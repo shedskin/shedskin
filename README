@@ -1,0 +1,300 @@
+*** Shed Skin Python-to-C++ Compiler ***
+Copyright 2005-2007 Mark Dufour; License GNU GPL version 3 (See LICENSE)
+
+CONTENTS
+
+ABOUT
+INSTALLATION
+USAGE
+LIMITATIONS
+TIPS
+BUILDING EXTENSION MODULES
+PARALLEL PYTHON
+IMPLEMENTING LIBRARIES
+THANKS
+CONTACT
+
+
+ABOUT
+
+Shed Skin is an experimental Python-to-C++ compiler. It accepts pure Python programs, and generates optimized C++ code. This means that, in combination with a C++ compiler, it allows for translation of Python programs into highly efficient machine language. For a set of 27 non-trivial test programs, measurements show a typical speedup of 2-40 over Psyco, about 11 on average, and 2-220 over CPython, about 39 on average.
+
+The high performance and elegant approach of Shed Skin (it is only 6500 lines!) come at a cost. First, it currently only accepts programs that are _statically_ typed. This simply means that variables can only ever have a single type. So e.g. a = 1; a = '1' is not allowed. Of course, a single type can be 'abstract' or 'generic' (as in C++), so that e.g. a = A(); a = B(), where A and B have a common base class, is allowed. 
+
+Second, Python programs cannot currently freely use the Python standard library. However, some common imports are supported (see lib/*.py), and many other can be easily added. The problem is a practical one, since in theory it is possible to create bindings for most library modules. A simple work-around is to only compile critical parts of a Python program (see BUILDING EXTENSION MODULES). This way, the 'main' program can use the full Python dynamics and standard library and the whole program is written in pure Python.
+
+Shed Skin is still alpha software, and there are some other minor, often temporary, limitations. Please read the LIMITATIONS section carefully, before trying to compile a program. The only thing I ask in return for making the software freely available under the GPL, is that you send me an email when you encounter a problem, that is not listed among these limitations. This is the fastest way to getting your program supported, since I usually do not fix problems I do not know about :-) Please also let me know if you would like me to implement certain library functions. 
+
+
+INSTALLATION
+
+On Windows XP:
+
+  1) Install Python 2.3, 2.4 or 2.5; make sure 'python' can be called from the command-line
+  2) Unzip the installation package into some directory
+  3) Enter this directory from the command-line and run 'init.bat'
+  4) Try the 'hello world' example by running 'ss test; make run'
+     (If this fails, it may be because you have an old version of MingW installed. Uninstall or upgrade it and try again.)
+  5) To run a full test suite of 179 examples, run 'unit.py'. This may take a while.
+
+
+On UNIX:
+
+  1) Install Python 2.3, 2.4 or 2.5; make sure 'python' can be called from the command-line
+  2) Install the Boehm-Demers-Weiser GC version 6.x: http://www.hpl.hp.com/personal/Hans_Boehm/gc/
+     Make sure to use: ./configure  --enable-cplusplus
+     Make sure that you have the development version (i.e. including include files and libgc.so) 
+     (Under Gentoo GNU/Linux this whole step is simply: 'emerge boehm-gc')
+     (Under Debian GNU/Linux this whole step is simply: 'apt-get install libgc-dev')
+  3) Make sure you have C++ development tools installed (the compiler has been tested with g++ 3.4/4.0)
+
+  4) Unzip the installation package into some directory
+  5) Enter this directory from the command-line and run 'python setup.py'
+  6) Copy 'ss' to somewhere in your path.
+     (Under some distros, such as Ubuntu, there may already be a utility named 'ss' - make sure you use the right one)
+  7) Try the 'hello world' example by running 'ss test; make run'
+     (If you get an error during 'make run', you may have to modify the FLAGS file. For example, in case of something like "undefined reference to `dlopen'", add ' -ldl' to the LFLAGS line and rerun 'ss test; make run')
+  8) To run a full test suite of 179 programs, run 'python unit.py'. This may take a while!
+
+
+USAGE
+
+Compilation:
+
+  1) On Windows XP, make sure you are on a command-line where you have run 'init.bat' (see above)
+  3) Go to the directory with the Python project that has to be compiled
+  4) Compile it using 'ss name', where the project's main module is called 'name.py'
+     (For each program file, a version annotated with type information will be generated, e.g. 'name.ss.py')
+  5) Run 'make' or 'make run' to build (and run) the resulting C++ code. 
+
+
+Unit tests:
+
+  1) Run 'python unit.py' to perform all unit tests ('-h' gives a list of options)
+
+
+
+LIMITATIONS
+
+You can only import functions/variables that exist in lib/*.py. See IMPLEMENTING LIBRARIES.
+
+The type analysis currently does not scale very well beyond a few hundred lines of code.
+
+Do not mix different types in a single variable or container (instance variable):
+
+  a = 1   
+  a = "hoi" # wrong
+
+  [1, '1'] # wrong
+
+Except in binary tuples (in the future: tuples up to a certain length):
+
+  t = (1, [1]) # okay
+  t = (1, 1.0, "1") # wrong
+
+None may only be mixed with non-scalar types:
+
+  l = [1] 
+  l = None # okay
+
+  m = 1
+  m = None # wrong
+
+  def fun(x=None): # wrong - use a special value for x here, for example x=-1
+      return x
+  fun(1)
+
+Anonymous functions can only be mixed if they have the same (non-generic) signature:
+
+  x = lambda x,y: x+y # okay
+  x = lambda a,b: a-b
+  somefunc(x)
+
+Try not to mix floats and ints together (mostly temporary):
+
+  a = [1.0] 
+  a = [1] # wrong - use a float here, too
+
+Do not pass classes, modules around (temporary):
+
+  class bla: pass 
+  x = bla # wrong
+
+Class attributes should always be accessed using a class identifier:
+  
+  self.class_attr # wrong
+  bla.class_attr 
+
+Generators cannot be methods (yet).
+
+Anonymous function passing works reasonably, but methods cannot be passed around (yet), and anonymous function references cannot be generic (yet)!
+
+Do not use:
+  -variable numbers of arguments
+  -more than 3 arguments to 'zip', 'min' and 'max' (temporary)
+  -arbitrary-size arithmetic
+  -reflection (getattr, hasattr), eval, or other really dynamic stuff
+  -multiple/dynamic inheritance, generator expressions, nested functions
+  -operator overloading may not always work
+
+Finally, the compiler has not been optimized for string usage.
+
+
+TIPS
+
+1) I sometimes see dictionaries used like this:
+
+   statistics = {'nodes': 28, 'solutions', set()} 
+
+   Shed Skin does not support this 'non-uniform' use of container types ('nodes' and 'solutions' have different types.) You can easily code around this problem by using a 'statistics' class:
+
+   class statistics: pass
+   s = statistics(); s.nodes = 28; s.solutions = set()
+
+2) The type analysis may currently end up in an infinite loop; if this happens, it sometimes helps to run Shedskin with the --infinite command-line option. 
+
+3) Having abstract types means you can not only use custom classes, but also _builtin_ Python container classes in an abstract way, e.g., as follows:
+   
+   a = [1,2,3]
+   a = (1,2,3)
+   for e in a: print e      # 'a' is an abstract sequence of type 'int'!
+
+   b = {1: '1', 2: '2', 3: '3'} 
+   b = xrange(10)           # 'b' is an abstract iterable of type 'int'!
+   for e in b: print e
+
+4) Not only builtin Python container classes can be used in a generic way (a list with integers becomes a generic list<int>, for example), but also _custom_ classes. For the following code, 'm1' and 'm2' become a matrix<int> and a matrix<double>, respectively:
+
+   class matrix:
+      def __init__(self, hop):
+         self.unit = hop
+
+   m1 = matrix([1,2])
+   m2 = matrix([1.0, 2.0])
+
+5) The evaluation order of arguments to 'print' changes with translation to C++. While this may be fixed later, for now it's better not to depend on this order (e.g., by using separate print statements):
+    
+   print f(), g() # in generated code, g is called before f!
+   print 'hoei', raw_input() # raw_input is called before 'hoei' is printed!
+
+6) While tuples with different types of elements with length > 2 are not yet supported, it can be useful to simulate them: 
+
+   a = (1, '1', 1.0) # not supported
+   a = (1, ('1', 1.0)) # supported
+
+
+BUILDING EXTENSION MODULES
+
+As of version 0.0.22, Shedskin supports building simple extension modules. The main limitations are as follows:
+
+-Only builtin scalar and container types (int, float, str, list, tuple, dict, set) as well as None can be passed/returned; support for custom classes may be added later.
+-Objects are completely converted for each call/return, including all of their contents. This means you cannot directly change CPython objects from the Shedskin side and vice versa.
+-Global module variables are converted at module initialization time, and cannot be changed later on from the Shedskin side.
+
+On the positive side, default arguments and common exceptions are supported.
+
+Building an exception module is a straightforward process. Consider the following program:
+
+    some_var = [1,2,3]
+
+    def some_func(x):
+        return 2*x
+
+    if __name__ == '__main__':
+        some_func(1)    # obviously, this is needed for type inference to work
+
+To compile this down to an extension module, use the new '-e' command-line parameter:
+
+    ss -e mod_name
+    make
+
+Depending on the platform, the resulting extension module (shared library) is called mod_name.so or mod_name.pyd.
+
+    >>>import mod_name
+    >>>dir(mod_name)
+    >>>mod_name.some_var
+    >>>mod_name.some_func(1)
+
+
+PARALLEL PYTHON
+
+Extension modules generated by Shed Skin can be called from Parallel Python. Suppose we have a partial sum function in a file called 'meuk.py':
+
+   def part_sum(start, end):
+       """Calculates partial sum"""
+       sum = 0
+       for x in xrange(start, end):
+           if x % 2 == 0:
+              sum -= 1.0 / x
+           else:
+              sum += 1.0 / x
+       return sum
+
+   if __name__ == '__main__':
+       part_sum(1, 10)
+
+The following commands compile this down to an extension module (see BUILDING EXTENSION MODULES):
+
+   ss -e meuk
+   make
+
+To make sure Parallel Python can find it, we have to make sure it is in the Python path, e.g. as follows:
+
+   export PYTHONPATH=$pwd
+
+Now, to actually call meuk.part_sum from Parallel Python, finally we have to use a pure-Python wrapper:
+
+   def part_sum(start, end):
+       import meuk
+       return meuk.part_sum(start, end)
+
+
+IMPLEMENTING LIBRARIES
+
+A library module in Shedskin consists of two parts: a 'type-model', that models the type behaviour of the module, to be used during type analysis; and an implementation in C++, that implements the module or forms a bridge to something that does. In the 'lib' dir you can find many examples. See, for example, the files 'lib/os/path.py' and 'lib/os/path.?pp'. 
+
+We show how to implement a module for when there is a pure Python implementation available (e.g., extracted from PyPy). Of course, Shedskin can often be used to generate the C++ implementation part. While the type-model can be the original Python implementation, it is better to create a minimized version of it, that shows how types 'flow' through each function or method. For example, the function random.random can be modeled simply as: 
+
+def random(): return 1
+
+The following steps show how to add support for the 'stat' module. 
+
+1) Save a pure Python implementation somewhere as 'stat.py' (e.g. take a copy from PyPy).
+
+2) Write a test program, that uses every part of the module, in such a way that Shedskin can determine every type that 'flows' through the module: 
+
+   import stat
+   stat.S_ISDIR(1)
+   ..
+
+3) Compile the test program and the pure Python implementation of the 'stat' module to C++ (assuming the test program is called 'test.py'):
+
+   ss test 
+
+4) Make sure the test program works:
+
+   make run
+   
+4) Add the 'stat' module to the Shedskin library, by moving 'stat.py' and the newly generated 'stat.?pp' files into the 'lib' dir.
+
+5) Optionally, change 'stat.py' into a minimal type-model, by removing anything that is not needed in a type analysis. For example, the definition of 'S_ISDIR' can simply become:
+
+   def S_ISDIR(x): return 1
+
+If you cannot start from a pure Python implementation, start by writing a type model, and use Shedskin to create a C++ framework for the module. Then fill in the details yourself and move the result to the 'lib' dir.
+
+If you'd like to implement a nested library module, e.g. os.path, start by creating an empty 'os' dir and place the 'path.py' file in here. Write a test program that simply imports 'os.path', compile it with Shedskin, test the result, and move 'os/path.py' and 'os/path.?pp' to 'lib/os'.  
+
+
+THANKS 
+
+Thanks to Google, for sponsoring this project via their SoC program; to Bearophile and Luis M. Gonzalez, for finding bugs/missing features and for keeping me motivated; to Jeff Miller, for implementing the random module; and to Denis de Leeuw Duarte for helping me run Shed Skin under OSX.
+
+
+CONTACT 
+
+mark.dufour@gmail.com
+http://mark.dufour.googlepages.com
+
+
+

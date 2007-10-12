@@ -1,0 +1,100 @@
+CPython: amaze.py runtime: 9.469531
+Cpython+psyco: amaze.py runtime: 2.505413
+Shedskin: amaze ss-analysis: 47.551083 compiletime: 11.346458 runtime: 1.742764
+
+CPython: brainfuck.py runtime: 3.960837
+Cpython+psyco: brainfuck.py runtime: 0.066357
+Shedskin: brainfuck ss-analysis: 4.476689 compiletime: 6.366809 runtime: 1.339873
+
+CPython: chess.py runtime: 7.072727
+Cpython+psyco: chess.py runtime: 1.006358
+Shedskin: chess ss-analysis: 34.384360 compiletime: 8.252543 runtime: 0.397794
+
+CPython: genetic.py runtime: 3.269487
+Cpython+psyco: genetic.py runtime: 0.824364
+Shedskin: genetic ss-analysis: 8.037784 compiletime: 9.100937 runtime: 0.261308
+
+CPython: life.py runtime: 0.106856
+Cpython+psyco: life.py runtime: 0.019240
+Shedskin: life ss-analysis: 5.987664 compiletime: 6.384678 runtime: 0.038750
+
+CPython: linalg.py runtime: 5.579008
+Cpython+psyco: linalg.py runtime: 1.891296
+Shedskin: linalg ss-analysis: 23.902609 compiletime: 6.958332 runtime: 0.570506
+
+CPython: mandelbrot.py runtime: 43.348013
+Cpython+psyco: mandelbrot.py runtime: 8.084350
+Shedskin: mandelbrot ss-analysis: 4.036327 compiletime: 5.301525 runtime: 0.189942
+
+CPython: mask_alg.py runtime: 5.079748
+Cpython+psyco: mask_alg.py runtime: 0.845488
+Shedskin: mask_alg ss-analysis: 12.528590 compiletime: 7.056581 runtime: 0.437582
+
+CPython: nbody.py runtime: 55.326871
+Cpython+psyco: nbody.py runtime: 21.807967
+Shedskin: nbody ss-analysis: 6.191225 compiletime: 6.137064 runtime: 1.394688
+
+CPython: neural1.py runtime: 3.842778
+Cpython+psyco: neural1.py runtime: 1.750885
+Shedskin: neural1 ss-analysis: 18.666957 compiletime: 11.354749 runtime: 0.579190
+
+CPython: neural2.py runtime: 0.257780
+Cpython+psyco: neural2.py runtime: 0.053258
+Shedskin: neural2 ss-analysis: 11.879973 compiletime: 10.190973 runtime: 0.015422
+
+CPython: oliva2.py runtime: 14.916344
+Cpython+psyco: oliva2.py runtime: 3.676438
+Shedskin: oliva2 ss-analysis: 6.649934 compiletime: 8.997684 runtime: 0.194157
+
+CPython: othello.py runtime: 48.778582
+Cpython+psyco: othello.py runtime: 15.472002
+Shedskin: othello ss-analysis: 8.919105 compiletime: 6.831107 runtime: 0.555028
+
+CPython: pisang.py runtime: 241.176669
+Cpython+psyco: pisang.py runtime: 31.848267
+Shedskin: pisang ss-analysis: 9.308995 compiletime: 6.907807 runtime: 20.725332
+
+CPython: pygmy.py runtime: 101.515111
+Cpython+psyco: pygmy.py runtime: 63.230671
+Shedskin: pygmy ss-analysis: 26.092097 compiletime: 10.475930 runtime: 2.173775
+
+CPython: pystone.py runtime: 1.243037
+Cpython+psyco: pystone.py runtime: 0.224885
+Shedskin: pystone ss-analysis: 6.055370 compiletime: 6.415546 runtime: 0.062067
+
+CPython: richards.py runtime: 8.503369
+Cpython+psyco: richards.py runtime: 1.711149
+Shedskin: richards ss-analysis: 18.416627 compiletime: 6.434345 runtime: 0.048445
+
+CPython: sudoku1.py runtime: 20.984668
+Cpython+psyco: sudoku1.py runtime: 0.936488
+Shedskin: sudoku1 ss-analysis: 11.121888 compiletime: 7.109259 runtime: 0.431268
+
+CPython: sudoku2.py runtime: 18.444081
+Cpython+psyco: sudoku2.py runtime: 7.385975
+Shedskin: sudoku2 ss-analysis: 46.396940 compiletime: 9.915695 runtime: 4.130637
+
+CPython: sudoku3.py runtime: 5.857571
+Cpython+psyco: sudoku3.py runtime: 1.796524
+Shedskin: sudoku3 ss-analysis: 46.370621 compiletime: 8.176076 runtime: 0.701616
+
+CPython: tictactoe.py runtime: 2.765803
+Cpython+psyco: tictactoe.py runtime: 1.105360
+Shedskin: tictactoe ss-analysis: 21.028411 compiletime: 8.594263 runtime: 3.863131
+
+CPython: voronoi.py runtime: 0.388001
+Cpython+psyco: voronoi.py runtime: 0.094068
+Shedskin: voronoi ss-analysis: 6.254521 compiletime: 8.851095 runtime: 0.017239
+
+CPython: yopyra.py runtime: 283.100286
+Cpython+psyco: yopyra.py runtime: 208.715343
+Shedskin: yopyra ss-analysis: 16.145887 compiletime: 8.898999 runtime: 3.212384
+
+CPython: sieve.py runtime: 7.249665
+Cpython+psyco: sieve.py runtime: 2.232059
+Shedskin: sieve ss-analysis: 6.061585 compiletime: 7.601941 runtime: 1.082988
+
+CPython: dijkstra.py runtime: 5.373554
+Cpython+psyco: dijkstra.py runtime: 1.610474
+Shedskin: dijkstra ss-analysis: 36.383886 compiletime: 10.284240 runtime: 0.424269
+

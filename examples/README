@@ -1,0 +1,19 @@
+27 programs that work with Shed Skin 0.0.25.
+(To compile fysphun.py, yopyra.py and msp_ss.py, see comments in the top.)
+
+
+Average speedup versus CPython: 38.6 times
+Average speedup versus Psyco: 10.9 times
+
+
+System used for testing:
+   Linux 2.6.16-gentoo-r7 #4 SMP PREEMPT
+   i686 AMD Athlon(tm) 64 X2 Dual Core Processor 4400+ AuthenticAMD GNU/Linux
+   g++ (GCC) 4.1.1 (Gentoo 4.1.1-r3)
+   Python 2.4.4, Psyco 1.5.1
+
+See benchmark.log for details, including analysis time
+
+
+If you have another interesting test case, please send it to:
+   shedskin-list@lists.sourceforge.net or mark.dufour@gmail.com
