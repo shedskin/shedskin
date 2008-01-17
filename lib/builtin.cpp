@@ -169,6 +169,8 @@ int str::isalnum() {
 int str::__ctype_function(int (*cfunc)(int))
 {
   int i, l = unit.size();
+  if(!l) 
+      return 0;
   
   for(i = 0; i < l; i++) 
       if(!cfunc((int)unit[i])) return 0;
@@ -312,6 +314,9 @@ int str::istitle(void)
 	int i, len;
 	
 	len = unit.size();
+    if(!len)
+        return 0;
+
 	for(i = 0; i < len; )
 	{
 		for( ; !::isalpha((int)unit[i]) && i < len; i++) ;

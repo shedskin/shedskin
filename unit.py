@@ -65,6 +65,14 @@ try:
 except re.error, msg:
 	print msg
 
+#corner cases
+print int(''.isdigit())
+print int(''.isalpha())
+print int(''.isalnum())
+print int(''.islower())
+print int(''.isupper())
+print int(''.istitle())
+
 ''', '''
 output(equal=True)
 
