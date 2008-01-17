@@ -1,0 +1,7 @@
+CC=g++ 
+CCFLAGS=-O3 -s -pipe -fomit-frame-pointer $(CPPFLAGS)
+#CCFLAGS=-O0 $(CPPFLAGS)
+LFLAGS=-lgc $(LDFLAGS)
+
+
+
