@@ -13,13 +13,13 @@ extern str *version;
 extern tuple2<int, int> *version_info;
 extern str *__name__, *copyright, *platform;
 extern int hexversion, maxint;
-extern file *_stdin, *_stdout, *_stderr;
+extern file *__ss_stdin, *__ss_stdout, *__ss_stderr;
 
 void exit();
 template<class T> void exit(T x) {
     if(x == 0)
         std::exit(0);
-    print(_stderr, "%s\n", __str(x)); 
+    print(__ss_stderr, "%s\n", __str(x)); 
     std::exit(1);
 }
 template<> void exit(int x);

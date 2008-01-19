@@ -205,7 +205,7 @@ double getmtime(str *filename) {
     Return the last modification time of a file, reported by os.stat().
     */
     
-    return (__os__::stat(filename))->_st_mtime;
+    return (__os__::stat(filename))->__ss_st_mtime;
 }
 
 double getatime(str *filename) {
@@ -213,7 +213,7 @@ double getatime(str *filename) {
     Return the last access time of a file, reported by os.stat().
     */
     
-    return (__os__::stat(filename))->_st_atime;
+    return (__os__::stat(filename))->__ss_st_atime;
 }
 
 double getctime(str *filename) {
@@ -221,7 +221,7 @@ double getctime(str *filename) {
     Return the metadata change time of a file, reported by os.stat().
     */
     
-    return (__os__::stat(filename))->_st_ctime;
+    return (__os__::stat(filename))->__ss_st_ctime;
 }
 
 int islink(str *path) {
@@ -235,7 +235,7 @@ int islink(str *path) {
     } catch (__os__::error *) {
         return 0;
     }
-    return __stat__::S_ISLNK(st->st_mode);
+    return __stat__::__ss_S_ISLNK(st->st_mode);
 }
 
 int exists(str *path) {
@@ -277,7 +277,7 @@ int isdir(str *path) {
     } catch (__os__::error *) {
         return 0;
     }
-    return __stat__::S_ISDIR(st->st_mode);
+    return __stat__::__ss_S_ISDIR(st->st_mode);
 }
 
 int isfile(str *path) {
@@ -291,7 +291,7 @@ int isfile(str *path) {
     } catch (__os__::error *) {
         return 0;
     }
-    return __stat__::S_ISREG(st->st_mode);
+    return __stat__::__ss_S_ISREG(st->st_mode);
 }
 
 int samefile(str *f1, str *f2) {
@@ -654,7 +654,7 @@ double getmtime(str *filename) {
     Return the last modification time of a file, reported by os.stat()
     */
     
-    return (__os__::stat(filename))->_st_mtime;
+    return (__os__::stat(filename))->__ss_st_mtime;
 }
 
 double getatime(str *filename) {
@@ -662,7 +662,7 @@ double getatime(str *filename) {
     Return the last access time of a file, reported by os.stat()
     */
     
-    return (__os__::stat(filename))->_st_atime;
+    return (__os__::stat(filename))->__ss_st_atime;
 }
 
 double getctime(str *filename) {
@@ -670,7 +670,7 @@ double getctime(str *filename) {
     Return the creation time of a file, reported by os.stat().
     */
     
-    return (__os__::stat(filename))->_st_ctime;
+    return (__os__::stat(filename))->__ss_st_ctime;
 }
 
 int islink(str *path) {
@@ -711,7 +711,7 @@ int isdir(str *path) {
     } catch (__os__::error *) {
         return 0;
     }
-    return __stat__::S_ISDIR(st->st_mode);
+    return __stat__::__ss_S_ISDIR(st->st_mode);
 }
 
 int isfile(str *path) {
@@ -725,7 +725,7 @@ int isfile(str *path) {
     } catch (__os__::error *) {
         return 0;
     }
-    return __stat__::S_ISREG(st->st_mode);
+    return __stat__::__ss_S_ISREG(st->st_mode);
 }
 
 str *normpath(str *path) {

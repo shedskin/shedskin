@@ -1,92 +1,95 @@
 #include "stat.hpp"
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
 namespace __stat__ {
 
-int ST_ATIME, ST_CTIME, ST_DEV, ST_GID, ST_INO, ST_MODE, ST_MTIME, ST_NLINK, ST_SIZE, ST_UID, S_ENFMT, S_IEXEC, S_IFBLK, S_IFCHR, S_IFDIR, S_IFIFO, S_IFLNK, S_IFREG, S_IFSOCK, S_IREAD, S_IRGRP, S_IROTH, S_IRUSR, S_IRWXG, S_IRWXO, S_IRWXU, S_ISGID, S_ISUID, S_ISVTX, S_IWGRP, S_IWOTH, S_IWRITE, S_IWUSR, S_IXGRP, S_IXOTH, S_IXUSR;
+int __ss_ST_MODE, __ss_ST_INO, __ss_ST_DEV, __ss_ST_NLINK, __ss_ST_UID, __ss_ST_GID, __ss_ST_SIZE, __ss_ST_ATIME, __ss_ST_MTIME, __ss_ST_CTIME, __ss_S_IFDIR, __ss_S_IFCHR, __ss_S_IFBLK, __ss_S_IFREG, __ss_S_IFIFO, __ss_S_IFLNK, __ss_S_IFSOCK, __ss_S_ISUID, __ss_S_ISGID, __ss_S_ENFMT, __ss_S_ISVTX, __ss_S_IREAD, __ss_S_IWRITE, __ss_S_IEXEC, __ss_S_IRWXU, __ss_S_IRUSR, __ss_S_IWUSR, __ss_S_IXUSR, __ss_S_IRWXG, __ss_S_IRGRP, __ss_S_IWGRP, __ss_S_IXGRP, __ss_S_IRWXO, __ss_S_IROTH, __ss_S_IWOTH, __ss_S_IXOTH;
 
 void __init() {
-    ST_MODE = 0;
-    ST_INO = 1;
-    ST_DEV = 2;
-    ST_NLINK = 3;
-    ST_UID = 4;
-    ST_GID = 5;
-    ST_SIZE = 6;
-    ST_ATIME = 7;
-    ST_MTIME = 8;
-    ST_CTIME = 9;
-    S_IFDIR = 16384;
-    S_IFCHR = 8192;
-    S_IFBLK = 24576;
-    S_IFREG = 32768;
-    S_IFIFO = 4096;
-    S_IFLNK = 40960;
-    S_IFSOCK = 49152;
-    S_ISUID = 2048;
-    S_ISGID = 1024;
-    S_ENFMT = S_ISGID;
-    S_ISVTX = 512;
-    S_IREAD = 256;
-    S_IWRITE = 128;
-    S_IEXEC = 64;
-    S_IRWXU = 448;
-    S_IRUSR = 256;
-    S_IWUSR = 128;
-    S_IXUSR = 64;
-    S_IRWXG = 56;
-    S_IRGRP = 32;
-    S_IWGRP = 16;
-    S_IXGRP = 8;
-    S_IRWXO = 7;
-    S_IROTH = 4;
-    S_IWOTH = 2;
-    S_IXOTH = 1;
+    __ss_ST_MODE = 0; /* XXX */
+    __ss_ST_INO = 1;
+    __ss_ST_DEV = 2;
+    __ss_ST_NLINK = 3;
+    __ss_ST_UID = 4;
+    __ss_ST_GID = 5;
+    __ss_ST_SIZE = 6;
+    __ss_ST_ATIME = 7;
+    __ss_ST_MTIME = 8;
+    __ss_ST_CTIME = 9;
+
+    __ss_S_IFDIR = S_IFDIR;
+    __ss_S_IFCHR = S_IFCHR;
+    __ss_S_IFBLK = S_IFBLK;
+    __ss_S_IFREG = S_IFREG;
+    __ss_S_IFIFO = S_IFIFO;
+    __ss_S_IFLNK = S_IFLNK;
+    __ss_S_IFSOCK = S_IFSOCK;
+    __ss_S_ISUID = S_ISUID;
+    __ss_S_ISGID = S_ISGID;
+    __ss_S_ENFMT = S_ISGID;
+    __ss_S_ISVTX = S_ISVTX;
+    __ss_S_IREAD = S_IREAD;
+    __ss_S_IWRITE = S_IWRITE;
+    __ss_S_IEXEC = S_IEXEC;
+    __ss_S_IRWXU = S_IRWXU;
+    __ss_S_IRUSR = S_IRUSR;
+    __ss_S_IWUSR = S_IWUSR;
+    __ss_S_IXUSR = S_IXUSR;
+    __ss_S_IRWXG = S_IRWXG;
+    __ss_S_IRGRP = S_IRGRP;
+    __ss_S_IWGRP = S_IWGRP;
+    __ss_S_IXGRP = S_IXGRP;
+    __ss_S_IRWXO = S_IRWXO;
+    __ss_S_IROTH = S_IROTH;
+    __ss_S_IWOTH = S_IWOTH;
+    __ss_S_IXOTH = S_IXOTH;
 }
 
-int S_IMODE(int mode) {
-    
-    return (mode&4095);
+int __ss_S_IMODE(int mode) {
+    return (mode&4095); /* XXX */
 }
 
-int S_IFMT(int mode) {
-    
-    return (mode&61440);
+int __ss_S_IFMT(int mode) {
+    return (mode&61440); /* XXX */
 }
 
-int S_ISDIR(int mode) {
+int __ss_S_ISDIR(int mode) {
     
-    return (S_IFMT(mode)==S_IFDIR);
+    return S_ISDIR(mode);
 }
 
-int S_ISCHR(int mode) {
+int __ss_S_ISCHR(int mode) {
     
-    return (S_IFMT(mode)==S_IFCHR);
+    return S_ISCHR(mode);
 }
 
-int S_ISBLK(int mode) {
+int __ss_S_ISBLK(int mode) {
     
-    return (S_IFMT(mode)==S_IFBLK);
+    return S_ISBLK(mode);
 }
 
-int S_ISREG(int mode) {
+int __ss_S_ISREG(int mode) {
     
-    return (S_IFMT(mode)==S_IFREG);
+    return S_ISREG(mode);
 }
 
-int S_ISFIFO(int mode) {
+int __ss_S_ISFIFO(int mode) {
     
-    return (S_IFMT(mode)==S_IFIFO);
+    return S_ISFIFO(mode);
 }
 
-int S_ISLNK(int mode) {
+int __ss_S_ISLNK(int mode) {
     
-    return (S_IFMT(mode)==S_IFLNK);
+    return S_ISLNK(mode);
 }
 
-int S_ISSOCK(int mode) {
+int __ss_S_ISSOCK(int mode) {
     
-    return (S_IFMT(mode)==S_IFSOCK);
-}
+    return S_ISSOCK(mode);
+} 
 
 } // module namespace
 
