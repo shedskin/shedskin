@@ -338,7 +338,7 @@ int chmod (str* path, int val) {
     attr = GetFileAttributesA(var->unit.c_str());
 
     if (attr != 0xFFFFFFFF) {
-        if (i & _S_IWRITE)
+        if (i & S_IWRITE)
             attr &= ~FILE_ATTRIBUTE_READONLY;
         else
             attr |= FILE_ATTRIBUTE_READONLY;
