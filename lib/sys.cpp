@@ -6,7 +6,7 @@ namespace __sys__ {
 list<str *> *argv;
 str *version;
 
-file *_stdin, *_stdout, *_stderr;
+file *__ss_stdin, *__ss_stdout, *__ss_stderr;
 tuple2<int, int> *version_info;
 str *__name__, *copyright, *platform;
 int hexversion, maxint;
@@ -27,9 +27,9 @@ void __init(int c, char **v) {
     for(int i=0; i<c; i++)
         argv->append(new str(v[i]));
 
-    _stdin = new file(stdin);
-    _stdout = new file(stdout); 
-    _stderr = new file(stderr); 
+    __ss_stdin = new file(stdin);
+    __ss_stdout = new file(stdout); 
+    __ss_stderr = new file(stderr); 
 }
 
 void exit() {

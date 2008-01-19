@@ -68,7 +68,7 @@ template <class A> int walk(str *top, int (*func)(A, str *, list<str *> *), A ar
         } catch (__os__::error *) {
             continue;
         }
-        if (__stat__::S_ISDIR(st->st_mode)) {
+        if (__stat__::__ss_S_ISDIR(st->st_mode)) {
             walk(name, func, arg);
         }
     END_FOR

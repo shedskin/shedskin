@@ -23,9 +23,6 @@
 #include <ext/hash_map>
 #include <ext/hash_set>
 
-#undef fileno
-#undef write
-
 namespace __shedskin__ {
 
 /* builtin class forward declarations */
@@ -795,7 +792,7 @@ public:
     int writelines(pyseq<str *> *p);
     int flush();
     int close();
-    int fileno();
+    int __ss_fileno();
 
     void __check_closed();
 
@@ -934,7 +931,7 @@ public:
 
 class OSError : public Exception { 
 public: 
-    int _errno;
+    int __ss_errno;
     str *filename; 
     str *message;
     str *strerror;

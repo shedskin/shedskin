@@ -34,7 +34,7 @@ extern class_ *cl___cstat;
 class __cstat : public pyobj {
 public:
     int st_mode, st_ino, st_dev, st_rdev, st_nlink, st_uid, st_gid, st_size, st_blksize, st_blocks;
-    int _st_mtime, _st_atime, _st_ctime;
+    int __ss_st_mtime, __ss_st_atime, __ss_st_ctime;
 
     __cstat(str *path, int t);
     __cstat(int fd);

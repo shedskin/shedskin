@@ -183,7 +183,7 @@ int makedirs(str *name, int mode) {
         try {
             makedirs(head, mode);
         } catch (OSError *e) {
-            if (e->_errno != EEXIST) {
+            if (e->__ss_errno != EEXIST) {
                 throw (e);
             }
         }
@@ -236,9 +236,9 @@ void __cstat::fill_er_up() {
     this->st_dev = sbuf.st_dev;
     this->st_rdev = sbuf.st_rdev;
     this->st_nlink = sbuf.st_nlink;
-    this->_st_atime = sbuf.st_atime;
-    this->_st_mtime = sbuf.st_mtime;
-    this->_st_ctime = sbuf.st_ctime;
+    this->__ss_st_atime = sbuf.st_atime;
+    this->__ss_st_mtime = sbuf.st_mtime;
+    this->__ss_st_ctime = sbuf.st_ctime;
     this->st_uid = sbuf.st_uid;
     this->st_gid = sbuf.st_gid;
     this->st_size = sbuf.st_size;
@@ -249,7 +249,7 @@ void __cstat::fill_er_up() {
 }
 
 str *__cstat::__repr__() {
-    return __mod(const_0, this->st_mode, this->st_ino, this->st_dev, this->st_nlink, this->st_uid, this->st_gid, this->st_size, this->_st_mtime, this->_st_atime, this->_st_ctime);
+    return __mod(const_0, this->st_mode, this->st_ino, this->st_dev, this->st_nlink, this->st_uid, this->st_gid, this->st_size, this->__ss_st_mtime, this->__ss_st_atime, this->__ss_st_ctime);
 }
 
 int __cstat::__len__() {
@@ -266,9 +266,9 @@ int __cstat::__getitem__(int i) {
         case 4: return st_uid;
         case 5: return st_gid;
         case 6: return st_size;
-        case 7: return _st_atime;
-        case 8: return _st_mtime;
-        case 9: return _st_ctime;
+        case 7: return __ss_st_atime;
+        case 8: return __ss_st_mtime;
+        case 9: return __ss_st_ctime;
 
         default:  
             throw new IndexError(new str("tuple index out of range")); 

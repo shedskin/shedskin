@@ -961,13 +961,9 @@ int file::close() {
     return 0;
 }
 
-int file::fileno() {
+int file::__ss_fileno() {
     __check_closed();
-#ifdef WIN32
-    return _fileno(f);
-#else
-    return ::fileno(f);
-#endif
+    return fileno(f);
 }
 
 str *file::__repr__() {
@@ -1717,26 +1713,18 @@ template<> double __to_ss(PyObject *p) {
 
 #endif
 
-int get_errno() {
-#ifdef WIN32
-    return *_errno();
-#else
-    return errno;
-#endif
-}
-
 // Exceptions
 OSError::OSError(str *filename) {
     this->filename = filename;
-    _errno = get_errno();
+    __ss_errno = errno;
     message = new str("");
-    strerror = new str(::strerror(_errno));
+    strerror = new str(::strerror(__ss_errno));
 }
 str *OSError::__str__() {
-    return __add_strs(7, new str("[Errno "), __str(_errno), new str("] "), strerror, new str(": '"), filename, new str("'"));
+    return __add_strs(7, new str("[Errno "), __str(__ss_errno), new str("] "), strerror, new str(": '"), filename, new str("'"));
 }
 str *OSError::__repr__() {
-    return __add_strs(5, new str("OSError("), __str(_errno), new str(", '"), strerror, new str("')")); 
+    return __add_strs(5, new str("OSError("), __str(__ss_errno), new str(", '"), strerror, new str("')")); 
 }
 
 } // namespace __shedskin__
