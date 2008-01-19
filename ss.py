@@ -105,6 +105,8 @@ class class_:
         result = []
         while a != other:
             result.append(a)
+            if not a.bases:
+                break
             a = a.bases[0] 
         return result
 
@@ -5417,7 +5419,7 @@ def confusion_misc():
 def analyze_virtuals(): 
     for node in gx.merged_inh: # XXX all:
         # --- for every message
-        if isinstance(node, CallFunc) and not inode(node).mv.module.ident == 'builtin':
+        if isinstance(node, CallFunc) and not inode(node).mv.module.builtin: #ident == 'builtin':
             objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr = analyze_callfunc(node)
             if not method_call or objexpr not in gx.merged_inh: 
                 continue # XXX
