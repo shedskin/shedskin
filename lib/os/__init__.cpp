@@ -2,6 +2,7 @@
 #include "path.hpp"
 
 #include <cstdlib>
+#include <sstream>
 #include <sys/stat.h>
 #include <stdio.h>
 #include <dirent.h>
@@ -10,6 +11,10 @@
 namespace std {
 #include <unistd.h>
 }
+
+#ifdef WIN32
+#include <windows.h>
+#endif
 
 char *get_environ(int n) { 
 #ifndef WIN32
@@ -305,6 +310,91 @@ int stat_float_times(int newvalue) {
     if(newvalue==0)
         throw new TypeError(new str("os.stat_float_times: cannot change type"));
     return 1;
+}
+
+int getpid() {
+    return ::getpid();
+}
+
+int putenv(str* varname, str* value) {
+    std::stringstream ss;
+    ss << varname->unit.c_str() << '=' << value->unit.c_str();
+    return ::putenv(const_cast<char*>(ss.str().c_str()));
+}
+
+int umask(int newmask)  {
+    return ::umask(newmask);
+}
+
+int unsetenv (str* var) {
+    return ::unsetenv(var->unit.c_str());
+}
+
+int chmod (str* path, int val) {
+#ifdef WIN32
+    DWORD attr;
+    int res;
+    attr = GetFileAttributesA(var->unit.c_str());
+
+    if (attr != 0xFFFFFFFF) {
+        if (i & _S_IWRITE)
+            attr &= ~FILE_ATTRIBUTE_READONLY;
+        else
+            attr |= FILE_ATTRIBUTE_READONLY;
+        res = SetFileAttributesA(var->unit.c_str(), attr);
+    }
+    else {
+        res = 0;
+    }
+    if(!res) {
+        throw new OSError("Chmod");
+    }
+    return 0;
+#else
+    return ::chmod(path->unit.c_str(), val);
+#endif
+}
+
+int renames (str* old, str* _new) {
+    tuple2<str *, str *> *__0, *__1, *__5;
+    str *__2, *__3, *head, *tail;
+
+
+    __0 = __path__::split(_new);
+    head = __0->__getfirst__();
+    tail = __0->__getsecond__();
+
+    if ((!__bool(tail))) {
+        __1 = __path__::split(head);
+        head = __1->__getfirst__();
+        tail = __1->__getsecond__();
+    }
+    
+    while(__bool(__AND(head, tail, 2)) && !__path__::exists(head)) {
+        try {
+            makedirs(head);
+        } catch (OSError *) {
+            break;
+        }
+        __5 = __path__::split(head);
+        head = __5->__getfirst__();
+        tail = __5->__getsecond__();
+    }
+    rename(old, _new);
+
+    __0 = __path__::split(old);
+    head = __0->__getfirst__();
+    tail = __0->__getsecond__();
+
+    if ((!__bool(tail))) {
+        __1 = __path__::split(head);
+        head = __1->__getfirst__();
+        tail = __1->__getsecond__();
+    }
+
+    if(__bool(__AND(head,tail,2))) {
+        removedirs(head);
+    }
 }
 
 void __init() {

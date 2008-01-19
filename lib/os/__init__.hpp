@@ -64,6 +64,13 @@ int fork();
 int stat_float_times(int newvalue=-1);
 str *strerror(int i);
 
+int getpid();
+int putenv(str* varname, str* value);
+int umask(int newmask);
+int unsetenv(str* var);
+int chmod(str* path, int val);
+int renames(str* old, str* _new);
+
 typedef OSError error;
 
 void __init();
