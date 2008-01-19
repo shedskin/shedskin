@@ -110,6 +110,24 @@ def getgid():
 def stat_float_times(n=False): 
     return True
 
+def getpid():
+    return 1
+
+def putenv(variable, value):
+    pass
+
+def umask(newmask):
+    return 0
+
+def chmod(path, val):
+    return 0
+
+def unsetenv(var):
+    pass
+
+def renames(old, new):
+    pass
+
 class error(OSError): 
     pass
 
