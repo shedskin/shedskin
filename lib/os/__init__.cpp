@@ -17,10 +17,10 @@ namespace std {
 #endif
 
 char *get_environ(int n) { 
-#ifndef WIN32
-return environ[n]; 
-#else
+#ifdef WIN32
 return _environ[n];
+#else
+return environ[n]; 
 #endif
 }
 
@@ -327,7 +327,8 @@ int umask(int newmask)  {
 }
 
 int unsetenv (str* var) {
-    return ::unsetenv(var->unit.c_str());
+    ::unsetenv(var->unit.c_str());
+    return 0;
 }
 
 int chmod (str* path, int val) {
