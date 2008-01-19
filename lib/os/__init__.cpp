@@ -16,19 +16,16 @@ namespace std {
 #include <windows.h>
 #endif
 
-char *get_environ(int n) { 
-#ifdef WIN32
-return _environ[n];
-#else
-return environ[n]; 
+#ifdef OSX
+#include <crt_externs.h>
+#define environ (*_NSGetEnviron())
 #endif
-}
 
 namespace __os__ {
 
 str *const_0;
 str *linesep, *name;
-dict<str *, str *> *environ;
+dict<str *, str *> *__ss_environ;
 struct stat sbuf;
 
 str *altsep, *curdir, *defpath, *devnull, *extsep, *pardir, *pathsep, *sep;
@@ -410,12 +407,12 @@ void __init() {
     name = new str("posix");
 #endif
     
-    environ = new dict<str *, str *>();
+    __ss_environ = new dict<str *, str *>();
 
-    for (int n = 0; get_environ(n); n++) {
-        str *line = new str(get_environ(n));
+    for (int n = 0; environ[n]; n++) {
+        str *line = new str(environ[n]);
         int pos = line->find(new str("="));
-        environ->__setitem__(line->__slice__(2, 0, pos, 0), line->__slice__(1, (pos+1), 0, 0));
+        __ss_environ->__setitem__(line->__slice__(2, 0, pos, 0), line->__slice__(1, (pos+1), 0, 0));
     }
 
     __path__::__init(); /* ugh */

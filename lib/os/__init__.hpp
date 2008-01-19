@@ -3,15 +3,11 @@
 
 #include "builtin.hpp"
 
-#ifdef WIN32
-#undef environ
-#endif
-
 using namespace __shedskin__;
 namespace __os__ {
 
 extern str *linesep, *name;
-extern dict<str *, str *> *environ;
+extern dict<str *, str *> *__ss_environ;
 extern str *altsep, *curdir, *defpath, *devnull, *extsep, *pardir, *pathsep, *sep;
 
 list<str *> *listdir(str *path);
