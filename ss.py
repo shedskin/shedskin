@@ -6597,11 +6597,18 @@ def generate_code():
     print '[generating c++ code..]'
 
     gx.dirs.setdefault('',[]).append(gx.main_module)
+
     ident = gx.main_module.ident 
+
+    if sys.platform == 'win32':
+        pyver = '%d%d' % sys.version_info[:2]
+    else:
+        includes = os.popen4('python-config --includes')[1].read().strip()
+        ldflags = os.popen4('python-config --ldflags')[1].read().strip()
+
     if gx.extension_module: 
         if sys.platform == 'win32': ident += '.pyd'
         else: ident += '.so'
-    pyver, pyver2 = '%d.%d' % sys.version_info[:2], '%d%d' % sys.version_info[:2]
 
     # --- repeat for each directory:
     for dir, mods in gx.dirs.items():
@@ -6628,21 +6635,26 @@ def generate_code():
         if gx.flags: flags = gx.flags
         elif os.path.isfile('FLAGS'): flags = 'FLAGS'
         else: flags = connect_paths(gx.sysdir, 'FLAGS')
+
         for line in file(flags):
             line = line[:-1]
+
             if line[:line.find('=')].strip() == 'CCFLAGS': 
                 line += ' -I'+gx.libdir.replace(' ', '\ ')
                 if not gx.wrap_around_check: line += ' -DNOWRAP' 
                 if gx.bounds_checking: line += ' -DBOUNDS' 
                 if gx.extension_module: 
-                    if sys.platform == 'win32': line += ' -Ic:/Python%s/include -D__SS_BIND' % pyver2
-                    else: line += ' -g -fPIC -I/usr/include/python%s -D__SS_BIND' % pyver
+                    if sys.platform == 'win32': line += ' -Ic:/Python%s/include -D__SS_BIND' % pyver
+                    else: line += ' -g -fPIC -D__SS_BIND ' + includes
+
             elif line[:line.find('=')].strip() == 'LFLAGS': 
                 if gx.extension_module: 
-                    if sys.platform == 'win32': line += ' -shared -Lc:/Python%s/libs -lpython%s' % (pyver2, pyver2) 
-                    else: line += ' -shared -Xlinker -export-dynamic -lpython%s' % pyver
+                    if sys.platform == 'win32': line += ' -shared -Lc:/Python%s/libs -lpython%s' % (pyver, pyver) 
+                    elif sys.platform == 'darwin': line += ' -bundle -Xlinker -dynamic ' + ldflags
+                    else: line += ' -shared -Xlinker -export-dynamic ' + ldflags
                 if 're' in [m.ident for m in mods]:
                     line += ' -lpcre'
+
             print >>makefile, line
         print >>makefile
 
