@@ -4571,7 +4571,7 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None):
 
     if not template_vars:
         if cl.ident in gx.cpp_keywords:
-            return namespace+ss_prefix+map(cl.ident)
+            return namespace+gx.ss_prefix+map(cl.ident)
         return namespace+map(cl.ident)
 
     subtypes = [] 

@@ -711,8 +711,8 @@ public:
     int __contains__(T a);
     int __len__();
 
-    set<T> *_union(pyiter<T> *s);
-    set<T> *_union(set<T> *s);
+    set<T> *__ss_union(pyiter<T> *s);
+    set<T> *__ss_union(set<T> *s);
     int update(pyiter<T> *s);
 
     set<T> *difference(set<T> *s);
@@ -1702,7 +1702,7 @@ template<class T> T set<T>::pop() {
     return e;
 }
 
-template<class T> set<T> *set<T>::_union(pyiter<T> *s) {
+template<class T> set<T> *set<T>::__ss_union(pyiter<T> *s) {
     set<T> *c = new set<T>(this->frozen);
     c->units = units; 
     c->update(s);
@@ -1710,7 +1710,7 @@ template<class T> set<T> *set<T>::_union(pyiter<T> *s) {
     return c;
 }
 
-template<class T> set<T> *set<T>::_union(set<T> *s) {
+template<class T> set<T> *set<T>::__ss_union(set<T> *s) {
     set<T> *a, *b;
     set<T> *c = new set<T>(this->frozen);
 
@@ -1800,7 +1800,7 @@ template<class T> set<T> *set<T>::__and__(set<T> *s) {
     return intersection(s);
 }
 template<class T> set<T> *set<T>::__or__(set<T> *s) {
-    return _union(s);
+    return __ss_union(s);
 }
 template<class T> set<T> *set<T>::__xor__(set<T> *s) {
     return symmetric_difference(s);
@@ -1810,7 +1810,7 @@ template<class T> set<T> *set<T>::__iand__(set<T> *s) {
     return this;
 }
 template<class T> set<T> *set<T>::__ior__(set<T> *s) {
-    units = _union(s)->units;
+    units = __ss_union(s)->units;
     return this;
 }
 template<class T> set<T> *set<T>::__ixor__(set<T> *s) {
