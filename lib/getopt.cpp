@@ -161,7 +161,7 @@ tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *gnu_getopt(list<str *> *a
         shortopts = shortopts->__slice__(1, 1, 0, 0);
         all_options_first = 1;
     }
-    else if (__bool((__os__::environ)->get(const_4))) {
+    else if (__bool((__os__::__ss_environ)->get(const_4))) {
         all_options_first = 1;
     }
     else {
