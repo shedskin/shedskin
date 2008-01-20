@@ -6,7 +6,7 @@ import traceback, sys, os, time
 
 tests = [
 
-('''fixes for 0.0.27; re''', '''
+('''fixes for 0.0.27; re, time''', '''
 #re
 import re
 
@@ -64,6 +64,36 @@ try:
 	
 except re.error, msg:
 	print msg
+
+#time
+import time
+try:
+    print time.mktime(time.struct_time((1970, 2, 17, 23, 33, 34, 1, 48, -1)))
+    print time.mktime((1970, 2, 17, 23, 33, 34, 3, 17, -1))
+    print time.localtime(4142014)    
+#    print time.localtime()
+#    print time.localtime(time.mktime(time.localtime()))
+#    print time.gmtime(time.mktime(time.gmtime()))
+#    print time.asctime()
+    print time.asctime(time.struct_time((2008, 6, 24, 12, 50, 00, 0, 120, -1)))
+#    print time.ctime()
+    print time.ctime(1000000)
+    y = (2008, 6, 24, 12, 50, 00, 0, 120, -1)
+    x = time.struct_time(y)
+    print x
+    print x.tm_mon
+    print x[6]
+#    print time.strftime("%R",time.localtime())
+#    print time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.gmtime())
+    print time.strftime("%a, %d %b %Y %H:%M:%S",
+            (2008, 6, 24, 12, 50, 00, 0, 120, -1))
+    print time.strptime("2001-11-12 18:31:01", "%Y-%m-%d %H:%M:%S")
+    print time.strptime("2001","%Y")
+    print time.timezone
+    print time.tzname
+
+except TypeError, e:
+    print e
 
 #corner cases
 print int(''.isdigit())
