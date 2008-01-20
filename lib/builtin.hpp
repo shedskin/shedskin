@@ -791,7 +791,6 @@ public:
     int write(str *s);
     int writelines(pyseq<str *> *p);
     int flush();
-    int close();
     int __ss_fileno();
 
     void __check_closed();
@@ -799,6 +798,7 @@ public:
     virtual int getchar();
     virtual int putchar(int c);
     virtual int seek(int i, int w=0);
+    virtual int close();
 
     int tell();
 

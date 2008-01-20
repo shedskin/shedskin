@@ -3694,11 +3694,28 @@ class generateVisitor(ASTVisitor):
                return True
         return False
 
+    def library_func(self, funcs, modname, clname, funcname):
+        for func in funcs:
+            if not func.mv.module.builtin or func.mv.module.ident != modname:
+                continue
+
+            if clname != None:
+                if not func.parent or func.parent.ident != clname:
+                    continue
+
+            return func.ident == funcname
+
+        return False
+
     def visitCallFunc(self, node, func=None): 
         #print 'callfunc', node
         objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr = analyze_callfunc(node)
 
         funcs = callfunc_targets(node, self.mergeinh)
+
+        if self.library_func(funcs, 're', None, 'findall') or \
+           self.library_func(funcs, 're', 're_object', 'findall'):
+            error("assuming 'findall' returns list of strings", node, warning=True)
 
         if self.bastard(ident, objexpr):
             ident = '__getitem__'
