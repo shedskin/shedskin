@@ -10,8 +10,12 @@ extern str *linesep, *name;
 extern dict<str *, str *> *__ss_environ;
 extern str *altsep, *curdir, *defpath, *devnull, *extsep, *pardir, *pathsep, *sep;
 
-list<str *> *listdir(str *path);
+typedef OSError error;
 
+class popen_pipe;
+class __cstat;
+
+list<str *> *listdir(str *path);
 str *getcwd();
 int chdir(str *dir);
 str *getenv(str *name, str *alternative=0);
@@ -23,8 +27,6 @@ int mkdir(str *path, int mode=0777);
 int makedirs(str *name, int mode=0777);
 int abort();
 int system(str *c);
-
-class __cstat;
 
 extern class_ *cl___cstat;
 class __cstat : public pyobj {
@@ -67,7 +69,16 @@ int unsetenv(str* var);
 int chmod(str* path, int val);
 int renames(str* old, str* _new);
 
-typedef OSError error;
+class popen_pipe : public file {
+public:
+    popen_pipe(str *name, str *mode=0);
+    popen_pipe(FILE* pipe);
+    int close();
+};
+
+popen_pipe* popen(str* cmd);
+popen_pipe* popen(str* cmd, str* mode);
+popen_pipe* popen(str* cmd, str* mode, int bufsize);
 
 void __init();
 

@@ -395,6 +395,46 @@ int renames (str* old, str* _new) {
     }
 }
 
+popen_pipe* popen(str* cmd) {
+    return popen(cmd, new str("r"), -1);
+}
+
+popen_pipe* popen(str* cmd, str* mode) {
+    return popen(cmd, mode, -1);
+}
+
+popen_pipe* popen(str* cmd, str* mode, int bufsize) {
+    FILE* fp = ::popen(cmd->unit.c_str(), mode->unit.c_str());
+
+    if(!fp) throw new OSError(cmd);
+    return new popen_pipe(fp);
+}
+
+popen_pipe::popen_pipe(str *cmd, str *mode) {
+    FILE* fp;
+
+    if(!mode)
+        mode = new str("r");
+    fp = ::popen(cmd->unit.c_str(), mode->unit.c_str());
+    this->name = cmd;
+    this->mode = mode;
+
+    endoffile=print_space=0;
+    print_lastchar='\n';
+}
+
+popen_pipe::popen_pipe(FILE* pipe) {
+    f = pipe;
+    endoffile=print_space=0;
+    print_lastchar='\n';
+}
+
+int popen_pipe::close() {
+    pclose(f);
+    closed = 1;
+    return 0;
+}
+
 void __init() {
     const_0 = new str("(%d, %d, %d, %d, %d, %d, %d, %d, %d, %d)");
 

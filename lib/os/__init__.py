@@ -14,6 +14,39 @@ defpath = ''
 altsep = ''
 devnull = ''
 
+class error(OSError): 
+    pass
+
+class __cstat:
+    def __init__(self):
+        self.st_mode = 1
+        self.st_size = 1
+        self.st_ino = 1
+        self.st_dev = 1
+        self.st_rdev = 1
+        self.st_nlink = 1
+        self.st_mtime = 1
+        self.st_atime = 1
+        self.st_ctime = 1
+        self.st_uid = 1
+        self.st_gid = 1
+
+        self.st_blksize = 1
+        self.st_blocks = 1
+
+    def __len__(self):
+        return 1
+    def __getitem__(self, i):
+        return 1
+    def __slice__(self, x, l, u, s):     
+        return (1,)
+
+    def __repr__(self):
+        return ''
+
+class popen_pipe(file):
+    pass
+
 def listdir(path):
     return ['']
 
@@ -62,33 +95,6 @@ def system(c):
 def strerror(i):
     return ''
 
-class __cstat:
-    def __init__(self):
-        self.st_mode = 1
-        self.st_size = 1
-        self.st_ino = 1
-        self.st_dev = 1
-        self.st_rdev = 1
-        self.st_nlink = 1
-        self.st_mtime = 1
-        self.st_atime = 1
-        self.st_ctime = 1
-        self.st_uid = 1
-        self.st_gid = 1
-
-        self.st_blksize = 1
-        self.st_blocks = 1
-
-    def __len__(self):
-        return 1
-    def __getitem__(self, i):
-        return 1
-    def __slice__(self, x, l, u, s):     
-        return (1,)
-
-    def __repr__(self):
-        return ''
-
 def stat(path):
     return __cstat()
 
@@ -128,6 +134,8 @@ def unsetenv(var):
 def renames(old, new):
     pass
 
-class error(OSError): 
-    pass
+def popen(cmd, mode='r', bufsize=-1):
+    return popen_pipe()
+
+
 
