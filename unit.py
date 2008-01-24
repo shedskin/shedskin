@@ -6,7 +6,7 @@ import traceback, sys, os, time
 
 tests = [
 
-('''fixes for 0.0.27; re, time''', '''
+('''fixes for 0.0.27; re, time, glob, fnmatch''', '''
 #re
 import re
 
@@ -102,6 +102,12 @@ print int(''.isalnum())
 print int(''.islower())
 print int(''.isupper())
 print int(''.istitle())
+
+#glob, fnmatch
+import glob
+print glob.glob('ss.py')
+import fnmatch
+print int(fnmatch.fnmatch('ss.py', 'ss.[py]y'))
 
 ''', '''
 output(equal=True)
