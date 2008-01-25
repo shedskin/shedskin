@@ -3218,8 +3218,8 @@ class generateVisitor(ASTVisitor):
             self.output('%sclass __gen_%s : public %s {' % (templatestr, func.ident, typesetreprnew(func.retnode.thing, func)[:-2]))
             self.output('public:')
             self.indent()
-            for f in func.vars:
-                self.output(typesetreprnew(func.vars[f], func)+self.cpp_name(f)+';') # XXX merge below
+            pairs = [(typesetreprnew(func.vars[f], func), self.cpp_name(f)) for f in func.vars]
+            self.output(self.indentation.join(self.group_declarations(pairs)))
             self.output('int __last_yield;\n')
 
             args = []
@@ -4461,9 +4461,11 @@ class generateVisitor(ASTVisitor):
 
         t = list(inode(node).types())[0]
 
-        if t[0].ident in ['int_','float_']: 
-            if node.value == 1e500: self.append('1e500')
-            elif node.value == -1e500: self.append('-1e500')
+        if t[0].ident == 'int_':
+            self.append(str(node.value)) 
+        elif t[0].ident == 'float_': 
+            if str(node.value) in ['inf', '1.#INF']: self.append('INFINITY')
+            elif str(node.value) in ['-inf', '-1.#INF']: self.append('-INFINITY')
             else: self.append(str(node.value)) 
         elif t[0].ident == 'str_': 
             self.append('new str("%s"' % self.expandspecialchars(node.value))
