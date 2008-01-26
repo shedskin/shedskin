@@ -440,6 +440,11 @@ public:
     tuple2();
     tuple2(int n, A a, B b);
 
+    void __init2__(A a, B b) {
+        first = a;
+        second = b;
+    }
+
     A __getfirst__();
     B __getsecond__();
 
@@ -575,6 +580,12 @@ public:
 
     tuple2();
     tuple2(int count, ...);
+
+    void __init2__(T a, T b) {
+        units.resize(2);
+        units[0] = a;
+        units[1] = b;
+    }
 
     T __getfirst__();
     T __getsecond__();
@@ -2513,8 +2524,13 @@ template <class A, class B> list<tuple2<A, B> *> *__zip2(pyseq<A> *a, pyseq<B> *
 
     int n = __min(len(a), len(b));
     result->units.reserve(n);
-    for(int i=0; i<n; i++)
-        result->units.push_back(new tuple2<A, B>(2, a->units[i], b->units[i]));
+
+    tuple2<A, B> *v = new tuple2<A, B>[n];
+
+    for(int i=0; i<n; i++) {
+        v[i].__init2__(a->units[i], b->units[i]);
+        result->units.push_back(&v[i]);
+    }
 
     return result;
 }
