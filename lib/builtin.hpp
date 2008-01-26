@@ -2554,6 +2554,26 @@ template <class A> list<tuple2<A,A> *> *__zip3(pyiter<A> *a, pyiter<A> *b, pyite
     return result;
 }
 
+template <class A> list<tuple2<A,A> *> *__zip3(pyseq<A> *a, pyseq<A> *b, pyseq<A> *c) {
+    list<tuple2<A, A> *> *result;
+    result = new list<tuple2<A, A> *>();
+
+    int n = __min(__min(len(a), len(b)), len(c));
+    result->units.reserve(n);
+
+    tuple2<A, A> *v = new tuple2<A, A>[n];
+
+    for(int i=0; i<n; i++) {
+        v[i].units.resize(3);
+        v[i].units[0] = a->units[i];
+        v[i].units[1] = b->units[i];
+        v[i].units[2] = c->units[i];
+        result->units.push_back(&v[i]);
+    }
+
+    return result;
+}
+
 /* pow */
 
 template<class A, class B> double __power(A a, B b);
