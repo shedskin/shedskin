@@ -3902,9 +3902,11 @@ class generateVisitor(ASTVisitor):
             self.append('(('+typesetreprnew(func.retnode.thing, func)+')(')
 
         elif isinstance(node.value, Name) and node.value.name == 'self': # XXX integrate with assign_needs_cast!? # XXX self?
-            cl = lowest_common_parents(polymorphic_t(self.mergeinh[func.retnode.thing]))[0] # XXX simplify
-            if not (cl == func.parent or cl in func.parent.ancestors()): 
-                self.append('('+cl.ident+' *)')
+            lcp = lowest_common_parents(polymorphic_t(self.mergeinh[func.retnode.thing])) # XXX simplify
+            if lcp:
+                cl = lcp[0] # XXX simplify
+                if not (cl == func.parent or cl in func.parent.ancestors()): 
+                    self.append('('+cl.ident+' *)')
 
         self.visit(node.value, func)
         if cast: self.append('))')
