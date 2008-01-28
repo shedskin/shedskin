@@ -53,6 +53,8 @@ class class_:
         self.virtuals = {}              # 'virtually' called methods 
         self.virtualvars = {}           # 'virtual' variables
         self.template_vars = {}
+        self.properties = {}
+        self.staticmethods = []
 
         self.typenr = gx.nrcltypes
         gx.nrcltypes += 1
@@ -991,7 +993,7 @@ class moduleVisitor(ASTVisitor):
             if is_lambda: self.lambdas[func.ident] = func
             else: self.funcs[func.ident] = func
         else:
-            if not func.formals or func.formals[0] != 'self':
+            if not func.ident in parent.staticmethods and (not func.formals or func.formals[0] != 'self'):
                 error("formal arguments of method must start with 'self'", node)
             if not func.mv.module.builtin and func.ident in ['__new__', '__getattr__', '__setattr__', '__radd__', '__rsub__', '__rmul__', '__rdiv__', '__rtruediv__', '__rfloordiv__', '__rmod__', '__rdivmod__', '__rpow__', '__rlshift__', '__rrshift__', '__rand__', '__rxor__', '__ror__', '__iter__']:
                 error("'%s' is not supported" % func.ident, node, warning=True)
@@ -1863,8 +1865,24 @@ class moduleVisitor(ASTVisitor):
             gx.typeclass[defclass('class_').dcpa] = newclass
             defclass('class_').dcpa += 1
 
+        # --- staticmethod, property
+        skip = []
         for child in node.code.getChildNodes():
-            self.visit(child, self.classes[node.name])
+            if isinstance(child, Assign) and len(child.nodes) == 1:
+                lvalue, rvalue = child.nodes[0], child.expr
+                if isinstance(lvalue, AssName) and isinstance(rvalue, CallFunc) and isinstance(rvalue.node, Name) and rvalue.node.name in ['staticmethod', 'property']:
+                    if rvalue.node.name == 'property':
+                        newclass.properties[lvalue.name] = rvalue.args
+                        #print 'prop', newclass.properties
+                    else:
+                        newclass.staticmethods.append(lvalue.name)
+                        #print 'sm', newclass.staticmethods
+                    skip.append(child)
+
+        # --- children
+        for child in node.code.getChildNodes():
+            if child not in skip:
+                self.visit(child, self.classes[node.name])
 
         # --- __iadd__ etc.
         if not newclass.mv.module.builtin or newclass.ident in ['int_', 'float_', 'str_', 'tuple']: 
@@ -2579,8 +2597,9 @@ class generateVisitor(ASTVisitor):
             # --- class variable declarations
             if cl.parent.vars: # XXX merge with visitModule
                 for var in cl.parent.vars.values():
-                    self.start(typesetreprnew(var, cl.parent)+cl.ident+'::'+self.cpp_name(var.name)) 
-                    self.eol()
+                    if gx.merged_inh[var]:
+                        self.start(typesetreprnew(var, cl.parent)+cl.ident+'::'+self.cpp_name(var.name)) 
+                        self.eol()
                 print >>self.out
 
             return
@@ -2602,7 +2621,8 @@ class generateVisitor(ASTVisitor):
         # --- class variables 
         if cl.parent.vars:
             for var in cl.parent.vars.values():
-                self.output('static '+typesetreprnew(var, cl.parent)+self.cpp_name(var.name)+';') 
+                if gx.merged_inh[var]:
+                    self.output('static '+typesetreprnew(var, cl.parent)+self.cpp_name(var.name)+';') 
             print >>self.out
 
         # --- instance variables
@@ -3137,6 +3157,9 @@ class generateVisitor(ASTVisitor):
             formals2[i] = self.cpp_name(f)
 
         formaldecs = [o+f for (o,f) in zip(ftypes, formals2)]
+
+        if declare and isinstance(func.parent, class_) and func.ident in func.parent.staticmethods:
+            header = 'static '+header
 
         # --- output 
         self.append(header+'('+', '.join(formaldecs)+')')
@@ -4850,7 +4873,17 @@ def analyze_callfunc(node, check_exist=False): # XXX generate target list XXX un
 
         var = lookupvar(ident, inode(node).parent)
         module = lookupmodule(node.node.expr, imports)
-         
+        iscl = isinstance(objexpr, Name) and (objexpr.name in mv.classes or objexpr.name in mv.ext_classes)
+
+        if iscl and (not var or not var.parent):
+            if objexpr.name in mv.classes:
+                cl = mv.classes[objexpr.name]
+            else:
+                cl = mv.ext_classes[objexpr.name]
+            if ident in cl.staticmethods: 
+                direct_call = cl.funcs[ident]
+                return objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr
+
         if module and (not var or not var.parent): # XXX var.parent?
             namespace, objexpr = imports[module], None
 
@@ -4966,6 +4999,9 @@ def cartesian_product(node, worklist):
 
     elif direct_call:
         funcs = [(direct_call, 0, None)]
+    
+        if ident == 'hop':
+            print 'directcall', direct_call
 
         if ident == 'dict':
             clnames = [t[0].ident for t in gx.cnode[expr.args[0],node.dcpa,node.cpa].types() if isinstance(t[0], class_)]
@@ -5038,6 +5074,9 @@ def cpa(callnode, worklist):
         #print '(func, dcpa, objtype), c', c[0], c[1:]
         (func, dcpa, objtype), c = c[0], c[1:]
 
+        if isinstance(func.parent, class_) and func.ident in func.parent.staticmethods:
+            dcpa = 1
+
         if objtype: objtype = (objtype,)
         else: objtype = ()
 
@@ -5093,13 +5132,15 @@ def cpa(callnode, worklist):
             #    gx.method_refs.add(callnode.thing)
             #    continue
 
-            var = defaultvar(varname, func.parent, worklist) # XXX always make new var??
+            parent = func.parent
+
+            var = defaultvar(varname, parent, worklist) # XXX always make new var??
             inode(var).copy(dcpa,0,worklist)
 
             if not gx.cnode[var,dcpa,0] in gx.types:
                 gx.types[gx.cnode[var,dcpa,0]] = set()
 
-            gx.cnode[var,dcpa,0].mv = func.parent.module.mv # XXX move into defaultvar
+            gx.cnode[var,dcpa,0].mv = parent.module.mv # XXX move into defaultvar
 
             if callfunc.node.attrname == '__setattr__':
                 addconstraint(gx.cnode[callfunc.args[1],callnode.dcpa,callnode.cpa], gx.cnode[var,dcpa,0], worklist)
@@ -5202,7 +5243,6 @@ def connect_actual_formal(expr, func, parent_constr=False, check_error=False):
         if len(actuals)+len(keywords) > len(formals) and not func.varargs:
             #if func.ident != 'join':
             if not (func.mv.module.builtin and func.mv.module.ident == 'path' and func.ident == 'join'): # XXX
-                traceback.print_stack()
                 error("too many arguments in call to '%s'" % func.ident, expr)
         if len(actuals)+len(keywords) < len(formals)-len(func.defaults) and not expr.star_args:
             error("not enough arguments in call to '%s'" % func.ident, expr)
