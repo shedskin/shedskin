@@ -110,14 +110,30 @@ print glob.glob('ss.py')
 import fnmatch
 print int(fnmatch.fnmatch('ss.py', 'ss.[py]y'))
 
-#staticmethod
-class woef:
+#staticmethod, property
+class woef(object):
     def x(a):
         print a
+    def y(self, b):
+        print b
+
+    def getz(self):
+        return 15+self._x
+    def setz(self, x):
+        self._x = x
+
     x = staticmethod(x)
+    z = property(getz, setz)
 
 w = woef()
+w.y(4321)
 woef.x(1234)
+
+woef.k = 1
+woef.k
+
+w.z = 14
+print w.z
 
 
 ''', '''
