@@ -5000,9 +5000,6 @@ def cartesian_product(node, worklist):
     elif direct_call:
         funcs = [(direct_call, 0, None)]
     
-        if ident == 'hop':
-            print 'directcall', direct_call
-
         if ident == 'dict':
             clnames = [t[0].ident for t in gx.cnode[expr.args[0],node.dcpa,node.cpa].types() if isinstance(t[0], class_)]
             if 'dict' in clnames or 'defaultdict' in clnames:
