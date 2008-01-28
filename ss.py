@@ -1872,7 +1872,7 @@ class moduleVisitor(ASTVisitor):
                 lvalue, rvalue = child.nodes[0], child.expr
                 if isinstance(lvalue, AssName) and isinstance(rvalue, CallFunc) and isinstance(rvalue.node, Name) and rvalue.node.name in ['staticmethod', 'property']:
                     if rvalue.node.name == 'property':
-                        newclass.properties[lvalue.name] = rvalue.args
+                        newclass.properties[lvalue.name] = rvalue.args[0].name, rvalue.args[1].name
                         #print 'prop', newclass.properties
                     else:
                         newclass.staticmethods.append(lvalue.name)
@@ -4041,6 +4041,12 @@ class generateVisitor(ASTVisitor):
 
                 # expr.attr = expr
                 elif isinstance(lvalue, AssAttr):
+                    lcp = lowest_common_parents(polymorphic_t(self.mergeinh[lvalue.expr]))
+                    if len(lcp) == 1 and isinstance(lcp[0], class_) and lvalue.attrname in lcp[0].properties:
+                        self.visitm(lvalue.expr, '->'+lcp[0].properties[lvalue.attrname][1]+'(', rvalue, ')', func)
+                        self.eol()
+                        continue
+
                     self.assign_pair(lvalue, rvalue, func)
                     self.append(' = ')
 
@@ -4418,6 +4424,11 @@ class generateVisitor(ASTVisitor):
             ident = '__getitem__'
         else:
             ident = node.attrname
+
+        lcp = lowest_common_parents(polymorphic_t(self.mergeinh[node.expr]))
+        if len(lcp) == 1 and isinstance(lcp[0], class_) and node.attrname in lcp[0].properties:
+            self.append(lcp[0].properties[node.attrname][0]+'()')
+            return
 
         if ident == '__getitem__':
             lcp = lowest_common_parents(polymorphic_t(self.mergeinh[node.expr]))
@@ -5098,6 +5109,17 @@ def cpa(callnode, worklist):
             if blocked:
                 continue
 
+        # property
+        callfunc = callnode.thing
+        if isinstance(callfunc.node, Getattr) and callfunc.node.attrname in ['__setattr__', '__getattr__']:
+            if isinstance(func.parent, class_) and callfunc.args and callfunc.args[0].value in func.parent.properties:
+                arg = callfunc.args[0].value
+                if callfunc.node.attrname == '__setattr__':
+                    func = func.parent.funcs[func.parent.properties[arg][1]]
+                else:
+                    func = func.parent.funcs[func.parent.properties[arg][0]]
+                c = c[1:]
+
         if (func,)+objtype+c in callnode.nodecp:
             continue 
         callnode.nodecp.add((func,)+objtype+c)
@@ -5117,34 +5139,36 @@ def cpa(callnode, worklist):
             func.copy(dcpa, cpa, worklist, c)
 
         cpa = func.cp[dcpa][c]
-        callfunc = callnode.thing
 
         # --- actuals and formals 
         if isinstance(callfunc.node, Getattr) and callfunc.node.attrname in ['__setattr__', '__getattr__']: # variables
-            # builtin methods
-            varname = callfunc.args[0].value
-            #if varname in func.parent.funcs and callfunc.node.attrname == '__getattr__' and not callnode.parent_callfunc: # XXX
-            #    gx.types[callnode] = set([(func.parent.funcs[varname], objtype[0][1])])
-            #    addtoworklist(worklist, callnode)
-            #    gx.method_refs.add(callnode.thing)
-            #    continue
-
-            parent = func.parent
-
-            var = defaultvar(varname, parent, worklist) # XXX always make new var??
-            inode(var).copy(dcpa,0,worklist)
-
-            if not gx.cnode[var,dcpa,0] in gx.types:
-                gx.types[gx.cnode[var,dcpa,0]] = set()
-
-            gx.cnode[var,dcpa,0].mv = parent.module.mv # XXX move into defaultvar
-
-            if callfunc.node.attrname == '__setattr__':
-                addconstraint(gx.cnode[callfunc.args[1],callnode.dcpa,callnode.cpa], gx.cnode[var,dcpa,0], worklist)
+            if isinstance(func.parent, class_) and callfunc.args and callfunc.args[0].value in func.parent.properties:
+                actuals_formals(callfunc, func, callnode, dcpa, cpa, objtype+c, worklist)
             else:
-                addconstraint(gx.cnode[var,dcpa,0], callnode, worklist)
+                # builtin methods
+                varname = callfunc.args[0].value
+                #if varname in func.parent.funcs and callfunc.node.attrname == '__getattr__' and not callnode.parent_callfunc: # XXX
+                #    gx.types[callnode] = set([(func.parent.funcs[varname], objtype[0][1])])
+                #    addtoworklist(worklist, callnode)
+                #    gx.method_refs.add(callnode.thing)
+                #    continue
 
-            continue
+                parent = func.parent
+
+                var = defaultvar(varname, parent, worklist) # XXX always make new var??
+                inode(var).copy(dcpa,0,worklist)
+
+                if not gx.cnode[var,dcpa,0] in gx.types:
+                    gx.types[gx.cnode[var,dcpa,0]] = set()
+
+                gx.cnode[var,dcpa,0].mv = parent.module.mv # XXX move into defaultvar
+
+                if callfunc.node.attrname == '__setattr__':
+                    addconstraint(gx.cnode[callfunc.args[1],callnode.dcpa,callnode.cpa], gx.cnode[var,dcpa,0], worklist)
+                else:
+                    addconstraint(gx.cnode[var,dcpa,0], callnode, worklist)
+
+                continue
         else: 
             # non-builtin methods, functions
             actuals_formals(callfunc, func, callnode, dcpa, cpa, objtype+c, worklist)
@@ -5160,6 +5184,9 @@ def actuals_formals(expr, func, node, dcpa, cpa, types, worklist):
     actuals = [a for a in expr.args if not isinstance(a, Keyword)]
     formals = [f for f in func.formals if not f in [func.varargs, func.kwargs]]
     keywords = [a for a in expr.args if isinstance(a, Keyword)]
+
+    if ident in ['__getattr__', '__setattr__']:
+        actuals = actuals[1:]
 
     anon_func = False
     meth_func = False
