@@ -669,7 +669,7 @@ class moduleVisitor(ASTVisitor):
             child = child.getChildNodes()[0]
             count += 1
 
-        if isinstance(child, UnarySub): child = child.expr
+        if isinstance(child, (UnarySub, UnaryAdd)): child = child.expr
 
         if isinstance(child, CallFunc) and isinstance(child.node, Name):
             map = {'int': int, 'str': str, 'float': float}
@@ -771,7 +771,7 @@ class moduleVisitor(ASTVisitor):
             
     # --- determine single constructor child node type, used by the above
     def child_type_rec(self, node):
-        if isinstance(node, UnarySub):
+        if isinstance(node, (UnarySub, UnaryAdd)):
             node = node.expr
 
         if isinstance(node, (List, Tuple)):
@@ -1161,6 +1161,9 @@ class moduleVisitor(ASTVisitor):
     def visitUnarySub(self, node, func=None):
         self.fakefunc(node, node.expr, '__neg__', [], func)
 
+    def visitUnaryAdd(self, node, func=None):
+        self.fakefunc(node, node.expr, '__pos__', [], func)
+
     def visitCompare(self, node, func=None):
         newnode = cnode(node, parent=func)
         gx.types[newnode] = set([(defclass('int_'),0)]) # XXX new type?
@@ -1445,9 +1448,9 @@ class moduleVisitor(ASTVisitor):
 
            # print 'ff', ivar, evar
 
-            if len(node.list.args) == 3 and not isinstance(node.list.args[2], (Const, UnarySub, Name)): # XXX merge with ListComp
+            if len(node.list.args) == 3 and not isinstance(node.list.args[2], (Const, UnarySub, UnaryAdd, Name)): # XXX merge with ListComp
                 for arg in node.list.args:
-                    if not isinstance(arg, (Const, UnarySub, Name)): # XXX create func for better check
+                    if not isinstance(arg, (Const, UnarySub, UnaryAdd, Name)): # XXX create func for better check
                         tvar = self.tempvar(arg, func)
                         self.addconstraint((inode(arg), inode(tvar)), func)
 
@@ -1530,9 +1533,9 @@ class moduleVisitor(ASTVisitor):
                 evar = self.tempvar(qual.list, lcfunc) # expr var
                 self.addconstraint((inode(qual.list.args[0]), inode(evar)), lcfunc)
 
-                if len(qual.list.args) == 3 and not isinstance(qual.list.args[2], (Const, UnarySub, Name)): # XXX merge with ListComp
+                if len(qual.list.args) == 3 and not isinstance(qual.list.args[2], (Const, UnarySub, UnaryAdd, Name)): # XXX merge with ListComp
                     for arg in qual.list.args:
-                        if not isinstance(arg, (Const, UnarySub, Name)): # XXX create func for better check
+                        if not isinstance(arg, (Const, UnarySub, UnaryAdd, Name)): # XXX create func for better check
                             tvar = self.tempvar(arg, lcfunc)
                             self.addconstraint((inode(arg), inode(tvar)), lcfunc)
 
@@ -2133,7 +2136,7 @@ class generateVisitor(ASTVisitor):
         return ';\n'.join(decl2)
 
     def constant_constructor(self, node):
-        if isinstance(node, UnarySub):
+        if isinstance(node, (UnarySub, UnaryAdd)):
             node = node.expr
         if isinstance(node, Const) and type(node.value) in [int, float, str]:
             return False
@@ -2141,7 +2144,7 @@ class generateVisitor(ASTVisitor):
         return self.constant_constructor_rec(node)
        
     def constant_constructor_rec(self, node):
-        if isinstance(node, UnarySub):
+        if isinstance(node, (UnarySub, UnaryAdd)):
             node = node.expr
 
         # --- determine whether built-in constructor call builds a (compound) constant, e.g. [(1,),[1,(1,2)]]
@@ -2189,7 +2192,7 @@ class generateVisitor(ASTVisitor):
         return self.consts[node]
     
     def equal_constructor_rec(self, a, b):
-        if isinstance(a, UnarySub) and isinstance(b, UnarySub):
+        if isinstance(a, (UnarySub, UnaryAdd)) and isinstance(b, (UnarySub, UnaryAdd)):
             return self.equal_constructor_rec(a.expr, b.expr)
 
         if isinstance(a, Const) and isinstance(b, Const):
@@ -2998,7 +3001,7 @@ class generateVisitor(ASTVisitor):
 
         # --- for i in range(..) -> for( i=l, u=expr; i < u; i++ ) .. 
         if fastfor(node):
-            if len(node.list.args) == 3 and not isinstance(node.list.args[2], (Const, UnarySub)): # XXX unarysub
+            if len(node.list.args) == 3 and not isinstance(node.list.args[2], (Const, UnarySub, UnaryAdd)): # XXX unarysub
                 self.fastfor_switch(node, func)
                 self.indent()
                 self.fastfor(node, assname, '', func)
@@ -3012,7 +3015,7 @@ class generateVisitor(ASTVisitor):
                 self.output('}')
             else:
                 neg=''
-                if len(node.list.args) == 3 and isinstance(node.list.args[2], UnarySub): # XXX and const
+                if len(node.list.args) == 3 and isinstance(node.list.args[2], (UnarySub, UnaryAdd)): # XXX and const
                     neg = '_NEG'
 
                 self.fastfor(node, assname, neg, func)
@@ -3698,6 +3701,12 @@ class generateVisitor(ASTVisitor):
         else:
             self.visitCallFunc(inode(node.expr).fakefunc, func)
 
+    def visitUnaryAdd(self, node, func=None):
+        if unboxable(self.mergeinh[node.expr]):
+            self.visitm('+', node.expr, func)
+        else:
+            self.visitCallFunc(inode(node.expr).fakefunc, func)
+
     def refer(self, node, func, visit2=False):
         if isinstance(node, str):
             var = lookupvar(node, func)
@@ -3834,7 +3843,7 @@ class generateVisitor(ASTVisitor):
 
         if not target.mv.module.builtin:
             for default in target.defaults: # default constant arguments (are global!)
-                if not isinstance(default, (UnarySub, Const)) and not (isinstance(default, Name) and default.name == 'None'):
+                if not isinstance(default, (UnarySub, UnaryAdd, Const)) and not (isinstance(default, Name) and default.name == 'None'):
                     self.get_constant(default)
 
         for f in funcs:
@@ -4207,7 +4216,7 @@ class generateVisitor(ASTVisitor):
         if fastfor(qual):
             #self.output('result->resize(uh);') # XXX
 
-            if len(qual.list.args) == 3 and not isinstance(qual.list.args[2], (Const, UnarySub)): # XXX unarysub
+            if len(qual.list.args) == 3 and not isinstance(qual.list.args[2], (Const, UnarySub, UnaryAdd)): # XXX unarysub
                 self.fastfor_switch(qual, lcfunc)
                 self.indent()
                 self.fastfor(qual, iter, '', lcfunc)

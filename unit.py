@@ -135,6 +135,19 @@ woef.k
 w.z = 14
 print w.z
 
+#unaryadd
+class V:
+    def __init__(self, x):
+        self.x = x
+    def __pos__(self):
+        return V(self.x+1)
+    def __neg__(self):
+        return V(self.x-1)
+    def __repr__(self):
+        return 'V(%d)' % self.x
+
+v = V(1)
+print ++v, +-+-v
 
 ''', '''
 output(equal=True)
