@@ -310,6 +310,15 @@ def addtoworklist(worklist, node): # XXX to infer.py
         worklist.append(node)
         node.in_list = 1
 
+def in_out(a, b):
+    a.out.add(b)
+    b.in_.add(a)
+
+def addconstraint(a, b, worklist=None):
+    getgx().constraints.add((a,b))
+    in_out(a, b)
+    addtoworklist(worklist, a)
+    
 # --- shortcuts
 
 def inode(node):
@@ -381,3 +390,80 @@ def defvar(name, parent, local, worklist=None, template_var=False):
     getgx().types[newnode] = set()
 
     return var
+
+def defclass(name):
+    if name in getmv().classes: return getmv().classes[name]
+    else: return getmv().ext_classes[name]
+
+def deffunc(name):
+    if name in getmv().funcs: return getmv().funcs[name]
+    else: return getmv().ext_funcs[name]
+
+class fakeGetattr(Getattr): pass # XXX ugly
+class fakeGetattr2(Getattr): pass
+class fakeGetattr3(Getattr): pass
+
+def lookupmodule(node, imports):
+    orig_node = node
+    module = ''
+    while isinstance(node, Getattr):
+        module = '.' + node.attrname + module
+        node = node.expr
+    if isinstance(node, Name) and node.name + module in imports:
+        return node.name + module
+    return None
+
+# --- recursively determine (lvalue, rvalue) pairs in assignment expressions
+
+def assign_rec(left, right):
+    # determine lvalues and rvalues
+    if isinstance(left, (AssTuple, AssList)): 
+        lvalues = left.getChildNodes()
+    else: 
+        lvalues = [left]
+
+    if len(lvalues) > 1:
+        if isinstance(right, (Tuple, List)): 
+            rvalues = right.getChildNodes()
+        else:
+            return [(left, right)]
+    else:
+        rvalues = [right]
+
+    # pair corresponding arguments
+    pairs = []
+    for (lvalue,rvalue) in zip(lvalues, rvalues):
+         if isinstance(lvalue, (AssTuple, AssList)): 
+             pairs += assign_rec(lvalue, rvalue)
+         else:
+             pairs.append((lvalue, rvalue))
+
+    return pairs
+
+def get_ident(node):
+    if not isinstance(node, Const) or not isinstance(node.value, int):
+        return '__getitem__'
+
+    if node.value == 0:  return '__getfirst__'
+    elif node.value == 1: return '__getsecond__'
+    return '__getitem__'
+
+def augmsg(node, msg):
+    if hasattr(node, 'augment'): return '__i'+msg+'__'
+    return '__'+msg+'__'
+
+errormsgs = set()
+
+def error(msg, node=None, warning=False):
+    if msg in errormsgs: return
+    errormsgs.add(msg)
+        
+    if warning: type = '*WARNING*'
+    else: type = '*ERROR*'
+    if node: lineno = ':'+str(node.lineno)
+    else: lineno = ''
+    msg = type+' '+getmv().module.ident+lineno+': '+msg
+    print msg
+
+    if not warning:
+        sys.exit()
