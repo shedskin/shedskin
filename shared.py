@@ -2,7 +2,7 @@ from compiler import *
 from compiler.ast import *
 from compiler.visitor import *
 
-import os
+import os, sys
 
 # --- global variables gx, mv
 
@@ -467,3 +467,221 @@ def error(msg, node=None, warning=False):
 
     if not warning:
         sys.exit()
+
+# --- merge constraint network along combination of given dimensions (dcpa, cpa, inheritance)
+# e.g. for annotation we merge everything; for code generation, we might want to create specialized code
+def merged(nodes, dcpa=False, inheritance=False): 
+    merge = {}
+
+    #for n in nodes:
+    #    if isinstance(n.thing, Name) and n.thing.name == '__0':
+    #        print 'jow', n, n.parent, n.thing in getgx().inherited
+
+    if inheritance: # XXX do we really need this crap
+        mergeinh = merged([n for n in nodes if n.thing in getgx().inherited])
+        nodes = [n for n in nodes if not n.thing in getgx().inherited] 
+        mergenoinh = merged(nodes)
+
+    for node in nodes:
+        # --- merge node types
+        if dcpa: sort = (node.thing, node.dcpa)
+        else: sort = node.thing
+        merge.setdefault(sort, set()).update(getgx().types[node]) 
+
+        # --- merge inheritance nodes
+        if inheritance:
+            inh = getgx().inheritance_relations.get(node.thing, [])
+
+            # merge function variables with their inherited versions (we don't customize!)
+            if isinstance(node.thing, variable) and isinstance(node.thing.parent, function):
+                var = node.thing
+
+                for inhfunc in getgx().inheritance_relations.get(var.parent, []):
+                    if var.name in inhfunc.vars:
+                        if inhfunc.vars[var.name] in mergenoinh: # XXX
+                            merge.setdefault(sort, set()).update(mergenoinh[inhfunc.vars[var.name]])
+
+            # node is not a function variable
+            else:
+                for n in inh:
+                    if n in mergeinh: # XXX
+                        merge.setdefault(sort, set()).update(mergeinh[n]) 
+
+    return merge
+
+# --- analyze call expression: namespace, method call, direct call/constructor..
+
+def analyze_callfunc(node, check_exist=False): # XXX generate target list XXX uniform variable system!
+    #print 'analyze callnode', node, inode(node).parent
+    namespace, objexpr, method_call, mod_var, parent_constr = inode(node).mv.module, None, False, False, False # XXX mod_var
+    constructor, direct_call = None, None
+    imports = inode(node).mv.imports
+
+    # method call
+    if isinstance(node.node, Getattr): 
+        objexpr, ident = node.node.expr, node.node.attrname
+
+        if isinstance(objexpr, Name) and inode(node).parent:
+            cl = inode(node).parent.parent
+            if isinstance(cl, class_) and objexpr.name in [x.ident for x in cl.bases]:
+                parent_constr = True
+                ident = ident+objexpr.name+'__'
+                return objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr
+
+        var = lookupvar(ident, inode(node).parent)
+        module = lookupmodule(node.node.expr, imports)
+        iscl = isinstance(objexpr, Name) and (objexpr.name in getmv().classes or objexpr.name in getmv().ext_classes)
+
+        if iscl and (not var or not var.parent):
+            if objexpr.name in getmv().classes:
+                cl = getmv().classes[objexpr.name]
+            else:
+                cl = getmv().ext_classes[objexpr.name]
+            if ident in cl.staticmethods: 
+                direct_call = cl.funcs[ident]
+                return objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr
+
+        if module and (not var or not var.parent): # XXX var.parent?
+            namespace, objexpr = imports[module], None
+
+        elif isinstance(objexpr, Name) and (objexpr.name == 'dict') and (not var or not var.parent):
+            namespace, objexpr = defclass('dict'), None
+            if ident in imports['builtin'].funcs:
+                direct_call = imports['builtin'].funcs[ident] # XXX beh
+                return objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr
+        else:
+            method_call = True
+
+    elif isinstance(node.node, Name):
+        ident = node.node.name
+    else:
+        ident = 'meuk' # XXX ?
+
+    # direct [constructor] call
+    if isinstance(node.node, Name) or namespace != inode(node).mv.module: 
+        if ident in ['max','min','sum'] and len(node.args) == 1:
+            ident = '__'+ident
+        elif ident == 'zip' and len(node.args) <= 3:
+            if not node.args:
+                error("please provide 'zip' with arguments", node)
+            ident = '__zip'+str(len(node.args))
+
+        if ident in ['list','tuple','frozenset','set','dict'] and not node.args:
+            constructor = namespace.mv.ext_classes[ident]
+        elif ident in namespace.mv.classes:
+            constructor = namespace.mv.classes[ident]
+        elif ident not in ['list','tuple','dict'] and ident in namespace.mv.ext_classes: # XXX cleanup
+            constructor = namespace.mv.ext_classes[ident]
+        elif ident in namespace.mv.funcs:
+            direct_call = namespace.mv.funcs[ident]
+        elif ident in namespace.mv.ext_funcs:
+            direct_call = namespace.mv.ext_funcs[ident]
+
+        else:
+            if isinstance(node.node, Name):
+                var = lookupvar(ident, inode(node).parent)
+                if var:
+                    return objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr
+
+            if namespace != inode(node).mv.module:
+                return objexpr, ident, None, False, None, True, False
+            elif check_exist: 
+                traceback.print_stack()
+                error("unbound identifier '"+ident+"'", node)
+
+    return objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr
+
+# --- return list of potential call targets
+def callfunc_targets(node, merge):
+    objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr = analyze_callfunc(node)
+    funcs = []
+
+    if node.node in merge and [t for t in merge[node.node] if isinstance(t[0], function)]: # anonymous function call
+        funcs = [t[0] for t in merge[node.node]]
+
+    elif constructor:
+        if ident == 'defaultdict' and len(node.args) == 2:
+            funcs = [constructor.funcs['__initdict__']] # XXX __initi__
+        elif '__init__' in constructor.funcs: 
+            funcs = [constructor.funcs['__init__']]
+
+    elif parent_constr:
+        if ident != '__init__':
+            cl = inode(node).parent.parent
+            funcs = [cl.funcs[ident]]
+
+    elif direct_call:
+        funcs = [direct_call]
+
+    elif method_call:
+        classes = set([t[0] for t in merge[objexpr]])
+        funcs = [cl.funcs[ident] for cl in classes if ident in cl.funcs]
+
+    return funcs
+
+def connect_actual_formal(expr, func, parent_constr=False, check_error=False):
+    pairs = []
+
+    actuals = [a for a in expr.args if not isinstance(a, Keyword)]
+    if isinstance(func.parent, class_): 
+        formals = [f for f in func.formals if not f in ['self', func.varargs, func.kwargs]]
+    else:
+        formals = [f for f in func.formals if not f in [func.varargs, func.kwargs]]
+    keywords = [a for a in expr.args if isinstance(a, Keyword)]
+
+    if parent_constr: actuals = actuals[1:] 
+
+    if check_error and func.ident not in ['min', 'max']:
+        if len(actuals)+len(keywords) > len(formals) and not func.varargs:
+            #if func.ident != 'join':
+            if not (func.mv.module.builtin and func.mv.module.ident == 'path' and func.ident == 'join'): # XXX
+                error("too many arguments in call to '%s'" % func.ident, expr)
+        if len(actuals)+len(keywords) < len(formals)-len(func.defaults) and not expr.star_args:
+            error("not enough arguments in call to '%s'" % func.ident, expr)
+
+        missing = formals[len(actuals):-len(func.defaults)] 
+        if [x for x in missing if not x in [a.name for a in keywords]]:
+            error("no '%s' argument in call to '%s'" % (missing[0], func.ident))
+
+    kwdict = {}
+    for kw in keywords: 
+        if kw.name not in formals:
+            error("no argument '%s' in call to '%s'" % (kw.name, func.ident), expr)
+        kwdict[kw.name] = kw.expr
+
+    uglyoffset = len(func.defaults)-(len(formals)-len(actuals))
+
+    # --- connect regular, default and keyword arguments
+    if not func.mv.module.builtin or func.mv.module.ident in ['random', 'itertools']: # XXX investigate
+        for (i, formal) in enumerate(formals[len(actuals):]):
+            if formal in kwdict:
+                actuals.append(kwdict[formal])
+                continue
+
+            if not func.defaults: # XXX
+                continue
+            default = func.defaults[i+uglyoffset]
+            actuals.append(default)
+
+    for (actual, formal) in zip(actuals, formals):
+        pairs.append((actual, func.vars[formal]))
+
+    # --- actual star argument: unpack to extra formals
+    if expr.star_args: 
+        pairs.append((expr.star_args, tuple([func.vars[f] for f in formals[len(actuals):]])))
+
+    # --- formal star argument: pack actual arguments
+    if func.varargs:
+        pairs.append((tuple(actuals[len(formals):]), func.vars[func.varargs]))
+
+    return pairs
+
+def parent_func(thing):
+    parent = inode(thing).parent
+    while parent:
+        if not isinstance(parent, function) or not parent.listcomp:
+            return parent
+        parent = parent.parent
+
+    return None
+
