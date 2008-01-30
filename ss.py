@@ -7,6 +7,8 @@ from compiler import *
 from compiler.ast import *
 from compiler.visitor import *
 
+from shared import *
+
 import sys, string, copy, getopt, os.path, textwrap, traceback
 
 # python2.3 compatibility
@@ -34,7 +36,7 @@ class static_class: # XXX merge with regular class
         self.ident = cl.ident
         self.bases = []
         self.parent = None
-        self.mv = mv
+        self.mv = getmv()
         self.module = cl.module
 
     def __repr__(self):
@@ -47,7 +49,7 @@ class class_:
         self.bases = []
         self.children = []
         self.dcpa = 1
-        self.mv = mv
+        self.mv = getmv()
         self.vars = {}
         self.funcs = {}
         self.virtuals = {}              # 'virtually' called methods 
@@ -56,9 +58,9 @@ class class_:
         self.properties = {}
         self.staticmethods = []
 
-        self.typenr = gx.nrcltypes
-        gx.nrcltypes += 1
-        gx.typeclass[self.typenr] = self
+        self.typenr = getgx().nrcltypes
+        getgx().nrcltypes += 1
+        getgx().typeclass[self.typenr] = self
 
         # data adaptive analysis
         self.nrcart = {}                # nr: cart
@@ -70,19 +72,19 @@ class class_:
 
     def copy(self, dcpa):
         for var in self.vars.values(): # XXX 
-            if not inode(var) in gx.types: continue # XXX research later
+            if not inode(var) in getgx().types: continue # XXX research later
 
             inode(var).copy(dcpa, 0)
-            gx.types[gx.cnode[var, dcpa, 0]] = inode(var).types().copy()
+            getgx().types[getgx().cnode[var, dcpa, 0]] = inode(var).types().copy()
 
             for n in inode(var).in_: # XXX
                 if isinstance(n.thing, Const):
-                    addconstraint(n, gx.cnode[var,dcpa,0])
+                    addconstraint(n, getgx().cnode[var,dcpa,0])
 
         for func in self.funcs.values():
             if self.mv.module.ident == 'builtin' and self.ident != '__iter' and func.ident == '__iter__': # XXX hack for __iter__:__iter() 
                 itercl = defclass('__iter')
-                gx.alloc_info[func.ident, ((self,dcpa),), func.returnexpr[0]] = (itercl, itercl.dcpa)
+                getgx().alloc_info[func.ident, ((self,dcpa),), func.returnexpr[0]] = (itercl, itercl.dcpa)
 
                 #print 'itercopy', itercl.dcpa
 
@@ -140,8 +142,6 @@ def relative_path(a, b):
 
 class module:
     def __init__(self, name, ast=None, parent=None, node=None):
-        global mv
-
         for c in name: 
             if not c in string.letters+string.digits+'_.':
                 print ("*ERROR*:%s.py: module names should consist of letters, digits and underscores" % name)
@@ -156,13 +156,13 @@ class module:
             self.mod_path = []
         else: 
             # --- locate module
-            importfromlib = (parent and parent.dir == gx.libdir)
+            importfromlib = (parent and parent.dir == getgx().libdir)
 
             relname = name.replace('.', '/')
             relpath = name.split('.')
             if parent: path = connect_paths(parent.dir, relname)
             else: path = name
-            libpath = connect_paths(gx.libdir, relname)
+            libpath = connect_paths(getgx().libdir, relname)
 
             #print 'huh', name, parent, self.ident, relname, relpath
 
@@ -196,21 +196,23 @@ class module:
                 error('cannot locate module: '+name, node)
 
             if self.filename.startswith(libpath): self.builtin = True
-            gx.modules['.'.join(self.mod_path+[self.ident])] = self
+            getgx().modules['.'.join(self.mod_path+[self.ident])] = self
               
             #print 'done', self.filename, self.dir, self.mod_path, self.ident
 
             self.ast = parsefile(self.filename) 
-            gx.dirs.setdefault('', []).append(self)
+            getgx().dirs.setdefault('', []).append(self)
 
-        old_mv = mv 
+        old_mv = getmv()
         self.mv = mv = moduleVisitor(self)
+        setmv(mv)
 
         mv.visit = mv.dispatch
         mv.visitor = mv
         mv.dispatch(self.ast)
 
         mv = old_mv
+        setmv(mv)
 
         self.funcs = self.mv.funcs
         self.classes = self.mv.classes
@@ -238,7 +240,7 @@ class function:
         self.varargs = None
         self.kwargs = None
         self.globals = []
-        self.mv = mv
+        self.mv = getmv()
         self.lnodes = []
         self.nodes = set()
         self.defaults = []
@@ -251,8 +253,8 @@ class function:
         self.ftypes = []                # function is called via a virtual call: arguments may have to be cast
         self.inherited = None
 
-        if node and mv.module.ident != 'builtin':
-            gx.allfuncs.add(self)
+        if node and getmv().module.ident != 'builtin':
+            getgx().allfuncs.add(self)
 
         self.parent_constr = None
         self.retvars = []
@@ -282,7 +284,7 @@ class function:
         # --- copy tuple seed for varargs
         if self.varargs:
             var = self.vars[self.varargs]
-            gx.types[gx.cnode[var,dcpa,cpa]] = gx.types[inode(var)].copy()
+            getgx().types[getgx().cnode[var,dcpa,cpa]] = getgx().types[inode(var)].copy()
 
         # --- iterative flow analysis: seed allocation sites in new template
         ifa_seed_template(self, cart, dcpa, cpa, worklist)
@@ -344,9 +346,9 @@ def defvar(name, parent, local, worklist=None, template_var=False):
             parent = parent.parent
             
         # not found: global
-        if name in mv.globals:
-            return mv.globals[name]
-        dest = mv.globals
+        if name in getmv().globals:
+            return getmv().globals[name]
+        dest = getmv().globals
 
     if not local:
         return None
@@ -355,14 +357,14 @@ def defvar(name, parent, local, worklist=None, template_var=False):
     if template_var:
         var.template_variable = True
     else:
-        gx.allvars.add(var)
+        getgx().allvars.add(var)
 
     dest[name] = var
     newnode = cnode(var, parent=parent) 
     if parent:
         newnode.mv = parent.mv
     addtoworklist(worklist, newnode)
-    gx.types[newnode] = set()
+    getgx().types[newnode] = set()
 
     return var
 
@@ -376,7 +378,7 @@ class cnode:
         self.fakefunc = None
         self.parent = parent
         self.defnodes = False # if callnode, notification nodes were made for default arguments
-        self.mv = mv
+        self.mv = getmv()
         self.constructor = False # allocation site 
         self.copymetoo = False
         self.filters = [] # run-time type filters such as isinstance()
@@ -384,11 +386,11 @@ class cnode:
         self.fakert = False
      
         if isinstance(self.thing, CallFunc) and isinstance(self.thing.node, Name) and self.thing.node.name == 'set': 
-            if (self.thing, self.dcpa, self.cpa) in gx.cnode:
+            if (self.thing, self.dcpa, self.cpa) in getgx().cnode:
                 print 'killing something!', self
                 traceback.print_stack() 
 
-        gx.cnode[self.thing, self.dcpa, self.cpa] = self
+        getgx().cnode[self.thing, self.dcpa, self.cpa] = self
 
         # --- in, outgoing constraints
 
@@ -417,8 +419,8 @@ class cnode:
     def copy(self, dcpa, cpa, worklist=None):
         #if not self.mv.module.builtin: print 'copy', self
 
-        if (self.thing, dcpa, cpa) in gx.cnode:
-            return gx.cnode[self.thing, dcpa, cpa]
+        if (self.thing, dcpa, cpa) in getgx().cnode:
+            return getgx().cnode[self.thing, dcpa, cpa]
 
         newnode = cnode(self.thing, dcpa, cpa)
 
@@ -431,19 +433,19 @@ class cnode:
         addtoworklist(worklist, newnode)
 
         if self.constructor or self.copymetoo or isinstance(self.thing, (Not, Compare)): # XXX XXX
-            gx.types[newnode] = gx.types[self].copy()
+            getgx().types[newnode] = getgx().types[self].copy()
         else:
-            gx.types[newnode] = set()
+            getgx().types[newnode] = set()
         return newnode
 
     def types(self):
-        return gx.types[self]
+        return getgx().types[self]
 
     def __repr__(self):
         return repr((self.thing, self.dcpa, self.cpa))
 
 def inode(node):
-    return gx.cnode[node,0,0]
+    return getgx().cnode[node,0,0]
 
 class fakeGetattr(Getattr): pass # XXX ugly
 class fakeGetattr2(Getattr): pass
@@ -466,7 +468,7 @@ def template_match(split, parent, orig_parent=None):
 
             for (dcpa, cpa), types in split.items():
                 if not types: continue
-                if not (var,dcpa,0) in gx.cnode: continue # XXX ahm..
+                if not (var,dcpa,0) in getgx().cnode: continue # XXX ahm..
                 if isinstance(parent, class_) and dcpa in parent.unused: # XXX research nicer fix
                     continue
 
@@ -475,9 +477,9 @@ def template_match(split, parent, orig_parent=None):
                     match = False
 
                 if isinstance(parent, function):
-                    node = gx.cnode[var, dcpa, cpa]
+                    node = getgx().cnode[var, dcpa, cpa]
                 else:
-                    node = gx.cnode[var, dcpa, 0] # cpa=0 for class variables 
+                    node = getgx().cnode[var, dcpa, 0] # cpa=0 for class variables 
 
                 if set([t[0] for t in types]) != set([t[0] for t in node.types()]): 
                     match = False
@@ -532,9 +534,6 @@ def slicenums(nodes):
 
 class globalInfo: # XXX add comments
     def __init__(self):
-        global gx
-        gx = self
-
         self.constraints = set()
         self.allvars = set()
         self.allfuncs = set()
@@ -587,9 +586,9 @@ def get_ident(node):
     return '__getitem__'
 
 def check_redef(node, s=None, onlybuiltins=False): # XXX to modvisitor, rewrite
-    if not mv.module.builtin:
-        existing = [mv.ext_classes, mv.ext_funcs]
-        if not onlybuiltins: existing += [mv.classes, mv.funcs]
+    if not getmv().module.builtin:
+        existing = [getmv().ext_classes, getmv().ext_funcs]
+        if not onlybuiltins: existing += [getmv().classes, getmv().funcs]
         for whatsit in existing:
             if s != None: name = s
             else: name = node.name
@@ -602,9 +601,9 @@ def augmsg(node, msg):
 
 # --- maintain inheritance relations between copied AST nodes
 def inherit_rec(original, copy):
-    gx.inheritance_relations.setdefault(original, []).append(copy)
-    gx.inherited.add(copy)
-    gx.parent_nodes[copy] = original
+    getgx().inheritance_relations.setdefault(original, []).append(copy)
+    getgx().inherited.add(copy)
+    getgx().parent_nodes[copy] = original
 
     for (a,b) in zip(original.getChildNodes(), copy.getChildNodes()): 
         inherit_rec(a,b)
@@ -641,15 +640,15 @@ class moduleVisitor(ASTVisitor):
         self.importnodes = []
 
     def dispatch(self, node, *args):
-        if (node, 0, 0) not in gx.cnode:
+        if (node, 0, 0) not in getgx().cnode:
             ASTVisitor.dispatch(self, node, *args)
 
     def fakefunc(self, node, objexpr, attrname, args, func):
-        if (node, 0, 0) in gx.cnode: # XXX 
-            newnode = gx.cnode[node,0,0]
+        if (node, 0, 0) in getgx().cnode: # XXX 
+            newnode = getgx().cnode[node,0,0]
         else:
             newnode = cnode(node, parent=func)
-            gx.types[newnode] = set()
+            getgx().types[newnode] = set()
 
         fakefunc = CallFunc(Getattr(objexpr, attrname), args)
 
@@ -677,7 +676,7 @@ class moduleVisitor(ASTVisitor):
                 count, child = count+1, int
             elif child.node.name in map:
                 child = map[child.node.name]
-            elif child.node.name in [cl.ident for cl in gx.allclasses] or child.node.name in mv.classes: # XXX mv.classes
+            elif child.node.name in [cl.ident for cl in getgx().allclasses] or child.node.name in getmv().classes: # XXX getmv().classes
                 child = child.node.name 
             else:
                 if count == 1: return None
@@ -692,25 +691,25 @@ class moduleVisitor(ASTVisitor):
             if count == 1: return None
             child = None
 
-        gx.list_types.setdefault((count, child), len(gx.list_types)+2)
-        #print 'listtype', node, gx.list_types[count, child]
-        return gx.list_types[count, child]
+        getgx().list_types.setdefault((count, child), len(getgx().list_types)+2)
+        #print 'listtype', node, getgx().list_types[count, child]
+        return getgx().list_types[count, child]
 
     def instance(self, node, cl, func=None):
-        if (node, 0, 0) in gx.cnode: # XXX to create_node() func
-            newnode = gx.cnode[node,0,0]
+        if (node, 0, 0) in getgx().cnode: # XXX to create_node() func
+            newnode = getgx().cnode[node,0,0]
         else:
             newnode = cnode(node, parent=func)
 
         newnode.constructor = True 
 
         if cl.ident in ['int_','float_','str_','none', 'class_','bool']:
-            gx.types[newnode] = set([(cl, cl.dcpa-1)])
+            getgx().types[newnode] = set([(cl, cl.dcpa-1)])
         else:
             if cl.ident == 'list' and self.list_type(node):
-                gx.types[newnode] = set([(cl, self.list_type(node))])
+                getgx().types[newnode] = set([(cl, self.list_type(node))])
             else:
-                gx.types[newnode] = set([(cl, cl.dcpa)])
+                getgx().types[newnode] = set([(cl, cl.dcpa)])
 
     def constructor(self, node, classname, func): 
         cl = defclass(classname)
@@ -719,7 +718,7 @@ class moduleVisitor(ASTVisitor):
         var = defaultvar('unit', cl)
 
         if classname in ['list','tuple'] and not node.nodes:
-            gx.empty_constructors.add(node) # ifa disables those that flow to instance variable assignments
+            getgx().empty_constructors.add(node) # ifa disables those that flow to instance variable assignments
 
         # --- internally flow binary tuples
         if cl.ident == 'tuple2':
@@ -795,14 +794,14 @@ class moduleVisitor(ASTVisitor):
     def add_dynamic_constraint(self, parent, child, varname, func): 
         #print 'dynamic constr', child, parent
 
-        gx.assign_target[child] = parent
+        getgx().assign_target[child] = parent
         cu = Const(varname)
         self.visit(cu, func)
         fakefunc = CallFunc(fakeGetattr2(parent, '__setattr__'), [cu, child])
         self.visit(fakefunc, func)
           
         fakechildnode = cnode((child, varname), parent=func) # create separate 'fake' cnode per child, so we can have multiple 'callfuncs'
-        gx.types[fakechildnode] = set()
+        getgx().types[fakechildnode] = set()
 
         self.addconstraint((inode(parent), fakechildnode), func) # add constraint from parent to fake child node. if parent changes, all fake child nodes change, and the callfunc for each child node is triggered
         fakechildnode.callfuncs.append(fakefunc)
@@ -810,7 +809,7 @@ class moduleVisitor(ASTVisitor):
     # --- add regular constraint to function
     def addconstraint(self, constraint, func):
         in_out(constraint[0], constraint[1])
-        gx.constraints.add(constraint)
+        getgx().constraints.add(constraint)
         while func and func.listcomp: func = func.parent # XXX
         if func:
             func.constraints.add(constraint)
@@ -824,29 +823,27 @@ class moduleVisitor(ASTVisitor):
             if isinstance(b, Discard) and isinstance(b.expr, Const) and type(b.expr.value) == str:
                 comments.append(b.expr.value)
             elif comments:
-                gx.comments[b] = comments
+                getgx().comments[b] = comments
                 comments = []
        
             self.visit(b, func)
             
     def visitModule(self, node):
-        global mv
-
         # --- bootstrap built-in classes
         if self.module.ident == 'builtin':
-            for dummy in gx.builtins:
+            for dummy in getgx().builtins:
                 self.visit(Class(dummy, [], None, Pass()))
 
         if self.module.ident != 'builtin':
             if sys.version.startswith('2.5') or sys.version.startswith('2.6'): n = From('builtin', [('*', None)], None)
             else: n = From('builtin', [('*', None)])
-            mv.importnodes.append(n)
+            getmv().importnodes.append(n)
             self.visit(n)
 
         # --- __name__
         if self.module.ident != 'builtin':
             namevar = defaultvar('__name__', None)
-            gx.types[inode(namevar)] = set([(defclass('str_'),0)]) 
+            getgx().types[inode(namevar)] = set([(defclass('str_'),0)]) 
 
         # --- forward class references
         for child in node.getChildNodes():
@@ -857,21 +854,21 @@ class moduleVisitor(ASTVisitor):
                         check_redef(n) 
                         newclass = class_(n)
                         self.classes[n.name] = newclass
-                        mv.classes[n.name] = newclass
+                        getmv().classes[n.name] = newclass
                         newclass.module = self.module
                         newclass.parent = static_class(newclass)
          
         # --- visit children
         for child in node.getChildNodes():
             if isinstance(child, Stmt):
-                mv.importnodes.extend([n for n in child.nodes if isinstance(n, (Import, From))])
+                getmv().importnodes.extend([n for n in child.nodes if isinstance(n, (Import, From))])
             self.visit(child, None)
 
         # --- register classes
-        for cl in mv.classes.values():
-            gx.allclasses.add(cl)
+        for cl in getmv().classes.values():
+            getgx().allclasses.add(cl)
             # add '_NR' to duplicate class names
-            cl_list = gx.nameclasses.setdefault(cl.ident, [])
+            cl_list = getgx().nameclasses.setdefault(cl.ident, [])
             cl.cpp_name = cl.ident
             cl_list.append(cl)
             if len(cl_list) > 1:
@@ -908,19 +905,21 @@ class moduleVisitor(ASTVisitor):
                     func_copy = copy.deepcopy(func.node)
                     inherit_rec(func.node, func_copy)
 
-                    #print 'inherit func in', func.ident, mv.module, func.mv.module
-                    tempmv, mv = mv, func.mv
-                    #print 'tempmv', mv.module
+                    #print 'inherit func in', func.ident, getmv().module, func.mv.module
+                    tempmv, mv = getmv(), func.mv
+                    setmv(mv)
+                    #print 'tempmv', getmv().module
                     self.visitFunction(func_copy, cl, inherited_from=ancestor)
                     mv = tempmv
+                    setmv(mv)
 
                     # maintain relation with original
-                    gx.inheritance_relations.setdefault(func, []).append(cl.funcs[ident])
+                    getgx().inheritance_relations.setdefault(func, []).append(cl.funcs[ident])
                     cl.funcs[ident].inherited = func.node
                     func_copy.name = ident
 
     def visitImport(self, node, func=None):
-        if not node in mv.importnodes: # XXX use (func, node) as parent..
+        if not node in getmv().importnodes: # XXX use (func, node) as parent..
             error("please place all imports (no 'try:' etc) at the top of the file", node)
 
         for (name, pseudonym) in node.names:
@@ -929,10 +928,10 @@ class moduleVisitor(ASTVisitor):
             var.imported = True
 
             mod = self.analyzeModule(name, pseudonym, node)
-            gx.types[inode(var)] = set([(mod,0)]) 
+            getgx().types[inode(var)] = set([(mod,0)]) 
 
     def visitFrom(self, node, parent=None):
-        if not node in mv.importnodes: # XXX use (func, node) as parent..
+        if not node in getmv().importnodes: # XXX use (func, node) as parent..
             error("please place all imports (no 'try:' etc) at the top of the file", node)
 
         mod = self.analyzeModule(node.modname, node.modname, node)
@@ -967,11 +966,11 @@ class moduleVisitor(ASTVisitor):
                 error("no identifier '%s' in module '%s'" % (name, node.modname), node)
 
     def analyzeModule(self, name, pseud, node):
-        #print 'analyze', name, gx.modules.keys()
-        if name in gx.modules: # XXX to module(..)
-            mod = gx.modules[name]
+        #print 'analyze', name, getgx().modules.keys()
+        if name in getgx().modules: # XXX to module(..)
+            mod = getgx().modules[name]
         else:
-            mod = module(name, None, mv.module, node)
+            mod = module(name, None, getmv().module, node)
 
         self.imports[pseud] = mod
         return mod
@@ -1011,7 +1010,7 @@ class moduleVisitor(ASTVisitor):
                 # star argument 
                 tnode = Tuple([])
                 self.constructor(tnode, 'tuple', func)
-                gx.empty_constructors.remove(tnode) # XXX research bad interaction
+                getgx().empty_constructors.remove(tnode) # XXX research bad interaction
                 self.addconstraint((inode(tnode), inode(var)), func)
 
             elif formal == func.kwargs:
@@ -1037,7 +1036,7 @@ class moduleVisitor(ASTVisitor):
 
         # --- flow return expressions together into single node
         func.retnode = retnode = cnode(node, parent=func)
-        gx.types[retnode] = set()
+        getgx().types[retnode] = set()
 
         for expr in func.returnexpr:
             self.addconstraint((inode(expr), inode(node)), func)
@@ -1059,11 +1058,11 @@ class moduleVisitor(ASTVisitor):
 
         newnode = cnode(node, parent=func)
         newnode.copymetoo = True
-        gx.types[newnode] = set([(self.lambdas[name],0)])
+        getgx().types[newnode] = set([(self.lambdas[name],0)])
 
     def visitAnd(self, node, func=None): # XXX merge
         newnode = cnode(node, parent=func)
-        gx.types[newnode] = set()
+        getgx().types[newnode] = set()
         for child in node.getChildNodes():
             self.visit(child, func)
             self.addconstraint((inode(child), newnode), func)
@@ -1072,7 +1071,7 @@ class moduleVisitor(ASTVisitor):
 
     def visitOr(self, node, func=None):
         newnode = cnode(node, parent=func)
-        gx.types[newnode] = set() 
+        getgx().types[newnode] = set() 
         for child in node.getChildNodes():
             self.visit(child, func)
             self.addconstraint((inode(child), newnode), func)
@@ -1089,7 +1088,7 @@ class moduleVisitor(ASTVisitor):
 
     def visitIfExp(self, node, func=None):
         newnode = cnode(node, parent=func)
-        gx.types[newnode] = set() 
+        getgx().types[newnode] = set() 
 
         for child in node.getChildNodes():
             self.visit(child, func)
@@ -1110,7 +1109,7 @@ class moduleVisitor(ASTVisitor):
             node.lineno = node.items[0][0].lineno
 
     def visitNot(self, node, func=None):
-        gx.types[cnode(node, parent=func)] = set([(defclass('int_'),0)])  # XXX new type?
+        getgx().types[cnode(node, parent=func)] = set([(defclass('int_'),0)])  # XXX new type?
         self.visit(node.expr, func)
 
     def visitBackquote(self, node, func=None):
@@ -1166,7 +1165,7 @@ class moduleVisitor(ASTVisitor):
 
     def visitCompare(self, node, func=None):
         newnode = cnode(node, parent=func)
-        gx.types[newnode] = set([(defclass('int_'),0)]) # XXX new type?
+        getgx().types[newnode] = set([(defclass('int_'),0)]) # XXX new type?
 
         self.visit(node.expr, func)
 
@@ -1209,7 +1208,7 @@ class moduleVisitor(ASTVisitor):
 
     def visitbitpair(self, node, msg, func=None):
         newnode = cnode(node, parent=func)
-        gx.types[inode(node)] = set()
+        getgx().types[inode(node)] = set()
         
         left = node.nodes[0]
         for right in node.nodes[1:]:
@@ -1231,7 +1230,7 @@ class moduleVisitor(ASTVisitor):
 
     def visitAugAssign(self, node, func=None): # a[b] += c -> a[b] = a[b]+c, using tempvars to handle sidefx
         newnode = cnode(node, parent=func)
-        gx.types[newnode] = set()
+        getgx().types[newnode] = set()
 
         clone = copy.deepcopy(node)
         lnode = node.node
@@ -1317,7 +1316,7 @@ class moduleVisitor(ASTVisitor):
 
     def visitPrint(self, node, func=None):
         pnode = cnode(node, parent=func)
-        gx.types[pnode] = set()
+        getgx().types[pnode] = set()
 
         for child in node.getChildNodes():
             self.visit(child, func)
@@ -1327,8 +1326,8 @@ class moduleVisitor(ASTVisitor):
             self.fakefunc(newnode, child, '__str__', [], func)
 
     def tempvar(self, node, func=None):
-        if node in gx.parent_nodes:
-            varname = self.tempcount[gx.parent_nodes[node]]
+        if node in getgx().parent_nodes:
+            varname = self.tempcount[getgx().parent_nodes[node]]
         elif node in self.tempcount: # XXX investigate why this happens (patrick down)
             varname = self.tempcount[node]
         else:
@@ -1344,7 +1343,7 @@ class moduleVisitor(ASTVisitor):
 
         if isinstance(node.expr1, Name):
             name = node.expr1.name
-            if not lookupvar(name, func) and not (name in mv.classes or name in mv.ext_classes):
+            if not lookupvar(name, func) and not (name in getmv().classes or name in getmv().ext_classes):
                 error("no such class: '%s'" % name, node)
 
         for child in node.getChildNodes():
@@ -1363,7 +1362,7 @@ class moduleVisitor(ASTVisitor):
                 if isinstance(h0, Name): 
                     clname = h0.name
                     if clname in ['int','float','class']: clname += '_'
-                    if not (clname in mv.classes or clname in mv.ext_classes):
+                    if not (clname in getmv().classes or clname in getmv().ext_classes):
                         error("no such class: '%s'" % clname, node)
                     cl = defclass(clname)
 
@@ -1371,7 +1370,7 @@ class moduleVisitor(ASTVisitor):
                     if not isinstance(h0.expr, Name):
                         error('this type of exception is not supported', h0)
 
-                    cl = gx.modules[h0.expr.name].classes[h0.attrname]
+                    cl = getgx().modules[h0.expr.name].classes[h0.attrname]
 
                 if isinstance(h1, AssName):
                     var = defaultvar(h1.name, func) 
@@ -1380,7 +1379,7 @@ class moduleVisitor(ASTVisitor):
 
                 var.invisible = True
                 inode(var).copymetoo = True
-                gx.types[inode(var)] = set([(cl, 1)])
+                getgx().types[inode(var)] = set([(cl, 1)])
 
         for child in node.getChildNodes():
             self.visit(child, func)
@@ -1388,7 +1387,7 @@ class moduleVisitor(ASTVisitor):
         # else
         if node.else_:
             elsevar = self.tempvar(node.else_, func)
-            gx.types[inode(elsevar)] = set([(defclass('int_'),0)])
+            getgx().types[inode(elsevar)] = set([(defclass('int_'),0)])
             inode(elsevar).copymetoo = True
 
     def visitTryFinally(self, node, func=None):
@@ -1406,7 +1405,7 @@ class moduleVisitor(ASTVisitor):
     def visitFor(self, node, func=None):
         # --- iterable contents -> assign node
         assnode = cnode(node.assign, parent=func)
-        gx.types[assnode] = set()
+        getgx().types[assnode] = set()
 
         get_iter = CallFunc(Getattr(node.list, '__iter__'), [])
         fakefunc = CallFunc(Getattr(get_iter, 'next'), [])
@@ -1427,7 +1426,7 @@ class moduleVisitor(ASTVisitor):
             # for expr.x in..
             cnode(node.assign, parent=func)
 
-            gx.assign_target[node.assign.expr] = node.assign.expr # XXX multiple targets possible please
+            getgx().assign_target[node.assign.expr] = node.assign.expr # XXX multiple targets possible please
             fakefunc2 = CallFunc(Getattr(node.assign.expr, '__setattr__'), [Const(node.assign.attrname), fakefunc])
             self.visit(fakefunc2, func)
 
@@ -1463,33 +1462,33 @@ class moduleVisitor(ASTVisitor):
             self.addconstraint((inode(get_iter), inode(itervar)), func)
 
             xvar = self.tempvar(node.list, func)
-            gx.types[inode(xvar)] = set([(defclass('int_'),0)])
+            getgx().types[inode(xvar)] = set([(defclass('int_'),0)])
             inode(xvar).copymetoo = True
 
         # --- for-else
         if node.else_:
             elsevar = self.tempvar(node.else_, func)
            # print 'elsevar', elsevar
-            gx.types[inode(elsevar)] = set([(defclass('int_'),0)])
+            getgx().types[inode(elsevar)] = set([(defclass('int_'),0)])
             inode(elsevar).copymetoo = True
 
             self.visit(node.else_, func)
 
         # --- loop body
-        gx.loopstack.append(node)
+        getgx().loopstack.append(node)
         self.visit(node.body, func)
-        gx.loopstack.pop()
+        getgx().loopstack.pop()
         self.for_in_iters.append(node.list)
 
     def visitWhile(self, node, func=None):
-        gx.loopstack.append(node)
+        getgx().loopstack.append(node)
         for child in node.getChildNodes():
             self.visit(child, func)
-        gx.loopstack.pop()
+        getgx().loopstack.pop()
 
         if node.else_:
             elsevar = self.tempvar(node.else_, func)
-            gx.types[inode(elsevar)] = set([(defclass('int_'),0)])
+            getgx().types[inode(elsevar)] = set([(defclass('int_'),0)])
             inode(elsevar).copymetoo = True
 
             self.visit(node.else_, func)
@@ -1504,7 +1503,7 @@ class moduleVisitor(ASTVisitor):
         for qual in node.quals:
             # iter
             assign = qual.assign
-            gx.types[cnode(assign, parent=func)] = set()
+            getgx().types[cnode(assign, parent=func)] = set()
 
             # list.unit->iter
             get_iter = CallFunc(Getattr(qual.list, '__iter__'), [])
@@ -1547,7 +1546,7 @@ class moduleVisitor(ASTVisitor):
                 self.addconstraint((inode(get_iter), inode(itervar)), lcfunc)
 
                 xvar = self.tempvar(qual) 
-                gx.types[inode(xvar)] = set([(defclass('int_'),0)])
+                getgx().types[inode(xvar)] = set([(defclass('int_'),0)])
                 inode(xvar).copymetoo = True
 
             # cond
@@ -1573,7 +1572,7 @@ class moduleVisitor(ASTVisitor):
             return
 
         newnode = cnode(node, parent=func)
-        gx.types[newnode] = set()
+        getgx().types[newnode] = set()
         if isinstance(node.value, Name):
             func.retvars.append(node.value.name)
         
@@ -1595,7 +1594,7 @@ class moduleVisitor(ASTVisitor):
             return
 
         newnode = cnode(node, parent=func)
-        gx.types[newnode] = set()
+        getgx().types[newnode] = set()
 
         # --- a,b,.. = c,(d,e),.. = .. = expr 
         for target_expr in node.nodes:
@@ -1613,7 +1612,7 @@ class moduleVisitor(ASTVisitor):
                     self.assign_pair(lvalue, rvalue, func)
 
                     # filter flow 
-                    if not mv.module.builtin: # XXX
+                    if not getmv().module.builtin: # XXX
                         rvar = None
                         if isinstance(rvalue, Name):
                             rvar = lookupvar(rvalue.name, func) 
@@ -1626,11 +1625,11 @@ class moduleVisitor(ASTVisitor):
                             lvar = None 
             
                         if rvar:
-                            gx.assignments.append((lvar, rvar))
+                            getgx().assignments.append((lvar, rvar))
 
                 # name = expr
                 elif isinstance(lvalue, AssName):
-                    if (rvalue, 0, 0) not in gx.cnode: # XXX generalize 
+                    if (rvalue, 0, 0) not in getgx().cnode: # XXX generalize 
                         self.visit(rvalue, func)
 
                     if lvalue.name != '_':
@@ -1644,11 +1643,11 @@ class moduleVisitor(ASTVisitor):
                         self.addconstraint((inode(rvalue), inode(lvar)), func)
 
                     # filter flow
-                    if not mv.module.builtin: # XXX
+                    if not getmv().module.builtin: # XXX
                         if isinstance(rvalue, Name): # XXX
-                            gx.assignments.append((lookupvar(lvalue.name, func), lookupvar(rvalue.name, func))) 
+                            getgx().assignments.append((lookupvar(lvalue.name, func), lookupvar(rvalue.name, func))) 
                         if isinstance(rvalue, Getattr) and isinstance(rvalue.expr, Name) and rvalue.expr.name == 'self':
-                            gx.assignments.append((lookupvar(lvalue.name, func), defaultvar(rvalue.attrname, func.parent)))
+                            getgx().assignments.append((lookupvar(lvalue.name, func), defaultvar(rvalue.attrname, func.parent)))
 
                 # (a,(b,c), ..) = expr
                 elif isinstance(lvalue, (AssTuple, AssList)):
@@ -1668,7 +1667,7 @@ class moduleVisitor(ASTVisitor):
             if isinstance(node.expr, Tuple):
                 if [n for n in node.nodes if isinstance(n, AssTuple)]:
                     for child in node.expr.nodes:
-                        if (child,0,0) not in gx.cnode: # (a,b) = (1,2): (1,2) never visited
+                        if (child,0,0) not in getgx().cnode: # (a,b) = (1,2): (1,2) never visited
                             continue
                         if not isinstance(child, Const) and not (isinstance(child, Name) and child.name == 'None'):
                             tvar = self.tempvar(child, func)
@@ -1699,7 +1698,7 @@ class moduleVisitor(ASTVisitor):
         elif isinstance(lvalue, AssAttr):
             cnode(lvalue, parent=func)
 
-            gx.assign_target[rvalue] = lvalue.expr
+            getgx().assign_target[rvalue] = lvalue.expr
             fakefunc = CallFunc(Getattr(lvalue.expr, '__setattr__'), [Const(lvalue.attrname), rvalue])
 
             self.visit(fakefunc, func)
@@ -1714,7 +1713,7 @@ class moduleVisitor(ASTVisitor):
             lvalue = lvalue.nodes
         for (i, item) in enumerate(lvalue):
             fakenode = cnode((item,), parent=func) # fake node per item, for multiple callfunc triggers
-            gx.types[fakenode] = set()
+            getgx().types[fakenode] = set()
             self.addconstraint((inode(rvalue), fakenode), func)
 
             fakefunc = CallFunc(fakeGetattr3(rvalue, get_ident(Const(i))), [Const(i)])
@@ -1750,7 +1749,7 @@ class moduleVisitor(ASTVisitor):
             if isinstance(node.node, fakeGetattr): # XXX butt ugly
                 self.visit(node.node, func)
             elif isinstance(node.node, fakeGetattr2): 
-                gx.types[newnode] = set() # XXX move above
+                getgx().types[newnode] = set() # XXX move above
 
                 self.callfuncs.append((node, func))
 
@@ -1769,16 +1768,16 @@ class moduleVisitor(ASTVisitor):
             ident = node.node.attrname
             inode(node.node.expr).callfuncs.append(node) # XXX iterative dataflow analysis: move there?
 
-            if isinstance(node.node.expr, Name) and node.node.expr.name in mv.imports and node.node.attrname == '__getattr__': # XXX analyze_callfunc
-                if node.args[0].value in mv.imports[node.node.expr.name].mv.globals: # XXX bleh
-                    self.addconstraint((inode(mv.imports[node.node.expr.name].mv.globals[node.args[0].value]), newnode), func)
+            if isinstance(node.node.expr, Name) and node.node.expr.name in getmv().imports and node.node.attrname == '__getattr__': # XXX analyze_callfunc
+                if node.args[0].value in getmv().imports[node.node.expr.name].mv.globals: # XXX bleh
+                    self.addconstraint((inode(getmv().imports[node.node.expr.name].mv.globals[node.args[0].value]), newnode), func)
 
 
         elif isinstance(node.node, Name):
             # direct call
             ident = node.node.name
 
-            if ident in ['reduce', 'map', 'filter', 'apply', 'getattr', 'setattr'] and ident not in mv.funcs:
+            if ident in ['reduce', 'map', 'filter', 'apply', 'getattr', 'setattr'] and ident not in getmv().funcs:
                 error("'%s' function is not supported" % ident, node.node)
             if ident in ['slice']:
                 error("'%s' function is not supported" % ident, node.node)
@@ -1814,7 +1813,7 @@ class moduleVisitor(ASTVisitor):
             self.instance(node, constructor, func)
             inode(node).callfuncs.append(node) # XXX see above, investigate
         else:
-            gx.types[newnode] = set()
+            getgx().types[newnode] = set()
 
         self.callfuncs.append((node, func))
 
@@ -1824,23 +1823,23 @@ class moduleVisitor(ASTVisitor):
         if len(node.bases) > 1:
             error('multiple inheritance is not supported', node)
 
-        if not mv.module.builtin: # XXX doesn't have to be Name
+        if not getmv().module.builtin: # XXX doesn't have to be Name
             for base in node.bases:
                 if not isinstance(base, Name):
                     error('specify base class with identifier for now', node)
-                if base.name not in mv.classes and base.name not in mv.ext_classes:
+                if base.name not in getmv().classes and base.name not in getmv().ext_classes:
                     error("name '%s' is not defined" % base.name, node)
 
-                if base.name in mv.ext_classes and mv.ext_classes[base.name].mv.module.ident == 'builtin' and base.name not in ['object', 'Exception']: 
+                if base.name in getmv().ext_classes and getmv().ext_classes[base.name].mv.module.ident == 'builtin' and base.name not in ['object', 'Exception']: 
                     error('inheritance from builtins is not supported', node)
 
-        if node.name in mv.classes:
-            newclass = mv.classes[node.name] # set in visitModule, for forward references
+        if node.name in getmv().classes:
+            newclass = getmv().classes[node.name] # set in visitModule, for forward references
         else:
             check_redef(node) # XXX merge with visitModule
             newclass = class_(node) 
             self.classes[node.name] = newclass
-            mv.classes[node.name] = newclass
+            getmv().classes[node.name] = newclass
             newclass.module = self.module
             newclass.parent = static_class(newclass)
 
@@ -1861,11 +1860,11 @@ class moduleVisitor(ASTVisitor):
                 cl.funcs[ident] = func
 
         # --- built-in attributes
-        if 'class_' in mv.classes or 'class_' in mv.ext_classes:
+        if 'class_' in getmv().classes or 'class_' in getmv().ext_classes:
             var = defaultvar('__class__', newclass)
             var.invisible = True
-            gx.types[inode(var)] = set([(defclass('class_'), defclass('class_').dcpa)])
-            gx.typeclass[defclass('class_').dcpa] = newclass
+            getgx().types[inode(var)] = set([(defclass('class_'), defclass('class_').dcpa)])
+            getgx().typeclass[defclass('class_').dcpa] = newclass
             defclass('class_').dcpa += 1
 
         # --- staticmethod, property
@@ -1912,11 +1911,11 @@ class moduleVisitor(ASTVisitor):
             error('%s attribute is not supported' % node.attrname, node)
 
         newnode = cnode(node, parent=func)
-        gx.types[newnode] = set()
+        getgx().types[newnode] = set()
 
         fakefunc = CallFunc(fakeGetattr(node.expr, '__getattr__'), [Const(node.attrname)])
         self.visit(fakefunc, func)
-        self.addconstraint((gx.cnode[fakefunc,0,0], newnode), func)
+        self.addconstraint((getgx().cnode[fakefunc,0,0], newnode), func)
         #newnode.fakert = inode(fakefunc)
 
         self.callfuncs.append((fakefunc, func))
@@ -1929,7 +1928,7 @@ class moduleVisitor(ASTVisitor):
 
     def visitName(self, node, func=None):
         newnode = cnode(node, parent=func)
-        gx.types[newnode] = set()
+        getgx().types[newnode] = set()
 
         if node.name == '__doc__': 
             error("'%s' attribute is not supported" % node.name, node)
@@ -1947,16 +1946,16 @@ class moduleVisitor(ASTVisitor):
             var = lookupvar(node.name, func)
             if not var: # XXX define variables before use, or they are assumed to be global
                 if node.name in self.funcs: # XXX remove: variable lookup should be uniform
-                    gx.types[newnode] = set([(self.funcs[node.name], 0)])
+                    getgx().types[newnode] = set([(self.funcs[node.name], 0)])
                     self.lambdas[node.name] = self.funcs[node.name]
                 elif node.name in self.classes or node.name in self.ext_classes: 
                     if node.name in self.classes: cl = self.classes[node.name] 
                     else: cl = self.ext_classes[node.name]
-                    gx.types[newnode] = set([(cl.parent, 0)]) # XXX add warning
+                    getgx().types[newnode] = set([(cl.parent, 0)]) # XXX add warning
                     newnode.copymetoo = True # XXX merge into some kind of 'seeding' function
                 elif node.name in ['int', 'float', 'str']: # XXX
                     cl = self.ext_classes[node.name+'_']
-                    gx.types[newnode] = set([(cl.parent, 0)]) 
+                    getgx().types[newnode] = set([(cl.parent, 0)]) 
                     newnode.copymetoo = True
                 else:
                     var = defaultvar(node.name, None)
@@ -1965,12 +1964,12 @@ class moduleVisitor(ASTVisitor):
         
 
 def defclass(name):
-    if name in mv.classes: return mv.classes[name]
-    else: return mv.ext_classes[name]
+    if name in getmv().classes: return getmv().classes[name]
+    else: return getmv().ext_classes[name]
 
 def deffunc(name):
-    if name in mv.funcs: return mv.funcs[name]
-    else: return mv.ext_funcs[name]
+    if name in getmv().funcs: return getmv().funcs[name]
+    else: return getmv().ext_funcs[name]
 
 def singletype(node, type):
     types = [t[0] for t in inode(node).types()]
@@ -2002,7 +2001,7 @@ class generateVisitor(ASTVisitor):
         self.out = file(name+'.cpp','w')
         self.indentation = ''
         self.consts = {}
-        self.mergeinh = merged(gx.types, inheritance=True) 
+        self.mergeinh = merged(getgx().types, inheritance=True) 
         self.module = module
         self.name = module.ident
 
@@ -2161,13 +2160,13 @@ class generateVisitor(ASTVisitor):
 
     def find_constants(self):
         # --- determine (compound, non-str) constants
-        for callfunc, _ in mv.callfuncs:
+        for callfunc, _ in getmv().callfuncs:
             if isinstance(callfunc.node, Getattr) and callfunc.node.attrname in ['__ne__', '__eq__', '__contains__']:
                 for node in [callfunc.node.expr, callfunc.args[0]]:
                     if self.constant_constructor(node):
                         self.consts[node] = self.get_constant(node)
 
-        for node in mv.for_in_iters:
+        for node in getmv().for_in_iters:
             if self.constant_constructor(node):
                 self.consts[node] = self.get_constant(node)
 
@@ -2251,13 +2250,13 @@ class generateVisitor(ASTVisitor):
 
                     for (name, pseudonym) in child.names:
                         if name == '*':
-                            for func in gx.modules[child.modname].funcs.values():
+                            for func in getgx().modules[child.modname].funcs.values():
                                 if func.cp: 
                                     print >>self.out, 'using '+mod_id+'::'+self.cpp_name(func.ident)+';';
-                            for var in gx.modules[child.modname].mv.globals.values():
+                            for var in getgx().modules[child.modname].mv.globals.values():
                                 if not var.invisible and not var.imported and not var.name.startswith('__'):
                                     print >>self.out, 'using '+mod_id+'::'+self.cpp_name(var.name)+';';
-                            for cl in gx.modules[child.modname].classes:
+                            for cl in getgx().modules[child.modname].classes:
                                 print >>self.out, 'using '+mod_id+'::'+cl+';';
 
                             continue
@@ -2278,7 +2277,7 @@ class generateVisitor(ASTVisitor):
             self.func_pointers(True)
 
             # globals
-            defs = self.declaredefs(list(mv.globals.items()), declare=True);
+            defs = self.declaredefs(list(getmv().globals.items()), declare=True);
             if defs:
                 self.output(defs+';')
                 print >>self.out
@@ -2288,20 +2287,20 @@ class generateVisitor(ASTVisitor):
                 if isinstance(child, Class): self.visitClass(child, True)
 
             # --- variables
-            if self.module != gx.main_module:
+            if self.module != getgx().main_module:
                 print >>self.out
                 for v in self.module.mv.globals.values():
                     if not v.invisible and not v.imported and not v.name in self.module.funcs:
                         print >>self.out, 'extern '+typesetreprnew(v, None)+' '+v.name+';'
 
             # function declarations
-            if self.module != gx.main_module:
+            if self.module != getgx().main_module:
                 print >>self.out, 'void __init();'
             for child in node.node.getChildNodes():
                 if isinstance(child, Function): 
-                    func = mv.funcs[child.name]
+                    func = getmv().funcs[child.name]
                     if not self.inhcpa(func):
-                    #if not hmcpa(func) and (not func in gx.inheritance_relations or not [1 for f in gx.inheritance_relations[func] if hmcpa(f)]): # XXX merge with visitFunction
+                    #if not hmcpa(func) and (not func in getgx().inheritance_relations or not [1 for f in getgx().inheritance_relations[func] if hmcpa(f)]): # XXX merge with visitFunction
                         pass
                     elif not func.mv.module.builtin and not func.ident in ['min','max','zip','sum','__zip2','enumerate']: # XXX latter for test 116
                         self.visitFunction(func.node, declare=True)
@@ -2329,7 +2328,7 @@ class generateVisitor(ASTVisitor):
         print >>self.out
 
         # --- globals
-        defs = self.declaredefs(list(mv.globals.items()), declare=False);
+        defs = self.declaredefs(list(getmv().globals.items()), declare=False);
         if defs:
             self.output(defs+';')
             print >>self.out
@@ -2339,19 +2338,19 @@ class generateVisitor(ASTVisitor):
 
         # --- list comprehensions
         self.listcomps = {}
-        for (listcomp,lcfunc,func) in mv.listcomps:
+        for (listcomp,lcfunc,func) in getmv().listcomps:
             self.listcomps[listcomp] = (lcfunc, func)
-        for (listcomp,lcfunc,func) in mv.listcomps: # XXX cleanup
+        for (listcomp,lcfunc,func) in getmv().listcomps: # XXX cleanup
             parent = func
             while isinstance(parent, function) and parent.listcomp: parent = parent.parent
             if isinstance(parent, function) and not parent.cp:
                 continue
-            if not func or not func.mv.module.builtin: # not in gx.builtin_funcs:
+            if not func or not func.mv.module.builtin: # not in getgx().builtin_funcs:
                 self.listcomp_func(listcomp)
 
         # --- lambdas
-        for l in mv.lambdas.values():
-            if l.ident not in mv.funcs:
+        for l in getmv().lambdas.values():
+            if l.ident not in getmv().funcs:
                 self.visit(l.node)
 
         # --- classes 
@@ -2361,11 +2360,11 @@ class generateVisitor(ASTVisitor):
         # --- __init
         self.output('void __init() {')
         self.indent()
-        if self.module == gx.main_module and not gx.extension_module: self.output('__name__ = new str("__main__");\n')
+        if self.module == getgx().main_module and not getgx().extension_module: self.output('__name__ = new str("__main__");\n')
         else: self.output('__name__ = new str("%s");\n' % self.module.ident)
 
-        if mv.classes:
-            for cl in mv.classes.values():
+        if getmv().classes:
+            for cl in getmv().classes.values():
                 self.output('cl_'+cl.cpp_name+' = new class_("%s", %d, %d);' % (cl.cpp_name, cl.low, cl.high))
 
                 for var in cl.parent.vars.values():
@@ -2405,8 +2404,8 @@ class generateVisitor(ASTVisitor):
         print >>self.out
 
         # --- c++ main/extension module setup
-        if self.module == gx.main_module: 
-            if gx.extension_module:
+        if self.module == getgx().main_module: 
+            if getgx().extension_module:
                 print >>self.out, 'extern "C" {'
                 print >>self.out, '#include <Python.h>\n'
                 
@@ -2461,11 +2460,11 @@ class generateVisitor(ASTVisitor):
                     print >>self.out, '    {"%(id)s", %(id)s, METH_VARARGS, ""},' % {'id': func.ident}
                 print >>self.out, '    {NULL, NULL, 0, NULL}        /* Sentinel */\n};\n'
 
-            if gx.extension_module:
+            if getgx().extension_module:
                 print >>self.out, 'PyMODINIT_FUNC init%s(void) {' % self.module.ident
 
                 vars = []
-                for (name,var) in mv.globals.items():
+                for (name,var) in getmv().globals.items():
                     if singletype(var, module) or var.invisible: # XXX merge declaredefs 
                         continue
                     typehu = typesetreprnew(var, var.parent)
@@ -2483,10 +2482,10 @@ class generateVisitor(ASTVisitor):
 
             print >>self.out, '    __shedskin__::__init();'
 
-            for mod in gx.modules.values():
-                if mod != gx.main_module and mod.ident != 'builtin':
+            for mod in getgx().modules.values():
+                if mod != getgx().main_module and mod.ident != 'builtin':
                     if mod.ident == 'sys':
-                        if gx.extension_module:
+                        if getgx().extension_module:
                             print >>self.out, '    __sys__::__init(0, 0);'
                         else:
                             print >>self.out, '    __sys__::__init(argc, argv);'
@@ -2494,7 +2493,7 @@ class generateVisitor(ASTVisitor):
                         print >>self.out, '    __'+'__::__'.join([n for n in mod.mod_path+[mod.ident]])+'__::__init();' # XXX sep func
 
             print >>self.out, '    __'+self.module.ident+'__::__init();'
-            if gx.extension_module:
+            if getgx().extension_module:
                 print >>self.out, '\n    PyObject *mod = Py_InitModule("%s", %sMethods);\n' % (self.module.ident, self.module.ident)
                 for var in vars:
                     varname = self.cpp_name(var.name)
@@ -2509,7 +2508,7 @@ class generateVisitor(ASTVisitor):
              
             print >>self.out, '}'
 
-            if gx.extension_module:
+            if getgx().extension_module:
                 print >>self.out, '\n} // extern "C"'
 
     def do_comment(self, s):
@@ -2525,8 +2524,8 @@ class generateVisitor(ASTVisitor):
         self.output('*/')
 
     def do_comments(self, child):
-        if child in gx.comments:
-            for n in gx.comments[child]:
+        if child in getgx().comments:
+            for n in getgx().comments[child]:
                 self.do_comment(n)
 
     def visitContinue(self, node, func=None):
@@ -2543,7 +2542,7 @@ class generateVisitor(ASTVisitor):
         print >>self.out
 
         if node.else_:
-            self.output('%s = 0;' % mv.tempcount[node.else_])
+            self.output('%s = 0;' % getmv().tempcount[node.else_])
          
         self.start('while(')
         self.bool_test(node.test, func)
@@ -2551,22 +2550,22 @@ class generateVisitor(ASTVisitor):
         print >>self.out, self.line
 
         self.indent()
-        gx.loopstack.append(node)
+        getgx().loopstack.append(node)
         self.visit(node.body, func)
-        gx.loopstack.pop()
+        getgx().loopstack.pop()
         self.deindent()
 
         self.output('}')
 
         if node.else_:
-            self.output('if (!%s) {' % mv.tempcount[node.else_])
+            self.output('if (!%s) {' % getmv().tempcount[node.else_])
             self.indent()
             self.visit(node.else_, func)
             self.deindent()
             self.output('}')
 
     def visitClass(self, node, declare):
-        cl = mv.classes[node.name]
+        cl = getmv().classes[node.name]
 
         # --- .cpp file: output class methods
         if not declare:
@@ -2577,7 +2576,7 @@ class generateVisitor(ASTVisitor):
             if cl.virtuals:
                 self.virtuals(cl, declare)
 
-            if node in gx.comments:
+            if node in getgx().comments:
                 self.do_comments(node)
             else:
                 self.output('/**\nclass %s\n*/\n' % cl.ident)
@@ -2600,7 +2599,7 @@ class generateVisitor(ASTVisitor):
             # --- class variable declarations
             if cl.parent.vars: # XXX merge with visitModule
                 for var in cl.parent.vars.values():
-                    if gx.merged_inh[var]:
+                    if getgx().merged_inh[var]:
                         self.start(typesetreprnew(var, cl.parent)+cl.ident+'::'+self.cpp_name(var.name)) 
                         self.eol()
                 print >>self.out
@@ -2624,7 +2623,7 @@ class generateVisitor(ASTVisitor):
         # --- class variables 
         if cl.parent.vars:
             for var in cl.parent.vars.values():
-                if gx.merged_inh[var]:
+                if getgx().merged_inh[var]:
                     self.output('static '+typesetreprnew(var, cl.parent)+self.cpp_name(var.name)+';') 
             print >>self.out
 
@@ -2646,7 +2645,7 @@ class generateVisitor(ASTVisitor):
                 subclasses = cl.virtualvars[ident]
 
                 merged = set()
-                for m in [gx.merged_inh[subcl.vars[ident]] for subcl in subclasses if ident in subcl.vars and subcl.vars[ident] in gx.merged_inh]: # XXX
+                for m in [getgx().merged_inh[subcl.vars[ident]] for subcl in subclasses if ident in subcl.vars and subcl.vars[ident] in getgx().merged_inh]: # XXX
                     merged.update(m)
             
                 ts = self.padme(typestrnew({(1,0): merged}, cl, True, cl))
@@ -2784,7 +2783,7 @@ class generateVisitor(ASTVisitor):
                 if ident in cl.funcs: cl.funcs[ident].declared = True
 
     def inhcpa(self, func):
-        return hmcpa(func) or (func in gx.inheritance_relations and [1 for f in gx.inheritance_relations[func] if hmcpa(f)])
+        return hmcpa(func) or (func in getgx().inheritance_relations and [1 for f in getgx().inheritance_relations[func] if hmcpa(f)])
 
     def visitSlice(self, node, func=None):
         if node.flags == 'OP_DELETE':
@@ -2795,7 +2794,7 @@ class generateVisitor(ASTVisitor):
             self.visit(inode(node.expr).fakefunc, func)
 
     def visitLambda(self, node, parent=None):
-        self.append(mv.lambdaname[node])
+        self.append(getmv().lambdaname[node])
 
     def visitTuple(self, node, func=None):
         if not self.filling_consts and node in self.consts:
@@ -2817,9 +2816,9 @@ class generateVisitor(ASTVisitor):
         if numberprefix and len(node.getChildNodes()): 
             self.append(str(len(node.getChildNodes()))+', ')
         for child in node.getChildNodes():
-            if child in mv.tempcount:
+            if child in getmv().tempcount:
                 print 'jahoor tempcount', child
-                self.append(mv.tempcount[child])
+                self.append(getmv().tempcount[child])
             else:
                 self.visit(child, func)
 
@@ -2903,10 +2902,10 @@ class generateVisitor(ASTVisitor):
         print >>self.out, self.line
         self.indent()
         if node.else_:
-            self.output('%s = 0;' % mv.tempcount[node.else_])
+            self.output('%s = 0;' % getmv().tempcount[node.else_])
         self.visit(node.body, func)
         if node.else_:
-            self.output('%s = 1;' % mv.tempcount[node.else_])
+            self.output('%s = 1;' % getmv().tempcount[node.else_])
         self.deindent()
         self.start('}')
 
@@ -2939,32 +2938,32 @@ class generateVisitor(ASTVisitor):
 
         # else
         if node.else_: 
-            self.output('if(%s) { // else' % mv.tempcount[node.else_])
+            self.output('if(%s) { // else' % getmv().tempcount[node.else_])
             self.indent()
             self.visit(node.else_, func)
             self.deindent()
             self.output('}')
             
     def fastfor(self, node, assname, neg, func=None):
-            ivar, evar = mv.tempcount[node.assign], mv.tempcount[node.list]
+            ivar, evar = getmv().tempcount[node.assign], getmv().tempcount[node.list]
 
             self.start('FAST_FOR%s('%neg+assname+',')
 
             if len(node.list.args) == 1: 
                 self.append('0,')
-                if node.list.args[0] in mv.tempcount: # XXX in visit?
-                    self.append(mv.tempcount[node.list.args[0]])
+                if node.list.args[0] in getmv().tempcount: # XXX in visit?
+                    self.append(getmv().tempcount[node.list.args[0]])
                 else:
                     self.visit(node.list.args[0], func)
                 self.append(',')
             else: 
-                if node.list.args[0] in mv.tempcount: # XXX in visit?
-                    self.append(mv.tempcount[node.list.args[0]])
+                if node.list.args[0] in getmv().tempcount: # XXX in visit?
+                    self.append(getmv().tempcount[node.list.args[0]])
                 else:
                     self.visit(node.list.args[0], func)
                 self.append(',')
-                if node.list.args[1] in mv.tempcount: # XXX in visit?
-                    self.append(mv.tempcount[node.list.args[1]])
+                if node.list.args[1] in getmv().tempcount: # XXX in visit?
+                    self.append(getmv().tempcount[node.list.args[1]])
                 else:
                     self.visit(node.list.args[1], func)
                 self.append(',')
@@ -2972,8 +2971,8 @@ class generateVisitor(ASTVisitor):
             if len(node.list.args) != 3:
                 self.append('1')
             else:
-                if node.list.args[2] in mv.tempcount: # XXX in visit?
-                    self.append(mv.tempcount[node.list.args[2]])
+                if node.list.args[2] in getmv().tempcount: # XXX in visit?
+                    self.append(getmv().tempcount[node.list.args[2]])
                 else:
                     self.visit(node.list.args[2], func)
             self.append(',%s,%s)' % (ivar[2:],evar[2:]))
@@ -2986,18 +2985,18 @@ class generateVisitor(ASTVisitor):
             if node.assign.name != '_':
                 assname = node.assign.name
             else:
-                assname = mv.tempcount[(node.assign,1)]
+                assname = getmv().tempcount[(node.assign,1)]
         elif isinstance(node.assign, AssAttr): 
             self.start('')
             self.visitAssAttr(node.assign, func)
             assname = self.line.strip()
         else:
-            assname = mv.tempcount[node.assign]
+            assname = getmv().tempcount[node.assign]
 
         print >>self.out
 
         if node.else_:
-            self.output('%s = 0;' % mv.tempcount[node.else_])
+            self.output('%s = 0;' % getmv().tempcount[node.else_])
 
         # --- for i in range(..) -> for( i=l, u=expr; i < u; i++ ) .. 
         if fastfor(node):
@@ -3032,8 +3031,8 @@ class generateVisitor(ASTVisitor):
             if not [t for t in self.mergeinh[node.list] if t[0] not in (defclass('tuple'), defclass('list'))]:
                 pref = '_SEQ'
 
-            if pref == '': tail = mv.tempcount[(node,1)][2:]
-            else: tail = mv.tempcount[node][2:]+','+mv.tempcount[node.list][2:]
+            if pref == '': tail = getmv().tempcount[(node,1)][2:]
+            else: tail = getmv().tempcount[node][2:]+','+getmv().tempcount[node.list][2:]
 
             if node.list in self.consts:
                 self.output('FOR_IN%s(%s, %s, %s)' % (pref, assname, self.consts[node.list], tail))
@@ -3050,27 +3049,27 @@ class generateVisitor(ASTVisitor):
         self.indent()
 
         if isinstance(node.assign, (AssTuple, AssList)):
-            self.tuple_assign(node.assign, mv.tempcount[node.assign], func)
+            self.tuple_assign(node.assign, getmv().tempcount[node.assign], func)
 
-        gx.loopstack.append(node)
+        getgx().loopstack.append(node)
         self.visit(node.body, func)
-        gx.loopstack.pop()
+        getgx().loopstack.pop()
         self.deindent()
 
         self.output('END_FOR')
 
         if node.else_:
-            self.output('if (!%s) {' % mv.tempcount[node.else_])
+            self.output('if (!%s) {' % getmv().tempcount[node.else_])
             self.indent()
             self.visit(node.else_, func)
             self.deindent()
             self.output('}')
 
     def func_pointers(self, print_them):
-        mv.lambda_cache = {}
-        mv.lambda_signum = {}
+        getmv().lambda_cache = {}
+        getmv().lambda_signum = {}
 
-        for func in mv.lambdas.values():
+        for func in getmv().lambdas.values():
             argtypes = [typesetreprnew(func.vars[formal], func).rstrip() for formal in func.formals]
             signature = '_'.join(argtypes)
 
@@ -3080,15 +3079,15 @@ class generateVisitor(ASTVisitor):
                 rettype = 'void '
             signature += '->'+rettype
 
-            if signature not in mv.lambda_cache: 
-                nr = len(mv.lambda_cache)
-                mv.lambda_cache[signature] = nr
+            if signature not in getmv().lambda_cache: 
+                nr = len(getmv().lambda_cache)
+                getmv().lambda_cache[signature] = nr
                 if print_them:
                     print >>self.out, 'typedef %s(*lambda%d)(' % (rettype, nr) + ', '.join(argtypes)+');'
 
-            mv.lambda_signum[func] = mv.lambda_cache[signature]
+            getmv().lambda_signum[func] = getmv().lambda_cache[signature]
 
-        if mv.lambda_cache and print_them: print >>self.out
+        if getmv().lambda_cache and print_them: print >>self.out
 
     # --- function/method header
     def func_header(self, func, declare, is_init=False):
@@ -3103,8 +3102,8 @@ class generateVisitor(ASTVisitor):
 
         # --- function/method template
         header = ''
-#        if func.ident != '__init__' and func in gx.inheritance_relations: #XXX cleanup
-#            for child in gx.inheritance_relations[func]:
+#        if func.ident != '__init__' and func in getgx().inheritance_relations: #XXX cleanup
+#            for child in getgx().inheritance_relations[func]:
 #                if func.ident in child.parent.funcs and not child.parent.funcs[func.ident].inherited:
 #                    header += 'virtual '
 #                    break
@@ -3198,14 +3197,14 @@ class generateVisitor(ASTVisitor):
             self.deindent()
 
     def nokeywords(self, name):
-        if name in gx.cpp_keywords:
-            return gx.ss_prefix+name
+        if name in getgx().cpp_keywords:
+            return getgx().ss_prefix+name
         return name
 
     def cpp_name(self, name, func=None):
-        if name in [cl.ident for cl in gx.allclasses]:
+        if name in [cl.ident for cl in getgx().allclasses]:
             return '_'+name
-        elif name+'_' in [cl.ident for cl in gx.allclasses]:
+        elif name+'_' in [cl.ident for cl in getgx().allclasses]:
             return '_'+name
         elif name in self.module.funcs and func and isinstance(func.parent, class_) and name in func.parent.funcs: 
             return '__'+func.mv.module.ident+'__::'+name
@@ -3216,10 +3215,10 @@ class generateVisitor(ASTVisitor):
         # locate right func instance
         if parent and isinstance(parent, class_):
             func = parent.funcs[node.name]
-        elif node.name in mv.funcs:
-            func = mv.funcs[node.name]
+        elif node.name in getmv().funcs:
+            func = getmv().funcs[node.name]
         else:
-            func = mv.lambdas[node.name]
+            func = getmv().lambdas[node.name]
 
         if func.invisible or (func.inherited and not func.ident == '__init__'):
             return
@@ -3387,8 +3386,8 @@ class generateVisitor(ASTVisitor):
         self.visitm('((', node.test, ')?(', node.then, '):(', node.else_, '))', func)
 
     def visitBreak(self, node, func=None):
-        if gx.loopstack[-1].else_ in mv.tempcount:
-            self.output('%s = 1;' % mv.tempcount[gx.loopstack[-1].else_])
+        if getgx().loopstack[-1].else_ in getmv().tempcount:
+            self.output('%s = 1;' % getmv().tempcount[getgx().loopstack[-1].else_])
         self.output('break;')
 
     def visitStmt(self, node, func=None):
@@ -3450,7 +3449,7 @@ class generateVisitor(ASTVisitor):
             self.castup(node, nodes[0], func)
             self.append(', ')
             self.booleanOp(node, nodes[1:], op, func)
-            self.append(', '+mv.tempcount[nodes[0]][2:]+')')
+            self.append(', '+getmv().tempcount[nodes[0]][2:]+')')
         else:
             self.castup(node, nodes[0], func)
 
@@ -3686,11 +3685,11 @@ class generateVisitor(ASTVisitor):
         self.append(')'+postfix)
 
     def visit2(self, node, func): # XXX use temp vars in comparisons, e.g. (t1=fun())
-        if node in mv.tempcount:
+        if node in getmv().tempcount:
             if node in self.done:
-                self.append(mv.tempcount[node])
+                self.append(getmv().tempcount[node])
             else:
-                self.visitm('('+mv.tempcount[node]+'=', node, ')', func)
+                self.visitm('('+getmv().tempcount[node]+'=', node, ')', func)
                 self.done.add(node)
         else:
             self.visit(node, func)
@@ -3945,7 +3944,7 @@ class generateVisitor(ASTVisitor):
         self.eol()
 
     def tuple_assign(self, lvalue, rvalue, func): 
-        temp = mv.tempcount[lvalue]
+        temp = getmv().tempcount[lvalue]
 
         if isinstance(lvalue, tuple): nodes = lvalue
         else: nodes = lvalue.nodes
@@ -4000,11 +3999,11 @@ class generateVisitor(ASTVisitor):
             self.append('),')
             self.visit(lvalue.subs[0], func)
             #else:
-            #    self.append(mv.tempcount[lvalue.expr]+' = ')
+            #    self.append(getmv().tempcount[lvalue.expr]+' = ')
             #    self.refer(lvalue.expr, func)
             #    self.eol()
             #    self.start('')
-            #    self.append('ELEM('+mv.tempcount[lvalue.expr]+',')
+            #    self.append('ELEM('+getmv().tempcount[lvalue.expr]+',')
             #    self.visit(lvalue.subs[0], func)
             self.append(')')
 
@@ -4023,14 +4022,14 @@ class generateVisitor(ASTVisitor):
             if isinstance(node.expr, Tuple):
                 if [n for n in node.nodes if isinstance(n, AssTuple)]: # XXX a,b=d[i,j]=..?
                     for child in node.expr.nodes:
-                        if not (child,0,0) in gx.cnode: # (a,b) = (1,2): (1,2) never visited
+                        if not (child,0,0) in getgx().cnode: # (a,b) = (1,2): (1,2) never visited
                             continue
                         if not isinstance(child, Const) and not (isinstance(child, Name) and child.name == 'None'):
-                            self.start(mv.tempcount[child]+' = ')
+                            self.start(getmv().tempcount[child]+' = ')
                             self.visit(child, func)
                             self.eol()
             elif not isinstance(node.expr, Const) and not (isinstance(node.expr, Name) and node.expr.name == 'None'):
-                self.start(mv.tempcount[node.expr]+' = ')
+                self.start(getmv().tempcount[node.expr]+' = ')
                 self.visit(node.expr, func)
                 self.eol()
 
@@ -4095,8 +4094,8 @@ class generateVisitor(ASTVisitor):
                         cast = True
                         self.append('(('+typesetreprnew(var, func)+')(')
 
-                if rvalue in mv.tempcount:
-                    self.append(mv.tempcount[rvalue])
+                if rvalue in getmv().tempcount:
+                    self.append(getmv().tempcount[rvalue])
                 else:
                     self.visit(rvalue, func)
                 if cast: self.append('))')
@@ -4113,8 +4112,8 @@ class generateVisitor(ASTVisitor):
 
             if isinstance(rvalue, str):
                 self.append(rvalue)
-            elif rvalue in mv.tempcount:
-                self.append(mv.tempcount[rvalue])
+            elif rvalue in getmv().tempcount:
+                self.append(getmv().tempcount[rvalue])
             else:
                 self.visit(rvalue, func)
 
@@ -4135,7 +4134,7 @@ class generateVisitor(ASTVisitor):
 
         for qual in node.quals:
             if not fastfor(qual) and not isinstance(qual.list, Name): # XXX ugly!!
-                mv.tempcount[qual.list] = varname = '__'+str(len(mv.tempcount)) 
+                getmv().tempcount[qual.list] = varname = '__'+str(len(getmv().tempcount)) 
                 args.append(typesetreprnew(qual.list, lcfunc)+varname) 
 
         for name in lcfunc.misses:
@@ -4174,13 +4173,13 @@ class generateVisitor(ASTVisitor):
     def fastfor_switch(self, node, func):
         self.start()
         for arg in node.list.args:
-            if arg in mv.tempcount:
+            if arg in getmv().tempcount:
                 self.start()
-                self.visitm(mv.tempcount[arg], ' = ', arg, func)
+                self.visitm(getmv().tempcount[arg], ' = ', arg, func)
                 self.eol()
         self.start('if(')
-        if node.list.args[2] in mv.tempcount:
-            self.append(mv.tempcount[node.list.args[2]])
+        if node.list.args[2] in getmv().tempcount:
+            self.append(getmv().tempcount[node.list.args[2]])
         else:
             self.visit(node.list.args[2])
         self.append('>0) {')
@@ -4190,7 +4189,7 @@ class generateVisitor(ASTVisitor):
     def listcomp_rec(self, node, quals, lcfunc):
         if not quals:
             if len(node.quals) == 1 and not fastfor(node.quals[0]) and not node.quals[0].ifs and not [t for t in self.mergeinh[node.quals[0].list] if t[0] not in (defclass('tuple'), defclass('list'))]:
-                self.start('result->units['+mv.tempcount[node.quals[0]]+'] = ')
+                self.start('result->units['+getmv().tempcount[node.quals[0]]+'] = ')
                 self.visit(node.expr, lcfunc)
             else:
                 self.start('result->append(')
@@ -4206,9 +4205,9 @@ class generateVisitor(ASTVisitor):
             if qual.assign.name != '_':
                 var = lookupvar(qual.assign.name, lcfunc)
             else:
-                var = lookupvar(mv.tempcount[(qual.assign,1)], lcfunc)
+                var = lookupvar(getmv().tempcount[(qual.assign,1)], lcfunc)
         else:
-            var = lookupvar(mv.tempcount[qual.assign], lcfunc)
+            var = lookupvar(getmv().tempcount[qual.assign], lcfunc)
 
         iter = self.cpp_name(var.name)
 
@@ -4238,15 +4237,15 @@ class generateVisitor(ASTVisitor):
                 pref = '_SEQ'
 
             if not isinstance(qual.list, Name):
-                itervar = mv.tempcount[qual.list]
+                itervar = getmv().tempcount[qual.list]
             else:
                 itervar = self.cpp_name(qual.list.name)
 
             if len(node.quals) == 1 and not qual.ifs and pref == '_SEQ':
                 self.output('result->resize(len('+itervar+'));')
 
-            if pref == '': tail = mv.tempcount[(qual,1)][2:]
-            else: tail = mv.tempcount[qual.list][2:]+','+mv.tempcount[qual][2:]
+            if pref == '': tail = getmv().tempcount[(qual,1)][2:]
+            else: tail = getmv().tempcount[qual.list][2:]+','+getmv().tempcount[qual][2:]
 
             self.start('FOR_IN'+pref+'('+iter+','+itervar+','+tail)
             print >>self.out, self.line+')'
@@ -4335,7 +4334,7 @@ class generateVisitor(ASTVisitor):
         # pair conversion flags to mod args
         # XXX error("unsupported format character", node)
 
-        flags = [] # XXX use in mv.visitMod
+        flags = [] # XXX use in getmv().visitMod
         state = 0
         for i, c in enumerate(node.left.value):
             if c == '%':
@@ -4470,7 +4469,7 @@ class generateVisitor(ASTVisitor):
             self.append(map[node.name])
 
         else: # XXX clean up
-            if not self.mergeinh[node] and not inode(node).parent in gx.inheritance_relations:
+            if not self.mergeinh[node] and not inode(node).parent in getgx().inheritance_relations:
                 error("variable '"+node.name+"' has no type", node, warning=True)
                 self.append(node.name)
             elif singletype(node, module):
@@ -4540,8 +4539,8 @@ def split_subsplit(split, varname, tvar=True):
             else:
                 var = t[0].vars[varname]
 
-            if (var, t[1], 0) in gx.cnode: # XXX yeah?
-                subsplit[dcpa, cpa].update(gx.cnode[var, t[1], 0].types())
+            if (var, t[1], 0) in getgx().cnode: # XXX yeah?
+                subsplit[dcpa, cpa].update(getgx().cnode[var, t[1], 0].types())
 
     return subsplit
 
@@ -4583,9 +4582,9 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None):
     anon_funcs = set([t[0] for t in alltypes if isinstance(t[0], function)])
     if anon_funcs:
         f = anon_funcs.pop()
-        if not f in mv.lambda_signum: # XXX method reference
+        if not f in getmv().lambda_signum: # XXX method reference
             return '__method_ref_0'
-        return 'lambda'+str(mv.lambda_signum[f])
+        return 'lambda'+str(getmv().lambda_signum[f])
 
     classes = polymorphic_cl(split_classes(split))
     lcp = lowest_common_parents(classes)
@@ -4622,7 +4621,7 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None):
             
     # --- namespace prefix
     namespace = ''
-    if cl.module not in [mv.module, gx.modules['builtin']] and not (cl.ident in mv.ext_funcs or cl.ident in mv.ext_classes):
+    if cl.module not in [getmv().module, getgx().modules['builtin']] and not (cl.ident in getmv().ext_funcs or cl.ident in getmv().ext_classes):
         namespace = cl.module.ident+'::'
         if cplusplus: namespace = '__'+cl.module.ident+'__::'
 
@@ -4636,8 +4635,8 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None):
     #    template_vars = cl.template_vars
 
     if not template_vars:
-        if cl.ident in gx.cpp_keywords:
-            return namespace+gx.ss_prefix+map(cl.ident)
+        if cl.ident in getgx().cpp_keywords:
+            return namespace+getgx().ss_prefix+map(cl.ident)
         return namespace+map(cl.ident)
 
     subtypes = [] 
@@ -4662,8 +4661,8 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None):
     if ident in ['frozenset', 'pyset'] and cplusplus:
         ident = 'set'
         
-    if ident in gx.cpp_keywords:
-        ident = gx.ss_prefix+ident
+    if ident in getgx().cpp_keywords:
+        ident = getgx().ss_prefix+ident
 
     # --- final type representation
     return namespace+ident+sep[0]+', '.join(subtypes)+sep[1]+ptr
@@ -4673,9 +4672,9 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None):
 def typesplit(node, parent):
     split = {} 
 
-    if isinstance(parent, function) and parent in gx.inheritance_relations: # XXX templates
-        if node in gx.merged_inh:
-            split[1,0] = gx.merged_inh[node]
+    if isinstance(parent, function) and parent in getgx().inheritance_relations: # XXX templates
+        if node in getgx().merged_inh:
+            split[1,0] = getgx().merged_inh[node]
         return split
 
     while is_listcomp(parent): 
@@ -4683,22 +4682,22 @@ def typesplit(node, parent):
 
     if isinstance(parent, class_): # class variables
         for dcpa in range(1, parent.dcpa):
-            if (node, dcpa, 0) in gx.cnode:
-                split[dcpa, 0] = gx.cnode[node, dcpa, 0].types()
+            if (node, dcpa, 0) in getgx().cnode:
+                split[dcpa, 0] = getgx().cnode[node, dcpa, 0].types()
 
     elif isinstance(parent, function):
         if isinstance(parent.parent, class_): # method variables/expressions (XXX nested functions)
             for dcpa in range(1, parent.parent.dcpa):
                 if dcpa in parent.cp:
                     for cpa in range(len(parent.cp[dcpa])): 
-                        if (node, dcpa, cpa) in gx.cnode:
-                            split[dcpa, cpa] = gx.cnode[node, dcpa, cpa].types()
+                        if (node, dcpa, cpa) in getgx().cnode:
+                            split[dcpa, cpa] = getgx().cnode[node, dcpa, cpa].types()
 
         else: # function variables/expressions
             if 0 in parent.cp:
                 for cpa in range(len(parent.cp[0])): 
-                    if (node, 0, cpa) in gx.cnode:
-                        split[0, cpa] = gx.cnode[node, 0, cpa].types()
+                    if (node, 0, cpa) in getgx().cnode:
+                        split[0, cpa] = getgx().cnode[node, 0, cpa].types()
     else:
         split[0, 0] = inode(node).types()
 
@@ -4711,7 +4710,7 @@ def lowest_common_parents(classes):
     changed = 1
     while changed:
         changed = 0
-        for cl in gx.allclasses:
+        for cl in getgx().allclasses:
              desc_in_classes = [[c for c in ch.descendants(inclusive=True) if c in lcp] for ch in cl.children]
              if len([d for d in desc_in_classes if d]) > 1:
                  for d in desc_in_classes:
@@ -4739,17 +4738,17 @@ def printtypeset(types):
 
 def printstate():
     #print 'state:'
-    printtypeset(gx.types)
+    printtypeset(getgx().types)
     
 def printconstraints():
     #print 'constraints:'
-    l = list(gx.constraints)
+    l = list(getgx().constraints)
     l.sort(lambda x, y: cmp(repr(x[0]),repr(y[0])))
     for (a,b) in l:
         if not (a.mv.module.builtin and b.mv.module.builtin):
             print a, '->', b
-            if not a in gx.types or not b in gx.types:
-                print 'NOTYPE', a in gx.types, b in gx.types
+            if not a in getgx().types or not b in getgx().types:
+                print 'NOTYPE', a in getgx().types, b in getgx().types
     print
 
 def cartesian(*lists):
@@ -4765,19 +4764,19 @@ def cartesian(*lists):
 errormsgs = set()
 
 def seed_nodes():
-    for node in gx.types:
+    for node in getgx().types:
         if isinstance(node.thing, Name):
             if node.thing.name in ['True', 'False']:
-                gx.types[node] = set([(defclass('int_'), 0)])
+                getgx().types[node] = set([(defclass('int_'), 0)])
             elif node.thing.name == 'None':
-                gx.types[node] = set([(defclass('none'), 0)])
+                getgx().types[node] = set([(defclass('none'), 0)])
 
 def in_out(a, b):
     a.out.add(b)
     b.in_.add(a)
 
 def addconstraint(a, b, worklist=None):
-    gx.constraints.add((a,b))
+    getgx().constraints.add((a,b))
     in_out(a, b)
     addtoworklist(worklist, a)
     
@@ -4788,7 +4787,7 @@ def addtoworklist(worklist, node):
 
 def init_worklist():
     worklist = []
-    for node, types in gx.types.items():
+    for node, types in getgx().types.items():
         if types: 
             addtoworklist(worklist, node)
     return worklist
@@ -4801,17 +4800,17 @@ def propagate():
     worklist = init_worklist()
     #print 'worklist', worklist
 
-    gx.checkcallfunc = [] # XXX 
+    getgx().checkcallfunc = [] # XXX 
 
     # --- check whether seeded nodes are object/argument to call  
     changed = set()
     for w in worklist:
         for callfunc in w.callfuncs:
             #print 'seed changed', w.callfunc, w.dcpa, w.cpa
-            changed.add(gx.cnode[callfunc, w.dcpa, w.cpa])
+            changed.add(getgx().cnode[callfunc, w.dcpa, w.cpa])
 
     # --- statically bind calls without object/arguments 
-    for node in gx.types:
+    for node in getgx().types:
         expr = node.thing
         if isinstance(expr, CallFunc) and not expr.args:
             changed.add(node)
@@ -4826,41 +4825,41 @@ def propagate():
          
         for b in a.out.copy(): # XXX kan veranderen...?
             # for builtin types, the set of instance variables is known, so do not flow into non-existent ones # XXX ifa
-            if isinstance(b.thing, variable) and isinstance(b.thing.parent, class_) and b.thing.parent.ident in gx.builtins:
+            if isinstance(b.thing, variable) and isinstance(b.thing.parent, class_) and b.thing.parent.ident in getgx().builtins:
                 if b.thing.parent.ident in ['int_', 'float_', 'str_', 'none']: continue
                 elif b.thing.parent.ident in ['list', 'tuple', 'frozenset', 'set', 'file','__iter'] and b.thing.name != 'unit': continue 
                 elif b.thing.parent.ident == 'dict' and b.thing.name not in ['unit', 'value']: continue
                 elif b.thing.parent.ident == 'tuple2' and b.thing.name not in ['unit', 'first', 'second']: continue
 
-                #print 'flow', a, b #, difference #, difference, gx.types[b], b.callfunc
+                #print 'flow', a, b #, difference #, difference, getgx().types[b], b.callfunc
 
-            difference = gx.types[a] - gx.types[b]
+            difference = getgx().types[a] - getgx().types[b]
 
             if difference:
                 if isinstance(b.thing, variable) and b.thing.filter: # apply filter
                     #print 'aha', b.thing.filter, difference, [d for d in difference if d[0] in b.thing.filter] 
                     difference = set([d for d in difference if d[0] in b.thing.filter])
 
-                gx.types[b].update(difference)
+                getgx().types[b].update(difference)
 
                 # --- flow may be constrained by run-time checks, e.g. isinstance(..) # XXX and by method calls
-                #if (b.thing, 0, 0) in gx.cnode: # XXX
-                #    filters = gx.cnode[b.thing, 0, 0].filters
+                #if (b.thing, 0, 0) in getgx().cnode: # XXX
+                #    filters = getgx().cnode[b.thing, 0, 0].filters
                 #    if filters:
                 #        print 'filter', b.thing, filters
-                #        gx.types[b] = set([t for t in gx.types[b] if t[0] in filters]) # XXX efficiency, inheritance
+                #        getgx().types[b] = set([t for t in getgx().types[b] if t[0] in filters]) # XXX efficiency, inheritance
 
                 # --- check whether node corresponds to actual argument: if so, perform cartesian product algorithm
                 for callfunc in b.callfuncs:
-                    #print 'id changed', b.callfunc, b.dcpa, b.cpa, gx.types[b], a
-                    cpa(gx.cnode[callfunc, b.dcpa, b.cpa], worklist)
+                    #print 'id changed', b.callfunc, b.dcpa, b.cpa, getgx().types[b], a
+                    cpa(getgx().cnode[callfunc, b.dcpa, b.cpa], worklist)
 
                 addtoworklist(worklist, b)
 
-                while gx.checkcallfunc: # XXX
-                    b = gx.checkcallfunc.pop()
+                while getgx().checkcallfunc: # XXX
+                    b = getgx().checkcallfunc.pop()
                     for callfunc in b.callfuncs:
-                        cpa(gx.cnode[callfunc, b.dcpa, b.cpa], worklist)
+                        cpa(getgx().cnode[callfunc, b.dcpa, b.cpa], worklist)
 
 
 def lookupmodule(node, imports):
@@ -4893,13 +4892,13 @@ def analyze_callfunc(node, check_exist=False): # XXX generate target list XXX un
 
         var = lookupvar(ident, inode(node).parent)
         module = lookupmodule(node.node.expr, imports)
-        iscl = isinstance(objexpr, Name) and (objexpr.name in mv.classes or objexpr.name in mv.ext_classes)
+        iscl = isinstance(objexpr, Name) and (objexpr.name in getmv().classes or objexpr.name in getmv().ext_classes)
 
         if iscl and (not var or not var.parent):
-            if objexpr.name in mv.classes:
-                cl = mv.classes[objexpr.name]
+            if objexpr.name in getmv().classes:
+                cl = getmv().classes[objexpr.name]
             else:
-                cl = mv.ext_classes[objexpr.name]
+                cl = getmv().ext_classes[objexpr.name]
             if ident in cl.staticmethods: 
                 direct_call = cl.funcs[ident]
                 return objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr
@@ -4993,14 +4992,14 @@ def cartesian_product(node, worklist):
 
     if not node.mv.module.builtin or node.mv.module.ident == 'path': # XXX to analyze_callfunc
         subnode = expr.node, node.dcpa, node.cpa
-        if subnode in gx.cnode:
-            stypes = gx.cnode[subnode].types() 
+        if subnode in getgx().cnode:
+            stypes = getgx().cnode[subnode].types() 
             if [t for t in stypes if isinstance(t[0], function)]:
                 anon_func = True
 
     if anon_func:
         # anonymous call 
-        types = gx.cnode[expr.node, node.dcpa, node.cpa].types()
+        types = getgx().cnode[expr.node, node.dcpa, node.cpa].types()
 
         if types:
             if list(types)[0][0].parent: # method reference XXX merge below?
@@ -5014,19 +5013,19 @@ def cartesian_product(node, worklist):
         funcs = [(t[0].funcs['__init__'], t[1], t) for t in node.types() if '__init__' in t[0].funcs]
 
     elif parent_constr:
-        objtypes = gx.cnode[lookupvar('self', node.parent), node.dcpa, node.cpa].types() 
+        objtypes = getgx().cnode[lookupvar('self', node.parent), node.dcpa, node.cpa].types() 
         funcs = [(t[0].funcs[ident], t[1], None) for t in objtypes if ident in t[0].funcs]
 
     elif direct_call:
         funcs = [(direct_call, 0, None)]
     
         if ident == 'dict':
-            clnames = [t[0].ident for t in gx.cnode[expr.args[0],node.dcpa,node.cpa].types() if isinstance(t[0], class_)]
+            clnames = [t[0].ident for t in getgx().cnode[expr.args[0],node.dcpa,node.cpa].types() if isinstance(t[0], class_)]
             if 'dict' in clnames or 'defaultdict' in clnames:
                 funcs = [(node.mv.ext_funcs['__dict'], 0, None)]
 
     elif method_call:
-        objtypes = gx.cnode[objexpr, node.dcpa, node.cpa].types() 
+        objtypes = getgx().cnode[objexpr, node.dcpa, node.cpa].types() 
         funcs = [(t[0].funcs[ident], t[1], t) for t in objtypes if ident in t[0].funcs]
 
     # --- argument types XXX connect_actuals_formals
@@ -5061,16 +5060,16 @@ def cartesian_product(node, worklist):
 
             if not node.defnodes:
                 defnode = cnode((inode(node.thing),i), node.dcpa, node.cpa, parent=func)
-                gx.types[defnode] = set()
+                getgx().types[defnode] = set()
 
                 defnode.callfuncs.append(node.thing)
-                addconstraint(gx.cnode[default, 0, 0], defnode, worklist)
+                addconstraint(getgx().cnode[default, 0, 0], defnode, worklist)
         node.defnodes = True
 
     argtypes = [] # XXX
     for arg in args:
-        if (arg, node.dcpa, node.cpa) in gx.cnode:
-            argtypes.append(gx.cnode[arg,node.dcpa,node.cpa].types()) 
+        if (arg, node.dcpa, node.cpa) in getgx().cnode:
+            argtypes.append(getgx().cnode[arg,node.dcpa,node.cpa].types()) 
         else:
             argtypes.append(inode(arg).types()) # XXX def arg?
 
@@ -5144,7 +5143,7 @@ def cpa(callnode, worklist):
             #if not func.mv.module.builtin and not func.ident in ['__getattr__', '__setattr__']:
             #    print 'template', (func, dcpa), c
 
-            gx.templates += 1
+            getgx().templates += 1
             func.copy(dcpa, cpa, worklist, c)
 
         cpa = func.cp[dcpa][c]
@@ -5157,9 +5156,9 @@ def cpa(callnode, worklist):
                 # builtin methods
                 varname = callfunc.args[0].value
                 #if varname in func.parent.funcs and callfunc.node.attrname == '__getattr__' and not callnode.parent_callfunc: # XXX
-                #    gx.types[callnode] = set([(func.parent.funcs[varname], objtype[0][1])])
+                #    getgx().types[callnode] = set([(func.parent.funcs[varname], objtype[0][1])])
                 #    addtoworklist(worklist, callnode)
-                #    gx.method_refs.add(callnode.thing)
+                #    getgx().method_refs.add(callnode.thing)
                 #    continue
 
                 parent = func.parent
@@ -5167,15 +5166,15 @@ def cpa(callnode, worklist):
                 var = defaultvar(varname, parent, worklist) # XXX always make new var??
                 inode(var).copy(dcpa,0,worklist)
 
-                if not gx.cnode[var,dcpa,0] in gx.types:
-                    gx.types[gx.cnode[var,dcpa,0]] = set()
+                if not getgx().cnode[var,dcpa,0] in getgx().types:
+                    getgx().types[getgx().cnode[var,dcpa,0]] = set()
 
-                gx.cnode[var,dcpa,0].mv = parent.module.mv # XXX move into defaultvar
+                getgx().cnode[var,dcpa,0].mv = parent.module.mv # XXX move into defaultvar
 
                 if callfunc.node.attrname == '__setattr__':
-                    addconstraint(gx.cnode[callfunc.args[1],callnode.dcpa,callnode.cpa], gx.cnode[var,dcpa,0], worklist)
+                    addconstraint(getgx().cnode[callfunc.args[1],callnode.dcpa,callnode.cpa], getgx().cnode[var,dcpa,0], worklist)
                 else:
-                    addconstraint(gx.cnode[var,dcpa,0], callnode, worklist)
+                    addconstraint(getgx().cnode[var,dcpa,0], callnode, worklist)
 
                 continue
         else: 
@@ -5184,7 +5183,7 @@ def cpa(callnode, worklist):
 
         # --- call and return expressions
         if func.retnode and not constructor:
-            retnode = gx.cnode[func.retnode.thing, dcpa, cpa]
+            retnode = getgx().cnode[func.retnode.thing, dcpa, cpa]
             addconstraint(retnode, callnode, worklist)
 
 def actuals_formals(expr, func, node, dcpa, cpa, types, worklist):
@@ -5201,8 +5200,8 @@ def actuals_formals(expr, func, node, dcpa, cpa, types, worklist):
     meth_func = False
     if not node.mv.module.builtin: # XXX to analyze_callfunc
         subnode = expr.node, node.dcpa, node.cpa
-        if subnode in gx.cnode:
-            stypes = gx.cnode[subnode].types() 
+        if subnode in getgx().cnode:
+            stypes = getgx().cnode[subnode].types() 
             if [t for t in stypes if isinstance(t[0], function)]:
                 anon_func = True
             if [t for t in stypes if isinstance(t[0], function) and t[0].parent]:
@@ -5219,7 +5218,7 @@ def actuals_formals(expr, func, node, dcpa, cpa, types, worklist):
     elif method_call or constructor:
         smut = [None]+smut # XXX add type here
     elif not direct_call: # XXX ?
-        types2 = gx.cnode[expr.node, node.dcpa, node.cpa].types()
+        types2 = getgx().cnode[expr.node, node.dcpa, node.cpa].types()
         if list(types2)[0][0].parent: 
             smut = [None]+smut
 
@@ -5242,7 +5241,7 @@ def actuals_formals(expr, func, node, dcpa, cpa, types, worklist):
 
     for (actual, formal, formaltype) in zip(smut, formals, types):
         #print 'connect', actual, formal, formaltype, node
-        formalnode = gx.cnode[func.vars[formal], dcpa, cpa]
+        formalnode = getgx().cnode[func.vars[formal], dcpa, cpa]
 
         if formaltype[1] != 0: # ifa: remember dataflow information for non-simple types
             if actual == None:
@@ -5250,14 +5249,14 @@ def actuals_formals(expr, func, node, dcpa, cpa, types, worklist):
                     objexpr = node.thing
 
                 if method_call or constructor:
-                    formalnode.in_.add(gx.cnode[objexpr, node.dcpa, node.cpa]) 
+                    formalnode.in_.add(getgx().cnode[objexpr, node.dcpa, node.cpa]) 
             else:
                 if actual in func.defaults:
-                    formalnode.in_.add(gx.cnode[actual, 0, 0])
+                    formalnode.in_.add(getgx().cnode[actual, 0, 0])
                 else:
-                    formalnode.in_.add(gx.cnode[actual, node.dcpa, node.cpa])
+                    formalnode.in_.add(getgx().cnode[actual, node.dcpa, node.cpa])
                 
-        gx.types[formalnode].add(formaltype)
+        getgx().types[formalnode].add(formaltype)
         addtoworklist(worklist, formalnode)
 
 def connect_actual_formal(expr, func, parent_constr=False, check_error=False):
@@ -5325,7 +5324,7 @@ def error(msg, node=None, warning=False):
     else: type = '*ERROR*'
     if node: lineno = ':'+str(node.lineno)
     else: lineno = ''
-    msg = type+' '+mv.module.ident+lineno+': '+msg
+    msg = type+' '+getmv().module.ident+lineno+': '+msg
     print msg
 
     if not warning:
@@ -5338,28 +5337,28 @@ def merged(nodes, dcpa=False, inheritance=False):
 
     #for n in nodes:
     #    if isinstance(n.thing, Name) and n.thing.name == '__0':
-    #        print 'jow', n, n.parent, n.thing in gx.inherited
+    #        print 'jow', n, n.parent, n.thing in getgx().inherited
 
     if inheritance: # XXX do we really need this crap
-        mergeinh = merged([n for n in nodes if n.thing in gx.inherited])
-        nodes = [n for n in nodes if not n.thing in gx.inherited] 
+        mergeinh = merged([n for n in nodes if n.thing in getgx().inherited])
+        nodes = [n for n in nodes if not n.thing in getgx().inherited] 
         mergenoinh = merged(nodes)
 
     for node in nodes:
         # --- merge node types
         if dcpa: sort = (node.thing, node.dcpa)
         else: sort = node.thing
-        merge.setdefault(sort, set()).update(gx.types[node]) 
+        merge.setdefault(sort, set()).update(getgx().types[node]) 
 
         # --- merge inheritance nodes
         if inheritance:
-            inh = gx.inheritance_relations.get(node.thing, [])
+            inh = getgx().inheritance_relations.get(node.thing, [])
 
             # merge function variables with their inherited versions (we don't customize!)
             if isinstance(node.thing, variable) and isinstance(node.thing.parent, function):
                 var = node.thing
 
-                for inhfunc in gx.inheritance_relations.get(var.parent, []):
+                for inhfunc in getgx().inheritance_relations.get(var.parent, []):
                     if var.name in inhfunc.vars:
                         if inhfunc.vars[var.name] in mergenoinh: # XXX
                             merge.setdefault(sort, set()).update(mergenoinh[inhfunc.vars[var.name]])
@@ -5377,10 +5376,9 @@ def merged(nodes, dcpa=False, inheritance=False):
 
 # --- annotate original code; use above function to merge results to original code dimensions
 def annotate():
-    global mv
     def paste(expr, text):
         if not expr.lineno: return
-        if (expr,0,0) in gx.cnode and inode(expr).mv != mv: return # XXX
+        if (expr,0,0) in getgx().cnode and inode(expr).mv != mv: return # XXX
         line = source[expr.lineno-1][:-1]
         if '#' in line: line = line[:line.index('#')]
         if text != '':
@@ -5391,11 +5389,12 @@ def annotate():
         if text: source[expr.lineno-1] += ' ' + text
         source[expr.lineno-1] += '\n'
 
-    for module in gx.modules.values(): 
+    for module in getgx().modules.values(): 
         mv = module.mv
+        setmv(mv)
 
         # merge type information for nodes in module XXX inheritance across modules?
-        merge = merged([n for n in gx.types if n.mv == mv], inheritance=True)
+        merge = merged([n for n in getgx().types if n.mv == mv], inheritance=True)
 
         source = open(module.filename).readlines()
 
@@ -5411,21 +5410,21 @@ def annotate():
                 paste(expr, typesetreprnew(expr, inode(expr).parent, False))
 
         # --- instance variables
-        funcs = mv.funcs.values()
-        for cl in mv.classes.values():
+        funcs = getmv().funcs.values()
+        for cl in getmv().classes.values():
             labels = [var.name+': '+typesetreprnew(var, cl, False) for var in cl.vars.values() if var in merge and merge[var] and not var.name.startswith('__')] 
             if labels: paste(cl.node, ', '.join(labels))
             funcs += cl.funcs.values()
 
         # --- function variables
         for func in funcs:
-            if not func.node or func.node in gx.inherited: continue
+            if not func.node or func.node in getgx().inherited: continue
             vars = [func.vars[f] for f in func.formals]
             labels = [var.name+': '+typesetreprnew(var, func, False) for var in vars if not var.name.startswith('__')]
             paste(func.node, ', '.join(labels))
 
         # --- callfuncs
-        for callfunc, _ in mv.callfuncs:
+        for callfunc, _ in getmv().callfuncs:
             if isinstance(callfunc.node, Getattr):
                 if not isinstance(callfunc.node, (fakeGetattr, fakeGetattr2, fakeGetattr3)):
                     paste(callfunc.node.expr, typesetreprnew(callfunc, inode(callfunc).parent, False))
@@ -5491,35 +5490,35 @@ def confusion_misc():
     var2 = lookupvar('second', cl)
     if not var1 or not var2: return # XXX ?
 
-    for dcpa in gx.tuple2.copy():
-        gx.tuple2.remove(dcpa)
+    for dcpa in getgx().tuple2.copy():
+        getgx().tuple2.remove(dcpa)
 
     # use regular tuple template for tuples used in addition
-    for node in gx.merged_all:
+    for node in getgx().merged_all:
         if isinstance(node, CallFunc):
             if isinstance(node.node, Getattr) and node.node.attrname in ['__add__','__iadd__'] and not isinstance(node.args[0], Const):
 
                 tupletypes = set()
-                for types in [gx.merged_all[node.node.expr], gx.merged_all[node.args[0]]]:
+                for types in [getgx().merged_all[node.node.expr], getgx().merged_all[node.args[0]]]:
                     for t in types: 
                         if t[0].ident == 'tuple':  
-                            if t[1] in gx.tuple2:
-                                gx.tuple2.remove(t[1])
-                                gx.types[gx.cnode[var1, t[1], 0]].update(gx.types[gx.cnode[var2, t[1], 0]])
+                            if t[1] in getgx().tuple2:
+                                getgx().tuple2.remove(t[1])
+                                getgx().types[getgx().cnode[var1, t[1], 0]].update(getgx().types[getgx().cnode[var2, t[1], 0]])
 
-                            tupletypes.update(gx.types[gx.cnode[var1, t[1], 0]])
+                            tupletypes.update(getgx().types[getgx().cnode[var1, t[1], 0]])
 
 # --- determine virtual methods and variables
 def analyze_virtuals(): 
-    for node in gx.merged_inh: # XXX all:
+    for node in getgx().merged_inh: # XXX all:
         # --- for every message
         if isinstance(node, CallFunc) and not inode(node).mv.module.builtin: #ident == 'builtin':
             objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr = analyze_callfunc(node)
-            if not method_call or objexpr not in gx.merged_inh: 
+            if not method_call or objexpr not in getgx().merged_inh: 
                 continue # XXX
 
             # --- determine abstract receiver class
-            classes = polymorphic_t(gx.merged_inh[objexpr]) 
+            classes = polymorphic_t(getgx().merged_inh[objexpr]) 
             if not classes:
                 continue
 
@@ -5554,7 +5553,7 @@ def analyze_virtuals():
 
 # --- merge variables assigned to via 'self.varname = ..' in inherited methods into base class
 def upgrade_variables():
-    for node, inheritnodes in gx.inheritance_relations.items():
+    for node, inheritnodes in getgx().inheritance_relations.items():
         if isinstance(node, AssAttr): 
             baseclass = inode(node).parent.parent
             inhclasses = [inode(x).parent.parent for x in inheritnodes]
@@ -5563,14 +5562,14 @@ def upgrade_variables():
             for inhclass in inhclasses:
                 inhvar = lookupvar(node.attrname, inhclass)
 
-                if (var, 1, 0) in gx.cnode:
-                    newnode = gx.cnode[var,1,0]
+                if (var, 1, 0) in getgx().cnode:
+                    newnode = getgx().cnode[var,1,0]
                 else:
                     newnode = cnode(var, 1, 0, parent=baseclass)
-                    gx.types[newnode] = set()
+                    getgx().types[newnode] = set()
 
-                if inhvar in gx.merged_all: # XXX ?
-                    gx.types[newnode].update(gx.merged_all[inhvar])
+                if inhvar in getgx().merged_all: # XXX ?
+                    getgx().types[newnode].update(getgx().merged_all[inhvar])
 
 
 def subclass(a, b):
@@ -5581,7 +5580,7 @@ def subclass(a, b):
 
 def template_parameters():
     # --- determine initial template variables (we might add prediction here later on)
-    for cl in gx.allclasses: # (first do class template vars, as function depend on them) # XXX recursion!
+    for cl in getgx().allclasses: # (first do class template vars, as function depend on them) # XXX recursion!
          #if not cl.bases and not cl.children: # XXX
              if cl.ident in ['dict', 'defaultdict'] and 'unit' in cl.vars and 'value' in cl.vars:
                  vars = [cl.vars['unit'], cl.vars['value']]
@@ -5602,8 +5601,8 @@ def template_parameters():
         if not 'B' in defclass(clname).template_vars:
             defaultvar('B', defclass(clname), template_var=True)
 
-    allfuncs = gx.allfuncs.copy() 
-    allfuncs.update(gx.modules['builtin'].funcs.values())
+    allfuncs = getgx().allfuncs.copy() 
+    allfuncs.update(getgx().modules['builtin'].funcs.values())
  
     for func in allfuncs:
         #if func.mv.module.ident != 'builtin':
@@ -5616,16 +5615,16 @@ def template_parameters():
 
     # --- remove template variables until the C++ compiler exactly knows all types
     #     (uncertainty arises from passing truly polymorphic object into parameterized arguments)
-    gx.changed = True
-    while gx.changed:
-        gx.changed = False
+    getgx().changed = True
+    while getgx().changed:
+        getgx().changed = False
 
-        for node in gx.merged_all:
+        for node in getgx().merged_all:
             if isinstance(node, CallFunc):
                 objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr = analyze_callfunc(node)
                 if ident and ident.startswith('__'): continue # XXX
 
-                targets = callfunc_targets(node, gx.merged_all) # XXX getting targets, pairs in sep func..
+                targets = callfunc_targets(node, getgx().merged_all) # XXX getting targets, pairs in sep func..
                 for target in targets:
                     if isinstance(target.parent, class_) and target.parent.module.ident == 'builtin':
                         continue
@@ -5639,7 +5638,7 @@ def template_parameters():
                         formalsplit = typesplit(rvalue, target)
                         template_disable_rec(argsplit, inode(node).parent, formalsplit, target)
 
-        for parent in gx.allfuncs.union(gx.allclasses):
+        for parent in getgx().allfuncs.union(getgx().allclasses):
             new_dict = {}
             var_nr = 0
             if is_method(parent): 
@@ -5654,10 +5653,10 @@ def template_parameters():
             parent.template_vars = new_dict
              
     # --- output generic classes/functions
-    for cl in gx.allclasses: 
+    for cl in getgx().allclasses: 
         if cl.template_vars and not cl.mv.module.builtin:
             print template_repr(cl)+'class '+cl.ident
-    for func in gx.allfuncs:
+    for func in getgx().allfuncs:
         if func.template_vars and not func.mv.module.builtin:
             print template_repr(func)+func.ident 
 
@@ -5734,7 +5733,7 @@ def insert_template_var(split, parent):
 
     for (dcpa, cpa), types in split.items():
         newnode = cnode(new_tvar, dcpa, cpa)
-        gx.types[newnode] = types
+        getgx().types[newnode] = types
 
 
 # --- disable template variables, if a truly polymorphic object reaches them
@@ -5747,7 +5746,7 @@ def template_disable_rec(argsplit, func, formalsplit, target):
         if len(lcp) == 2 and defclass('int_') in lcp and defclass('float_') in lcp: # XXX
             return
         if len(lcp) > 1 and not template_match(argsplit, func) and template_match(formalsplit, target) and not template_match(formalsplit, target).template_disabled:
-            gx.changed = True
+            getgx().changed = True
             template_match(formalsplit, target).template_disabled = True
         return
 
@@ -5765,7 +5764,7 @@ def template_disable_rec(argsplit, func, formalsplit, target):
 
 # --- recursively visit all variable types, to see if ints/floats flow together with each other or pointer types
 def confused_vars():
-    for var in gx.allvars:
+    for var in getgx().allvars:
         #print 'confvar', var
         parent = parent_func(var) # XXX not necessary?
         if isinstance(parent, static_class): continue # XXX
@@ -5845,7 +5844,7 @@ def assign_needs_cast_rec(argsplit, func, formalsplit, target):
 # --- number classes with low and high numbers, to enable constant-time subclass check
 def number_classes():
     counter = 0
-    for cl in gx.allclasses:
+    for cl in getgx().allclasses:
         if not cl.bases: 
             counter = number_class_rec(cl, counter+1)
 
@@ -5862,7 +5861,7 @@ def ifa():
     redundant = {} # {redundant contour: similar contour we will map it to}
     removals = [] # [removed contour, ..]
 
-    classes = [defclass('list'), defclass('tuple'), defclass('tuple2'), defclass('dict'), defclass('set'),defclass('frozenset')]+[cl for cl in gx.allclasses if cl.ident not in ['str_','int_','float_','none','pyseq','pyset','class_','list','tuple','tuple2','dict','set','frozenset']]
+    classes = [defclass('list'), defclass('tuple'), defclass('tuple2'), defclass('dict'), defclass('set'),defclass('frozenset')]+[cl for cl in getgx().allclasses if cl.ident not in ['str_','int_','float_','none','pyseq','pyset','class_','list','tuple','tuple2','dict','set','frozenset']]
 
     for cl in classes:
         cl.splits = {}
@@ -5872,7 +5871,7 @@ def ifa():
     sys.stdout.flush()
 
     for cl in classes:
-        if gx.avoid_loops and cl.ident not in ['str_','int_','float_','none','pyiter','pyseq','class_','list','tuple','tuple2','dict','set', '__iter']:
+        if getgx().avoid_loops and cl.ident not in ['str_','int_','float_','none','pyiter','pyseq','class_','list','tuple','tuple2','dict','set', '__iter']:
             continue
 
         if split or redundant or removals:   
@@ -5904,8 +5903,8 @@ def ifa():
 
             attr_types = [] # XXX merge with ifa_merge_contours.. sep func?
             for var in vars:
-                if (var,dcpa,0) in gx.cnode:
-                    attr_types.append(merge_simple_types(gx.cnode[var,dcpa,0].types()))
+                if (var,dcpa,0) in getgx().cnode:
+                    attr_types.append(merge_simple_types(getgx().cnode[var,dcpa,0].types()))
                 else:
                     attr_types.append(frozenset())
             attr_types = tuple(attr_types)
@@ -5930,21 +5929,21 @@ def ifa():
             attr_types = nr_classes[dcpa]
 
             for (varnum, var) in enumerate(vars):
-                if not (var, dcpa, 0) in gx.cnode: continue
+                if not (var, dcpa, 0) in getgx().cnode: continue
                   
                 #if cl.ident == 'node':
                 #    print 'var', var
 
                 # --- determine assignment sets for this contour
-                node = gx.cnode[var, dcpa, 0]
+                node = getgx().cnode[var, dcpa, 0]
                 assignsets = {} # class set -> targets
                 alltargets = set()
 
                 for a in node.in_:
-                    types = gx.types[a]
+                    types = getgx().types[a]
                     if types:
-                        if a.thing in gx.assign_target: # XXX *args
-                            target = gx.cnode[gx.assign_target[a.thing], a.dcpa, a.cpa]
+                        if a.thing in getgx().assign_target: # XXX *args
+                            target = getgx().cnode[getgx().assign_target[a.thing], a.dcpa, a.cpa]
                             #print 'target', a, target, types
                             alltargets.add(target)
                             assignsets.setdefault(merge_simple_types(types), []).append(target) 
@@ -5955,7 +5954,7 @@ def ifa():
                 bah = set() # XXX coarse recursion check
                 for ass in assignsets:
                     bah.update(ass)
-                if cl.ident not in gx.builtins:
+                if cl.ident not in getgx().builtins:
                     if not [c for c, _ in bah if c.ident not in (cl.ident, 'none')]:
                         #print 'buggert!'
                         continue
@@ -5986,7 +5985,7 @@ def ifa():
                 # --- split off empty assignment sets (eg, [], or [x[0]] where x is None in some template)
                 if assignsets and cl.ident in ['list', 'tuple']: # XXX amaze, msp_ss
                     allcsites = set()
-                    for n, types in gx.types.items():
+                    for n, types in getgx().types.items():
                         if (cl, dcpa) in types and not n.in_:
                             allcsites.add(n)
 
@@ -5999,7 +5998,7 @@ def ifa():
                         newdcpa += 1
                         #return split, redundant, removals
 
-                if len(merge_simple_types(gx.types[node])) < 2 or len(assignsets) == 1:
+                if len(merge_simple_types(getgx().types[node])) < 2 or len(assignsets) == 1:
                     #print 'singleton set'
                     continue
 
@@ -6167,26 +6166,26 @@ def iterative_dataflow_analysis():
     backup = backup_network()
 
     while True:
-        gx.iterations += 1
+        getgx().iterations += 1
         # --- propagate using cartesian product algorithm
 
-        gx.new_alloc_info = {}
+        getgx().new_alloc_info = {}
 
         #print 'table'
-        #print '\n'.join([repr(e)+': '+repr(l) for e,l in gx.alloc_info.items()])
+        #print '\n'.join([repr(e)+': '+repr(l) for e,l in getgx().alloc_info.items()])
         #print 'propagate'
 
         propagate()
         #printstate()
 
-        gx.alloc_info = gx.new_alloc_info
+        getgx().alloc_info = getgx().new_alloc_info
 
         # --- ifa: detect conflicting assignments to instance variables, and split contours to resolve these
         split, redundant, removed = ifa()
         #if split: print 'splits', [(s[0], s[1], s[3]) for s in split]
 
         if not (split or redundant): # nothing has changed XXX 
-            print '\niterations:', gx.iterations, 'templates:', gx.templates
+            print '\niterations:', getgx().iterations, 'templates:', getgx().templates
             return
 
         # --- update alloc info table for split contours
@@ -6205,7 +6204,7 @@ def iterative_dataflow_analysis():
                                 if parent.parent and isinstance(parent.parent, class_): # self
                                     cart = ((parent.parent, n.dcpa),)+cart
 
-                                gx.alloc_info[parent.ident, cart, n.thing] = (cl, newnr) 
+                                getgx().alloc_info[parent.ident, cart, n.thing] = (cl, newnr) 
                                 break
 
         beforetypes = backup[0]
@@ -6231,7 +6230,7 @@ def iterative_dataflow_analysis():
                     beforetypes[node] = set(newtypes)
 
             new_info = {}
-            for (parent, cart, thing), x in gx.alloc_info.items():
+            for (parent, cart, thing), x in getgx().alloc_info.items():
                 remove = False
                 new_cart = []
                 for t in cart: 
@@ -6244,7 +6243,7 @@ def iterative_dataflow_analysis():
                     x = (x[0], redundant[x])
 
                 new_info[parent, tuple(new_cart), thing] = x
-            gx.alloc_info = new_info
+            getgx().alloc_info = new_info
 
         # --- create new class types, and seed global nodes 
         for cl, dcpa, nodes, newnr in split: 
@@ -6278,16 +6277,16 @@ def ifa_seed_template(func, cart, dcpa, cpa, worklist):
                 while isinstance(parent.parent, function): parent = parent.parent
 
                 alloc_id = (parent.ident, cart, node.thing) # XXX ident?
-                alloc_node = gx.cnode[node.thing, dcpa, cpa]
+                alloc_node = getgx().cnode[node.thing, dcpa, cpa]
 
-                if alloc_id in gx.alloc_info:
-                    pass #    print 'specified', func.ident, cart, alloc_node, alloc_node.callfuncs, gx.alloc_info[alloc_id]
+                if alloc_id in getgx().alloc_info:
+                    pass #    print 'specified', func.ident, cart, alloc_node, alloc_node.callfuncs, getgx().alloc_info[alloc_id]
 
                 # --- contour is newly split: copy allocation type for 'mother' contour; modify alloc_info
                 else:
                     mother_alloc_id = alloc_id
 
-                    for (id, c, thing) in gx.alloc_info:
+                    for (id, c, thing) in getgx().alloc_info:
                         if id ==  parent.ident and thing is node.thing:
                             okay = True
                             for a, b in zip(cart, c):
@@ -6304,34 +6303,34 @@ def ifa_seed_template(func, cart, dcpa, cpa, worklist):
 
                     #print 'not specified.. mother id:', mother_alloc_id
 
-                    if mother_alloc_id in gx.alloc_info:
-                        gx.alloc_info[alloc_id] = gx.alloc_info[mother_alloc_id]
-                        #print 'mothered', alloc_node, gx.alloc_info[mother_alloc_id]
-                    elif gx.types[node]: # empty constructors that do not flow to assignments have no type
-                        #print 'no mother', func.ident, cart, mother_alloc_id, alloc_node, gx.types[node]
-                        gx.alloc_info[alloc_id] = list(gx.types[node])[0]
+                    if mother_alloc_id in getgx().alloc_info:
+                        getgx().alloc_info[alloc_id] = getgx().alloc_info[mother_alloc_id]
+                        #print 'mothered', alloc_node, getgx().alloc_info[mother_alloc_id]
+                    elif getgx().types[node]: # empty constructors that do not flow to assignments have no type
+                        #print 'no mother', func.ident, cart, mother_alloc_id, alloc_node, getgx().types[node]
+                        getgx().alloc_info[alloc_id] = list(getgx().types[node])[0]
                     else:
                         #print 'oh boy'
-                        for (id, c, thing) in gx.alloc_info: # XXX vhy?
+                        for (id, c, thing) in getgx().alloc_info: # XXX vhy?
                             if id == parent.ident and thing is node.thing:
                                 mother_alloc_id = (id, c, thing)
-                                gx.alloc_info[alloc_id] = gx.alloc_info[mother_alloc_id]
+                                getgx().alloc_info[alloc_id] = getgx().alloc_info[mother_alloc_id]
                                 break
                         #assert false
 
-                    #if alloc_id in gx.alloc_info: # XXX faster
-                    #    print 'seed', func.ident, cart, alloc_node, gx.alloc_info[alloc_id]
+                    #if alloc_id in getgx().alloc_info: # XXX faster
+                    #    print 'seed', func.ident, cart, alloc_node, getgx().alloc_info[alloc_id]
 
-                if alloc_id in gx.alloc_info:
-                    gx.new_alloc_info[alloc_id] = gx.alloc_info[alloc_id]
+                if alloc_id in getgx().alloc_info:
+                    getgx().new_alloc_info[alloc_id] = getgx().alloc_info[alloc_id]
 
-                    gx.types[alloc_node] = set()
-                    #print 'seeding..', alloc_node, gx.alloc_info[alloc_id], alloc_node.thing in gx.empty_constructors
-                    gx.types[alloc_node].add(gx.alloc_info[alloc_id])
+                    getgx().types[alloc_node] = set()
+                    #print 'seeding..', alloc_node, getgx().alloc_info[alloc_id], alloc_node.thing in getgx().empty_constructors
+                    getgx().types[alloc_node].add(getgx().alloc_info[alloc_id])
                     addtoworklist(worklist, alloc_node)
 
                     if alloc_node.callfuncs: # XXX 
-                        gx.checkcallfunc.append(alloc_node)
+                        getgx().checkcallfunc.append(alloc_node)
 
 # --- for a set of target nodes of a specific type of assignment (e.g. int to (list,7)), flow back to creation points
 def backflow_path(worklist, t):
@@ -6340,7 +6339,7 @@ def backflow_path(worklist, t):
         new = []
         for node in worklist:
             for incoming in node.in_:
-                if t in gx.types[incoming]:
+                if t in getgx().types[incoming]:
                     incoming.fout.add(node)
 
                     if not incoming in path: 
@@ -6366,16 +6365,16 @@ def flow_creation_sites(worklist, allnodes):
 # --- backup constraint network
 def backup_network():
     beforetypes = {}
-    for node, typeset in gx.types.items():
+    for node, typeset in getgx().types.items():
         beforetypes[node] = typeset.copy()
 
-    beforeconstr = gx.constraints.copy()
+    beforeconstr = getgx().constraints.copy()
 
     beforeinout = {}
-    for node in gx.types:
+    for node in getgx().types:
         beforeinout[node] = (node.in_.copy(), node.out.copy()) 
 
-    beforecnode = gx.cnode.copy()
+    beforecnode = getgx().cnode.copy()
 
     return (beforetypes, beforeconstr, beforeinout, beforecnode)
 
@@ -6383,32 +6382,32 @@ def backup_network():
 def restore_network(backup):
     beforetypes, beforeconstr, beforeinout, beforecnode = backup
 
-    gx.types = {}
+    getgx().types = {}
     for node, typeset in beforetypes.items():
-        gx.types[node] = typeset.copy()
+        getgx().types[node] = typeset.copy()
 
-    gx.constraints = beforeconstr.copy()
-    gx.cnode = beforecnode.copy()
+    getgx().constraints = beforeconstr.copy()
+    getgx().cnode = beforecnode.copy()
 
-    for node, typeset in gx.types.items():
+    for node, typeset in getgx().types.items():
         node.nodecp = set()
         node.defnodes = False
         befinout = beforeinout[node]
         node.in_, node.out = befinout[0].copy(), befinout[1].copy()
         node.fout = set() # XXX ?
 
-    for var in gx.allvars: # XXX we have to restore some variable constraint nodes.. remove vars?
-        if not (var, 0, 0) in gx.cnode:
+    for var in getgx().allvars: # XXX we have to restore some variable constraint nodes.. remove vars?
+        if not (var, 0, 0) in getgx().cnode:
             newnode = cnode(var, parent=var.parent)
 
     # --- clear templates 
-    for func in gx.allfuncs:
+    for func in getgx().allfuncs:
         func.cp = {}
 
-    for cl in gx.modules['builtin'].classes.values():
+    for cl in getgx().modules['builtin'].classes.values():
         for func in cl.funcs.values():
             func.cp = {}
-    for func in gx.modules['builtin'].funcs.values():
+    for func in getgx().modules['builtin'].funcs.values():
         func.cp = {}
 
 def merge_simple_types(types):
@@ -6440,7 +6439,7 @@ def apply_filters(types, merge):
     # XXX y = x+1, self.a = x.meth(), expr.a = x.meth() -> retvals
     # XXX y = expr.meth().meth() -> retvals
 
-    print 'ass', gx.assignments
+    print 'ass', getgx().assignments
 
     changed = 1
     while changed:
@@ -6455,7 +6454,7 @@ def apply_filters(types, merge):
                     if not inode(node.thing).fakert:
                         #print 'GETATTR', node.thing, inode(node.thing).fakert
                         var = lookupvar(node.thing.expr.name, node.parent)
-                        filter = set([cl for cl in gx.allclasses if not cl.mv.module.builtin or node.thing.attrname in cl.funcs])
+                        filter = set([cl for cl in getgx().allclasses if not cl.mv.module.builtin or node.thing.attrname in cl.funcs])
                         if filter_flow(filter, var):
                             changed = 1
                             print 'getattr filter', var, var.filter, node.thing
@@ -6475,7 +6474,7 @@ def apply_filters(types, merge):
                         if isinstance(objexpr, Name): # XXX move out of iter loop?
                             var = lookupvar(objexpr.name, node.parent)
                             #print 'on var', var
-                            filter = set([cl for cl in gx.allclasses if ident in cl.funcs])
+                            filter = set([cl for cl in getgx().allclasses if ident in cl.funcs])
                             #print 'filter', filter
                             if filter_flow(filter, var):
                                 changed = 1
@@ -6484,7 +6483,7 @@ def apply_filters(types, merge):
                         # self.var.meth()
                         elif isinstance(objexpr, Getattr) and isinstance(objexpr.expr, Name) and objexpr.expr.name == 'self' and node.parent and node.parent.parent:
                             var = defaultvar(objexpr.attrname, node.parent.parent)
-                            filter = set([cl for cl in gx.allclasses if ident in cl.funcs])
+                            filter = set([cl for cl in getgx().allclasses if ident in cl.funcs])
                             if filter_flow(filter, var):
                                 changed = 1
                                 print 'self.var filter', node.thing, var, filter
@@ -6528,7 +6527,7 @@ def apply_filters(types, merge):
                                         print 'prop filter', var, var.filter, node.thing
 
         # --- variable assignment flow
-        for lvar, rvar in gx.assignments:
+        for lvar, rvar in getgx().assignments:
             if isinstance(lvar, variable) and filter_flow(lvar.filter, rvar):
                 changed = 1
                 print 'flow filter', lvar, rvar
@@ -6552,36 +6551,39 @@ def parsefile(name):
         sys.exit()
 
 def analysis(source, testing=False):
-    global mv, gx
-
     if testing: 
         gx = globalInfo()
+        setgx(gx)
         ast = parse(source+'\n')
     else:
+        gx = getgx()
         ast = parsefile(source)
+
     mv = None
+    setmv(mv)
 
     # --- build dataflow graph from source code
     gx.main_module = module(gx.main_mod, ast)
     gx.main_module.filename = gx.main_mod+'.py'
     gx.modules[gx.main_mod] = gx.main_module
     mv = gx.main_module.mv
+    setmv(mv)
 
     # --- seed class_.__name__ attributes..
-    for cl in gx.allclasses:
+    for cl in getgx().allclasses:
         if cl.ident == 'class_':
             var = defaultvar('__name__', cl)
-            gx.types[inode(var)] = set([(defclass('str_'), 0)])
+            getgx().types[inode(var)] = set([(defclass('str_'), 0)])
 
     # --- number classes (-> constant-time subclass check)
     number_classes()
 
     # --- non-ifa: copy classes for each allocation site
-    for cl in gx.allclasses:
+    for cl in getgx().allclasses:
         if cl.ident in ['int_','float_','none', 'class_','str_']: continue
 
         if cl.ident == 'list':
-            cl.dcpa = len(gx.list_types)+2
+            cl.dcpa = len(getgx().list_types)+2
         elif cl.ident == '__iter': # XXX huh
             pass
         else:
@@ -6591,44 +6593,45 @@ def analysis(source, testing=False):
             cl.copy(dcpa)
 
     var = defaultvar('unit', defclass('str_'))
-    gx.types[inode(var)] = set([(defclass('str_'), 0)])
+    getgx().types[inode(var)] = set([(defclass('str_'), 0)])
 
     #printstate()
     #printconstraints()
 
     # --- filters
-    #merge = merged(gx.types)
-    #apply_filters(gx.types.copy(), merge)
+    #merge = merged(getgx().types)
+    #apply_filters(getgx().types.copy(), merge)
    
     # --- cartesian product algorithm & iterative flow analysis
     iterative_dataflow_analysis()
     #propagate()
 
-    #merge = merged(gx.types)
-    #apply_filters(gx.types, merge)
+    #merge = merged(getgx().types)
+    #apply_filters(getgx().types, merge)
 
-    for cl in gx.allclasses:
+    for cl in getgx().allclasses:
         for name in cl.vars:
             if name in cl.parent.vars and not name.startswith('__'):
                 error("instance variable '%s' of class '%s' shadows class variable" % (name, cl.ident))
 
-    gx.merged_all = merged(gx.types) #, inheritance=True)
-    gx.merge_dcpa = merged(gx.types, dcpa=True)
+    getgx().merged_all = merged(getgx().types) #, inheritance=True)
+    getgx().merge_dcpa = merged(getgx().types, dcpa=True)
 
-    mv = gx.main_module.mv
+    mv = getgx().main_module.mv
+    setmv(mv)
     propagate() # XXX remove 
 
-    gx.merged_all = merged(gx.types) #, inheritance=True)
-    gx.merged_inh = merged(gx.types, inheritance=True)
+    getgx().merged_all = merged(getgx().types) #, inheritance=True)
+    getgx().merged_inh = merged(getgx().types, inheritance=True)
 
     # --- determine template parameters
     template_parameters()
 
     # --- detect inheritance stuff
     upgrade_variables()
-    gx.merged_all = merged(gx.types)
+    getgx().merged_all = merged(getgx().types)
 
-    gx.merged_inh = merged(gx.types, inheritance=True)
+    getgx().merged_inh = merged(getgx().types, inheritance=True)
 
     analyze_virtuals()
 
@@ -6637,35 +6640,35 @@ def analysis(source, testing=False):
     # --- check other sources of confusion
     confusion_misc() 
 
-    gx.merge_dcpa = merged(gx.types, dcpa=True)
-    gx.merged_all = merged(gx.types) #, inheritance=True) # XXX
+    getgx().merge_dcpa = merged(getgx().types, dcpa=True)
+    getgx().merged_all = merged(getgx().types) #, inheritance=True) # XXX
 
     # --- determine which classes need an __init__ method
-    for node, types in gx.merged_all.items():
+    for node, types in getgx().merged_all.items():
         if isinstance(node, CallFunc):
             objexpr, ident, _ , method_call, _, _, _ = analyze_callfunc(node)
             if method_call and ident == '__init__':
-                for t in gx.merged_all[objexpr]:
+                for t in getgx().merged_all[objexpr]:
                     t[0].has_init = True
 
     # --- determine which classes need copy, deepcopy methods
-    if 'copy' in gx.modules:
-        func = gx.modules['copy'].funcs['copy']
+    if 'copy' in getgx().modules:
+        func = getgx().modules['copy'].funcs['copy']
         var = func.vars[func.formals[0]]
-        for cl in set([t[0] for t in gx.merged_inh[var]]):
+        for cl in set([t[0] for t in getgx().merged_inh[var]]):
             cl.has_copy = True # XXX transitive, modeling
 
-        func = gx.modules['copy'].funcs['deepcopy']
+        func = getgx().modules['copy'].funcs['deepcopy']
         var = func.vars[func.formals[0]]
-        for cl in set([t[0] for t in gx.merged_inh[var]]):
+        for cl in set([t[0] for t in getgx().merged_inh[var]]):
             cl.has_deepcopy = True # XXX transitive, modeling
 
     # --- add inheritance relationships for non-original Nodes (and tempvars?); XXX register more, right solution?
-    for func in gx.allfuncs:
+    for func in getgx().allfuncs:
         #if not func.mv.module.builtin and func.ident == '__init__':
-        if func in gx.inheritance_relations: 
-            #print 'inherited from', func, gx.inheritance_relations[func]
-            for inhfunc in gx.inheritance_relations[func]:
+        if func in getgx().inheritance_relations: 
+            #print 'inherited from', func, getgx().inheritance_relations[func]
+            for inhfunc in getgx().inheritance_relations[func]:
                 for a, b in zip(func.registered, inhfunc.registered):
                     #print a, '->', b 
                     inherit_rec(a, b)
@@ -6678,13 +6681,13 @@ def analysis(source, testing=False):
     #generate_bindings()
 
     #print 'cnode!'
-    #for (a,b) in gx.cnode.items():
+    #for (a,b) in getgx().cnode.items():
     #    print a, b
-   # for (a,b) in gx.types.items():
+   # for (a,b) in getgx().types.items():
    #     print a, b
 
     # error for dynamic expression (XXX before codegen)
-    for node in gx.merged_all:
+    for node in getgx().merged_all:
         if isinstance(node, Node) and not isinstance(node, AssAttr) and not inode(node).mv.module.builtin:
             typesetreprnew(node, inode(node).parent) 
 
@@ -6692,12 +6695,11 @@ def analysis(source, testing=False):
 
 # --- generate C++ and Makefiles
 def generate_code():
-    global mv
     print '[generating c++ code..]'
 
-    gx.dirs.setdefault('',[]).append(gx.main_module)
+    getgx().dirs.setdefault('',[]).append(getgx().main_module)
 
-    ident = gx.main_module.ident 
+    ident = getgx().main_module.ident 
 
     if sys.platform == 'win32':
         pyver = '%d%d' % sys.version_info[:2]
@@ -6705,17 +6707,18 @@ def generate_code():
         includes = os.popen4('python-config --includes')[1].read().strip()
         ldflags = os.popen4('python-config --ldflags')[1].read().strip()
 
-    if gx.extension_module: 
+    if getgx().extension_module: 
         if sys.platform == 'win32': ident += '.pyd'
         else: ident += '.so'
 
     # --- repeat for each directory:
-    for dir, mods in gx.dirs.items():
+    for dir, mods in getgx().dirs.items():
         # --- generate C++ files
         for module in mods:
             if not module.builtin:
                 gv = generateVisitor(module)
                 mv = module.mv 
+                setmv(mv)
                 gv.func_pointers(False)
                 walk(module.ast, gv)
                 gv.out.close()
@@ -6731,23 +6734,23 @@ def generate_code():
         hppfiles = ' '.join([m.filename[:-3].replace(' ', '\ ')+'.hpp' for m in mods])
 
         # import flags
-        if gx.flags: flags = gx.flags
+        if getgx().flags: flags = getgx().flags
         elif os.path.isfile('FLAGS'): flags = 'FLAGS'
-        else: flags = connect_paths(gx.sysdir, 'FLAGS')
+        else: flags = connect_paths(getgx().sysdir, 'FLAGS')
 
         for line in file(flags):
             line = line[:-1]
 
             if line[:line.find('=')].strip() == 'CCFLAGS': 
-                line += ' -I'+gx.libdir.replace(' ', '\ ')
-                if not gx.wrap_around_check: line += ' -DNOWRAP' 
-                if gx.bounds_checking: line += ' -DBOUNDS' 
-                if gx.extension_module: 
+                line += ' -I'+getgx().libdir.replace(' ', '\ ')
+                if not getgx().wrap_around_check: line += ' -DNOWRAP' 
+                if getgx().bounds_checking: line += ' -DBOUNDS' 
+                if getgx().extension_module: 
                     if sys.platform == 'win32': line += ' -Ic:/Python%s/include -D__SS_BIND' % pyver
                     else: line += ' -g -fPIC -D__SS_BIND ' + includes
 
             elif line[:line.find('=')].strip() == 'LFLAGS': 
-                if gx.extension_module: 
+                if getgx().extension_module: 
                     if sys.platform == 'win32': line += ' -shared -Lc:/Python%s/libs -lpython%s' % (pyver, pyver) 
                     elif sys.platform == 'darwin': line += ' -bundle -Xlinker -dynamic ' + ldflags
                     else: line += ' -shared -Xlinker -export-dynamic ' + ldflags
@@ -6759,7 +6762,7 @@ def generate_code():
 
         print >>makefile, 'all:\t'+ident+'\n'
 
-        if not gx.extension_module:
+        if not getgx().extension_module:
             print >>makefile, 'run:\tall'
             print >>makefile, '\t./'+ident+'\n'
 
@@ -6780,7 +6783,7 @@ def generate_code():
         makefile.close()
 
 def generate_bindings():
-    for dir, mods in gx.dirs.items():
+    for dir, mods in getgx().dirs.items():
         for mod in mods:
             if mod.builtin and not os.path.isfile(mod.ident+'_.hpp'):
                 ident = mod.ident
@@ -6788,6 +6791,7 @@ def generate_bindings():
 
                 gv = generateVisitor(mod)
                 mv = mod.mv 
+                setmv(mv)
 
                 # --- generate *_.cpp file
                 gv.output('#include <Python.h>\n#include "%s_.hpp"\n\nnamespace __%s__ {\n' % (ident, ident)) 
@@ -6884,8 +6888,8 @@ def usage():
     sys.exit()
 
 def main():
-    global gx
     gx = globalInfo()
+    setgx(gx)
 
     print '*** SHED SKIN Python-to-C++ Compiler 0.0.26 ***'
     print 'Copyright 2005-2008 Mark Dufour; License GNU GPL version 3 (See LICENSE)'
@@ -6900,15 +6904,15 @@ def main():
     
     for o, a in opts:
         if o in ['-h', '--help']: usage()
-        if o in ['-b', '--bounds']: gx.bounds_checking = True
-        if o in ['-e', '--extmod']: gx.extension_module = True
-        if o in ['-i', '--infinite']: gx.avoid_loops = True
+        if o in ['-b', '--bounds']: getgx().bounds_checking = True
+        if o in ['-e', '--extmod']: getgx().extension_module = True
+        if o in ['-i', '--infinite']: getgx().avoid_loops = True
         if o in ['-f', '--flags']: 
             if not os.path.isfile(a): 
                 print "*ERROR* no such file: '%s'" % a
                 sys.exit()
-            gx.flags = a
-        if o in ['-n', '--nowrap']: gx.wrap_around_check = False
+            getgx().flags = a
+        if o in ['-n', '--nowrap']: getgx().wrap_around_check = False
 
     # --- argument
     if len(args) != 1:
