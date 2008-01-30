@@ -3106,3 +3106,70 @@ def get_includes(mod):
             imports.add('/'.join(mod.mod_path+[mod.ident])+'.hpp')
     return imports
 
+def subclass(a, b):
+    if b in a.bases:
+        return True
+    else:
+        return a.bases and subclass(a.bases[0], b) # XXX mult inh
+
+# --- determine virtual methods and variables
+def analyze_virtuals(): 
+    for node in getgx().merged_inh: # XXX all:
+        # --- for every message
+        if isinstance(node, CallFunc) and not inode(node).mv.module.builtin: #ident == 'builtin':
+            objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr = analyze_callfunc(node)
+            if not method_call or objexpr not in getgx().merged_inh: 
+                continue # XXX
+
+            # --- determine abstract receiver class
+            classes = polymorphic_t(getgx().merged_inh[objexpr]) 
+            if not classes:
+                continue
+
+            if isinstance(objexpr, Name) and objexpr.name == 'self': 
+                abstract_cl = inode(objexpr).parent.parent
+            else:
+                lcp = lowest_common_parents(classes)
+                lcp = [x for x in lcp if isinstance(x, class_)] # XXX 
+                if not lcp:
+                    continue
+                abstract_cl = lcp[0] 
+
+            if not abstract_cl or not isinstance(abstract_cl, class_):
+                continue 
+            subclasses = [cl for cl in classes if subclass(cl, abstract_cl)] 
+
+            # --- register virtual method
+            if not ident.startswith('__'):  
+                redefined = False
+                for concrete_cl in classes:
+                    if [cl for cl in concrete_cl.ancestors_upto(abstract_cl) if ident in cl.funcs and not cl.funcs[ident].inherited]:
+                        redefined = True
+
+                if redefined:
+                    abstract_cl.virtuals.setdefault(ident, set()).update(subclasses)
+
+            # --- register virtual var
+            elif ident in ['__getattr__','__setattr__'] and subclasses:      
+                var = defaultvar(node.args[0].value, abstract_cl)
+                abstract_cl.virtualvars.setdefault(node.args[0].value, set()).update(subclasses)
+
+# --- merge variables assigned to via 'self.varname = ..' in inherited methods into base class
+def upgrade_variables():
+    for node, inheritnodes in getgx().inheritance_relations.items():
+        if isinstance(node, AssAttr): 
+            baseclass = inode(node).parent.parent
+            inhclasses = [inode(x).parent.parent for x in inheritnodes]
+            var = defaultvar(node.attrname, baseclass)
+
+            for inhclass in inhclasses:
+                inhvar = lookupvar(node.attrname, inhclass)
+
+                if (var, 1, 0) in getgx().cnode:
+                    newnode = getgx().cnode[var,1,0]
+                else:
+                    newnode = cnode(var, 1, 0, parent=baseclass)
+                    getgx().types[newnode] = set()
+
+                if inhvar in getgx().merged_all: # XXX ?
+                    getgx().types[newnode].update(getgx().merged_all[inhvar])
