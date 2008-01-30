@@ -220,6 +220,13 @@ class module:
     def __repr__(self):
         return 'module '+self.ident 
 
+def parse_module(name, ast=None, parent=None, node=None):
+    if name in getgx().modules: 
+        mod = getgx().modules[name]
+    else:
+        mod = module(name, ast, parent, node)
+    return mod
+
 class function:
     def __init__(self, node=None, parent=None, inherited_from=None):
         self.node = node
@@ -967,10 +974,12 @@ class moduleVisitor(ASTVisitor):
 
     def analyzeModule(self, name, pseud, node):
         #print 'analyze', name, getgx().modules.keys()
-        if name in getgx().modules: # XXX to module(..)
-            mod = getgx().modules[name]
-        else:
-            mod = module(name, None, getmv().module, node)
+#        if name in getgx().modules: # XXX to module(..)
+#            mod = getgx().modules[name]
+#        else:
+#            mod = module(name, None, getmv().module, node)
+
+        mod = parse_module(name, None, getmv().module, node)
 
         self.imports[pseud] = mod
         return mod
@@ -6563,7 +6572,7 @@ def analysis(source, testing=False):
     setmv(mv)
 
     # --- build dataflow graph from source code
-    gx.main_module = module(gx.main_mod, ast)
+    gx.main_module = parse_module(gx.main_mod, ast)
     gx.main_module.filename = gx.main_mod+'.py'
     gx.modules[gx.main_mod] = gx.main_module
     mv = gx.main_module.mv
