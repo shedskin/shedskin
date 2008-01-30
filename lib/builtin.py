@@ -39,6 +39,8 @@ class int_:
         return 1
     def __neg__(self):
         return 1
+    def __pos__(self):
+        return 1
     def __hash__(self):
         return 1
     def __abs__(self):
@@ -63,6 +65,8 @@ class float_:
     def __pow__(self, b):         
         return 1.0               
     def __neg__(self):
+        return 1.0
+    def __pos__(self):
         return 1.0
     def __mod__(self, b):        
         return 1.0                
