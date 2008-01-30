@@ -140,91 +140,82 @@ def relative_path(a, b):
     if c.startswith('/'): c = c[1:]
     return c
 
-class module:
-    def __init__(self, name, ast=None, parent=None, node=None):
-        for c in name: 
-            if not c in string.letters+string.digits+'_.':
-                print ("*ERROR*:%s.py: module names should consist of letters, digits and underscores" % name)
-                sys.exit()
-
-        self.ident = name.split('.')[-1]
-        self.builtin = False
-
-        if ast: # XXX
-            self.ast = ast
-            self.dir = ''
-            self.mod_path = []
-        else: 
-            # --- locate module
-            importfromlib = (parent and parent.dir == getgx().libdir)
-
-            relname = name.replace('.', '/')
-            relpath = name.split('.')
-            if parent: path = connect_paths(parent.dir, relname)
-            else: path = name
-            libpath = connect_paths(getgx().libdir, relname)
-
-            #print 'huh', name, parent, self.ident, relname, relpath
-
-            if not importfromlib and os.path.isfile(path+'.py'): # local modules shadow library modules
-                self.filename = path+'.py'
-                if parent: self.mod_path = parent.mod_path + relpath[:-1]
-                else: self.mod_path = relpath[:-1]
-                split = path.split('/')
-                self.dir = '/'.join(split[:-1])
-
-            elif not importfromlib and os.path.isfile(connect_paths(path, '__init__.py')):
-                self.filename = connect_paths(path, '__init__.py')
-                if parent: self.mod_path = parent.mod_path + relpath
-                else: self.mod_path = relpath
-                self.dir = path
-
-            elif os.path.isfile(libpath+'.py'):
-                self.filename = libpath+'.py'
-                self.mod_path = relpath[:-1]
-                self.builtin = True
-                split = libpath.split('/')
-                self.dir = '/'.join(split[:-1])
-
-            elif os.path.isfile(connect_paths(libpath, '__init__.py')):
-                self.filename = connect_paths(libpath, '__init__.py')
-                self.mod_path = relpath[:-1]
-                self.builtin = True
-                self.dir = libpath
-
-            else:
-                error('cannot locate module: '+name, node)
-
-            if self.filename.startswith(libpath): self.builtin = True
-            getgx().modules['.'.join(self.mod_path+[self.ident])] = self
-              
-            #print 'done', self.filename, self.dir, self.mod_path, self.ident
-
-            self.ast = parsefile(self.filename) 
-            getgx().dirs.setdefault('', []).append(self)
-
-        old_mv = getmv()
-        self.mv = mv = moduleVisitor(self)
-        setmv(mv)
-
-        mv.visit = mv.dispatch
-        mv.visitor = mv
-        mv.dispatch(self.ast)
-
-        mv = old_mv
-        setmv(mv)
-
-        self.funcs = self.mv.funcs
-        self.classes = self.mv.classes
-
-    def __repr__(self):
-        return 'module '+self.ident 
-
 def parse_module(name, ast=None, parent=None, node=None):
     if name in getgx().modules: 
-        mod = getgx().modules[name]
-    else:
-        mod = module(name, ast, parent, node)
+        return getgx().modules[name]
+
+    for c in name: 
+        if not c in string.letters+string.digits+'_.':
+            print ("*ERROR*:%s.py: module names should consist of letters, digits and underscores" % name)
+            sys.exit()
+
+    ident = name.split('.')[-1]
+    mod = module(ident, node)
+    mod.builtin = False
+
+    if ast: # XXX
+        mod.ast = ast
+        mod.dir = ''
+        mod.mod_path = []
+    else: 
+        # --- locate module
+        importfromlib = (parent and parent.dir == getgx().libdir)
+
+        relname = name.replace('.', '/')
+        relpath = name.split('.')
+        if parent: path = connect_paths(parent.dir, relname)
+        else: path = name
+        libpath = connect_paths(getgx().libdir, relname)
+
+        if not importfromlib and os.path.isfile(path+'.py'): # local modules shadow library modules
+            mod.filename = path+'.py'
+            if parent: mod.mod_path = parent.mod_path + relpath[:-1]
+            else: mod.mod_path = relpath[:-1]
+            split = path.split('/')
+            mod.dir = '/'.join(split[:-1])
+
+        elif not importfromlib and os.path.isfile(connect_paths(path, '__init__.py')):
+            mod.filename = connect_paths(path, '__init__.py')
+            if parent: mod.mod_path = parent.mod_path + relpath
+            else: mod.mod_path = relpath
+            mod.dir = path
+
+        elif os.path.isfile(libpath+'.py'):
+            mod.filename = libpath+'.py'
+            mod.mod_path = relpath[:-1]
+            mod.builtin = True
+            split = libpath.split('/')
+            mod.dir = '/'.join(split[:-1])
+
+        elif os.path.isfile(connect_paths(libpath, '__init__.py')):
+            mod.filename = connect_paths(libpath, '__init__.py')
+            mod.mod_path = relpath[:-1]
+            mod.builtin = True
+            mod.dir = libpath
+
+        else:
+            error('cannot locate module: '+name, node)
+
+        if mod.filename.startswith(libpath): mod.builtin = True
+        getgx().modules['.'.join(mod.mod_path+[mod.ident])] = mod
+          
+        mod.ast = parsefile(mod.filename) 
+        getgx().dirs.setdefault('', []).append(mod)
+
+    old_mv = getmv()
+    mod.mv = mv = moduleVisitor(mod)
+    setmv(mv)
+
+    mv.visit = mv.dispatch
+    mv.visitor = mv
+    mv.dispatch(mod.ast)
+
+    mv = old_mv
+    setmv(mv)
+
+    mod.funcs = mod.mv.funcs
+    mod.classes = mod.mv.classes
+
     return mod
 
 class function:
@@ -973,14 +964,7 @@ class moduleVisitor(ASTVisitor):
                 error("no identifier '%s' in module '%s'" % (name, node.modname), node)
 
     def analyzeModule(self, name, pseud, node):
-        #print 'analyze', name, getgx().modules.keys()
-#        if name in getgx().modules: # XXX to module(..)
-#            mod = getgx().modules[name]
-#        else:
-#            mod = module(name, None, getmv().module, node)
-
         mod = parse_module(name, None, getmv().module, node)
-
         self.imports[pseud] = mod
         return mod
 
