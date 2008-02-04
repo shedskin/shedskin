@@ -317,12 +317,15 @@ class moduleVisitor(ASTVisitor):
             error("please place all imports (no 'try:' etc) at the top of the file", node)
 
         for (name, pseudonym) in node.names:
-            if not pseudonym: pseudonym = name
-            var = defaultvar(pseudonym, None)
-            var.imported = True
+            self.importpair(name, pseudonym, node)
 
-            mod = self.analyzeModule(name, pseudonym, node)
-            getgx().types[inode(var)] = set([(mod,0)]) 
+    def importpair(self, name, pseudonym, node):
+        if not pseudonym: pseudonym = name
+        var = defaultvar(pseudonym, None)
+        var.imported = True
+
+        mod = self.analyzeModule(name, pseudonym, node)
+        getgx().types[inode(var)] = set([(mod,0)]) 
 
     def visitFrom(self, node, parent=None):
         if not node in getmv().importnodes: # XXX use (func, node) as parent..
@@ -345,6 +348,7 @@ class moduleVisitor(ASTVisitor):
                 continue
 
             if not pseudonym: pseudonym = name
+
             if name in mod.funcs:
                 self.ext_funcs[pseudonym] = mod.funcs[name]
             elif name in mod.classes:
@@ -356,10 +360,14 @@ class moduleVisitor(ASTVisitor):
                     var.imported = True
                     var.invisible = True
                     self.addconstraint((inode(extvar), inode(var)), None)
+            elif os.path.isfile(mod.dir+'/'+name+'.py'):
+                modname = '.'.join(mod.mod_path+[mod.ident, name])
+                self.importpair(modname, name, node)
             else:
                 error("no identifier '%s' in module '%s'" % (name, node.modname), node)
 
     def analyzeModule(self, name, pseud, node):
+        #print 'name, pseud', name, pseud, node
         mod = parse_module(name, None, getmv().module, node)
         self.imports[pseud] = mod
         return mod
@@ -1396,8 +1404,8 @@ def parse_module(name, ast=None, parent=None, node=None):
 
         elif not importfromlib and os.path.isfile(connect_paths(path, '__init__.py')):
             mod.filename = connect_paths(path, '__init__.py')
-            if parent: mod.mod_path = parent.mod_path + relpath
-            else: mod.mod_path = relpath
+            if parent: mod.mod_path = parent.mod_path + relpath[:-1]
+            else: mod.mod_path = relpath[:-1]
             mod.dir = path
 
         elif os.path.isfile(libpath+'.py'):
