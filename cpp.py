@@ -274,7 +274,8 @@ class generateVisitor(ASTVisitor):
 
                             continue
 
-                        print >>self.out, 'using '+mod_id+'::'+self.nokeywords(name)+';'
+                        if not name in self.module.mv.globals or [t for t in self.module.mv.globals[name].types() if not isinstance(t[0], module)]:
+                            print >>self.out, 'using '+mod_id+'::'+self.nokeywords(name)+';'
             if skip: print >>self.out
 
             # class declarations
@@ -328,7 +329,8 @@ class generateVisitor(ASTVisitor):
         if self.module.filename.endswith('__init__.py'): # XXX nicer check
             print >>self.out, '#include "__init__.hpp"\n'
         else:
-            print >>self.out, '#include "'+'/'.join(self.module.mod_path+[self.module.ident])+'.hpp"\n'
+            #print >>self.out, '#include "'+'/'.join(self.module.mod_path+[self.module.ident])+'.hpp"\n'
+            print >>self.out, '#include "%s.hpp"\n' % self.module.ident
 
         # --- comments
         if node.doc:
@@ -2435,7 +2437,11 @@ class generateVisitor(ASTVisitor):
             if isinstance(node.expr, Name) and not lookupvar(node.expr.name, func): # XXX XXX
                 self.append(node.expr.name)
             else:
-                self.visit(node.expr, func)
+                if module:
+                    mod = getmv().imports[module]
+                    self.append('__'+'__::__'.join(mod.mod_path+[mod.ident])+'__') # XXX /__init__.py
+                else:
+                    self.visit(node.expr, func)
             if not isinstance(node.expr, (Name)):
                 self.append(')')
 
@@ -2618,8 +2624,8 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None):
     # --- namespace prefix
     namespace = ''
     if cl.module not in [getmv().module, getgx().modules['builtin']] and not (cl.ident in getmv().ext_funcs or cl.ident in getmv().ext_classes):
-        namespace = cl.module.ident+'::'
-        if cplusplus: namespace = '__'+cl.module.ident+'__::'
+        if cplusplus: namespace = '__'+'__::__'.join([n for n in cl.module.mod_path+[cl.module.ident]])+'__::'
+        else: namespace = '::'.join([n for n in cl.module.mod_path+[cl.module.ident]])+'::'
 
     # --- recurse for types with parametric subtypes
     template_vars = cl.template_vars # XXX why needed

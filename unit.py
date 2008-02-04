@@ -149,6 +149,10 @@ class V:
 v = V(1)
 print ++v, +-+-v
 
+#multidir fixes
+from testdata import crap
+print crap.incrap()
+
 ''', '''
 output(equal=True)
 
@@ -415,15 +419,15 @@ output(equal=True)
 
 ('''fixes for 0.0.24''', '''
 # --- import problem
-from bert import *
+from testdata.bert import *
 z = zeug()
 
 # --- '_' renaming mangle
-import bert
+import testdata.bert
 
 class hello:
     def hello(self):
-        bert.hello(1)
+        testdata.bert.hello(1)
 
 s=hello().hello()
 
@@ -7504,7 +7508,7 @@ output('1 2 1 1\\n1 2 3 1\\n1 2 3 4\\n')
 '''),
 
 ('''determine target functions in cartesian_product()''', '''
-import bert
+import testdata.bert
 
 class zeug: 
     def meuk(self):                      # self: [zeug()]
@@ -7516,8 +7520,8 @@ def hoi(): return 1                    # [float]
 print hoi()                              # [float]
 a = zeug()                               # [zeug()]
 
-print bert.hello(1)                      # [str]
-z = bert.zeug()                          # [bert::zeug()]
+print testdata.bert.hello(1)                      # [str]
+z = testdata.bert.zeug()                          # [bert::zeug()]
 z.hallo(1)                               # [int]
 
 print a.meuk()                           # [str]
@@ -7745,14 +7749,14 @@ check('c', ['list(int)'])
 '''),
 
 ('modules, namespaces, lambdas', '''
-import bert 
-from bert import hello, zeug             
+import testdata.bert 
+from testdata.bert import hello, zeug             
 #from sets import Set
 
 class jurk:
     pass                                 
 
-bert.hello(4)                            # []
+testdata.bert.hello(4)                            # []
 hello(4)                                 # [str]
 
 s2 = jurk()                              # [jurk()]
@@ -7761,7 +7765,7 @@ s4 = set()                               # [Set(float)]
 s4.add(1.0)                              # []
 s3 = set([1,2,3])                        # [Set(int)]
 
-kn = bert.zeug()                         # [zeug()]
+kn = testdata.bert.zeug()                         # [zeug()]
 kn.hallo(4)                              # []
                                       
 l1 = lambda x,y: x+y                     # [lambda0]
