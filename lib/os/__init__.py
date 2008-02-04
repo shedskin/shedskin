@@ -137,5 +137,26 @@ def renames(old, new):
 def popen(cmd, mode='r', bufsize=-1):
     return popen_pipe()
 
+def popen2(cmd, mode='r', bufsize=-1):
+    return ( file('/bin/sh'), file('/bin/sh') )
+
+def close(fd):
+    pass
+
+def execv(file, args):
+    pass
+
+def execvp(file, args):
+    pass
+
+def fdopen(fd, mode='r', bufsize=-1):
+    return file('/bin/sh')
+
+def pipe():
+    return (0,0)
+
+def dup2(f1,f2):
+    pass
+
 
 
