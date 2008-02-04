@@ -28,6 +28,8 @@ str *linesep, *name;
 dict<str *, str *> *__ss_environ;
 struct stat sbuf;
 
+const int MAXFD = 256;
+
 str *altsep, *curdir, *defpath, *devnull, *extsep, *pardir, *pathsep, *sep;
 
 list<str *> *listdir(str *path) {
@@ -408,6 +410,135 @@ popen_pipe* popen(str* cmd, str* mode, int bufsize) {
 
     if(!fp) throw new OSError(cmd);
     return new popen_pipe(fp);
+}
+
+tuple2<int,int>* pipe() {
+    int fds[2];
+    int ret;
+
+    ret = ::pipe(fds);
+
+    if(ret != 0) {
+        str* s = new str("pipe creation failed");
+
+        throw new OSError(s);
+    }
+
+    return new tuple2<int,int>(2,fds[0],fds[1]);
+}
+
+void dup2(int f1, int f2) {
+    int res = ::dup2(f1,f2);
+
+    if(res < 0) {
+        str* s = new str("dup2 failed");
+        throw new OSError(s);
+    }
+}
+
+void execv(str* file, list<str*>* args) {
+    //char** argvlist = new char*[ args->__len__()+1];
+    char** argvlist = (char**) GC_malloc( sizeof(char*) * (args->__len__()+1));
+
+    for(int i = 0; i < args->__len__(); ++i) {
+        argvlist[i] = const_cast<char*>(args->__getfast__(i)->unit.c_str());
+    }
+    argvlist[args->__len__()] = NULL;
+
+    ::execv(file->unit.c_str(), argvlist);
+
+    //delete[] argvlist;
+
+    throw new OSError(new str("execv error"));
+}
+
+void execvp(str* file, list<str*>* args) {
+    tuple2<str*,str*>* h_t = __path__::split(file);
+
+    if( __bool(h_t->__getfirst__())) {
+        execv(file,args);
+        return;
+    }
+
+    str* envpath;
+    
+    if(__ss_environ->__contains__(new str("PATH"))) {
+        envpath = __ss_environ->get(new str("PATH"));
+    }
+    else {
+        envpath = defpath;
+    }
+
+    list<str*>* PATH = envpath->split(pathsep);
+
+    for(int i = 0; i < PATH->__len__(); ++i) {
+        str* dir = PATH->__getfast__(i);
+        str* fullname = __path__::join(2, dir, file);
+        if(__path__::exists(fullname)) {
+            execv(fullname, args);
+        }
+    }
+    throw new OSError(new str("execvp failed"));
+}
+
+file* fdopen(int fd) {
+    return fdopen(fd, new str("r"), -1);
+}
+
+file* fdopen(int fd, str* mode) {
+    return fdopen(fd, mode, -1);
+}
+
+file* fdopen(int fd, str* mode, int bufsize) {
+    FILE* fp = ::fdopen(fd, mode->unit.c_str());
+    if(fp == NULL) throw new OSError(new str("fdopen failed"));
+
+    file* ret = new file(fp);
+    ret->name = new str("<fdopen>");
+    return ret;
+}
+
+tuple2<file*,file*>* popen2(str* cmd) {
+    return popen2(cmd, new str("t"), -1);
+}
+
+tuple2<file*,file*>* popen2(str* cmd, str* mode, int bufsize) {
+
+    tuple2<int,int>* p2c = pipe();
+    tuple2<int,int>* c2p = pipe();
+
+    int pid = fork();
+
+    if(pid == 0) {
+        dup2( p2c->__getfirst__(), 0);
+        dup2( c2p->__getsecond__(), 1);
+
+        for(int i = 3; i < MAXFD; ++i) {
+            try {
+                close(i);
+            }
+            catch(OSError*) {}
+        }
+
+        list<str*>* cmd_l = new list<str*>(3, new str("/bin/sh"),
+                new str("-c"), cmd);
+        execvp(new str("/bin/sh"), cmd_l);
+        ::exit(1);
+    }
+
+    close(p2c->__getfirst__());
+    close(c2p->__getsecond__());
+
+    tuple2<file*, file*>* ret = new tuple2<file*,file*>();
+    ret->__init2__(fdopen(p2c->__getsecond__(),new str("w")), fdopen(c2p->__getfirst__(), new str("r")));
+    
+    return ret;
+}
+
+void close(int fd) {
+   int res = ::close(fd);
+
+   if(res < 0) throw new OSError(new str("close failed"));
 }
 
 popen_pipe::popen_pipe(str *cmd, str *mode) {

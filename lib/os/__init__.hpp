@@ -10,6 +10,7 @@ extern str *linesep, *name;
 extern dict<str *, str *> *__ss_environ;
 extern str *altsep, *curdir, *defpath, *devnull, *extsep, *pardir, *pathsep, *sep;
 
+
 typedef OSError error;
 
 class popen_pipe;
@@ -68,6 +69,14 @@ int umask(int newmask);
 int unsetenv(str* var);
 int chmod(str* path, int val);
 int renames(str* old, str* _new);
+tuple2<int,int>* pipe();
+void dup2(int f1, int f2);
+void execvp(str* file, list<str*>* args);
+void execv(str* file, list<str*>* args);
+void close(int fd);
+file* fdopen(int fd);
+file* fdopen(int fd, str* mode);
+file* fdopen(int fd, str* mode, int bufsize);
 
 class popen_pipe : public file {
 public:
@@ -79,6 +88,9 @@ public:
 popen_pipe* popen(str* cmd);
 popen_pipe* popen(str* cmd, str* mode);
 popen_pipe* popen(str* cmd, str* mode, int bufsize);
+
+tuple2<file*,file*>* popen2(str* cmd);
+tuple2<file*,file*>* popen2(str* cmd, str* mode, int bufsize);
 
 void __init();
 
