@@ -75,6 +75,26 @@ class generateVisitor(ASTVisitor):
         file(self.fname+suffix,'w').writelines(newlines2)
         self.filling_consts = False
         
+    def insert_includes(self): # XXX ugly
+        includes = get_includes(self.module)
+        prop_includes = set(self.module.prop_includes) - set(includes)
+        if not prop_includes: return
+ 
+        #print 'insert', self.module, prop_includes
+
+        lines = file(self.fname+'.hpp','r').readlines()
+        newlines = []
+ 
+        prev = ''
+        for line in lines:
+            if prev.startswith('#include') and not line.strip():
+                for include in prop_includes:
+                    newlines.append('#include "%s"\n' % include)
+            newlines.append(line)
+            prev = line
+ 
+        file(self.fname+'.hpp','w').writelines(newlines)
+
     # --- group pairs of (type, name) declarations, while paying attention to '*'
     def group_declarations(self, pairs):
         group = {}
@@ -2627,14 +2647,18 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None):
         if cplusplus: namespace = '__'+'__::__'.join([n for n in cl.module.mod_path+[cl.module.ident]])+'__::'
         else: namespace = '::'.join([n for n in cl.module.mod_path+[cl.module.ident]])+'::'
 
+        if cl.module.filename.endswith('__init__.py'): # XXX only pass cl.module
+            include = '/'.join(cl.module.mod_path+[cl.module.ident])+'/__init__.hpp'
+        else:
+            include = '/'.join(cl.module.mod_path+[cl.module.ident])+'.hpp'
+        getmv().module.prop_includes.add(include)
+
     # --- recurse for types with parametric subtypes
     template_vars = cl.template_vars # XXX why needed
     if cl.ident in ['pyiter', 'pyseq','pyset']: # XXX dynamic subtype check
         for c in classes:
             if 'A' in c.template_vars:
                 template_vars = {'A': c.template_vars['A']}
-    #else:
-    #    template_vars = cl.template_vars
 
     if not template_vars:
         if cl.ident in getgx().cpp_keywords:

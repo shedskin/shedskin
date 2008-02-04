@@ -319,6 +319,7 @@ def generate_code():
                 gv.out.close()
                 gv.insert_consts(declare=False)
                 gv.insert_consts(declare=True)
+                gv.insert_includes()
 
         # --- generate Makefile
         makefile = file(connect_paths(dir, 'Makefile'), 'w')
@@ -335,7 +336,7 @@ def generate_code():
             line = line[:-1]
 
             if line[:line.find('=')].strip() == 'CCFLAGS': 
-                line += ' -I'+getgx().libdir.replace(' ', '\ ')
+                line += ' -I. -I'+getgx().libdir.replace(' ', '\ ')
                 if not getgx().wrap_around_check: line += ' -DNOWRAP' 
                 if getgx().bounds_checking: line += ' -DBOUNDS' 
                 if getgx().extension_module: 

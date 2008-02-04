@@ -224,6 +224,7 @@ class module:
     def __init__(self, ident, node):
         self.ident = ident
         self.node = node
+        self.prop_includes = set()
 
     def __repr__(self):
         return 'module '+self.ident 
