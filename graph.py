@@ -288,6 +288,8 @@ class moduleVisitor(ASTVisitor):
                 for func in ancestor.funcs.values():
                     if not func.node or func.inherited: continue
 
+                    if func.ident in ancestor.staticmethods: continue
+        
                     #print 'inherit', func, ancestor, cl
                     #print func.ident, ancestor.ident
 
