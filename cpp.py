@@ -457,7 +457,7 @@ class generateVisitor(ASTVisitor):
                         funcs.append(func)
 
                 for func in funcs:
-                    print >>self.out, 'PyObject *%s(PyObject *self, PyObject *args) {' % func.ident
+                    print >>self.out, 'PyObject *%s(PyObject *self, PyObject *args) {' % self.cpp_name(func.ident)
                     print >>self.out, '    if(PyTuple_Size(args) < %d || PyTuple_Size(args) > %d) {' % (len(func.formals)-len(func.defaults), len(func.formals))
                     print >>self.out, '        PyErr_SetString(PyExc_Exception, "invalid number of arguments");'
                     print >>self.out, '        return 0;'
@@ -482,7 +482,7 @@ class generateVisitor(ASTVisitor):
                         self.eol()
                     print >>self.out
 
-                    print >>self.out, '        return __to_py(__'+self.module.ident+'__::'+func.ident+'('+', '.join(['arg_%d' % i for i in range(len(func.formals))])+'));\n' 
+                    print >>self.out, '        return __to_py(__'+self.module.ident+'__::'+self.cpp_name(func.ident)+'('+', '.join(['arg_%d' % i for i in range(len(func.formals))])+'));\n' 
                     print >>self.out, '    } catch (Exception *e) {'
                     print >>self.out, '        PyErr_SetString(__to_py(e), e->msg->unit.c_str());'
                     print >>self.out, '        return 0;'
@@ -492,7 +492,7 @@ class generateVisitor(ASTVisitor):
 
                 print >>self.out, 'static PyMethodDef %sMethods[] = {' % self.module.ident
                 for func in funcs:
-                    print >>self.out, '    {"%(id)s", %(id)s, METH_VARARGS, ""},' % {'id': func.ident}
+                    print >>self.out, '    {"%(id)s", %(id2)s, METH_VARARGS, ""},' % {'id': func.ident, 'id2': self.cpp_name(func.ident)}
                 print >>self.out, '    {NULL, NULL, 0, NULL}        /* Sentinel */\n};\n'
 
             if getgx().extension_module:
