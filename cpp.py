@@ -838,24 +838,33 @@ class generateVisitor(ASTVisitor):
 
         temp = self.filling_consts
         self.filling_consts = False
-        ts = typesetreprnew(node, func)
 
-        if ts.endswith('*'): ts = ts[:-2]
-        self.append('(new '+ts)
-        self.children_args(node, func)
+        ts = typesetreprnew(node, func)
+        self.append('(new '+ts[:-2])
+        self.children_args(node, ts, func)
         self.append(')')
+
         self.filling_consts = temp
 
-    def children_args(self, node, func=None, cppsucks=False, numberprefix=True):
+    def children_args(self, node, ts, func=None): 
         self.append('(')
-        if numberprefix and len(node.getChildNodes()): 
+        if len(node.getChildNodes()): 
             self.append(str(len(node.getChildNodes()))+', ')
+
+        double = set(ts[ts.find('<')+1:-3].split(', ')) == set(['double']) # XXX whaa
+
         for child in node.getChildNodes():
+            if double and self.mergeinh[child] == set([(defclass('int_'), 0)]):
+                self.append('(double)(')
+
             if child in getmv().tempcount:
-                print 'jahoor tempcount', child
+                #print 'jahoor tempcount', child
                 self.append(getmv().tempcount[child])
             else:
                 self.visit(child, func)
+
+            if double and self.mergeinh[child] == set([(defclass('int_'), 0)]):
+                self.append(')')
 
             if child != node.getChildNodes()[-1]:
                 self.append(', ')
@@ -886,9 +895,12 @@ class generateVisitor(ASTVisitor):
 
         temp = self.filling_consts
         self.filling_consts = False
-        self.append('(new '+typesetreprnew(node, func)[:-2])
-        self.children_args(node, func)
+
+        ts = typesetreprnew(node, func)
+        self.append('(new '+ts[:-2])
+        self.children_args(node, ts, func)
         self.append(')')
+
         self.filling_consts = temp
 
     def visitAssert(self, node, func=None):

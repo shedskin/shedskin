@@ -152,6 +152,15 @@ print ++v, +-+-v
 from testdata import crap
 print crap.incrap()
 
+#int/double crap
+def to_ints(l):
+    return [int(x) for x in l]
+
+print to_ints([4.0, 4.0, 61]), to_ints((4.0, 4.0, 61))
+ls = [6]
+ls.append(1.0)
+print to_ints(ls)
+
 ''', '''
 output(equal=True)
 
