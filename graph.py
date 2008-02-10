@@ -393,7 +393,7 @@ class moduleVisitor(ASTVisitor):
         else:
             if not func.ident in parent.staticmethods and (not func.formals or func.formals[0] != 'self'):
                 error("formal arguments of method must start with 'self'", node)
-            if not func.mv.module.builtin and func.ident in ['__new__', '__getattr__', '__setattr__', '__radd__', '__rsub__', '__rmul__', '__rdiv__', '__rtruediv__', '__rfloordiv__', '__rmod__', '__rdivmod__', '__rpow__', '__rlshift__', '__rrshift__', '__rand__', '__rxor__', '__ror__', '__iter__']:
+            if not func.mv.module.builtin and func.ident in ['__new__', '__getattr__', '__setattr__', '__radd__', '__rsub__', '__rmul__', '__rdiv__', '__rtruediv__', '__rfloordiv__', '__rmod__', '__rdivmod__', '__rpow__', '__rlshift__', '__rrshift__', '__rand__', '__rxor__', '__ror__', '__iter__', '__call__']:
                 error("'%s' is not supported" % func.ident, node, warning=True)
 
         formals = func.formals[:]
