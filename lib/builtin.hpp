@@ -380,7 +380,7 @@ public:
     void clear();
     int __setitem__(int i, T e);
     int __delitem__(int i);
-    void init(int count, ...);
+    //void init(int count, ...);
     int __remove__(int i);
     int empty();
     list<T> *__slice__(int x, int l, int u, int s);
@@ -450,7 +450,7 @@ public:
 
     str *__repr__();
 
-    void init(int count, A a, B b);
+    //void init(int count, A a, B b);
 
     int __contains__(A a);
     int __contains__(B b);
@@ -600,7 +600,7 @@ public:
     tuple2<T,T> *__iadd__(tuple2<T,T> *b);
     tuple2<T,T> *__imul__(int n);
 
-    void init(int count, ...);
+    //void init(int count, ...);
 
     int __contains__(T a);
     int __eq__(pyobj *p);
@@ -1332,7 +1332,7 @@ template<class T> PyObject *list<T>::__to_py__() {
 }
 #endif
 
-template<class T> void list<T>::init(int count, ...)  {
+/*template<class T> void list<T>::init(int count, ...)  {
     clear();
 
     va_list ap;
@@ -1342,7 +1342,7 @@ template<class T> void list<T>::init(int count, ...)  {
         append(t);
     }
     va_end(ap);
-}
+}*/
 
 template<class T> void list<T>::clear() {
     units.resize(0);
@@ -1983,7 +1983,7 @@ template<class T> tuple2<T,T> *tuple2<T, T>::__imul__(int b) {
     return __mul__(b);
 }
 
-template<class T> void tuple2<T, T>::init(int count, ...) {
+/*template<class T> void tuple2<T, T>::init(int count, ...) {
     this->units.resize(0);
 
     va_list ap;
@@ -1993,7 +1993,7 @@ template<class T> void tuple2<T, T>::init(int count, ...) {
         this->units.push_back(t);
     }
     va_end(ap);
-}
+} */
 
 template<class T> int tuple2<T, T>::__contains__(T a) {
     for(int i=0; i<this->__len__(); i++)
@@ -2094,10 +2094,10 @@ template<class A, class B> B tuple2<A, B>::__getsecond__() {
     return second; 
 }
 
-template<class A, class B> void tuple2<A, B>::init(int count, A a, B b) {
+/*template<class A, class B> void tuple2<A, B>::init(int count, A a, B b) {
     first = a;
     second = b;
-}
+} */
 
 template<class A, class B> int tuple2<A, B>::__contains__(A a) {
     return __eq(first, a);
