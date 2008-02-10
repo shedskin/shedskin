@@ -1447,7 +1447,7 @@ int vasprintf(char **ret, const char *format, va_list ap)
 {
     va_list ap2;
     int len= 100;        /* First guess at the size */
-    if ((*ret= (char *)GC_malloc(len)) == NULL) return -1;
+    if ((*ret= (char *)malloc(len)) == NULL) return -1;
     while (1)
     {
         int nchar;
