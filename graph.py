@@ -442,7 +442,8 @@ class moduleVisitor(ASTVisitor):
 
         # --- register function
         if isinstance(parent, class_): 
-            defaultvar('self', func)
+            if func.ident not in parent.staticmethods: # XXX use flag
+                defaultvar('self', func)
             parent.funcs[func.ident] = func
 
     def visitLambda(self, node, func=None):
