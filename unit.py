@@ -1172,15 +1172,15 @@ smurf()
 baviaan()
 
 # --- simple itertools functions
-import itertools
-gg = itertools.count()
-print [gg.next() for i in range(10)]
-
-cycle = itertools.cycle(range(3))
-print [cycle.next() for i in range(10)]
-
-repeat = itertools.repeat([1,2,3], 10)
-print [repeat.next() for i in range(3)]
+#import itertools
+#gg = itertools.count()
+#print [gg.next() for i in range(10)]
+#
+#cycle = itertools.cycle(range(3))
+#print [cycle.next() for i in range(10)]
+#
+#repeat = itertools.repeat([1,2,3], 10)
+#print [repeat.next() for i in range(3)]
 
 # --- xrange, enumerate, reversed as iterators
 ah = xrange(10)
