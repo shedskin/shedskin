@@ -1521,16 +1521,16 @@ class generateVisitor(ASTVisitor):
             else: return
 
             # --- comparison to [], (): convert to ..->empty() # XXX {}, __ne__
-            if msg == '__eq__':
+            if msg in ['__eq__', '__ne__']:
                 leftcl, rightcl = polymorphic_t(self.mergeinh[left]), polymorphic_t(self.mergeinh[right])
 
                 if len(leftcl) == 1 and leftcl == rightcl and leftcl.pop().ident in ['list', 'tuple', 'tuple2', 'dict']:
                     for (a,b) in [(left, right), (right, left)]:
                         if isinstance(b, (List, Tuple, Dict)) and len(b.nodes) == 0:
-                            if pre: self.append(pre+'(')
+                            if msg == '__ne__': self.append('!(')
                             self.visit2(a, func)
                             self.append('->empty()')
-                            if pre: self.append(')')
+                            if msg == '__ne__': self.append(')')
                             return
 
             # --- 'x in range(n)' -> x > 0 && x < n # XXX not in, range(a,b)
