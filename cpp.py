@@ -1907,7 +1907,7 @@ class generateVisitor(ASTVisitor):
         #if ident == 'join' and not method_call:
             pairs = [(arg, target.formals[0]) for arg in node.args]
             self.append('%d, ' % len(node.args))
-        elif ident in ['max','min'] and len(node.args) > 3:
+        elif ident in ['max','min']: 
             pairs = [(arg, target.formals[0]) for arg in node.args]
         else:
             args = node.args
