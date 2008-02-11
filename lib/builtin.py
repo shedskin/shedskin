@@ -632,16 +632,16 @@ def __zip3(a, b, c):
 def zip(a): # for redefinition check only
     pass
     
-def max(a, b, c):
+def max(a):
+    a.__cmp__(a)
     return a
-    return b
 def __max(a):
     a.unit.__cmp__(a.unit)
     return a.unit
 
-def min(a, b, c):
+def min(a):
+    a.__cmp__(a)
     return a
-    return b
 def __min(a):
     a.unit.__cmp__(a.unit)
     return a.unit

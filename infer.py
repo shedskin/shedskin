@@ -429,6 +429,9 @@ def actuals_formals(expr, func, node, dcpa, cpa, types, worklist):
 
     #print 'aft', types #expr, smut, formals, types, zip(smut, formals, types)
 
+    if ident in ['min', 'max']:
+        formals *= len(smut)
+
     for (actual, formal, formaltype) in zip(smut, formals, types):
         #print 'connect', actual, formal, formaltype, node
         formalnode = getgx().cnode[func.vars[formal], dcpa, cpa]
