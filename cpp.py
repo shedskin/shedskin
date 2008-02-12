@@ -1919,6 +1919,12 @@ class generateVisitor(ASTVisitor):
             if constructor and ident=='defaultdict' and node.args:
                 pairs = pairs[1:]
 
+        double = False
+        if ident in ['min', 'max']:
+            for arg in node.args:
+                if (defclass('float_'),0) in self.mergeinh[arg]:
+                    double = True
+
         for (arg, formal) in pairs:
             if isinstance(arg, tuple):
                 # --- pack arguments as tuple
@@ -1941,7 +1947,10 @@ class generateVisitor(ASTVisitor):
             else:
                 # --- connect regular argument to formal
                 cast = False
-                if not target.mv.module.builtin and assign_needs_cast(arg, func, formal, target): # XXX builtin (dict.fromkeys?)
+                if double and self.mergeinh[arg] == set([(defclass('int_'),0)]):
+                    cast = True
+                    self.append('((double)(')
+                elif not target.mv.module.builtin and assign_needs_cast(arg, func, formal, target): # XXX builtin (dict.fromkeys?)
                     #print 'cast!', node, arg, formal
                     cast = True
                     self.append('(('+typesetreprnew(formal, target)+')(')

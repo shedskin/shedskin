@@ -1408,10 +1408,21 @@ double __min(pyseq<double> *l) { return __minimum(l); }
 int __max(pyseq<int> *l) { return __maximum(l); }
 double __max(pyseq<double> *l) { return __maximum(l); }
 
-double __min(int a, double b) { return __min((double)a, b); }
-double __min(double a, int b) { return __min(a, (double)b); }
-double __max(int a, double b) { return __max((double)a, b); }
-double __max(double a, int b) { return __max(a, (double)b); }
+#define __ss_max(a,b) ((a) > (b) ? (a) : (b))
+#define __ss_max3(a,b,c) (__ss_max((a), __ss_max((b), (c))))
+
+template<> int __max(int a, int b) { return __ss_max(a,b); }
+template<> int __max(int a, int b, int c) { return __ss_max3(a,b,c); }
+template<> double __max(double a, double b) { return __ss_max(a,b); }
+template<> double __max(double a, double b, double c) { return __ss_max3(a,b,c); }
+
+#define __ss_min(a,b) ((a) < (b) ? (a) : (b))
+#define __ss_min3(a,b,c) (__ss_min((a), __ss_min((b), (c))))
+
+template<> int __min(int a, int b) { return __ss_min(a,b); }
+template<> int __min(int a, int b, int c) { return __ss_min3(a,b,c); }
+template<> double __min(double a, double b) { return __ss_min(a,b); }
+template<> double __min(double a, double b, double c) { return __ss_min3(a,b,c); }
 
 /* abs */
 

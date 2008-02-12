@@ -2333,16 +2333,10 @@ template<class T> T __max(pyiter<T> *a) {
     return max;
 }
 
-int __max(pyseq<int> *l);
-double __max(pyseq<double> *l);
-
 template<class T> T __max(T a, T b) {
     if(__cmp(a, b)==1) return a;
     return b;
 }
-
-double __max(int a, double b);
-double __max(double a, int b);
 
 template<class T> T __max(T a, T b, T c) {
     if(__cmp(a, b)==1 && __cmp(a, c)==1) return a;
@@ -2363,6 +2357,11 @@ template<class T> T __max(int n, T a, T b, T c, ...) {
 
     return m;
 }
+
+template<> int __max(int a, int b);
+template<> int __max(int a, int b, int c);
+template<> double __max(double a, double b);
+template<> double __max(double a, double b, double c);
 
 template<class T> T __min(pyiter<T> *a) {
     T e, min = 0;
@@ -2387,9 +2386,6 @@ template<class T> T __min(T a, T b) {
     return b;
 }
 
-double __min(int a, double b);
-double __min(double a, int b);
-
 template<class T> T __min(T a, T b, T c) {
     if(__cmp(a, b)==-1 && __cmp(a, c)==-1) return a;
     else if(__cmp(b,c)==-1) return b;
@@ -2409,6 +2405,11 @@ template<class T> T __min(int n, T a, T b, T c, ...) {
 
     return m;
 }
+
+template<> int __min(int a, int b);
+template<> int __min(int a, int b, int c);
+template<> double __min(double a, double b);
+template<> double __min(double a, double b, double c);
 
 template<class A> static inline list<A> *__list_comp_0(list<A> *result, pyiter<A> *a) {
     A e;
