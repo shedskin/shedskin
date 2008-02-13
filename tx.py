@@ -11,6 +11,5 @@ os.system('cp -R lib tx%d' % part)
 os.system('cp -R testdata tx%d' % part)
 os.system('cp *.py tx%d' % part)
 os.system('cp FLAGS tx%d' % part)
-os.system('cd tx%d' % part)
 
-os.system('python unit.py -l %s' % ' '.join(map(str, tests)))
+os.system('cd tx%d; python unit.py -f -l %s' % ' '.join(map(str, tests)))
