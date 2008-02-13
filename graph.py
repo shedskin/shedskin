@@ -364,7 +364,7 @@ class moduleVisitor(ASTVisitor):
                     self.addconstraint((inode(extvar), inode(var)), None)
             elif os.path.isfile(mod.dir+'/'+name+'.py') or \
                  os.path.isfile(mod.dir+'/'+name+'/__init__.py'):
-                modname = '.'.join(mod.mod_path+[mod.ident, name])
+                modname = '.'.join(mod.mod_path+[name])
                 self.importpair(modname, name, node)
             else:
                 error("no identifier '%s' in module '%s'" % (name, node.modname), node)
@@ -1377,14 +1377,13 @@ def parsefile(name):
         sys.exit()
 
 def parse_module(name, ast=None, parent=None, node=None):
-    if name in getgx().modules: 
-        return getgx().modules[name]
-
+    # --- valid name?
     for c in name: 
         if not c in string.letters+string.digits+'_.':
             print ("*ERROR*:%s.py: module names should consist of letters, digits and underscores" % name)
             sys.exit()
 
+    # --- parse
     ident = name.split('.')[-1]
     mod = module(ident, node)
     mod.builtin = False
@@ -1392,7 +1391,8 @@ def parse_module(name, ast=None, parent=None, node=None):
     if ast: # XXX
         mod.ast = ast
         mod.dir = ''
-        mod.mod_path = []
+        mod.mod_path = [name]
+        mod.mod_dir = []
     else: 
         # --- locate module
         importfromlib = (parent and parent.dir == getgx().libdir)
@@ -1405,35 +1405,44 @@ def parse_module(name, ast=None, parent=None, node=None):
 
         if not importfromlib and os.path.isfile(path+'.py'): # local modules shadow library modules
             mod.filename = path+'.py'
-            if parent: mod.mod_path = parent.mod_path + relpath[:-1]
-            else: mod.mod_path = relpath[:-1]
+            if parent: mod.mod_path = parent.mod_dir + relpath
+            else: mod.mod_path = relpath
             split = path.split('/')
             mod.dir = '/'.join(split[:-1])
+            mod.mod_dir = mod.mod_path[:-1]
 
         elif not importfromlib and os.path.isfile(connect_paths(path, '__init__.py')):
             mod.filename = connect_paths(path, '__init__.py')
-            if parent: mod.mod_path = parent.mod_path + relpath[:-1]
-            else: mod.mod_path = relpath[:-1]
+            if parent: mod.mod_path = parent.mod_dir + relpath
+            else: mod.mod_path = relpath
             mod.dir = path
+            mod.mod_dir = mod.mod_path
 
         elif os.path.isfile(libpath+'.py'):
             mod.filename = libpath+'.py'
-            mod.mod_path = relpath[:-1]
+            mod.mod_path = relpath
             mod.builtin = True
             split = libpath.split('/')
             mod.dir = '/'.join(split[:-1])
+            mod.mod_dir = mod.mod_path[:-1]
 
         elif os.path.isfile(connect_paths(libpath, '__init__.py')):
             mod.filename = connect_paths(libpath, '__init__.py')
-            mod.mod_path = relpath[:-1]
+            mod.mod_path = relpath
             mod.builtin = True
             mod.dir = libpath
+            mod.mod_dir = mod.mod_path
 
         else:
             error('cannot locate module: '+name, node)
 
         if mod.filename.startswith(libpath): mod.builtin = True
-        getgx().modules['.'.join(mod.mod_path+[mod.ident])] = mod
+
+        modpath = '.'.join(mod.mod_path)
+        if modpath in getgx().modules: # cached?
+            return getgx().modules[modpath] 
+        #print 'not cached', modpath
+        getgx().modules[modpath] = mod
           
         mod.ast = parsefile(mod.filename) 
         getgx().dirs.setdefault('', []).append(mod)

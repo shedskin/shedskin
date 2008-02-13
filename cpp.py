@@ -248,7 +248,7 @@ class generateVisitor(ASTVisitor):
     def visitModule(self, node, declare=False):
         # --- header file
         if declare: 
-            define = self.module.ident.upper()+'_HPP'
+            define = '_'.join(self.module.mod_path).upper()+'_HPP'
             print >>self.out, '#ifndef __'+define
             print >>self.out, '#define __'+define+'\n'
 
@@ -271,7 +271,7 @@ class generateVisitor(ASTVisitor):
 
             # --- namespaces
             print >>self.out, 'using namespace __shedskin__;'
-            for n in self.module.mod_path+[self.module.ident]:
+            for n in self.module.mod_path:
                 print >>self.out, 'namespace __'+n+'__ {'
             print >>self.out
                  
@@ -340,7 +340,7 @@ class generateVisitor(ASTVisitor):
                         self.visitFunction(func.node, declare=True)
             print >>self.out
 
-            for n in self.module.mod_path+[self.module.ident]:
+            for n in self.module.mod_path:
                 print >>self.out, '} // module namespace'
             print >>self.out, '#endif'
             return
@@ -358,7 +358,7 @@ class generateVisitor(ASTVisitor):
             print >>self.out
 
         # --- namespace
-        for n in self.module.mod_path+[self.module.ident]:
+        for n in self.module.mod_path:
             print >>self.out, 'namespace __'+n+'__ {'
         print >>self.out
 
@@ -434,7 +434,7 @@ class generateVisitor(ASTVisitor):
                 self.visit(child)
 
         # --- close namespace
-        for n in self.module.mod_path+[self.module.ident]:
+        for n in self.module.mod_path:
             print >>self.out, '} // module namespace'
         print >>self.out
 
@@ -517,7 +517,8 @@ class generateVisitor(ASTVisitor):
 
             print >>self.out, '    __shedskin__::__init();'
 
-            for mod in getgx().modules.values():
+            for mod in getgx().modules.values(): # XXX
+#            for mod in getmv().imports.values():
                 if mod != getgx().main_module and mod.ident != 'builtin':
                     if mod.ident == 'sys':
                         if getgx().extension_module:
@@ -525,7 +526,7 @@ class generateVisitor(ASTVisitor):
                         else:
                             print >>self.out, '    __sys__::__init(argc, argv);'
                     else:
-                        print >>self.out, '    __'+'__::__'.join([n for n in mod.mod_path+[mod.ident]])+'__::__init();' # XXX sep func
+                        print >>self.out, '    __'+'__::__'.join([n for n in mod.mod_path])+'__::__init();' # XXX sep func
 
             print >>self.out, '    __'+self.module.ident+'__::__init();'
             if getgx().extension_module:
@@ -2480,7 +2481,7 @@ class generateVisitor(ASTVisitor):
             else:
                 if module:
                     mod = getmv().imports[module]
-                    self.append('__'+'__::__'.join(mod.mod_path+[mod.ident])+'__') # XXX /__init__.py
+                    self.append('__'+'__::__'.join(mod.mod_path)+'__') # XXX /__init__.py
                 else:
                     self.visit(node.expr, func)
             if not isinstance(node.expr, (Name)):
@@ -2665,13 +2666,13 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None):
     # --- namespace prefix
     namespace = ''
     if cl.module not in [getmv().module, getgx().modules['builtin']] and not (cl.ident in getmv().ext_funcs or cl.ident in getmv().ext_classes):
-        if cplusplus: namespace = '__'+'__::__'.join([n for n in cl.module.mod_path+[cl.module.ident]])+'__::'
-        else: namespace = '::'.join([n for n in cl.module.mod_path+[cl.module.ident]])+'::'
+        if cplusplus: namespace = '__'+'__::__'.join([n for n in cl.module.mod_path])+'__::'
+        else: namespace = '::'.join([n for n in cl.module.mod_path])+'::'
 
         if cl.module.filename.endswith('__init__.py'): # XXX only pass cl.module
-            include = '/'.join(cl.module.mod_path+[cl.module.ident])+'/__init__.hpp'
+            include = '/'.join(cl.module.mod_path)+'/__init__.hpp'
         else:
-            include = '/'.join(cl.module.mod_path+[cl.module.ident])+'.hpp'
+            include = '/'.join(cl.module.mod_path)+'.hpp'
         getmv().module.prop_includes.add(include)
 
     # --- recurse for types with parametric subtypes
@@ -3150,11 +3151,16 @@ def unboxable(types):
 
 def get_includes(mod):
     imports = set()
-    for mod in mod.mv.imports.values():
+    if mod == getgx().main_module:
+        mods = getgx().modules.values()
+    else:
+        mods = mod.mv.imports.values()
+
+    for mod in mods:
         if mod.filename.endswith('__init__.py'): # XXX
-            imports.add('/'.join(mod.mod_path+[mod.ident])+'/__init__.hpp')
+            imports.add('/'.join(mod.mod_path)+'/__init__.hpp')
         else:
-            imports.add('/'.join(mod.mod_path+[mod.ident])+'.hpp')
+            imports.add('/'.join(mod.mod_path)+'.hpp')
     return imports
 
 def subclass(a, b):
