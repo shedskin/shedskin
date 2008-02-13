@@ -151,6 +151,8 @@ print ++v, +-+-v
 #multidir fixes
 from testdata import crap
 print crap.incrap()
+from testdata import crap2
+crap2.incrap2()
 
 #int/double crap
 def to_ints(l):

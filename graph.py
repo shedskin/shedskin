@@ -362,7 +362,8 @@ class moduleVisitor(ASTVisitor):
                     var.imported = True
                     var.invisible = True
                     self.addconstraint((inode(extvar), inode(var)), None)
-            elif os.path.isfile(mod.dir+'/'+name+'.py'):
+            elif os.path.isfile(mod.dir+'/'+name+'.py') or \
+                 os.path.isfile(mod.dir+'/'+name+'/__init__.py'):
                 modname = '.'.join(mod.mod_path+[mod.ident, name])
                 self.importpair(modname, name, node)
             else:
