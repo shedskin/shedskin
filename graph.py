@@ -1390,6 +1390,7 @@ def parse_module(name, ast=None, parent=None, node=None):
 
     if ast: # XXX
         mod.ast = ast
+        mod.filename = name+'.py'
         mod.dir = ''
         mod.mod_path = [name]
         mod.mod_dir = []
