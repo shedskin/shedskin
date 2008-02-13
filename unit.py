@@ -157,9 +157,18 @@ def to_ints(l):
     return [int(x) for x in l]
 
 print to_ints([4.0, 4.0, 61]), to_ints((4.0, 4.0, 61))
-ls = [6]
-ls.append(1.0)
-print to_ints(ls)
+#print int(min(4.0, 4.0, 2))
+#print int(max(4.0, 4.0, 6))
+#print int(min(4.0, 4.0, 4.0, 2))
+#print int(max(4.0, 4.0, 4, 0, 6))
+l = [6]
+l.append(1.0)
+print to_ints(l)
+
+#assorted fixes
+[1] != []
+from collections import defaultdict
+print sorted(defaultdict.fromkeys(range(7,10), 'a').items())
 
 ''', '''
 output(equal=True)
@@ -5130,10 +5139,10 @@ print sum([1,2,3],4)
 print sum([[1],[2],[3,4]], [0])
 print sum([[1],[2],[3,4]], [])
 
-print {1.0: 2.0}.fromkeys([1,2,3])
+#print {1.0: 2.0}.fromkeys([1,2,3])
 print dict.fromkeys([1,2,3])
 
-print {1.0: 2.0}.fromkeys([1,2,3], 7)
+#print {1.0: 2.0}.fromkeys([1,2,3], 7)
 print dict.fromkeys([1,2,3], 4.0)
 print dict.fromkeys([1,2,3], 'string')
 
