@@ -461,9 +461,11 @@ def error(msg, node=None, warning=False):
         
     if warning: type = '*WARNING*'
     else: type = '*ERROR*'
+
     if node: lineno = ':'+str(node.lineno)
     else: lineno = ''
-    msg = type+' '+'/'.join(getmv().module.mod_path)+lineno+': '+msg
+
+    msg = type+' '+getmv().module.filename+lineno+': '+msg
     print msg
 
     if not warning:
