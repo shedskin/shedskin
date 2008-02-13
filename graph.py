@@ -1396,7 +1396,7 @@ def parse_module(name, ast=None, parent=None, node=None):
         mod.mod_dir = []
     else: 
         # --- locate module
-        importfromlib = (parent and parent.dir == getgx().libdir)
+        #importfromlib = (parent and parent.dir == getgx().libdir)
 
         relname = name.replace('.', '/')
         relpath = name.split('.')
@@ -1404,20 +1404,22 @@ def parse_module(name, ast=None, parent=None, node=None):
         else: path = name
         libpath = connect_paths(getgx().libdir, relname)
 
-        if not importfromlib and os.path.isfile(path+'.py'): # local modules shadow library modules
+        if os.path.isfile(path+'.py'): # local modules shadow library modules
             mod.filename = path+'.py'
             if parent: mod.mod_path = parent.mod_dir + relpath
             else: mod.mod_path = relpath
             split = path.split('/')
             mod.dir = '/'.join(split[:-1])
             mod.mod_dir = mod.mod_path[:-1]
+            mod.builtin = not parent or parent.builtin
 
-        elif not importfromlib and os.path.isfile(connect_paths(path, '__init__.py')):
+        elif os.path.isfile(connect_paths(path, '__init__.py')):
             mod.filename = connect_paths(path, '__init__.py')
             if parent: mod.mod_path = parent.mod_dir + relpath
             else: mod.mod_path = relpath
             mod.dir = path
             mod.mod_dir = mod.mod_path
+            mod.builtin = not parent or parent.builtin
 
         elif os.path.isfile(libpath+'.py'):
             mod.filename = libpath+'.py'
