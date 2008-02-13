@@ -333,4 +333,23 @@ public:
 void __init();
 
 } // module namespace
+
+namespace __defaultdict__ {
+    using __collections__::defaultdict;
+
+    template<class A, class B> defaultdict<A, B> *fromkeys(pyiter<A> *f, B b) {
+        defaultdict<A, B> *d = new defaultdict<A, B>();
+        A e;
+        __iter<A> *__0;
+        FOR_IN(e, f, 0)
+            d->__setitem__(e, b);
+        END_FOR
+        return d;
+    }
+
+    template<class A> defaultdict<A, int> *fromkeys(pyiter<A> *f) {
+        return fromkeys(f, 0);
+    }
+
+}
 #endif

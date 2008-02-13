@@ -132,11 +132,6 @@ template<class T> str *oct(T t) {
 }
 template<> str *oct(int a);
 
-namespace __dict__ {
-    template<class A, class B> dict<A, B> *fromkeys(pyiter<A> *f, B b);
-    template<class A> dict<A, int> *fromkeys(pyiter<A> *f);
-}
-
 str *__mod(str *fmt, ...);
 template<class T> str *__mod(str *fmt, tuple2<T,T> *t); 
 template<class A, class B> str *__mod(str *fmt, tuple2<A,B> *t);
@@ -650,11 +645,6 @@ public:
     int __contains__(K k);
     int __eq__(pyobj *e);
     V setdefault(K k, V v=0);
-
-    template <class A, class B> dict<A, B> *fromkeys(pyiter<A> *l, B b)
-        { return __dict__::fromkeys(l,b); }
-    template <class A> dict<A, int> *fromkeys(pyiter<A> *l)
-        { return __dict__::fromkeys(l); }
 
     __dictiterkeys<K, V> *__iter__();
     __dictiterkeys<K, V> *iterkeys();

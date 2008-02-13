@@ -381,11 +381,12 @@ class dict(pyiter):
     def __delete__(self, i):
         pass  
 
-    def fromkeys(self, l, b=None):
-        return fromkeys(l, b)
+    def fromkeys(l, b=None):
+        return {l.unit: b} 
+    fromkeys = staticmethod(fromkeys) # XXX classmethod
 
     def iterkeys(self):
-        return __iter(self.unit) # XXX iter(self.__keys)
+        return __iter(self.unit) 
     def itervalues(self):
         return __iter(self.value)
     def iteritems(self):
@@ -657,9 +658,6 @@ def __sum(l):
 def cmp(a, b):
     a.__cmp__(b)
     return 1
-
-def fromkeys(l, b=None):
-    return {l.unit: b} 
 
 def any(a):
     return 1
