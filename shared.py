@@ -2,7 +2,7 @@ from compiler import *
 from compiler.ast import *
 from compiler.visitor import *
 
-import os, sys
+import os, sys, traceback
 
 # --- global variables gx, mv
 
@@ -538,18 +538,13 @@ def analyze_callfunc(node, check_exist=False): # XXX generate target list XXX un
                 cl = getmv().classes[objexpr.name]
             else:
                 cl = getmv().ext_classes[objexpr.name]
-            if ident in cl.staticmethods: 
+            if ident in cl.staticmethods:  # staticmethod
                 direct_call = cl.funcs[ident]
+                #print 'staticmethodcall', direct_call
                 return objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr
 
         if module and (not var or not var.parent): # XXX var.parent?
             namespace, objexpr = imports[module], None
-
-        elif isinstance(objexpr, Name) and (objexpr.name == 'dict') and (not var or not var.parent):
-            namespace, objexpr = defclass('dict'), None
-            if ident in imports['builtin'].funcs:
-                direct_call = imports['builtin'].funcs[ident] # XXX beh
-                return objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr
         else:
             method_call = True
 

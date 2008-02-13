@@ -1135,6 +1135,10 @@ class moduleVisitor(ASTVisitor):
     def visitCallFunc(self, node, func=None): # XXX analyze_callfunc? XXX clean up!!
         newnode = cnode(node, parent=func) 
 
+        if isinstance(node.node, Name) and node.node.name == 'fromkeys':
+            print 'huhhh', node, getmv(), func
+            traceback.print_stack()
+
         # --- identify target
 
         if isinstance(node.node, Getattr): # XXX import math; math.e

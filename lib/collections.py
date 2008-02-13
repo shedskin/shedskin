@@ -1,38 +1,44 @@
 class deque(pyiter):
     def __init__(self, iterable=None):
         self.unit = iterable.unit
+
     def append(self, x):
         self.unit = x
     def appendleft(self, x):
         self.unit = x
-    def __getitem__(self, i):
-        return self.unit
-    def __setitem__(self, i, e):
-        self.unit = e
-    def __contains__(self, e):
-        return 1
-    def pop(self):
-        return self.unit
-    def popleft(self):
-        return self.unit
-    def __len__(self):
-        return 1
-    def __iter__(self):
-        return __iter(self.unit)
-    def clear(self):
-        pass
     def extend(self, b):
         self.unit = b.unit
     def extendleft(self, b):
         self.unit = b.unit
-    def remove(self, e):
-        pass
+
     def rotate(self, n):
         pass
+
+    def pop(self):
+        return self.unit
+    def popleft(self):
+        return self.unit
+
+    def remove(self, e):
+        pass
+    def clear(self):
+        pass
+
+    def __getitem__(self, i):
+        return self.unit
+    def __setitem__(self, i, e):
+        self.unit = e
     def __delitem__(self, i):
         pass
-    def truth(self):
+
+    def __contains__(self, e):
         return 1
+
+    def __len__(self):
+        return 1
+    def __iter__(self):
+        return __iter(self.unit)
+
     def __copy__(self):
         return self
     def __deepcopy__(self):
@@ -53,8 +59,6 @@ class defaultdict:
         self.value = item[1]
 
     def __setitem__(self, key, value):
-       # self.unit = key
-       # self.value = value
         self.__setunit__(key, value)
 
     def __getitem__(self, key):
@@ -122,11 +126,14 @@ class defaultdict:
     def __delete__(self, i):
         pass  
 
-#    def fromkeys(self, l, b=None):
-#        return fromkeys(l, b)
+    def fromkeys(l, b=None):
+        d = defaultdict(b)
+        d.unit = iter(l).next() 
+        return d
+    fromkeys = staticmethod(fromkeys) # XXX classmethod
 
     def iterkeys(self):
-        return __iter(self.unit) # XXX iter(self.__keys)
+        return __iter(self.unit) 
     def itervalues(self):
         return __iter(self.value)
     def iteritems(self):
