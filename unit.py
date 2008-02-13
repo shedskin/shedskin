@@ -5139,10 +5139,10 @@ print sum([1,2,3],4)
 print sum([[1],[2],[3,4]], [0])
 print sum([[1],[2],[3,4]], [])
 
-#print {1.0: 2.0}.fromkeys([1,2,3])
+print dict.fromkeys([1,2,3])
 print dict.fromkeys([1,2,3])
 
-#print {1.0: 2.0}.fromkeys([1,2,3], 7)
+print dict.fromkeys([1,2,3], 7)
 print dict.fromkeys([1,2,3], 4.0)
 print dict.fromkeys([1,2,3], 'string')
 
