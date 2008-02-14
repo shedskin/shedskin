@@ -161,10 +161,10 @@ def to_ints(l):
     return [int(x) for x in l]
 
 print to_ints([4.0, 4.0, 61]), to_ints((4.0, 4.0, 61))
-#print int(min(4.0, 4.0, 2))
-#print int(max(4.0, 4.0, 6))
-#print int(min(4.0, 4.0, 4.0, 2))
-#print int(max(4.0, 4.0, 4, 0, 6))
+print int(min(4.0, 4.0, 2))
+print int(max(4.0, 4.0, 6))
+print int(min(4.0, 4.0, 4.0, 2))
+print int(max(4.0, 4.0, 4, 0, 6))
 l = [6]
 l.append(1.0)
 print to_ints(l)
