@@ -1396,15 +1396,14 @@ def parse_module(name, ast=None, parent=None, node=None):
         mod.mod_dir = []
     else: 
         # --- locate module
-        #importfromlib = (parent and parent.dir == getgx().libdir)
-
         relname = name.replace('.', '/')
         relpath = name.split('.')
         if parent: path = connect_paths(parent.dir, relname)
         else: path = name
         libpath = connect_paths(getgx().libdir, relname)
+        rootpath = connect_paths(os.getcwd(), relname)
 
-        if os.path.isfile(path+'.py'): # local modules shadow library modules
+        if os.path.isfile(path+'.py'): # local module
             mod.filename = path+'.py'
             if parent: mod.mod_path = parent.mod_dir + relpath
             else: mod.mod_path = relpath
@@ -1421,25 +1420,36 @@ def parse_module(name, ast=None, parent=None, node=None):
             mod.mod_dir = mod.mod_path
             mod.builtin = not parent or parent.builtin
 
-        elif os.path.isfile(libpath+'.py'):
-            mod.filename = libpath+'.py'
+        elif os.path.isfile(rootpath+'.py'): # root module
+            mod.filename = rootpath+'.py'
             mod.mod_path = relpath
-            mod.builtin = True
-            split = libpath.split('/')
+            split = rootpath.split('/')
             mod.dir = '/'.join(split[:-1])
             mod.mod_dir = mod.mod_path[:-1]
 
-        elif os.path.isfile(connect_paths(libpath, '__init__.py')):
+        elif os.path.isfile(connect_paths(rootpath, '__init__.py')):
+            mod.filename = connect_paths(rootpath, '__init__.py')
+            mod.mod_path = relpath
+            mod.dir = rootpath
+            mod.mod_dir = mod.mod_path
+
+        elif os.path.isfile(libpath+'.py'): # library module
+            mod.filename = libpath+'.py'
+            mod.mod_path = relpath
+            split = libpath.split('/')
+            mod.dir = '/'.join(split[:-1])
+            mod.mod_dir = mod.mod_path[:-1]
+            mod.builtin = True
+
+        elif os.path.isfile(connect_paths(libpath, '__init__.py')): 
             mod.filename = connect_paths(libpath, '__init__.py')
             mod.mod_path = relpath
-            mod.builtin = True
             mod.dir = libpath
             mod.mod_dir = mod.mod_path
+            mod.builtin = True
 
         else:
             error('cannot locate module: '+name, node)
-
-        if mod.filename.startswith(libpath): mod.builtin = True
 
         modpath = '.'.join(mod.mod_path)
         if modpath in getgx().modules: # cached?
