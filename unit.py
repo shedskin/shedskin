@@ -155,6 +155,8 @@ import bert
 print bert.hello(1)
 from testdata import crap2
 crap2.incrap2()
+import testdata.crap2
+tc2c2 = testdata.crap2.crap2()
 
 #int/double crap
 def to_ints(l):
