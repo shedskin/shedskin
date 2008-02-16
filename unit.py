@@ -139,9 +139,9 @@ class base:
         return 12
 
     def gety(self):
-        return 18
+        return self.value
     def sety(self, val):
-        pass
+        self.value = val
 
     x = staticmethod(x)
     y = property(gety, sety)
@@ -151,7 +151,9 @@ class der(base):
     pass
 
 print der.x()
-print der().y
+derder = der()
+derder.y = 99
+print derder.y
 #print der.z # XXX
 
 #unaryadd
