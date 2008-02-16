@@ -7,6 +7,7 @@ list<str *> *argv;
 str *version;
 
 file *__ss_stdin, *__ss_stdout, *__ss_stderr;
+
 tuple2<int, int> *version_info;
 str *__name__, *copyright, *platform;
 int hexversion, maxint;
@@ -28,8 +29,11 @@ void __init(int c, char **v) {
         argv->append(new str(v[i]));
 
     __ss_stdin = new file(stdin);
+    __ss_stdin->name = new str("<stdin>");
     __ss_stdout = new file(stdout); 
+    __ss_stdout->name = new str("<stdout>");
     __ss_stderr = new file(stderr); 
+    __ss_stderr->name = new str("<stderr>");
 }
 
 void exit() {
