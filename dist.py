@@ -15,7 +15,7 @@ for file in files:
     os.system('cp %s %s' % (file, release))
 
 os.system('cp testdata/* %s/testdata' % release)
-os.system('cp testdata/crap2* %s/testdata/crap2' % release)
+os.system('cp testdata/crap2/* %s/testdata/crap2' % release)
 os.system('cp lib/* %s/lib' % release)
 os.system('cp lib/os/* %s/lib/os' % release)
 
