@@ -396,6 +396,7 @@ def main():
     print '(Please send bug reports here: mark.dufour@gmail.com)'
     print
 
+    
     # --- parse command-line options
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'eibnf:', ['infinite', 'extmod', 'bounds', 'nowrap', 'flags='])
@@ -413,6 +414,11 @@ def main():
                 sys.exit()
             getgx().flags = a
         if o in ['-n', '--nowrap']: getgx().wrap_around_check = False
+
+    major, minor = sys.version_info[:2]
+    if major != 2 or minor < 3:
+        print "*ERROR* use Python version 2.3 to 2.6"
+        sys.exit()
 
     # --- argument
     if len(args) != 1:
