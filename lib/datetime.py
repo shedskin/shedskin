@@ -249,7 +249,7 @@ timedelta.max = timedelta(days=999999999, hours=23, minutes=59, seconds=59, micr
 timedelta.resolution = timedelta(microseconds=1)
     
 
-if __name__ == "__main__":
+'''if __name__ == "__main__":
     #datetime.date tests
     
     d2 = date.today()
@@ -357,4 +357,4 @@ if __name__ == "__main__":
     abs(td1)
     td7 = td1 // 2
     td1 == td2
-    td8 = -td1
+    td8 = -td1'''
