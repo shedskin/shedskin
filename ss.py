@@ -420,6 +420,9 @@ def main():
     name = args[0]
     if not name.endswith('.py'):
         name += '.py'
+    if not os.path.isfile(name): 
+        print "*ERROR* no such file: '%s'" % name
+        sys.exit()
     gx.main_mod = name[:-3]
         
     # --- analyze & annotate
