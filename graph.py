@@ -1202,7 +1202,7 @@ class moduleVisitor(ASTVisitor):
 
         objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr = analyze_callfunc(node)
 
-        if constructor and ident == 'defaultdict':
+        if constructor and ident == 'defaultdict' and node.args:
             node.args[0] = CallFunc(node.args[0], []) 
 
         # --- arguments
