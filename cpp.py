@@ -3154,7 +3154,9 @@ def get_includes(mod):
     if mod == getgx().main_module:
         mods = getgx().modules.values()
     else:
-        mods = mod.mv.imports.values()
+        d = mod.mv.imports.copy()
+        d.update(mod.mv.fake_imports)
+        mods = d.values()
 
     for mod in mods:
         if mod.filename.endswith('__init__.py'): # XXX
