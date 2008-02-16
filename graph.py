@@ -19,6 +19,7 @@ class moduleVisitor(ASTVisitor):
         self.globals = {}
         self.lambdas = {}
         self.imports = {}
+        self.fake_imports = {}
         self.ext_classes = {}
         self.ext_funcs = {}
         self.lambdaname = {}
@@ -319,21 +320,21 @@ class moduleVisitor(ASTVisitor):
             error("please place all imports (no 'try:' etc) at the top of the file", node)
 
         for (name, pseudonym) in node.names:
-            self.importpair(name, pseudonym, node)
+            self.importpair(name, pseudonym, node, False)
 
-    def importpair(self, name, pseudonym, node):
+    def importpair(self, name, pseudonym, node, fake):
         if not pseudonym: pseudonym = name
         var = defaultvar(pseudonym, None)
         var.imported = True
 
-        mod = self.analyzeModule(name, pseudonym, node)
+        mod = self.analyzeModule(name, pseudonym, node, fake)
         getgx().types[inode(var)] = set([(mod,0)]) 
 
     def visitFrom(self, node, parent=None):
         if not node in getmv().importnodes: # XXX use (func, node) as parent..
             error("please place all imports (no 'try:' etc) at the top of the file", node)
 
-        mod = self.analyzeModule(node.modname, node.modname, node)
+        mod = self.analyzeModule(node.modname, node.modname, node, True)
 
         for (name, pseudonym) in node.names:
             if name == '*':
@@ -365,14 +366,17 @@ class moduleVisitor(ASTVisitor):
             elif os.path.isfile(mod.dir+'/'+name+'.py') or \
                  os.path.isfile(mod.dir+'/'+name+'/__init__.py'):
                 modname = '.'.join(mod.mod_path+[name])
-                self.importpair(modname, name, node)
+                self.importpair(modname, name, node, False)
             else:
                 error("no identifier '%s' in module '%s'" % (name, node.modname), node)
 
-    def analyzeModule(self, name, pseud, node):
+    def analyzeModule(self, name, pseud, node, fake):
         #print 'name, pseud', name, pseud, node
         mod = parse_module(name, None, getmv().module, node)
-        self.imports[pseud] = mod
+        if not fake:
+            self.imports[pseud] = mod
+        else:
+            self.fake_imports[pseud] = mod
         return mod
 
     def visitFunction(self, node, parent=None, is_lambda=False, inherited_from=None):
