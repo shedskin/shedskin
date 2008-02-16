@@ -134,6 +134,26 @@ woef.k
 w.z = 14
 print w.z
 
+class base:
+    def x():
+        return 12
+
+    def gety(self):
+        return 18
+    def sety(self, val):
+        pass
+
+    x = staticmethod(x)
+    y = property(gety, sety)
+    z = 21
+
+class der(base):
+    pass
+
+print der.x()
+print der().y
+#print der.z # XXX
+
 #unaryadd
 class V:
     def __init__(self, x):

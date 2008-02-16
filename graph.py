@@ -286,11 +286,12 @@ class moduleVisitor(ASTVisitor):
         # for each base class, duplicate methods
         for cl in self.classes.values():
             for ancestor in cl.ancestors():
+                cl.staticmethods.extend(ancestor.staticmethods)
+                cl.properties.update(ancestor.properties)
+
                 for func in ancestor.funcs.values():
                     if not func.node or func.inherited: continue
 
-                    if func.ident in ancestor.staticmethods: continue
-        
                     #print 'inherit', func, ancestor, cl
                     #print func.ident, ancestor.ident
 
