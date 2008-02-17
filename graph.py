@@ -396,7 +396,7 @@ class moduleVisitor(ASTVisitor):
         if not parent: 
             if is_lambda: self.lambdas[func.ident] = func
             else: self.funcs[func.ident] = func
-        else:
+        elif not func.mv.module.builtin:
             if not func.ident in parent.staticmethods and (not func.formals or func.formals[0] != 'self'):
                 error("formal arguments of method must start with 'self'", node)
             if not func.mv.module.builtin and func.ident in ['__new__', '__getattr__', '__setattr__', '__radd__', '__rsub__', '__rmul__', '__rdiv__', '__rtruediv__', '__rfloordiv__', '__rmod__', '__rdivmod__', '__rpow__', '__rlshift__', '__rrshift__', '__rand__', '__rxor__', '__ror__', '__iter__', '__call__']:

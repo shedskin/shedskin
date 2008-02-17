@@ -198,6 +198,8 @@ print to_ints(l)
 
 from collections import defaultdict
 print sorted(defaultdict.fromkeys(range(7,10), 'a').items())
+import collections
+print sorted(collections.defaultdict.fromkeys(range(7,10), 'a').items())
 
 from string import *
 class string: pass
