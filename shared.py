@@ -540,33 +540,23 @@ def analyze_callfunc(node, check_exist=False): # XXX generate target list XXX un
         objexpr, ident = node.node.expr, node.node.attrname
 
         # parent constr
-        if isinstance(objexpr, Name) and inode(node).parent:
+        if isinstance(objexpr, Name) and inode(node).parent: # XXX Name
             cl = inode(node).parent.parent
             if isinstance(cl, class_) and objexpr.name in [x.ident for x in cl.bases]:
                 parent_constr = True
                 ident = ident+objexpr.name+'__'
                 return objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr
 
-        var = lookupvar(ident, inode(node).parent)
+        # XXX a.b.c.. : a local variable!
+
+        # staticmethod
         cl = lookupclass(node.node.expr, imports)
-        #if cl:
-        #    print 'yay', cl
-
-        #iscl = isinstance(objexpr, Name) and (objexpr.name in getmv().classes or objexpr.name in getmv().ext_classes)
-
-        if cl and (not var or not var.parent): # XXX var alleen checken bij Name
-           # if objexpr.name in getmv().classes:
-           #     cl = getmv().classes[objexpr.name]
-           # else:
-           #     cl = getmv().ext_classes[objexpr.name]
-
-            if ident in cl.staticmethods:  # staticmethod
-                direct_call = cl.funcs[ident]
-                return objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr
+        if cl and ident in cl.staticmethods:  
+            direct_call = cl.funcs[ident]
+            return objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr
 
         module = lookupmodule(node.node.expr, imports)
-
-        if module and (not var or not var.parent): # XXX var.parent? zelfsde
+        if module: 
             namespace, objexpr = imports[module], None
         else:
             method_call = True
