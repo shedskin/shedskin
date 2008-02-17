@@ -3118,9 +3118,9 @@ def template_match(split, parent, orig_parent=None):
                 if isinstance(parent, class_) and dcpa in parent.unused: # XXX research nicer fix
                     continue
 
-                intfloat = [t for t in types if t[0].ident in ['int_', 'float_']]
-                if len(polymorphic_t(types)) > 1 and intfloat: 
-                    match = False
+                #intfloat = [t for t in types if t[0].ident in ['int_', 'float_']]
+                #if len(polymorphic_t(types)) > 1 and intfloat: 
+                #    match = False
 
                 if isinstance(parent, function):
                     node = getgx().cnode[var, dcpa, cpa]
