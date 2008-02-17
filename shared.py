@@ -405,13 +405,28 @@ class fakeGetattr2(Getattr): pass
 class fakeGetattr3(Getattr): pass
 
 def lookupmodule(node, imports):
-    orig_node = node
     module = ''
+
     while isinstance(node, Getattr):
         module = '.' + node.attrname + module
         node = node.expr
+
     if isinstance(node, Name) and node.name + module in imports:
         return node.name + module
+
+    return None
+
+def lookupclass(node, imports):
+    if isinstance(node, Name):
+        if node.name in getmv().classes: return getmv().classes[node.name]
+        elif node.name in getmv().ext_classes: return getmv().ext_classes[node.name]
+        else: return None
+
+    elif isinstance(node, Getattr):
+        module = lookupmodule(node.expr, imports)
+        if module and node.attrname in imports[module].classes:
+            return imports[module].classes[node.attrname]
+
     return None
 
 # --- recursively determine (lvalue, rvalue) pairs in assignment expressions
@@ -524,6 +539,7 @@ def analyze_callfunc(node, check_exist=False): # XXX generate target list XXX un
     if isinstance(node.node, Getattr): 
         objexpr, ident = node.node.expr, node.node.attrname
 
+        # parent constr
         if isinstance(objexpr, Name) and inode(node).parent:
             cl = inode(node).parent.parent
             if isinstance(cl, class_) and objexpr.name in [x.ident for x in cl.bases]:
@@ -532,20 +548,25 @@ def analyze_callfunc(node, check_exist=False): # XXX generate target list XXX un
                 return objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr
 
         var = lookupvar(ident, inode(node).parent)
-        module = lookupmodule(node.node.expr, imports)
-        iscl = isinstance(objexpr, Name) and (objexpr.name in getmv().classes or objexpr.name in getmv().ext_classes)
+        cl = lookupclass(node.node.expr, imports)
+        #if cl:
+        #    print 'yay', cl
 
-        if iscl and (not var or not var.parent):
-            if objexpr.name in getmv().classes:
-                cl = getmv().classes[objexpr.name]
-            else:
-                cl = getmv().ext_classes[objexpr.name]
+        #iscl = isinstance(objexpr, Name) and (objexpr.name in getmv().classes or objexpr.name in getmv().ext_classes)
+
+        if cl and (not var or not var.parent): # XXX var alleen checken bij Name
+           # if objexpr.name in getmv().classes:
+           #     cl = getmv().classes[objexpr.name]
+           # else:
+           #     cl = getmv().ext_classes[objexpr.name]
+
             if ident in cl.staticmethods:  # staticmethod
                 direct_call = cl.funcs[ident]
-                #print 'staticmethodcall', direct_call
                 return objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr
 
-        if module and (not var or not var.parent): # XXX var.parent?
+        module = lookupmodule(node.node.expr, imports)
+
+        if module and (not var or not var.parent): # XXX var.parent? zelfsde
             namespace, objexpr = imports[module], None
         else:
             method_call = True

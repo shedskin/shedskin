@@ -127,7 +127,8 @@ class defaultdict:
         pass  
 
     def fromkeys(l, b=None):
-        d = defaultdict(b)
+        d = defaultdict()
+        d.value = b
         d.unit = iter(l).next() 
         return d
     fromkeys = staticmethod(fromkeys) # XXX classmethod
