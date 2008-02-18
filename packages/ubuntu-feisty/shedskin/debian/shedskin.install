@@ -1,4 +1,8 @@
 ss.py usr/lib/shedskin/bin/
+shared.py usr/lib/shedskin/bin/
+graph.py usr/lib/shedskin/bin/
+infer.py usr/lib/shedskin/bin/
+cpp.py usr/lib/shedskin/bin/
 debian/scripts/shedskin usr/bin/
 FLAGS usr/lib/shedskin/
 lib/*.py usr/lib/shedskin/lib/
