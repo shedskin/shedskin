@@ -1,6 +1,6 @@
 README.html
 LICENSE
 testdata
-test.py
+debian/test.py
 unit.py
 bert.py
