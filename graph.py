@@ -1333,6 +1333,8 @@ class moduleVisitor(ASTVisitor):
     def visitConst(self, node, func=None):
         if type(node.value) == unicode:
             error('unicode is not supported', node)
+        if type(node.value) == complex:
+            error('complex numbers are not supported', node)
         map = {int: 'int_', str: 'str_', float: 'float_', type(None): 'none', long: 'int_'} # XXX 'return' -> Return(Const(None))?
         self.instance(node, defclass(map[type(node.value)]), func)
 
