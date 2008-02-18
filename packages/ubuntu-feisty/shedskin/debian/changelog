@@ -1,0 +1,22 @@
+shedskin (0.0.26-0ubuntu1) feisty; urgency=low
+
+  * Support for:
+    -most os.path methods
+    -many os methods
+    -collections.defaultdict
+    -getopt.gnu_getopt
+    -5 of the last missing str methods
+    -some missing file functionality
+  * Improved locale support
+  * removed many leading underscores in code generation
+  * optimized string addition (a+b+c+..)
+  * new documentation/tutorial
+  * many minor bug fixes
+ 
+ -- Mark Dufour <mark.dufour@gmail.com>  Sun,  13 Jan 2008 10:00:00 +0100
+
+shedskin (0.0.25-0ubuntu1) feisty; urgency=low
+
+  * Packaging of upstream sources.
+
+ -- Paul Boddie <paul@boddie.org.uk>  Sun,  2 Dec 2007 20:33:04 +0100

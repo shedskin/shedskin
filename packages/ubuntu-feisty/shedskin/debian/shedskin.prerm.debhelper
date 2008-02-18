@@ -1,0 +1,26 @@
+# Automatically added by dh_pycentral
+if which python >/dev/null 2>&1 && which pycentral >/dev/null 2>&1; then
+	pycentral pkgremove shedskin
+else
+	flist=$(tempfile)
+	find /usr/share/pycentral/shedskin -depth -mindepth 2 \
+	  \( -name '*.py' -printf 'p %P\n' -o -printf '%y %P\n' \) \
+	  > $flist 2>/dev/null || true
+	if [ -s $flist ]; then
+	    for d in /usr/lib/python[0-9].[0-9]; do
+		case "$d" in */python2.1|*/python2.2) continue; esac
+		while read t n; do
+		    case "$t" in
+			p) rm -f $d/$n $d/${n}[co];;
+			d) rmdir $d/$n 2>/dev/null || true;;
+			*) rm -f $d/$n
+		    esac
+		done < $flist
+	    done
+	fi
+	rm -f $flist
+	dpkg -L shedskin \
+            | awk '/\/usr\/share\/pycentral/ {next} /\.py$/ {print $0"c\n" $0"o"}' \
+	    | xargs rm -f >&2
+fi
+# End automatically added section
