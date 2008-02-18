@@ -1,5 +1,5 @@
 ss.py usr/lib/shedskin/bin/
-scripts/shedskin usr/bin/
+debian/scripts/shedskin usr/bin/
 FLAGS usr/lib/shedskin/
 lib/*.py usr/lib/shedskin/lib/
 lib/*.cpp usr/lib/shedskin/lib/
