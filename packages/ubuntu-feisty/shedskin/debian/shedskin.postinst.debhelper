@@ -1,0 +1,5 @@
+# Automatically added by dh_pycentral
+if which pycentral >/dev/null 2>&1; then
+	pycentral pkginstall shedskin
+fi
+# End automatically added section

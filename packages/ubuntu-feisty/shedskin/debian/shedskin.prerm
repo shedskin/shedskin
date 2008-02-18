@@ -1,0 +1,20 @@
+#! /bin/sh 
+# prerm script for ShedSkin
+
+set -e
+
+PACKAGE=shedskin
+
+case "$1" in
+    remove|upgrade|failed-upgrade)
+    ;;
+
+    *)
+        echo "prerm called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+
+
+
+exit 0

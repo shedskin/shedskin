@@ -1,0 +1,9 @@
+ss.py usr/lib/shedskin/bin/
+scripts/shedskin usr/bin/
+FLAGS usr/lib/shedskin/
+lib/*.py usr/lib/shedskin/lib/
+lib/*.cpp usr/lib/shedskin/lib/
+lib/*.hpp usr/lib/shedskin/lib/
+lib/os/*.py usr/lib/shedskin/lib/os/
+lib/os/*.cpp usr/lib/shedskin/lib/os/
+lib/os/*.hpp usr/lib/shedskin/lib/os/

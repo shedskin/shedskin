@@ -1,0 +1,67 @@
+#!/usr/bin/make -f
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+PYVERS=$(shell pyversions -vr)
+
+build: build-stamp
+
+build-stamp: $(PYVERS:%=build-python%)
+	touch $@
+
+build-python%:
+	#python$* setup.py build_py
+	#touch $@
+
+build-python-scripts:
+	#python setup.py build_scripts
+	#touch $@
+
+clean:
+	dh_testdir
+	dh_testroot
+	rm -f *-stamp
+	rm -rf build
+	find . -name '*.py[co]' | xargs rm -f
+	dh_clean
+
+install: build install-prereq $(PYVERS:%=install-python%) install-python-scripts
+	# Script fixing would appear here.
+
+install-prereq:
+	dh_testdir
+	dh_testroot
+	dh_clean -k
+
+install-python%:
+	#python$* setup.py install_lib --install-dir $(CURDIR)/debian/python-desktop/usr/lib/python$*/site-packages
+
+install-python-scripts:
+	#python setup.py install_scripts --install-dir $(CURDIR)/debian/python-desktop/usr/bin
+
+# Build architecture-independent files here.
+
+binary-indep: install
+	dh_testdir -i
+	dh_testroot -i
+	# Install before dh_pycentral so that it can work out that there's Python involved
+	dh_install -i -n
+	dh_pycentral -i usr/lib/shedskin/bin
+	dh_installdocs -i
+	dh_installchangelogs -i
+	gzip --best debian/shedskin.1
+	dh_installman -i debian/shedskin.1.gz
+	dh_fixperms -i
+	dh_installdeb -i
+	dh_gencontrol -i
+	dh_md5sums -i
+	dh_builddeb -i
+
+# Build architecture-dependent files here.
+
+binary-arch:
+	# Empty rule for this package.
+
+binary: binary-indep binary-arch
+.PHONY: build clean binary-arch binary-indep binary install
