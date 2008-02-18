@@ -210,7 +210,16 @@ void __init() {
     start = std::clock();
     const_0 = new str("time.struct_time() takes a 9-sequence");
     const_1 = new str("(%d, %d, %d, %d, %d, %d, %d, %d, %d)");
-    timezone = (gmtime()->tm_hour - localtime()->tm_hour) * 3600;
+    struct_time* gmt = gmtime();
+    struct_time* localt = localtime();
+    int gmt_hour = gmt->tm_hour;
+    int localt_hour = localt->tm_hour;
+    if (gmt->tm_mday > localt->tm_mday) {
+        localt_hour -= 24;
+    } else if (gmt->tm_mday < localt->tm_mday) {
+        localt_hour += 24;
+    }
+    timezone = (gmt_hour - localt_hour) * 3600;
     tzname = new tuple2<str *, str *>(2, new str(::tzname[0]), new str(::tzname[1]));
 }
 
