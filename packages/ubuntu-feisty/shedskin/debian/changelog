@@ -1,3 +1,17 @@
+shedskin (0.0.27-0ubuntu1) feisty; urgency=low
+
+  * Support for 're', 'time', 'fnmatch', 'glob'
+  * Basic support for staticmethod and property
+  * OSX support (also extension modules)
+  * Split up compiler core
+  * Improved support for 'os' (posix)
+  * Optimized 'zip' implementation
+  * Many fixes for multi-dir/multi-file projects
+  * Type model for 'datetime' (no implementation yet)
+  * Many bugfixes
+
+ -- Mark Dufour <mark.dufour@gmail.com>  Sun,  13 Jan 2008 10:00:00 +0100
+
 shedskin (0.0.26-0ubuntu1) feisty; urgency=low
 
   * Support for:
