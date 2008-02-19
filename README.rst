@@ -437,6 +437,8 @@ Tips and Tricks
  
 3. Shed Skin takes the flags it sends to the C++ compiler from the ``FLAGS`` file in the Shed Skin working directory. These flags can be overridden by creating a local file with the same name.
 
+4. Allocating many small objects (e.g. by using ``zip``) typically does not slow down Python programs by much. However, after compilation to C++, it can quickly become a bottleneck. 
+
 **Tricks**
 
 1. The used type inference techniques can end up in an infinite loop, especially for larger programs. If this happens, it sometimes helps to run **Shed Skin** with the ``--infinite`` command-line option.
