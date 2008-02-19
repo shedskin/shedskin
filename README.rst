@@ -132,16 +132,19 @@ In general, programs can only import functionality that is defined in the **Shed
   - bisect
   - collections
   - copy
+  - fnmatch
   - getopt
+  - glob
   - math
   - os (partially)
   - os.path 
   - random
+  - re
   - string
   - sys (partially, but including argv, exit, stdin etc.)
-  - time (partially, but including time and clock)
+  - time 
 
-For version **0.1** of **Shed Skin**, support for ``re``, ``datetime`` and ``socket`` is planned, as well as complete support for ``os`` and ``time``. (See `How to help out in Shed Skin Development`_ if you'd like to help improve support for these or other modules.)
+For version **0.1** of **Shed Skin**, support for ``datetime`` and ``socket`` is planned, as well as complete support for ``os``. (See `How to help out in Shed Skin Development`_ if you'd like to help improve support for these or other modules.)
 
 .. _Installation:
 
@@ -470,14 +473,21 @@ If you are a student, you might want to consider applying for the yearly Google 
 
 The following company/people deserve to be mentioned for their help with **Shed Skin** so far:
  
-* Google
+* Google 
 * Bearophile
-* Paul Boddie 
+* Brian Blais
+* Paul Boddie
+* Mark Dewing
 * James Coughlan
 * Luis M. Gonzales
 * Denis de Leeuw Duarte
+* Van Lindberg
+* David Marek
 * Jeff Miller
 * Harri Pasanen
+* SirNotAppearingInThisTutorial
+* Jaroslaw Tworek
+* Pavel Vinogradov
 
 .. _Roadmap:
 
