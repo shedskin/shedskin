@@ -20,7 +20,7 @@ SYNOPSIS
 DESCRIPTION
 ===========
 
-Shed Skin is an experimental Python-to-C++ compiler designed to speed up the execution of Python programs. It converts programs written in a static subset of Python to C++. The C++ code can be compiled to executable code, which can be run either as a standalone program or as a module easily imported and called from Python. 
+Shed Skin is an experimental Python-to-C++ compiler designed to speed up the execution of Python programs. It converts programs written in a static subset of Python to C++. The C++ code can be compiled to executable code, which can be run either as a standalone program or as a module imported and called from CPython. 
 
 LIMITATIONS
 ===========
