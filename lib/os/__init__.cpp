@@ -13,7 +13,7 @@ namespace std {
 }
 
 #ifdef WIN32
-#include <windows.h>
+//#include <windows.h>
 #endif
 
 #ifdef __APPLE__
@@ -311,9 +311,11 @@ int stat_float_times(int newvalue) {
     return 1;
 }
 
+#ifndef WIN32
 int getpid() {
     return ::getpid();
 }
+#endif
 
 int putenv(str* varname, str* value) {
     std::stringstream ss;
@@ -325,6 +327,7 @@ int umask(int newmask)  {
     return ::umask(newmask);
 }
 
+#ifndef WIN32
 int unsetenv (str* var) {
     ::unsetenv(var->unit.c_str());
     return 0;
@@ -354,6 +357,7 @@ int chmod (str* path, int val) {
     return ::chmod(path->unit.c_str(), val);
 #endif
 }
+#endif
 
 int renames (str* old, str* _new) {
     tuple2<str *, str *> *__0, *__1, *__5;
@@ -412,6 +416,7 @@ popen_pipe* popen(str* cmd, str* mode, int bufsize) {
     return new popen_pipe(fp);
 }
 
+#ifndef WIN32
 tuple2<int,int>* pipe() {
     int fds[2];
     int ret;
@@ -426,6 +431,7 @@ tuple2<int,int>* pipe() {
 
     return new tuple2<int,int>(2,fds[0],fds[1]);
 }
+#endif
 
 void dup2(int f1, int f2) {
     int res = ::dup2(f1,f2);
@@ -436,6 +442,7 @@ void dup2(int f1, int f2) {
     }
 }
 
+#ifndef WIN32
 void execv(str* file, list<str*>* args) {
     //char** argvlist = new char*[ args->__len__()+1];
     char** argvlist = (char**) GC_malloc( sizeof(char*) * (args->__len__()+1));
@@ -480,6 +487,7 @@ void execvp(str* file, list<str*>* args) {
     }
     throw new OSError(new str("execvp failed"));
 }
+#endif
 
 file* fdopen(int fd) {
     return fdopen(fd, new str("r"), -1);
@@ -498,6 +506,7 @@ file* fdopen(int fd, str* mode, int bufsize) {
     return ret;
 }
 
+#ifndef WIN32
 tuple2<file*,file*>* popen2(str* cmd) {
     return popen2(cmd, new str("t"), -1);
 }
@@ -534,6 +543,7 @@ tuple2<file*,file*>* popen2(str* cmd, str* mode, int bufsize) {
     
     return ret;
 }
+#endif
 
 void close(int fd) {
    int res = ::close(fd);
