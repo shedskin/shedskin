@@ -504,7 +504,7 @@ The following activities are planned for future versions of **Shed Skin**:
 
 **0.1** (6-12 months from now)
 
-* Add complete support for the ``re``, ``socket`` and ``datetime`` modules, and all modules mentioned in `Library Limitations`_.
+* Add complete support for the ``datetime`` and ``socket`` modules, and all modules mentioned in `Library Limitations`_.
 
 * Improve the type inference techniques with at least *iterative deepening* and basic selector-based *filters*.
 
