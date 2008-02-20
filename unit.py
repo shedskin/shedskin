@@ -320,10 +320,10 @@ try:
     os.chdir('ontehunoe')
 
 except OSError, e:
-    print e
-    print repr(e)
+#    print e
+#    print repr(e)
     print e.errno
-    print e.strerror
+#    print e.strerror
     print e.filename
 
 #int(), float(), str(); test all
