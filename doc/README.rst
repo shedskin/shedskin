@@ -37,7 +37,7 @@ Additionally, the type inference techniques employed by **Shed Skin** currently 
 
 Because **Shed Skin** is still in a very early stage of development, it can also improve a lot. At the moment, you will probably run into some bugs when using it. Please report these, so they can be fixed! 
 
-At the moment, **Shed Skin** supports GNU/Linux, OSX and Windows platforms.
+At the moment, **Shed Skin** is only compatible with Python versions 2.3 to 2.6, and has only been tested on GNU/Linux, OSX and Windows platforms.
 
 .. _Typing Restrictions:
 
@@ -151,9 +151,9 @@ For version **0.1** of **Shed Skin**, support for ``datetime`` and ``socket`` is
 Installation
 ------------
 
-The latest version of Shed Skin can be downloaded from the `Googlecode site`_. There are three types of packages available: a self-extracting Windows installer, a **Debian** package, and a UNIX source package.
+The latest version of Shed Skin can be downloaded from the `Googlecode site`_. There are three types of packages available: a self-extracting Windows installer, a **Debian** package, and a UNIX source package. 
 
-To install the Windows version, simply download and start it.
+To install the Windows version, simply download and start it. (If you use ActivePython, please deinstall it first, and install the regular Python distribution.)
 
 To install the **Debian** package, simply download and install it using your package manager. 
 
@@ -169,7 +169,6 @@ To install the UNIX source package, take the following steps:
    ``sudo apt-get install libpcre3-dev``
 
  - run ``python setup.py`` and place the generated ``shedskin`` file in your path 
-
 
 .. _Compiling and Running a Stand-Alone Program:
 
@@ -200,7 +199,7 @@ To only build, but not run the executable file, omit the ``run`` part: ::
 
     make
 
-For the executable file to execute properly under Windows, note that ``gc.dll`` (located in the Shed Skin working directory) must be located somewhere in the Windows path. This happens automatically when running ``init.bat``. 
+For the executable file to execute properly under Windows, note that ``gc.dll`` and ``libpcre-0.dll`` (located in the Shed Skin working directory) must be located somewhere in the Windows path. This happens automatically when running ``init.bat``. 
 
 As Shed Skin is still an *experimental* project and contains bugs, it is recommended that you test and debug programs thoroughly with the regular Python interpreter (**CPython**), before compiling them with **Shed Skin**. Discrepancies between **CPython** and **Shed Skin** versions should be reported as possible bugs to ``mark.dufour@gmail.com``. 
 
