@@ -490,6 +490,7 @@ The following company/people deserve to be mentioned for their help with **Shed 
 * Van Lindberg
 * David Marek
 * Jeff Miller
+* Joaquin Abian Monux
 * Harri Pasanen
 * SirNotAppearingInThisTutorial
 * Jaroslaw Tworek
