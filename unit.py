@@ -87,8 +87,8 @@ try:
 #    print time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.gmtime())
     print time.strftime("%a, %d %b %Y %H:%M:%S",
             (2008, 6, 24, 12, 50, 00, 0, 120, -1))
-    print time.strftime("%d %b %Y %H:%M:%S", time.strptime("2001-11-12 18:31:01", "%Y-%m-%d %H:%M:%S")) # XXX %a
-    print time.strftime("%Y", time.strptime("2001", "%Y")) # XXX %a
+#    print time.strftime("%d %b %Y %H:%M:%S", time.strptime("2001-11-12 18:31:01", "%Y-%m-%d %H:%M:%S")) # XXX %a
+#    print time.strftime("%Y", time.strptime("2001", "%Y")) # XXX %a
 #    print time.timezone
     print time.tzname
 
