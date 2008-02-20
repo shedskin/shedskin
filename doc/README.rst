@@ -144,7 +144,7 @@ In general, programs can only import functionality that is defined in the **Shed
   - sys (partially, but including argv, exit, stdin etc.)
   - time 
 
-For version **0.1** of **Shed Skin**, support for ``datetime`` and ``socket`` is planned, as well as complete support for ``os``. (See `How to help out in Shed Skin Development`_ if you'd like to help improve support for these or other modules.)
+For version **0.1** of **Shed Skin**, support for at least ``datetime`` and ``socket`` is planned, as well as complete support for ``os``. (See `How to help out in Shed Skin Development`_ if you'd like to help improve support for these or other modules.)
 
 .. _Installation:
 
