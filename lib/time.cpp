@@ -199,12 +199,13 @@ str *strftime(str *format, tuple2<int, int> *tuple) {
     return strftime(format, st);
 }
 
+#ifndef WIN32
 struct_time *strptime(str *string, str *format) {
     tm time_tuple = {0, 0, 0, 1, 0, 0, 0, 1, -1};
     ::strptime(string->unit.c_str(), format->unit.c_str(), &time_tuple);
     return tm2tuple(&time_tuple);
 }
-
+#endif
 
 void __init() {
     start = std::clock();
