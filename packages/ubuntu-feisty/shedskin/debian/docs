@@ -1,5 +1,5 @@
 doc/README.html
-LICENSE
+doc/LICENSE
 testdata
 debian/test.py
 unit.py
