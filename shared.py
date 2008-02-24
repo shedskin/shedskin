@@ -24,7 +24,6 @@ class globalInfo: # XXX add comments, split up
         self.typeclass = {}
         self.sig_nr = {}
         self.nameclasses = {}
-        self.dirs = {}                  # module management
         self.tuple2 = set()             # binary typed tuples 
         self.module = None
         self.simple_builtins = ['none', 'str_', 'float_', 'int_', 'class_']   
@@ -49,7 +48,9 @@ class globalInfo: # XXX add comments, split up
         self.flags = None
         self.method_refs = set()
         self.avoid_loops = False
+        self.annotation = True
         self.assignments = []
+        self.output_dir=''
 
 def newgx():
     return globalInfo()

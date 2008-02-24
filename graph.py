@@ -1465,7 +1465,6 @@ def parse_module(name, ast=None, parent=None, node=None):
         getgx().modules[modpath] = mod
           
         mod.ast = parsefile(mod.filename) 
-        getgx().dirs.setdefault('', []).append(mod)
 
     old_mv = getmv()
     mod.mv = mv = moduleVisitor(mod)

@@ -9,15 +9,13 @@ import textwrap, string
 # --- code generation visitor; use type information; c++ templates
 class generateVisitor(ASTVisitor):
     def __init__(self, module):
-        name = module.filename[:-3]
-        self.fname = name
-        self.out = file(name+'.cpp','w')
+        self.output_base = os.path.join(getgx().output_dir, module.filename[:-3])
+        self.out = file(self.output_base+'.cpp','w')
         self.indentation = ''
         self.consts = {}
         self.mergeinh = merged(getgx().types, inheritance=True) 
         self.module = module
         self.name = module.ident
-
         self.filling_consts = False
         self.constant_nr = 0
 
@@ -28,7 +26,7 @@ class generateVisitor(ASTVisitor):
         if declare: suffix = '.hpp'
         else: suffix = '.cpp'
 
-        lines = file(self.fname+suffix,'r').readlines()
+        lines = file(self.output_base+suffix,'r').readlines()
         newlines = [] 
         j = -1
         for (i,line) in enumerate(lines):
@@ -72,7 +70,7 @@ class generateVisitor(ASTVisitor):
 
                 newlines2.append('\n')
         
-        file(self.fname+suffix,'w').writelines(newlines2)
+        file(self.output_base+suffix,'w').writelines(newlines2)
         self.filling_consts = False
         
     def insert_includes(self): # XXX ugly
@@ -82,7 +80,7 @@ class generateVisitor(ASTVisitor):
  
         #print 'insert', self.module, prop_includes
 
-        lines = file(self.fname+'.hpp','r').readlines()
+        lines = file(self.output_base+'.hpp','r').readlines()
         newlines = []
  
         prev = ''
@@ -93,7 +91,7 @@ class generateVisitor(ASTVisitor):
             newlines.append(line)
             prev = line
  
-        file(self.fname+'.hpp','w').writelines(newlines)
+        file(self.output_base+'.hpp','w').writelines(newlines)
 
     # --- group pairs of (type, name) declarations, while paying attention to '*'
     def group_declarations(self, pairs):
@@ -112,7 +110,7 @@ class generateVisitor(ASTVisitor):
         return result
 
     def header_file(self):
-        self.out = file(self.module.filename[:-3]+'.hpp','w')
+        self.out = file(self.output_base+'.hpp','w')
         self.visit(self.module.ast, True)
         self.out.close()
 
