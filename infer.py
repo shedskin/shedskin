@@ -1133,60 +1133,59 @@ def filter_flow(filter, var):
 
 
 def generate_bindings():
-    for dir, mods in getgx().dirs.items():
-        for mod in mods:
-            if mod.builtin and not os.path.isfile(mod.ident+'_.hpp'):
-                ident = mod.ident
-                print 'generate!', ident
+    for mod in getgx().modules.values():
+        if mod.builtin and not os.path.isfile(mod.ident+'_.hpp'):
+            ident = mod.ident
+            print 'generate!', ident
 
-                gv = generateVisitor(mod)
-                mv = mod.mv 
-                setmv(mv)
+            gv = generateVisitor(mod)
+            mv = mod.mv 
+            setmv(mv)
 
-                # --- generate *_.cpp file
-                gv.output('#include <Python.h>\n#include "%s_.hpp"\n\nnamespace __%s__ {\n' % (ident, ident)) 
-                gv.output('PyObject '+', '.join(['*__'+x for x in mod.funcs.keys()+mod.classes.keys()])+';\n')
+            # --- generate *_.cpp file
+            gv.output('#include <Python.h>\n#include "%s_.hpp"\n\nnamespace __%s__ {\n' % (ident, ident)) 
+            gv.output('PyObject '+', '.join(['*__'+x for x in mod.funcs.keys()+mod.classes.keys()])+';\n')
 
-                # class bindings
-                for cl in mod.classes.values():
-                    gv.visitm('/**', 'class %s' % cl.ident, '*/', None)
-                    for func in cl.funcs.values():
-                        if func.ident not in ['__getattr__', '__setattr__']:
-                            bind_function(gv, func)
+            # class bindings
+            for cl in mod.classes.values():
+                gv.visitm('/**', 'class %s' % cl.ident, '*/', None)
+                for func in cl.funcs.values():
+                    if func.ident not in ['__getattr__', '__setattr__']:
+                        bind_function(gv, func)
 
-                # function bindings
-                for func in mod.funcs.values():
-                    bind_function(gv, func)
+            # function bindings
+            for func in mod.funcs.values():
+                bind_function(gv, func)
 
-                # __init
-                gv.output('void __init() {\n    '+'\n    '.join(['__%s = __import("%s", "%s");' % (x, ident, x) for x in mod.funcs.keys()+mod.classes.keys()])+'\n\n}\n')
+            # __init
+            gv.output('void __init() {\n    '+'\n    '.join(['__%s = __import("%s", "%s");' % (x, ident, x) for x in mod.funcs.keys()+mod.classes.keys()])+'\n\n}\n')
 
-                gv.output('} // namespace __%s__' % ident)
-                gv.out.close()
+            gv.output('} // namespace __%s__' % ident)
+            gv.out.close()
 
-                gv.out = file(mod.filename[:-3]+'.hpp','w')
+            gv.out = file(mod.filename[:-3]+'.hpp','w')
 
-                # --- generate *_.hpp file
-                gv.output('#ifndef __%s_HPP\n#define __%s_HPP\n\n#include "builtin_.hpp"\n\nusing namespace __shedskin__;\n\nnamespace __%s__ {\n' % (ident.upper(), ident.upper(), ident))
+            # --- generate *_.hpp file
+            gv.output('#ifndef __%s_HPP\n#define __%s_HPP\n\n#include "builtin_.hpp"\n\nusing namespace __shedskin__;\n\nnamespace __%s__ {\n' % (ident.upper(), ident.upper(), ident))
 
-                # class declarations 
-                for cl in mod.classes.values():
-                    gv.output('class %s : public pyobj {\npublic:' % cl.ident)
-                    gv.indent()
-                    gv.output('PyObject *self;\n')
-                    for func in cl.funcs.values():
-                        if func.ident not in ['__getattr__', '__setattr__']:
-                            gv.func_header(func, declare=True)
-                        
-                    gv.deindent()
-                    gv.output('\n};\n')
+            # class declarations 
+            for cl in mod.classes.values():
+                gv.output('class %s : public pyobj {\npublic:' % cl.ident)
+                gv.indent()
+                gv.output('PyObject *self;\n')
+                for func in cl.funcs.values():
+                    if func.ident not in ['__getattr__', '__setattr__']:
+                        gv.func_header(func, declare=True)
+                    
+                gv.deindent()
+                gv.output('\n};\n')
 
-                # function declarations
-                for func in mod.funcs.values():
-                    gv.func_header(func, declare=True)
+            # function declarations
+            for func in mod.funcs.values():
+                gv.func_header(func, declare=True)
 
-                gv.output('\nvoid __init();\n\n} // namespace __%s__\n#endif' % ident)
-                gv.out.close()
+            gv.output('\nvoid __init();\n\n} // namespace __%s__\n#endif' % ident)
+            gv.out.close()
 
 def bind_function(gv, func):
     gv.func_header(func, declare=False)

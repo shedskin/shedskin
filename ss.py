@@ -280,7 +280,7 @@ def annotate():
         # --- output annotated file (skip if no write permission)
         if not module.builtin: 
             try:
-                out = open(module.filename[:-3]+'.ss.py','w')
+                out = open(os.path.join(getgx().output_dir, module.filename[:-3]+'.ss.py'),'w')
                 out.write(''.join(source))
                 out.close()
             except IOError:
@@ -289,8 +289,6 @@ def annotate():
 # --- generate C++ and Makefiles
 def generate_code():
     print '[generating c++ code..]'
-
-    getgx().dirs.setdefault('',[]).append(getgx().main_module)
 
     ident = getgx().main_module.ident 
 
@@ -304,86 +302,95 @@ def generate_code():
         if sys.platform == 'win32': ident += '.pyd'
         else: ident += '.so'
 
-    # --- repeat for each directory:
-    for dir, mods in getgx().dirs.items():
-        # --- generate C++ files
-        for module in mods:
-            if not module.builtin:
-                gv = generateVisitor(module)
-                mv = module.mv 
-                setmv(mv)
-                gv.func_pointers(False)
-                walk(module.ast, gv)
-                gv.out.close()
-                gv.header_file()
-                gv.out.close()
-                gv.insert_consts(declare=False)
-                gv.insert_consts(declare=True)
-                gv.insert_includes()
+    # --- generate C++ files
+    mods = getgx().modules.values()
+    for module in mods:
+        if not module.builtin:
+            # create output directory if necessary
+            if getgx().output_dir:
+                output_dir = os.path.join(getgx().output_dir, module.dir).split(os.sep)
+                for i in range(len(output_dir)):
+                    dir = os.path.join(*output_dir[:i+1])
+                    if dir and not os.path.isdir(dir):
+                        os.mkdir(dir)
 
-        # --- generate Makefile
-        makefile = file(connect_paths(dir, 'Makefile'), 'w')
+            gv = generateVisitor(module)
+            mv = module.mv 
+            setmv(mv)
+            gv.func_pointers(False)
+            walk(module.ast, gv)
+            gv.out.close()
+            gv.header_file()
+            gv.out.close()
+            gv.insert_consts(declare=False)
+            gv.insert_consts(declare=True)
+            gv.insert_includes()
 
-        cppfiles = ' '.join([m.filename[:-3].replace(' ', '\ ')+'.cpp' for m in mods])
-        hppfiles = ' '.join([m.filename[:-3].replace(' ', '\ ')+'.hpp' for m in mods])
+    # --- generate Makefile
+    makefile = file(os.path.join(getgx().output_dir, 'Makefile'), 'w')
 
-        # import flags
-        if getgx().flags: flags = getgx().flags
-        elif os.path.isfile('FLAGS'): flags = 'FLAGS'
-        else: flags = connect_paths(getgx().sysdir, 'FLAGS')
+    cppfiles = ' '.join([m.filename[:-3].replace(' ', '\ ')+'.cpp' for m in mods])
+    hppfiles = ' '.join([m.filename[:-3].replace(' ', '\ ')+'.hpp' for m in mods])
 
-        for line in file(flags):
-            line = line[:-1]
+    # import flags
+    if getgx().flags: flags = getgx().flags
+    elif os.path.isfile('FLAGS'): flags = 'FLAGS'
+    else: flags = connect_paths(getgx().sysdir, 'FLAGS')
 
-            if line[:line.find('=')].strip() == 'CCFLAGS': 
-                line += ' -I. -I'+getgx().libdir.replace(' ', '\ ')
-                if not getgx().wrap_around_check: line += ' -DNOWRAP' 
-                if getgx().bounds_checking: line += ' -DBOUNDS' 
-                if getgx().extension_module: 
-                    if sys.platform == 'win32': line += ' -Ic:/Python%s/include -D__SS_BIND' % pyver
-                    else: line += ' -g -fPIC -D__SS_BIND ' + includes
+    for line in file(flags):
+        line = line[:-1]
 
-            elif line[:line.find('=')].strip() == 'LFLAGS': 
-                if getgx().extension_module: 
-                    if sys.platform == 'win32': line += ' -shared -Lc:/Python%s/libs -lpython%s' % (pyver, pyver) 
-                    elif sys.platform == 'darwin': line += ' -bundle -Xlinker -dynamic ' + ldflags
-                    else: line += ' -shared -Xlinker -export-dynamic ' + ldflags
-                if 're' in [m.ident for m in mods]:
-                    line += ' -lpcre'
+        if line[:line.find('=')].strip() == 'CCFLAGS': 
+            line += ' -I. -I'+getgx().libdir.replace(' ', '\ ')
+            if not getgx().wrap_around_check: line += ' -DNOWRAP' 
+            if getgx().bounds_checking: line += ' -DBOUNDS' 
+            if getgx().extension_module: 
+                if sys.platform == 'win32': line += ' -Ic:/Python%s/include -D__SS_BIND' % pyver
+                else: line += ' -g -fPIC -D__SS_BIND ' + includes
 
-            print >>makefile, line
-        print >>makefile
+        elif line[:line.find('=')].strip() == 'LFLAGS': 
+            if getgx().extension_module: 
+                if sys.platform == 'win32': line += ' -shared -Lc:/Python%s/libs -lpython%s' % (pyver, pyver) 
+                elif sys.platform == 'darwin': line += ' -bundle -Xlinker -dynamic ' + ldflags
+                else: line += ' -shared -Xlinker -export-dynamic ' + ldflags
+            if 're' in [m.ident for m in mods]:
+                line += ' -lpcre'
 
-        print >>makefile, 'all:\t'+ident+'\n'
+        print >>makefile, line
+    print >>makefile
 
-        if not getgx().extension_module:
-            print >>makefile, 'run:\tall'
-            print >>makefile, '\t./'+ident+'\n'
+    print >>makefile, 'all:\t'+ident+'\n'
 
-            print >>makefile, 'full:'
-            print >>makefile, '\tss '+ident+'; $(MAKE) run\n'
+    if not getgx().extension_module:
+        print >>makefile, 'run:\tall'
+        print >>makefile, '\t./'+ident+'\n'
 
-        print >>makefile, 'CPPFILES='+cppfiles
-        print >>makefile, 'HPPFILES='+hppfiles+'\n'
+        print >>makefile, 'full:'
+        print >>makefile, '\tss '+ident+'; $(MAKE) run\n'
 
-        print >>makefile, ident+':\t$(CPPFILES) $(HPPFILES)'
-        print >>makefile, '\t$(CC) $(CCFLAGS) $(CPPFILES) $(LFLAGS) -o '+ident+'\n'
+    print >>makefile, 'CPPFILES='+cppfiles
+    print >>makefile, 'HPPFILES='+hppfiles+'\n'
 
-        if sys.platform == 'win32':
-            ident += '.exe'
-        print >>makefile, 'clean:'
-        print >>makefile, '\trm '+ident
+    print >>makefile, ident+':\t$(CPPFILES) $(HPPFILES)'
+    print >>makefile, '\t$(CC) $(CCFLAGS) $(CPPFILES) $(LFLAGS) -o '+ident+'\n'
 
-        makefile.close()
+    if sys.platform == 'win32':
+        ident += '.exe'
+    print >>makefile, 'clean:'
+    print >>makefile, '\trm '+ident
+
+    makefile.close()
 
 def usage():
     print """Usage: ss.py [OPTION]... FILE
 
+ -a --noann             Don't output annotated source code
  -b --bounds            Enable bounds checking
+ -d --dir               Specify alternate directory for output files
  -e --extmod            Generate extension module
- -f --flags             Provide alternative Makefile flags
- -n --nowrap            Disable wrap-around checking 
+ -f --flags             Provide alternate Makefile flags
  -i --infinite          Try to avoid infinite analysis time 
+ -n --nowrap            Disable wrap-around checking 
 """
     sys.exit()
 
@@ -399,7 +406,7 @@ def main():
     
     # --- parse command-line options
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'eibnf:', ['infinite', 'extmod', 'bounds', 'nowrap', 'flags='])
+        opts, args = getopt.getopt(sys.argv[1:], 'eibnfad:', ['infinite', 'extmod', 'bounds', 'nowrap', 'flags=', 'dir='])
     except getopt.GetoptError:
         usage()
     
@@ -407,7 +414,9 @@ def main():
         if o in ['-h', '--help']: usage()
         if o in ['-b', '--bounds']: getgx().bounds_checking = True
         if o in ['-e', '--extmod']: getgx().extension_module = True
+        if o in ['-a', '--noann']: getgx().annotation = False
         if o in ['-i', '--infinite']: getgx().avoid_loops = True
+        if o in ['-d', '--dir']: getgx().output_dir = a
         if o in ['-f', '--flags']: 
             if not os.path.isfile(a): 
                 print "*ERROR* no such file: '%s'" % a
@@ -433,7 +442,8 @@ def main():
         
     # --- analyze & annotate
     analysis(name)
-    annotate()
+    if getgx().annotation:
+        annotate()
 
 if __name__ == '__main__':
     main()

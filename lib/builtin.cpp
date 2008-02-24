@@ -1435,11 +1435,8 @@ list<str *> *__list(str *s) {
     list<str *> *r = new list<str *>();
     r->units.resize(len(s));
     int sz = s->unit.size();
-    for(int i=0; i<sz; i++) {
-        str *t = new str();
-        t->unit += s->unit[i];
-        r->units[i] = t;
-    }
+    for(int i=0; i<sz; i++) 
+        r->units[i] = __char_cache[s->unit[i]];
     return r;
 }
 
