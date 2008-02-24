@@ -476,7 +476,7 @@ Open source projects, especially new ones such as **Shed Skin**, thrive on user 
 
 If you are a student, you might want to consider applying for the yearly Google `Summer of Code`_ or `GHOP`_ projects. **Shed Skin** has so far successfully participated in one Summer of Code and one GHOP. 
 
-The following company/people deserve to be mentioned for their help with **Shed Skin** so far:
+I would like to thank the following company/people, for their help with **Shed Skin** so far:
  
 * Google 
 * Bearophile
@@ -492,6 +492,7 @@ The following company/people deserve to be mentioned for their help with **Shed 
 * Joaquin Abian Monux
 * Harri Pasanen
 * SirNotAppearingInThisTutorial
+* Dave Tweed
 * Jaroslaw Tworek
 * Pavel Vinogradov
 
