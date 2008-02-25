@@ -311,7 +311,10 @@ def generate_code():
                 output_dir = os.path.join(getgx().output_dir, module.dir).split(os.sep)
                 for i in range(len(output_dir)):
                     dir = os.path.join(*output_dir[:i+1])
+                    if getgx().output_dir.startswith(os.sep):
+                        dir = os.sep+dir
                     if dir and not os.path.isdir(dir):
+                        print 'mk', dir
                         os.mkdir(dir)
 
             gv = generateVisitor(module)
