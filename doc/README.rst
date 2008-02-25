@@ -484,6 +484,7 @@ I would like to thank the following company/people, for their help with **Shed S
 * Paul Boddie
 * Mark Dewing
 * James Coughlan
+* Michael Elkins
 * Luis M. Gonzales
 * Denis de Leeuw Duarte
 * Van Lindberg
