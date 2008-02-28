@@ -92,6 +92,12 @@ popen_pipe* popen(str* cmd, str* mode, int bufsize);
 tuple2<file*,file*>* popen2(str* cmd);
 tuple2<file*,file*>* popen2(str* cmd, str* mode, int bufsize);
 
+tuple2<file*,file*>* popen3(str* cmd);
+tuple2<file*,file*>* popen3(str* cmd, str* mode, int bufsize);
+
+tuple2<file*,file*>* popen4(str* cmd);
+tuple2<file*,file*>* popen4(str* cmd, str* mode, int bufsize);
+
 void __init();
 
 } // module namespace

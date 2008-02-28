@@ -140,6 +140,12 @@ def popen(cmd, mode='r', bufsize=-1):
 def popen2(cmd, mode='r', bufsize=-1):
     return ( file('/bin/sh'), file('/bin/sh') )
 
+def popen3(cmd, mode='r', bufsize=-1):
+    return ( file('/bin/sh'), file('/bin/sh'), file('/bin/sh') )
+
+def popen4(cmd, mode='r', bufsize=-1):
+    return ( file('/bin/sh'), file('/bin/sh') )
+
 def close(fd):
     pass
 
