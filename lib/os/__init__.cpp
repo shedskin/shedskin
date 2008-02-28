@@ -512,7 +512,6 @@ tuple2<file*,file*>* popen2(str* cmd) {
 }
 
 tuple2<file*,file*>* popen2(str* cmd, str* mode, int bufsize) {
-
     tuple2<int,int>* p2c = pipe();
     tuple2<int,int>* c2p = pipe();
 
@@ -543,6 +542,82 @@ tuple2<file*,file*>* popen2(str* cmd, str* mode, int bufsize) {
     
     return ret;
 }
+
+tuple2<file*,file*>* popen3(str* cmd) {
+    return popen3(cmd, new str("t"), -1);
+}
+
+
+tuple2<file*,file*>* popen3(str* cmd, str* mode, int bufsize) {
+    tuple2<int,int>* p2c = pipe();
+    tuple2<int,int>* c2p = pipe();
+    tuple2<int,int>* erp = pipe();
+
+    int pid = fork();
+
+    if(pid == 0) {
+        dup2( p2c->__getfirst__(), 0);
+        dup2( c2p->__getsecond__(), 1);
+        dup2( erp->__getsecond__(), 2);
+
+        for(int i = 3; i < MAXFD; ++i) {
+            try {
+                close(i);
+            }
+            catch(OSError*) {}
+        }
+
+        list<str*>* cmd_l = new list<str*>(3, new str("/bin/sh"),
+                new str("-c"), cmd);
+        execvp(new str("/bin/sh"), cmd_l);
+        ::exit(1);
+    }
+
+    close(p2c->__getfirst__());
+    close(c2p->__getsecond__());
+    close(erp->__getsecond__());
+
+    return new tuple2<file*,file*>(3,fdopen(p2c->__getsecond__(),new str("w")), fdopen(c2p->__getfirst__(), new str("r")), fdopen(erp->__getfirst__(), new str("r")) );
+}
+
+tuple2<file*,file*>* popen4(str* cmd) {
+    return popen4(cmd, new str("t"), -1);
+}
+
+tuple2<file*,file*>* popen4(str* cmd, str* mode, int bufsize) {
+    tuple2<int,int>* p2c = pipe();
+    tuple2<int,int>* c2p = pipe();
+
+    int pid = fork();
+
+    if(pid == 0) {
+        dup2( p2c->__getfirst__(), 0);
+        dup2( c2p->__getsecond__(), 1);
+        dup2( c2p->__getsecond__(), 2);
+
+        for(int i = 3; i < MAXFD; ++i) {
+            try {
+                close(i);
+            }
+            catch(OSError*) {}
+        }
+
+        list<str*>* cmd_l = new list<str*>(3, new str("/bin/sh"),
+                new str("-c"), cmd);
+        execvp(new str("/bin/sh"), cmd_l);
+        ::exit(1);
+    }
+
+    close(p2c->__getfirst__());
+    close(c2p->__getsecond__());
+
+    tuple2<file*, file*>* ret = new tuple2<file*,file*>();
+    ret->__init2__(fdopen(p2c->__getsecond__(),new str("w")), fdopen(c2p->__getfirst__(), new str("r")));
+    
+    return ret;
+
+}
+
 #endif
 
 void close(int fd) {
