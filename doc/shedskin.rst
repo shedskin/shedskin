@@ -41,4 +41,4 @@ OPTIONS
 
 THANKS
 ======
-Google, Bearophile, Brian Blais, Paul Boddie, Mark Dewing, James Coughlan, Luis M. Gonzales, Denis de Leeuw Duarte, Van Lindberg, David Marek, Jeff Miller, Joaquin Abian Monux, Harri Pasanen, SirNotAppearingInThisManPage, Jaroslaw Tworek, Pavel Vinogradov
+Google, Bearophile, Brian Blais, Paul Boddie, Mark Dewing, James Coughlan, Luis M. Gonzales, Denis de Leeuw Duarte, Michael Elkins, Van Lindberg, David Marek, Jeff Miller, Joaquin Abian Monux, Harri Pasanen, SirNotAppearingInThisManPage, Jaroslaw Tworek, Pavel Vinogradov
