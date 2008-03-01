@@ -52,6 +52,15 @@ int BPF, LOWER, M, MATRIX_A, MAXBITS, MAXINT, MAXWIDTH, N, UPPER;
 str *__name__;
 Random *_inst;
 
+int  default_3;
+int  default_6;
+int  default_1;
+int  default_0;
+int  default_5;
+int  default_7;
+int  default_4;
+int  default_2;
+
 static inline list<double> *list_comp_0(list<int> *__108) {
     list<int> *__23;
     __iter<int> *__24;
@@ -973,7 +982,13 @@ void __init() {
     MATRIX_A = 2567483615u;
     UPPER = 2147483648u;
     LOWER = 2147483647;
-    _inst = (new Random(-1));
+    default_0 = -1;
+    default_1 = -1;
+    default_2 = -1;
+    default_3 = -1;
+    default_4 = -1;
+    _inst = (new Random(default_0));
+    default_5 = -1;
 }
 
 int seed() {

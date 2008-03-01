@@ -218,6 +218,9 @@ class generateVisitor(ASTVisitor):
                 return self.consts[other]
         
         self.consts[node] = 'const_'+str(self.constant_nr)
+#        print 'wof', node
+#        traceback.print_stack()
+
         self.constant_nr += 1
         return self.consts[node]
     
@@ -319,12 +322,20 @@ class generateVisitor(ASTVisitor):
                 if isinstance(child, Class): self.visitClass(child, True)
 
             # --- variables
-            if self.module != getgx().main_module:
-                print >>self.out
-                for v in self.module.mv.globals.values():
-                    if not v.invisible and not v.imported and not v.name in self.module.funcs:
-                        print >>self.out, 'extern '+typesetreprnew(v, None)+' '+v.name+';'
+            #if self.module != getgx().main_module:
+                #print >>self.out
+                #for v in self.module.mv.globals.values():
+                #    print 'uh', v
+                #    if not v.invisible and not v.imported and not v.name in self.module.funcs:
+                #        print >>self.out, 'extern '+typesetreprnew(v, None)+' '+v.name+';'
+                #if self.module.mv.globals.values(): print >>self.out
 
+            # --- defaults
+            if self.module.mv.defaults.items(): 
+                for default, nr in self.module.mv.defaults.items():
+                    print >>self.out, 'extern '+typesetreprnew(default, None)+' '+('default_%d;'%nr)
+                print >>self.out
+                    
             # function declarations
             if self.module != getgx().main_module:
                 print >>self.out, 'void __init();'
@@ -369,6 +380,12 @@ class generateVisitor(ASTVisitor):
         # --- constants: __eq__(const) or ==/__eq(List())
         self.find_constants()
 
+        # --- defaults
+        if self.module.mv.defaults.items(): 
+            for default, nr in self.module.mv.defaults.items():
+                print >>self.out, typesetreprnew(default, None)+' '+('default_%d;'%nr)
+            print >>self.out
+
         # --- list comprehensions
         self.listcomps = {}
         for (listcomp,lcfunc,func) in getmv().listcomps:
@@ -409,6 +426,21 @@ class generateVisitor(ASTVisitor):
             print >>self.out
 
         for child in node.node.getChildNodes():
+            if isinstance(child, Function): 
+                for default in child.defaults:
+                    if default in getmv().defaults:
+                        self.start('')
+                        self.visitm('default_%d = ' % getmv().defaults[default], default, ';')
+                        self.eol()
+            elif isinstance(child, Class):
+                for child2 in child.code.getChildNodes():
+                    if isinstance(child2, Function): 
+                        for default in child2.defaults:
+                            if default in getmv().defaults:
+                                self.start('')
+                                self.visitm('default_%d = ' % getmv().defaults[default], default, ';')
+                                self.eol()
+
             if isinstance(child, Discard):
                 if isinstance(child.expr, Const) and child.expr.value == None: # XXX merge with visitStmt
                     continue
@@ -1886,10 +1918,10 @@ class generateVisitor(ASTVisitor):
                 self.append('(('+cast+')(')"""
 
 
-        if not target.mv.module.builtin:
-            for default in target.defaults: # default constant arguments (are global!)
-                if not isinstance(default, (UnarySub, UnaryAdd, Const)) and not (isinstance(default, Name) and default.name == 'None'):
-                    self.get_constant(default)
+#        if not target.mv.module.builtin:
+#            for default in target.defaults: # default constant arguments (are global!)
+#                if not isinstance(default, (UnarySub, UnaryAdd, Const)) and not (isinstance(default, Name) and default.name == 'None'):
+#                    self.get_constant(default)
 
         for f in funcs:
             #print 'sig', f.formals, f.varargs
@@ -1954,7 +1986,15 @@ class generateVisitor(ASTVisitor):
                     cast = True
                     self.append('(('+typesetreprnew(formal, target)+')(')
 
-                if arg in self.consts:
+                if arg in target.mv.defaults: # XXX same module
+                    if self.mergeinh[arg] == set([(defclass('none'),0)]):
+                        self.append('0')
+                    elif target.mv.module == getmv().module:
+                        self.append('default_%d' % (target.mv.defaults[arg]))
+                    else:
+                        self.append('%s::default_%d' % ('__'+'__::__'.join(target.mv.module.mod_path)+'__', target.mv.defaults[arg]))
+
+                elif arg in self.consts:
                     self.append(self.consts[arg])
                 else:
                     if constructor and ident in ['set', 'frozenset'] and typesetreprnew(arg, func) in ['list<void *> *', 'tuple<void *> *', 'pyiter<void *> *', 'pyseq<void *> *', 'pyset<void *>']: # XXX to needs_cast
