@@ -430,7 +430,11 @@ class moduleVisitor(ASTVisitor):
                 self.visit(child, func)
 
         for default in func.defaults:
-            if not isinstance(default, Const) or isinstance(default.value, str): 
+            if isinstance(default, (UnarySub, UnaryAdd)) and isinstance(default.expr, Const) and isinstance(default.expr.value, (int, float)): # XXX merge
+                pass
+            elif isinstance(default, Const) and isinstance(default.value, (int, float)):
+                pass
+            else:
                 self.defaults[default] = len(self.defaults)
 
             if func.mv.module.builtin:
