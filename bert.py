@@ -20,4 +20,8 @@ b = None
 def def4(a=b):
     pass
 
+def1()
+def2()
+def3()
+huh()
 def4([1])

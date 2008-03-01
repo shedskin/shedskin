@@ -1826,6 +1826,10 @@ class generateVisitor(ASTVisitor):
            self.library_func(funcs, 're', 're_object', 'findall'):
             error("assuming 'findall' returns list of strings", node, warning=True)
 
+        elif self.library_func(funcs, 'socket', 'socket', 'settimeout') or \
+             self.library_func(funcs, 'socket', 'socket', 'gettimeout'):
+            error("socket.set/gettimeout do not accept/return None", node, warning=True)
+
         if self.bastard(ident, objexpr):
             ident = '__getitem__'
 
