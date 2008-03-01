@@ -84,14 +84,6 @@ public:
 };
 
 
-extern int  default_3;
-extern int  default_6;
-extern int  default_1;
-extern int  default_0;
-extern int  default_5;
-extern int  default_7;
-extern int  default_4;
-extern int  default_2;
 extern int  UPPER;
 extern double  LOG4;
 extern double  SG_MAGICCONST;
