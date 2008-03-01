@@ -31,6 +31,7 @@ class moduleVisitor(ASTVisitor):
         self.callfuncs = []
         self.for_in_iters = []
         self.listcomps = []
+        self.defaults = {}
 
         self.importnodes = []
 
@@ -429,6 +430,9 @@ class moduleVisitor(ASTVisitor):
                 self.visit(child, func)
 
         for default in func.defaults:
+            if not isinstance(default, Const) or isinstance(default.value, str): 
+                self.defaults[default] = len(self.defaults)
+
             if func.mv.module.builtin:
                 self.visit(default, func)
             else:
@@ -1140,10 +1144,6 @@ class moduleVisitor(ASTVisitor):
 
     def visitCallFunc(self, node, func=None): # XXX analyze_callfunc? XXX clean up!!
         newnode = cnode(node, parent=func) 
-
-        if isinstance(node.node, Name) and node.node.name == 'fromkeys':
-            print 'huhhh', node, getmv(), func
-            traceback.print_stack()
 
         # --- identify target
 

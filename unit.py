@@ -12,6 +12,23 @@ import time
 print time.strftime("%d %b %Y %H:%M:%S", time.strptime("2001-11-12 18:31:01", "%Y-%m-%d %H:%M:%S")) 
 print time.strftime("%Y", time.strptime("2001", "%Y"))
 
+#improve default arguments
+import bert
+print bert.def1()
+
+print bert.def2()
+bert.a = 16
+print bert.huh()
+print bert.def2()
+
+print bert.def3()
+
+def bleh(l=[1,2]):
+    return l
+print bleh()
+
+bert.def4()
+
 ''', '''
 output(equal=True)
 
