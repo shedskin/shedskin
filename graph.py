@@ -1406,10 +1406,10 @@ def parse_module(name, ast=None, parent=None, node=None):
         relname = name.replace('.', '/')
         relpath = name.split('.')
         if parent: path = connect_paths(parent.dir, relname)
-        else: path = name
+        else: path = relname
         libpath = connect_paths(getgx().libdir, relname)
         rootpath = connect_paths(os.getcwd(), relname)
-
+ 
         if os.path.isfile(path+'.py'): # local module
             mod.filename = path+'.py'
             if parent: mod.mod_path = parent.mod_dir + relpath
@@ -1417,42 +1417,40 @@ def parse_module(name, ast=None, parent=None, node=None):
             split = path.split('/')
             mod.dir = '/'.join(split[:-1])
             mod.mod_dir = mod.mod_path[:-1]
-            mod.builtin = not parent or parent.builtin
-
+            mod.builtin = parent.builtin
+ 
         elif os.path.isfile(connect_paths(path, '__init__.py')):
-            mod.filename = connect_paths(path, '__init__.py')
+            mod.filename = path+'/__init__.py'
             if parent: mod.mod_path = parent.mod_dir + relpath
             else: mod.mod_path = relpath
             mod.dir = path
             mod.mod_dir = mod.mod_path
-            mod.builtin = not parent or parent.builtin
-
+            mod.builtin = parent.builtin
+ 
         elif os.path.isfile(rootpath+'.py'): # root module
-            mod.filename = rootpath+'.py'
+            mod.filename = relname+'.py'
             mod.mod_path = relpath
-            split = rootpath.split('/')
-            mod.dir = '/'.join(split[:-1])
-            mod.mod_dir = mod.mod_path[:-1]
-
+            mod.dir = '/'.join(relpath[:-1])
+            mod.mod_dir = relpath[:-1]
+ 
         elif os.path.isfile(connect_paths(rootpath, '__init__.py')):
-            mod.filename = connect_paths(rootpath, '__init__.py')
+            mod.filename = relname+'/__init__.py'
             mod.mod_path = relpath
-            mod.dir = rootpath
+            mod.dir = relname
             mod.mod_dir = mod.mod_path
-
+ 
         elif os.path.isfile(libpath+'.py'): # library module
             mod.filename = libpath+'.py'
             mod.mod_path = relpath
-            split = libpath.split('/')
-            mod.dir = '/'.join(split[:-1])
-            mod.mod_dir = mod.mod_path[:-1]
+            mod.dir = '/'.join(relpath[:-1])
+            mod.mod_dir = relpath[:-1]
             mod.builtin = True
-
-        elif os.path.isfile(connect_paths(libpath, '__init__.py')): 
-            mod.filename = connect_paths(libpath, '__init__.py')
+ 
+        elif os.path.isfile(connect_paths(libpath, '__init__.py')):
+            mod.filename = libpath+'/__init__.py'
             mod.mod_path = relpath
-            mod.dir = libpath
-            mod.mod_dir = mod.mod_path
+            mod.dir = relname
+            mod.mod_dir = relpath
             mod.builtin = True
 
         else:
