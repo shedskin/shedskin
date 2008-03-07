@@ -29,6 +29,7 @@ print bleh()
 
 bert.def4()
 
+
 ''', '''
 output(equal=True)
 
