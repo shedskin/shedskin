@@ -228,136 +228,136 @@ str *str::lstrip(str *chars) {
 
 tuple2<str *, str *> *str::partition(str *sep)
 {
-	int i;
-	
-	i = unit.find(sep->unit);
-	if(i != -1) 
-		return new tuple2<str *, str *>(3, new str(unit.substr(0, i)), new str(sep->unit), new str(unit.substr(i + sep->unit.length())));
-	else 
-		return new tuple2<str *, str *>(3, new str(unit), new str(""), new str(""));
+    int i;
+    
+    i = unit.find(sep->unit);
+    if(i != -1) 
+        return new tuple2<str *, str *>(3, new str(unit.substr(0, i)), new str(sep->unit), new str(unit.substr(i + sep->unit.length())));
+    else 
+        return new tuple2<str *, str *>(3, new str(unit), new str(""), new str(""));
 }
 
 tuple2<str *, str *> *str::rpartition(str *sep)
 {
-	int i;
-	
-	i = unit.rfind(sep->unit);
-	if(i != -1) 
-		return new tuple2<str *, str *>(3, new str(unit.substr(0, i)), new str(sep->unit), new str(unit.substr(i + sep->unit.length())));
-	else 
-		return new tuple2<str *, str *>(3, new str(unit), new str(""), new str(""));
+    int i;
+    
+    i = unit.rfind(sep->unit);
+    if(i != -1) 
+        return new tuple2<str *, str *>(3, new str(unit.substr(0, i)), new str(sep->unit), new str(unit.substr(i + sep->unit.length())));
+    else 
+        return new tuple2<str *, str *>(3, new str(unit), new str(""), new str(""));
 }
 
 list<str *> *str::rsplit(str *sep, int maxsep)
 {
-	__GC_STRING ts;
-	list<str *> *r = new list<str *>();
-	int i, j, curi, tslen;
-	
-	curi = 0;
-	i = j = unit.size() - 1;
-	
-	//split by whitespace
-	if(!sep)
-	{
-		while(i > 0 && j > 0 && (curi < maxsep || maxsep < 0))
-		{
-			j = unit.find_last_not_of(ws, i);
-			if(j == -1) break;
-			
-			i = unit.find_last_of(ws, j);
-			
-			//this works out pretty nicely; i will be -1 if no more is found, and thus i + 1 will be 0th index
-			r->append(new str(unit.substr(i + 1, j - i)));
-			curi++;
-		}
-		
-		//thus we only bother about extra stuff here if we *have* found more whitespace
-		if(i > 0 && j >= 0 && (j = unit.find_last_not_of(ws, i)) >= 0) r->append(new str(unit.substr(0, j)));
-	}
-	
-	//split by seperator
-	else
-	{
-		ts = sep->unit;
-		tslen = ts.length();
-		
-		i++;
-		while(i > 0 && j > 0 && (curi < maxsep || maxsep < 0))
-		{
-			j = i;
-			i--;
-			
-			i = unit.rfind(ts, i);
-			if(i == -1)
-			{
-				i = j;
-				break;
-			}
-			
-			r->append(new str(unit.substr(i + tslen, j - i - tslen)));
-			
-			curi++;
-		}
-		
-		//either left over (beyond max) or very last match (see loop break)
-		if(i >= 0) r->append(new str(unit.substr(0, i)));
-	}
-	
-	r->reverse();
-	
-	return r;
+    __GC_STRING ts;
+    list<str *> *r = new list<str *>();
+    int i, j, curi, tslen;
+    
+    curi = 0;
+    i = j = unit.size() - 1;
+    
+    //split by whitespace
+    if(!sep)
+    {
+        while(i > 0 && j > 0 && (curi < maxsep || maxsep < 0))
+        {
+            j = unit.find_last_not_of(ws, i);
+            if(j == -1) break;
+            
+            i = unit.find_last_of(ws, j);
+            
+            //this works out pretty nicely; i will be -1 if no more is found, and thus i + 1 will be 0th index
+            r->append(new str(unit.substr(i + 1, j - i)));
+            curi++;
+        }
+        
+        //thus we only bother about extra stuff here if we *have* found more whitespace
+        if(i > 0 && j >= 0 && (j = unit.find_last_not_of(ws, i)) >= 0) r->append(new str(unit.substr(0, j)));
+    }
+    
+    //split by seperator
+    else
+    {
+        ts = sep->unit;
+        tslen = ts.length();
+        
+        i++;
+        while(i > 0 && j > 0 && (curi < maxsep || maxsep < 0))
+        {
+            j = i;
+            i--;
+            
+            i = unit.rfind(ts, i);
+            if(i == -1)
+            {
+                i = j;
+                break;
+            }
+            
+            r->append(new str(unit.substr(i + tslen, j - i - tslen)));
+            
+            curi++;
+        }
+        
+        //either left over (beyond max) or very last match (see loop break)
+        if(i >= 0) r->append(new str(unit.substr(0, i)));
+    }
+    
+    r->reverse();
+    
+    return r;
 }
 
 int str::istitle(void)
 {
-	int i, len;
-	
-	len = unit.size();
+    int i, len;
+    
+    len = unit.size();
     if(!len)
         return 0;
 
-	for(i = 0; i < len; )
-	{
-		for( ; !::isalpha((int)unit[i]) && i < len; i++) ;
-		if(i == len) break;
-		
-		if(!::isupper((int)unit[i])) return 0;
-		i++;
-		
-		for( ; ::islower((int)unit[i]) && i < len; i++) ;
-		if(i == len) break;
-		
-		if(::isalpha((int)unit[i])) return 0;
-	}
-	
-	return 1;
+    for(i = 0; i < len; )
+    {
+        for( ; !::isalpha((int)unit[i]) && i < len; i++) ;
+        if(i == len) break;
+        
+        if(!::isupper((int)unit[i])) return 0;
+        i++;
+        
+        for( ; ::islower((int)unit[i]) && i < len; i++) ;
+        if(i == len) break;
+        
+        if(::isalpha((int)unit[i])) return 0;
+    }
+    
+    return 1;
 }
 
 list<str *> *str::splitlines(int keepends)
 {
-	list<str *> *r = new list<str *>();
-	int i, j, endlen;
-	char *ends = "\r\n";
-	
-	endlen = i = 0;
-	do
-	{
-		j = i + endlen;
-		i = unit.find_first_of(ends, j);
-		if(i == -1) break;
-		
-		//for all we know the character sequence could change mid-way...
-		if(unit[i] == '\r' && unit[i + 1] == '\n') endlen = 2;
-		else endlen = 1;
-		
-		r->append(new str(unit.substr(j, i - j + (keepends ? endlen : 0))));
-	}
-	while(i >= 0);
-	
-	if(j != unit.size()) r->append(new str(unit.substr(j)));
-	
-	return r;
+    list<str *> *r = new list<str *>();
+    int i, j, endlen;
+    char *ends = "\r\n";
+    
+    endlen = i = 0;
+    do
+    {
+        j = i + endlen;
+        i = unit.find_first_of(ends, j);
+        if(i == -1) break;
+        
+        //for all we know the character sequence could change mid-way...
+        if(unit[i] == '\r' && unit[i + 1] == '\n') endlen = 2;
+        else endlen = 1;
+        
+        r->append(new str(unit.substr(j, i - j + (keepends ? endlen : 0))));
+    }
+    while(i >= 0);
+    
+    if(j != unit.size()) r->append(new str(unit.substr(j)));
+    
+    return r;
 }
 
 
@@ -747,10 +747,10 @@ int str::endswith(str *s, int start, int end) {
     slicenr(7, start, end, one, __len__());
 
     for(i = end, j = len(s); i > start && j > 0; )
-		if (unit[--i] != s->unit[--j])
-			return 0; 
+        if (unit[--i] != s->unit[--j])
+            return 0; 
 
-	return 1;
+    return 1;
 }
 
 str *str::replace(str *a, str *b, int c) {
@@ -1680,9 +1680,9 @@ template<> int __mods(int a, int b) {
 
 #ifdef __SS_BIND
 PyObject *__import(char *mod, char *method) {
-	PyObject *m = PyImport_ImportModule(mod);
+    PyObject *m = PyImport_ImportModule(mod);
     PyObject *d = PyObject_GetAttrString(m, "__dict__");
-	return PyDict_GetItemString(d, method);
+    return PyDict_GetItemString(d, method);
 }
 
 PyObject *__call(PyObject *obj, PyObject *args) {
@@ -1699,17 +1699,17 @@ PyObject *__args(int n, ...) {
     va_list ap;
     va_start(ap, n);
 
-	PyObject *p = PyTuple_New(n);
+    PyObject *p = PyTuple_New(n);
 
     for(int i=0; i<n; i++) {
         PyObject *t = va_arg(ap, PyObject *);
         PyTuple_SetItem(p, i, t);
     }
     va_end(ap);
-	return p;
+    return p;
 }
 
-template<> PyObject *__to_py(int i) { return PyInt_FromLong(i); }	
+template<> PyObject *__to_py(int i) { return PyInt_FromLong(i); }   
 template<> PyObject *__to_py(double d) { return PyFloat_FromDouble(d); }
 
 template<> int __to_ss(PyObject *p) { 

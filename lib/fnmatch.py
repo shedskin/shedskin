@@ -2,16 +2,16 @@
 import re, os, os.path
 
 def fnmatch(name, pat):
-	return 1
+    return 1
 
 def filter(names, pat):
-	return ['']
+    return ['']
 
 def fnmatchcase(name, pat):
-	return 1
+    return 1
 
 def translate(pat):
-	return ''
+    return ''
 
 def init():
-	pass
+    pass

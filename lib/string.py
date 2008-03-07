@@ -19,7 +19,7 @@ def rindex(s, sub, start=0, end=0):
     return 1                     
 
 def rsplit(s, sep='', c=-1):
-	return ['']
+    return ['']
 
 def split(s, sep='', c=-1):
     return ['']
