@@ -1001,19 +1001,13 @@ str *raw_input(str *msg) {
     return new str(s); 
 }
 
-int __int() {
-    return 0;
-}
+int __int() { return 0; }
 
-template<> int __int(str *s) {
-    return __int(s, 10);
-}
-template<> int __int(int i) {
-    return i;
-}
-template<> int __int(double d) {
-    return (int)d;
-}
+template<> int __int(str *s) { return __int(s, 10); }
+template<> int __int(int i) { return i; }
+template<> int __int(bool b) { return b; }
+template<> int __int(double d) { return (int)d; }
+
 int __int(str *s, int base) {
     char *cp;
     s = s->strip();
@@ -1025,6 +1019,7 @@ int __int(str *s, int base) {
 
 double __float() { return 0; }
 template<> double __float(int p) { return p; }
+template<> double __float(bool b) { return __float((int)b); }
 template<> double __float(double d) { return d; }
 template<> double __float(str *s) {
     return atof((char *)(s->unit.c_str()));
@@ -1171,6 +1166,7 @@ template<> void *__copy(void *d) { return d; }
 
 template<> str *repr(double d) { return __str(d); }
 template<> str *repr(int i) { return __str(i); }
+template<> str *repr(bool b) { return __str((int)b); }
 template<> str *repr(void *v) { return new str("void"); }
 
 str *__str(void *v) { return new str("void"); }
@@ -1350,13 +1346,20 @@ str *__str(int i, int base) {
     return new str(psz);
 }
 
+str *__str(bool b) {
+    return __str((int)b);
+}
+
 template<> str *hex(int i) {
     return (new str("0x"))->__add__(__str(i, 16));
 }
+template<> str *hex(bool b) { return hex((int)b); }
 
 template<> str *oct(int i) {
+    if(i==0) return new str("0");
     return (new str("0"))->__add__(__str(i, 8));
 }
+template<> str *oct(bool b) { return oct((int)b); }
 
 str *__str() { return new str(""); } /* XXX optimize */
 
@@ -1428,6 +1431,7 @@ template<> double __min(double a, double b, double c) { return __ss_min3(a,b,c);
 
 template<> int __abs(int a) { return a<0?-a:a; }
 template<> double __abs(double a) { return a<0?-a:a; }
+int __abs(bool b) { return __abs((int)b); }
 
 /* list */
 

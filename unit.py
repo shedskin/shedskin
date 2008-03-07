@@ -29,6 +29,20 @@ print bleh()
 
 bert.def4()
 
+#C++ bool type 
+def h(x):
+    if x in ['False', '0']: return 0
+    elif x in ['True', '1']: return 1
+    else: return 2
+
+print hex(1==2), hex(1!=2)
+print oct(1==2), oct(1!=2)
+print abs(1==2), abs(1!=2)
+print h(str(1==2)), h(str(1!=2))
+print h(repr(1==2)), h(repr(1!=2))
+print int(1==2), int(1!=2)
+print float(1==2), float(1!=2)
+print ord(chr(1==2)), ord(chr(1!=2))
 
 ''', '''
 output(equal=True)

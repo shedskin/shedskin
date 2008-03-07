@@ -74,12 +74,14 @@ int __int();
 template<class T> int __int(T t) { return t->__int__(); }
 template<> int __int(str *s);
 template<> int __int(int i);
+template<> int __int(bool b);
 template<> int __int(double d);
 int __int(str *s, int base);
 
 double __float();
 template<class T> double __float(T t) { return t->__float__(); }
 template<> double __float(int i);
+template<> double __float(bool b);
 template<> double __float(double f);
 template<> double __float(str *s);
 
@@ -87,10 +89,12 @@ str *__str();
 template<class T> str *__str(T t);
 template<> str *__str(double t);
 str *__str(int t, int base=10);
+str *__str(bool b);
 
 template<class T> str *repr(T t);
 template<> str *repr(double t);
 template<> str *repr(int t);
+template<> str *repr(bool b);
 template<> str *repr(void *t);
 
 file *open(str *name, str *flags = 0);
@@ -121,16 +125,19 @@ template<class T> T __abs(T t) {
 }
 template<> int __abs(int a);
 template<> double __abs(double a);
+int __abs(bool b);
 
 template<class T> str *hex(T t) {
     return t->__hex__();
 }
 template<> str *hex(int a);
+template<> str *hex(bool b);
 
 template<class T> str *oct(T t) {
     return t->__oct__();
 }
 template<> str *oct(int a);
+template<> str *oct(bool b);
 
 str *__mod(str *fmt, ...);
 template<class T> str *__mod(str *fmt, tuple2<T,T> *t); 
