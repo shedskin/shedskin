@@ -111,6 +111,7 @@ public:
     int send(str *string, int flags=0);
     int sendall(str *string, int flags=0);
     int sendto(str *string, int flags, inet_address addr);
+    int sendto(str *string, inet_address addr);
     socket *close();
     socket *settimeout(double value);
     double gettimeout() { return _timeout; }
