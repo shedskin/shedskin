@@ -49,6 +49,8 @@ str *__name__;
 str *invalid_address;
 str *timed_out;
 str *host_not_found;
+int default_0;
+int default_1;
 
 /**
 class error
@@ -163,7 +165,7 @@ static unsigned long int string_to_addr(const char *s)
     /* try looking up the address in dns */
     struct hostent *he = ::gethostbyname(s);
     if (!he)
-	throw new herror(host_not_found); //FIXME should this raise herror() instead?
+	throw new herror(host_not_found); 
     return * reinterpret_cast<unsigned long *>( he->h_addr_list[0] );
 }
 
@@ -363,7 +365,7 @@ int socket::send(str *string, int flags) {
 int socket::sendall(str *string, int flags) {
     const char *s = string->unit.c_str();
     size_t offset = 0;
-    size_t len = strlen(s); //FIXME doesn't allow for nul chars in the input
+    size_t len = string->__len__(); //FIXME is this guaranteed to be the same as the C string length, even if we are dealing with wide/unicode? 
 
     while (offset < len)
 	offset += send(s + offset, len - offset, flags);
@@ -618,6 +620,9 @@ void __init()
     cl_gaierror = new class_("gaierror", 14, 14);
     cl_timeout = new class_("timeout", 15, 15);
     cl_error = new class_("error", 16, 16);
+
+    default_0 = __ss_AF_INET;
+    default_1 = __ss_SOCK_STREAM;
 
     // string constants used by this module
     invalid_address = new str("invalid address");
