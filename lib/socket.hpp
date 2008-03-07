@@ -33,16 +33,16 @@ typedef int socket_type;
 using namespace __shedskin__;
 namespace __socket__ {
 
-extern str *const_0, *const_1, *const_2, *const_3, *const_4, *const_5;
-
 class error;
 class herror;
 class gaierror;
 class timeout;
 class socket;
 
+extern int default_0;
+extern int default_1;
+
 extern str *__name__;
-extern socket *s;
 
 extern class_ *cl_error;
 class error : public Exception {
@@ -97,7 +97,6 @@ public:
     int type;
     typedef tuple2<str *, int> *inet_address;
 
-    //FIXME shedskin can't deal default args yet
     socket(int family=2, int type=1, int proto=0);
     ~socket();
     int __ss_fileno();
