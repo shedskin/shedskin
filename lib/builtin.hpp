@@ -501,11 +501,11 @@ public:
     int __len__();
     str *__slice__(int x, int l, int u, int s);
 
-	list<str *> *rsplit(str *sep = 0, int maxsplit = -1);
-	int istitle(void);
-	tuple2<str *, str *> *rpartition(str *sep);
-	tuple2<str *, str *> *partition(str *sep);
-	list<str *> *splitlines(int keepends = 0);
+    list<str *> *rsplit(str *sep = 0, int maxsplit = -1);
+    int istitle(void);
+    tuple2<str *, str *> *rpartition(str *sep);
+    tuple2<str *, str *> *partition(str *sep);
+    list<str *> *splitlines(int keepends = 0);
 
     int __fixstart(int a, int b);
     int __checkneg(int i);
@@ -1110,11 +1110,11 @@ template<class K, class V> dict<K, V>::dict(PyObject *p) {
 } 
 
 template<class K, class V> PyObject *dict<K, V>::__to_py__() {
-	PyObject *p = PyDict_New();
+    PyObject *p = PyDict_New();
     int len = this->__len__();
     for (it = units.begin(); it != units.end(); it++)
         PyDict_SetItem(p, __to_py(it->first), __to_py(it->second));
-	return p;
+    return p;
 }
 #endif
 
@@ -1322,10 +1322,10 @@ template<class T> list<T>::list(PyObject *p) {
 
 template<class T> PyObject *list<T>::__to_py__() {
     int len = this->__len__();
-	PyObject *p = PyList_New(len);
-	for(int i=0; i<len; i++)
+    PyObject *p = PyList_New(len);
+    for(int i=0; i<len; i++)
         PyList_SetItem(p, i, __to_py(this->__getitem__(i)));
-	return p;
+    return p;
 }
 #endif
 
@@ -1630,10 +1630,10 @@ template<class T> set<T>::set(PyObject *p) {
 } 
 
 template<class T> PyObject *set<T>::__to_py__() {
-	PyObject *p = PyObject_CallObject((PyObject *)(&PySet_Type), 0);
+    PyObject *p = PyObject_CallObject((PyObject *)(&PySet_Type), 0);
     for(it1 = units.begin(); it1 != units.end(); it1++) 
         PyObject_CallMethod(p, "add", "O", __to_py(*it1));
-	return p;
+    return p;
 }
 #endif
 

@@ -2,10 +2,10 @@
 import os, os.path, fnmatch, re
 
 def iglob(s):
-	return __iter('')
+    return __iter('')
 
 def glob(s):
-	return ['']
+    return ['']
 
 def init():
-	pass
+    pass
