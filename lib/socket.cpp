@@ -53,32 +53,32 @@ int default_0;
 int default_1;
 
 /**
-class error
-*/
+  class error
+  */
 
 class_ *cl_error;
 
 /**
-class herror
-*/
+  class herror
+  */
 
 class_ *cl_herror;
 
 /**
-class gaierror
-*/
+  class gaierror
+  */
 
 class_ *cl_gaierror;
 
 /**
-class timeout
-*/
+  class timeout
+  */
 
 class_ *cl_timeout;
 
 /**
-class socket
-*/
+  class socket
+  */
 
 class_ *cl_socket;
 
@@ -102,7 +102,7 @@ int __ss_SOMAXCONN = SOMAXCONN;
 double __ss_default_timeout = -1.0;
 
 int socket::__ss_fileno() {
-    
+
     return this->_fd;
 }
 
@@ -124,12 +124,12 @@ str* make_errstring(const char *prefix)
 }
 
 str *socket::getsockopt(int level, int optname, int value) {
-    
+
     socklen_t buflen = value;
     char buf[buflen];
 
     if (::getsockopt(_fd, level, optname, buf, &buflen) == SOCKET_ERROR)
-    throw new error(make_errstring("getsockopt"));
+        throw new error(make_errstring("getsockopt"));
 
     return new str(buf, buflen);
 }
@@ -137,7 +137,7 @@ str *socket::getsockopt(int level, int optname, int value) {
 socket *socket::bind(const sockaddr *sa, socklen_t salen)
 {
     if (::bind(_fd, sa, salen) == SOCKET_ERROR) {
-    throw new error(make_errstring("bind"));
+        throw new error(make_errstring("bind"));
     }
     return this;
 }
@@ -146,9 +146,9 @@ socket *socket::bind(const sockaddr *sa, socklen_t salen)
 static unsigned long int string_to_addr(const char *s)
 {
     if (!*s)
-    return INADDR_ANY;
+        return INADDR_ANY;
     if (strcmp(s, "<broadcast>") == 0)
-    return INADDR_BROADCAST;
+        return INADDR_BROADCAST;
 #ifdef WIN32
     /* winsock doesn't have inet_aton() so we are forced to use inet_addr().
      * however, since python has the special form <broadcast> we can use
@@ -160,12 +160,12 @@ static unsigned long int string_to_addr(const char *s)
 #else
     struct in_addr addr;
     if (::inet_aton(s, &addr))
-    return addr.s_addr; // ip address
+        return addr.s_addr; // ip address
 #endif
     /* try looking up the address in dns */
     struct hostent *he = ::gethostbyname(s);
     if (!he)
-    throw new herror(host_not_found); 
+        throw new herror(host_not_found); 
     return * reinterpret_cast<unsigned long *>( he->h_addr_list[0] );
 }
 
@@ -182,7 +182,7 @@ static void tuple_to_sin_addr(sockaddr_in *dst, socket::inet_address src)
 socket *socket::bind(socket::inet_address address)
 {
     if (family != AF_INET)
-    throw new ValueError(invalid_address);
+        throw new ValueError(invalid_address);
 
     const char *host = address->first->unit.c_str();
     int port = address->second;
@@ -194,14 +194,14 @@ socket *socket::bind(socket::inet_address address)
 
 socket *socket::setsockopt(int level, int optname, int value) {
     if (::setsockopt(_fd, level, optname, SOCKOPT_CAST &value, sizeof(value)) == SOCKET_ERROR)
-    throw new error(make_errstring("setsockopt"));
-    
+        throw new error(make_errstring("setsockopt"));
+
     return this;
 }
 
 socket *socket::connect(socket::inet_address address) {
     if (family != AF_INET)
-    throw new ValueError(invalid_address);
+        throw new ValueError(invalid_address);
     const char *host = address->first->unit.c_str();
     int port = address->second;
 
@@ -237,12 +237,12 @@ static void set_blocking(socket_type fd)
     u_long flag = 0;
     if (ioctlsocket(fd, FIONBIO, &flag) == SOCKET_ERROR)
 #else
-    //FIXME should probably only clear the O_NONBLOCKING flag
-    if (::fcntl(fd, F_SETFL, 0) == SOCKET_ERROR)
+        //FIXME should probably only clear the O_NONBLOCKING flag
+        if (::fcntl(fd, F_SETFL, 0) == SOCKET_ERROR)
 #endif
-    {
-        throw new error(make_errstring("fcntl"));
-    }
+        {
+            throw new error(make_errstring("fcntl"));
+        }
 }
 
 static void set_nonblocking(socket_type fd)
@@ -251,68 +251,69 @@ static void set_nonblocking(socket_type fd)
     u_long flag = 1;
     if (ioctlsocket(fd, FIONBIO, &flag) == SOCKET_ERROR)
 #else
-    if (::fcntl(fd, F_SETFL, O_NONBLOCK) == SOCKET_ERROR)
+        if (::fcntl(fd, F_SETFL, O_NONBLOCK) == SOCKET_ERROR)
 #endif
-    {
-        throw new error(make_errstring("fcntl"));
-    }
+        {
+            throw new error(make_errstring("fcntl"));
+        }
 }
 socket *socket::connect(const sockaddr *sa, socklen_t salen)
 {
     if (_blocking && _timeout >= 0) {
-    // temporarily set the socket to nonblocking
-    set_nonblocking(_fd);
+        // temporarily set the socket to nonblocking
+        set_nonblocking(_fd);
     }
 
     if (::connect(_fd, sa, salen) == SOCKET_ERROR) {
-    if (ERRNO != EINPROGRESS)
-        throw new error(make_errstring("connect"));
+        if (ERRNO != EINPROGRESS)
+            throw new error(make_errstring("connect"));
     }
 
     if (_blocking && _timeout >= 0) {
-    fd_set s;
-    FD_ZERO(&s);
-    FD_SET(_fd, &s);
-    timeval to;
-    to.tv_sec = static_cast<tv_sec_type>(_timeout);
-    to.tv_usec = static_cast<tv_usec_type>(1000000 * (_timeout - (double)to.tv_sec));
-    if (::select(_fd+1, 0, &s, 0, &to) == SOCKET_ERROR)
-        throw new error(make_errstring("select"));
-    if (! FD_ISSET(_fd, &s)) {
-        //FIXME socket is left in nonblocking state, is this ok?
-        throw new timeout(timed_out);
-    }
+        fd_set s;
+        FD_ZERO(&s);
+        FD_SET(_fd, &s);
+        timeval to;
+        to.tv_sec = static_cast<tv_sec_type>(_timeout);
+        to.tv_usec = static_cast<tv_usec_type>(1000000 * (_timeout - (double)to.tv_sec));
+        if (::select(_fd+1, 0, &s, 0, &to) == SOCKET_ERROR)
+            throw new error(make_errstring("select"));
+        if (! FD_ISSET(_fd, &s)) {
+            //FIXME socket is left in nonblocking state, is this ok?
+            throw new timeout(timed_out);
+        }
 
-    // get connection status
-    int err = 0;
-    socklen_t errsize = sizeof(err);
-    if (::getsockopt(_fd, SOL_SOCKET, SO_ERROR, SOCKOPT_CAST &err, &errsize) == SOCKET_ERROR)
-        throw new error(make_errstring("getsockopt"));
+        // get connection status
+        int err = 0;
+        socklen_t errsize = sizeof(err);
+        if (::getsockopt(_fd, SOL_SOCKET, SO_ERROR, SOCKOPT_CAST &err, &errsize) == SOCKET_ERROR)
+            throw new error(make_errstring("getsockopt"));
 
-    if (err != 0) {
-        std::ostringstream os;
-        os << "connect: " << strerror(err) << " (errno " << err << ")";
-        const std::string& s = os.str();
-        throw new error(new str( s.c_str() ));
-    }
+        if (err != 0) {
+            std::ostringstream os;
+            os << "connect: " << strerror(err) << " (errno " << err << ")";
+            const std::string& s = os.str();
+            throw new error(new str( s.c_str() ));
+        }
 
-    // turn blocking back on
-    set_nonblocking(_fd);
+        // turn blocking back on
+        set_nonblocking(_fd);
     }
 
     return this;
 }
+
 socket *socket::setblocking(int flag)
 {
     if (flag)  {
-    //blocking mode
-    _blocking = true;
-    _timeout = -1.0; //reset
-    set_blocking(_fd);
+        //blocking mode
+        _blocking = true;
+        _timeout = -1.0; //reset
+        set_blocking(_fd);
     } else {
-    //non-blocking
-    set_nonblocking(_fd);
-    _blocking = false;
+        //non-blocking
+        set_nonblocking(_fd);
+        _blocking = false;
     }
     return this;
 }
@@ -327,23 +328,23 @@ socket *socket::settimeout(double val)
 socket *socket::shutdown(int how)
 {
     if (::shutdown(_fd, how) == SOCKET_ERROR)
-    throw new error(make_errstring("shutdown"));
+        throw new error(make_errstring("shutdown"));
     return this;
 }
 
 void socket::write_wait()
 {
     if (_blocking && _timeout >= 0) {
-    fd_set s;
-    FD_ZERO(&s);
-    FD_SET(_fd, &s);
-    timeval to;
-    to.tv_sec = static_cast<tv_sec_type>(_timeout);
-    to.tv_usec = static_cast<tv_usec_type>(1000000 * (_timeout - (double)to.tv_sec));
-    if (::select(_fd+1, 0, &s, 0, &to) == SOCKET_ERROR)
-        throw new error(make_errstring("select"));
-    if (! FD_ISSET(_fd, &s))
-        throw new timeout(timed_out);
+        fd_set s;
+        FD_ZERO(&s);
+        FD_SET(_fd, &s);
+        timeval to;
+        to.tv_sec = static_cast<tv_sec_type>(_timeout);
+        to.tv_usec = static_cast<tv_usec_type>(1000000 * (_timeout - (double)to.tv_sec));
+        if (::select(_fd+1, 0, &s, 0, &to) == SOCKET_ERROR)
+            throw new error(make_errstring("select"));
+        if (! FD_ISSET(_fd, &s))
+            throw new timeout(timed_out);
     }
 }
 
@@ -353,7 +354,7 @@ int socket::send(const char *s, size_t len, int flags)
 
     ssize_t r = ::send(_fd, s, len, flags);
     if (r == SOCKET_ERROR)
-    throw new error(make_errstring("send"));
+        throw new error(make_errstring("send"));
     return r;
 }
 
@@ -368,7 +369,7 @@ int socket::sendall(str *string, int flags) {
     size_t len = string->__len__(); //FIXME is this guaranteed to be the same as the C string length, even if we are dealing with wide/unicode? 
 
     while (offset < len)
-    offset += send(s + offset, len - offset, flags);
+        offset += send(s + offset, len - offset, flags);
     return len;
 }
 
@@ -391,16 +392,21 @@ int socket::sendto(str* msg, int flags, socket::inet_address addr)
 
     ssize_t len = ::sendto(_fd, buf, buflen, flags, sa, salen);
     if (len == SOCKET_ERROR)
-    throw new error(make_errstring("sendto"));
+        throw new error(make_errstring("sendto"));
 
     return len;
+}
+
+int socket::sendto(str* msg, socket::inet_address addr)
+{
+    return sendto(msg, 0, addr);
 }
 
 socket *socket::close()
 {
     if (::CLOSE(_fd) == SOCKET_ERROR)
 #define STRINGIFY(x) #x
-    throw new error(make_errstring(STRINGIFY(CLOSE)));
+        throw new error(make_errstring(STRINGIFY(CLOSE)));
 #undef STRINGIFY
     return this;
 }
@@ -408,16 +414,16 @@ socket *socket::close()
 void socket::read_wait()
 {
     if (_blocking && _timeout >= 0) {
-    fd_set s;
-    FD_ZERO(&s);
-    FD_SET(_fd, &s);
-    timeval to;
-    to.tv_sec = static_cast<tv_sec_type>(_timeout);
-    to.tv_usec = static_cast<tv_usec_type>(1000000 * (_timeout - (double)to.tv_sec));
-    if (::select(_fd+1, &s, 0, 0, &to) == SOCKET_ERROR)
-        throw new error(make_errstring("select"));
-    if (! FD_ISSET(_fd, &s))
-        throw new timeout(timed_out);
+        fd_set s;
+        FD_ZERO(&s);
+        FD_SET(_fd, &s);
+        timeval to;
+        to.tv_sec = static_cast<tv_sec_type>(_timeout);
+        to.tv_usec = static_cast<tv_usec_type>(1000000 * (_timeout - (double)to.tv_sec));
+        if (::select(_fd+1, &s, 0, 0, &to) == SOCKET_ERROR)
+            throw new error(make_errstring("select"));
+        if (! FD_ISSET(_fd, &s))
+            throw new timeout(timed_out);
     }
 }
 
@@ -428,7 +434,7 @@ str *socket::recv(int bufsize, int flags)
     char buf[bufsize];
     ssize_t len = ::recv(_fd, buf, bufsize, flags);
     if (len == SOCKET_ERROR)
-    throw new error(make_errstring("recv"));
+        throw new error(make_errstring("recv"));
     return new str(buf, len);
 }
 
@@ -453,7 +459,7 @@ ssize_t socket::recvfrom(char *buf, size_t bufsize, int flags, sockaddr *sa, soc
     read_wait();
     ssize_t len = ::recvfrom(_fd, buf, bufsize, flags, sa, salen);
     if (len == SOCKET_ERROR)
-    throw new error(make_errstring("recvfrom"));
+        throw new error(make_errstring("recvfrom"));
     return len;
 }
 
@@ -468,13 +474,13 @@ tuple2<str *, socket::inet_address> *socket::recvfrom(int bufsize, int flags)
 
 socket::socket(int family, int type, int proto) {
     this->__class__ = cl_socket;
-    
+
     this->family = family;
     this->type = type;
     this->proto = proto;
     _fd = ::socket(family, type, proto);
     if (_fd == SOCKET_ERROR)
-    throw new error(make_errstring("socket"));
+        throw new error(make_errstring("socket"));
     _timeout = __ss_default_timeout;
     _blocking = true;
 }
@@ -487,27 +493,27 @@ socket::~socket()
 socket *socket::listen(int backlog)
 {
     if(::listen(_fd, backlog) == SOCKET_ERROR)
-    throw new error(make_errstring("listen"));
+        throw new error(make_errstring("listen"));
     return this;
 }
 
 socket* socket::accept(sockaddr *sa, socklen_t *salen)
 {
     if (_blocking && _timeout >= 0) {
-    fd_set s;
-    FD_ZERO(&s);
-    FD_SET(_fd, &s);
-    timeval to;
-    to.tv_sec = static_cast<tv_sec_type>(_timeout);
-    to.tv_usec = static_cast<tv_usec_type>(1000000 * (_timeout - (double)to.tv_sec));
-    if (::select(_fd+1, &s, 0, 0, &to) == SOCKET_ERROR)
-        throw new error(make_errstring("select"));
-    if (! FD_ISSET(_fd, &s))
-        throw new timeout(timed_out);
+        fd_set s;
+        FD_ZERO(&s);
+        FD_SET(_fd, &s);
+        timeval to;
+        to.tv_sec = static_cast<tv_sec_type>(_timeout);
+        to.tv_usec = static_cast<tv_usec_type>(1000000 * (_timeout - (double)to.tv_sec));
+        if (::select(_fd+1, &s, 0, 0, &to) == SOCKET_ERROR)
+            throw new error(make_errstring("select"));
+        if (! FD_ISSET(_fd, &s))
+            throw new timeout(timed_out);
     }
     int r;
     if ((r = ::accept(_fd, sa, salen)) == SOCKET_ERROR) {
-    throw new error(make_errstring("accept"));
+        throw new error(make_errstring("accept"));
     }
     socket *sock = new socket();
     sock->family = family;
@@ -542,7 +548,7 @@ tuple2<socket *, socket::inet_address> *socket::accept() {
 socket *socket::bind(pyseq<str *> *address)
 {
     if (family != AF_UNIX)
-    throw new ValueError(invalid_address);
+        throw new ValueError(invalid_address);
     sockaddr_un sun;
     sun.sun_family = AF_UNIX;
     const str* __0 = address->__getitem__(0);
@@ -557,7 +563,7 @@ socket::inet_address socket::getpeername()
     struct sockaddr_in addr;
     socklen_t addrlen = sizeof(addr);
     if (::getpeername(_fd, reinterpret_cast<sockaddr *>(&addr), &addrlen) == SOCKET_ERROR)
-    throw new error(make_errstring("getpeername"));
+        throw new error(make_errstring("getpeername"));
     return sin_addr_to_tuple(&addr);
 }
 
@@ -566,7 +572,7 @@ socket::inet_address socket::getsockname()
     struct sockaddr_in addr;
     socklen_t addrlen = sizeof(addr);
     if (::getsockname(_fd, reinterpret_cast<sockaddr *>(&addr), &addrlen) == SOCKET_ERROR)
-    throw new error(make_errstring("getsockname"));
+        throw new error(make_errstring("getsockname"));
     return sin_addr_to_tuple(&addr);
 }
 
@@ -574,7 +580,7 @@ str *gethostname()
 {
     char name[HOST_NAME_MAX];
     if (::gethostname(name, sizeof(name)) == -1)
-    throw new herror(make_errstring("gethostname"));
+        throw new herror(make_errstring("gethostname"));
     return new str(name);
 }
 
@@ -598,7 +604,7 @@ int _ss_ntohs(int x) {
 double getdefaulttimeout()
 {
     if (__ss_default_timeout < 0)
-    throw new error(new str("no timeout is set"));
+        throw new error(new str("no timeout is set"));
     return __ss_default_timeout;
 }
 
@@ -606,7 +612,7 @@ double getdefaulttimeout()
 int setdefaulttimeout(double x)
 {
     if (x < 0)
-    throw new ValueError(new str("invalid argument"));
+        throw new ValueError(new str("invalid argument"));
     __ss_default_timeout = x;
     return 0;
 }
@@ -636,7 +642,7 @@ void __init()
     // Initialize Winsock
     iResult = WSAStartup(MAKEWORD(2,2), &wsaData);
     if (iResult != 0) {
-    throw new error(new str("WSAStartup failed"));
+        throw new error(new str("WSAStartup failed"));
     }
 #endif /* WIN32 */
 }
@@ -654,7 +660,7 @@ str *gethostbyname(str *hostname)
 {
     hostent *he = ::gethostbyname(hostname->unit.c_str());
     if (!he)
-    throw new herror(host_not_found);
+        throw new herror(host_not_found);
     char ip[sizeof("xxx.xxx.xxx.xxx")];
     int addr = htonl( *((int *) he->h_addr_list[0]) );
     sprintf(ip, "%d.%d.%d.%d", ((addr >> 24) & 0xff), ((addr >> 16) & 0xff), ((addr >> 8) & 0xff), (addr & 0xff));
