@@ -44,6 +44,11 @@ print int(1==2), int(1!=2)
 print float(1==2), float(1!=2)
 print ord(chr(1==2)), ord(chr(1!=2))
 
+#random.sample/choice 
+import random
+print random.sample(xrange(1), 1)
+print random.sample(set([1]), 1)
+
 ''', '''
 output(equal=True)
 

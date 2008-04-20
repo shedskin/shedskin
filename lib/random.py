@@ -35,9 +35,9 @@ class Random:
     def getrandbits(self, k): return 1
     def randrange(self, start, stop, step=1): return 1
     def randint(self, a, b): return 1
-    def choice(self, seq): return seq.unit
+    def choice(self, seq): return seq[seq.__len__()]
     def shuffle(self, x): return x
-    def sample(self, population, k): return [population.unit]
+    def sample(self, population, k): return [iter(population).next()]
     def uniform(self, a, b): return 1.0
     def normalvariate(self, mu, sigma): return 1.0
     def lognormvariate(self, mu, sigma): return 1.0
@@ -69,9 +69,9 @@ def getstate(): return [1.0,1.0,1.0]
 def setstate(state): return 1
 def randrange(start, stop, step=1): return 1
 def randint(a, b): return 1
-def choice(seq): return seq.unit
+def choice(seq): return seq[seq.__len__()]
 def shuffle(x): return x
-def sample(population, k): return [population.unit]
+def sample(population, k): return [iter(population).next()]
 def uniform(a, b): return 1.0
 def normalvariate(mu, sigma): return 1.0
 def lognormvariate(mu, sigma): return 1.0
