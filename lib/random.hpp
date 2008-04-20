@@ -59,6 +59,7 @@ public:
     double gauss(double mu, double sigma);
     template <class A> A choice(pyseq<A> *seq);
     template <class A> int shuffle(pyseq<A> *x);
+    template <class A> list<A> *sample(pyiter<A> *population, int k);
     template <class A> list<A> *sample(pyseq<A> *population, int k);
     int _genrand_int32();
     virtual list<double> *getstate();
@@ -110,6 +111,7 @@ int randrange(int start, int stop, int step);
 int randint(int a, int b);
 template <class A> A choice(pyseq<A> *seq);
 template <class A> int shuffle(pyseq<A> *x);
+template <class A> list<A> *sample(pyiter<A> *population, int k);
 template <class A> list<A> *sample(pyseq<A> *population, int k);
 double uniform(double a, double b);
 double normalvariate(double mu, double sigma);
@@ -133,6 +135,10 @@ template <class A> A choice(pyseq<A> *seq) {
 template <class A> int shuffle(pyseq<A> *x) {
     
     return _inst->shuffle(x);
+}
+
+template <class A> list<A> *sample(pyiter<A> *population, int k) {
+    return sample(__list(population), k);
 }
 
 template <class A> list<A> *sample(pyseq<A> *population, int k) {
@@ -164,6 +170,9 @@ template <class A> int Random::shuffle(pyseq<A> *x) {
     return 0;
 }
 
+template <class A> list<A> *Random::sample(pyiter<A> *population, int k) {
+    return sample(__list(population), k);
+}
 
 template <class A> list<A> *Random::sample(pyseq<A> *population, int k) {
     /**
