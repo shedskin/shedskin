@@ -340,6 +340,7 @@ def generate_code():
 
         if line[:line.find('=')].strip() == 'CCFLAGS': 
             line += ' -I. -I'+getgx().libdir.replace(' ', '\ ')
+            if sys.platform == 'darwin': line += ' -I/opt/local/include' # macports... and fink?
             if not getgx().wrap_around_check: line += ' -DNOWRAP' 
             if getgx().bounds_checking: line += ' -DBOUNDS' 
             if getgx().extension_module: 
@@ -347,6 +348,7 @@ def generate_code():
                 else: line += ' -g -fPIC -D__SS_BIND ' + includes
 
         elif line[:line.find('=')].strip() == 'LFLAGS': 
+            if sys.platform == 'darwin': line += ' -L/opt/local/lib'
             if getgx().extension_module: 
                 if sys.platform == 'win32': line += ' -shared -Lc:/Python%s/libs -lpython%s' % (pyver, pyver) 
                 elif sys.platform == 'darwin': line += ' -bundle -Xlinker -dynamic ' + ldflags

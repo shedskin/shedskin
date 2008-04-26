@@ -100,10 +100,10 @@ template<> str *repr(void *t);
 file *open(str *name, str *flags = 0);
 str *raw_input(str *msg = 0);
 
-void print(char *fmt, ...);
-void print(file *f, char *fmt, ...);
-void printc(char *fmt, ...); /* print comma */
-void printc(file *f, char *fmt, ...);
+void print(const char *fmt, ...);
+void print(file *f, const char *fmt, ...);
+void printc(const char *fmt, ...); /* print comma */
+void printc(file *f, const char *fmt, ...);
 
 int isinstance(pyobj *, class_ *);
 int isinstance(pyobj *, tuple2<class_ *, class_ *> *);
@@ -264,7 +264,7 @@ public:
     int low, high;
     str *__name__;
 
-    class_(char *name, int low, int high);
+    class_(const char *name, int low, int high);
     str *__repr__();
     int __eq__(pyobj *c);
 
