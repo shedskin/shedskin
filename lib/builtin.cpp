@@ -112,7 +112,7 @@ str *str::__repr__() {
     __GC_STRING sep = "\\\n\r\t";
     __GC_STRING let = "\\nrt";
 
-    char *quote = "'";
+    const char *quote = "'";
     int hasq = unit.find("'");
     int hasd = unit.find("\"");
 
@@ -338,7 +338,7 @@ list<str *> *str::splitlines(int keepends)
 {
     list<str *> *r = new list<str *>();
     int i, j, endlen;
-    char *ends = "\r\n";
+    const char *ends = "\r\n";
     
     endlen = i = 0;
     do
@@ -814,7 +814,7 @@ PyObject *str::__to_py__() {
 }
 #endif
 
-class_::class_(char *name, int low, int high) {
+class_::class_(const char *name, int low, int high) {
     this->__name__ = new str(name);
     this->low = low; this->high = high;
 }
@@ -1558,7 +1558,7 @@ void __exit() {
         std::cout << '\n';
 }
 
-void print(char *fmt, ...) { // XXX merge four functions (put std::cout in a file instance)
+void print(const char *fmt, ...) { // XXX merge four functions (put std::cout in a file instance)
      va_list args;
      va_start(args, fmt);
      str *s = __mod2(new str(fmt), args);
@@ -1573,7 +1573,7 @@ void print(char *fmt, ...) { // XXX merge four functions (put std::cout in a fil
      print_space = 0;
 }
 
-void print(file *f, char *fmt, ...) {
+void print(file *f, const char *fmt, ...) {
      va_list args;
      va_start(args, fmt);
      str *s = __mod2(new str(fmt), args);
@@ -1588,7 +1588,7 @@ void print(file *f, char *fmt, ...) {
      f->print_space = 0;
 }
 
-void printc(char *fmt, ...) {
+void printc(const char *fmt, ...) {
      va_list args;
      va_start(args, fmt);
      str *s = __mod2(new str(fmt), args);
@@ -1604,7 +1604,7 @@ void printc(char *fmt, ...) {
      print_space = 1;
 }
 
-void printc(file *f, char *fmt, ...) {
+void printc(file *f, const char *fmt, ...) {
      va_list args;
      va_start(args, fmt);
      str *s = __mod2(new str(fmt), args);
