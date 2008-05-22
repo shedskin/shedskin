@@ -6,6 +6,8 @@ from shared import *
 
 import textwrap, string
 
+from backward import *
+
 # --- code generation visitor; use type information; c++ templates
 class generateVisitor(ASTVisitor):
     def __init__(self, module):
