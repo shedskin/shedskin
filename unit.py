@@ -49,6 +49,16 @@ import random
 print random.sample(xrange(1), 1)
 print random.sample(set([1]), 1)
 
+#fast_for_neg in listcomp_for
+print [(i, i) for i in range(29, -1, -1)]
+
+#works, but add as test
+def a():
+   pass
+def b(func=a):
+   func()
+b()
+
 ''', '''
 output(equal=True)
 
