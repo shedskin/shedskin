@@ -610,7 +610,7 @@ def callfunc_targets(node, merge):
     funcs = []
 
     if node.node in merge and [t for t in merge[node.node] if isinstance(t[0], function)]: # anonymous function call
-        funcs = [t[0] for t in merge[node.node]]
+        funcs = [t[0] for t in merge[node.node] if isinstance(t[0], function)]
 
     elif constructor:
         if ident == 'defaultdict' and len(node.args) == 2:
@@ -665,7 +665,8 @@ def connect_actual_formal(expr, func, parent_constr=False, check_error=False):
     uglyoffset = len(func.defaults)-(len(formals)-len(actuals))
 
     # --- connect regular, default and keyword arguments
-    if not func.mv.module.builtin or func.mv.module.ident in ['random', 'itertools']: # XXX investigate
+    if not func.mv.module.builtin or func.mv.module.ident in ['random', 'itertools'] or \
+        (func.ident in ('sort','sorted')): # XXX investigate
         for (i, formal) in enumerate(formals[len(actuals):]):
             if formal in kwdict:
                 actuals.append(kwdict[formal])

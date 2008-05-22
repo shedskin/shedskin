@@ -610,9 +610,11 @@ def pow(a, b, c=1):
 def abs(x):                            
     return x.__abs__()
 
-def sorted(l):
-    l.unit.__cmp__(l.unit)
-    return [l.unit]
+def sorted(it): #, cmp=None, key=None, reverse=None):
+    elem = iter(it).next()
+#    cmp(elem, elem)
+    elem.__cmp__(elem)
+    return [elem]
 
 def reversed(l):
     return iter(l)
