@@ -1025,40 +1025,40 @@ class generateVisitor(ASTVisitor):
             self.output('}')
             
     def fastfor(self, node, assname, neg, func=None):
-            ivar, evar = getmv().tempcount[node.assign], getmv().tempcount[node.list]
+        ivar, evar = getmv().tempcount[node.assign], getmv().tempcount[node.list]
 
-            self.start('FAST_FOR%s('%neg+assname+',')
+        self.start('FAST_FOR%s('%neg+assname+',')
 
-            if len(node.list.args) == 1: 
-                self.append('0,')
-                if node.list.args[0] in getmv().tempcount: # XXX in visit?
-                    self.append(getmv().tempcount[node.list.args[0]])
-                else:
-                    self.visit(node.list.args[0], func)
-                self.append(',')
-            else: 
-                if node.list.args[0] in getmv().tempcount: # XXX in visit?
-                    self.append(getmv().tempcount[node.list.args[0]])
-                else:
-                    self.visit(node.list.args[0], func)
-                self.append(',')
-                if node.list.args[1] in getmv().tempcount: # XXX in visit?
-                    self.append(getmv().tempcount[node.list.args[1]])
-                else:
-                    self.visit(node.list.args[1], func)
-                self.append(',')
-
-            if len(node.list.args) != 3:
-                self.append('1')
+        if len(node.list.args) == 1: 
+            self.append('0,')
+            if node.list.args[0] in getmv().tempcount: # XXX in visit?
+                self.append(getmv().tempcount[node.list.args[0]])
             else:
-                if node.list.args[2] in getmv().tempcount: # XXX in visit?
-                    self.append(getmv().tempcount[node.list.args[2]])
-                else:
-                    self.visit(node.list.args[2], func)
-            self.append(',%s,%s)' % (ivar[2:],evar[2:]))
-            #print 'ie', ivar, evar 
+                self.visit(node.list.args[0], func)
+            self.append(',')
+        else: 
+            if node.list.args[0] in getmv().tempcount: # XXX in visit?
+                self.append(getmv().tempcount[node.list.args[0]])
+            else:
+                self.visit(node.list.args[0], func)
+            self.append(',')
+            if node.list.args[1] in getmv().tempcount: # XXX in visit?
+                self.append(getmv().tempcount[node.list.args[1]])
+            else:
+                self.visit(node.list.args[1], func)
+            self.append(',')
 
-            print >>self.out, self.line
+        if len(node.list.args) != 3:
+            self.append('1')
+        else:
+            if node.list.args[2] in getmv().tempcount: # XXX in visit?
+                self.append(getmv().tempcount[node.list.args[2]])
+            else:
+                self.visit(node.list.args[2], func)
+        self.append(',%s,%s)' % (ivar[2:],evar[2:]))
+        #print 'ie', ivar, evar 
+
+        print >>self.out, self.line
 
     def visitFor(self, node, func=None):
         if isinstance(node.assign, AssName):
@@ -2314,8 +2314,6 @@ class generateVisitor(ASTVisitor):
 
         # for in
         if fastfor(qual):
-            #self.output('result->resize(uh);') # XXX
-
             if len(qual.list.args) == 3 and not isinstance(qual.list.args[2], (Const, UnarySub, UnaryAdd)): # XXX unarysub
                 self.fastfor_switch(qual, lcfunc)
                 self.indent()
@@ -2329,7 +2327,10 @@ class generateVisitor(ASTVisitor):
                 self.deindent()
                 self.output('}')
             else:
-                self.fastfor(qual, iter, '', lcfunc)
+                neg=''
+                if len(qual.list.args) == 3 and isinstance(qual.list.args[2], (UnarySub, UnaryAdd)): # XXX and const
+                    neg = '_NEG'
+                self.fastfor(qual, iter, neg, lcfunc)
                 self.listcompfor_body(node, quals, iter, lcfunc)
 
         else:
