@@ -4,6 +4,8 @@ from compiler.visitor import *
 
 import os, sys, traceback
 
+from backward import *
+
 # --- global variables gx, mv
 
 class globalInfo: # XXX add comments, split up

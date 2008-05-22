@@ -6,6 +6,8 @@ from shared import *
 
 import sys, string, copy
 
+from backward import *
+
 # --- module visitor; analyze program, build constraint graph
 
 class moduleVisitor(ASTVisitor):
