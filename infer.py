@@ -182,7 +182,8 @@ def cartesian_product(node, worklist):
     anon_func = False
     funcs = []
 
-    if not node.mv.module.builtin or node.mv.module.ident == 'path': # XXX to analyze_callfunc
+    if not node.mv.module.builtin or node.mv.module.ident == 'path' or \
+        (node.parent and node.parent.ident in ('sort','sorted')): # XXX to analyze_callfunc
         subnode = expr.node, node.dcpa, node.cpa
         if subnode in getgx().cnode:
             stypes = getgx().cnode[subnode].types() 
