@@ -149,8 +149,10 @@ class list(pyseq):
 
     def reverse(self):         
         pass
-    def sort(self):           
-        self.unit.__cmp__(self.unit)
+    def sort(self, cmp=None, key=None, reverse=None):
+        elem = self.unit
+        cmp(elem, elem)
+        elem.__cmp__(elem)
        
     def __getfirst__(self, i): # XXX remove
         return self.unit             
@@ -610,9 +612,9 @@ def pow(a, b, c=1):
 def abs(x):                            
     return x.__abs__()
 
-def sorted(it): #, cmp=None, key=None, reverse=None):
+def sorted(it, cmp=None, key=None, reverse=None):
     elem = iter(it).next()
-#    cmp(elem, elem)
+    cmp(elem, elem)
     elem.__cmp__(elem)
     return [elem]
 

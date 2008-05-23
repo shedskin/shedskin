@@ -59,6 +59,34 @@ def b(func=a):
    func()
 b()
 
+# sorted, list.sort: cmp and reverse args 
+def mut(a,b):
+    return -cmp(a,b)
+
+def cmut(a,b):
+    return -cmp(a,b)
+
+print sorted([5,1,3,2,4])
+print sorted([5,1,3,2,4], reverse=True)
+print sorted([5,1,3,2,4], cmp=mut)
+print sorted([5,1,3,2,4], cmp=mut, reverse=True)
+
+print sorted(set([5,1,3,2,4]))
+print sorted(set([5,1,3,2,4]), reverse=True)
+print sorted(set([5,1,3,2,4]), cmp=mut)
+print sorted(set([5,1,3,2,4]), cmp=mut, reverse=True)
+
+print sorted('abcde')
+print sorted('abcde', reverse=True)
+print sorted('abcde', cmp=cmut)
+print sorted('abcde', cmp=cmut, reverse=True)
+
+l = [1,4,5,2,3]
+l.sort(); print l
+l.sort(cmp=mut); print l
+l.sort(reverse=True); print l
+l.sort(cmp=mut, reverse=True); print l
+
 ''', '''
 output(equal=True)
 
