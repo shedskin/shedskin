@@ -794,11 +794,11 @@ str *str::capitalize() {
     return r;
 }
 
-str *str::sorted() {
+/* str *str::sorted() {
     str *s = new str(unit);
     sort(s->unit.begin(), s->unit.end());
     return s;
-}
+} */
 
 #ifdef __SS_BIND
 str::str(PyObject *p) : cached_hash(0) {
@@ -1446,10 +1446,13 @@ list<str *> *__list(str *s) {
 
 /* sorted */
 
-list<str *> *sorted(str *t) {
-    str *s = new str(t->unit);
-    sort(s->unit.begin(), s->unit.end());
-    return __list(s);
+list<str *> *sorted(str *t, int (*cmp)(str *, str *), int key, int reverse) {
+    list<str *> *l = __list(t);
+    l->sort(cmp, key, reverse);
+    return l;
+}
+list<str *> *sorted(str *t, int cmp, int key, int reverse) {
+    return sorted(t, (int (*)(str *, str *))0, key, reverse);
 }
 
 /* mod helpers */

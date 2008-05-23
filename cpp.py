@@ -1884,13 +1884,13 @@ class generateVisitor(ASTVisitor):
                 self.append('(')
 
         elif method_call:
-            if isinstance(objexpr, Const) and objexpr.value == '' and ident == 'join' and isinstance(node.args[0], CallFunc) and \
-                  isinstance(node.args[0].node, Name) and node.args[0].node.name == 'sorted' and \
-                  self.mergeinh[node.args[0].args[0]] == set([(defclass('str_'), 0)]): # ''.join(sorted(str))
-                #print 'nnee', objexpr, ident, self.mergeinh[node.args[0].args[0]], node.args
-                self.visitm(node.args[0].args[0], '->sorted()', func)
-                return
-            else:
+#            if isinstance(objexpr, Const) and objexpr.value == '' and ident == 'join' and isinstance(node.args[0], CallFunc) and \
+#                  isinstance(node.args[0].node, Name) and node.args[0].node.name == 'sorted' and \
+#                  self.mergeinh[node.args[0].args[0]] == set([(defclass('str_'), 0)]): # ''.join(sorted(str))
+#                #print 'nnee', objexpr, ident, self.mergeinh[node.args[0].args[0]], node.args
+#                self.visitm(node.args[0].args[0], '->sorted()', func)
+#                return
+#            else:
                 for cl, _ in self.mergeinh[objexpr]:
                     if cl.ident != 'none' and ident not in cl.funcs:
                         conv = {'int_': 'int', 'float_': 'float', 'str_': 'str', 'class_': 'class', 'none': 'none'}

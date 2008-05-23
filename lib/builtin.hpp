@@ -187,12 +187,25 @@ template<> int __cmp(int a, int b);
 template<> int __cmp(double a, double b);
 template<> int __cmp(void *a, void *b); /* keep compiler happy */
 
-template<class T> int cpp_cmp(T a, T b) {
+template<class T> int cpp_cmp(T a, T b) { 
     return __cmp(a, b) == -1;
 }
-
-template<class T> class cpp_cmp2 {
-    public: int operator()(T t, T v) const { return __cmp(t, v) == -1; }
+template<class T> int cpp_cmp_rev(T a, T b) {
+    return __cmp(a, b) != -1;
+}
+template<class T> class cpp_cmp_custom {
+    typedef int (*hork)(T, T);
+    hork cmp;
+public:
+    cpp_cmp_custom(hork a) { cmp = a; }
+    int operator()(T a, T b) const { return cmp(a,b) == -1; }
+};
+template<class T> class cpp_cmp_custom_rev {
+    typedef int (*hork)(T, T);
+    hork cmp;
+public:
+    cpp_cmp_custom_rev(hork a) { cmp = a; }
+    int operator()(T a, T b) const { return cmp(a,b) != -1; }
 };
 
 template<class T> struct dereference {}; 
@@ -423,7 +436,7 @@ public:
     int insert(int m, T e);
 
     int reverse();
-    int sort();
+    int sort(int (*cmp)(T, T), int key, int reverse);
 
     list<T> *__copy__();
     list<T> *__deepcopy__(dict<void *, pyobj *> *memo);
@@ -555,7 +568,7 @@ public:
 
     __seqiter<str *> *__iter__();
 
-    str *sorted();
+    //str *sorted();
 
     str *__iadd__(str *b);
     str *__imul__(int n);
@@ -1588,8 +1601,19 @@ template<class T> int list<T>::reverse() {
     return 0;
 }
 
-template<class T> int list<T>::sort() {
-    std::sort(units.begin(), units.end(), cpp_cmp<T>);
+template<class T> int list<T>::sort(int (*cmp)(T, T), int key, int reverse) {
+    if(cmp) {
+        if(reverse)
+            std::sort(units.begin(), units.end(), cpp_cmp_custom_rev<T>(cmp));
+        else
+            std::sort(units.begin(), units.end(), cpp_cmp_custom<T>(cmp));
+    } else {
+        if(reverse)
+            std::sort(units.begin(), units.end(), cpp_cmp_rev<T>);
+        else
+            std::sort(units.begin(), units.end(), cpp_cmp<T>);
+    }
+
     return 0;
 }
 
@@ -1661,7 +1685,7 @@ template<class T> int set<T>::__hash__() {
     list<int> *seeds = new list<int>();
     for(it1 = units.begin(); it1 != units.end(); it1++)
         seeds->append(hasher<T>(*it1));
-    seeds->sort(); /* XXX */
+    seeds->sort(0, 0, 0); /* XXX */
     int seed = 0;
     for(int i = 0; i < len(seeds); i++)
         seed = hash_combine(seed, seeds->units[i]);
@@ -2419,25 +2443,32 @@ template<class A> static inline list<A> *__list_comp_0(list<A> *result, pyiter<A
     return result;
 }
 
-template <class A> list<A> *sorted(pyiter<A> *x) {
+template <class A> list<A> *sorted(pyiter<A> *x, int (*cmp)(A, A), int key, int reverse) {
     list<A> *r = new list<A>();
     A e;
     __iter<A> *__0;
     FOR_IN(e, x, 0)
         r->append(e);
     END_FOR
-    r->sort();
+    r->sort(cmp, key, reverse);
     return r;
 }
+template <class A> list<A> *sorted(pyiter<A> *x, int cmp, int key, int reverse) { /* beh */
+    return sorted(x, (int (*)(A,A))0, key, reverse); 
+}
 
-template <class A> list<A> *sorted(pyseq<A> *x) {
+template <class A> list<A> *sorted(pyseq<A> *x, int (*cmp)(A, A), int key, int reverse) {
     list<A> *r = new list<A>();
     r->units = x->units;
-    r->sort();
+    r->sort(cmp, key, reverse);
     return r;
 }
+template <class A> list<A> *sorted(pyseq<A> *x, int cmp, int key, int reverse) { /* beh */
+    return sorted(x, (int (*)(A,A))0, key, reverse); 
+}
 
-list<str *> *sorted(str *x);
+list<str *> *sorted(str *x, int (*cmp)(str *, str *), int key, int reverse);
+list<str *> *sorted(str *x, int cmp, int key, int reverse); /* beh */
 
 template<class A> class __reverse : public __iter<A> {
 public:
