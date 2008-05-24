@@ -191,7 +191,7 @@ template<class T> int cpp_cmp(T a, T b) {
     return __cmp(a, b) == -1;
 }
 template<class T> int cpp_cmp_rev(T a, T b) {
-    return __cmp(a, b) != -1;
+    return __cmp(a, b) == 1;
 }
 template<class T> class cpp_cmp_custom {
     typedef int (*hork)(T, T);
@@ -205,7 +205,7 @@ template<class T> class cpp_cmp_custom_rev {
     hork cmp;
 public:
     cpp_cmp_custom_rev(hork a) { cmp = a; }
-    int operator()(T a, T b) const { return cmp(a,b) != -1; }
+    int operator()(T a, T b) const { return cmp(a,b) == 1; }
 };
 
 template<class T> struct dereference {}; 
