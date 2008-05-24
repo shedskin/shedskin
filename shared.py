@@ -19,6 +19,7 @@ class globalInfo: # XXX add comments, split up
         self.templates = 0
         self.modules = {}
         self.inheritance_relations = {}
+        self.inheritance_tempvars = {}
         self.parent_nodes = {}
         self.inherited = set()
         self.nrcltypes = 8;
@@ -138,7 +139,7 @@ class function:
         self.declared = False
 
         self.registered = []
-
+        self.registered_tempvars = []
 
     def __repr__(self):
         if self.parent: return 'function '+repr((self.parent, self.ident))
@@ -520,8 +521,12 @@ def merged(nodes, dcpa=False, inheritance=False):
 
                 for inhfunc in getgx().inheritance_relations.get(var.parent, []):
                     if var.name in inhfunc.vars:
-                        if inhfunc.vars[var.name] in mergenoinh: # XXX
+                        if inhfunc.vars[var.name] in mergenoinh: 
                             merge.setdefault(sort, set()).update(mergenoinh[inhfunc.vars[var.name]])
+
+                for inhvar in getgx().inheritance_tempvars.get(var, []): # XXX more general
+                    if inhvar in mergenoinh: 
+                        merge.setdefault(sort, set()).update(mergenoinh[inhvar])
 
             # node is not a function variable
             else:
