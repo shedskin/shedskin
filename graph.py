@@ -875,6 +875,8 @@ class moduleVisitor(ASTVisitor):
             self.addconstraint((inode(node.list), inode(ovar)), func) # node.list
 
             itervar = self.tempvar((node,1), func)
+            #print 'itervar', itervar
+            register_tempvar(itervar, func)
             self.addconstraint((inode(get_iter), inode(itervar)), func)
 
             xvar = self.tempvar(node.list, func)
@@ -1507,9 +1509,14 @@ def inherit_rec(original, copy):
         inherit_rec(a,b)
 
 def register_node(node, func): 
-    #print 'register', node, nr, func
+    #print 'register node', node, func
     if func:
         func.registered.append(node)
+
+def register_tempvar(var, func): 
+    #print 'register tvar', var, func
+    if func:
+        func.registered_tempvars.append(var)
         
 def slicenums(nodes):
     nodes2 = []

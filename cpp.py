@@ -1393,6 +1393,8 @@ class generateVisitor(ASTVisitor):
             if var.invisible: continue
 
             if name not in func.formals:
+                #print 'declare', var, self.mergeinh[var], getgx().merged_inh[var]
+
                 name = self.cpp_name(name)
                 ts = typesetreprnew(var, func)
             
@@ -2651,7 +2653,6 @@ def typesetreprnew(node, parent, cplusplus=True):
 
     # --- separate types in multiple duplicates, so we can do parallel template matching of subtypes..
     split = typesplit(node, parent)
-    #print 'split', node, split
 
     # --- use this 'split' to determine type representation
     ts = typestrnew(split, parent, cplusplus, orig_parent, node) 

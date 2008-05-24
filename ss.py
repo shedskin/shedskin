@@ -169,6 +169,11 @@ def analysis(source, testing=False):
                     #print a, '->', b 
                     inherit_rec(a, b)
 
+                for a, b in zip(func.registered_tempvars, inhfunc.registered_tempvars): # XXX more general
+                    getgx().inheritance_tempvars.setdefault(a, []).append(b)
+
+    getgx().merged_inh = merged(getgx().types, inheritance=True) # XXX why X times
+
     # --- finally, generate C++ code and Makefiles.. :-)
 
     #printstate()

@@ -87,6 +87,20 @@ l.sort(cmp=mut); print l
 l.sort(reverse=True); print l
 l.sort(cmp=mut, reverse=True); print l
 
+# tempvars/new nodes and inheritance (XXX add more here)
+class network:
+    def shortestpath(self):
+        for node in set([1]): 
+            pass
+
+        #hup = [node for node in [1]]
+
+class smallworld(network):
+    pass
+
+s = smallworld() 
+s.shortestpath()
+
 ''', '''
 output(equal=True)
 
