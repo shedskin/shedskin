@@ -751,6 +751,8 @@ class moduleVisitor(ASTVisitor):
 
         var = defaultvar(varname, func) 
         self.tempcount[node] = varname
+
+        register_tempvar(var, func) 
         return var
 
     def visitRaise(self, node, func=None):
@@ -876,7 +878,7 @@ class moduleVisitor(ASTVisitor):
 
             itervar = self.tempvar((node,1), func)
             #print 'itervar', itervar
-            register_tempvar(itervar, func)
+            #register_tempvar(itervar, func)
             self.addconstraint((inode(get_iter), inode(itervar)), func)
 
             xvar = self.tempvar(node.list, func)
@@ -939,6 +941,7 @@ class moduleVisitor(ASTVisitor):
                     lvar = self.tempvar((assign,1), lcfunc)
                 else:
                     lvar = defaultvar(assign.name, lcfunc) # XXX str or Name?
+                #register_tempvar(lvar, func) 
                 self.addconstraint((inode(assign), inode(lvar)), lcfunc)
             else: # AssTuple, AssList
                 self.tuple_flow(assign, assign, lcfunc)
