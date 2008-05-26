@@ -40,7 +40,7 @@ class generateVisitor(ASTVisitor):
                 pairs = []
                 done = set()
                 for (node, name) in self.consts.items():
-                    if not name in done and self.mergeinh[node]:
+                    if not name in done and node in self.mergeinh and self.mergeinh[node]:
                         ts = typesetreprnew(node, inode(node).parent)
                         if declare: ts = 'extern '+ts
                         pairs.append((ts, name))
@@ -393,12 +393,18 @@ class generateVisitor(ASTVisitor):
         for (listcomp,lcfunc,func) in getmv().listcomps:
             self.listcomps[listcomp] = (lcfunc, func)
         for (listcomp,lcfunc,func) in getmv().listcomps: # XXX cleanup
-            parent = func
-            while isinstance(parent, function) and parent.listcomp: parent = parent.parent
-            if isinstance(parent, function) and not parent.cp:
+            if lcfunc.mv.module.builtin:
                 continue
-            if not func or not func.mv.module.builtin: # not in getgx().builtin_funcs:
-                self.listcomp_func(listcomp)
+
+            parent = func
+            while isinstance(parent, function) and parent.listcomp: 
+                parent = parent.parent
+
+            if isinstance(parent, function):
+                if not self.inhcpa(parent) or parent.inherited:
+                    continue
+
+            self.listcomp_func(listcomp)
 
         # --- lambdas
         for l in getmv().lambdas.values():
