@@ -93,7 +93,7 @@ class network:
         for node in set([1]): 
             print node
 
-        #print [node for node in [1]]
+        print [node for node in [1]]
 
 class smallworld(network):
     pass
