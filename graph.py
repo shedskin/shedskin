@@ -941,7 +941,7 @@ class moduleVisitor(ASTVisitor):
                     lvar = self.tempvar((assign,1), lcfunc)
                 else:
                     lvar = defaultvar(assign.name, lcfunc) # XXX str or Name?
-                #register_tempvar(lvar, func) 
+                register_tempvar(lvar, func) 
                 self.addconstraint((inode(assign), inode(lvar)), lcfunc)
             else: # AssTuple, AssList
                 self.tuple_flow(assign, assign, lcfunc)

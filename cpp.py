@@ -64,7 +64,7 @@ class generateVisitor(ASTVisitor):
                 todolist = todo.keys()
                 todolist.sort()
                 for number in todolist:
-                    if todo[number] in self.mergeinh and self.mergeinh[todo[number]]: # XXX
+                    if self.mergeinh[todo[number]]: # XXX
                         name = 'const_'+str(number)
                         self.start('    '+name+' = ')
                         self.visit(todo[number], inode(todo[number]).parent)
@@ -197,16 +197,16 @@ class generateVisitor(ASTVisitor):
             if isinstance(callfunc.node, Getattr) and callfunc.node.attrname in ['__ne__', '__eq__', '__contains__']:
                 for node in [callfunc.node.expr, callfunc.args[0]]:
                     if self.constant_constructor(node):
-                        self.consts[node] = self.get_constant(node)
+                        self.get_constant(node)
 
         for node in getmv().for_in_iters:
             if self.constant_constructor(node):
-                self.consts[node] = self.get_constant(node)
+                self.get_constant(node)
 
         for node in self.mergeinh:
             if isinstance(node, Subscript):
                 if self.constant_constructor(node.expr):
-                    self.consts[node.expr] = self.get_constant(node.expr)
+                    self.get_constant(node.expr)
 
         #for node in self.mergeinh:
         #    if isinstance(node, (Mul, Add)): # XXX extend, arbitrary methods on constructor? (getitem, find..)
@@ -215,15 +215,19 @@ class generateVisitor(ASTVisitor):
         #                self.consts[child] = self.get_constant(child)
 
     def get_constant(self, node):
+        parent = inode(node).parent
+        while isinstance(parent, function) and parent.listcomp: # XXX
+            parent = parent.parent
+        if isinstance(parent, function) and parent.inherited:
+            return
+
         for other in self.consts:
             if node is other or self.equal_constructor_rec(node, other):
                 return self.consts[other]
         
         self.consts[node] = 'const_'+str(self.constant_nr)
-#        print 'wof', node
-#        traceback.print_stack()
-
         self.constant_nr += 1
+
         return self.consts[node]
     
     def equal_constructor_rec(self, a, b):
