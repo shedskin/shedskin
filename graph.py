@@ -963,7 +963,7 @@ class moduleVisitor(ASTVisitor):
                 itervar = self.tempvar((qual,1), lcfunc)
                 self.addconstraint((inode(get_iter), inode(itervar)), lcfunc)
 
-                xvar = self.tempvar(qual) 
+                xvar = self.tempvar(qual, lcfunc) 
                 getgx().types[inode(xvar)] = set([(defclass('int_'),0)])
                 inode(xvar).copymetoo = True
 

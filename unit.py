@@ -91,9 +91,9 @@ l.sort(cmp=mut, reverse=True); print l
 class network:
     def shortestpath(self):
         for node in set([1]): 
-            pass
+            print node
 
-        #hup = [node for node in [1]]
+        #print [node for node in [1]]
 
 class smallworld(network):
     pass
