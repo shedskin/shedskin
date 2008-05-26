@@ -520,6 +520,7 @@ def merged(nodes, dcpa=False, inheritance=False):
                 var = node.thing
 
                 for inhfunc in getgx().inheritance_relations.get(var.parent, []):
+
                     if var.name in inhfunc.vars:
                         if inhfunc.vars[var.name] in mergenoinh: 
                             merge.setdefault(sort, set()).update(mergenoinh[inhfunc.vars[var.name]])
