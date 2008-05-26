@@ -88,6 +88,7 @@ class variable:
         self.imported = False
         self.initexpr = None
         self.filter = set()                # filters: x.append(..) means that x can only be of a class that has 'append'
+        self.registered = False
 
     def types(self):
         return inode(self).types()
@@ -353,7 +354,15 @@ def lookupvar(name, parent):
     return defvar(name, parent, False)
 
 def defaultvar(name, parent, worklist=None, template_var=False):
-    return defvar(name, parent, True, worklist, template_var)
+    var = defvar(name, parent, True, worklist, template_var)
+
+    if isinstance(parent, function) and parent.listcomp and not var.registered:
+        while isinstance(parent, function) and parent.listcomp: # XXX
+            parent = parent.parent
+        if isinstance(parent, function):
+            register_tempvar(var, parent)
+
+    return var
 
 def defvar(name, parent, local, worklist=None, template_var=False):
     if parent and name in parent.vars:
@@ -705,3 +714,8 @@ def parent_func(thing):
 
     return None
 
+def register_tempvar(var, func): 
+    #print 'register tvar', var, func
+    if func:
+        func.registered_tempvars.append(var)
+        
