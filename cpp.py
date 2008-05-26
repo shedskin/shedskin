@@ -40,7 +40,7 @@ class generateVisitor(ASTVisitor):
                 pairs = []
                 done = set()
                 for (node, name) in self.consts.items():
-                    if not name in done and node in self.mergeinh and self.mergeinh[node]:
+                    if not name in done and node in self.mergeinh and self.mergeinh[node]: # XXX
                         ts = typesetreprnew(node, inode(node).parent)
                         if declare: ts = 'extern '+ts
                         pairs.append((ts, name))
@@ -64,7 +64,7 @@ class generateVisitor(ASTVisitor):
                 todolist = todo.keys()
                 todolist.sort()
                 for number in todolist:
-                    if self.mergeinh[todo[number]]:
+                    if todo[number] in self.mergeinh and self.mergeinh[todo[number]]: # XXX
                         name = 'const_'+str(number)
                         self.start('    '+name+' = ')
                         self.visit(todo[number], inode(todo[number]).parent)
