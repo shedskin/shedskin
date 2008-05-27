@@ -18,8 +18,6 @@
 typedef long tv_sec_type;
 typedef long tv_usec_type;
 
-//winsock docs state that the hostname will always be 256 or less
-#define HOST_NAME_MAX 256
 
 #define ERRNO WSAGetLastError()
 
@@ -39,6 +37,10 @@ typedef time_t tv_sec_type;
 typedef suseconds_t tv_usec_type;
 
 #endif /* WIN32 */
+
+#ifndef HOST_NAME_MAX
+#define HOST_NAME_MAX 256
+#endif
 
 #include <sstream>
 
@@ -87,7 +89,9 @@ int __ss_AF_UNIX = AF_UNIX;
 int __ss_SOCK_STREAM = SOCK_STREAM;
 int __ss_SOCK_DGRAM = SOCK_DGRAM;
 #ifndef WIN32
+#ifndef __APPLE__
 int __ss_SOL_IP = SOL_IP;
+#endif
 int __ss_IP_TOS = IP_TOS;
 int __ss_IP_TTL = IP_TTL;
 #endif
