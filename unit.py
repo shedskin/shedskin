@@ -113,6 +113,10 @@ class BootStrapLoader(LowLevel):
 bsl = BootStrapLoader()
 bsl.actionRun()
 
+# test compilation
+import socket
+import stat
+
 ''', '''
 output(equal=True)
 
