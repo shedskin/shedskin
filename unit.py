@@ -101,6 +101,18 @@ class smallworld(network):
 s = smallworld() 
 s.shortestpath()
 
+# ss-progs regression
+class LowLevel:
+   def bslTxRx(self, blkout=None):
+       pass
+
+class BootStrapLoader(LowLevel):
+   def actionRun(self):
+       self.bslTxRx()
+
+bsl = BootStrapLoader()
+bsl.actionRun()
+
 ''', '''
 output(equal=True)
 
