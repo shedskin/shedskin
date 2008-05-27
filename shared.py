@@ -511,8 +511,7 @@ def merged(nodes, dcpa=False, inheritance=False):
 
     if inheritance: # XXX do we really need this crap
         mergeinh = merged([n for n in nodes if n.thing in getgx().inherited])
-        nodes = [n for n in nodes if not n.thing in getgx().inherited] 
-        mergenoinh = merged(nodes)
+        mergenoinh = merged([n for n in nodes if not n.thing in getgx().inherited]) 
 
     for node in nodes:
         # --- merge node types
@@ -541,7 +540,7 @@ def merged(nodes, dcpa=False, inheritance=False):
             # node is not a function variable
             else:
                 for n in inh:
-                    if n in mergeinh: # XXX
+                    if n in mergeinh: # XXX ook mergenoinh?
                         merge.setdefault(sort, set()).update(mergeinh[n]) 
 
     return merge
