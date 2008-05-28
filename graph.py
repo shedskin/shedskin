@@ -432,11 +432,7 @@ class moduleVisitor(ASTVisitor):
                 self.visit(child, func)
 
         for default in func.defaults:
-            if isinstance(default, (UnarySub, UnaryAdd)) and isinstance(default.expr, Const) and isinstance(default.expr.value, (int, float)): # XXX merge
-                pass
-            elif isinstance(default, Const) and isinstance(default.value, (int, float)):
-                pass
-            else:
+            if not const_literal(default):
                 self.defaults[default] = len(self.defaults)
 
             if func.mv.module.builtin:
@@ -863,11 +859,9 @@ class moduleVisitor(ASTVisitor):
             evar = self.tempvar(node.list, func) # expr var
             self.addconstraint((inode(node.list.args[0]), inode(evar)), func)
 
-           # print 'ff', ivar, evar
-
-            if len(node.list.args) == 3 and not isinstance(node.list.args[2], (Const, UnarySub, UnaryAdd, Name)): # XXX merge with ListComp
+            if len(node.list.args) == 3 and not isinstance(node.list.args[2], Name) and not const_literal(node.list.args[2]): # XXX merge with ListComp
                 for arg in node.list.args:
-                    if not isinstance(arg, (Const, UnarySub, UnaryAdd, Name)): # XXX create func for better check
+                    if not isinstance(arg, Name) and not const_literal(arg): # XXX create func for better check
                         tvar = self.tempvar(arg, func)
                         self.addconstraint((inode(arg), inode(tvar)), func)
 
@@ -953,9 +947,9 @@ class moduleVisitor(ASTVisitor):
                 evar = self.tempvar(qual.list, lcfunc) # expr var
                 self.addconstraint((inode(qual.list.args[0]), inode(evar)), lcfunc)
 
-                if len(qual.list.args) == 3 and not isinstance(qual.list.args[2], (Const, UnarySub, UnaryAdd, Name)): # XXX merge with ListComp
+                if len(qual.list.args) == 3 and not isinstance(qual.list.args[2], Name) and not const_literal(qual.list.args[2]): # XXX merge with ListComp
                     for arg in qual.list.args:
-                        if not isinstance(arg, (Const, UnarySub, UnaryAdd, Name)): # XXX create func for better check
+                        if not isinstance(arg, Name) and not const_literal(arg): # XXX create func for better check
                             tvar = self.tempvar(arg, lcfunc)
                             self.addconstraint((inode(arg), inode(tvar)), lcfunc)
 
