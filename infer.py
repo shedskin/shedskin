@@ -767,6 +767,9 @@ def iterative_dataflow_analysis():
 
     while True:
         getgx().iterations += 1
+        if getgx().avoid_loops and getgx().iterations > 30:
+            print '\n*WARNING* reached maximum number of iterations, aborting'
+            break
         # --- propagate using cartesian product algorithm
 
         getgx().new_alloc_info = {}
