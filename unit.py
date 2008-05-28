@@ -53,11 +53,11 @@ print random.sample(set([1]), 1)
 print [(i, i) for i in range(29, -1, -1)]
 
 #works, but add as test
-def a():
+def ah():
    pass
-def b(func=a):
+def bh(func=ah):
    func()
-b()
+bh()
 
 # sorted, list.sort: cmp and reverse args 
 def mut(a,b):
@@ -116,6 +116,38 @@ bsl.actionRun()
 # test compilation
 import socket
 import stat
+
+# test all cases
+a = 1
+
+print [x for x in range(1,10,1)]
+print [x for x in range(10,1,-1)]
+print [x for x in range(1,10,+1)]
+print [x for x in range(1,10,a)]
+print [x for x in range(10,1,-a)]
+print [x for x in range(1,10,+a)]
+print [x for x in range(1,10,a*1)]
+print [x for x in range(1,10,-(-1))]
+print [x for x in range(1,10,+(+a))]
+
+for x in range(1,10,1): print x,
+print
+for x in range(1,10,+1): print x,
+print
+for x in range(1,10,a): print x,
+print
+for x in range(1,10,+a): print x,
+print
+for x in range(1,10,-(-1)): print x,
+print
+for x in range(1,10,+(+1)): print x,
+print
+for x in range(1,10,+(+a)): print x,
+print
+for x in range(10,1,-1): print x,
+print
+for x in range(10,1,-a): print x,
+print
 
 ''', '''
 output(equal=True)

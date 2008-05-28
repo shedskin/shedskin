@@ -1090,7 +1090,7 @@ class generateVisitor(ASTVisitor):
 
         # --- for i in range(..) -> for( i=l, u=expr; i < u; i++ ) .. 
         if fastfor(node):
-            if len(node.list.args) == 3 and not isinstance(node.list.args[2], (Const, UnarySub, UnaryAdd)): # XXX unarysub
+            if len(node.list.args) == 3 and not const_literal(node.list.args[2]):
                 self.fastfor_switch(node, func)
                 self.indent()
                 self.fastfor(node, assname, '', func)
@@ -1104,7 +1104,7 @@ class generateVisitor(ASTVisitor):
                 self.output('}')
             else:
                 neg=''
-                if len(node.list.args) == 3 and isinstance(node.list.args[2], (UnarySub, UnaryAdd)): # XXX and const
+                if len(node.list.args) == 3 and const_literal(node.list.args[2]) and isinstance(node.list.args[2], UnarySub):
                     neg = '_NEG'
 
                 self.fastfor(node, assname, neg, func)
@@ -1787,16 +1787,20 @@ class generateVisitor(ASTVisitor):
             self.visit(node, func)
 
     def visitUnarySub(self, node, func=None):
+        self.visitm('(', func)
         if unboxable(self.mergeinh[node.expr]):
             self.visitm('-', node.expr, func)
         else:
             self.visitCallFunc(inode(node.expr).fakefunc, func)
+        self.visitm(')', func)
 
     def visitUnaryAdd(self, node, func=None):
+        self.visitm('(', func)
         if unboxable(self.mergeinh[node.expr]):
             self.visitm('+', node.expr, func)
         else:
             self.visitCallFunc(inode(node.expr).fakefunc, func)
+        self.visitm(')', func)
 
     def refer(self, node, func, visit2=False):
         if isinstance(node, str):
@@ -1930,19 +1934,7 @@ class generateVisitor(ASTVisitor):
         # --- arguments 
         target = funcs[0] # XXX
 
-        # --- casting:
-        """if target.returnexpr and not (target.formals and target.vars[target.formals[0]].parametric) and self.typestr(target.returnexpr[-1]) != self.typestr(node): # XXX cleanup & use more often
-                cast = self.typestr(node)
-                self.append('(('+cast+')(')"""
-
-
-#        if not target.mv.module.builtin:
-#            for default in target.defaults: # default constant arguments (are global!)
-#                if not isinstance(default, (UnarySub, UnaryAdd, Const)) and not (isinstance(default, Name) and default.name == 'None'):
-#                    self.get_constant(default)
-
         for f in funcs:
-            #print 'sig', f.formals, f.varargs
             if len(f.formals) != len(target.formals) or (f.varargs and not target.varargs) or (not f.varargs and target.varargs): # incompatible signatures XXX fix function headers to cope
                 error('incompatible target signatures', node, warning=True)
                 self.append(')')
@@ -1953,7 +1945,6 @@ class generateVisitor(ASTVisitor):
             return
 
         if target.mv.module.builtin and target.mv.module.ident == 'path' and ident=='join': # XXX
-        #if ident == 'join' and not method_call:
             pairs = [(arg, target.formals[0]) for arg in node.args]
             self.append('%d, ' % len(node.args))
         elif ident in ['max','min']: 
@@ -2326,7 +2317,7 @@ class generateVisitor(ASTVisitor):
 
         # for in
         if fastfor(qual):
-            if len(qual.list.args) == 3 and not isinstance(qual.list.args[2], (Const, UnarySub, UnaryAdd)): # XXX unarysub
+            if len(qual.list.args) == 3 and not const_literal(qual.list.args[2]):
                 self.fastfor_switch(qual, lcfunc)
                 self.indent()
                 self.fastfor(qual, iter, '', lcfunc)
@@ -2340,7 +2331,7 @@ class generateVisitor(ASTVisitor):
                 self.output('}')
             else:
                 neg=''
-                if len(qual.list.args) == 3 and isinstance(qual.list.args[2], (UnarySub, UnaryAdd)): # XXX and const
+                if len(qual.list.args) == 3 and const_literal(qual.list.args[2]) and isinstance(qual.list.args[2], UnarySub): 
                     neg = '_NEG'
                 self.fastfor(qual, iter, neg, lcfunc)
                 self.listcompfor_body(node, quals, iter, lcfunc)

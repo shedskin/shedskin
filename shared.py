@@ -718,3 +718,8 @@ def register_tempvar(var, func):
     if func:
         func.registered_tempvars.append(var)
         
+def const_literal(node):
+    if isinstance(node, (UnarySub, UnaryAdd)):
+        node = node.expr
+    return isinstance(node, Const) and isinstance(node.value, (int, float))
+
