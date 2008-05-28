@@ -1,8 +1,8 @@
 Shed Skin Tutorial
 ==================
 
-:Version: Shed Skin 0.0.27
-:Date: Feb. 19, 2008
+:Version: Shed Skin 0.0.28
+:Date: June 1, 2008
 :Authors: Mark Dufour and James Coughlan
 
 .. _Parallel Python: http://www.parallelpython.com/
@@ -136,37 +136,55 @@ In general, programs can only import functionality that is defined in the **Shed
   - getopt
   - glob
   - math
-  - os (partially)
+  - os 
   - os.path 
   - random
   - re
+  - socket 
   - string
-  - sys (partially, but including argv, exit, stdin etc.)
+  - sys 
   - time 
 
-For version **0.1** of **Shed Skin**, support for at least ``datetime`` and ``socket`` is planned, as well as complete support for ``os``. (See `How to help out in Shed Skin Development`_ if you'd like to help improve support for these or other modules.)
+For version **0.1** of **Shed Skin**, support for at least ``datetime`` support is planned, as well as complete support for ``os``. (See `How to help out in Shed Skin Development`_ if you'd like to help improve support for these or other modules.)
 
 .. _Installation:
 
 Installation
 ------------
 
-The latest version of Shed Skin can be downloaded from the `Googlecode site`_. There are three types of packages available: a self-extracting Windows installer, a **Debian** package, and a UNIX source package. 
+The latest version of **Shed Skin** can be downloaded from the `Googlecode site`_. There are three types of packages available: a self-extracting **Windows** installer, a **Debian** package, and a UNIX source package. 
 
-To install the Windows version, simply download and start it. (If you use ActivePython, please deinstall it first, and install the regular Python distribution.)
+To install the **Windows** version, simply download and start it. (If you use ActivePython or some other non-standard Python distribution,, please deinstall it first.)
 
 To install the **Debian** package, simply download and install it using your package manager. 
 
-To install the UNIX source package, take the following steps:
+To install the UNIX source package on a **GNU/Linux** system, take the following steps:
 
  - download and unpack it
+
  - install the Boehm garbage collector; on a **Debian** system this is simply:
     
    ``sudo apt-get install libgc-dev``
 
- - install the PCRE library; on a **Debian** system this is simply:
+ - install the PCRE library (optional, if you want to use ``re``, ``glob`` or ``fnmatch``); on a **Debian** system this is simply:
 
    ``sudo apt-get install libpcre3-dev``
+
+ - run ``python setup.py`` and place the generated ``shedskin`` file in your path 
+
+To install the UNIX source package on an **OSX** system, take the following steps:
+
+ - download and unpack it
+
+ - install the XCode development environment
+
+ - install the Boehm garbage collector; without a package manager, download the source package and run: 
+    
+   ``./configure && sudo make install``
+
+ - install the PCRE library (optional, if you want to use ``re``, ``glob`` or ``fnmatch``); without a package manager, download the source package and run: 
+
+   ``./configure && sudo make install``
 
  - run ``python setup.py`` and place the generated ``shedskin`` file in your path 
 
@@ -175,7 +193,7 @@ To install the UNIX source package, take the following steps:
 Compiling and Running a Stand-Alone Program
 -------------------------------------------
 
-To use **Shed Skin** under Windows, first execute (double-click) the ``init.bat`` file in the ``shedskin-0.0.27`` directory, relative to where you installed it.  A command-line window will appear, with the current directory set to the ``shedskin-0.0.27\shedskin`` directory (hereafter referred to as the *Shed Skin working directory*).
+To use **Shed Skin** under Windows, first execute (double-click) the ``init.bat`` file in the ``shedskin-0.0.28`` directory, relative to where you installed it.  A command-line window will appear, with the current directory set to the ``shedskin-0.0.28\shedskin`` directory (hereafter referred to as the *Shed Skin working directory*).
 
 Suppose we have defined a simple test program, called ``test.py``: ::
 
@@ -506,13 +524,11 @@ The following activities are planned for future versions of **Shed Skin**:
 
 **0.1** (6-12 months from now)
 
-* Add complete support for the ``datetime`` and ``socket`` modules, and all modules mentioned in `Library Limitations`_.
+* Add complete support for the ``datetime`` module, and all modules mentioned in `Library Limitations`_.
 
 * Improve the type inference techniques with at least *iterative deepening* and basic selector-based *filters*.
 
 * Compile at least one program of around 3,000 lines, for example `Quameon`_.  
-
-* Split up the compiler core.
 
 **0.2** (12-24 months from now)
 
