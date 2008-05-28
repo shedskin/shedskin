@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# *** SHED SKIN Python-to-C++ Compiler 0.0.27 ***
+# *** SHED SKIN Python-to-C++ Compiler 0.0.28 ***
 # Copyright 2005-2008 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 
 from compiler import *
@@ -393,7 +393,7 @@ def main():
     gx = newgx()
     setgx(gx)
 
-    print '*** SHED SKIN Python-to-C++ Compiler 0.0.27 ***'
+    print '*** SHED SKIN Python-to-C++ Compiler 0.0.28 ***'
     print 'Copyright 2005-2008 Mark Dufour; License GNU GPL version 3 (See LICENSE)'
     print '(Please send bug reports here: mark.dufour@gmail.com)'
     print
