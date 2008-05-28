@@ -6,7 +6,7 @@ import traceback, sys, os, time
 
 tests = [
 
-('''fixes for 0.0.28''', '''
+('''fixes for 0.0.28; socket''', '''
 #time.strptime
 import time
 print time.strftime("%d %b %Y %H:%M:%S", time.strptime("2001-11-12 18:31:01", "%Y-%m-%d %H:%M:%S")) 
