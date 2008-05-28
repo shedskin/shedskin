@@ -377,7 +377,7 @@ def generate_code():
     makefile.close()
 
 def usage():
-    print """Usage: ss.py [OPTION]... FILE
+    print """Usage: shedskin [OPTION]... FILE
 
  -a --noann             Don't output annotated source code
  -b --bounds            Enable bounds checking
