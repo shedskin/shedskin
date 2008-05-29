@@ -1237,7 +1237,7 @@ class generateVisitor(ASTVisitor):
         if func.ftypes:
             #print 'cast', oldftypes, formals, ftypes
 
-            for i in range(len(oldftypes)): # XXX this is 'cast on specialize'.. how about generalization?
+            for i in range(min(len(oldftypes), len(ftypes))): # XXX this is 'cast on specialize'.. how about generalization?
                 if oldftypes[i] != ftypes[i]:
                     #print 'cast!', oldftypes[i], ftypes[i+1]
                     casts.append(oldftypes[i]+formals[i]+' = ('+oldftypes[i]+')__'+formals[i]+';')
@@ -1935,8 +1935,8 @@ class generateVisitor(ASTVisitor):
         target = funcs[0] # XXX
 
         for f in funcs:
-            if len(f.formals) != len(target.formals) or (f.varargs and not target.varargs) or (not f.varargs and target.varargs): # incompatible signatures XXX fix function headers to cope
-                error('incompatible target signatures', node, warning=True)
+            if len(f.formals) != len(target.formals) or (f.varargs and not target.varargs) or (not f.varargs and target.varargs): # incompatible signatures 
+                error('calling functions with different numbers of arguments', node, warning=True)
                 self.append(')')
                 return
 
