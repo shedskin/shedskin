@@ -1640,6 +1640,9 @@ template<class T> set<T>::set(int frozen) {
 }
 
 #ifdef __SS_BIND
+#if (PY_MAJOR_VERSION == 2)
+#if (PY_MINOR_VERSION > 4)
+
 template<class T> set<T>::set(PyObject *p) {
     if(PyTuple_Check(p) || PyList_Check(p) || PyDict_Check(p) || PyInt_Check(p) || PyFloat_Check(p) || PyString_Check(p)) // XXX
         throw new TypeError(new str("error in conversion to Shed Skin (set expected)"));
@@ -1659,6 +1662,9 @@ template<class T> PyObject *set<T>::__to_py__() {
         PyObject_CallMethod(p, "add", "O", __to_py(*it1));
     return p;
 }
+
+#endif
+#endif
 #endif
 
 template<class T> set<T>::set(pyiter<T> *p, int frozen) {
