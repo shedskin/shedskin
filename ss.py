@@ -404,9 +404,18 @@ def main():
     print 'Copyright 2005-2008 Mark Dufour; License GNU GPL version 3 (See LICENSE)'
     print '(Please send bug reports here: mark.dufour@gmail.com)'
     print
-
     
-    # --- parse command-line options
+    # --- some checks
+    major, minor = sys.version_info[:2]
+    if major != 2 or minor < 3:
+        print '*ERROR* Shed Skin is not compatible with this version of Python'
+        sys.exit()
+
+    if sys.platform == 'win32' and os.path.isdir('c:/mingw'):
+        print '*ERROR* please rename or remove c:/mingw, as it conflicts with Shed Skin'
+        sys.exit()
+
+    # --- command-line options
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'eibnfad:', ['infinite', 'extmod', 'bounds', 'nowrap', 'flags=', 'dir='])
     except getopt.GetoptError:
@@ -425,11 +434,6 @@ def main():
                 sys.exit()
             getgx().flags = a
         if o in ['-n', '--nowrap']: getgx().wrap_around_check = False
-
-    major, minor = sys.version_info[:2]
-    if major != 2 or minor < 3:
-        print "*ERROR* use Python version 2.3 to 2.6"
-        sys.exit()
 
     # --- argument
     if len(args) != 1:
