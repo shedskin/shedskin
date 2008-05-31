@@ -286,16 +286,17 @@ def generate_code():
 
     ident = getgx().main_module.ident 
 
-    if sys.platform == 'win32':
-        pyver = '%d%d' % sys.version_info[:2]
-    else:
+    pyver = sysconfig.get_config_var('VERSION')
+
+    if sys.platform != 'win32':
         includes = '-I' + sysconfig.get_python_inc() + ' ' + \
                    '-I' + sysconfig.get_python_inc(plat_specific=True)
 
         ldflags = sysconfig.get_config_var('LIBS') + ' ' + \
-                  sysconfig.get_config_var('SYSLIBS') + ' '
+                  sysconfig.get_config_var('SYSLIBS') + ' ' + \
+                  '-lpython'+pyver 
         if not sysconfig.get_config_var('Py_ENABLE_SHARED'):
-            ldflags += '-L' + sysconfig.get_config_var('LIBPL')
+            ldflags += ' -L' + sysconfig.get_config_var('LIBPL')
 
     if getgx().extension_module: 
         if sys.platform == 'win32': ident += '.pyd'
