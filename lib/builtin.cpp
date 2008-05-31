@@ -1684,7 +1684,7 @@ template<> int __mods(int a, int b) {
 #ifdef __SS_BIND
 PyObject *__import(char *mod, char *method) {
     PyObject *m = PyImport_ImportModule(mod);
-    PyObject *d = PyObject_GetAttrString(m, "__dict__");
+    PyObject *d = PyObject_GetAttrString(m, (char *)"__dict__");
     return PyDict_GetItemString(d, method);
 }
 

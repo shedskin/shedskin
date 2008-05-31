@@ -534,7 +534,7 @@ class generateVisitor(ASTVisitor):
 
                 print >>self.out, 'static PyMethodDef %sMethods[] = {' % self.module.ident
                 for func in funcs:
-                    print >>self.out, '    {"%(id)s", %(id2)s, METH_VARARGS, ""},' % {'id': func.ident, 'id2': self.cpp_name(func.ident)}
+                    print >>self.out, '    {(char *)"%(id)s", %(id2)s, METH_VARARGS, (char *)""},' % {'id': func.ident, 'id2': self.cpp_name(func.ident)}
                 print >>self.out, '    {NULL, NULL, 0, NULL}        /* Sentinel */\n};\n'
 
             if getgx().extension_module:
@@ -572,13 +572,13 @@ class generateVisitor(ASTVisitor):
 
             print >>self.out, '    __'+self.module.ident+'__::__init();'
             if getgx().extension_module:
-                print >>self.out, '\n    PyObject *mod = Py_InitModule("%s", %sMethods);\n' % (self.module.ident, self.module.ident)
+                print >>self.out, '\n    PyObject *mod = Py_InitModule((char *)"%s", %sMethods);\n' % (self.module.ident, self.module.ident)
                 for var in vars:
                     varname = self.cpp_name(var.name)
                     if [1 for t in self.mergeinh[var] if t[0].ident in ['int_', 'float_']]:
-                        print >>self.out, '    PyModule_AddObject(mod, "%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+self.module.ident+'__::'+varname}
+                        print >>self.out, '    PyModule_AddObject(mod, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+self.module.ident+'__::'+varname}
                     else:
-                        print >>self.out, '    if(%(var)s) PyModule_AddObject(mod, "%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+self.module.ident+'__::'+varname}
+                        print >>self.out, '    if(%(var)s) PyModule_AddObject(mod, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+self.module.ident+'__::'+varname}
 
                 print >>self.out
             else:
