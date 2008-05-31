@@ -13,6 +13,7 @@ from cpp import *
 from infer import *
 
 import sys, string, copy, getopt, os.path, textwrap, traceback
+from distutils import sysconfig
 
 from backward import *
 
@@ -288,8 +289,13 @@ def generate_code():
     if sys.platform == 'win32':
         pyver = '%d%d' % sys.version_info[:2]
     else:
-        includes = os.popen4('python-config --includes')[1].read().strip()
-        ldflags = os.popen4('python-config --ldflags')[1].read().strip()
+        includes = '-I' + sysconfig.get_python_inc() + ' ' + \
+                   '-I' + sysconfig.get_python_inc(plat_specific=True)
+
+        ldflags = sysconfig.get_config_var('LIBS') + ' ' + \
+                  sysconfig.get_config_var('SYSLIBS') + ' '
+        if not sysconfig.get_config_var('Py_ENABLE_SHARED'):
+            ldflags += '-L' + sysconfig.get_config_var('LIBPL')
 
     if getgx().extension_module: 
         if sys.platform == 'win32': ident += '.pyd'
