@@ -20,7 +20,7 @@ Shed Skin Tutorial
 Purpose of this Tutorial
 ------------------------
 
-This tutorial is designed to get you up and running with **Shed Skin**, and provides an overview of how to use it to compile and run standalone programs and modules callable from standard Python code. 
+This tutorial is designed to get you up and running with **Shed Skin**, and provides an overview of how to use it to compile and run standalone programs and modules callable from regular Python code. 
 
 .. _Introduction:
 
@@ -29,7 +29,7 @@ Introduction
 
 **Shed Skin** is an *experimental* **Python-to-C++ compiler** designed to speed up the execution of Python programs. It converts programs written in a *static subset* of Python to C++. The C++ code can be compiled to executable code, which can be run either as a standalone program or as a module easily imported and called from Python. 
 
-**Shed Skin** uses type inference techniques to determine the *implicit* types used in a Python program, in order to generate the *explicit* type declarations needed in a C++ version. Because C++ is *statically typed*, Shed Skin requires Python code to be written such that all variables are (implicitly) statically typed.
+**Shed Skin** uses type inference techniques to determine the *implicit* types used in a Python program, in order to generate the *explicit* type declarations needed in a C++ version. Because C++ is *statically typed*, **Shed Skin** requires Python code to be written such that all variables are (implicitly) statically typed.
 
 Besides the *typing* and *subset* restrictions, supported programs cannot freely use the Python standard library, although the most common modules are supported, such as ``math`` and ``random`` (see `Library Limitations`_). 
 
@@ -154,7 +154,7 @@ Installation
 
 The latest version of **Shed Skin** can be downloaded from the `Googlecode site`_. There are three types of packages available: a self-extracting **Windows** installer, a **Debian** package, and a UNIX source package. 
 
-To install the **Windows** version, simply download and start it. (If you use ActivePython or some other non-standard Python distribution,, please deinstall it first.)
+To install the **Windows** version, simply download and start it. (If you use ActivePython or some other non-standard Python distribution, please deinstall it first.)
 
 To install the **Debian** package, simply download and install it using your package manager. 
 
@@ -176,7 +176,7 @@ To install the UNIX source package on an **OSX** system, take the following step
 
  - download and unpack it
 
- - install the XCode development environment
+ - install the Apple XCode development environment
 
  - install the Boehm garbage collector; without a package manager, download the source package and run: 
     
@@ -217,16 +217,16 @@ To only build, but not run the executable file, omit the ``run`` part: ::
 
     make
 
-For the executable file to execute properly under Windows, note that ``gc.dll`` and ``libpcre-0.dll`` (located in the Shed Skin working directory) must be located somewhere in the Windows path. This happens automatically when running ``init.bat``. 
+For the executable file to execute properly under Windows, note that ``gc.dll`` and ``libpcre-0.dll`` (located in the **Shed Skin** working directory) must be located somewhere in the Windows path. This happens automatically when running ``init.bat``. 
 
-As Shed Skin is still an *experimental* project and contains bugs, it is recommended that you test and debug programs thoroughly with the regular Python interpreter (**CPython**), before compiling them with **Shed Skin**. Discrepancies between **CPython** and **Shed Skin** versions should be reported as possible bugs to ``mark.dufour@gmail.com``. 
+As **Shed Skin** is still an *experimental* project and contains bugs, it is recommended that you test and debug programs thoroughly with the regular Python interpreter (**CPython**), before compiling them with **Shed Skin**. Discrepancies between **CPython** and **Shed Skin** versions should be reported as possible bugs to ``mark.dufour@gmail.com``. 
 
 .. _Compiling an Extension Module:
 
 Compiling an Extension Module
 -----------------------------
 
-The ability to build extension modules is useful since it permits the use of standard, unrestricted Python code (including all libraries and the use of any standard Python programming techniques, including dynamic typing) in the main program, while still allowing the speedup of compiling the speed-critical parts by **Shed Skin**.
+The ability to build extension modules is useful since it permits the use of standard, unrestricted Python code (including all libraries and the use of any standard Python programming techniques, including dynamic typing) in the main program, while still allowing the speedup of compiling the speed-critical parts with **Shed Skin**.
 
 **Simple Example**
 
@@ -271,7 +271,7 @@ Note that calling ``func1`` with a non-integer argument causes an error: ::
         func1(10.5)
     TypeError: error in conversion to Shed Skin (integer expected)
 
-This error would not arise in standard Python, but arises with Shed Skin since it infers *specific* argument types for each function, based on how it is called in the module.
+This error would not arise in standard Python, but arises with **Shed Skin** since it infers *specific* argument types for each function, based on how it is called in the module.
  
 It is useful to know which version of the module you are importing: either the **Shed Skin** version (``simple_module.so`` or ``simple_module.pyd``) or the original Python version (``simple_module.py`` or ``simple_module.pyc``). One way to determine this, is to include the following code in the top of the module: ::
 
@@ -424,11 +424,13 @@ Command-line Options
 
 The ``shedskin`` command has the following options: ::
 
-    -b --bounds             Enable bounds checking 
-    -e --extmod             Generate extension module
-    -f --flags              Provide alternative Makefile flags
-    -n --nowrap             Disable wrap-around checking
-    -i --infinite           Try to avoid infinite analysis time
+    -a --noann             Don't output annotated source code
+    -b --bounds            Enable bounds checking
+    -d --dir               Specify alternate directory for output files
+    -e --extmod            Generate extension module
+    -f --flags             Provide alternate Makefile flags
+    -i --infinite          Try to avoid infinite analysis time 
+    -n --nowrap            Disable wrap-around checking 
 
 (To see an up-to-date list of these options simply type ``shedskin`` without any argument.)
 
@@ -450,9 +452,9 @@ Tips and Tricks
 
 1. When recompiling an extension module, ``make`` will fail if the ``.pyd`` or ``.so`` file can’t be overwritten. This problem may occur when using **IPython**: after importing a module, it is impossible to overwrite the ``.pyd`` or ``.so`` file as long as **IPython** is kept open.
 
-2. If you modify a module after compiling it with **Shed Skin**, you may find yourself unable to import the new version (e.g. to test it in **CPython** before recompiling with Shed Skin) until you delete the corresponding ``.pyd`` or ``.so`` file.
+2. If you modify a module after compiling it with **Shed Skin**, you may find yourself unable to import the new version (e.g. to test it in **CPython** before recompiling with **Shed Skin**) until you delete the corresponding ``.pyd`` or ``.so`` file.
  
-3. Shed Skin takes the flags it sends to the C++ compiler from the ``FLAGS`` file in the Shed Skin working directory. These flags can be overridden by creating a local file with the same name.
+3. **Shed Skin** takes the flags it sends to the C++ compiler from the ``FLAGS`` file in the **Shed Skin** working directory. These flags can be overridden by creating a local file with the same name.
 
 4. Allocating many small objects (e.g. by using ``zip``) typically does not slow down Python programs by much. However, after compilation to C++, it can quickly become a bottleneck. 
 
