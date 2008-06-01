@@ -286,9 +286,11 @@ def generate_code():
 
     ident = getgx().main_module.ident 
 
-    pyver = '%d%d' % sys.version_info[:2]
+    if sys.platform == 'win32':
+        pyver = '%d%d' % sys.version_info[:2]
+    else:
+        pyver = sysconfig.get_config_var('VERSION')
 
-    if sys.platform != 'win32':
         includes = '-I' + sysconfig.get_python_inc() + ' ' + \
                    '-I' + sysconfig.get_python_inc(plat_specific=True)
 
