@@ -413,9 +413,9 @@ def main():
         print '*ERROR* Shed Skin is not compatible with this version of Python'
         sys.exit()
 
-    if sys.platform == 'win32' and os.path.isdir('c:/mingw'):
-        print '*ERROR* please rename or remove c:/mingw, as it conflicts with Shed Skin'
-        sys.exit()
+#    if sys.platform == 'win32' and os.path.isdir('c:/mingw'):
+#        print '*ERROR* please rename or remove c:/mingw, as it conflicts with Shed Skin'
+#        sys.exit()
 
     # --- command-line options
     try:
