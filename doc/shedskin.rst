@@ -2,9 +2,9 @@
 Shedskin
 ========
 
---------------------------------------
-An experimental Python-to-C++ Compiler
---------------------------------------
+---------------------------------------------------
+An experimental (restricted) Python-to-C++ Compiler
+---------------------------------------------------
 
 :Author: mark.dufour@gmail.com
 :Date:   2008-06-01
