@@ -2,7 +2,7 @@
 This package is comprised of two parts:
 
     - the Shed Skin compiler, plus testing framework (*.py)
-    - a C++ implementation of the Python builtins and libraries (*.?pp)
+    - a C++ implementation of the Python builtins and libraries (lib/*.?pp)
 
 Concerning the Shed Skin compiler, plus testing framework (*.py):
 
@@ -682,7 +682,7 @@ Public License instead of this License.  But first, please read
 <http://www.gnu.org/philosophy/why-not-lgpl.html>.
 
 
-Concerning the C++ implementation of Python builtins and libraries (*.?pp):
+Concerning the C++ implementation of Python builtins and libraries (lib/*.?pp):
 
     Copyright (c) 2005, 2006 M. Dufour
 
