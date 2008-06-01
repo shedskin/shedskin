@@ -357,7 +357,7 @@ def generate_code():
                 else: line += ' -shared -Xlinker -export-dynamic ' + ldflags
             if 're' in [m.ident for m in mods]:
                 line += ' -lpcre'
-            if 'socket' in [m.ident for m in mods]:
+            if sys.platform == 'win32' and 'socket' in [m.ident for m in mods]:
                 line += ' -lws2_32'
 
         print >>makefile, line
