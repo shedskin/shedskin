@@ -33,13 +33,13 @@ LIMITATIONS
 OPTIONS
 =======
 
- -a --noann             Don't output annotated source code
- -b --bounds            Enable bounds checking
- -d --dir               Specify alternate directory for output files
- -e --extmod            Generate extension module
- -f --flags             Provide alternate Makefile flags
- -i --infinite          Try to avoid infinite analysis time 
- -n --nowrap            Disable wrap-around checking 
+-a, --noann             Don't output annotated source code
+-b, --bounds            Enable bounds checking
+-d, --dir               Specify alternate directory for output files
+-e, --extmod            Generate extension module
+-f, --flags             Provide alternate Makefile flags
+-i, --infinite          Try to avoid infinite analysis time 
+-n, --nowrap            Disable wrap-around checking 
 
 THANKS
 ======
