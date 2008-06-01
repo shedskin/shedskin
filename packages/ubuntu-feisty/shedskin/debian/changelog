@@ -1,3 +1,17 @@
+shedskin (0.0.28-0ubuntu1) feisty; urgency=low
+
+  * Basic 'socket' support (Michael Elkins)
+  * Support for os.{popen3, popen4} (Jaroslaw Tworek)
+  * Support for time.strptime under Windows (David Marek)
+  * Options for changing output dir, disabling annotation (Dave Tweed)
+  * Support for 'cmp' and 'reverse' arguments of 'sorted' and 'list.sort'
+  * Fixes for cross-module default arguments 
+  * Important fixes for type inference and inheritance
+  * Restore compatibility with Python 2.3
+  * Many minor bugfixes
+
+ -- Mark Dufour <mark.dufour@gmail.com>  Sun,  1 Jun 2008 10:00:00 +0100
+
 shedskin (0.0.27-0ubuntu1) feisty; urgency=low
 
   * Support for 're', 'time', 'fnmatch', 'glob'
