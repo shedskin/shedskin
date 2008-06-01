@@ -3,7 +3,7 @@ import sys, os
 
 release = 'shedskin-%s' % sys.argv[1]
 
-files = ['doc/LICENSE', 'doc/README.html', 'FLAGS', 'ss.py', 'setup.py', 'bert.py', 'unit.py', 'shared.py', 'graph.py', 'cpp.py', 'infer.py']
+files = ['doc/LICENSE', 'doc/README.html', 'FLAGS', 'ss.py', 'setup.py', 'bert.py', 'unit.py', 'shared.py', 'graph.py', 'cpp.py', 'infer.py', 'backward.py']
 
 os.system('mkdir %s' % release)
 os.system('mkdir %s/lib' % release)
