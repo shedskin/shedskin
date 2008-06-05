@@ -502,6 +502,7 @@ I would like to thank the following company/people, for their help with **Shed S
 * Bearophile
 * Brian Blais
 * Paul Boddie
+* Djamel Cherif
 * Mark Dewing
 * James Coughlan
 * Michael Elkins
