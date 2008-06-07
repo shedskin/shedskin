@@ -2476,11 +2476,11 @@ template <class A> list<A> *sorted(pyseq<A> *x, int cmp, int key, int reverse) {
 list<str *> *sorted(str *x, int (*cmp)(str *, str *), int key, int reverse);
 list<str *> *sorted(str *x, int cmp, int key, int reverse); /* beh */
 
-template<class A> class __reverse : public __iter<A> {
+template<class A> class __ss_reverse : public __iter<A> {
 public:
     pyseq<A> *p;
     int i;
-    __reverse(pyseq<A> *p) {
+    __ss_reverse(pyseq<A> *p) {
         this->p = p;
         i = len(p)-1;
     }
@@ -2493,7 +2493,7 @@ public:
 };
 
 template <class A> __iter<A> *reversed(pyseq<A> *x) {
-    return new __reverse<A>(x);
+    return new __ss_reverse<A>(x);
 }
 
 __iter<int> *reversed(__rangeiter *x); // XXX model rangeiter and such
@@ -2501,7 +2501,7 @@ __iter<int> *reversed(__rangeiter *x); // XXX model rangeiter and such
 template <class A> __iter<A> *reversed(pyiter<A> *x) { // fallback? specialized for deque
     if(x->__class__ == cl_rangeiter) // XXX model rangeiter and such
         return reversed((__rangeiter *)(x));
-    return new __reverse<A>(__list(x));
+    return new __ss_reverse<A>(__list(x));
 }
 
 template<class A> class __enumiter : public __iter<tuple2<int, A> *> {
