@@ -1457,7 +1457,7 @@ list<str *> *sorted(str *t, int cmp, int key, int reverse) {
 
 /* mod helpers */
 
-#ifdef WIN32
+#if defined(WIN32) || defined(SOLARIS)
 int vasprintf(char **ret, const char *format, va_list ap)
 {
     va_list ap2;

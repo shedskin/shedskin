@@ -2677,7 +2677,7 @@ namespace __dict__ {
 
 int __fmtpos(str *fmt);
 
-#ifdef WIN32
+#if defined(WIN32) || defined(SOLARIS)
 int asprintf(char **ret, const char *format, ...);
 #endif
 
