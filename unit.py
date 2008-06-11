@@ -11,6 +11,7 @@ tests = [
 hex=['A','B','C','D','E','F']
 try:
     print hex.index('A'.upper())
+    print hex.count('A'+'')
 except Exception, e:
     print e
 
