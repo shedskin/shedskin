@@ -6,6 +6,19 @@ import traceback, sys, os, time
 
 tests = [
 
+('''fixes for 0.0.29''', '''
+#equality..
+hex=['A','B','C','D','E','F']
+try:
+    print hex.index('A'.upper())
+except Exception, e:
+    print e
+
+
+''', '''
+output(equal=True)
+'''),
+
 ('''fixes for 0.0.28; socket''', '''
 #time.strptime
 import time
