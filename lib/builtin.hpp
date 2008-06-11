@@ -1560,7 +1560,7 @@ template<class T> int list<T>::index(T a, int s, int e) {
     int one = 1;
     slicenr(7, s, e, one, this->__len__());
     for(int i = s; i<e;i++)
-        if(a == units[i])
+        if(__eq(a,units[i]))
             return i;
     throw new ValueError(new str("list.index(x): x not in list"));
 } 
@@ -1569,7 +1569,7 @@ template<class T> int list<T>::count(T a) {
     int c = 0;
     int len = this->__len__();
     for(int i = 0; i<len;i++)
-        if(a == units[i])
+        if(__eq(a,units[i]))
             c++;
     return c;
 }
