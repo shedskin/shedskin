@@ -372,7 +372,7 @@ def generate_code():
         print >>makefile, '\t./'+ident+'\n'
 
         print >>makefile, 'full:'
-        print >>makefile, '\tss '+ident+'; $(MAKE) run\n'
+        print >>makefile, '\tshedskin '+ident+'; $(MAKE) run\n'
 
     print >>makefile, 'CPPFILES='+cppfiles
     print >>makefile, 'HPPFILES='+hppfiles+'\n'
