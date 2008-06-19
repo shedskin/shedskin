@@ -514,7 +514,7 @@ class generateVisitor(ASTVisitor):
                             cast = assign_needs_cast(defau, None, func.vars[formal], func)
                             if cast:
                                 self.append('(('+typesetreprnew(func.vars[formal], func)+')')
-                            if self.constant_constructor(defau) or (isinstance(defau, Const) and type(defau.value) == str):
+                            if self.constant_constructor(defau) or (isinstance(defau, Const) and type(defau.value) == str) or isinstance(defau, Name):
                                 self.append('__'+func.mv.module.ident+'__::')
                             self.visit(defau, func)
                             if cast:
