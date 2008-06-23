@@ -1117,7 +1117,7 @@ template<class K, class V> dict<K, V>::dict(PyObject *p) {
     
     this->__class__ = cl_dict;
     PyObject *key, *value;
-    int pos = 0;
+    Py_ssize_t pos = 0;
     while(PyDict_Next(p, &pos, &key, &value)) 
         __setitem__(__to_ss<K>(key), __to_ss<V>(value));
 } 
