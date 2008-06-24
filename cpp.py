@@ -514,9 +514,15 @@ class generateVisitor(ASTVisitor):
                             cast = assign_needs_cast(defau, None, func.vars[formal], func)
                             if cast:
                                 self.append('(('+typesetreprnew(func.vars[formal], func)+')')
-                            if self.constant_constructor(defau) or (isinstance(defau, Const) and type(defau.value) == str) or isinstance(defau, Name):
-                                self.append('__'+func.mv.module.ident+'__::')
-                            self.visit(defau, func)
+
+                            if defau in func.mv.defaults:
+                                if self.mergeinh[defau] == set([(defclass('none'),0)]):
+                                    self.append('0')
+                                else:
+                                    self.append('%s::default_%d' % ('__'+func.mv.module.ident+'__', func.mv.defaults[defau]))
+                            else:
+                                self.visit(defau, func)
+
                             if cast:
                                 self.append(')')
                         else:
@@ -2005,7 +2011,7 @@ class generateVisitor(ASTVisitor):
                     cast = True
                     self.append('(('+typesetreprnew(formal, target)+')(')
 
-                if arg in target.mv.defaults: # XXX same module
+                if arg in target.mv.defaults: 
                     if self.mergeinh[arg] == set([(defclass('none'),0)]):
                         self.append('0')
                     elif target.mv.module == getmv().module:
