@@ -762,6 +762,9 @@ str *str::replace(str *a, str *b, int c) {
 }
 
 str *str::upper() {
+    if(unit.size() == 1)
+        return __char_cache[::toupper(unit[0])];
+
     str *toReturn = new str(*this);
     std::transform(toReturn->unit.begin(), toReturn->unit.end(), toReturn->unit.begin(), toupper);
 
@@ -769,6 +772,9 @@ str *str::upper() {
 }
 
 str *str::lower() {
+    if(unit.size() == 1)
+        return __char_cache[::tolower(unit[0])];
+
     str *toReturn = new str(*this);
     std::transform(toReturn->unit.begin(), toReturn->unit.end(), toReturn->unit.begin(), tolower);
 
