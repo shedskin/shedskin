@@ -421,7 +421,7 @@ def main():
 
     # --- command-line options
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'eibnfad:', ['infinite', 'extmod', 'bounds', 'nowrap', 'flags=', 'dir='])
+        opts, args = getopt.getopt(sys.argv[1:], 'eibnf:ad:', ['infinite', 'extmod', 'bounds', 'nowrap', 'flags=', 'dir='])
     except getopt.GetoptError:
         usage()
     
