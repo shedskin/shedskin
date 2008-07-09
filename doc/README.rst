@@ -507,6 +507,7 @@ I would like to thank the following company/people, for their help with **Shed S
 * James Coughlan
 * Michael Elkins
 * Luis M. Gonzales
+* Karel Heyse
 * Denis de Leeuw Duarte
 * Van Lindberg
 * David Marek
