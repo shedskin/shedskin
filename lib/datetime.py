@@ -62,7 +62,7 @@ class date:
         return ''
 
 class datetime(date):
-    def __init__(self, year, month, day, hour=0, minute=0, second=0, microsecond=0, tzinfo=0):
+    def __init__(self, year, month, day, hour=0, minute=0, second=0, microsecond=0, tzinfo=None):
         date.__init__(self, year, month, day)
 
         self.hour = hour
@@ -70,17 +70,19 @@ class datetime(date):
         self.second = second
         self.microsecond = microsecond
         self.tzinfo = tzinfo
+
+        tzinfo.utcoffset(self)
     
     def today():
         return datetime(0, 0, 0)
     
-    def now(tz=0):
+    def now(tz=None):
         return datetime(0, 0, 0)
     
     def utcnow():
         return datetime(0, 0, 0)
     
-    def fromtimestamp(timestamp, tz):
+    def fromtimestamp(timestamp, tz=None):
         return datetime(0, 0, 0)
     
     def utcfromtimestamp(timestamp):
@@ -122,7 +124,7 @@ class datetime(date):
     def timetz(self):
         return time(self.hour, self.minute, self.second, self.microsecond, self.tzinfo)
 
-    def replace(self, year=0, month=0, day=0, hour=0, minute=0, second=0, microsecond=0, tzinfo=0):
+    def replace(self, year=0, month=0, day=0, hour=0, minute=0, second=0, microsecond=0, tzinfo=None):
         return self
 
     def astimezone(self, tz):
@@ -155,7 +157,7 @@ class datetime(date):
     def isocalendar(self):
         return (1, 1, 1)
 
-    def isoformat(self, sep):
+    def isoformat(self, sep='T'):
         return ''
 
     def __str__(self):
@@ -168,14 +170,14 @@ class datetime(date):
         return ''
 
 class time:
-    def __init__(self, hour, minute, second, microsecond, tzinfo=0):
+    def __init__(self, hour=0, minute=0, second=0, microsecond=0, tzinfo=None):
         self.hour = hour
         self.minute = minute
         self.second = second
         self.microsecond = microsecond
         self.tzinfo = tzinfo
     
-    def replace(self, hour=0, minute=0, seconds=0, microseconds=0, tzinfo=0):
+    def replace(self, hour=0, minute=0, seconds=0, microseconds=0, tzinfo=None):
         return self
 
     def isoformat(self):
@@ -232,12 +234,27 @@ class timedelta:
     def subfromdatetime(self):
         return datetime(1, 1, 1)
 
+
+class tzinfo:
+    def __init__(self):
+        pass
+    def utcoffset(self, dt):
+        return timedelta()
+    def dst(self, dt):
+        return timedelta()
+    def tzname(self, dt):
+        return ''
+    def fromutc(self, dt):
+        return datetime(0,0,0)
+
+
+
 date.min = date (MINYEAR, 1, 1)
 date.max = date (MAXYEAR, 12, 31)
 date.resolution = timedelta(days=1)
 
-datetime.min = datetime(MINYEAR, 1, 1, tzinfo=0)
-datetime.max = datetime(MAXYEAR, 12, 31, 23, 59, 59, 999999, tzinfo=0)
+datetime.min = datetime(MINYEAR, 1, 1, tzinfo=None)
+datetime.max = datetime(MAXYEAR, 12, 31, 23, 59, 59, 999999, tzinfo=None)
 datetime.resolution = timedelta(microseconds=1)
 
 time.min = time(0, 0, 0, 0)
@@ -250,6 +267,11 @@ timedelta.resolution = timedelta(microseconds=1)
     
 
 '''if __name__ == "__main__":
+    tzinfo().utcoffset(datetime(1,1,1))
+    tzinfo().dst(datetime(1,1,1))
+    tzinfo().tzname(datetime(1,1,1))
+    tzinfo().fromutc(datetime(1,1,1))
+
     #datetime.date tests
     
     d2 = date.today()
