@@ -2930,16 +2930,19 @@ def split_subsplit(split, varname, tvar=True):
 def template_parameters():
     # --- determine initial template variables (we might add prediction here later on)
     for cl in getgx().allclasses: # (first do class template vars, as function depend on them) # XXX recursion!
-         #if not cl.bases and not cl.children: # XXX
+        vars = cl.vars.values()
+        #if not cl.bases and not cl.children: # XXX
+
+        if cl.mv.module.builtin:
+             if cl.ident == 'datetime':
+                 continue
              if cl.ident in ['dict', 'defaultdict'] and 'unit' in cl.vars and 'value' in cl.vars:
                  vars = [cl.vars['unit'], cl.vars['value']]
              elif cl == defclass('tuple2') and 'first' in cl.vars and 'second' in cl.vars:
                  vars = [cl.vars['first'], cl.vars['second']]
-             else:
-                 vars = cl.vars.values()
 
-             for var in vars:
-                 template_detect(var, cl)
+        for var in vars:
+             template_detect(var, cl)
 
     for clname in ['list', 'tuple', 'set', 'frozenset']: # XXX remove
         if not 'A' in defclass(clname).template_vars:
