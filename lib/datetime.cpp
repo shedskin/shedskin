@@ -588,11 +588,11 @@ date *datetime::_date() {
 }
 
 time *datetime::_time() {
-	return new time(hour,minute,second,microsecond);
+	return new time(15, hour,minute,second,microsecond);
 }
 
 time *datetime::timetz() {
-	return new time(hour,minute,second,microsecond,_tzinfo);
+	return new time(31, hour,minute,second,microsecond,_tzinfo);
 }
 
 datetime *datetime::replace(int year,int month,int day,int hour,int minute,int second,int microsecond,tzinfo *tzinfo) {
@@ -749,7 +749,7 @@ str *datetime::strftime(str *format) {
 
 
 //class time    
-time::time(int hour, int minute, int second, int microsecond, tzinfo *tzinfo) {
+time::time(int __args, int hour, int minute, int second, int microsecond, tzinfo *tzinfo) {
     __class__=cl_time;
     
     if(hour>=24 || hour<0) throw new ValueError(new str("hour must be in 0..23"));

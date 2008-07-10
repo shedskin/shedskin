@@ -158,7 +158,7 @@ public:
 
     time(time *t):hour(t->hour), minute(t->minute), second(t->second), microsecond(t->microsecond), _tzinfo(t->_tzinfo)
                 {__class__=cl_time;};                                                       //copyconstructor
-    time(int hour=0, int minute=0, int second=0, int microsecond=0, tzinfo *tzinfo=NULL);
+    time(int __args, int hour=0, int minute=0, int second=0, int microsecond=0, tzinfo *tzinfo=NULL);
 
     time *replace(int hour=-1, int minute=-1, int second=-1, int microsecond=-1, tzinfo *tzinfo=NULL);
 

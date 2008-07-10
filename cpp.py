@@ -1840,8 +1840,27 @@ class generateVisitor(ASTVisitor):
 
         return False
 
+    def add_args_arg(self, node, funcs):
+        ''' append argument that describes which formals are actually filled in '''
+
+        if self.library_func(funcs, 'datetime', 'time', '__init__'):
+
+            formals = funcs[0].formals[1:] # skip self
+            formal_pos = dict([(v,k) for k,v in enumerate(formals)])
+            positions = []
+
+            for i, arg in enumerate(node.args):
+                if isinstance(arg, Keyword):
+                    positions.append(formal_pos[arg.name])
+                else:
+                    positions.append(i)
+
+            if positions:
+                self.append(str(reduce(lambda a,b: a|b, [(1<<x) for x in positions]))+', ')
+            else:
+                self.append('0, ')
+
     def visitCallFunc(self, node, func=None): 
-        #print 'callfunc', node
         objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr = analyze_callfunc(node)
 
         funcs = callfunc_targets(node, self.mergeinh)
@@ -1980,6 +1999,8 @@ class generateVisitor(ASTVisitor):
             for arg in node.args:
                 if (defclass('float_'),0) in self.mergeinh[arg]:
                     double = True
+
+        self.add_args_arg(node, funcs)
 
         for (arg, formal) in pairs:
             if isinstance(arg, tuple):
@@ -2934,7 +2955,7 @@ def template_parameters():
         #if not cl.bases and not cl.children: # XXX
 
         if cl.mv.module.builtin:
-             if cl.ident == 'datetime':
+             if cl.ident in ['datetime', 'date', 'time', 'timedelta']:
                  continue
              if cl.ident in ['dict', 'defaultdict'] and 'unit' in cl.vars and 'value' in cl.vars:
                  vars = [cl.vars['unit'], cl.vars['value']]
