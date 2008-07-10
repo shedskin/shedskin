@@ -6,7 +6,7 @@ import traceback, sys, os, time
 
 tests = [
 
-('''fixes for 0.0.29''', '''
+('''fixes for 0.0.29; datetime''', '''
 #equality..
 hex=['A','B','C','D','E','F']
 try:
@@ -15,6 +15,21 @@ try:
 except Exception, e:
     print e
 
+#datetime
+from datetime import date, tzinfo, timedelta, datetime
+
+# enable keyword args
+print date(2007,4,3).replace(month=11)
+
+# template problem
+class TZ2(tzinfo):
+    def utcoffset(self, dt): return timedelta(0,0,0,0,-339)
+
+try:
+    dt = datetime(2007,4,3, tzinfo=TZ2())
+    print dt
+except Exception, e:
+    print e
 
 ''', '''
 output(equal=True)
