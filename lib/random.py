@@ -33,7 +33,7 @@ class Random:
     def getstate(self): return [1.0,1.0,1.0]
     def setstate(self, state): return 1
     def getrandbits(self, k): return 1
-    def randrange(self, start, stop, step=1): return 1
+    def randrange(self, start, stop=1, step=1): return 1
     def randint(self, a, b): return 1
     def choice(self, seq): return seq[seq.__len__()]
     def shuffle(self, x): return x
@@ -67,7 +67,7 @@ def seed(a=-1): return 1
 def random(): return 1.0
 def getstate(): return [1.0,1.0,1.0]
 def setstate(state): return 1
-def randrange(start, stop, step=1): return 1
+def randrange(start, stop=1, step=1): return 1
 def randint(a, b): return 1
 def choice(seq): return seq[seq.__len__()]
 def shuffle(x): return x

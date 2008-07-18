@@ -35,6 +35,7 @@ public:
 
     virtual double random();
     double paretovariate(double alpha);
+    int randrange(int stop);
     int randrange(int start, int stop);
     int randrange(int start, int stop, int step);
     double betavariate(double alpha, double beta);
@@ -106,6 +107,7 @@ int seed(int a);
 double random();
 list<double> *getstate();
 int setstate(list<double> *state);
+int randrange(int stop);
 int randrange(int start, int stop);
 int randrange(int start, int stop, int step);
 int randint(int a, int b);
