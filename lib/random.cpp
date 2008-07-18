@@ -97,6 +97,9 @@ double Random::paretovariate(double alpha) {
     return (1.0/__power(u, (1.0/alpha)));
 }
 
+int Random::randrange(int stop) {
+    return this->randrange(0, stop, 1);
+}
 int Random::randrange(int start, int stop) {
     return this->randrange(start, stop, 1);
 }
@@ -998,6 +1001,11 @@ list<double> *getstate() {
 int setstate(list<double> *state) {
     
     return _inst->setstate(state);
+}
+
+int randrange(int stop) {
+    
+    return _inst->randrange(0, stop, 1);
 }
 
 int randrange(int start, int stop) {

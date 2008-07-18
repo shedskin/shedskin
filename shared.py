@@ -682,15 +682,16 @@ def connect_actual_formal(expr, func, parent_constr=False, check_error=False):
     # --- connect regular, default and keyword arguments
     if not func.mv.module.builtin or func.mv.module.ident in ['random', 'itertools', 'datetime'] or \
         (func.ident in ('sort','sorted')): # XXX investigate
-        for (i, formal) in enumerate(formals[len(actuals):]):
-            if formal in kwdict:
-                actuals.append(kwdict[formal])
-                continue
+        if not (func.mv.module.builtin and func.mv.module.ident == 'random' and func.ident == 'randrange'):
+            for (i, formal) in enumerate(formals[len(actuals):]):
+                if formal in kwdict:
+                    actuals.append(kwdict[formal])
+                    continue
 
-            if not func.defaults: # XXX
-                continue
-            default = func.defaults[i+uglyoffset]
-            actuals.append(default)
+                if not func.defaults: # XXX
+                    continue
+                default = func.defaults[i+uglyoffset]
+                actuals.append(default)
 
     for (actual, formal) in zip(actuals, formals):
         pairs.append((actual, func.vars[formal]))
