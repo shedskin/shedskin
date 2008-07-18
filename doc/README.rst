@@ -430,7 +430,7 @@ The ``shedskin`` command has the following options: ::
     -e --extmod            Generate extension module
     -f --flags             Provide alternate Makefile flags
     -i --infinite          Try to avoid infinite analysis time 
-    -n --nowrap            Disable wrap-around checking 
+    -w --nowrap            Disable wrap-around checking 
 
 (To see an up-to-date list of these options simply type ``shedskin`` without any argument.)
 

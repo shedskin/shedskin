@@ -396,7 +396,7 @@ def usage():
  -e --extmod            Generate extension module
  -f --flags             Provide alternate Makefile flags
  -i --infinite          Try to avoid infinite analysis time 
- -n --nowrap            Disable wrap-around checking 
+ -w --nowrap            Disable wrap-around checking 
 """
     sys.exit()
 
@@ -437,7 +437,7 @@ def main():
                 print "*ERROR* no such file: '%s'" % a
                 sys.exit()
             getgx().flags = a
-        if o in ['-n', '--nowrap']: getgx().wrap_around_check = False
+        if o in ['-w', '--nowrap']: getgx().wrap_around_check = False
 
     # --- argument
     if len(args) != 1:
