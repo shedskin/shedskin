@@ -91,7 +91,9 @@ int __ss_SOCK_DGRAM = SOCK_DGRAM;
 #ifndef WIN32
 #ifndef __APPLE__
 #ifndef SOLARIS
+#ifndef __FreeBSD__
 int __ss_SOL_IP = SOL_IP;
+#endif
 #endif
 #endif
 int __ss_IP_TOS = IP_TOS;
