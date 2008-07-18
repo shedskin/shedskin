@@ -39,7 +39,7 @@ OPTIONS
 -e, --extmod            Generate extension module
 -f, --flags             Provide alternate Makefile flags
 -i, --infinite          Try to avoid infinite analysis time 
--n, --nowrap            Disable wrap-around checking 
+-w, --nowrap            Disable wrap-around checking 
 
 THANKS
 ======
