@@ -31,6 +31,13 @@ try:
 except Exception, e:
     print e
 
+#random.randrange
+import random
+
+print random.randrange(1)
+print random.randrange(0,1)
+print random.randrange(0,1,1)
+
 ''', '''
 output(equal=True)
 '''),
