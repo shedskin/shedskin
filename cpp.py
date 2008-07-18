@@ -628,7 +628,7 @@ class generateVisitor(ASTVisitor):
         if node.else_:
             self.output('%s = 0;' % getmv().tempcount[node.else_])
          
-        self.start('while(')
+        self.start('while (')
         self.bool_test(node.test, func)
         self.append(') {')
         print >>self.out, self.line
