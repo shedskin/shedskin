@@ -90,7 +90,7 @@ int __ss_SOCK_STREAM = SOCK_STREAM;
 int __ss_SOCK_DGRAM = SOCK_DGRAM;
 #ifndef WIN32
 #ifndef __APPLE__
-#ifndef SOLARIS
+#ifndef __sun
 #ifndef __FreeBSD__
 int __ss_SOL_IP = SOL_IP;
 #endif
@@ -103,7 +103,7 @@ int __ss_SOL_SOCKET = SOL_SOCKET;
 int __ss_SO_REUSEADDR = SO_REUSEADDR;
 int __ss_INADDR_ANY = INADDR_ANY;
 int __ss_INADDR_LOOPBACK = INADDR_LOOPBACK;
-#ifndef SOLARIS
+#ifndef __sun
 int __ss_INADDR_NONE = INADDR_NONE;
 #endif
 int __ss_INADDR_BROADCAST = INADDR_BROADCAST;
