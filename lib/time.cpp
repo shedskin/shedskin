@@ -177,6 +177,8 @@ str *strftime(str *format, struct_time* tuple) {
     unsigned int size = format->__len__();
     unsigned int n;
     char *buf;
+	if(size==0)
+		return new str();
     do {
         size *= 2;
         buf = new char[size];

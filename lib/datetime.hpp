@@ -31,13 +31,8 @@ class OverflowError : public Exception { public: OverflowError(str *msg=0) : Exc
 class NotImplementedError : public Exception { public: NotImplementedError(str *msg=0) : Exception(msg) {} };
 
 //todo:
-//handle tzinfo=None in replace()
-//error with datetime(...,TZ()) template thing
-//tzinfo inheritance
 //timedelta::timedelta() rounding problems
 //check (unsinged) int/long ranges (arguments as well)
-//read_only variables
-
 
 //class date
 extern class_ *cl_date;
@@ -49,23 +44,23 @@ public:
 
     date(int year, int month, int day);
     date(date* d):year(d->year),month(d->month),day(d->day){__class__=cl_date;};
-    static date *today();                                //ok
-    static date *fromtimestamp(int timestamp);            //todo, weird thing
+    static date *today();
+    static date *fromtimestamp(int timestamp);
     static date *fromordinal(int o);                    //copied from cpython
-    date *__add__(timedelta *other);                    //ok
-    date *__sub__(timedelta *other);                    //ok
-    timedelta *__sub__(date *other);                    //ok
+    date *__add__(timedelta *other);
+    date *__sub__(timedelta *other);
+    timedelta *__sub__(date *other);
 
     date *replace(int year=0, int month=0, int day=0);  //ok (how to handle keyword variables?)
     __time__::struct_time *timetuple();                 //ok (depends on function from cpython)
     int toordinal();                                    //copied from cpython
     int weekday();                                      //copied from cpython
     int isoweekday();                                   //copied from cpython
-    tuple2<int, int> *isocalendar();                    //ok
-    str *isoformat();                                   //ok
-    str *__str__();                                     //ok
-    str *ctime();                                       //ok
-    str *strftime(str *format);                         //ok
+    tuple2<int, int> *isocalendar();
+    str *isoformat();
+    str *__str__();
+    str *ctime();
+    str *strftime(str *format);
 };
 
 bool __lt(date *f, date *s);
@@ -120,7 +115,7 @@ public:
     time *_time();
     time *timetz();
 	
-    datetime *replace(int year=-1,int month=-1,int day=-1,int hour=-1,int minute=-1,int second=-1,int microsecond=-1,tzinfo *tzinfo=NULL);
+    datetime *replace(int __args, int year=-1,int month=-1,int day=-1,int hour=-1,int minute=-1,int second=-1,int microsecond=-1,tzinfo *tzinfo=NULL);
     datetime *astimezone(tzinfo *tzinfo);
     timedelta *utcoffset();
     timedelta *dst();
@@ -158,9 +153,9 @@ public:
 
     time(time *t):hour(t->hour), minute(t->minute), second(t->second), microsecond(t->microsecond), _tzinfo(t->_tzinfo)
                 {__class__=cl_time;};                                                       //copyconstructor
-    time(int __args, int hour=0, int minute=0, int second=0, int microsecond=0, tzinfo *tzinfo=NULL);
+    time(int hour=0, int minute=0, int second=0, int microsecond=0, tzinfo *tzinfo=NULL);
 
-    time *replace(int hour=-1, int minute=-1, int second=-1, int microsecond=-1, tzinfo *tzinfo=NULL);
+    time *replace(int __args, int hour=-1, int minute=-1, int second=-1, int microsecond=-1, tzinfo *tzinfo=NULL);
 
     str *isoformat();
     str *__str__();
@@ -169,6 +164,13 @@ public:
     timedelta *dst();
     str *tzname();
 };
+
+bool __lt(time *f, time *s);
+bool __gt(time *f, time *s);
+bool __le(time *f, time *s);
+bool __ge(time *f, time *s);
+bool __eq(time *f, time *s);
+bool __ne(time *f, time *s);
 
 
 
@@ -182,14 +184,14 @@ public:
 
     timedelta(double days=0., double seconds=0., double microseconds=0., double milliseconds=0., double minutes=0., double hours=0., double weeks=0.);
     timedelta(timedelta *c):days(c->days),seconds(c->seconds),microseconds(c->microseconds){__class__=cl_timedelta;}
-    str *__str__();                                         //ok
-    timedelta *__add__(timedelta *other);                   //ok
-    timedelta *__sub__(timedelta *other);                   //ok
-    timedelta *__mul__(int n);                              //ok
-    timedelta *__div__(int n);                              //ok
-    timedelta *__neg__();                                   //ok
+    str *__str__();
+    timedelta *__add__(timedelta *other);
+    timedelta *__sub__(timedelta *other);
+    timedelta *__mul__(int n);
+    timedelta *__div__(int n);
+    timedelta *__neg__();
     timedelta *__floordiv__(int n);                     //what's the difference between this and __div__?
-    timedelta *__abs__();                                   //ok
+    timedelta *__abs__();
 };
 
 } // module namespace
