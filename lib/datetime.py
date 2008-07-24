@@ -69,20 +69,25 @@ class datetime(date):
         self.minute = minute
         self.second = second
         self.microsecond = microsecond
+
         self.tzinfo = tzinfo
 
         tzinfo.utcoffset(self)
+        tzinfo.dst(self)
+        tzinfo.tzname(self)
     
     def today():
         return datetime(0, 0, 0)
     
     def now(tz=None):
+        tz.utcoffset(self)
         return datetime(0, 0, 0)
     
     def utcnow():
         return datetime(0, 0, 0)
     
     def fromtimestamp(timestamp, tz=None):
+        tz.fromutc(self)
         return datetime(0, 0, 0)
     
     def utcfromtimestamp(timestamp):
@@ -128,6 +133,7 @@ class datetime(date):
         return self
 
     def astimezone(self, tz):
+        tz.fromutc(self)
         return self
 
     def utcoffset(self):
@@ -175,9 +181,15 @@ class time:
         self.minute = minute
         self.second = second
         self.microsecond = microsecond
+
         self.tzinfo = tzinfo
+
+        dt = datetime(0,0,0)
+        tzinfo.utcoffset(dt)
+        tzinfo.dst(dt)
+        tzinfo.tzname(dt)
     
-    def replace(self, hour=0, minute=0, seconds=0, microseconds=0, tzinfo=None):
+    def replace(self, hour=0, minute=0, second=0, microsecond=0, tzinfo=None):
         return self
 
     def isoformat(self):
@@ -245,6 +257,8 @@ class tzinfo:
     def tzname(self, dt):
         return ''
     def fromutc(self, dt):
+        self.utcoffset(dt)
+        self.dst(dt)
         return datetime(0,0,0)
 
 
@@ -266,117 +280,3 @@ timedelta.max = timedelta(days=999999999, hours=23, minutes=59, seconds=59, micr
 timedelta.resolution = timedelta(microseconds=1)
     
 
-'''if __name__ == "__main__":
-    tzinfo().utcoffset(datetime(1,1,1))
-    tzinfo().dst(datetime(1,1,1))
-    tzinfo().tzname(datetime(1,1,1))
-    tzinfo().fromutc(datetime(1,1,1))
-
-    #datetime.date tests
-    
-    d2 = date.today()
-    d3 = date.fromtimestamp(1234)
-    d4 = date.fromordinal(123)
-
-    d1 = date(2008, 01, 01)
-    d2 = date(2005, 05, 06)
-    d3 = d1 + timedelta(days=1)
-    d4 = d3 - timedelta(days=1)
-    d4 == d1
-    d4 != d2
-    d3 >= d4
-    d3 > d4
-    d3 <= d1
-    d1 < d1
-    d5 = d1.replace(year=2222)
-    d5.toordinal()
-    str(d5)
-    d5.isoformat()
-    d5 = d1.replace(year=2007)
-    d6 = d1 + timedelta(days=1)
-    td1 = d1 - d5
-    
-    d1.isocalendar()
-    d1.timetuple()
-    d1.weekday()
-    d1.isoweekday()
-    d1.ctime()
-    d1.strftime('')
-
-    #datetime.time tests
-    
-    t1 = time(12, 01, 01, 01)
-    t2 = t1.replace(hour=9)
-    t1.isoformat()
-    str(t2)
-    
-    t1 == t2
-    t1 != t2
-    t1 >= t2
-    t1 >  t2
-    t1 <= t2
-    t1 <  t2
-
-    t1.strftime('')
-    t1.utcoffset()
-    t1.dst()
-    t1.tzname()
-
-    #datetime.datetime tests
-    
-    dt1 = datetime(2008, 01, 01)
-    dt4 = datetime.utcnow()
-    dt5 = datetime.strptime("", "")
-    dt6 = datetime.utcfromtimestamp(111)
-    dt7 = datetime.combine(d1, t1)
-    dt8 = datetime.now()
-
-    d99 = datetime.today()
-    d98 = datetime.fromtimestamp(1234, 2)
-    d97 = datetime.fromordinal(123)
-
-    dt2 = dt1 + timedelta(days=1)
-    td1 = dt2 - dt1
-    dt2 - td1 # XXX test this
-    d10 = dt1.date()
-    t10 = dt1.time()
-    t11 = dt1.timetz()
-    dt2 = dt1.replace(year=100)
-    dt2.isoformat(' ')
-    str(dt1)
-    
-    dt1 == dt2
-    dt1 != dt2
-    dt1 >= dt2
-    dt1 >  dt2
-    dt1 <= dt2
-    dt1 <  dt2
-
-    dt1.weekday()
-    dt1.utctimetuple()
-    dt1.toordinal()
-    dt1.astimezone(1) # XXX needs arg
-    dt1.strftime('')
-    dt1.dst()
-    dt1.isocalendar()
-    dt1.timetuple()
-    dt1.tzname()
-    dt1.isoweekday()
-    dt1.utcoffset()
-    dt1.ctime()
-
-    #datetime.timedelta tests
-    
-    td1 = timedelta(days=1)
-    td2 = timedelta(hours=2)
-    td3 = td1 + td2
-    td4 = td1 - td2
-    td5 = td1 * 4
-    td6 = td2 / 2
-    str(td1)
-
-    td1 != td2
-    abs(td1)
-    td7 = td1 // 2
-    td1 == td2
-    td8 = -td1'''
