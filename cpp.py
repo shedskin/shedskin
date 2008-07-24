@@ -1843,7 +1843,8 @@ class generateVisitor(ASTVisitor):
     def add_args_arg(self, node, funcs):
         ''' append argument that describes which formals are actually filled in '''
 
-        if self.library_func(funcs, 'datetime', 'time', '__init__'):
+        if self.library_func(funcs, 'datetime', 'time', 'replace') or \
+           self.library_func(funcs, 'datetime', 'datetime', 'replace'):
 
             formals = funcs[0].formals[1:] # skip self
             formal_pos = dict([(v,k) for k,v in enumerate(formals)])

@@ -112,15 +112,11 @@ bool __gt(date *f, date *s) {
 }
 
 bool __le(date *f, date *s) {
-	if(f->year*366+f->month*31+f->day <= s->year*366+s->month*31+s->day)
-		return true;
-	return false;
+	return !__gt(f,s);
 }
 
 bool __ge(date *f, date *s) {
-	if(f->year*366+f->month*31+f->day >= s->year*366+s->month*31+s->day)
-		return true;
-	return false;
+	return !__lt(f,s);
 }
 
 bool __eq(date *f, date *s) {
@@ -130,9 +126,7 @@ bool __eq(date *f, date *s) {
 }
 
 bool __ne(date *f, date *s) {
-	if(f->year!=s->year || f->month!=s->month || f->day!=s->day)
-		return true;
-	return false;
+	return !__eq(f,s);
 }
 
 
@@ -552,21 +546,11 @@ bool __gt(datetime *f, datetime *s) {
 }
 
 bool __le(datetime *f, datetime *s) {
-	datetime_compare_check(f,s);
-	if(f->year*366+f->month*31+f->day < s->year*366+s->month*31+s->day)
-		return true;
-	if(f->year*366+f->month*31+f->day == s->year*366+s->month*31+s->day && (f->hour*3600+f->minute*60+f->second)*1000000+f->microsecond <= (s->hour*3600+s->minute*60+s->second)*1000000+s->microsecond)
-		return true;
-	return false;	
+	return !__gt(f,s);
 }
 
 bool __ge(datetime *f, datetime *s) {
-	datetime_compare_check(f,s);
-	if(f->year*366+f->month*31+f->day > s->year*366+s->month*31+s->day)
-		return true;
-	if(f->year*366+f->month*31+f->day == s->year*366+s->month*31+s->day && (f->hour*3600+f->minute*60+f->second)*1000000+f->microsecond >= (s->hour*3600+s->minute*60+s->second)*1000000+s->microsecond)
-		return true;
-	return false;	
+	return !__lt(f,s);
 }
 
 bool __eq(datetime *f, datetime *s) {
@@ -577,10 +561,7 @@ bool __eq(datetime *f, datetime *s) {
 }
 
 bool __ne(datetime *f, datetime *s) {
-	datetime_compare_check(f,s);
-	if(f->year!=s->year || f->month!=s->month || f->day!=s->day || f->hour!=s->hour || f->minute!=s->minute || f->second!=s->second || f->microsecond!=s->microsecond)
-		return true;
-	return false;
+	return !__eq(f,s);
 }
 
 date *datetime::_date() {
@@ -588,38 +569,38 @@ date *datetime::_date() {
 }
 
 time *datetime::_time() {
-	return new time(15, hour,minute,second,microsecond);
+	return new time(hour,minute,second,microsecond);
 }
 
 time *datetime::timetz() {
-	return new time(31, hour,minute,second,microsecond,_tzinfo);
+	return new time(hour,minute,second,microsecond,_tzinfo);
 }
 
-datetime *datetime::replace(int year,int month,int day,int hour,int minute,int second,int microsecond,tzinfo *tzinfo) {
+datetime *datetime::replace(int __args, int year,int month,int day,int hour,int minute,int second,int microsecond,tzinfo *tzinfo) {
     datetime *t = new datetime(this);
 
-   if(year!=-1) {
+   if((__args & 1)==1) {
         if(year<MINYEAR || year>MAXYEAR)    throw new ValueError(new str("year is out of range"));
         t->year=year;}
-    if(month!=-1) {
+    if((__args & 2)==2) {
         if(month<=0 || month>12)            throw new ValueError(new str("month must be in 1..12"));
         t->month=month;}
-    if(day!=-1) {
+    if((__args & 4)==4) {
         if(day<=0 || day>days_in_month(t->year,t->month)) throw new ValueError(new str("day is out of range for month"));
         t->day=day;}
-    if(hour!=-1) {
+    if((__args & 8)==8) {
         if(hour<0 || hour>=24)              throw new ValueError(new str("hour must be in 0..23"));
         t->hour=hour;}
-    if(minute!=-1) {
+    if((__args & 16)==16) {
         if(minute<0 || minute>=60)          throw new ValueError(new str("minute must be in 0..59"));
         t->minute=minute;}
-    if(second!=-1) {
+    if((__args & 32)==32) {
         if(second<0 || second>=60)          throw new ValueError(new str("second must be in 0..59"));
         t->second=second;}
-    if(microsecond!=-1) {
+    if((__args & 64)==64) {
         if(microsecond<0 || microsecond>=1000000)      throw new ValueError(new str("microsecond must be in 0..999999"));
         t->microsecond=microsecond;}
-    if(tzinfo!=NULL)            //how to handle tzinfo=None
+    if((__args & 128)==128)
         t->_tzinfo = tzinfo;
     return t;
 }
@@ -630,7 +611,7 @@ datetime *datetime::astimezone(tzinfo *tzinfo) {
 		throw new ValueError(new str("astimezone() cannot be applied to a naive datetime"));
 	if(this->_tzinfo == tzinfo)
 		return this;
-	datetime *utc = this->__sub__(this->utcoffset())->replace(-1,-1,-1,-1,-1,-1,-1,tzinfo);
+	datetime *utc = this->__sub__(this->utcoffset())->replace(128,-1,-1,-1,-1,-1,-1,-1,tzinfo);
 	datetime *r = tzinfo->fromutc(utc);
 	delete utc;
 	return r;
@@ -721,21 +702,23 @@ str *datetime::__str__() {
 
 str *datetime::ctime() {
     /*format = "Www Mmm dd hh:mm:ss yyyy"*/
-    return strftime(ctime_format);
+	return __time__::strftime(ctime_format,timetuple());
 };
 
 str *datetime::strftime(str *format) {
-    list<str *> *a = format->split(z_string);
-	if(_tzinfo)
-		format = (str *)(_tzinfo->minutes_to_str(this)->__str__()->join(a));
-	else
-		format = empty_string->join(a);
-	a = format->split(Z_string);
-	if(_tzinfo)
-		format = (str *)(_tzinfo->tzname(this)->__str__()->join(a));
-	else
-		format = empty_string->join(a);
-    return __time__::strftime(format,timetuple());
+	str *tmp;
+	if(_tzinfo) {
+		tmp = format->replace(z_string,_tzinfo->minutes_to_str(this)->__str__());
+		format = tmp->replace(Z_string,_tzinfo->tzname(this));
+	}
+	else {
+		tmp = format->replace(z_string,empty_string);
+		format = tmp->replace(Z_string,empty_string);
+	}
+	delete tmp;
+    tmp = __time__::strftime(format,timetuple());
+	delete format;
+	return tmp;
 }
 
 
@@ -749,7 +732,7 @@ str *datetime::strftime(str *format) {
 
 
 //class time    
-time::time(int __args, int hour, int minute, int second, int microsecond, tzinfo *tzinfo) {
+time::time(int hour, int minute, int second, int microsecond, tzinfo *tzinfo) {
     __class__=cl_time;
     
     if(hour>=24 || hour<0) throw new ValueError(new str("hour must be in 0..23"));
@@ -764,21 +747,21 @@ time::time(int __args, int hour, int minute, int second, int microsecond, tzinfo
     this->_tzinfo = tzinfo;
 }
 
-time *time::replace(int hour, int minute, int second, int microsecond, tzinfo *tzinfo) {
+time *time::replace(int __args, int hour, int minute, int second, int microsecond, tzinfo *tzinfo) {
     time *t = new time(this);
-    if(hour!=-1) {
+    if((__args & 1)==1) {
         if(hour<0 || hour>=24)          throw new ValueError(new str("hour must be in 0..23"));
         t->hour=hour;}
-    if(minute!=-1) {
+    if((__args & 2)==2) {
         if(minute<0 || minute>=60)      throw new ValueError(new str("minute must be in 0..59"));
         t->minute=minute;}
-    if(second!=-1) {
+    if((__args & 4)==4) {
         if(second<0 || second>=60)      throw new ValueError(new str("second must be in 0..59"));
         t->second=second;}
-    if(microsecond!=-1) {
+    if((__args & 8)==8) {
         if(microsecond<0 || microsecond>=1000000)      throw new ValueError(new str("microsecond must be in 0..999999"));
         t->microsecond=microsecond;}
-    if(tzinfo!=NULL)                    //how to handle tzinfo=None ?
+    if((__args & 16)==16)
         t->_tzinfo = tzinfo;
     return t;
 }
@@ -799,20 +782,22 @@ str *time::__str__() {
 }
 
 str *time::strftime(str* format) {
-    list<str *> *a = format->split(z_string);
-	if(_tzinfo)
-		format = (str *)(_tzinfo->minutes_to_str(NULL)->__str__()->join(a));
-	else
-		format = empty_string->join(a);
-	a = format->split(Z_string);
-	if(_tzinfo)
-		format = (str *)(_tzinfo->tzname(NULL)->__str__()->join(a));
-	else
-		format = empty_string->join(a);
-    return __time__::strftime(format, new __time__::struct_time(
+	str *tmp;
+	if(_tzinfo) {
+		tmp = format->replace(z_string,_tzinfo->minutes_to_str(NULL)->__str__());
+		format = tmp->replace(Z_string,_tzinfo->tzname(NULL));
+	}
+	else {
+		tmp = format->replace(z_string,empty_string);
+		format = tmp->replace(Z_string,empty_string);
+	}
+	delete tmp;
+    tmp = __time__::strftime(format, new __time__::struct_time(
                                             new tuple2<int, int>(9,1900,1,1,//according to cpython implementation, but 0,0, according to description I found on the internet
                                                                  hour,minute,second,
                                                                  0,0,-1)));
+	delete format;
+	return tmp;
 }
 
 timedelta *time::utcoffset() {
@@ -836,6 +821,57 @@ str *time::tzname() {
 		return _tzinfo->tzname(NULL);
 }
 
+void time_compare_check(time *&f, time *&s) {
+	if((f->_tzinfo && !s->_tzinfo) || (s->_tzinfo && !f->_tzinfo))
+		throw new TypeError(new str("can't compare offset-naive and offset-aware datetimes"));
+	if(f->_tzinfo) {
+		timedelta *fdelta = f->_tzinfo->utcoffset(NULL), *sdelta = s->_tzinfo->utcoffset(NULL);
+		time *ft = new time(), *st = new time();
+		ft->hour = f->hour-fdelta->days*24;
+		ft->minute = f->minute;
+		ft->second = f->second - fdelta->seconds;
+		ft->microsecond = f->microsecond - fdelta->microseconds;
+		st->hour = s->hour-sdelta->days*24;
+		st->minute = s->minute;
+		st->second = s->second - sdelta->seconds;
+		st->microsecond = s->microsecond - sdelta->microseconds;
+		f = ft;
+		s = st;
+	}
+}
+
+bool __lt(time *f, time *s) {
+	time_compare_check(f,s);
+	if((f->hour*3600+f->minute*60+f->second)*1000000+f->microsecond < (s->hour*3600+s->minute*60+s->second)*1000000+s->microsecond)
+		return true;
+	return false;	
+}
+
+bool __gt(time *f, time *s) {
+	time_compare_check(f,s);
+	if((f->hour*3600+f->minute*60+f->second)*1000000+f->microsecond > (s->hour*3600+s->minute*60+s->second)*1000000+s->microsecond)
+		return true;
+	return false;	
+}
+
+bool __le(time *f, time *s) {
+	return !__gt(f,s);
+}
+
+bool __ge(time *f, time *s) {
+	return !__lt(f,s);
+}
+
+bool __eq(time *f, time *s) {
+	time_compare_check(f,s);
+	if((f->hour*3600+f->minute*60+f->second)*1000000+f->microsecond == (s->hour*3600+s->minute*60+s->second)*1000000+s->microsecond)
+		return true;
+	return false;	
+}
+
+bool __ne(time *f, time *s) {
+	return !__eq(f,s);
+}
 
 
 
@@ -912,7 +948,12 @@ timedelta *timedelta::__div__(int n) {
     if(n==0) {
         throw new ZeroDivisionError(new str("integer division or modulo by zero"));
     }
-    return new timedelta(double(days)/n,double(seconds)/n,double(microseconds)/n,0,0,0,0);
+	double d,s,us;
+	d = double(days)/n;
+	s = double(seconds)/n;
+	std::cout<<(long)days*24*3600*1000000 + (long)seconds*1000000 + (long)microseconds<<std::endl;
+	us = double(microseconds)/n+(((long double)(days)/n-double(days)/n)*24*3600+(long double)(seconds)/n-s)*1000000;
+    return new timedelta(0,d*24*3600+s,us,0,0,0,0);
 }
 
 timedelta *timedelta::__neg__() {
