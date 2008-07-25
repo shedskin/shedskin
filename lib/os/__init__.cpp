@@ -16,6 +16,7 @@ namespace std {
 //#include <windows.h>
 #endif
 
+/* environ */
 #ifdef __FreeBSD__
 #include <roken.h>
 #endif
@@ -23,6 +24,10 @@ namespace std {
 #ifdef __APPLE__
 #include <crt_externs.h>
 #define environ (*_NSGetEnviron())
+#endif
+
+#ifdef __sun
+extern char **environ;
 #endif
 
 namespace __os__ {

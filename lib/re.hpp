@@ -4,9 +4,14 @@
 //depending on what you want...
 //#define PCRE_STATIC
 
-#include "pcre.h"
-
 #include "builtin.hpp"
+
+#ifndef __sun
+#include <pcre.h>
+#else
+#include <pcre/pcre.h>
+#endif
+
 
 using namespace __shedskin__;
 
