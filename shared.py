@@ -42,6 +42,7 @@ class globalInfo: # XXX add comments, split up
         self.cpp_keywords.update(['ST_ATIME', 'ST_CTIME', 'ST_DEV', 'ST_GID', 'ST_INO', 'ST_MODE', 'ST_MTIME', 'ST_NLINK', 'ST_SIZE', 'ST_UID', 'S_ENFMT', 'S_IEXEC', 'S_IFBLK', 'S_IFCHR', 'S_IFDIR', 'S_IFIFO', 'S_IFLNK', 'S_IFREG', 'S_IFSOCK', 'S_IREAD', 'S_IRGRP', 'S_IROTH', 'S_IRUSR', 'S_IRWXG', 'S_IRWXO', 'S_IRWXU', 'S_ISGID', 'S_ISUID', 'S_ISVTX', 'S_IWGRP', 'S_IWOTH', 'S_IWRITE', 'S_IWUSR', 'S_IXGRP', 'S_IXOTH', 'S_IXUSR', 'S_IMODE', 'S_IFMT', 'S_ISDIR', 'S_ISCHR', 'S_ISBLK', 'S_ISREG', 'S_ISFIFO', 'S_ISLNK', 'S_ISSOCK'])
         self.cpp_keywords.update(['AF_INET', 'AF_UNIX', 'SOCK_STREAM', 'SOCK_DGRAM', 'SOL_IP', 'SOL_SOCKET', 'IP_TOS', 'IP_TTL', 'SHUT_RD', 'SHUT_WR', 'SHUT_RDWR', 'INADDR_ANY', 'INADDR_LOOPBACK', 'INADDR_NONE', 'INADDR_BROADCAST', 'SO_REUSEADDR', 'SOMAXCONN', 'htonl', 'htons', 'ntohl', 'ntohs'])
         self.cpp_keywords.update(['main'])
+        self.cpp_keywords.update(['sun'])
         self.ss_prefix = '__ss_'
         self.list_types = {}
         self.classes_with_init = set()
