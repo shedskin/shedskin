@@ -1,5 +1,4 @@
 #include "re.hpp"
-#include "pcre.h"
 
 using namespace std;
 
