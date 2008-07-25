@@ -231,12 +231,12 @@ socket *socket::connect(pyseq<str *> *address)
 {
     if (family != AF_UNIX)
         throw new ValueError(invalid_address);
-    sockaddr_un sun;
-    sun.sun_family = AF_UNIX;
+    sockaddr_un smup;
+    smup.sun_family = AF_UNIX;
     const str* __0 = address->__getitem__(0);
-    strncpy(sun.sun_path, __0->unit.c_str(), PATH_MAX);
+    strncpy(smup.sun_path, __0->unit.c_str(), PATH_MAX);
 
-    return connect(reinterpret_cast<sockaddr *>(&sun), sizeof(sun));
+    return connect(reinterpret_cast<sockaddr *>(&smup), sizeof(smup));
 }
 #endif /* ! WIN32 */
 
@@ -537,11 +537,11 @@ socket* socket::accept(sockaddr *sa, socklen_t *salen)
 // UNIX sockets
 tuple2<socket *, pyseq<str *> *> *socket::accept()
 {
-    sockaddr_un sun;
-    socklen_t sunsize = sizeof(sun);
+    sockaddr_un smup;
+    socklen_t sunsize = sizeof(smup);
 
-    socket *sock = accept(reinterpret_cast<sockaddr *>(&sun), &sunsize);
-    str* addr = new str(sun.sun_path);
+    socket *sock = accept(reinterpret_cast<sockaddr *>(&smup), &sunsize);
+    str* addr = new str(smup.sun_path);
     return new tuple2<socket *, pyseq<str *> *>(2, sock, addr);
 }
 #endif
@@ -559,12 +559,12 @@ socket *socket::bind(pyseq<str *> *address)
 {
     if (family != AF_UNIX)
         throw new ValueError(invalid_address);
-    sockaddr_un sun;
-    sun.sun_family = AF_UNIX;
+    sockaddr_un smup;
+    smup.sun_family = AF_UNIX;
     const str* __0 = address->__getitem__(0);
-    strncpy(sun.sun_path, __0->unit.c_str(), PATH_MAX);
+    strncpy(smup.sun_path, __0->unit.c_str(), PATH_MAX);
 
-    return bind(reinterpret_cast<sockaddr *>(&sun), sizeof(sun));
+    return bind(reinterpret_cast<sockaddr *>(&smup), sizeof(smup));
 }
 #endif /* ! WIN32 */
 
