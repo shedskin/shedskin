@@ -192,6 +192,12 @@ public:
     timedelta *__neg__();
     timedelta *__floordiv__(int n);                     //what's the difference between this and __div__?
     timedelta *__abs__();
+    int __eq__(timedelta *other);
+    int __cmp__(timedelta *other);
+    int __gt__(timedelta *other);
+    int __lt__(timedelta *other);
+    int __ge__(timedelta *other);
+    int __le__(timedelta *other);
 };
 
 } // module namespace

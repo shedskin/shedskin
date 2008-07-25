@@ -30,7 +30,7 @@ def mktime(tuple):
     return 1.0
 
 def localtime(timep=None):
-    return struct_time()(1,2,3)
+    return struct_time((1,2,3))
 
 def gmtime(seconds=None):
     return struct_time((1,2,3))
