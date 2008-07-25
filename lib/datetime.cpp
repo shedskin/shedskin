@@ -974,4 +974,26 @@ timedelta *timedelta::__abs__() {
         return __neg__();
 }
 
+int timedelta::__cmp__(timedelta *other) {
+    if ((days == other->days) && (seconds == other->seconds) &&
+        (microseconds == other->microseconds)) {
+        return 0;
+    } else if (((days * 24 * 3600) + seconds) > ((other->days * 24 * 3600) + other->seconds)) {
+        return 1;
+    } else if ((((days * 24 * 3600) + seconds) == ((other->days * 24 * 3600) + other->seconds)) && (microseconds > other->microseconds)) {
+        return 1;
+    } else if (((days * 24 * 3600) + seconds) < ((other->days * 24 * 3600) + other->seconds)) {
+        return -1;
+    } else if ((((days * 24 * 3600) + seconds) == ((other->days * 24 * 3600) + other->seconds)) && (microseconds < other->microseconds)) {
+        return -1;
+    }
+}
+
+int timedelta::__eq__(timedelta *other) { return __cmp__(other) == 0; }
+int timedelta::__gt__(timedelta *other) { return __cmp__(other) == 1; }
+int timedelta::__lt__(timedelta *other) { return __cmp__(other) == -1; }
+int timedelta::__ge__(timedelta *other) { return __cmp__(other) != -1; }
+int timedelta::__le__(timedelta *other) { return __cmp__(other) != 1; }
+
+
 }
