@@ -356,11 +356,16 @@ def generate_code():
             if getgx().extension_module: 
                 if sys.platform == 'win32': line += ' -shared -Lc:/Python%s/libs -lpython%s' % (pyver, pyver) 
                 elif sys.platform == 'darwin': line += ' -bundle -Xlinker -dynamic ' + ldflags
+                elif sys.platform == 'sunos5': line += ' -shared -Xlinker ' + ldflags
                 else: line += ' -shared -Xlinker -export-dynamic ' + ldflags
+
             if 're' in [m.ident for m in mods]:
                 line += ' -lpcre'
-            if sys.platform == 'win32' and 'socket' in [m.ident for m in mods]:
-                line += ' -lws2_32'
+            if 'socket' in [m.ident for m in mods]:
+                if sys.platform == 'win32':
+                    line += ' -lws2_32'
+                elif sys.platform == 'sunos5':
+                    line += ' -lsocket -lnsl'
 
         print >>makefile, line
     print >>makefile
