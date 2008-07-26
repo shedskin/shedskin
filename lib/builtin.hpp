@@ -150,6 +150,10 @@ template<class A, class B> str *__mod(str *fmt, tuple2<A,B> *t);
 #define __GC_HASH_SET __gnu_cxx::hash_set<T, hashfunc<T>, hasheq<T>, gc_allocator<T> >
 #define __GC_HASH_MAP __gnu_cxx::hash_map<K, V, hashfunc<K>, hasheq<K>, gc_allocator<std::pair<K, V> > >
 
+#ifdef __sun
+#define INFINITY __builtin_inff()
+#endif
+
 void __init();
 void __exit();
 void slicenr(int x, int &l, int&u, int&s, int len);
