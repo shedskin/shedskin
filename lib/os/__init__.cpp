@@ -59,7 +59,7 @@ list<str *> *listdir(str *path) {
 
 str *getcwd() { 
     str *r;
-    char *d=::getcwd(0, 0);
+    char *d=::getcwd(0, 256);
     r = new str(d);
     free(d);
     return r;
