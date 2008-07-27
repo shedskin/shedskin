@@ -1,4 +1,5 @@
 #include "datetime.hpp"
+#include "time.hpp"
 #include <iostream>
 
 namespace __datetime__ {
@@ -309,7 +310,11 @@ datetime *datetime::today() {
     t = localtime( &rawtime );
     
     struct timeval tv;
+#ifdef WIN32
+    __time__::gettimeofday(&tv, NULL); 
+#else
     gettimeofday(&tv, NULL); 
+#endif
 
     return new datetime(t->tm_year+1900,t->tm_mon+1,t->tm_mday,t->tm_hour,t->tm_min,t->tm_sec,tv.tv_usec);
 }
@@ -336,7 +341,11 @@ datetime *datetime::utcnow() {
     t = gmtime( &rawtime );
     
     struct timeval tv;
+#ifdef WIN32
+    __time__::gettimeofday(&tv, NULL); 
+#else
     gettimeofday(&tv, NULL); 
+#endif
 
     return new datetime(t->tm_year+1900,t->tm_mon+1,t->tm_mday,t->tm_hour,t->tm_min,t->tm_sec,tv.tv_usec);
 }
@@ -429,7 +438,11 @@ datetime *datetime::combine(date *d, time *t) {
 datetime *datetime::strptime(str *date_string, str *format) {
 	time_t rawtime;
 	struct tm t = {0, 0, 0, 1, 0, 0, 0, 1, -1};
+#ifdef WIN32
+    char *e = __time__::strptime(date_string->unit.c_str(), format->unit.c_str(), &t);
+#else
     char *e = ::strptime(date_string->unit.c_str(), format->unit.c_str(), &t);
+#endif
     if(!e)
         throw new ValueError(new str("time data did not match format:  data="+date_string->unit+" fmt="+format->unit));
  	if((*e)!='\0')
@@ -892,9 +905,9 @@ timedelta::timedelta(double days, double seconds, double microseconds, double mi
 	this->seconds = (int)(hours*3600 + minutes*60 + seconds + (weeks*7 + days - int(weeks*7 + days))*24*3600);
     //rounding to nearest microsec
 	if(usec1>=0.0)
-		this->microseconds = floor(usec1+0.5);
+		this->microseconds = (int)(floor(usec1+0.5));
 	else
-		this->microseconds = ceil(usec1-0.5);
+		this->microseconds = (int)(ceil(usec1-0.5));
     
     //move 1000000us to 1s
     this->seconds += this->microseconds/1000000;

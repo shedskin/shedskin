@@ -12,6 +12,15 @@
 using namespace __shedskin__;
 namespace __time__ {
 
+#ifdef WIN32
+struct  __ss_timezone {
+    int     tz_minuteswest;
+    int     tz_dsttime;
+};
+
+int gettimeofday (struct timeval *tv, struct __ss_timezone *tz);
+#endif
+
 extern int timezone;
 extern tuple2<str *, str *> *tzname;
 
@@ -67,6 +76,9 @@ str *strftime(str *format);
 str *strftime(str *format, tuple2<int, int> *tuple);
 
 struct_time *strptime(str *string, str *format);
+#ifdef WIN32
+char *strptime(const char *, const char *, struct tm *);
+#endif
 
 void __init();
 
