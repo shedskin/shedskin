@@ -11,12 +11,7 @@ double clock() {
 }
 
 #ifdef WIN32
-struct  timezone {
-    int     tz_minuteswest;
-    int     tz_dsttime;
-};
-
-static int gettimeofday (struct timeval *tv, struct timezone *tz)
+int gettimeofday (struct timeval *tv, struct __ss_timezone *tz)
 {
    struct _timeb tb;
 
