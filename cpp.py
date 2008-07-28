@@ -294,7 +294,7 @@ class generateVisitor(ASTVisitor):
                                 if func.cp: 
                                     print >>self.out, 'using '+mod_id+'::'+self.cpp_name(func.ident)+';';
                             for var in getgx().modules[child.modname].mv.globals.values():
-                                if not var.invisible and not var.imported and not var.name.startswith('__'):
+                                if not var.invisible and not var.imported and not var.name.startswith('__') and var.types():
                                     print >>self.out, 'using '+mod_id+'::'+self.cpp_name(var.name)+';';
                             for cl in getgx().modules[child.modname].classes:
                                 print >>self.out, 'using '+mod_id+'::'+cl+';';
