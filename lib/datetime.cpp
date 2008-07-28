@@ -100,36 +100,20 @@ timedelta *date::__sub__(date *other) {
     return new timedelta(toordinal()-other->toordinal(), 0, 0, 0 ,0, 0, 0);
 }
 
-bool __lt(date *f, date *s) {
-	if(f->year*366+f->month*31+f->day < s->year*366+s->month*31+s->day)
-		return true;
-	return false;
+int date::__cmp__(date *other) {
+	if(year==other->year && month==other->month && day==other->day)
+		return 0;
+    if (year*366+month*31+day > other->year*366+other->month*31+other->day)
+        return 1;
+    return -1;
 }
 
-bool __gt(date *f, date *s) {
-	if(f->year*366+f->month*31+f->day > s->year*366+s->month*31+s->day)
-		return true;
-	return false;
-}
-
-bool __le(date *f, date *s) {
-	return !__gt(f,s);
-}
-
-bool __ge(date *f, date *s) {
-	return !__lt(f,s);
-}
-
-bool __eq(date *f, date *s) {
-	if(f->year==s->year && f->month==s->month && f->day==s->day)
-		return true;
-	return false;
-}
-
-bool __ne(date *f, date *s) {
-	return !__eq(f,s);
-}
-
+int date::__eq__(date *other) { return __cmp__(other) == 0; }
+int date::__ne__(date *other) { return __cmp__(other) != 0; }
+int date::__gt__(date *other) { return __cmp__(other) == 1; }
+int date::__lt__(date *other) { return __cmp__(other) == -1; }
+int date::__ge__(date *other) { return __cmp__(other) != -1; }
+int date::__le__(date *other) { return __cmp__(other) != 1; }
 
 date *date::replace(int year, int month, int day) {
     date* t = new date(this);
@@ -540,42 +524,25 @@ void datetime_compare_check(datetime *&f, datetime *&s) {
 	}
 }
 
-bool __lt(datetime *f, datetime *s) {
-	datetime_compare_check(f,s);
-	if(f->year*366+f->month*31+f->day < s->year*366+s->month*31+s->day)
-		return true;
-	if(f->year*366+f->month*31+f->day == s->year*366+s->month*31+s->day && (f->hour*3600+f->minute*60+f->second)*1000000+f->microsecond < (s->hour*3600+s->minute*60+s->second)*1000000+s->microsecond)
-		return true;
-	return false;	
+int datetime::__cmp__(datetime *other) {
+    datetime *f = this;
+	datetime_compare_check(f, other);
+
+	if(f->year==other->year && f->month==other->month && f->day==other->day && f->hour==other->hour && f->minute==other->minute && f->second==other->second && f->microsecond==other->microsecond)
+		return 0;
+	if(f->year*366+f->month*31+f->day > other->year*366+other->month*31+other->day)
+		return 1;
+	if(f->year*366+f->month*31+f->day == other->year*366+other->month*31+other->day && (f->hour*3600+f->minute*60+f->second)*1000000+f->microsecond > (other->hour*3600+other->minute*60+other->second)*1000000+other->microsecond)
+		return 1;
+    return -1;
 }
 
-bool __gt(datetime *f, datetime *s) {
-	datetime_compare_check(f,s);
-	if(f->year*366+f->month*31+f->day > s->year*366+s->month*31+s->day)
-		return true;
-	if(f->year*366+f->month*31+f->day == s->year*366+s->month*31+s->day && (f->hour*3600+f->minute*60+f->second)*1000000+f->microsecond > (s->hour*3600+s->minute*60+s->second)*1000000+s->microsecond)
-		return true;
-	return false;	
-}
-
-bool __le(datetime *f, datetime *s) {
-	return !__gt(f,s);
-}
-
-bool __ge(datetime *f, datetime *s) {
-	return !__lt(f,s);
-}
-
-bool __eq(datetime *f, datetime *s) {
-	datetime_compare_check(f,s);
-	if(f->year==s->year && f->month==s->month && f->day==s->day && f->hour==s->hour && f->minute==s->minute && f->second==s->second && f->microsecond==s->microsecond)
-		return true;
-	return false;
-}
-
-bool __ne(datetime *f, datetime *s) {
-	return !__eq(f,s);
-}
+int datetime::__eq__(datetime *other) { return __cmp__(other) == 0; }
+int datetime::__ne__(datetime *other) { return __cmp__(other) != 0; }
+int datetime::__gt__(datetime *other) { return __cmp__(other) == 1; }
+int datetime::__lt__(datetime *other) { return __cmp__(other) == -1; }
+int datetime::__ge__(datetime *other) { return __cmp__(other) != -1; }
+int datetime::__le__(datetime *other) { return __cmp__(other) != 1; }
 
 date *datetime::_date() {
 	return new date(year,month,day);
@@ -853,44 +820,23 @@ void time_compare_check(time *&f, time *&s) {
 	}
 }
 
-bool __lt(time *f, time *s) {
-	time_compare_check(f,s);
-	if((f->hour*3600+f->minute*60+f->second)*1000000+f->microsecond < (s->hour*3600+s->minute*60+s->second)*1000000+s->microsecond)
-		return true;
-	return false;	
+int time::__cmp__(time *other) {
+    time *f = this;
+	time_compare_check(f, other);
+
+	if((f->hour*3600+f->minute*60+f->second)*1000000+f->microsecond == (other->hour*3600+other->minute*60+other->second)*1000000+other->microsecond)
+        return 0;
+	if((f->hour*3600+f->minute*60+f->second)*1000000+f->microsecond > (other->hour*3600+other->minute*60+other->second)*1000000+other->microsecond)
+        return 1;
+    return -1;
 }
 
-bool __gt(time *f, time *s) {
-	time_compare_check(f,s);
-	if((f->hour*3600+f->minute*60+f->second)*1000000+f->microsecond > (s->hour*3600+s->minute*60+s->second)*1000000+s->microsecond)
-		return true;
-	return false;	
-}
-
-bool __le(time *f, time *s) {
-	return !__gt(f,s);
-}
-
-bool __ge(time *f, time *s) {
-	return !__lt(f,s);
-}
-
-bool __eq(time *f, time *s) {
-	time_compare_check(f,s);
-	if((f->hour*3600+f->minute*60+f->second)*1000000+f->microsecond == (s->hour*3600+s->minute*60+s->second)*1000000+s->microsecond)
-		return true;
-	return false;	
-}
-
-bool __ne(time *f, time *s) {
-	return !__eq(f,s);
-}
-
-
-
-
-
-
+int time::__eq__(time *other) { return __cmp__(other) == 0; }
+int time::__ne__(time *other) { return __cmp__(other) != 0; }
+int time::__gt__(time *other) { return __cmp__(other) == 1; }
+int time::__lt__(time *other) { return __cmp__(other) == -1; }
+int time::__ge__(time *other) { return __cmp__(other) != -1; }
+int time::__le__(time *other) { return __cmp__(other) != 1; }
 
 
 //class timedelta
@@ -988,21 +934,17 @@ timedelta *timedelta::__abs__() {
 }
 
 int timedelta::__cmp__(timedelta *other) {
-    if ((days == other->days) && (seconds == other->seconds) &&
-        (microseconds == other->microseconds)) {
+    if ((days == other->days) && (seconds == other->seconds) && (microseconds == other->microseconds)) 
         return 0;
-    } else if (((days * 24 * 3600) + seconds) > ((other->days * 24 * 3600) + other->seconds)) {
+    if (((days * 24 * 3600) + seconds) > ((other->days * 24 * 3600) + other->seconds)) 
         return 1;
-    } else if ((((days * 24 * 3600) + seconds) == ((other->days * 24 * 3600) + other->seconds)) && (microseconds > other->microseconds)) {
+    if ((((days * 24 * 3600) + seconds) == ((other->days * 24 * 3600) + other->seconds)) && (microseconds > other->microseconds)) 
         return 1;
-    } else if (((days * 24 * 3600) + seconds) < ((other->days * 24 * 3600) + other->seconds)) {
-        return -1;
-    } else if ((((days * 24 * 3600) + seconds) == ((other->days * 24 * 3600) + other->seconds)) && (microseconds < other->microseconds)) {
-        return -1;
-    }
+    return -1;
 }
 
 int timedelta::__eq__(timedelta *other) { return __cmp__(other) == 0; }
+int timedelta::__ne__(timedelta *other) { return __cmp__(other) != 0; }
 int timedelta::__gt__(timedelta *other) { return __cmp__(other) == 1; }
 int timedelta::__lt__(timedelta *other) { return __cmp__(other) == -1; }
 int timedelta::__ge__(timedelta *other) { return __cmp__(other) != -1; }

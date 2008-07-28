@@ -61,14 +61,15 @@ public:
     str *__str__();
     str *ctime();
     str *strftime(str *format);
-};
 
-bool __lt(date *f, date *s);
-bool __gt(date *f, date *s);
-bool __le(date *f, date *s);
-bool __ge(date *f, date *s);
-bool __eq(date *f, date *s);
-bool __ne(date *f, date *s);
+    int __cmp__(date *other);
+    int __eq__(date *other);
+    int __ne__(date *other);
+    int __gt__(date *other);
+    int __lt__(date *other);
+    int __ge__(date *other);
+    int __le__(date *other);
+};
 
 
 //class tzinfo
@@ -134,14 +135,15 @@ public:
     str *__str__();
     str *ctime();
     str *strftime(str *format);
-};
 
-bool __lt(datetime *f, datetime *s);
-bool __gt(datetime *f, datetime *s);
-bool __le(datetime *f, datetime *s);
-bool __ge(datetime *f, datetime *s);
-bool __eq(datetime *f, datetime *s);
-bool __ne(datetime *f, datetime *s);
+    int __cmp__(datetime *other);
+    int __eq__(datetime *other);
+    int __ne__(datetime *other);
+    int __gt__(datetime *other);
+    int __lt__(datetime *other);
+    int __ge__(datetime *other);
+    int __le__(datetime *other);
+};
 
 
 //class time
@@ -163,16 +165,15 @@ public:
     timedelta *utcoffset();
     timedelta *dst();
     str *tzname();
+
+    int __cmp__(time *other);
+    int __eq__(time *other);
+    int __ne__(time *other);
+    int __gt__(time *other);
+    int __lt__(time *other);
+    int __ge__(time *other);
+    int __le__(time *other);
 };
-
-bool __lt(time *f, time *s);
-bool __gt(time *f, time *s);
-bool __le(time *f, time *s);
-bool __ge(time *f, time *s);
-bool __eq(time *f, time *s);
-bool __ne(time *f, time *s);
-
-
 
 //class timedelta
 extern class_ *cl_timedelta;
@@ -192,8 +193,10 @@ public:
     timedelta *__neg__();
     timedelta *__floordiv__(int n);                     //what's the difference between this and __div__?
     timedelta *__abs__();
-    int __eq__(timedelta *other);
+
     int __cmp__(timedelta *other);
+    int __eq__(timedelta *other);
+    int __ne__(timedelta *other);
     int __gt__(timedelta *other);
     int __lt__(timedelta *other);
     int __ge__(timedelta *other);
