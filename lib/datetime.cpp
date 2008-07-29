@@ -1,5 +1,6 @@
 #include "datetime.hpp"
 #include "time.hpp"
+#include "string.hpp"
 #include <iostream>
 
 namespace __datetime__ {
@@ -8,6 +9,9 @@ str *date_format,*hour_format1,*hour_format2,*ctime_format;
 str *one_day_string,*minus_one_day_string,*multiple_days_string,*point_string,*space_string,*none_string,*empty_string,*z_string,*Z_string;
 
 int MINYEAR, MAXYEAR;
+
+list<str *> *DayNames, *MonthNames;
+
 class_ *cl_date, *cl_tzinfo, *cl_timedelta, *cl_time, *cl_datetime;
 
 void __init() {
@@ -20,7 +24,7 @@ void __init() {
     date_format = new str("%04d-%02d-%02d");
     hour_format1 = new str("%d:%02d:%02d");
     hour_format2 = new str("%02d:%02d:%02d");
-	ctime_format = new str("%a %b %e %T %Y");
+    ctime_format = new str("%s %s %2d %02d:%02d:%02d %04d");
 	
 	one_day_string = new str("1 day, %d:%02d:%02d");
 	minus_one_day_string = new str("-1 day, %d:%02d:%02d");
@@ -34,11 +38,10 @@ void __init() {
     
     MINYEAR = 1;
     MAXYEAR = 9999;
+
+    DayNames = __string__::split(new str("Mon Tue Wed Thu Fri Sat Sun"));
+    MonthNames = __string__::split(new str("Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec"));
 }
-
-
-
-
 
 
 //class date        
@@ -182,22 +185,15 @@ str *date::__str__() {
 }
 
 str *date::ctime() {
-    return __time__::ctime(__time__::mktime(timetuple()));
+    int wday = weekday();
+
+    return __mod(ctime_format, DayNames->__getitem__(wday), MonthNames->__getitem__(month-1),
+                        day, 0, 0, 0, year);
 }
 
 str *date::strftime(str *format) {
     return __time__::strftime(format,timetuple());
 }
-
-
-
-
-
-
-
-
-
-
 
 
 //class tzinfo
@@ -259,16 +255,6 @@ str *tzinfo::minutes_to_str(datetime *dt) {
 		f = str("+%02d:%02d");
 	return __mod(&f,offset->seconds/3600,(offset->seconds/60)%60);
 }
-
-
-
-
-
-
-
-
-
-
 
 
 //class datetime
@@ -438,8 +424,6 @@ datetime *datetime::strptime(str *date_string, str *format) {
         t.tm_min,
         t.tm_sec);
 }
-
-
 
 datetime *datetime::__add__(timedelta *other) {
     int usec = this->microsecond + other->microseconds;
@@ -681,9 +665,11 @@ str *datetime::__str__() {
 }
 
 str *datetime::ctime() {
-    /*format = "Www Mmm dd hh:mm:ss yyyy"*/
-	return __time__::strftime(ctime_format,timetuple());
-};
+    int wday = weekday();
+
+    return __mod(ctime_format, DayNames->__getitem__(wday), MonthNames->__getitem__(month-1),
+                        day, hour, minute, second, year);
+}
 
 str *datetime::strftime(str *format) {
 	str *tmp;
@@ -700,16 +686,6 @@ str *datetime::strftime(str *format) {
 	delete format;
 	return tmp;
 }
-
-
-
-
-
-
-
-
-
-
 
 //class time    
 time::time(int hour, int minute, int second, int microsecond, tzinfo *tzinfo) {
