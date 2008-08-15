@@ -846,51 +846,6 @@ public:
 
 };
 
-#define ASSERT(x, y) if(!(x)) throw new AssertionError(y);
-
-#define FOR_IN(i, m, temp) \
-    __ ## temp = ___iter(m); \
-    while((__ ## temp)->for_has_next()) { \
-        i = (__ ## temp)->for_get_next(); \
-
-#define FOR_IN_SEQ(i, m, temp, n) \
-    __ ## temp = m; \
-    for(__ ## n = 0; __ ## n < (__ ## temp)->units.size(); __ ## n ++) { \
-        i = (__ ## temp)->units[__ ## n]; \
-
-#define FOR_IN_T2(i, m, obj, n) \
-    __ ## obj = m; \
-    for(__ ## n = 0; __ ## n < 2; __ ## n ++) { \
-        if (! __ ## n) i = (__ ## obj)->__getfirst__(); \
-        else i = (__ ## obj)->__getsecond__(); \
-
-#define FAST_FOR(i, l, u, s, t1, t2) \
-    if(s==0) \
-        throw new ValueError(new str("range() step argument must not be zero")); \
-    for(__ ## t1 = l, __ ## t2 = u; __ ## t1 < __ ## t2; __ ## t1 += s) { \
-        i=__ ## t1; \
-
-#define FAST_FOR_NEG(i, l, u, s, t1, t2) \
-    if(s==0) \
-        throw new ValueError(new str("range() step argument must not be zero")); \
-    for(__ ## t1 = l, __ ## t2 = u; __ ## t1 > __ ## t2; __ ## t1 += s) { \
-        i=__ ## t1; \
-
-#define END_FOR }
-
-template<class T> static inline int __wrap(T a, int i) {
-    #ifndef NOWRAP
-    if(i<0) return len(a)+i;
-    #endif
-    #ifdef BOUNDS 
-        if(i<0 || i>= len(a)) 
-            throw new IndexError(new str("index out of range")); 
-    #endif
-    return i;
-}
-
-#define ELEM(a,i) a->units[__wrap(a,i)]
-
 /* exceptions */
 
 class Exception: public pyobj {
@@ -995,6 +950,51 @@ public:
 };
 
 class StopIteration : public Exception { public: StopIteration(str *msg=0) : Exception(msg) {} };
+
+#define ASSERT(x, y) if(!(x)) throw new AssertionError(y);
+
+#define FOR_IN(i, m, temp) \
+    __ ## temp = ___iter(m); \
+    while((__ ## temp)->for_has_next()) { \
+        i = (__ ## temp)->for_get_next(); \
+
+#define FOR_IN_SEQ(i, m, temp, n) \
+    __ ## temp = m; \
+    for(__ ## n = 0; __ ## n < (__ ## temp)->units.size(); __ ## n ++) { \
+        i = (__ ## temp)->units[__ ## n]; \
+
+#define FOR_IN_T2(i, m, obj, n) \
+    __ ## obj = m; \
+    for(__ ## n = 0; __ ## n < 2; __ ## n ++) { \
+        if (! __ ## n) i = (__ ## obj)->__getfirst__(); \
+        else i = (__ ## obj)->__getsecond__(); \
+
+#define FAST_FOR(i, l, u, s, t1, t2) \
+    if(s==0) \
+        throw new ValueError(new str("range() step argument must not be zero")); \
+    for(__ ## t1 = l, __ ## t2 = u; __ ## t1 < __ ## t2; __ ## t1 += s) { \
+        i=__ ## t1; \
+
+#define FAST_FOR_NEG(i, l, u, s, t1, t2) \
+    if(s==0) \
+        throw new ValueError(new str("range() step argument must not be zero")); \
+    for(__ ## t1 = l, __ ## t2 = u; __ ## t1 > __ ## t2; __ ## t1 += s) { \
+        i=__ ## t1; \
+
+#define END_FOR }
+
+template<class T> static inline int __wrap(T a, int i) {
+    #ifndef NOWRAP
+    if(i<0) return len(a)+i;
+    #endif
+    #ifdef BOUNDS 
+        if(i<0 || i>= len(a)) 
+            throw new IndexError(new str("index out of range")); 
+    #endif
+    return i;
+}
+
+#define ELEM(a,i) a->units[__wrap(a,i)]
 
 /* representation */
 
