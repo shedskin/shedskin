@@ -426,7 +426,7 @@ def main():
 
     # --- command-line options
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'eibnf:ad:', ['infinite', 'extmod', 'bounds', 'nowrap', 'flags=', 'dir='])
+        opts, args = getopt.getopt(sys.argv[1:], 'heibwf:ad:', ['infinite', 'extmod', 'bounds', 'nowrap', 'flags=', 'dir='])
     except getopt.GetoptError:
         usage()
     
@@ -437,12 +437,12 @@ def main():
         if o in ['-a', '--noann']: getgx().annotation = False
         if o in ['-i', '--infinite']: getgx().avoid_loops = True
         if o in ['-d', '--dir']: getgx().output_dir = a
+        if o in ['-w', '--nowrap']: getgx().wrap_around_check = False
         if o in ['-f', '--flags']: 
             if not os.path.isfile(a): 
                 print "*ERROR* no such file: '%s'" % a
                 sys.exit()
             getgx().flags = a
-        if o in ['-w', '--nowrap']: getgx().wrap_around_check = False
 
     # --- argument
     if len(args) != 1:
