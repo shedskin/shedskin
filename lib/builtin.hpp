@@ -1800,19 +1800,18 @@ template<class T> int set<T>::difference_update(set<T> *s) {
 }
 
 template<class T> set<T> *set<T>::symmetric_difference(set<T> *s) {
-    set<T> *a, *b;
     set<T> *c = new set<T>(this->frozen);
 
-    if(len(s) < len(this)) { a = s; b = this; }
-    else { a = this; b = s; } 
-
-    c->units = b->units;
-
-    for(it1 = a->units.begin(); it1 != a->units.end(); it1++) {
+    for(it1 = units.begin(); it1 != units.end(); it1++) {
         T e = *it1;
-        if (!c->units.erase(e)) 
+        if(!s->__contains__(e))
             c->add(e);
-    } 
+    }
+    for(it1 = s->units.begin(); it1 != s->units.end(); it1++) {
+        T e = *it1;
+        if(!this->__contains__(e))
+            c->add(e);
+    }
 
     return c;
 }
