@@ -739,6 +739,7 @@ public:
     set<T> *__ss_union(pyiter<T> *s);
     set<T> *__ss_union(set<T> *s);
     int update(pyiter<T> *s);
+    int update(set<T> *s);
 
     set<T> *difference(set<T> *s);
     set<T> *__sub__(set<T> *s);
@@ -1774,6 +1775,13 @@ template<class T> int set<T>::update(pyiter<T> *s) {
     return 0;
 }
 
+template<class T> int set<T>::update(set<T> *s) {
+    for(it1 = s->units.begin(); it1 != s->units.end(); it1++)
+        add(*it1);
+
+    return 0;
+}
+
 template<class T> int set<T>::clear() {
     units.clear();
     return 0;
@@ -1799,27 +1807,30 @@ template<class T> int set<T>::difference_update(set<T> *s) {
     return 0;
 }
 
-template<class T> set<T> *set<T>::symmetric_difference(set<T> *s) {
-    set<T> *c = new set<T>(this->frozen);
-
-    for(it1 = units.begin(); it1 != units.end(); it1++) {
-        T e = *it1;
-        if(!s->__contains__(e))
-            c->add(e);
-    }
-    for(it1 = s->units.begin(); it1 != s->units.end(); it1++) {
-        T e = *it1;
-        if(!this->__contains__(e))
-            c->add(e);
-    }
-
-    return c;
-}
 
 template<class T> int set<T>::symmetric_difference_update(set<T> *s) {
     set<T> *c = symmetric_difference(s);
     units = c->units;
     return 0;
+}
+
+template<class T> set<T> *set<T>::symmetric_difference(set<T> *s) {
+    set<T> *a, *b;
+    set<T> *c = new set<T>(this->frozen);
+
+    if(len(s) < len(this)) { a = s; b = this; }
+    else { a = this; b = s; } 
+
+    c->units = b->units;
+
+    for(it1 = a->units.begin(); it1 != a->units.end(); it1++) {
+        T e = *it1;
+        if (!c->units.erase(e)) {
+            c->add(e);
+        }
+    }
+
+    return c;
 }
 
 template<class T> set<T> *set<T>::intersection(set<T> *s) {
