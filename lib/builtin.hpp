@@ -15,6 +15,7 @@
 #include <fstream>
 #include <sstream>
 #include <cstdarg>
+#include <cstring>
 #include <cmath>
 #include <algorithm>
 #include <iterator>
