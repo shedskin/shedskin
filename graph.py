@@ -396,6 +396,15 @@ class moduleVisitor(ASTVisitor):
         elif func.ident in func.parent.funcs and func.ident not in ['__getattr__', '__setattr__']: # XXX
             error("function/class redefinition is not allowed ('%s')" % func.ident, node)
 
+        if node.decorators:
+            for decorator in node.decorators.nodes:
+                if not isinstance(decorator, Name):
+                    error("complex decorators are not supported", decorator)
+                if decorator.name == 'staticmethod':
+                    parent.staticmethods.append(node.name)
+                else:
+                    error("'%s' decorator is not supported" % decorator.name, decorator)
+
         if not parent: 
             if is_lambda: self.lambdas[func.ident] = func
             else: self.funcs[func.ident] = func
@@ -427,9 +436,7 @@ class moduleVisitor(ASTVisitor):
                 self.constructor(dnode, 'dict', func)
                 self.addconstraint((inode(dnode), inode(var)), func)
 
-        for child in node.getChildNodes():
-            if child not in func.defaults:
-                self.visit(child, func)
+        self.visit(node.code, func)
 
         for default in func.defaults:
             if not const_literal(default):
