@@ -1419,8 +1419,7 @@ class generateVisitor(ASTVisitor):
         self.output(self.indentation.join(self.group_declarations(pairs)))
 
         # --- function body
-        for child in node.getChildNodes():
-            self.visit(child, func)
+        self.visit(node.code, func)
         if func.fakeret:
             self.visit(func.fakeret, func)
         
