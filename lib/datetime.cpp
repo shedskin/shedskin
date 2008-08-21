@@ -289,11 +289,10 @@ datetime *datetime::today() {
     return new datetime(t->tm_year+1900,t->tm_mon+1,t->tm_mday,t->tm_hour,t->tm_min,t->tm_sec,tv.tv_usec);
 }
 
-datetime *datetime::now() {
-    return today();
-}
-
 datetime *datetime::now(tzinfo *tzinfo) {
+    if(!tzinfo)
+        return today();
+
     datetime *r = utcnow();
     r->_tzinfo = tzinfo;
 	if(r->_tzinfo)

@@ -97,8 +97,7 @@ public:
     datetime(int year, int month, int day, int hour=0, int minute=0, int second=0, int microsecond=0, tzinfo *tzinfo=NULL);
     
     static datetime *today();
-    static datetime *now();
-    static datetime *now(tzinfo *tzinfo);
+    static datetime *now(tzinfo *tzinfo=NULL);
     static datetime *utcnow();
     
 	static datetime *from_timestamp(double timestamp, tzinfo *tzinfo, bool timefn);
