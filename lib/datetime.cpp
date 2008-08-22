@@ -612,8 +612,8 @@ str *datetime::tzname() {
 
 
 __time__::struct_time *datetime::timetuple() {
-    unsigned char dst;
-    if(_tzinfo!=NULL) {
+    char dst=-1;
+    if(_tzinfo) {
 		timedelta *tmp = _tzinfo->dst(this);
 		if(tmp->days==0 && tmp->seconds==0 && tmp->microseconds==0)
 			dst=0;
@@ -621,6 +621,7 @@ __time__::struct_time *datetime::timetuple() {
 			dst=1;
         delete tmp;
 	}
+
     return new __time__::struct_time(new tuple2<int, int>(9, 
                                                         year,month,day,
                                                         hour,minute,second,
