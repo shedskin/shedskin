@@ -1,7 +1,25 @@
 #!/usr/bin/env python
 
-# *** SHED SKIN Python-to-C++ Compiler 0.0.28 ***
-# Copyright 2005-2008 Mark Dufour; License GNU GPL version 3 (See LICENSE)
+'''
+*** SHED SKIN Python-to-C++ Compiler 0.0.28 ***
+Copyright 2005-2008 Mark Dufour; License GNU GPL version 3 (See LICENSE)
+
+ss.py: main program file
+
+uses: graph.py (build constraint graph for dataflow analysis)
+      infer.py (iterative type analysis over constraint graph)
+      cpp.py (generate C++ code)
+      shared.py (functions shared by several of these modules)
+       
+analysis(): call into above modules to compile a Python program
+annotate(): output type-annotated Python files (*.ss.py)
+generate_code(): generate Makefile and use cpp.py to output C++ code
+main(): parse command-line options, call analysis and annotate
+
+TODO: move generate_code() to cpp.py 
+      move and revisit confusion misc()
+
+'''
 
 from compiler import *
 from compiler.ast import *
