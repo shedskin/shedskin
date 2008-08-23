@@ -8,7 +8,7 @@ we combine two techniques from the literature, to analyze both parametric polymo
 
 the cartesian product algorithm duplicates functions (or their graph counterpart), based on the cartesian product of possible argument types, whereas iterative flow analysis duplicates classes based on observed imprecisions at assignment points. the two integers mentioned in the graph.py description are used to keep track of duplicates along these dimensions (first class duplicate nr, then function duplicate nr).
 
-the combined techniques scales reasonably well, but can explode in many cases. there are many ways to improve this. some ideas:
+the combined technique scales reasonably well, but can explode in many cases. there are many ways to improve this. some ideas:
 
 -an iterative deepening approach, merging redundant duplicates after each deepening
 -add and propagate filters across variables. e.g. 'a+1; a=b' implies that a and b must be of a type that implements '__add__'.
