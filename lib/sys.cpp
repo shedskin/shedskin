@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <climits>
 #include "sys.hpp"
 
 namespace __sys__ {
