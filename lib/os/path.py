@@ -1,4 +1,4 @@
-import os, stat
+import stat
 
 curdir = ''
 pardir = ''

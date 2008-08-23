@@ -338,10 +338,20 @@ class moduleVisitor(ASTVisitor):
             error("please place all imports (no 'try:' etc) at the top of the file", node)
 
         for (name, pseudonym) in node.names:
-            self.importpair(name, pseudonym, node, False)
+            if pseudonym:
+                # --- import a.b as c: don't import a
+                self.importpair(name, pseudonym, node, False)
+  
+            else:
+                # --- import a.b.c: import a, then a.b, then a.b.c
+                split = name.split('.')
+                for i in range(len(split)):
+                    subname = '.'.join(split[:i+1])
+                    self.importpair(subname, subname, node, False)
 
     def importpair(self, name, pseudonym, node, fake):
         if not pseudonym: pseudonym = name
+
         var = defaultvar(pseudonym, None)
         var.imported = True
 
