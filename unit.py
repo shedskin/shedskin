@@ -38,6 +38,17 @@ print random.randrange(1)
 print random.randrange(0,1)
 print random.randrange(0,1,1)
 
+#staticmethod decorator
+class C:
+    @staticmethod
+    def id(x):
+        return x
+print C.id(1)
+
+#improve import mechanism
+import os.path
+print os.getcwd()
+
 ''', '''
 output(equal=True)
 '''),
