@@ -193,6 +193,7 @@ def cartesian_product(node, worklist):
     if anon_func:
         # anonymous call 
         types = getgx().cnode[expr.node, node.dcpa, node.cpa].types()
+        types = [t for t in types if isinstance(t[0], function)] # XXX XXX analyse per t, sometimes class, sometimes function..
 
         if types:
             if list(types)[0][0].parent: # method reference XXX merge below?
@@ -219,6 +220,8 @@ def cartesian_product(node, worklist):
 
     elif method_call:
         objtypes = getgx().cnode[objexpr, node.dcpa, node.cpa].types() 
+        objtypes = [t for t in objtypes if not isinstance(t[0], function)] # XXX
+
         funcs = [(t[0].funcs[ident], t[1], t) for t in objtypes if ident in t[0].funcs]
 
     # --- argument types XXX connect_actuals_formals
@@ -267,7 +270,6 @@ def cartesian_product(node, worklist):
             argtypes.append(inode(arg).types()) # XXX def arg?
 
     #print 'argtypes', argtypes, node #, args, argtypes, cartesian(*([funcs]+argtypes))
-
     return cartesian(*([funcs]+argtypes))
 
 
