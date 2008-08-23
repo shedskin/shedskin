@@ -1,3 +1,16 @@
+'''
+*** SHED SKIN Python-to-C++ Compiler 0.0.28 ***
+Copyright 2005-2008 Mark Dufour; License GNU GPL version 3 (See LICENSE)
+
+graph.py: build constraint graph used in dataflow analysis
+
+constraint graph: graph along which possible types 'flow' during an 'abstract execution' of a program (a dataflow analysis). consider the assignment statement 'a = b'. it follows that the set of possible types of b is smaller than or equal to that of a (a constraint). we can determine possible types of a, by 'flowing' the types from b to a, in other words, along the constraint. 
+constraint graph nodes are stored in getgx().cnode, and the set of types of for each node in getgx().types. nodes are identified by an AST Node, and two integers. the integers are used in infer.py to duplicate parts of the constraint graph along two dimensions. in the initial constraint graph, these integers are always 0. 
+
+class moduleVisitor: inherits visitor pattern from compiler.visitor.ASTVisitor, to recursively generate constraints for each syntactical Python construct. for example, the visitFor method is called in case of a for-loop. temporary variables are introduced in many places, to enable translation to a lower-level language.
+
+parse_module(): locate module by name (e.g. 'os.path'), and use moduleVisitor if not cached'''
+
 from compiler import *
 from compiler.ast import *
 from compiler.visitor import *

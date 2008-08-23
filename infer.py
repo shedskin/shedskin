@@ -1,3 +1,36 @@
+'''
+*** SHED SKIN Python-to-C++ Compiler 0.0.28 ***
+Copyright 2005-2008 Mark Dufour; License GNU GPL version 3 (See LICENSE)
+
+infer.py: perform iterative type analysis 
+
+we combine two techniques from the literature, to analyze both parametric polymorphism and data polymorphism adaptively. these techniques are agesen's cartesian product algorithm and plevyak's iterative flow analysis (the data polymorphic part). for details about these algorithms, see ole agesen's excellent Phd thesis. for details about how they are precisely implemented in Shed Skin, see mark dufour's MsC thesis.
+
+the cartesian product algorithm duplicates functions (or their graph counterpart), based on the cartesian product of possible argument types, whereas iterative flow analysis duplicates classes based on observed imprecisions at assignment points. the two integers mentioned in the graph.py description are used to keep track of duplicates along these dimensions (first class duplicate nr, then function duplicate nr).
+
+the combined techniques scales reasonably well, but can explode in many cases. there are many ways to improve this. some ideas:
+
+-an iterative deepening approach, merging redundant duplicates after each deepening
+-add and propagate filters across variables. e.g. 'a+1; a=b' implies that a and b must be of a type that implements '__add__'.
+
+a complementary but very practical approach to (greatly) improve scalability would be to profile programs before compiling them, resulting in quite precise (lower bound) type information. type inference can then be used to 'fill in the gaps'.
+
+iterative_dataflow_analysis(): 
+    (FORWARD PHASE)
+    -propagate types along constraint graph (propagate())
+    -all the while creating function duplicates using the cartesian product algorithm(cpa())
+    -when creating a function duplicate, fill in allocation points with correct type (ifa_seed_template()) 
+    (BACKWARD PHASE)
+    -determine classes to be duplicated, according to found imprecision points (ifa()) 
+    -from imprecision points, follow the constraint graph backwardly to find involved allocation points
+    -duplicate classes, and spread them over these allocation points
+    (CLEANUP)
+    -quit if no further imprecision points (ifa() did not find anything)
+    -otherwise, restore the constraint graph to its original state and restart
+    -all the while maintaining types for each allocation point in getgx().alloc_info
+
+'''
+
 from compiler import *
 from compiler.ast import *
 from compiler.visitor import *
