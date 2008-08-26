@@ -49,6 +49,9 @@ print C.id(1)
 import os.path
 print os.getcwd()
 
+from os import path 
+print path.curdir
+
 ''', '''
 output(equal=True)
 '''),

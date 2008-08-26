@@ -340,16 +340,16 @@ class moduleVisitor(ASTVisitor):
         for (name, pseudonym) in node.names:
             if pseudonym:
                 # --- import a.b as c: don't import a
-                self.importpair(name, pseudonym, node, False)
+                self.importmodule(name, pseudonym, node, False)
   
             else:
                 # --- import a.b.c: import a, then a.b, then a.b.c
                 split = name.split('.')
                 for i in range(len(split)):
                     subname = '.'.join(split[:i+1])
-                    self.importpair(subname, subname, node, False)
+                    self.importmodule(subname, subname, node, False)
 
-    def importpair(self, name, pseudonym, node, fake):
+    def importmodule(self, name, pseudonym, node, fake):
         if not pseudonym: pseudonym = name
 
         var = defaultvar(pseudonym, None)
@@ -380,21 +380,23 @@ class moduleVisitor(ASTVisitor):
 
             if not pseudonym: pseudonym = name
 
+            if mod.builtin: localpath = connect_paths(getgx().libdir, mod.dir)
+            else: localpath = mod.dir
+
             if name in mod.funcs:
                 self.ext_funcs[pseudonym] = mod.funcs[name]
             elif name in mod.classes:
                 self.ext_classes[pseudonym] = mod.classes[name]
-            elif name in mod.mv.globals:
+            elif name in mod.mv.globals and not mod.mv.globals[name].imported: # XXX
                 extvar = mod.mv.globals[name]
-                if not extvar.imported:
-                    var = defaultvar(pseudonym, None)
-                    var.imported = True
-                    var.invisible = True
-                    self.addconstraint((inode(extvar), inode(var)), None)
-            elif os.path.isfile(mod.dir+'/'+name+'.py') or \
-                 os.path.isfile(mod.dir+'/'+name+'/__init__.py'):
+                var = defaultvar(pseudonym, None)
+                var.imported = True
+                var.invisible = True
+                self.addconstraint((inode(extvar), inode(var)), None)
+            elif os.path.isfile(localpath+'/'+name+'.py') or \
+                 os.path.isfile(localpath+'/'+name+'/__init__.py'):
                 modname = '.'.join(mod.mod_path+[name])
-                self.importpair(modname, name, node, False)
+                self.importmodule(modname, name, node, False)
             else:
                 error("no identifier '%s' in module '%s'" % (name, node.modname), node)
 
