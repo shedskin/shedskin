@@ -347,9 +347,18 @@ class moduleVisitor(ASTVisitor):
     def importmodules(self, name, node, fake):
         # --- import a.b.c: import a, then a.b, then a.b.c
         split = name.split('.')
+        mod=getmv().module
         for i in range(len(split)):
             subname = '.'.join(split[:i+1])
+            parent = mod
             mod = self.importmodule(subname, subname, node, fake)
+            if mod.ident not in parent.mv.imports: # XXX
+                if not fake:
+                    parent.mv.imports[mod.ident] = mod
+                    #var = defaultvar(parent.ident, None)
+                    #var.imported = True
+                    #getgx().types[inode(var)] = set([(mod,0)]) 
+                
         return mod
 
     def importmodule(self, name, pseudonym, node, fake):
