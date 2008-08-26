@@ -2567,6 +2567,7 @@ class generateVisitor(ASTVisitor):
 
     def visitGetattr(self, node, func=None):
         module = lookupmodule(node.expr, inode(node).mv.imports)
+        realmodule = lookupmodule(node.expr, inode(node).mv.imports, getmod=True)
         cl = lookupclass(node.expr, inode(node).mv.imports)
 
         if cl and node.attrname in cl.staticmethods: # staticmethod
@@ -2588,9 +2589,8 @@ class generateVisitor(ASTVisitor):
             if isinstance(node.expr, Name) and not lookupvar(node.expr.name, func): # XXX XXX
                 self.append(node.expr.name)
             else:
-                if module:
-                    mod = getmv().imports[module]
-                    self.append('__'+'__::__'.join(mod.mod_path)+'__') # XXX /__init__.py
+                if realmodule:
+                    self.append('__'+'__::__'.join(realmodule.mod_path)+'__') # XXX /__init__.py
                 else:
                     self.visit(node.expr, func)
             if not isinstance(node.expr, (Name)):

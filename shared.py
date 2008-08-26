@@ -420,17 +420,27 @@ class fakeGetattr(Getattr): pass # XXX ugly
 class fakeGetattr2(Getattr): pass
 class fakeGetattr3(Getattr): pass
 
-def lookupmodule(node, imports):
-    module = ''
+def lookupmodule(node, imports, getmod=False):
+    path = []
 
     while isinstance(node, Getattr):
-        module = '.' + node.attrname + module
+        path = [node.attrname] + path
         node = node.expr
 
-    if isinstance(node, Name) and node.name + module in imports:
-        return node.name + module
+    if isinstance(node, Name):
+        path = [node.name] + path
 
-    return None
+        # --- search import chain
+        for ident in path:
+            if ident in imports:
+                mod = imports[ident]
+                imports = mod.mv.imports
+            else:
+                return None
+        
+        # --- found: return mod or path
+        if getmod: return mod
+        return '.'.join(path)
 
 def lookupclass(node, imports):
     if isinstance(node, Name):
@@ -439,9 +449,9 @@ def lookupclass(node, imports):
         else: return None
 
     elif isinstance(node, Getattr):
-        module = lookupmodule(node.expr, imports)
-        if module and node.attrname in imports[module].classes:
-            return imports[module].classes[node.attrname]
+        module = lookupmodule(node.expr, imports, getmod=True)
+        if module and node.attrname in module.classes:
+            return module.classes[node.attrname]
 
     return None
 
@@ -575,9 +585,9 @@ def analyze_callfunc(node, check_exist=False): # XXX generate target list XXX un
             direct_call = cl.funcs[ident]
             return objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr
 
-        module = lookupmodule(node.node.expr, imports)
+        module = lookupmodule(node.node.expr, imports, getmod=True)
         if module: 
-            namespace, objexpr = imports[module], None
+            namespace, objexpr = module, None
         else:
             method_call = True
 
