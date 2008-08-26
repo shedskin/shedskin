@@ -52,6 +52,9 @@ print os.getcwd()
 from os import path 
 print path.curdir
 
+from os.path import curdir
+print curdir
+
 ''', '''
 output(equal=True)
 '''),
