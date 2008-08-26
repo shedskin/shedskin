@@ -1443,11 +1443,16 @@ def parse_module(name, ast=None, parent=None, node=None):
         relpath = name.split('.')
         if parent: path = connect_paths(parent.dir, relname)
         else: path = relname
+
+        # --- absolute paths for local module, lib module and 'root' module
+        if parent.builtin: localpath = connect_paths(getgx().libdir, path)
+        else: localpath = path
         libpath = connect_paths(getgx().libdir, relname)
         rootpath = connect_paths(os.getcwd(), relname)
- 
-        if os.path.isfile(path+'.py'): # local module
-            mod.filename = path+'.py'
+
+        # --- try local path
+        if os.path.isfile(localpath+'.py'):
+            mod.filename = localpath+'.py'
             if parent: mod.mod_path = parent.mod_dir + relpath
             else: mod.mod_path = relpath
             split = path.split('/')
@@ -1463,7 +1468,8 @@ def parse_module(name, ast=None, parent=None, node=None):
             mod.mod_dir = mod.mod_path
             mod.builtin = parent.builtin
  
-        elif os.path.isfile(rootpath+'.py'): # root module
+        # --- try root path
+        elif os.path.isfile(rootpath+'.py'): 
             mod.filename = relname+'.py'
             mod.mod_path = relpath
             mod.dir = '/'.join(relpath[:-1])
@@ -1475,7 +1481,8 @@ def parse_module(name, ast=None, parent=None, node=None):
             mod.dir = relname
             mod.mod_dir = mod.mod_path
  
-        elif os.path.isfile(libpath+'.py'): # library module
+        # --- try lib path
+        elif os.path.isfile(libpath+'.py'): 
             mod.filename = libpath+'.py'
             mod.mod_path = relpath
             mod.dir = '/'.join(relpath[:-1])
@@ -1492,12 +1499,14 @@ def parse_module(name, ast=None, parent=None, node=None):
         else:
             error('cannot locate module: '+name, node)
 
+        # --- check cache
         modpath = '.'.join(mod.mod_path)
         if modpath in getgx().modules: # cached?
             return getgx().modules[modpath] 
         #print 'not cached', modpath
         getgx().modules[modpath] = mod
           
+        # --- not cached, so parse
         mod.ast = parsefile(mod.filename) 
 
     old_mv = getmv()
