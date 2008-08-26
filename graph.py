@@ -334,35 +334,41 @@ class moduleVisitor(ASTVisitor):
                     func_copy.name = ident
 
     def visitImport(self, node, func=None):
-        if not node in getmv().importnodes: # XXX use (func, node) as parent..
+        if not node in getmv().importnodes: 
             error("please place all imports (no 'try:' etc) at the top of the file", node)
 
         for (name, pseudonym) in node.names:
             if pseudonym:
                 # --- import a.b as c: don't import a
                 self.importmodule(name, pseudonym, node, False)
-  
             else:
-                # --- import a.b.c: import a, then a.b, then a.b.c
-                split = name.split('.')
-                for i in range(len(split)):
-                    subname = '.'.join(split[:i+1])
-                    self.importmodule(subname, subname, node, False)
+                self.importmodules(name, node, False)
+
+    def importmodules(self, name, node, fake):
+        # --- import a.b.c: import a, then a.b, then a.b.c
+        split = name.split('.')
+        for i in range(len(split)):
+            subname = '.'.join(split[:i+1])
+            mod = self.importmodule(subname, subname, node, fake)
+        return mod
 
     def importmodule(self, name, pseudonym, node, fake):
-        if not pseudonym: pseudonym = name
-
-        var = defaultvar(pseudonym, None)
-        var.imported = True
-
         mod = self.analyzeModule(name, pseudonym, node, fake)
-        getgx().types[inode(var)] = set([(mod,0)]) 
+
+        if not fake:
+            if not pseudonym: pseudonym = name
+
+            var = defaultvar(pseudonym, None)
+            var.imported = True
+            getgx().types[inode(var)] = set([(mod,0)]) 
+
+        return mod
 
     def visitFrom(self, node, parent=None):
         if not node in getmv().importnodes: # XXX use (func, node) as parent..
             error("please place all imports (no 'try:' etc) at the top of the file", node)
 
-        mod = self.analyzeModule(node.modname, node.modname, node, True)
+        mod = self.importmodules(node.modname, node, True)
 
         for (name, pseudonym) in node.names:
             if name == '*':
