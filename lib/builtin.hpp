@@ -596,7 +596,6 @@ public:
 template<class T> class tuple2<T,T> : public pyseq<T> {
 public:
     using pyseq<T>::units;
-    int cached_hash;
 
     tuple2();
     tuple2(int count, ...);
@@ -628,8 +627,6 @@ public:
     tuple2<T,T> *__slice__(int x, int l, int u, int s);
 
     int __hash__();
-    int __hash_calc__();
-    int __hash_cached__();
 
     tuple2<T,T> *__deepcopy__(dict<void *, pyobj *> *memo);
     tuple2<T,T> *__copy__();
@@ -639,10 +636,6 @@ public:
     PyObject *__to_py__();
 #endif
 };
-
-template<> int tuple2<int, int>::__hash__();
-template<> int tuple2<double, double>::__hash__();
-template<> int tuple2<str *, str *>::__hash__(); 
 
 template <class K, class V> class dict : public pyiter<K> {
 public:
@@ -1960,7 +1953,6 @@ template<class T> set<T> *set<T>::__deepcopy__(dict<void *, pyobj *> *memo) {
 
 template<class T> tuple2<T, T>::tuple2() {
     this->__class__ = cl_tuple;
-    cached_hash = 0;
 }
 
 template<class T> tuple2<T, T>::tuple2(int count, ...) {
@@ -1972,7 +1964,6 @@ template<class T> tuple2<T, T>::tuple2(int count, ...) {
         this->units.push_back(t);
     }
     va_end(ap);
-    cached_hash = 0;
 }
 
 template<class T> T tuple2<T, T>::__getfirst__() { 
@@ -2062,25 +2053,11 @@ template<class T> tuple2<T,T> *tuple2<T, T>::__slice__(int x, int l, int u, int 
 }
 
 template<class T> int tuple2<T, T>::__hash__() {
-    return __hash_calc__();
-}
-
-template<class T> int tuple2<T, T>::__hash_calc__() {
-    //printf("hashing\n");
     int seed = 0;
     for(int i = 0; i<this->__len__();i++) {
         seed = hash_combine(seed, hasher<T>(this->units[i]));
     }
     return seed;
-}
-
-template<class T> int tuple2<T, T>::__hash_cached__() {
-    if(cached_hash) {
-        //printf("skipped\n");
-        return cached_hash;
-    }
-    cached_hash = __hash_calc__();
-    return cached_hash;
 }
 
 template<class T> tuple2<T,T> *tuple2<T,T>::__copy__() {
