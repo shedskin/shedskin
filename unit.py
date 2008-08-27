@@ -55,6 +55,9 @@ print path.curdir
 from os.path import curdir
 print curdir
 
+import os as os2
+print os2.path.curdir
+
 ''', '''
 output(equal=True)
 '''),

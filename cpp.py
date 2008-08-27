@@ -2567,7 +2567,6 @@ class generateVisitor(ASTVisitor):
 
     def visitGetattr(self, node, func=None):
         module = lookupmodule(node.expr, inode(node).mv.imports)
-        realmodule = lookupmodule(node.expr, inode(node).mv.imports, getmod=True)
         cl = lookupclass(node.expr, inode(node).mv.imports)
 
         if cl and node.attrname in cl.staticmethods: # staticmethod
@@ -2576,12 +2575,12 @@ class generateVisitor(ASTVisitor):
                 self.append('__'+cl.ident+'__::')
             elif isinstance(node.expr, Getattr):
                 submod = lookupmodule(node.expr.expr, inode(node).mv.imports)
-                self.append('__'+submod.replace('.','__::__')+'__::'+ident+'::')
+                self.append(namespace(submod)+'::'+ident+'::')
             else:
                 self.append(ident+'::')
 
         elif module and not (isinstance(node.expr, Name) and lookupvar(node.expr.name, func)): # XXX forbid redef?
-            self.append('__'+module.replace('.', '__::__')+'__::')
+            self.append(namespace(module)+'::') 
 
         else:
             if not isinstance(node.expr, (Name)):
@@ -2589,8 +2588,8 @@ class generateVisitor(ASTVisitor):
             if isinstance(node.expr, Name) and not lookupvar(node.expr.name, func): # XXX XXX
                 self.append(node.expr.name)
             else:
-                if realmodule:
-                    self.append('__'+'__::__'.join(realmodule.mod_path)+'__') # XXX /__init__.py
+                if module:
+                    self.append(namespace(module)) 
                 else:
                     self.visit(node.expr, func)
             if not isinstance(node.expr, (Name)):
@@ -2616,9 +2615,9 @@ class generateVisitor(ASTVisitor):
         self.append(self.cpp_name(ident))
 
     def visitAssAttr(self, node, func=None): # XXX stack/static
-        module = lookupmodule(node.expr, inode(node).mv.imports) 
+        module = lookupmodule(node.expr, inode(node).mv.imports)
         if module and not (isinstance(node.expr, Name) and lookupvar(node.expr.name, func)):
-            self.append('__'+module.replace('.', '__::__')+'__::'+self.cpp_name(node.attrname))
+            self.append(namespace(module)+'::'+self.cpp_name(node.attrname))
         else:
             if isinstance(node.expr, Name) and not lookupvar(node.expr.name, func): # XXX XXX
                 self.append(node.expr.name)
@@ -2696,6 +2695,9 @@ def singletype(node, type):
     if len(types) == 1 and isinstance(types[0], type):
         return types[0]
     return None
+
+def namespace(module):
+    return '__'+'__::__'.join(module.mod_path)+'__'
 
 # --- determine representation of node type set (within parameterized context)
 def typesetreprnew(node, parent, cplusplus=True):

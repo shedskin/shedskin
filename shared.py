@@ -420,7 +420,7 @@ class fakeGetattr(Getattr): pass # XXX ugly
 class fakeGetattr2(Getattr): pass
 class fakeGetattr3(Getattr): pass
 
-def lookupmodule(node, imports, getmod=False):
+def lookupmodule(node, imports):
     path = []
 
     while isinstance(node, Getattr):
@@ -438,9 +438,7 @@ def lookupmodule(node, imports, getmod=False):
             else:
                 return None
         
-        # --- found: return mod or path
-        if getmod: return mod
-        return '.'.join(path)
+        return mod
 
 def lookupclass(node, imports):
     if isinstance(node, Name):
@@ -449,7 +447,7 @@ def lookupclass(node, imports):
         else: return None
 
     elif isinstance(node, Getattr):
-        module = lookupmodule(node.expr, imports, getmod=True)
+        module = lookupmodule(node.expr, imports)
         if module and node.attrname in module.classes:
             return module.classes[node.attrname]
 
@@ -585,7 +583,7 @@ def analyze_callfunc(node, check_exist=False): # XXX generate target list XXX un
             direct_call = cl.funcs[ident]
             return objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr
 
-        module = lookupmodule(node.node.expr, imports, getmod=True)
+        module = lookupmodule(node.node.expr, imports)
         if module: 
             namespace, objexpr = module, None
         else:
