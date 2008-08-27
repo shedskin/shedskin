@@ -1629,12 +1629,6 @@ void printc(file *f, const char *fmt, ...) {
      f->print_space = 1;
 }
 
-/* cache hash values for tuple, frozenset */
-
-template<> int tuple2<int, int>::__hash__() { return __hash_cached__(); }
-template<> int tuple2<double, double>::__hash__() { return __hash_cached__(); }
-template<> int tuple2<str *, str *>::__hash__() { return __hash_cached__(); } 
-
 /* str, file iteration */
 
 __seqiter<str *> *str::__iter__() {
