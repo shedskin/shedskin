@@ -63,6 +63,10 @@ v = '1 %(aap)s, 1 %(aap)s, 2 %(bert)s..'
 d = {'aap': 'aapje', 'bert': 'bertjes'}
 print v % d
 
+w = '1 %(aap)s, 1 %(aap)d, 2 %(bert)c..' 
+f = {'aap': 70, 'bert': 71}
+print w % f
+
 ''', '''
 output(equal=True)
 '''),
