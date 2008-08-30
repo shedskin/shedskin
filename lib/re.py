@@ -54,9 +54,11 @@ class re_object:
         return ['']
     
     def sub(self, tpl, s, maxn=0):
+        tpl(match_object())
         return ''
     
     def subn(self, tpl, s, maxn=0):
+        tpl(match_object())
         return ['', '']
     
     def finditer(self, s, pos=0, endpos=-1):
@@ -82,9 +84,11 @@ def split(pat, s, maxn=0):
     return ['']
 
 def sub(pat, tpl, s, maxn=0):
+    tpl(match_object())
     return ''
 
 def subn(pat, tpl, s, maxn=0):
+    tpl(match_object())
     return ['', '']
 
 def finditer(pat, s, pos=0, endpos=-1):
