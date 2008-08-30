@@ -2476,13 +2476,17 @@ class generateVisitor(ASTVisitor):
         return
 
     def visitMod(self, node, func=None):
-        if [t for t in self.mergeinh[node.left] if t[0].ident != 'str_']:
+        if [t for t in getgx().merged_inh[node.left] if t[0].ident != 'str_']:
             self.visitBinary(node.left, node.right, '__mod__', '%', func)
             return
 
-        elif not isinstance(node.left, Const):
-            error('left-hand string in mod operation should be constant', node.left, warning=True)
-            self.visitm(node.left, '%', node.right, func)
+#        elif not isinstance(node.left, Const):
+#            error('left-hand string in mod operation should be constant', node.left, warning=True)
+#            self.visitm(node.left, '%', node.right, func)
+#            return
+        
+        if node.right in getgx().merged_inh and [t for t in getgx().merged_inh[node.right] if t[0].ident == 'dict']: # XXX
+            self.visitm('__moddict(', node.left, ', ', node.right, ')', func)
             return
 
         self.visitm('__mod(', node.left, func)

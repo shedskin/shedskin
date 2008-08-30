@@ -141,6 +141,8 @@ template<> str *oct(int a);
 template<> str *oct(bool b);
 
 str *__mod(str *fmt, ...);
+str *__moddict(str *fmt, dict<str *, str *> *d);
+
 template<class T> str *__mod(str *fmt, tuple2<T,T> *t); 
 template<class A, class B> str *__mod(str *fmt, tuple2<A,B> *t);
 

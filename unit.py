@@ -58,6 +58,11 @@ print curdir
 import os as os2
 print os2.path.curdir
 
+#mod improvements
+v = '1 %(aap)s, 1 %(aap)s, 2 %(bert)s..' 
+d = {'aap': 'aapje', 'bert': 'bertjes'}
+print v % d
+
 ''', '''
 output(equal=True)
 '''),
