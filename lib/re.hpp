@@ -62,7 +62,7 @@ public:
     //functions
     str *expand(str *tpl);
     
-    str *group(int m);
+    str *group(int m = 0);
     str *group(str *m);
     
     dict<str *, str *> *groupdict(str *defval = 0);
