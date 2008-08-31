@@ -1549,8 +1549,9 @@ str *__mod2(str *fmt, va_list args) {
 
 /* mod */
 
-str *mod_to_c(int i) { return chr(i); }
 str *mod_to_c(str *s) { return s; } 
+str *mod_to_c(int i) { return chr(i); }
+str *mod_to_c(double d) { return chr(__int(d)); }
 
 str *__mod(str *fmt, ...) {
      va_list args;
