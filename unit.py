@@ -59,13 +59,19 @@ import os as os2
 print os2.path.curdir
 
 #mod improvements
-v = '1 %(aap)s, 1 %(aap)s, 2 %(bert)s..' 
+v = '1 %(aap)s, 1 %(aap)s, %% 2 %(bert)s..' 
 d = {'aap': 'aapje', 'bert': 'bertjes'}
 print v % d
 
-w = '1 %(aap)s, 1 %(aap)d, 2 %(bert)c..' 
+w = '1 %(aap)s, %% 1 %(aap)d, 2 %(bert)c..' 
 f = {'aap': 70, 'bert': 71}
 print w % f
+
+t = (70,70,70)
+print '1 %s %% %d %c..' % t
+
+t2 = ('x', 71)
+print ' %%%c, en %%%c.. huhu' % t2
 
 ''', '''
 output(equal=True)
