@@ -73,6 +73,12 @@ print '1 %s %% %d %c..' % t
 t2 = ('x', 71)
 print ' %%%c, en %%%c.. huhu' % t2
 
+t3 = (70, 71, 72, 73, 74)
+print '%c %d %x %s %r' % t3
+
+t4 = (70.0, 71.0, 72.0, 73.0, 74.0)
+print '%c %d %x %s %r' % t4
+
 ''', '''
 output(equal=True)
 '''),

@@ -2734,6 +2734,7 @@ void __fmtcheck(str *fmt, int l);
 template <class T> str *mod_to_c(T t) { return 0; }
 str *mod_to_c(str *s);
 str *mod_to_c(int i); 
+str *mod_to_c(double d); 
 
 template<class T> int do_modfill(char c, str **fmt, T arg, str **s) {
     if(c == '%') {
@@ -2742,8 +2743,12 @@ template<class T> int do_modfill(char c, str **fmt, T arg, str **s) {
     }
     else if(c == 'c')
         __modfill(fmt, mod_to_c(arg), s);
-    else
-        __modfill(fmt, arg, s); 
+    else if(c == 's' || c == 'r')
+        __modfill(fmt, arg, s);
+    else if(__GC_STRING("diouxX").find(c) != -1)
+        __modfill(fmt, __int(arg), s);
+    else if(__GC_STRING("eEfFgGh").find(c) != -1)
+        __modfill(fmt, __float(arg), s);
        
     return 1;
 }
