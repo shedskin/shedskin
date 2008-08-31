@@ -82,6 +82,12 @@ print v4 % t4
 
 print '%(aap)s %(bert)d %% %(bert)c' % {'aap': 'hallo', 'bert': 72}
 
+#match_object.group def arg
+import re
+p = re.compile(r'\d+')
+m = p.search('Call 65490 for printing, 49152 for user code.')
+print m.group()
+
 ''', '''
 output(equal=True)
 '''),
