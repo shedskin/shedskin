@@ -2476,27 +2476,47 @@ class generateVisitor(ASTVisitor):
         return
 
     def visitMod(self, node, func=None):
+        # --- non-str % ..
         if [t for t in getgx().merged_inh[node.left] if t[0].ident != 'str_']:
             self.visitBinary(node.left, node.right, '__mod__', '%', func)
             return
 
-#        elif not isinstance(node.left, Const):
-#            error('left-hand string in mod operation should be constant', node.left, warning=True)
-#            self.visitm(node.left, '%', node.right, func)
-#            return
-        
-        if node.right in getgx().merged_inh and [t for t in getgx().merged_inh[node.right] if t[0].ident == 'dict']: # XXX
-            self.visitm('__moddict(', node.left, ', ', node.right, ')', func)
+        # --- str % non-constant dict/tuple
+        if not isinstance(node.right, (Tuple, Dict)) and node.right in getgx().merged_inh: # XXX
+            if [t for t in getgx().merged_inh[node.right] if t[0].ident == 'dict']: 
+                self.visitm('__moddict(', node.left, ', ', node.right, ')', func)
+                return
+            elif [t for t in getgx().merged_inh[node.right] if t[0].ident in ['tuple', 'tuple2']]: 
+                self.visitm('__modtuple(', node.left, ', ', node.right, ')', func)
+                return
+
+        # --- non-constant str % constant dict/tuple
+        if not isinstance(node.left, Const) and isinstance(node.right, (Dict, Tuple)): 
+            error("left-hand side of mod operation should be constant for constant dict/tuple", node, warning=True)
             return
 
-        self.visitm('__mod(', node.left, func)
+        # --- list and remove keys
+        j = 0
+        v = node.left.value
+        names = []
+        while True:
+            i = v.find('%(', j)
+            if i == -1:
+                break
+            j = v.find(')', i)
+            if j == -1:
+                break
 
-        # pair conversion flags to mod args
-        # XXX error("unsupported format character", node)
+            names.append(v[i+2:j])
+       
+        for name in set(names):
+            v = v.replace('('+name+')', '')
+        fmt = v
 
-        flags = [] # XXX use in getmv().visitMod
+        # --- determine formatting flags 
+        flags = [] 
         state = 0
-        for i, c in enumerate(node.left.value):
+        for i, c in enumerate(fmt):
             if c == '%':
                 state = 1-state
                 continue
@@ -2509,35 +2529,43 @@ class generateVisitor(ASTVisitor):
         if state == 1:
             error("incomplete format", node, warning=True)
 
-        # str % t
-        if node.right in self.mergeinh and ('tuple' in [t[0].ident for t in self.mergeinh[node.right]] or 'tuple2' in [t[0].ident for t in self.mergeinh[node.right]]):
-            self.visitm(', ', node.right, func)
+        # --- str % tuple/dict: determine corresponding child nodes 
+        if isinstance(node.right, Tuple):
+            nodes = node.right.nodes
 
+        elif isinstance(node.right, Dict):
+            nodes = []
+            for name in names:
+                values = [t[1] for t in node.right.items if isinstance(t[0], Const) and t[0].value == name]
+                if values: # XXX error
+                    nodes.append(values[0])
+
+        # str % non-tuple/dict
         else:
-            # str % (..)
-            if isinstance(node.right, Tuple):
-                nodes = node.right.nodes
+            nodes = [node.right]
 
-            # str % non-t
+        if len(flags) != len(nodes):
+            error("wrong number of format arguments", node, warning=True)
+
+        if fmt == node.left.value:
+            self.visitm('__mod(', node.left, func)
+        else:
+            self.visitm('__mod(new str("', fmt, '")', func) # XXX
+
+        # --- pair flags with nodes, converting nodes where necessary
+        for (f, n) in zip(flags, nodes):
+            if f == 'c' and 'int_' in [t[0].ident for t in self.mergeinh[n]]:
+                self.visitm(', chr(', n, ')', func)
+            elif f in 'eEfFgG' and 'float_' not in [t[0].ident for t in self.mergeinh[n]]:
+                self.visitm(', __float(', n, ')', func)
+            elif f in 'diouxX' and (not 'int_' in [t[0].ident for t in self.mergeinh[n]] or 'float_' in [t[0].ident for t in self.mergeinh[n]]):
+                self.visitm(', __int(', n, ')', func)
+            elif f in 'sr' and 'float_' in [t[0].ident for t in self.mergeinh[n]]:
+                self.visitm(', new float_(', n, ')', func)
+            elif f in 'sr' and 'int_' in [t[0].ident for t in self.mergeinh[n]]:
+                self.visitm(', new int_(', n, ')', func)
             else:
-                nodes = [node.right]
-
-            if len(flags) != len(nodes):
-                error("wrong number of format arguments", node, warning=True)
-
-            for (f, n) in zip(flags, nodes):
-                if f == 'c' and 'int_' in [t[0].ident for t in self.mergeinh[n]]:
-                    self.visitm(', chr(', n, ')', func)
-                elif f in 'eEfFgG' and 'float_' not in [t[0].ident for t in self.mergeinh[n]]:
-                    self.visitm(', __float(', n, ')', func)
-                elif f in 'diouxX' and (not 'int_' in [t[0].ident for t in self.mergeinh[n]] or 'float_' in [t[0].ident for t in self.mergeinh[n]]):
-                    self.visitm(', __int(', n, ')', func)
-                elif f in 'sr' and 'float_' in [t[0].ident for t in self.mergeinh[n]]:
-                    self.visitm(', new float_(', n, ')', func)
-                elif f in 'sr' and 'int_' in [t[0].ident for t in self.mergeinh[n]]:
-                    self.visitm(', new int_(', n, ')', func)
-                else:
-                    self.visitm(', ', n, func)
+                self.visitm(', ', n, func)
 
         self.append(')')
 

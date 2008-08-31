@@ -761,12 +761,7 @@ class moduleVisitor(ASTVisitor):
         self.fakefunc(node, node.left, '__pow__', [node.right], func)
 
     def visitMod(self, node, func=None):
-        if isinstance(node.left, Const) and isinstance(node.left.value, str):
-            for i, c in enumerate(node.left.value):
-                if c == '%' and i+1 < len(node.left.value) and node.left.value[i+1] == '(':
-                    error("mapping keys ('%(..)') are not supported", node.left)
-
-        if isinstance(node.right, Tuple):
+        if isinstance(node.right, (Tuple, Dict)):
             self.fakefunc(node, node.left, '__mod__', [], func)
             for child in node.right.getChildNodes():
                 self.visit(child, func)

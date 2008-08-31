@@ -77,7 +77,10 @@ t3 = (70, 71, 72, 73, 74)
 print '%c %d %x %s %r' % t3
 
 t4 = (70.0, 71.0, 72.0, 73.0, 74.0)
-print '%c %d %x %s %r' % t4
+v4 = '%c %d %x %s %r' 
+print v4 % t4
+
+print '%(aap)s %(bert)d %% %(bert)c' % {'aap': 'hallo', 'bert': 72}
 
 ''', '''
 output(equal=True)
