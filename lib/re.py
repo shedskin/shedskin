@@ -21,7 +21,7 @@ class match_object:
     def expand(self, tpl):
         return ''
     
-    def group(self, grp):
+    def group(self, grp = 0):
         return ''
     
     def start(self, i):
