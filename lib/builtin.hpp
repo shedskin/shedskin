@@ -847,7 +847,9 @@ public:
 class Exception: public pyobj {
 public:
     str *msg;
-    Exception(str *msg=0) { this->msg = msg; }
+    Exception(str *msg=0) { __init__(msg); }
+    int __init__(str *msg) { this->msg = msg; }
+    int __init__(int msg) { this->msg = 0; } /* XXX */
     str *__repr__() { return msg ? msg : new str("0"); }
 
 #ifdef __SS_BIND
