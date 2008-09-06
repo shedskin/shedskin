@@ -714,6 +714,7 @@ class generateVisitor(ASTVisitor):
             pyobjbase = ['public pyobj']
 
         self.output(template_repr(cl)+'class '+self.nokeywords(cl.ident)+' : '+', '.join(pyobjbase+['public '+b.ident for b in cl.bases])+' {')
+
         self.do_comment(node.doc)
         self.output('public:')
         self.indent()
@@ -759,7 +760,7 @@ class generateVisitor(ASTVisitor):
             print >>self.out
             
         # --- constructor 
-        if [c for c in cl.ancestors() if c.ident == 'Exception']:
+        if [c for c in cl.bases if c.ident == 'Exception']: # XXX 
             if cl.funcs['__init__'].inherited:
                 self.output(self.nokeywords(cl.ident)+'(str *msg=0) : %s(msg) {\n        __class__ = cl_'%cl.bases[0].ident+cl.cpp_name+';\n    }')
         elif not '__init__' in cl.funcs or len(cl.funcs['__init__'].formals) > 1: # XXX template vars

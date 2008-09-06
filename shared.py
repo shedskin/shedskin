@@ -570,7 +570,7 @@ def analyze_callfunc(node, check_exist=False): # XXX generate target list XXX un
         # parent constr
         if isinstance(objexpr, Name) and inode(node).parent: # XXX Name
             cl = inode(node).parent.parent
-            if isinstance(cl, class_) and objexpr.name in [x.ident for x in cl.bases]:
+            if isinstance(cl, class_) and objexpr.name in [x.ident for x in cl.ancestors()]:
                 parent_constr = True
                 ident = ident+objexpr.name+'__'
                 return objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr
