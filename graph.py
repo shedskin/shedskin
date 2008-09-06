@@ -491,7 +491,8 @@ class moduleVisitor(ASTVisitor):
                 self.visit(default, None) # defaults are global!! (XXX except when modeling..)
 
         # --- add implicit 'return None' if no return expressions 
-        if not func.ident == '__init__' and not func.returnexpr:
+        #if not func.ident == '__init__' and not func.returnexpr:
+        if not func.returnexpr:
             func.fakeret = Return(Name('None'))
             self.visit(func.fakeret, func)
 

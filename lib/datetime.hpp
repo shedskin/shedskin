@@ -82,6 +82,7 @@ public:
     virtual str *tzname(datetime *dt) {throw new NotImplementedError(new str("a tzinfo subclass must implement tzname()"));};
     virtual datetime *fromutc(datetime *dt);
 	str *minutes_to_str(datetime *dt);
+    int __init__() {};
 };
 
 

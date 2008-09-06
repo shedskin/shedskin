@@ -680,15 +680,10 @@ class generateVisitor(ASTVisitor):
                 self.output('/**\nclass %s\n*/\n' % cl.ident)
             self.output('class_ *cl_'+cl.cpp_name+';\n')
 
-            #if '__init__' in cl.funcs and cl.descendants() and len(cl.funcs['__init__'].formals) != 1:
-            #    self.output(cl.ident+'::'+cl.ident+'() {}')
-
             # --- method definitions
             for func in cl.funcs.values():
-                if func.node: 
+                if func.node and not (func.ident=='__init__' and func.inherited): 
                     self.visitFunction(func.node, cl, declare)
-            if cl.has_init:
-                self.visitFunction(cl.funcs['__init__'].node, cl, declare, True)
             if cl.has_copy and not 'copy' in cl.funcs and not cl.template_vars:
                 self.copy_method(cl, '__copy__', declare)
             if cl.has_deepcopy and not 'deepcopy' in cl.funcs and not cl.template_vars:
@@ -759,14 +754,27 @@ class generateVisitor(ASTVisitor):
         if [v for v in cl.vars if not v.startswith('__')]:
             print >>self.out
             
-        # --- constructor 
-        if [c for c in cl.bases if c.ident == 'Exception']: # XXX 
-            if cl.funcs['__init__'].inherited:
-                self.output(self.nokeywords(cl.ident)+'(str *msg=0) : %s(msg) {\n        __class__ = cl_'%cl.bases[0].ident+cl.cpp_name+';\n    }')
-        elif not '__init__' in cl.funcs or len(cl.funcs['__init__'].formals) > 1: # XXX template vars
-            self.output(self.nokeywords(cl.ident)+'() {\n        __class__ = cl_'+cl.cpp_name+';\n    }')
-        elif cl.descendants() and len(cl.funcs['__init__'].formals) != 1: # XXX
-            self.output(cl.ident+'();')
+        # --- constructor
+        need_init = False
+        if '__init__' in cl.funcs:
+            initfunc = cl.funcs['__init__']
+            if self.inhcpa(initfunc):
+                 need_init = True
+
+        # --- default constructor
+        if need_init:
+            self.output(self.nokeywords(cl.ident)+'() {}')
+        else:
+            self.output(self.nokeywords(cl.ident)+'() { this->__class__ = cl_'+cl.cpp_name+'; }')
+
+        # --- init constructor
+        if need_init:
+            self.func_header(initfunc, declare=True, is_init=True)
+            self.indent()
+            self.output('this->__class__ = cl_'+cl.cpp_name+';')
+            self.output('__init__('+', '.join([self.cpp_name(f) for f in initfunc.formals[1:]])+');')
+            self.deindent()
+            self.output('}')
 
         # --- virtual methods
         if cl.virtuals:
@@ -774,11 +782,8 @@ class generateVisitor(ASTVisitor):
 
         # --- regular methods
         for func in cl.funcs.values():
-            if func.node:
+            if func.node and not (func.ident=='__init__' and func.inherited): 
                 self.visitFunction(func.node, cl, declare)
-
-        if cl.has_init:
-            self.visitFunction(cl.funcs['__init__'].node, cl, declare, True)
 
         if cl.has_copy and not 'copy' in cl.funcs:
             self.copy_method(cl, '__copy__', declare)
@@ -1213,27 +1218,21 @@ class generateVisitor(ASTVisitor):
 
         # --- function/method template
         header = ''
-#        if func.ident != '__init__' and func in getgx().inheritance_relations: #XXX cleanup
-#            for child in getgx().inheritance_relations[func]:
-#                if func.ident in child.parent.funcs and not child.parent.funcs[func.ident].inherited:
-#                    header += 'virtual '
-#                    break
 
         if method and not declare:
             header = template_repr(func.parent)
         header += template_repr(func)
             
         # --- return expression
-        if func.ident in ['__hash__']:
+        if is_init:
+            ident = self.nokeywords(func.parent.ident)
+        elif func.ident in ['__hash__']:
             header += 'int '
         elif func.returnexpr: 
             header += typesetreprnew(func.retnode.thing, func) # XXX mult
         else:
-            if ident.startswith('__init__') and not is_init: 
-                ident = self.nokeywords(func.parent.ident)
-            else:
-                header += 'void '
-                ident = self.cpp_name(ident)
+            header += 'void '
+            ident = self.cpp_name(ident)
 
         ftypes = [typesetreprnew(func.vars[f], func) for f in formals]
 
@@ -1249,9 +1248,10 @@ class generateVisitor(ASTVisitor):
             else:
                 header += self.nokeywords(func.parent.ident)+'::'
         
-        if func.ident != '__init__':
-            ident = self.cpp_name(ident)
-        header += ident
+        if is_init:
+            header += ident
+        else:
+            header += self.cpp_name(ident)
 
         # --- cast arguments if necessary (explained above)
         casts = []
@@ -1274,29 +1274,18 @@ class generateVisitor(ASTVisitor):
         if declare and isinstance(func.parent, class_) and func.ident in func.parent.staticmethods:
             header = 'static '+header
 
+        if is_init and not formaldecs:
+            formaldecs = ['int init']
+
         # --- output 
         self.append(header+'('+', '.join(formaldecs)+')')
-        if declare and not (is_method(func) and func.parent.template_vars) and not func.template_vars: # XXX general func
+        if is_init:
+            print >>self.out, self.line+' {'
+
+        elif declare and not (is_method(func) and func.parent.template_vars) and not func.template_vars: # XXX general func
             self.eol()
             return
         else:
-            if func.ident == '__init__':
-                if func.inherited:
-                    self.append(' : '+func.parent.bases[0].ident+'('+','.join([f for f in func.formals if f != 'self'])+')') # XXX
-                elif func.parent_constr:
-                    target = func.parent.bases[0].funcs['__init__'] # XXX use general pairing function (connect_actual..?)
-
-                    pc = func.parent_constr
-                    if len(pc) < len(target.formals):
-                        pc += target.defaults[-len(target.formals)+len(pc):]
-
-                    self.append(' : '+pc[0]+'(')
-                    if len(pc) > 1:
-                        for n in pc[1:-1]:
-                            self.visitm(n, ',', func)
-                        self.visitm(pc[-1], func)
-                    self.append(')')
-        
             print >>self.out, self.line+' {'
             self.indent()
                     
@@ -1322,7 +1311,7 @@ class generateVisitor(ASTVisitor):
 
         return self.nokeywords(name)
 
-    def visitFunction(self, node, parent=None, declare=False, is_init=False):
+    def visitFunction(self, node, parent=None, declare=False):
         # locate right func instance
         if parent and isinstance(parent, class_):
             func = parent.funcs[node.name]
@@ -1388,7 +1377,7 @@ class generateVisitor(ASTVisitor):
             self.deindent()
             self.output('};\n')
 
-        self.func_header(func, declare, is_init)
+        self.func_header(func, declare)
         if declare and not (is_method(func) and func.parent.template_vars) and not func.template_vars: # XXX general func
             return
 
@@ -1401,22 +1390,6 @@ class generateVisitor(ASTVisitor):
             self.deindent()
             self.output('}\n')
             return
-
-        if func.ident.startswith('__init__'):
-            if func.parent:
-                if not func.parent.has_init or not is_init:
-                    self.output('this->__class__ = cl_'+parent.cpp_name+';')
-
-                if func.parent.has_init and not is_init:
-                    self.output('__init__('+','.join(func.formals[1:])+');')
-                    self.deindent();
-                    self.output('}\n')
-                    return
-
-            if func.inherited:
-                self.deindent()
-                self.output('}\n')
-                return
 
         # --- local declarations
         pairs = []
@@ -1908,11 +1881,11 @@ class generateVisitor(ASTVisitor):
 
         elif constructor:
             self.append('(new '+self.nokeywords(typesetreprnew(node, func)[:-2])+'(')
+            if funcs and len(funcs[0].formals) == 1 and not funcs[0].mv.module.builtin: # XXX builtin
+                self.append('1') # don't call default constructor
 
         elif parent_constr:
-            if ident.startswith('__init__'):
-                return
-            self.append(func.parent.bases[0].ident+'::'+node.node.attrname+'(') # XXX
+            self.append(node.node.expr.name+'::'+node.node.attrname+'(') # XXX lookupclass
 
         elif direct_call: # XXX no namespace (e.g., math.pow), check nr of args
             if ident == 'float' and node.args and self.mergeinh[node.args[0]] == set([(defclass('float_'), 0)]):

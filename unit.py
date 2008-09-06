@@ -88,6 +88,23 @@ p = re.compile(r'\d+')
 m = p.search('Call 65490 for printing, 49152 for user code.')
 print m.group()
 
+#do not special-case __init__
+class Error(Exception):
+    def __init__(self, x):
+        print 'error.__init__', x
+
+class ParsingError(Error):
+    pass
+
+class MissingSectionHeaderError(ParsingError):
+    def __init__(self):
+        print 'missingsectionheadererror.__init__'
+        Error.__init__(self, '4')
+
+Error('3')
+MissingSectionHeaderError()
+
+
 ''', '''
 output(equal=True)
 '''),
