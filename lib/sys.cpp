@@ -22,7 +22,7 @@ void __init(int c, char **v) {
     hexversion = 0x0001a00;
 
     copyright = new str("Copyright (c) Mark Dufour 2005-2008.\nAll Rights Reserved.");
-    platform = new str("linux2");
+    platform = new str("shedskin");
 
     maxint = INT_MAX;
 
