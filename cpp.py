@@ -1276,7 +1276,7 @@ class generateVisitor(ASTVisitor):
             header = 'static '+header
 
         if is_init and not formaldecs:
-            formaldecs = ['int init']
+            formaldecs = ['int __ss_init']
 
         # --- output 
         self.append(header+'('+', '.join(formaldecs)+')')
