@@ -708,7 +708,13 @@ class generateVisitor(ASTVisitor):
         else:
             pyobjbase = ['public pyobj']
 
-        self.output(template_repr(cl)+'class '+self.nokeywords(cl.ident)+' : '+', '.join(pyobjbase+['public '+b.ident for b in cl.bases])+' {')
+        clnames = [] # XXX sep func
+        for b in cl.bases:
+            module = b.mv.module 
+            if module.ident != 'builtin' and module != getmv().module and module.mod_path: clnames.append(namespace(module)+'::'+self.nokeywords(b.ident))
+            else: clnames.append(self.nokeywords(b.ident))
+
+        self.output(template_repr(cl)+'class '+self.nokeywords(cl.ident)+' : '+', '.join(pyobjbase+['public '+clname for clname in clnames])+' {')
 
         self.do_comment(node.doc)
         self.output('public:')

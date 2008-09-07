@@ -291,12 +291,8 @@ class moduleVisitor(ASTVisitor):
 
         # determine base classes
         for cl in self.classes.values():
-            for node in cl.node.bases: # XXX getattr
-                if node.name in self.classes:
-                    ancestor = self.classes[node.name]
-                else:
-                    ancestor = self.ext_classes[node.name]
-
+            for base in cl.node.bases: # XXX getattr
+                ancestor = lookupclass(base, getmv().imports)
                 cl.bases.append(ancestor)
                 ancestor.children.append(cl)
 
@@ -1203,7 +1199,7 @@ class moduleVisitor(ASTVisitor):
             if isinstance(node.node.expr, Name) and inode(node).parent:
                 cl, ident = func.parent, node.node.expr.name
                 
-                if isinstance(cl, class_) and ident in [b.name for b in cl.node.bases] and not isinstance(node.node,fakeGetattr): # XXX fakegetattr
+                if isinstance(cl, class_) and ident in [b.name for b in cl.node.bases if isinstance(b, Name)] and not isinstance(node.node,fakeGetattr): # XXX fakegetattr
                     func.parent_constr = [ident] + node.args[1:]
 
             # method call
@@ -1284,16 +1280,21 @@ class moduleVisitor(ASTVisitor):
         if len(node.bases) > 1:
             error('multiple inheritance is not supported', node)
 
-        if not getmv().module.builtin: # XXX doesn't have to be Name
+        if not getmv().module.builtin: 
             for base in node.bases:
-                if not isinstance(base, Name):
-                    error('specify base class with identifier for now', node)
-                if base.name not in getmv().classes and base.name not in getmv().ext_classes:
-                    error("name '%s' is not defined" % base.name, node)
+                if not isinstance(base, (Name, Getattr)): 
+                    error("invalid expression for base class", node)
 
-                if base.name in getmv().ext_classes and getmv().ext_classes[base.name].mv.module.ident == 'builtin' and base.name not in ['object', 'Exception']: 
-                    error('inheritance from builtins is not supported', node)
+                if isinstance(base, Name): name = base.name
+                else: name = base.attrname
 
+                cl = lookupclass(base, getmv().imports)
+                if not cl:
+                    error("no such class: '%s'" % name, node)
+               
+                elif cl.mv.module.ident == 'builtin' and name not in ['object', 'Exception']:
+                    error("inheritance from builtin class '%s' is not supported" % name, node)
+               
         if node.name in getmv().classes:
             newclass = getmv().classes[node.name] # set in visitModule, for forward references
         else:
