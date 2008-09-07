@@ -2177,7 +2177,7 @@ class generateVisitor(ASTVisitor):
                 elif isinstance(lvalue, AssAttr):
                     lcp = lowest_common_parents(polymorphic_t(self.mergeinh[lvalue.expr]))
                     if len(lcp) == 1 and isinstance(lcp[0], class_) and lvalue.attrname in lcp[0].properties:
-                        self.visitm(lvalue.expr, '->'+lcp[0].properties[lvalue.attrname][1]+'(', rvalue, ')', func)
+                        self.visitm(lvalue.expr, '->'+self.cpp_name(lcp[0].properties[lvalue.attrname][1])+'(', rvalue, ')', func)
                         self.eol()
                         continue
 
@@ -2607,7 +2607,7 @@ class generateVisitor(ASTVisitor):
 
         lcp = lowest_common_parents(polymorphic_t(self.mergeinh[node.expr]))
         if len(lcp) == 1 and isinstance(lcp[0], class_) and node.attrname in lcp[0].properties:
-            self.append(lcp[0].properties[node.attrname][0]+'()')
+            self.append(self.cpp_name(lcp[0].properties[node.attrname][0])+'()')
             return
 
         if ident == '__getitem__':

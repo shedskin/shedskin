@@ -441,6 +441,8 @@ class moduleVisitor(ASTVisitor):
                     error("complex decorators are not supported", decorator)
                 if decorator.name == 'staticmethod':
                     parent.staticmethods.append(node.name)
+                elif decorator.name == 'property':
+                    parent.properties[node.name] = node.name, None 
                 else:
                     error("'%s' decorator is not supported" % decorator.name, decorator)
 
