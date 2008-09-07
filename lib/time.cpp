@@ -6,11 +6,32 @@ clock_t start;
 int timezone;
 tuple2<str *, str *> *tzname;
 
-double clock() {
-    return ((double) (std::clock()-start)) / CLOCKS_PER_SEC;
+#ifdef WIN32
+
+#include <windows.h>
+
+double clock()
+{
+       static LARGE_INTEGER ctrStart;
+       static double divisor = 0.0;
+       LARGE_INTEGER now;
+       double diff;
+
+       if (divisor == 0.0) {
+               LARGE_INTEGER freq;
+               QueryPerformanceCounter(&ctrStart);
+               if (!QueryPerformanceFrequency(&freq) || freq.QuadPart == 0) {
+                       /* Unlikely to happen - this works on all intel
+                            machines at least!  Revert to clock() */
+                       return ((double) (std::clock()-start)) / CLOCKS_PER_SEC;
+               }
+               divisor = (double)freq.QuadPart;
+       }
+       QueryPerformanceCounter(&now);
+       diff = (double)(now.QuadPart - ctrStart.QuadPart);
+       return diff / divisor;
 }
 
-#ifdef WIN32
 int gettimeofday (struct timeval *tv, struct __ss_timezone *tz)
 {
    struct _timeb tb;
@@ -28,6 +49,12 @@ int gettimeofday (struct timeval *tv, struct __ss_timezone *tz)
   }
   return (0);
 }
+#else
+
+double clock() {
+    return ((double) (std::clock()-start)) / CLOCKS_PER_SEC;
+}
+
 #endif
 
 str *const_0, *const_1;
