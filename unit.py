@@ -104,6 +104,15 @@ class MissingSectionHeaderError(ParsingError):
 Error('3')
 MissingSectionHeaderError()
 
+#base class not identifier
+import testdata.bert as b
+
+class A(b.zeug):
+    def hup(self):
+        print self.hallo(4)
+
+A().hup()
+
 
 ''', '''
 output(equal=True)
