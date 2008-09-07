@@ -292,7 +292,7 @@ class moduleVisitor(ASTVisitor):
         # determine base classes
         for cl in self.classes.values():
             for base in cl.node.bases: # XXX getattr
-                ancestor = lookupclass(base, getmv().imports)
+                ancestor = lookupclass(base, getmv())
                 cl.bases.append(ancestor)
                 ancestor.children.append(cl)
 
@@ -1288,7 +1288,7 @@ class moduleVisitor(ASTVisitor):
                 if isinstance(base, Name): name = base.name
                 else: name = base.attrname
 
-                cl = lookupclass(base, getmv().imports)
+                cl = lookupclass(base, getmv())
                 if not cl:
                     error("no such class: '%s'" % name, node)
                

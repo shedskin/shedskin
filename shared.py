@@ -420,8 +420,9 @@ class fakeGetattr(Getattr): pass # XXX ugly
 class fakeGetattr2(Getattr): pass
 class fakeGetattr3(Getattr): pass
 
-def lookupmodule(node, imports):
+def lookupmodule(node, mv):
     path = []
+    imports = mv.imports
 
     while isinstance(node, Getattr):
         path = [node.attrname] + path
@@ -440,14 +441,14 @@ def lookupmodule(node, imports):
         
         return mod
 
-def lookupclass(node, imports):
+def lookupclass(node, mv):
     if isinstance(node, Name):
-        if node.name in getmv().classes: return getmv().classes[node.name]
-        elif node.name in getmv().ext_classes: return getmv().ext_classes[node.name]
+        if node.name in mv.classes: return mv.classes[node.name]
+        elif node.name in mv.ext_classes: return mv.ext_classes[node.name]
         else: return None
 
     elif isinstance(node, Getattr):
-        module = lookupmodule(node.expr, imports)
+        module = lookupmodule(node.expr, mv)
         if module and node.attrname in module.classes:
             return module.classes[node.attrname]
 
@@ -561,12 +562,12 @@ def analyze_callfunc(node, check_exist=False): # XXX generate target list XXX un
     #print 'analyze callnode', node, inode(node).parent
     namespace, objexpr, method_call, mod_var, parent_constr = inode(node).mv.module, None, False, False, False # XXX mod_var
     constructor, direct_call = None, None
-    imports = inode(node).mv.imports
+    mv = inode(node).mv
 
     # method call
     if isinstance(node.node, Getattr): 
         objexpr, ident = node.node.expr, node.node.attrname
-        cl = lookupclass(objexpr, imports)
+        cl = lookupclass(objexpr, mv)
 
         # staticmethod call
         if cl and ident in cl.staticmethods:  
@@ -581,7 +582,7 @@ def analyze_callfunc(node, check_exist=False): # XXX generate target list XXX un
                 ident = ident+objexpr.name+'__' # XXX change data structure
                 return objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr
 
-        module = lookupmodule(node.node.expr, imports)
+        module = lookupmodule(node.node.expr, mv)
         if module: 
             namespace, objexpr = module, None
         else:
