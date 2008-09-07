@@ -113,6 +113,13 @@ class A(b.zeug):
 
 A().hup()
 
+#property decorator
+class huppa:
+    @property
+    def huppa(self):
+        return 28
+
+print huppa().huppa
 
 ''', '''
 output(equal=True)
