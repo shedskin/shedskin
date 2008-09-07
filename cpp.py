@@ -316,7 +316,7 @@ class generateVisitor(ASTVisitor):
                             continue
 
                         if not name in self.module.mv.globals or [t for t in self.module.mv.globals[name].types() if not isinstance(t[0], module)]:
-                            print >>self.out, 'using '+mod_id+'::'+self.nokeywords(name)+';'
+                            print >>self.out, 'using '+mod_id+'::'+nokeywords(name)+';'
             if skip: print >>self.out
 
             # class declarations
@@ -325,7 +325,7 @@ class generateVisitor(ASTVisitor):
                 if isinstance(child, Class): 
                     gotcl = True
                     cl = defclass(child.name)
-                    print >>self.out, template_repr(cl)+'class '+self.nokeywords(cl.ident)+';'
+                    print >>self.out, template_repr(cl)+'class '+nokeywords(cl.ident)+';'
 
             # --- lambda typedefs
             if gotcl: print >>self.out
@@ -708,13 +708,8 @@ class generateVisitor(ASTVisitor):
         else:
             pyobjbase = ['public pyobj']
 
-        clnames = [] # XXX sep func
-        for b in cl.bases:
-            module = b.mv.module 
-            if module.ident != 'builtin' and module != getmv().module and module.mod_path: clnames.append(namespace(module)+'::'+self.nokeywords(b.ident))
-            else: clnames.append(self.nokeywords(b.ident))
-
-        self.output(template_repr(cl)+'class '+self.nokeywords(cl.ident)+' : '+', '.join(pyobjbase+['public '+clname for clname in clnames])+' {')
+        clnames = [namespaceclass(b) for b in cl.bases]
+        self.output(template_repr(cl)+'class '+nokeywords(cl.ident)+' : '+', '.join(pyobjbase+['public '+clname for clname in clnames])+' {')
 
         self.do_comment(node.doc)
         self.output('public:')
@@ -769,9 +764,9 @@ class generateVisitor(ASTVisitor):
 
         # --- default constructor
         if need_init:
-            self.output(self.nokeywords(cl.ident)+'() {}')
+            self.output(nokeywords(cl.ident)+'() {}')
         else:
-            self.output(self.nokeywords(cl.ident)+'() { this->__class__ = cl_'+cl.cpp_name+'; }')
+            self.output(nokeywords(cl.ident)+'() { this->__class__ = cl_'+cl.cpp_name+'; }')
 
         # --- init constructor
         if need_init:
@@ -1231,7 +1226,7 @@ class generateVisitor(ASTVisitor):
             
         # --- return expression
         if is_init:
-            ident = self.nokeywords(func.parent.ident)
+            ident = nokeywords(func.parent.ident)
         elif func.ident in ['__hash__']:
             header += 'int '
         elif func.returnexpr: 
@@ -1250,9 +1245,9 @@ class generateVisitor(ASTVisitor):
         # --- method header
         if method and not declare:
             if func.parent.template_vars:
-                header += self.nokeywords(func.parent.ident)+'<'+','.join(func.parent.template_vars.keys())+'>::'
+                header += nokeywords(func.parent.ident)+'<'+','.join(func.parent.template_vars.keys())+'>::'
             else:
-                header += self.nokeywords(func.parent.ident)+'::'
+                header += nokeywords(func.parent.ident)+'::'
         
         if is_init:
             header += ident
@@ -1302,11 +1297,6 @@ class generateVisitor(ASTVisitor):
                 self.output(cast)
             self.deindent()
 
-    def nokeywords(self, name):
-        if name in getgx().cpp_keywords:
-            return getgx().ss_prefix+name
-        return name
-
     def cpp_name(self, name, func=None):
         if name in [cl.ident for cl in getgx().allclasses]:
             return '_'+name
@@ -1315,7 +1305,7 @@ class generateVisitor(ASTVisitor):
         elif name in self.module.funcs and func and isinstance(func.parent, class_) and name in func.parent.funcs: 
             return '__'+func.mv.module.ident+'__::'+name
 
-        return self.nokeywords(name)
+        return nokeywords(name)
 
     def visitFunction(self, node, parent=None, declare=False):
         # locate right func instance
@@ -1886,12 +1876,13 @@ class generateVisitor(ASTVisitor):
             self.visitm(node.node, '(', func)
 
         elif constructor:
-            self.append('(new '+self.nokeywords(typesetreprnew(node, func)[:-2])+'(')
+            self.append('(new '+nokeywords(typesetreprnew(node, func)[:-2])+'(')
             if funcs and len(funcs[0].formals) == 1 and not funcs[0].mv.module.builtin: # XXX builtin
                 self.append('1') # don't call default constructor
 
         elif parent_constr:
-            self.append(node.node.expr.name+'::'+node.node.attrname+'(') # XXX lookupclass
+            cl = lookupclass(node.node.expr, getmv())
+            self.append(namespaceclass(cl)+'::'+node.node.attrname+'(') 
 
         elif direct_call: # XXX no namespace (e.g., math.pow), check nr of args
             if ident == 'float' and node.args and self.mergeinh[node.args[0]] == set([(defclass('float_'), 0)]):
@@ -2578,15 +2569,15 @@ class generateVisitor(ASTVisitor):
         self.eol(line)
 
     def visitGetattr(self, node, func=None):
-        module = lookupmodule(node.expr, inode(node).mv.imports)
-        cl = lookupclass(node.expr, inode(node).mv.imports)
+        module = lookupmodule(node.expr, inode(node).mv)
+        cl = lookupclass(node.expr, inode(node).mv)
 
         if cl and node.attrname in cl.staticmethods: # staticmethod
             ident = cl.ident
             if cl.ident in ['dict', 'defaultdict']: # own namespace because of template vars
                 self.append('__'+cl.ident+'__::')
             elif isinstance(node.expr, Getattr):
-                submod = lookupmodule(node.expr.expr, inode(node).mv.imports)
+                submod = lookupmodule(node.expr.expr, inode(node).mv)
                 self.append(namespace(submod)+'::'+ident+'::')
             else:
                 self.append(ident+'::')
@@ -2627,7 +2618,7 @@ class generateVisitor(ASTVisitor):
         self.append(self.cpp_name(ident))
 
     def visitAssAttr(self, node, func=None): # XXX stack/static
-        module = lookupmodule(node.expr, inode(node).mv.imports)
+        module = lookupmodule(node.expr, inode(node).mv)
         if module and not (isinstance(node.expr, Name) and lookupvar(node.expr.name, func)):
             self.append(namespace(module)+'::'+self.cpp_name(node.attrname))
         else:
@@ -2710,6 +2701,14 @@ def singletype(node, type):
 
 def namespace(module):
     return '__'+'__::__'.join(module.mod_path)+'__'
+
+def namespaceclass(cl):
+    module = cl.mv.module 
+
+    if module.ident != 'builtin' and module != getmv().module and module.mod_path:  
+        return namespace(module)+'::'+nokeywords(cl.ident)
+    else: 
+        return nokeywords(cl.ident)
 
 # --- determine representation of node type set (within parameterized context)
 def typesetreprnew(node, parent, cplusplus=True):
@@ -3357,3 +3356,9 @@ def upgrade_variables():
 
                 if inhvar in getgx().merged_all: # XXX ?
                     getgx().types[newnode].update(getgx().merged_all[inhvar])
+
+def nokeywords(name):
+    if name in getgx().cpp_keywords:
+        return getgx().ss_prefix+name
+    return name
+
