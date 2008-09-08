@@ -11,8 +11,6 @@
 #include <sys/timeb.h>
 #endif
 
-#include "datetime_cpython.hpp"
-
 using namespace __shedskin__;
 namespace __datetime__ {
 
@@ -202,6 +200,7 @@ public:
     int __ge__(timedelta *other);
     int __le__(timedelta *other);
 };
+
 
 } // module namespace
 
