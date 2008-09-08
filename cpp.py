@@ -759,7 +759,7 @@ class generateVisitor(ASTVisitor):
         need_init = False
         if '__init__' in cl.funcs:
             initfunc = cl.funcs['__init__']
-            if self.inhcpa(initfunc):
+            if self.inhcpa(initfunc): 
                  need_init = True
 
         # --- default constructor

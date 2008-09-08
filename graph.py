@@ -298,7 +298,8 @@ class moduleVisitor(ASTVisitor):
 
         # for each base class, duplicate methods
         for cl in self.classes.values():
-            for ancestor in cl.ancestors():
+            for ancestor in cl.ancestors_upto(None)[1:]: # XXX #cl.ancestors():
+
                 cl.staticmethods.extend(ancestor.staticmethods)
                 cl.properties.update(ancestor.properties)
 
