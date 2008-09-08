@@ -1851,7 +1851,7 @@ class generateVisitor(ASTVisitor):
 
         if self.library_func(funcs, 're', None, 'findall') or \
            self.library_func(funcs, 're', 're_object', 'findall'):
-            error("assuming 'findall' returns list of strings", node, warning=True)
+            error("'findall' does not work with groups", node, warning=True)
 
         if self.library_func(funcs, 'socket', 'socket', 'settimeout') or \
            self.library_func(funcs, 'socket', 'socket', 'gettimeout'):
