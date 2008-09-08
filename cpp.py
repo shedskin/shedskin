@@ -2720,14 +2720,23 @@ def typesetreprnew(node, parent, cplusplus=True):
     split = typesplit(node, parent)
 
     # --- use this 'split' to determine type representation
-    ts = typestrnew(split, parent, cplusplus, orig_parent, node) 
+    try:
+        ts = typestrnew(split, parent, cplusplus, orig_parent, node) 
+    except RuntimeError:
+        if not hasattr(node, 'lineno'): node.lineno = None # XXX
+        if not getmv().module.builtin and isinstance(node, variable) and not node.name.startswith('__'): # XXX startswith
+            error("variable %s has dynamic (sub)type" % repr(node), warning=True)
+        ts = 'ERROR'
+
     if cplusplus: 
         if not ts.endswith('*'): ts += ' '
         return ts
     return '['+ts+']'
 
-def typestrnew(split, root_class, cplusplus, orig_parent, node=None):
+def typestrnew(split, root_class, cplusplus, orig_parent, node=None, depth=0):
     #print 'typestrnew', split, root_class
+    if depth==10:
+        raise RuntimeError()
 
     # --- annotation or c++ code
     conv1 = {'int_': 'int', 'float_': 'double', 'str_': 'str', 'none': 'int'}
@@ -2763,7 +2772,7 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None):
         if inode(node).mv.module.builtin:
             return '***ERROR*** '
         if isinstance(node, variable):
-            if not node.name.startswith('__') :
+            if not node.name.startswith('__') : # XXX startswith
                 #print 'beh', classes, lcp, split, template_match(split, root_class, orig_parent)
 
                 if orig_parent: varname = "%s" % node
@@ -2814,7 +2823,7 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None):
             continue
 
         subsplit = split_subsplit(split, tvar)
-        subtypes.append(typestrnew(subsplit, root_class, cplusplus, orig_parent, node))
+        subtypes.append(typestrnew(subsplit, root_class, cplusplus, orig_parent, node, depth+1))
 
     ident = cl.ident
 
