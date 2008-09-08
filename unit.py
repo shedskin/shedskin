@@ -121,6 +121,16 @@ class huppa:
 
 print huppa().huppa
 
+# inherit from parent first, etc.
+class InterpolationError(Exception):
+    def __init__(self, option, section):
+        print option, section
+
+class InterpolationSyntaxError(InterpolationError):
+    pass
+
+InterpolationSyntaxError('a', 'b')
+
 ''', '''
 output(equal=True)
 '''),
