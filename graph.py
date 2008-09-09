@@ -330,6 +330,9 @@ class moduleVisitor(ASTVisitor):
                     cl.funcs[ident].inherited = func.node
                     func_copy.name = ident
 
+                    if ident == func.ident:
+                        cl.funcs[ident+ancestor.ident+'__'] = cl.funcs[ident]
+
     def visitImport(self, node, func=None):
         if not node in getmv().importnodes: 
             error("please place all imports (no 'try:' etc) at the top of the file", node)

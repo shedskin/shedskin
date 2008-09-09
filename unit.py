@@ -142,6 +142,21 @@ class ConfigParser(RawConfigParser):
 config = ConfigParser()
 config.read()
 
+# inheritance lookup
+class HUP:
+    def hup(self, x):
+        print 'huppa', x
+
+class HOP(HUP):
+    pass
+
+class HOPPA(HOP):
+    def __init__(self):
+        HOP.hup(self, 8)
+#        HOPPA.hup(self, 9) 
+
+HOPPA()
+
 ''', '''
 output(equal=True)
 '''),
