@@ -131,6 +131,17 @@ class InterpolationSyntaxError(InterpolationError):
 
 InterpolationSyntaxError('a', 'b')
 
+# ignore __getattr__, __setattr__ for ancestor calls
+class RawConfigParser:
+    KWEK = 'kwek!'
+
+class ConfigParser(RawConfigParser):
+    def read(self):
+        self.sections = RawConfigParser.KWEK
+
+config = ConfigParser()
+config.read()
+
 ''', '''
 output(equal=True)
 '''),
