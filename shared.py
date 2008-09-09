@@ -567,20 +567,21 @@ def analyze_callfunc(node, check_exist=False): # XXX generate target list XXX un
     # method call
     if isinstance(node.node, Getattr): 
         objexpr, ident = node.node.expr, node.node.attrname
+
         cl = lookupclass(objexpr, mv)
-
-        # staticmethod call
-        if cl and ident in cl.staticmethods:  
-            direct_call = cl.funcs[ident]
-            return objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr
-
-        # ancestor call
-        elif cl and inode(node).parent:
-            thiscl = inode(node).parent.parent
-            if isinstance(thiscl, class_) and cl.ident in [x.ident for x in thiscl.ancestors()]: # XXX
-                parent_constr = True
-                ident = ident+objexpr.name+'__' # XXX change data structure
+        if cl:
+            # staticmethod call
+            if ident in cl.staticmethods:  
+                direct_call = cl.funcs[ident]
                 return objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr
+
+            # ancestor call
+            elif ident not in ['__setattr__', '__getattr__'] and inode(node).parent:
+                thiscl = inode(node).parent.parent
+                if isinstance(thiscl, class_) and cl.ident in [x.ident for x in thiscl.ancestors()]: # XXX
+                    parent_constr = True
+                    ident = ident+objexpr.name+'__' # XXX change data structure
+                    return objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr
 
         module = lookupmodule(node.node.expr, mv)
         if module: 
