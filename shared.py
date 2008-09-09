@@ -580,7 +580,7 @@ def analyze_callfunc(node, check_exist=False): # XXX generate target list XXX un
                 thiscl = inode(node).parent.parent
                 if isinstance(thiscl, class_) and cl.ident in [x.ident for x in thiscl.ancestors()]: # XXX
                     parent_constr = True
-                    ident = ident+objexpr.name+'__' # XXX change data structure
+                    ident = ident+lookupimplementor(cl, ident)+'__' # XXX change data structure
                     return objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr
 
         module = lookupmodule(node.node.expr, mv)
@@ -627,6 +627,14 @@ def analyze_callfunc(node, check_exist=False): # XXX generate target list XXX un
                 error("unbound identifier '"+ident+"'", node)
 
     return objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr
+
+# XXX ugly: find ancestor class that implements function 'ident'
+def lookupimplementor(cl, ident):
+    while cl:
+        if ident in cl.funcs and not cl.funcs[ident].inherited:
+            return cl.ident
+        cl = cl.bases[0]
+    return None
 
 # --- return list of potential call targets
 def callfunc_targets(node, merge):
