@@ -568,8 +568,15 @@ def analyze_callfunc(node, check_exist=False): # XXX generate target list XXX un
     if isinstance(node.node, Getattr): 
         objexpr, ident = node.node.expr, node.node.attrname
 
+        # XXX a.b.c where a local var; to lookupclass and module?
+        localvar = None
+        if isinstance(objexpr, Name):
+            var = lookupvar(objexpr.name, inode(node).parent)
+            if var and var.parent:
+                localvar = var
+
         cl = lookupclass(objexpr, mv)
-        if cl:
+        if not localvar and cl:
             # staticmethod call
             if ident in cl.staticmethods:  
                 direct_call = cl.funcs[ident]
@@ -578,10 +585,11 @@ def analyze_callfunc(node, check_exist=False): # XXX generate target list XXX un
             # ancestor call
             elif ident not in ['__setattr__', '__getattr__'] and inode(node).parent:
                 thiscl = inode(node).parent.parent
-                if isinstance(thiscl, class_) and cl.ident in [x.ident for x in thiscl.ancestors()]: # XXX
-                    parent_constr = True
-                    ident = ident+lookupimplementor(cl, ident)+'__' # XXX change data structure
-                    return objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr
+                if isinstance(thiscl, class_) and cl.ident in [x.ident for x in thiscl.ancestors_upto(None)]: # XXX
+                    if lookupimplementor(cl,ident):
+                        parent_constr = True
+                        ident = ident+lookupimplementor(cl, ident)+'__' # XXX change data structure
+                        return objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr
 
         module = lookupmodule(node.node.expr, mv)
         if module: 
@@ -633,7 +641,10 @@ def lookupimplementor(cl, ident):
     while cl:
         if ident in cl.funcs and not cl.funcs[ident].inherited:
             return cl.ident
-        cl = cl.bases[0]
+        if cl.bases:
+            cl = cl.bases[0]
+        else:
+            break
     return None
 
 # --- return list of potential call targets

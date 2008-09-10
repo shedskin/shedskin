@@ -153,7 +153,7 @@ class HOP(HUP):
 class HOPPA(HOP):
     def __init__(self):
         HOP.hup(self, 8)
-#        HOPPA.hup(self, 9) 
+        HOPPA.hup(self, 9) 
 
 HOPPA()
 
