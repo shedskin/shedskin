@@ -765,9 +765,6 @@ print cc.a
 # --- just in case
 this = 1
 
-# --- good to test also
-import struct
-
 ''', '''
 output(equal=True)
 '''),
