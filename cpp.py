@@ -259,13 +259,6 @@ class generateVisitor(ASTVisitor):
 
         return 0
 
-    def ext_supported(self, types):
-        if [t for t in types if not isinstance(t[0], class_)]:
-            return False
-        if [t for t in types if not t[0].mv.module.ident == 'builtin' or t[0].ident not in ['int_', 'float_', 'str_', 'list', 'tuple', 'tuple2', 'dict', 'set', 'none']]:
-            return False
-        return True
-
     def visitModule(self, node, declare=False):
         # --- header file
         if declare: 
@@ -506,10 +499,12 @@ class generateVisitor(ASTVisitor):
                         continue 
                     builtins = True
                     for formal in func.formals:
-                        if not self.ext_supported(self.mergeinh[func.vars[formal]]):
+                        try:
+                            typesetreprnew(func.vars[formal], func, check_extmod=True)
+                            typesetreprnew(func.retnode.thing, func, check_extmod=True)
+                        except ExtmodError:
                             builtins = False
-    
-                    if builtins and self.ext_supported(self.mergeinh[func.retnode.thing]):
+                    if builtins:
                         funcs.append(func)
 
                 for func in funcs:
@@ -567,7 +562,11 @@ class generateVisitor(ASTVisitor):
                     typehu = typesetreprnew(var, var.parent)
                     if not typehu or typehu == 'void *': continue 
                     if name.startswith('__'): continue
-                    if not self.ext_supported(self.mergeinh[var]): continue
+
+                    try:
+                        typesetreprnew(var, var.parent, check_extmod=True)
+                    except ExtmodError:
+                        continue
 
                     vars.append(var)
 
@@ -2711,7 +2710,7 @@ def namespaceclass(cl):
         return nokeywords(cl.ident)
 
 # --- determine representation of node type set (within parameterized context)
-def typesetreprnew(node, parent, cplusplus=True):
+def typesetreprnew(node, parent, cplusplus=True, check_extmod=False):
     orig_parent = parent
     while is_listcomp(parent): # XXX redundant with typesplit?
         parent = parent.parent
@@ -2721,7 +2720,7 @@ def typesetreprnew(node, parent, cplusplus=True):
 
     # --- use this 'split' to determine type representation
     try:
-        ts = typestrnew(split, parent, cplusplus, orig_parent, node) 
+        ts = typestrnew(split, parent, cplusplus, orig_parent, node, check_extmod) 
     except RuntimeError:
         if not hasattr(node, 'lineno'): node.lineno = None # XXX
         if not getmv().module.builtin and isinstance(node, variable) and not node.name.startswith('__'): # XXX startswith
@@ -2733,7 +2732,10 @@ def typesetreprnew(node, parent, cplusplus=True):
         return ts
     return '['+ts+']'
 
-def typestrnew(split, root_class, cplusplus, orig_parent, node=None, depth=0):
+class ExtmodError(Exception):
+    pass
+
+def typestrnew(split, root_class, cplusplus, orig_parent, node=None, check_extmod=False, depth=0):
     #print 'typestrnew', split, root_class
     if depth==10:
         raise RuntimeError()
@@ -2754,6 +2756,8 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None, depth=0):
         alltypes.update(types)
 
     anon_funcs = set([t[0] for t in alltypes if isinstance(t[0], function)])
+    if anon_funcs and check_extmod:
+        raise ExtmodError()
     if anon_funcs:
         f = anon_funcs.pop()
         if not f in getmv().lambda_signum: # XXX method reference
@@ -2766,6 +2770,8 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None, depth=0):
     # --- multiple parent classes: check template variables
     if len(lcp) > 1:              
         tvar = template_match(split, root_class, orig_parent)
+        if tvar and check_extmod:
+            raise ExtmodError()
         if tvar: return tvar.name
         if set(lcp) == set([defclass('int_'),defclass('float_')]):
             return conv['float_']
@@ -2786,6 +2792,9 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None, depth=0):
         return ''
 
     cl = lcp.pop() 
+
+    if check_extmod and not (cl.mv.module.ident == 'builtin' and cl.ident in ['int_', 'float_', 'str_', 'list', 'tuple', 'tuple2', 'dict', 'set', 'none']):
+        raise ExtmodError()
 
     # --- simple built-in types
     if cl.ident in ['int_', 'float_','none']:
@@ -2823,7 +2832,7 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None, depth=0):
             continue
 
         subsplit = split_subsplit(split, tvar)
-        subtypes.append(typestrnew(subsplit, root_class, cplusplus, orig_parent, node, depth+1))
+        subtypes.append(typestrnew(subsplit, root_class, cplusplus, orig_parent, node, check_extmod, depth+1))
 
     ident = cl.ident
 
