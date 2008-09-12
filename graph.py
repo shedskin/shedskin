@@ -800,10 +800,10 @@ class moduleVisitor(ASTVisitor):
         return var
 
     def visitRaise(self, node, func=None):
-        if node.expr1 == None: error('first argument of raise cannot be None', node)
-        elif node.expr3 != None: error('third argument of raise not supported', node)
+        if node.expr1 == None or node.expr2 != None or node.expr3 != None: 
+            error('unsupported raise syntax', node)
 
-        if isinstance(node.expr1, Name):
+        if isinstance(node.expr1, Name): # XXX lookupclass
             name = node.expr1.name
             if not lookupvar(name, func) and not (name in getmv().classes or name in getmv().ext_classes):
                 error("no such class: '%s'" % name, node)
