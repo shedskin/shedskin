@@ -2965,7 +2965,7 @@ def moveStr(board, strMove):
       return
   for m in moves:
     print toString(m)
-  raise "no move found", strMove
+  raise "no move found" #, strMove
 
 def rowAttack(board, attackers, ix, dir):
   own = attackers[0]
@@ -4837,10 +4837,10 @@ class ueuk:
     def __repr__(self):
         return 'ueukrepr!'
 
-try:
-    raise ueuk, 'aha! error.'
-except ueuk, x:
-    print x.msg
+#try:
+#    raise ueuk, 'aha! error.'
+#except ueuk, x:
+#    print x.msg
     
 try:
     raise ueuk('aha! error.')
@@ -4869,7 +4869,8 @@ except ValueError, v:
     print 'hah', v
 
 ''', '''
-output("ok!\\ncrap!\\nmore crap! the universe won't collapse\\naha! error.\\nueukrepr!\\nexceptions are stupid :D\\nexceptions are stupid :D\\nbah! 3\\nhah list.index(x): x not in list\\n")
+#output("ok!\\ncrap!\\nmore crap! the universe won't collapse\\naha! error.\\nueukrepr!\\nexceptions are stupid :D\\nexceptions are stupid :D\\nbah! 3\\nhah list.index(x): x not in list\\n")
+output("ok!\\ncrap!\\nmore crap! the universe won't collapse\\nueukrepr!\\nexceptions are stupid :D\\nexceptions are stupid :D\\nbah! 3\\nhah list.index(x): x not in list\\n")
 
 '''),
 
