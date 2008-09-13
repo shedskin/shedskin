@@ -1439,14 +1439,14 @@ def parsefile(name):
         return parseFile(name)
     except SyntaxError, s:
         print '*ERROR* %s:%d: %s' % (name, s.lineno, s.msg)
-        sys.exit()
+        sys.exit(1)
 
 def parse_module(name, ast=None, parent=None, node=None):
     # --- valid name?
     for c in name: 
         if not c in string.letters+string.digits+'_.':
             print ("*ERROR*:%s.py: module names should consist of letters, digits and underscores" % name)
-            sys.exit()
+            sys.exit(1)
 
     # --- parse
     ident = name.split('.')[-1]

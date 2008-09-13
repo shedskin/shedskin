@@ -421,7 +421,7 @@ def usage():
  -i --infinite          Try to avoid infinite analysis time 
  -w --nowrap            Disable wrap-around checking 
 """
-    sys.exit()
+    sys.exit(1)
 
 def main():
     gx = newgx()
@@ -436,7 +436,7 @@ def main():
     major, minor = sys.version_info[:2]
     if major != 2 or minor < 3:
         print '*ERROR* Shed Skin is not compatible with this version of Python'
-        sys.exit()
+        sys.exit(1)
 
 #    if sys.platform == 'win32' and os.path.isdir('c:/mingw'):
 #        print '*ERROR* please rename or remove c:/mingw, as it conflicts with Shed Skin'
@@ -459,7 +459,7 @@ def main():
         if o in ['-f', '--flags']: 
             if not os.path.isfile(a): 
                 print "*ERROR* no such file: '%s'" % a
-                sys.exit()
+                sys.exit(1)
             getgx().flags = a
 
     # --- argument
@@ -470,7 +470,7 @@ def main():
         name += '.py'
     if not os.path.isfile(name): 
         print "*ERROR* no such file: '%s'" % name
-        sys.exit()
+        sys.exit(1)
     gx.main_mod = name[:-3]
         
     # --- analyze & annotate
