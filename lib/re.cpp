@@ -273,6 +273,32 @@ str *re_object::sub(str *repl, str *subj, int maxn)
     return __subn(repl, subj, maxn, 0);
 }
 
+str *re_object::sub(replfunc func, str *string, int maxn) {
+    list<str *> *l;
+    __re__::match_object *match;
+    __iter<__re__::match_object *> *__0, *__1;
+    int __2, at;
+
+    at = 0;
+    l = (new list<str *>());
+
+    FOR_IN(match,finditer(string),1)
+        l->append(string->__slice__(3, at, match->start(), 0));
+        l->append(func(match));
+        at = match->end();
+        if ((maxn>0)) {
+            maxn = (maxn-1);
+            if ((maxn==0)) {
+                break;
+            }
+        }
+    END_FOR
+
+    l->append(string->__slice__(1, at, 0, 0));
+    return (new str(""))->join(l);
+}
+
+
 tuple2<str *, int> *re_object::subn(str *repl, str *subj, int maxn)
 {
     str *r;
@@ -614,6 +640,16 @@ str *sub(str *pat, str *repl, str *subj, int maxn)
     
     ro = compile(pat, 0);
     r = ro->sub(repl, subj, maxn);
+    
+    return r;
+}
+
+str *sub(str *pat, replfunc func, str *subj, int maxn) {
+    re_object *ro;
+    str *r;
+    
+    ro = compile(pat, 0);
+    r = ro->sub(func, subj, maxn);
     
     return r;
 }
