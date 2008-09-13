@@ -16,7 +16,7 @@ int hexversion, maxint;
 void __init(int c, char **v) {
     argv = new list<str *>();
 
-    version = new str("Shed Skin Python-to-C++ Compiler 0.0.28\n[GCC ");
+    version = new str("Shed Skin Python-to-C++ Compiler 0.0.29\n[GCC ");
     version = version->__add__(new str(__VERSION__))->__add__(new str("]"));
     version_info = new tuple2<int, int>(5, 0, 0, 27, 0, 0);
     hexversion = 0x0001a00;
