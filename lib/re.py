@@ -24,10 +24,10 @@ class match_object:
     def group(self, grp = 0):
         return ''
     
-    def start(self, i):
+    def start(self, i = 0):
         return 1
     
-    def end(self, i):
+    def end(self, i = 0):
         return 1
     
     def groups(self, defval = 0):

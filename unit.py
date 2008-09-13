@@ -8,10 +8,10 @@ tests = [
 
 ('''fixes for 0.0.29; datetime''', '''
 #equality..
-hex=['A','B','C','D','E','F']
+hx=['A','B','C','D','E','F']
 try:
-    print hex.index('A'.upper())
-    print hex.count('A'+'')
+    print hx.index('A'.upper())
+    print hx.count('A'+'')
 except Exception, e:
     print e
 
@@ -82,11 +82,19 @@ print v4 % t4
 
 print '%(aap)s %(bert)d %% %(bert)c' % {'aap': 'hallo', 'bert': 72}
 
-#match_object.group def arg
+#re.sub replacement function
 import re
+
+def hexrepl(match):
+   value = int(match.group())
+   return hex(value)
+
 p = re.compile(r'\d+')
-m = p.search('Call 65490 for printing, 49152 for user code.')
-print m.group()
+print p.sub('****', 'Call 65490 for printing, 49152 for user code.', 1) 
+print p.sub(hexrepl, 'Call 65490 for printing, 49152 for user code.', 1) 
+print p.sub(hexrepl, 'Call 65490 for printing, 49152 for user code.') 
+print re.sub(r'\d+', '****', 'Call 65490 for printing, 49152 for user code.', 2) 
+print re.sub(r'\d+', hexrepl, 'Call 65490 for printing, 49152 for user code.', 2) 
 
 #do not special-case __init__
 class Error(Exception):

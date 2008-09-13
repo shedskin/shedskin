@@ -20,6 +20,8 @@ namespace __re__ {
 extern const int I, L, M, S, U, X, 
     IGNORECASE, LOCALE, MULTILINE, DOTALL, UNICODE, VERBOSE;
 
+class match_object;
+typedef str *(*replfunc)(match_object *);
 
 //re.error
 class error : public Exception
@@ -71,9 +73,9 @@ public:
     int __index(int matchid, char isend);
     int __index(str *mname, char isend);
     
-    int end(int matchid);
+    int end(int matchid = 0);
     int end(str *mname);
-    int start(int matchid);
+    int start(int matchid = 0);
     int start(str *mname);
     
     
@@ -117,6 +119,7 @@ public:
     __iter<match_object *> *finditer(str *subj, int pos = 0, int endpos = -1, int flags = 0);
     list<str *> *split(str *subj, int maxn = -1);
     str *sub(str *repl, str *subj, int maxn = -1);
+    str *sub(replfunc repl, str *subj, int maxn = -1);
     tuple2<str *, int> *subn(str *repl, str *subj, int maxn = -1);
     list<str *> *findall(str *subj, int flags = 0);
     
@@ -142,6 +145,7 @@ match_object *search(str *pat, str *subj, int flags = 0);
 __iter<match_object *> *finditer(str *pat, str *subj, int pos = 0, int endpos = -1, int flags = 0);
 list<str *> *split(str *pat, str *subj, int maxn = 0);
 str *sub(str *pat, str *repl, str *subj, int maxn = 0);
+str *sub(str *pat, replfunc repl, str *subj, int maxn = 0);
 tuple2<str *, int> *subn(str *pat, str *repl, str *subj, int maxn = 0);
 list<str *> *findall(str *pat, str *subj, int flags = 0);
 str *escape(str *s);
