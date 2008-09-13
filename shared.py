@@ -509,7 +509,7 @@ def error(msg, node=None, warning=False):
     print msg
 
     if not warning:
-        sys.exit()
+        sys.exit(1)
 
 # --- merge constraint network along combination of given dimensions (dcpa, cpa, inheritance)
 # e.g. for annotation we merge everything; for code generation, we might want to create specialized code
