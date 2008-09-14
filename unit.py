@@ -6,7 +6,7 @@ import traceback, sys, os, time
 
 tests = [
 
-('''fixes for 0.0.29; datetime''', '''
+('''fixes for 0.0.29; datetime, ConfigParser''', '''
 #equality..
 hx=['A','B','C','D','E','F']
 try:
@@ -147,8 +147,8 @@ class ConfigParser(RawConfigParser):
     def read(self):
         self.sections = RawConfigParser.KWEK
 
-config = ConfigParser()
-config.read()
+configg = ConfigParser()
+configg.read()
 
 # inheritance lookup
 class HUP:
@@ -164,6 +164,48 @@ class HOPPA(HOP):
         HOPPA.hup(self, 9) 
 
 HOPPA()
+
+#ConfigParser # XXX readfp
+import ConfigParser
+
+config = ConfigParser.ConfigParser(defaults={'aha': 'hah'})
+
+config.read(["testdata/test.conf"])
+
+print config.getint('ematter', 'pages'), config.getfloat('ematter', 'pages')
+print int(config.getboolean('ematter', 'hop'))
+
+print int(config.has_section('ematteu'))
+config.add_section('meuk')
+config.set('meuk', 'submeuk1', 'oi')
+config.set('meuk', 'submeuk2', 'bwah')
+if config.has_section('meuk') and config.has_option('meuk', 'submeuk1'):
+    config.remove_option('meuk', 'submeuk1')
+config.add_section('bagger')
+config.remove_section('bagger')
+
+# dump entire config file
+for section in sorted(config.sections()):
+    print section
+    for option in sorted(config.options(section)):
+        print " ", option, "=", config.get(section, option)
+
+print config.get('ematter', 'pages', vars={'var': 'blah'})
+
+fl = open('test.ini', 'w')
+config.write(fl)
+fl.close()
+print sorted(open('test.ini').readlines())
+
+print config.defaults()
+print sorted(config.items('ematter', vars={'var': 'blah'}))
+
+rcp = ConfigParser.RawConfigParser()
+rcp.read(["testdata/test.conf"])
+
+print rcp.get('ematter', 'pages') #, vars={'var': 'blah'})
+print rcp.items('ematter')
+
 
 ''', '''
 output(equal=True)
