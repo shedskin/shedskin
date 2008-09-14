@@ -215,6 +215,7 @@ public:
     int write(file *fp);
     int add_section(str *section);
     list<str *> *sections();
+    list<str *> *read(str *filename);
     list<str *> *read(list<str *> *filenames);
     int getboolean(str *section, str *option);
     list<tuple2<str *, str *> *> *items(str *section);

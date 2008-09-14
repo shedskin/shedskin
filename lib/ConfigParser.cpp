@@ -524,6 +524,10 @@ str *RawConfigParser::get(str *section, str *option, int raw, dict<str *, str *>
     return 0;
 }
 
+list<str *> *RawConfigParser::read(str *filename) {
+    return read(new list<str *>(1, filename));
+}
+
 list<str *> *RawConfigParser::read(list<str *> *filenames) {
     /**
     Read and parse a filename or a list of filenames.
