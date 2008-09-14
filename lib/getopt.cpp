@@ -49,7 +49,10 @@ GetoptError::GetoptError(str *msg, str *opt) {
     this->__class__ = cl_GetoptError;
     
     this->msg = msg;
-    this->opt = opt;
+    if(opt)
+        this->opt = opt;
+    else
+        this->opt = const_0;
 }
 
 void __init() {
