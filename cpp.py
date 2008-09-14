@@ -995,9 +995,14 @@ class generateVisitor(ASTVisitor):
                 self.visit(arg, func)
 
     def visitRaise(self, node, func=None):
+        cl = None # XXX sep func
+        t = [t[0] for t in self.mergeinh[node.expr1]]
+        if len(t) == 1:
+            cl = t[0]
+
         self.start('throw (')
         # --- raise class [, constructor args]
-        if isinstance(node.expr1, Name) and not lookupvar(node.expr1.name, func): # XXX var = MyException
+        if isinstance(node.expr1, Name) and not lookupvar(node.expr1.name, func): # XXX lookupclass 
             self.append('new %s(' % node.expr1.name)
             if node.expr2:
                 if isinstance(node.expr2, Tuple) and node.expr2.nodes:
@@ -1008,6 +1013,8 @@ class generateVisitor(ASTVisitor):
                     self.visit(node.expr2, func)
             self.append(')')
         # --- raise instance
+        elif isinstance(cl, class_) and cl.mv.module.ident == 'builtin' and not [a for a in cl.ancestors_upto(None) if a.ident == 'Exception']:
+            self.append('new Exception()')
         else:
             self.visit(node.expr1, func)
         self.eol(')')
@@ -1033,12 +1040,13 @@ class generateVisitor(ASTVisitor):
                 pairs = [(handler[0], handler[1], handler[2])]
 
             for (h0, h1, h2) in pairs:
-                if not h0:
+                if isinstance(h0, Name) and h0.name in ['int', 'float', 'str', 'class']:
+                    continue # XXX lookupclass
+                elif h0:
+                    arg = namespaceclass(lookupclass(h0, getmv()))+' *'
+                else:
                     arg = 'Exception *'
-                elif isinstance(h0, Name):
-                    arg = h0.name+' *'
-                else: # XXX flow & visit
-                    arg = '__'+h0.expr.name+'__::'+h0.attrname+' *'
+
                 if h1:
                     arg += h1.name
 

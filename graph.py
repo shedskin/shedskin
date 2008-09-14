@@ -803,11 +803,6 @@ class moduleVisitor(ASTVisitor):
         if node.expr1 == None or node.expr2 != None or node.expr3 != None: 
             error('unsupported raise syntax', node)
 
-        if isinstance(node.expr1, Name): # XXX lookupclass
-            name = node.expr1.name
-            if not lookupvar(name, func) and not (name in getmv().classes or name in getmv().ext_classes):
-                error("no such class: '%s'" % name, node)
-
         for child in node.getChildNodes():
             self.visit(child, func)
 
@@ -821,18 +816,9 @@ class moduleVisitor(ASTVisitor):
                 pairs = [(handler[0], handler[1])]
 
             for (h0, h1) in pairs:
-                if isinstance(h0, Name): 
-                    clname = h0.name
-                    if clname in ['int','float','class']: clname += '_'
-                    if not (clname in getmv().classes or clname in getmv().ext_classes):
-                        error("no such class: '%s'" % clname, node)
-                    cl = defclass(clname)
-
-                else: # Getattr
-                    if not isinstance(h0.expr, Name):
-                        error('this type of exception is not supported', h0)
-
-                    cl = getgx().modules[h0.expr.name].classes[h0.attrname]
+                if isinstance(h0, Name) and h0.name in ['int', 'float', 'str', 'class']:
+                    continue # handle in lookupclass
+                cl = lookupclass(h0, getmv())
 
                 if isinstance(h1, AssName):
                     var = defaultvar(h1.name, func) 
