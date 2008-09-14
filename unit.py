@@ -170,7 +170,7 @@ import ConfigParser
 
 config = ConfigParser.ConfigParser(defaults={'aha': 'hah'})
 
-config.read(["testdata/test.conf"])
+config.read("testdata/test.conf")
 
 print config.getint('ematter', 'pages'), config.getfloat('ematter', 'pages')
 print int(config.getboolean('ematter', 'hop'))
@@ -192,10 +192,10 @@ for section in sorted(config.sections()):
 
 print config.get('ematter', 'pages', vars={'var': 'blah'})
 
-fl = open('test.ini', 'w')
+fl = open('testdata/test.ini', 'w')
 config.write(fl)
 fl.close()
-print sorted(open('test.ini').readlines())
+print sorted(open('testdata/test.ini').readlines())
 
 print config.defaults()
 print sorted(config.items('ematter', vars={'var': 'blah'}))
