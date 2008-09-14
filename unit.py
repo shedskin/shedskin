@@ -206,6 +206,11 @@ rcp.read(["testdata/test.conf"])
 print rcp.get('ematter', 'pages') #, vars={'var': 'blah'})
 print rcp.items('ematter')
 
+# catch str exception
+try:
+    raise '2888'
+except:
+    print 'welja'
 
 ''', '''
 output(equal=True)
