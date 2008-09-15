@@ -734,7 +734,7 @@ str *ConfigParser::_interpolate(str *section, str *option, str *rawval, dict<str
     while (depth) {
         depth = (depth-1);
         if (value->__contains__(const_28)) {
-            value = const_17;
+            value = (ConfigParser::_KEYCRE)->sub(_interpolation_replace, value);
             try {
                 value = __moddict(value, vars);
             } catch (KeyError *e) {
@@ -851,6 +851,19 @@ list<tuple2<str *, str *> *> *ConfigParser::items(str *section, int raw, dict<st
     }
     else {
         return list_comp_1(d, this, options, section);
+    }
+    return 0;
+}
+
+str *_interpolation_replace(__re__::match_object *match) {
+    str *s;
+
+    s = match->group(1);
+    if ((s==0)) {
+        return match->group();
+    }
+    else {
+        return __mod(new str("%%(%s)s"), s->lower());
     }
     return 0;
 }
