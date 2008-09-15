@@ -241,6 +241,8 @@ public:
     list<tuple2<str *, str *> *> *items(str *section, int raw, dict<str *, str *> *vars);
 };
 
+str *_interpolation_replace(__re__::match_object *match);
+
 extern str * default_11;
 extern int  default_10;
 extern int  default_13;
