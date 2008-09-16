@@ -1,8 +1,8 @@
 Shed Skin Tutorial
 ==================
 
-:Version: Shed Skin 0.0.28
-:Date: June 1, 2008
+:Version: Shed Skin 0.0.29
+:Date: September 16, 2008
 :Authors: Mark Dufour and James Coughlan
 
 .. _Parallel Python: http://www.parallelpython.com/
@@ -12,6 +12,7 @@ Shed Skin Tutorial
 .. _quameon: http://quameon.sourceforge.net/
 .. _Summer of code: http://code.google.com/soc/
 .. _GHOP: http://code.google.com/opensource/ghop/
+.. _Boehm: http://www.hpl.hp.com/personal/Hans_Boehm/gc/ 
 
 .. contents::
 
@@ -20,14 +21,14 @@ Shed Skin Tutorial
 Purpose of this Tutorial
 ------------------------
 
-This tutorial is designed to get you up and running with **Shed Skin**, and provides an overview of how to use it to compile and run standalone programs and modules callable from regular Python code. 
+This tutorial provides an overview of **Shed Skin** and its limitations, as well as step-by-step instructions on how to use it to compile and run standalone programs and modules callable from regular Python code. 
 
 .. _Introduction:
 
 Introduction
 ------------
 
-**Shed Skin** is an *experimental* **Python-to-C++ compiler** designed to speed up the execution of Python programs. It converts programs written in a *static subset* of Python to C++. The C++ code can be compiled to executable code, which can be run either as a standalone program or as a module easily imported and called from Python. 
+**Shed Skin** is an *experimental* **Python-to-C++ compiler** designed to speed up the execution of computation-intensive Python programs. It converts programs written in a *static subset* of Python to C++. The C++ code can be compiled to executable code, which can be run either as a standalone program or as a module easily imported and called from Python. 
 
 **Shed Skin** uses type inference techniques to determine the *implicit* types used in a Python program, in order to generate the *explicit* type declarations needed in a C++ version. Because C++ is *statically typed*, **Shed Skin** requires Python code to be written such that all variables are (implicitly) statically typed.
 
@@ -37,7 +38,7 @@ Additionally, the type inference techniques employed by **Shed Skin** currently 
 
 Because **Shed Skin** is still in a very early stage of development, it can also improve a lot. At the moment, you will probably run into some bugs when using it. Please report these, so they can be fixed! 
 
-At the moment, **Shed Skin** is only compatible with Python versions 2.3 to 2.6, and has only been tested on GNU/Linux, OSX and Windows platforms.
+At the moment, **Shed Skin** is only compatible with Python versions 2.3 to 2.5, and should work on GNU/Linux, FreeBSD, OpenSolaris, OSX and Windows XP.
 
 .. _Typing Restrictions:
 
@@ -101,13 +102,13 @@ Python Subset Restrictions
 
 **Shed Skin** will only ever support a subset of all Python features. The following common features are currently not supported:
 
-  - variable numbers of arguments and keyword arguments (varargs and kwargs)
-  - arbitrary-size arithmetic (integers become 32-bit on a 32-bit machine!)
+  - variable numbers of arguments and keyword arguments 
+  - arbitrary-size arithmetic (integers become 32-bit on a 32-bit architecture!)
   - reflection (getattr, hasattr), eval, or other really dynamic stuff
   - multiple inheritance
   - generator expressions
   - nested functions and classes
-  - inheritance from builtins 
+  - inheritance from builtins (excluding Exception and object) 
 
 Some other features are currently only partially supported:
 
@@ -116,27 +117,33 @@ Some other features are currently only partially supported:
         self.class_attr # bad
         bla.class_attr # good
 
-  - anonymous function passing works reasonably well, but not for methods
+  - anonymous function passing works reasonably well, but not for methods, and placing them in containers potentially confuses **Shed Skin**: ::
+
+        var = lambda x,y: x+y # good
+        [var] # asking for trouble
+        method_ref = self.some_method # bad
 
 .. _Library Limitations:
 
 Library Limitations
 -------------------
 
-Programs to be compiled with **Shed Skin** cannot freely use the Python standard library. Only a handful of common modules is currently supported. 
+Programs to be compiled with **Shed Skin** cannot freely use the Python standard library. Only about 15 common modules are currently supported. 
 
-Note that **Shed Skin** can be used to build an extension module, so the main program can still use the full standard library (and of course all Python features!). See `Compiling an Extension Module`_. 
+Note that **Shed Skin** can be used to build an extension module, so the main program can use arbitrary modules (and of course all Python features!). See `Compiling an Extension Module`_. 
 
 In general, programs can only import functionality that is defined in the **Shed Skin** ``lib/`` directory. The following modules are largely supported at the moment: 
 
   - bisect
   - collections
+  - ConfigParser
   - copy
+  - datetime
   - fnmatch
   - getopt
   - glob
   - math
-  - os 
+  - os (needs more work, especially under Windows)
   - os.path 
   - random
   - re
@@ -145,7 +152,7 @@ In general, programs can only import functionality that is defined in the **Shed
   - sys 
   - time 
 
-For version **0.1** of **Shed Skin**, support for at least ``datetime`` support is planned, as well as complete support for ``os``. (See `How to help out in Shed Skin Development`_ if you'd like to help improve support for these or other modules.)
+For version **0.1** of **Shed Skin**, complete support for ``os`` is planned. (See `How to help out in Shed Skin Development`_ on how to help improve or add to these modules.)
 
 .. _Installation:
 
@@ -154,21 +161,65 @@ Installation
 
 The latest version of **Shed Skin** can be downloaded from the `Googlecode site`_. There are three types of packages available: a self-extracting **Windows** installer, a **Debian** package, and a UNIX source package. 
 
-To install the **Windows** version, simply download and start it. (If you use ActivePython or some other non-standard Python distribution, please deinstall it first.)
+To install the **Windows** version, simply download and start it. (If you use ActivePython or some other non-standard Python distribution, please deinstall this first.)
 
 To install the **Debian** package, simply download and install it using your package manager. 
 
 To install the UNIX source package on a **GNU/Linux** system, take the following steps:
 
- - download and unpack it
+ - download and unpack it 
 
- - install the Boehm garbage collector; on a **Debian** system this is simply:
+ - install the Boehm garbage collector
+ 
+   on a **Debian** system, this is simply:
     
    ``sudo apt-get install libgc-dev``
 
- - install the PCRE library (optional, if you want to use ``re``, ``glob`` or ``fnmatch``); on a **Debian** system this is simply:
+   on a **Fedora** system, this is simply:
+   
+   ``sudo yum install gc-devel``
+
+ - install the PCRE library (optional, if you want to use ``re``, ``glob`` or ``fnmatch``)
+ 
+   on a **Debian** system this is simply:
 
    ``sudo apt-get install libpcre3-dev``
+
+   on a **Fedora** system, this is simply:
+
+   ``sudo yum install pcre-devel``
+
+ - run ``python setup.py`` and place the generated ``shedskin`` file in your path 
+
+ - make sure you can run ``g++``, the C++ compiler
+
+To install the UNIX source package on a **FreeBSD** system, take the following steps:
+
+ - download and unpack it
+ 
+ - install the Boehm garbage collector (optionally using the latest version from `Boehm`_)
+   
+   make sure to disable threading support, e.g. using a tarball:
+
+   ``./configure --enable-cplusplus --disable-threads --prefix=/usr && make install``
+
+ - install the PCRE library (optional, if you want to use ``re``, ``glob`` or ``fnmatch``)
+
+   from a tarball:
+
+   ``./configure && make install``
+
+To install the UNIX source package on an **OpenSolaris** system, take the following steps:
+
+ - download and unpack it
+ 
+ - install the following packages:
+
+   ``SUNWgcc``
+   ``SUNWhea``
+   ``SUNWarc``
+   ``SUNWlibgc``
+   ``SUNWpcre``
 
  - run ``python setup.py`` and place the generated ``shedskin`` file in your path 
 
@@ -205,7 +256,7 @@ To compile this program to C++, type: ::
 
 This will create two C++ files, called ``test.cpp`` and ``test.hpp``, as well as a type-annotated file called ``test.ss.py``.
 
-To create and run an executable file (called ``test.exe`` or ``test``, depending on platform), type: ::
+To create and run an executable file (called ``test.exe`` under Windows or otherwise ``test``), type: ::
 
     make run
 
@@ -219,14 +270,13 @@ To only build, but not run the executable file, omit the ``run`` part: ::
 
 For the executable file to execute properly under Windows, note that ``gc.dll`` and ``libpcre-0.dll`` (located in the **Shed Skin** working directory) must be located somewhere in the Windows path. This happens automatically when running ``init.bat``. 
 
-As **Shed Skin** is still an *experimental* project and contains bugs, it is recommended that you test and debug programs thoroughly with the regular Python interpreter (**CPython**), before compiling them with **Shed Skin**. Discrepancies between **CPython** and **Shed Skin** versions should be reported as possible bugs to ``mark.dufour@gmail.com``. 
 
 .. _Compiling an Extension Module:
 
 Compiling an Extension Module
 -----------------------------
 
-The ability to build extension modules is useful since it permits the use of standard, unrestricted Python code (including all libraries and the use of any standard Python programming techniques, including dynamic typing) in the main program, while still allowing the speedup of compiling the speed-critical parts with **Shed Skin**.
+The ability to build extension modules is useful since it permits the use of unrestricted Python code in the 'main' program, while still allowing the speedup of compiling speed-critical parts with **Shed Skin**.
 
 **Simple Example**
 
@@ -528,11 +578,13 @@ The following activities are planned for future versions of **Shed Skin**:
 
 **0.1** (6-12 months from now)
 
-* Add complete support for the ``datetime`` module, and all modules mentioned in `Library Limitations`_.
+* Complete support for the ``os`` module, and all modules mentioned in `Library Limitations`_.
 
 * Improve the type inference techniques with at least *iterative deepening* and basic selector-based *filters*.
 
 * Compile at least one program of around 3,000 lines, for example `Quameon`_.  
+
+* Improve **Shed Skin** ``set`` efficiency to be similar to that of CPython ``set``.
 
 **0.2** (12-24 months from now)
 
@@ -551,8 +603,6 @@ The following activities are planned for future versions of **Shed Skin**:
 **0.9** (18-36 months from now)
 
 * Efficient and complete extension module support.
-
-* **Shed Skin** ``set`` type performs at least as efficiently as CPython ``set``.
 
 * Improve type inference to the point where it works for typical, arbitrary programs of around 3,000 lines.
 
