@@ -1,0 +1,115 @@
+# scene descripting for yopyraSS.py
+
+# (optional, default 320 240) size = size of the final image
+size 160 120
+
+nbounces 5 
+
+# (optional, default 1) oversampling=1 implica que no hay oversampling
+oversampling 2
+
+# (optional, default 60) vision = size of the visual field
+vision 60
+
+# (optional, default all span) renderslice: start_rendering_line end_rendering_line
+# renderslice note: if you use oversampling>1 it may give problems
+#renderslice 10 40
+
+posCamara 6.0 6.0 6.0
+lookCamara 1.0 0.8 -0.1
+upCamara 0.0 0.0 1.0
+
+# sphere: material_number x y z radius
+sphere 0 -8 2.26163 0.993114  0.35
+sphere 2 -8 0.73837 3.00689  0.35
+sphere 0 -7.6 1.60521 0.803393  0.35
+sphere 2 -7.6 1.39479 3.19661  0.35
+sphere 0 -7.2 0.923034 0.906644  0.35
+sphere 2 -7.2 2.07697 3.09336  0.35
+sphere 0 -6.8 0.382118 1.27759  0.35
+sphere 2 -6.8 2.61788 2.72241  0.35
+sphere 0 -6.4 0.114898 1.8254  0.35
+sphere 2 -6.4 2.8851 2.1746  0.35
+sphere 0 -6 0.1868 2.41596  0.35
+sphere 2 -6 2.8132 1.58404  0.35
+sphere 0 -5.6 0.580219 2.90468  0.35
+sphere 2 -5.6 2.41978 1.09532  0.35
+sphere 0 -5.2 1.19883 3.17191  0.35
+sphere 2 -5.2 1.80117 0.828095  0.35
+sphere 0 -4.8 1.89118 3.1522  0.35
+sphere 2 -4.8 1.10882 0.847796  0.35
+sphere 0 -4.4 2.48776 2.8504  0.35
+sphere 2 -4.4 0.512244 1.1496  0.35
+sphere 0 -4 2.84249 2.34039  0.35
+sphere 2 -4 0.157506 1.65961  0.35
+sphere 0 -3.6 2.86854 1.74705  0.35
+sphere 2 -3.6 0.131458 2.25295  0.35
+sphere 0 -3.2 2.55952 1.21563  0.35
+sphere 2 -3.2 0.440477 2.78437  0.35
+sphere 0 -2.8 1.9911 0.876252  0.35
+sphere 2 -2.8 1.0089 3.12375  0.35
+sphere 0 -2.4 1.30243 0.812009  0.35
+sphere 2 -2.4 1.69757 3.18799  0.35
+sphere 0 -2 0.662139 1.03863  0.35
+sphere 2 -2 2.33786 2.96137  0.35
+sphere 0 -1.6 0.226984 1.50062  0.35
+sphere 2 -1.6 2.77302 2.49938  0.35
+sphere 0 -1.2 0.103507 2.08488  0.35
+sphere 2 -1.2 2.89649 1.91512  0.35
+sphere 0 -0.8 0.321941 2.64836  0.35
+sphere 2 -0.8 2.67806 1.35164  0.35
+sphere 0 -0.4 0.828804 3.0531  0.35
+sphere 2 -0.4 2.1712 0.946901  0.35
+sphere 0 0 1.5 3.2  0.35
+sphere 2 0 1.5 0.8  0.35
+sphere 0 0.4 2.1712 3.0531  0.35
+sphere 2 0.4 0.828804 0.946901  0.35
+sphere 0 0.8 2.67806 2.64836  0.35
+sphere 2 0.8 0.321941 1.35164  0.35
+sphere 0 1.2 2.89649 2.08488  0.35
+sphere 2 1.2 0.103507 1.91512  0.35
+sphere 0 1.6 2.77302 1.50062  0.35
+sphere 2 1.6 0.226984 2.49938  0.35
+sphere 0 2 2.33786 1.03863  0.35
+sphere 2 2 0.662139 2.96137  0.35
+sphere 0 2.4 1.69757 0.812009  0.35
+sphere 2 2.4 1.30243 3.18799  0.35
+sphere 0 2.8 1.0089 0.876252  0.35
+sphere 2 2.8 1.9911 3.12375  0.35
+sphere 0 3.2 0.440477 1.21563  0.35
+sphere 2 3.2 2.55952 2.78437  0.35
+sphere 0 3.6 0.131458 1.74705  0.35
+sphere 2 3.6 2.86854 2.25295  0.35
+sphere 0 4 0.157506 2.34039  0.35
+sphere 2 4 2.84249 1.65961  0.35
+sphere 0 4.4 0.512244 2.8504  0.35
+sphere 2 4.4 2.48776 1.1496  0.35
+sphere 0 4.8 1.10882 3.1522  0.35
+sphere 2 4.8 1.89118 0.847796  0.35
+sphere 0 5.2 1.80117 3.17191  0.35
+sphere 2 5.2 1.19883 0.828095  0.35
+sphere 0 5.6 2.41978 2.90468  0.35
+sphere 2 5.6 0.580219 1.09532  0.35
+sphere 0 6 2.8132 2.41596  0.35
+sphere 2 6 0.1868 1.58404  0.35
+sphere 0 6.4 2.8851 1.8254  0.35
+sphere 2 6.4 0.114898 2.1746  0.35
+sphere 0 6.8 2.61788 1.27759  0.35
+sphere 2 6.8 0.382118 2.72241  0.35
+sphere 0 7.2 2.07697 0.906644  0.35
+sphere 2 7.2 0.923034 3.09336  0.35
+sphere 0 7.6 1.39479 0.803393  0.35
+sphere 2 7.6 1.60521 3.19661  0.35
+
+# plano: material normal_x normal_y normal_z distancia:
+plano 1  0.0 0.0 1.0  0.0
+
+# light: x y z  r g b  puntual/ambiental   (rgb are in [0,1])
+light -2.0 1.0 4.0  1.0 1.0 1.0 puntual
+light -2.0 1.0 4.0  0.1 0.1 0.1  ambiental
+
+# material: r g b cDifuso cEspecular dEspecular cReflexion cTransmitividad iRefraccion
+material 0.3 0.3 1.0   0.7 0.4 0.8 0.3 0.0 0.0
+material 0.4 1.0 1.0   0.2 0.0 0.0 0.2 0.0 0.0
+material 1.0 0.2 0.2   0.9 0.7 1.0 0.2 0.0 0.0
+material 0.2 1.0 0.2   0.4 0.4 0.9 0.7 0.3 0.9
