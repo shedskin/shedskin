@@ -429,7 +429,6 @@ def main():
 
     print '*** SHED SKIN Python-to-C++ Compiler 0.0.29 ***'
     print 'Copyright 2005-2008 Mark Dufour; License GNU GPL version 3 (See LICENSE)'
-    print '(Please send bug reports here: mark.dufour@gmail.com)'
     print
     
     # --- some checks
