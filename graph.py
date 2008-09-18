@@ -376,7 +376,7 @@ class moduleVisitor(ASTVisitor):
     def visitFrom(self, node, parent=None):
         if not node in getmv().importnodes: # XXX use (func, node) as parent..
             error("please place all imports (no 'try:' etc) at the top of the file", node)
-        if node.level:
+        if hasattr(node, 'level') and node.level:
             error("relative imports are not supported", node)
 
         mod = self.importmodules(node.modname, node, True)
