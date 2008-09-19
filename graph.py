@@ -439,7 +439,7 @@ class moduleVisitor(ASTVisitor):
         elif func.ident in func.parent.funcs and func.ident not in ['__getattr__', '__setattr__']: # XXX
             error("function/class redefinition is not allowed ('%s')" % func.ident, node)
 
-        if node.decorators:
+        if hasattr(node, 'decorators') and node.decorators:
             for decorator in node.decorators.nodes:
                 if not isinstance(decorator, Name):
                     error("complex decorators are not supported", decorator)
