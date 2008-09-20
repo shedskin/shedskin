@@ -1,3 +1,22 @@
+shedskin (0.0.29-0ubuntu1) feisty; urgency=low
+
+  * FreeBSD, OpenSolaris and 64-bit GNU/Linux support
+  * datetime implementation (Karel Heyse, Pavel Vinogradov, FFAO, David Marek)
+  * ConfigParser implementation (suggested by Albert Hofkamp)
+  * staticmethod and property decorator support (Sanxyin)
+  * GCC 4.3 fixes (Sanxiyn, Winterknight)
+  * support for mapping keys('%(key)x' % some_dict)
+  * improvements to the import mechanism for nested modules (e.g. os.path)
+  * __init__ is now less of a special case
+  * many fixes for calling ancestor methods (e.g. __init__)
+  * all example programs now compile to extension modules
+  * avoid stack overflows for highly recursive/dynamic types
+  * re.sub now accepts a replacement function
+  * tuple hash caching was removed (as CPython does not do this)
+  * many, many bugfixes
+
+ -- Mark Dufour <mark.dufour@gmail.com>  Sun,  1 Jun 2008 10:00:00 +0100
+
 shedskin (0.0.28-0ubuntu1) feisty; urgency=low
 
   * Basic 'socket' support (Michael Elkins)

@@ -1,2 +1,2 @@
 python:Versions=current
-python:Depends=python, python-central (>= 0.5.8)
+python:Depends=python, python-central (>= 0.6.5)
