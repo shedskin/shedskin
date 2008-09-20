@@ -12,7 +12,9 @@ tuple2<str *, str *> *tzname;
 
 double clock()
 {
-       static LARGE_INTEGER ctrStart;
+    return ((double) (std::clock()-start)) / CLOCKS_PER_SEC;
+
+/*       static LARGE_INTEGER ctrStart;
        static double divisor = 0.0;
        LARGE_INTEGER now;
        double diff;
@@ -21,15 +23,15 @@ double clock()
                LARGE_INTEGER freq;
                QueryPerformanceCounter(&ctrStart);
                if (!QueryPerformanceFrequency(&freq) || freq.QuadPart == 0) {
-                       /* Unlikely to happen - this works on all intel
-                            machines at least!  Revert to clock() */
+                       // Unlikely to happen - this works on all intel
+                       //     machines at least!  Revert to clock() 
                        return ((double) (std::clock()-start)) / CLOCKS_PER_SEC;
                }
                divisor = (double)freq.QuadPart;
        }
        QueryPerformanceCounter(&now);
        diff = (double)(now.QuadPart - ctrStart.QuadPart);
-       return diff / divisor;
+       return diff / divisor; */
 }
 
 int gettimeofday (struct timeval *tv, struct __ss_timezone *tz)
