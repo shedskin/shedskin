@@ -7,9 +7,9 @@ An experimental (restricted) Python-to-C++ Compiler
 ---------------------------------------------------
 
 :Author: mark.dufour@gmail.com
-:Date:   2008-06-01
+:Date:   2008-09-20
 :Copyright: GPL version 3 or later
-:Version: 0.0.28
+:Version: 0.0.29
 :Manual section: 1
 
 SYNOPSIS
@@ -43,4 +43,4 @@ OPTIONS
 
 THANKS
 ======
-Google, Bearophile, Brian Blais, Paul Boddie, Djamel Cherif, Mark Dewing, James Coughlan, Luis M. Gonzales, Karel Heyse, Denis de Leeuw Duarte, Michael Elkins, Van Lindberg, David Marek, Jeff Miller, Joaquin Abian Monux, Harri Pasanen, SirNotAppearingInThisManPage, Dave Tweed, Jaroslaw Tworek, Pavel Vinogradov
+Google, Bearophile, Brian Blais, Paul Boddie, Djamel Cherif, Mark Dewing, James Coughlan, Luis M. Gonzales, Karel Heyse, Denis de Leeuw Duarte, Michael Elkins, FFAO, Van Lindberg, David Marek, Jeff Miller, Joaquin Abian Monux, Harri Pasanen, SirNotAppearingInThisManPage, Dave Tweed, Jaroslaw Tworek, Pavel Vinogradov
