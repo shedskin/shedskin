@@ -4,7 +4,7 @@ Package creator:
 
 The origin of the package is:
 
-  http://mark.dufour.googlepages.com/home
+  http://shedskin.googlecode.com
 
 Package author:
 
@@ -19,7 +19,7 @@ This package is comprised of two parts:
 
 Concerning the Shed Skin compiler, plus testing framework (*.py):
 
-Copyright 2005-2007 Mark Dufour; License GNU GPL version 3
+Copyright 2005-2007 Mark Dufour; License GNU GPL version 3 or later
 
 Concerning the C++ implementation of Python builtins and libraries (*.?pp):
 

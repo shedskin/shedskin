@@ -1,5 +1,8 @@
 # Automatically added by dh_pycentral
 if which pycentral >/dev/null 2>&1; then
 	pycentral pkginstall shedskin
+	if grep -qs '^shedskin$' /var/lib/pycentral/delayed-pkgs; then
+		sed -i '/^shedskin$/d' /var/lib/pycentral/delayed-pkgs
+	fi
 fi
 # End automatically added section
