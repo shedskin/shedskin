@@ -2,7 +2,7 @@ Shed Skin Tutorial
 ==================
 
 :Version: Shed Skin 0.0.29
-:Date: September 16, 2008
+:Date: September 20, 2008
 :Authors: Mark Dufour and James Coughlan
 
 .. _Parallel Python: http://www.parallelpython.com/
@@ -38,7 +38,7 @@ Additionally, the type inference techniques employed by **Shed Skin** currently 
 
 Because **Shed Skin** is still in a very early stage of development, it can also improve a lot. At the moment, you will probably run into some bugs when using it. Please report these, so they can be fixed! 
 
-At the moment, **Shed Skin** is only compatible with Python versions 2.3 to 2.5, and should work on GNU/Linux, FreeBSD, OpenSolaris, OSX and Windows XP.
+At the moment, **Shed Skin** is only compatible with Python versions 2.3 to 2.5, and should work on GNU/Linux platforms, FreeBSD, OpenSolaris, OSX and Windows XP.
 
 .. _Typing Restrictions:
 
@@ -128,7 +128,7 @@ Some other features are currently only partially supported:
 Library Limitations
 -------------------
 
-Programs to be compiled with **Shed Skin** cannot freely use the Python standard library. Only about 15 common modules are currently supported. 
+Programs to be compiled with **Shed Skin** cannot freely use the Python standard library. Only about 17 common modules are currently supported. 
 
 Note that **Shed Skin** can be used to build an extension module, so the main program can use arbitrary modules (and of course all Python features!). See `Compiling an Extension Module`_. 
 
@@ -169,6 +169,10 @@ To install the UNIX source package on a **GNU/Linux** system, take the following
 
  - download and unpack it 
 
+ - run ``python setup.py`` and place the generated ``shedskin`` file in your path 
+
+ - make sure you can run ``g++``, the C++ compiler
+
  - install the Boehm garbage collector
  
    on a **Debian** system, this is simply:
@@ -179,7 +183,7 @@ To install the UNIX source package on a **GNU/Linux** system, take the following
    
    ``sudo yum install gc-devel``
 
- - install the PCRE library (optional, if you want to use ``re``, ``glob`` or ``fnmatch``)
+ - install the PCRE library:
  
    on a **Debian** system this is simply:
 
@@ -189,21 +193,19 @@ To install the UNIX source package on a **GNU/Linux** system, take the following
 
    ``sudo yum install pcre-devel``
 
- - run ``python setup.py`` and place the generated ``shedskin`` file in your path 
-
- - make sure you can run ``g++``, the C++ compiler
-
 To install the UNIX source package on a **FreeBSD** system, take the following steps:
 
  - download and unpack it
  
+ - run ``python setup.py`` and place the generated ``shedskin`` file in your path 
+
  - install the Boehm garbage collector (optionally using the latest version from `Boehm`_)
    
    make sure to disable threading support, e.g. using a tarball:
 
    ``./configure --enable-cplusplus --disable-threads --prefix=/usr && make install``
 
- - install the PCRE library (optional, if you want to use ``re``, ``glob`` or ``fnmatch``)
+ - install the PCRE library:
 
    from a tarball:
 
@@ -213,6 +215,8 @@ To install the UNIX source package on an **OpenSolaris** system, take the follow
 
  - download and unpack it
  
+ - run ``python setup.py`` and place the generated ``shedskin`` file in your path 
+
  - install the following packages:
 
    ``SUNWgcc``
@@ -221,11 +225,11 @@ To install the UNIX source package on an **OpenSolaris** system, take the follow
    ``SUNWlibgc``
    ``SUNWpcre``
 
- - run ``python setup.py`` and place the generated ``shedskin`` file in your path 
-
 To install the UNIX source package on an **OSX** system, take the following steps:
 
  - download and unpack it
+
+ - run ``python setup.py`` and place the generated ``shedskin`` file in your path 
 
  - install the Apple XCode development environment
 
@@ -233,11 +237,9 @@ To install the UNIX source package on an **OSX** system, take the following step
     
    ``./configure && sudo make install``
 
- - install the PCRE library (optional, if you want to use ``re``, ``glob`` or ``fnmatch``); without a package manager, download the source package and run: 
+ - install the PCRE library; without a package manager, download the source package and run: 
 
    ``./configure && sudo make install``
-
- - run ``python setup.py`` and place the generated ``shedskin`` file in your path 
 
 .. _Compiling and Running a Stand-Alone Program:
 
@@ -542,7 +544,7 @@ Tips and Tricks
 How to help out in Shed Skin Development
 ----------------------------------------
 
-Open source projects, especially new ones such as **Shed Skin**, thrive on user feedback. Please send in bug reports (email: ``mark.dufour@gmail.com``), patches or other code, or suggestions about this document; or join the mailing list and start or participate in discussions (see the `Googlecode site`_.)
+Open source projects, especially new ones such as **Shed Skin**, thrive on user feedback. Please send in bug reports, patches or other code, or suggestions about this document; or join the mailing list and start or participate in discussions (see the `Googlecode site`_.)
 
 If you are a student, you might want to consider applying for the yearly Google `Summer of Code`_ or `GHOP`_ projects. **Shed Skin** has so far successfully participated in one Summer of Code and one GHOP. 
 
