@@ -711,48 +711,73 @@ public:
     tuple2<K, V> *next();
 };
 
-template <class T> class set : public pyiter<T> {
+const int MINSIZE = 8;
+const int PERTURB_SHIFT = 5;
+
+const int DISCARD_NOTFOUND = 0;
+const int DISCARD_FOUND = 1;
+
+const int unused = 0;
+const int dummy = 1;
+const int active = 2;
+
+template<class T> struct setentry {
+    long hash; // avoid rehashings...
+    T key;
+    int use;
+};
+
+template<class T> class set : public pyiter<T> { 
 public:
-    __GC_HASH_SET units;
-    typename __GC_HASH_SET::iterator it1, it2;
     int frozen;
+    int fill;
+    int used;
+    int mask;
+    setentry<T> *table;
+    setentry<T> smalltable[MINSIZE];
 
     set(int frozen=0);
-    set(pyiter<T> *l, int frozen=0);
+    set(pyiter<T> *p, int frozen=0);
+    set<T>& operator=(const set<T>& other);
 
-    int add(T x);
-    int discard(T a);
-    int remove(T a);
+    int add(T key);
+    int add(setentry<T>* entry);
+    int discard(T key);
+    int discard(setentry<T>* entry);
     T pop();
+
+    str* __repr__();
+
+    int __contains__(T key);
+    int __contains__(setentry<T>* entry);
+    int __len__();
 
     int clear();
     set<T> *copy();
 
-    int __contains__(T a);
-    int __len__();
+    int update(pyiter<T> *s);
+    int update(const set<T>* other);
 
+    int difference_update(set<T> *s);
+    int intersection_update(set<T> *s);
+    int symmetric_difference_update(set<T> *s);
+
+    set<T> *intersection(set<T> *s);
     set<T> *__ss_union(pyiter<T> *s);
     set<T> *__ss_union(set<T> *s);
-    int update(pyiter<T> *s);
-    int update(set<T> *s);
-
-    set<T> *difference(set<T> *s);
-    set<T> *__sub__(set<T> *s);
-    int difference_update(set<T> *s);
-    set<T> *intersection(set<T> *s);
-    int intersection_update(set<T> *s);
     set<T> *symmetric_difference(set<T> *s);
-    int symmetric_difference_update(set<T> *s);
+    set<T> *difference(set<T> *other);
 
     set<T> *__and__(set<T> *s);
     set<T> *__or__(set<T> *s);
     set<T> *__xor__(set<T> *s);
-
+    set<T> *__sub__(set<T> *s);
+    
     set<T> *__iand__(set<T> *s);
     set<T> *__ior__(set<T> *s);
     set<T> *__ixor__(set<T> *s);
     set<T> *__isub__(set<T> *s);
-
+    
     int issubset(pyiter<T> *s);
     int issubset(set<T> *s);
     int issuperset(set<T> *s);
@@ -765,14 +790,10 @@ public:
     int __eq__(pyobj *p);
     int __cmp__(pyobj *p);
 
-    str *__repr__();
-
-    int __hash__();
-
-    __setiter<T> *__iter__() { 
+    __setiter<T> *__iter__() {
         return new __setiter<T>(this);
     }
-
+    
     set<T> *__copy__();
     set<T> *__deepcopy__(dict<void *, pyobj *> *memo);
 
@@ -780,12 +801,24 @@ public:
     set(PyObject *);
     PyObject *__to_py__();
 #endif
+
+    int __hash__();
+
+    // used internally
+    setentry<T>* lookup(T key, long hash) const;
+    void insert_key(T key, long hash);
+    void insert_clean(T key, long hash);
+    int next(int *pos_ptr, setentry<T> **entry_ptr);
+    void resize(int minused);
 };
 
 template <class T> class __setiter : public __iter<T> {
 public:
     set<T> *p;
-    typename __GC_HASH_SET::iterator iter;
+    int pos;
+    int si_used;
+    int len;
+    setentry<T>* entry;
 
     __setiter<T>(set<T> *p);
     T next();
@@ -1634,11 +1667,21 @@ template<class T> int list<T>::remove(T e) {
     return 0;
 }
 
-/* set<T> methods */
+#define INIT_NONZERO_SET_SLOTS(so) do {				\
+	(so)->table = (so)->smalltable;				\
+	(so)->mask = MINSIZE - 1;				\
+    } while(0)
 
-template<class T> set<T>::set(int frozen) {
+
+#define EMPTY_TO_MINSIZE(so) do {				\
+	memset((so)->smalltable, 0, sizeof((so)->smalltable));	\
+	(so)->used = (so)->fill = 0;				\
+	INIT_NONZERO_SET_SLOTS(so);				\
+    } while(0)
+
+template <class T> set<T>::set(int frozen) : frozen(frozen) {
     this->__class__ = cl_set;
-    this->frozen = frozen;
+    EMPTY_TO_MINSIZE(this);
 }
 
 #ifdef __SS_BIND
@@ -1656,12 +1699,16 @@ template<class T> set<T>::set(PyObject *p) {
         Py_DECREF(item);
     }
     Py_DECREF(iter); 
-} 
+}
 
 template<class T> PyObject *set<T>::__to_py__() {
     PyObject *p = PyObject_CallObject((PyObject *)(&PySet_Type), 0);
-    for(it1 = units.begin(); it1 != units.end(); it1++) 
-        PyObject_CallMethod(p, "add", "O", __to_py(*it1));
+    
+    T e;
+    __iter<T> *__0;
+    FOR_IN(e, this, 0)
+        PyObject_CallMethod(p, "add", "O", __to_py(e));
+    END_FOR
     return p;
 }
 
@@ -1672,8 +1719,28 @@ template<class T> PyObject *set<T>::__to_py__() {
 template<class T> set<T>::set(pyiter<T> *p, int frozen) {
     this->__class__ = cl_set;
     this->frozen = frozen;
+    EMPTY_TO_MINSIZE(this);
 
     update(p);
+}
+
+template <class T> set<T>& set<T>::operator=(const set<T>& other) {
+    // copy test
+    /*int i;
+    for (i=0; i<8; i++) {
+        smalltable[i].use = unused;
+    }
+
+    table = smalltable;
+    mask = MINSIZE - 1;
+    used = 0;
+    fill = 0;
+
+    update(other);*/
+
+    memcpy(this, &other, sizeof(set<T>));
+    table = new setentry<T>[other.mask+1];
+    memcpy(table, other.table, sizeof(setentry<T>) * (other.mask+1));
 }
 
 template<class T> int set<T>::__eq__(pyobj *p) {
@@ -1681,23 +1748,13 @@ template<class T> int set<T>::__eq__(pyobj *p) {
 
     if( b->__len__() != this->__len__()) return 0;
 
-    for(it1 = units.begin(); it1 != units.end(); it1++)
-        if(!b->__contains__(*it1))
+    int pos = 0;
+    setentry<T> *entry;
+    while (next(&pos, &entry)) {
+        if(!b->__contains__(entry))
             return 0;
+    }
     return 1;
-}
-
-template<class T> int set<T>::__hash__() { 
-    if(!this->frozen)
-        throw new TypeError(new str("set objects are unhashable"));
-    list<int> *seeds = new list<int>();
-    for(it1 = units.begin(); it1 != units.end(); it1++)
-        seeds->append(hasher<T>(*it1));
-    seeds->sort(0, 0, 0); /* XXX */
-    int seed = 0;
-    for(int i = 0; i < len(seeds); i++)
-        seed = hash_combine(seed, seeds->units[i]);
-    return seed;
 }
 
 template<class T> int set<T>::__ge__(set<T> *s) {
@@ -1716,35 +1773,382 @@ template<class T> int set<T>::__gt__(set<T> *s) {
     return issuperset(s);
 }
 
-template<class T> int set<T>::__cmp__(pyobj *p) { /* optimize */
-    set<T> *b = (set<T> *)p;
-    if(issubset(b)) return -1;
-    else if(issuperset(b)) return 1;
+template<class T> int set<T>::__cmp__(pyobj *p) {
+    //note: originally SS did cmp() by using issubset() and issuperset().
+    //I'm, however, following the Python specifications here...
+    throw new TypeError(new str("cannot compare sets using cmp()"));
+}
+
+template<class T> int set<T>::__hash__() {
+    if(!this->frozen)
+        throw new TypeError(new str("set objects are unhashable"));
+    list<int> *seeds = new list<int>();
+
+    T e;
+    __iter<T> *__0;
+    FOR_IN(e, this, 0)
+        seeds->append(hasher<T>(e));
+    END_FOR
+
+    seeds->sort(0, 0, 0); /* XXX */
+    int seed = 0;
+    for(int i = 0; i < len(seeds); i++)
+        seed = hash_combine(seed, seeds->units[i]);
+    return seed;
+}
+
+template <class T> setentry<T>* set<T>::lookup(T key, long hash) const {
+
+    int i = hash & mask;
+    setentry<T>* entry = &table[i];
+    if (!(entry->use) || entry->key == key)
+        return entry;
+
+    setentry <T>* freeslot;
+
+    if (entry->use == dummy)
+        freeslot = entry;
+    else
+        freeslot = NULL;
+
+    unsigned int perturb;
+    for (perturb = hash; ; perturb >>= PERTURB_SHIFT) {
+        i = (i << 2) + i + perturb + 1;
+        entry = &table[i & mask];
+        if (!(entry->use)) {
+            if (freeslot != NULL)
+                entry = freeslot;
+            break;
+        }
+        if (entry->key == key)
+            break;
+
+        else if (entry->use == dummy && freeslot == NULL)
+            freeslot = entry;
+	}
+	return entry;
+}
+
+template <class T> void set<T>::insert_key(T key, long hash) {
+    setentry<T>* entry;
+
+    entry = lookup(key, hash);
+    if (!(entry->use)) {
+        fill++;
+        entry->key = key;
+        entry->hash = hash;
+        entry->use = active;
+        used++;
+    }
+    else if (entry->use == dummy) {
+        entry->key = key;
+        entry->hash = hash;
+        entry->use = active;
+        used++;
+    }
+}
+
+template <class T> int set<T>::add(T key)
+{
+    long hash = hasher<T>(key);
+    int n_used = used;
+
+    insert_key(key, hash);
+    if ((used > n_used && fill*3 >= (mask+1)*2))
+        resize(used>50000 ? used*2 : used*4);
     return 0;
 }
 
-template<class T> int set<T>::add(T x) {
-    units.insert(x);
+template <class T> int set<T>::add(setentry<T>* entry)
+{
+    int n_used = used;
+
+    insert_key(entry->key, entry->hash);
+    if ((used > n_used && fill*3 >= (mask+1)*2))
+        resize(used>50000 ? used*2 : used*4);
     return 0;
 }
-template<class T> int set<T>::remove(T x) {
-    units.erase(x);
-    return 0;
+
+template <class T> int set<T>::discard(T key) {
+	register long hash = hasher<T>(key);
+	register setentry<T> *entry;
+
+	entry = lookup(key, hash);
+
+	if (entry->use != active)
+		return DISCARD_NOTFOUND; // nothing to discard
+
+	entry->use = dummy;
+	used--;
+	return DISCARD_FOUND;
 }
-template<class T> int set<T>::discard(T x) {
-    units.erase(x);
-    return 0;
+
+template <class T> int set<T>::discard(setentry<T>* entry) {
+	entry = lookup(entry->key, entry->hash);
+
+	if (entry->use != active)
+		return DISCARD_NOTFOUND; // nothing to discard
+
+	entry->use = dummy;
+	used--;
+	return DISCARD_FOUND;
 }
 
 template<class T> T set<T>::pop() {
-    T e = *units.begin();
-    units.erase(units.begin());
-    return e;
+    register int i = 0;
+	register setentry<T> *entry;
+
+	if (used == 0)
+		throw new KeyError(new str("pop from an empty set"));
+
+	entry = &table[0];
+	if (entry->use != active) {
+		i = entry->hash;
+		if (i > mask || i < 1)
+			i = 1;	/* skip slot 0 */
+		while ((entry = &table[i])->use != active) {
+			i++;
+			if (i > mask)
+				i = 1;
+		}
+	}
+	entry->use = dummy;
+	used--;
+	table[0].hash = i + 1;  /* next place to start */
+	return entry->key;
+}
+
+/*
+ * Iterate over a set table.  Use like so:
+ *
+ *     Py_ssize_t pos;
+ *     setentry *entry;
+ *     pos = 0;   # important!  pos should not otherwise be changed by you
+ *     while (set_next(yourset, &pos, &entry)) {
+ *              Refer to borrowed reference in entry->key.
+ *     }
+ */
+template <class T> int set<T>::next(int *pos_ptr, setentry<T> **entry_ptr)
+{
+	int i;
+
+	i = *pos_ptr;
+
+	while (i <= mask && (table[i].use != active))
+		i++;
+	*pos_ptr = i+1;
+	if (i > mask)
+		return 0;
+	*entry_ptr = &table[i];
+	return 1;
+}
+
+/*
+Internal routine used by set_table_resize() to insert an item which is
+known to be absent from the set.  This routine also assumes that
+the set contains no deleted entries.  Besides the performance benefit,
+using insert() in resize() is dangerous (SF bug #1456209).
+*/
+template <class T> void set<T>::insert_clean(T key, long hash)
+{
+	register size_t i;
+	register size_t perturb;
+	register setentry<T> *entry;
+
+	i = hash & mask;
+
+	entry = &table[i];
+	for (perturb = hash; entry->use; perturb >>= PERTURB_SHIFT) {
+		i = (i << 2) + i + perturb + 1;
+		entry = &table[i & mask];
+	}
+	fill++;
+	entry->key = key;
+	entry->hash = hash;
+	entry->use = active;
+	used++;
+}
+
+
+/*
+Restructure the table by allocating a new table and reinserting all
+keys again.  When entries have been deleted, the new table may
+actually be smaller than the old one.
+*/
+template <class T> void set<T>::resize(int minused)
+{
+	int newsize;
+	setentry<T> *oldtable, *newtable, *entry;
+	int i;
+	setentry<T> small_copy[MINSIZE];
+
+	/* Find the smallest table size > minused. */
+	for (newsize = MINSIZE;
+	     newsize <= minused && newsize > 0;
+	     newsize <<= 1)
+		;
+	if (newsize <= 0) {
+		//XXX raise memory error
+	}
+
+	/* Get space for a new table. */
+	oldtable = table;
+
+	if (newsize == MINSIZE) {
+		/* A large table is shrinking, or we can't get any smaller. */
+		newtable = smalltable;
+		if (newtable == oldtable) {
+			if (fill == used) {
+				/* No dummies, so no point doing anything. */
+				return;
+			}
+			/* We're not going to resize it, but rebuild the
+			   table anyway to purge old dummy entries.
+			   Subtle:  This is *necessary* if fill==size,
+			   as set_lookkey needs at least one virgin slot to
+			   terminate failing searches.  If fill < size, it's
+			   merely desirable, as dummies slow searches. */
+			memcpy(small_copy, oldtable, sizeof(small_copy));
+			oldtable = small_copy;
+		}
+	}
+	else {
+		newtable = new setentry<T>[newsize];
+	}
+
+	/* Make the set empty, using the new table. */
+	table = newtable;
+	mask = newsize - 1;
+
+	memset(newtable, 0, sizeof(setentry<T>) * newsize);
+
+    i = used;
+    used = 0;
+	fill = 0;
+
+	/* Copy the data over;
+	   dummy entries aren't copied over */
+	for (entry = oldtable; i > 0; entry++) {
+		if (entry->use == active) {
+			/* ACTIVE */
+			--i;
+			insert_clean(entry->key, entry->hash);
+		}
+	}
+}
+
+template<class T> str *set<T>::__repr__() {
+    str *r;
+    if(this->frozen) r = new str("frozenset([");
+    else r = new str("set([");
+
+    //int rest = units.size()-1;
+    int rest = used-1;
+
+    int pos = 0;
+    setentry<T>* entry;
+    while (next(&pos, &entry)) {
+        T e = entry->key;
+        r->unit += repr(e)->unit;
+        if(rest)
+           r->unit += ", ";
+        --rest;
+    }
+    r->unit += "])";
+    return r;
+}
+
+template<class T> int set<T>::__len__() {
+    return used;
+}
+
+template <class T> int set<T>::__contains__(T key) {
+    long hash = hasher(key);
+	setentry<T> *entry;
+
+	entry = lookup(key, hash);
+
+	return entry->use==active;
+}
+
+template <class T> int set<T>::__contains__(setentry<T>* entry) {
+	entry = lookup(entry->key, entry->hash);
+
+	return entry->use == active;
+}
+
+template <class T> int set<T>::clear()
+{
+	setentry<T> *entry, *table;
+	int table_is_malloced;
+	ssize_t fill;
+	setentry<T> small_copy[MINSIZE];
+
+    table = this->table;
+	table_is_malloced = table != smalltable;
+
+	/* This is delicate.  During the process of clearing the set,
+	 * decrefs can cause the set to mutate.  To avoid fatal confusion
+	 * (voice of experience), we have to make the set empty before
+	 * clearing the slots, and never refer to anything via so->ref while
+	 * clearing.
+	 */
+	fill = this->fill;
+	if (table_is_malloced)
+		EMPTY_TO_MINSIZE(this);
+
+	else if (fill > 0) {
+		/* It's a small table with something that needs to be cleared.
+		 * Afraid the only safe way is to copy the set entries into
+		 * another small table first.
+		 */
+		// ffao: is this really needed without reference counting?
+		//memcpy(small_copy, table, sizeof(small_copy));
+		//table = small_copy;
+		EMPTY_TO_MINSIZE(this);
+	}
+	/* else it's a small table that's already empty */
+
+	/* if (table_is_malloced)
+		PyMem_DEL(table); */
+	return 0;
+}
+
+template<class T> int set<T>::update(pyiter<T> *s) {
+    T e;
+    __iter<T> *__0;
+    FOR_IN(e, s, 0)
+        add(e);
+    END_FOR
+    return 0;
+}
+
+template <class T> int set<T>::update(const set<T>* other)
+{
+	register int i;
+	register setentry<T> *entry;
+
+	/* if (other == this || other->used == 0)
+		// a.update(a) or a.update({}); nothing to do
+		return 0; */
+	/* Do one big resize at the start, rather than
+	 * incrementally resizing as we insert new keys.  Expect
+	 * that there will be no (or few) overlapping keys.
+	 */
+	if ((fill + other->used)*3 >= (mask+1)*2)
+	   resize((used + other->used)*2);
+	for (i = 0; i <= other->mask; i++) {
+		entry = &other->table[i];
+		if (entry->use == active) {
+			insert_key(entry->key, entry->hash);
+		}
+	}
+    return 0;
 }
 
 template<class T> set<T> *set<T>::__ss_union(pyiter<T> *s) {
     set<T> *c = new set<T>(this->frozen);
-    c->units = units; 
+    *c = *this;
     c->update(s);
 
     return c;
@@ -1757,58 +2161,10 @@ template<class T> set<T> *set<T>::__ss_union(set<T> *s) {
     if(len(s) < len(this)) { a = s; b = this; }
     else { a = this; b = s; }
 
-    c->units = b->units; 
+    *c = *b;
     c->update(a);
 
     return c;
-}
-
-template<class T> int set<T>::update(pyiter<T> *s) {
-    T e;
-    __iter<T> *__0;
-    FOR_IN(e, s, 0)
-        add(e);
-    END_FOR
-    return 0;
-}
-
-template<class T> int set<T>::update(set<T> *s) {
-    for(it1 = s->units.begin(); it1 != s->units.end(); it1++)
-        add(*it1);
-
-    return 0;
-}
-
-template<class T> int set<T>::clear() {
-    units.clear();
-    return 0;
-}
-
-template<class T> set<T> *set<T>::difference(set<T> *s) { 
-    set<T> *c = new set<T>(this->frozen);
-    T e;
-    __iter<T> *__0;
-    FOR_IN(e, this, 0)
-        if(!s->__contains__(e))
-            c->add(e);
-    END_FOR
-    return c;
-}
-template<class T> set<T> *set<T>::__sub__(set<T> *s) {
-    return difference(s);
-}
-
-template<class T> int set<T>::difference_update(set<T> *s) {
-    set<T> *c = difference(s);
-    units = c->units; /* XXX don't copy */
-    return 0;
-}
-
-
-template<class T> int set<T>::symmetric_difference_update(set<T> *s) {
-    set<T> *c = symmetric_difference(s);
-    units = c->units;
-    return 0;
 }
 
 template<class T> set<T> *set<T>::symmetric_difference(set<T> *s) {
@@ -1816,14 +2172,16 @@ template<class T> set<T> *set<T>::symmetric_difference(set<T> *s) {
     set<T> *c = new set<T>(this->frozen);
 
     if(len(s) < len(this)) { a = s; b = this; }
-    else { a = this; b = s; } 
+    else { a = this; b = s; }
 
-    c->units = b->units;
+    *c = *b;
 
-    for(it1 = a->units.begin(); it1 != a->units.end(); it1++) {
-        T e = *it1;
-        if (!c->units.erase(e)) {
-            c->add(e);
+    int pos = 0;
+    setentry<T> *entry;
+
+    while (a->next(&pos, &entry)) {
+        if (!c->discard(entry)) {
+            c->add(entry);
         }
     }
 
@@ -1835,15 +2193,32 @@ template<class T> set<T> *set<T>::intersection(set<T> *s) {
     set<T> *c = new set<T>(this->frozen);
 
     if(len(s) < len(this)) { a = s; b = this; }
-    else { a = this; b = s; } 
+    else { a = this; b = s; }
 
-    for(it1 = a->units.begin(); it1 != a->units.end(); it1++) {
-        T e = *it1;
-        if(b->__contains__(e))
-            c->add(e);
+    int pos = 0;
+    setentry<T> *entry;
+
+    while (a->next(&pos, &entry)) {
+        if(b->__contains__(entry))
+            c->add(entry);
     }
 
     return c;
+}
+
+template <class T> set<T>* set<T>::difference(set<T> *other)
+{
+    set<T>* result = new set<T>;
+    int pos = 0;
+    setentry<T> *entry;
+
+    while (next(&pos, &entry)) {
+        if (!other->__contains__(entry)) {
+            result->add(entry);
+        }
+    }
+
+    return result;
 }
 
 template<class T> set<T> *set<T>::__and__(set<T> *s) {
@@ -1855,32 +2230,48 @@ template<class T> set<T> *set<T>::__or__(set<T> *s) {
 template<class T> set<T> *set<T>::__xor__(set<T> *s) {
     return symmetric_difference(s);
 }
+template<class T> set<T> *set<T>::__sub__(set<T> *s) {
+    return difference(s);
+}
 template<class T> set<T> *set<T>::__iand__(set<T> *s) {
-    units = intersection(s)->units;
+    *this = intersection(s);
     return this;
 }
 template<class T> set<T> *set<T>::__ior__(set<T> *s) {
-    units = __ss_union(s)->units;
+    *this = __ss_union(s);
     return this;
 }
 template<class T> set<T> *set<T>::__ixor__(set<T> *s) {
-    units = symmetric_difference(s)->units;
+    *this = symmetric_difference(s);
     return this;
 }
 template<class T> set<T> *set<T>::__isub__(set<T> *s) {
-    units = difference(s)->units;
+    *this = difference(s);
     return this;
+}
+
+
+template<class T> int set<T>::difference_update(set<T> *s) {
+    set<T> *c = difference(s);
+    *this = *c; /* XXX don't copy */
+    return 0;
+}
+
+template<class T> int set<T>::symmetric_difference_update(set<T> *s) {
+    set<T> *c = symmetric_difference(s);
+    *this = *c;
+    return 0;
 }
 
 template<class T> int set<T>::intersection_update(set<T> *s) {
     set<T> *c = intersection(s);
-    units = c->units;
+    *this = *c;
     return 0;
 }
 
 template<class T> set<T> *set<T>::copy() {
     set<T> *c = new set<T>(this->frozen);
-    c->units = units;
+    *c = *this;
     return c;
 }
 
@@ -1914,42 +2305,38 @@ template<class T> int set<T>::issuperset(pyiter<T> *s) {
     return issuperset(new set<T>(s));
 }
 
-template<class T> int set<T>::__len__() {
-    return units.size();
-}
-
-template<class T> str *set<T>::__repr__() {
-    str *r;
-    if(this->frozen) r = new str("frozenset([");
-    else r = new str("set([");
-
-    int rest = units.size()-1;
-
-    for (it1 = units.begin(); it1 != units.end(); it1++, rest--) {
-        r->unit += repr(*it1)->unit;
-        if(rest)
-           r->unit += ", ";
-    }
-    r->unit += "])";
-    return r;
-}
-
-template<class T> int set<T>::__contains__(T a) {
-    return units.find(a) != units.end();
-}
-
 template<class T> set<T> *set<T>::__copy__() {
     set<T> *c = new set<T>();
-    c->units = this->units;
+    *c = *this;
     return c;
 }
 
 template<class T> set<T> *set<T>::__deepcopy__(dict<void *, pyobj *> *memo) {
     set<T> *c = new set<T>();
     memo->__setitem__(this, c);
-    for (it1 = units.begin(); it1 != units.end(); it1++) 
-        c->units.insert(__deepcopy(*it1, memo));
+
+    T e;
+    __iter<T> *__0;
+    FOR_IN(e, this, 0)
+        c->add(__deepcopy(e, memo));
+    END_FOR
     return c;
+}
+
+template<class T> __setiter<T>::__setiter(set<T> *p) {
+    this->p = p;
+    this->pos = 0;
+    this->si_used = p->used;
+}
+
+template<class T> T __setiter<T>::next() {
+    if (si_used != p->used) {
+        throw new RuntimeError(new str("set changed size during iteration"));
+        si_used = -1;
+    }
+    int ret = p->next(&pos, &entry);
+    if (!ret) throw new StopIteration();
+    return entry->key;
 }
 
 /* tuple2<T, T> */
@@ -2239,17 +2626,6 @@ template<class K, class V> tuple2<K, V> *__dictiteritems<K, V>::next() {
     tuple2<K, V> *t = new tuple2<K, V>(2, iter->first, iter->second);
     iter++;
     return t;
-}
-
-template<class T> __setiter<T>::__setiter(set<T> *p) {
-    this->p = p;
-    iter = p->units.begin();
-}
-
-template<class T> T __setiter<T>::next() {
-    if(iter == p->units.end())
-        throw new StopIteration();
-    return *(iter++);
 }
 
 /* builtins */
