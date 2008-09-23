@@ -1801,7 +1801,7 @@ template <class T> setentry<T>* set<T>::lookup(T key, long hash) const {
 
     int i = hash & mask;
     setentry<T>* entry = &table[i];
-    if (!(entry->use) || entry->key == key)
+    if (!(entry->use) || __eq(entry->key, key))
         return entry;
 
     setentry <T>* freeslot;
@@ -1820,7 +1820,7 @@ template <class T> setentry<T>* set<T>::lookup(T key, long hash) const {
                 entry = freeslot;
             break;
         }
-        if (entry->key == key)
+        if (__eq(entry->key, key))
             break;
 
         else if (entry->use == dummy && freeslot == NULL)
