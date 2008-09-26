@@ -744,6 +744,7 @@ public:
     int add(setentry<T>* entry);
     int discard(T key);
     int discard(setentry<T>* entry);
+    int remove(T key);
     T pop();
 
     str* __repr__();
@@ -1758,6 +1759,11 @@ template<class T> int set<T>::__eq__(pyobj *p) {
     return 1;
 }
 
+template <class T> int set<T>::remove(T key) {
+    if (!discard(key)) throw new KeyError(__str(key));
+    return 0;
+}
+
 template<class T> int set<T>::__ge__(set<T> *s) {
     return issuperset(s);
 }
@@ -2043,7 +2049,6 @@ template<class T> str *set<T>::__repr__() {
     if(this->frozen) r = new str("frozenset([");
     else r = new str("set([");
 
-    //int rest = units.size()-1;
     int rest = used-1;
 
     int pos = 0;
@@ -2181,8 +2186,15 @@ template<class T> set<T> *set<T>::symmetric_difference(set<T> *s) {
     setentry<T> *entry;
 
     while (a->next(&pos, &entry)) {
-        if (!c->discard(entry)) {
-            c->add(entry);
+        setentry<T> *new_entry = c->lookup(entry->key, entry->hash);
+        if (new_entry->use == active) {
+            new_entry->use = dummy;
+            c->used--;
+       }
+        else {
+            if (!(new_entry->use)) c->fill++;
+            memcpy(new_entry, entry, sizeof(setentry<T>));
+            c->used++;
         }
     }
 
