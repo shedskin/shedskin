@@ -1739,8 +1739,9 @@ template <class T> set<T>& set<T>::operator=(const set<T>& other) {
     update(other);*/
 
     memcpy(this, &other, sizeof(set<T>));
-    table = new setentry<T>[other.mask+1];
-    memcpy(table, other.table, sizeof(setentry<T>) * (other.mask+1));
+    int table_size = sizeof(setentry<T>) * (other.mask+1);
+    table = (setentry<T>*) GC_MALLOC(table_size);
+    memcpy(table, other.table, table_size);
 }
 
 template<class T> int set<T>::__eq__(pyobj *p) {
@@ -2013,7 +2014,7 @@ template <class T> void set<T>::resize(int minused)
 		}
 	}
 	else {
-		newtable = new setentry<T>[newsize];
+        newtable = (setentry<T>*) GC_MALLOC(sizeof(setentry<T>) * newsize);
 	}
 
 	/* Make the set empty, using the new table. */
