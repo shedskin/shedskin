@@ -738,7 +738,6 @@ public:
 
     set(int frozen=0);
     set(pyiter<T> *p, int frozen=0);
-    ~set();
     set<T>& operator=(const set<T>& other);
 
     int add(T key);
@@ -1672,9 +1671,6 @@ template<class T> int list<T>::remove(T e) {
 template <class T> void *myallocate(int n) { return GC_MALLOC(n); }
 template <> void *myallocate<int>(int n);
 
-template <class T> void myfree(void *p) {}
-template <> void myfree<int>(void *p);
-
 #define INIT_NONZERO_SET_SLOTS(so) do {				\
 	(so)->table = (so)->smalltable;				\
 	(so)->mask = MINSIZE - 1;				\
@@ -1750,11 +1746,6 @@ template <class T> set<T>& set<T>::operator=(const set<T>& other) {
     int table_size = sizeof(setentry<T>) * (other.mask+1);
     table = (setentry<T>*)myallocate<T>(table_size);
     memcpy(table, other.table, table_size);
-}
-
-template<class T> set<T>::~set() {
-    if(table != smalltable)
-        myfree<T>(table);
 }
 
 template<class T> int set<T>::__eq__(pyobj *p) {
@@ -2054,9 +2045,6 @@ template <class T> void set<T>::resize(int minused)
 			insert_clean(entry->key, entry->hash);
 		}
 	}
-
-    if(oldtable != smalltable)
-        myfree<T>(oldtable);
 }
 
 template<class T> str *set<T>::__repr__() {
