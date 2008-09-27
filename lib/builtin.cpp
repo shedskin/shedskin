@@ -1749,5 +1749,8 @@ str *OSError::__repr__() {
     return __add_strs(5, new str("OSError("), __str(__ss_errno), new str(", '"), strerror, new str("')")); 
 }
 
+template <> void *myallocate<int>(int n) { return malloc(n); }
+template <> void myfree<int>(void *p) { free(p); }
+
 } // namespace __shedskin__
 
