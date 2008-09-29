@@ -2959,6 +2959,11 @@ def assign_needs_cast_rec(argsplit, func, formalsplit, target):
     argclasses = split_classes(argsplit)
     formalclasses = split_classes(formalsplit)
     #print 'splitclasses', argclasses, formalclasses
+ 
+    # arg type is None, formal type is more
+    noneset = set([defclass('none')])
+    if argclasses == noneset and formalclasses != noneset:
+        return True
 
     if defclass('none') in argclasses: return False # XXX research later
 
