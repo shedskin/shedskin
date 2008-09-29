@@ -6,6 +6,17 @@ import traceback, sys, os, time
 
 tests = [
 
+('''fixes for 0.0.30''', '''
+# casting
+a = None
+b = 'hallo'
+b = a
+
+''', '''
+output(equal=True)
+
+'''),
+
 ('''fixes for 0.0.29; datetime, ConfigParser''', '''
 #equality..
 hx=['A','B','C','D','E','F']
