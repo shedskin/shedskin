@@ -70,6 +70,22 @@ str *float_::__repr__() {
     return __str(unit);
 } 
 
+/* complex methods */
+
+complex::complex(double real, double imag) {
+    this->real = real;
+    this->imag = imag;
+}
+
+complex *complex::__add__(complex *b) {
+    return new complex(this->real+b->real, this->imag+b->imag);
+}
+
+str *complex::__repr__() {
+    str *bweh = new str("(%g+%gj)");
+    return __mod(bweh, this->real, this->imag);
+}
+
 /* str methods */
 
 str::str() : cached_hash(0) {
