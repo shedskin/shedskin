@@ -303,6 +303,15 @@ public:
     str *__repr__();
 }; 
 
+class complex : public pyobj {
+public:
+    double real, imag;
+
+    complex(double real, double imag=0.0);
+    complex *__add__(complex *b);
+    str *__repr__();
+};
+
 template <class T> class pyiter : public pyobj {
 public:
     virtual __iter<T> *__iter__() = 0;

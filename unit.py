@@ -6,7 +6,7 @@ import traceback, sys, os, time
 
 tests = [
 
-('''fixes for 0.0.30''', '''
+('''fixes for 0.0.30; complex''', '''
 # casting
 class Foo:
    def __init__(self):
@@ -25,6 +25,14 @@ class Foo:
        #self.x[1:2] = []
 
 f1 = Foo()
+
+# complex
+c = complex(7.1, 4.7)
+print c, c.real, c.imag
+d = complex(7)
+print d, d.real, d.imag
+e = c+d
+print e, e.real, e.imag
 
 ''', '''
 output(equal=True)

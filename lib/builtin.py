@@ -467,6 +467,17 @@ class set(pyset):
     def intersection_update(self, b):
         pass
 
+class complex:
+    def __init__(self, real, imag=None):
+        self.real = 1.0
+        self.imag = 1.0
+
+    def __add__(self, c):              
+        return self
+
+    def __repr__(self):
+        return ''
+
 class object: pass
 
 # --- exceptions
