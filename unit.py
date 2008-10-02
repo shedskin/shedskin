@@ -8,9 +8,23 @@ tests = [
 
 ('''fixes for 0.0.30''', '''
 # casting
-a = None
-b = 'hallo'
-b = a
+class Foo:
+   def __init__(self):
+       a = None
+       self.v = [1]
+       self.v = a
+
+       w = self.v
+       w = a
+
+       #x = [1,2,3]
+       #x[1:2] = []
+       #x[1:2] = [4,5]
+       # 
+       #self.x = [1,2,3]
+       #self.x[1:2] = []
+
+f1 = Foo()
 
 ''', '''
 output(equal=True)
