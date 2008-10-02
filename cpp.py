@@ -2173,6 +2173,7 @@ class generateVisitor(ASTVisitor):
             tempvars = len(pairs) > 1
 
             for (lvalue, rvalue) in pairs:
+                cast = None
                 self.start('') # XXX remove?
                 
                 # expr[expr] = expr
@@ -2183,17 +2184,26 @@ class generateVisitor(ASTVisitor):
                 # expr.attr = expr
                 elif isinstance(lvalue, AssAttr):
                     lcp = lowest_common_parents(polymorphic_t(self.mergeinh[lvalue.expr]))
+                    # property
                     if len(lcp) == 1 and isinstance(lcp[0], class_) and lvalue.attrname in lcp[0].properties:
                         self.visitm(lvalue.expr, '->'+self.cpp_name(lcp[0].properties[lvalue.attrname][1])+'(', rvalue, ')', func)
                         self.eol()
                         continue
+                    elif len(lcp) == 1 and isinstance(lcp[0], class_):
+                        var = lookupvar(lvalue.attrname, lcp[0])
+                        if assign_needs_cast(rvalue, func, var, lcp[0]):
+                            cast = typesetreprnew(var, lcp[0])
 
                     self.assign_pair(lvalue, rvalue, func)
                     self.append(' = ')
 
-                # name = expr: if name non-escaping, allocate list (comprehension) on stack
+                # name = expr
                 elif isinstance(lvalue, AssName):
-                    if lvalue.name != '_':
+                    if lvalue.name != '_': # XXX 
+                        var = lookupvar(lvalue.name, func) 
+                        if assign_needs_cast(rvalue, func, var, func):
+                            cast = typesetreprnew(var, func)
+
                         self.visit(lvalue, func)
                         self.append(' = ')
 
@@ -2204,6 +2214,18 @@ class generateVisitor(ASTVisitor):
             
                 # expr[a:b] = expr
                 elif isinstance(lvalue, Slice):
+                    #var = None
+                    #if isinstance(lvalue.expr, Name): # XXX merge
+                    #    var = lookupvar(lvalue.expr.name, func)
+                    #    if assign_needs_cast(rvalue, func, var, func):
+                    #        cast = typesetreprnew(var, func)
+                    #elif isinstance(lvalue.expr, Getattr):
+                    #    lcp = lowest_common_parents(polymorphic_t(self.mergeinh[lvalue.expr.expr]))
+                    #    if len(lcp) == 1 and isinstance(lcp[0], class_):
+                    #        var = lookupvar(lvalue.expr.attrname, lcp[0])
+                    #        if assign_needs_cast(rvalue, func, var, lcp[0]):
+                    #            cast = typesetreprnew(var, lcp[0])
+
                     if isinstance(rvalue, Slice) and lvalue.upper == rvalue.upper == None and lvalue.lower == rvalue.lower == None:
                         self.visitm(lvalue.expr, self.connector(lvalue.expr, func), 'units = ', rvalue.expr, self.connector(rvalue.expr, func), 'units', func)
                     else:
@@ -2217,21 +2239,15 @@ class generateVisitor(ASTVisitor):
                     self.eol()
                     continue
 
-                # --- cast incompatible types (XXX conversion in cases)
-                cast = False
-                if isinstance(lvalue, AssName) and lvalue.name != '_': # XXX hm
-                    var = lookupvar(lvalue.name, func) 
-                
-                    if assign_needs_cast(rvalue, func, var, func):
-                        #print 'cast!', lvalue, rvalue
-                        cast = True
-                        self.append('(('+typesetreprnew(var, func)+')(')
-
+                # rvalue, optionally with cast
+                if cast: 
+                    self.append('(('+cast+')(')
                 if rvalue in getmv().tempcount:
                     self.append(getmv().tempcount[rvalue])
                 else:
                     self.visit(rvalue, func)
                 if cast: self.append('))')
+
                 self.eol()
 
     def assign_pair(self, lvalue, rvalue, func):
