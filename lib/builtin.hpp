@@ -1889,10 +1889,17 @@ template <class T> int set<T>::add(setentry<T>* entry)
 }
 
 template <class T> int set<T>::discard(T key) {
+    int orig_frozen;
+    int is_set = __type(key) == cl_set;
+    if (is_set) {
+        orig_frozen = key->frozen;
+        key->frozen = 1;
+    } 
 	register long hash = hasher<T>(key);
 	register setentry<T> *entry;
 
 	entry = lookup(key, hash);
+    if (is_set) key->frozen = orig_frozen; 
 
 	if (entry->use != active)
 		return DISCARD_NOTFOUND; // nothing to discard
