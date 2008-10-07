@@ -47,7 +47,7 @@ str *_resolve_link(str *path);
 #endif
 
 #ifndef WIN32
-template <class A> int walk(str *top, int (*func)(A, str *, list<str *> *), A arg) {
+template <class A> int walk(str *top, void *(*func)(A, str *, list<str *> *), A arg) {
     list<str *> *__21, *names;
     __iter<str *> *__22;
     str *name;
@@ -76,7 +76,7 @@ template <class A> int walk(str *top, int (*func)(A, str *, list<str *> *), A ar
     return 0;
 }
 #else
-template <class A> int walk(str *top, int (*func)(A, str *, list<str *> *), A arg) {
+template <class A> int walk(str *top, void *(*func)(A, str *, list<str *> *), A arg) {
     list<str *> *__33, *names;
     __iter<str *> *__34;
     str *name;

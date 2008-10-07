@@ -26,6 +26,11 @@ class Foo:
 
 f1 = Foo()
 
+# ugliness
+ss = set([frozenset([1,2,3])])
+ss.discard(set([1,2,3]))
+print ss 
+
 # complex
 c = complex(7.1, 4.7)
 print c, c.real, c.imag

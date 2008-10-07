@@ -349,7 +349,7 @@ public:
         return units[i];
     }
 
-    virtual int append(T t) {
+    virtual void *append(T t) {
         units.push_back(t);
         return 0;
     }
@@ -892,6 +892,7 @@ public:
     str *msg;
     Exception(str *msg=0) { __init__(msg); }
     int __init__(str *msg) { this->msg = msg; }
+    int __init__(void *msg) { this->msg = 0; } /* XXX */
     int __init__(int msg) { this->msg = 0; } /* XXX */
     str *__repr__() { return msg ? msg : new str("0"); }
 
@@ -1888,18 +1889,27 @@ template <class T> int set<T>::add(setentry<T>* entry)
     return 0;
 }
 
+/*template <class T> int freeze(set<T> *key) {
+    int orig_frozen = key->frozen;
+    key->frozen = 1;
+    return orig_frozen;
+}
+template <class T> void unfreeze(set<T> *key, int orig_frozen) {
+    key->frozen = orig_frozen;
+}
+template <class U> int freeze(U) {
+    return 0;
+}
+template <class U> int unfreeze(U, int orig_frozen) {
+}  */
+
 template <class T> int set<T>::discard(T key) {
-    int orig_frozen;
-    int is_set = __type(key) == cl_set;
-    if (is_set) {
-        orig_frozen = key->frozen;
-        key->frozen = 1;
-    } 
+    //int orig_frozen = freeze(key);
 	register long hash = hasher<T>(key);
 	register setentry<T> *entry;
 
 	entry = lookup(key, hash);
-    if (is_set) key->frozen = orig_frozen; 
+    //unfreeze(key, orig_frozen);
 
 	if (entry->use != active)
 		return DISCARD_NOTFOUND; // nothing to discard
@@ -3071,8 +3081,8 @@ namespace __dict__ {
         return d;
     }
 
-    template<class A> dict<A, int> *fromkeys(pyiter<A> *f) {
-        return fromkeys(f, 0);
+    template<class A> dict<A, void *> *fromkeys(pyiter<A> *f) {
+        return fromkeys(f, (void *)0);
     }
 
 }

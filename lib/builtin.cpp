@@ -1189,7 +1189,7 @@ template<> void *__copy(void *d) { return d; }
 template<> str *repr(double d) { return __str(d); }
 template<> str *repr(int i) { return __str(i); }
 template<> str *repr(bool b) { return __str((int)b); }
-template<> str *repr(void *v) { return new str("void"); }
+template<> str *repr(void *v) { return new str("0"); }
 
 str *__str(void *v) { return new str("void"); }
 
