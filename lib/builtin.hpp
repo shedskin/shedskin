@@ -1040,8 +1040,8 @@ template<class T> static inline int __wrap(T a, int i) {
 
 /* representation */
 
-template<class T> str *__str(T t) { if (!t) return new str("0"); return t->__str__(); }
-template<class T> str *repr(T t) { if (!t) return new str("0"); return t->__repr__(); }
+template<class T> str *__str(T t) { if (!t) return new str("None"); return t->__str__(); }
+template<class T> str *repr(T t) { if (!t) return new str("None"); return t->__repr__(); }
 
 str *__str(void *);
 
