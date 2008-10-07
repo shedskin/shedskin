@@ -1889,7 +1889,7 @@ template <class T> int set<T>::add(setentry<T>* entry)
     return 0;
 }
 
-/*template <class T> int freeze(set<T> *key) {
+template <class T> int freeze(set<T> *key) {
     int orig_frozen = key->frozen;
     key->frozen = 1;
     return orig_frozen;
@@ -1897,19 +1897,19 @@ template <class T> int set<T>::add(setentry<T>* entry)
 template <class T> void unfreeze(set<T> *key, int orig_frozen) {
     key->frozen = orig_frozen;
 }
-template <class U> int freeze(U) {
+template <class U> int freeze(U key) {
     return 0;
 }
-template <class U> int unfreeze(U, int orig_frozen) {
-}  */
+template <class U> void unfreeze(U, int orig_frozen) {
+}  
 
 template <class T> int set<T>::discard(T key) {
-    //int orig_frozen = freeze(key);
+    int orig_frozen = freeze(key);
 	register long hash = hasher<T>(key);
 	register setentry<T> *entry;
 
 	entry = lookup(key, hash);
-    //unfreeze(key, orig_frozen);
+    unfreeze(key, orig_frozen);
 
 	if (entry->use != active)
 		return DISCARD_NOTFOUND; // nothing to discard
