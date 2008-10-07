@@ -167,7 +167,8 @@ class generateVisitor(ASTVisitor):
             if singletype(var, module) or var.invisible: # XXX buh
                 continue
             typehu = typesetreprnew(var, var.parent)
-            if not typehu or typehu == 'void *': continue 
+            # void *
+            if not typehu or not var.types(): continue 
 
             decl.setdefault(typehu, []).append(self.cpp_name(name))
         decl2 = []
@@ -560,7 +561,8 @@ class generateVisitor(ASTVisitor):
                     if singletype(var, module) or var.invisible: # XXX merge declaredefs 
                         continue
                     typehu = typesetreprnew(var, var.parent)
-                    if not typehu or typehu == 'void *': continue 
+                    # void *
+                    if not typehu or not var.types(): continue 
                     if name.startswith('__'): continue
 
                     try:
@@ -743,12 +745,11 @@ class generateVisitor(ASTVisitor):
                     merged.update(m)
             
                 ts = self.padme(typestrnew({(1,0): merged}, cl, True, cl))
-                if ts != 'void *':
+                if merged:
                     self.output(ts+self.cpp_name(ident)+';') 
 
-
             # non-virtual
-            elif typesetreprnew(var, cl) != 'void *': # XXX invisible?
+            elif var in getgx().merged_inh and getgx().merged_inh[var]:
                 self.output(typesetreprnew(var, cl)+self.cpp_name(var.name)+';') 
 
         if [v for v in cl.vars if not v.startswith('__')]:
@@ -812,7 +813,8 @@ class generateVisitor(ASTVisitor):
                 self.output('memo->__setitem__(this, c);')
            
             for var in cl.vars.values():
-                if typesetreprnew(var, cl) != 'void *' and not var.invisible:
+                if var in getgx().merged_inh and getgx().merged_inh[var]:
+                #if var not in cl.funcs and not var.invisible:
                     if name == '__deepcopy__':
                         self.output('c->%s = __deepcopy(%s);' % (var.name, var.name))
                     else:
@@ -2821,10 +2823,12 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None, check_extmo
         raise ExtmodError()
 
     # --- simple built-in types
-    if cl.ident in ['int_', 'float_','none']:
+    if cl.ident in ['int_', 'float_']:
         return conv[cl.ident]
     elif cl.ident == 'str_':
         return 'str'+ptr 
+    elif cl.ident == 'none':
+        return 'void *'
             
     # --- namespace prefix
     namespace = ''
