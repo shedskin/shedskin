@@ -307,7 +307,7 @@ class complex : public pyobj {
 public:
     double real, imag;
 
-    complex(double real, double imag=0.0);
+    complex(double real=0.0, double imag=0.0);
     complex *__add__(complex *b);
     str *__repr__();
 };

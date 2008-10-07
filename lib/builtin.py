@@ -53,7 +53,7 @@ class int_:
 
 class float_:                            
     def __add__(self, b):               
-        return 1.0                     
+        return 1.0 #b.__with_float__(self)
     def __sub__(self, b):             
         return 1.0                   
     def __mul__(self, b):           
@@ -468,7 +468,7 @@ class set(pyset):
         pass
 
 class complex:
-    def __init__(self, real, imag=None):
+    def __init__(self, real=None, imag=None):
         self.real = 1.0
         self.imag = 1.0
 
