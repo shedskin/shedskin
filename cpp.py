@@ -1755,8 +1755,8 @@ class generateVisitor(ASTVisitor):
             return
         
         # --- 'a.__mul__(b)': use template to call to b.__mul__(a), while maintaining evaluation order
-        if inline == '*' and ul and not ur:
-            self.append('__mul(')
+        if inline in ['+', '*'] and ul and not ur:
+            self.append('__'+{'+':'add', '*':'mul'}[inline]+'2(')
             self.visit2(left, func)
             self.append(', ')
             self.visit2(origright, func)

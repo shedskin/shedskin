@@ -309,6 +309,8 @@ public:
 
     complex(double real=0.0, double imag=0.0);
     complex *__add__(complex *b);
+    complex *__add__(double b);
+
     str *__repr__();
 };
 
@@ -1073,9 +1075,14 @@ template<> int __lt(double a, double b);
 template<class T> int __le(T a, T b) { return a->__le__(b); }
 template<> int __le(int a, int b);
 template<> int __le(double a, double b);
+
 template<class T> T __add(T a, T b) { return a->__add__(b); }
 template<> int __add(int a, int b);
 template<> double __add(double a, double b);
+
+/* reverse */
+template<class U> U __add2(double a, U b) { return b->__add__(a); }
+template<class T> T __mul2(int n, T a) { return a->__mul__(n); }
 
 str *__add_strs(int n, ...);
 
@@ -1099,10 +1106,6 @@ template<class T> T __copy(T t) { return (T)(t->__copy__()); }
 template<> int __copy(int i);
 template<> double __copy(double d);
 template<> void *__copy(void *p);
-
-template<class T> T __mul(int n, T a) {
-    return a->__mul__(n);
-}
 
 template<class T> int len(T x) {
     return x->__len__();

@@ -77,9 +77,8 @@ complex::complex(double real, double imag) {
     this->imag = imag;
 }
 
-complex *complex::__add__(complex *b) {
-    return new complex(this->real+b->real, this->imag+b->imag);
-}
+complex *complex::__add__(complex *b) { return new complex(this->real+b->real, this->imag+b->imag); }
+complex *complex::__add__(double b) { return new complex(this->real+b, this->imag); }
 
 str *complex::__repr__() {
     str *bweh = new str("(%g+%gj)");
@@ -1209,6 +1208,7 @@ template<> int __lt(int a, int b) { return a < b; }
 template<> int __lt(double a, double b) { return a < b; }
 template<> int __le(int a, int b) { return a <= b; }
 template<> int __le(double a, double b) { return a <= b; }
+
 template<> int __add(int a, int b) { return a + b; }
 template<> double __add(double a, double b) { return a + b; }
 
