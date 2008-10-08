@@ -51,27 +51,30 @@ class int_:
     def __deepcopy__(self):
         return self
 
+    def __with_float__(self):
+        return 1.0
+
 class float_:                            
     def __add__(self, b):               
-        return 1.0 #b.__with_float__(self)
+        return b.__with_float__()
     def __sub__(self, b):             
-        return 1.0                   
+        return b.__with_float__()
     def __mul__(self, b):           
-        return 1.0                 
+        return b.__with_float__()
     def __div__(self, b):         
-        return 1.0               
+        return b.__with_float__()
     def __floordiv__(self, b):
-        return 1.0
+        return b.__with_float__()
     def __pow__(self, b):         
-        return 1.0               
+        return b.__with_float__()
     def __neg__(self):
         return 1.0
     def __pos__(self):
         return 1.0
     def __mod__(self, b):        
-        return 1.0                
+        return b.__with_float__()
     def __divmod__(self, b):
-        return (1.0,)
+        return (b.__with_float__(),)
 
     def __repr__(self):         
         return ''              
@@ -83,6 +86,9 @@ class float_:
         return self
     def __deepcopy__(self):
         return self
+
+    def __with_float__(self):
+        return 1.0
 
 class none: pass
 
@@ -477,6 +483,9 @@ class complex:
 
     def __repr__(self):
         return ''
+
+    def __with_float__(self):
+        return self
 
 class object: pass
 
