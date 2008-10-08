@@ -44,6 +44,10 @@ d = complex(7)
 print d, d.real, d.imag
 e = c+d
 print e, e.real, e.imag
+f = 1.2+complex()
+print f
+g = complex()+1.3
+print g
 
 ''', '''
 output(equal=True)
