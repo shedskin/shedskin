@@ -2713,6 +2713,8 @@ class generateVisitor(ASTVisitor):
             if '\0' in node.value: # '\0' delimiter in C
                 self.append(', %d' % len(node.value))
             self.append(')')
+        elif t[0].ident == 'complex': 
+            self.append('new complex(%s, %s)' % (node.value.real, node.value.imag))
         else: 
             self.append('new %s(%s)' % (t[0].ident, node.value))
 
