@@ -48,10 +48,11 @@ f = 1.2+complex()
 print f
 g = complex()+1.3
 print g
-d = complex(7, 1.1)
+d = 7+1.1j
 c += d
 c += 8.4
 c += 2
+c += 9j
 print c
 
 ''', '''
