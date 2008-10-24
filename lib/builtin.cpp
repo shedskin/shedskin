@@ -78,9 +78,14 @@ complex::complex(double real, double imag) {
 }
 
 complex *complex::__add__(complex *b) { return new complex(this->real+b->real, this->imag+b->imag); }
-complex *complex::__add__(double b) { return new complex(this->real+b, this->imag); }
+complex *complex::__add__(double b) { return new complex(b+this->real, this->imag); }
 complex *complex::__iadd__(complex *b) { this->real += b->real; this->imag += b->imag; return this; }
 complex *complex::__iadd__(double b) { this->real += b; return this; }
+
+complex *complex::__mul__(complex *b) { return new complex(this->real*b->real-this->imag*b->imag, this->real*b->imag+this->imag*b->real); }
+complex *complex::__mul__(double b) { return new complex(b*this->real, b*this->imag); }
+complex *complex::__imul__(complex *b) { this->real = this->real*b->real-this->imag*b->imag; this->imag = this->imag*b->real+this->real*b->imag; return this; } 
+complex *complex::__imul__(double b) { this->real *= b; this->imag *= b; return this; }
 
 str *complex::__repr__() {
     str *bweh = new str("(%g+%gj)");

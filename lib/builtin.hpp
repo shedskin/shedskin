@@ -308,10 +308,16 @@ public:
     double real, imag;
 
     complex(double real=0.0, double imag=0.0);
+
     complex *__add__(complex *b);
     complex *__add__(double b);
     complex *__iadd__(complex *b);
     complex *__iadd__(double b);
+
+    complex *__mul__(complex *b);
+    complex *__mul__(double b);
+    complex *__imul__(complex *b);
+    complex *__imul__(double b);
 
     str *__repr__();
 };
