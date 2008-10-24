@@ -48,6 +48,11 @@ f = 1.2+complex()
 print f
 g = complex()+1.3
 print g
+d = complex(7, 1.1)
+c += d
+c += 8.4
+c += 2
+print c
 
 ''', '''
 output(equal=True)
