@@ -1341,7 +1341,7 @@ class moduleVisitor(ASTVisitor):
                 self.visit(child, self.classes[node.name])
 
         # --- __iadd__ etc.
-        if not newclass.mv.module.builtin or newclass.ident in ['int_', 'float_', 'str_', 'tuple']: 
+        if not newclass.mv.module.builtin or newclass.ident in ['int_', 'float_', 'str_', 'tuple', 'complex']: 
             msgs = ['add', 'mul'] # XXX mod, pow
             if newclass.ident in ['int_', 'float_']: msgs += ['sub', 'div', 'floordiv']
             if newclass.ident in ['int_']: msgs += ['lshift', 'rshift', 'and', 'xor', 'or']

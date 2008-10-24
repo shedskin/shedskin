@@ -79,6 +79,8 @@ complex::complex(double real, double imag) {
 
 complex *complex::__add__(complex *b) { return new complex(this->real+b->real, this->imag+b->imag); }
 complex *complex::__add__(double b) { return new complex(this->real+b, this->imag); }
+complex *complex::__iadd__(complex *b) { this->real += b->real; this->imag += b->imag; return this; }
+complex *complex::__iadd__(double b) { this->real += b; return this; }
 
 str *complex::__repr__() {
     str *bweh = new str("(%g+%gj)");
