@@ -54,6 +54,7 @@ c += 8.4
 c += 2
 c += 9j
 print c
+print (7+4j)*(9+5j), 3*(7+4j) 
 
 ''', '''
 output(equal=True)
