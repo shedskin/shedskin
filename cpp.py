@@ -1714,12 +1714,13 @@ class generateVisitor(ASTVisitor):
         # --- inline mod/div
         if (floattype.intersection(ltypes) or inttype.intersection(ltypes)):
             if inline in ['%'] or (inline in ['/'] and not (floattype.intersection(ltypes) or floattype.intersection(rtypes))):
-                self.append({'%': '__mods', '/': '__divs'}[inline]+'(')
-                self.visit2(left, func)
-                self.append(', ')
-                self.visit2(origright, func)
-                self.append(')')
-                return
+                if not defclass('complex') in [t[0] for t in rtypes]: # XXX
+                    self.append({'%': '__mods', '/': '__divs'}[inline]+'(')
+                    self.visit2(left, func)
+                    self.append(', ')
+                    self.visit2(origright, func)
+                    self.append(')')
+                    return
 
         # --- inline floordiv # XXX merge above?
         if (inline and ul and ur) and inline in ['//']:
@@ -1755,8 +1756,8 @@ class generateVisitor(ASTVisitor):
             return
         
         # --- 'a.__mul__(b)': use template to call to b.__mul__(a), while maintaining evaluation order
-        if inline in ['+', '*'] and ul and not ur:
-            self.append('__'+{'+':'add', '*':'mul'}[inline]+'2(')
+        if inline in ['+', '*', '-', '/'] and ul and not ur:
+            self.append('__'+{'+':'add', '*':'mul', '-':'sub', '/':'div'}[inline]+'2(')
             self.visit2(left, func)
             self.append(', ')
             self.visit2(origright, func)

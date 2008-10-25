@@ -481,6 +481,21 @@ class complex:
     def __add__(self, c):              
         return self
 
+    def __sub__(self, c):              
+        return self
+
+    def __mul__(self, c):              
+        return self
+
+    def __div__(self, c):              
+        return self
+
+    def __abs__(self):
+        return 1.0
+
+    def conjugate(self):
+        return self
+
     def __repr__(self):
         return ''
 

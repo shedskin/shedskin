@@ -55,6 +55,11 @@ c += 2
 c += 9j
 print c
 print (7+4j)*(9+5j), 3*(7+4j) 
+c,d = 2+2j, -3+4j
+print c.conjugate()
+print abs(c)
+print 7-c, c-7, c-d
+print 2/c, c/2, c/d
 
 ''', '''
 output(equal=True)
