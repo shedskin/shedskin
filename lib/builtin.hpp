@@ -314,13 +314,30 @@ public:
     complex *__iadd__(complex *b);
     complex *__iadd__(double b);
 
+    complex *__sub__(complex *b);
+    complex *__sub__(double b);
+    complex *__rsub__(double b);
+    complex *__isub__(complex *b);
+    complex *__isub__(double b);
+
     complex *__mul__(complex *b);
     complex *__mul__(double b);
     complex *__imul__(complex *b);
     complex *__imul__(double b);
 
+    complex *__div__(complex *b);
+    complex *__div__(double b);
+    complex *__rdiv__(double b);
+    complex *__idiv__(complex *b);
+    complex *__idiv__(double b);
+
+    complex *conjugate();
+    double __abs__();
+
     str *__repr__();
 };
+
+double __abs(complex *c);
 
 template <class T> class pyiter : public pyobj {
 public:
@@ -1090,7 +1107,9 @@ template<> double __add(double a, double b);
 
 /* reverse */
 template<class U> U __add2(double a, U b) { return b->__add__(a); }
+template<class U> U __sub2(double a, U b) { return b->__rsub__(a); }
 template<class T> T __mul2(int n, T a) { return a->__mul__(n); }
+template<class T> T __div2(int n, T a) { return a->__rdiv__(n); }
 
 str *__add_strs(int n, ...);
 

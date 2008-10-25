@@ -77,19 +77,45 @@ complex::complex(double real, double imag) {
     this->imag = imag;
 }
 
-complex *complex::__add__(complex *b) { return new complex(this->real+b->real, this->imag+b->imag); }
-complex *complex::__add__(double b) { return new complex(b+this->real, this->imag); }
-complex *complex::__iadd__(complex *b) { this->real += b->real; this->imag += b->imag; return this; }
-complex *complex::__iadd__(double b) { this->real += b; return this; }
+complex *complex::__add__(complex *b) { return new complex(real+b->real, imag+b->imag); }
+complex *complex::__add__(double b) { return new complex(b+real, imag); }
+complex *complex::__iadd__(complex *b) { real += b->real; imag += b->imag; return this; }
+complex *complex::__iadd__(double b) { real += b; return this; }
 
-complex *complex::__mul__(complex *b) { return new complex(this->real*b->real-this->imag*b->imag, this->real*b->imag+this->imag*b->real); }
-complex *complex::__mul__(double b) { return new complex(b*this->real, b*this->imag); }
-complex *complex::__imul__(complex *b) { this->real = this->real*b->real-this->imag*b->imag; this->imag = this->imag*b->real+this->real*b->imag; return this; } 
-complex *complex::__imul__(double b) { this->real *= b; this->imag *= b; return this; }
+complex *complex::__sub__(complex *b) { return new complex(real-b->real, imag-b->imag); }
+complex *complex::__sub__(double b) { return new complex(real-b, imag); }
+complex *complex::__rsub__(double b) { return new complex(b-real, -imag); }
+complex *complex::__isub__(complex *b) { real -= b->real; imag -= b->imag; return this; }
+complex *complex::__isub__(double b) { real -= b; return this; }
+
+complex *complex::__mul__(complex *b) { return new complex(real*b->real-imag*b->imag, real*b->imag+imag*b->real); }
+complex *complex::__mul__(double b) { return new complex(b*real, b*imag); }
+complex *complex::__imul__(complex *b) { real = real*b->real-imag*b->imag; imag = imag*b->real+real*b->imag; return this; } 
+complex *complex::__imul__(double b) { real *= b; imag *= b; return this; }
+
+void __complexdiv(complex *c, complex *a, complex *b) {
+    double norm = b->real*b->real+b->imag*b->imag;
+    c->real = (a->real*b->real+a->imag*b->imag)/norm;
+    c->imag = (a->imag*b->real-b->imag*a->real)/norm;
+}
+
+complex *complex::__div__(complex *b) { complex *c=new complex(); __complexdiv(c, this, b); return c; }
+complex *complex::__div__(double b) { return new complex(real/b, imag/b); }
+complex *complex::__rdiv__(double b) { complex *c=new complex(); __complexdiv(c, new complex(b), this); return c; }
+
+complex *complex::conjugate() { return new complex(real, -imag); }
+double complex::__abs__() { return std::sqrt(real*real+imag*imag); }
+double __abs(complex *c) { return c->__abs__(); }
 
 str *complex::__repr__() {
-    str *bweh = new str("(%g+%gj)");
-    return __mod(bweh, this->real, this->imag);
+    str *left, *middle, *right;
+    left = __mod(new str("(%g"), real);
+    if(imag<0) 
+        middle = new str("");
+    else
+        middle = new str("+");
+    right = __mod(new str("%gj)"), imag);
+    return __add_strs(3, left, middle, right);
 }
 
 /* str methods */
