@@ -332,6 +332,8 @@ public:
     complex *__idiv__(double b);
 
     complex *conjugate();
+    complex *__pos__();
+    complex *__neg__();
     double __abs__();
 
     str *__repr__();
