@@ -1,4 +1,5 @@
 #include "builtin.hpp"
+#include "re.hpp"
 #include <climits>
 #include <numeric>
 #include <stdlib.h>
@@ -75,6 +76,39 @@ str *float_::__repr__() {
 complex::complex(double real, double imag) {
     this->real = real;
     this->imag = imag;
+}
+
+complex::complex(str *s) {
+    __re__::match_object *m;
+    __re__::re_object *p;
+
+    p = __re__::compile(new str("(?P<one>[+-]?([\\d\\.]+e[+-]?\\d+|[\\d\\.]*)j?)(?P<two>[+-]?([\\d\\.]+e[+-]?\\d+|[\\d\\.]*)j?)?$"));
+    m = p->match(s->strip());
+    if (__bool(m)) {
+        complex *c = (parsevalue(m->group(new str("one"))))->__add__(parsevalue(m->group(new str("two"))));
+        real = c->real;
+        imag = c->imag;
+    }
+    else {
+        throw ((new ValueError(new str("complex() arg is a malformed string"))));
+    }
+}
+
+complex *complex::parsevalue(str *s) {
+    complex *mult;
+
+    if ((!__bool(s))) {
+        return __add2(0, new complex(0.0, 0.0));
+    }
+    mult = __add2(1, new complex(0.0, 0.0));
+    if (__eq(s->__getitem__((-1)), new str("j"))) {
+        s = s->__slice__(2, 0, (-1), 0);
+        mult = __add2(0, new complex(0.0, 1.0));
+    }
+    if (((new list<str *>(2, new str("+"), new str("-"))))->__contains__(s)) {
+        s = s->__iadd__(new str("1"));
+    }
+    return __mul2(__float(s), mult);
 }
 
 complex *complex::__add__(complex *b) { return new complex(real+b->real, imag+b->imag); }
