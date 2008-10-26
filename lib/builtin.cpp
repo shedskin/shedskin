@@ -109,6 +109,8 @@ double __abs(complex *c) { return c->__abs__(); }
 
 str *complex::__repr__() {
     str *left, *middle, *right;
+    if(real==0) 
+        return __mod(new str("%gj"), imag);
     left = __mod(new str("(%g"), real);
     if(imag<0) 
         middle = new str("");

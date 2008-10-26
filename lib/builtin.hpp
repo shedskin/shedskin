@@ -1109,7 +1109,9 @@ template<> double __add(double a, double b);
 template<class U> U __add2(double a, U b) { return b->__add__(a); }
 template<class U> U __sub2(double a, U b) { return b->__rsub__(a); }
 template<class T> T __mul2(int n, T a) { return a->__mul__(n); }
+template<class T> T __mul2(double n, T a) { return a->__mul__(n); }
 template<class T> T __div2(int n, T a) { return a->__rdiv__(n); }
+template<class T> T __div2(double n, T a) { return a->__rdiv__(n); }
 
 str *__add_strs(int n, ...);
 
