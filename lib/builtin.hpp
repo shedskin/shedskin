@@ -308,6 +308,8 @@ public:
     double real, imag;
 
     complex(double real=0.0, double imag=0.0);
+    complex(str *s);
+    complex *parsevalue(str *s);
 
     complex *__add__(complex *b);
     complex *__add__(double b);

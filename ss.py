@@ -347,8 +347,13 @@ def generate_code():
     # --- generate Makefile
     makefile = file(os.path.join(getgx().output_dir, 'Makefile'), 'w')
 
+
     cppfiles = ' '.join([m.filename[:-3].replace(' ', '\ ')+'.cpp' for m in mods])
     hppfiles = ' '.join([m.filename[:-3].replace(' ', '\ ')+'.hpp' for m in mods])
+    repath = os.path.join(getgx().libdir, 're.cpp')
+    if not repath in cppfiles: 
+        cppfiles += ' '+repath
+        hppfiles += ' '+os.path.join(getgx().libdir, 're.hpp')
 
     # import flags
     if getgx().flags: flags = getgx().flags

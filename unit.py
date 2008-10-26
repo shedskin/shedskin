@@ -77,20 +77,20 @@ def parsevalue(s):
     return float(s)*mult
 
 def hak(s):
-    s = s.strip()
-#    pat = r'(?P<%s>[+-]?([\d\.]+e[+-]?\d+|[\d\.]*)j?)?'
-    imag = re.compile(r'(?P<one>[+-]?([\d\.]+e[+-]?\d+|[\d\.]*)j?)?(?P<two>[+-]?([\d\.]+e[+-]?\d+|[\d\.]*)j?)?')
-    m = imag.match(s)
-    print s, ':',
+    imag = re.compile('(?P<one>[+-]?([\d\.]+e[+-]?\d+|[\d\.]*)j?)(?P<two>[+-]?([\d\.]+e[+-]?\d+|[\d\.]*)j?)?$')
+    m = imag.match(s.strip())
     if m:
-        print parsevalue(m.group('one')) + parsevalue(m.group('two'))
+        return parsevalue(m.group('one')) + parsevalue(m.group('two'))
     else:
-        print 'niks'
+        raise ValueError('complex() arg is a malformed string')
 
-hak(' 2.4+0j' ), hak('2.4'), hak(' .4j'), hak('1-j')
-hak('-10-j'), hak('+10.1+2.4j'), hak('+j')
-hak('2e02'), hak('2e-02-2e+01j'), hak('-1.3e-3.1j')
+print hak(' 2.4+0j' ), hak('2.4'), hak(' .4j'), hak('1-j')
+print hak('-10-j'), hak('+10.1+2.4j'), hak('+j')
+print hak('2e02'), hak('2e-02-2e+01j'), hak('-1.3e-3.1j')
 
+print complex(' 2.4+0j' ), complex('2.4'), complex(' .4j'), complex('1-j')
+print complex('-10-j'), complex('+10.1+2.4j'), complex('+j')
+print complex('2e02'), complex('2e-02-2e+01j'), complex('-1.3e-3.1j')
 
 ''', '''
 output(equal=True)
