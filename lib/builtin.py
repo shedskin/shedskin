@@ -490,6 +490,12 @@ class complex:
     def __div__(self, c):              
         return self
 
+    def __pos__(self):
+        return self
+
+    def __neg__(self):
+        return self
+
     def __abs__(self):
         return 1.0
 

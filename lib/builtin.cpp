@@ -79,19 +79,19 @@ complex::complex(double real, double imag) {
 
 complex *complex::__add__(complex *b) { return new complex(real+b->real, imag+b->imag); }
 complex *complex::__add__(double b) { return new complex(b+real, imag); }
-complex *complex::__iadd__(complex *b) { real += b->real; imag += b->imag; return this; }
-complex *complex::__iadd__(double b) { real += b; return this; }
+complex *complex::__iadd__(complex *b) { return __add__(b); }
+complex *complex::__iadd__(double b) { return __add__(b); }
 
 complex *complex::__sub__(complex *b) { return new complex(real-b->real, imag-b->imag); }
 complex *complex::__sub__(double b) { return new complex(real-b, imag); }
 complex *complex::__rsub__(double b) { return new complex(b-real, -imag); }
-complex *complex::__isub__(complex *b) { real -= b->real; imag -= b->imag; return this; }
-complex *complex::__isub__(double b) { real -= b; return this; }
+complex *complex::__isub__(complex *b) { return __sub__(b); }
+complex *complex::__isub__(double b) { return __sub__(b); }
 
 complex *complex::__mul__(complex *b) { return new complex(real*b->real-imag*b->imag, real*b->imag+imag*b->real); }
 complex *complex::__mul__(double b) { return new complex(b*real, b*imag); }
-complex *complex::__imul__(complex *b) { real = real*b->real-imag*b->imag; imag = imag*b->real+real*b->imag; return this; } 
-complex *complex::__imul__(double b) { real *= b; imag *= b; return this; }
+complex *complex::__imul__(complex *b) { return __mul__(b); }
+complex *complex::__imul__(double b) { return __mul__(b); }
 
 void __complexdiv(complex *c, complex *a, complex *b) {
     double norm = b->real*b->real+b->imag*b->imag;
@@ -101,9 +101,13 @@ void __complexdiv(complex *c, complex *a, complex *b) {
 
 complex *complex::__div__(complex *b) { complex *c=new complex(); __complexdiv(c, this, b); return c; }
 complex *complex::__div__(double b) { return new complex(real/b, imag/b); }
+complex *complex::__idiv__(complex *b) { return __div__(b); }
+complex *complex::__idiv__(double b) { return __div__(b); }
 complex *complex::__rdiv__(double b) { complex *c=new complex(); __complexdiv(c, new complex(b), this); return c; }
 
 complex *complex::conjugate() { return new complex(real, -imag); }
+complex *complex::__pos__() { return this; }
+complex *complex::__neg__() { return new complex(-real, -imag); }
 double complex::__abs__() { return std::sqrt(real*real+imag*imag); }
 double __abs(complex *c) { return c->__abs__(); }
 
