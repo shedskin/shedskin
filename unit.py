@@ -61,6 +61,36 @@ print abs(c)
 print 7-c, c-7, c-d
 print 2/c, c/2, c/d
 
+# complex(str)
+import re
+
+def parsevalue(s):
+    if not s: 
+        return 0+0j
+    mult = 1+0j
+    if s[-1] == 'j':
+        s = s[:-1]
+        mult = 0+1j
+    if s in ['+', '-']: 
+        s += '1'
+    return float(s)*mult
+
+def hak(s):
+    s = s.strip()
+#    pat = r'(?P<%s>[+-]?([\d\.]+e[+-]?\d+|[\d\.]*)j?)?'
+    imag = re.compile(r'(?P<one>[+-]?([\d\.]+e[+-]?\d+|[\d\.]*)j?)?(?P<two>[+-]?([\d\.]+e[+-]?\d+|[\d\.]*)j?)?')
+    m = imag.match(s)
+    print s, ':',
+    if m:
+        print parsevalue(m.group('one')) + parsevalue(m.group('two'))
+    else:
+        print 'niks'
+
+hak(' 2.4+0j' ), hak('2.4'), hak(' .4j'), hak('1-j')
+hak('-10-j'), hak('+10.1+2.4j'), hak('+j')
+hak('2e02'), hak('2e-02-2e+01j'), hak('-1.3e-3.1j')
+
+
 ''', '''
 output(equal=True)
 
