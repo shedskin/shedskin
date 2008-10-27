@@ -308,8 +308,8 @@ public:
     double real, imag;
 
     complex(double real=0.0, double imag=0.0);
+    template<class T> complex(T t);
     complex(str *s);
-    complex *parsevalue(str *s);
 
     complex *__add__(complex *b);
     complex *__add__(double b);
@@ -339,7 +339,14 @@ public:
     double __abs__();
 
     str *__repr__();
+
+    complex *parsevalue(str *s);
 };
+
+template<class T> complex::complex(T t) {
+    real = __float(t);
+    imag = 0;
+}
 
 double __abs(complex *c);
 
