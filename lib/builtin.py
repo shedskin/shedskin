@@ -474,6 +474,7 @@ class set(pyset):
 
 class complex:
     def __init__(self, real=None, imag=None):
+        real.__float__()
         self.real = 1.0
         self.imag = 1.0
 
