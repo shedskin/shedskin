@@ -2487,9 +2487,10 @@ class generateVisitor(ASTVisitor):
                 self.visitm('__modtuple(', node.left, ', ', node.right, ')', func)
                 return
 
-        # --- non-constant str % constant dict/tuple
-        if not isinstance(node.left, Const) and isinstance(node.right, (Dict, Tuple)): 
-            error("left-hand side of mod operation should be constant for constant dict/tuple", node, warning=True)
+        # --- non-constant str % constant dict/tuple/non-str
+        if not isinstance(node.left, Const):
+            error("left-hand side of mod operation should be constant here", node, warning=True)
+            self.visit(node.right, func)
             return
 
         # --- list and remove keys
