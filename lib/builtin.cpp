@@ -1610,6 +1610,31 @@ void __fmtcheck(str *fmt, int l) {
 
 }
 
+str *__mod3(str *fmt, va_list args) {
+    int j;
+    str *r = new str();
+
+    while((j = __fmtpos(fmt)) != -1) {
+        char c = fmt->unit[j];
+
+        if(c == 'c') 
+            __modfill(&fmt, mod_to_c2(va_arg(args, pyobj *)), &r);
+        else if(c == 's' || c == 'r')
+            __modfill(&fmt, va_arg(args, pyobj *), &r);
+        else if(c == '%')
+            __modfill(&fmt, 0, &r);
+        else if(__GC_STRING("diouxX").find(c) != -1)
+            __modfill(&fmt, mod_to_int(va_arg(args, pyobj *)), &r);
+        else if(__GC_STRING("eEfFgGh").find(c) != -1)
+            __modfill(&fmt, mod_to_float(va_arg(args, pyobj *)), &r);
+        else
+            break;
+    }
+
+    r->unit += fmt->unit;
+    return r;
+}
+
 str *__mod2(str *fmt, va_list args) {
     int j;
     str *r = new str();
@@ -1629,18 +1654,109 @@ str *__mod2(str *fmt, va_list args) {
             __modfill(&fmt, va_arg(args, double), &r);
         else
             break;
-
     }
 
     r->unit += fmt->unit;
     return r;
 }
 
+str *__modcd(str *fmt, list<str *> *names, ...) {
+    int i, j;
+    list<pyobj *> *vals = new list<pyobj *>();
+    va_list args;
+    va_start(args, names);
+    for(i=0; i<len(names); i++)
+        vals->append(va_arg(args, pyobj *));
+    va_end(args);
+
+    str *naam;
+    int pos, pos2;
+    dict<str *, pyobj *> *d;
+
+    d = __dict(__zip2(names, vals));
+
+    //print("d %s\n", d);
+
+    str *const_5 = new str("%("), *const_6 = new str(")");
+
+    list<pyobj *> *values = new list<pyobj *>();
+
+    while (fmt->__contains__(const_5)) {
+        pos = fmt->index(const_5);
+        pos2 = fmt->find(const_6, pos);
+        naam = fmt->__slice__(3, (pos+2), pos2, 0);
+        //print("naam %s\n", naam);
+        values->append(d->__getitem__(naam));
+        fmt = (fmt->__slice__(2, 0, (pos+1), 0))->__add__(fmt->__slice__(1, (pos2+1), 0, 0));
+    }
+
+    //print("hop %s %s\n", fmt, values);
+
+    str *r = new str();
+    i = 0;
+    pyobj *value;
+    while((j = __fmtpos(fmt)) != -1) {
+        char c = fmt->unit[j];
+        if(c != '%')
+            value = values->__getitem__(i++);
+
+        if(c == 'c') 
+            __modfill(&fmt, mod_to_c2(value), &r);
+        else if(c == 's' || c == 'r')
+            __modfill(&fmt, value, &r);
+        else if(c == '%')
+            __modfill(&fmt, 0, &r);
+        else if(__GC_STRING("diouxX").find(c) != -1)
+            __modfill(&fmt, mod_to_int(value), &r);
+        else if(__GC_STRING("eEfFgGh").find(c) != -1)
+            __modfill(&fmt, mod_to_float(value), &r);
+        else
+            break;
+    }
+
+    r->unit += fmt->unit;
+    return r;
+} 
+
 /* mod */
 
 str *mod_to_c(str *s) { return s; } 
 str *mod_to_c(int i) { return chr(i); }
-str *mod_to_c(double d) { return chr(__int(d)); }
+str *mod_to_c(double d) { return chr(__int(d)); } 
+
+str *mod_to_c2(pyobj *t) { 
+    if(t->__class__ == cl_int_)
+        return chr(((int_ *)t)->unit); 
+    else if(t->__class__ == cl_float_)
+        return chr(((float_ *)t)->unit); 
+    else if(t->__class__ == cl_str_)
+        return __str(t); 
+    return new str("crap");
+}
+
+int mod_to_int(pyobj *t) { 
+    if(t->__class__ == cl_int_)
+        return ((int_ *)t)->unit; 
+    else if(t->__class__ == cl_float_)
+        return __int(((float_ *)t)->unit); 
+    return 0;
+}
+
+double mod_to_float(pyobj *t) { 
+    if(t->__class__ == cl_int_)
+        return ((int_ *)t)->unit; 
+    else if(t->__class__ == cl_float_)
+        return ((float_ *)t)->unit; 
+    return 0;
+}
+
+str *__modct(str *fmt, ...) {
+     va_list args;
+     va_start(args, fmt);
+     str *s = __mod3(new str(fmt->unit), args);
+     va_end(args);
+     return s;
+}
 
 str *__mod(str *fmt, ...) {
      va_list args;

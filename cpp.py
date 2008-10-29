@@ -2487,84 +2487,30 @@ class generateVisitor(ASTVisitor):
                 self.visitm('__modtuple(', node.left, ', ', node.right, ')', func)
                 return
 
-        # --- non-constant str % constant dict/tuple/non-str
-        if not isinstance(node.left, Const):
-            error("left-hand side of mod operation should be constant here", node, warning=True)
-            self.visit(node.right, func)
-            return
-
-        # --- list and remove keys
-        j = 0
-        v = node.left.value
-        names = []
-        while True:
-            i = v.find('%(', j)
-            if i == -1:
-                break
-            j = v.find(')', i)
-            if j == -1:
-                break
-
-            names.append(v[i+2:j])
-       
-        for name in set(names):
-            v = v.replace('('+name+')', '')
-        fmt = v
-
-        # --- determine formatting flags 
-        flags = [] 
-        state = 0
-        for i, c in enumerate(fmt):
-            if c == '%':
-                state = 1-state
-                continue
-            if state == 0:
-                continue
-            if c in 'diouxXeEfFgGcrs':
-                flags.append(c)
-                state = 0
-
-        if state == 1:
-            error("incomplete format", node, warning=True)
-
-        # --- str % tuple/dict: determine corresponding child nodes 
-        if isinstance(node.right, Tuple):
-            nodes = node.right.nodes
-
-        elif isinstance(node.right, Dict):
-            nodes = []
-            for name in names:
-                values = [t[1] for t in node.right.items if isinstance(t[0], Const) and t[0].value == name]
-                if values: # XXX error
-                    nodes.append(values[0])
-
-        # str % non-tuple/dict
+        # --- str % constant-dict: 
+        if isinstance(node.right, Dict): # XXX geen str keys
+            self.visitm('__modcd(', node.left, ', ', 'new list<str *>(%d, ' % len(node.right.items), func)
+            self.append(', '.join([('new str("%s")' % key.value) for key, value in node.right.items]))
+            self.append(')')
+            nodes = [value for (key,value) in node.right.items]
         else:
-            nodes = [node.right]
+            self.visitm('__modct(', node.left, func)
+            # --- str % constant-tuple
+            if isinstance(node.right, Tuple):
+                nodes = node.right.nodes
 
-        if len(flags) != len(nodes):
-            error("wrong number of format arguments", node, warning=True)
+            # --- str % non-tuple/non-dict
+            else:
+                nodes = [node.right]
 
-        if fmt == node.left.value:
-            self.visitm('__mod(', node.left, func)
-        else:
-            self.visitm('__mod(new str("', fmt, '")', func) # XXX
-
-        # --- pair flags with nodes, converting nodes where necessary
-        for (f, n) in zip(flags, nodes):
-            if f == 'c' and 'int_' in [t[0].ident for t in self.mergeinh[n]]:
-                self.visitm(', chr(', n, ')', func)
-            elif f in 'eEfFgG' and 'float_' not in [t[0].ident for t in self.mergeinh[n]]:
-                self.visitm(', __float(', n, ')', func)
-            elif f in 'diouxX' and (not 'int_' in [t[0].ident for t in self.mergeinh[n]] or 'float_' in [t[0].ident for t in self.mergeinh[n]]):
-                self.visitm(', __int(', n, ')', func)
-            elif f in 'sr' and 'float_' in [t[0].ident for t in self.mergeinh[n]]:
+        # --- visit nodes, unboxing scalars
+        for n in nodes: 
+            if (defclass('float_'), 0) in self.mergeinh[n]:
                 self.visitm(', new float_(', n, ')', func)
-            elif f in 'sr' and 'int_' in [t[0].ident for t in self.mergeinh[n]]:
+            elif (defclass('int_'), 0) in self.mergeinh[n]:
                 self.visitm(', new int_(', n, ')', func)
             else:
                 self.visitm(', ', n, func)
-
         self.append(')')
 
     def visitPrintnl(self, node, func=None):
