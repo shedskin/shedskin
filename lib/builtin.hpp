@@ -141,6 +141,8 @@ template<> str *oct(int a);
 template<> str *oct(bool b);
 
 str *__mod(str *fmt, ...);
+str *__modct(str *fmt, ...);
+str *__modcd(str *fmt, list<str *> *l, ...);
 
 template<class T> str *__modtuple(str *fmt, tuple2<T,T> *t); 
 template<class A, class B> str *__modtuple(str *fmt, tuple2<A,B> *t);
@@ -3198,6 +3200,10 @@ template <class T> str *mod_to_c(T t) { return 0; }
 str *mod_to_c(str *s);
 str *mod_to_c(int i); 
 str *mod_to_c(double d); 
+
+str *mod_to_c2(pyobj *t);
+int mod_to_int(pyobj *t);
+double mod_to_float(pyobj *t);
 
 template<class T> int do_modfill(char c, str **fmt, T arg, str **s) {
     if(c == '%') {
