@@ -77,7 +77,8 @@ def parsevalue(s):
     return float(s)*mult
 
 def hak(s):
-    imag = re.compile('(?P<one>[+-]?([\d\.]+e[+-]?\d+|[\d\.]*)j?)(?P<two>[+-]?([\d\.]+e[+-]?\d+|[\d\.]*)j?)?$')
+    pat = '(?P<%s>[+-]?([\d\.]+e[+-]?\d+|[\d\.]*)j?)'
+    imag = re.compile(pat % 'one' + pat % 'two' + '?$')
     m = imag.match(s.strip())
     if m:
         return parsevalue(m.group('one')) + parsevalue(m.group('two'))
