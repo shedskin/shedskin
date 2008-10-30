@@ -231,6 +231,7 @@ template<class T> T __to_ss(PyObject *p) {
 
 template<> int __to_ss(PyObject *p);
 template<> double __to_ss(PyObject *p);
+template<> void *__to_ss(PyObject *p);
 
 template<class T> PyObject *__to_py(T t) {
     if(!t) return Py_None;
@@ -239,6 +240,7 @@ template<class T> PyObject *__to_py(T t) {
 
 template<> PyObject *__to_py(int i);
 template<> PyObject *__to_py(double i);
+template<> PyObject *__to_py(void *);
 #endif
 
 /* externs */

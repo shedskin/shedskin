@@ -1923,19 +1923,24 @@ PyObject *__args(int n, ...) {
 
 template<> PyObject *__to_py(int i) { return PyInt_FromLong(i); }   
 template<> PyObject *__to_py(double d) { return PyFloat_FromDouble(d); }
+template<> PyObject *__to_py(void *v) { return Py_None; }
 
 template<> int __to_ss(PyObject *p) { 
-    if(p==Py_None) return 0;
     if(!PyInt_Check(p)) 
         throw new TypeError(new str("error in conversion to Shed Skin (integer expected)"));
     return PyInt_AsLong(p);
 }
 
 template<> double __to_ss(PyObject *p) { 
-    if(p==Py_None) return 0.0;
     if(!PyInt_Check(p) and !PyFloat_Check(p)) 
         throw new TypeError(new str("error in conversion to Shed Skin (float or int expected)"));
     return PyFloat_AsDouble(p); 
+}
+
+template<> void * __to_ss(PyObject *p) { 
+    if(p!=Py_None)
+        throw new TypeError(new str("error in conversion to Shed Skin (None expected)"));
+    return 0;
 }
 
 #endif

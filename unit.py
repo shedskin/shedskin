@@ -98,6 +98,9 @@ class PI:
         return 3.14
 print complex(PI())
 
+# not sure why this didn't work before
+print "%%(%s)s" % 'ole'
+
 ''', '''
 output(equal=True)
 
