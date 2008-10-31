@@ -1987,6 +1987,9 @@ class generateVisitor(ASTVisitor):
             self.append('%d, ' % len(node.args))
         elif ident in ['max','min']: 
             pairs = [(arg, target.formals[0]) for arg in node.args]
+        elif ident == '__group':
+            self.append(str(len(node.args))+', ')
+            pairs = [(arg, target.formals[0]) for arg in node.args]
         else:
             args = node.args
             if node.star_args:

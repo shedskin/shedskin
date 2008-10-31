@@ -23,6 +23,8 @@ class match_object:
     
     def group(self, grp = 0):
         return ''
+    def __group(self):
+        return ('',)
     
     def start(self, i = 0):
         return 1

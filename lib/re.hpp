@@ -65,7 +65,9 @@ public:
     str *expand(str *tpl);
     
     str *group(int m = 0);
+    tuple2<str *, str *> *group(int n, int m, ...);
     str *group(str *m);
+    tuple2<str *, str *> *group(int n, str *m, ...);
     
     dict<str *, str *> *groupdict(str *defval = 0);
     tuple2<str *, str *> *groups(str *defval = 0);
