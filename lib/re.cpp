@@ -26,6 +26,28 @@ str *match_object::group(str *mname)
     return new str(re->__group(&string->unit, captured, mname));
 }
 
+tuple2<str *, str *> *match_object::group(int n, int m, ...) {
+    tuple2<str *, str *> *t = new tuple2<str *, str *>();
+    va_list ap;
+    va_start(ap, m);
+    t->append(group(m));
+    for(int i=0; i<n-1; i++)
+        t->append(group(va_arg(ap, int)));
+    va_end(ap); 
+    return t;
+}
+
+tuple2<str *, str *> *match_object::group(int n, str *m, ...) {
+    tuple2<str *, str *> *t = new tuple2<str *, str *>();
+    va_list ap;
+    va_start(ap, m);
+    t->append(group(m));
+    for(int i=0; i<n-1; i++)
+        t->append(group(va_arg(ap, str *)));
+    va_end(ap); 
+    return t;
+}
+
 //index functions
 int match_object::__index(int matchid, char isend)
 {

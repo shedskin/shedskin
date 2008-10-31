@@ -102,6 +102,20 @@ print complex(PI())
 # not sure why this didn't work before
 print "%%(%s)s" % 'ole'
 
+# re.group multiple int/str arguments
+imag = re.compile('(a)(b)')
+m = imag.match('ab')
+print m.group(), m.group(0), m.group(1), m.group(2)
+print m.group(0, 2), m.group(2, 1, 1, 2)
+imag = re.compile('(?P<one>a)(?P<two>b)')
+m = imag.match('ab')
+print m.group(), m.group('one'), m.group('two')
+print m.group('two', 'one')
+wap = m.group('one')
+print wap
+hop = m.group('one', 'two', 'one')
+print hop
+
 ''', '''
 output(equal=True)
 
