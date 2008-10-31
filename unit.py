@@ -61,6 +61,7 @@ print abs(c)
 print 7-c, c-7, c-d
 print 2/c, c/2, c/d
 print +c, ++c, -d, --d
+print 1-1j
 
 # complex(str)
 import re
