@@ -1755,6 +1755,14 @@ class generateVisitor(ASTVisitor):
             self.append(')'+postfix)
             return
         
+        # --- 1 +- ..j
+        if inline in ['+', '-'] and isinstance(origright, Const) and isinstance(origright.value, complex):
+            if floattype.intersection(ltypes) or inttype.intersection(ltypes):
+                self.append('(new complex(')
+                self.visit2(left, func)
+                self.append(', '+{'+':'', '-':'-'}[inline]+str(origright.value.imag)+'))')
+                return
+
         # --- 'a.__mul__(b)': use template to call to b.__mul__(a), while maintaining evaluation order
         if inline in ['+', '*', '-', '/'] and ul and not ur:
             self.append('__'+{'+':'add', '*':'mul', '-':'sub', '/':'div'}[inline]+'2(')
