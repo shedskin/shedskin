@@ -498,8 +498,9 @@ class generateVisitor(ASTVisitor):
     def do_extmod(self):
         print >>self.out, 'extern "C" {'
         print >>self.out, '#include <Python.h>\n'
-        
-        funcs = [] # select functions that are called and have copyable arg/return types
+
+        # --- select functions that are called and have copyable arg/return types
+        funcs = [] 
         for func in self.module.funcs.values():
             if not hmcpa(func): # not called
                 continue 
@@ -513,53 +514,15 @@ class generateVisitor(ASTVisitor):
             if builtins:
                 funcs.append(func)
 
+        # --- for each selected function, output glue code
         for func in funcs:
-            print >>self.out, 'PyObject *%s(PyObject *self, PyObject *args) {' % self.cpp_name(func.ident)
-            print >>self.out, '    if(PyTuple_Size(args) < %d || PyTuple_Size(args) > %d) {' % (len(func.formals)-len(func.defaults), len(func.formals))
-            print >>self.out, '        PyErr_SetString(PyExc_Exception, "invalid number of arguments");'
-            print >>self.out, '        return 0;'
-            print >>self.out, '    }\n' 
-            print >>self.out, '    try {'
+            self.do_extmod_method(func)
+        self.do_extmod_methoddef(self.module.ident, funcs)
 
-            for i, formal in enumerate(func.formals):
-                self.start('')
-                self.append('        %(type)sarg_%(num)d = (PyTuple_Size(args) > %(num)d) ? __to_ss<%(type)s>(PyTuple_GetItem(args, %(num)d)) : ' % {'type' : typesetreprnew(func.vars[formal], func), 'num' : i})
-                if i >= len(func.formals)-len(func.defaults):
-                    defau = func.defaults[i-(len(func.formals)-len(func.defaults))]
-                    cast = assign_needs_cast(defau, None, func.vars[formal], func)
-                    if cast:
-                        self.append('(('+typesetreprnew(func.vars[formal], func)+')')
-
-                    if defau in func.mv.defaults:
-                        if self.mergeinh[defau] == set([(defclass('none'),0)]):
-                            self.append('0')
-                        else:
-                            self.append('%s::default_%d' % ('__'+func.mv.module.ident+'__', func.mv.defaults[defau]))
-                    else:
-                        self.visit(defau, func)
-
-                    if cast:
-                        self.append(')')
-                else:
-                    self.append('0')
-                self.eol()
-            print >>self.out
-
-            print >>self.out, '        return __to_py(__'+self.module.ident+'__::'+self.cpp_name(func.ident)+'('+', '.join(['arg_%d' % i for i in range(len(func.formals))])+'));\n' 
-            print >>self.out, '    } catch (Exception *e) {'
-            print >>self.out, '        PyErr_SetString(__to_py(e), e->msg->unit.c_str());'
-            print >>self.out, '        return 0;'
-            print >>self.out, '    }'
-
-            print >>self.out, '}\n'
-
-        print >>self.out, 'static PyMethodDef %sMethods[] = {' % self.module.ident
-        for func in funcs:
-            print >>self.out, '    {(char *)"%(id)s", %(id2)s, METH_VARARGS, (char *)""},' % {'id': func.ident, 'id2': self.cpp_name(func.ident)}
-        print >>self.out, '    {NULL, NULL, 0, NULL}        /* Sentinel */\n};\n'
-
+        # --- module init function
         print >>self.out, 'PyMODINIT_FUNC init%s(void) {' % self.module.ident
 
+        # initialize variables
         vars = []
         for (name,var) in getmv().globals.items():
             if singletype(var, module) or var.invisible: # XXX merge declaredefs 
@@ -580,9 +543,11 @@ class generateVisitor(ASTVisitor):
             print >>self.out, '    __'+self.module.ident+'__::'+self.cpp_name(var.name)+' = 0;'
         if vars: print >>self.out
 
+        # initialize modules
         self.do_init_modules()
-
         print >>self.out, '\n    PyObject *mod = Py_InitModule((char *)"%s", %sMethods);\n' % (self.module.ident, self.module.ident)
+
+        # register variables
         for var in vars:
             varname = self.cpp_name(var.name)
             if [1 for t in self.mergeinh[var] if t[0].ident in ['int_', 'float_']]:
@@ -592,6 +557,52 @@ class generateVisitor(ASTVisitor):
 
         print >>self.out, '\n}'
         print >>self.out, '\n} // extern "C"'
+
+    def do_extmod_methoddef(self, ident, funcs):
+        print >>self.out, 'static PyMethodDef %sMethods[] = {' % ident
+        for func in funcs:
+            print >>self.out, '    {(char *)"%(id)s", %(id2)s, METH_VARARGS, (char *)""},' % {'id': func.ident, 'id2': self.cpp_name(func.ident)}
+        print >>self.out, '    {NULL, NULL, 0, NULL}        /* Sentinel */\n};\n'
+
+    def do_extmod_method(self, func):
+        print >>self.out, 'PyObject *%s(PyObject *self, PyObject *args) {' % self.cpp_name(func.ident)
+        print >>self.out, '    if(PyTuple_Size(args) < %d || PyTuple_Size(args) > %d) {' % (len(func.formals)-len(func.defaults), len(func.formals))
+        print >>self.out, '        PyErr_SetString(PyExc_Exception, "invalid number of arguments");'
+        print >>self.out, '        return 0;'
+        print >>self.out, '    }\n' 
+        print >>self.out, '    try {'
+
+        for i, formal in enumerate(func.formals):
+            self.start('')
+            self.append('        %(type)sarg_%(num)d = (PyTuple_Size(args) > %(num)d) ? __to_ss<%(type)s>(PyTuple_GetItem(args, %(num)d)) : ' % {'type' : typesetreprnew(func.vars[formal], func), 'num' : i})
+            if i >= len(func.formals)-len(func.defaults):
+                defau = func.defaults[i-(len(func.formals)-len(func.defaults))]
+                cast = assign_needs_cast(defau, None, func.vars[formal], func)
+                if cast:
+                    self.append('(('+typesetreprnew(func.vars[formal], func)+')')
+
+                if defau in func.mv.defaults:
+                    if self.mergeinh[defau] == set([(defclass('none'),0)]):
+                        self.append('0')
+                    else:
+                        self.append('%s::default_%d' % ('__'+func.mv.module.ident+'__', func.mv.defaults[defau]))
+                else:
+                    self.visit(defau, func)
+
+                if cast:
+                    self.append(')')
+            else:
+                self.append('0')
+            self.eol()
+        print >>self.out
+
+        print >>self.out, '        return __to_py(__'+self.module.ident+'__::'+self.cpp_name(func.ident)+'('+', '.join(['arg_%d' % i for i in range(len(func.formals))])+'));\n' 
+        print >>self.out, '    } catch (Exception *e) {'
+        print >>self.out, '        PyErr_SetString(__to_py(e), e->msg->unit.c_str());'
+        print >>self.out, '        return 0;'
+        print >>self.out, '    }'
+
+        print >>self.out, '}\n'
 
     def do_main(self):
         print >>self.out, 'int main(int argc, char **argv) {'
