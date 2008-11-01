@@ -497,7 +497,12 @@ class generateVisitor(ASTVisitor):
         
     def do_extmod(self):
         print >>self.out, 'extern "C" {'
-        print >>self.out, '#include <Python.h>\n'
+        print >>self.out, '#include <Python.h>'
+        print >>self.out, '#include <structmember.h>\n'
+
+        if getgx().extmod_classes:
+            for cl in self.module.classes.values(): 
+                self.do_extmod_class(cl)
 
         # --- select functions that are called and have copyable arg/return types
         funcs = [] 
@@ -562,7 +567,7 @@ class generateVisitor(ASTVisitor):
         print >>self.out, 'static PyMethodDef %sMethods[] = {' % ident
         for func in funcs:
             print >>self.out, '    {(char *)"%(id)s", %(id2)s, METH_VARARGS, (char *)""},' % {'id': func.ident, 'id2': self.cpp_name(func.ident)}
-        print >>self.out, '    {NULL, NULL, 0, NULL}        /* Sentinel */\n};\n'
+        print >>self.out, '    {NULL} /* Sentinel */\n};\n'
 
     def do_extmod_method(self, func):
         print >>self.out, 'PyObject *%s(PyObject *self, PyObject *args) {' % self.cpp_name(func.ident)
@@ -603,6 +608,32 @@ class generateVisitor(ASTVisitor):
         print >>self.out, '    }'
 
         print >>self.out, '}\n'
+
+    def do_extmod_class(self, cl):
+        # determine methods, vars to expose XXX merge
+        funcs = []
+        vars = []
+        for func in cl.funcs.values():
+            if hmcpa(func) and not func.ident in ['__setattr__', '__getattr__']:
+                funcs.append(func)
+        for var in cl.vars.values():
+             if var.invisible: continue
+             if var in getgx().merged_inh and getgx().merged_inh[var]:
+                 vars.append(var)
+
+        # object struct
+        print >>self.out, 'typedef struct {'
+        print >>self.out, '    PyObject_HEAD'
+        for var in vars:
+            print >>self.out, '    PyObject *%s;' % self.cpp_name(var.name)
+        print >>self.out, '} %sObject;\n' % cl.cpp_name
+
+        # member def
+        print >>self.out, 'static PyMemberDef %s_members[] = {' % cl.cpp_name
+        for var in vars:
+            print >>self.out, '    {(char *)"%s", T_OBJECT_EX, offsetof(%sObject, %s), 0, (char *)""},' % (var.name, cl.cpp_name, self.cpp_name(var.name))
+        print >>self.out, '    {NULL} /* Sentinel */'
+        print >>self.out, '};\n'
 
     def do_main(self):
         print >>self.out, 'int main(int argc, char **argv) {'
