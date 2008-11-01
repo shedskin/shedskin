@@ -9,6 +9,7 @@
  */
 
 #include "socket.hpp"
+#include <climits>
 
 #ifdef WIN32
 
