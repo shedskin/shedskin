@@ -491,124 +491,132 @@ class generateVisitor(ASTVisitor):
         # --- c++ main/extension module setup
         if self.module == getgx().main_module: 
             if getgx().extension_module:
-                print >>self.out, 'extern "C" {'
-                print >>self.out, '#include <Python.h>\n'
-                
-                funcs = [] # select functions that are called and have copyable arg/return types
-                for func in self.module.funcs.values():
-                    if not hmcpa(func): # not called
-                        continue 
-                    builtins = True
-                    for formal in func.formals:
-                        try:
-                            typesetreprnew(func.vars[formal], func, check_extmod=True)
-                            typesetreprnew(func.retnode.thing, func, check_extmod=True)
-                        except ExtmodError:
-                            builtins = False
-                    if builtins:
-                        funcs.append(func)
+                self.do_extmod()
+            else:
+                self.do_main()
+        
+    def do_extmod(self):
+        print >>self.out, 'extern "C" {'
+        print >>self.out, '#include <Python.h>\n'
+        
+        funcs = [] # select functions that are called and have copyable arg/return types
+        for func in self.module.funcs.values():
+            if not hmcpa(func): # not called
+                continue 
+            builtins = True
+            for formal in func.formals:
+                try:
+                    typesetreprnew(func.vars[formal], func, check_extmod=True)
+                    typesetreprnew(func.retnode.thing, func, check_extmod=True)
+                except ExtmodError:
+                    builtins = False
+            if builtins:
+                funcs.append(func)
 
-                for func in funcs:
-                    print >>self.out, 'PyObject *%s(PyObject *self, PyObject *args) {' % self.cpp_name(func.ident)
-                    print >>self.out, '    if(PyTuple_Size(args) < %d || PyTuple_Size(args) > %d) {' % (len(func.formals)-len(func.defaults), len(func.formals))
-                    print >>self.out, '        PyErr_SetString(PyExc_Exception, "invalid number of arguments");'
-                    print >>self.out, '        return 0;'
-                    print >>self.out, '    }\n' 
-                    print >>self.out, '    try {'
+        for func in funcs:
+            print >>self.out, 'PyObject *%s(PyObject *self, PyObject *args) {' % self.cpp_name(func.ident)
+            print >>self.out, '    if(PyTuple_Size(args) < %d || PyTuple_Size(args) > %d) {' % (len(func.formals)-len(func.defaults), len(func.formals))
+            print >>self.out, '        PyErr_SetString(PyExc_Exception, "invalid number of arguments");'
+            print >>self.out, '        return 0;'
+            print >>self.out, '    }\n' 
+            print >>self.out, '    try {'
 
-                    for i, formal in enumerate(func.formals):
-                        self.start('')
-                        self.append('        %(type)sarg_%(num)d = (PyTuple_Size(args) > %(num)d) ? __to_ss<%(type)s>(PyTuple_GetItem(args, %(num)d)) : ' % {'type' : typesetreprnew(func.vars[formal], func), 'num' : i})
-                        if i >= len(func.formals)-len(func.defaults):
-                            defau = func.defaults[i-(len(func.formals)-len(func.defaults))]
-                            cast = assign_needs_cast(defau, None, func.vars[formal], func)
-                            if cast:
-                                self.append('(('+typesetreprnew(func.vars[formal], func)+')')
+            for i, formal in enumerate(func.formals):
+                self.start('')
+                self.append('        %(type)sarg_%(num)d = (PyTuple_Size(args) > %(num)d) ? __to_ss<%(type)s>(PyTuple_GetItem(args, %(num)d)) : ' % {'type' : typesetreprnew(func.vars[formal], func), 'num' : i})
+                if i >= len(func.formals)-len(func.defaults):
+                    defau = func.defaults[i-(len(func.formals)-len(func.defaults))]
+                    cast = assign_needs_cast(defau, None, func.vars[formal], func)
+                    if cast:
+                        self.append('(('+typesetreprnew(func.vars[formal], func)+')')
 
-                            if defau in func.mv.defaults:
-                                if self.mergeinh[defau] == set([(defclass('none'),0)]):
-                                    self.append('0')
-                                else:
-                                    self.append('%s::default_%d' % ('__'+func.mv.module.ident+'__', func.mv.defaults[defau]))
-                            else:
-                                self.visit(defau, func)
-
-                            if cast:
-                                self.append(')')
-                        else:
+                    if defau in func.mv.defaults:
+                        if self.mergeinh[defau] == set([(defclass('none'),0)]):
                             self.append('0')
-                        self.eol()
-                    print >>self.out
-
-                    print >>self.out, '        return __to_py(__'+self.module.ident+'__::'+self.cpp_name(func.ident)+'('+', '.join(['arg_%d' % i for i in range(len(func.formals))])+'));\n' 
-                    print >>self.out, '    } catch (Exception *e) {'
-                    print >>self.out, '        PyErr_SetString(__to_py(e), e->msg->unit.c_str());'
-                    print >>self.out, '        return 0;'
-                    print >>self.out, '    }'
-
-                    print >>self.out, '}\n'
-
-                print >>self.out, 'static PyMethodDef %sMethods[] = {' % self.module.ident
-                for func in funcs:
-                    print >>self.out, '    {(char *)"%(id)s", %(id2)s, METH_VARARGS, (char *)""},' % {'id': func.ident, 'id2': self.cpp_name(func.ident)}
-                print >>self.out, '    {NULL, NULL, 0, NULL}        /* Sentinel */\n};\n'
-
-            if getgx().extension_module:
-                print >>self.out, 'PyMODINIT_FUNC init%s(void) {' % self.module.ident
-
-                vars = []
-                for (name,var) in getmv().globals.items():
-                    if singletype(var, module) or var.invisible: # XXX merge declaredefs 
-                        continue
-                    typehu = typesetreprnew(var, var.parent)
-                    # void *
-                    if not typehu or not var.types(): continue 
-                    if name.startswith('__'): continue
-
-                    try:
-                        typesetreprnew(var, var.parent, check_extmod=True)
-                    except ExtmodError:
-                        continue
-
-                    vars.append(var)
-
-                for var in vars:
-                    print >>self.out, '    __'+self.module.ident+'__::'+self.cpp_name(var.name)+' = 0;'
-                if vars: print >>self.out
-            else:
-                print >>self.out, 'int main(int argc, char **argv) {'
-
-            print >>self.out, '    __shedskin__::__init();'
-
-            for mod in getgx().modules.values(): # XXX
-#            for mod in getmv().imports.values():
-                if mod != getgx().main_module and mod.ident != 'builtin':
-                    if mod.ident == 'sys':
-                        if getgx().extension_module:
-                            print >>self.out, '    __sys__::__init(0, 0);'
                         else:
-                            print >>self.out, '    __sys__::__init(argc, argv);'
+                            self.append('%s::default_%d' % ('__'+func.mv.module.ident+'__', func.mv.defaults[defau]))
                     else:
-                        print >>self.out, '    __'+'__::__'.join([n for n in mod.mod_path])+'__::__init();' # XXX sep func
+                        self.visit(defau, func)
 
-            print >>self.out, '    __'+self.module.ident+'__::__init();'
-            if getgx().extension_module:
-                print >>self.out, '\n    PyObject *mod = Py_InitModule((char *)"%s", %sMethods);\n' % (self.module.ident, self.module.ident)
-                for var in vars:
-                    varname = self.cpp_name(var.name)
-                    if [1 for t in self.mergeinh[var] if t[0].ident in ['int_', 'float_']]:
-                        print >>self.out, '    PyModule_AddObject(mod, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+self.module.ident+'__::'+varname}
-                    else:
-                        print >>self.out, '    if(%(var)s) PyModule_AddObject(mod, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+self.module.ident+'__::'+varname}
+                    if cast:
+                        self.append(')')
+                else:
+                    self.append('0')
+                self.eol()
+            print >>self.out
 
-                print >>self.out
+            print >>self.out, '        return __to_py(__'+self.module.ident+'__::'+self.cpp_name(func.ident)+'('+', '.join(['arg_%d' % i for i in range(len(func.formals))])+'));\n' 
+            print >>self.out, '    } catch (Exception *e) {'
+            print >>self.out, '        PyErr_SetString(__to_py(e), e->msg->unit.c_str());'
+            print >>self.out, '        return 0;'
+            print >>self.out, '    }'
+
+            print >>self.out, '}\n'
+
+        print >>self.out, 'static PyMethodDef %sMethods[] = {' % self.module.ident
+        for func in funcs:
+            print >>self.out, '    {(char *)"%(id)s", %(id2)s, METH_VARARGS, (char *)""},' % {'id': func.ident, 'id2': self.cpp_name(func.ident)}
+        print >>self.out, '    {NULL, NULL, 0, NULL}        /* Sentinel */\n};\n'
+
+        print >>self.out, 'PyMODINIT_FUNC init%s(void) {' % self.module.ident
+
+        vars = []
+        for (name,var) in getmv().globals.items():
+            if singletype(var, module) or var.invisible: # XXX merge declaredefs 
+                continue
+            typehu = typesetreprnew(var, var.parent)
+            # void *
+            if not typehu or not var.types(): continue 
+            if name.startswith('__'): continue
+
+            try:
+                typesetreprnew(var, var.parent, check_extmod=True)
+            except ExtmodError:
+                continue
+
+            vars.append(var)
+
+        for var in vars:
+            print >>self.out, '    __'+self.module.ident+'__::'+self.cpp_name(var.name)+' = 0;'
+        if vars: print >>self.out
+
+        self.do_init_modules()
+
+        print >>self.out, '\n    PyObject *mod = Py_InitModule((char *)"%s", %sMethods);\n' % (self.module.ident, self.module.ident)
+        for var in vars:
+            varname = self.cpp_name(var.name)
+            if [1 for t in self.mergeinh[var] if t[0].ident in ['int_', 'float_']]:
+                print >>self.out, '    PyModule_AddObject(mod, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+self.module.ident+'__::'+varname}
             else:
-                print >>self.out, '    __shedskin__::__exit();'
-             
-            print >>self.out, '}'
+                print >>self.out, '    if(%(var)s) PyModule_AddObject(mod, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+self.module.ident+'__::'+varname}
 
-            if getgx().extension_module:
-                print >>self.out, '\n} // extern "C"'
+        print >>self.out, '\n}'
+        print >>self.out, '\n} // extern "C"'
+
+    def do_main(self):
+        print >>self.out, 'int main(int argc, char **argv) {'
+
+        self.do_init_modules()
+
+        print >>self.out, '    __shedskin__::__exit();'
+        print >>self.out, '}'
+
+    def do_init_modules(self):
+        print >>self.out, '    __shedskin__::__init();'
+
+        # --- init imports
+        for mod in getgx().modules.values(): # XXX
+            if mod != getgx().main_module and mod.ident != 'builtin':
+                if mod.ident == 'sys':
+                    if getgx().extension_module:
+                        print >>self.out, '    __sys__::__init(0, 0);'
+                    else:
+                        print >>self.out, '    __sys__::__init(argc, argv);'
+                else:
+                    print >>self.out, '    __'+'__::__'.join([n for n in mod.mod_path])+'__::__init();' # XXX sep func
+
+        # --- start program
+        print >>self.out, '    __'+self.module.ident+'__::__init();'
 
     def do_comment(self, s):
         if not s: return
