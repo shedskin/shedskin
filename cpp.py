@@ -17,6 +17,7 @@ from compiler.ast import *
 from compiler.visitor import *
 
 from shared import *
+import extmod
 
 import textwrap, string
 
@@ -491,215 +492,10 @@ class generateVisitor(ASTVisitor):
         # --- c++ main/extension module setup
         if self.module == getgx().main_module: 
             if getgx().extension_module:
-                self.do_extmod()
+                extmod.do_extmod(self)
             else:
                 self.do_main()
         
-    def do_extmod(self):
-        print >>self.out, '/* extension module glue */\n'
-        print >>self.out, 'extern "C" {'
-        print >>self.out, '#include <Python.h>'
-        print >>self.out, '#include <structmember.h>\n'
-
-        if getgx().extmod_classes:
-            for cl in self.module.classes.values(): 
-                self.do_extmod_class(cl)
-
-        print >>self.out, '/* global functions */\n'
-
-        # --- select functions that are called and have copyable arg/return types
-        funcs = [] 
-        for func in self.module.funcs.values():
-            if not hmcpa(func): # not called
-                continue 
-            builtins = True
-            for formal in func.formals:
-                try:
-                    typesetreprnew(func.vars[formal], func, check_extmod=True)
-                    typesetreprnew(func.retnode.thing, func, check_extmod=True)
-                except ExtmodError:
-                    builtins = False
-            if builtins:
-                funcs.append(func)
-
-        # --- for each selected function, output glue code
-        for func in funcs:
-            self.do_extmod_method(func)
-        self.do_extmod_methoddef(self.module.ident, funcs)
-
-        # --- module init function
-        print >>self.out, 'PyMODINIT_FUNC init%s(void) {' % self.module.ident
-
-        # initialize variables
-        vars = []
-        for (name,var) in getmv().globals.items():
-            if singletype(var, module) or var.invisible: # XXX merge declaredefs 
-                continue
-            typehu = typesetreprnew(var, var.parent)
-            # void *
-            if not typehu or not var.types(): continue 
-            if name.startswith('__'): continue
-
-            try:
-                typesetreprnew(var, var.parent, check_extmod=True)
-            except ExtmodError:
-                continue
-
-            vars.append(var)
-
-        for var in vars:
-            print >>self.out, '    __'+self.module.ident+'__::'+self.cpp_name(var.name)+' = 0;'
-        if vars: print >>self.out
-
-        # initialize modules
-        self.do_init_modules()
-        print >>self.out, '\n    PyObject *mod = Py_InitModule((char *)"%s", %sMethods);' % (self.module.ident, self.module.ident)
-        print >>self.out, '    if(!mod)'
-        print >>self.out, '        return;\n'
-
-        # add variables to module
-        for var in vars:
-            varname = self.cpp_name(var.name)
-            if [1 for t in self.mergeinh[var] if t[0].ident in ['int_', 'float_']]:
-                print >>self.out, '    PyModule_AddObject(mod, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+self.module.ident+'__::'+varname}
-            else:
-                print >>self.out, '    if(%(var)s) PyModule_AddObject(mod, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+self.module.ident+'__::'+varname}
-
-        # add types to module
-        if getgx().extmod_classes:
-            for cl in self.module.classes.values(): 
-                print >>self.out, '    %sObjectType.tp_new = PyType_GenericNew;' % cl.ident
-                print >>self.out, '    if (PyType_Ready(&%sObjectType) < 0)' % cl.ident
-                print >>self.out, '        return;\n'
-                print >>self.out, '    PyModule_AddObject(mod, "%s", (PyObject *)&%sObjectType);' % (cl.ident, cl.ident)
-
-        print >>self.out, '\n}'
-        print >>self.out, '\n} // extern "C"'
-
-    def do_extmod_methoddef(self, ident, funcs):
-        print >>self.out, 'static PyMethodDef %sMethods[] = {' % ident
-        for func in funcs:
-            print >>self.out, '    {(char *)"%(id)s", %(id2)s, METH_VARARGS, (char *)""},' % {'id': func.ident, 'id2': self.cpp_name(func.ident)}
-        print >>self.out, '    {NULL}\n};\n'
-
-    def do_extmod_method(self, func):
-        is_method = isinstance(func.parent, class_)
-        if is_method: formals = func.formals[1:]
-        else: formals = func.formals
-
-        print >>self.out, 'PyObject *%s(PyObject *self, PyObject *args) {' % self.cpp_name(func.ident)
-        print >>self.out, '    if(PyTuple_Size(args) < %d || PyTuple_Size(args) > %d) {' % (len(formals)-len(func.defaults), len(formals))
-        print >>self.out, '        PyErr_SetString(PyExc_Exception, "invalid number of arguments");'
-        print >>self.out, '        return 0;'
-        print >>self.out, '    }\n' 
-        print >>self.out, '    try {'
-
-        if is_method:
-            print >>self.out, '        %(type)s_self = __to_ss<%(type)s>(self);' % {'type' : '__%s__::'%self.module.ident+typesetreprnew(func.vars[func.formals[0]], func)}
-  
-        # convert [self,] args 
-        for i, formal in enumerate(formals):
-            self.start('')
-            self.append('        %(type)sarg_%(num)d = (PyTuple_Size(args) > %(num)d) ? __to_ss<%(type)s>(PyTuple_GetItem(args, %(num)d)) : ' % {'type' : typesetreprnew(func.vars[formal], func), 'num' : i})
-            if i >= len(formals)-len(func.defaults):
-                defau = func.defaults[i-(len(formals)-len(func.defaults))]
-                cast = assign_needs_cast(defau, None, func.vars[formal], func)
-                if cast:
-                    self.append('(('+typesetreprnew(func.vars[formal], func)+')')
-
-                if defau in func.mv.defaults:
-                    if self.mergeinh[defau] == set([(defclass('none'),0)]):
-                        self.append('0')
-                    else:
-                        self.append('%s::default_%d' % ('__'+func.mv.module.ident+'__', func.mv.defaults[defau]))
-                else:
-                    self.visit(defau, func)
-
-                if cast:
-                    self.append(')')
-            else:
-                self.append('0')
-            self.eol()
-        print >>self.out
-
-        # call 
-        if is_method: where = '_self->'
-        else: where = '__'+self.module.ident+'__::'
-        print >>self.out, '        return __to_py('+where+self.cpp_name(func.ident)+'('+', '.join(['arg_%d' % i for i in range(len(formals))])+'));\n' 
-
-        # convert exceptions
-        print >>self.out, '    } catch (Exception *e) {'
-        print >>self.out, '        PyErr_SetString(__to_py(e), e->msg->unit.c_str());'
-        print >>self.out, '        return 0;'
-        print >>self.out, '    }'
-        print >>self.out, '}\n'
-
-    def do_extmod_class(self, cl):
-        # determine methods, vars to expose XXX merge
-        funcs = []
-        vars = []
-        for func in cl.funcs.values():
-            if hmcpa(func) and not func.ident in ['__setattr__', '__getattr__']:
-                funcs.append(func)
-        for var in cl.vars.values():
-             if var.invisible: continue
-             if var in getgx().merged_inh and getgx().merged_inh[var]:
-                 vars.append(var)
-
-        print >>self.out, '/* class %s */\n' % cl.ident
-
-        # python object 
-        print >>self.out, 'typedef struct {'
-        print >>self.out, '    PyObject_HEAD'
-        for var in vars:
-            print >>self.out, '    PyObject *%s;' % self.cpp_name(var.name)
-        print >>self.out, '} %sObject;\n' % cl.ident
-
-        # attributes
-        print >>self.out, 'static PyMemberDef %sMembers[] = {' % cl.ident
-        for var in vars:
-            print >>self.out, '    {(char *)"%s", T_OBJECT_EX, offsetof(%sObject, %s), 0, (char *)""},' % (var.name, cl.cpp_name, self.cpp_name(var.name))
-        print >>self.out, '    {NULL}\n};\n'
-
-        # methods
-        for func in funcs:
-            self.do_extmod_method(func)
-        self.do_extmod_methoddef(cl.ident, funcs)
-
-        # python type
-        print >>self.out, 'static PyTypeObject %sObjectType = {' % cl.ident
-        print >>self.out, '    PyObject_HEAD_INIT(NULL)'
-        print >>self.out, '    0,              /* ob_size           */'
-        print >>self.out, '    "%s.%s",            /* tp_name           */' % (cl.module.ident, cl.ident)
-        print >>self.out, '    sizeof(%sObject),     /* tp_basicsize      */' % cl.ident
-        print >>self.out, '    0,              /* tp_itemsize       */'
-        print >>self.out, '    0,              /* tp_dealloc        */'
-        print >>self.out, '    0,              /* tp_print          */'
-        print >>self.out, '    0,              /* tp_getattr        */'
-        print >>self.out, '    0,              /* tp_setattr        */'
-        print >>self.out, '    0,              /* tp_compare        */'
-        print >>self.out, '    0,              /* tp_repr           */'
-        print >>self.out, '    0,              /* tp_as_number      */'
-        print >>self.out, '    0,              /* tp_as_sequence    */'
-        print >>self.out, '    0,              /* tp_as_mapping     */'
-        print >>self.out, '    0,              /* tp_hash           */'
-        print >>self.out, '    0,              /* tp_call           */'
-        print >>self.out, '    0,              /* tp_str            */'
-        print >>self.out, '    0,              /* tp_getattro       */'
-        print >>self.out, '    0,              /* tp_setattro       */'
-        print >>self.out, '    0,              /* tp_as_buffer      */'
-        print >>self.out, '    Py_TPFLAGS_DEFAULT,     /* tp_flags          */'
-        print >>self.out, '    0,              /* tp_doc            */'
-        print >>self.out, '    0,              /* tp_traverse       */'
-        print >>self.out, '    0,              /* tp_clear          */'
-        print >>self.out, '    0,              /* tp_richcompare    */'
-        print >>self.out, '    0,              /* tp_weaklistoffset */'
-        print >>self.out, '    0,              /* tp_iter           */'
-        print >>self.out, '    0,              /* tp_iternext       */'
-        print >>self.out, '    %sMethods,               /* tp_methods        */' % cl.ident
-        print >>self.out, '    %sMembers,           /* tp_members        */' % cl.ident
-        print >>self.out, '};\n'
-
     def do_main(self):
         print >>self.out, 'int main(int argc, char **argv) {'
 
@@ -805,7 +601,7 @@ class generateVisitor(ASTVisitor):
             if cl.has_deepcopy and not 'deepcopy' in cl.funcs and not cl.template_vars:
                 self.copy_method(cl, '__deepcopy__', declare)
             if getgx().extmod_classes:
-                self.convert_methods(cl, declare)
+                extmod.convert_methods(self, cl, declare)
             
             # --- class variable declarations
             if cl.parent.vars: # XXX merge with visitModule
@@ -909,25 +705,10 @@ class generateVisitor(ASTVisitor):
             self.copy_method(cl, '__deepcopy__', declare)
         
         if getgx().extmod_classes:
-            self.convert_methods(cl, declare)
+            extmod.convert_methods(self, cl, declare)
 
         self.deindent()
         self.output('};\n')
-
-    def convert_methods(self, cl, declare):
-        if declare:
-            print >>self.out, '#ifdef __SS_BIND'
-            print >>self.out, '    %s(PyObject *);' % cl.cpp_name
-            print >>self.out, '    PyObject *__to_py__();' 
-            print >>self.out, '#endif'
-        else:
-            print >>self.out, '#ifdef __SS_BIND'
-            print >>self.out, '%s::%s(PyObject *) {' % (cl.cpp_name, cl.cpp_name)
-            print >>self.out, '}\n'
-            print >>self.out, 'PyObject *%s::__to_py__() {' % cl.cpp_name
-            print >>self.out, '    return Py_None;'
-            print >>self.out, '}\n'
-            print >>self.out, '#endif'
        
     def copy_method(self, cl, name, declare): # XXX merge?
         header = cl.template()+' *'
