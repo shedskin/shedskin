@@ -47,7 +47,7 @@ class generateVisitor(ASTVisitor):
         newlines = [] 
         j = -1
         for (i,line) in enumerate(lines):
-            if line.startswith('namespace '):
+            if line.startswith('namespace ') and not 'XXX' in line: # XXX
                 j = i+1
             newlines.append(line)
         
@@ -600,8 +600,6 @@ class generateVisitor(ASTVisitor):
                 self.copy_method(cl, '__copy__', declare)
             if cl.has_deepcopy and not 'deepcopy' in cl.funcs and not cl.template_vars:
                 self.copy_method(cl, '__deepcopy__', declare)
-            if getgx().extmod_classes:
-                extmod.convert_methods(self, cl, declare)
             
             # --- class variable declarations
             if cl.parent.vars: # XXX merge with visitModule
