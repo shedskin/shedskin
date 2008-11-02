@@ -496,6 +496,7 @@ class generateVisitor(ASTVisitor):
                 self.do_main()
         
     def do_extmod(self):
+        print >>self.out, '/* extension module glue */\n'
         print >>self.out, 'extern "C" {'
         print >>self.out, '#include <Python.h>'
         print >>self.out, '#include <structmember.h>\n'
@@ -503,6 +504,8 @@ class generateVisitor(ASTVisitor):
         if getgx().extmod_classes:
             for cl in self.module.classes.values(): 
                 self.do_extmod_class(cl)
+
+        print >>self.out, '/* global functions */\n'
 
         # --- select functions that are called and have copyable arg/return types
         funcs = [] 
@@ -567,21 +570,29 @@ class generateVisitor(ASTVisitor):
         print >>self.out, 'static PyMethodDef %sMethods[] = {' % ident
         for func in funcs:
             print >>self.out, '    {(char *)"%(id)s", %(id2)s, METH_VARARGS, (char *)""},' % {'id': func.ident, 'id2': self.cpp_name(func.ident)}
-        print >>self.out, '    {NULL} /* Sentinel */\n};\n'
+        print >>self.out, '    {NULL}\n};\n'
 
     def do_extmod_method(self, func):
+        is_method = isinstance(func.parent, class_)
+        if is_method: formals = func.formals[1:]
+        else: formals = func.formals
+
         print >>self.out, 'PyObject *%s(PyObject *self, PyObject *args) {' % self.cpp_name(func.ident)
-        print >>self.out, '    if(PyTuple_Size(args) < %d || PyTuple_Size(args) > %d) {' % (len(func.formals)-len(func.defaults), len(func.formals))
+        print >>self.out, '    if(PyTuple_Size(args) < %d || PyTuple_Size(args) > %d) {' % (len(formals)-len(func.defaults), len(formals))
         print >>self.out, '        PyErr_SetString(PyExc_Exception, "invalid number of arguments");'
         print >>self.out, '        return 0;'
         print >>self.out, '    }\n' 
         print >>self.out, '    try {'
 
-        for i, formal in enumerate(func.formals):
+        if is_method:
+            print >>self.out, '        %(type)s_self = __to_ss<%(type)s>(self);' % {'type' : '__%s__::'%self.module.ident+typesetreprnew(func.vars[func.formals[0]], func)}
+  
+        # convert [self,] args 
+        for i, formal in enumerate(formals):
             self.start('')
             self.append('        %(type)sarg_%(num)d = (PyTuple_Size(args) > %(num)d) ? __to_ss<%(type)s>(PyTuple_GetItem(args, %(num)d)) : ' % {'type' : typesetreprnew(func.vars[formal], func), 'num' : i})
-            if i >= len(func.formals)-len(func.defaults):
-                defau = func.defaults[i-(len(func.formals)-len(func.defaults))]
+            if i >= len(formals)-len(func.defaults):
+                defau = func.defaults[i-(len(formals)-len(func.defaults))]
                 cast = assign_needs_cast(defau, None, func.vars[formal], func)
                 if cast:
                     self.append('(('+typesetreprnew(func.vars[formal], func)+')')
@@ -601,12 +612,16 @@ class generateVisitor(ASTVisitor):
             self.eol()
         print >>self.out
 
-        print >>self.out, '        return __to_py(__'+self.module.ident+'__::'+self.cpp_name(func.ident)+'('+', '.join(['arg_%d' % i for i in range(len(func.formals))])+'));\n' 
+        # call 
+        if is_method: where = '_self->'
+        else: where = '__'+self.module.ident+'__::'
+        print >>self.out, '        return __to_py('+where+self.cpp_name(func.ident)+'('+', '.join(['arg_%d' % i for i in range(len(formals))])+'));\n' 
+
+        # convert exceptions
         print >>self.out, '    } catch (Exception *e) {'
         print >>self.out, '        PyErr_SetString(__to_py(e), e->msg->unit.c_str());'
         print >>self.out, '        return 0;'
         print >>self.out, '    }'
-
         print >>self.out, '}\n'
 
     def do_extmod_class(self, cl):
@@ -621,19 +636,25 @@ class generateVisitor(ASTVisitor):
              if var in getgx().merged_inh and getgx().merged_inh[var]:
                  vars.append(var)
 
-        # object struct
+        print >>self.out, '/* class %s */\n' % cl.ident
+
+        # python object 
         print >>self.out, 'typedef struct {'
         print >>self.out, '    PyObject_HEAD'
         for var in vars:
             print >>self.out, '    PyObject *%s;' % self.cpp_name(var.name)
         print >>self.out, '} %sObject;\n' % cl.cpp_name
 
-        # member def
-        print >>self.out, 'static PyMemberDef %s_members[] = {' % cl.cpp_name
+        # attributes
+        print >>self.out, 'static PyMemberDef %sMembers[] = {' % cl.cpp_name
         for var in vars:
             print >>self.out, '    {(char *)"%s", T_OBJECT_EX, offsetof(%sObject, %s), 0, (char *)""},' % (var.name, cl.cpp_name, self.cpp_name(var.name))
-        print >>self.out, '    {NULL} /* Sentinel */'
-        print >>self.out, '};\n'
+        print >>self.out, '    {NULL}\n};\n'
+
+        # methods
+        for func in funcs:
+            self.do_extmod_method(func)
+        self.do_extmod_methoddef(cl.ident, funcs)
 
     def do_main(self):
         print >>self.out, 'int main(int argc, char **argv) {'
