@@ -88,6 +88,12 @@ def do_extmod(gv):
             print >>gv.out, '    PyModule_AddObject(mod, "%s", (PyObject *)&%sObjectType);' % (cl.ident, cl.ident)
 
     print >>gv.out, '\n}'
+
+    # conversion methods to/from CPython/Shedskin
+    if getgx().extmod_classes:
+        for cl in gv.module.classes.values(): 
+            convert_methods(gv, cl, False)
+
     print >>gv.out, '\n} // extern "C"'
 
 def do_extmod_methoddef(gv, ident, funcs):
@@ -221,11 +227,30 @@ def convert_methods(gv, cl, declare):
         print >>gv.out, '    PyObject *__to_py__();' 
         print >>gv.out, '#endif'
     else:
+        vars = []
+        for var in cl.vars.values(): # XXX merge
+             if var.invisible: continue
+             if var in getgx().merged_inh and getgx().merged_inh[var]:
+                 vars.append(var)
+
         print >>gv.out, '#ifdef __SS_BIND'
-        print >>gv.out, '%s::%s(PyObject *) {' % (cl.cpp_name, cl.cpp_name)
+        print >>gv.out, 'namespace __%s__ { /* XXX */\n' % gv.module.ident
+
+        print >>gv.out, '%s::%s(PyObject *p) {' % (cl.cpp_name, cl.cpp_name)
+        for var in vars:
+            print >>gv.out, '    this->%s = __to_ss<%s>(((bertObject *)p)->%s);' % (var.name, cpp.typesetreprnew(var, cl), var.name)
         print >>gv.out, '}\n'
+
         print >>gv.out, 'PyObject *%s::__to_py__() {' % cl.cpp_name
-        print >>gv.out, '    return Py_None;'
+        print >>gv.out, '    PyObject *p = _PyObject_New(&%sObjectType);' % cl.ident
+        print >>gv.out, '    p = PyObject_Init(p, &%sObjectType);' % cl.ident
+
+        for var in vars:
+            print >>gv.out, '    ((%sObject *)p)->%s = __to_py(this->%s);' % (cl.ident, var.name, var.name)
+
+        print >>gv.out, '    return p;'
         print >>gv.out, '}\n'
+
+        print >>gv.out, '}'
         print >>gv.out, '#endif'
 
