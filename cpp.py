@@ -553,15 +553,25 @@ class generateVisitor(ASTVisitor):
 
         # initialize modules
         self.do_init_modules()
-        print >>self.out, '\n    PyObject *mod = Py_InitModule((char *)"%s", %sMethods);\n' % (self.module.ident, self.module.ident)
+        print >>self.out, '\n    PyObject *mod = Py_InitModule((char *)"%s", %sMethods);' % (self.module.ident, self.module.ident)
+        print >>self.out, '    if(!mod)'
+        print >>self.out, '        return;\n'
 
-        # register variables
+        # add variables to module
         for var in vars:
             varname = self.cpp_name(var.name)
             if [1 for t in self.mergeinh[var] if t[0].ident in ['int_', 'float_']]:
                 print >>self.out, '    PyModule_AddObject(mod, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+self.module.ident+'__::'+varname}
             else:
                 print >>self.out, '    if(%(var)s) PyModule_AddObject(mod, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+self.module.ident+'__::'+varname}
+
+        # add types to module
+        if getgx().extmod_classes:
+            for cl in self.module.classes.values(): 
+                print >>self.out, '    %sObjectType.tp_new = PyType_GenericNew;' % cl.ident
+                print >>self.out, '    if (PyType_Ready(&%sObjectType) < 0)' % cl.ident
+                print >>self.out, '        return;\n'
+                print >>self.out, '    PyModule_AddObject(mod, "%s", (PyObject *)&%sObjectType);' % (cl.ident, cl.ident)
 
         print >>self.out, '\n}'
         print >>self.out, '\n} // extern "C"'
@@ -643,10 +653,10 @@ class generateVisitor(ASTVisitor):
         print >>self.out, '    PyObject_HEAD'
         for var in vars:
             print >>self.out, '    PyObject *%s;' % self.cpp_name(var.name)
-        print >>self.out, '} %sObject;\n' % cl.cpp_name
+        print >>self.out, '} %sObject;\n' % cl.ident
 
         # attributes
-        print >>self.out, 'static PyMemberDef %sMembers[] = {' % cl.cpp_name
+        print >>self.out, 'static PyMemberDef %sMembers[] = {' % cl.ident
         for var in vars:
             print >>self.out, '    {(char *)"%s", T_OBJECT_EX, offsetof(%sObject, %s), 0, (char *)""},' % (var.name, cl.cpp_name, self.cpp_name(var.name))
         print >>self.out, '    {NULL}\n};\n'
@@ -655,6 +665,40 @@ class generateVisitor(ASTVisitor):
         for func in funcs:
             self.do_extmod_method(func)
         self.do_extmod_methoddef(cl.ident, funcs)
+
+        # python type
+        print >>self.out, 'static PyTypeObject %sObjectType = {' % cl.ident
+        print >>self.out, '    PyObject_HEAD_INIT(NULL)'
+        print >>self.out, '    0,              /* ob_size           */'
+        print >>self.out, '    "%s.%s",            /* tp_name           */' % (cl.module.ident, cl.ident)
+        print >>self.out, '    sizeof(%sObject),     /* tp_basicsize      */' % cl.ident
+        print >>self.out, '    0,              /* tp_itemsize       */'
+        print >>self.out, '    0,              /* tp_dealloc        */'
+        print >>self.out, '    0,              /* tp_print          */'
+        print >>self.out, '    0,              /* tp_getattr        */'
+        print >>self.out, '    0,              /* tp_setattr        */'
+        print >>self.out, '    0,              /* tp_compare        */'
+        print >>self.out, '    0,              /* tp_repr           */'
+        print >>self.out, '    0,              /* tp_as_number      */'
+        print >>self.out, '    0,              /* tp_as_sequence    */'
+        print >>self.out, '    0,              /* tp_as_mapping     */'
+        print >>self.out, '    0,              /* tp_hash           */'
+        print >>self.out, '    0,              /* tp_call           */'
+        print >>self.out, '    0,              /* tp_str            */'
+        print >>self.out, '    0,              /* tp_getattro       */'
+        print >>self.out, '    0,              /* tp_setattro       */'
+        print >>self.out, '    0,              /* tp_as_buffer      */'
+        print >>self.out, '    Py_TPFLAGS_DEFAULT,     /* tp_flags          */'
+        print >>self.out, '    0,              /* tp_doc            */'
+        print >>self.out, '    0,              /* tp_traverse       */'
+        print >>self.out, '    0,              /* tp_clear          */'
+        print >>self.out, '    0,              /* tp_richcompare    */'
+        print >>self.out, '    0,              /* tp_weaklistoffset */'
+        print >>self.out, '    0,              /* tp_iter           */'
+        print >>self.out, '    0,              /* tp_iternext       */'
+        print >>self.out, '    %sMethods,               /* tp_methods        */' % cl.ident
+        print >>self.out, '    %sMembers,           /* tp_members        */' % cl.ident
+        print >>self.out, '};\n'
 
     def do_main(self):
         print >>self.out, 'int main(int argc, char **argv) {'
@@ -760,6 +804,8 @@ class generateVisitor(ASTVisitor):
                 self.copy_method(cl, '__copy__', declare)
             if cl.has_deepcopy and not 'deepcopy' in cl.funcs and not cl.template_vars:
                 self.copy_method(cl, '__deepcopy__', declare)
+            if getgx().extmod_classes:
+                self.convert_methods(cl, declare)
             
             # --- class variable declarations
             if cl.parent.vars: # XXX merge with visitModule
@@ -862,9 +908,27 @@ class generateVisitor(ASTVisitor):
         if cl.has_deepcopy and not 'deepcopy' in cl.funcs:
             self.copy_method(cl, '__deepcopy__', declare)
         
+        if getgx().extmod_classes:
+            self.convert_methods(cl, declare)
+
         self.deindent()
         self.output('};\n')
 
+    def convert_methods(self, cl, declare):
+        if declare:
+            print >>self.out, '#ifdef __SS_BIND'
+            print >>self.out, '    %s(PyObject *);' % cl.cpp_name
+            print >>self.out, '    PyObject *__to_py__();' 
+            print >>self.out, '#endif'
+        else:
+            print >>self.out, '#ifdef __SS_BIND'
+            print >>self.out, '%s::%s(PyObject *) {' % (cl.cpp_name, cl.cpp_name)
+            print >>self.out, '}\n'
+            print >>self.out, 'PyObject *%s::__to_py__() {' % cl.cpp_name
+            print >>self.out, '    return Py_None;'
+            print >>self.out, '}\n'
+            print >>self.out, '#endif'
+       
     def copy_method(self, cl, name, declare): # XXX merge?
         header = cl.template()+' *'
         if not declare:
