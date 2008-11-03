@@ -695,22 +695,22 @@ public:
 
     dict();
     dict(int count, ...);
-    int __setitem__(K k, V v);
+    void *__setitem__(K k, V v);
     V __getitem__(K k);
-    int __delitem__(K k);
+    void *__delitem__(K k);
     list<K> *keys();
     list<V> *values();
     list<tuple2<K, V> *> *items();
     int __len__();
     str *__repr__();
     int has_key(K k);
-    int clear();
+    void *clear();
     dict<K,V> *copy();
     V get(K k);
     V get(K k, V v);
     V pop(K k);
     tuple2<K, V> *popitem();
-    int update(dict<K, V> *e);
+    void *update(dict<K, V> *e);
     int __contains__(K k);
     int __eq__(pyobj *e);
     V setdefault(K k, V v=0);
@@ -790,11 +790,11 @@ public:
     set(pyiter<T> *p, int frozen=0);
     set<T>& operator=(const set<T>& other);
 
-    int add(T key);
-    int add(setentry<T>* entry);
-    int discard(T key);
-    int discard(setentry<T>* entry);
-    int remove(T key);
+    void *add(T key);
+    void *add(setentry<T>* entry);
+    void *discard(T key); 
+    int do_discard(T key);
+    void *remove(T key);
     T pop();
 
     str* __repr__();
@@ -803,15 +803,15 @@ public:
     int __contains__(setentry<T>* entry);
     int __len__();
 
-    int clear();
+    void *clear();
     set<T> *copy();
 
-    int update(pyiter<T> *s);
-    int update(const set<T>* other);
+    void *update(pyiter<T> *s);
+    void *update(const set<T>* other);
 
-    int difference_update(set<T> *s);
-    int intersection_update(set<T> *s);
-    int symmetric_difference_update(set<T> *s);
+    void *difference_update(set<T> *s);
+    void *intersection_update(set<T> *s);
+    void *symmetric_difference_update(set<T> *s);
 
     set<T> *intersection(set<T> *s);
     set<T> *__ss_union(pyiter<T> *s);
@@ -1223,9 +1223,9 @@ template<class K, class V> PyObject *dict<K, V>::__to_py__() {
 }
 #endif
 
-template<class K, class V> int dict<K,V>::__setitem__(K k, V v) {
+template<class K, class V> void *dict<K,V>::__setitem__(K k, V v) {
     units[k] = v;
-    return 0;
+    return NULL;
 }
 
 template<class K, class V> V dict<K,V>::get(K k) {
@@ -1258,9 +1258,9 @@ template<class K, class V> V dict<K,V>::pop(K k) {
     return v;
 }
 
-template<class K, class V> int dict<K,V>::__delitem__(K k) {
+template<class K, class V> void *dict<K,V>::__delitem__(K k) {
     units.erase(k);
-    return 0;
+    return NULL;
 }
 
 template<class K, class V> int dict<K,V>::__len__() {
@@ -1286,9 +1286,9 @@ template<class K, class V> int dict<K,V>::has_key(K k) {
     return units.find(k) != units.end();
 }
 
-template<class K, class V> int dict<K,V>::clear() {
+template<class K, class V> void *dict<K,V>::clear() {
     this->units.clear();
-    return 0;
+    return NULL;
 }
 
 template<class K, class V> dict<K,V> *dict<K,V>::copy() {
@@ -1321,10 +1321,10 @@ template<class K, class V> list<V> *dict<K,V>::values() {
     return l;
 }
 
-template<class K, class V> int dict<K,V>::update(dict<K,V> *e) {
+template<class K, class V> void *dict<K,V>::update(dict<K,V> *e) {
     for (it = e->units.begin(); it != e->units.end(); it++)
         this->__setitem__(it->first, it->second);
-    return 0;
+    return NULL;
 }
 
 template<class K, class V> list<tuple2<K,V> *> *dict<K,V>::items() {
@@ -1812,9 +1812,9 @@ template<class T> int set<T>::__eq__(pyobj *p) {
     return 1;
 }
 
-template <class T> int set<T>::remove(T key) {
-    if (!discard(key)) throw new KeyError(__str(key));
-    return 0;
+template <class T> void *set<T>::remove(T key) {
+    if (!do_discard(key)) throw new KeyError(__str(key));
+    return NULL;
 }
 
 template<class T> int set<T>::__ge__(set<T> *s) {
@@ -1908,7 +1908,7 @@ template <class T> void set<T>::insert_key(T key, long hash) {
     }
 }
 
-template <class T> int set<T>::add(T key)
+template <class T> void *set<T>::add(T key)
 {
     long hash = hasher<T>(key);
     int n_used = used;
@@ -1916,17 +1916,17 @@ template <class T> int set<T>::add(T key)
     insert_key(key, hash);
     if ((used > n_used && fill*3 >= (mask+1)*2))
         resize(used>50000 ? used*2 : used*4);
-    return 0;
+    return NULL;
 }
 
-template <class T> int set<T>::add(setentry<T>* entry)
+template <class T> void *set<T>::add(setentry<T>* entry)
 {
     int n_used = used;
 
     insert_key(entry->key, entry->hash);
     if ((used > n_used && fill*3 >= (mask+1)*2))
         resize(used>50000 ? used*2 : used*4);
-    return 0;
+    return NULL;
 }
 
 template <class T> int freeze(set<T> *key) {
@@ -1943,24 +1943,18 @@ template <class U> int freeze(U key) {
 template <class U> void unfreeze(U, int orig_frozen) {
 }  
 
-template <class T> int set<T>::discard(T key) {
+template <class T> void *set<T>::discard(T key) {
+    do_discard(key);
+    return NULL;
+}
+
+template <class T> int set<T>::do_discard(T key) {
     int orig_frozen = freeze(key);
 	register long hash = hasher<T>(key);
 	register setentry<T> *entry;
 
 	entry = lookup(key, hash);
     unfreeze(key, orig_frozen);
-
-	if (entry->use != active)
-		return DISCARD_NOTFOUND; // nothing to discard
-
-	entry->use = dummy;
-	used--;
-	return DISCARD_FOUND;
-}
-
-template <class T> int set<T>::discard(setentry<T>* entry) {
-	entry = lookup(entry->key, entry->hash);
 
 	if (entry->use != active)
 		return DISCARD_NOTFOUND; // nothing to discard
@@ -2152,7 +2146,7 @@ template <class T> int set<T>::__contains__(setentry<T>* entry) {
 	return entry->use == active;
 }
 
-template <class T> int set<T>::clear()
+template <class T> void *set<T>::clear()
 {
 	setentry<T> *entry, *table;
 	int table_is_malloced;
@@ -2186,19 +2180,19 @@ template <class T> int set<T>::clear()
 
 	/* if (table_is_malloced)
 		PyMem_DEL(table); */
-	return 0;
+	return NULL;
 }
 
-template<class T> int set<T>::update(pyiter<T> *s) {
+template<class T> void *set<T>::update(pyiter<T> *s) {
     T e;
     __iter<T> *__0;
     FOR_IN(e, s, 0)
         add(e);
     END_FOR
-    return 0;
+    return NULL;
 }
 
-template <class T> int set<T>::update(const set<T>* other)
+template <class T> void *set<T>::update(const set<T>* other)
 {
 	register int i;
 	register setentry<T> *entry;
@@ -2218,7 +2212,7 @@ template <class T> int set<T>::update(const set<T>* other)
 			insert_key(entry->key, entry->hash);
 		}
 	}
-    return 0;
+    return NULL;
 }
 
 template<class T> set<T> *set<T>::__ss_union(pyiter<T> *s) {
@@ -2333,22 +2327,22 @@ template<class T> set<T> *set<T>::__isub__(set<T> *s) {
 }
 
 
-template<class T> int set<T>::difference_update(set<T> *s) {
+template<class T> void *set<T>::difference_update(set<T> *s) {
     set<T> *c = difference(s);
     *this = *c; /* XXX don't copy */
-    return 0;
+    return NULL;
 }
 
-template<class T> int set<T>::symmetric_difference_update(set<T> *s) {
+template<class T> void *set<T>::symmetric_difference_update(set<T> *s) {
     set<T> *c = symmetric_difference(s);
     *this = *c;
-    return 0;
+    return NULL;
 }
 
-template<class T> int set<T>::intersection_update(set<T> *s) {
+template<class T> void *set<T>::intersection_update(set<T> *s) {
     set<T> *c = intersection(s);
     *this = *c;
-    return 0;
+    return NULL;
 }
 
 template<class T> set<T> *set<T>::copy() {
