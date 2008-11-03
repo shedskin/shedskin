@@ -450,16 +450,15 @@ public:
     list(int count, ...);
 
     void clear();
-    int __setitem__(int i, T e);
-    int __delitem__(int i);
+    void *__setitem__(int i, T e);
+    void *__delitem__(int i);
     //void init(int count, ...);
-    int __remove__(int i);
     int empty();
     list<T> *__slice__(int x, int l, int u, int s);
-    int __setslice__(int x, int l, int u, int s, pyiter<T> *b);
-    int __delete__(int i);
-    int __delete__(int x, int l, int u, int s);
-    int __delslice__(int a, int b);
+    void *__setslice__(int x, int l, int u, int s, pyiter<T> *b);
+    void *__delete__(int i);
+    void *__delete__(int x, int l, int u, int s);
+    void *__delslice__(int a, int b);
     int __contains__(T a);
 
     list<T> *__add__(list<T> *b);
@@ -469,8 +468,8 @@ public:
     list<T> *__iadd__(pyseq<T> *b);
     list<T> *__imul__(int n);
 
-    int extend(pyiter<T> *p);
-    int extend(pyseq<T> *p);
+    void *extend(pyiter<T> *p);
+    void *extend(pyseq<T> *p);
 
     int index(T a);
     int index(T a, int s);
@@ -489,11 +488,11 @@ public:
 
     T pop();
     T pop(int m);
-    int remove(T e);
-    int insert(int m, T e);
+    void *remove(T e);
+    void *insert(int m, T e);
 
-    int reverse();
-    int sort(int (*cmp)(T, T), int key, int reverse);
+    void *reverse();
+    void *sort(int (*cmp)(T, T), int key, int reverse);
 
     list<T> *__copy__();
     list<T> *__deepcopy__(dict<void *, pyobj *> *memo);
@@ -1461,40 +1460,34 @@ template<class T> int list<T>::__eq__(pyobj *p) {
    return 1;
 }
 
-template<class T> int list<T>::extend(pyiter<T> *p) {
+template<class T> void *list<T>::extend(pyiter<T> *p) {
     __iter<T> *__0;
     T e;
     FOR_IN(e, p, 0)
         append(e); 
     END_FOR
-    return 0;
+    return NULL;
 }
 
-template<class T> int list<T>::extend(pyseq<T> *p) {
+template<class T> void *list<T>::extend(pyseq<T> *p) {
     int l1, l2;
     l1 = this->__len__(); l2 = p->__len__();
 
     this->units.resize(l1+l2);
     memcpy(&(this->units[l1]), &(p->units[0]), sizeof(T)*l2);
-    return 0;
+    return NULL;
 }
 
-template<class T> int list<T>::__setitem__(int i, T e) {
+template<class T> void *list<T>::__setitem__(int i, T e) {
     i = __wrap(this, i);
     units[i] = e;
-    return 0;
+    return NULL;
 }
 
-template<class T> int list<T>::__delitem__(int i) {
+template<class T> void *list<T>::__delitem__(int i) {
     i = __wrap(this, i);
     units.erase(units.begin()+i,units.begin()+i+1);
-    return 0;
-}
-
-template<class T> int list<T>::__remove__(int i) { 
-    i = __wrap(this, i);
-    units.erase(units.begin()+i,units.begin()+i+1);
-    return 0;
+    return NULL;
 }
 
 template<class T> int list<T>::empty() {
@@ -1507,7 +1500,7 @@ template<class T> list<T> *list<T>::__slice__(int x, int l, int u, int s) {
     return c;
 }
 
-template<class T> int list<T>::__setslice__(int x, int l, int u, int s, pyiter<T> *b) {
+template<class T> void *list<T>::__setslice__(int x, int l, int u, int s, pyiter<T> *b) {
     int i, j;
     T e;
 
@@ -1552,16 +1545,16 @@ template<class T> int list<T>::__setslice__(int x, int l, int u, int s, pyiter<T
                 this->units[j] = la->units[i];
     }
 
-    return 0;
+    return NULL;
 }
 
-template<class T> int list<T>::__delete__(int i) {
+template<class T> void *list<T>::__delete__(int i) {
     i = __wrap(this, i);
     units.erase(units.begin()+i,units.begin()+i+1);
-    return 0;
+    return NULL;
 }
 
-template<class T> int list<T>::__delete__(int x, int l, int u, int s) {
+template<class T> void *list<T>::__delete__(int x, int l, int u, int s) {
     slicenr(x, l, u, s, this->__len__());
 
     if(s == 1)
@@ -1573,12 +1566,12 @@ template<class T> int list<T>::__delete__(int x, int l, int u, int s) {
                 v.push_back(this->units[i]);
         units = v;
     }
-    return 0;
+    return NULL;
 }
 
-template<class T> int list<T>::__delslice__(int a, int b) {
+template<class T> void *list<T>::__delslice__(int a, int b) {
     units.erase(units.begin()+a,units.begin()+b);
-    return 0;
+    return NULL;
 }
 
 template<class T> int list<T>::__contains__(T a) {
@@ -1689,12 +1682,12 @@ template<class T> T list<T>::pop() {
     return pop(-1);
 }
 
-template<class T> int list<T>::reverse() {
+template<class T> void *list<T>::reverse() {
     std::reverse(this->units.begin(), this->units.end());
-    return 0;
+    return NULL;
 }
 
-template<class T> int list<T>::sort(int (*cmp)(T, T), int key, int reverse) {
+template<class T> void *list<T>::sort(int (*cmp)(T, T), int key, int reverse) {
     if(cmp) {
         if(reverse)
             std::sort(units.begin(), units.end(), cpp_cmp_custom_rev<T>(cmp));
@@ -1707,22 +1700,22 @@ template<class T> int list<T>::sort(int (*cmp)(T, T), int key, int reverse) {
             std::sort(units.begin(), units.end(), cpp_cmp<T>);
     }
 
-    return 0;
+    return NULL;
 }
 
-template<class T> int list<T>::insert(int m, T e) {
+template<class T> void *list<T>::insert(int m, T e) {
     if (m<0) m = this->__len__()+m;
     units.insert(units.begin()+m, e);
-    return 0;
+    return NULL;
 }
 
-template<class T> int list<T>::remove(T e) {
+template<class T> void *list<T>::remove(T e) {
     for(int i = 0; i < this->__len__(); i++)
         if(__eq(units[i], e)) {
             units.erase(units.begin()+i);
-            return 0;
+            return NULL;
         }
-    return 0;
+    return NULL;
 }
 
 template <class T> void *myallocate(int n) { return GC_MALLOC(n); }
