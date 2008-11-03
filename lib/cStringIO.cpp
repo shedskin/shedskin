@@ -10,12 +10,12 @@ StringI::StringI(str *s) : file() {
 
 }
 
-int StringI::seek(int i, int w) {
+void *StringI::seek(int i, int w) {
     if(w==0) pos = i;
     else if(w==1) pos += i;
     else pos = len(s)+i;
     endoffile = 0;
-    return 0;
+    return NULL;
 }
 
 int StringI::getchar() {
@@ -24,14 +24,14 @@ int StringI::getchar() {
     return s->unit[pos++];
 }
 
-int StringI::putchar(int c) {
+void *StringI::putchar(int c) {
     if(pos < len(s))
         s->unit[pos] = c;
     else 
         s->unit += c;
 
     pos++;
-    return 0;
+    return NULL;
 }
 
 StringI *StringIO(str *s) {

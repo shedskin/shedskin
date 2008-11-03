@@ -656,10 +656,10 @@ popen_pipe::popen_pipe(FILE* pipe) {
     print_lastchar='\n';
 }
 
-int popen_pipe::close() {
+void *popen_pipe::close() {
     pclose(f);
     closed = 1;
-    return 0;
+    return NULL;
 }
 
 void __init() {

@@ -955,20 +955,20 @@ int file::getchar() {
     return fgetc(f);
 }
 
-int file::putchar(int c) {
+void *file::putchar(int c) {
     __check_closed();
     fputc(c, f);
-    return 0;
+    return NULL;
 }
 
-int file::write(str *s) {
+void *file::write(str *s) {
     __check_closed();
   //  fputs(s->unit.c_str(), f);
 
     for(int i = 0; i < s->unit.size(); i++)
         putchar(s->unit[i]);
 
-    return 0;
+    return NULL;
 }
 
 void file::__check_closed() {
@@ -976,11 +976,11 @@ void file::__check_closed() {
         throw new ValueError(new str("I/O operation on closed file"));
 }
 
-int file::seek(int i, int w) {
+void *file::seek(int i, int w) {
     __check_closed();
     fseek(f, i, w);
     endoffile = 0; /* XXX add check */
-    return 0;
+    return NULL;
 }
 
 int file::tell() {
@@ -988,11 +988,11 @@ int file::tell() {
     return ftell(f);
 }
 
-int file::writelines(pyseq<str *> *l) {
+void *file::writelines(pyseq<str *> *l) {
     __check_closed();
     for(int i=0; i<len(l); i++)
         write(l->__getitem__(i));
-    return 0;
+    return NULL;
 }
 
 str *file::readline(int n) { 
@@ -1046,16 +1046,16 @@ list<str *> *file::readlines() {
     return lines;
 }
 
-int file::flush() {
+void *file::flush() {
     __check_closed();
     fflush(f);
-    return 0;
+    return NULL;
 }
 
-int file::close() {
+void *file::close() {
     fclose(f);
     closed = 1;
-    return 0;
+    return NULL;
 }
 
 int file::__ss_fileno() {

@@ -893,17 +893,17 @@ public:
     str *read(int n=-1);
     str *readline(int n=-1);
     list<str *> *readlines();
-    int write(str *s);
-    int writelines(pyseq<str *> *p);
-    int flush();
+    void *write(str *s);
+    void *writelines(pyseq<str *> *p);
+    void *flush();
     int __ss_fileno();
 
     void __check_closed();
 
     virtual int getchar();
-    virtual int putchar(int c);
-    virtual int seek(int i, int w=0);
-    virtual int close();
+    virtual void *putchar(int c);
+    virtual void *seek(int i, int w=0);
+    virtual void *close();
 
     int tell();
 
