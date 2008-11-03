@@ -82,7 +82,7 @@ class popen_pipe : public file {
 public:
     popen_pipe(str *name, str *mode=0);
     popen_pipe(FILE* pipe);
-    int close();
+    void *close();
 };
 
 popen_pipe* popen(str* cmd);
