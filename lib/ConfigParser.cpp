@@ -318,7 +318,7 @@ double RawConfigParser::getfloat(str *section, str *option) {
     return __float(this->get(section, option, default_5, 0));
 }
 
-int RawConfigParser::_set(str *section, str *option, str *value) {
+void *RawConfigParser::_set(str *section, str *option, str *value) {
     /**
     Set an option.
     */
@@ -336,7 +336,7 @@ int RawConfigParser::_set(str *section, str *option, str *value) {
         }
     }
     sectdict->__setitem__(this->optionxform(option), value);
-    return 0;
+    return NULL;
 }
 
 int RawConfigParser::has_section(str *section) {
@@ -430,7 +430,7 @@ int RawConfigParser::has_option(str *section, str *option) {
     return 0;
 }
 
-int RawConfigParser::write(file *fp) {
+void *RawConfigParser::write(file *fp) {
     /**
     Write an .ini-format representation of the configuration state.
     */
@@ -470,10 +470,10 @@ int RawConfigParser::write(file *fp) {
         fp->write(const_13);
     END_FOR
 
-    return 0;
+    return NULL;
 }
 
-int RawConfigParser::add_section(str *section) {
+void *RawConfigParser::add_section(str *section) {
     /**
     Create a new section in the configuration.
     
@@ -486,7 +486,7 @@ int RawConfigParser::add_section(str *section) {
         throw ((new DuplicateSectionError(section)));
     }
     this->_sections->__setitem__(section, (new dict<str *, str *>()));
-    return 0;
+    return NULL;
 }
 
 list<str *> *RawConfigParser::sections() {
@@ -521,7 +521,7 @@ str *RawConfigParser::get(str *section, str *option, int raw, dict<str *, str *>
     else {
         throw ((new NoOptionError(option,section)));
     }
-    return 0;
+    return NULL;
 }
 
 list<str *> *RawConfigParser::read(str *filename) {
@@ -592,7 +592,7 @@ list<tuple2<str *, str *> *> *RawConfigParser::items(str *section) {
     return d->items();
 }
 
-int RawConfigParser::_read(file *fp, str *fpname) {
+void *RawConfigParser::_read(file *fp, str *fpname) {
     /**
     Parse a sectioned setup file.
     
@@ -683,7 +683,7 @@ int RawConfigParser::_read(file *fp, str *fpname) {
     if (__bool(e)) {
         throw (e);
     }
-    return 0;
+    return NULL;
 }
 
 int RawConfigParser::getint(str *section, str *option) {
@@ -800,7 +800,7 @@ str *ConfigParser::get(str *section, str *option, int raw, dict<str *, str *> *v
     else {
         return this->_interpolate(section, option, value, d);
     }
-    return 0;
+    return NULL;
 }
 
 list<tuple2<str *, str *> *> *ConfigParser::items(str *section, int raw, dict<str *, str *> *vars) {
@@ -852,7 +852,7 @@ list<tuple2<str *, str *> *> *ConfigParser::items(str *section, int raw, dict<st
     else {
         return list_comp_1(d, this, options, section);
     }
-    return 0;
+    return NULL;
 }
 
 str *_interpolation_replace(__re__::match_object *match) {
@@ -865,7 +865,7 @@ str *_interpolation_replace(__re__::match_object *match) {
     else {
         return __mod(new str("%%(%s)s"), s->lower());
     }
-    return 0;
+    return NULL;
 }
 
 __re__::re_object *ConfigParser::_KEYCRE;
