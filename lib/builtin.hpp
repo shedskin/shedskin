@@ -337,6 +337,13 @@ public:
     complex *__idiv__(complex *b);
     complex *__idiv__(double b);
 
+    complex *__floordiv__(complex *b);
+    complex *__floordiv__(double b);
+    complex *__mod__(complex *b);
+    complex *__mod__(double b);
+    tuple2<complex *, complex *> *__divmod__(complex *b);
+    tuple2<complex *, complex *> *__divmod__(double b);
+
     complex *conjugate();
     complex *__pos__();
     complex *__neg__();
@@ -3105,6 +3112,9 @@ template<> int __floordiv(int a, int b);
 template<class A, class B> tuple2<double, double> *divmod(A a, B b);
 template<> tuple2<double, double> *divmod(double a, int b);
 template<> tuple2<double, double> *divmod(int a, double b);
+
+tuple2<complex *, complex *> *divmod(complex *a, double b);
+tuple2<complex *, complex *> *divmod(complex *a, int b);
 
 template<class A> tuple2<A, A> *divmod(A a, A b) {
     return a->__divmod__(b);

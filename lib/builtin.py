@@ -490,6 +490,15 @@ class complex:
     def __div__(self, c):              
         return self
 
+    def __floordiv__(self, b):
+        return self
+
+    def __mod__(self, b):
+        return self
+
+    def __divmod__(self, b):
+        return (self,)
+
     def __pos__(self):
         return self
 

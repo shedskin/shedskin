@@ -65,6 +65,16 @@ print 1-1j
 print int(1j == 1j), int(1j != 1j) 
 print hash(12+10j)
 print int(bool(0j)), int(bool(1+1j))
+print divmod((5+5j), (1+2j))
+print (5+5j)//(1+2j), (5+5j)%(1+2j)
+print divmod((5+5j), 2)
+print (5+5j)//2, (5+5j)%2
+#print divmod((5+5j), 2.2)
+print (5+5j)//2.2, (5+5j)%2.2
+print divmod((5.5+5.5j), 2)
+print (5.5+5.5j)//2, (5.5+5.5j)%2
+#print divmod((5.5+5.5j), 2.8)
+print (5.5+5.5j)//2.8, (5.5+5.5j)%2.8
 
 # complex(str)
 import re
