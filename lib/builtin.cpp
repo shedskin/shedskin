@@ -1940,7 +1940,7 @@ template<> double __to_ss(PyObject *p) {
 template<> void * __to_ss(PyObject *p) { 
     if(p!=Py_None)
         throw new TypeError(new str("error in conversion to Shed Skin (None expected)"));
-    return 0;
+    return NULL;
 }
 
 #endif

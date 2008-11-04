@@ -54,16 +54,16 @@ public:
         return units[i];
     }
 
-    int __setitem__(int i, A value) {
+    void *__setitem__(int i, A value) {
         i = __wrap(this, i);
         units[i] = value;
-        return 0;
+        return NULL;
     } 
 
-    int __delitem__(int i) {
+    void *__delitem__(int i) {
         i = __wrap(this, i);
         units.erase(units.begin()+i);
-        return 0;
+        return NULL;
     }
 
     int __contains__(A value) {
@@ -93,37 +93,38 @@ public:
         return r;
    }
    
-   int extend(pyiter<A> *p) {
+   void *extend(pyiter<A> *p) {
        __iter<A> *__0;
        A e;
        FOR_IN(e, p, 0)
            append(e);
        END_FOR
-       return 0;
+       return NULL;
    }
 
-   int extendleft(pyiter<A> *p) {
+   void *extendleft(pyiter<A> *p) {
        __iter<A> *__0;
        A e;
        FOR_IN(e, p, 0)
            appendleft(e);
        END_FOR
-       return 0;
+       return NULL;
    }
    
-   int remove(A value) {
+   void *remove(A value) {
        iter = units.begin();
        while(iter != units.end()) {
            if(*iter == value) {
                units.erase(iter);
-               return 0;
+               return NULL;
            }
            iter++;
        }
        throw new ValueError(new str("hops"));
+       return NULL;
    }
 
-   int rotate(int n) {
+   void *rotate(int n) {
        if(!units.empty()) {
            n = n % __len__();
            if(n<0) 
@@ -133,12 +134,12 @@ public:
                for(int i=0; i<n; i++) 
                    appendleft(pop());
        }
-       return 0;
+       return NULL;
    }
    
-   int clear() {
+   void *clear() {
        units.clear();
-       return 0;
+       return NULL;
    }
 
    int truth() {
@@ -228,7 +229,7 @@ public:
         return (this->units[k] = v);
     } 
 
-    int __addtoitem__(K k, V v) {
+    void *_addtoitem__(K k, V v) {
         iter = this->units.find(k);
         if(iter == this->units.end()) {
             V defval = new (typename dereference<V>::type)();
@@ -236,7 +237,7 @@ public:
         }
         else  
             iter->second = __add(iter->second, v);
-        return 0;
+        return NULL;
     } 
 
     str *__repr__() {
@@ -275,13 +276,13 @@ public:
         return iter->second;
     }
 
-    int __addtoitem__(K k, int v) {
+    void *__addtoitem__(K k, int v) {
         iter = this->units.find(k);
         if(iter == this->units.end()) 
             this->units[k] = v;
         else  
             iter->second = iter->second+v;
-        return 0;
+        return NULL;
     } 
 
     str *__repr__() {
@@ -316,13 +317,13 @@ public:
         return iter->second;
     }
 
-    double __addtoitem__(K k, double v) {
+    void *__addtoitem__(K k, double v) {
         iter = this->units.find(k);
         if(iter == this->units.end()) 
             this->units[k] = v;
         else  
             iter->second = iter->second+v;
-        return 0;
+        return NULL;
     } 
 
     str *__repr__() {
