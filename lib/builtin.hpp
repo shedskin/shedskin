@@ -225,7 +225,7 @@ template<class T> struct dereference <T*> {
 
 #ifdef __SS_BIND
 template<class T> T __to_ss(PyObject *p) {
-    if(p==Py_None) return 0;
+    if(p==Py_None) return NULL;
     return new (typename dereference<T>::type)(p); /* isn't C++ pretty :-) */
 }
 
@@ -393,7 +393,7 @@ public:
 
     virtual void *append(T t) {
         units.push_back(t);
-        return 0;
+        return NULL;
     }
 
     virtual void slice(int x, int l, int u, int s, pyseq<T> *c) {
@@ -723,7 +723,7 @@ public:
     dict<K, V> *__deepcopy__(dict<void *, pyobj *> *memo);
     dict<K, V> *__copy__();
 
-    int __addtoitem__(K k, V v);
+    void *__addtoitem__(K k, V v);
 
 #ifdef __SS_BIND
     dict(PyObject *);
@@ -1231,9 +1231,10 @@ template<class K, class V> void *dict<K,V>::__setitem__(K k, V v) {
 template<class K, class V> V dict<K,V>::get(K k) {
     it = units.find(k);
     if(it == units.end())
-        return 0;
+        return NULL; /* XXX value int: raise exception */
     return it->second;
 }
+
 template<class K, class V> V dict<K,V>::get(K k, V v) {
     it = units.find(k);
     if(it == units.end())
@@ -1360,12 +1361,12 @@ template<class K, class V> V dict<K,V>::__getitem__(K k) {
     return iter->second;
 }
 
-template<class K, class V> int dict<K,V>::__addtoitem__(K k, V v) {
+template<class K, class V> void *dict<K,V>::__addtoitem__(K k, V v) {
     typename __GC_HASH_MAP::iterator iter;
     iter = units.find(k);
     if(iter == units.end()) throw new KeyError(__str(k));
     iter->second = __add(iter->second, v);
-    return 0;
+    return NULL;
 }
 
 template<class K, class V> int dict<K,V>::__eq__(pyobj *e) {
