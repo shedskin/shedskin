@@ -159,6 +159,35 @@ complex *complex::__neg__() { return new complex(-real, -imag); }
 double complex::__abs__() { return std::sqrt(real*real+imag*imag); }
 double __abs(complex *c) { return c->__abs__(); }
 
+complex *complex::__floordiv__(complex *b) {
+    complex *c = __div__(b);
+    c->real = ((int)c->real);
+    c->imag = 0;
+    return c;
+}
+complex *complex::__floordiv__(double b) {
+    complex *c = __div__(b);
+    c->real = ((int)c->real);
+    c->imag = 0;
+    return c;
+}
+
+complex *complex::__mod__(complex *b) {
+    complex *c = __div__(b);
+    return __sub__(b->__mul__(((int)c->real)));
+}
+complex *complex::__mod__(double b) {
+    complex *c = __div__(b);
+    return __sub__(b*((int)c->real));
+}
+
+tuple2<complex *, complex *> *complex::__divmod__(complex *b) {
+    return new tuple2<complex *, complex *>(2, __floordiv__(b), __mod__(b));
+}
+tuple2<complex *, complex *> *complex::__divmod__(double b) {
+    return new tuple2<complex *, complex *>(2, __floordiv__(b), __mod__(b));
+}
+
 int complex::__eq__(pyobj *p) {
     if(p->__class__ != cl_complex)
         return 0;
@@ -1391,6 +1420,10 @@ template<> tuple2<double, double> *divmod(double a, double b) {
 }
 template<> tuple2<double, double> *divmod(double a, int b) { return divmod(a, (double)b); } 
 template<> tuple2<double, double> *divmod(int a, double b) { return divmod((double)a, b); }
+
+tuple2<complex *, complex *> *divmod(complex *a, double b) { return a->__divmod__(b); }
+tuple2<complex *, complex *> *divmod(complex *a, int b) { return a->__divmod__(b); }
+
 template<> tuple2<int, int> *divmod(int a, int b) {
     return new tuple2<int, int>(2, __floordiv(a,b), __mods(a,b));
 }
