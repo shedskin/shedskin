@@ -345,6 +345,11 @@ public:
     str *__repr__();
 
     complex *parsevalue(str *s);
+
+#ifdef __SS_BIND
+    complex(PyObject *);
+    PyObject *__to_py__();
+#endif
 };
 
 template<class T> complex::complex(T t) {

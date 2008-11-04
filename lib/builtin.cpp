@@ -94,6 +94,16 @@ complex::complex(str *s) {
     }
 }
 
+#ifdef __SS_BIND
+complex::complex(PyObject *p) {
+    real = PyComplex_RealAsDouble(p);
+    imag = PyComplex_ImagAsDouble(p);
+}
+PyObject *complex::__to_py__() {
+    return PyComplex_FromDoubles(real, imag);
+}
+#endif
+
 complex *complex::parsevalue(str *s) {
     complex *mult;
 
