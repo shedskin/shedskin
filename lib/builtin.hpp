@@ -346,6 +346,10 @@ public:
 
     complex *parsevalue(str *s);
 
+    int __eq__(pyobj *p);
+    int __hash__();
+    int __nonzero__();
+
 #ifdef __SS_BIND
     complex(PyObject *);
     PyObject *__to_py__();

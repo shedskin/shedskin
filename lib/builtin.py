@@ -508,6 +508,9 @@ class complex:
     def __with_float__(self):
         return self
 
+    def __hash__(self):
+        return 1
+
 class object: pass
 
 # --- exceptions

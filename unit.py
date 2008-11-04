@@ -62,6 +62,9 @@ print 7-c, c-7, c-d
 print 2/c, c/2, c/d
 print +c, ++c, -d, --d
 print 1-1j
+print int(1j == 1j), int(1j != 1j) 
+print hash(12+10j)
+print int(bool(0j)), int(bool(1+1j))
 
 # complex(str)
 import re
