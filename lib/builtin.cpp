@@ -9,7 +9,7 @@
 
 namespace __shedskin__ {
 
-class_ *cl_class_, *cl_none, *cl_str_, *cl_int_, *cl_float_, *cl_list, *cl_tuple, *cl_dict, *cl_set, *cl_object, *cl_rangeiter;
+class_ *cl_class_, *cl_none, *cl_str_, *cl_int_, *cl_float_, *cl_complex, *cl_list, *cl_tuple, *cl_dict, *cl_set, *cl_object, *cl_rangeiter;
 
 str *sp;
 __GC_STRING ws, __fmtchars;
@@ -33,6 +33,7 @@ void __init() {
     cl_set = new class_("set", 8, 8);
     cl_object = new class_("object", 9, 9);
     cl_rangeiter = new class_("rangeiter", 10, 10);
+    cl_complex = new class_("complex", 11, 11);
 
     ws = " \n\r\t\f\v";
     __fmtchars = "diouxXeEfFgGhcrs%";
@@ -74,11 +75,13 @@ str *float_::__repr__() {
 /* complex methods */
 
 complex::complex(double real, double imag) {
+    this->__class__ = cl_complex;
     this->real = real;
     this->imag = imag;
 }
 
 complex::complex(str *s) {
+    this->__class__ = cl_complex;
     __re__::match_object *m;
     __re__::re_object *p;
 
@@ -96,6 +99,7 @@ complex::complex(str *s) {
 
 #ifdef __SS_BIND
 complex::complex(PyObject *p) {
+    this->__class__ = cl_complex;
     real = PyComplex_RealAsDouble(p);
     imag = PyComplex_ImagAsDouble(p);
 }
@@ -154,6 +158,20 @@ complex *complex::__pos__() { return this; }
 complex *complex::__neg__() { return new complex(-real, -imag); }
 double complex::__abs__() { return std::sqrt(real*real+imag*imag); }
 double __abs(complex *c) { return c->__abs__(); }
+
+int complex::__eq__(pyobj *p) {
+    if(p->__class__ != cl_complex)
+        return 0;
+    return real == ((complex *)p)->real && imag == ((complex *)p)->imag;
+}
+
+int complex::__hash__() {
+    return ((int)imag)*1000003+((int)real);
+}
+
+int complex::__nonzero__() {
+    return real != 0 || imag != 0;
+}
 
 str *complex::__repr__() {
     str *left, *middle, *right;
