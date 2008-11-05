@@ -47,7 +47,7 @@ str *_resolve_link(str *path);
 #endif
 
 #ifndef WIN32
-template <class A> int walk(str *top, void *(*func)(A, str *, list<str *> *), A arg) {
+template <class A> void *walk(str *top, void *(*func)(A, str *, list<str *> *), A arg) {
     list<str *> *__21, *names;
     __iter<str *> *__22;
     str *name;
@@ -57,7 +57,7 @@ template <class A> int walk(str *top, void *(*func)(A, str *, list<str *> *), A 
     try {
         names = __os__::listdir(top);
     } catch (__os__::error *) {
-        return 0;
+        return NULL;
     }
     func(arg, top, names);
 
@@ -73,10 +73,10 @@ template <class A> int walk(str *top, void *(*func)(A, str *, list<str *> *), A 
         }
     END_FOR
 
-    return 0;
+    return NULL;
 }
 #else
-template <class A> int walk(str *top, void *(*func)(A, str *, list<str *> *), A arg) {
+template <class A> void *walk(str *top, void *(*func)(A, str *, list<str *> *), A arg) {
     list<str *> *__33, *names;
     __iter<str *> *__34;
     str *name;
@@ -86,7 +86,7 @@ template <class A> int walk(str *top, void *(*func)(A, str *, list<str *> *), A 
     try {
         names = __os__::listdir(top);
     } catch (__os__::error *) {
-        return 0;
+        return NULL;
     }
     func(arg, top, names);
     exceptions = (new tuple2<str *, str *>(2, const_0, const_3));
@@ -100,7 +100,7 @@ template <class A> int walk(str *top, void *(*func)(A, str *, list<str *> *), A 
         }
     END_FOR
 
-    return 0;
+    return NULL;
 }
 #endif
 

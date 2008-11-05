@@ -26,7 +26,7 @@ extern tuple2<str *, str *> *tzname;
 
 double clock();
 double time();
-void sleep(double s);
+void *sleep(double s);
 
 extern str *const_0, *const_1;
 
