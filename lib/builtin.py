@@ -508,6 +508,9 @@ class complex:
     def __abs__(self):
         return 1.0
 
+    def __pow__(self, b):
+        return self
+
     def conjugate(self):
         return self
 
