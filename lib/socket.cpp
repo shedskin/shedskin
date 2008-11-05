@@ -620,12 +620,12 @@ double getdefaulttimeout()
 }
 
 // FIXME this should allow the argument to be None
-int setdefaulttimeout(double x)
+void *setdefaulttimeout(double x)
 {
     if (x < 0)
         throw new ValueError(new str("invalid argument"));
     __ss_default_timeout = x;
-    return 0;
+    return NULL;
 }
 
 void __init()

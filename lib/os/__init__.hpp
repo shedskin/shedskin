@@ -18,15 +18,15 @@ class __cstat;
 
 list<str *> *listdir(str *path);
 str *getcwd();
-int chdir(str *dir);
+void *chdir(str *dir);
 str *getenv(str *name, str *alternative=0);
-int rename(str *a, str *b);
-int remove(str *a);
-int rmdir(str *a);
-int removedirs(str *name);
-int mkdir(str *path, int mode=0777);
-int makedirs(str *name, int mode=0777);
-int abort();
+void *rename(str *a, str *b);
+void *remove(str *a);
+void *rmdir(str *a);
+void *removedirs(str *name);
+void *mkdir(str *path, int mode=0777);
+void *makedirs(str *name, int mode=0777);
+void *abort();
 int system(str *c);
 
 extern class_ *cl___cstat;
@@ -55,7 +55,7 @@ str *readlink(str *path);
 
 int getuid();
 int getgid();
-int chown(str *path, int uid, int gid);
+void *chown(str *path, int uid, int gid);
 
 int fork();
 #endif
@@ -64,16 +64,16 @@ int stat_float_times(int newvalue=-1);
 str *strerror(int i);
 
 int getpid();
-int putenv(str* varname, str* value);
+void *putenv(str* varname, str* value);
 int umask(int newmask);
-int unsetenv(str* var);
+void *unsetenv(str* var);
 int chmod(str* path, int val);
-int renames(str* old, str* _new);
+void *renames(str* old, str* _new);
 tuple2<int,int>* pipe();
-void dup2(int f1, int f2);
-void execvp(str* file, list<str*>* args);
-void execv(str* file, list<str*>* args);
-void close(int fd);
+void *dup2(int f1, int f2);
+void *execvp(str* file, list<str*>* args);
+void *execv(str* file, list<str*>* args);
+void *close(int fd);
 file* fdopen(int fd);
 file* fdopen(int fd, str* mode);
 file* fdopen(int fd, str* mode, int bufsize);

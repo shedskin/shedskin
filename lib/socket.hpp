@@ -137,7 +137,7 @@ int __ss_ntohl(int);
 int __ss_ntohs(int);
 int has_ipv6();
 double getdefaulttimeout();
-int setdefaulttimeout(double x);
+void *setdefaulttimeout(double x);
 str *gethostname();
 
 extern int __ss_SOCK_STREAM, __ss_AF_INET, __ss_AF_INET, __ss_AF_UNIX, __ss_SOCK_DGRAM, __ss_SOL_IP, __ss_SOL_SOCKET, __ss_IP_TOS, __ss_IP_TTL;

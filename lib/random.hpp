@@ -41,8 +41,8 @@ public:
     double betavariate(double alpha, double beta);
     double normalvariate(double mu, double sigma);
     double _genrand_res53();
-    int seed();
-    int seed(int a);
+    void *seed();
+    void *seed(int a);
     double weibullvariate(double alpha, double beta);
     Random();
     Random(int a);
@@ -72,14 +72,14 @@ class WichmannHill : public Random {
 public:
     tuple2<int, int> *_seed;
 
-    int __whseed(int x, int y, int z);
+    void *__whseed(int x, int y, int z);
     double random();
-    int seed();
-    int seed(int a);
+    void *seed();
+    void *seed(int a);
     WichmannHill();
     WichmannHill(int a);
-    int whseed();
-    int whseed(int a);
+    void *whseed();
+    void *whseed(int a);
     int setstate(list<double> *state);
     int jumpahead(int n);
     list<double> *getstate();
@@ -102,8 +102,8 @@ extern str * __name__;
 extern double  NV_MAGICCONST;
 extern int  MAXBITS;
 void __init();
-int seed();
-int seed(int a);
+void *seed();
+void *seed(int a);
 double random();
 list<double> *getstate();
 int setstate(list<double> *state);
