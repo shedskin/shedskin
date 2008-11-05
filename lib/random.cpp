@@ -211,10 +211,10 @@ double Random::_genrand_res53() {
     return 0;
 }
 
-int Random::seed() {
+void *Random::seed() {
     return this->seed(-1);
 }
-int Random::seed(int a) {
+void *Random::seed(int a) {
     /**
     Initialize the random number generator with a single seed number.
     
@@ -233,7 +233,7 @@ int Random::seed(int a) {
     this->_init_by_array((new list<int>(1, a)));
     this->gauss_next = 0.0;
     this->gauss_switch = 0;
-    return 0;
+    return NULL;
 }
 
 double Random::weibullvariate(double alpha, double beta) {
@@ -619,7 +619,7 @@ class WichmannHill
 
 class_ *cl_WichmannHill;
 
-int WichmannHill::__whseed(int x, int y, int z) {
+void *WichmannHill::__whseed(int x, int y, int z) {
     /**
     Set the Wichmann-Hill seed from (x, y, z).
     
@@ -662,7 +662,7 @@ int WichmannHill::__whseed(int x, int y, int z) {
     this->_seed = (new tuple2<int, int>(3, __62, __63, __64));
     this->gauss_next = 0.0;
     this->gauss_switch = 0;
-    return 0;
+    return NULL;
 }
 
 double WichmannHill::random() {
@@ -686,10 +686,10 @@ double WichmannHill::random() {
     return __math__::fmod((((__float(x)/30269.0)+(__float(y)/30307.0))+(__float(z)/30323.0)), 1.0);
 }
 
-int WichmannHill::seed() {
+void *WichmannHill::seed() {
     return this->seed(-1);
 }
-int WichmannHill::seed(int a) {
+void *WichmannHill::seed(int a) {
     /**
     Initialize internal state from hashable object.
     
@@ -725,7 +725,7 @@ int WichmannHill::seed(int a) {
     this->_seed = (new tuple2<int, int>(3, __43, __44, __45));
     this->gauss_next = 0.0;
     this->gauss_switch = 0;
-    return 0;
+    return NULL;
 }
 
 WichmannHill::WichmannHill() {
@@ -746,10 +746,10 @@ WichmannHill::WichmannHill(int a) {
     this->VERSION = 1;
 }
 
-int WichmannHill::whseed() {
+void *WichmannHill::whseed() {
     return this->whseed(-1);
 }
-int WichmannHill::whseed(int a) {
+void *WichmannHill::whseed(int a) {
     /**
     Seed from current time or non-negative integer argument.
     
@@ -763,7 +763,7 @@ int WichmannHill::whseed(int a) {
 
     if ((a==-1)) {
         this->__whseed(((int )(0)), ((int )(0)), ((int )(0)));
-        return 0;
+        return NULL;
     }
     __65 = divmod(a, 256);
     a = __65->__getfirst__();
@@ -787,7 +787,7 @@ int WichmannHill::whseed(int a) {
         z = 1;
     }
     this->__whseed(x, y, z);
-    return 0;
+    return NULL;
 }
 
 int WichmannHill::setstate(list<double> *state) {
@@ -979,11 +979,11 @@ void __init() {
     _inst = (new Random(-1));
 }
 
-int seed() {
+void *seed() {
     
     return _inst->seed(-1);
 }
-int seed(int a) {
+void *seed(int a) {
 
     return _inst->seed(a);
 }

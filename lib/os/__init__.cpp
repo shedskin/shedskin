@@ -65,9 +65,10 @@ str *getcwd() {
     return r;
 }
 
-int chdir(str *dir) { 
+void *chdir(str *dir) { 
     if(::chdir(dir->unit.c_str()) == -1)
         throw new OSError(dir);
+    return NULL;
 }
 
 str *strerror(int i) {
@@ -105,9 +106,10 @@ int fork() {
     return ret;
 }
 
-int chown(str *path, int uid, int gid) {
+void *chown(str *path, int uid, int gid) {
     if (::chown(path->unit.c_str(), uid, gid) == -1) 
         throw new OSError(path);
+    return NULL;
 }
 #endif
 
@@ -122,22 +124,25 @@ str *getenv(str *name, str *alternative) {
     return alternative;
 }
 
-int rename(str *a, str *b) {
+void *rename(str *a, str *b) {
     if(std::rename(a->unit.c_str(), b->unit.c_str()) == -1)
         throw new OSError(a);
+    return NULL;
 }
 
-int remove(str *path) {
+void *remove(str *path) {
     if(std::remove(path->unit.c_str()) == -1)
         throw new OSError(path);
+    return NULL;
 }
 
-int rmdir(str *a) {
+void *rmdir(str *a) {
     if (::rmdir(a->unit.c_str()) == -1)
         throw new OSError(a);
+    return NULL;
 }
 
-int removedirs(str *name) {
+void *removedirs(str *name) {
     tuple2<str *, str *> *__0, *__1, *__5;
     str *__2, *__3, *head, *tail;
 
@@ -161,20 +166,21 @@ int removedirs(str *name) {
         head = __5->__getfirst__();
         tail = __5->__getsecond__();
     }
-    return 0;
+    return NULL;
 }
 
 
-int mkdir(str *path, int mode) {
+void *mkdir(str *path, int mode) {
 #ifdef WIN32
     if (::mkdir(path->unit.c_str()) == -1)
 #else
     if (::mkdir(path->unit.c_str(), mode) == -1)
 #endif
         throw new OSError(path);
+    return NULL;
 }
 
-int makedirs(str *name, int mode) {
+void *makedirs(str *name, int mode) {
     tuple2<str *, str *> *__0, *__1;
     str *head, *tail;
     int __2, __3, __4;
@@ -196,14 +202,14 @@ int makedirs(str *name, int mode) {
             }
         }
         if (__eq(tail, __path__::curdir)) {
-            return 0;
+            return NULL;
         }
     }
     mkdir(name, mode);
-    return 0;
+    return NULL;
 }
 
-int abort() {
+void *abort() {
     std::abort();
 }
 
@@ -328,10 +334,11 @@ int getpid() {
 #endif
 }
 
-int putenv(str* varname, str* value) {
+void *putenv(str* varname, str* value) {
     std::stringstream ss;
     ss << varname->unit.c_str() << '=' << value->unit.c_str();
-    return ::putenv(const_cast<char*>(ss.str().c_str()));
+    ::putenv(const_cast<char*>(ss.str().c_str()));
+    return NULL;
 }
 
 int umask(int newmask)  {
@@ -339,9 +346,9 @@ int umask(int newmask)  {
 }
 
 #ifndef WIN32
-int unsetenv (str* var) {
+void *unsetenv (str* var) {
     ::unsetenv(var->unit.c_str());
-    return 0;
+    return NULL;
 }
 
 int chmod (str* path, int val) {
@@ -370,7 +377,7 @@ int chmod (str* path, int val) {
 }
 #endif
 
-int renames (str* old, str* _new) {
+void *renames(str* old, str* _new) {
     tuple2<str *, str *> *__0, *__1, *__5;
     str *__2, *__3, *head, *tail;
 
@@ -410,6 +417,7 @@ int renames (str* old, str* _new) {
     if(__bool(__AND(head,tail,2))) {
         removedirs(head);
     }
+    return NULL;
 }
 
 popen_pipe* popen(str* cmd) {
@@ -444,17 +452,19 @@ tuple2<int,int>* pipe() {
 }
 #endif
 
-void dup2(int f1, int f2) {
+void *dup2(int f1, int f2) {
     int res = ::dup2(f1,f2);
 
     if(res < 0) {
         str* s = new str("dup2 failed");
         throw new OSError(s);
     }
+
+    return NULL;
 }
 
 #ifndef WIN32
-void execv(str* file, list<str*>* args) {
+void *execv(str* file, list<str*>* args) {
     //char** argvlist = new char*[ args->__len__()+1];
     char** argvlist = (char**) GC_malloc( sizeof(char*) * (args->__len__()+1));
 
@@ -470,12 +480,12 @@ void execv(str* file, list<str*>* args) {
     throw new OSError(new str("execv error"));
 }
 
-void execvp(str* file, list<str*>* args) {
+void *execvp(str* file, list<str*>* args) {
     tuple2<str*,str*>* h_t = __path__::split(file);
 
     if( __bool(h_t->__getfirst__())) {
         execv(file,args);
-        return;
+        return NULL;
     }
 
     str* envpath;
@@ -631,10 +641,11 @@ tuple2<file*,file*>* popen4(str* cmd, str* mode, int bufsize) {
 
 #endif
 
-void close(int fd) {
+void *close(int fd) {
    int res = ::close(fd);
 
    if(res < 0) throw new OSError(new str("close failed"));
+   return NULL;
 }
 
 popen_pipe::popen_pipe(str *cmd, str *mode) {

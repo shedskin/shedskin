@@ -65,9 +65,6 @@ def rename(a, b):
 def remove(path):
     pass
 
-def unlink(path):
-    pass
-
 def rmdir(a):
     pass
 

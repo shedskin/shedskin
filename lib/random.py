@@ -24,7 +24,7 @@ LOWER = 0x7fffffffL # least significant r bits
 
 class Random:
     def __init__(self, a=-1): return 1
-    def seed(self, a=-1): return 1
+    def seed(self, a=-1): pass
     def random(self): return 1.0
     def _genrand_res53(self): return 1.0
     def _genrand_int32(self): return 1
@@ -53,17 +53,17 @@ class Random:
 
 class WichmannHill(Random):
     def __init__(self, a=-1): return 1
-    def seed(self, a=-1): return 1
+    def seed(self, a=-1): pass
     def random(self): return 1.0
     def getstate(self): return [1.0,1.0,1.0]
     def setstate(self, state): return 1
     def jumpahead(self, n): return 1
-    def __whseed(self, x=0, y=0, z=0): return 1
-    def whseed(self, a=-1): return 1
+    def __whseed(self, x=0, y=0, z=0): pass
+    def whseed(self, a=-1): pass
 
 
 _inst = Random()
-def seed(a=-1): return 1
+def seed(a=-1): pass
 def random(): return 1.0
 def getstate(): return [1.0,1.0,1.0]
 def setstate(state): return 1
