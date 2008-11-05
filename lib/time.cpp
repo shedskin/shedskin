@@ -130,7 +130,7 @@ double time() {
     return tim.tv_sec+tim.tv_usec/1000000.0;
 }
 
-void sleep(double s) {
+void *sleep(double s) {
     timeval tim;
     double t1, t2;
 
@@ -141,6 +141,7 @@ void sleep(double s) {
         t2=tim.tv_sec+(tim.tv_usec/1000000.0);
     } while (t2-t1 < s);
 
+    return NULL;
 }
 
 double mktime(struct_time *tuple) {

@@ -69,10 +69,6 @@ class re_object:
     def findall(self, s, flags=0):
         return ['']
     
-
-def init():
-    pass
-
 def compile(pat, flgs=0):
     return re_object()
 
