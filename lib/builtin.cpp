@@ -1,6 +1,7 @@
 #include "builtin.hpp"
 #include "re.hpp"
 #include <climits>
+#include <cmath>
 #include <numeric>
 #include <stdlib.h>
 #include <stdio.h>
@@ -1402,6 +1403,25 @@ int __power2(int a) { return a*a; }
 double __power2(double a) { return a*a; }
 int __power3(int a) { return a*a*a; }
 double __power3(double a) { return a*a*a; }
+
+complex *__power(complex *a, complex *b) {
+    double vabs, len, at, phase;
+    vabs = a->__abs__();
+    len = std::pow(vabs,b->real);
+    at = std::atan2(a->imag, a->real);
+    phase = at*b->real;
+    if (b->imag != 0.0) {
+        len /= std::exp(at*b->imag);
+        phase += b->imag*std::log(vabs);
+    }
+    return new complex(len*std::cos(phase), len*std::sin(phase)); 
+}
+complex *__power(complex *a, int b) {
+    return __power(a, new complex(b, 0));
+}
+complex *__power(complex *a, double b) {
+    return __power(a, new complex(b, 0));
+}
 
 /* division */
 

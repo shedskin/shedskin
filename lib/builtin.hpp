@@ -3080,6 +3080,10 @@ template<class A, class B> double __power(A a, B b);
 template<> double __power(double a, int b);
 template<> double __power(int a, double b);
 
+complex *__power(complex *a, complex *b);
+complex *__power(complex *a, int b);
+complex *__power(complex *a, double b);
+
 template<class A> A __power(A a, A b);
 template<> double __power(double a, double b);
 template<> int __power(int a, int b);
