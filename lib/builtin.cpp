@@ -1405,16 +1405,29 @@ int __power3(int a) { return a*a*a; }
 double __power3(double a) { return a*a*a; }
 
 complex *__power(complex *a, complex *b) {
+    complex *r = new complex();
     double vabs, len, at, phase;
-    vabs = a->__abs__();
-    len = std::pow(vabs,b->real);
-    at = std::atan2(a->imag, a->real);
-    phase = at*b->real;
-    if (b->imag != 0.0) {
-        len /= std::exp(at*b->imag);
-        phase += b->imag*std::log(vabs);
+    if(b->real == 0 && b->imag == 0) {
+        r->real = 1;
+        r->imag = 0;
     }
-    return new complex(len*std::cos(phase), len*std::sin(phase)); 
+    else if(a->real == 0 && a->imag == 0) {
+        r->real = 0;
+        r->imag = 0;
+    }
+    else {
+        vabs = a->__abs__();
+        len = std::pow(vabs,b->real);
+        at = std::atan2(a->imag, a->real);
+        phase = at*b->real;
+        if (b->imag != 0.0) {
+            len /= std::exp(at*b->imag);
+            phase += b->imag*std::log(vabs);
+        }
+        r->real = len*std::cos(phase);
+        r->imag = len*std::sin(phase); 
+    }
+    return r;
 }
 complex *__power(complex *a, int b) {
     return __power(a, new complex(b, 0));
