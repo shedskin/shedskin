@@ -1748,8 +1748,6 @@ str *__modcd(str *fmt, list<str *> *names, ...) {
 
     d = __dict(__zip2(names, vals));
 
-    //print("d %s\n", d);
-
     str *const_5 = new str("%("), *const_6 = new str(")");
 
     list<pyobj *> *values = new list<pyobj *>();
@@ -1758,37 +1756,11 @@ str *__modcd(str *fmt, list<str *> *names, ...) {
         pos = fmt->index(const_5);
         pos2 = fmt->find(const_6, pos);
         naam = fmt->__slice__(3, (pos+2), pos2, 0);
-        //print("naam %s\n", naam);
         values->append(d->__getitem__(naam));
         fmt = (fmt->__slice__(2, 0, (pos+1), 0))->__add__(fmt->__slice__(1, (pos2+1), 0, 0));
     }
 
-    //print("hop %s %s\n", fmt, values);
-
-    str *r = new str();
-    i = 0;
-    pyobj *value;
-    while((j = __fmtpos(fmt)) != -1) {
-        char c = fmt->unit[j];
-        if(c != '%')
-            value = values->__getitem__(i++);
-
-        if(c == 'c') 
-            __modfill(&fmt, mod_to_c2(value), &r);
-        else if(c == 's' || c == 'r')
-            __modfill(&fmt, value, &r);
-        else if(c == '%')
-            __modfill(&fmt, 0, &r);
-        else if(__GC_STRING("diouxX").find(c) != -1)
-            __modfill(&fmt, mod_to_int(value), &r);
-        else if(__GC_STRING("eEfFgGh").find(c) != -1)
-            __modfill(&fmt, mod_to_float(value), &r);
-        else
-            break;
-    }
-
-    r->unit += fmt->unit;
-    return r;
+    return __mod4(fmt, values);
 } 
 
 /* mod */
