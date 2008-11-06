@@ -263,7 +263,7 @@ void __cstat::fill_er_up() {
 }
 
 str *__cstat::__repr__() {
-    return __mod(const_0, this->st_mode, this->st_ino, this->st_dev, this->st_nlink, this->st_uid, this->st_gid, this->st_size, this->__ss_st_mtime, this->__ss_st_atime, this->__ss_st_ctime);
+    return __modct(const_0, 10, __box(this->st_mode), __box(this->st_ino), __box(this->st_dev), __box(this->st_nlink), __box(this->st_uid), __box(this->st_gid), __box(this->st_size), __box(this->__ss_st_mtime), __box(this->__ss_st_atime), __box(this->__ss_st_ctime));
 }
 
 int __cstat::__len__() {

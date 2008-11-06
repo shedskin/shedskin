@@ -184,7 +184,7 @@ class_ *cl_NoSectionError;
 
 int NoSectionError::__init__(str *section) {
     
-    Error::__init__(__mod(const_3, section));
+    Error::__init__(__modct(const_3, 1, section));
     this->section = section;
     return 0;
 }
@@ -197,7 +197,7 @@ class_ *cl_DuplicateSectionError;
 
 int DuplicateSectionError::__init__(str *section) {
     
-    Error::__init__(__mod(const_4, section));
+    Error::__init__(__modct(const_4, 1, section));
     this->section = section;
     return 0;
 }
@@ -210,7 +210,7 @@ class_ *cl_NoOptionError;
 
 int NoOptionError::__init__(str *option, str *section) {
     
-    Error::__init__(__mod(const_5, option, section));
+    Error::__init__(__modct(const_5, 2, option, section));
     this->option = option;
     this->section = section;
     return 0;
@@ -240,7 +240,7 @@ class_ *cl_InterpolationMissingOptionError;
 int InterpolationMissingOptionError::__init__(str *option, str *section, str *rawval, str *reference) {
     str *msg;
 
-    msg = __mod(const_6, section, option, reference, rawval);
+    msg = __modct(const_6, 4, section, option, reference, rawval);
     InterpolationError::__init__(option, section, msg);
     this->reference = reference;
     return 0;
@@ -261,7 +261,7 @@ class_ *cl_InterpolationDepthError;
 int InterpolationDepthError::__init__(str *option, str *section, str *rawval) {
     str *msg;
 
-    msg = __mod(const_7, section, option, rawval);
+    msg = __modct(const_7, 3, section, option, rawval);
     InterpolationError::__init__(option, section, msg);
     return 0;
 }
@@ -274,7 +274,7 @@ class_ *cl_ParsingError;
 
 int ParsingError::__init__(str *filename) {
     
-    Error::__init__(__mod(const_8, filename));
+    Error::__init__(__modct(const_8, 1, filename));
     this->filename = filename;
     this->errors = (new list<tuple2<int, str *> *>());
     return 0;
@@ -283,7 +283,7 @@ int ParsingError::__init__(str *filename) {
 int ParsingError::append(int lineno, str *line) {
     
     (this->errors)->append((new tuple2<int, str *>(2, lineno, line)));
-    this->message = (this->message)->__iadd__(__mod(const_9, lineno, line));
+    this->message = (this->message)->__iadd__(__modct(const_9, 2, __box(lineno), line));
     return 0;
 }
 
@@ -295,7 +295,7 @@ class_ *cl_MissingSectionHeaderError;
 
 int MissingSectionHeaderError::__init__(str *filename, int lineno, str *line) {
     
-    Error::__init__(__mod(const_10, filename, lineno, line));
+    Error::__init__(__modct(const_10, 3, filename, __box(lineno), line));
     this->filename = filename;
     this->lineno = lineno;
     this->line = line;
@@ -443,27 +443,27 @@ void *RawConfigParser::write(file *fp) {
     __iter<tuple2<str *, str *> *> *__21, *__28;
 
     if (__bool(this->_defaults)) {
-        fp->write(__mod(const_11, DEFAULTSECT));
+        fp->write(__modct(const_11, 1, DEFAULTSECT));
 
         FOR_IN_SEQ(__19,(this->_defaults)->items(),20,22)
             __19 = __19;
             key = __19->__getfirst__();
             value = __19->__getsecond__();
-            fp->write(__mod(const_12, key, (__str(value))->replace(const_13, const_14)));
+            fp->write(__modct(const_12, 2, key, (__str(value))->replace(const_13, const_14)));
         END_FOR
 
         fp->write(const_13);
     }
 
     FOR_IN(section,this->_sections,24)
-        fp->write(__mod(const_11, section));
+        fp->write(__modct(const_11, 1, section));
 
         FOR_IN_SEQ(__26,((this->_sections)->__getitem__(section))->items(),27,29)
             __26 = __26;
             key = __26->__getfirst__();
             value = __26->__getsecond__();
             if (__ne(key, const_15)) {
-                fp->write(__mod(const_12, key, (__str(value))->replace(const_13, const_14)));
+                fp->write(__modct(const_12, 2, key, (__str(value))->replace(const_13, const_14)));
             }
         END_FOR
 
@@ -568,7 +568,7 @@ int RawConfigParser::getboolean(str *section, str *option) {
 
     v = this->get(section, option, default_5, 0);
     if ((!(RawConfigParser::_boolean_states)->__contains__(v->lower()))) {
-        throw ((new ValueError(__mod(const_16, v))));
+        throw ((new ValueError(__modct(const_16, 1, v))));
     }
     return (RawConfigParser::_boolean_states)->__getitem__(v->lower());
 }
@@ -630,7 +630,7 @@ void *RawConfigParser::_read(file *fp, str *fpname) {
         if (((line->__getitem__(0))->isspace() && (cursect!=0) && __bool(optname))) {
             value = line->strip();
             if (__bool(value)) {
-                cursect->__setitem__(optname, __mod(const_21, cursect->__getitem__(optname), value));
+                cursect->__setitem__(optname, __modct(const_21, 2, cursect->__getitem__(optname), value));
             }
         }
         else {
@@ -863,7 +863,7 @@ str *_interpolation_replace(__re__::match_object *match) {
         return match->group();
     }
     else {
-        return __mod(new str("%%(%s)s"), s->lower());
+        return __modct(new str("%%(%s)s"), 1, s->lower());
     }
     return NULL;
 }

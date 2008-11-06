@@ -206,13 +206,13 @@ int complex::__nonzero__() {
 str *complex::__repr__() {
     str *left, *middle, *right;
     if(real==0) 
-        return __mod(new str("%gj"), imag);
-    left = __mod(new str("(%g"), real);
+        return __modct(new str("%gj"), 1, __box(imag));
+    left = __modct(new str("(%g"), 1, __box(real));
     if(imag<0) 
         middle = new str("");
     else
         middle = new str("+");
-    right = __mod(new str("%gj)"), imag);
+    right = __modct(new str("%gj)"), 1, __box(imag));
     return __add_strs(3, left, middle, right);
 }
 
@@ -999,7 +999,7 @@ file::file(str *name, str *flags) {
     this->name = name;
     this->mode = flags;
     if(!f) 
-       throw new IOError(__mod(new str("No such file or directory: '%s'"), name));
+       throw new IOError(__modct(new str("No such file or directory: '%s'"), 1, name));
     endoffile=print_space=0;
     print_lastchar='\n';
 }
@@ -1731,31 +1731,6 @@ str *__mod4(str *fmt, list<pyobj *> *vals) {
     return r;
 }
 
-str *__mod2(str *fmt, va_list args) {
-    int j;
-    str *r = new str();
-
-    while((j = __fmtpos(fmt)) != -1) {
-        char c = fmt->unit[j];
-
-        if(c == 'c')
-            __modfill(&fmt, va_arg(args, str *), &r);
-        else if(c == 's' || c == 'r')
-            __modfill(&fmt, va_arg(args, pyobj *), &r);
-        else if(c == '%')
-            __modfill(&fmt, 0, &r);
-        else if(__GC_STRING("diouxX").find(c) != -1)
-            __modfill(&fmt, va_arg(args, int), &r);
-        else if(__GC_STRING("eEfFgGh").find(c) != -1)
-            __modfill(&fmt, va_arg(args, double), &r);
-        else
-            break;
-    }
-
-    r->unit += fmt->unit;
-    return r;
-}
-
 str *__modcd(str *fmt, list<str *> *names, ...) {
     int i, j;
     list<pyobj *> *vals = new list<pyobj *>();
@@ -1854,14 +1829,6 @@ str *__modct(str *fmt, int n, ...) {
          vals->append(va_arg(args, pyobj *));
      va_end(args);
      str *s = __mod4(fmt, vals);
-     return s;
-}
-
-str *__mod(str *fmt, ...) {
-     va_list args;
-     va_start(args, fmt);
-     str *s = __mod2(new str(fmt->unit), args);
-     va_end(args);
      return s;
 }
 
