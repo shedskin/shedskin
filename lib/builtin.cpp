@@ -1704,9 +1704,11 @@ void __fmtcheck(str *fmt, int l) {
 
 }
 
-str *__mod4(str *fmt, list<pyobj *> *vals) {
+str *__mod4(str *fmts, list<pyobj *> *vals) {
+    /* XXX fmtchecks */
     int i, j;
     str *r = new str();
+    str *fmt = new str(fmts->unit);
     i = 0;
     while((j = __fmtpos(fmt)) != -1) {
         char c = fmt->unit[j];

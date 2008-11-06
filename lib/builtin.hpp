@@ -3217,64 +3217,16 @@ str *mod_to_c2(pyobj *t);
 int mod_to_int(pyobj *t);
 double mod_to_float(pyobj *t);
 
-template<class T> int do_modfill(char c, str **fmt, T arg, str **s) {
-    if(c == '%') {
-        __modfill(fmt, 0, s);
-        return 0;
-    }
-    else if(c == 'c')
-        __modfill(fmt, mod_to_c(arg), s);
-    else if(c == 's' || c == 'r')
-        __modfill(fmt, arg, s);
-    else if(__GC_STRING("diouxX").find(c) != -1)
-        __modfill(fmt, __int(arg), s);
-    else if(__GC_STRING("eEfFgGh").find(c) != -1)
-        __modfill(fmt, __float(arg), s);
-       
-    return 1;
-}
-
 template<class T> str *__modtuple(str *fmt, tuple2<T,T> *t) {
-    __fmtcheck(fmt, len(t));
-
-    str *fmts = new str(fmt->unit);
-    str *r = new str();
-
-    int j, i = 0;
-    T arg;
-    while((j = __fmtpos(fmts)) != -1) {
-        char c = fmts->unit[j];
-        arg = t->__getitem__(i);
-
-        if(do_modfill(c, &fmts, arg, &r))
-            i++;
-    }
-        
-    r->unit += fmts->unit;
-    return r;
+    list<pyobj *> *vals = new list<pyobj *>();
+    for(int i=0;i<len(t);i++)
+        vals->append(__box(t->__getitem__(i)));
+    return __mod4(fmt, vals);
 }
 
 template<class A, class B> str *__modtuple(str *fmt, tuple2<A,B> *t) {
-    __fmtcheck(fmt, 2);
-
-    str *fmts = new str(fmt->unit);
-    str *r = new str();
-
-    int j, i = 0;
-    int result;
-    while((j = __fmtpos(fmts)) != -1) {
-        char c = fmts->unit[j];
-        if(i==0)
-            result = do_modfill(c, &fmts, t->__getfirst__(), &r);
-        else
-            result = do_modfill(c, &fmts, t->__getsecond__(), &r);
-
-        if(result)
-            i++;
-    }
-
-    r->unit += fmts->unit;
-    return r;
+    list<pyobj *> *vals = new list<pyobj *>(2, __box(t->__getfirst__()), __box(t->__getsecond__()));
+    return __mod4(fmt, vals);
 } 
 
 template<class T> str *__moddict(str *v, dict<str *, T> *d) {
@@ -3309,23 +3261,10 @@ template<class T> str *__moddict(str *v, dict<str *, T> *d) {
         v = v->replace(__add_strs(3, const_7, name, const_6), const_8);
     END_FOR
 
-    /* like __mod2, but with known types */
-    int k;
-    int argcount=0;
-    str *r = new str();
-    str *fmt = new str(v->unit);
-    T arg;
-
-    while((k = __fmtpos(fmt)) != -1) {
-        char c = fmt->unit[k];
-        arg = d->__getitem__(names->__getitem__(argcount));
-
-        if(do_modfill(c, &fmt, arg, &r))
-            argcount++;
-    }
-
-    r->unit += fmt->unit;
-    return r;
+    list<pyobj *> *vals = new list<pyobj *>();
+    for(i=0;i<len(names);i++)
+        vals->append(__box(d->__getitem__(names->__getitem__(i))));
+    return __mod4(v, vals);
 }
 
 template<class T> T __box(T t) { return t; }
