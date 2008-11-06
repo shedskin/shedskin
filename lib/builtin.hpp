@@ -3329,6 +3329,11 @@ template<class T> str *__moddict(str *v, dict<str *, T> *d) {
     return r;
 }
 
+template<class T> T __box(T t) { return t; }
+int_ *__box(int);
+int_ *__box(bool);
+float_ *__box(double);
+
 /* any, all */
 
 template<class A> int any(pyiter<A> *a) {
