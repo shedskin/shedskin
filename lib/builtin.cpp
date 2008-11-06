@@ -1860,6 +1860,16 @@ str *__mod(str *fmt, ...) {
      return s;
 }
 
+int_ *__box(int i) {
+    return new int_(i);
+}
+int_ *__box(bool b) {
+    return new int_(b);
+}
+float_ *__box(double d) {
+    return new float_(d);
+}
+
 /* print .., */
 
 char print_lastchar = '\n';
@@ -1873,7 +1883,7 @@ void __exit() {
 void print(const char *fmt, ...) { // XXX merge four functions (put std::cout in a file instance)
      va_list args;
      va_start(args, fmt);
-     str *s = __mod2(new str(fmt), args);
+     str *s = __mod3(new str(fmt), args);
 
      if(print_space && print_lastchar != '\n' && !(len(s) && s->unit[0] == '\n'))
          std::cout << " ";
@@ -1888,7 +1898,7 @@ void print(const char *fmt, ...) { // XXX merge four functions (put std::cout in
 void print(file *f, const char *fmt, ...) {
      va_list args;
      va_start(args, fmt);
-     str *s = __mod2(new str(fmt), args);
+     str *s = __mod3(new str(fmt), args);
 
      if(f->print_space && f->print_lastchar != '\n' && !(len(s) && s->unit[0] == '\n'))
          f->putchar(' ');
@@ -1903,7 +1913,7 @@ void print(file *f, const char *fmt, ...) {
 void printc(const char *fmt, ...) {
      va_list args;
      va_start(args, fmt);
-     str *s = __mod2(new str(fmt), args);
+     str *s = __mod3(new str(fmt), args);
 
      if(print_space && print_lastchar != '\n' && !(len(s) && s->unit[0] == '\n'))
          std::cout << " ";
@@ -1919,7 +1929,7 @@ void printc(const char *fmt, ...) {
 void printc(file *f, const char *fmt, ...) {
      va_list args;
      va_start(args, fmt);
-     str *s = __mod2(new str(fmt), args);
+     str *s = __mod3(new str(fmt), args);
 
      if(f->print_space && f->print_lastchar != '\n' && !(len(s) && s->unit[0] == '\n'))
          f->putchar(' ');

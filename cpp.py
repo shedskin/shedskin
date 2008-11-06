@@ -2428,12 +2428,10 @@ class generateVisitor(ASTVisitor):
             else:
                 nodes = [node.right]
 
-        # --- visit nodes, unboxing scalars
+        # --- visit nodes, boxing scalars
         for n in nodes: 
-            if (defclass('float_'), 0) in self.mergeinh[n]:
-                self.visitm(', new float_(', n, ')', func)
-            elif (defclass('int_'), 0) in self.mergeinh[n]:
-                self.visitm(', new int_(', n, ')', func)
+            if (defclass('float_'), 0) in self.mergeinh[n] or (defclass('int_'), 0) in self.mergeinh[n]:
+                self.visitm(', __box(', n, ')', func)
             else:
                 self.visitm(', ', n, func)
         self.append(')')
@@ -2453,7 +2451,10 @@ class generateVisitor(ASTVisitor):
             elif 'int_' in types: fstring.append('%d')
             else: fstring.append('%s')
 
-            self.visit(n, func)
+            if 'float_' in types or 'int_' in types:
+                self.visitm('__box(', n, ')', func)
+            else:
+                self.visit(n, func)
 
         fmt = ' '.join(fstring).replace('\n', '\\n')
         if newline: fmt += newline
