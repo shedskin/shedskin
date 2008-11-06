@@ -2427,6 +2427,7 @@ class generateVisitor(ASTVisitor):
             # --- str % non-tuple/non-dict
             else:
                 nodes = [node.right]
+            self.append(', %d' % len(nodes))
 
         # --- visit nodes, boxing scalars
         for n in nodes: 
@@ -2464,6 +2465,7 @@ class generateVisitor(ASTVisitor):
         else: self.start('print(')
         if node.dest:
             self.visitm(node.dest, ', ', func)
+        self.append('%d, ' % len(node.nodes))
         line = '"'+fmt+'"'+line+')'
         self.eol(line)
 

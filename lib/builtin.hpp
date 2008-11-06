@@ -101,10 +101,10 @@ template<> str *repr(void *t);
 file *open(str *name, str *flags = 0);
 str *raw_input(str *msg = 0);
 
-void print(const char *fmt, ...);
-void print(file *f, const char *fmt, ...);
-void printc(const char *fmt, ...); /* print comma */
-void printc(file *f, const char *fmt, ...);
+void print(int n, const char *fmt, ...);
+void print(file *f, int n, const char *fmt, ...);
+void printc(int n, const char *fmt, ...); /* print comma */
+void printc(file *f, int n, const char *fmt, ...);
 
 int isinstance(pyobj *, class_ *);
 int isinstance(pyobj *, tuple2<class_ *, class_ *> *);
@@ -141,7 +141,8 @@ template<> str *oct(int a);
 template<> str *oct(bool b);
 
 str *__mod(str *fmt, ...);
-str *__modct(str *fmt, ...);
+str *__mod4(str *fmt, list<pyobj *> *vals);
+str *__modct(str *fmt, int n, ...);
 str *__modcd(str *fmt, list<str *> *l, ...);
 
 template<class T> str *__modtuple(str *fmt, tuple2<T,T> *t); 

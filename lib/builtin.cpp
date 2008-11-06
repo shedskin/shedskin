@@ -1704,23 +1704,25 @@ void __fmtcheck(str *fmt, int l) {
 
 }
 
-str *__mod3(str *fmt, va_list args) {
-    int j;
+str *__mod4(str *fmt, list<pyobj *> *vals) {
+    int i, j;
     str *r = new str();
-
+    i = 0;
     while((j = __fmtpos(fmt)) != -1) {
         char c = fmt->unit[j];
-
+        pyobj *p;
+        if(c != '%')
+            p = vals->__getitem__(i++);
         if(c == 'c') 
-            __modfill(&fmt, mod_to_c2(va_arg(args, pyobj *)), &r);
+            __modfill(&fmt, mod_to_c2(p), &r);
         else if(c == 's' || c == 'r')
-            __modfill(&fmt, va_arg(args, pyobj *), &r);
+            __modfill(&fmt, p, &r);
         else if(c == '%')
-            __modfill(&fmt, 0, &r);
+            __modfill(&fmt, 0, &r); /* XXX heh */
         else if(__GC_STRING("diouxX").find(c) != -1)
-            __modfill(&fmt, mod_to_int(va_arg(args, pyobj *)), &r);
+            __modfill(&fmt, mod_to_int(p), &r);
         else if(__GC_STRING("eEfFgGh").find(c) != -1)
-            __modfill(&fmt, mod_to_float(va_arg(args, pyobj *)), &r);
+            __modfill(&fmt, mod_to_float(p), &r);
         else
             break;
     }
@@ -1844,11 +1846,14 @@ double mod_to_float(pyobj *t) {
     return 0;
 }
 
-str *__modct(str *fmt, ...) {
+str *__modct(str *fmt, int n, ...) {
+     list<pyobj *> *vals = new list<pyobj *>();
      va_list args;
-     va_start(args, fmt);
-     str *s = __mod3(new str(fmt->unit), args);
+     va_start(args, n);
+     for(int i=0; i<n; i++)
+         vals->append(va_arg(args, pyobj *));
      va_end(args);
+     str *s = __mod4(fmt, vals);
      return s;
 }
 
@@ -1880,63 +1885,63 @@ void __exit() {
         std::cout << '\n';
 }
 
-void print(const char *fmt, ...) { // XXX merge four functions (put std::cout in a file instance)
+void print(int n, const char *fmt, ...) { // XXX merge four functions 
+     list<pyobj *> *vals = new list<pyobj *>();
      va_list args;
      va_start(args, fmt);
-     str *s = __mod3(new str(fmt), args);
-
+     for(int i=0; i<n; i++)
+         vals->append(va_arg(args, pyobj *));
+     va_end(args);
+     str *s = __mod4(new str(fmt), vals);
      if(print_space && print_lastchar != '\n' && !(len(s) && s->unit[0] == '\n'))
          std::cout << " ";
-
      std::cout << s->unit;
-     va_end(args);
-
      print_lastchar = s->unit[len(s)-1];
      print_space = 0;
 }
 
-void print(file *f, const char *fmt, ...) {
+void print(file *f, int n, const char *fmt, ...) {
+     list<pyobj *> *vals = new list<pyobj *>();
      va_list args;
      va_start(args, fmt);
-     str *s = __mod3(new str(fmt), args);
-
+     for(int i=0; i<n; i++)
+         vals->append(va_arg(args, pyobj *));
+     va_end(args);
+     str *s = __mod4(new str(fmt), vals);
      if(f->print_space && f->print_lastchar != '\n' && !(len(s) && s->unit[0] == '\n'))
          f->putchar(' ');
-
      f->write(s);
-     va_end(args);
-
      f->print_lastchar = s->unit[len(s)-1];
      f->print_space = 0;
 }
 
-void printc(const char *fmt, ...) {
+void printc(int n, const char *fmt, ...) {
+     list<pyobj *> *vals = new list<pyobj *>();
      va_list args;
      va_start(args, fmt);
-     str *s = __mod3(new str(fmt), args);
-
+     for(int i=0; i<n; i++)
+         vals->append(va_arg(args, pyobj *));
+     va_end(args);
+     str *s = __mod4(new str(fmt), vals);
      if(print_space && print_lastchar != '\n' && !(len(s) && s->unit[0] == '\n'))
          std::cout << " ";
-
      std::cout << s->unit;
-     va_end(args);
-
      if(len(s)) print_lastchar = s->unit[len(s)-1];
      else print_lastchar = ' ';
      print_space = 1;
 }
 
-void printc(file *f, const char *fmt, ...) {
+void printc(int n, file *f, const char *fmt, ...) {
+     list<pyobj *> *vals = new list<pyobj *>();
      va_list args;
      va_start(args, fmt);
-     str *s = __mod3(new str(fmt), args);
-
+     for(int i=0; i<n; i++)
+         vals->append(va_arg(args, pyobj *));
+     va_end(args);
+     str *s = __mod4(new str(fmt), vals);
      if(f->print_space && f->print_lastchar != '\n' && !(len(s) && s->unit[0] == '\n'))
          f->putchar(' ');
-
      f->write(s);
-     va_end(args);
-
      if(len(s)) f->print_lastchar = s->unit[len(s)-1];
      else f->print_lastchar = ' ';
      f->print_space = 1;
