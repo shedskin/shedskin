@@ -140,7 +140,6 @@ template<class T> str *oct(T t) {
 template<> str *oct(int a);
 template<> str *oct(bool b);
 
-str *__mod(str *fmt, ...);
 str *__mod4(str *fmt, list<pyobj *> *vals);
 str *__modct(str *fmt, int n, ...);
 str *__modcd(str *fmt, list<str *> *l, ...);
@@ -3207,7 +3206,6 @@ template<class A> A __mods(A a, A b);
 template<> double __mods(double a, double b);
 template<> int __mods(int a, int b);
 
-str *__mod(str *fmt, ...);
 void __fmtcheck(str *fmt, int l);
 
 template <class T> str *mod_to_c(T t) { return 0; }

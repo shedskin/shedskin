@@ -90,7 +90,7 @@ struct_time::struct_time(tuple2<int, int> *_tuple) {
 
 str *struct_time::__repr__() {
     
-    return __mod(const_1, this->tm_year, this->tm_mon, this->tm_mday, this->tm_hour, this->tm_min, this->tm_sec, this->tm_wday, this->tm_yday, this->tm_isdst);
+    return __modct(const_1, 9, __box(this->tm_year), __box(this->tm_mon), __box(this->tm_mday), __box(this->tm_hour), __box(this->tm_min), __box(this->tm_sec), __box(this->tm_wday), __box(this->tm_yday), __box(this->tm_isdst));
 }
 
 tm* tuple2tm(struct_time* tuple) {

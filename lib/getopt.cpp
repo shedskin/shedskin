@@ -225,7 +225,7 @@ tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *do_longs(list<tuple2<str 
     if (has_arg) {
         if ((optarg==0)) {
             if ((!__bool(args))) {
-                throw ((new GetoptError(__mod(const_6, opt),opt)));
+                throw ((new GetoptError(__modct(const_6, 1, opt),opt)));
             }
             __12 = args->__getfast__(0);
             __13 = args->__slice__(1, 1, 0, 0);
@@ -234,7 +234,7 @@ tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *do_longs(list<tuple2<str 
         }
     }
     else if (__bool(optarg)) {
-        throw ((new GetoptError(__mod(const_7, opt),opt)));
+        throw ((new GetoptError(__modct(const_7, 1, opt),opt)));
     }
     opts->append((new tuple2<str *, str *>(2, (const_2)->__add__(opt), __OR(optarg, const_0, 14))));
     return (new tuple2<list<tuple2<str *, str *> *> *, list<str *> *>(2, opts, args));
@@ -247,7 +247,7 @@ tuple2<int, str *> *long_has_args(str *opt, pyiter<str *> *longopts) {
 
     possibilities = list_comp_0(opt, longopts);
     if ((!__bool(possibilities))) {
-        throw ((new GetoptError(__mod(const_8, opt),opt)));
+        throw ((new GetoptError(__modct(const_8, 1, opt),opt)));
     }
     if (possibilities->__contains__(opt)) {
         return (new tuple2<int, str *>(2, 0, opt));
@@ -256,7 +256,7 @@ tuple2<int, str *> *long_has_args(str *opt, pyiter<str *> *longopts) {
         return (new tuple2<int, str *>(2, 1, opt));
     }
     if ((len(possibilities)>1)) {
-        throw ((new GetoptError(__mod(const_9, opt),opt)));
+        throw ((new GetoptError(__modct(const_9, 1, opt),opt)));
     }
     ASSERT((len(possibilities)==1), 0);
     unique_match = possibilities->__getfast__(0);
@@ -280,7 +280,7 @@ tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *do_shorts(list<tuple2<str
         if (short_has_arg(opt, shortopts)) {
             if (__eq(optstring, const_0)) {
                 if ((!__bool(args))) {
-                    throw ((new GetoptError(__mod(const_10, opt),opt)));
+                    throw ((new GetoptError(__modct(const_10, 1, opt),opt)));
                 }
                 __21 = args->__getfast__(0);
                 __22 = args->__slice__(1, 1, 0, 0);
@@ -310,7 +310,7 @@ int short_has_arg(str *opt, str *shortopts) {
         }
     END_FOR
 
-    throw ((new GetoptError(__mod(const_12, opt),opt)));
+    throw ((new GetoptError(__modct(const_12, 1, opt),opt)));
     return 0;
 }
 

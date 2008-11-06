@@ -489,7 +489,7 @@ int Random::setstate(list<double> *state) {
 
     version = __int(state->__getfast__(0));
     if ((version!=2)) {
-        throw ((new ValueError(__mod(const_10, new int_(version), new int_(this->VERSION)))));
+        throw ((new ValueError(__modct(const_10, 2, __box(version), __box(this->VERSION)))));
     }
     this->mti = __int(state->__getfast__(1));
     this->gauss_switch = __int(state->__getfast__(2));
@@ -812,7 +812,7 @@ int WichmannHill::setstate(list<double> *state) {
         this->gauss_next = state->__getfast__(5);
     }
     else {
-        throw ((new ValueError(__mod(const_10, new int_(version), new int_(this->VERSION)))));
+        throw ((new ValueError(__modct(const_10, 2, __box(version), __box(this->VERSION)))));
     }
     return 0;
 }
