@@ -1704,6 +1704,55 @@ void __fmtcheck(str *fmt, int l) {
 
 }
 
+void __modfill(str **fmt, pyobj *t, str **s) {
+    char *d;
+    char c;
+    int i = (*fmt)->unit.find('%');
+    int j = __fmtpos(*fmt);
+
+    *s = new str((*s)->unit + (*fmt)->unit.substr(0, i));
+
+    c = (*fmt)->unit[j];
+
+    if(c == 's' or c == 'r') {
+        str *add;
+        if(c == 's') add = __str(t);
+        else add = repr(t);
+
+        if((*fmt)->unit[i+1] == '.') {
+            int maxlen = __int(new str((*fmt)->unit.substr(i+2, j-i-2)));
+            if(maxlen < len(add))
+                add = new str(add->unit.substr(0, maxlen));
+        }
+
+        *s = new str((*s)->unit + add->unit);
+    }
+    else if(c  == 'c')
+        *s = new str((*s)->unit + __str(t)->unit);
+    else if(c == '%')
+        *s = new str((*s)->unit + '%');
+    else {
+        if(c == 'h') {
+            //(*fmt)->unit[j] = 'g'; 
+            (*fmt)->unit.replace(j, 1, ".12g");
+            j += 3;
+        }
+        if(t->__class__ == cl_int_)
+            asprintf(&d, (*fmt)->unit.substr(i, j+1-i).c_str(), ((int_ *)t)->unit);
+        else if(t->__class__== cl_float_)
+            asprintf(&d, (*fmt)->unit.substr(i, j+1-i).c_str(), ((float_ *)t)->unit);
+        else
+            asprintf(&d, (*fmt)->unit.substr(i, j+1-i).c_str(), 0); /* XXX */
+
+        *s = new str((*s)->unit + d);
+        if(c == 'h' && t->__class__ == cl_float_ && ((float_ *)t)->unit-((int)(((float_ *)t)->unit)) == 0)
+            (*s)->unit += ".0";   
+        free(d); 
+    }
+
+    *fmt = new str((*fmt)->unit.substr(j+1, (*fmt)->unit.size()-j-1));
+}
+
 str *__mod4(str *fmts, list<pyobj *> *vals) {
     /* XXX fmtchecks */
     int i, j;
@@ -1720,7 +1769,7 @@ str *__mod4(str *fmts, list<pyobj *> *vals) {
         else if(c == 's' || c == 'r')
             __modfill(&fmt, p, &r);
         else if(c == '%')
-            __modfill(&fmt, 0, &r); /* XXX heh */
+            __modfill(&fmt, NULL, &r); /* XXX heh */
         else if(__GC_STRING("diouxX").find(c) != -1)
             __modfill(&fmt, mod_to_int(p), &r);
         else if(__GC_STRING("eEfFgGh").find(c) != -1)
@@ -1765,10 +1814,6 @@ str *__modcd(str *fmt, list<str *> *names, ...) {
 
 /* mod */
 
-str *mod_to_c(str *s) { return s; } 
-str *mod_to_c(int i) { return chr(i); }
-str *mod_to_c(double d) { return chr(__int(d)); } 
-
 str *mod_to_c2(pyobj *t) { 
     if(t->__class__ == cl_int_)
         return chr(((int_ *)t)->unit); 
@@ -1779,20 +1824,20 @@ str *mod_to_c2(pyobj *t) {
     return new str("crap");
 }
 
-int mod_to_int(pyobj *t) { 
+int_ *mod_to_int(pyobj *t) { 
     if(t->__class__ == cl_int_)
-        return ((int_ *)t)->unit; 
+        return (int_ *)t;
     else if(t->__class__ == cl_float_)
-        return __int(((float_ *)t)->unit); 
-    return 0;
+        return new int_(((float_ *)t)->unit); 
+    return new int_(0);
 }
 
-double mod_to_float(pyobj *t) { 
-    if(t->__class__ == cl_int_)
-        return ((int_ *)t)->unit; 
-    else if(t->__class__ == cl_float_)
-        return ((float_ *)t)->unit; 
-    return 0;
+float_ *mod_to_float(pyobj *t) { 
+    if(t->__class__ == cl_float_)
+        return (float_ *)t;
+    else if(t->__class__ == cl_int_)
+        return new float_(((int_ *)t)->unit); 
+    return new float_(0);
 }
 
 str *__modct(str *fmt, int n, ...) {
