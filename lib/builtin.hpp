@@ -3145,58 +3145,11 @@ namespace __dict__ {
 
 }
 
-/* mod helpers */
-
-int __fmtpos(str *fmt);
+/* mod */
 
 #if defined(WIN32) || defined(__sun)
 int asprintf(char **ret, const char *format, ...);
 #endif
-
-template<class T> void __modfill(str **fmt, T t, str **s) {
-    char *d;
-    char c;
-    int i = (*fmt)->unit.find('%');
-    int j = __fmtpos(*fmt);
-
-    *s = new str((*s)->unit + (*fmt)->unit.substr(0, i));
-
-    c = (*fmt)->unit[j];
-
-    if(c == 's' or c == 'r') {
-        str *add;
-        if(c == 's') add = __str(t);
-        else add = repr(t);
-
-        if((*fmt)->unit[i+1] == '.') {
-            int maxlen = __int(new str((*fmt)->unit.substr(i+2, j-i-2)));
-            if(maxlen < len(add))
-                add = new str(add->unit.substr(0, maxlen));
-        }
-
-        *s = new str((*s)->unit + add->unit);
-    }
-    else if(c  == 'c')
-        *s = new str((*s)->unit + __str(t)->unit);
-    else if(c == '%')
-        *s = new str((*s)->unit + '%');
-    else {
-        if(c == 'h') {
-            //(*fmt)->unit[j] = 'g'; 
-            (*fmt)->unit.replace(j, 1, ".12g");
-            j += 3;
-        }
-        asprintf(&d, (*fmt)->unit.substr(i, j+1-i).c_str(), t);
-        *s = new str((*s)->unit + d);
-        if(c == 'h' && (t-(intptr_t)t == 0)) 
-            (*s)->unit += ".0";   
-        free(d); 
-    }
-
-    *fmt = new str((*fmt)->unit.substr(j+1, (*fmt)->unit.size()-j-1));
-}
-
-/* mod */
 
 template<class A, class B> double __mods(A a, B b);
 template<> double __mods(double a, int b);
@@ -3207,15 +3160,11 @@ template<> double __mods(double a, double b);
 template<> int __mods(int a, int b);
 
 void __fmtcheck(str *fmt, int l);
-
-template <class T> str *mod_to_c(T t) { return 0; }
-str *mod_to_c(str *s);
-str *mod_to_c(int i); 
-str *mod_to_c(double d); 
-
+int __fmtpos(str *fmt);
+void __modfill(str **fmt, pyobj *t, str **s);
 str *mod_to_c2(pyobj *t);
-int mod_to_int(pyobj *t);
-double mod_to_float(pyobj *t);
+int_ *mod_to_int(pyobj *t);
+float_ *mod_to_float(pyobj *t);
 
 template<class T> str *__modtuple(str *fmt, tuple2<T,T> *t) {
     list<pyobj *> *vals = new list<pyobj *>();
