@@ -112,8 +112,11 @@ class PI:
         return 3.14
 print complex(PI())
 
-# not sure why this didn't work before
+# %% woes
 print "%%(%s)s" % 'ole'
+print '%%(bert)s %(bert)s' % {'bert': 18}
+ddd = {'bert': 19.9}
+print '%%(bert)s %(bert)s' % ddd
 
 # re.group multiple int/str arguments
 imag = re.compile('(a)(b)')
