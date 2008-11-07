@@ -57,7 +57,7 @@ template <class K, class V> class dict;
 class Exception;
 class AssertionError; class KeyError; class ValueError; class IndexError;
 class NotImplementedError; class IOError; class OSError; class SyntaxError;
-class StopIteration; class TypeError; class RuntimeError;
+class StopIteration; class TypeError; class RuntimeError; class OverflowError;
 
 /* builtin function forward declarations */
 
@@ -204,14 +204,14 @@ template<class T> int cpp_cmp_rev(T a, T b) {
 template<class T> class cpp_cmp_custom {
     typedef int (*hork)(T, T);
     hork cmp;
-public:
+    public:
     cpp_cmp_custom(hork a) { cmp = a; }
     int operator()(T a, T b) const { return cmp(a,b) == -1; }
 };
 template<class T> class cpp_cmp_custom_rev {
     typedef int (*hork)(T, T);
     hork cmp;
-public:
+    public:
     cpp_cmp_custom_rev(hork a) { cmp = a; }
     int operator()(T a, T b) const { return cmp(a,b) == 1; }
 };
@@ -277,8 +277,9 @@ public:
     virtual pyobj *__copy__() { return this; }
     virtual pyobj *__deepcopy__(dict<void *, pyobj *> *memo) { return this; }
 
-    virtual int __len__() { return 1; }
+    virtual int __len__() { return 1; } /* XXX exception */
     virtual int __nonzero__() { return __len__() != 0; }
+    virtual int __int__() { return 0; }
 
 };
 
@@ -1037,6 +1038,14 @@ public:
     TypeError(str *msg=0) : Exception(msg) {} 
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_TypeError; }
+#endif
+};
+
+class OverflowError : public Exception { 
+public: 
+    OverflowError(str *msg=0) : Exception(msg) {} 
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_OverflowError; }
 #endif
 };
 

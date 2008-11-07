@@ -1844,13 +1844,26 @@ str *__modcd(str *fmt, list<str *> *names, ...) {
 /* mod */
 
 str *mod_to_c2(pyobj *t) { 
-    if(t->__class__ == cl_int_)
-        return chr(((int_ *)t)->unit); 
+    if(t == NULL)
+        throw new TypeError(new str("an integer is required"));
+    if(t->__class__ == cl_str_) {
+        if(len((str *)t) == 1)
+            return (str *)t;
+        else
+            throw new TypeError(new str("%c requires int or char"));
+    }
+    int value;
+    if(t->__class__ == cl_int_) 
+        value = ((int_ *)t)->unit;
     else if(t->__class__ == cl_float_)
-        return chr(((float_ *)t)->unit); 
-    else if(t->__class__ == cl_str_)
-        return __str(t); 
-    return new str("crap");
+        value = ((float_ *)t)->unit;
+    else 
+        value = t->__int__();
+    if(value < 0)
+        throw new OverflowError(new str("unsigned byte integer is less than minimum"));
+    else if(value > 255)
+        throw new OverflowError(new str("unsigned byte integer is greater than minimum"));
+    return chr(value);
 }
 
 int_ *mod_to_int(pyobj *t) { 
