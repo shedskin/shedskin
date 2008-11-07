@@ -1684,6 +1684,21 @@ int __fmtpos(str *fmt) {
     return fmt->unit.find_first_of(__fmtchars, i+1);
 }
 
+int __fmtpos2(str *fmt) {
+    int i = 0;
+    while((i = fmt->unit.find('%', i)) != -1) {
+        if(i != fmt->unit.size()-1) {
+            char nextchar = fmt->unit[i+1];
+            if(nextchar == '%')
+                i++;
+            else if(nextchar == '(')
+                return i;
+        }
+        i++;
+    }
+    return -1;
+}
+
 void __fmtcheck(str *fmt, int l) {
     int i = 0, j = 0;
     while((j = fmt->unit.find('%', j)) != -1) {
@@ -1816,8 +1831,7 @@ str *__modcd(str *fmt, list<str *> *names, ...) {
 
     list<pyobj *> *values = new list<pyobj *>();
 
-    while (fmt->__contains__(const_5)) {
-        pos = fmt->index(const_5);
+    while((pos = __fmtpos2(fmt)) != -1) {
         pos2 = fmt->find(const_6, pos);
         naam = fmt->__slice__(3, (pos+2), pos2, 0);
         values->append(d->__getitem__(naam));
