@@ -101,10 +101,10 @@ template<> str *repr(void *t);
 file *open(str *name, str *flags = 0);
 str *raw_input(str *msg = 0);
 
-void print(int n, const char *fmt, ...);
-void print(file *f, int n, const char *fmt, ...);
-void printc(int n, const char *fmt, ...); /* print comma */
-void printc(file *f, int n, const char *fmt, ...);
+void print(int n,  ...);
+void print(file *f, int n, ...);
+void printc(int n, ...); /* print comma */
+void printc(file *f, int n, ...);
 
 int isinstance(pyobj *, class_ *);
 int isinstance(pyobj *, tuple2<class_ *, class_ *> *);

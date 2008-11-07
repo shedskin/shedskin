@@ -129,6 +129,16 @@ print wap
 hop = m.group('one', 'two', 'one')
 print hop
 
+# join empty list
+el = ['hap'][7:8]
+print ' '.join(el)
+
+# this works now
+def p(msg):
+    print msg
+p(15)
+p("hello")
+
 ''', '''
 output(equal=True)
 

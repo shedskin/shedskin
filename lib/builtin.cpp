@@ -778,9 +778,7 @@ str *__add_strs(int n, ...) {
 str *str::__join(pyseq<str *> *l, int total_len) {
     __GC_STRING s;
     s.resize(total_len);
-
     int k = 0;
-
     for(int i = 0; i < len(l); i++) {
         __GC_STRING &t = l->units[i]->unit;
 
@@ -792,8 +790,6 @@ str *str::__join(pyseq<str *> *l, int total_len) {
             k += unit.size();
         } 
     }
-
-    s.resize(s.size()-unit.size());
     return new str(s);
 }
 
@@ -808,8 +804,8 @@ str *str::join(pyiter<str *> *l) {
         total_len += i->unit.size();
         ++count;
     END_FOR
-    total_len += count*unit.size();
-
+    if(total_len)
+        total_len += (count-1)*unit.size();
     return __join(rl, total_len);
 } 
 
@@ -818,8 +814,8 @@ str *str::join(pyseq<str *> *l) {
     __GC_VECTOR(str *)::const_iterator it;
     for(it = l->units.begin(); it < l->units.end(); it++)
         total_len += (*it)->unit.size();
-    total_len += len(l)*unit.size();
-
+    if(total_len)
+        total_len += (len(l)-1)*unit.size();
     return __join(l, total_len);
 }
 
@@ -1782,6 +1778,25 @@ str *__mod4(str *fmts, list<pyobj *> *vals) {
     return r;
 }
 
+str *__mod5(list<pyobj *> *vals, int newline) {
+    list<str *> *fmt = new list<str *>(); 
+    for(int i=0;i<len(vals);i++) {
+        pyobj *p = vals->__getitem__(i);
+        if(p == NULL)
+            fmt->append(new str("%s"));
+        else if(p->__class__ == cl_float_)
+            fmt->append(new str("%h"));
+        else if(p->__class__== cl_int_)
+            fmt->append(new str("%d"));
+        else
+            fmt->append(new str("%s"));
+    }
+    str *s = (new str(" "))->join(fmt);
+    if(newline)
+        s = s->__add__(new str("\n"));
+    return __mod4(s, vals);
+}
+
 str *__modcd(str *fmt, list<str *> *names, ...) {
     int i, j;
     list<pyobj *> *vals = new list<pyobj *>();
@@ -1871,14 +1886,14 @@ void __exit() {
         std::cout << '\n';
 }
 
-void print(int n, const char *fmt, ...) { // XXX merge four functions 
+void print(int n, ...) { // XXX merge four functions 
      list<pyobj *> *vals = new list<pyobj *>();
      va_list args;
-     va_start(args, fmt);
+     va_start(args, n);
      for(int i=0; i<n; i++)
          vals->append(va_arg(args, pyobj *));
      va_end(args);
-     str *s = __mod4(new str(fmt), vals);
+     str *s = __mod5(vals, 1);
      if(print_space && print_lastchar != '\n' && !(len(s) && s->unit[0] == '\n'))
          std::cout << " ";
      std::cout << s->unit;
@@ -1886,14 +1901,14 @@ void print(int n, const char *fmt, ...) { // XXX merge four functions
      print_space = 0;
 }
 
-void print(file *f, int n, const char *fmt, ...) {
+void print(file *f, int n, ...) {
      list<pyobj *> *vals = new list<pyobj *>();
      va_list args;
-     va_start(args, fmt);
+     va_start(args, n);
      for(int i=0; i<n; i++)
          vals->append(va_arg(args, pyobj *));
      va_end(args);
-     str *s = __mod4(new str(fmt), vals);
+     str *s = __mod5(vals, 1);
      if(f->print_space && f->print_lastchar != '\n' && !(len(s) && s->unit[0] == '\n'))
          f->putchar(' ');
      f->write(s);
@@ -1901,14 +1916,14 @@ void print(file *f, int n, const char *fmt, ...) {
      f->print_space = 0;
 }
 
-void printc(int n, const char *fmt, ...) {
+void printc(int n, ...) {
      list<pyobj *> *vals = new list<pyobj *>();
      va_list args;
-     va_start(args, fmt);
+     va_start(args, n);
      for(int i=0; i<n; i++)
          vals->append(va_arg(args, pyobj *));
      va_end(args);
-     str *s = __mod4(new str(fmt), vals);
+     str *s = __mod5(vals, 0);
      if(print_space && print_lastchar != '\n' && !(len(s) && s->unit[0] == '\n'))
          std::cout << " ";
      std::cout << s->unit;
@@ -1917,14 +1932,14 @@ void printc(int n, const char *fmt, ...) {
      print_space = 1;
 }
 
-void printc(int n, file *f, const char *fmt, ...) {
+void printc(file *f, int n, ...) {
      list<pyobj *> *vals = new list<pyobj *>();
      va_list args;
-     va_start(args, fmt);
+     va_start(args, n);
      for(int i=0; i<n; i++)
          vals->append(va_arg(args, pyobj *));
      va_end(args);
-     str *s = __mod4(new str(fmt), vals);
+     str *s = __mod5(vals, 0);
      if(f->print_space && f->print_lastchar != '\n' && !(len(s) && s->unit[0] == '\n'))
          f->putchar(' ');
      f->write(s);

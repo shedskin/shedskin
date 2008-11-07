@@ -2441,33 +2441,18 @@ class generateVisitor(ASTVisitor):
         self.visitPrint(node, func, '\\n')
 
     def visitPrint(self, node, func=None, newline=None):
-        fstring = []
-        self.line = ''
-
-        for n in node.nodes:
-            self.append(', ')
-
-            types = [t[0].ident for t in self.mergeinh[n]]
-            if 'float_' in types: fstring.append('%h') 
-            elif 'int_' in types: fstring.append('%d')
-            else: fstring.append('%s')
-
-            if 'float_' in types or 'int_' in types:
-                self.visitm('__box(', n, ')', func)
-            else:
-                self.visit(n, func)
-
-        fmt = ' '.join(fstring).replace('\n', '\\n')
-        if newline: fmt += newline
-
-        line = self.line
-        if not newline: self.start('printc(')
-        else: self.start('print(')
+        if newline: self.start('print(')
+        else: self.start('printc(')
         if node.dest:
             self.visitm(node.dest, ', ', func)
-        self.append('%d, ' % len(node.nodes))
-        line = '"'+fmt+'"'+line+')'
-        self.eol(line)
+        self.append(str(len(node.nodes)))
+        for n in node.nodes:
+            types = [t[0].ident for t in self.mergeinh[n]]
+            if 'float_' in types or 'int_' in types:
+                self.visitm(', __box(', n, ')', func)
+            else:
+                self.visitm(', ', n, func)
+        self.eol(')')
 
     def visitGetattr(self, node, func=None):
         module = lookupmodule(node.expr, inode(node).mv)
@@ -2535,7 +2520,7 @@ class generateVisitor(ASTVisitor):
     def visitName(self, node, func=None, add_cl=True):
         map = {'True': '1', 'False': '0', 'self': 'this'}
         if node.name == 'None':
-            self.append('0')
+            self.append('NULL')
         elif node.name == 'self' and ((func and func.listcomp) or not isinstance(func.parent, class_)):
             self.append('self')
         elif node.name in map:
@@ -2573,7 +2558,7 @@ class generateVisitor(ASTVisitor):
             return
 
         if node.value == None: 
-            self.append('0')
+            self.append('NULL')
             return
 
         t = list(inode(node).types())[0]
