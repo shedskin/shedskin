@@ -1297,6 +1297,8 @@ int ord(str *s) {
 }
 
 str *chr(int i) {
+    if(i < 0 || i > 255) 
+        throw new ValueError(new str("chr() arg not in range(256)"));
     return __char_cache[i];
 }
 
@@ -1737,30 +1739,25 @@ void __modfill(str **fmt, pyobj *t, str **s) {
         }
 
         *s = new str((*s)->unit + add->unit);
-    }
-    else if(c  == 'c')
+    } else if(c  == 'c')
         *s = new str((*s)->unit + __str(t)->unit);
     else if(c == '%')
         *s = new str((*s)->unit + '%');
-    else {
+    else if(t->__class__ == cl_int_) {
+        asprintf(&d, (*fmt)->unit.substr(i, j+1-i).c_str(), ((int_ *)t)->unit);
+        *s = new str((*s)->unit + d);
+        free(d); 
+    } else { /* cl_float_ */
         if(c == 'h') {
-            //(*fmt)->unit[j] = 'g'; 
             (*fmt)->unit.replace(j, 1, ".12g");
             j += 3;
         }
-        if(t->__class__ == cl_int_)
-            asprintf(&d, (*fmt)->unit.substr(i, j+1-i).c_str(), ((int_ *)t)->unit);
-        else if(t->__class__== cl_float_)
-            asprintf(&d, (*fmt)->unit.substr(i, j+1-i).c_str(), ((float_ *)t)->unit);
-        else
-            asprintf(&d, (*fmt)->unit.substr(i, j+1-i).c_str(), 0); /* XXX */
-
+        asprintf(&d, (*fmt)->unit.substr(i, j+1-i).c_str(), ((float_ *)t)->unit);
         *s = new str((*s)->unit + d);
-        if(c == 'h' && t->__class__ == cl_float_ && ((float_ *)t)->unit-((int)(((float_ *)t)->unit)) == 0)
+        if(c == 'h' && ((float_ *)t)->unit-((int)(((float_ *)t)->unit)) == 0)
             (*s)->unit += ".0";   
         free(d); 
     }
-
     *fmt = new str((*fmt)->unit.substr(j+1, (*fmt)->unit.size()-j-1));
 }
 
