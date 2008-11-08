@@ -1864,19 +1864,24 @@ str *mod_to_c2(pyobj *t) {
 }
 
 int_ *mod_to_int(pyobj *t) { 
+    if(t == NULL)
+        throw new TypeError(new str("int argument required"));
     if(t->__class__ == cl_int_)
         return (int_ *)t;
     else if(t->__class__ == cl_float_)
         return new int_(((float_ *)t)->unit); 
-    return new int_(0);
+    else 
+        return new int_(t->__int__());
 }
 
 float_ *mod_to_float(pyobj *t) { 
+    if(t == NULL)
+        throw new TypeError(new str("float argument required"));
     if(t->__class__ == cl_float_)
         return (float_ *)t;
     else if(t->__class__ == cl_int_)
         return new float_(((int_ *)t)->unit); 
-    return new float_(0);
+    throw new TypeError(new str("float argument required"));
 }
 
 str *__modct(str *fmt, int n, ...) {
@@ -2094,6 +2099,9 @@ str *OSError::__repr__() {
 }
 
 template <> void *myallocate<int>(int n) { return GC_MALLOC_ATOMIC(n); }
+
+template<> int __none() { throw new TypeError(new str("mixing None with int")); }
+template<> double __none() { throw new TypeError(new str("mixing None with float")); }
 
 } // namespace __shedskin__
 

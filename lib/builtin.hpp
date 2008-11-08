@@ -1253,10 +1253,14 @@ template<class K, class V> void *dict<K,V>::__setitem__(K k, V v) {
     return NULL;
 }
 
+template<class T> T __none() { return NULL; }
+template<> int __none(); 
+template<> double __none();
+
 template<class K, class V> V dict<K,V>::get(K k) {
     it = units.find(k);
     if(it == units.end())
-        return NULL; /* XXX value int: raise exception */
+        return __none<V>();
     return it->second;
 }
 
@@ -1382,14 +1386,14 @@ template<class K, class V> str *dict<K,V>::__repr__() {
 template<class K, class V> V dict<K,V>::__getitem__(K k) {
     typename __GC_HASH_MAP::iterator iter;
     iter = units.find(k);
-    if(iter == units.end()) throw new KeyError(__str(k));
+    if(iter == units.end()) throw new KeyError(repr(k));
     return iter->second;
 }
 
 template<class K, class V> void *dict<K,V>::__addtoitem__(K k, V v) {
     typename __GC_HASH_MAP::iterator iter;
     iter = units.find(k);
-    if(iter == units.end()) throw new KeyError(__str(k));
+    if(iter == units.end()) throw new KeyError(repr(k));
     iter->second = __add(iter->second, v);
     return NULL;
 }
@@ -1839,7 +1843,7 @@ template<class T> int set<T>::__eq__(pyobj *p) {
 }
 
 template <class T> void *set<T>::remove(T key) {
-    if (!do_discard(key)) throw new KeyError(__str(key));
+    if (!do_discard(key)) throw new KeyError(repr(key));
     return NULL;
 }
 

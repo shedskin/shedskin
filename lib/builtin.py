@@ -372,7 +372,6 @@ class dict(pyiter):
         return {self.unit: self.value} 
     def get(self, k, default=None):   
         return self.value                
-        return default
     def pop(self, k):                  
         return self.value            
     def popitem(self):                 
