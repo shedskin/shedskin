@@ -1701,22 +1701,6 @@ int __fmtpos2(str *fmt) {
     return -1;
 }
 
-void __fmtcheck(str *fmt, int l) {
-    int i = 0, j = 0;
-    while((j = fmt->unit.find('%', j)) != -1) {
-        char c = fmt->unit[j+1];
-        if(c != '%')
-            i++;    
-        j += 2;
-    }
-
-    if(i < l)
-        throw new TypeError(new str("not all arguments converted during string formatting"));
-    if(i > l)
-        throw new TypeError(new str("not enough arguments for format string"));
-
-}
-
 void __modfill(str **fmt, pyobj *t, str **s) {
     char *d;
     char c;
@@ -1762,7 +1746,6 @@ void __modfill(str **fmt, pyobj *t, str **s) {
 }
 
 str *__mod4(str *fmts, list<pyobj *> *vals) {
-    /* XXX fmtchecks */
     int i, j;
     str *r = new str();
     str *fmt = new str(fmts->unit);
@@ -1770,8 +1753,11 @@ str *__mod4(str *fmts, list<pyobj *> *vals) {
     while((j = __fmtpos(fmt)) != -1) {
         char c = fmt->unit[j];
         pyobj *p;
-        if(c != '%')
+        if(c != '%') {
+            if(i==len(vals))
+                throw new TypeError(new str("not enough arguments for format string"));
             p = vals->__getitem__(i++);
+        }
         if(c == 'c') 
             __modfill(&fmt, mod_to_c2(p), &r);
         else if(c == 's' || c == 'r')
@@ -1785,6 +1771,8 @@ str *__mod4(str *fmts, list<pyobj *> *vals) {
         else
             break;
     }
+    if(i!=len(vals))
+        throw new TypeError(new str("not all arguments converted during string formatting"));
 
     r->unit += fmt->unit;
     return r;

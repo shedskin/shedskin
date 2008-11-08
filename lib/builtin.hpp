@@ -170,6 +170,7 @@ static inline int hash_combine(int seed, int other) {
 }
 
 template<class T> int hasher(T t) {
+    if(t == NULL) return 0;
     return t->__hash__();
 };
 template<> int hasher(int a);
@@ -3168,7 +3169,6 @@ template<class A> A __mods(A a, A b);
 template<> double __mods(double a, double b);
 template<> int __mods(int a, int b);
 
-void __fmtcheck(str *fmt, int l);
 int __fmtpos(str *fmt);
 int __fmtpos2(str *fmt);
 void __modfill(str **fmt, pyobj *t, str **s);
