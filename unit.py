@@ -142,6 +142,10 @@ def p(msg):
 p(15)
 p("hello")
 
+# hash(None)
+dwek = {('a', 'b', None): 18}
+print dwek[('a', 'b', None)]
+
 ''', '''
 output(equal=True)
 
