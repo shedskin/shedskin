@@ -198,7 +198,6 @@ def analysis(source, testing=False):
     #printstate()
     #printconstraints()
     generate_code()
-    #generate_bindings()
 
     #print 'cnode!'
     #for (a,b) in getgx().cnode.items():

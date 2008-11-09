@@ -2006,39 +2006,7 @@ template<> int __mods(int a, int b) {
     return m;
 }
 
-/* binding */
-
 #ifdef __SS_BIND
-PyObject *__import(char *mod, char *method) {
-    PyObject *m = PyImport_ImportModule(mod);
-    PyObject *d = PyObject_GetAttrString(m, (char *)"__dict__");
-    return PyDict_GetItemString(d, method);
-}
-
-PyObject *__call(PyObject *obj, PyObject *args) {
-    return PyObject_CallObject(obj, args);
-}
-
-PyObject *__call(PyObject *obj, char *name, PyObject *args) {
-    PyObject *method = PyObject_GetAttrString(obj, name);
-    PyObject *x = PyObject_CallObject(method, args);
-    return x;
-}
-
-PyObject *__args(int n, ...) {
-    va_list ap;
-    va_start(ap, n);
-
-    PyObject *p = PyTuple_New(n);
-
-    for(int i=0; i<n; i++) {
-        PyObject *t = va_arg(ap, PyObject *);
-        PyTuple_SetItem(p, i, t);
-    }
-    va_end(ap);
-    return p;
-}
-
 template<> PyObject *__to_py(int i) { return PyInt_FromLong(i); }   
 template<> PyObject *__to_py(double d) { return PyFloat_FromDouble(d); }
 template<> PyObject *__to_py(void *v) { return Py_None; }
@@ -2060,7 +2028,6 @@ template<> void * __to_ss(PyObject *p) {
         throw new TypeError(new str("error in conversion to Shed Skin (None expected)"));
     return NULL;
 }
-
 #endif
 
 // Exceptions
