@@ -1127,20 +1127,6 @@ str *pyobj::__repr__() {
     return __class__->__name__->__add__(new str(" instance"));
 }
 
-int whatsit(__GC_STRING &s) {
-    int i = -1;
-    int count = 0;
-
-    while((i = s.find("%", i+1)) > -1)
-    {
-        int j = s.find_first_of("diouxXeEfFgGhcrs", i);
-        s.replace(i, j-i+1, "%s");
-        count += 1;
-    }
-
-    return count;
-}
-
 str *raw_input(str *msg) {
     __GC_STRING s;
     if(msg)
@@ -1293,9 +1279,14 @@ __iter<int> *reversed(__rangeiter *x) {
 }
 
 int ord(str *s) {
+    if(len(s) != 1) 
+        throw new TypeError(__modct(new str("ord() expected a character, but string of length %d found"), 1, __box(len(s))));
     return (unsigned char)(s->unit[0]);
 }
 
+str *chr(bool b) {
+    return chr((int)b);
+}
 str *chr(int i) {
     if(i < 0 || i > 255) 
         throw new ValueError(new str("chr() arg not in range(256)"));

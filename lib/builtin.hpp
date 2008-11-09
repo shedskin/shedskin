@@ -34,6 +34,7 @@ class str;
 class int_;
 class float_;
 class file;
+class complex;
 
 template <class T> class pyiter;
 template <class T> class pyseq;
@@ -116,7 +117,12 @@ __iter<int> *xrange(int b);
 __iter<int> *xrange(int a, int b, int s=1);
 
 int ord(str *c);
+
 str *chr(int i);
+str *chr(bool b);
+template<class T> str *chr(T t) {
+    return chr(t->__int__());
+}
 
 double ___round(double a);
 double ___round(double a, int n);
@@ -127,6 +133,7 @@ template<class T> T __abs(T t) {
 template<> int __abs(int a);
 template<> double __abs(double a);
 int __abs(bool b);
+double __abs(complex *c);
 
 template<class T> str *hex(T t) {
     return t->__hex__();
@@ -161,7 +168,6 @@ template<class A, class B> str *__modtuple(str *fmt, tuple2<A,B> *t);
 void __init();
 void __exit();
 void slicenr(int x, int &l, int&u, int&s, int len);
-int whatsit(__GC_STRING &s);
 
 /* hashing */
 
@@ -246,7 +252,7 @@ template<> PyObject *__to_py(void *);
 
 /* externs */
 
-extern class_ *cl_str_, *cl_int_, *cl_float_, *cl_list, *cl_tuple, *cl_dict, *cl_set, *cl_object, *cl_rangeiter;
+extern class_ *cl_str_, *cl_int_, *cl_float_, *cl_complex, *cl_list, *cl_tuple, *cl_dict, *cl_set, *cl_object, *cl_rangeiter;
 
 extern __GC_VECTOR(str *) __letters;
 
@@ -278,7 +284,7 @@ public:
     virtual pyobj *__copy__() { return this; }
     virtual pyobj *__deepcopy__(dict<void *, pyobj *> *memo) { return this; }
 
-    virtual int __len__() { return 1; } /* XXX exception */
+    virtual int __len__() { return 1; } /* XXX exceptions? */
     virtual int __nonzero__() { return __len__() != 0; }
     virtual int __int__() { return 0; }
 
@@ -366,11 +372,10 @@ public:
 };
 
 template<class T> complex::complex(T t) {
+    __class__ = cl_complex;
     real = __float(t);
     imag = 0;
 }
-
-double __abs(complex *c);
 
 template <class T> class pyiter : public pyobj {
 public:
@@ -1146,6 +1151,7 @@ template<> int __add(int a, int b);
 template<> double __add(double a, double b);
 
 /* reverse */
+
 template<class U> U __add2(double a, U b) { return b->__add__(a); }
 template<class U> U __sub2(double a, U b) { return b->__rsub__(a); }
 template<class T> T __mul2(int n, T a) { return a->__mul__(n); }

@@ -89,7 +89,9 @@ class float_:
     def __with_float__(self):
         return 1.0
 
-class none: pass
+class none: 
+    def __hash__(self):   
+        return 1
 
 class pyiter: 
     def __iter__(self):
