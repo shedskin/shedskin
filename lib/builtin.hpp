@@ -1780,16 +1780,17 @@ template <class T> set<T>::set(int frozen) : frozen(frozen) {
 #if (PY_MINOR_VERSION > 4)
 
 template<class T> set<T>::set(PyObject *p) {
-    if(PyTuple_Check(p) || PyList_Check(p) || PyDict_Check(p) || PyInt_Check(p) || PyFloat_Check(p) || PyString_Check(p)) // XXX
+    this->__class__ = cl_set;
+    EMPTY_TO_MINSIZE(this);
+    if(!PyAnySet_Check(p))
         throw new TypeError(new str("error in conversion to Shed Skin (set expected)"));
 
-    this->__class__ = cl_set;
     PyObject *iter = PyObject_GetIter(p), *item;
     while(item = PyIter_Next(iter)) {
         add(__to_ss<T>(item));
         Py_DECREF(item);
     }
-    Py_DECREF(iter); 
+    Py_DECREF(iter);  
 }
 
 template<class T> PyObject *set<T>::__to_py__() {
@@ -1798,7 +1799,7 @@ template<class T> PyObject *set<T>::__to_py__() {
     T e;
     __iter<T> *__0;
     FOR_IN(e, this, 0)
-        PyObject_CallMethod(p, "add", "O", __to_py(e));
+        PyObject_CallMethod(p, (char *)"add", (char *)"O", __to_py(e));
     END_FOR
     return p;
 }
@@ -3237,16 +3238,6 @@ template<class A> int all(pyiter<A> *a) {
     END_FOR
     return 1;
 }
-
-/* binding */
-
-#ifdef __SS_BIND
-PyObject *__import(char *mod, char *method);
-PyObject *__call(PyObject *call, PyObject *args);
-PyObject *__call(PyObject *obj, char *method, PyObject *args);
-PyObject *__args(int n, ...);
-#endif
-
 
 } // namespace __shedskin__
 #endif
