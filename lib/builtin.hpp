@@ -1799,7 +1799,7 @@ template<class T> PyObject *set<T>::__to_py__() {
     T e;
     __iter<T> *__0;
     FOR_IN(e, this, 0)
-        PyObject_CallMethod(p, (char *)"add", (char *)"O", __to_py(e));
+        PySet_Add(p, __to_py(e));
     END_FOR
     return p;
 }
