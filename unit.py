@@ -146,6 +146,9 @@ p("hello")
 dwek = {('a', 'b', None): 18}
 print dwek[('a', 'b', None)]
 
+lrp = []
+print [lrp.append(0)]
+
 ''', '''
 output(equal=True)
 
