@@ -1051,14 +1051,8 @@ def restore_network(backup):
 def merge_simple_types(types):
     merge = types.copy()
     if len(types) > 1 and (defclass('none'),0) in types:
-        merge.remove((defclass('none'),0))
-
-    return frozenset(merge)
-
-def merge_simple_types2(types):
-    merge = types.copy()
-    if len(types) > 1 and (defclass('none'),0) in types:
-        merge.remove((defclass('none'),0))
+        if not (defclass('int_'),0) in types and not (defclass('float_'),0) in types:
+            merge.remove((defclass('none'),0))
 
     return frozenset(merge)
 
