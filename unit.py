@@ -146,6 +146,7 @@ p("hello")
 dwek = {('a', 'b', None): 18}
 print dwek[('a', 'b', None)]
 
+# merge_simple_types
 lrp = []
 print [lrp.append(0)]
 

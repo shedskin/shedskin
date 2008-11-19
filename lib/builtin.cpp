@@ -37,7 +37,7 @@ void __init() {
     cl_complex = new class_("complex", 11, 11);
 
     ws = " \n\r\t\f\v";
-    __fmtchars = "diouxXeEfFgGhcrs%";
+    __fmtchars = "#*-+ .0123456789hlL";
     sp = new str(" ");
 
     for(int i=0;i<256;i++) {
@@ -1674,8 +1674,8 @@ int __fmtpos(str *fmt) {
     int i = fmt->unit.find('%');
     if(i == -1)
         return -1;
-    return fmt->unit.find_first_of(__fmtchars, i+1);
-}
+    return fmt->unit.find_first_not_of(__fmtchars, i+1);
+} 
 
 int __fmtpos2(str *fmt) {
     int i = 0;
@@ -1697,6 +1697,7 @@ void __modfill(str **fmt, pyobj *t, str **s) {
     char c;
     int i = (*fmt)->unit.find('%');
     int j = __fmtpos(*fmt);
+    int x;
 
     *s = new str((*s)->unit + (*fmt)->unit.substr(0, i));
 
@@ -1719,17 +1720,17 @@ void __modfill(str **fmt, pyobj *t, str **s) {
     else if(c == '%')
         *s = new str((*s)->unit + '%');
     else if(t->__class__ == cl_int_) {
-        asprintf(&d, (*fmt)->unit.substr(i, j+1-i).c_str(), ((int_ *)t)->unit);
+        x = asprintf(&d, (*fmt)->unit.substr(i, j+1-i).c_str(), ((int_ *)t)->unit);
         *s = new str((*s)->unit + d);
         free(d); 
     } else { /* cl_float_ */
-        if(c == 'h') {
+        if(c == 'H') {
             (*fmt)->unit.replace(j, 1, ".12g");
             j += 3;
         }
-        asprintf(&d, (*fmt)->unit.substr(i, j+1-i).c_str(), ((float_ *)t)->unit);
+        x = asprintf(&d, (*fmt)->unit.substr(i, j+1-i).c_str(), ((float_ *)t)->unit);
         *s = new str((*s)->unit + d);
-        if(c == 'h' && ((float_ *)t)->unit-((int)(((float_ *)t)->unit)) == 0)
+        if(c == 'H' && ((float_ *)t)->unit-((int)(((float_ *)t)->unit)) == 0)
             (*s)->unit += ".0";   
         free(d); 
     }
@@ -1753,14 +1754,14 @@ str *__mod4(str *fmts, list<pyobj *> *vals) {
             __modfill(&fmt, mod_to_c2(p), &r);
         else if(c == 's' || c == 'r')
             __modfill(&fmt, p, &r);
-        else if(c == '%')
-            __modfill(&fmt, NULL, &r); /* XXX heh */
         else if(__GC_STRING("diouxX").find(c) != -1)
             __modfill(&fmt, mod_to_int(p), &r);
-        else if(__GC_STRING("eEfFgGh").find(c) != -1)
+        else if(__GC_STRING("eEfFgGH").find(c) != -1)
             __modfill(&fmt, mod_to_float(p), &r);
+        else if(c == '%')
+            __modfill(&fmt, NULL, &r); 
         else
-            break;
+            throw new ValueError(new str("unsupported format character"));
     }
     if(i!=len(vals))
         throw new TypeError(new str("not all arguments converted during string formatting"));
@@ -1776,7 +1777,7 @@ str *__mod5(list<pyobj *> *vals, int newline) {
         if(p == NULL)
             fmt->append(new str("%s"));
         else if(p->__class__ == cl_float_)
-            fmt->append(new str("%h"));
+            fmt->append(new str("%H"));
         else if(p->__class__== cl_int_)
             fmt->append(new str("%d"));
         else
