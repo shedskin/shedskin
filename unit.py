@@ -13,16 +13,20 @@ class Foo:
        a = None
        self.v = [1]
        self.v = a
+       print self.v
 
        w = self.v
        w = a
+       print w
 
-       #x = [1,2,3]
-       #x[1:2] = []
-       #x[1:2] = [4,5]
-       # 
-       #self.x = [1,2,3]
-       #self.x[1:2] = []
+       x = [1,2,3]
+       x[1:2] = []
+       x[1:2] = [4,5]
+       print x
+        
+       self.x = [1,2,3]
+       self.x[1:2] = []
+       print self.x
 
 f1 = Foo()
 

@@ -2117,21 +2117,14 @@ class generateVisitor(ASTVisitor):
                         self.visitm(lvalue.expr, '->'+self.cpp_name(lcp[0].properties[lvalue.attrname][1])+'(', rvalue, ')', func)
                         self.eol()
                         continue
-                    elif len(lcp) == 1 and isinstance(lcp[0], class_):
-                        var = lookupvar(lvalue.attrname, lcp[0])
-                        if assign_needs_cast(rvalue, func, var, lcp[0]):
-                            cast = typesetreprnew(var, lcp[0])
-
+                    cast = self.var_assign_needs_cast(lvalue, rvalue, func) 
                     self.assign_pair(lvalue, rvalue, func)
                     self.append(' = ')
 
                 # name = expr
                 elif isinstance(lvalue, AssName):
                     if lvalue.name != '_': # XXX 
-                        var = lookupvar(lvalue.name, func) 
-                        if assign_needs_cast(rvalue, func, var, func):
-                            cast = typesetreprnew(var, func)
-
+                        cast = self.var_assign_needs_cast(lvalue, rvalue, func) 
                         self.visit(lvalue, func)
                         self.append(' = ')
 
@@ -2142,22 +2135,14 @@ class generateVisitor(ASTVisitor):
             
                 # expr[a:b] = expr
                 elif isinstance(lvalue, Slice):
-                    #var = None
-                    #if isinstance(lvalue.expr, Name): # XXX merge
-                    #    var = lookupvar(lvalue.expr.name, func)
-                    #    if assign_needs_cast(rvalue, func, var, func):
-                    #        cast = typesetreprnew(var, func)
-                    #elif isinstance(lvalue.expr, Getattr):
-                    #    lcp = lowest_common_parents(polymorphic_t(self.mergeinh[lvalue.expr.expr]))
-                    #    if len(lcp) == 1 and isinstance(lcp[0], class_):
-                    #        var = lookupvar(lvalue.expr.attrname, lcp[0])
-                    #        if assign_needs_cast(rvalue, func, var, lcp[0]):
-                    #            cast = typesetreprnew(var, lcp[0])
-
                     if isinstance(rvalue, Slice) and lvalue.upper == rvalue.upper == None and lvalue.lower == rvalue.lower == None:
                         self.visitm(lvalue.expr, self.connector(lvalue.expr, func), 'units = ', rvalue.expr, self.connector(rvalue.expr, func), 'units', func)
                     else:
-                        self.visitSlice(lvalue, func)
+                        fakefunc = inode(lvalue.expr).fakefunc
+                        self.visitm('(', fakefunc.node.expr, ')->__setslice__(', fakefunc.args[0], ',', fakefunc.args[1], ',', fakefunc.args[2], ',', fakefunc.args[3], ',', func)
+                        cast = self.var_assign_needs_cast(lvalue.expr, rvalue, func)
+                        if cast: self.visitm('(('+cast+')', fakefunc.args[4], '))', func) 
+                        else: self.visitm(fakefunc.args[4], ')', func)
                     self.eol()
                     continue
 
@@ -2177,6 +2162,23 @@ class generateVisitor(ASTVisitor):
                 if cast: self.append('))')
 
                 self.eol()
+
+    def var_assign_needs_cast(self, expr, rvalue, func):
+        cast = None
+        if isinstance(expr, AssName):
+            var = lookupvar(expr.name, func)
+            if assign_needs_cast(rvalue, func, var, func):
+                cast = typesetreprnew(var, func)
+        elif isinstance(expr, AssAttr):
+            lcp = lowest_common_parents(polymorphic_t(self.mergeinh[expr.expr]))
+            if len(lcp) == 1 and isinstance(lcp[0], class_):
+                var = lookupvar(expr.attrname, lcp[0])
+                if assign_needs_cast(rvalue, func, var, lcp[0]):
+                    cast = typesetreprnew(var, lcp[0])
+        else:
+            if assign_needs_cast(rvalue, func, expr, func):
+                cast = typesetreprnew(expr, func)
+        return cast
 
     def assign_pair(self, lvalue, rvalue, func):
         self.start('')
@@ -2831,6 +2833,7 @@ def hmcpa(func):
         if len(cpas) == 1: got_one = 1
     return got_one
     
+
 # --- assignment (incl. passing arguments, returning values) may require a cast 
 def assign_needs_cast(arg, func, formal, target):
     argsplit = typesplit(arg, func)
@@ -2870,6 +2873,7 @@ def assign_needs_cast_rec(argsplit, func, formalsplit, target):
             return True
 
     return False
+
 
 def split_subsplit(split, varname, tvar=True):
     subsplit = {}
