@@ -1,4 +1,5 @@
 import os
+import sys
 
 def do_cmd(cmd):
     print '\n\n', cmd, '\n'
@@ -12,14 +13,19 @@ print 'examples: %d' % len(set(files))
 
 print '*** cmd-line options:'
 
-do_cmd('shedskin -b othello && make run')
-do_cmd('shedskin -w othello && make run')
+do_cmd('shedskin -b othello')
+do_cmd('make run')
+do_cmd('shedskin -w othello')
+do_cmd('make run')
 
 # ss-progs
 
 print '*** examples:'
 
-os.system('cp lib/* ../lib')
+if sys.platform == 'win32':
+    os.system('copy lib\*.* ..\lib')
+else:
+    os.system('cp lib/* ../lib')
 
 for (i, file) in enumerate(files):
     print '*** test: %s %d' % (file, i)
@@ -28,7 +34,9 @@ for (i, file) in enumerate(files):
     if file == 'yopyra.py':
         options += ' -i'
 
-    do_cmd('shedskin %s %s && make run' % (options.strip(), file)) 
-    do_cmd('shedskin -e %s %s && make' % (options.strip(), file))
+    do_cmd('shedskin %s %s' % (options.strip(), file)) 
+    do_cmd('make run')
+    do_cmd('shedskin -e %s %s' % (options.strip(), file))
+    do_cmd('make')
 
 
