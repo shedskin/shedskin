@@ -1833,7 +1833,7 @@ str *mod_to_c2(pyobj *t) {
     if(t->__class__ == cl_int_) 
         value = ((int_ *)t)->unit;
     else if(t->__class__ == cl_float_)
-        value = ((float_ *)t)->unit;
+        value = ((int)(((float_ *)t)->unit));
     else 
         value = t->__int__();
     if(value < 0)
@@ -1849,7 +1849,7 @@ int_ *mod_to_int(pyobj *t) {
     if(t->__class__ == cl_int_)
         return (int_ *)t;
     else if(t->__class__ == cl_float_)
-        return new int_(((float_ *)t)->unit); 
+        return new int_(((int)(((float_ *)t)->unit))); 
     else 
         return new int_(t->__int__());
 }
