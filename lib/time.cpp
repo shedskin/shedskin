@@ -8,7 +8,7 @@ tuple2<str *, str *> *tzname;
 
 #ifdef WIN32
 
-#include <windows.h>
+//#include <windows.h>
 
 double clock()
 {
