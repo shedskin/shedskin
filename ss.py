@@ -305,6 +305,7 @@ def generate_code():
 
     if sys.platform == 'win32':
         pyver = '%d%d' % sys.version_info[:2]
+	prefix = sysconfig.get_config_var('prefix').replace('\\', '/')
     else:
         pyver = sysconfig.get_config_var('VERSION')
 
@@ -349,10 +350,10 @@ def generate_code():
 
     cppfiles = ' '.join([m.filename[:-3].replace(' ', '\ ')+'.cpp' for m in mods])
     hppfiles = ' '.join([m.filename[:-3].replace(' ', '\ ')+'.hpp' for m in mods])
-    repath = os.path.join(getgx().libdir, 're.cpp')
+    repath = connect_paths(getgx().libdir, 're.cpp')
     if not repath in cppfiles: 
         cppfiles += ' '+repath
-        hppfiles += ' '+os.path.join(getgx().libdir, 're.hpp')
+        hppfiles += ' '+connect_paths(getgx().libdir, 're.hpp')
 
     # import flags
     if getgx().flags: flags = getgx().flags
@@ -369,14 +370,14 @@ def generate_code():
             if not getgx().wrap_around_check: line += ' -DNOWRAP' 
             if getgx().bounds_checking: line += ' -DBOUNDS' 
             if getgx().extension_module: 
-                if sys.platform == 'win32': line += ' -Ic:/Python%s/include -D__SS_BIND' % pyver
+                if sys.platform == 'win32': line += ' -I%s/include -D__SS_BIND' % prefix
                 else: line += ' -g -fPIC -D__SS_BIND ' + includes
 
         elif line[:line.find('=')].strip() == 'LFLAGS': 
             if sys.platform == 'darwin' and os.path.isdir('/opt/local/lib'):  
                 line += ' -L/opt/local/lib'
             if getgx().extension_module: 
-                if sys.platform == 'win32': line += ' -shared -Lc:/Python%s/libs -lpython%s' % (pyver, pyver) 
+                if sys.platform == 'win32': line += ' -shared -L%s/libs -lpython%s' % (prefix, pyver) 
                 elif sys.platform == 'darwin': line += ' -bundle -Xlinker -dynamic ' + ldflags
                 elif sys.platform == 'sunos5': line += ' -shared -Xlinker ' + ldflags
                 else: line += ' -shared -Xlinker -export-dynamic ' + ldflags
