@@ -99,7 +99,9 @@ def do_extmod(gv):
 def do_extmod_methoddef(gv, ident, funcs):
     print >>gv.out, 'static PyMethodDef %sMethods[] = {' % ident
     for func in funcs:
-        print >>gv.out, '    {(char *)"%(id)s", %(id2)s, METH_VARARGS, (char *)""},' % {'id': func.ident, 'id2': gv.cpp_name(func.ident)}
+        if isinstance(func.parent, class_): id = func.parent.ident+'_'+func.ident
+        else: id = gv.cpp_name(func.ident)
+        print >>gv.out, '    {(char *)"%(id)s", %(id2)s, METH_VARARGS, (char *)""},' % {'id': func.ident, 'id2': id}
     print >>gv.out, '    {NULL}\n};\n'
 
 def do_extmod_method(gv, func):
@@ -107,7 +109,9 @@ def do_extmod_method(gv, func):
     if is_method: formals = func.formals[1:]
     else: formals = func.formals
 
-    print >>gv.out, 'PyObject *%s(PyObject *self, PyObject *args) {' % gv.cpp_name(func.ident)
+    if isinstance(func.parent, class_): id = func.parent.ident+'_'+func.ident
+    else: id = gv.cpp_name(func.ident)
+    print >>gv.out, 'PyObject *%s(PyObject *self, PyObject *args) {' % id
     print >>gv.out, '    if(PyTuple_Size(args) < %d || PyTuple_Size(args) > %d) {' % (len(formals)-len(func.defaults), len(formals))
     print >>gv.out, '        PyErr_SetString(PyExc_Exception, "invalid number of arguments");'
     print >>gv.out, '        return 0;'
@@ -120,7 +124,11 @@ def do_extmod_method(gv, func):
     # convert [self,] args 
     for i, formal in enumerate(formals):
         gv.start('')
-        gv.append('        %(type)sarg_%(num)d = (PyTuple_Size(args) > %(num)d) ? __to_ss<%(type)s>(PyTuple_GetItem(args, %(num)d)) : ' % {'type' : cpp.typesetreprnew(func.vars[formal], func), 'num' : i})
+        typ = cpp.typesetreprnew(func.vars[formal], func)
+        cls = [t[0] for t in gv.mergeinh[func.vars[formal]] if isinstance(t[0], class_)]
+        if [c for c in cls if c.mv.module == getgx().main_module]:
+            typ = ('__%s__::'%c.mv.module.ident)+typ
+        gv.append('        %(type)sarg_%(num)d = (PyTuple_Size(args) > %(num)d) ? __to_ss<%(type)s>(PyTuple_GetItem(args, %(num)d)) : ' % {'type' : typ, 'num' : i})
         if i >= len(formals)-len(func.defaults):
             defau = func.defaults[i-(len(formals)-len(func.defaults))]
             cast = cpp.assign_needs_cast(defau, None, func.vars[formal], func)
@@ -238,7 +246,7 @@ def convert_methods(gv, cl, declare):
 
         print >>gv.out, '%s::%s(PyObject *p) {' % (cl.cpp_name, cl.cpp_name)
         for var in vars:
-            print >>gv.out, '    this->%s = __to_ss<%s>(((bertObject *)p)->%s);' % (var.name, cpp.typesetreprnew(var, cl), var.name)
+            print >>gv.out, '    this->%s = __to_ss<%s>(((%sObject *)p)->%s);' % (var.name, cpp.typesetreprnew(var, cl), cl.ident, var.name)
         print >>gv.out, '}\n'
 
         print >>gv.out, 'PyObject *%s::__to_py__() {' % cl.cpp_name
