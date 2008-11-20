@@ -326,13 +326,12 @@ int stat_float_times(int newvalue) {
     return 1;
 }
 
+#ifndef WIN32
 int getpid() {
-#ifdef WIN32
-    return GetCurrentProcessId();
-#else
+    //return GetCurrentProcessId();
     return ::getpid();
-#endif
 }
+#endif
 
 void *putenv(str* varname, str* value) {
     std::stringstream ss;
