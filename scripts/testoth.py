@@ -1,10 +1,15 @@
 import os
+import sys
 
-os.system('rm othello.so')
+if sys.platform: ext = '.pyd'
+else: ext = '.so'
+
+os.system('rm othello'+ext)
 os.system('shedskin -e othello && make')
 
 import othello
-assert othello.__file__.split('/')[-1] == 'othello.so'
+print othello.__file__
+assert othello.__file__.split(os.sep)[-1] == 'othello'+ext
 
 board = othello.board
 white, black = othello.white, othello.black
