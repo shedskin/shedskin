@@ -82,7 +82,6 @@ def do_extmod(gv):
     # add types to module
     if getgx().extmod_classes:
         for cl in gv.module.classes.values(): 
-            print >>gv.out, '    %sObjectType.tp_new = PyType_GenericNew;' % cl.ident
             print >>gv.out, '    if (PyType_Ready(&%sObjectType) < 0)' % cl.ident
             print >>gv.out, '        return;\n'
             print >>gv.out, '    PyModule_AddObject(mod, "%s", (PyObject *)&%sObjectType);' % (cl.ident, cl.ident)
@@ -189,6 +188,17 @@ def do_extmod_class(gv, cl):
         print >>gv.out, '    {(char *)"%s", T_OBJECT_EX, offsetof(%sObject, %s), 0, (char *)""},' % (var.name, cl.cpp_name, gv.cpp_name(var.name))
     print >>gv.out, '    {NULL}\n};\n'
 
+    # tp_new 
+    print >>gv.out, 'PyObject *%sNew(PyTypeObject *type, PyObject *args, PyObject *kwds) {' % cl.ident
+    print >>gv.out, '    %sObject *self = (%sObject *)type->tp_alloc(type, 0);' % (cl.ident, cl.ident)
+    print >>gv.out, '    return (PyObject *)self;'
+    print >>gv.out, '}\n'
+
+    # dealloc
+    print >>gv.out, 'void %sDealloc(%sObject *self) {' % (cl.ident, cl.ident)
+    print >>gv.out, '    self->ob_type->tp_free((PyObject *)self);'
+    print >>gv.out, '}\n'
+   
     # methods
     for func in funcs:
         do_extmod_method(gv, func)
@@ -198,10 +208,10 @@ def do_extmod_class(gv, cl):
     print >>gv.out, 'static PyTypeObject %sObjectType = {' % cl.ident
     print >>gv.out, '    PyObject_HEAD_INIT(NULL)'
     print >>gv.out, '    0,              /* ob_size           */'
-    print >>gv.out, '    "%s.%s",            /* tp_name           */' % (cl.module.ident, cl.ident)
-    print >>gv.out, '    sizeof(%sObject),     /* tp_basicsize      */' % cl.ident
+    print >>gv.out, '    "%s.%s",        /* tp_name           */' % (cl.module.ident, cl.ident)
+    print >>gv.out, '    sizeof(%sObject), /* tp_basicsize      */' % cl.ident
     print >>gv.out, '    0,              /* tp_itemsize       */'
-    print >>gv.out, '    0,              /* tp_dealloc        */'
+    print >>gv.out, '    (destructor)%sDealloc, /* tp_dealloc        */' % cl.ident
     print >>gv.out, '    0,              /* tp_print          */'
     print >>gv.out, '    0,              /* tp_getattr        */'
     print >>gv.out, '    0,              /* tp_setattr        */'
@@ -216,7 +226,7 @@ def do_extmod_class(gv, cl):
     print >>gv.out, '    0,              /* tp_getattro       */'
     print >>gv.out, '    0,              /* tp_setattro       */'
     print >>gv.out, '    0,              /* tp_as_buffer      */'
-    print >>gv.out, '    Py_TPFLAGS_DEFAULT,     /* tp_flags          */'
+    print >>gv.out, '    Py_TPFLAGS_DEFAULT, /* tp_flags          */'
     print >>gv.out, '    0,              /* tp_doc            */'
     print >>gv.out, '    0,              /* tp_traverse       */'
     print >>gv.out, '    0,              /* tp_clear          */'
@@ -224,8 +234,17 @@ def do_extmod_class(gv, cl):
     print >>gv.out, '    0,              /* tp_weaklistoffset */'
     print >>gv.out, '    0,              /* tp_iter           */'
     print >>gv.out, '    0,              /* tp_iternext       */'
-    print >>gv.out, '    %sMethods,               /* tp_methods        */' % cl.ident
-    print >>gv.out, '    %sMembers,           /* tp_members        */' % cl.ident
+    print >>gv.out, '    %sMethods,      /* tp_methods        */' % cl.ident
+    print >>gv.out, '    %sMembers,      /* tp_members        */' % cl.ident
+    print >>gv.out, '    0,              /* tp_getset         */'
+    print >>gv.out, '    0,              /* tp_base           */'
+    print >>gv.out, '    0,              /* tp_dict           */'
+    print >>gv.out, '    0,              /* tp_descr_get      */'
+    print >>gv.out, '    0,              /* tp_descr_set      */'
+    print >>gv.out, '    0,              /* tp_dictoffset     */'
+    print >>gv.out, '    0,              /* tp_init           */'
+    print >>gv.out, '    0,              /* tp_alloc          */'
+    print >>gv.out, '    %sNew,          /* tp_new            */' % cl.ident
     print >>gv.out, '};\n'
 
 def convert_methods(gv, cl, declare):
