@@ -89,12 +89,12 @@ def do_extmod(gv):
 
     print >>gv.out, '\n}'
 
+    print >>gv.out, '\n} // extern "C"'
+
     # conversion methods to/from CPython/Shedskin
     if getgx().extmod_classes:
         for cl in gv.module.classes.values(): 
             convert_methods(gv, cl, False)
-
-    print >>gv.out, '\n} // extern "C"'
 
 def do_extmod_methoddef(gv, ident, funcs):
     print >>gv.out, 'static PyMethodDef %sMethods[] = {' % ident
@@ -262,7 +262,6 @@ def do_extmod_class(gv, cl):
 def convert_methods(gv, cl, declare):
     if declare:
         print >>gv.out, '#ifdef __SS_BIND'
-        print >>gv.out, '    %s(PyObject *);' % cl.cpp_name
         print >>gv.out, '    PyObject *__to_py__();' 
         print >>gv.out, '#endif'
     else:
@@ -275,13 +274,26 @@ def convert_methods(gv, cl, declare):
         print >>gv.out, '#ifdef __SS_BIND'
         print >>gv.out, 'namespace __%s__ { /* XXX */\n' % gv.module.ident
 
-        print >>gv.out, '%s::%s(PyObject *p) {' % (cl.cpp_name, cl.cpp_name)
+        print >>gv.out, 'PyObject *%s::__to_py__() {' % cl.cpp_name
+        print >>gv.out, '    return (PyObject *)(__ss_proxy->__getitem__(this));'
         print >>gv.out, '}\n'
 
-        print >>gv.out, 'PyObject *%s::__to_py__() {' % cl.cpp_name
-        print >>gv.out, '    return NULL;'
+        print >>gv.out, '}\n'
+
+        print >>gv.out, 'namespace __shedskin__ { /* XXX */\n' 
+
+        print >>gv.out, 'template<> __%s__::%s *__to_ss(PyObject *p) {' % (gv.module.ident, cl.cpp_name)
+        print >>gv.out, '    if(p->ob_type != &%sObjectType)' % cl.ident
+        print >>gv.out, '        throw new TypeError(new str("error in conversion to Shed Skin (%s expected)"));' % cl.ident
+        print >>gv.out, '    return ((%sObject *)p)->__ss_object;' % cl.ident
         print >>gv.out, '}\n'
 
         print >>gv.out, '}'
         print >>gv.out, '#endif'
+
+def convert_methods2(gv, classes):
+    print >>gv.out, 'namespace __shedskin__ { /* XXX */\n'
+    for cl in classes:
+        print >>gv.out, 'template<> __%s__::%s *__to_ss(PyObject *p);' % (gv.module.ident, cl.cpp_name)
+    print >>gv.out, '}'
 

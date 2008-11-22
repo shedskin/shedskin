@@ -366,6 +366,10 @@ class generateVisitor(ASTVisitor):
 
             for n in self.module.mod_path:
                 print >>self.out, '} // module namespace'
+
+            if getgx().extension_module and self.module == getgx().main_module: 
+                extmod.convert_methods2(self, self.module.classes.values())
+
             print >>self.out, '#endif'
             return
 
