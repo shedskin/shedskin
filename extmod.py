@@ -14,6 +14,7 @@ def do_extmod(gv):
     print >>gv.out, 'extern "C" {'
     print >>gv.out, '#include <Python.h>'
     print >>gv.out, '#include <structmember.h>\n'
+    print >>gv.out, 'using namespace __%s__;\n' % gv.module.ident
 
     if getgx().extmod_classes:
         for cl in gv.module.classes.values(): 
@@ -117,9 +118,6 @@ def do_extmod_method(gv, func):
     print >>gv.out, '    }\n' 
     print >>gv.out, '    try {'
 
-    if is_method:
-        print >>gv.out, '        %(type)s_self = __to_ss<%(type)s>(self);' % {'type' : '__%s__::'%gv.module.ident+cpp.typesetreprnew(func.vars[func.formals[0]], func)}
-
     # convert [self,] args 
     for i, formal in enumerate(formals):
         gv.start('')
@@ -150,7 +148,7 @@ def do_extmod_method(gv, func):
     print >>gv.out
 
     # call 
-    if is_method: where = '_self->'
+    if is_method: where = '((%sObject *)self)->__ss_object->' % func.parent.ident
     else: where = '__'+gv.module.ident+'__::'
     print >>gv.out, '        return __to_py('+where+gv.cpp_name(func.ident)+'('+', '.join(['arg_%d' % i for i in range(len(formals))])+'));\n' 
 
@@ -200,16 +198,17 @@ def do_extmod_class(gv, cl):
     # getset
     for var in vars:
         print >>gv.out, 'PyObject *%s_get_%s(%sObject *self, void *closure) {' % (cl.ident, var.name, cl.ident)
-        print >>gv.out, '    return Py_None;'
+        print >>gv.out, '    return __to_py(self->__ss_object->%s);' % gv.cpp_name(var.name)
         print >>gv.out, '}\n'
 
         print >>gv.out, 'int %s_set_%s(%sObject *self, PyObject *value, void *closure) {' % (cl.ident, var.name, cl.ident)
+        print >>gv.out, '    self->__ss_object->%s = __to_ss<%s>(value);' % (gv.cpp_name(var.name), cpp.typesetreprnew(var, func))
         print >>gv.out, '    return 0;'
         print >>gv.out, '}\n'
 
     print >>gv.out, 'PyGetSetDef %sGetSet[] = {' % cl.ident
     for var in vars:
-        print >>gv.out, '    {(char *)"%s", (getter)%s_get_%s, (setter)%s_get_%s, (char *)"", NULL},' % (var.name, cl.ident, var.name, cl.ident, var.name)
+        print >>gv.out, '    {(char *)"%s", (getter)%s_get_%s, (setter)%s_set_%s, (char *)"", NULL},' % (var.name, cl.ident, var.name, cl.ident, var.name)
     print >>gv.out, '    {NULL}\n};\n'
 
     # methods
