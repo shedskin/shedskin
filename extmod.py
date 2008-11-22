@@ -178,6 +178,7 @@ def do_extmod_class(gv, cl):
     # python object 
     print >>gv.out, 'typedef struct {'
     print >>gv.out, '    PyObject_HEAD'
+    print >>gv.out, '    __%s__::%s *__ss_object;' % (gv.module.ident, cl.ident)
     for var in vars:
         print >>gv.out, '    PyObject *%s;' % gv.cpp_name(var.name)
     print >>gv.out, '} %sObject;\n' % cl.ident
@@ -191,6 +192,8 @@ def do_extmod_class(gv, cl):
     # tp_new 
     print >>gv.out, 'PyObject *%sNew(PyTypeObject *type, PyObject *args, PyObject *kwds) {' % cl.ident
     print >>gv.out, '    %sObject *self = (%sObject *)type->tp_alloc(type, 0);' % (cl.ident, cl.ident)
+    print >>gv.out, '    self->__ss_object = new __%s__::%s();' % (gv.module.ident, cl.ident)
+    print >>gv.out, '    __ss_proxy->__setitem__(self->__ss_object, self);'
     print >>gv.out, '    return (PyObject *)self;'
     print >>gv.out, '}\n'
 

@@ -16,11 +16,15 @@ str *sp;
 __GC_STRING ws, __fmtchars;
 __GC_VECTOR(str *) __char_cache;
 
+#ifdef __SS_BIND
+dict<void *, void *> *__ss_proxy;
+#endif
 
 void __init() {
     GC_INIT();
 #ifdef __SS_BIND
     Py_Initialize();
+    __ss_proxy = new dict<void *, void *>();
 #endif
 
     cl_class_ = new class_ ("class_", 0, 0);

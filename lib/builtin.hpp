@@ -248,6 +248,8 @@ template<class T> PyObject *__to_py(T t) {
 template<> PyObject *__to_py(int i);
 template<> PyObject *__to_py(double i);
 template<> PyObject *__to_py(void *);
+
+extern dict<void *, void *> *__ss_proxy;
 #endif
 
 /* externs */
