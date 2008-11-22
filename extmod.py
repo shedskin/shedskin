@@ -179,14 +179,9 @@ def do_extmod_class(gv, cl):
     print >>gv.out, 'typedef struct {'
     print >>gv.out, '    PyObject_HEAD'
     print >>gv.out, '    __%s__::%s *__ss_object;' % (gv.module.ident, cl.ident)
-    for var in vars:
-        print >>gv.out, '    PyObject *%s;' % gv.cpp_name(var.name)
     print >>gv.out, '} %sObject;\n' % cl.ident
 
-    # attributes
     print >>gv.out, 'static PyMemberDef %sMembers[] = {' % cl.ident
-    for var in vars:
-        print >>gv.out, '    {(char *)"%s", T_OBJECT_EX, offsetof(%sObject, %s), 0, (char *)""},' % (var.name, cl.cpp_name, gv.cpp_name(var.name))
     print >>gv.out, '    {NULL}\n};\n'
 
     # tp_new 
@@ -202,6 +197,21 @@ def do_extmod_class(gv, cl):
     print >>gv.out, '    self->ob_type->tp_free((PyObject *)self);'
     print >>gv.out, '}\n'
    
+    # getset
+    for var in vars:
+        print >>gv.out, 'PyObject *%s_get_%s(%sObject *self, void *closure) {' % (cl.ident, var.name, cl.ident)
+        print >>gv.out, '    return Py_None;'
+        print >>gv.out, '}\n'
+
+        print >>gv.out, 'int %s_set_%s(%sObject *self, PyObject *value, void *closure) {' % (cl.ident, var.name, cl.ident)
+        print >>gv.out, '    return 0;'
+        print >>gv.out, '}\n'
+
+    print >>gv.out, 'PyGetSetDef %sGetSet[] = {' % cl.ident
+    for var in vars:
+        print >>gv.out, '    {(char *)"%s", (getter)%s_get_%s, (setter)%s_get_%s, (char *)"", NULL},' % (var.name, cl.ident, var.name, cl.ident, var.name)
+    print >>gv.out, '    {NULL}\n};\n'
+
     # methods
     for func in funcs:
         do_extmod_method(gv, func)
@@ -239,7 +249,7 @@ def do_extmod_class(gv, cl):
     print >>gv.out, '    0,              /* tp_iternext       */'
     print >>gv.out, '    %sMethods,      /* tp_methods        */' % cl.ident
     print >>gv.out, '    %sMembers,      /* tp_members        */' % cl.ident
-    print >>gv.out, '    0,              /* tp_getset         */'
+    print >>gv.out, '    %sGetSet,       /* tp_getset         */' % cl.ident
     print >>gv.out, '    0,              /* tp_base           */'
     print >>gv.out, '    0,              /* tp_dict           */'
     print >>gv.out, '    0,              /* tp_descr_get      */'
@@ -267,18 +277,10 @@ def convert_methods(gv, cl, declare):
         print >>gv.out, 'namespace __%s__ { /* XXX */\n' % gv.module.ident
 
         print >>gv.out, '%s::%s(PyObject *p) {' % (cl.cpp_name, cl.cpp_name)
-        for var in vars:
-            print >>gv.out, '    this->%s = __to_ss<%s>(((%sObject *)p)->%s);' % (var.name, cpp.typesetreprnew(var, cl), cl.ident, var.name)
         print >>gv.out, '}\n'
 
         print >>gv.out, 'PyObject *%s::__to_py__() {' % cl.cpp_name
-        print >>gv.out, '    PyObject *p = _PyObject_New(&%sObjectType);' % cl.ident
-        print >>gv.out, '    p = PyObject_Init(p, &%sObjectType);' % cl.ident
-
-        for var in vars:
-            print >>gv.out, '    ((%sObject *)p)->%s = __to_py(this->%s);' % (cl.ident, var.name, var.name)
-
-        print >>gv.out, '    return p;'
+        print >>gv.out, '    return NULL;'
         print >>gv.out, '}\n'
 
         print >>gv.out, '}'
