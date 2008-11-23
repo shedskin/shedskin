@@ -35,7 +35,7 @@ def do_extmod(gv):
             except cpp.ExtmodError:
                 builtins = False
         if builtins:
-            funcs.append(func)
+            funcs.append(func) # XXX return value?
 
     # --- for each selected function, output glue code
     for func in funcs:
@@ -280,7 +280,12 @@ def convert_methods(gv, cl, declare):
         print >>gv.out, 'namespace __%s__ { /* XXX */\n' % gv.module.ident
 
         print >>gv.out, 'PyObject *%s::__to_py__() {' % cl.cpp_name
-        print >>gv.out, '    return (PyObject *)(__ss_proxy->__getitem__(this));'
+        print >>gv.out, '    if(__ss_proxy->has_key(this))'
+        print >>gv.out, '        return (PyObject *)(__ss_proxy->__getitem__(this));'
+        print >>gv.out, '    %sObject *self = (%sObject *)(%sObjectType.tp_alloc(&%sObjectType, 0));' % (4*(cl.ident,))
+        print >>gv.out, '    self->__ss_object = this;'
+        print >>gv.out, '    __ss_proxy->__setitem__(self->__ss_object, self);'
+        print >>gv.out, '    return (PyObject *)self;'
         print >>gv.out, '}\n'
 
         print >>gv.out, '}\n'
