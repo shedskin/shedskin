@@ -2688,7 +2688,7 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None, check_extmo
 
     cl = lcp.pop() 
 
-    if check_extmod and not (cl.mv.module.ident == 'builtin' and cl.ident in ['int_', 'float_', 'complex', 'str_', 'list', 'tuple', 'tuple2', 'dict', 'set', 'none']):
+    if check_extmod and cl.mv.module.builtin and not (cl.mv.module.ident == 'builtin' and cl.ident in ['int_', 'float_', 'complex', 'str_', 'list', 'tuple', 'tuple2', 'dict', 'set', 'none']):
         raise ExtmodError()
 
     # --- simple built-in types
