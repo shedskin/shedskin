@@ -198,7 +198,9 @@ def do_extmod_class(gv, cl):
     # getset
     for var in vars:
         print >>gv.out, 'PyObject *%s_get_%s(%sObject *self, void *closure) {' % (cl.ident, var.name, cl.ident)
-        print >>gv.out, '    return __to_py(self->__ss_object->%s);' % gv.cpp_name(var.name)
+        print >>gv.out, '    PyObject *p = __to_py(self->__ss_object->%s);' % gv.cpp_name(var.name)
+        print >>gv.out, '    Py_INCREF(p);'
+        print >>gv.out, '    return p;'
         print >>gv.out, '}\n'
 
         print >>gv.out, 'int %s_set_%s(%sObject *self, PyObject *value, void *closure) {' % (cl.ident, var.name, cl.ident)
