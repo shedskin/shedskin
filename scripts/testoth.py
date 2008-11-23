@@ -1,7 +1,7 @@
 import os
 import sys
 
-if sys.platform: ext = '.pyd'
+if sys.platform == 'win32': ext = '.pyd'
 else: ext = '.so'
 
 os.system('rm othello'+ext)
