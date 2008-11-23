@@ -182,11 +182,18 @@ def do_extmod_class(gv, cl):
     print >>gv.out, 'static PyMemberDef %sMembers[] = {' % cl.ident
     print >>gv.out, '    {NULL}\n};\n'
 
+    # methods
+    for func in funcs:
+        do_extmod_method(gv, func)
+    do_extmod_methoddef(gv, cl.ident, funcs)
+
     # tp_new 
     print >>gv.out, 'PyObject *%sNew(PyTypeObject *type, PyObject *args, PyObject *kwds) {' % cl.ident
     print >>gv.out, '    %sObject *self = (%sObject *)type->tp_alloc(type, 0);' % (cl.ident, cl.ident)
     print >>gv.out, '    self->__ss_object = new __%s__::%s();' % (gv.module.ident, cl.ident)
     print >>gv.out, '    __ss_proxy->__setitem__(self->__ss_object, self);'
+    if '__init__' in cl.funcs and cpp.hmcpa(cl.funcs['__init__']):
+        print >>gv.out, '    %s___init__((PyObject *)self, args);' % cl.ident
     print >>gv.out, '    return (PyObject *)self;'
     print >>gv.out, '}\n'
 
@@ -213,11 +220,6 @@ def do_extmod_class(gv, cl):
     for var in vars:
         print >>gv.out, '    {(char *)"%s", (getter)%s_get_%s, (setter)%s_set_%s, (char *)"", NULL},' % (var.name, cl.ident, var.name, cl.ident, var.name)
     print >>gv.out, '    {NULL}\n};\n'
-
-    # methods
-    for func in funcs:
-        do_extmod_method(gv, func)
-    do_extmod_methoddef(gv, cl.ident, funcs)
 
     # python type
     print >>gv.out, 'static PyTypeObject %sObjectType = {' % cl.ident
