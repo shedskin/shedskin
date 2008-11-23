@@ -193,6 +193,7 @@ def do_extmod_class(gv, cl):
     # dealloc
     print >>gv.out, 'void %sDealloc(%sObject *self) {' % (cl.ident, cl.ident)
     print >>gv.out, '    self->ob_type->tp_free((PyObject *)self);'
+    print >>gv.out, '    __ss_proxy->__delitem__(self->__ss_object);'
     print >>gv.out, '}\n'
    
     # getset
