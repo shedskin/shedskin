@@ -72,6 +72,14 @@ def do_extmod(gv):
     print >>gv.out, '    if(!mod)'
     print >>gv.out, '        return;\n'
 
+    # add types to module
+    if getgx().extmod_classes:
+        for cl in gv.module.classes.values(): 
+            print >>gv.out, '    if (PyType_Ready(&%sObjectType) < 0)' % cl.ident
+            print >>gv.out, '        return;\n'
+            print >>gv.out, '    PyModule_AddObject(mod, "%s", (PyObject *)&%sObjectType);' % (cl.ident, cl.ident)
+    print >>gv.out
+
     # add variables to module
     for var in vars:
         varname = gv.cpp_name(var.name)
@@ -79,13 +87,6 @@ def do_extmod(gv):
             print >>gv.out, '    PyModule_AddObject(mod, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+gv.module.ident+'__::'+varname}
         else:
             print >>gv.out, '    if(%(var)s) PyModule_AddObject(mod, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+gv.module.ident+'__::'+varname}
-
-    # add types to module
-    if getgx().extmod_classes:
-        for cl in gv.module.classes.values(): 
-            print >>gv.out, '    if (PyType_Ready(&%sObjectType) < 0)' % cl.ident
-            print >>gv.out, '        return;\n'
-            print >>gv.out, '    PyModule_AddObject(mod, "%s", (PyObject *)&%sObjectType);' % (cl.ident, cl.ident)
 
     print >>gv.out, '\n}'
 
