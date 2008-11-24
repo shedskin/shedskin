@@ -193,7 +193,8 @@ def do_extmod_class(gv, cl):
     print >>gv.out, '    self->__ss_object = new __%s__::%s();' % (gv.module.ident, cl.ident)
     print >>gv.out, '    __ss_proxy->__setitem__(self->__ss_object, self);'
     if '__init__' in cl.funcs and cpp.hmcpa(cl.funcs['__init__']):
-        print >>gv.out, '    %s___init__((PyObject *)self, args);' % cl.ident
+        print >>gv.out, '    if(%s___init__((PyObject *)self, args) == 0)' % cl.ident
+        print >>gv.out, '        return 0;'
     print >>gv.out, '    return (PyObject *)self;'
     print >>gv.out, '}\n'
 
