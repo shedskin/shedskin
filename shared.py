@@ -51,7 +51,6 @@ class globalInfo: # XXX add comments, split up
         self.wrap_around_check = True
         self.bounds_checking = False
         self.extension_module = False
-        self.extmod_classes = False
         self.flags = None
         self.method_refs = set()
         self.avoid_loops = False

@@ -706,7 +706,7 @@ class generateVisitor(ASTVisitor):
         if cl.has_deepcopy and not 'deepcopy' in cl.funcs:
             self.copy_method(cl, '__deepcopy__', declare)
         
-        if getgx().extmod_classes:
+        if getgx().extension_module:
             extmod.convert_methods(self, cl, declare)
 
         self.deindent()

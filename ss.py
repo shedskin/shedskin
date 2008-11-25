@@ -452,7 +452,6 @@ def main():
     
     for o, a in opts:
         if o in ['-h', '--help']: usage()
-        if o in ['-c']: getgx().extmod_classes = True
         if o in ['-b', '--bounds']: getgx().bounds_checking = True
         if o in ['-e', '--extmod']: getgx().extension_module = True
         if o in ['-a', '--noann']: getgx().annotation = False
