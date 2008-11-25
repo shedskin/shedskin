@@ -22,49 +22,14 @@ def do_extmod(gv):
 
     print >>gv.out, '/* global functions */\n'
 
-    # --- select functions that are called and have copyable arg/return types
-    funcs = [] 
-    for func in gv.module.funcs.values():
-        if not cpp.hmcpa(func): # not called
-            continue 
-        builtins = True
-        for formal in func.formals:
-            try:
-                cpp.typesetreprnew(func.vars[formal], func, check_extmod=True)
-                cpp.typesetreprnew(func.retnode.thing, func, check_extmod=True)
-            except cpp.ExtmodError:
-                builtins = False
-        if builtins:
-            funcs.append(func) # XXX return value?
-
-    # --- for each selected function, output glue code
+    # --- global functions
+    funcs = supported_funcs(gv.module.funcs.values())
     for func in funcs:
         do_extmod_method(gv, func)
     do_extmod_methoddef(gv, gv.module.ident, funcs)
 
     # --- module init function
     print >>gv.out, 'PyMODINIT_FUNC init%s(void) {' % gv.module.ident
-
-    # initialize variables
-    vars = []
-    for (name,var) in getmv().globals.items():
-        if cpp.singletype(var, module) or var.invisible: # XXX merge declaredefs 
-            continue
-        typehu = cpp.typesetreprnew(var, var.parent)
-        # void *
-        if not typehu or not var.types(): continue 
-        if name.startswith('__'): continue
-
-        try:
-            cpp.typesetreprnew(var, var.parent, check_extmod=True)
-        except cpp.ExtmodError:
-            continue
-
-        vars.append(var)
-
-    for var in vars:
-        print >>gv.out, '    __'+gv.module.ident+'__::'+gv.cpp_name(var.name)+' = 0;'
-    if vars: print >>gv.out
 
     # initialize modules
     gv.do_init_modules()
@@ -80,13 +45,14 @@ def do_extmod(gv):
             print >>gv.out, '    PyModule_AddObject(mod, "%s", (PyObject *)&%sObjectType);' % (cl.ident, cl.ident)
     print >>gv.out
 
-    # add variables to module
+    # global variables
+    vars = supported_vars(getmv().globals.values())
     for var in vars:
         varname = gv.cpp_name(var.name)
         if [1 for t in gv.mergeinh[var] if t[0].ident in ['int_', 'float_']]:
             print >>gv.out, '    PyModule_AddObject(mod, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+gv.module.ident+'__::'+varname}
         else:
-            print >>gv.out, '    if(%(var)s) PyModule_AddObject(mod, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+gv.module.ident+'__::'+varname}
+            print >>gv.out, '    PyModule_AddObject(mod, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+gv.module.ident+'__::'+varname}
 
     print >>gv.out, '\n}'
 
@@ -160,17 +126,42 @@ def do_extmod_method(gv, func):
     print >>gv.out, '    }'
     print >>gv.out, '}\n'
 
+def supported_funcs(funcs):
+    supported = [] 
+    for func in funcs:
+        if not cpp.hmcpa(func) or func.ident in ['__setattr__', '__getattr__']: 
+            continue 
+        builtins = True
+        for formal in func.formals:
+            try:
+                cpp.typesetreprnew(func.vars[formal], func, check_extmod=True)
+                cpp.typesetreprnew(func.retnode.thing, func, check_extmod=True)
+            except cpp.ExtmodError:
+                builtins = False
+        if builtins:
+            supported.append(func) 
+    return supported
+
+def supported_vars(vars): # XXX virtuals?
+    supported = []
+    for var in vars:
+        if not var in getgx().merged_inh or not getgx().merged_inh[var]:
+            continue
+        if cpp.singletype(var, module) or var.invisible: 
+            continue
+        if var.name.startswith('__'): # XXX
+            continue 
+        try:
+            typehu = cpp.typesetreprnew(var, var.parent, check_extmod=True)
+        except cpp.ExtmodError:
+            continue
+        supported.append(var)
+    return supported
+
 def do_extmod_class(gv, cl):
-    # determine methods, vars to expose XXX merge
-    funcs = []
-    vars = []
-    for func in cl.funcs.values():
-        if cpp.hmcpa(func) and not func.ident in ['__setattr__', '__getattr__']:
-            funcs.append(func)
-    for var in cl.vars.values():
-         if var.invisible: continue
-         if var in getgx().merged_inh and getgx().merged_inh[var]:
-             vars.append(var)
+    # determine methods, vars to expose 
+    funcs = supported_funcs(cl.funcs.values())
+    vars = supported_vars(cl.vars.values())
 
     print >>gv.out, '/* class %s */\n' % cl.ident
 
@@ -272,12 +263,6 @@ def convert_methods(gv, cl, declare):
         print >>gv.out, '    PyObject *__to_py__();' 
         print >>gv.out, '#endif'
     else:
-        vars = []
-        for var in cl.vars.values(): # XXX merge
-             if var.invisible: continue
-             if var in getgx().merged_inh and getgx().merged_inh[var]:
-                 vars.append(var)
-
         print >>gv.out, '#ifdef __SS_BIND'
         print >>gv.out, 'namespace __%s__ { /* XXX */\n' % gv.module.ident
 
