@@ -16,9 +16,8 @@ def do_extmod(gv):
     print >>gv.out, '#include <structmember.h>\n'
     print >>gv.out, 'using namespace __%s__;\n' % gv.module.ident
 
-    if getgx().extmod_classes:
-        for cl in gv.module.classes.values(): 
-            do_extmod_class(gv, cl)
+    for cl in gv.module.classes.values(): 
+        do_extmod_class(gv, cl)
 
     print >>gv.out, '/* global functions */\n'
 
@@ -38,11 +37,10 @@ def do_extmod(gv):
     print >>gv.out, '        return;\n'
 
     # add types to module
-    if getgx().extmod_classes:
-        for cl in gv.module.classes.values(): 
-            print >>gv.out, '    if (PyType_Ready(&%sObjectType) < 0)' % cl.ident
-            print >>gv.out, '        return;\n'
-            print >>gv.out, '    PyModule_AddObject(mod, "%s", (PyObject *)&%sObjectType);' % (cl.ident, cl.ident)
+    for cl in gv.module.classes.values(): 
+        print >>gv.out, '    if (PyType_Ready(&%sObjectType) < 0)' % cl.ident
+        print >>gv.out, '        return;\n'
+        print >>gv.out, '    PyModule_AddObject(mod, "%s", (PyObject *)&%sObjectType);' % (cl.ident, cl.ident)
     print >>gv.out
 
     # global variables
@@ -59,9 +57,8 @@ def do_extmod(gv):
     print >>gv.out, '\n} // extern "C"'
 
     # conversion methods to/from CPython/Shedskin
-    if getgx().extmod_classes:
-        for cl in gv.module.classes.values(): 
-            convert_methods(gv, cl, False)
+    for cl in gv.module.classes.values(): 
+        convert_methods(gv, cl, False)
 
 def do_extmod_methoddef(gv, ident, funcs):
     print >>gv.out, 'static PyMethodDef %sMethods[] = {' % ident
