@@ -22,7 +22,7 @@ def do_extmod(gv):
     print >>gv.out, '/* global functions */\n'
 
     # --- global functions
-    funcs = supported_funcs(gv.module.funcs.values())
+    funcs = supported_funcs(gv, gv.module.funcs.values())
     for func in funcs:
         do_extmod_method(gv, func)
     do_extmod_methoddef(gv, gv.module.ident, funcs)
@@ -124,10 +124,15 @@ def do_extmod_method(gv, func):
     print >>gv.out, '    }'
     print >>gv.out, '}\n'
 
-def supported_funcs(funcs):
+def supported_funcs(gv, funcs):
     supported = [] 
     for func in funcs:
-        if not cpp.hmcpa(func) or func.ident in ['__setattr__', '__getattr__']: 
+        if func.ident in ['__setattr__', '__getattr__', '__iadd__', '__isub__', '__imul__']: # XXX
+            continue
+        if isinstance(func.parent, class_):
+            if func.invisible or func.inherited or not gv.inhcpa(func):
+                continue
+        elif not cpp.hmcpa(func):
             continue 
         builtins = True
         for formal in func.formals:
@@ -158,7 +163,7 @@ def supported_vars(vars): # XXX virtuals?
 
 def do_extmod_class(gv, cl):
     # determine methods, vars to expose 
-    funcs = supported_funcs(cl.funcs.values())
+    funcs = supported_funcs(gv, cl.funcs.values())
     vars = supported_vars(cl.vars.values())
 
     print >>gv.out, '/* class %s */\n' % cl.ident
@@ -182,7 +187,7 @@ def do_extmod_class(gv, cl):
     print >>gv.out, '    %sObject *self = (%sObject *)type->tp_alloc(type, 0);' % (cl.ident, cl.ident)
     print >>gv.out, '    self->__ss_object = new __%s__::%s();' % (gv.module.ident, cl.ident)
     print >>gv.out, '    __ss_proxy->__setitem__(self->__ss_object, self);'
-    if '__init__' in cl.funcs and cpp.hmcpa(cl.funcs['__init__']):
+    if '__init__' in cl.funcs and not cl.funcs['__init__'].inherited and cpp.hmcpa(cl.funcs['__init__']):
         print >>gv.out, '    if(%s___init__((PyObject *)self, args) == 0)' % cl.ident
         print >>gv.out, '        return 0;'
     print >>gv.out, '    return (PyObject *)self;'
