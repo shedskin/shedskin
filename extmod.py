@@ -208,7 +208,11 @@ def do_extmod_class(gv, cl):
         print >>gv.out, '}\n'
 
         print >>gv.out, 'int %s_set_%s(%sObject *self, PyObject *value, void *closure) {' % (cl.ident, var.name, cl.ident)
-        print >>gv.out, '    self->__ss_object->%s = __to_ss<%s>(value);' % (gv.cpp_name(var.name), cpp.typesetreprnew(var, var.parent))
+        typ = cpp.typesetreprnew(var, var.parent)
+        if typ == 'void *': # XXX investigate
+            print >>gv.out, '    self->__ss_object->%s = NULL;' % gv.cpp_name(var.name)
+        else: 
+            print >>gv.out, '    self->__ss_object->%s = __to_ss<%s>(value);' % (gv.cpp_name(var.name), typ)
         print >>gv.out, '    return 0;'
         print >>gv.out, '}\n'
 
