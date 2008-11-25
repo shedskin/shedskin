@@ -2593,6 +2593,12 @@ def singletype(node, type):
         return types[0]
     return None
 
+def singletype2(types, type):
+    ltypes = list(types)
+    if len(types) == 1 and isinstance(ltypes[0][0], type):
+        return ltypes[0][0]
+    return None
+
 def namespace(module):
     return '__'+'__::__'.join(module.mod_path)+'__'
 

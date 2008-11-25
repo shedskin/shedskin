@@ -87,8 +87,9 @@ def do_extmod_method(gv, func):
         gv.start('')
         typ = cpp.typesetreprnew(func.vars[formal], func)
         cls = [t[0] for t in gv.mergeinh[func.vars[formal]] if isinstance(t[0], class_)]
-        if [c for c in cls if c.mv.module == getgx().main_module]:
-            typ = ('__%s__::'%c.mv.module.ident)+typ
+        cls = [c for c in cls if c.mv.module == getgx().main_module]
+        if cls:
+            typ = ('__%s__::' % cls[0].mv.module.ident)+typ
         gv.append('        %(type)sarg_%(num)d = (PyTuple_Size(args) > %(num)d) ? __to_ss<%(type)s>(PyTuple_GetItem(args, %(num)d)) : ' % {'type' : typ, 'num' : i})
         if i >= len(formals)-len(func.defaults):
             defau = func.defaults[i-(len(formals)-len(func.defaults))]
@@ -144,10 +145,10 @@ def supported_vars(vars): # XXX virtuals?
     for var in vars:
         if not var in getgx().merged_inh or not getgx().merged_inh[var]:
             continue
-        if cpp.singletype(var, module) or var.invisible: 
-            continue
         if var.name.startswith('__'): # XXX
             continue 
+        if var.invisible or cpp.singletype2(getgx().merged_inh[var], module):
+            continue
         try:
             typehu = cpp.typesetreprnew(var, var.parent, check_extmod=True)
         except cpp.ExtmodError:
@@ -202,7 +203,7 @@ def do_extmod_class(gv, cl):
         print >>gv.out, '}\n'
 
         print >>gv.out, 'int %s_set_%s(%sObject *self, PyObject *value, void *closure) {' % (cl.ident, var.name, cl.ident)
-        print >>gv.out, '    self->__ss_object->%s = __to_ss<%s>(value);' % (gv.cpp_name(var.name), cpp.typesetreprnew(var, func))
+        print >>gv.out, '    self->__ss_object->%s = __to_ss<%s>(value);' % (gv.cpp_name(var.name), cpp.typesetreprnew(var, var.parent))
         print >>gv.out, '    return 0;'
         print >>gv.out, '}\n'
 
