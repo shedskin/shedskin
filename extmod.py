@@ -14,7 +14,8 @@ def do_extmod(gv):
     print >>gv.out, 'extern "C" {'
     print >>gv.out, '#include <Python.h>'
     print >>gv.out, '#include <structmember.h>\n'
-    print >>gv.out, 'using namespace __%s__;\n' % gv.module.ident
+
+    print >>gv.out, 'namespace __%s__ { /* XXX */\n' % gv.module.ident
 
     for cl in gv.module.classes.values(): 
         do_extmod_class(gv, cl)
@@ -54,6 +55,7 @@ def do_extmod(gv):
 
     print >>gv.out, '\n}'
 
+    print >>gv.out, '\n} // namespace __%s__' % gv.module.ident
     print >>gv.out, '\n} // extern "C"'
 
     # conversion methods to/from CPython/Shedskin
@@ -64,7 +66,7 @@ def do_extmod_methoddef(gv, ident, funcs):
     print >>gv.out, 'static PyMethodDef %sMethods[] = {' % ident
     for func in funcs:
         if isinstance(func.parent, class_): id = func.parent.ident+'_'+func.ident
-        else: id = gv.cpp_name(func.ident)
+        else: id = 'Global_'+func.ident
         print >>gv.out, '    {(char *)"%(id)s", %(id2)s, METH_VARARGS, (char *)""},' % {'id': func.ident, 'id2': id}
     print >>gv.out, '    {NULL}\n};\n'
 
@@ -73,8 +75,8 @@ def do_extmod_method(gv, func):
     if is_method: formals = func.formals[1:]
     else: formals = func.formals
 
-    if isinstance(func.parent, class_): id = func.parent.ident+'_'+func.ident
-    else: id = gv.cpp_name(func.ident)
+    if isinstance(func.parent, class_): id = func.parent.ident+'_'+func.ident # XXX
+    else: id = 'Global_'+func.ident # XXX
     print >>gv.out, 'PyObject *%s(PyObject *self, PyObject *args) {' % id
     print >>gv.out, '    if(PyTuple_Size(args) < %d || PyTuple_Size(args) > %d) {' % (len(formals)-len(func.defaults), len(formals))
     print >>gv.out, '        PyErr_SetString(PyExc_Exception, "invalid number of arguments");'
@@ -293,9 +295,9 @@ def convert_methods(gv, cl, declare):
         print >>gv.out, 'namespace __shedskin__ { /* XXX */\n' 
 
         print >>gv.out, 'template<> __%s__::%s *__to_ss(PyObject *p) {' % (gv.module.ident, cl.cpp_name)
-        print >>gv.out, '    if(p->ob_type != &%sObjectType)' % cl.ident
+        print >>gv.out, '    if(p->ob_type != &__%s__::%sObjectType)' % (gv.module.ident, cl.ident)
         print >>gv.out, '        throw new TypeError(new str("error in conversion to Shed Skin (%s expected)"));' % cl.ident
-        print >>gv.out, '    return ((%sObject *)p)->__ss_object;' % cl.ident
+        print >>gv.out, '    return ((__%s__::%sObject *)p)->__ss_object;' % (gv.module.ident, cl.ident)
         print >>gv.out, '}\n'
 
         print >>gv.out, '}'
