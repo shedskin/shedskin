@@ -802,7 +802,7 @@ class generateVisitor(ASTVisitor):
                 if ident in cl.funcs and self.inhcpa(cl.funcs[ident]):
                     self.eol(')')
                 else:
-                    self.eol(') = 0')
+                    self.eol(') {}') # XXX 
 
                 if ident in cl.funcs: cl.funcs[ident].declared = True
 
