@@ -1128,7 +1128,7 @@ str *file::__repr__() {
 /* builtin functions */
 
 str *pyobj::__repr__() {
-    return __class__->__name__->__add__(new str(" instance"));
+    return __add_strs(3, new str("<"), __class__->__name__, new str(" instance>"));
 }
 
 str *raw_input(str *msg) {
