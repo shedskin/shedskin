@@ -1285,7 +1285,8 @@ class moduleVisitor(ASTVisitor):
                     error("no such class: '%s'" % name, node)
                
                 elif cl.mv.module.ident == 'builtin' and name not in ['object', 'Exception']:
-                    error("inheritance from builtin class '%s' is not supported" % name, node)
+                    if defclass('Exception') not in cl.ancestors(): 
+                        error("inheritance from builtin class '%s' is not supported" % name, node)
                
         if node.name in getmv().classes:
             newclass = getmv().classes[node.name] # set in visitModule, for forward references
