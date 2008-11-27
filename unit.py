@@ -154,6 +154,11 @@ print dwek[('a', 'b', None)]
 lrp = []
 print [lrp.append(0)]
 
+# inheritance from Exception descendant
+class X(RuntimeError):
+    pass
+X()
+
 ''', '''
 output(equal=True)
 
@@ -5485,7 +5490,7 @@ def fun4(a, b=7, c='1', d=1, e=1.0):
 fun4(1,2,e=2.0,c='8')
 
 ''', '''
-output("[[1]]\\n[0, 4, 5, 6, 7, 8, 9]\\n[[1]] [[0, 1]]\\n[[1, 1], [1, 1]]\\n2\\n[]\\n[2, 3, 4]\\n[1, 0, 1]\\njammer\\n0\\n1\\n2\\n1\\n0\\n2\\n0\\n3\\n1\\n1\\nhash(l) [0, 1, 2]\\nhash(float(l)) [0, 49152, 81920]\\n1\\n0\\n[None, None, None]\\n2147483647\\n-2147483648\\n0 0\\n[1]\\n[1, 2, 3, 4, 5]\\n[1, 2, 3]\\n['a', 'b', 'e', 'f']\\n\\n[1, 4]\\n[]\\n[1, 4]\\n[(1, 2), (1, 3), (1, 4), (1, 6)]\\n[(1.0, 7), (1.0, 9), (2.1, 4)]\\n1 0 0\\n1\\n10 10 20\\n20 20\\nPrinter3 instance\\nNone\\n[None, None, None, None, None]\\n(1, 'a')\\nNone\\nNone\\nNone\\n*\\n*\\n4.5\\n3\\n3\\n6\\n6\\n[1, 2]\\n[1, 2, 2]\\n[1, 2, 2, 2]\\n[]\\n[]\\n[]\\n2222222 888\\n1 2 8 1 2\\n")
+output("[[1]]\\n[0, 4, 5, 6, 7, 8, 9]\\n[[1]] [[0, 1]]\\n[[1, 1], [1, 1]]\\n2\\n[]\\n[2, 3, 4]\\n[1, 0, 1]\\njammer\\n0\\n1\\n2\\n1\\n0\\n2\\n0\\n3\\n1\\n1\\nhash(l) [0, 1, 2]\\nhash(float(l)) [0, 49152, 81920]\\n1\\n0\\n[None, None, None]\\n2147483647\\n-2147483648\\n0 0\\n[1]\\n[1, 2, 3, 4, 5]\\n[1, 2, 3]\\n['a', 'b', 'e', 'f']\\n\\n[1, 4]\\n[]\\n[1, 4]\\n[(1, 2), (1, 3), (1, 4), (1, 6)]\\n[(1.0, 7), (1.0, 9), (2.1, 4)]\\n1 0 0\\n1\\n10 10 20\\n20 20\\n<Printer3 instance>\\nNone\\n[None, None, None, None, None]\\n(1, 'a')\\nNone\\nNone\\nNone\\n*\\n*\\n4.5\\n3\\n3\\n6\\n6\\n[1, 2]\\n[1, 2, 2]\\n[1, 2, 2, 2]\\n[]\\n[]\\n[]\\n2222222 888\\n1 2 8 1 2\\n")
 
 '''),
 
