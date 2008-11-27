@@ -1959,7 +1959,7 @@ class generateVisitor(ASTVisitor):
 
                 if arg in target.mv.defaults: 
                     if self.mergeinh[arg] == set([(defclass('none'),0)]):
-                        self.append('0')
+                        self.append('NULL')
                     elif target.mv.module == getmv().module:
                         self.append('default_%d' % (target.mv.defaults[arg]))
                     else:

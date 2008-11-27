@@ -157,6 +157,7 @@ print [lrp.append(0)]
 # inheritance from Exception descendant
 class X(RuntimeError):
     def __init__(self, msg=None):
+        RuntimeError.__init__(self, msg)
         print 'ole', msg
 X()
 

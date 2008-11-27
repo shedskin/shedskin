@@ -67,21 +67,19 @@ def confusion_misc():
 
 def analysis(source, testing=False):
     if testing: 
-        gx = newgx()
-        setgx(gx)
+        setgx(newgx())
         ast = parse(source+'\n')
     else:
-        gx = getgx()
         ast = parsefile(source)
 
     mv = None
     setmv(mv)
 
     # --- build dataflow graph from source code
-    gx.main_module = parse_module(gx.main_mod, ast)
-    gx.main_module.filename = gx.main_mod+'.py'
-    gx.modules[gx.main_mod] = gx.main_module
-    mv = gx.main_module.mv
+    getgx().main_module = parse_module(getgx().main_mod, ast)
+    getgx().main_module.filename = getgx().main_mod+'.py'
+    getgx().modules[getgx().main_mod] = getgx().main_module
+    mv = getgx().main_module.mv
     setmv(mv)
 
     # --- seed class_.__name__ attributes..
@@ -210,7 +208,7 @@ def analysis(source, testing=False):
         if isinstance(node, Node) and not isinstance(node, AssAttr) and not inode(node).mv.module.builtin:
             typesetreprnew(node, inode(node).parent) 
 
-    return gx
+    return getgx()
 
 # --- annotate original code; use above function to merge results to original code dimensions
 def annotate():
@@ -427,8 +425,7 @@ def usage():
     sys.exit(1)
 
 def main():
-    gx = newgx()
-    setgx(gx)
+    setgx(newgx())
 
     print '*** SHED SKIN Python-to-C++ Compiler 0.0.29 ***'
     print 'Copyright 2005-2008 Mark Dufour; License GNU GPL version 3 (See LICENSE)'
@@ -473,7 +470,7 @@ def main():
     if not os.path.isfile(name): 
         print "*ERROR* no such file: '%s'" % name
         sys.exit(1)
-    gx.main_mod = name[:-3]
+    getgx().main_mod = name[:-3]
         
     # --- analyze & annotate
     analysis(name)
