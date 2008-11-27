@@ -1873,16 +1873,17 @@ class generateVisitor(ASTVisitor):
         else:
             error("unbound identifier '"+ident+"'", node)
 
-        if constructor and self.mergeinh[node] and 'Exception' in [c.ident for c in list(self.mergeinh[node])[0][0].ancestors()]: # XXX self.mergeinh[node], try getopt
-            if node.args:
-                for n in node.args[:-1]:
-                    self.visit(n, func)
-                    self.append(',')
-                self.visit(node.args[-1], func)
-            self.append('))')
-            return
+        #if constructor and self.mergeinh[node] and 'Exception' in [c.ident for c in list(self.mergeinh[node])[0][0].ancestors()]: # XXX self.mergeinh[node], try getopt
+        #    if node.args:
+        #        for n in node.args[:-1]:
+        #            self.visit(n, func)
+        #            self.append(',')
+        #        self.visit(node.args[-1], func)
+        #    self.append('))')
+        #    return
 
-        elif not funcs:
+        #elif not funcs:
+        if not funcs:
             if constructor: self.append(')')
             self.append(')')
             return
