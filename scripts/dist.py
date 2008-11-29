@@ -14,11 +14,15 @@ os.system('mkdir %s/testdata/crap2' % release)
 for file in files:
     os.system('cp %s %s' % (file, release))
 
+os.system('rm testdata/*.pyc testdata/*.ss.py')
 os.system('cp testdata/* %s/testdata' % release)
+os.system('rm testdata/crap2/*.pyc testdata/crap2/*.ss.py')
 os.system('cp testdata/crap2/* %s/testdata/crap2' % release)
 os.system('rm lib/struct* lib/pygame* lib/serial*')
-os.system('cp lib/* %s/lib' % release)
-os.system('cp lib/os/* %s/lib/os' % release)
+os.system('cp lib/*.py %s/lib' % release)
+os.system('cp lib/*.?pp %s/lib' % release)
+os.system('cp lib/os/*.py %s/lib/os' % release)
+os.system('cp lib/os/*.?pp %s/lib/os' % release)
 
 os.system("echo print \\'hello, world!\\' > %s/test.py" % release)
 
