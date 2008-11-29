@@ -156,7 +156,7 @@ class list(pyseq):
 
     def reverse(self):         
         pass
-    def sort(self, cmp=None, key=None, reverse=None):
+    def sort(self, cmp=0, key=0, reverse=0):
         elem = self.unit
         cmp(elem, elem)
         elem.__cmp__(elem)
@@ -668,7 +668,7 @@ def pow(a, b, c=1):
 def abs(x):                            
     return x.__abs__()
 
-def sorted(it, cmp=None, key=None, reverse=None):
+def sorted(it, cmp=0, key=0, reverse=0): # XXX None
     elem = iter(it).next()
     cmp(elem, elem)
     elem.__cmp__(elem)

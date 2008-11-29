@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 '''
-*** SHED SKIN Python-to-C++ Compiler 0.0.29 ***
+*** SHED SKIN Python-to-C++ Compiler ***
 Copyright 2005-2008 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 
 ss.py: main program file
@@ -427,7 +427,7 @@ def usage():
 def main():
     setgx(newgx())
 
-    print '*** SHED SKIN Python-to-C++ Compiler 0.0.29 ***'
+    print '*** SHED SKIN Python-to-C++ Compiler 0.0.30 ***'
     print 'Copyright 2005-2008 Mark Dufour; License GNU GPL version 3 (See LICENSE)'
     print
     
@@ -437,9 +437,9 @@ def main():
         print '*ERROR* Shed Skin is not compatible with this version of Python'
         sys.exit(1)
 
-#    if sys.platform == 'win32' and os.path.isdir('c:/mingw'):
-#        print '*ERROR* please rename or remove c:/mingw, as it conflicts with Shed Skin'
-#        sys.exit()
+    if sys.platform == 'win32' and os.path.isdir('c:/mingw'):
+        print '*ERROR* please rename or remove c:/mingw, as it conflicts with Shed Skin'
+        sys.exit()
 
     # --- command-line options
     try:
