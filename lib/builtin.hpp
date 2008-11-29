@@ -1243,7 +1243,11 @@ template<class K, class V> dict<K, V>::dict(PyObject *p) {
     
     this->__class__ = cl_dict;
     PyObject *key, *value;
+#ifdef __sun
+    ssize_t pos = 0;
+#else
     Py_ssize_t pos = 0;
+#endif
     while(PyDict_Next(p, &pos, &key, &value)) 
         __setitem__(__to_ss<K>(key), __to_ss<V>(value));
 } 
