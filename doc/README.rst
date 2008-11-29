@@ -1,8 +1,8 @@
 Shed Skin Tutorial
 ==================
 
-:Version: Shed Skin 0.0.29
-:Date: September 20, 2008
+:Version: Shed Skin 0.0.30
+:Date: November 30, 2008
 :Authors: Mark Dufour and James Coughlan
 
 .. _Parallel Python: http://www.parallelpython.com/
@@ -16,23 +16,16 @@ Shed Skin Tutorial
 
 .. contents::
 
-.. _Purpose of this Tutorial:
-
-Purpose of this Tutorial
-------------------------
-
-This tutorial provides an overview of **Shed Skin** and its limitations, as well as step-by-step instructions on how to use it to compile and run standalone programs and modules callable from regular Python code. 
-
 .. _Introduction:
 
 Introduction
 ------------
 
-**Shed Skin** is an *experimental* **Python-to-C++ compiler** designed to speed up the execution of computation-intensive Python programs. It converts programs written in a *static subset* of Python to C++. The C++ code can be compiled to executable code, which can be run either as a standalone program or as a module easily imported and called from Python. 
+**Shed Skin** is an *experimental* **Python-to-C++ compiler** designed to speed up the execution of computation-intensive Python programs. It converts programs written in a *static subset* of Python to C++. The C++ code can be compiled to executable code, which can be run either as a standalone program or as an extension module easily imported and used in a regular Python program. 
 
 **Shed Skin** uses type inference techniques to determine the *implicit* types used in a Python program, in order to generate the *explicit* type declarations needed in a C++ version. Because C++ is *statically typed*, **Shed Skin** requires Python code to be written such that all variables are (implicitly) statically typed.
 
-Besides the *typing* and *subset* restrictions, supported programs cannot freely use the Python standard library, although the most common modules are supported, such as ``math`` and ``random`` (see `Library Limitations`_). 
+Besides the *typing* and *subset* restrictions, supported programs cannot freely use the Python standard library, although the most common modules are supported, such as ``random`` and ``re`` (see `Library Limitations`_). 
 
 Additionally, the type inference techniques employed by **Shed Skin** currently do not scale very well beyond several hundred lines of code (the largest compiled program is about 1,600 lines). In all, this means that **Shed Skin** is currently mostly useful to compile *smallish* programs and extension modules, that do not make extensive use of dynamic Python features or the standard library.
 
@@ -65,12 +58,12 @@ are allowed, but ::
 
     d=[1, 2.5, ’abc’] # bad
     e=[3, [1,2]] # bad
-    f=(0,’abc’,[1,2,3]) # bad
+    f=(0, ’abc’, [1,2,3]) # bad
 
 are not allowed. Of course, dictionary keys and values can be of different types: ::
 
-    g={’a’:1, ’b’:2, ’c’:3} # good
-    h={’a’:1, ’b’:’hello’, ’c’:[1,2,3]} # bad
+    g={’a’: 1, ’b’: 2, ’c’: 3} # good
+    h={’a’: 1, ’b’: ’hello’, ’c’: [1,2,3]} # bad
 
 In the current version of **Shed Skin**, mixed types are also permitted in tuples of length two: ::
 
@@ -86,7 +79,8 @@ In the future, mixed tuples up to a certain length will be allowed.
     m = 1
     m = None # bad
 
-    def fun(x=None): pass # bad: use a special value for x here, e.g. x=-1
+    def fun(x = None): # bad: use a special value for x here, e.g. x = -1
+        pass 
     fun(1) 
 
 Integers and floats can often be mixed, but it is better to avoid this where possible, as it may confuse **Shed Skin**: ::
@@ -109,6 +103,7 @@ Python Subset Restrictions
   - generator expressions
   - nested functions and classes
   - inheritance from builtins (excluding Exception and object) 
+  - some builtins, such as ``map``, ``filter`` and ``reduce``
 
 Some other features are currently only partially supported:
 
@@ -246,9 +241,9 @@ To install the UNIX source package on an **OSX** system, take the following step
 Compiling and Running a Stand-Alone Program
 -------------------------------------------
 
-To use **Shed Skin** under Windows, first execute (double-click) the ``init.bat`` file in the ``shedskin-0.0.28`` directory, relative to where you installed it.  A command-line window will appear, with the current directory set to the ``shedskin-0.0.28\shedskin`` directory (hereafter referred to as the *Shed Skin working directory*).
+To use **Shed Skin** under Windows, first execute (double-click) the ``init.bat`` file in the ``shedskin-0.0.30`` directory, relative to where you installed it.  A command-line window will appear, with the current directory set to the ``shedskin-0.0.30\shedskin`` directory (hereafter referred to as the *Shed Skin working directory*).
 
-Suppose we have defined a simple test program, called ``test.py``: ::
+Consider the following simple test program, called ``test.py``: ::
 
     print 'hello, world!'
 
@@ -292,8 +287,6 @@ We begin with a simple example module, called ``simple_module.py``, containing t
         d=dict([(i, i*i)  for i in range(n)])
         return d
 
-    # In order for type inference to work, 
-    # we must show Shed Skin how functions will be called:
     if __name__ == '__main__':
         print func1(5)
         print func2(10)
@@ -332,13 +325,11 @@ It is useful to know which version of the module you are importing: either the *
 
 **Restrictions**
 
-There are several important restrictions that must be observed when compiling an extension module:
+There are two important restrictions that must be observed when compiling an extension module:
 
-1. Only builtin scalar and container types (``int``, ``float``, ``str``, ``list``, ``tuple``, ``dict``, ``set``) as well as ``None`` can be passed/returned. Support for custom classes will be added in a later version of **Shed Skin**.
+1. Only builtin scalar and container types (``int``, ``float``, ``complex``, ``str``, ``list``, ``tuple``, ``dict``, ``set``) as well as ``None`` and instances of user-defined classes can be passed/returned. So for example, anonymous functions and iterators are currently not supported.
 
-2. Objects are completely converted for each call/return from **Shed Skin** to **CPython** types and back, including all of their contents. This means you cannot directly change **CPython** objects from the **Shed Skin** side and vice versa, and that conversion may become a bottleneck.
-
-3. Global module variables are converted at module initialization time, and cannot be changed later on from the **Shed Skin** side.
+2. Builtin objects are completely converted for each call/return from **Shed Skin** to **CPython** types and back, including all of their contents. This means you cannot change **CPython** builtin objects from the **Shed Skin** side and vice versa, and that conversion may be slow. Instances of user-defined classes can be passed/returned without any conversion, and changed from either side.
 
 **Example for NumPy/SciPy users**
 
@@ -490,7 +481,7 @@ For example, to use the bounds checking option to compile ``test.py``, type ``sh
 
 The ``--bounds`` option is used to catch index out-of-bounds errors in lists, tuples and strings, which would produce errors in **CPython**.  Without it, the following erroneous code would give a spurious value rather than reporting an error: ::
 
-    a=[1,2,3]
+    a=[1, 2, 3]
     print a[5] # invalid index: out of bounds
 
 The ``--nowrap`` option can speed up program execution by a modest amount, at the risk of giving wrong values for negative indices (``a[-1]`` in the above example.) Before using this option, make sure that your code will run safely with it.
@@ -581,15 +572,11 @@ The following activities are planned for future versions of **Shed Skin**:
 
 **0.1** (6-12 months from now)
 
-* Complete support for the ``os`` module, and all modules mentioned in `Library Limitations`_.
+* Complete support for the ``os`` module, especially under Windows
 
-* Improve the type inference techniques with at least *iterative deepening* and basic selector-based *filters*.
+* Upgrade MingW to something more recent 
 
-* Compile at least one program of around 3,000 lines, for example `Quameon`_.  
-
-* Improve **Shed Skin** ``set`` efficiency to be similar to that of CPython ``set``.
-
-**0.2** (12-24 months from now)
+**0.2-0.4** (12-24 months from now)
 
 * Replace many quick hacks in the compiler core
 
@@ -603,9 +590,11 @@ The following activities are planned for future versions of **Shed Skin**:
 
 * Add support for tuples with mixed elements up to a certain length
 
-**0.9** (18-36 months from now)
+* Improve the type inference techniques with at least *iterative deepening* and basic selector-based *filters*.
 
-* Efficient and complete extension module support.
+* Compile at least one program of around 3,000 lines, for example `Quameon`_.  
+
+**0.9** (18-36 months from now)
 
 * Improve type inference to the point where it works for typical, arbitrary programs of around 3,000 lines.
 
