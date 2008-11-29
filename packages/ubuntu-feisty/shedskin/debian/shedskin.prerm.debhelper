@@ -1,5 +1,11 @@
 # Automatically added by dh_pycentral
 case "$1" in remove|upgrade)
+	pkgremove=y
+esac
+if [ -f /var/lib/pycentral/shedskin.pkgremove ] || [ -f /var/lib/pycentral/pkgremove ]; then
+	pkgremove=y
+fi
+if [ "$pkgremove" = y ]; then
 if which python >/dev/null 2>&1 && which pycentral >/dev/null 2>&1; then
 	pycentral pkgremove shedskin
 else
@@ -34,5 +40,6 @@ else
 	    | xargs -r rm -f >&2
 	rm -f $flist $slist
 fi
-esac
+rm -f /var/lib/pycentral/shedskin.pkgremove
+fi
 # End automatically added section
