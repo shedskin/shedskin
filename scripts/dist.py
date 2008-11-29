@@ -3,7 +3,7 @@ import sys, os
 
 release = 'shedskin-%s' % sys.argv[1]
 
-files = ['doc/LICENSE', 'doc/README.html', 'FLAGS', 'ss.py', 'setup.py', 'bert.py', 'unit.py', 'shared.py', 'graph.py', 'cpp.py', 'infer.py', 'backward.py']
+files = ['doc/LICENSE', 'doc/README.html', 'FLAGS', 'ss.py', 'setup.py', 'bert.py', 'unit.py', 'shared.py', 'graph.py', 'cpp.py', 'infer.py', 'backward.py', 'extmod.py']
 
 os.system('mkdir %s' % release)
 os.system('mkdir %s/lib' % release)
@@ -16,6 +16,7 @@ for file in files:
 
 os.system('cp testdata/* %s/testdata' % release)
 os.system('cp testdata/crap2/* %s/testdata/crap2' % release)
+os.system('rm lib/struct* lib/pygame* lib/serial*')
 os.system('cp lib/* %s/lib' % release)
 os.system('cp lib/os/* %s/lib/os' % release)
 
