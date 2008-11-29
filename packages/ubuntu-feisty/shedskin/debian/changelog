@@ -1,3 +1,19 @@
+shedskin (0.0.30-0ubuntu1) feisty; urgency=low
+
+  * user-defined class support in extension modules
+  * blindingly fast set implementation (FFAO) 
+  * complex number support
+  * many string formatting improvements
+  * None maps to NULL instead of 0, and prints as 'None'
+  * re.match_object.group accepts multiple arguments
+  * casting improvements 
+  * inheritance from builtin exceptions other than Exception
+  * hashing None should work now
+  * important type inference fix
+  * many, many bugfixes
+
+ -- Mark Dufour <mark.dufour@gmail.com>  Sun,  1 Jun 2008 10:00:00 +0100
+
 shedskin (0.0.29-0ubuntu1) feisty; urgency=low
 
   * FreeBSD, OpenSolaris and 64-bit GNU/Linux support
