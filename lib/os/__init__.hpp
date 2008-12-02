@@ -50,16 +50,6 @@ __cstat *stat(str *path);
 __cstat *lstat(str *path);
 __cstat *fstat(int fd);
 
-#ifndef WIN32
-str *readlink(str *path);
-
-int getuid();
-int getgid();
-void *chown(str *path, int uid, int gid);
-
-int fork();
-#endif
-
 int stat_float_times(int newvalue=-1);
 str *strerror(int i);
 
@@ -97,6 +87,20 @@ tuple2<file*,file*>* popen3(str* cmd, str* mode, int bufsize);
 
 tuple2<file*,file*>* popen4(str* cmd);
 tuple2<file*,file*>* popen4(str* cmd, str* mode, int bufsize);
+
+#ifndef WIN32
+str *readlink(str *path);
+
+int getuid();
+int getgid();
+list<int> *getgroups();
+int getpgid(int pid);
+int getpgrp();
+
+void *chown(str *path, int uid, int gid);
+
+int fork();
+#endif
 
 void __init();
 

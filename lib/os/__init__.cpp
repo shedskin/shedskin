@@ -37,7 +37,7 @@ str *linesep, *name;
 dict<str *, str *> *__ss_environ;
 struct stat sbuf;
 
-const int MAXFD = 256;
+const int MAXENTRIES = 4096; /* XXX probably have to fix each function that uses this */
 
 str *altsep, *curdir, *defpath, *devnull, *extsep, *pardir, *pathsep, *sep;
 
@@ -74,44 +74,6 @@ void *chdir(str *dir) {
 str *strerror(int i) {
     return new str(::strerror(i));
 }
-
-#ifndef WIN32
-str *readlink(str *path) {
-    int size = 255;
-    str *r;
-
-    while (1)
-      {
-        char *buffer = (char *) GC_malloc (size);
-	    int nchars = ::readlink(path->unit.c_str(), buffer, size);
-    	if (nchars == -1) {
-            throw new OSError(path);
-  	    }
-        if (nchars < size) {
-            buffer[nchars] = '\0';
-            r = new str(buffer);
-            return r;
-        }
-        size *= 2;
-      }       
-}
-
-int getuid() { return ::getuid(); }
-int getgid() { return ::getgid(); }
-
-int fork() {
-    int ret;
-    if ((ret = ::fork()) == -1)
-        throw new OSError();
-    return ret;
-}
-
-void *chown(str *path, int uid, int gid) {
-    if (::chown(path->unit.c_str(), uid, gid) == -1) 
-        throw new OSError(path);
-    return NULL;
-}
-#endif
 
 int system(str *c) {
     return std::system(c->unit.c_str());
@@ -434,23 +396,6 @@ popen_pipe* popen(str* cmd, str* mode, int bufsize) {
     return new popen_pipe(fp);
 }
 
-#ifndef WIN32
-tuple2<int,int>* pipe() {
-    int fds[2];
-    int ret;
-
-    ret = ::pipe(fds);
-
-    if(ret != 0) {
-        str* s = new str("pipe creation failed");
-
-        throw new OSError(s);
-    }
-
-    return new tuple2<int,int>(2,fds[0],fds[1]);
-}
-#endif
-
 void *dup2(int f1, int f2) {
     int res = ::dup2(f1,f2);
 
@@ -541,7 +486,7 @@ tuple2<file*,file*>* popen2(str* cmd, str* mode, int bufsize) {
         dup2( p2c->__getfirst__(), 0);
         dup2( c2p->__getsecond__(), 1);
 
-        for(int i = 3; i < MAXFD; ++i) {
+        for(int i = 3; i < MAXENTRIES; ++i) {
             try {
                 close(i);
             }
@@ -580,7 +525,7 @@ tuple2<file*,file*>* popen3(str* cmd, str* mode, int bufsize) {
         dup2( c2p->__getsecond__(), 1);
         dup2( erp->__getsecond__(), 2);
 
-        for(int i = 3; i < MAXFD; ++i) {
+        for(int i = 3; i < MAXENTRIES; ++i) {
             try {
                 close(i);
             }
@@ -615,7 +560,7 @@ tuple2<file*,file*>* popen4(str* cmd, str* mode, int bufsize) {
         dup2( c2p->__getsecond__(), 1);
         dup2( c2p->__getsecond__(), 2);
 
-        for(int i = 3; i < MAXFD; ++i) {
+        for(int i = 3; i < MAXENTRIES; ++i) {
             try {
                 close(i);
             }
@@ -671,6 +616,86 @@ void *popen_pipe::close() {
     closed = 1;
     return NULL;
 }
+
+#ifndef WIN32
+tuple2<int,int>* pipe() {
+    int fds[2];
+    int ret;
+
+    ret = ::pipe(fds);
+
+    if(ret != 0) {
+        str* s = new str("pipe creation failed");
+
+        throw new OSError(s);
+    }
+
+    return new tuple2<int,int>(2,fds[0],fds[1]);
+}
+#endif
+
+/* UNIX-only functionality */
+
+#ifndef WIN32
+str *readlink(str *path) {
+    int size = 255;
+    str *r;
+
+    while (1)
+      {
+        char *buffer = (char *) GC_malloc (size);
+	    int nchars = ::readlink(path->unit.c_str(), buffer, size);
+    	if (nchars == -1) {
+            throw new OSError(path);
+  	    }
+        if (nchars < size) {
+            buffer[nchars] = '\0';
+            r = new str(buffer);
+            return r;
+        }
+        size *= 2;
+      }       
+}
+
+int getuid() { return ::getuid(); }
+int getgid() { return ::getgid(); }
+
+int fork() {
+    int ret;
+    if ((ret = ::fork()) == -1)
+        throw new OSError();
+    return ret;
+}
+
+void *chown(str *path, int uid, int gid) {
+    if (::chown(path->unit.c_str(), uid, gid) == -1) 
+        throw new OSError(path);
+    return NULL;
+}
+
+list<int> *getgroups() {
+    gid_t l[MAXENTRIES];
+    int nr = ::getgroups(MAXENTRIES, l);
+    if(nr == -1)
+        throw new OSError(new str("os.getgroups"));
+    list<int> *r = new list<int>();
+    for(int i=0;i<nr;i++)
+        r->append(l[i]);
+    return r;
+}
+
+int getpgid(int pid) {
+    int nr = ::getpgid(pid);
+    if(nr == -1)
+        throw new OSError(new str("os.getpgid"));
+    return nr;
+}
+
+int getpgrp() {
+    return getpgid(0);
+}
+
+#endif
 
 void __init() {
     const_0 = new str("(%d, %d, %d, %d, %d, %d, %d, %d, %d, %d)");

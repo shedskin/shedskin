@@ -110,6 +110,15 @@ def getuid():
 def getgid():
     return 1
 
+def getgroups():
+    return [1]
+
+def getpgid(pid):
+    return 1
+
+def getpgrp():
+    return 1
+
 def stat_float_times(n=False): 
     return True
 
