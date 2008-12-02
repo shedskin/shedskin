@@ -673,6 +673,18 @@ void *chown(str *path, int uid, int gid) {
     return NULL;
 }
 
+void *chroot(str *path) {
+    if (::chroot(path->unit.c_str()) == -1) 
+        throw new OSError(path);
+    return NULL;
+}
+
+str *ctermid() {
+    char term[L_ctermid];
+    char *ptr = ::ctermid(term);
+    return new str(ptr);
+}
+
 list<int> *getgroups() {
     gid_t l[MAXENTRIES];
     int nr = ::getgroups(MAXENTRIES, l);

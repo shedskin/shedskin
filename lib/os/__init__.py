@@ -170,5 +170,9 @@ def pipe():
 def dup2(f1,f2):
     pass
 
+def chroot(dir):
+    pass
 
+def ctermid():
+    return ''
 

@@ -98,6 +98,8 @@ int getpgid(int pid);
 int getpgrp();
 
 void *chown(str *path, int uid, int gid);
+void *chroot(str *path);
+str *ctermid();
 
 int fork();
 #endif
