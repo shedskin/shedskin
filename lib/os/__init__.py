@@ -167,7 +167,16 @@ def fdopen(fd, mode='r', bufsize=-1):
 def pipe():
     return (0,0)
 
+def dup(f1):
+    return 1
+
 def dup2(f1,f2):
+    pass
+
+def fchdir(f1):
+    pass
+
+def fdatasync(f1):
     pass
 
 def chroot(dir):
