@@ -65,9 +65,8 @@ void *dup2(int f1, int f2);
 void *execvp(str* file, list<str*>* args);
 void *execv(str* file, list<str*>* args);
 void *close(int fd);
-file* fdopen(int fd);
-file* fdopen(int fd, str* mode);
-file* fdopen(int fd, str* mode, int bufsize);
+int open(str *name, int flags);
+file* fdopen(int fd, str* mode=NULL, int bufsize=-1);
 
 class popen_pipe : public file {
 public:

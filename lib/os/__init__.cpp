@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <dirent.h>
 #include <errno.h>
+#include <fcntl.h>
 
 namespace std {
 #include <unistd.h>
@@ -399,25 +400,25 @@ popen_pipe* popen(str* cmd, str* mode, int bufsize) {
 int dup(int f1) {
     int f2 = ::dup(f1);
     if (f2 == -1) 
-        throw new OSError(new str("dup failed"));
+        throw new OSError(new str("os.dup failed"));
     return f2;
 }
 
 void *dup2(int f1, int f2) {
     if (::dup2(f1,f2) == -1) 
-        throw new OSError(new str("dup2 failed"));
+        throw new OSError(new str("os.dup2 failed"));
     return NULL;
 }
 
 void *fchdir(int f1) {
     if (::fchdir(f1) == -1) 
-        throw new OSError(new str("fchdir failed"));
+        throw new OSError(new str("os.fchdir failed"));
     return NULL;
 }
 
 void *fdatasync(int f1) {
     if (::fdatasync(f1) == -1) 
-        throw new OSError(new str("fdatasync failed"));
+        throw new OSError(new str("os.fdatasync failed"));
     return NULL;
 }
 
@@ -464,21 +465,24 @@ void *execvp(str* file, list<str*>* args) {
             execv(fullname, args);
         }
     }
-    throw new OSError(new str("execvp failed"));
+    throw new OSError(new str("os.execvp failed"));
 }
 #endif
 
-file* fdopen(int fd) {
-    return fdopen(fd, new str("r"), -1);
-}
-
-file* fdopen(int fd, str* mode) {
-    return fdopen(fd, mode, -1);
+int open(str *name, int flags) { /* XXX mode argument */
+    int fp = ::open(name->unit.c_str(), flags);
+    if(fp == -1)
+        throw new OSError(new str("os.open failed"));
+    return fp;
 }
 
 file* fdopen(int fd, str* mode, int bufsize) {
+    if(!mode)
+        mode = new str("r");
+/* XXX ValueError: mode string must begin with one of 'r', 'w', 'a' or 'U' */
     FILE* fp = ::fdopen(fd, mode->unit.c_str());
-    if(fp == NULL) throw new OSError(new str("fdopen failed"));
+    if(fp == NULL) 
+        throw new OSError(new str("os.fdopen failed"));
 
     file* ret = new file(fp);
     ret->name = new str("<fdopen>");
@@ -600,9 +604,8 @@ tuple2<file*,file*>* popen4(str* cmd, str* mode, int bufsize) {
 #endif
 
 void *close(int fd) {
-   int res = ::close(fd);
-
-   if(res < 0) throw new OSError(new str("close failed"));
+   if(::close(fd) < 0) 
+       throw new OSError(new str("os.close failed"));
    return NULL;
 }
 
@@ -639,7 +642,7 @@ tuple2<int,int>* pipe() {
     ret = ::pipe(fds);
 
     if(ret != 0) {
-        str* s = new str("pipe creation failed");
+        str* s = new str("os.pipe failed");
 
         throw new OSError(s);
     }
