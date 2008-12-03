@@ -164,6 +164,9 @@ def execv(file, args):
 def execvp(file, args):
     pass
 
+def open(name, flags):
+    return 1
+
 def fdopen(fd, mode='r', bufsize=-1):
     return file('/bin/sh')
 
