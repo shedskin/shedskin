@@ -99,6 +99,7 @@ int getgid();
 list<int> *getgroups();
 int getpgid(int pid);
 int getpgrp();
+str *getlogin();
 
 void *chown(str *path, int uid, int gid);
 void *chroot(str *path);
