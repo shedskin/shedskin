@@ -56,6 +56,9 @@ def getenv(name, alternative=''):
 def getcwd():
     return ''
 
+def getlogin():
+    return ''
+
 def chdir(d):
     pass
 

@@ -677,8 +677,15 @@ int getgid() { return ::getgid(); }
 int fork() {
     int ret;
     if ((ret = ::fork()) == -1)
-        throw new OSError();
+        throw new OSError(new str("os.fork"));
     return ret;
+}
+
+str *getlogin() {
+    char *name = ::getlogin();
+    if(!name)
+        throw new OSError(new str("os.getlogin"));
+    return new str(name);
 }
 
 void *chown(str *path, int uid, int gid) {
