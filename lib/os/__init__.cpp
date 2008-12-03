@@ -396,14 +396,28 @@ popen_pipe* popen(str* cmd, str* mode, int bufsize) {
     return new popen_pipe(fp);
 }
 
+int dup(int f1) {
+    int f2 = ::dup(f1);
+    if (f2 == -1) 
+        throw new OSError(new str("dup failed"));
+    return f2;
+}
+
 void *dup2(int f1, int f2) {
-    int res = ::dup2(f1,f2);
+    if (::dup2(f1,f2) == -1) 
+        throw new OSError(new str("dup2 failed"));
+    return NULL;
+}
 
-    if(res < 0) {
-        str* s = new str("dup2 failed");
-        throw new OSError(s);
-    }
+void *fchdir(int f1) {
+    if (::fchdir(f1) == -1) 
+        throw new OSError(new str("fchdir failed"));
+    return NULL;
+}
 
+void *fdatasync(int f1) {
+    if (::fdatasync(f1) == -1) 
+        throw new OSError(new str("fdatasync failed"));
     return NULL;
 }
 

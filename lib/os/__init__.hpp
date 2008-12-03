@@ -60,6 +60,7 @@ void *unsetenv(str* var);
 int chmod(str* path, int val);
 void *renames(str* old, str* _new);
 tuple2<int,int>* pipe();
+int dup(int f1);
 void *dup2(int f1, int f2);
 void *execvp(str* file, list<str*>* args);
 void *execv(str* file, list<str*>* args);
@@ -90,6 +91,8 @@ tuple2<file*,file*>* popen4(str* cmd, str* mode, int bufsize);
 
 #ifndef WIN32
 str *readlink(str *path);
+void *fchdir(int f1);
+void *fdatasync(int f1);
 
 int getuid();
 int getgid();
