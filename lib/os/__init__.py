@@ -113,6 +113,12 @@ def getuid():
 def getgid():
     return 1
 
+def getegid():
+    return 1
+
+def geteuid():
+    return 1
+
 def getgroups():
     return [1]
 
@@ -120,6 +126,12 @@ def getpgid(pid):
     return 1
 
 def getpgrp():
+    return 1
+
+def getppid():
+    return 1
+
+def getsid(pid):
     return 1
 
 def stat_float_times(n=False): 

@@ -676,6 +676,9 @@ str *readlink(str *path) {
 
 int getuid() { return ::getuid(); }
 int getgid() { return ::getgid(); }
+int geteuid() { return ::geteuid(); }
+int getegid() { return ::getegid(); }
+int getppid() { return ::getppid(); }
 
 int fork() {
     int ret;
@@ -718,6 +721,13 @@ list<int> *getgroups() {
     for(int i=0;i<nr;i++)
         r->append(l[i]);
     return r;
+}
+
+int getsid(int pid) {
+    int nr = ::getsid(pid);
+    if(nr == -1)
+        throw new OSError(new str("os.getsid"));
+    return nr;
 }
 
 int getpgid(int pid) {
