@@ -100,6 +100,7 @@ int getsid(int pid);
 
 void *lchown(str *path, int uid, int gid);
 void *link(str *src, str *dst);
+void *symlink(str *src, str *dst);
 
 list<int> *getgroups();
 str *getlogin();
