@@ -89,19 +89,24 @@ tuple2<file*,file*>* popen4(str* cmd);
 tuple2<file*,file*>* popen4(str* cmd, str* mode, int bufsize);
 
 #ifndef WIN32
+int getuid();
+int geteuid();
+int getgid();
+int getegid();
+int getpgid(int pid);
+int getpgrp();
+int getppid();
+int getsid(int pid);
+
+list<int> *getgroups();
+str *getlogin();
+
 str *readlink(str *path);
 void *fchdir(int f1);
 void *fdatasync(int f1);
-
-int getuid();
-int getgid();
-list<int> *getgroups();
-int getpgid(int pid);
-int getpgrp();
-str *getlogin();
-
 void *chown(str *path, int uid, int gid);
 void *chroot(str *path);
+
 str *ctermid();
 
 int fork();
