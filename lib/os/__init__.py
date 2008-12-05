@@ -218,3 +218,6 @@ def lchown(p, u, g):
 def link(a, b):
     pass
 
+def symlink(a, b):
+    pass
+

@@ -771,6 +771,11 @@ void *link(str *src, str *dst) {
     return NULL;
 }
 
+void *symlink(str *src, str *dst) {
+    if(::symlink(src->unit.c_str(), dst->unit.c_str()) == -1)
+        throw new OSError(new str("os.symlink"));
+    return NULL;
+}
 
 #endif
 
