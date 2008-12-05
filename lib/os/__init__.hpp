@@ -108,6 +108,8 @@ void *chown(str *path, int uid, int gid);
 void *chroot(str *path);
 
 str *ctermid();
+int isatty(int fd);
+str *ttyname(int fd);
 
 int fork();
 #endif

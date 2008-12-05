@@ -712,6 +712,17 @@ str *ctermid() {
     return new str(ptr);
 }
 
+int isatty(int fd) {
+    return ::isatty(fd);
+}
+
+str *ttyname(int fd) {
+    char *name = ::ttyname(fd);
+    if(!name)
+        throw new OSError(new str("os.ttyname"));
+    return new str(name);
+}
+
 list<int> *getgroups() {
     gid_t l[MAXENTRIES];
     int nr = ::getgroups(MAXENTRIES, l);

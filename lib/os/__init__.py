@@ -203,3 +203,8 @@ def chroot(dir):
 def ctermid():
     return ''
 
+def isatty(fd):
+    return True
+
+def ttyname(fd):
+    return ''
