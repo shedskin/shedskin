@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <sstream>
 #include <sys/stat.h>
+#include <sys/utsname.h>
 #include <stdio.h>
 #include <dirent.h>
 #include <errno.h>
@@ -700,6 +701,12 @@ void *chown(str *path, int uid, int gid) {
     return NULL;
 }
 
+void *lchown(str *path, int uid, int gid) {
+    if (::lchown(path->unit.c_str(), uid, gid) == -1) 
+        throw new OSError(path);
+    return NULL;
+}
+
 void *chroot(str *path) {
     if (::chroot(path->unit.c_str()) == -1) 
         throw new OSError(path);
@@ -721,6 +728,12 @@ str *ttyname(int fd) {
     if(!name)
         throw new OSError(new str("os.ttyname"));
     return new str(name);
+}
+
+tuple2<str *, str *> *uname() {
+    struct utsname name;
+    ::uname(&name);
+    return new tuple2<str *, str *>(5, new str(name.sysname), new str(name.nodename), new str(name.release), new str(name.version), new str(name.machine));
 }
 
 list<int> *getgroups() {
@@ -751,6 +764,13 @@ int getpgid(int pid) {
 int getpgrp() {
     return getpgid(0);
 }
+
+void *link(str *src, str *dst) {
+    if(::link(src->unit.c_str(), dst->unit.c_str()) == -1)
+        throw new OSError(new str("os.link"));
+    return NULL;
+}
+
 
 #endif
 

@@ -98,6 +98,9 @@ int getpgrp();
 int getppid();
 int getsid(int pid);
 
+void *lchown(str *path, int uid, int gid);
+void *link(str *src, str *dst);
+
 list<int> *getgroups();
 str *getlogin();
 
@@ -110,6 +113,8 @@ void *chroot(str *path);
 str *ctermid();
 int isatty(int fd);
 str *ttyname(int fd);
+
+tuple2<str *, str *> *uname();
 
 int fork();
 #endif
