@@ -208,3 +208,13 @@ def isatty(fd):
 
 def ttyname(fd):
     return ''
+
+def uname():
+    return ('',)
+
+def lchown(p, u, g):
+    pass
+
+def link(a, b):
+    pass
+
