@@ -221,3 +221,5 @@ def link(a, b):
 def symlink(a, b):
     pass
 
+def wait():
+    return (1,)
