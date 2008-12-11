@@ -118,6 +118,7 @@ str *ttyname(int fd);
 tuple2<str *, str *> *uname();
 
 int fork();
+tuple2<int, int> *wait();
 #endif
 
 void __init();

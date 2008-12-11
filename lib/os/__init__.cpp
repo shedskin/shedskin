@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <sstream>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <sys/utsname.h>
 #include <stdio.h>
 #include <dirent.h>
@@ -686,6 +687,13 @@ int fork() {
     if ((ret = ::fork()) == -1)
         throw new OSError(new str("os.fork"));
     return ret;
+}
+
+tuple2<int, int> *wait() {
+    int pid, status;
+    if((pid = ::wait(&status)) == -1)
+        throw new OSError(new str("os.wait"));
+    return new tuple2<int, int>(2, pid, status);
 }
 
 str *getlogin() {
