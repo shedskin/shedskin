@@ -9,7 +9,7 @@ namespace __os__ {
 extern str *linesep, *name;
 extern dict<str *, str *> *__ss_environ;
 extern str *altsep, *curdir, *defpath, *devnull, *extsep, *pardir, *pathsep, *sep;
-
+extern int __ss_O_APPEND, __ss_O_CREAT, __ss_O_EXCL, __ss_O_RDONLY, __ss_O_RDWR, __ss_O_TRUNC, __ss_O_WRONLY;
 
 typedef OSError error;
 
@@ -67,6 +67,8 @@ void *execv(str* file, list<str*>* args);
 void *close(int fd);
 int open(str *name, int flags);
 file* fdopen(int fd, str* mode=NULL, int bufsize=-1);
+str *read(int fd, int n);
+int write(int fd, str *s);
 
 class popen_pipe : public file {
 public:
