@@ -14,6 +14,14 @@ defpath = ''
 altsep = ''
 devnull = ''
 
+O_APPEND = 0
+O_CREAT = 0
+O_EXCL = 0
+O_RDONLY = 0
+O_RDWR = 0
+O_TRUNC = 0
+O_WRONLY = 0
+
 class error(OSError): 
     pass
 
@@ -177,6 +185,12 @@ def execvp(file, args):
     pass
 
 def open(name, flags):
+    return 1
+
+def read(fd, n):
+    return ''
+
+def write(fd, s):
     return 1
 
 def fdopen(fd, mode='r', bufsize=-1):

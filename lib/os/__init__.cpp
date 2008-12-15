@@ -40,9 +40,11 @@ str *linesep, *name;
 dict<str *, str *> *__ss_environ;
 struct stat sbuf;
 
-const int MAXENTRIES = 4096; /* XXX probably have to fix each function that uses this */
+const int MAXENTRIES = 4096; /* XXX fix functions that use this */
 
 str *altsep, *curdir, *defpath, *devnull, *extsep, *pardir, *pathsep, *sep;
+
+int __ss_O_APPEND, __ss_O_CREAT, __ss_O_EXCL, __ss_O_RDONLY, __ss_O_RDWR, __ss_O_TRUNC, __ss_O_WRONLY;
 
 list<str *> *listdir(str *path) {
     list<str *> *r = new list<str *>();
@@ -491,6 +493,24 @@ file* fdopen(int fd, str* mode, int bufsize) {
     return ret;
 }
 
+str *read(int fd, int n) {  /* XXX slowness */
+    char c;
+    str *s = new str();
+    for(int i=0; i<n; i++) {
+        if(::read(fd, &c, 1) == -1)
+            throw new OSError(new str("os.read"));
+        s->unit += c;
+    }
+    return s;
+}
+
+int write(int fd, str *s) {
+    int r;
+    if((r=::write(fd, s->unit.c_str(), len(s))) == -1)
+        throw new OSError(new str("os.write"));
+    return r;
+}
+
 #ifndef WIN32
 tuple2<file*,file*>* popen2(str* cmd) {
     return popen2(cmd, new str("t"), -1);
@@ -818,6 +838,13 @@ void __init() {
     altsep = __path__::altsep;
     devnull = __path__::devnull;
 
+    __ss_O_APPEND = O_APPEND;
+    __ss_O_CREAT = O_CREAT;
+    __ss_O_EXCL = O_EXCL;
+    __ss_O_RDONLY = O_RDONLY;
+    __ss_O_RDWR = O_RDWR;
+    __ss_O_TRUNC = O_TRUNC;
+    __ss_O_WRONLY = O_WRONLY;
 }
 
 } // module namespace

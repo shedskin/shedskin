@@ -1782,7 +1782,6 @@ class generateVisitor(ASTVisitor):
 
     def visitCallFunc(self, node, func=None): 
         objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr = analyze_callfunc(node)
-
         funcs = callfunc_targets(node, self.mergeinh)
 
         if self.library_func(funcs, 're', None, 'findall') or \
