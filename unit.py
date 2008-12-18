@@ -5,6 +5,35 @@ from sets import Set
 import traceback, sys, os, time
 
 tests = [
+('''fixes for 0.0.31''', '''
+# disappearing type
+class hoppaclass:
+    def hoppa(self):
+        nScale = 1 << 16 
+        FIX = lambda x: int((x) * nScale + 0.5)
+        print FIX(4)
+
+hoppaclass().hoppa()
+
+# locally override module
+import testdata.bert as game
+
+class Game:
+    def __init__(self):
+        self.x = 'xxx'
+
+def hup(game):
+    game.__init__()
+    print game.x
+    if game:
+        print 'game'
+
+hup(Game())
+
+''', '''
+output(equal=True)
+
+'''),
 
 ('''fixes for 0.0.30; complex''', '''
 # casting
