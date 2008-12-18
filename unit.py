@@ -6,7 +6,7 @@ import traceback, sys, os, time
 
 tests = [
 ('''fixes for 0.0.31''', '''
-# disappearing type
+# the mystery of the disappearing type
 class hoppaclass:
     def hoppa(self):
         nScale = 1 << 16 
@@ -15,7 +15,7 @@ class hoppaclass:
 
 hoppaclass().hoppa()
 
-# locally override module
+# locally override module name
 import testdata.bert as game
 
 class Game:
@@ -29,6 +29,13 @@ def hup(game):
         print 'game'
 
 hup(Game())
+
+# class attribute access across module
+from testdata import bert 
+
+bert.zeug.purple += 1
+blah = bert.zeug.purple
+print blah
 
 ''', '''
 output(equal=True)
