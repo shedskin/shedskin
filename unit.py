@@ -37,6 +37,12 @@ bert.zeug.purple += 1
 blah = bert.zeug.purple
 print blah
 
+# don't crash here
+try:
+    pass
+except Fietspomp:
+    raise Douchegordijn
+
 ''', '''
 output(equal=True)
 
