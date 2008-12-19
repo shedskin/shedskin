@@ -1065,6 +1065,22 @@ public:
 #endif
 };
 
+class KeyboardInterrupt : public Exception {
+public: 
+    KeyboardInterrupt(str *msg=0) : Exception(msg) {} 
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_KeyboardInterrupt; }
+#endif
+};
+
+class EOFError : public Exception {
+public: 
+    EOFError(str *msg=0) : Exception(msg) {}
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_EOFError; }
+#endif
+};
+
 class StopIteration : public Exception { public: StopIteration(str *msg=0) : Exception(msg) {} };
 
 #define ASSERT(x, y) if(!(x)) throw new AssertionError(y);

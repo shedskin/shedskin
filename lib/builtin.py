@@ -546,6 +546,8 @@ class RuntimeError(Exception): pass
 class OSError(Exception): pass
 #    def __init__(self, message=None): 
 #        self.message = message
+class KeyboardInterrupt(Exception): pass
+class EOFError(Exception): pass
 
 __exception = OSError('') # XXX remove 
 __exception.errno = 0
