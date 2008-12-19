@@ -6,7 +6,7 @@ import traceback, sys, os, time
 
 tests = [
 ('''fixes for 0.0.31''', '''
-# the mystery of the disappearing type
+# disappearing type
 class hoppaclass:
     def hoppa(self):
         nScale = 1 << 16 
@@ -37,11 +37,24 @@ bert.zeug.purple += 1
 blah = bert.zeug.purple
 print blah
 
-# don't crash here
-try:
+# template conflict
+def opterr(x):
     pass
-except Fietspomp:
-    raise Douchegordijn
+
+opterr(1)
+opterr('1')
+
+# disappearing type 
+def ParseAction(action):
+    return ('',)
+
+def ParseRuleLine(line):
+    tmp=line.split()
+    for y in tmp[-1].split():
+        ParseAction(y) 
+
+for x in ''.split(): 
+    ParseRuleLine(x)
 
 ''', '''
 output(equal=True)
