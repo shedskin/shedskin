@@ -24,3 +24,5 @@ class array:
     def __delete__(self, x, a=1, b=1, s=1):
         pass
 
+    def __setitem__(self, i, e):
+        pass
