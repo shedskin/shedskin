@@ -17,7 +17,7 @@ class array : public pyobj {
 public:
 
     array() {}
-    array(str *flags, list<int> *arg) {
+    array(str *flags, list<int> *arg=NULL) {
         this->__class__ = cl_array;
         __init__(flags, arg);
     }
@@ -31,6 +31,7 @@ public:
     void *fromfile(file *f, int n);
     void *__init__(str *flags, list<int> *arg);
     void *__delete__(int x, int a, int b, int s);
+    void *__setitem__(int i, int e);
 };
 
 extern void * default_0;

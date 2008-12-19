@@ -63,6 +63,10 @@ void *array::__delete__(int x, int a, int b, int s) {
     
     return NULL;
 }
+void *array::__setitem__(int i, int e) {
+
+    return NULL;
+}
 
 void __init() {
     const_0 = new str("");
