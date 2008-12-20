@@ -26,14 +26,14 @@ def do_extmod(gv):
     funcs = supported_funcs(gv, gv.module.funcs.values())
     for func in funcs:
         do_extmod_method(gv, func)
-    do_extmod_methoddef(gv, gv.module.ident, funcs)
+    do_extmod_methoddef(gv, 'Global_'+gv.module.ident, funcs)
 
     # --- module init function
     print >>gv.out, 'PyMODINIT_FUNC init%s(void) {' % gv.module.ident
 
     # initialize modules
     gv.do_init_modules()
-    print >>gv.out, '\n    PyObject *mod = Py_InitModule((char *)"%s", %sMethods);' % (gv.module.ident, gv.module.ident)
+    print >>gv.out, '\n    PyObject *mod = Py_InitModule((char *)"%s", Global_%sMethods);' % (gv.module.ident, gv.module.ident)
     print >>gv.out, '    if(!mod)'
     print >>gv.out, '        return;\n'
 

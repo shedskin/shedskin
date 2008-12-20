@@ -533,6 +533,8 @@ class Exception:
         self.msg = msg
 
 class AssertionError(Exception): pass
+class KeyboardInterrupt(Exception): pass
+class EOFError(Exception): pass
 class KeyError(Exception): pass
 class ValueError(Exception): pass
 class IndexError(Exception): pass
