@@ -1571,6 +1571,12 @@ template<class T> void *list<T>::__setslice__(int x, int l, int u, int s, pyiter
 
     slicenr(x, l, u, s, this->__len__());
 
+    if(l>= this->__len__()) { /* XXX cleanup whole function */
+        for(i=0; i<len(la); i++)
+            this->units.push_back(la->units[i]);
+        return NULL;
+    }
+
     if(x&4) { // x&4: extended slice (step 's' is given), check if sizes match 
         int slicesize; 
         if(l == u) slicesize = 0; // XXX ugly
@@ -1588,7 +1594,7 @@ template<class T> void *list<T>::__setslice__(int x, int l, int u, int s, pyiter
     }
 
     if(s == 1) {
-        if(!(x&4) && u < l) 
+        if(!(x&4) && u < l)
             this->units.insert(this->units.begin()+l, la->units.begin(), la->units.end());
         else if(l < u) {
             this->units.erase(this->units.begin()+l, this->units.begin()+u);
