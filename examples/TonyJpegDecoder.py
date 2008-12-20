@@ -478,19 +478,19 @@ class TonyJpegDecoder:
     # i is the actual input pixel value, in the range 0..MAXJSAMPLE
     nScale = 1 << 16 # equal to pow(2,16)
     nHalf = nScale >> 1
-    FIX = lambda x: int((x) * nScale + 0.5)
+    FIX = lambda x, n: int((x) * n + 0.5)
     for i in range(256):
       # The Cb or Cr value we are thinking of is x = i - CENTERJSAMPLE
       # We also add in ONE_HALF so that need not do it in inner loop
       x = i - 128
       # Cr=>R value is nearest int to 1.40200 * x
-      self.CrToR[i] = (int) ( FIX(1.40200) * x + nHalf ) >> 16
+      self.CrToR[i] = (int) ( FIX(1.40200, nScale) * x + nHalf ) >> 16
       # Cb=>B value is nearest int to 1.77200 * x
-      self.CbToB[i] = (int) ( FIX(1.77200) * x + nHalf ) >> 16
+      self.CbToB[i] = (int) ( FIX(1.77200, nScale) * x + nHalf ) >> 16
       # Cr=>G value is scaled-up -0.71414 * x
-      self.CrToG[i] = (int) (- FIX(0.71414) * x)
+      self.CrToG[i] = (int) (- FIX(0.71414, nScale) * x)
       # Cb=>G value is scaled-up -0.34414 * x
-      self.CbToG[i] = (int) (- FIX(0.34414) * x + nHalf)
+      self.CbToG[i] = (int) (- FIX(0.34414, nScale) * x + nHalf)
 
   def InitQuantTable(self):
     """InitQuantTable will produce customized quantization table into: self.tblYQuant[0..63] and self.tblCbCrQuant[0..63]"""
