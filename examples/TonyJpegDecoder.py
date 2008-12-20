@@ -172,8 +172,8 @@ class TonyJpegDecoder:
     self.CbToB = {}
     self.CbToG = {}
     # To speed up, we precompute two DCT quant tables
-    self.qtblY = {}
-    self.qtblCbCr = {}
+    self.qtblY_dict = {}
+    self.qtblCbCr_dict = {}
     self.htblYDC = HUFFTABLE()
     self.htblYAC = HUFFTABLE()
     self.htblCbCrDC = HUFFTABLE()
@@ -238,9 +238,9 @@ class TonyJpegDecoder:
       prec = n >> 4
       n &= 0x0F
       if n == 0:
-        qtb = self.qtblY
+        qtb = self.qtblY_dict
       else:
-        qtb = self.qtblCbCr
+        qtb = self.qtblCbCr_dict
       for i in range(64):
         qtb[jpeg_natural_order[i]] = self.ReadByte()
       length -= 64
@@ -534,8 +534,8 @@ class TonyJpegDecoder:
        4520,  6270,  5906,  5315,  4520,  3552,  2446,  1247]
 
     # Scale the Y and CbCr quant table, respectively
-    self.qtblY = ScaleQuantTable(self.qtblY, aanscales)
-    self.qtblCbCr = ScaleQuantTable(self.qtblCbCr, aanscales)
+    self.qtblY = ScaleQuantTable(self.qtblY_dict, aanscales)
+    self.qtblCbCr = ScaleQuantTable(self.qtblCbCr_dict, aanscales)
     # If no qtb got from jpg file header, then use std quant tbl
     # self.qtblY = ScaleQuantTable(std_luminance_quant_tbl, aanscales)
     # self.qtblCbCr = ScaleQuantTable(std_chrominance_quant_tbl, aanscales)
