@@ -47,6 +47,15 @@ def ParseRuleLine(line):
 for x in ''.split(): 
     ParseRuleLine(x)
 
+# setslice interesting cases
+a = range(5)
+a[7:80] = range(5)
+print a
+a[10:15] = range(10)
+print a
+a[12:20] = range(10)
+print a
+
 ''', '''
 output(equal=True)
 
