@@ -592,7 +592,7 @@ def analyze_callfunc(node, check_exist=False): # XXX generate target list XXX un
                         return objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr
 
         module = lookupmodule(node.node.expr, mv)
-        if module: 
+        if not localvar and module: 
             namespace, objexpr = module, None
         else:
             if ident == 'group' and len(node.args) > 1:

@@ -2463,8 +2463,13 @@ class generateVisitor(ASTVisitor):
     def visitGetattr(self, node, func=None):
         module = lookupmodule(node.expr, inode(node).mv)
         cl = lookupclass(node.expr, inode(node).mv)
+        localvar = None
+        if isinstance(node.expr, Name):
+            var = lookupvar(node.expr.name, func)
+            if var and var.parent:
+                localvar = var
 
-        if cl and node.attrname in cl.staticmethods: # staticmethod
+        if not localvar and cl and node.attrname in cl.staticmethods: # staticmethod
             ident = cl.ident
             if cl.ident in ['dict', 'defaultdict']: # own namespace because of template vars
                 self.append('__'+cl.ident+'__::')
@@ -2474,7 +2479,7 @@ class generateVisitor(ASTVisitor):
             else:
                 self.append(ident+'::')
 
-        elif module and not (isinstance(node.expr, Name) and lookupvar(node.expr.name, func)): # XXX forbid redef?
+        elif not localvar and module: 
             self.append(namespace(module)+'::') 
 
         else:
@@ -2483,10 +2488,7 @@ class generateVisitor(ASTVisitor):
             if isinstance(node.expr, Name) and not lookupvar(node.expr.name, func): # XXX XXX
                 self.append(node.expr.name)
             else:
-                if module:
-                    self.append(namespace(module)) 
-                else:
-                    self.visit(node.expr, func)
+                self.visit(node.expr, func)
             if not isinstance(node.expr, (Name)):
                 self.append(')')
 
