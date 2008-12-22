@@ -2479,6 +2479,14 @@ class generateVisitor(ASTVisitor):
             else:
                 self.append(ident+'::')
 
+        elif not localvar and cl: # XXX merge above?
+            ident = cl.ident
+            if isinstance(node.expr, Getattr):
+                submod = lookupmodule(node.expr.expr, inode(node).mv)
+                self.append(namespace(submod)+'::'+cl.cpp_name+'::')
+            else:
+                self.append(ident+'::')
+
         elif not localvar and module: 
             self.append(namespace(module)+'::') 
 
