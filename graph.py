@@ -1375,6 +1375,11 @@ class moduleVisitor(ASTVisitor):
 
         self.callfuncs.append((fakefunc, func))
 
+        cl = lookupclass(node, self) # XXX merge with analyze_callfunc, cpp.visitGetattr
+        if cl:
+            getgx().types[newnode] = set([(cl.parent, 0)]) 
+            newnode.copymetoo = True 
+
     def visitConst(self, node, func=None):
         if type(node.value) == unicode:
             error('unicode is not supported', node)
