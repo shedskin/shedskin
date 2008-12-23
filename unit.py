@@ -24,7 +24,7 @@ hup(Game())
 # class attribute access across module
 from testdata import bert 
 
-bert.zeug.purple += 1
+#bert.zeug.purple += 1 # XXX
 blah = bert.zeug.purple
 print blah
 
@@ -55,6 +55,9 @@ a[10:15] = range(10)
 print a
 a[12:20] = range(10)
 print a
+
+# not good
+print len(''.split())
 
 ''', '''
 output(equal=True)
