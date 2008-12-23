@@ -274,9 +274,10 @@ class cnode:
         self.callfuncs = []    # callfuncs to which node is object/argument
         self.copybyvalue = {}   # node is copy-by-value argument (int/str/float type->number)
 
-        if isinstance(thing, CallFunc): self.changed = 1 # object/arguments have changed
+        #if isinstance(thing, CallFunc): self.changed = 1 # object/arguments have changed
 
         self.nodecp = set()        # already analyzed cp's # XXX kill! kill!
+        self.changed = 0
 
         # --- add node to surrounding non-listcomp function
         if parent: # do this only once! (not when copying)
@@ -304,6 +305,7 @@ class cnode:
 
         if self.constructor or self.copymetoo or isinstance(self.thing, (Not, Compare)): # XXX XXX
             getgx().types[newnode] = getgx().types[self].copy()
+            newnode.changed = 1
         else:
             getgx().types[newnode] = set()
         return newnode

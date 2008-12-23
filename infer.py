@@ -165,6 +165,11 @@ def propagate():
     while worklist:
         a = worklist.pop(0)
         a.in_list = 0
+
+        if not a.mv.module.builtin and a.changed: # XXX general mechanism for seeding/changes -> cpa
+            for callfunc in a.callfuncs:
+                cpa(getgx().cnode[callfunc, a.dcpa, a.cpa], worklist)
+            a.changed = False
          
         for b in a.out.copy(): # XXX kan veranderen...?
             # for builtin types, the set of instance variables is known, so do not flow into non-existent ones # XXX ifa
@@ -369,6 +374,7 @@ def cpa(callnode, worklist):
             func.cp[dcpa][c] = cpa = len(func.cp[dcpa]) # XXX +1
 
             #if not func.mv.module.builtin and not func.ident in ['__getattr__', '__setattr__']:
+            #if not callnode.mv.module.builtin:
             #    print 'template', (func, dcpa), c
 
             getgx().templates += 1
