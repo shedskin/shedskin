@@ -510,8 +510,6 @@ list<str *> *str::splitlines(int keepends)
     return r;
 }
 
-
-
 str *str::rstrip(str *chars) {
     __GC_STRING remove;
     if(chars) remove = chars->unit;
@@ -526,12 +524,13 @@ list<str *> *str::split(str *sp, int max_splits) {
     __GC_STRING s = unit;
     int sep_iter, chunk_iter = 0, tmp, num_splits = 0;
     list<str *> *result = new list<str *>();
-
     if (sp == NULL)
     {
 #define next_separator(iter) (s.find_first_of(ws, (iter)))
 #define skip_separator(iter) (s.find_first_not_of(ws, (iter)))
 
+        if(skip_separator(chunk_iter) == -1) /* XXX */ 
+            return result;
         if(next_separator(chunk_iter) == 0) 
             chunk_iter = skip_separator(chunk_iter);
         while((max_splits < 0 or num_splits < max_splits)
