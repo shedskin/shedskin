@@ -57,7 +57,8 @@ a[12:20] = range(10)
 print a
 
 # not good
-print len(''.split())
+print ''.split()
+print '  '.split()
 
 ''', '''
 output(equal=True)
