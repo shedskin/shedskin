@@ -60,6 +60,14 @@ print a
 print ''.split()
 print '  '.split()
 
+# casting problem
+def hoppa():
+    return ['beh']
+    return []
+    return None
+
+hop = hoppa()
+
 ''', '''
 output(equal=True)
 
