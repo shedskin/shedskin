@@ -1,3 +1,31 @@
+### to compile this, move lib/array.* to the shedskin lib dir!
+
+"""
+Based on C++ code by Dr. Tony Lin:
+
+*****************************************************************************
+*    Author:            Dr. Tony Lin                                        *
+*    Email:            lintong@cis.pku.edu.cn                               *
+*    Release Date:    Dec. 2002                                             *
+*                                                                           *
+*    Name:            TonyJpegLib, rewritten from IJG codes                 *
+*    Source:            IJG v.6a JPEG LIB                                   *
+*    Purpose:        Support real jpeg file, with readable code             *
+*                                                                           *
+*    Acknowlegement:    Thanks for great IJG, and Chris Losinger            *
+*                                                                           *
+*    Legal Issues:    (almost same as IJG with followings)                  *
+*                                                                           *
+*    1. We don't promise that this software works.                          *
+*    2. You can use this software for whatever you want.                    *
+*    You don't have to pay.                                                 *
+*    3. You may not pretend that you wrote this software. If you use it     *
+*    in a program, you must acknowledge somewhere. That is, please          *
+*    metion IJG, and Me, Dr. Tony Lin.                                      *
+*                                                                           *
+*****************************************************************************
+"""
+
 import sys
 
 M_SOF0  = 0xc0
