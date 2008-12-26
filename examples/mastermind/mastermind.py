@@ -53,8 +53,8 @@ class Mastermind:
         print "red yellow green purple black white"
         print ""
 
-    def display(self,spel):
-        for r in spel.getBoard().getRows():
+    def display(self,game):
+        for r in game.getBoard().getRows():
             for p in r.getGuess().getPegs():
                 print str(colour.getColourName(p.getColour())).rjust(6),
             print " | Result:\t",
@@ -62,8 +62,8 @@ class Mastermind:
                 print str(colour.getColourName(p.getColour())).rjust(6),
             print ""
 
-    def displaySecret(self,spel):
-        for p in spel.getSecretCode().getPegs():
+    def displaySecret(self,game):
+        for p in game.getSecretCode().getPegs():
             print str(colour.getColourName(p.getColour())).rjust(6),
 
     def __readGuess(self):
@@ -88,15 +88,15 @@ class Mastermind:
         if (re.search("^r",s) is not None):
             return peg.Peg(colour.Colours.red)
         elif (re.search("^p",s) is not None):
-            return peg.Peg(colour.purple)
+            return peg.Peg(colour.Colours.purple)
         elif (re.search("^g",s) is not None):
-            return peg.Peg(colour.green)
+            return peg.Peg(colour.Colours.green)
         elif (re.search("^y",s) is not None):
-            return peg.Peg(colour.yellow)
+            return peg.Peg(colour.Colours.yellow)
         elif (re.search("^w",s) is not None):
-            return peg.Peg(colour.white)
+            return peg.Peg(colour.Colours.white)
         elif (re.search("^b",s) is not None):
-            return peg.Peg(colour.black)
+            return peg.Peg(colour.Colours.black)
         else:
             return None
 

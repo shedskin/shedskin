@@ -12,23 +12,15 @@ def getColourName(i):
     elif i == 5:
         return "black"
 
-numberOfColours = 6
-red = 0
-green = 1
-purple = 2
-yellow = 3
-white = 4
-black = 5
-
 class Colours:
-#    numberOfColours = 6
+    numberOfColours = 6
     red = 0
-#    green = 1
+    green = 1
     purple = 2
-#    yellow = 3
-#    white = 4
-#    black = 5
+    yellow = 3
+    white = 4
+    black = 5 
 
     def getNumberOfColours(self):
-        return numberOfColours
+        return self.numberOfColours
 

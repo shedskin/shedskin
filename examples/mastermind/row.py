@@ -3,8 +3,7 @@ import code
 class Row:
     """Class containing a guess code and answer code"""
 
-    def __init__(self,guess,result=None):
-        print 'ha', guess, result
+    def __init__(self,guess,result):
         self.__guess = guess
         self.__result = result
 

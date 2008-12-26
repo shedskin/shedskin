@@ -2,15 +2,15 @@ import random
 import peg
 import colour
 
-DEFAULTCODESIZE = 4
-
 class Code:
     """Class representing a collection of pegs"""
 
-#    __defaultCodeSize = 4
-#    __pegList = []
+    #__defaultCodeSize = 4
+    #__pegList = []
 
     def __init__(self, __pegList=None):
+    #    self.__pegList = __pegList
+        self.__defaultCodeSize = 4
         self.__pegList = __pegList
 
     def setPegs(self, __pegList):
@@ -18,11 +18,11 @@ class Code:
 
     def setRandomCode(self, codeSize=-1):
         if codeSize == -1:
-            codeSize = DEFAULTCODESIZE
+            codeSize = self.__defaultCodeSize
         random.seed()
         self.__pegList = []
         for i in range(codeSize):
-            x = peg.Peg(random.randint(0,colour.numberOfColours-1))
+            x = peg.Peg(random.randint(0,colour.Colours.numberOfColours-1))
             self.__pegList.append(x)
 
     def getPegs(self):
@@ -53,7 +53,7 @@ class Code:
             if (self.__pegList[i].equals(code.getPegs()[i])):
                 secretUsed[i] = True
                 guessUsed[i] = True
-                resultPegs.append(peg.Peg(colour.black))
+                resultPegs.append(peg.Peg(colour.Colours.black))
                 count += 1
 
         """
@@ -75,7 +75,7 @@ class Code:
                     if (i != j and not secretUsed[j] \
                     and not guessUsed[i] \
                     and self.__pegList[j].equals(code.getPegs()[i])):
-                        resultPegs.append(peg.Peg(colour.white))
+                        resultPegs.append(peg.Peg(colour.Colours.white))
                         secretUsed[j] = True
                         guessUsed[i] = True
 
