@@ -2864,24 +2864,25 @@ def assign_needs_cast(arg, func, formal, target):
 def assign_needs_cast_rec(argsplit, func, formalsplit, target):
     argclasses = split_classes(argsplit)
     formalclasses = split_classes(formalsplit)
-    #print 'splitclasses', argclasses, formalclasses
  
-    # arg type is None, formal type is more
+    # void * 
     noneset = set([defclass('none')])
     if argclasses == noneset and formalclasses != noneset:
         return True
 
-    if defclass('none') in argclasses: return False # XXX research later
+    # no type 
+    if not argclasses and formalclasses: # a = [[]]
+        return True
 
     #if len(formalclasses) > 1 and len(argclasses) == 1:
     #    if not template_match(argsplit, func) and not template_match(formalsplit, target):
     #        return True
          
+    if defclass('none') in formalclasses:
+        formalclasses.remove(defclass('none'))
+
     if len(formalclasses) != 1:
         return False
-
-    if not len(argclasses): # a = [[]]
-        return True
 
     cl = formalclasses.pop()
 
@@ -2893,7 +2894,6 @@ def assign_needs_cast_rec(argsplit, func, formalsplit, target):
             return True
 
     return False
-
 
 def split_subsplit(split, varname, tvar=True):
     subsplit = {}
