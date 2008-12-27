@@ -1,4 +1,4 @@
-### to compile this, move lib/pygame.* to the shedskin lib dir!
+### to compile this, copy lib/pygame.* to the shedskin lib dir!
 ###
 ### also, modify FLAGS to something like this:
 ###
