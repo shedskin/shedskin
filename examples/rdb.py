@@ -1,3 +1,5 @@
+### to compile this, copy lib/array.* to the shedskin lib dir!
+
 __title__="KeyJ's iPod shuffle Database Builder"
 __version__="1.0-rc1"
 

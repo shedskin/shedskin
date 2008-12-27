@@ -1,4 +1,4 @@
-### to compile this, move lib/serial.* and lib/struct.* to the shedskin lib dir!
+### to compile this, copy lib/serial.* and lib/struct.* to the shedskin lib dir!
 
 # Serial Bootstrap Loader software for the MSP430 embedded proccessor.
 #

@@ -1,5 +1,3 @@
-### to compile this, move lib/array.* to the shedskin lib dir!
-
 """
 Based on C++ code by Dr. Tony Lin:
 
