@@ -105,9 +105,12 @@ class Mastermind:
 
 """
 
-if __name__ == "__main__":
+def main():
     m = Mastermind()
     guesses = 8
     if len(sys.argv) > 1 and re.match("\d", sys.argv[1]) is not None:
         guesses = int(sys.argv[1])
     m.play(guesses)
+
+if __name__ == "__main__":
+    main()
