@@ -1008,13 +1008,19 @@ file *open(str *name, str *flags) {
 }
 
 int file::getchar() {
+    int r;
     __check_closed();
-    return fgetc(f);
+    r = fgetc(f);
+    if(ferror(f))
+        throw new IOError();
+    return r;
 }
 
 void *file::putchar(int c) {
     __check_closed();
     fputc(c, f);
+    if(ferror(f))
+        throw new IOError();
     return NULL;
 }
 
