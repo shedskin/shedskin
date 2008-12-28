@@ -1135,6 +1135,8 @@ str *raw_input(str *msg) {
     if(msg)
         std::cout << msg->unit;
     std::getline(std::cin, s);
+    if(std::cin.eof())
+        throw new EOFError();
     return new str(s); 
 }
 
