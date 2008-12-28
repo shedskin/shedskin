@@ -527,7 +527,7 @@ class generateVisitor(ASTVisitor):
 
     def do_comment(self, s):
         if not s: return
-        doc = s.split('\n')
+        doc = s.replace('/*', '//').replace('*/', '//').split('\n')
         self.output('/**')
         if doc[0].strip():
             self.output(doc[0])
