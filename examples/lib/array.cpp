@@ -31,7 +31,7 @@ void *array::fromstring(str *s) {
 }
 
 void *array::tofile(file *f) {
-    
+    f->write(tostring());
     return NULL;
 }
 
@@ -43,18 +43,18 @@ str *array::tostring() {
 }
 
 int array::__len__() {
-    
-    return 1;
+    return len(unit);
 }
 
 array *array::__slice__(int x, int l, int u, int s) {
-    
-    return this;
+    return new array(new str("B"), unit->__slice__(x, l, u, s));
 }
 
 void *array::fromfile(file *f, int n) {
     str *r = f->read(n); 
     fromstring(r); 
+    if(len(r) != n)
+        throw new EOFError();
     return NULL;
 }
 
@@ -66,16 +66,18 @@ void *array::__init__(str *flags, list<int> *arg) {
 }
 
 void *array::__delete__(int x, int a, int b, int s) {
-    
-    return NULL;
+    unit->__delete__(x, a, b, s);
 }
-void *array::__setitem__(int i, int e) {
 
-    return NULL;
+void *array::__setitem__(int i, int e) {
+    unit->__setitem__(i, e);
 }
 
 str *array::__repr__() {
-    return __add_strs(3, new str("array('B', "), repr(unit), new str(")"));
+    if(len(unit))
+        return __add_strs(3, new str("array('B', "), repr(unit), new str(")"));
+    else
+        return new str("array('B')");
 }
 
 void __init() {
