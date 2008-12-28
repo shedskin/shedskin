@@ -68,6 +68,11 @@ def hoppa():
 
 hop = hoppa()
 
+# comment problem
+def hoezee():
+    \'\'\'kijk een /* C++ comment */\'\'\'
+hoezee()
+
 ''', '''
 output(equal=True)
 
