@@ -1,7 +1,59 @@
 ### to compile this, copy lib/array.* to the shedskin lib dir!
 
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
 __title__="KeyJ's iPod shuffle Database Builder"
 __version__="1.0-rc1"
+__author__="Martin Fiedler"
+__email__="martin.fiedler@gmx.net"
+
+""" VERSION HISTORY
+1.0-rc1 (2006-04-26)
+    * finally(!) added the often-requested auto-rename feature (-r option)
+0.7-pre1 (2005-06-09)
+    * 0.6-final was skipped because of the huge load of new (experimental)
+      features in this version :)
+    * rule files allow for nice and flexible fine tuning
+    * fixed --nochdir and --nosmart bugs
+    * numerical sorting (i.e. "track2.mp3" < "track10.mp3")
+    * iTunesSD entries are now copied over from the old file if possible; this
+      should preserve the keys for .aa files
+0.6-pre2 (2005-05-02)
+    * fixed file type bug (thanks to Nowhereman)
+    * improved audio book support (thanks to Nowhereman)
+    * files called $foo.book.$type (like example.book.mp3) are stored as
+      audio books now
+    * the subdirectories of /iPod_Control/Music are merged as if they were a
+      single directory
+0.6-pre1 (2005-04-23)
+    * always starts from the directory of the executable now
+    * output logging
+    * generating iTunesPState and iTunesStats so that the iPod won't overwrite
+      iTunesShuffle anymore
+    * -> return of smart shuffle ;)
+    * directory display order is identical to playback ordernow
+    * command line options and help
+    * interactive mode, configurable playback volume, directory limitation
+0.5 (2005-04-15)
+    * major code refactoring (thanks to Andre Kloss)
+    * removed "smart shuffle" again -- the iPod deleted the file anyway :(
+    * common errors are now reported more concisely
+    * dot files (e.g. ".hidden_file") are now ignored while browsing the iPod
+0.4 (2005-03-20)
+    * fixed iPod crashes after playing the shuffle playlist to the end
+    * fixed incorrect databse entries for non-MP3 files
+0.3 (2005-03-18)
+    * Python version now includes a "smart shuffle" feature
+0.2 (2005-03-15)
+    * added Python version
+0.1 (2005-03-13)
+    * initial public release, Win32 only
+"""
 
 import sys,os,os.path,array,getopt,random,fnmatch,string
 
