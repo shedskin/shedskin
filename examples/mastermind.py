@@ -1,2 +1,7 @@
 from mm import mastermind
-mastermind.main()
+
+def main():
+    mastermind.main()
+
+if __name__=='__main__':
+    main()
