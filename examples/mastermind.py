@@ -1,2 +1,2 @@
-from mastermind import mastermind
+from mm import mastermind
 mastermind.main()
