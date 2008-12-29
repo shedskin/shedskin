@@ -2,6 +2,8 @@ import board
 import row
 import code
 
+""" copyright Sean McCarthy, license GPL v2 or later """
+
 class Game:
     """Class Game, provides functions for playing"""
 

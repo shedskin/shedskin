@@ -1,3 +1,5 @@
+""" copyright Sean McCarthy, license GPL v2 or later """
+
 def getColourName(i):
     if i == 0:
         return "red"

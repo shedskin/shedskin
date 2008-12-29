@@ -1,5 +1,7 @@
 import code
 
+""" copyright Sean McCarthy, license GPL v2 or later """
+
 class Row:
     """Class containing a guess code and answer code"""
 

@@ -5,6 +5,8 @@ import colour
 import re
 import sys
 
+""" copyright Sean McCarthy, license GPL v2 or later """
+
 class Mastermind:
 
     """

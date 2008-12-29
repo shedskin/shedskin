@@ -1,5 +1,7 @@
 import colour
 
+""" copyright Sean McCarthy, license GPL v2 or later """
+
 class Peg:
     """Class representing a (coloured) peg on the mastermind board"""
 

@@ -2,6 +2,8 @@ import random
 import peg
 import colour
 
+""" copyright Sean McCarthy, license GPL v2 or later """
+
 class Code:
     """Class representing a collection of pegs"""
 
