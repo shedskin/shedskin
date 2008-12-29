@@ -1,5 +1,7 @@
 import row
 
+""" copyright Sean McCarthy, license GPL v2 or later """
+
 class Board:
     """Class board, a collection of rows"""
 
