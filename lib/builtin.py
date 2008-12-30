@@ -550,6 +550,10 @@ class KeyboardInterrupt(Exception): pass
 class ZeroDivisionError(Exception): pass
 class OverflowError(Exception): pass
 class FloatingPointError(Exception): pass
+class MemoryError(Exception): pass
+class NameError(Exception): pass
+class SystemExit(Exception): pass
+class SystemError(Exception): pass
 
 __exception = OSError('') # XXX remove 
 __exception.errno = 0

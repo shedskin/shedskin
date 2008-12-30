@@ -1097,6 +1097,38 @@ public:
 #endif
 };
 
+class MemoryError : public Exception {
+public: 
+    MemoryError(str *msg=0) : Exception(msg) {}
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_MemoryError; }
+#endif
+};
+
+class NameError : public Exception {
+public: 
+    NameError(str *msg=0) : Exception(msg) {}
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_NameError; }
+#endif
+};
+
+class SystemError : public Exception {
+public: 
+    SystemError(str *msg=0) : Exception(msg) {}
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_SystemError; }
+#endif
+};
+
+class SystemExit : public Exception {
+public: 
+    SystemExit(str *msg=0) : Exception(msg) {}
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_SystemExit; }
+#endif
+};
+
 class StopIteration : public Exception { public: StopIteration(str *msg=0) : Exception(msg) {} };
 
 #define ASSERT(x, y) if(!(x)) throw new AssertionError(y);
