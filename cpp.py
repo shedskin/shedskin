@@ -963,7 +963,10 @@ class generateVisitor(ASTVisitor):
                 if isinstance(h0, Name) and h0.name in ['int', 'float', 'str', 'class']:
                     continue # XXX lookupclass
                 elif h0:
-                    arg = namespaceclass(lookupclass(h0, getmv()))+' *'
+                    cl = lookupclass(h0, getmv())
+                    if cl.mv.module.builtin and cl.ident in ['KeyboardInterrupt', 'FloatingPointError', 'OverflowError', 'ZeroDivisionError']:
+                        error("'%s' is not supported" % cl.ident, node, warning=True)
+                    arg = namespaceclass(cl)+' *'
                 else:
                     arg = 'Exception *'
 

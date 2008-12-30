@@ -1009,8 +1009,6 @@ public:
 #endif
 };
 
-//class ZeroDivisionError : public Exception { public: ZeroDivisionError(str *msg=0) : Exception(msg) {} };
-
 class IOError : public Exception { 
 public: 
     IOError(str *msg=0) : Exception(msg) {} 
@@ -1072,6 +1070,22 @@ public:
     KeyboardInterrupt(str *msg=0) : Exception(msg) {} 
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_KeyboardInterrupt; }
+#endif
+};
+
+class FloatingPointError : public Exception {
+public: 
+    FloatingPointError(str *msg=0) : Exception(msg) {} 
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_FloatingPointError; }
+#endif
+};
+
+class ZeroDivisionError : public Exception {
+public: 
+    ZeroDivisionError(str *msg=0) : Exception(msg) {} 
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_ZeroDivisionError; }
 #endif
 };
 
