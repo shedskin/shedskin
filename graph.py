@@ -819,6 +819,8 @@ class moduleVisitor(ASTVisitor):
                 if isinstance(h0, Name) and h0.name in ['int', 'float', 'str', 'class']:
                     continue # handle in lookupclass
                 cl = lookupclass(h0, getmv())
+                if not cl:
+		    error("unknown or unsupported exception type", node)
 
                 if isinstance(h1, AssName):
                     var = defaultvar(h1.name, func) 
