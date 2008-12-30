@@ -741,3 +741,9 @@ class __iter(pyiter):
 
 def iter(a):
     return a.__iter__()
+
+def exit(code=0):
+    pass
+
+def quit(code=0):
+    pass
