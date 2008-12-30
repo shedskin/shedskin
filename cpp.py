@@ -2713,7 +2713,8 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None, check_extmo
     elif cl.ident == 'str_':
         return 'str'+ptr 
     elif cl.ident == 'none':
-        return 'void *'
+        if cplusplus: return 'void *'
+        return 'None'
             
     # --- namespace prefix
     namespace = ''
