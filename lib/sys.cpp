@@ -37,12 +37,12 @@ void __init(int c, char **v) {
     __ss_stderr->name = new str("<stderr>");
 }
 
-void exit() {
-    std::exit(0);
+void __ss_exit() {
+    __shedskin__::__exit();
 }; 
 
-template<> void exit(int x) {
-    std::exit(x);
+template<> void __ss_exit(int x) {
+    __shedskin__::__exit(x);
 }
 
 } // module namespace

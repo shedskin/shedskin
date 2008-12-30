@@ -15,14 +15,14 @@ extern str *__name__, *copyright, *platform;
 extern int hexversion, maxint;
 extern file *__ss_stdin, *__ss_stdout, *__ss_stderr;
 
-void exit();
-template<class T> void exit(T x) {
+void __ss_exit();
+template<class T> void __ss_exit(T x) {
     if(x == 0)
-        std::exit(0);
+        __shedskin__::__exit();
     print(__ss_stderr, "%s\n", __str(x)); 
-    std::exit(1);
+    __shedskin__::__exit(1);
 }
-template<> void exit(int x);
+template<> void __ss_exit(int x);
 
 } // module namespace
 #endif

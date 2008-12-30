@@ -166,7 +166,9 @@ template<class A, class B> str *__modtuple(str *fmt, tuple2<A,B> *t);
 #endif
 
 void __init();
-void __exit();
+void __exit(int code=0);
+void quit(int code=0);
+void __ss_exit(int code=0);
 void slicenr(int x, int &l, int&u, int&s, int len);
 
 /* hashing */
