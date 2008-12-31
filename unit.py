@@ -24,7 +24,7 @@ hup(Game())
 # class attribute access across module
 from testdata import bert 
 
-#bert.zeug.purple += 1 # XXX
+bert.zeug.purple += 1
 blah = bert.zeug.purple
 print blah
 

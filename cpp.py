@@ -2467,12 +2467,17 @@ class generateVisitor(ASTVisitor):
         module = lookupmodule(node.expr, inode(node).mv)
         cl = lookupclass(node.expr, inode(node).mv)
         localvar = None
-        if isinstance(node.expr, Name):
+        if isinstance(node.expr, Name): # XXX Getattr
             var = lookupvar(node.expr.name, func)
             if var and var.parent:
                 localvar = var
 
-        if not localvar and cl and node.attrname in cl.staticmethods: # staticmethod
+        # module.attr
+        if module and not localvar: 
+            self.append(namespace(module)+'::') 
+
+        # class.attr: staticmethod
+        elif cl and not localvar and node.attrname in cl.staticmethods: 
             ident = cl.ident
             if cl.ident in ['dict', 'defaultdict']: # own namespace because of template vars
                 self.append('__'+cl.ident+'__::')
@@ -2482,7 +2487,8 @@ class generateVisitor(ASTVisitor):
             else:
                 self.append(ident+'::')
 
-        elif not localvar and cl: # XXX merge above?
+        # class.attr
+        elif cl and not localvar: # XXX merge above?
             ident = cl.ident
             if isinstance(node.expr, Getattr):
                 submod = lookupmodule(node.expr.expr, inode(node).mv)
@@ -2490,9 +2496,7 @@ class generateVisitor(ASTVisitor):
             else:
                 self.append(ident+'::')
 
-        elif not localvar and module: 
-            self.append(namespace(module)+'::') 
-
+        # obj.attr
         else:
             if not isinstance(node.expr, (Name)):
                 self.append('(')
@@ -2510,11 +2514,13 @@ class generateVisitor(ASTVisitor):
         else:
             ident = node.attrname
 
+        # property
         lcp = lowest_common_parents(polymorphic_t(self.mergeinh[node.expr]))
         if len(lcp) == 1 and isinstance(lcp[0], class_) and node.attrname in lcp[0].properties:
             self.append(self.cpp_name(lcp[0].properties[node.attrname][0])+'()')
             return
 
+        # getfast
         if ident == '__getitem__':
             lcp = lowest_common_parents(polymorphic_t(self.mergeinh[node.expr]))
             if len(lcp) == 1 and lcp[0] == defclass('list'):
@@ -2522,16 +2528,36 @@ class generateVisitor(ASTVisitor):
 
         self.append(self.cpp_name(ident))
 
-    def visitAssAttr(self, node, func=None): # XXX stack/static
+    def visitAssAttr(self, node, func=None): # XXX merge with visitGetattr
         module = lookupmodule(node.expr, inode(node).mv)
-        if module and not (isinstance(node.expr, Name) and lookupvar(node.expr.name, func)):
-            self.append(namespace(module)+'::'+self.cpp_name(node.attrname))
+        cl = lookupclass(node.expr, inode(node).mv)
+        localvar = None
+        if isinstance(node.expr, Name): # XXX Getattr, to lookupmodule/class
+            var = lookupvar(node.expr.name, func)
+            if var and var.parent:
+                localvar = var
+
+        # module.attr
+        if module and not localvar:
+            self.append(namespace(module)+'::')
+
+        # class.attr
+        elif cl and not localvar: 
+            if isinstance(node.expr, Getattr):
+                submod = lookupmodule(node.expr.expr, inode(node).mv)
+                self.append(namespace(submod)+'::'+cl.cpp_name+'::')
+            else:
+                self.append(cl.ident+'::')
+
+        # obj.attr
         else:
-            if isinstance(node.expr, Name) and not lookupvar(node.expr.name, func): # XXX XXX
+            if isinstance(node.expr, Name) and not lookupvar(node.expr.name, func): # XXX
                 self.append(node.expr.name)
             else:
                 self.visit(node.expr, func)
-            self.append(self.connector(node.expr, func)+self.cpp_name(node.attrname))
+            self.append(self.connector(node.expr, func)) # XXX '->'
+
+        self.append(self.cpp_name(node.attrname))
 
     def visitAssName(self, node, func=None):
         self.append(self.cpp_name(node.name))
