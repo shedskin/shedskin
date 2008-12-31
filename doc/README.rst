@@ -273,7 +273,9 @@ For the executable file to execute properly under Windows, note that ``gc.dll`` 
 Compiling an Extension Module
 -----------------------------
 
-The ability to build extension modules is useful since it permits the use of unrestricted Python code in the 'main' program, while still allowing the speedup of compiling speed-critical parts with **Shed Skin**.
+Extension modules are compiled binaries, typically written using C or C++, that can be imported and used like regular Python modules. They allow one to write most of a project in unrestricted Python, while optimizing one or more speed-critical parts. 
+
+It is very easy to generate extension modules with **Shed Skin**. 
 
 **Simple Example**
 
@@ -298,7 +300,9 @@ To compile the module into an extension module, type: ::
     shedskin -e simple_module
     make
 
-Depending on platform, the resulting extension module (*shared library*) is called ``simple_module.so`` or ``simple_module.pyd``.
+On UNIX systems, for 'make' to succeed, you must have the Python development files installed (under **Debian**, install ``python-dev``).
+
+Depending on platform, the resulting extension module (*shared library*) is called ``simple_module.so`` or ``simple_module.pyd``. 
 
 The extension module can now be simply imported as usual: ::
 
