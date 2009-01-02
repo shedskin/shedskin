@@ -389,6 +389,8 @@ def generate_code():
         print >>makefile, line
     print >>makefile
 
+    print >>makefile, '.PHONY: all run full clean\n'
+
     print >>makefile, 'all:\t'+ident+'\n'
 
     if not getgx().extension_module:
