@@ -1671,7 +1671,7 @@ template<class T> void *list<T>::__delete__(int x, int l, int u, int s) {
     slicenr(x, l, u, s, this->__len__());
 
     if(s == 1)
-        units.erase(units.begin()+l,units.begin()+u);
+        __delslice__(l, u);
     else {
         std::vector<T, gc_allocator<T> > v;
         for(int i=0; i<this->__len__();i++)
@@ -1683,6 +1683,8 @@ template<class T> void *list<T>::__delete__(int x, int l, int u, int s) {
 }
 
 template<class T> void *list<T>::__delslice__(int a, int b) {
+    if(a>this->__len__()) return NULL;
+    if(b>this->__len__()) b = this->__len__();
     units.erase(units.begin()+a,units.begin()+b);
     return NULL;
 }

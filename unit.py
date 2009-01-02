@@ -60,6 +60,10 @@ print a
 print ''.split()
 print '  '.split()
 
+lll = [1,2]
+del lll[18:]
+print lll
+
 # casting problem
 def hoppa():
     return ['beh']
