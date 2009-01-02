@@ -341,7 +341,7 @@ def browse(path, interactive):
       except OSError:
         pass
 
-  files.sort() #cmp_key)
+  files.sort(cmp=lambda a,b:cmp(a.name, b.name)) #cmp_key)
   count=len([None for f in files if not f.dir])
   if count: domains.append([])
 
@@ -444,7 +444,6 @@ def smart_shuffle():
   return seq
 
 def make_shuffle(count):
-  random.seed(1)
   if options.smart:
     log("Generating smart shuffle sequence ...",False)
     seq=smart_shuffle()
@@ -462,6 +461,7 @@ def make_shuffle(count):
 
 def main(dirs):
   global header,iTunesSD,total_count,KnownEntries,Rules
+  random.seed(1)
   log("Welcome to %s, version %s"%(__title__,__version__))
   log()
 
