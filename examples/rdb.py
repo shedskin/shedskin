@@ -320,8 +320,8 @@ def browse(path, interactive):
   try:
     files = []
     for name in os.listdir(path):
-        if name: 
-            files.append(file_entry(path,name))
+        entry = file_entry(path,name)
+        if entry: files.append(entry)
 #    files=filter(None,[file_entry(path,name) for name in os.listdir(path)])
   except OSError:
     return
@@ -444,7 +444,7 @@ def smart_shuffle():
   return seq
 
 def make_shuffle(count):
-  random.seed()
+  random.seed(1)
   if options.smart:
     log("Generating smart shuffle sequence ...",False)
     seq=smart_shuffle()
