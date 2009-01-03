@@ -92,9 +92,14 @@ tuple2<file*,file*>* popen4(str* cmd, str* mode, int bufsize);
 
 #ifndef WIN32
 int getuid();
+void *setuid(int uid);
 int geteuid();
+void *seteuid(int euid);
 int getgid();
+void *setgid(int gid);
 int getegid();
+void *setegid(int egid);
+
 int getpgid(int pid);
 int getpgrp();
 int getppid();

@@ -697,9 +697,14 @@ str *readlink(str *path) {
 }
 
 int getuid() { return ::getuid(); }
+void *setuid(int uid) { ::setuid(uid); return NULL; }
 int getgid() { return ::getgid(); }
+void *setgid(int gid) { ::setgid(gid); return NULL; }
 int geteuid() { return ::geteuid(); }
+void *seteuid(int euid) { ::seteuid(euid); return NULL; }
 int getegid() { return ::getegid(); }
+void *setegid(int egid) { ::setegid(egid); return NULL; }
+
 int getppid() { return ::getppid(); }
 
 int fork() {
