@@ -163,11 +163,20 @@ def getppid():
 def getsid(pid):
     return 1
 
-def stat_float_times(n=False): 
-    return True
+def setsid():
+    return 1
 
 def getpid():
     return 1
+
+def setreuid(ruid, euid):
+    pass
+
+def setregid(guid, egid):
+    pass
+
+def stat_float_times(n=False): 
+    return True
 
 def putenv(variable, value):
     pass

@@ -104,8 +104,10 @@ void *setpgid(int pid, int pgrp);
 int getpgrp();
 void *setpgrp();
 int getppid();
-
+void *setreuid(int ruid, int euid);
+void *setregid(int rgid, int egid);
 int getsid(int pid);
+int setsid();
 
 void *lchown(str *path, int uid, int gid);
 void *link(str *src, str *dst);
