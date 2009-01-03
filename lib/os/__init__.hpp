@@ -99,10 +99,12 @@ int getgid();
 void *setgid(int gid);
 int getegid();
 void *setegid(int egid);
-
 int getpgid(int pid);
+void *setpgid(int pid, int pgrp);
 int getpgrp();
+void *setpgrp();
 int getppid();
+
 int getsid(int pid);
 
 void *lchown(str *path, int uid, int gid);

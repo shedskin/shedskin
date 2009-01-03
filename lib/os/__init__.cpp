@@ -697,13 +697,32 @@ str *readlink(str *path) {
 }
 
 int getuid() { return ::getuid(); }
-void *setuid(int uid) { ::setuid(uid); return NULL; }
+void *setuid(int uid) { 
+    if(::setuid(uid) == -1)
+        throw new OSError(new str("os.setuid"));
+    return NULL; 
+}
+
 int getgid() { return ::getgid(); }
-void *setgid(int gid) { ::setgid(gid); return NULL; }
+void *setgid(int gid) { 
+    if(::setgid(gid) == -1)
+        throw new OSError(new str("os.setgid"));
+    return NULL; 
+}
+
 int geteuid() { return ::geteuid(); }
-void *seteuid(int euid) { ::seteuid(euid); return NULL; }
+void *seteuid(int euid) { 
+    if(::seteuid(euid) == -1)
+        throw new OSError(new str("os.seteuid"));
+    return NULL; 
+}
+
 int getegid() { return ::getegid(); }
-void *setegid(int egid) { ::setegid(egid); return NULL; }
+void *setegid(int egid) {
+    if(::setegid(egid) == -1)
+        throw new OSError(new str("os.setegid"));
+    return NULL; 
+}
 
 int getppid() { return ::getppid(); }
 
@@ -793,9 +812,19 @@ int getpgid(int pid) {
         throw new OSError(new str("os.getpgid"));
     return nr;
 }
+void *setpgid(int pid, int pgrp) {
+    if(::setpgid(pid, pgrp) == -1)
+        throw new OSError(new str("os.setpgid"));
+    return NULL;
+}
 
 int getpgrp() {
     return getpgid(0);
+}
+void *setpgrp() {
+    if(::setpgrp() == -1)
+        throw new OSError(new str("os.setpgrp"));
+    return NULL;
 }
 
 void *link(str *src, str *dst) {
