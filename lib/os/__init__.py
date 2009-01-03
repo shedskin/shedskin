@@ -145,8 +145,14 @@ def getgroups():
 def getpgid(pid):
     return 1
 
+def setpgid(pid, pgrp):
+    pass
+
 def getpgrp():
     return 1
+
+def setpgrp():
+    pass
 
 def getppid():
     return 1
