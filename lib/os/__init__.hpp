@@ -112,6 +112,7 @@ void *link(str *src, str *dst);
 void *symlink(str *src, str *dst);
 
 list<int> *getgroups();
+void *setgroups(pyseq<int> *groups);
 str *getlogin();
 
 str *readlink(str *path);
