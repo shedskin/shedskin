@@ -142,6 +142,9 @@ def seteuid(euid):
 def getgroups():
     return [1]
 
+def setgroups(groups):
+    pass
+
 def getpgid(pid):
     return 1
 

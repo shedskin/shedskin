@@ -10,6 +10,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <grp.h>
 
 namespace std {
 #include <unistd.h>
@@ -797,6 +798,14 @@ list<int> *getgroups() {
     for(int i=0;i<nr;i++)
         r->append(l[i]);
     return r;
+}
+void *setgroups(pyseq<int> *groups) {
+    gid_t l[MAXENTRIES];
+    for(int i=0; i<len(groups); i++)
+        l[i] = groups->__getitem__(i);
+    if(::setgroups(len(groups), l) == -1)
+        throw new OSError(new str("os.setgroups"));
+    return NULL;
 }
 
 int getsid(int pid) {
