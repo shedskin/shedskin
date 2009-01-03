@@ -118,14 +118,26 @@ def readlink(path):
 def getuid():
     return 1
 
+def setuid(uid):
+    pass
+
 def getgid():
     return 1
+
+def setgid(gid):
+    pass
 
 def getegid():
     return 1
 
+def setegid(egid):
+    pass
+
 def geteuid():
     return 1
+
+def seteuid(euid):
+    pass
 
 def getgroups():
     return [1]
