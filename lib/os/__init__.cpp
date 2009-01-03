@@ -727,6 +727,18 @@ void *setegid(int egid) {
 
 int getppid() { return ::getppid(); }
 
+void *setreuid(int ruid, int euid) {
+    if(::setreuid(ruid, euid) == -1)
+        throw new OSError(new str("os.setreuid"));
+    return NULL; 
+}
+
+void *setregid(int rgid, int egid) {
+    if(::setregid(rgid, egid) == -1)
+        throw new OSError(new str("os.setregid"));
+    return NULL; 
+}
+
 int fork() {
     int ret;
     if ((ret = ::fork()) == -1)
@@ -812,6 +824,12 @@ int getsid(int pid) {
     int nr = ::getsid(pid);
     if(nr == -1)
         throw new OSError(new str("os.getsid"));
+    return nr;
+}
+int setsid() {
+    int nr = ::setsid();
+    if(nr == -1)
+        throw new OSError(new str("os.setsid"));
     return nr;
 }
 
