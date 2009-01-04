@@ -175,6 +175,12 @@ def setreuid(ruid, euid):
 def setregid(guid, egid):
     pass
 
+def tcgetpgrp(fd):
+    return 1
+
+def tcsetpgrp(fd, pg):
+    pass
+
 def stat_float_times(n=False): 
     return True
 
