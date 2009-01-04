@@ -108,6 +108,8 @@ void *setreuid(int ruid, int euid);
 void *setregid(int rgid, int egid);
 int getsid(int pid);
 int setsid();
+int tcgetpgrp(int fd);
+void *tcsetpgrp(int fd, int pg);
 
 void *lchown(str *path, int uid, int gid);
 void *link(str *src, str *dst);

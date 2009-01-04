@@ -739,6 +739,20 @@ void *setregid(int rgid, int egid) {
     return NULL; 
 }
 
+int tcgetpgrp(int fd) {
+    int nr;
+    nr = ::tcgetpgrp(fd);
+    if(nr == -1)
+        throw new OSError(new str("os.tcgetpgrp"));
+    return NULL; 
+}
+
+void *tcsetpgrp(int fd, int pg) {
+    if(::tcsetpgrp(fd, pg) == -1)
+        throw new OSError(new str("os.tcsetpgrp"));
+    return NULL; 
+}
+
 int fork() {
     int ret;
     if ((ret = ::fork()) == -1)
