@@ -133,6 +133,7 @@ tuple2<str *, str *> *uname();
 
 int fork();
 tuple2<int, int> *wait();
+int nice(int n);
 #endif
 
 void __init();

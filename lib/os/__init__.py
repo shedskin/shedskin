@@ -271,5 +271,8 @@ def link(a, b):
 def symlink(a, b):
     pass
 
+def nice(n):
+    return 1
+
 def wait():
     return (1,)
