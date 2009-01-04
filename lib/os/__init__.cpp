@@ -774,6 +774,17 @@ int nice(int n) {
     return m;
 }
 
+void *kill(int pid, int sig) {
+    if(::kill(pid, sig) == -1)
+        throw new OSError(new str("os.kill"));
+    return NULL;
+}
+void *killpg(int pgid, int sig) {
+    if(::killpg(pgid, sig) == -1)
+        throw new OSError(new str("os.killpg"));
+    return NULL;
+}
+
 str *getlogin() {
     char *name = ::getlogin();
     if(!name)

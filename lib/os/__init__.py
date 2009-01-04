@@ -276,3 +276,9 @@ def nice(n):
 
 def wait():
     return (1,)
+
+def kill(pid, sig):
+    pass
+
+def killpg(pgid, sig):
+    pass
