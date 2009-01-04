@@ -767,6 +767,13 @@ tuple2<int, int> *wait() {
     return new tuple2<int, int>(2, pid, status);
 }
 
+int nice(int n) {
+    int m;
+    if((m = ::nice(n)) == -1)
+        throw new OSError(new str("os.nice"));
+    return m;
+}
+
 str *getlogin() {
     char *name = ::getlogin();
     if(!name)
