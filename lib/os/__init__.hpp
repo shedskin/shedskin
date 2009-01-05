@@ -8,6 +8,7 @@ namespace __os__ {
 
 extern str *linesep, *name;
 extern dict<str *, str *> *__ss_environ;
+extern dict<str *, int> *pathconf_names;
 extern str *altsep, *curdir, *defpath, *devnull, *extsep, *pardir, *pathsep, *sep;
 extern int __ss_O_APPEND, __ss_O_CREAT, __ss_O_EXCL, __ss_O_RDONLY, __ss_O_RDWR, __ss_O_TRUNC, __ss_O_WRONLY;
 
@@ -137,6 +138,12 @@ int nice(int n);
 
 void *kill(int pid, int sig);
 void *killpg(int pgid, int sig);
+
+int pathconf(str *path, str *name); 
+int pathconf(str *path, int name); 
+int fpathconf(int fd, str *name); 
+int fpathconf(int fd, int name); 
+
 #endif
 
 void __init();

@@ -3,7 +3,7 @@ import path
 name = ''
 
 linesep = ''
-environ = {'':''}
+environ = {'': ''}
 
 curdir = ''
 pardir = ''
@@ -21,6 +21,8 @@ O_RDONLY = 0
 O_RDWR = 0
 O_TRUNC = 0
 O_WRONLY = 0
+
+pathconf_names = {'': 1}
 
 class error(OSError): 
     pass
@@ -282,3 +284,9 @@ def kill(pid, sig):
 
 def killpg(pgid, sig):
     pass
+
+def pathconf(path, name):
+    return 1
+
+def fpathconf(fd, name):
+    return 1

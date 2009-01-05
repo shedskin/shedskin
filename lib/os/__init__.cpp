@@ -39,6 +39,7 @@ namespace __os__ {
 str *const_0;
 str *linesep, *name;
 dict<str *, str *> *__ss_environ;
+dict<str *, int> *pathconf_names;
 struct stat sbuf;
 
 const int MAXENTRIES = 4096; /* XXX fix functions that use this */
@@ -898,6 +899,28 @@ void *symlink(str *src, str *dst) {
     return NULL;
 }
 
+int pathconf(str *path, str *name) {
+    if(!pathconf_names->__contains__(name))
+        throw new ValueError(new str("unrecognized configuration name"));
+    int limit = ::pathconf(path->unit.c_str(), pathconf_names->__getitem__(name)); /* XXX errors */
+    return limit;
+}
+int pathconf(str *path, int name) {
+    int limit = ::pathconf(path->unit.c_str(), name); /* XXX errors */
+    return limit;
+}
+
+int fpathconf(int fd, str *name) {
+    if(!pathconf_names->__contains__(name))
+        throw new ValueError(new str("unrecognized configuration name"));
+    int limit = ::fpathconf(fd, pathconf_names->__getitem__(name)); /* XXX errors */
+    return limit;
+}
+int fpathconf(int fd, int name) {
+    int limit = ::fpathconf(fd, name); /* XXX errors */
+    return limit;
+}
+
 #endif
 
 void __init() {
@@ -938,6 +961,24 @@ void __init() {
     __ss_O_RDWR = O_RDWR;
     __ss_O_TRUNC = O_TRUNC;
     __ss_O_WRONLY = O_WRONLY;
+
+    pathconf_names = new dict<str *, int>();
+    pathconf_names->__setitem__(new str("PC_MAX_INPUT"), _PC_MAX_INPUT);
+    pathconf_names->__setitem__(new str("PC_VDISABLE"), _PC_VDISABLE);
+    pathconf_names->__setitem__(new str("PC_SYNC_IO"), _PC_SYNC_IO);
+    pathconf_names->__setitem__(new str("PC_SOCK_MAXBUF"), _PC_SOCK_MAXBUF);
+    pathconf_names->__setitem__(new str("PC_NAME_MAX"), _PC_NAME_MAX);
+    pathconf_names->__setitem__(new str("PC_MAX_CANON"), _PC_MAX_CANON);
+    pathconf_names->__setitem__(new str("PC_PRIO_IO"), _PC_PRIO_IO);
+    pathconf_names->__setitem__(new str("PC_CHOWN_RESTRICTED"), _PC_CHOWN_RESTRICTED);
+    pathconf_names->__setitem__(new str("PC_ASYNC_IO"), _PC_ASYNC_IO);
+    pathconf_names->__setitem__(new str("PC_NO_TRUNC"), _PC_NO_TRUNC);
+    pathconf_names->__setitem__(new str("PC_FILESIZEBITS"), _PC_FILESIZEBITS);
+    pathconf_names->__setitem__(new str("PC_LINK_MAX"), _PC_LINK_MAX);
+    pathconf_names->__setitem__(new str("PC_PIPE_BUF"), _PC_PIPE_BUF);
+    pathconf_names->__setitem__(new str("PC_PATH_MAX"), _PC_PATH_MAX);
+
+
 }
 
 } // module namespace
