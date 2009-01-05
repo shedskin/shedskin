@@ -1228,6 +1228,8 @@ class generateVisitor(ASTVisitor):
             self.deindent()
 
     def cpp_name(self, name, func=None):
+        if self.module == getgx().main_module and name == 'init'+self.module.ident: # conflict with extmod init
+            return '_'+name
         if name in [cl.ident for cl in getgx().allclasses]:
             return '_'+name
         elif name+'_' in [cl.ident for cl in getgx().allclasses]:
