@@ -39,7 +39,7 @@ namespace __os__ {
 str *const_0;
 str *linesep, *name;
 dict<str *, str *> *__ss_environ;
-dict<str *, int> *pathconf_names;
+dict<str *, int> *pathconf_names, *confstr_names;
 struct stat sbuf;
 
 const int MAXENTRIES = 4096; /* XXX fix functions that use this */
@@ -902,8 +902,7 @@ void *symlink(str *src, str *dst) {
 int pathconf(str *path, str *name) {
     if(!pathconf_names->__contains__(name))
         throw new ValueError(new str("unrecognized configuration name"));
-    int limit = ::pathconf(path->unit.c_str(), pathconf_names->__getitem__(name)); /* XXX errors */
-    return limit;
+    return pathconf(path, pathconf_names->__getitem__(name)); /* XXX errors */
 }
 int pathconf(str *path, int name) {
     int limit = ::pathconf(path->unit.c_str(), name); /* XXX errors */
@@ -913,12 +912,24 @@ int pathconf(str *path, int name) {
 int fpathconf(int fd, str *name) {
     if(!pathconf_names->__contains__(name))
         throw new ValueError(new str("unrecognized configuration name"));
-    int limit = ::fpathconf(fd, pathconf_names->__getitem__(name)); /* XXX errors */
-    return limit;
+    return fpathconf(fd, pathconf_names->__getitem__(name)); /* XXX errors */
 }
 int fpathconf(int fd, int name) {
     int limit = ::fpathconf(fd, name); /* XXX errors */
     return limit;
+}
+
+str *confstr(str *name) {
+    if(!confstr_names->__contains__(name))
+        throw new ValueError(new str("unrecognized configuration name"));
+    return confstr(confstr_names->__getitem__(name));
+}
+str *confstr(int name) {
+    char buf[MAXENTRIES];
+    int size = ::confstr(name, buf, MAXENTRIES); /* XXX errors */
+    if(size == -1)
+        throw new OSError(new str("os.confstr"));
+    return new str(buf);
 }
 
 #endif
@@ -978,6 +989,32 @@ void __init() {
     pathconf_names->__setitem__(new str("PC_PIPE_BUF"), _PC_PIPE_BUF);
     pathconf_names->__setitem__(new str("PC_PATH_MAX"), _PC_PATH_MAX);
 
+    confstr_names = new dict<str *, int>();
+    confstr_names->__setitem__(new str("CS_XBS5_LP64_OFF64_CFLAGS"), _CS_XBS5_LP64_OFF64_CFLAGS);
+    confstr_names->__setitem__(new str("CS_LFS64_CFLAGS"), _CS_LFS64_CFLAGS);
+    confstr_names->__setitem__(new str("CS_XBS5_LPBIG_OFFBIG_LIBS"), _CS_XBS5_LPBIG_OFFBIG_LIBS);
+    confstr_names->__setitem__(new str("CS_XBS5_ILP32_OFFBIG_LINTFLAGS"), _CS_XBS5_ILP32_OFFBIG_LINTFLAGS);
+    confstr_names->__setitem__(new str("CS_XBS5_ILP32_OFF32_LIBS"), _CS_XBS5_ILP32_OFF32_LIBS);
+    confstr_names->__setitem__(new str("CS_XBS5_ILP32_OFF32_LINTFLAGS"), _CS_XBS5_ILP32_OFF32_LINTFLAGS);
+    confstr_names->__setitem__(new str("CS_LFS64_LIBS"), _CS_LFS64_LIBS);
+    confstr_names->__setitem__(new str("CS_XBS5_ILP32_OFF32_CFLAGS"), _CS_XBS5_ILP32_OFF32_CFLAGS);
+    confstr_names->__setitem__(new str("CS_XBS5_ILP32_OFFBIG_CFLAGS"), _CS_XBS5_ILP32_OFFBIG_CFLAGS);
+    confstr_names->__setitem__(new str("CS_LFS_LDFLAGS"), _CS_LFS_LDFLAGS);
+    confstr_names->__setitem__(new str("CS_LFS_LINTFLAGS"), _CS_LFS_LINTFLAGS);
+    confstr_names->__setitem__(new str("CS_LFS_LIBS"), _CS_LFS_LIBS);
+    confstr_names->__setitem__(new str("CS_PATH"), _CS_PATH);
+    confstr_names->__setitem__(new str("CS_LFS64_LINTFLAGS"), _CS_LFS64_LINTFLAGS);
+    confstr_names->__setitem__(new str("CS_LFS_CFLAGS"), _CS_LFS_CFLAGS);
+    confstr_names->__setitem__(new str("CS_LFS64_LDFLAGS"), _CS_LFS64_LDFLAGS);
+    confstr_names->__setitem__(new str("CS_XBS5_ILP32_OFFBIG_LIBS"), _CS_XBS5_ILP32_OFFBIG_LIBS);
+    confstr_names->__setitem__(new str("CS_XBS5_ILP32_OFF32_LDFLAGS"), _CS_XBS5_ILP32_OFF32_LDFLAGS);
+    confstr_names->__setitem__(new str("CS_XBS5_LPBIG_OFFBIG_LINTFLAGS"), _CS_XBS5_LPBIG_OFFBIG_LINTFLAGS);
+    confstr_names->__setitem__(new str("CS_XBS5_ILP32_OFFBIG_LDFLAGS"), _CS_XBS5_ILP32_OFFBIG_LDFLAGS);
+    confstr_names->__setitem__(new str("CS_XBS5_LP64_OFF64_LINTFLAGS"), _CS_XBS5_LP64_OFF64_LINTFLAGS);
+    confstr_names->__setitem__(new str("CS_XBS5_LP64_OFF64_LIBS"), _CS_XBS5_LP64_OFF64_LIBS);
+    confstr_names->__setitem__(new str("CS_XBS5_LPBIG_OFFBIG_CFLAGS"), _CS_XBS5_LPBIG_OFFBIG_CFLAGS);
+    confstr_names->__setitem__(new str("CS_XBS5_LPBIG_OFFBIG_LDFLAGS"), _CS_XBS5_LPBIG_OFFBIG_LDFLAGS);
+    confstr_names->__setitem__(new str("CS_XBS5_LP64_OFF64_LDFLAGS"), _CS_XBS5_LP64_OFF64_LDFLAGS);
 
 }
 
