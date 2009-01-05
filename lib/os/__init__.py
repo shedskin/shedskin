@@ -23,7 +23,8 @@ O_TRUNC = 0
 O_WRONLY = 0
 
 pathconf_names = {'': 1}
-confstr_names = {'': ''}
+sysconf_names = {'': 1}
+confstr_names = {'': 1}
 
 class error(OSError): 
     pass
@@ -294,3 +295,6 @@ def fpathconf(fd, name):
 
 def confstr(name):
     return ''
+
+def sysconf(name):
+    return 1
