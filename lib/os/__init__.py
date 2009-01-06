@@ -281,6 +281,9 @@ def nice(n):
 def wait():
     return (1,)
 
+def waitpid(pid, options):
+    return (1,)
+
 def kill(pid, sig):
     pass
 

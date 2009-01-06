@@ -768,6 +768,13 @@ tuple2<int, int> *wait() {
     return new tuple2<int, int>(2, pid, status);
 }
 
+tuple2<int, int> *waitpid(int pid, int options) {
+    int status;
+    if((pid = ::waitpid(pid, &status, options)) == -1)
+        throw new OSError(new str("os.waitpid"));
+    return new tuple2<int, int>(2, pid, status);
+}
+
 int nice(int n) {
     int m;
     if((m = ::nice(n)) == -1)
