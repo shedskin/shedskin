@@ -95,6 +95,12 @@ def makedirs(name, mode=0777):
 def fork():
     return 1
 
+def forkpty():
+    return (1,)
+
+def openpty():
+    return (1,)
+
 def abort():
     pass
 
@@ -301,3 +307,4 @@ def confstr(name):
 
 def sysconf(name):
     return 1
+

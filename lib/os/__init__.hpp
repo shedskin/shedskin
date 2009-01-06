@@ -133,8 +133,13 @@ str *ttyname(int fd);
 tuple2<str *, str *> *uname();
 
 int fork();
+tuple2<int, int> *forkpty();
+
+tuple2<int, int> *openpty();
+
 tuple2<int, int> *wait();
 tuple2<int, int> *waitpid(int pid, int options);
+
 int nice(int n);
 
 void *kill(int pid, int sig);
@@ -148,7 +153,6 @@ str *confstr(str *name);
 str *confstr(int name);
 int sysconf(str *name);
 int sysconf(int name);
-
 #endif
 
 void __init();

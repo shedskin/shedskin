@@ -11,6 +11,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <grp.h>
+#include <pty.h>
 
 namespace std {
 #include <unistd.h>
@@ -759,6 +760,19 @@ int fork() {
     if ((ret = ::fork()) == -1)
         throw new OSError(new str("os.fork"));
     return ret;
+}
+
+tuple2<int, int> *forkpty() {
+    int ret, amaster;
+    if ((ret = ::forkpty(&amaster, NULL, NULL, NULL)) == -1)
+        throw new OSError(new str("os.forkpty"));
+    return new tuple2<int, int>(2, ret, amaster);
+}
+tuple2<int, int> *openpty() {
+    int amaster, aslave;
+    if (::openpty(&amaster, &aslave, NULL, NULL, NULL) == -1)
+        throw new OSError(new str("os.openpty"));
+    return new tuple2<int, int>(2, amaster, aslave);
 }
 
 tuple2<int, int> *wait() {
