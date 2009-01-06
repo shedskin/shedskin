@@ -310,11 +310,15 @@ def generate_code():
         includes = '-I' + sysconfig.get_python_inc() + ' ' + \
                    '-I' + sysconfig.get_python_inc(plat_specific=True)
 
-        ldflags = sysconfig.get_config_var('LIBS') + ' ' + \
-                  sysconfig.get_config_var('SYSLIBS') + ' ' + \
-                  '-lpython'+pyver 
-        if not sysconfig.get_config_var('Py_ENABLE_SHARED'):
-            ldflags += ' -L' + sysconfig.get_config_var('LIBPL')
+        if sys.platform == 'darwin':
+            ldflags = sysconfig.get_config_var('BASECFLAGS')
+        else:
+            ldflags = sysconfig.get_config_var('LIBS') + ' ' + \
+                      sysconfig.get_config_var('SYSLIBS') + ' ' + \
+                      '-lpython'+pyver 
+
+            if not sysconfig.get_config_var('Py_ENABLE_SHARED'):
+                ldflags += ' -L' + sysconfig.get_config_var('LIBPL')
 
     if getgx().extension_module: 
         if sys.platform == 'win32': ident += '.pyd'
@@ -363,8 +367,10 @@ def generate_code():
 
         if line[:line.find('=')].strip() == 'CCFLAGS': 
             line += ' -I. -I'+getgx().libdir.replace(' ', '\ ')
+            if sys.platform == 'darwin' and os.path.isdir('/usr/local/include'): 
+                line += ' -I/usr/local/include' # XXX
             if sys.platform == 'darwin' and os.path.isdir('/opt/local/include'): 
-                line += ' -I/opt/local/include' # macports... and fink?
+                line += ' -I/opt/local/include' # XXX
             if not getgx().wrap_around_check: line += ' -DNOWRAP' 
             if getgx().bounds_checking: line += ' -DBOUNDS' 
             if getgx().extension_module: 
@@ -372,11 +378,13 @@ def generate_code():
                 else: line += ' -g -fPIC -D__SS_BIND ' + includes
 
         elif line[:line.find('=')].strip() == 'LFLAGS': 
-            if sys.platform == 'darwin' and os.path.isdir('/opt/local/lib'):  
+            if sys.platform == 'darwin' and os.path.isdir('/opt/local/lib'): # XXX
                 line += ' -L/opt/local/lib'
+            if sys.platform == 'darwin' and os.path.isdir('/usr/local/lib'): # XXX 
+                line += ' -L/usr/local/lib'
             if getgx().extension_module: 
                 if sys.platform == 'win32': line += ' -shared -L%s/libs -lpython%s' % (prefix, pyver) 
-                elif sys.platform == 'darwin': line += ' -bundle -Xlinker -dynamic ' + ldflags
+                elif sys.platform == 'darwin': line += ' -bundle -undefined dynamic_lookup ' + ldflags
                 elif sys.platform == 'sunos5': line += ' -shared -Xlinker ' + ldflags
                 else: line += ' -shared -Xlinker -export-dynamic ' + ldflags
 
