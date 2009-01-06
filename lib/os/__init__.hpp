@@ -134,6 +134,7 @@ tuple2<str *, str *> *uname();
 
 int fork();
 tuple2<int, int> *wait();
+tuple2<int, int> *waitpid(int pid, int options);
 int nice(int n);
 
 void *kill(int pid, int sig);
