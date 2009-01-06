@@ -499,9 +499,13 @@ file* fdopen(int fd, str* mode, int bufsize) {
 str *read(int fd, int n) {  /* XXX slowness */
     char c;
     str *s = new str();
+    int nr;
     for(int i=0; i<n; i++) {
-        if(::read(fd, &c, 1) == -1)
+        nr = ::read(fd, &c, 1);
+        if(nr == -1)
             throw new OSError(new str("os.read"));
+        if(nr == 0)
+            break;
         s->unit += c;
     }
     return s;
@@ -760,6 +764,12 @@ int fork() {
     if ((ret = ::fork()) == -1)
         throw new OSError(new str("os.fork"));
     return ret;
+}
+
+void *ftruncate(int fd, int n) {
+    if (::ftruncate(fd, n) == -1)
+        throw new OSError(new str("os.ftruncate"));
+    return NULL;
 }
 
 tuple2<int, int> *forkpty() {

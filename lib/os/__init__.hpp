@@ -153,6 +153,9 @@ str *confstr(str *name);
 str *confstr(int name);
 int sysconf(str *name);
 int sysconf(int name);
+
+void *ftruncate(int fd, int n);
+
 #endif
 
 void __init();

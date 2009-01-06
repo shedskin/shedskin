@@ -308,3 +308,5 @@ def confstr(name):
 def sysconf(name):
     return 1
 
+def ftruncate(fd, n):
+    pass
