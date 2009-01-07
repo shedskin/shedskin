@@ -237,10 +237,6 @@ void __cstat::fill_er_up() {
 #endif
 }
 
-str *__cstat::__repr__() {
-    return __modct(const_0, 10, __box(this->st_mode), __box(this->st_ino), __box(this->st_dev), __box(this->st_nlink), __box(this->st_uid), __box(this->st_gid), __box(this->st_size), __box(this->__ss_st_mtime), __box(this->__ss_st_atime), __box(this->__ss_st_ctime));
-}
-
 int __cstat::__len__() {
     return 10;
 }
@@ -266,10 +262,20 @@ int __cstat::__getitem__(int i) {
     return 0;
 }
 
-tuple2<int, int> *__cstat::__slice__(int x, int l, int u, int s) {
+
+/* class namedtuple */
+
+str *namedtuple::__repr__() {
+    tuple2<int, int> *t = new tuple2<int, int>();
+    for(int i=0; i < __len__(); i++)
+        t->units.push_back(__getitem__(i));
+    return repr(t);
+}
+
+tuple2<int, int> *namedtuple::__slice__(int x, int l, int u, int s) {
     tuple2<int, int> *c = new tuple2<int, int>();
 
-    slicenr(x, l, u, s, 10);
+    slicenr(x, l, u, s, __len__());
  
     if(s > 0)
         for(int i=l; i<u; i += s)

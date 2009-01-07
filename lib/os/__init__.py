@@ -45,6 +45,27 @@ class __cstat:
 
         self.st_blksize = 1
         self.st_blocks = 1
+    def __len__(self):
+        return 1
+    def __getitem__(self, i):
+        return 1
+    def __slice__(self, x, l, u, s):     
+        return (1,)
+    def __repr__(self):
+        return ''
+
+class __vfsstat:
+    def __init__(self):
+        self.f_bsize = 1
+        self.f_frsize = 1
+        self.f_blocks = 1
+        self.f_bfree = 1
+        self.f_bavail = 1
+        self.f_files = 1
+        self.f_ffree = 1
+        self.f_favail = 1
+        self.f_flag = 1
+        self.f_namemax = 1
 
     def __len__(self):
         return 1
@@ -52,9 +73,14 @@ class __cstat:
         return 1
     def __slice__(self, x, l, u, s):     
         return (1,)
-
     def __repr__(self):
         return ''
+
+def statvfs(path):
+    return __vfsstat()
+
+def fstatvfs(fd):
+    return __vfsstat()
 
 class popen_pipe(file):
     pass
