@@ -973,6 +973,13 @@ int sysconf(int name) {
     return limit;
 }
 
+tuple2<double, double> *getloadavg() {
+    double load[3];
+    if(::getloadavg(load, 3) != 3)
+        throw new OSError(new str("os.getloadavg"));
+    return new tuple2<double, double>(3, load[0], load[1], load[2]);
+}
+
 #endif
 
 void __init() {

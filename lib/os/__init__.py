@@ -310,3 +310,6 @@ def sysconf(name):
 
 def ftruncate(fd, n):
     pass
+
+def getloadavg():
+    return (1.0,)

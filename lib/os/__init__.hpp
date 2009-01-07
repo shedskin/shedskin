@@ -156,6 +156,8 @@ int sysconf(int name);
 
 void *ftruncate(int fd, int n);
 
+tuple2<double, double> *getloadavg();
+
 #endif
 
 void __init();
