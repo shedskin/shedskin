@@ -98,6 +98,22 @@ tuple2<file*,file*>* popen4(str* cmd);
 tuple2<file*,file*>* popen4(str* cmd, str* mode, int bufsize);
 
 #ifndef WIN32
+extern class_ *cl___vfsstat;
+class __vfsstat : public namedtuple {
+public:
+    int f_bsize, f_frsize, f_blocks, f_bfree, f_bavail, f_files, f_ffree, f_favail, f_flag, f_namemax; 
+
+    __vfsstat(str *path);
+    __vfsstat(int fd);
+    void fill_er_up();
+
+    int __len__();
+    int __getitem__(int i);
+};
+
+__vfsstat *statvfs(str *path);
+__vfsstat *fstatvfs(int fd);
+
 int getuid();
 void *setuid(int uid);
 int geteuid();

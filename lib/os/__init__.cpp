@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <sys/utsname.h>
+#include <sys/statvfs.h>
 #include <stdio.h>
 #include <dirent.h>
 #include <errno.h>
@@ -42,6 +43,7 @@ str *linesep, *name;
 dict<str *, str *> *__ss_environ;
 dict<str *, int> *pathconf_names, *confstr_names, *sysconf_names;
 struct stat sbuf;
+struct statvfs vbuf;
 
 const int MAXENTRIES = 4096; /* XXX fix functions that use this */
 
@@ -997,6 +999,68 @@ void *mkfifo(str *path, int mode) {
     return NULL;
 }
 
+/* class __vfsstat */
+
+class_ *cl___vfsstat;
+
+__vfsstat::__vfsstat(str *path) {
+    this->__class__ = cl___vfsstat;
+    if(statvfs(path->unit.c_str(), &vbuf) == -1)
+        throw new OSError(path);
+    fill_er_up();
+}
+    
+__vfsstat::__vfsstat(int fd) {
+    this->__class__ = cl___vfsstat;
+    if(fstatvfs(fd, &vbuf) == -1)
+        throw new OSError(__str(fd));
+    fill_er_up();
+}
+
+void __vfsstat::fill_er_up() {
+    this->f_bsize = vbuf.f_bsize;
+    this->f_frsize = vbuf.f_frsize;
+    this->f_blocks = vbuf.f_blocks;
+    this->f_bfree = vbuf.f_bfree;
+    this->f_bavail = vbuf.f_bavail;
+    this->f_files = vbuf.f_files;
+    this->f_ffree = vbuf.f_ffree;
+    this->f_favail = vbuf.f_favail;
+    this->f_flag = vbuf.f_flag;
+    this->f_namemax = vbuf.f_namemax;
+}
+
+int __vfsstat::__len__() {
+    return 10;
+}
+
+int __vfsstat::__getitem__(int i) {
+    i = __wrap(this, i);
+    switch(i) {
+        case 0: return vbuf.f_bsize;
+        case 1: return vbuf.f_frsize;
+        case 2: return vbuf.f_blocks;
+        case 3: return vbuf.f_bfree;
+        case 4: return vbuf.f_bavail;
+        case 5: return vbuf.f_files;
+        case 6: return vbuf.f_ffree;
+        case 7: return vbuf.f_favail;
+        case 8: return vbuf.f_flag;
+        case 9: return vbuf.f_namemax;
+
+        default:  
+            throw new IndexError(new str("tuple index out of range")); 
+    } 
+
+    return 0;
+}
+
+__vfsstat *statvfs(str *path) {
+    return new __vfsstat(path);
+}
+__vfsstat *fstatvfs(int fd) {
+    return new __vfsstat(fd);
+}
 
 #endif
 
@@ -1010,6 +1074,7 @@ void __init() {
     name = new str("nt");
 #else
     name = new str("posix");
+    cl___vfsstat = new class_("__vfsstat", 4, 4);
 #endif
     
     __ss_environ = new dict<str *, str *>();
