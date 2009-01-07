@@ -313,3 +313,9 @@ def ftruncate(fd, n):
 
 def getloadavg():
     return (1.0,)
+
+def mkfifo(path, mode=438):
+    pass
+
+def unlink(path):
+    pass
