@@ -16,17 +16,13 @@ days_per_year = 365.24
 def advance(bodies, dt, n):
     # Create all possible pairs first
     #pairs = [(b, b2) for i, b in enumerate(bodies) for b2 in bodies[i+1:]] XXX doesnt compile
-#    pairs = []
-#    for i in range(len(bodies)):
-#        for j in range(i+1, len(bodies)):
-#            pairs.append((bodies[i], bodies[j]))
+    pairs = []
+    for i in range(len(bodies)):
+        for j in range(i+1, len(bodies)):
+            pairs.append((bodies[i], bodies[j]))
 
     for i in xrange(n):
-#        for b, b2 in pairs:
-        for i in range(len(bodies)):
-          for j in range(i+1, len(bodies)):
-            b, b2 = bodies[i], bodies[j]
-
+        for b, b2 in pairs:
             dx = b[0] - b2[0]
             dy = b[1] - b2[1]
             dz = b[2] - b2[2]
