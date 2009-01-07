@@ -30,8 +30,16 @@ void *makedirs(str *name, int mode=0777);
 void *abort();
 int system(str *c);
 
+class namedtuple : public pyobj {
+public:
+    tuple2<int, int> *__slice__(int x, int l, int u, int s);
+    str *__repr__();
+    virtual int __len__() = 0;
+    virtual int __getitem__(int i) = 0;
+};
+
 extern class_ *cl___cstat;
-class __cstat : public pyobj {
+class __cstat : public namedtuple {
 public:
     int st_mode, st_ino, st_dev, st_rdev, st_nlink, st_uid, st_gid, st_size, st_blksize, st_blocks;
     int __ss_st_mtime, __ss_st_atime, __ss_st_ctime;
@@ -42,9 +50,7 @@ public:
 
     int __len__();
     int __getitem__(int i);
-    tuple2<int, int> *__slice__(int x, int l, int u, int s);
 
-    str *__repr__();
 };
 
 __cstat *stat(str *path);
