@@ -106,6 +106,11 @@ void *remove(str *path) {
     return NULL;
 }
 
+void *unlink(str *path) {
+    remove(path);
+    return NULL;
+}
+
 void *rmdir(str *a) {
     if (::rmdir(a->unit.c_str()) == -1)
         throw new OSError(a);
@@ -979,6 +984,13 @@ tuple2<double, double> *getloadavg() {
         throw new OSError(new str("os.getloadavg"));
     return new tuple2<double, double>(3, load[0], load[1], load[2]);
 }
+
+void *mkfifo(str *path, int mode) {
+    if(::mkfifo(path->unit.c_str(), mode) == -1)
+        throw new OSError(new str("os.mkfifo"));
+    return NULL;
+}
+
 
 #endif
 

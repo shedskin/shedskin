@@ -157,6 +157,8 @@ int sysconf(int name);
 void *ftruncate(int fd, int n);
 
 tuple2<double, double> *getloadavg();
+void *mkfifo(str *path, int mode=438);
+void *unlink(str *path);
 
 #endif
 
