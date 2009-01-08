@@ -81,7 +81,7 @@ public:
         __0 = __os__::__path__::split(pathname);
         dirname = __0->__getfirst__();
         basename = __0->__getsecond__();
-        if ((!__bool(dirname))) {
+        if ((!___bool(dirname))) {
 
             FOR_IN_SEQ(name,glob1(__os__::curdir, basename),1,3)
                 __last_yield = 1;
@@ -145,7 +145,7 @@ list<str *> *glob1(str *dirname, str *pattern) {
     str *nm;
     int __19;
 
-    if ((!__bool(dirname))) {
+    if ((!___bool(dirname))) {
         dirname = __os__::curdir;
     }
     try {

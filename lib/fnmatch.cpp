@@ -83,9 +83,9 @@ list<str *> *filter(list<str *> *names, str *pat) {
 
         FOR_IN_SEQ(name,names,0,2)
 #ifndef WIN32
-            if (__bool(cpat->match(name))) {
+            if (___bool(cpat->match(name))) {
 #else
-            if (__bool(cpat->match(__os__::__path__::normcase(name)))) {
+            if (___bool(cpat->match(__os__::__path__::normcase(name)))) {
 #endif
                 result->append(name);
             }

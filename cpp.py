@@ -550,7 +550,7 @@ class generateVisitor(ASTVisitor):
         if [1 for t in self.mergeinh[node] if isinstance(t[0], class_) and t[0].ident == 'int_']:
             self.visit(node, func)
         else:
-            self.visitm('__bool(', node, ')', func)
+            self.visitm('___bool(', node, ')', func)
 
     def visitWhile(self, node, func=None):
         print >>self.out
@@ -1361,7 +1361,7 @@ class generateVisitor(ASTVisitor):
         if unboxable(self.mergeinh[node.expr]):
             self.visit(node.expr, func)
         else:
-            self.visitm('__bool(', node.expr, ')', func)
+            self.visitm('___bool(', node.expr, ')', func)
         self.append(')')
 
     def visitBackquote(self, node, func=None):
@@ -1435,7 +1435,7 @@ class generateVisitor(ASTVisitor):
         self.append('(')
         for n in node.nodes:
             if self.mergeinh[n] != set([(defclass('int_'),0)]):
-                self.visitm('__bool(', n, ')', func)
+                self.visitm('___bool(', n, ')', func)
             else:
                 self.visit(n, func)
             if n != node.nodes[-1]:
@@ -1828,10 +1828,10 @@ class generateVisitor(ASTVisitor):
             if ident == 'float' and node.args and self.mergeinh[node.args[0]] == set([(defclass('float_'), 0)]):
                 self.visit(node.args[0], func)
                 return
-            if ident in ['abs', 'int', 'float', 'str', 'dict', 'tuple', 'list', 'type', 'bool', 'cmp', 'sum']:
+            if ident in ['abs', 'int', 'float', 'str', 'dict', 'tuple', 'list', 'type', 'cmp', 'sum']:
                 self.append('__'+ident+'(')
-            elif ident == 'iter':
-                self.append('___iter(') # XXX
+            elif ident in ['iter', 'bool']:
+                self.append('___'+ident+'(') # XXX
             elif ident == 'pow' and direct_call.mv.module.ident == 'builtin':
                 if len(node.args)==3: third = node.args[2]
                 else: third = None

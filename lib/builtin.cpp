@@ -92,7 +92,7 @@ complex::complex(str *s) {
 
     p = __re__::compile(new str("(?P<one>[+-]?([\\d\\.]+e[+-]?\\d+|[\\d\\.]*)j?)(?P<two>[+-]?([\\d\\.]+e[+-]?\\d+|[\\d\\.]*)j?)?$"));
     m = p->match(s->strip());
-    if (__bool(m)) {
+    if (___bool(m)) {
         complex *c = (parsevalue(m->group(new str("one"))))->__add__(parsevalue(m->group(new str("two"))));
         real = c->real;
         imag = c->imag;
@@ -116,7 +116,7 @@ PyObject *complex::__to_py__() {
 complex *complex::parsevalue(str *s) {
     complex *mult;
 
-    if ((!__bool(s))) {
+    if ((!___bool(s))) {
         return __add2(0, new complex(0.0, 0.0));
     }
     mult = __add2(1, new complex(0.0, 0.0));
@@ -1576,15 +1576,15 @@ double ___round(double a, int n) {
 
 /* bool */
 
-int __bool() { return 0; }
+int ___bool() { return 0; }
 
-template<> int __bool(int x) {
+template<> int ___bool(int x) {
     return x;
 }
-template<> int __bool(bool x) {
+template<> int ___bool(bool x) {
     return (int)x;
 }
-template<> int __bool(double x) {
+template<> int ___bool(double x) {
     return x!=0;
 }
 

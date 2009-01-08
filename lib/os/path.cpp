@@ -121,7 +121,7 @@ tuple2<str *, str *> *split(str *p) {
     __8 = p->__slice__(1, i, 0, 0);
     head = __7;
     tail = __8;
-    if ((__bool(head) && __ne(head, (const_4)->__mul__(len(head))))) {
+    if ((___bool(head) && __ne(head, (const_4)->__mul__(len(head))))) {
         head = head->rstrip(const_4);
     }
     return (new tuple2<str *, str *>(2, head, tail));
@@ -176,7 +176,7 @@ str *commonprefix(list<str *> *m) {
     str *s1, *s2;
     int __11, __12, i, n;
 
-    if ((!__bool(m))) {
+    if ((!___bool(m))) {
         return const_0;
     }
     s1 = __min(m);
@@ -337,10 +337,10 @@ str *normpath(str *path) {
         if ((const_2)->__contains__(comp)) {
             continue;
         }
-        if ((__ne(comp, const_3) || __AND((!initial_slashes), (!__bool(new_comps)), 32) || __bool((__bool(new_comps) && __eq(new_comps->__getfast__(-1), const_3))))) {
+        if ((__ne(comp, const_3) || __AND((!initial_slashes), (!___bool(new_comps)), 32) || ___bool((___bool(new_comps) && __eq(new_comps->__getfast__(-1), const_3))))) {
             new_comps->append(comp);
         }
-        else if (__bool(new_comps)) {
+        else if (___bool(new_comps)) {
             new_comps->pop();
         }
     END_FOR
@@ -504,7 +504,7 @@ str *joinl(list<str *> *l) {
         else {
             ASSERT((len(path)>0), 0);
             if ((const_18)->__contains__(path->__getitem__(-1))) {
-                if ((__bool(b) && (const_18)->__contains__(b->__getitem__(0)))) {
+                if ((___bool(b) && (const_18)->__contains__(b->__getitem__(0)))) {
                     path = path->__iadd__(b->__slice__(1, 1, 0, 0));
                 }
                 else {
@@ -514,7 +514,7 @@ str *joinl(list<str *> *l) {
             else if (__eq(path->__getitem__(-1), const_19)) {
                 path = path->__iadd__(b);
             }
-            else if (__bool(b)) {
+            else if (___bool(b)) {
                 if ((const_18)->__contains__(b->__getitem__(0))) {
                     path = path->__iadd__(b);
                 }
@@ -568,7 +568,7 @@ tuple2<str *, str *> *split(str *p) {
     tail = __19;
     head2 = head;
 
-    while((__bool(head2) && (const_18)->__contains__(head2->__getitem__(-1)))) {
+    while((___bool(head2) && (const_18)->__contains__(head2->__getitem__(-1)))) {
         head2 = head2->__slice__(2, 0, -1, 0);
     }
     head = __OR(head2, head, 22);
@@ -619,7 +619,7 @@ str *commonprefix(list<str *> *m) {
     int __26, __27, __28, i;
     str *item, *prefix;
 
-    if ((!__bool(m))) {
+    if ((!___bool(m))) {
         return const_1;
     }
     prefix = m->__getfast__(0);
@@ -777,7 +777,7 @@ str *normpath(str *path) {
             i = (i+1);
         }
     }
-    if (__AND((!__bool(prefix)), (!__bool(comps)), 41)) {
+    if (__AND((!___bool(prefix)), (!___bool(comps)), 41)) {
         comps->append(const_0);
     }
     return prefix->__add__((const_4)->join(comps));

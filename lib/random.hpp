@@ -218,7 +218,7 @@ template <class A> list<A> *Random::sample(pyseq<A> *population, int k) {
     }
     else {
         try {
-            ((n>0) && __bool((new tuple2<A, A>(3, population->__getitem__(0), population->__getitem__(__floordiv(n, 2)), population->__getitem__((n-1))))));
+            ((n>0) && ___bool((new tuple2<A, A>(3, population->__getitem__(0), population->__getitem__(__floordiv(n, 2)), population->__getitem__((n-1))))));
         } catch (TypeError *) {
             population = __tuple(population);
         } catch (KeyError *) {
