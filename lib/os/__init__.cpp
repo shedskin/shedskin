@@ -1103,6 +1103,12 @@ void *utime(str *path, tuple2<int, double> *times) { HOPPA }
 void *utime(str *path, tuple2<double, int> *times) { HOPPA }
 void *utime(str *path, tuple2<double, double> *times) { HOPPA }
 
+#undef HOPPA
+
+int access(str *path, int mode) {
+    return (::access(path->unit.c_str(), mode) == 0);
+}
+
 #endif
 
 void __init() {

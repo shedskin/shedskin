@@ -357,3 +357,6 @@ def urandom(n):
 
 def utime(path, times):
     pass
+
+def access(path, mode):
+    return True

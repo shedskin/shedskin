@@ -192,6 +192,8 @@ void *utime(str *path, tuple2<int, double> *times);
 void *utime(str *path, tuple2<double, int> *times);
 void *utime(str *path, tuple2<double, double> *times);
 
+int access(str *path, int mode);
+
 #endif
 
 void __init();
