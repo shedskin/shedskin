@@ -1062,6 +1062,18 @@ __vfsstat *fstatvfs(int fd) {
     return new __vfsstat(fd);
 }
 
+void *fsync(int fd) {
+    if(::fsync(fd) == -1)
+        throw new OSError(new str("os.fsync"));
+    return NULL;
+}
+
+void *lseek(int fd, int pos, int how) {
+    if(::lseek(fd, pos, how) == -1)
+        throw new OSError(new str("os.lseek"));
+    return NULL;
+}
+
 #endif
 
 void __init() {

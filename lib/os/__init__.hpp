@@ -182,6 +182,8 @@ tuple2<double, double> *getloadavg();
 void *mkfifo(str *path, int mode=438);
 void *unlink(str *path);
 
+void *fsync(int fd);
+void *lseek(int fd, int pos, int how);
 #endif
 
 void __init();
