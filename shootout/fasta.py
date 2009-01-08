@@ -4,29 +4,32 @@
 # Optimized for speed by bearophile, Jan 7 2006
 
 from sys import argv, stdout
-import psyco
-from array import array
 
-iub = [['a', 0.27],
-       ['c', 0.12],
-       ['g', 0.12],
-       ['t', 0.27],
-       ['B', 0.02],
-       ['D', 0.02],
-       ['H', 0.02],
-       ['K', 0.02],
-       ['M', 0.02],
-       ['N', 0.02],
-       ['R', 0.02],
-       ['S', 0.02],
-       ['V', 0.02],
-       ['W', 0.02],
-       ['Y', 0.02]]
+class Pair:
+    def __init__(self, a, b):
+        self.a = a
+        self.b = b
 
-homosapiens = [['a', 0.3029549426680],
-               ['c', 0.1979883004921],
-               ['g', 0.1975473066391],
-               ['t', 0.3015094502008]]
+iub = [Pair('a', 0.27),
+       Pair('c', 0.12),
+       Pair('g', 0.12),
+       Pair('t', 0.27),
+       Pair('B', 0.02),
+       Pair('D', 0.02),
+       Pair('H', 0.02),
+       Pair('K', 0.02),
+       Pair('M', 0.02),
+       Pair('N', 0.02),
+       Pair('R', 0.02),
+       Pair('S', 0.02),
+       Pair('V', 0.02),
+       Pair('W', 0.02),
+       Pair('Y', 0.02)]
+
+homosapiens = [Pair('a', 0.3029549426680),
+               Pair('c', 0.1979883004921),
+               Pair('g', 0.1975473066391),
+               Pair('t', 0.3015094502008)]
 
 alu = "GGCCGGGCGCGGTGGCTCACGCCTGTAATCCCAGCACTTTGGGAGGCCGAGGCGGGCGGATCACCTGAGGTCAGGAGTT"\
       "CGAGACCAGCCTGGCCAACATGGTGAAACCCCGTCTCTACTAAAAATACAAAAATTAGCCGGGCGTGGTGGCGCGCGCC"\
@@ -47,25 +50,25 @@ def gen_random(max):
 def makeCumulative(genelist):
     cp = 0.0
     for i in xrange(len(genelist)):
-        cp += genelist[i][1]
-        genelist[i][1] = cp
+        cp += genelist[i].b
+        genelist[i].b = cp
 
 
 def selectRandom(genelist):
     r = gen_random(1.0)
     for pair in genelist:
-        if r < pair[1]:
-            return pair[0]
+        if r < pair.b:
+            return pair.a
 
 
 def makeRandomFasta(id, desc, genelist, todo):
     print ">" + str(id), desc
     line_length = 60
-    a = array("c", " " * line_length)
+    a = list(" " * line_length)
     for i in xrange(todo / line_length):
         for j in xrange(line_length):
             a[j] = selectRandom(genelist)
-        a.tofile(stdout)
+        print "".join(a)
         print
 
     todo = todo % line_length
@@ -105,7 +108,6 @@ def makeRepeatFasta(id, desc, s, todo):
         todo -= line_length
 
 
-psyco.full()
 n = int(argv[1])
 
 makeCumulative(iub)
