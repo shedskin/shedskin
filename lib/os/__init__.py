@@ -360,3 +360,7 @@ def utime(path, times):
 
 def access(path, mode):
     return True
+
+def times():
+    return (1.0,)
+

@@ -5,6 +5,7 @@
 #include <sstream>
 #include <sys/stat.h>
 #include <sys/time.h>
+#include <sys/times.h>
 #include <sys/wait.h>
 #include <sys/utsname.h>
 #include <sys/statvfs.h>
@@ -1107,6 +1108,15 @@ void *utime(str *path, tuple2<double, double> *times) { HOPPA }
 
 int access(str *path, int mode) {
     return (::access(path->unit.c_str(), mode) == 0);
+}
+
+tuple2<double, double> *times() {
+    struct tms buf;
+    clock_t c;
+    int ticks_per_second = ::sysconf(_SC_CLK_TCK);
+    if((c = ::times(&buf)) == -1)
+        throw new OSError(new str("os.utime"));
+    return new tuple2<double, double>(5, ((double)buf.tms_utime / ticks_per_second), ((double)buf.tms_stime / ticks_per_second), ((double)buf.tms_cutime / ticks_per_second), ((double)buf.tms_cstime / ticks_per_second), ((double)c / ticks_per_second)); 
 }
 
 #endif
