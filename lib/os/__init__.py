@@ -345,3 +345,9 @@ def mkfifo(path, mode=438):
 
 def unlink(path):
     pass
+
+def lseek(fd, pos, how):
+    pass
+
+def fsync(fd):
+    pass
