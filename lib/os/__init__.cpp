@@ -4,15 +4,18 @@
 #include <cstdlib>
 #include <sstream>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <sys/wait.h>
 #include <sys/utsname.h>
 #include <sys/statvfs.h>
+#include <sys/types.h>
 #include <stdio.h>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <grp.h>
 #include <pty.h>
+#include <utime.h>
 
 namespace std {
 #include <unistd.h>
@@ -1080,6 +1083,25 @@ str *urandom(int n) {
     close(fd);
     return s;
 }
+
+void __utime(str *path) {
+    if(::utime(path->unit.c_str(), NULL) == -1)
+        throw new OSError(new str("os.utime"));
+}
+void __utime(str *path, double actime, double modtime) {
+    struct utimbuf buf;
+    buf.actime = actime;
+    buf.modtime = modtime;
+    if(::utime(path->unit.c_str(), &buf) == -1)
+        throw new OSError(new str("os.utime"));
+}
+
+#define HOPPA if (times) __utime(path, times->__getfirst__(), times->__getsecond__()); else __utime(path); return NULL;
+
+void *utime(str *path, tuple2<int, int> *times) { HOPPA }
+void *utime(str *path, tuple2<int, double> *times) { HOPPA }
+void *utime(str *path, tuple2<double, int> *times) { HOPPA }
+void *utime(str *path, tuple2<double, double> *times) { HOPPA }
 
 #endif
 

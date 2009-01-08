@@ -186,6 +186,12 @@ void *fsync(int fd);
 void *lseek(int fd, int pos, int how);
 
 str *urandom(int n);
+
+void *utime(str *path, tuple2<int, int> *times);
+void *utime(str *path, tuple2<int, double> *times);
+void *utime(str *path, tuple2<double, int> *times);
+void *utime(str *path, tuple2<double, double> *times);
+
 #endif
 
 void __init();

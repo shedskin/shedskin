@@ -354,3 +354,6 @@ def fsync(fd):
 
 def urandom(n):
     return ''
+
+def utime(path, times):
+    pass
