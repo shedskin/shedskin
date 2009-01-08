@@ -351,3 +351,6 @@ def lseek(fd, pos, how):
 
 def fsync(fd):
     pass
+
+def urandom(n):
+    return ''

@@ -1074,6 +1074,13 @@ void *lseek(int fd, int pos, int how) {
     return NULL;
 }
 
+str *urandom(int n) {
+    int fd = open(new str("/dev/urandom"), __ss_O_RDONLY);
+    str *s = read(fd, n);
+    close(fd);
+    return s;
+}
+
 #endif
 
 void __init() {
