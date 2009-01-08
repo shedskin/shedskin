@@ -184,6 +184,8 @@ void *unlink(str *path);
 
 void *fsync(int fd);
 void *lseek(int fd, int pos, int how);
+
+str *urandom(int n);
 #endif
 
 void __init();
