@@ -22,9 +22,11 @@ def gen_freq(seq, frame, frequences):
 def sort_seq(seq, length, frequences):
     n, frequences = gen_freq(seq, length, frequences)
 
-    l = sorted(frequences.items(), reverse=True, key=lambda (seq,freq): (freq,seq))
+   # l = sorted(frequences.items(), reverse=True, key=lambda (seq,freq): (freq,seq))
+    l = [(freq, seq) for seq, freq in frequences.items()]
+    l.sort(reverse = True)
 
-    print '\n'.join("%s %.3f" % (st, 100.0*fr/n) for st,fr in l)
+    print '\n'.join(["%s %.3f" % (st, 100.0*fr/n) for fr,st in l])
     print
 
 
