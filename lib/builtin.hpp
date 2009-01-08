@@ -1254,19 +1254,19 @@ template<class T> int len(T x) {
 
 /* bool */
 
-int __bool();
+int ___bool();
 
-template<class T> int __bool(T x) {
+template<class T> int ___bool(T x) {
     return (x && x->__nonzero__());
 }
-template<> int __bool(int x);
-template<> int __bool(bool x);
-template<> int __bool(double x);
+template<> int ___bool(int x);
+template<> int ___bool(bool x);
+template<> int ___bool(double x);
 
 /* logical and, or */
 
-#define __OR(a, b, t) ((__bool(__ ## t = a))?(__ ## t):(b))
-#define __AND(a, b, t) ((!__bool(__ ## t = a))?(__ ## t):(b))
+#define __OR(a, b, t) ((___bool(__ ## t = a))?(__ ## t):(b))
+#define __AND(a, b, t) ((!___bool(__ ## t = a))?(__ ## t):(b))
 
 /* __iter<T> methods */
 
@@ -3301,7 +3301,7 @@ template<class A> int any(pyiter<A> *a) {
     A b;
     __iter<A> *__0;
     FOR_IN(b,a,0)
-        if(__bool(b))
+        if(___bool(b))
             return 1;
     END_FOR
     return 0;
@@ -3311,7 +3311,7 @@ template<class A> int all(pyiter<A> *a) {
     A b;
     __iter<A> *__0;
     FOR_IN(b,a,0)
-        if(!__bool(b))
+        if(!___bool(b))
             return 0;
     END_FOR
     return 1;

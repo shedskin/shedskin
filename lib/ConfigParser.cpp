@@ -325,7 +325,7 @@ void *RawConfigParser::_set(str *section, str *option, str *value) {
     int __16, __17;
     dict<str *, str *> *sectdict;
 
-    if (__OR((!__bool(section)), __eq(section, DEFAULTSECT), 16)) {
+    if (__OR((!___bool(section)), __eq(section, DEFAULTSECT), 16)) {
         sectdict = this->_defaults;
     }
     else {
@@ -356,7 +356,7 @@ int RawConfigParser::remove_option(str *section, str *option) {
     int __30, __31, existed;
     dict<str *, str *> *sectdict;
 
-    if (__OR((!__bool(section)), __eq(section, DEFAULTSECT), 30)) {
+    if (__OR((!___bool(section)), __eq(section, DEFAULTSECT), 30)) {
         sectdict = this->_defaults;
     }
     else {
@@ -397,7 +397,7 @@ int RawConfigParser::__init__(dict<str *, str *> *defaults) {
 
     this->_sections = (new dict<str *, dict<str *, str *> *>());
     this->_defaults = (new dict<str *, str *>());
-    if (__bool(defaults)) {
+    if (___bool(defaults)) {
 
         FOR_IN_SEQ(__0,defaults->items(),1,3)
             __0 = __0;
@@ -416,7 +416,7 @@ int RawConfigParser::has_option(str *section, str *option) {
     */
     int __12, __13, __14, __15;
 
-    if (__OR((!__bool(section)), __eq(section, DEFAULTSECT), 12)) {
+    if (__OR((!___bool(section)), __eq(section, DEFAULTSECT), 12)) {
         option = this->optionxform(option);
         return (this->_defaults)->__contains__(option);
     }
@@ -442,7 +442,7 @@ void *RawConfigParser::write(file *fp) {
     list<tuple2<str *, str *> *> *__20, *__27;
     __iter<tuple2<str *, str *> *> *__21, *__28;
 
-    if (__bool(this->_defaults)) {
+    if (___bool(this->_defaults)) {
         fp->write(__modct(const_11, 1, DEFAULTSECT));
 
         FOR_IN_SEQ(__19,(this->_defaults)->items(),20,22)
@@ -617,7 +617,7 @@ void *RawConfigParser::_read(file *fp, str *fpname) {
 
     while (1) {
         line = fp->readline();
-        if ((!__bool(line))) {
+        if ((!___bool(line))) {
             break;
         }
         lineno = (lineno+1);
@@ -627,15 +627,15 @@ void *RawConfigParser::_read(file *fp, str *fpname) {
         if (__AND(__eq(((line->split(0, 1))->__getfast__(0))->lower(), const_19), (const_20)->__contains__(line->__getitem__(0)), 35)) {
             continue;
         }
-        if (((line->__getitem__(0))->isspace() && (cursect!=0) && __bool(optname))) {
+        if (((line->__getitem__(0))->isspace() && (cursect!=0) && ___bool(optname))) {
             value = line->strip();
-            if (__bool(value)) {
+            if (___bool(value)) {
                 cursect->__setitem__(optname, __modct(const_21, 2, cursect->__getitem__(optname), value));
             }
         }
         else {
             mo = (RawConfigParser::SECTCRE)->match(line);
-            if (__bool(mo)) {
+            if (___bool(mo)) {
                 sectname = mo->group(const_22);
                 if ((this->_sections)->__contains__(sectname)) {
                     cursect = (this->_sections)->__getitem__(sectname);
@@ -654,7 +654,7 @@ void *RawConfigParser::_read(file *fp, str *fpname) {
             }
             else {
                 mo = (RawConfigParser::OPTCRE)->match(line);
-                if (__bool(mo)) {
+                if (___bool(mo)) {
                     optname = mo->group(const_23);
                     vi = mo->group(const_24);
                     optval = mo->group(const_25);
@@ -672,7 +672,7 @@ void *RawConfigParser::_read(file *fp, str *fpname) {
                     cursect->__setitem__(optname, optval);
                 }
                 else {
-                    if ((!__bool(e))) {
+                    if ((!___bool(e))) {
                         e = (new ParsingError(fpname));
                     }
                     e->append(lineno, repr(line));
@@ -680,7 +680,7 @@ void *RawConfigParser::_read(file *fp, str *fpname) {
             }
         }
     }
-    if (__bool(e)) {
+    if (___bool(e)) {
         throw (e);
     }
     return NULL;
@@ -778,7 +778,7 @@ str *ConfigParser::get(str *section, str *option, int raw, dict<str *, str *> *v
             throw ((new NoSectionError(section)));
         }
     }
-    if (__bool(vars)) {
+    if (___bool(vars)) {
 
         FOR_IN_SEQ(__46,vars->items(),47,49)
             __46 = __46;
@@ -832,7 +832,7 @@ list<tuple2<str *, str *> *> *ConfigParser::items(str *section, int raw, dict<st
             throw ((new NoSectionError(section)));
         }
     }
-    if (__bool(vars)) {
+    if (___bool(vars)) {
 
         FOR_IN_SEQ(__52,vars->items(),53,55)
             __52 = __52;

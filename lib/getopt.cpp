@@ -114,7 +114,7 @@ tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *getopt(list<str *> *args,
     opts = (new list<tuple2<str *, str *> *>());
     longopts = __list(longopts);
 
-    while((__bool(args) && (args->__getfast__(0))->startswith(const_1) && __ne(args->__getfast__(0), const_1))) {
+    while((___bool(args) && (args->__getfast__(0))->startswith(const_1) && __ne(args->__getfast__(0), const_1))) {
         if (__eq(args->__getfast__(0), const_2)) {
             args = args->__slice__(1, 1, 0, 0);
             break;
@@ -164,14 +164,14 @@ tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *gnu_getopt(list<str *> *a
         shortopts = shortopts->__slice__(1, 1, 0, 0);
         all_options_first = 1;
     }
-    else if (__bool((__os__::__ss_environ)->get(const_4))) {
+    else if (___bool((__os__::__ss_environ)->get(const_4))) {
         all_options_first = 1;
     }
     else {
         all_options_first = 0;
     }
 
-    while(__bool(args)) {
+    while(___bool(args)) {
         if (__eq(args->__getfast__(0), const_2)) {
             prog_args = prog_args->__iadd__(args->__slice__(1, 1, 0, 0));
             break;
@@ -224,7 +224,7 @@ tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *do_longs(list<tuple2<str 
     opt = __11->__getsecond__();
     if (has_arg) {
         if ((optarg==0)) {
-            if ((!__bool(args))) {
+            if ((!___bool(args))) {
                 throw ((new GetoptError(__modct(const_6, 1, opt),opt)));
             }
             __12 = args->__getfast__(0);
@@ -233,7 +233,7 @@ tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *do_longs(list<tuple2<str 
             args = __13;
         }
     }
-    else if (__bool(optarg)) {
+    else if (___bool(optarg)) {
         throw ((new GetoptError(__modct(const_7, 1, opt),opt)));
     }
     opts->append((new tuple2<str *, str *>(2, (const_2)->__add__(opt), __OR(optarg, const_0, 14))));
@@ -246,7 +246,7 @@ tuple2<int, str *> *long_has_args(str *opt, pyiter<str *> *longopts) {
     int has_arg;
 
     possibilities = list_comp_0(opt, longopts);
-    if ((!__bool(possibilities))) {
+    if ((!___bool(possibilities))) {
         throw ((new GetoptError(__modct(const_8, 1, opt),opt)));
     }
     if (possibilities->__contains__(opt)) {
@@ -279,7 +279,7 @@ tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *do_shorts(list<tuple2<str
         optstring = __20;
         if (short_has_arg(opt, shortopts)) {
             if (__eq(optstring, const_0)) {
-                if ((!__bool(args))) {
+                if ((!___bool(args))) {
                     throw ((new GetoptError(__modct(const_10, 1, opt),opt)));
                 }
                 __21 = args->__getfast__(0);

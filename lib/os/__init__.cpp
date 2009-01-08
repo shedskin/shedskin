@@ -127,13 +127,13 @@ void *removedirs(str *name) {
     __0 = __path__::split(name);
     head = __0->__getfirst__();
     tail = __0->__getsecond__();
-    if ((!__bool(tail))) {
+    if ((!___bool(tail))) {
         __1 = __path__::split(head);
         head = __1->__getfirst__();
         tail = __1->__getsecond__();
     }
 
-    while(__bool(__AND(head, tail, 2))) {
+    while(___bool(__AND(head, tail, 2))) {
         try {
             rmdir(head);
         } catch (OSError *) {
@@ -165,12 +165,12 @@ void *makedirs(str *name, int mode) {
     __0 = __path__::split(name);
     head = __0->__getfirst__();
     tail = __0->__getsecond__();
-    if ((!__bool(tail))) {
+    if ((!___bool(tail))) {
         __1 = __path__::split(head);
         head = __1->__getfirst__();
         tail = __1->__getsecond__();
     }
-    if ((__bool(head) && __bool(tail) && (!__path__::exists(head)))) {
+    if ((___bool(head) && ___bool(tail) && (!__path__::exists(head)))) {
         try {
             makedirs(head, mode);
         } catch (OSError *e) {
@@ -368,13 +368,13 @@ void *renames(str* old, str* _new) {
     head = __0->__getfirst__();
     tail = __0->__getsecond__();
 
-    if ((!__bool(tail))) {
+    if ((!___bool(tail))) {
         __1 = __path__::split(head);
         head = __1->__getfirst__();
         tail = __1->__getsecond__();
     }
     
-    while(__bool(__AND(head, tail, 2)) && !__path__::exists(head)) {
+    while(___bool(__AND(head, tail, 2)) && !__path__::exists(head)) {
         try {
             makedirs(head);
         } catch (OSError *) {
@@ -390,13 +390,13 @@ void *renames(str* old, str* _new) {
     head = __0->__getfirst__();
     tail = __0->__getsecond__();
 
-    if ((!__bool(tail))) {
+    if ((!___bool(tail))) {
         __1 = __path__::split(head);
         head = __1->__getfirst__();
         tail = __1->__getsecond__();
     }
 
-    if(__bool(__AND(head,tail,2))) {
+    if(___bool(__AND(head,tail,2))) {
         removedirs(head);
     }
     return NULL;
@@ -462,7 +462,7 @@ void *execv(str* file, list<str*>* args) {
 void *execvp(str* file, list<str*>* args) {
     tuple2<str*,str*>* h_t = __path__::split(file);
 
-    if( __bool(h_t->__getfirst__())) {
+    if( ___bool(h_t->__getfirst__())) {
         execv(file,args);
         return NULL;
     }
