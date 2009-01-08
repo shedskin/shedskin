@@ -12,35 +12,44 @@ def main():
     iter = 50
     limit = 2.
     size = int(sys.argv[1])
-    fsize = float(size)
-    bit_num = 7
-    byte_acc = 0
+    bit = 0x80
+    bit_accu = 0
+    gone = False
 
     cout("P4\n%d %d\n" % (size, size))
 
     for y in xrange(size):
-        fy = 2j * y / fsize - 1j
+        ci = 2.0 * y / size - 1.0
+
         for x in xrange(size):
-            z = 0j
-            c = 2. * x / fsize - 1.5 + fy
+            cr = 2.0 * x / size - 1.5
+
+            zr = 0; zi = 0; pr = 0; pi = 0
 
             for i in xrange(iter):
-                z = z * z + c
-                if abs(z) >= limit:
+                zi = 2.0 * zr * zi + ci
+                zr = pr - pi + cr
+                pi = zi * zi
+                pr = zr * zr
+                if pi+pr > limit:
+                    gone = True
                     break
-            else:
-                byte_acc += 1 << bit_num
 
-            if bit_num == 0:
-                cout(chr(byte_acc))
-                bit_num = 7
-                byte_acc = 0
+            if gone:
+                gone = False
             else:
-                bit_num -= 1
+                bit_accu |= bit
 
-        if bit_num != 7:
-            cout(chr(byte_acc))
-            bit_num = 7
-            byte_acc = 0
+            if bit == 1:
+                cout(chr(bit_accu))
+                bit_accu = 0
+                bit = 0x80
+            else:
+                bit >>= 1
+
+        if bit != 0x80:
+            cout(chr(bit_accu))
+            bit_accu = 0
+            bit = 0x80
 
 main()
