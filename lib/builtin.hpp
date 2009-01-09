@@ -1860,7 +1860,11 @@ template <class T> set<T>::set(int frozen) : frozen(frozen) {
 template<class T> set<T>::set(PyObject *p) {
     this->__class__ = cl_set;
     EMPTY_TO_MINSIZE(this);
-    if(!PyAnySet_Check(p))
+    if(PyFrozenSet_CheckExact(p))
+        frozen = 1;
+    else if(PyAnySet_CheckExact(p))
+        frozen = 0;
+    else
         throw new TypeError(new str("error in conversion to Shed Skin (set expected)"));
 
     PyObject *iter = PyObject_GetIter(p), *item;
