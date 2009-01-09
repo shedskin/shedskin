@@ -195,6 +195,10 @@ void *utime(str *path, tuple2<double, double> *times);
 int access(str *path, int mode);
 tuple2<double, double> *times();
 
+str *tmpnam();
+file *tmpfile();
+str *tempnam(str *dir, str *prefix=NULL);
+
 #endif
 
 void __init();

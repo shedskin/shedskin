@@ -1119,6 +1119,32 @@ tuple2<double, double> *times() {
     return new tuple2<double, double>(5, ((double)buf.tms_utime / ticks_per_second), ((double)buf.tms_stime / ticks_per_second), ((double)buf.tms_cutime / ticks_per_second), ((double)buf.tms_cstime / ticks_per_second), ((double)c / ticks_per_second)); 
 }
 
+str *tmpnam() {
+    char *buf;
+    if((buf = ::tmpnam(NULL)) == NULL)
+        throw new OSError(new str("os.tmpnam"));
+    return new str(buf);
+}
+file *tmpfile() {
+    FILE *f;
+    if((f = ::tmpfile()) == NULL)
+        throw new OSError(new str("os.tmpfile"));
+    file *_file = new file(f);
+    _file->name = new str("<tmpfile>");
+    return _file;
+}
+str *tempnam(str *dir, str *prefix) {
+    char *name;
+    str *result;
+    char *pfx = NULL;
+    if(prefix) pfx = (char *)(prefix->unit.c_str());
+    if((name = ::tempnam(dir->unit.c_str(), pfx)) == NULL)
+        throw new OSError(new str("os.tempnam"));
+    result = new str(name);
+    free(name);
+    return result;
+}
+
 #endif
 
 void __init() {
