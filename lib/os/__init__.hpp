@@ -199,6 +199,10 @@ str *tmpnam();
 file *tmpfile();
 str *tempnam(str *dir, str *prefix=NULL);
 
+int __ss_makedev(int major, int minor);
+int __ss_major(int dev);
+int __ss_minor(int dev);
+
 #endif
 
 void __init();

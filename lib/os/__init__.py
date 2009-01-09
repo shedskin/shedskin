@@ -372,3 +372,12 @@ def tempnam(dir, prefix=None):
 
 def tmpfile():
     return file()
+
+def makedev(major, minor):
+    return 1
+
+def major(dev):
+    return 1
+
+def minor(dev):
+    return 1
