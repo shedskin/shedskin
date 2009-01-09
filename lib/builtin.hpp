@@ -1872,14 +1872,11 @@ template<class T> set<T>::set(PyObject *p) {
 }
 
 template<class T> PyObject *set<T>::__to_py__() {
-    PyObject *p = PyObject_CallObject((PyObject *)(&PySet_Type), 0);
-    
-    T e;
-    __iter<T> *__0;
-    FOR_IN(e, this, 0)
-        PySet_Add(p, __to_py(e));
-    END_FOR
-    return p;
+    list<T> *l = __list(this); /* XXX optimize */
+    if(frozen)
+        return PyFrozenSet_New(__to_py(l)); 
+    else
+        return PySet_New(__to_py(l));
 }
 
 #endif
