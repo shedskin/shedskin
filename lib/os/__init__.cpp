@@ -1145,6 +1145,16 @@ str *tempnam(str *dir, str *prefix) {
     return result;
 }
 
+int __ss_makedev(int major, int minor) {
+    return makedev(major, minor);
+}
+int __ss_major(int dev) {
+    return major(dev);
+}
+int __ss_minor(int dev) {
+    return minor(dev);
+}
+
 #endif
 
 void __init() {
