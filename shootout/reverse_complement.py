@@ -11,21 +11,20 @@ def show(seq,
          table=string.maketrans('ACBDGHK\nMNSRUTWVYacbdghkmnsrutwvy',
                                 'TGVHCDM\nKNSYAAWBRTGVHCDMKNSYAAWBR')):
 
-   seq = (''.join(seq)).translate(table)[::-1]
-   for i in xrange(0, len(seq), 60):
-      print seq[i:i+60]
+   seq2 = (''.join(seq)).translate(table)[::-1]
+   for i in xrange(0, len(seq2), 60):
+      print seq2[i:i+60]
 
 
 def main():
    seq = []
-   add_line = seq.append
    for line in sys.stdin:
       if line[0] in '>;':
          show(seq)
          print line,
          del seq[:]
       else:
-         add_line(line[:-1])
+         seq.append(line[:-1])
    show(seq)
 
 main()
