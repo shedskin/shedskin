@@ -3,7 +3,7 @@
 #contributed by Dominique Wahli
 
 from sys import stdin
-from re import sub, findall
+from re import sub, finditer
 
 seq = stdin.read()
 ilen = len(seq)
@@ -22,7 +22,7 @@ variants = (
       'agggta[cgt]a|t[acg]taccct',
       'agggtaa[cgt]|[acg]ttaccct')
 for f in variants:
-    print f, len(findall(f, seq))
+    print f, len(list(finditer(f, seq)))
 
 subst = {
       'B' : '(c|g|t)', 'D' : '(a|g|t)',   'H' : '(a|c|t)', 'K' : '(g|t)',
