@@ -1,24 +1,21 @@
-# The Computer Language Benchmarks Game
+# The Great Computer Language Shootout
 # http://shootout.alioth.debian.org/
-# Written by Dima Dorfman, 2004
-
-# modified by Heinrich Acker
-# modified by Dani Nanz 2007-10-03
+# nsieve benchmark for Psyco
+# Optimized from the Free Pascal version by bearophile, Jan 1 2006
 
 import sys
-from itertools import count, islice, izip
 
 def nsieve(m, c=0):
-
     a = [True] * (m + 1)
-    iu = m // 2    # faster but not compliant: iu = int(m ** 0.5)
-    for i, x in izip(count(2), islice(a, 2, None)):
-        if x:
+    n1 = m + 1
+    for i in xrange(2, n1):
+        if a[i]:
             c += 1
-            if i <= iu:
-                a[i + i :: i] = (False, ) * ((m - i) // i)
+            k = i << 1
+            while k < n1:
+                if a[k]: a[k] = False
+                k += i
     print 'Primes up to %8d %8d' % (m, c)
-
 
 for k in 0, 1, 2:
     nsieve((1 << (int(sys.argv[1]) - k)) * 10000)
