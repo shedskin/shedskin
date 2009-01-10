@@ -60,22 +60,25 @@ __cstat *fstat(int fd);
 int stat_float_times(int newvalue=-1);
 str *strerror(int i);
 
-int getpid();
 void *putenv(str* varname, str* value);
 int umask(int newmask);
-void *unsetenv(str* var);
 int chmod(str* path, int val);
 void *renames(str* old, str* _new);
 tuple2<int,int>* pipe();
 int dup(int f1);
 void *dup2(int f1, int f2);
-void *execvp(str* file, list<str*>* args);
-void *execv(str* file, list<str*>* args);
 void *close(int fd);
 int open(str *name, int flags);
 file* fdopen(int fd, str* mode=NULL, int bufsize=-1);
 str *read(int fd, int n);
 int write(int fd, str *s);
+
+#ifndef WIN32
+void *execvp(str* file, list<str*>* args);
+void *execv(str* file, list<str*>* args);
+
+void *unsetenv(str* var);
+int getpid();
 
 class popen_pipe : public file {
 public:
@@ -97,7 +100,6 @@ tuple2<file*,file*>* popen3(str* cmd, str* mode, int bufsize);
 tuple2<file*,file*>* popen4(str* cmd);
 tuple2<file*,file*>* popen4(str* cmd, str* mode, int bufsize);
 
-#ifndef WIN32
 extern class_ *cl___vfsstat;
 class __vfsstat : public namedtuple {
 public:
