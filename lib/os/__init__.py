@@ -381,3 +381,6 @@ def major(dev):
 
 def minor(dev):
     return 1
+
+def mknod(filename, mode=438, device=0):
+    pass
