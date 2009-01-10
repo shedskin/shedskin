@@ -313,13 +313,6 @@ int stat_float_times(int newvalue) {
     return 1;
 }
 
-#ifndef WIN32
-int getpid() {
-    //return GetCurrentProcessId();
-    return ::getpid();
-}
-#endif
-
 void *putenv(str* varname, str* value) {
     std::stringstream ss;
     ss << varname->unit.c_str() << '=' << value->unit.c_str();
@@ -332,11 +325,6 @@ int umask(int newmask)  {
 }
 
 #ifndef WIN32
-void *unsetenv (str* var) {
-    ::unsetenv(var->unit.c_str());
-    return NULL;
-}
-
 int chmod (str* path, int val) {
 #ifdef WIN32
     DWORD attr;
@@ -406,6 +394,31 @@ void *renames(str* old, str* _new) {
     return NULL;
 }
 
+popen_pipe::popen_pipe(str *cmd, str *mode) {
+    FILE* fp;
+
+    if(!mode)
+        mode = new str("r");
+    fp = ::popen(cmd->unit.c_str(), mode->unit.c_str());
+    this->name = cmd;
+    this->mode = mode;
+
+    endoffile=print_space=0;
+    print_lastchar='\n';
+}
+
+popen_pipe::popen_pipe(FILE* pipe) {
+    f = pipe;
+    endoffile=print_space=0;
+    print_lastchar='\n';
+}
+
+void *popen_pipe::close() {
+    pclose(f);
+    closed = 1;
+    return NULL;
+}
+
 popen_pipe* popen(str* cmd) {
     return popen(cmd, new str("r"), -1);
 }
@@ -445,53 +458,6 @@ void *fdatasync(int f1) {
         throw new OSError(new str("os.fdatasync failed"));
     return NULL;
 }
-
-#ifndef WIN32
-void *execv(str* file, list<str*>* args) {
-    //char** argvlist = new char*[ args->__len__()+1];
-    char** argvlist = (char**) GC_malloc( sizeof(char*) * (args->__len__()+1));
-
-    for(int i = 0; i < args->__len__(); ++i) {
-        argvlist[i] = const_cast<char*>(args->__getfast__(i)->unit.c_str());
-    }
-    argvlist[args->__len__()] = NULL;
-
-    ::execv(file->unit.c_str(), argvlist);
-
-    //delete[] argvlist;
-
-    throw new OSError(new str("execv error"));
-}
-
-void *execvp(str* file, list<str*>* args) {
-    tuple2<str*,str*>* h_t = __path__::split(file);
-
-    if( ___bool(h_t->__getfirst__())) {
-        execv(file,args);
-        return NULL;
-    }
-
-    str* envpath;
-    
-    if(__ss_environ->__contains__(new str("PATH"))) {
-        envpath = __ss_environ->get(new str("PATH"));
-    }
-    else {
-        envpath = defpath;
-    }
-
-    list<str*>* PATH = envpath->split(pathsep);
-
-    for(int i = 0; i < PATH->__len__(); ++i) {
-        str* dir = PATH->__getfast__(i);
-        str* fullname = __path__::join(2, dir, file);
-        if(__path__::exists(fullname)) {
-            execv(fullname, args);
-        }
-    }
-    throw new OSError(new str("os.execvp failed"));
-}
-#endif
 
 int open(str *name, int flags) { /* XXX mode argument */
     int fp = ::open(name->unit.c_str(), flags);
@@ -535,119 +501,6 @@ int write(int fd, str *s) {
     return r;
 }
 
-#ifndef WIN32
-tuple2<file*,file*>* popen2(str* cmd) {
-    return popen2(cmd, new str("t"), -1);
-}
-
-tuple2<file*,file*>* popen2(str* cmd, str* mode, int bufsize) {
-    tuple2<int,int>* p2c = pipe();
-    tuple2<int,int>* c2p = pipe();
-
-    int pid = fork();
-
-    if(pid == 0) {
-        dup2( p2c->__getfirst__(), 0);
-        dup2( c2p->__getsecond__(), 1);
-
-        for(int i = 3; i < MAXENTRIES; ++i) {
-            try {
-                close(i);
-            }
-            catch(OSError*) {}
-        }
-
-        list<str*>* cmd_l = new list<str*>(3, new str("/bin/sh"),
-                new str("-c"), cmd);
-        execvp(new str("/bin/sh"), cmd_l);
-        ::exit(1);
-    }
-
-    close(p2c->__getfirst__());
-    close(c2p->__getsecond__());
-
-    tuple2<file*, file*>* ret = new tuple2<file*,file*>();
-    ret->__init2__(fdopen(p2c->__getsecond__(),new str("w")), fdopen(c2p->__getfirst__(), new str("r")));
-    
-    return ret;
-}
-
-tuple2<file*,file*>* popen3(str* cmd) {
-    return popen3(cmd, new str("t"), -1);
-}
-
-
-tuple2<file*,file*>* popen3(str* cmd, str* mode, int bufsize) {
-    tuple2<int,int>* p2c = pipe();
-    tuple2<int,int>* c2p = pipe();
-    tuple2<int,int>* erp = pipe();
-
-    int pid = fork();
-
-    if(pid == 0) {
-        dup2( p2c->__getfirst__(), 0);
-        dup2( c2p->__getsecond__(), 1);
-        dup2( erp->__getsecond__(), 2);
-
-        for(int i = 3; i < MAXENTRIES; ++i) {
-            try {
-                close(i);
-            }
-            catch(OSError*) {}
-        }
-
-        list<str*>* cmd_l = new list<str*>(3, new str("/bin/sh"),
-                new str("-c"), cmd);
-        execvp(new str("/bin/sh"), cmd_l);
-        ::exit(1);
-    }
-
-    close(p2c->__getfirst__());
-    close(c2p->__getsecond__());
-    close(erp->__getsecond__());
-
-    return new tuple2<file*,file*>(3,fdopen(p2c->__getsecond__(),new str("w")), fdopen(c2p->__getfirst__(), new str("r")), fdopen(erp->__getfirst__(), new str("r")) );
-}
-
-tuple2<file*,file*>* popen4(str* cmd) {
-    return popen4(cmd, new str("t"), -1);
-}
-
-tuple2<file*,file*>* popen4(str* cmd, str* mode, int bufsize) {
-    tuple2<int,int>* p2c = pipe();
-    tuple2<int,int>* c2p = pipe();
-
-    int pid = fork();
-
-    if(pid == 0) {
-        dup2( p2c->__getfirst__(), 0);
-        dup2( c2p->__getsecond__(), 1);
-        dup2( c2p->__getsecond__(), 2);
-
-        for(int i = 3; i < MAXENTRIES; ++i) {
-            try {
-                close(i);
-            }
-            catch(OSError*) {}
-        }
-
-        list<str*>* cmd_l = new list<str*>(3, new str("/bin/sh"),
-                new str("-c"), cmd);
-        execvp(new str("/bin/sh"), cmd_l);
-        ::exit(1);
-    }
-
-    close(p2c->__getfirst__());
-    close(c2p->__getsecond__());
-
-    tuple2<file*, file*>* ret = new tuple2<file*,file*>();
-    ret->__init2__(fdopen(p2c->__getsecond__(),new str("w")), fdopen(c2p->__getfirst__(), new str("r")));
-    
-    return ret;
-
-}
-
-#endif
 
 void *close(int fd) {
    if(::close(fd) < 0) 
@@ -655,47 +508,6 @@ void *close(int fd) {
    return NULL;
 }
 
-popen_pipe::popen_pipe(str *cmd, str *mode) {
-    FILE* fp;
-
-    if(!mode)
-        mode = new str("r");
-    fp = ::popen(cmd->unit.c_str(), mode->unit.c_str());
-    this->name = cmd;
-    this->mode = mode;
-
-    endoffile=print_space=0;
-    print_lastchar='\n';
-}
-
-popen_pipe::popen_pipe(FILE* pipe) {
-    f = pipe;
-    endoffile=print_space=0;
-    print_lastchar='\n';
-}
-
-void *popen_pipe::close() {
-    pclose(f);
-    closed = 1;
-    return NULL;
-}
-
-#ifndef WIN32
-tuple2<int,int>* pipe() {
-    int fds[2];
-    int ret;
-
-    ret = ::pipe(fds);
-
-    if(ret != 0) {
-        str* s = new str("os.pipe failed");
-
-        throw new OSError(s);
-    }
-
-    return new tuple2<int,int>(2,fds[0],fds[1]);
-}
-#endif
 
 /* UNIX-only functionality */
 
@@ -1160,6 +972,186 @@ void *mknod(str *filename, int mode, int device) {
         throw new OSError(new str("os.mknod"));
 }
 
+void *execv(str* file, list<str*>* args) {
+    //char** argvlist = new char*[ args->__len__()+1];
+    char** argvlist = (char**) GC_malloc( sizeof(char*) * (args->__len__()+1));
+
+    for(int i = 0; i < args->__len__(); ++i) {
+        argvlist[i] = const_cast<char*>(args->__getfast__(i)->unit.c_str());
+    }
+    argvlist[args->__len__()] = NULL;
+
+    ::execv(file->unit.c_str(), argvlist);
+
+    //delete[] argvlist;
+
+    throw new OSError(new str("execv error"));
+}
+
+void *execvp(str* file, list<str*>* args) {
+    tuple2<str*,str*>* h_t = __path__::split(file);
+
+    if( ___bool(h_t->__getfirst__())) {
+        execv(file,args);
+        return NULL;
+    }
+
+    str* envpath;
+    
+    if(__ss_environ->__contains__(new str("PATH"))) {
+        envpath = __ss_environ->get(new str("PATH"));
+    }
+    else {
+        envpath = defpath;
+    }
+
+    list<str*>* PATH = envpath->split(pathsep);
+
+    for(int i = 0; i < PATH->__len__(); ++i) {
+        str* dir = PATH->__getfast__(i);
+        str* fullname = __path__::join(2, dir, file);
+        if(__path__::exists(fullname)) {
+            execv(fullname, args);
+        }
+    }
+    throw new OSError(new str("os.execvp failed"));
+}
+
+int getpid() {
+    //return GetCurrentProcessId();
+    return ::getpid();
+}
+
+void *unsetenv (str* var) {
+    ::unsetenv(var->unit.c_str());
+    return NULL;
+}
+
+tuple2<file*,file*>* popen2(str* cmd) {
+    return popen2(cmd, new str("t"), -1);
+}
+
+tuple2<file*,file*>* popen2(str* cmd, str* mode, int bufsize) {
+    tuple2<int,int>* p2c = pipe();
+    tuple2<int,int>* c2p = pipe();
+
+    int pid = fork();
+
+    if(pid == 0) {
+        dup2( p2c->__getfirst__(), 0);
+        dup2( c2p->__getsecond__(), 1);
+
+        for(int i = 3; i < MAXENTRIES; ++i) {
+            try {
+                close(i);
+            }
+            catch(OSError*) {}
+        }
+
+        list<str*>* cmd_l = new list<str*>(3, new str("/bin/sh"),
+                new str("-c"), cmd);
+        execvp(new str("/bin/sh"), cmd_l);
+        ::exit(1);
+    }
+
+    close(p2c->__getfirst__());
+    close(c2p->__getsecond__());
+
+    tuple2<file*, file*>* ret = new tuple2<file*,file*>();
+    ret->__init2__(fdopen(p2c->__getsecond__(),new str("w")), fdopen(c2p->__getfirst__(), new str("r")));
+    
+    return ret;
+}
+
+tuple2<file*,file*>* popen3(str* cmd) {
+    return popen3(cmd, new str("t"), -1);
+}
+
+
+tuple2<file*,file*>* popen3(str* cmd, str* mode, int bufsize) {
+    tuple2<int,int>* p2c = pipe();
+    tuple2<int,int>* c2p = pipe();
+    tuple2<int,int>* erp = pipe();
+
+    int pid = fork();
+
+    if(pid == 0) {
+        dup2( p2c->__getfirst__(), 0);
+        dup2( c2p->__getsecond__(), 1);
+        dup2( erp->__getsecond__(), 2);
+
+        for(int i = 3; i < MAXENTRIES; ++i) {
+            try {
+                close(i);
+            }
+            catch(OSError*) {}
+        }
+
+        list<str*>* cmd_l = new list<str*>(3, new str("/bin/sh"),
+                new str("-c"), cmd);
+        execvp(new str("/bin/sh"), cmd_l);
+        ::exit(1);
+    }
+
+    close(p2c->__getfirst__());
+    close(c2p->__getsecond__());
+    close(erp->__getsecond__());
+
+    return new tuple2<file*,file*>(3,fdopen(p2c->__getsecond__(),new str("w")), fdopen(c2p->__getfirst__(), new str("r")), fdopen(erp->__getfirst__(), new str("r")) );
+}
+
+tuple2<file*,file*>* popen4(str* cmd) {
+    return popen4(cmd, new str("t"), -1);
+}
+
+tuple2<file*,file*>* popen4(str* cmd, str* mode, int bufsize) {
+    tuple2<int,int>* p2c = pipe();
+    tuple2<int,int>* c2p = pipe();
+
+    int pid = fork();
+
+    if(pid == 0) {
+        dup2( p2c->__getfirst__(), 0);
+        dup2( c2p->__getsecond__(), 1);
+        dup2( c2p->__getsecond__(), 2);
+
+        for(int i = 3; i < MAXENTRIES; ++i) {
+            try {
+                close(i);
+            }
+            catch(OSError*) {}
+        }
+
+        list<str*>* cmd_l = new list<str*>(3, new str("/bin/sh"),
+                new str("-c"), cmd);
+        execvp(new str("/bin/sh"), cmd_l);
+        ::exit(1);
+    }
+
+    close(p2c->__getfirst__());
+    close(c2p->__getsecond__());
+
+    tuple2<file*, file*>* ret = new tuple2<file*,file*>();
+    ret->__init2__(fdopen(p2c->__getsecond__(),new str("w")), fdopen(c2p->__getfirst__(), new str("r")));
+    
+    return ret;
+
+}
+
+tuple2<int,int>* pipe() {
+    int fds[2];
+    int ret;
+
+    ret = ::pipe(fds);
+
+    if(ret != 0) {
+        str* s = new str("os.pipe failed");
+
+        throw new OSError(s);
+    }
+
+    return new tuple2<int,int>(2,fds[0],fds[1]);
+}
 #endif
 
 void __init() {
