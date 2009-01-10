@@ -8,7 +8,7 @@
 import sys
 import math
 
-def doit(n, sin=math.sin, cos=math.cos):
+def doit(n):
 
     alt = -1.
     twothirds = 2. / 3.
@@ -17,7 +17,7 @@ def doit(n, sin=math.sin, cos=math.cos):
     while k <= n:
         k2 = k * k
         k3 = k2 * k
-        ks, kc = sin(k), cos(k)
+        ks, kc = math.sin(k), math.cos(k)
         alt = -alt
         s0 += twothirds ** k
         s1 += k ** -.5
