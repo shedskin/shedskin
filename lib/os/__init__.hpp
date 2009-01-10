@@ -203,6 +203,8 @@ int __ss_makedev(int major, int minor);
 int __ss_major(int dev);
 int __ss_minor(int dev);
 
+void *mknod(str *filename, int mode=438, int device=0);
+
 #endif
 
 void __init();

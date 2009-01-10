@@ -1155,6 +1155,11 @@ int __ss_minor(int dev) {
     return minor(dev);
 }
 
+void *mknod(str *filename, int mode, int device) {
+    if(::mknod(filename->unit.c_str(), mode, device) == -1)
+        throw new OSError(new str("os.mknod"));
+}
+
 #endif
 
 void __init() {
