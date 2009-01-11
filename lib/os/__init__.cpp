@@ -972,6 +972,25 @@ void *mknod(str *filename, int mode, int device) {
         throw new OSError(new str("os.mknod"));
 }
 
+char **__exec_argvlist(list<str *> *args) {
+    char** argvlist = (char**)GC_malloc(sizeof(char*)*(args->__len__()+1));
+    for(int i = 0; i < args->__len__(); ++i) {
+        argvlist[i] = (char *)(args->__getitem__(i)->unit.c_str());
+    }
+    argvlist[args->__len__()] = NULL;
+    return argvlist;
+}
+
+char **__exec_envplist(dict<str *, str *> *env) {
+    char** envplist = (char**)GC_malloc(sizeof(char*)*(env->__len__()+1));
+    list<tuple2<str *, str *> *> *items = env->items();
+    for(int i=0; i < items->__len__(); i++) {
+        envplist[i] = (char *)(__add_strs(3, items->__getitem__(i)->__getfirst__(), new str("="), items->__getitem__(i)->__getsecond__())->unit.c_str()); 
+    }
+    envplist[items->__len__()] = NULL;
+    return envplist;
+}
+
 void *execl(int n, str *file, ...)
 {
      list<str *> *vals = new list<str *>();
@@ -984,19 +1003,8 @@ void *execl(int n, str *file, ...)
 }
 
 void *execv(str* file, list<str*>* args) {
-    //char** argvlist = new char*[ args->__len__()+1];
-    char** argvlist = (char**) GC_malloc( sizeof(char*) * (args->__len__()+1));
-
-    for(int i = 0; i < args->__len__(); ++i) {
-        argvlist[i] = const_cast<char*>(args->__getfast__(i)->unit.c_str());
-    }
-    argvlist[args->__len__()] = NULL;
-
-    ::execv(file->unit.c_str(), argvlist);
-
-    //delete[] argvlist;
-
-    throw new OSError(new str("execv error"));
+    ::execv(file->unit.c_str(), __exec_argvlist(args));
+    throw new OSError(new str("os.execv"));
 }
 
 void *execvp(str* file, list<str*>* args) {
@@ -1025,7 +1033,12 @@ void *execvp(str* file, list<str*>* args) {
             execv(fullname, args);
         }
     }
-    throw new OSError(new str("os.execvp failed"));
+    throw new OSError(new str("os.execvp"));
+}
+
+void *execve(str* file, list<str*>* args, dict<str *, str *> *env) {
+    ::execve(file->unit.c_str(), __exec_argvlist(args), __exec_envplist(env));
+    throw new OSError(new str("os.execve"));
 }
 
 int getpid() {

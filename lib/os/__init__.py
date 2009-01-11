@@ -259,6 +259,8 @@ def execv(path, args):
 def execvp(path, args):
     pass
 
+def execve(path, args, env):
+    pass
 
 def open(name, flags):
     return 1
