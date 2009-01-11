@@ -996,7 +996,7 @@ void *execl(int n, str *file, ...)
      list<str *> *vals = new list<str *>();
      va_list args;
      va_start(args, file);
-     for(int i=0; i<n; i++)
+     for(int i=0; i<n-1; i++)
          vals->append(va_arg(args, str *)); /* XXX check str */
      va_end(args);
      execv(file, vals);
