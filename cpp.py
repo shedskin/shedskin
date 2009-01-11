@@ -1910,7 +1910,7 @@ class generateVisitor(ASTVisitor):
             self.append('%d, ' % len(node.args))
         elif ident in ['max','min']: 
             pairs = [(arg, target.formals[0]) for arg in node.args]
-        elif ident == '__group':
+        elif target.mv.module.builtin and (ident == '__group' or ident.startswith('execl') or ident.startswith('spawnl')):
             self.append(str(len(node.args))+', ')
             pairs = [(arg, target.formals[0]) for arg in node.args]
         else:

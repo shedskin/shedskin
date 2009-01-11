@@ -250,11 +250,15 @@ def popen4(cmd, mode='r', bufsize=-1):
 def close(fd):
     pass
 
-def execv(file, args):
+def execl(path):
     pass
 
-def execvp(file, args):
+def execv(path, args):
     pass
+
+def execvp(path, args):
+    pass
+
 
 def open(name, flags):
     return 1
