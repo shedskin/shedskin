@@ -78,10 +78,15 @@ void *execl(int n, str *file, ...);
 void *execlp(int n, str *file, ...);
 void *execle(int n, str *file, ...);
 void *execlpe(int n, str *file, ...);
-void *execv(str* file, list<str*>* args);
-void *execvp(str* file, list<str*>* args);
-void *execve(str* file, list<str*>* args, dict<str *, str *> *env);
-void *execvpe(str* file, list<str*>* args, dict<str *, str *> *env);
+void *execv(str *file, list<str*> *args);
+void *execvp(str *file, list<str*> *args);
+void *execve(str *file, list<str*> *args, dict<str *, str *> *env);
+void *execvpe(str *file, list<str*> *args, dict<str *, str *> *env);
+
+int spawnv(int mode, str *file, list<str *> *args);
+int spawnvp(int mode, str *file, list<str *> *args);
+int spawnve(int mode, str *file, list<str *> *args, dict<str *, str *> *env);
+int spawnvpe(int mode, str *file, list<str *> *args, dict<str *, str *> *env);
 
 void *unsetenv(str* var);
 int getpid();
