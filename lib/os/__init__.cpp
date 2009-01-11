@@ -1092,6 +1092,58 @@ void *execvpe(str* file, list<str*>* args, dict<str *, str *> *env) {
     throw new OSError(new str("os.execvpe"));
 }
 
+int spawnv(int mode, str *file, list<str *> *args) {
+    int pid, retval;
+    tuple2<int, int> *t;
+    if(!(pid = fork())) /* XXX no spawn* for C++..? */
+        execv(file, args);
+    else if (mode) 
+        return pid;
+    else {
+        t = waitpid(pid, 0);
+        return t->__getsecond__();
+    }
+}
+
+int spawnvp(int mode, str *file, list<str *> *args) {
+    int pid, retval;
+    tuple2<int, int> *t;
+    if(!(pid = fork())) /* XXX no spawn* for C++..? */
+        execvp(file, args);
+    else if (mode) 
+        return pid;
+    else {
+        t = waitpid(pid, 0);
+        return t->__getsecond__();
+    }
+}
+
+int spawnve(int mode, str *file, list<str *> *args, dict<str *, str *> *env) {
+    int pid, retval;
+    tuple2<int, int> *t;
+    if(!(pid = fork())) /* XXX no spawn* for C++..? */
+        execve(file, args, env);
+    else if (mode) 
+        return pid;
+    else {
+        t = waitpid(pid, 0);
+        return t->__getsecond__();
+    }
+}
+
+int spawnvpe(int mode, str *file, list<str *> *args, dict<str *, str *> *env) {
+    int pid, retval;
+    tuple2<int, int> *t;
+    if(!(pid = fork())) /* XXX no spawn* for C++..? */
+        execvpe(file, args, env);
+    else if (mode) 
+        return pid;
+    else {
+        t = waitpid(pid, 0);
+        return t->__getsecond__();
+    }
+}
+
 int getpid() {
     //return GetCurrentProcessId();
     return ::getpid();

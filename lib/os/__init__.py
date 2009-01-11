@@ -252,27 +252,39 @@ def close(fd):
 
 def execl(path):
     pass
-
 def execlp(path):
     pass
-
 def execle(path):
     pass
-
 def execlpe(path):
     pass
 
 def execv(path, args):
     pass
-
 def execvp(path, args):
     pass
-
 def execve(path, args, env):
     pass
-
 def execvpe(path, args, env):
     pass
+
+def spawnl(mode, path):
+    return 1
+def spawnlp(mode, path):
+    return 1
+def spawnle(mode, path):
+    return 1
+def spawnlpe(mode, path):
+    return 1
+
+def spawnv(mode, path, args):
+    return 1
+def spawnvp(mode, path, args):
+    return 1
+def spawnve(mode, path, args, env):
+    return 1
+def spawnvpe(mode, path, args, env):
+    return 1
 
 def open(name, flags):
     return 1
