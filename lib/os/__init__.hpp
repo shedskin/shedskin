@@ -83,6 +83,10 @@ void *execvp(str *file, list<str*> *args);
 void *execve(str *file, list<str*> *args, dict<str *, str *> *env);
 void *execvpe(str *file, list<str*> *args, dict<str *, str *> *env);
 
+int spawnl(int n, int mode, str *file, ...);
+int spawnlp(int n, int mode, str *file, ...);
+int spawnle(int n, int mode, str *file, ...);
+int spawnlpe(int n, int mode, str *file, ...);
 int spawnv(int mode, str *file, list<str *> *args);
 int spawnvp(int mode, str *file, list<str *> *args);
 int spawnve(int mode, str *file, list<str *> *args, dict<str *, str *> *env);

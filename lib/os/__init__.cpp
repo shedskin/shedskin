@@ -1092,6 +1092,48 @@ void *execvpe(str* file, list<str*>* args, dict<str *, str *> *env) {
     throw new OSError(new str("os.execvpe"));
 }
 
+int spawnl(int n, int mode, str *file, ...) {
+     list<str *> *vals = new list<str *>();
+     va_list args;
+     va_start(args, file);
+     for(int i=0; i<n-2; i++)
+         vals->append(va_arg(args, str *)); /* XXX check str */
+     va_end(args);
+     return spawnv(mode, file, vals);
+}
+
+int spawnlp(int n, int mode, str *file, ...) {
+     list<str *> *vals = new list<str *>();
+     va_list args;
+     va_start(args, file);
+     for(int i=0; i<n-2; i++)
+         vals->append(va_arg(args, str *)); /* XXX check str */
+     va_end(args);
+     return spawnvp(mode, file, vals);
+}
+
+int spawnle(int n, int mode, str *file, ...) {
+     list<str *> *vals = new list<str *>();
+     va_list args;
+     va_start(args, file);
+     for(int i=0; i<n-3; i++)
+         vals->append(va_arg(args, str *)); /* XXX check str */
+     va_end(args);
+     dict<str *, str *> *env = (dict<str *, str *> *)(va_arg(args, pyobj *)); /* XXX check */
+     return spawnve(mode, file, vals, env);
+}
+
+int spawnlpe(int n, int mode, str *file, ...) {
+     list<str *> *vals = new list<str *>();
+     va_list args;
+     va_start(args, file);
+     for(int i=0; i<n-3; i++)
+         vals->append(va_arg(args, str *)); /* XXX check str */
+     va_end(args);
+     dict<str *, str *> *env = (dict<str *, str *> *)(va_arg(args, pyobj *)); /* XXX check */
+     return spawnvpe(mode, file, vals, env);
+}
+
 int spawnv(int mode, str *file, list<str *> *args) {
     int pid, retval;
     tuple2<int, int> *t;
