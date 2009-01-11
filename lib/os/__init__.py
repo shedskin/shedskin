@@ -253,6 +253,15 @@ def close(fd):
 def execl(path):
     pass
 
+def execlp(path):
+    pass
+
+def execle(path):
+    pass
+
+def execlpe(path):
+    pass
+
 def execv(path, args):
     pass
 

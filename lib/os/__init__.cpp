@@ -1000,8 +1000,7 @@ list<str *> *__exec_path() {
     return envpath->split(pathsep);
 }
 
-void *execl(int n, str *file, ...)
-{
+void *execl(int n, str *file, ...) {
      list<str *> *vals = new list<str *>();
      va_list args;
      va_start(args, file);
@@ -1009,6 +1008,38 @@ void *execl(int n, str *file, ...)
          vals->append(va_arg(args, str *)); /* XXX check str */
      va_end(args);
      execv(file, vals);
+}
+
+void *execlp(int n, str *file, ...) {
+     list<str *> *vals = new list<str *>();
+     va_list args;
+     va_start(args, file);
+     for(int i=0; i<n-1; i++)
+         vals->append(va_arg(args, str *)); /* XXX check str */
+     va_end(args);
+     execvp(file, vals);
+}
+
+void *execle(int n, str *file, ...) {
+     list<str *> *vals = new list<str *>();
+     va_list args;
+     va_start(args, file);
+     for(int i=0; i<n-2; i++)
+         vals->append(va_arg(args, str *)); /* XXX check str */
+     va_end(args);
+     dict<str *, str *> *env = (dict<str *, str *> *)(va_arg(args, pyobj *)); /* XXX check */
+     execve(file, vals, env);
+}
+
+void *execlpe(int n, str *file, ...) {
+     list<str *> *vals = new list<str *>();
+     va_list args;
+     va_start(args, file);
+     for(int i=0; i<n-2; i++)
+         vals->append(va_arg(args, str *)); /* XXX check str */
+     va_end(args);
+     dict<str *, str *> *env = (dict<str *, str *> *)(va_arg(args, pyobj *)); /* XXX check */
+     execvpe(file, vals, env);
 }
 
 void *execv(str* file, list<str*>* args) {

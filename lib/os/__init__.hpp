@@ -75,6 +75,9 @@ int write(int fd, str *s);
 
 #ifndef WIN32
 void *execl(int n, str *file, ...);
+void *execlp(int n, str *file, ...);
+void *execle(int n, str *file, ...);
+void *execlpe(int n, str *file, ...);
 void *execv(str* file, list<str*>* args);
 void *execvp(str* file, list<str*>* args);
 void *execve(str* file, list<str*>* args, dict<str *, str *> *env);
