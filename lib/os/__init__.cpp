@@ -972,6 +972,17 @@ void *mknod(str *filename, int mode, int device) {
         throw new OSError(new str("os.mknod"));
 }
 
+void *execl(int n, str *file, ...)
+{
+     list<str *> *vals = new list<str *>();
+     va_list args;
+     va_start(args, file);
+     for(int i=0; i<n; i++)
+         vals->append(va_arg(args, str *)); /* XXX check str */
+     va_end(args);
+     execv(file, vals);
+}
+
 void *execv(str* file, list<str*>* args) {
     //char** argvlist = new char*[ args->__len__()+1];
     char** argvlist = (char**) GC_malloc( sizeof(char*) * (args->__len__()+1));

@@ -74,6 +74,7 @@ str *read(int fd, int n);
 int write(int fd, str *s);
 
 #ifndef WIN32
+void *execl(int n, str *file, ...);
 void *execvp(str* file, list<str*>* args);
 void *execv(str* file, list<str*>* args);
 
