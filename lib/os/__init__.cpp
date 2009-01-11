@@ -10,6 +10,7 @@
 #include <sys/utsname.h>
 #include <sys/statvfs.h>
 #include <sys/types.h>
+#include <sysexits.h>
 #include <stdio.h>
 #include <dirent.h>
 #include <errno.h>
@@ -53,7 +54,7 @@ const int MAXENTRIES = 4096; /* XXX fix functions that use this */
 
 str *altsep, *curdir, *defpath, *devnull, *extsep, *pardir, *pathsep, *sep;
 
-int __ss_O_APPEND, __ss_O_CREAT, __ss_O_EXCL, __ss_O_RDONLY, __ss_O_RDWR, __ss_O_TRUNC, __ss_O_WRONLY;
+int __ss_EX_CANTCREAT, __ss_EX_CONFIG, __ss_EX_DATAERR, __ss_EX_IOERR, __ss_EX_NOHOST, __ss_EX_NOINPUT, __ss_EX_NOPERM, __ss_EX_NOUSER, __ss_EX_OK, __ss_EX_OSERR, __ss_EX_OSFILE, __ss_EX_PROTOCOL, __ss_EX_SOFTWARE, __ss_EX_TEMPFAIL, __ss_EX_UNAVAILABLE, __ss_EX_USAGE, __ss_F_OK, __ss_NGROUPS_MAX, __ss_O_APPEND, __ss_O_CREAT, __ss_O_DIRECT, __ss_O_DIRECTORY, __ss_O_DSYNC, __ss_O_EXCL, __ss_O_LARGEFILE, __ss_O_NDELAY, __ss_O_NOCTTY, __ss_O_NOFOLLOW, __ss_O_NONBLOCK, __ss_O_RDONLY, __ss_O_RDWR, __ss_O_RSYNC, __ss_O_SYNC, __ss_O_TRUNC, __ss_O_WRONLY, __ss_P_NOWAIT, __ss_P_NOWAITO, __ss_P_WAIT, __ss_R_OK, __ss_SEEK_CUR, __ss_SEEK_END, __ss_SEEK_SET, __ss_TMP_MAX, __ss_WCONTINUED, __ss_WNOHANG, __ss_WUNTRACED, __ss_W_OK, __ss_X_OK;
 
 list<str *> *listdir(str *path) {
     list<str *> *r = new list<str *>();
@@ -1139,12 +1140,12 @@ int spawnv(int mode, str *file, list<str *> *args) {
     tuple2<int, int> *t;
     if(!(pid = fork())) /* XXX no spawn* for C++..? */
         execv(file, args);
-    else if (mode) 
-        return pid;
-    else {
+    else if (mode == __ss_P_WAIT) {
         t = waitpid(pid, 0);
         return t->__getsecond__();
     }
+    else 
+        return pid;
 }
 
 int spawnvp(int mode, str *file, list<str *> *args) {
@@ -1152,12 +1153,12 @@ int spawnvp(int mode, str *file, list<str *> *args) {
     tuple2<int, int> *t;
     if(!(pid = fork())) /* XXX no spawn* for C++..? */
         execvp(file, args);
-    else if (mode) 
-        return pid;
-    else {
+    else if (mode == __ss_P_WAIT) {
         t = waitpid(pid, 0);
         return t->__getsecond__();
     }
+    else 
+        return pid;
 }
 
 int spawnve(int mode, str *file, list<str *> *args, dict<str *, str *> *env) {
@@ -1165,12 +1166,12 @@ int spawnve(int mode, str *file, list<str *> *args, dict<str *, str *> *env) {
     tuple2<int, int> *t;
     if(!(pid = fork())) /* XXX no spawn* for C++..? */
         execve(file, args, env);
-    else if (mode) 
-        return pid;
-    else {
+    else if (mode == __ss_P_WAIT) {
         t = waitpid(pid, 0);
         return t->__getsecond__();
     }
+    else 
+        return pid;
 }
 
 int spawnvpe(int mode, str *file, list<str *> *args, dict<str *, str *> *env) {
@@ -1178,12 +1179,12 @@ int spawnvpe(int mode, str *file, list<str *> *args, dict<str *, str *> *env) {
     tuple2<int, int> *t;
     if(!(pid = fork())) /* XXX no spawn* for C++..? */
         execvpe(file, args, env);
-    else if (mode) 
-        return pid;
-    else {
+    else if (mode == __ss_P_WAIT) {
         t = waitpid(pid, 0);
         return t->__getsecond__();
     }
+    else 
+        return pid;
 }
 
 int getpid() {
@@ -1355,13 +1356,54 @@ void __init() {
     altsep = __path__::altsep;
     devnull = __path__::devnull;
 
+    __ss_EX_CANTCREAT = EX_CANTCREAT;
+    __ss_EX_CONFIG = EX_CONFIG;
+    __ss_EX_DATAERR = EX_DATAERR;
+    __ss_EX_IOERR = EX_IOERR;
+    __ss_EX_NOHOST = EX_NOHOST;
+    __ss_EX_NOINPUT = EX_NOINPUT;
+    __ss_EX_NOPERM = EX_NOPERM;
+    __ss_EX_NOUSER = EX_NOUSER;
+    __ss_EX_OK = EX_OK;
+    __ss_EX_OSERR = EX_OSERR;
+    __ss_EX_OSFILE = EX_OSFILE;
+    __ss_EX_PROTOCOL = EX_PROTOCOL;
+    __ss_EX_SOFTWARE = EX_SOFTWARE;
+    __ss_EX_TEMPFAIL = EX_TEMPFAIL;
+    __ss_EX_UNAVAILABLE = EX_UNAVAILABLE;
+    __ss_EX_USAGE = EX_USAGE;
+    __ss_F_OK = F_OK;
+    __ss_NGROUPS_MAX = NGROUPS_MAX;
     __ss_O_APPEND = O_APPEND;
     __ss_O_CREAT = O_CREAT;
+    __ss_O_DIRECT = O_DIRECT;
+    __ss_O_DIRECTORY = O_DIRECTORY;
+    __ss_O_DSYNC = O_DSYNC;
     __ss_O_EXCL = O_EXCL;
+    __ss_O_LARGEFILE = O_LARGEFILE;
+    __ss_O_NDELAY = O_NDELAY;
+    __ss_O_NOCTTY = O_NOCTTY;
+    __ss_O_NOFOLLOW = O_NOFOLLOW;
+    __ss_O_NONBLOCK = O_NONBLOCK;
     __ss_O_RDONLY = O_RDONLY;
     __ss_O_RDWR = O_RDWR;
+    __ss_O_RSYNC = O_RSYNC;
+    __ss_O_SYNC = O_SYNC;
     __ss_O_TRUNC = O_TRUNC;
     __ss_O_WRONLY = O_WRONLY;
+    __ss_P_NOWAIT = 1;
+    __ss_P_NOWAITO = 1;
+    __ss_P_WAIT = 0;
+    __ss_R_OK = R_OK;
+    __ss_SEEK_CUR = SEEK_CUR;
+    __ss_SEEK_END = SEEK_END;
+    __ss_SEEK_SET = SEEK_SET;
+    __ss_TMP_MAX = TMP_MAX;
+    __ss_WCONTINUED = WCONTINUED;
+    __ss_WNOHANG = WNOHANG;
+    __ss_WUNTRACED = WUNTRACED;
+    __ss_W_OK = W_OK;
+    __ss_X_OK = X_OK;
 
     pathconf_names = new dict<str *, int>();
     pathconf_names->__setitem__(new str("PC_MAX_INPUT"), _PC_MAX_INPUT);
