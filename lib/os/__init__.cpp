@@ -991,6 +991,15 @@ char **__exec_envplist(dict<str *, str *> *env) {
     return envplist;
 }
 
+list<str *> *__exec_path() {
+    str* envpath;
+    if(__ss_environ->__contains__(new str("PATH"))) 
+        envpath = __ss_environ->get(new str("PATH"));
+    else 
+        envpath = defpath;
+    return envpath->split(pathsep);
+}
+
 void *execl(int n, str *file, ...)
 {
      list<str *> *vals = new list<str *>();
@@ -1012,19 +1021,10 @@ void *execvp(str* file, list<str*>* args) {
 
     if( ___bool(h_t->__getfirst__())) {
         execv(file,args);
-        return NULL;
+        throw new OSError(new str("os.execvp"));
     }
 
-    str* envpath;
-    
-    if(__ss_environ->__contains__(new str("PATH"))) {
-        envpath = __ss_environ->get(new str("PATH"));
-    }
-    else {
-        envpath = defpath;
-    }
-
-    list<str*>* PATH = envpath->split(pathsep);
+    list<str *> *PATH = __exec_path();
 
     for(int i = 0; i < PATH->__len__(); ++i) {
         str* dir = PATH->__getfast__(i);
@@ -1039,6 +1039,26 @@ void *execvp(str* file, list<str*>* args) {
 void *execve(str* file, list<str*>* args, dict<str *, str *> *env) {
     ::execve(file->unit.c_str(), __exec_argvlist(args), __exec_envplist(env));
     throw new OSError(new str("os.execve"));
+}
+
+void *execvpe(str* file, list<str*>* args, dict<str *, str *> *env) {
+
+    tuple2<str*,str*>* h_t = __path__::split(file);
+
+    if( ___bool(h_t->__getfirst__())) {
+        execve(file, args, env);
+        throw new OSError(new str("os.execvpe"));
+    }
+
+    list<str *> *PATH = __exec_path();
+
+    for(int i = 0; i < PATH->__len__(); ++i) {
+        str* dir = PATH->__getfast__(i);
+        str* fullname = __path__::join(2, dir, file);
+        if(__path__::exists(fullname)) 
+            execve(fullname, args, env);
+    }
+    throw new OSError(new str("os.execvpe"));
 }
 
 int getpid() {
