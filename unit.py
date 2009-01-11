@@ -47,7 +47,7 @@ def ParseRuleLine(line):
 for x in ''.split(): 
     ParseRuleLine(x)
 
-# setslice interesting cases
+# working outside of list
 a = range(5)
 a[7:80] = range(5)
 print a
@@ -56,13 +56,13 @@ print a
 a[12:20] = range(10)
 print a
 
-# not good
-print ''.split()
-print '  '.split()
-
 lll = [1,2]
 del lll[18:]
 print lll
+
+# not good
+print ''.split()
+print '  '.split()
 
 # casting problem
 def hoppa():
