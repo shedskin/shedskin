@@ -931,12 +931,12 @@ tuple2<double, double> *times() {
     return new tuple2<double, double>(5, ((double)buf.tms_utime / ticks_per_second), ((double)buf.tms_stime / ticks_per_second), ((double)buf.tms_cutime / ticks_per_second), ((double)buf.tms_cstime / ticks_per_second), ((double)c / ticks_per_second)); 
 }
 
-str *tmpnam() {
+/* str *tmpnam() { XXX raises compiler warning
     char *buf;
     if((buf = ::tmpnam(NULL)) == NULL)
         throw new OSError(new str("os.tmpnam"));
     return new str(buf);
-}
+} */
 file *tmpfile() {
     FILE *f;
     if((f = ::tmpfile()) == NULL)
@@ -945,7 +945,7 @@ file *tmpfile() {
     _file->name = new str("<tmpfile>");
     return _file;
 }
-str *tempnam(str *dir, str *prefix) {
+/* str *tempnam(str *dir, str *prefix) { XXX raises compiler warning
     char *name;
     str *result;
     char *pfx = NULL;
@@ -955,7 +955,7 @@ str *tempnam(str *dir, str *prefix) {
     result = new str(name);
     free(name);
     return result;
-}
+} */
 
 int __ss_makedev(int major, int minor) {
     return makedev(major, minor);
