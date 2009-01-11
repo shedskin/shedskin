@@ -75,8 +75,9 @@ int write(int fd, str *s);
 
 #ifndef WIN32
 void *execl(int n, str *file, ...);
-void *execvp(str* file, list<str*>* args);
 void *execv(str* file, list<str*>* args);
+void *execvp(str* file, list<str*>* args);
+void *execve(str* file, list<str*>* args, dict<str *, str *> *env);
 
 void *unsetenv(str* var);
 int getpid();
