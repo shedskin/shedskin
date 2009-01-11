@@ -78,6 +78,7 @@ void *execl(int n, str *file, ...);
 void *execv(str* file, list<str*>* args);
 void *execvp(str* file, list<str*>* args);
 void *execve(str* file, list<str*>* args, dict<str *, str *> *env);
+void *execvpe(str* file, list<str*>* args, dict<str *, str *> *env);
 
 void *unsetenv(str* var);
 int getpid();
