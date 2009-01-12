@@ -455,3 +455,20 @@ def minor(dev):
 
 def mknod(filename, mode=438, device=0):
     pass
+
+def WCOREDUMP(status):
+    return 1
+def WEXITSTATUS(status):
+    return 1
+def WIFCONTINUED(status):
+    return 1
+def WIFEXITED(status):
+    return 1
+def WIFSIGNALED(status):
+    return 1
+def WIFSTOPPED(status):
+    return 1
+def WSTOPSIG(status):
+    return 1
+def WTERMSIG(status):
+    return 1
