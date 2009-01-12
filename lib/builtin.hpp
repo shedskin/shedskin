@@ -47,6 +47,7 @@ template <class T, class U> class __dictitervalues;
 template <class T, class U> class __dictiteritems;
 class __fileiter;
 class __striter;
+class __xrange;
 class __rangeiter;
 
 template <class T> class list;
@@ -113,8 +114,8 @@ int isinstance(pyobj *, tuple2<class_ *, class_ *> *);
 list<int> *range(int b);
 list<int> *range(int a, int b, int s=1);
 
-__iter<int> *xrange(int b);
-__iter<int> *xrange(int a, int b, int s=1);
+__xrange *xrange(int b);
+__xrange *xrange(int a, int b, int s=1);
 
 int ord(str *c);
 
@@ -256,7 +257,7 @@ extern dict<void *, void *> *__ss_proxy;
 
 /* externs */
 
-extern class_ *cl_str_, *cl_int_, *cl_float_, *cl_complex, *cl_list, *cl_tuple, *cl_dict, *cl_set, *cl_object, *cl_rangeiter;
+extern class_ *cl_str_, *cl_int_, *cl_float_, *cl_complex, *cl_list, *cl_tuple, *cl_dict, *cl_set, *cl_object, *cl_xrange, *cl_rangeiter;
 
 extern __GC_VECTOR(str *) __letters;
 
@@ -390,7 +391,6 @@ public:
 template<class T> class __iter : public pyiter<T> {
 public:
     virtual T next() = 0;
-    virtual int __len__() { return -1; } // XXX throw exception
 
     __iter<T> *__iter__() { return this; }
 
@@ -951,6 +951,16 @@ class object : public pyobj {
 public:
     object() { this->__class__ = cl_object; }
 
+};
+
+class __xrange : public pyiter<int> {
+public:
+    int a, b, s;
+
+    __xrange(int a, int b, int s);
+    __iter<int> *__iter__();
+    int __len__();
+    str *__repr__();
 };
 
 /* exceptions */
@@ -3061,11 +3071,9 @@ template <class A> __iter<A> *reversed(pyseq<A> *x) {
     return new __ss_reverse<A>(x);
 }
 
-__iter<int> *reversed(__rangeiter *x); // XXX model rangeiter and such
+__iter<int> *reversed(__xrange *x); 
 
-template <class A> __iter<A> *reversed(pyiter<A> *x) { // fallback? specialized for deque
-    if(x->__class__ == cl_rangeiter) // XXX model rangeiter and such
-        return reversed((__rangeiter *)(x));
+template <class A> __iter<A> *reversed(pyiter<A> *x) { 
     return new __ss_reverse<A>(__list(x));
 }
 

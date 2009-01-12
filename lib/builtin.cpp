@@ -10,7 +10,7 @@
 
 namespace __shedskin__ {
 
-class_ *cl_class_, *cl_none, *cl_str_, *cl_int_, *cl_float_, *cl_complex, *cl_list, *cl_tuple, *cl_dict, *cl_set, *cl_object, *cl_rangeiter;
+class_ *cl_class_, *cl_none, *cl_str_, *cl_int_, *cl_float_, *cl_complex, *cl_list, *cl_tuple, *cl_dict, *cl_set, *cl_object, *cl_rangeiter, *cl_xrange;
 
 str *sp;
 __GC_STRING ws, __fmtchars;
@@ -39,6 +39,7 @@ void __init() {
     cl_object = new class_("object", 9, 9);
     cl_rangeiter = new class_("rangeiter", 10, 10);
     cl_complex = new class_("complex", 11, 11);
+    cl_xrange = new class_("xrange", 12, 12);
 
     ws = " \n\r\t\f\v";
     __fmtchars = "#*-+ .0123456789hlL";
@@ -1277,15 +1278,36 @@ public:
         throw new StopIteration();
     }
 
-    int __len__() {
-        return range_len(a,b,s);
-    }
 };
 
-__iter<int> *xrange(int a, int b, int s) { return new __rangeiter(a,b,s); }
-__iter<int> *xrange(int n) { return new __rangeiter(0, n, 1); }
+__xrange::__xrange(int a, int b, int s) {
+    this->a = a;
+    this->b = b;
+    this->s = s;
+}
 
-__iter<int> *reversed(__rangeiter *x) {
+__iter<int> *__xrange::__iter__() {
+    return new __rangeiter(a, b, s);
+}
+
+int __xrange::__len__() {
+   return range_len(a, b, s);
+} 
+    
+str *__xrange::__repr__() {
+    if(s==1) {
+        if(a==0)
+            return __modct(new str("xrange(%d)"), 1, __box(b));
+        else
+            return __modct(new str("xrange(%d, %d)"), 2, __box(a), __box(b));
+    } 
+    return __modct(new str("xrange(%d, %d, %d)"), 3, __box(a), __box(b), __box(s)); /* XXX */
+}
+
+__xrange *xrange(int a, int b, int s) { return new __xrange(a,b,s); }
+__xrange *xrange(int n) { return new __xrange(0, n, 1); }
+
+__iter<int> *reversed(__xrange *x) {
    return new __rangeiter(x->a+(range_len(x->a,x->b,x->s)-1)*x->s, x->a-x->s, -x->s);
 }
 

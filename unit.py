@@ -88,10 +88,11 @@ print file.read(10)
 file.close()
 
 # xrange reset
-xr = xrange(2)
-for x in xr:
-    for y in xr:
-        print x, y
+xrr = xrange(2)
+print xrr, list(xrr), list(reversed(xrr))
+for xr in xrr:
+    for yr in xrr:
+        print xr, yr
 
 ''', '''
 output(equal=True)
