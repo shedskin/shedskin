@@ -686,10 +686,18 @@ def reversed(l):
     return iter(l)
 
 def enumerate(x): 
-    return __iter((1, x.unit))
+    return __iter((1, x.unit)) # XXX 
+
+class __xrange:
+    def __init__(self):
+        self.unit = 1 
+    def __iter__(self):
+        return __iter(1)
+    def __len__(self):
+        return 1
 
 def xrange(a, b=1, s=1):
-    return __iter(1)
+    return __xrange()
     
 def __zip1(a): 
     return [(a.unit,)]
