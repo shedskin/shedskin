@@ -509,6 +509,37 @@ void *close(int fd) {
    return NULL;
 }
 
+int __ss_WCOREDUMP(int status) {
+    return WCOREDUMP(status);
+}
+
+int __ss_WEXITSTATUS(int status) {
+    return WEXITSTATUS(status);
+}
+
+int __ss_WIFCONTINUED(int status) {
+    return WIFCONTINUED(status);
+}
+
+int __ss_WIFEXITED(int status) {
+    return WIFEXITED(status);
+}
+
+int __ss_WIFSIGNALED(int status) {
+    return WIFSIGNALED(status);
+}
+
+int __ss_WIFSTOPPED(int status) {
+    return WIFSTOPPED(status);
+}
+
+int __ss_WSTOPSIG(int status) {
+    return WSTOPSIG(status);
+}
+
+int __ss_WTERMSIG(int status) {
+    return WTERMSIG(status);
+}
 
 /* UNIX-only functionality */
 

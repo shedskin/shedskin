@@ -73,6 +73,15 @@ file* fdopen(int fd, str* mode=NULL, int bufsize=-1);
 str *read(int fd, int n);
 int write(int fd, str *s);
 
+int __ss_WCOREDUMP(int status);
+int __ss_WEXITSTATUS(int status);
+int __ss_WIFCONTINUED(int status);
+int __ss_WIFEXITED(int status);
+int __ss_WIFSIGNALED(int status);
+int __ss_WIFSTOPPED(int status);
+int __ss_WSTOPSIG(int status);
+int __ss_WTERMSIG(int status);
+
 #ifndef WIN32
 void *execl(int n, str *file, ...);
 void *execlp(int n, str *file, ...);
