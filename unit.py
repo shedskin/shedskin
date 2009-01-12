@@ -77,6 +77,16 @@ def hoezee():
     \'\'\'kijk een /* C++ comment */\'\'\'
 hoezee()
 
+# double for problem
+bodies = [1.53, 1.7]
+itjes = [1]
+print [b2 for i in itjes for b2 in bodies[i:]]
+
+# overloading problem
+file = open('ss.py')
+print file.read(10)
+file.close()
+
 ''', '''
 output(equal=True)
 
