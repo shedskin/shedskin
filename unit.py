@@ -87,6 +87,12 @@ file = open('ss.py')
 print file.read(10)
 file.close()
 
+# xrange reset
+xr = xrange(2)
+for x in xr:
+    for y in xr:
+        print x, y
+
 ''', '''
 output(equal=True)
 
