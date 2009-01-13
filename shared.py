@@ -577,7 +577,7 @@ def analyze_callfunc(node, check_exist=False): # XXX generate target list XXX un
         localvar = None
         if isinstance(objexpr, Name):
             var = lookupvar(objexpr.name, inode(node).parent)
-            if var and var.parent:
+            if var and not var.imported:
                 localvar = var
 
         cl = lookupclass(objexpr, mv)
