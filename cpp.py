@@ -2471,7 +2471,7 @@ class generateVisitor(ASTVisitor):
         localvar = None
         if isinstance(node.expr, Name): # XXX Getattr
             var = lookupvar(node.expr.name, func)
-            if var and var.parent:
+            if var and not var.imported:
                 localvar = var
 
         # module.attr
@@ -2536,7 +2536,7 @@ class generateVisitor(ASTVisitor):
         localvar = None
         if isinstance(node.expr, Name): # XXX Getattr, to lookupmodule/class
             var = lookupvar(node.expr.name, func)
-            if var and var.parent:
+            if var and not var.imported:
                 localvar = var
 
         # module.attr
