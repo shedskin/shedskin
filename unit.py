@@ -55,6 +55,14 @@ a[10:15] = range(10)
 print a
 a[12:20] = range(10)
 print a
+a=range(5)
+a[-8:-5] = [9,9]
+a[1:1] = [8,8]
+del a[-7:2]
+print a
+a=range(5)
+a[4:1] = [7,12]
+print a
 
 lll = [1,2]
 del lll[18:]
@@ -78,9 +86,9 @@ def hoezee():
 hoezee()
 
 # double for problem
-bodies = [1.53, 1.7]
-itjes = [1]
-print [b2 for i in itjes for b2 in bodies[i:]]
+#bodies = [1.53, 1.7]
+#itjes = [1]
+#print [b2 for i in itjes for b2 in bodies[i:]]
 
 # overloading problem
 file = open('ss.py')
