@@ -1492,15 +1492,20 @@ void slicenr(int x, int &l, int&u, int&s, int len) {
     if (!(x&4))
         s = 1;
 
-    if (l<0)
+    if (l>=len)
+        l = len;
+    else if (l<0) {
         l = len+l;
-    if (u<0)
-        u = len+u;
-
-    if (l<0)
-        l = 0;
+        if(l<0)
+            l = 0;
+    }
     if (u>=len)
         u = len;
+    else if (u<0) {
+        u = len+u;
+        if(u<0)
+            u = 0;
+    }
 
     if(s<0) {
         if (!(x&1))
