@@ -1317,13 +1317,14 @@ template<class K, class V> dict<K, V>::dict(PyObject *p) {
     
     this->__class__ = cl_dict;
     PyObject *key, *value;
-#ifdef __sun
-    ssize_t pos = 0;
-#else
-    Py_ssize_t pos = 0;
-#endif
-    while(PyDict_Next(p, &pos, &key, &value)) 
+
+    PyObject *iter = PyObject_GetIter(p);
+    while(key = PyIter_Next(iter)) {
+        value = PyDict_GetItem(p, key);
         __setitem__(__to_ss<K>(key), __to_ss<V>(value));
+        Py_DECREF(key);
+    }
+    Py_DECREF(iter);  
 } 
 
 template<class K, class V> PyObject *dict<K, V>::__to_py__() {
