@@ -68,7 +68,7 @@ lll = [1,2]
 del lll[18:]
 print lll
 
-# not good
+# split nothing
 print ''.split()
 print '  '.split()
 
@@ -85,10 +85,16 @@ def hoezee():
     \'\'\'kijk een /* C++ comment */\'\'\'
 hoezee()
 
-# double for problem
-#bodies = [1.53, 1.7]
-#itjes = [1]
-#print [b2 for i in itjes for b2 in bodies[i:]]
+# list comp scoping
+def knuts(j, globje):
+    print 'knuts!', j, globje
+    return [7]
+
+itjes = [1]
+
+globje = 'globje'
+print [1 for i in 3*itjes for b2 in knuts(i, globje)] 
+print [2 for i in 4*itjes if knuts(2*i, globje)] 
 
 # overloading problem
 file = open('ss.py')
