@@ -1444,183 +1444,697 @@ void __init() {
 #endif
 
     pathconf_names = new dict<str *, int>();
-    pathconf_names->__setitem__(new str("PC_MAX_INPUT"), _PC_MAX_INPUT);
-    pathconf_names->__setitem__(new str("PC_VDISABLE"), _PC_VDISABLE);
-    pathconf_names->__setitem__(new str("PC_SYNC_IO"), _PC_SYNC_IO);
-    pathconf_names->__setitem__(new str("PC_SOCK_MAXBUF"), _PC_SOCK_MAXBUF);
-    pathconf_names->__setitem__(new str("PC_NAME_MAX"), _PC_NAME_MAX);
-    pathconf_names->__setitem__(new str("PC_MAX_CANON"), _PC_MAX_CANON);
-    pathconf_names->__setitem__(new str("PC_PRIO_IO"), _PC_PRIO_IO);
-    pathconf_names->__setitem__(new str("PC_CHOWN_RESTRICTED"), _PC_CHOWN_RESTRICTED);
+#ifdef _PC_ABI_AIO_XFER_MAX
+    pathconf_names->__setitem__(new str("PC_ABI_AIO_XFER_MAX"), _PC_ABI_AIO_XFER_MAX);
+#endif
+#ifdef _PC_ABI_ASYNC_IO
+    pathconf_names->__setitem__(new str("PC_ABI_ASYNC_IO"), _PC_ABI_ASYNC_IO);
+#endif
+#ifdef _PC_ASYNC_IO
     pathconf_names->__setitem__(new str("PC_ASYNC_IO"), _PC_ASYNC_IO);
-    pathconf_names->__setitem__(new str("PC_NO_TRUNC"), _PC_NO_TRUNC);
+#endif
+#ifdef _PC_CHOWN_RESTRICTED
+    pathconf_names->__setitem__(new str("PC_CHOWN_RESTRICTED"), _PC_CHOWN_RESTRICTED);
+#endif
+#ifdef _PC_FILESIZEBITS
     pathconf_names->__setitem__(new str("PC_FILESIZEBITS"), _PC_FILESIZEBITS);
+#endif
+#ifdef _PC_LAST
+    pathconf_names->__setitem__(new str("PC_LAST"), _PC_LAST);
+#endif
+#ifdef _PC_LINK_MAX
     pathconf_names->__setitem__(new str("PC_LINK_MAX"), _PC_LINK_MAX);
-    pathconf_names->__setitem__(new str("PC_PIPE_BUF"), _PC_PIPE_BUF);
+#endif
+#ifdef _PC_MAX_CANON
+    pathconf_names->__setitem__(new str("PC_MAX_CANON"), _PC_MAX_CANON);
+#endif
+#ifdef _PC_MAX_INPUT
+    pathconf_names->__setitem__(new str("PC_MAX_INPUT"), _PC_MAX_INPUT);
+#endif
+#ifdef _PC_NAME_MAX
+    pathconf_names->__setitem__(new str("PC_NAME_MAX"), _PC_NAME_MAX);
+#endif
+#ifdef _PC_NO_TRUNC
+    pathconf_names->__setitem__(new str("PC_NO_TRUNC"), _PC_NO_TRUNC);
+#endif
+#ifdef _PC_PATH_MAX
     pathconf_names->__setitem__(new str("PC_PATH_MAX"), _PC_PATH_MAX);
+#endif
+#ifdef _PC_PIPE_BUF
+    pathconf_names->__setitem__(new str("PC_PIPE_BUF"), _PC_PIPE_BUF);
+#endif
+#ifdef _PC_PRIO_IO
+    pathconf_names->__setitem__(new str("PC_PRIO_IO"), _PC_PRIO_IO);
+#endif
+#ifdef _PC_SOCK_MAXBUF
+    pathconf_names->__setitem__(new str("PC_SOCK_MAXBUF"), _PC_SOCK_MAXBUF);
+#endif
+#ifdef _PC_SYNC_IO
+    pathconf_names->__setitem__(new str("PC_SYNC_IO"), _PC_SYNC_IO);
+#endif
+#ifdef _PC_VDISABLE
+    pathconf_names->__setitem__(new str("PC_VDISABLE"), _PC_VDISABLE);
+#endif
 
     confstr_names = new dict<str *, int>();
-    confstr_names->__setitem__(new str("CS_XBS5_LP64_OFF64_CFLAGS"), _CS_XBS5_LP64_OFF64_CFLAGS);
+#ifdef _CS_ARCHITECTURE
+    confstr_names->__setitem__(new str("CS_ARCHITECTURE"), _CS_ARCHITECTURE);
+#endif
+#ifdef _CS_HOSTNAME
+    confstr_names->__setitem__(new str("CS_HOSTNAME"), _CS_HOSTNAME);
+#endif
+#ifdef _CS_HW_PROVIDER
+    confstr_names->__setitem__(new str("CS_HW_PROVIDER"), _CS_HW_PROVIDER);
+#endif
+#ifdef _CS_HW_SERIAL
+    confstr_names->__setitem__(new str("CS_HW_SERIAL"), _CS_HW_SERIAL);
+#endif
+#ifdef _CS_INITTAB_NAME
+    confstr_names->__setitem__(new str("CS_INITTAB_NAME"), _CS_INITTAB_NAME);
+#endif
+#ifdef _CS_LFS64_CFLAGS
     confstr_names->__setitem__(new str("CS_LFS64_CFLAGS"), _CS_LFS64_CFLAGS);
-    confstr_names->__setitem__(new str("CS_XBS5_LPBIG_OFFBIG_LIBS"), _CS_XBS5_LPBIG_OFFBIG_LIBS);
-    confstr_names->__setitem__(new str("CS_XBS5_ILP32_OFFBIG_LINTFLAGS"), _CS_XBS5_ILP32_OFFBIG_LINTFLAGS);
-    confstr_names->__setitem__(new str("CS_XBS5_ILP32_OFF32_LIBS"), _CS_XBS5_ILP32_OFF32_LIBS);
-    confstr_names->__setitem__(new str("CS_XBS5_ILP32_OFF32_LINTFLAGS"), _CS_XBS5_ILP32_OFF32_LINTFLAGS);
-    confstr_names->__setitem__(new str("CS_LFS64_LIBS"), _CS_LFS64_LIBS);
-    confstr_names->__setitem__(new str("CS_XBS5_ILP32_OFF32_CFLAGS"), _CS_XBS5_ILP32_OFF32_CFLAGS);
-    confstr_names->__setitem__(new str("CS_XBS5_ILP32_OFFBIG_CFLAGS"), _CS_XBS5_ILP32_OFFBIG_CFLAGS);
-    confstr_names->__setitem__(new str("CS_LFS_LDFLAGS"), _CS_LFS_LDFLAGS);
-    confstr_names->__setitem__(new str("CS_LFS_LINTFLAGS"), _CS_LFS_LINTFLAGS);
-    confstr_names->__setitem__(new str("CS_LFS_LIBS"), _CS_LFS_LIBS);
-    confstr_names->__setitem__(new str("CS_PATH"), _CS_PATH);
-    confstr_names->__setitem__(new str("CS_LFS64_LINTFLAGS"), _CS_LFS64_LINTFLAGS);
-    confstr_names->__setitem__(new str("CS_LFS_CFLAGS"), _CS_LFS_CFLAGS);
+#endif
+#ifdef _CS_LFS64_LDFLAGS
     confstr_names->__setitem__(new str("CS_LFS64_LDFLAGS"), _CS_LFS64_LDFLAGS);
-    confstr_names->__setitem__(new str("CS_XBS5_ILP32_OFFBIG_LIBS"), _CS_XBS5_ILP32_OFFBIG_LIBS);
+#endif
+#ifdef _CS_LFS64_LIBS
+    confstr_names->__setitem__(new str("CS_LFS64_LIBS"), _CS_LFS64_LIBS);
+#endif
+#ifdef _CS_LFS64_LINTFLAGS
+    confstr_names->__setitem__(new str("CS_LFS64_LINTFLAGS"), _CS_LFS64_LINTFLAGS);
+#endif
+#ifdef _CS_LFS_CFLAGS
+    confstr_names->__setitem__(new str("CS_LFS_CFLAGS"), _CS_LFS_CFLAGS);
+#endif
+#ifdef _CS_LFS_LDFLAGS
+    confstr_names->__setitem__(new str("CS_LFS_LDFLAGS"), _CS_LFS_LDFLAGS);
+#endif
+#ifdef _CS_LFS_LIBS
+    confstr_names->__setitem__(new str("CS_LFS_LIBS"), _CS_LFS_LIBS);
+#endif
+#ifdef _CS_LFS_LINTFLAGS
+    confstr_names->__setitem__(new str("CS_LFS_LINTFLAGS"), _CS_LFS_LINTFLAGS);
+#endif
+#ifdef _CS_MACHINE
+    confstr_names->__setitem__(new str("CS_MACHINE"), _CS_MACHINE);
+#endif
+#ifdef _CS_PATH
+    confstr_names->__setitem__(new str("CS_PATH"), _CS_PATH);
+#endif
+#ifdef _CS_RELEASE
+    confstr_names->__setitem__(new str("CS_RELEASE"), _CS_RELEASE);
+#endif
+#ifdef _CS_SRPC_DOMAIN
+    confstr_names->__setitem__(new str("CS_SRPC_DOMAIN"), _CS_SRPC_DOMAIN);
+#endif
+#ifdef _CS_SYSNAME
+    confstr_names->__setitem__(new str("CS_SYSNAME"), _CS_SYSNAME);
+#endif
+#ifdef _CS_VERSION
+    confstr_names->__setitem__(new str("CS_VERSION"), _CS_VERSION);
+#endif
+#ifdef _CS_XBS5_ILP32_OFF32_CFLAGS
+    confstr_names->__setitem__(new str("CS_XBS5_ILP32_OFF32_CFLAGS"), _CS_XBS5_ILP32_OFF32_CFLAGS);
+#endif
+#ifdef _CS_XBS5_ILP32_OFF32_LDFLAGS
     confstr_names->__setitem__(new str("CS_XBS5_ILP32_OFF32_LDFLAGS"), _CS_XBS5_ILP32_OFF32_LDFLAGS);
-    confstr_names->__setitem__(new str("CS_XBS5_LPBIG_OFFBIG_LINTFLAGS"), _CS_XBS5_LPBIG_OFFBIG_LINTFLAGS);
+#endif
+#ifdef _CS_XBS5_ILP32_OFF32_LIBS
+    confstr_names->__setitem__(new str("CS_XBS5_ILP32_OFF32_LIBS"), _CS_XBS5_ILP32_OFF32_LIBS);
+#endif
+#ifdef _CS_XBS5_ILP32_OFF32_LINTFLAGS
+    confstr_names->__setitem__(new str("CS_XBS5_ILP32_OFF32_LINTFLAGS"), _CS_XBS5_ILP32_OFF32_LINTFLAGS);
+#endif
+#ifdef _CS_XBS5_ILP32_OFFBIG_CFLAGS
+    confstr_names->__setitem__(new str("CS_XBS5_ILP32_OFFBIG_CFLAGS"), _CS_XBS5_ILP32_OFFBIG_CFLAGS);
+#endif
+#ifdef _CS_XBS5_ILP32_OFFBIG_LDFLAGS
     confstr_names->__setitem__(new str("CS_XBS5_ILP32_OFFBIG_LDFLAGS"), _CS_XBS5_ILP32_OFFBIG_LDFLAGS);
-    confstr_names->__setitem__(new str("CS_XBS5_LP64_OFF64_LINTFLAGS"), _CS_XBS5_LP64_OFF64_LINTFLAGS);
-    confstr_names->__setitem__(new str("CS_XBS5_LP64_OFF64_LIBS"), _CS_XBS5_LP64_OFF64_LIBS);
-    confstr_names->__setitem__(new str("CS_XBS5_LPBIG_OFFBIG_CFLAGS"), _CS_XBS5_LPBIG_OFFBIG_CFLAGS);
-    confstr_names->__setitem__(new str("CS_XBS5_LPBIG_OFFBIG_LDFLAGS"), _CS_XBS5_LPBIG_OFFBIG_LDFLAGS);
+#endif
+#ifdef _CS_XBS5_ILP32_OFFBIG_LIBS
+    confstr_names->__setitem__(new str("CS_XBS5_ILP32_OFFBIG_LIBS"), _CS_XBS5_ILP32_OFFBIG_LIBS);
+#endif
+#ifdef _CS_XBS5_ILP32_OFFBIG_LINTFLAGS
+    confstr_names->__setitem__(new str("CS_XBS5_ILP32_OFFBIG_LINTFLAGS"), _CS_XBS5_ILP32_OFFBIG_LINTFLAGS);
+#endif
+#ifdef _CS_XBS5_LP64_OFF64_CFLAGS
+    confstr_names->__setitem__(new str("CS_XBS5_LP64_OFF64_CFLAGS"), _CS_XBS5_LP64_OFF64_CFLAGS);
+#endif
+#ifdef _CS_XBS5_LP64_OFF64_LDFLAGS
     confstr_names->__setitem__(new str("CS_XBS5_LP64_OFF64_LDFLAGS"), _CS_XBS5_LP64_OFF64_LDFLAGS);
+#endif
+#ifdef _CS_XBS5_LP64_OFF64_LIBS
+    confstr_names->__setitem__(new str("CS_XBS5_LP64_OFF64_LIBS"), _CS_XBS5_LP64_OFF64_LIBS);
+#endif
+#ifdef _CS_XBS5_LP64_OFF64_LINTFLAGS
+    confstr_names->__setitem__(new str("CS_XBS5_LP64_OFF64_LINTFLAGS"), _CS_XBS5_LP64_OFF64_LINTFLAGS);
+#endif
+#ifdef _CS_XBS5_LPBIG_OFFBIG_CFLAGS
+    confstr_names->__setitem__(new str("CS_XBS5_LPBIG_OFFBIG_CFLAGS"), _CS_XBS5_LPBIG_OFFBIG_CFLAGS);
+#endif
+#ifdef _CS_XBS5_LPBIG_OFFBIG_LDFLAGS
+    confstr_names->__setitem__(new str("CS_XBS5_LPBIG_OFFBIG_LDFLAGS"), _CS_XBS5_LPBIG_OFFBIG_LDFLAGS);
+#endif
+#ifdef _CS_XBS5_LPBIG_OFFBIG_LIBS
+    confstr_names->__setitem__(new str("CS_XBS5_LPBIG_OFFBIG_LIBS"), _CS_XBS5_LPBIG_OFFBIG_LIBS);
+#endif
+#ifdef _CS_XBS5_LPBIG_OFFBIG_LINTFLAGS
+    confstr_names->__setitem__(new str("CS_XBS5_LPBIG_OFFBIG_LINTFLAGS"), _CS_XBS5_LPBIG_OFFBIG_LINTFLAGS);
+#endif
+#ifdef _MIPS_CS_AVAIL_PROCESSORS
+    confstr_names->__setitem__(new str("MIPS_CS_AVAIL_PROCESSORS"), _MIPS_CS_AVAIL_PROCESSORS);
+#endif
+#ifdef _MIPS_CS_BASE
+    confstr_names->__setitem__(new str("MIPS_CS_BASE"), _MIPS_CS_BASE);
+#endif
+#ifdef _MIPS_CS_HOSTID
+    confstr_names->__setitem__(new str("MIPS_CS_HOSTID"), _MIPS_CS_HOSTID);
+#endif
+#ifdef _MIPS_CS_HW_NAME
+    confstr_names->__setitem__(new str("MIPS_CS_HW_NAME"), _MIPS_CS_HW_NAME);
+#endif
+#ifdef _MIPS_CS_NUM_PROCESSORS
+    confstr_names->__setitem__(new str("MIPS_CS_NUM_PROCESSORS"), _MIPS_CS_NUM_PROCESSORS);
+#endif
+#ifdef _MIPS_CS_OSREL_MAJ
+    confstr_names->__setitem__(new str("MIPS_CS_OSREL_MAJ"), _MIPS_CS_OSREL_MAJ);
+#endif
+#ifdef _MIPS_CS_OSREL_MIN
+    confstr_names->__setitem__(new str("MIPS_CS_OSREL_MIN"), _MIPS_CS_OSREL_MIN);
+#endif
+#ifdef _MIPS_CS_OSREL_PATCH
+    confstr_names->__setitem__(new str("MIPS_CS_OSREL_PATCH"), _MIPS_CS_OSREL_PATCH);
+#endif
+#ifdef _MIPS_CS_OS_NAME
+    confstr_names->__setitem__(new str("MIPS_CS_OS_NAME"), _MIPS_CS_OS_NAME);
+#endif
+#ifdef _MIPS_CS_OS_PROVIDER
+    confstr_names->__setitem__(new str("MIPS_CS_OS_PROVIDER"), _MIPS_CS_OS_PROVIDER);
+#endif
+#ifdef _MIPS_CS_PROCESSORS
+    confstr_names->__setitem__(new str("MIPS_CS_PROCESSORS"), _MIPS_CS_PROCESSORS);
+#endif
+#ifdef _MIPS_CS_SERIAL
+    confstr_names->__setitem__(new str("MIPS_CS_SERIAL"), _MIPS_CS_SERIAL);
+#endif
+#ifdef _MIPS_CS_VENDOR
+    confstr_names->__setitem__(new str("MIPS_CS_VENDOR"), _MIPS_CS_VENDOR);
+#endif
 
     sysconf_names = new dict<str *, int>();
-    sysconf_names->__setitem__(new str("SC_REALTIME_SIGNALS"), _SC_REALTIME_SIGNALS);
-    sysconf_names->__setitem__(new str("SC_PII_OSI_COTS"), _SC_PII_OSI_COTS);
-    sysconf_names->__setitem__(new str("SC_PII_OSI"), _SC_PII_OSI);
-    sysconf_names->__setitem__(new str("SC_T_IOV_MAX"), _SC_T_IOV_MAX);
-    sysconf_names->__setitem__(new str("SC_THREADS"), _SC_THREADS);
-    sysconf_names->__setitem__(new str("SC_AIO_MAX"), _SC_AIO_MAX);
-    sysconf_names->__setitem__(new str("SC_USHRT_MAX"), _SC_USHRT_MAX);
-    sysconf_names->__setitem__(new str("SC_THREAD_KEYS_MAX"), _SC_THREAD_KEYS_MAX);
-    sysconf_names->__setitem__(new str("SC_XOPEN_XPG4"), _SC_XOPEN_XPG4);
-    sysconf_names->__setitem__(new str("SC_SEM_VALUE_MAX"), _SC_SEM_VALUE_MAX);
-    sysconf_names->__setitem__(new str("SC_XOPEN_XPG2"), _SC_XOPEN_XPG2);
-    sysconf_names->__setitem__(new str("SC_XOPEN_XPG3"), _SC_XOPEN_XPG3);
-    sysconf_names->__setitem__(new str("SC_GETGR_R_SIZE_MAX"), _SC_GETGR_R_SIZE_MAX);
-    sysconf_names->__setitem__(new str("SC_SEM_NSEMS_MAX"), _SC_SEM_NSEMS_MAX);
-    sysconf_names->__setitem__(new str("SC_AVPHYS_PAGES"), _SC_AVPHYS_PAGES);
-    sysconf_names->__setitem__(new str("SC_NL_NMAX"), _SC_NL_NMAX);
-    sysconf_names->__setitem__(new str("SC_PAGESIZE"), _SC_PAGESIZE);
-    sysconf_names->__setitem__(new str("SC_EXPR_NEST_MAX"), _SC_EXPR_NEST_MAX);
-    sysconf_names->__setitem__(new str("SC_XOPEN_LEGACY"), _SC_XOPEN_LEGACY);
-    sysconf_names->__setitem__(new str("SC_SHRT_MAX"), _SC_SHRT_MAX);
-    sysconf_names->__setitem__(new str("SC_2_SW_DEV"), _SC_2_SW_DEV);
-    sysconf_names->__setitem__(new str("SC_SSIZE_MAX"), _SC_SSIZE_MAX);
-    sysconf_names->__setitem__(new str("SC_RTSIG_MAX"), _SC_RTSIG_MAX);
-    sysconf_names->__setitem__(new str("SC_THREAD_PRIO_INHERIT"), _SC_THREAD_PRIO_INHERIT);
-    sysconf_names->__setitem__(new str("SC_EQUIV_CLASS_MAX"), _SC_EQUIV_CLASS_MAX);
-    sysconf_names->__setitem__(new str("SC_NL_ARGMAX"), _SC_NL_ARGMAX);
-    sysconf_names->__setitem__(new str("SC_PII_OSI_CLTS"), _SC_PII_OSI_CLTS);
+#ifdef _SC_2_CHAR_TERM
     sysconf_names->__setitem__(new str("SC_2_CHAR_TERM"), _SC_2_CHAR_TERM);
-    sysconf_names->__setitem__(new str("SC_THREAD_PROCESS_SHARED"), _SC_THREAD_PROCESS_SHARED);
-    sysconf_names->__setitem__(new str("SC_VERSION"), _SC_VERSION);
-    sysconf_names->__setitem__(new str("SC_LONG_BIT"), _SC_LONG_BIT);
-    sysconf_names->__setitem__(new str("SC_SIGQUEUE_MAX"), _SC_SIGQUEUE_MAX);
-    sysconf_names->__setitem__(new str("SC_ATEXIT_MAX"), _SC_ATEXIT_MAX);
-    sysconf_names->__setitem__(new str("SC_BC_BASE_MAX"), _SC_BC_BASE_MAX);
-    sysconf_names->__setitem__(new str("SC_SELECT"), _SC_SELECT);
-    sysconf_names->__setitem__(new str("SC_XOPEN_ENH_I18N"), _SC_XOPEN_ENH_I18N);
-    sysconf_names->__setitem__(new str("SC_PAGE_SIZE"), _SC_PAGE_SIZE);
-    sysconf_names->__setitem__(new str("SC_PII_XTI"), _SC_PII_XTI);
-    sysconf_names->__setitem__(new str("SC_MEMORY_PROTECTION"), _SC_MEMORY_PROTECTION);
-    sysconf_names->__setitem__(new str("SC_TIMER_MAX"), _SC_TIMER_MAX);
-    sysconf_names->__setitem__(new str("SC_AIO_LISTIO_MAX"), _SC_AIO_LISTIO_MAX);
-    sysconf_names->__setitem__(new str("SC_UCHAR_MAX"), _SC_UCHAR_MAX);
-    sysconf_names->__setitem__(new str("SC_SCHAR_MAX"), _SC_SCHAR_MAX);
-    sysconf_names->__setitem__(new str("SC_2_UPE"), _SC_2_UPE);
-    sysconf_names->__setitem__(new str("SC_NL_SETMAX"), _SC_NL_SETMAX);
-    sysconf_names->__setitem__(new str("SC_RE_DUP_MAX"), _SC_RE_DUP_MAX);
-    sysconf_names->__setitem__(new str("SC_BC_SCALE_MAX"), _SC_BC_SCALE_MAX);
-    sysconf_names->__setitem__(new str("SC_TZNAME_MAX"), _SC_TZNAME_MAX);
-    sysconf_names->__setitem__(new str("SC_LOGIN_NAME_MAX"), _SC_LOGIN_NAME_MAX);
-    sysconf_names->__setitem__(new str("SC_NPROCESSORS_ONLN"), _SC_NPROCESSORS_ONLN);
-    sysconf_names->__setitem__(new str("SC_SEMAPHORES"), _SC_SEMAPHORES);
-    sysconf_names->__setitem__(new str("SC_SAVED_IDS"), _SC_SAVED_IDS);
-    sysconf_names->__setitem__(new str("SC_XOPEN_SHM"), _SC_XOPEN_SHM);
-    sysconf_names->__setitem__(new str("SC_2_FORT_RUN"), _SC_2_FORT_RUN);
-    sysconf_names->__setitem__(new str("SC_XOPEN_VERSION"), _SC_XOPEN_VERSION);
-    sysconf_names->__setitem__(new str("SC_IOV_MAX"), _SC_IOV_MAX);
-    sysconf_names->__setitem__(new str("SC_2_VERSION"), _SC_2_VERSION);
-    sysconf_names->__setitem__(new str("SC_THREAD_DESTRUCTOR_ITERATIONS"), _SC_THREAD_DESTRUCTOR_ITERATIONS);
-    sysconf_names->__setitem__(new str("SC_ASYNCHRONOUS_IO"), _SC_ASYNCHRONOUS_IO);
-    sysconf_names->__setitem__(new str("SC_MESSAGE_PASSING"), _SC_MESSAGE_PASSING);
-    sysconf_names->__setitem__(new str("SC_CHILD_MAX"), _SC_CHILD_MAX);
-    sysconf_names->__setitem__(new str("SC_ULONG_MAX"), _SC_ULONG_MAX);
-    sysconf_names->__setitem__(new str("SC_2_C_VERSION"), _SC_2_C_VERSION);
-    sysconf_names->__setitem__(new str("SC_ARG_MAX"), _SC_ARG_MAX);
-    sysconf_names->__setitem__(new str("SC_GETPW_R_SIZE_MAX"), _SC_GETPW_R_SIZE_MAX);
-    sysconf_names->__setitem__(new str("SC_XOPEN_CRYPT"), _SC_XOPEN_CRYPT);
-    sysconf_names->__setitem__(new str("SC_SCHAR_MIN"), _SC_SCHAR_MIN);
-    sysconf_names->__setitem__(new str("SC_AIO_PRIO_DELTA_MAX"), _SC_AIO_PRIO_DELTA_MAX);
-    sysconf_names->__setitem__(new str("SC_NL_LANGMAX"), _SC_NL_LANGMAX);
-    sysconf_names->__setitem__(new str("SC_THREAD_STACK_MIN"), _SC_THREAD_STACK_MIN);
-    sysconf_names->__setitem__(new str("SC_CHAR_MIN"), _SC_CHAR_MIN);
-    sysconf_names->__setitem__(new str("SC_NL_TEXTMAX"), _SC_NL_TEXTMAX);
-    sysconf_names->__setitem__(new str("SC_STREAM_MAX"), _SC_STREAM_MAX);
-    sysconf_names->__setitem__(new str("SC_UIO_MAXIOV"), _SC_UIO_MAXIOV);
-    sysconf_names->__setitem__(new str("SC_MEMLOCK"), _SC_MEMLOCK);
-    sysconf_names->__setitem__(new str("SC_NZERO"), _SC_NZERO);
-    sysconf_names->__setitem__(new str("SC_SHARED_MEMORY_OBJECTS"), _SC_SHARED_MEMORY_OBJECTS);
-    sysconf_names->__setitem__(new str("SC_THREAD_THREADS_MAX"), _SC_THREAD_THREADS_MAX);
-    sysconf_names->__setitem__(new str("SC_THREAD_ATTR_STACKADDR"), _SC_THREAD_ATTR_STACKADDR);
-    sysconf_names->__setitem__(new str("SC_INT_MIN"), _SC_INT_MIN);
-    sysconf_names->__setitem__(new str("SC_SHRT_MIN"), _SC_SHRT_MIN);
-    sysconf_names->__setitem__(new str("SC_COLL_WEIGHTS_MAX"), _SC_COLL_WEIGHTS_MAX);
-    sysconf_names->__setitem__(new str("SC_THREAD_PRIORITY_SCHEDULING"), _SC_THREAD_PRIORITY_SCHEDULING);
-    sysconf_names->__setitem__(new str("SC_THREAD_ATTR_STACKSIZE"), _SC_THREAD_ATTR_STACKSIZE);
-    sysconf_names->__setitem__(new str("SC_PHYS_PAGES"), _SC_PHYS_PAGES);
-    sysconf_names->__setitem__(new str("SC_JOB_CONTROL"), _SC_JOB_CONTROL);
-    sysconf_names->__setitem__(new str("SC_FSYNC"), _SC_FSYNC);
-    sysconf_names->__setitem__(new str("SC_CHARCLASS_NAME_MAX"), _SC_CHARCLASS_NAME_MAX);
-    sysconf_names->__setitem__(new str("SC_XOPEN_UNIX"), _SC_XOPEN_UNIX);
-    sysconf_names->__setitem__(new str("SC_BC_DIM_MAX"), _SC_BC_DIM_MAX);
-    sysconf_names->__setitem__(new str("SC_PII_INTERNET_STREAM"), _SC_PII_INTERNET_STREAM);
-    sysconf_names->__setitem__(new str("SC_MB_LEN_MAX"), _SC_MB_LEN_MAX);
-    sysconf_names->__setitem__(new str("SC_UINT_MAX"), _SC_UINT_MAX);
-    sysconf_names->__setitem__(new str("SC_CHAR_BIT"), _SC_CHAR_BIT);
-    sysconf_names->__setitem__(new str("SC_XOPEN_REALTIME"), _SC_XOPEN_REALTIME);
-    sysconf_names->__setitem__(new str("SC_MQ_OPEN_MAX"), _SC_MQ_OPEN_MAX);
-    sysconf_names->__setitem__(new str("SC_PII_OSI_M"), _SC_PII_OSI_M);
-    sysconf_names->__setitem__(new str("SC_PRIORITY_SCHEDULING"), _SC_PRIORITY_SCHEDULING);
-    sysconf_names->__setitem__(new str("SC_NGROUPS_MAX"), _SC_NGROUPS_MAX);
-    sysconf_names->__setitem__(new str("SC_MQ_PRIO_MAX"), _SC_MQ_PRIO_MAX);
-    sysconf_names->__setitem__(new str("SC_XBS5_LPBIG_OFFBIG"), _SC_XBS5_LPBIG_OFFBIG);
-    sysconf_names->__setitem__(new str("SC_PII_SOCKET"), _SC_PII_SOCKET);
-    sysconf_names->__setitem__(new str("SC_MAPPED_FILES"), _SC_MAPPED_FILES);
-    sysconf_names->__setitem__(new str("SC_PII_INTERNET_DGRAM"), _SC_PII_INTERNET_DGRAM);
-    sysconf_names->__setitem__(new str("SC_XBS5_LP64_OFF64"), _SC_XBS5_LP64_OFF64);
-    sysconf_names->__setitem__(new str("SC_XOPEN_XCU_VERSION"), _SC_XOPEN_XCU_VERSION);
-    sysconf_names->__setitem__(new str("SC_OPEN_MAX"), _SC_OPEN_MAX);
-    sysconf_names->__setitem__(new str("SC_PRIORITIZED_IO"), _SC_PRIORITIZED_IO);
-    sysconf_names->__setitem__(new str("SC_TTY_NAME_MAX"), _SC_TTY_NAME_MAX);
-    sysconf_names->__setitem__(new str("SC_WORD_BIT"), _SC_WORD_BIT);
-    sysconf_names->__setitem__(new str("SC_SYNCHRONIZED_IO"), _SC_SYNCHRONIZED_IO);
-    sysconf_names->__setitem__(new str("SC_PASS_MAX"), _SC_PASS_MAX);
-    sysconf_names->__setitem__(new str("SC_PII_INTERNET"), _SC_PII_INTERNET);
-    sysconf_names->__setitem__(new str("SC_LINE_MAX"), _SC_LINE_MAX);
-    sysconf_names->__setitem__(new str("SC_XBS5_ILP32_OFF32"), _SC_XBS5_ILP32_OFF32);
-    sysconf_names->__setitem__(new str("SC_2_C_DEV"), _SC_2_C_DEV);
+#endif
+#ifdef _SC_2_C_BIND
     sysconf_names->__setitem__(new str("SC_2_C_BIND"), _SC_2_C_BIND);
-    sysconf_names->__setitem__(new str("SC_BC_STRING_MAX"), _SC_BC_STRING_MAX);
-    sysconf_names->__setitem__(new str("SC_THREAD_PRIO_PROTECT"), _SC_THREAD_PRIO_PROTECT);
-    sysconf_names->__setitem__(new str("SC_CHAR_MAX"), _SC_CHAR_MAX);
-    sysconf_names->__setitem__(new str("SC_XBS5_ILP32_OFFBIG"), _SC_XBS5_ILP32_OFFBIG);
-    sysconf_names->__setitem__(new str("SC_2_LOCALEDEF"), _SC_2_LOCALEDEF);
-    sysconf_names->__setitem__(new str("SC_PII"), _SC_PII);
-    sysconf_names->__setitem__(new str("SC_POLL"), _SC_POLL);
+#endif
+#ifdef _SC_2_C_DEV
+    sysconf_names->__setitem__(new str("SC_2_C_DEV"), _SC_2_C_DEV);
+#endif
+#ifdef _SC_2_C_VERSION
+    sysconf_names->__setitem__(new str("SC_2_C_VERSION"), _SC_2_C_VERSION);
+#endif
+#ifdef _SC_2_FORT_DEV
     sysconf_names->__setitem__(new str("SC_2_FORT_DEV"), _SC_2_FORT_DEV);
-    sysconf_names->__setitem__(new str("SC_INT_MAX"), _SC_INT_MAX);
-    sysconf_names->__setitem__(new str("SC_NPROCESSORS_CONF"), _SC_NPROCESSORS_CONF);
-    sysconf_names->__setitem__(new str("SC_DELAYTIMER_MAX"), _SC_DELAYTIMER_MAX);
-    sysconf_names->__setitem__(new str("SC_THREAD_SAFE_FUNCTIONS"), _SC_THREAD_SAFE_FUNCTIONS);
-    sysconf_names->__setitem__(new str("SC_MEMLOCK_RANGE"), _SC_MEMLOCK_RANGE);
-    sysconf_names->__setitem__(new str("SC_NL_MSGMAX"), _SC_NL_MSGMAX);
-    sysconf_names->__setitem__(new str("SC_TIMERS"), _SC_TIMERS);
-    sysconf_names->__setitem__(new str("SC_XOPEN_REALTIME_THREADS"), _SC_XOPEN_REALTIME_THREADS);
+#endif
+#ifdef _SC_2_FORT_RUN
+    sysconf_names->__setitem__(new str("SC_2_FORT_RUN"), _SC_2_FORT_RUN);
+#endif
+#ifdef _SC_2_LOCALEDEF
+    sysconf_names->__setitem__(new str("SC_2_LOCALEDEF"), _SC_2_LOCALEDEF);
+#endif
+#ifdef _SC_2_SW_DEV
+    sysconf_names->__setitem__(new str("SC_2_SW_DEV"), _SC_2_SW_DEV);
+#endif
+#ifdef _SC_2_UPE
+    sysconf_names->__setitem__(new str("SC_2_UPE"), _SC_2_UPE);
+#endif
+#ifdef _SC_2_VERSION
+    sysconf_names->__setitem__(new str("SC_2_VERSION"), _SC_2_VERSION);
+#endif
+#ifdef _SC_ABI_ASYNCHRONOUS_IO
+    sysconf_names->__setitem__(new str("SC_ABI_ASYNCHRONOUS_IO"), _SC_ABI_ASYNCHRONOUS_IO);
+#endif
+#ifdef _SC_ACL
+    sysconf_names->__setitem__(new str("SC_ACL"), _SC_ACL);
+#endif
+#ifdef _SC_AIO_LISTIO_MAX
+    sysconf_names->__setitem__(new str("SC_AIO_LISTIO_MAX"), _SC_AIO_LISTIO_MAX);
+#endif
+#ifdef _SC_AIO_MAX
+    sysconf_names->__setitem__(new str("SC_AIO_MAX"), _SC_AIO_MAX);
+#endif
+#ifdef _SC_AIO_PRIO_DELTA_MAX
+    sysconf_names->__setitem__(new str("SC_AIO_PRIO_DELTA_MAX"), _SC_AIO_PRIO_DELTA_MAX);
+#endif
+#ifdef _SC_ARG_MAX
+    sysconf_names->__setitem__(new str("SC_ARG_MAX"), _SC_ARG_MAX);
+#endif
+#ifdef _SC_ASYNCHRONOUS_IO
+    sysconf_names->__setitem__(new str("SC_ASYNCHRONOUS_IO"), _SC_ASYNCHRONOUS_IO);
+#endif
+#ifdef _SC_ATEXIT_MAX
+    sysconf_names->__setitem__(new str("SC_ATEXIT_MAX"), _SC_ATEXIT_MAX);
+#endif
+#ifdef _SC_AUDIT
+    sysconf_names->__setitem__(new str("SC_AUDIT"), _SC_AUDIT);
+#endif
+#ifdef _SC_AVPHYS_PAGES
+    sysconf_names->__setitem__(new str("SC_AVPHYS_PAGES"), _SC_AVPHYS_PAGES);
+#endif
+#ifdef _SC_BC_BASE_MAX
+    sysconf_names->__setitem__(new str("SC_BC_BASE_MAX"), _SC_BC_BASE_MAX);
+#endif
+#ifdef _SC_BC_DIM_MAX
+    sysconf_names->__setitem__(new str("SC_BC_DIM_MAX"), _SC_BC_DIM_MAX);
+#endif
+#ifdef _SC_BC_SCALE_MAX
+    sysconf_names->__setitem__(new str("SC_BC_SCALE_MAX"), _SC_BC_SCALE_MAX);
+#endif
+#ifdef _SC_BC_STRING_MAX
+    sysconf_names->__setitem__(new str("SC_BC_STRING_MAX"), _SC_BC_STRING_MAX);
+#endif
+#ifdef _SC_CAP
+    sysconf_names->__setitem__(new str("SC_CAP"), _SC_CAP);
+#endif
+#ifdef _SC_CHARCLASS_NAME_MAX
+    sysconf_names->__setitem__(new str("SC_CHARCLASS_NAME_MAX"), _SC_CHARCLASS_NAME_MAX);
+#endif
+#ifdef _SC_CHAR_BIT
+    sysconf_names->__setitem__(new str("SC_CHAR_BIT"), _SC_CHAR_BIT);
+#endif
+#ifdef _SC_CHAR_MAX
+    sysconf_names->__setitem__(new str("SC_CHAR_MAX"), _SC_CHAR_MAX);
+#endif
+#ifdef _SC_CHAR_MIN
+    sysconf_names->__setitem__(new str("SC_CHAR_MIN"), _SC_CHAR_MIN);
+#endif
+#ifdef _SC_CHILD_MAX
+    sysconf_names->__setitem__(new str("SC_CHILD_MAX"), _SC_CHILD_MAX);
+#endif
+#ifdef _SC_CLK_TCK
     sysconf_names->__setitem__(new str("SC_CLK_TCK"), _SC_CLK_TCK);
+#endif
+#ifdef _SC_COHER_BLKSZ
+    sysconf_names->__setitem__(new str("SC_COHER_BLKSZ"), _SC_COHER_BLKSZ);
+#endif
+#ifdef _SC_COLL_WEIGHTS_MAX
+    sysconf_names->__setitem__(new str("SC_COLL_WEIGHTS_MAX"), _SC_COLL_WEIGHTS_MAX);
+#endif
+#ifdef _SC_DCACHE_ASSOC
+    sysconf_names->__setitem__(new str("SC_DCACHE_ASSOC"), _SC_DCACHE_ASSOC);
+#endif
+#ifdef _SC_DCACHE_BLKSZ
+    sysconf_names->__setitem__(new str("SC_DCACHE_BLKSZ"), _SC_DCACHE_BLKSZ);
+#endif
+#ifdef _SC_DCACHE_LINESZ
+    sysconf_names->__setitem__(new str("SC_DCACHE_LINESZ"), _SC_DCACHE_LINESZ);
+#endif
+#ifdef _SC_DCACHE_SZ
+    sysconf_names->__setitem__(new str("SC_DCACHE_SZ"), _SC_DCACHE_SZ);
+#endif
+#ifdef _SC_DCACHE_TBLKSZ
+    sysconf_names->__setitem__(new str("SC_DCACHE_TBLKSZ"), _SC_DCACHE_TBLKSZ);
+#endif
+#ifdef _SC_DELAYTIMER_MAX
+    sysconf_names->__setitem__(new str("SC_DELAYTIMER_MAX"), _SC_DELAYTIMER_MAX);
+#endif
+#ifdef _SC_EQUIV_CLASS_MAX
+    sysconf_names->__setitem__(new str("SC_EQUIV_CLASS_MAX"), _SC_EQUIV_CLASS_MAX);
+#endif
+#ifdef _SC_EXPR_NEST_MAX
+    sysconf_names->__setitem__(new str("SC_EXPR_NEST_MAX"), _SC_EXPR_NEST_MAX);
+#endif
+#ifdef _SC_FSYNC
+    sysconf_names->__setitem__(new str("SC_FSYNC"), _SC_FSYNC);
+#endif
+#ifdef _SC_GETGR_R_SIZE_MAX
+    sysconf_names->__setitem__(new str("SC_GETGR_R_SIZE_MAX"), _SC_GETGR_R_SIZE_MAX);
+#endif
+#ifdef _SC_GETPW_R_SIZE_MAX
+    sysconf_names->__setitem__(new str("SC_GETPW_R_SIZE_MAX"), _SC_GETPW_R_SIZE_MAX);
+#endif
+#ifdef _SC_ICACHE_ASSOC
+    sysconf_names->__setitem__(new str("SC_ICACHE_ASSOC"), _SC_ICACHE_ASSOC);
+#endif
+#ifdef _SC_ICACHE_BLKSZ
+    sysconf_names->__setitem__(new str("SC_ICACHE_BLKSZ"), _SC_ICACHE_BLKSZ);
+#endif
+#ifdef _SC_ICACHE_LINESZ
+    sysconf_names->__setitem__(new str("SC_ICACHE_LINESZ"), _SC_ICACHE_LINESZ);
+#endif
+#ifdef _SC_ICACHE_SZ
+    sysconf_names->__setitem__(new str("SC_ICACHE_SZ"), _SC_ICACHE_SZ);
+#endif
+#ifdef _SC_INF
+    sysconf_names->__setitem__(new str("SC_INF"), _SC_INF);
+#endif
+#ifdef _SC_INT_MAX
+    sysconf_names->__setitem__(new str("SC_INT_MAX"), _SC_INT_MAX);
+#endif
+#ifdef _SC_INT_MIN
+    sysconf_names->__setitem__(new str("SC_INT_MIN"), _SC_INT_MIN);
+#endif
+#ifdef _SC_IOV_MAX
+    sysconf_names->__setitem__(new str("SC_IOV_MAX"), _SC_IOV_MAX);
+#endif
+#ifdef _SC_IP_SECOPTS
+    sysconf_names->__setitem__(new str("SC_IP_SECOPTS"), _SC_IP_SECOPTS);
+#endif
+#ifdef _SC_JOB_CONTROL
+    sysconf_names->__setitem__(new str("SC_JOB_CONTROL"), _SC_JOB_CONTROL);
+#endif
+#ifdef _SC_KERN_POINTERS
+    sysconf_names->__setitem__(new str("SC_KERN_POINTERS"), _SC_KERN_POINTERS);
+#endif
+#ifdef _SC_KERN_SIM
+    sysconf_names->__setitem__(new str("SC_KERN_SIM"), _SC_KERN_SIM);
+#endif
+#ifdef _SC_LINE_MAX
+    sysconf_names->__setitem__(new str("SC_LINE_MAX"), _SC_LINE_MAX);
+#endif
+#ifdef _SC_LOGIN_NAME_MAX
+    sysconf_names->__setitem__(new str("SC_LOGIN_NAME_MAX"), _SC_LOGIN_NAME_MAX);
+#endif
+#ifdef _SC_LOGNAME_MAX
+    sysconf_names->__setitem__(new str("SC_LOGNAME_MAX"), _SC_LOGNAME_MAX);
+#endif
+#ifdef _SC_LONG_BIT
+    sysconf_names->__setitem__(new str("SC_LONG_BIT"), _SC_LONG_BIT);
+#endif
+#ifdef _SC_MAC
+    sysconf_names->__setitem__(new str("SC_MAC"), _SC_MAC);
+#endif
+#ifdef _SC_MAPPED_FILES
+    sysconf_names->__setitem__(new str("SC_MAPPED_FILES"), _SC_MAPPED_FILES);
+#endif
+#ifdef _SC_MAXPID
+    sysconf_names->__setitem__(new str("SC_MAXPID"), _SC_MAXPID);
+#endif
+#ifdef _SC_MB_LEN_MAX
+    sysconf_names->__setitem__(new str("SC_MB_LEN_MAX"), _SC_MB_LEN_MAX);
+#endif
+#ifdef _SC_MEMLOCK
+    sysconf_names->__setitem__(new str("SC_MEMLOCK"), _SC_MEMLOCK);
+#endif
+#ifdef _SC_MEMLOCK_RANGE
+    sysconf_names->__setitem__(new str("SC_MEMLOCK_RANGE"), _SC_MEMLOCK_RANGE);
+#endif
+#ifdef _SC_MEMORY_PROTECTION
+    sysconf_names->__setitem__(new str("SC_MEMORY_PROTECTION"), _SC_MEMORY_PROTECTION);
+#endif
+#ifdef _SC_MESSAGE_PASSING
+    sysconf_names->__setitem__(new str("SC_MESSAGE_PASSING"), _SC_MESSAGE_PASSING);
+#endif
+#ifdef _SC_MMAP_FIXED_ALIGNMENT
+    sysconf_names->__setitem__(new str("SC_MMAP_FIXED_ALIGNMENT"), _SC_MMAP_FIXED_ALIGNMENT);
+#endif
+#ifdef _SC_MQ_OPEN_MAX
+    sysconf_names->__setitem__(new str("SC_MQ_OPEN_MAX"), _SC_MQ_OPEN_MAX);
+#endif
+#ifdef _SC_MQ_PRIO_MAX
+    sysconf_names->__setitem__(new str("SC_MQ_PRIO_MAX"), _SC_MQ_PRIO_MAX);
+#endif
+#ifdef _SC_NACLS_MAX
+    sysconf_names->__setitem__(new str("SC_NACLS_MAX"), _SC_NACLS_MAX);
+#endif
+#ifdef _SC_NGROUPS_MAX
+    sysconf_names->__setitem__(new str("SC_NGROUPS_MAX"), _SC_NGROUPS_MAX);
+#endif
+#ifdef _SC_NL_ARGMAX
+    sysconf_names->__setitem__(new str("SC_NL_ARGMAX"), _SC_NL_ARGMAX);
+#endif
+#ifdef _SC_NL_LANGMAX
+    sysconf_names->__setitem__(new str("SC_NL_LANGMAX"), _SC_NL_LANGMAX);
+#endif
+#ifdef _SC_NL_MSGMAX
+    sysconf_names->__setitem__(new str("SC_NL_MSGMAX"), _SC_NL_MSGMAX);
+#endif
+#ifdef _SC_NL_NMAX
+    sysconf_names->__setitem__(new str("SC_NL_NMAX"), _SC_NL_NMAX);
+#endif
+#ifdef _SC_NL_SETMAX
+    sysconf_names->__setitem__(new str("SC_NL_SETMAX"), _SC_NL_SETMAX);
+#endif
+#ifdef _SC_NL_TEXTMAX
+    sysconf_names->__setitem__(new str("SC_NL_TEXTMAX"), _SC_NL_TEXTMAX);
+#endif
+#ifdef _SC_NPROCESSORS_CONF
+    sysconf_names->__setitem__(new str("SC_NPROCESSORS_CONF"), _SC_NPROCESSORS_CONF);
+#endif
+#ifdef _SC_NPROCESSORS_ONLN
+    sysconf_names->__setitem__(new str("SC_NPROCESSORS_ONLN"), _SC_NPROCESSORS_ONLN);
+#endif
+#ifdef _SC_NPROC_CONF
+    sysconf_names->__setitem__(new str("SC_NPROC_CONF"), _SC_NPROC_CONF);
+#endif
+#ifdef _SC_NPROC_ONLN
+    sysconf_names->__setitem__(new str("SC_NPROC_ONLN"), _SC_NPROC_ONLN);
+#endif
+#ifdef _SC_NZERO
+    sysconf_names->__setitem__(new str("SC_NZERO"), _SC_NZERO);
+#endif
+#ifdef _SC_OPEN_MAX
+    sysconf_names->__setitem__(new str("SC_OPEN_MAX"), _SC_OPEN_MAX);
+#endif
+#ifdef _SC_PAGESIZE
+    sysconf_names->__setitem__(new str("SC_PAGESIZE"), _SC_PAGESIZE);
+#endif
+#ifdef _SC_PAGE_SIZE
+    sysconf_names->__setitem__(new str("SC_PAGE_SIZE"), _SC_PAGE_SIZE);
+#endif
+#ifdef _SC_PASS_MAX
+    sysconf_names->__setitem__(new str("SC_PASS_MAX"), _SC_PASS_MAX);
+#endif
+#ifdef _SC_PHYS_PAGES
+    sysconf_names->__setitem__(new str("SC_PHYS_PAGES"), _SC_PHYS_PAGES);
+#endif
+#ifdef _SC_PII
+    sysconf_names->__setitem__(new str("SC_PII"), _SC_PII);
+#endif
+#ifdef _SC_PII_INTERNET
+    sysconf_names->__setitem__(new str("SC_PII_INTERNET"), _SC_PII_INTERNET);
+#endif
+#ifdef _SC_PII_INTERNET_DGRAM
+    sysconf_names->__setitem__(new str("SC_PII_INTERNET_DGRAM"), _SC_PII_INTERNET_DGRAM);
+#endif
+#ifdef _SC_PII_INTERNET_STREAM
+    sysconf_names->__setitem__(new str("SC_PII_INTERNET_STREAM"), _SC_PII_INTERNET_STREAM);
+#endif
+#ifdef _SC_PII_OSI
+    sysconf_names->__setitem__(new str("SC_PII_OSI"), _SC_PII_OSI);
+#endif
+#ifdef _SC_PII_OSI_CLTS
+    sysconf_names->__setitem__(new str("SC_PII_OSI_CLTS"), _SC_PII_OSI_CLTS);
+#endif
+#ifdef _SC_PII_OSI_COTS
+    sysconf_names->__setitem__(new str("SC_PII_OSI_COTS"), _SC_PII_OSI_COTS);
+#endif
+#ifdef _SC_PII_OSI_M
+    sysconf_names->__setitem__(new str("SC_PII_OSI_M"), _SC_PII_OSI_M);
+#endif
+#ifdef _SC_PII_SOCKET
+    sysconf_names->__setitem__(new str("SC_PII_SOCKET"), _SC_PII_SOCKET);
+#endif
+#ifdef _SC_PII_XTI
+    sysconf_names->__setitem__(new str("SC_PII_XTI"), _SC_PII_XTI);
+#endif
+#ifdef _SC_POLL
+    sysconf_names->__setitem__(new str("SC_POLL"), _SC_POLL);
+#endif
+#ifdef _SC_PRIORITIZED_IO
+    sysconf_names->__setitem__(new str("SC_PRIORITIZED_IO"), _SC_PRIORITIZED_IO);
+#endif
+#ifdef _SC_PRIORITY_SCHEDULING
+    sysconf_names->__setitem__(new str("SC_PRIORITY_SCHEDULING"), _SC_PRIORITY_SCHEDULING);
+#endif
+#ifdef _SC_REALTIME_SIGNALS
+    sysconf_names->__setitem__(new str("SC_REALTIME_SIGNALS"), _SC_REALTIME_SIGNALS);
+#endif
+#ifdef _SC_RE_DUP_MAX
+    sysconf_names->__setitem__(new str("SC_RE_DUP_MAX"), _SC_RE_DUP_MAX);
+#endif
+#ifdef _SC_RTSIG_MAX
+    sysconf_names->__setitem__(new str("SC_RTSIG_MAX"), _SC_RTSIG_MAX);
+#endif
+#ifdef _SC_SAVED_IDS
+    sysconf_names->__setitem__(new str("SC_SAVED_IDS"), _SC_SAVED_IDS);
+#endif
+#ifdef _SC_SCHAR_MAX
+    sysconf_names->__setitem__(new str("SC_SCHAR_MAX"), _SC_SCHAR_MAX);
+#endif
+#ifdef _SC_SCHAR_MIN
+    sysconf_names->__setitem__(new str("SC_SCHAR_MIN"), _SC_SCHAR_MIN);
+#endif
+#ifdef _SC_SELECT
+    sysconf_names->__setitem__(new str("SC_SELECT"), _SC_SELECT);
+#endif
+#ifdef _SC_SEMAPHORES
+    sysconf_names->__setitem__(new str("SC_SEMAPHORES"), _SC_SEMAPHORES);
+#endif
+#ifdef _SC_SEM_NSEMS_MAX
+    sysconf_names->__setitem__(new str("SC_SEM_NSEMS_MAX"), _SC_SEM_NSEMS_MAX);
+#endif
+#ifdef _SC_SEM_VALUE_MAX
+    sysconf_names->__setitem__(new str("SC_SEM_VALUE_MAX"), _SC_SEM_VALUE_MAX);
+#endif
+#ifdef _SC_SHARED_MEMORY_OBJECTS
+    sysconf_names->__setitem__(new str("SC_SHARED_MEMORY_OBJECTS"), _SC_SHARED_MEMORY_OBJECTS);
+#endif
+#ifdef _SC_SHRT_MAX
+    sysconf_names->__setitem__(new str("SC_SHRT_MAX"), _SC_SHRT_MAX);
+#endif
+#ifdef _SC_SHRT_MIN
+    sysconf_names->__setitem__(new str("SC_SHRT_MIN"), _SC_SHRT_MIN);
+#endif
+#ifdef _SC_SIGQUEUE_MAX
+    sysconf_names->__setitem__(new str("SC_SIGQUEUE_MAX"), _SC_SIGQUEUE_MAX);
+#endif
+#ifdef _SC_SIGRT_MAX
+    sysconf_names->__setitem__(new str("SC_SIGRT_MAX"), _SC_SIGRT_MAX);
+#endif
+#ifdef _SC_SIGRT_MIN
+    sysconf_names->__setitem__(new str("SC_SIGRT_MIN"), _SC_SIGRT_MIN);
+#endif
+#ifdef _SC_SOFTPOWER
+    sysconf_names->__setitem__(new str("SC_SOFTPOWER"), _SC_SOFTPOWER);
+#endif
+#ifdef _SC_SPLIT_CACHE
+    sysconf_names->__setitem__(new str("SC_SPLIT_CACHE"), _SC_SPLIT_CACHE);
+#endif
+#ifdef _SC_SSIZE_MAX
+    sysconf_names->__setitem__(new str("SC_SSIZE_MAX"), _SC_SSIZE_MAX);
+#endif
+#ifdef _SC_STACK_PROT
+    sysconf_names->__setitem__(new str("SC_STACK_PROT"), _SC_STACK_PROT);
+#endif
+#ifdef _SC_STREAM_MAX
+    sysconf_names->__setitem__(new str("SC_STREAM_MAX"), _SC_STREAM_MAX);
+#endif
+#ifdef _SC_SYNCHRONIZED_IO
+    sysconf_names->__setitem__(new str("SC_SYNCHRONIZED_IO"), _SC_SYNCHRONIZED_IO);
+#endif
+#ifdef _SC_THREADS
+    sysconf_names->__setitem__(new str("SC_THREADS"), _SC_THREADS);
+#endif
+#ifdef _SC_THREAD_ATTR_STACKADDR
+    sysconf_names->__setitem__(new str("SC_THREAD_ATTR_STACKADDR"), _SC_THREAD_ATTR_STACKADDR);
+#endif
+#ifdef _SC_THREAD_ATTR_STACKSIZE
+    sysconf_names->__setitem__(new str("SC_THREAD_ATTR_STACKSIZE"), _SC_THREAD_ATTR_STACKSIZE);
+#endif
+#ifdef _SC_THREAD_DESTRUCTOR_ITERATIONS
+    sysconf_names->__setitem__(new str("SC_THREAD_DESTRUCTOR_ITERATIONS"), _SC_THREAD_DESTRUCTOR_ITERATIONS);
+#endif
+#ifdef _SC_THREAD_KEYS_MAX
+    sysconf_names->__setitem__(new str("SC_THREAD_KEYS_MAX"), _SC_THREAD_KEYS_MAX);
+#endif
+#ifdef _SC_THREAD_PRIORITY_SCHEDULING
+    sysconf_names->__setitem__(new str("SC_THREAD_PRIORITY_SCHEDULING"), _SC_THREAD_PRIORITY_SCHEDULING);
+#endif
+#ifdef _SC_THREAD_PRIO_INHERIT
+    sysconf_names->__setitem__(new str("SC_THREAD_PRIO_INHERIT"), _SC_THREAD_PRIO_INHERIT);
+#endif
+#ifdef _SC_THREAD_PRIO_PROTECT
+    sysconf_names->__setitem__(new str("SC_THREAD_PRIO_PROTECT"), _SC_THREAD_PRIO_PROTECT);
+#endif
+#ifdef _SC_THREAD_PROCESS_SHARED
+    sysconf_names->__setitem__(new str("SC_THREAD_PROCESS_SHARED"), _SC_THREAD_PROCESS_SHARED);
+#endif
+#ifdef _SC_THREAD_SAFE_FUNCTIONS
+    sysconf_names->__setitem__(new str("SC_THREAD_SAFE_FUNCTIONS"), _SC_THREAD_SAFE_FUNCTIONS);
+#endif
+#ifdef _SC_THREAD_STACK_MIN
+    sysconf_names->__setitem__(new str("SC_THREAD_STACK_MIN"), _SC_THREAD_STACK_MIN);
+#endif
+#ifdef _SC_THREAD_THREADS_MAX
+    sysconf_names->__setitem__(new str("SC_THREAD_THREADS_MAX"), _SC_THREAD_THREADS_MAX);
+#endif
+#ifdef _SC_TIMERS
+    sysconf_names->__setitem__(new str("SC_TIMERS"), _SC_TIMERS);
+#endif
+#ifdef _SC_TIMER_MAX
+    sysconf_names->__setitem__(new str("SC_TIMER_MAX"), _SC_TIMER_MAX);
+#endif
+#ifdef _SC_TTY_NAME_MAX
+    sysconf_names->__setitem__(new str("SC_TTY_NAME_MAX"), _SC_TTY_NAME_MAX);
+#endif
+#ifdef _SC_TZNAME_MAX
+    sysconf_names->__setitem__(new str("SC_TZNAME_MAX"), _SC_TZNAME_MAX);
+#endif
+#ifdef _SC_T_IOV_MAX
+    sysconf_names->__setitem__(new str("SC_T_IOV_MAX"), _SC_T_IOV_MAX);
+#endif
+#ifdef _SC_UCHAR_MAX
+    sysconf_names->__setitem__(new str("SC_UCHAR_MAX"), _SC_UCHAR_MAX);
+#endif
+#ifdef _SC_UINT_MAX
+    sysconf_names->__setitem__(new str("SC_UINT_MAX"), _SC_UINT_MAX);
+#endif
+#ifdef _SC_UIO_MAXIOV
+    sysconf_names->__setitem__(new str("SC_UIO_MAXIOV"), _SC_UIO_MAXIOV);
+#endif
+#ifdef _SC_ULONG_MAX
+    sysconf_names->__setitem__(new str("SC_ULONG_MAX"), _SC_ULONG_MAX);
+#endif
+#ifdef _SC_USHRT_MAX
+    sysconf_names->__setitem__(new str("SC_USHRT_MAX"), _SC_USHRT_MAX);
+#endif
+#ifdef _SC_VERSION
+    sysconf_names->__setitem__(new str("SC_VERSION"), _SC_VERSION);
+#endif
+#ifdef _SC_WORD_BIT
+    sysconf_names->__setitem__(new str("SC_WORD_BIT"), _SC_WORD_BIT);
+#endif
+#ifdef _SC_XBS5_ILP32_OFF32
+    sysconf_names->__setitem__(new str("SC_XBS5_ILP32_OFF32"), _SC_XBS5_ILP32_OFF32);
+#endif
+#ifdef _SC_XBS5_ILP32_OFFBIG
+    sysconf_names->__setitem__(new str("SC_XBS5_ILP32_OFFBIG"), _SC_XBS5_ILP32_OFFBIG);
+#endif
+#ifdef _SC_XBS5_LP64_OFF64
+    sysconf_names->__setitem__(new str("SC_XBS5_LP64_OFF64"), _SC_XBS5_LP64_OFF64);
+#endif
+#ifdef _SC_XBS5_LPBIG_OFFBIG
+    sysconf_names->__setitem__(new str("SC_XBS5_LPBIG_OFFBIG"), _SC_XBS5_LPBIG_OFFBIG);
+#endif
+#ifdef _SC_XOPEN_CRYPT
+    sysconf_names->__setitem__(new str("SC_XOPEN_CRYPT"), _SC_XOPEN_CRYPT);
+#endif
+#ifdef _SC_XOPEN_ENH_I18N
+    sysconf_names->__setitem__(new str("SC_XOPEN_ENH_I18N"), _SC_XOPEN_ENH_I18N);
+#endif
+#ifdef _SC_XOPEN_LEGACY
+    sysconf_names->__setitem__(new str("SC_XOPEN_LEGACY"), _SC_XOPEN_LEGACY);
+#endif
+#ifdef _SC_XOPEN_REALTIME
+    sysconf_names->__setitem__(new str("SC_XOPEN_REALTIME"), _SC_XOPEN_REALTIME);
+#endif
+#ifdef _SC_XOPEN_REALTIME_THREADS
+    sysconf_names->__setitem__(new str("SC_XOPEN_REALTIME_THREADS"), _SC_XOPEN_REALTIME_THREADS);
+#endif
+#ifdef _SC_XOPEN_SHM
+    sysconf_names->__setitem__(new str("SC_XOPEN_SHM"), _SC_XOPEN_SHM);
+#endif
+#ifdef _SC_XOPEN_UNIX
+    sysconf_names->__setitem__(new str("SC_XOPEN_UNIX"), _SC_XOPEN_UNIX);
+#endif
+#ifdef _SC_XOPEN_VERSION
+    sysconf_names->__setitem__(new str("SC_XOPEN_VERSION"), _SC_XOPEN_VERSION);
+#endif
+#ifdef _SC_XOPEN_XCU_VERSION
+    sysconf_names->__setitem__(new str("SC_XOPEN_XCU_VERSION"), _SC_XOPEN_XCU_VERSION);
+#endif
+#ifdef _SC_XOPEN_XPG2
+    sysconf_names->__setitem__(new str("SC_XOPEN_XPG2"), _SC_XOPEN_XPG2);
+#endif
+#ifdef _SC_XOPEN_XPG3
+    sysconf_names->__setitem__(new str("SC_XOPEN_XPG3"), _SC_XOPEN_XPG3);
+#endif
+#ifdef _SC_XOPEN_XPG4
+    sysconf_names->__setitem__(new str("SC_XOPEN_XPG4"), _SC_XOPEN_XPG4);
+#endif
 
 }
 
