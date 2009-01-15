@@ -778,7 +778,11 @@ int getpgrp() {
     return getpgid(0);
 }
 void *setpgrp() {
+#ifndef __APPLE__
     if(::setpgrp() == -1)
+#else
+    if(::setpgrp(0, 0) == -1)
+#endif
         throw new OSError(new str("os.setpgrp"));
     return NULL;
 }
