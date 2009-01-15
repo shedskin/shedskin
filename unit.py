@@ -86,15 +86,20 @@ def hoezee():
 hoezee()
 
 # list comp scoping
-def knuts(j, globje):
-    print 'knuts!', j, globje
+def knuts(j, var):
+    print 'knuts!', j, var
     return [7]
 
 itjes = [1]
+globaltje = 'global'
 
-globje = 'globje'
-print [1 for i in 3*itjes for b2 in knuts(i, globje)] 
-print [2 for i in 4*itjes if knuts(2*i, globje)] 
+def ahoi():
+    localtje = 'localtje'
+    twitjes = [2]
+    print [1 for i in 3*twitjes for b2 in knuts(i, globaltje)] 
+    print [2 for i in 4*itjes if knuts(2*i, localtje)] 
+
+ahoi()
 
 # overloading problem
 file = open('ss.py')
