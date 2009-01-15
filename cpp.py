@@ -2220,11 +2220,6 @@ class generateVisitor(ASTVisitor):
         # --- formals: target, z if not Name, out-of-scopes 
         args = []
 
-        for qual in node.quals:
-            if not fastfor(qual) and not isinstance(qual.list, Name): # XXX ugly!!
-                getmv().tempcount[qual.list] = varname = '__'+str(len(getmv().tempcount)) 
-                args.append(typesetreprnew(qual.list, lcfunc)+varname) 
-
         for name in lcfunc.misses:
             if lookupvar(name, func).parent:
                 args.append(typesetreprnew(lookupvar(name, lcfunc), lcfunc)+self.cpp_name(name))
@@ -2327,6 +2322,9 @@ class generateVisitor(ASTVisitor):
 
             if not isinstance(qual.list, Name):
                 itervar = getmv().tempcount[qual.list]
+                self.start('')
+                self.visitm(itervar, ' = ', qual.list, lcfunc)
+                self.eol()
             else:
                 itervar = self.cpp_name(qual.list.name)
 
@@ -2374,12 +2372,6 @@ class generateVisitor(ASTVisitor):
         lcfunc, _ = self.listcomps[node]
         args = []
         temp = self.line
-
-        for qual in node.quals:
-            if not fastfor(qual) and not isinstance(qual.list, Name):
-                self.line = ''
-                self.visit(qual.list, func)
-                args.append(self.line)
 
         for name in lcfunc.misses:
             var = lookupvar(name, func)

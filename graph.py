@@ -958,13 +958,8 @@ class moduleVisitor(ASTVisitor):
             # list.unit->iter
             get_iter = CallFunc(Getattr(qual.list, '__iter__'), [])
             fakefunc = CallFunc(Getattr(get_iter, 'next'), [])
-
-            if isinstance(qual.list, Name) or fastfor(qual): # XXX merge
-                self.visit(fakefunc, lcfunc)
-                self.addconstraint((inode(fakefunc), inode(assign)), lcfunc)
-            else:
-                self.visit(fakefunc, func)
-                self.addconstraint((inode(fakefunc), inode(assign)), func)
+            self.visit(fakefunc, lcfunc)
+            self.addconstraint((inode(fakefunc), inode(assign)), lcfunc)
 
             if isinstance(assign, AssName): # XXX merge with visitFor
                 if assign.name == '_':
