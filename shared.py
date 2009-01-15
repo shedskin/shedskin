@@ -561,6 +561,13 @@ def merged(nodes, dcpa=False, inheritance=False):
 
     return merge
 
+def lookup_class_module(objexpr, mv, parent):
+    if isinstance(objexpr, Name): # XXX Getattr?
+        var = lookupvar(objexpr.name, parent)
+        if var and not var.imported: # XXX cl?
+            return None, None
+    return lookupclass(objexpr, mv), lookupmodule(objexpr, mv)
+
 # --- analyze call expression: namespace, method call, direct call/constructor..
 
 def analyze_callfunc(node, check_exist=False): # XXX generate target list XXX uniform variable system!
@@ -572,16 +579,9 @@ def analyze_callfunc(node, check_exist=False): # XXX generate target list XXX un
     # method call
     if isinstance(node.node, Getattr): 
         objexpr, ident = node.node.expr, node.node.attrname
+        cl, module = lookup_class_module(objexpr, mv, inode(node).parent)
 
-        # XXX a.b.c where a local var; to lookupclass and module?
-        localvar = None
-        if isinstance(objexpr, Name):
-            var = lookupvar(objexpr.name, inode(node).parent)
-            if var and not var.imported:
-                localvar = var
-
-        cl = lookupclass(objexpr, mv)
-        if not localvar and cl:
+        if cl:
             # staticmethod call
             if ident in cl.staticmethods:  
                 direct_call = cl.funcs[ident]
@@ -596,8 +596,7 @@ def analyze_callfunc(node, check_exist=False): # XXX generate target list XXX un
                         ident = ident+lookupimplementor(cl, ident)+'__' # XXX change data structure
                         return objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr
 
-        module = lookupmodule(node.node.expr, mv)
-        if not localvar and module: 
+        if module: # XXX elif?
             namespace, objexpr = module, None
         else:
             if ident == 'group' and len(node.args) > 1:

@@ -2458,20 +2458,14 @@ class generateVisitor(ASTVisitor):
         self.eol(')')
 
     def visitGetattr(self, node, func=None):
-        module = lookupmodule(node.expr, inode(node).mv)
-        cl = lookupclass(node.expr, inode(node).mv)
-        localvar = None
-        if isinstance(node.expr, Name): # XXX Getattr
-            var = lookupvar(node.expr.name, func)
-            if var and not var.imported:
-                localvar = var
+        cl, module = lookup_class_module(node.expr, inode(node).mv, func)
 
         # module.attr
-        if module and not localvar: 
+        if module: 
             self.append(namespace(module)+'::') 
 
         # class.attr: staticmethod
-        elif cl and not localvar and node.attrname in cl.staticmethods: 
+        elif cl and node.attrname in cl.staticmethods: 
             ident = cl.ident
             if cl.ident in ['dict', 'defaultdict']: # own namespace because of template vars
                 self.append('__'+cl.ident+'__::')
@@ -2482,7 +2476,7 @@ class generateVisitor(ASTVisitor):
                 self.append(ident+'::')
 
         # class.attr
-        elif cl and not localvar: # XXX merge above?
+        elif cl: # XXX merge above?
             ident = cl.ident
             if isinstance(node.expr, Getattr):
                 submod = lookupmodule(node.expr.expr, inode(node).mv)
@@ -2523,20 +2517,14 @@ class generateVisitor(ASTVisitor):
         self.append(self.cpp_name(ident))
 
     def visitAssAttr(self, node, func=None): # XXX merge with visitGetattr
-        module = lookupmodule(node.expr, inode(node).mv)
-        cl = lookupclass(node.expr, inode(node).mv)
-        localvar = None
-        if isinstance(node.expr, Name): # XXX Getattr, to lookupmodule/class
-            var = lookupvar(node.expr.name, func)
-            if var and not var.imported:
-                localvar = var
+        cl, module = lookup_class_module(node.expr, inode(node).mv, func)
 
         # module.attr
-        if module and not localvar:
+        if module:
             self.append(namespace(module)+'::')
 
         # class.attr
-        elif cl and not localvar: 
+        elif cl: 
             if isinstance(node.expr, Getattr):
                 submod = lookupmodule(node.expr.expr, inode(node).mv)
                 self.append(namespace(submod)+'::'+cl.cpp_name+'::')
