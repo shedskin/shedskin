@@ -16,7 +16,6 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <grp.h>
-#include <pty.h>
 #include <utime.h>
 
 namespace std {
@@ -34,7 +33,10 @@ namespace std {
 
 #ifdef __APPLE__
 #include <crt_externs.h>
+#include <util.h>
 #define environ (*_NSGetEnviron())
+#else
+#include <pty.h>
 #endif
 
 #ifdef __sun
@@ -454,11 +456,13 @@ void *fchdir(int f1) {
     return NULL;
 }
 
+#ifndef __APPLE__
 void *fdatasync(int f1) {
     if (::fdatasync(f1) == -1) 
         throw new OSError(new str("os.fdatasync failed"));
     return NULL;
 }
+#endif
 
 int open(str *name, int flags) { /* XXX mode argument */
     int fp = ::open(name->unit.c_str(), flags);
@@ -1407,18 +1411,14 @@ void __init() {
     __ss_NGROUPS_MAX = NGROUPS_MAX;
     __ss_O_APPEND = O_APPEND;
     __ss_O_CREAT = O_CREAT;
-    __ss_O_DIRECT = O_DIRECT;
     __ss_O_DIRECTORY = O_DIRECTORY;
-    __ss_O_DSYNC = O_DSYNC;
     __ss_O_EXCL = O_EXCL;
-    __ss_O_LARGEFILE = O_LARGEFILE;
     __ss_O_NDELAY = O_NDELAY;
     __ss_O_NOCTTY = O_NOCTTY;
     __ss_O_NOFOLLOW = O_NOFOLLOW;
     __ss_O_NONBLOCK = O_NONBLOCK;
     __ss_O_RDONLY = O_RDONLY;
     __ss_O_RDWR = O_RDWR;
-    __ss_O_RSYNC = O_RSYNC;
     __ss_O_SYNC = O_SYNC;
     __ss_O_TRUNC = O_TRUNC;
     __ss_O_WRONLY = O_WRONLY;
@@ -1435,6 +1435,13 @@ void __init() {
     __ss_WUNTRACED = WUNTRACED;
     __ss_W_OK = W_OK;
     __ss_X_OK = X_OK;
+
+#ifndef __APPLE__
+    __ss_O_DIRECT = O_DIRECT;
+    __ss_O_DSYNC = O_DSYNC;
+    __ss_O_RSYNC = O_RSYNC;
+    __ss_O_LARGEFILE = O_LARGEFILE;
+#endif
 
     pathconf_names = new dict<str *, int>();
     pathconf_names->__setitem__(new str("PC_MAX_INPUT"), _PC_MAX_INPUT);
