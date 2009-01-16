@@ -56,7 +56,7 @@ const int MAXENTRIES = 4096; /* XXX fix functions that use this */
 
 str *altsep, *curdir, *defpath, *devnull, *extsep, *pardir, *pathsep, *sep;
 
-int __ss_EX_CANTCREAT, __ss_EX_CONFIG, __ss_EX_DATAERR, __ss_EX_IOERR, __ss_EX_NOHOST, __ss_EX_NOINPUT, __ss_EX_NOPERM, __ss_EX_NOUSER, __ss_EX_OK, __ss_EX_OSERR, __ss_EX_OSFILE, __ss_EX_PROTOCOL, __ss_EX_SOFTWARE, __ss_EX_TEMPFAIL, __ss_EX_UNAVAILABLE, __ss_EX_USAGE, __ss_F_OK, __ss_NGROUPS_MAX, __ss_O_APPEND, __ss_O_CREAT, __ss_O_DIRECT, __ss_O_DIRECTORY, __ss_O_DSYNC, __ss_O_EXCL, __ss_O_LARGEFILE, __ss_O_NDELAY, __ss_O_NOCTTY, __ss_O_NOFOLLOW, __ss_O_NONBLOCK, __ss_O_RDONLY, __ss_O_RDWR, __ss_O_RSYNC, __ss_O_SYNC, __ss_O_TRUNC, __ss_O_WRONLY, __ss_P_NOWAIT, __ss_P_NOWAITO, __ss_P_WAIT, __ss_R_OK, __ss_SEEK_CUR, __ss_SEEK_END, __ss_SEEK_SET, __ss_TMP_MAX, __ss_WCONTINUED, __ss_WNOHANG, __ss_WUNTRACED, __ss_W_OK, __ss_X_OK;
+int __ss_F_OK, __ss_R_OK, __ss_W_OK, __ss_X_OK, __ss_NGROUPS_MAX, __ss_TMP_MAX, __ss_WCONTINUED, __ss_WNOHANG, __ss_WUNTRACED, __ss_O_RDONLY, __ss_O_WRONLY, __ss_O_RDWR, __ss_O_NDELAY, __ss_O_NONBLOCK, __ss_O_APPEND, __ss_O_DSYNC, __ss_O_RSYNC, __ss_O_SYNC, __ss_O_NOCTTY, __ss_O_CREAT, __ss_O_EXCL, __ss_O_TRUNC, __ss_O_BINARY, __ss_O_TEXT, __ss_O_LARGEFILE, __ss_O_SHLOCK, __ss_O_EXLOCK, __ss_O_NOINHERIT, __ss__O_SHORT_LIVED, __ss_O_TEMPORARY, __ss_O_RANDOM, __ss_O_SEQUENTIAL, __ss_O_ASYNC, __ss_O_DIRECT, __ss_O_DIRECTORY, __ss_O_NOFOLLOW, __ss_O_NOATIME, __ss_EX_OK, __ss_EX_USAGE, __ss_EX_DATAERR, __ss_EX_NOINPUT, __ss_EX_NOUSER, __ss_EX_NOHOST, __ss_EX_UNAVAILABLE, __ss_EX_SOFTWARE, __ss_EX_OSERR, __ss_EX_OSFILE, __ss_EX_CANTCREAT, __ss_EX_IOERR, __ss_EX_TEMPFAIL, __ss_EX_PROTOCOL, __ss_EX_NOPERM, __ss_EX_CONFIG, __ss_EX_NOTFOUND, __ss_P_WAIT, __ss_P_NOWAIT, __ss_P_OVERLAY, __ss_P_NOWAITO, __ss_P_DETACH;
 
 list<str *> *listdir(str *path) {
     list<str *> *r = new list<str *>();
@@ -1395,57 +1395,174 @@ void __init() {
     altsep = __path__::altsep;
     devnull = __path__::devnull;
 
-    __ss_EX_CANTCREAT = EX_CANTCREAT;
-    __ss_EX_CONFIG = EX_CONFIG;
-    __ss_EX_DATAERR = EX_DATAERR;
-    __ss_EX_IOERR = EX_IOERR;
-    __ss_EX_NOHOST = EX_NOHOST;
-    __ss_EX_NOINPUT = EX_NOINPUT;
-    __ss_EX_NOPERM = EX_NOPERM;
-    __ss_EX_NOUSER = EX_NOUSER;
-    __ss_EX_OK = EX_OK;
-    __ss_EX_OSERR = EX_OSERR;
-    __ss_EX_OSFILE = EX_OSFILE;
-    __ss_EX_PROTOCOL = EX_PROTOCOL;
-    __ss_EX_SOFTWARE = EX_SOFTWARE;
-    __ss_EX_TEMPFAIL = EX_TEMPFAIL;
-    __ss_EX_UNAVAILABLE = EX_UNAVAILABLE;
-    __ss_EX_USAGE = EX_USAGE;
+#ifdef F_OK
     __ss_F_OK = F_OK;
-    __ss_NGROUPS_MAX = NGROUPS_MAX;
-    __ss_O_APPEND = O_APPEND;
-    __ss_O_CREAT = O_CREAT;
-    __ss_O_DIRECTORY = O_DIRECTORY;
-    __ss_O_EXCL = O_EXCL;
-    __ss_O_NDELAY = O_NDELAY;
-    __ss_O_NOCTTY = O_NOCTTY;
-    __ss_O_NOFOLLOW = O_NOFOLLOW;
-    __ss_O_NONBLOCK = O_NONBLOCK;
-    __ss_O_RDONLY = O_RDONLY;
-    __ss_O_RDWR = O_RDWR;
-    __ss_O_SYNC = O_SYNC;
-    __ss_O_TRUNC = O_TRUNC;
-    __ss_O_WRONLY = O_WRONLY;
-    __ss_P_NOWAIT = 1;
-    __ss_P_NOWAITO = 1;
-    __ss_P_WAIT = 0;
+#endif
+#ifdef R_OK
     __ss_R_OK = R_OK;
-    __ss_SEEK_CUR = SEEK_CUR;
-    __ss_SEEK_END = SEEK_END;
-    __ss_SEEK_SET = SEEK_SET;
-    __ss_TMP_MAX = TMP_MAX;
-    __ss_WCONTINUED = WCONTINUED;
-    __ss_WNOHANG = WNOHANG;
-    __ss_WUNTRACED = WUNTRACED;
+#endif
+#ifdef W_OK
     __ss_W_OK = W_OK;
+#endif
+#ifdef X_OK
     __ss_X_OK = X_OK;
-
-#ifndef __APPLE__
-    __ss_O_DIRECT = O_DIRECT;
+#endif
+#ifdef NGROUPS_MAX
+    __ss_NGROUPS_MAX = NGROUPS_MAX;
+#endif
+#ifdef TMP_MAX
+    __ss_TMP_MAX = TMP_MAX;
+#endif
+#ifdef WCONTINUED
+    __ss_WCONTINUED = WCONTINUED;
+#endif
+#ifdef WNOHANG
+    __ss_WNOHANG = WNOHANG;
+#endif
+#ifdef WUNTRACED
+    __ss_WUNTRACED = WUNTRACED;
+#endif
+#ifdef O_RDONLY
+    __ss_O_RDONLY = O_RDONLY;
+#endif
+#ifdef O_WRONLY
+    __ss_O_WRONLY = O_WRONLY;
+#endif
+#ifdef O_RDWR
+    __ss_O_RDWR = O_RDWR;
+#endif
+#ifdef O_NDELAY
+    __ss_O_NDELAY = O_NDELAY;
+#endif
+#ifdef O_NONBLOCK
+    __ss_O_NONBLOCK = O_NONBLOCK;
+#endif
+#ifdef O_APPEND
+    __ss_O_APPEND = O_APPEND;
+#endif
+#ifdef O_DSYNC
     __ss_O_DSYNC = O_DSYNC;
+#endif
+#ifdef O_RSYNC
     __ss_O_RSYNC = O_RSYNC;
+#endif
+#ifdef O_SYNC
+    __ss_O_SYNC = O_SYNC;
+#endif
+#ifdef O_NOCTTY
+    __ss_O_NOCTTY = O_NOCTTY;
+#endif
+#ifdef O_CREAT
+    __ss_O_CREAT = O_CREAT;
+#endif
+#ifdef O_EXCL
+    __ss_O_EXCL = O_EXCL;
+#endif
+#ifdef O_TRUNC
+    __ss_O_TRUNC = O_TRUNC;
+#endif
+#ifdef O_BINARY
+    __ss_O_BINARY = O_BINARY;
+#endif
+#ifdef O_TEXT
+    __ss_O_TEXT = O_TEXT;
+#endif
+#ifdef O_LARGEFILE
     __ss_O_LARGEFILE = O_LARGEFILE;
 #endif
+#ifdef O_SHLOCK
+    __ss_O_SHLOCK = O_SHLOCK;
+#endif
+#ifdef O_EXLOCK
+    __ss_O_EXLOCK = O_EXLOCK;
+#endif
+#ifdef O_NOINHERIT
+    __ss_O_NOINHERIT = O_NOINHERIT;
+#endif
+#ifdef _O_SHORT_LIVED
+    __ss__O_SHORT_LIVED = _O_SHORT_LIVED;
+#endif
+#ifdef O_TEMPORARY
+    __ss_O_TEMPORARY = O_TEMPORARY;
+#endif
+#ifdef O_RANDOM
+    __ss_O_RANDOM = O_RANDOM;
+#endif
+#ifdef O_SEQUENTIAL
+    __ss_O_SEQUENTIAL = O_SEQUENTIAL;
+#endif
+#ifdef O_ASYNC
+    __ss_O_ASYNC = O_ASYNC;
+#endif
+#ifdef O_DIRECT
+    __ss_O_DIRECT = O_DIRECT;
+#endif
+#ifdef O_DIRECTORY
+    __ss_O_DIRECTORY = O_DIRECTORY;
+#endif
+#ifdef O_NOFOLLOW
+    __ss_O_NOFOLLOW = O_NOFOLLOW;
+#endif
+#ifdef O_NOATIME
+    __ss_O_NOATIME = O_NOATIME;
+#endif
+#ifdef EX_OK
+    __ss_EX_OK = EX_OK;
+#endif
+#ifdef EX_USAGE
+    __ss_EX_USAGE = EX_USAGE;
+#endif
+#ifdef EX_DATAERR
+    __ss_EX_DATAERR = EX_DATAERR;
+#endif
+#ifdef EX_NOINPUT
+    __ss_EX_NOINPUT = EX_NOINPUT;
+#endif
+#ifdef EX_NOUSER
+    __ss_EX_NOUSER = EX_NOUSER;
+#endif
+#ifdef EX_NOHOST
+    __ss_EX_NOHOST = EX_NOHOST;
+#endif
+#ifdef EX_UNAVAILABLE
+    __ss_EX_UNAVAILABLE = EX_UNAVAILABLE;
+#endif
+#ifdef EX_SOFTWARE
+    __ss_EX_SOFTWARE = EX_SOFTWARE;
+#endif
+#ifdef EX_OSERR
+    __ss_EX_OSERR = EX_OSERR;
+#endif
+#ifdef EX_OSFILE
+    __ss_EX_OSFILE = EX_OSFILE;
+#endif
+#ifdef EX_CANTCREAT
+    __ss_EX_CANTCREAT = EX_CANTCREAT;
+#endif
+#ifdef EX_IOERR
+    __ss_EX_IOERR = EX_IOERR;
+#endif
+#ifdef EX_TEMPFAIL
+    __ss_EX_TEMPFAIL = EX_TEMPFAIL;
+#endif
+#ifdef EX_PROTOCOL
+    __ss_EX_PROTOCOL = EX_PROTOCOL;
+#endif
+#ifdef EX_NOPERM
+    __ss_EX_NOPERM = EX_NOPERM;
+#endif
+#ifdef EX_CONFIG
+    __ss_EX_CONFIG = EX_CONFIG;
+#endif
+#ifdef EX_NOTFOUND
+    __ss_EX_NOTFOUND = EX_NOTFOUND;
+#endif
+
+    __ss_P_WAIT = 0; /* XXX */
+    __ss_P_NOWAIT = 1;
+    __ss_P_NOWAITO = 1;
+    __ss_P_OVERLAY = 2;
+    __ss_P_DETACH = 3;
 
     pathconf_names = new dict<str *, int>();
 #ifdef _PC_ABI_AIO_XFER_MAX
