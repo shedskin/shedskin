@@ -26,21 +26,23 @@ namespace std {
 //#include <windows.h>
 #endif
 
-/* environ */
 #ifdef __FreeBSD__
 #include <roken.h>
+#include <libutil.h>
 #endif
 
 #ifdef __APPLE__
 #include <crt_externs.h>
 #include <util.h>
 #define environ (*_NSGetEnviron())
-#else
-#include <pty.h>
 #endif
 
 #ifdef __sun
 extern char **environ;
+#endif
+
+#if !defined(__APPLE__) && !defined(__FreeBSD__)
+#include <pty.h>
 #endif
 
 namespace __os__ {
@@ -456,7 +458,7 @@ void *fchdir(int f1) {
     return NULL;
 }
 
-#ifndef __APPLE__
+#if !defined(__APPLE__) && !defined(__FreeBSD__)
 void *fdatasync(int f1) {
     if (::fdatasync(f1) == -1) 
         throw new OSError(new str("os.fdatasync failed"));
@@ -778,7 +780,7 @@ int getpgrp() {
     return getpgid(0);
 }
 void *setpgrp() {
-#ifndef __APPLE__
+#if !defined(__APPLE__) && !defined(__FreeBSD__)
     if(::setpgrp() == -1)
 #else
     if(::setpgrp(0, 0) == -1)
