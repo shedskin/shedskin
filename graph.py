@@ -269,7 +269,18 @@ class moduleVisitor(ASTVisitor):
                         getmv().classes[n.name] = newclass
                         newclass.module = self.module
                         newclass.parent = static_class(newclass)
-         
+
+        # --- list global class, func nodes
+        getmv().classnodes = []
+        getmv().funcnodes = []
+        for child in node.getChildNodes():
+            if isinstance(child, Stmt):
+                for n in child.nodes:
+                    if isinstance(n, Class):
+                        getmv().classnodes.append(n)
+                    elif isinstance(n, Function):
+                        getmv().funcnodes.append(n)
+
         # --- visit children
         for child in node.getChildNodes():
             if isinstance(child, Stmt):
@@ -432,10 +443,11 @@ class moduleVisitor(ASTVisitor):
 
         func = function(node, parent, inherited_from)
 
-        if isinstance(parent, function):
-            error('nested functions are not supported', node)
+        if not is_method(func): 
+            check_redef(node)
+            if not getmv().module.builtin and not node in getmv().funcnodes and not is_lambda:
+                error("non-global function '%s'" % node.name, node)
 
-        if not is_method(func): check_redef(node)
         elif func.ident in func.parent.funcs and func.ident not in ['__getattr__', '__setattr__']: # XXX
             error("function/class redefinition is not allowed ('%s')" % func.ident, node)
 
@@ -1264,8 +1276,8 @@ class moduleVisitor(ASTVisitor):
         self.callfuncs.append((node, func))
 
     def visitClass(self, node, parent=None):
-        if parent: 
-            error('nested classes are not supported', node)
+        if not getmv().module.builtin and not node in getmv().classnodes:
+            error("non-global class '%s'" % node.name, node)
         if len(node.bases) > 1:
             error('multiple inheritance is not supported', node)
 
