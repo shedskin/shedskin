@@ -1,8 +1,8 @@
 Shed Skin Tutorial
 ==================
 
-:Version: Shed Skin 0.0.30
-:Date: November 30, 2008
+:Version: Shed Skin 0.1
+:Date: January, 2009
 :Authors: Mark Dufour and James Coughlan
 
 .. _Parallel Python: http://www.parallelpython.com/
@@ -241,7 +241,7 @@ To install the UNIX source package on an **OSX** system, take the following step
 Compiling and Running a Stand-Alone Program
 -------------------------------------------
 
-To use **Shed Skin** under Windows, first execute (double-click) the ``init.bat`` file in the ``shedskin-0.0.30`` directory, relative to where you installed it.  A command-line window will appear, with the current directory set to the ``shedskin-0.0.30\shedskin`` directory (hereafter referred to as the *Shed Skin working directory*).
+To use **Shed Skin** under Windows, first execute (double-click) the ``init.bat`` file in the ``shedskin-0.1`` directory, relative to where you installed it.  A command-line window will appear, with the current directory set to the ``shedskin-0.1\shedskin`` directory (hereafter referred to as the *Shed Skin working directory*).
 
 Consider the following simple test program, called ``test.py``: ::
 
@@ -329,11 +329,13 @@ It is useful to know which version of the module you are importing: either the *
 
 **Restrictions**
 
-There are two important restrictions that must be observed when compiling an extension module:
+There are three important restrictions that must be observed when compiling an extension module:
 
-1. Only builtin scalar and container types (``int``, ``float``, ``complex``, ``str``, ``list``, ``tuple``, ``dict``, ``set``) as well as ``None`` and instances of user-defined classes can be passed/returned. So for example, anonymous functions and iterators are currently not supported.
+1. Only builtin scalar and container types (``int``, ``float``, ``complex``, ``str``, ``list``, ``tuple``, ``dict``, ``set``, ``frozenset``) as well as ``None`` and instances of user-defined classes can be passed/returned. So for instance, anonymous functions and iterators are currently not supported.
 
-2. Builtin objects are completely converted for each call/return from **Shed Skin** to **CPython** types and back, including all of their contents. This means you cannot change **CPython** builtin objects from the **Shed Skin** side and vice versa, and that conversion may be slow. Instances of user-defined classes can be passed/returned without any conversion, and changed from either side.
+2. Builtin objects are completely converted for each call/return from **Shed Skin** to **CPython** types and back, including their contents. This means you cannot change **CPython** builtin objects from the **Shed Skin** side and vice versa, and conversion may be slow. Instances of user-defined classes can be passed/returned without any conversion, and changed from either side.
+
+3. Global variables are converted once, at initialization time, from **Shed Skin** to **CPython**. This means that the value of the **CPython** version and **Shed Skin** version can change independently. This problem can be avoided by only using constant globals, or by adding getter/setter functions.
 
 **Example for NumPy/SciPy users**
 
@@ -574,17 +576,17 @@ Shed Skin Roadmap
 
 The following activities are planned for future versions of **Shed Skin**:
 
-**0.1** (6-12 months from now)
+**0.2-0.9** (6-24 months from now)
 
-* Complete support for the ``os`` module, especially under Windows
+* Complete support for the ``os`` module under Windows
 
 * Upgrade MingW to something more recent 
-
-**0.2-0.4** (12-24 months from now)
 
 * Replace many quick hacks in the compiler core
 
 * Perform several major cleanups.
+
+* Improve I/O performance
 
 * Improve readability of generated code.
 
@@ -598,11 +600,8 @@ The following activities are planned for future versions of **Shed Skin**:
 
 * Compile at least one program of around 3,000 lines, for example `Quameon`_.  
 
-**0.9** (18-36 months from now)
-
-* Improve type inference to the point where it works for typical, arbitrary programs of around 3,000 lines.
+**1.0** (24-48 months from now)
 
 * Add support for multiple inheritance, generator expressions and nested functions
 
-* Add basic stack allocation, out-of-bounds and wrap-around optimizations.
-
+* Improve type inference to the point where it works for typical, arbitrary programs of around 3,000 lines.
