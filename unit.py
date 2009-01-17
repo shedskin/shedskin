@@ -5,7 +5,7 @@ from sets import Set
 import traceback, sys, os, time
 
 tests = [
-('''fixes for 0.0.31''', '''
+('''fixes for 0.1''', '''
 # locally override module name
 import testdata.bert as game
 
@@ -826,10 +826,10 @@ print to_ints(l)
 #assorted fixes
 [1] != []
 
-from collections import defaultdict
-print sorted(defaultdict.fromkeys(range(7,10), 'a').items())
-import collections
-print sorted(collections.defaultdict.fromkeys(range(7,10), 'a').items())
+#from collections import defaultdict
+#print sorted(defaultdict.fromkeys(range(7,10), 'a').items())
+#import collections
+#print sorted(collections.defaultdict.fromkeys(range(7,10), 'a').items())
 
 from string import *
 class string: pass
@@ -842,7 +842,7 @@ output(equal=True)
 
 ('''fixes for 0.0.26; os.path, defaultdict''', '''
 #simple fixes
-print 8+(2 if 1 else 3)
+#print 8+(2 if 1 else 3)
 print repr('\\377ai\\37aoi\\001123\\00hoi\\01hoi\\0hoi')
 
 # add_strs()
@@ -907,8 +907,8 @@ print 'ab\\ncd\\r\\nef\\rghi\\n'.splitlines()
 print 'ab\\ncd\\r\\nef\\rghi\\n'.splitlines(1)
 print int('This Is A Title'.istitle())
 print int('This is not a title'.istitle())
-print 'a and b and c'.partition('and')
-print 'a and b and c'.rpartition('and')
+#print 'a and b and c'.partition('and')
+#print 'a and b and c'.rpartition('and')
 
 #default argument problem
 def msplit(sep=0, spl=-1):
@@ -960,28 +960,28 @@ except OSError, e:
 print int(), float(), list(), dict(), set(), tuple(), frozenset(), # XXX repr(str())
 
 #collections.defaultdict
-from collections import defaultdict
+#from collections import defaultdict
 
-s1 = 'mississippi'
-d1 = defaultdict(int)
-for k1 in s1:
-    d1[k1] += 1
-
-print sorted(d1.items())
-
-s2 = [('yellow', 1), ('blue', 2), ('yellow', 3), ('blue', 4), ('red', 1)]
-d2 = defaultdict(list)
-for k2, v2 in s2:
-    d2[k2].append(v2)
-
-print sorted(d2.items())
-
-s3 = [('red', 1), ('blue', 2), ('red', 3), ('blue', 4), ('red', 1), ('blue', 4)]
-d3 = defaultdict(set)
-for k3, v3 in s3:
-    d3[k3].add(v3)
-
-print sorted(d3.items())
+#s1 = 'mississippi'
+#d1 = defaultdict(int)
+#for k1 in s1:
+#    d1[k1] += 1
+#
+#print sorted(d1.items())
+#
+#s2 = [('yellow', 1), ('blue', 2), ('yellow', 3), ('blue', 4), ('red', 1)]
+#d2 = defaultdict(list)
+#for k2, v2 in s2:
+#    d2[k2].append(v2)
+#
+#print sorted(d2.items())
+#
+#s3 = [('red', 1), ('blue', 2), ('red', 3), ('blue', 4), ('red', 1), ('blue', 4)]
+#d3 = defaultdict(set)
+#for k3, v3 in s3:
+#    d3[k3].add(v3)
+#
+#print sorted(d3.items())
 
 ''', '''
 output(equal=True)

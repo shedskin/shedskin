@@ -394,7 +394,7 @@ def generate_code():
                 elif sys.platform == 'sunos5':
                     line += ' -lsocket -lnsl'
             if 'os' in [m.ident for m in mods]:
-                if sys.platform not in ['win32', 'darwin']:
+                if sys.platform not in ['win32', 'darwin', 'sunos5']:
                     line += ' -lutil'
 
         print >>makefile, line

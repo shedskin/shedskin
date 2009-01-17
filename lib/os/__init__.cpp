@@ -38,10 +38,13 @@ namespace std {
 #endif
 
 #ifdef __sun
+#include <sys/mkdev.h>
+#include <sys/loadavg.h>
+#include <signal.h>
 extern char **environ;
 #endif
 
-#if !defined(__APPLE__) && !defined(__FreeBSD__)
+#if !defined(__APPLE__) && !defined(__FreeBSD__) && !defined(__sun)
 #include <pty.h>
 #endif
 
@@ -639,6 +642,7 @@ void *ftruncate(int fd, int n) {
     return NULL;
 }
 
+#if !defined(__sun)
 tuple2<int, int> *forkpty() {
     int ret, amaster;
     if ((ret = ::forkpty(&amaster, NULL, NULL, NULL)) == -1)
@@ -651,6 +655,7 @@ tuple2<int, int> *openpty() {
         throw new OSError(new str("os.openpty"));
     return new tuple2<int, int>(2, amaster, aslave);
 }
+#endif
 
 tuple2<int, int> *wait() {
     int pid, status;
@@ -945,8 +950,8 @@ void __utime(str *path) {
 }
 void __utime(str *path, double actime, double modtime) {
     struct utimbuf buf;
-    buf.actime = actime;
-    buf.modtime = modtime;
+    buf.actime = (time_t)actime;
+    buf.modtime = (time_t)modtime;
     if(::utime(path->unit.c_str(), &buf) == -1)
         throw new OSError(new str("os.utime"));
 }
