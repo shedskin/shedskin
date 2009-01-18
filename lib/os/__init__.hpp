@@ -15,7 +15,6 @@ extern int __ss_F_OK, __ss_R_OK, __ss_W_OK, __ss_X_OK, __ss_NGROUPS_MAX, __ss_TM
 
 typedef OSError error;
 
-class popen_pipe;
 class __cstat;
 
 list<str *> *listdir(str *path);
@@ -74,6 +73,18 @@ file* fdopen(int fd, str* mode=NULL, int bufsize=-1);
 str *read(int fd, int n);
 int write(int fd, str *s);
 
+class popen_pipe : public file {
+public:
+    popen_pipe(str *name, str *mode=0);
+    popen_pipe(FILE* pipe);
+    void *close();
+};
+
+popen_pipe* popen(str* cmd);
+popen_pipe* popen(str* cmd, str* mode);
+popen_pipe* popen(str* cmd, str* mode, int bufsize);
+
+#ifndef WIN32
 int __ss_WCOREDUMP(int status);
 int __ss_WEXITSTATUS(int status);
 int __ss_WIFCONTINUED(int status);
@@ -83,7 +94,6 @@ int __ss_WIFSTOPPED(int status);
 int __ss_WSTOPSIG(int status);
 int __ss_WTERMSIG(int status);
 
-#ifndef WIN32
 void *execl(int n, str *file, ...);
 void *execlp(int n, str *file, ...);
 void *execle(int n, str *file, ...);
@@ -104,17 +114,6 @@ int spawnvpe(int mode, str *file, list<str *> *args, dict<str *, str *> *env);
 
 void *unsetenv(str* var);
 int getpid();
-
-class popen_pipe : public file {
-public:
-    popen_pipe(str *name, str *mode=0);
-    popen_pipe(FILE* pipe);
-    void *close();
-};
-
-popen_pipe* popen(str* cmd);
-popen_pipe* popen(str* cmd, str* mode);
-popen_pipe* popen(str* cmd, str* mode, int bufsize);
 
 tuple2<file*,file*>* popen2(str* cmd);
 tuple2<file*,file*>* popen2(str* cmd, str* mode, int bufsize);
