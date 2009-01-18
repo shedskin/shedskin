@@ -4,19 +4,22 @@
 #include <cstdlib>
 #include <sstream>
 #include <sys/stat.h>
+#include <stdio.h>
+#include <dirent.h>
+#include <errno.h>
 #include <sys/time.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <utime.h>
+
+#ifndef WIN32
 #include <sys/times.h>
 #include <sys/wait.h>
 #include <sys/utsname.h>
 #include <sys/statvfs.h>
-#include <sys/types.h>
-#include <sysexits.h>
-#include <stdio.h>
-#include <dirent.h>
-#include <errno.h>
-#include <fcntl.h>
 #include <grp.h>
-#include <utime.h>
+#include <sysexits.h>
+#endif
 
 namespace std {
 #include <unistd.h>
@@ -44,7 +47,7 @@ namespace std {
 extern char **environ;
 #endif
 
-#if !defined(__APPLE__) && !defined(__FreeBSD__) && !defined(__sun)
+#if !defined(__APPLE__) && !defined(__FreeBSD__) && !defined(__sun) && !defined(WIN32)
 #include <pty.h>
 #endif
 
@@ -54,8 +57,11 @@ str *const_0;
 str *linesep, *name;
 dict<str *, str *> *__ss_environ;
 dict<str *, int> *pathconf_names, *confstr_names, *sysconf_names;
+
 struct stat sbuf;
+#ifndef WIN32
 struct statvfs vbuf;
+#endif
 
 const int MAXENTRIES = 4096; /* XXX fix functions that use this */
 
@@ -455,13 +461,7 @@ void *dup2(int f1, int f2) {
     return NULL;
 }
 
-void *fchdir(int f1) {
-    if (::fchdir(f1) == -1) 
-        throw new OSError(new str("os.fchdir failed"));
-    return NULL;
-}
-
-#if !defined(__APPLE__) && !defined(__FreeBSD__)
+#if !defined(__APPLE__) && !defined(__FreeBSD__) && !defined(WIN32)
 void *fdatasync(int f1) {
     if (::fdatasync(f1) == -1) 
         throw new OSError(new str("os.fdatasync failed"));
@@ -518,6 +518,9 @@ void *close(int fd) {
    return NULL;
 }
 
+/* UNIX-only functionality */
+
+#ifndef WIN32
 int __ss_WCOREDUMP(int status) {
     return WCOREDUMP(status);
 }
@@ -550,9 +553,12 @@ int __ss_WTERMSIG(int status) {
     return WTERMSIG(status);
 }
 
-/* UNIX-only functionality */
+void *fchdir(int f1) {
+    if (::fchdir(f1) == -1) 
+        throw new OSError(new str("os.fchdir failed"));
+    return NULL;
+}
 
-#ifndef WIN32
 str *readlink(str *path) {
     int size = 255;
     str *r;
