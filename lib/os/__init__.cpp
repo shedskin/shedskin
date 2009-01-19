@@ -37,6 +37,7 @@ namespace std {
 #ifdef __APPLE__
 #include <crt_externs.h>
 #include <util.h>
+#include <signal.h>
 #define environ (*_NSGetEnviron())
 #endif
 
@@ -791,11 +792,7 @@ int getpgrp() {
     return getpgid(0);
 }
 void *setpgrp() {
-#if !defined(__APPLE__) && !defined(__FreeBSD__)
-    if(::setpgrp() == -1)
-#else
-    if(::setpgrp(0, 0) == -1)
-#endif
+    if(::setpgid(0, 0) == -1)
         throw new OSError(new str("os.setpgrp"));
     return NULL;
 }
