@@ -3173,6 +3173,9 @@ def template_match(split, parent, orig_parent=None):
 
     # --- match with class/function template variables
     for parent in parents:
+        if not isinstance(parent, (class_, function)): # XXX shedskin -i tiles.py
+            continue
+
         for var in parent.template_vars.values():
             match = True
 
