@@ -113,6 +113,14 @@ for xr in xrr:
     for yr in xrr:
         print xr, yr
 
+# tutorial example should work at least..
+class matrix:
+    def __init__(self, hop):
+        self.unit = hop
+
+m1 = matrix([1])
+m2 = matrix([1.0])
+
 ''', '''
 output(equal=True)
 
