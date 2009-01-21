@@ -2927,29 +2927,33 @@ def split_subsplit(split, varname, tvar=True):
 
 def template_parameters():
     # --- determine initial template variables (we might add prediction here later on)
-    for cl in getgx().allclasses: # (first do class template vars, as function depend on them) # XXX recursion!
+    builtinclasses = [cl for cl in getgx().allclasses if cl.mv.module.builtin]
+    nonbuiltinclasses = [cl for cl in getgx().allclasses if not cl.mv.module.builtin]
+
+    for cl in builtinclasses: # (first do class template vars, as function depend on them) # XXX recursion!
+        if cl.ident in ['datetime', 'date', 'time', 'timedelta']:
+            continue
+
         vars = cl.vars.values()
-        #if not cl.bases and not cl.children: # XXX
 
-        if cl.mv.module.builtin:
-             if cl.ident in ['datetime', 'date', 'time', 'timedelta']:
-                 continue
-             if cl.ident in ['dict', 'defaultdict'] and 'unit' in cl.vars and 'value' in cl.vars:
-                 vars = [cl.vars['unit'], cl.vars['value']]
-             elif cl == defclass('tuple2') and 'first' in cl.vars and 'second' in cl.vars:
-                 vars = [cl.vars['first'], cl.vars['second']]
-
+        if cl.ident in ['dict', 'defaultdict'] and 'unit' in cl.vars and 'value' in cl.vars:
+            vars = [cl.vars['unit'], cl.vars['value']]
+        elif cl == defclass('tuple2') and 'first' in cl.vars and 'second' in cl.vars:
+            vars = [cl.vars['first'], cl.vars['second']]
+            
         for var in vars:
-             template_detect(var, cl)
+            template_detect(var, cl)
 
     for clname in ['list', 'tuple', 'set', 'frozenset']: # XXX remove
         if not 'A' in defclass(clname).template_vars:
             defaultvar('A', defclass(clname), template_var=True)
     for clname in ['tuple2', 'dict']:
-        #if not 'A' in defclass(clname).template_vars:
-        #    defaultvar('A', defclass(clname), template_var=True)
         if not 'B' in defclass(clname).template_vars:
             defaultvar('B', defclass(clname), template_var=True)
+
+    for cl in nonbuiltinclasses: 
+        for var in cl.vars.values():
+            template_detect(var, cl)
 
     allfuncs = getgx().allfuncs.copy() 
     allfuncs.update(getgx().modules['builtin'].funcs.values())
