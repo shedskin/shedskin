@@ -2,7 +2,7 @@ Shed Skin Tutorial
 ==================
 
 :Version: Shed Skin 0.1
-:Date: January, 2009
+:Date: January 22, 2009
 :Authors: Mark Dufour and James Coughlan
 
 .. _Parallel Python: http://www.parallelpython.com/
@@ -13,6 +13,7 @@ Shed Skin Tutorial
 .. _Summer of code: http://code.google.com/soc/
 .. _GHOP: http://code.google.com/opensource/ghop/
 .. _Boehm: http://www.hpl.hp.com/personal/Hans_Boehm/gc/ 
+.. _PCRE: http://www.pcre.org/
 
 .. contents::
 
@@ -29,7 +30,7 @@ Besides the *typing* and *subset* restrictions, supported programs cannot freely
 
 Additionally, the type inference techniques employed by **Shed Skin** currently do not scale very well beyond several hundred lines of code (the largest compiled program is about 1,600 lines). In all, this means that **Shed Skin** is currently mostly useful to compile *smallish* programs and extension modules, that do not make extensive use of dynamic Python features or the standard library.
 
-Because **Shed Skin** is still in a very early stage of development, it can also improve a lot. At the moment, you will probably run into some bugs when using it. Please report these, so they can be fixed! 
+Because **Shed Skin** is still in an early stage of development, it can also improve a lot. At the moment, you will probably run into some bugs when using it. Please report these, so they can be fixed! 
 
 At the moment, **Shed Skin** is only compatible with Python versions 2.3 to 2.5, and should work on GNU/Linux platforms, FreeBSD, OpenSolaris, OSX and Windows XP.
 
@@ -40,34 +41,36 @@ Typing Restrictions
 
 **Shed Skin** translates pure, but *implicitly statically typed*, Python programs into C++. The static typing restriction means that variables can only ever have a *single, static type*. So, for example, ::
 
-    a = 1; a = ’1’ # bad
+    a = 1
+    a = ’1’ # bad
 
 is not allowed. However, as in C++, types can be *abstract* or *generic*, so that, for example, ::
 
-    a = A(); a = B() # good
+    a = A()
+    a = B() # good
 
 where **A** and **B** have a common base class, is allowed. (See `Tips and Tricks`_ for an example of a generic type.) 
 
 The typing restriction also means that the elements of some collection (``list``, ``set``, etc.) cannot have different types (because their *subtype* must also be static). Thus: ::
 
-    a=[’apple’, ’b’, ’c’] # good
-    b=(1, 2, 3) # good
-    c=[[10.3, -2.0], [1.5, 2.3], []] # good
+    a = [’apple’, ’b’, ’c’] # good
+    b = (1, 2, 3) # good
+    c = [[10.3, -2.0], [1.5, 2.3], []] # good
 
 are allowed, but ::
 
-    d=[1, 2.5, ’abc’] # bad
-    e=[3, [1,2]] # bad
-    f=(0, ’abc’, [1,2,3]) # bad
+    d = [1, 2.5, ’abc’] # bad
+    e = [3, [1, 2]] # bad
+    f = (0, ’abc’, [1, 2, 3]) # bad
 
 are not allowed. Of course, dictionary keys and values can be of different types: ::
 
-    g={’a’: 1, ’b’: 2, ’c’: 3} # good
-    h={’a’: 1, ’b’: ’hello’, ’c’: [1,2,3]} # bad
+    g = {’a’: 1, ’b’: 2, ’c’: 3} # good
+    h = {’a’: 1, ’b’: ’hello’, ’c’: [1, 2, 3]} # bad
 
 In the current version of **Shed Skin**, mixed types are also permitted in tuples of length two: ::
 
-    a=(1, [1]) # good
+    a = (1, [1]) # good
 
 In the future, mixed tuples up to a certain length will be allowed.
 
@@ -97,7 +100,7 @@ Python Subset Restrictions
 **Shed Skin** will only ever support a subset of all Python features. The following common features are currently not supported:
 
   - variable numbers of arguments and keyword arguments 
-  - arbitrary-size arithmetic (integers become 32-bit on a 32-bit architecture!)
+  - arbitrary-size arithmetic (integers become 32-bit on most architectures!)
   - reflection (getattr, hasattr), eval, or other really dynamic stuff
   - multiple inheritance
   - generator expressions
@@ -110,13 +113,14 @@ Some other features are currently only partially supported:
   - class attributes must always be accessed using a class identifier: ::
 
         self.class_attr # bad
-        bla.class_attr # good
+        SomeClass.class_attr # good
 
-  - anonymous function passing works reasonably well, but not for methods, and placing them in containers potentially confuses **Shed Skin**: ::
+  - anonymous function passing works reasonably well, but not for methods, and they cannot be contained: ::
 
-        var = lambda x,y: x+y # good
-        [var] # asking for trouble
-        method_ref = self.some_method # bad
+        var = lambda x, y: x+y # good
+        var = some_func # good
+        var = self.some_method # bad
+        [var] # bad
 
 .. _Library Limitations:
 
@@ -138,7 +142,7 @@ In general, programs can only import functionality that is defined in the **Shed
   - getopt
   - glob
   - math
-  - os (needs more work, especially under Windows)
+  - os (some functionality missing under Windows)
   - os.path 
   - random
   - re
@@ -147,20 +151,30 @@ In general, programs can only import functionality that is defined in the **Shed
   - sys 
   - time 
 
-For version **0.1** of **Shed Skin**, complete support for ``os`` is planned. (See `How to help out in Shed Skin Development`_ on how to help improve or add to these modules.)
+See `How to help out in Shed Skin Development`_ on how to help improve or add to these modules.
 
 .. _Installation:
 
 Installation
 ------------
 
-The latest version of **Shed Skin** can be downloaded from the `Googlecode site`_. There are three types of packages available: a self-extracting **Windows** installer, a **Debian** package, and a UNIX source package. 
+The latest version of **Shed Skin** can be downloaded from the `Googlecode site`_. There are three types of packages available: a self-extracting **Windows** installer, a **Debian** (**Ubuntu**) package, and a **UNIX** source package. 
 
-To install the **Windows** version, simply download and start it. (If you use ActivePython or some other non-standard Python distribution, please deinstall this first.)
+**Windows**
+
+To install the **Windows** version, simply download and start it. (If you use **ActivePython** or some other non-standard Python distribution, or **MingW**, please deinstall this first.)
+
+**Debian** (**Ubuntu**)
 
 To install the **Debian** package, simply download and install it using your package manager. 
 
-To install the UNIX source package on a **GNU/Linux** system, take the following steps:
+If there are complaints about missing dependencies, the following explicitly installs them:
+
+``sudo apt-get install g++ libpcre3-dev libgc-dev``
+
+**GNU/Linux**
+
+To install the **UNIX** source package on a **GNU/Linux** system, take the following steps:
 
  - download and unpack it 
 
@@ -168,45 +182,31 @@ To install the UNIX source package on a **GNU/Linux** system, take the following
 
  - make sure you can run ``g++``, the C++ compiler
 
- - install the Boehm garbage collector
+ - install the `Boehm`_ garbage collector
  
-   on a **Debian** system, this is simply:
-    
-   ``sudo apt-get install libgc-dev``
+ - install the `PCRE`_ library
 
-   on a **Fedora** system, this is simply:
-   
-   ``sudo yum install gc-devel``
+on a **Fedora** system, the last three steps are simply:
 
- - install the PCRE library:
- 
-   on a **Debian** system this is simply:
+``sudo yum install gcc-c++ pcre-devel gc-devel``
 
-   ``sudo apt-get install libpcre3-dev``
+**FreeBSD**
 
-   on a **Fedora** system, this is simply:
-
-   ``sudo yum install pcre-devel``
-
-To install the UNIX source package on a **FreeBSD** system, take the following steps:
+To install the **UNIX** source package on a **FreeBSD** system, take the following steps:
 
  - download and unpack it
  
  - run ``python setup.py`` and place the generated ``shedskin`` file in your path 
 
- - install the Boehm garbage collector (optionally using the latest version from `Boehm`_)
-   
-   make sure to disable threading support, e.g. using a tarball:
+ - install the `Boehm`_ garbage collector, making sure to disable threading support:
 
    ``./configure --enable-cplusplus --disable-threads --prefix=/usr && make install``
 
- - install the PCRE library:
+ - install the `PCRE`_ library
 
-   from a tarball:
+**OpenSolaris**
 
-   ``./configure && make install``
-
-To install the UNIX source package on an **OpenSolaris** system, take the following steps:
+To install the **UNIX** source package on an **OpenSolaris** system, take the following steps:
 
  - download and unpack it
  
@@ -214,13 +214,11 @@ To install the UNIX source package on an **OpenSolaris** system, take the follow
 
  - install the following packages:
 
-   ``SUNWgcc``
-   ``SUNWhea``
-   ``SUNWarc``
-   ``SUNWlibgc``
-   ``SUNWpcre``
+   ``SUNWgcc`` ``SUNWhea`` ``SUNWarc`` ``SUNWlibgc`` ``SUNWpcre``
 
-To install the UNIX source package on an **OSX** system, take the following steps:
+**OSX**
+
+To install the **UNIX** source package on an **OSX** system, take the following steps:
 
  - download and unpack it
 
@@ -228,13 +226,9 @@ To install the UNIX source package on an **OSX** system, take the following step
 
  - install the Apple XCode development environment
 
- - install the Boehm garbage collector; without a package manager, download the source package and run: 
-    
-   ``./configure && sudo make install``
+ - install the `Boehm`_ garbage collector
 
- - install the PCRE library; without a package manager, download the source package and run: 
-
-   ``./configure && sudo make install``
+ - install the `PCRE`_ library
 
 .. _Compiling and Running a Stand-Alone Program:
 
@@ -244,6 +238,8 @@ Compiling and Running a Stand-Alone Program
 To use **Shed Skin** under Windows, first execute (double-click) the ``init.bat`` file in the ``shedskin-0.1`` directory, relative to where you installed it.  A command-line window will appear, with the current directory set to the ``shedskin-0.1\shedskin`` directory (hereafter referred to as the *Shed Skin working directory*).
 
 Consider the following simple test program, called ``test.py``: ::
+
+    # test.py
 
     print 'hello, world!'
 
@@ -273,7 +269,7 @@ For the executable file to execute properly under Windows, note that ``gc.dll`` 
 Compiling an Extension Module
 -----------------------------
 
-Extension modules are compiled binaries, typically written using C or C++, that can be imported and used like regular Python modules. They allow one to write most of a project in unrestricted Python, while optimizing one or more speed-critical parts. 
+Extension modules are compiled binaries, typically written in C or C++ for speed, that can be imported and used like regular Python modules. They allow one to write most of a project in unrestricted Python, while optimizing one or more speed-critical parts. 
 
 It is very easy to generate extension modules with **Shed Skin**. 
 
@@ -281,26 +277,27 @@ It is very easy to generate extension modules with **Shed Skin**.
 
 We begin with a simple example module, called ``simple_module.py``, containing two simple functions: ::
 
-    #simple_module.py
+    # simple_module.py
+
     def func1(x):
         return x+1
 
     def func2(n):
-        d=dict([(i, i*i)  for i in range(n)])
+        d = dict([(i, i*i)  for i in range(n)])
         return d
 
     if __name__ == '__main__':
         print func1(5)
         print func2(10)
 
-In order for type inference to work, note that the module must (*indirectly*) call its own functions (if ``func1`` calls ``func2``, we can omit the call to ``func2``). This is accomplished in the example by putting the function calls in the ``if __name__=='__main__'`` statement, so that they will not be executed when the module is imported.
+In order for type inference to work, the module must (*indirectly*) call its own functions (if ``func1`` calls ``func2``, we can omit the call to ``func2``). This is accomplished in the example by putting the function calls under the ``if __name__=='__main__'`` statement, so that they will not be executed when the module is imported.
 
 To compile the module into an extension module, type: ::
 
     shedskin -e simple_module
     make
 
-On UNIX systems, for 'make' to succeed, you must have the Python development files installed (under **Debian**, install ``python-dev``).
+On **UNIX** systems, for 'make' to succeed, you must have the Python development files installed (under **Debian**, install ``python-dev``).
 
 Depending on platform, the resulting extension module (*shared library*) is called ``simple_module.so`` or ``simple_module.pyd``. 
 
@@ -320,8 +317,6 @@ Note that calling ``func1`` with a non-integer argument causes an error: ::
         func1(10.5)
     TypeError: error in conversion to Shed Skin (integer expected)
 
-This error would not arise in standard Python, but arises with **Shed Skin** since it infers *specific* argument types for each function, based on how it is called in the module.
- 
 It is useful to know which version of the module you are importing: either the **Shed Skin** version (``simple_module.so`` or ``simple_module.pyd``) or the original Python version (``simple_module.py`` or ``simple_module.pyc``). One way to determine this, is to include the following code in the top of the module: ::
 
     import sys
@@ -339,32 +334,30 @@ There are three important restrictions that must be observed when compiling an e
 
 **Example for NumPy/SciPy users**
 
-The following example demonstrates how a matrix created in `NumPy`_ can be processed by a module compiled with **Shed Skin**. The function ``my_sum`` sums all the elements in a matrix: ::
+The following example demonstrates how a matrix created in `NumPy`_ can be processed by an extension module generated with **Shed Skin**. The function ``my_sum`` sums all the elements in a matrix: ::
 
-    #simple_module2.py
-    #function to compute sum of elements in list of lists (matrix):
+    # simple_module2.py
+
     def my_sum(a):
-        h=len(a) #number of rows in matrix
-        w=len(a[0]) #number of columns
-        s=0.
+        """ compute sum of elements in list of lists (matrix) """
+        h = len(a) # number of rows in matrix
+        w = len(a[0]) # number of columns
+        s = 0.0
         for i in range(h):
             for j in range(w):
                 s += a[i][j]
         return s
 
-    # In order for type inference to work, 
-    # we must show how functions will be (indirectly) called:
     if __name__ == '__main__':
-        a=[[1.,2.],[3.,4.]]
-        print my_sum(a)
+        print my_sum([[1.0, 2.0], [3.0, 4.0]])
 
 (This example is given purely as an illustration, since `NumPy`_ arrays already include a built-in ``sum`` method.) 
 
 After compiling the module with **Shed Skin**, the ``my_sum`` function can now be used as follows: ::
 
     >>> import numpy
-    >>> from simple_module import my_sum
-    >>> a=numpy.array(([1.,2.],[3.,4.]))
+    >>> from simple_module2 import my_sum
+    >>> a = numpy.array(([1.0, 2.0], [3.0, 4.0]))
     >>> my_sum(a.tolist())
     10.0
 
@@ -379,8 +372,10 @@ Extension modules generated by **Shed Skin** can be easily combined with paralle
 
 Suppose we have defined the following function in a file, called ``meuk.py``: ::
 
+    # meuk.py
+
     def part_sum(start, end):
-        """Calculates partial sum"""
+        """ calculate partial sum """
         sum = 0
         for x in xrange(start, end):
             if x % 2 == 0:
@@ -392,7 +387,7 @@ Suppose we have defined the following function in a file, called ``meuk.py``: ::
     if __name__ == ’__main__’:
         part_sum(1, 10)
 
-To use this module with `Parallel Python`_ or `pprocess`_, we must first compile it into an extension module (see `Compiling an Extension Module`_): ::
+To compile this into an extension module, type: ::
 
     shedskin -e meuk
     make
@@ -418,7 +413,7 @@ To use the generated extension module with `Parallel Python`_ >= 1.5.1, simply a
 
 **pprocess**
 
-To use the extension module with `pprocess`_, follow the same approach: ::
+To use the generated extension module with `pprocess`_, follow the same approach: ::
 
     import pprocess
 
@@ -445,12 +440,14 @@ To call manually written C/C++ code, follow these steps:
 1. Provide **Shed Skin** with enough information to perform type inference, by providing it with a *type model* of the C/C++ code. Suppose we wish to call a simple function that returns a list with the n smallest prime numbers larger than some number. The following type model, contained in a file called ``stuff.py``, is sufficient for **Shed Skin** to perform type inference: ::
 
     #stuff.py
+
     def more_primes(n, nr=10):
         return [1]
 
 2. To actually perform type inference, create a test program, called ``test.py``, that uses the type model, and compile it: ::
 
     #test.py
+
     import stuff
     print stuff.more_primes(100)
      
@@ -464,14 +461,14 @@ By moving ``stuff.*`` to ``lib/``, we have in fact added support for an arbitrar
 
 **Shed Skin Types**
 
-**Shed Skin** reimplements the Python builtins with its own set of C++ classes, built on the C++ Standard Template Library. They have a similar interface, so they should be easy to use (provided you have some basic C++ knowledge.) See the class definitions in ``lib/builtin.hpp`` for details. If in doubt, convert some equivalent Python code to C++, and have a look at the result.
+**Shed Skin** reimplements the Python builtins with its own set of C++ classes (built on the C++ Standard Template Library). These have a similar interface to their Python counterparts, so they should be easy to use (provided you have some basic C++ knowledge.) See the class definitions in ``lib/builtin.hpp`` for details. If in doubt, convert some equivalent Python code to C++, and have a look at the result!
 
 .. _Command-line Options:
 
 Command-line Options
 --------------------
 
-The ``shedskin`` command has the following options: ::
+The ``shedskin`` command can be given the following options: ::
 
     -a --noann             Don't output annotated source code
     -b --bounds            Enable bounds checking
@@ -481,16 +478,14 @@ The ``shedskin`` command has the following options: ::
     -i --infinite          Try to avoid infinite analysis time 
     -w --nowrap            Disable wrap-around checking 
 
-(To see an up-to-date list of these options simply type ``shedskin`` without any argument.)
+For example, to compile the file ``test.py`` as an extension module, type ``shedskin –e test`` or ``shedskin ––extmod test``.
 
-For example, to use the bounds checking option to compile ``test.py``, type ``shedskin –b test`` or ``shedskin ––bounds test``. 
+By default and for speed, **Shed Skin** does not raise exceptions for index out-of-bounds errors. Instead, these can be turned on with the ``--bounds`` option. Without it, the following code gives a spurious value rather than raising an exception: ::
 
-The ``--bounds`` option is used to catch index out-of-bounds errors in lists, tuples and strings, which would produce errors in **CPython**.  Without it, the following erroneous code would give a spurious value rather than reporting an error: ::
-
-    a=[1, 2, 3]
+    a = [1, 2, 3]
     print a[5] # invalid index: out of bounds
 
-The ``--nowrap`` option can speed up program execution by a modest amount, at the risk of giving wrong values for negative indices (``a[-1]`` in the above example.) Before using this option, make sure that your code will run safely with it.
+The ``--nowrap`` option can further speed up program execution by a modest amount, at the risk of giving wrong values for negative indices (``a[-1]`` in the above example.) Before using this option, make sure that your code will run safely with it.
 
 .. _Tips and Tricks:
 
@@ -509,7 +504,7 @@ Tips and Tricks
 
 **Tricks**
 
-1. The used type inference techniques can end up in an infinite loop, especially for larger programs. If this happens, it sometimes helps to run **Shed Skin** with the ``--infinite`` command-line option.
+1. The used type inference techniques can end up in an infinite loop, especially for larger programs. If this happens, it can help to run **Shed Skin** with the ``--infinite`` command-line option.
 
 2. The following two code fragments work the same, but only the second one is supported: ::
 
@@ -518,9 +513,9 @@ Tips and Tricks
     class statistics: pass
     s = statistics(); s.nodes = 28; s.solutions = set()
 
-3. The evaluation order of arguments to a function or ``print`` changes with translation to C++, so it's better not to depend on this: ::
+3. The evaluation order of arguments to a function or ``print`` changes with translation to C++, so it's better not to depend on it: ::
 
-    print 'hoei', raw_input() # raw_input is called first!
+    print 'hoei', raw_input() # raw_input is called before printing 'hoei'!
 
 4. Tuples with different types of elements and length > 2 are not supported. It can however be useful to 'simulate' them: ::
 
@@ -584,11 +579,7 @@ The following activities are planned for future versions of **Shed Skin**:
 
 * Replace many quick hacks in the compiler core
 
-* Perform several major cleanups.
-
 * Improve I/O performance
-
-* Improve readability of generated code.
 
 * Locate bugs using some Python regression test suite, and fix them.
 
