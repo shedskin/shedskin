@@ -28,7 +28,7 @@ LIMITATIONS
 
 1. Variables must be (implicitly) statically typed. Abstract and generic types (as in C++) are supported.
 2. Several Python features cannot be used or only partially. For example, nested functions and variable numbers of arguments are not supported.
-3. Programs cannot freely use the standard library, only those available in ``lib/*.py``.
+3. Programs cannot freely use the standard library, only those available in ``lib/``.
 
 OPTIONS
 =======
