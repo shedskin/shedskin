@@ -7,9 +7,9 @@ An experimental (restricted) Python-to-C++ Compiler
 ---------------------------------------------------
 
 :Author: mark.dufour@gmail.com
-:Date:   2008-09-20
+:Date:   2009-01-25
 :Copyright: GPL version 3 or later
-:Version: 0.0.29
+:Version: 0.1
 :Manual section: 1
 
 SYNOPSIS
