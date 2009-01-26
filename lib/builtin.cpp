@@ -297,6 +297,10 @@ str *str::__repr__() {
     return new str(ss.str().c_str());
 }
 
+int str::__int__() {
+    return __int(this);
+}
+
 int str::__contains__(str *s) {
     return unit.find(s->unit) != -1;
 }

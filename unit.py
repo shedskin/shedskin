@@ -5,6 +5,10 @@ from sets import Set
 import traceback, sys, os, time
 
 tests = [
+('''fixes for 0.1.1''', '''
+
+'''),
+
 ('''fixes for 0.1''', '''
 # locally override module name
 import testdata.bert as game
