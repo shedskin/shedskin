@@ -7,6 +7,9 @@ import traceback, sys, os, time
 tests = [
 ('''fixes for 0.1.1''', '''
 
+''', '''
+output(equal=True)
+
 '''),
 
 ('''fixes for 0.1''', '''
