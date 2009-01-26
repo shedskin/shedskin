@@ -646,8 +646,9 @@ public:
     str *rjust(int width, str *fchar=0);
 
     int __cmp__(pyobj *p);
-
     int __hash__();
+
+    int __int__(); /* XXX compilation warning for int(pyseq<str *> *) */ 
 
     __seqiter<str *> *__iter__();
 
