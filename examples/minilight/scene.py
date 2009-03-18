@@ -10,7 +10,7 @@ from triangle import Triangle
 from vector3f import Vector3f, ZERO, ONE, MAX
 
 import re
-SEARCH = re.compile('(\(.+\))\s*(\(.+\))').search
+SEARCH = re.compile('(\(.+\))\s*(\(.+\))')
 
 MAX_TRIANGLES = 0x100000
 
@@ -19,7 +19,7 @@ class Scene(object):
     def __init__(self, in_stream, eye_position):
         for line in in_stream:
             if not line.isspace():
-                s, g = SEARCH(line).groups()
+                s, g = SEARCH.search(line).groups()
                 self.sky_emission = Vector3f(s).clamped(ZERO, MAX)
                 self.ground_reflection = Vector3f(g).clamped(ZERO, ONE)
                 self.triangles = []

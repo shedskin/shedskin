@@ -13,14 +13,18 @@ DISPLAY_LUMINANCE_MAX = 200.0
 RGB_LUMINANCE = Vector3f(0.2126, 0.7152, 0.0722)
 GAMMA_ENCODE = 0.45
 
+
 class Image(object):
 
     def __init__(self, in_stream):
         for line in in_stream:
             if not line.isspace():
-                self.width, self.height = map(lambda dimension: min(max(1, int(dimension)), 10000), line.split())
+                self.width, self.height = self.dim(line.split()[0]), self.dim(line.split()[1])
                 self.pixels = [0.0] * self.width * self.height * 3
                 break
+
+    def dim(self, dimension):
+        return min(max(1, int(dimension)), 10000)
 
     def add_to_pixel(self, x, y, radiance):
         if x >= 0 and x < self.width and y >= 0 and y < self.height:

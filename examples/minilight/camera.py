@@ -10,14 +10,14 @@ from raytracer import RayTracer
 from vector3f import Vector3f
 
 import re
-SEARCH = re.compile('(\(.+\))\s*(\(.+\))\s*(\S+)').search
+SEARCH = re.compile('(\(.+\))\s*(\(.+\))\s*(\S+)')
 
 class Camera(object):
 
     def __init__(self, in_stream):
         for line in in_stream:
             if not line.isspace():
-                p, d, a = SEARCH(line).groups()
+                p, d, a = SEARCH.search(line).groups()
                 self.view_position = Vector3f(p)
                 self.view_direction = Vector3f(d).unitize()
                 if self.view_direction.is_zero():
