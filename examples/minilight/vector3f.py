@@ -71,5 +71,5 @@ class Vector3f(object):
 
 ZERO = Vector3f(0.0)
 ONE = Vector3f(1.0)
-MAX = Vector3f(float(2**1024 - 2**971))
+MAX = Vector3f(1.797e308)
 ##ALMOST_ONE?

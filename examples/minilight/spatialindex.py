@@ -65,7 +65,7 @@ class SpatialIndex(object):
                     hit_object, hit_position = self.vector[sub_cell].get_intersection(ray_origin, ray_direction, last_hit, cell_position)
                     if hit_object:
                         break
-                step = float(2**1024 - 2**971)
+                step = 1.797e308
                 axis = 0
                 for i in range(3):
                     high = (sub_cell >> i) & 1
@@ -82,7 +82,7 @@ class SpatialIndex(object):
                 cell_position = ray_origin + ray_direction * step
                 sub_cell = sub_cell ^ (1 << axis)
         else:
-            nearest_distance = float(2**1024 - 2**971)
+            nearest_distance = 1.797e308
             for item in self.vector:
                 if item != last_hit:
                     distance = item.get_intersection(ray_origin, ray_direction)
