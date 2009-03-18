@@ -24,7 +24,7 @@ class SurfacePoint(object):
     def get_reflection(self, in_direction, in_radiance, out_direction):
         in_dot = in_direction.dot(self.triangle_ref.normal)
         out_dot = out_direction.dot(self.triangle_ref.normal)
-        return ZERO if (in_dot < 0.0) ^ (out_dot < 0.0) else in_radiance * self.triangle_ref.reflectivity * (abs(in_dot) / pi)
+        return ZERO if (in_dot < 0.0) ^ (out_dot < 0.0) else in_radiance.mul(self.triangle_ref.reflectivity) * (abs(in_dot) / pi)
 
     def get_next_direction(self, in_direction):
         reflectivity_mean = self.triangle_ref.reflectivity.dot(ONE) / 3.0
