@@ -5,7 +5,7 @@
 
 
 from triangle import Triangle, TOLERANCE
-from vector3f import Vector3f, MAX
+from vector3f import Vector3f_seq, Vector3f_scalar, MAX
 
 MAX_LEVELS = 44
 MAX_ITEMS  =  8
@@ -15,13 +15,13 @@ class SpatialIndex(object):
     def __init__(self, vect, bound, items, level=0):
         if vect:
             items = [(item.get_bound(), item) for item in items]
-            bound = list(vect) * 2
+            bound = vect.as_list() * 2
             for item in items:
                 for j in range(6):
                     if (bound[j] > item[0][j]) ^ (j > 2):
                         bound[j] = item[0][j]
-            size = max(list(Vector3f(bound[3:6]) - Vector3f(bound[0:3])))
-            self.bound = bound[0:3] + list(Vector3f(bound[3:6]).clamped(Vector3f(bound[0:3]) + Vector3f(size), MAX))
+            size = max((Vector3f_seq(bound[3:6]) - Vector3f_seq(bound[0:3])).as_list())
+            self.bound = bound[0:3] + (Vector3f_seq(bound[3:6]).clamped(Vector3f_seq(bound[0:3]) + Vector3f_scalar(size), MAX)).as_list()
         else:
             self.bound = bound
         self.is_branch = len(items) > MAX_ITEMS and level < MAX_LEVELS - 1

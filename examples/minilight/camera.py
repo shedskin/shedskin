@@ -7,7 +7,7 @@
 from math import pi, tan
 from random import random
 from raytracer import RayTracer
-from vector3f import Vector3f
+from vector3f import Vector3f, Vector3f_str
 
 import re
 SEARCH = re.compile('(\(.+\))\s*(\(.+\))\s*(\S+)')
@@ -18,8 +18,8 @@ class Camera(object):
         for line in in_stream:
             if not line.isspace():
                 p, d, a = SEARCH.search(line).groups()
-                self.view_position = Vector3f(p)
-                self.view_direction = Vector3f(d).unitize()
+                self.view_position = Vector3f_str(p)
+                self.view_direction = Vector3f_str(d).unitize()
                 if self.view_direction.is_zero():
                     self.view_direction = Vector3f(0.0, 0.0, 1.0)
                 self.view_angle = min(max(10.0, float(a)), 160.0) * (pi / 180.0)

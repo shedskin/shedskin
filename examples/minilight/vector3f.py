@@ -5,25 +5,28 @@
 
 
 from math import sqrt
+import traceback # XXX
+
+def Vector3f_str(s):
+    split = s.lstrip(' (').rstrip(') ').split()
+    return Vector3f(float(split[0]), float(split[1]), float(split[2]))
+
+def Vector3f_seq(seq):
+    return Vector3f(seq[0], seq[1], seq[2])
+
+def Vector3f_scalar(s):
+    return Vector3f(s, s, s)
 
 class Vector3f(object):
 
-    def __init__(self, *args):
-        if len(args) == 1 and type(args[0]) == type(''):
-            self.x, self.y, self.z = [float(x) for x in args[0].lstrip(' (').rstrip(') ').split()]
-        elif type(args[0]) == Vector3f:
-            self.x, self.y, self.z = args[0].x, args[0].y, args[0].z
-        else:
-            if type(args[0]) == list or type(args[0]) == tuple:
-                args = args[0]
-            self.x = self.y = self.z = float(args[0])
-            if len(args) > 2:
-                self.y, self.z = float(args[1]), float(args[2])
+    def __init__(self, x, y, z):
+        self.x, self.y, self.z = float(x), float(y), float(z)
 
-    def __iter__(self):
-        yield self.x
-        yield self.y
-        yield self.z
+    def as_list(self):
+        return [self.x, self.y, self.z]
+
+    def copy(self):
+        return Vector3f(self.x, self.y, self.z)
 
     def __getitem__(self, key):
         if key == 2:
@@ -69,7 +72,7 @@ class Vector3f(object):
                         min(max(self.y, lo.y), hi.y),
                         min(max(self.z, lo.z), hi.z))
 
-ZERO = Vector3f(0.0)
-ONE = Vector3f(1.0)
-MAX = Vector3f(1.797e308)
+ZERO = Vector3f_scalar(0.0)
+ONE = Vector3f_scalar(1.0)
+MAX = Vector3f_scalar(1.797e308)
 ##ALMOST_ONE?
