@@ -9,7 +9,7 @@ from random import random
 from vector3f import Vector3f, ZERO, ONE, MAX
 
 import re
-SEARCH = re.compile('(\(.+\))\s*(\(.+\))\s*(\(.+\))\s*(\(.+\))\s*(\(.+\))').search
+SEARCH = re.compile('(\(.+\))\s*(\(.+\))\s*(\(.+\))\s*(\(.+\))\s*(\(.+\))')
 
 TOLERANCE = 1.0 / 1024.0
 
@@ -18,8 +18,8 @@ class Triangle(object):
     def __init__(self, in_stream):
         for line in in_stream:
             if not line.isspace():
-                v0, v1, v2, r, e = SEARCH(line).groups()
-                self.vertexs = map(Vector3f, [v0, v1, v2])
+                v0, v1, v2, r, e = SEARCH.search(line).groups()
+                self.vertexs = [Vector3f(v0), Vector3f(v1), Vector3f(v2)]
                 self.edge0 = Vector3f(v1) - Vector3f(v0)
                 self.edge3 = Vector3f(v2) - Vector3f(v0)
                 self.reflectivity = Vector3f(r).clamped(ZERO, ONE)
