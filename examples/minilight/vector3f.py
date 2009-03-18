@@ -46,10 +46,10 @@ class Vector3f(object):
         return Vector3f(self.x - other.x, self.y - other.y, self.z - other.z)
 
     def __mul__(self, other):
-        if type(other) == Vector3f:
-            return Vector3f(self.x * other.x, self.y * other.y, self.z * other.z)
-        else:
-            return Vector3f(self.x * other, self.y * other, self.z * other)
+        return Vector3f(self.x * other, self.y * other, self.z * other)
+
+    def mul(self, other):
+        return Vector3f(self.x * other.x, self.y * other.y, self.z * other.z)
 
     def is_zero(self):
         return self.x == 0.0 and self.y == 0.0 and self.z == 0.0

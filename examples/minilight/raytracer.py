@@ -19,7 +19,7 @@ class RayTracer(object):
             local_emission = ZERO if last_hit else surface_point.get_emission(ray_origin, -ray_direction, False)
             illumination = self.sample_emitters(ray_direction, surface_point)
             next_direction, color = surface_point.get_next_direction(-ray_direction)
-            reflection = ZERO if next_direction.is_zero() else color * self.get_radiance(surface_point.position, next_direction, surface_point.triangle_ref)
+            reflection = ZERO if next_direction.is_zero() else color.mul(self.get_radiance(surface_point.position, next_direction, surface_point.triangle_ref))
             return reflection + illumination + local_emission
         else:
             return self.scene_ref.get_default_emission(-ray_direction)

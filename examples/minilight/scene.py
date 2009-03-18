@@ -44,4 +44,4 @@ class Scene(object):
         return len(self.emitters)
 
     def get_default_emission(self, back_direction):
-        return self.sky_emission if back_direction.y < 0.0 else self.sky_emission * self.ground_reflection
+        return self.sky_emission if back_direction.y < 0.0 else self.sky_emission.mul(self.ground_reflection)
