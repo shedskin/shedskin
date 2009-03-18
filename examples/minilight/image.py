@@ -5,7 +5,7 @@
 
 
 from math import log10
-from vector3f import Vector3f
+from vector3f import Vector3f, Vector3f_seq
 
 PPM_ID = 'P6'
 MINILIGHT_URI = 'http://www.hxa7241.org/minilight/'
@@ -29,7 +29,7 @@ class Image(object):
     def add_to_pixel(self, x, y, radiance):
         if x >= 0 and x < self.width and y >= 0 and y < self.height:
             index = (x + ((self.height - 1 - y) * self.width)) * 3
-            for a in radiance:
+            for a in radiance.as_list():
                 self.pixels[index] += a
                 index += 1
 
@@ -45,7 +45,7 @@ class Image(object):
     def calculate_tone_mapping(self, pixels, divider):
         sum_of_logs = 0.0
         for i in range(len(pixels) / 3):
-            y = Vector3f(pixels[i * 3: i * 3 + 3]).dot(RGB_LUMINANCE) * divider
+            y = Vector3f_seq(pixels[i * 3: i * 3 + 3]).dot(RGB_LUMINANCE) * divider
             sum_of_logs += log10(y if y > 1e-4 else 1e-4)
         log_mean_luminance = 10.0 ** (sum_of_logs / (len(pixels) / 3))
         a = 1.219 + (DISPLAY_LUMINANCE_MAX * 0.25) ** 0.4

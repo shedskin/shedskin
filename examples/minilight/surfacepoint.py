@@ -12,7 +12,7 @@ class SurfacePoint(object):
 
     def __init__(self, triangle, position):
         self.triangle_ref = triangle
-        self.position = Vector3f(position)
+        self.position = position.copy() 
 
     def get_emission(self, to_position, out_direction, is_solid_angle):
         ray = to_position - self.position

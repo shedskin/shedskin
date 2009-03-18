@@ -6,7 +6,7 @@
 
 from math import sqrt
 from random import random
-from vector3f import Vector3f, ZERO, ONE, MAX
+from vector3f import Vector3f_str, ZERO, ONE, MAX
 
 import re
 SEARCH = re.compile('(\(.+\))\s*(\(.+\))\s*(\(.+\))\s*(\(.+\))\s*(\(.+\))')
@@ -19,12 +19,12 @@ class Triangle(object):
         for line in in_stream:
             if not line.isspace():
                 v0, v1, v2, r, e = SEARCH.search(line).groups()
-                self.vertexs = [Vector3f(v0), Vector3f(v1), Vector3f(v2)]
-                self.edge0 = Vector3f(v1) - Vector3f(v0)
-                self.edge3 = Vector3f(v2) - Vector3f(v0)
-                self.reflectivity = Vector3f(r).clamped(ZERO, ONE)
-                self.emitivity = Vector3f(e).clamped(ZERO, MAX)
-                edge1 = Vector3f(v2) - Vector3f(v1)
+                self.vertexs = [Vector3f_str(v0), Vector3f_str(v1), Vector3f_str(v2)]
+                self.edge0 = Vector3f_str(v1) - Vector3f_str(v0)
+                self.edge3 = Vector3f_str(v2) - Vector3f_str(v0)
+                self.reflectivity = Vector3f_str(r).clamped(ZERO, ONE)
+                self.emitivity = Vector3f_str(e).clamped(ZERO, MAX)
+                edge1 = Vector3f_str(v2) - Vector3f_str(v1)
                 self.tangent = self.edge0.unitize()
                 self.normal = self.tangent.cross(edge1).unitize()
                 pa2 = self.edge0.cross(edge1)

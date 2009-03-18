@@ -7,7 +7,7 @@
 from random import choice
 from spatialindex import SpatialIndex
 from triangle import Triangle
-from vector3f import Vector3f, ZERO, ONE, MAX
+from vector3f import Vector3f_str, ZERO, ONE, MAX
 
 import re
 SEARCH = re.compile('(\(.+\))\s*(\(.+\))')
@@ -20,8 +20,8 @@ class Scene(object):
         for line in in_stream:
             if not line.isspace():
                 s, g = SEARCH.search(line).groups()
-                self.sky_emission = Vector3f(s).clamped(ZERO, MAX)
-                self.ground_reflection = Vector3f(g).clamped(ZERO, ONE)
+                self.sky_emission = Vector3f_str(s).clamped(ZERO, MAX)
+                self.ground_reflection = Vector3f_str(g).clamped(ZERO, ONE)
                 self.triangles = []
                 try:
                     for i in range(MAX_TRIANGLES):
