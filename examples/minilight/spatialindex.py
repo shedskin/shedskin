@@ -14,7 +14,7 @@ class SpatialIndex(object):
 
     def __init__(self, vect, bound, items, level=0):
         if vect:
-            items = [(item.get_bound(), item) for item in items]
+            items = [(item[1].get_bound(), item[1]) for item in items]
             bound = vect.as_list() * 2
             for item in items:
                 for j in range(6):
@@ -48,7 +48,7 @@ class SpatialIndex(object):
                 if len(sub_items) > 0:
                     self.vector[s] = SpatialIndex(None, sub_bound, sub_items, MAX_LEVELS if q1 > 1 or q2 else level + 1)
         else:
-            self.vector = [item[1] for item in items]
+            self.items = [item[1] for item in items]
 
     def get_intersection(self, ray_origin, ray_direction, last_hit, start=None):
         start = start if start else ray_origin
@@ -83,7 +83,7 @@ class SpatialIndex(object):
                 sub_cell = sub_cell ^ (1 << axis)
         else:
             nearest_distance = 1.797e308
-            for item in self.vector:
+            for item in self.items:
                 if item != last_hit:
                     distance = item.get_intersection(ray_origin, ray_direction)
                     if distance >= 0.0 and (distance < nearest_distance):
