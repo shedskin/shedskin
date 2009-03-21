@@ -2027,17 +2027,21 @@ __iter<str *> *file::__iter__() {
     return new __fileiter(this);
 }
 
+str *file::next() {
+    if(endoffile)
+        throw new StopIteration();
+    str *line = readline();
+    if(endoffile && !len(line))
+        throw new StopIteration();
+    return line;
+}
+
 __fileiter::__fileiter(file *p) {
     this->p = p;
 }
 
 str *__fileiter::next() {
-    if(p->endoffile)
-        throw new StopIteration();
-    str *line = p->readline();
-    if(p->endoffile && !len(line))
-        throw new StopIteration();
-    return line;
+    return p->next();
 }
 
 /* mod */

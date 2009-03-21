@@ -938,6 +938,7 @@ public:
     str *__repr__();
 
     __iter<str *> *__iter__();
+    str *next();
 
 };
 
