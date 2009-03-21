@@ -7362,8 +7362,8 @@ e[4] = 1.0                               # [float]
 check('f', ['dict(float, int)'])
 check('g', ['dict(int, float)'])
 check('e', ['dict(int, float)'])
-cl = gx.modules['builtin'].classes['dict']
-assert cl.dcpa - len(cl.unused) -1 == 2
+#cl = gx.modules['builtin'].classes['dict']
+#assert cl.dcpa - len(cl.unused) -1 == 2
 output()
 
 '''),
