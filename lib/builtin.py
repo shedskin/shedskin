@@ -638,6 +638,9 @@ class file(pyiter):
     def __repr__(self):
         return ''
 
+    def next(self):
+        return ''
+
 def open(name, flags=None):             
     return file(name, flags)             
     
