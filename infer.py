@@ -306,6 +306,9 @@ def cartesian_product(node, worklist):
             argtypes.append(getgx().cnode[arg,node.dcpa,node.cpa].types()) 
         else:
             argtypes.append(inode(arg).types()) # XXX def arg?
+ 
+#    if ident == 'get_radiance':
+#        argtypes[1] = argtypes[0]
 
     #print 'argtypes', argtypes, node #, args, argtypes, cartesian(*([funcs]+argtypes))
     return cartesian(*([funcs]+argtypes))
@@ -687,7 +690,7 @@ def ifa():
                     #print 'new type', tuple(new_attr_types)
                     new_attr_types = tuple(new_attr_types)
                      
-                    if new_attr_types in classes_nr and (not [len(types)==1 and list(types)[0][0].ident in ['float_','str_','int_'] for types in new_attr_types if types].count(False) or classes_nr[new_attr_types] >= cl.dcpa): # XXX last check.. useful or not?
+                    if new_attr_types in classes_nr and not classes_nr[new_attr_types] >= cl.dcpa: # XXX last check.. useful or not?
                         nr = classes_nr[new_attr_types]
                         if nr != dcpa: # XXX better check: classes_nr for dcpa
                             #print 'reuse', node, nr
