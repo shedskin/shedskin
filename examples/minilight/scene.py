@@ -38,7 +38,7 @@ class Scene(object):
 
     def get_emitter(self):
         emitter = None if len(self.emitters) == 0 else choice(self.emitters)
-        return [(emitter.get_sample_point() if emitter else ZERO), emitter]
+        return (emitter.get_sample_point() if emitter else ZERO), emitter
 
     def emitters_count(self):
         return len(self.emitters)
