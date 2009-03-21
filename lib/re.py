@@ -33,7 +33,7 @@ class match_object:
         return 1
     
     def groups(self, defval = 0):
-        return ['', '']
+        return ('',)
     
     def groupdict(self, defval = 0):
         return {'' : ''}

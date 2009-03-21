@@ -6,6 +6,14 @@ import traceback, sys, os, time
 
 tests = [
 ('''fixes for 0.1.1''', '''
+# file.next
+print file('ss.py').next().strip()
+
+# re.groups returns tuple
+import re
+m = re.match(r"(\d+)\.?(\d+)?", "24")
+groups = m.groups()
+print groups
 
 ''', '''
 output(equal=True)
