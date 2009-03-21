@@ -25,10 +25,10 @@ class Scene(object):
                 self.triangles = []
                 try:
                     for i in range(MAX_TRIANGLES):
-                        self.triangles.append((None, Triangle(in_stream)))
+                        self.triangles.append(Triangle(in_stream))
                 except StopIteration:
                     pass
-                self.emitters = [triangle[1] for triangle in self.triangles if not triangle[1].emitivity.is_zero() and triangle[1].area > 0.0]
+                self.emitters = [triangle for triangle in self.triangles if not triangle.emitivity.is_zero() and triangle.area > 0.0]
                 self.index = SpatialIndex(eye_position, None, self.triangles)
 
                 break
