@@ -14,12 +14,13 @@ class SpatialIndex(object):
 
     def __init__(self, vect, bound, items, level=0):
         if vect:
-            items = [(item[1].get_bound(), item[1]) for item in items]
+            for item in items:
+                item.bound = item.get_bound()
             bound = vect.as_list() * 2
             for item in items:
                 for j in range(6):
-                    if (bound[j] > item[0][j]) ^ (j > 2):
-                        bound[j] = item[0][j]
+                    if (bound[j] > item.bound[j]) ^ (j > 2):
+                        bound[j] = item.bound[j]
             size = max((Vector3f_seq(bound[3:6]) - Vector3f_seq(bound[0:3])).as_list())
             self.bound = bound[0:3] + (Vector3f_seq(bound[3:6]).clamped(Vector3f_seq(bound[0:3]) + Vector3f_scalar(size), MAX)).as_list()
         else:
@@ -38,17 +39,16 @@ class SpatialIndex(object):
                         sub_bound.append(self.bound[j])
                 sub_items = []
                 for item in items:
-                    item_bound = item[0]
-                    if item_bound[3] >= sub_bound[0] and item_bound[0] < sub_bound[3] and \
-                       item_bound[4] >= sub_bound[1] and item_bound[1] < sub_bound[4] and \
-                       item_bound[5] >= sub_bound[2] and item_bound[2] < sub_bound[5]:
+                    if item.bound[3] >= sub_bound[0] and item.bound[0] < sub_bound[3] and \
+                       item.bound[4] >= sub_bound[1] and item.bound[1] < sub_bound[4] and \
+                       item.bound[5] >= sub_bound[2] and item.bound[2] < sub_bound[5]:
                            sub_items.append(item)
-                q1 += 1 if len(sub_items) == len(item) else 0
+                q1 += 1 if len(sub_items) == len(items) else 0
                 q2 = (sub_bound[3] - sub_bound[0]) < (TOLERANCE * 4.0)
                 if len(sub_items) > 0:
                     self.vector[s] = SpatialIndex(None, sub_bound, sub_items, MAX_LEVELS if q1 > 1 or q2 else level + 1)
         else:
-            self.items = [item[1] for item in items]
+            self.items = items
 
     def get_intersection(self, ray_origin, ray_direction, last_hit, start=None):
         start = start if start else ray_origin
