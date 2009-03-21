@@ -5,7 +5,6 @@
 
 
 from math import sqrt
-import traceback # XXX
 
 def Vector3f_str(s):
     split = s.lstrip(' (').rstrip(') ').split()
