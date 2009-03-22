@@ -15,6 +15,17 @@ m = re.match(r"(\d+)\.?(\d+)?", "24")
 groups = m.groups()
 print groups
 
+# overloading __getitem__ problem
+class Vector3f:
+    def __getitem__(self, key):
+        return 19
+v = Vector3f()
+print v[0]
+
+# more string formatting
+print '!'+('%6d%6s%6.2f' % (18,'hoi', 1.17))+'!'
+print '!'+('%*d%*s%*.2f' % (6,18,6,'hoi',6,1.17))+'!'
+
 ''', '''
 output(equal=True)
 
