@@ -784,21 +784,19 @@ str *__add_strs(int n, ...) {
 }
 
 str *str::__join(pyseq<str *> *l, int total_len) {
-    __GC_STRING s;
-    s.resize(total_len);
+    str *s = new str();
+    s->unit.resize(total_len);
     int k = 0;
     for(int i = 0; i < len(l); i++) {
-        __GC_STRING &t = l->units[i]->unit;
-
-        memcpy((void *)(s.data()+k), t.data(), t.size());
-        k += t.size();
-
-        if(unit.size()) {
-            memcpy((void *)(s.data()+k), unit.data(), unit.size());
+        str *t = l->units[i];
+        memcpy((void *)(s->unit.data()+k), t->unit.data(), t->unit.size());
+        k += t->unit.size();
+        if(unit.size() && i < len(l)-1) {
+            memcpy((void *)(s->unit.data()+k), unit.data(), unit.size());
             k += unit.size();
         } 
     }
-    return new str(s);
+    return new str(s->unit);
 }
 
 str *str::join(pyiter<str *> *l) { 
@@ -1734,49 +1732,58 @@ int __fmtpos2(str *fmt) {
     return -1;
 }
 
-void __modfill(str **fmt, pyobj *t, str **s) {
+template<class T> str *do_asprintf(const char *fmt, T t, pyobj *a1, pyobj *a2) {
     char *d;
+    int x;
+    str *r;
+    if(a2)
+        x = asprintf(&d, fmt, ((int_ *)a1)->unit, ((int_ *)a2)->unit, t);
+    else if(a1)
+        x = asprintf(&d, fmt, ((int_ *)a1)->unit, t);
+    else
+        x = asprintf(&d, fmt, t);
+    r = new str(d);
+    free(d); 
+    return r;
+}
+
+void __modfill(str **fmt, pyobj *t, str **s, pyobj *a1, pyobj *a2) {
     char c;
     int i = (*fmt)->unit.find('%');
     int j = __fmtpos(*fmt);
-    int x;
-
+    str *d;
     *s = new str((*s)->unit + (*fmt)->unit.substr(0, i));
+    str *add;
 
     c = (*fmt)->unit[j];
-
     if(c == 's' or c == 'r') {
-        str *add;
         if(c == 's') add = __str(t);
         else add = repr(t);
-
-        if((*fmt)->unit[i+1] == '.') {
-            int maxlen = __int(new str((*fmt)->unit.substr(i+2, j-i-2)));
-            if(maxlen < len(add))
-                add = new str(add->unit.substr(0, maxlen));
-        }
-
-        *s = new str((*s)->unit + add->unit);
+        (*fmt)->unit[j] = 's';
+        add = do_asprintf((*fmt)->unit.substr(i, j+1-i).c_str(), add->unit.c_str(), a1, a2);
     } else if(c  == 'c')
-        *s = new str((*s)->unit + __str(t)->unit);
+        add = __str(t);
     else if(c == '%')
-        *s = new str((*s)->unit + '%');
+        add = new str("%");
     else if(t->__class__ == cl_int_) {
-        x = asprintf(&d, (*fmt)->unit.substr(i, j+1-i).c_str(), ((int_ *)t)->unit);
-        *s = new str((*s)->unit + d);
-        free(d); 
+        add = do_asprintf((*fmt)->unit.substr(i, j+1-i).c_str(), ((int_ *)t)->unit, a1, a2);
     } else { /* cl_float_ */
         if(c == 'H') {
             (*fmt)->unit.replace(j, 1, ".12g");
             j += 3;
         }
-        x = asprintf(&d, (*fmt)->unit.substr(i, j+1-i).c_str(), ((float_ *)t)->unit);
-        *s = new str((*s)->unit + d);
+        add = do_asprintf((*fmt)->unit.substr(i, j+1-i).c_str(), ((float_ *)t)->unit, a1, a2);
         if(c == 'H' && ((float_ *)t)->unit-((int)(((float_ *)t)->unit)) == 0)
-            (*s)->unit += ".0";   
-        free(d); 
+            add->unit += ".0";   
     }
+    *s = (*s)->__add__(add);
     *fmt = new str((*fmt)->unit.substr(j+1, (*fmt)->unit.size()-j-1));
+}
+
+pyobj *modgetitem(list<pyobj *> *vals, int i) {
+    if(i==len(vals))
+        throw new TypeError(new str("not enough arguments for format string"));
+    return vals->__getitem__(i);
 }
 
 str *__mod4(str *fmts, list<pyobj *> *vals) {
@@ -1785,28 +1792,31 @@ str *__mod4(str *fmts, list<pyobj *> *vals) {
     str *fmt = new str(fmts->unit);
     i = 0;
     while((j = __fmtpos(fmt)) != -1) {
+        pyobj *p, *a1, *a2;
+
+        int asterisks = count(fmt->unit.begin(), fmt->unit.begin()+j, '*');
+        a1 = a2 = NULL;
+        if(asterisks==1) {
+            a1 = modgetitem(vals, i++);
+        } else if(asterisks==2) {
+            a1 = modgetitem(vals, i++);
+            a2 = modgetitem(vals, i++);
+        }
+
         char c = fmt->unit[j];
-        pyobj *p;
-        if(c != '%') {
-            if(i==len(vals))
-                throw new TypeError(new str("not enough arguments for format string"));
-            p = vals->__getitem__(i++);
-        }
+        if(c != '%') 
+            p = modgetitem(vals, i++);
+
         if(c == 'c') 
-            __modfill(&fmt, mod_to_c2(p), &r);
-        else if(c == 's' || c == 'r')
-            __modfill(&fmt, p, &r);
-        else if(__GC_STRING("diouxX").find(c) != -1) {
-            if(fmt->unit[j-1] == '*') { /* XXX elaborate */
-                fmt->unit[j-1] = __str(p)->unit[0];
-                p = vals->__getitem__(i++);
-            }
-            __modfill(&fmt, mod_to_int(p), &r);
-        }
+            __modfill(&fmt, mod_to_c2(p), &r, a1, a2);
+        else if(c == 's' || c == 'r') 
+            __modfill(&fmt, p, &r, a1, a2);
+        else if(__GC_STRING("diouxX").find(c) != -1) 
+            __modfill(&fmt, mod_to_int(p), &r, a1, a2);
         else if(__GC_STRING("eEfFgGH").find(c) != -1)
-            __modfill(&fmt, mod_to_float(p), &r);
+            __modfill(&fmt, mod_to_float(p), &r, a1, a2);
         else if(c == '%')
-            __modfill(&fmt, NULL, &r); 
+            __modfill(&fmt, NULL, &r, a1, a2); 
         else
             throw new ValueError(new str("unsupported format character"));
     }

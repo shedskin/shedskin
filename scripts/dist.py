@@ -28,10 +28,10 @@ os.system("echo print \\'hello, world!\\' > %s/test.py" % release)
 
 os.system('tar zcf %s.tgz %s' % (release, release))
 
-os.system('rm blap -R; mkdir blap')
-os.chdir('blap')
-os.system('tar zxf ../%s.tgz' % release)
-os.chdir(release)
-os.system('python unit.py -rf') 
+#os.system('rm blap -R; mkdir blap')
+#os.chdir('blap')
+#os.system('tar zxf ../%s.tgz' % release)
+#os.chdir(release)
+#os.system('python unit.py -rf') 
 
 
