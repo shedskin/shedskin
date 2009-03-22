@@ -1796,8 +1796,13 @@ str *__mod4(str *fmts, list<pyobj *> *vals) {
             __modfill(&fmt, mod_to_c2(p), &r);
         else if(c == 's' || c == 'r')
             __modfill(&fmt, p, &r);
-        else if(__GC_STRING("diouxX").find(c) != -1)
+        else if(__GC_STRING("diouxX").find(c) != -1) {
+            if(fmt->unit[j-1] == '*') { /* XXX elaborate */
+                fmt->unit[j-1] = __str(p)->unit[0];
+                p = vals->__getitem__(i++);
+            }
             __modfill(&fmt, mod_to_int(p), &r);
+        }
         else if(__GC_STRING("eEfFgGH").find(c) != -1)
             __modfill(&fmt, mod_to_float(p), &r);
         else if(c == '%')
