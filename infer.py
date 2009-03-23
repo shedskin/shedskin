@@ -307,9 +307,6 @@ def cartesian_product(node, worklist):
         else:
             argtypes.append(inode(arg).types()) # XXX def arg?
  
-#    if ident == 'get_radiance':
-#        argtypes[1] = argtypes[0]
-
     #print 'argtypes', argtypes, node #, args, argtypes, cartesian(*([funcs]+argtypes))
     return cartesian(*([funcs]+argtypes))
 
