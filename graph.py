@@ -619,7 +619,8 @@ class moduleVisitor(ASTVisitor):
             elif len(node.subs) > 1:
                 self.fakefunc(node, node.expr, '__getitem__', [subscript], func) 
             else:
-                ident = get_ident(subscript) # XXX should model __getitem__ always..
+                #ident = get_ident(subscript) # XXX should model __getitem__ always..
+                ident = '__getitem__'
                 self.fakefunc(node, node.expr, ident, [subscript], func) 
 
     def visitSlice(self, node, func=None):
@@ -1174,7 +1175,7 @@ class moduleVisitor(ASTVisitor):
             getgx().types[fakenode] = set()
             self.addconstraint((inode(rvalue), fakenode), func)
 
-            fakefunc = CallFunc(fakeGetattr3(rvalue, get_ident(Const(i))), [Const(i)])
+            fakefunc = CallFunc(fakeGetattr3(rvalue, '__getitem__'), [Const(i)])
 
             fakenode.callfuncs.append(fakefunc)
             self.visit(fakefunc, func)

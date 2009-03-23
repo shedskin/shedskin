@@ -161,11 +161,6 @@ class list(pyseq):
         cmp(elem, elem)
         elem.__cmp__(elem)
        
-    def __getfirst__(self, i): # XXX remove
-        return self.unit             
-    def __getsecond__(self, i):     
-        return self.unit           
-
 class tuple(pyseq):               
     def __len__(self):           
         return 1                
@@ -185,11 +180,6 @@ class tuple(pyseq):
     def __getitem__(self, i):   
         a = self.unit          
         return a              
-
-    def __getfirst__(self, i):        
-        return self.unit             
-    def __getsecond__(self, i):     
-        return self.unit           
 
     def __slice__(self, x, l, u, s):  
         return self                  
@@ -312,11 +302,6 @@ class str_(pyseq):
     def replace(self, a, b, c=0):             
         return ''                        
 
-    def __getfirst__(self, i):          
-        return ' '                     
-    def __getsecond__(self, i):       
-        return ' '                   
-
     def translate(self, table, delchars=''):
         return ''
 
@@ -380,11 +365,6 @@ class dict(pyiter):
         return (self.unit, self.value)
     def update(self, d):             
         self.__setunit__(d.unit, d.value)
-
-    def __getfirst__(self, i):      
-        return self.value                
-    def __getsecond__(self, i):         
-        return self.value              
 
     def __delete__(self, i):
         pass  

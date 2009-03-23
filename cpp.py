@@ -224,12 +224,6 @@ class generateVisitor(ASTVisitor):
                 if self.constant_constructor(node.expr):
                     self.get_constant(node.expr)
 
-        #for node in self.mergeinh:
-        #    if isinstance(node, (Mul, Add)): # XXX extend, arbitrary methods on constructor? (getitem, find..)
-        #        for child in [node.left, node.right]:
-        #            if self.constant_constructor(child):
-        #                self.consts[child] = self.get_constant(child)
-
     def get_constant(self, node):
         parent = inode(node).parent
         while isinstance(parent, function) and parent.listcomp: # XXX
@@ -335,15 +329,6 @@ class generateVisitor(ASTVisitor):
             # --- class definitions
             for child in node.node.getChildNodes():
                 if isinstance(child, Class): self.visitClass(child, True)
-
-            # --- variables
-            #if self.module != getgx().main_module:
-                #print >>self.out
-                #for v in self.module.mv.globals.values():
-                #    print 'uh', v
-                #    if not v.invisible and not v.imported and not v.name in self.module.funcs:
-                #        print >>self.out, 'extern '+typesetreprnew(v, None)+' '+v.name+';'
-                #if self.module.mv.globals.values(): print >>self.out
 
             # --- defaults
             if self.module.mv.defaults.items(): 
@@ -1744,13 +1729,6 @@ class generateVisitor(ASTVisitor):
         else:
             self.visit(node, func)
 
-    def bastard(self, ident, objexpr):
-        if ident in ['__getfirst__','__getsecond__']:
-           lcp = lowest_common_parents(polymorphic_t(self.mergeinh[objexpr]))
-           if [cl for cl in lcp if cl.ident != 'tuple2']:
-               return True
-        return False
-
     def library_func(self, funcs, modname, clname, funcname):
         for func in funcs:
             if not func.mv.module.builtin or func.mv.module.ident != modname:
@@ -1807,9 +1785,6 @@ class generateVisitor(ASTVisitor):
                len([arg for arg in node.args if not isinstance(arg, Keyword)]) >= 2:
                 error("'key' argument of 'list.sort' is not supported", node, warning=True)
 
-        if self.bastard(ident, objexpr):
-            ident = '__getitem__'
-
         # --- target expression
 
         if node.node in self.mergeinh and [t for t in self.mergeinh[node.node] if isinstance(t[0], function)]: # anonymous function
@@ -1860,33 +1835,28 @@ class generateVisitor(ASTVisitor):
                 self.append('(')
 
         elif method_call:
-#            if isinstance(objexpr, Const) and objexpr.value == '' and ident == 'join' and isinstance(node.args[0], CallFunc) and \
-#                  isinstance(node.args[0].node, Name) and node.args[0].node.name == 'sorted' and \
-#                  self.mergeinh[node.args[0].args[0]] == set([(defclass('str_'), 0)]): # ''.join(sorted(str))
-#                #print 'nnee', objexpr, ident, self.mergeinh[node.args[0].args[0]], node.args
-#                self.visitm(node.args[0].args[0], '->sorted()', func)
-#                return
-#            else:
-                for cl, _ in self.mergeinh[objexpr]:
-                    if cl.ident != 'none' and ident not in cl.funcs:
-                        conv = {'int_': 'int', 'float_': 'float', 'str_': 'str', 'class_': 'class', 'none': 'none'}
-                        clname = conv.get(cl.ident, cl.ident)
-                        error("class '%s' has no method '%s'" % (clname, ident), node, warning=True)
-                self.visitm(node.node, '(', func)
+            for cl, _ in self.mergeinh[objexpr]:
+                if cl.ident != 'none' and ident not in cl.funcs:
+                    conv = {'int_': 'int', 'float_': 'float', 'str_': 'str', 'class_': 'class', 'none': 'none'}
+                    clname = conv.get(cl.ident, cl.ident)
+                    error("class '%s' has no method '%s'" % (clname, ident), node, warning=True)
+
+            # tuple2.__getitem -> __getfirst__/__getsecond
+            lcp = lowest_common_parents(polymorphic_t(self.mergeinh[objexpr]))
+            if (ident == '__getitem__' and len(lcp) == 1 and lcp[0] == defclass('tuple2') and \
+                isinstance(node.args[0], Const) and node.args[0].value in (0,1)):
+                    self.visit(node.node.expr, func)
+                    if node.args[0].value == 0:
+                        self.append('->__getfirst__()')
+                    else:
+                        self.append('->__getsecond__()')
+                    return
+
+            self.visitm(node.node, '(', func)
 
         else:
             error("unbound identifier '"+ident+"'", node)
 
-        #if constructor and self.mergeinh[node] and 'Exception' in [c.ident for c in list(self.mergeinh[node])[0][0].ancestors()]: # XXX self.mergeinh[node], try getopt
-        #    if node.args:
-        #        for n in node.args[:-1]:
-        #            self.visit(n, func)
-        #            self.append(',')
-        #        self.visit(node.args[-1], func)
-        #    self.append('))')
-        #    return
-
-        #elif not funcs:
         if not funcs:
             if constructor: self.append(')')
             self.append(')')
@@ -1900,10 +1870,6 @@ class generateVisitor(ASTVisitor):
                 error('calling functions with different numbers of arguments', node, warning=True)
                 self.append(')')
                 return
-
-        if ident in ['__getfirst__','__getsecond__']:
-            self.append(')')
-            return
 
         if target.mv.module.builtin and target.mv.module.ident == 'path' and ident=='join': # XXX
             pairs = [(arg, target.formals[0]) for arg in node.args]
@@ -2029,7 +1995,10 @@ class generateVisitor(ASTVisitor):
             self.eol()
 
             for i, item in enumerate(nodes):
-                ident, arg = get_ident(Const(i)), ''
+                if i == 0: ident = '__getfirst__'
+                elif i == 1: ident = '__getsecond__'
+                else: ident = '__getitem__'
+                arg = ''
                 if ident == '__getitem__':
                     arg = str(i)
                 selector = '%s->%s(%s)' % (temp, ident, arg)
@@ -2068,13 +2037,6 @@ class generateVisitor(ASTVisitor):
             self.refer(lvalue.expr, func)
             self.append('),')
             self.visit(lvalue.subs[0], func)
-            #else:
-            #    self.append(getmv().tempcount[lvalue.expr]+' = ')
-            #    self.refer(lvalue.expr, func)
-            #    self.eol()
-            #    self.start('')
-            #    self.append('ELEM('+getmv().tempcount[lvalue.expr]+',')
-            #    self.visit(lvalue.subs[0], func)
             self.append(')')
 
         else:
@@ -2497,10 +2459,7 @@ class generateVisitor(ASTVisitor):
 
             self.append(self.connector(node.expr, func))
 
-        if self.bastard(node.attrname, node.expr):
-            ident = '__getitem__'
-        else:
-            ident = node.attrname
+        ident = node.attrname
 
         # property
         lcp = lowest_common_parents(polymorphic_t(self.mergeinh[node.expr]))
