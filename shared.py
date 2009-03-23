@@ -486,14 +486,6 @@ def assign_rec(left, right):
 
     return pairs
 
-def get_ident(node):
-    if not isinstance(node, Const) or not isinstance(node.value, int):
-        return '__getitem__'
-
-    if node.value == 0:  return '__getfirst__'
-    elif node.value == 1: return '__getsecond__'
-    return '__getitem__'
-
 def augmsg(node, msg):
     if hasattr(node, 'augment'): return '__i'+msg+'__'
     return '__'+msg+'__'

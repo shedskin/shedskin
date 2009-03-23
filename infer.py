@@ -350,8 +350,18 @@ def cpa(callnode, worklist):
             if blocked:
                 continue
 
-        # property
         callfunc = callnode.thing
+
+        # tuple2.__getitem__(0/1) -> __getfirst__/__getsecond__
+        if (isinstance(callfunc.node, Getattr) and callfunc.node.attrname == '__getitem__' and \
+            isinstance(callfunc.args[0], Const) and callfunc.args[0].value in (0,1) and \
+            func.parent.mv.module.builtin and func.parent.ident == 'tuple2'):
+                if callfunc.args[0].value == 0:
+                    func = func.parent.funcs['__getfirst__']
+                else:
+                    func = func.parent.funcs['__getsecond__']
+
+        # property
         if isinstance(callfunc.node, Getattr) and callfunc.node.attrname in ['__setattr__', '__getattr__']:
             if isinstance(func.parent, class_) and callfunc.args and callfunc.args[0].value in func.parent.properties:
                 arg = callfunc.args[0].value

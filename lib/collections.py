@@ -118,11 +118,6 @@ class defaultdict:
     def update(self, d):             
         self.__setunit__(d.unit, d.value)
 
-    def __getfirst__(self, i):      
-        return self.value                
-    def __getsecond__(self, i):         
-        return self.value              
-
     def __delete__(self, i):
         pass  
 
