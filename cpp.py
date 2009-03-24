@@ -1066,13 +1066,9 @@ class generateVisitor(ASTVisitor):
             if pref == '': tail = getmv().tempcount[(node,1)][2:]
             else: tail = getmv().tempcount[node][2:]+','+getmv().tempcount[node.list][2:]
 
-            if node.list in self.consts:
-                self.output('FOR_IN%s(%s, %s, %s)' % (pref, assname, self.consts[node.list], tail))
-            else:
-                self.start('FOR_IN%s(%s,' % (pref, assname))
-                self.visit(node.list, func)
-                print >>self.out, self.line+','+tail+')'
-
+            self.start('FOR_IN%s(%s,' % (pref, assname))
+            self.visit(node.list, func)
+            print >>self.out, self.line+','+tail+')'
             self.forbody(node, func)
 
         print >>self.out
