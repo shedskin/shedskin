@@ -847,7 +847,7 @@ class generateVisitor(ASTVisitor):
 
         self.filling_consts = temp
 
-    def visitTuple(self, node, func=None):
+    def visittuplelist(self, node, func=None):
         if not self.filling_consts and node in self.consts:
             self.append(self.consts[node])
             return
@@ -862,22 +862,12 @@ class generateVisitor(ASTVisitor):
         self.append(')')
 
         self.filling_consts = temp
+
+    def visitTuple(self, node, func=None):
+        self.visittuplelist(node, func)
 
     def visitList(self, node, func=None):
-        if not self.filling_consts and node in self.consts:
-            self.append(self.consts[node])
-            return
-
-        temp = self.filling_consts
-        self.filling_consts = False
-
-        ts = typesetreprnew(node, func)
-        self.append('(new '+ts[:-2])
-        self.append('(')
-        self.children_args(node, ts, func)
-        self.append(')')
-
-        self.filling_consts = temp
+        self.visittuplelist(node, func)
 
     def visitAssert(self, node, func=None):
         self.start('ASSERT(')
