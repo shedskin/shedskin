@@ -615,7 +615,7 @@ def ifa():
                 # --- determine backflow paths and creation points per assignment set
                 paths = {}
                 creation_points = {}
-                for assign_set, targets in assignsets.items():
+                for assign_set, targets in assignsets.iteritems():
                     #print 'assignset', assign_set, targets
                     path = backflow_path(targets, (cl,dcpa))
                     #print 'path', path
@@ -636,7 +636,7 @@ def ifa():
                 # --- split off empty assignment sets (eg, [], or [x[0]] where x is None in some template)
                 if assignsets and cl.ident in ['list', 'tuple']: # XXX amaze, msp_ss
                     allcsites = set()
-                    for n, types in getgx().types.items():
+                    for n, types in getgx().types.iteritems():
                         if (cl, dcpa) in types and not n.in_:
                             allcsites.add(n)
 
@@ -656,7 +656,7 @@ def ifa():
                 # --- per node, determine paths it is located on
                 for n in allnodes: n.paths = []
 
-                for assign_set, path in paths.items():
+                for assign_set, path in paths.iteritems():
                     for n in path:
                         n.paths.append(assign_set)
 

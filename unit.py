@@ -16,11 +16,11 @@ groups = m.groups()
 print groups
 
 # overloading __getitem__ problem
-#class Vector3f:
-#    def __getitem__(self, key):
-#        return 19
-#v = Vector3f()
-#print v[0]
+class Vector3f:
+    def __getitem__(self, key):
+        return 19
+v = Vector3f()
+print v[0]
 
 # more string formatting
 print '!'+('%06d%6r%6.2f' % (18,'hoi', 1.17))+'!'
