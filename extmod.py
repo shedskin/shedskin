@@ -17,18 +17,22 @@ def do_extmod(gv):
 
     print >>gv.out, 'namespace __%s__ { /* XXX */\n' % gv.module.ident
 
-    for cl in gv.module.classes.values(): 
+    # filter out unsupported stuff
+    classes = supported_classes(gv.module.classes.values())
+    funcs = supported_funcs(gv, gv.module.funcs.values())
+    vars = supported_vars(getmv().globals.values())
+
+    # classes
+    for cl in classes: 
         do_extmod_class(gv, cl)
 
+    # global functions
     print >>gv.out, '/* global functions */\n'
-
-    # --- global functions
-    funcs = supported_funcs(gv, gv.module.funcs.values())
     for func in funcs:
         do_extmod_method(gv, func)
     do_extmod_methoddef(gv, 'Global_'+gv.module.ident, funcs)
 
-    # --- module init function
+    # module init function
     print >>gv.out, 'PyMODINIT_FUNC init%s(void) {' % gv.module.ident
 
     # initialize modules
@@ -38,14 +42,13 @@ def do_extmod(gv):
     print >>gv.out, '        return;\n'
 
     # add types to module
-    for cl in gv.module.classes.values(): 
+    for cl in classes:
         print >>gv.out, '    if (PyType_Ready(&%sObjectType) < 0)' % cl.ident
         print >>gv.out, '        return;\n'
         print >>gv.out, '    PyModule_AddObject(mod, "%s", (PyObject *)&%sObjectType);' % (cl.ident, cl.ident)
     print >>gv.out
 
     # global variables
-    vars = supported_vars(getmv().globals.values())
     for var in vars:
         varname = gv.cpp_name(var.name)
         if [1 for t in gv.mergeinh[var] if t[0].ident in ['int_', 'float_']]:
@@ -59,7 +62,7 @@ def do_extmod(gv):
     print >>gv.out, '\n} // extern "C"'
 
     # conversion methods to/from CPython/Shedskin
-    for cl in gv.module.classes.values(): 
+    for cl in classes: 
         convert_methods(gv, cl, False)
 
 def do_extmod_methoddef(gv, ident, funcs):
@@ -145,6 +148,11 @@ def supported_funcs(gv, funcs):
                 builtins = False
         if builtins:
             supported.append(func) 
+        else:
+            if isinstance(func.parent, class_):
+                print '*WARNING* method not exported:', func.parent.ident+'.'+func.ident
+            else:
+                print '*WARNING* function not exported:', func.ident
     return supported
 
 def supported_vars(vars): # XXX virtuals?
@@ -159,9 +167,23 @@ def supported_vars(vars): # XXX virtuals?
         try:
             typehu = cpp.typesetreprnew(var, var.parent, check_extmod=True)
         except cpp.ExtmodError:
+            if isinstance(var.parent, class_):
+                print '*WARNING* variable not exported:', var.parent.ident+'.'+var.name
+            else:
+                print '*WARNING* variable not exported:', var.name
             continue
         supported.append(var)
     return supported
+
+def supported_classes(classes, warn=True):
+    result = []
+    for cl in classes:
+        if cl.template_vars:
+            if warn:
+                print '*WARNING* class not exported:', cl.ident
+        else:
+            result.append(cl)
+    return result
 
 def do_extmod_class(gv, cl):
     # determine methods, vars to expose 
@@ -304,6 +326,7 @@ def convert_methods(gv, cl, declare):
         print >>gv.out, '#endif'
 
 def convert_methods2(gv, classes):
+    classes = supported_classes(classes, warn=False)
     print >>gv.out, 'namespace __shedskin__ { /* XXX */\n'
     for cl in classes:
         print >>gv.out, 'template<> __%s__::%s *__to_ss(PyObject *p);' % (gv.module.ident, cl.cpp_name)
