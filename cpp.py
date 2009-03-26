@@ -805,23 +805,7 @@ class generateVisitor(ASTVisitor):
     def visitLambda(self, node, parent=None):
         self.append(getmv().lambdaname[node])
 
-    def visitTuple(self, node, func=None):
-        if not self.filling_consts and node in self.consts:
-            self.append(self.consts[node])
-            return
-
-        temp = self.filling_consts
-        self.filling_consts = False
-
-        ts = typesetreprnew(node, func)
-        self.append('(new '+ts[:-2])
-        self.children_args(node, ts, func)
-        self.append(')')
-
-        self.filling_consts = temp
-
     def children_args(self, node, ts, func=None): 
-        self.append('(')
         if len(node.getChildNodes()): 
             self.append(str(len(node.getChildNodes()))+', ')
 
@@ -832,7 +816,6 @@ class generateVisitor(ASTVisitor):
                 self.append('(double)(')
 
             if child in getmv().tempcount:
-                #print 'jahoor tempcount', child
                 self.append(getmv().tempcount[child])
             else:
                 self.visit(child, func)
@@ -852,6 +835,7 @@ class generateVisitor(ASTVisitor):
         temp = self.filling_consts
         self.filling_consts = False
         self.append('(new '+typesetreprnew(node, func)[:-2]+'(')
+
         if node.items:
             self.append(str(len(node.items))+', ')
 
@@ -860,6 +844,23 @@ class generateVisitor(ASTVisitor):
             if (key, value) != node.items[-1]:
                 self.append(', ')
         self.append('))')
+
+        self.filling_consts = temp
+
+    def visitTuple(self, node, func=None):
+        if not self.filling_consts and node in self.consts:
+            self.append(self.consts[node])
+            return
+
+        temp = self.filling_consts
+        self.filling_consts = False
+
+        ts = typesetreprnew(node, func)
+        self.append('(new '+ts[:-2])
+        self.append('(')
+        self.children_args(node, ts, func)
+        self.append(')')
+
         self.filling_consts = temp
 
     def visitList(self, node, func=None):
@@ -872,6 +873,7 @@ class generateVisitor(ASTVisitor):
 
         ts = typesetreprnew(node, func)
         self.append('(new '+ts[:-2])
+        self.append('(')
         self.children_args(node, ts, func)
         self.append(')')
 
@@ -2671,6 +2673,8 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None, check_extmo
     cl = lcp.pop() 
 
     if check_extmod and cl.mv.module.builtin and not (cl.mv.module.ident == 'builtin' and cl.ident in ['int_', 'float_', 'complex', 'str_', 'list', 'tuple', 'tuple2', 'dict', 'set', 'frozenset', 'none']):
+        raise ExtmodError()
+    elif check_extmod and not cl.mv.module.builtin and cl.template_vars:
         raise ExtmodError()
 
     # --- simple built-in types
