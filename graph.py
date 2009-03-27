@@ -793,10 +793,7 @@ class moduleVisitor(ASTVisitor):
 
         for child in node.getChildNodes():
             self.visit(child, func)
-            newnode = inode(child)
-            pnode.fakenodes.append(newnode)
-
-            self.fakefunc(newnode, child, '__str__', [], func)
+            self.fakefunc(inode(child), child, '__str__', [], func)
 
     def tempvar(self, node, func=None):
         if node in getgx().parent_nodes:

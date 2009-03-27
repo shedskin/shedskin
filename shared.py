@@ -247,14 +247,13 @@ class cnode:
         self.thing = thing
         self.dcpa = dcpa
         self.cpa = cpa
-        self.fakenodes = []
         self.fakefunc = None
         self.parent = parent
         self.defnodes = False # if callnode, notification nodes were made for default arguments
         self.mv = getmv()
         self.constructor = False # allocation site 
         self.copymetoo = False
-        self.filters = [] # run-time type filters such as isinstance()
+#        self.filters = [] # run-time type filters such as isinstance()
         self.fakert = False
      
         getgx().cnode[self.thing, self.dcpa, self.cpa] = self
@@ -269,9 +268,6 @@ class cnode:
 
         self.in_list = 0        # node in work-list
         self.callfuncs = []    # callfuncs to which node is object/argument
-        self.copybyvalue = {}   # node is copy-by-value argument (int/str/float type->number)
-
-        #if isinstance(thing, CallFunc): self.changed = 1 # object/arguments have changed
 
         self.nodecp = set()        # already analyzed cp's # XXX kill! kill!
         self.changed = 0
