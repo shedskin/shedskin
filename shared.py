@@ -255,14 +255,8 @@ class cnode:
         self.constructor = False # allocation site 
         self.copymetoo = False
         self.filters = [] # run-time type filters such as isinstance()
-        #self.parent_callfunc = None
         self.fakert = False
      
-        if isinstance(self.thing, CallFunc) and isinstance(self.thing.node, Name) and self.thing.node.name == 'set': 
-            if (self.thing, self.dcpa, self.cpa) in getgx().cnode:
-                print 'killing something!', self
-                traceback.print_stack() 
-
         getgx().cnode[self.thing, self.dcpa, self.cpa] = self
 
         # --- in, outgoing constraints
@@ -288,7 +282,6 @@ class cnode:
             if isinstance(parent, function):
                 if self not in parent.nodes:
                     parent.nodes.add(self)
-                    #parent.lnodes.append(self)
 
     def copy(self, dcpa, cpa, worklist=None): # XXX to infer.py
         #if not self.mv.module.builtin: print 'copy', self

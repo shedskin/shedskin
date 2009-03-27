@@ -79,11 +79,6 @@ def func_copy(func, dcpa, cpa, worklist=None, cart=None):
     for node in func.nodes:
         newnode = node.copy(dcpa, cpa, worklist)
 
-    # --- copy tuple seed for varargs
-    if func.varargs:
-        var = func.vars[func.varargs]
-        getgx().types[getgx().cnode[var,dcpa,cpa]] = getgx().types[inode(var)].copy()
-
     # --- iterative flow analysis: seed allocation sites in new template
     ifa_seed_template(func, cart, dcpa, cpa, worklist)
 
