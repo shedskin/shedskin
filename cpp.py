@@ -2728,7 +2728,6 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None, check_extmo
     # --- final type representation
     return namespace+ident+sep[0]+', '.join(subtypes)+sep[1]+ptr
 
-
 # --- separate types in multiple duplicates
 def typesplit(node, parent):
     split = {} 
@@ -2763,7 +2762,6 @@ def typesplit(node, parent):
         split[0, 0] = inode(node).types()
 
     return split
-
 
 def polymorphic_cl(classes):
     cls = set([cl for cl in classes])
@@ -2814,7 +2812,6 @@ def hmcpa(func):
         if len(cpas) == 1: got_one = 1
     return got_one
     
-
 # --- assignment (incl. passing arguments, returning values) may require a cast 
 def assign_needs_cast(arg, func, formal, target):
     argsplit = typesplit(arg, func)
@@ -2835,10 +2832,6 @@ def assign_needs_cast_rec(argsplit, func, formalsplit, target):
     if not argclasses and formalclasses: # a = [[]]
         return True
 
-    #if len(formalclasses) > 1 and len(argclasses) == 1:
-    #    if not template_match(argsplit, func) and not template_match(formalsplit, target):
-    #        return True
-         
     if defclass('none') in formalclasses:
         formalclasses.remove(defclass('none'))
 
@@ -2963,11 +2956,9 @@ def template_parameters():
         if func.template_vars and not func.mv.module.builtin:
             print template_repr(func)+func.ident 
 
-
 def template_repr(parent):
     if not parent or not parent.template_vars:
         return ''
-
     return 'template <'+', '.join(['class '+n for n in parent.template_vars.keys()])+'> '
 
 # --- detect template variables: recurse over type, creating template variables for each polymorphic variable
@@ -3015,8 +3006,6 @@ def template_detect_rec(split, parent):
         template_detect_rec(subsplit, parent)
 
 def insert_template_var(split, parent):
-#    print 'insert', parent, split
-    
     var_nr = len(parent.template_vars)
     if is_method(parent): 
         var_nr += len(parent.parent.template_vars)
@@ -3027,7 +3016,6 @@ def insert_template_var(split, parent):
     for (dcpa, cpa), types in split.items():
         newnode = cnode(new_tvar, dcpa, cpa)
         getgx().types[newnode] = types
-
 
 # --- disable template variables, if a truly polymorphic object reaches them
 def template_disable_rec(argsplit, func, formalsplit, target):
@@ -3053,7 +3041,6 @@ def template_disable_rec(argsplit, func, formalsplit, target):
         formalsubsplit = split_subsplit(formalsplit, tvar)
 
         template_disable_rec(argsubsplit, func, formalsubsplit, target)
-
 
 # --- recursively visit all variable types, to see if ints/floats flow together with each other or pointer types
 def confused_vars():
@@ -3098,8 +3085,6 @@ def confused_var_rec(split, parent, var, dichotomy=False):
         subsplit = split_subsplit(split, tvar)
         confused_var_rec(subsplit, parent, var, dichotomy)
 
-
-
 # --- number classes with low and high numbers, to enable constant-time subclass check
 def number_classes():
     counter = 0
@@ -3137,10 +3122,6 @@ def template_match(split, parent, orig_parent=None):
                 if not (var,dcpa,0) in getgx().cnode: continue # XXX ahm..
                 if isinstance(parent, class_) and dcpa in parent.unused: # XXX research nicer fix
                     continue
-
-                #intfloat = [t for t in types if t[0].ident in ['int_', 'float_']]
-                #if len(polymorphic_t(types)) > 1 and intfloat: 
-                #    match = False
 
                 if isinstance(parent, function):
                     node = getgx().cnode[var, dcpa, cpa]
