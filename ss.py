@@ -373,6 +373,7 @@ def generate_code():
                 line += ' -I/opt/local/include' # XXX
             if not getgx().wrap_around_check: line += ' -DNOWRAP' 
             if not getgx().bounds_checking: line += ' -DNOBOUNDS' 
+            if getgx().fast_random: line += ' -DFASTRANDOM' 
             if getgx().extension_module: 
                 if sys.platform == 'win32': line += ' -I%s/include -D__SS_BIND' % prefix
                 else: line += ' -g -fPIC -D__SS_BIND ' + includes
@@ -457,18 +458,19 @@ def main():
 
     # --- command-line options
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'cheibwf:ad:', ['infinite', 'extmod', 'bounds', 'nowrap', 'flags=', 'dir='])
+        opts, args = getopt.getopt(sys.argv[1:], 'bichefw:ad:r', ['infinite', 'extmod', 'bounds', 'nowrap', 'flags=', 'dir=', 'random'])
     except getopt.GetoptError:
         usage()
     
     for o, a in opts:
         if o in ['-h', '--help']: usage()
-        if o in ['-b', '--bounds']: getgx().bounds_checking = True
+        if o in ['-b', '--nobounds']: getgx().bounds_checking = True
         if o in ['-e', '--extmod']: getgx().extension_module = True
         if o in ['-a', '--noann']: getgx().annotation = False
         if o in ['-i', '--infinite']: getgx().avoid_loops = True
         if o in ['-d', '--dir']: getgx().output_dir = a
         if o in ['-w', '--nowrap']: getgx().wrap_around_check = False
+        if o in ['-r', '--random']: getgx().fast_random = True
         if o in ['-f', '--flags']: 
             if not os.path.isfile(a): 
                 print "*ERROR* no such file: '%s'" % a

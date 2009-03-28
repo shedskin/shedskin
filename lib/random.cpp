@@ -171,8 +171,12 @@ double Random::random() {
     /**
     Generate a random number on [0,1)-real-interval.
     */
-    
+   
+#ifdef FASTRANDOM
+    return rand() / ((double)RAND_MAX+1);
+#else
     return this->_genrand_res53();
+#endif
 }
 
 double Random::normalvariate(double mu, double sigma) {
@@ -215,6 +219,10 @@ void *Random::seed() {
     return this->seed(-1);
 }
 void *Random::seed(int a) {
+#ifdef FASTRANDOM
+    srand(a);
+    return NULL;
+#endif
     /**
     Initialize the random number generator with a single seed number.
     
