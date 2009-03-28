@@ -1179,7 +1179,7 @@ template<class T> static inline int __wrap(T a, int i) {
     #ifndef NOWRAP
     if(i<0) return len(a)+i;
     #endif
-    #ifdef BOUNDS 
+    #ifndef NOBOUNDS 
         if(i<0 || i>= len(a)) 
             throw new IndexError(new str("index out of range")); 
     #endif

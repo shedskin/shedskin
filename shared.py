@@ -52,7 +52,7 @@ class globalInfo: # XXX add comments, split up
         self.loopstack = [] # track nested loops
         self.comments = {}
         self.wrap_around_check = True
-        self.bounds_checking = False
+        self.bounds_checking = True
         self.extension_module = False
         self.flags = None
         self.method_refs = set()
