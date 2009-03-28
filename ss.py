@@ -372,7 +372,7 @@ def generate_code():
             if sys.platform == 'darwin' and os.path.isdir('/opt/local/include'): 
                 line += ' -I/opt/local/include' # XXX
             if not getgx().wrap_around_check: line += ' -DNOWRAP' 
-            if getgx().bounds_checking: line += ' -DBOUNDS' 
+            if not getgx().bounds_checking: line += ' -DNOBOUNDS' 
             if getgx().extension_module: 
                 if sys.platform == 'win32': line += ' -I%s/include -D__SS_BIND' % prefix
                 else: line += ' -g -fPIC -D__SS_BIND ' + includes
@@ -428,7 +428,7 @@ def usage():
     print """Usage: shedskin [OPTION]... FILE
 
  -a --noann             Don't output annotated source code
- -b --bounds            Enable bounds checking
+ -b --nobounds          Disable bounds checking
  -d --dir               Specify alternate directory for output files
  -e --extmod            Generate extension module
  -f --flags             Provide alternate Makefile flags
