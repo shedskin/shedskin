@@ -433,6 +433,7 @@ def usage():
  -e --extmod            Generate extension module
  -f --flags             Provide alternate Makefile flags
  -i --infinite          Try to avoid infinite analysis time 
+ -r --random            Use fast random number generator 
  -w --nowrap            Disable wrap-around checking 
 """
     sys.exit(1)

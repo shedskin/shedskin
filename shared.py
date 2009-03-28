@@ -243,6 +243,8 @@ class module:
 # --- constraint graph node
 
 class cnode:
+    __slots__ = ['thing', 'dcpa', 'cpa', 'fakefunc', 'parent', 'defnodes', 'mv', 'constructor', 'copymetoo', 'fakert', 'in_', 'out', 'fout', 'in_list', 'callfuncs', 'nodecp', 'changed']
+
     def __init__(self, thing, dcpa=0, cpa=0, parent=None):
         self.thing = thing
         self.dcpa = dcpa
