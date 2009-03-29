@@ -458,13 +458,13 @@ def main():
 
     # --- command-line options
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'bichefw:ad:r', ['infinite', 'extmod', 'bounds', 'nowrap', 'flags=', 'dir=', 'random'])
+        opts, args = getopt.getopt(sys.argv[1:], 'bichef:wad:r', ['infinite', 'extmod', 'bounds', 'nowrap', 'flags=', 'dir=', 'random'])
     except getopt.GetoptError:
         usage()
     
     for o, a in opts:
         if o in ['-h', '--help']: usage()
-        if o in ['-b', '--nobounds']: getgx().bounds_checking = True
+        if o in ['-b', '--nobounds']: getgx().bounds_checking = False
         if o in ['-e', '--extmod']: getgx().extension_module = True
         if o in ['-a', '--noann']: getgx().annotation = False
         if o in ['-i', '--infinite']: getgx().avoid_loops = True
