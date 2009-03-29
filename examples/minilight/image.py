@@ -29,9 +29,9 @@ class Image(object):
     def add_to_pixel(self, x, y, radiance):
         if x >= 0 and x < self.width and y >= 0 and y < self.height:
             index = (x + ((self.height - 1 - y) * self.width)) * 3
-            for a in radiance.as_list():
-                self.pixels[index] += a
-                index += 1
+            self.pixels[index] += radiance.x
+            self.pixels[index+1] += radiance.y
+            self.pixels[index+2] += radiance.z
 
     def get_formatted(self, out, iteration):
         divider = 1.0 / ((iteration if iteration > 0 else 0) + 1)
