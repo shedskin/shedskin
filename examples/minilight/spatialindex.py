@@ -53,17 +53,18 @@ class SpatialIndex(object):
     def get_intersection(self, ray_origin, ray_direction, last_hit, start=None):
         start = start if start else ray_origin
         hit_object = hit_position = None
+        b0, b1, b2, b3, b4, b5 = self.bound
         if self.is_branch:
-            sub_cell = 1 if start[0] >= (self.bound[0] + self.bound[3]) * 0.5 else 0
-            if start[1] >= (self.bound[1] + self.bound[4]) * 0.5:
+            sub_cell = 1 if start.x >= (b0+b3) * 0.5 else 0
+            if start.y >= (b1+b4) * 0.5:
                 sub_cell |= 2
-            if start[2] >= (self.bound[2] + self.bound[5]) * 0.5:
+            if start.z >= (b2+b5) * 0.5:
                 sub_cell |= 4
             cell_position = start
             while True:
-                if self.vector[sub_cell]:
+                if self.vector[sub_cell] != None:
                     hit_object, hit_position = self.vector[sub_cell].get_intersection(ray_origin, ray_direction, last_hit, cell_position)
-                    if hit_object:
+                    if hit_object != None:
                         break
                 step = 1.797e308
                 axis = 0
@@ -86,14 +87,14 @@ class SpatialIndex(object):
             for item in self.items:
                 if item != last_hit:
                     distance = item.get_intersection(ray_origin, ray_direction)
-                    if distance >= 0.0 and (distance < nearest_distance):
+                    if 0.0 <= distance < nearest_distance:
                         hit = ray_origin + ray_direction * distance
-                        if (self.bound[0] - hit[0] <= TOLERANCE) and \
-                           (hit[0] - self.bound[3] <= TOLERANCE) and \
-                           (self.bound[1] - hit[1] <= TOLERANCE) and \
-                           (hit[1] - self.bound[4] <= TOLERANCE) and \
-                           (self.bound[2] - hit[2] <= TOLERANCE) and \
-                           (hit[2] - self.bound[5] <= TOLERANCE):
+                        if (b0 - hit.x <= TOLERANCE) and \
+                           (hit.x - b3 <= TOLERANCE) and \
+                           (b1 - hit.y <= TOLERANCE) and \
+                           (hit.y - b4 <= TOLERANCE) and \
+                           (b2 - hit.z <= TOLERANCE) and \
+                           (hit.z - b5 <= TOLERANCE):
                                hit_object = item
                                hit_position = hit
                                nearest_distance = distance

@@ -67,13 +67,17 @@ class Triangle(object):
         tvy = ray_origin.y - v0.y
         tvz = ray_origin.z - v0.z
         u = (tvx * pvx + tvy * pvy + tvz * pvz) * inv_det
-        if u < 0.0 or u > 1.0:
+        if u < 0.0: 
+            return -1.0
+        elif u > 1.0: 
             return -1.0
         qvx = tvy * e1z - tvz * e1y
         qvy = tvz * e1x - tvx * e1z
         qvz = tvx * e1y - tvy * e1x
         v = (ray_direction.x * qvx + ray_direction.y * qvy + ray_direction.z * qvz) * inv_det
-        if v < 0.0 or u + v > 1.0:
+        if v < 0.0:
+            return -1.0
+        elif u + v > 1.0:
             return -1.0
         t = (e2x * qvx + e2y * qvy + e2z * qvz) * inv_det
         if t < 0.0:
