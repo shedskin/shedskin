@@ -26,6 +26,26 @@ print v[0]
 print '!'+('%06d%6r%6.2f' % (18,'hoi', 1.17))+'!'
 print '!'+('%0*d%*s%*.*f' % (6,18,6,'hoi',8,2,1.171))+'!'
 
+# and/or funtest (already worked)
+hoppa = (17, 18)
+a, b = hoppa or (19,20)
+print a, b
+
+hoppa = None
+a, b = hoppa or (19,20)
+print a, b
+
+x = [1,2]
+y = [3,4,5]
+c = x and y or None
+print c 
+
+y = None
+z = None
+c = x and y or z
+print c
+
+ 
 ''', '''
 output(equal=True)
 
