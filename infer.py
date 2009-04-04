@@ -115,7 +115,7 @@ def cartesian(*lists):
             result.append(x + (y,))
     return result
   
-def seed_nodes():
+def seed_nodes(): # XXX redundant - can be removed?
     for node in getgx().types:
         if isinstance(node.thing, Name):
             if node.thing.name in ['True', 'False']:

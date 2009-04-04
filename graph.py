@@ -1405,6 +1405,8 @@ class moduleVisitor(ASTVisitor):
         if node.name in ['None', 'True', 'False']: 
             if node.name == 'None': # XXX also bools, remove def seed_nodes()
                 self.instance(node, defclass('none'), func)
+            else:
+                self.instance(node, defclass('int_'), func)
             return
 
         if func and node.name in func.globals:

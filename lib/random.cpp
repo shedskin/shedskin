@@ -222,7 +222,7 @@ void *Random::seed(int a) {
 #ifdef FASTRANDOM
     srand(a);
     return NULL;
-#endif
+#else
     /**
     Initialize the random number generator with a single seed number.
     
@@ -242,6 +242,7 @@ void *Random::seed(int a) {
     this->gauss_next = 0.0;
     this->gauss_switch = 0;
     return NULL;
+#endif
 }
 
 double Random::weibullvariate(double alpha, double beta) {
