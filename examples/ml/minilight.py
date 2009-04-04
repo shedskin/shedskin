@@ -4,9 +4,6 @@
 #  http://www.hxa7241.org/
 
 
-#import psyco
-#psyco.full()
-
 from camera import Camera
 from image import Image
 from scene import Scene
@@ -71,34 +68,37 @@ def save_image(image_file_pathname, image, frame_no):
     image.get_formatted(image_file, frame_no - 1)
     image_file.close()
 
+def main(arg):
+    print BANNER
+    model_file_pathname = arg
+    image_file_pathname = model_file_pathname + '.ppm'
+    model_file = open(model_file_pathname, 'r')
+    if model_file.next().strip() != MODEL_FORMAT_ID:
+        raise 'invalid model file'
+    for line in model_file:
+        if not line.isspace():
+            iterations = int(line)
+            break
+    image = Image(model_file)
+    camera = Camera(model_file)
+    scene = Scene(model_file, camera.view_position)
+    model_file.close()
+    last_time = time() - (SAVE_PERIOD + 1)
+    try:
+        for frame_no in range(1, iterations + 1):
+            camera.get_frame(scene, image)
+            if SAVE_PERIOD < time() - last_time or frame_no == iterations:
+                last_time = time()
+                save_image(image_file_pathname, image, frame_no)
+            stdout.write('\b' * ((int(log10(frame_no - 1)) if frame_no > 1 else -1) + 12) + 'iteration: %u' % frame_no)
+            stdout.flush()
+        print '\nfinished'
+    except KeyboardInterrupt:
+        save_image(image_file_pathname, image, frame_no)
+        print '\ninterupted'
+
 if __name__ == '__main__':
     if len(argv) < 2 or argv[1] == '-?' or argv[1] == '--help':
         print HELP
     else:
-        print BANNER
-        model_file_pathname = argv[1]
-        image_file_pathname = model_file_pathname + '.ppm'
-        model_file = open(model_file_pathname, 'r')
-        if model_file.next().strip() != MODEL_FORMAT_ID:
-            raise 'invalid model file'
-        for line in model_file:
-            if not line.isspace():
-                iterations = int(line)
-                break
-        image = Image(model_file)
-        camera = Camera(model_file)
-        scene = Scene(model_file, camera.view_position)
-        model_file.close()
-        last_time = time() - (SAVE_PERIOD + 1)
-        try:
-            for frame_no in range(1, iterations + 1):
-                camera.get_frame(scene, image)
-                if SAVE_PERIOD < time() - last_time or frame_no == iterations:
-                    last_time = time()
-                    save_image(image_file_pathname, image, frame_no)
-                stdout.write('\b' * ((int(log10(frame_no - 1)) if frame_no > 1 else -1) + 12) + 'iteration: %u' % frame_no)
-                stdout.flush()
-            print '\nfinished'
-        except KeyboardInterrupt:
-            save_image(image_file_pathname, image, frame_no)
-            print '\ninterupted'
+        main(argv[1])
