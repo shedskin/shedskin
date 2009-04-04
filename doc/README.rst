@@ -14,6 +14,7 @@ Shed Skin Tutorial
 .. _GHOP: http://code.google.com/opensource/ghop/
 .. _Boehm: http://www.hpl.hp.com/personal/Hans_Boehm/gc/ 
 .. _PCRE: http://www.pcre.org/
+.. _Gprof2Dot: http://code.google.com/p/jrfonseca/wiki/Gprof2Dot
 
 .. contents::
 
@@ -471,21 +472,22 @@ Command-line Options
 The ``shedskin`` command can be given the following options: ::
 
     -a --noann             Don't output annotated source code
-    -b --bounds            Enable bounds checking
+    -b --nobounds          Disable bounds checking
     -d --dir               Specify alternate directory for output files
     -e --extmod            Generate extension module
     -f --flags             Provide alternate Makefile flags
     -i --infinite          Try to avoid infinite analysis time 
+    -r --random            Use fast random number generator
     -w --nowrap            Disable wrap-around checking 
 
 For example, to compile the file ``test.py`` as an extension module, type ``shedskin –e test`` or ``shedskin ––extmod test``.
 
-By default and for speed, **Shed Skin** does not raise exceptions for index out-of-bounds errors. Instead, these can be turned on with the ``--bounds`` option. Without it, the following code gives a spurious value rather than raising an exception: ::
+In Python, exceptions are raised for index out-of-bounds errors, as in the following example. Because checking for these errors can slow down certain programs, it can be turned off with the ``--nobounds`` option. ::
 
     a = [1, 2, 3]
     print a[5] # invalid index: out of bounds
 
-The ``--nowrap`` option can further speed up program execution by a modest amount, at the risk of giving wrong values for negative indices (``a[-1]`` in the above example.) Before using this option, make sure that your code will run safely with it.
+Also, negative index values can often be used to count 'backwards' (``a[-1]`` in the example). Because checking for this can also slow down certain programs, it can be turned off with the ``--nowrap`` option.
 
 .. _Tips and Tricks:
 
