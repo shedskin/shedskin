@@ -494,16 +494,26 @@ Also, negative index values can often be used to count 'backwards' (``a[-1]`` in
 Tips and Tricks
 ---------------
 
-**Tips**
+**Performance**
+
+1. Allocating many small objects (e.g. by using ``zip``) typically does not slow down Python programs by much. However, after compilation to C++, it can quickly become a bottleneck. The key to getting excellent performance is to allocate as few objects as possible. 
+
+2. **Shed Skin** takes the flags it sends to the C++ compiler from the ``FLAGS`` file in the **Shed Skin** working directory. These flags can be modified or overruled by creating a local file with the same name, or by directly editing the generated Makefile. The following flags typically give good results: ::
+
+    -O3 -s -fomit-frame-pointer -msse2
+
+3. Profile-guided optimization can help to squeeze out even more performance. For a recent version of GCC, first compile and run the generated code with ``-fprofile-generate``, then with ``fprofile-use``.
+
+4. Several Python features (that may slow down your program) are not always necessary, and can be turned off for generated code. See the section `Command-line Options`_ for details. 
+
+5. When optimizing, it is extremely useful to know exactly how much time is spent in each part of your program. The program `Gprof2Dot`_ can be used to generate beautiful graphs for both the Python code and the compiled code.
+
+**Other tips**
 
 1. When recompiling an extension module, ``make`` will fail if the ``.pyd`` or ``.so`` file can’t be overwritten. This problem may occur when using **IPython**: after importing a module, it is impossible to overwrite the ``.pyd`` or ``.so`` file as long as **IPython** is kept open.
 
 2. If you modify a module after compiling it with **Shed Skin**, you may find yourself unable to import the new version (e.g. to test it in **CPython** before recompiling with **Shed Skin**) until you delete the corresponding ``.pyd`` or ``.so`` file.
  
-3. **Shed Skin** takes the flags it sends to the C++ compiler from the ``FLAGS`` file in the **Shed Skin** working directory. These flags can be overridden by creating a local file with the same name.
-
-4. Allocating many small objects (e.g. by using ``zip``) typically does not slow down Python programs by much. However, after compilation to C++, it can quickly become a bottleneck. 
-
 **Tricks**
 
 1. The used type inference techniques can end up in an infinite loop, especially for larger programs. If this happens, it can help to run **Shed Skin** with the ``--infinite`` command-line option.
