@@ -44,8 +44,28 @@ y = None
 z = None
 c = x and y or z
 print c
-
  
+# TI problem
+def rungame(strategy, verbose):
+    strategy()
+
+def s_bestinfo():
+    z = [0][0]
+    print z
+
+def s_worstinfo():
+    z = [0][0]
+    print z
+
+def eval_strategy(strategy):
+    rungame(strategy, False)
+
+def main():
+    eval_strategy(s_bestinfo)
+    eval_strategy(s_worstinfo)
+
+main()
+
 ''', '''
 output(equal=True)
 
