@@ -45,16 +45,16 @@ z = None
 c = x and y or z
 print c
  
-# TI problem
+# TI problem (seeding bool)
 def rungame(strategy, verbose):
     strategy()
 
 def s_bestinfo():
-    z = [0][0]
+    z = [0]
     print z
 
 def s_worstinfo():
-    z = [0][0]
+    z = [0]
     print z
 
 def eval_strategy(strategy):
