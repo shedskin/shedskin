@@ -2895,69 +2895,6 @@ def template_parameters():
 
     return
 
-    for cl in nonbuiltinclasses: 
-        for var in cl.vars.values():
-            template_detect(var, cl)
-
-    allfuncs = getgx().allfuncs.copy() 
-    allfuncs.update(getgx().modules['builtin'].funcs.values())
- 
-    for func in allfuncs:
-        #if func.mv.module.ident != 'builtin':
-            formals = func.formals
-            if func.defaults:
-                formals = formals[:-len(func.defaults)]
-            for formal in formals:
-                if func.parent and formal == 'self': continue
-                template_detect(func.vars[formal], func)
-
-    # --- remove template variables until the C++ compiler exactly knows all types
-    #     (uncertainty arises from passing truly polymorphic object into parameterized arguments)
-    getgx().changed = True
-    while getgx().changed:
-        getgx().changed = False
-
-        for node in getgx().merged_all:
-            if isinstance(node, CallFunc):
-                objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr = analyze_callfunc(node)
-                if ident and ident.startswith('__'): continue # XXX
-
-                targets = callfunc_targets(node, getgx().merged_all) # XXX getting targets, pairs in sep func..
-                for target in targets:
-                    if isinstance(target.parent, class_) and target.parent.module.ident == 'builtin':
-                        continue
-
-                    pairs = connect_actual_formal(node, target)
-
-                    for (lvalue, rvalue) in pairs:
-                        if isinstance(lvalue, tuple) or isinstance(rvalue, tuple): 
-                            continue
-                        argsplit = typesplit(lvalue, inode(node).parent)
-                        formalsplit = typesplit(rvalue, target)
-                        template_disable_rec(argsplit, inode(node).parent, formalsplit, target)
-
-        for parent in getgx().allfuncs.union(getgx().allclasses):
-            new_dict = {}
-            var_nr = 0
-            if is_method(parent): 
-                var_nr = len(parent.parent.template_vars)
-
-            for tvar in parent.template_vars.values():
-                if not tvar.template_disabled: 
-                    tvar.name = string.ascii_uppercase[var_nr]
-                    new_dict[tvar.name] = tvar
-                    var_nr += 1
-
-            parent.template_vars = new_dict
-             
-    # --- output generic classes/functions
-    for cl in getgx().allclasses: 
-        if cl.template_vars and not cl.mv.module.builtin:
-            print template_repr(cl)+'class '+cl.ident
-    for func in getgx().allfuncs:
-        if func.template_vars and not func.mv.module.builtin:
-            print template_repr(func)+func.ident 
-
 def template_repr(parent):
     if not parent or not parent.template_vars:
         return ''
@@ -3018,31 +2955,6 @@ def insert_template_var(split, parent):
     for (dcpa, cpa), types in split.items():
         newnode = cnode(new_tvar, dcpa, cpa)
         getgx().types[newnode] = types
-
-# --- disable template variables, if a truly polymorphic object reaches them
-def template_disable_rec(argsplit, func, formalsplit, target):
-    argclasses = polymorphic_cl(split_classes(argsplit))
-    formalclasses = polymorphic_cl(split_classes(formalsplit))
-
-    if len(formalclasses) > 1:
-        lcp = lowest_common_parents(argclasses)
-        if len(lcp) == 2 and defclass('int_') in lcp and defclass('float_') in lcp: # XXX
-            return
-        if len(lcp) > 1 and not template_match(argsplit, func) and template_match(formalsplit, target) and not template_match(formalsplit, target).template_disabled:
-            getgx().changed = True
-            template_match(formalsplit, target).template_disabled = True
-        return
-
-    elif len(formalclasses) == 0:
-        return
-        
-    cl = formalclasses.pop()
-
-    for tvar in cl.template_vars: # XXX all polymorphic variables? 
-        argsubsplit = split_subsplit(argsplit, tvar)
-        formalsubsplit = split_subsplit(formalsplit, tvar)
-
-        template_disable_rec(argsubsplit, func, formalsubsplit, target)
 
 # --- recursively visit all variable types, to see if ints/floats flow together with each other or pointer types
 def confused_vars():
