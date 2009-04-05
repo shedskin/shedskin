@@ -507,8 +507,7 @@ def ifa():
     redundant = {} # {redundant contour: similar contour we will map it to}
     removals = [] # [removed contour, ..]
 
-    classes = [defclass('list'), defclass('tuple'), defclass('tuple2'), defclass('dict'), defclass('set'),defclass('frozenset')]+[cl for cl in getgx().allclasses if cl.ident not in ['str_','int_','float_','none','pyseq','pyset','class_','list','tuple','tuple2','dict','set','frozenset']]
-
+    classes = [cl for cl in getgx().allclasses if cl.mv.module.builtin and cl.ident in ['list', 'tuple', 'tuple2', 'dict', 'set', 'frozenset', 'deque', 'defaultdict', '__iter']]
     for cl in classes:
         cl.splits = {}
 
@@ -517,9 +516,6 @@ def ifa():
     sys.stdout.flush()
 
     for cl in classes:
-        if cl.ident not in ['str_','int_','float_','none','pyiter','pyseq','class_','list','tuple','tuple2','dict','set', '__iter']:
-            continue
-
         if split or redundant or removals:   
             return split, redundant, removals
             
