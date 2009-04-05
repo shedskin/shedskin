@@ -517,7 +517,7 @@ def ifa():
     sys.stdout.flush()
 
     for cl in classes:
-        if getgx().avoid_loops and cl.ident not in ['str_','int_','float_','none','pyiter','pyseq','class_','list','tuple','tuple2','dict','set', '__iter']:
+        if cl.ident not in ['str_','int_','float_','none','pyiter','pyseq','class_','list','tuple','tuple2','dict','set', '__iter']:
             continue
 
         if split or redundant or removals:   
@@ -813,8 +813,8 @@ def iterative_dataflow_analysis():
 
     while True:
         getgx().iterations += 1
-        if getgx().avoid_loops and getgx().iterations > 30:
-            print '\n*WARNING* reached maximum number of iterations, aborting'
+        if getgx().iterations > 30:
+            print '\n*WARNING* reached maximum number of iterations'
             break
         # --- propagate using cartesian product algorithm
 

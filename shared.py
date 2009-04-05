@@ -57,7 +57,6 @@ class globalInfo: # XXX add comments, split up
         self.extension_module = False
         self.flags = None
         self.method_refs = set()
-        self.avoid_loops = False
         self.annotation = True
         self.assignments = []
         self.output_dir=''
