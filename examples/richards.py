@@ -254,7 +254,7 @@ class DeviceTask(Task):
                 return self.qpkt(pkt)
         else:
             d.pending = pkt
-            if tracing: trace(pkt.datum)
+            if tracing: trace(str(pkt.datum))
             return self.hold()
 
 

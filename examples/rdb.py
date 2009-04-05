@@ -581,8 +581,8 @@ def parse_options():
   try:
     opts,args=getopt.getopt(sys.argv[1:],"hiv:snlfL:r",\
               ["help","interactive","volume=","nosmart","nochdir","nolog","force","logfile=","rename"])
-  except getopt.GetoptError, message:
-    opterr(message)
+  except getopt.GetoptError, g:
+    opterr(g.msg)
   for opt,arg in opts:
     if opt in ("-h","--help"):
       help()
