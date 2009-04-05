@@ -2893,6 +2893,8 @@ def template_parameters():
         if not 'B' in defclass(clname).template_vars:
             defaultvar('B', defclass(clname), template_var=True)
 
+    return
+
     for cl in nonbuiltinclasses: 
         for var in cl.vars.values():
             template_detect(var, cl)
