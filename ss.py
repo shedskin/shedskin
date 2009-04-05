@@ -433,7 +433,6 @@ def usage():
  -d --dir               Specify alternate directory for output files
  -e --extmod            Generate extension module
  -f --flags             Provide alternate Makefile flags
- -i --infinite          Try to avoid infinite analysis time 
  -r --random            Use fast random number generator 
  -w --nowrap            Disable wrap-around checking 
 """
@@ -467,7 +466,6 @@ def main():
         if o in ['-b', '--nobounds']: getgx().bounds_checking = False
         if o in ['-e', '--extmod']: getgx().extension_module = True
         if o in ['-a', '--noann']: getgx().annotation = False
-        if o in ['-i', '--infinite']: getgx().avoid_loops = True
         if o in ['-d', '--dir']: getgx().output_dir = a
         if o in ['-w', '--nowrap']: getgx().wrap_around_check = False
         if o in ['-r', '--random']: getgx().fast_random = True

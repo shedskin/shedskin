@@ -34,10 +34,8 @@ for (i, file) in enumerate(files):
     print '*** test: %s %d' % (file, i)
 
     options = ''
-    if file == 'yopyra.py':
-        options += ' -i'
     if file == 'minilight.py':
-        options += ' -ir'
+        options += ' -r'
 
     do_cmd('shedskin %s %s' % (options.strip(), file)) 
     if file in ['mastermind.py', 'rdb.py', 'TonyJpegDecoder.py']: 
