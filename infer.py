@@ -507,9 +507,14 @@ def ifa():
     redundant = {} # {redundant contour: similar contour we will map it to}
     removals = [] # [removed contour, ..]
 
-    classes = [cl for cl in getgx().allclasses if cl.mv.module.builtin and cl.ident in ['list', 'tuple', 'tuple2', 'dict', 'set', 'frozenset', 'deque', 'defaultdict', '__iter']]
-    for cl in classes:
-        cl.splits = {}
+    # determine classes to split
+    classes = []
+    for ident in ['list', 'tuple', 'tuple2', 'dict', 'set', 'frozenset', 'deque', 'defaultdict', '__iter']:
+        for cl in getgx().allclasses:
+            if cl.mv.module.builtin and cl.ident == ident:
+                cl.splits = {}
+                classes.append(cl)
+                break
 
     #print '\n*** iteration ***'
     sys.stdout.write('*')
