@@ -1067,22 +1067,6 @@ class moduleVisitor(ASTVisitor):
                 elif isinstance(lvalue, AssAttr):
                     self.assign_pair(lvalue, rvalue, func)
 
-                    # filter flow 
-                    if not getmv().module.builtin: # XXX
-                        rvar = None
-                        if isinstance(rvalue, Name):
-                            rvar = lookupvar(rvalue.name, func) 
-                        elif isinstance(rvalue, Getattr) and isinstance(rvalue.expr, Name) and rvalue.expr.name == 'self':
-                            rvar = defaultvar(rvalue.attrname, func.parent)
-
-                        if isinstance(lvalue.expr, Name) and lvalue.expr.name == 'self':
-                            lvar = defaultvar(lvalue.attrname, func.parent)
-                        else: 
-                            lvar = None 
-            
-                        if rvar:
-                            getgx().assignments.append((lvar, rvar))
-
                 # name = expr
                 elif isinstance(lvalue, AssName):
                     if (rvalue, 0, 0) not in getgx().cnode: # XXX generalize 
@@ -1097,13 +1081,6 @@ class moduleVisitor(ASTVisitor):
                             lvar = defaultvar(lvalue.name, func)
 
                         self.addconstraint((inode(rvalue), inode(lvar)), func)
-
-                    # filter flow
-                    if not getmv().module.builtin: # XXX
-                        if isinstance(rvalue, Name): # XXX
-                            getgx().assignments.append((lookupvar(lvalue.name, func), lookupvar(rvalue.name, func))) 
-                        if isinstance(rvalue, Getattr) and isinstance(rvalue.expr, Name) and rvalue.expr.name == 'self':
-                            getgx().assignments.append((lookupvar(lvalue.name, func), defaultvar(rvalue.attrname, func.parent)))
 
                 # (a,(b,c), ..) = expr
                 elif isinstance(lvalue, (AssTuple, AssList)):
