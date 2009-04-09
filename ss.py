@@ -24,6 +24,7 @@ TODO: move generate_code() to cpp.py
 from compiler import *
 from compiler.ast import *
 from compiler.visitor import *
+import gc
 
 from shared import *
 from graph import *
@@ -66,6 +67,8 @@ def confusion_misc():
                             tupletypes.update(getgx().types[getgx().cnode[var1, t[1], 0]])
 
 def analysis(source, testing=False):
+    gc.set_threshold(23456, 10, 10)
+
     if testing: 
         setgx(newgx())
         ast = parse(source+'\n')
