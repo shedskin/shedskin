@@ -92,7 +92,6 @@ class variable:
         self.template_disabled = False
         self.imported = False
         self.initexpr = None
-        self.filter = set()                # filters: x.append(..) means that x can only be of a class that has 'append'
         self.registered = False
 
     def types(self):
@@ -255,7 +254,6 @@ class cnode:
         self.mv = getmv()
         self.constructor = False # allocation site 
         self.copymetoo = False
-#        self.filters = [] # run-time type filters such as isinstance()
         self.fakert = False
      
         getgx().cnode[self.thing, self.dcpa, self.cpa] = self

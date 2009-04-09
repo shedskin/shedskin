@@ -111,19 +111,8 @@ def analysis(source, testing=False):
     var = defaultvar('unit', defclass('str_'))
     getgx().types[inode(var)] = set([(defclass('str_'), 0)])
 
-    #printstate()
-    #printconstraints()
-
-    # --- filters
-    #merge = merged(getgx().types)
-    #apply_filters(getgx().types.copy(), merge)
-   
     # --- cartesian product algorithm & iterative flow analysis
     iterative_dataflow_analysis()
-    #propagate()
-
-    #merge = merged(getgx().types)
-    #apply_filters(getgx().types, merge)
 
     for cl in getgx().allclasses:
         for name in cl.vars:
@@ -199,12 +188,6 @@ def analysis(source, testing=False):
     #printstate()
     #printconstraints()
     generate_code()
-
-    #print 'cnode!'
-    #for (a,b) in getgx().cnode.items():
-    #    print a, b
-   # for (a,b) in getgx().types.items():
-   #     print a, b
 
     # error for dynamic expression (XXX before codegen)
     for node in getgx().merged_all:

@@ -179,18 +179,7 @@ def propagate():
             difference = getgx().types[a] - getgx().types[b]
 
             if difference:
-                if isinstance(b.thing, variable) and b.thing.filter: # apply filter
-                    #print 'aha', b.thing.filter, difference, [d for d in difference if d[0] in b.thing.filter] 
-                    difference = set([d for d in difference if d[0] in b.thing.filter])
-
                 getgx().types[b].update(difference)
-
-                # --- flow may be constrained by run-time checks, e.g. isinstance(..) # XXX and by method calls
-                #if (b.thing, 0, 0) in getgx().cnode: # XXX
-                #    filters = getgx().cnode[b.thing, 0, 0].filters
-                #    if filters:
-                #        print 'filter', b.thing, filters
-                #        getgx().types[b] = set([t for t in getgx().types[b] if t[0] in filters]) # XXX efficiency, inheritance
 
                 # --- check whether node corresponds to actual argument: if so, perform cartesian product algorithm
                 for callfunc in b.callfuncs:
@@ -204,10 +193,8 @@ def propagate():
                     for callfunc in b.callfuncs:
                         cpa(getgx().cnode[callfunc, b.dcpa, b.cpa], worklist)
 
-
-        
 # --- determine cartesian product of possible function and argument types
-def cartesian_product(node, worklist):
+def possible_functions(node): 
     expr = node.thing
 
     # --- determine possible target functions
@@ -257,8 +244,15 @@ def cartesian_product(node, worklist):
 
         funcs = [(t[0].funcs[ident], t[1], t) for t in objtypes if ident in t[0].funcs]
 
-    # --- argument types XXX connect_actuals_formals
+    return funcs
 
+def possible_argtypes(node, funcs, worklist): 
+    expr = node.thing
+
+    # --- determine possible target functions
+    objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr = analyze_callfunc(expr, True) # XXX only parent_constr used
+
+    # --- argument types XXX connect_actuals_formals
     args = [arg for arg in expr.args if not isinstance(arg, Keyword)]
     keywords = [arg for arg in expr.args if isinstance(arg, Keyword)]
 
@@ -292,25 +286,61 @@ def cartesian_product(node, worklist):
                 getgx().types[defnode] = set()
 
                 defnode.callfuncs.append(node.thing)
-                addconstraint(getgx().cnode[default, 0, 0], defnode, worklist)
+                addconstraint(getgx().cnode[default, 0, 0], defnode, worklist) # XXX bad place
         node.defnodes = True
 
-    argtypes = [] # XXX
+    argtypes = [] 
     for arg in args:
         if (arg, node.dcpa, node.cpa) in getgx().cnode:
             argtypes.append(getgx().cnode[arg,node.dcpa,node.cpa].types()) 
         else:
             argtypes.append(inode(arg).types()) # XXX def arg?
- 
+
+    return argtypes
+
+def cartesian_product(node, worklist):
+    funcs = possible_functions(node)
+    argtypes = possible_argtypes(node, funcs, worklist)
     #print 'argtypes', argtypes, node #, args, argtypes, cartesian(*([funcs]+argtypes))
     return cartesian(*([funcs]+argtypes))
 
+def redirect(c, dcpa, func, callfunc, ident):
+    # staticmethod
+    if isinstance(func.parent, class_) and func.ident in func.parent.staticmethods:
+        dcpa = 1
+
+    # defaultdict
+    if ident == 'defaultdict' and len(callfunc.args) == 2:
+        clnames = [x[0].ident for x in c if isinstance(x[0], class_)]
+        if 'dict' in clnames or 'defaultdict' in clnames:
+            func = list(callnode.types())[0][0].funcs['__initdict__'] 
+        else:
+            func = list(callnode.types())[0][0].funcs['__inititer__'] 
+
+    # tuple2.__getitem__(0/1) -> __getfirst__/__getsecond__
+    if (isinstance(callfunc.node, Getattr) and callfunc.node.attrname == '__getitem__' and \
+        isinstance(callfunc.args[0], Const) and callfunc.args[0].value in (0,1) and \
+        func.parent.mv.module.builtin and func.parent.ident == 'tuple2'):
+            if callfunc.args[0].value == 0:
+                func = func.parent.funcs['__getfirst__']
+            else:
+                func = func.parent.funcs['__getsecond__']
+
+    # property
+    if isinstance(callfunc.node, Getattr) and callfunc.node.attrname in ['__setattr__', '__getattr__']:
+        if isinstance(func.parent, class_) and callfunc.args and callfunc.args[0].value in func.parent.properties:
+            arg = callfunc.args[0].value
+            if callfunc.node.attrname == '__setattr__':
+                func = func.parent.funcs[func.parent.properties[arg][1]]
+            else:
+                func = func.parent.funcs[func.parent.properties[arg][0]]
+            c = c[1:]
+
+    return c, dcpa, func
 
 # --- cartesian product algorithm; adds interprocedural constraints
 def cpa(callnode, worklist):
-    cp = cartesian_product(callnode, worklist) 
-    if not cp: return
-
+    cp = cartesian_product(callnode, worklist)
     objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr = analyze_callfunc(callnode.thing)
 
     # --- iterate over argument type combinations
@@ -318,54 +348,14 @@ def cpa(callnode, worklist):
         #print '(func, dcpa, objtype), c', c[0], c[1:]
         (func, dcpa, objtype), c = c[0], c[1:]
 
-        if isinstance(func.parent, class_) and func.ident in func.parent.staticmethods:
-            dcpa = 1
-
         if objtype: objtype = (objtype,)
         else: objtype = ()
 
-        if ident == 'defaultdict' and len(callnode.thing.args) == 2:
-            clnames = [x[0].ident for x in c if isinstance(x[0], class_)]
-            if 'dict' in clnames or 'defaultdict' in clnames:
-                func = list(callnode.types())[0][0].funcs['__initdict__'] 
-            else:
-                func = list(callnode.types())[0][0].funcs['__inititer__'] 
-
-        # filter CPA terms using filters on formals
-        if not func.mv.module.builtin and not func.ident in ['__getattr__', '__setattr__']:
-            #print 'cpa term', func, c
-            blocked = 0
-            if objtype: formals = func.formals[1:]
-            else: formals = func.formals
-            for t, filter in zip(c, [func.vars[formal].filter for formal in formals]):
-                if filter and t[0] not in filter:
-                    #print 'cpa filter', func, c, t[0], filter
-                    blocked = 1
-                    break
-            if blocked:
-                continue
-
+        # redirect func in special cases
         callfunc = callnode.thing
+        c, dcpa, func = redirect(c, dcpa, func, callfunc, ident)
 
-        # tuple2.__getitem__(0/1) -> __getfirst__/__getsecond__
-        if (isinstance(callfunc.node, Getattr) and callfunc.node.attrname == '__getitem__' and \
-            isinstance(callfunc.args[0], Const) and callfunc.args[0].value in (0,1) and \
-            func.parent.mv.module.builtin and func.parent.ident == 'tuple2'):
-                if callfunc.args[0].value == 0:
-                    func = func.parent.funcs['__getfirst__']
-                else:
-                    func = func.parent.funcs['__getsecond__']
-
-        # property
-        if isinstance(callfunc.node, Getattr) and callfunc.node.attrname in ['__setattr__', '__getattr__']:
-            if isinstance(func.parent, class_) and callfunc.args and callfunc.args[0].value in func.parent.properties:
-                arg = callfunc.args[0].value
-                if callfunc.node.attrname == '__setattr__':
-                    func = func.parent.funcs[func.parent.properties[arg][1]]
-                else:
-                    func = func.parent.funcs[func.parent.properties[arg][0]]
-                c = c[1:]
-
+        # already connected to template
         if (func,)+objtype+c in callnode.nodecp:
             continue 
         callnode.nodecp.add((func,)+objtype+c)
@@ -1067,113 +1057,3 @@ def merge_simple_types(types):
             merge.remove((defclass('none'),0))
 
     return frozenset(merge)
-
-# --- iterative filter application/propagation
-def apply_filters(types, merge):
-    # XXX x = 1, x = [] etc.
-    # XXX y = x+1, self.a = x.meth(), expr.a = x.meth() -> retvals
-    # XXX y = expr.meth().meth() -> retvals
-
-    print 'ass', getgx().assignments
-
-    changed = 1
-    while changed:
-        changed = 0
-        
-        # --- initial filters, flow across function call
-        for node in types: # XXX
-            if node.thing in merge and not node.mv.module.builtin: 
-
-                # --- var.a: limit builtins to have method named 'a'
-                if isinstance(node.thing, Getattr) and isinstance(node.thing.expr, Name): # XXX out
-                    if not inode(node.thing).fakert:
-                        #print 'GETATTR', node.thing, inode(node.thing).fakert
-                        var = lookupvar(node.thing.expr.name, node.parent)
-                        filter = set([cl for cl in getgx().allclasses if not cl.mv.module.builtin or node.thing.attrname in cl.funcs])
-                        if filter_flow(filter, var):
-                            changed = 1
-                            print 'getattr filter', var, var.filter, node.thing
-
-                # --- var.a(): limit classes to have method named 'a'
-                if isinstance(node.thing, CallFunc):
-                    if isinstance(node.thing.node, Getattr) and node.thing.node.attrname.startswith('__') and node.thing.node.attrname in ['__getattr__', '__setattr__', '__str__', '__repr__', '__getfirst__', '__getsecond__', '__hash__', '__cmp__', '__eq__', '__ne__', '__le__', '__lt__', '__ge__', '__gt__']: # XXX
-                        continue
-
-                    #print node.thing, merge[node.thing]
-                    objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr = analyze_callfunc(node.thing)
-                    # --- var.meth() -> setup filter for var (can only be of class that implements 'meth')
-                    if method_call:
-                        #print 'method call', objexpr, ident
-
-                        # name.meth()
-                        if isinstance(objexpr, Name): # XXX move out of iter loop?
-                            var = lookupvar(objexpr.name, node.parent)
-                            #print 'on var', var
-                            filter = set([cl for cl in getgx().allclasses if ident in cl.funcs])
-                            #print 'filter', filter
-                            if filter_flow(filter, var):
-                                changed = 1
-                                print 'var filter', var, var.filter, node.thing
-
-                        # self.var.meth()
-                        elif isinstance(objexpr, Getattr) and isinstance(objexpr.expr, Name) and objexpr.expr.name == 'self' and node.parent and node.parent.parent:
-                            var = defaultvar(objexpr.attrname, node.parent.parent)
-                            filter = set([cl for cl in getgx().allclasses if ident in cl.funcs])
-                            if filter_flow(filter, var):
-                                changed = 1
-                                print 'self.var filter', node.thing, var, filter
-
-                    # --- propagate filters along backward variable flow
-                    targets = callfunc_targets(node.thing, merge)
-
-                    if method_call and isinstance(objexpr, Name): # minimize targets with _new_ filters
-                        var = lookupvar(objexpr.name, node.parent) 
-                        if var.filter:
-                            #print 'filter targets', node.thing, targets, var.filter
-
-                            if targets: targetcls = set([target.parent for target in targets]) & var.filter
-                            else: targetcls = var.filter
-
-                            newtargets = [cl.funcs[ident] for cl in targetcls]
-                            #if not targets or len(newtargets) < len(targets):
-                            #    print 'filtered targets', node.thing, newtargets
-                            targets = newtargets
-
-                    if not [t for t in targets if t.mv.module.builtin]:
-                        filters = [[] for i in range(len(node.thing.args))] 
-                        # --- determine filters per 'variable' argument per target
-                        for target in targets:
-                            #print 'target:', target
-                            pairs = connect_actual_formal(node.thing, target)
-                            for ((a,b), f) in zip(pairs, filters):
-                                if isinstance(a, Name): # XXX expr.a
-                                    var, filter = lookupvar(a.name, node.parent), b.filter
-                                    f.append(b.filter)
-
-                        # --- OR filters per 'variable' argument and propagate
-                        for arg, filter in zip(node.thing.args, filters):
-                            if isinstance(arg, Name): # XXX expr.a
-                                if filter and not [f for f in filter if not f]:
-                                    orfilter = reduce(lambda x,y: x|y, filter)
-                                    var = lookupvar(arg.name, node.parent)
-                                    #print 'or filter:', var, orfilter
-                                    if filter_flow(orfilter, var):
-                                        changed = 1
-                                        print 'prop filter', var, var.filter, node.thing
-
-        # --- variable assignment flow
-        for lvar, rvar in getgx().assignments:
-            if isinstance(lvar, variable) and filter_flow(lvar.filter, rvar):
-                changed = 1
-                print 'flow filter', lvar, rvar
-
-def filter_flow(filter, var):
-    if not filter:
-        return 0
-    elif not var.filter: 
-        var.filter = filter
-        return 1
-    elif len(var.filter & filter) < len(var.filter): 
-        var.filter &= filter
-        return 1
-    return 0
