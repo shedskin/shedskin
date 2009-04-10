@@ -345,13 +345,12 @@ def cpa(callnode, worklist):
 
     # --- iterate over argument type combinations
     for c in cp:
-        #print '(func, dcpa, objtype), c', c[0], c[1:]
         (func, dcpa, objtype), c = c[0], c[1:]
 
         if objtype: objtype = (objtype,)
         else: objtype = ()
 
-        # redirect func in special cases
+        # redirect in special cases
         callfunc = callnode.thing
         c, dcpa, func = redirect(c, dcpa, func, callfunc, ident)
 
@@ -360,60 +359,56 @@ def cpa(callnode, worklist):
             continue 
         callnode.nodecp.add((func,)+objtype+c)
 
-        if not dcpa in func.cp: func.cp[dcpa] = {}
-        template_exists = c in func.cp[dcpa]
-        if template_exists:
-            pass
-        else:
-            # --- unseen cartesian product: create new template
-            func.cp[dcpa][c] = cpa = len(func.cp[dcpa]) # XXX +1
-
-            #if not func.mv.module.builtin and not func.ident in ['__getattr__', '__setattr__']:
-            #if not callnode.mv.module.builtin:
-            #    print 'template', (func, dcpa), c
-
-            getgx().templates += 1
-            func_copy(func, dcpa, cpa, worklist, c)
-
+        # create new template
+        if not dcpa in func.cp or not c in func.cp[dcpa]:
+            create_template(func, dcpa, c, worklist)
         cpa = func.cp[dcpa][c]
 
-        # --- actuals and formals 
-        if isinstance(callfunc.node, Getattr) and callfunc.node.attrname in ['__setattr__', '__getattr__']: # variables
-            if isinstance(func.parent, class_) and callfunc.args and callfunc.args[0].value in func.parent.properties:
-                actuals_formals(callfunc, func, callnode, dcpa, cpa, objtype+c, worklist)
-            else:
-                # builtin methods
-                varname = callfunc.args[0].value
-                #if varname in func.parent.funcs and callfunc.node.attrname == '__getattr__' and not callnode.parent_callfunc: # XXX
-                #    getgx().types[callnode] = set([(func.parent.funcs[varname], objtype[0][1])])
-                #    addtoworklist(worklist, callnode)
-                #    getgx().method_refs.add(callnode.thing)
-                #    continue
+        # __getattr__, __setattr__
+        if connect_getsetattr(func, callnode, callfunc, dcpa, worklist):
+            continue
 
-                parent = func.parent
+        # connect actuals and formals
+        actuals_formals(callfunc, func, callnode, dcpa, cpa, objtype+c, worklist)
 
-                var = defaultvar(varname, parent, worklist) # XXX always make new var??
-                inode(var).copy(dcpa,0,worklist)
-
-                if not getgx().cnode[var,dcpa,0] in getgx().types:
-                    getgx().types[getgx().cnode[var,dcpa,0]] = set()
-
-                getgx().cnode[var,dcpa,0].mv = parent.module.mv # XXX move into defaultvar
-
-                if callfunc.node.attrname == '__setattr__':
-                    addconstraint(getgx().cnode[callfunc.args[1],callnode.dcpa,callnode.cpa], getgx().cnode[var,dcpa,0], worklist)
-                else:
-                    addconstraint(getgx().cnode[var,dcpa,0], callnode, worklist)
-
-                continue
-        else: 
-            # non-builtin methods, functions
-            actuals_formals(callfunc, func, callnode, dcpa, cpa, objtype+c, worklist)
-
-        # --- call and return expressions
+        # connect call and return expressions
         if func.retnode and not constructor:
             retnode = getgx().cnode[func.retnode.thing, dcpa, cpa]
             addconstraint(retnode, callnode, worklist)
+
+def connect_getsetattr(func, callnode, callfunc, dcpa, worklist):
+    if (isinstance(callfunc.node, Getattr) and callfunc.node.attrname in ['__setattr__', '__getattr__'] and \
+        not (isinstance(func.parent, class_) and callfunc.args and callfunc.args[0].value in func.parent.properties)):
+            varname = callfunc.args[0].value
+            parent = func.parent
+
+            var = defaultvar(varname, parent, worklist) # XXX always make new var??
+            inode(var).copy(dcpa,0,worklist)
+
+            if not getgx().cnode[var,dcpa,0] in getgx().types:
+                getgx().types[getgx().cnode[var,dcpa,0]] = set()
+
+            getgx().cnode[var,dcpa,0].mv = parent.module.mv # XXX move into defaultvar
+
+            if callfunc.node.attrname == '__setattr__':
+                addconstraint(getgx().cnode[callfunc.args[1],callnode.dcpa,callnode.cpa], getgx().cnode[var,dcpa,0], worklist)
+            else:
+                addconstraint(getgx().cnode[var,dcpa,0], callnode, worklist)
+            return True
+    return False
+
+def create_template(func, dcpa, c, worklist):
+    # --- unseen cartesian product: create new template
+
+    if not dcpa in func.cp: func.cp[dcpa] = {}
+    func.cp[dcpa][c] = cpa = len(func.cp[dcpa]) # XXX +1
+
+    #if not func.mv.module.builtin and not func.ident in ['__getattr__', '__setattr__']:
+    #if not callnode.mv.module.builtin:
+    #    print 'template', (func, dcpa), c
+
+    getgx().templates += 1
+    func_copy(func, dcpa, cpa, worklist, c)
 
 def actuals_formals(expr, func, node, dcpa, cpa, types, worklist):
     objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr = analyze_callfunc(expr) # XXX call less
