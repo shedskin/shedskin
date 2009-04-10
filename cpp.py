@@ -328,7 +328,8 @@ class generateVisitor(ASTVisitor):
 
             # --- class definitions
             for child in node.node.getChildNodes():
-                if isinstance(child, Class): self.visitClass(child, True)
+                if isinstance(child, Class): 
+                    self.class_hpp(child)
 
             # --- defaults
             if self.module.mv.defaults.items(): 
@@ -415,7 +416,8 @@ class generateVisitor(ASTVisitor):
 
         # --- classes 
         for child in node.node.getChildNodes():
-            if isinstance(child, Class): self.visitClass(child, False)
+            if isinstance(child, Class): 
+                self.class_cpp(child)
 
         # --- __init
         self.output('void __init() {')
@@ -563,44 +565,8 @@ class generateVisitor(ASTVisitor):
             self.deindent()
             self.output('}')
 
-    def visitClass(self, node, declare):
+    def class_hpp(self, node, declare=True): # XXX remove declare
         cl = getmv().classes[node.name]
-
-        # --- .cpp file: output class methods
-        if not declare:
-            if cl.template_vars:  # XXX
-                self.output('class_ *cl_'+cl.cpp_name+';\n')
-                return
-
-            if cl.virtuals:
-                self.virtuals(cl, declare)
-
-            if node in getgx().comments:
-                self.do_comments(node)
-            else:
-                self.output('/**\nclass %s\n*/\n' % cl.ident)
-            self.output('class_ *cl_'+cl.cpp_name+';\n')
-
-            # --- method definitions
-            for func in cl.funcs.values():
-                if func.node and not (func.ident=='__init__' and func.inherited): 
-                    self.visitFunction(func.node, cl, declare)
-            if cl.has_copy and not 'copy' in cl.funcs and not cl.template_vars:
-                self.copy_method(cl, '__copy__', declare)
-            if cl.has_deepcopy and not 'deepcopy' in cl.funcs and not cl.template_vars:
-                self.copy_method(cl, '__deepcopy__', declare)
-            
-            # --- class variable declarations
-            if cl.parent.vars: # XXX merge with visitModule
-                for var in cl.parent.vars.values():
-                    if getgx().merged_inh[var]:
-                        self.start(typesetreprnew(var, cl.parent)+cl.ident+'::'+self.cpp_name(var.name)) 
-                        self.eol()
-                print >>self.out
-
-            return
-
-        # --- .hpp file: class declaration
         self.output('extern class_ *cl_'+cl.cpp_name+';') 
 
         # --- header
@@ -616,45 +582,8 @@ class generateVisitor(ASTVisitor):
         self.output('public:')
         self.indent()
 
-        # --- class variables 
-        if cl.parent.vars:
-            for var in cl.parent.vars.values():
-                if getgx().merged_inh[var]:
-                    self.output('static '+typesetreprnew(var, cl.parent)+self.cpp_name(var.name)+';') 
-            print >>self.out
+        self.class_variables(cl)
 
-        # --- instance variables
-        for var in cl.vars.values():
-            if var.invisible: continue # var.name in cl.virtualvars: continue
-
-            # var is masked by ancestor var
-            vars = set()
-            for ancestor in cl.ancestors():
-                vars.update(ancestor.vars)
-                #vars.update(ancestor.virtualvars)
-            if var.name in vars:
-                continue
-
-            # virtual
-            if var.name in cl.virtualvars:
-                ident = var.name
-                subclasses = cl.virtualvars[ident]
-
-                merged = set()
-                for m in [getgx().merged_inh[subcl.vars[ident]] for subcl in subclasses if ident in subcl.vars and subcl.vars[ident] in getgx().merged_inh]: # XXX
-                    merged.update(m)
-            
-                ts = self.padme(typestrnew({(1,0): merged}, cl, True, cl))
-                if merged:
-                    self.output(ts+self.cpp_name(ident)+';') 
-
-            # non-virtual
-            elif var in getgx().merged_inh and getgx().merged_inh[var]:
-                self.output(typesetreprnew(var, cl)+self.cpp_name(var.name)+';') 
-
-        if [v for v in cl.vars if not v.startswith('__')]:
-            print >>self.out
-            
         # --- constructor
         need_init = False
         if '__init__' in cl.funcs:
@@ -696,7 +625,82 @@ class generateVisitor(ASTVisitor):
 
         self.deindent()
         self.output('};\n')
-       
+
+    def class_cpp(self, node, declare=False): # XXX declare
+        cl = getmv().classes[node.name]
+
+        if cl.template_vars:  # XXX
+            self.output('class_ *cl_'+cl.cpp_name+';\n')
+            return
+
+        if cl.virtuals:
+            self.virtuals(cl, declare)
+
+        if node in getgx().comments:
+            self.do_comments(node)
+        else:
+            self.output('/**\nclass %s\n*/\n' % cl.ident)
+        self.output('class_ *cl_'+cl.cpp_name+';\n')
+
+        # --- method definitions
+        for func in cl.funcs.values():
+            if func.node and not (func.ident=='__init__' and func.inherited): 
+                self.visitFunction(func.node, cl, declare)
+        if cl.has_copy and not 'copy' in cl.funcs and not cl.template_vars:
+            self.copy_method(cl, '__copy__', declare)
+        if cl.has_deepcopy and not 'deepcopy' in cl.funcs and not cl.template_vars:
+            self.copy_method(cl, '__deepcopy__', declare)
+        
+        # --- class variable declarations
+        if cl.parent.vars: # XXX merge with visitModule
+            for var in cl.parent.vars.values():
+                if getgx().merged_inh[var]:
+                    self.start(typesetreprnew(var, cl.parent)+cl.ident+'::'+self.cpp_name(var.name)) 
+                    self.eol()
+            print >>self.out
+
+        return
+
+    def class_variables(self, cl):
+        # --- class variables 
+        if cl.parent.vars:
+            for var in cl.parent.vars.values():
+                if getgx().merged_inh[var]:
+                    self.output('static '+typesetreprnew(var, cl.parent)+self.cpp_name(var.name)+';') 
+            print >>self.out
+
+        # --- instance variables
+        for var in cl.vars.values():
+            if var.invisible: continue # var.name in cl.virtualvars: continue
+
+            # var is masked by ancestor var
+            vars = set()
+            for ancestor in cl.ancestors():
+                vars.update(ancestor.vars)
+                #vars.update(ancestor.virtualvars)
+            if var.name in vars:
+                continue
+
+            # virtual
+            if var.name in cl.virtualvars:
+                ident = var.name
+                subclasses = cl.virtualvars[ident]
+
+                merged = set()
+                for m in [getgx().merged_inh[subcl.vars[ident]] for subcl in subclasses if ident in subcl.vars and subcl.vars[ident] in getgx().merged_inh]: # XXX
+                    merged.update(m)
+            
+                ts = self.padme(typestrnew({(1,0): merged}, cl, True, cl))
+                if merged:
+                    self.output(ts+self.cpp_name(ident)+';') 
+
+            # non-virtual
+            elif var in getgx().merged_inh and getgx().merged_inh[var]:
+                self.output(typesetreprnew(var, cl)+self.cpp_name(var.name)+';') 
+
+        if [v for v in cl.vars if not v.startswith('__')]:
+            print >>self.out
+
     def copy_method(self, cl, name, declare): # XXX merge?
         header = cl.template()+' *'
         if not declare:
