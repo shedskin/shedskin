@@ -1239,44 +1239,7 @@ class generateVisitor(ASTVisitor):
                 return
               
         if func.isGenerator and ((declare and func.template_vars) or not declare):
-            templatestr=''
-            if func.template_vars: templatestr = 'template <'+','.join(['class '+f for f in func.template_vars])+'> '
-            self.output('%sclass __gen_%s : public %s {' % (templatestr, func.ident, typesetreprnew(func.retnode.thing, func)[:-2]))
-            self.output('public:')
-            self.indent()
-            pairs = [(typesetreprnew(func.vars[f], func), self.cpp_name(f)) for f in func.vars]
-            self.output(self.indentation.join(self.group_declarations(pairs)))
-            self.output('int __last_yield;\n')
-
-            args = []
-            for f in func.formals:
-                args.append(typesetreprnew(func.vars[f], func)+self.cpp_name(f))
-            self.output(('__gen_%s(' % func.ident) + ','.join(args)+') {')
-            self.indent()
-            for f in func.formals:
-                self.output('this->%s = %s;' % (self.cpp_name(f),self.cpp_name(f)))
-            self.output('__last_yield = -1;')
-            self.deindent()
-            self.output('}\n')
-
-            self.output('%s next() {' % typesetreprnew(func.retnode.thing, func)[7:-3])
-            self.indent()
-            self.output('switch(__last_yield) {')
-            self.indent()
-            for (i,n) in enumerate(func.yieldNodes):
-                self.output('case %d: goto __after_yield_%d;' % (i,i))
-            self.output('default: break;')
-            self.deindent()
-            self.output('}')
-
-            for child in func.node.code.getChildNodes():
-                self.visit(child, func)
-            self.output('throw new StopIteration();')
-            self.deindent()
-            self.output('}\n')
-
-            self.deindent()
-            self.output('};\n')
+            self.generator_class(func)
 
         self.func_header(func, declare)
         if declare and not (is_method(func) and func.parent.template_vars) and not func.template_vars: # XXX general func
@@ -1285,11 +1248,7 @@ class generateVisitor(ASTVisitor):
         self.indent()
 
         if func.isGenerator:
-            templatestr=''
-            if func.template_vars: templatestr = '<'+','.join(func.template_vars)+'>'
-            self.output('return new __gen_%s%s(%s);\n' % (func.ident, templatestr, ','.join([self.cpp_name(f) for f in func.formals]))) # XXX formals
-            self.deindent()
-            self.output('}\n')
+            self.generator_body(func)
             return
 
         # --- local declarations
@@ -1318,6 +1277,53 @@ class generateVisitor(ASTVisitor):
             if not func.ident == '__init__' and not func.fakeret and not isinstance(lastnode, Return) and not (isinstance(lastnode, Stmt) and isinstance(lastnode.nodes[-1], Return)): # XXX use Stmt in moduleVisitor
                 self.output('return 0;')
 
+        self.deindent()
+        self.output('}\n')
+
+    def generator_class(self, func):
+        templatestr=''
+        if func.template_vars: templatestr = 'template <'+','.join(['class '+f for f in func.template_vars])+'> '
+        self.output('%sclass __gen_%s : public %s {' % (templatestr, func.ident, typesetreprnew(func.retnode.thing, func)[:-2]))
+        self.output('public:')
+        self.indent()
+        pairs = [(typesetreprnew(func.vars[f], func), self.cpp_name(f)) for f in func.vars]
+        self.output(self.indentation.join(self.group_declarations(pairs)))
+        self.output('int __last_yield;\n')
+
+        args = []
+        for f in func.formals:
+            args.append(typesetreprnew(func.vars[f], func)+self.cpp_name(f))
+        self.output(('__gen_%s(' % func.ident) + ','.join(args)+') {')
+        self.indent()
+        for f in func.formals:
+            self.output('this->%s = %s;' % (self.cpp_name(f),self.cpp_name(f)))
+        self.output('__last_yield = -1;')
+        self.deindent()
+        self.output('}\n')
+
+        self.output('%s next() {' % typesetreprnew(func.retnode.thing, func)[7:-3])
+        self.indent()
+        self.output('switch(__last_yield) {')
+        self.indent()
+        for (i,n) in enumerate(func.yieldNodes):
+            self.output('case %d: goto __after_yield_%d;' % (i,i))
+        self.output('default: break;')
+        self.deindent()
+        self.output('}')
+
+        for child in func.node.code.getChildNodes():
+            self.visit(child, func)
+        self.output('throw new StopIteration();')
+        self.deindent()
+        self.output('}\n')
+
+        self.deindent()
+        self.output('};\n')
+
+    def generator_body(self, func):
+        templatestr=''
+        if func.template_vars: templatestr = '<'+','.join(func.template_vars)+'>'
+        self.output('return new __gen_%s%s(%s);\n' % (func.ident, templatestr, ','.join([self.cpp_name(f) for f in func.formals]))) # XXX formals
         self.deindent()
         self.output('}\n')
 
