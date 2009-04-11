@@ -627,7 +627,7 @@ int tcgetpgrp(int fd) {
     nr = ::tcgetpgrp(fd);
     if(nr == -1)
         throw new OSError(new str("os.tcgetpgrp"));
-    return NULL; 
+    return nr; 
 }
 
 void *tcsetpgrp(int fd, int pg) {
