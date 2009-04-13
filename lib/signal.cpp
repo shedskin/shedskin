@@ -9,11 +9,18 @@ int __ss_SIGABRT, __ss_SIGALRM, __ss_SIGBUS, __ss_SIGCHLD, __ss_SIGCLD, __ss_SIG
 void __init() {
     __name__ = new str("signal");
 
+#ifndef __APPLE__
+    __ss_SIGCLD = SIGCLD;
+    __ss_SIGPOLL = SIGPOLL;
+    __ss_SIGPWR = SIGPWR;
+    __ss_SIGRTMAX = SIGRTMAX;
+    __ss_SIGRTMIN = SIGRTMIN;
+#endif
+
     __ss_SIGABRT = SIGABRT;
     __ss_SIGALRM = SIGALRM;
     __ss_SIGBUS = SIGBUS;
     __ss_SIGCHLD = SIGCHLD;
-    __ss_SIGCLD = SIGCLD;
     __ss_SIGCONT = SIGCONT;
     __ss_SIGFPE = SIGFPE;
     __ss_SIGHUP = SIGHUP;
@@ -23,12 +30,8 @@ void __init() {
     __ss_SIGIOT = SIGIOT;
     __ss_SIGKILL = SIGKILL;
     __ss_SIGPIPE = SIGPIPE;
-    __ss_SIGPOLL = SIGPOLL;
     __ss_SIGPROF = SIGPROF;
-    __ss_SIGPWR = SIGPWR;
     __ss_SIGQUIT = SIGQUIT;
-    __ss_SIGRTMAX = SIGRTMAX;
-    __ss_SIGRTMIN = SIGRTMIN;
     __ss_SIGSEGV = SIGSEGV;
     __ss_SIGSTOP = SIGSTOP;
     __ss_SIGSYS = SIGSYS;

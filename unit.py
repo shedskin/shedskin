@@ -66,6 +66,9 @@ def main():
 
 main()
 
+# test
+import signal
+
 ''', '''
 output(equal=True)
 
