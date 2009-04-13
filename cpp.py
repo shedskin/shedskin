@@ -255,110 +255,108 @@ class generateVisitor(ASTVisitor):
 
         return 0
 
-    def visitModule(self, node, declare=False):
-        # --- header file
-        if declare: 
-            define = '_'.join(self.module.mod_path).upper()+'_HPP'
-            print >>self.out, '#ifndef __'+define
-            print >>self.out, '#define __'+define+'\n'
+    def module_hpp(self, node):
+        define = '_'.join(self.module.mod_path).upper()+'_HPP'
+        print >>self.out, '#ifndef __'+define
+        print >>self.out, '#define __'+define+'\n'
 
-            # --- include header files
-            if self.module.dir == '': depth = 0
-            else: depth = self.module.dir.count('/')+1
-            #print >>self.out, '#include "'+depth*'../'+'builtin_.hpp"'
+        # --- include header files
+        if self.module.dir == '': depth = 0
+        else: depth = self.module.dir.count('/')+1
+        #print >>self.out, '#include "'+depth*'../'+'builtin_.hpp"'
 
-            includes = get_includes(self.module)
-            if 'getopt.hpp' in includes: # XXX
-                includes.add('os/__init__.hpp')
-                includes.add('os/path.hpp')
-                includes.add('stat.hpp')
-            if 'os/__init__.hpp' in includes: # XXX
-                includes.add('os/path.hpp')
-                includes.add('stat.hpp')
-            for include in includes:
-                print >>self.out, '#include "'+include+'"'
-            if includes: print >>self.out
+        includes = get_includes(self.module)
+        if 'getopt.hpp' in includes: # XXX
+            includes.add('os/__init__.hpp')
+            includes.add('os/path.hpp')
+            includes.add('stat.hpp')
+        if 'os/__init__.hpp' in includes: # XXX
+            includes.add('os/path.hpp')
+            includes.add('stat.hpp')
+        for include in includes:
+            print >>self.out, '#include "'+include+'"'
+        if includes: print >>self.out
 
-            # --- namespaces
-            print >>self.out, 'using namespace __shedskin__;'
-            for n in self.module.mod_path:
-                print >>self.out, 'namespace __'+n+'__ {'
-            print >>self.out
-                 
-            skip = False
-            for child in node.node.getChildNodes():
-                if isinstance(child, From): 
-                    skip = True
-                    mod_id = '__'+'__::__'.join(child.modname.split('.'))+'__'
+        # --- namespaces
+        print >>self.out, 'using namespace __shedskin__;'
+        for n in self.module.mod_path:
+            print >>self.out, 'namespace __'+n+'__ {'
+        print >>self.out
+             
+        skip = False
+        for child in node.node.getChildNodes():
+            if isinstance(child, From): 
+                skip = True
+                mod_id = '__'+'__::__'.join(child.modname.split('.'))+'__'
 
-                    for (name, pseudonym) in child.names:
-                        if name == '*':
-                            for func in getgx().modules[child.modname].funcs.values():
-                                if func.cp: 
-                                    print >>self.out, 'using '+mod_id+'::'+self.cpp_name(func.ident)+';';
-                            for var in getgx().modules[child.modname].mv.globals.values():
-                                if not var.invisible and not var.imported and not var.name.startswith('__') and var.types():
-                                    print >>self.out, 'using '+mod_id+'::'+self.cpp_name(var.name)+';';
-                            for cl in getgx().modules[child.modname].classes:
-                                print >>self.out, 'using '+mod_id+'::'+cl+';';
+                for (name, pseudonym) in child.names:
+                    if name == '*':
+                        for func in getgx().modules[child.modname].funcs.values():
+                            if func.cp: 
+                                print >>self.out, 'using '+mod_id+'::'+self.cpp_name(func.ident)+';';
+                        for var in getgx().modules[child.modname].mv.globals.values():
+                            if not var.invisible and not var.imported and not var.name.startswith('__') and var.types():
+                                print >>self.out, 'using '+mod_id+'::'+self.cpp_name(var.name)+';';
+                        for cl in getgx().modules[child.modname].classes:
+                            print >>self.out, 'using '+mod_id+'::'+cl+';';
 
-                            continue
+                        continue
 
-                        if not name in self.module.mv.globals or [t for t in self.module.mv.globals[name].types() if not isinstance(t[0], module)]:
-                            print >>self.out, 'using '+mod_id+'::'+nokeywords(name)+';'
-            if skip: print >>self.out
+                    if not name in self.module.mv.globals or [t for t in self.module.mv.globals[name].types() if not isinstance(t[0], module)]:
+                        print >>self.out, 'using '+mod_id+'::'+nokeywords(name)+';'
+        if skip: print >>self.out
 
-            # class declarations
-            gotcl = False
-            for child in node.node.getChildNodes():
-                if isinstance(child, Class): 
-                    gotcl = True
-                    cl = defclass(child.name)
-                    print >>self.out, template_repr(cl)+'class '+nokeywords(cl.ident)+';'
+        # class declarations
+        gotcl = False
+        for child in node.node.getChildNodes():
+            if isinstance(child, Class): 
+                gotcl = True
+                cl = defclass(child.name)
+                print >>self.out, template_repr(cl)+'class '+nokeywords(cl.ident)+';'
 
-            # --- lambda typedefs
-            if gotcl: print >>self.out
-            self.func_pointers(True)
+        # --- lambda typedefs
+        if gotcl: print >>self.out
+        self.func_pointers(True)
 
-            # globals
-            defs = self.declaredefs(list(getmv().globals.items()), declare=True);
-            if defs:
-                self.output(defs+';')
-                print >>self.out
-
-            # --- class definitions
-            for child in node.node.getChildNodes():
-                if isinstance(child, Class): 
-                    self.class_hpp(child)
-
-            # --- defaults
-            if self.module.mv.defaults.items(): 
-                for default, nr in self.module.mv.defaults.items():
-                    print >>self.out, 'extern '+typesetreprnew(default, None)+' '+('default_%d;'%nr)
-                print >>self.out
-                    
-            # function declarations
-            if self.module != getgx().main_module:
-                print >>self.out, 'void __init();'
-            for child in node.node.getChildNodes():
-                if isinstance(child, Function): 
-                    func = getmv().funcs[child.name]
-                    if not self.inhcpa(func):
-                    #if not hmcpa(func) and (not func in getgx().inheritance_relations or not [1 for f in getgx().inheritance_relations[func] if hmcpa(f)]): # XXX merge with visitFunction
-                        pass
-                    elif not func.mv.module.builtin and not func.ident in ['min','max','zip','sum','__zip2','enumerate']: # XXX latter for test 116
-                        self.visitFunction(func.node, declare=True)
+        # globals
+        defs = self.declaredefs(list(getmv().globals.items()), declare=True);
+        if defs:
+            self.output(defs+';')
             print >>self.out
 
-            for n in self.module.mod_path:
-                print >>self.out, '} // module namespace'
+        # --- class definitions
+        for child in node.node.getChildNodes():
+            if isinstance(child, Class): 
+                self.class_hpp(child)
 
-            if getgx().extension_module and self.module == getgx().main_module: 
-                extmod.convert_methods2(self, self.module.classes.values())
+        # --- defaults
+        if self.module.mv.defaults.items(): 
+            for default, nr in self.module.mv.defaults.items():
+                print >>self.out, 'extern '+typesetreprnew(default, None)+' '+('default_%d;'%nr)
+            print >>self.out
+                
+        # function declarations
+        if self.module != getgx().main_module:
+            print >>self.out, 'void __init();'
+        for child in node.node.getChildNodes():
+            if isinstance(child, Function): 
+                func = getmv().funcs[child.name]
+                if not self.inhcpa(func):
+                #if not hmcpa(func) and (not func in getgx().inheritance_relations or not [1 for f in getgx().inheritance_relations[func] if hmcpa(f)]): # XXX merge with visitFunction
+                    pass
+                elif not func.mv.module.builtin and not func.ident in ['min','max','zip','sum','__zip2','enumerate']: # XXX latter for test 116
+                    self.visitFunction(func.node, declare=True)
+        print >>self.out
 
-            print >>self.out, '#endif'
-            return
+        for n in self.module.mod_path:
+            print >>self.out, '} // module namespace'
 
+        if getgx().extension_module and self.module == getgx().main_module: 
+            extmod.convert_methods2(self, self.module.classes.values())
+
+        print >>self.out, '#endif'
+
+    def module_cpp(self, node):
         # --- external dependencies 
         if self.module.filename.endswith('__init__.py'): # XXX nicer check
             print >>self.out, '#include "__init__.hpp"\n'
@@ -487,6 +485,12 @@ class generateVisitor(ASTVisitor):
             else:
                 self.do_main()
         
+    def visitModule(self, node, declare=False):
+        if declare:
+            self.module_hpp(node)
+        else:
+            self.module_cpp(node)
+
     def do_main(self):
         print >>self.out, 'int main(int argc, char **argv) {'
 
