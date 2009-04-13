@@ -510,7 +510,7 @@ def ifa():
             return split, redundant, removals
             
         #print '---', cl.ident
-        newdcpa = cl.dcpa 
+        cl.newdcpa = cl.dcpa 
 
         # --- determine instance variables XXX kill
         if cl.ident in ['list', 'tuple', 'frozenset', 'set','__iter']:
@@ -560,233 +560,195 @@ def ifa():
 
             attr_types = nr_classes[dcpa]
 
-            for (varnum, var) in enumerate(vars):
-                if not (var, dcpa, 0) in getgx().cnode: continue
-                  
-                #if cl.ident == 'node':
-                #    print 'var', var
-
-                # --- determine assignment sets for this contour
-                node = getgx().cnode[var, dcpa, 0]
-                assignsets = {} # class set -> targets
-                alltargets = set()
-
-                for a in node.in_:
-                    types = getgx().types[a]
-                    if types:
-                        if a.thing in getgx().assign_target: # XXX *args
-                            target = getgx().cnode[getgx().assign_target[a.thing], a.dcpa, a.cpa]
-                            #print 'target', a, target, types
-                            alltargets.add(target)
-                            assignsets.setdefault(merge_simple_types(types), []).append(target) 
-
-                #print 'assignsets', (cl.ident, dcpa), assignsets
-                #print 'examine contour', dcpa
-
-                bah = set() # XXX coarse recursion check
-                for ass in assignsets:
-                    bah.update(ass)
-                if cl.ident not in getgx().builtins:
-                    if not [c for c, _ in bah if c.ident not in (cl.ident, 'none')]:
-                        #print 'buggert!'
-                        continue
-
-                #print 'assignsets', (cl.ident, dcpa), assignsets
-
-                # --- determine backflow paths and creation points per assignment set
-                paths = {}
-                creation_points = {}
-                for assign_set, targets in assignsets.iteritems():
-                    #print 'assignset', assign_set, targets
-                    path = backflow_path(targets, (cl,dcpa))
-                    #print 'path', path
-
-                    paths[assign_set] = path
-                    alloc = [n for n in path if not n.in_]
-                    creation_points[assign_set] = alloc
-
-                #print 'creation points', creation_points
-
-                # --- collect all nodes
-                allnodes = set()
-                for path in paths.values(): 
-                   allnodes.update(path)
-                endpoints = [huh for huh in allnodes if not huh.in_] # XXX call csites
-                #print 'endpoints', endpoints
-
-                # --- split off empty assignment sets (eg, [], or [x[0]] where x is None in some template)
-                if assignsets and cl.ident in ['list', 'tuple']: # XXX amaze, msp_ss
-                    allcsites = set()
-                    for n, types in getgx().types.iteritems():
-                        if (cl, dcpa) in types and not n.in_:
-                            allcsites.add(n)
-
-                    empties = list(allcsites-set(endpoints))
-                    #print 'EMPTIES', empties, assignsets
-
-                    if empties:
-                        split.append((cl, dcpa, empties, newdcpa))
-                        cl.splits[newdcpa] = dcpa
-                        newdcpa += 1
-                        #return split, redundant, removals
-
-                if len(merge_simple_types(getgx().types[node])) < 2 or len(assignsets) == 1:
-                    #print 'singleton set'
-                    continue
-
-                # --- per node, determine paths it is located on
-                for n in allnodes: n.paths = []
-
-                for assign_set, path in paths.iteritems():
-                    for n in path:
-                        n.paths.append(assign_set)
-
-                # --- for each node, determine creation points that 'flow' through it
-                csites = []
-                for n in allnodes: 
-                    n.csites = set()
-                    if not n.in_: # and (n.dcpa, n.cpa) != (0,0): # XXX
-                        n.csites.add(n)
-                        csites.append(n)
-                flow_creation_sites(csites, allnodes)
-            
-                if len(csites) == 1:
-                    #print 'just one creation site!'
-                    continue
-                
-                # --- determine creation nodes that are only one one path
-                noconf = set() 
-                for node in csites: #allnodes:
-                    #if not node.in_ and len(node.paths) == 1:
-                    #print 'noconf', node, node.paths
-                    if len(node.paths) == 1:
-                        noconf.add(node)
-                        #print 'no confusion about:', node, node.paths[0], node.parent
-
-                # --- for these, see if we can reuse existing contours; otherwise, create new contours
-                removed = 0
-                nr_of_nodes = len(noconf)
-                for node in noconf:
-                    #assign_set = set()
-                    #for path in node.paths:
-                    #    assign_set.update(path)
-                    #assign_set = frozenset(assign_set)
-                    assign_set = node.paths[0]
-
-                    new_attr_types = list(attr_types)
-                    new_attr_types[varnum] = assign_set
-                    #print 'new type', tuple(new_attr_types)
-                    new_attr_types = tuple(new_attr_types)
-                     
-                    if new_attr_types in classes_nr and not classes_nr[new_attr_types] >= cl.dcpa: # XXX last check.. useful or not?
-                        nr = classes_nr[new_attr_types]
-                        if nr != dcpa: # XXX better check: classes_nr for dcpa
-                            #print 'reuse', node, nr
-                            split.append((cl, dcpa, [node], nr))
-                            cl.splits[nr] = dcpa
-                            
-                            removed += 1
-                        #else: 
-                        #    print 'doh!!'
-                    else: 
-                        #print 'new!', node, newdcpa
-
-                        classes_nr[new_attr_types] = newdcpa
-
-                        split.append((cl, dcpa, [node], newdcpa))
-                        cl.splits[newdcpa] = dcpa
-                        newdcpa += 1
-
-                        nr_of_nodes -= 1
-                        removed += 1
-
-                # --- remove contour if it becomes empty 
-                if removed == len([node for node in allnodes if not node.in_]):
-                    #print 'remove contour', dcpa
-                    cl.unused.append(dcpa)
-                    removals.append((cl,dcpa))
-                
-                if split: # XXX
-                    break
-                #print 'check confluence'
-
-                # --- object contour splitting
-
-                #print 'hoep?', cl.ident
-
-                for node in allnodes:
-                    # --- determine if node is a confluence point
-
-                    conf_point = False
-                    if len(node.in_) > 1 and isinstance(node.thing, variable):
-                        #print 'possible confluence', node, node.csites
-                        for csite in node.csites:
-                            occ = [csite in crpoints for crpoints in creation_points.values()].count(True)
-                            if occ > 1:
-                                conf_point = True
-                                break
-                    if not conf_point:
-                        continue
-
-                    if not node.thing.formal_arg and not isinstance(node.thing.parent, class_):
-                        #print 'bad split', node
-                        continue
-
-                    # --- determine split along incoming dataflow edges
-
-                    #print 'confluence point', node, node.paths #, node.in_
-
-                    remaining = [incoming.csites.copy() for incoming in node.in_ if incoming in allnodes]
-                    #print 'remaining before', remaining
-
-                    # --- try to clean out larger collections, if subsets are in smaller ones
-
-                    for (i, seti) in enumerate(remaining):
-                        for setj in remaining[i+1:]:
-                            in_both = seti.intersection(setj)
-                            if in_both:
-                                if len(seti) > len(setj):
-                                    seti -= in_both
-                                else:
-                                    setj -= in_both
-
-                    remaining = [setx for setx in remaining if setx]
-                    #print 'remaining after', remaining
-                    
-                    if len(remaining) < 2:
-                        #print "one rem"
-                        continue
-
-                    # --- if it exists, perform actual splitting
-                    #print 'split rem', remaining
-                    for splitsites in remaining[1:]:
-                        #print 'splitsites', splitsites
-
-                        split.append((cl, dcpa, splitsites, newdcpa))
-                        cl.splits[newdcpa] = dcpa
-                        newdcpa += 1
-
-                    return split, redundant, removals 
-                
-                # --- if all else fails, perform wholesale splitting
-                # XXX assign sets should be different; len(paths) > 1?
-
-                #print 'wholesale!', cl.ident, dcpa, assignsets
-
-                if len(paths) > 1 and len(csites) > 1:
-                    #print 'no confluence..split all?'
-                    #print paths.keys(), csites
-
-                    for csite in csites[1:]:
-                        #print 'splitsites', splitsites
-
-                        split.append((cl, dcpa, [csite], newdcpa))
-                        cl.splits[newdcpa] = dcpa
-                        newdcpa += 1
-
-                    return split, redundant, removals
+            if ifa_split_vars(cl, dcpa, vars, attr_types, classes_nr, split, redundant, removals) != None:
+                return split, redundant, removals
 
     return split, redundant, removals
+
+def ifa_split_vars(cl, dcpa, vars, attr_types, classes_nr, split, redundant, removals):
+    for (varnum, var) in enumerate(vars):
+        if not (var, dcpa, 0) in getgx().cnode: continue
+          
+        # --- determine assignment sets for this contour
+        node = getgx().cnode[var, dcpa, 0]
+        assignsets = {} # class set -> targets
+        alltargets = set()
+
+        for a in node.in_:
+            types = getgx().types[a]
+            if types:
+                if a.thing in getgx().assign_target: # XXX *args
+                    target = getgx().cnode[getgx().assign_target[a.thing], a.dcpa, a.cpa]
+                    #print 'target', a, target, types
+                    alltargets.add(target)
+                    assignsets.setdefault(merge_simple_types(types), []).append(target) 
+
+        #print 'assignsets', (cl.ident, dcpa), assignsets
+        #print 'examine contour', dcpa
+
+        bah = set() # XXX coarse recursion check
+        for ass in assignsets:
+            bah.update(ass)
+        if cl.ident not in getgx().builtins:
+            if not [c for c, _ in bah if c.ident not in (cl.ident, 'none')]:
+                #print 'buggert!'
+                continue
+
+        #print 'assignsets', (cl.ident, dcpa), assignsets
+
+        # --- determine backflow paths and creation points per assignment set
+        paths = {}
+        creation_points = {}
+        for assign_set, targets in assignsets.iteritems():
+            #print 'assignset', assign_set, targets
+            path = backflow_path(targets, (cl,dcpa))
+            #print 'path', path
+
+            paths[assign_set] = path
+            alloc = [n for n in path if not n.in_]
+            creation_points[assign_set] = alloc
+
+        #print 'creation points', creation_points
+
+        # --- collect all nodes
+        allnodes = set()
+        for path in paths.values(): 
+           allnodes.update(path)
+        endpoints = [huh for huh in allnodes if not huh.in_] # XXX call csites
+        #print 'endpoints', endpoints
+
+        # --- split off empty assignment sets (eg, [], or [x[0]] where x is None in some template)
+        if assignsets and cl.ident in ['list', 'tuple']: # XXX amaze, msp_ss
+            allcsites = set()
+            for n, types in getgx().types.iteritems():
+                if (cl, dcpa) in types and not n.in_:
+                    allcsites.add(n)
+
+            empties = list(allcsites-set(endpoints))
+            if empties:
+                ifa_split_class(cl, dcpa, empties, split)
+
+        if len(merge_simple_types(getgx().types[node])) < 2 or len(assignsets) == 1:
+            #print 'singleton set'
+            continue
+
+        # --- per node, determine paths it is located on
+        for n in allnodes: n.paths = []
+
+        for assign_set, path in paths.iteritems():
+            for n in path:
+                n.paths.append(assign_set)
+
+        # --- for each node, determine creation points that 'flow' through it
+        csites = []
+        for n in allnodes: 
+            n.csites = set()
+            if not n.in_: # and (n.dcpa, n.cpa) != (0,0): # XXX
+                n.csites.add(n)
+                csites.append(n)
+        flow_creation_sites(csites, allnodes)
+    
+        if len(csites) == 1:
+            #print 'just one creation site!'
+            continue
+        
+        # --- determine creation nodes that are only one one path
+        noconf = set() 
+        for node in csites: #allnodes:
+            #print 'noconf', node, node.paths
+            if len(node.paths) == 1:
+                noconf.add(node)
+                #print 'no confusion about:', node, node.paths[0], node.parent
+
+        # --- for these, see if we can reuse existing contours; otherwise, create new contours
+        removed = 0
+        nr_of_nodes = len(noconf)
+        for node in noconf:
+            assign_set = node.paths[0]
+
+            new_attr_types = list(attr_types)
+            new_attr_types[varnum] = assign_set
+            new_attr_types = tuple(new_attr_types)
+             
+            if new_attr_types in classes_nr and not classes_nr[new_attr_types] >= cl.dcpa: # XXX last check.. useful or not?
+                nr = classes_nr[new_attr_types]
+                if nr != dcpa: # XXX better check: classes_nr for dcpa
+                    #print 'reuse', node, nr
+                    split.append((cl, dcpa, [node], nr))
+                    cl.splits[nr] = dcpa
+                    removed += 1
+            else: 
+                #print 'new!', node, newdcpa
+                classes_nr[new_attr_types] = cl.newdcpa
+                ifa_split_class(cl, dcpa, [node], split)
+                nr_of_nodes -= 1
+                removed += 1
+
+        # --- remove contour if it becomes empty 
+        if removed == len([node for node in allnodes if not node.in_]):
+            #print 'remove contour', dcpa
+            cl.unused.append(dcpa)
+            removals.append((cl,dcpa))
+        
+        if split: # XXX
+            break
+        #print 'check confluence'
+
+        # --- object contour splitting
+
+        for node in allnodes:
+            # --- determine if node is a confluence point
+
+            conf_point = False
+            if len(node.in_) > 1 and isinstance(node.thing, variable):
+                #print 'possible confluence', node, node.csites
+                for csite in node.csites:
+                    occ = [csite in crpoints for crpoints in creation_points.values()].count(True)
+                    if occ > 1:
+                        conf_point = True
+                        break
+            if not conf_point:
+                continue
+
+            if not node.thing.formal_arg and not isinstance(node.thing.parent, class_):
+                #print 'bad split', node
+                continue
+
+            # --- determine split along incoming dataflow edges
+            #print 'confluence point', node, node.paths #, node.in_
+
+            remaining = [incoming.csites.copy() for incoming in node.in_ if incoming in allnodes]
+
+            # --- try to clean out larger collections, if subsets are in smaller ones
+            for (i, seti) in enumerate(remaining):
+                for setj in remaining[i+1:]:
+                    in_both = seti.intersection(setj)
+                    if in_both:
+                        if len(seti) > len(setj):
+                            seti -= in_both
+                        else:
+                            setj -= in_both
+
+            remaining = [setx for setx in remaining if setx]
+            if len(remaining) < 2:
+                continue
+
+            # --- if it exists, perform actual splitting
+            for splitsites in remaining[1:]:
+                ifa_split_class(cl, dcpa, splitsites, split)
+            return split, redundant, removals 
+        
+        # --- if all else fails, perform wholesale splitting
+        # XXX assign sets should be different; len(paths) > 1?
+        if len(paths) > 1 and len(csites) > 1:
+            for csite in csites[1:]:
+                ifa_split_class(cl, dcpa, [csite], split)
+            return split, redundant, removals
+
+def ifa_split_class(cl, dcpa, things, split):
+    split.append((cl, dcpa, things, cl.newdcpa))
+    cl.splits[cl.newdcpa] = dcpa
+    cl.newdcpa += 1
 
 # --- cartesian product algorithm (cpa) & iterative flow analysis (ifa)
 def iterative_dataflow_analysis():
