@@ -170,9 +170,6 @@ class class_:
         getgx().nrcltypes += 1
         getgx().typeclass[self.typenr] = self
 
-        # data adaptive analysis
-        self.nrcart = {}                # nr: cart
-        self.cartnr = {}                # cart: nr
         self.splits = {}                # contour: old contour (used between iterations)
         self.unused = []                # unused contours
 
@@ -502,10 +499,6 @@ def error(msg, node=None, warning=False):
 def merged(nodes, dcpa=False, inheritance=False): 
     merge = {}
 
-    #for n in nodes:
-    #    if isinstance(n.thing, Name) and n.thing.name == '__0':
-    #        print 'jow', n, n.parent, n.thing in getgx().inherited
-
     if inheritance: # XXX do we really need this crap
         mergeinh = merged([n for n in nodes if n.thing in getgx().inherited])
         mergenoinh = merged([n for n in nodes if not n.thing in getgx().inherited]) 
@@ -550,7 +543,6 @@ def lookup_class_module(objexpr, mv, parent):
     return lookupclass(objexpr, mv), lookupmodule(objexpr, mv)
 
 # --- analyze call expression: namespace, method call, direct call/constructor..
-
 def analyze_callfunc(node, check_exist=False): # XXX generate target list XXX uniform variable system!
     #print 'analyze callnode', node, inode(node).parent
     namespace, objexpr, method_call, mod_var, parent_constr = inode(node).mv.module, None, False, False, False # XXX mod_var
@@ -712,14 +704,6 @@ def connect_actual_formal(expr, func, parent_constr=False, check_error=False):
 
     for (actual, formal) in zip(actuals, formals):
         pairs.append((actual, func.vars[formal]))
-
-    # --- actual star argument: unpack to extra formals
-    if expr.star_args: 
-        pairs.append((expr.star_args, tuple([func.vars[f] for f in formals[len(actuals):]])))
-
-    # --- formal star argument: pack actual arguments
-    if func.varargs:
-        pairs.append((tuple(actuals[len(formals):]), func.vars[func.varargs]))
 
     return pairs
 

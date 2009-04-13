@@ -1196,7 +1196,6 @@ class moduleVisitor(ASTVisitor):
                 self.visit(node.node, func) 
                 inode(node.node).callfuncs.append(node) # XXX iterative dataflow analysis: move there?
                 inode(node.node).fakert = True
-                #inode(node.node).fakert.parent_callfunc = node
 
             ident = node.node.attrname
             inode(node.node.expr).callfuncs.append(node) # XXX iterative dataflow analysis: move there?
@@ -1237,11 +1236,9 @@ class moduleVisitor(ASTVisitor):
             inode(arg).callfuncs.append(node) # this one too
 
         if node.star_args or node.dstar_args:
-             error('automatic argument unpacking is not supported', node)
+             error('argument (un)packing is not supported', node)
 
         # --- handle instantiation or call
-        #objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr = analyze_callfunc(node)
-
         if constructor:
             self.instance(node, constructor, func)
             inode(node).callfuncs.append(node) # XXX see above, investigate
