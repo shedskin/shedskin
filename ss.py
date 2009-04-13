@@ -96,13 +96,11 @@ def analysis(source, testing=False):
 
     # --- non-ifa: copy classes for each allocation site
     for cl in getgx().allclasses:
-        if cl.ident in ['int_','float_','none', 'class_','str_']: continue
-
+        if cl.ident in ['int_','float_','none', 'class_','str_']: 
+            continue
         if cl.ident == 'list':
             cl.dcpa = len(getgx().list_types)+2
-        elif cl.ident == '__iter': # XXX huh
-            pass
-        else:
+        elif cl.ident != '__iter': # XXX huh
             cl.dcpa = 2
 
         for dcpa in range(1, cl.dcpa): 
@@ -135,7 +133,6 @@ def analysis(source, testing=False):
     # --- detect inheritance stuff
     upgrade_variables()
     getgx().merged_all = merged(getgx().types)
-
     getgx().merged_inh = merged(getgx().types, inheritance=True)
 
     analyze_virtuals()
@@ -172,10 +169,8 @@ def analysis(source, testing=False):
     for func in getgx().allfuncs:
         #if not func.mv.module.builtin and func.ident == '__init__':
         if func in getgx().inheritance_relations: 
-            #print 'inherited from', func, getgx().inheritance_relations[func]
             for inhfunc in getgx().inheritance_relations[func]:
                 for a, b in zip(func.registered, inhfunc.registered):
-                    #print a, '->', b 
                     inherit_rec(a, b)
 
                 for a, b in zip(func.registered_tempvars, inhfunc.registered_tempvars): # XXX more general
@@ -292,17 +287,14 @@ def generate_code():
 	prefix = sysconfig.get_config_var('prefix').replace('\\', '/')
     else:
         pyver = sysconfig.get_config_var('VERSION')
-
         includes = '-I' + sysconfig.get_python_inc() + ' ' + \
                    '-I' + sysconfig.get_python_inc(plat_specific=True)
-
         if sys.platform == 'darwin':
             ldflags = sysconfig.get_config_var('BASECFLAGS')
         else:
             ldflags = sysconfig.get_config_var('LIBS') + ' ' + \
                       sysconfig.get_config_var('SYSLIBS') + ' ' + \
                       '-lpython'+pyver 
-
             if not sysconfig.get_config_var('Py_ENABLE_SHARED'):
                 ldflags += ' -L' + sysconfig.get_config_var('LIBPL')
 
@@ -334,7 +326,6 @@ def generate_code():
 
     # --- generate Makefile
     makefile = file(os.path.join(getgx().output_dir, 'Makefile'), 'w')
-
 
     cppfiles = ' '.join([m.filename[:-3].replace(' ', '\ ')+'.cpp' for m in mods])
     hppfiles = ' '.join([m.filename[:-3].replace(' ', '\ ')+'.hpp' for m in mods])
@@ -388,22 +379,18 @@ def generate_code():
     print >>makefile
 
     print >>makefile, '.PHONY: all run full clean\n'
-
     print >>makefile, 'all:\t'+ident+'\n'
 
     if not getgx().extension_module:
         print >>makefile, 'run:\tall'
         print >>makefile, '\t./'+ident+'\n'
-
         print >>makefile, 'full:'
         print >>makefile, '\tshedskin '+ident+'; $(MAKE) run\n'
 
     print >>makefile, 'CPPFILES='+cppfiles
     print >>makefile, 'HPPFILES='+hppfiles+'\n'
-
     print >>makefile, ident+':\t$(CPPFILES) $(HPPFILES)'
     print >>makefile, '\t$(CC) $(CCFLAGS) $(CPPFILES) $(LFLAGS) -o '+ident+'\n'
-
     if sys.platform == 'win32':
         ident += '.exe'
     print >>makefile, 'clean:'
@@ -436,7 +423,6 @@ def main():
     if major != 2 or minor < 3:
         print '*ERROR* Shed Skin is not compatible with this version of Python'
         sys.exit(1)
-
     if sys.platform == 'win32' and os.path.isdir('c:/mingw'):
         print '*ERROR* please rename or remove c:/mingw, as it conflicts with Shed Skin'
         sys.exit()
