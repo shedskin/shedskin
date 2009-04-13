@@ -1,8 +1,8 @@
 Shed Skin Tutorial
 ==================
 
-:Version: Shed Skin 0.1
-:Date: January 22, 2009
+:Version: Shed Skin 0.1.1
+:Date: April 20, 2009
 :Authors: Mark Dufour and James Coughlan
 
 .. _Parallel Python: http://www.parallelpython.com/
@@ -33,7 +33,7 @@ Additionally, the type inference techniques employed by **Shed Skin** currently 
 
 Because **Shed Skin** is still in an early stage of development, it can also improve a lot. At the moment, you will probably run into some bugs when using it. Please report these, so they can be fixed! 
 
-At the moment, **Shed Skin** is only compatible with Python versions 2.3 to 2.5, and should work on GNU/Linux platforms, FreeBSD, OpenSolaris, OSX and Windows XP.
+At the moment, **Shed Skin** is only compatible with Python versions 2.3 to 2.6, and should work on GNU/Linux platforms, FreeBSD, OpenSolaris, OSX and Windows XP.
 
 .. _Typing Restrictions:
 
@@ -45,12 +45,12 @@ Typing Restrictions
     a = 1
     a = ’1’ # bad
 
-is not allowed. However, as in C++, types can be *abstract* or *generic*, so that, for example, ::
+is not allowed. However, as in C++, types can be *abstract*, so that, for example, ::
 
     a = A()
     a = B() # good
 
-where **A** and **B** have a common base class, is allowed. (See `Tips and Tricks`_ for an example of a generic type.) 
+where **A** and **B** have a common base class, is allowed. 
 
 The typing restriction also means that the elements of some collection (``list``, ``set``, etc.) cannot have different types (because their *subtype* must also be static). Thus: ::
 
@@ -64,7 +64,7 @@ are allowed, but ::
     e = [3, [1, 2]] # bad
     f = (0, ’abc’, [1, 2, 3]) # bad
 
-are not allowed. Of course, dictionary keys and values can be of different types: ::
+are not allowed. Of course, dictionary keys and values may be of different types: ::
 
     g = {’a’: 1, ’b’: 2, ’c’: 3} # good
     h = {’a’: 1, ’b’: ’hello’, ’c’: [1, 2, 3]} # bad
@@ -169,7 +169,7 @@ To install the **Windows** version, simply download and start it. (If you use **
 
 To install the **Debian** package, simply download and install it using your package manager. 
 
-If there are complaints about missing dependencies, the following explicitly installs them:
+If there are complaints about missing dependencies, the following explicitly installs these:
 
 ``sudo apt-get install g++ libpcre3-dev libgc-dev``
 
@@ -213,9 +213,13 @@ To install the **UNIX** source package on an **OpenSolaris** system, take the fo
  
  - run ``python setup.py`` and place the generated ``shedskin`` file in your path 
 
- - install the following packages:
+ - install the following packages: ::
 
-   ``SUNWgcc`` ``SUNWhea`` ``SUNWarc`` ``SUNWlibgc`` ``SUNWpcre``
+    SUNWgcc 
+    SUNWhea 
+    SUNWarc 
+    SUNWlibgc 
+    SUNWpcre
 
 **OSX**
 
@@ -298,7 +302,7 @@ To compile the module into an extension module, type: ::
     shedskin -e simple_module
     make
 
-On **UNIX** systems, for 'make' to succeed, you must have the Python development files installed (under **Debian**, install ``python-dev``).
+On **UNIX** systems, for 'make' to succeed, you must have the Python development files installed (under **Debian**, install ``python-dev``; under **Fedora**, install ``python-devel``).
 
 Depending on platform, the resulting extension module (*shared library*) is called ``simple_module.so`` or ``simple_module.pyd``. 
 
@@ -476,7 +480,6 @@ The ``shedskin`` command can be given the following options: ::
     -d --dir               Specify alternate directory for output files
     -e --extmod            Generate extension module
     -f --flags             Provide alternate Makefile flags
-    -i --infinite          Try to avoid infinite analysis time 
     -r --random            Use fast random number generator
     -w --nowrap            Disable wrap-around checking 
 
@@ -504,7 +507,7 @@ Tips and Tricks
 
 3. Profile-guided optimization can help to squeeze out even more performance. For a recent version of GCC, first compile and run the generated code with ``-fprofile-generate``, then with ``fprofile-use``.
 
-4. Several Python features (that may slow down your program) are not always necessary, and can be turned off for generated code. See the section `Command-line Options`_ for details. 
+4. Several Python features (that may slow down generated code) are not always necessary, and can be turned off. See the section `Command-line Options`_ for details. 
 
 5. When optimizing, it is extremely useful to know exactly how much time is spent in each part of your program. The program `Gprof2Dot`_ can be used to generate beautiful graphs for both the Python code and the compiled code.
 
@@ -516,32 +519,21 @@ Tips and Tricks
  
 **Tricks**
 
-1. The used type inference techniques can end up in an infinite loop, especially for larger programs. If this happens, it can help to run **Shed Skin** with the ``--infinite`` command-line option.
-
-2. The following two code fragments work the same, but only the second one is supported: ::
+1. The following two code fragments work the same, but only the second one is supported: ::
 
     statistics = {'nodes': 28, 'solutions': set()}
    
     class statistics: pass
     s = statistics(); s.nodes = 28; s.solutions = set()
 
-3. The evaluation order of arguments to a function or ``print`` changes with translation to C++, so it's better not to depend on it: ::
+2. The evaluation order of arguments to a function or ``print`` changes with translation to C++, so it's better not to depend on it: ::
 
     print 'hoei', raw_input() # raw_input is called before printing 'hoei'!
 
-4. Tuples with different types of elements and length > 2 are not supported. It can however be useful to 'simulate' them: ::
+3. Tuples with different types of elements and length > 2 are not supported. It can however be useful to 'simulate' them: ::
 
     a = (1, '1', 1.0) # bad
     a = (1, ('1', 1.0)) # good
-
-5. The following example shows how to model a *generic* type: ::
-
-    class matrix:
-        def __init__(self, hop):
-            self.unit = hop
-
-    m1 = matrix([1])
-    m2 = matrix([1.0])
 
 .. _How to help out in Shed Skin Development:
 
