@@ -1,5 +1,4 @@
 #
-### to compile this, use --infinite option, e.g. 'ss --infinite yopyra'
 ### to change the scene/resolution, edit scene.txt
 # 
 # GPL Notice:
