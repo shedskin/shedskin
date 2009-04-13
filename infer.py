@@ -555,19 +555,20 @@ def ifa():
         #     split contours on imprecisions; merge contours when reverse dataflow is unambiguous
 
         for dcpa in range(1, cl.dcpa):
-            if dcpa in unused: continue
-            #print 'examine pre', dcpa
+            if dcpa in unused: 
+                continue
 
-            attr_types = nr_classes[dcpa]
-
-            if ifa_split_vars(cl, dcpa, vars, attr_types, classes_nr, split, redundant, removals) != None:
+            if ifa_split_vars(cl, dcpa, vars, nr_classes, classes_nr, split, redundant, removals) != None:
                 return split, redundant, removals
 
     return split, redundant, removals
 
-def ifa_split_vars(cl, dcpa, vars, attr_types, classes_nr, split, redundant, removals):
+def ifa_split_vars(cl, dcpa, vars, nr_classes, classes_nr, split, redundant, removals):
+    attr_types = nr_classes[dcpa]
+
     for (varnum, var) in enumerate(vars):
-        if not (var, dcpa, 0) in getgx().cnode: continue
+        if not (var, dcpa, 0) in getgx().cnode: 
+            continue
         node = getgx().cnode[var, dcpa, 0]
 
         creation_points, paths, assignsets, allnodes, csites = ifa_flow_graph(cl, dcpa, node)
