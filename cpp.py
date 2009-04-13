@@ -2907,8 +2907,6 @@ def template_parameters():
         if not 'B' in defclass(clname).template_vars:
             defaultvar('B', defclass(clname), template_var=True)
 
-    return
-
 def template_repr(parent):
     if not parent or not parent.template_vars:
         return ''
