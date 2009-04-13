@@ -38,9 +38,9 @@ class moduleVisitor(ASTVisitor):
         self.fake_imports = {}
         self.ext_classes = {}
         self.ext_funcs = {}
-        self.lambdaname = {}
 
-        self.lambda_cache = {} # XXX ununboxable requires these.. 
+        self.lambdaname = {}
+        self.lambda_cache = {} 
         self.lambda_signum = {}
 
         self.tempcount = {}
@@ -63,7 +63,6 @@ class moduleVisitor(ASTVisitor):
             getgx().types[newnode] = set()
 
         fakefunc = CallFunc(Getattr(objexpr, attrname), args)
-
         self.visit(fakefunc, func)
         self.addconstraint((inode(fakefunc), newnode), func)
 
@@ -80,7 +79,8 @@ class moduleVisitor(ASTVisitor):
             child = child.getChildNodes()[0]
             count += 1
 
-        if isinstance(child, (UnarySub, UnaryAdd)): child = child.expr
+        if isinstance(child, (UnarySub, UnaryAdd)): 
+            child = child.expr
 
         if isinstance(child, CallFunc) and isinstance(child.node, Name):
             map = {'int': int, 'str': str, 'float': float}
@@ -160,7 +160,6 @@ class moduleVisitor(ASTVisitor):
             for (key,value) in node.items: # XXX filter
                 self.add_dynamic_constraint(node, key, 'unit', func)
                 self.add_dynamic_constraint(node, value, 'value', func)
-
         else:
             for child in node.nodes:
                 self.visit(child, func)
@@ -199,8 +198,6 @@ class moduleVisitor(ASTVisitor):
 
         elif isinstance(node, Const):
             return (list(inode(node).types())[0][0],)
-
-        return None
 
     # --- add dynamic constraint for constructor argument, e.g. '[expr]' becomes [].__setattr__('unit', expr)
     def add_dynamic_constraint(self, parent, child, varname, func): 
@@ -309,7 +306,7 @@ class moduleVisitor(ASTVisitor):
 
         # for each base class, duplicate methods
         for cl in self.classes.values():
-            for ancestor in cl.ancestors_upto(None)[1:]: # XXX #cl.ancestors():
+            for ancestor in cl.ancestors_upto(None)[1:]: 
 
                 cl.staticmethods.extend(ancestor.staticmethods)
                 cl.properties.update(ancestor.properties)
@@ -366,10 +363,6 @@ class moduleVisitor(ASTVisitor):
             if mod.ident not in parent.mv.imports: # XXX
                 if not fake:
                     parent.mv.imports[mod.ident] = mod
-                    #var = defaultvar(parent.ident, None)
-                    #var.imported = True
-                    #getgx().types[inode(var)] = set([(mod,0)]) 
-                
         return mod
 
     def importmodule(self, name, pseudonym, node, fake):
@@ -403,7 +396,6 @@ class moduleVisitor(ASTVisitor):
                         var.imported = True
                         var.invisible = True
                         self.addconstraint((inode(extvar), inode(var)), None)
-
                 continue
 
             if not pseudonym: pseudonym = name
@@ -479,19 +471,6 @@ class moduleVisitor(ASTVisitor):
         for formal in func.formals: 
             var = defaultvar(formal, func) 
             var.formal_arg = True
-            
-            if formal == func.varargs:
-                # star argument 
-                tnode = Tuple([])
-                self.constructor(tnode, 'tuple', func)
-                getgx().empty_constructors.remove(tnode) # XXX research bad interaction
-                self.addconstraint((inode(tnode), inode(var)), func)
-
-            elif formal == func.kwargs:
-                # dict argument
-                dnode = Dict([])
-                self.constructor(dnode, 'dict', func)
-                self.addconstraint((inode(dnode), inode(var)), func)
 
         self.visit(node.code, func)
 
@@ -505,7 +484,6 @@ class moduleVisitor(ASTVisitor):
                 self.visit(default, None) # defaults are global!! (XXX except when modeling..)
 
         # --- add implicit 'return None' if no return expressions 
-        #if not func.ident == '__init__' and not func.returnexpr:
         if not func.returnexpr:
             func.fakeret = Return(Name('None'))
             self.visit(func.fakeret, func)
@@ -581,7 +559,6 @@ class moduleVisitor(ASTVisitor):
 
     def visitDict(self, node, func=None):
         self.constructor(node, 'dict', func)
-
         if node.items: # XXX library bug
             node.lineno = node.items[0][0].lineno
 
@@ -599,12 +576,8 @@ class moduleVisitor(ASTVisitor):
             self.constructor(node, 'tuple', func)
 
     def visitSubscript(self, node, func=None): # XXX merge __setitem__, __getitem__
-        #if len(node.subs) > 1:
-        #    error('multidimensional subscripting is not supported', node)
-
         if len(node.subs) > 1:
             subscript = Tuple(node.subs)
-            #inode(node).faketuple = subscript
         else:
             subscript = node.subs[0]
 
@@ -619,7 +592,6 @@ class moduleVisitor(ASTVisitor):
             elif len(node.subs) > 1:
                 self.fakefunc(node, node.expr, '__getitem__', [subscript], func) 
             else:
-                #ident = get_ident(subscript) # XXX should model __getitem__ always..
                 ident = '__getitem__'
                 self.fakefunc(node, node.expr, ident, [subscript], func) 
 
