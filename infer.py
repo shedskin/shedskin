@@ -568,62 +568,21 @@ def ifa():
 def ifa_split_vars(cl, dcpa, vars, attr_types, classes_nr, split, redundant, removals):
     for (varnum, var) in enumerate(vars):
         if not (var, dcpa, 0) in getgx().cnode: continue
-          
-        # --- determine assignment sets for this contour
         node = getgx().cnode[var, dcpa, 0]
-        assignsets = {} # class set -> targets
-        alltargets = set()
 
-        for a in node.in_:
-            types = getgx().types[a]
-            if types:
-                if a.thing in getgx().assign_target: # XXX *args
-                    target = getgx().cnode[getgx().assign_target[a.thing], a.dcpa, a.cpa]
-                    #print 'target', a, target, types
-                    alltargets.add(target)
-                    assignsets.setdefault(merge_simple_types(types), []).append(target) 
+        creation_points, paths, assignsets, allnodes, csites = ifa_flow_graph(cl, dcpa, node)
 
-        #print 'assignsets', (cl.ident, dcpa), assignsets
-        #print 'examine contour', dcpa
-
-        bah = set() # XXX coarse recursion check
-        for ass in assignsets:
-            bah.update(ass)
-        if cl.ident not in getgx().builtins:
-            if not [c for c, _ in bah if c.ident not in (cl.ident, 'none')]:
-                #print 'buggert!'
-                continue
-
-        #print 'assignsets', (cl.ident, dcpa), assignsets
-
-        # --- determine backflow paths and creation points per assignment set
-        paths = {}
-        creation_points = {}
-        for assign_set, targets in assignsets.iteritems():
-            #print 'assignset', assign_set, targets
-            path = backflow_path(targets, (cl,dcpa))
-            #print 'path', path
-
-            paths[assign_set] = path
-            alloc = [n for n in path if not n.in_]
-            creation_points[assign_set] = alloc
-
-        #print 'creation points', creation_points
-
-        # --- collect all nodes
-        allnodes = set()
-        for path in paths.values(): 
-           allnodes.update(path)
-        endpoints = [huh for huh in allnodes if not huh.in_] # XXX call csites
-        #print 'endpoints', endpoints
+        if len(csites) == 1:
+            #print 'just one creation site!'
+            continue
 
         # --- split off empty assignment sets (eg, [], or [x[0]] where x is None in some template)
+        endpoints = [huh for huh in allnodes if not huh.in_] # XXX call csites
         if assignsets and cl.ident in ['list', 'tuple']: # XXX amaze, msp_ss
             allcsites = set()
             for n, types in getgx().types.iteritems():
                 if (cl, dcpa) in types and not n.in_:
                     allcsites.add(n)
-
             empties = list(allcsites-set(endpoints))
             if empties:
                 ifa_split_class(cl, dcpa, empties, split)
@@ -632,36 +591,9 @@ def ifa_split_vars(cl, dcpa, vars, attr_types, classes_nr, split, redundant, rem
             #print 'singleton set'
             continue
 
-        # --- per node, determine paths it is located on
-        for n in allnodes: n.paths = []
-
-        for assign_set, path in paths.iteritems():
-            for n in path:
-                n.paths.append(assign_set)
-
-        # --- for each node, determine creation points that 'flow' through it
-        csites = []
-        for n in allnodes: 
-            n.csites = set()
-            if not n.in_: # and (n.dcpa, n.cpa) != (0,0): # XXX
-                n.csites.add(n)
-                csites.append(n)
-        flow_creation_sites(csites, allnodes)
-    
-        if len(csites) == 1:
-            #print 'just one creation site!'
-            continue
-        
-        # --- determine creation nodes that are only one one path
-        noconf = set() 
-        for node in csites: #allnodes:
-            #print 'noconf', node, node.paths
-            if len(node.paths) == 1:
-                noconf.add(node)
-                #print 'no confusion about:', node, node.paths[0], node.parent
-
         # --- for these, see if we can reuse existing contours; otherwise, create new contours
         removed = 0
+        noconf = set([n for n in csites if len(n.paths)==1])
         nr_of_nodes = len(noconf)
         for node in noconf:
             assign_set = node.paths[0]
@@ -744,6 +676,44 @@ def ifa_split_vars(cl, dcpa, vars, attr_types, classes_nr, split, redundant, rem
             for csite in csites[1:]:
                 ifa_split_class(cl, dcpa, [csite], split)
             return split, redundant, removals
+
+def ifa_flow_graph(cl, dcpa, node):
+    creation_points, paths, assignsets = {}, {}, {}
+    allnodes = set()
+    csites = []
+
+    # --- determine assignment sets
+    for a in node.in_:
+        types = getgx().types[a]
+        if types:
+            if a.thing in getgx().assign_target: # XXX *args
+                target = getgx().cnode[getgx().assign_target[a.thing], a.dcpa, a.cpa]
+                #print 'target', a, target, types
+                assignsets.setdefault(merge_simple_types(types), []).append(target) 
+
+    # --- determine backflow paths and creation points per assignment set
+    for assign_set, targets in assignsets.iteritems():
+        path = backflow_path(targets, (cl,dcpa))
+        paths[assign_set] = path
+        allnodes.update(path)
+        alloc = [n for n in path if not n.in_]
+        creation_points[assign_set] = alloc
+
+    # --- per node, determine paths it is located on
+    for n in allnodes: n.paths = []
+    for assign_set, path in paths.iteritems():
+        for n in path:
+            n.paths.append(assign_set)
+
+    # --- for each node, determine creation points that 'flow' through it
+    for n in allnodes: 
+        n.csites = set()
+        if not n.in_:
+            n.csites.add(n)
+            csites.append(n)
+    flow_creation_sites(csites, allnodes)
+
+    return creation_points, paths, assignsets, allnodes, csites
 
 def ifa_split_class(cl, dcpa, things, split):
     split.append((cl, dcpa, things, cl.newdcpa))
