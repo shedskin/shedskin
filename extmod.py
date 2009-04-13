@@ -14,7 +14,6 @@ def do_extmod(gv):
     print >>gv.out, 'extern "C" {'
     print >>gv.out, '#include <Python.h>'
     print >>gv.out, '#include <structmember.h>\n'
-
     print >>gv.out, 'namespace __%s__ { /* XXX */\n' % gv.module.ident
 
     # filter out unsupported stuff
@@ -57,7 +56,6 @@ def do_extmod(gv):
             print >>gv.out, '    PyModule_AddObject(mod, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+gv.module.ident+'__::'+varname}
 
     print >>gv.out, '\n}'
-
     print >>gv.out, '\n} // namespace __%s__' % gv.module.ident
     print >>gv.out, '\n} // extern "C"'
 
@@ -190,14 +188,12 @@ def do_extmod_class(gv, cl):
     funcs = supported_funcs(gv, cl.funcs.values())
     vars = supported_vars(cl.vars.values())
 
-    print >>gv.out, '/* class %s */\n' % cl.ident
-
     # python object 
+    print >>gv.out, '/* class %s */\n' % cl.ident
     print >>gv.out, 'typedef struct {'
     print >>gv.out, '    PyObject_HEAD'
     print >>gv.out, '    __%s__::%s *__ss_object;' % (gv.module.ident, cl.ident)
     print >>gv.out, '} %sObject;\n' % cl.ident
-
     print >>gv.out, 'static PyMemberDef %sMembers[] = {' % cl.ident
     print >>gv.out, '    {NULL}\n};\n'
 
@@ -310,9 +306,7 @@ def convert_methods(gv, cl, declare):
         print >>gv.out, '    self->__ss_object = this;'
         print >>gv.out, '    __ss_proxy->__setitem__(self->__ss_object, self);'
         print >>gv.out, '    return (PyObject *)self;'
-        print >>gv.out, '}\n'
-
-        print >>gv.out, '}\n'
+        print >>gv.out, '}\n}\n'
 
         print >>gv.out, 'namespace __shedskin__ { /* XXX */\n' 
 
@@ -320,9 +314,7 @@ def convert_methods(gv, cl, declare):
         print >>gv.out, '    if(p->ob_type != &__%s__::%sObjectType)' % (gv.module.ident, cl.ident)
         print >>gv.out, '        throw new TypeError(new str("error in conversion to Shed Skin (%s expected)"));' % cl.ident
         print >>gv.out, '    return ((__%s__::%sObject *)p)->__ss_object;' % (gv.module.ident, cl.ident)
-        print >>gv.out, '}\n'
-
-        print >>gv.out, '}'
+        print >>gv.out, '}\n}'
         print >>gv.out, '#endif'
 
 def convert_methods2(gv, classes):
@@ -331,4 +323,3 @@ def convert_methods2(gv, classes):
     for cl in classes:
         print >>gv.out, 'template<> __%s__::%s *__to_ss(PyObject *p);' % (gv.module.ident, cl.cpp_name)
     print >>gv.out, '}'
-
