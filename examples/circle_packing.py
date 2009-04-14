@@ -12,16 +12,13 @@ http://nodebox.net/code/index.php/shared_2008-08-07-12-55-33
 Later ported to Python + Psyco + Pygame by leonardo maffi, V.1.0, Apr 14 2009
 """
 
-import sys, os
+import sys, os, time
 from random import randrange
 
 import pygame # if pygame is absent this program may just print coords
 from pygame.locals import QUIT, K_ESCAPE, MOUSEBUTTONDOWN, MOUSEBUTTONUP, MOUSEMOTION
 
 import circle
-
-import psyco
-psyco.full()
 
 # to center the window in the screen
 if sys.platform == 'win32' or sys.platform == 'win64':
@@ -35,7 +32,6 @@ NCIRCLES = 120
 
 # more iterations = smoother physics but slower animation
 ITERATIONS = 80
-
 
 SCREEN_WIDTH_2 = SCREEN_WIDTH / 2
 SCREEN_HEIGHT_2 = SCREEN_HEIGHT / 2
@@ -100,9 +96,13 @@ def get_input():
 def run():
     global dragged
 
+    iterations = 0
+    t0 = time.time()
     while True:
-        print sys.getrefcount(None)
-
+        iterations += 1
+        if iterations % 100 == 0:
+            print time.time()-t0
+            t0 = time.time()
         get_input()
 
         surface.fill((0, 0, 0))

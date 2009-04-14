@@ -244,7 +244,10 @@ template<> double __to_ss(PyObject *p);
 template<> void *__to_ss(PyObject *p);
 
 template<class T> PyObject *__to_py(T t) {
-    if(!t) return Py_None;
+    if(!t) {
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
     return t->__to_py__(); 
 }
 
