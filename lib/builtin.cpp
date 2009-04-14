@@ -826,17 +826,20 @@ str *str::join(pyseq<str *> *l) {
 }
 
 str *str::__slice__(int x, int l, int u, int s) {
-    __GC_STRING r;
     slicenr(x, l, u, s, __len__());
 
-    if(s > 0)
-        for(int i=l; i<u; i += s)
-            r += unit[i];
-    else
-        for(int i=l; i>u; i += s)
-            r += unit[i];
-
-    return new str(r);
+    if(s == 1)
+        return new str(unit.substr(l, u-l));
+    else {
+        __GC_STRING r;
+        if(s > 0)
+            for(int i=l; i<u; i += s)
+                r += unit[i];
+        else
+            for(int i=l; i>u; i += s)
+                r += unit[i];
+        return new str(r);
+    }
 }
 
 int str::__fixstart(int a, int b) {
