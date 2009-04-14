@@ -2081,7 +2081,7 @@ template<> int __mods(int a, int b) {
 #ifdef __SS_BIND
 template<> PyObject *__to_py(int i) { return PyInt_FromLong(i); }   
 template<> PyObject *__to_py(double d) { return PyFloat_FromDouble(d); }
-template<> PyObject *__to_py(void *v) { return Py_None; }
+template<> PyObject *__to_py(void *v) { Py_INCREF(Py_None); return Py_None; }
 
 template<> int __to_ss(PyObject *p) { 
     if(!PyInt_Check(p)) 
