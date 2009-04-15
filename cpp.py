@@ -2703,11 +2703,13 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None, check_extmo
         getmv().module.prop_includes.add(include)
 
     # --- recurse for types with parametric subtypes
-    template_vars = cl.template_vars # XXX why needed
-    if cl.ident in ['pyiter', 'pyseq','pyset']: # XXX dynamic subtype check
-        for c in classes:
-            if 'A' in c.template_vars:
-                template_vars = {'A': c.template_vars['A']}
+    #template_vars = cl.template_vars # XXX why needed
+    #if cl.ident in ['pyiter', 'pyseq','pyset']: # XXX dynamic subtype check
+    #    for c in classes:
+    #        if 'A' in c.template_vars:
+    #            template_vars = {'A': c.template_vars['A']}
+
+    template_vars = cl.tvar_names()
 
     if not template_vars:
         if cl.ident in getgx().cpp_keywords:
@@ -2716,10 +2718,17 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None, check_extmo
 
     subtypes = [] 
     for tvar in template_vars:
-        if cl.ident == 'tuple' and tvar != cl.unittvar:
-            continue
+#        if cl.ident == 'tuple' and tvar != cl.unittvar:
+#            continue
+#
+#        if cl.ident == 'list':
+#            print '1.', tvar
+#            print split_subsplit(split, tvar)
+#            print '2.', 'unit'
+#            print split_subsplit(split, 'unit', False)
+#            sys.exit()
 
-        subsplit = split_subsplit(split, tvar)
+        subsplit = split_subsplit(split, tvar, False)
         subtypes.append(typestrnew(subsplit, root_class, cplusplus, orig_parent, node, check_extmod, depth+1))
 
     ident = cl.ident
@@ -2868,6 +2877,8 @@ def split_subsplit(split, varname, tvar=True):
     for (dcpa, cpa), types in split.items():
         subsplit[dcpa, cpa] = set()
         for t in types:
+            if not tvar and not varname in t[0].vars: # XXX 
+                continue
             if tvar and not varname in t[0].template_vars: # XXX 
                 continue
 
