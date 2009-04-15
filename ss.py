@@ -127,9 +127,6 @@ def analysis(source, testing=False):
     getgx().merged_all = merged(getgx().types) #, inheritance=True)
     getgx().merged_inh = merged(getgx().types, inheritance=True)
 
-    # --- determine template parameters
-    template_parameters()
-
     # --- detect inheritance stuff
     upgrade_variables()
     getgx().merged_all = merged(getgx().types)
@@ -137,9 +134,7 @@ def analysis(source, testing=False):
 
     analyze_virtuals()
 
-    # --- determine integer/float types that cannot be unboxed
-    confused_vars()
-    # --- check other sources of confusion
+    # --- check some sources of confusion # XXX can we remove this
     confusion_misc() 
 
     getgx().merge_dcpa = merged(getgx().types, dcpa=True)

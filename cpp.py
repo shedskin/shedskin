@@ -2702,13 +2702,6 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None, check_extmo
             include = '/'.join(cl.module.mod_path)+'.hpp'
         getmv().module.prop_includes.add(include)
 
-    # --- recurse for types with parametric subtypes
-    #template_vars = cl.template_vars # XXX why needed
-    #if cl.ident in ['pyiter', 'pyseq','pyset']: # XXX dynamic subtype check
-    #    for c in classes:
-    #        if 'A' in c.template_vars:
-    #            template_vars = {'A': c.template_vars['A']}
-
     template_vars = cl.tvar_names()
 
     if not template_vars:
@@ -2718,16 +2711,6 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None, check_extmo
 
     subtypes = [] 
     for tvar in template_vars:
-#        if cl.ident == 'tuple' and tvar != cl.unittvar:
-#            continue
-#
-#        if cl.ident == 'list':
-#            print '1.', tvar
-#            print split_subsplit(split, tvar)
-#            print '2.', 'unit'
-#            print split_subsplit(split, 'unit', False)
-#            sys.exit()
-
         subsplit = split_subsplit(split, tvar, False)
         subtypes.append(typestrnew(subsplit, root_class, cplusplus, orig_parent, node, check_extmod, depth+1))
 
@@ -2863,12 +2846,14 @@ def assign_needs_cast_rec(argsplit, func, formalsplit, target):
 
     cl = formalclasses.pop()
 
-    for tvar in cl.template_vars:
-        argsubsplit = split_subsplit(argsplit, tvar)
-        formalsubsplit = split_subsplit(formalsplit, tvar)
+    tvars = cl.tvar_names()
+    if tvars:
+        for tvar in tvars:
+            argsubsplit = split_subsplit(argsplit, tvar, False)
+            formalsubsplit = split_subsplit(formalsplit, tvar, False)
 
-        if assign_needs_cast_rec(argsubsplit, func, formalsubsplit, target):
-            return True
+            if assign_needs_cast_rec(argsubsplit, func, formalsubsplit, target):
+                return True
 
     return False
 
@@ -2892,135 +2877,13 @@ def split_subsplit(split, varname, tvar=True):
 
     return subsplit
 
-def template_parameters():
-    # --- determine initial template variables (we might add prediction here later on)
-    builtinclasses = [cl for cl in getgx().allclasses if cl.mv.module.builtin]
-    nonbuiltinclasses = [cl for cl in getgx().allclasses if not cl.mv.module.builtin]
-
-    for cl in builtinclasses: # (first do class template vars, as function depend on them) # XXX recursion!
-        if cl.ident in ['datetime', 'date', 'time', 'timedelta']:
-            continue
-
-        vars = cl.vars.values()
-
-        if cl.ident in ['dict', 'defaultdict'] and 'unit' in cl.vars and 'value' in cl.vars:
-            vars = [cl.vars['unit'], cl.vars['value']]
-        elif cl == defclass('tuple2') and 'first' in cl.vars and 'second' in cl.vars:
-            vars = [cl.vars['first'], cl.vars['second']]
-            
-        for var in vars:
-            template_detect(var, cl)
-
-    for clname in ['list', 'tuple', 'set', 'frozenset']: # XXX remove
-        if not 'A' in defclass(clname).template_vars:
-            defaultvar('A', defclass(clname), template_var=True)
-    for clname in ['tuple2', 'dict']:
-        if not 'B' in defclass(clname).template_vars:
-            defaultvar('B', defclass(clname), template_var=True)
-
 def template_repr(parent):
     if not parent or not parent.template_vars:
         return ''
     return 'template <'+', '.join(['class '+n for n in parent.template_vars.keys()])+'> '
 
-# --- detect template variables: recurse over type, creating template variables for each polymorphic variable
-def template_detect(var, parent):
-    split = typesplit(var, parent)
-    #print 'split', var, split 
-
-    if (var.name == 'unit' and var.parent.ident in ['list','tuple','set','frozenset','__iter', 'deque']) or (var.name in ['unit', 'value'] and var.parent.ident in ['dict', 'defaultdict']) or (var.name in ['first', 'second'] and var.parent.ident == 'tuple2'):
-        if var.name == 'unit' and var.parent.ident == 'tuple': # XXX
-            var.parent.unittvar = string.ascii_uppercase[len(parent.template_vars)]
-
-        insert_template_var(split, parent)
-    else:
-        template_detect_rec(split, parent)
-
 def polymorphic_t(types):
     return polymorphic_cl([t[0] for t in types])
-
-def template_detect_rec(split, parent):
-    classes = polymorphic_cl(split_classes(split))
-    lcp = lowest_common_parents(classes)
-
-    for ts in split.values(): # confused type in single template
-        if len(polymorphic_t(ts)) > 1:
-            return
-
-    if len(lcp) > 1:
-        # --- create template var if no match with existing one
-        if not template_match(split, parent):
-            insert_template_var(split, parent)
-        return
-
-    elif len(classes) == 0:
-        return
-
-    cl = classes.pop()
-
-    template_vars = cl.template_vars
-    if lcp[0].ident in ['pyiter','pyseq', 'pyset']: # XXX
-        if 'A' in cl.template_vars:
-            template_vars = {'A':cl.template_vars['A']}
-
-    for tvar in template_vars: 
-        subsplit = split_subsplit(split, tvar)
-        template_detect_rec(subsplit, parent)
-
-def insert_template_var(split, parent):
-    var_nr = len(parent.template_vars)
-    if is_method(parent): 
-        var_nr += len(parent.parent.template_vars)
-
-    name = string.ascii_uppercase[var_nr]
-    new_tvar = defaultvar(name, parent, template_var=True)
-
-    for (dcpa, cpa), types in split.items():
-        newnode = cnode(new_tvar, dcpa, cpa)
-        getgx().types[newnode] = types
-
-# --- recursively visit all variable types, to see if ints/floats flow together with each other or pointer types
-def confused_vars():
-    for var in getgx().allvars:
-        #print 'confvar', var
-        parent = parent_func(var) # XXX not necessary?
-        if isinstance(parent, static_class): continue # XXX
-
-        split = typesplit(var, parent)
-        confused_var_rec(split, parent, var)
-
-def confused_var_rec(split, parent, var, dichotomy=False):
-    if template_match(split, parent):
-        return
-
-    alltypes = set() # XXX merge somehow
-    for (dcpa, cpa), types in split.items():
-        alltypes.update(types)
-
-    classes = polymorphic_t([t for t in alltypes if isinstance(t[0], class_)])
-             
-    if len(classes) > 1:
-        intfloat = [t[0] for t in alltypes if t[0].ident in ['int_', 'float_']]
-        if len(intfloat) == 2: # merge int/float interactions into floats
-            return
-
-        #print 'multismulti', classes, split, parent, var
-        if parent and isinstance(parent,class_) and parent.ident == 'tuple2' and var.name == 'unit':
-            return
-
-        if parent and isinstance(parent,function) and parent.ident in ['min','max']: # XXX builtin
-            return
-
-        return
-
-    elif len(classes) == 0:
-        return
-
-    cl = classes.pop()
-
-    for tvar in cl.template_vars: # XXX all polymorphic variables? 
-        subsplit = split_subsplit(split, tvar)
-        confused_var_rec(subsplit, parent, var, dichotomy)
 
 # --- number classes with low and high numbers, to enable constant-time subclass check
 def number_classes():
@@ -3038,47 +2901,8 @@ def number_class_rec(cl, counter):
 
 # --- check whether local variables/expressions match with class/function template variable
 def template_match(split, parent, orig_parent=None): 
-    # --- global: no surrounding template
-    if not parent:  
-        return False
+    return False
 
-    parents = [parent]
-    if is_method(parent): 
-        parents = [parent.parent, parent]
-
-    # --- match with class/function template variables
-    for parent in parents:
-        if not isinstance(parent, (class_, function)): # XXX shedskin -i tiles.py
-            continue
-
-        for var in parent.template_vars.values():
-            match = True
-
-            for (dcpa, cpa), types in split.items():
-                if not types: continue
-                if not (var,dcpa,0) in getgx().cnode: continue # XXX ahm..
-                if isinstance(parent, class_) and dcpa in parent.unused: # XXX research nicer fix
-                    continue
-
-                if isinstance(parent, function):
-                    node = getgx().cnode[var, dcpa, cpa]
-                else:
-                    node = getgx().cnode[var, dcpa, 0] # cpa=0 for class variables 
-
-                if set([t[0] for t in types]) != set([t[0] for t in node.types()]): 
-                    match = False
-                    break
-                    
-            if match: 
-                if isinstance(orig_parent, function) and orig_parent.listcomp:
-                    orig_parent.tvars.add(var)
-                return var
-    return None
-        
-def template_match_node(node, parent):
-    split = typesplit(node, parent)
-    return template_match(split, parent)
-    
 class Bitpair:
     def __init__(self, nodes, msg, inline):
         self.nodes = nodes
