@@ -205,6 +205,15 @@ class class_:
             a.update(cl.descendants())
         return a
 
+    def tvar_names(self):
+        if self.mv.module.builtin:
+            if self.ident in ['list', 'tuple', 'frozenset', 'set', 'frozenset', 'deque', '__iter', 'pyseq', 'pyiter', 'pyset']:
+                return ['unit']
+            elif self.ident in ['dict', 'defaultdict']:
+                return ['unit', 'value']
+            elif self.ident == 'tuple2':
+                return ['first', 'second']
+
     def __repr__(self):
         return 'class '+self.ident
 
@@ -300,7 +309,10 @@ class cnode:
         return newnode
 
     def types(self):
-        return getgx().types[self]
+        if self in getgx().types:
+            return getgx().types[self]
+        else:
+            return set() # XXX
 
     def __repr__(self):
         return repr((self.thing, self.dcpa, self.cpa))
