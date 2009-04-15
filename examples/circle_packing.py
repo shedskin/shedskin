@@ -100,7 +100,7 @@ def run():
     t0 = time.time()
     while True:
         iterations += 1
-        if iterations % 100 == 0:
+        if iterations % 10 == 0:
             print time.time()-t0
             t0 = time.time()
         get_input()

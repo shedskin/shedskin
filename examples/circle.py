@@ -21,6 +21,7 @@ class Circle(object):
         self.radius = radius
         self.color = color
 
+    @property
     def offset(self):
         return sqr_distance(self.x, self.y, SCREEN_WIDTH_2, SCREEN_HEIGHT_2)
 
@@ -33,7 +34,7 @@ class Circle(object):
         return d < (radii * radii)
 
 def pack(circles, damping=0.1, padding=2, exclude=None):
-    circles.sort(cmp=lambda c1,c2: cmp(c1.offset(), c2.offset()))
+    circles.sort(cmp=lambda c1,c2: cmp(c1.offset, c2.offset))
 
     len_circles = len(circles)
     # repulsive force: move away from intersecting circles.
