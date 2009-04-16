@@ -1,5 +1,41 @@
-34 programs that work with Shed Skin 0.1.1.
-(To compile fysphun.py, rdb.py and msp_ss.py, see comments in the top.)
+35 programs that work with Shed Skin 0.1.1.
 
 If you have another interesting test case, please send it to:
    mark.dufour@gmail.com
+
+amaze.py           
+dijkstra.py  
+mandelbrot.py   
+minilight.py  
+oliva2.py   
+rdb.py       
+sudoku3.py          
+voronoi.py
+brainfuck.py       
+fysphun.py   
+mao.py          
+msp_ss.py     
+othello.py  
+richards.py  
+sudo.py             
+yopyra.py
+chess.py           
+genetic.py   
+mask_alg.py     
+nbody.py      
+pisang.py   
+sieve.py     
+testprogs.py
+circle_packing.py  
+life.py      
+mastermind2.py  
+neural1.py    
+pygmy.py    
+sudoku1.py   
+tictactoe.py
+linalg.py    
+mastermind.py   
+neural2.py    
+pystone.py  
+sudoku2.py   
+TonyJpegDecoder.py
