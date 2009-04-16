@@ -3,39 +3,67 @@
 If you have another interesting test case, please send it to:
    mark.dufour@gmail.com
 
-amaze.py           
-dijkstra.py  
-mandelbrot.py   
-minilight.py  
-oliva2.py   
-rdb.py       
-sudoku3.py          
-voronoi.py
-brainfuck.py       
-fysphun.py   
-mao.py          
-msp_ss.py     
-othello.py  
-richards.py  
-sudo.py             
-yopyra.py
-chess.py           
-genetic.py   
-mask_alg.py     
-nbody.py      
-pisang.py   
-sieve.py     
-testprogs.py
-circle_packing.py  
-life.py      
-mastermind2.py  
-neural1.py    
-pygmy.py    
-sudoku1.py   
-tictactoe.py
-linalg.py    
-mastermind.py   
-neural2.py    
-pystone.py  
-sudoku2.py   
-TonyJpegDecoder.py
+lines name description compilation
+
+   479 amaze.py
+    64 brainfuck.py
+   371 chess.py
+   122 circle_packing.py
+    85 circle.py
+   130 dijkstra.py
+   265 fysphun.py
+   112 genetic.py
+   109 life.py
+   235 linalg.py
+    33 mandelbrot.py
+   245 mao.py
+   176 mask_alg.py
+   153 mastermind2.py
+     7 mastermind.py
+     7 minilight.py
+  1706 msp_ss.py
+   132 nbody.py
+   100 neural1.py
+   172 neural2.py
+   146 oliva2.py
+   123 othello.py
+   112 pisang.py
+   344 pygmy.py
+   344 pygmy.ss.py
+   220 pystone.py
+   621 rdb.py
+   404 richards.py
+   113 sieve.py
+   181 sudoku1.py
+   203 sudoku2.py
+   183 sudoku3.py
+   104 sudo.py
+    48 testprogs.py
+   175 tictactoe.py
+  1235 TonyJpegDecoder.py
+    52 voronoi.py
+   399 yopyra.py
+  9710 total
+
+   45 ml/camera.py
+   53 ml/image.py
+    0 ml/__init__.py
+  104 ml/minilight.py
+   35 ml/raytracer.py
+   47 ml/scene.py
+  101 ml/spatialindex.py
+   45 ml/surfacepoint.py
+   92 ml/triangle.py
+   77 ml/vector3f.py
+  599 total
+
+  19 mm/board.py
+  85 mm/code.py
+  28 mm/colour.py
+  48 mm/game.py
+   0 mm/__init__.py
+ 118 mm/mastermind.py
+  22 mm/peg.py
+  23 mm/row.py
+ 343 total
+
