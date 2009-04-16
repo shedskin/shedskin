@@ -173,6 +173,9 @@ def annotate():
         source[expr.lineno-1] += '\n'
 
     for module in getgx().modules.values(): 
+        if module.builtin:
+            continue
+
         mv = module.mv
         setmv(mv)
 
@@ -234,13 +237,12 @@ def annotate():
                 paste(expr, typesetreprnew(expr.expr, inode(expr).parent, False))
 
         # --- output annotated file (skip if no write permission)
-        if not module.builtin: 
-            try:
-                out = open(os.path.join(getgx().output_dir, module.filename[:-3]+'.ss.py'),'w')
-                out.write(''.join(source))
-                out.close()
-            except IOError:
-                pass
+        try:
+            out = open(os.path.join(getgx().output_dir, module.filename[:-3]+'.ss.py'),'w')
+            out.write(''.join(source))
+            out.close()
+        except IOError:
+            pass
 
 # --- generate C++ and Makefiles
 def generate_code():
