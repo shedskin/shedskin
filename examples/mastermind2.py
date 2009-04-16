@@ -2,9 +2,6 @@
 # http://code.activestate.com/recipes/496907/
 # Version speed up and adapted to Psyco D by leonardo maffi, V.1.0, Apr 4 2009
 
-# this code sorely lacks doctests/unittests!
-# This is 26 times faster than the original Python version.
-
 import random
 from math import log
 from collections import defaultdict
