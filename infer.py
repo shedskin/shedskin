@@ -512,17 +512,7 @@ def ifa():
         #print '---', cl.ident
         cl.newdcpa = cl.dcpa 
 
-        # --- determine instance variables XXX kill
-        if cl.ident in ['list', 'tuple', 'frozenset', 'set','__iter']:
-            names = ['unit']
-        elif cl.ident == 'tuple2':
-            names = ['first', 'second']
-        elif cl.ident == 'dict':
-            names = ['unit', 'value']
-        else:
-            names = [name for name in cl.vars if not name.startswith('__')]
-        vars = [cl.vars[name] for name in names if name in cl.vars]
-
+        vars = [cl.vars[name] for name in cl.tvar_names() if name in cl.vars]
         #print 'vars', vars
 
         unused = cl.unused[:]
@@ -546,14 +536,11 @@ def ifa():
             nr_classes[dcpa] = attr_types
             classes_nr[attr_types] = dcpa
 
-        #print 'unused', cl.unused
         if redundant or cl.splits: # investigate cl.splits.. suppose contour 3->5 and 1->5 splits.. 5->mother?
             #print 'skip class..', redundant, cl.splits
             continue
 
-        # --- examine each contour:
-        #     split contours on imprecisions; merge contours when reverse dataflow is unambiguous
-
+        # --- examine each class copy
         for dcpa in range(1, cl.dcpa):
             if dcpa in unused: 
                 continue
