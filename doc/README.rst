@@ -329,13 +329,15 @@ It is useful to know which version of the module you are importing: either the *
 
 **Restrictions**
 
-There are three important restrictions that must be observed when compiling an extension module:
+There are several important restrictions that must be observed when compiling an extension module:
 
 1. Only builtin scalar and container types (``int``, ``float``, ``complex``, ``str``, ``list``, ``tuple``, ``dict``, ``set``, ``frozenset``) as well as ``None`` and instances of user-defined classes can be passed/returned. So for instance, anonymous functions and iterators are currently not supported.
 
 2. Builtin objects are completely converted for each call/return from **Shed Skin** to **CPython** types and back, including their contents. This means you cannot change **CPython** builtin objects from the **Shed Skin** side and vice versa, and conversion may be slow. Instances of user-defined classes can be passed/returned without any conversion, and changed from either side.
 
 3. Global variables are converted once, at initialization time, from **Shed Skin** to **CPython**. This means that the value of the **CPython** version and **Shed Skin** version can change independently. This problem can be avoided by only using constant globals, or by adding getter/setter functions.
+
+4. Keyword arguments are not supported at the moment.
 
 **Example for NumPy/SciPy users**
 
