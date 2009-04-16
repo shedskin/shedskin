@@ -88,8 +88,6 @@ class variable:
         self.parent = parent
         self.invisible = False            # not in C++ output
         self.formal_arg = False
-        self.template_variable = False    
-        self.template_disabled = False
         self.imported = False
         self.initexpr = None
         self.registered = False
@@ -117,7 +115,6 @@ class function:
         self.parent = parent 
         self.constraints = set()
         self.vars = {}
-        self.template_vars = {}
         self.varargs = None
         self.kwargs = None
         self.globals = []
@@ -162,7 +159,6 @@ class class_:
         self.funcs = {}
         self.virtuals = {}              # 'virtually' called methods 
         self.virtualvars = {}           # 'virtual' variables
-        self.template_vars = {}
         self.properties = {}
         self.staticmethods = []
 
@@ -216,10 +212,6 @@ class class_:
 
     def __repr__(self):
         return 'class '+self.ident
-
-    def template(self): # XXX nokeywords
-        if self.template_vars: return self.ident+'<'+','.join(self.template_vars)+'>'
-        else: return self.ident
 
 class static_class: # XXX merge with regular class
     def __init__(self, cl):
@@ -358,8 +350,8 @@ def fastfor(node):
 def lookupvar(name, parent):
     return defvar(name, parent, False)
 
-def defaultvar(name, parent, worklist=None, template_var=False):
-    var = defvar(name, parent, True, worklist, template_var)
+def defaultvar(name, parent, worklist=None):
+    var = defvar(name, parent, True, worklist)
 
     if isinstance(parent, function) and parent.listcomp and not var.registered:
         while isinstance(parent, function) and parent.listcomp: # XXX
@@ -369,12 +361,10 @@ def defaultvar(name, parent, worklist=None, template_var=False):
 
     return var
 
-def defvar(name, parent, local, worklist=None, template_var=False):
+def defvar(name, parent, local, worklist=None):
     if parent and name in parent.vars:
         return parent.vars[name]
-    if template_var:
-        dest = parent.template_vars
-    elif parent and local:
+    if parent and local:
         dest = parent.vars
     else:
         # recursive lookup
@@ -397,10 +387,7 @@ def defvar(name, parent, local, worklist=None, template_var=False):
         return None
 
     var = variable(name, parent)
-    if template_var:
-        var.template_variable = True
-    else:
-        getgx().allvars.add(var)
+    getgx().allvars.add(var)
 
     dest[name] = var
     newnode = cnode(var, parent=parent) 

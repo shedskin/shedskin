@@ -23,7 +23,7 @@ import textwrap, string
 
 from backward import *
 
-# --- code generation visitor; use type information; c++ templates
+# --- code generation visitor; use type information
 class generateVisitor(ASTVisitor):
     def __init__(self, module):
         self.output_base = os.path.join(getgx().output_dir, module.filename[:-3])
@@ -312,7 +312,7 @@ class generateVisitor(ASTVisitor):
             if isinstance(child, Class): 
                 gotcl = True
                 cl = defclass(child.name)
-                print >>self.out, template_repr(cl)+'class '+nokeywords(cl.ident)+';'
+                print >>self.out, 'class '+nokeywords(cl.ident)+';'
 
         # --- lambda typedefs
         if gotcl: print >>self.out
@@ -580,7 +580,7 @@ class generateVisitor(ASTVisitor):
             pyobjbase = ['public pyobj']
 
         clnames = [namespaceclass(b) for b in cl.bases]
-        self.output(template_repr(cl)+'class '+nokeywords(cl.ident)+' : '+', '.join(pyobjbase+['public '+clname for clname in clnames])+' {')
+        self.output('class '+nokeywords(cl.ident)+' : '+', '.join(pyobjbase+['public '+clname for clname in clnames])+' {')
 
         self.do_comment(node.doc)
         self.output('public:')
@@ -633,10 +633,6 @@ class generateVisitor(ASTVisitor):
     def class_cpp(self, node, declare=False): # XXX declare
         cl = getmv().classes[node.name]
 
-        if cl.template_vars:  # XXX
-            self.output('class_ *cl_'+cl.cpp_name+';\n')
-            return
-
         if cl.virtuals:
             self.virtuals(cl, declare)
 
@@ -650,9 +646,9 @@ class generateVisitor(ASTVisitor):
         for func in cl.funcs.values():
             if func.node and not (func.ident=='__init__' and func.inherited): 
                 self.visitFunction(func.node, cl, declare)
-        if cl.has_copy and not 'copy' in cl.funcs and not cl.template_vars:
+        if cl.has_copy and not 'copy' in cl.funcs:
             self.copy_method(cl, '__copy__', declare)
-        if cl.has_deepcopy and not 'deepcopy' in cl.funcs and not cl.template_vars:
+        if cl.has_deepcopy and not 'deepcopy' in cl.funcs:
             self.copy_method(cl, '__deepcopy__', declare)
         
         # --- class variable declarations
@@ -706,9 +702,9 @@ class generateVisitor(ASTVisitor):
             print >>self.out
 
     def copy_method(self, cl, name, declare): # XXX merge?
-        header = cl.template()+' *'
+        header = nokeywords(cl.ident)+' *'
         if not declare:
-            header += cl.template()+'::'
+            header += nokeywords(cl.ident)+'::'
         header += name+'('
         self.start(header)
         
@@ -716,10 +712,10 @@ class generateVisitor(ASTVisitor):
             self.append('dict<void *, pyobj *> *memo')
         self.append(')')
 
-        if (cl.template_vars and declare) or (not cl.template_vars and not declare):
+        if not declare:
             print >>self.out, self.line+' {'
             self.indent()
-            self.output(cl.template()+' *c = new '+cl.template()+'();')
+            self.output(nokeywords(cl.ident)+' *c = new '+nokeywords(cl.ident)+'();')
             if name == '__deepcopy__':
                 self.output('memo->__setitem__(this, c);')
            
@@ -1128,14 +1124,8 @@ class generateVisitor(ASTVisitor):
         ident = func.ident
         self.start()
 
-        # --- function/method template
-        header = ''
-
-        if method and not declare:
-            header = template_repr(func.parent)
-        header += template_repr(func)
-            
         # --- return expression
+        header = ''
         if is_init:
             ident = nokeywords(func.parent.ident)
         elif func.ident in ['__hash__']:
@@ -1155,10 +1145,7 @@ class generateVisitor(ASTVisitor):
 
         # --- method header
         if method and not declare:
-            if func.parent.template_vars:
-                header += nokeywords(func.parent.ident)+'<'+','.join(func.parent.template_vars.keys())+'>::'
-            else:
-                header += nokeywords(func.parent.ident)+'::'
+            header += nokeywords(func.parent.ident)+'::'
         
         if is_init:
             header += ident
@@ -1194,7 +1181,7 @@ class generateVisitor(ASTVisitor):
         if is_init:
             print >>self.out, self.line+' {'
 
-        elif declare and not (is_method(func) and func.parent.template_vars) and not func.template_vars: # XXX general func
+        elif declare: 
             self.eol()
             return
         else:
@@ -1235,8 +1222,6 @@ class generateVisitor(ASTVisitor):
             return
         if declare and func.declared: # XXX
             return
-        if not declare and ((is_method(func) and func.parent.template_vars) or func.template_vars): # XXX general func
-            return
 
         # check whether function is called at all (possibly via inheritance)
         if not self.inhcpa(func):
@@ -1246,13 +1231,12 @@ class generateVisitor(ASTVisitor):
             if not (declare and func.ident in func.parent.virtuals):
                 return
               
-        if func.isGenerator and ((declare and func.template_vars) or not declare):
+        if func.isGenerator and not declare:
             self.generator_class(func)
 
         self.func_header(func, declare)
-        if declare and not (is_method(func) and func.parent.template_vars) and not func.template_vars: # XXX general func
+        if declare:
             return
-
         self.indent()
 
         if func.isGenerator:
@@ -1289,9 +1273,7 @@ class generateVisitor(ASTVisitor):
         self.output('}\n')
 
     def generator_class(self, func):
-        templatestr=''
-        if func.template_vars: templatestr = 'template <'+','.join(['class '+f for f in func.template_vars])+'> '
-        self.output('%sclass __gen_%s : public %s {' % (templatestr, func.ident, typesetreprnew(func.retnode.thing, func)[:-2]))
+        self.output('class __gen_%s : public %s {' % (func.ident, typesetreprnew(func.retnode.thing, func)[:-2]))
         self.output('public:')
         self.indent()
         pairs = [(typesetreprnew(func.vars[f], func), self.cpp_name(f)) for f in func.vars]
@@ -1329,9 +1311,7 @@ class generateVisitor(ASTVisitor):
         self.output('};\n')
 
     def generator_body(self, func):
-        templatestr=''
-        if func.template_vars: templatestr = '<'+','.join(func.template_vars)+'>'
-        self.output('return new __gen_%s%s(%s);\n' % (func.ident, templatestr, ','.join([self.cpp_name(f) for f in func.formals]))) # XXX formals
+        self.output('return new __gen_%s(%s);\n' % (func.ident, ','.join([self.cpp_name(f) for f in func.formals]))) # XXX formals
         self.deindent()
         self.output('}\n')
 
@@ -2190,10 +2170,7 @@ class generateVisitor(ASTVisitor):
 
         ts = typesetreprnew(node, lcfunc) 
         if not ts.endswith('*'): ts += ' '
-        trepr = ''
-        if lcfunc.tvars:
-            trepr = 'template<'+', '.join(['class '+tvar.name for tvar in lcfunc.tvars])+'> ' 
-        self.output(trepr+'static inline '+ts+lcfunc.ident+'('+', '.join(args)+') {')
+        self.output('static inline '+ts+lcfunc.ident+'('+', '.join(args)+') {')
         self.indent()
 
         # --- local: (x,y), result
@@ -2650,20 +2627,14 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None, check_extmo
     classes = polymorphic_cl(split_classes(split))
     lcp = lowest_common_parents(classes)
 
-    # --- multiple parent classes: check template variables
+    # --- multiple parent classes
     if len(lcp) > 1:              
-        tvar = template_match(split, root_class, orig_parent)
-        if tvar and check_extmod:
-            raise ExtmodError()
-        if tvar: return tvar.name
         if set(lcp) == set([defclass('int_'),defclass('float_')]):
             return conv['float_']
         if inode(node).mv.module.builtin:
             return '***ERROR*** '
         if isinstance(node, variable):
             if not node.name.startswith('__') : # XXX startswith
-                #print 'beh', classes, lcp, split, template_match(split, root_class, orig_parent)
-
                 if orig_parent: varname = "%s" % node
                 else: varname = "'%s'" % node
                 error("variable %s has dynamic (sub)type: {%s}" % (varname, ', '.join([conv2.get(cl.ident, cl.ident) for cl in lcp])), warning=True)
@@ -2677,8 +2648,6 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None, check_extmo
     cl = lcp.pop() 
 
     if check_extmod and cl.mv.module.builtin and not (cl.mv.module.ident == 'builtin' and cl.ident in ['int_', 'float_', 'complex', 'str_', 'list', 'tuple', 'tuple2', 'dict', 'set', 'frozenset', 'none']):
-        raise ExtmodError()
-    elif check_extmod and not cl.mv.module.builtin and cl.template_vars:
         raise ExtmodError()
 
     # --- simple built-in types
@@ -2703,16 +2672,15 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None, check_extmo
         getmv().module.prop_includes.add(include)
 
     template_vars = cl.tvar_names()
-
-    if not template_vars:
+    if template_vars:
+        subtypes = [] 
+        for tvar in template_vars:
+            subsplit = split_subsplit(split, tvar)
+            subtypes.append(typestrnew(subsplit, root_class, cplusplus, orig_parent, node, check_extmod, depth+1))
+    else:
         if cl.ident in getgx().cpp_keywords:
             return namespace+getgx().ss_prefix+map(cl.ident)
         return namespace+map(cl.ident)
-
-    subtypes = [] 
-    for tvar in template_vars:
-        subsplit = split_subsplit(split, tvar, False)
-        subtypes.append(typestrnew(subsplit, root_class, cplusplus, orig_parent, node, check_extmod, depth+1))
 
     ident = cl.ident
 
@@ -2738,7 +2706,7 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None, check_extmo
 def typesplit(node, parent):
     split = {} 
 
-    if isinstance(parent, function) and parent in getgx().inheritance_relations: # XXX templates
+    if isinstance(parent, function) and parent in getgx().inheritance_relations: 
         if node in getgx().merged_inh:
             split[1,0] = getgx().merged_inh[node]
         return split
@@ -2849,38 +2817,25 @@ def assign_needs_cast_rec(argsplit, func, formalsplit, target):
     tvars = cl.tvar_names()
     if tvars:
         for tvar in tvars:
-            argsubsplit = split_subsplit(argsplit, tvar, False)
-            formalsubsplit = split_subsplit(formalsplit, tvar, False)
+            argsubsplit = split_subsplit(argsplit, tvar)
+            formalsubsplit = split_subsplit(formalsplit, tvar)
 
             if assign_needs_cast_rec(argsubsplit, func, formalsubsplit, target):
                 return True
 
     return False
 
-def split_subsplit(split, varname, tvar=True):
+def split_subsplit(split, varname):
     subsplit = {}
     for (dcpa, cpa), types in split.items():
         subsplit[dcpa, cpa] = set()
         for t in types:
-            if not tvar and not varname in t[0].vars: # XXX 
+            if not varname in t[0].vars: # XXX 
                 continue
-            if tvar and not varname in t[0].template_vars: # XXX 
-                continue
-
-            if tvar:
-                var = t[0].template_vars[varname]
-            else:
-                var = t[0].vars[varname]
-
+            var = t[0].vars[varname]
             if (var, t[1], 0) in getgx().cnode: # XXX yeah?
                 subsplit[dcpa, cpa].update(getgx().cnode[var, t[1], 0].types())
-
     return subsplit
-
-def template_repr(parent):
-    if not parent or not parent.template_vars:
-        return ''
-    return 'template <'+', '.join(['class '+n for n in parent.template_vars.keys()])+'> '
 
 def polymorphic_t(types):
     return polymorphic_cl([t[0] for t in types])
@@ -2898,10 +2853,6 @@ def number_class_rec(cl, counter):
         counter = number_class_rec(child, counter+1)
     cl.high = counter
     return counter
-
-# --- check whether local variables/expressions match with class/function template variable
-def template_match(split, parent, orig_parent=None): 
-    return False
 
 class Bitpair:
     def __init__(self, nodes, msg, inline):
