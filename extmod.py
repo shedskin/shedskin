@@ -17,7 +17,7 @@ def do_extmod(gv):
     print >>gv.out, 'namespace __%s__ { /* XXX */\n' % gv.module.ident
 
     # filter out unsupported stuff
-    classes = supported_classes(gv.module.classes.values())
+    classes = gv.module.classes.values()
     funcs = supported_funcs(gv, gv.module.funcs.values())
     vars = supported_vars(getmv().globals.values())
 
@@ -173,16 +173,6 @@ def supported_vars(vars): # XXX virtuals?
         supported.append(var)
     return supported
 
-def supported_classes(classes, warn=True):
-    result = []
-    for cl in classes:
-        if cl.template_vars:
-            if warn:
-                print '*WARNING* class not exported:', cl.ident
-        else:
-            result.append(cl)
-    return result
-
 def do_extmod_class(gv, cl):
     # determine methods, vars to expose 
     funcs = supported_funcs(gv, cl.funcs.values())
@@ -319,7 +309,6 @@ def convert_methods(gv, cl, declare):
         print >>gv.out, '#endif'
 
 def convert_methods2(gv, classes):
-    classes = supported_classes(classes, warn=False)
     print >>gv.out, 'namespace __shedskin__ { /* XXX */\n'
     for cl in classes:
         print >>gv.out, 'template<> __%s__::%s *__to_ss(PyObject *p);' % (gv.module.ident, cl.cpp_name)
