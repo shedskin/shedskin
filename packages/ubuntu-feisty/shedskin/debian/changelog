@@ -1,4 +1,4 @@
-shedskin (0.1-0ubuntu1) feisty; urgency=low
+shedskin (0.1.1-0ubuntu1) feisty; urgency=low
 
   * added 5 new example programs, now 35 in total
   * removal of generic type support, and -i option
