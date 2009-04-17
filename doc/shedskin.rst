@@ -7,15 +7,23 @@ An experimental (restricted) Python-to-C++ Compiler
 ---------------------------------------------------
 
 :Author: mark.dufour@gmail.com
-:Date:   2009-01-25
+:Date:   2009-04-20
 :Copyright: GPL version 3 or later
-:Version: 0.1
+:Version: 0.1.1
 :Manual section: 1
 
 SYNOPSIS
 ========
 
-  shedskin [OPTION]... FILE
+shedskin [OPTION]... FILE
+
+ -a --noann             Don't output annotated source code
+ -b --nobounds          Disable bounds checking
+ -d --dir               Specify alternate directory for output files
+ -e --extmod            Generate extension module
+ -f --flags             Provide alternate Makefile flags
+ -r --random            Use fast random number generator 
+ -w --nowrap            Disable wrap-around checking 
 
 DESCRIPTION
 ===========
@@ -26,20 +34,13 @@ LIMITATIONS
 ===========
 (See the documentation for a more detailed overview.)
 
-1. Variables must be (implicitly) statically typed. Abstract and generic types (as in C++) are supported.
+1. Variables must be (implicitly) statically typed. Abstract types (as in C++) are supported.
 2. Several Python features cannot be used or only partially. For example, nested functions and variable numbers of arguments are not supported.
 3. Programs cannot freely use the standard library, only those available in ``lib/``.
 
 OPTIONS
 =======
 
--a, --noann             Don't output annotated source code
--b, --bounds            Enable bounds checking
--d, --dir               Specify alternate directory for output files
--e, --extmod            Generate extension module
--f, --flags             Provide alternate Makefile flags
--i, --infinite          Try to avoid infinite analysis time 
--w, --nowrap            Disable wrap-around checking 
 
 THANKS
 ======
