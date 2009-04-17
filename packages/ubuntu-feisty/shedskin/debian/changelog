@@ -1,3 +1,32 @@
+shedskin (0.1-0ubuntu1) feisty; urgency=low
+
+  * added 5 new example programs, now 35 in total
+  * removal of generic type support, and -i option
+  * many cleanups and refactoring in the compiler core (10% smaller now)
+  * two important TI fixes
+  * compiler uses about 25% less memory and CPU time
+  * several extension module fixes
+  * new command-line option -r, to use C rand() (much faster)
+  * bounds checking now on by default (-b disables it now)
+  * many minor bug fixes/improvements
+  * added performance tips to the tutorial
+
+ -- Mark Dufour <mark.dufour@gmail.com>  Mon,  19 Jan 2009 10:00:00 +0100
+
+shedskin (0.1-0ubuntu1) feisty; urgency=low
+  
+  * almost complete support for 'os' (UNIX)
+  * jpeg decoder (1200 lines) and two other programs added to ss-progs
+  * extension module fixes
+  * important type inference fix (disappearing type)
+  * improved variable overloading
+  * casting improvements
+  * fixes for setslice, delslice corner cases
+  * xrange returns xrange object instead of iterator
+  * several other bugfixes 
+
+ -- Mark Dufour <mark.dufour@gmail.com>  Mon,  19 Jan 2009 10:00:00 +0100
+
 shedskin (0.0.30-0ubuntu1) feisty; urgency=low
 
   * user-defined class support in extension modules
