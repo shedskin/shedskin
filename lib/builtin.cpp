@@ -1970,7 +1970,7 @@ void print(int n, ...) { // XXX merge four functions
          vals->append(va_arg(args, pyobj *));
      va_end(args);
      str *s = __mod5(vals, 1);
-     if(print_space && print_lastchar != '\n' && !(len(s) && s->unit[0] == '\n'))
+     if(print_space && print_lastchar != '\n' && print_lastchar != '\t' && !(len(s) && s->unit[0] == '\n'))
          std::cout << " ";
      std::cout << s->unit;
      print_lastchar = s->unit[len(s)-1];
@@ -1985,7 +1985,7 @@ void print(file *f, int n, ...) {
          vals->append(va_arg(args, pyobj *));
      va_end(args);
      str *s = __mod5(vals, 1);
-     if(f->print_space && f->print_lastchar != '\n' && !(len(s) && s->unit[0] == '\n'))
+     if(f->print_space && f->print_lastchar != '\n' && f->print_lastchar != '\t' && !(len(s) && s->unit[0] == '\n'))
          f->putchar(' ');
      f->write(s);
      f->print_lastchar = s->unit[len(s)-1];
@@ -2000,7 +2000,7 @@ void printc(int n, ...) {
          vals->append(va_arg(args, pyobj *));
      va_end(args);
      str *s = __mod5(vals, 0);
-     if(print_space && print_lastchar != '\n' && !(len(s) && s->unit[0] == '\n'))
+     if(print_space && print_lastchar != '\n' && print_lastchar != '\t' && !(len(s) && s->unit[0] == '\n'))
          std::cout << " ";
      std::cout << s->unit;
      if(len(s)) print_lastchar = s->unit[len(s)-1];
@@ -2016,7 +2016,7 @@ void printc(file *f, int n, ...) {
          vals->append(va_arg(args, pyobj *));
      va_end(args);
      str *s = __mod5(vals, 0);
-     if(f->print_space && f->print_lastchar != '\n' && !(len(s) && s->unit[0] == '\n'))
+     if(f->print_space && f->print_lastchar != '\n' && f->print_lastchar != '\t' && !(len(s) && s->unit[0] == '\n'))
          f->putchar(' ');
      f->write(s);
      if(len(s)) f->print_lastchar = s->unit[len(s)-1];
