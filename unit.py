@@ -5,6 +5,14 @@ from sets import Set
 import traceback, sys, os, time
 
 tests = [
+('''fixes for 0.1.2''', '''
+print 'aha\t',
+print 'hum'
+
+''', '''
+output(equal=True)
+'''),
+
 ('''fixes for 0.1.1''', '''
 # file.next
 print file('ss.py').next().strip()
