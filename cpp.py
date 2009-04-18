@@ -1848,7 +1848,7 @@ class generateVisitor(ASTVisitor):
         target = funcs[0] # XXX
 
         for f in funcs:
-            if len(f.formals) != len(target.formals) or (f.varargs and not target.varargs) or (not f.varargs and target.varargs): # incompatible signatures 
+            if len(f.formals) != len(target.formals):
                 error('calling functions with different numbers of arguments', node, warning=True)
                 self.append(')')
                 return
