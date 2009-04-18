@@ -265,9 +265,9 @@ def possible_argtypes(node, funcs, worklist):
     if funcs: # XXX return here
         func = funcs[0][0] # XXX
         if parent_constr: # XXX merge
-            formals = [f for f in func.formals if not f in [func.varargs, func.kwargs]]
+            formals = [f for f in func.formals]
         else:
-            formals = [f for f in func.formals if not f in ['self', func.varargs, func.kwargs]]
+            formals = [f for f in func.formals if f != 'self']
         uglyoffset = len(func.defaults)-(len(formals)-len(args))
 
         for (i, formal) in enumerate(formals[len(args):]):
@@ -414,7 +414,7 @@ def actuals_formals(expr, func, node, dcpa, cpa, types, worklist):
     objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr = analyze_callfunc(expr) # XXX call less
 
     actuals = [a for a in expr.args if not isinstance(a, Keyword)]
-    formals = [f for f in func.formals if not f in [func.varargs, func.kwargs]]
+    formals = [f for f in func.formals]
     keywords = [a for a in expr.args if isinstance(a, Keyword)]
 
     if ident in ['__getattr__', '__setattr__']:
@@ -453,7 +453,7 @@ def actuals_formals(expr, func, node, dcpa, cpa, types, worklist):
                 smut.append(kw.expr)
 
     # XXX add defaults to smut here, simplify code below
-    if not ident in ['min','max','bool'] and not (expr.star_args or expr.dstar_args or func.varargs or func.kwargs) and (len(smut) < len(formals)-len(func.defaults) or len(smut) > len(formals)): # XXX star_args etc. XXX keywords <-> defaults
+    if not ident in ['min','max','bool'] and (len(smut) < len(formals)-len(func.defaults) or len(smut) > len(formals)): # XXX star_args etc. XXX keywords <-> defaults
         return
 
     # --- connect/seed as much direct arguments as possible

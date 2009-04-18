@@ -24,13 +24,11 @@ class globalInfo: # XXX add comments, split up
         self.inherited = set()
         self.nrcltypes = 8;
         self.empty_constructors = set()
-        self.typeclass = {}
         self.sig_nr = {}
         self.nameclasses = {}
         self.tuple2 = set()             # binary typed tuples 
         self.module = None
-        self.simple_builtins = ['none', 'str_', 'float_', 'int_', 'class_']   
-        self.builtins = self.simple_builtins + ['list', 'tuple', 'tuple2', 'dict', 'frozenset', 'set']
+        self.builtins = ['none', 'str_', 'float_', 'int_', 'class_', 'list', 'tuple', 'tuple2', 'dict', 'set', 'frozenset']
         self.assign_target = {}              # instance node for instance variable assignment
         self.alloc_info = {}                 # allocation site type information across iterations
         self.iterations = 0
@@ -48,17 +46,15 @@ class globalInfo: # XXX add comments, split up
         self.cpp_keywords.update(['sun'])
         self.ss_prefix = '__ss_'
         self.list_types = {}
-        self.classes_with_init = set()
         self.loopstack = [] # track nested loops
         self.comments = {}
+        # command-line options
         self.wrap_around_check = True
         self.bounds_checking = True
         self.fast_random = False
         self.extension_module = False
         self.flags = None
-        self.method_refs = set()
         self.annotation = True
-        self.assignments = []
         self.output_dir=''
 
 def newgx():
@@ -115,8 +111,6 @@ class function:
         self.parent = parent 
         self.constraints = set()
         self.vars = {}
-        self.varargs = None
-        self.kwargs = None
         self.globals = []
         self.mv = getmv()
         self.lnodes = []
@@ -164,7 +158,6 @@ class class_:
 
         self.typenr = getgx().nrcltypes
         getgx().nrcltypes += 1
-        getgx().typeclass[self.typenr] = self
 
         self.splits = {}                # contour: old contour (used between iterations)
         self.unused = []                # unused contours
@@ -267,7 +260,7 @@ class cnode:
         self.in_list = 0        # node in work-list
         self.callfuncs = []    # callfuncs to which node is object/argument
 
-        self.nodecp = set()        # already analyzed cp's # XXX kill! kill!
+        self.nodecp = set()        # already analyzed cp's # XXX kill!?
         self.changed = 0
 
         # --- add node to surrounding non-listcomp function
@@ -658,15 +651,15 @@ def connect_actual_formal(expr, func, parent_constr=False, check_error=False):
 
     actuals = [a for a in expr.args if not isinstance(a, Keyword)]
     if isinstance(func.parent, class_): 
-        formals = [f for f in func.formals if not f in ['self', func.varargs, func.kwargs]]
+        formals = [f for f in func.formals if f != 'self']
     else:
-        formals = [f for f in func.formals if not f in [func.varargs, func.kwargs]]
+        formals = [f for f in func.formals]
     keywords = [a for a in expr.args if isinstance(a, Keyword)]
 
     if parent_constr: actuals = actuals[1:] 
 
     if check_error and func.ident not in ['min', 'max']:
-        if len(actuals)+len(keywords) > len(formals) and not func.varargs:
+        if len(actuals)+len(keywords) > len(formals):
             #if func.ident != 'join':
             if not (func.mv.module.builtin and func.mv.module.ident == 'path' and func.ident == 'join') and \
                not (func.mv.module.builtin and func.mv.module.ident == 're' and func.ident == '__group') and \

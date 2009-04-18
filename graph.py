@@ -464,8 +464,6 @@ class moduleVisitor(ASTVisitor):
                 error("'%s' is not supported" % func.ident, node, warning=True)
 
         formals = func.formals[:]
-        if node.kwargs: func.kwargs = formals.pop()
-        if node.varargs: func.varargs = formals.pop()
         func.defaults = node.defaults
 
         for formal in func.formals: 
@@ -1272,7 +1270,6 @@ class moduleVisitor(ASTVisitor):
             var = defaultvar('__class__', newclass)
             var.invisible = True
             getgx().types[inode(var)] = set([(defclass('class_'), defclass('class_').dcpa)])
-            getgx().typeclass[defclass('class_').dcpa] = newclass
             defclass('class_').dcpa += 1
 
         # --- staticmethod, property
