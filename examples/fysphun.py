@@ -1,32 +1,13 @@
-### to compile this, copy lib/pygame.* to the shedskin lib dir!
-###
-### also, modify FLAGS to something like this:
-###
-### CCFLAGS=-O3 -I/usr/include/python2.5 -D__SS_BIND
-### LFLAGS=-lgc -lpython2.5
-###
-### now that Shed Skin supports extension modules, this is probably
-### not a good approach!
-
 # (c) Alex P-B (chozabu@gmail.com) 
 # license: http://creativecommons.org/licenses/by-nc-sa/2.5/
-#
-# a graphical pygame application (placing and connecting new points, 
-# as in the original version, does not work yet - see screenshot fysphun.png) 
 
-import pygame
-#from pygame.locals import *
 from math import sin, cos, pi, hypot
 from random import random
 
-pygame.init()
-sh = 768
-sw = 1024
-screen  = pygame.display_set_mode((sw,sh),0,32)
-pygame.display_set_caption("FysPhun, check command line for controls!")
-mx = 100
-my = 100
-
+def setup(w, h):
+    global sw, sh
+    sw, sh = w, h
+   
 class Point:
         def __init__(self):
                 self.x=0
@@ -84,12 +65,6 @@ links = []
 wheels = []
 
 drawlinks = 1
-addinglink = 0
-nearp = None
-paused = 0
-shiftdown = 0
-draggingpoint = 0
-wheelpower = 0.1
 
 def addlinki(p1,p2, dist=30,strength=0.5):
 	global drawlinks
@@ -125,18 +100,6 @@ def addpoint(x,y):
 	points.append(p)
 	return p 
 	
-def nearestpoint(x,y):
-	mind = 10000000
-	retp = None
-	for p in points:
-		xd = x-p.x
-		yd = y-p.y
-		td = xd*xd+yd*yd
-		if td < mind:
-			retp = p
-			mind = td
-	return retp
-
 class Wheel:
 	def __init__(self,x,y,numspokes = 8, scale = 34):
 		global drawlinks
@@ -178,7 +141,6 @@ class Wheel:
 
 for ir in range(18*2):
 	addpoint(ir*15,10+cos(ir)*5)
-nearp = points[0]
 for ir in range(11,18*2-1):
 	addlinki(ir,ir+1)
 drawlinks = 1
@@ -212,54 +174,3 @@ addlinki(7,9,70)
 addlinki(3,5,40)
 
 wheels.append(Wheel(300,300))
-
-ingame = 1
-while ingame:
-        for p in points:
-                if not p.locked:
-                        p.basicphys()
-
-	for e in pygame.event_get():
-		if e.type is pygame.QUIT:
-			ingame = 0
-                elif e.type is pygame.MOUSEMOTION:
-			mx,my = e.pos
-                elif e.type is pygame.MOUSEBUTTONDOWN:
-			mx,my = e.pos
-                        nearp = nearestpoint(mx,my)
-                        draggingpoint = 1
-                elif e.type is pygame.MOUSEBUTTONUP:
-                        draggingpoint = 0
-
-	if draggingpoint:
-		nearp.x = mx
-                nearp.y = my
-
-        gravmax = 0.0
-
-        #more input!
-        for w in wheels:
-                w.addpower(wheelpower)
-        #Constraints!
-        for l in links:
-                l.applyme()
-        #World constraints!
-        for p in points:
-                p.basiclimits()
-        for p in points:
-                if p.locked:
-                        p.x = p.ox
-                        p.y = p.oy
-
-	#draw
-	screen.fill((0,0,0))
-	for l in links:
-		if l.drawme:pygame.draw_lines(screen, (255,0,0),0, [(int(l.p1.x),int(l.p1.y)),(int(l.p2.x),int(l.p2.y))],1)
-	for p in points:
-		pygame.draw_circle(screen, (0,255,0), (int(p.x),int(p.y)), int(p.rad))
-	pygame.draw_circle(screen, (0,0,255), (int(nearp.x),int(nearp.y)), int(nearp.rad*0.74))
-	if addinglink:
-		pygame.draw_lines(screen, (255,255,0),0, [(int(nearp.x),int(nearp.y)),(int(mx),int(my))],1)
-	pygame.display_flip()
-	pygame.time_wait(5)
-	
