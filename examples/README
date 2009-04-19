@@ -11,7 +11,7 @@ lines  name               description               notes
    130 dijkstra.py        dijkstra's algorithm
     85 circle.py          circle packing animation  shedskin -e circle && make && python circle_packing.py
                                                     (drag circles with mouse)
-   265 fysphun.py         physics animation         see comments in top (extension module would be better)
+   265 fysphun.py         physics animation         shedskin -e fysphun && make && python fysphun_main.py
                                                     (create/drag points with mouse)
    112 genetic.py         genetic algorithm
    109 life.py            conway's game of life

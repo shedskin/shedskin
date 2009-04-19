@@ -127,7 +127,7 @@ class Wheel:
 		addlinkrr(self.spokes[0+halfspoke/2],self.spokes[halfspoke+halfspoke/2])
 		addlinkrr(self.spokes[0],self.spokes[halfspoke])
 
-	def addpower(self,power=1):
+	def addpower(self,power=1.0):
 		mp = self.mainpoint
 		for p in self.spokes:
 			if p.y > mp.y:
@@ -174,3 +174,11 @@ addlinki(7,9,70)
 addlinki(3,5,40)
 
 wheels.append(Wheel(300,300))
+
+if __name__ == '__main__':
+    setup(1,1)
+    p, l, w = points[0], links[0], wheels[0] 
+    p.basiclimits()
+    p.basicphys()
+    l.applyme()
+    w.addpower()
