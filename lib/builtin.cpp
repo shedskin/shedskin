@@ -1572,7 +1572,10 @@ str *__str(bool b) {
 }
 
 template<> str *hex(int i) {
-    return (new str("0x"))->__add__(__str(i, 16));
+    if(i<0)
+        return (new str("-0x"))->__add__(__str(-i, 16));
+    else
+        return (new str("0x"))->__add__(__str(i, 16));
 }
 template<> str *hex(bool b) { return hex((int)b); }
 
