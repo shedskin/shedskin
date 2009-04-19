@@ -6,8 +6,12 @@ import traceback, sys, os, time
 
 tests = [
 ('''fixes for 0.1.2''', '''
+# print space or not
 print 'aha\t',
 print 'hum'
+
+# minus in front
+print hex(-200)
 
 ''', '''
 output(equal=True)
