@@ -394,7 +394,6 @@ class moduleVisitor(ASTVisitor):
                     if not extvar.imported and not name in ['__name__']:
                         var = defaultvar(name, None) # XXX merge
                         var.imported = True
-                        var.invisible = True
                         self.addconstraint((inode(extvar), inode(var)), None)
                 continue
 
@@ -411,7 +410,6 @@ class moduleVisitor(ASTVisitor):
                 extvar = mod.mv.globals[name]
                 var = defaultvar(pseudonym, None)
                 var.imported = True
-                var.invisible = True
                 self.addconstraint((inode(extvar), inode(var)), None)
             elif os.path.isfile(localpath+'/'+name+'.py') or \
                  os.path.isfile(localpath+'/'+name+'/__init__.py'):
