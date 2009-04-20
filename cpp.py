@@ -294,16 +294,12 @@ class generateVisitor(ASTVisitor):
                         for func in getgx().modules[child.modname].funcs.values():
                             if func.cp: 
                                 print >>self.out, 'using '+mod_id+'::'+self.cpp_name(func.ident)+';';
-                        for var in getgx().modules[child.modname].mv.globals.values():
-                            if not var.invisible and not var.imported and not var.name.startswith('__') and var.types():
-                                print >>self.out, 'using '+mod_id+'::'+self.cpp_name(var.name)+';';
                         for cl in getgx().modules[child.modname].classes:
                             print >>self.out, 'using '+mod_id+'::'+cl+';';
-
-                        continue
-
-                    if not name in self.module.mv.globals or [t for t in self.module.mv.globals[name].types() if not isinstance(t[0], module)]:
-                        print >>self.out, 'using '+mod_id+'::'+nokeywords(name)+';'
+                    else:
+                        if not pseudonym: pseudonym = name
+                        if not pseudonym in self.module.mv.globals:# or [t for t in self.module.mv.globals[pseudonym].types() if not isinstance(t[0], module)]:
+                            print >>self.out, 'using '+mod_id+'::'+nokeywords(name)+';'
         if skip: print >>self.out
 
         # class declarations
@@ -442,6 +438,7 @@ class generateVisitor(ASTVisitor):
                         self.start('')
                         self.visitm('default_%d = ' % getmv().defaults[default], default, ';')
                         self.eol()
+
             elif isinstance(child, Class):
                 for child2 in child.code.getChildNodes():
                     if isinstance(child2, Function): 
@@ -451,7 +448,7 @@ class generateVisitor(ASTVisitor):
                                 self.visitm('default_%d = ' % getmv().defaults[default], default, ';')
                                 self.eol()
 
-            if isinstance(child, Discard):
+            elif isinstance(child, Discard):
                 if isinstance(child.expr, Const) and child.expr.value == None: # XXX merge with visitStmt
                     continue
                 if isinstance(child.expr, Const) and type(child.expr.value) == str:
@@ -460,6 +457,20 @@ class generateVisitor(ASTVisitor):
                 self.start('')
                 self.visit(child)
                 self.eol()
+
+            elif isinstance(child, From):
+                mod_id = '__'+'__::__'.join(child.modname.split('.'))+'__'
+                for (name, pseudonym) in child.names:
+                    if name == '*':
+                        for var in getgx().modules[child.modname].mv.globals.values():
+                            if not var.invisible and not var.imported and not var.name.startswith('__') and var.types():
+                                self.start(nokeywords(var.name)+' = '+mod_id+'::'+nokeywords(var.name))
+                                self.eol()
+                    else:
+                        if not pseudonym: pseudonym = name
+                        if pseudonym in self.module.mv.globals and not [t for t in self.module.mv.globals[pseudonym].types() if isinstance(t[0], module)]:
+                            self.start(nokeywords(pseudonym)+' = '+mod_id+'::'+nokeywords(name))
+                            self.eol()
 
             elif not isinstance(child, (Class, Function)):
                 self.do_comments(child)
