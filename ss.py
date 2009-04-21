@@ -305,7 +305,7 @@ def generate_code():
     # import flags
     if getgx().flags: flags = getgx().flags
     elif os.path.isfile('FLAGS'): flags = 'FLAGS'
-    else: flags = connect_paths(getgx().sysdir.replace(' ', '\ '), 'FLAGS')
+    else: flags = connect_paths(getgx().sysdir, 'FLAGS')
 
     for line in file(flags):
         line = line[:-1]
