@@ -1478,6 +1478,8 @@ def parse_module(name, ast=None, parent=None, node=None):
     mv.visit = mv.dispatch
     mv.visitor = mv
     mv.dispatch(mod.ast)
+    mod.import_order = getgx().import_order
+    getgx().import_order += 1
 
     mv = old_mv
     setmv(mv)

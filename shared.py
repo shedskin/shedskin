@@ -48,6 +48,7 @@ class globalInfo: # XXX add comments, split up
         self.list_types = {}
         self.loopstack = [] # track nested loops
         self.comments = {}
+        self.import_order = 0 # module import order
         # command-line options
         self.wrap_around_check = True
         self.bounds_checking = True
@@ -226,6 +227,7 @@ class module:
         self.ident = ident
         self.node = node
         self.prop_includes = set()
+        self.import_order = 0
 
     def __repr__(self):
         return 'module '+self.ident 
