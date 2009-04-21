@@ -514,7 +514,9 @@ class generateVisitor(ASTVisitor):
         print >>self.out, '    __shedskin__::__init();'
 
         # --- init imports
-        for mod in getgx().modules.values(): # XXX
+        mods = getgx().modules.values()
+        mods.sort(cmp=lambda a,b: cmp(a.import_order, b.import_order))
+        for mod in mods:
             if mod != getgx().main_module and mod.ident != 'builtin':
                 if mod.ident == 'sys':
                     if getgx().extension_module:
