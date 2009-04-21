@@ -297,15 +297,15 @@ def generate_code():
 
     cppfiles = ' '.join([m.filename[:-3].replace(' ', '\ ')+'.cpp' for m in mods])
     hppfiles = ' '.join([m.filename[:-3].replace(' ', '\ ')+'.hpp' for m in mods])
-    repath = connect_paths(getgx().libdir, 're.cpp')
+    repath = connect_paths(getgx().libdir.replace(' ', '\ '), 're.cpp')
     if not repath in cppfiles: 
         cppfiles += ' '+repath
-        hppfiles += ' '+connect_paths(getgx().libdir, 're.hpp')
+        hppfiles += ' '+connect_paths(getgx().libdir.replace(' ', '\ '), 're.hpp')
 
     # import flags
     if getgx().flags: flags = getgx().flags
     elif os.path.isfile('FLAGS'): flags = 'FLAGS'
-    else: flags = connect_paths(getgx().sysdir, 'FLAGS')
+    else: flags = connect_paths(getgx().sysdir.replace(' ', '\ '), 'FLAGS')
 
     for line in file(flags):
         line = line[:-1]
