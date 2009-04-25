@@ -14,6 +14,11 @@ class body :
     pass
 
 def advance(bodies, dt) :
+    for b in bodies :
+        b.x += dt/2 * b.vx
+        b.y += dt/2 * b.vy
+        b.z += dt/2 * b.vz
+
     for i in xrange(len(bodies)) :
         b = bodies[i]
 
@@ -36,9 +41,9 @@ def advance(bodies, dt) :
             b2.vz += dz * b_mass_x_mag
 
     for b in bodies :
-        b.x += dt * b.vx
-        b.y += dt * b.vy
-        b.z += dt * b.vz
+        b.x += dt/2 * b.vx
+        b.y += dt/2 * b.vy
+        b.z += dt/2 * b.vz
 
 def energy(bodies) :
     e = 0.0
