@@ -683,10 +683,10 @@ str *str::__imul__(int n) {
 /* (C) 2004, 2005 Paul Hsieh. Covered under the Paul Hsieh derivative license.
    http://www.azillionmonkeys.com/qed/{hash,weblicense}.html  */
 
-#define get16bits(d) (*((const uint16_t *) (d)))
+#define get16bits(d) (*((const unsigned short int *) (d)))
 
-static inline uint32_t SuperFastHash (const char * data, int len) {
-    uint32_t hash = 0, tmp;
+static inline unsigned int SuperFastHash (const char * data, int len) {
+    unsigned int hash = 0, tmp;
     int rem;
 
     if (len <= 0 || data == NULL) return 0;
@@ -699,7 +699,7 @@ static inline uint32_t SuperFastHash (const char * data, int len) {
         hash  += get16bits (data);
         tmp    = (get16bits (data+2) << 11) ^ hash;
         hash   = (hash << 16) ^ tmp;
-        data  += 2*sizeof (uint16_t);
+        data  += 2*sizeof (unsigned short int);
         hash  += hash >> 11;
     }
 
@@ -707,7 +707,7 @@ static inline uint32_t SuperFastHash (const char * data, int len) {
     switch (rem) {
         case 3: hash += get16bits (data);
                 hash ^= hash << 16;
-                hash ^= data[sizeof (uint16_t)] << 18;
+                hash ^= data[sizeof (unsigned short int)] << 18;
                 hash += hash >> 11;
                 break;
         case 2: hash += get16bits (data);
