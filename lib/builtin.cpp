@@ -1468,7 +1468,6 @@ complex *__power(complex *a, double b) {
 template<> double __divs(double a, double b) { return a/b; }
 template<> double __divs(int a, double b) { return (double)a/b; }
 template<> double __divs(double a, int b) { return a/((double)b); }
-template<> int __divs(int a, int b) { return (int)floor(((double)a)/b); }
 
 template<> double __floordiv(double a, double b) { return floor(a/b); }
 template<> double __floordiv(int a, double b) { return floor((double)a/b); }
@@ -2074,12 +2073,6 @@ template<> double __mods(double a, double b) {
 }
 template<> double __mods(int a, double b) { return __mods((double)a, b); }
 template<> double __mods(double a, int b) { return __mods(a, (double)b); }
-
-template<> int __mods(int a, int b) {
-    int m = a%b;
-    if((m<0 && b>0)||(m>0 && b<0)) m+=b;
-    return m;
-}
 
 #ifdef __SS_BIND
 template<> PyObject *__to_py(int i) { return PyInt_FromLong(i); }   
