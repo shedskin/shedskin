@@ -3210,7 +3210,10 @@ template<> double __divs(int a, double b);
 
 template<class A> A __divs(A a, A b);
 template<> double __divs(double a, double b);
-template<> int __divs(int a, int b);
+template<> inline int __divs(int a, int b) {
+    if (a<0||b<0) return (int)floor(((double)a)/b); 
+    else return a/b;
+}
 
 template<class A, class B> double __floordiv(A a, B b);
 template<> double __floordiv(double a, int b);
@@ -3260,7 +3263,11 @@ template<> double __mods(int a, double b);
 
 template<class A> A __mods(A a, A b);
 template<> double __mods(double a, double b);
-template<> int __mods(int a, int b);
+template<> inline int __mods(int a, int b) {
+    int m = a%b;
+    if((m<0 && b>0)||(m>0 && b<0)) m+=b;
+    return m;
+}
 
 int __fmtpos(str *fmt);
 int __fmtpos2(str *fmt);
