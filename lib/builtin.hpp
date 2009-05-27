@@ -3211,7 +3211,8 @@ template<> double __divs(int a, double b);
 template<class A> A __divs(A a, A b);
 template<> double __divs(double a, double b);
 template<> inline int __divs(int a, int b) {
-    if (a<0||b<0) return (int)floor(((double)a)/b); 
+    if(a<0 && b>0) return (a-b+1)/b;
+    else if(b<0 && a>0) return (a-b-1)/b;
     else return a/b;
 }
 
