@@ -1474,7 +1474,7 @@ struct_time *strptime(str *string, str *format) {
 void __init() {
     start = std::clock();
     const_0 = new str("time.struct_time() takes a 9-sequence");
-    const_1 = new str("(%d, %d, %d, %d, %d, %d, %d, %d, %d)");
+    const_1 = new str("time.struct_time(tm_year=%d, tm_mon=%d, tm_mday=%d, tm_hour=%d, tm_min=%d, tm_sec=%d, tm_wday=%d, tm_yday=%d, tm_isdst=%d)");
     struct_time* gmt = gmtime();
     struct_time* localt = localtime();
     int gmt_hour = gmt->tm_hour;
