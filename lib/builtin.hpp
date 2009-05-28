@@ -1967,7 +1967,7 @@ template<class T> int set<T>::__cmp__(pyobj *p) {
 
 template<class T> int set<T>::__hash__() {
     if(!this->frozen)
-        throw new TypeError(new str("set objects are unhashable"));
+        throw new TypeError(new str("unhashable type: 'set'"));
     list<int> *seeds = new list<int>();
 
     T e;
