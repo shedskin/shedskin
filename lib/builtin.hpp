@@ -176,13 +176,20 @@ static inline int hash_combine(int seed, int other) {
     return seed ^ (other + 0x9e3779b9 + (seed << 6) + (seed >> 2));
 }
 
-template<class T> int hasher(T t) {
+template<class T> inline int hasher(T t) {
     if(t == NULL) return 0;
     return t->__hash__();
 };
-template<> int hasher(int a);
-template<> int hasher(double a);
-template<> int hasher(void *a);
+template<> inline int hasher(int a) { return a; }
+template<> inline int hasher(void *a) { return (intptr_t)a; }
+template<> inline int hasher(double v) {
+    int hipart, expo; /* modified from CPython */
+    v = frexp(v, &expo);
+    v *= 32768.0; /* 2**15 */
+    hipart = (int)v;   /* take the top 16 bits */
+    v = (v - (double)hipart) * 32768.0; /* get the next 16 bits */
+    return hipart + (int)v + (expo << 15);
+}
 
 template<class T> class hashfunc
 {
@@ -2971,10 +2978,16 @@ template<class T> T __max(int n, T a, T b, T c, ...) {
     return m;
 }
 
-template<> int __max(int a, int b);
-template<> int __max(int a, int b, int c);
-template<> double __max(double a, double b);
-template<> double __max(double a, double b, double c);
+#define __SS_MAX(a,b) ((a) > (b) ? (a) : (b))
+#define __SS_MAX3(a,b,c) (__SS_MAX((a), __SS_MAX((b), (c))))
+
+template<> inline int __max(int a, int b) { return __SS_MAX(a,b); }
+template<> inline int __max(int a, int b, int c) { return __SS_MAX3(a,b,c); }
+template<> inline double __max(double a, double b) { return __SS_MAX(a,b); }
+template<> inline double __max(double a, double b, double c) { return __SS_MAX3(a,b,c); }
+
+#undef __SS_MAX
+#undef __SS_MAX3
 
 template<class T> T __min(pyiter<T> *a) {
     T e, min = 0;
@@ -3019,10 +3032,16 @@ template<class T> T __min(int n, T a, T b, T c, ...) {
     return m;
 }
 
-template<> int __min(int a, int b);
-template<> int __min(int a, int b, int c);
-template<> double __min(double a, double b);
-template<> double __min(double a, double b, double c);
+#define __SS_MIN(a,b) ((a) < (b) ? (a) : (b))
+#define __SS_MIN3(a,b,c) (__SS_MIN((a), __SS_MIN((b), (c)))) 
+
+template<> inline int __min(int a, int b) { return __SS_MIN(a,b); }
+template<> inline int __min(int a, int b, int c) { return __SS_MIN3(a,b,c); }
+template<> inline double __min(double a, double b) { return __SS_MIN(a,b); }
+template<> inline double __min(double a, double b, double c) { return __SS_MIN3(a,b,c); }
+
+#undef __SS_MIN
+#undef __SS_MIN3
 
 template<class A> static inline list<A> *__list_comp_0(list<A> *result, pyiter<A> *a) {
     A e;
@@ -3209,19 +3228,19 @@ template<> int __power(int a, int b);
 
 int __power(int a, int b, int c);
 
-int __power2(int a);
-double __power2(double a);
-int __power3(int a);
-double __power3(double a);
+inline int __power2(int a) { return a*a; }
+inline double __power2(double a) { return a*a; }
+inline int __power3(int a) { return a*a*a; }
+inline double __power3(double a) { return a*a*a; }
 
 /* division */
 
 template<class A, class B> double __divs(A a, B b);
-template<> double __divs(double a, int b);
-template<> double __divs(int a, double b);
+template<> inline double __divs(int a, double b) { return (double)a/b; }
+template<> inline double __divs(double a, int b) { return a/((double)b); }
 
 template<class A> A __divs(A a, A b);
-template<> double __divs(double a, double b);
+template<> inline double __divs(double a, double b) { return a/b; }
 template<> inline int __divs(int a, int b) {
     if(a<0 && b>0) return (a-b+1)/b;
     else if(b<0 && a>0) return (a-b-1)/b;
@@ -3229,25 +3248,43 @@ template<> inline int __divs(int a, int b) {
 }
 
 template<class A, class B> double __floordiv(A a, B b);
-template<> double __floordiv(double a, int b);
-template<> double __floordiv(int a, double b);
+template<> inline double __floordiv(int a, double b) { return floor((double)a/b); }
+template<> inline double __floordiv(double a, int b) { return floor(a/((double)b)); }
 
-template<class A> A __floordiv(A a, A b) { return a->__floordiv__(b); }
-template<> double __floordiv(double a, double b);
-template<> int __floordiv(int a, int b);
+template<class A> inline A __floordiv(A a, A b) { return a->__floordiv__(b); }
+template<> inline double __floordiv(double a, double b) { return floor(a/b); }
+template<> inline int __floordiv(int a, int b) { return (int)floor((double)a/b); } /* XXX */
+
+template<class A> A __mods(A a, A b);
+template<> inline int __mods(int a, int b) {
+    int m = a%b;
+    if((m<0 && b>0)||(m>0 && b<0)) m+=b;
+    return m;
+}
+template<> inline double __mods(double a, double b) {
+    double f = fmod(a,b);
+    if((f<0 && b>0)||(f>0 && b<0)) f+=b;
+    return f;
+}
+
+template<class A, class B> double __mods(A a, B b);
+template<> inline double __mods(int a, double b) { return __mods((double)a, b); }
+template<> inline double __mods(double a, int b) { return __mods(a, (double)b); }
 
 template<class A, class B> tuple2<double, double> *divmod(A a, B b);
-template<> tuple2<double, double> *divmod(double a, int b);
-template<> tuple2<double, double> *divmod(int a, double b);
+template<> inline tuple2<double, double> *divmod(double a, int b) { return divmod(a, (double)b); } 
+template<> inline tuple2<double, double> *divmod(int a, double b) { return divmod((double)a, b); }
+
+template<class A> inline tuple2<A, A> *divmod(A a, A b) { return a->__divmod__(b); }
+template<> inline tuple2<double, double> *divmod(double a, double b) {
+    return new tuple2<double, double>(2, __floordiv(a,b), __mods(a,b));
+}
+template<> inline tuple2<int, int> *divmod(int a, int b) {
+    return new tuple2<int, int>(2, __floordiv(a,b), __mods(a,b));
+}
 
 tuple2<complex *, complex *> *divmod(complex *a, double b);
 tuple2<complex *, complex *> *divmod(complex *a, int b);
-
-template<class A> tuple2<A, A> *divmod(A a, A b) {
-    return a->__divmod__(b);
-}
-template<> tuple2<double, double> *divmod(double a, double b);
-template<> tuple2<int, int> *divmod(int a, int b);
 
 /* dict.fromkeys */
 
@@ -3268,19 +3305,7 @@ namespace __dict__ {
 
 }
 
-/* mod */
-
-template<class A, class B> double __mods(A a, B b);
-template<> double __mods(double a, int b);
-template<> double __mods(int a, double b);
-
-template<class A> A __mods(A a, A b);
-template<> double __mods(double a, double b);
-template<> inline int __mods(int a, int b) {
-    int m = a%b;
-    if((m<0 && b>0)||(m>0 && b<0)) m+=b;
-    return m;
-}
+/* string formatting */
 
 int __fmtpos(str *fmt);
 int __fmtpos2(str *fmt);
@@ -3317,6 +3342,8 @@ template<class T> str *__moddict(str *v, dict<str *, T> *d) {
         vals->append(__box(d->__getitem__(names->__getitem__(i))));
     return __mod4(v, vals);
 }
+
+/* boxing */
 
 template<class T> T __box(T t) { return t; }
 int_ *__box(int);
