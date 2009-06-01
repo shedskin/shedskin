@@ -73,19 +73,19 @@ template<class K, class V> dict<K,V> *__dict(pyiter<tuple2<K, V> *> *p);
 template<class K, class V> dict<K,V> *__dict(dict<K,V> *p);
 template<class K> dict<K,K> *__dict(pyiter<list<K> *> *p);
 
-int __int();
-template<class T> int __int(T t) { return t->__int__(); }
-template<> int __int(str *s);
-template<> int __int(int i);
-template<> int __int(bool b);
-template<> int __int(double d);
 int __int(str *s, int base);
+inline int __int() { return 0; }
+template<class T> inline int __int(T t) { return t->__int__(); }
+template<> inline int __int(str *s) { return __int(s, 10); }
+template<> inline int __int(int i) { return i; }
+template<> inline int __int(bool b) { return b; }
+template<> inline int __int(double d) { return (int)d; }
 
-double __float();
-template<class T> double __float(T t) { return t->__float__(); }
-template<> double __float(int i);
-template<> double __float(bool b);
-template<> double __float(double f);
+inline double __float() { return 0; }
+template<class T> inline double __float(T t) { return t->__float__(); }
+template<> inline double __float(int p) { return p; }
+template<> inline double __float(bool b) { return __float((int)b); }
+template<> inline double __float(double d) { return d; }
 template<> double __float(str *s);
 
 str *__str();
@@ -128,12 +128,10 @@ template<class T> str *chr(T t) {
 double ___round(double a);
 double ___round(double a, int n);
 
-template<class T> T __abs(T t) {
-    return t->__abs__();
-}
-template<> int __abs(int a);
-template<> double __abs(double a);
-int __abs(bool b);
+template<class T> inline T __abs(T t) { return t->__abs__(); }
+template<> inline int __abs(int a) { return a<0?-a:a; }
+template<> inline double __abs(double a) { return a<0?-a:a; }
+inline int __abs(bool b) { return __abs((int)b); }
 double __abs(complex *c);
 
 template<class T> str *hex(T t) {
@@ -197,13 +195,26 @@ template<class T> class hasheq {
 
 /* comparison */
 
-template<class T> int __cmp(T a, T b) {
+template<class T> inline int __cmp(T a, T b) {
     return a->__cmp__(b);
 }
 
-template<> int __cmp(int a, int b);
-template<> int __cmp(double a, double b);
-template<> int __cmp(void *a, void *b); /* keep compiler happy */
+template<> inline int __cmp(int a, int b) { 
+    if(a < b) return -1;
+    else if(a > b) return 1;
+    return 0;
+} 
+
+template<> inline int __cmp(double a, double b) {
+    if(a < b) return -1;
+    else if(a > b) return 1;
+    return 0;
+}
+template<> inline int __cmp(void *a, void *b) {
+    if(a < b) return -1;
+    else if(a > b) return 1;
+    return 0;
+}
 
 template<class T> int cpp_cmp(T a, T b) { 
     return __cmp(a, b) == -1;
@@ -1204,32 +1215,34 @@ template<class T> class_ *__type(T t) { return t->__class__; }
 template<> class_ *__type(int i);
 template<> class_ *__type(double d);
 
-/* equality, comparison, math operators */
+/* equality, comparison */
 
-template<class T> int __eq(T a, T b) { return ((a&&b)?(a->__eq__(b)):(a==b)); }
-template<> int __eq(void *a, void *b);
-template<> int __eq(int a, int b);
-template<> int __eq(double a, double b);
-template<class T> int __ne(T a, T b) { return ((a&&b)?(a->__ne__(b)):(a!=b)); }
-template<> int __ne(void *a, void *b);
-template<> int __ne(int a, int b);
-template<> int __ne(double a, double b);
-template<class T> int __gt(T a, T b) { return a->__gt__(b); }
-template<> int __gt(int a, int b);
-template<> int __gt(double a, double b);
-template<class T> int __ge(T a, T b) { return a->__ge__(b); }
-template<> int __ge(int a, int b);
-template<> int __ge(double a, double b);
-template<class T> int __lt(T a, T b) { return a->__lt__(b); }
-template<> int __lt(int a, int b);
-template<> int __lt(double a, double b);
-template<class T> int __le(T a, T b) { return a->__le__(b); }
-template<> int __le(int a, int b);
-template<> int __le(double a, double b);
+template<class T> inline int __eq(T a, T b) { return ((a&&b)?(a->__eq__(b)):(a==b)); }
+template<> inline int __eq(int a, int b) { return a == b; }
+template<> inline int __eq(double a, double b) { return a == b; }
+template<> inline int __eq(void *a, void *b) { return a == b; }
+template<class T> inline int __ne(T a, T b) { return ((a&&b)?(a->__ne__(b)):(a!=b)); }
+template<> inline int __ne(int a, int b) { return a != b; }
+template<> inline int __ne(double a, double b) { return a != b; }
+template<> inline int __ne(void *a, void *b) { return a != b; }
+template<class T> inline int __gt(T a, T b) { return a->__gt__(b); }
+template<> inline int __gt(int a, int b) { return a > b; }
+template<> inline int __gt(double a, double b) { return a > b; }
+template<class T> inline int __ge(T a, T b) { return a->__ge__(b); }
+template<> inline int __ge(int a, int b) { return a >= b; }
+template<> inline int __ge(double a, double b) { return a >= b; }
+template<class T> inline int __lt(T a, T b) { return a->__lt__(b); }
+template<> inline int __lt(int a, int b) { return a < b; }
+template<> inline int __lt(double a, double b) { return a < b; }
+template<class T> inline int __le(T a, T b) { return a->__le__(b); }
+template<> inline int __le(int a, int b) { return a <= b; }
+template<> inline int __le(double a, double b) { return a <= b; }
 
-template<class T> T __add(T a, T b) { return a->__add__(b); }
-template<> int __add(int a, int b);
-template<> double __add(double a, double b);
+/* add */
+
+template<class T> inline T __add(T a, T b) { return a->__add__(b); }
+template<> inline int __add(int a, int b) { return a + b; }
+template<> inline double __add(double a, double b) { return a + b; }
 
 /* reverse */
 
@@ -1263,20 +1276,19 @@ template<> int __copy(int i);
 template<> double __copy(double d);
 template<> void *__copy(void *p);
 
+/* len */
+
 template<class T> int len(T x) {
     return x->__len__();
 }
 
 /* bool */
 
-int ___bool();
-
-template<class T> int ___bool(T x) {
-    return (x && x->__nonzero__());
-}
-template<> int ___bool(int x);
-template<> int ___bool(bool x);
-template<> int ___bool(double x);
+inline int ___bool() { return 0; }
+template<class T> inline int ___bool(T x) { return (x && x->__nonzero__()); }
+template<> inline int ___bool(int x) { return x; }
+template<> inline int ___bool(bool x) { return (int)x; }
+template<> inline int ___bool(double x) { return x!=0; }
 
 /* logical and, or */
 

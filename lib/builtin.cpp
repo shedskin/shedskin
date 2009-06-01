@@ -1152,12 +1152,6 @@ str *raw_input(str *msg) {
     return new str(s); 
 }
 
-int __int() { return 0; }
-
-template<> int __int(str *s) { return __int(s, 10); }
-template<> int __int(int i) { return i; }
-template<> int __int(bool b) { return b; }
-template<> int __int(double d) { return (int)d; }
 
 int __int(str *s, int base) {
     char *cp;
@@ -1168,10 +1162,6 @@ int __int(str *s, int base) {
     return i;
 }
 
-double __float() { return 0; }
-template<> double __float(int p) { return p; }
-template<> double __float(bool b) { return __float((int)b); }
-template<> double __float(double d) { return d; }
 template<> double __float(str *s) {
     return atof((char *)(s->unit.c_str()));
 }
@@ -1350,26 +1340,6 @@ template<> str *repr(void *v) { return new str("None"); }
 
 str *__str(void *v) { return new str("void"); }
 
-/* equality, comparison, math operators */
-
-template<> int __eq(int a, int b) { return a == b; }
-template<> int __eq(double a, double b) { return a == b; }
-template<> int __eq(void *a, void *b) { return a == b; }
-template<> int __ne(int a, int b) { return a != b; }
-template<> int __ne(double a, double b) { return a != b; }
-template<> int __ne(void *a, void *b) { return a != b; }
-template<> int __gt(int a, int b) { return a > b; }
-template<> int __gt(double a, double b) { return a > b; }
-template<> int __ge(int a, int b) { return a >= b; }
-template<> int __ge(double a, double b) { return a >= b; }
-template<> int __lt(int a, int b) { return a < b; }
-template<> int __lt(double a, double b) { return a < b; }
-template<> int __le(int a, int b) { return a <= b; }
-template<> int __le(double a, double b) { return a <= b; }
-
-template<> int __add(int a, int b) { return a + b; }
-template<> double __add(double a, double b) { return a + b; }
-
 /* get class pointer */
 
 template<> class_ *__type(int i) { return cl_int_; }
@@ -1525,25 +1495,6 @@ void slicenr(int x, int &l, int&u, int&s, int len) {
     }
 }
 
-/* cmp */
-
-template<> int __cmp(int a, int b) { 
-    if(a < b) return -1;
-    else if(a > b) return 1;
-    return 0;
-} 
-
-template<> int __cmp(double a, double b) {
-    if(a < b) return -1;
-    else if(a > b) return 1;
-    return 0;
-}
-template<> int __cmp(void *a, void *b) {
-    if(a < b) return -1;
-    else if(a > b) return 1;
-    return 0;
-}
-
 str *__str(int i, int base) {
     if(i<10 && i>=0 && base==10)
         return __char_cache['0'+i];
@@ -1608,20 +1559,6 @@ double ___round(double a, int n) {
     return __portableround(pow(10,n)*a)/pow(10,n);
 }
 
-/* bool */
-
-int ___bool() { return 0; }
-
-template<> int ___bool(int x) {
-    return x;
-}
-template<> int ___bool(bool x) {
-    return (int)x;
-}
-template<> int ___bool(double x) {
-    return x!=0;
-}
-
 /* sum */
 
 int __sum(pyseq<int> *l, int b) { return accumulate(l->units.begin(), l->units.end(), b); }
@@ -1649,12 +1586,6 @@ template<> int __min(int a, int b) { return __ss_min(a,b); }
 template<> int __min(int a, int b, int c) { return __ss_min3(a,b,c); }
 template<> double __min(double a, double b) { return __ss_min(a,b); }
 template<> double __min(double a, double b, double c) { return __ss_min3(a,b,c); }
-
-/* abs */
-
-template<> int __abs(int a) { return a<0?-a:a; }
-template<> double __abs(double a) { return a<0?-a:a; }
-int __abs(bool b) { return __abs((int)b); }
 
 /* list */
 
