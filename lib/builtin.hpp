@@ -1285,9 +1285,8 @@ template<> void *__copy(void *p);
 
 /* len */
 
-template<class T> int len(T x) {
-    return x->__len__();
-}
+template<class T> int len(T x) { return x->__len__(); }
+template<class T> inline int len(list<T> *x) { return x->units.size(); } /* XXX more general solution? */
 
 /* bool */
 
