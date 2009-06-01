@@ -1345,19 +1345,6 @@ str *__str(void *v) { return new str("void"); }
 template<> class_ *__type(int i) { return cl_int_; }
 template<> class_ *__type(double d) { return cl_float_; }
 
-/* hashing */
-
-template<> int hasher(int a) { return a; }
-template<> int hasher(double v) {
-    int hipart, expo; /* modified from CPython */
-    v = frexp(v, &expo);
-    v *= 32768.0; /* 2**15 */
-    hipart = (int)v;   /* take the top 16 bits */
-    v = (v - (double)hipart) * 32768.0; /* get the next 16 bits */
-    return hipart + (int)v + (expo << 15);
-}
-template<> int hasher(void *a) { return (intptr_t)a; }
-
 /* pow */
 
 template<> double __power(double a, double b) { return pow(a,b); }
@@ -1396,11 +1383,6 @@ int __power(int a, int b, int c) {
     return res;
 }
 
-int __power2(int a) { return a*a; }
-double __power2(double a) { return a*a; }
-int __power3(int a) { return a*a*a; }
-double __power3(double a) { return a*a*a; }
-
 complex *__power(complex *a, complex *b) {
     complex *r = new complex();
     double vabs, len, at, phase;
@@ -1435,27 +1417,8 @@ complex *__power(complex *a, double b) {
 
 /* division */
 
-template<> double __divs(double a, double b) { return a/b; }
-template<> double __divs(int a, double b) { return (double)a/b; }
-template<> double __divs(double a, int b) { return a/((double)b); }
-
-template<> double __floordiv(double a, double b) { return floor(a/b); }
-template<> double __floordiv(int a, double b) { return floor((double)a/b); }
-template<> double __floordiv(double a, int b) { return floor(a/((double)b)); }
-template<> int __floordiv(int a, int b) { return (int)floor((double)a/b); }
-
-template<> tuple2<double, double> *divmod(double a, double b) {
-    return new tuple2<double, double>(2, __floordiv(a,b), __mods(a,b));
-}
-template<> tuple2<double, double> *divmod(double a, int b) { return divmod(a, (double)b); } 
-template<> tuple2<double, double> *divmod(int a, double b) { return divmod((double)a, b); }
-
 tuple2<complex *, complex *> *divmod(complex *a, double b) { return a->__divmod__(b); }
 tuple2<complex *, complex *> *divmod(complex *a, int b) { return a->__divmod__(b); }
-
-template<> tuple2<int, int> *divmod(int a, int b) {
-    return new tuple2<int, int>(2, __floordiv(a,b), __mods(a,b));
-}
 
 /* slicing */
 
@@ -1570,22 +1533,6 @@ int __min(pyseq<int> *l) { return __minimum(l); }
 double __min(pyseq<double> *l) { return __minimum(l); }
 int __max(pyseq<int> *l) { return __maximum(l); }
 double __max(pyseq<double> *l) { return __maximum(l); }
-
-#define __ss_max(a,b) ((a) > (b) ? (a) : (b))
-#define __ss_max3(a,b,c) (__ss_max((a), __ss_max((b), (c))))
-
-template<> int __max(int a, int b) { return __ss_max(a,b); }
-template<> int __max(int a, int b, int c) { return __ss_max3(a,b,c); }
-template<> double __max(double a, double b) { return __ss_max(a,b); }
-template<> double __max(double a, double b, double c) { return __ss_max3(a,b,c); }
-
-#define __ss_min(a,b) ((a) < (b) ? (a) : (b))
-#define __ss_min3(a,b,c) (__ss_min((a), __ss_min((b), (c))))
-
-template<> int __min(int a, int b) { return __ss_min(a,b); }
-template<> int __min(int a, int b, int c) { return __ss_min3(a,b,c); }
-template<> double __min(double a, double b) { return __ss_min(a,b); }
-template<> double __min(double a, double b, double c) { return __ss_min3(a,b,c); }
 
 /* list */
 
@@ -1994,16 +1941,6 @@ __fileiter::__fileiter(file *p) {
 str *__fileiter::next() {
     return p->next();
 }
-
-/* mod */
-
-template<> double __mods(double a, double b) {
-    double f = fmod(a,b);
-    if((f<0 && b>0)||(f>0 && b<0)) f+=b;
-    return f;
-}
-template<> double __mods(int a, double b) { return __mods((double)a, b); }
-template<> double __mods(double a, int b) { return __mods(a, (double)b); }
 
 #ifdef __SS_BIND
 template<> PyObject *__to_py(int i) { return PyInt_FromLong(i); }   
