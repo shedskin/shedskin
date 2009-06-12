@@ -23,6 +23,11 @@ a = MAXINT
 print a
 print randum()
 
+#default argument problem
+import getopt
+flats = getopt.getopt(None,None)
+print flats
+
 ''', '''
 output(equal=True)
 '''),
