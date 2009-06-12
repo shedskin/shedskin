@@ -3270,10 +3270,6 @@ template<class A, class B> double __mods(A a, B b);
 template<> inline double __mods(int a, double b) { return __mods((double)a, b); }
 template<> inline double __mods(double a, int b) { return __mods(a, (double)b); }
 
-template<class A, class B> tuple2<double, double> *divmod(A a, B b);
-template<> inline tuple2<double, double> *divmod(double a, int b) { return divmod(a, (double)b); } 
-template<> inline tuple2<double, double> *divmod(int a, double b) { return divmod((double)a, b); }
-
 template<class A> inline tuple2<A, A> *divmod(A a, A b) { return a->__divmod__(b); }
 template<> inline tuple2<double, double> *divmod(double a, double b) {
     return new tuple2<double, double>(2, __floordiv(a,b), __mods(a,b));
@@ -3281,6 +3277,9 @@ template<> inline tuple2<double, double> *divmod(double a, double b) {
 template<> inline tuple2<int, int> *divmod(int a, int b) {
     return new tuple2<int, int>(2, __floordiv(a,b), __mods(a,b));
 }
+template<class A, class B> tuple2<double, double> *divmod(A a, B b);
+template<> inline tuple2<double, double> *divmod(double a, int b) { return divmod(a, (double)b); } 
+template<> inline tuple2<double, double> *divmod(int a, double b) { return divmod((double)a, b); }
 
 tuple2<complex *, complex *> *divmod(complex *a, double b);
 tuple2<complex *, complex *> *divmod(complex *a, int b);

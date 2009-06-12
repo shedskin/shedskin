@@ -76,6 +76,9 @@ void __init() {
 
 }
 
+tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *getopt(list<str *> *args, str *shortopts) {
+    return getopt(args, shortopts, new list<str *>());
+}
 tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *getopt(list<str *> *args, str *shortopts, str *longopts) {
     return getopt(args, shortopts, new list<str *>(1, longopts));
 }
@@ -133,6 +136,9 @@ tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *getopt(list<str *> *args,
     return (new tuple2<list<tuple2<str *, str *> *> *, list<str *> *>(2, opts, args));
 }
 
+tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *gnu_getopt(list<str *> *args, str *shortopts) {
+    return gnu_getopt(args, shortopts, new list<str *>());
+}
 tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *gnu_getopt(list<str *> *args, str *shortopts, str *longopts) {
     return gnu_getopt(args, shortopts, new list<str *>(1, longopts));
 }

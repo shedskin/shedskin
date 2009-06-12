@@ -25,7 +25,7 @@ print randum()
 
 #default argument problem
 import getopt
-flats = getopt.getopt(None,None)
+flats = getopt.getopt(['a'],'a')
 print flats
 
 ''', '''
