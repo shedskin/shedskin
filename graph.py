@@ -473,11 +473,7 @@ class moduleVisitor(ASTVisitor):
         for default in func.defaults:
             if not const_literal(default):
                 self.defaults[default] = len(self.defaults)
-
-            if func.mv.module.builtin:
-                self.visit(default, func)
-            else:
-                self.visit(default, None) # defaults are global!! (XXX except when modeling..)
+            self.visit(default, None) # defaults are global
 
         # --- add implicit 'return None' if no return expressions 
         if not func.returnexpr:
