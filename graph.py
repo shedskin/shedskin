@@ -1271,9 +1271,9 @@ class moduleVisitor(ASTVisitor):
                 lvalue, rvalue = child.nodes[0], child.expr
                 if isinstance(lvalue, AssName) and isinstance(rvalue, CallFunc) and isinstance(rvalue.node, Name) and rvalue.node.name in ['staticmethod', 'property']:
                     if rvalue.node.name == 'property':
-                        if len(rvalue.args) == 1:
+                        if len(rvalue.args) == 1 and isinstance(rvalue.args[0], Name):
                             newclass.properties[lvalue.name] = rvalue.args[0].name, None
-                        elif len(rvalue.args) == 2:
+                        elif len(rvalue.args) == 2 and isinstance(rvalue.args[0], Name) and isinstance(rvalue.args[1], Name):
                             newclass.properties[lvalue.name] = rvalue.args[0].name, rvalue.args[1].name
                         else:
                             error("complex properties are not supported", rvalue)
