@@ -18,11 +18,17 @@ SYNOPSIS
 shedskin [OPTION]... FILE
 
  -a --noann             Don't output annotated source code
+
  -b --nobounds          Disable bounds checking
+
  -d --dir               Specify alternate directory for output files
+
  -e --extmod            Generate extension module
+
  -f --flags             Provide alternate Makefile flags
+
  -r --random            Use fast random number generator 
+
  -w --nowrap            Disable wrap-around checking 
 
 DESCRIPTION
