@@ -1,4 +1,4 @@
-35 programs that work with Shed Skin 0.1.1.
+36 programs that work with Shed Skin 0.1.2.
 
 If you have another interesting test case, please send it to:
    mark.dufour@gmail.com
@@ -43,5 +43,6 @@ lines  name               description               notes
    175 tictactoe.py       tictactoe on large boards
   1235 TonyJpegDecoder.py jpeg decoder
     52 voronoi.py         textual voronoi
+   795 voronoi2.py        voronoi algoritm
 
- 10186 total
+ 10981 total
