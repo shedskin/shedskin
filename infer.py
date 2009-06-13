@@ -37,8 +37,6 @@ from compiler.visitor import *
 
 from shared import *
 
-from backward import *
-
 def class_copy(cl, dcpa):
     for var in cl.vars.values(): # XXX 
         if not inode(var) in getgx().types: continue # XXX research later

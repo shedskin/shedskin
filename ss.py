@@ -34,8 +34,6 @@ from infer import *
 import sys, string, copy, getopt, os.path, textwrap, traceback
 from distutils import sysconfig
 
-from backward import *
-
 
 def analysis(source, testing=False):
     gc.set_threshold(23456, 10, 10)
