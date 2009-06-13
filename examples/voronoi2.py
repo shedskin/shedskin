@@ -126,7 +126,7 @@ class Context(object):
         elif(self.triangulate):
             pass
         elif(self.plot):
-            self.circle (s.x, s.y, cradius)
+            self.circle (s.x, s.y, 1) #cradius)
         elif(self.doPrint):
             print "s %f %f" % (s.x, s.y)
 
