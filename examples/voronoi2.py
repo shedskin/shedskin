@@ -348,7 +348,6 @@ class Edge(object):
     LE = 0
     RE = 1
     EDGE_NUM = 0
-    DELETED = {}   # marker value
 
     def __init__(self):
         self.a = 0.0
@@ -357,6 +356,7 @@ class Edge(object):
         self.ep  = [None,None]
         self.reg = [None,None]
         self.edgenum = 0
+        self.deleted = False
 
     def dump(self):
         print "(#%d a=%g, b=%g, c=%g)" % (self.edgenum,self.a,self.b,self.c)
@@ -558,14 +558,14 @@ class EdgeList(object):
     def delete(self,he):
         he.left.right = he.right
         he.right.left = he.left
-        he.edge = Edge.DELETED
+        he.edge.deleted = True 
 
     # Get entry from hash table, pruning any deleted nodes 
     def gethash(self,b):
         if(b < 0 or b >= self.hashsize):
             return None
         he = self.hash[b]
-        if he is None or he.edge is not Edge.DELETED:
+        if he is None or he.edge is None or not he.edge.deleted: 
             return he
 
         #  Hash table points to deleted half edge.  Patch as necessary.
