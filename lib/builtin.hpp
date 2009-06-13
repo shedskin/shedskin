@@ -1653,7 +1653,7 @@ template<class T> void *list<T>::__setslice__(int x, int l, int u, int s, pyiter
 
     slicenr(x, l, u, s, this->__len__());
     
-    if(x&4) { // x&4: extended slice (step 's' is given), check if sizes match 
+    if(x&4 && s != 1) { // x&4: extended slice (step 's' is given), check if sizes match 
         int slicesize; 
         if(l == u) slicesize = 0; // XXX ugly
         else if(s > 0 && u < l) slicesize=0; 
@@ -1666,7 +1666,7 @@ template<class T> void *list<T>::__setslice__(int x, int l, int u, int s, pyiter
         }
 
         if(slicesize != len(la)) 
-                throw new ValueError(__modtuple(new str("attempt to assign sequence of size %d to extended slice of size %d"), new tuple2<int,int>(2, len(la), slicesize)));  
+            throw new ValueError(__modtuple(new str("attempt to assign sequence of size %d to extended slice of size %d"), new tuple2<int,int>(2, len(la), slicesize)));  
     }
 
     if(s == 1) {
