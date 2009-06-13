@@ -21,8 +21,6 @@ import extmod
 
 import textwrap, string
 
-from backward import *
-
 # --- code generation visitor; use type information
 class generateVisitor(ASTVisitor):
     def __init__(self, module):
