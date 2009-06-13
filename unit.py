@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 from ss import *
-from sets import Set
 import traceback, sys, os, time
 
 tests = [
@@ -9717,7 +9716,7 @@ def output(text=None, equal=False):
 
 # --- parse arguments and options
 
-args, options = [], Set()
+args, options = [], set()
 
 for arg in sys.argv[1:]:
     if arg.startswith('-'): 
