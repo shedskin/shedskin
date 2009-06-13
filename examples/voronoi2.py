@@ -178,9 +178,9 @@ def voronoi(siteList,context):
     priorityQ = PriorityQueue(siteList.ymin,siteList.ymax,len(siteList))
     siteIter = siteList.iterator()
     
-    bottomsite = siteIter.next()
+    bottomsite = getnext(siteIter)
     context.outSite(bottomsite)
-    newsite = siteIter.next()
+    newsite = getnext(siteIter)
     minpt = Site(-BIG_FLOAT,-BIG_FLOAT)
     while True:
         if not priorityQ.isEmpty():
@@ -225,7 +225,7 @@ def voronoi(siteList,context):
                 # push the Halfedge into the ordered linked list of vertices
                 priorityQ.insert(bisector,p,newsite.distance(p))
             
-            newsite = siteIter.next()
+            newsite = getnext(siteIter)
 
         elif not priorityQ.isEmpty():
             # intersection is smallest - this is a vector (circle) event 
@@ -671,6 +671,12 @@ class PriorityQueue(object):
 
 
 #------------------------------------------------------------------
+def getnext(whatsit):
+    try:
+        return whatsit.next()
+    except StopIteration:
+        return None
+
 class SiteList(object):
     def __init__(self,pointList):
         self.__sites = []
@@ -692,20 +698,20 @@ class SiteList(object):
         site.sitenum = self.__sitenum
         self.__sitenum += 1
 
-    class Iterator(object):
-        def __init__(this,lst):  this.generator = (s for s in lst)
-        def __iter__(this):      return this
-        def next(this): 
-            try:
-                return this.generator.next()
-            except StopIteration:
-                return None
+#    class Iterator(object):
+#        def __init__(this,lst):  this.generator = (s for s in lst)
+#        def __iter__(this):      return this
+#        def next(this): 
+#            try:
+#                return this.generator.next()
+#            except StopIteration:
+#                return None
 
     def iterator(self):
-        return SiteList.Iterator(self.__sites)
+        return iter(self.__sites) #SiteList.Iterator(self.__sites)
 
     def __iter__(self):
-        return SiteList.Iterator(self.__sites)
+        return iter(self.__sites) #SiteList.Iterator(self.__sites)
 
     def __len__(self):
         return len(self.__sites)
