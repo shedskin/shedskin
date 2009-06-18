@@ -1328,9 +1328,7 @@ class generateVisitor(ASTVisitor):
 
     def visitYield(self, node, func):
         self.output('__last_yield = %d;' % func.yieldNodes.index(node))
-        self.start()
-        self.visitm('return ', node.value, func)
-        self.eol()
+        self.return_expr(node.value, func.yieldnode, func)
         self.output('__after_yield_%d:;' % func.yieldNodes.index(node))
         self.start()
         
@@ -1952,23 +1950,23 @@ class generateVisitor(ASTVisitor):
         if func.isGenerator:
             self.output('throw new StopIteration();')
             return
+        self.return_expr(node.value, func.retnode, func)
 
+    def return_expr(self, expr, retnode, func):
         self.start('return ')
 
-        cast = False
-        if assign_needs_cast(node.value, func, func.retnode.thing, func):
-            #print 'cast!', node
-            cast = True
-            self.append('(('+typesetreprnew(func.retnode.thing, func)+')(')
+        cast = assign_needs_cast(expr, func, retnode.thing, func)
+        if cast:
+            self.append('(('+typesetreprnew(retnode.thing, func)+')(')
 
-        elif isinstance(node.value, Name) and node.value.name == 'self': # XXX integrate with assign_needs_cast!? # XXX self?
-            lcp = lowest_common_parents(polymorphic_t(self.mergeinh[func.retnode.thing])) # XXX simplify
+        elif isinstance(expr, Name) and expr.name == 'self': # XXX integrate with assign_needs_cast!? # XXX self?
+            lcp = lowest_common_parents(polymorphic_t(self.mergeinh[retnode.thing])) # XXX simplify
             if lcp:
                 cl = lcp[0] # XXX simplify
                 if not (cl == func.parent or cl in func.parent.ancestors()): 
                     self.append('('+cl.ident+' *)')
 
-        self.visit(node.value, func)
+        self.visit(expr, func)
         if cast: self.append('))')
         self.eol()
 
@@ -2819,7 +2817,8 @@ def assign_needs_cast_rec(argsplit, func, formalsplit, target):
 
     if defclass('none') in formalclasses:
         formalclasses.remove(defclass('none'))
-
+    if defclass('tuple2') in formalclasses and defclass('tuple') in formalclasses: # XXX generalize? lcp?
+        formalclasses.remove(defclass('tuple'))
     if len(formalclasses) != 1:
         return False
 
