@@ -27,6 +27,18 @@ import getopt
 flats = getopt.getopt(['a'],'a')
 print flats
 
+#more casting problems..
+def hop():
+    yield ()
+    yield (1,2)
+h = hop()
+print list(h)
+print list(h)
+def hap():
+    return ()
+    return (1,2)
+print hap()
+
 ''', '''
 output(equal=True)
 '''),

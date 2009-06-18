@@ -466,6 +466,12 @@ class moduleVisitor(ASTVisitor):
             var = defaultvar(formal, func) 
             var.formal_arg = True
 
+        # --- flow return expressions together into single node
+        func.retnode = retnode = cnode(node, parent=func)
+        getgx().types[retnode] = set()
+        func.yieldnode = yieldnode = cnode((node,'yield'), parent=func)
+        getgx().types[yieldnode] = set()
+
         self.visit(node.code, func)
 
         for default in func.defaults:
@@ -477,13 +483,6 @@ class moduleVisitor(ASTVisitor):
         if not func.returnexpr:
             func.fakeret = Return(Name('None'))
             self.visit(func.fakeret, func)
-
-        # --- flow return expressions together into single node
-        func.retnode = retnode = cnode(node, parent=func)
-        getgx().types[retnode] = set()
-
-        for expr in func.returnexpr:
-            self.addconstraint((inode(expr), inode(node)), func)
 
         # --- register function
         if isinstance(parent, class_): 
@@ -818,11 +817,10 @@ class moduleVisitor(ASTVisitor):
     def visitYield(self, node, func):
         if func.parent:
             error("generator _methods_ are not supported", node)
-
         func.isGenerator = True
         func.yieldNodes.append(node)
-
         self.visit(Return(CallFunc(Name('__iter'), [node.value])), func) 
+        self.addconstraint((inode(node.value), func.yieldnode), func) 
 
     def visitFor(self, node, func=None):
         # --- iterable contents -> assign node
@@ -986,17 +984,15 @@ class moduleVisitor(ASTVisitor):
     def visitReturn(self, node, func):
         self.visit(node.value, func)
         func.returnexpr.append(node.value)
-        if isinstance(node.value, Const) and node.value.value == None: 
-            return
-
-        newnode = cnode(node, parent=func)
-        getgx().types[newnode] = set()
-        if isinstance(node.value, Name):
-            func.retvars.append(node.value.name)
+        if not (isinstance(node.value, Const) and node.value.value == None): 
+            newnode = cnode(node, parent=func)
+            getgx().types[newnode] = set()
+            if isinstance(node.value, Name):
+                func.retvars.append(node.value.name)
+        if func.retnode:
+            self.addconstraint((inode(node.value), func.retnode), func) 
         
     def visitAssign(self, node, func=None):
-        #print 'assign', node, node.nodes
-
         # --- class-level attribute # XXX merge below
         if isinstance(func, class_):
             parent = func # XXX move above
