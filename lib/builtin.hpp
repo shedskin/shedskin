@@ -446,7 +446,10 @@ public:
 
     virtual void slice(int x, int l, int u, int s, pyseq<T> *c) {
         slicenr(x, l, u, s, __len__());
-        if(s > 0)
+        if(s == 1) {
+            c->units.resize(u-l);
+            memcpy(&(c->units[0]), &(this->units[l]), sizeof(T)*(u-l));
+        } else if(s > 0)
             for(int i=l; i<u; i += s)
                 c->append(units[i]);
         else
