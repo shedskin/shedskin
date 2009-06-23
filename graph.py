@@ -836,10 +836,7 @@ class moduleVisitor(ASTVisitor):
         # --- assign node -> variables  XXX merge into assign_pair
         if isinstance(node.assign, AssName):
             # for x in..
-            if node.assign.name == '_': 
-                lvar = self.tempvar((node.assign,1), func)
-            else:
-                lvar = defaultvar(node.assign.name, func)
+            lvar = defaultvar(node.assign.name, func)
             self.addconstraint((assnode, inode(lvar)), func)
 
         elif isinstance(node.assign, AssAttr): # XXX experimental :)
@@ -932,10 +929,7 @@ class moduleVisitor(ASTVisitor):
             self.addconstraint((inode(fakefunc), inode(assign)), lcfunc)
 
             if isinstance(assign, AssName): # XXX merge with visitFor
-                if assign.name == '_':
-                    lvar = self.tempvar((assign,1), lcfunc)
-                else:
-                    lvar = defaultvar(assign.name, lcfunc) # XXX str or Name?
+                lvar = defaultvar(assign.name, lcfunc) # XXX str or Name?
                 #register_tempvar(lvar, func) 
                 self.addconstraint((inode(assign), inode(lvar)), lcfunc)
             else: # AssTuple, AssList
@@ -1030,15 +1024,14 @@ class moduleVisitor(ASTVisitor):
                     if (rvalue, 0, 0) not in getgx().cnode: # XXX generalize 
                         self.visit(rvalue, func)
 
-                    if lvalue.name != '_':
-                        self.visit(lvalue, func)
+                    self.visit(lvalue, func)
 
-                        if func and lvalue.name in func.globals:
-                            lvar = defaultvar(lvalue.name, None)
-                        else:
-                            lvar = defaultvar(lvalue.name, func)
+                    if func and lvalue.name in func.globals:
+                        lvar = defaultvar(lvalue.name, None)
+                    else:
+                        lvar = defaultvar(lvalue.name, func)
 
-                        self.addconstraint((inode(rvalue), inode(lvar)), func)
+                    self.addconstraint((inode(rvalue), inode(lvar)), func)
 
                 # (a,(b,c), ..) = expr
                 elif isinstance(lvalue, (AssTuple, AssList)):
@@ -1113,9 +1106,8 @@ class moduleVisitor(ASTVisitor):
             self.visit(fakefunc, func)
 
             if isinstance(item, AssName):
-                if item.name != '_':
-                    lvar = defaultvar(item.name, func)
-                    self.addconstraint((inode(fakefunc), inode(lvar)), func)
+                lvar = defaultvar(item.name, func)
+                self.addconstraint((inode(fakefunc), inode(lvar)), func)
             elif isinstance(item, (Subscript, AssAttr)):
                 self.assign_pair(item, fakefunc, func)
             elif isinstance(item, (AssTuple, AssList)): # recursion
@@ -1333,8 +1325,6 @@ class moduleVisitor(ASTVisitor):
 
         if node.name == '__doc__': 
             error("'%s' attribute is not supported" % node.name, node)
-        elif node.name in ['_']:
-            error("'%s' cannot be used as variable name" % node.name, node)
        
         if node.name in ['None', 'True', 'False']: 
             if node.name == 'None': # XXX also bools, remove def seed_nodes()
