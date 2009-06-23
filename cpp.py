@@ -1021,10 +1021,7 @@ class generateVisitor(ASTVisitor):
 
     def visitFor(self, node, func=None):
         if isinstance(node.assign, AssName):
-            if node.assign.name != '_':
-                assname = node.assign.name
-            else:
-                assname = getmv().tempcount[(node.assign,1)]
+            assname = node.assign.name
         elif isinstance(node.assign, AssAttr): 
             self.start('')
             self.visitAssAttr(node.assign, func)
@@ -1995,8 +1992,7 @@ class generateVisitor(ASTVisitor):
                 selector = '%s->%s(%s)' % (temp, ident, arg)
 
                 if isinstance(item, AssName):
-                    if item.name != '_':
-                        self.output('%s = %s;' % (item.name, selector)) 
+                    self.output('%s = %s;' % (item.name, selector)) 
                 elif isinstance(item, (AssTuple, AssList)): # recursion
                     self.tuple_assign(item, selector, func)
                 elif isinstance(item, Subscript):
@@ -2012,14 +2008,13 @@ class generateVisitor(ASTVisitor):
             self.eol()
 
             for (n, item) in enumerate(lvalue.nodes):
-                if item.name != '_': 
-                    self.start()
-                    if isinstance(rvalue, Const): sel = '__getitem__(%d)' % n
-                    elif len(lvalue.nodes) > 2: sel = '__getfast__(%d)' % n
-                    elif n == 0: sel = '__getfirst__()' # XXX merge
-                    else: sel = '__getsecond__()'
-                    self.visitm(item, ' = ', temp, '->'+sel, func)
-                    self.eol()
+                self.start()
+                if isinstance(rvalue, Const): sel = '__getitem__(%d)' % n
+                elif len(lvalue.nodes) > 2: sel = '__getfast__(%d)' % n
+                elif n == 0: sel = '__getfirst__()' # XXX merge
+                else: sel = '__getsecond__()'
+                self.visitm(item, ' = ', temp, '->'+sel, func)
+                self.eol()
             
     def subs_assign(self, lvalue, func):
         if defclass('list') in [t[0] for t in self.mergeinh[lvalue.expr]]:
@@ -2085,10 +2080,9 @@ class generateVisitor(ASTVisitor):
 
                 # name = expr
                 elif isinstance(lvalue, AssName):
-                    if lvalue.name != '_': # XXX 
-                        cast = self.var_assign_needs_cast(lvalue, rvalue, func) 
-                        self.visit(lvalue, func)
-                        self.append(' = ')
+                    cast = self.var_assign_needs_cast(lvalue, rvalue, func) 
+                    self.visit(lvalue, func)
+                    self.append(' = ')
 
                 # (a,(b,c), ..) = expr
                 elif isinstance(lvalue, (AssTuple, AssList)):
@@ -2235,10 +2229,7 @@ class generateVisitor(ASTVisitor):
 
         # iter var
         if isinstance(qual.assign, AssName):
-            if qual.assign.name != '_':
-                var = lookupvar(qual.assign.name, lcfunc)
-            else:
-                var = lookupvar(getmv().tempcount[(qual.assign,1)], lcfunc)
+            var = lookupvar(qual.assign.name, lcfunc)
         else:
             var = lookupvar(getmv().tempcount[qual.assign], lcfunc)
 
