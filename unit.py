@@ -39,6 +39,15 @@ def hap():
     return (1,2)
 print hap()
 
+#FOR_IN_T2 for listcomp
+class animal: 
+    def sound(self): 
+        print 'oink'
+class dog(animal): pass
+class cat(animal): pass
+print [a.sound() for a in dog(), cat()]
+
+
 ''', '''
 output(equal=True)
 '''),

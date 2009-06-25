@@ -1028,42 +1028,19 @@ class generateVisitor(ASTVisitor):
             assname = self.line.strip()
         else:
             assname = getmv().tempcount[node.assign]
+        assname = self.cpp_name(assname)
 
         print >>self.out
-
         if node.else_:
             self.output('%s = 0;' % getmv().tempcount[node.else_])
 
         # --- for i in range(..) -> for( i=l, u=expr; i < u; i++ ) .. 
         if fastfor(node):
-            if len(node.list.args) == 3 and not const_literal(node.list.args[2]):
-                self.fastfor_switch(node, func)
-                self.indent()
-                self.fastfor(node, assname, '', func)
-                self.forbody(node, func)
-                self.deindent()
-                self.output('} else {')
-                self.indent()
-                self.fastfor(node, assname, '_NEG', func)
-                self.forbody(node, func)
-                self.deindent()
-                self.output('}')
-            else:
-                neg=''
-                if len(node.list.args) == 3 and const_literal(node.list.args[2]) and isinstance(node.list.args[2], UnarySub):
-                    neg = '_NEG'
-
-                self.fastfor(node, assname, neg, func)
-                self.forbody(node, func)
-
-        # --- otherwise, apply macro magic
+            self.do_fastfor(node, node, None, assname, func)
         else:
-            assname = self.cpp_name(assname)
-                
             pref = ''
             if not [t for t in self.mergeinh[node.list] if t[0] != defclass('tuple2')]:
-                pref = '_T2' # XXX generalize to listcomps
-
+                pref = '_T2' 
             if not [t for t in self.mergeinh[node.list] if t[0] not in (defclass('tuple'), defclass('list'))]:
                 pref = '_SEQ'
 
@@ -1073,11 +1050,15 @@ class generateVisitor(ASTVisitor):
             self.start('FOR_IN%s(%s,' % (pref, assname))
             self.visit(node.list, func)
             print >>self.out, self.line+','+tail+')'
-            self.forbody(node, func)
+            self.forbody(node, None, assname, func)
 
         print >>self.out
 
-    def forbody(self, node, func=None):
+    def forbody(self, node, quals, iter, func):
+        if quals != None:
+            self.listcompfor_body(node, quals, iter, func)
+            return
+
         self.indent()
 
         if isinstance(node.assign, (AssTuple, AssList)):
@@ -2232,32 +2213,15 @@ class generateVisitor(ASTVisitor):
             var = lookupvar(qual.assign.name, lcfunc)
         else:
             var = lookupvar(getmv().tempcount[qual.assign], lcfunc)
-
         iter = self.cpp_name(var.name)
 
         # for in
         if fastfor(qual):
-            if len(qual.list.args) == 3 and not const_literal(qual.list.args[2]):
-                self.fastfor_switch(qual, lcfunc)
-                self.indent()
-                self.fastfor(qual, iter, '', lcfunc)
-                self.listcompfor_body(node, quals, iter, lcfunc)
-                self.deindent()
-                self.output('} else {')
-                self.indent()
-                self.fastfor(qual, iter, '_NEG', lcfunc)
-                self.listcompfor_body(node, quals, iter, lcfunc)
-                self.deindent()
-                self.output('}')
-            else:
-                neg=''
-                if len(qual.list.args) == 3 and const_literal(qual.list.args[2]) and isinstance(qual.list.args[2], UnarySub): 
-                    neg = '_NEG'
-                self.fastfor(qual, iter, neg, lcfunc)
-                self.listcompfor_body(node, quals, iter, lcfunc)
-
+            self.do_fastfor(node, qual, quals, iter, lcfunc)
         else:
             pref = ''
+            if not [t for t in self.mergeinh[qual.list] if t[0] != defclass('tuple2')]:
+                pref = '_T2' 
             if not [t for t in self.mergeinh[qual.list] if t[0] not in (defclass('tuple'), defclass('list'))]:
                 pref = '_SEQ'
 
@@ -2280,9 +2244,28 @@ class generateVisitor(ASTVisitor):
 
             self.listcompfor_body(node, quals, iter, lcfunc)
 
+    def do_fastfor(self, node, qual, quals, iter, func):
+        if len(qual.list.args) == 3 and not const_literal(qual.list.args[2]):
+            self.fastfor_switch(qual, func)
+            self.indent()
+            self.fastfor(qual, iter, '', func)
+            self.forbody(node, quals, iter, func)
+            self.deindent()
+            self.output('} else {')
+            self.indent()
+            self.fastfor(qual, iter, '_NEG', func)
+            self.forbody(node, quals, iter, func)
+            self.deindent()
+            self.output('}')
+        else:
+            neg=''
+            if len(qual.list.args) == 3 and const_literal(qual.list.args[2]) and isinstance(qual.list.args[2], UnarySub): 
+                neg = '_NEG'
+            self.fastfor(qual, iter, neg, func)
+            self.forbody(node, quals, iter, func)
+
     def listcompfor_body(self, node, quals, iter, lcfunc):
         qual = quals[0]
-
         self.indent()
 
         if isinstance(qual.assign, (AssTuple, AssList)):
