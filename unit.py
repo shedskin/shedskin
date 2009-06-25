@@ -47,6 +47,24 @@ class dog(animal): pass
 class cat(animal): pass
 print [a.sound() for a in dog(), cat()]
 
+#tests used for optimization
+l = [(7,8),(9,10)]
+class D: pass
+y = D()
+for a, b in enumerate(l):
+    print a,b
+for a, y.b in enumerate(l):
+    print a,y.b
+class C: pass
+x = C()
+for x.a, (c,d) in enumerate(l):
+    print x.a,c,d
+for t in enumerate(l):
+    print t
+print [(a, b) for a, b in enumerate(l)]
+print [(a, y.b) for a, y.b in enumerate(l)]
+print [(x.a, (c,d)) for x.a, (c,d) in enumerate(l)]
+print [t for t in enumerate(l)]
 
 ''', '''
 output(equal=True)
