@@ -2197,7 +2197,7 @@ class generateVisitor(ASTVisitor):
     def listcomp_rec(self, node, quals, lcfunc):
         if not quals:
             if len(node.quals) == 1 and not fastfor(node.quals[0]) and not node.quals[0].ifs and not [t for t in self.mergeinh[node.quals[0].list] if t[0] not in (defclass('tuple'), defclass('list'))]:
-                self.start('result->units['+getmv().tempcount[node.quals[0]]+'] = ')
+                self.start('result->units['+getmv().tempcount[node.quals[0].list]+'] = ')
                 self.visit(node.expr, lcfunc)
             else:
                 self.start('result->append(')
@@ -2226,7 +2226,7 @@ class generateVisitor(ASTVisitor):
                 pref = '_SEQ'
 
             if not isinstance(qual.list, Name):
-                itervar = getmv().tempcount[qual.list]
+                itervar = getmv().tempcount[qual]
                 self.start('')
                 self.visitm(itervar, ' = ', qual.list, lcfunc)
                 self.eol()
@@ -2237,7 +2237,7 @@ class generateVisitor(ASTVisitor):
                 self.output('result->resize(len('+itervar+'));')
 
             if pref == '': tail = getmv().tempcount[(qual,1)][2:]
-            else: tail = getmv().tempcount[qual.list][2:]+','+getmv().tempcount[qual][2:]
+            else: tail = getmv().tempcount[qual][2:]+','+getmv().tempcount[qual.list][2:]
 
             self.start('FOR_IN'+pref+'('+iter+','+itervar+','+tail)
             print >>self.out, self.line+')'

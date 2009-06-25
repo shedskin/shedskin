@@ -853,10 +853,27 @@ class moduleVisitor(ASTVisitor):
         else:
             error('unsupported type of assignment', node)
 
+        self.do_for(node, assnode, get_iter, func)
+
+        # --- for-else
+        if node.else_:
+            elsevar = self.tempvar(node.else_, func)
+           # print 'elsevar', elsevar
+            getgx().types[inode(elsevar)] = set([(defclass('int_'),0)])
+            inode(elsevar).copymetoo = True
+
+            self.visit(node.else_, func)
+
+        # --- loop body
+        getgx().loopstack.append(node)
+        self.visit(node.body, func)
+        getgx().loopstack.pop()
+        self.for_in_iters.append(node.list)
+
+    def do_for(self, node, assnode, get_iter, func):
         # --- for i in range(..) XXX i should not be modified.. use tempcounter; two bounds
         if fastfor(node):
             ivar = self.tempvar(node.assign, func) # index var
-            
             self.addconstraint((assnode, inode(ivar)), func)
 
             evar = self.tempvar(node.list, func) # expr var
@@ -874,28 +891,11 @@ class moduleVisitor(ASTVisitor):
             self.addconstraint((inode(node.list), inode(ovar)), func) # node.list
 
             itervar = self.tempvar((node,1), func)
-            #print 'itervar', itervar
-            #register_tempvar(itervar, func)
             self.addconstraint((inode(get_iter), inode(itervar)), func)
 
             xvar = self.tempvar(node.list, func)
             getgx().types[inode(xvar)] = set([(defclass('int_'),0)])
             inode(xvar).copymetoo = True
-
-        # --- for-else
-        if node.else_:
-            elsevar = self.tempvar(node.else_, func)
-           # print 'elsevar', elsevar
-            getgx().types[inode(elsevar)] = set([(defclass('int_'),0)])
-            inode(elsevar).copymetoo = True
-
-            self.visit(node.else_, func)
-
-        # --- loop body
-        getgx().loopstack.append(node)
-        self.visit(node.body, func)
-        getgx().loopstack.pop()
-        self.for_in_iters.append(node.list)
 
     def visitWhile(self, node, func=None):
         getgx().loopstack.append(node)
@@ -919,45 +919,23 @@ class moduleVisitor(ASTVisitor):
 
         for qual in node.quals:
             # iter
-            assign = qual.assign
-            getgx().types[cnode(assign, parent=func)] = set()
+            assnode = cnode(qual.assign, parent=func)
+            getgx().types[assnode] = set()
 
             # list.unit->iter
             get_iter = CallFunc(Getattr(qual.list, '__iter__'), [])
             fakefunc = CallFunc(Getattr(get_iter, 'next'), [])
             self.visit(fakefunc, lcfunc)
-            self.addconstraint((inode(fakefunc), inode(assign)), lcfunc)
+            self.addconstraint((inode(fakefunc), inode(qual.assign)), lcfunc)
 
-            if isinstance(assign, AssName): # XXX merge with visitFor
-                lvar = defaultvar(assign.name, lcfunc) # XXX str or Name?
+            if isinstance(qual.assign, AssName): # XXX merge with visitFor
+                lvar = defaultvar(qual.assign.name, lcfunc) # XXX str or Name?
                 #register_tempvar(lvar, func) 
-                self.addconstraint((inode(assign), inode(lvar)), lcfunc)
+                self.addconstraint((inode(qual.assign), inode(lvar)), lcfunc)
             else: # AssTuple, AssList
-                self.tuple_flow(assign, assign, lcfunc)
+                self.tuple_flow(qual.assign, qual.assign, lcfunc)
 
-            if fastfor(qual): #XXX merge with visitFor above
-                ivar = self.tempvar(assign, lcfunc) # index var 
-                self.addconstraint((inode(assign), inode(ivar)), lcfunc)
-
-                evar = self.tempvar(qual.list, lcfunc) # expr var
-                self.addconstraint((inode(qual.list.args[0]), inode(evar)), lcfunc)
-
-                if len(qual.list.args) == 3 and not isinstance(qual.list.args[2], Name) and not const_literal(qual.list.args[2]): # XXX merge with ListComp
-                    for arg in qual.list.args:
-                        if not isinstance(arg, Name) and not const_literal(arg): # XXX create func for better check
-                            tvar = self.tempvar(arg, lcfunc)
-                            self.addconstraint((inode(arg), inode(tvar)), lcfunc)
-
-            else:
-                ovar = self.tempvar(qual.list, lcfunc)
-                self.addconstraint((inode(qual.list), inode(ovar)), lcfunc)
-
-                itervar = self.tempvar((qual,1), lcfunc)
-                self.addconstraint((inode(get_iter), inode(itervar)), lcfunc)
-
-                xvar = self.tempvar(qual, lcfunc) 
-                getgx().types[inode(xvar)] = set([(defclass('int_'),0)])
-                inode(xvar).copymetoo = True
+            self.do_for(qual, assnode, get_iter, lcfunc)
 
             # cond
             for child in qual.ifs:
