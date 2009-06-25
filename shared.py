@@ -340,6 +340,9 @@ def is_listcomp(parent):
 def fastfor(node):
     return isinstance(node.list, CallFunc) and isinstance(node.list.node, Name) and node.list.node.name in ['range', 'xrange']
 
+def is_enum(node):
+    return isinstance(node.list, CallFunc) and isinstance(node.list.node, Name) and node.list.node.name == 'enumerate' and node.list.args and isinstance(node.assign, (AssList, AssTuple))
+
 def lookupvar(name, parent):
     return defvar(name, parent, False)
 

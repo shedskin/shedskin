@@ -897,6 +897,10 @@ class moduleVisitor(ASTVisitor):
             getgx().types[inode(xvar)] = set([(defclass('int_'),0)])
             inode(xvar).copymetoo = True
 
+            if is_enum(node):
+                enumvar = self.tempvar((node,2), func)
+                self.addconstraint((inode(node.list.args[0]), inode(enumvar)), func)
+
     def visitWhile(self, node, func=None):
         getgx().loopstack.append(node)
         for child in node.getChildNodes():
