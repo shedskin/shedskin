@@ -2118,21 +2118,22 @@ print a,b,c,d,e,f
 
 # --- underscore in assignment
 _ = 4
-a, _ = 1, '2'
-huh = 1, 2
-_, b = huh
-mtx = [[1,2,3],[4,5,6],[6,7,8]]
-[du, [x, y, _], _] = mtx
-print du, x, y
-hop = [(1,(2,3))]
-for _ in hop: print 'hop'
-for _, (a,b) in hop: print 'hop', a, b
-for a, (_,b) in hop: print 'hop', a, b
-for a, _ in hop: print 'hop', a
-print ['hop' for _ in hop]
-print ['hop %d %d' % (a,b) for _, [a,b] in hop]
-print ['hop %d %d' % (a,b) for a, [_,b] in hop]
-print ['hop %d' % a for a, _ in hop]
+print _, _
+#a, _ = 1, '2'
+#huh = 1, 2
+#_, b = huh
+#mtx = [[1,2,3],[4,5,6],[6,7,8]]
+#[du, [x, y, _], _] = mtx
+#print du, x, y
+#hop = [(1,(2,3))]
+#for _ in hop: print 'hop'
+#for _, (a,b) in hop: print 'hop', a, b
+#for a, (_,b) in hop: print 'hop', a, b
+#for a, _ in hop: print 'hop', a
+#print ['hop' for _ in hop]
+#print ['hop %d %d' % (a,b) for _, [a,b] in hop]
+#print ['hop %d %d' % (a,b) for a, [_,b] in hop]
+#print ['hop %d' % a for a, _ in hop]
 
 # --- except 'tuple'
 for a in range(2):
