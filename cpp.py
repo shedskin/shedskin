@@ -984,6 +984,7 @@ class generateVisitor(ASTVisitor):
             self.output('}')
             
     def fastfor(self, node, assname, neg, func=None):
+        # --- for i in range(..) -> for( i=l, u=expr; i < u; i++ ) .. 
         ivar, evar = getmv().tempcount[node.assign], getmv().tempcount[node.list]
 
         self.start('FAST_FOR%s('%neg+assname+',')
@@ -1025,7 +1026,7 @@ class generateVisitor(ASTVisitor):
         elif isinstance(node.assign, AssAttr): 
             self.start('')
             self.visitAssAttr(node.assign, func)
-            assname = self.line.strip()
+            assname = self.line.strip() # XXX yuck
         else:
             assname = getmv().tempcount[node.assign]
         assname = self.cpp_name(assname)
@@ -1034,25 +1035,27 @@ class generateVisitor(ASTVisitor):
         if node.else_:
             self.output('%s = 0;' % getmv().tempcount[node.else_])
 
-        # --- for i in range(..) -> for( i=l, u=expr; i < u; i++ ) .. 
         if fastfor(node):
             self.do_fastfor(node, node, None, assname, func)
         else:
-            pref = ''
-            if not [t for t in self.mergeinh[node.list] if t[0] != defclass('tuple2')]:
-                pref = '_T2' 
-            if not [t for t in self.mergeinh[node.list] if t[0] not in (defclass('tuple'), defclass('list'))]:
-                pref = '_SEQ'
-
-            if pref == '': tail = getmv().tempcount[(node,1)][2:]
-            else: tail = getmv().tempcount[node][2:]+','+getmv().tempcount[node.list][2:]
-
+            pref, tail = self.forin_preftail(node)
             self.start('FOR_IN%s(%s,' % (pref, assname))
             self.visit(node.list, func)
             print >>self.out, self.line+','+tail+')'
             self.forbody(node, None, assname, func)
-
         print >>self.out
+
+    def forin_preftail(self, node):
+        pref = ''
+        if not [t for t in self.mergeinh[node.list] if t[0] != defclass('tuple2')]:
+            pref = '_T2' 
+        if not [t for t in self.mergeinh[node.list] if t[0] not in (defclass('tuple'), defclass('list'))]:
+            pref = '_SEQ'
+        if pref == '': 
+            tail = getmv().tempcount[(node,1)][2:]
+        else: 
+            tail = getmv().tempcount[node][2:]+','+getmv().tempcount[node.list][2:]
+        return pref, tail
 
     def forbody(self, node, quals, iter, func):
         if quals != None:
@@ -2215,16 +2218,9 @@ class generateVisitor(ASTVisitor):
             var = lookupvar(getmv().tempcount[qual.assign], lcfunc)
         iter = self.cpp_name(var.name)
 
-        # for in
         if fastfor(qual):
             self.do_fastfor(node, qual, quals, iter, lcfunc)
         else:
-            pref = ''
-            if not [t for t in self.mergeinh[qual.list] if t[0] != defclass('tuple2')]:
-                pref = '_T2' 
-            if not [t for t in self.mergeinh[qual.list] if t[0] not in (defclass('tuple'), defclass('list'))]:
-                pref = '_SEQ'
-
             if not isinstance(qual.list, Name):
                 itervar = getmv().tempcount[qual]
                 self.start('')
@@ -2233,15 +2229,13 @@ class generateVisitor(ASTVisitor):
             else:
                 itervar = self.cpp_name(qual.list.name)
 
+            pref, tail = self.forin_preftail(qual)
+
             if len(node.quals) == 1 and not qual.ifs and pref == '_SEQ':
                 self.output('result->resize(len('+itervar+'));')
 
-            if pref == '': tail = getmv().tempcount[(qual,1)][2:]
-            else: tail = getmv().tempcount[qual][2:]+','+getmv().tempcount[qual.list][2:]
-
             self.start('FOR_IN'+pref+'('+iter+','+itervar+','+tail)
             print >>self.out, self.line+')'
-
             self.listcompfor_body(node, quals, iter, lcfunc)
 
     def do_fastfor(self, node, qual, quals, iter, func):
