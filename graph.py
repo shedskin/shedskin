@@ -897,9 +897,17 @@ class moduleVisitor(ASTVisitor):
             getgx().types[inode(xvar)] = set([(defclass('int_'),0)])
             inode(xvar).copymetoo = True
 
-            if is_enum(node):
+            if is_enum(node) or is_zip2(node):
                 enumvar = self.tempvar((node,2), func)
                 self.addconstraint((inode(node.list.args[0]), inode(enumvar)), func)
+
+                if is_zip2(node):
+                    zipvar = self.tempvar((node,3), func)
+                    self.addconstraint((inode(node.list.args[1]), inode(zipvar)), func)
+
+                    xvar2 = self.tempvar((node,4), func)
+                    getgx().types[inode(xvar2)] = set([(defclass('int_'),0)])
+                    inode(xvar2).copymetoo = True
 
     def visitWhile(self, node, func=None):
         getgx().loopstack.append(node)

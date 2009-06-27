@@ -341,7 +341,10 @@ def fastfor(node):
     return isinstance(node.list, CallFunc) and isinstance(node.list.node, Name) and node.list.node.name in ['range', 'xrange']
 
 def is_enum(node):
-    return isinstance(node.list, CallFunc) and isinstance(node.list.node, Name) and node.list.node.name == 'enumerate' and node.list.args and isinstance(node.assign, (AssList, AssTuple))
+    return isinstance(node.list, CallFunc) and isinstance(node.list.node, Name) and node.list.node.name == 'enumerate' and len(node.list.args) == 1 and isinstance(node.assign, (AssList, AssTuple))
+
+def is_zip2(node):
+    return isinstance(node.list, CallFunc) and isinstance(node.list.node, Name) and node.list.node.name == 'zip' and len(node.list.args) == 2 and isinstance(node.assign, (AssList, AssTuple))
 
 def lookupvar(name, parent):
     return defvar(name, parent, False)

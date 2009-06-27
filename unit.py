@@ -47,7 +47,7 @@ class dog(animal): pass
 class cat(animal): pass
 print [a.sound() for a in dog(), cat()]
 
-#tests used for optimization
+#tests used for optimizing enumerate/zip
 l = [(7,8),(9,10)]
 class D: pass
 y = D()
@@ -65,6 +65,25 @@ print [(a, b) for a, b in enumerate(l)]
 print [(a, y.b) for a, y.b in enumerate(l)]
 print [(x.a, (c,d)) for x.a, (c,d) in enumerate(l)]
 print [t for t in enumerate(l)]
+
+l2 = [(7,8), (9,10)]
+for a2, b2 in zip(l2, l2[::-1]+l2):
+    print a2, b2
+for t2 in zip(l2, l2):
+    print t2
+class C2: pass
+c2 = C2()
+for c2.x, (d2,e2) in zip(2*l2, l2):
+    print c2.x, d2, e2
+for (d2,e2), c2.x in zip(2*l2, l2):
+    print d2, e2, c2.x
+for (d2,e2), (f2,g2) in zip(l2, l2):
+    print d2, e2, f2, g2
+print zip('hoi','hap'), zip('ah', 'bh', 'ch')
+for u2,v2 in zip('hoi','hap'):
+    print u2+v2
+print zip('ahoi', range(5))
+print [((d2, e2), c2.x) for (d2,e2), c2.x in zip(2*l2, l2)]
 
 ''', '''
 output(equal=True)
