@@ -85,6 +85,21 @@ for u2,v2 in zip('hoi','hap'):
 print zip('ahoi', range(5))
 print [((d2, e2), c2.x) for (d2,e2), c2.x in zip(2*l2, l2)]
 
+#pyseq:str special cases
+print 'a'.join('hap')
+fi = file('testdata/humba', 'w')
+fi.writelines('hoei')
+fi.close()
+print file('testdata/humba').read()
+print tuple('hap')
+up = ['a']
+up.extend('hoi')
+print up
+up += 'wap'
+print up
+print min('gehakt'), max('gehakt')
+print list(reversed('gehakt'))
+
 ''', '''
 output(equal=True)
 '''),
