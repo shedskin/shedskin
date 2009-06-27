@@ -1016,15 +1016,18 @@ class generateVisitor(ASTVisitor):
             else:
                 self.visit(node.list.args[2], func)
         self.append(',%s,%s)' % (ivar[2:],evar[2:]))
-        #print 'ie', ivar, evar 
-
         print >>self.out, self.line
 
     def fastenum(self, node):
-        return is_enum(node) and not [t for t in self.mergeinh[node.list.args[0]] if t[0] not in (defclass('tuple'), defclass('list'))]
+        return is_enum(node) and self.only_classes(node.list.args[0], ('tuple', 'list', 'none'))
 
     def fastzip2(self, node):
-        return is_zip2(node) and not [t for t in self.mergeinh[node.list.args[0]] if t[0] not in (defclass('tuple'), defclass('list'))] and not [t for t in self.mergeinh[node.list.args[1]] if t[0] not in (defclass('tuple'), defclass('list'))]
+        names = ('tuple', 'list', 'none')
+        return is_zip2(node) and self.only_classes(node.list.args[0], names) and self.only_classes(node.list.args[1], names)
+
+    def only_classes(self, node, names):
+        classes = [defclass(name) for name in names]
+        return not [t for t in self.mergeinh[node] if t[0] not in classes]
 
     def visitFor(self, node, func=None):
         if isinstance(node.assign, AssName):
@@ -1099,9 +1102,9 @@ class generateVisitor(ASTVisitor):
 
     def forin_preftail(self, node):
         pref = ''
-        if not [t for t in self.mergeinh[node.list] if t[0] != defclass('tuple2')]:
+        if self.only_classes(node.list, ('tuple2', 'none')):
             pref = '_T2' 
-        if not [t for t in self.mergeinh[node.list] if t[0] not in (defclass('tuple'), defclass('list'))]:
+        if self.only_classes(node.list, ('tuple', 'list', 'none')):
             pref = '_SEQ'
         if pref == '': 
             tail = getmv().tempcount[(node,1)][2:]
@@ -2251,7 +2254,7 @@ class generateVisitor(ASTVisitor):
     # --- nested for loops: loop headers, if statements
     def listcomp_rec(self, node, quals, lcfunc):
         if not quals:
-            if len(node.quals) == 1 and not fastfor(node.quals[0]) and not self.fastenum(node.quals[0]) and not self.fastzip2(node.quals[0]) and not node.quals[0].ifs and not [t for t in self.mergeinh[node.quals[0].list] if t[0] not in (defclass('tuple'), defclass('list'))]:
+            if len(node.quals) == 1 and not fastfor(node.quals[0]) and not self.fastenum(node.quals[0]) and not self.fastzip2(node.quals[0]) and not node.quals[0].ifs and self.only_classes(node.quals[0].list, ('tuple', 'list', 'none')):
                 self.start('result->units['+getmv().tempcount[node.quals[0].list]+'] = ')
                 self.visit(node.expr, lcfunc)
             else:
