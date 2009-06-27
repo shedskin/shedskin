@@ -1023,6 +1023,9 @@ class generateVisitor(ASTVisitor):
     def fastenum(self, node):
         return is_enum(node) and not [t for t in self.mergeinh[node.list.args[0]] if t[0] not in (defclass('tuple'), defclass('list'))]
 
+    def fastzip2(self, node):
+        return is_zip2(node) and not [t for t in self.mergeinh[node.list.args[0]] if t[0] not in (defclass('tuple'), defclass('list'))] and not [t for t in self.mergeinh[node.list.args[1]] if t[0] not in (defclass('tuple'), defclass('list'))]
+
     def visitFor(self, node, func=None):
         if isinstance(node.assign, AssName):
             assname = node.assign.name
@@ -1043,6 +1046,9 @@ class generateVisitor(ASTVisitor):
         elif self.fastenum(node):
             self.do_fastenum(node, func)
             self.forbody(node, None, assname, func, skip=True)
+        elif self.fastzip2(node):
+            self.do_fastzip2(node, func)
+            self.forbody(node, None, assname, func, skip=True)
         else:
             pref, tail = self.forin_preftail(node)
             self.start('FOR_IN%s(%s,' % (pref, assname))
@@ -1050,6 +1056,28 @@ class generateVisitor(ASTVisitor):
             print >>self.out, self.line+','+tail+')'
             self.forbody(node, None, assname, func)
         print >>self.out
+
+    def do_fastzip2(self, node, func):
+        self.start('FOR_IN_ZIP(')
+        left, right = node.assign.nodes
+        self.do_fastzip2_one(left, func)
+        self.do_fastzip2_one(right, func)
+        self.visitm(node.list.args[0], ',', node.list.args[1], ',', func)
+        tail1 = getmv().tempcount[(node,2)][2:]+','+getmv().tempcount[(node,3)][2:]+','
+        tail2 = getmv().tempcount[(node.list)][2:]+','+getmv().tempcount[(node,4)][2:]
+        print >>self.out, self.line+tail1+tail2+')'
+        self.indent()
+        if isinstance(left, (AssTuple, AssList)): 
+            self.tuple_assign(left, getmv().tempcount[left], func)
+        if isinstance(right, (AssTuple, AssList)): 
+            self.tuple_assign(right, getmv().tempcount[right], func)
+
+    def do_fastzip2_one(self, node, func):
+        if isinstance(node, (AssTuple, AssList)):
+            self.append(getmv().tempcount[node])
+        else:
+            self.visit(node, func)
+        self.append(',')
 
     def do_fastenum(self, node, func):
         self.start('FOR_IN_SEQ(')
@@ -2223,7 +2251,7 @@ class generateVisitor(ASTVisitor):
     # --- nested for loops: loop headers, if statements
     def listcomp_rec(self, node, quals, lcfunc):
         if not quals:
-            if len(node.quals) == 1 and not fastfor(node.quals[0]) and not node.quals[0].ifs and not [t for t in self.mergeinh[node.quals[0].list] if t[0] not in (defclass('tuple'), defclass('list'))]:
+            if len(node.quals) == 1 and not fastfor(node.quals[0]) and not self.fastenum(node.quals[0]) and not self.fastzip2(node.quals[0]) and not node.quals[0].ifs and not [t for t in self.mergeinh[node.quals[0].list] if t[0] not in (defclass('tuple'), defclass('list'))]:
                 self.start('result->units['+getmv().tempcount[node.quals[0].list]+'] = ')
                 self.visit(node.expr, lcfunc)
             else:
@@ -2246,6 +2274,9 @@ class generateVisitor(ASTVisitor):
             self.do_fastfor(node, qual, quals, iter, lcfunc)
         elif self.fastenum(qual):
             self.do_fastenum(qual, lcfunc)
+            self.listcompfor_body(node, quals, iter, lcfunc, skip=True)
+        elif self.fastzip2(qual):
+            self.do_fastzip2(qual, lcfunc)
             self.listcompfor_body(node, quals, iter, lcfunc, skip=True)
         else:
             if not isinstance(qual.list, Name):

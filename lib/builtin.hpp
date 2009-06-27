@@ -164,6 +164,11 @@ template<class A, class B> str *__modtuple(str *fmt, tuple2<A,B> *t);
 #define INFINITY __builtin_inff()
 #endif
 
+#define __SS_MIN(a,b) ((a) < (b) ? (a) : (b))
+#define __SS_MIN3(a,b,c) (__SS_MIN((a), __SS_MIN((b), (c)))) 
+#define __SS_MAX(a,b) ((a) > (b) ? (a) : (b))
+#define __SS_MAX3(a,b,c) (__SS_MAX((a), __SS_MAX((b), (c))))
+
 void __init();
 void __exit(int code=0);
 void quit(int code=0);
@@ -1178,6 +1183,14 @@ class StopIteration : public Exception { public: StopIteration(str *msg=0) : Exc
     __ ## temp = m; \
     for(__ ## n = 0; __ ## n < (__ ## temp)->units.size(); __ ## n ++) { \
         i = (__ ## temp)->units[__ ## n]; \
+
+#define FOR_IN_ZIP(a,b, k,l, t,u, n,m) \
+    __ ## m = __SS_MIN(k->units.size(), l->units.size()); \
+    __ ## t = k; \
+    __ ## u = l; \
+    for(__ ## n = 0; __ ## n < __ ## m; __ ## n ++) { \
+        a = (__ ## t)->units[__ ## n]; \
+        b = (__ ## u)->units[__ ## n]; 
 
 #define FOR_IN_T2(i, m, obj, n) \
     __ ## obj = m; \
@@ -2980,16 +2993,10 @@ template<class T> T __max(int n, T a, T b, T c, ...) {
     return m;
 }
 
-#define __SS_MAX(a,b) ((a) > (b) ? (a) : (b))
-#define __SS_MAX3(a,b,c) (__SS_MAX((a), __SS_MAX((b), (c))))
-
 template<> inline int __max(int a, int b) { return __SS_MAX(a,b); }
 template<> inline int __max(int a, int b, int c) { return __SS_MAX3(a,b,c); }
 template<> inline double __max(double a, double b) { return __SS_MAX(a,b); }
 template<> inline double __max(double a, double b, double c) { return __SS_MAX3(a,b,c); }
-
-#undef __SS_MAX
-#undef __SS_MAX3
 
 template<class T> T __min(pyiter<T> *a) {
     T e, min = 0;
@@ -3034,16 +3041,10 @@ template<class T> T __min(int n, T a, T b, T c, ...) {
     return m;
 }
 
-#define __SS_MIN(a,b) ((a) < (b) ? (a) : (b))
-#define __SS_MIN3(a,b,c) (__SS_MIN((a), __SS_MIN((b), (c)))) 
-
 template<> inline int __min(int a, int b) { return __SS_MIN(a,b); }
 template<> inline int __min(int a, int b, int c) { return __SS_MIN3(a,b,c); }
 template<> inline double __min(double a, double b) { return __SS_MIN(a,b); }
 template<> inline double __min(double a, double b, double c) { return __SS_MIN3(a,b,c); }
-
-#undef __SS_MIN
-#undef __SS_MIN3
 
 template<class A> static inline list<A> *__list_comp_0(list<A> *result, pyiter<A> *a) {
     A e;
@@ -3159,6 +3160,8 @@ template <class A, class B> list<tuple2<A, B> *> *__zip2(pyiter<A> *a, pyiter<B>
 }
 
 template <class A, class B> list<tuple2<A, B> *> *__zip2(pyseq<A> *a, pyseq<B> *b) {
+    if(a->__class__ == cl_str_ || b->__class__ == cl_str_) /* XXX */
+        return __zip2(((pyiter<A> *)((str *)a)), ((pyiter<B> *)((str *)b))); 
     list<tuple2<A, B> *> *result;
     result = new list<tuple2<A, B> *>();
 
@@ -3195,6 +3198,8 @@ template <class A> list<tuple2<A,A> *> *__zip3(pyiter<A> *a, pyiter<A> *b, pyite
 }
 
 template <class A> list<tuple2<A,A> *> *__zip3(pyseq<A> *a, pyseq<A> *b, pyseq<A> *c) {
+    if(a->__class__ == cl_str_ || b->__class__ == cl_str_ || c->__class__ == cl_str_) /* XXX */
+        return __zip3(((pyiter<A> *)((str *)a)), ((pyiter<A> *)((str *)b)), ((pyiter<A> *)((str *)c)));
     list<tuple2<A, A> *> *result;
     result = new list<tuple2<A, A> *>();
 

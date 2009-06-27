@@ -1966,7 +1966,7 @@ template<> void * __to_ss(PyObject *p) {
 }
 #endif
 
-// Exceptions
+/* Exceptions */
 OSError::OSError(str *filename) {
     this->filename = filename;
     __ss_errno = errno;
