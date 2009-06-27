@@ -825,6 +825,10 @@ str *str::join(pyseq<str *> *l) {
     return __join(l, total_len);
 }
 
+str *str::join(str *s) {
+    return join((pyiter<str *> *)s);
+}
+
 str *str::__slice__(int x, int l, int u, int s) {
     slicenr(x, l, u, s, __len__());
 
@@ -1304,6 +1308,9 @@ __xrange *xrange(int n) { return new __xrange(0, n, 1); }
 
 __iter<int> *reversed(__xrange *x) {
    return new __rangeiter(x->a+(range_len(x->a,x->b,x->s)-1)*x->s, x->a-x->s, -x->s);
+}
+__iter<str *> *reversed(str *s) {
+    return reversed((pyiter<str *> *)s);
 }
 
 int ord(str *s) {

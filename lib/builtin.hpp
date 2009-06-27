@@ -522,10 +522,12 @@ public:
 
     list<T> *__iadd__(pyiter<T> *b);
     list<T> *__iadd__(pyseq<T> *b);
+    list<T> *__iadd__(str *s);
     list<T> *__imul__(int n);
 
     void *extend(pyiter<T> *p);
     void *extend(pyseq<T> *p);
+    void *extend(str *s);
 
     int index(T a);
     int index(T a, int s);
@@ -614,9 +616,10 @@ public:
     list<str *> *split(str *sep=0, int maxsplit=-1);
     int __eq__(pyobj *s);
     str *__add__(str *b);
-    str *__join(pyseq<str *> *l, int total_len);
     str *join(pyiter<str *> *l);
+    str *__join(pyseq<str *> *l, int total_len);
     str *join(pyseq<str *> *l);
+    str *join(str *s);
     str *__str__();
     str *__repr__();
     str *__mul__(int n);
@@ -1635,6 +1638,11 @@ template<class T> void *list<T>::extend(pyseq<T> *p) {
     return NULL;
 }
 
+template<class T> void *list<T>::extend(str *s) {
+    extend((pyiter<str *> *)s);
+    return NULL;
+}
+
 template<class T> void *list<T>::__setitem__(int i, T e) {
     i = __wrap(this, i);
     units[i] = e;
@@ -1787,6 +1795,10 @@ template<class T> list<T> *list<T>::__iadd__(pyiter<T> *b) {
 }
 template<class T> list<T> *list<T>::__iadd__(pyseq<T> *b) {
     extend(b);
+    return this;
+}
+template<class T> list<T> *list<T>::__iadd__(str *s) {
+    extend(s);
     return this;
 }
 
@@ -3100,15 +3112,14 @@ public:
     }
 };
 
-template <class A> __iter<A> *reversed(pyseq<A> *x) {
-    return new __ss_reverse<A>(x);
-}
-
-__iter<int> *reversed(__xrange *x); 
-
 template <class A> __iter<A> *reversed(pyiter<A> *x) { 
     return new __ss_reverse<A>(__list(x));
 }
+template <class A> __iter<A> *reversed(pyseq<A> *x) {
+    return new __ss_reverse<A>(x);
+}
+__iter<str *> *reversed(str *s);
+__iter<int> *reversed(__xrange *x); 
 
 template<class A> class __enumiter : public __iter<tuple2<int, A> *> {
 public:
