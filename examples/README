@@ -5,6 +5,7 @@ If you have another interesting test case, please send it to:
 
 lines  name               description               notes
 
+   141 ant.py             TSP approximation
    479 amaze.py           maze generator/solver
     64 brainfuck.py       brainfuck interpreter
    371 chess.py           chess engine
@@ -45,4 +46,4 @@ lines  name               description               notes
     52 voronoi.py         textual voronoi
    795 voronoi2.py        voronoi algoritm
 
- 10981 total
+ 11122 total
