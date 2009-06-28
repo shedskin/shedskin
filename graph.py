@@ -510,8 +510,7 @@ class moduleVisitor(ASTVisitor):
         for child in node.getChildNodes():
             self.visit(child, func)
             self.addconstraint((inode(child), newnode), func)
-            tvar = self.tempvar(child, func)
-            self.addconstraint((newnode, inode(tvar)), func)
+            self.tempvar2(child, newnode, func)
 
     def visitOr(self, node, func=None):
         newnode = cnode(node, parent=func)
@@ -519,8 +518,7 @@ class moduleVisitor(ASTVisitor):
         for child in node.getChildNodes():
             self.visit(child, func)
             self.addconstraint((inode(child), newnode), func)
-            tvar = self.tempvar(child, func)
-            self.addconstraint((newnode, inode(tvar)), func)
+            self.tempvar2(child, newnode, func)
 
     def visitIf(self, node, func=None):
         for test in node.tests:
@@ -633,8 +631,7 @@ class moduleVisitor(ASTVisitor):
         # tempvars, e.g. (t1=fun())
         for term in node.ops[:-1]:
             if not isinstance(term[1], (Name,Const)):
-                tvar = self.tempvar(term[1], func)
-                self.addconstraint((inode(term[1]), inode(tvar)), func)
+                self.tempvar2(term[1], inode(term[1]), func)
 
     def visitBitand(self, node, func=None):
         self.visitbitpair(node, augmsg(node, 'and'), func)
@@ -770,6 +767,15 @@ class moduleVisitor(ASTVisitor):
         register_tempvar(var, func) 
         return var
 
+    def tempvar2(self, node, source, func):
+        tvar = self.tempvar(node, func)
+        self.addconstraint((source, inode(tvar)), func)
+
+    def tempvar_int(self, node, func):
+        var = self.tempvar(node, func)
+        getgx().types[inode(var)] = set([(defclass('int_'),0)])
+        inode(var).copymetoo = True
+
     def visitRaise(self, node, func=None):
         if node.expr1 == None or node.expr2 != None or node.expr3 != None: 
             error('unsupported raise syntax', node)
@@ -807,9 +813,7 @@ class moduleVisitor(ASTVisitor):
 
         # else
         if node.else_:
-            elsevar = self.tempvar(node.else_, func)
-            getgx().types[inode(elsevar)] = set([(defclass('int_'),0)])
-            inode(elsevar).copymetoo = True
+            self.tempvar_int(node.else_, func)
 
     def visitTryFinally(self, node, func=None):
         error("'try..finally' is not supported", node)
@@ -857,11 +861,7 @@ class moduleVisitor(ASTVisitor):
 
         # --- for-else
         if node.else_:
-            elsevar = self.tempvar(node.else_, func)
-           # print 'elsevar', elsevar
-            getgx().types[inode(elsevar)] = set([(defclass('int_'),0)])
-            inode(elsevar).copymetoo = True
-
+            self.tempvar_int(node.else_, func)
             self.visit(node.else_, func)
 
         # --- loop body
@@ -873,41 +873,25 @@ class moduleVisitor(ASTVisitor):
     def do_for(self, node, assnode, get_iter, func):
         # --- for i in range(..) XXX i should not be modified.. use tempcounter; two bounds
         if fastfor(node):
-            ivar = self.tempvar(node.assign, func) # index var
-            self.addconstraint((assnode, inode(ivar)), func)
-
-            evar = self.tempvar(node.list, func) # expr var
-            self.addconstraint((inode(node.list.args[0]), inode(evar)), func)
+            self.tempvar2(node.assign, assnode, func)
+            self.tempvar2(node.list, inode(node.list.args[0]), func)
 
             if len(node.list.args) == 3 and not isinstance(node.list.args[2], Name) and not const_literal(node.list.args[2]): # XXX merge with ListComp
                 for arg in node.list.args:
                     if not isinstance(arg, Name) and not const_literal(arg): # XXX create func for better check
-                        tvar = self.tempvar(arg, func)
-                        self.addconstraint((inode(arg), inode(tvar)), func)
+                        self.tempvar2(arg, inode(arg), func)
 
         # --- temp vars for list, iter
         else:
-            ovar = self.tempvar(node, func)
-            self.addconstraint((inode(node.list), inode(ovar)), func) # node.list
-
-            itervar = self.tempvar((node,1), func)
-            self.addconstraint((inode(get_iter), inode(itervar)), func)
-
-            xvar = self.tempvar(node.list, func)
-            getgx().types[inode(xvar)] = set([(defclass('int_'),0)])
-            inode(xvar).copymetoo = True
+            self.tempvar2(node, inode(node.list), func)
+            self.tempvar2((node,1), inode(get_iter), func)
+            self.tempvar_int(node.list, func)
 
             if is_enum(node) or is_zip2(node):
-                enumvar = self.tempvar((node,2), func)
-                self.addconstraint((inode(node.list.args[0]), inode(enumvar)), func)
-
+                self.tempvar2((node,2), inode(node.list.args[0]), func)
                 if is_zip2(node):
-                    zipvar = self.tempvar((node,3), func)
-                    self.addconstraint((inode(node.list.args[1]), inode(zipvar)), func)
-
-                    xvar2 = self.tempvar((node,4), func)
-                    getgx().types[inode(xvar2)] = set([(defclass('int_'),0)])
-                    inode(xvar2).copymetoo = True
+                    self.tempvar2((node,3), inode(node.list.args[1]), func)
+                    self.tempvar_int((node,4), func)
 
     def visitWhile(self, node, func=None):
         getgx().loopstack.append(node)
@@ -916,10 +900,7 @@ class moduleVisitor(ASTVisitor):
         getgx().loopstack.pop()
 
         if node.else_:
-            elsevar = self.tempvar(node.else_, func)
-            getgx().types[inode(elsevar)] = set([(defclass('int_'),0)])
-            inode(elsevar).copymetoo = True
-
+            self.tempvar_int(node.else_, func)
             self.visit(node.else_, func)
 
     def visitListComp(self, node, func=None):
@@ -1044,11 +1025,9 @@ class moduleVisitor(ASTVisitor):
                         if (child,0,0) not in getgx().cnode: # (a,b) = (1,2): (1,2) never visited
                             continue
                         if not isinstance(child, Const) and not (isinstance(child, Name) and child.name == 'None'):
-                            tvar = self.tempvar(child, func)
-                            self.addconstraint((inode(child), inode(tvar)), func)
+                            self.tempvar2(child, inode(child), func)
             elif not isinstance(node.expr, Const) and not (isinstance(node.expr, Name) and node.expr.name == 'None'):
-                tvar = self.tempvar(node.expr, func)
-                self.addconstraint((inode(node.expr), inode(tvar)), func)
+                self.tempvar2(node.expr, inode(node.expr), func)
 
     def assign_pair(self, lvalue, rvalue, func):
         # expr[expr] = expr
@@ -1065,8 +1044,7 @@ class moduleVisitor(ASTVisitor):
                 inode(lvalue.expr).faketuple = subscript
 
             if not isinstance(lvalue.expr, Name):
-                var = self.tempvar(lvalue.expr, func)
-                self.addconstraint((inode(lvalue.expr), inode(var)), func)
+                self.tempvar2(lvalue.expr, inode(lvalue.expr), func)
 
         # expr.attr = expr
         elif isinstance(lvalue, AssAttr):
@@ -1078,10 +1056,7 @@ class moduleVisitor(ASTVisitor):
             self.visit(fakefunc, func)
 
     def tuple_flow(self, lvalue, rvalue, func=None):
-        #print 'tuple flow', lvalue, rvalue
-
-        tvar = self.tempvar(lvalue, func)
-        self.addconstraint((inode(rvalue), inode(tvar)), func)
+        self.tempvar2(lvalue, inode(rvalue), func)
 
         if isinstance(lvalue, (AssTuple, AssList)):
             lvalue = lvalue.nodes

@@ -712,10 +712,7 @@ def parent_func(thing):
             return parent
         parent = parent.parent
 
-    return None
-
 def register_tempvar(var, func): 
-    #print 'register tvar', var, func
     if func:
         func.registered_tempvars.append(var)
         
@@ -727,8 +724,6 @@ def const_literal(node):
 # --- XXX description, confusion_misc? what's this for..
 def confusion_misc(): 
     confusion = set()
-
-    # --- tuple2
 
     # use regular tuple if both elements have the same type representation
     cl = defclass('tuple')
