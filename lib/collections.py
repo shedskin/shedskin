@@ -135,4 +135,6 @@ class defaultdict:
     def iteritems(self):
         return __iter((self.unit, self.value))
 
+    def __iter__(self):
+        return __iter(self.unit)
 
