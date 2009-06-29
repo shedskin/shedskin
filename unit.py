@@ -108,10 +108,10 @@ print list(sentences())
 
 #defdict problem
 import collections
-hop = collections.defaultdict(int) 
-hop[4] = 5
-for x in hop:
-    print x, hop[x]
+hoppa = collections.defaultdict(int) 
+hoppa[4] = 5
+for xxx in hoppa:
+    print xxx, hoppa[xxx]
 
 ''', '''
 output(equal=True)
