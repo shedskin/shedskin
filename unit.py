@@ -100,6 +100,19 @@ print up
 print min('gehakt'), max('gehakt')
 print list(reversed('gehakt'))
 
+#variable naming
+def sentences():
+    next = 12
+    yield next
+print list(sentences())
+
+#defdict problem
+import collections
+hop = collections.defaultdict(int) 
+hop[4] = 5
+for x in hop:
+    print x, hop[x]
+
 ''', '''
 output(equal=True)
 '''),
