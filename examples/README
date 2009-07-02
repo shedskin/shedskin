@@ -1,4 +1,4 @@
-39 programs that work with Shed Skin 0.1.2.
+40 programs that work with Shed Skin 0.1.2.
 
 If you have another interesting test case, please send it to:
    mark.dufour@gmail.com
@@ -19,6 +19,7 @@ lines  name               description               notes
    235 linalg.py          linear algebra
    296 LZ2.py             Lempel-Ziv compressor
    208 ac_encode.py       Arithmetic coding compressor
+   435 block.py           Huffman block compressor
     33 mandelbrot.py      mandelbrot fractal
    350 mastermind.py      mastermind against comp 
    153 mastermind2.py     mastermind strategies

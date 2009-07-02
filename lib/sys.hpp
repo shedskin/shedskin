@@ -24,5 +24,7 @@ template<class T> void __ss_exit(T x) {
 }
 template<> void __ss_exit(int x);
 
+void *setrecursionlimit(int limit);
+
 } // module namespace
 #endif
