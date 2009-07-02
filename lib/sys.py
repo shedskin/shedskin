@@ -10,5 +10,8 @@ platform = ''
 hexversion = 0
 maxint = 0
 
+def setrecursionlimit(limit):
+    pass
+
 def exit(code=0): 
     pass

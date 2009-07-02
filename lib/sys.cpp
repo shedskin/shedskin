@@ -45,5 +45,9 @@ template<> void __ss_exit(int x) {
     __shedskin__::__exit(x);
 }
 
+void *setrecursionlimit(int limit) {
+    return NULL;
+}
+
 } // module namespace
 
