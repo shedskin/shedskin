@@ -17,7 +17,8 @@ lines  name               description               notes
    112 genetic.py         genetic algorithm
    109 life.py            conway's game of life
    235 linalg.py          linear algebra
-   296 LZ2.py             Lempel-Ziv compression
+   296 LZ2.py             Lempel-Ziv compressor
+   208 ac_encode.py       Arithmetic coding compressor
     33 mandelbrot.py      mandelbrot fractal
    350 mastermind.py      mastermind against comp 
    153 mastermind2.py     mastermind strategies
