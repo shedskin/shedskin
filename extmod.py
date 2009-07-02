@@ -137,6 +137,9 @@ def supported_funcs(gv, funcs):
                 continue
         elif not cpp.hmcpa(func):
             continue 
+        if isinstance(func.parent, class_) and func.ident in func.parent.staticmethods:
+            print '*WARNING* method not exported:', func.parent.ident+'.'+func.ident
+            continue
         builtins = True
         for formal in func.formals:
             try:
