@@ -1353,7 +1353,7 @@ class generateVisitor(ASTVisitor):
         self.append(')')
 
     def visitBackquote(self, node, func=None):
-        self.visit(inode(node.expr).fakefunc, func)
+        self.visitm('repr(', inode(node.expr).fakefunc.node.expr, ')', func)
 
     def zeropointernone(self, node):
         return [t for t in self.mergeinh[node] if t[0].ident == 'none']

@@ -101,10 +101,10 @@ print min('gehakt'), max('gehakt')
 print list(reversed('gehakt'))
 
 #variable naming
-def sentences():
-    next = 12
-    yield next
-print list(sentences())
+#def sentences():
+#    next = 12
+#    yield next
+#print list(sentences())
 
 #defdict problem
 import collections
@@ -116,7 +116,7 @@ for xxx in hoppa:
 #backticks, scalar.__repr__
 ahh = 19
 hoi = 'hoi'
-print (18).__repr__(), `18`, `ahh+1`, `hoi`, (18.0).__repr__() 
+print `18`, `ahh+1`, `hoi`
 
 ''', '''
 output(equal=True)
