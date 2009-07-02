@@ -25,7 +25,7 @@ lines  name               description               notes
    153 mastermind2.py     mastermind strategies
   1706 msp_ss.py          serial bootstrap loader   see comments in top
    132 nbody.py           planet body physics
-   100 neural1.py         back-prop neural network
+   185 neural1.py         back-prop neural network
    172 neural2.py         back-prop neural network
    146 oliva2.py          sea shell patterns
    123 othello.py         othello player
@@ -49,4 +49,4 @@ lines  name               description               notes
     52 voronoi.py         textual voronoi
    795 voronoi2.py        voronoi algoritm
 
- 11122 total # XXX update, use sloccount
+ 12017 total # XXX use sloccount
