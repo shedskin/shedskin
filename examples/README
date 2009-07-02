@@ -1,4 +1,4 @@
-36 programs that work with Shed Skin 0.1.2.
+37 programs that work with Shed Skin 0.1.2.
 
 If you have another interesting test case, please send it to:
    mark.dufour@gmail.com
@@ -17,6 +17,7 @@ lines  name               description               notes
    112 genetic.py         genetic algorithm
    109 life.py            conway's game of life
    235 linalg.py          linear algebra
+   296 LZ2.py             Lempel-Ziv compression
     33 mandelbrot.py      mandelbrot fractal
    350 mastermind.py      mastermind against comp 
    153 mastermind2.py     mastermind strategies
@@ -46,4 +47,4 @@ lines  name               description               notes
     52 voronoi.py         textual voronoi
    795 voronoi2.py        voronoi algoritm
 
- 11122 total
+ 11122 total # XXX update, use sloccount
