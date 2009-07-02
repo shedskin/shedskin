@@ -113,6 +113,11 @@ hoppa[4] = 5
 for xxx in hoppa:
     print xxx, hoppa[xxx]
 
+#backticks, scalar.__repr__
+ahh = 19
+hoi = 'hoi'
+print (18).__repr__(), `18`, `ahh+1`, `hoi`, (18.0).__repr__() 
+
 ''', '''
 output(equal=True)
 '''),
