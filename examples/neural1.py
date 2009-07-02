@@ -1,100 +1,185 @@
-# (c) Mark Dufour
-# --- mark.dufour@gmail.com
-#
-# back-propagation neural network 
+# This code is a slightly modified version of Raymond Hettinger's recipe on ASPN
+# http://code.activestate.com/recipes/496908/
+# Jeff Hinrichs - 20090419
 
-from random import random
-from math import sqrt, e
+# Constants defining the neuron's response curve
+import sys
 
-sigmoid = lambda x: pow((1+pow(e,-x)),-1) # [lambda0]
-deriv = lambda x: pow(e,-x) * pow((1+pow(e,-x)),-2) # [lambda0]
+minact, rest, thresh, decay, maxact = -0.2, -0.1, 0.0, 0.1, 1.0
+alpha, gamma, estr = 0.1, 0.1, 0.4
 
-class link:                             # in_node: [node], weight: [float], activation: [], out_node: [node], delta: [], input: [], output: [], unit: []
-    def __init__(self, in_node, out_node): # self: [nlink], in_node: [node]*, out_node: [node]*
-        self.in_node = in_node; self.out_node = out_node # [node]
-        self.weight = (random()-0.5)/2  # [float]
+units = []
+pools = []
+unitbyname = {}
+
+class Unit(object):
+    __slots__ = ['name', 'pool', 'extinp', 'activation', 'output', 'exciters', 'newact']
+    def __init__(self, name, pool):
+        self.name = name
+        self.pool = pool
+        self.reset()
+        self.exciters = []
+        unitbyname[name] = self
+    def reset(self):
+        self.setext(0.0)
+        self._setactivation()
+    def setext(self, weight=1.0):
+        self.extinp = weight
+    def _setactivation(self, val=rest):
+        self.activation = val
+        self.output = max(thresh, val)
+    def addexciter(self, aunit):
+        self.exciters.append(aunit)
+    def remove(self, aunit):
+        self.exciters.remove(aunit)
+    def computenewact(self):
+        ai = self.activation
+        plus = sum([exciter.output for exciter in self.exciters])
+        minus = self.pool.sum - self.output
+        netinput = alpha*plus - gamma*minus + estr*self.extinp
+        if netinput > 0:
+            ai = (maxact-ai)*netinput - decay*(ai-rest) + ai
+        else:
+            ai = (ai-minact)*netinput - decay*(ai-rest) + ai
+        self.newact = max(min(ai, maxact), minact)
+    def commitnewact(self):
+        self._setactivation(self.newact)
+
+class Pool(object):
+    __slots__ = ['sum', 'members']
+    def __init__(self):
+        self.sum = 0.0
+        self.members = set()
+    def addmember(self, member):
+        self.members.add(member)
+    def updatesum(self):
+        self.sum = sum([member.output for member in self.members])
+    def display(self):
+        result = sorted([(unit.activation, unit.name) for unit in self.members], reverse=True)
+        for i, (act, unitbyname) in enumerate(result):
+            print "%s: %.2f\t" % (unitbyname, act),
+            if i % 4 == 3: print
+        print '\n'
+
+def load(filename):
+    """Load in a database and interpret it as a network
+
+    First column must be unique keys which define the instance units.
+    Each column is a pool (names, gangs, ages, etc).
+    Every row is mutually excitory.
+    """
+    units[:] = []
+    pools[:] = []
+    for line in open(filename):
+        relatedunits = line.split()
+        if not len(relatedunits): continue
+        key = len(units)
+        #print relatedunits
+        for poolnum, name in enumerate(relatedunits):
+            if poolnum >= len(pools):
+                pools.append(Pool())
+            pool = pools[poolnum]
+            if name in unitbyname:
+                unit = unitbyname[name]
+            else:
+                unit = Unit(name, pool)
+                units.append(unit)
+            pool.addmember(unit)
+            if poolnum > 0:
+                #print key, units[key]
+                units[key].addexciter(unit)
+                unit.addexciter(units[key])
+
+def reset():
+    for unit in units:
+        unit.reset()
+
+def depair(i, j):
+    unitbyname[i].remove(unitbyname[j])
+    unitbyname[j].remove(unitbyname[i])
+
+def touch(itemstr, weight=1.0):
+    for name in itemstr.split():
+        unitbyname[name].setext(weight)
+
+def run(times=100):
+    """Run n-cycles and display result"""
+    for i in xrange(times):
+        for pool in pools:
+            pool.updatesum()
+        for unit in units:
+            unit.computenewact()
+        for unit in units:
+            unit.commitnewact()
+    print '-' * 20
+    for pool in pools:
+        pool.display()
+
+if __name__ == '__main__' or 1:
+    if '--help' in sys.argv:
+        print sys.argv[0]
+        print
+        print '\t%s --help|--test| datafile.tab nueron1 [neuron2 ...]' % sys.argv[0]
+        print
+        sys.exit()
+    elif '--test' in sys.argv:
+        SampleFile = """
+Art         Jets        40      jh      sing    pusher
+Al          Jets        30      jh      mar     burglar
+Sam         Jets        20      col     sing    bookie
+Clyde       Jets        40      jh      sing    bookie
+Mike        Jets        30      jh      sing    bookie
+Jim         Jets        20      jh      div     burglar
+Greg        Jets        20      hs      mar     pusher
+John        Jets        20      jh      mar     burglar
+Doug        Jets        30      hs      sing    bookie
+Lance       Jets        20      jh      mar     burglar
+George      Jets        20      jh      div     burglar
+Pete        Jets        20      hs      sing    bookie
+Fred        Jets        20      hs      sing    pusher
+Gene        Jets        20      col     sing    pusher
+Ralph       Jets        30      jh      sing    pusher
+
+Phil        Sharks      30      col     mar     pusher
+Ike         Sharks      30      jh      sing    bookie
+Nick        Sharks      30      hs      sing    pusher
+Don         Sharks      30      col     mar     burglar
+Ned         Sharks      30      col     mar     bookie
+Karl        Sharks      40      hs      mar     bookie
+Ken         Sharks      20      hs      sing    burglar
+Earl        Sharks      40      hs      mar     burglar
+Rick        Sharks      30      hs      div     burglar
+Ol          Sharks      30      col     mar     pusher
+Neal        Sharks      30      hs      sing    bookie
+Dave        Sharks      30      hs      div     pusher
+"""
+        fh = open('jets.txt','wb')
+        fh.write(SampleFile)
+        fh.close()
+    
+        load('jets.txt')
+        print 'Touching neuron: Ken, weight=0.8'
+        touch('Ken', weight=0.8)
+        run()
+
+        reset()
+        print 'Touching neurons: Sharks 20 jh sing burglar'
+        touch('Sharks 20 jh sing burglar')
+        run()
+
+        reset()
         
-class node:                              # in_node: [], weight: [], activation: [float], out_node: [], delta: [float], output: [list(nlink)], input: [list(nlink)], unit: []
-    def __init__(self, input_nodes):     # self: [node], input_nodes: [list(node)]
-    	self.input, self.output = [], []    # [list(nlink)], [list(nlink)]
-        for node in input_nodes:         # [list(node)]
-            l = link(node,self)         # [nlink]
-            self.input.append(l)         # []
-            node.output.append(l)        # []
+        print 'Touching neuron: Lance'
+        touch('Lance')
+        print 'Deparing Lance burglar'
+        depair('Lance','burglar')
+        run()
 
-def incoming(node): return sum([link.in_node.activation * link.weight for link in node.input]) # [float]
-
-def neural_network_output(network, input): # network: [list(list(node))], input: [list(int)]
-    # set input layer activations
-    for index, node in enumerate(network[0]): # [tuple(int, node)]
-        node.activation = input[index]   # [int]
-        
-    # forward propagate output 
-    for layer in network[1:]:            # [list(list(node))]
-        for node in layer:               # [list(node)]
-            node.activation = sigmoid(incoming(node)) # [float]
-
-    return [node.activation for node in network[-1]] # [list(float)]
-
-def back_propagate_error(network, answer): # network: [list(list(node))], answer: [list(int)]
-    #output = [node.activation for node in network[-1]] # [list(float)]
-
-    # output layer deltas
-    for index, node in enumerate(network[-1]): # [tuple(int, node)]
-        node.delta = deriv(incoming(node)) * (answer[index] - node.activation) # [float]
-
-    # backward propagate error
-    for layer in network[-2::-1]:        # [list(list(node))]
-        for node in layer:               # [list(node)]
-            node.delta = deriv(incoming(node)) * sum([link.out_node.delta * link.weight for link in node.output]) # [float]
-            for link in node.output:     # [list(nlink)]
-                link.weight += alpha * node.activation * link.out_node.delta # [float]
-	         
-def append_error(network, examples):     # network: [list(list(node))], examples: [list(tuple(list(int)))]
-    compare = [(neural_network_output(network, example)[0], answer[0]) for example, answer in examples] # [list(tuple(float, int))]
-    errors.append(sqrt((1.0/len(examples))*sum([pow(answer-output,2) for output, answer in compare]))) # [tuple(float, int)]
-
-def train_network(network, examples, epochs): # network: [list(list(node))], examples: [list(tuple(list(int)))], epochs: [int]
-    global errors
-    errors = []                          # [list(float)]
-    append_error(network, examples)      # []
-
-    for epoch in range(epochs):          # [list(int)]
-        for example, answer in examples: # [tuple(list(int))]
-            output = neural_network_output(network, example) # [list(float)]
-	    back_propagate_error(network, answer) # []
-	    #print_weights(network)
-
-	append_error(network, examples)         # []
-     
-#def print_weights(network):
-#    for number, layer in enumerate(network[-2::-1]):
-#        print 'layer', number
-#        for node in layer: 
-#	    print [link.weight for link in node.output]
-
-alpha = 0.5                              # [float]
-
-input_layer = [node([]) for n in range(10)] # [list(node)]
-hidden_layer = [node(input_layer) for n in range(4)] # [list(node)]
-output_layer = [node(hidden_layer) for n in range(1)] # [list(node)]
-
-network = [input_layer, hidden_layer, output_layer] # [list(list(node))]
-
-examples = [ ([1,0,0,1,1,2,0,1,0,0], [1]), # [list(tuple(list(int)))]
-             ([1,0,0,1,2,0,0,0,2,2], [0]), # [tuple(list(int))]
-	     ([0,1,0,0,1,0,0,0,3,0], [1]),      # [list(int)]
-	     ([1,0,1,1,2,0,1,0,2,1], [1]),      # [tuple(list(int))]
- 	     ([1,0,1,0,2,2,0,1,0,3], [0]),     # [tuple(list(int))]
-	     ([0,1,0,1,1,1,1,1,1,0], [1]),      # [tuple(list(int))]
-	     ([0,1,0,0,0,0,1,0,3,0], [0]),      # [list(int)]
-	     ([0,0,0,1,1,1,1,1,2,0], [1]),      # [list(int)]
-	     ([0,1,1,0,2,0,1,0,3,3], [0]),      # [list(int)]
-	     ([1,1,1,1,2,2,0,1,1,1], [0]),      # [list(int)]
-	     ([0,0,0,0,0,0,0,0,2,0], [0]),      # [list(int)]
-	     ([1,1,1,1,2,0,0,0,3,2], [1]) ]     # [list(int)]
-
-epochs = 1000                            # [int]
-train_network(network, examples, epochs) # []
-print [neural_network_output(network, example) for example, answer in examples] # [list(list(float))]
-
+    else:
+        #print sys.argv
+        print "loading %s for Neural Analysis..." % sys.argv[1]
+        load(sys.argv[1])
+        for neuron in sys.argv[2:]:
+            print "Touching neuron: %s" % neuron
+            touch(neuron)
+        run()
