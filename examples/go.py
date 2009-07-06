@@ -1,8 +1,8 @@
 import random
 
-SIZE = 19
+SIZE = 9
 WHITE, BLACK, EMPTY = 0, 1, 2
-SHOW = {EMPTY: '. ', WHITE: 'o ', BLACK: 'x '}
+SHOW = {EMPTY: '.', WHITE: 'o', BLACK: 'x'}
 
 def to_pos(x,y):
     return y*SIZE+x
@@ -130,6 +130,9 @@ class Board:
 
     def play_random_move(self):
         pos = self.random_move()
+        return self.play_move(pos)
+
+    def play_move(self, pos):
         if pos == -1:
             if self.lastpass:
                 return -2
@@ -155,7 +158,8 @@ class Board:
         result = []
         for y in range(SIZE):
             start = to_pos(0, y)
-            result.append(''.join([SHOW[square.color] for square in self.squares[start:start+SIZE]]))
+            result.append(''.join([SHOW[square.color]+' ' for square in self.squares[start:start+SIZE]]))
+        result.append('W %d B %d (%s)' % (self.score(WHITE), self.score(BLACK), SHOW[self.color]))
         return '\n'.join(result)
 
 class Group:
@@ -191,23 +195,68 @@ class Group:
         self.members.update(group.members)
         self.liberties.update(group.liberties)
 
+class UCTNode:
+    def __init__(self):
+        self.bestchild = None
+        self.wins = 0
+        self.losses = 0
+        self.pos_child = [None for x in range(SIZE*SIZE)]
+
+    def play(self, board):
+        color = board.color
+        pos = board.random_move()
+        board.play_move(pos)
+#        print 'SELECT', to_xy(pos)
+#        print board
+        board.play()
+#        print board
+#        print 'WHITE', board.score(WHITE)
+#        print 'BLACK', board.score(BLACK)
+
+        child = self.pos_child[pos]
+        if not child:
+#            print 'NEW NODE'
+            child = self.pos_child[pos] = UCTNode()
+       
+        if color == BLACK:
+            wins = board.score(BLACK) >= board.score(WHITE)
+            if wins:
+                child.wins += 1
+            else:
+                child.losses += 1
+
+    def score(self):
+        return self.wins/float(self.wins+self.losses)
+
 if __name__ == '__main__':
     random.seed(1)
     board = Board()
-    board.play_random_move()
-    board.play_random_move()
-    board.play_random_move()
-    print 'START STATE:'
-    print board
+#    for x in range(20):
+#        board.play_random_move()
+#    print 'START STATE:'
+#    print board
     state = board.get_state()
-
-    for game in range(2):
-        random.seed(1)
+    tree = UCTNode()
+    for game in range(25000):
+        node = tree
         board = Board()
         board.set_state(state)
-        print 'RESET STATE:'
-        print board
-        board.play()
-        print board
-        print 'WHITE', board.score(WHITE)
-        print 'BLACK', board.score(BLACK)
+        #print 'RESET STATE:'
+        #print board
+        node.play(board)
+        #print 'FINAL:'
+        #print board
+
+    print 'visited', len([child for child in tree.pos_child if child])
+
+    maxscore = -1
+    maxchild = None
+    maxpos = -1
+    for pos, child in enumerate(node.pos_child):
+        if child: # and (child.wins or child.losses):
+            print 'child!', to_xy(pos), child.wins, child.losses, child.score()
+            if child.score() > maxscore:
+                maxchild = child
+                maxscore = child.score()
+                maxpos = pos
+    print 'best one', maxchild, maxchild.wins, maxchild.losses, maxchild.score(), to_xy(maxpos)
