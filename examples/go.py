@@ -33,10 +33,11 @@ class Board:
         for square in self.squares:
             square.set_neighbours()
         self.empties = [square.pos for square in self.squares]
+        self.color = BLACK
 
-    def acceptable(self, color, pos, lastmove):
+    def acceptable(self, pos, lastmove):
         square = self.squares[pos]
-        other = 1-color
+        other = 1-self.color
         legal = False
         buddies = 0
         need_help = False
@@ -51,7 +52,7 @@ class Board:
             elif ncolor == other:
                 if liberties == 1 and not (neighbour.pos == lastmove and members == 1):
                     return True
-            elif ncolor == color:
+            elif ncolor == self.color:
                 buddies += 1
                 if liberties == 1:
                     need_help = True
@@ -60,13 +61,13 @@ class Board:
 
         return legal and (buddies != len(square.neighbours) or need_help)
 
-    def move(self, color, pos):
+    def move(self, pos):
         square = self.squares[pos]
-        other = 1-color
+        other = 1-self.color
         prev_group = None
         for neighbour in square.neighbours:
             group = neighbour.group
-            if neighbour.color == color:
+            if neighbour.color == self.color:
                 if square.pos in group.liberties:
                     group.liberties.remove(square.pos)
                 if prev_group:
@@ -77,7 +78,7 @@ class Board:
                 prev_group = group
             if neighbour.color == other:
                 group.take_liberty(square)
-        square.color = color
+        square.color = self.color
         if not prev_group:
 #            print 'new group'
             self.new_group(square)
@@ -92,12 +93,12 @@ class Board:
             if neighbour.color == EMPTY:
                 group.liberties.add(neighbour.pos)
 
-    def random_move(self, color, lastmove):
+    def random_move(self, lastmove):
         choices = len(self.empties)
         while choices:  
             i = random.randrange(choices)
             trypos = board.empties[i]
-            if self.acceptable(color, trypos, lastmove):
+            if self.acceptable(trypos, lastmove):
                 last = len(self.empties)-1
                 self.empties[i] = self.empties[last] 
                 self.empties.pop(last)
@@ -122,13 +123,12 @@ class Board:
         return count
 
     def play(self):
-        color = BLACK
     #    print self
         lastmove = -1
         lastpass = False
         for x in range(1000):
     #        print 'MOVE', x
-            pos = self.random_move(color, lastmove)
+            pos = self.random_move(lastmove)
             if pos == -1:
     #            print 'PASS', SHOW[color]
                 if lastpass:
@@ -137,12 +137,12 @@ class Board:
                 lastpass = True
             else:
     #            print 'CHOICE', SHOW[color], to_xy(pos)
-                self.move(color, pos)
+                self.move(pos)
                 lastmove = pos
                 lastpass = False
     #            print self
     #            print
-            color = 1-color
+            self.color = 1-self.color
 
         print self
     #    print
@@ -191,6 +191,6 @@ class Group:
 
 if __name__ == '__main__':
     random.seed(1)
-    for game in range(10):
+    for game in range(1):
         board = Board()
         board.play()
