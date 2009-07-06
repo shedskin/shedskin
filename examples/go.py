@@ -84,6 +84,7 @@ class Board:
         square.color = color
         if not prev_group:
             self.new_group(square)
+        self.empties = [e for e in self.empties if e != pos] # XXX set?
 
     def new_group(self, square):
         group = square.group = square.fast_group
@@ -99,7 +100,7 @@ class Board:
         choices = len(self.empties)
         while choices:  
             i = random.randrange(choices)
-            trypos = board.empties[i]
+            trypos = self.empties[i]
             if self.acceptable(trypos):
                 last = len(self.empties)-1
                 self.empties[i] = self.empties[last] 
@@ -215,7 +216,7 @@ class UCTNode:
             if node.bestchild and random.random() < 0.2:
                 pos = node.bestchild.pos
             else:
-                pos = board.random_move()
+                pos = board.random_move() # XXX geen move mogelijk?
             board.play_move(pos)
 
             child = node.pos_child[pos]
@@ -274,26 +275,42 @@ class UCTNode:
 if __name__ == '__main__':
     random.seed(1)
     board = Board()
-#    for x in range(20):
-#        board.play_random_move()
-#    print 'START STATE:'
-#    print board
-    state = board.get_state()
-    tree = UCTNode()
-    maxdepth = 0
-    for game in range(25000):
-        node = tree
-        board = Board()
-        board.set_state(state)
-        #print 'RESET STATE:'
-        #print board
-        node.play(board)
-        #print 'FINAL:'
-        #print board
+    board.color = WHITE
+    while True:
+        print board
 
-    print 'visited', len([child for child in tree.pos_child if child])
+        # user 
+        user = raw_input('?')
+        if user == 'q':
+            print 'WHITE:', board.score(WHITE)
+            print 'BLACK:', board.score(BLACK)
+            break
 
-    best = tree.best_child(hoppa=True)
-    print 'best one', best, best.wins, best.losses, best.score(), to_xy(best.pos)
-    
-    print 'maxdepth', maxdepth
+        x, y = [int(i) for i in user.split()]
+        pos = to_pos(x, y)
+        if not board.acceptable(pos):
+            continue
+        board.play_move(pos)
+        print board
+
+        # computer
+        pos = board.random_move()
+        if pos == -1:
+            print 'I pass.'
+            board.color = 1-board.color
+            continue
+        print 'thinking..'
+        state = board.get_state()
+        tree = UCTNode()
+        maxdepth = 0
+        for game in range(5000):
+            node = tree
+            nboard = Board()
+            nboard.set_state(state)
+            #print 'SET STATE:'
+            #print nboard
+            node.play(nboard)
+        best = tree.best_child(hoppa=True)
+        print 'best one', best, best.wins, best.losses, best.score(), to_xy(best.pos)
+        print 'I move here:', to_xy(tree.bestchild.pos)
+        board.play_move(tree.bestchild.pos)
