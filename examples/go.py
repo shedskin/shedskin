@@ -206,12 +206,13 @@ class UCTNode:
         self.parent = None
 
     def play(self, board):
+        global maxdepth
         color = board.color
 
         steps = []
         node = self
         while True:
-            if node.bestchild and random.random() < 0.5:
+            if node.bestchild and random.random() < 0.2:
                 pos = node.bestchild.pos
             else:
                 pos = board.random_move()
@@ -228,6 +229,8 @@ class UCTNode:
             steps.append(child)
             node = child
 
+        maxdepth = max(maxdepth, len(steps))
+        
         board.play()
 
         wins = board.score(BLACK) >= board.score(WHITE)
@@ -277,7 +280,8 @@ if __name__ == '__main__':
 #    print board
     state = board.get_state()
     tree = UCTNode()
-    for game in range(1000):
+    maxdepth = 0
+    for game in range(10000):
         node = tree
         board = Board()
         board.set_state(state)
@@ -292,3 +296,4 @@ if __name__ == '__main__':
     best = tree.best_child(hoppa=True)
     print 'best one', best, best.wins, best.losses, best.score(), to_xy(best.pos)
     
+    print 'maxdepth', maxdepth
