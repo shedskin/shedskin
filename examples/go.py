@@ -1,4 +1,5 @@
 import random
+import math
 
 SIZE = 5
 WHITE, BLACK, EMPTY = 0, 1, 2
@@ -210,7 +211,7 @@ class UCTNode:
         steps = []
         node = self
         while True:
-            if node.bestchild and random.random() < 0.5:
+            if node.bestchild and random.random() < 0.2:
                 pos = node.bestchild.pos
             else:
                 pos = board.random_move()
@@ -218,31 +219,41 @@ class UCTNode:
 
             child = node.pos_child[pos]
             if not child:
-#                print 'NEW AT', steps
                 child = node.pos_child[pos] = UCTNode()
                 child.pos = pos
                 child.parent = self
                 steps.append(child)
                 break
 
-#            print 'KEN AL AT', steps
             steps.append(child)
             node = child
 
         board.play()
 
-        if color == BLACK:
-            wins = board.score(BLACK) >= board.score(WHITE)
-            for child in steps:
-                if wins:
+        wins = board.score(BLACK) >= board.score(WHITE)
+        for child in steps:
+            if wins:
+                if color == BLACK:
                     child.wins += 1
-                    if not child.parent.bestchild or child.score() > child.parent.bestchild.score():
-                        child.parent.bestchild = child
+                else:
+                    child.losses += 1
+            else:
+                if color == WHITE:
+                    child.wins += 1
                 else:
                     child.losses += 1
 
+            if not child.parent.bestchild or child.score() > child.parent.bestchild.score():
+                child.parent.bestchild = child
+            color = 1-color
+
     def score(self):
-        return self.wins/float(self.wins+self.losses)
+        winrate = self.wins/float(self.wins+self.losses)
+        parentvisits = self.parent.wins+self.parent.losses
+        if not parentvisits:
+            return winrate
+        nodevisits = self.wins+self.losses
+        return winrate + math.sqrt((math.log(parentvisits))/(nodevisits))
 
 if __name__ == '__main__':
     random.seed(1)
@@ -253,7 +264,7 @@ if __name__ == '__main__':
 #    print board
     state = board.get_state()
     tree = UCTNode()
-    for game in range(1000):
+    for game in range(5000):
         node = tree
         board = Board()
         board.set_state(state)
