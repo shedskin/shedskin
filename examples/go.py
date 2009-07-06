@@ -34,8 +34,10 @@ class Board:
             square.set_neighbours()
         self.empties = [square.pos for square in self.squares]
         self.color = BLACK
+        self.lastmove = -1
+        self.lastpass = False
 
-    def acceptable(self, pos, lastmove):
+    def acceptable(self, pos):
         square = self.squares[pos]
         other = 1-self.color
         legal = False
@@ -50,7 +52,7 @@ class Board:
             if ncolor == EMPTY:
                 return True
             elif ncolor == other:
-                if liberties == 1 and not (neighbour.pos == lastmove and members == 1):
+                if liberties == 1 and not (neighbour.pos == self.lastmove and members == 1):
                     return True
             elif ncolor == self.color:
                 buddies += 1
@@ -93,12 +95,12 @@ class Board:
             if neighbour.color == EMPTY:
                 group.liberties.add(neighbour.pos)
 
-    def random_move(self, lastmove):
+    def random_move(self):
         choices = len(self.empties)
         while choices:  
             i = random.randrange(choices)
             trypos = board.empties[i]
-            if self.acceptable(trypos, lastmove):
+            if self.acceptable(trypos):
                 last = len(self.empties)-1
                 self.empties[i] = self.empties[last] 
                 self.empties.pop(last)
@@ -124,22 +126,20 @@ class Board:
 
     def play(self):
     #    print self
-        lastmove = -1
-        lastpass = False
         for x in range(1000):
     #        print 'MOVE', x
-            pos = self.random_move(lastmove)
+            pos = self.random_move()
             if pos == -1:
     #            print 'PASS', SHOW[color]
-                if lastpass:
+                if self.lastpass:
                     break
-                lastmove = -1
-                lastpass = True
+                self.lastmove = -1
+                self.lastpass = True
             else:
     #            print 'CHOICE', SHOW[color], to_xy(pos)
                 self.move(pos)
-                lastmove = pos
-                lastpass = False
+                self.lastmove = pos
+                self.lastpass = False
     #            print self
     #            print
             self.color = 1-self.color
