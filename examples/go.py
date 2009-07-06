@@ -275,7 +275,7 @@ class UCTNode:
 if __name__ == '__main__':
     random.seed(1)
     board = Board()
-    board.color = WHITE
+    board.color = BLACK
     while True:
         print board
 
