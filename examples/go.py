@@ -1,7 +1,7 @@
 import random
 
 SIZE = 19
-WHITE, BLACK, EMPTY, WALL = 0, 1, 2, 3
+WHITE, BLACK, EMPTY = 0, 1, 2
 SHOW = {EMPTY: '. ', WHITE: 'o ', BLACK: 'x '}
 
 def to_pos(x,y):
@@ -63,13 +63,13 @@ class Board:
 
         return legal and (buddies != len(square.neighbours) or need_help)
 
-    def move(self, pos):
+    def move(self, pos, color):
         square = self.squares[pos]
-        other = 1-self.color
+        other = 1-color
         prev_group = None
         for neighbour in square.neighbours:
             group = neighbour.group
-            if neighbour.color == self.color:
+            if neighbour.color == color:
                 if square.pos in group.liberties:
                     group.liberties.remove(square.pos)
                 if prev_group:
@@ -80,9 +80,8 @@ class Board:
                 prev_group = group
             if neighbour.color == other:
                 group.take_liberty(square)
-        square.color = self.color
+        square.color = color
         if not prev_group:
-#            print 'new group'
             self.new_group(square)
 
     def new_group(self, square):
@@ -137,11 +136,20 @@ class Board:
             self.lastmove = -1
             self.lastpass = True
         else:
-            self.move(pos)
+            self.move(pos, self.color)
             self.lastmove = pos
             self.lastpass = False
         self.color = 1-self.color
         return pos
+
+    def get_state(self):
+        return [square.color for square in self.squares], (self.color, self.lastmove, self.lastpass)
+
+    def set_state(self, state):
+        colors, (self.color, self.lastmove, self.lastpass) = state
+        for pos, color in enumerate(colors):
+            if color != EMPTY:
+                self.move(pos, color)
 
     def __repr__(self):
         result = []
@@ -185,8 +193,20 @@ class Group:
 
 if __name__ == '__main__':
     random.seed(1)
-    for game in range(1):
+    board = Board()
+    board.play_random_move()
+    board.play_random_move()
+    board.play_random_move()
+    print 'START STATE:'
+    print board
+    state = board.get_state()
+
+    for game in range(2):
+        random.seed(1)
         board = Board()
+        board.set_state(state)
+        print 'RESET STATE:'
+        print board
         board.play()
         print board
         print 'WHITE', board.score(WHITE)
