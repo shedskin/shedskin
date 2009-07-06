@@ -125,29 +125,23 @@ class Board:
         return count
 
     def play(self):
-    #    print self
         for x in range(1000):
-    #        print 'MOVE', x
-            pos = self.random_move()
-            if pos == -1:
-    #            print 'PASS', SHOW[color]
-                if self.lastpass:
-                    break
-                self.lastmove = -1
-                self.lastpass = True
-            else:
-    #            print 'CHOICE', SHOW[color], to_xy(pos)
-                self.move(pos)
-                self.lastmove = pos
-                self.lastpass = False
-    #            print self
-    #            print
-            self.color = 1-self.color
+            if self.play_random_move() == -2:
+                break
 
-        print self
-    #    print
-        print 'WHITE', self.score(WHITE)
-        print 'BLACK', self.score(BLACK)
+    def play_random_move(self):
+        pos = self.random_move()
+        if pos == -1:
+            if self.lastpass:
+                return -2
+            self.lastmove = -1
+            self.lastpass = True
+        else:
+            self.move(pos)
+            self.lastmove = pos
+            self.lastpass = False
+        self.color = 1-self.color
+        return pos
 
     def __repr__(self):
         result = []
@@ -194,3 +188,6 @@ if __name__ == '__main__':
     for game in range(1):
         board = Board()
         board.play()
+        print board
+        print 'WHITE', board.score(WHITE)
+        print 'BLACK', board.score(BLACK)
