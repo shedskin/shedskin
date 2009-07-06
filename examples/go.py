@@ -1,7 +1,7 @@
 import random
 import math
 
-SIZE = 5
+SIZE = 7
 WHITE, BLACK, EMPTY = 0, 1, 2
 SHOW = {EMPTY: '.', WHITE: 'o', BLACK: 'x'}
 
@@ -264,8 +264,8 @@ class UCTNode:
         maxpos = -1
         for pos, child in enumerate(self.pos_child):
             if child: # and (child.wins or child.losses):
-                if hoppa:
-                    print 'child!', to_xy(pos), child.wins, child.losses, child.score()
+                #if hoppa:
+                #    print 'child!', to_xy(pos), child.wins, child.losses, child.score()
                 if child.score() > maxscore:
                     maxchild = child
                     maxscore = child.score()
@@ -303,7 +303,7 @@ if __name__ == '__main__':
         state = board.get_state()
         tree = UCTNode()
         maxdepth = 0
-        for game in range(5000):
+        for game in range(10000):
             node = tree
             nboard = Board()
             nboard.set_state(state)
