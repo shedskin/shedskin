@@ -1,6 +1,6 @@
 import random
 
-SIZE = 9
+SIZE = 5
 WHITE, BLACK, EMPTY = 0, 1, 2
 SHOW = {EMPTY: '.', WHITE: 'o', BLACK: 'x'}
 
@@ -198,32 +198,48 @@ class Group:
 class UCTNode:
     def __init__(self):
         self.bestchild = None
+        self.pos = -1
         self.wins = 0
         self.losses = 0
         self.pos_child = [None for x in range(SIZE*SIZE)]
+        self.parent = None
 
     def play(self, board):
         color = board.color
-        pos = board.random_move()
-        board.play_move(pos)
-#        print 'SELECT', to_xy(pos)
-#        print board
-        board.play()
-#        print board
-#        print 'WHITE', board.score(WHITE)
-#        print 'BLACK', board.score(BLACK)
 
-        child = self.pos_child[pos]
-        if not child:
-#            print 'NEW NODE'
-            child = self.pos_child[pos] = UCTNode()
-       
+        steps = []
+        node = self
+        while True:
+            if node.bestchild and random.random() < 0.5:
+                pos = node.bestchild.pos
+            else:
+                pos = board.random_move()
+            board.play_move(pos)
+
+            child = node.pos_child[pos]
+            if not child:
+#                print 'NEW AT', steps
+                child = node.pos_child[pos] = UCTNode()
+                child.pos = pos
+                child.parent = self
+                steps.append(child)
+                break
+
+#            print 'KEN AL AT', steps
+            steps.append(child)
+            node = child
+
+        board.play()
+
         if color == BLACK:
             wins = board.score(BLACK) >= board.score(WHITE)
-            if wins:
-                child.wins += 1
-            else:
-                child.losses += 1
+            for child in steps:
+                if wins:
+                    child.wins += 1
+                    if not child.parent.bestchild or child.score() > child.parent.bestchild.score():
+                        child.parent.bestchild = child
+                else:
+                    child.losses += 1
 
     def score(self):
         return self.wins/float(self.wins+self.losses)
@@ -237,7 +253,7 @@ if __name__ == '__main__':
 #    print board
     state = board.get_state()
     tree = UCTNode()
-    for game in range(25000):
+    for game in range(1000):
         node = tree
         board = Board()
         board.set_state(state)
