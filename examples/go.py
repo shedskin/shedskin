@@ -255,7 +255,7 @@ class UCTNode:
         if not parentvisits:
             return winrate
         nodevisits = self.wins+self.losses
-        return winrate + math.sqrt((math.log(parentvisits))/(nodevisits))
+        return winrate + math.sqrt((math.log(parentvisits))/(nodevisits))/2
 
     def best_child(self, hoppa=False):
         maxscore = -1
@@ -281,7 +281,7 @@ if __name__ == '__main__':
     state = board.get_state()
     tree = UCTNode()
     maxdepth = 0
-    for game in range(10000):
+    for game in range(25000):
         node = tree
         board = Board()
         board.set_state(state)
