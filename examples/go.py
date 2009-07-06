@@ -279,20 +279,6 @@ if __name__ == '__main__':
     while True:
         print board
 
-        # user 
-        user = raw_input('?')
-        if user == 'q':
-            print 'WHITE:', board.score(WHITE)
-            print 'BLACK:', board.score(BLACK)
-            break
-
-        x, y = [int(i) for i in user.split()]
-        pos = to_pos(x, y)
-        if not board.acceptable(pos):
-            continue
-        board.play_move(pos)
-        print board
-
         # computer
         pos = board.random_move()
         if pos == -1:
@@ -311,6 +297,20 @@ if __name__ == '__main__':
             #print nboard
             node.play(nboard)
         best = tree.best_child(hoppa=True)
-        print 'best one', best, best.wins, best.losses, best.score(), to_xy(best.pos)
+#        print 'best one', best, best.wins, best.losses, best.score(), to_xy(best.pos)
         print 'I move here:', to_xy(tree.bestchild.pos)
         board.play_move(tree.bestchild.pos)
+        print board
+
+        # user 
+        user = raw_input('?')
+        if user == 'q':
+            print 'WHITE:', board.score(WHITE)
+            print 'BLACK:', board.score(BLACK)
+            break
+
+        x, y = [int(i) for i in user.split()]
+        pos = to_pos(x, y)
+        if not board.acceptable(pos):
+            continue
+        board.play_move(pos)
