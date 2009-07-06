@@ -211,7 +211,7 @@ class UCTNode:
         steps = []
         node = self
         while True:
-            if node.bestchild and random.random() < 0.2:
+            if node.bestchild and random.random() < 0.5:
                 pos = node.bestchild.pos
             else:
                 pos = board.random_move()
@@ -243,8 +243,7 @@ class UCTNode:
                 else:
                     child.losses += 1
 
-            if not child.parent.bestchild or child.score() > child.parent.bestchild.score():
-                child.parent.bestchild = child
+            child.parent.bestchild = child.parent.best_child()
             color = 1-color
 
     def score(self):
@@ -255,6 +254,20 @@ class UCTNode:
         nodevisits = self.wins+self.losses
         return winrate + math.sqrt((math.log(parentvisits))/(nodevisits))
 
+    def best_child(self, hoppa=False):
+        maxscore = -1
+        maxchild = None
+        maxpos = -1
+        for pos, child in enumerate(self.pos_child):
+            if child: # and (child.wins or child.losses):
+                if hoppa:
+                    print 'child!', to_xy(pos), child.wins, child.losses, child.score()
+                if child.score() > maxscore:
+                    maxchild = child
+                    maxscore = child.score()
+                    maxpos = pos
+        return maxchild
+
 if __name__ == '__main__':
     random.seed(1)
     board = Board()
@@ -264,7 +277,7 @@ if __name__ == '__main__':
 #    print board
     state = board.get_state()
     tree = UCTNode()
-    for game in range(5000):
+    for game in range(1000):
         node = tree
         board = Board()
         board.set_state(state)
@@ -276,14 +289,6 @@ if __name__ == '__main__':
 
     print 'visited', len([child for child in tree.pos_child if child])
 
-    maxscore = -1
-    maxchild = None
-    maxpos = -1
-    for pos, child in enumerate(node.pos_child):
-        if child: # and (child.wins or child.losses):
-            print 'child!', to_xy(pos), child.wins, child.losses, child.score()
-            if child.score() > maxscore:
-                maxchild = child
-                maxscore = child.score()
-                maxpos = pos
-    print 'best one', maxchild, maxchild.wins, maxchild.losses, maxchild.score(), to_xy(maxpos)
+    best = tree.best_child(hoppa=True)
+    print 'best one', best, best.wins, best.losses, best.score(), to_xy(best.pos)
+    
