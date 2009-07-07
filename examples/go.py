@@ -1,9 +1,11 @@
 import random
 import math
 
-SIZE = 7
+SIZE = 4
+GAMES = 100
 WHITE, BLACK, EMPTY = 0, 1, 2
 SHOW = {EMPTY: '.', WHITE: 'o', BLACK: 'x'}
+PASS = -1
 
 def to_pos(x,y):
     return y*SIZE+x
@@ -35,8 +37,8 @@ class Board:
             square.set_neighbours()
         self.empties = [square.pos for square in self.squares]
         self.color = BLACK
-        self.lastmove = -1
-        self.lastpass = False
+        self.lastmove = -2
+        self.finished = False
 
     def legal_move(self, pos):
         square = self.squares[pos]
@@ -111,7 +113,7 @@ class Board:
             choices -= 1
             self.empties[i] = self.empties[choices]
             self.empties[choices] = trypos
-        return -1
+        return PASS
 
     def score(self, color):
         count = 0
@@ -127,33 +129,25 @@ class Board:
                     count += 1
         return count
 
-    def play(self):
-        for x in range(1000):
-            if self.play_random_move() == -2:
-                break
-
-    def play_random_move(self):
-        pos = self.random_move()
-        return self.play_move(pos)
+    def playout(self):
+        while not self.finished:
+            pos = self.random_move()
+            self.play_move(pos)
 
     def play_move(self, pos):
-        if pos == -1:
-            if self.lastpass:
-                return -2
-            self.lastmove = -1
-            self.lastpass = True
-        else:
+        if pos != PASS:
             self.move(pos, self.color)
-            self.lastmove = pos
-            self.lastpass = False
+        elif self.lastmove == PASS:
+            self.finished = True
+        self.lastmove = pos
         self.color = 1-self.color
         return pos
 
     def get_state(self):
-        return [square.color for square in self.squares], (self.color, self.lastmove, self.lastpass)
+        return [square.color for square in self.squares], (self.color, self.lastmove)
 
     def set_state(self, state):
-        colors, (self.color, self.lastmove, self.lastpass) = state
+        colors, (self.color, self.lastmove) = state
         for pos, color in enumerate(colors):
             if color != EMPTY:
                 self.move(pos, color)
@@ -209,7 +203,6 @@ class UCTNode:
         self.parent = None
 
     def play(self, board):
-        global maxdepth
         color = board.color
 
         steps = []
@@ -232,9 +225,7 @@ class UCTNode:
             steps.append(child)
             node = child
 
-        maxdepth = max(maxdepth, len(steps))
-        
-        board.play()
+        board.playout()
 
         wins = board.score(BLACK) >= board.score(WHITE)
         for child in steps:
@@ -274,56 +265,62 @@ class UCTNode:
                     maxpos = pos
         return maxchild
 
-if __name__ == '__main__':
-    random.seed(1)
+def user_move(board):
+    while True:
+        text = raw_input('?').strip()
+        if text == 'p':
+            return PASS
+        try:
+            x, y = [int(i) for i in text.split()]
+        except ValueError:
+            continue
+        if not (0 <= x < SIZE and 0 <= y < SIZE):
+            continue
+        pos = to_pos(x, y)
+        if board.legal_move(pos):
+            return pos
+
+def computer_move(board):
+    pos = board.random_move()
+    if pos == PASS:
+        return PASS
+    state = board.get_state()
+    tree = UCTNode()
+    for game in range(GAMES):
+        node = tree
+        nboard = Board()
+        nboard.set_state(state)
+        #print 'SET STATE:'
+        #print nboard
+        node.play(nboard)
+    best = tree.best_child(hoppa=True)
+#        print 'best one', best, best.wins, best.losses, best.score(), to_xy(best.pos)
+    return best.pos
+
+def versus_cpu():
     board = Board()
-    board.color = BLACK
     while True:
         print board
-
-        # computer
-        pos = board.random_move()
-        if pos == -1:
-            print 'I pass.'
-            board.color = 1-board.color
-            continue
         print 'thinking..'
-        state = board.get_state()
-        tree = UCTNode()
-        maxdepth = 0
-        for game in range(100):
-            node = tree
-            nboard = Board()
-            nboard.set_state(state)
-            #print 'SET STATE:'
-            #print nboard
-            node.play(nboard)
-        best = tree.best_child(hoppa=True)
-#        print 'best one', best, best.wins, best.losses, best.score(), to_xy(best.pos)
-        print 'I move here:', to_xy(tree.bestchild.pos)
-        board.play_move(tree.bestchild.pos)
-        print board
-
-        # user 
-        finished = False
-        while True:
-            try:
-                user = raw_input('?')
-            except EOFError:
-                finished = True
-                break
-            if user == 'q':
-                print 'WHITE:', board.score(WHITE)
-                print 'BLACK:', board.score(BLACK)
-                finished = True
-                break
-            try:
-                x, y = [int(i) for i in user.split()]
-            except ValueError:
-                continue
-            pos = to_pos(x, y)
-            if board.legal_move(pos):
-                board.play_move(pos)
-                break
-        if finished:
+        pos = computer_move(board)
+        if pos == PASS:
+            print 'I pass.'
+        else:
+            print 'I move here:', to_xy(pos)
+        board.play_move(pos)
+        if board.finished:
             break
+        print board
+        pos = user_move(board)
+        board.play_move(pos)
+        if board.finished:
+            break
+    print 'WHITE:', board.score(WHITE)
+    print 'BLACK:', board.score(BLACK)
+
+if __name__ == '__main__':
+    random.seed(1)
+    try:
+        versus_cpu()
+    except EOFError:
+        pass
