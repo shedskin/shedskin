@@ -1,8 +1,8 @@
 import random
 import math
 
-SIZE = 9
-GAMES = 100
+SIZE = 7
+GAMES = 1000
 WHITE, BLACK, EMPTY = 0, 1, 2
 SHOW = {EMPTY: '.', WHITE: 'o', BLACK: 'x'}
 PASS = -1
@@ -117,6 +117,8 @@ class Board:
     def playout(self):
         """ play until finished """
         for x in range(1000): # XXX while not self.finished?
+            if self.finished:
+                break
             pos = self.random_move()
             self.play_move(pos)
 
@@ -129,7 +131,6 @@ class Board:
         self.color = 1-self.color
         self.lastmove = pos
         self.history.append(pos)
-        return pos
 
     def _move(self, pos, color):
         """ actual move: update groups, empties """
