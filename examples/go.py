@@ -35,7 +35,7 @@ class Board:
         self.squares = [Square(self, pos) for pos in range(SIZE*SIZE)]
         for square in self.squares:
             square.set_neighbours()
-        self.empties = [square.pos for square in self.squares]
+        self.empties = set(range(SIZE*SIZE))
         self.color = BLACK
         self.finished = False
         self.lastmove = -2
@@ -75,18 +75,11 @@ class Board:
 
     def random_move(self):
         """ return random, possibly useful move """
-        choices = len(self.empties)
-        while choices:  
-            i = random.randrange(choices)
-            pos = self.empties[i]
+        choices = list(self.empties)
+        random.shuffle(choices)
+        for pos in choices:
             if self.legal_move(pos) and self.useful_move(pos):
-                last = len(self.empties)-1
-                self.empties[i] = self.empties[last] 
-                self.empties.pop(last)
                 return pos
-            choices -= 1
-            self.empties[i] = self.empties[choices]
-            self.empties[choices] = pos
         return PASS
 
     def new_group(self, square): # XXX to Group class
@@ -153,7 +146,7 @@ class Board:
         square.color = color
         if not prev_group:
             self.new_group(square)
-        self.empties = [e for e in self.empties if e != pos] # XXX set?
+        self.empties.remove(pos)
 
     def replay(self, history):
         """ replay steps """
@@ -180,7 +173,7 @@ class Group:
             self.liberties.remove(square.pos)
         if not self.liberties: 
             other = 1-self.color
-            self.board.empties.extend(self.members)
+            self.board.empties.update(self.members)
             for pos in self.members:
                 square = self.board.squares[pos]
                 square.color = EMPTY
