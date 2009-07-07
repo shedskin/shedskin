@@ -1,8 +1,8 @@
 import random
 import math
 
-SIZE = 7
-GAMES = 1000
+SIZE = 9
+GAMES = 10000
 WHITE, BLACK, EMPTY = 0, 1, 2
 SHOW = {EMPTY: '.', WHITE: 'o', BLACK: 'x'}
 PASS = -1
