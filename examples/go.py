@@ -2,7 +2,7 @@ import random
 import math
 
 SIZE = 9
-GAMES = 100 
+GAMES = 100
 WHITE, BLACK, EMPTY = 0, 1, 2
 SHOW = {EMPTY: '.', WHITE: 'o', BLACK: 'x'}
 PASS = -1
@@ -37,11 +37,15 @@ class Board:
             square.set_neighbours()
         self.empties = [square.pos for square in self.squares]
         self.color = BLACK
-        self.lastmove = -2
         self.finished = False
+        self.lastmove = -2
+        self.history = []
 
     def legal_move(self, pos):
+        """ determine if move is legal """
         square = self.squares[pos]
+        if square.color != EMPTY:
+            return False
         other = 1-self.color
         for neighbour in square.neighbours:
             ncolor = neighbour.color
@@ -58,17 +62,77 @@ class Board:
                     return True
         return False
 
-    def bad_move(self, pos):
+    def useful_move(self, pos):
+        """ determine whether move can be useful """
         square = self.squares[pos]
         buddies = 0
         for neighbour in square.neighbours:
             if neighbour.color == self.color:
                 if len(neighbour.group.liberties) == 1:
-                    return False
+                    return True
                 buddies += 1
-        return buddies == len(square.neighbours)
+        return buddies != len(square.neighbours)
 
-    def move(self, pos, color):
+    def random_move(self):
+        """ return random, possibly useful move """
+        choices = len(self.empties)
+        while choices:  
+            i = random.randrange(choices)
+            pos = self.empties[i]
+            if self.legal_move(pos) and self.useful_move(pos):
+                last = len(self.empties)-1
+                self.empties[i] = self.empties[last] 
+                self.empties.pop(last)
+                return pos
+            choices -= 1
+            self.empties[i] = self.empties[choices]
+            self.empties[choices] = pos
+        return PASS
+
+    def new_group(self, square): # XXX to Group class
+        group = square.group = square.fast_group
+        group.color = square.color
+        group.members.clear()
+        group.members.add(square.pos)
+        group.liberties.clear()
+        for neighbour in square.neighbours:
+            if neighbour.color == EMPTY:
+                group.liberties.add(neighbour.pos)
+
+    def score(self, color):
+        """ score according to chinese rules """ # XXX lookup rules :)
+        count = 0
+        for square in self.squares:
+            if square.color == color:
+                count += 1
+            elif square.color == EMPTY:
+                surround = 0
+                for neighbour in square.neighbours:
+                    if neighbour.color == color:
+                        surround += 1
+                if surround == len(square.neighbours): 
+                    count += 1
+        return count
+
+    def playout(self):
+        """ play until finished """
+        for x in range(1000): # XXX while not self.finished?
+            pos = self.random_move()
+            self.play_move(pos)
+
+    def play_move(self, pos):
+        """ administer move or PASS """
+        if pos != PASS:
+            self._move(pos, self.color)
+        elif self.lastmove == PASS:
+            self.finished = True
+        self.color = 1-self.color
+        self.lastmove = pos
+        self.history.append(pos)
+        return pos
+
+    def _move(self, pos, color):
+        """ actual move: update groups, empties """
         square = self.squares[pos]
         other = 1-color
         prev_group = None
@@ -90,68 +154,10 @@ class Board:
             self.new_group(square)
         self.empties = [e for e in self.empties if e != pos] # XXX set?
 
-    def new_group(self, square):
-        group = square.group = square.fast_group
-        group.color = square.color
-        group.members.clear()
-        group.members.add(square.pos)
-        group.liberties.clear()
-        for neighbour in square.neighbours:
-            if neighbour.color == EMPTY:
-                group.liberties.add(neighbour.pos)
-
-    def random_move(self):
-        choices = len(self.empties)
-        while choices:  
-            i = random.randrange(choices)
-            trypos = self.empties[i]
-            if self.legal_move(trypos) and not self.bad_move(trypos):
-                last = len(self.empties)-1
-                self.empties[i] = self.empties[last] 
-                self.empties.pop(last)
-                return trypos
-            choices -= 1
-            self.empties[i] = self.empties[choices]
-            self.empties[choices] = trypos
-        return PASS
-
-    def score(self, color):
-        count = 0
-        for square in self.squares:
-            if square.color == color:
-                count += 1
-            elif square.color == EMPTY:
-                surround = 0
-                for neighbour in square.neighbours:
-                    if neighbour.color == color:
-                        surround += 1
-                if surround == len(square.neighbours): 
-                    count += 1
-        return count
-
-    def playout(self):
-        for x in range(1000):
-        #while not self.finished: XXX 
-            pos = self.random_move()
+    def replay(self, history):
+        """ replay steps """
+        for pos in history:
             self.play_move(pos)
-
-    def play_move(self, pos):
-        if pos != PASS:
-            self.move(pos, self.color)
-        elif self.lastmove == PASS:
-            self.finished = True
-        self.lastmove = pos
-        self.color = 1-self.color
-        return pos
-
-    def get_state(self):
-        return [square.color for square in self.squares], (self.color, self.lastmove)
-
-    def set_state(self, state):
-        colors, (self.color, self.lastmove) = state
-        for pos, color in enumerate(colors):
-            if color != EMPTY:
-                self.move(pos, color)
 
     def __repr__(self):
         result = []
@@ -287,12 +293,12 @@ def computer_move(board):
     pos = board.random_move()
     if pos == PASS:
         return PASS
-    state = board.get_state()
+    history = board.history[:]
     tree = UCTNode()
     for game in range(GAMES):
         node = tree
         nboard = Board()
-        nboard.set_state(state)
+        nboard.replay(history)
         #print 'SET STATE:'
         #print nboard
         node.play(nboard)
