@@ -38,31 +38,33 @@ class Board:
         self.lastmove = -1
         self.lastpass = False
 
-    def acceptable(self, pos):
+    def legal_move(self, pos):
         square = self.squares[pos]
         other = 1-self.color
-        legal = False
-        buddies = 0
-        need_help = False
         for neighbour in square.neighbours:
             ncolor = neighbour.color
-            if neighbour.group:
-                members = len(neighbour.group.members)
-                liberties = len(neighbour.group.liberties)
-
             if ncolor == EMPTY:
                 return True
+            elif ncolor == self.color:
+                liberties = len(neighbour.group.liberties)
+                if liberties >= 2:
+                    return True
             elif ncolor == other:
+                members = len(neighbour.group.members)
+                liberties = len(neighbour.group.liberties)
                 if liberties == 1 and not (neighbour.pos == self.lastmove and members == 1):
                     return True
-            elif ncolor == self.color:
-                buddies += 1
-                if liberties == 1:
-                    need_help = True
-                elif liberties >= 2:
-                    legal = True
+        return False
 
-        return legal and (buddies != len(square.neighbours) or need_help)
+    def bad_move(self, pos):
+        square = self.squares[pos]
+        buddies = 0
+        for neighbour in square.neighbours:
+            if neighbour.color == self.color:
+                if len(neighbour.group.liberties) == 1:
+                    return False
+                buddies += 1
+        return buddies == len(square.neighbours)
 
     def move(self, pos, color):
         square = self.squares[pos]
@@ -101,7 +103,7 @@ class Board:
         while choices:  
             i = random.randrange(choices)
             trypos = self.empties[i]
-            if self.acceptable(trypos):
+            if self.legal_move(trypos) and not self.bad_move(trypos):
                 last = len(self.empties)-1
                 self.empties[i] = self.empties[last] 
                 self.empties.pop(last)
@@ -289,7 +291,7 @@ if __name__ == '__main__':
         state = board.get_state()
         tree = UCTNode()
         maxdepth = 0
-        for game in range(10000):
+        for game in range(1000):
             node = tree
             nboard = Board()
             nboard.set_state(state)
@@ -311,6 +313,6 @@ if __name__ == '__main__':
 
         x, y = [int(i) for i in user.split()]
         pos = to_pos(x, y)
-        if not board.acceptable(pos):
+        if not board.legal_move(pos):
             continue
         board.play_move(pos)
