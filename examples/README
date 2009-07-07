@@ -15,7 +15,8 @@ lines  name               description               notes
    184 fysphun.py         physics animation         shedskin -e fysphun && make && python fysphun_main.py
                                                     (create/drag points with mouse)
    112 genetic.py         genetic algorithm
-   316 go.py              go player (monte carlo+UCT)
+   316 go.py              go player (monte carlo/UCT)
+                                                    (see pgo.py to use multiple processes)
    109 life.py            conway's game of life
    235 linalg.py          linear algebra
    296 LZ2.py             Lempel-Ziv compressor
