@@ -80,9 +80,6 @@ class Board:
             i = random.randrange(choices)
             pos = self.empties[i]
             if self.legal_move(pos) and self.useful_move(pos):
-                last = len(self.empties)-1
-                self.empties[i] = self.empties[last] 
-                self.empties.pop(last)
                 return pos
             choices -= 1
             self.empties[i] = self.empties[choices]
