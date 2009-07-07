@@ -291,7 +291,7 @@ if __name__ == '__main__':
         state = board.get_state()
         tree = UCTNode()
         maxdepth = 0
-        for game in range(1000):
+        for game in range(100):
             node = tree
             nboard = Board()
             nboard.set_state(state)
@@ -305,14 +305,25 @@ if __name__ == '__main__':
         print board
 
         # user 
-        user = raw_input('?')
-        if user == 'q':
-            print 'WHITE:', board.score(WHITE)
-            print 'BLACK:', board.score(BLACK)
+        finished = False
+        while True:
+            try:
+                user = raw_input('?')
+            except EOFError:
+                finished = True
+                break
+            if user == 'q':
+                print 'WHITE:', board.score(WHITE)
+                print 'BLACK:', board.score(BLACK)
+                finished = True
+                break
+            try:
+                x, y = [int(i) for i in user.split()]
+            except ValueError:
+                continue
+            pos = to_pos(x, y)
+            if board.legal_move(pos):
+                board.play_move(pos)
+                break
+        if finished:
             break
-
-        x, y = [int(i) for i in user.split()]
-        pos = to_pos(x, y)
-        if not board.legal_move(pos):
-            continue
-        board.play_move(pos)
