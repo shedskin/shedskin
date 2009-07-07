@@ -1,8 +1,8 @@
 import random
 import math
 
-SIZE = 4
-GAMES = 100
+SIZE = 9
+GAMES = 100 
 WHITE, BLACK, EMPTY = 0, 1, 2
 SHOW = {EMPTY: '.', WHITE: 'o', BLACK: 'x'}
 PASS = -1
@@ -130,7 +130,8 @@ class Board:
         return count
 
     def playout(self):
-        while not self.finished:
+        for x in range(1000):
+        #while not self.finished: XXX 
             pos = self.random_move()
             self.play_move(pos)
 
@@ -257,8 +258,8 @@ class UCTNode:
         maxpos = -1
         for pos, child in enumerate(self.pos_child):
             if child: # and (child.wins or child.losses):
-                #if hoppa:
-                #    print 'child!', to_xy(pos), child.wins, child.losses, child.score()
+#                if hoppa:
+#                    print 'child!', to_xy(pos), child.wins, child.losses, child.score()
                 if child.score() > maxscore:
                     maxchild = child
                     maxscore = child.score()
@@ -270,6 +271,8 @@ def user_move(board):
         text = raw_input('?').strip()
         if text == 'p':
             return PASS
+        if text == 'q':
+            raise EOFError
         try:
             x, y = [int(i) for i in text.split()]
         except ValueError:
@@ -300,7 +303,8 @@ def computer_move(board):
 def versus_cpu():
     board = Board()
     while True:
-        print board
+        if board.lastmove != PASS:
+            print board
         print 'thinking..'
         pos = computer_move(board)
         if pos == PASS:
@@ -310,7 +314,8 @@ def versus_cpu():
         board.play_move(pos)
         if board.finished:
             break
-        print board
+        if board.lastmove != PASS:
+            print board
         pos = user_move(board)
         board.play_move(pos)
         if board.finished:
