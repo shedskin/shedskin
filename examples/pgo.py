@@ -1,10 +1,10 @@
-import pp, random
+import pp, sys, random
 import go
 
-PROCESSES = 2
+NPROCESSES = int(sys.argv[1])
 
 job_server = pp.Server()
-job_server.set_ncpus(PROCESSES)
+job_server.set_ncpus(NPROCESSES)
 
 def go_job(history, i, n):
     import go
@@ -22,8 +22,8 @@ def versus_cpu():
             print 'thinking..'
 
             jobs = []
-            for i in range(PROCESSES):
-                jobs.append(job_server.submit(go_job, (board.history, i, PROCESSES)))
+            for i in range(NPROCESSES):
+                jobs.append(job_server.submit(go_job, (board.history, i, NPROCESSES)))
 
             result = [job() for job in jobs]
             pos, score = max(result, key=lambda x: x[1])
