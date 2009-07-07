@@ -22,7 +22,7 @@ class Square:
         self.group = None
         self.fast_group = Group(board)
 
-    def set_neighbours(self):
+    def set__neighbours(self): 
         x, y = to_xy(self.pos)
         self.neighbours = []
         for dx, dy in [(-1,0), (1,0), (0,-1), (0,1)]:
@@ -34,7 +34,7 @@ class Board:
     def __init__(self):
         self.squares = [Square(self, pos) for pos in range(SIZE*SIZE)]
         for square in self.squares:
-            square.set_neighbours()
+            square.set__neighbours()
         self.empties = range(SIZE*SIZE) 
         self.color = BLACK
         self.finished = False
@@ -207,7 +207,7 @@ class UCTNode:
         self.pos_child = [None for x in range(SIZE*SIZE)]
         self.parent = None
 
-    def play(self, board):
+    def play(self, board, options=None):
         color = board.color
 
         steps = []
@@ -216,7 +216,10 @@ class UCTNode:
             if node.bestchild and random.random() < 0.2:
                 pos = node.bestchild.pos
             else:
-                pos = board.random_move() # XXX geen move mogelijk?
+                if not node.parent and options:
+                    pos = random.choice(options)
+                else:
+                    pos = board.random_move() # XXX geen move mogelijk?
             board.play_move(pos)
 
             child = node.pos_child[pos]
@@ -297,12 +300,22 @@ def computer_move(board):
         node = tree
         nboard = Board()
         nboard.replay(history)
-        #print 'SET STATE:'
-        #print nboard
         node.play(nboard)
     best = tree.best_child(hoppa=True)
-#        print 'best one', best, best.wins, best.losses, best.score(), to_xy(best.pos)
     return best.pos
+
+def pgo(history, i, n):
+    board = Board()
+    board.replay(history)
+    options = [pos for pos in board.empties if board.legal_move(pos) and board.useful_move(pos)][i::n]
+    tree = UCTNode()
+    for game in range(GAMES):
+        node = tree
+        nboard = Board()
+        nboard.replay(history)
+        node.play(nboard, options)
+    best = tree.best_child(hoppa=True)
+    return best.pos, best.score()
 
 def versus_cpu():
     board = Board()

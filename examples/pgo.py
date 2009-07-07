@@ -1,0 +1,48 @@
+import pp, random
+import go
+
+PROCESSES = 2
+
+job_server = pp.Server()
+job_server.set_ncpus(PROCESSES)
+
+def go_job(history, i, n):
+    import go
+    return go.pgo(history, i, n)
+
+def versus_cpu():
+    board = go.Board()
+    while True:
+        if board.lastmove != go.PASS:
+            print board
+        pos = board.random_move()
+        if pos == go.PASS:
+            print 'I pass.'
+        else:
+            print 'thinking..'
+
+            jobs = []
+            for i in range(PROCESSES):
+                jobs.append(job_server.submit(go_job, (board.history, i, PROCESSES)))
+
+            result = [job() for job in jobs]
+            pos, score = max(result, key=lambda x: x[1])
+            print 'I move here:', go.to_xy(pos)
+        board.play_move(pos)
+        if board.finished:
+            break
+        if board.lastmove != go.PASS:
+            print board
+        pos = go.user_move(board)
+        board.play_move(pos)
+        if board.finished:
+            break
+    print 'WHITE:', board.score(go.WHITE)
+    print 'BLACK:', board.score(go.BLACK)
+
+if __name__ == '__main__':
+    random.seed(1)
+    try:
+        versus_cpu()
+    except EOFError:
+        pass
