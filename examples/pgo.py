@@ -14,7 +14,7 @@ def versus_cpu():
     board = go.Board()
     while True:
         if board.lastmove != go.PASS:
-            print board
+            print board.__repr__()
         pos = board.random_move()
         if pos == go.PASS:
             print 'I pass.'
@@ -32,7 +32,7 @@ def versus_cpu():
         if board.finished:
             break
         if board.lastmove != go.PASS:
-            print board
+            print board.__repr__()
         pos = go.user_move(board)
         board.play_move(pos)
         if board.finished:

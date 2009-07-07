@@ -207,6 +207,9 @@ class UCTNode:
         self.pos_child = [None for x in range(SIZE*SIZE)]
         self.parent = None
 
+        if False: # model
+            self.play(None, [1])
+
     def play(self, board, options=None):
         color = board.color
 
@@ -341,6 +344,8 @@ def versus_cpu():
     print 'BLACK:', board.score(BLACK)
 
 if __name__ == '__main__':
+    if False: # model
+        pgo([1], 0, 1)
     random.seed(1)
     try:
         versus_cpu()
