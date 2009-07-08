@@ -1,8 +1,8 @@
 import random
 import math
 
-SIZE = 5
-GAMES = 100
+SIZE = 9
+GAMES = 10000
 WHITE, BLACK, EMPTY = 0, 1, 2
 SHOW = {EMPTY: '.', WHITE: 'o', BLACK: 'x'}
 PASS = -1
@@ -207,9 +207,6 @@ class UCTNode:
         self.pos_child = [None for x in range(SIZE*SIZE)]
         self.parent = None
 
-        if False: # model
-            self.play(None, [1])
-
     def play(self, board, options=None):
         color = board.color
 
@@ -343,9 +340,12 @@ def versus_cpu():
     print 'WHITE:', board.score(WHITE)
     print 'BLACK:', board.score(BLACK)
 
+if False: # type model for extmod
+    pgo([1], 0, 1)
+    UCTNode().play(None, [1])
+
 if __name__ == '__main__':
-    if False: # model
-        pgo([1], 0, 1)
+
     random.seed(1)
     try:
         versus_cpu()
