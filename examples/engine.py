@@ -24,10 +24,11 @@ class Engine:
     def play(self, color, vertex):
         vertex = gtp.parse_vertex(vertex)
         if vertex is None:
-            return
-        i, j = vertex
-        pos = go.to_pos(i, j)
-        self.board.play_move(pos)
+            self.board.play_move(go.PASS)
+        else:
+            i, j = vertex
+            pos = go.to_pos(i, j)
+            self.board.play_move(pos)
 
 #    def undo(self):
 #        pass
