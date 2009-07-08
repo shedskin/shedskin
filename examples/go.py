@@ -338,7 +338,7 @@ def versus_cpu():
     print 'BLACK:', board.score(BLACK)
 
 if False: # type model for extmod
-    pgo([1], 0, 1)
+    pgo([1], [1])
     UCTNode().play(None, [1])
 
 if __name__ == '__main__':
