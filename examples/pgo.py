@@ -1,8 +1,7 @@
 import pp, sys, random
 import go
 
-MAXPROCESSES = int(sys.argv[1])
-
+MAXPROCESSES = 2
 job_server = pp.Server()
 job_server.set_ncpus(MAXPROCESSES)
 
@@ -47,6 +46,8 @@ def versus_cpu():
     print 'BLACK:', board.score(go.BLACK)
 
 if __name__ == '__main__':
+    MAXPROCESSES = int(sys.argv[1])
+    job_server.set_ncpus(MAXPROCESSES)
     random.seed(1)
     try:
         versus_cpu()
