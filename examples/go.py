@@ -130,9 +130,10 @@ class Board:
         self.history.append(pos)
 
     def _move(self, pos, color):
-        """ actual move: update groups, empties """
+        """ actual move: update groups, empties, remove captives """
         square = self.squares[pos]
         other = 1-color
+        # connect to surrounding stones
         prev_group = None
         for neighbour in square.neighbours:
             group = neighbour.group
@@ -145,12 +146,17 @@ class Board:
                 else:
                     group.add_stone(square)
                 prev_group = group
-            if neighbour.color == other:
-                group.take_liberty(square)
+
+        # fill in square
         square.color = color
         if not prev_group:
             self.new_group(square)
         self.empties = [e for e in self.empties if e != pos] # XXX
+
+        # remove captives
+        for neighbour in square.neighbours:
+            if neighbour.color == other:
+                neighbour.group.take_liberty(square)
 
     def replay(self, history):
         """ replay steps """
