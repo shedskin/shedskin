@@ -18,6 +18,7 @@ def versus_cpu():
         options = [pos for pos in board.empties if board.legal_move(pos) and board.useful_move(pos)]
         if not options:
             print 'I pass.'
+            pos = go.PASS
         else:
             nprocesses = min(MAXPROCESSES, (len(options)/8)+1)
             print 'thinking.. (%d)' % nprocesses
