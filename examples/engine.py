@@ -12,7 +12,7 @@ class Engine:
         self.board = go.Board()
 
     def boardsize(self, size):
-        if int(size) != 9:
+        if int(size) != go.SIZE:
             raise 'illegal board size'
 
     def clear_board(self):
