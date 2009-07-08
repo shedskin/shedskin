@@ -2,6 +2,7 @@
 
 import sys
 import gtp
+import pgo
 import go
 
 class Engine:
@@ -35,7 +36,7 @@ class Engine:
         options = [pos for pos in self.board.empties if self.board.legal_move(pos) and self.board.useful_move(pos)]
         if not options:
             return 'pass'
-        pos, score = go.pgo(self.board.history, options)
+        pos = pgo.computer_move(self.board, options)
         self.board.play_move(pos)
         x,y = go.to_xy(pos)
         return gtp.make_vertex(x, y)
