@@ -213,7 +213,7 @@ class UCTNode:
         steps = []
         node = self
         while True:
-            if node.bestchild and random.random() < 0.2:
+            if node.bestchild and random.random() < 0.5:
                 pos = node.bestchild.pos
             else:
                 if not node.parent and options:
@@ -257,7 +257,7 @@ class UCTNode:
         if not parentvisits:
             return winrate
         nodevisits = self.wins+self.losses
-        return winrate + math.sqrt((math.log(parentvisits))/(nodevisits))/2
+        return winrate + math.sqrt((math.log(parentvisits))/(5*nodevisits))
 
     def best_child(self, hoppa=False):
         maxscore = -1
