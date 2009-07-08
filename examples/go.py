@@ -304,10 +304,7 @@ def computer_move(board):
     best = tree.best_child(hoppa=True)
     return best.pos
 
-def pgo(history, i, n):
-    board = Board()
-    board.replay(history)
-    options = [pos for pos in board.empties if board.legal_move(pos) and board.useful_move(pos)][i::n]
+def pgo(history, options):
     tree = UCTNode()
     for game in range(GAMES):
         node = tree
