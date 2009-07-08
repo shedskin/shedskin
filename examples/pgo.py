@@ -10,6 +10,15 @@ def go_job(history, options):
     import go
     return go.pgo(history, options)
 
+def computer_move(board, options):
+    nprocesses = min(MAXPROCESSES, (len(options)/8)+1)
+    jobs = []
+    for i in range(nprocesses):
+        jobs.append(job_server.submit(go_job, (board.history, options[i::nprocesses])))
+    result = [job() for job in jobs]
+    pos, score = max(result, key=lambda x: x[1])
+    return pos
+
 def versus_cpu():
     board = go.Board()
     while True:
@@ -20,13 +29,8 @@ def versus_cpu():
             print 'I pass.'
             pos = go.PASS
         else:
-            nprocesses = min(MAXPROCESSES, (len(options)/8)+1)
-            print 'thinking.. (%d)' % nprocesses
-            jobs = []
-            for i in range(nprocesses):
-                jobs.append(job_server.submit(go_job, (board.history, options[i::nprocesses])))
-            result = [job() for job in jobs]
-            pos, score = max(result, key=lambda x: x[1])
+            print 'thinking..'
+            pos = computer_move(board, options)
             print 'I move here:', go.to_xy(pos) 
 
         board.play_move(pos)
