@@ -22,7 +22,7 @@ class Square:
         self.group = None
         self.fast_group = Group(board)
 
-    def set__neighbours(self): 
+    def set_neighbours(self): 
         x, y = to_xy(self.pos)
         self.neighbours = []
         for dx, dy in [(-1,0), (1,0), (0,-1), (0,1)]:
@@ -34,7 +34,7 @@ class Board:
     def __init__(self):
         self.squares = [Square(self, pos) for pos in range(SIZE*SIZE)]
         for square in self.squares:
-            square.set__neighbours()
+            square.set_neighbours()
         self.empties = range(SIZE*SIZE) 
         self.color = BLACK
         self.finished = False
