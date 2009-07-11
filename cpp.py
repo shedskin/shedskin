@@ -1261,6 +1261,9 @@ class generateVisitor(ASTVisitor):
                 return
               
         if func.isGenerator and not declare:
+            for var in func.vars:
+                if var == 'next':
+                    error("variable name 'next' cannot be used in generator", node)
             self.generator_class(func)
 
         self.func_header(func, declare)
