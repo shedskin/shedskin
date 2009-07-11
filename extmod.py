@@ -214,13 +214,13 @@ def do_extmod_class(gv, cl):
    
     # getset
     for var in vars:
-        print >>gv.out, 'PyObject *%s_get_%s(%sObject *self, void *closure) {' % (cl.ident, var.name, cl.ident)
+        print >>gv.out, 'PyObject *__ss_get_%s_%s(%sObject *self, void *closure) {' % (cl.ident, var.name, cl.ident)
         print >>gv.out, '    PyObject *p = __to_py(self->__ss_object->%s);' % gv.cpp_name(var.name)
         print >>gv.out, '    Py_INCREF(p);'
         print >>gv.out, '    return p;'
         print >>gv.out, '}\n'
 
-        print >>gv.out, 'int %s_set_%s(%sObject *self, PyObject *value, void *closure) {' % (cl.ident, var.name, cl.ident)
+        print >>gv.out, 'int __ss_set_%s_%s(%sObject *self, PyObject *value, void *closure) {' % (cl.ident, var.name, cl.ident)
         print >>gv.out, '    try {'
         typ = cpp.typesetreprnew(var, var.parent)
         if typ == 'void *': # XXX investigate
@@ -237,7 +237,7 @@ def do_extmod_class(gv, cl):
 
     print >>gv.out, 'PyGetSetDef %sGetSet[] = {' % cl.ident
     for var in vars:
-        print >>gv.out, '    {(char *)"%s", (getter)%s_get_%s, (setter)%s_set_%s, (char *)"", NULL},' % (var.name, cl.ident, var.name, cl.ident, var.name)
+        print >>gv.out, '    {(char *)"%s", (getter)__ss_get_%s_%s, (setter)__ss_set_%s_%s, (char *)"", NULL},' % (var.name, cl.ident, var.name, cl.ident, var.name)
     print >>gv.out, '    {NULL}\n};\n'
 
     # python type
