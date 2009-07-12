@@ -3,6 +3,7 @@ import math
 
 SIZE = 9
 GAMES = 10000
+KOMI = 7.5
 WHITE, BLACK, EMPTY = 0, 1, 2
 SHOW = {EMPTY: '.', WHITE: 'o', BLACK: 'x'}
 PASS = -1
@@ -97,8 +98,10 @@ class Board:
                 group.liberties.add(neighbour.pos)
 
     def score(self, color):
-        """ score according to chinese rules """ # XXX lookup rules :)
+        """ score according to chinese rules (area, instead of territory) """ 
         count = 0
+        if color == WHITE:
+            count = KOMI
         for square in self.squares:
             if square.color == color:
                 count += 1
@@ -168,7 +171,7 @@ class Board:
         for y in range(SIZE):
             start = to_pos(0, y)
             result.append(''.join([SHOW[square.color]+' ' for square in self.squares[start:start+SIZE]]))
-        result.append('W %d B %d (%s)' % (self.score(WHITE), self.score(BLACK), SHOW[self.color]))
+        result.append('W %s B %s (%s)' % (self.score(WHITE), self.score(BLACK), SHOW[self.color]))
         return '\n'.join(result)
 
 class Group:
