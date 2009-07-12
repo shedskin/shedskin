@@ -225,7 +225,9 @@ class UCTNode:
                 if not node.parent and options:
                     pos = random.choice(options)
                 else:
-                    pos = board.random_move() # XXX geen move mogelijk?
+                    pos = board.random_move() 
+                    if pos == PASS:
+                        break
             board.play_move(pos)
 
             child = node.pos_child[pos]
