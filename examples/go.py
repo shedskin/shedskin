@@ -41,6 +41,8 @@ class Board:
         self.finished = False
         self.lastmove = -2
         self.history = []
+        self.white_dead = 0
+        self.black_dead = 0
 
     def legal_move(self, pos):
         """ determine if move is legal """
@@ -99,9 +101,10 @@ class Board:
 
     def score(self, color):
         """ score according to chinese rules (area, instead of territory) """ 
-        count = 0
         if color == WHITE:
-            count = KOMI
+            count = KOMI + self.black_dead
+        else:
+            count = self.white_dead
         for square in self.squares:
             if square.color == color:
                 count += 1
@@ -187,6 +190,10 @@ class Group:
         if not self.liberties: 
             other = 1-self.color
             self.board.empties.extend(self.members)
+            if self.color == BLACK:
+                self.board.black_dead += len(self.members)
+            else:
+                self.board.white_dead += len(self.members)
             for pos in self.members:
                 square = self.board.squares[pos]
                 square.color = EMPTY
