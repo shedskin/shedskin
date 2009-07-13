@@ -707,9 +707,10 @@ def __min(a):
     return a.unit
 
 def sum(l, b):     
-    b.unit = l.unit.unit
+    b.unit = l.unit.unit # XXX
     l.unit.__add__(l.unit)
     return l.unit
+    return b
 def __sum(l):
     l.unit.__add__(l.unit)
     return l.unit

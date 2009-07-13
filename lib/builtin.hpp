@@ -2938,7 +2938,9 @@ template <class A> A __sum(pyiter<A> *l, A b) {
 
 template <class A> A __sum(pyiter<A> *l) { return __sum(l, 0); }
 
-int __sum(pyseq<int> *l, int b=0);
+int __sum(pyseq<int> *l);
+int __sum(pyseq<int> *l, int b);
+double __sum(pyseq<int> *l, double b);
 double __sum(pyseq<double> *l, double b=0);
 
 template<class T> T __minimum(pyseq<T> *l) {

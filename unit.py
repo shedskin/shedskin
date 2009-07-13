@@ -135,6 +135,11 @@ for pair in pairs:
     insort(items, A(pair[0], pair[1]))
 print items
 
+#sum ints with double
+items2 = range(5)
+ork = sum(items2, 0.3) 
+print ork
+
 ''', '''
 output(equal=True)
 '''),
