@@ -1531,7 +1531,9 @@ double ___round(double a, int n) {
 
 /* sum */
 
+int __sum(pyseq<int> *l) { return __sum(l, 0); }
 int __sum(pyseq<int> *l, int b) { return accumulate(l->units.begin(), l->units.end(), b); }
+double __sum(pyseq<int> *l, double b) { return accumulate(l->units.begin(), l->units.end(), 0)+b; }
 double __sum(pyseq<double> *l, double b) { return accumulate(l->units.begin(), l->units.end(), b); }
 
 /* min, max */
