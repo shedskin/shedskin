@@ -17,7 +17,7 @@ template <class A> void *insort_right(list<A> *a, A x, int lo, int hi) {
 
     while((lo<hi)) {
         mid = (lo+hi)/2;
-        if (__lt(x, a->units[mid])) {
+        if (__cmp(x, a->units[mid])==-1) {
             hi = mid;
         }
         else {
@@ -40,7 +40,7 @@ template <class A> int bisect_right(list<A> *a, A x, int lo, int hi) {
 
     while((lo<hi)) {
         mid = (lo+hi)/2;
-        if (__lt(x, a->units[mid])) {
+        if (__cmp(x, a->units[mid])==-1) {
             hi = mid;
         }
         else {
@@ -61,7 +61,7 @@ template <class A> void *insort_left(list<A> *a, A x, int lo, int hi) {
 
     while((lo<hi)) {
         mid = (lo+hi)/2;
-        if (__lt(a->units[mid], x)) {
+        if (__cmp(a->units[mid], x)==-1) {
             lo = (mid+1);
         }
         else {
@@ -78,7 +78,7 @@ template <class A> int bisect_left(list<A> *a, A x, int lo, int hi) {
 
     while((lo<hi)) {
         mid = __divs((lo+hi), 2);
-        if (__lt(a->units[mid], x)) {
+        if (__cmp(a->units[mid], x)==-1) {
             lo = (mid+1);
         }
         else {
