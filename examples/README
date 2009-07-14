@@ -1,4 +1,4 @@
-40 programs that work with Shed Skin 0.1.2.
+40 programs that work with Shed Skin 0.2.
 
 If you have another interesting test case, please send it to:
    mark.dufour@gmail.com
@@ -15,7 +15,7 @@ lines  name               description               notes
    184 fysphun.py         physics animation         shedskin -e fysphun && make && python fysphun_main.py
                                                     (create/drag points with mouse)
    112 genetic.py         genetic algorithm
-   356 go.py              go player (monte carlo/UCT) shedskin -r go (fast random number generator)
+   368 go.py              go player (monte carlo/UCT) shedskin -r go (fast random number generator)
                                                     (see DISCO for details)
    109 life.py            conway's game of life
    235 linalg.py          linear algebra
@@ -50,4 +50,4 @@ lines  name               description               notes
     52 voronoi.py         textual voronoi
    795 voronoi2.py        voronoi algoritm
 
- 12197 total # XXX use sloccount
+ 12219 total 
