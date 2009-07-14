@@ -118,7 +118,7 @@ ahh = 19
 hoi = 'hoi'
 print `18`, `ahh+1`, `hoi`
 
-#bisect should model __cmp__
+#bisect should model __cmp__, fix sorting problem
 from bisect import insort
 class A(object):
     def __init__(self, x, y):
