@@ -1,8 +1,8 @@
 Shed Skin Tutorial
 ==================
 
-:Version: Shed Skin 0.1.1
-:Date: April 20, 2009
+:Version: Shed Skin 0.2
+:Date: July 15, 2009
 :Authors: Mark Dufour and James Coughlan
 
 .. _Parallel Python: http://www.parallelpython.com/
@@ -100,14 +100,15 @@ Python Subset Restrictions
 
 **Shed Skin** will only ever support a subset of all Python features. The following common features are currently not supported:
 
-  - variable numbers of arguments and keyword arguments 
-  - arbitrary-size arithmetic (integers become 32-bit on most architectures!)
   - reflection (getattr, hasattr), eval, or other really dynamic stuff
-  - multiple inheritance
+  - arbitrary-size arithmetic (integers become 32-bit on most architectures!)
   - generator expressions
+  - variable numbers of arguments and keyword arguments 
+  - multiple inheritance
   - nested functions and classes
   - inheritance from builtins (excluding Exception and object) 
   - some builtins, such as ``map``, ``filter`` and ``reduce``
+  - overloading ``__iter__`` and ``__call__`` 
 
 Some other features are currently only partially supported:
 
@@ -577,7 +578,7 @@ Shed Skin Roadmap
 
 The following activities are planned for future versions of **Shed Skin**:
 
-**0.2-0.9** (6-24 months from now)
+**0.3-0.9** (6-24 months from now)
 
 * Complete support for the ``os`` module under Windows
 
