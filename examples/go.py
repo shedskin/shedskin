@@ -2,7 +2,7 @@ import random
 import math
 
 SIZE = 9
-GAMES = 1000
+GAMES = 10000
 KOMI = 7.5
 WHITE, BLACK, EMPTY = 0, 1, 2
 SHOW = {EMPTY: '.', WHITE: 'o', BLACK: 'x'}
@@ -88,6 +88,10 @@ class Board:
             self.empties[i] = self.empties[choices]
             self.empties[choices] = pos
         return PASS
+
+    def possible_moves(self):
+        """ legal and useful moves """
+        return [pos for pos in self.empties if self.legal_move(pos) and self.useful_move(pos)]
 
     def new_group(self, square): # XXX to Group class
         group = square.group = square.fast_group
@@ -217,12 +221,17 @@ class UCTNode:
 
     def play(self, board, options=None):
         """ uct tree search """
+        if options:  
+            self.unexplored = options
+        else:
+            self.unexplored = board.possible_moves()
+
         color = board.color
         steps = []
 
         node = self
         while True:
-            pos = node.select(board, options)
+            pos = node.select()
             if pos == PASS:
                 break
             board.play_move(pos)
@@ -232,6 +241,7 @@ class UCTNode:
                 child = node.pos_child[pos] = UCTNode()
                 child.pos = pos
                 child.parent = self
+                child.unexplored = board.possible_moves()
                 steps.append(child)
                 break
 
@@ -241,16 +251,18 @@ class UCTNode:
         self.random_playout(board)
         self.update_path(board, color, steps)
 
-    def select(self, board, options):
-        """ select move """
-        if self.bestchild and random.random() < 0.5:
-            pos = self.bestchild.pos
+    def select(self):
+        """ select move; unexplored children first, then according to uct value """
+        if self.unexplored:
+            i = random.randrange(len(self.unexplored))
+            pos = self.unexplored[i]
+            self.unexplored[i] = self.unexplored[len(self.unexplored)-1]
+            self.unexplored.pop()
+            return pos
+        elif self.bestchild:
+            return self.bestchild.pos
         else:
-            if not self.parent and options:
-                pos = random.choice(options)
-            else:
-                pos = board.random_move() 
-        return pos
+            return PASS
 
     def random_playout(self, board):
         """ random play until both players pass """
