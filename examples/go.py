@@ -226,7 +226,7 @@ class UCTNode:
 
         node = self
         while True:
-            pos = node.select()
+            pos = node.select(board)
             if pos == PASS:
                 break
             board.play_move(pos)
@@ -246,18 +246,18 @@ class UCTNode:
         self.random_playout(board)
         self.update_path(board, color, steps)
 
-    def select(self):
+    def select(self, board):
         """ select move; unexplored children first, then according to uct value """
-        if self.unexplored:
+        if self.bestchild and random.random() < 0.5:
+            return self.bestchild.pos
+        elif self.unexplored:
             i = random.randrange(len(self.unexplored))
             pos = self.unexplored[i]
             self.unexplored[i] = self.unexplored[len(self.unexplored)-1]
             self.unexplored.pop()
             return pos
-        elif self.bestchild:
-            return self.bestchild.pos
         else:
-            return PASS
+            return board.random_move()
 
     def random_playout(self, board):
         """ random play until both players pass """
@@ -269,6 +269,8 @@ class UCTNode:
 
     def update_path(self, board, color, steps):
         """ update win/loss count for every step """
+        global treedepth
+        treedepth = max(treedepth, len(steps))
         wins = board.score(BLACK) >= board.score(WHITE)
         for child in steps:
             if wins:
@@ -325,6 +327,8 @@ def user_move(board):
             return pos
 
 def computer_move(board):
+    global treedepth
+    treedepth = 0
     pos = board.random_move()
     if pos == PASS:
         return PASS
@@ -357,6 +361,7 @@ def versus_cpu():
             print board
         print 'thinking..'
         pos = computer_move(board)
+        print 'tree depth:', treedepth
         if pos == PASS:
             print 'I pass.'
         else:
