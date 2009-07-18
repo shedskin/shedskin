@@ -2,7 +2,7 @@ import random
 import math
 
 SIZE = 9
-GAMES = 10000
+GAMES = 1000
 KOMI = 7.5
 WHITE, BLACK, EMPTY = 0, 1, 2
 SHOW = {EMPTY: '.', WHITE: 'o', BLACK: 'x'}
@@ -117,14 +117,6 @@ class Board:
                     count += 1
         return count
 
-    def playout(self):
-        """ play until finished """
-        for x in range(1000): # XXX while not self.finished?
-            if self.finished:
-                break
-            pos = self.random_move()
-            self.play_move(pos)
-
     def play_move(self, pos):
         """ administer move or PASS """
         if pos != PASS:
@@ -224,20 +216,15 @@ class UCTNode:
         self.parent = None
 
     def play(self, board, options=None):
+        """ uct tree search """
         color = board.color
-
         steps = []
+
         node = self
         while True:
-            if node.bestchild and random.random() < 0.5:
-                pos = node.bestchild.pos
-            else:
-                if not node.parent and options:
-                    pos = random.choice(options)
-                else:
-                    pos = board.random_move() 
-                    if pos == PASS:
-                        break
+            pos = node.select(board, options)
+            if pos == PASS:
+                break
             board.play_move(pos)
 
             child = node.pos_child[pos]
@@ -251,8 +238,30 @@ class UCTNode:
             steps.append(child)
             node = child
 
-        board.playout()
+        self.random_playout(board)
+        self.update_path(board, color, steps)
 
+    def select(self, board, options):
+        """ select move """
+        if self.bestchild and random.random() < 0.5:
+            pos = self.bestchild.pos
+        else:
+            if not self.parent and options:
+                pos = random.choice(options)
+            else:
+                pos = board.random_move() 
+        return pos
+
+    def random_playout(self, board):
+        """ random play until both players pass """
+        for x in range(1000): # XXX while not self.finished?
+            if board.finished:
+                break
+            pos = board.random_move()
+            board.play_move(pos)
+
+    def update_path(self, board, color, steps):
+        """ update win/loss count for every step """
         wins = board.score(BLACK) >= board.score(WHITE)
         for child in steps:
             if wins:
