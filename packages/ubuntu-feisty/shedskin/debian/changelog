@@ -1,3 +1,21 @@
+shedskin (0.2-0ubuntu1) feisty; urgency=low
+
+  * added 7 new example programs (and removed some), now 40 in total
+  * many inlining optimizations
+  * huge speedups for 'for .., .. in enumerate/zip(sequence, sequence?)'
+  * important TI fix (involving default arguments)
+  * fixes for 'import as'
+  * follow module initialization order
+  * optimized 'len(list)' (remove virtual call)
+  * optimized list slicing (when step is 1)
+  * drop compatibility with 2.3, follow 2.6 implementation
+  * fysphun example now uses an extension module
+  * variable with name underscore no special case anymore (could be dynamic)
+  * cleaned up compiler core further, removing about 100 lines again
+  * many minor bugfixes 
+
+ -- Mark Dufour <mark.dufour@gmail.com>  Wed,  15 Jul 2009 10:00:00 +0100
+
 shedskin (0.1.1-0ubuntu1) feisty; urgency=low
 
   * added 5 new example programs, now 35 in total
