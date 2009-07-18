@@ -221,11 +221,6 @@ class UCTNode:
 
     def play(self, board, options=None):
         """ uct tree search """
-        if options:  
-            self.unexplored = options
-        else:
-            self.unexplored = board.possible_moves()
-
         color = board.color
         steps = []
 
@@ -239,9 +234,9 @@ class UCTNode:
             child = node.pos_child[pos]
             if not child:
                 child = node.pos_child[pos] = UCTNode()
-                child.pos = pos
-                child.parent = self
                 child.unexplored = board.possible_moves()
+                child.pos = pos
+                child.parent = node
                 steps.append(child)
                 break
 
@@ -335,6 +330,7 @@ def computer_move(board):
         return PASS
     history = board.history[:]
     tree = UCTNode()
+    tree.unexplored = board.possible_moves()
     for game in range(GAMES):
         node = tree
         nboard = Board()
@@ -345,6 +341,7 @@ def computer_move(board):
 
 def pgo(history, options):
     tree = UCTNode()
+    tree.unexplored = options
     for game in range(GAMES):
         node = tree
         nboard = Board()
@@ -381,7 +378,6 @@ if False: # type model for extmod
     UCTNode().play(None, [1])
 
 if __name__ == '__main__':
-
     random.seed(1)
     try:
         versus_cpu()
