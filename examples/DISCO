@@ -4,7 +4,7 @@ License GNU GPL version 3
 
 INTRODUCTION
 
-Disco is a simple Go player in only 350 lines of Python. It is based on the shiny new Monte Carlo + UCT algorithm. Given enough time, it can play pretty interesting games on 9x9.. For speed, it can be compiled with Shedskin, and use multiple processes via Parallel Python.
+Disco is a simple Go player in only 400 lines of Python. It is based on the shiny new Monte Carlo + UCT algorithm. Given enough time, it can play pretty interesting games on 9x9.. For speed, it can be compiled with Shedskin, and use multiple processes via Parallel Python.
 
 Disco was made as a test case for Shedskin, and may not evolve any further. I certainly do not want to get addicted to Go programming as well. But if it evolves further, I will make sure it always stays in pure Python, stays under 1,000 lines of code, and compiles with Shedskin. 
 
