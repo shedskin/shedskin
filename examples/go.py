@@ -222,9 +222,8 @@ class UCTNode:
     def play(self, board, options=None):
         """ uct tree search """
         color = board.color
-        steps = []
-
         node = self
+        path = [node]
         while True:
             pos = node.select(board)
             if pos == PASS:
@@ -237,18 +236,18 @@ class UCTNode:
                 child.unexplored = board.possible_moves()
                 child.pos = pos
                 child.parent = node
-                steps.append(child)
+                path.append(child)
                 break
 
-            steps.append(child)
+            path.append(child)
             node = child
 
         self.random_playout(board)
-        self.update_path(board, color, steps)
+        self.update_path(board, color, path)
 
     def select(self, board):
         """ select move; unexplored children first, then according to uct value """
-        if self.bestchild and random.random() < 0.5:
+        if (self.wins+self.losses) >= 10 and random.random() < 0.6:
             return self.bestchild.pos
         elif self.unexplored:
             i = random.randrange(len(self.unexplored))
@@ -267,25 +266,19 @@ class UCTNode:
             pos = board.random_move()
             board.play_move(pos)
 
-    def update_path(self, board, color, steps):
-        """ update win/loss count for every step """
+    def update_path(self, board, color, path):
+        """ update win/loss count along path """
         global treedepth
-        treedepth = max(treedepth, len(steps))
+        treedepth = max(treedepth, len(path))
         wins = board.score(BLACK) >= board.score(WHITE)
-        for child in steps:
-            if wins:
-                if color == BLACK:
-                    child.wins += 1
-                else:
-                    child.losses += 1
-            else:
-                if color == WHITE:
-                    child.wins += 1
-                else:
-                    child.losses += 1
-
-            child.parent.bestchild = child.parent.best_child()
+        for node in path:
             color = 1-color
+            if wins == (color == BLACK):
+                node.wins += 1
+            else:
+                node.losses += 1
+            if node.parent:
+                node.parent.bestchild = node.parent.best_child()
 
     def score(self):
         winrate = self.wins/float(self.wins+self.losses)
@@ -295,18 +288,23 @@ class UCTNode:
         nodevisits = self.wins+self.losses
         return winrate + math.sqrt((math.log(parentvisits))/(5*nodevisits))
 
-    def best_child(self, hoppa=False):
+    def best_child(self):
         maxscore = -1
         maxchild = None
-        maxpos = -1
-        for pos, child in enumerate(self.pos_child):
-            if child: # and (child.wins or child.losses):
-#                if hoppa:
-#                    print 'child!', to_xy(pos), child.wins, child.losses, child.score()
-                if child.score() > maxscore:
-                    maxchild = child
-                    maxscore = child.score()
-                    maxpos = pos
+        for child in self.pos_child:
+            if child and child.score() > maxscore:
+                maxchild = child
+                maxscore = child.score()
+        return maxchild
+
+    def best_visited(self):
+        maxvisits = -1
+        maxchild = None
+        for child in self.pos_child:
+            if child:
+                print to_xy(child.pos), child.wins, child.losses, child.score()
+            if child and (child.wins+child.losses) > maxvisits:
+                maxvisits, maxchild = (child.wins+child.losses), child
         return maxchild
 
 def user_move(board):
@@ -340,8 +338,7 @@ def computer_move(board):
         nboard = Board()
         nboard.replay(history)
         node.play(nboard)
-    best = tree.best_child(hoppa=True)
-    return best.pos
+    return tree.best_visited().pos
 
 def pgo(history, options):
     tree = UCTNode()
@@ -351,7 +348,7 @@ def pgo(history, options):
         nboard = Board()
         nboard.replay(history)
         node.play(nboard, options)
-    best = tree.best_child(hoppa=True)
+    best = tree.best_visited()
     return best.pos, best.score()
 
 def versus_cpu():
