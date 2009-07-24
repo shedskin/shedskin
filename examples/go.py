@@ -301,8 +301,8 @@ class UCTNode:
         maxvisits = -1
         maxchild = None
         for child in self.pos_child:
-            if child:
-                print to_xy(child.pos), child.wins, child.losses, child.score()
+#            if child:
+#                print to_xy(child.pos), child.wins, child.losses, child.score()
             if child and (child.wins+child.losses) > maxvisits:
                 maxvisits, maxchild = (child.wins+child.losses), child
         return maxchild
