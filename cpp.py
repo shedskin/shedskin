@@ -660,7 +660,7 @@ class generateVisitor(ASTVisitor):
         # --- class variable declarations
         if cl.parent.vars: # XXX merge with visitModule
             for var in cl.parent.vars.values():
-                if getgx().merged_inh[var]:
+                if var in getgx().merged_inh and getgx().merged_inh[var]:
                     self.start(typesetreprnew(var, cl.parent)+cl.ident+'::'+self.cpp_name(var.name)) 
                     self.eol()
             print >>self.out
@@ -669,7 +669,7 @@ class generateVisitor(ASTVisitor):
         # --- class variables 
         if cl.parent.vars:
             for var in cl.parent.vars.values():
-                if getgx().merged_inh[var]:
+                if var in getgx().merged_inh and getgx().merged_inh[var]:
                     self.output('static '+typesetreprnew(var, cl.parent)+self.cpp_name(var.name)+';') 
             print >>self.out
 
