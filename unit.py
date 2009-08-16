@@ -8,6 +8,13 @@ tests = [
 # __ss_result
 print [result for result in range(4)]
 
+# void *constant caused by unused function 
+def parse150():
+    a = '150'
+def ftpcp():
+    'ah' in ('150',)
+parse150()
+
 ''', '''
 output(equal=True)
 '''),
