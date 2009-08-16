@@ -4,7 +4,15 @@ from ss import *
 import traceback, sys, os, time
 
 tests = [
-('''fixes for 0.1.2''', '''
+('''fixes for 0.2.1''', '''
+# __ss_result
+print [result for result in range(4)]
+
+''', '''
+output(equal=True)
+'''),
+
+('''fixes for 0.2''', '''
 # print space or not
 print 'aha\t',
 print 'hum'
