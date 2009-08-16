@@ -10,8 +10,11 @@ SOL_SOCKET=1
 
 SO_REUSEADDR=2
 
+AI_PASSIVE=1
+
 AF_UNIX=1
 AF_INET=2
+AF_INET6=10
 
 IP_TOS=1
 
@@ -39,6 +42,9 @@ class socket(object):
 
     def fileno(self):
         return 0
+
+    def makefile(self, flags=None):
+        return file('', flags)
 
     def listen(self, backlog):
         return self
