@@ -85,6 +85,8 @@ class_ *cl_timeout;
 
 class_ *cl_socket;
 
+int __ss_AI_PASSIVE = AI_PASSIVE;
+int __ss_AF_INET6 = AF_INET6;
 int __ss_AF_INET = AF_INET;
 int __ss_AF_UNIX = AF_UNIX;
 int __ss_SOCK_STREAM = SOCK_STREAM;
@@ -144,6 +146,10 @@ str *socket::getsockopt(int level, int optname, int value) {
 
     return new str(buf, buflen);
 }
+
+/*file *socket::makefile(str *flags) {
+    return new file(new str(""), flags);
+} */
 
 socket *socket::bind(const sockaddr *sa, socklen_t salen)
 {
@@ -235,7 +241,7 @@ socket *socket::connect(pyseq<str *> *address)
     sockaddr_un smup;
     smup.sun_family = AF_UNIX;
     const str* __0 = address->__getitem__(0);
-    strncpy(smup.sun_path, __0->unit.c_str(), PATH_MAX);
+    strcpy(smup.sun_path, __0->unit.c_str());
 
     return connect(reinterpret_cast<sockaddr *>(&smup), sizeof(smup));
 }
@@ -563,7 +569,7 @@ socket *socket::bind(pyseq<str *> *address)
     sockaddr_un smup;
     smup.sun_family = AF_UNIX;
     const str* __0 = address->__getitem__(0);
-    strncpy(smup.sun_path, __0->unit.c_str(), PATH_MAX);
+    strcpy(smup.sun_path, __0->unit.c_str());
 
     return bind(reinterpret_cast<sockaddr *>(&smup), sizeof(smup));
 }
