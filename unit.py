@@ -15,6 +15,19 @@ def ftpcp():
     'ah' in ('150',)
 parse150()
 
+# callbacks
+class FTP:
+    def retrbinary(self, callback):
+        callback('hoi')
+    def retrlines(self):
+        callback = print_line
+        callback('hoi2')
+def print_line(line):
+    print line
+ftp = FTP()
+ftp.retrbinary(print_line)
+ftp.retrlines()
+
 ''', '''
 output(equal=True)
 '''),
