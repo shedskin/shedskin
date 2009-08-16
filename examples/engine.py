@@ -16,7 +16,7 @@ class Engine:
             raise 'illegal board size'
 
     def clear_board(self):
-        pass
+        self.board = go.Board()
 
     def komi(self, value):
         pass
