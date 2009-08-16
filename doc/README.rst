@@ -107,6 +107,7 @@ Python Subset Restrictions
   - multiple inheritance
   - nested functions and classes
   - inheritance from builtins (excluding Exception and object) 
+  - using local variables 'before' their definition
   - some builtins, such as ``map``, ``filter`` and ``reduce``
   - overloading ``__iter__`` and ``__call__`` 
 
