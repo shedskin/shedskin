@@ -226,7 +226,7 @@ class generateVisitor(ASTVisitor):
         parent = inode(node).parent
         while isinstance(parent, function) and parent.listcomp: # XXX
             parent = parent.parent
-        if isinstance(parent, function) and parent.inherited:
+        if isinstance(parent, function) and (parent.inherited or not self.inhcpa(parent)):
             return
 
         for other in self.consts:
