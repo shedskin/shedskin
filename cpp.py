@@ -2193,13 +2193,13 @@ class generateVisitor(ASTVisitor):
             else:
                 self.output(ts+', '.join(names)+';')
 
-        self.output(typesetreprnew(node, lcfunc)+'result = new '+typesetreprnew(node, lcfunc)[:-2]+'();')
+        self.output(typesetreprnew(node, lcfunc)+'__ss_result = new '+typesetreprnew(node, lcfunc)[:-2]+'();')
         print >>self.out
          
         self.listcomp_rec(node, node.quals, lcfunc)
       
         # --- return result
-        self.output('return result;')
+        self.output('return __ss_result;')
         self.deindent();
         self.output('}\n')
 
@@ -2222,10 +2222,10 @@ class generateVisitor(ASTVisitor):
     def listcomp_rec(self, node, quals, lcfunc):
         if not quals:
             if len(node.quals) == 1 and not fastfor(node.quals[0]) and not self.fastenum(node.quals[0]) and not self.fastzip2(node.quals[0]) and not node.quals[0].ifs and self.only_classes(node.quals[0].list, ('tuple', 'list', 'none')):
-                self.start('result->units['+getmv().tempcount[node.quals[0].list]+'] = ')
+                self.start('__ss_result->units['+getmv().tempcount[node.quals[0].list]+'] = ')
                 self.visit(node.expr, lcfunc)
             else:
-                self.start('result->append(')
+                self.start('__ss_result->append(')
                 self.visit(node.expr, lcfunc)
                 self.append(')')
             self.eol()
@@ -2260,7 +2260,7 @@ class generateVisitor(ASTVisitor):
             pref, tail = self.forin_preftail(qual)
 
             if len(node.quals) == 1 and not qual.ifs and pref == '_SEQ':
-                self.output('result->resize(len('+itervar+'));')
+                self.output('__ss_result->resize(len('+itervar+'));')
 
             self.start('FOR_IN'+pref+'('+iter+','+itervar+','+tail)
             print >>self.out, self.line+')'
