@@ -1,4 +1,5 @@
 #include "time.hpp"
+#include "time.h"
 
 namespace __time__ {
 
@@ -131,15 +132,13 @@ double time() {
 }
 
 void *sleep(double s) {
-    timeval tim;
-    double t1, t2;
+    struct timespec time;
+    time_t seconds = (int) s;
+    long nanosecs = (double)(s - seconds)*1000000000;
+    time.tv_sec = seconds;
+    time.tv_nsec = nanosecs;
 
-    gettimeofday(&tim, 0);
-    t1=tim.tv_sec+(tim.tv_usec/1000000.0);
-    do {
-        gettimeofday(&tim, 0);
-        t2=tim.tv_sec+(tim.tv_usec/1000000.0);
-    } while (t2-t1 < s);
+    nanosleep(&time, NULL);
 
     return NULL;
 }
