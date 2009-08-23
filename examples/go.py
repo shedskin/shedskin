@@ -2,7 +2,7 @@ import random
 import math
 
 SIZE = 9
-GAMES = 1000
+GAMES = 10000
 KOMI = 7.5
 WHITE, BLACK, EMPTY = 0, 1, 2
 SHOW = {EMPTY: '.', WHITE: 'o', BLACK: 'x'}
@@ -86,12 +86,10 @@ class Board:
             if self.legal_move(pos) and self.useful_move(pos):
                 return pos
             choices -= 1
-            self.empties[i] = self.empties[choices]
-            self.empty_pos[self.empties[choices]] = i
-            self.empties[choices] = pos
-            self.empty_pos[pos] = choices
+            self.set_empty(i, self.empties[choices])
+            self.set_empty(choices, pos)
         return PASS
-
+  
     def possible_moves(self):
         """ legal and useful moves """
         return [pos for pos in self.empties if self.legal_move(pos) and self.useful_move(pos)]
@@ -168,11 +166,12 @@ class Board:
         self.empties.append(pos)
 
     def remove_empty(self, pos):
-        pos = self.empty_pos[pos]
-        last_empty = self.empties[len(self.empties)-1]
-        self.empties[pos] = last_empty
-        self.empty_pos[last_empty] = pos
+        self.set_empty(self.empty_pos[pos], self.empties[len(self.empties)-1])
         self.empties.pop()
+
+    def set_empty(self, choices, pos): 
+        self.empties[choices] = pos
+        self.empty_pos[pos] = choices
 
     def replay(self, history):
         """ replay steps """
