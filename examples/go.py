@@ -247,7 +247,7 @@ class UCTNode:
 
     def select(self, board):
         """ select move; unexplored children first, then according to uct value """
-        if (self.wins+self.losses) >= 10 and random.random() < 0.6:
+        if self.bestchild and random.random() < 0.5:
             return self.bestchild.pos
         elif self.unexplored:
             i = random.randrange(len(self.unexplored))
@@ -349,7 +349,7 @@ def pgo(history, options):
         nboard.replay(history)
         node.play(nboard, options)
     best = tree.best_visited()
-    return best.pos, best.score()
+    return best.pos, (best.wins+best.losses)
 
 def versus_cpu():
     board = Board()
