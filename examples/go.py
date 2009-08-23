@@ -169,9 +169,9 @@ class Board:
         self.set_empty(self.empty_pos[pos], self.empties[len(self.empties)-1])
         self.empties.pop()
 
-    def set_empty(self, choices, pos): 
-        self.empties[choices] = pos
-        self.empty_pos[pos] = choices
+    def set_empty(self, i, pos): 
+        self.empties[i] = pos
+        self.empty_pos[pos] = i
 
     def replay(self, history):
         """ replay steps """
