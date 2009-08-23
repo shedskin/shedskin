@@ -24,7 +24,7 @@ class Square:
         self.fast_group = Group(board)
 
     def set_neighbours(self): 
-        x, y = to_xy(self.pos)
+        x, y = self.pos % SIZE, self.pos / SIZE;
         self.neighbours = []
         for dx, dy in [(-1,0), (1,0), (0,-1), (0,1)]:
             newx, newy = x+dx, y+dy
