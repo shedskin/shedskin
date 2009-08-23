@@ -247,16 +247,16 @@ class UCTNode:
 
     def select(self, board):
         """ select move; unexplored children first, then according to uct value """
-        if self.bestchild and random.random() < 0.5:
-            return self.bestchild.pos
-        elif self.unexplored:
+        if self.unexplored:
             i = random.randrange(len(self.unexplored))
             pos = self.unexplored[i]
             self.unexplored[i] = self.unexplored[len(self.unexplored)-1]
             self.unexplored.pop()
             return pos
+        elif self.bestchild:
+            return self.bestchild.pos
         else:
-            return board.random_move()
+            return PASS
 
     def random_playout(self, board):
         """ random play until both players pass """
