@@ -2,7 +2,7 @@ import random
 import math
 
 SIZE = 9
-GAMES = 10000
+GAMES = 1000
 KOMI = 7.5
 WHITE, BLACK, EMPTY = 0, 1, 2
 SHOW = {EMPTY: '.', WHITE: 'o', BLACK: 'x'}
@@ -36,7 +36,8 @@ class Board:
         self.squares = [Square(self, pos) for pos in range(SIZE*SIZE)]
         for square in self.squares:
             square.set_neighbours()
-        self.empties = range(SIZE*SIZE) 
+        self.empties = range(SIZE*SIZE)
+        self.empty_pos = range(SIZE*SIZE)
         self.color = BLACK
         self.finished = False
         self.lastmove = -2
@@ -86,7 +87,9 @@ class Board:
                 return pos
             choices -= 1
             self.empties[i] = self.empties[choices]
+            self.empty_pos[self.empties[choices]] = i
             self.empties[choices] = pos
+            self.empty_pos[pos] = choices
         return PASS
 
     def possible_moves(self):
@@ -151,14 +154,25 @@ class Board:
 
         # fill in square
         square.color = color
+        self.remove_empty(pos)
         if not prev_group:
             self.new_group(square)
-        self.empties = [e for e in self.empties if e != pos] # XXX
 
         # remove captives
         for neighbour in square.neighbours:
             if neighbour.color == other:
                 neighbour.group.take_liberty(square)
+
+    def add_empty(self, pos):
+        self.empty_pos[pos] = len(self.empties)
+        self.empties.append(pos)
+
+    def remove_empty(self, pos):
+        pos = self.empty_pos[pos]
+        last_empty = self.empties[len(self.empties)-1]
+        self.empties[pos] = last_empty
+        self.empty_pos[last_empty] = pos
+        self.empties.pop()
 
     def replay(self, history):
         """ replay steps """
@@ -185,7 +199,8 @@ class Group:
             self.liberties.remove(square.pos)
         if not self.liberties: 
             other = 1-self.color
-            self.board.empties.extend(self.members)
+            for member in self.members:
+                self.board.add_empty(member)
             if self.color == BLACK:
                 self.board.black_dead += len(self.members)
             else:
@@ -263,6 +278,12 @@ class UCTNode:
         for x in range(1000): # XXX while not self.finished?
             if board.finished:
                 break
+#            print 'checking'
+#            for i, pos in enumerate(board.empties):
+#                if board.empty_pos[pos] != i:
+#                    print 'FOUT %d staat op %d, maar volgens empty_pos op %d' % (pos, i, board.empty_pos[pos])
+#                    import sys
+#                    sys.exit()
             pos = board.random_move()
             board.play_move(pos)
 
