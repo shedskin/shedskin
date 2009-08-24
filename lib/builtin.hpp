@@ -1021,11 +1021,19 @@ public:
 #endif
 };
 
-class ValueError : public Exception { 
+class EOFError : public Exception {
 public: 
-    ValueError(str *msg=0) : Exception(msg) {} 
+    EOFError(str *msg=0) : Exception(msg) {}
 #ifdef __SS_BIND
-    PyObject *__to_py__() { return PyExc_ValueError; }
+    PyObject *__to_py__() { return PyExc_EOFError; }
+#endif
+};
+
+class FloatingPointError : public Exception {
+public: 
+    FloatingPointError(str *msg=0) : Exception(msg) {} 
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_FloatingPointError; }
 #endif
 };
 
@@ -1034,14 +1042,6 @@ public:
     KeyError(str *msg=0) : Exception(msg) {} 
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_KeyError; }
-#endif
-};
-
-class NotImplementedError : public Exception { 
-public: 
-    NotImplementedError(str *msg=0) : Exception(msg) {} 
-#ifdef __SS_BIND
-    PyObject *__to_py__() { return PyExc_NotImplementedError; }
 #endif
 };
 
@@ -1061,83 +1061,11 @@ public:
 #endif
 };
 
-class OSError : public Exception { 
-public: 
-    int __ss_errno;
-    str *filename; 
-    str *message;
-    str *strerror;
-
-    OSError(str *message=0); 
-    str *__str__();
-    str *__repr__();
-
-#ifdef __SS_BIND
-    PyObject *__to_py__() { return PyExc_OSError; }
-#endif
-};
-
-class SyntaxError : public Exception { 
-public: 
-    SyntaxError(str *msg=0) : Exception(msg) {} 
-#ifdef __SS_BIND
-    PyObject *__to_py__() { return PyExc_SyntaxError; }
-#endif
-};
-
-class TypeError : public Exception { 
-public: 
-    TypeError(str *msg=0) : Exception(msg) {} 
-#ifdef __SS_BIND
-    PyObject *__to_py__() { return PyExc_TypeError; }
-#endif
-};
-
-class OverflowError : public Exception { 
-public: 
-    OverflowError(str *msg=0) : Exception(msg) {} 
-#ifdef __SS_BIND
-    PyObject *__to_py__() { return PyExc_OverflowError; }
-#endif
-};
-
-class RuntimeError : public Exception { 
-public: 
-    RuntimeError(str *msg=0) : Exception(msg) {} 
-#ifdef __SS_BIND
-    PyObject *__to_py__() { return PyExc_RuntimeError; }
-#endif
-};
-
 class KeyboardInterrupt : public Exception {
 public: 
     KeyboardInterrupt(str *msg=0) : Exception(msg) {} 
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_KeyboardInterrupt; }
-#endif
-};
-
-class FloatingPointError : public Exception {
-public: 
-    FloatingPointError(str *msg=0) : Exception(msg) {} 
-#ifdef __SS_BIND
-    PyObject *__to_py__() { return PyExc_FloatingPointError; }
-#endif
-};
-
-class ZeroDivisionError : public Exception {
-public: 
-    ZeroDivisionError(str *msg=0) : Exception(msg) {} 
-#ifdef __SS_BIND
-    PyObject *__to_py__() { return PyExc_ZeroDivisionError; }
-#endif
-};
-
-class EOFError : public Exception {
-public: 
-    EOFError(str *msg=0) : Exception(msg) {}
-#ifdef __SS_BIND
-    PyObject *__to_py__() { return PyExc_EOFError; }
 #endif
 };
 
@@ -1157,6 +1085,54 @@ public:
 #endif
 };
 
+class NotImplementedError : public Exception { 
+public: 
+    NotImplementedError(str *msg=0) : Exception(msg) {} 
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_NotImplementedError; }
+#endif
+};
+
+class OSError : public Exception { 
+public: 
+    int __ss_errno;
+    str *filename; 
+    str *message;
+    str *strerror;
+
+    OSError(str *message=0); 
+    str *__str__();
+    str *__repr__();
+
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_OSError; }
+#endif
+};
+
+class OverflowError : public Exception { 
+public: 
+    OverflowError(str *msg=0) : Exception(msg) {} 
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_OverflowError; }
+#endif
+};
+
+class RuntimeError : public Exception { 
+public: 
+    RuntimeError(str *msg=0) : Exception(msg) {} 
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_RuntimeError; }
+#endif
+};
+
+class SyntaxError : public Exception { 
+public: 
+    SyntaxError(str *msg=0) : Exception(msg) {} 
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_SyntaxError; }
+#endif
+};
+
 class SystemError : public Exception {
 public: 
     SystemError(str *msg=0) : Exception(msg) {}
@@ -1170,6 +1146,30 @@ public:
     SystemExit(str *msg=0) : Exception(msg) {}
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_SystemExit; }
+#endif
+};
+
+class TypeError : public Exception { 
+public: 
+    TypeError(str *msg=0) : Exception(msg) {} 
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_TypeError; }
+#endif
+};
+
+class ValueError : public Exception { 
+public: 
+    ValueError(str *msg=0) : Exception(msg) {} 
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_ValueError; }
+#endif
+};
+
+class ZeroDivisionError : public Exception {
+public: 
+    ZeroDivisionError(str *msg=0) : Exception(msg) {} 
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_ZeroDivisionError; }
 #endif
 };
 
