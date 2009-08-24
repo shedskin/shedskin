@@ -513,27 +513,25 @@ class Exception:
         self.msg = msg
 
 class AssertionError(Exception): pass
-class KeyboardInterrupt(Exception): pass
 class EOFError(Exception): pass
-class KeyError(Exception): pass
-class ValueError(Exception): pass
-class IndexError(Exception): pass
-class NotImplementedError(Exception): pass
-class IOError(Exception): pass
-class SyntaxError(Exception): pass
-class StopIteration(Exception): pass
-class TypeError(Exception): pass
-class RuntimeError(Exception): pass
-class OSError(Exception): pass
-class EOFError(Exception): pass
-class KeyboardInterrupt(Exception): pass
-class ZeroDivisionError(Exception): pass
-class OverflowError(Exception): pass
 class FloatingPointError(Exception): pass
+class IndexError(Exception): pass
+class IOError(Exception): pass
+class KeyboardInterrupt(Exception): pass
+class KeyError(Exception): pass
 class MemoryError(Exception): pass
 class NameError(Exception): pass
-class SystemExit(Exception): pass
+class NotImplementedError(Exception): pass
+class OSError(Exception): pass
+class OverflowError(Exception): pass
+class RuntimeError(Exception): pass
+class StopIteration(Exception): pass
+class SyntaxError(Exception): pass
 class SystemError(Exception): pass
+class SystemExit(Exception): pass
+class TypeError(Exception): pass
+class ValueError(Exception): pass
+class ZeroDivisionError(Exception): pass
 
 __exception = OSError('') # XXX remove 
 __exception.errno = 0
