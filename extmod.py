@@ -3,9 +3,7 @@
 Copyright 2005-2009 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 
 extmod.py: extension module support
-
 '''
-
 from shared import *
 import cpp
 

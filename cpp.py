@@ -9,17 +9,11 @@ output equivalent C++ code, using templates and virtuals to support data, parame
 class generateVisitor: inherits visitor pattern from compiler.visitor.ASTVisitor, to recursively generate C++ code for each syntactical Python construct. the constraint graph, with inferred types, is first 'merged' back to program dimensions (getgx().merged_inh). 
 
 typesetreprnew(): returns the C++ (or annotation) type declaration, taking into consideration detected data/parametric polymorphism (via analyze_virtuals() and template_detect()).
-
 '''
-
-from compiler import *
-from compiler.ast import *
-from compiler.visitor import *
+import textwrap, string
 
 from shared import *
 import extmod
-
-import textwrap, string
 
 # --- code generation visitor; use type information
 class generateVisitor(ASTVisitor):

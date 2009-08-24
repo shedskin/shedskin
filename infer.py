@@ -28,13 +28,7 @@ iterative_dataflow_analysis():
     -quit if no further imprecision points (ifa() did not find anything)
     -otherwise, restore the constraint graph to its original state and restart
     -all the while maintaining types for each allocation point in getgx().alloc_info
-
 '''
-
-from compiler import *
-from compiler.ast import *
-from compiler.visitor import *
-
 from shared import *
 
 def class_copy(cl, dcpa):

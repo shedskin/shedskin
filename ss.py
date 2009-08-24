@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 '''
 *** SHED SKIN Python-to-C++ Compiler ***
 Copyright 2005-2009 Mark Dufour; License GNU GPL version 3 (See LICENSE)
@@ -18,21 +17,14 @@ main(): parse command-line options, call analysis and annotate
 
 TODO: move generate_code() to cpp.py 
       move and revisit confusion misc()
-
 '''
-
-from compiler import *
-from compiler.ast import *
-from compiler.visitor import *
-import gc
+import gc, sys, string, copy, getopt, os.path, textwrap, traceback
+from distutils import sysconfig
 
 from shared import *
 from graph import *
 from cpp import *
 from infer import *
-
-import sys, string, copy, getopt, os.path, textwrap, traceback
-from distutils import sysconfig
 
 
 def analysis(source, testing=False):

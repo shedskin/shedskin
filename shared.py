@@ -1,8 +1,8 @@
+import os, sys, traceback
 from compiler import *
 from compiler.ast import *
 from compiler.visitor import *
 
-import os, sys, traceback
 
 # --- global variables gx, mv
 
