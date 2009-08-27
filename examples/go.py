@@ -1,7 +1,8 @@
 import random, math
 
 SIZE = 9
-GAMES = 100000
+GAMES = 10000
+KOMI = 7.5
 WHITE, BLACK, EMPTY = 0, 1, 2
 SHOW = {EMPTY: '.', WHITE: 'o', BLACK: 'x'}
 PASS = -1
@@ -54,6 +55,10 @@ class Square:
     def remove(self, reference):
         self.color = EMPTY
         self.board.emptyset.add(self.pos)
+        if self.color == BLACK:
+            self.board.black_dead += 1
+        else:
+            self.board.white_dead += 1
         for neighbour in self.neighbours:
             if neighbour.color != EMPTY:
                 neighbour_ref = neighbour.find()
@@ -81,7 +86,7 @@ class EmptySet:
         while choices:  
             i = int(random.random()*choices)
             pos = self.empties[i]
-            if self.board.useful_move(pos):
+            if self.board.useful(pos):
                 return pos
             choices -= 1
             self.set(i, self.empties[choices])
@@ -114,11 +119,24 @@ class Board:
         self.color = BLACK
         self.finished = False
         self.lastmove = -2
+        self.history = []
+        self.white_dead = 0
+        self.black_dead = 0
+
+    def move(self, pos):
+        square = self.squares[pos]
+        if pos != PASS:
+            square.move(self.color)
+            self.emptyset.remove(square.pos)
+        elif self.lastmove == PASS:
+            self.finished = True
+        self.color = 1 - self.color
+        self.lastmove = pos
 
     def random_move(self):
         return self.emptyset.random_choice()
 
-    def useful_move(self, pos): 
+    def useful(self, pos): 
         global TIMESTAMP
         TIMESTAMP += 1
         square = self.squares[pos]
@@ -144,18 +162,30 @@ class Board:
         strong_opps = opps-weak_opps
         return weak_opps or (strong_neighs and (strong_opps or weak_neighs))
 
-    def play_move(self, pos):
-        square = self.squares[pos]
-        if pos != PASS:
-            self.move(square)
-        elif self.lastmove == PASS:
-            self.finished = True
-        self.color = 1 - self.color
-        self.lastmove = pos
+    def useful_moves(self):
+        return [pos for pos in self.emptyset.empties if self.useful(pos)]
 
-    def move(self, square):
-        square.move(self.color)
-        self.emptyset.remove(square.pos)
+    def replay(self, history):
+        for pos in history:
+            self.play_move(pos)
+
+    def score(self, color):
+        """ score according to chinese rules (area, instead of territory) """ 
+        if color == WHITE:
+            count = KOMI + self.black_dead
+        else:
+            count = self.white_dead
+        for square in self.squares:
+            if square.color == color:
+                count += 1
+            elif square.color == EMPTY:
+                surround = 0
+                for neighbour in square.neighbours:
+                    if neighbour.color == color:
+                        surround += 1
+                if surround == len(square.neighbours): 
+                    count += 1
+        return count
 
     def __repr__(self):
         result = []
@@ -164,53 +194,141 @@ class Board:
             result.append(''.join([SHOW[square.color]+' ' for square in self.squares[start:start+SIZE]]))
         return '\n'.join(result)
 
-def check(board):
-   for square in board.squares:
-       if square.color == EMPTY:
-           continue
+class UCTNode:
+    def __init__(self):
+        self.bestchild = None
+        self.pos = -1
+        self.wins = 0
+        self.losses = 0
+        self.pos_child = [None for x in range(SIZE*SIZE)]
+        self.parent = None
 
-       members1 = set([square])
-       changed = True
-       while changed:
-           changed = False
-           for member in members1.copy():
-               for neighbour in member.neighbours:
-                   if neighbour.color == square.color and neighbour not in members1:
-                       changed = True
-                       members1.add(neighbour)
-       ledges1 = 0
-       for member in members1:
-           for neighbour in member.neighbours:
-               if neighbour.color == EMPTY:
-                   ledges1 += 1
+    def play(self, board, options=None):
+        """ uct tree search """
+        color = board.color
+        node = self
+        path = [node]
+        while True:
+            pos = node.select(board)
+            if pos == PASS:
+                break
+            board.move(pos)
 
-   #    print 'members1', square, members1
-   #    print 'ledges1', ledges1
+            child = node.pos_child[pos]
+            if not child:
+                child = node.pos_child[pos] = UCTNode()
+                child.unexplored = board.useful_moves()
+                child.pos = pos
+                child.parent = node
+                path.append(child)
+                break
 
-       members2 = set()
-       root = square.find()
-       for square2 in board.squares:
-           if square2.color != EMPTY and square2.find() == root:
-               members2.add(square2)
+            path.append(child)
+            node = child
 
-       ledges2 = root.ledges
-   #    print 'members2', square, members1
-   #    print 'ledges2', ledges2
+        self.random_playout(board)
+        self.update_path(board, color, path)
 
-       assert ledges1 == ledges2
-       assert members1 == members2
+    def select(self, board):
+        """ select move; unexplored children first, then according to uct value """
+        if self.unexplored:
+            i = random.randrange(len(self.unexplored))
+            pos = self.unexplored[i]
+            self.unexplored[i] = self.unexplored[len(self.unexplored)-1]
+            self.unexplored.pop()
+            return pos
+        elif self.bestchild:
+            return self.bestchild.pos
+        else:
+            return PASS
 
-   empties1 = set(board.emptyset.empties)
-#    print 'empties1', empties1
+    def random_playout(self, board):
+        """ random play until both players pass """
+        for x in range(1000): # XXX while not self.finished?
+            if board.finished:
+                break
+#            print 'checking'
+#            for i, pos in enumerate(board.empties):
+#                if board.empty_pos[pos] != i:
+#                    print 'FOUT %d staat op %d, maar volgens empty_pos op %d' % (pos, i, board.empty_pos[pos])
+#                    import sys
+#                    sys.exit()
+            pos = board.random_move()
+            board.move(pos)
 
-   empties2 = set()
-   for square in board.squares:
-       if square.color == EMPTY:
-           empties2.add(square.pos)
+    def update_path(self, board, color, path):
+        """ update win/loss count along path """
+        global treedepth
+        treedepth = max(treedepth, len(path))
+        wins = board.score(BLACK) >= board.score(WHITE)
+        for node in path:
+            color = 1-color
+            if wins == (color == BLACK):
+                node.wins += 1
+            else:
+                node.losses += 1
+            if node.parent:
+                node.parent.bestchild = node.parent.best_child()
 
-#    print 'empties2', empties2
+    def score(self):
+        winrate = self.wins/float(self.wins+self.losses)
+        parentvisits = self.parent.wins+self.parent.losses
+        if not parentvisits:
+            return winrate
+        nodevisits = self.wins+self.losses
+        return winrate + math.sqrt((math.log(parentvisits))/(5*nodevisits))
 
-   assert empties1 == empties2
+    def best_child(self):
+        maxscore = -1
+        maxchild = None
+        for child in self.pos_child:
+            if child and child.score() > maxscore:
+                maxchild = child
+                maxscore = child.score()
+        return maxchild
+
+    def best_visited(self):
+        maxvisits = -1
+        maxchild = None
+        for child in self.pos_child:
+#            if child:
+#                print to_xy(child.pos), child.wins, child.losses, child.score()
+            if child and (child.wins+child.losses) > maxvisits:
+                maxvisits, maxchild = (child.wins+child.losses), child
+        return maxchild
+
+def user_move(board):
+    while True:
+        text = raw_input('?').strip()
+        if text == 'p':
+            return PASS
+        if text == 'q':
+            raise EOFError
+        try:
+            x, y = [int(i) for i in text.split()]
+        except ValueError:
+            continue
+        if not (0 <= x < SIZE and 0 <= y < SIZE):
+            continue
+        pos = to_pos(x, y)
+        if board.useful(pos): 
+            return pos
+
+def computer_move(board):
+    global treedepth
+    treedepth = 0
+    pos = board.random_move()
+    if pos == PASS:
+        return PASS
+    history = board.history[:]
+    tree = UCTNode()
+    tree.unexplored = board.useful_moves()
+    for game in range(GAMES):
+        node = tree
+        nboard = Board()
+        nboard.replay(history)
+        node.play(nboard)
+    return tree.best_visited().pos
 
 def main():
     random.seed(1)
@@ -233,6 +351,41 @@ def main():
 #            print
 #            check(board)
     print 'MOVES', MOVES
+
+def versus_cpu():
+    board = Board()
+    while True:
+        if board.lastmove != PASS:
+            print board
+        print 'thinking..'
+        pos = computer_move(board)
+        print 'tree depth:', treedepth
+        if pos == PASS:
+            print 'I pass.'
+        else:
+            print 'I move here:', to_xy(pos)
+        board.move(pos)
+        if board.finished:
+            break
+        if board.lastmove != PASS:
+            print board
+        pos = user_move(board)
+        board.move(pos)
+        if board.finished:
+            break
+    print 'WHITE:', board.score(WHITE)
+    print 'BLACK:', board.score(BLACK)
+
+#if False: # type model for extmod
+#    pgo([1], [1])
+#    UCTNode().play(None, [1])
+
+if __name__ == '__main__':
+    random.seed(1)
+    try:
+        versus_cpu()
+    except EOFError:
+        pass
 
 if __name__ == '__main__':
     main()
