@@ -1,7 +1,7 @@
 import random, math
 
 SIZE = 9
-GAMES = 10
+GAMES = 10000
 KOMI = 7.5
 WHITE, BLACK, EMPTY = 0, 1, 2
 SHOW = {EMPTY: '.', WHITE: 'o', BLACK: 'x'}
@@ -312,11 +312,6 @@ def computer_move(board):
         node.play(nboard)
     return tree.best_visited().pos
 
-def pgo(history):
-    board = Board()
-    board.replay(history)
-    return computer_move(board)
-
 def versus_cpu():
     board = Board()
     while True:
@@ -339,9 +334,6 @@ def versus_cpu():
             break
     print 'WHITE:', board.score(WHITE)
     print 'BLACK:', board.score(BLACK)
-
-if False: # type model for extmod
-    pgo([1])
 
 if __name__ == '__main__':
     random.seed(1)

@@ -2,7 +2,6 @@
 
 import sys
 import gtp
-import pgo
 import go
 
 class Engine:
@@ -24,22 +23,19 @@ class Engine:
     def play(self, color, vertex):
         vertex = gtp.parse_vertex(vertex)
         if vertex is None:
-            self.board.play_move(go.PASS)
+            self.board.move(go.PASS)
         else:
             i, j = vertex
             pos = go.to_pos(i, j)
-            self.board.play_move(pos)
+            self.board.move(pos)
 
 #    def undo(self):
 #        pass
 
     def genmove(self, color):
-        options = [pos for pos in self.board.empties if self.board.legal_move(pos) and self.board.useful_move(pos)]
-        if not options:
-            return 'pass'
-        pos = pgo.computer_move(self.board, options)
-        self.board.play_move(pos)
-        x,y = go.to_xy(pos)
+        pos = go.computer_move(self.board)
+        self.board.move(pos)
+        x, y = go.to_xy(pos)
         return gtp.make_vertex(x, y)
 
 #    def showboard(self):
