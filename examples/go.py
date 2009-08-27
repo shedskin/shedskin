@@ -1,7 +1,7 @@
 import random, math
 
 SIZE = 9
-GAMES = 10000
+GAMES = 10
 KOMI = 7.5
 WHITE, BLACK, EMPTY = 0, 1, 2
 SHOW = {EMPTY: '.', WHITE: 'o', BLACK: 'x'}
@@ -244,8 +244,6 @@ class UCTNode:
 
     def update_path(self, board, color, path):
         """ update win/loss count along path """
-        global treedepth
-        treedepth = max(treedepth, len(path))
         wins = board.score(BLACK) >= board.score(WHITE)
         for node in path:
             color = 1-color
@@ -301,8 +299,6 @@ def user_move(board):
             return pos
 
 def computer_move(board):
-    global treedepth
-    treedepth = 0
     pos = board.random_move()
     if pos == PASS:
         return PASS
@@ -316,6 +312,11 @@ def computer_move(board):
         node.play(nboard)
     return tree.best_visited().pos
 
+def pgo(history):
+    board = Board()
+    board.replay(history)
+    return computer_move(board)
+
 def versus_cpu():
     board = Board()
     while True:
@@ -323,7 +324,6 @@ def versus_cpu():
             print board
         print 'thinking..'
         pos = computer_move(board)
-        print 'tree depth:', treedepth
         if pos == PASS:
             print 'I pass.'
         else:
@@ -339,6 +339,9 @@ def versus_cpu():
             break
     print 'WHITE:', board.score(WHITE)
     print 'BLACK:', board.score(BLACK)
+
+if False: # type model for extmod
+    pgo([1])
 
 if __name__ == '__main__':
     random.seed(1)
