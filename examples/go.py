@@ -6,7 +6,6 @@ KOMI = 7.5
 WHITE, BLACK, EMPTY = 0, 1, 2
 SHOW = {EMPTY: '.', WHITE: 'o', BLACK: 'x'}
 PASS = -1
-MOVES = 0
 TIMESTAMP = 0
 
 def to_pos(x,y):
@@ -32,8 +31,6 @@ class Square:
                 self.neighbours.append(self.board.squares[to_pos(newx, newy)])
 
     def move(self, color):
-        global MOVES
-        MOVES += 1
         self.color = color
         self.reference = self
         self.ledges = 0
@@ -72,9 +69,6 @@ class Square:
             self.reference = self.reference.find()
         return self.reference
 
-    def __repr__(self):
-        return repr(to_xy(self.pos))
- 
 class EmptySet:
     def __init__(self, board):
         self.board = board
@@ -132,6 +126,7 @@ class Board:
             self.finished = True
         self.color = 1 - self.color
         self.lastmove = pos
+        self.history.append(pos)
 
     def random_move(self):
         return self.emptyset.random_choice()
@@ -167,7 +162,7 @@ class Board:
 
     def replay(self, history):
         for pos in history:
-            self.play_move(pos)
+            self.move(pos)
 
     def score(self, color):
         """ score according to chinese rules (area, instead of territory) """ 
@@ -203,7 +198,7 @@ class UCTNode:
         self.pos_child = [None for x in range(SIZE*SIZE)]
         self.parent = None
 
-    def play(self, board, options=None):
+    def play(self, board):
         """ uct tree search """
         color = board.color
         node = self
@@ -247,12 +242,6 @@ class UCTNode:
         for x in range(1000): # XXX while not self.finished?
             if board.finished:
                 break
-#            print 'checking'
-#            for i, pos in enumerate(board.empties):
-#                if board.empty_pos[pos] != i:
-#                    print 'FOUT %d staat op %d, maar volgens empty_pos op %d' % (pos, i, board.empty_pos[pos])
-#                    import sys
-#                    sys.exit()
             pos = board.random_move()
             board.move(pos)
 
@@ -330,28 +319,6 @@ def computer_move(board):
         node.play(nboard)
     return tree.best_visited().pos
 
-def main():
-    random.seed(1)
-    board = Board()
-    for game in range(GAMES):
-#        print 'GAME'
-        board.reset()
-        for x in range(1000): 
-            if board.finished:
-                break
-            pos = board.random_move()
-#            print 'TURN', SHOW[board.color]
-#            if pos == PASS:
-#                print 'PASS'
-#            else:
-#                print 'SELECT', to_xy(pos)
-            board.play_move(pos)
-#            print x
-#            print board
-#            print
-#            check(board)
-    print 'MOVES', MOVES
-
 def versus_cpu():
     board = Board()
     while True:
@@ -376,16 +343,9 @@ def versus_cpu():
     print 'WHITE:', board.score(WHITE)
     print 'BLACK:', board.score(BLACK)
 
-#if False: # type model for extmod
-#    pgo([1], [1])
-#    UCTNode().play(None, [1])
-
 if __name__ == '__main__':
     random.seed(1)
     try:
         versus_cpu()
     except EOFError:
         pass
-
-if __name__ == '__main__':
-    main()
