@@ -1311,7 +1311,7 @@ template<class T> inline int len(list<T> *x) { return x->units.size(); } /* XXX 
 
 inline int ___bool() { return 0; }
 template<class T> inline int ___bool(T x) { return (x && x->__nonzero__()); }
-template<> inline int ___bool(int x) { return x; }
+template<> inline int ___bool(int x) { return x!=0; }
 template<> inline int ___bool(bool x) { return (int)x; }
 template<> inline int ___bool(double x) { return x!=0; }
 
