@@ -208,7 +208,6 @@ class UCTNode:
             if pos == PASS:
                 break
             board.move(pos)
-
             child = node.pos_child[pos]
             if not child:
                 child = node.pos_child[pos] = UCTNode()
@@ -217,10 +216,8 @@ class UCTNode:
                 child.parent = node
                 path.append(child)
                 break
-
             path.append(child)
             node = child
-
         self.random_playout(board)
         self.update_path(board, color, path)
 
