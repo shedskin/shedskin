@@ -236,7 +236,7 @@ class UCTNode:
 
     def random_playout(self, board):
         """ random play until both players pass """
-        for x in range(1000): # XXX while not self.finished?
+        for x in range(241): # XXX while not self.finished?
             if board.finished:
                 break
             pos = board.random_move()
