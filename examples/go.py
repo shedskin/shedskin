@@ -1,7 +1,7 @@
 import random, math
 
 SIZE = 9
-GAMES = 10000
+GAMES = 100000
 KOMI = 7.5
 WHITE, BLACK, EMPTY = 0, 1, 2
 SHOW = {EMPTY: '.', WHITE: 'o', BLACK: 'x'}
@@ -302,13 +302,13 @@ def computer_move(board):
     pos = board.random_move()
     if pos == PASS:
         return PASS
-    history = board.history[:]
     tree = UCTNode()
     tree.unexplored = board.useful_moves()
+    nboard = Board()
     for game in range(GAMES):
         node = tree
-        nboard = Board()
-        nboard.replay(history)
+        nboard.reset()
+        nboard.replay(board.history)
         node.play(nboard)
     return tree.best_visited().pos
 
