@@ -53,9 +53,9 @@ class Square:
                     if neighbour_ref.ledges == 0:
                         neighbour.remove(neighbour_ref)
 
-    def remove(self, reference, empty=True):
+    def remove(self, reference, update=True):
         self.board.update(self, self.color())
-        if empty:
+        if update:
             self.board.emptyset.add(self.pos)
             if self.color() == BLACK:
                 self.board.black_dead += 1
@@ -65,12 +65,12 @@ class Square:
             if neighbour.color() != EMPTY:
                 neighbour_ref = neighbour.find()
                 if neighbour_ref == reference:
-                    neighbour.remove(reference, empty)
+                    neighbour.remove(reference, update)
                 else:
-                    if empty:
+                    if update:
                         neighbour_ref.ledges += 1
 
-    def find(self): 
+    def find(self): # XXX don't always update
         reference = self.reference
         while reference != reference.reference:
             reference = reference.reference
@@ -120,6 +120,10 @@ class ZobristState:
 class ZobristStack:
     def __init__(self):
         self.stack = [ZobristState() for z in range(MAXMOVES)]
+        self.reset()
+
+    def reset(self):
+        self.stack[0] = ZobristState()
         self.size = 0
 
 class Board:
@@ -132,9 +136,9 @@ class Board:
 
     def reset(self):
         self.emptyset = EmptySet(self)
-        self.state = ZobristState() #[0 for x in range(((SIZE*SIZE)>>4)+1)]
+        self.zstack.reset()
+        self.state = self.zstack.stack[self.zstack.size]
         self.backup_state = ZobristState()
-        self.zstack.size = 0
         self.color = BLACK
         self.finished = False
         self.lastmove = -2
@@ -192,7 +196,7 @@ class Board:
                     weak_neighs += 1
                 else:
                     weak_opps += 1
-                    neighbour_ref.remove(neighbour_ref, empty=False)
+                    neighbour_ref.remove(neighbour_ref, update=False)
         strong_neighs = neighs-weak_neighs
         strong_opps = opps-weak_opps
         self.revert()
