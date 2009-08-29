@@ -196,6 +196,8 @@ class Board:
         for neighbour in square.neighbours:
             neighcolor = neighbour.color()
             if neighcolor == EMPTY:
+                if not square.used:
+                    return True
                 empties = True
                 continue
             neighbour_ref = neighbour.find()
