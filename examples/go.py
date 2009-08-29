@@ -72,6 +72,9 @@ class Square:
             self.reference = self.reference.find()
         return self.reference
 
+    def __repr__(self):
+        return repr(to_xy(self.pos))
+
 class EmptySet:
     def __init__(self, board):
         self.board = board
@@ -190,6 +193,42 @@ class Board:
                     count += 1
         return count
 
+    def check(self):
+       for square in self.squares:
+           if square.color() == EMPTY:
+               continue
+
+           members1 = set([square])
+           changed = True
+           while changed:
+               changed = False
+               for member in members1.copy():
+                   for neighbour in member.neighbours:
+                       if neighbour.color() == square.color and neighbour not in members1:
+                           changed = True
+                           members1.add(neighbour)
+           ledges1 = 0
+           for member in members1:
+               for neighbour in member.neighbours:
+                   if neighbour.color() == EMPTY:
+                       ledges1 += 1
+
+           print 'members1', square, members1
+           print 'ledges1', ledges1
+
+           members2 = set()
+           root = square.find()
+           for square2 in self.squares:
+               if square2.color() != EMPTY and square2.find() == root:
+                   members2.add(square2)
+
+           ledges2 = root.ledges
+           print 'members2', square, members1
+           print 'ledges2', ledges2
+
+           assert ledges1 == ledges2
+           assert members1 == members2
+
     def __repr__(self):
         result = []
         for y in range(SIZE):
@@ -245,6 +284,7 @@ class UCTNode:
     def random_playout(self, board):
         """ random play until both players pass """
         for x in range(241): # XXX while not self.finished?
+            #board.check()
             if board.finished:
                 break
             pos = board.random_move()
