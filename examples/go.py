@@ -55,10 +55,11 @@ class Square:
         self.board.zstack.push()
 
     def remove(self, reference, update=True):
-        self.board.update(self, self.color())
+        color = self.color()
+        self.board.update(self, color)
         if update:
             self.board.emptyset.add(self.pos)
-            if self.color() == BLACK:
+            if color == BLACK:
                 self.board.black_dead += 1
             else:
                 self.board.white_dead += 1
