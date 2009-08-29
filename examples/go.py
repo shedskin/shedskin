@@ -1,7 +1,7 @@
 import random, math
 
 SIZE = 9
-GAMES = 100000
+GAMES = 100
 KOMI = 7.5
 EMPTY, WHITE, BLACK = 0, 1, 2
 SHOW = {EMPTY: '.', WHITE: 'o', BLACK: 'x'}
@@ -204,7 +204,7 @@ class Board:
                changed = False
                for member in members1.copy():
                    for neighbour in member.neighbours:
-                       if neighbour.color() == square.color and neighbour not in members1:
+                       if neighbour.color() == square.color() and neighbour not in members1:
                            changed = True
                            members1.add(neighbour)
            ledges1 = 0
@@ -228,6 +228,17 @@ class Board:
 
            assert ledges1 == ledges2
            assert members1 == members2
+
+           empties1 = set(self.emptyset.empties)
+
+           empties2 = set()
+           for square in self.squares:
+               if square.color() == EMPTY:
+                   empties2.add(square.pos)
+
+           print 'empties1', empties1
+           print 'empties2', empties2
+           assert empties1 == empties2
 
     def __repr__(self):
         result = []
@@ -284,10 +295,12 @@ class UCTNode:
     def random_playout(self, board):
         """ random play until both players pass """
         for x in range(241): # XXX while not self.finished?
-            #board.check()
+#            print board
+#            board.check()
             if board.finished:
                 break
             pos = board.random_move()
+#            print 'pos', to_xy(pos)
             board.move(pos)
 
     def update_path(self, board, color, path):
