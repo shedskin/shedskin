@@ -198,7 +198,8 @@ class Board:
         square = self.squares[pos]
         empties = opps = weak_opps = neighs = weak_neighs = 0
         for neighbour in square.neighbours:
-            if neighbour.color() == EMPTY:
+            neighcolor = neighbour.color
+            if neighcolor == EMPTY:
                 empties = True
                 continue
             neighbour_ref = neighbour.find()
@@ -211,7 +212,7 @@ class Board:
                 neighbour_ref.temp_ledges = neighbour_ref.ledges
             neighbour_ref.temp_ledges -= 1
             if neighbour_ref.temp_ledges == 0:
-                if neighbour.color() == self.color:  
+                if neighcolor == self.color:  
                     weak_neighs += 1
                 else:
                     weak_opps += 1
