@@ -129,7 +129,7 @@ class ZobristState:
 class ZobristStack:
     def __init__(self, board):
         self.board = board
-        self.stack = [ZobristState() for z in range(MAXMOVES)]
+        self.stack = [ZobristState() for z in range(2*MAXMOVES)]
         self.reset()
 
     def reset(self):
@@ -222,7 +222,6 @@ class Board:
             self.zstack.revert()
             return False
         self.update(square, self.color)
-        dupe = False
         dupe = self.zstack.dupe()
         self.zstack.revert()
         return not dupe 
