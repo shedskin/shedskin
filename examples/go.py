@@ -220,7 +220,8 @@ class Board:
         strong_neighs = neighs-weak_neighs
         strong_opps = opps-weak_opps
         if not (empties or weak_opps or (strong_neighs and (strong_opps or weak_neighs))):
-            self.zstack.revert()
+            if weak_opps:
+                self.zstack.revert()
             return False
         self.update(square, self.color)
         dupe = self.zstack.dupe()
