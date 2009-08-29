@@ -8,6 +8,7 @@ SHOW = {EMPTY: '.', WHITE: 'o', BLACK: 'x'}
 PASS = -1
 TIMESTAMP = 0
 MOVES = 0
+MAXMOVES = 241
 
 def to_pos(x,y):
     return y * SIZE + x
@@ -23,7 +24,7 @@ class Square:
         self.timestamp = TIMESTAMP
 
     def color(self):
-        return (self.board.state[self.pos >> 4] >> ((self.pos & 0xf) << 1)) & 0x3
+        return (self.board.state.state[self.pos >> 4] >> ((self.pos & 0xf) << 1)) & 0x3
 
     def set_neighbours(self): 
         x, y = self.pos % SIZE, self.pos / SIZE;
@@ -52,25 +53,32 @@ class Square:
                     if neighbour_ref.ledges == 0:
                         neighbour.remove(neighbour_ref)
 
-    def remove(self, reference):
+    def remove(self, reference, empty=True):
         self.board.update(self, self.color())
-        self.board.emptyset.add(self.pos)
-        if self.color() == BLACK:
-            self.board.black_dead += 1
-        else:
-            self.board.white_dead += 1
+        if empty:
+            self.board.emptyset.add(self.pos)
+            if self.color() == BLACK:
+                self.board.black_dead += 1
+            else:
+                self.board.white_dead += 1
         for neighbour in self.neighbours:
             if neighbour.color() != EMPTY:
                 neighbour_ref = neighbour.find()
                 if neighbour_ref == reference:
-                    neighbour.remove(reference)
+                    neighbour.remove(reference, empty)
                 else:
-                    neighbour_ref.ledges += 1
+                    if empty:
+                        neighbour_ref.ledges += 1
 
     def find(self): 
-        if self.reference.pos != self.pos:
-            self.reference = self.reference.find()
-        return self.reference
+        reference = self.reference
+        while reference != reference.reference:
+            reference = reference.reference
+        return reference
+
+#        if self.reference.pos != self.pos:
+#            self.reference = self.reference.find()
+#        return self.reference
 
     def __repr__(self):
         return repr(to_xy(self.pos))
@@ -105,22 +113,40 @@ class EmptySet:
         self.empties[i] = pos
         self.empty_pos[pos] = i
 
+class ZobristState:
+    def __init__(self):
+        self.state = [0 for x in range(((SIZE*SIZE)>>4)+1)]
+
+class ZobristStack:
+    def __init__(self):
+        self.stack = [ZobristState() for z in range(MAXMOVES)]
+        self.size = 0
+
 class Board:
     def __init__(self):
         self.squares = [Square(self, pos) for pos in range(SIZE*SIZE)]
+        self.zstack = ZobristStack()
         for square in self.squares:
             square.set_neighbours()
         self.reset()
 
     def reset(self):
         self.emptyset = EmptySet(self)
-        self.state = [0 for x in range(((SIZE*SIZE)>>4)+1)]
+        self.state = ZobristState() #[0 for x in range(((SIZE*SIZE)>>4)+1)]
+        self.backup_state = ZobristState()
+        self.zstack.size = 0
         self.color = BLACK
         self.finished = False
         self.lastmove = -2
         self.history = []
         self.white_dead = 0
         self.black_dead = 0
+
+    def backup(self):
+        self.backup_state.state[:] = self.state.state
+ 
+    def revert(self):
+        self.state.state[:] = self.backup_state.state
 
     def move(self, pos):
         global MOVES
@@ -137,7 +163,7 @@ class Board:
         self.history.append(pos)
 
     def update(self, square, color):
-        self.state[square.pos >> 4] ^= color << ((square.pos & 0xf) << 1)
+        self.state.state[square.pos >> 4] ^= color << ((square.pos & 0xf) << 1)
 
     def random_move(self):
         return self.emptyset.random_choice()
@@ -146,10 +172,12 @@ class Board:
         global TIMESTAMP
         TIMESTAMP += 1
         square = self.squares[pos]
-        opps = weak_opps = neighs = weak_neighs = 0
+        self.backup()
+        empties = opps = weak_opps = neighs = weak_neighs = 0
         for neighbour in square.neighbours:
             if neighbour.color() == EMPTY:
-                return True
+                empties = True
+                continue
             neighbour_ref = neighbour.find()
             if neighbour_ref.timestamp != TIMESTAMP:
                 if neighbour.color() == self.color:  
@@ -164,9 +192,11 @@ class Board:
                     weak_neighs += 1
                 else:
                     weak_opps += 1
+                    neighbour_ref.remove(neighbour_ref, empty=False)
         strong_neighs = neighs-weak_neighs
         strong_opps = opps-weak_opps
-        return weak_opps or (strong_neighs and (strong_opps or weak_neighs))
+        self.revert()
+        return empties or weak_opps or (strong_neighs and (strong_opps or weak_neighs))
 
     def useful_moves(self):
         return [pos for pos in self.emptyset.empties if self.useful(pos)]
@@ -213,21 +243,22 @@ class Board:
                    if neighbour.color() == EMPTY:
                        ledges1 += 1
 
-           print 'members1', square, members1
-           print 'ledges1', ledges1
+           root = square.find()
+
+           #print 'members1', square, root, members1
+           #print 'ledges1', square, ledges1
 
            members2 = set()
-           root = square.find()
            for square2 in self.squares:
                if square2.color() != EMPTY and square2.find() == root:
                    members2.add(square2)
 
            ledges2 = root.ledges
-           print 'members2', square, members1
-           print 'ledges2', ledges2
+           #print 'members2', square, root, members1
+           #print 'ledges2', square, ledges2
 
-           assert ledges1 == ledges2
            assert members1 == members2
+           assert ledges1 == ledges2
 
            empties1 = set(self.emptyset.empties)
 
@@ -236,8 +267,8 @@ class Board:
                if square.color() == EMPTY:
                    empties2.add(square.pos)
 
-           print 'empties1', empties1
-           print 'empties2', empties2
+#           print 'empties1', sorted([to_xy(pos) for pos in empties1])
+#           print 'empties2', sorted([to_xy(pos) for pos in empties2])
            assert empties1 == empties2
 
     def __repr__(self):
@@ -294,13 +325,13 @@ class UCTNode:
 
     def random_playout(self, board):
         """ random play until both players pass """
-        for x in range(241): # XXX while not self.finished?
-#            print board
-#            board.check()
+        for x in range(MAXMOVES): # XXX while not self.finished?
+            print board
+            board.check()
             if board.finished:
                 break
             pos = board.random_move()
-#            print 'pos', to_xy(pos)
+            #print 'pos', to_xy(pos)
             board.move(pos)
 
     def update_path(self, board, color, path):
