@@ -200,7 +200,7 @@ class Board:
                 continue
             neighbour_ref = neighbour.find()
             if neighbour_ref.timestamp != TIMESTAMP:
-                if neighbour.color() == self.color:  
+                if neighcolor == self.color:  
                     neighs += 1
                 else: 
                     opps += 1
@@ -236,15 +236,15 @@ class Board:
             self.move(pos)
 
     def score(self, color):
-        """ score according to chinese rules (area, instead of territory) """ 
         if color == WHITE:
             count = KOMI + self.black_dead
         else:
             count = self.white_dead
         for square in self.squares:
-            if square.color() == color:
+            squarecolor = square.color()
+            if squarecolor == color:
                 count += 1
-            elif square.color() == EMPTY:
+            elif squarecolor == EMPTY:
                 surround = 0
                 for neighbour in square.neighbours:
                     if neighbour.color() == color:
