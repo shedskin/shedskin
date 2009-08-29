@@ -8,7 +8,6 @@ SHOW = {EMPTY: '.', WHITE: 'o', BLACK: 'x'}
 PASS = -1
 MAXMOVES = SIZE*SIZE*3
 TIMESTAMP = 0
-MOVES = 0
 
 def to_pos(x,y):
     return y * SIZE + x
@@ -40,11 +39,12 @@ class Square:
         self.reference = self
         self.ledges = 0
         for neighbour in self.neighbours:
-            if neighbour.color() == EMPTY: 
+            neighcolor = neighbour.color()
+            if neighcolor == EMPTY: 
                 self.ledges += 1
             else:
                 neighbour_ref = neighbour.find()
-                if neighbour.color() == color:
+                if neighcolor == color:
                     if neighbour_ref.reference != self:
                         self.ledges += neighbour_ref.ledges 
                         neighbour_ref.reference = self
@@ -73,17 +73,11 @@ class Square:
                     if update:
                         neighbour_ref.ledges += 1
 
-    def find(self): # XXX don't always update
+    def find(self): 
         reference = self
         while reference.pos != reference.reference.pos:
             reference = reference.reference
         return reference
-#        if self.reference.pos != self.pos:
-#            self.reference = self.reference.find()
-#        return self.reference
-
-    def __repr__(self):
-        return repr(to_xy(self.pos))
 
 class EmptySet:
     def __init__(self, board):
@@ -177,8 +171,6 @@ class Board:
         self.black_dead = 0
 
     def move(self, pos):
-        global MOVES
-        MOVES += 1
         square = self.squares[pos]
         if pos != PASS:
             square.move(self.color)
@@ -261,54 +253,6 @@ class Board:
                     count += 1
         return count
 
-    def check(self):
-       for square in self.squares:
-           if square.color() == EMPTY:
-               continue
-
-           members1 = set([square])
-           changed = True
-           while changed:
-               changed = False
-               for member in members1.copy():
-                   for neighbour in member.neighbours:
-                       if neighbour.color() == square.color() and neighbour not in members1:
-                           changed = True
-                           members1.add(neighbour)
-           ledges1 = 0
-           for member in members1:
-               for neighbour in member.neighbours:
-                   if neighbour.color() == EMPTY:
-                       ledges1 += 1
-
-           root = square.find()
-
-           #print 'members1', square, root, members1
-           #print 'ledges1', square, ledges1
-
-           members2 = set()
-           for square2 in self.squares:
-               if square2.color() != EMPTY and square2.find() == root:
-                   members2.add(square2)
-
-           ledges2 = root.ledges
-           #print 'members2', square, root, members1
-           #print 'ledges2', square, ledges2
-
-           assert members1 == members2
-           assert ledges1 == ledges2
-
-           empties1 = set(self.emptyset.empties)
-
-           empties2 = set()
-           for square in self.squares:
-               if square.color() == EMPTY:
-                   empties2.add(square.pos)
-
-#           print 'empties1', sorted([to_xy(pos) for pos in empties1])
-#           print 'empties2', sorted([to_xy(pos) for pos in empties2])
-           assert empties1 == empties2
-
     def __repr__(self):
         result = []
         for y in range(SIZE):
@@ -364,13 +308,9 @@ class UCTNode:
     def random_playout(self, board):
         """ random play until both players pass """
         for x in range(MAXMOVES): # XXX while not self.finished?
-#            print board
-#            board.check()
             if board.finished:
                 break
-            pos = board.random_move()
-#            print 'pos', to_xy(pos)
-            board.move(pos)
+            board.move(board.random_move())
 
     def update_path(self, board, color, path):
         """ update win/loss count along path """
@@ -467,11 +407,9 @@ def versus_cpu():
     print 'WHITE:', board.score(WHITE)
     print 'BLACK:', board.score(BLACK)
 
-MOVES = 0
 if __name__ == '__main__':
     random.seed(1)
     try:
         versus_cpu()
     except EOFError:
         pass
-    print 'MOVES', MOVES
