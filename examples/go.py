@@ -198,7 +198,7 @@ class Board:
         square = self.squares[pos]
         empties = opps = weak_opps = neighs = weak_neighs = 0
         for neighbour in square.neighbours:
-            neighcolor = neighbour.color
+            neighcolor = neighbour.color()
             if neighcolor == EMPTY:
                 empties = True
                 continue
