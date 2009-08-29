@@ -1612,9 +1612,9 @@ template<class T> void list<T>::clear() {
 
 template<class T> int list<T>::__eq__(pyobj *p) {
    list<T> *b = (list<T> *)p;
-   if( b->__len__() != this->__len__()) return 0;
-
-   for(int i = 0; i < this->__len__(); i++)
+   int len = this->units.size();
+   if(b->units.size() != len) return 0;
+   for(int i = 0; i < len; i++)
        if(!__eq(this->units[i], b->units[i]))
            return 0;
    return 1;
