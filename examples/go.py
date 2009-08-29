@@ -3,10 +3,11 @@ import random, math
 SIZE = 9
 GAMES = 100000
 KOMI = 7.5
-WHITE, BLACK, EMPTY = 0, 1, 2
+EMPTY, WHITE, BLACK = 0, 1, 2
 SHOW = {EMPTY: '.', WHITE: 'o', BLACK: 'x'}
 PASS = -1
 TIMESTAMP = 0
+MOVES = 0
 
 def to_pos(x,y):
     return y * SIZE + x
@@ -19,8 +20,10 @@ class Square:
     def __init__(self, board, pos):
         self.board = board
         self.pos = pos
-        self.color = EMPTY
         self.timestamp = TIMESTAMP
+
+    def color(self):
+        return (self.board.state[self.pos >> 4] >> ((self.pos & 0xf) << 1)) & 0x3
 
     def set_neighbours(self): 
         x, y = self.pos % SIZE, self.pos / SIZE;
@@ -31,15 +34,15 @@ class Square:
                 self.neighbours.append(self.board.squares[to_pos(newx, newy)])
 
     def move(self, color):
-        self.color = color
+        self.board.update(self, color)
         self.reference = self
         self.ledges = 0
         for neighbour in self.neighbours:
-            if neighbour.color == EMPTY: 
+            if neighbour.color() == EMPTY: 
                 self.ledges += 1
             else:
                 neighbour_ref = neighbour.find()
-                if neighbour.color == color:
+                if neighbour.color() == color:
                     if neighbour_ref.reference != self:
                         self.ledges += neighbour_ref.ledges 
                         neighbour_ref.reference = self
@@ -50,14 +53,14 @@ class Square:
                         neighbour.remove(neighbour_ref)
 
     def remove(self, reference):
-        self.color = EMPTY
+        self.board.update(self, self.color())
         self.board.emptyset.add(self.pos)
-        if self.color == BLACK:
+        if self.color() == BLACK:
             self.board.black_dead += 1
         else:
             self.board.white_dead += 1
         for neighbour in self.neighbours:
-            if neighbour.color != EMPTY:
+            if neighbour.color() != EMPTY:
                 neighbour_ref = neighbour.find()
                 if neighbour_ref == reference:
                     neighbour.remove(reference)
@@ -107,9 +110,8 @@ class Board:
         self.reset()
 
     def reset(self):
-        for square in self.squares:
-            square.color = EMPTY
         self.emptyset = EmptySet(self)
+        self.state = [0 for x in range(((SIZE*SIZE)>>4)+1)]
         self.color = BLACK
         self.finished = False
         self.lastmove = -2
@@ -118,15 +120,21 @@ class Board:
         self.black_dead = 0
 
     def move(self, pos):
+        global MOVES
+        MOVES += 1
         square = self.squares[pos]
         if pos != PASS:
             square.move(self.color)
             self.emptyset.remove(square.pos)
         elif self.lastmove == PASS:
             self.finished = True
-        self.color = 1 - self.color
+        if self.color == BLACK: self.color = WHITE
+        else: self.color = BLACK
         self.lastmove = pos
         self.history.append(pos)
+
+    def update(self, square, color):
+        self.state[square.pos >> 4] ^= color << ((square.pos & 0xf) << 1)
 
     def random_move(self):
         return self.emptyset.random_choice()
@@ -137,11 +145,11 @@ class Board:
         square = self.squares[pos]
         opps = weak_opps = neighs = weak_neighs = 0
         for neighbour in square.neighbours:
-            if neighbour.color == EMPTY:
+            if neighbour.color() == EMPTY:
                 return True
             neighbour_ref = neighbour.find()
             if neighbour_ref.timestamp != TIMESTAMP:
-                if neighbour.color == self.color:  
+                if neighbour.color() == self.color:  
                     neighs += 1
                 else: 
                     opps += 1
@@ -149,7 +157,7 @@ class Board:
                 neighbour_ref.temp_ledges = neighbour_ref.ledges
             neighbour_ref.temp_ledges -= 1
             if neighbour_ref.temp_ledges == 0:
-                if neighbour.color == self.color:  
+                if neighbour.color() == self.color:  
                     weak_neighs += 1
                 else:
                     weak_opps += 1
@@ -171,12 +179,12 @@ class Board:
         else:
             count = self.white_dead
         for square in self.squares:
-            if square.color == color:
+            if square.color() == color:
                 count += 1
-            elif square.color == EMPTY:
+            elif square.color() == EMPTY:
                 surround = 0
                 for neighbour in square.neighbours:
-                    if neighbour.color == color:
+                    if neighbour.color() == color:
                         surround += 1
                 if surround == len(square.neighbours): 
                     count += 1
@@ -186,7 +194,7 @@ class Board:
         result = []
         for y in range(SIZE):
             start = to_pos(0, y)
-            result.append(''.join([SHOW[square.color]+' ' for square in self.squares[start:start+SIZE]]))
+            result.append(''.join([SHOW[square.color()]+' ' for square in self.squares[start:start+SIZE]]))
         return '\n'.join(result)
 
 class UCTNode:
@@ -246,7 +254,8 @@ class UCTNode:
         """ update win/loss count along path """
         wins = board.score(BLACK) >= board.score(WHITE)
         for node in path:
-            color = 1-color
+            if color == BLACK: color = WHITE
+            else: color = BLACK
             if wins == (color == BLACK):
                 node.wins += 1
             else:
@@ -335,9 +344,11 @@ def versus_cpu():
     print 'WHITE:', board.score(WHITE)
     print 'BLACK:', board.score(BLACK)
 
+MOVES = 0
 if __name__ == '__main__':
     random.seed(1)
     try:
         versus_cpu()
     except EOFError:
         pass
+    print 'MOVES', MOVES
