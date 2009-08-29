@@ -119,6 +119,12 @@ class ZobristState:
     def __init__(self):
         self.state = [0 for x in range(((SIZE*SIZE)>>4)+1)]
 
+    def __hash__(self):
+        return hash(tuple(self.state))
+
+    def __eq__(self, other):
+        return self.state == other.state
+
 class ZobristStack:
     def __init__(self, board):
         self.board = board
@@ -128,15 +134,22 @@ class ZobristStack:
     def reset(self):
         self.stack[0] = ZobristState()
         self.size = 1
-        self.copy()
+        self.revert()
+        self.states = set()
+        self.states.add(self.stack[0])
 
-    def copy(self):
+    def revert(self):
         self.stack[self.size].state[:] = self.stack[self.size-1].state
 
     def push(self):
+        self.states.add(self.stack[self.size])
         self.size += 1
-        self.copy()
+        self.revert()
         self.board.state = self.stack[self.size]
+
+    def dupe(self):
+        print 'huh', self.states, self.size
+        return self.stack[self.size] in self.states
 
 class Board:
     def __init__(self):
@@ -203,7 +216,12 @@ class Board:
                     neighbour_ref.remove(neighbour_ref, update=False)
         strong_neighs = neighs-weak_neighs
         strong_opps = opps-weak_opps
-        self.zstack.copy()
+        self.update(square, self.color)
+        if self.zstack.dupe():
+            print 'ILLEGAL!'
+            import sys
+            sys.exit()
+        self.zstack.revert()
         return empties or weak_opps or (strong_neighs and (strong_opps or weak_neighs))
 
     def useful_moves(self):
