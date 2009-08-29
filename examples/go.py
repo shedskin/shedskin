@@ -6,7 +6,7 @@ KOMI = 7.5
 EMPTY, WHITE, BLACK = 0, 1, 2
 SHOW = {EMPTY: '.', WHITE: 'o', BLACK: 'x'}
 PASS = -1
-MAXMOVES = 241
+MAXMOVES = SIZE*SIZE*3
 TIMESTAMP = 0
 MOVES = 0
 
@@ -36,6 +36,7 @@ class Square:
 
     def move(self, color):
         self.board.update(self, color)
+        self.used = True
         self.reference = self
         self.ledges = 0
         for neighbour in self.neighbours:
@@ -166,6 +167,8 @@ class Board:
         self.emptyset = EmptySet(self)
         self.zstack.reset()
         self.state = self.zstack.stack[self.zstack.size]
+        for square in self.squares:
+            square.used = False
         self.color = BLACK
         self.finished = False
         self.lastmove = -2
@@ -224,6 +227,10 @@ class Board:
             if weak_opps:
                 self.zstack.revert()
             return False
+        if not square.used:
+            if weak_opps:
+                self.zstack.revert()
+            return True
         self.update(square, self.color)
         dupe = self.zstack.dupe()
         self.zstack.revert()
