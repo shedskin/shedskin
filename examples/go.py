@@ -1,7 +1,7 @@
 import random, math
 
 SIZE = 9
-GAMES = 100
+GAMES = 1
 KOMI = 7.5
 EMPTY, WHITE, BLACK = 0, 1, 2
 SHOW = {EMPTY: '.', WHITE: 'o', BLACK: 'x'}
@@ -52,6 +52,8 @@ class Square:
                     neighbour_ref.ledges -= 1
                     if neighbour_ref.ledges == 0:
                         neighbour.remove(neighbour_ref)
+        print 'push', self
+        self.board.zstack.push()
 
     def remove(self, reference, update=True):
         self.board.update(self, self.color())
@@ -118,18 +120,28 @@ class ZobristState:
         self.state = [0 for x in range(((SIZE*SIZE)>>4)+1)]
 
 class ZobristStack:
-    def __init__(self):
+    def __init__(self, board):
+        self.board = board
         self.stack = [ZobristState() for z in range(MAXMOVES)]
         self.reset()
 
     def reset(self):
         self.stack[0] = ZobristState()
-        self.size = 0
+        self.size = 1
+        self.copy()
+
+    def copy(self):
+        self.stack[self.size].state[:] = self.stack[self.size-1].state
+
+    def push(self):
+        self.size += 1
+        self.copy()
+        self.board.state = self.stack[self.size]
 
 class Board:
     def __init__(self):
         self.squares = [Square(self, pos) for pos in range(SIZE*SIZE)]
-        self.zstack = ZobristStack()
+        self.zstack = ZobristStack(self)
         for square in self.squares:
             square.set_neighbours()
         self.reset()
@@ -138,19 +150,12 @@ class Board:
         self.emptyset = EmptySet(self)
         self.zstack.reset()
         self.state = self.zstack.stack[self.zstack.size]
-        self.backup_state = ZobristState()
         self.color = BLACK
         self.finished = False
         self.lastmove = -2
         self.history = []
         self.white_dead = 0
         self.black_dead = 0
-
-    def backup(self):
-        self.backup_state.state[:] = self.state.state
- 
-    def revert(self):
-        self.state.state[:] = self.backup_state.state
 
     def move(self, pos):
         global MOVES
@@ -176,7 +181,6 @@ class Board:
         global TIMESTAMP
         TIMESTAMP += 1
         square = self.squares[pos]
-        self.backup()
         empties = opps = weak_opps = neighs = weak_neighs = 0
         for neighbour in square.neighbours:
             if neighbour.color() == EMPTY:
@@ -199,7 +203,7 @@ class Board:
                     neighbour_ref.remove(neighbour_ref, update=False)
         strong_neighs = neighs-weak_neighs
         strong_opps = opps-weak_opps
-        self.revert()
+        self.zstack.copy()
         return empties or weak_opps or (strong_neighs and (strong_opps or weak_neighs))
 
     def useful_moves(self):
@@ -335,7 +339,7 @@ class UCTNode:
             if board.finished:
                 break
             pos = board.random_move()
-            #print 'pos', to_xy(pos)
+            print 'pos', to_xy(pos)
             board.move(pos)
 
     def update_path(self, board, color, path):
