@@ -1,14 +1,14 @@
 import random, math
 
 SIZE = 9
-GAMES = 1
+GAMES = 10000
 KOMI = 7.5
 EMPTY, WHITE, BLACK = 0, 1, 2
 SHOW = {EMPTY: '.', WHITE: 'o', BLACK: 'x'}
 PASS = -1
+MAXMOVES = 241
 TIMESTAMP = 0
 MOVES = 0
-MAXMOVES = 241
 
 def to_pos(x,y):
     return y * SIZE + x
@@ -52,7 +52,6 @@ class Square:
                     neighbour_ref.ledges -= 1
                     if neighbour_ref.ledges == 0:
                         neighbour.remove(neighbour_ref)
-        print 'push', self
         self.board.zstack.push()
 
     def remove(self, reference, update=True):
@@ -73,11 +72,10 @@ class Square:
                         neighbour_ref.ledges += 1
 
     def find(self): # XXX don't always update
-        reference = self.reference
-        while reference != reference.reference:
+        reference = self
+        while reference.pos != reference.reference.pos:
             reference = reference.reference
         return reference
-
 #        if self.reference.pos != self.pos:
 #            self.reference = self.reference.find()
 #        return self.reference
@@ -120,7 +118,10 @@ class ZobristState:
         self.state = [0 for x in range(((SIZE*SIZE)>>4)+1)]
 
     def __hash__(self):
-        return hash(tuple(self.state))
+        h = self.state[0]
+        for i in range(1, len(self.state)):
+            h ^= self.state[i]
+        return h
 
     def __eq__(self, other):
         return self.state == other.state
@@ -139,7 +140,9 @@ class ZobristStack:
         self.states.add(self.stack[0])
 
     def revert(self):
-        self.stack[self.size].state[:] = self.stack[self.size-1].state
+        old, new = self.stack[self.size-1].state, self.stack[self.size].state
+        for x in range(len(old)):
+            new[x] = old[x]
 
     def push(self):
         self.states.add(self.stack[self.size])
@@ -148,7 +151,6 @@ class ZobristStack:
         self.board.state = self.stack[self.size]
 
     def dupe(self):
-        print 'huh', self.states, self.size
         return self.stack[self.size] in self.states
 
 class Board:
@@ -217,12 +219,11 @@ class Board:
         strong_neighs = neighs-weak_neighs
         strong_opps = opps-weak_opps
         self.update(square, self.color)
-        if self.zstack.dupe():
-            print 'ILLEGAL!'
-            import sys
-            sys.exit()
+        dupe = False
+        dupe = self.zstack.dupe()
         self.zstack.revert()
-        return empties or weak_opps or (strong_neighs and (strong_opps or weak_neighs))
+        return not dupe and \
+               (empties or weak_opps or (strong_neighs and (strong_opps or weak_neighs)))
 
     def useful_moves(self):
         return [pos for pos in self.emptyset.empties if self.useful(pos)]
@@ -352,12 +353,12 @@ class UCTNode:
     def random_playout(self, board):
         """ random play until both players pass """
         for x in range(MAXMOVES): # XXX while not self.finished?
-            print board
-            board.check()
+#            print board
+#            board.check()
             if board.finished:
                 break
             pos = board.random_move()
-            print 'pos', to_xy(pos)
+#            print 'pos', to_xy(pos)
             board.move(pos)
 
     def update_path(self, board, color, path):
@@ -443,6 +444,7 @@ def versus_cpu():
         else:
             print 'I move here:', to_xy(pos)
         board.move(pos)
+        break
         if board.finished:
             break
         if board.lastmove != PASS:
