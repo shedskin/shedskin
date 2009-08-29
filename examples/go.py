@@ -218,12 +218,14 @@ class Board:
                     neighbour_ref.remove(neighbour_ref, update=False)
         strong_neighs = neighs-weak_neighs
         strong_opps = opps-weak_opps
+        if not (empties or weak_opps or (strong_neighs and (strong_opps or weak_neighs))):
+            self.zstack.revert()
+            return False
         self.update(square, self.color)
         dupe = False
         dupe = self.zstack.dupe()
         self.zstack.revert()
-        return not dupe and \
-               (empties or weak_opps or (strong_neighs and (strong_opps or weak_neighs)))
+        return not dupe 
 
     def useful_moves(self):
         return [pos for pos in self.emptyset.empties if self.useful(pos)]
