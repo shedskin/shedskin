@@ -9764,7 +9764,11 @@ def getvar(name):
 def unittest(i):
     global gx, cv, number, code, name, test
     number = i
-    (name,code,test) = tests[i]
+    try:
+        (name,code,test) = tests[i]
+    except IndexError:
+        print "Test number "+str(i)+" does not yet exist."
+	sys.exit(1)
 
     # analysis
     try:

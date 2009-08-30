@@ -110,7 +110,7 @@ class generateVisitor(ASTVisitor):
         
         result = []
         for (type, names) in group.items():
-            names.sort(cmp)
+            names.sort()
             if type.endswith('*'):
                 result.append(type+(', *'.join(names))+';\n')
             else:
@@ -166,7 +166,7 @@ class generateVisitor(ASTVisitor):
             decl.setdefault(typehu, []).append(self.cpp_name(name))
         decl2 = []
         for (t,names) in decl.items():
-            names.sort(cmp)
+            names.sort()
             prefix=''
             if declare: prefix='extern '
             if t.endswith('*'):
@@ -506,7 +506,7 @@ class generateVisitor(ASTVisitor):
 
         # --- init imports
         mods = getgx().modules.values()
-        mods.sort(cmp=lambda a,b: cmp(a.import_order, b.import_order))
+        mods.sort(key=lambda x: x.import_order)
         for mod in mods:
             if mod != getgx().main_module and mod.ident != 'builtin':
                 if mod.ident == 'sys':
