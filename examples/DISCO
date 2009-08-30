@@ -4,25 +4,19 @@ License GNU GPL version 3
 
 INTRODUCTION
 
-Disco is a simple Go player in only 400 lines of Python. It is based on the shiny new Monte Carlo + UCT algorithm. Given enough time, it can play pretty interesting games on 9x9.. For speed, it can be compiled with Shedskin, and use multiple processes via Parallel Python.
+Disco is a simple Go player in only 400 lines of Python. It is based on the shiny new Monte Carlo + UCT algorithm. For a speedup of about 75 times (which it will need to play well), it can be compiled to C++ with Shedskin.
 
-Disco was made as a test case for Shedskin, and may not evolve any further. I certainly do not want to get addicted to Go programming as well. But if it evolves further, I will make sure it always stays in pure Python, stays under 1,000 lines of code, and compiles with Shedskin. 
+Disco was made as a test case for Shedskin, and may not evolve any further. I certainly do not want to get addicted to Go programming as well. But if it does evolve further, I will make sure it always stays in pure Python, stays under 1,000 lines of code, and compiles with Shedskin. 
 
 CONFIGURATION
 
-The number of playouts per turn can be configured in go.py, via the GAMES variable (default is 10000, which takes about 20 seconds per turn on my PC). The maximum number of used processes can be configured in pgo.py, via the MAXPROCESSES variable (default 2). There aren't many other options, and the computer always starts with black.
+The number of playouts per turn can be configured in go.py, via the GAMES variable (default is 15000, which takes about 3 seconds per turn on my PC). 
 
 INSTALLATION
 
-1) Download the latest version of Shedskin, and install it according to the Shedskin tutorial. Then compile go.py as an extension module:
+1) Download the latest version of Shedskin (version 0.2.1 or later or SVN), and install it according to the Shedskin tutorial. Then compile go.py as an extension module:
 
 shedskin -brew go.py 
 make
 
-2) Download and install Parallel Python, via the Parallel Python website.
-
-3) Download and install Gogui, the only graphical go board Disco has been tested with. In the Program menu, connect it to engine.py. Set the board size to 9x9, and hand the first turn to the computer. 
-
-USAGE
-
-Only playing and passing will probably work, no other features such as 'clear board' and 'undo'.
+2) Download and install Gogui, the only graphical go board Disco has been tested with. In the Program menu, connect it to engine.py. Set the board size to 9x9, and hand the first turn to the computer. 
