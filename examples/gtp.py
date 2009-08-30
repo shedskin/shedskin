@@ -124,12 +124,7 @@ def run(engine):
     commands = list_commands(engine)
     basic = Basic(commands)
     quit = False
-    f = file('huppa', 'w')
-    f.close()
     for line in get_line():
-        f = file('huppa', 'a')
-        print >>f, line
-        f.close()
         id, command, args = parse_command(line)
         if command == 'quit':
             quit = True
