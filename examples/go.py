@@ -1,7 +1,7 @@
 import random, math
 
 SIZE = 9
-GAMES = 1000
+GAMES = 15000
 KOMI = 7.5
 EMPTY, WHITE, BLACK = 0, 1, 2
 SHOW = {EMPTY: '.', WHITE: 'o', BLACK: 'x'}
@@ -60,10 +60,10 @@ class Square:
         self.board.update(self, color)
         if update:
             self.board.emptyset.add(self.pos)
-            if color == BLACK:
-                self.board.black_dead += 1
-            else:
-                self.board.white_dead += 1
+#            if color == BLACK:
+#                self.board.black_dead += 1
+#            else:
+#                self.board.white_dead += 1
         for neighbour in self.neighbours:
             if neighbour.color() != EMPTY:
                 neighbour_ref = neighbour.find()
@@ -444,14 +444,14 @@ def versus_cpu():
         else:
             print 'I move here:', to_xy(pos)
         board.move(pos)
-        break
-#        board.check()
+        #board.check()
         if board.finished:
             break
         if board.lastmove != PASS:
             print board
         pos = user_move(board)
         board.move(pos)
+        #board.check()
         if board.finished:
             break
     print 'WHITE:', board.score(WHITE)
