@@ -34,9 +34,9 @@ class Engine:
 
     def genmove(self, color):
         pos = go.computer_move(self.board)
+        self.board.move(pos)
         if pos == go.PASS:
             return 'pass'
-        self.board.move(pos)
         x, y = go.to_xy(pos)
         return gtp.make_vertex(x, y)
 
