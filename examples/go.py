@@ -20,7 +20,6 @@ def to_xy(pos):
 class Square:
     def __init__(self, board, pos):
         self.board = board
-        self.color = EMPTY
         self.pos = pos
         self.timestamp = TIMESTAMP
         self.removestamp = TIMESTAMP
@@ -43,6 +42,7 @@ class Square:
         self.color = color
         self.reference = self
         self.ledges = 0
+        self.used = True
         for neighbour in self.neighbours:
             neighcolor = neighbour.color
             if neighcolor == EMPTY: 
@@ -147,6 +147,7 @@ class Board:
     def reset(self):
         for square in self.squares:
             square.color = EMPTY
+            square.used = False
         self.emptyset = EmptySet(self)
         self.zobrist = ZobristHash(self)
         self.color = BLACK
@@ -171,10 +172,19 @@ class Board:
     def random_move(self):
         return self.emptyset.random_choice()
 
+    def useful_fast(self, square):
+        if not square.used:
+            for neighbour in square.neighbours:
+                if neighbour.color == EMPTY:
+                    return True
+        return False
+
     def useful(self, pos): 
         global TIMESTAMP
         TIMESTAMP += 1
         square = self.squares[pos]
+        if self.useful_fast(square):
+            return True
         old_hash = self.zobrist.hash
         self.zobrist.update(square, self.color)
         empties = opps = weak_opps = neighs = weak_neighs = 0
