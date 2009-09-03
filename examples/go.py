@@ -38,7 +38,6 @@ class Square:
         TIMESTAMP += 1
         MOVES += 1
         self.board.zobrist.update(self, color)
-        self.board.zobrist.add()
         self.color = color
         self.reference = self
         self.ledges = 0
@@ -58,6 +57,7 @@ class Square:
                     neighbour_ref.ledges -= 1
                     if neighbour_ref.ledges == 0:
                         neighbour.remove(neighbour_ref)
+        self.board.zobrist.add()
 
     def remove(self, reference, update=True):
         self.board.zobrist.update(self, EMPTY)
