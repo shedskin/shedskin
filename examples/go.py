@@ -50,7 +50,7 @@ class Square:
             else:
                 neighbour_ref = neighbour.find(update=True)
                 if neighcolor == color:
-                    if neighbour_ref.reference != self:
+                    if neighbour_ref.reference.pos != self.pos:
                         self.ledges += neighbour_ref.ledges 
                         neighbour_ref.reference = self
                     self.ledges -= 1
@@ -72,7 +72,7 @@ class Square:
         for neighbour in self.neighbours:
             if neighbour.color != EMPTY and neighbour.removestamp != TIMESTAMP:
                 neighbour_ref = neighbour.find(update)
-                if neighbour_ref == reference:
+                if neighbour_ref.pos == reference.pos:
                     neighbour.remove(reference, update)
                 else:
                     if update:
