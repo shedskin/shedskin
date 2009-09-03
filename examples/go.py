@@ -48,7 +48,7 @@ class Square:
             if neighcolor == EMPTY: 
                 self.ledges += 1
             else:
-                neighbour_ref = neighbour.find()
+                neighbour_ref = neighbour.find(update=True)
                 if neighcolor == color:
                     if neighbour_ref.reference != self:
                         self.ledges += neighbour_ref.ledges 
@@ -71,18 +71,20 @@ class Square:
 #                self.board.white_dead += 1
         for neighbour in self.neighbours:
             if neighbour.color != EMPTY and neighbour.removestamp != TIMESTAMP:
-                neighbour_ref = neighbour.find()
+                neighbour_ref = neighbour.find(update)
                 if neighbour_ref == reference:
                     neighbour.remove(reference, update)
                 else:
                     if update:
                         neighbour_ref.ledges += 1
 
-    def find(self): 
-        reference = self
-        while reference.pos != reference.reference.pos:
-            reference = reference.reference
-        return reference
+    def find(self, update=False): 
+       reference = self.reference
+       if reference.pos != self.pos:
+           reference = reference.find(update)
+           if update:
+               self.reference = reference
+       return reference
     
     def __repr__(self):
         return repr(to_xy(self.pos))
