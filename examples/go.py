@@ -126,17 +126,12 @@ class ZobristHash:
             self.hash ^= square.zobrist_strings[EMPTY]
         self.hash_set.clear()
         self.hash_set.add(self.hash)
-        #print 'init', self.hash_set
 
     def update(self, square, color):
-        #print 'uit', to_xy(square.pos), SHOW[square.color]
         self.hash ^= square.zobrist_strings[square.color]
-        #print 'in', to_xy(square.pos), SHOW[color]
         self.hash ^= square.zobrist_strings[color]
 
     def add(self):
-        #print 'dupe', self.dupe()
-        #print 'add', self.hash
         self.hash_set.add(self.hash)
     
     def dupe(self):
@@ -182,7 +177,6 @@ class Board:
         square = self.squares[pos]
         old_hash = self.zobrist.hash
         self.zobrist.update(square, self.color)
-#        print 'update', self.zobrist.hash
         empties = opps = weak_opps = neighs = weak_neighs = 0
         for neighbour in square.neighbours:
             neighcolor = neighbour.color
@@ -204,27 +198,12 @@ class Board:
                 else:
                     weak_opps += 1
                     neighbour_ref.remove(neighbour_ref, update=False)
-        if self.zobrist.dupe():
-#            print 'doppel', self.zobrist.hash, self.zobrist.hash_set
-#            print self
-            self.zobrist.hash = old_hash
-            return False
+        dupe = self.zobrist.dupe()
         self.zobrist.hash = old_hash
         strong_neighs = neighs-weak_neighs
         strong_opps = opps-weak_opps
-        if not (empties or weak_opps or (strong_neighs and (strong_opps or weak_neighs))):
-#            if weak_opps:
-#                self.zstack.revert()
-            return False
-#        if not square.used:
-#            if weak_opps:
-#                self.zstack.revert()
-#            return True
-#        self.update(square, self.color)
-#        dupe = self.zstack.dupe()
-#        self.zstack.revert()
-#        return not dupe 
-        return True
+        return not dupe and \
+               (empties or weak_opps or (strong_neighs and (strong_opps or weak_neighs)))
 
     def useful_moves(self):
         return [pos for pos in self.emptyset.empties if self.useful(pos)]
@@ -424,18 +403,8 @@ def computer_move(board):
         nboard.reset()
         nboard.replay(board.history)
         node.play(nboard)
-#        for x in range(MAXMOVES): # XXX while not self.finished?
-#            if nboard.finished:
-#                break
-#            pos = nboard.emptyset.random_choice()
-#            nboard.move(pos)
-#            print nboard
-#            print
-#            nboard.check()
-#            MOVES += 1
-        
     print 'moves', MOVES
-    return PASS #tree.best_visited().pos
+    return tree.best_visited().pos
 
 def versus_cpu():
     board = Board()
@@ -464,13 +433,6 @@ def versus_cpu():
     print 'BLACK:', board.score(BLACK)
 
 if __name__ == '__main__':
-#    b = Board()
-#    b.move(to_pos(4,4))
-#    b.move(to_pos(4,4))
-#    b.move(to_pos(4,4))
-#    print b
-#    print b.zobrist.hash_set
-
     random.seed(1)
     try:
         versus_cpu()
