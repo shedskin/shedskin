@@ -1,7 +1,7 @@
 import random, math, sys
 
 SIZE = 9
-GAMES = 25000
+GAMES = 15000
 KOMI = 7.5
 EMPTY, WHITE, BLACK = 0, 1, 2
 SHOW = {EMPTY: '.', WHITE: 'o', BLACK: 'x'}
@@ -415,7 +415,7 @@ def computer_move(board):
         nboard.reset()
         nboard.replay(board.history)
         node.play(nboard)
-    print 'moves', MOVES
+#    print 'moves', MOVES
     return tree.best_visited().pos
 
 def versus_cpu():
