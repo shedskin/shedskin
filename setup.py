@@ -1,11 +1,11 @@
 #!/usr/bin/env python
-import sys, os
-
-# create compiler startup script
-
-ss = file('shedskin','w')
-ss.write('#!/bin/sh\n')
-ss.write('SHEDSKIN_ROOT="%s" %s "%s/ss.py" $*\n' % (os.getcwd(), sys.executable, os.getcwd()))
+import os
+ss = file('shedskin.py', 'w')
+print >>ss, '''#!/usr/bin/env python
+import sys
+sys.path.append("%s")
+import shedskin
+shedskin.main()
+''' % os.getcwd()
 ss.close()
-
-os.system('chmod a+wrx shedskin')
+os.system('chmod a+wrx shedskin.py')
