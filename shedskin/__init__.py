@@ -26,7 +26,6 @@ from graph import *
 from cpp import *
 from infer import *
 
-
 def analysis(source, testing=False):
     gc.set_threshold(23456, 10, 10)
 
