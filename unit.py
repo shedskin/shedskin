@@ -739,7 +739,7 @@ print time.strftime("%d %b %Y %H:%M:%S", time.strptime("2001-11-12 18:31:01", "%
 print time.strftime("%Y", time.strptime("2001", "%Y"))
 
 #improve default arguments
-import bert
+import testdata.bert2 as bert
 print bert.def1()
 
 print bert.def2()
@@ -1047,7 +1047,7 @@ print ++v, +-+-v
 #multidir fixes
 from testdata import crap
 print crap.incrap()
-import bert
+import testdata.bert2 as bert 
 print bert.hello(1)
 from testdata import crap2
 crap2.incrap2()
