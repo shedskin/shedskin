@@ -53,7 +53,7 @@ class globalInfo: # XXX add comments, split up
         self.fast_random = False
         self.extension_module = False
         self.flags = None
-        self.annotation = True
+        self.annotation = False
         self.output_dir=''
 
 def newgx():

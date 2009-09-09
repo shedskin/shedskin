@@ -358,7 +358,7 @@ def generate_code():
 def usage():
     print """Usage: shedskin [OPTION]... FILE
 
- -a --noann             Don't output annotated source code
+ -a --ann               Output annotated source code (.ss.py)
  -b --nobounds          Disable bounds checking
  -d --dir               Specify alternate directory for output files
  -e --extmod            Generate extension module
@@ -394,7 +394,7 @@ def main():
         if o in ['-h', '--help']: usage()
         if o in ['-b', '--nobounds']: getgx().bounds_checking = False
         if o in ['-e', '--extmod']: getgx().extension_module = True
-        if o in ['-a', '--noann']: getgx().annotation = False
+        if o in ['-a', '--ann']: getgx().annotation = True
         if o in ['-d', '--dir']: getgx().output_dir = a
         if o in ['-w', '--nowrap']: getgx().wrap_around_check = False
         if o in ['-r', '--random']: getgx().fast_random = True
