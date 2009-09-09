@@ -29,7 +29,10 @@ iterative_dataflow_analysis():
     -otherwise, restore the constraint graph to its original state and restart
     -all the while maintaining types for each allocation point in getgx().alloc_info
 '''
+import gc
+
 from shared import *
+import graph, cpp
 
 def class_copy(cl, dcpa):
     for var in cl.vars.values(): # XXX 
@@ -964,3 +967,123 @@ def merge_simple_types(types):
             merge.remove((defclass('none'),0))
 
     return frozenset(merge)
+
+def analyze(source, testing=False):
+    gc.set_threshold(23456, 10, 10)
+
+    if testing: 
+        setgx(newgx())
+        ast = parse(source+'\n')
+    else:
+        ast = graph.parsefile(source)
+
+    mv = None
+    setmv(mv)
+
+    # --- build dataflow graph from source code
+    getgx().main_module = graph.parse_module(getgx().main_mod, ast)
+    getgx().main_module.filename = getgx().main_mod+'.py'
+    getgx().modules[getgx().main_mod] = getgx().main_module
+    mv = getgx().main_module.mv
+    setmv(mv)
+
+    # --- seed class_.__name__ attributes..
+    for cl in getgx().allclasses:
+        if cl.ident == 'class_':
+            var = defaultvar('__name__', cl)
+            getgx().types[inode(var)] = set([(defclass('str_'), 0)])
+
+    # --- number classes (-> constant-time subclass check)
+    cpp.number_classes()
+
+    # --- non-ifa: copy classes for each allocation site
+    for cl in getgx().allclasses:
+        if cl.ident in ['int_','float_','none', 'class_','str_']: 
+            continue
+        if cl.ident == 'list':
+            cl.dcpa = len(getgx().list_types)+2
+        elif cl.ident != '__iter': # XXX huh
+            cl.dcpa = 2
+
+        for dcpa in range(1, cl.dcpa): 
+            class_copy(cl, dcpa)
+
+    var = defaultvar('unit', defclass('str_'))
+    getgx().types[inode(var)] = set([(defclass('str_'), 0)])
+
+    # --- cartesian product algorithm & iterative flow analysis
+    iterative_dataflow_analysis()
+
+    for cl in getgx().allclasses:
+        for name in cl.vars:
+            if name in cl.parent.vars and not name.startswith('__'):
+                error("instance variable '%s' of class '%s' shadows class variable" % (name, cl.ident))
+
+    getgx().merged_all = merged(getgx().types) #, inheritance=True)
+    getgx().merge_dcpa = merged(getgx().types, dcpa=True)
+
+    mv = getgx().main_module.mv
+    setmv(mv)
+    propagate() # XXX remove 
+
+    getgx().merged_all = merged(getgx().types) #, inheritance=True)
+    getgx().merged_inh = merged(getgx().types, inheritance=True)
+
+    # --- detect inheritance stuff
+    cpp.upgrade_variables()
+    getgx().merged_all = merged(getgx().types)
+    getgx().merged_inh = merged(getgx().types, inheritance=True)
+
+    cpp.analyze_virtuals()
+
+    # --- check some sources of confusion # XXX can we remove this
+    confusion_misc() 
+
+    getgx().merge_dcpa = merged(getgx().types, dcpa=True)
+    getgx().merged_all = merged(getgx().types) #, inheritance=True) # XXX
+
+    # --- determine which classes need an __init__ method
+    for node, types in getgx().merged_all.items():
+        if isinstance(node, CallFunc):
+            objexpr, ident, _ , method_call, _, _, _ = analyze_callfunc(node)
+            if method_call and ident == '__init__':
+                for t in getgx().merged_all[objexpr]:
+                    t[0].has_init = True
+
+    # --- determine which classes need copy, deepcopy methods
+    if 'copy' in getgx().modules:
+        func = getgx().modules['copy'].funcs['copy']
+        var = func.vars[func.formals[0]]
+        for cl in set([t[0] for t in getgx().merged_inh[var]]):
+            cl.has_copy = True # XXX transitive, modeling
+
+        func = getgx().modules['copy'].funcs['deepcopy']
+        var = func.vars[func.formals[0]]
+        for cl in set([t[0] for t in getgx().merged_inh[var]]):
+            cl.has_deepcopy = True # XXX transitive, modeling
+
+    # --- add inheritance relationships for non-original Nodes (and tempvars?); XXX register more, right solution?
+    for func in getgx().allfuncs:
+        #if not func.mv.module.builtin and func.ident == '__init__':
+        if func in getgx().inheritance_relations: 
+            for inhfunc in getgx().inheritance_relations[func]:
+                for a, b in zip(func.registered, inhfunc.registered):
+                    inherit_rec(a, b)
+
+                for a, b in zip(func.registered_tempvars, inhfunc.registered_tempvars): # XXX more general
+                    getgx().inheritance_tempvars.setdefault(a, []).append(b)
+
+    getgx().merged_inh = merged(getgx().types, inheritance=True) # XXX why X times
+
+    # --- finally, generate C++ code and Makefiles.. :-)
+
+    #printstate()
+    #printconstraints()
+    #generate_code()
+
+    # error for dynamic expression (XXX before codegen)
+    for node in getgx().merged_all:
+        if isinstance(node, Node) and not isinstance(node, AssAttr) and not inode(node).mv.module.builtin:
+            cpp.typesetreprnew(node, inode(node).parent) 
+
+    return getgx()

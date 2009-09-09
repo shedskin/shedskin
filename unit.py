@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from shedskin import *
+import shedskin.infer
 import traceback, sys, os, time
 
 tests = [
@@ -9775,7 +9775,7 @@ def unittest(i):
         print '*** test:', name, i
 
         t1 = os.times()
-        gx = analysis(code, True)
+        gx = shedskin.infer.analyze(code, True)
         results[i]['analysis'] = os.times()[0]-t1[0]
         cv = gx.main_module.mv
 

@@ -11,6 +11,7 @@ class generateVisitor: inherits visitor pattern from compiler.visitor.ASTVisitor
 typesetreprnew(): returns the C++ (or annotation) type declaration, taking into consideration detected data/parametric polymorphism (via analyze_virtuals() and template_detect()).
 '''
 import textwrap, string
+from distutils import sysconfig
 
 from shared import *
 import extmod
@@ -2952,3 +2953,124 @@ def nokeywords(name):
         return getgx().ss_prefix+name
     return name
 
+# --- generate C++ and Makefiles
+def generate_code():
+    print '[generating c++ code..]'
+
+    ident = getgx().main_module.ident 
+
+    if sys.platform == 'win32':
+        pyver = '%d%d' % sys.version_info[:2]
+	prefix = sysconfig.get_config_var('prefix').replace('\\', '/')
+    else:
+        pyver = sysconfig.get_config_var('VERSION')
+        includes = '-I' + sysconfig.get_python_inc() + ' ' + \
+                   '-I' + sysconfig.get_python_inc(plat_specific=True)
+        if sys.platform == 'darwin':
+            ldflags = sysconfig.get_config_var('BASECFLAGS')
+        else:
+            ldflags = sysconfig.get_config_var('LIBS') + ' ' + \
+                      sysconfig.get_config_var('SYSLIBS') + ' ' + \
+                      '-lpython'+pyver 
+            if not sysconfig.get_config_var('Py_ENABLE_SHARED'):
+                ldflags += ' -L' + sysconfig.get_config_var('LIBPL')
+
+    if getgx().extension_module: 
+        if sys.platform == 'win32': ident += '.pyd'
+        else: ident += '.so'
+
+    # --- generate C++ files
+    mods = getgx().modules.values()
+    for module in mods:
+        if not module.builtin:
+            # create output directory if necessary
+            if getgx().output_dir:
+                output_dir = os.path.join(getgx().output_dir, module.dir)
+                if not os.path.exists(output_dir):
+                    os.makedirs(output_dir)
+
+            gv = generateVisitor(module)
+            mv = module.mv 
+            setmv(mv)
+            gv.func_pointers(False)
+            walk(module.ast, gv)
+            gv.out.close()
+            gv.header_file()
+            gv.out.close()
+            gv.insert_consts(declare=False)
+            gv.insert_consts(declare=True)
+            gv.insert_includes()
+
+    # --- generate Makefile
+    makefile = file(os.path.join(getgx().output_dir, 'Makefile'), 'w')
+
+    cppfiles = ' '.join([m.filename[:-3].replace(' ', '\ ')+'.cpp' for m in mods])
+    hppfiles = ' '.join([m.filename[:-3].replace(' ', '\ ')+'.hpp' for m in mods])
+    repath = connect_paths(getgx().libdir.replace(' ', '\ '), 're.cpp')
+    if not repath in cppfiles: 
+        cppfiles += ' '+repath
+        hppfiles += ' '+connect_paths(getgx().libdir.replace(' ', '\ '), 're.hpp')
+
+    # import flags
+    if getgx().flags: flags = getgx().flags
+    elif os.path.isfile('FLAGS'): flags = 'FLAGS'
+    else: flags = connect_paths(getgx().sysdir, 'FLAGS')
+
+    for line in file(flags):
+        line = line[:-1]
+
+        if line[:line.find('=')].strip() == 'CCFLAGS': 
+            line += ' -I. -I'+getgx().libdir.replace(' ', '\ ')
+            if sys.platform == 'darwin' and os.path.isdir('/usr/local/include'): 
+                line += ' -I/usr/local/include' # XXX
+            if sys.platform == 'darwin' and os.path.isdir('/opt/local/include'): 
+                line += ' -I/opt/local/include' # XXX
+            if not getgx().wrap_around_check: line += ' -DNOWRAP' 
+            if not getgx().bounds_checking: line += ' -DNOBOUNDS' 
+            if getgx().fast_random: line += ' -DFASTRANDOM' 
+            if getgx().extension_module: 
+                if sys.platform == 'win32': line += ' -I%s/include -D__SS_BIND' % prefix
+                else: line += ' -g -fPIC -D__SS_BIND ' + includes
+
+        elif line[:line.find('=')].strip() == 'LFLAGS': 
+            if sys.platform == 'darwin' and os.path.isdir('/opt/local/lib'): # XXX
+                line += ' -L/opt/local/lib'
+            if sys.platform == 'darwin' and os.path.isdir('/usr/local/lib'): # XXX 
+                line += ' -L/usr/local/lib'
+            if getgx().extension_module: 
+                if sys.platform == 'win32': line += ' -shared -L%s/libs -lpython%s' % (prefix, pyver) 
+                elif sys.platform == 'darwin': line += ' -bundle -undefined dynamic_lookup ' + ldflags
+                elif sys.platform == 'sunos5': line += ' -shared -Xlinker ' + ldflags
+                else: line += ' -shared -Xlinker -export-dynamic ' + ldflags
+
+            if 'socket' in [m.ident for m in mods]:
+                if sys.platform == 'win32':
+                    line += ' -lws2_32'
+                elif sys.platform == 'sunos5':
+                    line += ' -lsocket -lnsl'
+            if 'os' in [m.ident for m in mods]:
+                if sys.platform not in ['win32', 'darwin', 'sunos5']:
+                    line += ' -lutil'
+
+        print >>makefile, line
+    print >>makefile
+
+    print >>makefile, '.PHONY: all run full clean\n'
+    print >>makefile, 'all:\t'+ident+'\n'
+
+    if not getgx().extension_module:
+        print >>makefile, 'run:\tall'
+        print >>makefile, '\t./'+ident+'\n'
+        print >>makefile, 'full:'
+        print >>makefile, '\tshedskin '+ident+'; $(MAKE) run\n'
+
+    print >>makefile, 'CPPFILES='+cppfiles
+    print >>makefile, 'HPPFILES='+hppfiles+'\n'
+    print >>makefile, ident+':\t$(CPPFILES) $(HPPFILES)'
+    print >>makefile, '\t$(CC) $(CCFLAGS) $(CPPFILES) $(LFLAGS) -o '+ident+'\n'
+    if sys.platform == 'win32':
+        ident += '.exe'
+    print >>makefile, 'clean:'
+    print >>makefile, '\trm '+ident
+
+    makefile.close()
