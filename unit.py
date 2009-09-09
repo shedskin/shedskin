@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from ss import *
+from shedskin import *
 import traceback, sys, os, time
 
 tests = [
