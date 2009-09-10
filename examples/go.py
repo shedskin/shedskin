@@ -300,6 +300,9 @@ class UCTNode:
         self.wins = 0
         self.losses = 0
         self.pos_child = [None for x in range(SIZE*SIZE)]
+        self.amafvisits = 0
+        self.pos_amaf_wins = [0 for x in range(SIZE*SIZE)]
+        self.pos_amaf_losses = [0 for x in range(SIZE*SIZE)]
         self.parent = None
 
     def play(self, board):
@@ -307,6 +310,7 @@ class UCTNode:
         color = board.color
         node = self
         path = [node]
+        histpos = len(board.history)
         while True:
             pos = node.select(board)
             if pos == PASS:
@@ -323,7 +327,7 @@ class UCTNode:
             path.append(child)
             node = child
         self.random_playout(board)
-        self.update_path(board, color, path)
+        self.update_path(board, histpos, color, path)
 
     def select(self, board):
         """ select move; unexplored children first, then according to uct value """
@@ -343,9 +347,10 @@ class UCTNode:
         for x in range(MAXMOVES): # XXX while not self.finished?
             if board.finished:
                 break
-            board.move(board.random_move())
+            pos = board.random_move()
+            board.move(pos)
 
-    def update_path(self, board, color, path):
+    def update_path(self, board, histpos, color, path):
         """ update win/loss count along path """
         wins = board.score(BLACK) >= board.score(WHITE)
         for node in path:
@@ -356,6 +361,13 @@ class UCTNode:
             else:
                 node.losses += 1
             if node.parent:
+                for i in range(histpos+2, len(board.history), 2):
+                    pos = board.history[i]
+                    if wins == (color == BLACK):
+                        node.parent.pos_amaf_wins[pos] += 1
+                    else:
+                        node.parent.pos_amaf_losses[pos] += 1
+                    node.parent.amafvisits += 1
                 node.parent.bestchild = node.parent.best_child()
 
     def score(self):
@@ -364,7 +376,16 @@ class UCTNode:
         if not parentvisits:
             return winrate
         nodevisits = self.wins+self.losses
-        return winrate + math.sqrt((math.log(parentvisits))/(5*nodevisits))
+        uct_score = winrate + math.sqrt((math.log(parentvisits))/(5*nodevisits))
+
+        amafvisits = self.parent.pos_amaf_wins[self.pos]+self.parent.pos_amaf_losses[self.pos] 
+        if not amafvisits:
+            return uct_score
+        amafwinrate = self.parent.pos_amaf_wins[self.pos]/float(amafvisits)
+        uct_amaf = amafwinrate + math.sqrt((math.log(self.parent.amafvisits))/(5*amafvisits))
+
+        beta = math.sqrt(1000.0/(3*parentvisits+1000.0))
+        return beta*uct_amaf + (1-beta)*uct_score
 
     def best_child(self):
         maxscore = -1
@@ -415,6 +436,8 @@ def computer_move(board):
         nboard.reset()
         nboard.replay(board.history)
         node.play(nboard)
+#    for pos in range(SIZE*SIZE):
+#        print 'amaf', to_xy(pos), node.pos_child[pos].score() #node.pos_amaf_wins[pos]/float(node.pos_amaf_wins[pos]+node.pos_amaf_losses[pos])
 #    print 'moves', MOVES
     return tree.best_visited().pos
 
@@ -430,7 +453,7 @@ def versus_cpu():
         else:
             print 'I move here:', to_xy(pos)
         board.move(pos)
-        break
+        #break
         #board.check()
         if board.finished:
             break
