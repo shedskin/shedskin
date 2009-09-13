@@ -1,7 +1,7 @@
 import random, math, sys
 
 SIZE = 9
-GAMES = 15000
+#GAMES = 15000
 KOMI = 7.5
 EMPTY, WHITE, BLACK = 0, 1, 2
 SHOW = {EMPTY: '.', WHITE: 'o', BLACK: 'x'}
@@ -431,6 +431,7 @@ def computer_move(board):
     tree = UCTNode()
     tree.unexplored = board.useful_moves()
     nboard = Board()
+    GAMES = max(30000-(1000*len(board.history))/4, 5000)
     for game in range(GAMES):
         node = tree
         nboard.reset()
