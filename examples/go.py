@@ -7,7 +7,7 @@ EMPTY, WHITE, BLACK = 0, 1, 2
 SHOW = {EMPTY: '.', WHITE: 'o', BLACK: 'x'}
 PASS = -1
 MAXMOVES = SIZE*SIZE*3
-TIMESTAMP = 0
+TIMESTAMP = REMOVESTAMP = 0
 MOVES = 0
 
 def to_pos(x,y):
@@ -21,8 +21,11 @@ class Square:
     def __init__(self, board, pos):
         self.board = board
         self.pos = pos
+        self.liberties = 0
         self.timestamp = TIMESTAMP
-        self.removestamp = TIMESTAMP
+        self.timestamp2 = TIMESTAMP
+        self.findstamp = TIMESTAMP
+        self.removestamp = REMOVESTAMP
         self.zobrist_strings = [random.randrange(sys.maxint) for i in range(3)]
 
     def set_neighbours(self): 
@@ -33,6 +36,31 @@ class Square:
             if 0 <= newx < SIZE and 0 <= newy < SIZE:
                 self.neighbours.append(self.board.squares[to_pos(newx, newy)])
 
+    def count_liberties(self, reference=None):
+        if not reference:
+            reference = self
+            self.liberties = 0
+        self.timestamp = TIMESTAMP
+        for neighbour in self.neighbours:
+            if neighbour.timestamp != TIMESTAMP:
+                neighbour.timestamp = TIMESTAMP
+                if neighbour.color == EMPTY:
+                    reference.liberties += 1
+                elif neighbour.color == self.color:
+                    neighbour.count_liberties(reference)
+
+    def liberty(self):
+        self.findstamp = TIMESTAMP
+        for neighbour in self.neighbours:
+            if neighbour.findstamp != TIMESTAMP:
+                neighbour.findstamp = TIMESTAMP
+                if neighbour.color == EMPTY:
+                    return neighbour
+                elif neighbour.color == self.color:
+                    liberty = neighbour.liberty()
+                    if liberty:
+                        return liberty
+
     def move(self, color):
         global TIMESTAMP, MOVES
         TIMESTAMP += 1
@@ -40,28 +68,33 @@ class Square:
         self.board.zobrist.update(self, color)
         self.color = color
         self.reference = self
-        self.ledges = 0
+        self.members = 1
         self.used = True
+        self.board.atari = None
         for neighbour in self.neighbours:
-            neighcolor = neighbour.color
-            if neighcolor == EMPTY: 
-                self.ledges += 1
-            else:
+            if neighbour.color != EMPTY: 
                 neighbour_ref = neighbour.find(update=True)
-                if neighcolor == color:
-                    if neighbour_ref.reference.pos != self.pos:
-                        self.ledges += neighbour_ref.ledges 
+                if neighbour_ref.timestamp != TIMESTAMP:
+                    neighbour_ref.timestamp = TIMESTAMP
+                    if neighbour.color == color:
                         neighbour_ref.reference = self
-                    self.ledges -= 1
-                else:
-                    neighbour_ref.ledges -= 1
-                    if neighbour_ref.ledges == 0:
-                        neighbour.remove(neighbour_ref)
+                        self.members += neighbour_ref.members
+                    else:
+                        neighbour_ref.liberties -= 1
+                        if neighbour_ref.liberties == 0:
+                            neighbour_ref.remove(neighbour_ref, update=True)
+                        elif neighbour_ref.liberties == 1:
+                            self.board.atari = neighbour_ref
+        TIMESTAMP += 1
+        self.count_liberties()
         self.board.zobrist.add()
 
     def remove(self, reference, update=True):
+        global REMOVESTAMP
+        REMOVESTAMP += 1
+        removestamp = REMOVESTAMP
         self.board.zobrist.update(self, EMPTY)
-        self.removestamp = TIMESTAMP
+        self.timestamp2 = TIMESTAMP
         if update:
             self.color = EMPTY
             self.board.emptyset.add(self.pos)
@@ -69,14 +102,18 @@ class Square:
 #                self.board.black_dead += 1
 #            else:
 #                self.board.white_dead += 1
+        if update:
+            for neighbour in self.neighbours:
+                if neighbour.color != EMPTY:
+                    neighbour_ref = neighbour.find(update)
+                    if neighbour_ref.pos != self.pos and neighbour_ref.removestamp != removestamp:
+                        neighbour_ref.removestamp = removestamp
+                        neighbour_ref.liberties += 1
         for neighbour in self.neighbours:
-            if neighbour.color != EMPTY and neighbour.removestamp != TIMESTAMP:
+            if neighbour.color != EMPTY:
                 neighbour_ref = neighbour.find(update)
-                if neighbour_ref.pos == reference.pos:
+                if neighbour_ref.pos == reference.pos and neighbour.timestamp2 != TIMESTAMP:
                     neighbour.remove(reference, update)
-                else:
-                    if update:
-                        neighbour_ref.ledges += 1
 
     def find(self, update=False): 
        reference = self.reference
@@ -156,6 +193,7 @@ class Board:
         self.finished = False
         self.lastmove = -2
         self.history = []
+        self.atari = None
         self.white_dead = 0
         self.black_dead = 0
 
@@ -189,33 +227,30 @@ class Board:
             return True
         old_hash = self.zobrist.hash
         self.zobrist.update(square, self.color)
-        empties = opps = weak_opps = neighs = weak_neighs = 0
+        empties = strong_opps = weak_opps = strong_neighs = weak_neighs = 0
         for neighbour in square.neighbours:
-            neighcolor = neighbour.color
-            if neighcolor == EMPTY:
+            if neighbour.color == EMPTY:
                 empties += 1
-                continue
-            neighbour_ref = neighbour.find()
-            if neighbour_ref.timestamp != TIMESTAMP:
-                if neighcolor == self.color:  
-                    neighs += 1
-                else: 
-                    opps += 1
-                neighbour_ref.timestamp = TIMESTAMP
-                neighbour_ref.temp_ledges = neighbour_ref.ledges
-            neighbour_ref.temp_ledges -= 1
-            if neighbour_ref.temp_ledges == 0:
-                if neighcolor == self.color:  
-                    weak_neighs += 1
-                else:
-                    weak_opps += 1
-                    neighbour_ref.remove(neighbour_ref, update=False)
+            else:
+                neighbour_ref = neighbour.find()
+                if neighbour_ref.timestamp != TIMESTAMP:
+                    neighbour_ref.timestamp = TIMESTAMP
+                    weak = (neighbour_ref.liberties == 1)
+                    if neighbour.color == self.color:  
+                        if weak: 
+                            weak_neighs += 1
+                        else: 
+                            strong_neighs += 1
+                    else: 
+                        if weak: 
+                            weak_opps += 1
+                            neighbour_ref.remove(neighbour_ref, update=False)
+                        else: 
+                            strong_opps += 1
         dupe = self.zobrist.dupe()
         self.zobrist.hash = old_hash
-        strong_neighs = neighs-weak_neighs
-        strong_opps = opps-weak_opps
         return not dupe and \
-               (empties or weak_opps or (strong_neighs and (strong_opps or weak_neighs)))
+               bool(empties or weak_opps or (strong_neighs and (strong_opps or weak_neighs)))
 
     def useful_moves(self):
         return [pos for pos in self.emptyset.empties if self.useful(pos)]
@@ -256,11 +291,11 @@ class Board:
                        if neighbour.color == square.color and neighbour not in members1:
                            changed = True
                            members1.add(neighbour)
-           ledges1 = 0
+           liberties1 = set()
            for member in members1:
                for neighbour in member.neighbours:
                    if neighbour.color == EMPTY:
-                       ledges1 += 1
+                       liberties1.add(neighbour.pos)
 
            root = square.find()
 
@@ -272,12 +307,12 @@ class Board:
                if square2.color != EMPTY and square2.find() == root:
                    members2.add(square2)
 
-           ledges2 = root.ledges
+           liberties2 = root.liberties
            #print 'members2', square, root, members1
            #print 'ledges2', square, ledges2
 
            assert members1 == members2
-           assert ledges1 == ledges2, ('ledges differ at %r: %d %d' % (square, ledges1, ledges2))
+           assert len(liberties1) == liberties2, ('liberties differ at %r: %d %d' % (root, len(liberties1), liberties2))
 
            empties1 = set(self.emptyset.empties)
 
@@ -285,6 +320,8 @@ class Board:
            for square in self.squares:
                if square.color == EMPTY:
                    empties2.add(square.pos)
+
+           assert empties1 == empties2
 
     def __repr__(self):
         result = []
@@ -347,8 +384,19 @@ class UCTNode:
         for x in range(MAXMOVES): # XXX while not self.finished?
             if board.finished:
                 break
-            pos = board.random_move()
+            pos = PASS
+            if board.atari:
+                liberty = board.atari.liberty()
+                if board.useful(liberty.pos):
+                    pos = liberty.pos
+            if pos == PASS:
+                pos = board.random_move()
+#            print 'pos color', to_xy(pos), SHOW[board.color]
             board.move(pos)
+#            print board
+#            board.check()
+#        print 'WHITE:', board.score(WHITE)
+#        print 'BLACK:', board.score(BLACK)
 
     def update_path(self, board, histpos, color, path):
         """ update win/loss count along path """
@@ -363,6 +411,8 @@ class UCTNode:
             if node.parent:
                 for i in range(histpos+2, len(board.history), 2):
                     pos = board.history[i]
+                    if pos == PASS:
+                        break
                     if wins == (color == BLACK):
                         node.parent.pos_amaf_wins[pos] += 1
                     else:
@@ -431,7 +481,8 @@ def computer_move(board):
     tree = UCTNode()
     tree.unexplored = board.useful_moves()
     nboard = Board()
-    GAMES = max(30000-(1000*len(board.history))/4, 5000)
+    GAMES = max(25000-(1000*len(board.history))/4, 4000)
+#    GAMES = 100000
     for game in range(GAMES):
         node = tree
         nboard.reset()
