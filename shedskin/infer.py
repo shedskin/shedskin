@@ -1068,7 +1068,7 @@ def analyze(source, testing=False):
         if func in getgx().inheritance_relations: 
             for inhfunc in getgx().inheritance_relations[func]:
                 for a, b in zip(func.registered, inhfunc.registered):
-                    inherit_rec(a, b)
+                    graph.inherit_rec(a, b)
 
                 for a, b in zip(func.registered_tempvars, inhfunc.registered_tempvars): # XXX more general
                     getgx().inheritance_tempvars.setdefault(a, []).append(b)
