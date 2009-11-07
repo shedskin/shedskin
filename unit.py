@@ -7988,7 +7988,7 @@ check('b', ['list(float)'])
 check('c', ['list(int)'])
 check('d', ['list(float)'])
 dupl = gx.main_module.funcs['hoppa']
-assert typesetreprnew(dupl.vars['k'], dupl, False) == '[list(float)]'
+assert shedskin.cpp.typesetreprnew(dupl.vars['k'], dupl, False) == '[list(float)]'
 output()
 
 '''),
@@ -8062,11 +8062,11 @@ check('c', ['list(int)'])
 check('d', ['list(int)'])
 check('e', ['list(float)'])
 dupl = gx.main_module.funcs['dupl']
-assert typesetreprnew(dupl.vars['l'], dupl, False) == '[list(A)]'
-assert typesetreprnew(dupl.vars['k'], dupl, False) == '[list(float)]'
-assert typesetreprnew(dupl.vars['v'], dupl, False) == '[list(int)]'
+assert shedskin.cpp.typesetreprnew(dupl.vars['l'], dupl, False) == '[list(A)]'
+assert shedskin.cpp.typesetreprnew(dupl.vars['k'], dupl, False) == '[list(float)]'
+assert shedskin.cpp.typesetreprnew(dupl.vars['v'], dupl, False) == '[list(int)]'
 makel = gx.main_module.funcs['makel']
-assert typesetreprnew(makel.vars['l'], makel, False) == '[list(A)]'
+assert shedskin.cpp.typesetreprnew(makel.vars['l'], makel, False) == '[list(A)]'
 output()
 
 '''),
@@ -8095,8 +8095,8 @@ check('b', ['list(float)'])
 check('c', ['list(int)'])
 check('d', ['list(float)'])
 hoppa = gx.main_module.funcs['hoppa']
-assert typesetreprnew(hoppa.vars['l'], hoppa, False) == '[list(A)]'
-assert typesetreprnew(hoppa.vars['k'], hoppa, False) == '[list(float)]'
+assert shedskin.cpp.typesetreprnew(hoppa.vars['l'], hoppa, False) == '[list(A)]'
+assert shedskin.cpp.typesetreprnew(hoppa.vars['k'], hoppa, False) == '[list(float)]'
 output()
 
 '''),
@@ -8113,7 +8113,7 @@ dupl(a)                                  # []
 ''', '''
 check('a', ['list(int)'])
 hoppa = gx.main_module.funcs['dupl']
-assert typesetreprnew(hoppa.vars['k'], hoppa, False) == '[list(float)]'
+assert shedskin.cpp.typesetreprnew(hoppa.vars['k'], hoppa, False) == '[list(float)]'
 output()
 
 '''),
@@ -9747,7 +9747,7 @@ tests.reverse()
 failures = []
 
 def check(name, typelist):
-    ts = typesetreprnew(cv.globals[name], None, False) 
+    ts = shedskin.cpp.typesetreprnew(cv.globals[name], None, False) 
     if ts != '['+typelist[0]+']':
         print 'expected for', name+':'
         print '['+typelist[0]+']'
