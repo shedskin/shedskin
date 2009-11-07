@@ -174,7 +174,7 @@ output(equal=True)
 
 ('''fixes for 0.1.1''', '''
 # file.next
-print file('ss.py').next().strip()
+print file('unit.py').next().strip()
 
 # re.groups returns tuple
 import re
@@ -338,7 +338,7 @@ def ahoi():
 ahoi()
 
 # overloading problem
-file = open('ss.py')
+file = open('unit.py')
 print file.read(10)
 file.close()
 
@@ -979,9 +979,9 @@ print int(''.istitle())
 
 #glob, fnmatch
 import glob
-print glob.glob('ss.py')
+print glob.glob('unit.py')
 import fnmatch
-print int(fnmatch.fnmatch('ss.py', 'ss.[py]y'))
+print int(fnmatch.fnmatch('unit.py', 'unit.[py]y'))
 
 #staticmethod, property
 class woef(object):
@@ -1103,7 +1103,7 @@ from os.path import *
 
 print join('a','b','c')
 
-realpath('ss.py')
+realpath('unit.py')
 commonprefix(['xxx', 'xxxx'])
 normcase('hoei')
 splitext('hoei/woei')
@@ -1123,10 +1123,10 @@ def bleh2(arg, top, names):
 walk('testdata', bleh, 77)
 walk('testdata', bleh2, 'hoei')
 
-getsize('ss.py')
-getatime('ss.py')
-getctime('ss.py')
-getmtime('ss.py')
+getsize('unit.py')
+getatime('unit.py')
+getctime('unit.py')
+getmtime('unit.py')
 
 #locally overloading builtin definition 
 str = '4'
