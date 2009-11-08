@@ -1,20 +1,28 @@
-from shared import getgx
+import re, string
+
+from compiler import *
+from compiler.ast import *
+from compiler.visitor import *
+
+from shared import *
 from cpp import typesetreprnew
 
 # --- annotate original code
 def annotate():
     if not getgx().annotation:
         return
-
+    re_comment = re.compile(r'#[^\"\']*$')
     def paste(expr, text):
         if not expr.lineno: return
         if (expr,0,0) in getgx().cnode and inode(expr).mv != mv: return # XXX
         line = source[expr.lineno-1][:-1]
-        if '#' in line: line = line[:line.index('#')]
-        if text != '':
+        match = re_comment.search(line)
+        if match:
+            line = line[:match.start()]
+        if text:
             text = '# '+text
         line = string.rstrip(line)
-        if text != '' and len(line) < 40: line += (40-len(line))*' '
+        if text and len(line) < 40: line += (40-len(line))*' '
         source[expr.lineno-1] = line 
         if text: source[expr.lineno-1] += ' ' + text
         source[expr.lineno-1] += '\n'
