@@ -28,6 +28,13 @@ parse150()
 #ftp.retrbinary(print_line)
 #ftp.retrlines()
 
+# re.subn, re.re_object.subn (douglas mcneil)
+import re
+res = re.subn('a', 'ama', 'amadeus')
+print res
+res = re.compile('a').subn('ama', 'amadeus')
+print res
+
 ''', '''
 output(equal=True)
 '''),
