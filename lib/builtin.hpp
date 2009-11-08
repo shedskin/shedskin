@@ -697,7 +697,7 @@ public:
 
 class __striter : public __seqiter<str *> {
 public:
-    int counter;
+    int counter, size;
     str *p;
 
     __striter(str *p); 
