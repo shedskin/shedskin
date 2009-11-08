@@ -35,6 +35,9 @@ print res
 res = re.compile('a').subn('ama', 'amadeus')
 print res
 
+# str.replace infinite recursion (douglas mcneil)
+print 'faaaaaredfredbrrr'.replace('r', 'rr') 
+
 ''', '''
 output(equal=True)
 '''),
