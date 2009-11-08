@@ -910,9 +910,12 @@ int str::endswith(str *s, int start, int end) {
 
 str *str::replace(str *a, str *b, int c) {
     __GC_STRING s = unit;
-    int i, j = 0;
-    while( ((c==-1) || (j++ != c)) && (i = s.find(a->unit)) != -1 ) 
-        s.replace(i, a->unit.size(), b->unit);
+    int i, j, p;
+    j = p = 0;
+    while( ((c==-1) || (j++ != c)) && (i = s.find(a->unit, p)) != -1 ) {
+      s.replace(i, a->unit.size(), b->unit);
+      p = i + b->unit.size();
+    }
     return new str(s);
 }
 
