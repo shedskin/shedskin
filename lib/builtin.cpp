@@ -756,40 +756,79 @@ str *str::__iadd__(str *b) {
 
 str *__add_strs(int n, str *a, str *b, str *c) {
     str *result = new str();
-    result->unit.resize(a->unit.size()+b->unit.size()+c->unit.size());
-    memcpy((void *)(result->unit.data()), a->unit.data(), a->unit.size());
-    int pos = a->unit.size();
-    memcpy((void *)(result->unit.data()+pos), b->unit.data(), b->unit.size());
-    pos += b->unit.size();
-    memcpy((void *)(result->unit.data()+pos), c->unit.data(), c->unit.size());
+    int asize = a->unit.size();
+    int bsize = b->unit.size();
+    int csize = c->unit.size();
+    if(asize == 1 && bsize == 1 && csize == 1) {
+        result->unit.resize(3);
+        result->unit[0] = a->unit[0];
+        result->unit[1] = b->unit[0];
+        result->unit[2] = c->unit[0];
+    }
+    else {
+        result->unit.resize(asize+bsize+csize);
+        memcpy((void *)(result->unit.data()), a->unit.data(), asize);
+        int pos = asize;
+        memcpy((void *)(result->unit.data()+pos), b->unit.data(), bsize);
+        pos += bsize;
+        memcpy((void *)(result->unit.data()+pos), c->unit.data(), csize);
+    }
     return result;
 }
 
 str *__add_strs(int n, str *a, str *b, str *c, str *d) {
     str *result = new str();
-    result->unit.resize(a->unit.size()+b->unit.size()+c->unit.size()+d->unit.size());
-    memcpy((void *)(result->unit.data()), a->unit.data(), a->unit.size());
-    int pos = a->unit.size();
-    memcpy((void *)(result->unit.data()+pos), b->unit.data(), b->unit.size());
-    pos += b->unit.size();
-    memcpy((void *)(result->unit.data()+pos), c->unit.data(), c->unit.size());
-    pos += c->unit.size();
-    memcpy((void *)(result->unit.data()+pos), d->unit.data(), d->unit.size());
+    int asize = a->unit.size();
+    int bsize = b->unit.size();
+    int csize = c->unit.size();
+    int dsize = d->unit.size();
+    if(asize == 1 && bsize == 1 && csize == 1 && dsize == 1) {
+        result->unit.resize(4);
+        result->unit[0] = a->unit[0];
+        result->unit[1] = b->unit[0];
+        result->unit[2] = c->unit[0];
+        result->unit[3] = d->unit[0];
+    }
+    else {
+        result->unit.resize(asize+bsize+csize+dsize);
+        memcpy((void *)(result->unit.data()), a->unit.data(), asize);
+        int pos = asize;
+        memcpy((void *)(result->unit.data()+pos), b->unit.data(), bsize);
+        pos += bsize;
+        memcpy((void *)(result->unit.data()+pos), c->unit.data(), csize);
+        pos += csize;
+        memcpy((void *)(result->unit.data()+pos), d->unit.data(), dsize); 
+    }
     return result;
 }
 
 str *__add_strs(int n, str *a, str *b, str *c, str *d, str *e) {
     str *result = new str();
-    result->unit.resize(a->unit.size()+b->unit.size()+c->unit.size()+d->unit.size());
-    memcpy((void *)(result->unit.data()), a->unit.data(), a->unit.size());
-    int pos = a->unit.size();
-    memcpy((void *)(result->unit.data()+pos), b->unit.data(), b->unit.size());
-    pos += b->unit.size();
-    memcpy((void *)(result->unit.data()+pos), c->unit.data(), c->unit.size());
-    pos += c->unit.size();
-    memcpy((void *)(result->unit.data()+pos), d->unit.data(), d->unit.size());
-    pos += d->unit.size();
-    memcpy((void *)(result->unit.data()+pos), e->unit.data(), e->unit.size());
+    int asize = a->unit.size();
+    int bsize = b->unit.size();
+    int csize = c->unit.size();
+    int dsize = d->unit.size();
+    int esize = e->unit.size();
+    if(asize == 1 && bsize == 1 && csize == 1 && dsize == 1 && esize == 1) {
+        result->unit.resize(5);
+        result->unit[0] = a->unit[0];
+        result->unit[1] = b->unit[0];
+        result->unit[2] = c->unit[0];
+        result->unit[3] = d->unit[0];
+        result->unit[4] = e->unit[0];
+    }
+    else {
+        result->unit.resize(asize+bsize+csize+dsize+esize);
+        memcpy((void *)(result->unit.data()), a->unit.data(), asize);
+        int pos = asize;
+        memcpy((void *)(result->unit.data()+pos), b->unit.data(), bsize);
+        pos += bsize;
+        memcpy((void *)(result->unit.data()+pos), c->unit.data(), csize);
+        pos += csize;
+        memcpy((void *)(result->unit.data()+pos), d->unit.data(), dsize); 
+        pos += dsize;
+        memcpy((void *)(result->unit.data()+pos), e->unit.data(), esize); 
+    }
     return result;
 }
 

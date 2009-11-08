@@ -48,6 +48,12 @@ print 'hoi' + 'mams' + 'ik'
 print 'hoi' + 'mams' + 'ik' + 'ben'
 print 'hoi' + 'mams' + 'ik' + 'ben' + 'er'
 print 'hoi' + 'mams' + 'ik' + 'ben' + 'er' + 'weer'
+print 'h' 
+print 'h' + 'm'
+print 'h' + 'm' + 'i'
+print 'h' + 'm' + 'i' + 'b'
+print 'h' + 'm' + 'i' + 'b' + 'e'
+print 'h' + 'm' + 'i' + 'b' + 'e' + 'w'
 
 ''', '''
 output(equal=True)
