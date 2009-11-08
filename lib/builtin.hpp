@@ -1279,6 +1279,9 @@ template<class T> T __mul2(double n, T a) { return a->__mul__(n); }
 template<class T> T __div2(int n, T a) { return a->__rdiv__(n); }
 template<class T> T __div2(double n, T a) { return a->__rdiv__(n); }
 
+str *__add_strs(int n, str *a, str *b, str *c);
+str *__add_strs(int n, str *a, str *b, str *c, str *d);
+str *__add_strs(int n, str *a, str *b, str *c, str *d, str *e);
 str *__add_strs(int n, ...);
 
 /* deep copy */

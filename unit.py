@@ -41,6 +41,14 @@ print 'faaaaaredfredbrrr'.replace('r', 'rr')
 # strip whitespace
 print int(' \\t\\n0x18 \\t ', 16)
 
+# check add_strs optimization
+print 'hoi' 
+print 'hoi' + 'mams'
+print 'hoi' + 'mams' + 'ik'
+print 'hoi' + 'mams' + 'ik' + 'ben'
+print 'hoi' + 'mams' + 'ik' + 'ben' + 'er'
+print 'hoi' + 'mams' + 'ik' + 'ben' + 'er' + 'weer'
+
 ''', '''
 output(equal=True)
 '''),
