@@ -2004,12 +2004,13 @@ __seqiter<str *> *str::__iter__() {
 __striter::__striter(str *p) {
     this->p = p;
     counter = 0;
+    size = p->unit.size();
 }
 
 str *__striter::next() {
-   if(counter == p->unit.size())
-       throw new StopIteration();
-   return p->__getitem__(counter++); 
+    if(counter == size)
+        throw new StopIteration();
+    return __char_cache[((unsigned char)(p->unit[counter++]))];
 }
 
 __iter<str *> *file::__iter__() {
