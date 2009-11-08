@@ -754,6 +754,45 @@ str *str::__iadd__(str *b) {
     return __add__(b);
 }
 
+str *__add_strs(int n, str *a, str *b, str *c) {
+    str *result = new str();
+    result->unit.resize(a->unit.size()+b->unit.size()+c->unit.size());
+    memcpy((void *)(result->unit.data()), a->unit.data(), a->unit.size());
+    int pos = a->unit.size();
+    memcpy((void *)(result->unit.data()+pos), b->unit.data(), b->unit.size());
+    pos += b->unit.size();
+    memcpy((void *)(result->unit.data()+pos), c->unit.data(), c->unit.size());
+    return result;
+}
+
+str *__add_strs(int n, str *a, str *b, str *c, str *d) {
+    str *result = new str();
+    result->unit.resize(a->unit.size()+b->unit.size()+c->unit.size()+d->unit.size());
+    memcpy((void *)(result->unit.data()), a->unit.data(), a->unit.size());
+    int pos = a->unit.size();
+    memcpy((void *)(result->unit.data()+pos), b->unit.data(), b->unit.size());
+    pos += b->unit.size();
+    memcpy((void *)(result->unit.data()+pos), c->unit.data(), c->unit.size());
+    pos += c->unit.size();
+    memcpy((void *)(result->unit.data()+pos), d->unit.data(), d->unit.size());
+    return result;
+}
+
+str *__add_strs(int n, str *a, str *b, str *c, str *d, str *e) {
+    str *result = new str();
+    result->unit.resize(a->unit.size()+b->unit.size()+c->unit.size()+d->unit.size());
+    memcpy((void *)(result->unit.data()), a->unit.data(), a->unit.size());
+    int pos = a->unit.size();
+    memcpy((void *)(result->unit.data()+pos), b->unit.data(), b->unit.size());
+    pos += b->unit.size();
+    memcpy((void *)(result->unit.data()+pos), c->unit.data(), c->unit.size());
+    pos += c->unit.size();
+    memcpy((void *)(result->unit.data()+pos), d->unit.data(), d->unit.size());
+    pos += d->unit.size();
+    memcpy((void *)(result->unit.data()+pos), e->unit.data(), e->unit.size());
+    return result;
+}
+
 str *__add_strs(int n, ...) {
     va_list ap;
     va_start(ap, n);
