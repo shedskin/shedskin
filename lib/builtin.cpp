@@ -1241,7 +1241,7 @@ str *raw_input(str *msg) {
 int __int(str *s, int base) {
     char *cp;
     int size = s->unit.size();
-    if(size && (!('0' <= s->unit[0] <= '9') || !('0' <= s->unit[size-1] <= '9')))
+    if(!s->isdigit())
         s = s->strip();
     int i = strtol(s->unit.c_str(), &cp, base);
     if(cp != s->unit.c_str()+s->unit.size())
