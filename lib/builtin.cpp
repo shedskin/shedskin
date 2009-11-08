@@ -1162,7 +1162,8 @@ str *raw_input(str *msg) {
 
 int __int(str *s, int base) {
     char *cp;
-    s = s->strip();
+    if(!s->isdigit())
+        s = s->strip();
     int i = strtol(s->unit.c_str(), &cp, base);
     if(cp != s->unit.c_str()+s->unit.size())
         throw new ValueError(new str("invalid literal for int()"));

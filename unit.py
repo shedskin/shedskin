@@ -38,6 +38,9 @@ print res
 # str.replace infinite recursion (douglas mcneil)
 print 'faaaaaredfredbrrr'.replace('r', 'rr') 
 
+# strip whitespace
+print int(' \\t\\n0x18 \\t ', 16)
+
 ''', '''
 output(equal=True)
 '''),
