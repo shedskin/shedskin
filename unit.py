@@ -55,6 +55,9 @@ print 'h' + 'm' + 'i' + 'b'
 print 'h' + 'm' + 'i' + 'b' + 'e'
 print 'h' + 'm' + 'i' + 'b' + 'e' + 'w'
 
+# optimize addition of 1-length lists
+print [1]+[2,3,4], [1,2,3]+[4]
+
 ''', '''
 output(equal=True)
 '''),
