@@ -1757,9 +1757,11 @@ template<class T> list<T> *list<T>::__add__(list<T> *b) {
 
     list<T> *c = new list<T>();
     c->units.resize(l1+l2);
-    
-    memcpy(&(c->units[0]), &(this->units[0]), sizeof(T)*l1);
-    memcpy(&(c->units[l1]), &(b->units[0]), sizeof(T)*l2);
+
+    if(l1==1) c->units[0] = this->units[0];
+    else memcpy(&(c->units[0]), &(this->units[0]), sizeof(T)*l1);
+    if(l2==1) c->units[l1] = b->units[0];
+    else memcpy(&(c->units[l1]), &(b->units[0]), sizeof(T)*l2);
     
     return c;
 }
