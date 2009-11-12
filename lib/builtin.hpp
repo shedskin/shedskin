@@ -1744,7 +1744,8 @@ template<class T> void *list<T>::__delslice__(int a, int b) {
 }
 
 template<class T> int list<T>::__contains__(T a) {
-    for(int i=0; i<this->__len__(); i++)
+    int size = this->units.size();
+    for(int i=0; i<size; i++)
         if(__eq(this->units[i], a))
             return 1;
     return 0;
