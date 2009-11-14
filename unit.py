@@ -59,6 +59,18 @@ print 'h' + 'm' + 'i' + 'b' + 'e' + 'w'
 # optimize addition of 1-length lists
 print [1]+[2,3,4], [1,2,3]+[4]
 
+# known problem (issue 8)
+def quicksort(L):
+	x = y = 0
+	if L == []: return []
+	pivot = L[0]
+	return quicksort([x for x in L[1:] if x < pivot]) + [pivot] + \
+	        quicksort([y for y in L[1:] if y >= pivot])
+
+if __name__ == "__main__":
+	data = [1, 200, 50, 485, 22, 22, 3534, 22112]
+	print "quickdata: %s " % quicksort(data)
+
 ''', '''
 output(equal=True)
 '''),
