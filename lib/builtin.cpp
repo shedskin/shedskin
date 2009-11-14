@@ -989,10 +989,12 @@ int str::endswith(str *s, int start, int end) {
 str *str::replace(str *a, str *b, int c) {
     __GC_STRING s = unit;
     int i, j, p;
+    int asize = a->unit.size();
+    int bsize = b->unit.size();
     j = p = 0;
     while( ((c==-1) || (j++ != c)) && (i = s.find(a->unit, p)) != -1 ) {
-      s.replace(i, a->unit.size(), b->unit);
-      p = i + b->unit.size();
+      s.replace(i, asize, b->unit);
+      p = i + bsize + (asize?0:1);
     }
     return new str(s);
 }

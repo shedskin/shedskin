@@ -35,8 +35,9 @@ print res
 res = re.compile('a').subn('ama', 'amadeus')
 print res
 
-# str.replace infinite recursion (douglas mcneil)
+# str.replace corner cases (douglas mcneil)
 print 'faaaaaredfredbrrr'.replace('r', 'rr') 
+print 'aha'.replace('','men')
 
 # strip whitespace
 print int(' \\t\\n0x18 \\t ', 16)
