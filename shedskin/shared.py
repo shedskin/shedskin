@@ -495,42 +495,39 @@ def error(msg, node=None, warning=False):
 # --- merge constraint network along combination of given dimensions (dcpa, cpa, inheritance)
 # e.g. for annotation we merge everything; for code generation, we might want to create specialized code
 def merged(nodes, dcpa=False, inheritance=False): 
+    ggx = getgx()
     merge = {}
-
     if inheritance: # XXX do we really need this crap
-        mergeinh = merged([n for n in nodes if n.thing in getgx().inherited])
-        mergenoinh = merged([n for n in nodes if not n.thing in getgx().inherited]) 
+        mergeinh = merged([n for n in nodes if n.thing in ggx.inherited])
+        mergenoinh = merged([n for n in nodes if not n.thing in ggx.inherited]) 
 
     for node in nodes:
         # --- merge node types
         if dcpa: sort = (node.thing, node.dcpa)
         else: sort = node.thing
-        merge.setdefault(sort, set()).update(getgx().types[node]) 
+        sortdefault = merge.setdefault(sort, set())
+        sortdefault.update(ggx.types[node]) 
 
         # --- merge inheritance nodes
         if inheritance:
-            inh = getgx().inheritance_relations.get(node.thing, [])
+            inh = ggx.inheritance_relations.get(node.thing, [])
 
             # merge function variables with their inherited versions (we don't customize!)
             if isinstance(node.thing, variable) and isinstance(node.thing.parent, function):
                 var = node.thing
-
-                for inhfunc in getgx().inheritance_relations.get(var.parent, []):
-
+                for inhfunc in ggx.inheritance_relations.get(var.parent, []):
                     if var.name in inhfunc.vars:
                         if inhfunc.vars[var.name] in mergenoinh: 
-                            merge.setdefault(sort, set()).update(mergenoinh[inhfunc.vars[var.name]])
-
-                for inhvar in getgx().inheritance_tempvars.get(var, []): # XXX more general
+                            sortdefault.update(mergenoinh[inhfunc.vars[var.name]])
+                for inhvar in ggx.inheritance_tempvars.get(var, []): # XXX more general
                     if inhvar in mergenoinh: 
-                        merge.setdefault(sort, set()).update(mergenoinh[inhvar])
+                        sortdefault.update(mergenoinh[inhvar])
 
             # node is not a function variable
             else:
                 for n in inh:
                     if n in mergeinh: # XXX ook mergenoinh?
-                        merge.setdefault(sort, set()).update(mergeinh[n]) 
-
+                        sortdefault.update(mergeinh[n]) 
     return merge
 
 def lookup_class_module(objexpr, mv, parent):
