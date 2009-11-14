@@ -123,6 +123,7 @@ class list(pyseq):
     def __contains__(self, x):  
         return 1               
     def __add__(self, b):     
+        return self
         return b             
     def __mul__(self, b):   
         return self
