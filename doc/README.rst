@@ -564,10 +564,12 @@ I would like to thank the following company/people, for their help with **Shed S
 * Denis de Leeuw Duarte
 * Van Lindberg
 * David Marek
+* Douglas McNeil
 * Jeff Miller
 * Joaquin Abian Monux
 * Harri Pasanen
 * SirNotAppearingInThisTutorial
+* Thomas Spura
 * Dave Tweed
 * Jaroslaw Tworek
 * Pavel Vinogradov
