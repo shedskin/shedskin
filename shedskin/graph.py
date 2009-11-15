@@ -90,6 +90,8 @@ class moduleVisitor(ASTVisitor):
                 child = None
         elif isinstance(child, Const):
             child = type(child.value)
+        elif isinstance(child, Name) and child.name in ('True', 'False'):
+            child = int
         elif isinstance(child, Tuple):
             child = tuple
         elif isinstance(child, Dict):
