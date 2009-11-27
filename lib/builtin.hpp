@@ -512,6 +512,7 @@ public:
     int empty();
     list<T> *__slice__(int x, int l, int u, int s);
     void *__setslice__(int x, int l, int u, int s, pyiter<T> *b);
+    void *__setslice__(int x, int l, int u, int s, list<T> *b);
     void *__delete__(int i);
     void *__delete__(int x, int l, int u, int s);
     void *__delslice__(int a, int b);
@@ -1669,15 +1670,16 @@ template<class T> list<T> *list<T>::__slice__(int x, int l, int u, int s) {
 }
 
 template<class T> void *list<T>::__setslice__(int x, int l, int u, int s, pyiter<T> *b) {
-    int i, j;
     T e;
-
-    list<T> *la = new list<T>(); /* XXX optimize for sequences */
+    list<T> *la = new list<T>(); /* XXX avoid intermediate list */
     __iter<T> *__0;
     FOR_IN(e, b, 0)
         la->units.push_back(e);
     END_FOR
+    this->__setslice__(x, l, u, s, la);
+}
 
+template<class T> void *list<T>::__setslice__(int x, int l, int u, int s, list<T> *la) {
     slicenr(x, l, u, s, this->__len__());
     
     if(x&4 && s != 1) { // x&4: extended slice (step 's' is given), check if sizes match 
@@ -1704,6 +1706,7 @@ template<class T> void *list<T>::__setslice__(int x, int l, int u, int s, pyiter
             this->units.insert(this->units.begin()+l, la->units.begin(), la->units.end());
     }
     else {
+        int i, j;
         if(s > 0)
             for(i = 0, j = l; j < u; i++, j += s)
                 this->units[j] = la->units[i];

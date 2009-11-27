@@ -71,6 +71,13 @@ if __name__ == "__main__":
 	data = [1, 200, 50, 485, 22, 22, 3534, 22112]
 	print "quickdata: %s " % quicksort(data)
 
+# test list.__setslice__ optimization
+a = [1, 2, 3]
+a[-2:] = (1, 7, 9, 10)
+print a
+a[-2:] = set((1, 7, 9, 10))
+print a
+
 ''', '''
 output(equal=True)
 '''),
