@@ -66,7 +66,7 @@ def do_extmod_methoddef(gv, ident, funcs):
     for func in funcs:
         if isinstance(func.parent, class_): id = func.parent.ident+'_'+func.ident
         else: id = 'Global_'+func.ident
-        print >>gv.out, '    {(char *)"%(id)s", %(id2)s, METH_VARARGS, (char *)""},' % {'id': func.ident, 'id2': id}
+        print >>gv.out, '    {(char *)"%(id)s", (PyCFunction)%(id2)s, METH_VARARGS | METH_KEYWORDS, (char *)""},' % {'id': func.ident, 'id2': id}
     print >>gv.out, '    {NULL}\n};\n'
 
 def do_extmod_method(gv, func):
@@ -76,7 +76,7 @@ def do_extmod_method(gv, func):
 
     if isinstance(func.parent, class_): id = func.parent.ident+'_'+func.ident # XXX
     else: id = 'Global_'+func.ident # XXX
-    print >>gv.out, 'PyObject *%s(PyObject *self, PyObject *args) {' % id
+    print >>gv.out, 'PyObject *%s(PyObject *self, PyObject *args, PyObject *kwargs) {' % id
     print >>gv.out, '    if(PyTuple_Size(args) < %d || PyTuple_Size(args) > %d) {' % (len(formals)-len(func.defaults), len(formals))
     print >>gv.out, '        PyErr_SetString(PyExc_Exception, "invalid number of arguments");'
     print >>gv.out, '        return 0;'
@@ -194,7 +194,7 @@ def do_extmod_class(gv, cl):
     do_extmod_methoddef(gv, cl.ident, funcs)
 
     # tp_new 
-    print >>gv.out, 'PyObject *%sNew(PyTypeObject *type, PyObject *args, PyObject *kwds) {' % cl.ident
+    print >>gv.out, 'PyObject *%sNew(PyTypeObject *type, PyObject *args, PyObject *kwargs) {' % cl.ident
     print >>gv.out, '    %sObject *self = (%sObject *)type->tp_alloc(type, 0);' % (cl.ident, cl.ident)
     print >>gv.out, '    self->__ss_object = new __%s__::%s();' % (gv.module.ident, cl.ident)
     print >>gv.out, '    __ss_proxy->__setitem__(self->__ss_object, self);'
