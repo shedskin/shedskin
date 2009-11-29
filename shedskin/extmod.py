@@ -77,13 +77,8 @@ def do_extmod_method(gv, func):
     if isinstance(func.parent, class_): id = func.parent.ident+'_'+func.ident # XXX
     else: id = 'Global_'+func.ident # XXX
     print >>gv.out, 'PyObject *%s(PyObject *self, PyObject *args, PyObject *kwargs) {' % id
-    print >>gv.out, '    if(PyTuple_Size(args) < %d || PyTuple_Size(args) > %d) {' % (len(formals)-len(func.defaults), len(formals))
-    print >>gv.out, '        PyErr_SetString(PyExc_Exception, "invalid number of arguments");'
-    print >>gv.out, '        return 0;'
-    print >>gv.out, '    }\n' 
     print >>gv.out, '    try {'
 
-    # convert [self,] args 
     for i, formal in enumerate(formals):
         gv.start('')
         typ = cpp.typesetreprnew(func.vars[formal], func)
@@ -91,8 +86,9 @@ def do_extmod_method(gv, func):
         cls = [c for c in cls if c.mv.module == getgx().main_module]
         if cls:
             typ = ('__%s__::' % cls[0].mv.module.ident)+typ
-        gv.append('        %(type)sarg_%(num)d = (PyTuple_Size(args) > %(num)d) ? __to_ss<%(type)s>(PyTuple_GetItem(args, %(num)d)) : ' % {'type' : typ, 'num' : i})
+        gv.append('        %(type)sarg_%(num)d = __ss_arg<%(type)s>("%(name)s", %(num)d, ' % {'type' : typ, 'num' : i, 'name': formal})
         if i >= len(formals)-len(func.defaults):
+            gv.append('1, ')
             defau = func.defaults[i-(len(formals)-len(func.defaults))]
             cast = cpp.assign_needs_cast(defau, None, func.vars[formal], func)
             if cast:
@@ -105,11 +101,11 @@ def do_extmod_method(gv, func):
                     gv.append('%s::default_%d' % ('__'+func.mv.module.ident+'__', func.mv.defaults[defau]))
             else:
                 gv.visit(defau, func)
-
             if cast:
                 gv.append(')')
         else:
-            gv.append('0')
+            gv.append('0, NULL')
+        gv.append(', args, kwargs)')
         gv.eol()
     print >>gv.out
 
