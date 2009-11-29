@@ -1054,6 +1054,14 @@ public:
 #endif
 };
 
+class TypeError : public Exception { 
+public: 
+    TypeError(str *msg=0) : Exception(msg) {} 
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_TypeError; }
+#endif
+};
+
 class IOError : public Exception { 
 public: 
     IOError(str *msg=0) : Exception(msg) {} 
@@ -1147,14 +1155,6 @@ public:
     SystemExit(str *msg=0) : Exception(msg) {}
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_SystemExit; }
-#endif
-};
-
-class TypeError : public Exception { 
-public: 
-    TypeError(str *msg=0) : Exception(msg) {} 
-#ifdef __SS_BIND
-    PyObject *__to_py__() { return PyExc_TypeError; }
 #endif
 };
 
@@ -2826,6 +2826,21 @@ template<class A, class B> PyObject *tuple2<A, B>::__to_py__() {
     PyTuple_SetItem(p, 0, __to_py(first));
     PyTuple_SetItem(p, 1, __to_py(second));
     return p;
+}
+#endif
+
+#ifdef __SS_BIND
+template<class T> T __ss_arg(const char *name, int pos, int has_default, T default_value, PyObject *args, PyObject *kwargs) {
+    PyObject *kwarg;
+    int nrofargs = PyTuple_Size(args);
+    if (pos < nrofargs) 
+        return __to_ss<T>(PyTuple_GetItem(args, pos));
+    else if (kwargs && (kwarg = PyDict_GetItemString(kwargs, name))) 
+        return __to_ss<T>(kwarg);
+    else if (has_default) 
+        return default_value;
+    else
+        throw new TypeError(new str("missing argument"));
 }
 #endif
 
