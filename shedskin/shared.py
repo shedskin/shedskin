@@ -663,12 +663,10 @@ def connect_actual_formal(expr, func, parent_constr=False, check_error=False):
 
     if check_error and func.ident not in ['min', 'max']:
         if len(actuals)+len(keywords) > len(formals):
-            #if func.ident != 'join':
-            if not (func.mv.module.builtin and func.mv.module.ident == 'path' and func.ident == 'join') and \
+            if not func.node.varargs and \
                not (func.mv.module.builtin and func.mv.module.ident == 're' and func.ident == '__group') and \
                not (func.mv.module.builtin and func.mv.module.ident == 'os' and (func.ident.startswith('execl') or func.ident.startswith('spawnl'))): # XXX
-                    if not func.node.varargs:
-                        error("too many arguments in call to '%s'" % func.ident, expr)
+                    error("too many arguments in call to '%s'" % func.ident, expr)
         if len(actuals)+len(keywords) < len(formals)-len(func.defaults) and not expr.star_args:
             error("not enough arguments in call to '%s'" % func.ident, expr)
 
@@ -698,9 +696,10 @@ def connect_actual_formal(expr, func, parent_constr=False, check_error=False):
                 default = func.defaults[i+uglyoffset]
                 actuals.append(default)
 
+    if formals:
+        formals += (len(actuals)-len(formals)) * [formals[-1]]
     for (actual, formal) in zip(actuals, formals):
         pairs.append((actual, func.vars[formal]))
-
     return pairs
 
 def parent_func(thing):
