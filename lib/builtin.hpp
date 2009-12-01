@@ -1216,13 +1216,17 @@ class StopIteration : public Exception { public: StopIteration(str *msg=0) : Exc
 
 #define END_FOR }
 
+static void __throw_index_out_of_range() { /* improve inlining of __wrap */
+   throw new IndexError(new str("index out of range"));
+}
+
 template<class T> static inline int __wrap(T a, int i) {
     #ifndef NOWRAP
     if(i<0) return len(a)+i;
     #endif
     #ifndef NOBOUNDS 
         if(i<0 || i>= len(a)) 
-            throw new IndexError(new str("index out of range")); 
+            __throw_index_out_of_range();
     #endif
     return i;
 }
