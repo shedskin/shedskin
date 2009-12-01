@@ -1,26 +1,17 @@
 import math
 import time
 
-__all__ = ["Random","seed","random","uniform","randint","choice","sample",
-           "randrange","shuffle","normalvariate","lognormvariate",
-           "cunifvariate","expovariate","vonmisesvariate","gammavariate",
-           "stdgamma","gauss","betavariate","paretovariate","weibullvariate",
-           "getstate","setstate","jumpahead", "WichmannHill"]
-
-# Constants
-NV_MAGICCONST = 4 * math.exp(-0.5)/math.sqrt(2.0)
-LOG4 = math.log(4.0)
-SG_MAGICCONST = 1.0 + math.log(4.5)
-BPF = 53        # Number of bits in a float
-MAXWIDTH = 1L<<BPF
-MAXINT = 0x7fffffff
-
-# Mersenne Twister constants
-N = 624  # Period parameters
-M = 397
-MATRIX_A = 0x9908b0dfL   # constant vector a
-UPPER = 0x80000000L # most significant w-r bits
-LOWER = 0x7fffffffL # least significant r bits
+NV_MAGICCONST = 1.0
+LOG4 = 1.0
+SG_MAGICCONST = 1.0 
+BPF = 1
+MAXWIDTH = 1
+MAXINT = 1
+N = 1 
+M = 1
+MATRIX_A = 1
+UPPER = 1
+LOWER = 1
 
 class Random:
     def __init__(self, a=-1): return 1

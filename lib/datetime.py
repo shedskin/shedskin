@@ -36,7 +36,7 @@ class date:
         return self
     
     def timetuple(self):
-        return struct_time(9*(1,))
+        return struct_time((1,))
 
     def toordinal(self):
         return 1
@@ -147,10 +147,10 @@ class datetime(date):
         return ''
 
     def timetuple(self):
-        return struct_time(9*(1,))
+        return struct_time((1,))
 
     def utctimetuple(self):
-        return struct_time(9*(1,))
+        return struct_time((1,))
 
     def toordinal(self):
         return 1
