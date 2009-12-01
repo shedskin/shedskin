@@ -30,7 +30,7 @@ def islink(path):
 def isfile(path):
     return False
 
-def join(a):
+def join(*a):
     return ''
 
 def normcase(s):
