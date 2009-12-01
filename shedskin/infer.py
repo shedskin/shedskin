@@ -197,7 +197,7 @@ def possible_functions(node):
     anon_func = False
     funcs = []
 
-    if not node.mv.module.builtin or node.mv.module.ident in ['path','re'] or \
+    if not node.mv.module.builtin or node.mv.module.ident in ['path','re', 'itertools'] or \
         (node.parent and node.parent.ident in ('sort','sorted')): # XXX to analyze_callfunc
         subnode = expr.node, node.dcpa, node.cpa
         if subnode in getgx().cnode:
