@@ -448,7 +448,7 @@ def actuals_formals(expr, func, node, dcpa, cpa, types, worklist):
                 smut.append(kw.expr)
 
     # XXX add defaults to smut here, simplify code below
-    if not ident in ['min','max','bool'] and (len(smut) < len(formals)-len(func.defaults) or len(smut) > len(formals)): # XXX star_args etc. XXX keywords <-> defaults
+    if not ident in ['min','max','bool'] and (len(smut) < len(formals)-len(func.defaults) or len(smut) > len(formals)) and not func.node.varargs: # XXX star_args etc. XXX keywords <-> defaults
         return
 
     # --- connect/seed as much direct arguments as possible
@@ -462,7 +462,6 @@ def actuals_formals(expr, func, node, dcpa, cpa, types, worklist):
         formals *= len(smut)
 
     for (actual, formal, formaltype) in zip(smut, formals, types):
-        #print 'connect', actual, formal, formaltype, node
         formalnode = getgx().cnode[func.vars[formal], dcpa, cpa]
 
         if formaltype[1] != 0: # ifa: remember dataflow information for non-simple types
