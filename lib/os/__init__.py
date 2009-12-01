@@ -291,13 +291,13 @@ def popen4(cmd, mode='r', bufsize=-1):
 def close(fd):
     pass
 
-def execl(path):
+def execl(*path):
     pass
-def execlp(path):
+def execlp(*path):
     pass
-def execle(path):
+def execle(*path):
     pass
-def execlpe(path):
+def execlpe(*path):
     pass
 
 def execv(path, args):
@@ -309,13 +309,13 @@ def execve(path, args, env):
 def execvpe(path, args, env):
     pass
 
-def spawnl(mode, path):
+def spawnl(mode, *path):
     return 1
-def spawnlp(mode, path):
+def spawnlp(mode, *path):
     return 1
-def spawnle(mode, path):
+def spawnle(mode, *path):
     return 1
-def spawnlpe(mode, path):
+def spawnlpe(mode, *path):
     return 1
 
 def spawnv(mode, path, args):
