@@ -664,9 +664,8 @@ def connect_actual_formal(expr, func, parent_constr=False, check_error=False):
     if check_error and func.ident not in ['min', 'max']:
         if len(actuals)+len(keywords) > len(formals):
             if not func.node.varargs and \
-               not (func.mv.module.builtin and func.mv.module.ident == 're' and func.ident == '__group') and \
-               not (func.mv.module.builtin and func.mv.module.ident == 'os' and (func.ident.startswith('execl') or func.ident.startswith('spawnl'))): # XXX
-                    error("too many arguments in call to '%s'" % func.ident, expr)
+               not (func.mv.module.builtin and func.mv.module.ident == 're' and func.ident == '__group'):
+                   error("too many arguments in call to '%s'" % func.ident, expr)
         if len(actuals)+len(keywords) < len(formals)-len(func.defaults) and not expr.star_args:
             error("not enough arguments in call to '%s'" % func.ident, expr)
 
