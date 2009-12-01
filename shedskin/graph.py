@@ -425,7 +425,7 @@ class moduleVisitor(ASTVisitor):
         return mod
 
     def visitFunction(self, node, parent=None, is_lambda=False, inherited_from=None):
-        if node.varargs or node.kwargs or [x for x in node.argnames if not isinstance(x, str)]: 
+        if not getmv().module.builtin and (node.varargs or node.kwargs or [x for x in node.argnames if not isinstance(x, str)]): 
             error('argument (un)packing is not supported', node)
 
         func = function(node, parent, inherited_from)
