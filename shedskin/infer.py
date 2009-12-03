@@ -188,7 +188,7 @@ def possible_functions(node):
     funcs = []
 
     if not node.mv.module.builtin or node.mv.module.ident in ['path','re', 'itertools'] or \
-        (node.parent and node.parent.ident in ('sort','sorted', 'map', '__map3')): # XXX to analyze_callfunc
+        (node.parent and node.parent.ident in ('sort','sorted', 'map', '__map3', 'reduce')): # XXX to analyze_callfunc
         subnode = expr.node, node.dcpa, node.cpa
         if subnode in getgx().cnode:
             stypes = getgx().cnode[subnode].types() 
