@@ -3316,8 +3316,11 @@ template <class A, class B> list<A> *filter(B (*func)(A), pyiter<A> *a) {
     try {
         while(1) {
             value = ita->next();
-            if(___bool((*func)(value)))
-               result->append(value);
+            if(func) {
+                if(___bool((*func)(value)))
+                    result->append(value);
+            } else if(___bool(value)) 
+                result->append(value);
         }
     } catch(StopIteration *) {
         return result;
@@ -3325,12 +3328,15 @@ template <class A, class B> list<A> *filter(B (*func)(A), pyiter<A> *a) {
 }
 
 template <class A, class B> tuple2<A,A> *filter(B (*func)(A), tuple2<A,A> *a) {
-    return __tuple(filter(func, (pyiter<A> *)a)); /* XXX */
+    return __tuple(filter(func, (pyiter<A> *)a)); /* XXX inefficient */
+}
+template <class B> str *filter(B (*func)(str *), str *a) {
+    return (new str())->join(filter(func, (pyiter<str *> *)a)); /* XXX inefficient */
 }
 
-template <class B> str *filter(B (*func)(str *), str *a) {
-    return (new str())->join(filter(func, (pyiter<str *> *)a)); /* XXX */
-}
+template <class A> list<A> *filter(void *func, pyiter<A> *a) { return filter(((int(*)(A))(func)), a); }
+template <class A> tuple2<A,A> *filter(void *func, tuple2<A,A> *a) { return filter(((int(*)(A))(func)), a); }
+str *filter(void *func, str *a);
 
 /* pow */
 
