@@ -3309,6 +3309,21 @@ template <class A> A reduce(A (*func)(A, A), pyiter<A> *a) {
     }
 }
 
+template <class A, class B> list<A> *filter(B (*func)(A), pyiter<A> *a) {
+    __iter<A> *ita = a->__iter__();
+    list<A> *result = new list<A>();
+    A value;
+    try {
+        while(1) {
+            value = ita->next();
+            if(___bool((*func)(value)))
+               result->append(value);
+        }
+    } catch(StopIteration *) {
+        return result;
+    }
+}
+
 /* pow */
 
 template<class A, class B> double __power(A a, B b);

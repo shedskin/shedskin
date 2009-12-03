@@ -90,6 +90,8 @@ print bmap
 print reduce(lambda a,b:a+b, [3,5,7])
 print reduce(lambda a,b:a-b, set([3,5,7]),1)
 
+print filter(lambda a: 2 <=a<5, range(10))
+
 ''', '''
 output(equal=True)
 '''),

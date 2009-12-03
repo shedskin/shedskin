@@ -1123,9 +1123,7 @@ class moduleVisitor(ASTVisitor):
             # direct call
             ident = node.node.name
 
-            if ident in ['filter', 'getattr', 'setattr'] and ident not in getmv().funcs:
-                error("'%s' function is not supported" % ident, node.node)
-            if ident in ['slice']:
+            if ident in ['getattr', 'setattr', 'slice', 'next']:
                 error("'%s' function is not supported" % ident, node.node)
             if ident == 'dict' and [x for x in node.args if isinstance(x, Keyword)]:
                 error('unsupported method of initializing dictionaries', node)
