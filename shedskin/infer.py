@@ -198,7 +198,7 @@ def possible_functions(node):
     funcs = []
 
     if not node.mv.module.builtin or node.mv.module.ident in ['path','re', 'itertools'] or \
-        (node.parent and node.parent.ident in ('sort','sorted')): # XXX to analyze_callfunc
+        (node.parent and node.parent.ident in ('sort','sorted', 'map')): # XXX to analyze_callfunc
         subnode = expr.node, node.dcpa, node.cpa
         if subnode in getgx().cnode:
             stypes = getgx().cnode[subnode].types() 
@@ -448,18 +448,17 @@ def actuals_formals(expr, func, node, dcpa, cpa, types, worklist):
                 smut.append(kw.expr)
 
     # XXX add defaults to smut here, simplify code below
-    if not ident in ['min','max','bool'] and (len(smut) < len(formals)-len(func.defaults) or len(smut) > len(formals)) and not func.node.varargs: # XXX star_args etc. XXX keywords <-> defaults
+    if not ident in ['min','max','bool'] and (len(smut) < len(formals)-len(func.defaults) or len(smut) > len(formals)) and not func.node.varargs and not expr.star_args: 
         return
 
     # --- connect/seed as much direct arguments as possible
-
     if len(smut) < len(formals):
         smut = smut + func.defaults[-len(formals)+len(smut):]
-
-    #print 'aft', types #expr, smut, formals, types, zip(smut, formals, types)
-
     if ident in ['min', 'max']:
         formals *= len(smut)
+    if expr.star_args: 
+        smut += len(formals)*[expr.star_args]
+        types = len(formals)*types
 
     for (actual, formal, formaltype) in zip(smut, formals, types):
         formalnode = getgx().cnode[func.vars[formal], dcpa, cpa]

@@ -742,3 +742,6 @@ def exit(code=0):
 
 def quit(code=0):
     pass
+
+def map(func, *iterable):
+    return [func(*iter(iterable).next())]
