@@ -188,7 +188,7 @@ def possible_functions(node):
     funcs = []
 
     if not node.mv.module.builtin or node.mv.module.ident in ['path','re', 'itertools'] or \
-        (node.parent and node.parent.ident in ('sort','sorted', 'map', '__map3', 'filter', 'reduce')): # XXX to analyze_callfunc
+        (node.parent and node.parent.ident in ('sort','sorted', 'map', '__map3', 'filter', 'reduce', '__filter')): # XXX to analyze_callfunc
         subnode = expr.node, node.dcpa, node.cpa
         if subnode in getgx().cnode:
             stypes = getgx().cnode[subnode].types() 
@@ -293,6 +293,12 @@ def redirect(c, dcpa, func, callfunc, ident):
     # map XXX generalize based on __%s%d naming?
     if func.ident == 'map' and len(callfunc.args) == 3:
         func = func.mv.funcs['__'+ident+'3']
+
+    # filter
+    if ident == 'filter':
+        clnames = [x[0].ident for x in c if isinstance(x[0], class_)]
+        if 'str_' in clnames or 'tuple' in clnames or 'tuple2' in clnames:
+            func = func.mv.funcs['__'+ident]
 
     # staticmethod
     if isinstance(func.parent, class_) and func.ident in func.parent.staticmethods:

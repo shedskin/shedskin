@@ -3324,6 +3324,14 @@ template <class A, class B> list<A> *filter(B (*func)(A), pyiter<A> *a) {
     }
 }
 
+template <class A, class B> tuple2<A,A> *filter(B (*func)(A), tuple2<A,A> *a) {
+    return __tuple(filter(func, (pyiter<A> *)a)); /* XXX */
+}
+
+template <class B> str *filter(B (*func)(str *), str *a) {
+    return (new str())->join(filter(func, (pyiter<str *> *)a)); /* XXX */
+}
+
 /* pow */
 
 template<class A, class B> double __power(A a, B b);

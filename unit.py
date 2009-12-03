@@ -91,6 +91,8 @@ print reduce(lambda a,b:a+b, [3,5,7])
 print reduce(lambda a,b:a-b, set([3,5,7]),1)
 
 print filter(lambda a: 2 <=a<5, range(10))
+print filter(lambda c: c > 'a', 'abaaac')
+print filter(lambda c: c > 'a', tuple('abaaac'))
 
 ''', '''
 output(equal=True)

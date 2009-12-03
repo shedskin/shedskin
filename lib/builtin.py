@@ -750,8 +750,9 @@ def __map3(func, iter1, iter2):
 
 def filter(func, iter1):
     return [func(iter(iter1).next())]
+def __filter(func, iter1):
+    func(iter(iter1).next())
+    return iter1
 
 def reduce(func, iter1, init=None):
-    elem = iter(iter1).next() 
-    return func(elem, elem)
-
+    return func(*iter(iter1).next())
