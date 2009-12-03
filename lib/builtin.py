@@ -745,3 +745,5 @@ def quit(code=0):
 
 def map(func, *iterable):
     return [func(*iter(iterable).next())]
+def __map3(func, iter1, iter2):
+    return [func(iter(iter1).next(), iter(iter2).next())]
