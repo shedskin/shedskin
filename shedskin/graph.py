@@ -1123,7 +1123,7 @@ class moduleVisitor(ASTVisitor):
             # direct call
             ident = node.node.name
 
-            if ident in ['reduce', 'filter', 'getattr', 'setattr'] and ident not in getmv().funcs:
+            if ident in ['filter', 'getattr', 'setattr'] and ident not in getmv().funcs:
                 error("'%s' function is not supported" % ident, node.node)
             if ident in ['slice']:
                 error("'%s' function is not supported" % ident, node.node)
