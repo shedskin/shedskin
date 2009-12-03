@@ -78,6 +78,15 @@ print a
 a[-2:] = set((10,))
 print a
 
+# map
+def hoppa(x, y, z): return str(x+y+z)
+def uhppa(a, b): return a+int(b)
+
+amap = map(hoppa, [1,2,3], [3,4,5], [5,6,7])
+print amap
+bmap = map(uhppa, [1,2,3], ['3','4','5'])
+print bmap
+
 ''', '''
 output(equal=True)
 '''),
