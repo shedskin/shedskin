@@ -7783,7 +7783,7 @@ check('a', ['list(int)'])
 '''),
 
 ('(incorrectly) bootstrapping the builtin reduce', '''
-def reduce(f, l, i=-1):                  # f: [lambda0], l: [list(int)], i: [int]r
+def _reduce(f, l, i=-1):                  # f: [lambda0], l: [list(int)], i: [int]r
     if not l:                            # [list(int)]
         if i != -1: return i             # [int]
         print '*** ERROR! *** reduce() called with empty sequence and no initial value' # [str]
@@ -7801,7 +7801,7 @@ def reduce(f, l, i=-1):                  # f: [lambda0], l: [list(int)], i: [int
 acc = lambda x,y: x+y                    # [lambda0]
 score = [1,2,3,4]                        # [list(int)]
 
-print reduce(acc, score, 0)              # [int]
+print _reduce(acc, score, 0)              # [int]
 ''', '''
 output('10\\n')
 
@@ -8792,7 +8792,7 @@ check('a', ['list(int)'])
 # (c) Mark Dufour
 # --- mark.dufour@gmail.com
 
-def reduce(f, l, i=-1):                  # f: [lambda0], i: [int], l: [list(int)], r: [int]
+def _reduce(f, l, i=-1):                  # f: [lambda0], i: [int], l: [list(int)], r: [int]
     if not l:                            # [list(int)]
         if i != -1: return i             # [int]
         print '*** ERROR! *** reduce() called with empty sequence and no initial value' # [str]
@@ -8938,7 +8938,7 @@ def lookahead_variable(var, mods, dif):  # mods: [list(int)], dif: [list(int)], 
             break
         score.append(bincount)           # [None]
 	    
-    dif[var] = reduce(lambda x,y: 1024*x*y+x+y, score, 0) # [int]
+    dif[var] = _reduce(lambda x,y: 1024*x*y+x+y, score, 0) # [int]
     return 1                             # [int]
 
 def backtrack(mods):                     # lit: [int], mods: [list(int)]
@@ -9251,7 +9251,7 @@ print puzzlecolumns.__len__()
 # (c) Mark Dufour 
 # --- mark.dufour@gmail.com
 
-def reduce(f, l, i=-1):                  # f: [lambda0], i: [int], l: [list(int)], r: [int]
+def _reduce(f, l, i=-1):                  # f: [lambda0], i: [int], l: [list(int)], r: [int]
     if not l:                            # [list(int)]
         if i != -1: return i             # [int]
         print '*** ERROR! *** reduce() called with empty sequence and no initial value' # [str]
@@ -9339,7 +9339,7 @@ def lookahead(mods):                     # mods: [list(int)], dif: [list(int)], 
                 if not propagate(-choice, mods): return 0 # [int]
                 break
             score.append(bincount)       # []
-        dif[var] = reduce(lambda x, y: 1024*x*y+x+y, score, 0) # [int]
+        dif[var] = _reduce(lambda x, y: 1024*x*y+x+y, score, 0) # [int]
  
     return dif.index(max(dif))           # [int]
 
