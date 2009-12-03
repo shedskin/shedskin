@@ -1123,7 +1123,7 @@ class moduleVisitor(ASTVisitor):
             # direct call
             ident = node.node.name
 
-            if ident in ['reduce', 'map', 'filter', 'apply', 'getattr', 'setattr'] and ident not in getmv().funcs:
+            if ident in ['reduce', 'filter', 'getattr', 'setattr'] and ident not in getmv().funcs:
                 error("'%s' function is not supported" % ident, node.node)
             if ident in ['slice']:
                 error("'%s' function is not supported" % ident, node.node)
@@ -1143,14 +1143,16 @@ class moduleVisitor(ASTVisitor):
             node.args[0] = CallFunc(node.args[0], []) 
 
         # --- arguments
-        for arg in node.args: 
+        if not getmv().module.builtin and (node.star_args or node.dstar_args):
+            error('argument (un)packing is not supported', node)
+        args = node.args[:]
+        if node.star_args: args.append(node.star_args)
+        if node.dstar_args: args.append(node.dstar_args)
+        for arg in args:
             if isinstance(arg, Keyword):
                 arg = arg.expr
             self.visit(arg, func)
             inode(arg).callfuncs.append(node) # this one too
-
-        if node.star_args or node.dstar_args:
-             error('argument (un)packing is not supported', node)
 
         # --- handle instantiation or call
         if constructor:
