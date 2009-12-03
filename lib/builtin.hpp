@@ -3260,6 +3260,33 @@ template <class A> list<tuple2<A,A> *> *__zip3(pyseq<A> *a, pyseq<A> *b, pyseq<A
     return result;
 }
 
+/* map, filter, reduce */
+
+template <class A, class B, class C> list<B> *map(int n, A (*func)(B, C), pyiter<B> *b, pyiter<C> *c) { /* 2 args */
+    list<B> *result = new list<B>();
+    __iter<B> *itb = b->__iter__();
+    __iter<C> *itc = c->__iter__();
+    try {
+        while(1) 
+            result->append((*func)(itb->next(), itc->next()));
+    } catch(StopIteration *) {
+        return result;
+    }
+}
+
+template <class A, class B> list<A> *map(int n, A (*func)(B, B, B), pyiter<B> *b1, pyiter<B> *b2, pyiter<B> *b3) { /* 3 args */
+    list<A> *result = new list<A>();
+    __iter<B> *itb1 = b1->__iter__();
+    __iter<B> *itb2 = b2->__iter__();
+    __iter<B> *itb3 = b3->__iter__();
+    try {
+        while(1) 
+            result->append((*func)(itb1->next(), itb2->next(), itb3->next()));
+    } catch(StopIteration *) {
+        return result;
+    }
+}
+
 /* pow */
 
 template<class A, class B> double __power(A a, B b);
