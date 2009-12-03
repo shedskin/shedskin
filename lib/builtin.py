@@ -1,5 +1,3 @@
-# --- builtin types
-
 class class_:
     def __repr__(self):
         return self.__name__
@@ -429,7 +427,7 @@ class pyset(pyiter):
         self.unit.__repr__()
         return ''
 
-class frozenset(pyset): # XXX investigate why set(frozenset) doesn't work (merged(.., inheritance = True))
+class frozenset(pyset): 
     pass
 
 class set(pyset):
@@ -507,8 +505,6 @@ class complex:
 
 class object: pass
 
-# --- exceptions
-
 class Exception: 
     def __init__(self, msg=None): 
         self.msg = msg
@@ -540,7 +536,6 @@ __exception.filename = ''
 __exception.message = ''
 __exception.strerror = ''
 
-# --- builtin functions
 def str(x=None):                          
     x.__str__()
     x.__repr__()
