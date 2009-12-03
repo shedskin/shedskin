@@ -2037,6 +2037,8 @@ str *__fileiter::next() {
     return p->next();
 }
 
+str *filter(void *func, str *a) { return filter(((int(*)(str *))(func)), a); }
+
 #ifdef __SS_BIND
 template<> PyObject *__to_py(int i) { return PyInt_FromLong(i); }   
 template<> PyObject *__to_py(double d) { return PyFloat_FromDouble(d); }
