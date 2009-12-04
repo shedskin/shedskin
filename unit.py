@@ -67,9 +67,8 @@ def quicksort(L):
 	return quicksort([x for x in L[1:] if x < pivot]) + [pivot] + \
 	        quicksort([y for y in L[1:] if y >= pivot])
 
-if __name__ == "__main__":
-	data = [1, 200, 50, 485, 22, 22, 3534, 22112]
-	print "quickdata: %s " % quicksort(data)
+data = [1, 200, 50, 485, 22, 22, 3534, 22112]
+print "quickdata: %s " % quicksort(data)
 
 # test list.__setslice__ optimization
 a = [1, 2, 3]
