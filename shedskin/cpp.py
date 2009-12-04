@@ -1854,7 +1854,9 @@ class generateVisitor(ASTVisitor):
                 return
 
         if target.node.varargs:
-            self.append('%d, ' % len(node.args))
+            self.append('%d' % len(node.args))
+            if node.args:
+                self.append(', ')
 
         if ident in ['max','min']: 
             pairs = [(arg, target.formals[0]) for arg in node.args]
