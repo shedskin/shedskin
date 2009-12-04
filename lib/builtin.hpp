@@ -3260,18 +3260,36 @@ template <class A> list<tuple2<A,A> *> *__zip3(pyseq<A> *a, pyseq<A> *b, pyseq<A
     return result;
 }
 
-/* map, filter, reduce, next */
+/* next */
+
+template <class A> A next(__iter<A> *iter1, A fillvalue) {
+    try {
+        return iter1->next();
+    } catch(StopIteration *) {
+        return fillvalue;
+    }
+}
+template <class A> A next(__iter<A> *iter1, void *) { return next(iter1, (A)NULL); }
+template <class A> A next(__iter<A> *iter1) { return iter1->next(); }
+
+/* map, filter, reduce */
 
 template <class A, class B, class C> list<B> *map(int n, A (*func)(B, C), pyiter<B> *b, pyiter<C> *c) { 
     list<B> *result = new list<B>();
     __iter<B> *itb = b->__iter__();
     __iter<C> *itc = c->__iter__();
-    try {
-        while(1) 
-            result->append((*func)(itb->next(), itc->next()));
-    } catch(StopIteration *) {
-        return result;
+    B nextb;
+    C nextc;
+    int total;
+    while(1) {
+        total = 0;
+        try { nextb = next(itb); total += 1; } catch (StopIteration *) { nextb = NULL; }
+        try { nextc = next(itc); total += 1; } catch (StopIteration *) { nextc = NULL; }
+        if(total == 0)
+            break;
+        result->append((*func)(nextb, nextc));
     }
+    return result;
 }
 
 template <class A, class B> list<A> *map(int n, A (*func)(B, B, B), pyiter<B> *b1, pyiter<B> *b2, pyiter<B> *b3) { 
@@ -3279,12 +3297,18 @@ template <class A, class B> list<A> *map(int n, A (*func)(B, B, B), pyiter<B> *b
     __iter<B> *itb1 = b1->__iter__();
     __iter<B> *itb2 = b2->__iter__();
     __iter<B> *itb3 = b3->__iter__();
-    try {
-        while(1) 
-            result->append((*func)(itb1->next(), itb2->next(), itb3->next()));
-    } catch(StopIteration *) {
-        return result;
+    B nextb1, nextb2, nextb3;
+    int total;
+    while(1)  {
+        total = 0;
+        try { nextb1 = next(itb1); total += 1; } catch (StopIteration *) { nextb1 = NULL; }
+        try { nextb2 = next(itb2); total += 1; } catch (StopIteration *) { nextb2 = NULL; }
+        try { nextb3 = next(itb3); total += 1; } catch (StopIteration *) { nextb3 = NULL; }
+        if(total == 0)
+            break;
+        result->append((*func)(nextb1, nextb2, nextb3));
     }
+    return result;
 }
 
 template <class A> A reduce(A (*func)(A, A), pyiter<A> *a, A initial) {
@@ -3337,16 +3361,6 @@ template <class B> str *filter(B (*func)(str *), str *a) {
 template <class A> list<A> *filter(void *func, pyiter<A> *a) { return filter(((int(*)(A))(func)), a); }
 template <class A> tuple2<A,A> *filter(void *func, tuple2<A,A> *a) { return filter(((int(*)(A))(func)), a); }
 str *filter(void *func, str *a);
-
-template <class A> A next(__iter<A> *iter1, A fillvalue) {
-    try {
-        return iter1->next();
-    } catch(StopIteration *) {
-        return fillvalue;
-    }
-}
-template <class A> A next(__iter<A> *iter1, void *) { return next(iter1, (A)NULL); }
-template <class A> A next(__iter<A> *iter1) { return iter1->next(); }
 
 /* pow */
 

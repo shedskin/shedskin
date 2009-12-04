@@ -85,6 +85,14 @@ amap = map(hoppa, [1,2,3], [3,4,5], [5,6,7])
 print amap
 bmap = map(uhppa, [1,2,3], ['3','4','5'])
 print bmap
+def hoppa2(a, b):
+    if b: return a+b
+    return a+'X'
+print map(hoppa2, 'banaan', 'aap')
+def hoppa3(a, b):
+    if b: return a+b
+    return a
+print map(hoppa3, range(8), range(4))
 
 print reduce(lambda a,b: a+b, [3,5,7])
 print reduce(lambda a,b: a-b, set([3,5,7]), 1)
