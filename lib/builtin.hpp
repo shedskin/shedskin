@@ -3260,7 +3260,7 @@ template <class A> list<tuple2<A,A> *> *__zip3(pyseq<A> *a, pyseq<A> *b, pyseq<A
     return result;
 }
 
-/* map, filter, reduce */
+/* map, filter, reduce, next */
 
 template <class A, class B, class C> list<B> *map(int n, A (*func)(B, C), pyiter<B> *b, pyiter<C> *c) { 
     list<B> *result = new list<B>();
@@ -3337,6 +3337,16 @@ template <class B> str *filter(B (*func)(str *), str *a) {
 template <class A> list<A> *filter(void *func, pyiter<A> *a) { return filter(((int(*)(A))(func)), a); }
 template <class A> tuple2<A,A> *filter(void *func, tuple2<A,A> *a) { return filter(((int(*)(A))(func)), a); }
 str *filter(void *func, str *a);
+
+template <class A> A next(__iter<A> *iter1, A fillvalue) {
+    try {
+        return iter1->next();
+    } catch(StopIteration *) {
+        return fillvalue;
+    }
+}
+template <class A> A next(__iter<A> *iter1, void *) { return next(iter1, (A)NULL); }
+template <class A> A next(__iter<A> *iter1) { return iter1->next(); }
 
 /* pow */
 
