@@ -1763,10 +1763,11 @@ class generateVisitor(ASTVisitor):
         if self.library_func(funcs, 're', None, 'findall') or \
            self.library_func(funcs, 're', 're_object', 'findall'):
             error("'findall' does not work with groups (use 'finditer' instead)", node, warning=True)
-
         if self.library_func(funcs, 'socket', 'socket', 'settimeout') or \
            self.library_func(funcs, 'socket', 'socket', 'gettimeout'):
             error("socket.set/gettimeout do not accept/return None", node, warning=True)
+        if self.library_func(funcs, 'builtin', None, 'map') and len(node.args) > 2:
+            error("default fillvalue for 'map' becomes 0 for integers", node, warning=True)
 
         # --- target expression
         if node.node in self.mergeinh and [t for t in self.mergeinh[node.node] if isinstance(t[0], function)]: # anonymous function
