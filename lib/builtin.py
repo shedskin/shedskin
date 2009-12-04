@@ -657,6 +657,7 @@ def sorted(it, cmp=0, key=0, reverse=0): # XXX None
     elem = iter(it).next()
     cmp(elem, elem)
     elem.__cmp__(elem)
+    key(elem)
     return [elem]
 
 def reversed(l):
