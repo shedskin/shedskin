@@ -80,7 +80,6 @@ print a
 # map, filter, reduce
 def hoppa(x, y, z): return str(x+y+z)
 def uhppa(a, b): return a+int(b)
-
 amap = map(hoppa, [1,2,3], [3,4,5], [5,6,7])
 print amap
 bmap = map(uhppa, [1,2,3], ['3','4','5'])
@@ -93,6 +92,7 @@ def hoppa3(a, b):
     if b: return a+b
     return a
 print map(hoppa3, range(8), range(4))
+print sorted(map(lambda u: len(u), ['aaaaa', 'aaa', 'a']))
 
 print reduce(lambda a,b: a+b, [3,5,7])
 print reduce(lambda a,b: a-b, set([3,5,7]), 1)
