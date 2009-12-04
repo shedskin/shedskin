@@ -1858,9 +1858,6 @@ class generateVisitor(ASTVisitor):
 
         if ident in ['max','min']: 
             pairs = [(arg, target.formals[0]) for arg in node.args]
-        elif target.mv.module.builtin and ident == '__group':
-            self.append(str(len(node.args))+', ')
-            pairs = [(arg, target.formals[0]) for arg in node.args]
         else:
             args = node.args
             if node.star_args:

@@ -64,10 +64,10 @@ public:
     //functions
     str *expand(str *tpl);
     
-    str *group(int m = 0);
-    tuple2<str *, str *> *group(int n, int m, ...);
-    str *group(str *m);
-    tuple2<str *, str *> *group(int n, str *m, ...);
+    str *group(int n, int m = 0);
+    tuple2<str *, str *> *group(int n, int m, int o, ...);
+    str *group(int n, str *m);
+    tuple2<str *, str *> *group(int n, str *m, str *o, ...);
     
     dict<str *, str *> *groupdict(str *defval = 0);
     tuple2<str *, str *> *groups(str *defval = 0);

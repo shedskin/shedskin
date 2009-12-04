@@ -94,7 +94,7 @@ complex::complex(str *s) {
     p = __re__::compile(new str("(?P<one>[+-]?([\\d\\.]+e[+-]?\\d+|[\\d\\.]*)j?)(?P<two>[+-]?([\\d\\.]+e[+-]?\\d+|[\\d\\.]*)j?)?$"));
     m = p->match(s->strip());
     if (___bool(m)) {
-        complex *c = (parsevalue(m->group(new str("one"))))->__add__(parsevalue(m->group(new str("two"))));
+        complex *c = (parsevalue(m->group(1, new str("one"))))->__add__(parsevalue(m->group(1, new str("two"))));
         real = c->real;
         imag = c->imag;
     }

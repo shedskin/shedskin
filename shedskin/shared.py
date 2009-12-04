@@ -567,8 +567,6 @@ def analyze_callfunc(node, check_exist=False): # XXX generate target list XXX un
         if module: # XXX elif?
             namespace, objexpr = module, None
         else:
-            if ident == 'group' and len(node.args) > 1:
-                ident = '__group'
             method_call = True
 
     elif isinstance(node.node, Name):
@@ -662,13 +660,10 @@ def connect_actual_formal(expr, func, parent_constr=False, check_error=False):
     if parent_constr: actuals = actuals[1:] 
 
     if check_error and func.ident not in ['min', 'max']:
-        if len(actuals)+len(keywords) > len(formals):
-            if not func.node.varargs and \
-               not (func.mv.module.builtin and func.mv.module.ident == 're' and func.ident == '__group'):
-                   error("too many arguments in call to '%s'" % func.ident, expr)
+        if not func.node.varargs and len(actuals)+len(keywords) > len(formals):
+            error("too many arguments in call to '%s'" % func.ident, expr)
         if len(actuals)+len(keywords) < len(formals)-len(func.defaults) and not expr.star_args:
             error("not enough arguments in call to '%s'" % func.ident, expr)
-
         missing = formals[len(actuals):-len(func.defaults)] 
         if [x for x in missing if not x in [a.name for a in keywords]]:
             error("no '%s' argument in call to '%s'" % (missing[0], func.ident))

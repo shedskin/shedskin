@@ -21,10 +21,10 @@ class match_object:
     def expand(self, tpl):
         return ''
     
-    def group(self, grp = 0):
-        return ''
-    def __group(self):
+    def group(self, *args):
         return ('',)
+    def __group1(self, arg):
+        return ''
     
     def start(self, i = 0):
         return 1
