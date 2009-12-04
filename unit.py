@@ -78,7 +78,7 @@ print a
 a[-2:] = set((10,))
 print a
 
-# map, filter, reduce, next
+# map, filter, reduce
 def hoppa(x, y, z): return str(x+y+z)
 def uhppa(a, b): return a+int(b)
 
@@ -94,6 +94,20 @@ print filter(lambda a: 2<=a<5, range(10))
 print filter(lambda c: c>'a', 'abaaac')
 print filter(lambda c: c>'a', tuple('abaaac'))
 print filter(None, range(3)), filter(None, 'abc'), filter(None, tuple(range(3)))
+
+# next
+it1 = iter(range(4))
+for i in range(10):
+    print next(it1, -1)
+it2 = iter('abcd')
+try:
+    for i in range(10):
+        print next(it2)
+except StopIteration:
+    print 'stop'
+it3 = iter('aha')
+for i in range(10):
+    print next(it3, None)
 
 ''', '''
 output(equal=True)
