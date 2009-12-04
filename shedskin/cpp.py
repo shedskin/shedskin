@@ -1768,16 +1768,6 @@ class generateVisitor(ASTVisitor):
            self.library_func(funcs, 'socket', 'socket', 'gettimeout'):
             error("socket.set/gettimeout do not accept/return None", node, warning=True)
 
-        if self.library_func(funcs, 'builtin', None, 'sorted'):
-            if [arg for arg in node.args if isinstance(arg, Keyword) and arg.name=='key'] or \
-               len([arg for arg in node.args if not isinstance(arg, Keyword)]) >= 3:
-                error("'key' argument of 'sorted' is not supported", node, warning=True)
-
-        if self.library_func(funcs, 'builtin', 'list', 'sort'):
-            if [arg for arg in node.args if isinstance(arg, Keyword) and arg.name=='key'] or \
-               len([arg for arg in node.args if not isinstance(arg, Keyword)]) >= 2:
-                error("'key' argument of 'list.sort' is not supported", node, warning=True)
-
         # --- target expression
         if node.node in self.mergeinh and [t for t in self.mergeinh[node.node] if isinstance(t[0], function)]: # anonymous function
             self.visitm(node.node, '(', func)
