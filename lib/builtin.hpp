@@ -3274,8 +3274,22 @@ template <class A> A next(__iter<A> *iter1) { return iter1->next(); }
 
 /* map, filter, reduce */
 
-template <class A, class B, class C> list<B> *map(int n, A (*func)(B, C), pyiter<B> *b, pyiter<C> *c) { 
-    list<B> *result = new list<B>();
+template <class A, class B> list<A> *map(int n, A (*func)(B), pyiter<B> *b) { 
+    if(!func) 
+        throw new ValueError(new str("'map' function argument cannot be None"));
+    list<A> *result = new list<A>();
+    __iter<B> *itb = b->__iter__();
+    B nextb;
+    while(1) {
+        try { nextb = next(itb); } catch (StopIteration *) { return result; }
+        result->append((*func)(nextb));
+    }
+}
+
+template <class A, class B, class C> list<A> *map(int n, A (*func)(B, C), pyiter<B> *b, pyiter<C> *c) { 
+    if(!func) 
+        throw new ValueError(new str("'map' function argument cannot be None"));
+    list<A> *result = new list<A>();
     __iter<B> *itb = b->__iter__();
     __iter<C> *itc = c->__iter__();
     B nextb;
@@ -3293,6 +3307,8 @@ template <class A, class B, class C> list<B> *map(int n, A (*func)(B, C), pyiter
 }
 
 template <class A, class B> list<A> *map(int n, A (*func)(B, B, B), pyiter<B> *b1, pyiter<B> *b2, pyiter<B> *b3) { 
+    if(!func) 
+        throw new ValueError(new str("'map' function argument cannot be None"));
     list<A> *result = new list<A>();
     __iter<B> *itb1 = b1->__iter__();
     __iter<B> *itb2 = b2->__iter__();
