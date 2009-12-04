@@ -290,11 +290,12 @@ def cartesian_product(node, worklist):
     return itertools.product(*([funcs]+argtypes))
 
 def redirect(c, dcpa, func, callfunc, ident):
-    # map XXX generalize based on __%s%d naming?
-    if func.ident == 'map' and len(callfunc.args) == 3:
-        func = func.mv.funcs['__'+ident+'3']
-    if func.ident == 'group' and len(callfunc.args) == 1:
-        func = func.parent.funcs['__'+ident+'1']
+    # redirect based on number of arguments (__%s%d syntax in builtins)
+    if func.mv.module.builtin and (not func.mv.module.ident == 'builtin' or func.ident == 'map'): # XXX
+        if isinstance(func.parent, class_): funcs = func.parent.funcs
+        else: funcs = func.mv.funcs
+        redir = '__%s%d' % (func.ident, len(callfunc.args))
+        func = funcs.get(redir, func)
 
     # filter
     if ident == 'filter':
