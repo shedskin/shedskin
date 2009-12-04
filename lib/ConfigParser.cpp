@@ -636,7 +636,7 @@ void *RawConfigParser::_read(file *fp, str *fpname) {
         else {
             mo = (RawConfigParser::SECTCRE)->match(line);
             if (___bool(mo)) {
-                sectname = mo->group(const_22);
+                sectname = mo->group(1, const_22);
                 if ((this->_sections)->__contains__(sectname)) {
                     cursect = (this->_sections)->__getitem__(sectname);
                 }
@@ -655,9 +655,9 @@ void *RawConfigParser::_read(file *fp, str *fpname) {
             else {
                 mo = (RawConfigParser::OPTCRE)->match(line);
                 if (___bool(mo)) {
-                    optname = mo->group(const_23);
-                    vi = mo->group(const_24);
-                    optval = mo->group(const_25);
+                    optname = mo->group(1, const_23);
+                    vi = mo->group(1, const_24);
+                    optval = mo->group(1, const_25);
                     if (__AND((const_2)->__contains__(vi), optval->__contains__(const_26), 41)) {
                         pos = optval->find(const_26);
                         if (__AND((pos!=(-1)), (optval->__getitem__((pos-1)))->isspace(), 43)) {
@@ -858,9 +858,9 @@ list<tuple2<str *, str *> *> *ConfigParser::items(str *section, int raw, dict<st
 str *_interpolation_replace(__re__::match_object *match) {
     str *s;
 
-    s = match->group(1);
+    s = match->group(1, 1);
     if ((s==0)) {
-        return match->group();
+        return match->group(1);
     }
     else {
         return __modct(new str("%%(%s)s"), 1, s->lower());

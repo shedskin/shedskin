@@ -293,6 +293,8 @@ def redirect(c, dcpa, func, callfunc, ident):
     # map XXX generalize based on __%s%d naming?
     if func.ident == 'map' and len(callfunc.args) == 3:
         func = func.mv.funcs['__'+ident+'3']
+    if func.ident == 'group' and len(callfunc.args) == 1:
+        func = func.parent.funcs['__'+ident+'1']
 
     # filter
     if ident == 'filter':

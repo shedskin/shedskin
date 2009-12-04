@@ -16,34 +16,36 @@ const int
 const unsigned char *local_table;
 
 //match_object functions
-str *match_object::group(int matchid)
+str *match_object::group(int n, int matchid)
 {
     return new str(re->__group(&string->unit, captured, matchid));
 }
 
-str *match_object::group(str *mname)
+str *match_object::group(int n, str *mname)
 {
     return new str(re->__group(&string->unit, captured, mname));
 }
 
-tuple2<str *, str *> *match_object::group(int n, int m, ...) {
+tuple2<str *, str *> *match_object::group(int n, int m, int o, ...) {
     tuple2<str *, str *> *t = new tuple2<str *, str *>();
     va_list ap;
-    va_start(ap, m);
-    t->append(group(m));
-    for(int i=0; i<n-1; i++)
-        t->append(group(va_arg(ap, int)));
+    va_start(ap, o);
+    t->append(group(1, m));
+    t->append(group(1, o));
+    for(int i=0; i<n-2; i++)
+        t->append(group(1, va_arg(ap, int)));
     va_end(ap); 
     return t;
 }
 
-tuple2<str *, str *> *match_object::group(int n, str *m, ...) {
+tuple2<str *, str *> *match_object::group(int n, str *m, str *o, ...) {
     tuple2<str *, str *> *t = new tuple2<str *, str *>();
     va_list ap;
-    va_start(ap, m);
-    t->append(group(m));
-    for(int i=0; i<n-1; i++)
-        t->append(group(va_arg(ap, str *)));
+    va_start(ap, o);
+    t->append(group(1, m));
+    t->append(group(1, o));
+    for(int i=0; i<n-2; i++)
+        t->append(group(1, va_arg(ap, str *)));
     va_end(ap); 
     return t;
 }
