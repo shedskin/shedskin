@@ -29,7 +29,7 @@ iterative_dataflow_analysis():
     -otherwise, restore the constraint graph to its original state and restart
     -all the while maintaining types for each allocation point in getgx().alloc_info
 '''
-import gc, itertools
+import gc
 
 from shared import *
 import graph, cpp
@@ -283,11 +283,21 @@ def possible_argtypes(node, funcs, worklist):
 
     return argtypes
 
+def product(*lists):
+    if not lists:
+        return [()]
+    result = []
+    prod = product(*lists[:-1])
+    for x in prod:
+        for y in lists[-1]:
+            result.append(x + (y,))
+    return result
+
 def cartesian_product(node, worklist):
     funcs = possible_functions(node)
     argtypes = possible_argtypes(node, funcs, worklist)
     #print 'argtypes', argtypes, node #, args, argtypes, cartesian(*([funcs]+argtypes))
-    return itertools.product(*([funcs]+argtypes))
+    return product(*([funcs]+argtypes))
 
 def redirect(c, dcpa, func, callfunc, ident):
     # redirect based on number of arguments (__%s%d syntax in builtins)
