@@ -1854,6 +1854,9 @@ class generateVisitor(ASTVisitor):
                 self.append(')')
                 return
 
+        if parent_constr and target.inherited_from: # XXX
+            target = target.inherited_from
+
         if target.node.varargs:
             self.append('%d' % len(node.args))
             if node.args:

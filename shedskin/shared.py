@@ -658,7 +658,8 @@ def connect_actual_formal(expr, func, parent_constr=False, check_error=False):
         formals = [f for f in func.formals]
     keywords = [a for a in expr.args if isinstance(a, Keyword)]
 
-    if parent_constr: actuals = actuals[1:] 
+    if parent_constr: 
+        actuals = actuals[1:] 
 
     if check_error and func.ident not in ['min', 'max']:
         if not func.node.varargs and len(actuals)+len(keywords) > len(formals):
