@@ -1038,12 +1038,6 @@ str *str::capitalize() {
     return r;
 }
 
-/* str *str::sorted() {
-    str *s = new str(unit);
-    sort(s->unit.begin(), s->unit.end());
-    return s;
-} */
-
 #ifdef __SS_BIND
 str::str(PyObject *p) : cached_hash(0) {
     if(!PyString_Check(p)) 
@@ -1648,7 +1642,7 @@ list<str *> *sorted(str *t, int (*cmp)(str *, str *), int key, int reverse) {
 }
 list<str *> *sorted(str *t, int cmp, int key, int reverse) {
     return sorted(t, (int (*)(str *, str *))0, key, reverse);
-}
+} 
 
 /* mod helpers */
 
