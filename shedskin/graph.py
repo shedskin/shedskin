@@ -333,6 +333,7 @@ class moduleVisitor(ASTVisitor):
                     # maintain relation with original
                     getgx().inheritance_relations.setdefault(func, []).append(cl.funcs[ident])
                     cl.funcs[ident].inherited = func.node
+                    cl.funcs[ident].inherited_from = func
                     func_copy.name = ident
 
                     if ident == func.ident:
