@@ -138,6 +138,23 @@ print l
 l.sort(cmp=lambda a,b:cmp(a,b), key=lambda a:-a)
 print l
 
+# missing cast
+class hop:
+    def __init__(self, a):
+        print 'oh', a
+
+class hop2(hop):
+    def __init__(self):
+        bla = None
+        hop.__init__(self, bla)
+   
+class hop3(hop):
+    def __init__(self):
+        hop.__init__(self, 'hoi')
+
+hop2()
+hop3()
+
 ''', '''
 output(equal=True)
 '''),
