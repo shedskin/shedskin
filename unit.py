@@ -116,6 +116,28 @@ it3 = iter('aha')
 for i in range(10):
     print next(it3, None)
 
+# sort(ed) key argument
+a = range(4)
+print sorted(a)
+print sorted(a, cmp=lambda a,b:cmp(a,b))
+print sorted(a, cmp=lambda a,b:cmp(b,a))
+print sorted(a, key=lambda a:a)
+print sorted(a, key=lambda a:-a)
+print sorted(a, cmp=lambda a,b:cmp(a,b), key=lambda a:-a)
+
+l = range(4)
+print l
+l.sort(cmp=lambda a,b:cmp(a,b))
+print l
+l.sort(cmp=lambda a,b:cmp(b,a))
+print l
+l.sort(key=lambda a:a)
+print l
+l.sort(key=lambda a:-a)
+print l
+l.sort(cmp=lambda a,b:cmp(a,b), key=lambda a:-a)
+print l
+
 ''', '''
 output(equal=True)
 '''),

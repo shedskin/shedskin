@@ -159,6 +159,7 @@ class list(pyseq):
         elem = self.unit
         cmp(elem, elem)
         elem.__cmp__(elem)
+        key(elem)
        
 class tuple(pyseq):               
     def __len__(self):           
@@ -653,7 +654,7 @@ def pow(a, b, c=1):
 def abs(x):                            
     return x.__abs__()
 
-def sorted(it, cmp=0, key=0, reverse=0): # XXX None
+def sorted(it, cmp=0, key=0, reverse=0): 
     elem = iter(it).next()
     cmp(elem, elem)
     elem.__cmp__(elem)
@@ -664,7 +665,7 @@ def reversed(l):
     return iter(l)
 
 def enumerate(x): 
-    return __iter((1, x.unit)) # XXX 
+    return __iter((1, iter(x).next())) 
 
 class __xrange:
     def __init__(self):
