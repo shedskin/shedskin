@@ -169,6 +169,8 @@ template<class A, class B> str *__modtuple(str *fmt, tuple2<A,B> *t);
 #define __SS_MAX(a,b) ((a) > (b) ? (a) : (b))
 #define __SS_MAX3(a,b,c) (__SS_MAX((a), __SS_MAX((b), (c))))
 
+#define NONE ((void *)0)
+
 void __init();
 void __exit(int code=0);
 void quit(int code=0);
