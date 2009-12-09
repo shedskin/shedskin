@@ -403,6 +403,10 @@ tuple2<str *, str *> *str::rpartition(str *sep)
         return new tuple2<str *, str *>(3, new str(unit), new str(""), new str(""));
 }
 
+list<str *> *str::rsplit(void *sep, int maxsep) {
+    return rsplit((str *)sep, maxsep);
+}
+
 list<str *> *str::rsplit(str *sep, int maxsep)
 {
     __GC_STRING ts;
@@ -523,6 +527,10 @@ str *str::rstrip(str *chars) {
     if( last == -1 ) 
         return new str("");
     return new str(unit.substr(0,last+1));
+}
+
+list<str *> *str::split(void *sp, int max_splits) { 
+    return split((str *)sp, max_splits);
 }
 
 list<str *> *str::split(str *sp, int max_splits) { 
@@ -1108,7 +1116,7 @@ void *file::putchar(int c) {
     fputc(c, f);
     if(ferror(f))
         throw new IOError();
-    return NULL;
+    return NONE;
 }
 
 void *file::write(str *s) {
@@ -1118,7 +1126,7 @@ void *file::write(str *s) {
     for(int i = 0; i < s->unit.size(); i++)
         putchar(s->unit[i]);
 
-    return NULL;
+    return NONE;
 }
 
 void file::__check_closed() {
@@ -1130,7 +1138,7 @@ void *file::seek(int i, int w) {
     __check_closed();
     fseek(f, i, w);
     endoffile = 0; /* XXX add check */
-    return NULL;
+    return NONE;
 }
 
 int file::tell() {
@@ -1142,7 +1150,7 @@ void *file::writelines(pyseq<str *> *l) {
     __check_closed();
     for(int i=0; i<len(l); i++)
         write(l->__getitem__(i));
-    return NULL;
+    return NONE;
 }
 
 str *file::readline(int n) { 
@@ -1199,13 +1207,13 @@ list<str *> *file::readlines() {
 void *file::flush() {
     __check_closed();
     fflush(f);
-    return NULL;
+    return NONE;
 }
 
 void *file::close() {
     fclose(f);
     closed = 1;
-    return NULL;
+    return NONE;
 }
 
 int file::__ss_fileno() {
@@ -2053,7 +2061,7 @@ template<> double __to_ss(PyObject *p) {
 template<> void * __to_ss(PyObject *p) { 
     if(p!=Py_None)
         throw new TypeError(new str("error in conversion to Shed Skin (None expected)"));
-    return NULL;
+    return NONE;
 }
 #endif
 

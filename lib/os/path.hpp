@@ -57,7 +57,7 @@ template <class A> void *walk(str *top, void *(*func)(A, str *, list<str *> *), 
     try {
         names = __os__::listdir(top);
     } catch (__os__::error *) {
-        return NULL;
+        return NONE;
     }
     func(arg, top, names);
 
@@ -73,7 +73,7 @@ template <class A> void *walk(str *top, void *(*func)(A, str *, list<str *> *), 
         }
     END_FOR
 
-    return NULL;
+    return NONE;
 }
 #else
 template <class A> void *walk(str *top, void *(*func)(A, str *, list<str *> *), A arg) {
@@ -86,7 +86,7 @@ template <class A> void *walk(str *top, void *(*func)(A, str *, list<str *> *), 
     try {
         names = __os__::listdir(top);
     } catch (__os__::error *) {
-        return NULL;
+        return NONE;
     }
     func(arg, top, names);
     exceptions = (new tuple2<str *, str *>(2, const_0, const_3));
@@ -100,7 +100,7 @@ template <class A> void *walk(str *top, void *(*func)(A, str *, list<str *> *), 
         }
     END_FOR
 
-    return NULL;
+    return NONE;
 }
 #endif
 

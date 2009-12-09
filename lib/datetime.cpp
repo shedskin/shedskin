@@ -383,7 +383,7 @@ datetime *datetime::from_timestamp(double timestamp, tzinfo *tzinfo, bool timefn
 	}
 	else
 		throw new ValueError(new str("timestamp out of range for platform localtime()/gmtime() function"));
-	return NULL;
+	return (datetime *)NONE;
 }
 
 datetime *datetime::utcfromtimestamp(double timestamp) {
@@ -601,14 +601,14 @@ datetime *datetime::astimezone(tzinfo *tzinfo) {
 
 timedelta *datetime::utcoffset() {
     if(_tzinfo==NULL)
-        return NULL;
+        return (timedelta *)NONE;
     else
 		return _tzinfo->utcoffset(this);
 }
 
 timedelta *datetime::dst() {
     if(_tzinfo==NULL)
-        return NULL;
+        return (timedelta *)NONE;
     else
 		return _tzinfo->dst(this);
 }
@@ -768,14 +768,14 @@ str *time::strftime(str* format) {
 
 timedelta *time::utcoffset() {
     if(_tzinfo==NULL)
-        return NULL;
+        return (timedelta *)NONE;
     else
 		return _tzinfo->utcoffset(NULL);
 }
 
 timedelta *time::dst() {
     if(_tzinfo==NULL)
-        return NULL;
+        return (timedelta *)NONE;
     else
 		return _tzinfo->dst(NULL);
 }

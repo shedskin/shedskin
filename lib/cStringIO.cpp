@@ -15,7 +15,7 @@ void *StringI::seek(int i, int w) {
     else if(w==1) pos += i;
     else pos = len(s)+i;
     endoffile = 0;
-    return NULL;
+    return NONE;
 }
 
 int StringI::getchar() {
@@ -31,7 +31,7 @@ void *StringI::putchar(int c) {
         s->unit += c;
 
     pos++;
-    return NULL;
+    return NONE;
 }
 
 StringI *StringIO(str *s) {
