@@ -3,7 +3,7 @@
 # 
 # pisang - a simple sat solver in Python
 
-def reduce(f, l, i=-1):                  # f: [lambda0], i: [int], l: [list(int)], r: [int]
+def _reduce(f, l, i=-1):                  # f: [lambda0], i: [int], l: [list(int)], r: [int]
     if not l:                            # [list(int)]
         if i != -1: return i             # [int]
         print '*** ERROR! *** reduce() called with empty sequence and no initial value' # [str]
@@ -89,7 +89,7 @@ def lookahead(mods):                     # mods: [list(int)], dif: [list(int)], 
                 if not propagate(-choice, mods): return 0 # [int]
                 break
             score.append(bincount)       # []
-        dif[var] = reduce(lambda x, y: 1024*x*y+x+y, score, 0) # [int]
+        dif[var] = _reduce(lambda x, y: 1024*x*y+x+y, score, 0) # [int]
  
     return dif.index(max(dif))           # [int]
 
