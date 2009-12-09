@@ -403,10 +403,6 @@ tuple2<str *, str *> *str::rpartition(str *sep)
         return new tuple2<str *, str *>(3, new str(unit), new str(""), new str(""));
 }
 
-list<str *> *str::rsplit(void *sep, int maxsep) {
-    return rsplit((str *)sep, maxsep);
-}
-
 list<str *> *str::rsplit(str *sep, int maxsep)
 {
     __GC_STRING ts;
@@ -527,10 +523,6 @@ str *str::rstrip(str *chars) {
     if( last == -1 ) 
         return new str("");
     return new str(unit.substr(0,last+1));
-}
-
-list<str *> *str::split(void *sp, int max_splits) { 
-    return split((str *)sp, max_splits);
 }
 
 list<str *> *str::split(str *sp, int max_splits) { 
