@@ -274,7 +274,7 @@ template<class T> struct dereference <T*> {
 
 #ifdef __SS_BIND
 template<class T> T __to_ss(PyObject *p) {
-    if(p==Py_None) return NONE;
+    if(p==Py_None) return (T)NONE;
     return new (typename dereference<T>::type)(p); /* isn't C++ pretty :-) */
 }
 
