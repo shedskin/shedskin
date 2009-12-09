@@ -46,7 +46,7 @@ template<> void __ss_exit(int x) {
 }
 
 void *setrecursionlimit(int limit) {
-    return NULL;
+    return NONE;
 }
 
 } // module namespace

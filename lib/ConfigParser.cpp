@@ -315,7 +315,7 @@ str *RawConfigParser::optionxform(str *optionstr) {
 
 double RawConfigParser::getfloat(str *section, str *option) {
     
-    return __float(this->get(section, option, default_5, 0));
+    return __float(this->get(section, option, default_5, NONE));
 }
 
 void *RawConfigParser::_set(str *section, str *option, str *value) {
@@ -336,7 +336,7 @@ void *RawConfigParser::_set(str *section, str *option, str *value) {
         }
     }
     sectdict->__setitem__(this->optionxform(option), value);
-    return NULL;
+    return NONE;
 }
 
 int RawConfigParser::has_section(str *section) {
@@ -470,7 +470,7 @@ void *RawConfigParser::write(file *fp) {
         fp->write(const_13);
     END_FOR
 
-    return NULL;
+    return NONE;
 }
 
 void *RawConfigParser::add_section(str *section) {
@@ -486,7 +486,7 @@ void *RawConfigParser::add_section(str *section) {
         throw ((new DuplicateSectionError(section)));
     }
     this->_sections->__setitem__(section, (new dict<str *, str *>()));
-    return NULL;
+    return NONE;
 }
 
 list<str *> *RawConfigParser::sections() {
@@ -495,6 +495,10 @@ list<str *> *RawConfigParser::sections() {
     */
     
     return (this->_sections)->keys();
+}
+
+str *RawConfigParser::get(str *section, str *option, int raw, void *vars) {
+    return get(section, option, raw, (dict<str *, str *> *)vars);
 }
 
 str *RawConfigParser::get(str *section, str *option, int raw, dict<str *, str *> *vars) {
@@ -521,7 +525,7 @@ str *RawConfigParser::get(str *section, str *option, int raw, dict<str *, str *>
     else {
         throw ((new NoOptionError(option,section)));
     }
-    return NULL;
+    return (str *)NONE;
 }
 
 list<str *> *RawConfigParser::read(str *filename) {
@@ -566,7 +570,7 @@ list<str *> *RawConfigParser::read(list<str *> *filenames) {
 int RawConfigParser::getboolean(str *section, str *option) {
     str *v;
 
-    v = this->get(section, option, default_5, 0);
+    v = this->get(section, option, default_5, NONE);
     if ((!(RawConfigParser::_boolean_states)->__contains__(v->lower()))) {
         throw ((new ValueError(__modct(const_16, 1, v))));
     }
@@ -624,7 +628,7 @@ void *RawConfigParser::_read(file *fp, str *fpname) {
         if (__OR(__eq(line->strip(), const_17), (const_18)->__contains__(line->__getitem__(0)), 33)) {
             continue;
         }
-        if (__AND(__eq(((line->split(0, 1))->__getfast__(0))->lower(), const_19), (const_20)->__contains__(line->__getitem__(0)), 35)) {
+        if (__AND(__eq(((line->split(NONE, 1))->__getfast__(0))->lower(), const_19), (const_20)->__contains__(line->__getitem__(0)), 35)) {
             continue;
         }
         if (((line->__getitem__(0))->isspace() && (cursect!=0) && ___bool(optname))) {
@@ -683,12 +687,12 @@ void *RawConfigParser::_read(file *fp, str *fpname) {
     if (___bool(e)) {
         throw (e);
     }
-    return NULL;
+    return NONE;
 }
 
 int RawConfigParser::getint(str *section, str *option) {
     
-    return __int(this->get(section, option, default_5, 0));
+    return __int(this->get(section, option, default_5, NONE));
 }
 
 dict<str *, str *> *RawConfigParser::defaults() {
@@ -751,6 +755,10 @@ str *ConfigParser::_interpolate(str *section, str *option, str *rawval, dict<str
     return value;
 }
 
+str *ConfigParser::get(str *section, str *option, int raw, void *vars) {
+    return get(section, option, raw, (dict<str *, str *> *)vars);
+}
+
 str *ConfigParser::get(str *section, str *option, int raw, dict<str *, str *> *vars) {
     /**
     Get an option value for a given section.
@@ -800,7 +808,7 @@ str *ConfigParser::get(str *section, str *option, int raw, dict<str *, str *> *v
     else {
         return this->_interpolate(section, option, value, d);
     }
-    return NULL;
+    return (str *)NONE;
 }
 
 list<tuple2<str *, str *> *> *ConfigParser::items(str *section, int raw, dict<str *, str *> *vars) {
@@ -852,7 +860,7 @@ list<tuple2<str *, str *> *> *ConfigParser::items(str *section, int raw, dict<st
     else {
         return list_comp_1(d, this, options, section);
     }
-    return NULL;
+    return (list<tuple2<str *, str *> *> *)NONE;
 }
 
 str *_interpolation_replace(__re__::match_object *match) {
@@ -865,7 +873,7 @@ str *_interpolation_replace(__re__::match_object *match) {
     else {
         return __modct(new str("%%(%s)s"), 1, s->lower());
     }
-    return NULL;
+    return (str *)NONE;
 }
 
 __re__::re_object *ConfigParser::_KEYCRE;

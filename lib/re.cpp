@@ -476,7 +476,7 @@ match_object *re_object::__exec(str *subj, int pos, int endpos, int flags)
     );
     
     //no match was found (dont have to worry about freeing thanks to the garbage collector)
-    if(r < 0) return NULL;
+    if(r < 0) return (match_object *)NONE;
     
     //create object now that we know we're successful
     mobj = new match_object();

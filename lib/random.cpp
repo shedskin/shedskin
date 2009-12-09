@@ -221,7 +221,7 @@ void *Random::seed() {
 void *Random::seed(int a) {
 #ifdef FASTRANDOM
     srand(a);
-    return NULL;
+    return NONE;
 #else
     /**
     Initialize the random number generator with a single seed number.
@@ -241,7 +241,7 @@ void *Random::seed(int a) {
     this->_init_by_array((new list<int>(1, a)));
     this->gauss_next = 0.0;
     this->gauss_switch = 0;
-    return NULL;
+    return NONE;
 #endif
 }
 
@@ -671,7 +671,7 @@ void *WichmannHill::__whseed(int x, int y, int z) {
     this->_seed = (new tuple2<int, int>(3, __62, __63, __64));
     this->gauss_next = 0.0;
     this->gauss_switch = 0;
-    return NULL;
+    return NONE;
 }
 
 double WichmannHill::random() {
@@ -734,7 +734,7 @@ void *WichmannHill::seed(int a) {
     this->_seed = (new tuple2<int, int>(3, __43, __44, __45));
     this->gauss_next = 0.0;
     this->gauss_switch = 0;
-    return NULL;
+    return NONE;
 }
 
 WichmannHill::WichmannHill() {
@@ -772,7 +772,7 @@ void *WichmannHill::whseed(int a) {
 
     if ((a==-1)) {
         this->__whseed(((int )(0)), ((int )(0)), ((int )(0)));
-        return NULL;
+        return NONE;
     }
     __65 = divmod(a, 256);
     a = __65->__getfirst__();
@@ -796,7 +796,7 @@ void *WichmannHill::whseed(int a) {
         z = 1;
     }
     this->__whseed(x, y, z);
-    return NULL;
+    return NONE;
 }
 
 int WichmannHill::setstate(list<double> *state) {

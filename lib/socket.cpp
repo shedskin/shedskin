@@ -631,7 +631,7 @@ void *setdefaulttimeout(double x)
     if (x < 0)
         throw new ValueError(new str("invalid argument"));
     __ss_default_timeout = x;
-    return NULL;
+    return NONE;
 }
 
 void __init()

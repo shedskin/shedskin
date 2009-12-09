@@ -57,13 +57,13 @@ public:
     void *__setitem__(int i, A value) {
         i = __wrap(this, i);
         units[i] = value;
-        return NULL;
+        return NONE;
     } 
 
     void *__delitem__(int i) {
         i = __wrap(this, i);
         units.erase(units.begin()+i);
-        return NULL;
+        return NONE;
     }
 
     int __contains__(A value) {
@@ -99,7 +99,7 @@ public:
        FOR_IN(e, p, 0)
            append(e);
        END_FOR
-       return NULL;
+       return NONE;
    }
 
    void *extendleft(pyiter<A> *p) {
@@ -108,7 +108,7 @@ public:
        FOR_IN(e, p, 0)
            appendleft(e);
        END_FOR
-       return NULL;
+       return NONE;
    }
    
    void *remove(A value) {
@@ -116,12 +116,12 @@ public:
        while(iter != units.end()) {
            if(*iter == value) {
                units.erase(iter);
-               return NULL;
+               return NONE;
            }
            iter++;
        }
        throw new ValueError(new str("hops"));
-       return NULL;
+       return NONE;
    }
 
    void *rotate(int n) {
@@ -134,12 +134,12 @@ public:
                for(int i=0; i<n; i++) 
                    appendleft(pop());
        }
-       return NULL;
+       return NONE;
    }
    
    void *clear() {
        units.clear();
-       return NULL;
+       return NONE;
    }
 
    int truth() {
@@ -237,7 +237,7 @@ public:
         }
         else  
             iter->second = __add(iter->second, v);
-        return NULL;
+        return NONE;
     } 
 
     str *__repr__() {
@@ -282,7 +282,7 @@ public:
             this->units[k] = v;
         else  
             iter->second = iter->second+v;
-        return NULL;
+        return NONE;
     } 
 
     str *__repr__() {
@@ -323,7 +323,7 @@ public:
             this->units[k] = v;
         else  
             iter->second = iter->second+v;
-        return NULL;
+        return NONE;
     } 
 
     str *__repr__() {
