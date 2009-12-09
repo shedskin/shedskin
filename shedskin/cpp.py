@@ -1913,7 +1913,7 @@ class generateVisitor(ASTVisitor):
 
                 if arg in target.mv.defaults: 
                     if self.mergeinh[arg] == set([(defclass('none'),0)]):
-                        self.append('NONE')
+                        self.append('NULL')
                     elif target.mv.module == getmv().module:
                         self.append('default_%d' % (target.mv.defaults[arg]))
                     else:
@@ -2474,7 +2474,7 @@ class generateVisitor(ASTVisitor):
     def visitName(self, node, func=None, add_cl=True):
         map = {'True': '1', 'False': '0', 'self': 'this'}
         if node.name == 'None':
-            self.append('NONE')
+            self.append('NULL')
         elif node.name == 'self' and ((func and func.listcomp) or not isinstance(func.parent, class_)):
             self.append('self')
         elif node.name in map:
@@ -2512,7 +2512,7 @@ class generateVisitor(ASTVisitor):
             return
 
         if node.value == None: 
-            self.append('NONE')
+            self.append('NULL')
             return
 
         t = list(inode(node).types())[0]

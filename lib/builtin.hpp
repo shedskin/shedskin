@@ -169,8 +169,6 @@ template<class A, class B> str *__modtuple(str *fmt, tuple2<A,B> *t);
 #define __SS_MAX(a,b) ((a) > (b) ? (a) : (b))
 #define __SS_MAX3(a,b,c) (__SS_MAX((a), __SS_MAX((b), (c))))
 
-#define NONE ((void *)0)
-
 void __init();
 void __exit(int code=0);
 void quit(int code=0);
@@ -274,7 +272,7 @@ template<class T> struct dereference <T*> {
 
 #ifdef __SS_BIND
 template<class T> T __to_ss(PyObject *p) {
-    if(p==Py_None) return (T)NONE;
+    if(p==Py_None) return (T)NULL;
     return new (typename dereference<T>::type)(p); /* isn't C++ pretty :-) */
 }
 
@@ -462,7 +460,7 @@ public:
 
     virtual void *append(T t) {
         units.push_back(t);
-        return NONE;
+        return NULL;
     }
 
     virtual void slice(int x, int l, int u, int s, pyseq<T> *c) {
@@ -1407,7 +1405,7 @@ template<class K, class V> PyObject *dict<K, V>::__to_py__() {
 
 template<class K, class V> void *dict<K,V>::__setitem__(K k, V v) {
     units[k] = v;
-    return NONE;
+    return NULL;
 }
 
 template<class T> T __none() { return NULL; }
@@ -1447,7 +1445,7 @@ template<class K, class V> V dict<K,V>::pop(K k) {
 
 template<class K, class V> void *dict<K,V>::__delitem__(K k) {
     units.erase(k);
-    return NONE;
+    return NULL;
 }
 
 template<class K, class V> int dict<K,V>::__len__() {
@@ -1475,7 +1473,7 @@ template<class K, class V> int dict<K,V>::has_key(K k) {
 
 template<class K, class V> void *dict<K,V>::clear() {
     this->units.clear();
-    return NONE;
+    return NULL;
 }
 
 template<class K, class V> dict<K,V> *dict<K,V>::copy() {
@@ -1511,7 +1509,7 @@ template<class K, class V> list<V> *dict<K,V>::values() {
 template<class K, class V> void *dict<K,V>::update(dict<K,V> *e) {
     for (it = e->units.begin(); it != e->units.end(); it++)
         this->__setitem__(it->first, it->second);
-    return NONE;
+    return NULL;
 }
 
 template<class K, class V> list<tuple2<K,V> *> *dict<K,V>::items() {
@@ -1552,7 +1550,7 @@ template<class K, class V> void *dict<K,V>::__addtoitem__(K k, V v) {
     iter = units.find(k);
     if(iter == units.end()) throw new KeyError(repr(k));
     iter->second = __add(iter->second, v);
-    return NONE;
+    return NULL;
 }
 
 template<class K, class V> int dict<K,V>::__eq__(pyobj *e) {
@@ -1653,7 +1651,7 @@ template<class T> void *list<T>::extend(pyiter<T> *p) {
     FOR_IN(e, p, 0)
         append(e); 
     END_FOR
-    return NONE;
+    return NULL;
 }
 
 template<class T> void *list<T>::extend(pyseq<T> *p) {
@@ -1662,24 +1660,24 @@ template<class T> void *list<T>::extend(pyseq<T> *p) {
 
     this->units.resize(l1+l2);
     memcpy(&(this->units[l1]), &(p->units[0]), sizeof(T)*l2);
-    return NONE;
+    return NULL;
 }
 
 template<class T> void *list<T>::extend(str *s) {
     extend((pyiter<str *> *)s);
-    return NONE;
+    return NULL;
 }
 
 template<class T> void *list<T>::__setitem__(int i, T e) {
     i = __wrap(this, i);
     units[i] = e;
-    return NONE;
+    return NULL;
 }
 
 template<class T> void *list<T>::__delitem__(int i) {
     i = __wrap(this, i);
     units.erase(units.begin()+i,units.begin()+i+1);
-    return NONE;
+    return NULL;
 }
 
 template<class T> int list<T>::empty() {
@@ -1738,13 +1736,13 @@ template<class T> void *list<T>::__setslice__(int x, int l, int u, int s, list<T
                 this->units[j] = la->units[i];
     }
 
-    return NONE;
+    return NULL;
 }
 
 template<class T> void *list<T>::__delete__(int i) {
     i = __wrap(this, i);
     units.erase(units.begin()+i,units.begin()+i+1);
-    return NONE;
+    return NULL;
 }
 
 template<class T> void *list<T>::__delete__(int x, int l, int u, int s) {
@@ -1759,14 +1757,14 @@ template<class T> void *list<T>::__delete__(int x, int l, int u, int s) {
                 v.push_back(this->units[i]);
         units = v;
     }
-    return NONE;
+    return NULL;
 }
 
 template<class T> void *list<T>::__delslice__(int a, int b) {
-    if(a>this->__len__()) return NONE;
+    if(a>this->__len__()) return NULL;
     if(b>this->__len__()) b = this->__len__();
     units.erase(units.begin()+a,units.begin()+b);
-    return NONE;
+    return NULL;
 }
 
 template<class T> int list<T>::__contains__(T a) {
@@ -1886,7 +1884,7 @@ template<class T> T list<T>::pop() {
 
 template<class T> void *list<T>::reverse() {
     std::reverse(this->units.begin(), this->units.end());
-    return NONE;
+    return NULL;
 }
 
 template<class T> template <class U> void *list<T>::sort(int (*cmp)(T, T), U (*key)(T), int reverse) {
@@ -1908,7 +1906,7 @@ template<class T> template <class U> void *list<T>::sort(int (*cmp)(T, T), U (*k
             std::sort(units.begin(), units.end(), cpp_cmp<T>);
     }
 
-    return NONE;
+    return NULL;
 }
 
 template<class T> template <class U> void *list<T>::sort(int cmp, U (*key)(T), int reverse) {
@@ -1924,16 +1922,16 @@ template<class T> void *list<T>::sort(int cmp, int key, int reverse) {
 template<class T> void *list<T>::insert(int m, T e) {
     if (m<0) m = this->__len__()+m;
     units.insert(units.begin()+m, e);
-    return NONE;
+    return NULL;
 }
 
 template<class T> void *list<T>::remove(T e) {
     for(int i = 0; i < this->__len__(); i++)
         if(__eq(units[i], e)) {
             units.erase(units.begin()+i);
-            return NONE;
+            return NULL;
         }
-    return NONE;
+    return NULL;
 }
 
 template <class T> void *myallocate(int n) { return GC_MALLOC(n); }
@@ -2034,7 +2032,7 @@ template<class T> int set<T>::__eq__(pyobj *p) {
 
 template <class T> void *set<T>::remove(T key) {
     if (!do_discard(key)) throw new KeyError(repr(key));
-    return NONE;
+    return NULL;
 }
 
 template<class T> int set<T>::__ge__(set<T> *s) {
@@ -2136,7 +2134,7 @@ template <class T> void *set<T>::add(T key)
     insert_key(key, hash);
     if ((used > n_used && fill*3 >= (mask+1)*2))
         resize(used>50000 ? used*2 : used*4);
-    return NONE;
+    return NULL;
 }
 
 template <class T> void *set<T>::add(setentry<T>* entry)
@@ -2146,7 +2144,7 @@ template <class T> void *set<T>::add(setentry<T>* entry)
     insert_key(entry->key, entry->hash);
     if ((used > n_used && fill*3 >= (mask+1)*2))
         resize(used>50000 ? used*2 : used*4);
-    return NONE;
+    return NULL;
 }
 
 template <class T> int freeze(set<T> *key) {
@@ -2165,7 +2163,7 @@ template <class U> void unfreeze(U, int orig_frozen) {
 
 template <class T> void *set<T>::discard(T key) {
     do_discard(key);
-    return NONE;
+    return NULL;
 }
 
 template <class T> int set<T>::do_discard(T key) {
@@ -2400,7 +2398,7 @@ template <class T> void *set<T>::clear()
 
 	/* if (table_is_malloced)
 		PyMem_DEL(table); */
-	return NONE;
+	return NULL;
 }
 
 template<class T> void *set<T>::update(pyiter<T> *s) {
@@ -2409,7 +2407,7 @@ template<class T> void *set<T>::update(pyiter<T> *s) {
     FOR_IN(e, s, 0)
         add(e);
     END_FOR
-    return NONE;
+    return NULL;
 }
 
 template <class T> void *set<T>::update(const set<T>* other)
@@ -2432,7 +2430,7 @@ template <class T> void *set<T>::update(const set<T>* other)
 			insert_key(entry->key, entry->hash);
 		}
 	}
-    return NONE;
+    return NULL;
 }
 
 template<class T> set<T> *set<T>::__ss_union(pyiter<T> *s) {
@@ -2550,19 +2548,19 @@ template<class T> set<T> *set<T>::__isub__(set<T> *s) {
 template<class T> void *set<T>::difference_update(set<T> *s) {
     set<T> *c = difference(s);
     *this = *c; /* XXX don't copy */
-    return NONE;
+    return NULL;
 }
 
 template<class T> void *set<T>::symmetric_difference_update(set<T> *s) {
     set<T> *c = symmetric_difference(s);
     *this = *c;
-    return NONE;
+    return NULL;
 }
 
 template<class T> void *set<T>::intersection_update(set<T> *s) {
     set<T> *c = intersection(s);
     *this = *c;
-    return NONE;
+    return NULL;
 }
 
 template<class T> set<T> *set<T>::copy() {

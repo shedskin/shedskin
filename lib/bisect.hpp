@@ -25,13 +25,13 @@ template <class A> void *insort_right(list<A> *a, A x, int lo, int hi) {
         }
     }
     a->insert(lo, x);
-    return NONE;
+    return NULL;
 }
 
 template <class A> void *insort(list<A> *a, A x, int lo, int hi) {
     
     insort_right(a, x, lo, hi);
-    return NONE;
+    return NULL;
 }
 
 template <class A> int bisect_right(list<A> *a, A x, int lo, int hi) {
@@ -69,7 +69,7 @@ template <class A> void *insort_left(list<A> *a, A x, int lo, int hi) {
         }
     }
     a->insert(lo, x);
-    return NONE;
+    return NULL;
 }
 
 template <class A> int bisect_left(list<A> *a, A x, int lo, int hi) {

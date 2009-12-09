@@ -1116,7 +1116,7 @@ void *file::putchar(int c) {
     fputc(c, f);
     if(ferror(f))
         throw new IOError();
-    return NONE;
+    return NULL;
 }
 
 void *file::write(str *s) {
@@ -1126,7 +1126,7 @@ void *file::write(str *s) {
     for(int i = 0; i < s->unit.size(); i++)
         putchar(s->unit[i]);
 
-    return NONE;
+    return NULL;
 }
 
 void file::__check_closed() {
@@ -1138,7 +1138,7 @@ void *file::seek(int i, int w) {
     __check_closed();
     fseek(f, i, w);
     endoffile = 0; /* XXX add check */
-    return NONE;
+    return NULL;
 }
 
 int file::tell() {
@@ -1150,7 +1150,7 @@ void *file::writelines(pyseq<str *> *l) {
     __check_closed();
     for(int i=0; i<len(l); i++)
         write(l->__getitem__(i));
-    return NONE;
+    return NULL;
 }
 
 str *file::readline(int n) { 
@@ -1207,13 +1207,13 @@ list<str *> *file::readlines() {
 void *file::flush() {
     __check_closed();
     fflush(f);
-    return NONE;
+    return NULL;
 }
 
 void *file::close() {
     fclose(f);
     closed = 1;
-    return NONE;
+    return NULL;
 }
 
 int file::__ss_fileno() {
@@ -2061,7 +2061,7 @@ template<> double __to_ss(PyObject *p) {
 template<> void * __to_ss(PyObject *p) { 
     if(p!=Py_None)
         throw new TypeError(new str("error in conversion to Shed Skin (None expected)"));
-    return NONE;
+    return NULL;
 }
 #endif
 
