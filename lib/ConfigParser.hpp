@@ -199,16 +199,11 @@ public:
     dict<str *, dict<str *, str *> *> *_sections;
 
     RawConfigParser() {}
-    RawConfigParser(void *defaults) {
-        this->__class__ = cl_RawConfigParser;
-        __init__((dict<str *, str *> *)defaults);
-    }
     RawConfigParser(dict<str *, str *> *defaults) {
         this->__class__ = cl_RawConfigParser;
         __init__(defaults);
     }
     virtual str *get(str *section, str *option, int raw, dict<str *, str *> *vars);
-    virtual str *get(str *section, str *option, int raw, void *vars);
     str *optionxform(str *optionstr);
     double getfloat(str *section, str *option);
     void *_set(str *section, str *option, str *value);
@@ -243,7 +238,6 @@ public:
     }
     str *_interpolate(str *section, str *option, str *rawval, dict<str *, str *> *vars);
     str *get(str *section, str *option, int raw, dict<str *, str *> *vars);
-    str *get(str *section, str *option, int raw, void *vars);
     list<tuple2<str *, str *> *> *items(str *section, int raw, dict<str *, str *> *vars);
 };
 

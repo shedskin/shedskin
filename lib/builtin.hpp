@@ -632,7 +632,6 @@ public:
     str *lstrip(str *chars=0);
     str *rstrip(str *chars=0);
     list<str *> *split(str *sep=0, int maxsplit=-1);
-    list<str *> *split(void *sep, int maxsplit=-1);
     int __eq__(pyobj *s);
     str *__add__(str *b);
     str *join(pyiter<str *> *l);
@@ -649,7 +648,6 @@ public:
     str *__slice__(int x, int l, int u, int s);
 
     list<str *> *rsplit(str *sep = 0, int maxsplit = -1);
-    list<str *> *rsplit(void *sep, int maxsplit = -1);
     int istitle(void);
     tuple2<str *, str *> *rpartition(str *sep);
     tuple2<str *, str *> *partition(str *sep);

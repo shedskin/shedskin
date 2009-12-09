@@ -497,10 +497,6 @@ list<str *> *RawConfigParser::sections() {
     return (this->_sections)->keys();
 }
 
-str *RawConfigParser::get(str *section, str *option, int raw, void *vars) {
-    return get(section, option, raw, (dict<str *, str *> *)vars);
-}
-
 str *RawConfigParser::get(str *section, str *option, int raw, dict<str *, str *> *vars) {
     str *opt;
 
@@ -753,10 +749,6 @@ str *ConfigParser::_interpolate(str *section, str *option, str *rawval, dict<str
         throw ((new InterpolationDepthError(option,section,rawval)));
     }
     return value;
-}
-
-str *ConfigParser::get(str *section, str *option, int raw, void *vars) {
-    return get(section, option, raw, (dict<str *, str *> *)vars);
 }
 
 str *ConfigParser::get(str *section, str *option, int raw, dict<str *, str *> *vars) {
