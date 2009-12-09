@@ -107,7 +107,7 @@ int __ss_SO_REUSEADDR = SO_REUSEADDR;
 int __ss_INADDR_ANY = INADDR_ANY;
 int __ss_INADDR_LOOPBACK = INADDR_LOOPBACK;
 #ifndef __sun
-int __ss_INADDR_NONE = INADDR_NONE;
+int __ss_INADDR_NULL = INADDR_NONE;
 #endif
 int __ss_INADDR_BROADCAST = INADDR_BROADCAST;
 int __ss_SOMAXCONN = SOMAXCONN;
@@ -631,7 +631,7 @@ void *setdefaulttimeout(double x)
     if (x < 0)
         throw new ValueError(new str("invalid argument"));
     __ss_default_timeout = x;
-    return NONE;
+    return NULL;
 }
 
 void __init()

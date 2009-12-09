@@ -97,7 +97,7 @@ str *getcwd() {
 void *chdir(str *dir) { 
     if(::chdir(dir->unit.c_str()) == -1)
         throw new OSError(dir);
-    return NONE;
+    return NULL;
 }
 
 str *strerror(int i) {
@@ -118,24 +118,24 @@ str *getenv(str *name, str *alternative) {
 void *rename(str *a, str *b) {
     if(std::rename(a->unit.c_str(), b->unit.c_str()) == -1)
         throw new OSError(a);
-    return NONE;
+    return NULL;
 }
 
 void *remove(str *path) {
     if(std::remove(path->unit.c_str()) == -1)
         throw new OSError(path);
-    return NONE;
+    return NULL;
 }
 
 void *unlink(str *path) {
     remove(path);
-    return NONE;
+    return NULL;
 }
 
 void *rmdir(str *a) {
     if (::rmdir(a->unit.c_str()) == -1)
         throw new OSError(a);
-    return NONE;
+    return NULL;
 }
 
 void *removedirs(str *name) {
@@ -162,7 +162,7 @@ void *removedirs(str *name) {
         head = __5->__getfirst__();
         tail = __5->__getsecond__();
     }
-    return NONE;
+    return NULL;
 }
 
 
@@ -173,7 +173,7 @@ void *mkdir(str *path, int mode) {
     if (::mkdir(path->unit.c_str(), mode) == -1)
 #endif
         throw new OSError(path);
-    return NONE;
+    return NULL;
 }
 
 void *makedirs(str *name, int mode) {
@@ -198,11 +198,11 @@ void *makedirs(str *name, int mode) {
             }
         }
         if (__eq(tail, __path__::curdir)) {
-            return NONE;
+            return NULL;
         }
     }
     mkdir(name, mode);
-    return NONE;
+    return NULL;
 }
 
 void *abort() {
@@ -332,7 +332,7 @@ void *putenv(str* varname, str* value) {
     std::stringstream ss;
     ss << varname->unit.c_str() << '=' << value->unit.c_str();
     ::putenv(const_cast<char*>(ss.str().c_str()));
-    return NONE;
+    return NULL;
 }
 
 int umask(int newmask)  {
@@ -406,7 +406,7 @@ void *renames(str* old, str* _new) {
     if(___bool(__AND(head,tail,2))) {
         removedirs(head);
     }
-    return NONE;
+    return NULL;
 }
 
 popen_pipe::popen_pipe(str *cmd, str *mode) {
@@ -431,7 +431,7 @@ popen_pipe::popen_pipe(FILE* pipe) {
 void *popen_pipe::close() {
     pclose(f);
     closed = 1;
-    return NONE;
+    return NULL;
 }
 
 popen_pipe* popen(str* cmd) {
@@ -459,14 +459,14 @@ int dup(int f1) {
 void *dup2(int f1, int f2) {
     if (::dup2(f1,f2) == -1) 
         throw new OSError(new str("os.dup2 failed"));
-    return NONE;
+    return NULL;
 }
 
 #if !defined(__APPLE__) && !defined(__FreeBSD__) && !defined(WIN32)
 void *fdatasync(int f1) {
     if (::fdatasync(f1) == -1) 
         throw new OSError(new str("os.fdatasync failed"));
-    return NONE;
+    return NULL;
 }
 #endif
 
@@ -516,7 +516,7 @@ int write(int fd, str *s) {
 void *close(int fd) {
    if(::close(fd) < 0) 
        throw new OSError(new str("os.close failed"));
-   return NONE;
+   return NULL;
 }
 
 /* UNIX-only functionality */
@@ -557,7 +557,7 @@ int __ss_WTERMSIG(int status) {
 void *fchdir(int f1) {
     if (::fchdir(f1) == -1) 
         throw new OSError(new str("os.fchdir failed"));
-    return NONE;
+    return NULL;
 }
 
 str *readlink(str *path) {
@@ -584,28 +584,28 @@ int getuid() { return ::getuid(); }
 void *setuid(int uid) { 
     if(::setuid(uid) == -1)
         throw new OSError(new str("os.setuid"));
-    return NONE; 
+    return NULL; 
 }
 
 int getgid() { return ::getgid(); }
 void *setgid(int gid) { 
     if(::setgid(gid) == -1)
         throw new OSError(new str("os.setgid"));
-    return NONE; 
+    return NULL; 
 }
 
 int geteuid() { return ::geteuid(); }
 void *seteuid(int euid) { 
     if(::seteuid(euid) == -1)
         throw new OSError(new str("os.seteuid"));
-    return NONE; 
+    return NULL; 
 }
 
 int getegid() { return ::getegid(); }
 void *setegid(int egid) {
     if(::setegid(egid) == -1)
         throw new OSError(new str("os.setegid"));
-    return NONE; 
+    return NULL; 
 }
 
 int getppid() { return ::getppid(); }
@@ -613,13 +613,13 @@ int getppid() { return ::getppid(); }
 void *setreuid(int ruid, int euid) {
     if(::setreuid(ruid, euid) == -1)
         throw new OSError(new str("os.setreuid"));
-    return NONE; 
+    return NULL; 
 }
 
 void *setregid(int rgid, int egid) {
     if(::setregid(rgid, egid) == -1)
         throw new OSError(new str("os.setregid"));
-    return NONE; 
+    return NULL; 
 }
 
 int tcgetpgrp(int fd) {
@@ -633,7 +633,7 @@ int tcgetpgrp(int fd) {
 void *tcsetpgrp(int fd, int pg) {
     if(::tcsetpgrp(fd, pg) == -1)
         throw new OSError(new str("os.tcsetpgrp"));
-    return NONE; 
+    return NULL; 
 }
 
 int fork() {
@@ -646,7 +646,7 @@ int fork() {
 void *ftruncate(int fd, int n) {
     if (::ftruncate(fd, n) == -1)
         throw new OSError(new str("os.ftruncate"));
-    return NONE;
+    return NULL;
 }
 
 #if !defined(__sun)
@@ -688,12 +688,12 @@ int nice(int n) {
 void *kill(int pid, int sig) {
     if(::kill(pid, sig) == -1)
         throw new OSError(new str("os.kill"));
-    return NONE;
+    return NULL;
 }
 void *killpg(int pgid, int sig) {
     if(::killpg(pgid, sig) == -1)
         throw new OSError(new str("os.killpg"));
-    return NONE;
+    return NULL;
 }
 
 str *getlogin() {
@@ -706,19 +706,19 @@ str *getlogin() {
 void *chown(str *path, int uid, int gid) {
     if (::chown(path->unit.c_str(), uid, gid) == -1) 
         throw new OSError(path);
-    return NONE;
+    return NULL;
 }
 
 void *lchown(str *path, int uid, int gid) {
     if (::lchown(path->unit.c_str(), uid, gid) == -1) 
         throw new OSError(path);
-    return NONE;
+    return NULL;
 }
 
 void *chroot(str *path) {
     if (::chroot(path->unit.c_str()) == -1) 
         throw new OSError(path);
-    return NONE;
+    return NULL;
 }
 
 str *ctermid() {
@@ -760,7 +760,7 @@ void *setgroups(pyseq<int> *groups) {
         l[i] = groups->__getitem__(i);
     if(::setgroups(len(groups), l) == -1)
         throw new OSError(new str("os.setgroups"));
-    return NONE;
+    return NULL;
 }
 
 int getsid(int pid) {
@@ -785,7 +785,7 @@ int getpgid(int pid) {
 void *setpgid(int pid, int pgrp) {
     if(::setpgid(pid, pgrp) == -1)
         throw new OSError(new str("os.setpgid"));
-    return NONE;
+    return NULL;
 }
 
 int getpgrp() {
@@ -794,19 +794,19 @@ int getpgrp() {
 void *setpgrp() {
     if(::setpgid(0, 0) == -1)
         throw new OSError(new str("os.setpgrp"));
-    return NONE;
+    return NULL;
 }
 
 void *link(str *src, str *dst) {
     if(::link(src->unit.c_str(), dst->unit.c_str()) == -1)
         throw new OSError(new str("os.link"));
-    return NONE;
+    return NULL;
 }
 
 void *symlink(str *src, str *dst) {
     if(::symlink(src->unit.c_str(), dst->unit.c_str()) == -1)
         throw new OSError(new str("os.symlink"));
-    return NONE;
+    return NULL;
 }
 
 int pathconf(str *path, str *name) {
@@ -862,7 +862,7 @@ tuple2<double, double> *getloadavg() {
 void *mkfifo(str *path, int mode) {
     if(::mkfifo(path->unit.c_str(), mode) == -1)
         throw new OSError(new str("os.mkfifo"));
-    return NONE;
+    return NULL;
 }
 
 /* class __vfsstat */
@@ -931,13 +931,13 @@ __vfsstat *fstatvfs(int fd) {
 void *fsync(int fd) {
     if(::fsync(fd) == -1)
         throw new OSError(new str("os.fsync"));
-    return NONE;
+    return NULL;
 }
 
 void *lseek(int fd, int pos, int how) {
     if(::lseek(fd, pos, how) == -1)
         throw new OSError(new str("os.lseek"));
-    return NONE;
+    return NULL;
 }
 
 str *urandom(int n) {
@@ -959,7 +959,7 @@ void __utime(str *path, double actime, double modtime) {
         throw new OSError(new str("os.utime"));
 }
 
-#define HOPPA if (times) __utime(path, times->__getfirst__(), times->__getsecond__()); else __utime(path); return NONE;
+#define HOPPA if (times) __utime(path, times->__getfirst__(), times->__getsecond__()); else __utime(path); return NULL;
 
 void *utime(str *path, tuple2<int, int> *times) { HOPPA }
 void *utime(str *path, tuple2<int, double> *times) { HOPPA }
@@ -1243,7 +1243,7 @@ int getpid() {
 
 void *unsetenv (str* var) {
     ::unsetenv(var->unit.c_str());
-    return NONE;
+    return NULL;
 }
 
 tuple2<file*,file*>* popen2(str* cmd) {

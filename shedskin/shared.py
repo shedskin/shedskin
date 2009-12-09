@@ -42,7 +42,6 @@ class globalInfo: # XXX add comments, split up
         self.cpp_keywords.update(['makedev', 'major', 'minor'])
         self.cpp_keywords.update(['main'])
         self.cpp_keywords.update(['sun'])
-        self.cpp_keywords.update(['NONE'])
         self.ss_prefix = '__ss_'
         self.list_types = {}
         self.loopstack = [] # track nested loops

@@ -140,7 +140,7 @@ void *sleep(double s) {
 
     nanosleep(&time, NULL);
 
-    return NONE;
+    return NULL;
 }
 
 double mktime(struct_time *tuple) {
@@ -293,7 +293,7 @@ localtime_r (const time_t *t, struct tm  *tp)
 #endif /* ! HAVE_LOCALTIME_R && ! defined (localtime_r) */
 
 
-#define match_char(ch1, ch2) if (ch1 != ch2) return NONE
+#define match_char(ch1, ch2) if (ch1 != ch2) return NULL
 /*#if defined __GNUC__ && __GNUC__ >= 2
 # define match_string(cs1, s2) \
   ({ size_t len = strlen (cs1);                           \
@@ -314,13 +314,13 @@ localtime_r (const time_t *t, struct tm  *tp)
     while (*rp == ' ')                                \
       ++rp;                                   \
     if (*rp < '0' || *rp > '9')                           \
-      return NONE;                                \
+      return NULL;                                \
     do {                                      \
       val *= 10;                                  \
       val += *rp++ - '0';                             \
     } while (--__n > 0 && val * 10 <= to && *rp >= '0' && *rp <= '9');        \
     if (val < from || val > to)                           \
-      return NONE;                                \
+      return NULL;                                \
   } while (0)
 #ifdef _NL_CURRENT
 # define get_alt_number(from, to, n) \
@@ -336,7 +336,7 @@ localtime_r (const time_t *t, struct tm  *tp)
          goto do_normal;                              \
        }                                      \
     if (val < from || val > to)                       \
-      return NONE;                                \
+      return NULL;                                \
        }                                      \
      else                                     \
        {                                      \
@@ -629,7 +629,7 @@ __strptime_internal (const char *rp, const char *fmt, struct tm *tmp, void *stat
         }
       if (rp_longest == NULL)
         /* Does not match a weekday name.  */
-        return NONE;
+        return NULL;
       rp = rp_longest;
       s.decided = decided_longest;
       tm->tm_wday = cnt_longest;
@@ -685,7 +685,7 @@ __strptime_internal (const char *rp, const char *fmt, struct tm *tmp, void *stat
         }
       if (rp_longest == NULL)
         /* Does not match a month name.  */
-        return NONE;
+        return NULL;
       rp = rp_longest;
       s.decided = decided_longest;
       tm->tm_mon = cnt_longest;
@@ -700,7 +700,7 @@ __strptime_internal (const char *rp, const char *fmt, struct tm *tmp, void *stat
           if (!recursive (_NL_CURRENT (LC_TIME, D_T_FMT)))
         {
           if (s.decided == loc)
-            return NONE;
+            return NULL;
           else
             rp = rp_backup;
         }
@@ -716,7 +716,7 @@ __strptime_internal (const char *rp, const char *fmt, struct tm *tmp, void *stat
         }
 #endif
       if (!recursive (HERE_D_T_FMT))
-        return NONE;
+        return NULL;
       s.want_xday = 1;
       break;
     case 'C':
@@ -736,7 +736,7 @@ __strptime_internal (const char *rp, const char *fmt, struct tm *tmp, void *stat
       break;
     case 'F':
       if (!recursive ("%Y-%m-%d"))
-        return NONE;
+        return NULL;
       s.want_xday = 1;
       break;
     case 'x':
@@ -746,7 +746,7 @@ __strptime_internal (const char *rp, const char *fmt, struct tm *tmp, void *stat
           if (!recursive (_NL_CURRENT (LC_TIME, D_FMT)))
         {
           if (s.decided == loc)
-            return NONE;
+            return NULL;
           else
             rp = rp_backup;
         }
@@ -765,7 +765,7 @@ __strptime_internal (const char *rp, const char *fmt, struct tm *tmp, void *stat
     case 'D':
       /* Match standard day format.  */
       if (!recursive (HERE_D_FMT))
-        return NONE;
+        return NULL;
       s.want_xday = 1;
       break;
     case 'k':
@@ -834,7 +834,7 @@ __strptime_internal (const char *rp, const char *fmt, struct tm *tmp, void *stat
           if (match_string (HERE_PM_STR, rp))
         s.is_pm = 1;
           else
-        return NONE;
+        return NULL;
         }
       else
         s.is_pm = 0;
@@ -846,7 +846,7 @@ __strptime_internal (const char *rp, const char *fmt, struct tm *tmp, void *stat
           if (!recursive (_NL_CURRENT (LC_TIME, T_FMT_AMPM)))
         {
           if (s.decided == loc)
-            return NONE;
+            return NULL;
           else
             rp = rp_backup;
         }
@@ -862,11 +862,11 @@ __strptime_internal (const char *rp, const char *fmt, struct tm *tmp, void *stat
         }
 #endif
       if (!recursive (HERE_T_FMT_AMPM))
-        return NONE;
+        return NULL;
       break;
     case 'R':
       if (!recursive ("%H:%M"))
-        return NONE;
+        return NULL;
       break;
     case 's':
       {
@@ -877,7 +877,7 @@ __strptime_internal (const char *rp, const char *fmt, struct tm *tmp, void *stat
         time_t secs = 0;
         if (*rp < '0' || *rp > '9')
           /* We need at least one digit.  */
-          return NONE;
+          return NULL;
 
         do
           {
@@ -888,7 +888,7 @@ __strptime_internal (const char *rp, const char *fmt, struct tm *tmp, void *stat
 
         if (localtime_r (&secs, tm) == NULL)
           /* Error in function.  */
-          return NONE;
+          return NULL;
       }
       break;
     case 'S':
@@ -902,7 +902,7 @@ __strptime_internal (const char *rp, const char *fmt, struct tm *tmp, void *stat
           if (!recursive (_NL_CURRENT (LC_TIME, T_FMT)))
         {
           if (s.decided == loc)
-            return NONE;
+            return NULL;
           else
             rp = rp_backup;
         }
@@ -918,7 +918,7 @@ __strptime_internal (const char *rp, const char *fmt, struct tm *tmp, void *stat
       /* Fall through.  */
     case 'T':
       if (!recursive (HERE_T_FMT))
-        return NONE;
+        return NULL;
       break;
     case 'u':
       get_number (1, 7, 1);
@@ -931,7 +931,7 @@ __strptime_internal (const char *rp, const char *fmt, struct tm *tmp, void *stat
       break;
     case 'G':
       if (*rp < '0' || *rp > '9')
-        return NONE;
+        return NULL;
       /* XXX Ignore the number since we would need some more
          information to compute a real date.  */
       do
@@ -989,7 +989,7 @@ __strptime_internal (const char *rp, const char *fmt, struct tm *tmp, void *stat
         while (*rp == ' ')
           ++rp;
         if (*rp != '+' && *rp != '-')
-          return NONE;
+          return NULL;
         bool neg = *rp++ == '-';
         int n = 0;
         while (n < 4 && *rp >= '0' && *rp <= '9')
@@ -1001,16 +1001,16 @@ __strptime_internal (const char *rp, const char *fmt, struct tm *tmp, void *stat
           val *= 100;
         else if (n != 4)
           /* Only two or four digits recognized.  */
-          return NONE;
+          return NULL;
         else
           {
         /* We have to convert the minutes into decimal.  */
         if (val % 100 >= 60)
-          return NONE;
+          return NULL;
         val = (val / 100) * 100 + ((val % 100) * 50) / 30;
           }
         if (val > 1200)
-          return NONE;
+          return NULL;
         //tm->tm_gmtoff = (val * 3600) / 100;
         //if (neg)
         //  tm->tm_gmtoff = -tm->tm_gmtoff;
@@ -1032,7 +1032,7 @@ __strptime_internal (const char *rp, const char *fmt, struct tm *tmp, void *stat
           if (!recursive (fmt))
             {
               if (s.decided == loc)
-            return NONE;
+            return NULL;
               else
             rp = rp_backup;
             }
@@ -1048,7 +1048,7 @@ __strptime_internal (const char *rp, const char *fmt, struct tm *tmp, void *stat
           /* The C locale has no era information, so use the
          normal representation.  */
           if (!recursive (HERE_D_T_FMT))
-        return NONE;
+        return NULL;
           s.want_xday = 1;
           break;
         case 'C':
@@ -1063,7 +1063,7 @@ __strptime_internal (const char *rp, const char *fmt, struct tm *tmp, void *stat
               break;
             }
               else
-            return NONE;
+            return NULL;
             }
 
           num_eras = _NL_CURRENT_WORD (LC_TIME,
@@ -1084,7 +1084,7 @@ __strptime_internal (const char *rp, const char *fmt, struct tm *tmp, void *stat
 
           s.era_cnt = -1;
           if (s.decided == loc)
-            return NONE;
+            return NULL;
 
           s.decided = raw;
         }
@@ -1116,7 +1116,7 @@ __strptime_internal (const char *rp, const char *fmt, struct tm *tmp, void *stat
                            * era->absolute_direction));
             }
               if (! match)
-            return NONE;
+            return NULL;
 
               break;
             }
@@ -1146,7 +1146,7 @@ __strptime_internal (const char *rp, const char *fmt, struct tm *tmp, void *stat
 
           s.era_cnt = -1;
           if (s.decided == loc)
-            return NONE;
+            return NULL;
 
           s.decided = raw;
         }
@@ -1168,7 +1168,7 @@ __strptime_internal (const char *rp, const char *fmt, struct tm *tmp, void *stat
             {
               s.era_cnt = -1;
               if (s.decided == loc)
-            return NONE;
+            return NULL;
               else
             rp = rp_backup;
             }
@@ -1197,7 +1197,7 @@ __strptime_internal (const char *rp, const char *fmt, struct tm *tmp, void *stat
           if (!recursive (fmt))
             {
               if (s.decided == loc)
-            return NONE;
+            return NULL;
               else
             rp = rp_backup;
             }
@@ -1210,7 +1210,7 @@ __strptime_internal (const char *rp, const char *fmt, struct tm *tmp, void *stat
           s.decided = raw;
         }
           if (!recursive (HERE_D_FMT))
-        return NONE;
+        return NULL;
           break;
         case 'X':
           if (s.decided != raw)
@@ -1223,7 +1223,7 @@ __strptime_internal (const char *rp, const char *fmt, struct tm *tmp, void *stat
           if (!recursive (fmt))
             {
               if (s.decided == loc)
-            return NONE;
+            return NULL;
               else
             rp = rp_backup;
             }
@@ -1236,10 +1236,10 @@ __strptime_internal (const char *rp, const char *fmt, struct tm *tmp, void *stat
           s.decided = raw;
         }
           if (!recursive (HERE_T_FMT))
-        return NONE;
+        return NULL;
           break;
         default:
-          return NONE;
+          return NULL;
         }
       break;
 #else
@@ -1248,7 +1248,7 @@ __strptime_internal (const char *rp, const char *fmt, struct tm *tmp, void *stat
       if (*fmt != 'c' && *fmt != 'C' && *fmt != 'y' && *fmt != 'Y'
           && *fmt != 'x' && *fmt != 'X')
         /* This is an illegal format.  */
-        return NONE;
+        return NULL;
 
       goto start_over;
 #endif
@@ -1322,11 +1322,11 @@ __strptime_internal (const char *rp, const char *fmt, struct tm *tmp, void *stat
           s.want_xday = 1;
           break;
         default:
-          return NONE;
+          return NULL;
         }
       break;
     default:
-      return NONE;
+      return NULL;
     }
     }
 
@@ -1355,7 +1355,7 @@ __strptime_internal (const char *rp, const char *fmt, struct tm *tmp, void *stat
     {
       era = _nl_select_era_entry (s.era_cnt HELPER_LOCALE_ARG);
       if (era == NULL)
-    return NONE;
+    return NULL;
       if (s.want_era)
     tm->tm_year = (era->start_date[0]
                + ((tm->tm_year - era->offset)
