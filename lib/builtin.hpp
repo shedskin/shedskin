@@ -253,14 +253,14 @@ template<class T, class V> class cpp_cmp_key {
     hork key;
     public:
     cpp_cmp_key(hork a) { key = a; }
-    V operator()(T a, T b) const { return __cmp(key(a), key(b)) == -1; }
+    int operator()(T a, T b) const { return __cmp(key(a), key(b)) == -1; }
 };
 template<class T, class V> class cpp_cmp_key_rev {
     typedef V (*hork)(T);
     hork key;
     public:
     cpp_cmp_key_rev(hork a) { key = a; }
-    V operator()(T a, T b) const { return __cmp(key(a), key(b)) == 1; }
+    int operator()(T a, T b) const { return __cmp(key(a), key(b)) == 1; }
 }; 
 
 template<class T> struct dereference {}; 
