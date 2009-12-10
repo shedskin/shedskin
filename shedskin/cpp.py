@@ -377,6 +377,11 @@ class generateVisitor(ASTVisitor):
                 print >>self.out, typesetreprnew(default, None)+' '+('default_%d;'%nr)
             print >>self.out
 
+        # --- lambdas
+        for l in getmv().lambdas.values():
+            if l.ident not in getmv().funcs:
+                self.visit(l.node)
+
         # --- list comprehensions
         self.listcomps = {}
         for (listcomp,lcfunc,func) in getmv().listcomps:
@@ -394,11 +399,6 @@ class generateVisitor(ASTVisitor):
                     continue
 
             self.listcomp_func(listcomp)
-
-        # --- lambdas
-        for l in getmv().lambdas.values():
-            if l.ident not in getmv().funcs:
-                self.visit(l.node)
 
         # --- classes 
         for child in node.node.getChildNodes():
