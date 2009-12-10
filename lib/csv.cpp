@@ -13,9 +13,16 @@ class reader
 
 class_ *cl_reader;
 
+__csviter::__csviter(file *csvfile) { 
+    this->csvfile = csvfile; 
+}
+
+list<str *> *__csviter::next() {
+    return csvfile->next()->strip()->split(new str(","));
+}
+
 __csviter *reader::__iter__() {
-    
-    return NULL;
+    return new __csviter(csvfile);
 }
 
 void *reader::__init__(file *csvfile) {

@@ -16,10 +16,8 @@ extern OSError *__exception;
 class __csviter : public __iter<list<str *> *> {
 public:
     file *csvfile;
-    __csviter(file *csvfile) { this->csvfile = csvfile; }
-    list<str *> *next() {
-        return csvfile->next()->split();
-    }
+    __csviter(file *csvfile);
+    list<str *> *next();
 };
 
 extern class_ *cl_reader;
