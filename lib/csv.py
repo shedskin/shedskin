@@ -4,6 +4,3 @@ class reader:
 
     def __iter__(self):
         return __iter([''])
-
-    def next(self):
-        return self.csvfile.next().split(',')
