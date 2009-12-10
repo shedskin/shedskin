@@ -13,8 +13,17 @@ class reader;
 extern str *__name__;
 extern OSError *__exception;
 
+class __csviter : public __iter<list<str *> *> {
+public:
+    file *csvfile;
+    __csviter(file *csvfile) { this->csvfile = csvfile; }
+    list<str *> *next() {
+        return csvfile->next()->split();
+    }
+};
+
 extern class_ *cl_reader;
-class reader : public pyobj {
+class reader : public pyiter<list<str *> *> {
 public:
     file *csvfile;
 
@@ -23,8 +32,8 @@ public:
         this->__class__ = cl_reader;
         __init__(csvfile);
     }
-    list<str *> *next();
-    reader *__iter__();
+    __iter<list<str *> *> *next();
+    __csviter *__iter__();
     void *__init__(file *csvfile);
 };
 

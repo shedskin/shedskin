@@ -3,7 +3,7 @@ class reader:
         self.csvfile = csvfile
 
     def __iter__(self):
-        return self
+        return __iter([''])
 
     def next(self):
         return self.csvfile.next().split(',')

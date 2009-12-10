@@ -13,14 +13,9 @@ class reader
 
 class_ *cl_reader;
 
-list<str *> *reader::next() {
+__csviter *reader::__iter__() {
     
-    return ((this->csvfile)->next())->split(const_0);
-}
-
-reader *reader::__iter__() {
-    
-    return this;
+    return NULL;
 }
 
 void *reader::__init__(file *csvfile) {
