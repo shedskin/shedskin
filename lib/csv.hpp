@@ -6,7 +6,7 @@
 using namespace __shedskin__;
 namespace __csv__ {
 
-extern str *const_0, *const_1, *const_2, *const_3;
+extern str *const_0;
 
 class reader;
 
@@ -16,7 +16,7 @@ extern OSError *__exception;
 extern class_ *cl_reader;
 class reader : public pyobj {
 public:
-    int count;
+    file *csvfile;
 
     reader() {}
     reader(file *csvfile) {

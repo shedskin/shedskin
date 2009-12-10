@@ -1,9 +1,9 @@
 class reader:
     def __init__(self, csvfile):
-        pass
+        self.csvfile = csvfile
 
     def __iter__(self):
         return self
 
     def next(self):
-        return ['']
+        return self.csvfile.next().split(',')
