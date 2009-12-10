@@ -9,4 +9,4 @@ class reader:
         self.count += 1
         if self.count == 5:
             raise StopIteration
-        return ['hoei', 'hop', 18, 'hurk']
+        return ['hoei', 'hop', '18', 'hurk']
