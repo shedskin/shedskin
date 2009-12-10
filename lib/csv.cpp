@@ -2,7 +2,7 @@
 
 namespace __csv__ {
 
-str *const_0, *const_1, *const_2, *const_3;
+str *const_0;
 
 str *__name__;
 OSError *__exception;
@@ -15,11 +15,7 @@ class_ *cl_reader;
 
 list<str *> *reader::next() {
     
-    this->count = (this->count+1);
-    if ((this->count==5)) {
-        throw (new StopIteration());
-    }
-    return (new list<str *>(4, const_0, const_1, const_2, const_3));
+    return ((this->csvfile)->next())->split(const_0);
 }
 
 reader *reader::__iter__() {
@@ -29,19 +25,16 @@ reader *reader::__iter__() {
 
 void *reader::__init__(file *csvfile) {
     
-    this->count = 0;
+    this->csvfile = csvfile;
     return NULL;
 }
 
 void __init() {
-    const_0 = new str("hoei");
-    const_1 = new str("hop");
-    const_2 = new str("18");
-    const_3 = new str("hurk");
+    const_0 = new str(",");
 
     __name__ = new str("csv");
 
-    cl_reader = new class_("reader", 42, 42);
+    cl_reader = new class_("reader", 40, 40);
 
 }
 
