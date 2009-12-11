@@ -47,16 +47,6 @@ public:
 extern class_ *cl_reader;
 class reader : public pyiter<list<str *> *> {
 public:
-/*    file *csvfile;
-
-    reader() {}
-    reader(file *csvfile) {
-        this->__class__ = cl_reader;
-        __init__(csvfile);
-    }
-    __csviter *__iter__();
-    void *__init__(file *csvfile); */
-
     Dialect *dialect;
     int state;
     list<str *> *fields;

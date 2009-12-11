@@ -21,7 +21,7 @@ __csviter::__csviter(reader *r) {
 }
 
 list<str *> *__csviter::next() {
-    return NULL; //r->next()->strip()->split(new str(","));
+    return r->next();
 }
 
 __csviter *reader::__iter__() {
