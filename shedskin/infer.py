@@ -187,13 +187,11 @@ def possible_functions(node):
     anon_func = False
     funcs = []
 
-    if not node.mv.module.builtin or node.mv.module.ident in ['path','re', 'itertools'] or \
-        (node.parent and node.parent.ident in ('sort','sorted', 'map', '__map3', 'filter', 'reduce', '__filter')): # XXX to analyze_callfunc
-        subnode = expr.node, node.dcpa, node.cpa
-        if subnode in getgx().cnode:
-            stypes = getgx().cnode[subnode].types() 
-            if [t for t in stypes if isinstance(t[0], function)]:
-                anon_func = True
+    subnode = expr.node, node.dcpa, node.cpa # XXX to analyze_callfunc
+    if subnode in getgx().cnode:
+        stypes = getgx().cnode[subnode].types() 
+        if [t for t in stypes if isinstance(t[0], function)]:
+            anon_func = True
 
     if anon_func:
         # anonymous call 

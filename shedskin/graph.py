@@ -1129,7 +1129,7 @@ class moduleVisitor(ASTVisitor):
             if ident == 'dict' and [x for x in node.args if isinstance(x, Keyword)]:
                 error('unsupported method of initializing dictionaries', node)
 
-            if ident not in self.funcs and ident not in self.ext_funcs:
+            if lookupvar(ident, func):
                 self.visit(node.node, func)
                 inode(node.node).callfuncs.append(node) # XXX iterative dataflow analysis: move there
         else:
