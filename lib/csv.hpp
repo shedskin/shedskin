@@ -20,7 +20,7 @@ extern Dialect *excel;
 extern class_ *cl_Dialect;
 class Dialect : public pyobj {
 public:
-    void *escapechar;
+    str *escapechar;
     int skipinitialspace;
     int quoting;
     int strict;
