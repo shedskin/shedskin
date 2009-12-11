@@ -169,7 +169,7 @@ class Error
 class_ *cl_Error;
 
 int Error::__init__(str *msg) {
-    
+
     this->message = msg;
     Exception::__init__(msg);
     return 0;
@@ -183,7 +183,7 @@ class NoSectionError
 class_ *cl_NoSectionError;
 
 int NoSectionError::__init__(str *section) {
-    
+
     Error::__init__(__modct(const_3, 1, section));
     this->section = section;
     return 0;
@@ -196,7 +196,7 @@ class DuplicateSectionError
 class_ *cl_DuplicateSectionError;
 
 int DuplicateSectionError::__init__(str *section) {
-    
+
     Error::__init__(__modct(const_4, 1, section));
     this->section = section;
     return 0;
@@ -209,7 +209,7 @@ class NoOptionError
 class_ *cl_NoOptionError;
 
 int NoOptionError::__init__(str *option, str *section) {
-    
+
     Error::__init__(__modct(const_5, 2, option, section));
     this->option = option;
     this->section = section;
@@ -223,7 +223,7 @@ class InterpolationError
 class_ *cl_InterpolationError;
 
 int InterpolationError::__init__(str *option, str *section, str *msg) {
-    
+
     Error::__init__(msg);
     this->option = option;
     this->section = section;
@@ -273,7 +273,7 @@ class ParsingError
 class_ *cl_ParsingError;
 
 int ParsingError::__init__(str *filename) {
-    
+
     Error::__init__(__modct(const_8, 1, filename));
     this->filename = filename;
     this->errors = (new list<tuple2<int, str *> *>());
@@ -281,7 +281,7 @@ int ParsingError::__init__(str *filename) {
 }
 
 int ParsingError::append(int lineno, str *line) {
-    
+
     (this->errors)->append((new tuple2<int, str *>(2, lineno, line)));
     this->message = (this->message)->__iadd__(__modct(const_9, 2, __box(lineno), line));
     return 0;
@@ -294,7 +294,7 @@ class MissingSectionHeaderError
 class_ *cl_MissingSectionHeaderError;
 
 int MissingSectionHeaderError::__init__(str *filename, int lineno, str *line) {
-    
+
     Error::__init__(__modct(const_10, 3, filename, __box(lineno), line));
     this->filename = filename;
     this->lineno = lineno;
@@ -309,12 +309,12 @@ class RawConfigParser
 class_ *cl_RawConfigParser;
 
 str *RawConfigParser::optionxform(str *optionstr) {
-    
+
     return optionstr->lower();
 }
 
 double RawConfigParser::getfloat(str *section, str *option) {
-    
+
     return __float(this->get(section, option, default_5, NULL));
 }
 
@@ -342,10 +342,10 @@ void *RawConfigParser::_set(str *section, str *option, str *value) {
 int RawConfigParser::has_section(str *section) {
     /**
     Indicate whether the named section is present in the configuration.
-    
+
     The DEFAULT section is not acknowledged.
     */
-    
+
     return (this->_sections)->__contains__(section);
 }
 
@@ -476,7 +476,7 @@ void *RawConfigParser::write(file *fp) {
 void *RawConfigParser::add_section(str *section) {
     /**
     Create a new section in the configuration.
-    
+
     Raise DuplicateSectionError if a section by the specified name
     already exists.
     */
@@ -493,7 +493,7 @@ list<str *> *RawConfigParser::sections() {
     /**
     Return a list of section names, excluding [DEFAULT]
     */
-    
+
     return (this->_sections)->keys();
 }
 
@@ -531,14 +531,14 @@ list<str *> *RawConfigParser::read(str *filename) {
 list<str *> *RawConfigParser::read(list<str *> *filenames) {
     /**
     Read and parse a filename or a list of filenames.
-    
+
     Files that cannot be opened are silently ignored; this is
     designed so that you can specify a list of potential
     configuration file locations (e.g. current directory, user's
     home directory, systemwide directory), and all existing
     configuration files in the list will be read.  A single
     filename may also be given.
-    
+
     Return list of successfully read files.
     */
     list<str *> *__7, *read_ok;
@@ -595,7 +595,7 @@ list<tuple2<str *, str *> *> *RawConfigParser::items(str *section) {
 void *RawConfigParser::_read(file *fp, str *fpname) {
     /**
     Parse a sectioned setup file.
-    
+
     The sections in setup file contains a title line at the top,
     indicated by a name in square brackets (`[]'), plus key/value
     options lines, indicated by `name: value' format lines.
@@ -687,12 +687,12 @@ void *RawConfigParser::_read(file *fp, str *fpname) {
 }
 
 int RawConfigParser::getint(str *section, str *option) {
-    
+
     return __int(this->get(section, option, default_5, NULL));
 }
 
 dict<str *, str *> *RawConfigParser::defaults() {
-    
+
     return this->_defaults;
 }
 
@@ -754,13 +754,13 @@ str *ConfigParser::_interpolate(str *section, str *option, str *rawval, dict<str
 str *ConfigParser::get(str *section, str *option, int raw, dict<str *, str *> *vars) {
     /**
     Get an option value for a given section.
-    
+
     All % interpolations are expanded in the return values, based on the
     defaults passed into the constructor, unless the optional argument
     `raw' is true.  Additional substitutions may be provided using the
     `vars' argument, which must be a dictionary whose contents overrides
     any pre-existing defaults.
-    
+
     The section DEFAULT is special.
     */
     int __49;
@@ -807,13 +807,13 @@ list<tuple2<str *, str *> *> *ConfigParser::items(str *section, int raw, dict<st
     /**
     Return a list of tuples with (name, value) for each option
     in the section.
-    
+
     All % interpolations are expanded in the return values, based on the
     defaults passed into the constructor, unless the optional argument
     `raw' is true.  Additional substitutions may be provided using the
     `vars' argument, which must be a dictionary whose contents overrides
     any pre-existing defaults.
-    
+
     The section DEFAULT is special.
     */
     list<str *> *options;

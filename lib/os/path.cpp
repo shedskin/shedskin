@@ -67,7 +67,7 @@ str *normcase(str *s) {
     /**
     Normalize case of pathname.  Has no effect under Posix
     */
-    
+
     return s;
 }
 
@@ -75,7 +75,7 @@ int isabs(str *s) {
     /**
     Test whether a path is absolute
     */
-    
+
     return s->startswith(const_4);
 }
 
@@ -149,7 +149,7 @@ tuple2<str *, str *> *splitdrive(str *p) {
     Split a pathname into drive and path. On Posix, drive is always
     empty.
     */
-    
+
     return (new tuple2<str *, str *>(2, const_0, p));
 }
 
@@ -157,7 +157,7 @@ str *basename(str *p) {
     /**
     Returns the final component of a pathname
     */
-    
+
     return (split(p))->__getsecond__();
 }
 
@@ -165,7 +165,7 @@ str *dirname(str *p) {
     /**
     Returns the directory component of a pathname
     */
-    
+
     return (split(p))->__getfirst__();
 }
 
@@ -196,7 +196,7 @@ int getsize(str *filename) {
     /**
     Return the size of a file, reported by os.stat().
     */
-    
+
     return (__os__::stat(filename))->st_size;
 }
 
@@ -204,7 +204,7 @@ double getmtime(str *filename) {
     /**
     Return the last modification time of a file, reported by os.stat().
     */
-    
+
     return (__os__::stat(filename))->__ss_st_mtime;
 }
 
@@ -212,7 +212,7 @@ double getatime(str *filename) {
     /**
     Return the last access time of a file, reported by os.stat().
     */
-    
+
     return (__os__::stat(filename))->__ss_st_atime;
 }
 
@@ -220,7 +220,7 @@ double getctime(str *filename) {
     /**
     Return the metadata change time of a file, reported by os.stat().
     */
-    
+
     return (__os__::stat(filename))->__ss_st_ctime;
 }
 
@@ -357,7 +357,7 @@ str *abspath(str *path) {
     /**
     Return an absolute path.
     */
-    
+
     if ((!isabs(path))) {
         path = join(2, __os__::getcwd(), path);
     }
@@ -454,10 +454,10 @@ void __init() {
 str *normcase(str *s) {
     /**
     Normalize case of pathname.
-    
+
     Makes all characters lowercase and all slashes into backslashes.
     */
-    
+
     return (s->replace(const_6, const_4))->lower();
 }
 
@@ -536,7 +536,7 @@ tuple2<str *, str *> *splitdrive(str *p) {
     Split a pathname into drive and path specifiers. Returns a 2-tuple
     "(drive,path)";  either part may be empty
     */
-    
+
     if (__eq(p->__slice__(3, 1, 2, 0), const_19)) {
         return (new tuple2<str *, str *>(2, p->__slice__(3, 0, 2, 0), p->__slice__(1, 2, 0, 0)));
     }
@@ -546,7 +546,7 @@ tuple2<str *, str *> *splitdrive(str *p) {
 tuple2<str *, str *> *split(str *p) {
     /**
     Split a pathname.
-    
+
     Return tuple (head, tail) where tail is everything after the final slash.
     Either part may be empty.
     */
@@ -578,7 +578,7 @@ tuple2<str *, str *> *split(str *p) {
 tuple2<str *, str *> *splitext(str *p) {
     /**
     Split the extension from a pathname.
-    
+
     Extension is everything from the last dot to the end.
     Return (root, ext), either part may be empty.
     */
@@ -598,7 +598,7 @@ str *basename(str *p) {
     /**
     Returns the final component of a pathname
     */
-    
+
     return (split(p))->__getsecond__();
 }
 
@@ -606,7 +606,7 @@ str *dirname(str *p) {
     /**
     Returns the directory component of a pathname
     */
-    
+
     return (split(p))->__getfirst__();
 }
 
@@ -645,7 +645,7 @@ int getsize(str *filename) {
     /**
     Return the size of a file, reported by os.stat()
     */
-    
+
     return (__os__::stat(filename))->st_size;
 }
 
@@ -653,7 +653,7 @@ double getmtime(str *filename) {
     /**
     Return the last modification time of a file, reported by os.stat()
     */
-    
+
     return (__os__::stat(filename))->__ss_st_mtime;
 }
 
@@ -661,7 +661,7 @@ double getatime(str *filename) {
     /**
     Return the last access time of a file, reported by os.stat()
     */
-    
+
     return (__os__::stat(filename))->__ss_st_atime;
 }
 
@@ -669,7 +669,7 @@ double getctime(str *filename) {
     /**
     Return the creation time of a file, reported by os.stat().
     */
-    
+
     return (__os__::stat(filename))->__ss_st_ctime;
 }
 
@@ -677,7 +677,7 @@ int islink(str *path) {
     /**
     Test for symbolic link.  On WindowsNT/95 always returns false
     */
-    
+
     return 0;
 }
 
@@ -696,7 +696,7 @@ int exists(str *path) {
 }
 
 int lexists(str *path) {
-    
+
     return exists(path);
 }
 
@@ -787,7 +787,7 @@ str *abspath(str *path) {
     /**
     Return an absolute path.
     */
-    
+
     if ((!isabs(path))) {
         path = join(2, __os__::getcwd(), path);
     }
@@ -795,7 +795,7 @@ str *abspath(str *path) {
 }
 
 str *realpath(str *path) {
-    
+
     return abspath(path);
 }
 

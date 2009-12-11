@@ -29,7 +29,7 @@ template <class A> void *insort_right(list<A> *a, A x, int lo, int hi) {
 }
 
 template <class A> void *insort(list<A> *a, A x, int lo, int hi) {
-    
+
     insort_right(a, x, lo, hi);
     return NULL;
 }
@@ -51,7 +51,7 @@ template <class A> int bisect_right(list<A> *a, A x, int lo, int hi) {
 }
 
 template <class A> int bisect(list<A> *a, A x, int lo, int hi) {
-    
+
     return bisect_right(a, x, lo, hi);
 }
 

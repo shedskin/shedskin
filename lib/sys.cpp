@@ -31,15 +31,15 @@ void __init(int c, char **v) {
 
     __ss_stdin = new file(stdin);
     __ss_stdin->name = new str("<stdin>");
-    __ss_stdout = new file(stdout); 
+    __ss_stdout = new file(stdout);
     __ss_stdout->name = new str("<stdout>");
-    __ss_stderr = new file(stderr); 
+    __ss_stderr = new file(stderr);
     __ss_stderr->name = new str("<stderr>");
 }
 
 void __ss_exit() {
     __shedskin__::__exit();
-}; 
+};
 
 template<> void __ss_exit(int x) {
     __shedskin__::__exit(x);

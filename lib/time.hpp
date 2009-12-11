@@ -71,7 +71,7 @@ str *asctime(struct_time *tuple);
 str *ctime();
 str *ctime(const double seconds);
 
-str *strftime(str *format, struct_time* tuple); 
+str *strftime(str *format, struct_time* tuple);
 str *strftime(str *format);
 str *strftime(str *format, tuple2<int, int> *tuple);
 

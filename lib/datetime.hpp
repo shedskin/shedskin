@@ -90,26 +90,26 @@ class datetime : public date {
 public:
     int hour, minute, second, microsecond;
     tzinfo *_tzinfo;
-    
+
     datetime(datetime *d):date::date(d),hour(d->hour),minute(d->minute),second(d->second),microsecond(d->microsecond),_tzinfo(d->_tzinfo)
                 {__class__=cl_datetime;};
     datetime(int year, int month, int day, int hour=0, int minute=0, int second=0, int microsecond=0, tzinfo *tzinfo=NULL);
-    
+
     static datetime *today();
     static datetime *now(tzinfo *tzinfo=NULL);
     static datetime *utcnow();
-    
+
 	static datetime *from_timestamp(double timestamp, tzinfo *tzinfo, bool timefn);
     static datetime *fromtimestamp(double timestamp, tzinfo *tzinfo=NULL);
     static datetime *utcfromtimestamp(double timestamp);
     static datetime *fromordinal(int o);
     static datetime *combine(date *d, time *t);
     static datetime *strptime(str *date_string, str *format);
-    
+
     datetime *__add__(timedelta *other);
     datetime *__sub__(timedelta *other);
     timedelta *__sub__(datetime *other);
-    
+
     date *_date();									//why is it exactly these two have a _?
     time *_time();
     time *timetz();
@@ -119,16 +119,16 @@ public:
     timedelta *utcoffset();
     timedelta *dst();
     str *tzname();
-    
+
     __time__::struct_time *timetuple();
     __time__::struct_time *utctimetuple();
-    
+
     /*	//inherited from date
 	int toordinal();
     int weekday();
     int isoweekday();
     tuple2<int, int> *isocalendar();*/
-    
+
     str *isoformat(str *sep = new str("T"));
     str *__str__();
     str *ctime();

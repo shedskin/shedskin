@@ -106,7 +106,7 @@ int Random::randrange(int start, int stop) {
 int Random::randrange(int start, int stop, int step) {
     /**
     Choose a random item from range(start, stop[, step]).
-    
+
             This fixes the problem with randint() which includes the
             endpoint; in Python this is usually not what you want.
             Do not supply the 'int', 'default', and 'maxwidth' arguments.
@@ -150,10 +150,10 @@ int Random::randrange(int start, int stop, int step) {
 double Random::betavariate(double alpha, double beta) {
     /**
     Beta distribution.
-    
+
             Conditions on the parameters are alpha > -1 and beta} > -1.
             Returned values range between 0 and 1.
-    
+
     */
     double y;
 
@@ -171,7 +171,7 @@ double Random::random() {
     /**
     Generate a random number on [0,1)-real-interval.
     */
-   
+
 #ifdef FASTRANDOM
     return rand() / ((double)RAND_MAX+1);
 #else
@@ -182,9 +182,9 @@ double Random::random() {
 double Random::normalvariate(double mu, double sigma) {
     /**
     Normal distribution.
-    
+
             mu is the mean, and sigma is the standard deviation.
-    
+
     */
     double u1, u2, z, zz;
 
@@ -225,7 +225,7 @@ void *Random::seed(int a) {
 #else
     /**
     Initialize the random number generator with a single seed number.
-    
+
             If provided, the seed, a, must be an integer.
             If no argument is provided, current time is used for seeding.
     */
@@ -248,9 +248,9 @@ void *Random::seed(int a) {
 double Random::weibullvariate(double alpha, double beta) {
     /**
     Weibull distribution.
-    
+
             alpha is the scale parameter and beta is the shape parameter.
-    
+
     */
     double u;
 
@@ -260,7 +260,7 @@ double Random::weibullvariate(double alpha, double beta) {
 
 Random::Random() {
     this->__class__ = cl_Random;
-    
+
     this->mt = ((new list<int>(1, 0)))->__mul__(N);
     this->mti = (N+1);
     this->gauss_next = 0.0;
@@ -272,12 +272,12 @@ Random::Random() {
 Random::Random(int a) {
     /**
     Initialize an instance.
-    
+
             Optional argument a controls seeding, as for Random.seed().
             The seed, a, must be an integer.
     */
     this->__class__ = cl_Random;
-    
+
     this->mt = ((new list<int>(1, 0)))->__mul__(N);
     this->mti = (N+1);
     this->gauss_next = 0.0;
@@ -339,19 +339,19 @@ int Random::randint(int a, int b) {
     /**
     Return random integer in range [a, b], including both end points.
     */
-    
+
     return this->randrange(a, (b+1), 1);
 }
 
 double Random::vonmisesvariate(double mu, double kappa) {
     /**
     Circular data distribution.
-    
+
             mu is the mean angle, expressed in radians between 0 and 2*pi, and
             kappa is the concentration parameter, which must be greater than or
             equal to zero.  If kappa is equal to zero, this distribution reduces
             to a uniform random angle over the range 0 to 2*pi.
-    
+
     */
     double a, b, c, f, r, theta, u1, u2, u3, z;
 
@@ -385,9 +385,9 @@ double Random::vonmisesvariate(double mu, double kappa) {
 double Random::gammavariate(double alpha, double beta) {
     /**
     Gamma distribution.  Not the gamma function!
-    
+
             Conditions on the parameters are alpha > 0 and beta > 0.
-    
+
     */
     double ainv, b, bbb, ccc, p, r, u, u1, u2, v, x, z;
 
@@ -448,23 +448,23 @@ double Random::uniform(double a, double b) {
     /**
     Get a random number in the range [a, b).
     */
-    
+
     return (a+((b-a)*this->random()));
 }
 
 double Random::stdgamma(double alpha, double ainv, double bbb, double ccc) {
-    
+
     return this->gammavariate(alpha, 1.0);
 }
 
 double Random::expovariate(double lambd) {
     /**
     Exponential distribution.
-    
+
             lambd is 1.0 divided by the desired mean.  (The parameter would be
             called "lambda", but that is a reserved word in Python.)  Returned
             values range from 0 to positive infinity.
-    
+
     */
     double u;
 
@@ -480,7 +480,7 @@ int Random::getrandbits(int k) {
     /**
     getrandbits(k) -> x.  Generates an int with k random bits.
     */
-    
+
     if ((k<=0)) {
         throw (const_8);
     }
@@ -510,13 +510,13 @@ int Random::setstate(list<double> *state) {
 double Random::lognormvariate(double mu, double sigma) {
     /**
     Log normal distribution.
-    
+
             If you take the natural logarithm of this distribution, you'll get a
             normal distribution with mean mu and standard deviation sigma.
             mu can have any value, and sigma must be greater than zero.
-    
+
     */
-    
+
     return __math__::exp(this->normalvariate(mu, sigma));
 }
 
@@ -544,12 +544,12 @@ int Random::_init_genrand(int s) {
 double Random::gauss(double mu, double sigma) {
     /**
     Gaussian distribution.
-    
+
             mu is the mean, and sigma is the standard deviation.  This is
             slightly faster than the normalvariate() function.
-    
+
             Not thread-safe without a lock around calls.
-    
+
     */
     double g2rad, x2pi, z;
 
@@ -618,7 +618,7 @@ list<double> *Random::getstate() {
 }
 
 double Random::cunifvariate(double mean, double arc) {
-    
+
     return __math__::fmod((mean+(arc*(this->random()-0.5))), __math__::pi);
 }
 
@@ -631,7 +631,7 @@ class_ *cl_WichmannHill;
 void *WichmannHill::__whseed(int x, int y, int z) {
     /**
     Set the Wichmann-Hill seed from (x, y, z).
-    
+
             These must be integers in the range [0, 256).
     */
     tuple2<int, int> *__59, *__60, *__61;
@@ -701,10 +701,10 @@ void *WichmannHill::seed() {
 void *WichmannHill::seed(int a) {
     /**
     Initialize internal state from hashable object.
-    
+
             If provided, the seed, a, should be a non-negative integer.
             If no argument is provided, current time is used for seeding.
-    
+
             Distinct values between 0 and 27814431486575L inclusive are guaranteed
             to yield distinct internal states (this guarantee is specific to the
             default Wichmann-Hill generator).
@@ -739,7 +739,7 @@ void *WichmannHill::seed(int a) {
 
 WichmannHill::WichmannHill() {
     this->__class__ = cl_WichmannHill;
-    
+
     this->seed(-1);
     this->gauss_next = 0.0;
     this->gauss_switch = 0;
@@ -748,7 +748,7 @@ WichmannHill::WichmannHill() {
 
 WichmannHill::WichmannHill(int a) {
     this->__class__ = cl_WichmannHill;
-    
+
     this->seed(a);
     this->gauss_next = 0.0;
     this->gauss_switch = 0;
@@ -761,9 +761,9 @@ void *WichmannHill::whseed() {
 void *WichmannHill::whseed(int a) {
     /**
     Seed from current time or non-negative integer argument.
-    
+
             If no argument is provided, current time is used for seeding.
-    
+
             This is obsolete, provided for compatibility with the seed routine
             used prior to Python 2.1.  Use the .seed() method instead.
     */
@@ -829,9 +829,9 @@ int WichmannHill::setstate(list<double> *state) {
 int WichmannHill::jumpahead(int n) {
     /**
     Act as if n calls to random() were made, but quickly.
-    
+
             n is an int, greater than or equal to 0.
-    
+
             Example use:  If you have 2 threads and know that each will
             consume no more than a million random numbers, create two Random
             objects r1 and r2, then do
@@ -922,39 +922,39 @@ void __init() {
     Adapted by Raymond Hettinger for use with the Mersenne Twister core generator.
     Adapted by Jeff Miller for compatibility with the Shed Skin Python-to-C++
     compiler.
-    
+
     Mersenne Twister was converted to Python by Jeff Miller
     2007-02-03
     jwmillerusa (at) gmail (dot) com
     http://millerideas.com
-    
+
     Below are the original comments from the authors' C source file.
     =======================================================================
-    
+
        A C-program for MT19937, with initialization improved 2002/1/26.
        Coded by Takuji Nishimura and Makoto Matsumoto.
-    
+
        Before using, initialize the state by using init_genrand(seed)
        or init_by_array(init_key, key_length).
-    
+
        Copyright (C) 1997 - 2002, Makoto Matsumoto and Takuji Nishimura,
        All rights reserved.
-    
+
        Redistribution and use in source and binary forms, with or without
        modification, are permitted provided that the following conditions
        are met:
-    
+
          1. Redistributions of source code must retain the above copyright
             notice, this list of conditions and the following disclaimer.
-    
+
          2. Redistributions in binary form must reproduce the above copyright
             notice, this list of conditions and the following disclaimer in the
             documentation and/or other materials provided with the distribution.
-    
+
          3. The names of its contributors may not be used to endorse or promote
             products derived from this software without specific prior written
             permission.
-    
+
        THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
        AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
        IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -966,8 +966,8 @@ void __init() {
        CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
        ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
        POSSIBILITY OF SUCH DAMAGE.
-    
-    
+
+
        Any feedback is very welcome.
        http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html
        email: m-mat @ math.sci.hiroshima-u.ac.jp (remove space)
@@ -989,7 +989,7 @@ void __init() {
 }
 
 void *seed() {
-    
+
     return _inst->seed(-1);
 }
 void *seed(int a) {
@@ -998,102 +998,102 @@ void *seed(int a) {
 }
 
 double random() {
-    
+
     return _inst->random();
 }
 
 list<double> *getstate() {
-    
+
     return _inst->getstate();
 }
 
 int setstate(list<double> *state) {
-    
+
     return _inst->setstate(state);
 }
 
 int randrange(int stop) {
-    
+
     return _inst->randrange(0, stop, 1);
 }
 
 int randrange(int start, int stop) {
-    
+
     return _inst->randrange(start, stop, 1);
 }
 
 int randrange(int start, int stop, int step) {
-    
+
     return _inst->randrange(start, stop, step);
 }
 
 int randint(int a, int b) {
-    
+
     return _inst->randint(a, b);
 }
 
 double uniform(double a, double b) {
-    
+
     return _inst->uniform(a, b);
 }
 
 double normalvariate(double mu, double sigma) {
-    
+
     return _inst->normalvariate(mu, sigma);
 }
 
 double lognormvariate(double mu, double sigma) {
-    
+
     return _inst->lognormvariate(mu, sigma);
 }
 
 double cunifvariate(double mean, double arc) {
-    
+
     return _inst->cunifvariate(mean, arc);
 }
 
 double expovariate(double lambd) {
-    
+
     return _inst->expovariate(lambd);
 }
 
 double vonmisesvariate(double mu, double kappa) {
-    
+
     return _inst->vonmisesvariate(mu, kappa);
 }
 
 double gammavariate(double alpha, double beta) {
-    
+
     return _inst->gammavariate(alpha, beta);
 }
 
 double stdgamma(double alpha, double ainv, double bbb, double ccc) {
-    
+
     return _inst->stdgamma(alpha, ainv, bbb, ccc);
 }
 
 double gauss(double mu, double sigma) {
-    
+
     return _inst->gauss(mu, sigma);
 }
 
 double betavariate(double alpha, double beta) {
-    
+
     return _inst->betavariate(alpha, beta);
 }
 
 double paretovariate(double alpha) {
-    
+
     return _inst->paretovariate(alpha);
 }
 
 double weibullvariate(double alpha, double beta) {
-    
+
     return _inst->weibullvariate(alpha, beta);
 }
 
 int getrandbits(int k) {
-    
+
     return _inst->getrandbits(k);
 }
 
