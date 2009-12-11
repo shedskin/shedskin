@@ -23,11 +23,11 @@ def annotate():
             text = '# '+text
         line = string.rstrip(line)
         if text and len(line) < 40: line += (40-len(line))*' '
-        source[expr.lineno-1] = line 
+        source[expr.lineno-1] = line
         if text: source[expr.lineno-1] += ' ' + text
         source[expr.lineno-1] += '\n'
 
-    for module in getgx().modules.values(): 
+    for module in getgx().modules.values():
         if module.builtin:
             continue
 
@@ -53,7 +53,7 @@ def annotate():
         # --- instance variables
         funcs = getmv().funcs.values()
         for cl in getmv().classes.values():
-            labels = [var.name+': '+typesetreprnew(var, cl, False) for var in cl.vars.values() if var in merge and merge[var] and not var.name.startswith('__')] 
+            labels = [var.name+': '+typesetreprnew(var, cl, False) for var in cl.vars.values() if var in merge and merge[var] and not var.name.startswith('__')]
             if labels: paste(cl.node, ', '.join(labels))
             funcs += cl.funcs.values()
 
@@ -69,11 +69,11 @@ def annotate():
             if isinstance(callfunc.node, Getattr):
                 if not isinstance(callfunc.node, (fakeGetattr, fakeGetattr2, fakeGetattr3)):
                     paste(callfunc.node.expr, typesetreprnew(callfunc, inode(callfunc).parent, False))
-            else: 
+            else:
                 paste(callfunc.node, typesetreprnew(callfunc, inode(callfunc).parent, False))
 
         # --- higher-level crap (listcomps, returns, assignments, prints)
-        for expr in merge: 
+        for expr in merge:
             if isinstance(expr, ListComp):
                 paste(expr, typesetreprnew(expr, inode(expr).parent, False))
             elif isinstance(expr, Return):
@@ -84,7 +84,7 @@ def annotate():
                 paste(expr, ', '.join([typesetreprnew(child, inode(child).parent, False) for child in expr.nodes]))
 
         # --- assignments
-        for expr in merge: 
+        for expr in merge:
             if isinstance(expr, Assign):
                 pairs = assign_rec(expr.nodes[0], expr.expr)
                 paste(expr, ', '.join([typesetreprnew(r, inode(r).parent, False) for (l,r) in pairs]))

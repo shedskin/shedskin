@@ -20,7 +20,7 @@ def do_extmod(gv):
     vars = supported_vars(getmv().globals.values())
 
     # classes
-    for cl in classes: 
+    for cl in classes:
         do_extmod_class(gv, cl)
 
     # global functions
@@ -58,7 +58,7 @@ def do_extmod(gv):
     print >>gv.out, '\n} // extern "C"'
 
     # conversion methods to/from CPython/Shedskin
-    for cl in classes: 
+    for cl in classes:
         convert_methods(gv, cl, False)
 
 def do_extmod_methoddef(gv, ident, funcs):
@@ -109,10 +109,10 @@ def do_extmod_method(gv, func):
         gv.eol()
     print >>gv.out
 
-    # call 
+    # call
     if is_method: where = '((%sObject *)self)->__ss_object->' % func.parent.ident
     else: where = '__'+gv.module.ident+'__::'
-    print >>gv.out, '        return __to_py('+where+gv.cpp_name(func.ident)+'('+', '.join(['arg_%d' % i for i in range(len(formals))])+'));\n' 
+    print >>gv.out, '        return __to_py('+where+gv.cpp_name(func.ident)+'('+', '.join(['arg_%d' % i for i in range(len(formals))])+'));\n'
 
     # convert exceptions
     print >>gv.out, '    } catch (Exception *e) {'
@@ -122,7 +122,7 @@ def do_extmod_method(gv, func):
     print >>gv.out, '}\n'
 
 def supported_funcs(gv, funcs):
-    supported = [] 
+    supported = []
     for func in funcs:
         if func.ident in ['__setattr__', '__getattr__', '__iadd__', '__isub__', '__imul__']: # XXX
             continue
@@ -130,7 +130,7 @@ def supported_funcs(gv, funcs):
             if func.invisible or func.inherited or not gv.inhcpa(func):
                 continue
         elif not cpp.hmcpa(func):
-            continue 
+            continue
         if isinstance(func.parent, class_) and func.ident in func.parent.staticmethods:
             print '*WARNING* method not exported:', func.parent.ident+'.'+func.ident
             continue
@@ -142,7 +142,7 @@ def supported_funcs(gv, funcs):
             except cpp.ExtmodError:
                 builtins = False
         if builtins:
-            supported.append(func) 
+            supported.append(func)
         else:
             if isinstance(func.parent, class_):
                 print '*WARNING* method not exported:', func.parent.ident+'.'+func.ident
@@ -156,7 +156,7 @@ def supported_vars(vars): # XXX virtuals?
         if not var in getgx().merged_inh or not getgx().merged_inh[var]:
             continue
         if var.name.startswith('__'): # XXX
-            continue 
+            continue
         if var.invisible or cpp.singletype2(getgx().merged_inh[var], module):
             continue
         try:
@@ -171,11 +171,11 @@ def supported_vars(vars): # XXX virtuals?
     return supported
 
 def do_extmod_class(gv, cl):
-    # determine methods, vars to expose 
+    # determine methods, vars to expose
     funcs = supported_funcs(gv, cl.funcs.values())
     vars = supported_vars(cl.vars.values())
 
-    # python object 
+    # python object
     print >>gv.out, '/* class %s */\n' % cl.ident
     print >>gv.out, 'typedef struct {'
     print >>gv.out, '    PyObject_HEAD'
@@ -189,7 +189,7 @@ def do_extmod_class(gv, cl):
         do_extmod_method(gv, func)
     do_extmod_methoddef(gv, cl.ident, funcs)
 
-    # tp_new 
+    # tp_new
     print >>gv.out, 'PyObject *%sNew(PyTypeObject *type, PyObject *args, PyObject *kwargs) {' % cl.ident
     print >>gv.out, '    %sObject *self = (%sObject *)type->tp_alloc(type, 0);' % (cl.ident, cl.ident)
     print >>gv.out, '    self->__ss_object = new __%s__::%s();' % (gv.module.ident, cl.ident)
@@ -205,7 +205,7 @@ def do_extmod_class(gv, cl):
     print >>gv.out, '    self->ob_type->tp_free((PyObject *)self);'
     print >>gv.out, '    __ss_proxy->__delitem__(self->__ss_object);'
     print >>gv.out, '}\n'
-   
+
     # getset
     for var in vars:
         print >>gv.out, 'PyObject *__ss_get_%s_%s(%sObject *self, void *closure) {' % (cl.ident, var.name, cl.ident)
@@ -219,7 +219,7 @@ def do_extmod_class(gv, cl):
         typ = cpp.typesetreprnew(var, var.parent)
         if typ == 'void *': # XXX investigate
             print >>gv.out, '        self->__ss_object->%s = NULL;' % gv.cpp_name(var.name)
-        else: 
+        else:
             print >>gv.out, '        self->__ss_object->%s = __to_ss<%s>(value);' % (gv.cpp_name(var.name), typ)
         print >>gv.out, '    } catch (Exception *e) {'
         print >>gv.out, '        PyErr_SetString(__to_py(e), ((e->msg)?(e->msg->unit.c_str()):""));'
@@ -280,7 +280,7 @@ def do_extmod_class(gv, cl):
 def convert_methods(gv, cl, declare):
     if declare:
         print >>gv.out, '#ifdef __SS_BIND'
-        print >>gv.out, '    PyObject *__to_py__();' 
+        print >>gv.out, '    PyObject *__to_py__();'
         print >>gv.out, '#endif'
     else:
         print >>gv.out, '#ifdef __SS_BIND'
@@ -295,7 +295,7 @@ def convert_methods(gv, cl, declare):
         print >>gv.out, '    return (PyObject *)self;'
         print >>gv.out, '}\n}\n'
 
-        print >>gv.out, 'namespace __shedskin__ { /* XXX */\n' 
+        print >>gv.out, 'namespace __shedskin__ { /* XXX */\n'
 
         print >>gv.out, 'template<> __%s__::%s *__to_ss(PyObject *p) {' % (gv.module.ident, cl.cpp_name)
         print >>gv.out, '    if(p == Py_None) return NULL;'
