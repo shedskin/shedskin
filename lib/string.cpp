@@ -112,7 +112,7 @@ double atof(str *s) {
 
 str *__ctype_str(int (*cfunc)(int)) {
     str *s = new str();
-    for(int i=0; i<256; i++) 
+    for(int i=0; i<256; i++)
         if(cfunc(i))
             s->unit += (char)i;
     return s;
@@ -129,8 +129,8 @@ void __init() {
     hexdigits = new str("0123456789abcdefABCDEF");
     octdigits = new str("01234567");
 
-    punctuation = __ctype_str(ispunct); 
-    whitespace = __ctype_str(isspace); 
+    punctuation = __ctype_str(ispunct);
+    whitespace = __ctype_str(isspace);
 
     printable = __add_strs(5, digits, lowercase, uppercase, punctuation, new str(" \t\n\r\x0b\x0c"));
 

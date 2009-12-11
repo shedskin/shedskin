@@ -19,7 +19,7 @@ public:
 
     /* XXX modulo rotate, specialized reversed, copy, deepcopy */
 
-    deque(pyiter<A> *iterable=0) { 
+    deque(pyiter<A> *iterable=0) {
         this->__class__ = cl_deque;
         if(iterable)
             extend(iterable);
@@ -33,12 +33,12 @@ public:
         units.push_front(a);
     }
 
-    A pop() { 
-        if(units.empty()) 
+    A pop() {
+        if(units.empty())
             throw new IndexError(new str("pop from an empty deque"));
         A x = units.back();
         units.pop_back();
-        return x; 
+        return x;
     }
 
     A popleft() {
@@ -58,7 +58,7 @@ public:
         i = __wrap(this, i);
         units[i] = value;
         return NULL;
-    } 
+    }
 
     void *__delitem__(int i) {
         i = __wrap(this, i);
@@ -68,8 +68,8 @@ public:
 
     int __contains__(A value) {
         iter = units.begin();
-        while(iter != units.end()) 
-            if(*iter++ == value) 
+        while(iter != units.end())
+            if(*iter++ == value)
                 return 1;
         return 0;
     }
@@ -92,7 +92,7 @@ public:
         r->unit += "])";
         return r;
    }
-   
+
    void *extend(pyiter<A> *p) {
        __iter<A> *__0;
        A e;
@@ -110,7 +110,7 @@ public:
        END_FOR
        return NULL;
    }
-   
+
    void *remove(A value) {
        iter = units.begin();
        while(iter != units.end()) {
@@ -127,16 +127,16 @@ public:
    void *rotate(int n) {
        if(!units.empty()) {
            n = n % __len__();
-           if(n<0) 
-               for(int i=0; i>n; i--) 
+           if(n<0)
+               for(int i=0; i>n; i--)
                    append(popleft());
-           else 
-               for(int i=0; i<n; i++) 
+           else
+               for(int i=0; i<n; i++)
                    appendleft(pop());
        }
        return NULL;
    }
-   
+
    void *clear() {
        units.clear();
        return NULL;
@@ -224,10 +224,10 @@ public:
         return iter->second;
     }
 
-    V __missing__(K k) { 
-        V v = new (typename dereference<V>::type)(); 
+    V __missing__(K k) {
+        V v = new (typename dereference<V>::type)();
         return (this->units[k] = v);
-    } 
+    }
 
     void *_addtoitem__(K k, V v) {
         iter = this->units.find(k);
@@ -235,10 +235,10 @@ public:
             V defval = new (typename dereference<V>::type)();
             this->units[k] = __add(defval, v);
         }
-        else  
+        else
             iter->second = __add(iter->second, v);
         return NULL;
-    } 
+    }
 
     str *__repr__() {
         return __add_strs(3, new str("defaultdict("), dict<K, V>::__repr__(), new str(")"));
@@ -278,12 +278,12 @@ public:
 
     void *__addtoitem__(K k, int v) {
         iter = this->units.find(k);
-        if(iter == this->units.end()) 
+        if(iter == this->units.end())
             this->units[k] = v;
-        else  
+        else
             iter->second = iter->second+v;
         return NULL;
-    } 
+    }
 
     str *__repr__() {
         return __add_strs(3, new str("defaultdict("), dict<K, int>::__repr__(), new str(")"));
@@ -319,12 +319,12 @@ public:
 
     void *__addtoitem__(K k, double v) {
         iter = this->units.find(k);
-        if(iter == this->units.end()) 
+        if(iter == this->units.end())
             this->units[k] = v;
-        else  
+        else
             iter->second = iter->second+v;
         return NULL;
-    } 
+    }
 
     str *__repr__() {
         return __add_strs(3, new str("defaultdict("), dict<K, double>::__repr__(), new str(")"));

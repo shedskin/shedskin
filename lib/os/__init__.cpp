@@ -86,7 +86,7 @@ list<str *> *listdir(str *path) {
     return r;
 }
 
-str *getcwd() { 
+str *getcwd() {
     str *r;
     char *d=::getcwd(0, 256);
     r = new str(d);
@@ -94,7 +94,7 @@ str *getcwd() {
     return r;
 }
 
-void *chdir(str *dir) { 
+void *chdir(str *dir) {
     if(::chdir(dir->unit.c_str()) == -1)
         throw new OSError(dir);
     return NULL;
@@ -216,7 +216,7 @@ class_ *cl___cstat;
 __cstat::__cstat(str *path, int t) {
     int hop;
     this->__class__ = cl___cstat;
-    
+
     if(t==1) {
         if(stat(path->unit.c_str(), &sbuf) == -1)
             throw new OSError(path);
@@ -226,10 +226,10 @@ __cstat::__cstat(str *path, int t) {
 #endif
             throw new OSError(path);
     }
- 
+
     fill_er_up();
 }
-    
+
 __cstat::__cstat(int fd) {
     int hop;
     this->__class__ = cl___cstat;
@@ -276,9 +276,9 @@ int __cstat::__getitem__(int i) {
         case 8: return __ss_st_mtime;
         case 9: return __ss_st_ctime;
 
-        default:  
-            throw new IndexError(new str("tuple index out of range")); 
-    } 
+        default:
+            throw new IndexError(new str("tuple index out of range"));
+    }
 
     return 0;
 }
@@ -297,7 +297,7 @@ tuple2<int, int> *namedtuple::__slice__(int x, int l, int u, int s) {
     tuple2<int, int> *c = new tuple2<int, int>();
 
     slicenr(x, l, u, s, __len__());
- 
+
     if(s > 0)
         for(int i=l; i<u; i += s)
             c->append(__getitem__(i));
@@ -380,7 +380,7 @@ void *renames(str* old, str* _new) {
         head = __1->__getfirst__();
         tail = __1->__getsecond__();
     }
-    
+
     while(___bool(__AND(head, tail, 2)) && !__path__::exists(head)) {
         try {
             makedirs(head);
@@ -451,20 +451,20 @@ popen_pipe* popen(str* cmd, str* mode, int bufsize) {
 
 int dup(int f1) {
     int f2 = ::dup(f1);
-    if (f2 == -1) 
+    if (f2 == -1)
         throw new OSError(new str("os.dup failed"));
     return f2;
 }
 
 void *dup2(int f1, int f2) {
-    if (::dup2(f1,f2) == -1) 
+    if (::dup2(f1,f2) == -1)
         throw new OSError(new str("os.dup2 failed"));
     return NULL;
 }
 
 #if !defined(__APPLE__) && !defined(__FreeBSD__) && !defined(WIN32)
 void *fdatasync(int f1) {
-    if (::fdatasync(f1) == -1) 
+    if (::fdatasync(f1) == -1)
         throw new OSError(new str("os.fdatasync failed"));
     return NULL;
 }
@@ -482,7 +482,7 @@ file* fdopen(int fd, str* mode, int bufsize) {
         mode = new str("r");
 /* XXX ValueError: mode string must begin with one of 'r', 'w', 'a' or 'U' */
     FILE* fp = ::fdopen(fd, mode->unit.c_str());
-    if(fp == NULL) 
+    if(fp == NULL)
         throw new OSError(new str("os.fdopen failed"));
 
     file* ret = new file(fp);
@@ -514,7 +514,7 @@ int write(int fd, str *s) {
 
 
 void *close(int fd) {
-   if(::close(fd) < 0) 
+   if(::close(fd) < 0)
        throw new OSError(new str("os.close failed"));
    return NULL;
 }
@@ -555,7 +555,7 @@ int __ss_WTERMSIG(int status) {
 }
 
 void *fchdir(int f1) {
-    if (::fchdir(f1) == -1) 
+    if (::fchdir(f1) == -1)
         throw new OSError(new str("os.fchdir failed"));
     return NULL;
 }
@@ -577,35 +577,35 @@ str *readlink(str *path) {
             return r;
         }
         size *= 2;
-      }       
+      }
 }
 
 int getuid() { return ::getuid(); }
-void *setuid(int uid) { 
+void *setuid(int uid) {
     if(::setuid(uid) == -1)
         throw new OSError(new str("os.setuid"));
-    return NULL; 
+    return NULL;
 }
 
 int getgid() { return ::getgid(); }
-void *setgid(int gid) { 
+void *setgid(int gid) {
     if(::setgid(gid) == -1)
         throw new OSError(new str("os.setgid"));
-    return NULL; 
+    return NULL;
 }
 
 int geteuid() { return ::geteuid(); }
-void *seteuid(int euid) { 
+void *seteuid(int euid) {
     if(::seteuid(euid) == -1)
         throw new OSError(new str("os.seteuid"));
-    return NULL; 
+    return NULL;
 }
 
 int getegid() { return ::getegid(); }
 void *setegid(int egid) {
     if(::setegid(egid) == -1)
         throw new OSError(new str("os.setegid"));
-    return NULL; 
+    return NULL;
 }
 
 int getppid() { return ::getppid(); }
@@ -613,13 +613,13 @@ int getppid() { return ::getppid(); }
 void *setreuid(int ruid, int euid) {
     if(::setreuid(ruid, euid) == -1)
         throw new OSError(new str("os.setreuid"));
-    return NULL; 
+    return NULL;
 }
 
 void *setregid(int rgid, int egid) {
     if(::setregid(rgid, egid) == -1)
         throw new OSError(new str("os.setregid"));
-    return NULL; 
+    return NULL;
 }
 
 int tcgetpgrp(int fd) {
@@ -627,13 +627,13 @@ int tcgetpgrp(int fd) {
     nr = ::tcgetpgrp(fd);
     if(nr == -1)
         throw new OSError(new str("os.tcgetpgrp"));
-    return nr; 
+    return nr;
 }
 
 void *tcsetpgrp(int fd, int pg) {
     if(::tcsetpgrp(fd, pg) == -1)
         throw new OSError(new str("os.tcsetpgrp"));
-    return NULL; 
+    return NULL;
 }
 
 int fork() {
@@ -704,19 +704,19 @@ str *getlogin() {
 }
 
 void *chown(str *path, int uid, int gid) {
-    if (::chown(path->unit.c_str(), uid, gid) == -1) 
+    if (::chown(path->unit.c_str(), uid, gid) == -1)
         throw new OSError(path);
     return NULL;
 }
 
 void *lchown(str *path, int uid, int gid) {
-    if (::lchown(path->unit.c_str(), uid, gid) == -1) 
+    if (::lchown(path->unit.c_str(), uid, gid) == -1)
         throw new OSError(path);
     return NULL;
 }
 
 void *chroot(str *path) {
-    if (::chroot(path->unit.c_str()) == -1) 
+    if (::chroot(path->unit.c_str()) == -1)
         throw new OSError(path);
     return NULL;
 }
@@ -875,7 +875,7 @@ __vfsstat::__vfsstat(str *path) {
         throw new OSError(path);
     fill_er_up();
 }
-    
+
 __vfsstat::__vfsstat(int fd) {
     this->__class__ = cl___vfsstat;
     if(fstatvfs(fd, &vbuf) == -1)
@@ -914,9 +914,9 @@ int __vfsstat::__getitem__(int i) {
         case 8: return vbuf.f_flag;
         case 9: return vbuf.f_namemax;
 
-        default:  
-            throw new IndexError(new str("tuple index out of range")); 
-    } 
+        default:
+            throw new IndexError(new str("tuple index out of range"));
+    }
 
     return 0;
 }
@@ -978,7 +978,7 @@ tuple2<double, double> *times() {
     int ticks_per_second = ::sysconf(_SC_CLK_TCK);
     if((c = ::times(&buf)) == -1)
         throw new OSError(new str("os.utime"));
-    return new tuple2<double, double>(5, ((double)buf.tms_utime / ticks_per_second), ((double)buf.tms_stime / ticks_per_second), ((double)buf.tms_cutime / ticks_per_second), ((double)buf.tms_cstime / ticks_per_second), ((double)c / ticks_per_second)); 
+    return new tuple2<double, double>(5, ((double)buf.tms_utime / ticks_per_second), ((double)buf.tms_stime / ticks_per_second), ((double)buf.tms_cutime / ticks_per_second), ((double)buf.tms_cstime / ticks_per_second), ((double)c / ticks_per_second));
 }
 
 /* str *tmpnam() { XXX raises compiler warning
@@ -1035,7 +1035,7 @@ char **__exec_envplist(dict<str *, str *> *env) {
     char** envplist = (char**)GC_malloc(sizeof(char*)*(env->__len__()+1));
     list<tuple2<str *, str *> *> *items = env->items();
     for(int i=0; i < items->__len__(); i++) {
-        envplist[i] = (char *)(__add_strs(3, items->__getitem__(i)->__getfirst__(), new str("="), items->__getitem__(i)->__getsecond__())->unit.c_str()); 
+        envplist[i] = (char *)(__add_strs(3, items->__getitem__(i)->__getfirst__(), new str("="), items->__getitem__(i)->__getsecond__())->unit.c_str());
     }
     envplist[items->__len__()] = NULL;
     return envplist;
@@ -1043,9 +1043,9 @@ char **__exec_envplist(dict<str *, str *> *env) {
 
 list<str *> *__exec_path() {
     str* envpath;
-    if(__ss_environ->__contains__(new str("PATH"))) 
+    if(__ss_environ->__contains__(new str("PATH")))
         envpath = __ss_environ->get(new str("PATH"));
-    else 
+    else
         envpath = defpath;
     return envpath->split(pathsep);
 }
@@ -1136,7 +1136,7 @@ void *execvpe(str* file, list<str*>* args, dict<str *, str *> *env) {
     for(int i = 0; i < PATH->__len__(); ++i) {
         str* dir = PATH->__getfast__(i);
         str* fullname = __path__::join(2, dir, file);
-        if(__path__::exists(fullname)) 
+        if(__path__::exists(fullname))
             execve(fullname, args, env);
     }
     throw new OSError(new str("os.execvpe"));
@@ -1193,7 +1193,7 @@ int spawnv(int mode, str *file, list<str *> *args) {
         t = waitpid(pid, 0);
         return t->__getsecond__();
     }
-    else 
+    else
         return pid;
 }
 
@@ -1206,7 +1206,7 @@ int spawnvp(int mode, str *file, list<str *> *args) {
         t = waitpid(pid, 0);
         return t->__getsecond__();
     }
-    else 
+    else
         return pid;
 }
 
@@ -1219,7 +1219,7 @@ int spawnve(int mode, str *file, list<str *> *args, dict<str *, str *> *env) {
         t = waitpid(pid, 0);
         return t->__getsecond__();
     }
-    else 
+    else
         return pid;
 }
 
@@ -1232,7 +1232,7 @@ int spawnvpe(int mode, str *file, list<str *> *args, dict<str *, str *> *env) {
         t = waitpid(pid, 0);
         return t->__getsecond__();
     }
-    else 
+    else
         return pid;
 }
 
@@ -1278,7 +1278,7 @@ tuple2<file*,file*>* popen2(str* cmd, str* mode, int bufsize) {
 
     tuple2<file*, file*>* ret = new tuple2<file*,file*>();
     ret->__init2__(fdopen(p2c->__getsecond__(),new str("w")), fdopen(c2p->__getfirst__(), new str("r")));
-    
+
     return ret;
 }
 
@@ -1352,7 +1352,7 @@ tuple2<file*,file*>* popen4(str* cmd, str* mode, int bufsize) {
 
     tuple2<file*, file*>* ret = new tuple2<file*,file*>();
     ret->__init2__(fdopen(p2c->__getsecond__(),new str("w")), fdopen(c2p->__getfirst__(), new str("r")));
-    
+
     return ret;
 
 }
@@ -1385,7 +1385,7 @@ void __init() {
     name = new str("posix");
     cl___vfsstat = new class_("__vfsstat", 4, 4);
 #endif
-    
+
     __ss_environ = new dict<str *, str *>();
 
     for (int n = 0; environ[n]; n++) {

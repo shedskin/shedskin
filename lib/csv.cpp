@@ -13,8 +13,8 @@ class reader
 
 class_ *cl_reader;
 
-__csviter::__csviter(file *csvfile) { 
-    this->csvfile = csvfile; 
+__csviter::__csviter(file *csvfile) {
+    this->csvfile = csvfile;
 }
 
 list<str *> *__csviter::next() {
@@ -26,7 +26,7 @@ __csviter *reader::__iter__() {
 }
 
 void *reader::__init__(file *csvfile) {
-    
+
     this->csvfile = csvfile;
     return NULL;
 }

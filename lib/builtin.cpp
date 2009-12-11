@@ -65,7 +65,7 @@ int_::int_(int i) {
 
 str *int_::__repr__() {
     return __str(unit);
-} 
+}
 
 /* float methods */
 
@@ -76,7 +76,7 @@ float_::float_(double f) {
 
 str *float_::__repr__() {
     return __str(unit);
-} 
+}
 
 /* complex methods */
 
@@ -210,10 +210,10 @@ int complex::__nonzero__() {
 
 str *complex::__repr__() {
     str *left, *middle, *right;
-    if(real==0) 
+    if(real==0)
         return __modct(new str("%gj"), 1, __box(imag));
     left = __modct(new str("(%g"), 1, __box(real));
-    if(imag<0) 
+    if(imag<0)
         middle = new str("");
     else
         middle = new str("+");
@@ -324,12 +324,12 @@ int str::isalnum() {
 int str::__ctype_function(int (*cfunc)(int))
 {
   int i, l = unit.size();
-  if(!l) 
+  if(!l)
       return 0;
-  
-  for(i = 0; i < l; i++) 
+
+  for(i = 0; i < l; i++)
       if(!cfunc((int)unit[i])) return 0;
-  
+
   return 1;
 }
 
@@ -374,7 +374,7 @@ str *str::lstrip(str *chars) {
     if(chars) remove = chars->unit;
     else remove = ws;
     int first = unit.find_first_not_of(remove);
-    if( first == -1 ) 
+    if( first == -1 )
         return new str("");
     return new str(unit.substr(first,unit.size()-first));
 }
@@ -384,22 +384,22 @@ str *str::lstrip(str *chars) {
 tuple2<str *, str *> *str::partition(str *sep)
 {
     int i;
-    
+
     i = unit.find(sep->unit);
-    if(i != -1) 
+    if(i != -1)
         return new tuple2<str *, str *>(3, new str(unit.substr(0, i)), new str(sep->unit), new str(unit.substr(i + sep->unit.length())));
-    else 
+    else
         return new tuple2<str *, str *>(3, new str(unit), new str(""), new str(""));
 }
 
 tuple2<str *, str *> *str::rpartition(str *sep)
 {
     int i;
-    
+
     i = unit.rfind(sep->unit);
-    if(i != -1) 
+    if(i != -1)
         return new tuple2<str *, str *>(3, new str(unit.substr(0, i)), new str(sep->unit), new str(unit.substr(i + sep->unit.length())));
-    else 
+    else
         return new tuple2<str *, str *>(3, new str(unit), new str(""), new str(""));
 }
 
@@ -408,10 +408,10 @@ list<str *> *str::rsplit(str *sep, int maxsep)
     __GC_STRING ts;
     list<str *> *r = new list<str *>();
     int i, j, curi, tslen;
-    
+
     curi = 0;
     i = j = unit.size() - 1;
-    
+
     //split by whitespace
     if(!sep)
     {
@@ -419,55 +419,55 @@ list<str *> *str::rsplit(str *sep, int maxsep)
         {
             j = unit.find_last_not_of(ws, i);
             if(j == -1) break;
-            
+
             i = unit.find_last_of(ws, j);
-            
+
             //this works out pretty nicely; i will be -1 if no more is found, and thus i + 1 will be 0th index
             r->append(new str(unit.substr(i + 1, j - i)));
             curi++;
         }
-        
+
         //thus we only bother about extra stuff here if we *have* found more whitespace
         if(i > 0 && j >= 0 && (j = unit.find_last_not_of(ws, i)) >= 0) r->append(new str(unit.substr(0, j)));
     }
-    
+
     //split by seperator
     else
     {
         ts = sep->unit;
         tslen = ts.length();
-        
+
         i++;
         while(i > 0 && j > 0 && (curi < maxsep || maxsep < 0))
         {
             j = i;
             i--;
-            
+
             i = unit.rfind(ts, i);
             if(i == -1)
             {
                 i = j;
                 break;
             }
-            
+
             r->append(new str(unit.substr(i + tslen, j - i - tslen)));
-            
+
             curi++;
         }
-        
+
         //either left over (beyond max) or very last match (see loop break)
         if(i >= 0) r->append(new str(unit.substr(0, i)));
     }
-    
+
     r->reverse();
-    
+
     return r;
 }
 
 int str::istitle(void)
 {
     int i, len;
-    
+
     len = unit.size();
     if(!len)
         return 0;
@@ -476,16 +476,16 @@ int str::istitle(void)
     {
         for( ; !::isalpha((int)unit[i]) && i < len; i++) ;
         if(i == len) break;
-        
+
         if(!::isupper((int)unit[i])) return 0;
         i++;
-        
+
         for( ; ::islower((int)unit[i]) && i < len; i++) ;
         if(i == len) break;
-        
+
         if(::isalpha((int)unit[i])) return 0;
     }
-    
+
     return 1;
 }
 
@@ -494,24 +494,24 @@ list<str *> *str::splitlines(int keepends)
     list<str *> *r = new list<str *>();
     int i, j, endlen;
     const char *ends = "\r\n";
-    
+
     endlen = i = 0;
     do
     {
         j = i + endlen;
         i = unit.find_first_of(ends, j);
         if(i == -1) break;
-        
+
         //for all we know the character sequence could change mid-way...
         if(unit[i] == '\r' && unit[i + 1] == '\n') endlen = 2;
         else endlen = 1;
-        
+
         r->append(new str(unit.substr(j, i - j + (keepends ? endlen : 0))));
     }
     while(i >= 0);
-    
+
     if(j != unit.size()) r->append(new str(unit.substr(j)));
-    
+
     return r;
 }
 
@@ -520,12 +520,12 @@ str *str::rstrip(str *chars) {
     if(chars) remove = chars->unit;
     else remove = ws;
     int last = unit.find_last_not_of(remove);
-    if( last == -1 ) 
+    if( last == -1 )
         return new str("");
     return new str(unit.substr(0,last+1));
 }
 
-list<str *> *str::split(str *sp, int max_splits) { 
+list<str *> *str::split(str *sp, int max_splits) {
     __GC_STRING s = unit;
     int sep_iter, chunk_iter = 0, tmp, num_splits = 0;
     list<str *> *result = new list<str *>();
@@ -534,9 +534,9 @@ list<str *> *str::split(str *sp, int max_splits) {
 #define next_separator(iter) (s.find_first_of(ws, (iter)))
 #define skip_separator(iter) (s.find_first_not_of(ws, (iter)))
 
-        if(skip_separator(chunk_iter) == -1) /* XXX */ 
+        if(skip_separator(chunk_iter) == -1) /* XXX */
             return result;
-        if(next_separator(chunk_iter) == 0) 
+        if(next_separator(chunk_iter) == 0)
             chunk_iter = skip_separator(chunk_iter);
         while((max_splits < 0 or num_splits < max_splits)
               and (sep_iter = next_separator(chunk_iter)) != -1)
@@ -550,9 +550,9 @@ list<str *> *str::split(str *sp, int max_splits) {
             ++num_splits;
         }
         if(not (max_splits < 0 or num_splits < max_splits))
-            result->append(new str(s.substr(chunk_iter, s.size()-chunk_iter))); 
+            result->append(new str(s.substr(chunk_iter, s.size()-chunk_iter)));
         else if(sep_iter == -1)
-            result->append(new str(s.substr(chunk_iter, s.size()-chunk_iter))); 
+            result->append(new str(s.substr(chunk_iter, s.size()-chunk_iter)));
 
 #undef next_separator
 #undef skip_separator
@@ -586,9 +586,9 @@ list<str *> *str::split(str *sp, int max_splits) {
             ++num_splits;
         }
         if(not (max_splits < 0 or num_splits < max_splits))
-            result->append(new str(s.substr(chunk_iter, s.size()-chunk_iter))); 
+            result->append(new str(s.substr(chunk_iter, s.size()-chunk_iter)));
         else if(sep_iter == -1)
-            result->append(new str(s.substr(chunk_iter, s.size()-chunk_iter))); 
+            result->append(new str(s.substr(chunk_iter, s.size()-chunk_iter)));
 
 
 #undef next_separator
@@ -674,7 +674,7 @@ str *str::__mul__(int n) { /* optimize */
 
     return r;
 }
-str *str::__imul__(int n) { 
+str *str::__imul__(int n) {
     return __mul__(n);
 }
 
@@ -733,7 +733,7 @@ static inline unsigned int SuperFastHash (const char * data, int len) {
 /* ======================================================================== */
 
 int str::__hash__() {
-    if(cached_hash) 
+    if(cached_hash)
         return cached_hash;
     cached_hash = SuperFastHash(unit.c_str(), unit.size());
     return cached_hash;
@@ -797,7 +797,7 @@ str *__add_strs(int n, str *a, str *b, str *c, str *d) {
         pos += bsize;
         memcpy((void *)(result->unit.data()+pos), c->unit.data(), csize);
         pos += csize;
-        memcpy((void *)(result->unit.data()+pos), d->unit.data(), dsize); 
+        memcpy((void *)(result->unit.data()+pos), d->unit.data(), dsize);
     }
     return result;
 }
@@ -825,9 +825,9 @@ str *__add_strs(int n, str *a, str *b, str *c, str *d, str *e) {
         pos += bsize;
         memcpy((void *)(result->unit.data()+pos), c->unit.data(), csize);
         pos += csize;
-        memcpy((void *)(result->unit.data()+pos), d->unit.data(), dsize); 
+        memcpy((void *)(result->unit.data()+pos), d->unit.data(), dsize);
         pos += dsize;
-        memcpy((void *)(result->unit.data()+pos), e->unit.data(), esize); 
+        memcpy((void *)(result->unit.data()+pos), e->unit.data(), esize);
     }
     return result;
 }
@@ -872,12 +872,12 @@ str *str::__join(pyseq<str *> *l, int total_len) {
         if(unit.size() && i < len(l)-1) {
             memcpy((void *)(s->unit.data()+k), unit.data(), unit.size());
             k += unit.size();
-        } 
+        }
     }
     return new str(s->unit);
 }
 
-str *str::join(pyiter<str *> *l) { 
+str *str::join(pyiter<str *> *l) {
     list<str *> *rl = new list<str *>();
     str *i;
     int count, total_len;
@@ -891,7 +891,7 @@ str *str::join(pyiter<str *> *l) {
     if(total_len)
         total_len += (count-1)*unit.size();
     return __join(rl, total_len);
-} 
+}
 
 str *str::join(pyseq<str *> *l) {
     int total_len = 0;
@@ -959,7 +959,7 @@ int str::count(str *s, int start, int end) {
         count++;
     }
 
-    return count; 
+    return count;
 }
 
 int str::startswith(str *s, int start) { return startswith(s, start, __len__()); }
@@ -971,7 +971,7 @@ int str::startswith(str *s, int start, int end) {
         if (unit[i++] != s->unit[j++])
             return 0;
 
-    return j == len(s); 
+    return j == len(s);
 }
 
 int str::endswith(str *s, int start) { return endswith(s, start, __len__()); }
@@ -981,7 +981,7 @@ int str::endswith(str *s, int start, int end) {
 
     for(i = end, j = len(s); i > start && j > 0; )
         if (unit[--i] != s->unit[--j])
-            return 0; 
+            return 0;
 
     return 1;
 }
@@ -1040,7 +1040,7 @@ str *str::capitalize() {
 
 #ifdef __SS_BIND
 str::str(PyObject *p) : cached_hash(0) {
-    if(!PyString_Check(p)) 
+    if(!PyString_Check(p))
         throw new TypeError(new str("error in conversion to Shed Skin (string expected)"));
 
     __class__ = cl_str_;
@@ -1084,7 +1084,7 @@ file::file(str *name, str *flags) {
     f = fopen(name->unit.c_str(), flags->unit.c_str());
     this->name = name;
     this->mode = flags;
-    if(!f) 
+    if(!f)
        throw new IOError(__modct(new str("No such file or directory: '%s'"), 1, name));
     endoffile=print_space=0;
     print_lastchar='\n';
@@ -1145,7 +1145,7 @@ void *file::writelines(pyseq<str *> *l) {
     return NULL;
 }
 
-str *file::readline(int n) { 
+str *file::readline(int n) {
     __check_closed();
     int i = 0;
     str *r = new str();
@@ -1187,11 +1187,11 @@ list<str *> *file::readlines() {
     __check_closed();
     list<str *> *lines = new list<str *>();
     while(!endoffile) {
-        str *line = readline(); 
+        str *line = readline();
         if(endoffile && !len(line))
             break;
         lines->append(line);
-    } 
+    }
 
     return lines;
 }
@@ -1230,7 +1230,7 @@ str *raw_input(str *msg) {
     std::getline(std::cin, s);
     if(std::cin.eof())
         throw new EOFError();
-    return new str(s); 
+    return new str(s);
 }
 
 
@@ -1370,15 +1370,15 @@ __iter<int> *__xrange::__iter__() {
 
 int __xrange::__len__() {
    return range_len(a, b, s);
-} 
-    
+}
+
 str *__xrange::__repr__() {
     if(s==1) {
         if(a==0)
             return __modct(new str("xrange(%d)"), 1, __box(b));
         else
             return __modct(new str("xrange(%d, %d)"), 2, __box(a), __box(b));
-    } 
+    }
     return __modct(new str("xrange(%d, %d, %d)"), 3, __box(a), __box(b), __box(s)); /* XXX */
 }
 
@@ -1393,7 +1393,7 @@ __iter<str *> *reversed(str *s) {
 }
 
 int ord(str *s) {
-    if(len(s) != 1) 
+    if(len(s) != 1)
         throw new TypeError(__modct(new str("ord() expected a character, but string of length %d found"), 1, __box(len(s))));
     return (unsigned char)(s->unit[0]);
 }
@@ -1402,7 +1402,7 @@ str *chr(bool b) {
     return chr((int)b);
 }
 str *chr(int i) {
-    if(i < 0 || i > 255) 
+    if(i < 0 || i > 255)
         throw new ValueError(new str("chr() arg not in range(256)"));
     return __char_cache[i];
 }
@@ -1490,7 +1490,7 @@ complex *__power(complex *a, complex *b) {
             phase += b->imag*std::log(vabs);
         }
         r->real = len*std::cos(phase);
-        r->imag = len*std::sin(phase); 
+        r->imag = len*std::sin(phase);
     }
     return r;
 }
@@ -1628,7 +1628,7 @@ list<str *> *__list(str *s) {
     list<str *> *r = new list<str *>();
     r->units.resize(len(s));
     int sz = s->unit.size();
-    for(int i=0; i<sz; i++) 
+    for(int i=0; i<sz; i++)
         r->units[i] = __char_cache[s->unit[i]];
     return r;
 }
@@ -1642,7 +1642,7 @@ list<str *> *sorted(str *t, int (*cmp)(str *, str *), int key, int reverse) {
 }
 list<str *> *sorted(str *t, int cmp, int key, int reverse) {
     return sorted(t, (int (*)(str *, str *))0, key, reverse);
-} 
+}
 
 /* mod helpers */
 
@@ -1686,7 +1686,7 @@ int __fmtpos(str *fmt) {
     if(i == -1)
         return -1;
     return fmt->unit.find_first_not_of(__fmtchars, i+1);
-} 
+}
 
 int __fmtpos2(str *fmt) {
     int i = 0;
@@ -1714,7 +1714,7 @@ template<class T> str *do_asprintf(const char *fmt, T t, pyobj *a1, pyobj *a2) {
     else
         x = asprintf(&d, fmt, t);
     r = new str(d);
-    free(d); 
+    free(d);
     return r;
 }
 
@@ -1745,7 +1745,7 @@ void __modfill(str **fmt, pyobj *t, str **s, pyobj *a1, pyobj *a2) {
         }
         add = do_asprintf((*fmt)->unit.substr(i, j+1-i).c_str(), ((float_ *)t)->unit, a1, a2);
         if(c == 'H' && ((float_ *)t)->unit-((int)(((float_ *)t)->unit)) == 0)
-            add->unit += ".0";   
+            add->unit += ".0";
     }
     *s = (*s)->__add__(add);
     *fmt = new str((*fmt)->unit.substr(j+1, (*fmt)->unit.size()-j-1));
@@ -1775,19 +1775,19 @@ str *__mod4(str *fmts, list<pyobj *> *vals) {
         }
 
         char c = fmt->unit[j];
-        if(c != '%') 
+        if(c != '%')
             p = modgetitem(vals, i++);
 
-        if(c == 'c') 
+        if(c == 'c')
             __modfill(&fmt, mod_to_c2(p), &r, a1, a2);
-        else if(c == 's' || c == 'r') 
+        else if(c == 's' || c == 'r')
             __modfill(&fmt, p, &r, a1, a2);
-        else if(__GC_STRING("diouxX").find(c) != -1) 
+        else if(__GC_STRING("diouxX").find(c) != -1)
             __modfill(&fmt, mod_to_int(p), &r, a1, a2);
         else if(__GC_STRING("eEfFgGH").find(c) != -1)
             __modfill(&fmt, mod_to_float(p), &r, a1, a2);
         else if(c == '%')
-            __modfill(&fmt, NULL, &r, a1, a2); 
+            __modfill(&fmt, NULL, &r, a1, a2);
         else
             throw new ValueError(new str("unsupported format character"));
     }
@@ -1799,7 +1799,7 @@ str *__mod4(str *fmts, list<pyobj *> *vals) {
 }
 
 str *__mod5(list<pyobj *> *vals, int newline) {
-    list<str *> *fmt = new list<str *>(); 
+    list<str *> *fmt = new list<str *>();
     for(int i=0;i<len(vals);i++) {
         pyobj *p = vals->__getitem__(i);
         if(p == NULL)
@@ -1844,11 +1844,11 @@ str *__modcd(str *fmt, list<str *> *names, ...) {
     }
 
     return __mod4(fmt, values);
-} 
+}
 
 /* mod */
 
-str *mod_to_c2(pyobj *t) { 
+str *mod_to_c2(pyobj *t) {
     if(t == NULL)
         throw new TypeError(new str("an integer is required"));
     if(t->__class__ == cl_str_) {
@@ -1858,11 +1858,11 @@ str *mod_to_c2(pyobj *t) {
             throw new TypeError(new str("%c requires int or char"));
     }
     int value;
-    if(t->__class__ == cl_int_) 
+    if(t->__class__ == cl_int_)
         value = ((int_ *)t)->unit;
     else if(t->__class__ == cl_float_)
         value = ((int)(((float_ *)t)->unit));
-    else 
+    else
         value = t->__int__();
     if(value < 0)
         throw new OverflowError(new str("unsigned byte integer is less than minimum"));
@@ -1871,24 +1871,24 @@ str *mod_to_c2(pyobj *t) {
     return chr(value);
 }
 
-int_ *mod_to_int(pyobj *t) { 
+int_ *mod_to_int(pyobj *t) {
     if(t == NULL)
         throw new TypeError(new str("int argument required"));
     if(t->__class__ == cl_int_)
         return (int_ *)t;
     else if(t->__class__ == cl_float_)
-        return new int_(((int)(((float_ *)t)->unit))); 
-    else 
+        return new int_(((int)(((float_ *)t)->unit)));
+    else
         return new int_(t->__int__());
 }
 
-float_ *mod_to_float(pyobj *t) { 
+float_ *mod_to_float(pyobj *t) {
     if(t == NULL)
         throw new TypeError(new str("float argument required"));
     if(t->__class__ == cl_float_)
         return (float_ *)t;
     else if(t->__class__ == cl_int_)
-        return new float_(((int_ *)t)->unit); 
+        return new float_(((int_ *)t)->unit);
     throw new TypeError(new str("float argument required"));
 }
 
@@ -1930,7 +1930,7 @@ void quit(int code) {
     __shedskin__::__exit(code);
 }
 
-void print(int n, ...) { // XXX merge four functions 
+void print(int n, ...) { // XXX merge four functions
      list<pyobj *> *vals = new list<pyobj *>();
      va_list args;
      va_start(args, n);
@@ -2034,23 +2034,23 @@ str *__fileiter::next() {
 str *filter(void *func, str *a) { return filter(((int(*)(str *))(func)), a); }
 
 #ifdef __SS_BIND
-template<> PyObject *__to_py(int i) { return PyInt_FromLong(i); }   
+template<> PyObject *__to_py(int i) { return PyInt_FromLong(i); }
 template<> PyObject *__to_py(double d) { return PyFloat_FromDouble(d); }
 template<> PyObject *__to_py(void *v) { Py_INCREF(Py_None); return Py_None; }
 
-template<> int __to_ss(PyObject *p) { 
-    if(!PyInt_Check(p)) 
+template<> int __to_ss(PyObject *p) {
+    if(!PyInt_Check(p))
         throw new TypeError(new str("error in conversion to Shed Skin (integer expected)"));
     return PyInt_AsLong(p);
 }
 
-template<> double __to_ss(PyObject *p) { 
-    if(!PyInt_Check(p) and !PyFloat_Check(p)) 
+template<> double __to_ss(PyObject *p) {
+    if(!PyInt_Check(p) and !PyFloat_Check(p))
         throw new TypeError(new str("error in conversion to Shed Skin (float or int expected)"));
-    return PyFloat_AsDouble(p); 
+    return PyFloat_AsDouble(p);
 }
 
-template<> void * __to_ss(PyObject *p) { 
+template<> void * __to_ss(PyObject *p) {
     if(p!=Py_None)
         throw new TypeError(new str("error in conversion to Shed Skin (None expected)"));
     return NULL;
@@ -2068,7 +2068,7 @@ str *OSError::__str__() {
     return __add_strs(7, new str("[Errno "), __str(__ss_errno), new str("] "), strerror, new str(": '"), filename, new str("'"));
 }
 str *OSError::__repr__() {
-    return __add_strs(5, new str("OSError("), __str(__ss_errno), new str(", '"), strerror, new str("')")); 
+    return __add_strs(5, new str("OSError("), __str(__ss_errno), new str(", '"), strerror, new str("')"));
 }
 
 template <> void *myallocate<int>(int n) { return GC_MALLOC_ATOMIC(n); }

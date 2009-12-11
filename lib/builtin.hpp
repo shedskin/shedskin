@@ -150,7 +150,7 @@ str *__mod4(str *fmt, list<pyobj *> *vals);
 str *__modct(str *fmt, int n, ...);
 str *__modcd(str *fmt, list<str *> *l, ...);
 
-template<class T> str *__modtuple(str *fmt, tuple2<T,T> *t); 
+template<class T> str *__modtuple(str *fmt, tuple2<T,T> *t);
 template<class A, class B> str *__modtuple(str *fmt, tuple2<A,B> *t);
 
 /* internal use */
@@ -165,7 +165,7 @@ template<class A, class B> str *__modtuple(str *fmt, tuple2<A,B> *t);
 #endif
 
 #define __SS_MIN(a,b) ((a) < (b) ? (a) : (b))
-#define __SS_MIN3(a,b,c) (__SS_MIN((a), __SS_MIN((b), (c)))) 
+#define __SS_MIN3(a,b,c) (__SS_MIN((a), __SS_MIN((b), (c))))
 #define __SS_MAX(a,b) ((a) > (b) ? (a) : (b))
 #define __SS_MAX3(a,b,c) (__SS_MAX((a), __SS_MAX((b), (c))))
 
@@ -211,11 +211,11 @@ template<class T> inline int __cmp(T a, T b) {
     return a->__cmp__(b);
 }
 
-template<> inline int __cmp(int a, int b) { 
+template<> inline int __cmp(int a, int b) {
     if(a < b) return -1;
     else if(a > b) return 1;
     return 0;
-} 
+}
 
 template<> inline int __cmp(double a, double b) {
     if(a < b) return -1;
@@ -228,7 +228,7 @@ template<> inline int __cmp(void *a, void *b) {
     return 0;
 }
 
-template<class T> int cpp_cmp(T a, T b) { 
+template<class T> int cpp_cmp(T a, T b) {
     return __cmp(a, b) == -1;
 }
 template<class T> int cpp_cmp_rev(T a, T b) {
@@ -261,9 +261,9 @@ template<class T, class V> class cpp_cmp_key_rev {
     public:
     cpp_cmp_key_rev(hork a) { key = a; }
     int operator()(T a, T b) const { return __cmp(key(a), key(b)) == 1; }
-}; 
+};
 
-template<class T> struct dereference {}; 
+template<class T> struct dereference {};
 template<class T> struct dereference <T*> {
     typedef T type;
 };
@@ -285,7 +285,7 @@ template<class T> PyObject *__to_py(T t) {
         Py_INCREF(Py_None);
         return Py_None;
     }
-    return t->__to_py__(); 
+    return t->__to_py__();
 }
 
 template<> PyObject *__to_py(int i);
@@ -358,7 +358,7 @@ public:
     double unit;
     float_(double f);
     str *__repr__();
-}; 
+};
 
 class complex : public pyobj {
 public:
@@ -497,7 +497,7 @@ public:
         units.resize(n);
     }
 
-    __seqiter<T> *__iter__() { 
+    __seqiter<T> *__iter__() {
         return new __seqiter<T>(this);
     }
 
@@ -546,7 +546,7 @@ public:
 
     int index(T a);
     int index(T a, int s);
-    int index(T a, int s, int e); 
+    int index(T a, int s, int e);
 
     int count(T a);
     str *__repr__();
@@ -566,9 +566,9 @@ public:
 
     void *reverse();
     template<class U> void *sort(int (*cmp)(T, T), U (*key)(T), int reverse);
-    template<class U> void *sort(int cmp, U (*key)(T), int reverse); 
+    template<class U> void *sort(int cmp, U (*key)(T), int reverse);
     void *sort(int (*cmp)(T, T), int key, int reverse);
-    void *sort(int cmp, int key, int reverse); 
+    void *sort(int cmp, int key, int reverse);
 
     list<T> *__copy__();
     list<T> *__deepcopy__(dict<void *, pyobj *> *memo);
@@ -616,11 +616,11 @@ public:
     PyObject *__to_py__();
 #endif
 };
- 
+
 class str : public pyseq<str *> {
 public:
     __GC_STRING unit;
-    int cached_hash; 
+    int cached_hash;
 
     str();
     str(const char *s);
@@ -688,9 +688,9 @@ public:
     int islower();
     int isupper();
     int isalnum();
-    
+
     str *zfill(int width);
-    str *expandtabs(int width=8); 
+    str *expandtabs(int width=8);
 
     str *ljust(int width, str *fchar=0);
     str *rjust(int width, str *fchar=0);
@@ -698,7 +698,7 @@ public:
     int __cmp__(pyobj *p);
     int __hash__();
 
-    int __int__(); /* XXX compilation warning for int(pyseq<str *> *) */ 
+    int __int__(); /* XXX compilation warning for int(pyseq<str *> *) */
 
     __seqiter<str *> *__iter__();
 
@@ -706,7 +706,7 @@ public:
     str *__imul__(int n);
 
 #ifdef __SS_BIND
-    str(PyObject *p); 
+    str(PyObject *p);
     PyObject *__to_py__();
 #endif
 };
@@ -716,9 +716,9 @@ public:
     int counter, size;
     str *p;
 
-    __striter(str *p); 
+    __striter(str *p);
     str *next();
-}; 
+};
 
 template<class T> class tuple2<T,T> : public pyseq<T> {
 public:
@@ -853,7 +853,7 @@ template<class T> struct setentry {
     int use;
 };
 
-template<class T> class set : public pyiter<T> { 
+template<class T> class set : public pyiter<T> {
 public:
     int frozen;
     int fill;
@@ -868,7 +868,7 @@ public:
 
     void *add(T key);
     void *add(setentry<T>* entry);
-    void *discard(T key); 
+    void *discard(T key);
     int do_discard(T key);
     void *remove(T key);
     T pop();
@@ -899,12 +899,12 @@ public:
     set<T> *__or__(set<T> *s);
     set<T> *__xor__(set<T> *s);
     set<T> *__sub__(set<T> *s);
-    
+
     set<T> *__iand__(set<T> *s);
     set<T> *__ior__(set<T> *s);
     set<T> *__ixor__(set<T> *s);
     set<T> *__isub__(set<T> *s);
-    
+
     int issubset(pyiter<T> *s);
     int issubset(set<T> *s);
     int issuperset(set<T> *s);
@@ -920,7 +920,7 @@ public:
     __setiter<T> *__iter__() {
         return new __setiter<T>(this);
     }
-    
+
     set<T> *__copy__();
     set<T> *__deepcopy__(dict<void *, pyobj *> *memo);
 
@@ -993,9 +993,9 @@ public:
 class __fileiter : public __iter<str *> {
 public:
     file *p;
-    __fileiter(file *p); 
+    __fileiter(file *p);
     str *next();
-}; 
+};
 
 class object : public pyobj {
 public:
@@ -1029,16 +1029,16 @@ public:
 #endif
 };
 
-class AssertionError : public Exception { 
-public: 
-    AssertionError(str *msg=0) : Exception(msg) {} 
+class AssertionError : public Exception {
+public:
+    AssertionError(str *msg=0) : Exception(msg) {}
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_AssertionError; }
 #endif
 };
 
 class EOFError : public Exception {
-public: 
+public:
     EOFError(str *msg=0) : Exception(msg) {}
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_EOFError; }
@@ -1046,55 +1046,55 @@ public:
 };
 
 class FloatingPointError : public Exception {
-public: 
-    FloatingPointError(str *msg=0) : Exception(msg) {} 
+public:
+    FloatingPointError(str *msg=0) : Exception(msg) {}
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_FloatingPointError; }
 #endif
 };
 
-class KeyError : public Exception { 
-public: 
-    KeyError(str *msg=0) : Exception(msg) {} 
+class KeyError : public Exception {
+public:
+    KeyError(str *msg=0) : Exception(msg) {}
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_KeyError; }
 #endif
 };
 
-class IndexError : public Exception { 
-public: 
-    IndexError(str *msg=0) : Exception(msg) {} 
+class IndexError : public Exception {
+public:
+    IndexError(str *msg=0) : Exception(msg) {}
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_IndexError; }
 #endif
 };
 
-class TypeError : public Exception { 
-public: 
-    TypeError(str *msg=0) : Exception(msg) {} 
+class TypeError : public Exception {
+public:
+    TypeError(str *msg=0) : Exception(msg) {}
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_TypeError; }
 #endif
 };
 
-class IOError : public Exception { 
-public: 
-    IOError(str *msg=0) : Exception(msg) {} 
+class IOError : public Exception {
+public:
+    IOError(str *msg=0) : Exception(msg) {}
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_IOError; }
 #endif
 };
 
 class KeyboardInterrupt : public Exception {
-public: 
-    KeyboardInterrupt(str *msg=0) : Exception(msg) {} 
+public:
+    KeyboardInterrupt(str *msg=0) : Exception(msg) {}
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_KeyboardInterrupt; }
 #endif
 };
 
 class MemoryError : public Exception {
-public: 
+public:
     MemoryError(str *msg=0) : Exception(msg) {}
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_MemoryError; }
@@ -1102,29 +1102,29 @@ public:
 };
 
 class NameError : public Exception {
-public: 
+public:
     NameError(str *msg=0) : Exception(msg) {}
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_NameError; }
 #endif
 };
 
-class NotImplementedError : public Exception { 
-public: 
-    NotImplementedError(str *msg=0) : Exception(msg) {} 
+class NotImplementedError : public Exception {
+public:
+    NotImplementedError(str *msg=0) : Exception(msg) {}
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_NotImplementedError; }
 #endif
 };
 
-class OSError : public Exception { 
-public: 
+class OSError : public Exception {
+public:
     int __ss_errno;
-    str *filename; 
+    str *filename;
     str *message;
     str *strerror;
 
-    OSError(str *message=0); 
+    OSError(str *message=0);
     str *__str__();
     str *__repr__();
 
@@ -1133,32 +1133,32 @@ public:
 #endif
 };
 
-class OverflowError : public Exception { 
-public: 
-    OverflowError(str *msg=0) : Exception(msg) {} 
+class OverflowError : public Exception {
+public:
+    OverflowError(str *msg=0) : Exception(msg) {}
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_OverflowError; }
 #endif
 };
 
-class RuntimeError : public Exception { 
-public: 
-    RuntimeError(str *msg=0) : Exception(msg) {} 
+class RuntimeError : public Exception {
+public:
+    RuntimeError(str *msg=0) : Exception(msg) {}
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_RuntimeError; }
 #endif
 };
 
-class SyntaxError : public Exception { 
-public: 
-    SyntaxError(str *msg=0) : Exception(msg) {} 
+class SyntaxError : public Exception {
+public:
+    SyntaxError(str *msg=0) : Exception(msg) {}
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_SyntaxError; }
 #endif
 };
 
 class SystemError : public Exception {
-public: 
+public:
     SystemError(str *msg=0) : Exception(msg) {}
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_SystemError; }
@@ -1166,24 +1166,24 @@ public:
 };
 
 class SystemExit : public Exception {
-public: 
+public:
     SystemExit(str *msg=0) : Exception(msg) {}
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_SystemExit; }
 #endif
 };
 
-class ValueError : public Exception { 
-public: 
-    ValueError(str *msg=0) : Exception(msg) {} 
+class ValueError : public Exception {
+public:
+    ValueError(str *msg=0) : Exception(msg) {}
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_ValueError; }
 #endif
 };
 
 class ZeroDivisionError : public Exception {
-public: 
-    ZeroDivisionError(str *msg=0) : Exception(msg) {} 
+public:
+    ZeroDivisionError(str *msg=0) : Exception(msg) {}
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_ZeroDivisionError; }
 #endif
@@ -1209,7 +1209,7 @@ class StopIteration : public Exception { public: StopIteration(str *msg=0) : Exc
     __ ## u = l; \
     for(__ ## n = 0; __ ## n < __ ## m; __ ## n ++) { \
         a = (__ ## t)->units[__ ## n]; \
-        b = (__ ## u)->units[__ ## n]; 
+        b = (__ ## u)->units[__ ## n];
 
 #define FOR_IN_T2(i, m, obj, n) \
     __ ## obj = m; \
@@ -1239,8 +1239,8 @@ template<class T> static inline int __wrap(T a, int i) {
     #ifndef NOWRAP
     if(i<0) return len(a)+i;
     #endif
-    #ifndef NOBOUNDS 
-        if(i<0 || i>= len(a)) 
+    #ifndef NOBOUNDS
+        if(i<0 || i>= len(a))
             __throw_index_out_of_range();
     #endif
     return i;
@@ -1307,7 +1307,7 @@ str *__add_strs(int n, ...);
 /* deep copy */
 
 template<class T> T __deepcopy(T t, dict<void *, pyobj *> *memo=0) {
-    if(!memo) 
+    if(!memo)
         memo = new dict<void *, pyobj *>();
 
     T u = (T)(memo->get(t, 0));
@@ -1377,9 +1377,9 @@ template<class K, class V> dict<K, V>::dict(int count, ...)  {
 
 #ifdef __SS_BIND
 template<class K, class V> dict<K, V>::dict(PyObject *p) {
-    if(!PyDict_Check(p)) 
+    if(!PyDict_Check(p))
         throw new TypeError(new str("error in conversion to Shed Skin (dictionary expected)"));
-    
+
     this->__class__ = cl_dict;
     PyObject *key, *value;
 
@@ -1389,8 +1389,8 @@ template<class K, class V> dict<K, V>::dict(PyObject *p) {
         __setitem__(__to_ss<K>(key), __to_ss<V>(value));
         Py_DECREF(key);
     }
-    Py_DECREF(iter);  
-} 
+    Py_DECREF(iter);
+}
 
 template<class K, class V> PyObject *dict<K, V>::__to_py__() {
     PyObject *p = PyDict_New();
@@ -1407,7 +1407,7 @@ template<class K, class V> void *dict<K,V>::__setitem__(K k, V v) {
 }
 
 template<class T> T __none() { return NULL; }
-template<> int __none(); 
+template<> int __none();
 template<> double __none();
 
 template<class K, class V> V dict<K,V>::get(K k) {
@@ -1562,9 +1562,9 @@ template<class K, class V> int dict<K,V>::__eq__(pyobj *e) {
            return 0;
    END_FOR
    return 1;
-} 
+}
 
-template<class K, class V> __dictiterkeys<K, V> *dict<K, V>::__iter__() { 
+template<class K, class V> __dictiterkeys<K, V> *dict<K, V>::__iter__() {
     return new __dictiterkeys<K, V>(this);
 }
 
@@ -1574,12 +1574,12 @@ template<class K, class V> __dictiterkeys<K, V> *dict<K, V>::iterkeys() {
 
 template<class K, class V> __dictitervalues<K, V> *dict<K, V>::itervalues() {
     return new __dictitervalues<K, V>(this);
-} 
+}
 
 template<class K, class V> __dictiteritems<K, V> *dict<K, V>::iteritems() {
     return new __dictiteritems<K, V>(this);
-} 
-    
+}
+
 /* list<T> methods */
 
 template<class T> list<T>::list() {
@@ -1599,7 +1599,7 @@ template<class T> list<T>::list(int count, ...)  {
 
 #ifdef __SS_BIND
 template<class T> list<T>::list(PyObject *p) {
-    if(!PyList_Check(p)) 
+    if(!PyList_Check(p))
         throw new TypeError(new str("error in conversion to Shed Skin (list expected)"));
 
     this->__class__ = cl_list;
@@ -1647,7 +1647,7 @@ template<class T> void *list<T>::extend(pyiter<T> *p) {
     __iter<T> *__0;
     T e;
     FOR_IN(e, p, 0)
-        append(e); 
+        append(e);
     END_FOR
     return NULL;
 }
@@ -1700,28 +1700,28 @@ template<class T> void *list<T>::__setslice__(int x, int l, int u, int s, pyiter
 
 template<class T> void *list<T>::__setslice__(int x, int l, int u, int s, list<T> *la) {
     slicenr(x, l, u, s, this->__len__());
-    
-    if(x&4 && s != 1) { // x&4: extended slice (step 's' is given), check if sizes match 
-        int slicesize; 
+
+    if(x&4 && s != 1) { // x&4: extended slice (step 's' is given), check if sizes match
+        int slicesize;
         if(l == u) slicesize = 0; // XXX ugly
-        else if(s > 0 && u < l) slicesize=0; 
+        else if(s > 0 && u < l) slicesize=0;
         else if(s < 0 && l < u) slicesize=0;
         else {
             int slicelen = std::abs(u-l);
             int absstep = std::abs(s);
-            slicesize = slicelen/absstep; 
+            slicesize = slicelen/absstep;
             if(slicelen%absstep) slicesize += 1;
         }
 
-        if(slicesize != len(la)) 
-            throw new ValueError(__modtuple(new str("attempt to assign sequence of size %d to extended slice of size %d"), new tuple2<int,int>(2, len(la), slicesize)));  
+        if(slicesize != len(la))
+            throw new ValueError(__modtuple(new str("attempt to assign sequence of size %d to extended slice of size %d"), new tuple2<int,int>(2, len(la), slicesize)));
     }
 
     if(s == 1) {
         if(l <= u) {
             this->units.erase(this->units.begin()+l, this->units.begin()+u);
             this->units.insert(this->units.begin()+l, la->units.begin(), la->units.end());
-        } else 
+        } else
             this->units.insert(this->units.begin()+l, la->units.begin(), la->units.end());
     }
     else {
@@ -1784,7 +1784,7 @@ template<class T> list<T> *list<T>::__add__(list<T> *b) {
     else memcpy(&(c->units[0]), &(this->units[0]), sizeof(T)*l1);
     if(l2==1) c->units[l1] = b->units[0];
     else memcpy(&(c->units[l1]), &(b->units[0]), sizeof(T)*l2);
-    
+
     return c;
 }
 
@@ -1830,7 +1830,7 @@ template<class T> list<T> *list<T>::__iadd__(str *s) {
     return this;
 }
 
-template<class T> list<T> *list<T>::__imul__(int n) { 
+template<class T> list<T> *list<T>::__imul__(int n) {
     int l1 = this->__len__();
     this->units.resize(l1*n);
     for(int i = 1; i <= n-1; i++)
@@ -1847,7 +1847,7 @@ template<class T> int list<T>::index(T a, int s, int e) {
         if(__eq(a,units[i]))
             return i;
     throw new ValueError(new str("list.index(x): x not in list"));
-} 
+}
 
 template<class T> int list<T>::count(T a) {
     int c = 0;
@@ -1890,7 +1890,7 @@ template<class T> template <class U> void *list<T>::sort(int (*cmp)(T, T), U (*k
         if(reverse)
             std::sort(units.begin(), units.end(), cpp_cmp_key_rev<T, U>(key));
         else
-            std::sort(units.begin(), units.end(), cpp_cmp_key<T, U>(key)); 
+            std::sort(units.begin(), units.end(), cpp_cmp_key<T, U>(key));
     }
     else if(cmp) {
         if(reverse)
@@ -1971,13 +1971,13 @@ template<class T> set<T>::set(PyObject *p) {
         add(__to_ss<T>(item));
         Py_DECREF(item);
     }
-    Py_DECREF(iter);  
+    Py_DECREF(iter);
 }
 
 template<class T> PyObject *set<T>::__to_py__() {
     list<T> *l = __list(this); /* XXX optimize */
     if(frozen)
-        return PyFrozenSet_New(__to_py(l)); 
+        return PyFrozenSet_New(__to_py(l));
     else
         return PySet_New(__to_py(l));
 }
@@ -2066,7 +2066,7 @@ template<class T> int set<T>::__hash__() {
         seeds->append(hasher<T>(e));
     END_FOR
 
-    seeds->sort(0, 0, 0); 
+    seeds->sort(0, 0, 0);
     int seed = 0;
     for(int i = 0; i < len(seeds); i++)
         seed = hash_combine(seed, seeds->units[i]);
@@ -2157,7 +2157,7 @@ template <class U> int freeze(U key) {
     return 0;
 }
 template <class U> void unfreeze(U, int orig_frozen) {
-}  
+}
 
 template <class T> void *set<T>::discard(T key) {
     do_discard(key);
@@ -2648,14 +2648,14 @@ template<class T> tuple2<T, T>::tuple2(int count, ...) {
     va_end(ap);
 }
 
-template<class T> T tuple2<T, T>::__getfirst__() { 
-    return this->units[0]; 
+template<class T> T tuple2<T, T>::__getfirst__() {
+    return this->units[0];
 }
-template<class T> T tuple2<T, T>::__getsecond__() { 
-    return this->units[1]; 
+template<class T> T tuple2<T, T>::__getsecond__() {
+    return this->units[1];
 }
-template<class T> T tuple2<T, T>::__getfast__(int i) { 
-    return this->units[i]; 
+template<class T> T tuple2<T, T>::__getfast__(int i) {
+    return this->units[i];
 }
 
 template<class T> str *tuple2<T, T>::__repr__() {
@@ -2759,7 +2759,7 @@ template<class T> tuple2<T,T> *tuple2<T,T>::__deepcopy__(dict<void *, pyobj *> *
 
 #ifdef __SS_BIND
 template<class T> tuple2<T, T>::tuple2(PyObject *p) {
-    if(!PyTuple_Check(p)) 
+    if(!PyTuple_Check(p))
         throw new TypeError(new str("error in conversion to Shed Skin (tuple expected)"));
 
     this->__class__ = cl_tuple;
@@ -2789,11 +2789,11 @@ template<class A, class B> tuple2<A, B>::tuple2(int n, A a, B b) {
     second = b;
 }
 
-template<class A, class B> A tuple2<A, B>::__getfirst__() { 
-    return first; 
+template<class A, class B> A tuple2<A, B>::__getfirst__() {
+    return first;
 }
-template<class A, class B> B tuple2<A, B>::__getsecond__() { 
-    return second; 
+template<class A, class B> B tuple2<A, B>::__getsecond__() {
+    return second;
 }
 
 /*template<class A, class B> void tuple2<A, B>::init(int count, A a, B b) {
@@ -2830,7 +2830,7 @@ template<class A, class B> int tuple2<A, B>::__hash__() {
     return seed;
 }
 
-template<class A, class B> str *tuple2<A, B>::__repr__() { 
+template<class A, class B> str *tuple2<A, B>::__repr__() {
     __GC_STRING s = "("+repr(first)->unit+", "+repr(second)->unit+")";
     return new str(s);
 }
@@ -2843,12 +2843,12 @@ template<class A, class B> tuple2<A,B> *tuple2<A,B>::__deepcopy__(dict<void *, p
     memo->__setitem__(this, n);
     n->first = __deepcopy(first, memo);
     n->second = __deepcopy(second, memo);
-    return n; 
+    return n;
 }
 
 #ifdef __SS_BIND
 template<class A, class B> tuple2<A, B>::tuple2(PyObject *p) {
-    if(!PyTuple_Check(p)) 
+    if(!PyTuple_Check(p))
         throw new TypeError(new str("error in conversion to Shed Skin (tuple expected)"));
 
     this->__class__ = cl_tuple;
@@ -2868,11 +2868,11 @@ template<class A, class B> PyObject *tuple2<A, B>::__to_py__() {
 template<class T> T __ss_arg(const char *name, int pos, int has_default, T default_value, PyObject *args, PyObject *kwargs) {
     PyObject *kwarg;
     int nrofargs = PyTuple_Size(args);
-    if (pos < nrofargs) 
+    if (pos < nrofargs)
         return __to_ss<T>(PyTuple_GetItem(args, pos));
-    else if (kwargs && (kwarg = PyDict_GetItemString(kwargs, name))) 
+    else if (kwargs && (kwarg = PyDict_GetItemString(kwargs, name)))
         return __to_ss<T>(kwarg);
-    else if (has_default) 
+    else if (has_default)
         return default_value;
     else
         throw new TypeError(new str("missing argument"));
@@ -2882,7 +2882,7 @@ template<class T> T __ss_arg(const char *name, int pos, int has_default, T defau
 /* iterators */
 
 template<class T> str *__iter<T>::__repr__() {
-    return new str("iterator instance"); 
+    return new str("iterator instance");
 }
 
 template<class T> __seqiter<T>::__seqiter() {}
@@ -3157,7 +3157,7 @@ template <class A> list<A> *sorted(pyseq<A> *x, int (*cmp)(A, A), int key, int r
     r->sort(cmp, key, reverse);
     return r;
 }
-template <class A> list<A> *sorted(pyseq<A> *x, int cmp, int key, int reverse) { 
+template <class A> list<A> *sorted(pyseq<A> *x, int cmp, int key, int reverse) {
     return sorted(x, (int(*)(A, A))0, key, reverse);
 }
 
@@ -3188,14 +3188,14 @@ public:
     }
 };
 
-template <class A> __iter<A> *reversed(pyiter<A> *x) { 
+template <class A> __iter<A> *reversed(pyiter<A> *x) {
     return new __ss_reverse<A>(__list(x));
 }
 template <class A> __iter<A> *reversed(pyseq<A> *x) {
     return new __ss_reverse<A>(x);
 }
 __iter<str *> *reversed(str *s);
-__iter<int> *reversed(__xrange *x); 
+__iter<int> *reversed(__xrange *x);
 
 template<class A> class __enumiter : public __iter<tuple2<int, A> *> {
 public:
@@ -3248,7 +3248,7 @@ template <class A, class B> list<tuple2<A, B> *> *__zip2(pyiter<A> *a, pyiter<B>
 
 template <class A, class B> list<tuple2<A, B> *> *__zip2(pyseq<A> *a, pyseq<B> *b) {
     if(a->__class__ == cl_str_ || b->__class__ == cl_str_) /* XXX */
-        return __zip2(((pyiter<A> *)((str *)a)), ((pyiter<B> *)((str *)b))); 
+        return __zip2(((pyiter<A> *)((str *)a)), ((pyiter<B> *)((str *)b)));
     list<tuple2<A, B> *> *result;
     result = new list<tuple2<A, B> *>();
 
@@ -3320,8 +3320,8 @@ template <class A> A next(__iter<A> *iter1) { return iter1->next(); }
 
 /* map, filter, reduce */
 
-template <class A, class B> list<A> *map(int n, A (*func)(B), pyiter<B> *b) { 
-    if(!func) 
+template <class A, class B> list<A> *map(int n, A (*func)(B), pyiter<B> *b) {
+    if(!func)
         throw new ValueError(new str("'map' function argument cannot be None"));
     list<A> *result = new list<A>();
     __iter<B> *itb = b->__iter__();
@@ -3332,8 +3332,8 @@ template <class A, class B> list<A> *map(int n, A (*func)(B), pyiter<B> *b) {
     }
 }
 
-template <class A, class B, class C> list<A> *map(int n, A (*func)(B, C), pyiter<B> *b, pyiter<C> *c) { 
-    if(!func) 
+template <class A, class B, class C> list<A> *map(int n, A (*func)(B, C), pyiter<B> *b, pyiter<C> *c) {
+    if(!func)
         throw new ValueError(new str("'map' function argument cannot be None"));
     list<A> *result = new list<A>();
     __iter<B> *itb = b->__iter__();
@@ -3352,8 +3352,8 @@ template <class A, class B, class C> list<A> *map(int n, A (*func)(B, C), pyiter
     return result;
 }
 
-template <class A, class B> list<A> *map(int n, A (*func)(B, B, B), pyiter<B> *b1, pyiter<B> *b2, pyiter<B> *b3) { 
-    if(!func) 
+template <class A, class B> list<A> *map(int n, A (*func)(B, B, B), pyiter<B> *b1, pyiter<B> *b2, pyiter<B> *b3) {
+    if(!func)
         throw new ValueError(new str("'map' function argument cannot be None"));
     list<A> *result = new list<A>();
     __iter<B> *itb1 = b1->__iter__();
@@ -3377,7 +3377,7 @@ template <class A> A reduce(A (*func)(A, A), pyiter<A> *a, A initial) {
     __iter<A> *ita = a->__iter__();
     A result = initial;
     try {
-        while(1) 
+        while(1)
             result = (*func)(result, ita->next());
     } catch(StopIteration *) {
         return result;
@@ -3388,7 +3388,7 @@ template <class A> A reduce(A (*func)(A, A), pyiter<A> *a) {
     __iter<A> *ita = a->__iter__();
     A result = ita->next();
     try {
-        while(1) 
+        while(1)
             result = (*func)(result, ita->next());
     } catch(StopIteration *) {
         return result;
@@ -3405,7 +3405,7 @@ template <class A, class B> list<A> *filter(B (*func)(A), pyiter<A> *a) {
             if(func) {
                 if(___bool((*func)(value)))
                     result->append(value);
-            } else if(___bool(value)) 
+            } else if(___bool(value))
                 result->append(value);
         }
     } catch(StopIteration *) {
@@ -3491,7 +3491,7 @@ template<> inline tuple2<int, int> *divmod(int a, int b) {
     return new tuple2<int, int>(2, __floordiv(a,b), __mods(a,b));
 }
 template<class A, class B> tuple2<double, double> *divmod(A a, B b);
-template<> inline tuple2<double, double> *divmod(double a, int b) { return divmod(a, (double)b); } 
+template<> inline tuple2<double, double> *divmod(double a, int b) { return divmod(a, (double)b); }
 template<> inline tuple2<double, double> *divmod(int a, double b) { return divmod((double)a, b); }
 
 tuple2<complex *, complex *> *divmod(complex *a, double b);
@@ -3535,7 +3535,7 @@ template<class T> str *__modtuple(str *fmt, tuple2<T,T> *t) {
 template<class A, class B> str *__modtuple(str *fmt, tuple2<A,B> *t) {
     list<pyobj *> *vals = new list<pyobj *>(2, __box(t->__getfirst__()), __box(t->__getsecond__()));
     return __mod4(fmt, vals);
-} 
+}
 
 template<class T> str *__moddict(str *v, dict<str *, T> *d) {
     str *const_6 = new str(")");

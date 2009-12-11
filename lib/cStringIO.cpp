@@ -27,7 +27,7 @@ int StringI::getchar() {
 void *StringI::putchar(int c) {
     if(pos < len(s))
         s->unit[pos] = c;
-    else 
+    else
         s->unit += c;
 
     pos++;

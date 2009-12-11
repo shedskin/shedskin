@@ -182,7 +182,7 @@ static unsigned long int string_to_addr(const char *s)
     /* try looking up the address in dns */
     struct hostent *he = ::gethostbyname(s);
     if (!he)
-        throw new herror(host_not_found); 
+        throw new herror(host_not_found);
     return * reinterpret_cast<unsigned long *>( he->h_addr_list[0] );
 }
 
@@ -383,7 +383,7 @@ int socket::send(str *string, int flags) {
 int socket::sendall(str *string, int flags) {
     const char *s = string->unit.c_str();
     size_t offset = 0;
-    size_t len = string->__len__(); //FIXME is this guaranteed to be the same as the C string length, even if we are dealing with wide/unicode? 
+    size_t len = string->__len__(); //FIXME is this guaranteed to be the same as the C string length, even if we are dealing with wide/unicode?
 
     while (offset < len)
         offset += send(s + offset, len - offset, flags);

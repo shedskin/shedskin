@@ -25,7 +25,7 @@ double clock()
                QueryPerformanceCounter(&ctrStart);
                if (!QueryPerformanceFrequency(&freq) || freq.QuadPart == 0) {
                        // Unlikely to happen - this works on all intel
-                       //     machines at least!  Revert to clock() 
+                       //     machines at least!  Revert to clock()
                        return ((double) (std::clock()-start)) / CLOCKS_PER_SEC;
                }
                divisor = (double)freq.QuadPart;
@@ -65,16 +65,16 @@ str *const_0, *const_1;
 class_ *cl_struct_time;
 
 int struct_time::__getitem__(int n) {
-    
-    return ((new tuple2<int, int>(9, this->tm_year, this->tm_mon, 
+
+    return ((new tuple2<int, int>(9, this->tm_year, this->tm_mon,
                     this->tm_mday, this->tm_hour, this->tm_min, this->tm_sec,
-                    this->tm_wday, this->tm_yday, 
+                    this->tm_wday, this->tm_yday,
                     this->tm_isdst)))->__getitem__(n);
 }
 
 struct_time::struct_time(tuple2<int, int> *_tuple) {
     this->__class__ = cl_struct_time;
-    
+
     if ((len(_tuple)!=9)) {
         throw ((new TypeError(const_0)));
     }
@@ -90,15 +90,15 @@ struct_time::struct_time(tuple2<int, int> *_tuple) {
 }
 
 str *struct_time::__repr__() {
-    
+
     return __modct(const_1, 9, __box(this->tm_year), __box(this->tm_mon), __box(this->tm_mday), __box(this->tm_hour), __box(this->tm_min), __box(this->tm_sec), __box(this->tm_wday), __box(this->tm_yday), __box(this->tm_isdst));
 }
 
 tm* tuple2tm(struct_time* tuple) {
-    tm *time_tuple = new tm; 
+    tm *time_tuple = new tm;
 
-    time_tuple->tm_sec = tuple->tm_sec; 
-    time_tuple->tm_min = tuple->tm_min; 
+    time_tuple->tm_sec = tuple->tm_sec;
+    time_tuple->tm_min = tuple->tm_min;
     time_tuple->tm_hour = tuple->tm_hour;
     time_tuple->tm_mday = tuple->tm_mday;
     time_tuple->tm_mon = tuple->tm_mon - 1;
@@ -111,7 +111,7 @@ tm* tuple2tm(struct_time* tuple) {
 }
 
 struct_time *tm2tuple(tm* tm_time) {
-    struct_time *time_tuple = new struct_time(new tuple2<int, int>(9, 
+    struct_time *time_tuple = new struct_time(new tuple2<int, int>(9,
         tm_time->tm_year + 1900,
         tm_time->tm_mon + 1,
         tm_time->tm_mday,
@@ -121,7 +121,7 @@ struct_time *tm2tuple(tm* tm_time) {
         tm_time->tm_wday == 0 ? 6 : tm_time->tm_wday - 1,
         tm_time->tm_yday + 1,
         tm_time->tm_isdst));
-   
+
     return time_tuple;
 }
 
@@ -186,7 +186,7 @@ str *asctime() {
 
 str *asctime(struct_time *tuple) {
     return (new str(::asctime(tuple2tm(tuple))))->__slice__(2, 0, -1, 0);
-}    
+}
 
 str *ctime() {
     return asctime(localtime());
@@ -214,7 +214,7 @@ str *strftime(str *format, struct_time* tuple) {
 str *strftime(str *format) {
     return strftime(format, localtime());
 }
-        
+
 str *strftime(str *format, tuple2<int, int> *tuple) {
     struct_time *st;
     try {
@@ -1461,7 +1461,7 @@ struct_time *strptime(str *string, str *format) {
     if (!::strptime(string->unit.c_str(), format->unit.c_str(), &time_tuple)) {
         throw  new ValueError(new str("time data did not match format:  data="+string->unit+" fmt="+format->unit));
     }
-#else 
+#else
     if (!strptime(string->unit.c_str(), format->unit.c_str(), &time_tuple)) {
         throw  new ValueError(new str("time data did not match format:  data="+string->unit+" fmt="+format->unit));
     }

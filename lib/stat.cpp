@@ -60,40 +60,40 @@ int __ss_S_IFMT(int mode) {
 }
 
 int __ss_S_ISDIR(int mode) {
-    
+
     return S_ISDIR(mode);
 }
 
 int __ss_S_ISCHR(int mode) {
-    
+
     return S_ISCHR(mode);
 }
 
 int __ss_S_ISBLK(int mode) {
-    
+
     return S_ISBLK(mode);
 }
 
 int __ss_S_ISREG(int mode) {
-    
+
     return S_ISREG(mode);
 }
 
 int __ss_S_ISFIFO(int mode) {
-    
+
     return S_ISFIFO(mode);
 }
 
 #ifndef WIN32
 int __ss_S_ISLNK(int mode) {
-    
+
     return S_ISLNK(mode);
 }
 
 int __ss_S_ISSOCK(int mode) {
-    
+
     return S_ISSOCK(mode);
-} 
+}
 #endif
 
 } // module namespace

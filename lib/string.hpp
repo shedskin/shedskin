@@ -30,7 +30,7 @@ str *expandtabs(str *s, int width=8);
 list<str *> *split(str *s, str *sep=0, int c=-1);
 list<str *> *splitfields(str *s, str *sep=0, int c=-1);
 
-str *replace(str *s, str *a, str *b, int c=-1); 
+str *replace(str *s, str *a, str *b, int c=-1);
 str *translate(str *s, str *table, str *delchars=0);
 
 str *zfill(str *s, int width);

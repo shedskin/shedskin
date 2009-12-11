@@ -127,7 +127,7 @@ tuple2<file*,file*>* popen4(str* cmd, str* mode, int bufsize);
 extern class_ *cl___vfsstat;
 class __vfsstat : public namedtuple {
 public:
-    int f_bsize, f_frsize, f_blocks, f_bfree, f_bavail, f_files, f_ffree, f_favail, f_flag, f_namemax; 
+    int f_bsize, f_frsize, f_blocks, f_bfree, f_bavail, f_files, f_ffree, f_favail, f_flag, f_namemax;
 
     __vfsstat(str *path);
     __vfsstat(int fd);
@@ -193,10 +193,10 @@ int nice(int n);
 void *kill(int pid, int sig);
 void *killpg(int pgid, int sig);
 
-int pathconf(str *path, str *name); 
-int pathconf(str *path, int name); 
-int fpathconf(int fd, str *name); 
-int fpathconf(int fd, int name); 
+int pathconf(str *path, str *name);
+int pathconf(str *path, int name);
+int fpathconf(int fd, str *name);
+int fpathconf(int fd, int name);
 str *confstr(str *name);
 str *confstr(int name);
 int sysconf(str *name);

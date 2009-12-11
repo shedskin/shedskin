@@ -47,7 +47,7 @@ class_ *cl_GetoptError;
 
 GetoptError::GetoptError(str *msg, str *opt) {
     this->__class__ = cl_GetoptError;
-    
+
     this->msg = msg;
     if(opt)
         this->opt = opt;
@@ -82,11 +82,11 @@ tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *getopt(list<str *> *args,
 tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *getopt(list<str *> *args, str *shortopts, str *longopts) {
     return getopt(args, shortopts, new list<str *>(1, longopts));
 }
-    
+
 tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *getopt(list<str *> *args, str *shortopts, pyiter<str *> *longopts) {
     /**
     getopt(args, options[, long_options]) -> opts, args
-    
+
     Parses command line options and parameter list.  args is the
     argument list to be parsed, without the leading reference to the
     running program.  Typically, this means "sys.argv[1:]".  shortopts
@@ -98,7 +98,7 @@ tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *getopt(list<str *> *args,
     characters should not be included in the option name.  Options
     which require an argument should be followed by an equal sign
     ('=').
-    
+
     The return value consists of two elements: the first is a list of
     (option, value) pairs; the second is the list of program arguments
     left after the option list was stripped (this is a trailing slice
@@ -108,7 +108,7 @@ tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *getopt(list<str *> *args,
     string if the option has no argument.  The options occur in the
     list in the same order in which they were found, thus allowing
     multiple occurrences.  Long and short options may be mixed.
-    
+
     */
     list<str *> *__0, *__1, *__2;
     list<tuple2<str *, str *> *> *opts;
@@ -146,17 +146,17 @@ tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *gnu_getopt(list<str *> *a
 tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *gnu_getopt(list<str *> *args, str *shortopts, pyiter<str *> *longopts) {
     /**
     getopt(args, options[, long_options]) -> opts, args
-    
+
     This function works like getopt(), except that GNU style scanning
     mode is used by default. This means that option and non-option
     arguments may be intermixed. The getopt() function stops
     processing options as soon as a non-option argument is
     encountered.
-    
+
     If the first character of the option string is `+', or if the
     environment variable POSIXLY_CORRECT is set, then option
     processing stops as soon as a non-option argument is encountered.
-    
+
     */
     list<str *> *prog_args;
     list<tuple2<str *, str *> *> *opts;

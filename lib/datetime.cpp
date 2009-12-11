@@ -35,7 +35,7 @@ void __init() {
 	empty_string = new str("");
 	z_string = new str("%z");
 	Z_string = new str("%Z");
-    
+
     MINYEAR = 1;
     MAXYEAR = 9999;
 
@@ -54,7 +54,7 @@ static void ord_to_ymd(int ordinal, int *year, int *month, int *day);
 static int ymd_to_ord(int year, int month, int day);
 static int iso_week1_monday(int year);
 
-//class date        
+//class date
 date::date(int year, int month, int day){
     __class__=cl_date;
 
@@ -143,7 +143,7 @@ date *date::replace(int year, int month, int day) {
 }
 
 __time__::struct_time *date::timetuple() {
-    return new __time__::struct_time(new tuple2<int, int>(9, 
+    return new __time__::struct_time(new tuple2<int, int>(9,
     year,
     month,
     day,
@@ -172,7 +172,7 @@ tuple2<int, int> *date::isocalendar() {
     int  tmpyear      = year;
     int  tmpweek;
     int  tmpday;
-    
+
     tmpweek = divmod(today - week1_monday, 7, &tmpday);
     if (tmpweek < 0) {
         --tmpyear;
@@ -288,12 +288,12 @@ datetime *datetime::today() {
     struct tm * t;
     std::time( &rawtime );
     t = localtime( &rawtime );
-    
+
     struct timeval tv;
 #ifdef WIN32
-    __time__::gettimeofday(&tv, NULL); 
+    __time__::gettimeofday(&tv, NULL);
 #else
-    gettimeofday(&tv, NULL); 
+    gettimeofday(&tv, NULL);
 #endif
 
     return new datetime(t->tm_year+1900,t->tm_mon+1,t->tm_mday,t->tm_hour,t->tm_min,t->tm_sec,tv.tv_usec);
@@ -318,12 +318,12 @@ datetime *datetime::utcnow() {
     struct tm * t;
     std::time( &rawtime );
     t = gmtime( &rawtime );
-    
+
     struct timeval tv;
 #ifdef WIN32
-    __time__::gettimeofday(&tv, NULL); 
+    __time__::gettimeofday(&tv, NULL);
 #else
-    gettimeofday(&tv, NULL); 
+    gettimeofday(&tv, NULL);
 #endif
 
     return new datetime(t->tm_year+1900,t->tm_mon+1,t->tm_mday,t->tm_hour,t->tm_min,t->tm_sec,tv.tv_usec);
@@ -632,7 +632,7 @@ __time__::struct_time *datetime::timetuple() {
         delete tmp;
 	}
 
-    return new __time__::struct_time(new tuple2<int, int>(9, 
+    return new __time__::struct_time(new tuple2<int, int>(9,
                                                         year,month,day,
                                                         hour,minute,second,
                                                         weekday(),
@@ -647,7 +647,7 @@ __time__::struct_time *datetime::utctimetuple() {
 		tmp = this->__sub__(offset);
 		delete offset;
 	}
-    return new __time__::struct_time(new tuple2<int, int>(9, 
+    return new __time__::struct_time(new tuple2<int, int>(9,
                                                         tmp->year,tmp->month,tmp->day,
                                                         tmp->hour,tmp->minute,tmp->second,
                                                         tmp->weekday(),
@@ -697,15 +697,15 @@ str *datetime::strftime(str *format) {
 	return tmp;
 }
 
-//class time    
+//class time
 time::time(int hour, int minute, int second, int microsecond, tzinfo *tzinfo) {
     __class__=cl_time;
-    
+
     if(hour>=24 || hour<0) throw new ValueError(new str("hour must be in 0..23"));
     if(minute>=60 || minute<0) throw new ValueError(new str("minute must be in 0..59"));
     if(second>=60 || second<0) throw new ValueError(new str("second must be in 0..59"));
     if(microsecond>=1000000 || microsecond<0) throw new ValueError(new str("microsecond must be in 0..999999"));
-    
+
     this->hour = hour;
     this->minute = minute;
     this->second = second;
@@ -830,7 +830,7 @@ timedelta::timedelta(double days, double seconds, double microseconds, double mi
     __class__=cl_timedelta;
 //still some rounding errors
 	//all little bits of hours and seconds added up
-    double usec1 = milliseconds*1000 + microseconds + 
+    double usec1 = milliseconds*1000 + microseconds +
                         (((weeks*7 + days)*24*3600 + hours*3600 + minutes*60 + seconds)
 						-(int)(hours*3600 + minutes*60 + seconds + (weeks*7 + days)*24*3600))*1000000;
     this->days = int(weeks*7 + days);
@@ -840,7 +840,7 @@ timedelta::timedelta(double days, double seconds, double microseconds, double mi
 		this->microseconds = (int)(floor(usec1+0.5));
 	else
 		this->microseconds = (int)(ceil(usec1-0.5));
-    
+
     //move 1000000us to 1s
     this->seconds += this->microseconds/1000000;
     this->microseconds %= 1000000;
@@ -920,11 +920,11 @@ timedelta *timedelta::__abs__() {
 }
 
 int timedelta::__cmp__(timedelta *other) {
-    if ((days == other->days) && (seconds == other->seconds) && (microseconds == other->microseconds)) 
+    if ((days == other->days) && (seconds == other->seconds) && (microseconds == other->microseconds))
         return 0;
-    if (((days * 24 * 3600) + seconds) > ((other->days * 24 * 3600) + other->seconds)) 
+    if (((days * 24 * 3600) + seconds) > ((other->days * 24 * 3600) + other->seconds))
         return 1;
-    if ((((days * 24 * 3600) + seconds) == ((other->days * 24 * 3600) + other->seconds)) && (microseconds > other->microseconds)) 
+    if ((((days * 24 * 3600) + seconds) == ((other->days * 24 * 3600) + other->seconds)) && (microseconds > other->microseconds))
         return 1;
     return -1;
 }

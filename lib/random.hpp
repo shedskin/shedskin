@@ -130,12 +130,12 @@ double weibullvariate(double alpha, double beta);
 int getrandbits(int k);
 
 template <class A> A choice(pyseq<A> *seq) {
-    
+
     return _inst->choice(seq);
 }
 
 template <class A> int shuffle(pyseq<A> *x) {
-    
+
     return _inst->shuffle(x);
 }
 
@@ -144,14 +144,14 @@ template <class A> list<A> *sample(pyiter<A> *population, int k) {
 }
 
 template <class A> list<A> *sample(pyseq<A> *population, int k) {
-    
+
     return _inst->sample(population, k);
 }
 
 template <class A> int Random::shuffle(pyseq<A> *x) {
     /**
     x, random=random.random -> shuffle list x in place; return None.
-    
+
             Note that for even rather small len(x), the total number of
             permutations of x is larger than the period of most random number
             generators; this implies that "most" permutations of a long
@@ -179,13 +179,13 @@ template <class A> list<A> *Random::sample(pyiter<A> *population, int k) {
 template <class A> list<A> *Random::sample(pyseq<A> *population, int k) {
     /**
     Chooses k unique random elements from a population sequence.
-    
+
             Returns a new list containing elements from the population while
             leaving the original population unchanged.  The resulting list is
             in selection order so that all sub-slices will also be valid random
             samples.  This allows raffle winners (the sample) to be partitioned
             into grand prize and second place winners (the subslices).
-    
+
             Members of the population need not be hashable or unique.  If the
             population contains repeats, then each occurrence is a possible
             selection in the sample.
@@ -245,7 +245,7 @@ template <class A> A Random::choice(pyseq<A> *seq) {
     /**
     Choose a random element from a non-empty sequence.
     */
-    
+
     return seq->__getitem__(__int((this->random()*len(seq))));
 }
 

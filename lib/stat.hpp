@@ -41,7 +41,7 @@ extern int __ss_S_IROTH;
 extern int __ss_S_IWGRP;
 extern int __ss_S_IRWXO;
 extern int __ss_ST_DEV;
-extern int __ss_ST_SIZE; 
+extern int __ss_ST_SIZE;
 
 int __ss_S_IMODE(int mode);
 int __ss_S_IFMT(int mode);
@@ -51,7 +51,7 @@ int __ss_S_ISBLK(int mode);
 int __ss_S_ISREG(int mode);
 int __ss_S_ISFIFO(int mode);
 int __ss_S_ISLNK(int mode);
-int __ss_S_ISSOCK(int mode); 
+int __ss_S_ISSOCK(int mode);
 
 void __init();
 
