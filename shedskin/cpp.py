@@ -1760,10 +1760,6 @@ class generateVisitor(ASTVisitor):
         objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr = analyze_callfunc(node)
         funcs = callfunc_targets(node, self.mergeinh)
 
-        castnull = False
-        if self.library_func(funcs, 'itertools', None, 'islice'):
-            castnull = True
-
         if self.library_func(funcs, 're', None, 'findall') or \
            self.library_func(funcs, 're', 're_object', 'findall'):
             error("'findall' does not work with groups (use 'finditer' instead)", node, warning=True)
@@ -1849,8 +1845,19 @@ class generateVisitor(ASTVisitor):
             self.append(')')
             return
 
-        # --- arguments 
+        self.visit_callfunc_args(funcs, node, func)
+
+        self.append(')')
+        if constructor:
+            self.append(')')
+
+    def visit_callfunc_args(self, funcs, node, func):
+        objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr = analyze_callfunc(node)
         target = funcs[0] # XXX
+
+        castnull = False
+        if self.library_func(funcs, 'itertools', None, 'islice'):
+            castnull = True
 
         for f in funcs:
             if len(f.formals) != len(target.formals):
@@ -1942,9 +1949,6 @@ class generateVisitor(ASTVisitor):
         if constructor and ident == 'frozenset':
             if pairs: self.append(',')
             self.append('1')
-        self.append(')')
-        if constructor:
-            self.append(')')
 
     def visitReturn(self, node, func=None):
         if func.isGenerator:
