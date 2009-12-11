@@ -1,6 +1,5 @@
-#include <stdio.h>
 #include "string.hpp"
-
+#include <stdio.h>
 #include <ctype.h>
 
 namespace __string__ {

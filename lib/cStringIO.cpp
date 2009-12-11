@@ -1,5 +1,5 @@
-#include <stdio.h>
 #include "cStringIO.hpp"
+#include <stdio.h>
 
 namespace __cStringIO__ {
 
