@@ -13,21 +13,21 @@ class reader
 
 class_ *cl_reader;
 
-__csviter::__csviter(file *csvfile) {
-    this->csvfile = csvfile;
+__csviter::__csviter(reader *r) {
+    this->r = r;
 }
 
 list<str *> *__csviter::next() {
-    return csvfile->next()->strip()->split(new str(","));
+    return NULL; //r->next()->strip()->split(new str(","));
 }
 
 __csviter *reader::__iter__() {
-    return new __csviter(csvfile);
+    return new __csviter(this);
 }
 
-void *reader::__init__(file *csvfile) {
+void *reader::__init__(file *input_iter) {
 
-    this->csvfile = csvfile;
+    this->input_iter = input_iter;
     return NULL;
 }
 
