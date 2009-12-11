@@ -24,7 +24,7 @@ class globalInfo: # XXX add comments, split up
         self.empty_constructors = set()
         self.sig_nr = {}
         self.nameclasses = {}
-        self.tuple2 = set()             # binary typed tuples 
+        self.tuple2 = set()             # binary typed tuples
         self.module = None
         self.builtins = ['none', 'str_', 'float_', 'int_', 'class_', 'list', 'tuple', 'tuple2', 'dict', 'set', 'frozenset']
         self.assign_target = {}              # instance node for instance variable assignment
@@ -34,7 +34,7 @@ class globalInfo: # XXX add comments, split up
         self.libdir = connect_paths(self.sysdir, 'lib')
         self.main_mod = 'test'
         self.cpp_keywords = set(['asm', 'auto', 'bool', 'case', 'catch', 'char', 'const', 'const_cast', 'default', 'delete', 'do', 'double', 'dynamic_cast', 'enum', 'explicit', 'export', 'extern', 'false', 'float', 'friend', 'goto', 'inline', 'int', 'long', 'mutable', 'namespace', 'new', 'operator', 'private', 'protected', 'public', 'register', 'reinterpret_cast', 'short', 'signed', 'register', 'sizeof', 'static', 'static_cast', 'struct', 'switch', 'template', 'this', 'throw', 'true', 'typedef', 'typeid', 'typename', 'union', 'unsigned', 'using', 'virtual', 'void', 'volatile', 'wchar_t'])
-        self.cpp_keywords.update(['stdin', 'stdout', 'stderr', 'std', 'abstract', 'st_mtime', 'st_atime', 'st_ctime', 'errno', 'fileno', 'environ', 'rand', 'optind', 'opterr', 'optopt', 'optarg', 'exit']) 
+        self.cpp_keywords.update(['stdin', 'stdout', 'stderr', 'std', 'abstract', 'st_mtime', 'st_atime', 'st_ctime', 'errno', 'fileno', 'environ', 'rand', 'optind', 'opterr', 'optopt', 'optarg', 'exit'])
         self.cpp_keywords.update(['ST_ATIME', 'ST_CTIME', 'ST_DEV', 'ST_GID', 'ST_INO', 'ST_MODE', 'ST_MTIME', 'ST_NLINK', 'ST_SIZE', 'ST_UID', 'S_ENFMT', 'S_IEXEC', 'S_IFBLK', 'S_IFCHR', 'S_IFDIR', 'S_IFIFO', 'S_IFLNK', 'S_IFREG', 'S_IFSOCK', 'S_IREAD', 'S_IRGRP', 'S_IROTH', 'S_IRUSR', 'S_IRWXG', 'S_IRWXO', 'S_IRWXU', 'S_ISGID', 'S_ISUID', 'S_ISVTX', 'S_IWGRP', 'S_IWOTH', 'S_IWRITE', 'S_IWUSR', 'S_IXGRP', 'S_IXOTH', 'S_IXUSR', 'S_IMODE', 'S_IFMT', 'S_ISDIR', 'S_ISCHR', 'S_ISBLK', 'S_ISREG', 'S_ISFIFO', 'S_ISLNK', 'S_ISSOCK'])
         self.cpp_keywords.update(['F_OK', 'R_OK', 'W_OK', 'X_OK', 'NGROUPS_MAX', 'TMP_MAX', 'WCONTINUED', 'WNOHANG', 'WUNTRACED', 'O_RDONLY', 'O_WRONLY', 'O_RDWR', 'O_NDELAY', 'O_NONBLOCK', 'O_APPEND', 'O_DSYNC', 'O_RSYNC', 'O_SYNC', 'O_NOCTTY', 'O_CREAT', 'O_EXCL', 'O_TRUNC', 'O_BINARY', 'O_TEXT', 'O_LARGEFILE', 'O_SHLOCK', 'O_EXLOCK', 'O_NOINHERIT', '_O_SHORT_LIVED', 'O_TEMPORARY', 'O_RANDOM', 'O_SEQUENTIAL', 'O_ASYNC', 'O_DIRECT', 'O_DIRECTORY', 'O_NOFOLLOW', 'O_NOATIME', 'EX_OK', 'EX_USAGE', 'EX_DATAERR', 'EX_NOINPUT', 'EX_NOUSER', 'EX_NOHOST', 'EX_UNAVAILABLE', 'EX_SOFTWARE', 'EX_OSERR', 'EX_OSFILE', 'EX_CANTCREAT', 'EX_IOERR', 'EX_TEMPFAIL', 'EX_PROTOCOL', 'EX_NOPERM', 'EX_CONFIG', 'EX_NOTFOUND', 'P_WAIT', 'P_NOWAIT', 'P_OVERLAY', 'P_NOWAITO', 'P_DETACH', 'SEEK_CUR', 'SEEK_SET', 'SEEK_END'])
         self.cpp_keywords.update(['SIGABRT', 'SIGALRM', 'SIGBUS', 'SIGCHLD', 'SIGCLD', 'SIGCONT', 'SIGFPE', 'SIGHUP', 'SIGILL', 'SIGINT', 'SIGIO', 'SIGIOT', 'SIGKILL', 'SIGPIPE', 'SIGPOLL', 'SIGPROF', 'SIGPWR', 'SIGQUIT', 'SIGRTMAX', 'SIGRTMIN', 'SIGSEGV', 'SIGSTOP', 'SIGSYS', 'SIGTERM', 'SIGTRAP', 'SIGTSTP', 'SIGTTIN', 'SIGTTOU', 'SIGURG', 'SIGUSR1', 'SIGUSR2', 'SIGVTALRM', 'SIGWINCH', 'SIGXCPU', 'SIGXFSZ', 'SIG_DFL', 'SIG_IGN'])
@@ -107,7 +107,7 @@ class function:
             self.doc = node.doc
         self.returnexpr = []
         self.retnode = None
-        self.parent = parent 
+        self.parent = parent
         self.constraints = set()
         self.vars = {}
         self.globals = []
@@ -150,7 +150,7 @@ class class_:
         self.mv = getmv()
         self.vars = {}
         self.funcs = {}
-        self.virtuals = {}              # 'virtually' called methods 
+        self.virtuals = {}              # 'virtually' called methods
         self.virtualvars = {}           # 'virtual' variables
         self.properties = {}
         self.staticmethods = []
@@ -181,12 +181,12 @@ class class_:
             result.append(a)
             if not a.bases:
                 break
-            a = a.bases[0] 
+            a = a.bases[0]
         return result
 
     def descendants(self, inclusive=False): # XXX attribute (faster)
         a = set()
-        if inclusive: 
+        if inclusive:
             a.add(self)
         for cl in self.children:
             a.add(cl)
@@ -228,7 +228,7 @@ class module:
         self.import_order = 0
 
     def __repr__(self):
-        return 'module '+self.ident 
+        return 'module '+self.ident
 
 # --- constraint graph node
 
@@ -243,10 +243,10 @@ class cnode:
         self.parent = parent
         self.defnodes = False # if callnode, notification nodes were made for default arguments
         self.mv = getmv()
-        self.constructor = False # allocation site 
+        self.constructor = False # allocation site
         self.copymetoo = False
         self.fakert = False
-     
+
         getgx().cnode[self.thing, self.dcpa, self.cpa] = self
 
         # --- in, outgoing constraints
@@ -254,7 +254,7 @@ class cnode:
         self.in_ = set()        # incoming nodes
         self.out = set()        # outgoing nodes
         self.fout = set()       # unreal outgoing edges, used in ifa
-          
+
         # --- iterative dataflow analysis
 
         self.in_list = 0        # node in work-list
@@ -265,7 +265,7 @@ class cnode:
 
         # --- add node to surrounding non-listcomp function
         if parent: # do this only once! (not when copying)
-            while parent and isinstance(parent, function) and parent.listcomp: parent = parent.parent 
+            while parent and isinstance(parent, function) and parent.listcomp: parent = parent.parent
             if isinstance(parent, function):
                 if self not in parent.nodes:
                     parent.nodes.add(self)
@@ -315,7 +315,7 @@ def addconstraint(a, b, worklist=None):
     getgx().constraints.add((a,b))
     in_out(a, b)
     addtoworklist(worklist, a)
-    
+
 # --- shortcuts
 
 def inode(node):
@@ -376,7 +376,7 @@ def defvar(name, parent, local, worklist=None):
                 return parent.vars[name]
             chain.append(parent)
             parent = parent.parent
-            
+
         # not found: global
         if name in getmv().globals:
             return getmv().globals[name]
@@ -389,7 +389,7 @@ def defvar(name, parent, local, worklist=None):
     getgx().allvars.add(var)
 
     dest[name] = var
-    newnode = cnode(var, parent=parent) 
+    newnode = cnode(var, parent=parent)
     if parent:
         newnode.mv = parent.mv
     addtoworklist(worklist, newnode)
@@ -427,7 +427,7 @@ def lookupmodule(node, mv):
                 imports = mod.mv.imports
             else:
                 return None
-        
+
         return mod
 
 def lookupclass(node, mv):
@@ -447,13 +447,13 @@ def lookupclass(node, mv):
 
 def assign_rec(left, right):
     # determine lvalues and rvalues
-    if isinstance(left, (AssTuple, AssList)): 
+    if isinstance(left, (AssTuple, AssList)):
         lvalues = left.getChildNodes()
-    else: 
+    else:
         lvalues = [left]
 
     if len(lvalues) > 1:
-        if isinstance(right, (Tuple, List)): 
+        if isinstance(right, (Tuple, List)):
             rvalues = right.getChildNodes()
         else:
             return [(left, right)]
@@ -463,7 +463,7 @@ def assign_rec(left, right):
     # pair corresponding arguments
     pairs = []
     for (lvalue,rvalue) in zip(lvalues, rvalues):
-         if isinstance(lvalue, (AssTuple, AssList)): 
+         if isinstance(lvalue, (AssTuple, AssList)):
              pairs += assign_rec(lvalue, rvalue)
          else:
              pairs.append((lvalue, rvalue))
@@ -479,7 +479,7 @@ errormsgs = set()
 def error(msg, node=None, warning=False):
     if msg in errormsgs: return
     errormsgs.add(msg)
-        
+
     if warning: type = '*WARNING*'
     else: type = '*ERROR*'
 
@@ -494,19 +494,19 @@ def error(msg, node=None, warning=False):
 
 # --- merge constraint network along combination of given dimensions (dcpa, cpa, inheritance)
 # e.g. for annotation we merge everything; for code generation, we might want to create specialized code
-def merged(nodes, dcpa=False, inheritance=False): 
+def merged(nodes, dcpa=False, inheritance=False):
     ggx = getgx()
     merge = {}
     if inheritance: # XXX do we really need this crap
         mergeinh = merged([n for n in nodes if n.thing in ggx.inherited])
-        mergenoinh = merged([n for n in nodes if not n.thing in ggx.inherited]) 
+        mergenoinh = merged([n for n in nodes if not n.thing in ggx.inherited])
 
     for node in nodes:
         # --- merge node types
         if dcpa: sort = (node.thing, node.dcpa)
         else: sort = node.thing
         sortdefault = merge.setdefault(sort, set())
-        sortdefault.update(ggx.types[node]) 
+        sortdefault.update(ggx.types[node])
 
         # --- merge inheritance nodes
         if inheritance:
@@ -517,17 +517,17 @@ def merged(nodes, dcpa=False, inheritance=False):
                 var = node.thing
                 for inhfunc in ggx.inheritance_relations.get(var.parent, []):
                     if var.name in inhfunc.vars:
-                        if inhfunc.vars[var.name] in mergenoinh: 
+                        if inhfunc.vars[var.name] in mergenoinh:
                             sortdefault.update(mergenoinh[inhfunc.vars[var.name]])
                 for inhvar in ggx.inheritance_tempvars.get(var, []): # XXX more general
-                    if inhvar in mergenoinh: 
+                    if inhvar in mergenoinh:
                         sortdefault.update(mergenoinh[inhvar])
 
             # node is not a function variable
             else:
                 for n in inh:
                     if n in mergeinh: # XXX ook mergenoinh?
-                        sortdefault.update(mergeinh[n]) 
+                        sortdefault.update(mergeinh[n])
     return merge
 
 def lookup_class_module(objexpr, mv, parent):
@@ -545,13 +545,13 @@ def analyze_callfunc(node, check_exist=False): # XXX generate target list XXX un
     mv = inode(node).mv
 
     # method call
-    if isinstance(node.node, Getattr): 
+    if isinstance(node.node, Getattr):
         objexpr, ident = node.node.expr, node.node.attrname
         cl, module = lookup_class_module(objexpr, mv, inode(node).parent)
 
         if cl:
             # staticmethod call
-            if ident in cl.staticmethods:  
+            if ident in cl.staticmethods:
                 direct_call = cl.funcs[ident]
                 return objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr
 
@@ -575,7 +575,7 @@ def analyze_callfunc(node, check_exist=False): # XXX generate target list XXX un
         ident = 'meuk' # XXX ?
 
     # direct [constructor] call
-    if isinstance(node.node, Name) or namespace != inode(node).mv.module: 
+    if isinstance(node.node, Name) or namespace != inode(node).mv.module:
         if isinstance(node.node, Name):
             if lookupvar(ident, inode(node).parent):
                 return objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr
@@ -600,7 +600,7 @@ def analyze_callfunc(node, check_exist=False): # XXX generate target list XXX un
         else:
             if namespace != inode(node).mv.module:
                 return objexpr, ident, None, False, None, True, False
-            elif check_exist: 
+            elif check_exist:
                 traceback.print_stack()
                 error("unbound identifier '"+ident+"'", node)
 
@@ -628,7 +628,7 @@ def callfunc_targets(node, merge):
     elif constructor:
         if ident == 'defaultdict' and len(node.args) == 2:
             funcs = [constructor.funcs['__initdict__']] # XXX __initi__
-        elif '__init__' in constructor.funcs: 
+        elif '__init__' in constructor.funcs:
             funcs = [constructor.funcs['__init__']]
 
     elif parent_constr:
@@ -649,26 +649,26 @@ def connect_actual_formal(expr, func, parent_constr=False, check_error=False):
     pairs = []
 
     actuals = [a for a in expr.args if not isinstance(a, Keyword)]
-    if isinstance(func.parent, class_): 
+    if isinstance(func.parent, class_):
         formals = [f for f in func.formals if f != 'self']
     else:
         formals = [f for f in func.formals]
     keywords = [a for a in expr.args if isinstance(a, Keyword)]
 
-    if parent_constr: 
-        actuals = actuals[1:] 
+    if parent_constr:
+        actuals = actuals[1:]
 
     if check_error and func.ident not in ['min', 'max']:
         if not func.node.varargs and len(actuals)+len(keywords) > len(formals):
             error("too many arguments in call to '%s'" % func.ident, expr)
         if not func.node.varargs and len(actuals)+len(keywords) < len(formals)-len(func.defaults) and not expr.star_args:
             error("not enough arguments in call to '%s'" % func.ident, expr)
-        missing = formals[len(actuals):-len(func.defaults)] 
+        missing = formals[len(actuals):-len(func.defaults)]
         if [x for x in missing if not x in [a.name for a in keywords]]:
             error("no '%s' argument in call to '%s'" % (missing[0], func.ident))
 
     kwdict = {}
-    for kw in keywords: 
+    for kw in keywords:
         if kw.name not in formals:
             error("no argument '%s' in call to '%s'" % (kw.name, func.ident), expr)
         kwdict[kw.name] = kw.expr
@@ -702,17 +702,17 @@ def parent_func(thing):
             return parent
         parent = parent.parent
 
-def register_tempvar(var, func): 
+def register_tempvar(var, func):
     if func:
         func.registered_tempvars.append(var)
-        
+
 def const_literal(node):
     if isinstance(node, (UnarySub, UnaryAdd)):
         node = node.expr
     return isinstance(node, Const) and isinstance(node.value, (int, float))
 
 # --- XXX description, confusion_misc? what's this for..
-def confusion_misc(): 
+def confusion_misc():
     confusion = set()
 
     # use regular tuple if both elements have the same type representation
@@ -731,8 +731,8 @@ def confusion_misc():
 
                 tupletypes = set()
                 for types in [getgx().merged_all[node.node.expr], getgx().merged_all[node.args[0]]]:
-                    for t in types: 
-                        if t[0].ident == 'tuple':  
+                    for t in types:
+                        if t[0].ident == 'tuple':
                             if t[1] in getgx().tuple2:
                                 getgx().tuple2.remove(t[1])
                                 getgx().types[getgx().cnode[var1, t[1], 0]].update(getgx().types[getgx().cnode[var2, t[1], 0]])
