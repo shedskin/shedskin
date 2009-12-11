@@ -576,6 +576,10 @@ def analyze_callfunc(node, check_exist=False): # XXX generate target list XXX un
 
     # direct [constructor] call
     if isinstance(node.node, Name) or namespace != inode(node).mv.module: 
+        if isinstance(node.node, Name):
+            if lookupvar(ident, inode(node).parent):
+                return objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr
+
         if ident in ['max','min','sum'] and len(node.args) == 1:
             ident = '__'+ident
         elif ident == 'zip' and len(node.args) <= 3:
@@ -593,13 +597,7 @@ def analyze_callfunc(node, check_exist=False): # XXX generate target list XXX un
             direct_call = namespace.mv.funcs[ident]
         elif ident in namespace.mv.ext_funcs:
             direct_call = namespace.mv.ext_funcs[ident]
-
         else:
-            if isinstance(node.node, Name):
-                var = lookupvar(ident, inode(node).parent)
-                if var:
-                    return objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr
-
             if namespace != inode(node).mv.module:
                 return objexpr, ident, None, False, None, True, False
             elif check_exist: 

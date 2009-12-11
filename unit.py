@@ -155,6 +155,13 @@ class hop3(hop):
 hop2()
 hop3()
 
+# improve local variable overloading
+def bleh(a, b):
+    return 1
+def snrted(it, bleh):
+    bleh(1, 1)
+snrted(range(4), lambda a,b: a+b)
+
 ''', '''
 output(equal=True)
 '''),
@@ -786,11 +793,11 @@ InterpolationSyntaxError('a', 'b')
 class RawConfigParser:
     KWEK = 'kwek!'
 
-class ConfigParser(RawConfigParser):
+class MyConfigParser(RawConfigParser):
     def read(self):
         self.sections = RawConfigParser.KWEK
 
-configg = ConfigParser()
+configg = MyConfigParser()
 configg.read()
 
 # inheritance lookup
