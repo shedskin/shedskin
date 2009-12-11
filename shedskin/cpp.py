@@ -1760,6 +1760,10 @@ class generateVisitor(ASTVisitor):
         objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr = analyze_callfunc(node)
         funcs = callfunc_targets(node, self.mergeinh)
 
+        castnull = False
+        if self.library_func(funcs, 'itertools', None, 'islice'):
+            castnull = True
+
         if self.library_func(funcs, 're', None, 'findall') or \
            self.library_func(funcs, 're', 're_object', 'findall'):
             error("'findall' does not work with groups (use 'finditer' instead)", node, warning=True)
@@ -1910,6 +1914,9 @@ class generateVisitor(ASTVisitor):
                 elif not target.mv.module.builtin and assign_needs_cast(arg, func, formal, target): # XXX builtin (dict.fromkeys?)
                     cast = True
                     self.append('(('+typesetreprnew(formal, target)+')(')
+                elif castnull and isinstance(arg, Name) and arg.name == 'None':
+                    cast = True
+                    self.append('((void *)(')
 
                 if arg in target.mv.defaults: 
                     if self.mergeinh[arg] == set([(defclass('none'),0)]):
