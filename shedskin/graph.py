@@ -251,29 +251,31 @@ class moduleVisitor(ASTVisitor):
             namevar = defaultvar('__name__', None)
             getgx().types[inode(namevar)] = set([(defclass('str_'),0)])
 
-        # --- forward class references
+        # --- forward reference classes
+        getmv().classnodes = []
         for child in node.getChildNodes():
             if isinstance(child, Stmt):
                 for n in child.nodes:
                     if isinstance(n, Class):
-                        #print 'class!!', n.name
                         check_redef(n)
+                        getmv().classnodes.append(n)
                         newclass = class_(n)
                         self.classes[n.name] = newclass
                         getmv().classes[n.name] = newclass
                         newclass.module = self.module
                         newclass.parent = static_class(newclass)
 
-        # --- list global class, func nodes
-        getmv().classnodes = []
+        # --- forward refence functions
         getmv().funcnodes = []
         for child in node.getChildNodes():
             if isinstance(child, Stmt):
                 for n in child.nodes:
-                    if isinstance(n, Class):
-                        getmv().classnodes.append(n)
-                    elif isinstance(n, Function):
+                    if isinstance(n, Function):
+                        check_redef(n)
                         getmv().funcnodes.append(n)
+                        getmv().funcs[n.name] = function(n)
+
+        # --- forward reference variables
 
         # --- visit children
         for child in node.getChildNodes():
@@ -310,9 +312,6 @@ class moduleVisitor(ASTVisitor):
 
                 for func in ancestor.funcs.values():
                     if not func.node or func.inherited: continue
-
-                    #print 'inherit', func, ancestor, cl
-                    #print func.ident, ancestor.ident
 
                     ident = func.ident
                     if ident in cl.funcs:
@@ -417,7 +416,6 @@ class moduleVisitor(ASTVisitor):
                 error("no identifier '%s' in module '%s'" % (name, node.modname), node)
 
     def analyzeModule(self, name, pseud, node, fake):
-        #print 'name, pseud', name, pseud, node
         mod = parse_module(name, None, getmv().module, node)
         if not fake:
             self.imports[pseud] = mod
@@ -429,10 +427,12 @@ class moduleVisitor(ASTVisitor):
         if not getmv().module.builtin and (node.varargs or node.kwargs or [x for x in node.argnames if not isinstance(x, str)]):
             error('argument (un)packing is not supported', node)
 
-        func = function(node, parent, inherited_from)
+        if not parent and not is_lambda and node.name in getmv().funcs:
+            func = getmv().funcs[node.name]
+        else:
+            func = function(node, parent, inherited_from)
 
         if not is_method(func):
-            check_redef(node)
             if not getmv().module.builtin and not node in getmv().funcnodes and not is_lambda:
                 error("non-global function '%s'" % node.name, node)
 
@@ -965,11 +965,9 @@ class moduleVisitor(ASTVisitor):
                 error('at the class-level, only simple assignments are supported', node)
 
             lvar = defaultvar(node.nodes[0].name, parent.parent)
-
             self.visit(node.expr, None)
             self.addconstraint((inode(node.expr), inode(lvar)), None)
             lvar.initexpr = node.expr
-
             return
 
         newnode = cnode(node, parent=func)
@@ -980,8 +978,6 @@ class moduleVisitor(ASTVisitor):
             pairs = assign_rec(target_expr, node.expr)
 
             for (lvalue, rvalue) in pairs:
-                #print 'pair', lvalue, rvalue
-
                 # expr[expr] = expr
                 if isinstance(lvalue, Subscript) and not isinstance(lvalue.subs[0], Sliceobj):
                     self.assign_pair(lvalue, rvalue, func) # XXX use here generally, and in tuple_flow
@@ -1083,8 +1079,6 @@ class moduleVisitor(ASTVisitor):
     def visitCallFunc(self, node, func=None): # XXX analyze_callfunc? XXX clean up!!
         newnode = cnode(node, parent=func)
 
-        # --- identify target
-
         if isinstance(node.node, Getattr): # XXX import math; math.e
             # parent constr
             if isinstance(node.node.expr, Name) and inode(node).parent:
@@ -1118,7 +1112,6 @@ class moduleVisitor(ASTVisitor):
             if isinstance(node.node.expr, Name) and node.node.expr.name in getmv().imports and node.node.attrname == '__getattr__': # XXX analyze_callfunc
                 if node.args[0].value in getmv().imports[node.node.expr.name].mv.globals: # XXX bleh
                     self.addconstraint((inode(getmv().imports[node.node.expr.name].mv.globals[node.args[0].value]), newnode), func)
-
 
         elif isinstance(node.node, Name):
             # direct call
@@ -1269,7 +1262,6 @@ class moduleVisitor(ASTVisitor):
         fakefunc = CallFunc(fakeGetattr(node.expr, '__getattr__'), [Const(node.attrname)])
         self.visit(fakefunc, func)
         self.addconstraint((getgx().cnode[fakefunc,0,0], newnode), func)
-        #newnode.fakert = inode(fakefunc)
 
         self.callfuncs.append((fakefunc, func))
 
@@ -1319,8 +1311,6 @@ class moduleVisitor(ASTVisitor):
                     var = defaultvar(node.name, None)
         if var:
             self.addconstraint((inode(var), newnode), func)
-
-# --- helper functions
 
 def parsefile(name):
     try:
@@ -1413,7 +1403,6 @@ def parse_module(name, ast=None, parent=None, node=None):
         modpath = '.'.join(mod.mod_path)
         if modpath in getgx().modules: # cached?
             return getgx().modules[modpath]
-        #print 'not cached', modpath
         getgx().modules[modpath] = mod
 
         # --- not cached, so parse
@@ -1447,7 +1436,6 @@ def check_redef(node, s=None, onlybuiltins=False): # XXX to modvisitor, rewrite
             if name in whatsit:
                 error("function/class redefinition is not supported ('%s')" % name, node)
 
-
 # --- maintain inheritance relations between copied AST nodes
 def inherit_rec(original, copy):
     getgx().inheritance_relations.setdefault(original, []).append(copy)
@@ -1458,7 +1446,6 @@ def inherit_rec(original, copy):
         inherit_rec(a,b)
 
 def register_node(node, func):
-    #print 'register node', node, func
     if func:
         func.registered.append(node)
 
