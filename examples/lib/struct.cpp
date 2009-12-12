@@ -1,5 +1,5 @@
-#include <stdio.h>
 #include "struct.hpp"
+#include <stdio.h>
 
 namespace __struct__ {
 
