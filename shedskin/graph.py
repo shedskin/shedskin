@@ -251,31 +251,7 @@ class moduleVisitor(ASTVisitor):
             namevar = defaultvar('__name__', None)
             getgx().types[inode(namevar)] = set([(defclass('str_'),0)])
 
-        # --- forward reference classes
-        getmv().classnodes = []
-        for child in node.getChildNodes():
-            if isinstance(child, Stmt):
-                for n in child.nodes:
-                    if isinstance(n, Class):
-                        check_redef(n)
-                        getmv().classnodes.append(n)
-                        newclass = class_(n)
-                        self.classes[n.name] = newclass
-                        getmv().classes[n.name] = newclass
-                        newclass.module = self.module
-                        newclass.parent = static_class(newclass)
-
-        # --- forward refence functions
-        getmv().funcnodes = []
-        for child in node.getChildNodes():
-            if isinstance(child, Stmt):
-                for n in child.nodes:
-                    if isinstance(n, Function):
-                        check_redef(n)
-                        getmv().funcnodes.append(n)
-                        getmv().funcs[n.name] = function(n)
-
-        # --- forward reference variables
+        self.forward_references(node)
 
         # --- visit children
         for child in node.getChildNodes():
@@ -337,6 +313,27 @@ class moduleVisitor(ASTVisitor):
 
                     if ident == func.ident:
                         cl.funcs[ident+ancestor.ident+'__'] = cl.funcs[ident]
+
+    def forward_references(self, node):
+        getmv().classnodes = []
+        getmv().funcnodes = []
+
+        for child in node.getChildNodes():
+            if isinstance(child, Stmt):
+                for n in child.nodes:
+                    if isinstance(n, Class):
+                        check_redef(n)
+                        getmv().classnodes.append(n)
+                        newclass = class_(n)
+                        self.classes[n.name] = newclass
+                        getmv().classes[n.name] = newclass
+                        newclass.module = self.module
+                        newclass.parent = static_class(newclass)
+
+                    elif isinstance(n, Function):
+                        check_redef(n)
+                        getmv().funcnodes.append(n)
+                        getmv().funcs[n.name] = function(n)
 
     def visitImport(self, node, func=None):
         if not node in getmv().importnodes:
