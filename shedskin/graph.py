@@ -314,26 +314,69 @@ class moduleVisitor(ASTVisitor):
                     if ident == func.ident:
                         cl.funcs[ident+ancestor.ident+'__'] = cl.funcs[ident]
 
-    def forward_references(self, node):
-        getmv().classnodes = []
-        getmv().funcnodes = []
-
+    def stmt_nodes(self, node, cl):
+        result = []
         for child in node.getChildNodes():
             if isinstance(child, Stmt):
                 for n in child.nodes:
-                    if isinstance(n, Class):
-                        check_redef(n)
-                        getmv().classnodes.append(n)
-                        newclass = class_(n)
-                        self.classes[n.name] = newclass
-                        getmv().classes[n.name] = newclass
-                        newclass.module = self.module
-                        newclass.parent = static_class(newclass)
+                    if isinstance(n, cl):
+                        result.append(n)
+        return result
 
-                    elif isinstance(n, Function):
-                        check_redef(n)
-                        getmv().funcnodes.append(n)
-                        getmv().funcs[n.name] = function(n)
+    def forward_references(self, node):
+        getmv().classnodes = []
+
+        # classes
+        for n in self.stmt_nodes(node, Class):
+            check_redef(n)
+            getmv().classnodes.append(n)
+            newclass = class_(n)
+            self.classes[n.name] = newclass
+            getmv().classes[n.name] = newclass
+            newclass.module = self.module
+            newclass.parent = static_class(newclass)
+
+            # methods
+            for m in self.stmt_nodes(n, Function):
+                if m.name in newclass.funcs: # and func.ident not in ['__getattr__', '__setattr__']: # XXX
+                    error("function/class redefinition is not allowed ('%s')" % m.name, m)
+                func = function(m, newclass)
+                newclass.funcs[func.ident] = func
+                self.set_default_vars(m, func)
+
+        # functions
+        getmv().funcnodes = []
+        for n in self.stmt_nodes(node, Function):
+            check_redef(n)
+            getmv().funcnodes.append(n)
+            func = getmv().funcs[n.name] = function(n)
+            self.set_default_vars(n, func)
+
+    def set_default_vars(self, node, func):
+        globals = set(self.get_globals(node))
+        for assname in self.local_assignments(node):
+            if assname.name not in globals:
+                defaultvar(assname.name, func)
+
+    def get_globals(self, node):
+        if isinstance(node, Global):
+            result = node.names
+        else:
+            result = []
+            for child in node.getChildNodes():
+                result.extend(self.get_globals(child))
+        return result
+
+    def local_assignments(self, node):
+        if isinstance(node, ListComp):
+            return []
+        elif isinstance(node, AssName):
+            result = [node]
+        else:
+            result = []
+            for child in node.getChildNodes():
+                result.extend(self.local_assignments(child))
+        return result
 
     def visitImport(self, node, func=None):
         if not node in getmv().importnodes:
@@ -426,15 +469,14 @@ class moduleVisitor(ASTVisitor):
 
         if not parent and not is_lambda and node.name in getmv().funcs:
             func = getmv().funcs[node.name]
+        elif isinstance(parent, class_) and not inherited_from and node.name in parent.funcs:
+            func = parent.funcs[node.name]
         else:
             func = function(node, parent, inherited_from)
 
         if not is_method(func):
             if not getmv().module.builtin and not node in getmv().funcnodes and not is_lambda:
                 error("non-global function '%s'" % node.name, node)
-
-        elif func.ident in func.parent.funcs and func.ident not in ['__getattr__', '__setattr__']: # XXX
-            error("function/class redefinition is not allowed ('%s')" % func.ident, node)
 
         if hasattr(node, 'decorators') and node.decorators:
             for decorator in node.decorators.nodes:
