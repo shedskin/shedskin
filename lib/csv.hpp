@@ -10,6 +10,7 @@ extern str *const_0, *const_1, *const_2, *const_3, *const_4, *const_5, *const_6,
 
 class Dialect;
 class reader;
+class writer;
 
 extern str *__name__;
 extern list<int> *__0, *__1;
@@ -66,6 +67,27 @@ public:
     int parse_save_field();
     void *parse_reset();
     void *__init__(file *input_iter);
+};
+
+extern class_ *cl_writer;
+class writer : public pyobj {
+public:
+    Dialect *dialect;
+    int num_fields;
+    file *output_file;
+    list<str *> *rec;
+
+    writer() {}
+    writer(file *output_file) {
+        this->__class__ = cl_writer;
+        __init__(output_file);
+    }
+    int join_append_data(str *field, int quote_empty, int quoted);
+    void *writerow(list<str *> *seq);
+    void *join_reset();
+    void *writerows(list<list<str *> *> *seqs);
+    int join_append(str *field, int quoted, int quote_empty);
+    void *__init__(file *output_file);
 };
 
 void __init();
