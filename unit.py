@@ -15,7 +15,7 @@ def ftpcp():
     'ah' in ('150',)
 parse150()
 
-# callbacks
+# forward func refs
 class FTP:
     def retrbinary(self, callback):
         callback('hoi')
@@ -161,6 +161,37 @@ def bleh(a, b):
 def snrted(it, bleh):
     bleh(1, 1)
 snrted(range(4), lambda a,b: a+b)
+
+# forward var refs
+def hoep():
+    for x in range(10):
+        if x == 8:
+            print happa
+        elif x == 9:
+            print hoepa
+        else:
+            happa = x
+            hoepa, banaan = x, 2
+    [n for n in range(4)]
+
+class wa:
+    def wh(self):
+        if False:
+            y = 3
+        y = 2
+        print y
+
+        if False:
+            u.strip()
+        u = 'hoi'
+
+        if False:
+            z += 1
+        z = 2
+        print z
+
+hoep()
+wa().wh()
 
 ''', '''
 output(equal=True)
