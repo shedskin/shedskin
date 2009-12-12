@@ -16,17 +16,17 @@ def ftpcp():
 parse150()
 
 # callbacks
-#class FTP:
-#    def retrbinary(self, callback):
-#        callback('hoi')
-#    def retrlines(self):
-#        callback = print_line
-#        callback('hoi2')
-#def print_line(line):
-#    print line
-#ftp = FTP()
-#ftp.retrbinary(print_line)
-#ftp.retrlines()
+class FTP:
+    def retrbinary(self, callback):
+        callback('hoi')
+    def retrlines(self):
+        callback = print_line
+        callback('hoi2')
+def print_line(line):
+    print line
+ftp = FTP()
+ftp.retrbinary(print_line)
+ftp.retrlines()
 
 # re.subn, re.re_object.subn (douglas mcneil)
 import re

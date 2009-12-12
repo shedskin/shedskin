@@ -1298,6 +1298,7 @@ class moduleVisitor(ASTVisitor):
                 if node.name in self.funcs: # XXX remove: variable lookup should be uniform
                     getgx().types[newnode] = set([(self.funcs[node.name], 0)])
                     self.lambdas[node.name] = self.funcs[node.name]
+                    newnode.copymetoo = True
                 elif node.name in self.classes or node.name in self.ext_classes:
                     if node.name in self.classes: cl = self.classes[node.name]
                     else: cl = self.ext_classes[node.name]
