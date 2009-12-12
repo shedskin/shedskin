@@ -88,8 +88,6 @@ class generateVisitor(ASTVisitor):
         prop_includes = set(self.module.prop_includes) - set(includes)
         if not prop_includes: return
 
-        #print 'insert', self.module, prop_includes
-
         lines = file(self.output_base+'.hpp','r').readlines()
         newlines = []
 
