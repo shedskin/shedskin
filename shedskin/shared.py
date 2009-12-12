@@ -669,7 +669,7 @@ def connect_actual_formal(expr, func, parent_constr=False, check_error=False):
 
     kwdict = {}
     for kw in keywords:
-        if kw.name not in formals:
+        if not func.node.kwargs and kw.name not in formals:
             error("no argument '%s' in call to '%s'" % (kw.name, func.ident), expr)
         kwdict[kw.name] = kw.expr
 
