@@ -1766,6 +1766,8 @@ class generateVisitor(ASTVisitor):
             error("socket.set/gettimeout do not accept/return None", node, warning=True)
         if self.library_func(funcs, 'builtin', None, 'map') and len(node.args) > 2:
             error("default fillvalue for 'map' becomes 0 for integers", node, warning=True)
+        if self.library_func(funcs, 'itertools', None, 'izip_longest'):
+            error("default fillvalue for 'izip_longest' becomes 0 for integers", node, warning=True)
 
         # --- target expression
         if node.node in self.mergeinh and [t for t in self.mergeinh[node.node] if isinstance(t[0], function)]: # anonymous function
