@@ -677,7 +677,7 @@ def connect_actual_formal(expr, func, parent_constr=False, check_error=False):
     uglyoffset = len(func.defaults)-(len(formals)-len(actuals))
 
     # --- connect regular, default and keyword arguments
-    if not func.mv.module.builtin or func.mv.module.ident in ['random', 'itertools', 'datetime', 'ConfigParser'] or \
+    if not func.mv.module.builtin or func.mv.module.ident in ['random', 'itertools', 'datetime', 'ConfigParser', 'csv'] or \
         (func.ident in ('sort','sorted')): # XXX investigate
         if not (func.mv.module.builtin and func.mv.module.ident == 'random' and func.ident == 'randrange'):
             for (i, formal) in enumerate(formals[len(actuals):]):

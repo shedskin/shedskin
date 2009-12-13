@@ -2,13 +2,24 @@
 
 namespace __csv__ {
 
-str *const_0, *const_1, *const_2, *const_3, *const_4, *const_5, *const_6, *const_7, *const_8, *const_9;
+str *const_0, *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_19, *const_2, *const_3, *const_4, *const_5, *const_6, *const_7, *const_8, *const_9;
 
 str *__name__;
 list<int> *__0, *__1;
+int EAT_CRNL, ESCAPED_CHAR, ESCAPE_IN_QUOTED_FIELD, IN_FIELD, IN_QUOTED_FIELD, QUOTE_ALL, QUOTE_IN_QUOTED_FIELD, QUOTE_MINIMAL, QUOTE_NONE, QUOTE_NONNUMERIC, START_FIELD, START_RECORD, _field_limit;
 OSError *__exception;
-int EAT_CRNL, ESCAPED_CHAR, ESCAPE_IN_QUOTED_FIELD, IN_FIELD, IN_QUOTED_FIELD, QUOTE_ALL, QUOTE_IN_QUOTED_FIELD, QUOTE_MINIMAL, QUOTE_NONE, QUOTE_NONNUMERIC, START_FIELD, START_RECORD, field_limit;
-Dialect *excel;
+
+void * default_5;
+void * default_6;
+void * default_3;
+void * default_4;
+void * default_8;
+void * default_1;
+void * default_2;
+void * default_9;
+void * default_7;
+void * default_10;
+void * default_0;
 
 __csviter::__csviter(reader *r) {
     this->r = r;
@@ -23,20 +34,26 @@ __csviter *reader::__iter__() {
 }
 
 /**
-class Dialect
+class Error
 */
 
-class_ *cl_Dialect;
+class_ *cl_Error;
 
-void *Dialect::__init__() {
+/**
+class Excel
+*/
+
+class_ *cl_Excel;
+
+void *Excel::__init__() {
     
-    this->lineterminator = const_0;
-    this->skipinitialspace = 0;
-    this->quoting = 0;
-    this->delimiter = const_1;
-    this->quotechar = const_2;
+    this->delimiter = const_0;
+    this->quotechar = const_1;
     this->doublequote = 1;
-    this->escapechar = const_3;
+    this->skipinitialspace = 0;
+    this->lineterminator = const_2;
+    this->quoting = QUOTE_MINIMAL;
+    this->escapechar = ((str *)(NULL));
     this->strict = 0;
     return NULL;
 }
@@ -47,71 +64,61 @@ class reader
 
 class_ *cl_reader;
 
-int reader::parse_process_char(str *c) {
-    Dialect *dialect;
-    int __10, __11, __12, __5, __6, __7, __8, __9;
+void *reader::parse_process_char(str *c) {
+    Excel *dialect;
+    int __10, __11, __12, __13, __14, __7, __8, __9;
 
     dialect = this->dialect;
     if ((this->state==START_RECORD)) {
-        if (__eq(c, const_4)) {
-            return 0;
+        if (__eq(c, const_3)) {
+            return NULL;
         }
-        else if ((const_5)->__contains__(c)) {
+        else if ((const_4)->__contains__(c)) {
             this->state = EAT_CRNL;
-            return 0;
+            return NULL;
         }
         this->state = START_FIELD;
     }
     if ((this->state==START_FIELD)) {
-        if ((const_6)->__contains__(c)) {
-            if ((this->parse_save_field()<0)) {
-                return (-1);
-            }
-            if (__eq(c, const_4)) {
+        if ((const_5)->__contains__(c)) {
+            this->parse_save_field();
+            if (__eq(c, const_3)) {
                 this->state = START_RECORD;
             }
             else {
                 this->state = EAT_CRNL;
             }
         }
-        else if (__AND(__eq(c, dialect->quotechar), (dialect->quoting!=QUOTE_NONE), 5)) {
+        else if (__AND(__eq(c, dialect->quotechar), (dialect->quoting!=QUOTE_NONE), 7)) {
             this->state = IN_QUOTED_FIELD;
         }
         else if (__eq(c, dialect->escapechar)) {
             this->state = ESCAPED_CHAR;
         }
-        else if (__AND(__eq(c, const_7), dialect->skipinitialspace, 7)) {
+        else if (__AND(__eq(c, const_6), dialect->skipinitialspace, 9)) {
         }
         else if (__eq(c, dialect->delimiter)) {
-            if ((this->parse_save_field()<0)) {
-                return (-1);
-            }
+            this->parse_save_field();
         }
         else {
             if ((dialect->quoting==QUOTE_NONNUMERIC)) {
-                throw (new Exception());
+                this->numeric_field = 1;
             }
-            if ((this->parse_add_char(c)<0)) {
-                return (-1);
-            }
+            this->parse_add_char(c);
             this->state = IN_FIELD;
         }
     }
     else if ((this->state==ESCAPED_CHAR)) {
-        if (__eq(c, const_4)) {
-            c = const_8;
+        if (__eq(c, const_3)) {
+            c = const_7;
         }
-        if ((this->parse_add_char(c)<0)) {
-            return (-1);
-        }
+        this->parse_add_char(c);
         this->state = IN_FIELD;
     }
     else if ((this->state==IN_FIELD)) {
-        if ((const_9)->__contains__(c)) {
-            if ((this->parse_save_field()<0)) {
-                return (-1);
-            }
-            if (__eq(c, const_4)) {
+        if ((const_8)->__contains__(c)) {
+            this->parse_save_field();
+            if (__eq(c, const_3)) {
                 this->state = START_RECORD;
             }
             else {
@@ -122,24 +129,20 @@ int reader::parse_process_char(str *c) {
             this->state = ESCAPED_CHAR;
         }
         else if (__eq(c, dialect->delimiter)) {
-            if ((this->parse_save_field()<0)) {
-                return (-1);
-            }
+            this->parse_save_field();
             this->state = START_FIELD;
         }
         else {
-            if ((this->parse_add_char(c)<0)) {
-                return (-1);
-            }
+            this->parse_add_char(c);
         }
     }
     else if ((this->state==IN_QUOTED_FIELD)) {
-        if (__eq(c, const_4)) {
+        if (__eq(c, const_3)) {
         }
         else if (__eq(c, dialect->escapechar)) {
             this->state = ESCAPE_IN_QUOTED_FIELD;
         }
-        else if (__AND(__eq(c, dialect->quotechar), (dialect->quoting!=QUOTE_NONE), 9)) {
+        else if (__AND(__eq(c, dialect->quotechar), (dialect->quoting!=QUOTE_NONE), 11)) {
             if (dialect->doublequote) {
                 this->state = QUOTE_IN_QUOTED_FIELD;
             }
@@ -148,38 +151,28 @@ int reader::parse_process_char(str *c) {
             }
         }
         else {
-            if ((this->parse_add_char(c)<0)) {
-                return (-1);
-            }
+            this->parse_add_char(c);
         }
     }
     else if ((this->state==ESCAPE_IN_QUOTED_FIELD)) {
-        if (__eq(c, const_4)) {
-            c = const_8;
+        if (__eq(c, const_3)) {
+            c = const_7;
         }
-        if ((this->parse_add_char(c)<0)) {
-            return (-1);
-        }
+        this->parse_add_char(c);
         this->state = IN_QUOTED_FIELD;
     }
     else if ((this->state==QUOTE_IN_QUOTED_FIELD)) {
-        if (__AND((dialect->quoting!=QUOTE_NONE), __eq(c, dialect->quotechar), 11)) {
-            if ((this->parse_add_char(c)<0)) {
-                return (-1);
-            }
+        if (__AND((dialect->quoting!=QUOTE_NONE), __eq(c, dialect->quotechar), 13)) {
+            this->parse_add_char(c);
             this->state = IN_QUOTED_FIELD;
         }
         else if (__eq(c, dialect->delimiter)) {
-            if ((this->parse_save_field()<0)) {
-                return (-1);
-            }
+            this->parse_save_field();
             this->state = START_FIELD;
         }
-        else if ((const_9)->__contains__(c)) {
-            if ((this->parse_save_field()<0)) {
-                return (-1);
-            }
-            if (__eq(c, const_4)) {
+        else if ((const_8)->__contains__(c)) {
+            this->parse_save_field();
+            if (__eq(c, const_3)) {
                 this->state = START_RECORD;
             }
             else {
@@ -187,23 +180,21 @@ int reader::parse_process_char(str *c) {
             }
         }
         else if ((!dialect->strict)) {
-            if ((this->parse_add_char(c)<0)) {
-                return (-1);
-            }
+            this->parse_add_char(c);
             this->state = IN_FIELD;
         }
         else {
-            return (-1);
+            throw ((new Error(__modct(const_9, 2, dialect->delimiter, dialect->quotechar))));
         }
     }
     else if ((this->state==EAT_CRNL)) {
-        if ((const_5)->__contains__(c)) {
+        if ((const_4)->__contains__(c)) {
         }
-        else if (__eq(c, const_4)) {
+        else if (__eq(c, const_3)) {
             this->state = START_RECORD;
         }
         else {
-            return (-1);
+            throw ((new Error(const_10)));
         }
     }
     return 0;
@@ -214,30 +205,31 @@ void *reader::parse_reset() {
     this->fields = (new list<str *>());
     this->field = (new list<str *>());
     this->state = START_RECORD;
+    this->numeric_field = 0;
     return NULL;
 }
 
 list<str *> *reader::next() {
     list<str *> *fields;
-    __iter<str *> *__3;
-    str *__2, *c, *line;
-    int __4;
+    str *__4, *c, *line;
+    __iter<str *> *__5;
+    int __6;
 
     this->parse_reset();
 
     while (1) {
         line = (this->input_iter)->next();
+        this->line_num = (this->line_num+1);
 
-        FOR_IN(c,line,3)
-            if (__eq(c, const_4)) {
-                return this->fields;
+        FOR_IN(c,line,5)
+            if (__eq(c, const_3)) {
+                throw ((new Error(const_11)));
             }
-            if ((this->parse_process_char(c)<0)) {
-                return this->fields;
-            }
+            this->parse_process_char(c);
         END_FOR
 
-        if ((this->state!=START_RECORD)) {
+        this->parse_process_char(const_3);
+        if ((this->state==START_RECORD)) {
             break;
         }
     }
@@ -246,28 +238,33 @@ list<str *> *reader::next() {
     return fields;
 }
 
-void *reader::__init__(file *input_iter) {
+void *reader::__init__(file *input_iter, str *dialect, str *delimiter, str *quotechar, int doublequote, int skipinitialspace, str *lineterminator, int quoting, str *escapechar, int strict) {
     
     this->input_iter = input_iter;
     this->line_num = 0;
-    this->dialect = excel;
+    this->dialect = _get_dialect(dialect, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
     return NULL;
 }
 
-int reader::parse_save_field() {
-    
-    (this->fields)->append((const_3)->join(this->field));
+void *reader::parse_save_field() {
+    str *field;
+
+    field = (const_12)->join(this->field);
     this->field = (new list<str *>());
-    return 0;
+    if (this->numeric_field) {
+        this->numeric_field = 0;
+    }
+    (this->fields)->append(field);
+    return NULL;
 }
 
-int reader::parse_add_char(str *c) {
+void *reader::parse_add_char(str *c) {
     
-    if ((len(this->field)>=field_limit)) {
-        return (-1);
+    if ((len(this->field)>=_field_limit)) {
+        throw ((new Error(__modct(const_13, 1, __box(_field_limit)))));
     }
     (this->field)->append(c);
-    return 0;
+    return NULL;
 }
 
 /**
@@ -277,10 +274,10 @@ class writer
 class_ *cl_writer;
 
 int writer::join_append_data(str *field, int quote_empty, int quoted) {
-    __iter<str *> *__14;
-    str *__13, *c, *lineterm;
-    Dialect *dialect;
-    int __15, __16, __17, __18, __19, __20, __21, want_escape;
+    __iter<str *> *__16;
+    str *__15, *c, *lineterm;
+    Excel *dialect;
+    int __17, __18, __19, __20, __21, __22, __23, want_escape;
 
     dialect = this->dialect;
     lineterm = dialect->lineterminator;
@@ -291,12 +288,12 @@ int writer::join_append_data(str *field, int quote_empty, int quoted) {
         (this->rec)->append(dialect->quotechar);
     }
 
-    FOR_IN(c,field,14)
+    FOR_IN(c,field,16)
         want_escape = 0;
-        if (__eq(c, const_4)) {
+        if (__eq(c, const_3)) {
             break;
         }
-        if (__OR(__eq(c, dialect->delimiter), __OR(__eq(c, dialect->escapechar), __OR(__eq(c, dialect->quotechar), lineterm->__contains__(c), 18), 17), 16)) {
+        if (__OR(__eq(c, dialect->delimiter), __OR(__eq(c, dialect->escapechar), __OR(__eq(c, dialect->quotechar), lineterm->__contains__(c), 20), 19), 18)) {
             if ((dialect->quoting==QUOTE_NONE)) {
                 want_escape = 1;
             }
@@ -315,7 +312,7 @@ int writer::join_append_data(str *field, int quote_empty, int quoted) {
             }
             if (want_escape) {
                 if ((!___bool(dialect->escapechar))) {
-                    return (-1);
+                    throw ((new Error(const_14)));
                 }
                 (this->rec)->append(dialect->escapechar);
             }
@@ -323,9 +320,9 @@ int writer::join_append_data(str *field, int quote_empty, int quoted) {
         (this->rec)->append(c);
     END_FOR
 
-    if (__AND((!___bool(field)), quote_empty, 20)) {
+    if (__AND((!___bool(field)), quote_empty, 22)) {
         if ((dialect->quoting==QUOTE_NONE)) {
-            return (-1);
+            throw ((new Error(const_15)));
         }
         else {
             quoted = 1;
@@ -338,25 +335,25 @@ int writer::join_append_data(str *field, int quote_empty, int quoted) {
 }
 
 void *writer::writerow(list<str *> *seq) {
+    list<str *> *__24;
+    __iter<str *> *__25;
+    Excel *dialect;
+    int __26, quoted;
     str *field;
-    list<str *> *__22;
-    __iter<str *> *__23;
-    Dialect *dialect;
-    int __24, quoted;
 
     dialect = this->dialect;
     this->join_reset();
 
-    FOR_IN_SEQ(field,seq,22,24)
+    FOR_IN_SEQ(field,seq,24,26)
         quoted = 0;
         if ((dialect->quoting==QUOTE_NONNUMERIC)) {
-            throw (new Exception());
+            quoted = 1;
         }
         else if ((dialect->quoting==QUOTE_ALL)) {
             quoted = 1;
         }
         if ((field==NULL)) {
-            quoted = this->join_append(const_3, quoted, (len(seq)==1));
+            quoted = this->join_append(const_12, quoted, (len(seq)==1));
         }
         else {
             quoted = this->join_append(__str(field), quoted, (len(seq)==1));
@@ -364,7 +361,7 @@ void *writer::writerow(list<str *> *seq) {
     END_FOR
 
     (this->rec)->append((this->dialect)->lineterminator);
-    (this->output_file)->write((const_3)->join(this->rec));
+    (this->output_file)->write((const_12)->join(this->rec));
     return NULL;
 }
 
@@ -376,13 +373,13 @@ void *writer::join_reset() {
 }
 
 void *writer::writerows(list<list<str *> *> *seqs) {
+    __iter<list<str *> *> *__28;
     list<str *> *seq;
-    __iter<list<str *> *> *__26;
-    list<list<str *> *> *__25;
-    int __27;
+    list<list<str *> *> *__27;
+    int __29;
 
 
-    FOR_IN_SEQ(seq,seqs,25,27)
+    FOR_IN_SEQ(seq,seqs,27,29)
         this->writerow(seq);
     END_FOR
 
@@ -396,30 +393,41 @@ int writer::join_append(str *field, int quoted, int quote_empty) {
     return quoted;
 }
 
-void *writer::__init__(file *output_file) {
+void *writer::__init__(file *output_file, str *dialect, str *delimiter, str *quotechar, int doublequote, int skipinitialspace, str *lineterminator, int quoting, str *escapechar, int strict) {
     
     this->output_file = output_file;
-    this->dialect = excel;
+    this->dialect = _get_dialect(dialect, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
     return NULL;
 }
 
 void __init() {
-    const_0 = new str("\r\n");
-    const_1 = new str(",");
-    const_2 = new str("\"");
-    const_3 = new str("");
-    const_4 = new str("\000", 1);
-    const_5 = new str("\n\r");
-    const_6 = new str("\n\r\000", 3);
-    const_7 = new str(" ");
-    const_8 = new str("\n");
-    const_9 = new str("\000\n\r", 3);
+    const_0 = new str(",");
+    const_1 = new str("\"");
+    const_2 = new str("\r\n");
+    const_3 = new str("\000", 1);
+    const_4 = new str("\n\r");
+    const_5 = new str("\n\r\000", 3);
+    const_6 = new str(" ");
+    const_7 = new str("\n");
+    const_8 = new str("\000\n\r", 3);
+    const_9 = new str("'%c' expected after '%c'");
+    const_10 = new str("new-line character seen in unquoted field - do you need to open the file in universal-newline mode?");
+    const_11 = new str("line contains NULL byte");
+    const_12 = new str("");
+    const_13 = new str("field larger than field limit (%d)");
+    const_14 = new str("need to escape, but no escapechar set");
+    const_15 = new str("single empty field record must be quoted");
+    const_16 = new str("excel");
+    const_17 = new str("excel-tab");
+    const_18 = new str("\t");
+    const_19 = new str("unknown dialect");
 
     __name__ = new str("csv");
 
-    cl_Dialect = new class_("Dialect", 29, 29);
-    cl_writer = new class_("writer", 1, 1);
-    cl_reader = new class_("reader", 26, 26);
+    cl_writer = new class_("writer", 44, 44);
+    cl_reader = new class_("reader", 3, 3);
+    cl_Excel = new class_("Excel", 43, 43);
+    cl_Error = new class_("Error", 26, 26);
 
     __0 = range(8);
     START_RECORD = __0->__getfast__(0);
@@ -435,8 +443,73 @@ void __init() {
     QUOTE_ALL = __1->__getfast__(1);
     QUOTE_NONNUMERIC = __1->__getfast__(2);
     QUOTE_NONE = __1->__getfast__(3);
-    field_limit = (128*1024);
-    excel = (new Dialect(1));
+    _field_limit = (128*1024);
+    default_0 = NULL;
+    default_1 = NULL;
+    default_2 = NULL;
+    default_3 = NULL;
+    default_4 = NULL;
+    default_5 = NULL;
+    default_6 = NULL;
+    default_7 = NULL;
+    default_8 = NULL;
+    default_9 = NULL;
+}
+
+list<str *> *list_dialects() {
+    
+    return (new list<str *>(2, const_16, const_17));
+}
+
+Excel *_get_dialect(str *name, str *delimiter, str *quotechar, int doublequote, int skipinitialspace, str *lineterminator, int quoting, str *escapechar, int strict) {
+    Excel *dialect;
+    int __2, __3;
+
+    if (__OR((name==NULL), (__eq(name,const_16)), 2)) {
+        dialect = (new Excel(1));
+    }
+    else if (__eq(name, const_17)) {
+        dialect = (new Excel(1));
+        dialect->delimiter = const_18;
+    }
+    else {
+        throw ((new Error(const_19)));
+    }
+    if ((delimiter!=NULL)) {
+        dialect->delimiter = delimiter;
+    }
+    if ((quotechar!=NULL)) {
+        dialect->quotechar = quotechar;
+    }
+    if ((doublequote!=(-1))) {
+        dialect->doublequote = doublequote;
+    }
+    if ((skipinitialspace!=(-1))) {
+        dialect->skipinitialspace = skipinitialspace;
+    }
+    if ((lineterminator!=NULL)) {
+        dialect->lineterminator = lineterminator;
+    }
+    if ((quoting!=(-1))) {
+        dialect->quoting = quoting;
+    }
+    if ((escapechar!=NULL)) {
+        dialect->escapechar = escapechar;
+    }
+    if ((strict!=(-1))) {
+        dialect->strict = strict;
+    }
+    return dialect;
+}
+
+int field_size_limit(int new_limit) {
+    int old_limit;
+
+    old_limit = _field_limit;
+    if ((new_limit!=(-1))) {
+        _field_limit = new_limit;
+    }
+    return old_limit;
 }
 
 } // module namespace
