@@ -1866,10 +1866,7 @@ class generateVisitor(ASTVisitor):
         if parent_constr and target.inherited_from: # XXX
             target = target.inherited_from
 
-        if target.node.varargs:
-            self.append('%d' % len(node.args))
-            if node.args:
-                self.append(', ')
+        self.varargs_kwargs_args(target, node, funcs, func)
 
         if ident in ['max','min']:
             pairs = [(arg, target.formals[0]) for arg in node.args]
@@ -1947,6 +1944,33 @@ class generateVisitor(ASTVisitor):
         if constructor and ident == 'frozenset':
             if pairs: self.append(',')
             self.append('1')
+
+    def varargs_kwargs_args(self, target, node, funcs, func):
+        # place args to kwargs in front
+        kwgiven = dict([(arg.name, arg.expr) for arg in node.args if isinstance(arg, Keyword)])
+        kwredirects = []
+        nrredirects = 0
+
+        for kw, kwdefault in target.kwdefaults.items():
+            if kw in kwgiven:
+                kwredirects.append(kwgiven[kw])
+                nrredirects += 1
+            else:
+                kwredirects.append(kwdefault)
+
+        for arg in kwredirects:
+            self.visit(arg, func)
+            if arg != kwredirects[-1]:
+                self.append(', ')
+
+        # number of variadic arguments
+        if target.node.varargs:
+            if kwredirects:
+                self.append(', ')
+            nrvarargs = (len(node.args)-nrredirects)
+            self.append('%d' % nrvarargs)
+            if nrvarargs:
+                self.append(', ')
 
     def visitReturn(self, node, func=None):
         if func.isGenerator:
