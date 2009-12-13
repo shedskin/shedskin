@@ -69,21 +69,21 @@ class defaultdict:
         self.unit = key
         return self.value
 
-    def keys(self):                      
+    def keys(self):
         return [self.unit]
-    def values(self):                  
-        return [self.value]           
-    def items(self):                 
-        return [(self.unit, self.value)] 
+    def values(self):
+        return [self.value]
+    def items(self):
+        return [(self.unit, self.value)]
 
-    def __repr__(self):             
-        self.unit.__repr__()       
-        self.value.__repr__()     
-        return ''                
+    def __repr__(self):
+        self.unit.__repr__()
+        self.value.__repr__()
+        return ''
 
-    def __str__(self):                  
+    def __str__(self):
         return self.__repr__()
-    
+
     def __setunit__(self, k, v):
         self.unit = k
         k.__hash__()
@@ -93,43 +93,43 @@ class defaultdict:
     def __delitem__(self, i):
         pass
 
-    def setdefault(self, k, v=None):  
+    def setdefault(self, k, v=None):
         self.__setunit__(k, v)
-        return v                     
+        return v
 
-    def has_key(self, k):             
-        return 1                    
+    def has_key(self, k):
+        return 1
 
-    def __len__(self):             
-        return 1                  
+    def __len__(self):
+        return 1
 
-    def clear(self):                     
+    def clear(self):
         pass
-    def copy(self):                     
-        return {self.unit: self.value} 
+    def copy(self):
+        return {self.unit: self.value}
 
-    def get(self, k, default=None):   
-        return self.value                
+    def get(self, k, default=None):
+        return self.value
         return default
-    def pop(self, k):                  
-        return self.value            
-    def popitem(self):                 
+    def pop(self, k):
+        return self.value
+    def popitem(self):
         return (self.unit, self.value)
-    def update(self, d):             
+    def update(self, d):
         self.__setunit__(d.unit, d.value)
 
     def __delete__(self, i):
-        pass  
+        pass
 
     def fromkeys(l, b=None):
         d = defaultdict()
         d.value = b
-        d.unit = iter(l).next() 
+        d.unit = iter(l).next()
         return d
     fromkeys = staticmethod(fromkeys) # XXX classmethod
 
     def iterkeys(self):
-        return __iter(self.unit) 
+        return __iter(self.unit)
     def itervalues(self):
         return __iter(self.value)
     def iteritems(self):

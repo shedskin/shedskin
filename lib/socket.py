@@ -121,7 +121,7 @@ def htonl(x):
     return 0
 
 def inet_aton(x):
-    return '' 
+    return ''
 
 def inet_ntoa(x):
     return ''

@@ -2,7 +2,7 @@
 e = 2.7182818284590451
 pi = 3.1415926535897931
 
-def sqrt(x): return 1.0 
+def sqrt(x): return 1.0
 def sin(x): return 1.0
 def fabs(x): return 1.0
 def floor(x): return 1.0

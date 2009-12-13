@@ -12,17 +12,17 @@ class date:
 
     def today():
         return date(0, 0, 0)
-    
+
     def fromtimestamp(timestamp):
         return date(0, 0, 0)
-    
+
     def fromordinal(ordinal):
         return date(0, 0, 0)
-    
+
     today         = staticmethod(today)
     fromtimestamp = staticmethod(fromtimestamp)
     fromordinal   = staticmethod(fromordinal)
-    
+
     def __add__(self, other):
         return self
 
@@ -31,16 +31,16 @@ class date:
 
     def subfromdate(self):
         return timedelta()
-    
+
     def replace(self, year=0, month=0, day=0):
         return self
-    
+
     def timetuple(self):
         return struct_time((1,))
 
     def toordinal(self):
         return 1
-    
+
     def weekday(self):
         return 1
 
@@ -52,7 +52,7 @@ class date:
 
     def isoformat(self):
         return ''
-    
+
     def __str__(self):
         return ''
 
@@ -76,30 +76,30 @@ class datetime(date):
         tzinfo.utcoffset(self)
         tzinfo.dst(self)
         tzinfo.tzname(self)
-    
+
     def today():
         return datetime(0, 0, 0)
-    
+
     def now(tz=None):
         tz.utcoffset(self)
         return datetime(0, 0, 0)
-    
+
     def utcnow():
         return datetime(0, 0, 0)
-    
+
     def fromtimestamp(timestamp, tz=None):
         tz.fromutc(self)
         return datetime(0, 0, 0)
-    
+
     def utcfromtimestamp(timestamp):
         return datetime(0, 0, 0)
-    
+
     def fromordinal(ordinal):
         return datetime(0, 0, 0)
-    
+
     def combine(date, time):
         return datetime(0, 0, 0)
-    
+
     def strptime(date_string, format):
         return datetime(0, 0, 0)
 
@@ -111,16 +111,16 @@ class datetime(date):
     fromordinal = staticmethod(fromordinal)
     combine = staticmethod(combine)
     strptime = staticmethod(strptime)
-    
+
     def __add__(self, delta):
         return self
 
     def __sub__(self, other):
         return other.subfromdatetime()
-    
+
     def subfromdatetime(self):
         return timedelta()
-    
+
     def date(self):
         return date(self.year, self.month, self.day)
 
@@ -189,7 +189,7 @@ class time:
         tzinfo.utcoffset(dt)
         tzinfo.dst(dt)
         tzinfo.tzname(dt)
-    
+
     def replace(self, hour=0, minute=0, second=0, microsecond=0, tzinfo=None):
         return self
 
@@ -216,7 +216,7 @@ class timedelta:
         self.days = 1
         self.seconds = 1
         self.microseconds = 1
-    
+
     def __str__(self):
         return ''
 
@@ -231,7 +231,7 @@ class timedelta:
 
     def __div__(self, n):
         return self
-    
+
     def __neg__(self):
         return self
 
@@ -240,7 +240,7 @@ class timedelta:
 
     def __abs__(self):
         return self
-    
+
     def subfromdate(self):
         return date(1, 1, 1)
 
@@ -279,5 +279,5 @@ time.resolution = timedelta(microseconds=1)
 timedelta.min = timedelta(-999999999)
 timedelta.max = timedelta(days=999999999, hours=23, minutes=59, seconds=59, microseconds=999999)
 timedelta.resolution = timedelta(microseconds=1)
-    
+
 

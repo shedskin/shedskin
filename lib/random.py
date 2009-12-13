@@ -3,11 +3,11 @@ import time
 
 NV_MAGICCONST = 1.0
 LOG4 = 1.0
-SG_MAGICCONST = 1.0 
+SG_MAGICCONST = 1.0
 BPF = 1
 MAXWIDTH = 1
 MAXINT = 1
-N = 1 
+N = 1
 M = 1
 MATRIX_A = 1
 UPPER = 1

@@ -1,5 +1,5 @@
 
-argv = ['']            
+argv = ['']
 
 stdin, stdout, stderr = file('stdin'), file('stdout'), file('stderr')
 
@@ -13,5 +13,5 @@ maxint = 0
 def setrecursionlimit(limit):
     pass
 
-def exit(code=0): 
+def exit(code=0):
     pass
