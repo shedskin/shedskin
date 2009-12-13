@@ -589,7 +589,9 @@ class moduleVisitor(ASTVisitor):
             node.lineno = node.items[0][0].lineno
 
     def visitNot(self, node, func=None):
-        getgx().types[cnode(node, parent=func)] = set([(defclass('int_'),0)])  # XXX new type?
+        newnode = cnode(node, parent=func)
+        newnode.copymetoo = True
+        getgx().types[newnode] = set([(defclass('int_'),0)])  # XXX new type?
         self.visit(node.expr, func)
 
     def visitBackquote(self, node, func=None):
@@ -641,6 +643,7 @@ class moduleVisitor(ASTVisitor):
 
     def visitCompare(self, node, func=None):
         newnode = cnode(node, parent=func)
+        newnode.copymetoo = True
         getgx().types[newnode] = set([(defclass('int_'),0)]) # XXX new type?
 
         self.visit(node.expr, func)
