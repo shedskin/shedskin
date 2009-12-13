@@ -7,18 +7,18 @@ tests = [
 ('''csv''', '''
 import csv, collections
 d = collections.defaultdict(list)
-for (a,b,n,l) in csv.reader(file('woef.csv'), delimiter='|'):
+for (a,b,n,l) in csv.reader(file('testdata/woef.csv'), delimiter='|'):
     d[a,b].append((int(n),l))
 for a,b in sorted(d, key=lambda t: t[1]):
     hoppa = ' '.join([l for (n,l) in sorted(d[a,b], key=lambda t: t[0])])
     hoppa = hoppa.replace('&nbsp;', ' ')
     print '<H1>%s</H1><H2>%s</H2>' % (b,a), hoppa
-output = file('bla.csv', 'w')
+output = file('testdata/bla.csv', 'w')
 wr = csv.writer(output, delimiter='|')
 wr.writerow(['aa', 'bb', 'cc'])
 wr.writerows(2*[['a', 'c', 'b']])
 output.close()
-print file('bla.csv').read()
+print file('testdata/bla.csv').read()
 
 print csv.field_size_limit()
 print csv.field_size_limit(10)
@@ -26,8 +26,9 @@ print csv.field_size_limit()
 
 print sorted(csv.list_dialects())
 
-csv.reader(file('woef.csv'), dialect = 'excel', delimiter = ',', quotechar = '"', lineterminator = '\\r\\n', escapechar = '')
-csv.writer(file('bla.csv', 'w'), dialect = 'excel', delimiter = ',', quotechar = '"', lineterminator = '\\r\\n', escapechar = '')
+csv.reader(file('testdata/woef.csv'), dialect = 'excel', delimiter = ',', quotechar = '"', lineterminator = '\\r\\n', escapechar = '')
+csv.writer(file('testdata/bla.csv', 'w'), dialect = 'excel', delimiter = ',', quotechar = '"', lineterminator = '\\r\\n', escapechar = '')
+
 ''', '''
 output(equal=True)
 '''),
