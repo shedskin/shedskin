@@ -109,6 +109,7 @@ class function:
         self.retnode = None
         self.parent = parent
         self.constraints = set()
+        self.kwdefaults = {}
         self.vars = {}
         self.globals = []
         self.mv = getmv()
