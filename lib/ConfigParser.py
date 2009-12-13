@@ -22,7 +22,7 @@ class MissingSectionHeaderError(ParsingError):
     def __init__(self, filename, lineno, line): pass
 
 class RawConfigParser:
-    def __init__(self, defaults=None): 
+    def __init__(self, defaults=None):
         self._sections = {'': ''}
         self._defaults = {'': ''}
     def defaults(self):

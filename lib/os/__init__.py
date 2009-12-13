@@ -67,7 +67,7 @@ pathconf_names = {'': 1}
 sysconf_names = {'': 1}
 confstr_names = {'': 1}
 
-class error(OSError): 
+class error(OSError):
     pass
 
 class __cstat:
@@ -90,7 +90,7 @@ class __cstat:
         return 1
     def __getitem__(self, i):
         return 1
-    def __slice__(self, x, l, u, s):     
+    def __slice__(self, x, l, u, s):
         return (1,)
     def __repr__(self):
         return ''
@@ -112,7 +112,7 @@ class __vfsstat:
         return 1
     def __getitem__(self, i):
         return 1
-    def __slice__(self, x, l, u, s):     
+    def __slice__(self, x, l, u, s):
         return (1,)
     def __repr__(self):
         return ''
@@ -258,7 +258,7 @@ def tcgetpgrp(fd):
 def tcsetpgrp(fd, pg):
     pass
 
-def stat_float_times(n=False): 
+def stat_float_times(n=False):
     return True
 
 def putenv(variable, value):
@@ -437,7 +437,7 @@ def times():
 
 def tmpnam():
     return ''
-    
+
 def tempnam(dir, prefix=None):
     return ''
 

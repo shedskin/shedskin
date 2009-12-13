@@ -5,7 +5,7 @@ class GetoptError(Exception):
         self.msg = msg
         self.opt = opt
 
-class error(GetoptError): 
+class error(GetoptError):
     pass
 
 def getopt(args, shortopts, longopts = []):
