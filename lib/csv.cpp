@@ -11,32 +11,32 @@ list<int> *__0, *__1;
 int EAT_CRNL, ESCAPED_CHAR, ESCAPE_IN_QUOTED_FIELD, IN_FIELD, IN_QUOTED_FIELD, QUOTE_ALL, QUOTE_IN_QUOTED_FIELD, QUOTE_MINIMAL, QUOTE_NONE, QUOTE_NONNUMERIC, START_FIELD, START_RECORD, _field_limit;
 OSError *__exception;
 
-void * default_7;
-void * default_3;
 void * default_9;
+void * default_14;
+void * default_16;
 void * default_21;
+void * default_23;
+str * default_18;
+void * default_25;
+void * default_0;
+void * default_2;
+void * default_6;
+void * default_3;
+void * default_8;
 void * default_10;
 void * default_11;
 void * default_13;
 void * default_15;
+void * default_12;
 void * default_17;
 void * default_24;
 str * default_19;
 str * default_20;
 void * default_22;
-str * default_18;
-void * default_25;
+void * default_7;
 void * default_1;
-void * default_6;
-void * default_4;
 void * default_5;
-void * default_12;
-void * default_14;
-void * default_16;
-void * default_23;
-void * default_8;
-void * default_2;
-void * default_0;
+void * default_4;
 
 __csviter::__csviter(reader *r) {
     this->r = r;
@@ -517,12 +517,12 @@ list<str *> *DictReader::getfieldnames() {
     return this->_fieldnames;
 }
 
-void *DictReader::__init__(file *f, list<str *> *fieldnames, str *restkey, str *restval, void *dialect, str *delimiter, void *quotechar, int doublequote, int skipinitialspace, void *lineterminator, int quoting, void *escapechar, int strict) {
+void *DictReader::__init__(file *f, list<str *> *fieldnames, str *restkey, str *restval, str *dialect, str *delimiter, str *quotechar, int doublequote, int skipinitialspace, str *lineterminator, int quoting, str *escapechar, int strict) {
     
     this->_fieldnames = fieldnames;
     this->restkey = restkey;
     this->restval = restval;
-    this->_reader = (new reader(f, ((str *)(dialect)), delimiter, ((str *)(quotechar)), doublequote, skipinitialspace, ((str *)(lineterminator)), quoting, ((str *)(escapechar)), strict));
+    this->_reader = (new reader(f, dialect, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict));
     this->dialect = dialect;
     this->line_num = 0;
     return NULL;
@@ -567,7 +567,7 @@ void *DictWriter::writerows(list<dict<str *, str *> *> *rowdicts) {
     return (this->_writer)->writerows(rows);
 }
 
-void *DictWriter::__init__(file *f, list<str *> *fieldnames, str *restval, str *extrasaction, str *dialect, void *delimiter, void *quotechar, int doublequote, int skipinitialspace, void *lineterminator, int quoting, void *escapechar, int strict) {
+void *DictWriter::__init__(file *f, list<str *> *fieldnames, str *restval, str *extrasaction, str *dialect, str *delimiter, str *quotechar, int doublequote, int skipinitialspace, str *lineterminator, int quoting, str *escapechar, int strict) {
     
     this->fieldnames = fieldnames;
     this->restval = restval;
@@ -575,7 +575,7 @@ void *DictWriter::__init__(file *f, list<str *> *fieldnames, str *restval, str *
         throw ((new ValueError(__modct(const_23, 1, extrasaction))));
     }
     this->extrasaction = extrasaction;
-    this->_writer = (new writer(f, dialect, ((str *)(delimiter)), ((str *)(quotechar)), doublequote, skipinitialspace, ((str *)(lineterminator)), quoting, ((str *)(escapechar)), strict));
+    this->_writer = (new writer(f, dialect, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict));
     return NULL;
 }
 
@@ -611,11 +611,11 @@ void __init() {
 
     __name__ = new str("csv");
 
-    cl_writer = new class_("writer", 42, 42);
-    cl_DictReader = new class_("DictReader", 1, 1);
-    cl_Excel = new class_("Excel", 4, 4);
-    cl_reader = new class_("reader", 46, 46);
-    cl_Error = new class_("Error", 26, 26);
+    cl_writer = new class_("writer", 21, 21);
+    cl_DictReader = new class_("DictReader", 48, 48);
+    cl_Excel = new class_("Excel", 46, 46);
+    cl_reader = new class_("reader", 44, 44);
+    cl_Error = new class_("Error", 43, 43);
     cl_DictWriter = new class_("DictWriter", 2, 2);
 
     __0 = range(8);
