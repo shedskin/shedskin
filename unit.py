@@ -39,6 +39,7 @@ for d2 in rd:
     wr2.writerows([d2])
 bla.close()
 rd.fieldnames = fieldnames
+print rd.fieldnames 
 print open('testdata/bla.csv').read()
 
 ''', '''
