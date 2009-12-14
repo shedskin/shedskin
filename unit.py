@@ -42,6 +42,9 @@ rd.fieldnames = fieldnames
 print rd.fieldnames 
 print open('testdata/bla.csv').read()
 
+csv.DictReader(open('testdata/woef.csv'), None, dialect = 'excel', delimiter = ',', quotechar = '"', lineterminator = '', escapechar = '')
+csv.DictWriter(open('testdata/woef.csv'), None, dialect = 'excel', delimiter = ',', quotechar = '"', lineterminator = '', escapechar = '')
+
 ''', '''
 output(equal=True)
 '''),
