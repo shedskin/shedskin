@@ -29,3 +29,37 @@ class writer:
 
     def writerows(self, seqs):
         pass
+
+class DictReader:
+    def __init__(self, f, fieldnames=None, restkey=None, restval=None, dialect=None, delimiter=None, quotechar=None, doublequote=-1, skipinitialspace=-1, lineterminator=None, quoting=-1, escapechar=None, strict=-1):
+        self._fieldnames = ['']
+        self.restkey = ''
+        self.restval = ''
+        self.reader = reader(f)
+        self.dialect = ''
+        self.line_num = 0
+
+    def __iter__(self):
+        return __iter({'': ''})
+
+    def getfieldnames(self):
+        return self._fieldnames
+    def setfieldnames(self, value):
+        pass
+    fieldnames = property(getfieldnames, setfieldnames)
+
+    def next(self):
+        return {'': ''}
+
+class DictWriter:
+    def __init__(self, f, fieldnames, restval="", extrasaction="raise", dialect="excel", delimiter=None, quotechar=None, doublequote=-1, skipinitialspace=-1, lineterminator=None, quoting=-1, escapechar=None, strict=-1):
+        self.fieldnames = ['']
+        self.restval = ''
+        self.extrasaction = ''
+        self.writer = writer(f)
+
+    def writerow(self, rowdict):
+        pass
+
+    def writerows(self, rowdicts):
+        pass
