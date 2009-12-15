@@ -1483,19 +1483,8 @@ class generateVisitor(ASTVisitor):
                             if msg == '__ne__': self.append(')')
                             return
 
-            # --- 'x in range(n)' -> x > 0 && x < n # XXX not in, range(a,b)
             if msg == '__contains__':
-                #op = node.ops[0][1] # XXX a in range(8): a doesn't have to be an int variable..; eval order
-                if isinstance(right, CallFunc) and isinstance(right.node, Name) and right.node.name in ['range']: #, 'xrange']:
-                    if len(right.args) == 1:
-                        l, u = '0', right.args[0]
-                    else:
-                        l, u = right.args[0], right.args[1]
-                    if pre: self.append(pre)
-                    self.visitm('(', left, '>=', l, '&&', left, '<', u, ')', func)
-                else:
-                    self.visitBinary(right, left, msg, short, func, pre)
-
+                self.visitBinary(right, left, msg, short, func, pre)
             else:
                 self.visitBinary(left, right, msg, short, func, pre)
 
