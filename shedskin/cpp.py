@@ -1880,55 +1880,35 @@ class generateVisitor(ASTVisitor):
         self.add_args_arg(node, funcs)
 
         for (arg, formal) in pairs:
-            if isinstance(arg, tuple):
-                # --- pack arguments as tuple
-                self.append('new '+typesetreprnew(formal, target)[:-2]+'(')
+            cast = False
+            if double and self.mergeinh[arg] == set([(defclass('int_'),0)]):
+                cast = True
+                self.append('((double)(')
+            elif not target.mv.module.builtin and assign_needs_cast(arg, func, formal, target): # XXX builtin (dict.fromkeys?)
+                cast = True
+                self.append('(('+typesetreprnew(formal, target)+')(')
+            elif castnull and isinstance(arg, Name) and arg.name == 'None':
+                cast = True
+                self.append('((void *)(')
 
-                if len(arg) > 0:
-                    self.append(str(len(arg))+',')
-
-                    # XXX merge with children args, as below
-                    for a in arg:
-                        self.refer(a, func)
-                        if a != arg[-1]:
-                            self.append(',')
-                self.append(')')
-
-            elif isinstance(formal, tuple):
-                # --- unpack tuple
-                self.append(', '.join(['(*'+arg.name+')['+str(i)+']' for i in range(len(formal))]))
-
-            else:
-                # --- connect regular argument to formal
-                cast = False
-                if double and self.mergeinh[arg] == set([(defclass('int_'),0)]):
-                    cast = True
-                    self.append('((double)(')
-                elif not target.mv.module.builtin and assign_needs_cast(arg, func, formal, target): # XXX builtin (dict.fromkeys?)
-                    cast = True
-                    self.append('(('+typesetreprnew(formal, target)+')(')
-                elif castnull and isinstance(arg, Name) and arg.name == 'None':
-                    cast = True
-                    self.append('((void *)(')
-
-                if arg in target.mv.defaults:
-                    if self.mergeinh[arg] == set([(defclass('none'),0)]):
-                        self.append('NULL')
-                    elif target.mv.module == getmv().module:
-                        self.append('default_%d' % (target.mv.defaults[arg]))
-                    else:
-                        self.append('%s::default_%d' % ('__'+'__::__'.join(target.mv.module.mod_path)+'__', target.mv.defaults[arg]))
-
-                elif arg in self.consts:
-                    self.append(self.consts[arg])
+            if arg in target.mv.defaults:
+                if self.mergeinh[arg] == set([(defclass('none'),0)]):
+                    self.append('NULL')
+                elif target.mv.module == getmv().module:
+                    self.append('default_%d' % (target.mv.defaults[arg]))
                 else:
-                    if constructor and ident in ['set', 'frozenset'] and typesetreprnew(arg, func) in ['list<void *> *', 'tuple<void *> *', 'pyiter<void *> *', 'pyseq<void *> *', 'pyset<void *>']: # XXX to needs_cast
-                        pass # XXX assign_needs_cast
-                    else:
-                        self.refer(arg, func)
+                    self.append('%s::default_%d' % ('__'+'__::__'.join(target.mv.module.mod_path)+'__', target.mv.defaults[arg]))
 
-                if cast: self.append('))')
+            elif arg in self.consts:
+                self.append(self.consts[arg])
+            else:
+                if constructor and ident in ['set', 'frozenset'] and typesetreprnew(arg, func) in ['list<void *> *', 'tuple<void *> *', 'pyiter<void *> *', 'pyseq<void *> *', 'pyset<void *>']: # XXX to needs_cast
+                    pass # XXX assign_needs_cast
+                else:
+                    self.refer(arg, func)
 
+            if cast:
+                self.append('))')
             if (arg, formal) != pairs[-1]:
                 self.append(', ')
 
