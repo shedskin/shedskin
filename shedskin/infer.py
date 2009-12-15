@@ -184,27 +184,17 @@ def possible_functions(node):
 
     # --- determine possible target functions
     objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr = analyze_callfunc(expr, True)
-    anon_func = False
     funcs = []
 
-    subnode = expr.node, node.dcpa, node.cpa # XXX to analyze_callfunc
-    if subnode in getgx().cnode:
-        stypes = getgx().cnode[subnode].types()
-        if [t for t in stypes if isinstance(t[0], function)]:
-            anon_func = True
-
-    if anon_func:
+    if is_anon_func((expr.node, node.dcpa, node.cpa)):
         # anonymous call
         types = getgx().cnode[expr.node, node.dcpa, node.cpa].types()
         types = [t for t in types if isinstance(t[0], function)] # XXX XXX analyse per t, sometimes class, sometimes function..
 
-        if types:
-            if list(types)[0][0].parent: # method reference XXX merge below?
-                funcs = [(f[0], f[1], (f[0].parent, f[1])) for f in types] # node.dcpa: connect to right dcpa duplicate version
-            else: # function reference
-                funcs = [(f[0], f[1], None) for f in types] # function call: only one version; no objtype
-        else:
-            funcs = []
+        if list(types)[0][0].parent: # method reference XXX merge below?
+            funcs = [(f[0], f[1], (f[0].parent, f[1])) for f in types] # node.dcpa: connect to right dcpa duplicate version
+        else: # function reference
+            funcs = [(f[0], f[1], None) for f in types] # function call: only one version; no objtype
 
     elif constructor:
         funcs = [(t[0].funcs['__init__'], t[1], t) for t in node.types() if '__init__' in t[0].funcs]
@@ -416,6 +406,13 @@ def create_template(func, dcpa, c, worklist):
     getgx().templates += 1
     func_copy(func, dcpa, cpa, worklist, c)
 
+def is_anon_func(node):
+    if node in getgx().cnode:
+        types = getgx().cnode[node].types()
+        if [t for t in types if isinstance(t[0], function)]:
+            return True
+    return False
+
 def actuals_formals(expr, func, node, dcpa, cpa, types, worklist):
     objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr = analyze_callfunc(expr) # XXX call less
 
@@ -426,24 +423,9 @@ def actuals_formals(expr, func, node, dcpa, cpa, types, worklist):
     if ident in ['__getattr__', '__setattr__']:
         actuals = actuals[1:]
 
-    anon_func = False
-    meth_func = False
-    if not node.mv.module.builtin: # XXX to analyze_callfunc
-        subnode = expr.node, node.dcpa, node.cpa
-        if subnode in getgx().cnode:
-            stypes = getgx().cnode[subnode].types()
-            if [t for t in stypes if isinstance(t[0], function)]:
-                anon_func = True
-            if [t for t in stypes if isinstance(t[0], function) and t[0].parent]:
-                meth_func = True
-
-    # --- check for correct number of arguments
-
     # add a slot in case of implicit 'self'
     smut = actuals[:] # XXX smut unneeded
-    if meth_func:
-        smut = [None]+smut # XXX add type here
-    if parent_constr or anon_func:
+    if parent_constr or is_anon_func((expr.node, node.dcpa, node.cpa)):
         pass
     elif method_call or constructor:
         smut = [None]+smut # XXX add type here
