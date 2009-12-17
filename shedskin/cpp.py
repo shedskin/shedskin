@@ -274,10 +274,8 @@ class generateVisitor(ASTVisitor):
             print >>self.out, 'namespace __'+n+'__ {'
         print >>self.out
 
-        skip = False
         for child in node.node.getChildNodes():
             if isinstance(child, From):
-                skip = True
                 mod_id = '__'+'__::__'.join(child.modname.split('.'))+'__'
 
                 for (name, pseudonym) in child.names:
@@ -291,19 +289,17 @@ class generateVisitor(ASTVisitor):
                         if not pseudonym: pseudonym = name
                         if not pseudonym in self.module.mv.globals:# or [t for t in self.module.mv.globals[pseudonym].types() if not isinstance(t[0], module)]:
                             print >>self.out, 'using '+mod_id+'::'+nokeywords(name)+';'
-        if skip: print >>self.out
+        print >>self.out
 
         # class declarations
-        gotcl = False
         for child in node.node.getChildNodes():
             if isinstance(child, Class):
-                gotcl = True
                 cl = defclass(child.name)
                 print >>self.out, 'class '+nokeywords(cl.ident)+';'
+        print >>self.out
 
         # --- lambda typedefs
-        if gotcl: print >>self.out
-        self.func_pointers(True)
+        self.func_pointers()
 
         # globals
         defs = self.declaredefs(list(getmv().globals.items()), declare=True);
@@ -328,10 +324,7 @@ class generateVisitor(ASTVisitor):
         for child in node.node.getChildNodes():
             if isinstance(child, Function):
                 func = getmv().funcs[child.name]
-                if not self.inhcpa(func):
-                #if not hmcpa(func) and (not func in getgx().inheritance_relations or not [1 for f in getgx().inheritance_relations[func] if hmcpa(f)]): # XXX merge with visitFunction
-                    pass
-                elif not func.mv.module.builtin and not func.ident in ['min','max','zip','sum','__zip2','enumerate']: # XXX latter for test 116
+                if self.inhcpa(func) and not func.mv.module.builtin and not func.ident in ['min','max','zip','sum','__zip2','enumerate']: # XXX remove crap
                     self.visitFunction(func.node, declare=True)
         print >>self.out
 
@@ -1116,29 +1109,12 @@ class generateVisitor(ASTVisitor):
             self.deindent()
             self.output('}')
 
-    def func_pointers(self, print_them):
-        getmv().lambda_cache = {}
-        getmv().lambda_signum = {}
-
+    def func_pointers(self):
         for func in getmv().lambdas.values():
             argtypes = [typesetreprnew(func.vars[formal], func).rstrip() for formal in func.formals]
-            signature = '_'.join(argtypes)
-
-            if func.returnexpr:
-                rettype = typesetreprnew(func.retnode.thing,func)
-            else:
-                rettype = 'void '
-            signature += '->'+rettype
-
-            if signature not in getmv().lambda_cache:
-                nr = len(getmv().lambda_cache)
-                getmv().lambda_cache[signature] = nr
-                if print_them:
-                    print >>self.out, 'typedef %s(*lambda%d)(' % (rettype, nr) + ', '.join(argtypes)+');'
-
-            getmv().lambda_signum[func] = getmv().lambda_cache[signature]
-
-        if getmv().lambda_cache and print_them: print >>self.out
+            rettype = typesetreprnew(func.retnode.thing,func)
+            print >>self.out, 'typedef %s(*lambda%d)(' % (rettype, func.lambdanr) + ', '.join(argtypes)+');'
+        print >>self.out
 
     # --- function/method header
     def func_header(self, func, declare, is_init=False):
@@ -2477,7 +2453,9 @@ class generateVisitor(ASTVisitor):
 
     def visitName(self, node, func=None, add_cl=True):
         map = {'True': '1', 'False': '0', 'self': 'this'}
-        if node.name == 'None':
+        if node in getmv().lwrapper:
+            self.append(getmv().lwrapper[node])
+        elif node.name == 'None':
             self.append('NULL')
         elif node.name == 'self' and ((func and func.listcomp) or not isinstance(func.parent, class_)):
             self.append('self')
@@ -2610,10 +2588,7 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None, check_extmo
     if anon_funcs and check_extmod:
         raise ExtmodError()
     if anon_funcs:
-        f = anon_funcs.pop()
-        if not f in getmv().lambda_signum: # XXX method reference
-            return '__method_ref_0'
-        return 'lambda'+str(getmv().lambda_signum[f])
+        return 'lambda%d' % anon_funcs.pop().lambdanr
 
     classes = polymorphic_cl(split_classes(split))
     lcp = lowest_common_parents(classes)
@@ -2989,7 +2964,6 @@ def generate_code():
             gv = generateVisitor(module)
             mv = module.mv
             setmv(mv)
-            gv.func_pointers(False)
             walk(module.ast, gv)
             gv.out.close()
             gv.header_file()
