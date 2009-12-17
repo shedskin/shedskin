@@ -35,8 +35,7 @@ class moduleVisitor(ASTVisitor):
         self.ext_funcs = {}
 
         self.lambdaname = {}
-        self.lambda_cache = {}
-        self.lambda_signum = {}
+        self.lwrapper = {}
 
         self.tempcount = {}
         self.callfuncs = []
@@ -489,14 +488,14 @@ class moduleVisitor(ASTVisitor):
                 else:
                     error("'%s' decorator is not supported" % decorator.name, decorator)
 
-        if not parent:
-            if is_lambda: self.lambdas[func.ident] = func
-            else: self.funcs[func.ident] = func
-        elif not func.mv.module.builtin:
+        if parent:
             if not inherited_from and not func.ident in parent.staticmethods and (not func.formals or func.formals[0] != 'self'):
                 error("formal arguments of method must start with 'self'", node)
             if not func.mv.module.builtin and func.ident in ['__new__', '__getattr__', '__setattr__', '__radd__', '__rsub__', '__rmul__', '__rdiv__', '__rtruediv__', '__rfloordiv__', '__rmod__', '__rdivmod__', '__rpow__', '__rlshift__', '__rrshift__', '__rand__', '__rxor__', '__ror__', '__iter__', '__call__']:
                 error("'%s' is not supported" % func.ident, node, warning=True)
+
+        if is_lambda:
+            self.lambdas[node.name] = func
 
         formals = func.formals[:]
         func.defaults = node.defaults
@@ -530,18 +529,19 @@ class moduleVisitor(ASTVisitor):
             parent.funcs[func.ident] = func
 
     def visitLambda(self, node, func=None):
-        name = '__lambda'+str(len(self.lambdas))+'__'
-        self.lambdaname[node] = name
+        lambdanr = len(self.lambdas)
+        name = '__lambda%d__' % lambdanr
         try:
             fakenode = Function(None, name, node.argnames, node.defaults, node.flags, None, Return(node.code))
         except TypeError:
-            fakenode = Function(name, node.argnames, node.defaults, node.flags, None, Return(node.code))
-
+            fakenode = Function(name, node.argnames, node.defaults, node.flags, None, Return(node.code)) # XXX 2.3?
         self.visit(fakenode, None, True)
-
+        f = self.lambdas[name]
+        f.lambdanr = lambdanr
+        self.lambdaname[node] = name
         newnode = cnode(node, parent=func)
+        getgx().types[newnode] = set([(f, 0)])
         newnode.copymetoo = True
-        getgx().types[newnode] = set([(self.lambdas[name],0)])
 
     def visitAnd(self, node, func=None): # XXX merge
         newnode = cnode(node, parent=func)
@@ -1335,16 +1335,20 @@ class moduleVisitor(ASTVisitor):
                 self.instance(node, defclass('int_'), func)
             return
 
-        if func and node.name in func.globals: 
+        if func and node.name in func.globals:
             var = defaultvar(node.name, None)
         else:
             var = lookupvar(node.name, func)
             if not var:
                 if node.name in self.funcs or node.name in self.ext_funcs:
-                    if node.name in self.funcs: f = self.funcs[node.name] # XXX lookupsomething()?
-                    else: f = self.ext_funcs[node.name]
+                    if node.name in self.funcs:
+                        f = self.funcs[node.name] # XXX lookupsomething()?
+                        if node.name not in self.lambdas:
+                            f.lambdanr = len(self.lambdas)
+                            self.lambdas[node.name] = f
+                    else:
+                        f = self.builtinwrapper(node, func)
                     getgx().types[newnode] = set([(f, 0)])
-                    self.lambdas[node.name] = f # XXX can be multiple with same name
                     newnode.copymetoo = True
                 elif node.name in self.classes or node.name in self.ext_classes:
                     if node.name in self.classes: cl = self.classes[node.name]
@@ -1359,6 +1363,12 @@ class moduleVisitor(ASTVisitor):
                     var = defaultvar(node.name, None)
         if var:
             self.addconstraint((inode(var), newnode), func)
+
+    def builtinwrapper(self, node, func):
+        l = Lambda(['x'], [], 0, CallFunc(Name(node.name), [Name('x')]))
+        self.visit(l, func)
+        self.lwrapper[node] = self.lambdaname[l]
+        return self.lambdas[self.lambdaname[l]]
 
 def parsefile(name):
     try:
