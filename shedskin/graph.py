@@ -1335,14 +1335,16 @@ class moduleVisitor(ASTVisitor):
                 self.instance(node, defclass('int_'), func)
             return
 
-        if func and node.name in func.globals:
+        if func and node.name in func.globals: 
             var = defaultvar(node.name, None)
         else:
             var = lookupvar(node.name, func)
-            if not var: # XXX define variables before use, or they are assumed to be global
-                if node.name in self.funcs: # XXX remove: variable lookup should be uniform
-                    getgx().types[newnode] = set([(self.funcs[node.name], 0)])
-                    self.lambdas[node.name] = self.funcs[node.name]
+            if not var:
+                if node.name in self.funcs or node.name in self.ext_funcs:
+                    if node.name in self.funcs: f = self.funcs[node.name] # XXX lookupsomething()?
+                    else: f = self.ext_funcs[node.name]
+                    getgx().types[newnode] = set([(f, 0)])
+                    self.lambdas[node.name] = f # XXX can be multiple with same name
                     newnode.copymetoo = True
                 elif node.name in self.classes or node.name in self.ext_classes:
                     if node.name in self.classes: cl = self.classes[node.name]
