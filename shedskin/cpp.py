@@ -1112,6 +1112,8 @@ class generateVisitor(ASTVisitor):
     def func_pointers(self):
         for func in getmv().lambdas.values():
             argtypes = [typesetreprnew(func.vars[formal], func).rstrip() for formal in func.formals]
+            if func.largs != None:
+                argtypes = argtypes[:func.largs]
             rettype = typesetreprnew(func.retnode.thing,func)
             print >>self.out, 'typedef %s(*lambda%d)(' % (rettype, func.lambdanr) + ', '.join(argtypes)+');'
         print >>self.out
@@ -1123,6 +1125,8 @@ class generateVisitor(ASTVisitor):
             formals = [f for f in func.formals if f != 'self']
         else:
             formals = [f for f in func.formals]
+        if func.largs != None:
+            formals = formals[:func.largs]
 
         ident = func.ident
         self.start()
@@ -1734,6 +1738,10 @@ class generateVisitor(ASTVisitor):
         if self.library_func(funcs, 'itertools', None, 'izip_longest'):
             error("default fillvalue for 'izip_longest' becomes 0 for integers", node, warning=True)
 
+        nrargs = len(node.args)
+        if func and func.largs:
+            nrargs = func.largs
+
         # --- target expression
         if node.node in self.mergeinh and [t for t in self.mergeinh[node.node] if isinstance(t[0], function)]: # anonymous function
             self.visitm(node.node, '(', func)
@@ -1756,7 +1764,7 @@ class generateVisitor(ASTVisitor):
             elif ident in ['iter', 'bool']:
                 self.append('___'+ident+'(') # XXX
             elif ident == 'pow' and direct_call.mv.module.ident == 'builtin':
-                if len(node.args)==3: third = node.args[2]
+                if nrargs==3: third = node.args[2]
                 else: third = None
                 self.power(node.args[0], node.args[1], third, func)
                 return
@@ -1770,8 +1778,8 @@ class generateVisitor(ASTVisitor):
                 self.append('___round(')
             elif ident in ['min','max']:
                 self.append('__'+ident+'(')
-                if len(node.args) > 3:
-                    self.append(str(len(node.args))+', ')
+                if nrargs > 3:
+                    self.append(str(nrargs)+', ')
             else:
                 if ident in self.module.mv.ext_funcs: # XXX using as? :P
                      ident = self.module.mv.ext_funcs[ident].ident
@@ -1854,6 +1862,9 @@ class generateVisitor(ASTVisitor):
                     double = True
 
         self.add_args_arg(node, funcs)
+
+        if func and func.largs != None:
+            pairs = pairs[:func.largs]
 
         for (arg, formal) in pairs:
             cast = False

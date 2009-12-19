@@ -241,10 +241,17 @@ wa().wh()
 # passing builtins around
 print sorted([[2,3,4], [5,6], [7]], key=len)
 print map(len, ['a','bc'])
+#print map(max, ['a','bc'], ['d'], ['e']) # XXX
+print map(max, ['a'], ['d'], ['e'])
 print map(str, range(12))
 print map(list, 'abc')
-#print map(max, [1,2,3], [3,2,1]) # multiple args # cpa: 2 args
-#print map(int, ['18', '19']) # int() def arg?
+print map(int, ['18', '19'])
+def two(f, a, b):
+    return f(a, b)
+def three(f, a, b, c):
+    return f(a, b, c)
+print two(max, 'a', 'b')
+print three(max, 'a', 'b', 'c')
 
 ''', '''
 output(equal=True)

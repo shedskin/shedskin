@@ -269,6 +269,16 @@ def possible_argtypes(node, funcs, worklist):
         else:
             argtypes.append(inode(arg).types()) # XXX def arg?
 
+    # store arg count for calls to builtin refs
+    if funcs and (func.lambdawrapper or node.thing in getgx().lambdawrapper):
+        while argtypes and not argtypes[-1]:
+            argtypes = argtypes[:-1]
+        if func.lambdawrapper:
+            if node.parent and node.parent.node.varargs:
+                func.largs = node.parent.xargs[node.dcpa,node.cpa]-len(node.parent.formals)+1
+            else:
+                func.largs = len(argtypes)
+
     return argtypes
 
 def product(*lists):
@@ -359,6 +369,7 @@ def cpa(callnode, worklist):
         if not dcpa in func.cp or not c in func.cp[dcpa]:
             create_template(func, dcpa, c, worklist)
         cpa = func.cp[dcpa][c]
+        func.xargs[dcpa, cpa] = len(c)
 
         # __getattr__, __setattr__
         if connect_getsetattr(func, callnode, callfunc, dcpa, worklist):
@@ -441,7 +452,7 @@ def actuals_formals(expr, func, node, dcpa, cpa, types, worklist):
                 smut.append(kw.expr)
 
     # XXX add defaults to smut here, simplify code below
-    if not ident in ['min','max','bool'] and (len(smut) < len(formals)-len(func.defaults) or len(smut) > len(formals)) and not func.node.varargs and not expr.star_args:
+    if not ident in ['min','max','bool'] and (len(smut) < len(formals)-len(func.defaults) or len(smut) > len(formals)) and not func.node.varargs and not expr.star_args and func.lambdanr is None and expr not in getgx().lambdawrapper:
         return
 
     # --- connect/seed as much direct arguments as possible
