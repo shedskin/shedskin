@@ -30,6 +30,7 @@ class globalInfo: # XXX add comments, split up
         self.assign_target = {}              # instance node for instance variable assignment
         self.alloc_info = {}                 # allocation site type information across iterations
         self.iterations = 0
+        self.lambdawrapper = {}
         self.sysdir = os.sep.join(__file__.split(os.sep)[:-2])
         self.libdir = connect_paths(self.sysdir, 'lib')
         self.main_mod = 'test'
@@ -107,6 +108,8 @@ class function:
             self.doc = node.doc
         self.returnexpr = []
         self.retnode = None
+        self.lambdanr = None
+        self.lambdawrapper = False
         self.parent = parent
         self.constraints = set()
         self.kwdefaults = {}
@@ -118,6 +121,8 @@ class function:
         self.defaults = []
         self.misses = set()
         self.cp = {}
+        self.xargs = {}
+        self.largs = None
         self.listcomp = False
         self.isGenerator = False
         self.yieldNodes = []
@@ -659,7 +664,7 @@ def connect_actual_formal(expr, func, parent_constr=False, check_error=False):
     if parent_constr:
         actuals = actuals[1:]
 
-    if check_error and func.ident not in ['min', 'max']:
+    if check_error and func.ident not in ['min', 'max'] and func.lambdanr is None and expr not in getgx().lambdawrapper:
         if not func.node.varargs and len(actuals)+len(keywords) > len(formals):
             error("too many arguments in call to '%s'" % func.ident, expr)
         if not func.node.varargs and len(actuals)+len(keywords) < len(formals)-len(func.defaults) and not expr.star_args:

@@ -1365,10 +1365,14 @@ class moduleVisitor(ASTVisitor):
             self.addconstraint((inode(var), newnode), func)
 
     def builtinwrapper(self, node, func):
-        l = Lambda(['x'], [], 0, CallFunc(Name(node.name), [Name('x')]))
+        node2 = CallFunc(Name(node.name), [Name(x) for x in 'abcde'])
+        l = Lambda(list('abcde'), [], 0, node2)
         self.visit(l, func)
         self.lwrapper[node] = self.lambdaname[l]
-        return self.lambdas[self.lambdaname[l]]
+        getgx().lambdawrapper[node2] = self.lambdaname[l]
+        f = self.lambdas[self.lambdaname[l]]
+        f.lambdawrapper = True
+        return f
 
 def parsefile(name):
     try:
