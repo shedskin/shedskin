@@ -246,6 +246,7 @@ print map(max, ['a'], ['d'], ['e'])
 print map(str, range(12))
 print map(list, 'abc')
 print map(int, ['18', '19'])
+print map(set, [[1]])
 def two(f, a, b):
     return f(a, b)
 def three(f, a, b, c):
