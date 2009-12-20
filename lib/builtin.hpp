@@ -208,6 +208,7 @@ template<class T> class hasheq {
 /* comparison */
 
 template<class T> inline int __cmp(T a, T b) {
+    if (!a) return -1;
     return a->__cmp__(b);
 }
 
@@ -477,6 +478,7 @@ public:
     }
 
     virtual int __cmp__(pyobj *p) {
+        if (!p) return 1;
         pyseq<T> *b = (pyseq<T> *)p;
         int i, cmp;
         int mnm = __min(this->__len__(), b->__len__());
@@ -2818,6 +2820,7 @@ template<class A, class B> int tuple2<A, B>::__eq__(tuple2<A,B> *b) {
 }
 
 template<class A, class B> int tuple2<A, B>::__cmp__(pyobj *p) {
+    if (!p) return 1;
     tuple2<A,B> *b = (tuple2<A,B> *)p;
     if(int c = __cmp(first, b->first)) return c;
     return __cmp(second, b->second);

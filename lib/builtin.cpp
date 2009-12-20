@@ -646,6 +646,7 @@ str *str::center(int w, str *fill) {
 }
 
 int str::__cmp__(pyobj *p) {
+    if (!p) return 1;
     str *b = (str *)p;
     int r = unit.compare(b->unit);
     if( r < 0 ) return -1;

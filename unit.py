@@ -241,7 +241,7 @@ wa().wh()
 # passing builtins around
 print sorted([[2,3,4], [5,6], [7]], key=len)
 print map(len, ['a','bc'])
-#print map(max, ['a','bc'], ['d'], ['e']) # XXX
+print map(max, ['a','bc'], ['d'], ['e'])
 print map(max, ['a'], ['d'], ['e'])
 print map(str, range(12))
 print map(list, 'abc')
@@ -253,6 +253,11 @@ def three(f, a, b, c):
     return f(a, b, c)
 print two(max, 'a', 'b')
 print three(max, 'a', 'b', 'c')
+
+# __cmp and None
+lamp = ['a', 'b', None]
+lamp.sort()
+print lamp
 
 ''', '''
 output(equal=True)
