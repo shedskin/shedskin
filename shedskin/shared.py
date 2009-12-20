@@ -441,12 +441,21 @@ def lookupclass(node, mv):
         if node.name in mv.classes: return mv.classes[node.name]
         elif node.name in mv.ext_classes: return mv.ext_classes[node.name]
         else: return None
-
     elif isinstance(node, Getattr):
         module = lookupmodule(node.expr, mv)
         if module and node.attrname in module.classes:
             return module.classes[node.attrname]
+    return None
 
+def lookupfunc(node, mv):
+    if isinstance(node, Name):
+        if node.name in mv.funcs: return mv.funcs[node.name]
+        elif node.name in mv.ext_funcs: return mv.ext_funcs[node.name]
+        else: return None
+    elif isinstance(node, Getattr):
+        module = lookupmodule(node.expr, mv)
+        if module and node.attrname in module.funcs:
+            return module.funcs[node.attrname]
     return None
 
 # --- recursively determine (lvalue, rvalue) pairs in assignment expressions

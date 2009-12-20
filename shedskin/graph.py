@@ -1340,20 +1340,21 @@ class moduleVisitor(ASTVisitor):
         else:
             var = lookupvar(node.name, func)
             if not var:
-                if node.name in self.funcs or node.name in self.ext_funcs:
-                    if node.name in self.funcs:
-                        f = self.funcs[node.name] # XXX lookupsomething()?
-                        if node.name not in self.lambdas:
-                            f.lambdanr = len(self.lambdas)
-                            self.lambdas[node.name] = f
-                    else:
-                        f = self.builtinwrapper(node, func)
-                    getgx().types[newnode] = set([(f, 0)])
+                lfunc, lclass = lookupfunc(node, self), lookupclass(node, self)
+                if lfunc:
+                    if lfunc.mv.module.builtin:
+                        lfunc = self.builtinwrapper(node, func)
+                    elif node.name not in self.lambdas:
+                        lfunc.lambdanr = len(self.lambdas)
+                        self.lambdas[node.name] = lfunc
+                    getgx().types[newnode] = set([(lfunc, 0)])
                     newnode.copymetoo = True
-                elif node.name in self.classes or node.name in self.ext_classes:
-                    if node.name in self.classes: cl = self.classes[node.name]
-                    else: cl = self.ext_classes[node.name]
-                    getgx().types[newnode] = set([(cl.parent, 0)]) # XXX add warning
+                elif lclass:
+                    if lclass.mv.module.builtin:
+                        lclass = self.builtinwrapper(node, func)
+                    else:
+                        lclass = lclass.parent
+                    getgx().types[newnode] = set([(lclass, 0)])
                     newnode.copymetoo = True # XXX merge into some kind of 'seeding' function
                 elif node.name in ['int', 'float', 'str']: # XXX
                     cl = self.ext_classes[node.name+'_']
