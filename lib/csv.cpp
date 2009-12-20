@@ -5,6 +5,7 @@ namespace __csv__ {
 tuple2<str *, str *> *const_3;
 str *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_19, *const_2, *const_20, *const_21, *const_22, *const_23, *const_24, *const_25, *const_26, *const_27, *const_4, *const_5, *const_6, *const_7, *const_8, *const_9;
 list<void *> *const_0;
+str *const_88;
 
 str *__name__;
 list<int> *__0, *__1;
@@ -300,7 +301,9 @@ list<str *> *reader::next() {
 }
 
 void *reader::__init__(file *input_iter, str *dialect, str *delimiter, str *quotechar, int doublequote, int skipinitialspace, str *lineterminator, int quoting, str *escapechar, int strict) {
-    
+    if ((quoting==QUOTE_NONNUMERIC)) {
+        throw ((new ValueError(const_88)));
+    }
     this->input_iter = input_iter;
     this->line_num = 0;
     this->dialect = _get_dialect(dialect, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
@@ -455,7 +458,9 @@ int writer::join_append(str *field, int quoted, int quote_empty) {
 }
 
 void *writer::__init__(file *output_file, str *dialect, str *delimiter, str *quotechar, int doublequote, int skipinitialspace, str *lineterminator, int quoting, str *escapechar, int strict) {
-    
+    if ((quoting==QUOTE_NONNUMERIC)) {
+        throw ((new ValueError(const_88)));
+    }
     this->output_file = output_file;
     this->dialect = _get_dialect(dialect, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
     return NULL;
@@ -600,7 +605,7 @@ void __init() {
     const_17 = new str("field larger than field limit (%d)");
     const_18 = new str("need to escape, but no escapechar set");
     const_19 = new str("single empty field record must be quoted");
-    const_20 = new str("no go");
+    const_20 = new str("shedskin: DictReader 'restkey' is not supported");
     const_21 = new str("dict contains fields not in fieldnames: ");
     const_22 = new str(", ");
     const_23 = new str("extrasaction (%s) must be 'raise' or 'ignore'");
@@ -608,6 +613,7 @@ void __init() {
     const_25 = new str("excel-tab");
     const_26 = new str("\t");
     const_27 = new str("unknown dialect");
+    const_88 = new str("shedskin: QUOTE_NONNUMERIC is not supported");
 
     __name__ = new str("csv");
 
