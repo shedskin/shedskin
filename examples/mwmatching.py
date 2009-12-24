@@ -10,6 +10,9 @@ on non-bipartite graphs" by H.J. Gabow, Standford Ph.D. thesis, 1973.
 
 A C program for maximum weight matching by Ed Rothberg was used extensively
 to validate this new code.
+
+Copyright 2009 Joris van Rantwijk, license GPL2 or later
+
 """
 
 # If assigned, DEBUG(str) is called with lots of debug messages.
@@ -719,7 +722,7 @@ for t in xrange(nvertex):
         # (Note that our vertex dual variables, edge slacks and delta's
         # are pre-multiplied by two.)
         deltatype = -1
-        delta = deltaedge = deltablossom = None
+        # delta = deltaedge = deltablossom = None # XXX shedskin: int/None mixing
 
         # Verify data structures for delta2/delta3 computation.
         if CHECK_DELTA:
