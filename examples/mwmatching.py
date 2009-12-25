@@ -750,11 +750,11 @@ for t in xrange(nvertex):
             if ( blossomparent[b] == -1 and label[b] == 1 and
                  bestedge[b] != -1 ):
                 kslack = slack(bestedge[b])
-                if type(kslack) in (int, long):
-                    assert (kslack % 2) == 0
-                    d = kslack // 2
-                else:
-                    d = kslack / 2
+                #if type(kslack) in (int, long):
+                assert (kslack % 2) == 0 # XXX shedskin
+                d = kslack // 2
+                #else:
+                #    d = kslack / 2
                 if deltatype == -1 or d < delta:
                     delta = d
                     deltatype = 3

@@ -639,9 +639,6 @@ def bool(x):
 def repr(x):
     return x.__repr__()
 
-def type(x):
-    return x.__class__
-
 def hash(x):
     return x.__hash__()
 
