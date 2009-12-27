@@ -4,6 +4,74 @@ import shedskin.infer, shedskin.cpp
 import traceback, sys, os, time
 
 tests = [
+('''heapq''', '''
+import heapq
+
+heap = [21]
+print heap
+
+heapq.heappush(heap, 42)
+print heap
+
+heapq.heappush(heap, 12)
+print heap
+
+print heapq.heappop(heap)
+print heap
+#print heapq.heappushpop(heap, 63)
+print heap
+print heapq.heappop(heap)
+print heap
+print heapq.heappop(heap)
+print heap
+
+heapq.heappush(heap, 12)
+print heap
+
+heapq.heappush(heap, 52)
+print heap
+
+heapq.heappush(heap, 112)
+print heap
+
+heapq.heappush(heap, 1)
+print heap
+
+heapq.heappush(heap, 12)
+print heap
+
+print heapq.heappop(heap)
+print heap
+#print heapq.heappushpop(heap, 63)
+print heap
+print heapq.heappop(heap)
+print heap
+print heapq.heappop(heap)
+print heap
+
+print '--------------'
+
+l = [42, 45, 35, 3]
+print l
+
+heapq.heapify(l)
+print l
+
+print heapq.heapreplace(l, 36)
+print l
+
+print heapq.heappop(l)
+print l
+print heapq.heappop(l)
+print l
+print heapq.heappop(l)
+print l
+print heapq.heappop(l)
+print l
+''', '''
+output(equal=True)
+'''),
+
 ('''csv''', '''
 import csv, collections
 d = collections.defaultdict(list)
