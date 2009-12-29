@@ -240,8 +240,10 @@ class moduleVisitor(ASTVisitor):
                 self.visit(Class(dummy, [], None, Pass()))
 
         if self.module.ident != 'builtin':
-            if From.__init__.func_code.co_argcount - len(From.__init__.func_defaults) == 4: n = From('builtin', [('*', None)], None) # Python2.5+
-            else: n = From('builtin', [('*', None)]) # Python2.4
+            try:
+                n = From('builtin', [('*', None)], None) # Python2.5+
+            except TypeError:
+                n = From('builtin', [('*', None)])       # Python2.4
             getmv().importnodes.append(n)
             self.visit(n)
 
