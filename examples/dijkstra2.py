@@ -92,7 +92,9 @@ def make_graph(n):
     return G
 
 if __name__ == '__main__':
-    n = int(sys.argv[1])
+    n = 300
+    if len(sys.argv) > 1:
+        n = int(sys.argv[1])
     t0 = time.time()
     G = make_graph(n)
     print 't0 %.2f' % (time.time()-t0)
