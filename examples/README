@@ -1,4 +1,4 @@
-40 programs that work with Shed Skin 0.2.
+41 programs that work with Shed Skin 0.3.
 
 If you have another interesting test case, please send it to:
    mark.dufour@gmail.com
@@ -10,6 +10,7 @@ lines  name               description               notes
     64 brainfuck.py       brainfuck interpreter
    371 chess.py           chess engine
    130 dijkstra.py        dijkstra's algorithm
+   102 dijkstra2.py       bidirectional dijkstra search
     85 circle.py          circle packing animation  shedskin -e circle && make && python circle_packing.py
                                                     (drag circles with mouse)
    184 fysphun.py         physics animation         shedskin -e fysphun && make && python fysphun_main.py
@@ -50,4 +51,4 @@ lines  name               description               notes
     52 voronoi.py         textual voronoi
    795 voronoi2.py        voronoi algoritm
 
- 12219 total 
+ 12321 total 
