@@ -246,7 +246,10 @@ def do_extmod_class(gv, cl):
     print >>gv.out, '    0,              /* tp_getattr        */'
     print >>gv.out, '    0,              /* tp_setattr        */'
     print >>gv.out, '    0,              /* tp_compare        */'
-    print >>gv.out, '    0,              /* tp_repr           */'
+    if '__repr__' in cl.funcs and not cl.funcs['__repr__'].inherited and cpp.hmcpa(cl.funcs['__repr__']): # XXX generalize
+        print >>gv.out, '    (PyObject *(*)(PyObject *))%s___repr__, /* tp_repr           */' % cl.ident
+    else:
+        print >>gv.out, '    0,              /* tp_repr           */'
     print >>gv.out, '    0,              /* tp_as_number      */'
     print >>gv.out, '    0,              /* tp_as_sequence    */'
     print >>gv.out, '    0,              /* tp_as_mapping     */'
