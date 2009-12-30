@@ -5,7 +5,7 @@ board = [[empty for x in range(8)] for y in range(8)]
 board[3][3] = board[4][4] = white
 board[3][4] = board[4][3] = black
 player = {white: 'human', black: 'lalaoth'}
-depth = 3
+depth = 6
 directions = [(1, 1), (-1, 1), (0, 1), (1, -1), (-1, -1), (0, -1), (1, 0), (-1, 0)]
 corners = [(0, 0), (0, 7), (7, 0), (7, 7)]
 
@@ -93,6 +93,7 @@ if __name__ == '__main__':
                 continue
             else:
                 flip_stones(board, move, turn)
+                break # XXX shedskin; remove to play against computer
         turn = -turn
     print_board(board, turn)
     if stone_count(board, black) == stone_count(board, white):
