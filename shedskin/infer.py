@@ -495,7 +495,7 @@ def ifa():
         if split or redundant or removals:
             return split, redundant, removals
 
-        if DEBUG: print 'IFA: class', cl.ident
+        if DEBUG: print 'IFA: --- class %s ---' % cl.ident
         cl.newdcpa = cl.dcpa
         vars = [cl.vars[name] for name in cl.tvar_names() if name in cl.vars]
         unused = cl.unused[:]
@@ -632,7 +632,8 @@ def ifa_class_types(cl, unused, vars):
                 else:
                     attr_types.append(frozenset())
             attr_types = tuple(attr_types)
-            if DEBUG: print 'IFA', str(dcpa)+':', zip([var.name for var in vars], map(list, attr_types))
+            if DEBUG and [x for x in attr_types if x]: 
+                print 'IFA', str(dcpa)+':', zip([var.name for var in vars], map(list, attr_types))
             nr_classes[dcpa] = attr_types
             classes_nr[attr_types] = dcpa
     return classes_nr, nr_classes
