@@ -576,39 +576,10 @@ def ifa_split_vars(cl, dcpa, vars, nr_classes, classes_nr, split, redundant, rem
             #print 'singleton set'
             continue
 
-        # --- for these, see if we can reuse existing contours; otherwise, create new contours
-        removed = 0
-        noconf = set([n for n in csites if len(n.paths)==1])
-        nr_of_nodes = len(noconf)
-        for node in noconf:
-            assign_set = node.paths[0]
-
-            new_attr_types = list(attr_types)
-            new_attr_types[varnum] = assign_set
-            new_attr_types = tuple(new_attr_types)
-
-            if new_attr_types in classes_nr and not classes_nr[new_attr_types] >= cl.dcpa: # XXX last check.. useful or not?
-                nr = classes_nr[new_attr_types]
-                if nr != dcpa: # XXX better check: classes_nr for dcpa
-                    #print 'reuse', node, nr
-                    split.append((cl, dcpa, [node], nr))
-                    cl.splits[nr] = dcpa
-                    removed += 1
-            else:
-                #print 'new!', node, newdcpa
-                classes_nr[new_attr_types] = cl.newdcpa
-                ifa_split_class(cl, dcpa, [node], split)
-                nr_of_nodes -= 1
-                removed += 1
-
-        # --- remove contour if it becomes empty
-        if removed == len([node for node in allnodes if not node.in_]):
-            #print 'remove contour', dcpa
-            cl.unused.append(dcpa)
-            removals.append((cl,dcpa))
-
+        ifa_split_no_confusion(cl, dcpa, varnum, classes_nr, attr_types, csites, allnodes, split, removals)
         if split: # XXX
             break
+
         #print 'check confluence'
 
         # --- object contour splitting
@@ -661,6 +632,36 @@ def ifa_split_vars(cl, dcpa, vars, nr_classes, classes_nr, split, redundant, rem
             for csite in csites[1:]:
                 ifa_split_class(cl, dcpa, [csite], split)
             return split, redundant, removals
+
+def ifa_split_no_confusion(cl, dcpa, varnum, classes_nr, attr_types, csites, allnodes, split, removals):
+    '''creation sites on single path: split them off, possibly reusing contour'''
+    removed = 0
+    noconf = set([n for n in csites if len(n.paths)==1])
+    for node in noconf:
+        assign_set = node.paths[0]
+
+        new_attr_types = list(attr_types)
+        new_attr_types[varnum] = assign_set
+        new_attr_types = tuple(new_attr_types)
+
+        if new_attr_types in classes_nr and not classes_nr[new_attr_types] >= cl.dcpa: # XXX last check.. useful or not?
+            nr = classes_nr[new_attr_types]
+            if nr != dcpa: # XXX better check: classes_nr for dcpa
+                #print 'reuse', node, nr
+                split.append((cl, dcpa, [node], nr))
+                cl.splits[nr] = dcpa
+                removed += 1
+        else:
+            #print 'new!', node, newdcpa
+            classes_nr[new_attr_types] = cl.newdcpa
+            ifa_split_class(cl, dcpa, [node], split)
+            removed += 1
+
+    # --- remove contour if it becomes empty
+    if removed == len([node for node in allnodes if not node.in_]):
+        #print 'remove contour', dcpa
+        cl.unused.append(dcpa)
+        removals.append((cl,dcpa))
 
 def ifa_flow_graph(cl, dcpa, node):
     creation_points, paths, assignsets = {}, {}, {}
