@@ -489,138 +489,52 @@ def ifa():
     redundant = {} # {redundant contour: similar contour we will map it to}
     removals = [] # [removed contour, ..]
 
-    # determine classes to split
-    classes = []
-    for ident in ['list', 'tuple', 'tuple2', 'dict', 'set', 'frozenset', 'deque', 'defaultdict', '__iter']:
-        for cl in getgx().allclasses:
-            if cl.mv.module.builtin and cl.ident == ident:
-                cl.splits = {}
-                classes.append(cl)
-                break
-
-    #print '\n*** iteration ***'
-    sys.stdout.write('*')
-    sys.stdout.flush()
-
-    for cl in classes:
+    for cl in ifa_classes_to_split():
         if split or redundant or removals:
             return split, redundant, removals
 
         #print '---', cl.ident
         cl.newdcpa = cl.dcpa
-
         vars = [cl.vars[name] for name in cl.tvar_names() if name in cl.vars]
-        #print 'vars', vars
-
         unused = cl.unused[:]
+        classes_nr, nr_classes = ifa_class_types(cl, unused, vars)
 
-        # --- create table for previously deduced types: class set -> type nr; remove redundant types
-        classes_nr = {}
-        nr_classes = {}
-        for dcpa in range(1, cl.dcpa):
-            if dcpa in unused: continue
-
-            attr_types = [] # XXX merge with ifa_merge_contours.. sep func?
-            for var in vars:
-                if (var,dcpa,0) in getgx().cnode:
-                    attr_types.append(merge_simple_types(getgx().cnode[var,dcpa,0].types()))
-                else:
-                    attr_types.append(frozenset())
-            attr_types = tuple(attr_types)
-
-            #if cl.ident == 'node':
-            #    print str(dcpa)+':', zip(vars, attr_types)
-            nr_classes[dcpa] = attr_types
-            classes_nr[attr_types] = dcpa
-
-        if redundant or cl.splits: # investigate cl.splits.. suppose contour 3->5 and 1->5 splits.. 5->mother?
-            #print 'skip class..', redundant, cl.splits
+        if redundant or cl.splits: 
             continue
-
-        # --- examine each class copy
         for dcpa in range(1, cl.dcpa):
             if dcpa in unused:
                 continue
-
             if ifa_split_vars(cl, dcpa, vars, nr_classes, classes_nr, split, redundant, removals) != None:
                 return split, redundant, removals
 
     return split, redundant, removals
 
 def ifa_split_vars(cl, dcpa, vars, nr_classes, classes_nr, split, redundant, removals):
-    attr_types = nr_classes[dcpa]
-
     for (varnum, var) in enumerate(vars):
         if not (var, dcpa, 0) in getgx().cnode:
             continue
         node = getgx().cnode[var, dcpa, 0]
-
         creation_points, paths, assignsets, allnodes, csites = ifa_flow_graph(cl, dcpa, node)
-
         if len(csites) == 1:
             #print 'just one creation site!'
             continue
-
-        # --- split off empty assignment sets (eg, [], or [x[0]] where x is None in some template)
-        endpoints = [huh for huh in allnodes if not huh.in_] # XXX call csites
-        if assignsets and cl.ident in ['list', 'tuple']: # XXX amaze, msp_ss
-            allcsites = set()
-            for n, types in getgx().types.iteritems():
-                if (cl, dcpa) in types and not n.in_:
-                    allcsites.add(n)
-            empties = list(allcsites-set(endpoints))
-            if empties:
-                ifa_split_class(cl, dcpa, empties, split)
-
+        ifa_split_empties(cl, dcpa, allnodes, assignsets, split)
         if len(merge_simple_types(getgx().types[node])) < 2 or len(assignsets) == 1:
             #print 'singleton set'
             continue
-
-        ifa_split_no_confusion(cl, dcpa, varnum, classes_nr, attr_types, csites, allnodes, split, removals)
-        if split: # XXX
+        ifa_split_no_confusion(cl, dcpa, varnum, classes_nr, nr_classes, csites, allnodes, split, removals)
+        if split: 
             break
-
-        #print 'check confluence'
-
-        # --- object contour splitting
-
         for node in allnodes:
-            # --- determine if node is a confluence point
-
-            conf_point = False
-            if len(node.in_) > 1 and isinstance(node.thing, variable):
-                #print 'possible confluence', node, node.csites
-                for csite in node.csites:
-                    occ = [csite in crpoints for crpoints in creation_points.values()].count(True)
-                    if occ > 1:
-                        conf_point = True
-                        break
-            if not conf_point:
+            if not ifa_confluence_point(node, creation_points):
                 continue
-
             if not node.thing.formal_arg and not isinstance(node.thing.parent, class_):
                 #print 'bad split', node
                 continue
-
-            # --- determine split along incoming dataflow edges
             #print 'confluence point', node, node.paths #, node.in_
-
-            remaining = [incoming.csites.copy() for incoming in node.in_ if incoming in allnodes]
-
-            # --- try to clean out larger collections, if subsets are in smaller ones
-            for (i, seti) in enumerate(remaining):
-                for setj in remaining[i+1:]:
-                    in_both = seti.intersection(setj)
-                    if in_both:
-                        if len(seti) > len(setj):
-                            seti -= in_both
-                        else:
-                            setj -= in_both
-
-            remaining = [setx for setx in remaining if setx]
+            remaining = ifa_determine_split(node, allnodes)
             if len(remaining) < 2:
                 continue
-
             # --- if it exists, perform actual splitting
             for splitsites in remaining[1:]:
                 ifa_split_class(cl, dcpa, splitsites, split)
@@ -633,21 +547,42 @@ def ifa_split_vars(cl, dcpa, vars, nr_classes, classes_nr, split, redundant, rem
                 ifa_split_class(cl, dcpa, [csite], split)
             return split, redundant, removals
 
-def ifa_split_no_confusion(cl, dcpa, varnum, classes_nr, attr_types, csites, allnodes, split, removals):
+def ifa_determine_split(node, allnodes):
+    ''' determine split along incoming dataflow edges '''
+    remaining = [incoming.csites.copy() for incoming in node.in_ if incoming in allnodes]
+
+    # --- try to clean out larger collections, if subsets are in smaller ones
+    for (i, seti) in enumerate(remaining):
+        for setj in remaining[i+1:]:
+            in_both = seti.intersection(setj)
+            if in_both:
+                if len(seti) > len(setj):
+                    seti -= in_both
+                else:
+                    setj -= in_both
+
+    remaining = [setx for setx in remaining if setx]
+    return remaining
+
+def ifa_split_no_confusion(cl, dcpa, varnum, classes_nr, nr_classes, csites, allnodes, split, removals):
     '''creation sites on single path: split them off, possibly reusing contour'''
+    attr_types = nr_classes[dcpa]
     removed = 0
     noconf = set([n for n in csites if len(n.paths)==1])
     for node in noconf:
         assign_set = node.paths[0]
+        if len(attr_types) == 1 and list(attr_types)[0] == assign_set: # XXX only one var
+            #print 'same as parent!', cl, attr_types, assign_set
+            continue
 
         new_attr_types = list(attr_types)
-        new_attr_types[varnum] = assign_set
+        new_attr_types[varnum] = assign_set # XXX klopt varnum?
         new_attr_types = tuple(new_attr_types)
 
-        if new_attr_types in classes_nr and not classes_nr[new_attr_types] >= cl.dcpa: # XXX last check.. useful or not?
+        if new_attr_types in classes_nr:
             nr = classes_nr[new_attr_types]
-            if nr != dcpa: # XXX better check: classes_nr for dcpa
-                #print 'reuse', node, nr
+            if nr != dcpa:
+                #print 'reuse!', node, nr
                 split.append((cl, dcpa, [node], nr))
                 cl.splits[nr] = dcpa
                 removed += 1
@@ -662,6 +597,56 @@ def ifa_split_no_confusion(cl, dcpa, varnum, classes_nr, attr_types, csites, all
         #print 'remove contour', dcpa
         cl.unused.append(dcpa)
         removals.append((cl,dcpa))
+
+def ifa_split_empties(cl, dcpa, allnodes, assignsets, split):
+    ''' split off empty assignment sets (eg, [], or [x[0]] where x is None in some template) '''
+    endpoints = [huh for huh in allnodes if not huh.in_] # XXX call csites
+    if assignsets and cl.ident in ['list', 'tuple']: # XXX amaze, msp_ss
+        allcsites = set()
+        for n, types in getgx().types.iteritems():
+            if (cl, dcpa) in types and not n.in_:
+                allcsites.add(n)
+        empties = list(allcsites-set(endpoints))
+        if empties:
+            ifa_split_class(cl, dcpa, empties, split)
+
+def ifa_class_types(cl, unused, vars):
+    ''' create table for previously deduced types '''
+    classes_nr = {}
+    nr_classes = {}
+    for dcpa in range(1, cl.dcpa):
+        if dcpa not in unused: 
+            attr_types = [] # XXX merge with ifa_merge_contours.. sep func?
+            for var in vars:
+                if (var,dcpa,0) in getgx().cnode:
+                    attr_types.append(merge_simple_types(getgx().cnode[var,dcpa,0].types()))
+                else:
+                    attr_types.append(frozenset())
+            attr_types = tuple(attr_types)
+            #print str(dcpa)+':', zip(vars, attr_types)
+            nr_classes[dcpa] = attr_types
+            classes_nr[attr_types] = dcpa
+    return classes_nr, nr_classes
+
+def ifa_classes_to_split():
+    ''' setup classes to perform splitting on '''
+    classes = []
+    for ident in ['list', 'tuple', 'tuple2', 'dict', 'set', 'frozenset', 'deque', 'defaultdict', '__iter']:
+        for cl in getgx().allclasses:
+            if cl.mv.module.builtin and cl.ident == ident:
+                cl.splits = {}
+                classes.append(cl)
+                break
+    return classes
+
+def ifa_confluence_point(node, creation_points):
+    ''' determine if node is confluence point '''
+    if len(node.in_) > 1 and isinstance(node.thing, variable):
+        for csite in node.csites:
+            occ = [csite in crpoints for crpoints in creation_points.values()].count(True)
+            if occ > 1:
+                return True
+    return False
 
 def ifa_flow_graph(cl, dcpa, node):
     creation_points, paths, assignsets = {}, {}, {}
@@ -734,6 +719,9 @@ def iterative_dataflow_analysis():
         getgx().alloc_info = getgx().new_alloc_info
 
         # --- ifa: detect conflicting assignments to instance variables, and split contours to resolve these
+        #print '\n*** iteration ***'
+        sys.stdout.write('*')
+        sys.stdout.flush()
         split, redundant, removed = ifa()
         #if split: print 'splits', [(s[0], s[1], s[3]) for s in split]
 
