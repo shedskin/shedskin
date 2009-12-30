@@ -1,123 +1,102 @@
-# (c) Mark Dufour, Haifang Ni
-# --- mark.dufour@gmail.com
-#
-# min-max othello player 
+''' min-max othello player in 100 lines; copyleft Mark Dufour (GPL3 or later) '''
 
-empty, black, white = 0, 1, -1           # [int], [int], [int]
+empty, black, white = 0, 1, -1
+board = [[empty for x in range(8)] for y in range(8)]
+board[3][3] = board[4][4] = white
+board[3][4] = board[4][3] = black
+player = {white: 'human', black: 'lalaoth'}
+depth = 3
+directions = [(1, 1), (-1, 1), (0, 1), (1, -1), (-1, -1), (0, -1), (1, 0), (-1, 0)]
+corners = [(0, 0), (0, 7), (7, 0), (7, 7)]
 
-board = [[empty for x in range(8)] for y in range(8)] # [list(list(int))]
-board[3][3] = board[4][4] = white        # [int]
-board[3][4] = board[4][3] = black        # [int]
-
-player, depth = {white: 'human', black: 'lalaoth'}, 3 # [dict(int, str)], [int]
-
-def possible_move(board, x, y, color):   # board: [list(list(int))], x: [int], y: [int], color: [int]
-    if board[x][y] != empty:             # [int]
-        return False                     # [int]
-    for direction in [(1, 1), (-1, 1), (0, 1), (1, -1), (-1, -1), (0, -1), (1, 0), (-1, 0)]: # [list(tuple2(int, int))]
-        if flip_in_direction(board, x, y, direction, color): # [int]
-            return True                  # [int]
-    return False                         # [int]
+def possible_move(board, x, y, color):
+    if board[x][y] != empty:
+        return False
+    for direction in directions:
+        if flip_in_direction(board, x, y, direction, color):
+            return True
+    return False
         
-def flip_in_direction(board, x, y, direction, color): # board: [list(list(int))], x: [int], y: [int], direction: [tuple2(int, int)], color: [int]
-    other_color = False                  # [int]
-    while True:                          # [int]
-        x, y = x+direction[0], y+direction[1] # [int], [int]
-        if x not in range(8) or y not in range(8): # [int]
-            return False                 # [int]
-        square = board[x][y]             # [int]
-        if square == empty: return False # [int]
-        if square != color: other_color = True # [int]
-        else: return other_color         # [int]
+def flip_in_direction(board, x, y, direction, color):
+    other_color = False
+    while True:
+        x, y = x+direction[0], y+direction[1]
+        if x not in range(8) or y not in range(8):
+            return False
+        square = board[x][y]
+        if square == empty: return False
+        if square != color: other_color = True
+        else: return other_color
 
-def flip_stones(board, move, color):     # board: [list(list(int))], move: [tuple2(int, int)], color: [int]*
-    global flips
-    flips += 1                           # [int]
-    for direction in [(1, 1), (-1, 1), (0, 1), (1, -1), (-1, -1), (0, -1), (1, 0), (-1, 0)]: # [list(tuple2(int, int))]
-        if flip_in_direction(board, move[0], move[1], direction, color): # [int]
-             x, y = move[0]+direction[0], move[1]+direction[1] # [int], [int]
-             while board[x][y] != color: # [int]
-               board[x][y] = color       # [int]
-               x, y = x+direction[0], y+direction[1] # [int], [int]
-    board[move[0]][move[1]] = color      # [int]
+def flip_stones(board, move, color):
+    for direction in directions:
+        if flip_in_direction(board, move[0], move[1], direction, color):
+             x, y = move[0]+direction[0], move[1]+direction[1]
+             while board[x][y] != color:
+               board[x][y] = color
+               x, y = x+direction[0], y+direction[1]
+    board[move[0]][move[1]] = color
 
-#def print_board(board, turn):            # board: [], turn: []
-#    for line in board:                   # []
-#        print ' '.join([{white: 'O', black: 'X', empty: '.'}[square] for square in line]) # []
-#    print 'turn:', player[turn]          # [], []
-#    print 'black:', stone_count(board, black), 'white:', stone_count(board, white) # [], [], [], []
+def print_board(board, turn):
+    print '  '+' '.join('abcdefgh')
+    for nr, line in enumerate(board):
+        print nr+1, ' '.join([{white: 'O', black: 'X', empty: '.'}[square] for square in line])
+    print 'turn:', player[turn]
+    print 'black:', stone_count(board, black), 'white:', stone_count(board, white)
 
-def possible_moves(board, color):        # board: [list(list(int))], color: [int]
-    return [(x,y) for x in range(8) for y in range(8) if possible_move(board, x, y, color)] # [list(tuple2(int, int))]
-#def coordinates(move):                   # move: []
-#    return (int(move[1])-1, 'abcdefgh'.index(move[0])) # []
-def stone_count(board, color):           # board: [list(list(int))], color: [int]
-    return sum([len([square for square in line if square == color]) for line in board]) # [list(int)]
-#def human_move(move):                    # move: []
-#    return 'abcdefgh'[move[0]]+str(move[1]+1) # []
+def possible_moves(board, color):
+    return [(x,y) for x in range(8) for y in range(8) if possible_move(board, x, y, color)]
+def coordinates(move):
+    return (int(move[1])-1, 'abcdefgh'.index(move[0]))
+def human_move(move):
+    return 'abcdefgh'[move[1]]+str(move[0]+1)
+def stone_count(board, color):
+    return sum([len([square for square in line if square == color]) for line in board])
 
-def best_move(board, color, first, step=1): # board: [list(list(int))], color: [int]*, first: [int], step: [int]
-    max_move, max_mobility, max_score = None, 0, 0 # [none], [int], [int]
-    #print 'possible', possible_moves(board, color) # [str], [list(tuple2(int, int))]
-
-    for move in possible_moves(board, color): # [list(tuple2(int, int))]
-        #print 'board before'             # [str]
-        #print_board(board, color)        # []
-
-        #print 'move', move               # [str], [tuple2(int, int)]
-        if move in [(0,0),(0,7),(7,0),(7,7)]:      # [list(tuple2(int, int))]
-            mobility, score = 64, 64     # [int], [int]
-            if color != first:           # [int]
-                mobility = 64-mobility   # [int]
+def best_move(board, color, first, step=1):
+    max_move, max_mobility, max_score = None, 0, 0
+    for move in possible_moves(board, color):
+        if move in corners:
+            mobility, score = 64, 64
+            if color != first:
+                mobility = 64-mobility
         else:
-            testboard = [[square for square in line] for line in board] # [list(list(int))]
-            flip_stones(testboard, move, color) # []
-            #print_board(testboard, color) # []
-
-            if step < depth:             # [int]
-                #print 'deeper'           # [str]
-                next_move, mobility = best_move(testboard, -color, first, step+1) # [tuple2(tuple2(int, int), int)]
+            testboard = [[square for square in line] for line in board]
+            flip_stones(testboard, move, color)
+            if step < depth:
+                next_move, mobility = best_move(testboard, -color, first, step+1)
             else:
-                #print 'mobility'         # [str]
-                mobility = len(possible_moves(testboard, first)) # [int]
-            score = mobility             # [int]
-            if color != first:           # [int]
-                score = 64-score         # [int]
-        if score >= max_score:           # []
-            max_move, max_mobility, max_score = move, mobility, score # [tuple2(int, int)], [int], [int]
-
-    #print 'done'                         # [str]
-    return max_move, max_mobility        # [tuple2(tuple2(int, int), int)]
+                mobility = len(possible_moves(testboard, first))
+            score = mobility
+            if color != first:
+                score = 64-score
+        if score >= max_score:
+            max_move, max_mobility, max_score = move, mobility, score
+    return max_move, max_mobility
     
 if __name__ == '__main__':
-    flips = 0                                # [int]
-    steps = 0                                # [int]
-    turn = black                             # [int]
-    while possible_moves(board, black) or possible_moves(board, white): # [list(tuple2(int, int))]
-        if possible_moves(board, turn):      # [list(tuple2(int, int))]
-            #print_board(board, turn)         # []
-            #print 'flips', flips             # [str], [int]
-    #        steps += 1                       # [int]
-    #        if steps > 5:                    # [int]
-    #            break
-
-            #if turn == black:                # [int]
-            move, mobility = best_move(board, turn, turn) # [tuple2(tuple2(int, int), int)]
-            #else:
-            #    move = coordinates(raw_input()) # [tuple2(int, int)]
-            if not possible_move(board, move[0], move[1], turn): # [int]
-                print 'impossible!'          # [str]
-                turn = -turn                 # [int]
+    turn = black
+    while possible_moves(board, black) or possible_moves(board, white):
+        if possible_moves(board, turn):
+            print_board(board, turn)
+            if turn == black:
+                move, mobility = best_move(board, turn, turn)
+                print 'move:', human_move(move)
             else:
-                flip_stones(board, move, turn) # []
-        turn = -turn                         # [int]
-
-    #print_board(board, turn)
-    print 'flips', flips                     # [str], [int]
-
-    if stone_count(board, black) == stone_count(board, white): # [int]
-        print 'draw!'                        # [str]
+                try: 
+                    move = coordinates(raw_input('move? '))
+                except ValueError: 
+                    print 'syntax error'
+                    continue
+            if not possible_move(board, move[0], move[1], turn):
+                print 'impossible!'
+                continue
+            else:
+                flip_stones(board, move, turn)
+        turn = -turn
+    print_board(board, turn)
+    if stone_count(board, black) == stone_count(board, white):
+        print 'draw!'
     else:
-        if stone_count(board, black) > stone_count(board, white): print player[black], 'wins!' # [str], [str]
-        else: print player[white], 'wins!'   # [str], [str]
-
+        if stone_count(board, black) > stone_count(board, white): print player[black], 'wins!'
+        else: print player[white], 'wins!'
