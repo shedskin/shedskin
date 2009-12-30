@@ -522,7 +522,7 @@ def ifa_split_vars(cl, dcpa, vars, nr_classes, classes_nr, split, redundant, rem
         if len(csites) == 1:
             #print 'just one creation site!'
             continue
-        if DEBUG: print 'IFA visit var:', cl.ident, var.name, dcpa
+        if DEBUG: print 'IFA visit var %s.%s, %d' % (cl.ident, var.name, dcpa)
         ifa_split_empties(cl, dcpa, allnodes, assignsets, split)
         if len(merge_simple_types(getgx().types[node])) < 2 or len(assignsets) == 1:
             #print 'singleton set'
@@ -632,7 +632,7 @@ def ifa_class_types(cl, unused, vars):
                 else:
                     attr_types.append(frozenset())
             attr_types = tuple(attr_types)
-            if DEBUG: print 'IFA', str(dcpa)+':', zip(vars, attr_types)
+            if DEBUG: print 'IFA', str(dcpa)+':', zip([var.name for var in vars], map(list, attr_types))
             nr_classes[dcpa] = attr_types
             classes_nr[attr_types] = dcpa
     return classes_nr, nr_classes
