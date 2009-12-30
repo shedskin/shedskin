@@ -18,7 +18,7 @@ print heap
 
 print heapq.heappop(heap)
 print heap
-#print heapq.heappushpop(heap, 63)
+print heapq.heappushpop(heap, 63)
 print heap
 print heapq.heappop(heap)
 print heap
@@ -42,7 +42,7 @@ print heap
 
 print heapq.heappop(heap)
 print heap
-#print heapq.heappushpop(heap, 63)
+print heapq.heappushpop(heap, 63)
 print heap
 print heapq.heappop(heap)
 print heap
@@ -326,6 +326,26 @@ print three(max, 'a', 'b', 'c')
 lamp = ['a', 'b', None]
 lamp.sort()
 print lamp
+
+# bool and func pointers, misc fixes
+def wopper(x):
+    print 'wopper', x
+wopper('wopper')
+
+DEBUG = wopper
+DEBUG = None
+
+if DEBUG:
+    DEBUG('wopper')
+if not DEBUG:
+    print 'no debug'
+if not 18:
+    DEBUG('wopper')
+
+print 'debug' if () else 'no debug'
+
+print int(bool(DEBUG))
+print int(bool(1))
 
 ''', '''
 output(equal=True)

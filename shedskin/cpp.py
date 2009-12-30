@@ -533,9 +533,13 @@ class generateVisitor(ASTVisitor):
         self.start('continue')
         self.eol()
 
-    def bool_test(self, node, func):
-        if [1 for t in self.mergeinh[node] if isinstance(t[0], class_) and t[0].ident == 'int_']:
+    def bool_test(self, node, func, always_wrap=False):
+        is_int = [1 for t in self.mergeinh[node] if isinstance(t[0], class_) and t[0].ident == 'int_']
+        is_func = [1 for t in self.mergeinh[node] if isinstance(t[0], function)]
+        if not always_wrap and (is_int or is_func):
             self.visit(node, func)
+        elif always_wrap and is_func:
+            self.visitm('___bool(', node, '!=NULL)', func)
         else:
             self.visitm('___bool(', node, ')', func)
 
@@ -1323,10 +1327,7 @@ class generateVisitor(ASTVisitor):
 
     def visitNot(self, node, func=None):
         self.append('(!')
-        if unboxable(self.mergeinh[node.expr]):
-            self.visit(node.expr, func)
-        else:
-            self.visitm('___bool(', node.expr, ')', func)
+        self.bool_test(node.expr, func)
         self.append(')')
 
     def visitBackquote(self, node, func=None):
@@ -1361,7 +1362,9 @@ class generateVisitor(ASTVisitor):
             self.output('}')
 
     def visitIfExp(self, node, func=None):
-        self.visitm('((', node.test, ')?(', node.then, '):(', node.else_, '))', func)
+        self.append('((')
+        self.bool_test(node.test, func) 
+        self.visitm(')?(', node.then, '):(', node.else_, '))', func)
 
     def visitBreak(self, node, func=None):
         if getgx().loopstack[-1].else_ in getmv().tempcount:
@@ -1762,8 +1765,11 @@ class generateVisitor(ASTVisitor):
                 return
             if ident in ['abs', 'int', 'float', 'str', 'dict', 'tuple', 'list', 'type', 'cmp', 'sum']:
                 self.append('__'+ident+'(')
-            elif ident in ['iter', 'bool']:
-                self.append('___'+ident+'(') # XXX
+            elif ident in ['iter', 'round']:
+                self.append('___'+ident+'(') 
+            elif ident == 'bool':
+                self.bool_test(node.args[0], func, always_wrap=True)
+                return
             elif ident == 'pow' and direct_call.mv.module.ident == 'builtin':
                 if nrargs==3: third = node.args[2]
                 else: third = None
@@ -1775,8 +1781,6 @@ class generateVisitor(ASTVisitor):
                 error("'isinstance' cannot be used with ints or floats; assuming always true", node, warning=True)
                 self.append('1')
                 return
-            elif ident == 'round':
-                self.append('___round(')
             elif ident in ['min','max']:
                 self.append('__'+ident+'(')
                 if nrargs > 3:
