@@ -493,7 +493,7 @@ def ifa():
         if split or redundant or removals:
             return split, redundant, removals
 
-        #print '---', cl.ident
+        #print 'IFA: class', cl.ident
         cl.newdcpa = cl.dcpa
         vars = [cl.vars[name] for name in cl.tvar_names() if name in cl.vars]
         unused = cl.unused[:]
@@ -505,8 +505,10 @@ def ifa():
             if dcpa in unused:
                 continue
             if ifa_split_vars(cl, dcpa, vars, nr_classes, classes_nr, split, redundant, removals) != None:
+                #print 'IFA found splits, return'
                 return split, redundant, removals
 
+    #print 'IFA final return'
     return split, redundant, removals
 
 def ifa_split_vars(cl, dcpa, vars, nr_classes, classes_nr, split, redundant, removals):
@@ -518,12 +520,14 @@ def ifa_split_vars(cl, dcpa, vars, nr_classes, classes_nr, split, redundant, rem
         if len(csites) == 1:
             #print 'just one creation site!'
             continue
+        #print 'IFA visit var:', cl.ident, var.name, dcpa
         ifa_split_empties(cl, dcpa, allnodes, assignsets, split)
         if len(merge_simple_types(getgx().types[node])) < 2 or len(assignsets) == 1:
             #print 'singleton set'
             continue
         ifa_split_no_confusion(cl, dcpa, varnum, classes_nr, nr_classes, csites, allnodes, split, removals)
         if split: 
+            #print 'IFA found simple splits, aborting'
             break
         for node in allnodes:
             if not ifa_confluence_point(node, creation_points):
@@ -536,6 +540,7 @@ def ifa_split_vars(cl, dcpa, vars, nr_classes, classes_nr, split, redundant, rem
             if len(remaining) < 2:
                 continue
             # --- if it exists, perform actual splitting
+            #print 'IFA normal split, remaining:', len(remaining)
             for splitsites in remaining[1:]:
                 ifa_split_class(cl, dcpa, splitsites, split)
             return split, redundant, removals
@@ -543,6 +548,7 @@ def ifa_split_vars(cl, dcpa, vars, nr_classes, classes_nr, split, redundant, rem
         # --- if all else fails, perform wholesale splitting
         # XXX assign sets should be different; len(paths) > 1?
         if len(paths) > 1 and len(csites) > 1:
+            #print 'IFA wholesale splitting, csites:', len(csites)
             for csite in csites[1:]:
                 ifa_split_class(cl, dcpa, [csite], split)
             return split, redundant, removals
@@ -608,6 +614,7 @@ def ifa_split_empties(cl, dcpa, allnodes, assignsets, split):
                 allcsites.add(n)
         empties = list(allcsites-set(endpoints))
         if empties:
+            #print 'IFA found empties', len(empties)
             ifa_split_class(cl, dcpa, empties, split)
 
 def ifa_class_types(cl, unused, vars):
@@ -623,7 +630,7 @@ def ifa_class_types(cl, unused, vars):
                 else:
                     attr_types.append(frozenset())
             attr_types = tuple(attr_types)
-            #print str(dcpa)+':', zip(vars, attr_types)
+            #print 'IFA', str(dcpa)+':', zip(vars, attr_types)
             nr_classes[dcpa] = attr_types
             classes_nr[attr_types] = dcpa
     return classes_nr, nr_classes
@@ -723,7 +730,7 @@ def iterative_dataflow_analysis():
         sys.stdout.write('*')
         sys.stdout.flush()
         split, redundant, removed = ifa()
-        #if split: print 'splits', [(s[0], s[1], s[3]) for s in split]
+        #if split: print 'IFA splits', [(s[0], s[1], s[3]) for s in split]
 
         if not (split or redundant): # nothing has changed XXX
             print '\niterations:', getgx().iterations, 'templates:', getgx().templates
