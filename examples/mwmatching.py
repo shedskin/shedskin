@@ -16,11 +16,11 @@ Copyright 2009 Joris van Rantwijk, license GPL2 or later
 """
 
 # If assigned, DEBUG(str) is called with lots of debug messages.
-DEBUG = None
-"""def DEBUG(s):
-    from sys import stderr
+from sys import stderr
+def debug(s):
     print >>stderr, 'DEBUG:', s
-"""
+DEBUG = debug
+DEBUG = None
 
 # Check delta2/delta3 computation after every substage;
 # only works on integer weights, slows down the algorithm to O(n^4).
@@ -569,7 +569,7 @@ def verifyOptimum():
 def checkDelta2():
     for v in xrange(nvertex):
         if label[inblossom[v]] == 0:
-            bd = None
+            #bd = None
             bk = -1
             for p in neighbend[v]:
                 k = p // 2
@@ -586,9 +586,9 @@ def checkDelta2():
 # Check optimized delta3 against a trivial computation.
 def checkDelta3():
     bk = -1
-    bd = None
+#    bd = None
     tbk = -1
-    tbd = None
+#    tbd = None
     for b in xrange(2 * nvertex):
         if blossomparent[b] == -1 and label[b] == 1:
             for v in blossomLeaves(b):
