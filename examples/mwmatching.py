@@ -30,11 +30,14 @@ CHECK_DELTA = False
 CHECK_OPTIMUM = True
 
 # read input
-s = raw_input().split()
+input = file('testdata/bench_mwmatching_2039_250_a.gr')
+s = input.next().split()
+#s = raw_input().split()
 assert s[0] == 'p' and s[1] == 'edge'
 edges = []
 for i in xrange(int(s[3])):
-    s = raw_input().split()
+    #s = raw_input().split()
+    s = input.next().split()
     assert len(s) == 4 and s[0] == 'e'
     edges.append((int(s[1]), int(s[2]), int(s[3])))
 maxcardinality = True
