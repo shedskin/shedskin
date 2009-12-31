@@ -1,4 +1,4 @@
-41 programs that work with Shed Skin 0.3.
+42 programs that work with Shed Skin 0.3.
 
 If you have another interesting test case, please send it to:
    mark.dufour@gmail.com
@@ -27,6 +27,7 @@ lines  name               description               notes
    350 mastermind.py      mastermind against comp 
    153 mastermind2.py     mastermind strategies
   1706 msp_ss.py          serial bootstrap loader   see comments in top
+   843 mwmatching.py      maximum weighted matching algorithm 
    132 nbody.py           planet body physics
    185 neural1.py         back-prop neural network
    172 neural2.py         back-prop neural network
