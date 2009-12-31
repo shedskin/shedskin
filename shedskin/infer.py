@@ -488,7 +488,6 @@ def actuals_formals(expr, func, node, dcpa, cpa, types, worklist):
 # --- iterative flow analysis: after each iteration, detect imprecisions, and split involved contours
 def ifa():
     split = [] # [(set of creation nodes, new type number), ..]
-    redundant = {} # {redundant contour: similar contour we will map it to}
     removals = [] # [removed contour, ..]
     for cl in ifa_classes_to_split():
         if DEBUG: print 'IFA: --- class %s ---' % cl.ident
@@ -499,13 +498,13 @@ def ifa():
         for dcpa in range(1, cl.dcpa):
             if dcpa in unused:
                 continue
-            if ifa_split_vars(cl, dcpa, vars, nr_classes, classes_nr, split, redundant, removals) != None:
+            if ifa_split_vars(cl, dcpa, vars, nr_classes, classes_nr, split, removals) != None:
                 if DEBUG: print 'IFA found splits, return'
-                return split, redundant, removals
+                return split, removals
     if DEBUG: print 'IFA final return'
-    return split, redundant, removals
+    return split, removals
 
-def ifa_split_vars(cl, dcpa, vars, nr_classes, classes_nr, split, redundant, removals):
+def ifa_split_vars(cl, dcpa, vars, nr_classes, classes_nr, split, removals):
     for (varnum, var) in enumerate(vars):
         if not (var, dcpa, 0) in getgx().cnode:
             continue
@@ -533,14 +532,14 @@ def ifa_split_vars(cl, dcpa, vars, nr_classes, classes_nr, split, redundant, rem
             if DEBUG: print 'IFA normal split, remaining:', len(remaining)
             for splitsites in remaining[1:]:
                 ifa_split_class(cl, dcpa, splitsites, split)
-            return split, redundant, removals
+            return split, removals
         # --- if all else fails, perform wholesale splitting
         # XXX assign sets should be different; len(paths) > 1?
         if len(paths) > 1 and 1 < len(csites) < 10:
             if DEBUG: print 'IFA wholesale splitting, csites:', len(csites)
             for csite in csites[1:]:
                 ifa_split_class(cl, dcpa, [csite], split)
-            return split, redundant, removals
+            return split, removals
 
 def ifa_determine_split(node, allnodes):
     ''' determine split along incoming dataflow edges '''
@@ -713,19 +712,15 @@ def iterative_dataflow_analysis():
         # --- ifa: detect conflicting assignments to instance variables, and split contours to resolve these
         if DEBUG: print '\n*** iteration ***'
         else: sys.stdout.write('*'); sys.stdout.flush()
-        split, redundant, removed = ifa()
+        split, removed = ifa()
         if DEBUG and split: print 'IFA splits', [(s[0], s[1], s[3]) for s in split]
 
-        if not (split or redundant): # nothing has changed XXX
+        if not split: # nothing has changed 
             print '\niterations:', getgx().iterations, 'templates:', getgx().templates
             return
 
         # --- update alloc info table for split contours
-        #print 'splits:', defclass('list').splits
-
         for cl, dcpa, nodes, newnr in split:
-            #print 'split', cl, dcpa, nodes, newnr
-
             for n in nodes:
                 parent = parent_func(n.thing)
                 if parent:
@@ -746,36 +741,6 @@ def iterative_dataflow_analysis():
             if isinstance(parent_func(node.thing), function):
                 if node.constructor and isinstance(node.thing, (List,Dict,Tuple,ListComp,CallFunc)):
                     beforetypes[node] = set()
-
-        # --- update constraint network and alloc info table for redundant contours
-        if redundant:
-            #print 'redundant', redundant
-
-            for node, types in beforetypes.items():
-                if not parent_func(node.thing):
-                    newtypes = []
-                    for t in types:
-                        if t in redundant:
-                            newtypes.append((t[0], redundant[t]))
-                        else:
-                            newtypes.append(t)
-                    beforetypes[node] = set(newtypes)
-
-            new_info = {}
-            for (parent, cart, thing), x in getgx().alloc_info.items():
-                remove = False
-                new_cart = []
-                for t in cart:
-                    if t in redundant:
-                        new_cart.append((t[0], redundant[t]))
-                    else:
-                        new_cart.append(t)
-
-                if x in redundant:
-                    x = (x[0], redundant[x])
-
-                new_info[parent, tuple(new_cart), thing] = x
-            getgx().alloc_info = new_info
 
         # --- create new class types, and seed global nodes
         for cl, dcpa, nodes, newnr in split:
