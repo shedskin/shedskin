@@ -1398,14 +1398,11 @@ class generateVisitor(ASTVisitor):
         for n in node.nodes:
             if self.booleancast(node, n, func) is None:
                 mixing = True
-        if not mixing: return False
-
+        if not mixing: 
+            return False
         self.append('(')
         for n in node.nodes:
-            if self.mergeinh[n] != set([(defclass('int_'),0)]):
-                self.visitm('___bool(', n, ')', func)
-            else:
-                self.visit(n, func)
+            self.bool_test(n, func)
             if n != node.nodes[-1]:
                 self.append(' '+op+' ')
         self.append(')')
