@@ -4,7 +4,7 @@ Copyright 2005-2009 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 
 infer.py: perform iterative type analysis
 
-we combine two techniques from the literature, to analyze both parametric polymorphism and data polymorphism adaptively. these techniques are agesen's cartesian product algorithm and plevyak's iterative flow analysis (the data polymorphic part). for details about these algorithms, see ole agesen's excellent Phd thesis. for details about how they are precisely implemented in Shed Skin, see mark dufour's MsC thesis.
+we combine two techniques from the literature, to analyze both parametric polymorphism and data polymorphism adaptively. these techniques are agesen's cartesian product algorithm and plevyak's iterative flow analysis (the data polymorphic part). for details about these algorithms, see ole agesen's excellent Phd thesis. for details about the Shed Skin implementation, see mark dufour's MsC thesis.
 
 the cartesian product algorithm duplicates functions (or their graph counterpart), based on the cartesian product of possible argument types, whereas iterative flow analysis duplicates classes based on observed imprecisions at assignment points. the two integers mentioned in the graph.py description are used to keep track of duplicates along these dimensions (first class duplicate nr, then function duplicate nr).
 
@@ -22,7 +22,7 @@ iterative_dataflow_analysis():
     -when creating a function duplicate, fill in allocation points with correct type (ifa_seed_template())
     (BACKWARD PHASE)
     -determine classes to be duplicated, according to found imprecision points (ifa())
-    -from imprecision points, follow the constraint graph backwardly to find involved allocation points
+    -from imprecision points, follow the constraint graph (backwards) to find involved allocation points
     -duplicate classes, and spread them over these allocation points
     (CLEANUP)
     -quit if no further imprecision points (ifa() did not find anything)
@@ -488,23 +488,19 @@ def actuals_formals(expr, func, node, dcpa, cpa, types, worklist):
 # --- iterative flow analysis: after each iteration, detect imprecisions, and split involved contours
 def ifa():
     split = [] # [(set of creation nodes, new type number), ..]
-    removals = [] # [removed contour, ..]
     for cl in ifa_classes_to_split():
         if DEBUG: print 'IFA: --- class %s ---' % cl.ident
         cl.newdcpa = cl.dcpa
         vars = [cl.vars[name] for name in cl.tvar_names() if name in cl.vars]
-        unused = cl.unused[:]
-        classes_nr, nr_classes = ifa_class_types(cl, unused, vars)
+        classes_nr, nr_classes = ifa_class_types(cl, vars)
         for dcpa in range(1, cl.dcpa):
-            if dcpa in unused:
-                continue
-            if ifa_split_vars(cl, dcpa, vars, nr_classes, classes_nr, split, removals) != None:
+            if ifa_split_vars(cl, dcpa, vars, nr_classes, classes_nr, split) != None:
                 if DEBUG: print 'IFA found splits, return'
-                return split, removals
+                return split
     if DEBUG: print 'IFA final return'
-    return split, removals
+    return split
 
-def ifa_split_vars(cl, dcpa, vars, nr_classes, classes_nr, split, removals):
+def ifa_split_vars(cl, dcpa, vars, nr_classes, classes_nr, split):
     for (varnum, var) in enumerate(vars):
         if not (var, dcpa, 0) in getgx().cnode:
             continue
@@ -516,7 +512,7 @@ def ifa_split_vars(cl, dcpa, vars, nr_classes, classes_nr, split, removals):
         ifa_split_empties(cl, dcpa, allnodes, assignsets, split)
         if len(merge_simple_types(getgx().types[node])) < 2 or len(assignsets) == 1:
             continue
-        ifa_split_no_confusion(cl, dcpa, varnum, classes_nr, nr_classes, csites, allnodes, split, removals)
+        ifa_split_no_confusion(cl, dcpa, varnum, classes_nr, nr_classes, csites, allnodes, split)
         if split: 
             if DEBUG: print 'IFA found simple splits, aborting'
             break
@@ -532,14 +528,14 @@ def ifa_split_vars(cl, dcpa, vars, nr_classes, classes_nr, split, removals):
             if DEBUG: print 'IFA normal split, remaining:', len(remaining)
             for splitsites in remaining[1:]:
                 ifa_split_class(cl, dcpa, splitsites, split)
-            return split, removals
+            return split
         # --- if all else fails, perform wholesale splitting
         # XXX assign sets should be different; len(paths) > 1?
         if len(paths) > 1 and 1 < len(csites) < 10:
             if DEBUG: print 'IFA wholesale splitting, csites:', len(csites)
             for csite in csites[1:]:
                 ifa_split_class(cl, dcpa, [csite], split)
-            return split, removals
+            return split
 
 def ifa_determine_split(node, allnodes):
     ''' determine split along incoming dataflow edges '''
@@ -556,40 +552,37 @@ def ifa_determine_split(node, allnodes):
     remaining = [setx for setx in remaining if setx]
     return remaining
 
-def ifa_split_no_confusion(cl, dcpa, varnum, classes_nr, nr_classes, csites, allnodes, split, removals):
+def ifa_split_no_confusion(cl, dcpa, varnum, classes_nr, nr_classes, csites, allnodes, split):
     '''creation sites on single path: split them off, possibly reusing contour'''
     attr_types = nr_classes[dcpa]
-    removed = 0
     noconf = set([n for n in csites if len(n.paths)==1])
+    others = len(csites) - len(noconf)
+    subtype_csites = {}
     for node in noconf:
         assign_set = node.paths[0]
         if len(attr_types) == 1 and list(attr_types)[0] == assign_set: # XXX only one var
-            #print 'same as parent!', cl, attr_types, assign_set
-            continue
-        new_attr_types = list(attr_types)
-        new_attr_types[varnum] = assign_set # XXX klopt varnum?
-        new_attr_types = tuple(new_attr_types)
-        if new_attr_types in classes_nr:
-            nr = classes_nr[new_attr_types]
-            if nr != dcpa:
-                #print 'reuse!', node, nr
-                split.append((cl, dcpa, [node], nr))
-                cl.splits[nr] = dcpa
-                removed += 1
+            others += 1
         else:
-            #print 'new!', node, newdcpa
-            classes_nr[new_attr_types] = cl.newdcpa
-            ifa_split_class(cl, dcpa, [node], split)
-            removed += 1
-    # --- remove contour if it becomes empty
-    if removed == len([node for node in allnodes if not node.in_]):
-        #print 'remove contour', dcpa
-        cl.unused.append(dcpa)
-        removals.append((cl,dcpa))
+            subtype = list(attr_types)
+            subtype[varnum] = assign_set # XXX varnum correct?
+            subtype = tuple(subtype)
+            try: subtype_csites[subtype].append(node)
+            except KeyError: subtype_csites[subtype] = [node]
+    items = subtype_csites.items()
+    if not others:
+        items = items[1:]
+    for subtype, csites in subtype_csites.iteritems():
+        if subtype in classes_nr: # reuse contour
+            nr = classes_nr[subtype]
+            split.append((cl, dcpa, csites, nr))
+            cl.splits[nr] = dcpa
+        else: # create new contour
+            classes_nr[subtype] = cl.newdcpa
+            ifa_split_class(cl, dcpa, csites, split)
 
 def ifa_split_empties(cl, dcpa, allnodes, assignsets, split):
     ''' split off empty assignment sets (eg, [], or [x[0]] where x is None in some template) '''
-    endpoints = [huh for huh in allnodes if not huh.in_] # XXX call csites
+    endpoints = [huh for huh in allnodes if not huh.in_] # XXX call csites, paths==0 better?
     if assignsets and cl.ident in ['list', 'tuple', 'tuple2']: # XXX more
         allcsites = set()
         for n, types in getgx().types.iteritems():
@@ -600,23 +593,21 @@ def ifa_split_empties(cl, dcpa, allnodes, assignsets, split):
             if DEBUG: print 'IFA found empties', len(empties)
             ifa_split_class(cl, dcpa, empties, split)
 
-def ifa_class_types(cl, unused, vars):
+def ifa_class_types(cl, vars):
     ''' create table for previously deduced types '''
-    classes_nr = {}
-    nr_classes = {}
+    classes_nr, nr_classes = {}, {}
     for dcpa in range(1, cl.dcpa):
-        if dcpa not in unused: 
-            attr_types = [] # XXX merge with ifa_merge_contours.. sep func?
-            for var in vars:
-                if (var,dcpa,0) in getgx().cnode:
-                    attr_types.append(merge_simple_types(getgx().cnode[var,dcpa,0].types()))
-                else:
-                    attr_types.append(frozenset())
-            attr_types = tuple(attr_types)
-            if DEBUG and [x for x in attr_types if x]: 
-                print 'IFA', str(dcpa)+':', zip([var.name for var in vars], map(list, attr_types))
-            nr_classes[dcpa] = attr_types
-            classes_nr[attr_types] = dcpa
+        attr_types = [] # XXX merge with ifa_merge_contours.. sep func?
+        for var in vars:
+            if (var,dcpa,0) in getgx().cnode:
+                attr_types.append(merge_simple_types(getgx().cnode[var,dcpa,0].types()))
+            else:
+                attr_types.append(frozenset())
+        attr_types = tuple(attr_types)
+        if DEBUG and [x for x in attr_types if x]:
+            print 'IFA', str(dcpa)+':', zip([var.name for var in vars], map(list, attr_types))
+        nr_classes[dcpa] = attr_types
+        classes_nr[attr_types] = dcpa
     return classes_nr, nr_classes
 
 def ifa_classes_to_split():
@@ -685,10 +676,6 @@ def ifa_split_class(cl, dcpa, things, split):
 # --- cartesian product algorithm (cpa) & iterative flow analysis (ifa)
 def iterative_dataflow_analysis():
     print '[iterative type analysis..]'
-
-    removed = []
-
-    # --- backup constraint network
     backup = backup_network()
 
     while True:
@@ -696,23 +683,20 @@ def iterative_dataflow_analysis():
         if getgx().iterations > 30:
             print '\n*WARNING* reached maximum number of iterations'
             break
+
         # --- propagate using cartesian product algorithm
-
         getgx().new_alloc_info = {}
-
         #print 'table'
         #print '\n'.join([repr(e)+': '+repr(l) for e,l in getgx().alloc_info.items()])
         #print 'propagate'
-
         propagate()
         #printstate()
-
         getgx().alloc_info = getgx().new_alloc_info
 
         # --- ifa: detect conflicting assignments to instance variables, and split contours to resolve these
         if DEBUG: print '\n*** iteration ***'
         else: sys.stdout.write('*'); sys.stdout.flush()
-        split, removed = ifa()
+        split = ifa()
         if DEBUG and split: print 'IFA splits', [(s[0], s[1], s[3]) for s in split]
 
         if not split: # nothing has changed 
@@ -1021,12 +1005,6 @@ def analyze(source, testing=False):
                     getgx().inheritance_tempvars.setdefault(a, []).append(b)
 
     getgx().merged_inh = merged(getgx().types, inheritance=True) # XXX why X times
-
-    # --- finally, generate C++ code and Makefiles.. :-)
-
-    #printstate()
-    #printconstraints()
-    #generate_code()
 
     # error for dynamic expression (XXX before codegen)
     for node in getgx().merged_all:

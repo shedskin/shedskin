@@ -160,13 +160,9 @@ class class_:
         self.virtualvars = {}           # 'virtual' variables
         self.properties = {}
         self.staticmethods = []
-
         self.typenr = getgx().nrcltypes
         getgx().nrcltypes += 1
-
         self.splits = {}                # contour: old contour (used between iterations)
-        self.unused = []                # unused contours
-
         self.has_init = self.has_copy = self.has_deepcopy = False
 
     def ancestors(self): # XXX attribute (faster)
