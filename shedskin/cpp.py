@@ -27,7 +27,6 @@ class generateVisitor(ASTVisitor):
         self.module = module
         self.name = module.ident
         self.filling_consts = False
-        self.constant_nr = 0
 
     def insert_consts(self, declare): # XXX ugly
         if not self.consts: return
@@ -174,77 +173,17 @@ class generateVisitor(ASTVisitor):
                 decl2.append(prefix+t+(', '.join(names)))
         return ';\n'.join(decl2)
 
-    def constant_constructor(self, node):
-        if isinstance(node, (UnarySub, UnaryAdd)):
-            node = node.expr
-        if isinstance(node, Const) and type(node.value) in [int, float, str]:
-            return False
-
-        return self.constant_constructor_rec(node)
-
-    def constant_constructor_rec(self, node):
-        if isinstance(node, (UnarySub, UnaryAdd)):
-            node = node.expr
-
-        # --- determine whether built-in constructor call builds a (compound) constant, e.g. [(1,),[1,(1,2)]]
-        if isinstance(node, (List, Tuple, Dict)):
-            return not False in [self.constant_constructor_rec(child) for child in node.getChildNodes()]
-
-        # --- strings may also be constants of course
-        elif isinstance(node, Const) and type(node.value) in [int, float, str]:
-            if type(node.value) == str:
-                self.get_constant(node)
-            return True
-
-        return False
-
-    def find_constants(self):
-        # --- determine (compound, non-str) constants
-        for callfunc, _ in getmv().callfuncs:
-            if isinstance(callfunc.node, Getattr) and callfunc.node.attrname in ['__ne__', '__eq__', '__contains__']:
-                for node in [callfunc.node.expr, callfunc.args[0]]:
-                    if self.constant_constructor(node):
-                        self.get_constant(node)
-
-        for node in getmv().for_in_iters:
-            if self.constant_constructor(node):
-                self.get_constant(node)
-
-        for node in self.mergeinh:
-            if isinstance(node, Subscript):
-                if self.constant_constructor(node.expr):
-                    self.get_constant(node.expr)
-
     def get_constant(self, node):
         parent = inode(node).parent
         while isinstance(parent, function) and parent.listcomp: # XXX
             parent = parent.parent
-        if isinstance(parent, function) and (parent.inherited or not self.inhcpa(parent)):
+        if isinstance(parent, function) and (parent.inherited or not self.inhcpa(parent)): # XXX
             return
-
-        for other in self.consts:
-            if node is other or self.equal_constructor_rec(node, other):
+        for other in self.consts: # XXX use mapping
+            if node.value == other.value:
                 return self.consts[other]
-
-        self.consts[node] = 'const_'+str(self.constant_nr)
-        self.constant_nr += 1
-
+        self.consts[node] = 'const_'+str(len(self.consts))
         return self.consts[node]
-
-    def equal_constructor_rec(self, a, b):
-        if isinstance(a, (UnarySub, UnaryAdd)) and isinstance(b, (UnarySub, UnaryAdd)):
-            return self.equal_constructor_rec(a.expr, b.expr)
-
-        if isinstance(a, Const) and isinstance(b, Const):
-            for c in (int, float, str):
-                if isinstance(a.value, c) and isinstance(b.value, c):
-                    return a.value == b.value
-
-        for c in (List, Tuple, Dict):
-            if isinstance(a, c) and isinstance(b, c) and len(a.getChildNodes()) == len(b.getChildNodes()):
-                return not 0 in [self.equal_constructor_rec(d,e) for (d,e) in zip(a.getChildNodes(), b.getChildNodes())]
-
-        return 0
 
     def module_hpp(self, node):
         define = '_'.join(self.module.mod_path).upper()+'_HPP'
@@ -254,7 +193,6 @@ class generateVisitor(ASTVisitor):
         # --- include header files
         if self.module.dir == '': depth = 0
         else: depth = self.module.dir.count('/')+1
-        #print >>self.out, '#include "'+depth*'../'+'builtin_.hpp"'
 
         includes = get_includes(self.module)
         if 'getopt.hpp' in includes: # XXX
@@ -358,9 +296,6 @@ class generateVisitor(ASTVisitor):
         if defs:
             self.output(defs+';')
             print >>self.out
-
-        # --- constants: __eq__(const) or ==/__eq(List())
-        self.find_constants()
 
         # --- defaults
         if self.module.mv.defaults.items():
@@ -826,40 +761,20 @@ class generateVisitor(ASTVisitor):
         self.append(')')
 
     def visitDict(self, node, func=None):
-        if not self.filling_consts and node in self.consts:
-            self.append(self.consts[node])
-            return
-
-        temp = self.filling_consts
-        self.filling_consts = False
         self.append('(new '+typesetreprnew(node, func)[:-2]+'(')
-
         if node.items:
             self.append(str(len(node.items))+', ')
-
         for (key, value) in node.items:
             self.visitm('new tuple2'+typesetreprnew(node, func)[4:-2]+'(2,', key, ',', value, ')', func)
             if (key, value) != node.items[-1]:
                 self.append(', ')
         self.append('))')
 
-        self.filling_consts = temp
-
     def visittuplelist(self, node, func=None):
-        if not self.filling_consts and node in self.consts:
-            self.append(self.consts[node])
-            return
-
-        temp = self.filling_consts
-        self.filling_consts = False
-
         ts = typesetreprnew(node, func)
-        self.append('(new '+ts[:-2])
-        self.append('(')
+        self.append('(new '+ts[:-2]+'(')
         self.children_args(node, ts, func)
         self.append(')')
-
-        self.filling_consts = temp
 
     def visitTuple(self, node, func=None):
         self.visittuplelist(node, func)
