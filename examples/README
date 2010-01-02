@@ -1,55 +1,56 @@
 42 programs that work with Shed Skin 0.3.
 
+9,395 lines in total (using sloccount, around 13,700 otherwise)
+
 If you have another interesting test case, please send it to:
    mark.dufour@gmail.com
 
 lines  name               description               notes
+(sloccount)
 
-   141 ant.py             TSP approximation
-   479 amaze.py           maze generator/solver
-    64 brainfuck.py       brainfuck interpreter
-   371 chess.py           chess engine
-   130 dijkstra.py        dijkstra's algorithm
-   102 dijkstra2.py       bidirectional dijkstra search
-    85 circle.py          circle packing animation  shedskin -e circle && make && python circle_packing.py
+    84 ant.py             TSP approximation
+   327 amaze.py           maze generator/solver
+    54 brainfuck.py       brainfuck interpreter
+   321 chess.py           chess engine
+   105 dijkstra.py        dijkstra's algorithm
+    80 dijkstra2.py       bidirectional dijkstra search
+    65 circle.py          circle packing animation  shedskin -e circle && make && python circle_packing.py
                                                     (drag circles with mouse)
-   184 fysphun.py         physics animation         shedskin -e fysphun && make && python fysphun_main.py
+   147 fysphun.py         physics animation         shedskin -e fysphun && make && python fysphun_main.py
                                                     (create/drag points with mouse)
-   112 genetic.py         genetic algorithm
-   368 go.py              go player (monte carlo/UCT) shedskin -r go (fast random number generator)
+    92 genetic.py         genetic algorithm
+   446 go.py              go player (monte carlo/UCT) shedskin -r go (fast random number generator)
                                                     (see DISCO for details)
-   109 life.py            conway's game of life
-   235 linalg.py          linear algebra
-   296 LZ2.py             Lempel-Ziv compressor
-   208 ac_encode.py       Arithmetic coding compressor
-   435 block.py           Huffman block compressor
-    33 mandelbrot.py      mandelbrot fractal
-   350 mastermind.py      mastermind against comp 
-   153 mastermind2.py     mastermind strategies
-  1706 msp_ss.py          serial bootstrap loader   see comments in top
-   843 mwmatching.py      maximum weighted matching algorithm 
-   132 nbody.py           planet body physics
-   185 neural1.py         back-prop neural network
-   172 neural2.py         back-prop neural network
-   146 oliva2.py          sea shell patterns
-   123 othello.py         othello player
-   112 pisang.py          satisfiability solver
-   344 pygmy.py           raytracer
-   399 yopyra.py          raytracer
-   245 mao.py             raytracer (ao benchmark)  shedskin -r mao (fast random number generator)
-   606 minilight.py       advanced raytracer        shedskin -r minilight (fast random number generator) 
+    74 life.py            conway's game of life
+   186 linalg.py          linear algebra
+   190 LZ2.py             Lempel-Ziv compressor
+   174 ac_encode.py       Arithmetic coding compressor
+   222 block.py           Huffman block compressor
+    26 mandelbrot.py      mandelbrot fractal
+   223 mastermind.py      mastermind against comp
+   117 mastermind2.py     mastermind strategies
+ 1,201 msp_ss.py          serial bootstrap loader   see comments in top
+   482 mwmatching.py      maximum weighted matching algorithm
+   101 nbody.py           planet body physics
+   154 neural1.py         back-prop neural network
+   109 neural2.py         back-prop neural network
+    78 oliva2.py          sea shell patterns
+    95 othello.py         othello player
+    80 pisang.py          satisfiability solver
+   272 pygmy.py           raytracer
+   276 yopyra.py          raytracer
+   195 mao.py             raytracer (ao benchmark)  shedskin -r mao (fast random number generator)
+   462 minilight.py       advanced raytracer        shedskin -r minilight (fast random number generator)
                           (triangle primitives, octree spatial index)
-   220 pystone.py         standard benchmark
-   404 richards.py        standard benchmark
-   621 rdb.py             iPod shuffle programmer   see comments in top
-   113 sieve.py           prime number sieves
-   181 sudoku1.py         sudoku solver
-   203 sudoku2.py         sudoku solver
-   183 sudoku3.py         sudoku solver
-   104 sudo.py            norvig's sudoku solver
-   175 tictactoe.py       tictactoe on large boards
-  1235 TonyJpegDecoder.py jpeg decoder
-    52 voronoi.py         textual voronoi
-   795 voronoi2.py        voronoi algoritm
-
- 12321 total 
+   181 pystone.py         standard benchmark
+   286 richards.py        standard benchmark
+   469 rdb.py             iPod shuffle programmer   see comments in top
+    80 sieve.py           prime number sieves
+   139 sudoku1.py         sudoku solver
+   148 sudoku2.py         sudoku solver
+   155 sudoku3.py         sudoku solver
+    68 sudo.py            norvig's sudoku solver
+   113 tictactoe.py       tictactoe on large boards
+   753 TonyJpegDecoder.py jpeg decoder
+    39 voronoi.py         textual voronoi
+   526 voronoi2.py        voronoi algoritm
