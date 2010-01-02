@@ -513,7 +513,7 @@ def ifa_split_vars(cl, dcpa, vars, nr_classes, classes_nr, split):
         if len(merge_simple_types(getgx().types[node])) < 2 or len(assignsets) == 1:
             continue
         ifa_split_no_confusion(cl, dcpa, varnum, classes_nr, nr_classes, csites, allnodes, split)
-        if split: 
+        if split:
             if DEBUG: print 'IFA found simple splits, aborting'
             break
         for node in allnodes:
@@ -564,7 +564,7 @@ def ifa_split_no_confusion(cl, dcpa, varnum, classes_nr, nr_classes, csites, all
             others += 1
         else:
             subtype = list(attr_types)
-            subtype[varnum] = assign_set # XXX varnum correct?
+            subtype[varnum] = assign_set
             subtype = tuple(subtype)
             try: subtype_csites[subtype].append(node)
             except KeyError: subtype_csites[subtype] = [node]
