@@ -1,3 +1,10 @@
+'''
+ambient occlusion renderer
+http://lucille.atso-net.jp/aobench/
+
+Original version of AO bench was written by Syoyo Fujita. The original code(Proce55ing version) is licensed under BSD3 license. You can freely modify, port and distribute AO bench
+'''
+
 from math import sqrt, sin, cos, fabs
 import random
 from array import array
