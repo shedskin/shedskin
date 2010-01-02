@@ -170,6 +170,9 @@ def supported_vars(vars): # XXX virtuals?
         supported.append(var)
     return supported
 
+def hasmethod(cl, name): # XXX shared.py
+    return name in cl.funcs and not cl.funcs[name].inherited and cpp.hmcpa(cl.funcs[name])
+
 def do_extmod_class(gv, cl):
     # determine methods, vars to expose
     funcs = supported_funcs(gv, cl.funcs.values())
@@ -194,7 +197,7 @@ def do_extmod_class(gv, cl):
     print >>gv.out, '    %sObject *self = (%sObject *)type->tp_alloc(type, 0);' % (cl.ident, cl.ident)
     print >>gv.out, '    self->__ss_object = new __%s__::%s();' % (gv.module.ident, cl.ident)
     print >>gv.out, '    __ss_proxy->__setitem__(self->__ss_object, self);'
-    if '__init__' in cl.funcs and not cl.funcs['__init__'].inherited and cpp.hmcpa(cl.funcs['__init__']):
+    if hasmethod(cl, '__init__'):
         print >>gv.out, '    if(%s___init__((PyObject *)self, args, kwargs) == 0)' % cl.ident
         print >>gv.out, '        return 0;'
     print >>gv.out, '    return (PyObject *)self;'
@@ -246,7 +249,7 @@ def do_extmod_class(gv, cl):
     print >>gv.out, '    0,              /* tp_getattr        */'
     print >>gv.out, '    0,              /* tp_setattr        */'
     print >>gv.out, '    0,              /* tp_compare        */'
-    if '__repr__' in cl.funcs and not cl.funcs['__repr__'].inherited and cpp.hmcpa(cl.funcs['__repr__']): # XXX generalize
+    if hasmethod(cl, '__repr__'):
         print >>gv.out, '    (PyObject *(*)(PyObject *))%s___repr__, /* tp_repr           */' % cl.ident
     else:
         print >>gv.out, '    0,              /* tp_repr           */'
@@ -255,7 +258,10 @@ def do_extmod_class(gv, cl):
     print >>gv.out, '    0,              /* tp_as_mapping     */'
     print >>gv.out, '    0,              /* tp_hash           */'
     print >>gv.out, '    0,              /* tp_call           */'
-    print >>gv.out, '    0,              /* tp_str            */'
+    if hasmethod(cl, '__str__'):
+        print >>gv.out, '    (PyObject *(*)(PyObject *))%s___str__, /* tp_str           */' % cl.ident
+    else:
+        print >>gv.out, '    0,              /* tp_str            */'
     print >>gv.out, '    0,              /* tp_getattro       */'
     print >>gv.out, '    0,              /* tp_setattro       */'
     print >>gv.out, '    0,              /* tp_as_buffer      */'
