@@ -337,18 +337,6 @@ class generateVisitor(ASTVisitor):
         if self.module == getgx().main_module and not getgx().extension_module: self.output('__name__ = new str("__main__");\n')
         else: self.output('__name__ = new str("%s");\n' % self.module.ident)
 
-        if getmv().classes:
-            for cl in getmv().classes.values():
-                self.output('cl_'+cl.cpp_name+' = new class_("%s", %d, %d);' % (cl.cpp_name, cl.low, cl.high))
-
-                for var in cl.parent.vars.values():
-                    if var.initexpr:
-                        self.start()
-                        self.visitm(cl.ident+'::'+self.cpp_name(var.name)+' = ', var.initexpr, None)
-                        self.eol()
-
-            print >>self.out
-
         for child in node.node.getChildNodes():
             if isinstance(child, Function):
                 for default in child.defaults:
@@ -365,6 +353,15 @@ class generateVisitor(ASTVisitor):
                                 self.start('')
                                 self.visitm('default_%d = ' % getmv().defaults[default], default, ';')
                                 self.eol()
+                if child.name in getmv().classes:
+                    cl = getmv().classes[child.name]
+                    self.output('cl_'+cl.cpp_name+' = new class_("%s", %d, %d);' % (cl.cpp_name, cl.low, cl.high))
+                    for varname in cl.parent.varorder:
+                        var = cl.parent.vars[varname]
+                        if var.initexpr:
+                            self.start()
+                            self.visitm(cl.ident+'::'+self.cpp_name(var.name)+' = ', var.initexpr, cl)
+                            self.eol()
 
             elif isinstance(child, Discard):
                 if isinstance(child.expr, Const) and child.expr.value == None: # XXX merge with visitStmt
@@ -771,6 +768,8 @@ class generateVisitor(ASTVisitor):
         self.append('))')
 
     def visittuplelist(self, node, func=None):
+        if isinstance(func, class_): # XXX
+            func=None
         ts = typesetreprnew(node, func)
         self.append('(new '+ts[:-2]+'(')
         self.children_args(node, ts, func)
@@ -792,7 +791,7 @@ class generateVisitor(ASTVisitor):
         self.eol(')')
 
     def visitm(self, *args):
-        if args and isinstance(args[-1], function):
+        if args and isinstance(args[-1], (function, class_)):
             func = args[-1]
         else:
             func = None
@@ -1655,7 +1654,7 @@ class generateVisitor(ASTVisitor):
             error("default fillvalue for 'izip_longest' becomes 0 for integers", node, warning=True)
 
         nrargs = len(node.args)
-        if func and func.largs:
+        if isinstance(func, function) and func.largs:
             nrargs = func.largs
 
         # --- target expression
@@ -1780,7 +1779,7 @@ class generateVisitor(ASTVisitor):
 
         self.add_args_arg(node, funcs)
 
-        if func and func.largs != None:
+        if isinstance(func, function) and func.largs != None:
             pairs = pairs[:func.largs]
 
         for (arg, formal) in pairs:
@@ -2402,6 +2401,8 @@ class generateVisitor(ASTVisitor):
                 elif add_cl and [t for t in self.mergeinh[node] if isinstance(t[0], static_class)]:
                     self.append('cl_'+node.name)
                 else:
+                    if isinstance(func, class_) and node.name in func.parent.vars: # XXX
+                        self.append(func.ident+'::')
                     self.append(self.cpp_name(node.name))
 
     def expandspecialchars(self, value):

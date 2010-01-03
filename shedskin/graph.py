@@ -120,6 +120,8 @@ class moduleVisitor(ASTVisitor):
                 getgx().types[newnode] = set([(cl, cl.dcpa)])
 
     def constructor(self, node, classname, func):
+        if isinstance(func, class_): # XXX
+            func = None
         cl = defclass(classname)
 
         self.instance(node, cl, func)
@@ -215,6 +217,8 @@ class moduleVisitor(ASTVisitor):
     def addconstraint(self, constraint, func):
         in_out(constraint[0], constraint[1])
         getgx().constraints.add(constraint)
+        if isinstance(func, class_): # XXX
+            func = None
         while func and func.listcomp: func = func.parent # XXX
         if func:
             func.constraints.add(constraint)
@@ -1007,9 +1011,10 @@ class moduleVisitor(ASTVisitor):
             parent = func # XXX move above
             if len(node.nodes) > 1 or not isinstance(node.nodes[0], AssName):
                 error('at the class-level, only simple assignments are supported', node)
-
-            lvar = defaultvar(node.nodes[0].name, parent.parent)
-            self.visit(node.expr, None)
+            name = node.nodes[0].name
+            lvar = defaultvar(name, parent.parent)
+            parent.parent.varorder.append(name)
+            self.visit(node.expr, func)
             self.addconstraint((inode(node.expr), inode(lvar)), None)
             lvar.initexpr = node.expr
             return
@@ -1337,7 +1342,7 @@ class moduleVisitor(ASTVisitor):
                 self.instance(node, defclass('int_'), func)
             return
 
-        if func and node.name in func.globals:
+        if isinstance(func, function) and node.name in func.globals:
             var = defaultvar(node.name, None)
         else:
             var = lookupvar(node.name, func)
