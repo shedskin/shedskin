@@ -787,6 +787,8 @@ class moduleVisitor(ASTVisitor):
             self.fakefunc(node, node.left, '__mod__', [], func)
             for child in node.right.getChildNodes():
                 self.visit(child, func)
+                if isinstance(node.right, Tuple):
+                    self.fakefunc(inode(child), child, '__str__', [], func)
         else:
             self.fakefunc(node, node.left, '__mod__', [node.right], func)
 
