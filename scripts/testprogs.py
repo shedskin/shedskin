@@ -38,7 +38,7 @@ for (i, file) in enumerate(files):
         options += ' -r'
 
     do_cmd('shedskin %s %s' % (options.strip(), file)) 
-    if file in ['neural1.py', 'mastermind.py', 'rdb.py', 'TonyJpegDecoder.py', 'voronoi2.py', 'go.py']: 
+    if file in ['neural1.py', 'mastermind.py', 'rdb.py', 'TonyJpegDecoder.py', 'voronoi2.py', 'go.py', 'bh.py']: 
         do_cmd('make')
     else:
         do_cmd('make run')
