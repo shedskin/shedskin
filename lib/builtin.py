@@ -246,6 +246,9 @@ class str_(pyseq):
     def __repr__(self):
         return ''
     def __mod__(self, a=None):
+        a = a.unit
+        a.__str__()
+        a.__repr__()
         return ''
     def __add__(self,be):
         return ''
