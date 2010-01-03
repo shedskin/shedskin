@@ -210,6 +210,7 @@ class class_:
 class static_class: # XXX merge with regular class
     def __init__(self, cl):
         self.vars = {}
+        self.varorder = [] # XXX
         self.funcs = {}
         self.class_ = cl
         cl.static_class = self
@@ -242,6 +243,8 @@ class cnode:
         self.dcpa = dcpa
         self.cpa = cpa
         self.fakefunc = None
+        if isinstance(parent, class_): # XXX
+            parent = None
         self.parent = parent
         self.defnodes = False # if callnode, notification nodes were made for default arguments
         self.mv = getmv()
@@ -363,6 +366,8 @@ def defaultvar(name, parent, worklist=None):
     return var
 
 def defvar(name, parent, local, worklist=None):
+    if isinstance(parent, class_) and name in parent.parent.vars: # XXX
+        return parent.parent.vars[name]
     if parent and name in parent.vars:
         return parent.vars[name]
     if parent and local:
