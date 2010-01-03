@@ -9,6 +9,7 @@
 #include <gc/gc_cpp.h>
 
 #include <vector>
+#include <deque>
 #include <string>
 #include <set>
 #include <iostream>
@@ -156,6 +157,7 @@ template<class A, class B> str *__modtuple(str *fmt, tuple2<A,B> *t);
 /* internal use */
 
 #define __GC_VECTOR(T) std::vector< T, gc_allocator< T > >
+#define __GC_DEQUE(T) std::deque< T, gc_allocator< T > >
 #define __GC_STRING std::basic_string<char,std::char_traits<char>,gc_allocator<char> >
 #define __GC_HASH_SET __gnu_cxx::hash_set<T, hashfunc<T>, hasheq<T>, gc_allocator<T> >
 #define __GC_HASH_MAP __gnu_cxx::hash_map<K, V, hashfunc<K>, hasheq<K>, gc_allocator<std::pair<K, V> > >

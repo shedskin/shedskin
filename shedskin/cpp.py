@@ -1278,7 +1278,7 @@ class generateVisitor(ASTVisitor):
 
     def visitIfExp(self, node, func=None):
         self.append('((')
-        self.bool_test(node.test, func) 
+        self.bool_test(node.test, func)
         self.visitm(')?(', node.then, '):(', node.else_, '))', func)
 
     def visitBreak(self, node, func=None):
@@ -1313,7 +1313,7 @@ class generateVisitor(ASTVisitor):
         for n in node.nodes:
             if self.booleancast(node, n, func) is None:
                 mixing = True
-        if not mixing: 
+        if not mixing:
             return False
         self.append('(')
         for n in node.nodes:
@@ -1678,7 +1678,7 @@ class generateVisitor(ASTVisitor):
             if ident in ['abs', 'int', 'float', 'str', 'dict', 'tuple', 'list', 'type', 'cmp', 'sum']:
                 self.append('__'+ident+'(')
             elif ident in ['iter', 'round']:
-                self.append('___'+ident+'(') 
+                self.append('___'+ident+'(')
             elif ident == 'bool':
                 self.bool_test(node.args[0], func, always_wrap=True)
                 return
@@ -1746,7 +1746,7 @@ class generateVisitor(ASTVisitor):
         target = funcs[0] # XXX
 
         castnull = False
-        if self.library_func(funcs, 'itertools', None, 'islice'):
+        if self.library_func(funcs, 'itertools', None, 'islice') or self.library_func(funcs, 'itertools', None, 'permutations'):
             castnull = True
 
         for f in funcs:
