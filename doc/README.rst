@@ -568,6 +568,7 @@ I would like to thank the following company/people, for their help with **Shed S
 * Jeff Miller
 * Joaquin Abian Monux
 * Harri Pasanen
+* Jeremie Roquet
 * SirNotAppearingInThisTutorial
 * Thomas Spura
 * Dave Tweed
