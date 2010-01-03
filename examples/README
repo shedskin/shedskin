@@ -1,6 +1,6 @@
-42 programs that work with Shed Skin 0.3.
+43 programs that work with Shed Skin 0.3.
 
-9,395 lines in total (using sloccount, around 13,700 otherwise)
+9,810 lines in total (using sloccount, around 14,000 otherwise)
 
 If you have another interesting test case, please send it to:
    mark.dufour@gmail.com
@@ -10,6 +10,7 @@ lines  name               description               notes
 
     84 ant.py             TSP approximation
    327 amaze.py           maze generator/solver
+   415 bh.py              barnes-hut force calculation
     54 brainfuck.py       brainfuck interpreter
    321 chess.py           chess engine
    105 dijkstra.py        dijkstra's algorithm
