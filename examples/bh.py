@@ -661,7 +661,7 @@ class BH(object):
 
         if BH.print_results:
             for j, b in enumerate(root.bodies):
-                print "body %s: %s" % (repr(j), repr(b.pos))
+                print "body %d: %s" % (j, b.pos)
 
         if BH.print_msgs:
             print "Build Time %.3f" % (end0 - start0)
