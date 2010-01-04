@@ -672,35 +672,6 @@ print 'debug' if () else 'no debug'
 print int(bool(DEBUG))
 print int(bool(1))
 
-# class-level expressions
-from sys import maxint
-
-class Random(object):
-    m = maxint
-    a = 48271
-    q = m / a
-    r = m % a
-
-    def __init__(self, the_seed):
-        self.seed = the_seed
-
-    def uniform(self, min, max):
-        k = self.seed / Random.q
-        self.seed = Random.a * (self.seed - k * Random.q) - Random.r * k
-        if self.seed < 1:
-            self.seed += Random.m
-        r = float(self.seed) / Random.m
-        return r * (max - min) + min
-
-print Random.m
-print Random.a
-print Random.q
-print Random.r
-
-rnd = Random(123)
-for qapla in range(5):
-    print '%.2f' % rnd.uniform(0.0, 0.999)
-
 ''', '''
 output(equal=True)
 '''),
