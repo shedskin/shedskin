@@ -1147,7 +1147,7 @@ class generateVisitor(ASTVisitor):
         if not self.inhcpa(func):
             if func.ident in ['__iadd__', '__isub__', '__imul__']:
                 return
-            if func.lambdanr is None:
+            if func.lambdanr is None and not repr(node.code).startswith("Stmt([Raise(CallFunc(Name('NotImplementedError')"):
                 error(repr(func)+' not called!', node, warning=True)
             if not (declare and func.ident in func.parent.virtuals):
                 return
