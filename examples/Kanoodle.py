@@ -175,14 +175,14 @@ last = root
 ## build the columns
 
 pcolumns = {}
-for col in c1:
-    c = Column(col)
+for col2 in c1:
+    c = Column(col2)
     last.right = c
     c.left = last
     c.right = root
     root.left = c
     last = c
-    pcolumns[col] = c
+    pcolumns[col2] = c
 
 last = root
 for row in range(rows):
