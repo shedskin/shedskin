@@ -144,6 +144,6 @@ def setroot(r):
 solutions = 0
 o = []
 
-def setprintsolution(f):
-    global printsolution
-    printsolution = f
+#def setprintsolution(f):
+#    global printsolution
+#    printsolution = f
