@@ -505,14 +505,13 @@ def ifa_split_vars(cl, dcpa, vars, nr_classes, classes_nr, split):
         if not (var, dcpa, 0) in getgx().cnode:
             continue
         node = getgx().cnode[var, dcpa, 0]
-        creation_points, paths, assignsets, allnodes, csites = ifa_flow_graph(cl, dcpa, node)
-        if len(csites) == 1:
+        creation_points, paths, assignsets, allnodes, csites, emptycsites = ifa_flow_graph(cl, dcpa, node)
+        if len(csites)+len(emptycsites) == 1:
             continue
         if DEBUG: print 'IFA visit var %s.%s, %d' % (cl.ident, var.name, dcpa)
-        ifa_split_empties(cl, dcpa, allnodes, assignsets, split)
-        if len(merge_simple_types(getgx().types[node])) < 2 or len(assignsets) == 1:
-            continue
-        ifa_split_no_confusion(cl, dcpa, varnum, classes_nr, nr_classes, csites, allnodes, split)
+        if ((len(merge_simple_types(getgx().types[node])) > 1 and len(assignsets) > 1) or \
+            (assignsets and emptycsites)): # XXX move to split_no_conf
+            ifa_split_no_confusion(cl, dcpa, varnum, classes_nr, nr_classes, csites, emptycsites, allnodes, split)
         if split:
             if DEBUG: print 'IFA found simple splits, aborting'
             break
@@ -552,18 +551,21 @@ def ifa_determine_split(node, allnodes):
     remaining = [setx for setx in remaining if setx]
     return remaining
 
-def ifa_split_no_confusion(cl, dcpa, varnum, classes_nr, nr_classes, csites, allnodes, split):
+def ifa_split_no_confusion(cl, dcpa, varnum, classes_nr, nr_classes, csites, emptycsites, allnodes, split):
     '''creation sites on single path: split them off, possibly reusing contour'''
-    attr_types = nr_classes[dcpa]
-    noconf = set([n for n in csites if len(n.paths)==1])
-    others = len(csites) - len(noconf)
+    attr_types = list(nr_classes[dcpa])
+    noconf = set([n for n in csites if len(n.paths)==1]+emptycsites)
+    others = len(csites) + len(emptycsites) - len(noconf)
     subtype_csites = {}
     for node in noconf:
-        assign_set = node.paths[0]
-        if len(attr_types) == 1 and list(attr_types)[0] == assign_set: # XXX only one var
+        if node.paths:
+            assign_set = node.paths[0]
+        else:
+            assign_set = frozenset()
+        if attr_types[varnum] == assign_set:
             others += 1
         else:
-            subtype = list(attr_types)
+            subtype = attr_types[:]
             subtype[varnum] = assign_set
             subtype = tuple(subtype)
             try: subtype_csites[subtype].append(node)
@@ -579,19 +581,6 @@ def ifa_split_no_confusion(cl, dcpa, varnum, classes_nr, nr_classes, csites, all
         else: # create new contour
             classes_nr[subtype] = cl.newdcpa
             ifa_split_class(cl, dcpa, csites, split)
-
-def ifa_split_empties(cl, dcpa, allnodes, assignsets, split):
-    ''' split off empty assignment sets (eg, [], or [x[0]] where x is None in some template) '''
-    endpoints = [huh for huh in allnodes if not huh.in_] # XXX call csites, paths==0 better?
-    if assignsets and cl.ident in ['list', 'tuple', 'tuple2']: # XXX more
-        allcsites = set()
-        for n, types in getgx().types.iteritems():
-            if (cl, dcpa) in types and not n.in_:
-                allcsites.add(n)
-        empties = list(allcsites-set(endpoints))
-        if empties:
-            if DEBUG: print 'IFA found empties', len(empties)
-            ifa_split_class(cl, dcpa, empties, split)
 
 def ifa_class_types(cl, vars):
     ''' create table for previously deduced types '''
@@ -666,7 +655,16 @@ def ifa_flow_graph(cl, dcpa, node):
             csites.append(n)
     flow_creation_sites(csites, allnodes)
 
-    return creation_points, paths, assignsets, allnodes, csites
+    # csites not flowing to any assignment
+    allcsites = set()
+    for n, types in getgx().types.iteritems():
+        if (cl, dcpa) in types and not n.in_:
+            allcsites.add(n)
+    emptycsites = list(allcsites-set(csites))
+    for n in emptycsites:
+        n.paths = []
+
+    return creation_points, paths, assignsets, allnodes, csites, emptycsites
 
 def ifa_split_class(cl, dcpa, things, split):
     split.append((cl, dcpa, things, cl.newdcpa))
