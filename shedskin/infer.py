@@ -536,21 +536,6 @@ def ifa_split_vars(cl, dcpa, vars, nr_classes, classes_nr, split):
                 ifa_split_class(cl, dcpa, [csite], split)
             return split
 
-def ifa_determine_split(node, allnodes):
-    ''' determine split along incoming dataflow edges '''
-    remaining = [incoming.csites.copy() for incoming in node.in_ if incoming in allnodes]
-    # --- try to clean out larger collections, if subsets are in smaller ones
-    for (i, seti) in enumerate(remaining):
-        for setj in remaining[i+1:]:
-            in_both = seti.intersection(setj)
-            if in_both:
-                if len(seti) > len(setj):
-                    seti -= in_both
-                else:
-                    setj -= in_both
-    remaining = [setx for setx in remaining if setx]
-    return remaining
-
 def ifa_split_no_confusion(cl, dcpa, varnum, classes_nr, nr_classes, csites, emptycsites, allnodes, split):
     '''creation sites on single path: split them off, possibly reusing contour'''
     attr_types = list(nr_classes[dcpa])
@@ -598,6 +583,21 @@ def ifa_class_types(cl, vars):
         nr_classes[dcpa] = attr_types
         classes_nr[attr_types] = dcpa
     return classes_nr, nr_classes
+
+def ifa_determine_split(node, allnodes):
+    ''' determine split along incoming dataflow edges '''
+    remaining = [incoming.csites.copy() for incoming in node.in_ if incoming in allnodes]
+    # --- try to clean out larger collections, if subsets are in smaller ones
+    for (i, seti) in enumerate(remaining):
+        for setj in remaining[i+1:]:
+            in_both = seti.intersection(setj)
+            if in_both:
+                if len(seti) > len(setj):
+                    seti -= in_both
+                else:
+                    setj -= in_both
+    remaining = [setx for setx in remaining if setx]
+    return remaining
 
 def ifa_classes_to_split():
     ''' setup classes to perform splitting on '''
