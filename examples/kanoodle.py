@@ -1,7 +1,13 @@
-## This will find aolustions to the kanoodle puzzle where the "L" piece,
-## which looks like a "*" sign is placed with the center at (Lcol, Lrow)
+'''
+This will find solutions to the kanoodle puzzle where the "L" piece,
+which looks like a "*" sign is placed with the center at (Lcol, Lrow)
 
-## implements the Dancing Links algorithm, following Knuth's paper
+implements the Dancing Links algorithm, following Knuth's paper
+
+copyright David Austin, license GPL2
+
+'''
+
 import sys
 
 updates = 0
