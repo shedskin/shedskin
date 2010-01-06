@@ -1,6 +1,6 @@
-43 programs that work with Shed Skin 0.3.
+44 programs that work with Shed Skin 0.3.
 
-9,810 lines in total (using sloccount, around 14,000 otherwise)
+10,139 lines in total (using sloccount, around 14,300 otherwise)
 
 If you have another interesting test case, please send it to:
    mark.dufour@gmail.com
@@ -27,6 +27,7 @@ lines  name               description               notes
    190 LZ2.py             Lempel-Ziv compressor
    174 ac_encode.py       Arithmetic coding compressor
    222 block.py           Huffman block compressor
+   329 kanoodle.py        Knuth's dancing links
     26 mandelbrot.py      mandelbrot fractal
    223 mastermind.py      mastermind against comp
    117 mastermind2.py     mastermind strategies
