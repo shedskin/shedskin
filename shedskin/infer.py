@@ -296,7 +296,6 @@ def product(*lists):
 def cartesian_product(node, worklist):
     funcs = possible_functions(node)
     argtypes = possible_argtypes(node, funcs, worklist)
-    #print 'argtypes', argtypes, node #, args, argtypes, cartesian(*([funcs]+argtypes))
     return product(*([funcs]+argtypes))
 
 def redirect(c, dcpa, func, callfunc, ident):
@@ -304,7 +303,7 @@ def redirect(c, dcpa, func, callfunc, ident):
     if func.mv.module.builtin and (not func.mv.module.ident == 'builtin' or func.ident == 'map'): # XXX
         if isinstance(func.parent, class_): funcs = func.parent.funcs
         else: funcs = func.mv.funcs
-        redir = '__%s%d' % (func.ident, len(callfunc.args))
+        redir = '__%s%d' % (func.ident, len([kwarg for kwarg in callfunc.args if not isinstance(kwarg, Keyword)]))
         func = funcs.get(redir, func)
 
     # filter
@@ -413,7 +412,7 @@ def create_template(func, dcpa, c, worklist):
     func.cp[dcpa][c] = cpa = len(func.cp[dcpa]) # XXX +1
 
     #if not func.mv.module.builtin and not func.ident in ['__getattr__', '__setattr__']:
-    #if not callnode.mv.module.builtin:
+    #if func.ident == 'product':
     #    print 'template', (func, dcpa), c
 
     getgx().templates += 1
@@ -454,7 +453,7 @@ def actuals_formals(expr, func, node, dcpa, cpa, types, worklist):
                 smut.append(kw.expr)
 
     # XXX add defaults to smut here, simplify code below
-    if not ident in ['min','max','bool'] and (len(smut) < len(formals)-len(func.defaults) or len(smut) > len(formals)) and not func.node.varargs and not expr.star_args and func.lambdanr is None and expr not in getgx().lambdawrapper:
+    if not ident in ['min','max','bool'] and (len(smut) < len(formals)-len(func.defaults) or len(smut) > len(formals)) and not func.node.varargs and not func.node.kwargs and not expr.star_args and func.lambdanr is None and expr not in getgx().lambdawrapper:
         return
 
     # --- connect/seed as much direct arguments as possible
@@ -743,7 +742,6 @@ def iterative_dataflow_analysis():
 def ifa_seed_template(func, cart, dcpa, cpa, worklist):
     if cart != None: # (None means we are not in the process of propagation)
         #print 'funccopy', func.ident #, func.nodes
-
         if isinstance(func.parent, class_): # self
             cart = ((func.parent, dcpa),)+cart
 

@@ -675,9 +675,9 @@ def connect_actual_formal(expr, func, parent_constr=False, check_error=False):
         actuals = actuals[1:]
 
     if check_error and func.ident not in ['min', 'max'] and func.lambdanr is None and expr not in getgx().lambdawrapper:
-        if not func.node.varargs and len(actuals)+len(keywords) > len(formals):
+        if not func.node.varargs and not func.node.kwargs and len(actuals)+len(keywords) > len(formals):
             error("too many arguments in call to '%s'" % func.ident, expr)
-        if not func.node.varargs and len(actuals)+len(keywords) < len(formals)-len(func.defaults) and not expr.star_args:
+        if not func.node.varargs and not func.node.kwargs and len(actuals)+len(keywords) < len(formals)-len(func.defaults) and not expr.star_args:
             error("not enough arguments in call to '%s'" % func.ident, expr)
         missing = formals[len(actuals):-len(func.defaults)]
         if [x for x in missing if not x in [a.name for a in keywords]]:

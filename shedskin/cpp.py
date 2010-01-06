@@ -1838,9 +1838,9 @@ class generateVisitor(ASTVisitor):
                 self.append(', ')
 
         # number of variadic arguments
+        if kwredirects:
+            self.append(', ')
         if target.node.varargs:
-            if kwredirects:
-                self.append(', ')
             nrvarargs = (len(node.args)-nrredirects)
             self.append('%d' % nrvarargs)
             if nrvarargs:
