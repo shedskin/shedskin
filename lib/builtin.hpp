@@ -493,9 +493,7 @@ public:
         return __cmp(this->__len__(), b->__len__());
     }
 
-    virtual int __contains__(T t) {
-
-    }
+    virtual int __contains__(T t) = 0;
 
     void resize(int n) {
         units.resize(n);
@@ -1023,9 +1021,9 @@ class Exception: public pyobj {
 public:
     str *msg;
     Exception(str *msg=0) { __init__(msg); }
-    int __init__(str *msg) { this->msg = msg; }
-    int __init__(void *msg) { this->msg = 0; } /* XXX */
-    int __init__(int msg) { this->msg = 0; } /* XXX */
+    void __init__(str *msg) { this->msg = msg; }
+    void __init__(void *msg) { this->msg = 0; } /* XXX */
+    void __init__(int msg) { this->msg = 0; } /* XXX */
     str *__repr__() { return msg ? msg : new str("0"); }
 
 #ifdef __SS_BIND
@@ -1700,6 +1698,7 @@ template<class T> void *list<T>::__setslice__(int x, int l, int u, int s, pyiter
         la->units.push_back(e);
     END_FOR
     this->__setslice__(x, l, u, s, la);
+    return NULL;
 }
 
 template<class T> void *list<T>::__setslice__(int x, int l, int u, int s, list<T> *la) {
@@ -3169,11 +3168,13 @@ template <class A> list<A> *sorted(pyseq<A> *x, int cmp, int key, int reverse) {
 template <class U> list<str *> *sorted(str *x, int (*cmp)(str *, str *), U (*key)(str *), int reverse) {
     list<str *> *l = __list(x);
     l->sort(cmp, key, reverse);
+    return l;
 }
 list<str *> *sorted(str *x, int (*cmp)(str *, str *), int key, int reverse);
 template <class U> list<str *> *sorted(str *x, int cmp, U (*key)(str *), int reverse) {
     list<str *> *l = __list(x);
     l->sort(cmp, key, reverse);
+    return l;
 }
 list<str *> *sorted(str *x, int cmp, int key, int reverse);
 
@@ -3235,7 +3236,6 @@ template <class A> list<tuple2<A,A> *> *__zip1(pyiter<A> *a) {
 }
 
 template <class A, class B> list<tuple2<A, B> *> *__zip2(pyiter<A> *a, pyiter<B> *b) {
-    list<int> *__0;
     list<A> la;
     list<B> lb;
     int __1, __2, i;

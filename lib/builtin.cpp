@@ -235,7 +235,7 @@ str::str(__GC_STRING s) : unit(s), cached_hash(0) {
     __class__ = cl_str_;
 }
 
-str::str(const char *s, int size) : cached_hash(0), unit(__GC_STRING(s, size)) { /* '\0' delimiter in C */
+str::str(const char *s, int size) : unit(__GC_STRING(s, size)), cached_hash(0) { /* '\0' delimiter in C */
     __class__ = cl_str_;
 }
 
@@ -1237,7 +1237,6 @@ str *raw_input(str *msg) {
 
 int __int(str *s, int base) {
     char *cp;
-    int size = s->unit.size();
     if(!s->isdigit())
         s = s->strip();
     int i = strtol(s->unit.c_str(), &cp, base);
@@ -1723,7 +1722,6 @@ void __modfill(str **fmt, pyobj *t, str **s, pyobj *a1, pyobj *a2) {
     char c;
     int i = (*fmt)->unit.find('%');
     int j = __fmtpos(*fmt);
-    str *d;
     *s = new str((*s)->unit + (*fmt)->unit.substr(0, i));
     str *add;
 
@@ -1819,7 +1817,7 @@ str *__mod5(list<pyobj *> *vals, int newline) {
 }
 
 str *__modcd(str *fmt, list<str *> *names, ...) {
-    int i, j;
+    int i;
     list<pyobj *> *vals = new list<pyobj *>();
     va_list args;
     va_start(args, names);
@@ -1833,7 +1831,7 @@ str *__modcd(str *fmt, list<str *> *names, ...) {
 
     d = __dict(__zip2(names, vals));
 
-    str *const_5 = new str("%("), *const_6 = new str(")");
+    str *const_6 = new str(")");
 
     list<pyobj *> *values = new list<pyobj *>();
 

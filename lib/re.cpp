@@ -177,34 +177,34 @@ __GC_STRING re_object::__expand(__GC_STRING *subj, int *captured, __GC_STRING tp
             case '7' :
             case '8' :
             case '9' :
-   
+
                 j = i;
                 while(isdigit(tpl[i]) && i < len) i++;
-   
+
                 ref = strtol(tpl.substr(j, i - j).c_str(), 0, 10);
                 out += __group(subj, captured, ref);
-   
+
                 i--;
                 continue;
-   
+
             //named reference
             case 'g' :
-   
+
                 if(tpl[++i] != '<') throw new error(new str("invalid name group"));
                 i++;
-   
+
                 j = i;
                 c = 1;
                 while(tpl[i] != '>' && i < len) c = c && ::isdigit((int)tpl[i]), i++;
-   
+
                 if(tpl[i] != '>') throw new error(new str("unterminated name group"));
                 if(::isdigit((int)tpl[j]) && !c) throw new error(new str("invalid first character in name group"));
-   
+
                 if(c) out += __group(subj, captured, strtol(tpl.substr(j, i - j).c_str(), 0, 10));
                 else out += __group(subj, captured, new str(tpl.substr(j, i - j)));
-   
+
                 continue;
-   
+
             //escape char
             case 'n' : c = '\n'; break;
             case 'v' : c = '\v'; break;
@@ -213,7 +213,7 @@ __GC_STRING re_object::__expand(__GC_STRING *subj, int *captured, __GC_STRING tp
             case 'f' : c = '\f'; break;
             case 't' : c = '\t'; break;
             case 'r' : c = '\r'; break;
-   
+
             //nothing meaningful here, ignore
             default :
                 c = 0;
@@ -246,8 +246,7 @@ void re_free(void *o)
 str *re_object::__subn(str *repl, str *subj, int maxn, int *howmany)
 {
     __GC_STRING *s, out;
-    list<str *> *r;
-    int *captured, clen, i, j, cur;
+    int *captured, clen, i, cur;
     const char *c_subj;
 
     //temporary data
@@ -300,8 +299,8 @@ str *re_object::sub(str *repl, str *subj, int maxn)
 str *re_object::sub(replfunc func, str *string, int maxn) {
     list<str *> *l;
     __re__::match_object *match;
-    __iter<__re__::match_object *> *__0, *__1;
-    int __2, at;
+    __iter<__re__::match_object *> *__1;
+    int at;
 
     at = 0;
     l = (new list<str *>());
