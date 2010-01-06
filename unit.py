@@ -576,6 +576,8 @@ print l
 l.sort(cmp=lambda a,b:cmp(a,b), key=lambda a:-a)
 print l
 
+print sorted('dcba', key=lambda c: c)
+
 # missing cast
 class hop:
     def __init__(self, a):
@@ -691,7 +693,7 @@ from random import random as randum
 from string import *
 random.seed(1)
 a = MAXINT
-print a
+#print a
 print randum()
 
 #default argument problem
