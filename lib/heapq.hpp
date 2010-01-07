@@ -1,9 +1,8 @@
 #ifndef HEAPQ_HPP
 #define HEAPQ_HPP
 
-#include <cassert>
-
 #include "builtin.hpp"
+#include <cassert>
 
 using namespace __shedskin__;
 
