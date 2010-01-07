@@ -171,7 +171,7 @@ def supported_vars(vars): # XXX virtuals?
     return supported
 
 def hasmethod(cl, name): # XXX shared.py
-    return name in cl.funcs and not cl.funcs[name].inherited and cpp.hmcpa(cl.funcs[name])
+    return name in cl.funcs and not cl.funcs[name].invisible and not cl.funcs[name].inherited and cpp.hmcpa(cl.funcs[name])
 
 def do_extmod_class(gv, cl):
     # determine methods, vars to expose
