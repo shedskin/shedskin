@@ -131,6 +131,7 @@ double time() {
     return tim.tv_sec+tim.tv_usec/1000000.0;
 }
 
+#ifndef WIN32
 void *sleep(double s) {
     struct timespec time;
     time_t seconds = (int) s;
@@ -142,6 +143,7 @@ void *sleep(double s) {
 
     return NULL;
 }
+#endif
 
 double mktime(struct_time *tuple) {
     return ::mktime(tuple2tm(tuple));
