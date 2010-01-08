@@ -7,9 +7,9 @@ An experimental (restricted) Python-to-C++ Compiler
 ---------------------------------------------------
 
 :Author: mark.dufour@gmail.com
-:Date:   2009-07-15
+:Date:   2010-01-08
 :Copyright: GPL version 3 or later
-:Version: 0.2
+:Version: 0.3
 :Manual section: 1
 
 SYNOPSIS
@@ -17,7 +17,7 @@ SYNOPSIS
 
 shedskin [OPTION]... FILE
 
- -a --noann             Don't output annotated source code
+ -a --ann               Output annotated source code
 
  -b --nobounds          Disable bounds checking
 
@@ -27,14 +27,14 @@ shedskin [OPTION]... FILE
 
  -f --flags             Provide alternate Makefile flags
 
- -r --random            Use fast random number generator 
+ -r --random            Use fast random number generator
 
- -w --nowrap            Disable wrap-around checking 
+ -w --nowrap            Disable wrap-around checking
 
 DESCRIPTION
 ===========
 
-Shed Skin is an experimental Python-to-C++ compiler designed to speed up the execution of Python programs. It converts programs written in a static subset of Python to C++. The C++ code can be compiled to executable code, which can be run either as a standalone program or as a module imported and called from CPython. 
+Shed Skin is an experimental Python-to-C++ compiler designed to speed up the execution of Python programs. It converts programs written in a static subset of Python to C++. The C++ code can be compiled to executable code, which can be run either as a standalone program or as a module imported and called from CPython.
 
 LIMITATIONS
 ===========
@@ -50,4 +50,4 @@ OPTIONS
 
 THANKS
 ======
-Google, Bearophile, Brian Blais, Paul Boddie, Djamel Cherif, Mark Dewing, James Coughlan, Luis M. Gonzales, Karel Heyse, Denis de Leeuw Duarte, Michael Elkins, FFAO, Van Lindberg, David Marek, Douglas McNeil, Jeff Miller, Joaquin Abian Monux, Harri Pasanen, Jeremie Roquet, SirNotAppearingInThisManPage, Thomas Spura, Dave Tweed, Jaroslaw Tworek, Pavel Vinogradov
+Google, Bearophile, Brian Blais, Paul Boddie, Djamel Cherif, Mark Dewing, James Coughlan, Luis M. Gonzales, Karel Heyse, Denis de Leeuw Duarte, Michael Elkins, FFAO, Van Lindberg, David Marek, Douglas McNeil, Jeff Miller, Joaquin Abian Monux, Harri Pasanen, Joris van Rantwijk, Jeremie Roquet, SirNotAppearingInThisManPage, Thomas Spura, Dave Tweed, Jaroslaw Tworek, Pavel Vinogradov
