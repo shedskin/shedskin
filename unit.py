@@ -540,6 +540,9 @@ print filter(lambda c: c>'a', 'abaaac')
 print filter(lambda c: c>'a', tuple('abaaac'))
 print filter(None, range(3)), filter(None, 'abc'), filter(None, tuple(range(3)))
 
+options = filter(lambda option: option != 'fake', ['duh'])
+print options
+
 # next
 it1 = iter(range(4))
 for i in range(10):
