@@ -213,7 +213,7 @@ class generateVisitor(ASTVisitor):
         print >>self.out
 
         for child in node.node.getChildNodes():
-            if isinstance(child, From):
+            if isinstance(child, From) and child.modname != '__future__':
                 mod_id = '__'+'__::__'.join(child.modname.split('.'))+'__'
 
                 for (name, pseudonym) in child.names:
@@ -474,6 +474,28 @@ class generateVisitor(ASTVisitor):
             self.visitm('___bool(', node, '!=NULL)', func)
         else:
             self.visitm('___bool(', node, ')', func)
+
+    def visitWith(self, node, func=None):
+        print >>self.out
+        if node.vars:
+            self.start('WITH_VAR(')
+            self.append(typesetreprnew(node.expr, node))
+            self.append(',')
+            self.visit(node.expr, func)
+            self.append(',')
+            self.visit(node.vars, func)
+        else:
+            self.start('WITH(')
+            self.append(typesetreprnew(node.expr, node))
+            self.append(',')
+            self.visit(node.expr, func)
+
+        self.append(')')
+        print >>self.out, self.line
+        self.indent()
+        self.visit(node.body, func)
+        self.deindent()
+        self.output('END_WITH')
 
     def visitWhile(self, node, func=None):
         print >>self.out

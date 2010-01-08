@@ -985,6 +985,9 @@ public:
 
     int tell();
 
+    void __enter__();
+    void __exit__();
+
     str *__repr__();
 
     __iter<str *> *__iter__();
@@ -1232,6 +1235,30 @@ class StopIteration : public Exception { public: StopIteration(str *msg=0) : Exc
         i=__ ## t1; \
 
 #define END_FOR }
+
+template<class T> class With {
+public:
+    With(T expr) : _expr(expr) {
+        _expr->__enter__();
+    }
+    ~With() {
+        _expr->__exit__();
+    }
+    operator T() const {
+        return _expr;
+    }
+private:
+    T _expr;
+};
+
+#define WITH(t, e) {           \
+    With<t> __with(e); // TODO unique id
+
+#define WITH_VAR(t, e, v) {    \
+    With<t> __with##v(e);      \
+    t v = __with##v;
+
+#define END_WITH }
 
 static void __throw_index_out_of_range() { /* improve inlining of __wrap */
    throw new IndexError(new str("index out of range"));

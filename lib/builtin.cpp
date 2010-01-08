@@ -1218,6 +1218,12 @@ str *file::__repr__() {
     return (new str("file '"))->__add__(name)->__add__(new str("'"));
 }
 
+void file::__enter__() { }
+
+void file::__exit__() {
+    close();
+}
+
 /* builtin functions */
 
 str *pyobj::__repr__() {
