@@ -746,7 +746,8 @@ def __map3(func, iter1, iter2):
     return [func(iter(iter1).next(), iter(iter2).next())]
 
 def filter(func, iter1):
-    return [func(iter(iter1).next())]
+    if func(iter(iter1).next()):
+        return [iter(iter1).next()]
 def __filter(func, iter1):
     func(iter(iter1).next())
     return iter1
