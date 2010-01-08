@@ -5,283 +5,147 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="Docutils 0.5: http://docutils.sourceforge.net/" />
 <title>Shed Skin Tutorial</title>
-<meta name="date" content="July 15, 2009" />
+<meta name="date" content="Jan 8 2010" />
 <meta name="authors" content="Mark Dufour and James Coughlan" />
 <style type="text/css">
 
 /*
-:Author: David Goodger (goodger@python.org)
-:Id: $Id: html4css1.css 5196 2007-06-03 20:25:28Z wiemann $
+:Authors: Ian Bicking, Michael Foord
+:Contact: fuzzyman@voidspace.org.uk
+:Date: 2005/08/26 
+:Version: 0.1.0
 :Copyright: This stylesheet has been placed in the public domain.
 
-Default cascading style sheet for the HTML output of Docutils.
-
-See http://docutils.sf.net/docs/howto/html-stylesheets.html for how to
-customize this style sheet.
+Stylesheet for Docutils.
+Based on ``blue_box.css`` by Ian Bicking
+and ``html4css1.css`` revision 1.46.
 */
 
-/* used to remove borders from tables and images */
-.borderless, table.borderless td, table.borderless th {
-  border: 0 }
+@import url(html4css1.css);
 
-table.borderless td, table.borderless th {
-  /* Override padding for "table.docutils td" with "! important".
-     The right padding separates the table cells. */
-  padding: 0 0.5em 0 0 ! important }
+body {
+  font-family: Arial, sans-serif;
+}
 
-.first {
-  /* Override more specific margin styles with "! important". */
-  margin-top: 0 ! important }
+em, i {
+  /* Typically serif fonts have much nicer italics */
+  font-family: Times New Roman, Times, serif;
+}
 
-.last, .with-subtitle {
-  margin-bottom: 0 ! important }
+a.target {
+  color: blue;
+}
 
-.hidden {
-  display: none }
+a.target {
+  color: blue;
+}
 
 a.toc-backref {
-  text-decoration: none ;
-  color: black }
+  text-decoration: none;
+  color: black;
+}
 
-blockquote.epigraph {
-  margin: 2em 5em ; }
+a.toc-backref:hover {
+  background-color: inherit;
+}
 
-dl.docutils dd {
-  margin-bottom: 0.5em }
+a:hover {
+  background-color: #cccccc;
+}
 
-/* Uncomment (and remove this text!) to get bold-faced definition list terms
-dl.docutils dt {
-  font-weight: bold }
-*/
-
-div.abstract {
-  margin: 2em 5em }
-
-div.abstract p.topic-title {
-  font-weight: bold ;
-  text-align: center }
-
-div.admonition, div.attention, div.caution, div.danger, div.error,
-div.hint, div.important, div.note, div.tip, div.warning {
-  margin: 2em ;
-  border: medium outset ;
-  padding: 1em }
+div.attention, div.caution, div.danger, div.error, div.hint,
+div.important, div.note, div.tip, div.warning {
+  background-color: #cccccc;
+  padding: 3px;
+  width: 80%;
+}
 
 div.admonition p.admonition-title, div.hint p.admonition-title,
 div.important p.admonition-title, div.note p.admonition-title,
-div.tip p.admonition-title {
-  font-weight: bold ;
-  font-family: sans-serif }
+div.tip p.admonition-title  {
+  text-align: center;
+  background-color: #999999;
+  display: block;
+  margin: 0;
+}
 
 div.attention p.admonition-title, div.caution p.admonition-title,
 div.danger p.admonition-title, div.error p.admonition-title,
 div.warning p.admonition-title {
-  color: red ;
-  font-weight: bold ;
-  font-family: sans-serif }
+  color: #cc0000;
+  font-family: sans-serif;
+  text-align: center;
+  background-color: #999999;
+  display: block;
+  margin: 0;
+}
 
-/* Uncomment (and remove this text!) to get reduced vertical space in
-   compound paragraphs.
-div.compound .compound-first, div.compound .compound-middle {
-  margin-bottom: 0.5em }
+h1, h2, h3, h4, h5, h6 {
+  font-family: Helvetica, Arial, sans-serif;
+  border: thin solid black;
+  /* This makes the borders rounded on Mozilla, which pleases me */
+  -moz-border-radius: 8px;
+  padding: 4px;
+}
 
-div.compound .compound-last, div.compound .compound-middle {
-  margin-top: 0.5em }
-*/
+h1 {
+  background-color: #444499;
+  color: #ffffff;
+  border: medium solid black;
+}
 
-div.dedication {
-  margin: 2em 5em ;
-  text-align: center ;
-  font-style: italic }
+h1 a.toc-backref, h2 a.toc-backref { 
+  color: #ffffff;
+}
 
-div.dedication p.topic-title {
-  font-weight: bold ;
-  font-style: normal }
+h2 {
+  background-color: #666666;
+  color: #ffffff;
+  border: medium solid black;
+}
 
-div.figure {
-  margin-left: 2em ;
-  margin-right: 2em }
+h3, h4, h5, h6 {
+  background-color: #cccccc;
+  color: #000000;
+}
 
-div.footer, div.header {
-  clear: both;
-  font-size: smaller }
-
-div.line-block {
-  display: block ;
-  margin-top: 1em ;
-  margin-bottom: 1em }
-
-div.line-block div.line-block {
-  margin-top: 0 ;
-  margin-bottom: 0 ;
-  margin-left: 1.5em }
-
-div.sidebar {
-  margin: 0 0 0.5em 1em ;
-  border: medium outset ;
-  padding: 1em ;
-  background-color: #ffffee ;
-  width: 40% ;
-  float: right ;
-  clear: right }
-
-div.sidebar p.rubric {
-  font-family: sans-serif ;
-  font-size: medium }
-
-div.system-messages {
-  margin: 5em }
-
-div.system-messages h1 {
-  color: red }
-
-div.system-message {
-  border: medium outset ;
-  padding: 1em }
-
-div.system-message p.system-message-title {
-  color: red ;
-  font-weight: bold }
-
-div.topic {
-  margin: 2em }
-
-h1.section-subtitle, h2.section-subtitle, h3.section-subtitle,
-h4.section-subtitle, h5.section-subtitle, h6.section-subtitle {
-  margin-top: 0.4em }
+h3 a.toc-backref, h4 a.toc-backref, h5 a.toc-backref, 
+h6 a.toc-backref { 
+  color: #000000;
+}
 
 h1.title {
-  text-align: center }
-
-h2.subtitle {
-  text-align: center }
-
-hr.docutils {
-  width: 75% }
-
-img.align-left {
-  clear: left }
-
-img.align-right {
-  clear: right }
-
-ol.simple, ul.simple {
-  margin-bottom: 1em }
-
-ol.arabic {
-  list-style: decimal }
-
-ol.loweralpha {
-  list-style: lower-alpha }
-
-ol.upperalpha {
-  list-style: upper-alpha }
-
-ol.lowerroman {
-  list-style: lower-roman }
-
-ol.upperroman {
-  list-style: upper-roman }
-
-p.attribution {
-  text-align: right ;
-  margin-left: 50% }
-
-p.caption {
-  font-style: italic }
-
-p.credits {
-  font-style: italic ;
-  font-size: smaller }
-
-p.label {
-  white-space: nowrap }
-
-p.rubric {
-  font-weight: bold ;
-  font-size: larger ;
-  color: maroon ;
-  text-align: center }
-
-p.sidebar-title {
-  font-family: sans-serif ;
-  font-weight: bold ;
-  font-size: larger }
-
-p.sidebar-subtitle {
-  font-family: sans-serif ;
-  font-weight: bold }
-
-p.topic-title {
-  font-weight: bold }
-
-pre.address {
-  margin-bottom: 0 ;
-  margin-top: 0 ;
-  font-family: serif ;
-  font-size: 100% }
-
-pre.literal-block, pre.doctest-block {
-  margin-left: 2em ;
-  margin-right: 2em }
-
-span.classifier {
-  font-family: sans-serif ;
-  font-style: oblique }
-
-span.classifier-delimiter {
-  font-family: sans-serif ;
-  font-weight: bold }
-
-span.interpreted {
-  font-family: sans-serif }
-
-span.option {
-  white-space: nowrap }
-
-span.pre {
-  white-space: pre }
-
-span.problematic {
-  color: red }
-
-span.section-subtitle {
-  /* font-size relative to parent (h1..h6 element) */
-  font-size: 80% }
-
-table.citation {
-  border-left: solid 1px gray;
-  margin-left: 1px }
-
-table.docinfo {
-  margin: 2em 4em }
-
-table.docutils {
-  margin-top: 0.5em ;
-  margin-bottom: 0.5em }
+  text-align: center;
+  background-color: #444499;
+  color: #eeeeee;
+  border: thick solid black;
+  -moz-border-radius: 20px;
+}
 
 table.footnote {
-  border-left: solid 1px black;
-  margin-left: 1px }
+  padding-left: 0.5ex;
+}
 
-table.docutils td, table.docutils th,
-table.docinfo td, table.docinfo th {
-  padding-left: 0.5em ;
-  padding-right: 0.5em ;
-  vertical-align: top }
+table.citation {
+  padding-left: 0.5ex
+}
 
-table.docutils th.field-name, table.docinfo th.docinfo-name {
-  font-weight: bold ;
-  text-align: left ;
-  white-space: nowrap ;
-  padding-left: 0 }
+pre.literal-block, pre.doctest-block {
+  border: thin black solid;
+  padding: 5px;
+}
 
-h1 tt.docutils, h2 tt.docutils, h3 tt.docutils,
-h4 tt.docutils, h5 tt.docutils, h6 tt.docutils {
-  font-size: 100% }
+.image img { border-style : solid;
+            border-width : 2px;
+}
 
-ul.auto-toc {
-  list-style-type: none }
+h1 tt, h2 tt, h3 tt, h4 tt, h5 tt, h6 tt {
+  font-size: 100%;
+}
+
+code, tt {
+  color: #000066;
+}
 
 </style>
 </head>
@@ -293,9 +157,9 @@ ul.auto-toc {
 <col class="docinfo-content" />
 <tbody valign="top">
 <tr><th class="docinfo-name">Version:</th>
-<td>Shed Skin 0.2</td></tr>
+<td>0.3</td></tr>
 <tr><th class="docinfo-name">Date:</th>
-<td>July 15, 2009</td></tr>
+<td>Jan 8 2010</td></tr>
 <tr><th class="docinfo-name">Authors:</th>
 <td>Mark Dufour and James Coughlan</td></tr>
 </tbody>
@@ -315,17 +179,16 @@ ul.auto-toc {
 <li><a class="reference internal" href="#id10" id="id22">Command-line Options</a></li>
 <li><a class="reference internal" href="#id11" id="id23">Tips and Tricks</a></li>
 <li><a class="reference internal" href="#id12" id="id24">How to help out in Shed Skin Development</a></li>
-<li><a class="reference internal" href="#shed-skin-roadmap" id="id25">Shed Skin Roadmap</a></li>
 </ul>
 </div>
 <div class="section" id="id1">
 <span id="introduction"></span><h1><a class="toc-backref" href="#id13">Introduction</a></h1>
 <p><strong>Shed Skin</strong> is an <em>experimental</em> <strong>Python-to-C++ compiler</strong> designed to speed up the execution of computation-intensive Python programs. It converts programs written in a <em>static subset</em> of Python to C++. The C++ code can be compiled to executable code, which can be run either as a standalone program or as an extension module easily imported and used in a regular Python program.</p>
 <p><strong>Shed Skin</strong> uses type inference techniques to determine the <em>implicit</em> types used in a Python program, in order to generate the <em>explicit</em> type declarations needed in a C++ version. Because C++ is <em>statically typed</em>, <strong>Shed Skin</strong> requires Python code to be written such that all variables are (implicitly) statically typed.</p>
-<p>Besides the <em>typing</em> and <em>subset</em> restrictions, supported programs cannot freely use the Python standard library, although the most common modules are supported, such as <tt class="docutils literal"><span class="pre">random</span></tt> and <tt class="docutils literal"><span class="pre">re</span></tt> (see <a class="reference internal" href="#library-limitations">Library Limitations</a>).</p>
-<p>Additionally, the type inference techniques employed by <strong>Shed Skin</strong> currently do not scale very well beyond several hundred lines of code (the largest compiled program is about 1,600 lines). In all, this means that <strong>Shed Skin</strong> is currently mostly useful to compile <em>smallish</em> programs and extension modules, that do not make extensive use of dynamic Python features or the standard library.</p>
+<p>Besides the <em>typing</em> and <em>subset</em> restrictions, supported programs cannot freely use the Python standard library, although about 20 common modules are supported, such as <tt class="docutils literal"><span class="pre">random</span></tt> and <tt class="docutils literal"><span class="pre">re</span></tt> (see <a class="reference internal" href="#library-limitations">Library Limitations</a>).</p>
+<p>Additionally, the type inference techniques employed by <strong>Shed Skin</strong> currently do not scale very well beyond several hundred lines of code (the largest compiled program is about 1,200 lines (sloccount)). In all, this means that <strong>Shed Skin</strong> is currently mostly useful to compile <em>smallish</em> programs and extension modules, that do not make extensive use of dynamic Python features or the standard library.</p>
 <p>Because <strong>Shed Skin</strong> is still in an early stage of development, it can also improve a lot. At the moment, you will probably run into some bugs when using it. Please report these, so they can be fixed!</p>
-<p>At the moment, <strong>Shed Skin</strong> is only compatible with Python versions 2.4 to 2.6, and should work on GNU/Linux platforms, FreeBSD, OpenSolaris, OSX and Windows XP.</p>
+<p>At the moment, <strong>Shed Skin</strong> is compatible with Python versions 2.4 to 2.7, behaves like 2.6, and should work on GNU/Linux platforms, FreeBSD, OpenSolaris, OSX and Windows XP.</p>
 </div>
 <div class="section" id="id2">
 <span id="typing-restrictions"></span><h1><a class="toc-backref" href="#id14">Typing Restrictions</a></h1>
@@ -361,7 +224,7 @@ h = {’a’: 1, ’b’: ’hello’, ’c’: [1, 2, 3]} # bad
 <pre class="literal-block">
 a = (1, [1]) # good
 </pre>
-<p>In the future, mixed tuples up to a certain length will be allowed.</p>
+<p>In the future, mixed tuples up to a certain length will probably be allowed.</p>
 <p><tt class="docutils literal"><span class="pre">None</span></tt> may only be mixed with non-scalar types (i.e., not with <tt class="docutils literal"><span class="pre">int</span></tt> or <tt class="docutils literal"><span class="pre">float</span></tt>):</p>
 <pre class="literal-block">
 l = [1]
@@ -392,7 +255,6 @@ a = [1] # wrong - use a float here, too
 <li>multiple inheritance</li>
 <li>nested functions and classes</li>
 <li>inheritance from builtins (excluding Exception and object)</li>
-<li>some builtins, such as <tt class="docutils literal"><span class="pre">map</span></tt>, <tt class="docutils literal"><span class="pre">filter</span></tt> and <tt class="docutils literal"><span class="pre">reduce</span></tt></li>
 <li>overloading <tt class="docutils literal"><span class="pre">__iter__</span></tt> and <tt class="docutils literal"><span class="pre">__call__</span></tt></li>
 </ul>
 </blockquote>
@@ -403,6 +265,8 @@ a = [1] # wrong - use a float here, too
 <pre class="literal-block">
 self.class_attr # bad
 SomeClass.class_attr # good
+
+SomeClass.some_static_method() # good
 </pre>
 </li>
 <li><p class="first">anonymous function passing works reasonably well, but not for methods, and they cannot be contained:</p>
@@ -418,31 +282,34 @@ var = self.some_method # bad
 </div>
 <div class="section" id="id4">
 <span id="library-limitations"></span><h1><a class="toc-backref" href="#id16">Library Limitations</a></h1>
-<p>Programs to be compiled with <strong>Shed Skin</strong> cannot freely use the Python standard library. Only about 17 common modules are currently supported.</p>
-<p>Note that <strong>Shed Skin</strong> can be used to build an extension module, so the main program can use arbitrary modules (and of course all Python features!). See <a class="reference internal" href="#compiling-an-extension-module">Compiling an Extension Module</a>.</p>
-<p>In general, programs can only import functionality that is defined in the <strong>Shed Skin</strong> <tt class="docutils literal"><span class="pre">lib/</span></tt> directory. The following modules are largely supported at the moment:</p>
+<p>Programs to be compiled with <strong>Shed Skin</strong> cannot freely use the Python standard library. Only about 20 common modules are currently supported.</p>
+<p>Note that <strong>Shed Skin</strong> can be used to build an extension module, so the main program can freely use arbitrary modules (and of course all Python features!). See <a class="reference internal" href="#compiling-an-extension-module">Compiling an Extension Module</a>.</p>
+<p>The following modules are largely supported at the moment. Several of these, such as <tt class="docutils literal"><span class="pre">os.path</span></tt>, were compiled to C++ using <strong>shedskin</strong>.</p>
 <blockquote>
 <ul class="simple">
 <li>bisect</li>
 <li>collections</li>
 <li>ConfigParser</li>
 <li>copy</li>
-<li>datetime</li>
-<li>fnmatch</li>
+<li>csv</li>
+<li>datetime (Pavel Vinogradov, Karel Heyse, FFAO, David Marek)</li>
+<li>fnmatch (SirNotAppearingInThisTutorial)</li>
 <li>getopt</li>
-<li>glob</li>
+<li>glob (SirNotAppearingInThisTutorial)</li>
+<li>heapq (Jeremie Roquet)</li>
+<li>itertools (Jeremie Roquet)</li>
 <li>math</li>
 <li>os (some functionality missing under Windows)</li>
 <li>os.path</li>
-<li>random</li>
-<li>re</li>
-<li>socket</li>
+<li>random (Jeff Miller)</li>
+<li>re (SirNotAppearingInThisTutorial; uses libpcre)</li>
+<li>socket (Michael Elkins)</li>
 <li>string</li>
 <li>sys</li>
 <li>time</li>
 </ul>
 </blockquote>
-<p>See <a class="reference internal" href="#how-to-help-out-in-shed-skin-development">How to help out in Shed Skin Development</a> on how to help improve or add to these modules.</p>
+<p>See <a class="reference internal" href="#how-to-help-out-in-shed-skin-development">How to help out in Shed Skin Development</a> on how to help improve or add to the set of supported modules.</p>
 </div>
 <div class="section" id="id5">
 <span id="installation"></span><h1><a class="toc-backref" href="#id17">Installation</a></h1>
@@ -514,7 +381,7 @@ SUNWpcre
 </div>
 <div class="section" id="id6">
 <span id="compiling-and-running-a-stand-alone-program"></span><h1><a class="toc-backref" href="#id18">Compiling and Running a Stand-Alone Program</a></h1>
-<p>To use <strong>Shed Skin</strong> under Windows, first execute (double-click) the <tt class="docutils literal"><span class="pre">init.bat</span></tt> file in the <tt class="docutils literal"><span class="pre">shedskin-0.1</span></tt> directory, relative to where you installed it.  A command-line window will appear, with the current directory set to the <tt class="docutils literal"><span class="pre">shedskin-0.1\shedskin</span></tt> directory (hereafter referred to as the <em>Shed Skin working directory</em>).</p>
+<p>To use <strong>Shed Skin</strong> under Windows, first execute (double-click) the <tt class="docutils literal"><span class="pre">init.bat</span></tt> file in the <tt class="docutils literal"><span class="pre">shedskin-0.3</span></tt> directory, relative to where you installed it.  A command-line window will appear, with the current directory set to the <tt class="docutils literal"><span class="pre">shedskin-0.3\shedskin</span></tt> directory (hereafter referred to as the <em>Shed Skin working directory</em>).</p>
 <p>Consider the following simple test program, called <tt class="docutils literal"><span class="pre">test.py</span></tt>:</p>
 <pre class="literal-block">
 # test.py
@@ -525,7 +392,7 @@ print 'hello, world!'
 <pre class="literal-block">
 shedskin test
 </pre>
-<p>This will create two C++ files, called <tt class="docutils literal"><span class="pre">test.cpp</span></tt> and <tt class="docutils literal"><span class="pre">test.hpp</span></tt>, as well as a type-annotated file called <tt class="docutils literal"><span class="pre">test.ss.py</span></tt>.</p>
+<p>This will create two C++ files, called <tt class="docutils literal"><span class="pre">test.cpp</span></tt> and <tt class="docutils literal"><span class="pre">test.hpp</span></tt>, as well as a <tt class="docutils literal"><span class="pre">Makefile</span></tt> and a type-annotated file called <tt class="docutils literal"><span class="pre">test.ss.py</span></tt>.</p>
 <p>To create and run an executable file (called <tt class="docutils literal"><span class="pre">test.exe</span></tt> under Windows or otherwise <tt class="docutils literal"><span class="pre">test</span></tt>), type:</p>
 <pre class="literal-block">
 make run
@@ -538,7 +405,7 @@ hello, world!
 <pre class="literal-block">
 make
 </pre>
-<p>For the executable file to execute properly under Windows, note that <tt class="docutils literal"><span class="pre">gc.dll</span></tt> and <tt class="docutils literal"><span class="pre">libpcre-0.dll</span></tt> (located in the <strong>Shed Skin</strong> working directory) must be located somewhere in the Windows path. This happens automatically when running <tt class="docutils literal"><span class="pre">init.bat</span></tt>.</p>
+<p>For the executable file to execute properly under Windows, note that <tt class="docutils literal"><span class="pre">gc.dll</span></tt> and <tt class="docutils literal"><span class="pre">libpcre-0.dll</span></tt> (located in the <strong>Shed Skin</strong> working directory) must be located somewhere in the Windows path. This automatically the case after running <tt class="docutils literal"><span class="pre">init.bat</span></tt>.</p>
 </div>
 <div class="section" id="id7">
 <span id="compiling-an-extension-module"></span><h1><a class="toc-backref" href="#id19">Compiling an Extension Module</a></h1>
@@ -560,15 +427,15 @@ if __name__ == '__main__':
     print func1(5)
     print func2(10)
 </pre>
-<p>In order for type inference to work, the module must (<em>indirectly</em>) call its own functions (if <tt class="docutils literal"><span class="pre">func1</span></tt> calls <tt class="docutils literal"><span class="pre">func2</span></tt>, we can omit the call to <tt class="docutils literal"><span class="pre">func2</span></tt>). This is accomplished in the example by putting the function calls under the <tt class="docutils literal"><span class="pre">if</span> <span class="pre">__name__=='__main__'</span></tt> statement, so that they will not be executed when the module is imported.</p>
+<p>For type inference to work, the module must (<em>indirectly</em>) call its own functions (if <tt class="docutils literal"><span class="pre">func1</span></tt> calls <tt class="docutils literal"><span class="pre">func2</span></tt>, we can omit the call to <tt class="docutils literal"><span class="pre">func2</span></tt>). This is accomplished in the example by putting the function calls under the <tt class="docutils literal"><span class="pre">if</span> <span class="pre">__name__=='__main__'</span></tt> statement, so that they will not be executed when the module is imported.</p>
 <p>To compile the module into an extension module, type:</p>
 <pre class="literal-block">
 shedskin -e simple_module
 make
 </pre>
-<p>On <strong>UNIX</strong> systems, for 'make' to succeed, you must have the Python development files installed (under <strong>Debian</strong>, install <tt class="docutils literal"><span class="pre">python-dev</span></tt>; under <strong>Fedora</strong>, install <tt class="docutils literal"><span class="pre">python-devel</span></tt>).</p>
+<p>On <strong>UNIX</strong> systems, for 'make' to succeed, make sure to have the Python development files installed (under <strong>Debian</strong>, install <tt class="docutils literal"><span class="pre">python-dev</span></tt>; under <strong>Fedora</strong>, install <tt class="docutils literal"><span class="pre">python-devel</span></tt>).</p>
 <p>Depending on platform, the resulting extension module (<em>shared library</em>) is called <tt class="docutils literal"><span class="pre">simple_module.so</span></tt> or <tt class="docutils literal"><span class="pre">simple_module.pyd</span></tt>.</p>
-<p>The extension module can now be simply imported as usual:</p>
+<p>The extension module can now be simply imported and used as usual:</p>
 <pre class="literal-block">
 &gt;&gt;&gt; from simple_module import func1, func2
 &gt;&gt;&gt; func1(5)
@@ -595,7 +462,6 @@ print sys.version
 <li>Only builtin scalar and container types (<tt class="docutils literal"><span class="pre">int</span></tt>, <tt class="docutils literal"><span class="pre">float</span></tt>, <tt class="docutils literal"><span class="pre">complex</span></tt>, <tt class="docutils literal"><span class="pre">str</span></tt>, <tt class="docutils literal"><span class="pre">list</span></tt>, <tt class="docutils literal"><span class="pre">tuple</span></tt>, <tt class="docutils literal"><span class="pre">dict</span></tt>, <tt class="docutils literal"><span class="pre">set</span></tt>, <tt class="docutils literal"><span class="pre">frozenset</span></tt>) as well as <tt class="docutils literal"><span class="pre">None</span></tt> and instances of user-defined classes can be passed/returned. So for instance, anonymous functions and iterators are currently not supported.</li>
 <li>Builtin objects are completely converted for each call/return from <strong>Shed Skin</strong> to <strong>CPython</strong> types and back, including their contents. This means you cannot change <strong>CPython</strong> builtin objects from the <strong>Shed Skin</strong> side and vice versa, and conversion may be slow. Instances of user-defined classes can be passed/returned without any conversion, and changed from either side.</li>
 <li>Global variables are converted once, at initialization time, from <strong>Shed Skin</strong> to <strong>CPython</strong>. This means that the value of the <strong>CPython</strong> version and <strong>Shed Skin</strong> version can change independently. This problem can be avoided by only using constant globals, or by adding getter/setter functions.</li>
-<li>Keyword arguments are not supported at the moment.</li>
 </ol>
 <p><strong>Example for NumPy/SciPy users</strong></p>
 <p>The following example demonstrates how a matrix created in <a class="reference external" href="http://numpy.scipy.org/">NumPy</a> can be processed by an extension module generated with <strong>Shed Skin</strong>. The function <tt class="docutils literal"><span class="pre">my_sum</span></tt> sums all the elements in a matrix:</p>
@@ -709,7 +575,7 @@ print stuff.more_primes(100)
 shedskin test
 </pre>
 </li>
-<li><p class="first">Besides <tt class="docutils literal"><span class="pre">test.py</span></tt>, this also compiles <tt class="docutils literal"><span class="pre">stuff.py</span></tt> to C++. Now you can fill in manual C/C++ code in <tt class="docutils literal"><span class="pre">stuff.cpp</span></tt>. But to avoid that it is overwritten the next time <tt class="docutils literal"><span class="pre">test.py</span></tt> is compiled, first move <tt class="docutils literal"><span class="pre">stuff.*</span></tt> to the <strong>Shed Skin</strong> <tt class="docutils literal"><span class="pre">lib/</span></tt> dir.</p>
+<li><p class="first">Besides <tt class="docutils literal"><span class="pre">test.py</span></tt>, this also compiles <tt class="docutils literal"><span class="pre">stuff.py</span></tt> to C++. Now you can fill in manual C/C++ code in <tt class="docutils literal"><span class="pre">stuff.cpp</span></tt>. To avoid that it is overwritten the next time <tt class="docutils literal"><span class="pre">test.py</span></tt> is compiled, move <tt class="docutils literal"><span class="pre">stuff.*</span></tt> to the <strong>Shed Skin</strong> <tt class="docutils literal"><span class="pre">lib/</span></tt> dir.</p>
 </li>
 </ol>
 <p><strong>Standard Library</strong></p>
@@ -721,7 +587,7 @@ shedskin test
 <span id="command-line-options"></span><h1><a class="toc-backref" href="#id22">Command-line Options</a></h1>
 <p>The <tt class="docutils literal"><span class="pre">shedskin</span></tt> command can be given the following options:</p>
 <pre class="literal-block">
--a --noann             Don't output annotated source code
+-a --ann               Output annotated source code (.ss.py)
 -b --nobounds          Disable bounds checking
 -d --dir               Specify alternate directory for output files
 -e --extmod            Generate extension module
@@ -755,14 +621,9 @@ print a[5] # invalid index: out of bounds
 <li><p class="first">When optimizing, it is extremely useful to know exactly how much time is spent in each part of your program. The program <a class="reference external" href="http://code.google.com/p/jrfonseca/wiki/Gprof2Dot">Gprof2Dot</a> can be used to generate beautiful graphs for both the Python code and the compiled code.</p>
 </li>
 </ol>
-<p><strong>Other tips</strong></p>
-<ol class="arabic simple">
-<li>When recompiling an extension module, <tt class="docutils literal"><span class="pre">make</span></tt> will fail if the <tt class="docutils literal"><span class="pre">.pyd</span></tt> or <tt class="docutils literal"><span class="pre">.so</span></tt> file can’t be overwritten. This problem may occur when using <strong>IPython</strong>: after importing a module, it is impossible to overwrite the <tt class="docutils literal"><span class="pre">.pyd</span></tt> or <tt class="docutils literal"><span class="pre">.so</span></tt> file as long as <strong>IPython</strong> is kept open.</li>
-<li>If you modify a module after compiling it with <strong>Shed Skin</strong>, you may find yourself unable to import the new version (e.g. to test it in <strong>CPython</strong> before recompiling with <strong>Shed Skin</strong>) until you delete the corresponding <tt class="docutils literal"><span class="pre">.pyd</span></tt> or <tt class="docutils literal"><span class="pre">.so</span></tt> file.</li>
-</ol>
 <p><strong>Tricks</strong></p>
 <ol class="arabic">
-<li><p class="first">The following two code fragments work the same, but only the second one is supported:</p>
+<li><p class="first">The following two code fragments work the same, but only the second one is supported (using attributes also much faster in C++!):</p>
 <pre class="literal-block">
 statistics = {'nodes': 28, 'solutions': set()}
 
@@ -770,7 +631,7 @@ class statistics: pass
 s = statistics(); s.nodes = 28; s.solutions = set()
 </pre>
 </li>
-<li><p class="first">The evaluation order of arguments to a function or <tt class="docutils literal"><span class="pre">print</span></tt> changes with translation to C++, so it's better not to depend on it:</p>
+<li><p class="first">The evaluation order of arguments to a function or <tt class="docutils literal"><span class="pre">print</span></tt> changes with translation to C++, so it's better not to depend on this:</p>
 <pre class="literal-block">
 print 'hoei', raw_input() # raw_input is called before printing 'hoei'!
 </pre>
@@ -803,35 +664,19 @@ a = (1, ('1', 1.0)) # good
 <li>Denis de Leeuw Duarte</li>
 <li>Van Lindberg</li>
 <li>David Marek</li>
+<li>Douglas McNeil</li>
 <li>Jeff Miller</li>
 <li>Joaquin Abian Monux</li>
 <li>Harri Pasanen</li>
+<li>Jeremie Roquet</li>
 <li>SirNotAppearingInThisTutorial</li>
+<li>Joris van Rantwijk</li>
+<li>Thomas Spura</li>
 <li>Dave Tweed</li>
 <li>Jaroslaw Tworek</li>
 <li>Pavel Vinogradov</li>
 </ul>
-</div>
-<div class="section" id="shed-skin-roadmap">
-<span id="roadmap"></span><h1><a class="toc-backref" href="#id25">Shed Skin Roadmap</a></h1>
-<p>The following activities are planned for future versions of <strong>Shed Skin</strong>:</p>
-<p><strong>0.3-0.9</strong> (6-24 months from now)</p>
-<ul class="simple">
-<li>Complete support for the <tt class="docutils literal"><span class="pre">os</span></tt> module under Windows</li>
-<li>Upgrade MingW to something more recent</li>
-<li>Replace many quick hacks in the compiler core</li>
-<li>Improve I/O performance</li>
-<li>Locate bugs using some Python regression test suite, and fix them.</li>
-<li>Improve packaging of generated code</li>
-<li>Add support for tuples with mixed elements up to a certain length</li>
-<li>Improve the type inference techniques with at least <em>iterative deepening</em> and basic selector-based <em>filters</em>.</li>
-<li>Compile at least one program of around 3,000 lines, for example <a class="reference external" href="http://quameon.sourceforge.net/">Quameon</a>.</li>
-</ul>
-<p><strong>1.0</strong> (24-48 months from now)</p>
-<ul class="simple">
-<li>Add support for multiple inheritance, generator expressions and nested functions</li>
-<li>Improve type inference to the point where it works for typical, arbitrary programs of around 3,000 lines.</li>
-</ul>
+<p>As well as all the people that wrote and shared the 44 example programs.</p>
 </div>
 </div>
 </body>
