@@ -27,6 +27,7 @@ class generateVisitor(ASTVisitor):
         self.module = module
         self.name = module.ident
         self.filling_consts = False
+        self.with_count = 0
 
     def insert_consts(self, declare): # XXX ugly
         if not self.consts: return
@@ -476,21 +477,13 @@ class generateVisitor(ASTVisitor):
             self.visitm('___bool(', node, ')', func)
 
     def visitWith(self, node, func=None):
-        print >>self.out
+        self.start()
         if node.vars:
-            self.start('WITH_VAR(')
-            self.append(typesetreprnew(node.expr, node))
-            self.append(',')
-            self.visit(node.expr, func)
-            self.append(',')
-            self.visit(node.vars, func)
+            self.visitm('WITH_VAR(', node.expr, ',', node.vars, func)
         else:
-            self.start('WITH(')
-            self.append(typesetreprnew(node.expr, node))
-            self.append(',')
-            self.visit(node.expr, func)
-
-        self.append(')')
+            self.visitm('WITH(', node.expr, func)
+        self.append(',%d)' % self.with_count)
+        self.with_count += 1
         print >>self.out, self.line
         self.indent()
         self.visit(node.body, func)

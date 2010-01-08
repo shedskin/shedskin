@@ -1251,12 +1251,12 @@ private:
     T _expr;
 };
 
-#define WITH(t, e) {           \
-    With<t> __with(e); // TODO unique id
+#define WITH(e, n) {           \
+    With<typeof(e)> __with##n(e); // TODO unique id
 
-#define WITH_VAR(t, e, v) {    \
-    With<t> __with##v(e);      \
-    t v = __with##v;
+#define WITH_VAR(e, v, n) {    \
+    With<typeof(e)> __with##n(e);      \
+    typeof(e) v = __with##n;
 
 #define END_WITH }
 
