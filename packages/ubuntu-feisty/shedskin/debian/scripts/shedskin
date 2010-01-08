@@ -1,4 +1,0 @@
-#!/bin/sh
-
-export SHEDSKIN_ROOT=/usr/lib/shedskin
-/usr/lib/shedskin/bin/ss.py $*

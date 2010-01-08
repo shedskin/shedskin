@@ -425,9 +425,15 @@ class moduleVisitor(ASTVisitor):
         if hasattr(node, 'level') and node.level:
             error("relative imports are not supported", node)
 
+        if node.modname == '__future__':
+            for name, _ in node.names:
+                if name not in ['with_statement']:
+                    error("future '%s' is not yet supported" % name, node)
+            return
+
         mod = self.importmodules(node.modname, node, True)
 
-        for (name, pseudonym) in node.names:
+        for name, pseudonym in node.names:
             if name == '*':
                 self.ext_funcs.update(mod.funcs)
                 self.ext_classes.update(mod.classes)
@@ -952,6 +958,19 @@ class moduleVisitor(ASTVisitor):
         if node.else_:
             self.tempvar_int(node.else_, func)
             self.visit(node.else_, func)
+
+    def visitWith(self, node, func=None):
+        if node.vars:
+            varnode = cnode(node.vars, parent=func)
+            getgx().types[varnode] = set()
+            self.visit(node.expr, func)
+            self.addconstraint((inode(node.expr), varnode), func)
+            lvar = defaultvar(node.vars.name, func)
+            self.addconstraint((varnode, inode(lvar)), func)
+        else:
+            self.visit(node.expr, func)
+        for child in node.getChildNodes():
+            self.visit(child, func)
 
     def visitListComp(self, node, func=None):
         # --- [expr for iter in list for .. if cond ..]
