@@ -1236,12 +1236,12 @@ class StopIteration : public Exception { public: StopIteration(str *msg=0) : Exc
 
 #define END_FOR }
 
-template<class T> class With {
+template<class T> class __With {
 public:
-    With(T expr) : _expr(expr) {
+    __With(T expr) : _expr(expr) {
         _expr->__enter__();
     }
-    ~With() {
+    ~__With() {
         _expr->__exit__();
     }
     operator T() const {
@@ -1252,10 +1252,10 @@ private:
 };
 
 #define WITH(e, n) {           \
-    With<typeof(e)> __with##n(e); // TODO unique id
+    __With<typeof(e)> __with##n(e); // TODO unique id
 
 #define WITH_VAR(e, v, n) {    \
-    With<typeof(e)> __with##n(e);      \
+    __With<typeof(e)> __with##n(e);      \
     typeof(e) v = __with##n;
 
 #define END_WITH }

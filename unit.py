@@ -674,6 +674,15 @@ print 'debug' if () else 'no debug'
 print int(bool(DEBUG))
 print int(bool(1))
 
+# with statement
+with file('testdata/lop', 'w') as fp:
+    fp.write('neh')
+with file('testdata/lop') as ap:
+    print repr(ap.read())
+f = file('testdata/lop')
+with f:
+    print f.read()
+
 ''', '''
 output(equal=True)
 '''),
