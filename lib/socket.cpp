@@ -85,13 +85,13 @@ class_ *cl_timeout;
 
 class_ *cl_socket;
 
-int __ss_AI_PASSIVE = AI_PASSIVE;
 int __ss_AF_INET6 = AF_INET6;
 int __ss_AF_INET = AF_INET;
 int __ss_AF_UNIX = AF_UNIX;
 int __ss_SOCK_STREAM = SOCK_STREAM;
 int __ss_SOCK_DGRAM = SOCK_DGRAM;
 #ifndef WIN32
+int __ss_AI_PASSIVE = AI_PASSIVE;
 #ifndef __APPLE__
 #ifndef __sun
 #ifndef __FreeBSD__

@@ -27,6 +27,7 @@ typedef SOCKET socket_type;
 #include <sys/socket.h>
 
 typedef int socket_type;
+extern int __ss_AI_PASSIVE;
 
 #endif /* WIN32 */
 
@@ -144,7 +145,6 @@ str *gethostname();
 extern int __ss_SOCK_STREAM, __ss_AF_INET, __ss_AF_INET6, __ss_AF_UNIX, __ss_SOCK_DGRAM, __ss_SOL_IP, __ss_SOL_SOCKET, __ss_IP_TOS, __ss_IP_TTL;
 extern int __ss_SHUT_RD, __ss_SHUT_WR, __ss_SHUT_RDWR, __ss_SOMAXCONN, __ss_SO_REUSEADDR;
 extern int __ss_INADDR_ANY, __ss_INADDR_LOOPBACK, __ss_INADDR_NULL, __ss_INADDR_BROADCAST;
-extern int __ss_AI_PASSIVE;
 
 } // module namespace
 #endif

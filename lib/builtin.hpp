@@ -3375,8 +3375,8 @@ template <class A, class B, class C> list<A> *map(int n, A (*func)(B, C), pyiter
     int total;
     while(1) {
         total = 0;
-        try { nextb = next(itb); total += 1; } catch (StopIteration *) { nextb = NULL; }
-        try { nextc = next(itc); total += 1; } catch (StopIteration *) { nextc = NULL; }
+        try { nextb = next(itb); total += 1; } catch (StopIteration *) { nextb = 0; }
+        try { nextc = next(itc); total += 1; } catch (StopIteration *) { nextc = 0; }
         if(total == 0)
             break;
         result->append((*func)(nextb, nextc));
@@ -3395,9 +3395,9 @@ template <class A, class B> list<A> *map(int n, A (*func)(B, B, B), pyiter<B> *b
     int total;
     while(1)  {
         total = 0;
-        try { nextb1 = next(itb1); total += 1; } catch (StopIteration *) { nextb1 = NULL; }
-        try { nextb2 = next(itb2); total += 1; } catch (StopIteration *) { nextb2 = NULL; }
-        try { nextb3 = next(itb3); total += 1; } catch (StopIteration *) { nextb3 = NULL; }
+        try { nextb1 = next(itb1); total += 1; } catch (StopIteration *) { nextb1 = 0; }
+        try { nextb2 = next(itb2); total += 1; } catch (StopIteration *) { nextb2 = 0; }
+        try { nextb3 = next(itb3); total += 1; } catch (StopIteration *) { nextb3 = 0; }
         if(total == 0)
             break;
         result->append((*func)(nextb1, nextb2, nextb3));
