@@ -184,7 +184,7 @@ To install the **UNIX** source package on a **GNU/Linux** system, take the follo
 
  - download and unpack it
 
- - run ``python setup.py`` and place the generated ``shedskin`` file in your path
+ - run ``python setup.py`` and move the generated ``shedskin.py`` file to ``/usr/bin/shedskin``
 
  - make sure you can run ``g++``, the C++ compiler
 
@@ -202,7 +202,7 @@ To install the **UNIX** source package on a **FreeBSD** system, take the followi
 
  - download and unpack it
 
- - run ``python setup.py`` and place the generated ``shedskin`` file in your path
+ - run ``python setup.py`` and move the generated ``shedskin.py`` file to ``/usr/bin/shedskin``
 
  - install the `Boehm`_ garbage collector, making sure to disable threading support:
 
@@ -216,7 +216,7 @@ To install the **UNIX** source package on an **OpenSolaris** system, take the fo
 
  - download and unpack it
 
- - run ``python setup.py`` and place the generated ``shedskin`` file in your path
+ - run ``python setup.py`` and move the generated ``shedskin.py`` file to ``/usr/bin/shedskin``
 
  - install the following packages: ::
 
@@ -232,7 +232,7 @@ To install the **UNIX** source package on an **OSX** system, take the following 
 
  - download and unpack it
 
- - run ``python setup.py`` and place the generated ``shedskin`` file in your path
+ - run ``python setup.py`` and move the generated ``shedskin.py`` file to ``/usr/bin/shedskin``
 
  - install the Apple XCode development environment
 
