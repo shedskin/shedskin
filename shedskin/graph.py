@@ -1405,7 +1405,7 @@ class moduleVisitor(ASTVisitor):
 
 def parsefile(name):
     # Convert block comments into strings which will be duely ignored.
-    filebuf = re.sub(r"(#[{}])", r"'''\1", open(name).read())
+    filebuf = re.sub(r"(#[{}])", r"'''\1", open(name).read()) # XXX cannot include '''
     try:
         return parse(filebuf)
     except SyntaxError, s:
