@@ -31,7 +31,7 @@ class globalInfo: # XXX add comments, split up
         self.alloc_info = {}                 # allocation site type information across iterations
         self.iterations = 0
         self.lambdawrapper = {}
-        self.sysdir = '/'.join(__file__.split(os.sep)[:-2])
+        self.sysdir = '/'.join(__file__.split(os.sep)[:-1])
         self.libdir = connect_paths(self.sysdir, 'lib')
         self.main_mod = 'test'
         self.cpp_keywords = set(['asm', 'auto', 'bool', 'case', 'catch', 'char', 'const', 'const_cast', 'default', 'delete', 'do', 'double', 'dynamic_cast', 'enum', 'explicit', 'export', 'extern', 'false', 'float', 'friend', 'goto', 'inline', 'int', 'long', 'mutable', 'namespace', 'new', 'operator', 'private', 'protected', 'public', 'register', 'reinterpret_cast', 'short', 'signed', 'register', 'sizeof', 'static', 'static_cast', 'struct', 'switch', 'template', 'this', 'throw', 'true', 'typedef', 'typeid', 'typename', 'union', 'unsigned', 'using', 'virtual', 'void', 'volatile', 'wchar_t'])
