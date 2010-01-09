@@ -27,6 +27,8 @@ shedskin [OPTION]... FILE
 
  -f --flags             Provide alternate Makefile flags
 
+ -m --makefile          Specify alternate Makefile name
+
  -r --random            Use fast random number generator
 
  -w --nowrap            Disable wrap-around checking

@@ -33,6 +33,7 @@ def usage():
  -d --dir               Specify alternate directory for output files
  -e --extmod            Generate extension module
  -f --flags             Provide alternate Makefile flags
+ -m --makefile          Specify alternate Makefile name
  -r --random            Use fast random number generator
  -w --nowrap            Disable wrap-around checking
 """
@@ -56,7 +57,7 @@ def main():
 
     # --- command-line options
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'bchef:wad:r', ['extmod', 'nobounds', 'nowrap', 'flags=', 'dir=', 'random'])
+        opts, args = getopt.getopt(sys.argv[1:], 'bchef:wad:m:r', ['extmod', 'nobounds', 'nowrap', 'flags=', 'dir=', 'makefile=', 'random'])
     except getopt.GetoptError:
         usage()
 
@@ -68,6 +69,7 @@ def main():
         if o in ['-d', '--dir']: getgx().output_dir = a
         if o in ['-w', '--nowrap']: getgx().wrap_around_check = False
         if o in ['-r', '--random']: getgx().fast_random = True
+        if o in ['-m', '--makefile']: getgx().makefile_name = a
         if o in ['-f', '--flags']:
             if not os.path.isfile(a):
                 print "*ERROR* no such file: '%s'" % a

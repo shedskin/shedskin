@@ -12,7 +12,7 @@ class moduleVisitor: inherits visitor pattern from compiler.visitor.ASTVisitor, 
 
 parse_module(): locate module by name (e.g. 'os.path'), and use moduleVisitor if not cached
 '''
-import sys, string, copy
+import sys, string, copy, re
 
 from shared import *
 
@@ -1404,8 +1404,10 @@ class moduleVisitor(ASTVisitor):
         return f
 
 def parsefile(name):
+    # Convert block comments into strings which will be duely ignored.
+    filebuf = re.sub(r"(#[{}])", r"'''\1", open(name).read())
     try:
-        return parseFile(name)
+        return parse(filebuf)
     except SyntaxError, s:
         print '*ERROR* %s:%d: %s' % (name, s.lineno, s.msg)
         sys.exit(1)
