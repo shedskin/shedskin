@@ -643,7 +643,7 @@ a = (1, '1', 1.0) # bad
 a = (1, ('1', 1.0)) # good
 </pre>
 </li>
-<li><p class="first">Block comments consisting of #{ and #} are converted to block strings (''') by Shed Skin and ignored.  These block comments can be used to comment out sections of test code which cannot be converted during the Shed Skin process.  For example, the following will produce a plot when run using Python, but will only produce a print out of the data when converted to C++ using Shed Skin:</p>
+<li><p class="first">Block comments surrounded by <tt class="docutils literal"><span class="pre">#{</span></tt> and <tt class="docutils literal"><span class="pre">#}</span></tt> are ignored by <strong>Shed Skin</strong>.  This can be used to comment out code that cannot be compiled.  For example, the following will only produce a plot when run using <strong>CPython</strong>:</p>
 <pre class="literal-block">
 print &quot;x =&quot;, x
 print &quot;y =&quot;, y
