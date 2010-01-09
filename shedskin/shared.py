@@ -56,7 +56,8 @@ class globalInfo: # XXX add comments, split up
         self.extension_module = False
         self.flags = None
         self.annotation = False
-        self.output_dir=''
+        self.output_dir= ''
+        self.makefile_name = 'Makefile' # XXX other default?
 
 def newgx():
     return globalInfo()

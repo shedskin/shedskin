@@ -2917,7 +2917,7 @@ def generate_code():
             gv.insert_includes()
 
     # --- generate Makefile
-    makefile = file(os.path.join(getgx().output_dir, 'Makefile'), 'w')
+    makefile = file(os.path.join(getgx().output_dir, getgx().makefile_name), 'w')
 
     cppfiles = ' '.join([m.filename[:-3].replace(' ', '\ ')+'.cpp' for m in mods])
     hppfiles = ' '.join([m.filename[:-3].replace(' ', '\ ')+'.hpp' for m in mods])

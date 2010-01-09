@@ -485,6 +485,7 @@ The ``shedskin`` command can be given the following options: ::
     -d --dir               Specify alternate directory for output files
     -e --extmod            Generate extension module
     -f --flags             Provide alternate Makefile flags
+    -m --makefile          Specify alternate Makefile name
     -r --random            Use fast random number generator
     -w --nowrap            Disable wrap-around checking
 
@@ -533,6 +534,16 @@ Tips and Tricks
 
     a = (1, '1', 1.0) # bad
     a = (1, ('1', 1.0)) # good
+
+4. Block comments consisting of #{ and #} are converted to block strings (''') by Shed Skin and ignored.  These block comments can be used to comment out sections of test code which cannot be converted during the Shed Skin process.  For example, the following will produce a plot when run using Python, but will only produce a print out of the data when converted to C++ using Shed Skin: ::
+
+    print "x =", x
+    print "y =", y
+    #{
+    import pylab as pl
+    pl.plot(x, y)
+    pl.show()
+    #}
 
 .. _How to help out in Shed Skin Development:
 
