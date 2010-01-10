@@ -134,28 +134,28 @@ Programs to be compiled with **Shed Skin** cannot freely use the Python standard
 
 Note that **Shed Skin** can be used to build an extension module, so the main program can freely use arbitrary modules (and of course all Python features!). See `Compiling an Extension Module`_.
 
-The following modules are largely supported at the moment. Several of these, such as ``os.path``, were compiled to C++ using **shedskin**.
+The following modules are largely supported at the moment. Several of these, such as ``os.path``, were compiled to C++ using **Shed Skin**.
 
-  - bisect
-  - collections
-  - ConfigParser
-  - copy
-  - csv
-  - datetime (Pavel Vinogradov, Karel Heyse, FFAO, David Marek)
-  - fnmatch (SirNotAppearingInThisTutorial)
-  - getopt
-  - glob (SirNotAppearingInThisTutorial)
-  - heapq (Jeremie Roquet)
-  - itertools (Jeremie Roquet)
-  - math
-  - os (some functionality missing under Windows)
-  - os.path
-  - random (Jeff Miller)
-  - re (SirNotAppearingInThisTutorial; uses libpcre)
-  - socket (Michael Elkins)
-  - string
-  - sys
-  - time
+  - ``bisect``
+  - ``collections`` (defaultdict, deque)
+  - ``ConfigParser`` (no SafeConfigParser)
+  - ``copy``
+  - ``csv`` (no Dialect, Sniffer)
+  - ``datetime``
+  - ``fnmatch``
+  - ``getopt``
+  - ``glob``
+  - ``heapq`` (no nlargest, nsmallest, merge)
+  - ``itertools`` (no starmap)
+  - ``math``
+  - ``os`` (some functionality missing under Windows)
+  - ``os.path``
+  - ``random``
+  - ``re``
+  - ``socket``
+  - ``string``
+  - ``sys``
+  - ``time`` (no time.sleep under windows)
 
 See `How to help out in Shed Skin Development`_ on how to help improve or add to the set of supported modules.
 
