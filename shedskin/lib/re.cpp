@@ -16,12 +16,12 @@ const int
 const unsigned char *local_table;
 
 //match_object functions
-str *match_object::group(int n, int matchid)
+str *match_object::group(int /* n */, int matchid)
 {
     return new str(re->__group(&string->unit, captured, matchid));
 }
 
-str *match_object::group(int n, str *mname)
+str *match_object::group(int /* n */, str *mname)
 {
     return new str(re->__group(&string->unit, captured, mname));
 }

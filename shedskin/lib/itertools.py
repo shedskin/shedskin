@@ -6,7 +6,7 @@ def count(start = 0, step = 1):
     yield start
 
 def cycle(iterable):
-    yield iterable[0]
+    yield iter(iterable).next()
 
 def repeat(object, times = 0):
     yield object
@@ -17,62 +17,84 @@ def chain(*iterables):
     yield iter(iterables).next()
 
 def compress(data, selectors):
-    yield data[0]
+    if iter(selectors).next():
+        pass
+    yield iter(data).next()
 
 def dropwhile(predicate, iterable):
-    predicate(iterable[0])
-    yield iterable[0]
+    if predicate(iter(iterable).next()):
+        pass
+    yield iter(iterable).next()
 
 def groupby(iterable, key = lambda x: x):
-    key(iterable[0])
-    yield iterable[0], iterable.__iter__()
+    yield key(iter(iterable).next()), iter(iterable)
 
 def ifilter(predicate, iterable):
-    predicate(iterable[0])
-    yield iterable[0]
+    if predicate(iter(iterable).next()):
+        pass
+    yield iter(iterable).next()
 
 def ifilterfalse(predicate, iterable):
-    predicate(iterable[0])
-    yield iterable[0]
+    if predicate(iter(iterable).next()):
+        pass
+    yield iter(iterable).next()
 
 def islice(iterable, start, stop = -1, step = -1):
     'Known limitations: cannot distinguish between 0 and None for the stop argument'
-    yield iterable[0]
+    yield iter(iterable).next()
 
 def imap(function, *iterables):
+    'Known limitations: no more than 5 iterables are supported'
     yield function(iter(iterables).next())
+def __imap3(function, iter1, iter2):
+    yield function(iter(iter1).next(), iter(iter2).next())
+def __imap4(function, iter1, iter2, iter3):
+    yield function(iter(iter1).next(), iter(iter2).next(), iter(iter3).next())
+def __imap5(function, iter1, iter2, iter3, iter4):
+    yield function(iter(iter1).next(), iter(iter2).next(), iter(iter3).next(), iter(iter4).next())
+def __imap6(function, iter1, iter2, iter3, iter4, iter5):
+    yield function(iter(iter1).next(), iter(iter2).next(), iter(iter3).next(), iter(iter4).next(), iter(iter5).next())
 
 #def starmap(function, iterable):
 #    yield func(*iterable[0])
 
 def tee(iterable, n = 2):
-    return iterable, iterable
+    return iter(iterable), iter(iterable)
 
 def takewhile(predicate, iterable):
-    predicate(iterable[0])
-    yield iterable[0]
+    if predicate(iter(iterable).next()):
+        pass
+    yield iter(iterable).next()
 
 def izip(*iterables):
-    'Known limitations: iterables must all be of the same type'
+    'Known limitations: iterables must all be of the same type if they are more than two'
     yield iter(iterables).next(),
+def __izip2(iterable1, iterable2):
+    yield iter(iterable1).next(), iter(iterable2).next()
 
 def izip_longest(*iterables, **kwargs):
     'Known limitations: iterables must all be of the same type, cannot distinguish between 0 and None for the return value'
     __kw_fillvalue = None
     yield iter(iterables).next(),
+def __izip_longest2(iterable1, iterable2, **kwargs):
+    __kw_fillvalue = None
+    yield iter(iterable1).next(), iter(iterable2).next()
 
 # Combinatoric generators
 
 def product(*iterables, **kwargs):
-    'Known limitations: iterables must all be of the same type'
+    'Known limitations: iterables must all be of the same type if they are more than two'
     __kw_repeat = 1
     yield iter(iterables).next(),
+def __product2(iterable1, iterable2, **kwargs):
+    __kw_repeat = 1
+    yield iter(iterable1).next(), iter(iterable2).next()
 
 def permutations(iterable, r = None):
-    yield iterable[0],
+    yield iter(iterable).next(),
 
 def combinations(iterable, r):
-    yield iterable[0],
+    yield iter(iterable).next(),
 
 def combinations_with_replacement(iterable, r):
-    yield iterable[0],
+    yield iter(iterable).next(),
