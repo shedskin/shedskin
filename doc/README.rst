@@ -575,6 +575,7 @@ I would like to thank the following company/people, for their help with **Shed S
 * Joaquin Abian Monux
 * Harri Pasanen
 * Jeremie Roquet
+* Mike Schrick
 * SirNotAppearingInThisTutorial
 * Joris van Rantwijk
 * Thomas Spura
