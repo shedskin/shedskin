@@ -33,6 +33,13 @@ for b in itertools.cycle([1, 2, 3]):
        break
    print b
 
+print '-'
+
+woo = itertools.cycle(set([1, 2, 3]))
+print woo.next()
+print woo.next()
+print woo.next()
+
 print '### Repeat ###'
 
 ctt2 = 0
@@ -166,19 +173,29 @@ print '### Imap ###'
 
 def foo(a):
    return '{%i}' % a
-#def foo2(a, b):
-#   return '{%i//%f}' % (a, b)
-#def foo3(a, b, c):
-#   return '{%i//%f//%s}' % (a, b, c)
+def foo2(a, b):
+   return '{%i//%f}' % (a, b)
+def foo3(a, b, c):
+   return '{%i//%f//%s}' % (a, b, c)
+def foo4(a, b, c, d):
+   return '{%i//%f//%s//%i}' % (a, b, c, d)
+def foo5(a, b, c, d, e):
+   return '{%i//%f//%s//%i//%s}' % (a, b, c, d, str(e))
 
 for iia in itertools.imap(foo, (21, 12, 42)):
    print iia
 print '-'
-#for iib in itertools.imap(foo2, (21, 12, 42), (.21, .12)): # TODO does not work yet
-#   print iib
-#print '-'
-#for iic in itertools.imap(foo3, (21, 12, 42), (.21, .12), ('a', 'b', 'c')):
-#   print iic
+for iib in itertools.imap(foo2, (21, 12, 42), (.21, .12)):
+   print iib
+print '-'
+for iic in itertools.imap(foo3, (21, 12, 42), (.21, .12), ('a', 'b', 'c')):
+   print iic
+print '-'
+for iid in itertools.imap(foo4, (21, 12, 42), (.21, .12), ('a', 'b', 'c'), (42, 12, 14, 6)):
+   print iid
+print '-'
+for iie in itertools.imap(foo5, (21, 12, 42), (.21, .12), ('a', 'b', 'c'), (42, 12, 14, 6), ([5, 4], [8, 9])):
+   print iie
 
 print '### Starmap ###'
 
@@ -219,29 +236,29 @@ for at in itertools.izip([1, 3, 4]):
 print '-'
 for au in itertools.izip([1, 3, 4], [42, 21], [12, 21, 33, 55]):
     print au
-#print '-'
-#for au2 in itertools.izip([1, 3, 4], ['a', 'b']): # TODO does not work yet
-#    print au2
+print '-'
+for au2 in itertools.izip([1, 3, 4], ['a', 'b']):
+   print au2
 
 print '### Izip_longest ###'
 
-#for av1 in itertools.izip_longest():
-#    print av1
+for av1 in itertools.izip_longest():
+   print av1
 print '-'
 for av in itertools.izip_longest(fillvalue = 42):
-    print av
+   print av
 print '-'
-#for aw1 in itertools.izip_longest(['a', 'b', 'c']):
-#    print aw1
+for aw1 in itertools.izip_longest(['a', 'b', 'c']):
+   print aw1
 print '-'
-for aw in itertools.izip_longest([1, 3, 4], fillvalue = 42):
-    print aw
+for aw2 in itertools.izip_longest([1, 3, 4], fillvalue = 42):
+    print aw2
 print '-'
 for ax in itertools.izip_longest([1, 3, 4], [42, 21], [12, 21, 33, 55], fillvalue = 42):
     print ax
 print '-'
-#for aw in itertools.izip_longest([1, 3, 4], ['a', 'b'], fillvalue = 42):
-#    print aw
+for aw3 in itertools.izip_longest([[1, 2], [3, 4], [5, 6]], ['a', 'b']):
+    print aw3
 
 print '### Product ###'
 
@@ -271,26 +288,32 @@ for bf in itertools.product('AB', 'CD'):
 print '-'
 for bg in itertools.product('AB', 'CD', repeat = 2):
     print bg
+print '-'
+for bhy in itertools.product([.4, .42], [1, 2, 3]):
+    print '%.2f %d' % bhy
+print '-'
+for bhz in itertools.product('AB', [1, 2, 3]):
+    print bhz
 
 print '### Permutations ###'
 
-#for bh in itertools.permutations('ABDC'):
-#    print bh
-#print '-'
-#for bi in itertools.permutations('ABDC', 0):
-#    print bi
-#print '-'
-#for bj in itertools.permutations('ABDC', 1):
-#    print bj
-#print '-'
-#for bk in itertools.permutations('ABDC', 2):
-#    print bk
-#print '-'
-#for bl in itertools.permutations('ABDC', 3):
-#    print bl
-#print '-'
-#for bm in itertools.permutations('ABDC', 5):
-#    print bm
+for bh in itertools.permutations('ABDC'):
+    print bh
+print '-'
+for bi in itertools.permutations('ABDC', 0):
+    print bi
+print '-'
+for bj in itertools.permutations('ABDC', 1):
+    print bj
+print '-'
+for bk in itertools.permutations('ABDC', 2):
+    print bk
+print '-'
+for bl in itertools.permutations('ABDC', 3):
+    print bl
+print '-'
+for bm in itertools.permutations('ABDC', 5):
+    print bm
 
 print '### Combinations ###'
 
@@ -432,7 +455,7 @@ for d2 in rd:
     wr2.writerows([d2])
 bla.close()
 rd.fieldnames = fieldnames
-print rd.fieldnames 
+print rd.fieldnames
 print open('testdata/bla.csv').read()
 
 csv.DictReader(open('testdata/woef.csv'), None, dialect = 'excel', delimiter = ',', quotechar = '"', lineterminator = '', escapechar = '')
@@ -446,7 +469,7 @@ output(equal=True)
 # __ss_result
 print [result for result in range(4)]
 
-# void *constant caused by unused function 
+# void *constant caused by unused function
 def parse150():
     a = '150'
 def ftpcp():
@@ -474,20 +497,20 @@ res = re.compile('a').subn('ama', 'amadeus')
 print res
 
 # str.replace corner cases (douglas mcneil)
-print 'faaaaaredfredbrrr'.replace('r', 'rr') 
+print 'faaaaaredfredbrrr'.replace('r', 'rr')
 print 'aha'.replace('','men')
 
 # strip whitespace
 print int(' \\t\\n0x18 \\t ', 16)
 
 # check add_strs optimization
-print 'hoi' 
+print 'hoi'
 print 'hoi' + 'mams'
 print 'hoi' + 'mams' + 'ik'
 print 'hoi' + 'mams' + 'ik' + 'ben'
 print 'hoi' + 'mams' + 'ik' + 'ben' + 'er'
 print 'hoi' + 'mams' + 'ik' + 'ben' + 'er' + 'weer'
-print 'h' 
+print 'h'
 print 'h' + 'm'
 print 'h' + 'm' + 'i'
 print 'h' + 'm' + 'i' + 'b'
@@ -499,11 +522,11 @@ print [1]+[2,3,4], [1,2,3]+[4]
 
 # known problem (issue 8)
 def quicksort(L):
-	x = y = 0
-	if L == []: return []
-	pivot = L[0]
-	return quicksort([x for x in L[1:] if x < pivot]) + [pivot] + \
-	        quicksort([y for y in L[1:] if y >= pivot])
+        x = y = 0
+        if L == []: return []
+        pivot = L[0]
+        return quicksort([x for x in L[1:] if x < pivot]) + [pivot] + \
+                quicksort([y for y in L[1:] if y >= pivot])
 
 data = [1, 200, 50, 485, 22, 22, 3534, 22112]
 print "quickdata: %s " % quicksort(data)
@@ -590,7 +613,7 @@ class hop2(hop):
     def __init__(self):
         bla = None
         hop.__init__(self, bla)
-   
+
 class hop3(hop):
     def __init__(self):
         hop.__init__(self, 'hoi')
@@ -698,7 +721,7 @@ print 'hum'
 # minus in front
 print hex(200), hex(-200)
 
-# import as 
+# import as
 from sys import maxint as MAXINT
 import random
 from random import random as randum
@@ -726,8 +749,8 @@ def hap():
 print hap()
 
 #FOR_IN_T2 for listcomp
-class animal: 
-    def sound(self): 
+class animal:
+    def sound(self):
         print 'oink'
 class dog(animal): pass
 class cat(animal): pass
@@ -794,7 +817,7 @@ print list(reversed('gehakt'))
 
 #defdict problem
 import collections
-hoppa = collections.defaultdict(int) 
+hoppa = collections.defaultdict(int)
 hoppa[4] = 5
 for xxx in hoppa:
     print xxx, hoppa[xxx]
@@ -823,7 +846,7 @@ print items
 
 #sum ints with double
 items2 = range(5)
-ork = sum(items2, 0.3) 
+ork = sum(items2, 0.3)
 print ork
 
 ''', '''
@@ -863,13 +886,13 @@ print a, b
 x = [1,2]
 y = [3,4,5]
 c = x and y or None
-print c 
+print c
 
 y = None
 z = None
 c = x and y or z
 print c
- 
+
 # TI problem (seeding bool)
 def rungame(strategy, verbose):
     strategy()
@@ -916,7 +939,7 @@ def hup(game):
 hup(Game())
 
 # class attribute access across module
-from testdata import bert 
+from testdata import bert
 
 bert.zeug.purple += 1
 blah = bert.zeug.purple
@@ -929,16 +952,16 @@ def opterr(x):
 opterr(1)
 #opterr('1')
 
-# disappearing type 
+# disappearing type
 def ParseAction(action):
     return ('',)
 
 def ParseRuleLine(line):
     tmp=line.split()
     for y in tmp[-1].split():
-        ParseAction(y) 
+        ParseAction(y)
 
-for x in ''.split(): 
+for x in ''.split():
     ParseRuleLine(x)
 
 # working outside of list
@@ -990,8 +1013,8 @@ globaltje = 'global'
 def ahoi():
     localtje = 'localtje'
     twitjes = [2]
-    print [1 for i in 3*twitjes for b2 in knuts(i, globaltje)] 
-    print [2 for i in 4*itjes if knuts(2*i, localtje)] 
+    print [1 for i in 3*twitjes for b2 in knuts(i, globaltje)]
+    print [2 for i in 4*itjes if knuts(2*i, localtje)]
 
 ahoi()
 
@@ -1037,14 +1060,14 @@ class Foo:
        x[1:2] = []
        x[1:2] = [4,5]
        print x
-        
+
        self.x = [1,2,3]
        self.x[1:2] = []
        print self.x
 
 f1 = Foo()
 
-# print None 
+# print None
 a = [None]
 print a
 b = None
@@ -1053,7 +1076,7 @@ print b
 # ugliness
 ss = set([frozenset([1,2,3])])
 ss.discard(set([1,2,3]))
-print ss 
+print ss
 
 # complex
 c = complex(7.1, 4.7)
@@ -1072,7 +1095,7 @@ c += 8.4
 c += 2
 c += 9j
 print c
-print (7+4j)*(9+5j), 3*(7+4j) 
+print (7+4j)*(9+5j), 3*(7+4j)
 c,d = 2+2j, -3+4j
 print c.conjugate()
 print abs(c)
@@ -1080,7 +1103,7 @@ print 7-c, c-7, c-d
 print 2/c, c/2, c/d
 print +c, ++c, -d, --d
 print 1-1j
-print int(1j == 1j), int(1j != 1j) 
+print int(1j == 1j), int(1j != 1j)
 print hash(12+10j)
 print int(bool(0j)), int(bool(1+1j))
 print divmod((5+5j), (1+2j))
@@ -1098,13 +1121,13 @@ print (5.5+5.5j)//2.8, (5.5+5.5j)%2.8
 import re
 
 def parsevalue(s):
-    if not s: 
+    if not s:
         return 0+0j
     mult = 1+0j
     if s[-1] == 'j':
         s = s[:-1]
         mult = 0+1j
-    if s in ['+', '-']: 
+    if s in ['+', '-']:
         s += '1'
     return float(s)*mult
 
@@ -1223,7 +1246,7 @@ print C.id(1)
 import os.path
 print os.getcwd()
 
-from os import path 
+from os import path
 print path.curdir
 
 from os.path import curdir
@@ -1233,11 +1256,11 @@ import os as os2
 print os2.path.curdir
 
 #mod improvements
-v = '1 %(aap)s, 1 %(aap)s, %% 2 %(bert)s..' 
+v = '1 %(aap)s, 1 %(aap)s, %% 2 %(bert)s..'
 d = {'aap': 'aapje', 'bert': 'bertjes'}
 print v % d
 
-w = '1 %(aap)s, %% 1 %(aap)d, 2 %(bert)c..' 
+w = '1 %(aap)s, %% 1 %(aap)d, 2 %(bert)c..'
 f = {'aap': 70, 'bert': 71}
 print w % f
 
@@ -1251,7 +1274,7 @@ t3 = (70, 71, 72, 73, 74)
 print '%c %d %x %s %r' % t3
 
 t4 = (70.0, 71.0, 72.0, 73.0, 74.0)
-v4 = '%c %d %x %s %r' 
+v4 = '%c %d %x %s %r'
 print v4 % t4
 
 print '%(aap)s %(bert)d %% %(bert)c' % {'aap': 'hallo', 'bert': 72}
@@ -1264,11 +1287,11 @@ def hexrepl(match):
    return hex(value)
 
 p = re.compile(r'\d+')
-print p.sub('****', 'Call 65490 for printing, 49152 for user code.', 1) 
-print p.sub(hexrepl, 'Call 65490 for printing, 49152 for user code.', 1) 
-print p.sub(hexrepl, 'Call 65490 for printing, 49152 for user code.') 
-print re.sub(r'\d+', '****', 'Call 65490 for printing, 49152 for user code.', 2) 
-print re.sub(r'\d+', hexrepl, 'Call 65490 for printing, 49152 for user code.', 2) 
+print p.sub('****', 'Call 65490 for printing, 49152 for user code.', 1)
+print p.sub(hexrepl, 'Call 65490 for printing, 49152 for user code.', 1)
+print p.sub(hexrepl, 'Call 65490 for printing, 49152 for user code.')
+print re.sub(r'\d+', '****', 'Call 65490 for printing, 49152 for user code.', 2)
+print re.sub(r'\d+', hexrepl, 'Call 65490 for printing, 49152 for user code.', 2)
 
 #do not special-case __init__
 class Error(Exception):
@@ -1335,7 +1358,7 @@ class HOP(HUP):
 class HOPPA(HOP):
     def __init__(self):
         HOP.hup(self, 8)
-        HOPPA.hup(self, 9) 
+        HOPPA.hup(self, 9)
 
 HOPPA()
 
@@ -1393,7 +1416,7 @@ output(equal=True)
 ('''fixes for 0.0.28; socket''', '''
 #time.strptime
 import time
-print time.strftime("%d %b %Y %H:%M:%S", time.strptime("2001-11-12 18:31:01", "%Y-%m-%d %H:%M:%S")) 
+print time.strftime("%d %b %Y %H:%M:%S", time.strptime("2001-11-12 18:31:01", "%Y-%m-%d %H:%M:%S"))
 print time.strftime("%Y", time.strptime("2001", "%Y"))
 
 #improve default arguments
@@ -1413,7 +1436,7 @@ print bleh()
 
 bert.def4()
 
-#C++ bool type 
+#C++ bool type
 def h(x):
     if x in ['False', '0']: return 0
     elif x in ['True', '1']: return 1
@@ -1428,7 +1451,7 @@ print int(1==2), int(1!=2)
 print float(1==2), float(1!=2)
 print ord(chr(1==2)), ord(chr(1!=2))
 
-#random.sample/choice 
+#random.sample/choice
 import random
 print random.sample(xrange(1), 1)
 print random.sample(set([1]), 1)
@@ -1443,7 +1466,7 @@ def bh(func=ah):
    func()
 bh()
 
-# sorted, list.sort: cmp and reverse args 
+# sorted, list.sort: cmp and reverse args
 def mut(a,b):
     return -cmp(a,b)
 
@@ -1474,7 +1497,7 @@ l.sort(cmp=mut, reverse=True); print l
 # tempvars/new nodes and inheritance (XXX add more here)
 class network:
     def shortestpath(self):
-        for node in set([1]): 
+        for node in set([1]):
             print node
 
         print [node for node in [1]]
@@ -1482,7 +1505,7 @@ class network:
 class smallworld(network):
     pass
 
-s = smallworld() 
+s = smallworld()
 s.shortestpath()
 
 # ss-progs regression
@@ -1543,66 +1566,66 @@ output(equal=True)
 import re
 
 try:
-	a = re.compile(r'\\b(?P<email_name>[\\w.-]+?)@(?P<email_domain>[a-z.-]{3,})\\b', re.IGNORECASE)
-	b = 'bob (BoB@gmaiL.com) said to sally (sally123_43.d@hOtmail.co.uk) that no-name (not_a-real@em_ail.dres) was annoying...'
-	
-	print a.search(b, 20).group(0)
-	print a.match(b, 5).expand(r'the found name: \\g<email_name>\\nthe domain: \\g<email_domain>')
-	print a.subn(r'\\1 AT \\g<email_domain>', b)
-	print a.sub(r'<a href="mailto:\\g<0>">\\1</a>', b)
-#	print a.findall(b)
-	
-	c = re.compile(r\'\'\'
-		\\b
-		(?P<protocol>https?|(ftp)|(?P<mailto>mailto))
-		:(?(mailto)|//)
-		(
-			(?P<user>[\\w._-]+?)
-			(?(mailto)
-					
-				|
-					:(?P<pass>[\\w._-]*?)
-			)
-			@
-		)?
-		(?P<domain>[\\w.-]+)
-		(?(mailto)
-				
-			|
-				(?P<path>/[^\\s]*)
-		)
-		\\b
-		\'\'\', re.X)
-	d = 'fasdf mailto:bob@gmail.com, dasdfed ftp://haha:hoho@bla.com/files, http://fsesdf@asd.com orRLY!!?!L!? \\
-	https://example.com/OMG.html'
-	
-	allm = c.finditer(d)
-	i = 1
-	for mo in allm:
-		s = str(i) + ': \\n'
-		s += '\\tfull: ' + mo.group(0)
-		s += '\\n\\tnamed: '
-		
-		gd = mo.groupdict()
-		for k in sorted(gd):
-			if gd[k] == None: continue
-			s += '\\n\\t\\t' + k + ': ' + gd[k]
-		
-		print s
-		i += 1
-	
-	print re.split(r'\\W+', b)
-	print re.split(r'(\\W+)', b, 2)
-	
+        a = re.compile(r'\\b(?P<email_name>[\\w.-]+?)@(?P<email_domain>[a-z.-]{3,})\\b', re.IGNORECASE)
+        b = 'bob (BoB@gmaiL.com) said to sally (sally123_43.d@hOtmail.co.uk) that no-name (not_a-real@em_ail.dres) was annoying...'
+
+        print a.search(b, 20).group(0)
+        print a.match(b, 5).expand(r'the found name: \\g<email_name>\\nthe domain: \\g<email_domain>')
+        print a.subn(r'\\1 AT \\g<email_domain>', b)
+        print a.sub(r'<a href="mailto:\\g<0>">\\1</a>', b)
+#       print a.findall(b)
+
+        c = re.compile(r\'\'\'
+                \\b
+                (?P<protocol>https?|(ftp)|(?P<mailto>mailto))
+                :(?(mailto)|//)
+                (
+                        (?P<user>[\\w._-]+?)
+                        (?(mailto)
+
+                                |
+                                        :(?P<pass>[\\w._-]*?)
+                        )
+                        @
+                )?
+                (?P<domain>[\\w.-]+)
+                (?(mailto)
+
+                        |
+                                (?P<path>/[^\\s]*)
+                )
+                \\b
+                \'\'\', re.X)
+        d = 'fasdf mailto:bob@gmail.com, dasdfed ftp://haha:hoho@bla.com/files, http://fsesdf@asd.com orRLY!!?!L!? \\
+        https://example.com/OMG.html'
+
+        allm = c.finditer(d)
+        i = 1
+        for mo in allm:
+                s = str(i) + ': \\n'
+                s += '\\tfull: ' + mo.group(0)
+                s += '\\n\\tnamed: '
+
+                gd = mo.groupdict()
+                for k in sorted(gd):
+                        if gd[k] == None: continue
+                        s += '\\n\\t\\t' + k + ': ' + gd[k]
+
+                print s
+                i += 1
+
+        print re.split(r'\\W+', b)
+        print re.split(r'(\\W+)', b, 2)
+
 except re.error, msg:
-	print msg
+        print msg
 
 #time
 import time
 try:
     print time.mktime(time.struct_time((1970, 2, 17, 23, 33, 34, 1, 48, -1)))
     print time.mktime((1970, 2, 17, 23, 33, 34, 3, 17, -1))
-    print time.localtime(4142014)    
+    print time.localtime(4142014)
 #    print time.localtime()
 #    print time.localtime(time.mktime(time.localtime()))
 #    print time.gmtime(time.mktime(time.gmtime()))
@@ -1705,7 +1728,7 @@ print ++v, +-+-v
 #multidir fixes
 from testdata import crap
 print crap.incrap()
-import testdata.bert2 as bert 
+import testdata.bert2 as bert
 print bert.hello(1)
 from testdata import crap2
 crap2.incrap2()
@@ -1786,7 +1809,7 @@ getatime('unit.py')
 getctime('unit.py')
 getmtime('unit.py')
 
-#locally overloading builtin definition 
+#locally overloading builtin definition
 str = '4'
 
 t = ('aha', 2)
@@ -1911,7 +1934,7 @@ d[i,j] = 3.0
 d[i,j] += somme
 d[i,j] *= somme
 d[i,j] /= somme
- 
+
 print d
 
 e = {}
@@ -2042,7 +2065,7 @@ print ah, ch
 # --- __iadd__ etc.
 class C:
     def __init__(self, value):
-        self.value = value 
+        self.value = value
 
     def __iadd__(self, other):
         self.value += other.value
@@ -2079,7 +2102,7 @@ print hm
 
 d = C(8)
 print d // C(3)
-d //= C(3) 
+d //= C(3)
 print d
 
 # --- inheritance problem
@@ -2090,8 +2113,8 @@ class Maze(object):
 
 class ASCIIMaze(Maze):
     pass
-        
-maze = ASCIIMaze() 
+
+maze = ASCIIMaze()
 
 ''', '''
 output(equal=True)
@@ -2099,7 +2122,7 @@ output(equal=True)
 '''),
 
 ('''fixes for 0.0.22''', '''
-# --- out of bounds can be okay 
+# --- out of bounds can be okay
 a = range(5)
 print a[:10], a[:10:2]
 print a[-10:], a[-10::2]
@@ -2114,7 +2137,7 @@ class C:
       return 'C'
 
 print abs(C()), abs(23), abs(-1.3), -abs(C())
-      
+
 # --- str.translate problem
 import string
 atable = string.maketrans("bc", "ef")
@@ -2166,7 +2189,7 @@ try: print 'probeer'
 except Exception: pass
 else: print 'geen exceptie..'
 
-# collections 
+# collections
 from collections import deque
 
 d = deque([3,2,1])
@@ -2245,7 +2268,7 @@ def blah(s, e):
 blah([1,2,3,4,5,6,6,7], 4)
 #blah(['1','2','3','4','5','6','7'], '4')
 
-# copy 
+# copy
 import copy
 
 kb = [1,2]
@@ -2303,7 +2326,7 @@ random.seed(1)
 for z in range(1000):
     l,u,s = random.randrange(-5,5), random.randrange(-5,5), random.randrange(-5,5)
     print l, u, s
-    
+
     try:
         x = xrange(l,u,s)
         y = reversed(xrange(l,u,s))
@@ -2381,7 +2404,7 @@ print w
 # --- use %.12g to print floats
 print 1/3.0, 1.1234123412341234, 9.12341234e20, 1.1, 8.0
 
-# --- slice assignment (random test) 
+# --- slice assignment (random test)
 import random
 random.seed(10)
 
@@ -2396,7 +2419,7 @@ for x in range(1000):
         print 'done', a
     except ValueError, v:
         print v
-        
+
 ax = range(10)
 ax[-2:-3] = [0,1]
 print ax
@@ -2424,7 +2447,7 @@ uh[2] = 3
 print uh[2]
 uh[2] += 4
 print uh.elems
- 
+
 ux = 1
 ux += 1
 print ux
@@ -2465,7 +2488,7 @@ print yh[1,2]
 
 # --- __delitem__
 print yh.hop
-del yh[1,2] 
+del yh[1,2]
 print yh.hop
 
 yx = [1,2,3]
@@ -2482,8 +2505,8 @@ print string.find('abc', 'b', 0, 3)
 print string.split('a b c')
 print string.split('a b c', ' ')
 print string.split('a b c', ' ', 1)
-print string.replace('abc', 'c', 'd') 
-print string.replace('abc', 'c', 'd', 1) 
+print string.replace('abc', 'c', 'd')
+print string.replace('abc', 'c', 'd', 1)
 print string.count('abc', 'b')
 print string.count('abc', 'b', 0)
 print string.count('abc', 'b', 0, 3)
@@ -2619,7 +2642,7 @@ output(equal=True)
 '''),
 
 ('''fixes for 0.0.19; iterators''', '''
-# --- math.pow 
+# --- math.pow
 import math
 print int(math.pow(2,3))
 print pow(2.0,3.0)
@@ -2637,7 +2660,7 @@ print 8.0, '%g' % 8.0
 # --- iterators
 b = [1,2,3]
 for a in b:
-    print a, 
+    print a,
 print
 print [a for a in b]
 
@@ -2674,7 +2697,7 @@ print [l for l in file('testdata/hoppa')]
 def blah(a):
     while a > 0:
         yield a
-        yield 17 
+        yield 17
         a -= 1
 
 hop = blah(3)
@@ -2695,7 +2718,7 @@ print os.path.split('hoempa/nohu')
 import math
 print '%g' % math.log(10)
 
-# --- % revisited 
+# --- % revisited
 print -2 % 3
 print 2 % 3
 print math.fmod(-2.0, 3)
@@ -2736,7 +2759,7 @@ bx and n > 1
 class smurf:
     def __init__(self, a=-1):
         print 'hallo', a
-     
+
 class baviaan(smurf):
     def __init__(self, a=-1):
         print 'oehoehoe', a
@@ -2821,7 +2844,7 @@ d = {}
 print d
 
 # --- cl attr problem
-class FilebasedMazeGame: 
+class FilebasedMazeGame:
     hop = 18
     def __init__(self):
         a = FilebasedMazeGame.hop
@@ -2858,7 +2881,7 @@ print "default separator:"
 print s.split(None)
 print s.split(None, 0)
 print s.split(None, 1)
- 
+
 print "space separator:"
 print s.split(' ')
 print s.split(' ', 0)
@@ -2889,7 +2912,7 @@ print a,b,c
 [[a,b],c] = [[4,5],6]
 print a,b,c
 a, [b,c] = [1, (2,3)]
-print a,b,c 
+print a,b,c
 a, (b,c,d) = 1, (1,2,3)
 print a,b,c,d
 [(a,b), [c,d]] = [[1,2], (3,4)]
@@ -2954,7 +2977,7 @@ c = set([1,2])
 e = set([])
 f = set()
 print c, e, f
-    
+
 g = frozenset([1])
 h = {}
 h[g] = 4
@@ -2968,7 +2991,7 @@ try:
     {set([1]): 1}
 except TypeError, m:
     print m
-    
+
 z,y  = [(1,2),(3,), (4,5,6)], [(3,),(4,5,6),(1,2)]
 v, w = frozenset(z), frozenset(y)
 print 'eq', [0, 1][v == w]
@@ -2983,10 +3006,10 @@ output(equal=True)
 '''),
 
 ('''fixes for 0.0.16''', '''
-print '', 
+print '',
 print 'hoi', 'huh',
 print 'hophop'
-print '', 
+print '',
 print 'beh'
 
 print [1,2,3,1].index(1)
@@ -3001,7 +3024,7 @@ def RemoveElts(list):
 print RemoveElts([3])
 
 try:
-    try: 
+    try:
        {1:2}[3]
     except KeyError, e:
        raise e
@@ -3051,13 +3074,13 @@ def getopt(args, longopts):
     do_longs(opts, longopts)
 
 def do_longs(opts, longopts):
-    [o for o in longopts] 
+    [o for o in longopts]
 
 wa = ['']
 
 getopt(wa, wa)
 
-# cStringIO.StringIO, file.seek 
+# cStringIO.StringIO, file.seek
 import cStringIO, sys
 
 s = cStringIO.StringIO(file('testdata/hopsakee').read())
@@ -3076,7 +3099,7 @@ s = cStringIO.StringIO('blaat')
 s.seek(-3, 2)
 print s.read()
 
-s = cStringIO.StringIO() 
+s = cStringIO.StringIO()
 s.write('hallo\\njoh')
 s.seek(0, 0)
 print s.readlines()
@@ -3129,7 +3152,7 @@ print '%s.' % 1, '%s.' % (1,)
 print repr(18), repr('x')
 print 'aha %s %r' % (18, 19)
 
-# class file 
+# class file
 f = file('testdata/hopsakee')
 print 1, f.readline(),
 print f.readline(5)
@@ -3162,8 +3185,8 @@ print set(l)
 
 # add __or__ to builtin.int..
 class c: # grr
-   def a(self):         
-       return 1|1      
+   def a(self):
+       return 1|1
    def b(self):
        return 1&1
    def c(self):
@@ -3171,7 +3194,7 @@ class c: # grr
    def d(self):
        return ~1
 
-a_c = c()           
+a_c = c()
 print a_c.a(), a_c.b(), a_c.c(), a_c.d()
 
 # fake child nodes conflicting for binary tuples (e.g. one for unit and one for first)
@@ -3185,14 +3208,14 @@ bsl.comRxHeader()
 
 # self.mergeinh instead of self.merge XXX fix others
 class LowLevel2:
-   def bslTxRx(self, addr): 
+   def bslTxRx(self, addr):
        addr % 2
 
 class BootStrapLoader2(LowLevel2):
     pass
 
 bsl2 = BootStrapLoader2()
-bsl2.bslTxRx(0) 
+bsl2.bslTxRx(0)
 
 # improve parent constructor calls
 class L:
@@ -3242,7 +3265,7 @@ class BootStrapLoader3(LowLevel3):
     def __init__(self):
         LowLevel3.__init__(self)
 
-BootStrapLoader3() 
+BootStrapLoader3()
 
 ''', '''
 output(equal=True)
@@ -3295,7 +3318,7 @@ class City(object):
         self.latitude = 1
 
 class SortedTree(object):
-    def __init__(self, compareKey): 
+    def __init__(self, compareKey):
         self.compareKey = compareKey
 
 class Map(object):
@@ -3336,11 +3359,11 @@ def oink():
 oink()
 
 def test(t=()):
-  if t: 
+  if t:
       print t
-  else: 
+  else:
       test(t + (5,))
-  
+
 test()
 
 e = {}
@@ -3495,13 +3518,13 @@ class TaskState(object):
         self.task_waiting = False
         self.task_holding = False
         return self
-        
+
     def waitingWithPacket(self):
         self.packet_pending = True
         self.task_waiting = True
         self.task_holding = False
         return self
-        
+
     def isPacketPending(self):
         return self.packet_pending
 
@@ -3628,7 +3651,7 @@ class Task(TaskState):
         if t is None:
             raise Exception("Bad task id %d" % id)
         return t
-            
+
 
 # DeviceTask
 
@@ -3702,7 +3725,7 @@ class IdleTask(Task):
         else:
             i.control = i.control/2 ^ 0xd008
             return self.release(I_DEVB)
-            
+
 
 # WorkTask
 
@@ -3782,7 +3805,7 @@ class Richards(object):
             wkq = None;
             DeviceTask(I_DEVA, 4000, wkq, TaskState().waiting(), DeviceTaskRec());
             DeviceTask(I_DEVB, 5000, wkq, TaskState().waiting(), DeviceTaskRec());
-            
+
             schedule()
 
             if taskWorkArea.holdCount == 9297 and taskWorkArea.qpktCount == 23246:
@@ -3801,7 +3824,7 @@ output('1\\n')
 
 '''),
 
-('''pystone benchmark''', ''' 
+('''pystone benchmark''', '''
 # (c) Reinhold P. Weicker,  CACM Vol 27, No 10, 10/84 pg. 1013.
 # --- Translated from ADA to C by Rick Richardson.
 # --- Translated from C to Python by Guido van Rossum.
@@ -3841,7 +3864,7 @@ def pystones(loops=LOOPS):
 
 IntGlob = 0
 BoolGlob = FALSE
-Char1Glob = ' ' # ! 
+Char1Glob = ' ' # !
 Char2Glob = ' '
 Array1Glob = [0]*51
 #Array2Glob = map(lambda x: x[:], [Array1Glob]*51)
@@ -4082,7 +4105,7 @@ output(equal=True)
 #
 # Despite its looks, this program was written in Python, not converted to it.
 # This program is incomplete, castlings, enpassant situation etc. are not properly implemented
-# game ending is not recognized. The evaluator as simple as it ever could be. 
+# game ending is not recognized. The evaluator as simple as it ever could be.
 #
 # The board is an 160-element array of ints, Nones and Booleans,
 # The board contains the real board in squares indexed in variable 'squares'
@@ -4168,7 +4191,7 @@ def move(board, mv):
   if mv & 0x10000000: # promotion
     a = (mv & 0xff0000) >> 16
     if (a >= 0x80):
-      a = a - 0x100 
+      a = a - 0x100
     board[mv & 0xff] = a
 
 def toString(move):
@@ -4206,7 +4229,7 @@ def rowAttack(board, attackers, ix, dir):
       return (board[k] * own < 0) and board[k] in attackers
 
 def nonpawnAttacks(board, ix, color):
-  return (max([board[ix + i] == color * 2 for i in knightMoves]) or 
+  return (max([board[ix + i] == color * 2 for i in knightMoves]) or
           max([rowAttack(board, (color * 3, color * 5), ix, bishopLine) for bishopLine in bishopLines]) or
           max([rowAttack(board, (color * 4, color * 5), ix, rookLine) for rookLine in rookLines]))
 
@@ -4265,7 +4288,7 @@ def pseudoLegalMovesBlack(board):
         for k in knightMoves:
           if board[k + sq] == 0:
             retval.append(sq * 0x101 + k)
-      elif b == -3 or b == -5: 
+      elif b == -3 or b == -5:
         for line in bishopLines:
           for k in line:
             if (k + sq & 0x88) or board[k + sq] != 0:
@@ -4278,7 +4301,7 @@ def pseudoLegalMovesBlack(board):
             if (k + sq & 0x88) or board[k + sq] != 0:
               break
             retval.append(sq * 0x101 + k)
-      elif b == -6: 
+      elif b == -6:
         for k in kingMoves:
           if not (k + sq & 0x88) and board[k + sq] == 0:
             retval.append(sq * 0x101 + k)
@@ -4303,7 +4326,7 @@ def pseudoLegalCapturesWhite(board):
   for sq in squares:
     b = board[sq]
     if b >= 1:
-      if b == 1: 
+      if b == 1:
         if not (sq + 17 & 0x88) and board[sq + 17] < 0:
           retval.append(0x02000000 + sq * 0x101 + 17)
         if not (sq + 15 & 0x88) and board[sq + 15] < 0:
@@ -4333,7 +4356,7 @@ def pseudoLegalCapturesBlack(board):
   for sq in squares:
     b = board[sq]
     if b < 0:
-      if b == -1: 
+      if b == -1:
         if board[sq - 17] >= 1:
           retval.append(0x02000000 + sq * 0x101 - 17)
         if board[sq - 15] >= 1:
@@ -4401,7 +4424,7 @@ def alphaBetaQui(board, alpha, beta, n):
     e = -e
   if e >= beta:
     return (beta, iNone) # XXX
-  if (e > alpha): 
+  if (e > alpha):
     alpha = e
   bestMove = iNone # XXX
   if n >= -4:
@@ -4493,7 +4516,7 @@ pets = Cat(), Dog()
 for pet in pets: command(pet)
 for pet in (pets[1], pets[0]): command(pet)
 
-clearCastlingOpportunities = [None] 
+clearCastlingOpportunities = [None]
 clearCastlingOpportunities[0] = (10,)
 
 board = [1,2,3]
@@ -4504,7 +4527,7 @@ print clearCastlingOpportunities, board
 print range(-17, -120, -17)
 
 v = -1
-w = 4 
+w = 4
 
 for x in range(w,-2,v):
     print x
@@ -4554,22 +4577,22 @@ TxT_ITER = [[(row,col) for row in rows for col in cols] for rows in TRIPLETS for
 class soduko:
     def __init__(self, start_grid=None) :
         self.squares =[ [range(1,10)  for col in range(0,9)] for row in range(0,9)]
-        
+
         if start_grid is not None:
             assert len(start_grid)==9, "Bad input!"
             for row in range(0,9) :
                 self.set_row(row, start_grid[row])
-                
+
         self._changed=False
-    
+
     def copy(self) :
         soduko_copy = soduko(None)
         for row in range(0,9) :
             for col in range(0,9) :
-                soduko_copy.squares[row][col] = self.squares[row][col][:] 
+                soduko_copy.squares[row][col] = self.squares[row][col][:]
         soduko_copy._changed=False
         return soduko_copy
-    
+
     def set_row(self,row, x_list) :
         assert len(x_list)==9, 'not 9'
         for col in range(0,9) :
@@ -4585,12 +4608,12 @@ class soduko:
         elif x not in range(1,9+1) :
             pass
         else:
-            assert x in self.squares[row][col], "bugger2" 
-            
+            assert x in self.squares[row][col], "bugger2"
+
             self.squares[row][col] = [x]
             self.update_neighbours(row,col,x)
             self._changed=True
-            
+
     def cell_exclude(self, row,col,x) :
         assert x in range(1,9+1), 'inra'
         if x in self.squares[row][col] :
@@ -4619,13 +4642,13 @@ class soduko:
             for col in cols :
                 assert row <> set_row or col <> set_col , 'meuh'
                 self.cell_exclude(row,col,x)
-            
+
     def get_cell_digit_str(self,row,col) :
         if len(self.squares[row][col])==1 :
             return str(self.squares[row][col][0])
         else :
             return "0"
-            
+
     def __str__(self):
         answer = "   123   456   789\\n"
         for row in range(0,9) :
@@ -4634,10 +4657,10 @@ class soduko:
                         + "] [" + "".join([self.get_cell_digit_str(row,col).replace("0","?") for col in range(3,6)]) \
                         + "] [" + "".join([self.get_cell_digit_str(row,col).replace("0","?") for col in range(6,9)]) \
                         + "]\\n"
-            if row+1 in [3,6] : 
+            if row+1 in [3,6] :
               answer = answer + "   ---   ---   ---\\n"
         return answer
-                    
+
     def check(self) :
         self._changed=True
         while self._changed:
@@ -4645,7 +4668,7 @@ class soduko:
             self.check_for_single_occurances()
             self.check_for_last_in_row_col_3x3()
         return
-        
+
     def check_for_single_occurances(self):
         for check_type in [ROW_ITER, COL_ITER, TxT_ITER]:
             for check_list in check_type :
@@ -4683,7 +4706,7 @@ class soduko:
                     (row,col) = unknown_entries[0]
                     self.set_cell(row,col,x)
         return
-        
+
     def one_level_supposition(self):
         progress=True
         while progress :
@@ -4705,7 +4728,7 @@ class soduko:
                         elif len(bad_x) < len(self.squares[row][col]) :
                             for x in bad_x :
                                 self.cell_exclude(row,col,x)
-                                self.check() 
+                                self.check()
                             progress=True
                         else :
                             assert False, "bugger7"
@@ -4853,7 +4876,7 @@ class board(object):
 
                 if boardRep(_board) not in self.examined:
                         self.examined.add(boardRep(_board))
-            
+
                         #check for solution condition:
                         if _board.openspaces() <= 0:
                                 self.solutions.add(boardRep(_board))
@@ -4879,7 +4902,7 @@ class board(object):
                                                 #now we iterate through possible values to put in there
                                                 broken = False
                                                 for val in [i for i in xrange(9) if _board.mergemask(row, col).v[i] == True]:
-                                                        if not board.completeSearch and self.__status == 2: 
+                                                        if not board.completeSearch and self.__status == 2:
                                                             broken = True
                                                             break
                                                         val += 1
@@ -5068,7 +5091,7 @@ e = [4]; e = None
 print d == e, None == d, e == None, a == None, c[0] == None, c[1] == None
 
 class board(object):
-    def mergemask(self): 
+    def mergemask(self):
         print 'mergemask'
 
     def solve(self, board):
@@ -5104,7 +5127,7 @@ print heuk.noinit, h.ahah
 class myiter:
     def __init__(self, container):
         self.container = container
-        self.count = -1 
+        self.count = -1
     def next(self):
         self.count +=1
         if self.count < len(self.container):
@@ -5115,9 +5138,9 @@ class container:
     def __init__(self):
         self.unit = range(3)
     def __getitem__(self, i):
-        return self.unit[i] 
+        return self.unit[i]
     def __iter__(self):
-        return myiter(self) 
+        return myiter(self)
     def __len__(self):
         return len(self.unit)
 
@@ -5503,7 +5526,7 @@ output()
 
 from random import random, randint, choice
 from math import sin, pi
-from copy import copy 
+from copy import copy
 
 infiniteNeg = -1e302
 
@@ -5558,7 +5581,7 @@ class SGA:
     def tounamentSelectionPop(self):
         pop2 = []
         for i in xrange(self.popSize):
-            individual1 = choice(self.population) 
+            individual1 = choice(self.population)
             individual2 = choice(self.population)
             if random() < self.selectivePressure:
                 if individual1.fitness > individual2.fitness:
@@ -5575,8 +5598,8 @@ class SGA:
     def crossingOverPop(self):
         nCrossingOver = int(round(self.popSize * self.crossingOverProb))
         for i in xrange(nCrossingOver):
-            ind1 = choice(self.population) 
-            ind2 = choice(self.population) 
+            ind1 = choice(self.population)
+            ind2 = choice(self.population)
             crossPosition = randint(0, self.genomeSize-1)
             for j in xrange(crossPosition+1):
                 ind1.genome[j], ind2.genome[j] = ind2.genome[j], ind1.genome[j]
@@ -5598,7 +5621,7 @@ class SGA:
         for self.generation in xrange(1, self.generationsMax+1): # works now
             self.computeFitnessPop()
             self.showGeneration_bestIndFind()
-            self.population = self.tounamentSelectionPop()  
+            self.population = self.tounamentSelectionPop()
             self.mutatePop()
             self.crossingOverPop()
 
@@ -5658,10 +5681,10 @@ def determinant(M):
      if size==2: return M[0][0]*M[1][1]-M[0][1]*M[1][0] # 1x1 Minors don't work
      det=0
      for i in xrange(size):
-                    
+
           det += sign(i)*M[0][i]*determinant(Minor(M,0,i))
      return det
-     
+
 def inverse(M):
      size=len(M)
      det=determinant(M)
@@ -5673,7 +5696,7 @@ def inverse(M):
                v.append(det*sign(i+j)*determinant(Minor(M,j,i)))
           N.append(v)
      return N
-     
+
 def iterate_sort(list1,A,B,C,D,E,F):
     n=len(list1)
     for i in range(n):
@@ -5705,7 +5728,7 @@ def iterate_sort(list1,A,B,C,D,E,F):
             lasti += 1
         i += 1
     list1.__delslice__(lasti,n)
-        
+
 def gen(n,list1,A,B,C,D,E,F):
     for i in range(n): iterate_sort(list1,A,B,C,D,E,F)
 
@@ -5766,11 +5789,11 @@ def binary(n):
     if n==1: return 1
     m=n/2
     if 2*m==n: return 10*binary(m)
-    else: return 10*binary(m)+1 
-     
+    else: return 10*binary(m)+1
+
 length=6 # wordlength
 
-b=[[0,0,1],[0,1,0],[1,0,0]] 
+b=[[0,0,1],[0,1,0],[1,0,0]]
 
 A=[[1,1,0],[0,1,0],[0,0,1]]
 B=inverse(A)
@@ -6056,11 +6079,11 @@ except AssertionError:
 def crapfunction():
     a,b,c=1,2,3
     assert a > b < c, "the universe won't collapse"
-try: 
+try:
     crapfunction()
 except AssertionError, msg:
     print 'more crap!', msg
-     
+
 class ueuk:
     def __init__(self, msg):
         self.msg = msg
@@ -6071,7 +6094,7 @@ class ueuk:
 #    raise ueuk, 'aha! error.'
 #except ueuk, x:
 #    print x.msg
-    
+
 try:
     raise ueuk('aha! error.')
 except ueuk, x:
@@ -6156,7 +6179,7 @@ output('[1, 5, 6, 7, 4]\\n[1, 2, 3, 4, 5]\\n[1, 5, 4]\\n[]\\n[]\\n[1, 5, 6, 7, 4
 '''),
 
 ('''some const/comparisons''', '''
-class huhuhu: 
+class huhuhu:
     pass
 
 obj = huhuhu()
@@ -6194,13 +6217,13 @@ output(''.join(['ok%d\\n'%n for n in range(1,10)]))
 
 ('''inheritance in pygmy III''', '''
 class renderobject:
-	def intersect(self,l):
-		return "none", (l, l)
+        def intersect(self,l):
+                return "none", (l, l)
 
 class plane(renderobject):
-	def intersect(self,l):		
-		return "one", (l, l)
-	
+        def intersect(self,l):
+                return "one", (l, l)
+
 class sphere(renderobject):
     def intersect(self,l):
         return "none", (l, l)
@@ -6224,7 +6247,7 @@ class renderobject: pass
 class plane(renderobject): pass
 class sphere(renderobject): pass
 
-class light: 
+class light:
     def hoei(self): print 'hoei!'
 
 class parallellight(light): pass
@@ -6246,20 +6269,20 @@ output('hoei!\\n')
 
 ('''inheritance in pygmy I''','''
 class renderobject:
-	def __init__(self, shader):
-		self.shader=shader		
-	
+        def __init__(self, shader):
+                self.shader=shader
+
 class plane(renderobject):
-	def __init__(self,plane,dist,shader):
-		renderobject.__init__(self,shader)
-		self.plane=plane
-		self.dist=dist
-		
+        def __init__(self,plane,dist,shader):
+                renderobject.__init__(self,shader)
+                self.plane=plane
+                self.dist=dist
+
 class sphere(renderobject):
-	def __init__(self, pos, radius, shader):
-		renderobject.__init__(self,shader)
-		self.pos=pos
-		self.radius=radius
+        def __init__(self, pos, radius, shader):
+                renderobject.__init__(self,shader)
+                self.pos=pos
+                self.radius=radius
 
 class world:
     def __init__(self):
@@ -6279,7 +6302,7 @@ class father(object):
         self.a=a
         b=1
     def f(self,x):
-	    return x*self.a
+            return x*self.a
 
 class son(father):
     def g(self,x):
@@ -6295,7 +6318,7 @@ class mother(object):
         self.a=a
         b=1
     def f(self,x):
-	    return x*self.a
+            return x*self.a
 
 class daughter(mother):
     def g(self,x):
@@ -6308,7 +6331,7 @@ print mydaughter.g(5)
 output('12\\n80\\n80\\n')
 
 '''),
-    
+
 ('''collection of minor fixes for 0.0.6''', '''
 def gen():
     m = []
@@ -6328,7 +6351,7 @@ print a
 
 import copy
 
-b=[[0,1]] 
+b=[[0,1]]
 
 c=copy.deepcopy(b)
 c[0].pop(0)
@@ -6497,7 +6520,7 @@ def mut2(a=None):
     a.append("*")
 mut2(); mut2(); mut2()
 
-def fun2(a, b=4, c='1'): 
+def fun2(a, b=4, c='1'):
     return (a+b)*c
 print fun2(c='2', a=3, b=4), fun2(a=1, b=2, c='8')
 
@@ -6531,7 +6554,7 @@ a=2; b=3; print bool(a==b)
 
 def test():
     s1, s2 = "ab", "AB"
-    alist = ["_"] * 2 
+    alist = ["_"] * 2
     for pos in range(2):
         alist[ord(s1[pos])-ord('a')] = s2[pos]
     return alist
@@ -6551,12 +6574,12 @@ output("[0, 2]\\n''\\n['a', 'b']\\n1 0\\n['ab', 'cd', 'ef', 'gh', 'il', 'mn', 'o
 '''),
 
 ('''list comprehension problem: parents''', '''
-class node:    
-    def __init__(self):     
+class node:
+    def __init__(self):
         self.input = [8]
 
-def incoming(node): 
-    return [link for link in node.input] 
+def incoming(node):
+    return [link for link in node.input]
 
 print incoming(node())
 ''', '''
@@ -6570,7 +6593,7 @@ print 'hello, world!'
 from random import *
 x = 10*random()
 
-from sys import stdin, stdout 
+from sys import stdin, stdout
 for line in sorted(file('testdata/words')):
     print sorted(set(line.strip()))
 #stdout.write(stdin.read())
@@ -6620,7 +6643,7 @@ print a, b, c, d, e
 print max({1:2, 3:4})
 
 s1 = set([1,2,3])
-s2 = set([3,4,5]) 
+s2 = set([3,4,5])
 print str(s1.copy())+' - '+str(s2.copy())+' =', s1.difference(s2), '=', s1 - s2
 s1.difference_update(s2)
 s2.clear()
@@ -6629,7 +6652,7 @@ s1.remove(1)
 s1.discard(2)
 print s1, s1.issubset(s2), set([2,1]).issubset(set([3,1,2,4]))
 s1.update(set([1,2]))
-print s1.issuperset(set([1])) 
+print s1.issuperset(set([1]))
 
 af = set([1,2,3])
 print af.intersection(s1)
@@ -6680,7 +6703,7 @@ class Tester:
 
 Tester().isempty()
 
-class void: 
+class void:
     def bla(self): pass
 vv = void(); vv.bla()
 
@@ -6742,7 +6765,7 @@ from math import sqrt
 mmi = mmj = sqrt(mma)
 print int(mmi), int(mmj)
 
-mma, mmb = mmb, mma 
+mma, mmb = mmb, mma
 print mma, mmb
 
 mma, mmb = 1, 2
@@ -6761,7 +6784,7 @@ print mma, mmb
 meuk = [1,2]
 mma, mmb = meuk
 print mma, mmb
- 
+
 mmx = [1,2]
 print mmx
 
@@ -6901,9 +6924,9 @@ def add_queen(new_row, width, previous_solutions):
 
 def safe_queen(new_row, new_col, sol):
     for row in range(new_row):
-        if (sol[row] == new_col or                  
-            sol[row] + row == new_col + new_row or 
-            sol[row] - row == new_col - new_row): 
+        if (sol[row] == new_col or
+            sol[row] + row == new_col + new_row or
+            sol[row] - row == new_col - new_row):
                 return 0
     return 1
 
@@ -6937,10 +6960,10 @@ def half(points):
             del extrema[-2]
     return extrema
 
-points = sorted(set(points)) 
-upper = half(points) 
+points = sorted(set(points))
+upper = half(points)
 points.reverse()
-lower = half(points) 
+lower = half(points)
 print upper + lower[1:-1]
 ''', '''
 output()
@@ -7035,21 +7058,21 @@ t = (1,2,3,4,5)                          # [tuple(int)]
 print t[1:4]                             # [tuple(int)]
 
 s = 'we are testing shedskin on windows' # [str]
- 
+
 d = {}                                   # [dict(str, int)]
- 
+
 for i in s:                              # [str]
     if not i in d:                       # []
         d[i]= 1                          # [int]
     else:
         d[i]= d[i] + 1                   # [int]
-   
+
 for k,v in d.items():                    # [tuple(str, int)]
     if k == ' ':
         print k, ':', v                      # [str], [str], [int]
 
 x=[]                                     # [list(dude)]
- 
+
 class dude:                              # age: [int], last: [str], name: [str]
     def __init__(self, name, last , age): # self: [dude], name: [str]*, last: [str]*, age: [int]*
         self.name = name                 # [str]
@@ -7058,7 +7081,7 @@ class dude:                              # age: [int], last: [str], name: [str]
         x.append(self)                   # []
     def __repr__(self):                  # self: [dude]
         return '%s %s is %s years old' %(self.name, self.last, str(self.age)) # [str]
- 
+
 dude('luis','gonzalez',35)               # [dude]
 print x[0]                               # [dude]
 ''', '''
@@ -7154,7 +7177,7 @@ def prime(n):                            # n: [int]
         if(not n%i):                     # [int]
             return False                 # [int]
     return True                          # [int]
-    
+
 def factorize(n,l):                      # n: [int], l: [list(int)]
     for i in range(2,int(math.sqrt(n))+1): # [list(int)]
         if(not n%i):                     # [int]
@@ -7166,7 +7189,7 @@ def factorize(n,l):                      # n: [int], l: [list(int)]
                 l.append(n/i)            # []
             else:
                 factorize(n/i,l)         # []
-            break                
+            break
 
 factors=[]                               # [list(int)]
 n='2079283419'                             # [int]
@@ -7362,7 +7385,7 @@ output(equal=True)
 
 '''),
 
-('neural network simulator', ''' 
+('neural network simulator', '''
 # (c) Mark Dufour
 # --- mark.dufour@gmail.com
 
@@ -7376,10 +7399,10 @@ class link:                             # in_node: [node], weight: [float], acti
     def __init__(self, in_node, out_node): # self: [nlink], in_node: [node]*, out_node: [node]*
         self.in_node = in_node; self.out_node = out_node # [node]
         self.weight = (random()-0.5)/2  # [float]
-        
+
 class node:                              # in_node: [], weight: [], activation: [float], out_node: [], delta: [float], output: [list(nlink)], input: [list(nlink)], unit: []
     def __init__(self, input_nodes):     # self: [node], input_nodes: [list(node)]
-    	self.input, self.output = [], []    # [list(nlink)], [list(nlink)]
+        self.input, self.output = [], []    # [list(nlink)], [list(nlink)]
         for node in input_nodes:         # [list(node)]
             l = link(node,self)         # [nlink]
             self.input.append(l)         # []
@@ -7391,8 +7414,8 @@ def neural_network_output(network, input): # network: [list(list(node))], input:
     # set input layer activations
     for index, node in enumerate(network[0]): # [tuple(int, node)]
         node.activation = input[index]   # [int]
-        
-    # forward propagate output 
+
+    # forward propagate output
     for layer in network[1:]:            # [list(list(node))]
         for node in layer:               # [list(node)]
             node.activation = sigmoid(incoming(node)) # [float]
@@ -7412,7 +7435,7 @@ def back_propagate_error(network, answer): # network: [list(list(node))], answer
             node.delta = deriv(incoming(node)) * sum([link.out_node.delta * link.weight for link in node.output]) # [float]
             for link in node.output:     # [list(nlink)]
                 link.weight += alpha * node.activation * link.out_node.delta # [float]
-	         
+
 def append_error(network, examples):     # network: [list(list(node))], examples: [list(tuple(list(int)))]
     compare = [(neural_network_output(network, example)[0], answer[0]) for example, answer in examples] # [list(tuple(float, int))]
     errors.append(sqrt((1.0/len(examples))*sum([pow(answer-output,2) for output, answer in compare]))) # [tuple(float, int)]
@@ -7425,16 +7448,16 @@ def train_network(network, examples, epochs): # network: [list(list(node))], exa
     for epoch in range(epochs):          # [list(int)]
         for example, answer in examples: # [tuple(list(int))]
             output = neural_network_output(network, example) # [list(float)]
-	    back_propagate_error(network, answer) # []
-	    #print_weights(network)
+            back_propagate_error(network, answer) # []
+            #print_weights(network)
 
-	append_error(network, examples)         # []
-     
+        append_error(network, examples)         # []
+
 #def print_weights(network):
 #    for number, layer in enumerate(network[-2::-1]):
 #        print 'layer', number
-#        for node in layer: 
-#	    print [link.weight for link in node.output]
+#        for node in layer:
+#           print [link.weight for link in node.output]
 
 alpha = 0.5                              # [float]
 
@@ -7446,16 +7469,16 @@ network = [input_layer, hidden_layer, output_layer] # [list(list(node))]
 
 examples = [ ([1,0,0,1,1,2,0,1,0,0], [1]), # [list(tuple(list(int)))]
              ([1,0,0,1,2,0,0,0,2,2], [0]), # [tuple(list(int))]
-	     ([0,1,0,0,1,0,0,0,3,0], [1]),      # [list(int)]
-	     ([1,0,1,1,2,0,1,0,2,1], [1]),      # [tuple(list(int))]
- 	     ([1,0,1,0,2,2,0,1,0,3], [0]),     # [tuple(list(int))]
-	     ([0,1,0,1,1,1,1,1,1,0], [1]),      # [tuple(list(int))]
-	     ([0,1,0,0,0,0,1,0,3,0], [0]),      # [list(int)]
-	     ([0,0,0,1,1,1,1,1,2,0], [1]),      # [list(int)]
-	     ([0,1,1,0,2,0,1,0,3,3], [0]),      # [list(int)]
-	     ([1,1,1,1,2,2,0,1,1,1], [0]),      # [list(int)]
-	     ([0,0,0,0,0,0,0,0,2,0], [0]),      # [list(int)]
-	     ([1,1,1,1,2,0,0,0,3,2], [1]) ]     # [list(int)]
+             ([0,1,0,0,1,0,0,0,3,0], [1]),      # [list(int)]
+             ([1,0,1,1,2,0,1,0,2,1], [1]),      # [tuple(list(int))]
+             ([1,0,1,0,2,2,0,1,0,3], [0]),     # [tuple(list(int))]
+             ([0,1,0,1,1,1,1,1,1,0], [1]),      # [tuple(list(int))]
+             ([0,1,0,0,0,0,1,0,3,0], [0]),      # [list(int)]
+             ([0,0,0,1,1,1,1,1,2,0], [1]),      # [list(int)]
+             ([0,1,1,0,2,0,1,0,3,3], [0]),      # [list(int)]
+             ([1,1,1,1,2,2,0,1,1,1], [0]),      # [list(int)]
+             ([0,0,0,0,0,0,0,0,2,0], [0]),      # [list(int)]
+             ([1,1,1,1,2,0,0,0,3,2], [1]) ]     # [list(int)]
 
 epochs = 1000                            # [int]
 train_network(network, examples, epochs) # []
@@ -7469,14 +7492,14 @@ output()
 class node:                              # activation: [int]*
     def __init__(self, input):
         pass
-        
+
 def neural_network_output(network, input): # network: [list(list(node))], input: [list(int)]
     for node in network[0]:                 # [list(node)]
         node.activation = 1              # [int]
 
     for index, node in enumerate(network[0]): # [tuple2(int, node)]
         node.activation = input[index]   # [int]
-        
+
     return [node.activation for node in network[0]] # [list(int)]
 
 input_layer = [node([]) for n in range(10)] # [list(node)]
@@ -7538,7 +7561,7 @@ a = node(1, y)                           # [node]
 b = node(2, d)                           # [node]
 c = node(3, e)                           # [node]
 
-''', ''' 
+''', '''
 output()
 
 '''),
@@ -7575,7 +7598,7 @@ def enumerate(x):                        # x: [pyiter(A)]
         result.append((i,e))             # []
         i += 1
     return result                        # [list(tuple2(int, A))]
-    
+
 print enumerate(['0','1','2'])           # [list(tuple2(int, str))]
 print enumerate((2,1,0))                 # [list(tuple(int))]
 print enumerate({1: 2, 3: 4})            # [list(tuple(int))]
@@ -7599,7 +7622,7 @@ def __zip2(a, b):                           # a: [pyiter(A)], b: [pyiter(B)]
     for i in range(mini(len(la), len(lb))): # [list(int)]
         result.append((la[i], lb[i]))    # []
     return result                        # [list(tuple2(A, B))]
-    
+
 
 print zip({1:2, 2:3}, (1.1,2.2,3.3))     # [list(tuple2(int, float))]
 print zip((1.1,2.2,3.3), {1:2, 2:3})     # [list(tuple2(float, int))]
@@ -7744,7 +7767,7 @@ def best_move(board):                    # board: [int]
     max_mobility = 1                     # [int]
 
     return max_move, max_mobility        # [tuple2(tuple2(int, int), int)]
-    
+
 move, mob = best_move(board)                 # [tuple2(tuple2(int, int), int)]
 ''', '''
 output()
@@ -7847,7 +7870,7 @@ def bla():
 def blu():
     global x
     x = 2                                # [int]
- 
+
 y = 2                                    # [int]
 blu()                                    # []
 print bla()                              # [tuple2(int, int)]
@@ -7999,7 +8022,7 @@ def possible_move(board, x, y, color):   # board: [list(list(int))], x: [int], y
         if flip_in_direction(board, x, y, direction, color): # [int]
             return True                  # [int]
     return False                         # [int]
-        
+
 def flip_in_direction(board, x, y, direction, color): # board: [list(list(int))], x: [int], y: [int], direction: [tuple2(int, int)], color: [int]
     other_color = False                  # [int]
     while True:                          # [int]
@@ -8069,7 +8092,7 @@ def best_move(board, color, first, step=1): # board: [list(list(int))], color: [
 
     #print 'done'                         # [str]
     return max_move, max_mobility        # [tuple2(tuple2(int, int), int)]
-    
+
 flips = 0                                # [int]
 steps = 0                                # [int]
 turn = black                             # [int]
@@ -8108,7 +8131,7 @@ output('flips 43771\\nhuman wins!\\n')
 ('return tuple2(tuple2, int)', '''
 def best_move(xx):                       # xx: [int]
     return (0, 0), 0                     # [tuple2(tuple2(int, int), int)]
-    
+
 a, b = best_move(1)                      # [tuple2(tuple2(int, int), int)]
 ''', '''
 check('a', ['tuple(int)'])
@@ -8210,12 +8233,12 @@ output('[2, 4]\\n[4.6, 6.2]\\n[2.2, 4.4, 6.6]\\n')
 def doubles(x):                          # x: [dict(B, A)]
     return x.values()                    # [list(A)]
 
-f = {1: 1.0}     
-h = {3.0: 3}      
+f = {1: 1.0}
+h = {3.0: 3}
 
-a = doubles(f)      
-b = doubles(h)     
-''', ''' 
+a = doubles(f)
+b = doubles(h)
+''', '''
 check('a', ['list(float)'])
 check('b', ['list(int)'])
 output()
@@ -8355,7 +8378,7 @@ def propagate(lit):                      # lit: [int]
 
 def lookahead():                     # mods: [list(int)]
     global lit_mask
-    lit_mask = [1] 
+    lit_mask = [1]
 
 lookahead()
 propagate(10)
@@ -8414,7 +8437,7 @@ print b*2                                # [list(int)]
 print 2*'hoi'                            # [str]
 print 'hoi'*2                            # [str]
 
-class fred: 
+class fred:
     def __add__(self, b):                # self: [fred], b: [pyobj]r
         return b                         # [pyobj]
     def __augadd__(self, b):             # self: [fred], b: [pyobj]
@@ -8424,7 +8447,7 @@ class bert:
         return b                         # [pyobj]
     def __augadd__(self, b):             # self: [bert], b: [pyobj]
         pass
- 
+
 p = fred()                               # [fred]
 p = bert()                               # [bert]
 
@@ -8438,8 +8461,8 @@ output()
 '''),
 
 ('weird simple mess-up', '''
-nrofvars = [1][0] 
-vars = range(nrofvars+1)                 
+nrofvars = [1][0]
+vars = range(nrofvars+1)
 ''', '''
 
 '''),
@@ -8632,7 +8655,7 @@ a = [1]                                  # [list(int)]
 a = [2]                                  # [list(int)]
 ident(a).append(1)                       # []
 ident(b).append(1.0)                     # []
-  
+
 def hoppa(y):                            # y: [list(A)]
     k = [1.0]                            # [list(float)]
     l = [y[0]]                           # [list(A)]
@@ -8730,23 +8753,23 @@ output()
 '''),
 
 ('ifa: splitting + changing and non-changing containers in dependent function', '''
-def ident(x):                        
-    return x                        
+def ident(x):
+    return x
 
-b = []                                   
-a = []                                  
-ident(b).append(1.0)                   
-ident(a).append(1)                    
-  
-def hoppa(y):                    
-    k = []                        
-    k.append(1.0)                  
-    l = []                          
-    l.append(y[0])                   
+b = []
+a = []
+ident(b).append(1.0)
+ident(a).append(1)
+
+def hoppa(y):
+    k = []
+    k.append(1.0)
+    l = []
+    l.append(y[0])
     return l
 
-c = hoppa(a)                           
-d = hoppa(b)                          
+c = hoppa(a)
+d = hoppa(b)
 ''', '''
 check('a', ['list(int)'])
 check('b', ['list(float)'])
@@ -8842,7 +8865,7 @@ output()
 #        name = 'visit'+node.__class__.__name__ # [str]
 #        meth = getattr(self, name)       # [function (class visitor, 'visitModule'), function (class visitor, 'visitStmt')]
 #        meth(node)                       # []
-#        
+#
 #    def visitModule(self, node):         # self: [visitor()], node: [ast::Stmt(), ast::Module()]
 #        print 'module'                   # [str]
 #
@@ -8923,10 +8946,10 @@ output('hoi 2 3\\n')
 '''),
 
 ('simple template functioning','''
-class Const: 
+class Const:
     def __repr__(self):                  # self: [Const()]
         return 'const'                   # [str]
-class Name: 
+class Name:
     def __repr__(self):                  # self: [Name()]
         return 'name'                    # [str]
 
@@ -8950,7 +8973,7 @@ output('name\\nconst\\n')
 '''),
 
 ('parameterizing linked list values','''
-class bert:      
+class bert:
     pass
 
 class evert:
@@ -9093,7 +9116,7 @@ output('1 2 1 1\\n1 2 3 1\\n1 2 3 4\\n')
 ('''determine target functions in cartesian_product()''', '''
 import testdata.bert
 
-class zeug: 
+class zeug:
     def meuk(self):                      # self: [zeug()]
         return '2'                       # [str]
 
@@ -9332,12 +9355,12 @@ check('c', ['list(int)'])
 '''),
 
 ('modules, namespaces, lambdas', '''
-import testdata.bert 
-from testdata.bert import hello, zeug             
+import testdata.bert
+from testdata.bert import hello, zeug
 #from sets import Set
 
 class jurk:
-    pass                                 
+    pass
 
 testdata.bert.hello(4)                            # []
 hello(4)                                 # [str]
@@ -9350,7 +9373,7 @@ s3 = set([1,2,3])                        # [Set(int)]
 
 kn = testdata.bert.zeug()                         # [zeug()]
 kn.hallo(4)                              # []
-                                      
+
 l1 = lambda x,y: x+y                     # [lambda0]
 l2 = lambda x,y: x-y                     # [lambda0]
 l5 = l2                                  # [lambda0]
@@ -9407,7 +9430,7 @@ cnf = [l.strip().split() for l in file(argv[1]) if l[0] not in 'c0%\\n'] # [list
 clauses = [[int(x) for x in l[:-1] if x != ''] for l in cnf if l[0] != 'p'] # [list(list(int))]
 nrofvars = [int(l[2]) for l in cnf if l[0] == 'p'][0] # [int]
 vars = range(nrofvars+1)                 # [list(int)]
-occurrence = [[] for l in 2*vars] 
+occurrence = [[] for l in 2*vars]
 for clause in clauses:                   # [list(int)]
     for lit in clause: occurrence[lit].append(clause) # [int]
 fixedt = [-1 for var in vars]            # [list(int)]
@@ -9447,7 +9470,7 @@ def propagate(lit, mods, failed_literal=0): # lit_truth: [int], current: [int], 
             fixedt[abs(lit)] = (lit>0)   # [int]
             propcount += 1               # []
             mask_propagate(lit)          # []
-                
+
             for clause in occurrence[-lit]: # [list(int)]
                 length, unfixed = info(clause) # [tuple(int)]
 
@@ -9468,7 +9491,7 @@ def propagate(lit, mods, failed_literal=0): # lit_truth: [int], current: [int], 
     return 1                             # [int]
 
 def mask_propagate(lit):                 # lit: [int]
-    global lit_mask, part_mask # XXX 
+    global lit_mask, part_mask # XXX
     lit_mask[lit] |= part_mask           # []
 
 def mask_binclause(lits):                # lit: [int], lits: [list(int)]
@@ -9478,7 +9501,7 @@ def mask_binclause(lits):                # lit: [int], lits: [list(int)]
 hoppa = 0xffffffff
 
 def lookahead(mods):                     # mods: [list(int)], i: [int], u: [list(int)], var: [int], part: [list(int)]
-    global global_mask, lit_mask, part_mask, some_failure 
+    global global_mask, lit_mask, part_mask, some_failure
 
     global_mask = hoppa                # [int]
     lit_mask = [0 for var in range(2*(nrofvars+1))] # [list(int)]
@@ -9495,16 +9518,16 @@ def lookahead(mods):                     # mods: [list(int)], i: [int], u: [list
         #print binstr(global_mask)        # [str]
 
         lit_mask = [m & (hoppa-global_mask) for m in lit_mask] # [list(int)]
-	
+
         for i in range(32):              # [int]
             part, part_mask = parts[i], masks[i] # [list(int)], [int]
-            
+
             if global_mask & part_mask == 0: # [int]
                 #print 'skip', part_mask  # [str], [int]
                 continue
             global_mask &= (hoppa) ^ part_mask # []
             for var in part:             # [int]
-	            if fixedt[var] == -1 and not lookahead_variable(var, mods, dif): return 0 # [int]
+                    if fixedt[var] == -1 and not lookahead_variable(var, mods, dif): return 0 # [int]
 
     if some_failure:                     # [int]
         #print 'final iteration'          # [str]
@@ -9517,7 +9540,7 @@ def lookahead(mods):                     # mods: [list(int)], i: [int], u: [list
 def lookahead_variable(var, mods, dif):  # mods: [list(int)], dif: [list(int)], choice: [int]*, var: [int], prop: [int]
     global bincount, some_failure
     score = []                           # [list(int)]
-    
+
     for choice in [var,-var]:            # [int]
         prop_mods = []                   # [list(int)]
         bincount = 0                     # [int]
@@ -9529,7 +9552,7 @@ def lookahead_variable(var, mods, dif):  # mods: [list(int)], dif: [list(int)], 
             if not propagate(-choice, mods, 1): return 0 # [int]
             break
         score.append(bincount)           # [None]
-	    
+
     dif[var] = _reduce(lambda x,y: 1024*x*y+x+y, score, 0) # [int]
     return 1                             # [int]
 
@@ -9544,7 +9567,7 @@ def info(clause):                        # lit: [int], clause: [list(int)], unfi
         elif fixedt[abs(lit)] == (lit>0): return -1, 0 # [tuple(int)]
     return len, unfixed                  # [tuple(int)]
 
-def unfixed_vars(): 
+def unfixed_vars():
     return [var for var in range(1,nrofvars+1) if fixedt[var] == -1] # [list(int)]
 
 def unfixed_lits(clause):                # lit: [int]*, clause: [list(int)], result: [list(int)]r
@@ -9592,7 +9615,7 @@ def huhu2(s):                            # s: [int, str]r
     s += 'hola'                          # []
    # print s                              # [int, str]
     return s                             # [int, str]
-    
+
 d = 'crap'                               # [str]
 huhu(d)                                  # [str]
 print d                                  # [str]
@@ -9608,7 +9631,7 @@ output("['b', 'e', 'r', 't']\\nc\\n['c', '3', 'r', 't']\\ncrap\\ncrap\\n")
 '''),
 
 ('japanese puzzle solver by Jack Ha', '''
-# (c) Jack Ha 
+# (c) Jack Ha
 # --- jack.ha@gmail.com
 
 # code
@@ -9623,7 +9646,7 @@ def row_fit(numbers, startnum, length):  # i: [int], startnum: [int]*, length: [
         return True                      # [int]
     else:
         return False                     # [int]
-        
+
 def possible_row(new_row, old_row, startold): # i: [int], old_row: [list(str)], startold: [int], new_row: [list(str)]
     #print 'possible_row'                 # [str]
     for i in range(len(new_row)):        # [int]
@@ -9670,7 +9693,7 @@ def row_perm_rec(numbers, startnum, length, old_row, startold): # pos: [int]*, a
                     if pos+numbers[startnum] < length: # [int]
                         new_row.append('.') # [None]
                         x = 1            # [int]
-                    
+
                     a = row_perm_rec(numbers, startnum+1, length-numbers[startnum]-pos-x, old_row, startold+numbers[startnum]+pos+x) # [str, list(str)]
 #                    #print 'test0'
                     if a <> 'impossible' or a == []: # [int]
@@ -9723,7 +9746,7 @@ def print_puzzle(puzzle, puzzleboard):   # puzzle: [list(list(list(int)))], y: [
         for x in range(len(puzzle[0])):  # [int]
             print puzzleboard[y][x],     # [str]
         print
-    
+
 def check_puzzle(puzzlecolumns, puzzlerows): # puzzlecolumns: [list(list(int))], puzzlerows: [list(list(int))], i: [list(int)], sum1: [int], sum2: [int]
     sum1 = 0                             # [int]
     for i in puzzlecolumns:              # [list(int)]
@@ -9743,7 +9766,7 @@ def create_empty(x,y):                   # a: [list(list(str))]r, i: [int], j: [
     for j in range(y):                   # [int]
         a.append(r[:])                   # [None]
     return a                             # [list(list(str))]
-    
+
 def solve_puzzle(puzzlecolumns, puzzlerows): # changed: [int], rounds: [int], puzzlerows: [list(list(int))], newcol: [str, list(str)], sizeX: [int]*, sizeY: [int]*, puzzlecolumns: [list(list(int))], s: [str, list(str)], y: [int], x: [int], col: [list(str)], puzzleboard: [list(list(str))]
     sizeX = len(puzzlecolumns)           # [int]
     sizeY = len(puzzlerows)              # [int]
@@ -9830,17 +9853,17 @@ output('1\\n2\\n1\\n2\\n')
 #    def __len__(self):                   # self: [list(int)]
 #        return 1                         # [int]
 #
-#class int_: 
+#class int_:
 #    def __repr__(self):                  # self: [int]
 #        return ''                        # [str]
 
-puzzlecolumns = [1]                    
+puzzlecolumns = [1]
 print puzzlecolumns.__len__()
 ''','''
 '''),
 
 ('pisang sat solver', '''
-# (c) Mark Dufour 
+# (c) Mark Dufour
 # --- mark.dufour@gmail.com
 
 def _reduce(f, l, i=-1):                  # f: [lambda0], i: [int], l: [list(int)], r: [int]
@@ -9903,7 +9926,7 @@ def propagate(lit, mods):                # current: [int], unfixed: [int], mods:
             fixedt[abs(lit)] = (lit>0)   # [int]
             for clause in occurrence[-lit]: # [list(int)]
                 length, unfixed = info(clause) # [tuple(int)]
-                
+
                 if length == 0: return 0 # [int]
                 elif length == 1: mods.append(unfixed) # []
                 elif length == 2: bincount += 1 # []
@@ -9932,7 +9955,7 @@ def lookahead(mods):                     # mods: [list(int)], dif: [list(int)], 
                 break
             score.append(bincount)       # []
         dif[var] = _reduce(lambda x, y: 1024*x*y+x+y, score, 0) # [int]
- 
+
     return dif.index(max(dif))           # [int]
 
 def backtrack(mods):                     # lit: [int], mods: [list(int)]
@@ -9947,7 +9970,7 @@ def info(clause):                        # lit: [int], clause: [list(int)], unfi
     return len, unfixed                  # [tuple(int)]
 
 def unfixed_vars(): return [var for var in vars[1:] if fixedt[var] == -1] # [list(int)]
-    
+
 nodecount = 0                            # [int]
 if not solve_rec():                      # [int]
     print 'unsatisfiable', nodecount     # [str], [int]
@@ -9958,12 +9981,12 @@ output(equal=True)
 ('pisang: list comprehension types', '''
 argv = ['','testdata/uuf250-010.cnf']             # [list(str)]
 
-cnf = [l.strip().split() for l in file(argv[1]) if l[0] not in 'c%0\\n'] 
-clauses = [[int(x) for x in m[:-1]] for m in cnf if m[0] != 'p'] 
-nrofvars = [int(n[2]) for n in cnf if n[0] == 'p'][0] 
-vars = range(nrofvars+1)                
-occurrence = [[[c for c in clauses if -v in c],[c for c in clauses if v in c]] for v in vars] 
-fixedt = [-1 for var in vars]            
+cnf = [l.strip().split() for l in file(argv[1]) if l[0] not in 'c%0\\n']
+clauses = [[int(x) for x in m[:-1]] for m in cnf if m[0] != 'p']
+nrofvars = [int(n[2]) for n in cnf if n[0] == 'p'][0]
+vars = range(nrofvars+1)
+occurrence = [[[c for c in clauses if -v in c],[c for c in clauses if v in c]] for v in vars]
+fixedt = [-1 for var in vars]
 ''', '''
 check('cnf',['list(list(str))'])
 check('clauses',['list(list(int))'])
@@ -9997,7 +10020,7 @@ class pears:                           # type: [str]*, amount: [int, float]*, mu
     def __repr__(self):                  # self: [pears(int,float)]
         return self.hype                 # [str]
 
-#print 'pears simulator'                
+#print 'pears simulator'
 
 p = pears(2, 'it')                   # [pears(int,float)]
 p.setunit(1.0)                           # []
@@ -10026,24 +10049,24 @@ check('cube',['list(tuple(int))'])
 '''),
 
 ('list_list_int_tuple_int','''
-cube = [[1,2],(3,4)]                     
+cube = [[1,2],(3,4)]
 ''','''
 check('cube',['list(pyseq(int))'])
 '''),
 
 ('fred = fred + fred', '''
 class integer: pass
-        
-class fred:                                 
-    def __add__(self, x):              
-        i = integer()                   
-        return i                         
 
-def hoei():     
-    a = fred()   
-    return a+a    
+class fred:
+    def __add__(self, x):
+        i = integer()
+        return i
 
-a = hoei()        
+def hoei():
+    a = fred()
+    return a+a
+
+a = hoei()
 ''','''
 check('a',['integer'])
 '''),
@@ -10071,12 +10094,12 @@ check('a',['tuple(int)'])
 '''),
 
 ('list_float_tuple_int XXX ua', '''
-def gettuple():       
-    return (5,6)                    
+def gettuple():
+    return (5,6)
 
-a = gettuple()                     
-cube = [(1,2),(3,4),a,gettuple()]  
-#cube.append(1.0)                  
+a = gettuple()
+cube = [(1,2),(3,4),a,gettuple()]
+#cube.append(1.0)
 ''','''
 check('a',['tuple(int)'])
 #check('a',['tuple2(int, int)'])
@@ -10085,9 +10108,9 @@ check('cube',['list(tuple(int))'])
 '''),
 
 ('return self.unit', '''
-cube = []                          
-cube.append(1.0)                    
-y = cube[0]                          
+cube = []
+cube.append(1.0)
+y = cube[0]
 ''','''
 check('y',['float'])
 '''),
@@ -10128,7 +10151,7 @@ check('cube', ['list(float)'])
 '''),
 
 ('max escape', '''
-class integer:    
+class integer:
     def __gt__(self, b):            # self: [integer], b: [integer]
         return 1
 
@@ -10180,16 +10203,16 @@ qbert()                                  # [int]
 '''),
 
 ('typerepr for simple data polymorphism', '''
-class fred:                    
-    def init(self, whatsit):    
-        self.thingy = whatsit    
+class fred:
+    def init(self, whatsit):
+        self.thingy = whatsit
         return whatsit
 
-h = fred()  
-c = h.init(1)    
+h = fred()
+c = h.init(1)
 
-g = fred()  
-e = g.init('ho') 
+g = fred()
+e = g.init('ho')
 ''','''
 check('h', ['fred(int)'])
 check('g', ['fred(str)'])
@@ -10203,7 +10226,7 @@ class fred:                              # thingy: [int]
         b = 4                            # [int]
         return b                         # [int]
 
-def hottum():                             
+def hottum():
     pass
 
 h = fred()                               # [fred]
@@ -10260,7 +10283,7 @@ check('d',['str'])
 '''),
 
 ('addition operator', '''
-class fred:                      
+class fred:
     def __add__(self, x):                # [fred], [fred]
         return x                         # [int]
 
@@ -10273,41 +10296,41 @@ output(equal=True)
 '''),
 
 #('two-dim. duplication', '''
-#class fred:                       
-#    def init(self, whatsit):     
-#        self.thingy = whatsit   
-#        return whatsit         
+#class fred:
+#    def init(self, whatsit):
+#        self.thingy = whatsit
+#        return whatsit
 #
-##    def hottum(self, x):      
-#        self.woink(1)        
-#        b = self.woink(x)   
-#        return b           
+##    def hottum(self, x):
+#        self.woink(1)
+#        b = self.woink(x)
+#        return b
 #
-#    def woink(self, y):   
-#        return y         
+#    def woink(self, y):
+#        return y
 #
-#def hottum(x):          
-#    a = 1.0            
-#    a = x             
-#    return x         
+#def hottum(x):
+#    a = 1.0
+#    a = x
+#    return x
 #
-#hottum(1)       
-#hottum(1)        
-#a = hottum('hoi')      
+#hottum(1)
+#hottum(1)
+#a = hottum('hoi')
 #
-#h = fred()          
-#b = h.hottum('jo')       
-#c = h.init(1)             
+#h = fred()
+#b = h.hottum('jo')
+#c = h.init(1)
 #
-#beh = 1               
-#beh = 1.0              
-#g = fred()              
-#d = g.hottum(beh)            
-#e = g.init(1)                 
+#beh = 1
+#beh = 1.0
+#g = fred()
+#d = g.hottum(beh)
+#e = g.init(1)
 #
-#i = fred()                 
-#j = i.init('hop')               
-#k = i.init(1)                    
+#i = fred()
+#j = i.init('hop')
+#k = i.init(1)
 #''','''
 #check('a', ['str'])
 #check('h', ['fred_int'])
@@ -10324,9 +10347,9 @@ output(equal=True)
 
 ('nameclash', '''
 def aap(y):
-    return y    
+    return y
 def hap(y):
-    return y   
+    return y
 x = aap(1)
 y = hap(1.0)
 ''','''
@@ -10335,7 +10358,7 @@ check('y', ['float'])
 '''),
 
 ('return via', '''
-def bwa(): 
+def bwa():
     d = 'hoi'
     return d
 a = bwa()
@@ -10405,7 +10428,7 @@ tests.reverse()
 failures = []
 
 def check(name, typelist):
-    ts = shedskin.cpp.typesetreprnew(cv.globals[name], None, False) 
+    ts = shedskin.cpp.typesetreprnew(cv.globals[name], None, False)
     if ts != '['+typelist[0]+']':
         print 'expected for', name+':'
         print '['+typelist[0]+']'
@@ -10426,7 +10449,7 @@ def unittest(i):
         (name,code,test) = tests[i]
     except IndexError:
         print "Test number "+str(i)+" does not yet exist."
-	sys.exit(1)
+        sys.exit(1)
 
     # analysis
     try:
@@ -10438,7 +10461,7 @@ def unittest(i):
         cv = gx.main_module.mv
         shedskin.cpp.generate_code()
 
-        exec test 
+        exec test
 
         print '*** success:', name, i
         print
@@ -10460,7 +10483,7 @@ def output(text=None, equal=False):
 
     os.system('make clean')
 
-    # --- unix 
+    # --- unix
     if sys.platform != 'win32':
         os.system('make') # >& /dev/null')
         t1 = os.times()
@@ -10481,14 +10504,14 @@ def output(text=None, equal=False):
     results[number]['runtime'] = os.times()[2]-t1[2]
 
     # --- run test in CPython
-    if equal or try_cpython: 
+    if equal or try_cpython:
         print '*** running test using CPython..'
         file('wahh','w').write(code)
         t1 = os.times()
         com2 = os.popen('python wahh')
         if equal:
             text = ''.join(com2.readlines())
-        else: 
+        else:
             com2.readlines()
         com2.close()
         results[number]['cpython'] = os.times()[2]-t1[2]
@@ -10501,7 +10524,7 @@ def output(text=None, equal=False):
         com2 = os.popen('python wahh')
         if equal:
             text = ''.join(com2.readlines())
-        else: 
+        else:
             com2.readlines()
         com2.close()
         results[number]['psyco'] = os.times()[2]-t1[2]
@@ -10524,7 +10547,7 @@ def output(text=None, equal=False):
 args, options = [], set()
 
 for arg in sys.argv[1:]:
-    if arg.startswith('-'): 
+    if arg.startswith('-'):
         options.update(arg[1:])
     else: args.append(int(arg))
 
@@ -10554,7 +10577,7 @@ if 'h' in options:
     sys.exit()
 
 # --- print test
-if 'p' in options: 
+if 'p' in options:
     print tests[args[0]][1]
     sys.exit()
 
@@ -10564,7 +10587,7 @@ if 'l' in options:
 elif len(args) == 1:
     test_nrs = [args[0]]
 elif len(args) == 2:
-    if args[0] > args[1]: 
+    if args[0] > args[1]:
         args[0], args[1] = args[1], args[0]
         options.add('r')
     test_nrs = range(args[0],args[1])
@@ -10600,7 +10623,7 @@ for test in test_nrs:
     if failures and 'f' in options:
         break
 
-if not failures: 
+if not failures:
     print '*** no failures, yay!'
 
     # --- performance table
@@ -10635,7 +10658,7 @@ if not failures:
             print line
 else:
     print '*** tests failed:', len(failures)
-    print [(i, tests[i][0]) for i in failures] 
+    print [(i, tests[i][0]) for i in failures]
 
 
 

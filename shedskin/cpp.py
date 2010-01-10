@@ -1760,8 +1760,10 @@ class generateVisitor(ASTVisitor):
         target = funcs[0] # XXX
 
         castnull = False
-        if self.library_func(funcs, 'itertools', None, 'islice') or self.library_func(funcs, 'itertools', None, 'permutations'):
-            castnull = True
+        for itertools_func in ['islice', 'izip_longest', 'permutations']:
+            if self.library_func(funcs, 'itertools', None, itertools_func):
+                castnull = True
+                break
 
         for f in funcs:
             if len(f.formals) != len(target.formals):
