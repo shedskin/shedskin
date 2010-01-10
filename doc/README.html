@@ -284,29 +284,29 @@ var = self.some_method # bad
 <span id="library-limitations"></span><h1><a class="toc-backref" href="#id16">Library Limitations</a></h1>
 <p>Programs to be compiled with <strong>Shed Skin</strong> cannot freely use the Python standard library. Only about 20 common modules are currently supported.</p>
 <p>Note that <strong>Shed Skin</strong> can be used to build an extension module, so the main program can freely use arbitrary modules (and of course all Python features!). See <a class="reference internal" href="#compiling-an-extension-module">Compiling an Extension Module</a>.</p>
-<p>The following modules are largely supported at the moment. Several of these, such as <tt class="docutils literal"><span class="pre">os.path</span></tt>, were compiled to C++ using <strong>shedskin</strong>.</p>
+<p>The following modules are largely supported at the moment. Several of these, such as <tt class="docutils literal"><span class="pre">os.path</span></tt>, were compiled to C++ using <strong>Shed Skin</strong>.</p>
 <blockquote>
 <ul class="simple">
-<li>bisect</li>
-<li>collections</li>
-<li>ConfigParser</li>
-<li>copy</li>
-<li>csv</li>
-<li>datetime (Pavel Vinogradov, Karel Heyse, FFAO, David Marek)</li>
-<li>fnmatch (SirNotAppearingInThisTutorial)</li>
-<li>getopt</li>
-<li>glob (SirNotAppearingInThisTutorial)</li>
-<li>heapq (Jeremie Roquet)</li>
-<li>itertools (Jeremie Roquet)</li>
-<li>math</li>
-<li>os (some functionality missing under Windows)</li>
-<li>os.path</li>
-<li>random (Jeff Miller)</li>
-<li>re (SirNotAppearingInThisTutorial; uses libpcre)</li>
-<li>socket (Michael Elkins)</li>
-<li>string</li>
-<li>sys</li>
-<li>time</li>
+<li><tt class="docutils literal"><span class="pre">bisect</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">collections</span></tt> (defaultdict, deque)</li>
+<li><tt class="docutils literal"><span class="pre">ConfigParser</span></tt> (no SafeConfigParser)</li>
+<li><tt class="docutils literal"><span class="pre">copy</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">csv</span></tt> (no Dialect, Sniffer)</li>
+<li><tt class="docutils literal"><span class="pre">datetime</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">fnmatch</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">getopt</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">glob</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">heapq</span></tt> (no nlargest, nsmallest, merge)</li>
+<li><tt class="docutils literal"><span class="pre">itertools</span></tt> (no starmap)</li>
+<li><tt class="docutils literal"><span class="pre">math</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">os</span></tt> (some functionality missing under Windows)</li>
+<li><tt class="docutils literal"><span class="pre">os.path</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">random</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">re</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">socket</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">string</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">sys</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">time</span></tt> (no time.sleep under windows)</li>
 </ul>
 </blockquote>
 <p>See <a class="reference internal" href="#how-to-help-out-in-shed-skin-development">How to help out in Shed Skin Development</a> on how to help improve or add to the set of supported modules.</p>
@@ -681,6 +681,7 @@ pl.show()
 <li>Joaquin Abian Monux</li>
 <li>Harri Pasanen</li>
 <li>Jeremie Roquet</li>
+<li>Mike Schrick</li>
 <li>SirNotAppearingInThisTutorial</li>
 <li>Joris van Rantwijk</li>
 <li>Thomas Spura</li>
