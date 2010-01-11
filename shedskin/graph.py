@@ -1406,7 +1406,7 @@ class moduleVisitor(ASTVisitor):
 def parsefile(name):
     # Convert block comments into strings which will be duely ignored.
     pat = re.compile(r"#{.*?#}", re.MULTILINE | re.DOTALL)
-    filebuf = re.sub(pat, '', open(name).read())
+    filebuf = re.sub(pat, '', ''.join(open(name, 'U').readlines()))
     try:
         return parse(filebuf)
     except SyntaxError, s:
