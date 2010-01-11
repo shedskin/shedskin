@@ -5,25 +5,21 @@ release = 'shedskin-%s' % sys.argv[1]
 os.system('rm -R shedskin-%s' % sys.argv[1])
 os.system('mkdir %s' % release)
 
-for file in ['doc/LICENSE', 'doc/README.html', 'FLAGS', 'setup.py', 'unit.py']:
+for file in ['doc/LICENSE', 'doc/README.html', 'setup.py']:
     os.system('cp %s %s' % (file, release))
 
 os.system('mkdir %s/shedskin' % release)
-os.system('mkdir %s/lib' % release)
-os.system('mkdir %s/lib/os' % release)
-os.system('mkdir %s/testdata' % release)
-os.system('mkdir %s/testdata/crap2' % release)
+os.system('mkdir %s/shedskin/lib' % release)
+os.system('mkdir %s/shedskin/lib/os' % release)
 
-os.system('rm testdata/*.pyc testdata/*.ss.py')
-os.system('cp testdata/* %s/testdata' % release)
-os.system('rm testdata/crap2/*.pyc testdata/crap2/*.ss.py')
-os.system('cp testdata/crap2/* %s/testdata/crap2' % release)
-os.system('rm lib/struct* lib/pygame* lib/serial* lib/array*')
-os.system('cp lib/*.py %s/lib' % release)
-os.system('cp lib/*.?pp %s/lib' % release)
-os.system('cp lib/os/*.py %s/lib/os' % release)
-os.system('cp lib/os/*.?pp %s/lib/os' % release)
+os.system('rm shedskin/lib/struct* shedskin/lib/pygame* shedskin/lib/serial* shedskin/lib/array*')
+
+os.system('cp shedskin/lib/*.py %s/shedskin/lib' % release)
+os.system('cp shedskin/lib/*.?pp %s/shedskin/lib' % release)
+os.system('cp shedskin/lib/os/*.py %s/shedskin/lib/os' % release)
+os.system('cp shedskin/lib/os/*.?pp %s/shedskin/lib/os' % release)
 os.system('cp shedskin/*.py %s/shedskin' % release)
+os.system('cp shedskin/FLAGS %s/shedskin' % release)
 
 os.system("echo print \\'hello, world!\\' > %s/test.py" % release)
 
