@@ -298,7 +298,7 @@ def cartesian_product(node, worklist):
     argtypes = possible_argtypes(node, funcs, worklist)
     return product(*([funcs]+argtypes))
 
-def redirect(c, dcpa, func, callfunc, ident):
+def redirect(c, dcpa, func, callfunc, ident, callnode):
     # redirect based on number of arguments (__%s%d syntax in builtins)
     if func.mv.module.builtin and (not func.mv.module.ident == 'builtin' or func.ident == 'map'): # XXX
         if isinstance(func.parent, class_): funcs = func.parent.funcs
@@ -359,7 +359,7 @@ def cpa(callnode, worklist):
 
         # redirect in special cases
         callfunc = callnode.thing
-        c, dcpa, func = redirect(c, dcpa, func, callfunc, ident)
+        c, dcpa, func = redirect(c, dcpa, func, callfunc, ident, callnode)
 
         # already connected to template
         if (func,)+objtype+c in callnode.nodecp:
