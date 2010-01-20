@@ -4,7 +4,7 @@ import shedskin.infer, shedskin.cpp
 import traceback, sys, os, time
 
 tests = [
-(''' fixes for 0.4 '''
+('''fixes for 0.4''', '''
 # defaultdict(None, ..)
 from collections import defaultdict
 dnone = defaultdict(None)
