@@ -4,6 +4,23 @@ import shedskin.infer, shedskin.cpp
 import traceback, sys, os, time
 
 tests = [
+(''' fixes for 0.4 '''
+# defaultdict(None, ..)
+from collections import defaultdict
+dnone = defaultdict(None)
+dnone = defaultdict(None, [(8, 9)])
+dnone = defaultdict(None, dnone)
+dnone[4] = 5
+try:
+    print dnone[5]
+except KeyError:
+    print 'keyerror'
+print sorted(dnone.items())
+
+''', '''
+output(equal=True)
+'''),
+
 ('''itertools''', '''
 import itertools
 
