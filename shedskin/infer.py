@@ -137,7 +137,7 @@ def propagate():
     # --- statically bind calls without object/arguments
     for node in getgx().types:
         expr = node.thing
-        if isinstance(expr, CallFunc) and not expr.args:
+        if (isinstance(expr, CallFunc) and not expr.args) or expr in getgx().lambdawrapper: # XXX
             changed.add(node)
 
     for node in changed:
