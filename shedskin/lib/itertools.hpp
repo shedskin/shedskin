@@ -1,9 +1,9 @@
 #ifndef ITERTOOLS_HPP
 #define ITERTOOLS_HPP
 
+#include "builtin.hpp"
 #include <cassert>
 
-#include "builtin.hpp"
 
 using namespace __shedskin__;
 
