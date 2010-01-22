@@ -208,11 +208,6 @@ def possible_functions(node):
     elif direct_call:
         funcs = [(direct_call, 0, None)]
 
-        if ident == 'dict':
-            clnames = [t[0].ident for t in getgx().cnode[expr.args[0],node.dcpa,node.cpa].types() if isinstance(t[0], class_)]
-            if 'dict' in clnames or 'defaultdict' in clnames:
-                funcs = [(node.mv.ext_funcs['__dict'], 0, None)]
-
     elif method_call:
         objtypes = getgx().cnode[objexpr, node.dcpa, node.cpa].types()
         objtypes = [t for t in objtypes if not isinstance(t[0], function)] # XXX
@@ -316,13 +311,17 @@ def redirect(c, dcpa, func, callfunc, ident, callnode):
     if isinstance(func.parent, class_) and func.ident in func.parent.staticmethods:
         dcpa = 1
 
-    # defaultdict
-    if ident == 'defaultdict' and len(callfunc.args) == 2:
+    # dict, defaultdict
+    if (ident, nrargs(callfunc)) in (('dict', 1), ('defaultdict', 2)):
         clnames = [x[0].ident for x in c if isinstance(x[0], class_)]
         if 'dict' in clnames or 'defaultdict' in clnames:
             func = list(callnode.types())[0][0].funcs['__initdict__']
         else:
             func = list(callnode.types())[0][0].funcs['__inititer__']
+
+    # list, tuple
+    if ident in ('list', 'tuple', 'set', 'frozenset') and nrargs(callfunc) == 1:
+        func = list(callnode.types())[0][0].funcs['__inititer__'] # XXX use __init__?
 
     # tuple2.__getitem__(0/1) -> __getfirst__/__getsecond__
     if (isinstance(callfunc.node, Getattr) and callfunc.node.attrname == '__getitem__' and \

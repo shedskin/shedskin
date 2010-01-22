@@ -115,7 +115,7 @@ tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *getopt(list<str *> *args,
     tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *__3, *__4;
 
     opts = (new list<tuple2<str *, str *> *>());
-    longopts = __list(longopts);
+    longopts = new list<str *>(longopts);
 
     while((___bool(args) && (args->__getfast__(0))->startswith(const_1) && __ne(args->__getfast__(0), const_1))) {
         if (__eq(args->__getfast__(0), const_2)) {
@@ -165,7 +165,7 @@ tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *gnu_getopt(list<str *> *a
 
     opts = (new list<tuple2<str *, str *> *>());
     prog_args = (new list<str *>());
-    longopts = __list(longopts);
+    longopts = new list<str *>(longopts);
     if (shortopts->startswith(const_3)) {
         shortopts = shortopts->__slice__(1, 1, 0, 0);
         all_options_first = 1;

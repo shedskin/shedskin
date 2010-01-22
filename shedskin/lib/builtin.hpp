@@ -64,16 +64,6 @@ class StopIteration; class TypeError; class RuntimeError; class OverflowError;
 
 /* builtin function forward declarations */
 
-template<class T> list<T> *__list(pyiter<T> *p);
-template<class T> list<T> *__list(pyseq<T> *p);
-
-template<class T> tuple2<T,T> *__tuple(pyiter<T> *p);
-template<class T> tuple2<T,T> *__tuple(pyseq<T> *p);
-
-template<class K, class V> dict<K,V> *__dict(pyiter<tuple2<K, V> *> *p);
-template<class K, class V> dict<K,V> *__dict(dict<K,V> *p);
-template<class K> dict<K,K> *__dict(pyiter<list<K> *> *p);
-
 int __int(str *s, int base);
 inline int __int() { return 0; }
 template<class T> inline int __int(T t) { return t->__int__(); }
@@ -520,6 +510,7 @@ public:
 
     list();
     list(int count, ...);
+    list(pyiter<T> *p);
 
     void clear();
     void *__setitem__(int i, T e);
@@ -728,6 +719,7 @@ public:
 
     tuple2();
     tuple2(int count, ...);
+    tuple2(pyiter<T> *p);
 
     void __init2__(T a, T b) {
         units.resize(2);
@@ -773,6 +765,9 @@ public:
 
     dict();
     dict(int count, ...);
+    dict(dict<K, V> *p);
+    dict(pyiter<tuple2<K,V> *> *p); // XXX pyiter(iter)
+
     void *__setitem__(K k, V v);
     V __getitem__(K k);
     void *__delitem__(K k);
@@ -866,6 +861,7 @@ public:
 
     set(int frozen=0);
     set(pyiter<T> *p, int frozen=0);
+
     set<T>& operator=(const set<T>& other);
 
     void *add(T key);
@@ -1404,6 +1400,20 @@ template<class K, class V> dict<K, V>::dict(int count, ...)  {
     va_end(ap);
 }
 
+template<class K, class V> dict<K, V>::dict(dict<K, V> *p)  {
+    this->__class__ = cl_dict;
+    this->units = p->units;
+}
+
+template<class K, class V> dict<K, V>::dict(pyiter<tuple2<K,V> *> *p) {
+    this->__class__ = cl_dict;
+    tuple2<K,V> *t;
+    __iter<tuple2<K,V> *> *__0;
+    FOR_IN(t, p, 0)
+        __setitem__(t->__getfirst__(), t->__getsecond__());
+    END_FOR
+}
+
 #ifdef __SS_BIND
 template<class K, class V> dict<K, V>::dict(PyObject *p) {
     if(!PyDict_Check(p))
@@ -1521,10 +1531,6 @@ template<class K, class V> dict<K,V> *dict<K,V>::__deepcopy__(dict<void *, pyobj
     return n;
 }
 
-template<class K, class V> dict<K,V> *__dict(dict<K,V> *p) {
-    return p->copy();
-}
-
 template<class K, class V> list<V> *dict<K,V>::values() {
     list<V> *l = new list<V>();
     l->units.reserve(__len__());
@@ -1615,15 +1621,24 @@ template<class T> list<T>::list() {
     this->__class__ = cl_list;
 }
 
-template<class T> list<T>::list(int count, ...)  {
+template<class T> list<T>::list(int count, ...) {
     this->__class__ = cl_list;
     va_list ap;
     va_start(ap, count);
     for(int i=0; i<count; i++) {
         T t = va_arg(ap, T);
-        append(t);
+        this->units.push_back(t);
     }
     va_end(ap);
+}
+
+template<class T> list<T>::list(pyiter<T> *p) {
+    this->__class__ = cl_list;
+    T e;
+    __iter<T> *__0;
+    FOR_IN(e, p, 0)
+        this->units.push_back(e);
+    END_FOR
 }
 
 #ifdef __SS_BIND
@@ -2005,7 +2020,7 @@ template<class T> set<T>::set(PyObject *p) {
 }
 
 template<class T> PyObject *set<T>::__to_py__() {
-    list<T> *l = __list(this); /* XXX optimize */
+    list<T> *l = list(this); /* XXX optimize */
     if(frozen)
         return PyFrozenSet_New(__to_py(l));
     else
@@ -2678,6 +2693,15 @@ template<class T> tuple2<T, T>::tuple2(int count, ...) {
     va_end(ap);
 }
 
+template<class T> tuple2<T, T>::tuple2(pyiter<T> *p) {
+    this->__class__ = cl_tuple;
+    T e;
+    __iter<T> *__0;
+    FOR_IN(e, p, 0)
+        this->units.push_back(e);
+    END_FOR
+}
+
 template<class T> T tuple2<T, T>::__getfirst__() {
     return this->units[0];
 }
@@ -2968,55 +2992,28 @@ template<class K, class V> tuple2<K, V> *__dictiteritems<K, V>::next() {
 
 /* builtins */
 
-template<class T> list<T> * __list(pyiter<T> *p) {
-    list<T> *result = new list<T>();
-    T e;
-    __iter<T> *__0;
-    FOR_IN(e, p, 0)
-        result->append(e);
-    END_FOR
-    return result;
-}
-
+/*
 template<class T> list<T> *__list(pyseq<T> *p) {
     list<T> *result = new list<T>();
-/*    if(p->__class__ == cl_str_) { // why can't we specialize for str *..
-        printf("crap %s!\n", ((str *)p)->unit.c_str());
-        return __list((pyiter<T> *)p);
-    } */
+//    if(p->__class__ == cl_str_) { // why can't we specialize for str *..
+//        printf("crap %s!\n", ((str *)p)->unit.c_str());
+//        return __list((pyiter<T> *)p);
+//    } 
     result->units = p->units;
     return result;
 }
 
 list<str *> *__list(str *);
 
-template<class T> tuple2<T,T> *__tuple(pyiter<T> *p) {
-    tuple2<T,T> *result = new tuple2<T,T>();
-    T e;
-    __iter<T> *__0;
-    FOR_IN(e, p, 0)
-        result->append(e);
-    END_FOR
-    return result;
-}
-
 template<class T> tuple2<T,T> *__tuple(pyseq<T> *p) {
     tuple2<T,T> *result = new tuple2<T,T>();
-    if(p->__class__ == cl_str_) /* why can't we specialize for str *.. */
+    if(p->__class__ == cl_str_) /// why can't we specialize for str *..
         return __tuple((pyiter<T> *)p);
     result->units = p->units;
     return result;
 }
+*/
 
-template<class K, class V> dict<K,V> *__dict(pyiter<tuple2<K,V> *> *p) {
-    dict<K,V> *d = new dict<K,V>();
-    tuple2<K,V> *t;
-    __iter<tuple2<K,V> *> *__0;
-    FOR_IN(t, p, 0)
-        d->__setitem__(t->__getfirst__(), t->__getsecond__());
-    END_FOR
-    return d;
-}
 template <class A> A __sum(pyiter<A> *l, A b) {
     A e;
     __iter<A> *__0;
@@ -3193,13 +3190,13 @@ template <class A> list<A> *sorted(pyseq<A> *x, int cmp, int key, int reverse) {
 }
 
 template <class U> list<str *> *sorted(str *x, int (*cmp)(str *, str *), U (*key)(str *), int reverse) {
-    list<str *> *l = __list(x);
+    list<str *> *l = new list<str *>(x);
     l->sort(cmp, key, reverse);
     return l;
 }
 list<str *> *sorted(str *x, int (*cmp)(str *, str *), int key, int reverse);
 template <class U> list<str *> *sorted(str *x, int cmp, U (*key)(str *), int reverse) {
-    list<str *> *l = __list(x);
+    list<str *> *l = new list<str *>(x);
     l->sort(cmp, key, reverse);
     return l;
 }
@@ -3222,7 +3219,7 @@ public:
 };
 
 template <class A> __iter<A> *reversed(pyiter<A> *x) {
-    return new __ss_reverse<A>(__list(x));
+    return new __ss_reverse<A>(new list<A>(x));
 }
 template <class A> __iter<A> *reversed(pyseq<A> *x) {
     return new __ss_reverse<A>(x);
@@ -3446,7 +3443,7 @@ template <class A, class B> list<A> *filter(B (*func)(A), pyiter<A> *a) {
 }
 
 template <class A, class B> tuple2<A,A> *filter(B (*func)(A), tuple2<A,A> *a) {
-    return __tuple(filter(func, (pyiter<A> *)a)); /* XXX inefficient */
+    return new tuple2<A,A>(filter(func, (pyiter<A> *)a)); /* XXX inefficient */
 }
 template <class B> str *filter(B (*func)(str *), str *a) {
     return (new str())->join(filter(func, (pyiter<str *> *)a)); /* XXX inefficient */

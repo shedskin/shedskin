@@ -140,7 +140,7 @@ template <class A> int shuffle(pyseq<A> *x) {
 }
 
 template <class A> list<A> *sample(pyiter<A> *population, int k) {
-    return sample(__list(population), k);
+    return sample(new list<A>(population), k);
 }
 
 template <class A> list<A> *sample(pyseq<A> *population, int k) {
@@ -173,7 +173,7 @@ template <class A> int Random::shuffle(pyseq<A> *x) {
 }
 
 template <class A> list<A> *Random::sample(pyiter<A> *population, int k) {
-    return sample(__list(population), k);
+    return sample(new list<A>(population), k);
 }
 
 template <class A> list<A> *Random::sample(pyseq<A> *population, int k) {
@@ -207,7 +207,7 @@ template <class A> list<A> *Random::sample(pyseq<A> *population, int k) {
     }
     result = ((new list<A>(1, population->__getitem__(0))))->__mul__(k);
     if ((n<(6*k))) {
-        pool = __list(population);
+        pool = new list<A>(population);
 
         FAST_FOR(i,0,k,1,33,34)
             j = __int((this->random()*(n-i)));
@@ -220,9 +220,9 @@ template <class A> list<A> *Random::sample(pyseq<A> *population, int k) {
         try {
             ((n>0) && ___bool((new tuple2<A, A>(3, population->__getitem__(0), population->__getitem__(__floordiv(n, 2)), population->__getitem__((n-1))))));
         } catch (TypeError *) {
-            population = __tuple(population);
+            population = new tuple2<A,A>(population);
         } catch (KeyError *) {
-            population = __tuple(population);
+            population = new tuple2<A,A>(population);
         }
         selected = (new dict<int, A>());
 

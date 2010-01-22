@@ -29,7 +29,7 @@ list<str *> *glob(str *pathname) {
     
     */
     
-    return __list(iglob(pathname));
+    return new list<str *>(iglob(pathname));
 }
 
 class __gen_iglob : public __iter<str *> {

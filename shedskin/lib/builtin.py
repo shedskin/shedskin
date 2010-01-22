@@ -92,6 +92,11 @@ class none:
         return 1
 
 class pyiter:
+    def __init__(self):
+        pass
+    def __inititer__(self, i):
+        self.unit = iter(i).next()
+
     def __iter__(self):
         return __iter(self.unit)
     def __copy__(self): # XXX to base class
@@ -99,7 +104,8 @@ class pyiter:
     def __deepcopy__(self):
         return self
 
-class pyseq(pyiter): pass
+class pyseq(pyiter):
+    pass
 
 class list(pyseq):
     def append(self, f):
@@ -319,6 +325,14 @@ class str_(pyseq):
         return 1
 
 class dict(pyiter):
+    def __initdict__(self, other):
+        self.unit = other.unit
+        self.value = other.value
+    def __inititer__(self, other):
+        item = iter(other).next()
+        self.unit = item[0]
+        self.value = item[1]
+
     def __repr__(self):
         self.unit.__repr__()
         self.value.__repr__()
@@ -384,8 +398,8 @@ class dict(pyiter):
         return __iter((self.unit, self.value))
 
 class pyset(pyiter):
-    def __init__(self, x=[]):
-        self.__setunit__(x.unit)
+    def __inititer__(self, i):
+        self.__setunit__(iter(i).next())
 
     def __setunit__(self, unit):
         self.unit = unit
@@ -553,9 +567,6 @@ def float(x=None):
     x.__float__()
     return 1.0
 
-def tuple(x):
-    return (x.unit,)
-
 def hex(x):
     x.__hex__()
     return ''
@@ -563,14 +574,6 @@ def hex(x):
 def oct(x):
     x.__oct__()
     return ''
-
-def dict(x):
-    return {x.unit.first: x.unit.second}
-def __dict(d):
-    return {d.unit: d.value}
-
-def list(x):
-    return [x.unit]
 
 def isinstance(a, b):
     return 1
