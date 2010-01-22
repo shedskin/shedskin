@@ -1401,6 +1401,7 @@ class moduleVisitor(ASTVisitor):
         getgx().lambdawrapper[node2] = self.lambdaname[l]
         f = self.lambdas[self.lambdaname[l]]
         f.lambdawrapper = True
+        inode(node2).lambdawrapper = f
         return f
 
 def parsefile(name):

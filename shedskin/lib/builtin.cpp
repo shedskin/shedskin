@@ -1630,6 +1630,7 @@ double __max(pyseq<double> *l) { return __maximum(l); }
 
 /* list */
 
+/*
 list<str *> *__list(str *s) {
     list<str *> *r = new list<str *>();
     r->units.resize(len(s));
@@ -1637,12 +1638,12 @@ list<str *> *__list(str *s) {
     for(int i=0; i<sz; i++)
         r->units[i] = __char_cache[s->unit[i]];
     return r;
-}
+} */
 
 /* sorted */
 
 list<str *> *sorted(str *t, int (*cmp)(str *, str *), int key, int reverse) {
-    list<str *> *l = __list(t);
+    list<str *> *l = new list<str *>(t);
     l->sort(cmp, key, reverse);
     return l;
 }
@@ -1833,12 +1834,8 @@ str *__modcd(str *fmt, list<str *> *names, ...) {
 
     str *naam;
     int pos, pos2;
-    dict<str *, pyobj *> *d;
-
-    d = __dict(__zip2(names, vals));
-
+    dict<str *, pyobj *> *d = new dict<str *, pyobj *>(__zip2(names, vals));
     str *const_6 = new str(")");
-
     list<pyobj *> *values = new list<pyobj *>();
 
     while((pos = __fmtpos2(fmt)) != -1) {

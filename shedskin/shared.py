@@ -253,6 +253,7 @@ class cnode:
         self.constructor = False # allocation site
         self.copymetoo = False
         self.fakert = False
+        self.lambdawrapper = None
 
         getgx().cnode[self.thing, self.dcpa, self.cpa] = self
 
@@ -605,14 +606,12 @@ def analyze_callfunc(node, check_exist=False): # XXX generate target list XXX un
                 error("please provide 'zip' with arguments", node)
             ident = '__zip'+str(len(node.args))
 
-        if ident in ['list','tuple','frozenset','set','dict'] and not node.args:
-            constructor = namespace.mv.ext_classes[ident]
-        elif ident in namespace.mv.classes:
+        if ident in namespace.mv.classes:
             constructor = namespace.mv.classes[ident]
-        elif ident not in ['list','tuple','dict'] and ident in namespace.mv.ext_classes: # XXX cleanup
-            constructor = namespace.mv.ext_classes[ident]
         elif ident in namespace.mv.funcs:
             direct_call = namespace.mv.funcs[ident]
+        elif ident in namespace.mv.ext_classes:
+            constructor = namespace.mv.ext_classes[ident]
         elif ident in namespace.mv.ext_funcs:
             direct_call = namespace.mv.ext_funcs[ident]
         else:
@@ -635,6 +634,11 @@ def lookupimplementor(cl, ident):
             break
     return None
 
+def nrargs(node):
+    if inode(node).lambdawrapper:
+        return inode(node).lambdawrapper.largs
+    return len(node.args)
+
 # --- return list of potential call targets
 def callfunc_targets(node, merge):
     objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr = analyze_callfunc(node)
@@ -644,8 +648,10 @@ def callfunc_targets(node, merge):
         funcs = [t[0] for t in merge[node.node] if isinstance(t[0], function)]
 
     elif constructor:
-        if ident == 'defaultdict' and len(node.args) == 2:
-            funcs = [constructor.funcs['__initdict__']] # XXX __initi__
+        if ident in ('list', 'tuple', 'set', 'frozenset') and nrargs(node) == 1:
+            funcs = [constructor.funcs['__inititer__']]
+        elif (ident, nrargs(node)) in (('dict', 1), ('defaultdict', 2)): # XXX merge infer.redirect
+            funcs = [constructor.funcs['__initdict__']] # XXX __inititer__?
         elif '__init__' in constructor.funcs:
             funcs = [constructor.funcs['__init__']]
 

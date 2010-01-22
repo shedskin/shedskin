@@ -1678,7 +1678,7 @@ class generateVisitor(ASTVisitor):
 
         elif constructor:
             self.append('(new '+nokeywords(typesetreprnew(node, func)[:-2])+'(')
-            if funcs and len(funcs[0].formals) == 1 and not funcs[0].mv.module.builtin: # XXX builtin
+            if funcs and len(funcs[0].formals) == 1 and not funcs[0].mv.module.builtin:
                 self.append('1') # don't call default constructor
 
         elif parent_constr:

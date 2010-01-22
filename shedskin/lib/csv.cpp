@@ -494,7 +494,7 @@ dict<str *, str *> *DictReader::next() {
     while (row->empty()) {
         row = (this->_reader)->next();
     }
-    d = __dict(__zip2(this->getfieldnames(), row));
+    d = new dict<str *, str *>(__zip2(this->getfieldnames(), row));
     lf = len(this->getfieldnames());
     lr = len(row);
     if ((lf<lr)) {
