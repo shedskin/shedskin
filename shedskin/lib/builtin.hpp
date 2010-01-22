@@ -2821,9 +2821,9 @@ template<class T> tuple2<T,T> *tuple2<T, T>::__slice__(int x, int l, int u, int 
 
 template<class T> int tuple2<T, T>::__hash__() {
     int seed = 0;
-    for(int i = 0; i<this->__len__();i++) {
+    int sz = this->units.size();
+    for(int i = 0; i<sz; i++)
         seed = hash_combine(seed, hasher<T>(this->units[i]));
-    }
     return seed;
 }
 
