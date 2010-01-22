@@ -1628,18 +1628,6 @@ double __min(pyseq<double> *l) { return __minimum(l); }
 int __max(pyseq<int> *l) { return __maximum(l); }
 double __max(pyseq<double> *l) { return __maximum(l); }
 
-/* list */
-
-/*
-list<str *> *__list(str *s) {
-    list<str *> *r = new list<str *>();
-    r->units.resize(len(s));
-    int sz = s->unit.size();
-    for(int i=0; i<sz; i++)
-        r->units[i] = __char_cache[s->unit[i]];
-    return r;
-} */
-
 /* sorted */
 
 list<str *> *sorted(str *t, int (*cmp)(str *, str *), int key, int reverse) {

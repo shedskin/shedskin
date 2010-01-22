@@ -293,6 +293,7 @@ extern dict<void *, void *> *__ss_proxy;
 extern class_ *cl_str_, *cl_int_, *cl_float_, *cl_complex, *cl_list, *cl_tuple, *cl_dict, *cl_set, *cl_object, *cl_xrange, *cl_rangeiter;
 
 extern __GC_VECTOR(str *) __letters;
+extern __GC_VECTOR(str *) __char_cache;
 
 /* builtin class declarations */
 
@@ -511,6 +512,8 @@ public:
     list();
     list(int count, ...);
     list(pyiter<T> *p);
+    list(pyseq<T> *p);
+    list(str *s);
 
     void clear();
     void *__setitem__(int i, T e);
@@ -720,6 +723,8 @@ public:
     tuple2();
     tuple2(int count, ...);
     tuple2(pyiter<T> *p);
+    tuple2(pyseq<T> *p);
+    tuple2(str *s);
 
     void __init2__(T a, T b) {
         units.resize(2);
@@ -1639,6 +1644,19 @@ template<class T> list<T>::list(pyiter<T> *p) {
     FOR_IN(e, p, 0)
         this->units.push_back(e);
     END_FOR
+}
+
+template<class T> list<T>::list(pyseq<T> *p) {
+    this->__class__ = cl_list;
+    this->units = p->units;
+}
+
+template<class T> list<T>::list(str *s) {
+    this->__class__ = cl_list;
+    this->units.resize(len(s));
+    int sz = s->unit.size();
+    for(int i=0; i<sz; i++)
+        this->units[i] = __char_cache[s->unit[i]];
 }
 
 #ifdef __SS_BIND
@@ -2702,6 +2720,19 @@ template<class T> tuple2<T, T>::tuple2(pyiter<T> *p) {
     END_FOR
 }
 
+template<class T> tuple2<T, T>::tuple2(pyseq<T> *p) {
+    this->__class__ = cl_tuple;
+    this->units = p->units;
+}
+
+template<class T> tuple2<T, T>::tuple2(str *s) {
+    this->__class__ = cl_tuple;
+    this->units.resize(len(s));
+    int sz = s->unit.size();
+    for(int i=0; i<sz; i++)
+        this->units[i] = __char_cache[s->unit[i]];
+}
+
 template<class T> T tuple2<T, T>::__getfirst__() {
     return this->units[0];
 }
@@ -2991,28 +3022,6 @@ template<class K, class V> tuple2<K, V> *__dictiteritems<K, V>::next() {
 }
 
 /* builtins */
-
-/*
-template<class T> list<T> *__list(pyseq<T> *p) {
-    list<T> *result = new list<T>();
-//    if(p->__class__ == cl_str_) { // why can't we specialize for str *..
-//        printf("crap %s!\n", ((str *)p)->unit.c_str());
-//        return __list((pyiter<T> *)p);
-//    } 
-    result->units = p->units;
-    return result;
-}
-
-list<str *> *__list(str *);
-
-template<class T> tuple2<T,T> *__tuple(pyseq<T> *p) {
-    tuple2<T,T> *result = new tuple2<T,T>();
-    if(p->__class__ == cl_str_) /// why can't we specialize for str *..
-        return __tuple((pyiter<T> *)p);
-    result->units = p->units;
-    return result;
-}
-*/
 
 template <class A> A __sum(pyiter<A> *l, A b) {
     A e;
