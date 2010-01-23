@@ -1202,13 +1202,11 @@ class moduleVisitor(ASTVisitor):
             self.visit(node.node, func)
             inode(node.node).callfuncs.append(node) # XXX iterative dataflow analysis: move there
 
-        objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr = analyze_callfunc(node)
-
         # --- arguments
         if not getmv().module.builtin and (node.star_args or node.dstar_args):
             error('argument (un)packing is not supported', node)
         args = node.args[:]
-        if node.star_args: args.append(node.star_args) # XXX clean up
+        if node.star_args: args.append(node.star_args) # partially allowed in builtins
         if node.dstar_args: args.append(node.dstar_args)
         for arg in args:
             if isinstance(arg, Keyword):
@@ -1217,7 +1215,8 @@ class moduleVisitor(ASTVisitor):
             inode(arg).callfuncs.append(node) # this one too
 
         # --- handle instantiation or call
-        if constructor: # XXX only dep on analyze_callfunc
+        constructor = lookupclass(node.node, self)
+        if constructor and (not isinstance(node.node, Name) or not lookupvar(node.node.name, func)):
             self.instance(node, constructor, func)
             inode(node).callfuncs.append(node) # XXX see above, investigate
         else:

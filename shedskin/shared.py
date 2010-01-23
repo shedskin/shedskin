@@ -440,7 +440,7 @@ def lookupmodule(node, mv):
 
         return mod
 
-def lookupclass(node, mv):
+def lookupclass(node, mv): # XXX lookupvar first?
     if isinstance(node, Name):
         if node.name in mv.classes: return mv.classes[node.name]
         elif node.name in mv.ext_classes: return mv.ext_classes[node.name]
@@ -451,7 +451,7 @@ def lookupclass(node, mv):
             return module.classes[node.attrname]
     return None
 
-def lookupfunc(node, mv):
+def lookupfunc(node, mv): # XXX lookupvar first?
     if isinstance(node, Name):
         if node.name in mv.funcs: return mv.funcs[node.name]
         elif node.name in mv.ext_funcs: return mv.ext_funcs[node.name]
