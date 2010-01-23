@@ -205,129 +205,54 @@ template <class T> __iter<T> *reversed(deque<T> *d) {
 
 template <class K, class V> class defaultdict : public dict<K, V> {
     typename __GC_HASH_MAP2::iterator iter;
+    V (*func)();
 
 public:
-    defaultdict() {
+    defaultdict(V (*func)()=NULL) {
+        this->func = func;
     }
 
-    defaultdict(dict<K, V> *d) {
-
+    defaultdict(V (*func)(), dict<K, V> *d) {
+        this->func = func;
+        this->units = d->units;
     }
 
-    defaultdict(pyiter<tuple2<K, V> *> *i) {
-
+    defaultdict(V (*func)(), pyiter<tuple2<K, V> *> *i) {
+        this->func = func;
+        __iter<tuple2<K, int> *> *__0;
+        tuple2<K, int> *k;
+        FOR_IN(k, i, 0)
+            this->units[k->__getfirst__()] = k->__getsecond__();
+        END_FOR
     }
 
     V __getitem__(K k) {
         iter = this->units.find(k);
-        if(iter == this->units.end()) return __missing__(k);
+        if(iter == this->units.end())
+            return __missing__(k);
         return iter->second;
     }
 
     V __missing__(K k) {
-        V v = new (typename dereference<V>::type)();
-        return (this->units[k] = v);
+        if(func)
+            return (this->units[k] = func());
+        throw new KeyError(repr(k));
     }
 
-    void *_addtoitem__(K k, V v) {
+    void *__addtoitem__(K k, V v) {
         iter = this->units.find(k);
         if(iter == this->units.end()) {
-            V defval = new (typename dereference<V>::type)();
-            this->units[k] = __add(defval, v);
-        }
-        else
+            if(func)
+                this->units[k] = __add(func(), v);
+            else
+                throw new KeyError(repr(k));
+        } else
             iter->second = __add(iter->second, v);
         return NULL;
     }
 
     str *__repr__() {
         return __add_strs(3, new str("defaultdict("), dict<K, V>::__repr__(), new str(")"));
-    }
-};
-
-#define __GC_HASH_MAPI __gnu_cxx::hash_map<K, int, __shedskin__::hashfunc<K>, hasheq<K>, gc_allocator<std::pair<K, int> > >
-
-template<class K> class defaultdict<K, int> : public dict<K, int> {
-    typename __GC_HASH_MAPI::iterator iter;
-public:
-    defaultdict() {
-    }
-
-    defaultdict(dict<K, int> *d) {
-        this->units = d->units;
-    }
-
-    defaultdict(pyiter<tuple2<K, int> *> *i) {
-       __iter<tuple2<K, int> *> *__0;
-       tuple2<K, int> *k;
-
-       FOR_IN(k, i, 0)
-           this->units[k->__getfirst__()] = k->__getsecond__();
-       END_FOR
-    }
-
-    int __missing__(K k) {
-        return (this->units[k] = 0);
-    }
-
-    int __getitem__(K k) {
-        iter = this->units.find(k);
-        if(iter == this->units.end()) return __missing__(k);
-        return iter->second;
-    }
-
-    void *__addtoitem__(K k, int v) {
-        iter = this->units.find(k);
-        if(iter == this->units.end())
-            this->units[k] = v;
-        else
-            iter->second = iter->second+v;
-        return NULL;
-    }
-
-    str *__repr__() {
-        return __add_strs(3, new str("defaultdict("), dict<K, int>::__repr__(), new str(")"));
-    }
-};
-
-
-#define __GC_HASH_MAPD __gnu_cxx::hash_map<K, double, __shedskin__::hashfunc<K>, hasheq<K>, gc_allocator<std::pair<K, double> > >
-
-template<class K> class defaultdict<K, double> : public dict<K, double> {
-    typename __GC_HASH_MAPD::iterator iter;
-public:
-    defaultdict() {
-    }
-
-    defaultdict(dict<K, double> *d) {
-
-    }
-
-    defaultdict(pyiter<tuple2<K, double> *> *i) {
-
-    }
-
-    double __missing__(K k) {
-        return (this->units[k] = 0);
-    }
-
-    double __getitem__(K k) {
-        iter = this->units.find(k);
-        if(iter == this->units.end()) return __missing__(k);
-        return iter->second;
-    }
-
-    void *__addtoitem__(K k, double v) {
-        iter = this->units.find(k);
-        if(iter == this->units.end())
-            this->units[k] = v;
-        else
-            iter->second = iter->second+v;
-        return NULL;
-    }
-
-    str *__repr__() {
-        return __add_strs(3, new str("defaultdict("), dict<K, double>::__repr__(), new str(")"));
     }
 };
 

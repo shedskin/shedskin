@@ -1785,9 +1785,6 @@ class generateVisitor(ASTVisitor):
 
             pairs = connect_actual_formal(node, target, parent_constr, check_error=True)
 
-            if constructor and ident=='defaultdict' and node.args:
-                pairs = pairs[1:]
-
         double = False
         if ident in ['min', 'max']:
             for arg in node.args:

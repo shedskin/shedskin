@@ -45,18 +45,19 @@ class deque(pyiter):
         return self
 
 class defaultdict:
-    def __init__(self, value):
-        self.value = value
+    def __init__(self, func=None):
+        self.value = func()
 
-    def __initdict__(self, value, d):
-        self.value = value
-        self.value = d.value
-        self.unit = d.unit
+    def __initdict__(self, func, d):
+        value = func()
+        value = d.value
+        self.__setunit__(d.unit, value)
 
-    def __inititer__(self, value, i):
+    def __inititer__(self, func, i):
+        value = func()
         item = iter(i).next()
-        self.unit = item[0]
-        self.value = item[1]
+        value = item[1]
+        self.__setunit__(item[0], value)
 
     def __setitem__(self, key, value):
         self.__setunit__(key, value)

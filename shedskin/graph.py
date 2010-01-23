@@ -1204,14 +1204,11 @@ class moduleVisitor(ASTVisitor):
 
         objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr = analyze_callfunc(node)
 
-        if constructor and ident == 'defaultdict' and node.args:
-            node.args[0] = CallFunc(node.args[0], [])
-
         # --- arguments
         if not getmv().module.builtin and (node.star_args or node.dstar_args):
             error('argument (un)packing is not supported', node)
         args = node.args[:]
-        if node.star_args: args.append(node.star_args)
+        if node.star_args: args.append(node.star_args) # XXX clean up
         if node.dstar_args: args.append(node.dstar_args)
         for arg in args:
             if isinstance(arg, Keyword):
@@ -1220,7 +1217,7 @@ class moduleVisitor(ASTVisitor):
             inode(arg).callfuncs.append(node) # this one too
 
         # --- handle instantiation or call
-        if constructor:
+        if constructor: # XXX only dep on analyze_callfunc
             self.instance(node, constructor, func)
             inode(node).callfuncs.append(node) # XXX see above, investigate
         else:
