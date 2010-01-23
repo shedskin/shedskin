@@ -7,6 +7,7 @@ tests = [
 ('''fixes for 0.4''', '''
 # defaultdict(None, ..)
 from collections import defaultdict
+dnone = defaultdict()
 dnone = defaultdict(None)
 dnone = defaultdict(None, [(8, 9)])
 dnone = defaultdict(None, dnone)
