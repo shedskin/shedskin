@@ -1,109 +1,92 @@
-# (c) (the sister of) Peter Goodspeed
-# --- coriolinus@gmail.com
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #
-# conway's game of life, with no object-orientation,
-# a 20x20 non-wrapping grid, and no exceptions
+# Copyright 2010 Francesco Frassinelli <fraph24@gmail.com>
+#
+#    pylife is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#functions
-def rawBoard():
-        return [20 * [False] for i in xrange(20)]
+""" Implementation of: http://en.wikipedia.org/wiki/Conway's_Game_of_Life 
+        Tested on Python 2.6.4 and Python 3.1.1 """
 
-#def fromKb():
-#        eventLoop(lambda arg: raw_input(arg))
+from collections import defaultdict
+from itertools import product
+from sys import argv
 
-def nextI(qstr):
-        global source
-        if source == 1: #from keyboard
-                return raw_input(qstr)
-        elif source == 2: #from file
-                global flines
-                global fcur
-                if fcur < len(flines):
-                        ret = flines[fcur]
-                        fcur += 1
-                        return ret
+def add(board, pos):
+    """ Adds eight cells near current cell """
+    row, column = pos
+    return \
+        board[row-1, column-1] +\
+        board[row-1, column] +\
+        board[row-1, column+1] +\
+        board[row, column-1] +\
+        board[row, column+1] +\
+        board[row+1, column-1] +\
+        board[row+1, column] +\
+        board[row+1, column+1]
 
+def snext(board):
+    """ Calculates the next stage """
+    new = defaultdict(int, board)
+    for pos in list(board.keys()):
+        near = add(board, pos)
+        item = board[pos]
+        if near not in (2, 3) and item:
+            new[pos] = 0
+        elif near == 3 and not item:
+            new[pos] = 1
+    return new
 
-def pb(board):
-        #print board
-        print "-" * 20
-        for row in board:
-                ro = ''
-                for i in xrange(len(row)):
-                        if row[i]: ro += "X"
-                        else: ro += " "
-                print ro
-        print "-" * 20
+def process(board):
+    """ Finds if this board repeats itself """
+    history = [defaultdict(None, board)]
+    while 1:
+        board = snext(board)
+        if board in history:
+            if board == history[0]:
+                return board
+            return None
+        history.append(defaultdict(None, board))
 
-def eventLoop(nextInput):
-       cont = 'p'
-       while cont.lower()[0] == 'p':
-                board = rawBoard()
+def generator(rows, columns):
+    """ Generates a board """
+    ppos = [(row, column) for row in range(rows)
+                          for column in range(columns)]
+    possibilities = product((0, 1), repeat=rows*columns)
+    for case in possibilities:
+        board = defaultdict(int)
+        for pos, value in zip(ppos, case):
+            board[pos] = value
+        yield board
 
-                #how many inputs should we expect?
-                numcells = int(nextInput("how many cells? "))
+def bruteforce(rows, columns):
+    global count
+    count = 0
+    for board in map(process, generator(rows, columns)):
+        if board is not None:
+            count += 1
+            #print board
 
-                #get that many cells
-                for i in xrange(numcells):
-                        xy = str(nextInput("x,y: ")).split(',')
-                        x,y = int(xy[0]),int(xy[1])
-                        #set those cells
-                        board[x][y] = True
-
-                pb(board)
-                runSim(board)
-
-                cont = nextInput("play again? (p for yes; anything else for no): ")
-
-def runSim(board):
-        #main loop for simulating life
-        turns = 0
-        ob = None # old board
-
-        while turns < 10 and board != ob:
-                turns += 1
-                ob = board
-                board = nextgen(board)
-                pb(board)
-                print
-        if turns >= 10000: print "10 turns exhausted"
-        else: print "stabilized on turn %s" % str(turns + 1)
-
-def nextgen(board):
-        #transform the old board into a new one
-        nb = rawBoard()
-
-        for rown in xrange(len(board)):
-                for coln in xrange(len(board[rown])):
-                        nn = 0
-                        for r,c in neighbors(rown, coln):
-                                if board[r][c]: nn += 1
-                        if nn == 3: nb[rown][coln] = True
-                        elif nn >= 4 or nn < 2: nb[rown][coln] = False
-                        else: nb[rown][coln] = board[rown][coln]
-
-        return nb
-
-def neighbors(x,y):
-        rl = []
-        for mx in [-1,0,1]:
-                for my in [-1,0,1]:
-                        if not (mx == 0 and my == 0):
-                                r = (x + mx, y + my)
-                                if r[0] >= 0 and r[0] < 20 and r[1] >= 0 and r[1] < 20:
-                                        rl.append(r)
-        return rl
-
-#main
-source = 0
-while source not in [1,2]:
-        source = 2 #int(raw_input("1 for input from keyboard; 2 for input from file: "))
-
-if source==2:
-        fp = open('testdata/life.txt')
-        flines = [line for line in fp]
-        fp.close()
-        fcur = 0
-
-eventLoop(nextI)
-
+if __name__ == "__main__":
+    rows, columns = 4, 4
+    bruteforce(rows, columns)
+    print count
+#    try:
+#        rows, columns = int(argv[1]), int(argv[2])
+#    except IndexError:
+#        print("Usage: %s [rows] [columns]" % argv[0])
+#    except ValueError:
+#        print("Usage: %s [rows] [columns]" % argv[0])
+#    else:
+#        bruteforce(rows, columns)
