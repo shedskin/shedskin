@@ -2038,7 +2038,7 @@ template<class T> set<T>::set(PyObject *p) {
 }
 
 template<class T> PyObject *set<T>::__to_py__() {
-    list<T> *l = list(this); /* XXX optimize */
+    list<T> *l = new list<T>(this); /* XXX optimize */
     if(frozen)
         return PyFrozenSet_New(__to_py(l));
     else
