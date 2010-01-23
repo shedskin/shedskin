@@ -11,6 +11,7 @@ for file in ['doc/LICENSE', 'doc/README.html', 'setup.py']:
 os.system('mkdir %s/shedskin' % release)
 os.system('mkdir %s/shedskin/lib' % release)
 os.system('mkdir %s/shedskin/lib/os' % release)
+os.system('mkdir %s/scripts' % release)
 
 os.system('rm shedskin/lib/struct* shedskin/lib/pygame* shedskin/lib/serial* shedskin/lib/array*')
 
@@ -20,6 +21,7 @@ os.system('cp shedskin/lib/os/*.py %s/shedskin/lib/os' % release)
 os.system('cp shedskin/lib/os/*.?pp %s/shedskin/lib/os' % release)
 os.system('cp shedskin/*.py %s/shedskin' % release)
 os.system('cp shedskin/FLAGS %s/shedskin' % release)
+os.system('cp scripts/shedskin %s/scripts' % release)
 
 os.system("echo print \\'hello, world!\\' > %s/test.py" % release)
 
