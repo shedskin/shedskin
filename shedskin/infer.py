@@ -51,9 +51,6 @@ def class_copy(cl, dcpa):
         if cl.mv.module.ident == 'builtin' and cl.ident != '__iter' and func.ident == '__iter__': # XXX hack for __iter__:__iter()
             itercl = defclass('__iter')
             getgx().alloc_info[func.ident, ((cl,dcpa),), func.returnexpr[0]] = (itercl, itercl.dcpa)
-
-            #print 'itercopy', itercl.dcpa
-
             class_copy(itercl, dcpa)
             itercl.dcpa += 1
 
@@ -123,15 +120,12 @@ def propagate():
     #print 'propagate'
     seed_nodes()
     worklist = init_worklist()
-    #print 'worklist', worklist
-
     getgx().checkcallfunc = [] # XXX
 
     # --- check whether seeded nodes are object/argument to call
     changed = set()
     for w in worklist:
         for callfunc in w.callfuncs:
-            #print 'seed changed', w.callfunc, w.dcpa, w.cpa
             changed.add(getgx().cnode[callfunc, w.dcpa, w.cpa])
 
     # --- statically bind calls without object/arguments
@@ -153,24 +147,22 @@ def propagate():
                 cpa(getgx().cnode[callfunc, a.dcpa, a.cpa], worklist)
             a.changed = False
 
-        for b in a.out.copy(): # XXX kan veranderen...?
+        for b in a.out.copy(): # XXX can change...?
             # for builtin types, the set of instance variables is known, so do not flow into non-existent ones # XXX ifa
             if isinstance(b.thing, variable) and isinstance(b.thing.parent, class_) and b.thing.parent.ident in getgx().builtins:
                 if b.thing.parent.ident in ['int_', 'float_', 'str_', 'none']: continue
-                elif b.thing.parent.ident in ['list', 'tuple', 'frozenset', 'set', 'file','__iter'] and b.thing.name != 'unit': continue
-                elif b.thing.parent.ident == 'dict' and b.thing.name not in ['unit', 'value']: continue
+                elif b.thing.parent.ident in ['list', 'tuple', 'frozenset', 'set', 'file','__iter', 'deque'] and b.thing.name != 'unit': continue
+                elif b.thing.parent.ident in ('dict', 'defaultdict') and b.thing.name not in ['unit', 'value']: continue
                 elif b.thing.parent.ident == 'tuple2' and b.thing.name not in ['unit', 'first', 'second']: continue
 
                 #print 'flow', a, b #, difference #, difference, getgx().types[b], b.callfunc
 
             difference = getgx().types[a] - getgx().types[b]
-
             if difference:
                 getgx().types[b].update(difference)
 
                 # --- check whether node corresponds to actual argument: if so, perform cartesian product algorithm
                 for callfunc in b.callfuncs:
-                    #print 'id changed', b.callfunc, b.dcpa, b.cpa, getgx().types[b], a
                     cpa(getgx().cnode[callfunc, b.dcpa, b.cpa], worklist)
 
                 addtoworklist(worklist, b)
@@ -411,7 +403,6 @@ def create_template(func, dcpa, c, worklist):
     func.cp[dcpa][c] = cpa = len(func.cp[dcpa]) # XXX +1
 
     #if not func.mv.module.builtin and not func.ident in ['__getattr__', '__setattr__']:
-    #if func.ident == 'product':
     #    print 'template', (func, dcpa), c
 
     getgx().templates += 1
@@ -686,7 +677,6 @@ def iterative_dataflow_analysis():
         #print '\n'.join([repr(e)+': '+repr(l) for e,l in getgx().alloc_info.items()])
         #print 'propagate'
         propagate()
-        #printstate()
         getgx().alloc_info = getgx().new_alloc_info
 
         # --- ifa: detect conflicting assignments to instance variables, and split contours to resolve these
@@ -695,7 +685,7 @@ def iterative_dataflow_analysis():
         split = ifa()
         if DEBUG and split: print 'IFA splits', [(s[0], s[1], s[3]) for s in split]
 
-        if not split: # nothing has changed 
+        if not split: # nothing has changed
             print '\niterations:', getgx().iterations, 'templates:', getgx().templates
             return
 
@@ -704,7 +694,6 @@ def iterative_dataflow_analysis():
             for n in nodes:
                 parent = parent_func(n.thing)
                 if parent:
-                    #print 'parent', n, parent, parent.cp
                     if n.dcpa in parent.cp:
                         for cart, cpa in parent.cp[n.dcpa].items(): # XXX not very fast
                             if cpa == n.cpa:
@@ -732,7 +721,6 @@ def iterative_dataflow_analysis():
             for n in nodes:
                 if not parent_func(n.thing):
                     beforetypes[n] = set([(cl,newnr)])
-                    #print 'seed global', n, (cl,newnr)
 
         # --- restore network
         restore_network(backup)
@@ -746,8 +734,6 @@ def ifa_seed_template(func, cart, dcpa, cpa, worklist):
 
         for node in func.nodes:
             if node.constructor and isinstance(node.thing, (List, Dict, Tuple, ListComp, CallFunc)):
-                #print 'constr', node
-
                 # --- contour is specified in alloc_info
                 parent = node.parent
                 while isinstance(parent.parent, function): parent = parent.parent
@@ -756,29 +742,21 @@ def ifa_seed_template(func, cart, dcpa, cpa, worklist):
                 alloc_node = getgx().cnode[node.thing, dcpa, cpa]
 
                 if alloc_id in getgx().alloc_info:
-                    pass #    print 'specified', func.ident, cart, alloc_node, alloc_node.callfuncs, getgx().alloc_info[alloc_id]
-
+                    pass # print 'specified', func.ident, cart, alloc_node, alloc_node.callfuncs, getgx().alloc_info[alloc_id]
                 # --- contour is newly split: copy allocation type for 'mother' contour; modify alloc_info
                 else:
                     mother_alloc_id = alloc_id
 
                     for (id, c, thing) in getgx().alloc_info:
                         if id ==  parent.ident and thing is node.thing:
-                            okay = True
                             for a, b in zip(cart, c):
-                                if a == b:
-                                    pass #print 'eq', a, b
-                                elif isinstance(a[0], class_) and a[0] is b[0] and a[1] in a[0].splits and a[0].splits[a[1]] == b[1]:
-                                    pass #print 'inh', a, b
-                                else:
-                                    okay = False
+                                if a != b and not (isinstance(a[0], class_) and a[0] is b[0] and a[1] in a[0].splits and a[0].splits[a[1]] == b[1]):
                                     break
-                            if okay:
+                            else:
                                 mother_alloc_id = (id, c, thing)
                                 break
 
                     #print 'not specified.. mother id:', mother_alloc_id
-
                     if mother_alloc_id in getgx().alloc_info:
                         getgx().alloc_info[alloc_id] = getgx().alloc_info[mother_alloc_id]
                         #print 'mothered', alloc_node, getgx().alloc_info[mother_alloc_id]
@@ -792,14 +770,9 @@ def ifa_seed_template(func, cart, dcpa, cpa, worklist):
                                 mother_alloc_id = (id, c, thing)
                                 getgx().alloc_info[alloc_id] = getgx().alloc_info[mother_alloc_id]
                                 break
-                        #assert false
-
-                    #if alloc_id in getgx().alloc_info: # XXX faster
-                    #    print 'seed', func.ident, cart, alloc_node, getgx().alloc_info[alloc_id]
 
                 if alloc_id in getgx().alloc_info:
                     getgx().new_alloc_info[alloc_id] = getgx().alloc_info[alloc_id]
-
                     getgx().types[alloc_node] = set()
                     #print 'seeding..', alloc_node, getgx().alloc_info[alloc_id], alloc_node.thing in getgx().empty_constructors
                     getgx().types[alloc_node].add(getgx().alloc_info[alloc_id])
