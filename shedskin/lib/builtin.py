@@ -326,12 +326,11 @@ class str_(pyseq):
 
 class dict(pyiter):
     def __initdict__(self, other):
-        self.unit = other.unit
-        self.value = other.value
+        self.__setunit__(other.unit, other.value)
+
     def __inititer__(self, other):
         item = iter(other).next()
-        self.unit = item[0]
-        self.value = item[1]
+        self.__setunit__(item[0], item[1])
 
     def __repr__(self):
         self.unit.__repr__()
@@ -340,18 +339,22 @@ class dict(pyiter):
     def __str__(self):
         return self.__repr__()
 
-    def __setunit__(self, k, v):
-        self.unit = k
+    def __key__(self, k):
         k.__hash__()
         k.__eq__(k)
+
+    def __setunit__(self, k, v):
+        self.__key__(k)
+        self.unit = k
         self.value = v
 
     def __setitem__(self, k, v):
         self.__setunit__(k, v)
     def __getitem__(self, k):
+        self.__key__(k)
         return self.value
-    def __delitem__(self, i):
-        pass
+    def __delitem__(self, k):
+        self.__key__(k)
 
     def setdefault(self, k, v=None):
         self.__setunit__(k, v)
@@ -365,6 +368,7 @@ class dict(pyiter):
         return [(self.unit, self.value)]
 
     def has_key(self, k):
+        self.__key__(k)
         return 1
 
     def __len__(self):
@@ -375,16 +379,19 @@ class dict(pyiter):
     def copy(self):
         return {self.unit: self.value}
     def get(self, k, default=None):
+        self.__key__(k)
         return self.value
+        return default
     def pop(self, k):
+        self.__key__(k)
         return self.value
     def popitem(self):
         return (self.unit, self.value)
     def update(self, d):
         self.__setunit__(d.unit, d.value)
 
-    def __delete__(self, i):
-        pass
+    def __delete__(self, k):
+        self.__key__(k)
 
     def fromkeys(l, b=None):
         return {l.unit: b}

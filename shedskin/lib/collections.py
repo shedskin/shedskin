@@ -67,6 +67,7 @@ class defaultdict:
         return self.value
 
     def __missing__(self, key):
+        self.__key__(key)
         self.unit = key
         return self.value
 
@@ -85,20 +86,24 @@ class defaultdict:
     def __str__(self):
         return self.__repr__()
 
-    def __setunit__(self, k, v):
-        self.unit = k
+    def __key__(self, k):
         k.__hash__()
         k.__eq__(k)
+
+    def __setunit__(self, k, v):
+        self.__key__(k)
+        self.unit = k
         self.value = v
 
-    def __delitem__(self, i):
-        pass
+    def __delitem__(self, k):
+        self.__key__(k)
 
     def setdefault(self, k, v=None):
         self.__setunit__(k, v)
         return v
 
     def has_key(self, k):
+        self.__key__(k)
         return 1
 
     def __len__(self):
@@ -110,22 +115,23 @@ class defaultdict:
         return {self.unit: self.value}
 
     def get(self, k, default=None):
+        self.__key__(k)
         return self.value
         return default
     def pop(self, k):
+        self.__key__(k)
         return self.value
     def popitem(self):
         return (self.unit, self.value)
     def update(self, d):
         self.__setunit__(d.unit, d.value)
 
-    def __delete__(self, i):
-        pass
+    def __delete__(self, k):
+        self.__key__(k)
 
     def fromkeys(l, b=None):
         d = defaultdict()
-        d.value = b
-        d.unit = iter(l).next()
+        d.__setunit__(iter(l).next(), b)
         return d
     fromkeys = staticmethod(fromkeys) # XXX classmethod
 
@@ -138,4 +144,3 @@ class defaultdict:
 
     def __iter__(self):
         return __iter(self.unit)
-
