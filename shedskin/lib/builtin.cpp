@@ -1585,10 +1585,22 @@ template<> str *hex(int i) {
 template<> str *hex(bool b) { return hex((int)b); }
 
 template<> str *oct(int i) {
-    if(i==0) return new str("0");
-    return (new str("0"))->__add__(__str(i, 8));
+    if(i<0)
+        return (new str("-0"))->__add__(__str(-i, 8));
+    else if(i>0)
+        return (new str("0"))->__add__(__str(i, 8));
+    else
+      return new str("0");
 }
 template<> str *oct(bool b) { return oct((int)b); }
+
+template<> str *bin(int i) {
+    if(i<0)
+        return (new str("-0b"))->__add__(__str(-i, 2));
+    else
+        return (new str("0b"))->__add__(__str(i, 2));
+}
+template<> str *bin(bool b) { return bin((int)b); }
 
 str *__str() { return new str(""); } /* XXX optimize */
 

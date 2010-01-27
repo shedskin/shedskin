@@ -22,6 +22,20 @@ print sorted(dnone.items())
 self = 4
 print self
 
+# bin, oct, hex
+print hex(200), hex(-200), hex(0)
+print oct(200), oct(-200), oct(0)
+print bin(200), bin(-200), bin(0)
+
+class A(object):
+    def __index__(self):
+        return 42
+a = A()
+print bin(a)
+
+print bin(1==2), bin(1!=2)
+
+
 ''', '''
 output(equal=True)
 '''),

@@ -582,6 +582,10 @@ def oct(x):
     x.__oct__()
     return ''
 
+def bin(x):
+    x.__index__()
+    return ''
+
 def isinstance(a, b):
     return 1
 
