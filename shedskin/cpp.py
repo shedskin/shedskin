@@ -2398,7 +2398,7 @@ class generateVisitor(ASTVisitor):
             self.append(getmv().lwrapper[node])
         elif node.name == 'None':
             self.append('NULL')
-        elif node.name == 'self' and ((func and func.listcomp) or not isinstance(func.parent, class_)):
+        elif node.name == 'self' and (not func or func.listcomp or not isinstance(func.parent, class_)): # XXX lookupvar
             self.append('self')
         elif node.name in map:
             self.append(map[node.name])
@@ -2815,7 +2815,7 @@ def analyze_virtuals():
             if not classes:
                 continue
 
-            if isinstance(objexpr, Name) and objexpr.name == 'self':
+            if isinstance(objexpr, Name) and objexpr.name == 'self' and inode(objexpr).parent: # XXX last check to avoid crash
                 abstract_cl = inode(objexpr).parent.parent
             else:
                 lcp = lowest_common_parents(classes)
