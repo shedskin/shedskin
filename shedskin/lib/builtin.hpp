@@ -137,6 +137,12 @@ template<class T> str *oct(T t) {
 template<> str *oct(int a);
 template<> str *oct(bool b);
 
+template<class T> str *bin(T t) {
+    return bin(t->__index__());
+}
+template<> str *bin(int a);
+template<> str *bin(bool b);
+
 str *__mod4(str *fmt, list<pyobj *> *vals);
 str *__modct(str *fmt, int n, ...);
 str *__modcd(str *fmt, list<str *> *l, ...);
