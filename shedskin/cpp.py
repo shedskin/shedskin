@@ -304,15 +304,17 @@ class generateVisitor(ASTVisitor):
                 print >>self.out, typesetreprnew(default, None)+' '+('default_%d;'%nr)
             print >>self.out
 
+        # --- list comprehensions 1
+        self.listcomps = {}
+        for (listcomp,lcfunc,func) in getmv().listcomps:
+            self.listcomps[listcomp] = (lcfunc, func)
+
         # --- lambdas
         for l in getmv().lambdas.values():
             if l.ident not in getmv().funcs:
                 self.visit(l.node)
 
-        # --- list comprehensions
-        self.listcomps = {}
-        for (listcomp,lcfunc,func) in getmv().listcomps:
-            self.listcomps[listcomp] = (lcfunc, func)
+        # --- list comprehensions 2
         for (listcomp,lcfunc,func) in getmv().listcomps: # XXX cleanup
             if lcfunc.mv.module.builtin:
                 continue
