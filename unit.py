@@ -18,6 +18,10 @@ except KeyError:
     print 'keyerror'
 print sorted(dnone.items())
 
+# self variable (TODO: fix analyze_virtuals)
+self = 4
+print self
+
 ''', '''
 output(equal=True)
 '''),
