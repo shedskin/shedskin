@@ -308,6 +308,8 @@ class generateVisitor(ASTVisitor):
         self.listcomps = {}
         for (listcomp,lcfunc,func) in getmv().listcomps:
             self.listcomps[listcomp] = (lcfunc, func)
+        self.do_listcomps(True)
+        print >>self.out
 
         # --- lambdas
         for l in getmv().lambdas.values():
@@ -315,19 +317,7 @@ class generateVisitor(ASTVisitor):
                 self.visit(l.node)
 
         # --- list comprehensions 2
-        for (listcomp,lcfunc,func) in getmv().listcomps: # XXX cleanup
-            if lcfunc.mv.module.builtin:
-                continue
-
-            parent = func
-            while isinstance(parent, function) and parent.listcomp:
-                parent = parent.parent
-
-            if isinstance(parent, function):
-                if not self.inhcpa(parent) or parent.inherited:
-                    continue
-
-            self.listcomp_func(listcomp)
+        self.do_listcomps(False)
 
         # --- classes
         for child in node.node.getChildNodes():
@@ -2077,20 +2067,40 @@ class generateVisitor(ASTVisitor):
         elif isinstance(lvalue, AssAttr):
             self.visitAssAttr(lvalue, func)
 
+    def do_listcomps(self, declare):
+        for (listcomp, lcfunc, func) in getmv().listcomps: # XXX cleanup
+            if lcfunc.mv.module.builtin:
+                continue
+
+            parent = func
+            while isinstance(parent, function) and parent.listcomp:
+                parent = parent.parent
+
+            if isinstance(parent, function):
+                if not self.inhcpa(parent) or parent.inherited:
+                    continue
+
+            if declare:
+                self.listcomp_head(listcomp, True)
+            else:
+                self.listcomp_func(listcomp)
+
+    def listcomp_head(self, node, declare):
+        lcfunc, func = self.listcomps[node]
+        # --- formals: target, z if not Name, out-of-scopes
+        args = []
+        for name in lcfunc.misses:
+            if lookupvar(name, func).parent:
+                args.append(typesetreprnew(lookupvar(name, lcfunc), lcfunc)+self.cpp_name(name))
+        ts = typesetreprnew(node, lcfunc)
+        if not ts.endswith('*'): ts += ' '
+        self.output('static inline '+ts+lcfunc.ident+'('+', '.join(args)+')'+[' {', ';'][declare])
+
     def listcomp_func(self, node):
         # --- [x*y for (x,y) in z if c]
         lcfunc, func = self.listcomps[node]
 
-        # --- formals: target, z if not Name, out-of-scopes
-        args = []
-
-        for name in lcfunc.misses:
-            if lookupvar(name, func).parent:
-                args.append(typesetreprnew(lookupvar(name, lcfunc), lcfunc)+self.cpp_name(name))
-
-        ts = typesetreprnew(node, lcfunc)
-        if not ts.endswith('*'): ts += ' '
-        self.output('static inline '+ts+lcfunc.ident+'('+', '.join(args)+') {')
+        self.listcomp_head(node, False)
         self.indent()
 
         # --- local: (x,y), result
