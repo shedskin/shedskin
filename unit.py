@@ -36,11 +36,11 @@ print bin(a)
 print bin(1==2), bin(1!=2)
 
 # game of life
-import sys;r,c=map(int,sys.argv[1:]);p,g=r*c,range;z=g(p);w=lambda x:sum([d[v]for v in z if max(abs(x%r-v%r),abs(x/r-v/r))<2])
+argv=[0,3,3];r,c=map(int,argv[1:]);p,g=r*c,range;z=g(p);w=lambda x:sum([d[v]for v in z if max(abs(x%r-v%r),abs(x/r-v/r))<2])
 for m in g(2**p):
  d=map(int,bin(m)[2:].zfill(p))
  if d==[d[x]^(not d[x]and w(x)==3)^(d[x]and not 2<w(x)<5) for x in z]:
-  for x in g(c+1):print''.join([{1:'X',0:'.'}[x]for x in d[r*x:r*x+r]])
+  for x in g(c+1):print''.join([{1:'X',0:'.'}[y]for y in d[r*x:r*x+r]])
 
 ''', '''
 output(equal=True)
