@@ -44,7 +44,7 @@ w=lambda x:sum([(abs(x%r-v%r)<2)&(abs(x/r-v/r)<2)&d[v]for v in z])
 for m in g(2**p):
  d=[m>>x&1 for x in z]
  if all([d[x]&(2<w(x)<5)|~d[x]&(w(x)!=3)for x in z]):
-  for x in g(c+1):print''.join(['.X'[x]for x in d[r*x:r*x+r]])
+  for x in g(c+1):print''.join(['.X'[y]for y in d[r*x:r*x+r]])
 
 # pyseq and __getfast__
 seq = [1,2,3]
