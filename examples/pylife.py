@@ -148,6 +148,12 @@ class LifeBoard:
     self.nextid = 18
     self.root = E
 
+  def info(self):
+   return " c" + str(self.count()) + " m" + str(len(self.memo))
+
+  def width(self):
+   return self.root.width()
+
   def getnode(self, nw, ne, sw, se):
     tup = (nw.id, ne.id, sw.id, se.id)
     if not (self.memo.has_key(tup)):
@@ -262,3 +268,5 @@ if __name__ == '__main__':
     board.step(1)
     board.clear()
     board.count()
+    board.info()
+    board.width()

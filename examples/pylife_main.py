@@ -44,9 +44,7 @@ class LifeScreen:
     self.showcursor()
 
   def showmem(self):
-    self.screen.addstr(0, 0, str(self.steps)
-                         + " c" + str(self.board.count())
-                         + " m" + str(len(self.board.memo)))
+    self.screen.addstr(0, 0, str(self.steps) + self.board.info())
 
   def showcursor(self):
     self.screen.move(self.cury - self.offsety, self.curx - self.offsetx)
@@ -70,7 +68,7 @@ class LifeScreen:
     self.showcursor()
 
   def step(self, steps):
-    if self.board.root.width() > 2 ** 28: self.collect()
+    if self.board.width() > 2 ** 28: self.collect()
     self.board.step(steps)
     self.steps = self.steps + steps
     self.redraw()
