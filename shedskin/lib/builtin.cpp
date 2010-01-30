@@ -681,7 +681,7 @@ str *str::__imul__(int n) {
 
 /* ======================================================================== */
 
-/* (C) 2004, 2005 Paul Hsieh. Covered under the Paul Hsieh derivative license.
+/* (C) 2004, 2005 Paul Hsieh.
    http://www.azillionmonkeys.com/qed/{hash,weblicense}.html  */
 
 #define get16bits(d) (*((const unsigned short int *) (d)))
