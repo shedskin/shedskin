@@ -2001,6 +2001,11 @@ template<class T> void *list<T>::remove(T e) {
     return NULL;
 }
 
+/*
+set implementation, partially derived from CPython,
+copyright Python Software Foundation (http://www.python.org/download/releases/2.6.2/license/)
+*/
+
 template <class T> void *myallocate(int n) { return GC_MALLOC(n); }
 template <> void *myallocate<int>(int n);
 
