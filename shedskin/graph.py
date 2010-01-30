@@ -1149,7 +1149,7 @@ class moduleVisitor(ASTVisitor):
             else:
                 error('unsupported type of assignment', item)
 
-    def visitCallFunc(self, node, func=None): # XXX analyze_callfunc? XXX clean up!!
+    def visitCallFunc(self, node, func=None): # XXX clean up!!
         newnode = cnode(node, parent=func)
 
         if isinstance(node.node, Getattr): # XXX import math; math.e

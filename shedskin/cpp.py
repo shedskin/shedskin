@@ -1646,7 +1646,7 @@ class generateVisitor(ASTVisitor):
                 self.append('0, ')
 
     def visitCallFunc(self, node, func=None):
-        objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr = analyze_callfunc(node)
+        objexpr, ident, direct_call, method_call, constructor, parent_constr = analyze_callfunc(node)
         funcs = callfunc_targets(node, self.mergeinh)
 
         if self.library_func(funcs, 're', None, 'findall') or \
@@ -1748,7 +1748,7 @@ class generateVisitor(ASTVisitor):
             self.append(')')
 
     def visit_callfunc_args(self, funcs, node, func):
-        objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr = analyze_callfunc(node)
+        objexpr, ident, direct_call, method_call, constructor, parent_constr = analyze_callfunc(node)
         target = funcs[0] # XXX
 
         castnull = False
@@ -2818,7 +2818,7 @@ def analyze_virtuals():
     for node in getgx().merged_inh: # XXX all:
         # --- for every message
         if isinstance(node, CallFunc) and not inode(node).mv.module.builtin: #ident == 'builtin':
-            objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr = analyze_callfunc(node)
+            objexpr, ident, direct_call, method_call, constructor, parent_constr = analyze_callfunc(node)
             if not method_call or objexpr not in getgx().merged_inh:
                 continue # XXX
 

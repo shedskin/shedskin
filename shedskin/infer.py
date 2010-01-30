@@ -177,7 +177,7 @@ def possible_functions(node):
     expr = node.thing
 
     # --- determine possible target functions
-    objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr = analyze_callfunc(expr, True)
+    objexpr, ident, direct_call, method_call, constructor, parent_constr = analyze_callfunc(expr, True)
     funcs = []
 
     if is_anon_func((expr.node, node.dcpa, node.cpa)):
@@ -212,7 +212,7 @@ def possible_argtypes(node, funcs, worklist):
     expr = node.thing
 
     # --- determine possible target functions
-    objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr = analyze_callfunc(expr, True) # XXX only parent_constr used
+    objexpr, ident, direct_call, method_call, constructor, parent_constr = analyze_callfunc(expr, True) # XXX only parent_constr used
 
     # --- argument types XXX connect_actuals_formals
     args = [arg for arg in expr.args if not isinstance(arg, Keyword)]
@@ -339,7 +339,7 @@ def redirect(c, dcpa, func, callfunc, ident, callnode):
 # --- cartesian product algorithm; adds interprocedural constraints
 def cpa(callnode, worklist):
     cp = cartesian_product(callnode, worklist)
-    objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr = analyze_callfunc(callnode.thing)
+    objexpr, ident, direct_call, method_call, constructor, parent_constr = analyze_callfunc(callnode.thing)
 
     # --- iterate over argument type combinations
     for c in cp:
@@ -416,7 +416,7 @@ def is_anon_func(node):
     return False
 
 def actuals_formals(expr, func, node, dcpa, cpa, types, worklist):
-    objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr = analyze_callfunc(expr) # XXX call less
+    objexpr, ident, direct_call, method_call, constructor, parent_constr = analyze_callfunc(expr) # XXX call less
 
     actuals = [a for a in expr.args if not isinstance(a, Keyword)]
     formals = [f for f in func.formals]
@@ -427,14 +427,8 @@ def actuals_formals(expr, func, node, dcpa, cpa, types, worklist):
 
     # add a slot in case of implicit 'self'
     smut = actuals[:] # XXX smut unneeded
-    if parent_constr or is_anon_func((expr.node, node.dcpa, node.cpa)):
-        pass
-    elif method_call or constructor:
-        smut = [None]+smut # XXX add type here
-    elif not direct_call: # XXX ?
-        types2 = getgx().cnode[expr.node, node.dcpa, node.cpa].types()
-        if list(types2)[0][0].parent:
-            smut = [None]+smut
+    if (method_call or constructor) and not (parent_constr or is_anon_func((expr.node, node.dcpa, node.cpa))):
+        smut = [None]+smut # XXX add type here?
 
     for formal in formals:
         for kw in keywords:
@@ -944,7 +938,7 @@ def analyze(source, testing=False):
     # --- determine which classes need an __init__ method
     for node, types in getgx().merged_all.items():
         if isinstance(node, CallFunc):
-            objexpr, ident, _ , method_call, _, _, _ = analyze_callfunc(node)
+            objexpr, ident, _ , method_call, _, _ = analyze_callfunc(node)
             if method_call and ident == '__init__':
                 for t in getgx().merged_all[objexpr]:
                     t[0].has_init = True
