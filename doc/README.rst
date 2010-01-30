@@ -106,6 +106,7 @@ Python Subset Restrictions
   - variable numbers of arguments and keyword arguments
   - multiple inheritance
   - nested functions and classes
+  - closures
   - inheritance from builtins (excluding Exception and object)
   - overloading ``__iter__`` and ``__call__``
 
