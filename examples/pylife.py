@@ -8,6 +8,8 @@ copyright david bau
 http://davidbau.com/archives/2006/07/26/python_curses_life.html
 """
 
+import random
+
 def lifeScore(center, surround):
   "Conway's game of life rules: birth on 3, survival on 2 or 3"
   if surround == 3 or (surround == 2 and center == 1): return 1
@@ -260,13 +262,20 @@ class LifeBoard:
   def count(self):
     return self.root.count
 
-if __name__ == '__main__':
-    board = LifeBoard()
+if False: # otherwise not called
     board.getAll((0,0,0,0))
     board.get(0,0)
-    board.set(0,0,0)
-    board.step(1)
     board.clear()
     board.count()
     board.info()
     board.width()
+
+if __name__ == '__main__': # speed test
+    board = LifeBoard()
+    random.seed(2)
+    for x in range(1600):
+      board.set(random.randint(-40, 40), random.randint(-40, 40), 1)
+    steps = 1
+    for x in range(20):
+        board.step(steps)
+        steps *= 2
