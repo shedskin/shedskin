@@ -1780,7 +1780,7 @@ class generateVisitor(ASTVisitor):
         double = False
         if ident in ['min', 'max']:
             for arg in node.args:
-                if (defclass('float_'),0) in self.mergeinh[arg]:
+                if arg in self.mergeinh and (defclass('float_'),0) in self.mergeinh[arg]:
                     double = True
 
         self.add_args_arg(node, funcs)

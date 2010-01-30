@@ -36,11 +36,25 @@ print bin(a)
 print bin(1==2), bin(1!=2)
 
 # game of life
-argv=[0,3,3];r,c=map(int,argv[1:]);p,g=r*c,range;z=g(p);w=lambda x:sum([d[v]for v in z if max(abs(x%r-v%r),abs(x/r-v/r))<2])
+argv=[0,3,3]
+r,c=map(int,argv[1:])
+p,g=r*c,range
+z=g(p)
+w=lambda x:sum([(abs(x%r-v%r)<2)&(abs(x/r-v/r)<2)&d[v]for v in z])
 for m in g(2**p):
- d=map(int,bin(m)[2:].zfill(p))
- if d==[d[x]^(not d[x]and w(x)==3)^(d[x]and not 2<w(x)<5) for x in z]:
-  for x in g(c+1):print''.join([{1:'X',0:'.'}[y]for y in d[r*x:r*x+r]])
+ d=[m>>x&1 for x in z]
+ if all([d[x]&(2<w(x)<5)|~d[x]&(w(x)!=3)for x in z]):
+  for x in g(c+1):print''.join(['.X'[x]for x in d[r*x:r*x+r]])
+
+# pyseq and __getfast__
+seq = [1,2,3]
+seq = (1,2,3)
+s1,s2,s3 = seq
+print s1,s2,s3
+
+# min/max and 'key' arg; TODO more tests
+blah = ['3', '2', '1']
+print min(blah, key=int), max(blah, key=int)
 
 ''', '''
 output(equal=True)
