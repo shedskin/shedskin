@@ -1,11 +1,11 @@
-45 programs that work with Shed Skin 0.4.
+46 programs that work with Shed Skin 0.4.
 
-10,209 lines in total (using sloccount, around 14,400 otherwise)
+10,427 lines in total (using sloccount, around 14,500 otherwise)
 
 If you have another interesting test case, please send it to:
    mark.dufour@gmail.com
 
-lines  name               description               notes
+lines  name               description                   notes
 (sloccount)
 
     84 ant.py             TSP approximation
@@ -15,15 +15,16 @@ lines  name               description               notes
    321 chess.py           chess engine
    105 dijkstra.py        dijkstra's algorithm
     80 dijkstra2.py       bidirectional dijkstra search
-    65 circle.py          circle packing animation  shedskin -e circle && make && python circle_packing.py
-                                                    (drag circles with mouse)
-   147 fysphun.py         physics animation         shedskin -e fysphun && make && python fysphun_main.py
-                                                    (create/drag points with mouse)
+    65 circle.py          circle packing animation      shedskin -e circle && make && python circle_packing.py
+                                                        (drag circles with mouse)
+   147 fysphun.py         physics animation             shedskin -e fysphun && make && python fysphun_main.py
+                                                        (create/drag points with mouse)
     92 genetic.py         genetic algorithm
-   446 go.py              go player (monte carlo/UCT) shedskin -r go (fast random number generator)
-                                                    (see DISCO for details)
+   446 go.py              go player (monte carlo/UCT)   shedskin -r go (fast random number generator)
+                                                        (see DISCO for details)
     74 life.py            conway's game of life
     70 life2.py           shedskin-optimized life.py
+   218 pylife.py          hashlife-based game of life   shedskin -e pylife && make && python pylife_main.py
    186 linalg.py          linear algebra
    190 LZ2.py             Lempel-Ziv compressor
    174 ac_encode.py       Arithmetic coding compressor
@@ -32,7 +33,7 @@ lines  name               description               notes
     26 mandelbrot.py      mandelbrot fractal
    223 mastermind.py      mastermind against comp
    117 mastermind2.py     mastermind strategies
- 1,201 msp_ss.py          serial bootstrap loader   see comments in top
+ 1,201 msp_ss.py          serial bootstrap loader       see comments in top
    482 mwmatching.py      maximum weighted matching algorithm
    101 nbody.py           planet body physics
    154 neural1.py         back-prop neural network
@@ -42,12 +43,12 @@ lines  name               description               notes
     80 pisang.py          satisfiability solver
    272 pygmy.py           raytracer
    276 yopyra.py          raytracer
-   195 mao.py             raytracer (ao benchmark)  shedskin -r mao (fast random number generator)
-   462 minilight.py       advanced raytracer        shedskin -r minilight (fast random number generator)
+   195 mao.py             raytracer (ao benchmark)      shedskin -r mao (fast random number generator)
+   462 minilight.py       advanced raytracer            shedskin -r minilight (fast random number generator)
                           (triangle primitives, octree spatial index)
    181 pystone.py         standard benchmark
    286 richards.py        standard benchmark
-   469 rdb.py             iPod shuffle programmer   see comments in top
+   469 rdb.py             iPod shuffle programmer       see comments in top
     80 sieve.py           prime number sieves
    139 sudoku1.py         sudoku solver
    148 sudoku2.py         sudoku solver

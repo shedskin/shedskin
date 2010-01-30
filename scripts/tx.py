@@ -10,6 +10,6 @@ os.system('mkdir tx%d' % part)
 os.system('cp -R testdata tx%d' % part)
 os.system('cp -R shedskin tx%d' % part)
 os.system('cp unit.py tx%d' % part)
-os.system('cp shedskin/FLAGS tx%d/shedskin' % part)
+os.system('cp FLAGS tx%d/shedskin' % part)
 
 os.system('cd tx%d; python unit.py -f -l %s' % (part, ' '.join(map(str, tests))))
