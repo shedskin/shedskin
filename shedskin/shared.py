@@ -559,7 +559,7 @@ def lookup_class_module(objexpr, mv, parent):
 # --- analyze call expression: namespace, method call, direct call/constructor..
 def analyze_callfunc(node, check_exist=False): # XXX generate target list XXX uniform variable system!
     #print 'analyze callnode', node, inode(node).parent
-    namespace, objexpr, method_call, mod_var, parent_constr = inode(node).mv.module, None, False, False, False # XXX mod_var
+    namespace, objexpr, method_call, parent_constr = inode(node).mv.module, None, False, False 
     constructor, direct_call = None, None
     mv = inode(node).mv
 
@@ -572,7 +572,7 @@ def analyze_callfunc(node, check_exist=False): # XXX generate target list XXX un
             # staticmethod call
             if ident in cl.staticmethods:
                 direct_call = cl.funcs[ident]
-                return objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr
+                return objexpr, ident, direct_call, method_call, constructor, parent_constr
 
             # ancestor call
             elif ident not in ['__setattr__', '__getattr__'] and inode(node).parent:
@@ -581,7 +581,7 @@ def analyze_callfunc(node, check_exist=False): # XXX generate target list XXX un
                     if lookupimplementor(cl,ident):
                         parent_constr = True
                         ident = ident+lookupimplementor(cl, ident)+'__' # XXX change data structure
-                        return objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr
+                        return objexpr, ident, direct_call, method_call, constructor, parent_constr
 
         if module: # XXX elif?
             namespace, objexpr = module, None
@@ -597,7 +597,7 @@ def analyze_callfunc(node, check_exist=False): # XXX generate target list XXX un
     if isinstance(node.node, Name) or namespace != inode(node).mv.module:
         if isinstance(node.node, Name):
             if lookupvar(ident, inode(node).parent):
-                return objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr
+                return objexpr, ident, direct_call, method_call, constructor, parent_constr
 
         if ident in ['max','min','sum'] and len(node.args) == 1:
             ident = '__'+ident
@@ -616,12 +616,12 @@ def analyze_callfunc(node, check_exist=False): # XXX generate target list XXX un
             direct_call = namespace.mv.ext_funcs[ident]
         else:
             if namespace != inode(node).mv.module:
-                return objexpr, ident, None, False, None, True, False
+                return objexpr, ident, None, False, None, False
             elif check_exist:
                 traceback.print_stack()
                 error("unbound identifier '"+ident+"'", node)
 
-    return objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr
+    return objexpr, ident, direct_call, method_call, constructor, parent_constr
 
 # XXX ugly: find ancestor class that implements function 'ident'
 def lookupimplementor(cl, ident):
@@ -641,7 +641,7 @@ def nrargs(node):
 
 # --- return list of potential call targets
 def callfunc_targets(node, merge):
-    objexpr, ident, direct_call, method_call, constructor, mod_var, parent_constr = analyze_callfunc(node)
+    objexpr, ident, direct_call, method_call, constructor, parent_constr = analyze_callfunc(node)
     funcs = []
 
     if node.node in merge and [t for t in merge[node.node] if isinstance(t[0], function)]: # anonymous function call
