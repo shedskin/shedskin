@@ -1,5 +1,13 @@
 #!/usr/bin/python
 
+"""
+conway's game of life, using bill gosper's hashlife algorithm
+
+copyright david bau
+
+http://davidbau.com/archives/2006/07/26/python_curses_life.html
+"""
+
 def lifeScore(center, surround):
   "Conway's game of life rules: birth on 3, survival on 2 or 3"
   if surround == 3 or (surround == 2 and center == 1): return 1
