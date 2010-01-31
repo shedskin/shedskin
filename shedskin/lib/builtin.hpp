@@ -2817,8 +2817,9 @@ template<class T> int tuple2<T, T>::__contains__(T a) {
 template<class T> int tuple2<T, T>::__eq__(pyobj *p) {
     tuple2<T,T> *b;
     b = (tuple2<T,T> *)p;
-    if( b->__len__() != this->__len__()) return 0;
-    for(int i = 0; i < this->__len__(); i++)
+    int sz = this->units.size();
+    if(b->units.size() != sz) return 0;
+    for(int i=0; i<sz; i++)
         if(!__eq(this->units[i], b->units[i]))
             return 0;
     return 1;
