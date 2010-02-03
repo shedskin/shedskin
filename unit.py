@@ -60,6 +60,10 @@ print s1,s2,s3
 blah = ['3', '2', '1']
 print min(blah, key=int), max(blah, key=int)
 
+# zip()
+zip0 = zip()
+print zip0
+
 ''', '''
 output(equal=True)
 '''),
@@ -7651,7 +7655,7 @@ output('yo\\n')
 '''),
 
 ('bootstrapping builtins: enumerate, zip, min, max, sum', '''
-def enumerate(x):                        # x: [pyiter(A)]
+def _enumerate(x):                        # x: [pyiter(A)]
     i = 0                                # [int]
     result = []                          # [list(tuple2(int, A))]
     for e in x:                          # [pyiter(A)]
@@ -7659,9 +7663,9 @@ def enumerate(x):                        # x: [pyiter(A)]
         i += 1
     return result                        # [list(tuple2(int, A))]
 
-print enumerate(['0','1','2'])           # [list(tuple2(int, str))]
-print enumerate((2,1,0))                 # [list(tuple(int))]
-print enumerate({1: 2, 3: 4})            # [list(tuple(int))]
+print _enumerate(['0','1','2'])           # [list(tuple2(int, str))]
+print _enumerate((2,1,0))                 # [list(tuple(int))]
+print _enumerate({1: 2, 3: 4})            # [list(tuple(int))]
 
 def mini(arg1, arg2=None):                # arg1: [A], arg2: [pyobj]
     return arg1.getunit()                # [pyobj]
@@ -7673,7 +7677,7 @@ print mini([8,7,9])                       # [int]
 print mini(2,1)                           # [int]
 print mini(1.1,2.1)                       # [float]
 
-def __zip2(a, b):                           # a: [pyiter(A)], b: [pyiter(B)]
+def _zip(a, b):                           # a: [pyiter(A)], b: [pyiter(B)]
     la = [e for e in a]                  # [list(A)]
     lb = [e for e in b]                  # [list(B)]
 
@@ -7684,10 +7688,10 @@ def __zip2(a, b):                           # a: [pyiter(A)], b: [pyiter(B)]
     return result                        # [list(tuple2(A, B))]
 
 
-print zip({1:2, 2:3}, (1.1,2.2,3.3))     # [list(tuple2(int, float))]
-print zip((1.1,2.2,3.3), {1:2, 2:3})     # [list(tuple2(float, int))]
+print _zip({1:2, 2:3}, (1.1,2.2,3.3))     # [list(tuple2(int, float))]
+print _zip((1.1,2.2,3.3), {1:2, 2:3})     # [list(tuple2(float, int))]
 
-def sum(l):                              # l: [pyiter(A)]
+def _sum(l):                              # l: [pyiter(A)]
     first = True                         # [int]
     for e in l:                          # [pyiter(A)]
         if first:                        # []
@@ -7697,8 +7701,8 @@ def sum(l):                              # l: [pyiter(A)]
             result += e                  # [A]
     return result                        # [A]
 
-print sum([1,2,3,4])                     # [int]
-print sum({1.1: 2.2, 3.3: 4.4})          # [float]
+print _sum([1,2,3,4])                     # [int]
+print _sum({1.1: 2.2, 3.3: 4.4})          # [float]
 ''', '''
 output("[(0, '0'), (1, '1'), (2, '2')]\\n[(0, 2), (1, 1), (2, 0)]\\n[(0, 1), (1, 3)]\\n7\\n1\\n1.1\\n[(1, 1.1), (2, 2.2)]\\n[(1.1, 1), (2.2, 2)]\\n10\\n4.4\\n")
 

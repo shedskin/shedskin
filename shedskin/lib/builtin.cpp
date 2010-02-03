@@ -1833,7 +1833,7 @@ str *__modcd(str *fmt, list<str *> *names, ...) {
 
     str *naam;
     int pos, pos2;
-    dict<str *, pyobj *> *d = new dict<str *, pyobj *>(__zip2(names, vals));
+    dict<str *, pyobj *> *d = new dict<str *, pyobj *>(__zip(2, names, vals));
     str *const_6 = new str(")");
     list<pyobj *> *values = new list<pyobj *>();
 
@@ -2076,6 +2076,10 @@ template <> void *myallocate<int>(int n) { return GC_MALLOC_ATOMIC(n); }
 
 template<> int __none() { throw new TypeError(new str("mixing None with int")); }
 template<> double __none() { throw new TypeError(new str("mixing None with float")); }
+
+list<tuple2<void *, void *> *> *__zip(int nn) {
+    return new list<tuple2<void *, void *> *>();
+}
 
 } // namespace __shedskin__
 
