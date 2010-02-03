@@ -287,7 +287,7 @@ def cartesian_product(node, worklist):
 
 def redirect(c, dcpa, func, callfunc, ident, callnode):
     # redirect based on number of arguments (__%s%d syntax in builtins)
-    if func.mv.module.builtin and (not func.mv.module.ident == 'builtin' or func.ident == 'map'): # XXX
+    if func.mv.module.builtin:
         if isinstance(func.parent, class_): funcs = func.parent.funcs
         else: funcs = func.mv.funcs
         redir = '__%s%d' % (func.ident, len([kwarg for kwarg in callfunc.args if not isinstance(kwarg, Keyword)]))

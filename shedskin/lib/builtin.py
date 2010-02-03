@@ -692,15 +692,10 @@ class __xrange:
 def xrange(a, b=1, s=1):
     return __xrange()
 
-def __zip1(a):
-    return [(a.unit,)]
-def __zip2(a, b):
-    return [(a.unit, b.unit)]
-def __zip3(a, b, c):
-    return [(a.unit, b.unit, c.unit)]
-
-def zip(a): # for redefinition check only
-    pass
+def zip(*args):
+    return [(iter(args).next(),)]
+def __zip2(arg1, arg2):
+    return [(iter(arg1).next(), iter(arg2).next())]
 
 def max(a):
     a.__cmp__(a)

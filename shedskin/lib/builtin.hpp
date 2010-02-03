@@ -3267,7 +3267,9 @@ template <class A> __iter<tuple2<int, A> *> *enumerate(pyiter<A> *x) {
     return new __enumiter<A>(x);
 }
 
-template <class A> list<tuple2<A,A> *> *__zip1(pyiter<A> *a) {
+list<tuple2<void *, void *> *> *__zip(int nn);
+
+template <class A> list<tuple2<A,A> *> *__zip(int nn, pyiter<A> *a) {
     list<A> la;
     list<tuple2<A,A> *> *result;
     __list_comp_0(&la, a);
@@ -3280,7 +3282,7 @@ template <class A> list<tuple2<A,A> *> *__zip1(pyiter<A> *a) {
     return result;
 }
 
-template <class A, class B> list<tuple2<A, B> *> *__zip2(pyiter<A> *a, pyiter<B> *b) {
+template <class A, class B> list<tuple2<A, B> *> *__zip(int nn, pyiter<A> *a, pyiter<B> *b) {
     list<A> la;
     list<B> lb;
     int __1, __2, i;
@@ -3296,9 +3298,9 @@ template <class A, class B> list<tuple2<A, B> *> *__zip2(pyiter<A> *a, pyiter<B>
     return result;
 }
 
-template <class A, class B> list<tuple2<A, B> *> *__zip2(pyseq<A> *a, pyseq<B> *b) {
+template <class A, class B> list<tuple2<A, B> *> *__zip(int nn, pyseq<A> *a, pyseq<B> *b) {
     if(a->__class__ == cl_str_ || b->__class__ == cl_str_) /* XXX */
-        return __zip2(((pyiter<A> *)((str *)a)), ((pyiter<B> *)((str *)b)));
+        return __zip(2, ((pyiter<A> *)((str *)a)), ((pyiter<B> *)((str *)b)));
     list<tuple2<A, B> *> *result;
     result = new list<tuple2<A, B> *>();
 
@@ -3315,7 +3317,7 @@ template <class A, class B> list<tuple2<A, B> *> *__zip2(pyseq<A> *a, pyseq<B> *
     return result;
 }
 
-template <class A> list<tuple2<A,A> *> *__zip3(pyiter<A> *a, pyiter<A> *b, pyiter<A> *c) {
+template <class A> list<tuple2<A,A> *> *__zip(int nn, pyiter<A> *a, pyiter<A> *b, pyiter<A> *c) {
     list<int> *__0;
     list<A> la, lb, lc;
     int __1, __2, i;
@@ -3334,9 +3336,9 @@ template <class A> list<tuple2<A,A> *> *__zip3(pyiter<A> *a, pyiter<A> *b, pyite
     return result;
 }
 
-template <class A> list<tuple2<A,A> *> *__zip3(pyseq<A> *a, pyseq<A> *b, pyseq<A> *c) {
+template <class A> list<tuple2<A,A> *> *__zip(int nn, pyseq<A> *a, pyseq<A> *b, pyseq<A> *c) {
     if(a->__class__ == cl_str_ || b->__class__ == cl_str_ || c->__class__ == cl_str_) /* XXX */
-        return __zip3(((pyiter<A> *)((str *)a)), ((pyiter<A> *)((str *)b)), ((pyiter<A> *)((str *)c)));
+        return __zip(3, ((pyiter<A> *)((str *)a)), ((pyiter<A> *)((str *)b)), ((pyiter<A> *)((str *)c)));
     list<tuple2<A, A> *> *result;
     result = new list<tuple2<A, A> *>();
 

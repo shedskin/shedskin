@@ -600,12 +600,8 @@ def analyze_callfunc(node, check_exist=False): # XXX generate target list XXX un
             if lookupvar(ident, inode(node).parent):
                 return objexpr, ident, direct_call, method_call, constructor, parent_constr
 
-        if ident in ['max','min','sum'] and len(node.args) == 1:
+        if ident in ['max','min','sum'] and len(node.args) == 1: # XXX
             ident = '__'+ident
-        elif ident == 'zip' and len(node.args) <= 3:
-            if not node.args:
-                error("please provide 'zip' with arguments", node)
-            ident = '__zip'+str(len(node.args))
 
         if ident in namespace.mv.classes:
             constructor = namespace.mv.classes[ident]

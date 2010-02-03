@@ -263,7 +263,7 @@ class generateVisitor(ASTVisitor):
         for child in node.node.getChildNodes():
             if isinstance(child, Function):
                 func = getmv().funcs[child.name]
-                if self.inhcpa(func) and not func.mv.module.builtin and not func.ident in ['min','max','zip','sum','__zip2','enumerate']: # XXX remove crap
+                if self.inhcpa(func):
                     self.visitFunction(func.node, declare=True)
         print >>self.out
 
@@ -1145,8 +1145,6 @@ class generateVisitor(ASTVisitor):
 
         if func.invisible or (func.inherited and not func.ident == '__init__'):
             return
-        if func.mv.module.builtin or func.ident in ['min','max','zip','sum','__zip2','enumerate']: # XXX latter for test 116
-            return
         if declare and func.declared: # XXX
             return
 
@@ -1681,7 +1679,7 @@ class generateVisitor(ASTVisitor):
             if ident == 'float' and node.args and self.mergeinh[node.args[0]] == set([(defclass('float_'), 0)]):
                 self.visit(node.args[0], func)
                 return
-            if ident in ['abs', 'int', 'float', 'str', 'dict', 'tuple', 'list', 'type', 'cmp', 'sum']:
+            if ident in ['abs', 'int', 'float', 'str', 'dict', 'tuple', 'list', 'type', 'cmp', 'sum', 'zip']:
                 self.append('__'+ident+'(')
             elif ident in ['iter', 'round']:
                 self.append('___'+ident+'(')
