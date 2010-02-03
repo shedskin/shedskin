@@ -1721,15 +1721,10 @@ class generateVisitor(ASTVisitor):
                     error("class '%s' has no method '%s'" % (clname, ident), node, warning=True)
 
             # tuple2.__getitem -> __getfirst__/__getsecond
-            lcp = lowest_common_parents(polymorphic_t(self.mergeinh[objexpr]))
-            if (ident == '__getitem__' and len(lcp) == 1 and lcp[0] == defclass('tuple2') and \
-                isinstance(node.args[0], Const) and node.args[0].value in (0,1)):
-                    self.visit(node.node.expr, func)
-                    if node.args[0].value == 0:
-                        self.append('->__getfirst__()')
-                    else:
-                        self.append('->__getsecond__()')
-                    return
+            if ident == '__getitem__' and isinstance(node.args[0], Const) and node.args[0].value in (0,1) and self.only_classes(objexpr, ('tuple2',)):
+                self.visit(node.node.expr, func)
+                self.append('->%s()' % ['__getfirst__', '__getsecond__'][node.args[0].value])
+                return
 
             self.visitm(node.node, '(', func)
 
@@ -1878,7 +1873,6 @@ class generateVisitor(ASTVisitor):
 
     def tuple_assign(self, lvalue, rvalue, func):
         temp = getmv().tempcount[lvalue]
-
         if isinstance(lvalue, tuple): nodes = lvalue
         else: nodes = lvalue.nodes
 
@@ -1892,14 +1886,7 @@ class generateVisitor(ASTVisitor):
             self.eol()
 
             for i, item in enumerate(nodes):
-                if i == 0: ident = '__getfirst__'
-                elif i == 1: ident = '__getsecond__'
-                else: ident = '__getitem__'
-                arg = ''
-                if ident == '__getitem__':
-                    arg = str(i)
-                selector = '%s->%s(%s)' % (temp, ident, arg)
-
+                selector = self.get_selector(temp, item, i)
                 if isinstance(item, AssName):
                     self.output('%s = %s;' % (item.name, selector))
                 elif isinstance(item, (AssTuple, AssList)): # recursion
@@ -1908,32 +1895,34 @@ class generateVisitor(ASTVisitor):
                     self.assign_pair(item, selector, func)
                 elif isinstance(item, AssAttr):
                     self.assign_pair(item, selector, func)
-                    self.eol(' = '+selector)
+                    self.eol(' = ' + selector)
 
         # --- non-nested unpacking assignment: a,b,c = d
         else:
             self.start()
             self.visitm(temp, ' = ', rvalue, func)
             self.eol()
-
-            for (n, item) in enumerate(lvalue.nodes):
+            for i, item in enumerate(lvalue.nodes):
                 self.start()
-                if isinstance(rvalue, Const): sel = '__getitem__(%d)' % n
-                elif len(lvalue.nodes) > 2: sel = '__getfast__(%d)' % n
-                elif n == 0: sel = '__getfirst__()' # XXX merge
-                else: sel = '__getsecond__()'
-                self.visitm(item, ' = ', temp, '->'+sel, func)
+                self.visitm(item, ' = ', self.get_selector(temp, item, i), func)
                 self.eol()
+
+    def get_selector(self, temp, item, i):
+        rvalue_node = getgx().item_rvalue[item]
+        sel = '__getitem__(%d)' % i
+        if self.only_classes(rvalue_node, ('list',)):
+            sel = '__getfast__(%d)' % i
+        elif i < 2 and self.only_classes(rvalue_node, ('tuple2',)):
+            sel = ['__getfirst__()', '__getsecond__()'][i]
+        return '%s->%s' % (temp, sel)
 
     def subs_assign(self, lvalue, func):
         if defclass('list') in [t[0] for t in self.mergeinh[lvalue.expr]]:
-            #if isinstance(lvalue.expr, Name):
             self.append('ELEM((')
             self.refer(lvalue.expr, func)
             self.append('),')
             self.visit(lvalue.subs[0], func)
             self.append(')')
-
         else:
             if len(lvalue.subs) > 1:
                 subs = inode(lvalue.expr).faketuple
@@ -2369,10 +2358,8 @@ class generateVisitor(ASTVisitor):
             return
 
         # getfast
-        if ident == '__getitem__':
-            lcp = lowest_common_parents(polymorphic_t(self.mergeinh[node.expr]))
-            if len(lcp) == 1 and lcp[0] == defclass('list'):
-                ident = '__getfast__'
+        if ident == '__getitem__' and self.only_classes(node.expr, ('list',)):
+            ident = '__getfast__'
 
         self.append(self.cpp_name(ident))
 
