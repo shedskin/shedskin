@@ -697,19 +697,21 @@ def zip(*args):
 def __zip2(arg1, arg2):
     return [(iter(arg1).next(), iter(arg2).next())]
 
-def max(a):
-    a.__cmp__(a)
-    return a
-def __max(a):
-    a.unit.__cmp__(a.unit)
-    return a.unit
+def max(*arg):
+    arg.__cmp__(arg)
+    return arg
+def __max1(arg):
+    elem = iter(arg).next()
+    elem.__cmp__(elem)
+    return elem
 
-def min(a):
-    a.__cmp__(a)
-    return a
-def __min(a):
-    a.unit.__cmp__(a.unit)
-    return a.unit
+def min(*arg):
+    arg.__cmp__(arg)
+    return arg
+def __min1(arg):
+    elem = iter(arg).next()
+    elem.__cmp__(elem)
+    return elem
 
 def sum(l):
     elem = iter(l).next()
