@@ -600,7 +600,7 @@ def analyze_callfunc(node, check_exist=False): # XXX generate target list XXX un
             if lookupvar(ident, inode(node).parent):
                 return objexpr, ident, direct_call, method_call, constructor, parent_constr
 
-        if ident in ['max','min','sum'] and len(node.args) == 1: # XXX
+        if ident in ['max','min'] and len(node.args) == 1: # XXX
             ident = '__'+ident
 
         if ident in namespace.mv.classes:
@@ -679,7 +679,7 @@ def connect_actual_formal(expr, func, parent_constr=False, check_error=False):
     if parent_constr:
         actuals = actuals[1:]
 
-    if check_error and func.ident not in ['min', 'max'] and func.lambdanr is None and expr not in getgx().lambdawrapper:
+    if check_error and func.ident not in ['min', 'max', 'sum'] and func.lambdanr is None and expr not in getgx().lambdawrapper:
         if not func.node.varargs and not func.node.kwargs and len(actuals)+len(keywords) > len(formals):
             error("too many arguments in call to '%s'" % func.ident, expr)
         if not func.node.varargs and not func.node.kwargs and len(actuals)+len(keywords) < len(formals)-len(func.defaults) and not expr.star_args:
