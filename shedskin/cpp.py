@@ -1679,7 +1679,7 @@ class generateVisitor(ASTVisitor):
             if ident == 'float' and node.args and self.mergeinh[node.args[0]] == set([(defclass('float_'), 0)]):
                 self.visit(node.args[0], func)
                 return
-            if ident in ['abs', 'int', 'float', 'str', 'dict', 'tuple', 'list', 'type', 'cmp', 'sum', 'zip']:
+            if ident in ['abs', 'int', 'float', 'str', 'dict', 'tuple', 'list', 'type', 'cmp', 'sum', 'zip', 'max', 'min']:
                 self.append('__'+ident+'(')
             elif ident in ['iter', 'round']:
                 self.append('___'+ident+'(')
@@ -1697,10 +1697,6 @@ class generateVisitor(ASTVisitor):
                 error("'isinstance' cannot be used with ints or floats; assuming always true", node, warning=True)
                 self.append('1')
                 return
-            elif ident in ['min','max']:
-                self.append('__'+ident+'(')
-                if nrargs > 3:
-                    self.append(str(nrargs)+', ')
             else:
                 if ident in self.module.mv.ext_funcs: # XXX using as? :P
                      ident = self.module.mv.ext_funcs[ident].ident
@@ -1761,14 +1757,11 @@ class generateVisitor(ASTVisitor):
 
         self.varargs_kwargs_args(target, node, funcs, func)
 
-        if ident in ['max','min']:
-            pairs = [(arg, target.formals[0]) for arg in node.args]
-        else:
-            args = node.args
-            if node.star_args:
-                args = [node.star_args]+args
+        args = node.args
+        if node.star_args:
+            args = [node.star_args]+args
 
-            pairs = connect_actual_formal(node, target, parent_constr, check_error=True)
+        pairs = connect_actual_formal(node, target, parent_constr, check_error=True)
 
         double = False
         if ident in ['min', 'max']:

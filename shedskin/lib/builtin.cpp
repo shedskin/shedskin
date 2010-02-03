@@ -1634,10 +1634,10 @@ double __sum(pyseq<double> *l, double b) { return accumulate(l->units.begin(), l
 
 /* min, max */
 
-int __min(pyseq<int> *l) { return __minimum(l); }
-double __min(pyseq<double> *l) { return __minimum(l); }
-int __max(pyseq<int> *l) { return __maximum(l); }
-double __max(pyseq<double> *l) { return __maximum(l); }
+int __min(int nn, pyseq<int> *l) { return __minimum(l); }
+double __min(int nn, pyseq<double> *l) { return __minimum(l); }
+int __max(int nn, pyseq<int> *l) { return __maximum(l); }
+double __max(int nn, pyseq<double> *l) { return __maximum(l); }
 
 /* sorted */
 

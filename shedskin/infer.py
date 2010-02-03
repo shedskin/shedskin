@@ -437,14 +437,12 @@ def actuals_formals(expr, func, node, dcpa, cpa, types, worklist):
                 smut.append(kw.expr)
 
     # XXX add defaults to smut here, simplify code below
-    if not ident in ['min','max','bool'] and (len(smut) < len(formals)-len(func.defaults) or len(smut) > len(formals)) and not func.node.varargs and not func.node.kwargs and not expr.star_args and func.lambdanr is None and expr not in getgx().lambdawrapper:
+    if (len(smut) < len(formals)-len(func.defaults) or len(smut) > len(formals)) and not func.node.varargs and not func.node.kwargs and not expr.star_args and func.lambdanr is None and expr not in getgx().lambdawrapper:
         return
 
     # --- connect/seed as much direct arguments as possible
     if len(smut) < len(formals):
         smut = smut + func.defaults[-len(formals)+len(smut):]
-    if ident in ['min', 'max']:
-        formals *= len(smut)
     if expr.star_args:
         smut += len(formals)*[expr.star_args]
         types = len(formals)*types

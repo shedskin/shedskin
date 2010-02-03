@@ -480,7 +480,7 @@ public:
         if (!p) return 1;
         pyseq<T> *b = (pyseq<T> *)p;
         int i, cmp;
-        int mnm = __min(this->__len__(), b->__len__());
+        int mnm = __min(2, this->__len__(), b->__len__());
 
         for(i = 0; i < mnm; i++) {
             cmp = __cmp(this->units[i], b->units[i]);
@@ -3075,7 +3075,7 @@ template<class T> T __maximum(pyseq<T> *l) {
     return m;
 }
 
-template<class T> T __max(pyiter<T> *a) {
+template<class T> T __max(int nn, pyiter<T> *a) {
     T e, max = 0;
     int first = 1;
     __iter<T> *__0;
@@ -3090,23 +3090,23 @@ template<class T> T __max(pyiter<T> *a) {
     return max;
 }
 
-template<class T> T __max(T a, T b) {
+template<class T> T __max(int nn, T a, T b) {
     if(__cmp(a, b)==1) return a;
     return b;
 }
 
-template<class T> T __max(T a, T b, T c) {
+template<class T> T __max(int nn, T a, T b, T c) {
     if(__cmp(a, b)==1 && __cmp(a, c)==1) return a;
     else if(__cmp(b,c)==1) return b;
     return c;
 }
 
-template<class T> T __max(int n, T a, T b, T c, ...) {
-    T m = __max(a,b,c);
+template<class T> T __max(int n, T a, T b, T c, T d, ...) {
+    T m = __max(2,__max(3,a,b,c),d);
     va_list ap;
-    va_start(ap, c);
+    va_start(ap, d);
 
-    for(int i=0; i<n-3; i++) {
+    for(int i=0; i<n-4; i++) {
         T t = va_arg(ap, T);
         if(__cmp(t,m)==1) m=t;
     }
@@ -3115,12 +3115,12 @@ template<class T> T __max(int n, T a, T b, T c, ...) {
     return m;
 }
 
-template<> inline int __max(int a, int b) { return __SS_MAX(a,b); }
-template<> inline int __max(int a, int b, int c) { return __SS_MAX3(a,b,c); }
-template<> inline double __max(double a, double b) { return __SS_MAX(a,b); }
-template<> inline double __max(double a, double b, double c) { return __SS_MAX3(a,b,c); }
+template<> inline int __max(int nn, int a, int b) { return __SS_MAX(a,b); }
+template<> inline int __max(int nn, int a, int b, int c) { return __SS_MAX3(a,b,c); }
+template<> inline double __max(int nn, double a, double b) { return __SS_MAX(a,b); }
+template<> inline double __max(int nn, double a, double b, double c) { return __SS_MAX3(a,b,c); }
 
-template<class T> T __min(pyiter<T> *a) {
+template<class T> T __min(int nn, pyiter<T> *a) {
     T e, min = 0;
     int first = 1;
     __iter<T> *__0;
@@ -3135,26 +3135,26 @@ template<class T> T __min(pyiter<T> *a) {
     return min;
 }
 
-int __min(pyseq<int> *l);
-double __min(pyseq<double> *l);
+int __min(int nn, pyseq<int> *l);
+double __min(int nn, pyseq<double> *l);
 
-template<class T> T __min(T a, T b) {
+template<class T> T __min(int nn, T a, T b) {
     if( __cmp(a, b) == -1 ) return a;
     return b;
 }
 
-template<class T> T __min(T a, T b, T c) {
+template<class T> T __min(int nn, T a, T b, T c) {
     if(__cmp(a, b)==-1 && __cmp(a, c)==-1) return a;
     else if(__cmp(b,c)==-1) return b;
     return c;
 }
 
-template<class T> T __min(int n, T a, T b, T c, ...) {
-    T m = __min(a,b,c);
+template<class T> T __min(int n, T a, T b, T c, T d, ...) {
+    T m = __min(2,__min(3,a,b,c),d);
     va_list ap;
-    va_start(ap, c);
+    va_start(ap, d);
 
-    for(int i=0; i<n-3; i++) {
+    for(int i=0; i<n-4; i++) {
         T t = va_arg(ap, T);
         if(__cmp(t,m)==-1) m=t;
     }
@@ -3163,10 +3163,10 @@ template<class T> T __min(int n, T a, T b, T c, ...) {
     return m;
 }
 
-template<> inline int __min(int a, int b) { return __SS_MIN(a,b); }
-template<> inline int __min(int a, int b, int c) { return __SS_MIN3(a,b,c); }
-template<> inline double __min(double a, double b) { return __SS_MIN(a,b); }
-template<> inline double __min(double a, double b, double c) { return __SS_MIN3(a,b,c); }
+template<> inline int __min(int nn, int a, int b) { return __SS_MIN(a,b); }
+template<> inline int __min(int nn, int a, int b, int c) { return __SS_MIN3(a,b,c); }
+template<> inline double __min(int nn, double a, double b) { return __SS_MIN(a,b); }
+template<> inline double __min(int nn, double a, double b, double c) { return __SS_MIN3(a,b,c); }
 
 template<class A> static inline list<A> *__list_comp_0(list<A> *result, pyiter<A> *a) {
     A e;
@@ -3292,7 +3292,7 @@ template <class A, class B> list<tuple2<A, B> *> *__zip(int nn, pyiter<A> *a, py
     __list_comp_0(&lb, b);
     result = (new list<tuple2<A, B> *>());
 
-    FAST_FOR(i,0,__min(len(&la), len(&lb)),1,1,2)
+    FAST_FOR(i,0,__min(2, len(&la), len(&lb)),1,1,2)
         result->append((new tuple2<A, B>(2, la.units[i], lb.units[i])));
     END_FOR
     return result;
@@ -3304,7 +3304,7 @@ template <class A, class B> list<tuple2<A, B> *> *__zip(int nn, pyseq<A> *a, pys
     list<tuple2<A, B> *> *result;
     result = new list<tuple2<A, B> *>();
 
-    int n = __min(len(a), len(b));
+    int n = __min(2, len(a), len(b));
     result->units.reserve(n);
 
     tuple2<A, B> *v = new tuple2<A, B>[n];
@@ -3330,7 +3330,7 @@ template <class A> list<tuple2<A,A> *> *__zip(int nn, pyiter<A> *a, pyiter<A> *b
 
     result = (new list<tuple2<A,A> *>());
 
-    FAST_FOR(i,0,__min(len(&la), len(&lb), len(&lc)),1,1,2)
+    FAST_FOR(i,0,__min(3, len(&la), len(&lb), len(&lc)),1,1,2)
         result->append((new tuple2<A,A>(3, la.units[i], lb.units[i], lc.units[i])));
     END_FOR
     return result;
@@ -3342,7 +3342,7 @@ template <class A> list<tuple2<A,A> *> *__zip(int nn, pyseq<A> *a, pyseq<A> *b, 
     list<tuple2<A, A> *> *result;
     result = new list<tuple2<A, A> *>();
 
-    int n = __min(__min(len(a), len(b)), len(c));
+    int n = __min(3, len(a), len(b), len(c));
     result->units.reserve(n);
 
     tuple2<A, A> *v = new tuple2<A, A>[n];
