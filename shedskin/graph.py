@@ -1139,6 +1139,7 @@ class moduleVisitor(ASTVisitor):
             fakenode.callfuncs.append(fakefunc)
             self.visit(fakefunc, func)
 
+            getgx().item_rvalue[item] = rvalue
             if isinstance(item, AssName):
                 lvar = defaultvar(item.name, func)
                 self.addconstraint((inode(fakefunc), inode(lvar)), func)

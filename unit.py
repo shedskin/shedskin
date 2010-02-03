@@ -46,10 +46,14 @@ for m in g(2**p):
  if all([d[x]&(2<w(x)<5)|~d[x]&(w(x)!=3)for x in z]):
   for x in g(c+1):print''.join(['.X'[y]for y in d[r*x:r*x+r]])
 
-# pyseq and __getfast__
+# unpacking and __getitem__ special cases
 seq = [1,2,3]
 seq = (1,2,3)
 s1,s2,s3 = seq
+print s1,s2,s3
+seq3 = [4,5]
+seq3 = (4,5)
+s1,s2 = seq3
 print s1,s2,s3
 
 # min/max and 'key' arg; TODO more tests

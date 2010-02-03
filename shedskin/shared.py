@@ -58,6 +58,7 @@ class globalInfo: # XXX add comments, split up
         self.annotation = False
         self.output_dir= ''
         self.makefile_name = 'Makefile' # XXX other default?
+        self.item_rvalue = {}
 
 def newgx():
     return globalInfo()
