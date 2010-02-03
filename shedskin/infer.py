@@ -433,7 +433,6 @@ def actuals_formals(expr, func, node, dcpa, cpa, types, worklist):
     for formal in formals:
         for kw in keywords:
             if formal == kw.name:
-                actuals.append(kw.expr)
                 smut.append(kw.expr)
 
     # XXX add defaults to smut here, simplify code below
