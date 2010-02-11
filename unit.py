@@ -57,12 +57,18 @@ s1,s2 = seq3
 print s1,s2,s3
 
 # min/max and 'key' arg; TODO more tests
-blah = ['3', '2', '1']
-print min(blah, key=int), max(blah, key=int)
+#blah = ['3', '2', '1']
+#print min(blah, key=int), max(blah, key=int)
 
 # zip()
 zip0 = zip()
 print zip0
+
+# math.factorial
+import math
+for hm in range(13):
+    print math.factorial(hm),
+print 
 
 ''', '''
 output(equal=True)
