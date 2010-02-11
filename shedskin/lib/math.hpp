@@ -19,6 +19,18 @@ inline double fabs(double x) {
     return std::fabs(x);
 }
 
+inline int factorial(int x) {
+    if (x < 0) 
+        throw new ValueError(new str("factorial() not defined for negative values"));
+
+    int result = 1;
+    for (int i = 1; i <= x; ++i) {
+        result *= i;
+    }
+
+    return result;
+}
+
 inline double floor(double x) {
     return std::floor(x);
 }
