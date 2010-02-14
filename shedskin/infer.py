@@ -180,7 +180,7 @@ def possible_functions(node):
     objexpr, ident, direct_call, method_call, constructor, parent_constr = analyze_callfunc(expr, True)
     funcs = []
 
-    if is_anon_func((expr.node, node.dcpa, node.cpa)):
+    if is_anon_func(expr, node):
         # anonymous call
         types = getgx().cnode[expr.node, node.dcpa, node.cpa].types()
         types = [t for t in types if isinstance(t[0], function)] # XXX XXX analyse per t, sometimes class, sometimes function..
