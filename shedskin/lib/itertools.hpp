@@ -788,7 +788,7 @@ template<class T> inline izipiter<T, T> *izip(int iterable_count, pyiter<T> *ite
 // izip_longest
 
 template<class T, class U> class izip_longestiter;
-template<class T, class F> inline izip_longestiter<T, T> *izip_longest(F fillvalue, int iterable_count, pyiter<T> *iterable, ...);
+template<class T, class F> inline izip_longestiter<T, T> *izip_longest(int iterable_count, F fillvalue, pyiter<T> *iterable, ...);
 
 template<class T, class U> class izip_longestiter : public __iter<tuple2<T, U> *> {
 public:
@@ -872,7 +872,7 @@ public:
 
     tuple2<T, T> *next();
 
-    friend izip_longestiter<T, T> *izip_longest<T, T>(T fillvalue, int iterable_count, pyiter<T> *iterable, ...);
+    friend izip_longestiter<T, T> *izip_longest<T, T>(int iterable_count, T fillvalue, pyiter<T> *iterable, ...);
 };
 
 template<class T> inline izip_longestiter<T, T>::izip_longestiter() {
@@ -914,13 +914,13 @@ template<class T> tuple2<T, T> *izip_longestiter<T, T>::next() {
     return tuple;
 }
 
-template<class T> inline izip_longestiter<void*, void*> *izip_longest(T /* fillvalue */, int /* iterable_count */) {
+template<class T> inline izip_longestiter<void*, void*> *izip_longest(int /* iterable_count */, T /* fillvalue */) {
     return new izip_longestiter<void*, void*>();
 }
-template<class T, class U, class F> inline izip_longestiter<T, U> *izip_longest(F fillvalue, int /* iterable_count */, pyiter<T> *iterable1, pyiter<U> *iterable2) {
+template<class T, class U, class F> inline izip_longestiter<T, U> *izip_longest(int iterable_count, F fillvalue, pyiter<T> *iterable1, pyiter<U> *iterable2) {
   return new izip_longestiter<T, U>((T)fillvalue, iterable1, iterable2);
 }
-template<class T, class F> inline izip_longestiter<T, T> *izip_longest(F fillvalue, int iterable_count, pyiter<T> *iterable, ...) {
+template<class T, class F> inline izip_longestiter<T, T> *izip_longest(int iterable_count, F fillvalue, pyiter<T> *iterable, ...) {
     izip_longestiter<T, T> *iter = new izip_longestiter<T, T>((T)fillvalue, iterable);
 
     va_list ap;
@@ -940,7 +940,7 @@ template<class T, class F> inline izip_longestiter<T, T> *izip_longest(F fillval
 // product
 
 template<class T, class U> class productiter;
-template<class T> inline productiter<T, T> *product(int repeat, int iterable_count, pyiter<T> *iterable, ...);
+template<class T> inline productiter<T, T> *product(int iterable_count, int repeat, pyiter<T> *iterable, ...);
 
 template<class T, class U> class productiter : public __iter<tuple2<T, U> *> {
 public:
@@ -1021,7 +1021,7 @@ public:
 
     tuple2<T, T> *next();
 
-    friend productiter<T, T> *product<T>(int repeat, int iterable_count, pyiter<T> *iterable, ...);
+    friend productiter<T, T> *product<T>(int iterable_count, int repeat, pyiter<T> *iterable, ...);
 };
 
 template<class T> inline productiter<T, T>::productiter() {
@@ -1085,10 +1085,10 @@ template<class T> tuple2<T, T> *productiter<T, T>::next() {
     return tuple;
 }
 
-inline productiter<void*, void*> *product(int /* repeat */, int /* iterable_count */) {
+inline productiter<void*, void*> *product(int /* iterable_count */, int /* repeat */) {
     return new productiter<void*, void*>();
 }
-template<class T> inline productiter<T, T> *product(int repeat, int /* iterable_count */, pyiter<T> *iterable1, pyiter<T> *iterable2) {
+template<class T> inline productiter<T, T> *product(int /* iterable_count */, int repeat, pyiter<T> *iterable1, pyiter<T> *iterable2) {
     productiter<T, T> *iter = new productiter<T, T>();
 
     for (int i = 0; i < repeat; ++i) {
@@ -1098,10 +1098,10 @@ template<class T> inline productiter<T, T> *product(int repeat, int /* iterable_
 
     return iter;
 }
-template<class T, class U> inline productiter<T, U> *product(int /* repeat */, int /* iterable_count */, pyiter<T> *iterable1, pyiter<U> *iterable2) {
+template<class T, class U> inline productiter<T, U> *product(int /* iterable_count */, int /* repeat */, pyiter<T> *iterable1, pyiter<U> *iterable2) {
     return new productiter<T, U>(iterable1, iterable2);
 }
-template<class T> inline productiter<T, T> *product(int repeat, int iterable_count, pyiter<T> *iterable, ...) {
+template<class T> inline productiter<T, T> *product(int iterable_count, int repeat, pyiter<T> *iterable, ...) {
     productiter<T, T> *iter = new productiter<T, T>();
 
     for (int i = 0; i < repeat; ++i) {

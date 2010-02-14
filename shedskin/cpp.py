@@ -1755,13 +1755,13 @@ class generateVisitor(ASTVisitor):
         if parent_constr and target.inherited_from: # XXX
             target = target.inherited_from
 
-        self.varargs_kwargs_args(target, node, funcs, func)
+        pairs, rest = connect_actual_formal(node, target, parent_constr, check_error=True, merge=self.mergeinh)
 
-        args = node.args
-        if node.star_args:
-            args = [node.star_args]+args
+        if target.node.varargs:
+            self.append('%d' % rest)
+            if rest or pairs:
+                self.append(',')
 
-        pairs = connect_actual_formal(node, target, parent_constr, check_error=True, merge=self.mergeinh)
         double = False
         if ident in ['min', 'max']:
             for arg in node.args:
@@ -1809,33 +1809,6 @@ class generateVisitor(ASTVisitor):
         if constructor and ident == 'frozenset':
             if pairs: self.append(',')
             self.append('1')
-
-    def varargs_kwargs_args(self, target, node, funcs, func):
-        # place args to kwargs in front
-        kwgiven = dict([(arg.name, arg.expr) for arg in node.args if isinstance(arg, Keyword)])
-        kwredirects = []
-        nrredirects = 0
-
-        for kw, kwdefault in target.kwdefaults.items():
-            if kw in kwgiven:
-                kwredirects.append(kwgiven[kw])
-                nrredirects += 1
-            else:
-                kwredirects.append(kwdefault)
-
-        for arg in kwredirects:
-            self.visit(arg, func)
-            if arg != kwredirects[-1]:
-                self.append(', ')
-
-        # number of variadic arguments
-        if kwredirects:
-            self.append(', ')
-        if target.node.varargs:
-            nrvarargs = (len(node.args)-nrredirects)
-            self.append('%d' % nrvarargs)
-            if nrvarargs:
-                self.append(', ')
 
     def visitReturn(self, node, func=None):
         if func.isGenerator:

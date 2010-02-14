@@ -72,22 +72,18 @@ def izip(*iterables):
 def __izip2(iterable1, iterable2):
     yield iter(iterable1).next(), iter(iterable2).next()
 
-def izip_longest(*iterables, **kwargs):
+def izip_longest(__kw_fillvalue=None, *iterables):
     'Known limitations: iterables must all be of the same type, cannot distinguish between 0 and None for the return value'
-    __kw_fillvalue = None
     yield iter(iterables).next(),
-def __izip_longest2(iterable1, iterable2, **kwargs):
-    __kw_fillvalue = None
+def __izip_longest2(iterable1, iterable2, __kw_fillvalue=None):
     yield iter(iterable1).next(), iter(iterable2).next()
 
 # Combinatoric generators
 
-def product(*iterables, **kwargs):
+def product(__kw_repeat=1, *iterables):
     'Known limitations: iterables must all be of the same type if they are more than two'
-    __kw_repeat = 1
     yield iter(iterables).next(),
-def __product2(iterable1, iterable2, **kwargs):
-    __kw_repeat = 1
+def __product2(iterable1, iterable2, __kw_repeat=1):
     yield iter(iterable1).next(), iter(iterable2).next()
 
 def permutations(iterable, r = None):
