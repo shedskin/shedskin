@@ -115,7 +115,6 @@ class function:
         self.lambdawrapper = False
         self.parent = parent
         self.constraints = set()
-        self.kwdefaults = {}
         self.vars = {}
         self.globals = []
         self.mv = getmv()
@@ -691,17 +690,22 @@ def analyze_args(expr, func, node=None, skip_defaults=False, merge=None):
         if formal in kwdict:
             actuals.append(kwdict[formal])
             formals.append(formal)
-#        elif formal.startswith('__kw_') and formal[5:] in kwdict:
-#            actuals.append(kwdict[formal[5:]])
-        elif argnr < len(args): # and not formal.startswith('__kw_'):
+        elif formal.startswith('__kw_') and formal[5:] in kwdict:
+            actuals.insert(0, kwdict[formal[5:]])
+            formals.insert(0, formal)
+        elif argnr < len(args) and not formal.startswith('__kw_'):
             actuals.append(args[argnr])
             argnr += 1
             formals.append(formal)
         elif i >= default_start:
             if not skip_defaults:
                 default = func.defaults[i-default_start]
-                actuals.append(default)
-                formals.append(formal)
+                if formal.startswith('__kw_'):
+                    actuals.insert(0,default)
+                    formals.insert(0,formal)
+                else:
+                    actuals.append(default)
+                    formals.append(formal)
                 defaults.append(default)
         else:
             missing = True
@@ -746,13 +750,13 @@ def connect_actual_formal(expr, func, parent_constr=False, check_error=False, me
         if not func.node.varargs and not func.node.kwargs and len(actuals)+len(keywords) < len(formals)-len(func.defaults) and not expr.star_args:
             error("not enough arguments in call to '%s'" % func.ident, expr)
         missing = formals[len(actuals):-len(func.defaults)]
-        if [x for x in missing if not x in [a.name for a in keywords]]:
-            error("no '%s' argument in call to '%s'" % (missing[0], func.ident))
+#        if [x for x in missing if not x in [a.name for a in keywords]]:
+#            error("no '%s' argument in call to '%s'" % (missing[0], func.ident))
 
     kwdict = {}
     for kw in keywords:
-        if not func.node.kwargs and kw.name not in formals:
-            error("no argument '%s' in call to '%s'" % (kw.name, func.ident), expr)
+#        if not func.node.kwargs and kw.name not in formals:
+#            error("no argument '%s' in call to '%s'" % (kw.name, func.ident), expr)
         kwdict[kw.name] = kw.expr
 
     skip_defaults = True # XXX
@@ -761,12 +765,12 @@ def connect_actual_formal(expr, func, parent_constr=False, check_error=False, me
         if not (func.mv.module.builtin and func.mv.module.ident == 'random' and func.ident == 'randrange'):
             skip_defaults = False
 
-    actuals, formals, _, _, _ = analyze_args(expr, func, skip_defaults=skip_defaults, merge=merge)
+    actuals, formals, _, extra, _ = analyze_args(expr, func, skip_defaults=skip_defaults, merge=merge)
 
     for (actual, formal) in zip(actuals, formals):
         if not (isinstance(func.parent, class_) and formal == 'self'):
             pairs.append((actual, func.vars[formal]))
-    return pairs
+    return pairs, len(extra)
 
 def parent_func(thing):
     parent = inode(thing).parent

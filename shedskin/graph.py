@@ -1058,9 +1058,6 @@ class moduleVisitor(ASTVisitor):
 
                 # name = expr
                 elif isinstance(lvalue, AssName):
-                    if getmv().module.builtin and lvalue.name.startswith('__kw_'):
-                        func.kwdefaults[lvalue.name[5:]] = rvalue
-
                     if (rvalue, 0, 0) not in getgx().cnode: # XXX generalize
                         self.visit(rvalue, func)
 
