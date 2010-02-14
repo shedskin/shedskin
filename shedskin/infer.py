@@ -415,38 +415,72 @@ def is_anon_func(node):
             return True
     return False
 
+def analyze_args(expr, func, node):
+    objexpr, ident, direct_call, method_call, constructor, parent_constr = analyze_callfunc(expr)
+
+    args = []
+    kwdict = {}
+    for a in expr.args:
+        if isinstance(a, Keyword):
+            kwdict[a.name] = a.expr
+        else:
+            args.append(a)
+    formal_args = func.formals[:]
+    if func.node.varargs:
+        formal_args = formal_args[:-1]
+
+    if ident in ['__getattr__', '__setattr__']: # XXX
+        args = args[1:]
+
+    if (method_call or constructor) and not (parent_constr or is_anon_func((expr.node, node.dcpa, node.cpa))): # XXX
+        args = [None]+args
+
+    argnr = 0
+    defaultnr = 0
+    actuals = []
+    formals = []
+    missing = False
+    for formal in formal_args:
+        if formal in kwdict:
+            actuals.append(kwdict[formal])
+            formals.append(formal)
+#        elif formal.startswith('__kw_') and formal[5:] in kwdict:
+#            actuals.append(kwdict[formal[5:]])
+        elif argnr < len(args) and not formal.startswith('__kw_'):
+            actuals.append(args[argnr])
+            argnr += 1
+            formals.append(formal)
+        elif func.defaults and defaultnr < len(func.defaults):
+            default = func.defaults[defaultnr]
+            defaultnr += 1
+            actuals.append(default)
+            formals.append(formal)
+        else:
+            missing = True
+    extra = args[argnr:]
+
+    error = (missing or extra) and not func.node.varargs and not func.node.kwargs and not expr.star_args and func.lambdanr is None and expr not in getgx().lambdawrapper # XXX
+
+    if func.node.varargs:
+        for arg in extra:
+            actuals.append(arg)
+            formals.append(func.formals[-1])
+
+    return actuals, formals, extra, error
+
 def actuals_formals(expr, func, node, dcpa, cpa, types, worklist):
-    objexpr, ident, direct_call, method_call, constructor, parent_constr = analyze_callfunc(expr) # XXX call less
+    objexpr, ident, direct_call, method_call, constructor, parent_constr = analyze_callfunc(expr)
 
-    actuals = [a for a in expr.args if not isinstance(a, Keyword)]
-    formals = [f for f in func.formals]
-    keywords = [a for a in expr.args if isinstance(a, Keyword)]
-
-    if ident in ['__getattr__', '__setattr__']:
-        actuals = actuals[1:]
-
-    # add a slot in case of implicit 'self'
-    smut = actuals[:] # XXX smut unneeded
-    if (method_call or constructor) and not (parent_constr or is_anon_func((expr.node, node.dcpa, node.cpa))):
-        smut = [None]+smut # XXX add type here?
-
-    for formal in formals:
-        for kw in keywords:
-            if formal == kw.name:
-                smut.append(kw.expr)
-
-    # XXX add defaults to smut here, simplify code below
-    if (len(smut) < len(formals)-len(func.defaults) or len(smut) > len(formals)) and not func.node.varargs and not func.node.kwargs and not expr.star_args and func.lambdanr is None and expr not in getgx().lambdawrapper:
-        return
-
-    # --- connect/seed as much direct arguments as possible
-    if len(smut) < len(formals):
-        smut = smut + func.defaults[-len(formals)+len(smut):]
-    if expr.star_args:
-        smut += len(formals)*[expr.star_args]
+    if expr.star_args: # XXX only in lib/
+        formals = func.formals
+        actuals = len(formals)*[expr.star_args]
         types = len(formals)*types
+    else:
+        actuals, formals, varargs, error = analyze_args(expr, func, node)
+        if error:
+            return
 
-    for (actual, formal, formaltype) in zip(smut, formals, types):
+    for (actual, formal, formaltype) in zip(actuals, formals, types):
         formalnode = getgx().cnode[func.vars[formal], dcpa, cpa]
 
         if formaltype[1] != 0: # ifa: remember dataflow information for non-simple types
