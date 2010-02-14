@@ -662,6 +662,63 @@ def callfunc_targets(node, merge):
 
     return funcs
 
+def analyze_args(expr, func, node):
+    objexpr, ident, direct_call, method_call, constructor, parent_constr = analyze_callfunc(expr)
+
+    args = []
+    kwdict = {}
+    for a in expr.args:
+        if isinstance(a, Keyword):
+            kwdict[a.name] = a.expr
+        else:
+            args.append(a)
+    formal_args = func.formals[:]
+    if func.node.varargs:
+        formal_args = formal_args[:-1]
+    default_start = len(formal_args)-len(func.defaults)
+
+    if ident in ['__getattr__', '__setattr__']: # property?
+        args = args[1:]
+
+    if (method_call or constructor) and not (parent_constr or is_anon_func((expr.node, node.dcpa, node.cpa))): # XXX
+        args = [None]+args
+
+    argnr = 0
+    actuals, formals = [], []
+    missing = False
+    for i, formal in enumerate(formal_args):
+        if formal in kwdict:
+            actuals.append(kwdict[formal])
+            formals.append(formal)
+#        elif formal.startswith('__kw_') and formal[5:] in kwdict:
+#            actuals.append(kwdict[formal[5:]])
+        elif argnr < len(args): # and not formal.startswith('__kw_'):
+            actuals.append(args[argnr])
+            argnr += 1
+            formals.append(formal)
+        elif i >= default_start:
+            actuals.append(func.defaults[i-default_start])
+            formals.append(formal)
+        else:
+            missing = True
+    extra = args[argnr:]
+
+    error = (missing or extra) and not func.node.varargs and not func.node.kwargs and not expr.star_args and func.lambdanr is None and expr not in getgx().lambdawrapper # XXX
+
+    if func.node.varargs:
+        for arg in extra:
+            actuals.append(arg)
+            formals.append(func.formals[-1])
+
+    return actuals, formals, extra, error
+
+def is_anon_func(node):
+    if node in getgx().cnode:
+        types = getgx().cnode[node].types()
+        if [t for t in types if isinstance(t[0], function)]:
+            return True
+    return False
+
 def connect_actual_formal(expr, func, parent_constr=False, check_error=False):
     pairs = []
 
@@ -690,6 +747,9 @@ def connect_actual_formal(expr, func, parent_constr=False, check_error=False):
             error("no argument '%s' in call to '%s'" % (kw.name, func.ident), expr)
         kwdict[kw.name] = kw.expr
 
+
+
+
     uglyoffset = len(func.defaults)-(len(formals)-len(actuals))
 
     # --- connect regular, default and keyword arguments
@@ -708,6 +768,7 @@ def connect_actual_formal(expr, func, parent_constr=False, check_error=False):
 
     if formals:
         formals += (len(actuals)-len(formals)) * [formals[-1]]
+
     for (actual, formal) in zip(actuals, formals):
         pairs.append((actual, func.vars[formal]))
     return pairs
