@@ -662,8 +662,9 @@ def callfunc_targets(node, merge):
 
     return funcs
 
-def analyze_args(expr, func, node):
+def analyze_args(expr, func, node=None, skip_defaults=False, merge=None):
     objexpr, ident, direct_call, method_call, constructor, parent_constr = analyze_callfunc(expr)
+    anon_func = is_anon_func(expr, node, merge)
 
     args = []
     kwdict = {}
@@ -680,7 +681,7 @@ def analyze_args(expr, func, node):
     if ident in ['__getattr__', '__setattr__']: # property?
         args = args[1:]
 
-    if (method_call or constructor) and not (parent_constr or is_anon_func((expr.node, node.dcpa, node.cpa))): # XXX
+    if (method_call or constructor) and not (parent_constr or anon_func): # XXX
         args = [None]+args
 
     argnr = 0
@@ -697,8 +698,9 @@ def analyze_args(expr, func, node):
             argnr += 1
             formals.append(formal)
         elif i >= default_start:
-            actuals.append(func.defaults[i-default_start])
-            formals.append(formal)
+            if not skip_defaults:
+                actuals.append(func.defaults[i-default_start])
+                formals.append(formal)
         else:
             missing = True
     extra = args[argnr:]
@@ -712,14 +714,18 @@ def analyze_args(expr, func, node):
 
     return actuals, formals, extra, error
 
-def is_anon_func(node):
-    if node in getgx().cnode:
-        types = getgx().cnode[node].types()
-        if [t for t in types if isinstance(t[0], function)]:
-            return True
-    return False
+def is_anon_func(expr, node, merge=None): # XXX move to analyze_callfunc
+    types = set()
+    if node:
+        node = (expr.node, node.dcpa, node.cpa)
+        if node in getgx().cnode:
+            types = getgx().cnode[node].types()
+    else:
+        if expr.node in merge:
+            types = merge[expr.node]
+    return bool([t for t in types if isinstance(t[0], function)])
 
-def connect_actual_formal(expr, func, parent_constr=False, check_error=False):
+def connect_actual_formal(expr, func, parent_constr=False, check_error=False, merge=None):
     pairs = []
 
     actuals = [a for a in expr.args if not isinstance(a, Keyword)]
@@ -747,30 +753,17 @@ def connect_actual_formal(expr, func, parent_constr=False, check_error=False):
             error("no argument '%s' in call to '%s'" % (kw.name, func.ident), expr)
         kwdict[kw.name] = kw.expr
 
-
-
-
-    uglyoffset = len(func.defaults)-(len(formals)-len(actuals))
-
-    # --- connect regular, default and keyword arguments
+    skip_defaults = True # XXX
     if not func.mv.module.builtin or func.mv.module.ident in ['random', 'itertools', 'datetime', 'ConfigParser', 'csv'] or \
-        (func.ident in ('sort','sorted')): # XXX investigate
+        (func.ident in ('sort','sorted')):
         if not (func.mv.module.builtin and func.mv.module.ident == 'random' and func.ident == 'randrange'):
-            for (i, formal) in enumerate(formals[len(actuals):]):
-                if formal in kwdict:
-                    actuals.append(kwdict[formal])
-                    continue
+            skip_defaults = False
 
-                if not func.defaults: # XXX
-                    continue
-                default = func.defaults[i+uglyoffset]
-                actuals.append(default)
-
-    if formals:
-        formals += (len(actuals)-len(formals)) * [formals[-1]]
+    actuals, formals, extra, error = analyze_args(expr, func, skip_defaults=skip_defaults, merge=merge)
 
     for (actual, formal) in zip(actuals, formals):
-        pairs.append((actual, func.vars[formal]))
+        if not (isinstance(func.parent, class_) and formal == 'self'):
+            pairs.append((actual, func.vars[formal]))
     return pairs
 
 def parent_func(thing):

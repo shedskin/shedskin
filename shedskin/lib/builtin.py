@@ -713,14 +713,14 @@ def __min1(arg):
     elem.__cmp__(elem)
     return elem
 
-def sum(l):
-    elem = iter(l).next()
-    elem.__add__(elem)
-    return elem
-def __sum2(l, b):
+def sum(l, b):
     b.unit = l.unit.unit # XXX
     return sum(l)
     return b
+def __sum1(l):
+    elem = iter(l).next()
+    elem.__add__(elem)
+    return elem
 
 def cmp(a, b):
     a.__cmp__(b)

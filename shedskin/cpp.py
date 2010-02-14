@@ -1761,8 +1761,7 @@ class generateVisitor(ASTVisitor):
         if node.star_args:
             args = [node.star_args]+args
 
-        pairs = connect_actual_formal(node, target, parent_constr, check_error=True)
-
+        pairs = connect_actual_formal(node, target, parent_constr, check_error=True, merge=self.mergeinh)
         double = False
         if ident in ['min', 'max']:
             for arg in node.args:
