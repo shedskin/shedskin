@@ -428,32 +428,29 @@ def analyze_args(expr, func, node):
     formal_args = func.formals[:]
     if func.node.varargs:
         formal_args = formal_args[:-1]
+    default_start = len(formal_args)-len(func.defaults)
 
-    if ident in ['__getattr__', '__setattr__']: # XXX
+    if ident in ['__getattr__', '__setattr__']: # property?
         args = args[1:]
 
     if (method_call or constructor) and not (parent_constr or is_anon_func((expr.node, node.dcpa, node.cpa))): # XXX
         args = [None]+args
 
     argnr = 0
-    defaultnr = 0
-    actuals = []
-    formals = []
+    actuals, formals = [], []
     missing = False
-    for formal in formal_args:
+    for i, formal in enumerate(formal_args):
         if formal in kwdict:
             actuals.append(kwdict[formal])
             formals.append(formal)
 #        elif formal.startswith('__kw_') and formal[5:] in kwdict:
 #            actuals.append(kwdict[formal[5:]])
-        elif argnr < len(args) and not formal.startswith('__kw_'):
+        elif argnr < len(args): # and not formal.startswith('__kw_'):
             actuals.append(args[argnr])
             argnr += 1
             formals.append(formal)
-        elif func.defaults and defaultnr < len(func.defaults):
-            default = func.defaults[defaultnr]
-            defaultnr += 1
-            actuals.append(default)
+        elif i >= default_start:
+            actuals.append(func.defaults[i-default_start])
             formals.append(formal)
         else:
             missing = True
