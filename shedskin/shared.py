@@ -685,7 +685,7 @@ def analyze_args(expr, func, node=None, skip_defaults=False, merge=None):
         args = [None]+args
 
     argnr = 0
-    actuals, formals = [], []
+    actuals, formals, defaults = [], [], []
     missing = False
     for i, formal in enumerate(formal_args):
         if formal in kwdict:
@@ -699,8 +699,10 @@ def analyze_args(expr, func, node=None, skip_defaults=False, merge=None):
             formals.append(formal)
         elif i >= default_start:
             if not skip_defaults:
-                actuals.append(func.defaults[i-default_start])
+                default = func.defaults[i-default_start]
+                actuals.append(default)
                 formals.append(formal)
+                defaults.append(default)
         else:
             missing = True
     extra = args[argnr:]
@@ -712,7 +714,7 @@ def analyze_args(expr, func, node=None, skip_defaults=False, merge=None):
             actuals.append(arg)
             formals.append(func.formals[-1])
 
-    return actuals, formals, extra, error
+    return actuals, formals, defaults, extra, error
 
 def is_anon_func(expr, node, merge=None): # XXX move to analyze_callfunc
     types = set()
@@ -759,7 +761,7 @@ def connect_actual_formal(expr, func, parent_constr=False, check_error=False, me
         if not (func.mv.module.builtin and func.mv.module.ident == 'random' and func.ident == 'randrange'):
             skip_defaults = False
 
-    actuals, formals, extra, error = analyze_args(expr, func, skip_defaults=skip_defaults, merge=merge)
+    actuals, formals, _, _, _ = analyze_args(expr, func, skip_defaults=skip_defaults, merge=merge)
 
     for (actual, formal) in zip(actuals, formals):
         if not (isinstance(func.parent, class_) and formal == 'self'):

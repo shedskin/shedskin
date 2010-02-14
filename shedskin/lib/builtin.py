@@ -92,7 +92,7 @@ class none:
         return 1
 
 class pyiter:
-    def __init__(self):
+    def __init__(self, i=None):
         pass
     def __inititer__(self, i):
         self.unit = iter(i).next()

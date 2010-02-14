@@ -210,46 +210,29 @@ def possible_functions(node):
 
 def possible_argtypes(node, funcs, worklist):
     expr = node.thing
-
-    # --- determine possible target functions
-    objexpr, ident, direct_call, method_call, constructor, parent_constr = analyze_callfunc(expr, True) # XXX only parent_constr used
-
-    # --- argument types XXX connect_actuals_formals
-    args = [arg for arg in expr.args if not isinstance(arg, Keyword)]
-    keywords = [arg for arg in expr.args if isinstance(arg, Keyword)]
-
-    kwdict = {}
-    for kw in keywords: kwdict[kw.name] = kw.expr
-
-    if expr.star_args: args.append(expr.star_args)
-    if expr.dstar_args: args.append(expr.dstar_args)
-
-    if funcs: # XXX return here
+    objexpr, ident, direct_call, method_call, constructor, parent_constr = analyze_callfunc(expr)
+    if funcs:
         func = funcs[0][0] # XXX
-        if parent_constr: # XXX merge
-            formals = [f for f in func.formals]
-        else:
-            formals = [f for f in func.formals if f != 'self']
-        uglyoffset = len(func.defaults)-(len(formals)-len(args))
 
-        for (i, formal) in enumerate(formals[len(args):]):
-            #print 'formal', i, formal
-            if formal in kwdict:
-                args.append(kwdict[formal])
-                continue
+    args = []
+    if expr.star_args: # XXX
+        args = [expr.star_args]
+    elif funcs and not func.node: # XXX getattr, setattr
+        args = expr.args
+    elif funcs:
+        actuals, formals, used_defaults, varargs, error = analyze_args(expr, func, node)
 
-            if not func.defaults: # XXX
-                continue
-            default = func.defaults[i+uglyoffset]
-            args.append(default)
-
-            if not node.defnodes:
+        if not node.defnodes:
+            for i, default in enumerate(used_defaults):
                 defnode = cnode((inode(node.thing),i), node.dcpa, node.cpa, parent=func)
                 getgx().types[defnode] = set()
-
                 defnode.callfuncs.append(node.thing)
                 addconstraint(getgx().cnode[default, 0, 0], defnode, worklist) # XXX bad place
         node.defnodes = True
+
+        for act, form in zip(actuals, formals):
+            if parent_constr or not (isinstance(func.parent, class_) and form == 'self'): # XXX merge
+                args.append(act)
 
     argtypes = []
     for arg in args:
@@ -416,7 +399,7 @@ def actuals_formals(expr, func, node, dcpa, cpa, types, worklist):
         actuals = len(formals)*[expr.star_args]
         types = len(formals)*types
     else:
-        actuals, formals, varargs, error = analyze_args(expr, func, node)
+        actuals, formals, _, varargs, error = analyze_args(expr, func, node)
         if error:
             return
 
