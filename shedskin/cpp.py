@@ -922,14 +922,14 @@ class generateVisitor(ASTVisitor):
         print >>self.out, self.line
 
     def fastenum(self, node):
-        return is_enum(node) and self.only_classes(node.list.args[0], ('tuple', 'list', 'none'))
+        return is_enum(node) and self.only_classes(node.list.args[0], ('tuple', 'list'))
 
     def fastzip2(self, node):
-        names = ('tuple', 'list', 'none')
+        names = ('tuple', 'list')
         return is_zip2(node) and self.only_classes(node.list.args[0], names) and self.only_classes(node.list.args[1], names)
 
     def only_classes(self, node, names):
-        classes = [defclass(name) for name in names]
+        classes = [defclass(name) for name in names]+[defclass('none')]
         return not [t for t in self.mergeinh[node] if t[0] not in classes]
 
     def visitFor(self, node, func=None):
@@ -1001,9 +1001,9 @@ class generateVisitor(ASTVisitor):
 
     def forin_preftail(self, node):
         pref = ''
-        if self.only_classes(node.list, ('tuple2', 'none')):
+        if self.only_classes(node.list, ('tuple2',)):
             pref = '_T2'
-        if self.only_classes(node.list, ('tuple', 'list', 'none')):
+        if self.only_classes(node.list, ('tuple', 'list')):
             pref = '_SEQ'
         if pref == '':
             tail = getmv().tempcount[(node,1)][2:]
@@ -2094,7 +2094,7 @@ class generateVisitor(ASTVisitor):
     # --- nested for loops: loop headers, if statements
     def listcomp_rec(self, node, quals, lcfunc):
         if not quals:
-            if len(node.quals) == 1 and not fastfor(node.quals[0]) and not self.fastenum(node.quals[0]) and not self.fastzip2(node.quals[0]) and not node.quals[0].ifs and self.only_classes(node.quals[0].list, ('tuple', 'list', 'none')):
+            if len(node.quals) == 1 and not fastfor(node.quals[0]) and not self.fastenum(node.quals[0]) and not self.fastzip2(node.quals[0]) and not node.quals[0].ifs and self.only_classes(node.quals[0].list, ('tuple', 'list')):
                 self.start('__ss_result->units['+getmv().tempcount[node.quals[0].list]+'] = ')
                 self.visit(node.expr, lcfunc)
             else:
@@ -2470,7 +2470,6 @@ class ExtmodError(Exception):
     pass
 
 def typestrnew(split, root_class, cplusplus, orig_parent, node=None, check_extmod=False, depth=0):
-    #print 'typestrnew', split, root_class
     if depth==10:
         raise RuntimeError()
 
