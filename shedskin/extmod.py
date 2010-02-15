@@ -124,13 +124,13 @@ def do_extmod_method(gv, func):
 def supported_funcs(gv, funcs):
     supported = []
     for func in funcs:
+        if func.isGenerator or not cpp.hmcpa(func):
+            continue
         if func.ident in ['__setattr__', '__getattr__', '__iadd__', '__isub__', '__imul__']: # XXX
             continue
         if isinstance(func.parent, class_):
             if func.invisible or func.inherited or not gv.inhcpa(func):
                 continue
-        elif not cpp.hmcpa(func):
-            continue
         if isinstance(func.parent, class_) and func.ident in func.parent.staticmethods:
             print '*WARNING* method not exported:', func.parent.ident+'.'+func.ident
             continue
