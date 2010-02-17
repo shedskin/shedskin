@@ -750,19 +750,10 @@ def connect_actual_formal(expr, func, parent_constr=False, check_error=False, me
         if not func.node.varargs and not func.node.kwargs and len(actuals)+len(keywords) < len(formals)-len(func.defaults) and not expr.star_args:
             error("not enough arguments in call to '%s'" % func.ident, expr)
         missing = formals[len(actuals):-len(func.defaults)]
-#        if [x for x in missing if not x in [a.name for a in keywords]]:
-#            error("no '%s' argument in call to '%s'" % (missing[0], func.ident))
-
-    kwdict = {}
-    for kw in keywords:
-#        if not func.node.kwargs and kw.name not in formals:
-#            error("no argument '%s' in call to '%s'" % (kw.name, func.ident), expr)
-        kwdict[kw.name] = kw.expr
 
     skip_defaults = True # XXX
-    if not func.mv.module.builtin or func.mv.module.ident in ['random', 'itertools', 'datetime', 'ConfigParser', 'csv'] or \
-        (func.ident in ('sort','sorted')):
-        if not (func.mv.module.builtin and func.mv.module.ident == 'random' and func.ident == 'randrange'):
+    if not func.mv.module.builtin or func.mv.module.ident in ['random', 'itertools', 'datetime', 'ConfigParser', 'csv'] or (func.ident in ('sort','sorted', 'min', 'max')):
+        if not (func.mv.module.builtin and func.ident == 'randrange'):
             skip_defaults = False
 
     actuals, formals, _, extra, _ = analyze_args(expr, func, skip_defaults=skip_defaults, merge=merge)

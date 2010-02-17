@@ -241,12 +241,12 @@ def possible_argtypes(node, funcs, worklist):
         else:
             argtypes.append(inode(arg).types()) # XXX def arg?
 
-    # store arg count for calls to builtin refs
+    # store arg count for wrappers to builtin refs
     if funcs and (func.lambdawrapper or node.thing in getgx().lambdawrapper):
         while argtypes and not argtypes[-1]:
             argtypes = argtypes[:-1]
         if func.lambdawrapper:
-            if node.parent and node.parent.node.varargs:
+            if expr.star_args and node.parent and node.parent.node.varargs:
                 func.largs = node.parent.xargs[node.dcpa,node.cpa]-len(node.parent.formals)+1
             else:
                 func.largs = len(argtypes)

@@ -45,7 +45,7 @@ def islice(iterable, start, stop = -1, step = -1):
 
 def imap(function, *iterables):
     'Known limitations: no more than 5 iterables are supported'
-    yield function(iter(iterables).next())
+    yield function(*iter(iterables).next())
 def __imap3(function, iter1, iter2):
     yield function(iter(iter1).next(), iter(iter2).next())
 def __imap4(function, iter1, iter2, iter3):

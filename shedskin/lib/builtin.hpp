@@ -480,7 +480,7 @@ public:
         if (!p) return 1;
         pyseq<T> *b = (pyseq<T> *)p;
         int i, cmp;
-        int mnm = __min(2, this->__len__(), b->__len__());
+        int mnm = __min(2, 0, this->__len__(), b->__len__());
 
         for(i = 0; i < mnm; i++) {
             cmp = __cmp(this->units[i], b->units[i]);
@@ -3075,7 +3075,7 @@ template<class T> T __maximum(pyseq<T> *l) {
     return m;
 }
 
-template<class T> T __max(int nn, pyiter<T> *a) {
+template<class T, class B> T __max(int nn, B (*key)(T), pyiter<T> *a) {
     T e, max = 0;
     int first = 1;
     __iter<T> *__0;
@@ -3089,38 +3089,37 @@ template<class T> T __max(int nn, pyiter<T> *a) {
     END_FOR
     return max;
 }
+template<class T> T __max(int nn, int key, pyiter<T> *a) { return __max(nn, (int (*)(T))0, a); } /* XXX */
 
-template<class T> T __max(int nn, T a, T b) {
-    if(__cmp(a, b)==1) return a;
-    return b;
-}
+template<class B> static inline int __max(int nn, B (*key)(int), pyseq<int> *a) { return __maximum(a); }
+static inline int __max(int nn, int key, pyseq<int> *a) { return __maximum(a); }
+template<class B> static inline double __max(int nn, B (*key)(double), pyseq<double> *a) { return __maximum(a); }
+static inline double __max(int nn, int key, pyseq<double> *a) { return __maximum(a); }
 
-template<class T> T __max(int nn, T a, T b, T c) {
-    if(__cmp(a, b)==1 && __cmp(a, c)==1) return a;
-    else if(__cmp(b,c)==1) return b;
-    return c;
-}
-
-template<class T> T __max(int n, T a, T b, T c, T d, ...) {
-    T m = __max(2,__max(3,a,b,c),d);
+template<class T, class B> T __max(int n, B (*key)(T), T a, T b, ...) {
+    T m = (__cmp(a,b)==1)?a:b;
     va_list ap;
-    va_start(ap, d);
-
-    for(int i=0; i<n-4; i++) {
+    va_start(ap, b);
+    for(int i=0; i<n-2; i++) {
         T t = va_arg(ap, T);
         if(__cmp(t,m)==1) m=t;
     }
     va_end(ap);
-
+    return m;
+}
+template<class T> T __max(int n, int key, T a, T b, ...) { /* XXX */
+    T m = (__cmp(a,b)==1)?a:b;
+    va_list ap;
+    va_start(ap, b);
+    for(int i=0; i<n-2; i++) {
+        T t = va_arg(ap, T);
+        if(__cmp(t,m)==1) m=t;
+    }
+    va_end(ap);
     return m;
 }
 
-template<> inline int __max(int nn, int a, int b) { return __SS_MAX(a,b); }
-template<> inline int __max(int nn, int a, int b, int c) { return __SS_MAX3(a,b,c); }
-template<> inline double __max(int nn, double a, double b) { return __SS_MAX(a,b); }
-template<> inline double __max(int nn, double a, double b, double c) { return __SS_MAX3(a,b,c); }
-
-template<class T> T __min(int nn, pyiter<T> *a) {
+template<class T, class B> T __min(int nn, B (*key)(T), pyiter<T> *a) {
     T e, min = 0;
     int first = 1;
     __iter<T> *__0;
@@ -3134,39 +3133,35 @@ template<class T> T __min(int nn, pyiter<T> *a) {
     END_FOR
     return min;
 }
+template<class T> T __min(int nn, int key, pyiter<T> *a) { return __min(nn, (int (*)(T))0, a); } /* XXX */
 
-int __min(int nn, pyseq<int> *l);
-double __min(int nn, pyseq<double> *l);
+template<class B> static inline int __min(int nn, B (*key)(int), pyseq<int> *a) { return __minimum(a); }
+static inline int __min(int nn, int key, pyseq<int> *a) { return __minimum(a); }
+template<class B> static inline double __min(int nn, B (*key)(double), pyseq<double> *a) { return __minimum(a); }
+static inline double __min(int nn, int key, pyseq<double> *a) { return __minimum(a); }
 
-template<class T> T __min(int nn, T a, T b) {
-    if( __cmp(a, b) == -1 ) return a;
-    return b;
-}
-
-template<class T> T __min(int nn, T a, T b, T c) {
-    if(__cmp(a, b)==-1 && __cmp(a, c)==-1) return a;
-    else if(__cmp(b,c)==-1) return b;
-    return c;
-}
-
-template<class T> T __min(int n, T a, T b, T c, T d, ...) {
-    T m = __min(2,__min(3,a,b,c),d);
+template<class T, class B> T __min(int n, B (*key)(T), T a, T b, ...) {
+    T m = (__cmp(a,b)==1)?b:a;
     va_list ap;
-    va_start(ap, d);
-
-    for(int i=0; i<n-4; i++) {
+    va_start(ap, b);
+    for(int i=0; i<n-2; i++) {
         T t = va_arg(ap, T);
         if(__cmp(t,m)==-1) m=t;
     }
     va_end(ap);
-
     return m;
 }
-
-template<> inline int __min(int nn, int a, int b) { return __SS_MIN(a,b); }
-template<> inline int __min(int nn, int a, int b, int c) { return __SS_MIN3(a,b,c); }
-template<> inline double __min(int nn, double a, double b) { return __SS_MIN(a,b); }
-template<> inline double __min(int nn, double a, double b, double c) { return __SS_MIN3(a,b,c); }
+template<class T> T __min(int n, int key, T a, T b, ...) { /* XXX */
+    T m = (__cmp(a,b)==1)?b:a;
+    va_list ap;
+    va_start(ap, b);
+    for(int i=0; i<n-2; i++) {
+        T t = va_arg(ap, T);
+        if(__cmp(t,m)==-1) m=t;
+    }
+    va_end(ap);
+    return m;
+}
 
 template<class A> static inline list<A> *__list_comp_0(list<A> *result, pyiter<A> *a) {
     A e;
@@ -3292,7 +3287,7 @@ template <class A, class B> list<tuple2<A, B> *> *__zip(int nn, pyiter<A> *a, py
     __list_comp_0(&lb, b);
     result = (new list<tuple2<A, B> *>());
 
-    FAST_FOR(i,0,__min(2, len(&la), len(&lb)),1,1,2)
+    FAST_FOR(i,0,__min(2, 0, len(&la), len(&lb)),1,1,2)
         result->append((new tuple2<A, B>(2, la.units[i], lb.units[i])));
     END_FOR
     return result;
@@ -3304,7 +3299,7 @@ template <class A, class B> list<tuple2<A, B> *> *__zip(int nn, pyseq<A> *a, pys
     list<tuple2<A, B> *> *result;
     result = new list<tuple2<A, B> *>();
 
-    int n = __min(2, len(a), len(b));
+    int n = __min(2, 0, len(a), len(b));
     result->units.reserve(n);
 
     tuple2<A, B> *v = new tuple2<A, B>[n];
@@ -3330,7 +3325,7 @@ template <class A> list<tuple2<A,A> *> *__zip(int nn, pyiter<A> *a, pyiter<A> *b
 
     result = (new list<tuple2<A,A> *>());
 
-    FAST_FOR(i,0,__min(3, len(&la), len(&lb), len(&lc)),1,1,2)
+    FAST_FOR(i,0,__min(3, 0, len(&la), len(&lb), len(&lc)),1,1,2)
         result->append((new tuple2<A,A>(3, la.units[i], lb.units[i], lc.units[i])));
     END_FOR
     return result;
@@ -3342,7 +3337,7 @@ template <class A> list<tuple2<A,A> *> *__zip(int nn, pyseq<A> *a, pyseq<A> *b, 
     list<tuple2<A, A> *> *result;
     result = new list<tuple2<A, A> *>();
 
-    int n = __min(3, len(a), len(b), len(c));
+    int n = __min(3, 0, len(a), len(b), len(c));
     result->units.reserve(n);
 
     tuple2<A, A> *v = new tuple2<A, A>[n];
