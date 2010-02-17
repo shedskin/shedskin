@@ -755,6 +755,8 @@ def map(func, *iter1):
     return [func(*iter(iter1).next())]
 def __map3(func, iter1, iter2):
     return [func(iter(iter1).next(), iter(iter2).next())]
+def __map4(func, iter1, iter2, iter3): # XXX
+    return [func(iter(iter1).next(), iter(iter2).next(), iter(iter3).next())]
 
 def filter(func, iter1):
     if func(iter(iter1).next()):

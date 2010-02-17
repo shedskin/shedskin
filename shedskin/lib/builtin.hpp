@@ -3404,14 +3404,16 @@ template <class A, class B, class C> list<A> *map(int n, A (*func)(B, C), pyiter
     return result;
 }
 
-template <class A, class B> list<A> *map(int n, A (*func)(B, B, B), pyiter<B> *b1, pyiter<B> *b2, pyiter<B> *b3) {
+template <class A, class B, class C, class D> list<A> *map(int n, A (*func)(B, C, D), pyiter<B> *b1, pyiter<C> *b2, pyiter<D> *b3) {
     if(!func)
         throw new ValueError(new str("'map' function argument cannot be None"));
     list<A> *result = new list<A>();
     __iter<B> *itb1 = b1->__iter__();
-    __iter<B> *itb2 = b2->__iter__();
-    __iter<B> *itb3 = b3->__iter__();
-    B nextb1, nextb2, nextb3;
+    __iter<C> *itb2 = b2->__iter__();
+    __iter<D> *itb3 = b3->__iter__();
+    B nextb1;
+    C nextb2;
+    D nextb3;
     int total;
     while(1)  {
         total = 0;
