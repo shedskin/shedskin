@@ -68,7 +68,15 @@ print zip0
 import math
 for hm in range(13):
     print math.factorial(hm),
-print 
+print
+
+# map 3 iterables of different types
+def foo3(a, b, c):
+    return '%d %.2f %s' % (a, b, c)
+def flats():
+    for x in range(3):
+        yield chr(ord('A')+x)
+print map(foo3, xrange(3), map(float, range(1, 4)), flats())
 
 ''', '''
 output(equal=True)
