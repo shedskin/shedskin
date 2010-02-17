@@ -3051,113 +3051,160 @@ int __sum(pyseq<int> *l, int b);
 double __sum(pyseq<int> *l, double b);
 double __sum(pyseq<double> *l, double b=0);
 
-template<class T> T __minimum(pyseq<T> *l) {
-    int len = l->units.size();
-    int i;
-    if(len==0)
-        throw new ValueError(new str("minimum of empty sequence"));
-    T m = l->units[0];
-    for(i=1; i<len; i++)
-        if( l->units[i] < m )
-            m = l->units[i];
-    return m;
-}
+/* max */
 
-template<class T> T __maximum(pyseq<T> *l) {
+template<class T, class B> T __max(int nn, B (*key)(T), pyiter<T> *a) {
+    T e, max = 0;
+    B maxkey, maxkey2;
+    int first = 1;
+    __iter<T> *__0;
+    FOR_IN(e, a, 0)
+        if(key) {
+            maxkey2 = key(e);
+            if(first || __cmp(maxkey2, maxkey) == 1) {
+                max = e;
+                maxkey = maxkey2;
+            }
+        } else if(first || __cmp(e, max) == 1)
+            max = e;
+        if(first)
+            first = 0;
+    END_FOR
+    if(first)
+        throw new ValueError(new str("max() arg is an empty sequence"));
+    return max;
+}
+template<class T> T __max(int nn, int key, pyiter<T> *a) { return __max(nn, (int (*)(T))0, a); } /* XXX */
+
+template<class T, class B> T __max(int nn, B (*key)(T), pyseq<T> *l) {
     int len = l->units.size();
     int i;
     if(len==0)
         throw new ValueError(new str("maximum of empty sequence"));
     T m = l->units[0];
-    for(i=1; i<len; i++)
-        if( l->units[i] > m )
-            m = l->units[i];
+    B maxkey, maxkey2;
+    if(key)
+        maxkey = key(m);
+    for(i=1; i<len; i++) {
+        T elem = l->units[i];
+        if(key) {
+            maxkey2 = key(elem);
+            if(__cmp(maxkey2, maxkey) == 1) {
+                m = elem;
+                maxkey = maxkey2;
+            }
+        } else if(__cmp(elem,m) == 1)
+            m = elem;
+    }
     return m;
 }
+template<class T> T __max(int nn, int key, pyseq<T> *a) { return __max(nn, (int (*)(T))0, a); } /* XXX */
+template<class B> str *__max(int nn, B (*key)(str *), str *l) { return __max(nn, key, (pyiter<str *> *)l); }
+inline str *__max(int nn, int key, str *l) { return __max(nn, key, (pyiter<str *> *)l); }
 
-template<class T, class B> T __max(int nn, B (*key)(T), pyiter<T> *a) {
-    T e, max = 0;
-    int first = 1;
-    __iter<T> *__0;
-    FOR_IN(e, a, 0)
-        if(first) {
-            first = 0;
-            max = e;
-        }
-        else if( __cmp(e,max) == 1 )
-            max = e;
-    END_FOR
-    return max;
-}
-template<class T> T __max(int nn, int key, pyiter<T> *a) { return __max(nn, (int (*)(T))0, a); } /* XXX */
+template<class T, class B> inline T __max(int n, B (*key)(T), T a, T b) { return (__cmp(key(a), key(b))==1)?a:b; }
+template<class T> inline  T __max(int n, int key, T a, T b) { return (__cmp(a, b)==1)?a:b; }
 
-template<class B> static inline int __max(int nn, B (*key)(int), pyseq<int> *a) { return __maximum(a); }
-static inline int __max(int nn, int key, pyseq<int> *a) { return __maximum(a); }
-template<class B> static inline double __max(int nn, B (*key)(double), pyseq<double> *a) { return __maximum(a); }
-static inline double __max(int nn, int key, pyseq<double> *a) { return __maximum(a); }
-
-template<class T, class B> T __max(int n, B (*key)(T), T a, T b, ...) {
-    T m = (__cmp(a,b)==1)?a:b;
+template<class T, class B> T __max(int n, B (*key)(T), T a, T b, T c, ...) {
+    T m = __max(2, key, __max(2, key, a, b), c);
+    B maxkey = key(m);
     va_list ap;
-    va_start(ap, b);
-    for(int i=0; i<n-2; i++) {
+    va_start(ap, c);
+    for(int i=0; i<n-3; i++) {
+        T t = va_arg(ap, T);
+        if(__cmp(key(t),maxkey)==1)
+            m=t;
+    }
+    va_end(ap);
+    return m;
+}
+template<class T> T __max(int n, int key, T a, T b, T c, ...) { /* XXX */
+    T m = __max(2, key, __max(2, key, a, b), c);
+    va_list ap;
+    va_start(ap, c);
+    for(int i=0; i<n-3; i++) {
         T t = va_arg(ap, T);
         if(__cmp(t,m)==1) m=t;
     }
     va_end(ap);
     return m;
 }
-template<class T> T __max(int n, int key, T a, T b, ...) { /* XXX */
-    T m = (__cmp(a,b)==1)?a:b;
-    va_list ap;
-    va_start(ap, b);
-    for(int i=0; i<n-2; i++) {
-        T t = va_arg(ap, T);
-        if(__cmp(t,m)==1) m=t;
-    }
-    va_end(ap);
-    return m;
-}
+
+/* min */
 
 template<class T, class B> T __min(int nn, B (*key)(T), pyiter<T> *a) {
     T e, min = 0;
+    B minkey, minkey2;
     int first = 1;
     __iter<T> *__0;
     FOR_IN(e, a, 0)
-        if(first) {
+        if(key) {
+            minkey2 = key(e);
+            if(first || __cmp(minkey2, minkey) == -1) {
+                min = e;
+                minkey = minkey2;
+            }
+        } else if(first || __cmp(e, min) == -1)
+            min = e;
+        if(first)
             first = 0;
-            min = e;
-        }
-        else if( __cmp(e,min) == -1 )
-            min = e;
     END_FOR
+    if(first)
+        throw new ValueError(new str("min() arg is an empty sequence"));
     return min;
 }
-template<class T> T __min(int nn, int key, pyiter<T> *a) { return __min(nn, (int (*)(T))0, a); } /* XXX */
+template<class T> T __min(int nn, int key, pyiter<T> *a) { return __min(nn, (int (*)(T))0, a); }
 
-template<class B> static inline int __min(int nn, B (*key)(int), pyseq<int> *a) { return __minimum(a); }
-static inline int __min(int nn, int key, pyseq<int> *a) { return __minimum(a); }
-template<class B> static inline double __min(int nn, B (*key)(double), pyseq<double> *a) { return __minimum(a); }
-static inline double __min(int nn, int key, pyseq<double> *a) { return __minimum(a); }
+template<class T, class B> T __min(int nn, B (*key)(T), pyseq<T> *l) {
+    int len = l->units.size();
+    int i;
+    if(len==0)
+        throw new ValueError(new str("minimum of empty sequence"));
+    T m = l->units[0];
+    B minkey, minkey2;
+    if(key)
+        minkey = key(m);
+    for(i=1; i<len; i++) {
+        T elem = l->units[i];
+        if(key) {
+            minkey2 = key(elem);
+            if(__cmp(minkey2, minkey) == -1) {
+                m = elem;
+                minkey = minkey2;
+            }
+        } else if(__cmp(elem, m) == -1)
+            m = elem;
+    }
+    return m;
+}
+template<class T> T __min(int nn, int key, pyseq<T> *a) { return __min(nn, (int (*)(T))0, a); }
+template<class B> str *__min(int nn, B (*key)(str *), str *l) { return __min(nn, key, (pyiter<str *> *)l); }
+inline str *__min(int nn, int key, str *l) { return __min(nn, key, (pyiter<str *> *)l); }
 
-template<class T, class B> T __min(int n, B (*key)(T), T a, T b, ...) {
-    T m = (__cmp(a,b)==1)?b:a;
+template<class T, class B> inline T __min(int n, B (*key)(T), T a, T b) { return (__cmp(key(a), key(b))==-1)?a:b; }
+template<class T> inline  T __min(int n, int key, T a, T b) { return (__cmp(a, b)==-1)?a:b; }
+
+template<class T, class B> T __min(int n, B (*key)(T), T a, T b, T c, ...) {
+    T m = __min(2, key, __min(2, key, a, b), c);
+    B minkey = key(m);
     va_list ap;
-    va_start(ap, b);
-    for(int i=0; i<n-2; i++) {
+    va_start(ap, c);
+    for(int i=0; i<n-3; i++) {
         T t = va_arg(ap, T);
-        if(__cmp(t,m)==-1) m=t;
+        if(__cmp(key(t),minkey)==-1)
+            m=t;
     }
     va_end(ap);
     return m;
 }
-template<class T> T __min(int n, int key, T a, T b, ...) { /* XXX */
-    T m = (__cmp(a,b)==1)?b:a;
+template<class T> T __min(int n, int key, T a, T b, T c, ...) { /* XXX */
+    T m = __min(2, key, __min(2, key, a, b), c);
     va_list ap;
-    va_start(ap, b);
-    for(int i=0; i<n-2; i++) {
+    va_start(ap, c);
+    for(int i=0; i<n-3; i++) {
         T t = va_arg(ap, T);
-        if(__cmp(t,m)==-1) m=t;
+        if(__cmp(t,m)==-1)
+            m=t;
     }
     va_end(ap);
     return m;
