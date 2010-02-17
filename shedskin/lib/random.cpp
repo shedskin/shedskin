@@ -297,7 +297,7 @@ int Random::_init_by_array(list<int> *init_key) {
     this->_init_genrand(19650218);
     i = 1;
     j = 0;
-    k = __max(2, N, key_length);
+    k = __max(2, 0, N, key_length);
 
     FAST_FOR_NEG(k,k,0,-1,12,13)
         __14 = this->mt;

@@ -1756,11 +1756,13 @@ class generateVisitor(ASTVisitor):
             target = target.inherited_from
 
         pairs, rest = connect_actual_formal(node, target, parent_constr, check_error=True, merge=self.mergeinh)
+        if isinstance(func, function) and func.lambdawrapper:
+            rest = func.largs
 
         if target.node.varargs:
             self.append('%d' % rest)
             if rest or pairs:
-                self.append(',')
+                self.append(', ')
 
         double = False
         if ident in ['min', 'max']:
@@ -1771,7 +1773,9 @@ class generateVisitor(ASTVisitor):
         self.add_args_arg(node, funcs)
 
         if isinstance(func, function) and func.largs != None:
-            pairs = pairs[:func.largs]
+            kw = [p for p in pairs if p[1].name.startswith('__kw_')]
+            nonkw = [p for p in pairs if not p[1].name.startswith('__kw_')]
+            pairs = kw+nonkw[:func.largs]
 
         for (arg, formal) in pairs:
             cast = False
