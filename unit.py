@@ -56,9 +56,16 @@ seq3 = (4,5)
 s1,s2 = seq3
 print s1,s2,s3
 
-# min/max and 'key' arg; TODO more tests
-#blah = ['3', '2', '1']
-#print min(blah, key=int), max(blah, key=int)
+# min/max and 'key' arg
+blah = [1, 2, 3]
+omkeer = lambda x: -x
+print min(blah), max(blah)
+print min(blah, key=omkeer), max(blah, key=omkeer)
+print min(1,2), max(1,2)
+print min(1,2, key=omkeer), max(1,2, key=omkeer)
+print min(1,2,3), max(1,2,3)
+print min(1,2,3, key=omkeer), max(1,2,3, key=omkeer)
+print min(1,2,3, key=int), max(1,2,3, key=str)
 
 # zip()
 zip0 = zip()
