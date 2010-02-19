@@ -971,6 +971,9 @@ public:
     str *mode;
     int closed;
 
+    bool universal_mode;
+    bool cr;
+
     file(str *name, str *mode=0);
     file(FILE *g);
     file();
