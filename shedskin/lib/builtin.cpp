@@ -1068,26 +1068,38 @@ int class_::__eq__(pyobj *c) {
 /* file methods */
 
 file::file() {
-    endoffile=print_space=0;
-    print_lastchar='\n';
+    endoffile = print_space = 0;
+    print_lastchar = '\n';
+    universal_mode = false;
 }
 
 file::file(FILE *g) {
     f = g;
-    endoffile=print_space=0;
-    print_lastchar='\n';
+    endoffile = print_space = 0;
+    print_lastchar = '\n';
+    universal_mode = false;
 }
 
 file::file(str *name, str *flags) {
-    if (!flags)
+    universal_mode = false;
+    cr = false;
+    if (!flags) {
         flags = new str("r");
+    } else {
+        for (__GC_STRING::iterator it = flags->unit.begin(); it != flags->unit.end(); ++it) {
+            if (*it == 'u' || *it == 'U') {
+                universal_mode = true;
+                break;
+            }
+        }
+    }
     f = fopen(name->unit.c_str(), flags->unit.c_str());
     this->name = name;
     this->mode = flags;
-    if(!f)
-       throw new IOError(__modct(new str("No such file or directory: '%s'"), 1, name));
-    endoffile=print_space=0;
-    print_lastchar='\n';
+    if (!f)
+        throw new IOError(__modct(new str("No such file or directory: '%s'"), 1, name));
+    endoffile = print_space = 0;
+    print_lastchar = '\n';
 }
 
 file *open(str *name, str *flags) {
@@ -1098,8 +1110,22 @@ int file::getchar() {
     int r;
     __check_closed();
     r = fgetc(f);
+
     if(ferror(f))
         throw new IOError();
+
+    if (universal_mode) {
+        if (r == '\r') {
+            cr = true;
+            return '\n';
+        } else if (cr && r == '\n') {
+            r = fgetc(f);
+            if (ferror(f))
+                throw new IOError();
+            cr = (r == '\r');
+        }
+    }
+
     return r;
 }
 
@@ -2075,4 +2101,3 @@ list<tuple2<void *, void *> *> *__zip(int nn) {
 }
 
 } // namespace __shedskin__
-
