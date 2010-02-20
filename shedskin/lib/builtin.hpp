@@ -777,7 +777,9 @@ public:
     dict();
     dict(int count, ...);
     dict(dict<K, V> *p);
-    dict(pyiter<tuple2<K,V> *> *p); // XXX pyiter(iter)
+    dict(pyiter<tuple2<K,V> *> *p);
+    dict(pyiter<pyseq<K> *> *p);
+    dict(pyiter<str *> *p);
 
     void *__setitem__(K k, V v);
     V __getitem__(K k);
@@ -1425,6 +1427,24 @@ template<class K, class V> dict<K, V>::dict(pyiter<tuple2<K,V> *> *p) {
     __iter<tuple2<K,V> *> *__0;
     FOR_IN(t, p, 0)
         __setitem__(t->__getfirst__(), t->__getsecond__());
+    END_FOR
+}
+
+template<class K, class V> dict<K, V>::dict(pyiter<pyseq<K> *> *p) {
+    this->__class__ = cl_dict;
+    pyseq<K> *t;
+    __iter<pyseq<K> *> *__0;
+    FOR_IN(t, p, 0)
+        __setitem__(t->__getitem__(0), t->__getitem__(1));
+    END_FOR
+}
+
+template<class K, class V> dict<K, V>::dict(pyiter<str *> *p) { /* XXX why necessary */
+    this->__class__ = cl_dict;
+    str *t;
+    __iter<str *> *__0;
+    FOR_IN(t, p, 0)
+        __setitem__(t->__getitem__(0), t->__getitem__(1));
     END_FOR
 }
 
