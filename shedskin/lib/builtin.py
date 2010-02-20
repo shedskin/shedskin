@@ -4,34 +4,31 @@ class class_:
 
 class int_:
     def __add__(self, b):
-        return b
+        return b.__with_int__()
+    def __sub__(self, b):
+        return b.__with_int__()
+    def __mul__(self, b):
+        return b.__with_int__()
+    def __div__(self, b):
+        return b.__with_int__()
+    def __floordiv__(self, b):
+        return b.__with_int__()
+    def __mod__(self, b):
+        return b.__with_int__()
+    def __divmod__(self, b):
+        return (b.__with_int__(),)
+
     def __and__(self, b):
         return 1
     def __or__(self, b):
         return 1
     def __xor__(self, b):
         return 1
-    def __pow__(self, b):
-        return b
+
     def __rshift__(self, b):
         return 1
     def __lshift__(self, b):
         return 1
-
-    def __mul__(self, b):
-        return b
-    def __div__(self, b):
-        return b
-    def __floordiv__(self, b):
-        return b
-    def __sub__(self, b):
-        return b
-    def __repr__(self):
-        return ''
-    def __mod__(self, b):
-        return b
-    def __divmod__(self, b):
-        return (b,)
     def __invert__(self):
         return 1
     def __neg__(self):
@@ -43,13 +40,21 @@ class int_:
     def __abs__(self):
         return 1
 
+    def __pow__(self, b):
+        return b
+
     def __copy__(self):
         return self
     def __deepcopy__(self):
         return self
 
+    def __with_int__(self):
+        return 1
     def __with_float__(self):
         return 1.0
+
+    def __repr__(self):
+        return ''
 
 class float_:
     def __add__(self, b):
@@ -62,30 +67,36 @@ class float_:
         return b.__with_float__()
     def __floordiv__(self, b):
         return b.__with_float__()
-    def __pow__(self, b):
-        return b.__with_float__()
-    def __neg__(self):
-        return 1.0
-    def __pos__(self):
-        return 1.0
     def __mod__(self, b):
         return b.__with_float__()
     def __divmod__(self, b):
         return (b.__with_float__(),)
 
-    def __repr__(self):
-        return ''
-    def __hash__(self):
-        return 1
+    def __pow__(self, b):
+        return b.__with_float__()
+
+    def __neg__(self):
+        return 1.0
+    def __pos__(self):
+        return 1.0
     def __abs__(self):
         return 1.0
+
+    def __hash__(self):
+        return 1
+
     def __copy__(self):
         return self
     def __deepcopy__(self):
         return self
 
+    def __with_int__(self):
+        return 1.0
     def __with_float__(self):
         return 1.0
+
+    def __repr__(self):
+        return ''
 
 class none:
     def __hash__(self):
@@ -102,6 +113,9 @@ class pyiter:
     def __copy__(self): # XXX to base class
         return self
     def __deepcopy__(self):
+        return self
+
+    def __with_int__(self):
         return self
 
 class pyseq(pyiter):
@@ -485,48 +499,41 @@ class complex:
 
     def __add__(self, c):
         return self
-
     def __sub__(self, c):
         return self
-
     def __mul__(self, c):
         return self
-
     def __div__(self, c):
         return self
-
     def __floordiv__(self, b):
         return self
-
     def __mod__(self, b):
         return self
-
     def __divmod__(self, b):
         return (self,)
 
     def __pos__(self):
         return self
-
     def __neg__(self):
         return self
-
     def __abs__(self):
         return 1.0
+    def conjugate(self):
+        return self
 
     def __pow__(self, b):
         return self
 
-    def conjugate(self):
+    def __hash__(self):
+        return 1
+
+    def __with_int__(self):
+        return self
+    def __with_float__(self):
         return self
 
     def __repr__(self):
         return ''
-
-    def __with_float__(self):
-        return self
-
-    def __hash__(self):
-        return 1
 
 class object: pass
 
