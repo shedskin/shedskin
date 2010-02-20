@@ -52,6 +52,7 @@ seq = (1,2,3)
 s1,s2,s3 = seq
 print s1,s2,s3
 seq3 = [4,5]
+seq3 = None
 seq3 = (4,5)
 s1,s2 = seq3
 print s1,s2,s3
@@ -124,6 +125,11 @@ with open('crlf.txt', 'rU') as f1:
     for line in f1:
         print line,
 print '==='
+
+# dict(iter({str,pyseq}))
+print sorted(dict(['ab', 'cd']).items())
+print sorted(dict(set([(1,2.0), (3,4.0)])).items())
+print sorted(dict([[1,2], (3,4)]).items())
 
 ''', '''
 output(equal=True)
