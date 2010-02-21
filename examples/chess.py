@@ -20,7 +20,7 @@ iNone = -999
 iTrue = 1
 iFalse = 0
 
-setup = (4, 2, 3, 5, 6, 3, 2, 4, iNone, iNone) + (True,)*4 + (iNone, iNone) +   (1,) * 8 + (iNone, iNone, True, iNone, iNone, iNone, iNone, iNone,) +   ((0, ) * 8 + (iNone,) * 8) * 4 +   (-1,) * 8 + (iNone,) * 8 +   (-4, -2, -3, -5, -6, -3, -2, -4) + (iNone,) * 40
+setup = (4, 2, 3, 5, 6, 3, 2, 4, iNone, iNone) + (iTrue,)*4 + (iNone, iNone) +   (1,) * 8 + (iNone, iNone, iTrue, iNone, iNone, iNone, iNone, iNone,) +   ((0, ) * 8 + (iNone,) * 8) * 4 +   (-1,) * 8 + (iNone,) * 8 +   (-4, -2, -3, -5, -6, -3, -2, -4) + (iNone,) * 40
 
 squares = tuple([i for i in range(128) if not i & 8])
 knightMoves = (-33, -31, -18, -14, 14, 18, 31, 33)
