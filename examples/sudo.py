@@ -82,7 +82,7 @@ def solve_file(filename, sep, action): #=lambda x: x):
     results = [action(search(parse_grid(grid)))
                for grid in file(filename).read().strip().split(sep)]
     print "## Got %d out of %d" % (
-          sum([(r is not False) for r in results]), len(results))
+          sum([(r is not None) for r in results]), len(results))
     return results
 
 def printboard(values):
