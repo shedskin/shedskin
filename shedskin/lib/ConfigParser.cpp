@@ -339,14 +339,14 @@ void *RawConfigParser::_set(str *section, str *option, str *value) {
     return NULL;
 }
 
-int RawConfigParser::has_section(str *section) {
+__ss_bool RawConfigParser::has_section(str *section) {
     /**
     Indicate whether the named section is present in the configuration.
 
     The DEFAULT section is not acknowledged.
     */
 
-    return (this->_sections)->__contains__(section);
+    return __mbool((this->_sections)->__contains__(section));
 }
 
 int RawConfigParser::remove_option(str *section, str *option) {

@@ -458,16 +458,6 @@ class generateVisitor(ASTVisitor):
         self.start('continue')
         self.eol()
 
-    def bool_test(self, node, func, always_wrap=False):
-        is_int = [1 for t in self.mergeinh[node] if isinstance(t[0], class_) and t[0].ident == 'int_']
-        is_func = [1 for t in self.mergeinh[node] if isinstance(t[0], function)]
-        if not always_wrap and (is_int or is_func):
-            self.visit(node, func)
-        elif always_wrap and is_func:
-            self.visitm('___bool(', node, '!=NULL)', func)
-        else:
-            self.visitm('___bool(', node, ')', func)
-
     def visitWith(self, node, func=None):
         self.start()
         if node.vars:
@@ -1190,7 +1180,8 @@ class generateVisitor(ASTVisitor):
         if node.getChildNodes():
             lastnode = node.getChildNodes()[-1]
             if not func.ident == '__init__' and not func.fakeret and not isinstance(lastnode, Return) and not (isinstance(lastnode, Stmt) and isinstance(lastnode.nodes[-1], Return)): # XXX use Stmt in moduleVisitor
-                self.output('return 0;')
+                if not [1 for t in self.mergeinh[func.retnode.thing] if isinstance(t[0], class_) and t[0].ident == 'bool_']:
+                    self.output('return 0;')
 
         self.deindent()
         self.output('}\n')
@@ -1245,7 +1236,10 @@ class generateVisitor(ASTVisitor):
         self.start()
 
     def visitNot(self, node, func=None):
-        self.append('(!')
+        if [t for t in self.mergeinh[node] if t[0].ident == 'bool_']:
+            self.append('__NOT(')
+        else:
+            self.append('(!')
         self.bool_test(node.expr, func)
         self.append(')')
 
@@ -1258,19 +1252,14 @@ class generateVisitor(ASTVisitor):
     def visitIf(self, node, func=None):
         for test in node.tests:
             self.start()
-            if test == node.tests[0]:
-                self.append('if (')
-            else:
-                self.append('else if (')
-
+            if test != node.tests[0]:
+                self.append('else ')
+            self.append('if (')
             self.bool_test(test[0], func)
-
             print >>self.out, self.line+') {'
-
             self.indent()
             self.visit(test[1], func)
             self.deindent()
-
             self.output('}')
 
         if node.else_:
@@ -1321,7 +1310,7 @@ class generateVisitor(ASTVisitor):
             return False
         self.append('(')
         for n in node.nodes:
-            self.bool_test(n, func)
+            self.visit(n, func)
             if n != node.nodes[-1]:
                 self.append(' '+op+' ')
         self.append(')')
@@ -1351,9 +1340,7 @@ class generateVisitor(ASTVisitor):
             self.castup(node, nodes[0], func)
 
     def visitCompare(self, node, func=None):
-        if len(node.ops) > 1:
-            self.append('(')
-
+        self.append('___bool(')
         self.done = set() # (tvar=fun())
 
         left = node.expr
@@ -1368,7 +1355,6 @@ class generateVisitor(ASTVisitor):
             elif op == 'is not': msg, short, pre = None, '!=', None
             elif op == '<=': msg, short, pre = '__le__', '<=', None
             elif op == '>=': msg, short, pre = '__ge__', '>=', None
-            else: return
 
             # --- comparison to [], (): convert to ..->empty() # XXX {}, __ne__
             if msg in ['__eq__', '__ne__']:
@@ -1381,6 +1367,7 @@ class generateVisitor(ASTVisitor):
                             self.visit2(a, func)
                             self.append('->empty()')
                             if msg == '__ne__': self.append(')')
+                            self.append(')')
                             return
 
             if msg == '__contains__':
@@ -1392,8 +1379,7 @@ class generateVisitor(ASTVisitor):
                 self.append('&&')
             left = right
 
-        if len(node.ops) > 1:
-            self.append(')')
+        self.append(')')
 
     def visitAugAssign(self, node, func=None):
         if isinstance(node.node, Subscript):
@@ -1735,6 +1721,16 @@ class generateVisitor(ASTVisitor):
         self.append(')')
         if constructor:
             self.append(')')
+
+    def bool_test(self, node, func, always_wrap=False):
+        is_int = [1 for t in self.mergeinh[node] if isinstance(t[0], class_) and t[0].ident == 'int_']
+        is_func = [1 for t in self.mergeinh[node] if isinstance(t[0], function)]
+        if not always_wrap and (is_int or is_func):
+            self.visit(node, func)
+        elif always_wrap and is_func:
+            self.visitm('___bool(', node, '!=NULL)', func)
+        else:
+            self.visitm('___bool(', node, ')', func)
 
     def visit_callfunc_args(self, funcs, node, func):
         objexpr, ident, direct_call, method_call, constructor, parent_constr = analyze_callfunc(node)
@@ -2253,7 +2249,7 @@ class generateVisitor(ASTVisitor):
 
         # --- visit nodes, boxing scalars
         for n in nodes:
-            if (defclass('float_'), 0) in self.mergeinh[n] or (defclass('int_'), 0) in self.mergeinh[n]:
+            if [clname for clname in ('float_', 'int_', 'bool_') if (defclass(clname), 0) in self.mergeinh[n]]:
                 self.visitm(', __box(', n, ')', func)
             else:
                 self.visitm(', ', n, func)
@@ -2270,7 +2266,7 @@ class generateVisitor(ASTVisitor):
         self.append(str(len(node.nodes)))
         for n in node.nodes:
             types = [t[0].ident for t in self.mergeinh[n]]
-            if 'float_' in types or 'int_' in types:
+            if 'float_' in types or 'int_' in types or 'bool_' in types:
                 self.visitm(', __box(', n, ')', func)
             else:
                 self.visitm(', ', n, func)
@@ -2359,7 +2355,7 @@ class generateVisitor(ASTVisitor):
         self.append(self.cpp_name(node.name))
 
     def visitName(self, node, func=None, add_cl=True):
-        map = {'True': '1', 'False': '0', 'self': 'this'}
+        map = {'True': 'True', 'False': 'False', 'self': 'this'}
         if node in getmv().lwrapper:
             self.append(getmv().lwrapper[node])
         elif node.name == 'None':
@@ -2478,8 +2474,8 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None, check_extmo
         raise RuntimeError()
 
     # --- annotation or c++ code
-    conv1 = {'int_': 'int', 'float_': 'double', 'str_': 'str', 'none': 'int'}
-    conv2 = {'int_': 'int', 'float_': 'float', 'str_': 'str', 'class_': 'class', 'none': 'None'}
+    conv1 = {'int_': 'int', 'float_': 'double', 'str_': 'str', 'none': 'int', 'bool_':'__ss_bool'}
+    conv2 = {'int_': 'int', 'float_': 'float', 'str_': 'str', 'class_': 'class', 'none': 'None','bool_': 'bool'}
     if cplusplus: sep, ptr, conv = '<>', ' *', conv1
     else: sep, ptr, conv = '()', '', conv2
 
@@ -2521,11 +2517,11 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None, check_extmo
 
     cl = lcp.pop()
 
-    if check_extmod and cl.mv.module.builtin and not (cl.mv.module.ident == 'builtin' and cl.ident in ['int_', 'float_', 'complex', 'str_', 'list', 'tuple', 'tuple2', 'dict', 'set', 'frozenset', 'none']):
+    if check_extmod and cl.mv.module.builtin and not (cl.mv.module.ident == 'builtin' and cl.ident in ['int_', 'float_', 'complex', 'str_', 'list', 'tuple', 'tuple2', 'dict', 'set', 'frozenset', 'none', 'bool_']):
         raise ExtmodError()
 
     # --- simple built-in types
-    if cl.ident in ['int_', 'float_']:
+    if cl.ident in ['int_', 'float_', 'bool_']:
         return conv[cl.ident]
     elif cl.ident == 'str_':
         return 'str'+ptr
@@ -2613,7 +2609,7 @@ def typesplit(node, parent):
 
 def polymorphic_cl(classes):
     cls = set([cl for cl in classes])
-    if len(cls) > 1 and defclass('none') in cls and not defclass('int_') in cls and not defclass('float_') in cls:
+    if len(cls) > 1 and defclass('none') in cls and not defclass('int_') in cls and not defclass('float_') in cls and not defclass('bool_') in cls:
         cls.remove(defclass('none'))
 #    if defclass('float_') in cls and defclass('int_') in cls:
 #        cls.remove(defclass('int_'))
@@ -2737,7 +2733,7 @@ def unboxable(types):
         types = inode(types).types()
     classes = set([t[0] for t in types])
 
-    if [cl for cl in classes if cl.ident not in ['int_','float_']]:
+    if [cl for cl in classes if cl.ident not in ['int_','float_','bool_']]:
         return None
     else:
         if classes:

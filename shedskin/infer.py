@@ -103,7 +103,7 @@ def seed_nodes(): # XXX redundant - can be removed?
     for node in getgx().types:
         if isinstance(node.thing, Name):
             if node.thing.name in ['True', 'False']:
-                getgx().types[node] = set([(defclass('int_'), 0)])
+                getgx().types[node] = set([(defclass('bool_'), 0)])
             elif node.thing.name == 'None':
                 getgx().types[node] = set([(defclass('none'), 0)])
 
@@ -150,7 +150,7 @@ def propagate():
         for b in a.out.copy(): # XXX can change...?
             # for builtin types, the set of instance variables is known, so do not flow into non-existent ones # XXX ifa
             if isinstance(b.thing, variable) and isinstance(b.thing.parent, class_) and b.thing.parent.ident in getgx().builtins:
-                if b.thing.parent.ident in ['int_', 'float_', 'str_', 'none']: continue
+                if b.thing.parent.ident in ['int_', 'float_', 'str_', 'none', 'bool_']: continue
                 elif b.thing.parent.ident in ['list', 'tuple', 'frozenset', 'set', 'file','__iter', 'deque'] and b.thing.name != 'unit': continue
                 elif b.thing.parent.ident in ('dict', 'defaultdict') and b.thing.name not in ['unit', 'value']: continue
                 elif b.thing.parent.ident == 'tuple2' and b.thing.name not in ['unit', 'first', 'second']: continue
@@ -810,7 +810,7 @@ def restore_network(backup):
 def merge_simple_types(types):
     merge = types.copy()
     if len(types) > 1 and (defclass('none'),0) in types:
-        if not (defclass('int_'),0) in types and not (defclass('float_'),0) in types:
+        if not (defclass('int_'),0) in types and not (defclass('float_'),0) in types and not (defclass('bool_'),0) in types:
             merge.remove((defclass('none'),0))
 
     return frozenset(merge)
@@ -845,7 +845,7 @@ def analyze(source, testing=False):
 
     # --- non-ifa: copy classes for each allocation site
     for cl in getgx().allclasses:
-        if cl.ident in ['int_','float_','none', 'class_','str_']:
+        if cl.ident in ['int_','float_','none', 'class_','str_', 'bool_']:
             continue
         if cl.ident == 'list':
             cl.dcpa = len(getgx().list_types)+2

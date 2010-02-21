@@ -35,7 +35,20 @@ class str;
 class int_;
 class float_;
 class file;
+class bool_;
 class complex;
+
+class __ss_bool {
+public:
+    int value;
+    int operator+(__ss_bool b);
+    int operator==(__ss_bool b);
+    bool operator!();
+    operator bool();
+};
+
+extern __ss_bool True;
+extern __ss_bool False;
 
 template <class T> class pyiter;
 template <class T> class pyseq;
@@ -70,12 +83,14 @@ template<class T> inline int __int(T t) { return t->__int__(); }
 template<> inline int __int(str *s) { return __int(s, 10); }
 template<> inline int __int(int i) { return i; }
 template<> inline int __int(bool b) { return b; }
+template<> inline int __int(__ss_bool b) { return b.value; }
 template<> inline int __int(double d) { return (int)d; }
 
 inline double __float() { return 0; }
 template<class T> inline double __float(T t) { return t->__float__(); }
 template<> inline double __float(int p) { return p; }
 template<> inline double __float(bool b) { return __float((int)b); }
+template<> inline double __float(__ss_bool b) { return __float(b.value); }
 template<> inline double __float(double d) { return d; }
 template<> double __float(str *s);
 
@@ -84,11 +99,13 @@ template<class T> str *__str(T t);
 template<> str *__str(double t);
 str *__str(int t, int base=10);
 str *__str(bool b);
+str *__str(__ss_bool b);
 
 template<class T> str *repr(T t);
 template<> str *repr(double t);
 template<> str *repr(int t);
 template<> str *repr(bool b);
+template<> str *repr(__ss_bool b);
 template<> str *repr(void *t);
 
 file *open(str *name, str *flags = 0);
@@ -112,6 +129,7 @@ int ord(str *c);
 
 str *chr(int i);
 str *chr(bool b);
+str *chr(__ss_bool b);
 template<class T> str *chr(T t) {
     return chr(t->__int__());
 }
@@ -123,6 +141,7 @@ template<class T> inline T __abs(T t) { return t->__abs__(); }
 template<> inline int __abs(int a) { return a<0?-a:a; }
 template<> inline double __abs(double a) { return a<0?-a:a; }
 inline int __abs(bool b) { return __abs((int)b); }
+inline int __abs(__ss_bool b) { return __abs(b.value); }
 double __abs(complex *c);
 
 template<class T> str *hex(T t) {
@@ -130,18 +149,21 @@ template<class T> str *hex(T t) {
 }
 template<> str *hex(int a);
 template<> str *hex(bool b);
+template<> str *hex(__ss_bool b);
 
 template<class T> str *oct(T t) {
     return t->__oct__();
 }
 template<> str *oct(int a);
 template<> str *oct(bool b);
+template<> str *oct(__ss_bool b);
 
 template<class T> str *bin(T t) {
     return bin(t->__index__());
 }
 template<> str *bin(int a);
 template<> str *bin(bool b);
+template<> str *bin(__ss_bool b);
 
 str *__mod4(str *fmt, list<pyobj *> *vals);
 str *__modct(str *fmt, int n, ...);
@@ -184,6 +206,7 @@ template<class T> inline int hasher(T t) {
     return t->__hash__();
 };
 template<> inline int hasher(int a) { return a; }
+template<> inline int hasher(__ss_bool a) { return a.value; }
 template<> inline int hasher(void *a) { return (intptr_t)a; }
 template<> inline int hasher(double v) {
     int hipart, expo; /* modified from CPython */
@@ -213,6 +236,10 @@ template<class T> inline int __cmp(T a, T b) {
 template<> inline int __cmp(int a, int b) {
     if(a < b) return -1;
     else if(a > b) return 1;
+    return 0;
+}
+
+template<> inline int __cmp(__ss_bool a, __ss_bool b) {
     return 0;
 }
 
@@ -359,6 +386,14 @@ public:
     float_(double f);
     str *__repr__();
 };
+
+class bool_ : public pyobj {
+public:
+    __ss_bool unit;
+    bool_(__ss_bool i);
+    str *__repr__();
+};
+
 
 class complex : public pyobj {
 public:
@@ -847,6 +882,7 @@ public:
     tuple2<K, V> *next();
 };
 
+
 const int MINSIZE = 8;
 const int PERTURB_SHIFT = 5;
 
@@ -916,10 +952,10 @@ public:
     set<T> *__ixor__(set<T> *s);
     set<T> *__isub__(set<T> *s);
 
-    int issubset(pyiter<T> *s);
-    int issubset(set<T> *s);
-    int issuperset(set<T> *s);
-    int issuperset(pyiter<T> *s);
+    __ss_bool issubset(pyiter<T> *s);
+    __ss_bool issubset(set<T> *s);
+    __ss_bool issuperset(set<T> *s);
+    __ss_bool issuperset(pyiter<T> *s);
 
     int __gt__(set<T> *s);
     int __lt__(set<T> *s);
@@ -1306,8 +1342,10 @@ template<> class_ *__type(double d);
 
 template<class T> inline int __eq(T a, T b) { return ((a&&b)?(a->__eq__(b)):(a==b)); }
 template<> inline int __eq(int a, int b) { return a == b; }
+template<> inline int __eq(__ss_bool a, __ss_bool b) { return a == b; }
 template<> inline int __eq(double a, double b) { return a == b; }
 template<> inline int __eq(void *a, void *b) { return a == b; }
+
 template<class T> inline int __ne(T a, T b) { return ((a&&b)?(a->__ne__(b)):(a!=b)); }
 template<> inline int __ne(int a, int b) { return a != b; }
 template<> inline int __ne(double a, double b) { return a != b; }
@@ -1358,11 +1396,13 @@ template<class T> T __deepcopy(T t, dict<void *, pyobj *> *memo=0) {
 }
 
 template<> int __deepcopy(int i, dict<void *, pyobj *> *);
+template<> __ss_bool __deepcopy(__ss_bool i, dict<void *, pyobj *> *);
 template<> double __deepcopy(double d, dict<void *, pyobj *> *);
 template<> void *__deepcopy(void *p, dict<void *, pyobj *> *);
 
 template<class T> T __copy(T t) { return (T)(t->__copy__()); }
 template<> int __copy(int i);
+template<> __ss_bool __copy(__ss_bool i);
 template<> double __copy(double d);
 template<> void *__copy(void *p);
 
@@ -1373,16 +1413,20 @@ template<class T> inline int len(list<T> *x) { return x->units.size(); } /* XXX 
 
 /* bool */
 
-inline int ___bool() { return 0; }
-template<class T> inline int ___bool(T x) { return (x && x->__nonzero__()); }
-template<> inline int ___bool(int x) { return x!=0; }
-template<> inline int ___bool(bool x) { return (int)x; }
-template<> inline int ___bool(double x) { return x!=0; }
+static inline __ss_bool __mbool(bool c) { __ss_bool b; b.value=(int)c; return b; }
+inline __ss_bool ___bool() { return __mbool(false); }
+
+template<class T> inline __ss_bool ___bool(T x) { return __mbool(x && x->__nonzero__()); }
+template<> inline __ss_bool ___bool(int x) { return __mbool(x!=0); }
+template<> inline __ss_bool ___bool(bool x) { return __mbool(x); }
+template<> inline __ss_bool ___bool(__ss_bool x) { return x; }
+template<> inline __ss_bool ___bool(double x) { return __mbool(x!=0); }
 
 /* logical and, or */
 
 #define __OR(a, b, t) ((___bool(__ ## t = a))?(__ ## t):(b))
 #define __AND(a, b, t) ((!___bool(__ ## t = a))?(__ ## t):(b))
+#define __NOT(x) (__mbool(!x))
 
 /* __iter<T> methods */
 
@@ -2664,33 +2708,33 @@ template<class T> set<T> *set<T>::copy() {
     return c;
 }
 
-template<class T> int set<T>::issubset(set<T> *s) {
-    if(__len__() > s->__len__()) { return 0; }
+template<class T> __ss_bool set<T>::issubset(set<T> *s) {
+    if(__len__() > s->__len__()) { return False; }
     T e;
     __iter<T> *__0;
     FOR_IN(e, this, 0)
         if(!s->__contains__(e))
-            return 0;
+            return False;
     END_FOR
-    return 1;
+    return True;
 }
 
-template<class T> int set<T>::issuperset(set<T> *s) {
-    if(__len__() < s->__len__()) return 0;
+template<class T> __ss_bool set<T>::issuperset(set<T> *s) {
+    if(__len__() < s->__len__()) return False;
     T e;
     __iter<T> *__0;
     FOR_IN(e, s, 0)
         if(!__contains__(e))
-            return 0;
+            return False;
     END_FOR
-    return 1;
+    return True;
 }
 
-template<class T> int set<T>::issubset(pyiter<T> *s) {
+template<class T> __ss_bool set<T>::issubset(pyiter<T> *s) {
     return issubset(new set<T>(s));
 }
 
-template<class T> int set<T>::issuperset(pyiter<T> *s) {
+template<class T> __ss_bool set<T>::issuperset(pyiter<T> *s) {
     return issuperset(new set<T>(s));
 }
 
@@ -3066,8 +3110,10 @@ template <class A> A __sum(pyiter<A> *l, A b) {
     END_FOR
     return b;
 }
-
 template <class A> A __sum(pyiter<A> *l) { return __sum(l, 0); }
+
+int __sum(pyiter<__ss_bool> *l);
+int __sum(pyiter<__ss_bool> *l, int b);
 
 int __sum(pyseq<int> *l);
 int __sum(pyseq<int> *l, int b);
@@ -3678,6 +3724,7 @@ template<class T> str *__moddict(str *v, dict<str *, T> *d) {
 template<class T> T __box(T t) { return t; }
 int_ *__box(int);
 int_ *__box(bool);
+bool_ *__box(__ss_bool);
 float_ *__box(double);
 
 /* any, all */

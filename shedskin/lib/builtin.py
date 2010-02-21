@@ -56,6 +56,9 @@ class int_:
     def __repr__(self):
         return ''
 
+class bool_(int_):
+    pass
+
 class float_:
     def __add__(self, b):
         return b.__with_float__()
@@ -428,9 +431,9 @@ class pyset(pyiter):
         unit.__eq__(unit)
 
     def issubset(self, b):
-        return 1
+        return True
     def issuperset(self, b):
-        return 1
+        return True
 
     def intersection(self, b):
         return self
