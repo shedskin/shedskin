@@ -16,6 +16,9 @@ str *sp;
 __GC_STRING ws, __fmtchars;
 __GC_VECTOR(str *) __char_cache;
 
+__ss_bool True;
+__ss_bool False;
+
 #ifdef __SS_BIND
 dict<void *, void *> *__ss_proxy;
 #endif
@@ -40,6 +43,9 @@ void __init() {
     cl_rangeiter = new class_("rangeiter", 10, 10);
     cl_complex = new class_("complex", 11, 11);
     cl_xrange = new class_("xrange", 12, 12);
+     
+    True.value = 1;
+    False.value = 0;
 
     ws = " \n\r\t\f\v";
     __fmtchars = "#*-+ .0123456789hlL";
@@ -78,6 +84,18 @@ str *float_::__repr__() {
     return __str(unit);
 }
 
+bool_::bool_(__ss_bool i) {
+    unit = i;
+    //__class__ = cl_int_;
+}
+
+str *bool_::__repr__() {
+    if(unit.value)
+        return new str("True");
+    return new str("False");
+}
+
+/* float methods */
 /* complex methods */
 
 complex::complex(double real, double imag) {
@@ -1429,9 +1447,9 @@ int ord(str *s) {
     return (unsigned char)(s->unit[0]);
 }
 
-str *chr(bool b) {
-    return chr((int)b);
-}
+str *chr(bool b) { return chr((int)b); }
+str *chr(__ss_bool b) { return chr(b.value); }
+
 str *chr(int i) {
     if(i < 0 || i > 255)
         throw new ValueError(new str("chr() arg not in range(256)"));
@@ -1441,10 +1459,12 @@ str *chr(int i) {
 /* copy, deepcopy */
 
 template<> int __deepcopy(int i, dict<void *, pyobj *> *) { return i; }
+template<> __ss_bool __deepcopy(__ss_bool i, dict<void *, pyobj *> *) { return i; }
 template<> double __deepcopy(double d, dict<void *, pyobj *> *) { return d; }
 template<> void *__deepcopy(void *d, dict<void *, pyobj *> *) { return d; }
 
 template<> int __copy(int i) { return i; }
+template<> __ss_bool __copy(__ss_bool i) { return i; }
 template<> double __copy(double d) { return d; }
 template<> void *__copy(void *d) { return d; }
 
@@ -1453,6 +1473,7 @@ template<> void *__copy(void *d) { return d; }
 template<> str *repr(double d) { return __str(d); }
 template<> str *repr(int i) { return __str(i); }
 template<> str *repr(bool b) { return __str((int)b); }
+template<> str *repr(__ss_bool b) { return b.value?(new str("True")):(new str("False")); }
 template<> str *repr(void *v) { return new str("None"); }
 
 str *__str(void *v) { return new str("void"); }
@@ -1598,7 +1619,11 @@ str *__str(int i, int base) {
 }
 
 str *__str(bool b) {
-    return __str((int)b);
+    if(b) return new str("True");
+    return new str("False");
+}
+str *__str(__ss_bool b) {
+    return __str((bool)b);
 }
 
 template<> str *hex(int i) {
@@ -1608,6 +1633,7 @@ template<> str *hex(int i) {
         return (new str("0x"))->__add__(__str(i, 16));
 }
 template<> str *hex(bool b) { return hex((int)b); }
+template<> str *hex(__ss_bool b) { return hex(b.value); }
 
 template<> str *oct(int i) {
     if(i<0)
@@ -1618,6 +1644,7 @@ template<> str *oct(int i) {
       return new str("0");
 }
 template<> str *oct(bool b) { return oct((int)b); }
+template<> str *oct(__ss_bool b) { return oct(b.value); }
 
 template<> str *bin(int i) {
     if(i<0)
@@ -1626,6 +1653,7 @@ template<> str *bin(int i) {
         return (new str("0b"))->__add__(__str(i, 2));
 }
 template<> str *bin(bool b) { return bin((int)b); }
+template<> str *bin(__ss_bool b) { return bin(b.value); }
 
 str *__str() { return new str(""); } /* XXX optimize */
 
@@ -1653,8 +1681,19 @@ double ___round(double a, int n) {
 
 /* sum */
 
+int __sum(pyiter<__ss_bool> *l, int b) {
+    __ss_bool e;
+    __iter<__ss_bool> *__0;
+    FOR_IN(e,l,0)
+        b += e.value;
+    END_FOR
+    return b;
+}
+int __sum(pyiter<__ss_bool> *l) { return __sum(l, 0); }
+
 int __sum(pyseq<int> *l) { return __sum(l, 0); }
 int __sum(pyseq<int> *l, int b) { return accumulate(l->units.begin(), l->units.end(), b); }
+int __sum(pyseq<__ss_bool> *l, int b) { return accumulate(l->units.begin(), l->units.end(), b); }
 double __sum(pyseq<int> *l, double b) { return accumulate(l->units.begin(), l->units.end(), 0)+b; }
 double __sum(pyseq<double> *l, double b) { return accumulate(l->units.begin(), l->units.end(), b); }
 
@@ -1929,6 +1968,9 @@ int_ *__box(int i) {
 int_ *__box(bool b) {
     return new int_(b);
 }
+bool_ *__box(__ss_bool b) {
+    return new bool_(b);
+}
 float_ *__box(double d) {
     return new float_(d);
 }
@@ -2098,6 +2140,19 @@ template<> double __none() { throw new TypeError(new str("mixing None with float
 
 list<tuple2<void *, void *> *> *__zip(int nn) {
     return new list<tuple2<void *, void *> *>();
+}
+
+int __ss_bool::operator+(__ss_bool b) {
+    return value+b.value;
+}
+int __ss_bool::operator==(__ss_bool b) {
+    return value==b.value;
+}
+bool __ss_bool::operator!() {
+    return !value;
+}
+__ss_bool::operator bool() {
+    return bool(value);
 }
 
 } // namespace __shedskin__

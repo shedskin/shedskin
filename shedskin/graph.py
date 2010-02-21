@@ -111,7 +111,7 @@ class moduleVisitor(ASTVisitor):
 
         newnode.constructor = True
 
-        if cl.ident in ['int_','float_','str_','none', 'class_','bool']:
+        if cl.ident in ['int_','float_','str_','none', 'class_','bool_']:
             getgx().types[newnode] = set([(cl, cl.dcpa-1)])
         else:
             if cl.ident == 'list' and self.list_type(node):
@@ -603,7 +603,7 @@ class moduleVisitor(ASTVisitor):
     def visitNot(self, node, func=None):
         newnode = cnode(node, parent=func)
         newnode.copymetoo = True
-        getgx().types[newnode] = set([(defclass('int_'),0)])  # XXX new type?
+        getgx().types[newnode] = set([(defclass('bool_'),0)])  # XXX new type?
         self.visit(node.expr, func)
 
     def visitBackquote(self, node, func=None):
@@ -656,7 +656,7 @@ class moduleVisitor(ASTVisitor):
     def visitCompare(self, node, func=None):
         newnode = cnode(node, parent=func)
         newnode.copymetoo = True
-        getgx().types[newnode] = set([(defclass('int_'),0)]) # XXX new type?
+        getgx().types[newnode] = set([(defclass('bool_'),0)]) # XXX new type?
 
         self.visit(node.expr, func)
 
@@ -1354,7 +1354,7 @@ class moduleVisitor(ASTVisitor):
             if node.name == 'None': # XXX also bools, remove def seed_nodes()
                 self.instance(node, defclass('none'), func)
             else:
-                self.instance(node, defclass('int_'), func)
+                self.instance(node, defclass('bool_'), func)
             return
 
         if isinstance(func, function) and node.name in func.globals:

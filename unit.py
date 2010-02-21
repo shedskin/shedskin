@@ -131,6 +131,25 @@ print sorted(dict(['ab', 'cd']).items())
 print sorted(dict(set([(1,2.0), (3,4.0)])).items())
 print sorted(dict([[1,2], (3,4)]).items())
 
+# first-class booleans
+bool_a = True
+print bool_a
+bool_a = not bool_a
+
+bool_b = [bool_a, bool_a, True]
+print bool_b
+
+bool_c = bool_a + bool_a
+print bool_c
+
+bool_e = 7 > 8
+print bool_e
+
+if bool_e:
+    print 'e'
+if not bool_e:
+    print '!e'
+
 ''', '''
 output(equal=True)
 '''),
@@ -230,9 +249,9 @@ for k, g in itertools.groupby([1, 4, 6, 4, 1], key):
 
 print '### Ifilter ###'
 
-pred = lambda x: x % 2
+pred1 = lambda x: x % 2
 
-for h in itertools.ifilter(pred, range(10)):
+for h in itertools.ifilter(pred1, range(10)):
    print h
 for i in itertools.ifilter(None, range(10)):
    print i
@@ -2865,7 +2884,7 @@ print '%g' % 3.0
 # --- and/or revisited
 print 0 or 5 or 4
 print 0 or 0
-print 1 > 2 or 3
+print 1 > 2 or 3 < 4
 ax = [1]
 ax = []
 bx = [2]
@@ -3951,7 +3970,7 @@ iterations = 10
 result = r.run(iterations)
 print result
 ''', '''
-output('1\\n')
+output(equal=True)
 
 '''),
 
@@ -4251,8 +4270,8 @@ iNone = -999
 iTrue = 1
 iFalse = 0
 
-setup = (4, 2, 3, 5, 6, 3, 2, 4, iNone, iNone) + (True,)*4 + (iNone, iNone) + \
-  (1,) * 8 + (iNone, iNone, True, iNone, iNone, iNone, iNone, iNone,) + \
+setup = (4, 2, 3, 5, 6, 3, 2, 4, iNone, iNone) + (iTrue,)*4 + (iNone, iNone) + \
+  (1,) * 8 + (iNone, iNone, iTrue, iNone, iNone, iNone, iNone, iNone,) + \
   ((0, ) * 8 + (iNone,) * 8) * 4 + \
   (-1,) * 8 + (iNone,) * 8 + \
   (-4, -2, -3, -5, -6, -3, -2, -4) + (iNone,) * 40
@@ -4604,7 +4623,7 @@ def speedTest():
 
 speedTest()
 ''', '''
-output('(0, 33571891)\\n(0, 33567556)\\n')
+output(equal=True)
 
 '''),
 
@@ -5087,7 +5106,7 @@ puzzle.fread('testdata/b6.pz')
 #print puzzle
 puzzle.solve()
 ''', '''
-output('3649\\n')
+output(equal=True)
 
 '''),
 
@@ -5285,7 +5304,7 @@ try:
         print y
 except StopIteration: pass
 ''', '''
-output('0,0\\n0\\n1 1 1 0 1 0\\nmergemask\\nmergemask\\n2 5\\n6\\n3 2\\n0\\n1\\n2\\n')
+output(equal=True)
 
 '''),
 
@@ -6187,7 +6206,7 @@ def aigame(size=30, turn=1, players=2):
 
 aigame()
 ''', '''
-output('Board is full! Draw!\\n')
+output(equal=True)
 
 '''),
 
@@ -6253,8 +6272,7 @@ except ValueError, v:
     print 'hah', v
 
 ''', '''
-#output("ok!\\ncrap!\\nmore crap! the universe won't collapse\\naha! error.\\nueukrepr!\\nexceptions are stupid :D\\nexceptions are stupid :D\\nbah! 3\\nhah list.index(x): x not in list\\n")
-output("ok!\\ncrap!\\nmore crap! the universe won't collapse\\nueukrepr!\\nexceptions are stupid :D\\nexceptions are stupid :D\\nbah! 3\\nhah list.index(x): x not in list\\n")
+output(equal=True)
 
 '''),
 
@@ -6271,7 +6289,7 @@ c3.m1()
 c3.m2()
 print c3.a1, c3.a2
 ''', '''
-output('1 4\\n')
+output(equal=True)
 
 '''),
 
@@ -6305,7 +6323,7 @@ w = []
 w[:] = [1,2]
 print w
 ''', '''
-output('[1, 5, 6, 7, 4]\\n[1, 2, 3, 4, 5]\\n[1, 5, 4]\\n[]\\n[]\\n[1, 5, 6, 7, 4]\\n[1, 2]\\n')
+output(equal=True)
 
 '''),
 
@@ -6342,7 +6360,7 @@ if bla != 'meuk':
 if bla is not 'meuk':
     print 'ok9'
 ''', '''
-output(''.join(['ok%d\\n'%n for n in range(1,10)]))
+output(equal=True)
 
 '''),
 
@@ -6369,7 +6387,7 @@ meuk = [p, s]
 for obj in meuk:
     print obj.intersect(1)
 ''', '''
-output("('one', (1, 1))\\n('none', (2, 2))\\n('one', (1, 1))\\n('none', (1, 1))\\n")
+output(equal=True)
 
 '''),
 
@@ -6394,7 +6412,7 @@ lights.append(pointlight())
 
 lights[0].hoei()
 ''', '''
-output('hoei!\\n')
+output(equal=True)
 
 '''),
 
@@ -6459,7 +6477,7 @@ mydaughter = daughter(4)
 print mydaughter.g(5)
 
 ''', '''
-output('12\\n80\\n80\\n')
+output(equal=True)
 
 '''),
 
@@ -6534,7 +6552,8 @@ print true() == true() in [True]
 print 1 < 2 < 3 < 4
 
 print 'hash(l)', [hash(i) for i in xrange(3)]
-print 'hash(float(l))', [hash(float(i)) for i in xrange(3)]
+#print 'hash(float(l))', [hash(float(i)) for i in xrange(3)] XXX difference
+[hash(float(i)) for i in xrange(3)]
 
 class Toggle:
     def __init__(self, start_state):
@@ -6581,7 +6600,7 @@ print sorted(s7)
 
 ah = [(2.1, 4), (1.0, 9), (1.0, 7)]
 ah.sort()
-print ah
+print ['%.2f %d' % trt for trt in ah]
 
 p, q, r = set('ab'), set('abcde'), set('def')
 print q <= q, q > r, q >= r
@@ -6602,7 +6621,7 @@ print Printer2(), repr(Printer2())
 class Printer3:
     pass
 
-print Printer3()
+#print Printer3()
 
 def test(): pass
 print test()
@@ -6661,7 +6680,7 @@ def fun4(a, b=7, c='1', d=1, e=1.0):
 fun4(1,2,e=2.0,c='8')
 
 ''', '''
-output("[[1]]\\n[0, 4, 5, 6, 7, 8, 9]\\n[[1]] [[0, 1]]\\n[[1, 1], [1, 1]]\\n2\\n[]\\n[2, 3, 4]\\n[1, 0, 1]\\njammer\\n0\\n1\\n2\\n1\\n0\\n2\\n0\\n3\\n1\\n1\\nhash(l) [0, 1, 2]\\nhash(float(l)) [0, 49152, 81920]\\n1\\n0\\n[None, None, None]\\n2147483647\\n-2147483648\\n0 0\\n[1]\\n[1, 2, 3, 4, 5]\\n[1, 2, 3]\\n['a', 'b', 'e', 'f']\\n\\n[1, 4]\\n[]\\n[1, 4]\\n[(1, 2), (1, 3), (1, 4), (1, 6)]\\n[(1.0, 7), (1.0, 9), (2.1, 4)]\\n1 0 0\\n1\\n10 10 20\\n20 20\\n<Printer3 instance>\\nNone\\n[None, None, None, None, None]\\n(1, 'a')\\nNone\\nNone\\nNone\\n*\\n*\\n4.5\\n3\\n3\\n6\\n6\\n[1, 2]\\n[1, 2, 2]\\n[1, 2, 2, 2]\\n[]\\n[]\\n[]\\n2222222 888\\n1 2 8 1 2\\n")
+output(equal=True)
 
 '''),
 
@@ -6700,7 +6719,7 @@ print "a".join(["a","b"])
 "**".join({" oh":1, "he":0})
 
 ''','''
-output("[0, 2]\\n''\\n['a', 'b']\\n1 0\\n['ab', 'cd', 'ef', 'gh', 'il', 'mn', 'op']\\n0\\n['A', 'B']\\n[(0, 2), (0, 2), (0, 4), (0, 4), (1, 4), (1, 4)]\\naab\\n")
+output(equal=True)
 
 '''),
 
@@ -6714,7 +6733,7 @@ def incoming(node):
 
 print incoming(node())
 ''', '''
-output('[8]\\n')
+output(equal=True)
 
 '''),
 
@@ -6924,8 +6943,7 @@ from sys import exit
 exit()
 exit(-1)
 ''', '''
-#output("hello, world!\\n['\\\\r', 'a', 'h']\\n['\\\\r', 'b', 'c']\\n['\\\\r', 'c', 'd', 'e']\\n12 255 16\\n255 255 ff 12\\n \\"\\n\\t\\" \\nset([1])\\nset([1, 2, 3])\\n[1, 2, 3]\\n3\\n2\\n1\\na b\\na b c d e\\na b\\na b c d e\\n3\\nset([1, 2, 3]) - set([3, 4, 5]) = set([1, 2]) = set([1, 2])\\nset([1, 2]) set([])\\nset([]) 1 1\\n1\\nset([1, 2])\\nset([1, 2])\\n1\\n2\\n3\\n2 1\\n1 2\\n0 3\\nset([1, 4])\\n{1: 2, 2: 3}\\ncegi\\n[]\\n['y', '', 'y']\\n['', '', '', '']\\n['h', 'pl', '']\\n['x', 'xxx']\\nCNF\\n['\\\\xf6', '\\\\xf7', '\\\\xf8', '\\\\xf9', '\\\\xfa', '\\\\xfb', '\\\\xfc', '\\\\xfd', '\\\\xfe', '\\\\xff']\\n0 0 0 1 0\\n[[2, 1], [3], [4, 5, 6]]\\n[0, 1, 2, 3, 4]\\n6\\n10\\n{1: None, 2: None, 3: None}\\n{1: None, 2: None, 3: None}\\n{1: 7, 2: 7, 3: 7}\\n{1: 4.0, 2: 4.0, 3: 4.0}\\n{1: 'string', 2: 'string', 3: 'string'}\\nhoihoi\\n1\\n1<2\\nfred = fred\\nfred = fred = fred\\n(3, 4) 3 4\\n1 1 1\\n27 27 27\\n3.0 3.0\\n4 9\\n1 2\\n(1, 2) 1 2\\n1 2\\n2 1\\n1 2\\n[1, 2]\\n")
-output("hello, world!\\n['a', 'h']\\n['b', 'c']\\n['c', 'd', 'e']\\n12 255 16\\n255 255 ff 12\\n \\"\\n\\t\\" \\nset([1])\\nset([1, 2, 3])\\n[1, 2, 3]\\n3\\n2\\n1\\na b\\na b c d e\\na b\\na b c d e\\n3\\nset([1, 2, 3]) - set([3, 4, 5]) = set([1, 2]) = set([1, 2])\\nset([1, 2]) set([])\\nset([]) 1 1\\n1\\nset([1, 2])\\nset([1, 2])\\n1\\n2\\n3\\n2 1\\n1 2\\n0 3\\nset([1, 4])\\n{1: 2, 2: 3}\\ncegi\\n[]\\n['y', '', 'y']\\n['', '', '', '']\\n['h', 'pl', '']\\n['x', 'xxx']\\nCNF\\n['\\\\xf6', '\\\\xf7', '\\\\xf8', '\\\\xf9', '\\\\xfa', '\\\\xfb', '\\\\xfc', '\\\\xfd', '\\\\xfe', '\\\\xff']\\n0 0 0 1 0\\n[[2, 1], [3], [4, 5, 6]]\\n[0, 1, 2, 3, 4]\\n6\\n10\\n[0, 1, 2, 3, 4]\\n[1, 2, 3, 4]\\n{1: None, 2: None, 3: None}\\n{1: None, 2: None, 3: None}\\n{1: 7, 2: 7, 3: 7}\\n{1: 4.0, 2: 4.0, 3: 4.0}\\n{1: 'string', 2: 'string', 3: 'string'}\\nhoihoi\\n1\\n1<2\\nfred = fred\\nfred = fred = fred\\n(3, 4) 3 4\\n1 1 1\\n27 27 27\\n3 3\\n4 9\\n1 2\\n(1, 2) 1 2\\n1 2\\n2 1\\n1 2\\n[1, 2]\\n")
+output(equal=True)
 
 '''),
 
@@ -6997,7 +7015,7 @@ def pascal(n):
 
 print pascal(9)
 ''', '''
-output('[[1], [1, 1], [1, 2, 1], [1, 3, 3, 1], [1, 4, 6, 4, 1], [1, 5, 10, 10, 5, 1], [1, 6, 15, 20, 15, 6, 1], [1, 7, 21, 35, 35, 21, 7, 1], [1, 8, 28, 56, 70, 56, 28, 8, 1]]\\n')
+output(equal=True)
 '''),
 
 ('''mandelbrot''', '''
@@ -7066,7 +7084,7 @@ solutions = n_queens(n, n)
 print len(solutions), "solutions."
 
 ''', '''
-output('14200 solutions.\\n')
+output(equal=True)
 '''),
 
 ('''convex hull''', '''
@@ -7116,7 +7134,7 @@ d = {1: 4, 2: 5}
 del d[1]
 print d
 ''', '''
-output('[1, 4, 7]\\n[0, 1, 2, 3, 4, 5, 6, 7, 8]\\n[0, 3, 4, 5, 6, 7, 8]\\n[3, 5, 7]\\n{2: 5}\\n')
+output(equal=True)
 
 '''),
 
@@ -7146,7 +7164,7 @@ print 'hoei hoei\\\\n'.split()
 print ['hoei\\\\n']
 print 'hoei\\\\n'
 ''', '''
-output("[(), (1, 4), (1, 5), (1, 20), (2,), (2, 2), (2, 3), (3, 2), (3, 4), (3, 4, 5), (4, 1), (4, 2), (4, 3), (4, 4), (4, 5), (20, 1), (20, 2)]\\n[[1, 3], [3, 2]]\\n['aa', 'b', 'c']\\n[]\\nyay\\n['hatsie', 'flatsie', 'pots'] 1\\n['hoei', 'hoei']\\n['hoei', 'hoei\\\\\\\\n']\\n['hoei\\\\\\\\n']\\nhoei\\\\n\\n")
+output(equal=True)
 
 '''),
 
@@ -7216,7 +7234,7 @@ class dude:                              # age: [int], last: [str], name: [str]
 dude('luis','gonzalez',35)               # [dude]
 print x[0]                               # [dude]
 ''', '''
-output('hello, world!\\ns go\\nusgnae\\n(2, 3, 4)\\n  : 5\\nluis gonzalez is 35 years old\\n')
+output(equal=True)
 
 '''),
 
@@ -7254,7 +7272,7 @@ def primes(n):                           # n: [int]
 
 print primes(100)                        # [list(int)]
 ''', '''
-output('[2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97]\\n')
+output(equal=True)
 '''),
 
 ('''problems found by Luis Gonzales and someone else on python-list''', '''
@@ -7328,7 +7346,7 @@ n='2079283419'                             # [int]
 factorize(int(n),factors)                # []
 print factors                            # [list(int)]
 ''', '''
-output('[3, 3, 3, 1097, 70201]\\n')
+output(equal=True)
 
 '''),
 
@@ -7644,7 +7662,7 @@ examples = [ ([1,0,0,1,1,2,0,1,0,0], [1]), # [list(tuple2(list(int), list(int)))
 
 print [neural_network_output(network, example) for example, answer in examples] # [list(list(int))]
 ''', '''
-output('[[1, 0, 0, 1, 1, 2, 0, 1, 0, 0], [1, 0, 0, 1, 2, 0, 0, 0, 2, 2]]\\n')
+output(equal=True)
 
 '''),
 
@@ -7661,7 +7679,7 @@ def bla():
 x,y = bla()                              # [tuple2(str, float)]
 z,v = bla()                              # [tuple2(str, float)]
 ''', '''
-output('[(1, 0), (2, 1), (3, 2)]\\nhuhu 0 1.1\\nhuhu 1 2.2\\nhuhu 2 3.3\\n')
+output(equal=True)
 
 '''),
 
@@ -7674,7 +7692,7 @@ print a[::]                              # [list(int)]
 print a[:3:]                             # [list(int)]
 print a[::-1]                            # [list(int)]
 ''', '''
-output('[1, 2, 3, 4]\\n[2, 3]\\n[1, 2, 3, 4, 5]\\n[1, 2, 3]\\n[5, 4, 3, 2, 1]\\n')
+output(equal=True)
 
 '''),
 
@@ -7717,7 +7735,7 @@ if d == []:                              # [int]
 if c == []:
     print 'no'
 ''', '''
-output('yo\\n')
+output(equal=True)
 
 '''),
 
@@ -7810,7 +7828,7 @@ def bla():
 
 bla()                                    # []
 ''', '''
-output('[1]\\n')
+output(equal=True)
 
 '''),
 
@@ -7823,7 +7841,7 @@ d = {-1: 2}                              # [dict(int, int)]
 
 print d[-1]                              # [int]
 ''', '''
-output('1 2 2 3\\n2\\n')
+output(equal=True)
 
 '''),
 
@@ -7872,7 +7890,7 @@ dc[b] = 3                                # [int]
 
 print a, dc[a], b, dc[b]                 # [tuple(int)], [int], [tuple(int)], [int]
 ''', '''
-output('(1, 2, 1, 2, 3)\\n(1, 2) 2 (1, 2, 3) 3\\n')
+output(equal=True)
 
 '''),
 
@@ -7918,7 +7936,7 @@ e[w] = 3                                 # [int]
 print e[t], e[v], e[w]                   # [int], [int], [int]
 
 ''', '''
-output('3 2 3\\n')
+output(equal=True)
 
 '''),
 
@@ -7938,7 +7956,7 @@ while n > 0:                             # [int]
    n -= 1                                # [int]
 print nums                               # [list(tuple2(int, int))]
 ''', '''
-output('[(1, 1), (2, 1), (3, 2), (4, 3), (5, 5), (6, 8), (7, 13), (8, 21)]\\n')
+output(equal=True)
 
 '''),
 
@@ -7989,7 +8007,7 @@ def hoi():
 
 transitive()                             # []
 ''', '''
-output('[1, 2]\\n[1, 2]\\n[1, 2]\\n')
+output(equal=True)
 
 '''),
 
@@ -8006,7 +8024,7 @@ y = 2                                    # [int]
 blu()                                    # []
 print bla()                              # [tuple2(int, int)]
 ''', '''
-output('(2, 2)\\n')
+output(equal=True)
 
 '''),
 
@@ -8024,7 +8042,7 @@ print a == b                             # [int]
 print a == a                             # [int]
 print b == b                             # [int]
 ''', '''
-output('0\\n1\\n1\\n')
+output(equal=True)
 
 '''),
 
@@ -8130,7 +8148,7 @@ print ((3,)) in [((2,)),((1,))]          # [int]
 
 print [1] in ([2],[1])                   # [int]
 ''', '''
-output('1\\n1\\n0\\n1\\n1\\n0\\n1\\n0\\n1\\n0\\n1\\n')
+output(equal=True)
 
 '''),
 
@@ -8255,7 +8273,7 @@ else:
     if stone_count(board, black) > stone_count(board, white): print player[black], 'wins!' # [str], [str]
     else: print player[white], 'wins!'   # [str], [str]
 ''', '''
-output('flips 43771\\nhuman wins!\\n')
+output(equal=True)
 
 '''),
 
@@ -8287,7 +8305,7 @@ print flatsie({(2,3.1): [1,2,3]})        # [list(tuple2(float, int))]
 print flatsie({(1,4.1): None})           # [list(tuple2(float, int))]
 print flatsie(((7.7,1),))                # [list(tuple2(int, float))]
 ''', '''
-output('[(2.1, 1), (4.1, 2)]\\n[(3.1, 2)]\\n[(4.1, 1)]\\n[(1, 7.7)]\\n')
+output(equal=True)
 
 '''),
 
@@ -8356,7 +8374,7 @@ print doubles(f)                         # [list(int)]
 print doubles(h)                         # [list(float)]
 print doubles([1.1, 2.2, 3.3])           # [list(float)]
 ''', '''
-output('[2, 4]\\n[4.6, 6.2]\\n[2.2, 4.4, 6.6]\\n')
+output(equal=True)
 
 '''),
 
@@ -8386,7 +8404,7 @@ print a, b
 ''', '''
 check('a', ['list(int)'])
 check('b', ['list(float)'])
-output('[1, 2, 3] [1.1, 2.2, 3.3]\\n')
+output(equal=True)
 
 '''),
 
@@ -8549,7 +8567,7 @@ score = [1,2,3,4]                        # [list(int)]
 
 print _reduce(acc, score, 0)              # [int]
 ''', '''
-output('10\\n')
+output(equal=True)
 
 '''),
 
@@ -9007,7 +9025,7 @@ output()
 #v.dispatch(ast)                          # []
 #v.dispatch(ast.node)                     # []
 #''', '''
-#output('module\\nstmt\\n')
+#output(equal=True)
 #'''),
 
 #('simple reflective visitor class, using __class__.__name__','''
@@ -9040,7 +9058,7 @@ output()
 #v = visitor()                            # [visitor()]
 #v.dispatch(a)                            # []
 #''', '''
-#output('bert\\n')
+#output(equal=True)
 #
 #'''),
 
@@ -9073,7 +9091,7 @@ output()
 ('mod operator on string and tuple XXX', '''
 print 'hoi %d %s' % (2, '3')             # [str]
 ''', '''
-output('hoi 2 3\\n')
+output(equal=True)
 '''),
 
 ('simple template functioning','''
@@ -9099,7 +9117,7 @@ ass2 = Assign(bla, '1')                  # [Assign(str)]
 ass2.x = '1'                             # [str]
 ass2.y = 8                               # [int]
 ''', '''
-output('name\\nconst\\n')
+output(equal=True)
 
 '''),
 
@@ -9170,7 +9188,7 @@ a[0] = 3
 
 print a, b
 ''', '''
-output('[3, 2] [1, 2]\\n')
+output(equal=True)
 '''),
 
 ('direct lambda call with multiple targets', '''
@@ -9217,7 +9235,7 @@ output()
 #vi.dispatch(node, 'D')                   # []
 #vi.dispatch(node, 'Z', 4)                # []
 #''', '''
-#output('x 1\\ny 2\\nd 7\\nz 4 9\\n')
+#output(equal=True)
 #'''),
 
 ('''default arguments, function templates (XXX)''', '''
@@ -9241,7 +9259,7 @@ hoi(1,2,3)                               # [int]
 hoi(1,2,3,4)                             # [int]
 
 ''', '''
-output('1 2 1 1\\n1 2 3 1\\n1 2 3 4\\n')
+output(equal=True)
 '''),
 
 ('''determine target functions in cartesian_product()''', '''
@@ -9266,7 +9284,7 @@ print a.meuk()                           # [str]
 l1 = lambda x,y: x+y                     # [lambda0]
 print l1(1,2)                            # [int]
 ''', '''
-output('1\\n1\\nhello\\n2\\n3\\n')
+output(equal=True)
 '''),
 
 ('''builtins behave as templates, generate self.merge should reflect this XXX''', '''
@@ -9302,7 +9320,7 @@ def visit(node, *args):                  # node: [int], args: [tuple(float,int)]
 visit(1,2,2)                           # [int, float]
 visit(2,2,3,4,4,5)                       # [int, float]
 ''', '''
-output('1 (2, 2)\\n2 2\\n2 (2, 3, 4, 4, 5)\\n2 3\\n')
+output(equal=True)
 '''),
 
 ('''def ident(): use function template, or cast to real return value''', '''
@@ -9354,7 +9372,7 @@ def hoi(a, b):                           # a: [int, str], b: [int]
     print a                              # [int, str]
 hoi('1', 1)                                # []
 ''', '''
-output('hoi\\n')
+output(equal=True)
 '''),
 
 ('''None as 0-pointer tests''', '''
@@ -9374,7 +9392,7 @@ z = [1]                                  # [int]
 if z:                                    # [int]
     print z                            # [str]
 ''', '''
-output('bert\\n[1]\\n')
+output(equal=True)
 '''),
 
 ('''simple Set test''', '''
@@ -9384,7 +9402,7 @@ a = set([1,2])                           # [Set(int)]
 a.add(3)                                 # []
 print a                                  # [Set(int)]
 ''', '''
-output('set([1, 2, 3])\\n')
+output(equal=True)
 '''),
 
 ('''passing non-local arguments through (nested) list comprehensions''', '''
@@ -9406,7 +9424,7 @@ def hoi():                               # dinges: [list(int)], bla: [list(int)]
 
 print hoi()                              # [list(int)]
 ''', '''
-output('[1, 2]\\n[[1, 2], [1, 2]]\\n[[[1, 2], [1, 2]], [[1, 2], [1, 2]]]\\n[1, 2]\\n')
+output(equal=True)
 '''),
 
 ('''do not flow everything to each self''', '''
@@ -9946,7 +9964,7 @@ def bert():                              # puzzlecolumns: [list(list(int))], puz
 
 bert()                                   # []
 ''', '''
-output('Rounds: 9\\n')
+output(equal=True)
 '''),
 
 ('unboxing in the face of real polymorphism XXX ua', '''
@@ -9958,7 +9976,7 @@ a = 'hoi'                                # [str]
 print a                                  # [int, str]
 print b                                  # [int]
 ''', '''
-output('hoi\\n1\\n')
+output(equal=True)
 '''),
 
 ('merge integers..', '''
@@ -9973,7 +9991,7 @@ qbert(a)                                 # []
 qbert(b)                                 # []
 ''','''
 assert len(cv.funcs['qbert'].vars['a'].types()) == 1
-output('1\\n2\\n1\\n2\\n')
+output(equal=True)
 '''),
 
 ('class copy test', '''
@@ -10168,7 +10186,7 @@ m = [1,2,3,4]                            # [list(int)]
 lp = [q,q]                               # [list(pears(int,int))]
 print p, m, lp                           # [str], [str], [str]
 ''','''
-output('it [1, 2, 3, 4] [it, it]\\n')
+output(equal=True)
 '''),
 
 ('__setitem__','''

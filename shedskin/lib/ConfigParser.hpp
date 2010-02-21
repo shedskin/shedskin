@@ -207,7 +207,7 @@ public:
     str *optionxform(str *optionstr);
     double getfloat(str *section, str *option);
     void *_set(str *section, str *option, str *value);
-    int has_section(str *section);
+    __ss_bool has_section(str *section);
     int remove_option(str *section, str *option);
     int remove_section(str *section);
     int __init__(dict<str *, str *> *defaults);

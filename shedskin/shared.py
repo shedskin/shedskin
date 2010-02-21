@@ -26,7 +26,7 @@ class globalInfo: # XXX add comments, split up
         self.nameclasses = {}
         self.tuple2 = set()             # binary typed tuples
         self.module = None
-        self.builtins = ['none', 'str_', 'float_', 'int_', 'class_', 'list', 'tuple', 'tuple2', 'dict', 'set', 'frozenset']
+        self.builtins = ['none', 'str_', 'float_', 'int_', 'class_', 'list', 'tuple', 'tuple2', 'dict', 'set', 'frozenset', 'bool_']
         self.assign_target = {}              # instance node for instance variable assignment
         self.alloc_info = {}                 # allocation site type information across iterations
         self.iterations = 0

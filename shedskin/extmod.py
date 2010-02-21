@@ -48,7 +48,7 @@ def do_extmod(gv):
     # global variables
     for var in vars:
         varname = gv.cpp_name(var.name)
-        if [1 for t in gv.mergeinh[var] if t[0].ident in ['int_', 'float_']]:
+        if [1 for t in gv.mergeinh[var] if t[0].ident in ['int_', 'float_', 'bool_']]:
             print >>gv.out, '    PyModule_AddObject(mod, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+gv.module.ident+'__::'+varname}
         else:
             print >>gv.out, '    PyModule_AddObject(mod, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+gv.module.ident+'__::'+varname}
