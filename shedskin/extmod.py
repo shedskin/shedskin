@@ -103,6 +103,8 @@ def do_extmod_method(gv, func):
                 gv.visit(defau, func)
             if cast:
                 gv.append(')')
+        elif typ.strip() == '__ss_bool':
+            gv.append('0, False')
         else:
             gv.append('0, NULL')
         gv.append(', args, kwargs)')
