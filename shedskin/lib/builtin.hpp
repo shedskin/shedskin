@@ -82,14 +82,12 @@ inline int __int() { return 0; }
 template<class T> inline int __int(T t) { return t->__int__(); }
 template<> inline int __int(str *s) { return __int(s, 10); }
 template<> inline int __int(int i) { return i; }
-template<> inline int __int(bool b) { return b; }
 template<> inline int __int(__ss_bool b) { return b.value; }
 template<> inline int __int(double d) { return (int)d; }
 
 inline double __float() { return 0; }
 template<class T> inline double __float(T t) { return t->__float__(); }
 template<> inline double __float(int p) { return p; }
-template<> inline double __float(bool b) { return __float((int)b); }
 template<> inline double __float(__ss_bool b) { return __float(b.value); }
 template<> inline double __float(double d) { return d; }
 template<> double __float(str *s);
@@ -98,13 +96,11 @@ str *__str();
 template<class T> str *__str(T t);
 template<> str *__str(double t);
 str *__str(int t, int base=10);
-str *__str(bool b);
 str *__str(__ss_bool b);
 
 template<class T> str *repr(T t);
 template<> str *repr(double t);
 template<> str *repr(int t);
-template<> str *repr(bool b);
 template<> str *repr(__ss_bool b);
 template<> str *repr(void *t);
 
@@ -128,7 +124,6 @@ __xrange *xrange(int a, int b, int s=1);
 int ord(str *c);
 
 str *chr(int i);
-str *chr(bool b);
 str *chr(__ss_bool b);
 template<class T> str *chr(T t) {
     return chr(t->__int__());
@@ -140,7 +135,6 @@ double ___round(double a, int n);
 template<class T> inline T __abs(T t) { return t->__abs__(); }
 template<> inline int __abs(int a) { return a<0?-a:a; }
 template<> inline double __abs(double a) { return a<0?-a:a; }
-inline int __abs(bool b) { return __abs((int)b); }
 inline int __abs(__ss_bool b) { return __abs(b.value); }
 double __abs(complex *c);
 
@@ -148,21 +142,18 @@ template<class T> str *hex(T t) {
     return t->__hex__();
 }
 template<> str *hex(int a);
-template<> str *hex(bool b);
 template<> str *hex(__ss_bool b);
 
 template<class T> str *oct(T t) {
     return t->__oct__();
 }
 template<> str *oct(int a);
-template<> str *oct(bool b);
 template<> str *oct(__ss_bool b);
 
 template<class T> str *bin(T t) {
     return bin(t->__index__());
 }
 template<> str *bin(int a);
-template<> str *bin(bool b);
 template<> str *bin(__ss_bool b);
 
 str *__mod4(str *fmt, list<pyobj *> *vals);
@@ -3725,7 +3716,6 @@ template<class T> str *__moddict(str *v, dict<str *, T> *d) {
 
 template<class T> T __box(T t) { return t; }
 int_ *__box(int);
-int_ *__box(bool);
 bool_ *__box(__ss_bool);
 float_ *__box(double);
 
