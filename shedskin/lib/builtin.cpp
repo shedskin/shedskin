@@ -1447,7 +1447,6 @@ int ord(str *s) {
     return (unsigned char)(s->unit[0]);
 }
 
-str *chr(bool b) { return chr((int)b); }
 str *chr(__ss_bool b) { return chr(b.value); }
 
 str *chr(int i) {
@@ -1472,7 +1471,6 @@ template<> void *__copy(void *d) { return d; }
 
 template<> str *repr(double d) { return __str(d); }
 template<> str *repr(int i) { return __str(i); }
-template<> str *repr(bool b) { return __str((int)b); }
 template<> str *repr(__ss_bool b) { return b.value?(new str("True")):(new str("False")); }
 template<> str *repr(void *v) { return new str("None"); }
 
@@ -1618,12 +1616,9 @@ str *__str(int i, int base) {
     return new str(psz);
 }
 
-str *__str(bool b) {
+str *__str(__ss_bool b) {
     if(b) return new str("True");
     return new str("False");
-}
-str *__str(__ss_bool b) {
-    return __str((bool)b);
 }
 
 template<> str *hex(int i) {
@@ -1632,7 +1627,6 @@ template<> str *hex(int i) {
     else
         return (new str("0x"))->__add__(__str(i, 16));
 }
-template<> str *hex(bool b) { return hex((int)b); }
 template<> str *hex(__ss_bool b) { return hex(b.value); }
 
 template<> str *oct(int i) {
@@ -1643,7 +1637,6 @@ template<> str *oct(int i) {
     else
       return new str("0");
 }
-template<> str *oct(bool b) { return oct((int)b); }
 template<> str *oct(__ss_bool b) { return oct(b.value); }
 
 template<> str *bin(int i) {
@@ -1652,7 +1645,6 @@ template<> str *bin(int i) {
     else
         return (new str("0b"))->__add__(__str(i, 2));
 }
-template<> str *bin(bool b) { return bin((int)b); }
 template<> str *bin(__ss_bool b) { return bin(b.value); }
 
 str *__str() { return new str(""); } /* XXX optimize */
@@ -1964,9 +1956,6 @@ str *__modct(str *fmt, int n, ...) {
 
 int_ *__box(int i) {
     return new int_(i);
-}
-int_ *__box(bool b) {
-    return new int_(b);
 }
 bool_ *__box(__ss_bool b) {
     return new bool_(b);
