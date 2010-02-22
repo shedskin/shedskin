@@ -28,6 +28,7 @@ class generateVisitor(ASTVisitor):
         self.name = module.ident
         self.filling_consts = False
         self.with_count = 0
+        self.bool_wrapper = {}
 
     def insert_consts(self, declare): # XXX ugly
         if not self.consts: return
@@ -1339,8 +1340,9 @@ class generateVisitor(ASTVisitor):
         else:
             self.castup(node, nodes[0], func)
 
-    def visitCompare(self, node, func=None):
-        self.append('___bool(')
+    def visitCompare(self, node, func=None, wrapper=True):
+        if not node in self.bool_wrapper:
+            self.append('___bool(')
         self.done = set() # (tvar=fun())
 
         left = node.expr
@@ -1367,7 +1369,8 @@ class generateVisitor(ASTVisitor):
                             self.visit2(a, func)
                             self.append('->empty()')
                             if msg == '__ne__': self.append(')')
-                            self.append(')')
+                            if not node in self.bool_wrapper:
+                                self.append(')')
                             return
 
             if msg == '__contains__':
@@ -1379,7 +1382,8 @@ class generateVisitor(ASTVisitor):
                 self.append('&&')
             left = right
 
-        self.append(')')
+        if not node in self.bool_wrapper:
+            self.append(')')
 
     def visitAugAssign(self, node, func=None):
         if isinstance(node.node, Subscript):
@@ -1723,14 +1727,15 @@ class generateVisitor(ASTVisitor):
             self.append(')')
 
     def bool_test(self, node, func, always_wrap=False):
-        is_int = [1 for t in self.mergeinh[node] if isinstance(t[0], class_) and t[0].ident == 'int_']
-        is_func = [1 for t in self.mergeinh[node] if isinstance(t[0], function)]
-        if not always_wrap and (is_int or is_func):
+        wrapper = always_wrap or not self.only_classes(node, ('int_', 'bool_'))
+        if wrapper:
+            self.append('___bool(')
             self.visit(node, func)
-        elif always_wrap and is_func:
-            self.visitm('___bool(', node, '!=NULL)', func)
+            is_func = bool([1 for t in self.mergeinh[node] if isinstance(t[0], function)])
+            self.append(('', '!=NULL')[is_func]+')') # XXX
         else:
-            self.visitm('___bool(', node, ')', func)
+            self.bool_wrapper[node] = True
+            self.visit(node, func)
 
     def visit_callfunc_args(self, funcs, node, func):
         objexpr, ident, direct_call, method_call, constructor, parent_constr = analyze_callfunc(node)
