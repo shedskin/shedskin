@@ -1629,7 +1629,7 @@ def main():
    if todo or goaddr != -1 or startaddr != -1:
        if DEBUG: sys.stderr.write("Actions ...\n")
        #connect to the BSL
-       bsl.actionStartBSL(not unpatched, 1, bslrepl, forceBSL, mayuseBSL, speed, 1)
+       bsl.actionStartBSL(1-unpatched, 1, bslrepl, forceBSL, mayuseBSL, speed, 1)
 #       bsl.actionStartBSL(
 #           usepatch=not unpatched,
 #           replacementBSL=bslrepl,
