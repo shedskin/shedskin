@@ -1,3 +1,5 @@
+### to compile this, copy lib/array.*  to the shedskin lib dir!
+
 '''
 ambient occlusion renderer
 http://lucille.atso-net.jp/aobench/
