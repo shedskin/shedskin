@@ -2193,6 +2193,9 @@ class generateVisitor(ASTVisitor):
         self.deindent();
         self.output('END_FOR\n')
 
+    def visitGenExpr(self, node, func=None):
+        self.visit(getgx().genexp_to_lc[node], func)
+
     def visitListComp(self, node, func=None): #, target=None):
         lcfunc, _ = self.listcomps[node]
         args = []

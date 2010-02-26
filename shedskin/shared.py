@@ -59,6 +59,7 @@ class globalInfo: # XXX add comments, split up
         self.output_dir= ''
         self.makefile_name = 'Makefile' # XXX other default?
         self.item_rvalue = {}
+        self.genexp_to_lc = {}
 
 def newgx():
     return globalInfo()
