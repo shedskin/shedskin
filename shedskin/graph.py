@@ -1010,8 +1010,11 @@ class moduleVisitor(ASTVisitor):
 
             self.for_in_iters.append(qual.list)
 
-        # create list instance
-        self.instance(node, defclass('list'), func)
+        # node type
+        if node in getgx().genexp_to_lc.values(): # converted generator expression
+            self.instance(node, defclass('__iter'), func)
+        else:
+            self.instance(node, defclass('list'), func)
 
         # expr->instance.unit
         self.visit(node.expr, lcfunc)
