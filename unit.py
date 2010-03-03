@@ -162,6 +162,16 @@ print sum(sum(uhh) for uhh in id)
 ie = ([x,y] for x in range(10) for y in range(4))
 print len(list(ie))
 
+# random.triangular
+import random
+random.seed(1)
+print random.triangular()
+print random.triangular(high=1.1, low=0.0)
+print random.triangular(0.1)
+print random.triangular(-2, 2)
+print random.triangular(-2.0, 2.1, 1.5)
+print random.triangular(mode=1.5)
+
 ''', '''
 output(equal=True)
 '''),

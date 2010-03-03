@@ -30,6 +30,7 @@ class Random:
     def shuffle(self, x): return x
     def sample(self, population, k): return [iter(population).next()]
     def uniform(self, a, b): return 1.0
+    def triangular(self, low=0.0, high=1.0, mode=None): return 1.0
     def normalvariate(self, mu, sigma): return 1.0
     def lognormvariate(self, mu, sigma): return 1.0
     def cunifvariate(self, mean, arc): return 1.0
@@ -64,6 +65,7 @@ def choice(seq): return seq[seq.__len__()]
 def shuffle(x): return x
 def sample(population, k): return [iter(population).next()]
 def uniform(a, b): return 1.0
+def triangular(low=0.0, high=1.0, mode=None): return 1.0
 def normalvariate(mu, sigma): return 1.0
 def lognormvariate(mu, sigma): return 1.0
 def cunifvariate(mean, arc): return 1.0

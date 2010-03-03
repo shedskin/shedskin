@@ -51,6 +51,8 @@ public:
     double vonmisesvariate(double mu, double kappa);
     double gammavariate(double alpha, double beta);
     double uniform(double a, double b);
+    double triangular(double low, double high, double mode);
+    double triangular(double low, double high, void *mode);
     double stdgamma(double alpha, double ainv, double bbb, double ccc);
     double expovariate(double lambd);
     int getrandbits(int k);
@@ -116,6 +118,8 @@ template <class A> int shuffle(pyseq<A> *x);
 template <class A> list<A> *sample(pyiter<A> *population, int k);
 template <class A> list<A> *sample(pyseq<A> *population, int k);
 double uniform(double a, double b);
+double triangular(double low, double high, double mode);
+double triangular(double low, double high, void *mode);
 double normalvariate(double mu, double sigma);
 double lognormvariate(double mu, double sigma);
 double cunifvariate(double mean, double arc);
