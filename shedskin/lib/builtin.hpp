@@ -3095,13 +3095,14 @@ template<class K, class V> tuple2<K, V> *__dictiteritems<K, V>::next() {
 
 /* builtins */
 
-template <class A> A __sum(pyiter<A> *l, A b) {
+template <class A, class B> A __sum(pyiter<A> *l, B b) {
     A e;
+    A result = (A)b; /* XXX */
     __iter<A> *__0;
     FOR_IN(e,l,0)
-        b = __add(b, e);
+        result = __add(result, e);
     END_FOR
-    return b;
+    return result;
 }
 template <class A> A __sum(pyiter<A> *l) { return __sum(l, 0); }
 

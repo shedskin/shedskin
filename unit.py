@@ -150,6 +150,18 @@ if bool_e:
 if not bool_e:
     print '!e'
 
+# generator expressions
+ia = (2*x for x in range(10))
+print sum(ia)
+ib = ((str(x+y) for x in range(10)) for y in range(4))
+print [''.join(ur) for ur in ib]
+ic = [(x+3 for x in range(10)) for y in range(4)]
+print [sum(ar) for ar in ic]
+id = ([2.0*(x+y) for x in range(10)] for y in range(4))
+print sum(sum(uhh) for uhh in id)
+ie = ([x,y] for x in range(10) for y in range(4))
+print len(list(ie))
+
 ''', '''
 output(equal=True)
 '''),
