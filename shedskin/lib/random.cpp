@@ -452,6 +452,36 @@ double Random::uniform(double a, double b) {
     return (a+((b-a)*this->random()));
 }
 
+static inline double __triangular(double low, double high, double u, double c) {
+    double __0, __1;
+    if ((u>c)) {
+        u = (1.0-u);
+        c = (1.0-c);
+        __0 = high;
+        __1 = low;
+        low = __0;
+        high = __1;
+    }
+    return (low+((high-low)*__power((u*c), 0.5)));
+}
+
+double Random::triangular(double low, double high, double mode) {
+    /**
+    Triangular distribution.
+
+    Continuous distribution bounded by given lower and upper limits,
+    and having a given mode value in-between.
+
+    http://en.wikipedia.org/wiki/Triangular_distribution
+
+    */
+    return __triangular(low, high, this->random(), ((mode-low)/(high-low)));
+}
+
+double Random::triangular(double low, double high, void *mode) {
+    return __triangular(low, high, this->random(), 0.5);
+}
+
 double Random::stdgamma(double alpha, double ainv, double bbb, double ccc) {
 
     return this->gammavariate(alpha, 1.0);
@@ -1035,6 +1065,14 @@ int randint(int a, int b) {
 double uniform(double a, double b) {
 
     return _inst->uniform(a, b);
+}
+
+double triangular(double low, double high, double mode) {
+    return _inst->triangular(low, high, mode);
+}
+
+double triangular(double low, double high, void *mode) {
+    return _inst->triangular(low, high, mode);
 }
 
 double normalvariate(double mu, double sigma) {

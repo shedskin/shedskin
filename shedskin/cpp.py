@@ -1737,7 +1737,10 @@ class generateVisitor(ASTVisitor):
         objexpr, ident, direct_call, method_call, constructor, parent_constr = analyze_callfunc(node)
         target = funcs[0] # XXX
 
-        castnull = False
+        castnull = False # XXX
+        if (self.library_func(funcs, 'random', None, 'triangular') or \
+            self.library_func(funcs, 'random', 'Random', 'triangular')):
+            castnull = True
         for itertools_func in ['islice', 'izip_longest', 'permutations']:
             if self.library_func(funcs, 'itertools', None, itertools_func):
                 castnull = True
