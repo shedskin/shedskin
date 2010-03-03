@@ -305,25 +305,23 @@ class generateVisitor(ASTVisitor):
                 print >>self.out, typesetreprnew(default, None)+' '+('default_%d;'%nr)
             print >>self.out
 
-        # --- list comprehensions 1
+        # --- declarations
         self.listcomps = {}
         for (listcomp,lcfunc,func) in getmv().listcomps:
             self.listcomps[listcomp] = (lcfunc, func)
         self.do_listcomps(True)
+        self.do_lambdas(True)
         print >>self.out
 
-        # --- lambdas
-        for l in getmv().lambdas.values():
-            if l.ident not in getmv().funcs:
-                self.visit(l.node)
-
-        # --- list comprehensions 2
+        # --- definitions
         self.do_listcomps(False)
-
-        # --- classes
+        self.do_lambdas(False)
         for child in node.node.getChildNodes():
             if isinstance(child, Class):
                 self.class_cpp(child)
+            elif isinstance(child, Function):
+                self.do_comments(child)
+                self.visit(child)
 
         # --- __init
         self.output('void __init() {')
@@ -387,11 +385,6 @@ class generateVisitor(ASTVisitor):
 
         self.deindent()
         self.output('}\n')
-
-        for child in node.node.getChildNodes():
-            if isinstance(child, Function):
-                self.do_comments(child)
-                self.visit(child)
 
         # --- close namespace
         for n in self.module.mod_path:
@@ -1096,6 +1089,9 @@ class generateVisitor(ASTVisitor):
         if is_init and not formaldecs:
             formaldecs = ['int __ss_init']
 
+        if func.ident.startswith('__lambda'): # XXX
+            header = 'static inline ' + header
+
         # --- output
         self.append(header+'('+', '.join(formaldecs)+')')
         if is_init:
@@ -1145,7 +1141,7 @@ class generateVisitor(ASTVisitor):
                 return
             if func.lambdanr is None and not repr(node.code).startswith("Stmt([Raise(CallFunc(Name('NotImplementedError')"):
                 error(repr(func)+' not called!', node, warning=True)
-            if not (declare and func.ident in func.parent.virtuals):
+            if not (declare and func.parent and func.ident in func.parent.virtuals):
                 return
 
         if func.isGenerator and not declare:
@@ -2023,6 +2019,11 @@ class generateVisitor(ASTVisitor):
         # expr.x = expr
         elif isinstance(lvalue, AssAttr):
             self.visitAssAttr(lvalue, func)
+
+    def do_lambdas(self, declare):
+        for l in getmv().lambdas.values():
+            if l.ident not in getmv().funcs:
+                self.visitFunction(l.node, declare=declare)
 
     def do_listcomps(self, declare):
         for (listcomp, lcfunc, func) in getmv().listcomps: # XXX cleanup
