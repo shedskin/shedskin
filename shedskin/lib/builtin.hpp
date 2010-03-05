@@ -41,10 +41,10 @@ class complex;
 class __ss_bool {
 public:
     int value;
-    int operator+(__ss_bool b);
-    int operator==(__ss_bool b);
-    bool operator!();
-    operator bool();
+    inline int operator+(__ss_bool b) { return value+b.value; }
+    inline int operator==(__ss_bool b) { return value==b.value; }
+    inline bool operator!() { return !value; }
+    inline operator bool() { return bool(value); }
 };
 
 extern __ss_bool True;
