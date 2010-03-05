@@ -179,6 +179,11 @@ print random.triangular(-2, 2)
 print random.triangular(-2.0, 2.1, 1.5)
 print random.triangular(mode=1.5)
 
+# itertools.product fix
+import itertools
+print list(itertools.product([0,1,2], [0,1,2]))
+print list(itertools.product([-1, 0, 1], repeat=2))
+
 ''', '''
 output(equal=True)
 '''),
