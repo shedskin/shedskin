@@ -1072,7 +1072,8 @@ template<class T> tuple2<T, T> *productiter<T, T>::next() {
                     }
                     break;
                 }
-            } else if (this->indices[i] == this->values[i].size()) {
+            }
+            if (this->indices[i] == this->values[i].size()) {
                 this->indices[i] = 0;
             } else {
                 break;
