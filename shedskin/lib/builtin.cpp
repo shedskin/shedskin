@@ -2138,17 +2138,5 @@ list<tuple2<void *, void *> *> *__zip(int nn) {
     return new list<tuple2<void *, void *> *>();
 }
 
-int __ss_bool::operator+(__ss_bool b) {
-    return value+b.value;
-}
-int __ss_bool::operator==(__ss_bool b) {
-    return value==b.value;
-}
-bool __ss_bool::operator!() {
-    return !value;
-}
-__ss_bool::operator bool() {
-    return bool(value);
-}
 
 } // namespace __shedskin__
