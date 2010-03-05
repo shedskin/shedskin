@@ -219,10 +219,6 @@ void *Random::seed() {
     return this->seed(-1);
 }
 void *Random::seed(int a) {
-#ifdef FASTRANDOM
-    srand(a);
-    return NULL;
-#else
     /**
     Initialize the random number generator with a single seed number.
 
@@ -238,6 +234,10 @@ void *Random::seed(int a) {
         usec = __int((1000000*(hophop-__int(hophop))));
         a = ((__mods(secs, (MAXINT/1000000))*1000000)|usec);
     }
+#ifdef FASTRANDOM
+    srand(a);
+    return NULL;
+#else
     this->_init_by_array((new list<int>(1, a)));
     this->gauss_next = 0.0;
     this->gauss_switch = 0;
