@@ -162,6 +162,13 @@ print sum(sum(uhh) for uhh in id)
 ie = ([x,y] for x in range(10) for y in range(4))
 print len(list(ie))
 
+class meuk:
+    def layout(self):
+        return (x for x in 'abc')
+
+waf = meuk().layout()
+print list(waf)
+
 # random.triangular
 import random
 random.seed(1)
