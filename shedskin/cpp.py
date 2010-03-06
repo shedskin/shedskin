@@ -1307,7 +1307,7 @@ class generateVisitor(ASTVisitor):
             return False
         self.append('(')
         for n in node.nodes:
-            self.visit(n, func)
+            self.bool_test(n, func)
             if n != node.nodes[-1]:
                 self.append(' '+op+' ')
         self.append(')')
