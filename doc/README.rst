@@ -520,7 +520,7 @@ Tips and Tricks
 
 **Tricks**
 
-1. The following two code fragments work the same, but only the second one is supported (using attributes also much faster in C++!): ::
+1. The following two code fragments work the same, but only the second one is supported (using attributes is also much faster in C++!): ::
 
     statistics = {'nodes': 28, 'solutions': set()}
 
