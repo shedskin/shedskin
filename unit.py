@@ -150,6 +150,11 @@ if bool_e:
 if not bool_e:
     print '!e'
 
+queue = []
+augmented = 0
+if queue and not augmented:
+    print 'queue'
+
 # generator expressions
 ia = (2*x for x in range(10))
 print sum(ia)
