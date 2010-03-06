@@ -4,8 +4,8 @@ import shedskin.infer, shedskin.cpp
 import traceback, sys, os, time
 
 tests = [
-('''fixes for 0.4''', '''
-# defaultdict(None, ..)
+('''fixes for 0.4; booleans, generator expressions''', '''
+# defaultdict fixes
 from collections import defaultdict
 dnone = defaultdict()
 dnone = defaultdict(None)
@@ -17,6 +17,8 @@ try:
 except KeyError:
     print 'keyerror'
 print sorted(dnone.items())
+
+print sorted(defaultdict(str, {1: 'hoi'}).items())
 
 # self variable (TODO: fix analyze_virtuals)
 self = 4

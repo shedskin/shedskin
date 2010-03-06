@@ -45,7 +45,7 @@ class deque(pyiter):
         return self
 
 class defaultdict:
-    def __init__(self, func=None):
+    def __init__(self, func=None, x=None): # XXX
         self.value = func()
 
     def __initdict__(self, func, d):
