@@ -450,6 +450,7 @@ match_object *re_object::__exec(str *subj, int pos, int endpos, int flags)
     match_object *mobj;
     int *captured, clen, r, t, mx_i, nendpos;
     str *k, *mx_s;
+    mx_s = NULL;
     __iter<str *> *__tk;
 
     //allocate captured array

@@ -25,12 +25,14 @@ public:
             extend(iterable);
     }
 
-    int append(A a) {
+    void *append(A a) {
         units.push_back(a);
+        return NULL;
     }
 
-    int appendleft(A a) {
+    void *appendleft(A a) {
         units.push_front(a);
+        return NULL;
     }
 
     A pop() {

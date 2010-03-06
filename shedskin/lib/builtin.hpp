@@ -534,7 +534,7 @@ public:
 
 template <class T> class __seqiter : public __iter<T> {
 public:
-    int counter;
+    unsigned int counter;
     pyseq<T> *p;
     __seqiter<T>();
     __seqiter<T>(pyseq<T> *p);
@@ -1765,9 +1765,9 @@ template<class T> void list<T>::clear() {
 
 template<class T> int list<T>::__eq__(pyobj *p) {
    list<T> *b = (list<T> *)p;
-   int len = this->units.size();
+   unsigned int len = this->units.size();
    if(b->units.size() != len) return 0;
-   for(int i = 0; i < len; i++)
+   for(unsigned int i = 0; i < len; i++)
        if(!__eq(this->units[i], b->units[i]))
            return 0;
    return 1;
@@ -2879,9 +2879,9 @@ template<class T> int tuple2<T, T>::__contains__(T a) {
 template<class T> int tuple2<T, T>::__eq__(pyobj *p) {
     tuple2<T,T> *b;
     b = (tuple2<T,T> *)p;
-    int sz = this->units.size();
+    unsigned int sz = this->units.size();
     if(b->units.size() != sz) return 0;
-    for(int i=0; i<sz; i++)
+    for(unsigned int i=0; i<sz; i++)
         if(!__eq(this->units[i], b->units[i]))
             return 0;
     return 1;
