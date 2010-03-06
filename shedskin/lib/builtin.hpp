@@ -195,7 +195,7 @@ static inline int hash_combine(int seed, int other) {
 template<class T> inline int hasher(T t) {
     if(t == NULL) return 0;
     return t->__hash__();
-};
+}
 template<> inline int hasher(int a) { return a; }
 template<> inline int hasher(__ss_bool a) { return a.value; }
 template<> inline int hasher(void *a) { return (intptr_t)a; }
@@ -349,7 +349,7 @@ public:
     virtual int __le__(pyobj *p) { return __cmp__(p) != 1; }
 
     virtual pyobj *__copy__() { return this; }
-    virtual pyobj *__deepcopy__(dict<void *, pyobj *> *memo) { return this; }
+    virtual pyobj *__deepcopy__(dict<void *, pyobj *> *) { return this; }
 
     virtual int __len__() { return 1; } /* XXX exceptions? */
     virtual int __nonzero__() { return __len__() != 0; }
@@ -1068,8 +1068,8 @@ public:
     str *msg;
     Exception(str *msg=0) { __init__(msg); }
     void __init__(str *msg) { this->msg = msg; }
-    void __init__(void *msg) { this->msg = 0; } /* XXX */
-    void __init__(int msg) { this->msg = 0; } /* XXX */
+    void __init__(void *) { this->msg = 0; } /* XXX */
+    void __init__(int) { this->msg = 0; } /* XXX */
     str *__repr__() { return msg ? msg : new str("0"); }
 
 #ifdef __SS_BIND
@@ -2041,10 +2041,10 @@ template<class T> template <class U> void *list<T>::sort(int (*cmp)(T, T), U (*k
 template<class T> template <class U> void *list<T>::sort(int cmp, U (*key)(T), int reverse) {
     return sort((int(*)(T,T))0, key, reverse);
 }
-template<class T> void *list<T>::sort(int (*cmp)(T, T), int key, int reverse) {
+template<class T> void *list<T>::sort(int (*cmp)(T, T), int, int reverse) {
     return sort(cmp, (int(*)(T))0, reverse);
 }
-template<class T> void *list<T>::sort(int cmp, int key, int reverse) {
+template<class T> void *list<T>::sort(int cmp, int, int reverse) {
     return sort((int(*)(T,T))0, (int(*)(T))0, reverse);
 }
 
@@ -2185,7 +2185,7 @@ template<class T> int set<T>::__gt__(set<T> *s) {
     return issuperset(s);
 }
 
-template<class T> int set<T>::__cmp__(pyobj *p) {
+template<class T> int set<T>::__cmp__(pyobj *) {
     //note: originally SS did cmp() by using issubset() and issuperset().
     //I'm, however, following the Python specifications here...
     throw new TypeError(new str("cannot compare sets using cmp()"));
@@ -2942,7 +2942,7 @@ template<class A, class B> tuple2<A, B>::tuple2() {
     this->__class__ = cl_tuple;
 }
 
-template<class A, class B> tuple2<A, B>::tuple2(int n, A a, B b) {
+template<class A, class B> tuple2<A, B>::tuple2(int, A a, B b) {
     this->__class__ = cl_tuple;
     first = a;
     second = b;
@@ -3118,7 +3118,7 @@ double __sum(pyseq<double> *l, double b=0);
 
 /* max */
 
-template<class T, class B> T __max(int nn, B (*key)(T), pyiter<T> *a) {
+template<class T, class B> T __max(int, B (*key)(T), pyiter<T> *a) {
     T e, max = 0;
     B maxkey, maxkey2;
     int first = 1;
@@ -3139,9 +3139,9 @@ template<class T, class B> T __max(int nn, B (*key)(T), pyiter<T> *a) {
         throw new ValueError(new str("max() arg is an empty sequence"));
     return max;
 }
-template<class T> T __max(int nn, int key, pyiter<T> *a) { return __max(nn, (int (*)(T))0, a); } /* XXX */
+template<class T> T __max(int nn, int, pyiter<T> *a) { return __max(nn, (int (*)(T))0, a); } /* XXX */
 
-template<class T, class B> T __max(int nn, B (*key)(T), pyseq<T> *l) {
+template<class T, class B> T __max(int, B (*key)(T), pyseq<T> *l) {
     int len = l->units.size();
     int i;
     if(len==0)
@@ -3163,12 +3163,12 @@ template<class T, class B> T __max(int nn, B (*key)(T), pyseq<T> *l) {
     }
     return m;
 }
-template<class T> T __max(int nn, int key, pyseq<T> *a) { return __max(nn, (int (*)(T))0, a); } /* XXX */
+template<class T> T __max(int nn, int, pyseq<T> *a) { return __max(nn, (int (*)(T))0, a); } /* XXX */
 template<class B> str *__max(int nn, B (*key)(str *), str *l) { return __max(nn, key, (pyiter<str *> *)l); }
 inline str *__max(int nn, int key, str *l) { return __max(nn, key, (pyiter<str *> *)l); }
 
-template<class T, class B> inline T __max(int n, B (*key)(T), T a, T b) { return (__cmp(key(a), key(b))==1)?a:b; }
-template<class T> inline  T __max(int n, int key, T a, T b) { return (__cmp(a, b)==1)?a:b; }
+template<class T, class B> inline T __max(int, B (*key)(T), T a, T b) { return (__cmp(key(a), key(b))==1)?a:b; }
+template<class T> inline  T __max(int, int, T a, T b) { return (__cmp(a, b)==1)?a:b; }
 
 template<class T, class B> T __max(int n, B (*key)(T), T a, T b, T c, ...) {
     T m = __max(2, key, __max(2, key, a, b), c);
@@ -3197,7 +3197,7 @@ template<class T> T __max(int n, int key, T a, T b, T c, ...) { /* XXX */
 
 /* min */
 
-template<class T, class B> T __min(int nn, B (*key)(T), pyiter<T> *a) {
+template<class T, class B> T __min(int, B (*key)(T), pyiter<T> *a) {
     T e, min = 0;
     B minkey, minkey2;
     int first = 1;
@@ -3218,7 +3218,7 @@ template<class T, class B> T __min(int nn, B (*key)(T), pyiter<T> *a) {
         throw new ValueError(new str("min() arg is an empty sequence"));
     return min;
 }
-template<class T> T __min(int nn, int key, pyiter<T> *a) { return __min(nn, (int (*)(T))0, a); }
+template<class T> T __min(int nn, int, pyiter<T> *a) { return __min(nn, (int (*)(T))0, a); }
 
 template<class T, class B> T __min(int nn, B (*key)(T), pyseq<T> *l) {
     int len = l->units.size();
@@ -3247,7 +3247,7 @@ template<class B> str *__min(int nn, B (*key)(str *), str *l) { return __min(nn,
 inline str *__min(int nn, int key, str *l) { return __min(nn, key, (pyiter<str *> *)l); }
 
 template<class T, class B> inline T __min(int n, B (*key)(T), T a, T b) { return (__cmp(key(a), key(b))==-1)?a:b; }
-template<class T> inline  T __min(int n, int key, T a, T b) { return (__cmp(a, b)==-1)?a:b; }
+template<class T> inline  T __min(int, int, T a, T b) { return (__cmp(a, b)==-1)?a:b; }
 
 template<class T, class B> T __min(int n, B (*key)(T), T a, T b, T c, ...) {
     T m = __min(2, key, __min(2, key, a, b), c);
@@ -3313,7 +3313,7 @@ template <class A> list<A> *sorted(pyseq<A> *x, int (*cmp)(A, A), int key, int r
     r->sort(cmp, key, reverse);
     return r;
 }
-template <class A> list<A> *sorted(pyseq<A> *x, int cmp, int key, int reverse) {
+template <class A> list<A> *sorted(pyseq<A> *x, int, int key, int reverse) {
     return sorted(x, (int(*)(A, A))0, key, reverse);
 }
 
@@ -3389,7 +3389,7 @@ template <class A> list<tuple2<A,A> *> *__zip(int nn, pyiter<A> *a) {
     return result;
 }
 
-template <class A, class B> list<tuple2<A, B> *> *__zip(int nn, pyiter<A> *a, pyiter<B> *b) {
+template <class A, class B> list<tuple2<A, B> *> *__zip(int, pyiter<A> *a, pyiter<B> *b) {
     list<A> la;
     list<B> lb;
     int __1, __2, i;
@@ -3405,7 +3405,7 @@ template <class A, class B> list<tuple2<A, B> *> *__zip(int nn, pyiter<A> *a, py
     return result;
 }
 
-template <class A, class B> list<tuple2<A, B> *> *__zip(int nn, pyseq<A> *a, pyseq<B> *b) {
+template <class A, class B> list<tuple2<A, B> *> *__zip(int, pyseq<A> *a, pyseq<B> *b) {
     if(a->__class__ == cl_str_ || b->__class__ == cl_str_) /* XXX */
         return __zip(2, ((pyiter<A> *)((str *)a)), ((pyiter<B> *)((str *)b)));
     list<tuple2<A, B> *> *result;
@@ -3424,7 +3424,7 @@ template <class A, class B> list<tuple2<A, B> *> *__zip(int nn, pyseq<A> *a, pys
     return result;
 }
 
-template <class A> list<tuple2<A,A> *> *__zip(int nn, pyiter<A> *a, pyiter<A> *b, pyiter<A> *c) {
+template <class A> list<tuple2<A,A> *> *__zip(int, pyiter<A> *a, pyiter<A> *b, pyiter<A> *c) {
     list<int> *__0;
     list<A> la, lb, lc;
     int __1, __2, i;
@@ -3443,7 +3443,7 @@ template <class A> list<tuple2<A,A> *> *__zip(int nn, pyiter<A> *a, pyiter<A> *b
     return result;
 }
 
-template <class A> list<tuple2<A,A> *> *__zip(int nn, pyseq<A> *a, pyseq<A> *b, pyseq<A> *c) {
+template <class A> list<tuple2<A,A> *> *__zip(int, pyseq<A> *a, pyseq<A> *b, pyseq<A> *c) {
     if(a->__class__ == cl_str_ || b->__class__ == cl_str_ || c->__class__ == cl_str_) /* XXX */
         return __zip(3, ((pyiter<A> *)((str *)a)), ((pyiter<A> *)((str *)b)), ((pyiter<A> *)((str *)c)));
     list<tuple2<A, A> *> *result;
