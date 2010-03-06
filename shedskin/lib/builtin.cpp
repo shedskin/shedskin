@@ -292,7 +292,7 @@ str *str::__repr__() {
         quote = "\"";
 
     ss << quote;
-    for(int i=0; i<unit.size(); i++)
+    for(unsigned int i=0; i<unit.size(); i++)
     {
         char c = unit[i];
         int k;
@@ -320,11 +320,11 @@ int str::__int__() {
 }
 
 int str::__contains__(str *s) {
-    return unit.find(s->unit) != -1;
+    return unit.find(s->unit) != std::string::npos;
 }
 
 int str::isspace() {
-    return unit.size() && (unit.find_first_not_of(ws) == -1);
+    return unit.size() && (unit.find_first_not_of(ws) == std::string::npos);
 }
 
 int str::isdigit() {
@@ -510,7 +510,8 @@ int str::istitle(void)
 list<str *> *str::splitlines(int keepends)
 {
     list<str *> *r = new list<str *>();
-    int i, j, endlen;
+    int i, endlen;
+    unsigned int j;
     const char *ends = "\r\n";
 
     endlen = i = 0;
@@ -545,22 +546,23 @@ str *str::rstrip(str *chars) {
 
 list<str *> *str::split(str *sp, int max_splits) {
     __GC_STRING s = unit;
-    int sep_iter, chunk_iter = 0, tmp, num_splits = 0;
+    int num_splits = 0;
+    unsigned int sep_iter, tmp, chunk_iter = 0;
     list<str *> *result = new list<str *>();
     if (sp == NULL)
     {
 #define next_separator(iter) (s.find_first_of(ws, (iter)))
 #define skip_separator(iter) (s.find_first_not_of(ws, (iter)))
 
-        if(skip_separator(chunk_iter) == -1) /* XXX */
+        if(skip_separator(chunk_iter) == std::string::npos) /* XXX */
             return result;
         if(next_separator(chunk_iter) == 0)
             chunk_iter = skip_separator(chunk_iter);
         while((max_splits < 0 or num_splits < max_splits)
-              and (sep_iter = next_separator(chunk_iter)) != -1)
+              and (sep_iter = next_separator(chunk_iter)) != std::string::npos)
         {
             result->append(new str(s.substr(chunk_iter, sep_iter - chunk_iter)));
-            if((tmp = skip_separator(sep_iter)) == -1) {
+            if((tmp = skip_separator(sep_iter)) == std::string::npos) {
                 chunk_iter = sep_iter;
                 break;
             } else
@@ -569,7 +571,7 @@ list<str *> *str::split(str *sp, int max_splits) {
         }
         if(not (max_splits < 0 or num_splits < max_splits))
             result->append(new str(s.substr(chunk_iter, s.size()-chunk_iter)));
-        else if(sep_iter == -1)
+        else if(sep_iter == std::string::npos)
             result->append(new str(s.substr(chunk_iter, s.size()-chunk_iter)));
 
 #undef next_separator
@@ -581,7 +583,7 @@ list<str *> *str::split(str *sp, int max_splits) {
         int sep_size = sp->unit.size();
 
 #define next_separator(iter) s.find(sep, (iter))
-#define skip_separator(iter) ((iter + sep_size) > s.size()? -1 : (iter + sep_size))
+#define skip_separator(iter) ((iter + sep_size) > s.size()? std::string::npos : (iter + sep_size))
 
         if (max_splits == 0) {
             result->append(this);
@@ -593,10 +595,10 @@ list<str *> *str::split(str *sp, int max_splits) {
             ++num_splits;
         }
         while((max_splits < 0 or num_splits < max_splits)
-              and (sep_iter = next_separator(chunk_iter)) != -1)
+              and (sep_iter = next_separator(chunk_iter)) != std::string::npos)
         {
             result->append(new str(s.substr(chunk_iter, sep_iter - chunk_iter)));
-            if((tmp = skip_separator(sep_iter)) == -1) {
+            if((tmp = skip_separator(sep_iter)) == std::string::npos) {
                 chunk_iter = sep_iter;
                 break;
             } else
@@ -605,7 +607,7 @@ list<str *> *str::split(str *sp, int max_splits) {
         }
         if(not (max_splits < 0 or num_splits < max_splits))
             result->append(new str(s.substr(chunk_iter, s.size()-chunk_iter)));
-        else if(sep_iter == -1)
+        else if(sep_iter == std::string::npos)
             result->append(new str(s.substr(chunk_iter, s.size()-chunk_iter)));
 
 
@@ -626,7 +628,7 @@ str *str::translate(str *table, str *delchars) {
     int self_size = unit.size();
     for(int i = 0; i < self_size; i++) {
         char c = unit[i];
-        if(!delchars || delchars->unit.find(c) == -1)
+        if(!delchars || delchars->unit.find(c) == std::string::npos)
             newstr->unit.push_back(table->unit[(unsigned char)c]);
     }
 
@@ -772,7 +774,7 @@ str *str::__iadd__(str *b) {
     return __add__(b);
 }
 
-str *__add_strs(int n, str *a, str *b, str *c) {
+str *__add_strs(int, str *a, str *b, str *c) {
     str *result = new str();
     int asize = a->unit.size();
     int bsize = b->unit.size();
@@ -794,7 +796,7 @@ str *__add_strs(int n, str *a, str *b, str *c) {
     return result;
 }
 
-str *__add_strs(int n, str *a, str *b, str *c, str *d) {
+str *__add_strs(int, str *a, str *b, str *c, str *d) {
     str *result = new str();
     int asize = a->unit.size();
     int bsize = b->unit.size();
@@ -820,7 +822,7 @@ str *__add_strs(int n, str *a, str *b, str *c, str *d) {
     return result;
 }
 
-str *__add_strs(int n, str *a, str *b, str *c, str *d, str *e) {
+str *__add_strs(int, str *a, str *b, str *c, str *d, str *e) {
     str *result = new str();
     int asize = a->unit.size();
     int bsize = b->unit.size();
@@ -1159,7 +1161,7 @@ void *file::write(str *s) {
     __check_closed();
   //  fputs(s->unit.c_str(), f);
 
-    for(int i = 0; i < s->unit.size(); i++)
+    for(unsigned int i = 0; i < s->unit.size(); i++)
         putchar(s->unit[i]);
 
     return NULL;
