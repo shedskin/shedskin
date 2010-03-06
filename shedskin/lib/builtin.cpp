@@ -1041,12 +1041,12 @@ str *str::lower() {
 
 str *str::title() {
     str *r = new str(unit);
-    int i = 0;
-    while( (i != -1) && (i<unit.size()) )
+    unsigned int i = 0;
+    while( (i != std::string::npos) && (i<unit.size()) )
     {
         r->unit[i] = ::toupper(r->unit[i]);
         i = unit.find(" ", i);
-        if (i != -1)
+        if (i != std::string::npos)
             i++;
     }
     return r;
@@ -1656,13 +1656,12 @@ template<> str *__str(double t) {
     ss.precision(12);
     ss << std::showpoint << t;
     __GC_STRING s = ss.str().c_str();
-    if( s.find('e') == -1)
+    if(s.find('e') == std::string::npos)
     {
-        int j = s.find_last_not_of("0");
+        unsigned int j = s.find_last_not_of("0");
         if( s[j] == '.') j++;
         s = s.substr(0, j+1);
     }
-
     return new str(s);
 }
 
@@ -1747,8 +1746,8 @@ int __fmtpos(str *fmt) {
 }
 
 int __fmtpos2(str *fmt) {
-    int i = 0;
-    while((i = fmt->unit.find('%', i)) != -1) {
+    unsigned int i = 0;
+    while((i = fmt->unit.find('%', i)) != std::string::npos) {
         if(i != fmt->unit.size()-1) {
             char nextchar = fmt->unit[i+1];
             if(nextchar == '%')
@@ -1839,9 +1838,9 @@ str *__mod4(str *fmts, list<pyobj *> *vals) {
             __modfill(&fmt, mod_to_c2(p), &r, a1, a2);
         else if(c == 's' || c == 'r')
             __modfill(&fmt, p, &r, a1, a2);
-        else if(__GC_STRING("diouxX").find(c) != -1)
+        else if(__GC_STRING("diouxX").find(c) != std::string::npos)
             __modfill(&fmt, mod_to_int(p), &r, a1, a2);
-        else if(__GC_STRING("eEfFgGH").find(c) != -1)
+        else if(__GC_STRING("eEfFgGH").find(c) != std::string::npos)
             __modfill(&fmt, mod_to_float(p), &r, a1, a2);
         else if(c == '%')
             __modfill(&fmt, NULL, &r, a1, a2);

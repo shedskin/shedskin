@@ -405,7 +405,11 @@ class generateVisitor(ASTVisitor):
             self.module_cpp(node)
 
     def do_main(self):
-        print >>self.out, 'int main(int argc, char **argv) {'
+        mods = getgx().modules.values()
+        if [mod for mod in mods if mod.builtin and mod.ident == 'sys'] and not getgx().extension_module:
+            print >>self.out, 'int main(int argc, char **argv) {'
+        else:
+            print >>self.out, 'int main(int, char **) {'
 
         self.do_init_modules()
 

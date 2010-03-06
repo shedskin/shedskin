@@ -425,7 +425,7 @@ match_object *match_iter::next(void)
 {
     match_object *mobj;
 
-    if((pos > endpos && endpos != -1) || pos >= subj->unit.size()) throw new StopIteration();
+    if((pos > endpos && endpos != -1) || (unsigned int)pos >= subj->unit.size()) throw new StopIteration();
 
     //get next match
     mobj = ro->__exec(subj, pos, endpos, flags);
@@ -440,7 +440,7 @@ match_object *match_iter::next(void)
 __iter<match_object *> *re_object::finditer(str *subj, int pos, int endpos, int flags)
 {
     if(endpos < pos && endpos != -1) throw new error(new str("end position less than initial"));
-    if(pos >= subj->unit.size()) throw new error(new str("starting position >= string length"));
+    if((unsigned int)pos >= subj->unit.size()) throw new error(new str("starting position >= string length"));
 
     return new match_iter(this, subj, pos, endpos, flags);
 }
@@ -462,7 +462,7 @@ match_object *re_object::__exec(str *subj, int pos, int endpos, int flags)
     else if(endpos < pos) throw new error(new str("end position less than initial"));
     else nendpos = endpos;
 
-    if(pos >= subj->unit.size()) throw new error(new str("starting position >= string length"));
+    if((unsigned int)pos >= subj->unit.size()) throw new error(new str("starting position >= string length"));
 
     r = pcre_exec(
         compiled_pattern,
