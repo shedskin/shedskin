@@ -102,7 +102,6 @@ Python Subset Restrictions
 
   - reflection (getattr, hasattr), eval, or other really dynamic stuff
   - arbitrary-size arithmetic (integers become 32-bit on most architectures!)
-  - generator expressions
   - variable numbers of arguments and keyword arguments
   - multiple inheritance
   - nested functions and classes
