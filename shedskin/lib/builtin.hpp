@@ -475,12 +475,8 @@ template <class T> __iter<T> *___iter(pyiter<T> *p) {
     return p->__iter__();
 }
 
-//template<class T> struct gc_or_atomic { typedef __GC_VECTOR(T) type; };
-//template<> struct gc_or_atomic<int> { typedef std::vector<int> type; };
-
 template <class T> class pyseq : public pyiter<T> {
 public:
-//    typename gc_or_atomic<T>::type units;
     __GC_VECTOR(T) units;
 
     virtual int __len__() {
