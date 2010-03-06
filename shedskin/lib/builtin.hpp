@@ -233,7 +233,7 @@ template<> inline int __cmp(int a, int b) {
 }
 
 template<> inline int __cmp(__ss_bool a, __ss_bool b) {
-    return 0;
+    return __cmp(a.value, b.value); /* XXX */
 }
 
 template<> inline int __cmp(double a, double b) {
@@ -1248,7 +1248,7 @@ class StopIteration : public Exception { public: StopIteration(str *msg=0) : Exc
 
 #define FOR_IN_SEQ(i, m, temp, n) \
     __ ## temp = m; \
-    for(__ ## n = 0; __ ## n < (__ ## temp)->units.size(); __ ## n ++) { \
+    for(__ ## n = 0; (unsigned int)__ ## n < (__ ## temp)->units.size(); __ ## n ++) { \
         i = (__ ## temp)->units[__ ## n]; \
 
 #define FOR_IN_ZIP(a,b, k,l, t,u, n,m) \
@@ -2044,7 +2044,7 @@ template<class T> template <class U> void *list<T>::sort(int cmp, U (*key)(T), i
 template<class T> void *list<T>::sort(int (*cmp)(T, T), int, int reverse) {
     return sort(cmp, (int(*)(T))0, reverse);
 }
-template<class T> void *list<T>::sort(int cmp, int, int reverse) {
+template<class T> void *list<T>::sort(int, int, int reverse) {
     return sort((int(*)(T,T))0, (int(*)(T))0, reverse);
 }
 
@@ -3220,7 +3220,7 @@ template<class T, class B> T __min(int, B (*key)(T), pyiter<T> *a) {
 }
 template<class T> T __min(int nn, int, pyiter<T> *a) { return __min(nn, (int (*)(T))0, a); }
 
-template<class T, class B> T __min(int nn, B (*key)(T), pyseq<T> *l) {
+template<class T, class B> T __min(int, B (*key)(T), pyseq<T> *l) {
     int len = l->units.size();
     int i;
     if(len==0)
@@ -3242,11 +3242,11 @@ template<class T, class B> T __min(int nn, B (*key)(T), pyseq<T> *l) {
     }
     return m;
 }
-template<class T> T __min(int nn, int key, pyseq<T> *a) { return __min(nn, (int (*)(T))0, a); }
+template<class T> T __min(int nn, int, pyseq<T> *a) { return __min(nn, (int (*)(T))0, a); }
 template<class B> str *__min(int nn, B (*key)(str *), str *l) { return __min(nn, key, (pyiter<str *> *)l); }
 inline str *__min(int nn, int key, str *l) { return __min(nn, key, (pyiter<str *> *)l); }
 
-template<class T, class B> inline T __min(int n, B (*key)(T), T a, T b) { return (__cmp(key(a), key(b))==-1)?a:b; }
+template<class T, class B> inline T __min(int, B (*key)(T), T a, T b) { return (__cmp(key(a), key(b))==-1)?a:b; }
 template<class T> inline  T __min(int, int, T a, T b) { return (__cmp(a, b)==-1)?a:b; }
 
 template<class T, class B> T __min(int n, B (*key)(T), T a, T b, T c, ...) {
@@ -3479,7 +3479,7 @@ template <class A> A next(__iter<A> *iter1) { return iter1->next(); }
 
 /* map, filter, reduce */
 
-template <class A, class B> list<A> *map(int n, A (*func)(B), pyiter<B> *b) {
+template <class A, class B> list<A> *map(int, A (*func)(B), pyiter<B> *b) {
     if(!func)
         throw new ValueError(new str("'map' function argument cannot be None"));
     list<A> *result = new list<A>();
@@ -3511,7 +3511,7 @@ template <class A, class B, class C> list<A> *map(int n, A (*func)(B, C), pyiter
     return result;
 }
 
-template <class A, class B, class C, class D> list<A> *map(int n, A (*func)(B, C, D), pyiter<B> *b1, pyiter<C> *b2, pyiter<D> *b3) {
+template <class A, class B, class C, class D> list<A> *map(int, A (*func)(B, C, D), pyiter<B> *b1, pyiter<C> *b2, pyiter<D> *b3) {
     if(!func)
         throw new ValueError(new str("'map' function argument cannot be None"));
     list<A> *result = new list<A>();
