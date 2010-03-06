@@ -1472,14 +1472,14 @@ template<> void *__copy(void *d) { return d; }
 template<> str *repr(double d) { return __str(d); }
 template<> str *repr(int i) { return __str(i); }
 template<> str *repr(__ss_bool b) { return b.value?(new str("True")):(new str("False")); }
-template<> str *repr(void *v) { return new str("None"); }
+template<> str *repr(void *) { return new str("None"); }
 
-str *__str(void *v) { return new str("void"); }
+str *__str(void *) { return new str("void"); }
 
 /* get class pointer */
 
-template<> class_ *__type(int i) { return cl_int_; }
-template<> class_ *__type(double d) { return cl_float_; }
+template<> class_ *__type(int) { return cl_int_; }
+template<> class_ *__type(double) { return cl_float_; }
 
 /* pow */
 
@@ -1696,7 +1696,7 @@ list<str *> *sorted(str *t, int (*cmp)(str *, str *), int key, int reverse) {
     l->sort(cmp, key, reverse);
     return l;
 }
-list<str *> *sorted(str *t, int cmp, int key, int reverse) {
+list<str *> *sorted(str *t, int, int key, int reverse) {
     return sorted(t, (int (*)(str *, str *))0, key, reverse);
 }
 
@@ -2134,7 +2134,7 @@ template <> void *myallocate<int>(int n) { return GC_MALLOC_ATOMIC(n); }
 template<> int __none() { throw new TypeError(new str("mixing None with int")); }
 template<> double __none() { throw new TypeError(new str("mixing None with float")); }
 
-list<tuple2<void *, void *> *> *__zip(int nn) {
+list<tuple2<void *, void *> *> *__zip(int) {
     return new list<tuple2<void *, void *> *>();
 }
 

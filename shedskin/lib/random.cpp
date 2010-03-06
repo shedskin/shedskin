@@ -53,8 +53,6 @@ str *__name__;
 Random *_inst;
 
 static inline list<double> *list_comp_0(list<int> *__108) {
-    list<int> *__23;
-    __iter<int> *__24;
     int s, __25;
     list<double> *result = new list<double>();
 
@@ -68,8 +66,6 @@ static inline list<double> *list_comp_0(list<int> *__108) {
 
 static inline list<int> *list_comp_1(list<double> *__108) {
     double s;
-    list<double> *__26;
-    __iter<double> *__27;
     list<int> *result = new list<int>();
     int __28;
 
@@ -478,11 +474,11 @@ double Random::triangular(double low, double high, double mode) {
     return __triangular(low, high, this->random(), ((mode-low)/(high-low)));
 }
 
-double Random::triangular(double low, double high, void *mode) {
+double Random::triangular(double low, double high, void *) {
     return __triangular(low, high, this->random(), 0.5);
 }
 
-double Random::stdgamma(double alpha, double ainv, double bbb, double ccc) {
+double Random::stdgamma(double alpha, double, double, double) {
 
     return this->gammavariate(alpha, 1.0);
 }
