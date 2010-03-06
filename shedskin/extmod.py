@@ -140,7 +140,7 @@ def supported_funcs(gv, funcs):
         for formal in func.formals:
             try:
                 cpp.typesetreprnew(func.vars[formal], func, check_extmod=True)
-                cpp.typesetreprnew(func.retnode.thing, func, check_extmod=True)
+                cpp.typesetreprnew(func.retnode.thing, func, check_extmod=True, check_ret=True)
             except cpp.ExtmodError:
                 builtins = False
         if builtins:

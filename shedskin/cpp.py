@@ -2493,7 +2493,7 @@ def namespaceclass(cl):
         return nokeywords(cl.ident)
 
 # --- determine representation of node type set (within parameterized context)
-def typesetreprnew(node, parent, cplusplus=True, check_extmod=False):
+def typesetreprnew(node, parent, cplusplus=True, check_extmod=False, check_ret=False):
     orig_parent = parent
     while is_listcomp(parent): # XXX redundant with typesplit?
         parent = parent.parent
@@ -2503,7 +2503,7 @@ def typesetreprnew(node, parent, cplusplus=True, check_extmod=False):
 
     # --- use this 'split' to determine type representation
     try:
-        ts = typestrnew(split, parent, cplusplus, orig_parent, node, check_extmod)
+        ts = typestrnew(split, parent, cplusplus, orig_parent, node, check_extmod, 0, check_ret)
     except RuntimeError:
         if not hasattr(node, 'lineno'): node.lineno = None # XXX
         if not getmv().module.builtin and isinstance(node, variable) and not node.name.startswith('__'): # XXX startswith
@@ -2518,7 +2518,7 @@ def typesetreprnew(node, parent, cplusplus=True, check_extmod=False):
 class ExtmodError(Exception):
     pass
 
-def typestrnew(split, root_class, cplusplus, orig_parent, node=None, check_extmod=False, depth=0):
+def typestrnew(split, root_class, cplusplus, orig_parent, node=None, check_extmod=False, depth=0, check_ret=False):
     if depth==10:
         raise RuntimeError()
 
@@ -2566,7 +2566,9 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None, check_extmo
 
     cl = lcp.pop()
 
-    if check_extmod and cl.mv.module.builtin and not (cl.mv.module.ident == 'builtin' and cl.ident in ['int_', 'float_', 'complex', 'str_', 'list', 'tuple', 'tuple2', 'dict', 'set', 'frozenset', 'none', 'bool_']):
+    if check_ret and cl.mv.module.ident == 'collections' and cl.ident == 'defaultdict':
+        print '*WARNING* %s:defaultdicts are returned as dicts' % root_class.ident
+    elif check_extmod and cl.mv.module.builtin and not (cl.mv.module.ident == 'builtin' and cl.ident in ['int_', 'float_', 'complex', 'str_', 'list', 'tuple', 'tuple2', 'dict', 'set', 'frozenset', 'none', 'bool_']) and not (cl.mv.module.ident == 'collections' and cl.ident == 'defaultdict'):
         raise ExtmodError()
 
     # --- simple built-in types
