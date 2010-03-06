@@ -210,11 +210,13 @@ template<> inline int hasher(double v) {
 
 template<class T> class hashfunc
 {
-    public: int operator()(T t) const { return hasher<T>(t); }
+public:
+    int operator()(T t) const { return hasher<T>(t); }
 };
 
 template<class T> class hasheq {
-    public: int operator()(T t, T v) const { return __eq(t,v); }
+public: 
+    int operator()(T t, T v) const { return __eq(t,v); }
 };
 
 /* comparison */
@@ -254,28 +256,28 @@ template<class T> int cpp_cmp_rev(T a, T b) {
 template<class T> class cpp_cmp_custom {
     typedef int (*hork)(T, T);
     hork cmp;
-    public:
+public:
     cpp_cmp_custom(hork a) { cmp = a; }
     int operator()(T a, T b) const { return cmp(a,b) == -1; }
 };
 template<class T> class cpp_cmp_custom_rev {
     typedef int (*hork)(T, T);
     hork cmp;
-    public:
+public:
     cpp_cmp_custom_rev(hork a) { cmp = a; }
     int operator()(T a, T b) const { return cmp(a,b) == 1; }
 };
 template<class T, class V> class cpp_cmp_key {
     typedef V (*hork)(T);
     hork key;
-    public:
+public:
     cpp_cmp_key(hork a) { key = a; }
     int operator()(T a, T b) const { return __cmp(key(a), key(b)) == -1; }
 };
 template<class T, class V> class cpp_cmp_key_rev {
     typedef V (*hork)(T);
     hork key;
-    public:
+public:
     cpp_cmp_key_rev(hork a) { key = a; }
     int operator()(T a, T b) const { return __cmp(key(a), key(b)) == 1; }
 };
