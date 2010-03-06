@@ -44,7 +44,8 @@ lines  name               description                   notes
     80 pisang.py          satisfiability solver
    272 pygmy.py           raytracer
    276 yopyra.py          raytracer
-   195 mao.py             raytracer (ao benchmark)      shedskin -r mao (fast random number generator)
+   195 mao.py             raytracer (ao benchmark)      see comments in top
+                                                        shedskin -r mao (fast random number generator)
    462 minilight.py       advanced raytracer            shedskin -r minilight (fast random number generator)
                           (triangle primitives, octree spatial index)
    181 pystone.py         standard benchmark
