@@ -477,7 +477,7 @@ template <class T> __iter<T> *___iter(pyiter<T> *p) {
 
 template <class T> class pyseq : public pyiter<T> {
 public:
-    std::vector<T, gc_allocator<T> > units;
+    __GC_VECTOR(T) units;
 
     virtual int __len__() {
         return units.size();
@@ -1880,7 +1880,7 @@ template<class T> void *list<T>::__delete__(int x, int l, int u, int s) {
     if(s == 1)
         __delslice__(l, u);
     else {
-        std::vector<T, gc_allocator<T> > v;
+        __GC_VECTOR(T) v;
         for(int i=0; i<this->__len__();i++)
             if((i+l) % s)
                 v.push_back(this->units[i]);
