@@ -254,6 +254,25 @@ public:
     str *__repr__() {
         return __add_strs(3, new str("defaultdict("), dict<K, V>::__repr__(), new str(")"));
     }
+
+#ifdef __SS_BIND
+    defaultdict(PyObject *p) { /* XXX merge with dict */
+        if(!PyDict_Check(p))
+            throw new TypeError(new str("error in conversion to Shed Skin (dictionary expected)"));
+
+        this->__class__ = cl_dict;
+        PyObject *key, *value;
+
+        PyObject *iter = PyObject_GetIter(p);
+        while(key = PyIter_Next(iter)) {
+            value = PyDict_GetItem(p, key);
+            __setitem__(__to_ss<K>(key), __to_ss<V>(value));
+            Py_DECREF(key);
+        }
+        Py_DECREF(iter);
+    }
+#endif
+
 };
 
 void __init();
