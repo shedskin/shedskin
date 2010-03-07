@@ -33,6 +33,8 @@ public:
     list<int> *mt;
     int mti;
 
+    Random();
+    Random(int a);
     virtual double random();
     double paretovariate(double alpha);
     int randrange(int stop);
@@ -41,11 +43,8 @@ public:
     double betavariate(double alpha, double beta);
     double normalvariate(double mu, double sigma);
     double _genrand_res53();
-    void *seed();
-    void *seed(int a);
+    template <class A> void *seed(A a);
     double weibullvariate(double alpha, double beta);
-    Random();
-    Random(int a);
     int _init_by_array(list<int> *init_key);
     int randint(int a, int b);
     double vonmisesvariate(double mu, double kappa);
@@ -104,8 +103,6 @@ extern str * __name__;
 extern double  NV_MAGICCONST;
 extern int  MAXBITS;
 void __init();
-void *seed();
-void *seed(int a);
 double random();
 list<double> *getstate();
 int setstate(list<double> *state);
@@ -251,6 +248,41 @@ template <class A> A Random::choice(pyseq<A> *seq) {
     */
 
     return seq->__getitem__(__int((this->random()*len(seq))));
+}
+
+template <class A> void *Random::seed(A a) {
+    /**
+    Initialize the random number generator with a single seed number.
+
+            If provided, the seed, a, must be an integer.
+            If no argument is provided, current time is used for seeding.
+    */
+
+    int h;
+
+    if(__is_none(a)) {
+        int secs, usec, a;
+        double hophop = __time__::time();
+        secs = __int(hophop);
+        usec = __int((1000000*(hophop-__int(hophop))));
+        h = ((__mods(secs, (MAXINT/1000000))*1000000)|usec);
+    }
+    else
+        h = hasher(a);
+
+#ifdef FASTRANDOM
+    srand(h);
+#else
+    this->_init_by_array((new list<int>(1, h)));
+    this->gauss_next = 0.0;
+    this->gauss_switch = 0;
+#endif
+
+    return NULL;
+}
+
+template <class A> void *seed(A a) {
+    return _inst->seed(a);
 }
 
 } // module namespace

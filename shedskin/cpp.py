@@ -1742,7 +1742,9 @@ class generateVisitor(ASTVisitor):
         target = funcs[0] # XXX
 
         castnull = False # XXX
-        if (self.library_func(funcs, 'random', None, 'triangular') or \
+        if (self.library_func(funcs, 'random', None, 'seed') or \
+            self.library_func(funcs, 'random', None, 'triangular') or \
+            self.library_func(funcs, 'random', 'Random', 'seed') or \
             self.library_func(funcs, 'random', 'Random', 'triangular')):
             castnull = True
         for itertools_func in ['islice', 'izip_longest', 'permutations']:

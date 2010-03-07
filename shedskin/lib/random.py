@@ -15,7 +15,8 @@ LOWER = 1
 
 class Random:
     def __init__(self, a=-1): return 1
-    def seed(self, a=-1): pass
+    def seed(self, a=None):
+        a.__hash__()
     def random(self): return 1.0
     def _genrand_res53(self): return 1.0
     def _genrand_int32(self): return 1
@@ -55,7 +56,8 @@ class WichmannHill(Random):
 
 
 _inst = Random()
-def seed(a=-1): pass
+def seed(a=None):
+    _inst.seed(a)
 def random(): return 1.0
 def getstate(): return [1.0,1.0,1.0]
 def setstate(state): return 1
