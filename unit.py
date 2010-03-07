@@ -176,7 +176,7 @@ class meuk:
 waf = meuk().layout()
 print list(waf)
 
-# random.triangular
+# random module improvements
 import random
 random.seed(1)
 print random.triangular()
@@ -185,6 +185,12 @@ print random.triangular(0.1)
 print random.triangular(-2, 2)
 print random.triangular(-2.0, 2.1, 1.5)
 print random.triangular(mode=1.5)
+random.seed()
+random.seed('seed')
+random.seed(8.0)
+random.seed(None)
+random.seed(4)
+print random.random()
 
 # itertools.product fix
 import itertools

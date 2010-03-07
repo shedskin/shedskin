@@ -211,36 +211,6 @@ double Random::_genrand_res53() {
     return 0;
 }
 
-void *Random::seed() {
-    return this->seed(-1);
-}
-void *Random::seed(int a) {
-    /**
-    Initialize the random number generator with a single seed number.
-
-            If provided, the seed, a, must be an integer.
-            If no argument is provided, current time is used for seeding.
-    */
-    int secs, usec;
-    double hophop;
-
-    if ((a==-1)) {
-        hophop = __time__::time();
-        secs = __int(hophop);
-        usec = __int((1000000*(hophop-__int(hophop))));
-        a = ((__mods(secs, (MAXINT/1000000))*1000000)|usec);
-    }
-#ifdef FASTRANDOM
-    srand(a);
-    return NULL;
-#else
-    this->_init_by_array((new list<int>(1, a)));
-    this->gauss_next = 0.0;
-    this->gauss_switch = 0;
-    return NULL;
-#endif
-}
-
 double Random::weibullvariate(double alpha, double beta) {
     /**
     Weibull distribution.
@@ -261,7 +231,7 @@ Random::Random() {
     this->mti = (N+1);
     this->gauss_next = 0.0;
     this->gauss_switch = 0;
-    this->seed(-1);
+    this->seed((void *)NULL);
     this->VERSION = 2;
 }
 
@@ -1012,15 +982,6 @@ void __init() {
     UPPER = 2147483648u;
     LOWER = 2147483647;
     _inst = (new Random(-1));
-}
-
-void *seed() {
-
-    return _inst->seed(-1);
-}
-void *seed(int a) {
-
-    return _inst->seed(a);
 }
 
 double random() {

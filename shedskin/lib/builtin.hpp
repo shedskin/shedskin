@@ -287,6 +287,9 @@ template<class T> struct dereference <T*> {
     typedef T type;
 };
 
+template<class T> inline int __is_none(T *t) { return !t; }
+template<class T> inline int __is_none(T t) { return 0; }
+
 /* binding */
 
 #ifdef __SS_BIND
