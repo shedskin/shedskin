@@ -197,6 +197,11 @@ import itertools
 print list(itertools.product([0,1,2], [0,1,2]))
 print list(itertools.product([-1, 0, 1], repeat=2))
 
+# hashing
+print hash(-1)
+print hash(True)
+print hash(12.345)
+
 ''', '''
 output(equal=True)
 '''),
