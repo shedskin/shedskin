@@ -196,16 +196,20 @@ template<class T> inline int hasher(T t) {
     if(t == NULL) return 0;
     return t->__hash__();
 }
-template<> inline int hasher(int a) { return a; }
+template<> inline int hasher(int a) { return (a==-1)?-2:a; }
 template<> inline int hasher(__ss_bool a) { return a.value; }
 template<> inline int hasher(void *a) { return (intptr_t)a; }
 template<> inline int hasher(double v) {
-    int hipart, expo; /* modified from CPython */
+    long hipart, x; /* modified from CPython */
+    int expo;
     v = frexp(v, &expo);
-    v *= 32768.0; /* 2**15 */
-    hipart = (int)v;   /* take the top 16 bits */
-    v = (v - (double)hipart) * 32768.0; /* get the next 16 bits */
-    return hipart + (int)v + (expo << 15);
+    v *= 2147483648.0; /* 2**31 */
+    hipart = (long)v;   /* take the top 32 bits */
+    v = (v - (double)hipart) * 2147483648.0; /* get the next 32 bits */
+    x = hipart + (long)v + (expo << 15);
+    if (x== -1)
+        x = -2;
+    return x;
 }
 
 template<class T> class hashfunc
