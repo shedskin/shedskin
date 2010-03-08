@@ -1237,10 +1237,7 @@ class generateVisitor(ASTVisitor):
         self.start()
 
     def visitNot(self, node, func=None):
-        if [t for t in self.mergeinh[node] if t[0].ident == 'bool_']:
-            self.append('__NOT(')
-        else:
-            self.append('(!')
+        self.append('__NOT(')
         self.bool_test(node.expr, func)
         self.append(')')
 
@@ -2563,7 +2560,7 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None, check_extmo
                 if orig_parent: varname = "%s" % node
                 else: varname = "'%s'" % node
                 error("variable %s has dynamic (sub)type: {%s}" % (varname, ', '.join([conv2.get(cl.ident, cl.ident) for cl in lcp])), warning=True)
-        elif not isinstance(node, (Or,And)):
+        elif node not in getgx().bool_test_only:
             error("expression has dynamic (sub)type: {%s}" % ', '.join([conv2.get(cl.ident, cl.ident) for cl in lcp]), node, warning=True)
 
     elif not classes:

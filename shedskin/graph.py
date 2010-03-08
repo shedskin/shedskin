@@ -561,26 +561,27 @@ class moduleVisitor(ASTVisitor):
         newnode.copymetoo = True
 
     def visitAnd(self, node, func=None): # XXX merge
-        newnode = cnode(node, parent=func)
-        getgx().types[newnode] = set()
-        for child in node.getChildNodes():
-            self.visit(child, func)
-            self.addconstraint((inode(child), newnode), func)
-            self.tempvar2(child, newnode, func)
+        self.visitandor(node, func)
 
     def visitOr(self, node, func=None):
+        self.visitandor(node, func)
+
+    def visitandor(self, node, func):
         newnode = cnode(node, parent=func)
         getgx().types[newnode] = set()
         for child in node.getChildNodes():
+            if node in getgx().bool_test_only:
+                self.bool_test_add(child)
             self.visit(child, func)
             self.addconstraint((inode(child), newnode), func)
             self.tempvar2(child, newnode, func)
 
     def visitIf(self, node, func=None):
-        for test in node.tests:
-            faker = CallFunc(Name('bool'), [test[0]])
+        for test, code in node.tests:
+            self.bool_test_add(test)
+            faker = CallFunc(Name('bool'), [test])
             self.visit(faker, func)
-            self.visit(test[1], func)
+            self.visit(code, func)
         if node.else_:
            self.visit(node.else_, func)
 
@@ -606,6 +607,7 @@ class moduleVisitor(ASTVisitor):
             node.lineno = node.items[0][0].lineno
 
     def visitNot(self, node, func=None):
+        self.bool_test_add(node.expr)
         newnode = cnode(node, parent=func)
         newnode.copymetoo = True
         getgx().types[newnode] = set([(defclass('bool_'),0)])  # XXX new type?
@@ -954,8 +956,13 @@ class moduleVisitor(ASTVisitor):
                     self.tempvar2((node,3), inode(node.list.args[1]), func)
                     self.tempvar_int((node,4), func)
 
+    def bool_test_add(self, node):
+        if isinstance(node, (And, Or, Not)):
+            getgx().bool_test_only.add(node)
+
     def visitWhile(self, node, func=None):
         getgx().loopstack.append(node)
+        self.bool_test_add(node.test)
         for child in node.getChildNodes():
             self.visit(child, func)
         getgx().loopstack.pop()
@@ -977,6 +984,11 @@ class moduleVisitor(ASTVisitor):
         for child in node.getChildNodes():
             self.visit(child, func)
 
+    def visitListCompIf(self, node, func=None):
+        self.bool_test_add(node.test)
+        for child in node.getChildNodes():
+            self.visit(child, func)
+    
     def visitListComp(self, node, func=None):
         # --- [expr for iter in list for .. if cond ..]
         lcfunc = function()
