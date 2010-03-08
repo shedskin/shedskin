@@ -234,6 +234,8 @@ class moduleVisitor(ASTVisitor):
     def visitStmt(self, node, func=None):
         comments = []
         for b in node.nodes:
+            if isinstance(b, Discard):
+                self.bool_test_add(b.expr)
             if isinstance(b, Discard) and isinstance(b.expr, Const) and type(b.expr.value) == str:
                 comments.append(b.expr.value)
             elif comments:

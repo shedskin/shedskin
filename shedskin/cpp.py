@@ -1292,50 +1292,34 @@ class generateVisitor(ASTVisitor):
                 self.visit(b, func)
 
     def visitOr(self, node, func=None):
-        if not self.mixingboolean(node, '||', func): # allow type mixing, as result may not be used
-            self.booleanOp(node, node.nodes, '__OR', func)
+        self.visitandor(node, node.nodes, '__OR', 'or', func)
 
     def visitAnd(self, node, func=None):
-        if not self.mixingboolean(node, '&&', func): # allow type mixing, as result may not be used
-            self.booleanOp(node, node.nodes, '__AND', func)
+        self.visitandor(node, node.nodes,  '__AND', 'and', func)
 
-    def mixingboolean(self, node, op, func):
-        mixing = False
-        for n in node.nodes:
-            if self.booleancast(node, n, func) is None:
-                mixing = True
-        if not mixing:
-            return False
-        self.append('(')
-        for n in node.nodes:
-            self.bool_test(n, func)
-            if n != node.nodes[-1]:
-                self.append(' '+op+' ')
-        self.append(')')
-        return True
-
-    def booleancast(self, node, child, func=None):
-        if typesetreprnew(child, func) == typesetreprnew(node, func):
-            return '' # exactly the same types: no casting necessary
-        elif assign_needs_cast(child, func, node, func) or (self.mergeinh[child] == set([(defclass('none'),0)]) and self.mergeinh[node] != set([(defclass('none'),0)])): # cast None or almost compatible types
-            return '('+typesetreprnew(node, func)+')'
+    def visitandor(self, node, nodes, op, mix, func=None):
+        if node in getgx().bool_test_only:
+            self.append('(')
+            for n in nodes:
+                self.bool_test(n, func)
+                if n != node.nodes[-1]:
+                    self.append(' '+mix+' ')
+            self.append(')')
         else:
-            return None # local dynamic typing
-
-    def castup(self, node, child, func=None):
-        cast = self.booleancast(node, child, func)
-        if cast: self.visitm('('+cast, child, ')', func)
-        else: self.visit(child, func)
-
-    def booleanOp(self, node, nodes, op, func=None):
-        if len(nodes) > 1:
-            self.append(op+'(')
-            self.castup(node, nodes[0], func)
-            self.append(', ')
-            self.booleanOp(node, nodes[1:], op, func)
-            self.append(', '+getmv().tempcount[nodes[0]][2:]+')')
-        else:
-            self.castup(node, nodes[0], func)
+            child = nodes[0]
+            if len(nodes) > 1:
+                self.append(op+'(')
+            cast = ''
+            if assign_needs_cast(child, func, node, func):
+                cast = '(('+typesetreprnew(node, func)+')'
+                self.append(cast)
+            self.visit(child, func)
+            if cast:
+                self.append(')')
+            if len(nodes) > 1:
+                self.append(', ')
+                self.visitandor(node, nodes[1:], op, mix, func)
+                self.append(', '+getmv().tempcount[child][2:]+')')
 
     def visitCompare(self, node, func=None, wrapper=True):
         if not node in self.bool_wrapper:
@@ -1725,7 +1709,9 @@ class generateVisitor(ASTVisitor):
 
     def bool_test(self, node, func, always_wrap=False):
         wrapper = always_wrap or not self.only_classes(node, ('int_', 'bool_'))
-        if wrapper:
+        if node in getgx().bool_test_only:
+            self.visit(node, func)
+        elif wrapper:
             self.append('___bool(')
             self.visit(node, func)
             is_func = bool([1 for t in self.mergeinh[node] if isinstance(t[0], function)])
