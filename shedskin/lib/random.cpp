@@ -444,6 +444,10 @@ double Random::triangular(double low, double high, double mode) {
     return __triangular(low, high, this->random(), ((mode-low)/(high-low)));
 }
 
+double Random::triangular(double low, double high, int mode) {
+    return __triangular(low, high, this->random(), (double)mode);
+}
+
 double Random::triangular(double low, double high, void *) {
     return __triangular(low, high, this->random(), 0.5);
 }
@@ -1024,14 +1028,6 @@ double uniform(double a, double b) {
     return _inst->uniform(a, b);
 }
 
-double triangular(double low, double high, double mode) {
-    return _inst->triangular(low, high, mode);
-}
-
-double triangular(double low, double high, void *mode) {
-    return _inst->triangular(low, high, mode);
-}
-
 double normalvariate(double mu, double sigma) {
 
     return _inst->normalvariate(mu, sigma);
@@ -1090,6 +1086,16 @@ double weibullvariate(double alpha, double beta) {
 int getrandbits(int k) {
 
     return _inst->getrandbits(k);
+}
+
+double triangular(double low, double high, double mode) {
+    return _inst->triangular(low, high, mode);
+}
+double triangular(double low, double high, int mode) {
+    return _inst->triangular(low, high, mode);
+}
+double triangular(double low, double high, void *mode) {
+    return _inst->triangular(low, high, mode);
 }
 
 } // module namespace
