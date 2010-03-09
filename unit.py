@@ -185,6 +185,7 @@ print random.triangular(0.1)
 print random.triangular(-2, 2)
 print random.triangular(-2.0, 2.1, 1.5)
 print random.triangular(mode=1.5)
+print random.triangular(0, 5, 0)
 random.seed()
 random.seed('seed')
 random.seed(8.0)
@@ -201,6 +202,38 @@ print list(itertools.product([-1, 0, 1], repeat=2))
 print hash(-1)
 print hash(True)
 print hash(12.345)
+
+#and,or mixing
+1 or 'hoppa' or [1,2]
+plb = 1 or 9
+plc = not (1 or 9)
+not (1 or 'hopsa')
+pld = 1 and 9
+ple = not (1 and 9)
+if 1 or 'hoei':
+    print 'ba'
+while 1 or 'hoei':
+    print 'uhoh'
+    break
+while (1 or ('blah' and 1)):
+    break
+print [plx for plx in range(4) if plx and 'hoei']
+print [plx for plx in range(4) if plx and 1]
+if not (1 and 'hoei'):
+    print 'oh'
+
+# copy, deepcopy and None
+import copy
+
+class TreeNode:
+    def __init__(self):
+        self.hoppa = [1]
+        self.hoppa = None
+
+tn = TreeNode()
+tn2 = copy.deepcopy(tn)
+blar = tn2.hoppa
+blar2 = copy.copy(blar)
 
 ''', '''
 output(equal=True)
