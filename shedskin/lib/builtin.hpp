@@ -1388,12 +1388,15 @@ str *__add_strs(int n, ...);
 /* deep copy */
 
 template<class T> T __deepcopy(T t, dict<void *, pyobj *> *memo=0) {
+    if(!t)
+        return (T)NULL;
+
     if(!memo)
         memo = new dict<void *, pyobj *>();
-
     T u = (T)(memo->get(t, 0));
+    if(u)
+       return u;
 
-    if(u) return u;
     return (T)(t->__deepcopy__(memo));
 }
 
@@ -1402,7 +1405,11 @@ template<> __ss_bool __deepcopy(__ss_bool i, dict<void *, pyobj *> *);
 template<> double __deepcopy(double d, dict<void *, pyobj *> *);
 template<> void *__deepcopy(void *p, dict<void *, pyobj *> *);
 
-template<class T> T __copy(T t) { return (T)(t->__copy__()); }
+template<class T> T __copy(T t) { 
+    if(!t)
+        return (T)NULL;
+    return (T)(t->__copy__()); 
+}
 template<> int __copy(int i);
 template<> __ss_bool __copy(__ss_bool i);
 template<> double __copy(double d);
