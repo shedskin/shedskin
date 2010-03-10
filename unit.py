@@ -655,10 +655,12 @@ print l
 print '--------------'
 
 
-#for i in heapq.merge():
-#   print i
+for i in heapq.merge():
+   print i
 
-#print '-'
+print list(heapq.merge())
+
+print '-'
 
 for j in heapq.merge([3, 7, 18]):
     print j
