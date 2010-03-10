@@ -245,8 +245,8 @@ template<class T> T mergeiter<T>::next() {
     return it.second;
 }
 
-inline mergeiter<int> *merge(int /* iterable_count */) {
-    return new mergeiter<int>();
+inline mergeiter<void *> *merge(int /* iterable_count */) {
+    return new mergeiter<void *>();
 }
 template<class T> inline mergeiter<T> *merge(int iterable_count, pyiter<T> *iterable, ...) {
     mergeiter<T> *iter = new mergeiter<T>(iterable);

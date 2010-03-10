@@ -160,9 +160,6 @@ class generateVisitor(ASTVisitor):
             if singletype(var, module) or var.invisible: # XXX buh
                 continue
             typehu = typesetreprnew(var, var.parent)
-            # void *
-            if not typehu or not var.types(): continue
-
             decl.setdefault(typehu, []).append(self.cpp_name(name))
         decl2 = []
         for (t,names) in decl.items():
