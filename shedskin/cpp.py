@@ -2336,6 +2336,11 @@ class generateVisitor(ASTVisitor):
 
         # obj.attr
         else:
+            for t in self.mergeinh[node.expr]:
+                if isinstance(t[0], class_) and node.attrname in t[0].parent.vars:
+                    error("class attribute '"+node.attrname+"' accessed without using class name", node, warning=True)
+                    break
+
             if not isinstance(node.expr, (Name)):
                 self.append('(')
             if isinstance(node.expr, Name) and not lookupvar(node.expr.name, func): # XXX XXX
