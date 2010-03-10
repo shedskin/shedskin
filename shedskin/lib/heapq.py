@@ -17,11 +17,15 @@ def heapreplace(heap, item):
     heap[0] = item
     return heap[0]
 
-# def merge(*iterables):
-#     pass
+def merge(*iterables):
+    yield iter(iterables).next()
 
-# def nlargest(n, iterable, key = None):
-#     pass
+def nlargest(n, iterable): # TODO , key = None
+    elem = iter(iterable).next()
+    #key(elem)
+    yield elem
 
-# def nsmallest(n, iterable, key = None):
-#     pass
+def nsmallest(n, iterable): # TODO , key = None
+    elem = iter(iterable).next()
+    #key(elem)
+    yield elem
