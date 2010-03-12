@@ -235,6 +235,21 @@ tn2 = copy.deepcopy(tn)
 blar = tn2.hoppa
 blar2 = copy.copy(blar)
 
+# SystemExit
+import sys
+try:
+    exit(4)
+except SystemExit, baratie:
+    print 'jaja deze ook'
+try:
+    sys.exit(4)
+    sys.exit('hoppa')
+except SystemExit, baratie:
+    print 'exit with', baratie.code, baratie
+    if False: # difference when run from this file
+        sys.exit('aha')
+        sys.exit(baratie.code)
+
 ''', '''
 output(equal=True)
 '''),

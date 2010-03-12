@@ -181,8 +181,7 @@ template<class A, class B> str *__modtuple(str *fmt, tuple2<A,B> *t);
 #define __SS_MAX3(a,b,c) (__SS_MAX((a), __SS_MAX((b), (c))))
 
 void __init();
-void __exit(int code=0);
-void quit(int code=0);
+void __start(void (*initfunc)());
 void __ss_exit(int code=0);
 void slicenr(int x, int &l, int&u, int&s, int len);
 
@@ -1222,7 +1221,9 @@ public:
 
 class SystemExit : public Exception {
 public:
-    SystemExit(str *msg=0) : Exception(msg) {}
+    int code;
+    SystemExit(str *msg=0) : Exception(msg) { this->code = 0; }
+    SystemExit(int code=0) { this->msg = __str(code); this->code = code; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_SystemExit; }
 #endif
