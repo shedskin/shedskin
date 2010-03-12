@@ -571,6 +571,9 @@ __exception.filename = ''
 __exception.message = ''
 __exception.strerror = ''
 
+__exception2 = SystemExit('')
+__exception2.code = 1
+
 def str(x=None):
     x.__str__()
     x.__repr__()

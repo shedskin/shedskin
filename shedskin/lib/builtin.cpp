@@ -1970,16 +1970,22 @@ float_ *__box(double d) {
 char print_lastchar = '\n';
 int print_space = 0;
 
-void __exit(int code) {
+void __ss_exit(int code) {
+    throw new SystemExit(code);
+}
+
+void __start(void (*initfunc)()) {
+    int code = 0;
+    try {
+        initfunc();
+    } catch (SystemExit *s) {
+        if(s->code != 0)
+            print(1, s->msg);
+        code = s->code;
+    }
     if(print_lastchar != '\n')
         std::cout << '\n';
     std::exit(code);
-}
-void __ss_exit(int code) {
-    __shedskin__::__exit(code);
-}
-void quit(int code) {
-    __shedskin__::__exit(code);
 }
 
 void print(int n, ...) { // XXX merge four functions

@@ -38,12 +38,8 @@ void __init(int c, char **v) {
 }
 
 void __ss_exit() {
-    __shedskin__::__exit();
+    throw new SystemExit(0);
 };
-
-template<> void __ss_exit(int x) {
-    __shedskin__::__exit(x);
-}
 
 void *setrecursionlimit(int limit) {
     return NULL;
