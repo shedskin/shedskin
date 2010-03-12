@@ -244,6 +244,7 @@ except SystemExit, baratie:
 try:
     sys.exit(4)
     sys.exit('hoppa')
+    raise SystemExit()
 except SystemExit, baratie:
     print 'exit with', baratie.code, baratie
     if False: # difference when run from this file
