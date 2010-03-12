@@ -403,11 +403,17 @@ class generateVisitor(ASTVisitor):
 
     def do_main(self):
         mods = getgx().modules.values()
-        mods.sort(key=lambda x: x.import_order)
         if [mod for mod in mods if mod.builtin and mod.ident == 'sys'] and not getgx().extension_module:
             print >>self.out, 'int main(int argc, char **argv) {'
         else:
             print >>self.out, 'int main(int, char **) {'
+        self.do_init_modules()
+        print >>self.out, '    __shedskin__::__start(__%s__::__init);' % self.module.ident
+        print >>self.out, '}'
+
+    def do_init_modules(self):
+        mods = getgx().modules.values()
+        mods.sort(key=lambda x: x.import_order)
         print >>self.out, '    __shedskin__::__init();'
         for mod in mods:
             if mod != getgx().main_module and mod.ident != 'builtin':
@@ -418,8 +424,6 @@ class generateVisitor(ASTVisitor):
                         print >>self.out, '    __sys__::__init(argc, argv);'
                 else:
                     print >>self.out, '    __'+'__::__'.join([n for n in mod.mod_path])+'__::__init();' # XXX sep func
-        print >>self.out, '    __shedskin__::__start(__%s__::__init);' % self.module.ident
-        print >>self.out, '}'
 
     def do_comment(self, s):
         if not s: return

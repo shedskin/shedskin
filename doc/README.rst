@@ -146,7 +146,7 @@ The following modules are largely supported at the moment. Several of these, suc
   - ``fnmatch``
   - ``getopt``
   - ``glob``
-  - ``heapq`` (no nlargest, nsmallest, merge)
+  - ``heapq``
   - ``itertools`` (no starmap)
   - ``math``
   - ``os`` (some functionality missing under Windows)
@@ -156,7 +156,7 @@ The following modules are largely supported at the moment. Several of these, suc
   - ``socket``
   - ``string``
   - ``sys``
-  - ``time`` (no time.sleep under windows)
+  - ``time`` (no sleep, strptime under Windows)
 
 See `How to help out in Shed Skin Development`_ on how to help improve or add to the set of supported modules.
 

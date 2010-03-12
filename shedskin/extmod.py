@@ -34,6 +34,7 @@ def do_extmod(gv):
 
     # initialize modules
     gv.do_init_modules()
+    print >>gv.out, '    __'+gv.module.ident+'__::__init();'
     print >>gv.out, '\n    PyObject *mod = Py_InitModule((char *)"%s", Global_%sMethods);' % (gv.module.ident, gv.module.ident)
     print >>gv.out, '    if(!mod)'
     print >>gv.out, '        return;\n'
