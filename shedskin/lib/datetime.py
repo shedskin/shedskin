@@ -53,13 +53,13 @@ class date:
     def isoformat(self):
         return ''
 
-    def __str__(self):
-        return ''
-
     def ctime(self):
         return ''
 
     def strftime(self, format):
+        return ''
+
+    def __str__(self):
         return ''
 
 class datetime(date):
@@ -167,13 +167,13 @@ class datetime(date):
     def isoformat(self, sep='T'):
         return ''
 
-    def __str__(self):
-        return ''
-
     def ctime(self):
         return ''
 
     def strftime(self, format):
+        return ''
+
+    def __str__(self):
         return ''
 
 class time:
@@ -196,9 +196,6 @@ class time:
     def isoformat(self):
         return ''
 
-    def __str__(self):
-        return ''
-
     def strftime(self, format):
         return ''
 
@@ -211,14 +208,14 @@ class time:
     def tzname(self):
         return ''
 
+    def __str__(self):
+        return ''
+
 class timedelta:
     def __init__(self, days=0, seconds=0, microseconds=0, milliseconds=0, minutes=0, hours=0, weeks=0):
         self.days = 1
         self.seconds = 1
         self.microseconds = 1
-
-    def __str__(self):
-        return ''
 
     def __add__(self, other):
         return self
@@ -247,6 +244,8 @@ class timedelta:
     def subfromdatetime(self):
         return datetime(1, 1, 1)
 
+    def __str__(self):
+        return ''
 
 class tzinfo:
     def __init__(self):
@@ -261,8 +260,6 @@ class tzinfo:
         self.utcoffset(dt)
         self.dst(dt)
         return datetime(0,0,0)
-
-
 
 date.min = date (MINYEAR, 1, 1)
 date.max = date (MAXYEAR, 12, 31)
@@ -279,5 +276,3 @@ time.resolution = timedelta(microseconds=1)
 timedelta.min = timedelta(-999999999)
 timedelta.max = timedelta(days=999999999, hours=23, minutes=59, seconds=59, microseconds=999999)
 timedelta.resolution = timedelta(microseconds=1)
-
-

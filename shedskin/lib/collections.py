@@ -32,7 +32,7 @@ class deque(pyiter):
         pass
 
     def __contains__(self, e):
-        return 1
+        return True
 
     def __len__(self):
         return 1
