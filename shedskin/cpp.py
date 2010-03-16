@@ -1486,7 +1486,7 @@ class generateVisitor(ASTVisitor):
             return
 
         # --- inline other
-        if (inline and ul and ur) or not middle or (isinstance(left, Name) and left.name == 'None') or (isinstance(origright, Name) and origright.name == 'None'): # XXX not middle, cleanup?
+        if inline and ((ul and ur) or not middle or (isinstance(left, Name) and left.name == 'None') or (isinstance(origright, Name) and origright.name == 'None')): # XXX not middle, cleanup?
             self.append('(')
             self.visit2(left, func)
             self.append(inline)
