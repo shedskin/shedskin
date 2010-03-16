@@ -1,6 +1,6 @@
-47 programs that work with Shed Skin 0.4.
+46 programs that work with Shed Skin 0.4.
 
-10,500 lines in total (using sloccount, around 14,500 otherwise)
+10,400 lines in total (using sloccount, around 14,500 otherwise)
 
 If you have another interesting test case, please send it to:
    mark.dufour@gmail.com
@@ -24,7 +24,6 @@ lines  name               description                   notes
    446 go.py              go player (monte carlo/UCT)   shedskin -r go (fast random number generator)
                                                         (see DISCO for details)
     74 life.py            conway's game of life
-    70 life2.py           shedskin-optimized life.py
    218 pylife.py          hashlife-based game of life   shedskin -e pylife && make && python pylife_main.py
    186 linalg.py          linear algebra
    190 LZ2.py             Lempel-Ziv compressor
