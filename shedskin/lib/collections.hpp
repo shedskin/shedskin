@@ -68,12 +68,12 @@ public:
         return NULL;
     }
 
-    int __contains__(A value) {
+    __ss_bool __contains__(A value) {
         iter = units.begin();
         while(iter != units.end())
             if(*iter++ == value)
-                return 1;
-        return 0;
+                return True;
+        return False;
     }
 
     int __len__() {

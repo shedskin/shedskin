@@ -17,27 +17,28 @@ def chain(*iterables):
     yield iter(iterables).next()
 
 def compress(data, selectors):
-    if iter(selectors).next():
-        pass
+    iter(selectors).next()
     yield iter(data).next()
 
+def __pred_elem(predicate, iterable):
+    elem = iter(iterable).next()
+    predicate(elem)
+    return elem
+
 def dropwhile(predicate, iterable):
-    if predicate(iter(iterable).next()):
-        pass
-    yield iter(iterable).next()
+    yield __pred_elem(predicate, iterable)
 
 def groupby(iterable, key = lambda x: x):
     yield key(iter(iterable).next()), iter(iterable)
 
 def ifilter(predicate, iterable):
-    if predicate(iter(iterable).next()):
-        pass
-    yield iter(iterable).next()
+    yield __pred_elem(predicate, iterable)
 
 def ifilterfalse(predicate, iterable):
-    if predicate(iter(iterable).next()):
-        pass
-    yield iter(iterable).next()
+    yield __pred_elem(predicate, iterable)
+
+def takewhile(predicate, iterable):
+    yield __pred_elem(predicate, iterable)
 
 def islice(iterable, start, stop = -1, step = -1):
     'Known limitations: cannot distinguish between 0 and None for the stop argument'
@@ -60,11 +61,6 @@ def __imap6(function, iter1, iter2, iter3, iter4, iter5):
 
 def tee(iterable, n = 2):
     return iter(iterable), iter(iterable)
-
-def takewhile(predicate, iterable):
-    if predicate(iter(iterable).next()):
-        pass
-    yield iter(iterable).next()
 
 def izip(*iterables):
     'Known limitations: iterables must all be of the same type if they are more than two'
