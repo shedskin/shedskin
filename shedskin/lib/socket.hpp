@@ -137,7 +137,7 @@ int __ss_htonl(int);
 int __ss_htons(int);
 int __ss_ntohl(int);
 int __ss_ntohs(int);
-int has_ipv6();
+__ss_bool has_ipv6();
 double getdefaulttimeout();
 void *setdefaulttimeout(double x);
 str *gethostname();

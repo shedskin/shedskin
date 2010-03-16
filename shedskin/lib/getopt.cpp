@@ -209,8 +209,9 @@ tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *gnu_getopt(list<str *> *a
 tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *do_longs(list<tuple2<str *, str *> *> *opts, str *opt, pyiter<str *> *longopts, list<str *> *args) {
     list<str *> *__13;
     str *__12, *__14, *__15, *__8, *__9, *optarg;
-    int __10, has_arg, i;
-    tuple2<int, str *> *__11;
+    int __10, i;
+    __ss_bool has_arg;
+    tuple2<__ss_bool, str *> *__11;
 
     try {
         __10 = 0;
@@ -246,31 +247,31 @@ tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *do_longs(list<tuple2<str 
     return (new tuple2<list<tuple2<str *, str *> *> *, list<str *> *>(2, opts, args));
 }
 
-tuple2<int, str *> *long_has_args(str *opt, pyiter<str *> *longopts) {
+tuple2<__ss_bool, str *> *long_has_args(str *opt, pyiter<str *> *longopts) {
     list<str *> *possibilities;
     str *unique_match;
-    int has_arg;
+    __ss_bool has_arg;
 
     possibilities = list_comp_0(opt, longopts);
     if ((!___bool(possibilities))) {
         throw ((new GetoptError(__modct(const_8, 1, opt),opt)));
     }
     if (possibilities->__contains__(opt)) {
-        return (new tuple2<int, str *>(2, 0, opt));
+        return (new tuple2<__ss_bool, str *>(2, False, opt));
     }
     else if (possibilities->__contains__(opt->__add__(const_5))) {
-        return (new tuple2<int, str *>(2, 1, opt));
+        return (new tuple2<__ss_bool, str *>(2, True, opt));
     }
     if ((len(possibilities)>1)) {
         throw ((new GetoptError(__modct(const_9, 1, opt),opt)));
     }
     ASSERT((len(possibilities)==1), 0);
     unique_match = possibilities->__getfast__(0);
-    has_arg = unique_match->endswith(const_5);
+    has_arg = __mbool(unique_match->endswith(const_5));
     if (has_arg) {
         unique_match = unique_match->__slice__(2, 0, -1, 0);
     }
-    return (new tuple2<int, str *>(2, has_arg, unique_match));
+    return (new tuple2<__ss_bool, str *>(2, has_arg, unique_match));
 }
 
 tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *do_shorts(list<tuple2<str *, str *> *> *opts, str *optstring, str *shortopts, list<str *> *args) {
@@ -305,19 +306,18 @@ tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *do_shorts(list<tuple2<str
     return (new tuple2<list<tuple2<str *, str *> *> *, list<str *> *>(2, opts, args));
 }
 
-int short_has_arg(str *opt, str *shortopts) {
+__ss_bool short_has_arg(str *opt, str *shortopts) {
     str *__26;
     int __24, __25, i;
 
 
     FAST_FOR(i,0,len(shortopts),1,24,25)
         if ((__eq(opt, (__26=shortopts->__getitem__(i)))&&__ne(__26, const_11))) {
-            return shortopts->startswith(const_11, (i+1));
+            return __mbool(shortopts->startswith(const_11, (i+1)));
         }
     END_FOR
 
     throw ((new GetoptError(__modct(const_12, 1, opt),opt)));
-    return 0;
 }
 
 } // module namespace

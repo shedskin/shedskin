@@ -57,7 +57,7 @@ __cstat *stat(str *path);
 __cstat *lstat(str *path);
 __cstat *fstat(int fd);
 
-int stat_float_times(int newvalue=-1);
+__ss_bool stat_float_times(int newvalue=-1);
 str *strerror(int i);
 
 void *putenv(str* varname, str* value);
@@ -175,7 +175,7 @@ void *chown(str *path, int uid, int gid);
 void *chroot(str *path);
 
 str *ctermid();
-int isatty(int fd);
+__ss_bool isatty(int fd);
 str *ttyname(int fd);
 
 tuple2<str *, str *> *uname();
@@ -218,7 +218,7 @@ void *utime(str *path, tuple2<int, double> *times);
 void *utime(str *path, tuple2<double, int> *times);
 void *utime(str *path, tuple2<double, double> *times);
 
-int access(str *path, int mode);
+__ss_bool access(str *path, int mode);
 tuple2<double, double> *times();
 
 str *tmpnam();

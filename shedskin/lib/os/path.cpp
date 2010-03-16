@@ -71,12 +71,12 @@ str *normcase(str *s) {
     return s;
 }
 
-int isabs(str *s) {
+__ss_bool isabs(str *s) {
     /**
     Test whether a path is absolute
     */
 
-    return s->startswith(const_4);
+    return __mbool(s->startswith(const_4));
 }
 
 str *joinl(list<str *> *l) {
@@ -224,7 +224,7 @@ double getctime(str *filename) {
     return (__os__::stat(filename))->__ss_st_ctime;
 }
 
-int islink(str *path) {
+__ss_bool islink(str *path) {
     /**
     Test whether a path is a symbolic link
     */
@@ -233,12 +233,12 @@ int islink(str *path) {
     try {
         st = __os__::lstat(path);
     } catch (__os__::error *) {
-        return 0;
+        return False;
     }
-    return __stat__::__ss_S_ISLNK(st->st_mode);
+    return __mbool(__stat__::__ss_S_ISLNK(st->st_mode));
 }
 
-int exists(str *path) {
+__ss_bool exists(str *path) {
     /**
     Test whether a path exists.  Returns False for broken symbolic links
     */
@@ -247,12 +247,12 @@ int exists(str *path) {
     try {
         st = __os__::stat(path);
     } catch (__os__::error *) {
-        return 0;
+        return False;
     }
-    return 1;
+    return True;
 }
 
-int lexists(str *path) {
+__ss_bool lexists(str *path) {
     /**
     Test whether a path exists.  Returns True for broken symbolic links
     */
@@ -261,12 +261,12 @@ int lexists(str *path) {
     try {
         st = __os__::lstat(path);
     } catch (__os__::error *) {
-        return 0;
+        return False;
     }
-    return 1;
+    return True;
 }
 
-int isdir(str *path) {
+__ss_bool isdir(str *path) {
     /**
     Test whether a path is a directory
     */
@@ -275,12 +275,12 @@ int isdir(str *path) {
     try {
         st = __os__::stat(path);
     } catch (__os__::error *) {
-        return 0;
+        return False;
     }
-    return __stat__::__ss_S_ISDIR(st->st_mode);
+    return __mbool(__stat__::__ss_S_ISDIR(st->st_mode));
 }
 
-int isfile(str *path) {
+__ss_bool isfile(str *path) {
     /**
     Test whether a path is a regular file
     */
@@ -289,12 +289,12 @@ int isfile(str *path) {
     try {
         st = __os__::stat(path);
     } catch (__os__::error *) {
-        return 0;
+        return False;
     }
-    return __stat__::__ss_S_ISREG(st->st_mode);
+    return __mbool(__stat__::__ss_S_ISREG(st->st_mode));
 }
 
-int samefile(str *f1, str *f2) {
+__ss_bool samefile(str *f1, str *f2) {
     /**
     Test whether two pathnames reference the same actual file
     */
@@ -302,16 +302,15 @@ int samefile(str *f1, str *f2) {
 
     s1 = __os__::stat(f1);
     s2 = __os__::stat(f2);
-    return samestat(s1, s2);
+    return __mbool(samestat(s1, s2));
 }
 
-int samestat(__os__::__cstat *s1, __os__::__cstat *s2) {
+__ss_bool samestat(__os__::__cstat *s1, __os__::__cstat *s2) {
     /**
     Test whether two stat buffers reference the same file
     */
-    int __18, __19;
-
-    return __AND((s1->st_ino==s2->st_ino), (s1->st_dev==s2->st_dev), 18);
+    int __18;
+    return __mbool(__AND((s1->st_ino==s2->st_ino), (s1->st_dev==s2->st_dev), 18));
 }
 
 str *normpath(str *path) {
@@ -461,14 +460,14 @@ str *normcase(str *s) {
     return (s->replace(const_6, const_4))->lower();
 }
 
-int isabs(str *s) {
+__ss_bool isabs(str *s) {
     /**
     Test whether a path is absolute
     */
     int __0, __1;
 
     s = (splitdrive(s))->__getsecond__();
-    return __AND(__ne(s, const_1), (const_18)->__contains__(s->__slice__(2, 0, 1, 0)), 0);
+    return __mbool(__AND(__ne(s, const_1), (const_18)->__contains__(s->__slice__(2, 0, 1, 0)), 0));
 }
 
 str *joinl(list<str *> *l) {
@@ -673,15 +672,15 @@ double getctime(str *filename) {
     return (__os__::stat(filename))->__ss_st_ctime;
 }
 
-int islink(str *path) {
+__ss_bool islink(str *path) {
     /**
     Test for symbolic link.  On WindowsNT/95 always returns false
     */
 
-    return 0;
+    return False;
 }
 
-int exists(str *path) {
+__ss_bool exists(str *path) {
     /**
     Test whether a path exists
     */
@@ -690,17 +689,16 @@ int exists(str *path) {
     try {
         st = __os__::stat(path);
     } catch (__os__::error *) {
-        return 0;
+        return False;
     }
-    return 1;
+    return True;
 }
 
-int lexists(str *path) {
-
+__ss_bool lexists(str *path) {
     return exists(path);
 }
 
-int isdir(str *path) {
+__ss_bool isdir(str *path) {
     /**
     Test whether a path is a directory
     */
@@ -709,12 +707,12 @@ int isdir(str *path) {
     try {
         st = __os__::stat(path);
     } catch (__os__::error *) {
-        return 0;
+        return False;
     }
-    return __stat__::__ss_S_ISDIR(st->st_mode);
+    return __mbool(__stat__::__ss_S_ISDIR(st->st_mode));
 }
 
-int isfile(str *path) {
+__ss_bool isfile(str *path) {
     /**
     Test whether a path is a regular file
     */
@@ -723,9 +721,9 @@ int isfile(str *path) {
     try {
         st = __os__::stat(path);
     } catch (__os__::error *) {
-        return 0;
+        return False;
     }
-    return __stat__::__ss_S_ISREG(st->st_mode);
+    return __mbool(__stat__::__ss_S_ISREG(st->st_mode));
 }
 
 str *normpath(str *path) {

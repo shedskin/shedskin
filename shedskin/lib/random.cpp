@@ -490,7 +490,7 @@ int Random::getrandbits(int k) {
     return ((this->_genrand_int32()>>(32-k))&~(-1<<k));
 }
 
-int Random::setstate(list<double> *state) {
+void *Random::setstate(list<double> *state) {
     /**
     Restore internal state from object returned by getstate().
     */
@@ -504,7 +504,8 @@ int Random::setstate(list<double> *state) {
     this->gauss_switch = __int(state->__getfast__(2));
     this->mt = list_comp_1(state->__slice__(3, 3, -1, 0));
     this->gauss_next = state->__getfast__(-1);
-    return 0;
+
+    return NULL;
 }
 
 double Random::lognormvariate(double mu, double sigma) {
@@ -799,7 +800,7 @@ void *WichmannHill::whseed(int a) {
     return NULL;
 }
 
-int WichmannHill::setstate(list<double> *state) {
+void *WichmannHill::setstate(list<double> *state) {
     /**
     Restore internal state from object returned by getstate().
     */
@@ -823,7 +824,7 @@ int WichmannHill::setstate(list<double> *state) {
     else {
         throw ((new ValueError(__modct(const_10, 2, __box(version), __box(this->VERSION)))));
     }
-    return 0;
+    return NULL;
 }
 
 int WichmannHill::jumpahead(int n) {
@@ -998,7 +999,7 @@ list<double> *getstate() {
     return _inst->getstate();
 }
 
-int setstate(list<double> *state) {
+void *setstate(list<double> *state) {
 
     return _inst->setstate(state);
 }

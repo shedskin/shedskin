@@ -37,9 +37,9 @@ tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *gnu_getopt(list<str *> *a
 tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *gnu_getopt(list<str *> *args, str *shortopts);
 
 tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *do_longs(list<tuple2<str *, str *> *> *opts, str *opt, pyiter<str *> *longopts, list<str *> *args);
-tuple2<int, str *> *long_has_args(str *opt, pyiter<str *> *longopts);
+tuple2<__ss_bool, str *> *long_has_args(str *opt, pyiter<str *> *longopts);
 tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *do_shorts(list<tuple2<str *, str *> *> *opts, str *optstring, str *shortopts, list<str *> *args);
-int short_has_arg(str *opt, str *shortopts);
+__ss_bool short_has_arg(str *opt, str *shortopts);
 
 typedef GetoptError error;
 
