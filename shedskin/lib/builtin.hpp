@@ -112,8 +112,8 @@ void print(file *f, int n, ...);
 void printc(int n, ...); /* print comma */
 void printc(file *f, int n, ...);
 
-int isinstance(pyobj *, class_ *);
-int isinstance(pyobj *, tuple2<class_ *, class_ *> *);
+__ss_bool isinstance(pyobj *, class_ *);
+__ss_bool isinstance(pyobj *, tuple2<class_ *, class_ *> *);
 
 list<int> *range(int b);
 list<int> *range(int a, int b, int s=1);
@@ -526,7 +526,7 @@ public:
         return __cmp(this->__len__(), b->__len__());
     }
 
-    virtual int __contains__(T t) = 0;
+    virtual __ss_bool __contains__(T t) = 0;
 
     void resize(int n) {
         units.resize(n);
@@ -568,7 +568,7 @@ public:
     void *__delete__(int i);
     void *__delete__(int x, int l, int u, int s);
     void *__delslice__(int a, int b);
-    int __contains__(T a);
+    __ss_bool __contains__(T a);
 
     list<T> *__add__(list<T> *b);
     list<T> *__mul__(int b);
@@ -637,8 +637,8 @@ public:
 
     //void init(int count, A a, B b);
 
-    int __contains__(A a);
-    int __contains__(B b);
+    __ss_bool __contains__(A a);
+    __ss_bool __contains__(B b);
 
     int __len__();
 
@@ -665,7 +665,7 @@ public:
     str(__GC_STRING s);
     str(const char *s, int size); /* '\0' delimiter in C */
 
-    int __contains__(str *s);
+    __ss_bool __contains__(str *s);
     str *strip(str *chars=0);
     str *lstrip(str *chars=0);
     str *rstrip(str *chars=0);
@@ -686,7 +686,6 @@ public:
     str *__slice__(int x, int l, int u, int s);
 
     list<str *> *rsplit(str *sep = 0, int maxsplit = -1);
-    int istitle(void);
     tuple2<str *, str *> *rpartition(str *sep);
     tuple2<str *, str *> *partition(str *sep);
     list<str *> *splitlines(int keepends = 0);
@@ -705,10 +704,6 @@ public:
 
     int count(str *s, int start=0);
     int count(str *s, int start, int end);
-    int startswith(str *s, int start=0);
-    int startswith(str *s, int start, int end);
-    int endswith(str *s, int start=0);
-    int endswith(str *s, int start, int end);
 
     str *upper();
     str *lower();
@@ -719,13 +714,20 @@ public:
     str *swapcase();
     str *center(int w, str *fill=0);
 
-    int __ctype_function(int (*cfunc)(int));
-    int isspace();
-    int isalpha();
-    int isdigit();
-    int islower();
-    int isupper();
-    int isalnum();
+    __ss_bool __ctype_function(int (*cfunc)(int));
+
+    __ss_bool istitle();
+    __ss_bool isspace();
+    __ss_bool isalpha();
+    __ss_bool isdigit();
+    __ss_bool islower();
+    __ss_bool isupper();
+    __ss_bool isalnum();
+
+    __ss_bool startswith(str *s, int start=0);
+    __ss_bool startswith(str *s, int start, int end);
+    __ss_bool endswith(str *s, int start=0);
+    __ss_bool endswith(str *s, int start, int end);
 
     str *zfill(int width);
     str *expandtabs(int width=8);
@@ -789,7 +791,7 @@ public:
 
     //void init(int count, ...);
 
-    int __contains__(T a);
+    __ss_bool __contains__(T a);
     int __eq__(pyobj *p);
 
     tuple2<T,T> *__slice__(int x, int l, int u, int s);
@@ -825,7 +827,7 @@ public:
     list<tuple2<K, V> *> *items();
     int __len__();
     str *__repr__();
-    int has_key(K k);
+    __ss_bool has_key(K k);
     void *clear();
     dict<K,V> *copy();
     V get(K k);
@@ -833,7 +835,7 @@ public:
     V pop(K k);
     tuple2<K, V> *popitem();
     void *update(dict<K, V> *e);
-    int __contains__(K k);
+    __ss_bool __contains__(K k);
     int __eq__(pyobj *e);
     V setdefault(K k, V v=0);
 
@@ -923,8 +925,8 @@ public:
 
     str* __repr__();
 
-    int __contains__(T key);
-    int __contains__(setentry<T>* entry);
+    __ss_bool __contains__(T key);
+    __ss_bool __contains__(setentry<T>* entry);
     int __len__();
 
     void *clear();
@@ -1593,8 +1595,8 @@ template<class K, class V> list<K> *dict<K,V>::keys() {
     return l;
 }
 
-template<class K, class V> int dict<K,V>::has_key(K k) {
-    return units.find(k) != units.end();
+template<class K, class V> __ss_bool dict<K,V>::has_key(K k) {
+    return __mbool(units.find(k) != units.end());
 }
 
 template<class K, class V> void *dict<K,V>::clear() {
@@ -1642,8 +1644,8 @@ template<class K, class V> list<tuple2<K,V> *> *dict<K,V>::items() {
     return l;
 }
 
-template<class K, class V> int dict<K, V>::__contains__(K k) {
-    return units.find(k) != units.end();
+template<class K, class V> __ss_bool dict<K, V>::__contains__(K k) {
+    return __mbool(units.find(k) != units.end());
 }
 
 template<class K, class V> str *dict<K,V>::__repr__() {
@@ -1912,12 +1914,12 @@ template<class T> void *list<T>::__delslice__(int a, int b) {
     return NULL;
 }
 
-template<class T> int list<T>::__contains__(T a) {
+template<class T> __ss_bool list<T>::__contains__(T a) {
     int size = this->units.size();
     for(int i=0; i<size; i++)
         if(__eq(this->units[i], a))
-            return 1;
-    return 0;
+            return True;
+    return False;
 }
 
 template<class T> list<T> *list<T>::__add__(list<T> *b) {
@@ -2499,19 +2501,19 @@ template<class T> int set<T>::__len__() {
     return used;
 }
 
-template <class T> int set<T>::__contains__(T key) {
+template <class T> __ss_bool set<T>::__contains__(T key) {
     long hash = hasher(key);
 	setentry<T> *entry;
 
 	entry = lookup(key, hash);
 
-	return entry->use==active;
+	return __mbool(entry->use==active);
 }
 
-template <class T> int set<T>::__contains__(setentry<T>* entry) {
+template <class T> __ss_bool set<T>::__contains__(setentry<T>* entry) {
 	entry = lookup(entry->key, entry->hash);
 
-	return entry->use == active;
+	return __mbool(entry->use == active);
 }
 
 template <class T> void *set<T>::clear()
@@ -2885,11 +2887,11 @@ template<class T> tuple2<T,T> *tuple2<T, T>::__imul__(int b) {
     va_end(ap);
 } */
 
-template<class T> int tuple2<T, T>::__contains__(T a) {
+template<class T> __ss_bool tuple2<T, T>::__contains__(T a) {
     for(int i=0; i<this->__len__(); i++)
         if(__eq(this->units[i], a))
-            return 1;
-    return 0;
+            return True;
+    return False;
 }
 
 template<class T> int tuple2<T, T>::__eq__(pyobj *p) {
@@ -2976,12 +2978,12 @@ template<class A, class B> B tuple2<A, B>::__getsecond__() {
     second = b;
 } */
 
-template<class A, class B> int tuple2<A, B>::__contains__(A a) {
-    return __eq(first, a);
+template<class A, class B> __ss_bool tuple2<A, B>::__contains__(A a) {
+    return __mbool(__eq(first, a));
 }
 
-template<class A, class B> int tuple2<A, B>::__contains__(B b) {
-    return __eq(second, b);
+template<class A, class B> __ss_bool tuple2<A, B>::__contains__(B b) {
+    return __mbool(__eq(second, b));
 }
 
 template<class A, class B> int tuple2<A, B>::__len__() {
@@ -3740,14 +3742,14 @@ float_ *__box(double);
 
 /* any, all */
 
-template<class A> int any(pyiter<A> *a) {
+template<class A> __ss_bool any(pyiter<A> *a) {
     A b;
     __iter<A> *__0;
     FOR_IN(b,a,0)
         if(___bool(b))
-            return 1;
+            return True;
     END_FOR
-    return 0;
+    return False;
 }
 
 template<class A> int all(pyiter<A> *a) {
@@ -3755,9 +3757,9 @@ template<class A> int all(pyiter<A> *a) {
     __iter<A> *__0;
     FOR_IN(b,a,0)
         if(!___bool(b))
-            return 0;
+            return False;
     END_FOR
-    return 1;
+    return True;
 }
 
 } // namespace __shedskin__

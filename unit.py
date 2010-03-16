@@ -157,6 +157,9 @@ augmented = 0
 if queue and not augmented:
     print 'queue'
 
+a_bool = bool('hoppa')
+print a_bool
+
 # generator expressions
 ia = (2*x for x in range(10))
 print sum(ia)

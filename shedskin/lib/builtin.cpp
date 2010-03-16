@@ -319,37 +319,28 @@ int str::__int__() {
     return __int(this);
 }
 
-int str::__contains__(str *s) {
-    return unit.find(s->unit) != -1;
+__ss_bool str::__contains__(str *s) {
+    return __mbool(unit.find(s->unit) != -1);
 }
 
-int str::isspace() {
-    return unit.size() && (unit.find_first_not_of(ws) == -1);
-}
-
-int str::isdigit() {
-    return __ctype_function(&::isdigit);
-}
-
-int str::isalpha() {
-    return __ctype_function(&::isalpha);
-}
-
-int str::isalnum() {
-    return __ctype_function(&::isalnum);
-}
-
-int str::__ctype_function(int (*cfunc)(int))
+__ss_bool str::__ctype_function(int (*cfunc)(int))
 {
   int i, l = unit.size();
   if(!l)
-      return 0;
+      return False;
 
   for(i = 0; i < l; i++)
-      if(!cfunc((int)unit[i])) return 0;
+      if(!cfunc((int)unit[i])) return False;
 
-  return 1;
+  return True;
 }
+
+__ss_bool str::isspace() { return __mbool(unit.size() && (unit.find_first_not_of(ws) == -1)); }
+__ss_bool str::isdigit() { return __ctype_function(&::isdigit); }
+__ss_bool str::isalpha() { return __ctype_function(&::isalpha); }
+__ss_bool str::isalnum() { return __ctype_function(&::isalnum); }
+__ss_bool str::islower() { return __ctype_function(&::islower); }
+__ss_bool str::isupper() { return __ctype_function(&::isupper); }
 
 str *str::ljust(int width, str *s) {
     if(width<=__len__()) return this;
@@ -374,13 +365,6 @@ str *str::expandtabs(int width) {
     while((i = r.find("\t")) != -1)
         r.replace(i, 1, (new str(" "))->__mul__(width-i%width)->unit);
     return new str(r);
-}
-
-int str::islower() {
-    return __ctype_function(&::islower);
-}
-int str::isupper() {
-    return __ctype_function(&::isupper);
 }
 
 str *str::strip(str *chars) {
@@ -482,29 +466,29 @@ list<str *> *str::rsplit(str *sep, int maxsep)
     return r;
 }
 
-int str::istitle(void)
+__ss_bool str::istitle()
 {
     int i, len;
 
     len = unit.size();
     if(!len)
-        return 0;
+        return False;
 
     for(i = 0; i < len; )
     {
         for( ; !::isalpha((int)unit[i]) && i < len; i++) ;
         if(i == len) break;
 
-        if(!::isupper((int)unit[i])) return 0;
+        if(!::isupper((int)unit[i])) return False;
         i++;
 
         for( ; ::islower((int)unit[i]) && i < len; i++) ;
         if(i == len) break;
 
-        if(::isalpha((int)unit[i])) return 0;
+        if(::isalpha((int)unit[i])) return False;
     }
 
-    return 1;
+    return True;
 }
 
 list<str *> *str::splitlines(int keepends)
@@ -982,28 +966,28 @@ int str::count(str *s, int start, int end) {
     return count;
 }
 
-int str::startswith(str *s, int start) { return startswith(s, start, __len__()); }
-int str::startswith(str *s, int start, int end) {
+__ss_bool str::startswith(str *s, int start) { return startswith(s, start, __len__()); }
+__ss_bool str::startswith(str *s, int start, int end) {
     int i, j, one = 1;
     slicenr(7, start, end, one, __len__());
 
     for(i = start, j = 0; i < end && j < len(s); )
         if (unit[i++] != s->unit[j++])
-            return 0;
+            return False;
 
-    return j == len(s);
+    return __mbool(j == len(s));
 }
 
-int str::endswith(str *s, int start) { return endswith(s, start, __len__()); }
-int str::endswith(str *s, int start, int end) {
+__ss_bool str::endswith(str *s, int start) { return endswith(s, start, __len__()); }
+__ss_bool str::endswith(str *s, int start, int end) {
     int i, j, one = 1;
     slicenr(7, start, end, one, __len__());
 
     for(i = end, j = len(s); i > start && j > 0; )
         if (unit[--i] != s->unit[--j])
-            return 0;
+            return False;
 
-    return 1;
+    return True;
 }
 
 str *str::replace(str *a, str *b, int c) {
@@ -1300,20 +1284,20 @@ template<> double __float(str *s) {
     return atof((char *)(s->unit.c_str()));
 }
 
-int isinstance(pyobj *p, class_ *c) {
+__ss_bool isinstance(pyobj *p, class_ *c) {
     int classnr = p->__class__->low;
-    return ((classnr >= c->low) && (classnr <= c->high));
+    return __mbool(((classnr >= c->low) && (classnr <= c->high)));
 }
 
-int isinstance(pyobj *p, tuple2<class_ *, class_ *> *t) {
+__ss_bool isinstance(pyobj *p, tuple2<class_ *, class_ *> *t) {
     int classnr = p->__class__->low;
     for(int i = 0; i < t->__len__(); i++)
     {
        class_ *c = t->__getitem__(i);
        if ((classnr >= c->low) && (classnr <= c->high))
-           return 1;
+           return True;
     }
-    return 0;
+    return False;
 }
 
 static int range_len(int lo, int hi, int step) {

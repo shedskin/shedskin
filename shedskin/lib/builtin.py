@@ -141,8 +141,6 @@ class list(pyseq):
 
     def __len__(self):
         return 1
-    def __contains__(self, x):
-        return 1
     def __add__(self, b):
         return self
         return b
@@ -247,7 +245,7 @@ class str_(pyseq):
         return ''
 
     def istitle(self):
-        return 1
+        return True
     def splitlines(self, c=0):
         return ['']
     def partition(self, sep):
@@ -261,11 +259,9 @@ class str_(pyseq):
     def join(self, l):
         return self
     def __getitem__(self, i):
-        return ' '
+        return ''
     def __mul__(self, n):
         return ''
-    def __contains__(self, s):
-        return 1
     def __repr__(self):
         return ''
     def __mod__(self, a=None):
@@ -297,17 +293,17 @@ class str_(pyseq):
         return 1
 
     def isdigit(self):
-        return 1
+        return True
     def islower(self):
-        return 1
+        return True
     def isupper(self):
-        return 1
+        return True
     def isalpha(self):
-        return 1
+        return True
     def isspace(self):
-        return 1
+        return True
     def isalnum(self):
-        return 1
+        return True
 
     def zfill(self, width):
         return ''
@@ -320,10 +316,11 @@ class str_(pyseq):
 
     def count(self, e, start=0, end=0):
         return 1
+
     def startswith(self, e, start=0, end=0):
-        return 1
+        return True
     def endswith(self, e, start=0, end=0):
-        return 1
+        return True
 
     def replace(self, a, b, c=0):
         return ''
@@ -386,7 +383,7 @@ class dict(pyiter):
 
     def has_key(self, k):
         self.__key__(k)
-        return 1
+        return True
 
     def __len__(self):
         return 1
@@ -600,7 +597,7 @@ def bin(x):
     return ''
 
 def isinstance(a, b):
-    return 1
+    return True
 
 def range(a, b=1, s=1):
     return [1]
@@ -664,7 +661,7 @@ def divmod(a, b):
 def bool(x):
     x.__nonzero__()
     x.__len__()
-    return 1
+    return True
 
 def repr(x):
     return x.__repr__()
@@ -744,10 +741,10 @@ def cmp(a, b):
     return 1
 
 def any(a):
-    return 1
+    return True
 
 def all(a):
-    return 1
+    return True
 
 class __iter(pyiter):
     def __init__(self, a):
@@ -776,8 +773,9 @@ def __map4(func, iter1, iter2, iter3): # XXX
     return [func(iter(iter1).next(), iter(iter2).next(), iter(iter3).next())]
 
 def filter(func, iter1):
-    if func(iter(iter1).next()):
-        return [iter(iter1).next()]
+    elem = iter(iter1).next()
+    func(elem)
+    return [elem]
 def __filter(func, iter1):
     func(iter(iter1).next())
     return iter1
