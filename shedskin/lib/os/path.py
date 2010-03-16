@@ -9,26 +9,32 @@ defpath = ''
 altsep = ''
 devnull = ''
 
+def isdir(path):
+    return True
+
+def exists(path):
+    return True
+
+def lexists(path):
+    return True
+
+def islink(path):
+    return True
+
+def isfile(path):
+    return True
+
+def samefile(a, b):
+    return True
+
+def samestat(a, b):
+    return True
+
 def split(p):
     return ('','')
 
 def splitext(p):
     return ('','')
-
-def isdir(path):
-    return False
-
-def exists(path):
-    return False
-
-def lexists(path):
-    return False
-
-def islink(path):
-    return False
-
-def isfile(path):
-    return False
 
 def join(*a):
     return ''
@@ -37,7 +43,7 @@ def normcase(s):
     return s
 
 def isabs(s):
-    return 1
+    return True
 
 def splitdrive(s):
     return ('', '')
@@ -62,18 +68,15 @@ def normpath(s):
 
 def getsize(s):
     return 1
+
 def getatime(s):
     return 1.0
+
 def getmtime(s):
     return 1.0
+
 def getctime(s):
     return 1.0
-def samefile(a, b):
-    return 1
-def samestat(a, b):
-    return 1
 
 def walk(top, func, arg):
     func(arg, '', [''])
-
-

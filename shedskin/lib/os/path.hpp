@@ -18,7 +18,7 @@ extern int supports_unicode_filenames;
 #endif
 
 str *normcase(str *s);
-int isabs(str *s);
+__ss_bool isabs(str *s);
 str *joinl(list<str *> *l);
 str *join(int n, ...);
 tuple2<str *, str *> *split(str *p);
@@ -31,18 +31,18 @@ int getsize(str *filename);
 double getmtime(str *filename);
 double getatime(str *filename);
 double getctime(str *filename);
-int islink(str *path);
-int exists(str *path);
-int lexists(str *path);
-int isdir(str *path);
-int isfile(str *path);
+__ss_bool islink(str *path);
+__ss_bool exists(str *path);
+__ss_bool lexists(str *path);
+__ss_bool isdir(str *path);
+__ss_bool isfile(str *path);
 str *normpath(str *path);
 str *abspath(str *path);
 str *realpath(str *filename);
 
 #ifndef WIN32
-int samefile(str *f1, str *f2);
-int samestat(__os__::__cstat *s1, __os__::__cstat *s2);
+__ss_bool samefile(str *f1, str *f2);
+__ss_bool samestat(__os__::__cstat *s1, __os__::__cstat *s2);
 str *_resolve_link(str *path);
 #endif
 

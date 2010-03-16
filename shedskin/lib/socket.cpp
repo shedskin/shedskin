@@ -699,9 +699,9 @@ str *inet_ntoa(str *x)
     return new str(ip);
 }
 
-int has_ipv6()
+__ss_bool has_ipv6()
 {
-    return 0;
+    return False;
 }
 
 } // module namespace

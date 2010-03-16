@@ -85,7 +85,7 @@ class socket(object):
         return 0
 
     def sendall(self, string, flags=0):
-        return None
+        pass
 
     def getsockname(self):
         return ('', 0)
@@ -127,11 +127,10 @@ def inet_ntoa(x):
     return ''
 
 def has_ipv6():
-    return False
+    return True
 
 def getdefaulttimeout():
     return 0.0
 
 def setdefaulttimeout(x):
-    return None
-
+    pass

@@ -322,10 +322,10 @@ __cstat *fstat(int fd) {
     return new __cstat(fd);
 }
 
-int stat_float_times(int newvalue) {
+__ss_bool stat_float_times(int newvalue) {
     if(newvalue==0)
         throw new TypeError(new str("os.stat_float_times: cannot change type"));
-    return 1;
+    return True;
 }
 
 void *putenv(str* varname, str* value) {
@@ -727,8 +727,8 @@ str *ctermid() {
     return new str(ptr);
 }
 
-int isatty(int fd) {
-    return ::isatty(fd);
+__ss_bool isatty(int fd) {
+    return __mbool(::isatty(fd));
 }
 
 str *ttyname(int fd) {
@@ -968,8 +968,8 @@ void *utime(str *path, tuple2<double, double> *times) { HOPPA }
 
 #undef HOPPA
 
-int access(str *path, int mode) {
-    return (::access(path->unit.c_str(), mode) == 0);
+__ss_bool access(str *path, int mode) {
+    return __mbool(::access(path->unit.c_str(), mode) == 0);
 }
 
 tuple2<double, double> *times() {

@@ -23,12 +23,12 @@ class Random:
     def _init_genrand(self, s): return 1
     def _init_by_array(self, init_key): return 1
     def getstate(self): return [1.0,1.0,1.0]
-    def setstate(self, state): return 1
+    def setstate(self, state): pass
     def getrandbits(self, k): return 1
     def randrange(self, start, stop=1, step=1): return 1
     def randint(self, a, b): return 1
     def choice(self, seq): return seq[seq.__len__()]
-    def shuffle(self, x): return x
+    def shuffle(self, x): pass
     def sample(self, population, k): return [iter(population).next()]
     def uniform(self, a, b): return 1.0
     def triangular(self, low=0.0, high=1.0, mode=None): return 1.0
@@ -49,7 +49,7 @@ class WichmannHill(Random):
     def seed(self, a=-1): pass
     def random(self): return 1.0
     def getstate(self): return [1.0,1.0,1.0]
-    def setstate(self, state): return 1
+    def setstate(self, state): pass
     def jumpahead(self, n): return 1
     def __whseed(self, x=0, y=0, z=0): pass
     def whseed(self, a=-1): pass
@@ -60,11 +60,11 @@ def seed(a=None):
     _inst.seed(a)
 def random(): return 1.0
 def getstate(): return [1.0,1.0,1.0]
-def setstate(state): return 1
+def setstate(state): pass
 def randrange(start, stop=1, step=1): return 1
 def randint(a, b): return 1
 def choice(seq): return seq[seq.__len__()]
-def shuffle(x): return x
+def shuffle(x): pass
 def sample(population, k): return [iter(population).next()]
 def uniform(a, b): return 1.0
 def triangular(low=0.0, high=1.0, mode=None): return 1.0

@@ -56,12 +56,12 @@ public:
     double stdgamma(double alpha, double ainv, double bbb, double ccc);
     double expovariate(double lambd);
     int getrandbits(int k);
-    virtual int setstate(list<double> *state);
+    virtual void *setstate(list<double> *state);
     double lognormvariate(double mu, double sigma);
     int _init_genrand(int s);
     double gauss(double mu, double sigma);
     template <class A> A choice(pyseq<A> *seq);
-    template <class A> int shuffle(pyseq<A> *x);
+    template <class A> void *shuffle(pyseq<A> *x);
     template <class A> list<A> *sample(pyiter<A> *population, int k);
     template <class A> list<A> *sample(pyseq<A> *population, int k);
     int _genrand_int32();
@@ -82,7 +82,7 @@ public:
     WichmannHill(int a);
     void *whseed();
     void *whseed(int a);
-    int setstate(list<double> *state);
+    void *setstate(list<double> *state);
     int jumpahead(int n);
     list<double> *getstate();
 };
@@ -106,13 +106,13 @@ extern int  MAXBITS;
 void __init();
 double random();
 list<double> *getstate();
-int setstate(list<double> *state);
+void *setstate(list<double> *state);
 int randrange(int stop);
 int randrange(int start, int stop);
 int randrange(int start, int stop, int step);
 int randint(int a, int b);
 template <class A> A choice(pyseq<A> *seq);
-template <class A> int shuffle(pyseq<A> *x);
+template <class A> void *shuffle(pyseq<A> *x);
 template <class A> list<A> *sample(pyiter<A> *population, int k);
 template <class A> list<A> *sample(pyseq<A> *population, int k);
 double uniform(double a, double b);
@@ -137,7 +137,7 @@ template <class A> A choice(pyseq<A> *seq) {
     return _inst->choice(seq);
 }
 
-template <class A> int shuffle(pyseq<A> *x) {
+template <class A> void *shuffle(pyseq<A> *x) {
 
     return _inst->shuffle(x);
 }
@@ -151,7 +151,7 @@ template <class A> list<A> *sample(pyseq<A> *population, int k) {
     return _inst->sample(population, k);
 }
 
-template <class A> int Random::shuffle(pyseq<A> *x) {
+template <class A> void *Random::shuffle(pyseq<A> *x) {
     /**
     x, random=random.random -> shuffle list x in place; return None.
 
@@ -172,7 +172,7 @@ template <class A> int Random::shuffle(pyseq<A> *x) {
         ELEM((x),j) = __32;
     END_FOR
 
-    return 0;
+    return NULL;
 }
 
 template <class A> list<A> *Random::sample(pyiter<A> *population, int k) {
