@@ -669,26 +669,15 @@ class moduleVisitor(ASTVisitor):
 
         self.visit(node.expr, func)
 
+        msgs = {'<': 'lt', '>': 'gt', 'in': 'contains', 'not in': 'contains', '!=': 'ne', '==': 'eq', '<=': 'le', '>=': 'ge'}
         left = node.expr
         for op, right in node.ops:
             self.visit(right, func)
-
-            if op == '<': msg = '__lt__'
-            elif op == '>': msg = '__gt__'
-            elif op in ['in','not in']: msg = '__contains__'
-            elif op in ['!=', 'is not']: msg = '__ne__'
-            elif op in ['==', 'is']: msg = '__eq__'
-            elif op == '<=': msg = '__le__'
-            elif op == '>=': msg = '__ge__'
-            else:
-                print str(node.lineno)+': unsupported operator \''+op+'\''
-                return
-
-            if msg == '__contains__':
-                self.fakefunc(node, right, msg, [left], func)
-            else:
-                self.fakefunc(node, left, msg, [right], func)
-
+            msg = msgs.get(op)
+            if msg == 'contains':
+                self.fakefunc(node, right, '__'+msg+'__', [left], func)
+            elif msg:
+                self.fakefunc(node, left, '__'+msg+'__', [right], func)
             left = right
 
         # tempvars, e.g. (t1=fun())

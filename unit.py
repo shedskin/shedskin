@@ -251,6 +251,13 @@ except SystemExit, baratie:
         sys.exit('aha')
         sys.exit(baratie.code)
 
+# comparison model
+class Bla:
+    def __eq__(self, o):
+        print o.niks
+bla1 = Bla()
+bla1 is None
+
 ''', '''
 output(equal=True)
 '''),
