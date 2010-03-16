@@ -258,6 +258,9 @@ class Bla:
 bla1 = Bla()
 bla1 is None
 
+# crash
+print None in [[None]]
+
 ''', '''
 output(equal=True)
 '''),
