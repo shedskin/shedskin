@@ -25,11 +25,11 @@ class Node:
         self.score = 0 # calculated score for this node
         self.lid = lid # set the location id - unique for each location in the map
 
-#    def __eq__(self, n):
-#        if n.lid == self.lid:
-#            return 1
-#        else:
-#            return 0
+    def __eq__(self, n):
+        if n.lid == self.lid:
+            return 1
+        else:
+            return 0
 
 class AStar:
 
