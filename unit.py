@@ -264,6 +264,21 @@ bla1 is None
 # crash
 print None in [[None]]
 
+# casting to builtins (inference not enough)
+definiteinnerlist=[1]
+outerlist=[[1]]
+emptyinnerlist=[]
+outerlist.append(definiteinnerlist)
+outerlist.append(emptyinnerlist)
+outerlist[0] = emptyinnerlist
+print outerlist
+
+dikkie={1:1}
+dikkie2 = {1:dikkie}
+dikkie2[2] = {}
+dikkie2[3] = dikkie
+print sorted(dikkie2.items())
+
 ''', '''
 output(equal=True)
 '''),
