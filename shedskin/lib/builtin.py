@@ -127,9 +127,9 @@ class pyseq(pyiter):
 class list(pyseq):
     def append(self, u):
         self.unit = u
-    def index(self, idx, s=0, e=0):
+    def index(self, u, s=0, e=0):
         return 1
-    def count(self, a):
+    def count(self, u):
         return 1
 
     def __getitem__(self, i):
@@ -151,11 +151,11 @@ class list(pyseq):
         return self
     def __imul__(self, n):
         return self
-    def __slice__(self, x, l, u, s):
+    def __slice__(self, x, lower, upper, step):
         return self
     def __delslice__(self, a, b):
         pass
-    def __setslice__(self, x, l, u, s, r):
+    def __setslice__(self, x, lower, upper, step, r):
         self.unit = r.unit
     def __delete__(self, x, a=1, b=1, s=1):
         pass
@@ -164,15 +164,15 @@ class list(pyseq):
         return ''
     def __str__(self):
         return self.__repr__()
-    def extend(self, u):
-        self.unit = u.unit
+    def extend(self, other):
+        self.unit = other.unit
 
     def pop(self, m=0):
         return self.unit
-    def remove(self, e):
+    def remove(self, u):
         pass
-    def insert(self, m, e):
-        self.unit = e
+    def insert(self, i, u):
+        self.unit = u
 
     def reverse(self):
         pass
@@ -370,8 +370,8 @@ class dict(pyiter):
     def __delitem__(self, k):
         self.__key__(k)
 
-    def setdefault(self, k, v=None):
-        self.__setunit__(k, v)
+    def setdefault(self, u, v=None):
+        self.__setunit__(u, v)
         return v
 
     def keys(self):
@@ -381,8 +381,8 @@ class dict(pyiter):
     def items(self):
         return [(self.unit, self.value)]
 
-    def has_key(self, k):
-        self.__key__(k)
+    def has_key(self, u):
+        self.__key__(u)
         return True
 
     def __len__(self):
@@ -392,12 +392,12 @@ class dict(pyiter):
         pass
     def copy(self):
         return {self.unit: self.value}
-    def get(self, k, default=None):
-        self.__key__(k)
+    def get(self, u, v=None):
+        self.__key__(u)
         return self.value
-        return default
-    def pop(self, k):
-        self.__key__(k)
+        return v
+    def pop(self, u):
+        self.__key__(u)
         return self.value
     def popitem(self):
         return (self.unit, self.value)
