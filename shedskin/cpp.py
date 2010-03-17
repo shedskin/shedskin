@@ -1759,9 +1759,14 @@ class generateVisitor(ASTVisitor):
 
         for (arg, formal) in pairs:
             cast = False
+            special_cast = self.cast_to_builtin(arg, func, formal, target, method_call, objexpr)
+
             if double and self.mergeinh[arg] == set([(defclass('int_'),0)]):
                 cast = True
                 self.append('((double)(')
+            elif target.mv.module.builtin and special_cast:
+                cast = True
+                self.append('(('+special_cast+')(')
             elif not target.mv.module.builtin and assign_needs_cast(arg, func, formal, target): # XXX builtin (dict.fromkeys?)
                 cast = True
                 self.append('(('+typesetreprnew(formal, target)+')(')
@@ -1793,6 +1798,27 @@ class generateVisitor(ASTVisitor):
         if constructor and ident == 'frozenset':
             if pairs: self.append(',')
             self.append('1')
+
+    def cast_to_builtin(self, arg, func, formal, target, method_call, objexpr):
+        # type inference cannot deduce all necessary casts to builtin formals
+        vars = {'u': 'unit', 'v': 'value', 'o': None}
+        if target.mv.module.builtin and method_call and formal.name in vars:
+            if (target.parent.ident == 'list' and target.ident == 'append') or \
+               (target.parent.ident in ('list','dict') and target.ident == '__setitem__'):
+                to_ts = typesetreprnew(objexpr, func, var=vars[formal.name])
+                if typesetreprnew(arg, func) != to_ts:
+                    return to_ts
+
+    def cast_to_builtin2(self, arg, func, objexpr, msg, formal_nr):
+        # shortcut for outside of visitCallFunc XXX merge with visitCallFunc?
+        cls = [t[0] for t in self.mergeinh[objexpr] if isinstance(t[0], class_)]
+        if cls:
+            cl = cls.pop()
+            if msg in cl.funcs:
+                target = cl.funcs[msg]
+                if formal_nr < len(target.formals):
+                    formal = target.vars[target.formals[formal_nr]]
+                    return self.cast_to_builtin(arg, func, formal, target, True, objexpr)
 
     def visitReturn(self, node, func=None):
         if func.isGenerator:
@@ -1993,7 +2019,10 @@ class generateVisitor(ASTVisitor):
             elif rvalue in getmv().tempcount:
                 self.append(getmv().tempcount[rvalue])
             else:
+                cast = self.cast_to_builtin2(rvalue, func, lvalue.expr, '__setitem__', 2)
+                if cast: self.append('((%s)' % cast)
                 self.visit(rvalue, func)
+                if cast: self.append(')')
 
             if not defclass('list') in [t[0] for t in self.mergeinh[lvalue.expr]]:
                 self.append(')')
@@ -2478,7 +2507,7 @@ def namespaceclass(cl):
         return nokeywords(cl.ident)
 
 # --- determine representation of node type set (within parameterized context)
-def typesetreprnew(node, parent, cplusplus=True, check_extmod=False, check_ret=False):
+def typesetreprnew(node, parent, cplusplus=True, check_extmod=False, check_ret=False, var=None):
     orig_parent = parent
     while is_listcomp(parent): # XXX redundant with typesplit?
         parent = parent.parent
@@ -2488,7 +2517,7 @@ def typesetreprnew(node, parent, cplusplus=True, check_extmod=False, check_ret=F
 
     # --- use this 'split' to determine type representation
     try:
-        ts = typestrnew(split, parent, cplusplus, orig_parent, node, check_extmod, 0, check_ret)
+        ts = typestrnew(split, parent, cplusplus, orig_parent, node, check_extmod, 0, check_ret, var)
     except RuntimeError:
         if not hasattr(node, 'lineno'): node.lineno = None # XXX
         if not getmv().module.builtin and isinstance(node, variable) and not node.name.startswith('__'): # XXX startswith
@@ -2503,7 +2532,7 @@ def typesetreprnew(node, parent, cplusplus=True, check_extmod=False, check_ret=F
 class ExtmodError(Exception):
     pass
 
-def typestrnew(split, root_class, cplusplus, orig_parent, node=None, check_extmod=False, depth=0, check_ret=False):
+def typestrnew(split, root_class, cplusplus, orig_parent, node=None, check_extmod=False, depth=0, check_ret=False, var=None):
     if depth==10:
         raise RuntimeError()
 
@@ -2582,7 +2611,10 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None, check_extmo
         subtypes = []
         for tvar in template_vars:
             subsplit = split_subsplit(split, tvar)
-            subtypes.append(typestrnew(subsplit, root_class, cplusplus, orig_parent, node, check_extmod, depth+1))
+            ts = typestrnew(subsplit, root_class, cplusplus, orig_parent, node, check_extmod, depth+1)
+            if tvar == var:
+                return ts
+            subtypes.append(ts)
     else:
         if cl.ident in getgx().cpp_keywords:
             return namespace+getgx().ss_prefix+map(cl.ident)

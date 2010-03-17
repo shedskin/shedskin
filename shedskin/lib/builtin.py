@@ -125,8 +125,8 @@ class pyseq(pyiter):
     pass
 
 class list(pyseq):
-    def append(self, f):
-        self.unit = f
+    def append(self, u):
+        self.unit = u
     def index(self, idx, s=0, e=0):
         return 1
     def count(self, a):
@@ -134,8 +134,8 @@ class list(pyseq):
 
     def __getitem__(self, i):
         return self.unit
-    def __setitem__(self, i, e):
-        self.unit = e
+    def __setitem__(self, i, u):
+        self.unit = u
     def __delitem__(self, i):
         pass
 
@@ -362,8 +362,8 @@ class dict(pyiter):
         self.unit = k
         self.value = v
 
-    def __setitem__(self, k, v):
-        self.__setunit__(k, v)
+    def __setitem__(self, u, v):
+        self.__setunit__(u, v)
     def __getitem__(self, k):
         self.__key__(k)
         return self.value
