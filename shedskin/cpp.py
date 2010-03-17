@@ -1759,14 +1759,14 @@ class generateVisitor(ASTVisitor):
 
         for (arg, formal) in pairs:
             cast = False
-            special_cast = self.cast_to_builtin(arg, func, formal, target, method_call, objexpr)
+            builtin_cast = self.cast_to_builtin(arg, func, formal, target, method_call, objexpr)
 
             if double and self.mergeinh[arg] == set([(defclass('int_'),0)]):
                 cast = True
                 self.append('((double)(')
-            elif target.mv.module.builtin and special_cast:
+            elif builtin_cast:
                 cast = True
-                self.append('(('+special_cast+')(')
+                self.append('(('+builtin_cast+')(')
             elif not target.mv.module.builtin and assign_needs_cast(arg, func, formal, target): # XXX builtin (dict.fromkeys?)
                 cast = True
                 self.append('(('+typesetreprnew(formal, target)+')(')
@@ -1802,12 +1802,10 @@ class generateVisitor(ASTVisitor):
     def cast_to_builtin(self, arg, func, formal, target, method_call, objexpr):
         # type inference cannot deduce all necessary casts to builtin formals
         vars = {'u': 'unit', 'v': 'value', 'o': None}
-        if target.mv.module.builtin and method_call and formal.name in vars:
-            if (target.parent.ident == 'list' and target.ident == 'append') or \
-               (target.parent.ident in ('list','dict') and target.ident == '__setitem__'):
-                to_ts = typesetreprnew(objexpr, func, var=vars[formal.name])
-                if typesetreprnew(arg, func) != to_ts:
-                    return to_ts
+        if target.mv.module.builtin and method_call and formal.name in vars and target.parent.ident in ('list', 'dict'):
+            to_ts = typesetreprnew(objexpr, func, var=vars[formal.name])
+            if typesetreprnew(arg, func) != to_ts:
+                return to_ts
 
     def cast_to_builtin2(self, arg, func, objexpr, msg, formal_nr):
         # shortcut for outside of visitCallFunc XXX merge with visitCallFunc?
