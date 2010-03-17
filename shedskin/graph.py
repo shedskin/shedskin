@@ -697,12 +697,11 @@ class moduleVisitor(ASTVisitor):
     def visitbitpair(self, node, msg, func=None):
         newnode = cnode(node, parent=func)
         getgx().types[inode(node)] = set()
-
         left = node.nodes[0]
-        for right in node.nodes[1:]:
-            faker = self.fakefunc(node, left, msg, [right], func) # XXX node
-            self.addconstraint((inode(faker), inode(node)), func) # XXX beh
-            left = right
+        for i, right in enumerate(node.nodes[1:]):
+            faker = self.fakefunc((left, i), left, msg, [right], func)
+            left = faker
+        self.addconstraint((inode(faker), inode(node)), func)
 
     def visitAdd(self, node, func=None):
         self.fakefunc(node, node.left, augmsg(node, 'add'), [node.right], func)

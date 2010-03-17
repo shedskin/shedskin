@@ -160,6 +160,10 @@ if queue and not augmented:
 a_bool = bool('hoppa')
 print a_bool
 
+#print True & False, True & True, True*[1,2]
+har3 = True & True & 1
+print har3
+
 # generator expressions
 ia = (2*x for x in range(10))
 print sum(ia)
