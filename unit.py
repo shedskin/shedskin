@@ -160,7 +160,11 @@ if queue and not augmented:
 a_bool = bool('hoppa')
 print a_bool
 
-#print True & False, True & True, True*[1,2]
+print True & False, True & True, True & 1, 1 & False
+print True-2, False*3, 2+True, 2-False, 4*True
+
+print True*[1,2]
+
 har3 = True & True & 1
 print har3
 
@@ -4171,9 +4175,6 @@ class Record:
         return Record(self.PtrComp, self.Discr, self.EnumComp,
                       self.IntComp, self.StringComp)
 
-TRUE = 1
-FALSE = 0
-
 def main(loops=LOOPS):
     benchtime, stones = pystones(loops)
 #    print "Pystone(%s) time for %d passes = %g" % \
@@ -4187,7 +4188,7 @@ def pystones(loops=LOOPS):
     return Proc0(loops)
 
 IntGlob = 0
-BoolGlob = FALSE
+BoolGlob = False
 Char1Glob = ' ' # !
 Char2Glob = ' '
 Array1Glob = [0]*51
@@ -4299,7 +4300,7 @@ def Proc5():
     global BoolGlob
 
     Char1Glob = 'A'
-    BoolGlob = FALSE
+    BoolGlob = False
 
 def Proc6(EnumParIn):
     EnumParOut = EnumParIn
@@ -4355,18 +4356,18 @@ def Func2(StrParI1, StrParI2):
     if CharLoc >= 'W' and CharLoc <= 'Z':
         IntLoc = 7
     if CharLoc == 'X':
-        return TRUE
+        return True
     else:
         if StrParI1 > StrParI2:
             IntLoc = IntLoc + 7
-            return TRUE
+            return True
         else:
-            return FALSE
+            return False
 
 def Func3(EnumParIn):
     EnumLoc = EnumParIn
-    if EnumLoc == Ident3: return TRUE
-    return FALSE
+    if EnumLoc == Ident3: return True
+    return False
 
 main(LOOPS)
 
@@ -4482,9 +4483,9 @@ def move(board, mv):
   board[ix] = 0
   if clearCastlingOpportunities[ix]:
     for i in clearCastlingOpportunities[ix]:
-      board[i] = False
+      board[i] = iFalse
 
-  board[26] = not board[26] # Turn
+  board[26] = int(not board[26]) # Turn
   if (mv & 0x7fff0000) == 0:
     return
   if (mv & 0x01000000): # double step
@@ -9790,7 +9791,7 @@ def propagate(lit, mods, failed_literal=0): # lit_truth: [int], current: [int], 
 
     while 1:                             # [int]
         if fixedt[abs(lit)] == -1:       # [int]
-            fixedt[abs(lit)] = (lit>0)   # [int]
+            fixedt[abs(lit)] = int(lit>0)   # [int]
             propcount += 1               # []
             mask_propagate(lit)          # []
 
@@ -10246,7 +10247,7 @@ def propagate(lit, mods):                # current: [int], unfixed: [int], mods:
 
     while 1:                             # [int]
         if fixedt[abs(lit)] == -1:       # [int]
-            fixedt[abs(lit)] = (lit>0)   # [int]
+            fixedt[abs(lit)] = int(lit>0)   # [int]
             for clause in occurrence[-lit]: # [list(int)]
                 length, unfixed = info(clause) # [tuple(int)]
 
@@ -10561,7 +10562,9 @@ check('c', ['int'])
 ('max, integer class, __gt__, bool type', '''
 class integer:
     def __gt__(self, b):
-        return 1
+        return True
+    def __repr__(self):
+        return 'integer!'
 
 def maxi(a, b):                           # [integer], [integer]
     if a > b:                            # [bool]
@@ -10572,9 +10575,9 @@ a = integer()                            # [integer]
 b = integer()                            # [integer]
 c = maxi(a, b)                            # [integer]
 d = a > b                                # [bool]
+print a, b, c, d
 ''', '''
-check('c',['integer'])
-check('d',['int'])
+output(equal=True)
 '''),
 
 ('self.__setattr__ -> __getattr__', '''

@@ -52,12 +52,67 @@ class int_:
         return 1
     def __with_float__(self):
         return 1.0
+    def __with_bool__(self):
+        return 1
 
     def __repr__(self):
         return ''
 
-class bool_(int_):
-    pass
+class bool_:
+    def __add__(self, b):
+        return b.__with_int__()
+    def __sub__(self, b):
+        return b.__with_int__()
+    def __mul__(self, b):
+        return b.__with_int__()
+    def __div__(self, b):
+        return b.__with_int__()
+    def __floordiv__(self, b):
+        return b.__with_int__()
+    def __mod__(self, b):
+        return b.__with_int__()
+    def __divmod__(self, b):
+        return (b.__with_int__(),)
+
+    def __and__(self, b):
+        return b.__with_bool__()
+    def __or__(self, b):
+        return b.__with_bool__()
+    def __xor__(self, b):
+        return b.__with_bool__()
+
+    def __rshift__(self, b):
+        return 1
+    def __lshift__(self, b):
+        return 1
+    def __invert__(self):
+        return 1
+    def __neg__(self):
+        return 1
+    def __pos__(self):
+        return 1
+    def __hash__(self):
+        return 1
+    def __abs__(self):
+        return 1
+
+    def __pow__(self, b):
+        return b
+
+    def __copy__(self):
+        return self
+    def __deepcopy__(self):
+        return self
+
+    def __with_int__(self):
+        return 1
+    def __with_float__(self):
+        return 1.0
+    def __with_bool__(self):
+        return self
+
+    def __repr__(self):
+        return ''
 
 class float_:
     def __add__(self, b):

@@ -54,9 +54,9 @@ def move(board, mv):
   board[ix] = 0
   if clearCastlingOpportunities[ix]:
     for i in clearCastlingOpportunities[ix]:
-      board[i] = False
+      board[i] = iFalse
 
-  board[26] = not board[26] # Turn
+  board[26] = int(not board[26]) # Turn
   if (mv & 0x7fff0000) == 0:
     return
   if (mv & 0x01000000): # double step

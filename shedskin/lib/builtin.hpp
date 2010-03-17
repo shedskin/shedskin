@@ -42,8 +42,11 @@ class __ss_bool {
 public:
     int value;
     inline int operator+(__ss_bool b) { return value+b.value; }
-    inline int operator==(__ss_bool b) { return value==b.value; }
+    inline int operator==(__ss_bool b) { return value==b.value; } /* XXX */
     inline bool operator!() { return !value; }
+    inline __ss_bool operator&(__ss_bool b) { __ss_bool c; c.value=value&b.value; return c; }
+    inline __ss_bool operator|(__ss_bool b) { __ss_bool c; c.value=value|b.value; return c; }
+    inline __ss_bool operator^(__ss_bool b) { __ss_bool c; c.value=value^b.value; return c; }
     inline operator bool() { return bool(value); }
 };
 

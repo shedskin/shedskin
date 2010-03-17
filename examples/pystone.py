@@ -20,9 +20,6 @@ class Record:
         return Record(self.PtrComp, self.Discr, self.EnumComp,
                       self.IntComp, self.StringComp)
 
-TRUE = 1
-FALSE = 0
-
 def main(loops=LOOPS):
     benchtime, stones = pystones(loops)
 #    print "Pystone(%s) time for %d passes = %g" % #          (__version__, loops, benchtime)
@@ -34,7 +31,7 @@ def pystones(loops=LOOPS):
     return Proc0(loops)
 
 IntGlob = 0
-BoolGlob = FALSE
+BoolGlob = False
 Char1Glob = ' ' # ! 
 Char2Glob = ' '
 Array1Glob = [0]*51
@@ -146,7 +143,7 @@ def Proc5():
     global BoolGlob
 
     Char1Glob = 'A'
-    BoolGlob = FALSE
+    BoolGlob = False
 
 def Proc6(EnumParIn):
     EnumParOut = EnumParIn
@@ -202,18 +199,18 @@ def Func2(StrParI1, StrParI2):
     if CharLoc >= 'W' and CharLoc <= 'Z':
         IntLoc = 7
     if CharLoc == 'X':
-        return TRUE
+        return True
     else:
         if StrParI1 > StrParI2:
             IntLoc = IntLoc + 7
-            return TRUE
+            return True
         else:
-            return FALSE
+            return False
 
 def Func3(EnumParIn):
     EnumLoc = EnumParIn
-    if EnumLoc == Ident3: return TRUE
-    return FALSE
+    if EnumLoc == Ident3: return True
+    return False
 
 main(LOOPS)
 
