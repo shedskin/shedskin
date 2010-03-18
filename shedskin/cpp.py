@@ -1802,7 +1802,7 @@ class generateVisitor(ASTVisitor):
     def cast_to_builtin(self, arg, func, formal, target, method_call, objexpr):
         # type inference cannot deduce all necessary casts to builtin formals
         vars = {'u': 'unit', 'v': 'value', 'o': None}
-        if target.mv.module.builtin and method_call and formal.name in vars and target.parent.ident in ('list', 'dict'):
+        if target.mv.module.builtin and method_call and formal.name in vars and target.parent.ident in ('list', 'dict', 'set'):
             to_ts = typesetreprnew(objexpr, func, var=vars[formal.name])
             if typesetreprnew(arg, func) != to_ts:
                 return to_ts

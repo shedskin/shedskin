@@ -525,13 +525,13 @@ class frozenset(pyset):
     pass
 
 class set(pyset):
-    def add(self, x):
-        self.__setunit__(x)
+    def add(self, u):
+        self.__setunit__(u)
     def __isub__(self, b):
         return self
-    def discard(self, x):
+    def discard(self, u):
         pass
-    def remove(self, x):
+    def remove(self, u):
         pass
     def pop(self):
         return self.unit
