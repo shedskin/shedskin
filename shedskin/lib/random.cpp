@@ -986,7 +986,7 @@ void __init() {
     MATRIX_A = 2567483615u;
     UPPER = 2147483648u;
     LOWER = 2147483647;
-    _inst = (new Random(-1));
+    _inst = (new Random());
 }
 
 double random() {
