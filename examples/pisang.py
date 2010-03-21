@@ -56,13 +56,12 @@ def propagate(lit, mods):
         if fixedt[abs(lit)] == -1:
             fixedt[abs(lit)] = int(lit>0)
             for clause in occurrence[-lit]:
-                length, unfixed = info(clause)
-
-                if length == 0:
+                cl_len = length(clause)
+                if cl_len == 0:
                     return 0
-                elif length == 1:
-                    mods.append(unfixed)
-                elif length == 2:
+                elif cl_len == 1:
+                    mods.append(unfixed(clause))
+                elif cl_len == 2:
                     bincount += 1
 
         elif fixedt[abs(lit)] != (lit>0):
@@ -100,14 +99,21 @@ def backtrack(mods):
         fixedt[abs(lit)] = -1
     return 0
 
-def info(clause):
-    len, unfixed = 0, 0
+def length(clause):
+    len = 0
     for lit in clause:
-        if fixedt[abs(lit)] == -1:
-            unfixed, len = lit, len+1
-        elif fixedt[abs(lit)] == (lit>0):
-            return -1, 0
-    return len, unfixed
+        fixed = fixedt[abs(lit)]
+        if fixed == (lit>0):
+            return -1
+        if fixed == -1:
+            len += 1
+    return len
+
+def unfixed(clause):
+    for lit in clause:
+        fixed = fixedt[abs(lit)]
+        if fixed == -1:
+            return lit
 
 def unfixed_vars():
     return [var for var in vars[1:] if fixedt[var] == -1]
