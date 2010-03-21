@@ -837,7 +837,11 @@ class moduleVisitor(ASTVisitor):
             self.visit(child, func)
 
     def visitTryExcept(self, node, func=None):
+        self.visit(node.body, func)
+
         for handler in node.handlers:
+            self.visit(handler[2], func)
+
             if not handler[0]: continue
 
             if isinstance(handler[0], Tuple):
@@ -850,7 +854,7 @@ class moduleVisitor(ASTVisitor):
                     continue # handle in lookupclass
                 cl = lookupclass(h0, getmv())
                 if not cl:
-		    error("unknown or unsupported exception type", h0)
+                    error("unknown or unsupported exception type", h0)
 
                 if isinstance(h1, AssName):
                     var = defaultvar(h1.name, func)
@@ -861,11 +865,9 @@ class moduleVisitor(ASTVisitor):
                 inode(var).copymetoo = True
                 getgx().types[inode(var)] = set([(cl, 1)])
 
-        for child in node.getChildNodes():
-            self.visit(child, func)
-
         # else
         if node.else_:
+            self.visit(node.else_, func)
             self.tempvar_int(node.else_, func)
 
     def visitTryFinally(self, node, func=None):
