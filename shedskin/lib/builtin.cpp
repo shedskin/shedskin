@@ -1963,8 +1963,8 @@ void __start(void (*initfunc)()) {
     try {
         initfunc();
     } catch (SystemExit *s) {
-        if(s->code != 0)
-            print(1, s->msg);
+        if(s->message)
+            print(1, s->message);
         code = s->code;
     }
     if(print_lastchar != '\n')
