@@ -41,23 +41,23 @@ void __init() {
     _cache = (new dict<str *, __re__::re_object *>());
 }
 
-int fnmatch(str *name, str *pat) {
+__ss_bool fnmatch(str *name, str *pat) {
     /**
     Test whether FILENAME matches PATTERN.
-    
+
     Patterns are Unix shell style:
-    
+
     *       matches everything
     ?       matches any single character
     [seq]   matches any character in seq
     [!seq]  matches any char not in seq
-    
+
     An initial period in FILENAME is not special.
     Both FILENAME and PATTERN are first case-normalized
     if the operating system requires it.
     If you don't want this, use fnmatchcase(FILENAME, PATTERN).
     */
-    
+
     name = __os__::__path__::normcase(name);
     pat = __os__::__path__::normcase(pat);
     return fnmatchcase(name, pat);
@@ -94,10 +94,10 @@ list<str *> *filter(list<str *> *names, str *pat) {
     return result;
 }
 
-int fnmatchcase(str *name, str *pat) {
+__ss_bool fnmatchcase(str *name, str *pat) {
     /**
     Test whether FILENAME matches PATTERN, including case.
-    
+
     This is a version of fnmatch() which doesn't case-normalize
     its arguments.
     */
@@ -107,7 +107,7 @@ int fnmatchcase(str *name, str *pat) {
         res = translate(pat);
         _cache->__setitem__(pat, __re__::compile(res));
     }
-    return ((_cache->__getitem__(pat))->match(name)!=0);
+    return __mbool((_cache->__getitem__(pat))->match(name)!=0);
 }
 
 str *translate(str *pat) {
