@@ -3568,7 +3568,12 @@ template <class A> A reduce(A (*func)(A, A), pyiter<A> *a, A initial) {
 
 template <class A> A reduce(A (*func)(A, A), pyiter<A> *a) {
     __iter<A> *ita = a->__iter__();
-    A result = ita->next();
+    A result;
+    try {
+        result = ita->next();
+    } catch(StopIteration *) {
+        throw new TypeError(new str("reduce() of empty sequence with no initial value"));
+    }
     try {
         while(1)
             result = (*func)(result, ita->next());
@@ -3576,6 +3581,27 @@ template <class A> A reduce(A (*func)(A, A), pyiter<A> *a) {
         return result;
     }
 }
+
+template <class A> A reduce(A (*func)(A, A), pyseq<A> *a, A initial) {
+    unsigned int len = a->units.size();
+    A result = initial;
+    for(unsigned int i=0; i<len;i++)
+        result = (*func)(result, a->units[i]);
+    return result;
+}
+
+template <class A> A reduce(A (*func)(A, A), pyseq<A> *a) {
+    unsigned int len = a->units.size();
+    if(!len)
+        throw new TypeError(new str("reduce() of empty sequence with no initial value"));
+    A result = a->units[0];
+    for(unsigned int i=1; i<len;i++)
+        result = (*func)(result, a->units[i]);
+    return result;
+}
+
+str *reduce(str *(*func)(str *, str *), str *a);
+str *reduce(str *(*func)(str *, str *), str *a, str *initial);
 
 template <class A, class B> list<A> *filter(B (*func)(A), pyiter<A> *a) {
     __iter<A> *ita = a->__iter__();

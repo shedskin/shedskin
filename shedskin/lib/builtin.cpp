@@ -2073,7 +2073,14 @@ str *__fileiter::next() {
     return p->next();
 }
 
+/* map, filter, reduce */
+
 str *filter(void *func, str *a) { return filter(((int(*)(str *))(func)), a); }
+
+str *reduce(str *(*func)(str *, str *), str *a) { return reduce(func, (pyiter<str *> *)a); }
+str *reduce(str *(*func)(str *, str *), str *a, str *initial) { return reduce(func, (pyiter<str *> *)a, initial); }
+
+/* glue */
 
 #ifdef __SS_BIND
 template<> PyObject *__to_py(int i) { return PyInt_FromLong(i); }
