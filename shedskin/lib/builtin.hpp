@@ -1227,9 +1227,10 @@ public:
 class SystemExit : public Exception {
 public:
     int code;
-    SystemExit(str *msg) { this->msg = msg; this->code = 0; }
-    SystemExit(int code) { this->msg = __str(code); this->code = code; }
-    SystemExit() { this->msg = __str(0); this->code = 0; }
+    str *message;
+    SystemExit(str *msg) { this->message = msg; this->msg = msg; this->code = 1; }
+    SystemExit(int code) { this->message = NULL; this->msg = __str(code); this->code = code; }
+    SystemExit() { this->message = NULL; this->msg = __str(0); this->code = 0; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_SystemExit; }
 #endif
