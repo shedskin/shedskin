@@ -14,9 +14,9 @@ extern str *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *co
 extern dict<str *, __re__::re_object *> *_cache;
 extern str *__name__;
 
-int fnmatch(str *name, str *pat);
+__ss_bool fnmatch(str *name, str *pat);
 list<str *> *filter(list<str *> *names, str *pat);
-int fnmatchcase(str *name, str *pat);
+__ss_bool fnmatchcase(str *name, str *pat);
 str *translate(str *pat);
 
 void __init(void);

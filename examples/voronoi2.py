@@ -469,7 +469,7 @@ class Halfedge(object):
         if(e.a == 1.0):
             dyp = pt.y - topsite.y
             dxp = pt.x - topsite.x
-            fast = 0;
+            fast = False;
             if ((not right_of_site and e.b < 0.0) or (right_of_site and e.b >= 0.0)):
                 above = dyp >= e.b * dxp
                 fast = above
@@ -478,7 +478,7 @@ class Halfedge(object):
                 if(e.b < 0.0):
                     above = not above
                 if (not above):
-                    fast = 1
+                    fast = True
             if (not fast):
                 dxs = topsite.x - (e.reg[0]).x
                 above = e.b * (dxp*dxp - dyp*dyp) < dxs*dyp*(1.0+2.0*dxp/dxs + e.b*e.b)
@@ -753,7 +753,7 @@ def computeDelaunayTriangulation(points):
     """
     siteList = SiteList(points)
     context  = Context()
-    context.triangulate = true
+    context.triangulate = True
     voronoi(siteList,context)
     return context.triangles
 
@@ -764,14 +764,14 @@ if __name__=="__main__":
     except getopt.GetoptError:
         usage()
         sys.exit(2)
-      
+
     doHelp = 0
     c = Context()
     c.doPrint = 1
     for opt in optlist:
         if opt[0] == "-d":  c.debug = 1
         if opt[0] == "-p":  c.plot  = 1
-        if opt[0] == "-t":  c.triangulate = 1
+        if opt[0] == "-t":  c.triangulate = True
         if opt[0] == "-h":  doHelp = 1
 
     if not doHelp:

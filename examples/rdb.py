@@ -310,7 +310,7 @@ def browse(path, interactive):
         raise KeyboardInterrupt
       if not choice: continue
       if choice in "at":    # all/alle/tous/<dontknow>
-        interactive=0
+        interactive=False
         break
       if choice in "yjos":  # yes/ja/oui/si
         break
