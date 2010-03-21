@@ -2612,6 +2612,11 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None, check_extmo
             ts = typestrnew(subsplit, root_class, cplusplus, orig_parent, node, check_extmod, depth+1)
             if tvar == var:
                 return ts
+            for (dcpa, cpa), types in subsplit.items():
+                if [t[0] for t in types if isinstance(t[0], function)]:
+                    ident = cl.ident
+                    if ident == 'tuple2': ident = 'tuple'
+                    error("'%s' instance containing function reference" % ident, node, warning=True)
             subtypes.append(ts)
     else:
         if cl.ident in getgx().cpp_keywords:
