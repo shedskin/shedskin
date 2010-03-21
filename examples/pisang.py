@@ -1,21 +1,6 @@
 # pisang - a simple sat solver in Python
 # (c) mark.dufour@gmail.com
 
-def _reduce(f, l, i=-1): # builtin with shedskin >= 0.3, but nice as a test
-    if not l:
-        if i != -1: return i
-        print '*** ERROR! *** reduce() called with empty sequence and no initial value'
-
-    if i != -1:
-        r = f(i, l[0])
-    else:
-        r = l[0]
-
-    for i in range(len(l)-1):
-        r = f(r, l[i+1])
-
-    return r
-
 argv = ['','testdata/uuf250-010.cnf']
 
 cnf = [l.strip().split() for l in file(argv[1]) if l[0] not in 'c%0\n']
@@ -90,7 +75,7 @@ def lookahead(mods):
                     return 0
                 break
             score.append(bincount)
-        dif[var] = _reduce(lambda x, y: 1024*x*y+x+y, score, 0)
+        dif[var] = reduce(lambda x, y: 1024*x*y+x+y, score, 0)
 
     return dif.index(max(dif))
 
