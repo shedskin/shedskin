@@ -287,6 +287,12 @@ dikkie2[2] = {}
 dikkie2[3] = dikkie
 print sorted(dikkie2.items())
 
+# more test cases
+print reduce(lambda a,b: a+b, '34')
+print reduce(lambda a,b: a+b, '345', '6')
+print reduce(lambda a,b: a+b, [3,5,7], 2)
+print reduce(lambda a,b: a-b, set([3,5,7]))
+
 ''', '''
 output(equal=True)
 '''),
