@@ -1013,11 +1013,13 @@ public:
     bool exhausted;
     unsigned int highest_exhausted;
     std::vector<std::vector<T> > values;
+    std::vector<unsigned int> iter;
     std::vector<unsigned int> indices;
 
     productiter();
 
     void push_iter(pyiter<T> *iterable);
+    void repeat(int times);
 
     tuple2<T, T> *next();
 
@@ -1051,6 +1053,19 @@ template<class T> void productiter<T, T>::push_iter(pyiter<T> *iterable) {
     }
 }
 
+template<class T> inline void productiter<T, T>::repeat(int times) {
+    if (this->highest_exhausted == this->values.size()) {
+      this->highest_exhausted *= times;
+    }
+
+    for (int time = 0; time < times; ++time) {
+        for (int iter = 0; iter < this->values.size(); ++iter) {
+            this->iter.push_back(iter);
+            this->indices.push_back(0);
+        }
+    }
+}
+
 template<class T> tuple2<T, T> *productiter<T, T>::next() {
     if (this->exhausted) {
         throw new StopIteration();
@@ -1058,22 +1073,24 @@ template<class T> tuple2<T, T> *productiter<T, T>::next() {
 
     tuple2<T, T> *tuple = new tuple2<T, T>;
 
-    if (this->values.size()) {
-        for (int i = 0; i < (int)this->values.size(); ++i) {
-            tuple->units.push_back(this->values[i][this->indices[i]]);
+    if (this->iter.size()) {
+        for (int i = 0; i < (int)this->iter.size(); ++i) {
+            int j = this->iter[i];
+            tuple->units.push_back(this->values[j][this->indices[i]]);
         }
-        for (int i = this->values.size() - 1; i > -1; --i) {
+        for (int i = this->iter.size() - 1; i > -1; --i) {
+            int j = this->iter[i];
             ++this->indices[i];
             if (i <= (int)this->highest_exhausted) {
-                if (this->indices[i] >= this->values[i].size() - 1) {
+                if (this->indices[i] >= this->values[j].size() - 1) {
                     ++this->highest_exhausted;
-                    if (this->highest_exhausted > this->values.size()) {
+                    if (this->highest_exhausted > this->iter.size()) {
                         this->exhausted = true;
                     }
                     break;
                 }
             }
-            if (this->indices[i] == this->values[i].size()) {
+            if (this->indices[i] == this->values[j].size()) {
                 this->indices[i] = 0;
             } else {
                 break;
@@ -1092,10 +1109,10 @@ inline productiter<void*, void*> *product(int /* iterable_count */, int /* repea
 template<class T> inline productiter<T, T> *product(int /* iterable_count */, int repeat, pyiter<T> *iterable1, pyiter<T> *iterable2) {
     productiter<T, T> *iter = new productiter<T, T>();
 
-    for (int i = 0; i < repeat; ++i) {
-        iter->push_iter(iterable1);
-        iter->push_iter(iterable2);
-    }
+    iter->push_iter(iterable1);
+    iter->push_iter(iterable2);
+
+    iter->repeat(repeat);
 
     return iter;
 }
@@ -1105,20 +1122,20 @@ template<class T, class U> inline productiter<T, U> *product(int /* iterable_cou
 template<class T> inline productiter<T, T> *product(int iterable_count, int repeat, pyiter<T> *iterable, ...) {
     productiter<T, T> *iter = new productiter<T, T>();
 
-    for (int i = 0; i < repeat; ++i) {
-        int iter_count = iterable_count;
+    int iter_count = iterable_count;
 
-        iter->push_iter(iterable);
+    iter->push_iter(iterable);
 
-        va_list ap;
-        va_start(ap, iterable);
+    va_list ap;
+    va_start(ap, iterable);
 
-        while (--iter_count) {
-            iter->push_iter(va_arg(ap, pyiter<T> *));
-        }
-
-        va_end(ap);
+    while (--iter_count) {
+        iter->push_iter(va_arg(ap, pyiter<T> *));
     }
+
+    va_end(ap);
+
+    iter->repeat(repeat);
 
     return iter;
 }
