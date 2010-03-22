@@ -1,8 +1,8 @@
 Shed Skin Tutorial
 ==================
 
-:Version: 0.3
-:Date: Jan 8 2010
+:Version: 0.4
+:Date: April 1 2010
 :Authors: Mark Dufour and James Coughlan
 
 .. _Parallel Python: http://www.parallelpython.com/
@@ -31,9 +31,9 @@ Besides the *typing* and *subset* restrictions, supported programs cannot freely
 
 Additionally, the type inference techniques employed by **Shed Skin** currently do not scale very well beyond several hundred lines of code (the largest compiled program is about 1,200 lines (sloccount)). In all, this means that **Shed Skin** is currently mostly useful to compile *smallish* programs and extension modules, that do not make extensive use of dynamic Python features or the standard library.
 
-Because **Shed Skin** is still in an early stage of development, it can also improve a lot. At the moment, you will probably run into some bugs when using it. Please report these, so they can be fixed! 
+Because **Shed Skin** is still in an early stage of development, it can also improve a lot. At the moment, you will probably run into some bugs when using it. Please report these, so they can be fixed!
 
-At the moment, **Shed Skin** is compatible with Python versions 2.4 to 2.6, behaves like 2.6, and should work on GNU/Linux platforms, FreeBSD, OpenSolaris, OSX and Windows XP.
+At the moment, **Shed Skin** is compatible with Python versions 2.4 to 2.6, behaves like 2.6, and should work on most UNIX platforms, such as GNU/Linux, OSX, FreeBSD and OpenSolaris. The Windows version has been discontinued as of **Shed Skin** 0.4.
 
 .. _Typing Restrictions:
 
@@ -107,7 +107,7 @@ Python Subset Restrictions
   - nested functions and classes
   - unicode
   - closures
-  - inheritance from builtins (excluding Exception and object)
+  - inheritance from builtins (excluding ``Exception`` and ``object``)
   - overloading ``__iter__`` and ``__call__``
 
 Some other features are currently only partially supported:
@@ -119,12 +119,12 @@ Some other features are currently only partially supported:
 
         SomeClass.some_static_method() # good
 
-  - anonymous function passing works reasonably well, but not for methods, and they cannot be contained: ::
+  - functions references be passed around, but not method references, and they cannot be contained: ::
 
         var = lambda x, y: x+y # good
         var = some_func # good
         var = self.some_method # bad
-        [var] # bad
+        [var] # bad, contained
 
 .. _Library Limitations:
 
@@ -149,14 +149,14 @@ The following modules are largely supported at the moment. Several of these, suc
   - ``heapq``
   - ``itertools`` (no starmap)
   - ``math``
-  - ``os`` (some functionality missing under Windows)
+  - ``os``
   - ``os.path``
   - ``random``
   - ``re``
   - ``socket``
   - ``string``
   - ``sys``
-  - ``time`` (no sleep, strptime under Windows)
+  - ``time``
 
 See `How to help out in Shed Skin Development`_ on how to help improve or add to the set of supported modules.
 
@@ -165,19 +165,23 @@ See `How to help out in Shed Skin Development`_ on how to help improve or add to
 Installation
 ------------
 
-The latest version of **Shed Skin** can be downloaded from the `Googlecode site`_. There are three types of packages available: a self-extracting **Windows** installer, a **Debian** (**Ubuntu**) package, and a **UNIX** source package.
+The latest version of **Shed Skin** can be downloaded from the `Googlecode site`_. There are three types of packages available: a **Debian** package, an **RPM** package, and a **UNIX** source package.
 
-**Windows**
-
-To install the **Windows** version, simply download and start it. (If you use **ActivePython** or some other non-standard Python distribution, or **MingW**, please deinstall this first.)
-
-**Debian** (**Ubuntu**)
+**Debian**
 
 To install the **Debian** package, simply download and install it using your package manager.
 
 If there are complaints about missing dependencies, the following explicitly installs these:
 
 ``sudo apt-get install g++ libpcre3-dev libgc-dev``
+
+**RPM**
+
+To install the **RPM** package, simply download and install it using your package manager.
+
+If there are complaints about missing dependencies, the following explicitly installs these:
+
+``sudo yum install gcc-c++ pcre-devel gc-devel``
 
 **GNU/Linux**
 
@@ -192,10 +196,6 @@ To install the **UNIX** source package on a **GNU/Linux** system, take the follo
  - install the `Boehm`_ garbage collector
 
  - install the `PCRE`_ library
-
-on a **Fedora** system, the last three steps are simply:
-
-``sudo yum install gcc-c++ pcre-devel gc-devel``
 
 **FreeBSD**
 
@@ -246,34 +246,29 @@ To install the **UNIX** source package on an **OSX** system, take the following 
 Compiling and Running a Stand-Alone Program
 -------------------------------------------
 
-To use **Shed Skin** under Windows, first execute (double-click) the ``init.bat`` file in the ``shedskin-0.3`` directory, relative to where you installed it.  A command-line window will appear, with the current directory set to the ``shedskin-0.3\shedskin`` directory (hereafter referred to as the *Shed Skin working directory*).
-
-Consider the following simple test program, called ``test.py``: ::
+To compile the following simple test program, called ``test.py``: ::
 
     # test.py
 
     print 'hello, world!'
 
-To compile this program to C++, type: ::
+Open a terminal and type the following: ::
 
     shedskin test
 
-This will create two C++ files, called ``test.cpp`` and ``test.hpp``, as well as a ``Makefile`` and a type-annotated file called ``test.ss.py``.
+This will create two C++ files, called ``test.cpp`` and ``test.hpp``, as well as a ``Makefile``.
 
-To create and run an executable file (called ``test.exe`` under Windows or otherwise ``test``), type: ::
+To create an executable file, called ``test``, type: ::
 
-    make run
+    make
+
+To run the executable, type: ::
+
+    ./test
 
 The following output should now appear on the command line: ::
 
     hello, world!
-
-To only build, but not run the executable file, omit the ``run`` part: ::
-
-    make
-
-For the executable file to execute properly under Windows, note that ``gc.dll`` and ``libpcre-0.dll`` (located in the **Shed Skin** working directory) must be located somewhere in the Windows path. This automatically the case after running ``init.bat``.
-
 
 .. _Compiling an Extension Module:
 
@@ -310,7 +305,7 @@ To compile the module into an extension module, type: ::
 
 On **UNIX** systems, for 'make' to succeed, make sure to have the Python development files installed (under **Debian**, install ``python-dev``; under **Fedora**, install ``python-devel``).
 
-Depending on platform, the resulting extension module (*shared library*) is called ``simple_module.so`` or ``simple_module.pyd``.
+The resulting extension module (*shared library*) is called ``simple_module.so``.
 
 The extension module can now be simply imported and used as usual: ::
 
@@ -584,4 +579,4 @@ I would like to thank the following company/people, for their help with **Shed S
 * Jaroslaw Tworek
 * Pavel Vinogradov
 
-As well as all the people that wrote and shared the 44 example programs.
+As well as all the people that wrote and shared all the example programs.
