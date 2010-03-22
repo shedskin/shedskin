@@ -168,6 +168,9 @@ print True*[1,2]
 har3 = True & True & 1
 print har3
 
+niks = None
+print bool(niks), bool(None)
+
 # generator expressions
 ia = (2*x for x in range(10))
 print sum(ia)
@@ -294,6 +297,10 @@ print reduce(lambda a,b: a+b, '34')
 print reduce(lambda a,b: a+b, '345', '6')
 print reduce(lambda a,b: a+b, [3,5,7], 2)
 print reduce(lambda a,b: a-b, set([3,5,7]))
+
+print any([1,2]), all([0,1]), any([]), all([])
+print any(set([1,2])), all(set([0,1])), all({})
+print any('  '), any(''), all('   '), all('')
 
 ''', '''
 output(equal=True)
