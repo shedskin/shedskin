@@ -302,6 +302,14 @@ print any([1,2]), all([0,1]), any([]), all([])
 print any(set([1,2])), all(set([0,1])), all({})
 print any('  '), any(''), all('   '), all('')
 
+print []==[[]]
+print []==None
+print None==[[]]
+print None==[1]
+print [None] == [[1]]
+print [[1]] == []
+print [[]] == [[1]]
+
 ''', '''
 output(equal=True)
 '''),

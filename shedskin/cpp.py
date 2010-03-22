@@ -1330,21 +1330,6 @@ class generateVisitor(ASTVisitor):
             elif op == '<=': msg, short, pre = '__le__', '<=', None
             elif op == '>=': msg, short, pre = '__ge__', '>=', None
 
-            # --- comparison to [], (): convert to ..->empty() # XXX {}, __ne__
-            if msg in ['__eq__', '__ne__']:
-                leftcl, rightcl = polymorphic_t(self.mergeinh[left]), polymorphic_t(self.mergeinh[right])
-
-                if len(leftcl) == 1 and leftcl == rightcl and leftcl.pop().ident in ['list', 'tuple', 'tuple2', 'dict']:
-                    for (a,b) in [(left, right), (right, left)]:
-                        if isinstance(b, (List, Tuple, Dict)) and len(b.nodes) == 0:
-                            if msg == '__ne__': self.append('!(')
-                            self.visit2(a, func)
-                            self.append('->empty()')
-                            if msg == '__ne__': self.append(')')
-                            if not node in self.bool_wrapper:
-                                self.append(')')
-                            return
-
             if msg == '__contains__':
                 self.visitBinary(right, left, msg, short, func, pre)
             else:
@@ -1506,7 +1491,12 @@ class generateVisitor(ASTVisitor):
             self.append(middle[:-2]+'(')
             self.visit2(left, func)
             self.append(', ')
-            self.visit2(origright, func)
+            if typesetreprnew(left, func) != typesetreprnew(origright, func):
+                self.append('((%s)(' % typesetreprnew(left, func))
+                self.visit2(origright, func)
+                self.append('))')
+            else:
+                self.visit2(origright, func)
             self.append(')'+postfix)
             return
 
