@@ -208,6 +208,8 @@ print random.random()
 import itertools
 print list(itertools.product([0,1,2], [0,1,2]))
 print list(itertools.product([-1, 0, 1], repeat=2))
+print list(itertools.product(iter([1, 2, 3]), iter([4, 5]), repeat = 2))
+print list(itertools.product(iter([1, 2, 3]), iter([4, 5]), iter([6, 7, 8]), repeat = 2))
 
 # hashing
 print hash(-1)
