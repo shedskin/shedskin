@@ -1438,6 +1438,7 @@ template<> inline __ss_bool ___bool(int x) { return __mbool(x!=0); }
 template<> inline __ss_bool ___bool(bool x) { return __mbool(x); }
 template<> inline __ss_bool ___bool(__ss_bool x) { return x; }
 template<> inline __ss_bool ___bool(double x) { return __mbool(x!=0); }
+template<> inline __ss_bool ___bool(void *x) { return False; }
 
 /* logical and, or */
 
@@ -3782,7 +3783,17 @@ template<class A> __ss_bool any(pyiter<A> *a) {
     return False;
 }
 
-template<class A> int all(pyiter<A> *a) {
+template<class A> __ss_bool any(pyseq<A> *a) {
+    unsigned int len = a->units.size();
+    for(unsigned int i=0; i<len; i++)
+        if (___bool(a->units[i]))
+            return True;
+    return False;
+}
+
+inline __ss_bool any(str *s) { return __mbool(s->__len__()); }
+
+template<class A> __ss_bool all(pyiter<A> *a) {
     A b;
     __iter<A> *__0;
     FOR_IN(b,a,0)
@@ -3791,6 +3802,17 @@ template<class A> int all(pyiter<A> *a) {
     END_FOR
     return True;
 }
+
+
+template<class A> __ss_bool all(pyseq<A> *a) {
+    unsigned int len = a->units.size();
+    for(unsigned int i=0; i<len; i++)
+        if (!___bool(a->units[i]))
+            return False;
+    return True;
+}
+
+inline __ss_bool all(str *s) { return True; }
 
 } // namespace __shedskin__
 #endif
