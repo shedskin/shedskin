@@ -39,9 +39,10 @@ class match_object:
     def groupdict(self, defval = 0):
         return {'' : ''}
 
+    def __repr__(self):
+        return ''
 
 class re_object:
-
     def __init__(self):
         self.flags = 0
         self.groupindex = {'' : ''}
@@ -69,6 +70,9 @@ class re_object:
 
     def findall(self, s, flags=0):
         return ['']
+
+    def __repr__(self):
+        return ''
 
 def compile(pat, flgs=0):
     return re_object()

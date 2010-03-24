@@ -80,8 +80,7 @@ public:
     int start(int matchid = 0);
     int start(str *mname);
 
-
-    //...yeah
+    str *__repr__();
 };
 
 
@@ -125,7 +124,7 @@ public:
     tuple2<str *, int> *subn(str *repl, str *subj, int maxn = -1);
     list<str *> *findall(str *subj, int flags = 0);
 
-    //stuff
+    str *__repr__();
 };
 
 class match_iter : public __iter<match_object *>
@@ -139,7 +138,6 @@ public:
     match_object *next();
 };
 
-//re.* functions
 re_object *compile(str *pat, int flags = 0);
 
 match_object *match(str *pat, str *subj, int flags = 0);

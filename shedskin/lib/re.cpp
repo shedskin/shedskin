@@ -129,6 +129,13 @@ dict<str *, str *> *match_object::groupdict(str *defval)
     return r;
 }
 
+str *match_object::__repr__() {
+    return new str("<match_object>");
+}
+
+str *re_object::__repr__() {
+    return new str("<re_object>");
+}
 
 //these are for internal use
 __GC_STRING re_object::__group(__GC_STRING *subj, int *captured, int matchid)
@@ -697,6 +704,7 @@ list<str *> *__splitfind_once(str *pat, str *subj, int maxn, char onlyfind, int 
     ro = compile(pat, flags);
     r = ro->__splitfind(subj, maxn, onlyfind, 0);
 
+    //return subj->substr(captured[matchid * 2], captured[matchid * 2 + 1] - captured[matchid * 2]);
     return r;
 }
 
