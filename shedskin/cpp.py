@@ -8,7 +8,6 @@ output equivalent C++ code, using templates and virtuals to support data, parame
 
 class generateVisitor: inherits visitor pattern from compiler.visitor.ASTVisitor, to recursively generate C++ code for each syntactical Python construct. the constraint graph, with inferred types, is first 'merged' back to program dimensions (getgx().merged_inh).
 
-typesetreprnew(): returns the C++ (or annotation) type declaration, taking into consideration detected data/parametric polymorphism (via analyze_virtuals() and template_detect()).
 '''
 import textwrap, string
 from distutils import sysconfig
@@ -2721,9 +2720,15 @@ def assign_needs_cast(arg, func, formal, target):
     argsplit = typesplit(arg, func)
     formalsplit = typesplit(formal, target)
 
-    return assign_needs_cast_rec(argsplit, func, formalsplit, target)
+    try:
+        return assign_needs_cast_rec(argsplit, func, formalsplit, target)
+    except RuntimeError:
+        return False
 
-def assign_needs_cast_rec(argsplit, func, formalsplit, target):
+def assign_needs_cast_rec(argsplit, func, formalsplit, target, depth=0):
+    if depth == 10:
+        raise RuntimeError()
+
     argclasses = split_classes(argsplit)
     formalclasses = split_classes(formalsplit)
 
@@ -2750,7 +2755,7 @@ def assign_needs_cast_rec(argsplit, func, formalsplit, target):
         for tvar in tvars:
             argsubsplit = split_subsplit(argsplit, tvar)
             formalsubsplit = split_subsplit(formalsplit, tvar)
-            if assign_needs_cast_rec(argsubsplit, func, formalsubsplit, target):
+            if assign_needs_cast_rec(argsubsplit, func, formalsubsplit, target, depth+1):
                 return True
     return False
 
