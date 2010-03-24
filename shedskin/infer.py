@@ -29,7 +29,8 @@ iterative_dataflow_analysis():
     -otherwise, restore the constraint graph to its original state and restart
     -all the while maintaining types for each allocation point in getgx().alloc_info
 '''
-import gc
+import gc, random
+random.seed(42)
 
 from shared import *
 import graph, cpp
@@ -494,7 +495,7 @@ def ifa_split_no_confusion(cl, dcpa, varnum, classes_nr, nr_classes, csites, emp
     items = subtype_csites.items()
     if not others:
         items = items[1:]
-    for subtype, csites in subtype_csites.iteritems():
+    for subtype, csites in subtype_csites.iteritems(): # XXX items?
         if subtype in classes_nr: # reuse contour
             nr = classes_nr[subtype]
             split.append((cl, dcpa, csites, nr))
@@ -546,6 +547,7 @@ def ifa_classes_to_split():
                 cl.splits = {}
                 classes.append(cl)
                 break
+    random.shuffle(classes)
     return classes
 
 def ifa_confluence_point(node, creation_points):
