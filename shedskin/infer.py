@@ -443,14 +443,13 @@ def ifa_split_vars(cl, dcpa, vars, nr_classes, classes_nr, split):
             continue
         node = getgx().cnode[var, dcpa, 0]
         creation_points, paths, assignsets, allnodes, csites, emptycsites = ifa_flow_graph(cl, dcpa, node)
+        if DEBUG: print 'IFA visit var %s.%s, %d, csites %d' % (cl.ident, var.name, dcpa, len(csites))
         if len(csites)+len(emptycsites) == 1:
             continue
-        if DEBUG: print 'IFA visit var %s.%s, %d' % (cl.ident, var.name, dcpa)
         if ((len(merge_simple_types(getgx().types[node])) > 1 and len(assignsets) > 1) or \
             (assignsets and emptycsites)): # XXX move to split_no_conf
             ifa_split_no_confusion(cl, dcpa, varnum, classes_nr, nr_classes, csites, emptycsites, allnodes, split)
         if split:
-            if DEBUG: print 'IFA found simple splits, aborting'
             break
         for node in allnodes:
             if not ifa_confluence_point(node, creation_points):
@@ -503,6 +502,8 @@ def ifa_split_no_confusion(cl, dcpa, varnum, classes_nr, nr_classes, csites, emp
         else: # create new contour
             classes_nr[subtype] = cl.newdcpa
             ifa_split_class(cl, dcpa, csites, split)
+    if DEBUG and subtype_csites:
+        print 'IFA found simple split', subtype_csites.keys()
 
 def ifa_class_types(cl, vars):
     ''' create table for previously deduced types '''
