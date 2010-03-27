@@ -97,16 +97,18 @@ class SGA:
         self.generateRandomPop()
         self.bestIndividual = Individual(self.genomeSize)
         for self.generation in xrange(1, self.generationsMax+1):
+            if self.generation % 300 == 0:
+                print 'generation', self.generation
             self.computeFitnessPop()
             self.showGeneration_bestIndFind()
             self.population = self.tounamentSelectionPop()  
             self.mutatePop()
             self.crossingOverPop()
 
-sga = SGA()
-sga.generationsMax = 3000
-sga.genomeSize = 20
-sga.popSize = 30
-sga.geneMutationProb = 0.01
-sga.run()
-
+if __name__ == '__main__':
+    sga = SGA()
+    sga.generationsMax = 3000
+    sga.genomeSize = 20
+    sga.popSize = 30
+    sga.geneMutationProb = 0.01
+    sga.run()
