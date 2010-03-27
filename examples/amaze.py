@@ -474,6 +474,7 @@ class FilebasedMazeGame(MazeGame):
             except:
                 pass
 
-game = FilebasedMazeGame()
-for x in range(10000):
-    game.runGame()
+if __name__ == '__main__':
+    game = FilebasedMazeGame()
+    for x in range(10000):
+        game.runGame()
