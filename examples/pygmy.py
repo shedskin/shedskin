@@ -318,27 +318,28 @@ class spotshader(shader):
         ref = self.getreflected(shaderinfo)
         return ref*0.5 + col*0.5*self.doocclusion(10,shaderinfo)
 
-# Main
-# Give sixe x and y of the image
-if len(sys.argv) == 3:
-    nx, ny = int(sys.argv[1]), int(sys.argv[2])
-else:
-    nx, ny = 160, 120
-w = world(nx, ny)
-numballs = 10.0
-offset = vec(0.0,-5.0,55.0)
-rad = 12.0
-radperball = (2 * 3.141592) / numballs
+def main():
+    if len(sys.argv) == 3:
+        nx, ny = int(sys.argv[1]), int(sys.argv[2])
+    else:
+        nx, ny = 160, 120
+    w = world(nx, ny)
+    numballs = 10.0
+    offset = vec(0.0,-5.0,55.0)
+    rad = 12.0
+    radperball = (2 * 3.141592) / numballs
 
-for i in xrange(int(numballs)):
-    x = sin(0.3+radperball*float(i))*rad
-    y = cos(0.3+radperball*float(i))*rad
-    w.objects.append(sphere(vec(x,0.0,y)+offset,2.0,everythingshader()))
+    for i in xrange(int(numballs)):
+        x = sin(0.3+radperball*float(i))*rad
+        y = cos(0.3+radperball*float(i))*rad
+        w.objects.append(sphere(vec(x,0.0,y)+offset,2.0,everythingshader()))
 
-w.objects.append(sphere(vec(3.0,3.0,0.0)+offset,5.0,everythingshader()))
-w.objects.append(plane(vec(0.0,1.0,0.0),7.0, spotshader()))
-w.lights.append(parallellight(vec(1.0,1.0,-1.0), vec(0.3,0.9,0.1)))
-w.lights.append(pointlight(vec(5.0,100.0,-5.0), vec(0.5,0.5,1.0)))
+    w.objects.append(sphere(vec(3.0,3.0,0.0)+offset,5.0,everythingshader()))
+    w.objects.append(plane(vec(0.0,1.0,0.0),7.0, spotshader()))
+    w.lights.append(parallellight(vec(1.0,1.0,-1.0), vec(0.3,0.9,0.1)))
+    w.lights.append(pointlight(vec(5.0,100.0,-5.0), vec(0.5,0.5,1.0)))
 
-w.render('test.ppm')
+    w.render('test.ppm')
 
+if __name__ == '__main__':
+    main()
