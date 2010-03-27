@@ -1,19 +1,17 @@
 #!/usr/bin/env python
 
+# placed in the public domain by Stavros Korokithakis
+
 import time
 import copy
 from random import randrange, randint, seed, random, choice, triangular
 seed(42)
 
-
 # The size of the data bus of the multiplexer.
 DATA_SIZE = 4
 # The size of the selector, in bits (this is log2   (DATA_SIZE)).
 MUX_SIZE = 2
-
-
 MAX_DEPTH = 5
-
 
 OPCODE_NONE = 0
 OPCODE_AND = 1
@@ -21,18 +19,14 @@ OPCODE_OR = 2
 OPCODE_NOT = 3
 OPCODE_IF = 4
 
-
 ARG_NUM = (0, 2, 2, 1, 3)
-
 
 STATE_OPCODE = 0
 STATE_ARGUMENT = 1
 STATE_SUBTREE = 2
 
-
 def fitness(individual):
     return individual.fitness
-
 
 def make_random_genome(node, depth=0):
     if depth >= MAX_DEPTH or random() > 0.7:
@@ -45,7 +39,6 @@ def make_random_genome(node, depth=0):
         node.args = tuple([TreeNode() for _ in range(ARG_NUM[node.opcode])])
         for arg in node.args:
             make_random_genome(arg, depth+1)
-
 
 class TreeNode:
     def __init__(self, opcode=OPCODE_NONE, value=-1, args=None):
@@ -98,9 +91,7 @@ class TreeNode:
 
         return output
 
-
 class Individual:
-
     def __init__(self, genome=None):
         """
         Initialise the multiplexer with a genome and data size.
@@ -172,9 +163,7 @@ class Individual:
         self.fitness = (1.0 * correct) / total
         return self.fitness
 
-
 class Pool:
-
     population_size = 300
 
     def __init__(self):
@@ -236,7 +225,6 @@ def main():
 
     print "Epoch: %s, best fitness: %s" % (epoch, best_individual.fitness)
     print "Finished in %0.3f sec, best individual: %s" % (time.time() - start_time, best_individual)
-
 
 if __name__ == "__main__":
     main()
