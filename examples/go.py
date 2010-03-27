@@ -1,5 +1,7 @@
 import random, math, sys
 
+''' copyright mark dufour, license GPL v3 '''
+
 SIZE = 9
 #GAMES = 15000
 KOMI = 7.5

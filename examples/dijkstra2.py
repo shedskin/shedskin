@@ -22,7 +22,7 @@ class Graph:
         va, vb = self.vertices[a], self.vertices[b]
         va.neighs.append((vb, weight))
         vb.neighs.append((va, weight))
-        
+
 class Vertex:
     def __init__(self, id_):
         self.id_ = id_
@@ -35,29 +35,29 @@ def bidirectional_dijkstra(G, source_id, target_id):
     if source == target: return (0.0, [source])
     #Init:   Forward             Backward
     dists =  [{},                {}]# dictionary of final distances
-    paths =  [{source:[source]}, {target:[target]}] # dictionary of paths 
+    paths =  [{source:[source]}, {target:[target]}] # dictionary of paths
     fringe = [[],                []] #heap of (distance, node) tuples for extracting next node to expand
-    seen =   [{source:0.0},        {target:0.0} ]#dictionary of distances to nodes seen 
+    seen =   [{source:0.0},        {target:0.0} ]#dictionary of distances to nodes seen
     #initialize fringe heap
-    heapq.heappush(fringe[0], (0.0, source)) 
+    heapq.heappush(fringe[0], (0.0, source))
     heapq.heappush(fringe[1], (0.0, target))
     #variables to hold shortest discovered path
     #finaldist = 1e30000
     finalpath = []
     dir = 1
     while fringe[0] and fringe[1]:
-        # choose direction 
+        # choose direction
         # dir == 0 is forward direction and dir == 1 is back
         dir = 1-dir
         # extract closest to expand
-        (dist, v) = heapq.heappop(fringe[dir]) 
+        (dist, v) = heapq.heappop(fringe[dir])
         if v in dists[dir]:
-            # Shortest path to v has already been found 
+            # Shortest path to v has already been found
             continue
         # update distance
         dists[dir][v] = dist #equal to seen[dir][v]
         if v in dists[1-dir]:
-            # if we have scanned v in both directions we are done 
+            # if we have scanned v in both directions we are done
             # we have now discovered the shortest path
             return (finaldist,finalpath)
         for w, weight in v.neighs:
@@ -65,14 +65,14 @@ def bidirectional_dijkstra(G, source_id, target_id):
             if w in dists[dir]:
                 pass
             elif w not in seen[dir] or vwLength < seen[dir][w]:
-                # relaxing        
+                # relaxing
                 seen[dir][w] = vwLength
-                heapq.heappush(fringe[dir], (vwLength,w)) 
+                heapq.heappush(fringe[dir], (vwLength,w))
                 paths[dir][w] = paths[dir][v]+[w]
                 if w in seen[0] and w in seen[1]:
                     #see if this path is better than than the already
                     #discovered shortest path
-                    totaldist = seen[0][w] + seen[1][w] 
+                    totaldist = seen[0][w] + seen[1][w]
                     if finalpath == [] or finaldist > totaldist:
                         finaldist = totaldist
                         revpath = paths[1][w][:]
