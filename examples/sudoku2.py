@@ -113,19 +113,14 @@ class board(object):
                 return self.__openspaces
 
         def __solve(self, _board, depth):
-                global bekos
-                bekos += 1
-                if bekos == 5000:
-                    self.onexit()
-                    sys.exit()
-
                 if boardRep(_board) not in self.examined:
                         self.examined.add(boardRep(_board))
-            
+
                         #check for solution condition:
                         if _board.openspaces() <= 0:
                                 self.solutions.add(boardRep(_board))
-                                print 'sol', _board
+                                print 'solution:'
+                                print _board
                                 if depth == 0: self.onexit()
                                 if not board.completeSearch:
                                         self.onexit()
@@ -194,10 +189,11 @@ class board(object):
                 else: t = self.__endtime - self.__starttime
                 return {'max depth' : self.__maxdepth, 'turns' : self.__turns, 'backtracks' : self.__backtracks, 'elapsed time' : int(t), 'boards examined': len(self.examined), 'number of solutions' : len(self.solutions)}
 
+def main():
+    puzzle = board()
+    puzzle.fread('testdata/b6.pz')
+    print puzzle
+    puzzle.solve()
 
-bekos = 0
-puzzle = board()
-puzzle.fread('testdata/b6.pz')
-#print puzzle
-puzzle.solve()
-
+if __name__ == '__main__':
+    main()
