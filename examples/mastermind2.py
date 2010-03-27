@@ -147,4 +147,5 @@ def main():
     eval_strategy('s_trynodup', s_trynodup)
     eval_strategy('s_allrand', s_allrand)
 
-main()
+if __name__ == '__main__':
+    main()
