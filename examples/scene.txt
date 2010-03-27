@@ -1,9 +1,9 @@
 # scene descripting for yopyraSS.py
 
 # (optional, default 320 240) size = size of the final image
-size 160 120
+size 80 60
 
-nbounces 5 
+nbounces 5
 
 # (optional, default 1) oversampling=1 implica que no hay oversampling
 oversampling 2
