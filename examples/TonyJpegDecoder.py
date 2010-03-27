@@ -1220,7 +1220,8 @@ def avg(chrs):
     return ""
 
 def main():
-    inputfile = open(sys.argv[1], 'rb')
+#    inputfile = open(sys.argv[1], 'rb')
+    inputfile = open('tiger1.jpg', 'rb')
     jpgsrc = inputfile.read()
     inputfile.close()
     decoder = TonyJpegDecoder()
@@ -1228,8 +1229,10 @@ def main():
     bmpstr = "".join([chr(x) for x in bmpout])
     bmpstr2 = bgr2rgb(bmpstr)
     bmp = BMPFile(decoder.Width, decoder.Height, bmpstr)
-    bmpfile = sys.argv[2]
+#    bmpfile = sys.argv[2]
+    bmpfile = 'tiger1.bmp'
     open(bmpfile, "wb").write(str(bmp))
+    print 'converted %s to %s' % (inputfile, bmpfile)
 
 if __name__ == '__main__':
     main()
