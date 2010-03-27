@@ -43,10 +43,12 @@ def generateScreen(points, rows=40, cols=80):
 
 
 from time import clock
-points = generateRandomPoints(10)
-print
-t1 = clock()
-print generateScreen(points, 40, 80)
-t2 = clock()
-print round(t2-t1, 3)
+
+if __name__ == '__main__':
+    points = generateRandomPoints(10)
+    print
+    t1 = clock()
+    print generateScreen(points, 40, 80)
+    t2 = clock()
+    print round(t2-t1, 3)
 
