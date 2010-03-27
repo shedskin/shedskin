@@ -1688,8 +1688,8 @@ def main():
    bsl.comDone()           #Release serial communication port
 
 # shed skin
-#if __name__ == '__main__':
-try:
+if __name__ == '__main__':
+#try:
    main()
 # shed skin
 #   except SystemExit:
@@ -1698,9 +1698,9 @@ try:
 #       if DEBUG: raise     #show full trace in debug mode
 #       sys.stderr.write("user abort.\n")   #short messy in user mode
 #       sys.exit(1)         #set errorlevel for script usage
-except Exception, msg:  #every Exception is caught and displayed
-#   if DEBUG: raise     #show full trace in debug mode
-   sys.stderr.write("\nAn error occoured:\n%s\n" % msg) #short messy in user mode
-   sys.exit(1)         #set errorlevel for script usage
+#except Exception, msg:  #every Exception is caught and displayed
+##   if DEBUG: raise     #show full trace in debug mode
+#   sys.stderr.write("\nAn error occoured:\n%s\n" % msg) #short messy in user mode
+#   sys.exit(1)         #set errorlevel for script usage
 
 
