@@ -3,179 +3,176 @@
 #
 # sudoku solver
 
-def validMove(puzzle, x, y, number):     # puzzle: [list(list(int))], x: [int], y: [int], number: [int]
+def validMove(puzzle, x, y, number):
         #see if the number is in any row, column or his own 3x3 square
-        blnOK = True                     # [int]
-        px = x / 3                       # [int]
-        py = y / 3                       # [int]
-        if puzzle[x][y] != 0:            # [int]
-                blnOK = False            # [int]
-        if blnOK:                        # []
-                for i in range(9):       # [list(int)]
-                        if puzzle[i][y] == number: # [int]
-                                blnOK = False # [int]
-        if blnOK:                        # []
-                for j in range(9):       # [list(int)]
-                        if puzzle[x][j] == number: # [int]
-                                blnOK = False # [int]
-        if blnOK:                        # []
-                for i in range(3):       # [list(int)]
-                        for j in range(3): # [list(int)]
-                                if puzzle[px*3+i][py*3+j] == number: # [int]
-                                        blnOK = False # [int]
-        return blnOK                     # [int]
+        blnOK = True
+        px = x / 3
+        py = y / 3
+        if puzzle[x][y] != 0:
+                blnOK = False
+        if blnOK:
+                for i in range(9):
+                        if puzzle[i][y] == number:
+                                blnOK = False
+        if blnOK:
+                for j in range(9):
+                        if puzzle[x][j] == number:
+                                blnOK = False
+        if blnOK:
+                for i in range(3):
+                        for j in range(3):
+                                if puzzle[px*3+i][py*3+j] == number:
+                                        blnOK = False
+        return blnOK
 
-def findallMoves(puzzle,x,y):            # puzzle: [list(list(int))], x: [int], y: [int]
-        returnList = []                  # [list(int)]
-        for n in range(1,10):            # [list(int)]
-                if validMove(puzzle, x, y, n): # [int]
-                        returnList.append(n) # []
-        return returnList                # [list(int)]
+def findallMoves(puzzle,x,y):
+        returnList = []
+        for n in range(1,10):
+                if validMove(puzzle, x, y, n):
+                        returnList.append(n)
+        return returnList
 
-def solvePuzzleStep(puzzle):             # puzzle: [list(list(int))]
-        isChanged = False                # [int]
-        for y in range(9):               # [list(int)]
-                for x in range(9):       # [list(int)]
-                        if puzzle[x][y] == 0: # [int]
-                                allMoves = findallMoves(puzzle, x, y) # [list(int)]
-                                if len(allMoves) == 1: # [int]
-                                        puzzle[x][y] = allMoves[0] # [int]
-                                        isChanged = True # [int]
-        return isChanged                 # [int]
+def solvePuzzleStep(puzzle):
+        isChanged = False
+        for y in range(9):
+                for x in range(9):
+                        if puzzle[x][y] == 0:
+                                allMoves = findallMoves(puzzle, x, y)
+                                if len(allMoves) == 1:
+                                        puzzle[x][y] = allMoves[0]
+                                        isChanged = True
+        return isChanged
 
 #try to solve as much as possible without lookahead
-def solvePuzzleSimple(puzzle):           # puzzle: [list(list(int))]
-        iterationCount = 0               # [int]
-        while solvePuzzleStep(puzzle) == True: # [int]
-                iterationCount += 1      # [int]
+def solvePuzzleSimple(puzzle):
+        iterationCount = 0
+        while solvePuzzleStep(puzzle) == True:
+                iterationCount += 1
 
-hashtable = {}                           # [dict(int, int)]
+hashtable = {}
 
-def calc_hash(puzzle):                   # puzzle: [list(list(int))]
-        hashcode = 0                     # [int]
-        for c in range(9):               # [list(int)]
-                hashcode = hashcode * 17 + hash(tuple(puzzle[c])) # [int]
-        return hashcode                  # [int]
+def calc_hash(puzzle):
+        hashcode = 0
+        for c in range(9):
+                hashcode = hashcode * 17 + hash(tuple(puzzle[c]))
+        return hashcode
 
-def hash_add(puzzle):                    # puzzle: [list(list(int))]
-        hashtable[calc_hash(puzzle)] = 1 # [int]
+def hash_add(puzzle):
+        hashtable[calc_hash(puzzle)] = 1
 
-def hash_lookup(puzzle):                 # puzzle: [list(list(int))]
-        return hashtable.has_key(calc_hash(puzzle)) # [int]
+def hash_lookup(puzzle):
+        return hashtable.has_key(calc_hash(puzzle))
 
 #solve with lookahead
 #unit is 3x3, (i,j) is coords of unit. l is the list of all todo's
-def perm(puzzle, i, j, l, u):            # puzzle: [list(list(int))], i: [int], j: [int], l: [list(int)], u: [list(tuple(int))]
+def perm(puzzle, i, j, l, u):
         global iterations
-        iterations += 1                  # [int]
-        if (u == []) and (l == []):      # [int]
-                print "Solved!"          # [str]
-                #printpuzzle(puzzle)      # []
-                print "iterations: ", iterations # [str], [int]
-                return True              # [int]
+        iterations += 1
+        if (u == []) and (l == []):
+                print "Solved!"
+                printpuzzle(puzzle)
+                print "iterations: ", iterations
+                return True
         else:
-                if l == []:              # [int]
+                if l == []:
                         #here we have all permutations for one unit
 
                         #some simple moves
-                        puzzlebackup = [] # [list(tuple(int))]
-                        for c in range(9): # [list(int)]
-                                puzzlebackup.append(tuple(puzzle[c])) # []
-                        solvePuzzleSimple(puzzle) # []
+                        puzzlebackup = []
+                        for c in range(9):
+                                puzzlebackup.append(tuple(puzzle[c]))
+                        solvePuzzleSimple(puzzle)
 
                         #next unit to fill
-                        for c in range(len(u)): # [list(int)]
-                                if not hash_lookup(puzzle): # [int]
-                                        inew, jnew = u.pop(c) # [tuple(int)]
-                                        l = genMoveList(puzzle, inew, jnew) # [list(int)]
-                                        #only print new situations
-                                        #print "inew, jnew, l, u:", inew, jnew, l, u # [str], [int], [int], [list(int)], [list(tuple(int))]
-                                        #printpuzzle(puzzle) # []
-                                        #print "iterations: ", iterations # [str], [int]
-                                        if perm (puzzle, inew, jnew, l, u): # [int]
-                                                return True # [int]
+                        for c in range(len(u)):
+                                if not hash_lookup(puzzle):
+                                        inew, jnew = u.pop(c)
+                                        l = genMoveList(puzzle, inew, jnew)
+                                        #printpuzzle(puzzle)
+                                        #print "iterations: ", iterations
+                                        if perm (puzzle, inew, jnew, l, u):
+                                                return True
                                         else:
-                                                hash_add(puzzle) # []
-                                        u.insert(c, (inew, jnew)) # []
+                                                hash_add(puzzle)
+                                        u.insert(c, (inew, jnew))
 
                         #undo simple moves
-                        for y in range(9): # [list(int)]
-                                for x in range(9): # [list(int)]
-                                        puzzle[x][y] = puzzlebackup[x][y] # [int]
-                        hash_add(puzzle) # []
-                        return False     # [int]
+                        for y in range(9):
+                                for x in range(9):
+                                        puzzle[x][y] = puzzlebackup[x][y]
+                        hash_add(puzzle)
+                        return False
                 else:
                         #try all possibilities of one unit
-                        ii = i * 3       # [int]
-                        jj = j * 3       # [int]
-                        for m in range(len(l)): # [list(int)]
+                        ii = i * 3
+                        jj = j * 3
+                        for m in range(len(l)):
                                 #find first empty
-                                for y in range(3): # [list(int)]
-                                        for x in range(3): # [list(int)]
-                                                if validMove(puzzle, x+ii, y+jj, l[m]): # [int]
-                                                        puzzle[x+ii][y+jj] = l[m] # [int]
-                                                        backup = l.pop(m) # [int]
-                                                        if (perm(puzzle, i, j, l, u)): # [int]
-                                                                return True # [int]
+                                for y in range(3):
+                                        for x in range(3):
+                                                if validMove(puzzle, x+ii, y+jj, l[m]):
+                                                        puzzle[x+ii][y+jj] = l[m]
+                                                        backup = l.pop(m)
+                                                        if (perm(puzzle, i, j, l, u)):
+                                                                return True
                                                         else:
-                                                                hash_add(puzzle) # []
-                                                        l.insert(m, backup) # []
-                                                        puzzle[x+ii][y+jj] = 0 # [int]
-                        return False     # [int]
+                                                                hash_add(puzzle)
+                                                        l.insert(m, backup)
+                                                        puzzle[x+ii][y+jj] = 0
+                        return False
 
 #gen move list for unit (i,j)
-def genMoveList(puzzle, i, j):           # puzzle: [list(list(int))], i: [int], j: [int]
-        l = range(1,10)                  # [list(int)]
-        for y in range(3):               # [list(int)]
-                for x in range(3):       # [list(int)]
-                        p = puzzle[i*3+x][j*3+y] # [int]
-                        if p != 0:       # [int]
-                                l.remove(p) # []
-        return l                         # [list(int)]
+def genMoveList(puzzle, i, j):
+        l = range(1,10)
+        for y in range(3):
+                for x in range(3):
+                        p = puzzle[i*3+x][j*3+y]
+                        if p != 0:
+                                l.remove(p)
+        return l
 
-def printpuzzle(puzzle):                 # puzzle: [list(list(int))]
-        for x in range(9):               # [list(int)]
-                s = ' '                  # [str]
-                for y in range(9):       # [list(int)]
-                        p = puzzle[x][y] # [int]
-                        if p == 0:       # [int]
-                                s += '.' # [str]
+def printpuzzle(puzzle):
+        for x in range(9):
+                s = ' '
+                for y in range(9):
+                        p = puzzle[x][y]
+                        if p == 0:
+                                s += '.'
                         else:
-                                s += str(puzzle[x][y]) # [str]
-                        s += ' '         # [str]
-                print s                  # [str]
+                                s += str(puzzle[x][y])
+                        s += ' '
+                print s
 
 def main():
-        puzzle = [[0, 9, 3, 0, 8, 0, 4, 0, 0], # [list(list(int))]
-                          [0, 4, 0, 0, 3, 0, 0, 0, 0], # [list(int)]
-                          [6, 0, 0, 0, 0, 9, 2, 0, 5], # [list(int)]
-                          [3, 0, 0, 0, 0, 0, 0, 9, 0], # [list(int)]
-                          [0, 2, 7, 0, 0, 0, 5, 1, 0], # [list(int)]
-                          [0, 8, 0, 0, 0, 0, 0, 0, 4], # [list(int)]
-                          [7, 0, 1, 6, 0, 0, 0, 0, 2], # [list(int)]
-                          [0, 0, 0, 0, 7, 0, 0, 6, 0], # [list(int)]
-                          [0, 0, 4, 0, 1, 0, 8, 5, 0]] # [list(int)]
+        puzzle = [[0, 9, 3, 0, 8, 0, 4, 0, 0],
+                          [0, 4, 0, 0, 3, 0, 0, 0, 0],
+                          [6, 0, 0, 0, 0, 9, 2, 0, 5],
+                          [3, 0, 0, 0, 0, 0, 0, 9, 0],
+                          [0, 2, 7, 0, 0, 0, 5, 1, 0],
+                          [0, 8, 0, 0, 0, 0, 0, 0, 4],
+                          [7, 0, 1, 6, 0, 0, 0, 0, 2],
+                          [0, 0, 0, 0, 7, 0, 0, 6, 0],
+                          [0, 0, 4, 0, 1, 0, 8, 5, 0]]
 
         #create todo unit(each 3x3) list (this is also the order that they will be tried!)
-        u = []                           # [list(tuple(int))]
-        lcount = []                      # [list(int)]
-        for y in range(3):               # [list(int)]
-                for x in range(3):       # [list(int)]
-                        u.append((x,y))  # []
-                        lcount.append(len(genMoveList(puzzle, x, y))) # []
+        u = []
+        lcount = []
+        for y in range(3):
+                for x in range(3):
+                        u.append((x,y))
+                        lcount.append(len(genMoveList(puzzle, x, y)))
 
         #sort
-        for j in range(0,9):             # [list(int)]
-                for i in range(j,9):     # [list(int)]
-                        if i != j:       # [int]
-                                if lcount[i] < lcount[j]: # [int]
+        for j in range(0,9):
+                for i in range(j,9):
+                        if i != j:
+                                if lcount[i] < lcount[j]:
                                         u[i], u[j] = u[j], u[i]
                                         lcount[i], lcount[j] = lcount[j], lcount[i]
 
-        l = genMoveList(puzzle, 0, 0)    # [list(int)]
-        perm (puzzle, 0, 0, l, u)        # [int]
+        l = genMoveList(puzzle, 0, 0)
+        perm (puzzle, 0, 0, l, u)
 
-iterations = 0                           # [int]
+iterations = 0
 for x in range(30):
-    main()                                   # []
-
+    main()
