@@ -79,7 +79,7 @@ def bruteforce(rows, columns):
             #print board
 
 if __name__ == "__main__":
-    rows, columns = 4, 4
+    rows, columns = 4, 3
     bruteforce(rows, columns)
     print count
 #    try:
