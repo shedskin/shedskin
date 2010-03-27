@@ -4,25 +4,25 @@
 # Eric Rollins 2008
 
 #   This program generates a random array of distances between cities, then uses
-#   Ant Colony Optimization to find a short path traversing all the cities -- 
+#   Ant Colony Optimization to find a short path traversing all the cities --
 #   the Travelling Salesman Problem.
 #
 #   In this version of Ant Colony Optimization each ant starts in a random city.
 #   Paths are randomly chosed with probability inversely proportional to to the
-#   distance to the next city.  At the end of its travel the ant updates the 
+#   distance to the next city.  At the end of its travel the ant updates the
 #   pheromone matrix with its path if this path is the shortest one yet found.
-#   The probability of later ants taking a path is increased by the pheromone 
+#   The probability of later ants taking a path is increased by the pheromone
 #   value on that path.  Pheromone values evaporate (decrease) over time.
 #
-#   In this impementation weights between cities actually represent 
+#   In this impementation weights between cities actually represent
 #   (maxDistance - dist), so we are trying to maximize the score.
 #
 #   Usage: ant seed boost iterations cities
 #     seed         seed for random number generator (1,2,3...).
-#                  This seed controls the city distance array.  Remote 
-#                  executions have their seed values fixed (1,2) so each will 
+#                  This seed controls the city distance array.  Remote
+#                  executions have their seed values fixed (1,2) so each will
 #                  produce a different result.
-#     boost        pheromone boost for best path.  5 appears good.  
+#     boost        pheromone boost for best path.  5 appears good.
 #                  0 disables pheromones, providing random search.
 #     iterations   number of ants to be run.
 #     cities       number of cities.
@@ -76,7 +76,7 @@ def doSumWeight(cities, pher, used, current):
     runningTotal = 0.0
     for city in range(len(cities)):
         if not used.has_key(city):
-            runningTotal = (runningTotal + 
+            runningTotal = (runningTotal +
                             cities[current][city] * (1.0 + pher[current][city]))
     return runningTotal
 
@@ -89,7 +89,7 @@ def findSumWeight(cities, pher, used, current, soughtTotal):
         if runningTotal >= soughtTotal:
             break
         if not used.has_key(city):
-            runningTotal = (runningTotal + 
+            runningTotal = (runningTotal +
                             cities[current][city] * (1.0 + pher[current][city]))
             next = city
     return next
