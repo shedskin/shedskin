@@ -408,7 +408,10 @@ for tile in ominos:
 
 ## apply the Dancing Links algorithm to the matrix
 
-setroot(root)
-print 'begin search'
-search(0)
-print 'finished search'
+try:
+    setroot(root)
+    print 'begin search'
+    search(0)
+    print 'finished search'
+except SystemExit:
+    pass
