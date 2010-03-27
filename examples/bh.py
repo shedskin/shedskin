@@ -711,4 +711,5 @@ class BH(object):
         raise SystemExit()
 
 
-BH.main(argv)
+if __name__ == '__main__':
+    BH.main(argv)
