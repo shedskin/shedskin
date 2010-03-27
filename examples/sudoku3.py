@@ -12,22 +12,22 @@ TxT_ITER = [[(row,col) for row in rows for col in cols] for rows in TRIPLETS for
 class soduko:
     def __init__(self, start_grid=None) :
         self.squares =[ [range(1,10)  for col in range(0,9)] for row in range(0,9)]
-        
+
         if start_grid is not None:
             assert len(start_grid)==9, "Bad input!"
             for row in range(0,9) :
                 self.set_row(row, start_grid[row])
-                
+
         self._changed=False
-    
+
     def copy(self) :
         soduko_copy = soduko(None)
         for row in range(0,9) :
             for col in range(0,9) :
-                soduko_copy.squares[row][col] = self.squares[row][col][:] 
+                soduko_copy.squares[row][col] = self.squares[row][col][:]
         soduko_copy._changed=False
         return soduko_copy
-    
+
     def set_row(self,row, x_list) :
         assert len(x_list)==9, 'not 9'
         for col in range(0,9) :
@@ -43,12 +43,12 @@ class soduko:
         elif x not in range(1,9+1) :
             pass
         else:
-            assert x in self.squares[row][col], "bugger2" 
-            
+            assert x in self.squares[row][col], "bugger2"
+
             self.squares[row][col] = [x]
             self.update_neighbours(row,col,x)
             self._changed=True
-            
+
     def cell_exclude(self, row,col,x) :
         assert x in range(1,9+1), 'inra'
         if x in self.squares[row][col] :
@@ -77,21 +77,21 @@ class soduko:
             for col in cols :
                 assert row <> set_row or col <> set_col , 'meuh'
                 self.cell_exclude(row,col,x)
-            
+
     def get_cell_digit_str(self,row,col) :
         if len(self.squares[row][col])==1 :
             return str(self.squares[row][col][0])
         else :
             return "0"
-            
+
     def __str__(self):
         answer = "   123   456   789\n"
         for row in range(0,9) :
             answer = answer + str(row+1)                         +   " [" + "".join([self.get_cell_digit_str(row,col).replace("0","?") for col in range(0,3)])                         + "] [" + "".join([self.get_cell_digit_str(row,col).replace("0","?") for col in range(3,6)])                         + "] [" + "".join([self.get_cell_digit_str(row,col).replace("0","?") for col in range(6,9)])                         + "]\n"
-            if row+1 in [3,6] : 
+            if row+1 in [3,6] :
               answer = answer + "   ---   ---   ---\n"
         return answer
-                    
+
     def check(self) :
         self._changed=True
         while self._changed:
@@ -99,7 +99,7 @@ class soduko:
             self.check_for_single_occurances()
             self.check_for_last_in_row_col_3x3()
         return
-        
+
     def check_for_single_occurances(self):
         for check_type in [ROW_ITER, COL_ITER, TxT_ITER]:
             for check_list in check_type :
@@ -137,7 +137,7 @@ class soduko:
                     (row,col) = unknown_entries[0]
                     self.set_cell(row,col,x)
         return
-        
+
     def one_level_supposition(self):
         progress=True
         while progress :
@@ -159,25 +159,27 @@ class soduko:
                         elif len(bad_x) < len(self.squares[row][col]) :
                             for x in bad_x :
                                 self.cell_exclude(row,col,x)
-                                self.check() 
+                                self.check()
                             progress=True
                         else :
                             assert False, "bugger7"
 
+def main():
+    for x in range(50):
+        t = soduko(["800000600",
+                       "040500100",
+                       "070090000",
+                       "030020007",
+                       "600008004",
+                       "500000090",
+                       "000030020",
+                       "001006050",
+                       "004000003"])
 
-for x in range(50):
-    t = soduko(["800000600",
-                   "040500100",
-                   "070090000",
-                   "030020007",
-                   "600008004",
-                   "500000090",
-                   "000030020",
-                   "001006050",
-                   "004000003"])
+        t.check()
+        t.one_level_supposition()
+        t.check()
+        print t
 
-    t.check()
-    t.one_level_supposition()
-    t.check()
-    print t
-
+if __name__ == '__main__':
+    main()
