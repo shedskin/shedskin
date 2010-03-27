@@ -115,7 +115,7 @@ def run(times=100):
     for pool in pools:
         pool.display()
 
-if __name__ == '__main__' or 1:
+if __name__ == '__main__':
     if '--help' in sys.argv:
         print sys.argv[0]
         print
