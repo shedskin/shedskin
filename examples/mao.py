@@ -89,11 +89,11 @@ def ray_sphere_intersect(isect, ray, sphere):
                 isect.p.x = ray.org.x + ray.dir.x * t
                 isect.p.y = ray.org.y + ray.dir.y * t
                 isect.p.z = ray.org.z + ray.dir.z * t
-     
+
                 isect.n.x = isect.p.x - sphere.center.x
                 isect.n.y = isect.p.y - sphere.center.y
                 isect.n.z = isect.p.z - sphere.center.z
-     
+
                 vnormalize(isect.n)
 
 def ray_plane_intersect(isect, ray, plane):
@@ -101,8 +101,8 @@ def ray_plane_intersect(isect, ray, plane):
     v = vdot(ray.dir, plane.n)
 
     if abs(v) < 1.0e-17:
-        return 
-    
+        return
+
     t = -(vdot(ray.org, plane.n) + d) / v
 
     if t > 0.0:
@@ -143,8 +143,8 @@ def ambient_occlusion(col, isect):
     nphi = NAO_SAMPLES
     eps = 0.0001
 
-    p = Vector(isect.p.x + eps * isect.n.x, 
-               isect.p.y + eps * isect.n.y, 
+    p = Vector(isect.p.x + eps * isect.n.x,
+               isect.p.y + eps * isect.n.y,
                isect.p.z + eps * isect.n.z)
 
     basis = [Vector(0.0, 0.0, 0.0) for x in range(3)]
@@ -164,7 +164,7 @@ def ambient_occlusion(col, isect):
             y = sin(phi) * theta
             z = sqrt(1.0 - theta * theta)
 
-            rx = x * b0.x + y * b1.x + z * b2.x 
+            rx = x * b0.x + y * b1.x + z * b2.x
             ry = x * b0.y + y * b1.y + z * b2.y
             rz = x * b0.z + y * b1.z + z * b2.z
             ray.reset(p, rx, ry, rz)
@@ -249,6 +249,7 @@ def save_ppm(img, w, h, fname):
     array("B", img).tofile(fout)
     fout.close()
 
-init_scene()
-img = render(WIDTH, HEIGHT, NSUBSAMPLES)
-save_ppm(img, WIDTH, HEIGHT, "ao_py.ppm")
+if __name__ == '__main__':
+    init_scene()
+    img = render(WIDTH, HEIGHT, NSUBSAMPLES)
+    save_ppm(img, WIDTH, HEIGHT, "ao_py.ppm")
