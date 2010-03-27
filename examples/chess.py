@@ -367,5 +367,5 @@ def speedTest():
   res = alphaBeta(board, -99999999, 99999999, 4)
   print res
 
-speedTest()
-
+if __name__ == '__main__':
+    speedTest()
