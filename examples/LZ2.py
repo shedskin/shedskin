@@ -23,7 +23,7 @@ def dec_to_bin( n , digits ):
     000010001
     >>> print dec_to_bin( 17 , 5)
     10001
-    
+
     Will behead the standard binary number if requested
     >>> print dec_to_bin( 17 , 4)
     0001
@@ -33,7 +33,7 @@ def dec_to_bin( n , digits ):
     i=digits-1
     ans=""
     while i>=0 :
-        b = (((1<<i)&n)>0) 
+        b = (((1<<i)&n)>0)
         i -= 1
         ans = ans + str(int(b))
     return ans
@@ -94,7 +94,7 @@ def searchstatus(fr,to,L,c):
     print "|%s\n|%s%s\n|%s%s" %\
           (c,\
            ' '*fr, 'f',\
-           ' '*to, 't')                  
+           ' '*to, 't')
     # find where this substring occurs
     print "looking for '%s' inside '%s'. " % (c[fr:to],c[0:fr]) ,
 
@@ -110,7 +110,7 @@ def encode ( c, pretty=1 , verbose=0 ): ## c is STRING of characters (0/1) ; p i
     0010010000100000001001101000001011
 
     To understand the encoding procedure it might be
-    best to read the decoder. 
+    best to read the decoder.
 
     Termination rule:
     We have a special reserved "impossible pointer" string
@@ -135,11 +135,11 @@ def encode ( c, pretty=1 , verbose=0 ): ## c is STRING of characters (0/1) ; p i
     assert L>1 ## sorry, cannot compress the files "0" or "1" or ""
     output.append( c[0] )     # to get started we must send one bit
     fr = 1 ;
-    eof_sent = 0 
+    eof_sent = 0
     while (eof_sent == 0 ) : # start a new substring search
         to = fr              # Always Start by finding a match of the empty string
         oldpointer = -2      # indicates that no match has been found. Used for debugging.
-        while  (eof_sent == 0 ) and (to<=L) :   # extend the search 
+        while  (eof_sent == 0 ) and (to<=L) :   # extend the search
             if verbose > 2:  searchstatus(fr,to,L,c);  pass
             pointer = c[0:fr].find( c[fr:to] )
             if verbose > 2: print "result:",pointer , to ; pass
@@ -148,7 +148,7 @@ def encode ( c, pretty=1 , verbose=0 ): ## c is STRING of characters (0/1) ; p i
                 digits  = ceillog ( fr+1 )  # digits=ceillog ( fr ) would be enough space for oldpointer, which is in range (0,fr-1).
                 # we give ourselves extra space so as to be able to convey a termination event
                 maxlength = fr-oldpointer  # from-oldpointer is maximum possible sequence length
-                digits2 = ceillog ( maxlength+1 ) 
+                digits2 = ceillog ( maxlength+1 )
                 if (pointer==-1) :    to -= 1 ; pass # the matched string was shorter than to-fr; need to step back.
                 length = to-fr
                 if length < maxlength: # then the receiver can deduce the next bit
@@ -189,20 +189,20 @@ def decode( li , verbose=0 ):
     00000000000010000000000
     """
     assert(len(li)>0) # need to get first bit! The compressor cannot compress the empty string.
-    c=li.pop(0) 
-    fr = 1 ; to = fr 
-    
+    c=li.pop(0)
+    fr = 1 ; to = fr
+
     not_eof = 1 ; specialbit=0
     while not_eof:
-        assert(len(li)>0) # self-delimiting file 
+        assert(len(li)>0) # self-delimiting file
         digits  = ceillog ( fr+1 )
         pointer = bin_to_dec( li , digits ) # get the pointer
         maxlength = fr-pointer
         if pointer==fr : # special end of file signal!
             specialbit=int(li.pop(0))
-            pointer = bin_to_dec( li , digits ) 
-            maxlength = fr-pointer 
-            not_eof = 0 
+            pointer = bin_to_dec( li , digits )
+            maxlength = fr-pointer
+            not_eof = 0
             pass
         digits2 = ceillog ( maxlength+1 ) 
         length  =  bin_to_dec( li , digits2 )
@@ -218,7 +218,7 @@ def decode( li , verbose=0 ):
             pass
         fr = len(c)
     return c
-            
+
 def test():
     print "pretty encoding examples:"
     examples = [  "0010000000001000000000001" ,  "00000000000010000000000"  ]
@@ -232,15 +232,15 @@ def test():
                  "0000","0001","0010","0011","0100","0101","0110",\
                  "0111","1000","1001","1010","1011","1100","1101","1110","1111",\
                  "111","110010010101000000000001110100100100000000000000", \
-                 "00000000000010000000000" , "1100100" ,  "100100" ]         
+                 "00000000000010000000000" , "1100100" ,  "100100" ]
     pretty = 1 ; verbose = 1
     for ex in examples :
-        print 
+        print
         print "Encoding", ex
         zip =  encode( ex , pretty , verbose )
-        if verbose>2: print zip 
+        if verbose>2: print zip
         zip2 =  encode( ex , 0 , 0 )
-        print "Decoding", zip2 
+        print "Decoding", zip2
         unc = decode( list(zip2) , verbose )
         print "-> ", unc
         if unc==ex:
@@ -255,7 +255,7 @@ def test():
             zip =  encode( ex , pretty , verbose )
             print zip
             zip2 =  encode( ex , 0 , 0 )
-            print "Decoding", zip2 
+            print "Decoding", zip2
             unc = decode( list(zip2) , verbose )
             print "-> ", unc
             if unc==ex:
@@ -289,8 +289,8 @@ def hardertest():
 
     print "Checking for differences..."
     os.system( "diff testdata/BentCoinFile tmp2" )
-    os.system( "wc tmp.zip testdata/BentCoinFile tmp2" ) 
+    os.system( "wc tmp.zip testdata/BentCoinFile tmp2" )
 
-if __name__ == '__main__': 
+if __name__ == '__main__':
     test()
     hardertest()
