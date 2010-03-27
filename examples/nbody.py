@@ -134,4 +134,5 @@ def main() :
 
     print "%.9f" % energy(bodies)
 
-main()
+if __name__ == '__main__':
+    main()
