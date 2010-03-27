@@ -23,13 +23,6 @@
 from math import *
 import sys
 
-#try:
-#    import psyco
-#    psyco.full()
-#except:
-#    print "No Psyco optimization."
-
-
 MAX_DIST = 1999999999 # 9999999999
 PI_SOBRE_180 = 0.017453292
 PEQUENO = 0.000000001

@@ -135,12 +135,5 @@ def oliva(nx = 600,   # Length of the computed screen matrix (number of cells)
         # ----------- Plot-Save -------------
         outPGM.saverow( [255 * a[ix] for ix in xrange(nx)] )
 
-#import psyco; psyco.full()
-oliva()
-
-"""
-Timings, nx,ny = 600, 500:
-Python: 44.5 s      21.5 X
-Psyco: 8.8 s         4.2 X
-SS NOWRAP: 2.07 s    1   X
-"""
+if __name__ == '__main__':
+    oliva()

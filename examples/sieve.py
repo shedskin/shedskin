@@ -89,9 +89,6 @@ def sieveOfEratostenes(n):
             sieve[bottom::si] = [0] * -((bottom - top) // si)
     return [2] + [el for el in sieve if el]
 
-
-#import psyco; psyco.full()
-
 if __name__ == "__main__":
     # The Sieve of Atkin is supposed to be faster for big n.
 
