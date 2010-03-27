@@ -108,7 +108,7 @@ def dijkstra(G, t, s):
         S.insert(0, u)
         u = previous[u]
     return S
- 
+
 if __name__ == '__main__':
     for n in xrange(100):
         G = Graph()
@@ -125,6 +125,3 @@ if __name__ == '__main__':
                 print "\t => dijkstra %s ---> %s: " % (inter, t), S1, G.distance(inter, S1)
                 if S1 != S[ (len(S) - len(S1)) : ]:
                     print "************ ALARM! **************"
-
-
- 	  	 
