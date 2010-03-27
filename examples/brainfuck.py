@@ -60,5 +60,6 @@ def BF_interpreter(prog):
                         break
                 ip -= 1
 
-program = file('testdata/99bottles.bf').read()
-BF_interpreter(program)
+if __name__ == '__main__':
+    program = file('testdata/99bottles.bf').read()
+    BF_interpreter(program)
