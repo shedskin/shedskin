@@ -136,7 +136,7 @@ class NN:
         for j in range(self.nh):
             print self.wo[j]
 
-    def train(self, patterns, iterations=1000, N=0.5, M=0.1):
+    def train(self, patterns, iterations=10000, N=0.5, M=0.1):
         # N: learning rate
         # M: momentum factor
         for i in xrange(iterations):
@@ -146,7 +146,7 @@ class NN:
                 targets = p[1]
                 self.update(inputs)
                 error = error + self.backPropagate(targets, N, M)
-            if i % 100 == 0:
+            if i % 1000 == 0:
                 print 'error %-14f' % error
 
 
