@@ -1,6 +1,6 @@
 #
 ### to change the scene/resolution, edit scene.txt
-# 
+#
 # GPL Notice:
 #
 # This program is free software; you can redistribute it and/or modify it under
@@ -389,4 +389,5 @@ def main():
 
     fileout.close()
 
-main()
+if __name__ == '__main__':
+    main()
