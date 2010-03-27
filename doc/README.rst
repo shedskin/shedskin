@@ -2,7 +2,7 @@ Shed Skin Tutorial
 ==================
 
 :Version: 0.4
-:Date: April 1 2010
+:Date: March 27 2010
 :Authors: Mark Dufour and James Coughlan
 
 .. _Parallel Python: http://www.parallelpython.com/
@@ -23,13 +23,13 @@ Shed Skin Tutorial
 Introduction
 ------------
 
-**Shed Skin** is an *experimental* **Python-to-C++ compiler** designed to speed up the execution of computation-intensive Python programs. It converts programs written in a *static subset* of Python to C++. The C++ code can be compiled to executable code, which can be run either as a standalone program or as an extension module easily imported and used in a regular Python program.
+**Shed Skin** is an experimental **Python-to-C++ compiler** designed to speed up the execution of computation-intensive Python programs. It converts programs written in a static subset of Python to C++. The C++ code can be compiled to executable code, which can be run either as a standalone program or as an extension module easily imported and used in a regular Python program.
 
-**Shed Skin** uses type inference techniques to determine the *implicit* types used in a Python program, in order to generate the *explicit* type declarations needed in a C++ version. Because C++ is *statically typed*, **Shed Skin** requires Python code to be written such that all variables are (implicitly) statically typed.
+**Shed Skin** uses type inference techniques to determine the implicit types used in a Python program, in order to generate the explicit type declarations needed in a C++ version. Because C++ is statically typed, **Shed Skin** requires Python code to be written such that all variables are (implicitly) statically typed.
 
-Besides the *typing* and *subset* restrictions, supported programs cannot freely use the Python standard library, although about 20 common modules are supported, such as ``random`` and ``re`` (see `Library Limitations`_).
+Besides the typing and subset restrictions, supported programs cannot freely use the Python standard library, although about 20 common modules are supported, such as ``random`` and ``re`` (see `Library Limitations`_).
 
-Additionally, the type inference techniques employed by **Shed Skin** currently do not scale very well beyond several hundred lines of code (the largest compiled program is about 1,200 lines (sloccount)). In all, this means that **Shed Skin** is currently mostly useful to compile *smallish* programs and extension modules, that do not make extensive use of dynamic Python features or the standard library.
+Additionally, the type inference techniques employed by **Shed Skin** currently do not scale very well beyond several hundred lines of code (the largest compiled program is about 1,200 lines (sloccount)). In all, this means that **Shed Skin** is currently mostly useful to compile smallish programs and extension modules, that do not make extensive use of dynamic Python features or the standard library.
 
 Because **Shed Skin** is still in an early stage of development, it can also improve a lot. At the moment, you will probably run into some bugs when using it. Please report these, so they can be fixed!
 
@@ -40,31 +40,31 @@ At the moment, **Shed Skin** is compatible with Python versions 2.4 to 2.6, beha
 Typing Restrictions
 -------------------
 
-**Shed Skin** translates pure, but *implicitly statically typed*, Python programs into C++. The static typing restriction means that variables can only ever have a *single, static type*. So, for example, ::
+**Shed Skin** translates pure, but implicitly statically typed, Python programs into C++. The static typing restriction means that variables can only ever have a single, static type. So, for example, ::
 
     a = 1
     a = ’1’ # bad
 
-is not allowed. However, as in C++, types can be *abstract*, so that, for example, ::
+is not allowed. However, as in C++, types can be abstract, so that for example, ::
 
     a = A()
     a = B() # good
 
 where **A** and **B** have a common base class, is allowed. 
 
-The typing restriction also means that the elements of some collection (``list``, ``set``, etc.) cannot have different types (because their *subtype* must also be static). Thus: ::
+The typing restriction also means that the elements of some collection (``list``, ``set``, etc.) cannot have different types (because their subtype must also be static). Thus: ::
 
     a = [’apple’, ’b’, ’c’] # good
     b = (1, 2, 3) # good
     c = [[10.3, -2.0], [1.5, 2.3], []] # good
 
-are allowed, but ::
+is allowed, but ::
 
     d = [1, 2.5, ’abc’] # bad
     e = [3, [1, 2]] # bad
     f = (0, ’abc’, [1, 2, 3]) # bad
 
-are not allowed. Of course, dictionary keys and values may be of different types: ::
+is not allowed. Of course, dictionary keys and values may be of different types: ::
 
     g = {’a’: 1, ’b’: 2, ’c’: 3} # good
     h = {’a’: 1, ’b’: ’hello’, ’c’: [1, 2, 3]} # bad
@@ -106,9 +106,9 @@ Python Subset Restrictions
   - multiple inheritance
   - nested functions and classes
   - unicode
-  - closures
   - inheritance from builtins (excluding ``Exception`` and ``object``)
   - overloading ``__iter__`` and ``__call__``
+  - closures
 
 Some other features are currently only partially supported:
 
@@ -119,11 +119,11 @@ Some other features are currently only partially supported:
 
         SomeClass.some_static_method() # good
 
-  - functions references be passed around, but not method references, and they cannot be contained: ::
+  - function references be passed around, but not method references, and they cannot be contained: ::
 
         var = lambda x, y: x+y # good
         var = some_func # good
-        var = self.some_method # bad
+        var = self.some_method # bad, method reference
         [var] # bad, contained
 
 .. _Library Limitations:
@@ -132,8 +132,6 @@ Library Limitations
 -------------------
 
 Programs to be compiled with **Shed Skin** cannot freely use the Python standard library. Only about 20 common modules are currently supported.
-
-Note that **Shed Skin** can be used to build an extension module, so the main program can freely use arbitrary modules (and of course all Python features!). See `Compiling an Extension Module`_.
 
 The following modules are largely supported at the moment. Several of these, such as ``os.path``, were compiled to C++ using **Shed Skin**.
 
@@ -241,18 +239,16 @@ To install the **UNIX** source package on an **OSX** system, take the following 
 
  - install the `PCRE`_ library
 
-.. _Compiling and Running a Stand-Alone Program:
+.. _Compiling a Stand-Alone Program:
 
-Compiling and Running a Stand-Alone Program
--------------------------------------------
+Compiling a Stand-Alone Program
+-------------------------------
 
 To compile the following simple test program, called ``test.py``: ::
 
-    # test.py
-
     print 'hello, world!'
 
-Open a terminal and type the following: ::
+Type: ::
 
     shedskin test
 
@@ -262,26 +258,12 @@ To create an executable file, called ``test``, type: ::
 
     make
 
-To run the executable, type: ::
+.. _Generating an Extension Module:
 
-    ./test
+Generating an Extension Module
+------------------------------
 
-The following output should now appear on the command line: ::
-
-    hello, world!
-
-.. _Compiling an Extension Module:
-
-Compiling an Extension Module
------------------------------
-
-Extension modules are compiled binaries, typically written in C or C++ for speed, that can be imported and used like regular Python modules. They allow one to write most of a project in unrestricted Python, while optimizing one or more speed-critical parts.
-
-It is very easy to generate extension modules with **Shed Skin**.
-
-**Simple Example**
-
-We begin with a simple example module, called ``simple_module.py``, containing two simple functions: ::
+To compile the following program, called ``simple_module.py``, as an extension module: ::
 
     # simple_module.py
 
@@ -296,16 +278,14 @@ We begin with a simple example module, called ``simple_module.py``, containing t
         print func1(5)
         print func2(10)
 
-For type inference to work, the module must (*indirectly*) call its own functions (if ``func1`` calls ``func2``, we can omit the call to ``func2``). This is accomplished in the example by putting the function calls under the ``if __name__=='__main__'`` statement, so that they will not be executed when the module is imported.
-
-To compile the module into an extension module, type: ::
+Type: ::
 
     shedskin -e simple_module
     make
 
-On **UNIX** systems, for 'make' to succeed, make sure to have the Python development files installed (under **Debian**, install ``python-dev``; under **Fedora**, install ``python-devel``).
+For 'make' to succeed, make sure to have the Python development files installed (under **Debian**, install ``python-dev``; under **Fedora**, install ``python-devel``).
 
-The resulting extension module (*shared library*) is called ``simple_module.so``.
+Note that for type inference to be possible, the module must (indirectly) call its own functions. This is accomplished in the example by putting the function calls under the ``if __name__=='__main__'`` statement, so that they will not be executed when the module is imported.
 
 The extension module can now be simply imported and used as usual: ::
 
@@ -315,22 +295,9 @@ The extension module can now be simply imported and used as usual: ::
     >>> func2(10)
     {0: 0, 1: 1, 2: 4, 3: 9, 4: 16, 5: 25, 6: 36, 7: 49, 8: 64, 9: 81}
 
-Note that calling ``func1`` with a non-integer argument causes an error: ::
+**Differences**
 
-    >>> func1(10.5)
-    Traceback (most recent call last):
-      File "<pyshell#0>", line 1, in -toplevel-
-        func1(10.5)
-    TypeError: error in conversion to Shed Skin (integer expected)
-
-It is useful to know which version of the module you are importing: either the **Shed Skin** version (``simple_module.so`` or ``simple_module.pyd``) or the original Python version (``simple_module.py`` or ``simple_module.pyc``). One way to determine this, is to include the following code in the top of the module: ::
-
-    import sys
-    print sys.version
-
-**Restrictions**
-
-There are several important restrictions that must be observed when compiling an extension module:
+There are some important differences between using the compiled extension module and the original.
 
 1. Only builtin scalar and container types (``int``, ``float``, ``complex``, ``str``, ``list``, ``tuple``, ``dict``, ``set``, ``frozenset``) as well as ``None`` and instances of user-defined classes can be passed/returned. So for instance, anonymous functions and iterators are currently not supported.
 
@@ -338,43 +305,12 @@ There are several important restrictions that must be observed when compiling an
 
 3. Global variables are converted once, at initialization time, from **Shed Skin** to **CPython**. This means that the value of the **CPython** version and **Shed Skin** version can change independently. This problem can be avoided by only using constant globals, or by adding getter/setter functions.
 
-**Example for NumPy/SciPy users**
-
-The following example demonstrates how a matrix created in `NumPy`_ can be processed by an extension module generated with **Shed Skin**. The function ``my_sum`` sums all the elements in a matrix: ::
-
-    # simple_module2.py
-
-    def my_sum(a):
-        """ compute sum of elements in list of lists (matrix) """
-        h = len(a) # number of rows in matrix
-        w = len(a[0]) # number of columns
-        s = 0.0
-        for i in range(h):
-            for j in range(w):
-                s += a[i][j]
-        return s
-
-    if __name__ == '__main__':
-        print my_sum([[1.0, 2.0], [3.0, 4.0]])
-
-(This example is given purely as an illustration, since `NumPy`_ arrays already include a built-in ``sum`` method.)
-
-After compiling the module with **Shed Skin**, the ``my_sum`` function can now be used as follows: ::
-
-    >>> import numpy
-    >>> from simple_module2 import my_sum
-    >>> a = numpy.array(([1.0, 2.0], [3.0, 4.0]))
-    >>> my_sum(a.tolist())
-    10.0
-
-The ``tolist`` call is necessary here, as **Shed Skin** does not directly support `NumPy`_ types.
-
-
 .. _Parallel Processing:
 
 Parallel Processing
 -------------------
-Extension modules generated by **Shed Skin** can be easily combined with parallel processing software such as `Parallel Python`_ and `pprocess`_.
+
+Extension modules generated by **Shed Skin** can be combined with parallel processing software such as `Parallel Python`_ and `pprocess`_.
 
 Suppose we have defined the following function in a file, called ``meuk.py``: ::
 
@@ -463,7 +399,7 @@ To call manually written C/C++ code, follow these steps:
 
 **Standard Library**
 
-By moving ``stuff.*`` to ``lib/``, we have in fact added support for an arbitrary module to **Shed Skin**. Other programs compiled by **Shed Skin** can now import ``stuff`` and use ``more_primes``. There is no difference with adding support for a *standard library* module. In fact, in the ``lib/`` directory, you can find type models and implementations for all supported modules (see `Library Limitations`_). As you may notice, some have been partially converted to C++ using **Shed Skin**.
+By moving ``stuff.*`` to ``lib/``, we have in fact added support for an arbitrary module to **Shed Skin**. Other programs compiled by **Shed Skin** can now import ``stuff`` and use ``more_primes``. There is no difference with adding support for a standard library module. In fact, in the ``lib/`` directory, you can find type models and implementations for all supported modules (see `Library Limitations`_). As you may notice, some have been partially converted to C++ using **Shed Skin**.
 
 **Shed Skin Types**
 
@@ -503,7 +439,7 @@ Tips and Tricks
 
 1. Allocating many small objects (e.g. by using ``zip``) typically does not slow down Python programs by much. However, after compilation to C++, it can quickly become a bottleneck. The key to getting excellent performance is to allocate as few objects as possible.
 
-2. **Shed Skin** takes the flags it sends to the C++ compiler from the ``FLAGS`` file in the **Shed Skin** working directory. These flags can be modified or overruled by creating a local file with the same name, or by directly editing the generated Makefile. The following flags typically give good results: ::
+2. **Shed Skin** takes the flags it sends to the C++ compiler from the ``FLAGS`` file in the **Shed Skin** installation directory. These flags can be modified or overruled by creating a local file with the same name. The following flags typically give good results: ::
 
     -O3 -s -fomit-frame-pointer -msse2
 
@@ -579,4 +515,4 @@ I would like to thank the following company/people, for their help with **Shed S
 * Jaroslaw Tworek
 * Pavel Vinogradov
 
-As well as all the people that wrote and shared all the example programs.
+As well as all the other people who wrote and shared all the example programs.
