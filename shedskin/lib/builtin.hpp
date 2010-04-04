@@ -104,14 +104,17 @@ template<> double __float(str *s);
 str *__str();
 template<class T> str *__str(T t);
 template<> str *__str(double t);
+template<> str *__str(__ss_int t);
 str *__str(int t, int base=10);
 str *__str(__ss_bool b);
 
 template<class T> str *repr(T t);
 template<> str *repr(double t);
-template<> str *repr(int t);
+template<> str *repr(__ss_int t);
 template<> str *repr(__ss_bool b);
 template<> str *repr(void *t);
+
+str *repr(int t);
 
 file *open(str *name, str *flags = 0);
 str *raw_input(str *msg = 0);
@@ -385,8 +388,8 @@ public:
 
 class int_ : public pyobj {
 public:
-    int unit;
-    int_(int i);
+    __ss_int unit;
+    int_(__ss_int i);
     str *__repr__();
 };
 
@@ -3788,7 +3791,7 @@ template<class T> str *__moddict(str *v, dict<str *, T> *d) {
 /* boxing */
 
 template<class T> T __box(T t) { return t; }
-int_ *__box(int);
+int_ *__box(__ss_int);
 bool_ *__box(__ss_bool);
 float_ *__box(double);
 

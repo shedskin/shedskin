@@ -64,7 +64,7 @@ double __portableround(double x) {
 
 /* int_ methods */
 
-int_::int_(int i) {
+int_::int_(__ss_int i) {
     unit = i;
     __class__ = cl_int_;
 }
@@ -1456,9 +1456,11 @@ template<> void *__copy(void *d) { return d; }
 /* representation */
 
 template<> str *repr(double d) { return __str(d); }
-template<> str *repr(int i) { return __str(i); }
+template<> str *repr(__ss_int i) { return __str(i); }
 template<> str *repr(__ss_bool b) { return b.value?(new str("True")):(new str("False")); }
 template<> str *repr(void *) { return new str("None"); }
+
+str *repr(int i) { return __str(i); }
 
 str *__str(void *) { return new str("void"); }
 
@@ -1634,6 +1636,10 @@ template<> str *bin(int i) {
 template<> str *bin(__ss_bool b) { return bin(b.value); }
 
 str *__str() { return new str(""); } /* XXX optimize */
+
+template<> str *__str(__ss_int t) {
+    return new str("long long..");
+}
 
 template<> str *__str(double t) {
     std::stringstream ss;
@@ -1847,7 +1853,11 @@ str *__mod5(list<pyobj *> *vals, int newline) {
         else if(p->__class__ == cl_float_)
             fmt->append(new str("%H"));
         else if(p->__class__== cl_int_)
+#ifdef __SS_LONG
+            fmt->append(new str("%lld"));
+#else
             fmt->append(new str("%d"));
+#endif
         else
             fmt->append(new str("%s"));
     }
@@ -1939,7 +1949,7 @@ str *__modct(str *fmt, int n, ...) {
      return s;
 }
 
-int_ *__box(int i) {
+int_ *__box(__ss_int i) {
     return new int_(i);
 }
 bool_ *__box(__ss_bool b) {
