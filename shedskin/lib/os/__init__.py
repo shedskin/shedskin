@@ -472,3 +472,6 @@ def WSTOPSIG(status):
     return 1
 def WTERMSIG(status):
     return 1
+
+def _exit(code):
+    pass
