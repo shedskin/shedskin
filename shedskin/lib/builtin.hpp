@@ -104,17 +104,21 @@ template<> double __float(str *s);
 str *__str();
 template<class T> str *__str(T t);
 template<> str *__str(double t);
-template<> str *__str(__ss_int t);
+#ifdef __SS_LONG
+str *__str(__ss_int t, __ss_int base=10);
+#endif
 str *__str(int t, int base=10);
 str *__str(__ss_bool b);
 
 template<class T> str *repr(T t);
 template<> str *repr(double t);
+#ifdef __SS_LONG
 template<> str *repr(__ss_int t);
+#endif
+template<> str *repr(int t);
 template<> str *repr(__ss_bool b);
 template<> str *repr(void *t);
 
-str *repr(int t);
 
 file *open(str *name, str *flags = 0);
 str *raw_input(str *msg = 0);
