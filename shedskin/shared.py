@@ -54,6 +54,7 @@ class globalInfo: # XXX add comments, split up
         self.bounds_checking = True
         self.fast_random = False
         self.extension_module = False
+        self.longlong = False
         self.flags = None
         self.annotation = False
         self.output_dir= ''

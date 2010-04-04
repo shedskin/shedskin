@@ -53,6 +53,12 @@ public:
 extern __ss_bool True;
 extern __ss_bool False;
 
+#ifdef __SS_LONG
+    typedef long long __ss_int;
+#else
+    typedef int __ss_int;
+#endif
+
 template <class T> class pyiter;
 template <class T> class pyseq;
 
