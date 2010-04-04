@@ -176,6 +176,10 @@ void *mkdir(str *path, int mode) {
     return NULL;
 }
 
+void _exit(int code) {
+    ::exit(code);
+}
+
 void *makedirs(str *name, int mode) {
     tuple2<str *, str *> *__0, *__1;
     str *head, *tail;

@@ -84,6 +84,8 @@ popen_pipe* popen(str* cmd);
 popen_pipe* popen(str* cmd, str* mode);
 popen_pipe* popen(str* cmd, str* mode, int bufsize);
 
+void _exit(int code);
+
 #ifndef WIN32
 int __ss_WCOREDUMP(int status);
 int __ss_WEXITSTATUS(int status);
