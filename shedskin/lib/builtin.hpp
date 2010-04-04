@@ -1357,10 +1357,10 @@ static void __throw_index_out_of_range() { /* improve inlining of __wrap */
 }
 
 template<class T> static inline int __wrap(T a, int i) {
-    #ifndef NOWRAP
+    #ifndef __SS_NOWRAP
     if(i<0) return len(a)+i;
     #endif
-    #ifndef NOBOUNDS
+    #ifndef __SS_NOBOUNDS
         if(i<0 || i>= len(a))
             __throw_index_out_of_range();
     #endif
