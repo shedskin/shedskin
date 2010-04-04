@@ -807,7 +807,7 @@ class generateVisitor(ASTVisitor):
                     self.visit(node.expr2, func)
             self.append(')')
         # --- raise instance
-        elif isinstance(cl, class_) and cl.mv.module.ident == 'builtin' and not [a for a in cl.ancestors_upto(None) if a.ident == 'Exception']:
+        elif isinstance(cl, class_) and cl.mv.module.ident == 'builtin' and not [a for a in cl.ancestors_upto(None) if a.ident == 'BaseException']:
             self.append('new Exception()')
         else:
             self.visit(node.expr1, func)

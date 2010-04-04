@@ -73,7 +73,7 @@ template <class A, class B> class tuple2;
 template <class T> class set;
 template <class K, class V> class dict;
 
-class Exception;
+class BaseException; class Exception; class StandardError;
 class AssertionError; class KeyError; class ValueError; class IndexError;
 class NotImplementedError; class IOError; class OSError; class SyntaxError;
 class StopIteration; class TypeError; class RuntimeError; class OverflowError;
@@ -1074,109 +1074,120 @@ public:
 
 /* exceptions */
 
-class Exception: public pyobj {
+class BaseException : public pyobj {
 public:
     str *msg;
-    Exception(str *msg=0) { __init__(msg); }
+    BaseException(str *msg=0) { __init__(msg); }
+
     void __init__(str *msg) { this->msg = msg; }
     void __init__(void *) { this->msg = 0; } /* XXX */
     void __init__(int) { this->msg = 0; } /* XXX */
     str *__repr__() { return msg ? msg : new str("0"); }
+};
+
+class Exception: public BaseException {
+public:
+    Exception(str *msg=0) : BaseException(msg) {}
 
 #ifdef __SS_BIND
    virtual PyObject *__to_py__() { return PyExc_Exception; }
 #endif
 };
 
-class AssertionError : public Exception {
+class StandardError : public Exception {
 public:
-    AssertionError(str *msg=0) : Exception(msg) {}
+    StandardError(str *msg=0) : Exception(msg) {}
+};
+
+class AssertionError : public StandardError {
+public:
+    AssertionError(str *msg=0) : StandardError(msg) {}
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_AssertionError; }
 #endif
 };
 
-class EOFError : public Exception {
+class EOFError : public StandardError {
 public:
-    EOFError(str *msg=0) : Exception(msg) {}
+    EOFError(str *msg=0) : StandardError(msg) {}
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_EOFError; }
 #endif
 };
 
-class FloatingPointError : public Exception {
+class FloatingPointError : public StandardError {
 public:
-    FloatingPointError(str *msg=0) : Exception(msg) {}
+    FloatingPointError(str *msg=0) : StandardError(msg) {}
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_FloatingPointError; }
 #endif
 };
 
-class KeyError : public Exception {
+class KeyError : public StandardError {
 public:
-    KeyError(str *msg=0) : Exception(msg) {}
+    KeyError(str *msg=0) : StandardError(msg) {}
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_KeyError; }
 #endif
 };
 
-class IndexError : public Exception {
+class IndexError : public StandardError {
 public:
-    IndexError(str *msg=0) : Exception(msg) {}
+    IndexError(str *msg=0) : StandardError(msg) {}
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_IndexError; }
 #endif
 };
 
-class TypeError : public Exception {
+class TypeError : public StandardError {
 public:
-    TypeError(str *msg=0) : Exception(msg) {}
+    TypeError(str *msg=0) : StandardError(msg) {}
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_TypeError; }
 #endif
 };
 
-class IOError : public Exception {
+class IOError : public StandardError {
 public:
-    IOError(str *msg=0) : Exception(msg) {}
+    IOError(str *msg=0) : StandardError(msg) {}
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_IOError; }
 #endif
 };
 
-class KeyboardInterrupt : public Exception {
+class KeyboardInterrupt : public BaseException {
 public:
-    KeyboardInterrupt(str *msg=0) : Exception(msg) {}
+    KeyboardInterrupt(str *msg=0) : BaseException(msg) {}
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_KeyboardInterrupt; }
 #endif
 };
 
-class MemoryError : public Exception {
+class MemoryError : public StandardError {
 public:
-    MemoryError(str *msg=0) : Exception(msg) {}
+    MemoryError(str *msg=0) : StandardError(msg) {}
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_MemoryError; }
 #endif
 };
 
-class NameError : public Exception {
+class NameError : public StandardError {
 public:
-    NameError(str *msg=0) : Exception(msg) {}
+    NameError(str *msg=0) : StandardError(msg) {}
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_NameError; }
 #endif
 };
 
-class NotImplementedError : public Exception {
+class NotImplementedError : public StandardError {
 public:
-    NotImplementedError(str *msg=0) : Exception(msg) {}
+    NotImplementedError(str *msg=0) : StandardError(msg) {}
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_NotImplementedError; }
 #endif
 };
 
-class OSError : public Exception {
+class OSError : public StandardError {
 public:
     int __ss_errno;
     str *filename;
@@ -1192,39 +1203,39 @@ public:
 #endif
 };
 
-class OverflowError : public Exception {
+class OverflowError : public StandardError {
 public:
-    OverflowError(str *msg=0) : Exception(msg) {}
+    OverflowError(str *msg=0) : StandardError(msg) {}
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_OverflowError; }
 #endif
 };
 
-class RuntimeError : public Exception {
+class RuntimeError : public StandardError {
 public:
-    RuntimeError(str *msg=0) : Exception(msg) {}
+    RuntimeError(str *msg=0) : StandardError(msg) {}
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_RuntimeError; }
 #endif
 };
 
-class SyntaxError : public Exception {
+class SyntaxError : public StandardError {
 public:
-    SyntaxError(str *msg=0) : Exception(msg) {}
+    SyntaxError(str *msg=0) : StandardError(msg) {}
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_SyntaxError; }
 #endif
 };
 
-class SystemError : public Exception {
+class SystemError : public StandardError {
 public:
-    SystemError(str *msg=0) : Exception(msg) {}
+    SystemError(str *msg=0) : StandardError(msg) {}
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_SystemError; }
 #endif
 };
 
-class SystemExit : public Exception {
+class SystemExit : public BaseException {
 public:
     int code;
     str *message;
@@ -1236,23 +1247,26 @@ public:
 #endif
 };
 
-class ValueError : public Exception {
+class ValueError : public StandardError {
 public:
-    ValueError(str *msg=0) : Exception(msg) {}
+    ValueError(str *msg=0) : StandardError(msg) {}
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_ValueError; }
 #endif
 };
 
-class ZeroDivisionError : public Exception {
+class ZeroDivisionError : public StandardError {
 public:
-    ZeroDivisionError(str *msg=0) : Exception(msg) {}
+    ZeroDivisionError(str *msg=0) : StandardError(msg) {}
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_ZeroDivisionError; }
 #endif
 };
 
-class StopIteration : public Exception { public: StopIteration(str *msg=0) : Exception(msg) {} };
+class StopIteration : public Exception {
+public:
+    StopIteration(str *msg=0) : Exception(msg) {}
+};
 
 #define ASSERT(x, y) if(!(x)) throw new AssertionError(y);
 

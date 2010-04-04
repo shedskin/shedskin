@@ -1,6 +1,6 @@
 import sys, os
 
-total = 192
+total = 193
 parts, part = map(int, sys.argv[1:])
 
 tests = range(total)[part::parts]
