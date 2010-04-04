@@ -2456,6 +2456,8 @@ class generateVisitor(ASTVisitor):
 
         if t[0].ident == 'int_':
             self.append(str(node.value))
+            if getgx().longlong:
+                self.append('LL')
         elif t[0].ident == 'float_':
             if str(node.value) in ['inf', '1.#INF', 'Infinity']: self.append('INFINITY')
             elif str(node.value) in ['-inf', '-1.#INF', 'Infinity']: self.append('-INFINITY')
