@@ -3008,11 +3008,14 @@ def generate_code():
 
     print >>makefile, 'CPPFILES='+cppfiles
     print >>makefile, 'HPPFILES='+hppfiles+'\n'
-    print >>makefile, ident+':\t$(CPPFILES) $(HPPFILES)'
-    print >>makefile, '\t$(CC) $(CCFLAGS) $(CPPFILES) $(LFLAGS) -o '+ident+'\n'
+
+    for suffix, options in [('', ''), ('_prof', '-pg -ggdb'), ('_debug', '-g -ggdb')]:
+        print >>makefile, ident+suffix+':\t$(CPPFILES) $(HPPFILES)'
+        print >>makefile, '\t$(CC) '+options+' $(CCFLAGS) $(CPPFILES) $(LFLAGS) -o '+ident+suffix+'\n'
+
     if sys.platform == 'win32':
         ident += '.exe'
     print >>makefile, 'clean:'
-    print >>makefile, '\trm '+ident
+    print >>makefile, '\trm %s %s %s' % (ident, ident+'_prof', ident+'_debug')
 
     makefile.close()
