@@ -2996,14 +2996,12 @@ def generate_code():
         print >>makefile, line
     print >>makefile
 
-    print >>makefile, '.PHONY: all run full clean\n'
+    print >>makefile, '.PHONY: all run clean\n'
     print >>makefile, 'all:\t'+ident+'\n'
 
     if not getgx().extension_module:
         print >>makefile, 'run:\tall'
         print >>makefile, '\t./'+ident+'\n'
-        print >>makefile, 'full:'
-        print >>makefile, '\tshedskin '+ident+'; $(MAKE) run\n'
 
     print >>makefile, 'CPPFILES='+cppfiles
     print >>makefile, 'HPPFILES='+hppfiles+'\n'
