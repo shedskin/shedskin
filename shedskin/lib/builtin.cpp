@@ -1444,11 +1444,12 @@ str *chr(int i) {
 /* representation */
 
 template<> str *repr(double d) { return __str(d); }
+#ifdef __SS_LONG
 template<> str *repr(__ss_int i) { return __str(i); }
+#endif
+template<> str *repr(int i) { return __str(i); }
 template<> str *repr(__ss_bool b) { return b.value?(new str("True")):(new str("False")); }
 template<> str *repr(void *) { return new str("None"); }
-
-str *repr(int i) { return __str(i); }
 
 str *__str(void *) { return new str("void"); }
 
@@ -1570,6 +1571,30 @@ void slicenr(int x, int &l, int&u, int&s, int len) {
     }
 }
 
+#ifdef __SS_LONG
+str *__str(__ss_int i, __ss_int base) {
+    if(i<10 && i>=0 && base==10)
+        return __char_cache['0'+i];
+
+    char asc[] = "0123456789abcdefghijklmnopqrstuvwxyz";
+    char buf[24];
+    char *psz = buf+23;
+/*    if(i==INT_MIN)
+        return new str("-2147483648"); */
+    int neg = i<0;
+    *psz = 0;
+    if(neg) i = -i;
+    do {
+        unsigned long long lsd = i%base;
+        i = i/base;
+        *(--psz) = asc[lsd];
+    }
+    while(i != 0);
+    if(neg) *(--psz) = '-';
+    return new str(psz);
+}
+#endif
+
 str *__str(int i, int base) {
     if(i<10 && i>=0 && base==10)
         return __char_cache['0'+i];
@@ -1624,10 +1649,6 @@ template<> str *bin(int i) {
 template<> str *bin(__ss_bool b) { return bin(b.value); }
 
 str *__str() { return new str(""); } /* XXX optimize */
-
-template<> str *__str(__ss_int t) {
-    return new str("long long..");
-}
 
 template<> str *__str(double t) {
     std::stringstream ss;
