@@ -207,6 +207,9 @@ template<class T> inline int hasher(T t) {
     if(t == NULL) return 0;
     return t->__hash__();
 }
+#ifdef __SS_LONG
+template<> inline int hasher(__ss_int a) { return (a==-1)?-2:a; }
+#endif
 template<> inline int hasher(int a) { return (a==-1)?-2:a; }
 template<> inline int hasher(__ss_bool a) { return a.value; }
 template<> inline int hasher(void *a) { return (intptr_t)a; }
@@ -240,6 +243,14 @@ template<class T> inline int __cmp(T a, T b) {
     if (!a) return -1;
     return a->__cmp__(b);
 }
+
+#ifdef __SS_LONG
+template<> inline int __cmp(__ss_int a, __ss_int b) {
+    if(a < b) return -1;
+    else if(a > b) return 1;
+    return 0;
+}
+#endif
 
 template<> inline int __cmp(int a, int b) {
     if(a < b) return -1;
@@ -1374,6 +1385,9 @@ template<> class_ *__type(double d);
 /* equality, comparison */
 
 template<class T> inline int __eq(T a, T b) { return ((a&&b)?(a->__eq__(b)):(a==b)); }
+#ifdef __SS_LONG /* XXX */
+template<> inline int __eq(__ss_int a, __ss_int b) { return a == b; }
+#endif
 template<> inline int __eq(int a, int b) { return a == b; }
 template<> inline int __eq(__ss_bool a, __ss_bool b) { return a == b; }
 template<> inline int __eq(double a, double b) { return a == b; }
@@ -1416,7 +1430,21 @@ str *__add_strs(int n, str *a, str *b, str *c, str *d);
 str *__add_strs(int n, str *a, str *b, str *c, str *d, str *e);
 str *__add_strs(int n, ...);
 
-/* deep copy */
+/* copy */
+
+template<class T> T __copy(T t) {
+    if(!t)
+        return (T)NULL;
+    return (T)(t->__copy__());
+}
+
+#ifdef __SS_LONG
+template<> inline __ss_int __copy(__ss_int i) { return i; }
+#endif
+template<> inline int __copy(int i) { return i; }
+template<> inline __ss_bool __copy(__ss_bool b) { return b; }
+template<> inline double __copy(double d) { return d; }
+template<> inline void *__copy(void *p) { return p; }
 
 template<class T> T __deepcopy(T t, dict<void *, pyobj *> *memo=0) {
     if(!t)
@@ -1431,20 +1459,13 @@ template<class T> T __deepcopy(T t, dict<void *, pyobj *> *memo=0) {
     return (T)(t->__deepcopy__(memo));
 }
 
-template<> int __deepcopy(int i, dict<void *, pyobj *> *);
-template<> __ss_bool __deepcopy(__ss_bool i, dict<void *, pyobj *> *);
-template<> double __deepcopy(double d, dict<void *, pyobj *> *);
-template<> void *__deepcopy(void *p, dict<void *, pyobj *> *);
-
-template<class T> T __copy(T t) { 
-    if(!t)
-        return (T)NULL;
-    return (T)(t->__copy__()); 
-}
-template<> int __copy(int i);
-template<> __ss_bool __copy(__ss_bool i);
-template<> double __copy(double d);
-template<> void *__copy(void *p);
+#ifdef __SS_LONG
+template<> inline __ss_int __deepcopy(__ss_int i, dict<void *, pyobj *> *) { return i; }
+#endif
+template<> inline int __deepcopy(int i, dict<void *, pyobj *> *) { return i; }
+template<> inline __ss_bool __deepcopy(__ss_bool b, dict<void *, pyobj *> *) { return b; }
+template<> inline double __deepcopy(double d, dict<void *, pyobj *> *) { return d; }
+template<> inline void *__deepcopy(void *p, dict<void *, pyobj *> *) { return p; }
 
 /* len */
 
@@ -3694,11 +3715,15 @@ template<> inline int __divs(int a, int b) {
 }
 
 template<class A, class B> double __floordiv(A a, B b);
-template<> inline double __floordiv(int a, double b) { return floor((double)a/b); }
-template<> inline double __floordiv(double a, int b) { return floor(a/((double)b)); }
+template<> inline double __floordiv(__ss_int a, double b) { return floor((double)a/b); }
+template<> inline double __floordiv(double a, __ss_int b) { return floor(a/((double)b)); }
 
 template<class A> inline A __floordiv(A a, A b) { return a->__floordiv__(b); }
 template<> inline double __floordiv(double a, double b) { return floor(a/b); }
+
+#ifdef __SS_LONG /* XXX */
+template<> inline __ss_int __floordiv(__ss_int a, __ss_int b) { return (__ss_int)floor((double)a/b); } /* XXX */
+#endif
 template<> inline int __floordiv(int a, int b) { return (int)floor((double)a/b); } /* XXX */
 
 template<class A> A __mods(A a, A b);
