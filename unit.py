@@ -4,6 +4,20 @@ import shedskin.infer, shedskin.cpp
 import traceback, sys, os, time
 
 tests = [
+('''fixes for 0.5''', '''
+# exception hierarchy
+try:
+    try:
+        raise SystemExit('hoei')
+    except Exception, msg:
+        print 'foute boel'
+except BaseException as ork:
+    print 'base exc', ork
+
+''', '''
+output(equal=True)
+'''),
+
 ('''fixes for 0.4; booleans, generator expressions''', '''
 # defaultdict fixes
 from collections import defaultdict
