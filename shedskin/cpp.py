@@ -2524,7 +2524,7 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None, check_extmo
         raise RuntimeError()
 
     # --- annotation or c++ code
-    conv1 = {'int_': 'int', 'float_': 'double', 'str_': 'str', 'none': 'int', 'bool_':'__ss_bool'}
+    conv1 = {'int_': '__ss_int', 'float_': 'double', 'str_': 'str', 'none': 'int', 'bool_':'__ss_bool'}
     conv2 = {'int_': 'int', 'float_': 'float', 'str_': 'str', 'class_': 'class', 'none': 'None','bool_': 'bool'}
     if cplusplus: sep, ptr, conv = '<>', ' *', conv1
     else: sep, ptr, conv = '()', '', conv2
@@ -2969,6 +2969,7 @@ def generate_code():
             if not getgx().wrap_around_check: line += ' -DNOWRAP'
             if not getgx().bounds_checking: line += ' -DNOBOUNDS'
             if getgx().fast_random: line += ' -DFASTRANDOM'
+            if getgx().longlong: line += ' -D__SS_LONG'
             if getgx().extension_module:
                 if sys.platform == 'win32': line += ' -I%s/include -D__SS_BIND' % prefix
                 else: line += ' -g -fPIC -D__SS_BIND ' + includes
