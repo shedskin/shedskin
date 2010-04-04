@@ -1441,18 +1441,6 @@ str *chr(int i) {
     return __char_cache[i];
 }
 
-/* copy, deepcopy */
-
-template<> int __deepcopy(int i, dict<void *, pyobj *> *) { return i; }
-template<> __ss_bool __deepcopy(__ss_bool i, dict<void *, pyobj *> *) { return i; }
-template<> double __deepcopy(double d, dict<void *, pyobj *> *) { return d; }
-template<> void *__deepcopy(void *d, dict<void *, pyobj *> *) { return d; }
-
-template<> int __copy(int i) { return i; }
-template<> __ss_bool __copy(__ss_bool i) { return i; }
-template<> double __copy(double d) { return d; }
-template<> void *__copy(void *d) { return d; }
-
 /* representation */
 
 template<> str *repr(double d) { return __str(d); }
