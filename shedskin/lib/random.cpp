@@ -168,7 +168,7 @@ double Random::random() {
     Generate a random number on [0,1)-real-interval.
     */
 
-#ifdef FASTRANDOM
+#ifdef __SS_FASTRANDOM
     return rand() / ((double)RAND_MAX+1);
 #else
     return this->_genrand_res53();

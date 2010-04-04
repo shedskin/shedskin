@@ -2968,9 +2968,9 @@ def generate_code():
                 line += ' -I/usr/local/include' # XXX
             if sys.platform == 'darwin' and os.path.isdir('/opt/local/include'):
                 line += ' -I/opt/local/include' # XXX
-            if not getgx().wrap_around_check: line += ' -DNOWRAP'
-            if not getgx().bounds_checking: line += ' -DNOBOUNDS'
-            if getgx().fast_random: line += ' -DFASTRANDOM'
+            if not getgx().wrap_around_check: line += ' -D__SS_NOWRAP'
+            if not getgx().bounds_checking: line += ' -D__SS_NOBOUNDS'
+            if getgx().fast_random: line += ' -D__SS_FASTRANDOM'
             if getgx().longlong: line += ' -D__SS_LONG'
             if getgx().extension_module:
                 if sys.platform == 'win32': line += ' -I%s/include -D__SS_BIND' % prefix
