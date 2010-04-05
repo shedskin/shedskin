@@ -53,6 +53,8 @@ public:
 extern __ss_bool True;
 extern __ss_bool False;
 
+static inline __ss_bool __mbool(bool c) { __ss_bool b; b.value=(int)c; return b; }
+
 #ifdef __SS_LONG
     typedef long long __ss_int;
 #else
@@ -237,8 +239,8 @@ public:
 };
 
 template<class T> class hasheq {
-public: 
-    int operator()(T t, T v) const { return __eq(t,v); }
+public:
+    int operator()(T t, T v) const { return __eq(t, v); }
 };
 
 /* comparison */
@@ -369,25 +371,25 @@ public:
         return __gnu_cxx::hash<intptr_t>()((intptr_t)this);
     }
 
-    virtual int __eq__(pyobj *p) { return this == p; }
-    virtual int __ne__(pyobj *p) { return !__eq__(p); }
-
     virtual int __cmp__(pyobj *p) {
         return __cmp<void *>(this, p);
     }
 
-    virtual int __gt__(pyobj *p) { return __cmp__(p) == 1; }
-    virtual int __lt__(pyobj *p) { return __cmp__(p) == -1; }
-    virtual int __ge__(pyobj *p) { return __cmp__(p) != -1; }
-    virtual int __le__(pyobj *p) { return __cmp__(p) != 1; }
+    virtual __ss_bool __eq__(pyobj *p) { return __mbool(this == p); }
+    virtual __ss_bool __ne__(pyobj *p) { return __mbool(!__eq__(p)); }
+
+    virtual __ss_bool __gt__(pyobj *p) { return __mbool(__cmp__(p) == 1); }
+    virtual __ss_bool __lt__(pyobj *p) { return __mbool(__cmp__(p) == -1); }
+    virtual __ss_bool __ge__(pyobj *p) { return __mbool(__cmp__(p) != -1); }
+    virtual __ss_bool __le__(pyobj *p) { return __mbool(__cmp__(p) != 1); }
 
     virtual pyobj *__copy__() { return this; }
     virtual pyobj *__deepcopy__(dict<void *, pyobj *> *) { return this; }
 
     virtual int __len__() { return 1; } /* XXX exceptions? */
-    virtual int __nonzero__() { return __len__() != 0; }
     virtual int __int__() { return 0; }
 
+    virtual __ss_bool __nonzero__() { return __mbool(__len__() != 0); }
 };
 
 class class_: public pyobj {
@@ -397,7 +399,7 @@ public:
 
     class_(const char *name, int low, int high);
     str *__repr__();
-    int __eq__(pyobj *c);
+    __ss_bool __eq__(pyobj *c);
 
 };
 
@@ -469,9 +471,9 @@ public:
 
     complex *parsevalue(str *s);
 
-    int __eq__(pyobj *p);
+    __ss_bool __eq__(pyobj *p);
     int __hash__();
-    int __nonzero__();
+    __ss_bool __nonzero__();
 
 #ifdef __SS_BIND
     complex(PyObject *);
@@ -615,7 +617,7 @@ public:
 
     int count(T a);
     str *__repr__();
-    int __eq__(pyobj *l);
+    __ss_bool __eq__(pyobj *l);
 
     T __getfirst__() { return this->units[0]; } // XXX remove
     T __getsecond__() { return this->units[1]; }
@@ -669,7 +671,7 @@ public:
 
     int __len__();
 
-    int __eq__(tuple2<A,B> *b);
+    __ss_bool __eq__(tuple2<A,B> *b);
     int __cmp__(pyobj *p);
     int __hash__();
 
@@ -697,7 +699,7 @@ public:
     str *lstrip(str *chars=0);
     str *rstrip(str *chars=0);
     list<str *> *split(str *sep=0, int maxsplit=-1);
-    int __eq__(pyobj *s);
+    __ss_bool __eq__(pyobj *s);
     str *__add__(str *b);
     str *join(pyiter<str *> *l);
     str *__join(pyseq<str *> *l, int total_len);
@@ -819,7 +821,7 @@ public:
     //void init(int count, ...);
 
     __ss_bool __contains__(T a);
-    int __eq__(pyobj *p);
+    __ss_bool __eq__(pyobj *p);
 
     tuple2<T,T> *__slice__(int x, int l, int u, int s);
 
@@ -863,7 +865,7 @@ public:
     tuple2<K, V> *popitem();
     void *update(dict<K, V> *e);
     __ss_bool __contains__(K k);
-    int __eq__(pyobj *e);
+    __ss_bool __eq__(pyobj *e);
     V setdefault(K k, V v=0);
 
     __dictiterkeys<K, V> *__iter__();
@@ -987,11 +989,12 @@ public:
     __ss_bool issuperset(set<T> *s);
     __ss_bool issuperset(pyiter<T> *s);
 
-    int __gt__(set<T> *s);
-    int __lt__(set<T> *s);
-    int __ge__(set<T> *s);
-    int __le__(set<T> *s);
-    int __eq__(pyobj *p);
+    __ss_bool __gt__(set<T> *s);
+    __ss_bool __lt__(set<T> *s);
+    __ss_bool __ge__(set<T> *s);
+    __ss_bool __le__(set<T> *s);
+    __ss_bool __eq__(pyobj *p);
+
     int __cmp__(pyobj *p);
 
     __setiter<T> *__iter__() {
@@ -1388,31 +1391,31 @@ template<> class_ *__type(double d);
 
 /* equality, comparison */
 
-template<class T> inline int __eq(T a, T b) { return ((a&&b)?(a->__eq__(b)):(a==b)); }
+template<class T> inline __ss_bool __eq(T a, T b) { return ((a&&b)?(a->__eq__(b)):__mbool(a==b)); }
 #ifdef __SS_LONG /* XXX */
-template<> inline int __eq(__ss_int a, __ss_int b) { return a == b; }
+template<> inline __ss_bool __eq(__ss_int a, __ss_int b) { return __mbool(a == b); }
 #endif
-template<> inline int __eq(int a, int b) { return a == b; }
-template<> inline int __eq(__ss_bool a, __ss_bool b) { return a == b; }
-template<> inline int __eq(double a, double b) { return a == b; }
-template<> inline int __eq(void *a, void *b) { return a == b; }
+template<> inline __ss_bool __eq(int a, int b) { return __mbool(a == b); }
+template<> inline __ss_bool __eq(__ss_bool a, __ss_bool b) { return __mbool(a == b); }
+template<> inline __ss_bool __eq(double a, double b) { return __mbool(a == b); }
+template<> inline __ss_bool __eq(void *a, void *b) { return __mbool(a == b); }
 
-template<class T> inline int __ne(T a, T b) { return ((a&&b)?(a->__ne__(b)):(a!=b)); }
-template<> inline int __ne(int a, int b) { return a != b; }
-template<> inline int __ne(double a, double b) { return a != b; }
-template<> inline int __ne(void *a, void *b) { return a != b; }
-template<class T> inline int __gt(T a, T b) { return a->__gt__(b); }
-template<> inline int __gt(int a, int b) { return a > b; }
-template<> inline int __gt(double a, double b) { return a > b; }
-template<class T> inline int __ge(T a, T b) { return a->__ge__(b); }
-template<> inline int __ge(int a, int b) { return a >= b; }
-template<> inline int __ge(double a, double b) { return a >= b; }
-template<class T> inline int __lt(T a, T b) { return a->__lt__(b); }
-template<> inline int __lt(int a, int b) { return a < b; }
-template<> inline int __lt(double a, double b) { return a < b; }
-template<class T> inline int __le(T a, T b) { return a->__le__(b); }
-template<> inline int __le(int a, int b) { return a <= b; }
-template<> inline int __le(double a, double b) { return a <= b; }
+template<class T> inline __ss_bool __ne(T a, T b) { return ((a&&b)?(a->__ne__(b)):__mbool(a!=b)); }
+template<> inline __ss_bool __ne(int a, int b) { return __mbool(a != b); }
+template<> inline __ss_bool __ne(double a, double b) { return __mbool(a != b); }
+template<> inline __ss_bool __ne(void *a, void *b) { return __mbool(a != b); }
+template<class T> inline __ss_bool __gt(T a, T b) { return a->__gt__(b); }
+template<> inline __ss_bool __gt(int a, int b) { return __mbool(a > b); }
+template<> inline __ss_bool __gt(double a, double b) { return __mbool(a > b); }
+template<class T> inline __ss_bool __ge(T a, T b) { return a->__ge__(b); }
+template<> inline __ss_bool __ge(int a, int b) { return __mbool(a >= b); }
+template<> inline __ss_bool __ge(double a, double b) { return __mbool(a >= b); }
+template<class T> inline __ss_bool __lt(T a, T b) { return a->__lt__(b); }
+template<> inline __ss_bool __lt(int a, int b) { return __mbool(a < b); }
+template<> inline __ss_bool __lt(double a, double b) { return __mbool(a < b); }
+template<class T> inline __ss_bool __le(T a, T b) { return a->__le__(b); }
+template<> inline __ss_bool __le(int a, int b) { return __mbool(a <= b); }
+template<> inline __ss_bool __le(double a, double b) { return __mbool(a <= b); }
 
 /* add */
 
@@ -1478,7 +1481,6 @@ template<class T> inline int len(list<T> *x) { return x->units.size(); } /* XXX 
 
 /* bool */
 
-static inline __ss_bool __mbool(bool c) { __ss_bool b; b.value=(int)c; return b; }
 inline __ss_bool ___bool() { return __mbool(false); }
 
 template<class T> inline __ss_bool ___bool(T x) { return __mbool(x && x->__nonzero__()); }
@@ -1731,17 +1733,18 @@ template<class K, class V> void *dict<K,V>::__addtoitem__(K k, V v) {
     return NULL;
 }
 
-template<class K, class V> int dict<K,V>::__eq__(pyobj *e) {
+template<class K, class V> __ss_bool dict<K,V>::__eq__(pyobj *e) {
    dict<K, V> *b = (dict<K,V> *)e;
-   if( b->__len__() != this->__len__()) return 0;
+   if( b->__len__() != this->__len__())
+       return False;
 
    K k;
    __iter<K> *__0;
    FOR_IN(k, this, 0)
        if( !b->__contains__(k) || !__eq(this->__getitem__(k), b->__getitem__(k)))
-           return 0;
+           return False;
    END_FOR
-   return 1;
+   return True;
 }
 
 template<class K, class V> __dictiterkeys<K, V> *dict<K, V>::__iter__() {
@@ -1835,14 +1838,14 @@ template<class T> void list<T>::clear() {
     units.resize(0);
 }
 
-template<class T> int list<T>::__eq__(pyobj *p) {
+template<class T> __ss_bool list<T>::__eq__(pyobj *p) {
    list<T> *b = (list<T> *)p;
    unsigned int len = this->units.size();
-   if(b->units.size() != len) return 0;
+   if(b->units.size() != len) return False;
    for(unsigned int i = 0; i < len; i++)
        if(!__eq(this->units[i], b->units[i]))
-           return 0;
-   return 1;
+           return False;
+   return True;
 }
 
 template<class T> void *list<T>::extend(pyiter<T> *p) {
@@ -2222,18 +2225,19 @@ template <class T> set<T>& set<T>::operator=(const set<T>& other) {
     memcpy(table, other.table, table_size);
 }
 
-template<class T> int set<T>::__eq__(pyobj *p) {
+template<class T> __ss_bool set<T>::__eq__(pyobj *p) {
     set<T> *b = (set<T> *)p;
 
-    if( b->__len__() != this->__len__()) return 0;
+    if( b->__len__() != this->__len__())
+        return False;
 
     int pos = 0;
     setentry<T> *entry;
     while (next(&pos, &entry)) {
         if(!b->__contains__(entry))
-            return 0;
+            return False;
     }
-    return 1;
+    return True;
 }
 
 template <class T> void *set<T>::remove(T key) {
@@ -2241,19 +2245,19 @@ template <class T> void *set<T>::remove(T key) {
     return NULL;
 }
 
-template<class T> int set<T>::__ge__(set<T> *s) {
+template<class T> __ss_bool set<T>::__ge__(set<T> *s) {
     return issuperset(s);
 }
 
-template<class T> int set<T>::__le__(set<T> *s) {
+template<class T> __ss_bool set<T>::__le__(set<T> *s) {
     return issubset(s);
 }
 
-template<class T> int set<T>::__lt__(set<T> *s) {
+template<class T> __ss_bool set<T>::__lt__(set<T> *s) {
     return issubset(s);
 }
 
-template<class T> int set<T>::__gt__(set<T> *s) {
+template<class T> __ss_bool set<T>::__gt__(set<T> *s) {
     return issuperset(s);
 }
 
@@ -2948,15 +2952,16 @@ template<class T> __ss_bool tuple2<T, T>::__contains__(T a) {
     return False;
 }
 
-template<class T> int tuple2<T, T>::__eq__(pyobj *p) {
+template<class T> __ss_bool tuple2<T, T>::__eq__(pyobj *p) {
     tuple2<T,T> *b;
     b = (tuple2<T,T> *)p;
     unsigned int sz = this->units.size();
-    if(b->units.size() != sz) return 0;
+    if(b->units.size() != sz)
+        return False;
     for(unsigned int i=0; i<sz; i++)
         if(!__eq(this->units[i], b->units[i]))
-            return 0;
-    return 1;
+            return False;
+    return True;
 }
 
 template<class T> tuple2<T,T> *tuple2<T, T>::__slice__(int x, int l, int u, int s) {
@@ -3044,8 +3049,8 @@ template<class A, class B> int tuple2<A, B>::__len__() {
     return 2;
 }
 
-template<class A, class B> int tuple2<A, B>::__eq__(tuple2<A,B> *b) {
-    return __eq(first, b->__getfirst__()) && __eq(second, b->__getsecond__());
+template<class A, class B> __ss_bool tuple2<A, B>::__eq__(tuple2<A,B> *b) {
+    return __mbool(__eq(first, b->__getfirst__()) && __eq(second, b->__getsecond__()));
 }
 
 template<class A, class B> int tuple2<A, B>::__cmp__(pyobj *p) {

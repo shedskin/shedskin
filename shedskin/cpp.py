@@ -3016,6 +3016,6 @@ def generate_code():
     if sys.platform == 'win32':
         ident += '.exe'
     print >>makefile, 'clean:'
-    print >>makefile, '\trm %s %s %s' % (ident, ident+'_prof', ident+'_debug')
+    print >>makefile, '\trm -f %s %s %s' % (ident, ident+'_prof', ident+'_debug')
 
     makefile.close()

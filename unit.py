@@ -2530,7 +2530,7 @@ class D:
     def __str__(self): return '__str__'
     def __repr__(self): return '__repr__'
     def __cmp__(self, b): return 1
-    def __nonzero__(self): return 1
+    def __nonzero__(self): return True
     def __len__(self): return 1
 
 d = D()
@@ -7104,7 +7104,7 @@ if 1<2: print '1<2'
 
 class fred:
     def __eq__(self, b):
-        return 1
+        return True
 fr = fred()
 
 if fr == fr:
