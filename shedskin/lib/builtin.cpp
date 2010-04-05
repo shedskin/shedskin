@@ -43,7 +43,7 @@ void __init() {
     cl_rangeiter = new class_("rangeiter", 10, 10);
     cl_complex = new class_("complex", 11, 11);
     cl_xrange = new class_("xrange", 12, 12);
-     
+
     True.value = 1;
     False.value = 0;
 
@@ -212,18 +212,18 @@ tuple2<complex *, complex *> *complex::__divmod__(double b) {
     return new tuple2<complex *, complex *>(2, __floordiv__(b), __mod__(b));
 }
 
-int complex::__eq__(pyobj *p) {
+__ss_bool complex::__eq__(pyobj *p) {
     if(p->__class__ != cl_complex)
-        return 0;
-    return real == ((complex *)p)->real && imag == ((complex *)p)->imag;
+        return False;
+    return __mbool(real == ((complex *)p)->real && imag == ((complex *)p)->imag);
 }
 
 int complex::__hash__() {
     return ((int)imag)*1000003+((int)real);
 }
 
-int complex::__nonzero__() {
-    return real != 0 || imag != 0;
+__ss_bool complex::__nonzero__() {
+    return __mbool(real != 0 || imag != 0);
 }
 
 str *complex::__repr__() {
@@ -658,8 +658,8 @@ int str::__cmp__(pyobj *p) {
     return 0;
 }
 
-int str::__eq__(pyobj *p) {
-    return unit == ((str *)p)->unit;
+__ss_bool str::__eq__(pyobj *p) {
+    return __mbool(unit == ((str *)p)->unit);
 }
 
 str *str::__mul__(int n) { /* optimize */
@@ -1065,8 +1065,8 @@ str *class_::__repr__() {
     return (new str("class "))->__add__(__name__);
 }
 
-int class_::__eq__(pyobj *c) {
-    return c == this;
+__ss_bool class_::__eq__(pyobj *c) {
+    return __mbool(c == this);
 }
 
 /* file methods */
