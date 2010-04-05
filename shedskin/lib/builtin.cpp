@@ -1320,11 +1320,12 @@ static int range_len(int lo, int hi, int step) {
     return n;
 }
 
-list<int> *range(int a, int b, int s) {
-    list<int> *r;
-    int i, pos;
+list<__ss_int> *range(__ss_int a, __ss_int b, __ss_int s) {
+    list<__ss_int> *r;
+    __ss_int i;
+    int pos;
 
-    r = new list<int>();
+    r = new list<__ss_int>();
     pos = 0;
     i = a;
 
@@ -1357,7 +1358,7 @@ list<int> *range(int a, int b, int s) {
     return r;
 }
 
-list<int> *range(int n) {
+list<__ss_int> *range(__ss_int n) {
     return range(0, n);
 }
 
@@ -1440,6 +1441,21 @@ str *chr(int i) {
         throw new ValueError(new str("chr() arg not in range(256)"));
     return __char_cache[i];
 }
+
+#ifdef __SS_LONG
+str *chr(__ss_int i) {
+    return chr((int)i);
+}
+template<> str *hex(__ss_int i) {
+    return hex((int)i);
+}
+template<> str *oct(__ss_int i) {
+    return oct((int)i);
+}
+template<> str *bin(__ss_int i) {
+    return bin((int)i);
+}
+#endif
 
 /* representation */
 

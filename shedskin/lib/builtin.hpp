@@ -133,14 +133,17 @@ void printc(file *f, int n, ...);
 __ss_bool isinstance(pyobj *, class_ *);
 __ss_bool isinstance(pyobj *, tuple2<class_ *, class_ *> *);
 
-list<int> *range(int b);
-list<int> *range(int a, int b, int s=1);
+list<__ss_int> *range(__ss_int b);
+list<__ss_int> *range(__ss_int a, __ss_int b, __ss_int s=1);
 
 __xrange *xrange(int b);
 __xrange *xrange(int a, int b, int s=1);
 
 int ord(str *c);
 
+#ifdef __SS_LONG
+str *chr(__ss_int i);
+#endif
 str *chr(int i);
 str *chr(__ss_bool b);
 template<class T> str *chr(T t) {
@@ -151,6 +154,9 @@ double ___round(double a);
 double ___round(double a, int n);
 
 template<class T> inline T __abs(T t) { return t->__abs__(); }
+#ifdef __SS_LONG
+template<> inline __ss_int __abs(__ss_int a) { return a<0?-a:a; }
+#endif
 template<> inline int __abs(int a) { return a<0?-a:a; }
 template<> inline double __abs(double a) { return a<0?-a:a; }
 inline int __abs(__ss_bool b) { return __abs(b.value); }
@@ -159,18 +165,27 @@ double __abs(complex *c);
 template<class T> str *hex(T t) {
     return t->__hex__();
 }
+#ifdef __SS_LONG
+template<> str *hex(__ss_int a);
+#endif
 template<> str *hex(int a);
 template<> str *hex(__ss_bool b);
 
 template<class T> str *oct(T t) {
     return t->__oct__();
 }
+#ifdef __SS_LONG
+template<> str *oct(__ss_int a);
+#endif
 template<> str *oct(int a);
 template<> str *oct(__ss_bool b);
 
 template<class T> str *bin(T t) {
     return bin(t->__index__());
 }
+#ifdef __SS_LONG
+template<> str *bin(__ss_int a);
+#endif
 template<> str *bin(int a);
 template<> str *bin(__ss_bool b);
 
@@ -1420,6 +1435,9 @@ template<> inline __ss_bool __le(double a, double b) { return __mbool(a <= b); }
 /* add */
 
 template<class T> inline T __add(T a, T b) { return a->__add__(b); }
+#ifdef __SS_LONG
+template<> inline __ss_int __add(__ss_int a, __ss_int b) { return a + b; }
+#endif
 template<> inline int __add(int a, int b) { return a + b; }
 template<> inline double __add(double a, double b) { return a + b; }
 
@@ -1427,7 +1445,7 @@ template<> inline double __add(double a, double b) { return a + b; }
 
 template<class U> U __add2(double a, U b) { return b->__add__(a); }
 template<class U> U __sub2(double a, U b) { return b->__rsub__(a); }
-template<class T> T __mul2(int n, T a) { return a->__mul__(n); }
+template<class T> T __mul2(__ss_int n, T a) { return a->__mul__(n); }
 template<class T> T __mul2(double n, T a) { return a->__mul__(n); }
 template<class T> T __div2(int n, T a) { return a->__rdiv__(n); }
 template<class T> T __div2(double n, T a) { return a->__rdiv__(n); }
