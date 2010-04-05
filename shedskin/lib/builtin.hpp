@@ -1489,7 +1489,7 @@ template<> inline __ss_bool ___bool(double x) { return __mbool(x!=0); }
 template<> inline __ss_bool ___bool(void *x) { return False; }
 template<> inline __ss_bool ___bool(long int) { return False; } /* XXX bool(None) 64-bit */
 
-/* logical and, or */
+/* and, or, not */
 
 #define __OR(a, b, t) ((___bool(__ ## t = a))?(__ ## t):(b))
 #define __AND(a, b, t) ((!___bool(__ ## t = a))?(__ ## t):(b))
@@ -3096,6 +3096,8 @@ template<class A, class B> PyObject *tuple2<A, B>::__to_py__() {
 }
 #endif
 
+/* binding args */
+
 #ifdef __SS_BIND
 template<class T> T __ss_arg(const char *name, int pos, int has_default, T default_value, PyObject *args, PyObject *kwargs) {
     PyObject *kwarg;
@@ -3167,7 +3169,7 @@ template<class K, class V> tuple2<K, V> *__dictiteritems<K, V>::next() {
     return t;
 }
 
-/* builtins */
+/* sum */
 
 template <class A, class B> A __sum(pyiter<A> *l, B b) {
     A e;
@@ -3347,16 +3349,7 @@ template<class T> T __min(int n, int key, T a, T b, T c, ...) { /* XXX */
     return m;
 }
 
-template<class A> static inline list<A> *__list_comp_0(list<A> *result, pyiter<A> *a) {
-    A e;
-    result->clear();
-
-    __iter<A> *__0;
-    FOR_IN(e,a,0)
-        result->append(e);
-    END_FOR
-    return result;
-}
+/* sorted */
 
 template <class A, class B> list<A> *sorted(pyiter<A> *x, int (*cmp)(A, A), B (*key)(A), int reverse) {
     list<A> *r = new list<A>();
@@ -3402,6 +3395,8 @@ template <class U> list<str *> *sorted(str *x, int cmp, U (*key)(str *), int rev
 }
 list<str *> *sorted(str *x, int cmp, int key, int reverse);
 
+/* reversed */
+
 template<class A> class __ss_reverse : public __iter<A> {
 public:
     pyseq<A> *p;
@@ -3427,6 +3422,8 @@ template <class A> __iter<A> *reversed(pyseq<A> *x) {
 __iter<str *> *reversed(str *s);
 __iter<int> *reversed(__xrange *x);
 
+/* enumerate */
+
 template<class A> class __enumiter : public __iter<tuple2<int, A> *> {
 public:
     __iter<A> *p;
@@ -3446,7 +3443,20 @@ template <class A> __iter<tuple2<int, A> *> *enumerate(pyiter<A> *x) {
     return new __enumiter<A>(x);
 }
 
+/* zip */
+
 list<tuple2<void *, void *> *> *__zip(int nn);
+
+template<class A> static inline list<A> *__list_comp_0(list<A> *result, pyiter<A> *a) {
+    A e;
+    result->clear();
+
+    __iter<A> *__0;
+    FOR_IN(e,a,0)
+        result->append(e);
+    END_FOR
+    return result;
+}
 
 template <class A> list<tuple2<A,A> *> *__zip(int nn, pyiter<A> *a) {
     list<A> la;
@@ -3549,7 +3559,7 @@ template <class A> A next(__iter<A> *iter1, A fillvalue) {
 template <class A> A next(__iter<A> *iter1, void *) { return next(iter1, (A)NULL); }
 template <class A> A next(__iter<A> *iter1) { return iter1->next(); }
 
-/* map, filter, reduce */
+/* map */
 
 template <class A, class B> list<A> *map(int, A (*func)(B), pyiter<B> *b) {
     if(!func)
@@ -3606,6 +3616,8 @@ template <class A, class B, class C, class D> list<A> *map(int, A (*func)(B, C, 
     return result;
 }
 
+/* reduce */
+
 template <class A> A reduce(A (*func)(A, A), pyiter<A> *a, A initial) {
     __iter<A> *ita = a->__iter__();
     A result = initial;
@@ -3653,6 +3665,8 @@ template <class A> A reduce(A (*func)(A, A), pyseq<A> *a) {
 
 str *reduce(str *(*func)(str *, str *), str *a);
 str *reduce(str *(*func)(str *, str *), str *a, str *initial);
+
+/* filter */
 
 template <class A, class B> list<A> *filter(B (*func)(A), pyiter<A> *a) {
     __iter<A> *ita = a->__iter__();
@@ -3730,6 +3744,8 @@ template<> inline __ss_int __floordiv(__ss_int a, __ss_int b) { return (__ss_int
 #endif
 template<> inline int __floordiv(int a, int b) { return (int)floor((double)a/b); } /* XXX */
 
+/* modulo */
+
 template<class A> A __mods(A a, A b);
 template<> inline int __mods(int a, int b) {
     int m = a%b;
@@ -3745,6 +3761,8 @@ template<> inline double __mods(double a, double b) {
 template<class A, class B> double __mods(A a, B b);
 template<> inline double __mods(int a, double b) { return __mods((double)a, b); }
 template<> inline double __mods(double a, int b) { return __mods(a, (double)b); }
+
+/* divmod */
 
 template<class A> inline tuple2<A, A> *divmod(A a, A b) { return a->__divmod__(b); }
 template<> inline tuple2<double, double> *divmod(double a, double b) {
@@ -3824,7 +3842,7 @@ int_ *__box(__ss_int);
 bool_ *__box(__ss_bool);
 float_ *__box(double);
 
-/* any, all */
+/* any */
 
 template<class A> __ss_bool any(pyiter<A> *a) {
     A b;
@@ -3845,6 +3863,8 @@ template<class A> __ss_bool any(pyseq<A> *a) {
 }
 
 inline __ss_bool any(str *s) { return __mbool(s->__len__()); }
+
+/* all */
 
 template<class A> __ss_bool all(pyiter<A> *a) {
     A b;
