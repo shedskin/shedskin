@@ -787,7 +787,6 @@ def __min1(arg, __kw_key=0):
     return elem
 
 def sum(l, b):
-    b.unit = l.unit.unit # XXX
     return sum(l)
     return b
 def __sum1(l):
