@@ -98,6 +98,9 @@ template<> inline int __int(double d) { return (int)d; }
 
 inline double __float() { return 0; }
 template<class T> inline double __float(T t) { return t->__float__(); }
+#ifdef __SS_LONG
+template<> inline double __float(__ss_int p) { return p; }
+#endif
 template<> inline double __float(int p) { return p; }
 template<> inline double __float(__ss_bool b) { return __float(b.value); }
 template<> inline double __float(double d) { return d; }
@@ -647,10 +650,10 @@ public:
     void *insert(int m, T e);
 
     void *reverse();
-    template<class U> void *sort(int (*cmp)(T, T), U (*key)(T), int reverse);
-    template<class U> void *sort(int cmp, U (*key)(T), int reverse);
-    void *sort(int (*cmp)(T, T), int key, int reverse);
-    void *sort(int cmp, int key, int reverse);
+    template<class U> void *sort(int (*cmp)(T, T), U (*key)(T), __ss_int reverse);
+    template<class U> void *sort(__ss_int cmp, U (*key)(T), __ss_int reverse);
+    void *sort(int (*cmp)(T, T), __ss_int key, __ss_int reverse);
+    void *sort(__ss_int cmp, __ss_int key, __ss_int reverse);
 
     list<T> *__copy__();
     list<T> *__deepcopy__(dict<void *, pyobj *> *memo);
@@ -2109,7 +2112,7 @@ template<class T> void *list<T>::reverse() {
     return NULL;
 }
 
-template<class T> template <class U> void *list<T>::sort(int (*cmp)(T, T), U (*key)(T), int reverse) {
+template<class T> template <class U> void *list<T>::sort(int (*cmp)(T, T), U (*key)(T), __ss_int reverse) {
     if(key) {
         if(reverse)
             std::sort(units.begin(), units.end(), cpp_cmp_key_rev<T, U>(key));
@@ -2131,13 +2134,13 @@ template<class T> template <class U> void *list<T>::sort(int (*cmp)(T, T), U (*k
     return NULL;
 }
 
-template<class T> template <class U> void *list<T>::sort(int cmp, U (*key)(T), int reverse) {
+template<class T> template <class U> void *list<T>::sort(__ss_int cmp, U (*key)(T), __ss_int reverse) {
     return sort((int(*)(T,T))0, key, reverse);
 }
-template<class T> void *list<T>::sort(int (*cmp)(T, T), int, int reverse) {
+template<class T> void *list<T>::sort(int (*cmp)(T, T), __ss_int, __ss_int reverse) {
     return sort(cmp, (int(*)(T))0, reverse);
 }
-template<class T> void *list<T>::sort(int, int, int reverse) {
+template<class T> void *list<T>::sort(__ss_int, __ss_int, __ss_int reverse) {
     return sort((int(*)(T,T))0, (int(*)(T))0, reverse);
 }
 
@@ -2296,7 +2299,7 @@ template<class T> int set<T>::__hash__() {
         seeds->append(hasher<T>(e));
     END_FOR
 
-    seeds->sort(0, 0, 0);
+    seeds->sort((__ss_int)0, (__ss_int)0, (__ss_int)0);
     int seed = 0;
     for(int i = 0; i < len(seeds); i++)
         seed = hash_combine(seed, seeds->units[i]);
@@ -3374,7 +3377,7 @@ template<class T> T __min(int n, int key, T a, T b, T c, ...) { /* XXX */
 
 /* sorted */
 
-template <class A, class B> list<A> *sorted(pyiter<A> *x, int (*cmp)(A, A), B (*key)(A), int reverse) {
+template <class A, class B> list<A> *sorted(pyiter<A> *x, int (*cmp)(A, A), B (*key)(A), __ss_int reverse) {
     list<A> *r = new list<A>();
     A e;
     __iter<A> *__0;
@@ -3385,38 +3388,38 @@ template <class A, class B> list<A> *sorted(pyiter<A> *x, int (*cmp)(A, A), B (*
     return r;
 }
 
-template <class A> list<A> *sorted(pyiter<A> *x, int (*cmp)(A, A), int key, int reverse) {
+template <class A> list<A> *sorted(pyiter<A> *x, int (*cmp)(A, A), __ss_int key, __ss_int reverse) {
     return sorted(x, cmp, (int (*)(A))0, reverse);
 }
-template <class A, class B> list<A> *sorted(pyiter<A> *x, int cmp, B (*key)(A), int reverse) {
+template <class A, class B> list<A> *sorted(pyiter<A> *x, __ss_int cmp, B (*key)(A), __ss_int reverse) {
     return sorted(x, (int (*)(A,A))0, key, reverse);
 }
-template <class A> list<A> *sorted(pyiter<A> *x, int cmp,  int  key, int reverse) {
+template <class A> list<A> *sorted(pyiter<A> *x, __ss_int cmp,  __ss_int key, __ss_int reverse) {
     return sorted(x, (int (*)(A,A))0, (int (*)(A))0, reverse);
 }
 
-template <class A> list<A> *sorted(pyseq<A> *x, int (*cmp)(A, A), int key, int reverse) {
+template <class A> list<A> *sorted(pyseq<A> *x, int (*cmp)(A, A), __ss_int key, __ss_int reverse) {
     list<A> *r = new list<A>();
     r->units = x->units;
     r->sort(cmp, key, reverse);
     return r;
 }
-template <class A> list<A> *sorted(pyseq<A> *x, int, int key, int reverse) {
+template <class A> list<A> *sorted(pyseq<A> *x, __ss_int, __ss_int key, __ss_int reverse) {
     return sorted(x, (int(*)(A, A))0, key, reverse);
 }
 
-template <class U> list<str *> *sorted(str *x, int (*cmp)(str *, str *), U (*key)(str *), int reverse) {
+template <class U> list<str *> *sorted(str *x, int (*cmp)(str *, str *), U (*key)(str *), __ss_int reverse) {
     list<str *> *l = new list<str *>(x);
     l->sort(cmp, key, reverse);
     return l;
 }
-list<str *> *sorted(str *x, int (*cmp)(str *, str *), int key, int reverse);
-template <class U> list<str *> *sorted(str *x, int cmp, U (*key)(str *), int reverse) {
+list<str *> *sorted(str *x, int (*cmp)(str *, str *), __ss_int key, __ss_int reverse);
+template <class U> list<str *> *sorted(str *x, __ss_int cmp, U (*key)(str *), __ss_int reverse) {
     list<str *> *l = new list<str *>(x);
     l->sort(cmp, key, reverse);
     return l;
 }
-list<str *> *sorted(str *x, int cmp, int key, int reverse);
+list<str *> *sorted(str *x, __ss_int cmp, __ss_int key, __ss_int reverse);
 
 /* reversed */
 
