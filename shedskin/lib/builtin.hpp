@@ -88,13 +88,17 @@ class StopIteration; class TypeError; class RuntimeError; class OverflowError;
 
 /* builtin function forward declarations */
 
-int __int(str *s, int base);
-inline int __int() { return 0; }
-template<class T> inline int __int(T t) { return t->__int__(); }
-template<> inline int __int(str *s) { return __int(s, 10); }
-template<> inline int __int(int i) { return i; }
-template<> inline int __int(__ss_bool b) { return b.value; }
-template<> inline int __int(double d) { return (int)d; }
+inline __ss_int __int() { return 0; }
+__ss_int __int(str *s, __ss_int base);
+
+template<class T> inline __ss_int __int(T t) { return t->__int__(); }
+#ifdef __SS_LONG
+template<> inline __ss_int __int(__ss_int i) { return i; }
+#endif
+template<> inline __ss_int __int(int i) { return i; }
+template<> inline __ss_int __int(str *s) { return __int(s, 10); }
+template<> inline __ss_int __int(__ss_bool b) { return b.value; }
+template<> inline __ss_int __int(double d) { return (int)d; }
 
 inline double __float() { return 0; }
 template<class T> inline double __float(T t) { return t->__float__(); }
@@ -139,8 +143,8 @@ __ss_bool isinstance(pyobj *, tuple2<class_ *, class_ *> *);
 list<__ss_int> *range(__ss_int b);
 list<__ss_int> *range(__ss_int a, __ss_int b, __ss_int s=1);
 
-__xrange *xrange(int b);
-__xrange *xrange(int a, int b, int s=1);
+__xrange *xrange(__ss_int b);
+__xrange *xrange(__ss_int a, __ss_int b, __ss_int s=1);
 
 int ord(str *c);
 
@@ -219,7 +223,7 @@ template<class A, class B> str *__modtuple(str *fmt, tuple2<A,B> *t);
 void __init();
 void __start(void (*initfunc)());
 void __ss_exit(int code=0);
-void slicenr(int x, int &l, int&u, int&s, int len);
+void slicenr(__ss_int x, __ss_int &l, __ss_int &u, __ss_int &s, __ss_int len);
 
 /* hashing */
 
@@ -404,8 +408,8 @@ public:
     virtual pyobj *__copy__() { return this; }
     virtual pyobj *__deepcopy__(dict<void *, pyobj *> *) { return this; }
 
-    virtual int __len__() { return 1; } /* XXX exceptions? */
-    virtual int __int__() { return 0; }
+    virtual __ss_int __len__() { return 1; } /* XXX exceptions? */
+    virtual __ss_int __int__() { return 0; }
 
     virtual __ss_bool __nonzero__() { return __mbool(__len__() != 0); }
 };
@@ -532,7 +536,7 @@ template <class T> class pyseq : public pyiter<T> {
 public:
     __GC_VECTOR(T) units;
 
-    virtual int __len__() {
+    virtual __ss_int __len__() {
         return units.size();
     }
 
@@ -546,7 +550,7 @@ public:
         return NULL;
     }
 
-    virtual void slice(int x, int l, int u, int s, pyseq<T> *c) {
+    virtual void slice(__ss_int x, __ss_int l, __ss_int u, __ss_int s, pyseq<T> *c) {
         slicenr(x, l, u, s, __len__());
         if(s == 1) {
             c->units.resize(u-l);
@@ -609,9 +613,9 @@ public:
     void *__delitem__(int i);
     //void init(int count, ...);
     int empty();
-    list<T> *__slice__(int x, int l, int u, int s);
-    void *__setslice__(int x, int l, int u, int s, pyiter<T> *b);
-    void *__setslice__(int x, int l, int u, int s, list<T> *b);
+    list<T> *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
+    void *__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, pyiter<T> *b);
+    void *__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, list<T> *b);
     void *__delete__(int i);
     void *__delete__(int x, int l, int u, int s);
     void *__delslice__(int a, int b);
@@ -633,7 +637,7 @@ public:
     int index(T a, int s);
     int index(T a, int s, int e);
 
-    int count(T a);
+    __ss_int count(T a);
     str *__repr__();
     __ss_bool __eq__(pyobj *l);
 
@@ -687,7 +691,7 @@ public:
     __ss_bool __contains__(A a);
     __ss_bool __contains__(B b);
 
-    int __len__();
+    __ss_int __len__();
 
     __ss_bool __eq__(tuple2<A,B> *b);
     int __cmp__(pyobj *p);
@@ -729,8 +733,8 @@ public:
     str *__getitem__(int i);
     str *__getfirst__();
     str *__getsecond__();
-    int __len__();
-    str *__slice__(int x, int l, int u, int s);
+    __ss_int __len__();
+    str *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
 
     list<str *> *rsplit(str *sep = 0, int maxsplit = -1);
     tuple2<str *, str *> *rpartition(str *sep);
@@ -749,8 +753,8 @@ public:
     int rindex(str *s, int a=0);
     int rindex(str *s, int a, int b);
 
-    int count(str *s, int start=0);
-    int count(str *s, int start, int end);
+    __ss_int count(str *s, __ss_int start=0);
+    __ss_int count(str *s, __ss_int start, __ss_int end);
 
     str *upper();
     str *lower();
@@ -771,10 +775,10 @@ public:
     __ss_bool isupper();
     __ss_bool isalnum();
 
-    __ss_bool startswith(str *s, int start=0);
-    __ss_bool startswith(str *s, int start, int end);
-    __ss_bool endswith(str *s, int start=0);
-    __ss_bool endswith(str *s, int start, int end);
+    __ss_bool startswith(str *s, __ss_int start=0);
+    __ss_bool startswith(str *s, __ss_int start, __ss_int end);
+    __ss_bool endswith(str *s, __ss_int start=0);
+    __ss_bool endswith(str *s, __ss_int start, __ss_int end);
 
     str *zfill(int width);
     str *expandtabs(int width=8);
@@ -785,7 +789,7 @@ public:
     int __cmp__(pyobj *p);
     int __hash__();
 
-    int __int__(); /* XXX compilation warning for int(pyseq<str *> *) */
+    __ss_int __int__(); /* XXX compilation warning for int(pyseq<str *> *) */
 
     __seqiter<str *> *__iter__();
 
@@ -841,7 +845,7 @@ public:
     __ss_bool __contains__(T a);
     __ss_bool __eq__(pyobj *p);
 
-    tuple2<T,T> *__slice__(int x, int l, int u, int s);
+    tuple2<T,T> *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
 
     int __hash__();
 
@@ -872,7 +876,7 @@ public:
     list<K> *keys();
     list<V> *values();
     list<tuple2<K, V> *> *items();
-    int __len__();
+    __ss_int __len__();
     str *__repr__();
     __ss_bool has_key(K k);
     void *clear();
@@ -974,7 +978,7 @@ public:
 
     __ss_bool __contains__(T key);
     __ss_bool __contains__(setentry<T>* entry);
-    int __len__();
+    __ss_int __len__();
 
     void *clear();
     set<T> *copy();
@@ -1107,13 +1111,13 @@ public:
 
 };
 
-class __xrange : public pyiter<int> {
+class __xrange : public pyiter<__ss_int> {
 public:
-    int a, b, s;
+    __ss_int a, b, s;
 
-    __xrange(int a, int b, int s);
-    __iter<int> *__iter__();
-    int __len__();
+    __xrange(__ss_int a, __ss_int b, __ss_int s);
+    __iter<__ss_int> *__iter__();
+    __ss_int __len__();
     str *__repr__();
 };
 
@@ -1505,6 +1509,9 @@ template<class T> inline __ss_int len(list<T> *x) { return x->units.size(); } /*
 inline __ss_bool ___bool() { return __mbool(false); }
 
 template<class T> inline __ss_bool ___bool(T x) { return __mbool(x && x->__nonzero__()); }
+#ifdef __SS_LONG
+template<> inline __ss_bool ___bool(__ss_int x) { return __mbool(x!=0); }
+#endif
 template<> inline __ss_bool ___bool(int x) { return __mbool(x!=0); }
 template<> inline __ss_bool ___bool(bool x) { return __mbool(x); }
 template<> inline __ss_bool ___bool(__ss_bool x) { return x; }
@@ -1653,7 +1660,7 @@ template<class K, class V> void *dict<K,V>::__delitem__(K k) {
     return NULL;
 }
 
-template<class K, class V> int dict<K,V>::__len__() {
+template<class K, class V> __ss_int dict<K,V>::__len__() {
     return units.size();
 }
 
@@ -1908,13 +1915,13 @@ template<class T> int list<T>::empty() {
     return units.empty();
 }
 
-template<class T> list<T> *list<T>::__slice__(int x, int l, int u, int s) {
+template<class T> list<T> *list<T>::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
     list<T> *c = new list<T>();
     this->slice(x, l, u, s, c);
     return c;
 }
 
-template<class T> void *list<T>::__setslice__(int x, int l, int u, int s, pyiter<T> *b) {
+template<class T> void *list<T>::__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, pyiter<T> *b) {
     T e;
     list<T> *la = new list<T>(); /* XXX avoid intermediate list */
     __iter<T> *__0;
@@ -1925,7 +1932,7 @@ template<class T> void *list<T>::__setslice__(int x, int l, int u, int s, pyiter
     return NULL;
 }
 
-template<class T> void *list<T>::__setslice__(int x, int l, int u, int s, list<T> *la) {
+template<class T> void *list<T>::__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, list<T> *la) {
     slicenr(x, l, u, s, this->__len__());
 
     if(x&4 && s != 1) { // x&4: extended slice (step 's' is given), check if sizes match
@@ -1941,7 +1948,7 @@ template<class T> void *list<T>::__setslice__(int x, int l, int u, int s, list<T
         }
 
         if(slicesize != len(la))
-            throw new ValueError(__modtuple(new str("attempt to assign sequence of size %d to extended slice of size %d"), new tuple2<int,int>(2, len(la), slicesize)));
+            throw new ValueError(__modtuple(new str("attempt to assign sequence of size %d to extended slice of size %d"), new tuple2<__ss_int,__ss_int>(2, len(la), (__ss_int)slicesize)));
     }
 
     if(s == 1) {
@@ -2076,10 +2083,10 @@ template<class T> int list<T>::index(T a, int s, int e) {
     throw new ValueError(new str("list.index(x): x not in list"));
 }
 
-template<class T> int list<T>::count(T a) {
-    int c = 0;
-    int len = this->__len__();
-    for(int i = 0; i<len;i++)
+template<class T> __ss_int list<T>::count(T a) {
+    __ss_int c = 0;
+    __ss_int len = this->__len__();
+    for(__ss_int i = 0; i<len;i++)
         if(__eq(a,units[i]))
             c++;
     return c;
@@ -2576,7 +2583,7 @@ template<class T> str *set<T>::__repr__() {
     return r;
 }
 
-template<class T> int set<T>::__len__() {
+template<class T> __ss_int set<T>::__len__() {
     return used;
 }
 
@@ -2985,7 +2992,7 @@ template<class T> __ss_bool tuple2<T, T>::__eq__(pyobj *p) {
     return True;
 }
 
-template<class T> tuple2<T,T> *tuple2<T, T>::__slice__(int x, int l, int u, int s) {
+template<class T> tuple2<T,T> *tuple2<T, T>::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
     tuple2<T,T> *c = new tuple2<T,T>();
     this->slice(x, l, u, s, c);
     return c;
@@ -3066,7 +3073,7 @@ template<class A, class B> __ss_bool tuple2<A, B>::__contains__(B b) {
     return __mbool(__eq(second, b));
 }
 
-template<class A, class B> int tuple2<A, B>::__len__() {
+template<class A, class B> __ss_int tuple2<A, B>::__len__() {
     return 2;
 }
 
@@ -3446,26 +3453,26 @@ template <class A> __iter<A> *reversed(pyseq<A> *x) {
     return new __ss_reverse<A>(x);
 }
 __iter<str *> *reversed(str *s);
-__iter<int> *reversed(__xrange *x);
+__iter<__ss_int> *reversed(__xrange *x);
 
 /* enumerate */
 
-template<class A> class __enumiter : public __iter<tuple2<int, A> *> {
+template<class A> class __enumiter : public __iter<tuple2<__ss_int, A> *> {
 public:
     __iter<A> *p;
-    int i;
+    __ss_int i;
 
     __enumiter(pyiter<A> *p) {
         this->p = ___iter(p);
         i = 0;
     }
 
-    tuple2<int, A> *next() {
-        return new tuple2<int, A>(2, i++, p->next());
+    tuple2<__ss_int, A> *next() {
+        return new tuple2<__ss_int, A>(2, i++, p->next());
     }
 };
 
-template <class A> __iter<tuple2<int, A> *> *enumerate(pyiter<A> *x) {
+template <class A> __iter<tuple2<__ss_int, A> *> *enumerate(pyiter<A> *x) {
     return new __enumiter<A>(x);
 }
 
@@ -3802,6 +3809,10 @@ template<> inline double __mods(double a, double b) {
 }
 
 template<class A, class B> double __mods(A a, B b);
+#ifdef __SS_LONG
+template<> inline double __mods(__ss_int a, double b) { return __mods((double)a, b); }
+template<> inline double __mods(double a, __ss_int b) { return __mods(a, (double)b); }
+#endif
 template<> inline double __mods(int a, double b) { return __mods((double)a, b); }
 template<> inline double __mods(double a, int b) { return __mods(a, (double)b); }
 
