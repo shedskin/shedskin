@@ -851,9 +851,9 @@ int WichmannHill::jumpahead(int n) {
     x = __55->__getfast__(0);
     y = __55->__getfast__(1);
     z = __55->__getfast__(2);
-    x = __mods(__int((x*__power(171, n, 30269))), 30269);
-    y = __mods(__int((y*__power(172, n, 30307))), 30307);
-    z = __mods(__int((z*__power(170, n, 30323))), 30323);
+    x = __mods(__int((x*__power(171, n, 30269))), (__ss_int)30269);
+    y = __mods(__int((y*__power(172, n, 30307))), (__ss_int)30307);
+    z = __mods(__int((z*__power(170, n, 30323))), (__ss_int)30323);
     __56 = x;
     __57 = y;
     __58 = z;

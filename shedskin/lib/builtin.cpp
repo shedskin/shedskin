@@ -268,7 +268,7 @@ str *str::__getsecond__() {
     return __getitem__(1);
 }
 
-int str::__len__() {
+__ss_int str::__len__() {
     return unit.size();
 }
 
@@ -315,7 +315,7 @@ str *str::__repr__() {
     return new str(ss.str().c_str());
 }
 
-int str::__int__() {
+__ss_int str::__int__() {
     return __int(this);
 }
 
@@ -911,7 +911,7 @@ str *str::join(str *s) {
     return join((pyiter<str *> *)s);
 }
 
-str *str::__slice__(int x, int l, int u, int s) {
+str *str::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
     slicenr(x, l, u, s, __len__());
 
     if(s == 1)
@@ -951,9 +951,9 @@ int str::index(str *s, int a, int b) { return __checkneg(find(s, a, b)); }
 int str::rindex(str *s, int a) { return __checkneg(find(s, a)); }
 int str::rindex(str *s, int a, int b) { return __checkneg(find(s, a, b)); }
 
-int str::count(str *s, int start) { return count(s, start, __len__()); }
-int str::count(str *s, int start, int end) {
-    int i, count, one = 1;
+__ss_int str::count(str *s, __ss_int start) { return count(s, start, __len__()); }
+__ss_int str::count(str *s, __ss_int start, __ss_int end) {
+    __ss_int i, count, one = 1;
     slicenr(7, start, end, one, __len__());
 
     i = start; count = 0;
@@ -966,9 +966,9 @@ int str::count(str *s, int start, int end) {
     return count;
 }
 
-__ss_bool str::startswith(str *s, int start) { return startswith(s, start, __len__()); }
-__ss_bool str::startswith(str *s, int start, int end) {
-    int i, j, one = 1;
+__ss_bool str::startswith(str *s, __ss_int start) { return startswith(s, start, __len__()); }
+__ss_bool str::startswith(str *s, __ss_int start, __ss_int end) {
+    __ss_int i, j, one = 1;
     slicenr(7, start, end, one, __len__());
 
     for(i = start, j = 0; i < end && j < len(s); )
@@ -978,9 +978,9 @@ __ss_bool str::startswith(str *s, int start, int end) {
     return __mbool(j == len(s));
 }
 
-__ss_bool str::endswith(str *s, int start) { return endswith(s, start, __len__()); }
-__ss_bool str::endswith(str *s, int start, int end) {
-    int i, j, one = 1;
+__ss_bool str::endswith(str *s, __ss_int start) { return endswith(s, start, __len__()); }
+__ss_bool str::endswith(str *s, __ss_int start, __ss_int end) {
+    __ss_int i, j, one = 1;
     slicenr(7, start, end, one, __len__());
 
     for(i = end, j = len(s); i > start && j > 0; )
@@ -1270,11 +1270,11 @@ str *raw_input(str *msg) {
 }
 
 
-int __int(str *s, int base) {
+__ss_int __int(str *s, __ss_int base) {
     char *cp;
     if(!s->isdigit())
         s = s->strip();
-    int i = strtol(s->unit.c_str(), &cp, base);
+    int i = strtol(s->unit.c_str(), &cp, base); /* XXX long long */
     if(cp != s->unit.c_str()+s->unit.size())
         throw new ValueError(new str("invalid literal for int()"));
     return i;
@@ -1362,12 +1362,11 @@ list<__ss_int> *range(__ss_int n) {
     return range(0, n);
 }
 
-class __rangeiter : public __iter<int> {
+class __rangeiter : public __iter<__ss_int> {
 public:
-    int i;
-    int a, b, s;
+    __ss_int i, a, b, s;
 
-    __rangeiter(int a, int b, int s) {
+    __rangeiter(__ss_int a, __ss_int b, __ss_int s) {
         this->__class__ = cl_rangeiter;
 
         this->a = a;
@@ -1378,7 +1377,7 @@ public:
             throw new ValueError(new str("xrange() arg 3 must not be zero"));
     }
 
-    int next() {
+    __ss_int next() {
         if(s>0) {
             if(i<b) {
                 i += s;
@@ -1395,17 +1394,17 @@ public:
 
 };
 
-__xrange::__xrange(int a, int b, int s) {
+__xrange::__xrange(__ss_int a, __ss_int b, __ss_int s) {
     this->a = a;
     this->b = b;
     this->s = s;
 }
 
-__iter<int> *__xrange::__iter__() {
+__iter<__ss_int> *__xrange::__iter__() {
     return new __rangeiter(a, b, s);
 }
 
-int __xrange::__len__() {
+__ss_int __xrange::__len__() {
    return range_len(a, b, s);
 }
 
@@ -1419,10 +1418,10 @@ str *__xrange::__repr__() {
     return __modct(new str("xrange(%d, %d, %d)"), 3, __box(a), __box(b), __box(s)); /* XXX */
 }
 
-__xrange *xrange(int a, int b, int s) { return new __xrange(a,b,s); }
-__xrange *xrange(int n) { return new __xrange(0, n, 1); }
+__xrange *xrange(__ss_int a, __ss_int b, __ss_int s) { return new __xrange(a,b,s); }
+__xrange *xrange(__ss_int n) { return new __xrange(0, n, 1); }
 
-__iter<int> *reversed(__xrange *x) {
+__iter<__ss_int> *reversed(__xrange *x) {
    return new __rangeiter(x->a+(range_len(x->a,x->b,x->s)-1)*x->s, x->a-x->s, -x->s);
 }
 __iter<str *> *reversed(str *s) {
@@ -1566,7 +1565,7 @@ tuple2<complex *, complex *> *divmod(complex *a, int b) { return a->__divmod__(b
 
 /* slicing */
 
-void slicenr(int x, int &l, int&u, int&s, int len) {
+void slicenr(__ss_int x, __ss_int &l, __ss_int &u, __ss_int &s, __ss_int len) {
     if((x&4) && (s == 0))
         throw new ValueError(new str("slice step cannot be zero"));
 
