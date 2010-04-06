@@ -1494,8 +1494,8 @@ template<> inline void *__deepcopy(void *p, dict<void *, pyobj *> *) { return p;
 
 /* len */
 
-template<class T> int len(T x) { return x->__len__(); }
-template<class T> inline int len(list<T> *x) { return x->units.size(); } /* XXX more general solution? */
+template<class T> inline __ss_int len(T x) { return x->__len__(); }
+template<class T> inline __ss_int len(list<T> *x) { return x->units.size(); } /* XXX more general solution? */
 
 /* bool */
 
@@ -3723,32 +3723,42 @@ str *filter(void *func, str *a);
 /* pow */
 
 template<class A, class B> double __power(A a, B b);
-template<> double __power(double a, int b);
-template<> double __power(int a, double b);
+template<> inline double __power(__ss_int a, double b) { return pow(a,b); }
+template<> inline double __power(double a, __ss_int b) { return pow(a,b); }
 
 complex *__power(complex *a, complex *b);
-complex *__power(complex *a, int b);
+complex *__power(complex *a, __ss_int b);
 complex *__power(complex *a, double b);
 
 template<class A> A __power(A a, A b);
-template<> double __power(double a, double b);
-template<> int __power(int a, int b);
+template<> inline double __power(double a, double b) { return pow(a,b); }
+template<> __ss_int __power(__ss_int a, __ss_int b);
 
+#ifdef __SS_LONG
+__ss_int __power(__ss_int a, __ss_int b, __ss_int c);
+#endif
 int __power(int a, int b, int c);
 
-inline int __power2(int a) { return a*a; }
+inline __ss_int __power2(__ss_int a) { return a*a; }
 inline double __power2(double a) { return a*a; }
-inline int __power3(int a) { return a*a*a; }
+inline __ss_int __power3(__ss_int a) { return a*a*a; }
 inline double __power3(double a) { return a*a*a; }
 
 /* division */
 
 template<class A, class B> double __divs(A a, B b);
-template<> inline double __divs(int a, double b) { return (double)a/b; }
-template<> inline double __divs(double a, int b) { return a/((double)b); }
+template<> inline double __divs(__ss_int a, double b) { return (double)a/b; }
+template<> inline double __divs(double a, __ss_int b) { return a/((double)b); }
 
 template<class A> A __divs(A a, A b);
 template<> inline double __divs(double a, double b) { return a/b; }
+#ifdef __SS_LONG
+template<> inline __ss_int __divs(__ss_int a, __ss_int b) {
+    if(a<0 && b>0) return (a-b+1)/b;
+    else if(b<0 && a>0) return (a-b-1)/b;
+    else return a/b;
+}
+#endif
 template<> inline int __divs(int a, int b) {
     if(a<0 && b>0) return (a-b+1)/b;
     else if(b<0 && a>0) return (a-b-1)/b;
@@ -3770,6 +3780,13 @@ template<> inline int __floordiv(int a, int b) { return (int)floor((double)a/b);
 /* modulo */
 
 template<class A> A __mods(A a, A b);
+#ifdef __SS_LONG /* XXX */
+template<> inline __ss_int __mods(__ss_int a, __ss_int b) {
+    int m = a%b;
+    if((m<0 && b>0)||(m>0 && b<0)) m+=b;
+    return m;
+}
+#endif
 template<> inline int __mods(int a, int b) {
     int m = a%b;
     if((m<0 && b>0)||(m>0 && b<0)) m+=b;

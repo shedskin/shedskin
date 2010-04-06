@@ -1364,7 +1364,8 @@ list<__ss_int> *range(__ss_int n) {
 
 class __rangeiter : public __iter<int> {
 public:
-    int i, a, b, s;
+    int i;
+    int a, b, s;
 
     __rangeiter(int a, int b, int s) {
         this->__class__ = cl_rangeiter;
@@ -1476,12 +1477,8 @@ template<> class_ *__type(double) { return cl_float_; }
 
 /* pow */
 
-template<> double __power(double a, double b) { return pow(a,b); }
-template<> double __power(int a, double b) { return pow(a,b); }
-template<> double __power(double a, int b) { return pow(a,b); }
-
-template<> int __power(int a, int b) {
-    int res, tmp;
+template<> __ss_int __power(__ss_int a, __ss_int b) {
+    __ss_int res, tmp;
 
     res = 1;
     tmp = a;
@@ -1495,6 +1492,24 @@ template<> int __power(int a, int b) {
     }
     return res;
 }
+
+#ifdef __SS_LONG
+__ss_int __power(__ss_int a, __ss_int b, __ss_int c) {
+    __ss_int res, tmp;
+
+    res = 1;
+    tmp = a;
+
+    while((b>0)) {
+        if ((b%2)) {
+            res = ((res*tmp)%c);
+        }
+        tmp = ((tmp*tmp)%c);
+        b = (b/2);
+    }
+    return res;
+}
+#endif
 
 int __power(int a, int b, int c) {
     int res, tmp;
@@ -1537,7 +1552,7 @@ complex *__power(complex *a, complex *b) {
     }
     return r;
 }
-complex *__power(complex *a, int b) {
+complex *__power(complex *a, __ss_int b) {
     return __power(a, new complex(b, 0));
 }
 complex *__power(complex *a, double b) {
