@@ -351,6 +351,9 @@ template<class T> T __to_ss(PyObject *p) {
     return new (typename dereference<T>::type)(p); /* isn't C++ pretty :-) */
 }
 
+#ifdef __SS_LONG
+template<> __ss_int __to_ss(PyObject *p);
+#endif
 template<> int __to_ss(PyObject *p);
 template<> __ss_bool __to_ss(PyObject *p);
 template<> double __to_ss(PyObject *p);
@@ -364,6 +367,9 @@ template<class T> PyObject *__to_py(T t) {
     return t->__to_py__();
 }
 
+#ifdef __SS_LONG
+template<> PyObject *__to_py(__ss_int i);
+#endif
 template<> PyObject *__to_py(int i);
 template<> PyObject *__to_py(__ss_bool i);
 template<> PyObject *__to_py(double i);
