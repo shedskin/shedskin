@@ -16,10 +16,10 @@ int hexversion, maxint;
 void __init(int c, char **v) {
     argv = new list<str *>();
 
-    version = new str("Shed Skin Python-to-C++ Compiler 0.4\n[GCC ");
+    version = new str("Shed Skin Python-to-C++ Compiler 0.5\n[GCC ");
     version = version->__add__(new str(__VERSION__))->__add__(new str("]"));
-    version_info = new tuple2<int, int>(5, 0, 4, 0, 0, 0);
-    hexversion = 0x00040000;
+    version_info = new tuple2<int, int>(5, 0, 5, 0, 0, 0);
+    hexversion = 0x00050000;
 
     copyright = new str("Copyright (c) Mark Dufour 2005-2010.\nAll Rights Reserved.");
     platform = new str("shedskin");

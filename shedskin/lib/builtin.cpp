@@ -1794,9 +1794,9 @@ template<class T> str *do_asprintf(const char *fmt, T t, pyobj *a1, pyobj *a2) {
     int x;
     str *r;
     if(a2)
-        x = asprintf(&d, fmt, ((int_ *)a1)->unit, ((int_ *)a2)->unit, t);
+        x = asprintf(&d, fmt, (int)(((int_ *)a1)->unit), (int)(((int_ *)a2)->unit), t);
     else if(a1)
-        x = asprintf(&d, fmt, ((int_ *)a1)->unit, t);
+        x = asprintf(&d, fmt, (int)(((int_ *)a1)->unit), t); /* XXX (int) */
     else
         x = asprintf(&d, fmt, t);
     r = new str(d);
