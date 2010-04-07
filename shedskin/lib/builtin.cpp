@@ -662,24 +662,24 @@ __ss_bool str::__eq__(pyobj *p) {
     return __mbool(unit == ((str *)p)->unit);
 }
 
-str *str::__mul__(int n) { /* optimize */
+str *str::__mul__(__ss_int n) { /* optimize */
     str *r = new str();
     if(n<=0) return r;
     __GC_STRING &s = r->unit;
-    int ulen = unit.size();
+    __ss_int ulen = unit.size();
 
     if(ulen == 1)
        r->unit = __GC_STRING(n, unit[0]);
     else {
         s.resize(ulen*n);
 
-        for(int i=0; i<ulen*n; i+=ulen)
+        for(__ss_int i=0; i<ulen*n; i+=ulen)
             s.replace(i, ulen, unit);
     }
 
     return r;
 }
-str *str::__imul__(int n) {
+str *str::__imul__(__ss_int n) {
     return __mul__(n);
 }
 
@@ -1721,12 +1721,12 @@ double __sum(pyseq<double> *l, double b) { return accumulate(l->units.begin(), l
 
 /* sorted */
 
-list<str *> *sorted(str *t, int (*cmp)(str *, str *), int key, int reverse) {
+list<str *> *sorted(str *t, int (*cmp)(str *, str *), __ss_int key, __ss_int reverse) {
     list<str *> *l = new list<str *>(t);
     l->sort(cmp, key, reverse);
     return l;
 }
-list<str *> *sorted(str *t, int, int key, int reverse) {
+list<str *> *sorted(str *t, __ss_int, __ss_int key, __ss_int reverse) {
     return sorted(t, (int (*)(str *, str *))0, key, reverse);
 }
 

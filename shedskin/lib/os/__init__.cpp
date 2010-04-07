@@ -262,7 +262,7 @@ void __cstat::fill_er_up() {
 #endif
 }
 
-int __cstat::__len__() {
+__ss_int __cstat::__len__() {
     return 10;
 }
 
@@ -297,16 +297,16 @@ str *namedtuple::__repr__() {
     return repr(t);
 }
 
-tuple2<int, int> *namedtuple::__slice__(int x, int l, int u, int s) {
-    tuple2<int, int> *c = new tuple2<int, int>();
+tuple2<__ss_int, __ss_int> *namedtuple::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
+    tuple2<__ss_int, __ss_int> *c = new tuple2<__ss_int, __ss_int>();
 
     slicenr(x, l, u, s, __len__());
 
     if(s > 0)
-        for(int i=l; i<u; i += s)
+        for(__ss_int i=l; i<u; i += s)
             c->append(__getitem__(i));
     else
-        for(int i=l; i>u; i += s)
+        for(__ss_int i=l; i>u; i += s)
             c->append(__getitem__(i));
 
     return c;
@@ -900,7 +900,7 @@ void __vfsstat::fill_er_up() {
     this->f_namemax = vbuf.f_namemax;
 }
 
-int __vfsstat::__len__() {
+__ss_int __vfsstat::__len__() {
     return 10;
 }
 

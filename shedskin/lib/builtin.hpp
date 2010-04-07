@@ -38,15 +38,21 @@ class file;
 class bool_;
 class complex;
 
+#ifdef __SS_LONG
+    typedef long long __ss_int;
+#else
+    typedef int __ss_int;
+#endif
+
 class __ss_bool {
 public:
     int value;
-    inline int operator+(__ss_bool b) { return value+b.value; }
-    inline int operator==(__ss_bool b) { return value==b.value; } /* XXX */
-    inline bool operator!() { return !value; }
+    inline __ss_int operator+(__ss_bool b) { return value+b.value; }
+    inline __ss_bool operator==(__ss_bool b) { __ss_bool c; c.value=value==b.value; return c; }
     inline __ss_bool operator&(__ss_bool b) { __ss_bool c; c.value=value&b.value; return c; }
     inline __ss_bool operator|(__ss_bool b) { __ss_bool c; c.value=value|b.value; return c; }
     inline __ss_bool operator^(__ss_bool b) { __ss_bool c; c.value=value^b.value; return c; }
+    inline bool operator!() { return !value; }
     inline operator bool() { return bool(value); }
 };
 
@@ -54,12 +60,6 @@ extern __ss_bool True;
 extern __ss_bool False;
 
 static inline __ss_bool __mbool(bool c) { __ss_bool b; b.value=(int)c; return b; }
-
-#ifdef __SS_LONG
-    typedef long long __ss_int;
-#else
-    typedef int __ss_int;
-#endif
 
 template <class T> class pyiter;
 template <class T> class pyseq;
@@ -609,33 +609,33 @@ public:
     list(str *s);
 
     void clear();
-    void *__setitem__(int i, T e);
-    void *__delitem__(int i);
+    void *__setitem__(__ss_int i, T e);
+    void *__delitem__(__ss_int i);
     //void init(int count, ...);
     int empty();
     list<T> *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
     void *__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, pyiter<T> *b);
     void *__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, list<T> *b);
-    void *__delete__(int i);
-    void *__delete__(int x, int l, int u, int s);
-    void *__delslice__(int a, int b);
+    void *__delete__(__ss_int i);
+    void *__delete__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
+    void *__delslice__(__ss_int a, __ss_int b);
     __ss_bool __contains__(T a);
 
     list<T> *__add__(list<T> *b);
-    list<T> *__mul__(int b);
+    list<T> *__mul__(__ss_int b);
 
     list<T> *__iadd__(pyiter<T> *b);
     list<T> *__iadd__(pyseq<T> *b);
     list<T> *__iadd__(str *s);
-    list<T> *__imul__(int n);
+    list<T> *__imul__(__ss_int n);
 
     void *extend(pyiter<T> *p);
     void *extend(pyseq<T> *p);
     void *extend(str *s);
 
-    int index(T a);
-    int index(T a, int s);
-    int index(T a, int s, int e);
+    __ss_int index(T a);
+    __ss_int index(T a, __ss_int s);
+    __ss_int index(T a, __ss_int s, __ss_int e);
 
     __ss_int count(T a);
     str *__repr__();
@@ -729,7 +729,7 @@ public:
     str *join(str *s);
     str *__str__();
     str *__repr__();
-    str *__mul__(int n);
+    str *__mul__(__ss_int n);
     str *__getitem__(int i);
     str *__getfirst__();
     str *__getsecond__();
@@ -794,7 +794,7 @@ public:
     __seqiter<str *> *__iter__();
 
     str *__iadd__(str *b);
-    str *__imul__(int n);
+    str *__imul__(__ss_int n);
 
 #ifdef __SS_BIND
     str(PyObject *p);
@@ -835,10 +835,10 @@ public:
     str *__repr__();
 
     tuple2<T,T> *__add__(tuple2<T,T> *b);
-    tuple2<T,T> *__mul__(int b);
+    tuple2<T,T> *__mul__(__ss_int b);
 
     tuple2<T,T> *__iadd__(tuple2<T,T> *b);
-    tuple2<T,T> *__imul__(int n);
+    tuple2<T,T> *__imul__(__ss_int n);
 
     //void init(int count, ...);
 
@@ -1899,13 +1899,13 @@ template<class T> void *list<T>::extend(str *s) {
     return NULL;
 }
 
-template<class T> void *list<T>::__setitem__(int i, T e) {
+template<class T> void *list<T>::__setitem__(__ss_int i, T e) {
     i = __wrap(this, i);
     units[i] = e;
     return NULL;
 }
 
-template<class T> void *list<T>::__delitem__(int i) {
+template<class T> void *list<T>::__delitem__(__ss_int i) {
     i = __wrap(this, i);
     units.erase(units.begin()+i,units.begin()+i+1);
     return NULL;
@@ -1971,13 +1971,13 @@ template<class T> void *list<T>::__setslice__(__ss_int x, __ss_int l, __ss_int u
     return NULL;
 }
 
-template<class T> void *list<T>::__delete__(int i) {
+template<class T> void *list<T>::__delete__(__ss_int i) {
     i = __wrap(this, i);
     units.erase(units.begin()+i,units.begin()+i+1);
     return NULL;
 }
 
-template<class T> void *list<T>::__delete__(int x, int l, int u, int s) {
+template<class T> void *list<T>::__delete__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
     slicenr(x, l, u, s, this->__len__());
 
     if(s == 1)
@@ -1992,7 +1992,7 @@ template<class T> void *list<T>::__delete__(int x, int l, int u, int s) {
     return NULL;
 }
 
-template<class T> void *list<T>::__delslice__(int a, int b) {
+template<class T> void *list<T>::__delslice__(__ss_int a, __ss_int b) {
     if(a>this->__len__()) return NULL;
     if(b>this->__len__()) b = this->__len__();
     units.erase(units.begin()+a,units.begin()+b);
@@ -2022,15 +2022,15 @@ template<class T> list<T> *list<T>::__add__(list<T> *b) {
     return c;
 }
 
-template<class T> list<T> *list<T>::__mul__(int b) {
+template<class T> list<T> *list<T>::__mul__(__ss_int b) {
     list<T> *c = new list<T>();
     if(b<=0) return c;
-    int len = this->units.size();
+    __ss_int len = this->units.size();
     if(len==1)
         c->units.assign(b, this->units[0]);
     else {
         c->units.resize(b*len);
-        for(int i=0; i<b; i++)
+        for(__ss_int i=0; i<b; i++)
             memcpy(&(c->units[i*len]), &(this->units[0]), sizeof(T)*len);
     }
     return c;
@@ -2064,20 +2064,20 @@ template<class T> list<T> *list<T>::__iadd__(str *s) {
     return this;
 }
 
-template<class T> list<T> *list<T>::__imul__(int n) {
-    int l1 = this->__len__();
+template<class T> list<T> *list<T>::__imul__(__ss_int n) {
+    __ss_int l1 = this->__len__();
     this->units.resize(l1*n);
-    for(int i = 1; i <= n-1; i++)
+    for(__ss_int i = 1; i <= n-1; i++)
         memcpy(&(this->units[l1*i]), &(this->units[0]), sizeof(T)*l1);
     return this;
 }
 
-template<class T> int list<T>::index(T a) { return index(a, 0, this->__len__()); }
-template<class T> int list<T>::index(T a, int s) { return index(a, s, this->__len__()); }
-template<class T> int list<T>::index(T a, int s, int e) {
-    int one = 1;
+template<class T> __ss_int list<T>::index(T a) { return index(a, 0, this->__len__()); }
+template<class T> __ss_int list<T>::index(T a, __ss_int s) { return index(a, s, this->__len__()); }
+template<class T> __ss_int list<T>::index(T a, __ss_int s, __ss_int e) {
+    __ss_int one = 1;
     slicenr(7, s, e, one, this->__len__());
-    for(int i = s; i<e;i++)
+    for(__ss_int i = s; i<e;i++)
         if(__eq(a,units[i]))
             return i;
     throw new ValueError(new str("list.index(x): x not in list"));
@@ -2945,19 +2945,19 @@ template<class T> tuple2<T,T> *tuple2<T, T>::__iadd__(tuple2<T,T> *b) {
     return __add__(b);
 }
 
-template<class T> tuple2<T,T> *tuple2<T, T>::__mul__(int b) {
+template<class T> tuple2<T,T> *tuple2<T, T>::__mul__(__ss_int b) {
     tuple2<T,T> *c = new tuple2<T,T>();
     if(b<=0) return c;
-    int hop = this->__len__(); /* XXX merge with list */
+    __ss_int hop = this->__len__(); /* XXX merge with list */
     if(hop==1)
         c->units.insert(c->units.begin(), b, this->units[0]);
     else
-        for(int i=0; i<b; i++)
-            for(int j=0; j<hop; j++)
+        for(__ss_int i=0; i<b; i++)
+            for(__ss_int j=0; j<hop; j++)
                 c->units.push_back(this->units[j]);
     return c;
 }
-template<class T> tuple2<T,T> *tuple2<T, T>::__imul__(int b) {
+template<class T> tuple2<T,T> *tuple2<T, T>::__imul__(__ss_int b) {
     return __mul__(b);
 }
 
@@ -3891,7 +3891,7 @@ template<class T> str *__moddict(str *v, dict<str *, T> *d) {
 
 /* boxing */
 
-template<class T> T __box(T t) { return t; }
+template<class T> T __box(T t) { return t; } /* XXX */
 int_ *__box(__ss_int);
 bool_ *__box(__ss_bool);
 float_ *__box(double);
