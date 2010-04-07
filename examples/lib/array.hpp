@@ -15,24 +15,24 @@ extern str *__name__;
 extern class_ *cl_array;
 class array : public pyobj {
 public:
-    list<int> *unit;
+    list<__ss_int> *unit;
 
     array() {}
-    array(str *flags, list<int> *arg=NULL) {
+    array(str *flags, list<__ss_int> *arg=NULL) {
         this->__class__ = cl_array;
         __init__(flags, arg);
     }
-    void *fromlist(list<int> *l);
-    list<int> *tolist();
+    void *fromlist(list<__ss_int> *l);
+    list<__ss_int> *tolist();
     void *fromstring(str *s);
     void *tofile(file *f);
     str *tostring();
-    int __len__();
-    array *__slice__(int x, int l, int u, int s);
-    void *fromfile(file *f, int n);
-    void *__init__(str *flags, list<int> *arg);
-    void *__delete__(int x, int a, int b, int s);
-    void *__setitem__(int i, int e);
+    __ss_int __len__();
+    array *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
+    void *fromfile(file *f, __ss_int n);
+    void *__init__(str *flags, list<__ss_int> *arg);
+    void *__delete__(__ss_int x, __ss_int a, __ss_int b, __ss_int s);
+    void *__setitem__(__ss_int i, __ss_int e);
     str *__repr__();
 };
 
