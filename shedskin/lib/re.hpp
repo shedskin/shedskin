@@ -121,7 +121,7 @@ public:
     list<str *> *split(str *subj, int maxn = -1);
     str *sub(str *repl, str *subj, int maxn = -1);
     str *sub(replfunc repl, str *subj, int maxn = -1);
-    tuple2<str *, int> *subn(str *repl, str *subj, int maxn = -1);
+    tuple2<str *, __ss_int> *subn(str *repl, str *subj, int maxn = -1);
     list<str *> *findall(str *subj, int flags = 0);
 
     str *__repr__();
@@ -146,7 +146,7 @@ __iter<match_object *> *finditer(str *pat, str *subj, int pos = 0, int endpos = 
 list<str *> *split(str *pat, str *subj, int maxn = 0);
 str *sub(str *pat, str *repl, str *subj, int maxn = 0);
 str *sub(str *pat, replfunc repl, str *subj, int maxn = 0);
-tuple2<str *, int> *subn(str *pat, str *repl, str *subj, int maxn = 0);
+tuple2<str *, __ss_int> *subn(str *pat, str *repl, str *subj, int maxn = 0);
 list<str *> *findall(str *pat, str *subj, int flags = 0);
 str *escape(str *s);
 

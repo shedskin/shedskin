@@ -19,12 +19,12 @@ inline double fabs(double x) {
     return std::fabs(x);
 }
 
-inline int factorial(int x) {
+inline __ss_int factorial(__ss_int x) {
     if (x < 0) 
         throw new ValueError(new str("factorial() not defined for negative values"));
 
-    int result = 1;
-    for (int i = 1; i <= x; ++i) {
+    __ss_int result = 1;
+    for (__ss_int i = 1; i <= x; ++i) {
         result *= i;
     }
 

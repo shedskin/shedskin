@@ -444,7 +444,7 @@ double Random::triangular(double low, double high, double mode) {
     return __triangular(low, high, this->random(), ((mode-low)/(high-low)));
 }
 
-double Random::triangular(double low, double high, int mode) {
+double Random::triangular(double low, double high, __ss_int mode) {
     return __triangular(low, high, this->random(), (double)mode);
 }
 
@@ -1092,7 +1092,7 @@ int getrandbits(int k) {
 double triangular(double low, double high, double mode) {
     return _inst->triangular(low, high, mode);
 }
-double triangular(double low, double high, int mode) {
+double triangular(double low, double high, __ss_int mode) {
     return _inst->triangular(low, high, mode);
 }
 double triangular(double low, double high, void *mode) {

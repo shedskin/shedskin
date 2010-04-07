@@ -267,73 +267,73 @@ public:
 
 /* comparison */
 
-template<class T> inline int __cmp(T a, T b) {
+template<class T> inline __ss_int __cmp(T a, T b) {
     if (!a) return -1;
     return a->__cmp__(b);
 }
 
 #ifdef __SS_LONG
-template<> inline int __cmp(__ss_int a, __ss_int b) {
+template<> inline __ss_int __cmp(__ss_int a, __ss_int b) {
     if(a < b) return -1;
     else if(a > b) return 1;
     return 0;
 }
 #endif
 
-template<> inline int __cmp(int a, int b) {
+template<> inline __ss_int __cmp(int a, int b) {
     if(a < b) return -1;
     else if(a > b) return 1;
     return 0;
 }
 
-template<> inline int __cmp(__ss_bool a, __ss_bool b) {
+template<> inline __ss_int __cmp(__ss_bool a, __ss_bool b) {
     return __cmp(a.value, b.value); /* XXX */
 }
 
-template<> inline int __cmp(double a, double b) {
+template<> inline __ss_int __cmp(double a, double b) {
     if(a < b) return -1;
     else if(a > b) return 1;
     return 0;
 }
-template<> inline int __cmp(void *a, void *b) {
+template<> inline __ss_int __cmp(void *a, void *b) {
     if(a < b) return -1;
     else if(a > b) return 1;
     return 0;
 }
 
-template<class T> int cpp_cmp(T a, T b) {
+template<class T> __ss_int cpp_cmp(T a, T b) {
     return __cmp(a, b) == -1;
 }
-template<class T> int cpp_cmp_rev(T a, T b) {
+template<class T> __ss_int cpp_cmp_rev(T a, T b) {
     return __cmp(a, b) == 1;
 }
 template<class T> class cpp_cmp_custom {
-    typedef int (*hork)(T, T);
+    typedef __ss_int (*hork)(T, T);
     hork cmp;
 public:
     cpp_cmp_custom(hork a) { cmp = a; }
-    int operator()(T a, T b) const { return cmp(a,b) == -1; }
+    __ss_int operator()(T a, T b) const { return cmp(a,b) == -1; }
 };
 template<class T> class cpp_cmp_custom_rev {
-    typedef int (*hork)(T, T);
+    typedef __ss_int (*hork)(T, T);
     hork cmp;
 public:
     cpp_cmp_custom_rev(hork a) { cmp = a; }
-    int operator()(T a, T b) const { return cmp(a,b) == 1; }
+    __ss_int operator()(T a, T b) const { return cmp(a,b) == 1; }
 };
 template<class T, class V> class cpp_cmp_key {
     typedef V (*hork)(T);
     hork key;
 public:
     cpp_cmp_key(hork a) { key = a; }
-    int operator()(T a, T b) const { return __cmp(key(a), key(b)) == -1; }
+    __ss_int operator()(T a, T b) const { return __cmp(key(a), key(b)) == -1; }
 };
 template<class T, class V> class cpp_cmp_key_rev {
     typedef V (*hork)(T);
     hork key;
 public:
     cpp_cmp_key_rev(hork a) { key = a; }
-    int operator()(T a, T b) const { return __cmp(key(a), key(b)) == 1; }
+    __ss_int operator()(T a, T b) const { return __cmp(key(a), key(b)) == 1; }
 };
 
 template<class T> struct dereference {};
@@ -393,7 +393,7 @@ public:
         return __gnu_cxx::hash<intptr_t>()((intptr_t)this);
     }
 
-    virtual int __cmp__(pyobj *p) {
+    virtual __ss_int __cmp__(pyobj *p) {
         return __cmp<void *>(this, p);
     }
 
@@ -563,7 +563,7 @@ public:
                 c->append(units[i]);
     }
 
-    virtual int __cmp__(pyobj *p) {
+    virtual __ss_int __cmp__(pyobj *p) {
         if (!p) return 1;
         pyseq<T> *b = (pyseq<T> *)p;
         int i, cmp;
@@ -654,9 +654,9 @@ public:
     void *insert(int m, T e);
 
     void *reverse();
-    template<class U> void *sort(int (*cmp)(T, T), U (*key)(T), __ss_int reverse);
+    template<class U> void *sort(__ss_int (*cmp)(T, T), U (*key)(T), __ss_int reverse);
     template<class U> void *sort(__ss_int cmp, U (*key)(T), __ss_int reverse);
-    void *sort(int (*cmp)(T, T), __ss_int key, __ss_int reverse);
+    void *sort(__ss_int (*cmp)(T, T), __ss_int key, __ss_int reverse);
     void *sort(__ss_int cmp, __ss_int key, __ss_int reverse);
 
     list<T> *__copy__();
@@ -694,7 +694,7 @@ public:
     __ss_int __len__();
 
     __ss_bool __eq__(tuple2<A,B> *b);
-    int __cmp__(pyobj *p);
+    __ss_int __cmp__(pyobj *p);
     int __hash__();
 
     tuple2<A,B> *__copy__();
@@ -786,7 +786,7 @@ public:
     str *ljust(int width, str *fchar=0);
     str *rjust(int width, str *fchar=0);
 
-    int __cmp__(pyobj *p);
+    __ss_int __cmp__(pyobj *p);
     int __hash__();
 
     __ss_int __int__(); /* XXX compilation warning for int(pyseq<str *> *) */
@@ -1017,7 +1017,7 @@ public:
     __ss_bool __le__(set<T> *s);
     __ss_bool __eq__(pyobj *p);
 
-    int __cmp__(pyobj *p);
+    __ss_int __cmp__(pyobj *p);
 
     __setiter<T> *__iter__() {
         return new __setiter<T>(this);
@@ -1453,6 +1453,7 @@ template<> inline double __add(double a, double b) { return a + b; }
 template<class U> U __add2(double a, U b) { return b->__add__(a); }
 template<class U> U __sub2(double a, U b) { return b->__rsub__(a); }
 template<class T> T __mul2(__ss_int n, T a) { return a->__mul__(n); }
+template<class T> T __mul2(__ss_bool n, T a) { return a->__mul__(n.value); }
 template<class T> T __mul2(double n, T a) { return a->__mul__(n); }
 template<class T> T __div2(int n, T a) { return a->__rdiv__(n); }
 template<class T> T __div2(double n, T a) { return a->__rdiv__(n); }
@@ -2119,7 +2120,7 @@ template<class T> void *list<T>::reverse() {
     return NULL;
 }
 
-template<class T> template <class U> void *list<T>::sort(int (*cmp)(T, T), U (*key)(T), __ss_int reverse) {
+template<class T> template <class U> void *list<T>::sort(__ss_int (*cmp)(T, T), U (*key)(T), __ss_int reverse) {
     if(key) {
         if(reverse)
             std::sort(units.begin(), units.end(), cpp_cmp_key_rev<T, U>(key));
@@ -2142,13 +2143,13 @@ template<class T> template <class U> void *list<T>::sort(int (*cmp)(T, T), U (*k
 }
 
 template<class T> template <class U> void *list<T>::sort(__ss_int cmp, U (*key)(T), __ss_int reverse) {
-    return sort((int(*)(T,T))0, key, reverse);
+    return sort((__ss_int(*)(T,T))0, key, reverse);
 }
-template<class T> void *list<T>::sort(int (*cmp)(T, T), __ss_int, __ss_int reverse) {
-    return sort(cmp, (int(*)(T))0, reverse);
+template<class T> void *list<T>::sort(__ss_int (*cmp)(T, T), __ss_int, __ss_int reverse) {
+    return sort(cmp, (__ss_int(*)(T))0, reverse);
 }
 template<class T> void *list<T>::sort(__ss_int, __ss_int, __ss_int reverse) {
-    return sort((int(*)(T,T))0, (int(*)(T))0, reverse);
+    return sort((__ss_int(*)(T,T))0, (__ss_int(*)(T))0, reverse);
 }
 
 template<class T> void *list<T>::insert(int m, T e) {
@@ -2289,7 +2290,7 @@ template<class T> __ss_bool set<T>::__gt__(set<T> *s) {
     return issuperset(s);
 }
 
-template<class T> int set<T>::__cmp__(pyobj *) {
+template<class T> __ss_int set<T>::__cmp__(pyobj *) {
     //note: originally SS did cmp() by using issubset() and issuperset().
     //I'm, however, following the Python specifications here...
     throw new TypeError(new str("cannot compare sets using cmp()"));
@@ -3081,7 +3082,7 @@ template<class A, class B> __ss_bool tuple2<A, B>::__eq__(tuple2<A,B> *b) {
     return __mbool(__eq(first, b->__getfirst__()) && __eq(second, b->__getsecond__()));
 }
 
-template<class A, class B> int tuple2<A, B>::__cmp__(pyobj *p) {
+template<class A, class B> __ss_int tuple2<A, B>::__cmp__(pyobj *p) {
     if (!p) return 1;
     tuple2<A,B> *b = (tuple2<A,B> *)p;
     if(int c = __cmp(first, b->first)) return c;
@@ -3215,12 +3216,12 @@ template <class A, class B> A __sum(pyiter<A> *l, B b) {
 }
 template <class A> A __sum(pyiter<A> *l) { return __sum(l, 0); }
 
-int __sum(pyiter<__ss_bool> *l);
-int __sum(pyiter<__ss_bool> *l, int b);
+__ss_int __sum(pyiter<__ss_bool> *l);
+__ss_int __sum(pyiter<__ss_bool> *l, __ss_int b);
 
-int __sum(pyseq<int> *l);
-int __sum(pyseq<int> *l, int b);
-double __sum(pyseq<int> *l, double b);
+__ss_int __sum(pyseq<__ss_int> *l);
+__ss_int __sum(pyseq<__ss_int> *l, __ss_int b);
+double __sum(pyseq<__ss_int> *l, double b);
 double __sum(pyseq<double> *l, double b=0);
 
 /* max */
@@ -3384,7 +3385,7 @@ template<class T> T __min(int n, int key, T a, T b, T c, ...) { /* XXX */
 
 /* sorted */
 
-template <class A, class B> list<A> *sorted(pyiter<A> *x, int (*cmp)(A, A), B (*key)(A), __ss_int reverse) {
+template <class A, class B> list<A> *sorted(pyiter<A> *x, __ss_int (*cmp)(A, A), B (*key)(A), __ss_int reverse) {
     list<A> *r = new list<A>();
     A e;
     __iter<A> *__0;
@@ -3395,32 +3396,32 @@ template <class A, class B> list<A> *sorted(pyiter<A> *x, int (*cmp)(A, A), B (*
     return r;
 }
 
-template <class A> list<A> *sorted(pyiter<A> *x, int (*cmp)(A, A), __ss_int key, __ss_int reverse) {
-    return sorted(x, cmp, (int (*)(A))0, reverse);
+template <class A> list<A> *sorted(pyiter<A> *x, __ss_int (*cmp)(A, A), __ss_int key, __ss_int reverse) {
+    return sorted(x, cmp, (__ss_int (*)(A))0, reverse);
 }
 template <class A, class B> list<A> *sorted(pyiter<A> *x, __ss_int cmp, B (*key)(A), __ss_int reverse) {
-    return sorted(x, (int (*)(A,A))0, key, reverse);
+    return sorted(x, (__ss_int (*)(A,A))0, key, reverse);
 }
 template <class A> list<A> *sorted(pyiter<A> *x, __ss_int cmp,  __ss_int key, __ss_int reverse) {
-    return sorted(x, (int (*)(A,A))0, (int (*)(A))0, reverse);
+    return sorted(x, (__ss_int (*)(A,A))0, (__ss_int (*)(A))0, reverse);
 }
 
-template <class A> list<A> *sorted(pyseq<A> *x, int (*cmp)(A, A), __ss_int key, __ss_int reverse) {
+template <class A> list<A> *sorted(pyseq<A> *x, __ss_int (*cmp)(A, A), __ss_int key, __ss_int reverse) {
     list<A> *r = new list<A>();
     r->units = x->units;
     r->sort(cmp, key, reverse);
     return r;
 }
 template <class A> list<A> *sorted(pyseq<A> *x, __ss_int, __ss_int key, __ss_int reverse) {
-    return sorted(x, (int(*)(A, A))0, key, reverse);
+    return sorted(x, (__ss_int(*)(A, A))0, key, reverse);
 }
 
-template <class U> list<str *> *sorted(str *x, int (*cmp)(str *, str *), U (*key)(str *), __ss_int reverse) {
+template <class U> list<str *> *sorted(str *x, __ss_int (*cmp)(str *, str *), U (*key)(str *), __ss_int reverse) {
     list<str *> *l = new list<str *>(x);
     l->sort(cmp, key, reverse);
     return l;
 }
-list<str *> *sorted(str *x, int (*cmp)(str *, str *), __ss_int key, __ss_int reverse);
+list<str *> *sorted(str *x, __ss_int (*cmp)(str *, str *), __ss_int key, __ss_int reverse);
 template <class U> list<str *> *sorted(str *x, __ss_int cmp, U (*key)(str *), __ss_int reverse) {
     list<str *> *l = new list<str *>(x);
     l->sort(cmp, key, reverse);
@@ -3892,7 +3893,10 @@ template<class T> str *__moddict(str *v, dict<str *, T> *d) {
 /* boxing */
 
 template<class T> T __box(T t) { return t; } /* XXX */
+#ifdef __SS_LONG
 int_ *__box(__ss_int);
+#endif
+int_ *__box(int);
 bool_ *__box(__ss_bool);
 float_ *__box(double);
 

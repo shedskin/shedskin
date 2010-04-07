@@ -475,7 +475,7 @@ inline int _step(void*) {
 template<class T> inline bool _onearg(T /* stop */) {
     return false;
 }
-template<> inline bool _onearg<int>(int stop) {
+template<> inline bool _onearg(__ss_int stop) {
     return stop == -1;
 }
 
@@ -1152,7 +1152,7 @@ public:
     std::vector<T> cache;
 
     permutationsiter();
-    permutationsiter(pyiter<T> *iterable, int r);
+    permutationsiter(pyiter<T> *iterable, __ss_int r);
 
     ~permutationsiter();
 
@@ -1167,7 +1167,7 @@ template<class T> inline permutationsiter<T>::permutationsiter() {
     this->indices = 0;
     this->cycles = 0;
 }
-template<class T> inline permutationsiter<T>::permutationsiter(pyiter<T> *iterable, int r) {
+template<class T> inline permutationsiter<T>::permutationsiter(pyiter<T> *iterable, __ss_int r) {
     this->r = r;
     this->len = 0;
 
@@ -1246,7 +1246,7 @@ template<class T> tuple2<T, T> *permutationsiter<T>::next() {
 template<class T> inline permutationsiter<T> *permutations(pyiter<T> *iterable, void* /* r */) {
     return new permutationsiter<T>(iterable, iterable->__len__());
 }
-template<class T> inline permutationsiter<T> *permutations(pyiter<T> *iterable, int r) {
+template<class T> inline permutationsiter<T> *permutations(pyiter<T> *iterable, __ss_int r) {
     return new permutationsiter<T>(iterable, r);
 }
 
