@@ -4,14 +4,14 @@
 namespace __struct__ {
 
 str *r;
-tuple2<int, int> *t;
+tuple2<__ss_int, __ss_int> *t;
 
-str *pack(int x, int count, int endian) {
+str *pack(__ss_int x, __ss_int count, __ss_int endian) {
     str *r = new str("");
     for(int i=0; i<count; i++) {
         if(endian)
             r->unit += (unsigned char)((x >> 8*(count-i-1)) & 255);
-        else 
+        else
             r->unit += (unsigned char)((x >> 8*i) & 255);
 
     }
@@ -19,9 +19,9 @@ str *pack(int x, int count, int endian) {
     return r;
 }
 
-int unpack(str *s, int idx, int count, int endian) {
+__ss_int unpack(str *s, __ss_int idx, __ss_int count, __ss_int endian) {
     unsigned int r = 0;
-   
+
     for(int i=0; i<count; i++) {
         unsigned char c = s->__getitem__(i+idx)->unit[0];
         if (endian)
@@ -34,11 +34,11 @@ int unpack(str *s, int idx, int count, int endian) {
     return r;
 }
 
-void plemp(str *fmt, pyseq<int> *seq, str *s) {
+void plemp(str *fmt, pyseq<__ss_int> *seq, str *s) {
     if(seq) 
         r = new str("");
     else
-        t = new tuple2<int, int>();
+        t = new tuple2<__ss_int, __ss_int>();
 
     int endian = 1; // 0: little, 1: big
 
@@ -102,12 +102,12 @@ void plemp(str *fmt, pyseq<int> *seq, str *s) {
     }
 }
 
-str *pack_ints(str *fmt, pyseq<int> *s) {
-    plemp(fmt, s, 0); 
-    return r;   
+str *pack_ints(str *fmt, pyseq<__ss_int> *s) {
+    plemp(fmt, s, 0);
+    return r;
 }
 
-tuple2<int, int> *unpack_ints(str *fmt, str *s) {
+tuple2<__ss_int, __ss_int> *unpack_ints(str *fmt, str *s) {
     plemp(fmt, 0, s);
     return t;
 }

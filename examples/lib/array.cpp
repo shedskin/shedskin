@@ -14,13 +14,13 @@ class array
 
 class_ *cl_array;
 
-void *array::fromlist(list<int> *l) {
+void *array::fromlist(list<__ss_int> *l) {
     for(int i=0; i<len(l); i++)
         unit->append(l->__getitem__(i));
     return NULL;
 }
 
-list<int> *array::tolist() {
+list<__ss_int> *array::tolist() {
     return unit->__slice__(0,0,0,0);
 }
 
@@ -42,34 +42,34 @@ str *array::tostring() {
     return r;
 }
 
-int array::__len__() {
+__ss_int array::__len__() {
     return len(unit);
 }
 
-array *array::__slice__(int x, int l, int u, int s) {
+array *array::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
     return new array(new str("B"), unit->__slice__(x, l, u, s));
 }
 
-void *array::fromfile(file *f, int n) {
-    str *r = f->read(n); 
-    fromstring(r); 
+void *array::fromfile(file *f, __ss_int n) {
+    str *r = f->read(n);
+    fromstring(r);
     if(len(r) != n)
         throw new EOFError();
     return NULL;
 }
 
-void *array::__init__(str *flags, list<int> *arg) {
-    unit = new list<int>();
-    if(arg != NULL) 
+void *array::__init__(str *flags, list<__ss_int> *arg) {
+    unit = new list<__ss_int>();
+    if(arg != NULL)
         fromlist(arg);
     return NULL;
 }
 
-void *array::__delete__(int x, int a, int b, int s) {
+void *array::__delete__(__ss_int x, __ss_int a, __ss_int b, __ss_int s) {
     unit->__delete__(x, a, b, s);
 }
 
-void *array::__setitem__(int i, int e) {
+void *array::__setitem__(__ss_int i, __ss_int e) {
     unit->__setitem__(i, e);
 }
 

@@ -2,7 +2,7 @@
 
 # Version 1.1
 #
-# Changes in 1.1: 
+# Changes in 1.1:
 # In order to optimize the list handling I implemented the location id (lid) attribute.
 # This will make the all list serahces to become extremely more optimized.
 
@@ -11,8 +11,8 @@ class Path:
         self.nodes = nodes;
         self.totalCost = totalCost;
 
-    def getNodes(self): 
-        return self.nodes    
+    def getNodes(self):
+        return self.nodes
 
     def getTotalMoveCost(self):
         return self.totalCost
@@ -27,17 +27,17 @@ class Node:
 
     def __eq__(self, n):
         if n.lid == self.lid:
-            return 1
+            return True
         else:
-            return 0
+            return False
 
 class AStar:
 
     def __init__(self,maphandler):
         self.mh = maphandler
-                
+
     def _getBestOpenNode(self):
-        bestNode = None        
+        bestNode = None
         for n in self.on:
             if not bestNode:
                 bestNode = n
@@ -47,28 +47,28 @@ class AStar:
         return bestNode
 
     def _tracePath(self,n):
-        nodes = [];
-        totalCost = n.mCost;
-        p = n.parent;
-        nodes.insert(0,n);       
-        
+        nodes = []
+        totalCost = n.mCost
+        p = n.parent
+        nodes.insert(0,n)
+
         while 1:
-            if p.parent is None: 
+            if p.parent is None:
                 break
 
             nodes.insert(0,p)
             p=p.parent
-        
+
         return Path(nodes,totalCost)
 
-    def _handleNode(self,node,end):        
+    def _handleNode(self,node,end):
         i = self.o.index(node.lid)
         self.on.pop(i)
         self.o.pop(i)
         self.c.append(node.lid)
 
         nodes = self.mh.getAdjacentNodes(node,end)
-                   
+
         for n in nodes:
             if n.location == end:
                 # reached the destination
@@ -87,7 +87,7 @@ class AStar:
                     self.o.append(n.lid);
             else:
                 # new node, append to open list
-                self.on.append(n);                
+                self.on.append(n);
                 self.o.append(n.lid);
 
         return None
@@ -101,16 +101,16 @@ class AStar:
         fnode = self.mh.getNode(fromlocation)
         self.on.append(fnode)
         self.o.append(fnode.lid)
-        nextNode = fnode 
-               
-        while nextNode is not None: 
+        nextNode = fnode
+
+        while nextNode is not None:
             finish = self._handleNode(nextNode,end)
-            if finish:                
+            if finish:
                 return self._tracePath(finish)
             nextNode=self._getBestOpenNode()
-                
+
         return None
-      
+
 class SQ_Location:
     """A simple Square Map Location implementation"""
     def __init__(self,x,y):
@@ -120,9 +120,9 @@ class SQ_Location:
     def __eq__(self, l):
         """MUST BE IMPLEMENTED"""
         if l.x == self.x and l.y == self.y:
-            return 1
+            return True
         else:
-            return 0
+            return False
 
 class SQ_MapHandler:
     """A simple Square Map implementation"""
@@ -142,15 +142,15 @@ class SQ_MapHandler:
         if d == -1:
             return None
 
-        return Node(location,d,((y*self.w)+x));                
+        return Node(location,d,((y*self.w)+x))
 
     def getAdjacentNodes(self, curnode, dest):
-        """MUST BE IMPLEMENTED"""        
+        """MUST BE IMPLEMENTED"""
         result = []
-       
+
         cl = curnode.location
         dl = dest
-        
+
         n = self._handleNode(cl.x+1,cl.y,curnode,dl.x,dl.y)
         if n: result.append(n)
         n = self._handleNode(cl.x-1,cl.y,curnode,dl.x,dl.y)
@@ -159,7 +159,7 @@ class SQ_MapHandler:
         if n: result.append(n)
         n = self._handleNode(cl.x,cl.y-1,curnode,dl.x,dl.y)
         if n: result.append(n)
-                
+
         return result
 
     def _handleNode(self,x,y,fromnode,destx,desty):
@@ -168,12 +168,12 @@ class SQ_MapHandler:
             dx = max(x,destx) - min(x,destx)
             dy = max(y,desty) - min(y,desty)
             emCost = dx+dy
-            n.mCost += fromnode.mCost                                   
+            n.mCost += fromnode.mCost
             n.score = n.mCost+emCost
             n.parent=fromnode
             return n
 
-        return None    
+        return None
 
 if False: # shedskin
     AStar(SQ_MapHandler([1], 1, 1)).findPath(SQ_Location(1,1), SQ_Location(1,1))
