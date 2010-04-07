@@ -143,14 +143,16 @@ date *date::replace(int year, int month, int day) {
 }
 
 __time__::struct_time *date::timetuple() {
-    return new __time__::struct_time(new tuple2<int, int>(9,
-    year,
-    month,
-    day,
-    0,0,0,
-    weekday(),
-    days_before_month(year,month)+day,
-    -1));
+    return new __time__::struct_time(new tuple2<__ss_int, __ss_int>(9,
+        (__ss_int)year,
+        (__ss_int)month,
+        (__ss_int)day,
+        (__ss_int)0,
+        (__ss_int)0,
+        (__ss_int)0,
+        (__ss_int)(weekday()),
+        (__ss_int)(days_before_month(year,month)+day),
+        (__ss_int)-1));
 }
 
 int date::toordinal() {
@@ -632,12 +634,16 @@ __time__::struct_time *datetime::timetuple() {
         delete tmp;
 	}
 
-    return new __time__::struct_time(new tuple2<int, int>(9,
-                                                        year,month,day,
-                                                        hour,minute,second,
-                                                        weekday(),
-                                                        days_before_month(year,month)+day,
-                                                        dst));
+    return new __time__::struct_time(new tuple2<__ss_int, __ss_int>(9,
+        (__ss_int)year,
+        (__ss_int)month,
+        (__ss_int)day,
+        (__ss_int)hour,
+        (__ss_int)minute,
+        (__ss_int)second,
+        (__ss_int)(weekday()),
+        (__ss_int)(days_before_month(year,month)+day),
+        (__ss_int)dst));
 }
 
 __time__::struct_time *datetime::utctimetuple() {
@@ -647,15 +653,17 @@ __time__::struct_time *datetime::utctimetuple() {
 		tmp = this->__sub__(offset);
 		delete offset;
 	}
-    return new __time__::struct_time(new tuple2<int, int>(9,
-                                                        tmp->year,tmp->month,tmp->day,
-                                                        tmp->hour,tmp->minute,tmp->second,
-                                                        tmp->weekday(),
-                                                        days_before_month(tmp->year,tmp->month)+tmp->day,
-                                                        0));
+    return new __time__::struct_time(new tuple2<__ss_int, __ss_int>(9,
+        (__ss_int)(tmp->year),
+        (__ss_int)(tmp->month),
+        (__ss_int)(tmp->day),
+        (__ss_int)(tmp->hour),
+        (__ss_int)(tmp->minute),
+        (__ss_int)(tmp->second),
+        (__ss_int)(tmp->weekday()),
+        (__ss_int)(days_before_month(tmp->year,tmp->month)+tmp->day),
+        (__ss_int)0));
 }
-
-
 
 str *datetime::isoformat(str *sep) {
     if(sep->__len__()!=1) {
@@ -759,9 +767,16 @@ str *time::strftime(str* format) {
 	}
 	delete tmp;
     tmp = __time__::strftime(format, new __time__::struct_time(
-                                            new tuple2<int, int>(9,1900,1,1,//according to cpython implementation, but 0,0, according to description I found on the internet
-                                                                 hour,minute,second,
-                                                                 0,0,-1)));
+        new tuple2<__ss_int, __ss_int>((__ss_int)9,
+            (__ss_int)1900,
+            (__ss_int)1,
+            (__ss_int)1,//according to cpython implementation, but 0,0, according to description I found on the internet
+            (__ss_int)hour,
+            (__ss_int)minute,
+            (__ss_int)second,
+            (__ss_int)0,
+            (__ss_int)0,
+            (__ss_int)-1)));
 	delete format;
 	return tmp;
 }

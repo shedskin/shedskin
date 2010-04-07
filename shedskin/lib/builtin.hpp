@@ -1455,7 +1455,7 @@ template<class U> U __sub2(double a, U b) { return b->__rsub__(a); }
 template<class T> T __mul2(__ss_int n, T a) { return a->__mul__(n); }
 template<class T> T __mul2(__ss_bool n, T a) { return a->__mul__(n.value); }
 template<class T> T __mul2(double n, T a) { return a->__mul__(n); }
-template<class T> T __div2(int n, T a) { return a->__rdiv__(n); }
+template<class T> T __div2(__ss_int n, T a) { return a->__rdiv__(n); }
 template<class T> T __div2(double n, T a) { return a->__rdiv__(n); }
 
 str *__add_strs(int n, str *a, str *b, str *c);
@@ -3823,15 +3823,24 @@ template<class A> inline tuple2<A, A> *divmod(A a, A b) { return a->__divmod__(b
 template<> inline tuple2<double, double> *divmod(double a, double b) {
     return new tuple2<double, double>(2, __floordiv(a,b), __mods(a,b));
 }
+#ifdef __SS_LONG
+template<> inline tuple2<__ss_int, __ss_int> *divmod(__ss_int a, __ss_int b) {
+    return new tuple2<__ss_int, __ss_int>(2, __floordiv(a,b), __mods(a,b));
+}
+#endif
 template<> inline tuple2<int, int> *divmod(int a, int b) {
     return new tuple2<int, int>(2, __floordiv(a,b), __mods(a,b));
 }
 template<class A, class B> tuple2<double, double> *divmod(A a, B b);
+#ifdef __SS_LONG
+template<> inline tuple2<double, double> *divmod(double a, __ss_int b) { return divmod(a, (double)b); }
+template<> inline tuple2<double, double> *divmod(__ss_int a, double b) { return divmod((double)a, b); }
+#endif
 template<> inline tuple2<double, double> *divmod(double a, int b) { return divmod(a, (double)b); }
 template<> inline tuple2<double, double> *divmod(int a, double b) { return divmod((double)a, b); }
 
 tuple2<complex *, complex *> *divmod(complex *a, double b);
-tuple2<complex *, complex *> *divmod(complex *a, int b);
+tuple2<complex *, complex *> *divmod(complex *a, __ss_int b);
 
 /* dict.fromkeys */
 

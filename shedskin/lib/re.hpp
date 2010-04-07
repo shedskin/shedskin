@@ -64,8 +64,8 @@ public:
     //functions
     str *expand(str *tpl);
 
-    str *group(int n, int m = 0);
-    tuple2<str *, str *> *group(int n, int m, int o, ...);
+    str *group(int n, __ss_int m = 0);
+    tuple2<str *, str *> *group(int n, __ss_int m, __ss_int o, ...);
     str *group(int n, str *m);
     tuple2<str *, str *> *group(int n, str *m, str *o, ...);
 
