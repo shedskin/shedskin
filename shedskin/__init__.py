@@ -42,8 +42,8 @@ def usage():
 def main():
     setgx(newgx())
 
-    print '*** SHED SKIN Python-to-C++ Compiler 0.4 ***'
-    print 'Copyright 2005-2009 Mark Dufour; License GNU GPL version 3 (See LICENSE)'
+    print '*** SHED SKIN Python-to-C++ Compiler 0.5 ***'
+    print 'Copyright 2005-2010 Mark Dufour; License GNU GPL version 3 (See LICENSE)'
     print
 
     # --- some checks
