@@ -32,9 +32,9 @@ int system(str *c);
 
 class namedtuple : public pyobj {
 public:
-    tuple2<int, int> *__slice__(int x, int l, int u, int s);
+    tuple2<__ss_int, __ss_int> *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
     str *__repr__();
-    virtual int __len__() = 0;
+    virtual __ss_int __len__() = 0;
     virtual int __getitem__(int i) = 0;
 };
 
@@ -48,7 +48,7 @@ public:
     __cstat(int fd);
     void fill_er_up();
 
-    int __len__();
+    __ss_int __len__();
     int __getitem__(int i);
 
 };
@@ -135,7 +135,7 @@ public:
     __vfsstat(int fd);
     void fill_er_up();
 
-    int __len__();
+    __ss_int __len__();
     int __getitem__(int i);
 };
 
