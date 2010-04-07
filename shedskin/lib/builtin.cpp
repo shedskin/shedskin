@@ -649,7 +649,7 @@ str *str::center(int w, str *fill) {
     return r;
 }
 
-int str::__cmp__(pyobj *p) {
+__ss_int str::__cmp__(pyobj *p) {
     if (!p) return 1;
     str *b = (str *)p;
     int r = unit.compare(b->unit);
@@ -1703,7 +1703,7 @@ double ___round(double a, int n) {
 
 /* sum */
 
-int __sum(pyiter<__ss_bool> *l, int b) {
+__ss_int __sum(pyiter<__ss_bool> *l, __ss_int b) {
     __ss_bool e;
     __iter<__ss_bool> *__0;
     FOR_IN(e,l,0)
@@ -1711,23 +1711,23 @@ int __sum(pyiter<__ss_bool> *l, int b) {
     END_FOR
     return b;
 }
-int __sum(pyiter<__ss_bool> *l) { return __sum(l, 0); }
+__ss_int __sum(pyiter<__ss_bool> *l) { return __sum(l, (__ss_int)0); }
 
-int __sum(pyseq<int> *l) { return __sum(l, 0); }
-int __sum(pyseq<int> *l, int b) { return accumulate(l->units.begin(), l->units.end(), b); }
-int __sum(pyseq<__ss_bool> *l, int b) { return accumulate(l->units.begin(), l->units.end(), b); }
-double __sum(pyseq<int> *l, double b) { return accumulate(l->units.begin(), l->units.end(), 0)+b; }
+__ss_int __sum(pyseq<__ss_int> *l) { return __sum(l, (__ss_int)0); }
+__ss_int __sum(pyseq<__ss_int> *l, __ss_int b) { return accumulate(l->units.begin(), l->units.end(), b); }
+__ss_int __sum(pyseq<__ss_bool> *l, __ss_int b) { return accumulate(l->units.begin(), l->units.end(), b); }
+double __sum(pyseq<__ss_int> *l, double b) { return accumulate(l->units.begin(), l->units.end(), 0)+b; }
 double __sum(pyseq<double> *l, double b) { return accumulate(l->units.begin(), l->units.end(), b); }
 
 /* sorted */
 
-list<str *> *sorted(str *t, int (*cmp)(str *, str *), __ss_int key, __ss_int reverse) {
+list<str *> *sorted(str *t, __ss_int (*cmp)(str *, str *), __ss_int key, __ss_int reverse) {
     list<str *> *l = new list<str *>(t);
     l->sort(cmp, key, reverse);
     return l;
 }
 list<str *> *sorted(str *t, __ss_int, __ss_int key, __ss_int reverse) {
-    return sorted(t, (int (*)(str *, str *))0, key, reverse);
+    return sorted(t, (__ss_int (*)(str *, str *))0, key, reverse);
 }
 
 /* mod helpers */
@@ -1988,7 +1988,12 @@ str *__modct(str *fmt, int n, ...) {
      return s;
 }
 
+#ifdef __SS_LONG
 int_ *__box(__ss_int i) {
+    return new int_(i);
+}
+#endif
+int_ *__box(int i) {
     return new int_(i);
 }
 bool_ *__box(__ss_bool b) {

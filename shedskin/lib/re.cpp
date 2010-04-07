@@ -329,14 +329,14 @@ str *re_object::sub(replfunc func, str *string, int maxn) {
 }
 
 
-tuple2<str *, int> *re_object::subn(str *repl, str *subj, int maxn)
+tuple2<str *, __ss_int> *re_object::subn(str *repl, str *subj, int maxn)
 {
     str *r;
     int n;
 
     r = __subn(repl, subj, maxn, &n);
 
-    return new tuple2<str *, int>(2, r, n);
+    return new tuple2<str *, __ss_int>(2, r, n);
 }
 
 list<str *> *re_object::__splitfind(str *subj, int maxn, char onlyfind, int flags)
@@ -685,10 +685,10 @@ str *sub(str *pat, replfunc func, str *subj, int maxn) {
     return r;
 }
 
-tuple2<str *, int> *subn(str *pat, str *repl, str *subj, int maxn)
+tuple2<str *, __ss_int> *subn(str *pat, str *repl, str *subj, int maxn)
 {
     re_object *ro;
-    tuple2<str *, int> *r;
+    tuple2<str *, __ss_int> *r;
 
     ro = compile(pat, 0);
     r = ro->subn(repl, subj, maxn);

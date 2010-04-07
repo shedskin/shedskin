@@ -18,7 +18,7 @@ class DictReader;
 class DictWriter;
 
 extern str *__name__;
-extern list<int> *__0, *__1;
+extern list<__ss_int> *__0, *__1;
 extern int EAT_CRNL, ESCAPED_CHAR, ESCAPE_IN_QUOTED_FIELD, IN_FIELD, IN_QUOTED_FIELD, QUOTE_ALL, QUOTE_IN_QUOTED_FIELD, QUOTE_MINIMAL, QUOTE_NONE, QUOTE_NONNUMERIC, START_FIELD, START_RECORD, _field_limit;
 extern OSError *__exception;
 

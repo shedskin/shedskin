@@ -221,8 +221,8 @@ public:
 
     defaultdict(V (*func)(), pyiter<tuple2<K, V> *> *i) {
         this->func = func;
-        __iter<tuple2<K, int> *> *__0;
-        tuple2<K, int> *k;
+        __iter<tuple2<K, __ss_int> *> *__0;
+        tuple2<K, __ss_int> *k;
         FOR_IN(k, i, 0)
             this->units[k->__getfirst__()] = k->__getsecond__();
         END_FOR

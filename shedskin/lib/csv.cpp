@@ -8,7 +8,7 @@ list<void *> *const_0;
 str *const_88;
 
 str *__name__;
-list<int> *__0, *__1;
+list<__ss_int> *__0, *__1;
 int EAT_CRNL, ESCAPED_CHAR, ESCAPE_IN_QUOTED_FIELD, IN_FIELD, IN_QUOTED_FIELD, QUOTE_ALL, QUOTE_IN_QUOTED_FIELD, QUOTE_MINIMAL, QUOTE_NONE, QUOTE_NONNUMERIC, START_FIELD, START_RECORD, _field_limit;
 OSError *__exception;
 
