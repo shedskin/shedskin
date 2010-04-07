@@ -72,7 +72,7 @@ int struct_time::__getitem__(int n) {
                     this->tm_isdst)))->__getitem__(n);
 }
 
-struct_time::struct_time(tuple2<int, int> *_tuple) {
+struct_time::struct_time(tuple2<__ss_int, __ss_int> *_tuple) {
     this->__class__ = cl_struct_time;
 
     if ((len(_tuple)!=9)) {
@@ -111,16 +111,16 @@ tm* tuple2tm(struct_time* tuple) {
 }
 
 struct_time *tm2tuple(tm* tm_time) {
-    struct_time *time_tuple = new struct_time(new tuple2<int, int>(9,
-        tm_time->tm_year + 1900,
-        tm_time->tm_mon + 1,
-        tm_time->tm_mday,
-        tm_time->tm_hour,
-        tm_time->tm_min,
-        tm_time->tm_sec,
-        tm_time->tm_wday == 0 ? 6 : tm_time->tm_wday - 1,
-        tm_time->tm_yday + 1,
-        tm_time->tm_isdst));
+    struct_time *time_tuple = new struct_time(new tuple2<__ss_int, __ss_int>(9,
+        (__ss_int)(tm_time->tm_year + 1900),
+        (__ss_int)(tm_time->tm_mon + 1),
+        (__ss_int)(tm_time->tm_mday),
+        (__ss_int)(tm_time->tm_hour),
+        (__ss_int)(tm_time->tm_min),
+        (__ss_int)(tm_time->tm_sec),
+        (__ss_int)(tm_time->tm_wday == 0 ? 6 : tm_time->tm_wday - 1),
+        (__ss_int)(tm_time->tm_yday + 1),
+        (__ss_int)(tm_time->tm_isdst)));
 
     return time_tuple;
 }
@@ -149,7 +149,7 @@ double mktime(struct_time *tuple) {
     return ::mktime(tuple2tm(tuple));
 }
 
-double mktime(tuple2<int, int> *tuple) {
+double mktime(tuple2<__ss_int, __ss_int> *tuple) {
     struct_time *st;
     try {
         st = new struct_time(tuple);
@@ -217,7 +217,7 @@ str *strftime(str *format) {
     return strftime(format, localtime());
 }
 
-str *strftime(str *format, tuple2<int, int> *tuple) {
+str *strftime(str *format, tuple2<__ss_int, __ss_int> *tuple) {
     struct_time *st;
     try {
         st = new struct_time(tuple);

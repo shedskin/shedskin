@@ -51,13 +51,13 @@ public:
         __class__ = cl_struct_time;
     }
     int __getitem__(int n);
-    struct_time(tuple2<int, int> *_tuple);
+    struct_time(tuple2<__ss_int, __ss_int> *_tuple);
     str *__repr__();
 };
 
 
 double mktime(struct_time *tuple);
-double mktime(tuple2<int, int> *tuple);
+double mktime(tuple2<__ss_int, __ss_int> *tuple);
 
 struct_time *localtime();
 struct_time *localtime(const double timep);
@@ -73,7 +73,7 @@ str *ctime(const double seconds);
 
 str *strftime(str *format, struct_time* tuple);
 str *strftime(str *format);
-str *strftime(str *format, tuple2<int, int> *tuple);
+str *strftime(str *format, tuple2<__ss_int, __ss_int> *tuple);
 
 struct_time *strptime(str *string, str *format);
 #ifdef WIN32

@@ -1561,7 +1561,7 @@ complex *__power(complex *a, double b) {
 /* division */
 
 tuple2<complex *, complex *> *divmod(complex *a, double b) { return a->__divmod__(b); }
-tuple2<complex *, complex *> *divmod(complex *a, int b) { return a->__divmod__(b); }
+tuple2<complex *, complex *> *divmod(complex *a, __ss_int b) { return a->__divmod__(b); }
 
 /* slicing */
 

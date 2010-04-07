@@ -76,7 +76,7 @@ public:
         return False;
     }
 
-    int __len__() {
+    __ss_int __len__() {
         return units.size();
     }
 
