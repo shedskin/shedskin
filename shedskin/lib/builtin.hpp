@@ -1395,9 +1395,6 @@ template<class T> static inline int __wrap(T a, int i) {
     return i;
 }
 
-/* XXX deprecated */
-#define ELEM(a,i) a->units[__wrap(a,i)]
-
 /* representation */
 
 template<class T> str *__str(T t) { if (!t) return new str("None"); return t->__str__(); }

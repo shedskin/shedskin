@@ -25,7 +25,7 @@ class ConfigParser;
 
 extern list<str *> *__all__;
 extern str *DEFAULTSECT, *__name__;
-extern int MAX_INTERPOLATION_DEPTH;
+extern __ss_int MAX_INTERPOLATION_DEPTH;
 
 extern class_ *cl_Error;
 class Error : public Exception {
@@ -41,7 +41,7 @@ public:
         this->__class__ = cl_Error;
         __init__(msg);
     }
-    int __init__(str *msg);
+    void *__init__(str *msg);
 };
 
 extern class_ *cl_NoSectionError;
@@ -57,7 +57,7 @@ public:
         this->__class__ = cl_NoSectionError;
         __init__(section);
     }
-    int __init__(str *section);
+    void *__init__(str *section);
 };
 
 extern class_ *cl_DuplicateSectionError;
@@ -73,7 +73,7 @@ public:
         this->__class__ = cl_DuplicateSectionError;
         __init__(section);
     }
-    int __init__(str *section);
+    void *__init__(str *section);
 };
 
 extern class_ *cl_NoOptionError;
@@ -90,7 +90,7 @@ public:
         this->__class__ = cl_NoOptionError;
         __init__(option, section);
     }
-    int __init__(str *option, str *section);
+    void *__init__(str *option, str *section);
 };
 
 extern class_ *cl_InterpolationError;
@@ -108,7 +108,7 @@ public:
         this->__class__ = cl_InterpolationError;
         __init__(option, section, msg);
     }
-    int __init__(str *option, str *section, str *msg);
+    void *__init__(str *option, str *section, str *msg);
 };
 
 extern class_ *cl_InterpolationMissingOptionError;
@@ -124,7 +124,7 @@ public:
         this->__class__ = cl_InterpolationMissingOptionError;
         __init__(option, section, rawval, reference);
     }
-    int __init__(str *option, str *section, str *rawval, str *reference);
+    void *__init__(str *option, str *section, str *rawval, str *reference);
 };
 
 extern class_ *cl_InterpolationSyntaxError;
@@ -150,7 +150,7 @@ public:
         this->__class__ = cl_InterpolationDepthError;
         __init__(option, section, rawval);
     }
-    int __init__(str *option, str *section, str *rawval);
+    void *__init__(str *option, str *section, str *rawval);
 };
 
 extern class_ *cl_ParsingError;
@@ -159,7 +159,7 @@ class ParsingError : public Error {
 Raised when a configuration file does not follow legal syntax.
 */
 public:
-    list<tuple2<int, str *> *> *errors;
+    list<tuple2<__ss_int, str *> *> *errors;
     str *filename;
 
     ParsingError() {}
@@ -167,8 +167,8 @@ public:
         this->__class__ = cl_ParsingError;
         __init__(filename);
     }
-    int __init__(str *filename);
-    int append(int lineno, str *line);
+    void *__init__(str *filename);
+    void *append(__ss_int lineno, str *line);
 };
 
 extern class_ *cl_MissingSectionHeaderError;
@@ -177,21 +177,21 @@ class MissingSectionHeaderError : public ParsingError {
 Raised when a key-value pair is found before any section header.
 */
 public:
-    int lineno;
+    __ss_int lineno;
     str *line;
 
     MissingSectionHeaderError() {}
-    MissingSectionHeaderError(str *filename, int lineno, str *line) {
+    MissingSectionHeaderError(str *filename, __ss_int lineno, str *line) {
         this->__class__ = cl_MissingSectionHeaderError;
         __init__(filename, lineno, line);
     }
-    int __init__(str *filename, int lineno, str *line);
+    void *__init__(str *filename, __ss_int lineno, str *line);
 };
 
 extern class_ *cl_RawConfigParser;
 class RawConfigParser : public pyobj {
 public:
-    static dict<str *, int> *_boolean_states;
+    static dict<str *, __ss_int> *_boolean_states;
     static __re__::re_object *SECTCRE;
     static __re__::re_object *OPTCRE;
 
@@ -203,24 +203,24 @@ public:
         this->__class__ = cl_RawConfigParser;
         __init__(defaults);
     }
-    virtual str *get(str *section, str *option, int raw, dict<str *, str *> *vars);
+    virtual str *get(str *section, str *option, __ss_int raw, dict<str *, str *> *vars);
     str *optionxform(str *optionstr);
     double getfloat(str *section, str *option);
     void *_set(str *section, str *option, str *value);
     __ss_bool has_section(str *section);
-    int remove_option(str *section, str *option);
-    int remove_section(str *section);
-    int __init__(dict<str *, str *> *defaults);
-    int has_option(str *section, str *option);
+    __ss_bool remove_option(str *section, str *option);
+    __ss_bool remove_section(str *section);
+    void *__init__(dict<str *, str *> *defaults);
+    __ss_bool has_option(str *section, str *option);
     void *write(file *fp);
     void *add_section(str *section);
     list<str *> *sections();
     list<str *> *read(str *filename);
     list<str *> *read(list<str *> *filenames);
-    int getboolean(str *section, str *option);
+    __ss_bool getboolean(str *section, str *option);
     list<tuple2<str *, str *> *> *items(str *section);
     void *_read(file *fp, str *fpname);
-    int getint(str *section, str *option);
+    __ss_int getint(str *section, str *option);
     dict<str *, str *> *defaults();
     list<str *> *options(str *section);
 };
@@ -237,44 +237,44 @@ public:
         __init__(defaults);
     }
     str *_interpolate(str *section, str *option, str *rawval, dict<str *, str *> *vars);
-    str *get(str *section, str *option, int raw, dict<str *, str *> *vars);
-    list<tuple2<str *, str *> *> *items(str *section, int raw, dict<str *, str *> *vars);
+    str *get(str *section, str *option, __ss_int raw, dict<str *, str *> *vars);
+    list<tuple2<str *, str *> *> *items(str *section, __ss_int raw, dict<str *, str *> *vars);
 };
 
 str *_interpolation_replace(__re__::match_object *match);
 
 extern str * default_11;
-extern int  default_10;
-extern int  default_13;
-extern int  default_23;
-extern int  default_2;
-extern int  default_25;
-extern int  default_28;
-extern int  default_1;
-extern int  default_5;
-extern int  default_3;
-extern int  default_19;
-extern int  default_29;
-extern int  default_12;
+extern __ss_int  default_10;
+extern __ss_int  default_13;
+extern __ss_int  default_23;
+extern __ss_int  default_2;
+extern __ss_int  default_25;
+extern __ss_int  default_28;
+extern __ss_int  default_1;
+extern __ss_int  default_5;
+extern __ss_int  default_3;
+extern __ss_int  default_19;
+extern __ss_int  default_29;
+extern __ss_int  default_12;
 extern str * default_22;
-extern int  default_31;
-extern int  default_30;
+extern __ss_int  default_31;
+extern __ss_int  default_30;
 extern str * default_9;
-extern int  default_8;
+extern __ss_int  default_8;
 extern str * default_24;
 extern str * default_14;
 extern str * default_16;
 extern str * default_26;
-extern int  default_17;
+extern __ss_int  default_17;
 extern str * default_18;
-extern int  default_6;
-extern int  default_15;
-extern int  default_27;
+extern __ss_int  default_6;
+extern __ss_int  default_15;
+extern __ss_int  default_27;
 extern str * default_20;
-extern int  default_7;
-extern int  default_4;
+extern __ss_int  default_7;
+extern __ss_int  default_4;
 extern str * default_0;
-extern int  default_21;
+extern __ss_int  default_21;
 
 void __init();
 
