@@ -19,7 +19,7 @@ list<str *> *glob(str *pathname);
 __iter<str *> *iglob(str *pathname);
 list<str *> *glob1(str *dirname, str *pattern);
 list<str *> *glob0(str *dirname, str *basename);
-int has_magic(str *s);
+__ss_bool has_magic(str *s);
 
 void __init(void);
 

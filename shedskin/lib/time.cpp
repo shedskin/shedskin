@@ -4,7 +4,7 @@
 namespace __time__ {
 
 clock_t start;
-int timezone;
+__ss_int timezone;
 tuple2<str *, str *> *tzname;
 
 #ifdef WIN32
@@ -35,12 +35,12 @@ double clock()
        return diff / divisor; */
 }
 
-int gettimeofday (struct timeval *tv, struct __ss_timezone *tz)
+__ss_int gettimeofday (struct timeval *tv, struct __ss_timezone *tz)
 {
    struct _timeb tb;
 
    if (!tv)
-      return (-1);
+      return -1;
 
   _ftime (&tb);
   tv->tv_sec  = tb.time;
@@ -50,7 +50,7 @@ int gettimeofday (struct timeval *tv, struct __ss_timezone *tz)
     tz->tz_minuteswest = -60 * _timezone;
     tz->tz_dsttime = _daylight;
   }
-  return (0);
+  return 0;
 }
 #else
 
@@ -64,12 +64,13 @@ str *const_0, *const_1;
 
 class_ *cl_struct_time;
 
-int struct_time::__getitem__(int n) {
+__ss_int struct_time::__getitem__(__ss_int n) {
 
-    return ((new tuple2<int, int>(9, this->tm_year, this->tm_mon,
-                    this->tm_mday, this->tm_hour, this->tm_min, this->tm_sec,
-                    this->tm_wday, this->tm_yday,
-                    this->tm_isdst)))->__getitem__(n);
+    return ((new tuple2<__ss_int, __ss_int>(9,
+        this->tm_year, this->tm_mon,
+        this->tm_mday, this->tm_hour, this->tm_min, this->tm_sec,
+        this->tm_wday, this->tm_yday,
+        this->tm_isdst)))->__getitem__(n);
 }
 
 struct_time::struct_time(tuple2<__ss_int, __ss_int> *_tuple) {
@@ -264,8 +265,8 @@ void __init() {
     const_1 = new str("time.struct_time(tm_year=%d, tm_mon=%d, tm_mday=%d, tm_hour=%d, tm_min=%d, tm_sec=%d, tm_wday=%d, tm_yday=%d, tm_isdst=%d)");
     struct_time* gmt = gmtime();
     struct_time* localt = localtime();
-    int gmt_hour = gmt->tm_hour;
-    int localt_hour = localt->tm_hour;
+    __ss_int gmt_hour = gmt->tm_hour;
+    __ss_int localt_hour = localt->tm_hour;
     if (gmt->tm_mday > localt->tm_mday) {
         localt_hour -= 24;
     } else if (gmt->tm_mday < localt->tm_mday) {
