@@ -257,10 +257,6 @@ str::str(const char *s, int size) : unit(__GC_STRING(s, size)), cached_hash(0) {
     __class__ = cl_str_;
 }
 
-str *str::__getitem__(int i) {
-    i = __wrap(this, i);
-    return __char_cache[(unsigned char)unit[i]];
-}
 str *str::__getfirst__() {
     return __getitem__(0);
 }
@@ -1794,9 +1790,9 @@ template<class T> str *do_asprintf(const char *fmt, T t, pyobj *a1, pyobj *a2) {
     int x;
     str *r;
     if(a2)
-        x = asprintf(&d, fmt, (int)(((int_ *)a1)->unit), (int)(((int_ *)a2)->unit), t);
+        x = asprintf(&d, fmt, ((int_ *)a1)->unit, ((int_ *)a2)->unit, t);
     else if(a1)
-        x = asprintf(&d, fmt, (int)(((int_ *)a1)->unit), t); /* XXX (int) */
+        x = asprintf(&d, fmt, ((int_ *)a1)->unit, t);
     else
         x = asprintf(&d, fmt, t);
     r = new str(d);
@@ -1822,7 +1818,11 @@ void __modfill(str **fmt, pyobj *t, str **s, pyobj *a1, pyobj *a2) {
     else if(c == '%')
         add = new str("%");
     else if(t->__class__ == cl_int_) {
+#ifdef __SS_LONG
+        add = do_asprintf(((*fmt)->unit.substr(i, j-i)+__GC_STRING("lld")).c_str(), ((int_ *)t)->unit, a1, a2);
+#else
         add = do_asprintf((*fmt)->unit.substr(i, j+1-i).c_str(), ((int_ *)t)->unit, a1, a2);
+#endif
     } else { /* cl_float_ */
         if(c == 'H') {
             (*fmt)->unit.replace(j, 1, ".12g");
@@ -1892,11 +1892,7 @@ str *__mod5(list<pyobj *> *vals, int newline) {
         else if(p->__class__ == cl_float_)
             fmt->append(new str("%H"));
         else if(p->__class__== cl_int_)
-#ifdef __SS_LONG
-            fmt->append(new str("%lld"));
-#else
             fmt->append(new str("%d"));
-#endif
         else
             fmt->append(new str("%s"));
     }
