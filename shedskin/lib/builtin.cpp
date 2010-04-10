@@ -257,13 +257,6 @@ str::str(const char *s, int size) : unit(__GC_STRING(s, size)), cached_hash(0) {
     __class__ = cl_str_;
 }
 
-str *str::__getfirst__() {
-    return __getitem__(0);
-}
-str *str::__getsecond__() {
-    return __getitem__(1);
-}
-
 __ss_int str::__len__() {
     return unit.size();
 }

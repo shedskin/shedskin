@@ -1883,18 +1883,11 @@ class generateVisitor(ASTVisitor):
         return '%s->%s' % (temp, sel)
 
     def subs_assign(self, lvalue, func):
-        if defclass('list') in [t[0] for t in self.mergeinh[lvalue.expr]]:
-            self.append('ELEM((')
-            self.refer(lvalue.expr, func)
-            self.append('),')
-            self.visit(lvalue.subs[0], func)
-            self.append(')')
+        if len(lvalue.subs) > 1:
+            subs = inode(lvalue.expr).faketuple
         else:
-            if len(lvalue.subs) > 1:
-                subs = inode(lvalue.expr).faketuple
-            else:
-                subs = lvalue.subs[0]
-            self.visitm(lvalue.expr, self.connector(lvalue.expr, func), '__setitem__(', subs, ', ', func)
+            subs = lvalue.subs[0]
+        self.visitm(lvalue.expr, self.connector(lvalue.expr, func), '__setitem__(', subs, ', ', func)
 
     def visitAssign(self, node, func=None):
         #temp vars
@@ -2004,9 +1997,6 @@ class generateVisitor(ASTVisitor):
         # expr[expr] = expr
         if isinstance(lvalue, Subscript) and not isinstance(lvalue.subs[0], Sliceobj):
             self.subs_assign(lvalue, func)
-            if defclass('list') in [t[0] for t in self.mergeinh[lvalue.expr]]:
-                self.append(' = ')
-
             if isinstance(rvalue, str):
                 self.append(rvalue)
             elif rvalue in getmv().tempcount:
@@ -2016,9 +2006,7 @@ class generateVisitor(ASTVisitor):
                 if cast: self.append('((%s)' % cast)
                 self.visit(rvalue, func)
                 if cast: self.append(')')
-
-            if not defclass('list') in [t[0] for t in self.mergeinh[lvalue.expr]]:
-                self.append(')')
+            self.append(')')
             self.eol()
 
         # expr.x = expr
