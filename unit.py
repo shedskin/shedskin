@@ -14,6 +14,10 @@ try:
 except BaseException as ork:
     print 'base exc', ork
 
+# unbound ident
+import testdata.subsub
+print list(testdata.subsub.blah(4))
+
 ''', '''
 output(equal=True)
 '''),
