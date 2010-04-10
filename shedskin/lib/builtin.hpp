@@ -1288,7 +1288,7 @@ public:
     int code;
     str *message;
     SystemExit(str *msg) { this->message = msg; this->msg = msg; this->code = 1; }
-    SystemExit(int code) { this->message = NULL; this->msg = __str(code); this->code = code; }
+    SystemExit(__ss_int code) { this->message = NULL; this->msg = __str(code); this->code = code; }
     SystemExit() { this->message = NULL; this->msg = __str(0); this->code = 0; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_SystemExit; }

@@ -71,7 +71,7 @@ list<str *> *filter(list<str *> *names, str *pat) {
     str *name, *res;
     __re__::re_object *cpat;
     __iter<str *> *__1, *__4;
-    int __2;
+    __ss_int __2;
 
     result = (new list<str *>());
     pat = __os__::__path__::normcase(pat);
@@ -113,11 +113,11 @@ __ss_bool fnmatchcase(str *name, str *pat) {
 str *translate(str *pat) {
     /**
     Translate a shell PATTERN to a regular expression.
-    
+
     There is no way to quote meta-characters.
     */
     str *c, *res, *stuff;
-    int __10, __11, __12, __6, __7, __8, __9, i, j, n;
+    __ss_int __10, __11, __12, __6, __7, __8, __9, i, j, n;
 
     __6 = len(pat);
     i = 0;

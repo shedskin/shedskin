@@ -40,10 +40,10 @@ inline double fmod(double x, double y) {
 }
 
 inline tuple2<double, double> *modf(double x) {
-    return (new tuple2<double, double>(2, x-(int)x, (double)(int)x));
+    return (new tuple2<double, double>(2, x-(__ss_int)x, (double)(__ss_int)x));
 }
 
-inline double ldexp(double x, int i) {
+inline double ldexp(double x, __ss_int i) {
     return std::ldexp(x, i);
 }
 

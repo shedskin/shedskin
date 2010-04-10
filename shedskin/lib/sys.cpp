@@ -9,16 +9,16 @@ str *version;
 
 file *__ss_stdin, *__ss_stdout, *__ss_stderr;
 
-tuple2<int, int> *version_info;
+tuple2<__ss_int, __ss_int> *version_info;
 str *__name__, *copyright, *platform;
-int hexversion, maxint;
+__ss_int hexversion, maxint;
 
 void __init(int c, char **v) {
     argv = new list<str *>();
 
     version = new str("Shed Skin Python-to-C++ Compiler 0.5\n[GCC ");
     version = version->__add__(new str(__VERSION__))->__add__(new str("]"));
-    version_info = new tuple2<int, int>(5, 0, 5, 0, 0, 0);
+    version_info = new tuple2<__ss_int, __ss_int>(5, (__ss_int)0, (__ss_int)5, (__ss_int)0, (__ss_int)0, (__ss_int)0);
     hexversion = 0x00050000;
 
     copyright = new str("Copyright (c) Mark Dufour 2005-2010.\nAll Rights Reserved.");
@@ -38,10 +38,10 @@ void __init(int c, char **v) {
 }
 
 void __ss_exit() {
-    throw new SystemExit(0);
+    throw new SystemExit((__ss_int)0);
 };
 
-void *setrecursionlimit(int limit) {
+void *setrecursionlimit(__ss_int limit) {
     return NULL;
 }
 

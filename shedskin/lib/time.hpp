@@ -18,10 +18,10 @@ struct  __ss_timezone {
     int     tz_dsttime;
 };
 
-int gettimeofday (struct timeval *tv, struct __ss_timezone *tz);
+__ss_int gettimeofday (struct timeval *tv, struct __ss_timezone *tz);
 #endif
 
-extern int timezone;
+extern __ss_int timezone;
 extern tuple2<str *, str *> *tzname;
 
 double clock();
@@ -37,20 +37,20 @@ extern str *__name__;
 extern class_ *cl_struct_time;
 class struct_time : public pyobj {
 public:
-    int tm_sec;
-    int tm_hour;
-    int tm_mday;
-    int tm_isdst;
-    int tm_year;
-    int tm_mon;
-    int tm_yday;
-    int tm_wday;
-    int tm_min;
+    __ss_int tm_sec;
+    __ss_int tm_hour;
+    __ss_int tm_mday;
+    __ss_int tm_isdst;
+    __ss_int tm_year;
+    __ss_int tm_mon;
+    __ss_int tm_yday;
+    __ss_int tm_wday;
+    __ss_int tm_min;
 
     struct_time() {
         __class__ = cl_struct_time;
     }
-    int __getitem__(int n);
+    __ss_int __getitem__(__ss_int n);
     struct_time(tuple2<__ss_int, __ss_int> *_tuple);
     str *__repr__();
 };

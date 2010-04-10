@@ -8,7 +8,7 @@ namespace __datetime__ {
 str *date_format,*hour_format1,*hour_format2,*ctime_format;
 str *one_day_string,*minus_one_day_string,*multiple_days_string,*point_string,*space_string,*none_string,*empty_string,*z_string,*Z_string;
 
-int MINYEAR, MAXYEAR;
+__ss_int MINYEAR, MAXYEAR;
 
 list<str *> *DayNames, *MonthNames;
 
@@ -45,17 +45,17 @@ void __init() {
 
 /* helper functions */
 
-static int divmod(int x, int y, int *r);
-static int is_leap(int year);
-static int days_in_month(int year, int month);
-static int days_before_month(int year, int month);
-static int days_before_year(int year);
-static void ord_to_ymd(int ordinal, int *year, int *month, int *day);
-static int ymd_to_ord(int year, int month, int day);
-static int iso_week1_monday(int year);
+static __ss_int divmod(__ss_int x, __ss_int y, __ss_int *r);
+static __ss_int is_leap(__ss_int year);
+static __ss_int days_in_month(__ss_int year, __ss_int month);
+static __ss_int days_before_month(__ss_int year, __ss_int month);
+static __ss_int days_before_year(__ss_int year);
+static void ord_to_ymd(__ss_int ordinal, __ss_int *year, __ss_int *month, __ss_int *day);
+static __ss_int ymd_to_ord(__ss_int year, __ss_int month, __ss_int day);
+static __ss_int iso_week1_monday(__ss_int year);
 
 //class date
-date::date(int year, int month, int day){
+date::date(__ss_int year, __ss_int month, __ss_int day){
     __class__=cl_date;
 
     if(year<MINYEAR || year>MAXYEAR)    throw new ValueError(new str("year is out of range"));
@@ -76,7 +76,7 @@ date *date::today() {
     return new date(t->tm_year+1900,t->tm_mon+1,t->tm_mday);
 }
 
-date* date::fromtimestamp(int timestamp) {
+date* date::fromtimestamp(__ss_int timestamp) {
 	//date from timestamp using localtime
 	struct tm *tm;
 	time_t t = (time_t)timestamp;
@@ -89,7 +89,7 @@ date* date::fromtimestamp(int timestamp) {
 		throw new ValueError(new str("timestamp out of range for platform localtime() function"));
 }
 
-date* date::fromordinal(int o) {
+date* date::fromordinal(__ss_int o) {
 	//OverflowError is raised if date2.year  would be smaller than MINYEAR or larger than MAXYEAR.
 	 if(o<1)		//1 = date.min.toordinal()
 		throw new OverflowError(new str("ordinal must be >= 1"));
@@ -113,7 +113,7 @@ timedelta *date::__sub__(date *other) {
     return new timedelta(toordinal()-other->toordinal(), 0, 0, 0 ,0, 0, 0);
 }
 
-int date::__cmp__(date *other) {
+__ss_int date::__cmp__(date *other) {
 	if(year==other->year && month==other->month && day==other->day)
 		return 0;
     if (year*366+month*31+day > other->year*366+other->month*31+other->day)
@@ -121,14 +121,14 @@ int date::__cmp__(date *other) {
     return -1;
 }
 
-int date::__eq__(date *other) { return __cmp__(other) == 0; }
-int date::__ne__(date *other) { return __cmp__(other) != 0; }
-int date::__gt__(date *other) { return __cmp__(other) == 1; }
-int date::__lt__(date *other) { return __cmp__(other) == -1; }
-int date::__ge__(date *other) { return __cmp__(other) != -1; }
-int date::__le__(date *other) { return __cmp__(other) != 1; }
+__ss_bool date::__eq__(date *other) { return __mbool(__cmp__(other) == 0); }
+__ss_bool date::__ne__(date *other) { return __mbool(__cmp__(other) != 0); }
+__ss_bool date::__gt__(date *other) { return __mbool(__cmp__(other) == 1); }
+__ss_bool date::__lt__(date *other) { return __mbool(__cmp__(other) == -1); }
+__ss_bool date::__ge__(date *other) { return __mbool(__cmp__(other) != -1); }
+__ss_bool date::__le__(date *other) { return __mbool(__cmp__(other) != 1); }
 
-date *date::replace(int year, int month, int day) {
+date *date::replace(__ss_int year, __ss_int month, __ss_int day) {
     date* t = new date(this);
     if(year!=0) {
         if(year<MINYEAR || year>MAXYEAR)    throw new ValueError(new str("year is out of range"));
@@ -144,36 +144,32 @@ date *date::replace(int year, int month, int day) {
 
 __time__::struct_time *date::timetuple() {
     return new __time__::struct_time(new tuple2<__ss_int, __ss_int>(9,
-        (__ss_int)year,
-        (__ss_int)month,
-        (__ss_int)day,
-        (__ss_int)0,
-        (__ss_int)0,
-        (__ss_int)0,
+        (__ss_int)year, (__ss_int)month, (__ss_int)day,
+        (__ss_int)0, (__ss_int)0, (__ss_int)0,
         (__ss_int)(weekday()),
         (__ss_int)(days_before_month(year,month)+day),
-        (__ss_int)-1));
+        (__ss_int)(-1)));
 }
 
-int date::toordinal() {
+__ss_int date::toordinal() {
     return ymd_to_ord(year,month,day);
 }
 
-int date::weekday() {
+__ss_int date::weekday() {
     return (ymd_to_ord(year, month, day) + 6) % 7;
 }
 
-int date::isoweekday() {
+__ss_int date::isoweekday() {
     return (ymd_to_ord(year, month, day) + 6) % 7+1;
 }
 
-tuple2<int, int> *date::isocalendar() {
+tuple2<__ss_int, __ss_int> *date::isocalendar() {
 //modified from cpython
-    int  week1_monday = iso_week1_monday(year);
-    int  today        = ymd_to_ord(year, month, day);
-    int  tmpyear      = year;
-    int  tmpweek;
-    int  tmpday;
+    __ss_int  week1_monday = iso_week1_monday(year);
+    __ss_int  today        = ymd_to_ord(year, month, day);
+    __ss_int  tmpyear      = year;
+    __ss_int  tmpweek;
+    __ss_int  tmpday;
 
     tmpweek = divmod(today - week1_monday, 7, &tmpday);
     if (tmpweek < 0) {
@@ -185,7 +181,7 @@ tuple2<int, int> *date::isocalendar() {
         ++tmpyear;
         tmpweek = 0;
     }
-    return new tuple2<int, int>(3, tmpyear, tmpweek+1, tmpday+1);
+    return new tuple2<__ss_int, __ss_int>(3, (__ss_int)tmpyear, (__ss_int)(tmpweek+1), (__ss_int)(tmpday+1));
 }
 
 str *date::isoformat() {
@@ -197,7 +193,7 @@ str *date::__str__() {
 }
 
 str *date::ctime() {
-    int wday = weekday();
+    __ss_int wday = weekday();
 
     return __modct(ctime_format, 7, DayNames->__getitem__(wday), MonthNames->__getitem__(month-1),
                         __box(day), __box(0), __box(0), __box(0), __box(year));
@@ -270,7 +266,7 @@ str *tzinfo::minutes_to_str(datetime *dt) {
 
 
 //class datetime
-datetime::datetime(int year, int month, int day, int hour, int minute, int second, int microsecond, tzinfo *tzinfo):date::date(year,month,day) {
+datetime::datetime(__ss_int year, __ss_int month, __ss_int day, __ss_int hour, __ss_int minute, __ss_int second, __ss_int microsecond, tzinfo *tzinfo):date::date(year,month,day) {
     __class__=cl_datetime;
 
     if(hour>=24 || hour<0) throw new ValueError(new str("hour must be in 0..23"));
@@ -335,14 +331,14 @@ datetime *datetime::from_timestamp(double timestamp, tzinfo *tzinfo, bool timefn
 	//modified from cpython
 	time_t timet;
 	double fraction;
-	int us;
+	__ss_int us;
 
 	timet = (time_t)timestamp;
 	fraction = timestamp - (double)timet;
 	if (fraction * 1e6 >= 0.0)
-		us = (int)floor(fraction * 1e6 + 0.5);
+		us = (__ss_int)floor(fraction * 1e6 + 0.5);
 	else
-		us = (int)ceil(fraction * 1e6 - 0.5);
+		us = (__ss_int)ceil(fraction * 1e6 - 0.5);
 
 	if (us < 0) {
 		/* Truncation towards zero is not what we wanted
@@ -401,7 +397,7 @@ datetime *datetime::fromtimestamp(double timestamp, tzinfo *tzinfo) {
 		return tmp;
 }
 
-datetime *datetime::fromordinal(int o) {
+datetime *datetime::fromordinal(__ss_int o) {
 	if(o<1)		//1 = date.min.toordinal()
 		throw new OverflowError(new str("ordinal must be >= 1"));
 	if(o>3652059)	//3652059 = date.max.toordinal()
@@ -437,8 +433,8 @@ datetime *datetime::strptime(str *date_string, str *format) {
 }
 
 datetime *datetime::__add__(timedelta *other) {
-    int usec = this->microsecond + other->microseconds;
-    int sec = this->second + other->seconds;
+    __ss_int usec = this->microsecond + other->microseconds;
+    __ss_int sec = this->second + other->seconds;
     datetime *r = datetime::fromordinal(this->toordinal()+other->days +
                                         (((usec/1000000 + sec)/60 +
                                         this->minute)/60 + this->hour)/24);
@@ -451,9 +447,9 @@ datetime *datetime::__add__(timedelta *other) {
 }
 
 datetime *datetime::__sub__(timedelta *other) {
-    int usec = this->microsecond - other->microseconds;
-    int sec = this->second - other->seconds;
-	int days = this->toordinal()-other->days +
+    __ss_int usec = this->microsecond - other->microseconds;
+    __ss_int sec = this->second - other->seconds;
+	__ss_int days = this->toordinal()-other->days +
                                         (((usec/1000000 + sec)/60 +
                                         this->minute)/60 + this->hour)/24;
     datetime *r = datetime::fromordinal(days);
@@ -519,7 +515,7 @@ void datetime_compare_check(datetime *&f, datetime *&s) {
 	}
 }
 
-int datetime::__cmp__(datetime *other) {
+__ss_int datetime::__cmp__(datetime *other) {
     datetime *f = this;
 	datetime_compare_check(f, other);
 
@@ -532,12 +528,12 @@ int datetime::__cmp__(datetime *other) {
     return -1;
 }
 
-int datetime::__eq__(datetime *other) { return __cmp__(other) == 0; }
-int datetime::__ne__(datetime *other) { return __cmp__(other) != 0; }
-int datetime::__gt__(datetime *other) { return __cmp__(other) == 1; }
-int datetime::__lt__(datetime *other) { return __cmp__(other) == -1; }
-int datetime::__ge__(datetime *other) { return __cmp__(other) != -1; }
-int datetime::__le__(datetime *other) { return __cmp__(other) != 1; }
+__ss_bool datetime::__eq__(datetime *other) { return __mbool(__cmp__(other) == 0); }
+__ss_bool datetime::__ne__(datetime *other) { return __mbool(__cmp__(other) != 0); }
+__ss_bool datetime::__gt__(datetime *other) { return __mbool(__cmp__(other) == 1); }
+__ss_bool datetime::__lt__(datetime *other) { return __mbool(__cmp__(other) == -1); }
+__ss_bool datetime::__ge__(datetime *other) { return __mbool(__cmp__(other) != -1); }
+__ss_bool datetime::__le__(datetime *other) { return __mbool(__cmp__(other) != 1); }
 
 date *datetime::_date() {
 	return new date(year,month,day);
@@ -551,7 +547,7 @@ time *datetime::timetz() {
 	return new time(hour,minute,second,microsecond,_tzinfo);
 }
 
-datetime *datetime::replace(int __args, int year,int month,int day,int hour,int minute,int second,int microsecond,tzinfo *tzinfo) {
+datetime *datetime::replace(__ss_int __args, __ss_int year, __ss_int month, __ss_int day, __ss_int hour, __ss_int minute, __ss_int second, __ss_int microsecond, tzinfo *tzinfo) {
     datetime *t = new datetime(this);
 
    if((__args & 1)==1) {
@@ -683,7 +679,7 @@ str *datetime::__str__() {
 }
 
 str *datetime::ctime() {
-    int wday = weekday();
+    __ss_int wday = weekday();
 
     return __modct(ctime_format, 7, DayNames->__getitem__(wday), MonthNames->__getitem__(month-1),
                         __box(day), __box(hour), __box(minute), __box(second), __box(year));
@@ -706,7 +702,7 @@ str *datetime::strftime(str *format) {
 }
 
 //class time
-time::time(int hour, int minute, int second, int microsecond, tzinfo *tzinfo) {
+time::time(__ss_int hour, __ss_int minute, __ss_int second, __ss_int microsecond, tzinfo *tzinfo) {
     __class__=cl_time;
 
     if(hour>=24 || hour<0) throw new ValueError(new str("hour must be in 0..23"));
@@ -721,7 +717,7 @@ time::time(int hour, int minute, int second, int microsecond, tzinfo *tzinfo) {
     this->_tzinfo = tzinfo;
 }
 
-time *time::replace(int __args, int hour, int minute, int second, int microsecond, tzinfo *tzinfo) {
+time *time::replace(__ss_int __args, __ss_int hour, __ss_int minute, __ss_int second, __ss_int microsecond, tzinfo *tzinfo) {
     time *t = new time(this);
     if((__args & 1)==1) {
         if(hour<0 || hour>=24)          throw new ValueError(new str("hour must be in 0..23"));
@@ -767,7 +763,7 @@ str *time::strftime(str* format) {
 	}
 	delete tmp;
     tmp = __time__::strftime(format, new __time__::struct_time(
-        new tuple2<__ss_int, __ss_int>((__ss_int)9,
+        new tuple2<__ss_int, __ss_int>(9,
             (__ss_int)1900,
             (__ss_int)1,
             (__ss_int)1,//according to cpython implementation, but 0,0, according to description I found on the internet
@@ -776,7 +772,7 @@ str *time::strftime(str* format) {
             (__ss_int)second,
             (__ss_int)0,
             (__ss_int)0,
-            (__ss_int)-1)));
+            (__ss_int)(-1))));
 	delete format;
 	return tmp;
 }
@@ -821,7 +817,7 @@ void time_compare_check(time *&f, time *&s) {
 	}
 }
 
-int time::__cmp__(time *other) {
+__ss_int time::__cmp__(time *other) {
     time *f = this;
 	time_compare_check(f, other);
 
@@ -832,12 +828,12 @@ int time::__cmp__(time *other) {
     return -1;
 }
 
-int time::__eq__(time *other) { return __cmp__(other) == 0; }
-int time::__ne__(time *other) { return __cmp__(other) != 0; }
-int time::__gt__(time *other) { return __cmp__(other) == 1; }
-int time::__lt__(time *other) { return __cmp__(other) == -1; }
-int time::__ge__(time *other) { return __cmp__(other) != -1; }
-int time::__le__(time *other) { return __cmp__(other) != 1; }
+__ss_bool time::__eq__(time *other) { return __mbool(__cmp__(other) == 0); }
+__ss_bool time::__ne__(time *other) { return __mbool(__cmp__(other) != 0); }
+__ss_bool time::__gt__(time *other) { return __mbool(__cmp__(other) == 1); }
+__ss_bool time::__lt__(time *other) { return __mbool(__cmp__(other) == -1); }
+__ss_bool time::__ge__(time *other) { return __mbool(__cmp__(other) != -1); }
+__ss_bool time::__le__(time *other) { return __mbool(__cmp__(other) != 1); }
 
 
 //class timedelta
@@ -847,14 +843,14 @@ timedelta::timedelta(double days, double seconds, double microseconds, double mi
 	//all little bits of hours and seconds added up
     double usec1 = milliseconds*1000 + microseconds +
                         (((weeks*7 + days)*24*3600 + hours*3600 + minutes*60 + seconds)
-						-(int)(hours*3600 + minutes*60 + seconds + (weeks*7 + days)*24*3600))*1000000;
-    this->days = int(weeks*7 + days);
-	this->seconds = (int)(hours*3600 + minutes*60 + seconds + (weeks*7 + days - int(weeks*7 + days))*24*3600);
+						-(__ss_int)(hours*3600 + minutes*60 + seconds + (weeks*7 + days)*24*3600))*1000000;
+    this->days = (__ss_int)(weeks*7 + days);
+	this->seconds = (__ss_int)(hours*3600 + minutes*60 + seconds + (weeks*7 + days - (__ss_int)(weeks*7 + days))*24*3600);
     //rounding to nearest microsec
 	if(usec1>=0.0)
-		this->microseconds = (int)(floor(usec1+0.5));
+		this->microseconds = (__ss_int)(floor(usec1+0.5));
 	else
-		this->microseconds = (int)(ceil(usec1-0.5));
+		this->microseconds = (__ss_int)(ceil(usec1-0.5));
 
     //move 1000000us to 1s
     this->seconds += this->microseconds/1000000;
@@ -900,11 +896,11 @@ timedelta *timedelta::__sub__(timedelta *other) {
     return new timedelta(days-other->days, seconds-other->seconds, microseconds-other->microseconds,0,0,0,0);
 }
 
-timedelta *timedelta::__mul__(int n) {
+timedelta *timedelta::__mul__(__ss_int n) {
     return new timedelta(days*n, seconds*n, microseconds*n,0,0,0,0);
 }
 
-timedelta *timedelta::__div__(int n) {
+timedelta *timedelta::__div__(__ss_int n) {
     if(n==0) {
         throw new ZeroDivisionError(new str("integer division or modulo by zero"));
     }
@@ -920,7 +916,7 @@ timedelta *timedelta::__neg__() {
     return new timedelta(-days, -seconds, -microseconds,0,0,0,0);
 }
 
-timedelta *timedelta::__floordiv__(int n) {
+timedelta *timedelta::__floordiv__(__ss_int n) {
     if(n==0) {
        throw new ZeroDivisionError(new str("integer division or modulo by zero"));
     }
@@ -934,7 +930,7 @@ timedelta *timedelta::__abs__() {
         return __neg__();
 }
 
-int timedelta::__cmp__(timedelta *other) {
+__ss_int timedelta::__cmp__(timedelta *other) {
     if ((days == other->days) && (seconds == other->seconds) && (microseconds == other->microseconds))
         return 0;
     if (((days * 24 * 3600) + seconds) > ((other->days * 24 * 3600) + other->seconds))
@@ -944,12 +940,12 @@ int timedelta::__cmp__(timedelta *other) {
     return -1;
 }
 
-int timedelta::__eq__(timedelta *other) { return __cmp__(other) == 0; }
-int timedelta::__ne__(timedelta *other) { return __cmp__(other) != 0; }
-int timedelta::__gt__(timedelta *other) { return __cmp__(other) == 1; }
-int timedelta::__lt__(timedelta *other) { return __cmp__(other) == -1; }
-int timedelta::__ge__(timedelta *other) { return __cmp__(other) != -1; }
-int timedelta::__le__(timedelta *other) { return __cmp__(other) != 1; }
+__ss_bool timedelta::__eq__(timedelta *other) { return __mbool(__cmp__(other) == 0); }
+__ss_bool timedelta::__ne__(timedelta *other) { return __mbool(__cmp__(other) != 0); }
+__ss_bool timedelta::__gt__(timedelta *other) { return __mbool(__cmp__(other) == 1); }
+__ss_bool timedelta::__lt__(timedelta *other) { return __mbool(__cmp__(other) == -1); }
+__ss_bool timedelta::__ge__(timedelta *other) { return __mbool(__cmp__(other) != -1); }
+__ss_bool timedelta::__le__(timedelta *other) { return __mbool(__cmp__(other) != 1); }
 
 
 /*functions taken and modified from cpython, to be copied to datetime.cpp later*/
@@ -963,10 +959,10 @@ int timedelta::__le__(timedelta *other) { return __cmp__(other) != 1; }
  * the overflow case impossible (divmod(LONG_MIN, -1) is the only
  * overflow case).
  */
-static int
-divmod(int x, int y, int *r)
+static __ss_int
+divmod(__ss_int x, __ss_int y, __ss_int *r)
 {
-    int quo;
+    __ss_int quo;
 
     assert(y > 0);
     quo = x / y;
@@ -987,19 +983,19 @@ divmod(int x, int y, int *r)
  * and the number of days before that month in the same year.  These
  * are correct for non-leap years only.
  */
-static int _days_in_month[] = {
+static __ss_int _days_in_month[] = {
     0, /* unused; this vector uses 1-based indexing */
     31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
 };
 
-static int _days_before_month[] = {
+static __ss_int _days_before_month[] = {
     0, /* unused; this vector uses 1-based indexing */
     0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334
 };
 
 /* year -> 1 if leap year, else 0. */
-static int
-is_leap(int year)
+static __ss_int
+is_leap(__ss_int year)
 {
     /* Cast year to unsigned.  The result is the same either way, but
      * C can generate faster code for unsigned mod than for signed
@@ -1011,8 +1007,8 @@ is_leap(int year)
 }
 
 /* year, month -> number of days in that month in that year */
-static int
-days_in_month(int year, int month)
+static __ss_int
+days_in_month(__ss_int year, __ss_int month)
 {
     assert(month >= 1);
     assert(month <= 12);
@@ -1023,10 +1019,10 @@ days_in_month(int year, int month)
 }
 
 /* year, month -> number of days in year preceeding first day of month */
-static int
-days_before_month(int year, int month)
+static __ss_int
+days_before_month(__ss_int year, __ss_int month)
 {
-    int days;
+    __ss_int days;
 
     assert(month >= 1);
     assert(month <= 12);
@@ -1039,10 +1035,10 @@ days_before_month(int year, int month)
 /* year -> number of days before January 1st of year.  Remember that we
  * start with year 1, so days_before_year(1) == 0.
  */
-static int
-days_before_year(int year)
+static __ss_int
+days_before_year(__ss_int year)
 {
-    int y = year - 1;
+    __ss_int y = year - 1;
     /* This is incorrect if year <= 0; we really want the floor
      * here.  But so long as MINYEAR is 1, the smallest year this
      * can see is 0 (this can happen in some normalization endcases),
@@ -1066,9 +1062,9 @@ days_before_year(int year)
 
 /* ordinal -> year, month, day, considering 01-Jan-0001 as day 1. */
 static void
-ord_to_ymd(int ordinal, int *year, int *month, int *day)
+ord_to_ymd(__ss_int ordinal, __ss_int *year, __ss_int *month, __ss_int *day)
 {
-    int n, n1, n4, n100, n400, leapyear, preceding;
+    __ss_int n, n1, n4, n100, n400, leapyear, preceding;
 
     /* ordinal is a 1-based index, starting at 1-Jan-1.  The pattern of
      * leap years repeats exactly every 400 years.  The basic strategy is
@@ -1149,21 +1145,21 @@ ord_to_ymd(int ordinal, int *year, int *month, int *day)
 }
 
 /* year, month, day -> ordinal, considering 01-Jan-0001 as day 1. */
-static int
-ymd_to_ord(int year, int month, int day)
+static __ss_int
+ymd_to_ord(__ss_int year, __ss_int month, __ss_int day)
 {
     return days_before_year(year) + days_before_month(year, month) + day;
 }
 
 
-static int
-iso_week1_monday(int year)
+static __ss_int
+iso_week1_monday(__ss_int year)
 {
-    int first_day = ymd_to_ord(year, 1, 1);    /* ord of 1/1 */
+    __ss_int first_day = ymd_to_ord(year, 1, 1);    /* ord of 1/1 */
     /* 0 if 1/1 is a Monday, 1 if a Tue, etc. */
-    int first_weekday = (first_day + 6) % 7;
+    __ss_int first_weekday = (first_day + 6) % 7;
     /* ordinal of closest Monday at or before 1/1 */
-    int week1_monday  = first_day - first_weekday;
+    __ss_int week1_monday  = first_day - first_weekday;
 
     if (first_weekday > 3)    /* if 1/1 was Fri, Sat, Sun */
         week1_monday += 7;

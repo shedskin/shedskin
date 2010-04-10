@@ -24,11 +24,11 @@ void __init() {
 list<str *> *glob(str *pathname) {
     /**
     Return a list of paths matching a pathname pattern.
-    
+
     The pattern may contain simple shell-style wildcards a la fnmatch.
-    
+
     */
-    
+
     return new list<str *>(iglob(pathname));
 }
 
@@ -39,21 +39,21 @@ public:
     str *name;
     pyiter<str *> *__10;
     str *basename;
-    int __15;
+    __ss_int __15;
     list<str *> *__13;
     __iter<str *> *__5;
     pyiter<str *> *__4;
     list<str *> *__7;
-    int __6;
+    __ss_int __6;
     list<str *> *__1;
     tuple2<str *, str *> *__0;
-    int __3;
+    __ss_int __3;
     __iter<str *> *__2;
     str *pathname;
     str *dirname;
-    int __9;
+    __ss_int __9;
     __iter<str *> *__8;
-    int __12;
+    __ss_int __12;
     __iter<str *> *__14;
     int __last_yield;
 
@@ -131,9 +131,9 @@ public:
 __iter<str *> *iglob(str *pathname) {
     /**
     Return a list of paths matching a pathname pattern.
-    
+
     The pattern may contain simple shell-style wildcards a la fnmatch.
-    
+
     */
     return new __gen_iglob(pathname);
 
@@ -143,7 +143,7 @@ list<str *> *glob1(str *dirname, str *pattern) {
     list<str *> *__17, *n2, *names;
     __iter<str *> *__18;
     str *nm;
-    int __19;
+    __ss_int __19;
 
     if ((!___bool(dirname))) {
         dirname = __os__::curdir;
@@ -168,7 +168,7 @@ list<str *> *glob1(str *dirname, str *pattern) {
 }
 
 list<str *> *glob0(str *dirname, str *basename) {
-    
+
     if (__eq(basename, const_3)) {
         if (__os__::__path__::isdir(dirname)) {
             return (new list<str *>(1, basename));
@@ -182,9 +182,9 @@ list<str *> *glob0(str *dirname, str *basename) {
     return ((list<str *> *)((new list<void *>())));
 }
 
-int has_magic(str *s) {
-    
-    return (magic_check->search(s)!=0);
+__ss_bool has_magic(str *s) {
+
+    return __mbool(magic_check->search(s)!=0);
 }
 
 } // module namespace

@@ -1,4 +1,3 @@
-
 import os, os.path, fnmatch, re
 
 def iglob(s):
@@ -7,5 +6,5 @@ def iglob(s):
 def glob(s):
     return ['']
 
-def init():
-    pass
+def has_magic(s):
+    return True
