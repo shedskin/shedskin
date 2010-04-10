@@ -267,14 +267,14 @@ int Random::_init_by_array(list<int> *init_key) {
 
     FAST_FOR_NEG(k,k,0,-1,12,13)
         __14 = this->mt;
-        ELEM(__14,i) = ((((this->mt)->__getfast__(i)^(((this->mt)->__getfast__((i-1))^(((this->mt)->__getfast__((i-1))>>30)&3))*1664525))+init_key->__getfast__(j))+j);
+        __14->__setitem__(i, (((this->mt)->__getfast__(i)^(((this->mt)->__getfast__((i-1))^(((this->mt)->__getfast__((i-1))>>30)&3))*1664525))+init_key->__getfast__(j))+j);
         __15 = this->mt;
-        ELEM(__15,i) &= 4294967295u;
+        __15->__setitem__(i, __15->__getfast__(i) & 4294967295u);
         i += 1;
         j += 1;
         if ((i>=N)) {
             __16 = this->mt;
-            ELEM(__16,0) = (this->mt)->__getfast__((N-1));
+            __16->__setitem__(0, (this->mt)->__getfast__((N-1)));
             i = 1;
         }
         if ((j>=key_length)) {
@@ -285,19 +285,19 @@ int Random::_init_by_array(list<int> *init_key) {
 
     FAST_FOR_NEG(k,(N-1),0,-1,17,18)
         __19 = this->mt;
-        ELEM(__19,i) = (((this->mt)->__getfast__(i)^(((this->mt)->__getfast__((i-1))^(((this->mt)->__getfast__((i-1))>>30)&3))*1566083941))-i);
+        __19->__setitem__(i, (((this->mt)->__getfast__(i)^(((this->mt)->__getfast__((i-1))^(((this->mt)->__getfast__((i-1))>>30)&3))*1566083941))-i));
         __20 = this->mt;
-        ELEM(__20,i) &= 4294967295u;
+        __20->__setitem__(i, __20->__getfast__(i) & 4294967295u);
         i += 1;
         if ((i>=N)) {
             __21 = this->mt;
-            ELEM(__21,0) = (this->mt)->__getfast__((N-1));
+            __21->__setitem__(0, (this->mt)->__getfast__((N-1)));
             i = 1;
         }
     END_FOR
 
     __22 = this->mt;
-    ELEM(__22,0) = 2147483648u;
+    __22->__setitem__(0, 2147483648u);
     return 0;
 }
 
@@ -529,13 +529,13 @@ int Random::_init_genrand(int s) {
     int __8, __9;
 
     __7 = this->mt;
-    ELEM(__7,0) = (s&4294967295u);
+    __7->__setitem__(0, (s&4294967295u));
 
     FAST_FOR(this->mti,1,N,1,8,9)
         __10 = this->mt;
-        ELEM(__10,this->mti) = ((1812433253*((this->mt)->__getfast__((this->mti-1))^(((this->mt)->__getfast__((this->mti-1))>>30)&3)))+this->mti);
+        __10->__setitem__(this->mti, ((1812433253*((this->mt)->__getfast__((this->mti-1))^(((this->mt)->__getfast__((this->mti-1))>>30)&3)))+this->mti));
         __11 = this->mt;
-        ELEM(__11,this->mti) &= 4294967295u;
+        __11->__setitem__(this->mti, __11->__getfast__(this->mti) & 4294967295u);
     END_FOR
 
     this->mti += 1;
@@ -584,19 +584,19 @@ int Random::_genrand_int32() {
         FAST_FOR(kk,0,(N-M),1,0,1)
             y = (((this->mt)->__getfast__(kk)&UPPER)|((this->mt)->__getfast__((kk+1))&LOWER));
             __2 = this->mt;
-            ELEM(__2,kk) = ((this->mt)->__getfast__((kk+M))^(((y>>1)&LOWER)^mag01->__getfast__((y&1))));
+            __2->__setitem__(kk, ((this->mt)->__getfast__((kk+M))^(((y>>1)&LOWER)^mag01->__getfast__((y&1)))));
         END_FOR
 
 
         FAST_FOR(kk,(kk+1),(N-1),1,3,4)
             y = (((this->mt)->__getfast__(kk)&UPPER)|((this->mt)->__getfast__((kk+1))&LOWER));
             __5 = this->mt;
-            ELEM(__5,kk) = ((this->mt)->__getfast__((kk+(M-N)))^(((y>>1)&LOWER)^mag01->__getfast__((y&1))));
+            __5->__setitem__(kk, ((this->mt)->__getfast__((kk+(M-N)))^(((y>>1)&LOWER)^mag01->__getfast__((y&1)))));
         END_FOR
 
         y = (((this->mt)->__getfast__((N-1))&UPPER)|((this->mt)->__getfast__(0)&LOWER));
         __6 = this->mt;
-        ELEM(__6,(N-1)) = ((this->mt)->__getfast__((M-1))^(((y>>1)&LOWER)^mag01->__getfast__((y&1))));
+        __6->__setitem__(N-1, ((this->mt)->__getfast__((M-1))^(((y>>1)&LOWER)^mag01->__getfast__((y&1)))));
         this->mti = 0;
     }
     y = (this->mt)->__getfast__(this->mti);

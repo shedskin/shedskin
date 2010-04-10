@@ -8,14 +8,14 @@ namespace __cStringIO__ {
 
 class StringI : public file {
 public:
-    int pos;
+    __ss_int pos;
     str *s;
 
     StringI(str *s);
 
     int getchar();
-    void *putchar(int c);
-    void *seek(int i, int w=0);
+    void *putchar(__ss_int c);
+    void *seek(__ss_int i, __ss_int w=0);
 };
 
 

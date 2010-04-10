@@ -97,46 +97,46 @@ str *const_0, *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *
 
 list<str *> *__all__;
 str *DEFAULTSECT, *__name__;
-int MAX_INTERPOLATION_DEPTH;
+__ss_int MAX_INTERPOLATION_DEPTH;
 
 str * default_11;
-int  default_10;
-int  default_13;
-int  default_23;
-int  default_2;
-int  default_25;
-int  default_28;
-int  default_1;
-int  default_5;
-int  default_3;
-int  default_19;
-int  default_29;
-int  default_12;
+__ss_int  default_10;
+__ss_int  default_13;
+__ss_int  default_23;
+__ss_int  default_2;
+__ss_int  default_25;
+__ss_int  default_28;
+__ss_int  default_1;
+__ss_int  default_5;
+__ss_int  default_3;
+__ss_int  default_19;
+__ss_int  default_29;
+__ss_int  default_12;
 str * default_22;
-int  default_31;
-int  default_30;
+__ss_int  default_31;
+__ss_int  default_30;
 str * default_9;
-int  default_8;
+__ss_int  default_8;
 str * default_24;
 str * default_14;
 str * default_16;
 str * default_26;
-int  default_17;
+__ss_int  default_17;
 str * default_18;
-int  default_6;
-int  default_15;
-int  default_27;
+__ss_int  default_6;
+__ss_int  default_15;
+__ss_int  default_27;
 str * default_20;
-int  default_7;
-int  default_4;
+__ss_int  default_7;
+__ss_int  default_4;
 str * default_0;
-int  default_21;
+__ss_int  default_21;
 
 static inline list<tuple2<str *, str *> *> *list_comp_0(list<str *> *options, dict<str *, str *> *d) {
     list<str *> *__56;
     __iter<str *> *__57;
     str *option;
-    int __58;
+    __ss_int __58;
     list<tuple2<str *, str *> *> *result = new list<tuple2<str *, str *> *>();
 
     result->resize(len(options));
@@ -151,7 +151,7 @@ static inline list<tuple2<str *, str *> *> *list_comp_1(dict<str *, str *> *d, C
     list<str *> *__59;
     __iter<str *> *__60;
     str *option;
-    int __61;
+    __ss_int __61;
     list<tuple2<str *, str *> *> *result = new list<tuple2<str *, str *> *>();
 
     result->resize(len(options));
@@ -168,11 +168,11 @@ class Error
 
 class_ *cl_Error;
 
-int Error::__init__(str *msg) {
+void *Error::__init__(str *msg) {
 
     this->message = msg;
     Exception::__init__(msg);
-    return 0;
+    return NULL;
 }
 
 
@@ -182,11 +182,11 @@ class NoSectionError
 
 class_ *cl_NoSectionError;
 
-int NoSectionError::__init__(str *section) {
+void *NoSectionError::__init__(str *section) {
 
     Error::__init__(__modct(const_3, 1, section));
     this->section = section;
-    return 0;
+    return NULL;
 }
 
 /**
@@ -195,11 +195,11 @@ class DuplicateSectionError
 
 class_ *cl_DuplicateSectionError;
 
-int DuplicateSectionError::__init__(str *section) {
+void *DuplicateSectionError::__init__(str *section) {
 
     Error::__init__(__modct(const_4, 1, section));
     this->section = section;
-    return 0;
+    return NULL;
 }
 
 /**
@@ -208,12 +208,12 @@ class NoOptionError
 
 class_ *cl_NoOptionError;
 
-int NoOptionError::__init__(str *option, str *section) {
+void *NoOptionError::__init__(str *option, str *section) {
 
     Error::__init__(__modct(const_5, 2, option, section));
     this->option = option;
     this->section = section;
-    return 0;
+    return NULL;
 }
 
 /**
@@ -222,12 +222,12 @@ class InterpolationError
 
 class_ *cl_InterpolationError;
 
-int InterpolationError::__init__(str *option, str *section, str *msg) {
+void *InterpolationError::__init__(str *option, str *section, str *msg) {
 
     Error::__init__(msg);
     this->option = option;
     this->section = section;
-    return 0;
+    return NULL;
 }
 
 
@@ -237,13 +237,13 @@ class InterpolationMissingOptionError
 
 class_ *cl_InterpolationMissingOptionError;
 
-int InterpolationMissingOptionError::__init__(str *option, str *section, str *rawval, str *reference) {
+void *InterpolationMissingOptionError::__init__(str *option, str *section, str *rawval, str *reference) {
     str *msg;
 
     msg = __modct(const_6, 4, section, option, reference, rawval);
     InterpolationError::__init__(option, section, msg);
     this->reference = reference;
-    return 0;
+    return NULL;
 }
 
 /**
@@ -258,12 +258,12 @@ class InterpolationDepthError
 
 class_ *cl_InterpolationDepthError;
 
-int InterpolationDepthError::__init__(str *option, str *section, str *rawval) {
+void *InterpolationDepthError::__init__(str *option, str *section, str *rawval) {
     str *msg;
 
     msg = __modct(const_7, 3, section, option, rawval);
     InterpolationError::__init__(option, section, msg);
-    return 0;
+    return NULL;
 }
 
 /**
@@ -272,19 +272,19 @@ class ParsingError
 
 class_ *cl_ParsingError;
 
-int ParsingError::__init__(str *filename) {
+void *ParsingError::__init__(str *filename) {
 
     Error::__init__(__modct(const_8, 1, filename));
     this->filename = filename;
-    this->errors = (new list<tuple2<int, str *> *>());
-    return 0;
+    this->errors = (new list<tuple2<__ss_int, str *> *>());
+    return NULL;
 }
 
-int ParsingError::append(int lineno, str *line) {
+void *ParsingError::append(__ss_int lineno, str *line) {
 
-    (this->errors)->append((new tuple2<int, str *>(2, lineno, line)));
+    (this->errors)->append((new tuple2<__ss_int, str *>(2, lineno, line)));
     this->message = (this->message)->__iadd__(__modct(const_9, 2, __box(lineno), line));
-    return 0;
+    return NULL;
 }
 
 /**
@@ -293,13 +293,13 @@ class MissingSectionHeaderError
 
 class_ *cl_MissingSectionHeaderError;
 
-int MissingSectionHeaderError::__init__(str *filename, int lineno, str *line) {
+void *MissingSectionHeaderError::__init__(str *filename, __ss_int lineno, str *line) {
 
     Error::__init__(__modct(const_10, 3, filename, __box(lineno), line));
     this->filename = filename;
     this->lineno = lineno;
     this->line = line;
-    return 0;
+    return NULL;
 }
 
 /**
@@ -322,7 +322,7 @@ void *RawConfigParser::_set(str *section, str *option, str *value) {
     /**
     Set an option.
     */
-    int __16, __17;
+    __ss_int __16, __17;
     dict<str *, str *> *sectdict;
 
     if (__OR((!___bool(section)), __eq(section, DEFAULTSECT), 16)) {
@@ -349,11 +349,12 @@ __ss_bool RawConfigParser::has_section(str *section) {
     return __mbool((this->_sections)->__contains__(section));
 }
 
-int RawConfigParser::remove_option(str *section, str *option) {
+__ss_bool RawConfigParser::remove_option(str *section, str *option) {
     /**
     Remove an option.
     */
-    int __30, __31, existed;
+    __ss_int __30, __31;
+    __ss_bool existed;
     dict<str *, str *> *sectdict;
 
     if (__OR((!___bool(section)), __eq(section, DEFAULTSECT), 30)) {
@@ -374,11 +375,11 @@ int RawConfigParser::remove_option(str *section, str *option) {
     return existed;
 }
 
-int RawConfigParser::remove_section(str *section) {
+__ss_bool RawConfigParser::remove_section(str *section) {
     /**
     Remove a file section.
     */
-    int existed;
+    __ss_bool existed;
 
     existed = (this->_sections)->__contains__(section);
     if (existed) {
@@ -387,8 +388,8 @@ int RawConfigParser::remove_section(str *section) {
     return existed;
 }
 
-int RawConfigParser::__init__(dict<str *, str *> *defaults) {
-    int __3;
+void *RawConfigParser::__init__(dict<str *, str *> *defaults) {
+    __ss_int __3;
     tuple2<str *, str *> *__0;
     str *key, *value;
     list<tuple2<str *, str *> *> *__1;
@@ -407,34 +408,35 @@ int RawConfigParser::__init__(dict<str *, str *> *defaults) {
         END_FOR
 
     }
-    return 0;
+    return NULL;
 }
 
-int RawConfigParser::has_option(str *section, str *option) {
+__ss_bool RawConfigParser::has_option(str *section, str *option) {
     /**
     Check for the existence of a given option in a given section.
     */
-    int __12, __13, __14, __15;
+    __ss_int __12, __13, __15;
+    __ss_bool __14;
 
     if (__OR((!___bool(section)), __eq(section, DEFAULTSECT), 12)) {
         option = this->optionxform(option);
         return (this->_defaults)->__contains__(option);
     }
     else if ((!(this->_sections)->__contains__(section))) {
-        return 0;
+        return False;
     }
     else {
         option = this->optionxform(option);
         return __OR(((this->_sections)->__getitem__(section))->__contains__(option), (this->_defaults)->__contains__(option), 14);
     }
-    return 0;
+    return False;
 }
 
 void *RawConfigParser::write(file *fp) {
     /**
     Write an .ini-format representation of the configuration state.
     */
-    int __22, __25, __29;
+    __ss_int __22, __25, __29;
     dict<str *, dict<str *, str *> *> *__23;
     str *key, *section, *value;
     tuple2<str *, str *> *__19, *__26;
@@ -497,7 +499,7 @@ list<str *> *RawConfigParser::sections() {
     return (this->_sections)->keys();
 }
 
-str *RawConfigParser::get(str *section, str *option, int raw, dict<str *, str *> *vars) {
+str *RawConfigParser::get(str *section, str *option, __ss_int raw, dict<str *, str *> *vars) {
     str *opt;
 
     opt = this->optionxform(option);
@@ -544,7 +546,7 @@ list<str *> *RawConfigParser::read(list<str *> *filenames) {
     list<str *> *__7, *read_ok;
     __iter<str *> *__8;
     str *filename;
-    int __9;
+    __ss_int __9;
     file *fp;
 
     read_ok = (new list<str *>());
@@ -563,14 +565,14 @@ list<str *> *RawConfigParser::read(list<str *> *filenames) {
     return read_ok;
 }
 
-int RawConfigParser::getboolean(str *section, str *option) {
+__ss_bool RawConfigParser::getboolean(str *section, str *option) {
     str *v;
 
     v = this->get(section, option, default_5, NULL);
     if ((!(RawConfigParser::_boolean_states)->__contains__(v->lower()))) {
         throw ((new ValueError(__modct(const_16, 1, v))));
     }
-    return (RawConfigParser::_boolean_states)->__getitem__(v->lower());
+    return __mbool((RawConfigParser::_boolean_states)->__getitem__(v->lower()));
 }
 
 list<tuple2<str *, str *> *> *RawConfigParser::items(str *section) {
@@ -604,7 +606,7 @@ void *RawConfigParser::_read(file *fp, str *fpname) {
     and just about everything else are ignored.
     */
     __re__::match_object *mo;
-    int __33, __34, __35, __36, __41, __42, __43, __44, lineno, pos;
+    __ss_int __33, __34, __35, __36, __41, __42, __43, __44, lineno, pos;
     dict<str *, dict<str *, str *> *> *__40;
     ParsingError *e;
     str *__37, *__38, *__39, *line, *optname, *optval, *sectname, *value, *vi;
@@ -686,7 +688,7 @@ void *RawConfigParser::_read(file *fp, str *fpname) {
     return NULL;
 }
 
-int RawConfigParser::getint(str *section, str *option) {
+__ss_int RawConfigParser::getint(str *section, str *option) {
 
     return __int(this->get(section, option, default_5, NULL));
 }
@@ -714,7 +716,7 @@ list<str *> *RawConfigParser::options(str *section) {
     return opts->keys();
 }
 
-dict<str *, int> *RawConfigParser::_boolean_states;
+dict<str *, __ss_int> *RawConfigParser::_boolean_states;
 __re__::re_object *RawConfigParser::SECTCRE;
 __re__::re_object *RawConfigParser::OPTCRE;
 
@@ -726,7 +728,7 @@ class_ *cl_ConfigParser;
 
 str *ConfigParser::_interpolate(str *section, str *option, str *rawval, dict<str *, str *> *vars) {
     str *value;
-    int depth;
+    __ss_int depth;
 
     value = rawval;
     depth = MAX_INTERPOLATION_DEPTH;
@@ -751,7 +753,7 @@ str *ConfigParser::_interpolate(str *section, str *option, str *rawval, dict<str
     return value;
 }
 
-str *ConfigParser::get(str *section, str *option, int raw, dict<str *, str *> *vars) {
+str *ConfigParser::get(str *section, str *option, __ss_int raw, dict<str *, str *> *vars) {
     /**
     Get an option value for a given section.
 
@@ -763,7 +765,7 @@ str *ConfigParser::get(str *section, str *option, int raw, dict<str *, str *> *v
 
     The section DEFAULT is special.
     */
-    int __49;
+    __ss_int __49;
     tuple2<str *, str *> *__46;
     str *key, *value;
     list<tuple2<str *, str *> *> *__47;
@@ -803,7 +805,7 @@ str *ConfigParser::get(str *section, str *option, int raw, dict<str *, str *> *v
     return (str *)NULL;
 }
 
-list<tuple2<str *, str *> *> *ConfigParser::items(str *section, int raw, dict<str *, str *> *vars) {
+list<tuple2<str *, str *> *> *ConfigParser::items(str *section, __ss_int raw, dict<str *, str *> *vars) {
     /**
     Return a list of tuples with (name, value) for each option
     in the section.
@@ -817,7 +819,7 @@ list<tuple2<str *, str *> *> *ConfigParser::items(str *section, int raw, dict<st
     The section DEFAULT is special.
     */
     list<str *> *options;
-    int __55;
+    __ss_int __55;
     tuple2<str *, str *> *__52;
     str *key, *value;
     list<tuple2<str *, str *> *> *__53;
@@ -935,7 +937,7 @@ void __init() {
     cl_InterpolationSyntaxError = new class_("InterpolationSyntaxError", 19, 19);
     cl_MissingSectionHeaderError = new class_("MissingSectionHeaderError", 21, 21);
     cl_RawConfigParser = new class_("RawConfigParser", 27, 28);
-    RawConfigParser::_boolean_states = (new dict<str *, int>(8, new tuple2<str *, int>(2,const_29,1), new tuple2<str *, int>(2,const_30,1), new tuple2<str *, int>(2,const_31,1), new tuple2<str *, int>(2,const_32,1), new tuple2<str *, int>(2,const_33,0), new tuple2<str *, int>(2,const_34,0), new tuple2<str *, int>(2,const_35,0), new tuple2<str *, int>(2,const_36,0)));
+    RawConfigParser::_boolean_states = (new dict<str *, __ss_int>(8, new tuple2<str *, __ss_int>(2,const_29,1), new tuple2<str *, __ss_int>(2,const_30,1), new tuple2<str *, __ss_int>(2,const_31,1), new tuple2<str *, __ss_int>(2,const_32,1), new tuple2<str *, __ss_int>(2,const_33,0), new tuple2<str *, __ss_int>(2,const_34,0), new tuple2<str *, __ss_int>(2,const_35,0), new tuple2<str *, __ss_int>(2,const_36,0)));
     RawConfigParser::SECTCRE = __re__::compile(const_37);
     RawConfigParser::OPTCRE = __re__::compile(const_38);
     cl_ParsingError = new class_("ParsingError", 20, 21);

@@ -61,7 +61,7 @@ public:
     int _init_genrand(int s);
     double gauss(double mu, double sigma);
     template <class A> A choice(pyseq<A> *seq);
-    template <class A> void *shuffle(pyseq<A> *x);
+    template <class A> void *shuffle(list<A> *x);
     template <class A> list<A> *sample(pyiter<A> *population, int k);
     template <class A> list<A> *sample(pyseq<A> *population, int k);
     int _genrand_int32();
@@ -112,7 +112,7 @@ int randrange(int start, int stop);
 int randrange(int start, int stop, int step);
 int randint(int a, int b);
 template <class A> A choice(pyseq<A> *seq);
-template <class A> void *shuffle(pyseq<A> *x);
+template <class A> void *shuffle(list<A> *x);
 template <class A> list<A> *sample(pyiter<A> *population, int k);
 template <class A> list<A> *sample(pyseq<A> *population, int k);
 double uniform(double a, double b);
@@ -137,7 +137,7 @@ template <class A> A choice(pyseq<A> *seq) {
     return _inst->choice(seq);
 }
 
-template <class A> void *shuffle(pyseq<A> *x) {
+template <class A> void *shuffle(list<A> *x) {
 
     return _inst->shuffle(x);
 }
@@ -151,7 +151,7 @@ template <class A> list<A> *sample(pyseq<A> *population, int k) {
     return _inst->sample(population, k);
 }
 
-template <class A> void *Random::shuffle(pyseq<A> *x) {
+template <class A> void *Random::shuffle(list<A> *x) {
     /**
     x, random=random.random -> shuffle list x in place; return None.
 
@@ -168,8 +168,8 @@ template <class A> void *Random::shuffle(pyseq<A> *x) {
         j = __int((this->random()*(i+1)));
         __31 = x->__getitem__(j);
         __32 = x->__getitem__(i);
-        ELEM((x),i) = __31;
-        ELEM((x),j) = __32;
+        x->__setitem__(i, __31);
+        x->__setitem__(j, __32);
     END_FOR
 
     return NULL;
@@ -214,8 +214,8 @@ template <class A> list<A> *Random::sample(pyseq<A> *population, int k) {
 
         FAST_FOR(i,0,k,1,33,34)
             j = __int((this->random()*(n-i)));
-            ELEM((result),i) = pool->__getfast__(j);
-            ELEM((pool),j) = pool->__getfast__(((n-i)-1));
+            result->__setitem__(i, pool->__getfast__(j));
+            pool->__setitem__(j, pool->__getfast__(((n-i)-1)));
         END_FOR
 
     }
@@ -236,7 +236,7 @@ template <class A> list<A> *Random::sample(pyseq<A> *population, int k) {
                 j = __int((this->random()*n));
             }
             __39 = population->__getitem__(j);
-            ELEM((result),i) = __39;
+            result->__setitem__(i, __39);
             selected->__setitem__(j, __39);
         END_FOR
 

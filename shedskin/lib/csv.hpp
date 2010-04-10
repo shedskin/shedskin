@@ -19,7 +19,7 @@ class DictWriter;
 
 extern str *__name__;
 extern list<__ss_int> *__0, *__1;
-extern int EAT_CRNL, ESCAPED_CHAR, ESCAPE_IN_QUOTED_FIELD, IN_FIELD, IN_QUOTED_FIELD, QUOTE_ALL, QUOTE_IN_QUOTED_FIELD, QUOTE_MINIMAL, QUOTE_NONE, QUOTE_NONNUMERIC, START_FIELD, START_RECORD, _field_limit;
+extern __ss_int EAT_CRNL, ESCAPED_CHAR, ESCAPE_IN_QUOTED_FIELD, IN_FIELD, IN_QUOTED_FIELD, QUOTE_ALL, QUOTE_IN_QUOTED_FIELD, QUOTE_MINIMAL, QUOTE_NONE, QUOTE_NONNUMERIC, START_FIELD, START_RECORD, _field_limit;
 extern OSError *__exception;
 
 extern class_ *cl_Error;
@@ -37,16 +37,16 @@ extern class_ *cl_Excel;
 class Excel : public pyobj {
 public:
     str *lineterminator;
-    int skipinitialspace;
-    int quoting;
-    int strict;
+    __ss_int skipinitialspace;
+    __ss_int quoting;
+    __ss_int strict;
     str *delimiter;
     str *escapechar;
     str *quotechar;
-    int doublequote;
+    __ss_int doublequote;
 
     Excel() {}
-    Excel(int __ss_init) {
+    Excel(__ss_int __ss_init) {
         this->__class__ = cl_Excel;
         __init__();
     }
@@ -64,15 +64,15 @@ extern class_ *cl_reader;
 class reader : public pyiter<list<str *> *> {
 public:
     Excel *dialect;
-    int line_num;
+    __ss_int line_num;
     list<str *> *fields;
     list<str *> *field;
-    int state;
-    int numeric_field;
+    __ss_int state;
+    __ss_int numeric_field;
     file *input_iter;
 
     reader() {}
-    reader(file *input_iter, str *dialect, str *delimiter, str *quotechar, int doublequote, int skipinitialspace, str *lineterminator, int quoting, str *escapechar, int strict) {
+    reader(file *input_iter, str *dialect, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
         this->__class__ = cl_reader;
         __init__(input_iter, dialect, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
     }
@@ -80,7 +80,7 @@ public:
     void *parse_reset();
     list<str *> *next();
     __csviter *__iter__();
-    void *__init__(file *input_iter, str *dialect, str *delimiter, str *quotechar, int doublequote, int skipinitialspace, str *lineterminator, int quoting, str *escapechar, int strict);
+    void *__init__(file *input_iter, str *dialect, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict);
     void *parse_save_field();
     void *parse_add_char(str *c);
 };
@@ -89,21 +89,21 @@ extern class_ *cl_writer;
 class writer : public pyobj {
 public:
     Excel *dialect;
-    int num_fields;
+    __ss_int num_fields;
     file *output_file;
     list<str *> *rec;
 
     writer() {}
-    writer(file *output_file, str *dialect, str *delimiter, str *quotechar, int doublequote, int skipinitialspace, str *lineterminator, int quoting, str *escapechar, int strict) {
+    writer(file *output_file, str *dialect, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
         this->__class__ = cl_writer;
         __init__(output_file, dialect, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
     }
-    int join_append_data(str *field, int quote_empty, int quoted);
+    __ss_int join_append_data(str *field, __ss_int quote_empty, __ss_int quoted);
     void *writerow(list<str *> *seq);
     void *join_reset();
     void *writerows(list<list<str *> *> *seqs);
-    int join_append(str *field, int quoted, int quote_empty);
-    void *__init__(file *output_file, str *dialect, str *delimiter, str *quotechar, int doublequote, int skipinitialspace, str *lineterminator, int quoting, str *escapechar, int strict);
+    __ss_int join_append(str *field, __ss_int quoted, __ss_int quote_empty);
+    void *__init__(file *output_file, str *dialect, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict);
 };
 
 class __driter : public __iter<dict<str *, str *> *> {
@@ -118,13 +118,13 @@ class DictReader : public pyiter<dict<str *, str *> *> {
 public:
     str *restval;
     str *dialect;
-    int line_num;
+    __ss_int line_num;
     str *restkey;
     list<str *> *_fieldnames;
     reader *_reader;
 
     DictReader() {}
-    DictReader(file *f, list<str *> *fieldnames, str *restkey, str *restval, str *dialect, str *delimiter, str *quotechar, int doublequote, int skipinitialspace, str *lineterminator, int quoting, str *escapechar, int strict) {
+    DictReader(file *f, list<str *> *fieldnames, str *restkey, str *restval, str *dialect, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
         this->__class__ = cl_DictReader;
         __init__(f, fieldnames, restkey, restval, dialect, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
     }
@@ -132,7 +132,7 @@ public:
     dict<str *, str *> *next();
     __driter *__iter__();
     list<str *> *getfieldnames();
-    void *__init__(file *f, list<str *> *fieldnames, str *restkey, str *restval, str *dialect, str *delimiter, str *quotechar, int doublequote, int skipinitialspace, str *lineterminator, int quoting, str *escapechar, int strict);
+    void *__init__(file *f, list<str *> *fieldnames, str *restkey, str *restval, str *dialect, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict);
 };
 
 extern class_ *cl_DictWriter;
@@ -144,14 +144,14 @@ public:
     str *extrasaction;
 
     DictWriter() {}
-    DictWriter(file *f, list<str *> *fieldnames, str *restval, str *extrasaction, str *dialect, str *delimiter, str *quotechar, int doublequote, int skipinitialspace, str *lineterminator, int quoting, str *escapechar, int strict) {
+    DictWriter(file *f, list<str *> *fieldnames, str *restval, str *extrasaction, str *dialect, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
         this->__class__ = cl_DictWriter;
         __init__(f, fieldnames, restval, extrasaction, dialect, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
     }
     list<str *> *_dict_to_list(dict<str *, str *> *rowdict);
     void *writerow(dict<str *, str *> *rowdict);
     void *writerows(list<dict<str *, str *> *> *rowdicts);
-    void *__init__(file *f, list<str *> *fieldnames, str *restval, str *extrasaction, str *dialect, str *delimiter, str *quotechar, int doublequote, int skipinitialspace, str *lineterminator, int quoting, str *escapechar, int strict);
+    void *__init__(file *f, list<str *> *fieldnames, str *restval, str *extrasaction, str *dialect, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict);
 };
 
 extern void * default_9;
@@ -183,8 +183,8 @@ extern void * default_4;
 
 void __init();
 list<str *> *list_dialects();
-Excel *_get_dialect(str *name, str *delimiter, str *quotechar, int doublequote, int skipinitialspace, str *lineterminator, int quoting, str *escapechar, int strict);
-int field_size_limit(int new_limit);
+Excel *_get_dialect(str *name, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict);
+__ss_int field_size_limit(__ss_int new_limit);
 
 } // module namespace
 #endif

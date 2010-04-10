@@ -10,7 +10,7 @@ StringI::StringI(str *s) : file() {
 
 }
 
-void *StringI::seek(int i, int w) {
+void *StringI::seek(__ss_int i, __ss_int w) {
     if(w==0) pos = i;
     else if(w==1) pos += i;
     else pos = len(s)+i;
@@ -24,7 +24,7 @@ int StringI::getchar() {
     return s->unit[pos++];
 }
 
-void *StringI::putchar(int c) {
+void *StringI::putchar(__ss_int c) {
     if(pos < len(s))
         s->unit[pos] = c;
     else
