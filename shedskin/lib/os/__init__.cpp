@@ -57,24 +57,24 @@ namespace __os__ {
 str *const_0;
 str *linesep, *name;
 dict<str *, str *> *__ss_environ;
-dict<str *, int> *pathconf_names, *confstr_names, *sysconf_names;
+dict<str *, __ss_int> *pathconf_names, *confstr_names, *sysconf_names;
 
 struct stat sbuf;
 #ifndef WIN32
 struct statvfs vbuf;
 #endif
 
-const int MAXENTRIES = 4096; /* XXX fix functions that use this */
+const __ss_int MAXENTRIES = 4096; /* XXX fix functions that use this */
 
 str *altsep, *curdir, *defpath, *devnull, *extsep, *pardir, *pathsep, *sep;
 
-int __ss_F_OK, __ss_R_OK, __ss_W_OK, __ss_X_OK, __ss_NGROUPS_MAX, __ss_TMP_MAX, __ss_WCONTINUED, __ss_WNOHANG, __ss_WUNTRACED, __ss_O_RDONLY, __ss_O_WRONLY, __ss_O_RDWR, __ss_O_NDELAY, __ss_O_NONBLOCK, __ss_O_APPEND, __ss_O_DSYNC, __ss_O_RSYNC, __ss_O_SYNC, __ss_O_NOCTTY, __ss_O_CREAT, __ss_O_EXCL, __ss_O_TRUNC, __ss_O_BINARY, __ss_O_TEXT, __ss_O_LARGEFILE, __ss_O_SHLOCK, __ss_O_EXLOCK, __ss_O_NOINHERIT, __ss__O_SHORT_LIVED, __ss_O_TEMPORARY, __ss_O_RANDOM, __ss_O_SEQUENTIAL, __ss_O_ASYNC, __ss_O_DIRECT, __ss_O_DIRECTORY, __ss_O_NOFOLLOW, __ss_O_NOATIME, __ss_EX_OK, __ss_EX_USAGE, __ss_EX_DATAERR, __ss_EX_NOINPUT, __ss_EX_NOUSER, __ss_EX_NOHOST, __ss_EX_UNAVAILABLE, __ss_EX_SOFTWARE, __ss_EX_OSERR, __ss_EX_OSFILE, __ss_EX_CANTCREAT, __ss_EX_IOERR, __ss_EX_TEMPFAIL, __ss_EX_PROTOCOL, __ss_EX_NOPERM, __ss_EX_CONFIG, __ss_EX_NOTFOUND, __ss_P_WAIT, __ss_P_NOWAIT, __ss_P_OVERLAY, __ss_P_NOWAITO, __ss_P_DETACH, __ss_SEEK_SET, __ss_SEEK_CUR, __ss_SEEK_END;
+__ss_int __ss_F_OK, __ss_R_OK, __ss_W_OK, __ss_X_OK, __ss_NGROUPS_MAX, __ss_TMP_MAX, __ss_WCONTINUED, __ss_WNOHANG, __ss_WUNTRACED, __ss_O_RDONLY, __ss_O_WRONLY, __ss_O_RDWR, __ss_O_NDELAY, __ss_O_NONBLOCK, __ss_O_APPEND, __ss_O_DSYNC, __ss_O_RSYNC, __ss_O_SYNC, __ss_O_NOCTTY, __ss_O_CREAT, __ss_O_EXCL, __ss_O_TRUNC, __ss_O_BINARY, __ss_O_TEXT, __ss_O_LARGEFILE, __ss_O_SHLOCK, __ss_O_EXLOCK, __ss_O_NOINHERIT, __ss__O_SHORT_LIVED, __ss_O_TEMPORARY, __ss_O_RANDOM, __ss_O_SEQUENTIAL, __ss_O_ASYNC, __ss_O_DIRECT, __ss_O_DIRECTORY, __ss_O_NOFOLLOW, __ss_O_NOATIME, __ss_EX_OK, __ss_EX_USAGE, __ss_EX_DATAERR, __ss_EX_NOINPUT, __ss_EX_NOUSER, __ss_EX_NOHOST, __ss_EX_UNAVAILABLE, __ss_EX_SOFTWARE, __ss_EX_OSERR, __ss_EX_OSFILE, __ss_EX_CANTCREAT, __ss_EX_IOERR, __ss_EX_TEMPFAIL, __ss_EX_PROTOCOL, __ss_EX_NOPERM, __ss_EX_CONFIG, __ss_EX_NOTFOUND, __ss_P_WAIT, __ss_P_NOWAIT, __ss_P_OVERLAY, __ss_P_NOWAITO, __ss_P_DETACH, __ss_SEEK_SET, __ss_SEEK_CUR, __ss_SEEK_END;
 
 list<str *> *listdir(str *path) {
     list<str *> *r = new list<str *>();
     DIR *dp;
     struct dirent *ep;
-    int count = 0;
+    __ss_int count = 0;
 
     dp = opendir(path->unit.c_str());
 
@@ -100,11 +100,11 @@ void *chdir(str *dir) {
     return NULL;
 }
 
-str *strerror(int i) {
+str *strerror(__ss_int i) {
     return new str(::strerror(i));
 }
 
-int system(str *c) {
+__ss_int system(str *c) {
     return std::system(c->unit.c_str());
 }
 
@@ -166,7 +166,7 @@ void *removedirs(str *name) {
 }
 
 
-void *mkdir(str *path, int mode) {
+void *mkdir(str *path, __ss_int mode) {
 #ifdef WIN32
     if (::mkdir(path->unit.c_str()) == -1)
 #else
@@ -176,14 +176,14 @@ void *mkdir(str *path, int mode) {
     return NULL;
 }
 
-void _exit(int code) {
+void _exit(__ss_int code) {
     ::exit(code);
 }
 
-void *makedirs(str *name, int mode) {
+void *makedirs(str *name, __ss_int mode) {
     tuple2<str *, str *> *__0, *__1;
     str *head, *tail;
-    int __2, __3, __4;
+    __ss_int __2, __3, __4;
 
     __0 = __path__::split(name);
     head = __0->__getfirst__();
@@ -217,8 +217,8 @@ void *abort() {
 
 class_ *cl___cstat;
 
-__cstat::__cstat(str *path, int t) {
-    int hop;
+__cstat::__cstat(str *path, __ss_int t) {
+    __ss_int hop;
     this->__class__ = cl___cstat;
 
     if(t==1) {
@@ -234,8 +234,8 @@ __cstat::__cstat(str *path, int t) {
     fill_er_up();
 }
 
-__cstat::__cstat(int fd) {
-    int hop;
+__cstat::__cstat(__ss_int fd) {
+    __ss_int hop;
     this->__class__ = cl___cstat;
 
     if(fstat(fd, &sbuf) == -1)
@@ -266,7 +266,7 @@ __ss_int __cstat::__len__() {
     return 10;
 }
 
-int __cstat::__getitem__(int i) {
+__ss_int __cstat::__getitem__(__ss_int i) {
     i = __wrap(this, i);
     switch(i) {
         case 0: return st_mode;
@@ -291,8 +291,8 @@ int __cstat::__getitem__(int i) {
 /* class namedtuple */
 
 str *namedtuple::__repr__() {
-    tuple2<int, int> *t = new tuple2<int, int>();
-    for(int i=0; i < __len__(); i++)
+    tuple2<__ss_int, __ss_int> *t = new tuple2<__ss_int, __ss_int>();
+    for(__ss_int i=0; i < __len__(); i++)
         t->units.push_back(__getitem__(i));
     return repr(t);
 }
@@ -322,11 +322,11 @@ __cstat *lstat(str *path) {
     return new __cstat(path, 1);
 #endif
 }
-__cstat *fstat(int fd) {
+__cstat *fstat(__ss_int fd) {
     return new __cstat(fd);
 }
 
-__ss_bool stat_float_times(int newvalue) {
+__ss_bool stat_float_times(__ss_int newvalue) {
     if(newvalue==0)
         throw new TypeError(new str("os.stat_float_times: cannot change type"));
     return True;
@@ -339,15 +339,15 @@ void *putenv(str* varname, str* value) {
     return NULL;
 }
 
-int umask(int newmask)  {
+__ss_int umask(__ss_int newmask)  {
     return ::umask(newmask);
 }
 
 #ifndef WIN32
-int chmod (str* path, int val) {
+__ss_int chmod (str* path, __ss_int val) {
 #ifdef WIN32
     DWORD attr;
-    int res;
+    __ss_int res;
     attr = GetFileAttributesA(var->unit.c_str());
 
     if (attr != 0xFFFFFFFF) {
@@ -446,42 +446,42 @@ popen_pipe* popen(str* cmd, str* mode) {
     return popen(cmd, mode, -1);
 }
 
-popen_pipe* popen(str* cmd, str* mode, int bufsize) {
+popen_pipe* popen(str* cmd, str* mode, __ss_int bufsize) {
     FILE* fp = ::popen(cmd->unit.c_str(), mode->unit.c_str());
 
     if(!fp) throw new OSError(cmd);
     return new popen_pipe(fp);
 }
 
-int dup(int f1) {
-    int f2 = ::dup(f1);
+__ss_int dup(__ss_int f1) {
+    __ss_int f2 = ::dup(f1);
     if (f2 == -1)
         throw new OSError(new str("os.dup failed"));
     return f2;
 }
 
-void *dup2(int f1, int f2) {
+void *dup2(__ss_int f1, __ss_int f2) {
     if (::dup2(f1,f2) == -1)
         throw new OSError(new str("os.dup2 failed"));
     return NULL;
 }
 
 #if !defined(__APPLE__) && !defined(__FreeBSD__) && !defined(WIN32)
-void *fdatasync(int f1) {
+void *fdatasync(__ss_int f1) {
     if (::fdatasync(f1) == -1)
         throw new OSError(new str("os.fdatasync failed"));
     return NULL;
 }
 #endif
 
-int open(str *name, int flags) { /* XXX mode argument */
-    int fp = ::open(name->unit.c_str(), flags);
+__ss_int open(str *name, __ss_int flags) { /* XXX mode argument */
+    __ss_int fp = ::open(name->unit.c_str(), flags);
     if(fp == -1)
         throw new OSError(new str("os.open failed"));
     return fp;
 }
 
-file* fdopen(int fd, str* mode, int bufsize) {
+file* fdopen(__ss_int fd, str* mode, __ss_int bufsize) {
     if(!mode)
         mode = new str("r");
 /* XXX ValueError: mode string must begin with one of 'r', 'w', 'a' or 'U' */
@@ -494,11 +494,11 @@ file* fdopen(int fd, str* mode, int bufsize) {
     return ret;
 }
 
-str *read(int fd, int n) {  /* XXX slowness */
+str *read(__ss_int fd, __ss_int n) {  /* XXX slowness */
     char c;
     str *s = new str();
-    int nr;
-    for(int i=0; i<n; i++) {
+    __ss_int nr;
+    for(__ss_int i=0; i<n; i++) {
         nr = ::read(fd, &c, 1);
         if(nr == -1)
             throw new OSError(new str("os.read"));
@@ -509,15 +509,15 @@ str *read(int fd, int n) {  /* XXX slowness */
     return s;
 }
 
-int write(int fd, str *s) {
-    int r;
+__ss_int write(__ss_int fd, str *s) {
+    __ss_int r;
     if((r=::write(fd, s->unit.c_str(), len(s))) == -1)
         throw new OSError(new str("os.write"));
     return r;
 }
 
 
-void *close(int fd) {
+void *close(__ss_int fd) {
    if(::close(fd) < 0)
        throw new OSError(new str("os.close failed"));
    return NULL;
@@ -526,52 +526,52 @@ void *close(int fd) {
 /* UNIX-only functionality */
 
 #ifndef WIN32
-int __ss_WCOREDUMP(int status) {
+__ss_int __ss_WCOREDUMP(__ss_int status) {
     return WCOREDUMP(status);
 }
 
-int __ss_WEXITSTATUS(int status) {
+__ss_int __ss_WEXITSTATUS(__ss_int status) {
     return WEXITSTATUS(status);
 }
 
-int __ss_WIFCONTINUED(int status) {
+__ss_int __ss_WIFCONTINUED(__ss_int status) {
     return WIFCONTINUED(status);
 }
 
-int __ss_WIFEXITED(int status) {
+__ss_int __ss_WIFEXITED(__ss_int status) {
     return WIFEXITED(status);
 }
 
-int __ss_WIFSIGNALED(int status) {
+__ss_int __ss_WIFSIGNALED(__ss_int status) {
     return WIFSIGNALED(status);
 }
 
-int __ss_WIFSTOPPED(int status) {
+__ss_int __ss_WIFSTOPPED(__ss_int status) {
     return WIFSTOPPED(status);
 }
 
-int __ss_WSTOPSIG(int status) {
+__ss_int __ss_WSTOPSIG(__ss_int status) {
     return WSTOPSIG(status);
 }
 
-int __ss_WTERMSIG(int status) {
+__ss_int __ss_WTERMSIG(__ss_int status) {
     return WTERMSIG(status);
 }
 
-void *fchdir(int f1) {
+void *fchdir(__ss_int f1) {
     if (::fchdir(f1) == -1)
         throw new OSError(new str("os.fchdir failed"));
     return NULL;
 }
 
 str *readlink(str *path) {
-    int size = 255;
+    __ss_int size = 255;
     str *r;
 
     while (1)
       {
         char *buffer = (char *) GC_malloc (size);
-	    int nchars = ::readlink(path->unit.c_str(), buffer, size);
+	    __ss_int nchars = ::readlink(path->unit.c_str(), buffer, size);
     	if (nchars == -1) {
             throw new OSError(path);
   	    }
@@ -584,117 +584,118 @@ str *readlink(str *path) {
       }
 }
 
-int getuid() { return ::getuid(); }
-void *setuid(int uid) {
+__ss_int getuid() { return ::getuid(); }
+void *setuid(__ss_int uid) {
     if(::setuid(uid) == -1)
         throw new OSError(new str("os.setuid"));
     return NULL;
 }
 
-int getgid() { return ::getgid(); }
-void *setgid(int gid) {
+__ss_int getgid() { return ::getgid(); }
+void *setgid(__ss_int gid) {
     if(::setgid(gid) == -1)
         throw new OSError(new str("os.setgid"));
     return NULL;
 }
 
-int geteuid() { return ::geteuid(); }
-void *seteuid(int euid) {
+__ss_int geteuid() { return ::geteuid(); }
+void *seteuid(__ss_int euid) {
     if(::seteuid(euid) == -1)
         throw new OSError(new str("os.seteuid"));
     return NULL;
 }
 
-int getegid() { return ::getegid(); }
-void *setegid(int egid) {
+__ss_int getegid() { return ::getegid(); }
+void *setegid(__ss_int egid) {
     if(::setegid(egid) == -1)
         throw new OSError(new str("os.setegid"));
     return NULL;
 }
 
-int getppid() { return ::getppid(); }
+__ss_int getppid() { return ::getppid(); }
 
-void *setreuid(int ruid, int euid) {
+void *setreuid(__ss_int ruid, __ss_int euid) {
     if(::setreuid(ruid, euid) == -1)
         throw new OSError(new str("os.setreuid"));
     return NULL;
 }
 
-void *setregid(int rgid, int egid) {
+void *setregid(__ss_int rgid, __ss_int egid) {
     if(::setregid(rgid, egid) == -1)
         throw new OSError(new str("os.setregid"));
     return NULL;
 }
 
-int tcgetpgrp(int fd) {
-    int nr;
+__ss_int tcgetpgrp(__ss_int fd) {
+    __ss_int nr;
     nr = ::tcgetpgrp(fd);
     if(nr == -1)
         throw new OSError(new str("os.tcgetpgrp"));
     return nr;
 }
 
-void *tcsetpgrp(int fd, int pg) {
+void *tcsetpgrp(__ss_int fd, __ss_int pg) {
     if(::tcsetpgrp(fd, pg) == -1)
         throw new OSError(new str("os.tcsetpgrp"));
     return NULL;
 }
 
-int fork() {
-    int ret;
+__ss_int fork() {
+    __ss_int ret;
     if ((ret = ::fork()) == -1)
         throw new OSError(new str("os.fork"));
     return ret;
 }
 
-void *ftruncate(int fd, int n) {
+void *ftruncate(__ss_int fd, __ss_int n) {
     if (::ftruncate(fd, n) == -1)
         throw new OSError(new str("os.ftruncate"));
     return NULL;
 }
 
 #if !defined(__sun)
-tuple2<int, int> *forkpty() {
-    int ret, amaster;
+tuple2<__ss_int, __ss_int> *forkpty() {
+    __ss_int ret;
+    int amaster;
     if ((ret = ::forkpty(&amaster, NULL, NULL, NULL)) == -1)
         throw new OSError(new str("os.forkpty"));
-    return new tuple2<int, int>(2, ret, amaster);
+    return new tuple2<__ss_int, __ss_int>(2, ret, (__ss_int)amaster);
 }
-tuple2<int, int> *openpty() {
+tuple2<__ss_int, __ss_int> *openpty() {
     int amaster, aslave;
     if (::openpty(&amaster, &aslave, NULL, NULL, NULL) == -1)
         throw new OSError(new str("os.openpty"));
-    return new tuple2<int, int>(2, amaster, aslave);
+    return new tuple2<__ss_int, __ss_int>(2, (__ss_int)amaster, (__ss_int)aslave);
 }
 #endif
 
-tuple2<int, int> *wait() {
-    int pid, status;
+tuple2<__ss_int, __ss_int> *wait() {
+    __ss_int pid, status;
     if((pid = ::wait(&status)) == -1)
         throw new OSError(new str("os.wait"));
-    return new tuple2<int, int>(2, pid, status);
+    return new tuple2<__ss_int, __ss_int>(2, pid, status);
 }
 
-tuple2<int, int> *waitpid(int pid, int options) {
+tuple2<__ss_int, __ss_int> *waitpid(__ss_int pid, __ss_int options) {
     int status;
     if((pid = ::waitpid(pid, &status, options)) == -1)
         throw new OSError(new str("os.waitpid"));
-    return new tuple2<int, int>(2, pid, status);
+    return new tuple2<__ss_int, __ss_int>(2, pid, (__ss_int)status);
 }
 
-int nice(int n) {
-    int m;
+__ss_int nice(__ss_int n) {
+    __ss_int m;
     if((m = ::nice(n)) == -1)
         throw new OSError(new str("os.nice"));
     return m;
 }
 
-void *kill(int pid, int sig) {
+void *kill(__ss_int pid, __ss_int sig) {
     if(::kill(pid, sig) == -1)
         throw new OSError(new str("os.kill"));
     return NULL;
 }
-void *killpg(int pgid, int sig) {
+void *killpg(__ss_int pgid, __ss_int sig) {
     if(::killpg(pgid, sig) == -1)
         throw new OSError(new str("os.killpg"));
     return NULL;
@@ -707,13 +708,13 @@ str *getlogin() {
     return new str(name);
 }
 
-void *chown(str *path, int uid, int gid) {
+void *chown(str *path, __ss_int uid, __ss_int gid) {
     if (::chown(path->unit.c_str(), uid, gid) == -1)
         throw new OSError(path);
     return NULL;
 }
 
-void *lchown(str *path, int uid, int gid) {
+void *lchown(str *path, __ss_int uid, __ss_int gid) {
     if (::lchown(path->unit.c_str(), uid, gid) == -1)
         throw new OSError(path);
     return NULL;
@@ -731,11 +732,11 @@ str *ctermid() {
     return new str(ptr);
 }
 
-__ss_bool isatty(int fd) {
+__ss_bool isatty(__ss_int fd) {
     return __mbool(::isatty(fd));
 }
 
-str *ttyname(int fd) {
+str *ttyname(__ss_int fd) {
     char *name = ::ttyname(fd);
     if(!name)
         throw new OSError(new str("os.ttyname"));
@@ -748,51 +749,51 @@ tuple2<str *, str *> *uname() {
     return new tuple2<str *, str *>(5, new str(name.sysname), new str(name.nodename), new str(name.release), new str(name.version), new str(name.machine));
 }
 
-list<int> *getgroups() {
+list<__ss_int> *getgroups() {
     gid_t l[MAXENTRIES];
-    int nr = ::getgroups(MAXENTRIES, l);
+    __ss_int nr = ::getgroups(MAXENTRIES, l);
     if(nr == -1)
         throw new OSError(new str("os.getgroups"));
-    list<int> *r = new list<int>();
-    for(int i=0;i<nr;i++)
+    list<__ss_int> *r = new list<__ss_int>();
+    for(__ss_int i=0;i<nr;i++)
         r->append(l[i]);
     return r;
 }
-void *setgroups(pyseq<int> *groups) {
+void *setgroups(pyseq<__ss_int> *groups) {
     gid_t l[MAXENTRIES];
-    for(int i=0; i<len(groups); i++)
+    for(__ss_int i=0; i<len(groups); i++)
         l[i] = groups->__getitem__(i);
     if(::setgroups(len(groups), l) == -1)
         throw new OSError(new str("os.setgroups"));
     return NULL;
 }
 
-int getsid(int pid) {
-    int nr = ::getsid(pid);
+__ss_int getsid(__ss_int pid) {
+    __ss_int nr = ::getsid(pid);
     if(nr == -1)
         throw new OSError(new str("os.getsid"));
     return nr;
 }
-int setsid() {
-    int nr = ::setsid();
+__ss_int setsid() {
+    __ss_int nr = ::setsid();
     if(nr == -1)
         throw new OSError(new str("os.setsid"));
     return nr;
 }
 
-int getpgid(int pid) {
-    int nr = ::getpgid(pid);
+__ss_int getpgid(__ss_int pid) {
+    __ss_int nr = ::getpgid(pid);
     if(nr == -1)
         throw new OSError(new str("os.getpgid"));
     return nr;
 }
-void *setpgid(int pid, int pgrp) {
+void *setpgid(__ss_int pid, __ss_int pgrp) {
     if(::setpgid(pid, pgrp) == -1)
         throw new OSError(new str("os.setpgid"));
     return NULL;
 }
 
-int getpgrp() {
+__ss_int getpgrp() {
     return getpgid(0);
 }
 void *setpgrp() {
@@ -813,23 +814,23 @@ void *symlink(str *src, str *dst) {
     return NULL;
 }
 
-int pathconf(str *path, str *name) {
+__ss_int pathconf(str *path, str *name) {
     if(!pathconf_names->__contains__(name))
         throw new ValueError(new str("unrecognized configuration name"));
     return pathconf(path, pathconf_names->__getitem__(name)); /* XXX errors */
 }
-int pathconf(str *path, int name) {
-    int limit = ::pathconf(path->unit.c_str(), name); /* XXX errors */
+__ss_int pathconf(str *path, __ss_int name) {
+    __ss_int limit = ::pathconf(path->unit.c_str(), name); /* XXX errors */
     return limit;
 }
 
-int fpathconf(int fd, str *name) {
+__ss_int fpathconf(__ss_int fd, str *name) {
     if(!pathconf_names->__contains__(name))
         throw new ValueError(new str("unrecognized configuration name"));
     return fpathconf(fd, pathconf_names->__getitem__(name)); /* XXX errors */
 }
-int fpathconf(int fd, int name) {
-    int limit = ::fpathconf(fd, name); /* XXX errors */
+__ss_int fpathconf(__ss_int fd, __ss_int name) {
+    __ss_int limit = ::fpathconf(fd, name); /* XXX errors */
     return limit;
 }
 
@@ -838,21 +839,21 @@ str *confstr(str *name) {
         throw new ValueError(new str("unrecognized configuration name"));
     return confstr(confstr_names->__getitem__(name));
 }
-str *confstr(int name) {
+str *confstr(__ss_int name) {
     char buf[MAXENTRIES];
-    int size = ::confstr(name, buf, MAXENTRIES); /* XXX errors */
+    __ss_int size = ::confstr(name, buf, MAXENTRIES); /* XXX errors */
     if(size == -1)
         throw new OSError(new str("os.confstr"));
     return new str(buf);
 }
 
-int sysconf(str *name) {
+__ss_int sysconf(str *name) {
     if(!sysconf_names->__contains__(name))
         throw new ValueError(new str("unrecognized configuration name"));
     return sysconf(sysconf_names->__getitem__(name)); /* XXX errors */
 }
-int sysconf(int name) {
-    int limit = ::sysconf(name); /* XXX errors */
+__ss_int sysconf(__ss_int name) {
+    __ss_int limit = ::sysconf(name); /* XXX errors */
     return limit;
 }
 
@@ -863,7 +864,7 @@ tuple2<double, double> *getloadavg() {
     return new tuple2<double, double>(3, load[0], load[1], load[2]);
 }
 
-void *mkfifo(str *path, int mode) {
+void *mkfifo(str *path, __ss_int mode) {
     if(::mkfifo(path->unit.c_str(), mode) == -1)
         throw new OSError(new str("os.mkfifo"));
     return NULL;
@@ -880,7 +881,7 @@ __vfsstat::__vfsstat(str *path) {
     fill_er_up();
 }
 
-__vfsstat::__vfsstat(int fd) {
+__vfsstat::__vfsstat(__ss_int fd) {
     this->__class__ = cl___vfsstat;
     if(fstatvfs(fd, &vbuf) == -1)
         throw new OSError(__str(fd));
@@ -904,7 +905,7 @@ __ss_int __vfsstat::__len__() {
     return 10;
 }
 
-int __vfsstat::__getitem__(int i) {
+__ss_int __vfsstat::__getitem__(__ss_int i) {
     i = __wrap(this, i);
     switch(i) {
         case 0: return vbuf.f_bsize;
@@ -928,24 +929,24 @@ int __vfsstat::__getitem__(int i) {
 __vfsstat *statvfs(str *path) {
     return new __vfsstat(path);
 }
-__vfsstat *fstatvfs(int fd) {
+__vfsstat *fstatvfs(__ss_int fd) {
     return new __vfsstat(fd);
 }
 
-void *fsync(int fd) {
+void *fsync(__ss_int fd) {
     if(::fsync(fd) == -1)
         throw new OSError(new str("os.fsync"));
     return NULL;
 }
 
-void *lseek(int fd, int pos, int how) {
+void *lseek(__ss_int fd, __ss_int pos, __ss_int how) {
     if(::lseek(fd, pos, how) == -1)
         throw new OSError(new str("os.lseek"));
     return NULL;
 }
 
-str *urandom(int n) {
-    int fd = open(new str("/dev/urandom"), __ss_O_RDONLY);
+str *urandom(__ss_int n) {
+    __ss_int fd = open(new str("/dev/urandom"), __ss_O_RDONLY);
     str *s = read(fd, n);
     close(fd);
     return s;
@@ -965,21 +966,21 @@ void __utime(str *path, double actime, double modtime) {
 
 #define HOPPA if (times) __utime(path, times->__getfirst__(), times->__getsecond__()); else __utime(path); return NULL;
 
-void *utime(str *path, tuple2<int, int> *times) { HOPPA }
-void *utime(str *path, tuple2<int, double> *times) { HOPPA }
-void *utime(str *path, tuple2<double, int> *times) { HOPPA }
+void *utime(str *path, tuple2<__ss_int, __ss_int> *times) { HOPPA }
+void *utime(str *path, tuple2<__ss_int, double> *times) { HOPPA }
+void *utime(str *path, tuple2<double, __ss_int> *times) { HOPPA }
 void *utime(str *path, tuple2<double, double> *times) { HOPPA }
 
 #undef HOPPA
 
-__ss_bool access(str *path, int mode) {
+__ss_bool access(str *path, __ss_int mode) {
     return __mbool(::access(path->unit.c_str(), mode) == 0);
 }
 
 tuple2<double, double> *times() {
     struct tms buf;
     clock_t c;
-    int ticks_per_second = ::sysconf(_SC_CLK_TCK);
+    __ss_int ticks_per_second = ::sysconf(_SC_CLK_TCK);
     if((c = ::times(&buf)) == -1)
         throw new OSError(new str("os.utime"));
     return new tuple2<double, double>(5, ((double)buf.tms_utime / ticks_per_second), ((double)buf.tms_stime / ticks_per_second), ((double)buf.tms_cutime / ticks_per_second), ((double)buf.tms_cstime / ticks_per_second), ((double)c / ticks_per_second));
@@ -1011,24 +1012,24 @@ file *tmpfile() {
     return result;
 } */
 
-int __ss_makedev(int major, int minor) {
+__ss_int __ss_makedev(__ss_int major, __ss_int minor) {
     return makedev(major, minor);
 }
-int __ss_major(int dev) {
+__ss_int __ss_major(__ss_int dev) {
     return major(dev);
 }
-int __ss_minor(int dev) {
+__ss_int __ss_minor(__ss_int dev) {
     return minor(dev);
 }
 
-void *mknod(str *filename, int mode, int device) {
+void *mknod(str *filename, __ss_int mode, __ss_int device) {
     if(::mknod(filename->unit.c_str(), mode, device) == -1)
         throw new OSError(new str("os.mknod"));
 }
 
 char **__exec_argvlist(list<str *> *args) {
     char** argvlist = (char**)GC_malloc(sizeof(char*)*(args->__len__()+1));
-    for(int i = 0; i < args->__len__(); ++i) {
+    for(__ss_int i = 0; i < args->__len__(); ++i) {
         argvlist[i] = (char *)(args->__getitem__(i)->unit.c_str());
     }
     argvlist[args->__len__()] = NULL;
@@ -1038,7 +1039,7 @@ char **__exec_argvlist(list<str *> *args) {
 char **__exec_envplist(dict<str *, str *> *env) {
     char** envplist = (char**)GC_malloc(sizeof(char*)*(env->__len__()+1));
     list<tuple2<str *, str *> *> *items = env->items();
-    for(int i=0; i < items->__len__(); i++) {
+    for(__ss_int i=0; i < items->__len__(); i++) {
         envplist[i] = (char *)(__add_strs(3, items->__getitem__(i)->__getfirst__(), new str("="), items->__getitem__(i)->__getsecond__())->unit.c_str());
     }
     envplist[items->__len__()] = NULL;
@@ -1054,42 +1055,42 @@ list<str *> *__exec_path() {
     return envpath->split(pathsep);
 }
 
-void *execl(int n, str *file, ...) {
+void *execl(__ss_int n, str *file, ...) {
      list<str *> *vals = new list<str *>();
      va_list args;
      va_start(args, file);
-     for(int i=0; i<n-1; i++)
+     for(__ss_int i=0; i<n-1; i++)
          vals->append(va_arg(args, str *)); /* XXX check str */
      va_end(args);
      execv(file, vals);
 }
 
-void *execlp(int n, str *file, ...) {
+void *execlp(__ss_int n, str *file, ...) {
      list<str *> *vals = new list<str *>();
      va_list args;
      va_start(args, file);
-     for(int i=0; i<n-1; i++)
+     for(__ss_int i=0; i<n-1; i++)
          vals->append(va_arg(args, str *)); /* XXX check str */
      va_end(args);
      execvp(file, vals);
 }
 
-void *execle(int n, str *file, ...) {
+void *execle(__ss_int n, str *file, ...) {
      list<str *> *vals = new list<str *>();
      va_list args;
      va_start(args, file);
-     for(int i=0; i<n-2; i++)
+     for(__ss_int i=0; i<n-2; i++)
          vals->append(va_arg(args, str *)); /* XXX check str */
      va_end(args);
      dict<str *, str *> *env = (dict<str *, str *> *)(va_arg(args, pyobj *)); /* XXX check */
      execve(file, vals, env);
 }
 
-void *execlpe(int n, str *file, ...) {
+void *execlpe(__ss_int n, str *file, ...) {
      list<str *> *vals = new list<str *>();
      va_list args;
      va_start(args, file);
-     for(int i=0; i<n-2; i++)
+     for(__ss_int i=0; i<n-2; i++)
          vals->append(va_arg(args, str *)); /* XXX check str */
      va_end(args);
      dict<str *, str *> *env = (dict<str *, str *> *)(va_arg(args, pyobj *)); /* XXX check */
@@ -1111,7 +1112,7 @@ void *execvp(str* file, list<str*>* args) {
 
     list<str *> *PATH = __exec_path();
 
-    for(int i = 0; i < PATH->__len__(); ++i) {
+    for(__ss_int i = 0; i < PATH->__len__(); ++i) {
         str* dir = PATH->__getfast__(i);
         str* fullname = __path__::join(2, dir, file);
         if(__path__::exists(fullname)) {
@@ -1137,7 +1138,7 @@ void *execvpe(str* file, list<str*>* args, dict<str *, str *> *env) {
 
     list<str *> *PATH = __exec_path();
 
-    for(int i = 0; i < PATH->__len__(); ++i) {
+    for(__ss_int i = 0; i < PATH->__len__(); ++i) {
         str* dir = PATH->__getfast__(i);
         str* fullname = __path__::join(2, dir, file);
         if(__path__::exists(fullname))
@@ -1146,51 +1147,51 @@ void *execvpe(str* file, list<str*>* args, dict<str *, str *> *env) {
     throw new OSError(new str("os.execvpe"));
 }
 
-int spawnl(int n, int mode, str *file, ...) {
+__ss_int spawnl(__ss_int n, __ss_int mode, str *file, ...) {
      list<str *> *vals = new list<str *>();
      va_list args;
      va_start(args, file);
-     for(int i=0; i<n-2; i++)
+     for(__ss_int i=0; i<n-2; i++)
          vals->append(va_arg(args, str *)); /* XXX check str */
      va_end(args);
      return spawnv(mode, file, vals);
 }
 
-int spawnlp(int n, int mode, str *file, ...) {
+__ss_int spawnlp(__ss_int n, __ss_int mode, str *file, ...) {
      list<str *> *vals = new list<str *>();
      va_list args;
      va_start(args, file);
-     for(int i=0; i<n-2; i++)
+     for(__ss_int i=0; i<n-2; i++)
          vals->append(va_arg(args, str *)); /* XXX check str */
      va_end(args);
      return spawnvp(mode, file, vals);
 }
 
-int spawnle(int n, int mode, str *file, ...) {
+__ss_int spawnle(__ss_int n, __ss_int mode, str *file, ...) {
      list<str *> *vals = new list<str *>();
      va_list args;
      va_start(args, file);
-     for(int i=0; i<n-3; i++)
+     for(__ss_int i=0; i<n-3; i++)
          vals->append(va_arg(args, str *)); /* XXX check str */
      va_end(args);
      dict<str *, str *> *env = (dict<str *, str *> *)(va_arg(args, pyobj *)); /* XXX check */
      return spawnve(mode, file, vals, env);
 }
 
-int spawnlpe(int n, int mode, str *file, ...) {
+__ss_int spawnlpe(__ss_int n, __ss_int mode, str *file, ...) {
      list<str *> *vals = new list<str *>();
      va_list args;
      va_start(args, file);
-     for(int i=0; i<n-3; i++)
+     for(__ss_int i=0; i<n-3; i++)
          vals->append(va_arg(args, str *)); /* XXX check str */
      va_end(args);
      dict<str *, str *> *env = (dict<str *, str *> *)(va_arg(args, pyobj *)); /* XXX check */
      return spawnvpe(mode, file, vals, env);
 }
 
-int spawnv(int mode, str *file, list<str *> *args) {
-    int pid, retval;
-    tuple2<int, int> *t;
+__ss_int spawnv(__ss_int mode, str *file, list<str *> *args) {
+    __ss_int pid, retval;
+    tuple2<__ss_int, __ss_int> *t;
     if(!(pid = fork())) /* XXX no spawn* for C++..? */
         execv(file, args);
     else if (mode == __ss_P_WAIT) {
@@ -1201,9 +1202,9 @@ int spawnv(int mode, str *file, list<str *> *args) {
         return pid;
 }
 
-int spawnvp(int mode, str *file, list<str *> *args) {
-    int pid, retval;
-    tuple2<int, int> *t;
+__ss_int spawnvp(__ss_int mode, str *file, list<str *> *args) {
+    __ss_int pid, retval;
+    tuple2<__ss_int, __ss_int> *t;
     if(!(pid = fork())) /* XXX no spawn* for C++..? */
         execvp(file, args);
     else if (mode == __ss_P_WAIT) {
@@ -1214,9 +1215,9 @@ int spawnvp(int mode, str *file, list<str *> *args) {
         return pid;
 }
 
-int spawnve(int mode, str *file, list<str *> *args, dict<str *, str *> *env) {
-    int pid, retval;
-    tuple2<int, int> *t;
+__ss_int spawnve(__ss_int mode, str *file, list<str *> *args, dict<str *, str *> *env) {
+    __ss_int pid, retval;
+    tuple2<__ss_int, __ss_int> *t;
     if(!(pid = fork())) /* XXX no spawn* for C++..? */
         execve(file, args, env);
     else if (mode == __ss_P_WAIT) {
@@ -1227,9 +1228,9 @@ int spawnve(int mode, str *file, list<str *> *args, dict<str *, str *> *env) {
         return pid;
 }
 
-int spawnvpe(int mode, str *file, list<str *> *args, dict<str *, str *> *env) {
-    int pid, retval;
-    tuple2<int, int> *t;
+__ss_int spawnvpe(__ss_int mode, str *file, list<str *> *args, dict<str *, str *> *env) {
+    __ss_int pid, retval;
+    tuple2<__ss_int, __ss_int> *t;
     if(!(pid = fork())) /* XXX no spawn* for C++..? */
         execvpe(file, args, env);
     else if (mode == __ss_P_WAIT) {
@@ -1240,7 +1241,7 @@ int spawnvpe(int mode, str *file, list<str *> *args, dict<str *, str *> *env) {
         return pid;
 }
 
-int getpid() {
+__ss_int getpid() {
     //return GetCurrentProcessId();
     return ::getpid();
 }
@@ -1254,17 +1255,17 @@ tuple2<file*,file*>* popen2(str* cmd) {
     return popen2(cmd, new str("t"), -1);
 }
 
-tuple2<file*,file*>* popen2(str* cmd, str* mode, int bufsize) {
-    tuple2<int,int>* p2c = pipe();
-    tuple2<int,int>* c2p = pipe();
+tuple2<file*,file*>* popen2(str* cmd, str* mode, __ss_int bufsize) {
+    tuple2<__ss_int,__ss_int>* p2c = pipe();
+    tuple2<__ss_int,__ss_int>* c2p = pipe();
 
-    int pid = fork();
+    __ss_int pid = fork();
 
     if(pid == 0) {
         dup2( p2c->__getfirst__(), 0);
         dup2( c2p->__getsecond__(), 1);
 
-        for(int i = 3; i < MAXENTRIES; ++i) {
+        for(__ss_int i = 3; i < MAXENTRIES; ++i) {
             try {
                 close(i);
             }
@@ -1291,19 +1292,19 @@ tuple2<file*,file*>* popen3(str* cmd) {
 }
 
 
-tuple2<file*,file*>* popen3(str* cmd, str* mode, int bufsize) {
-    tuple2<int,int>* p2c = pipe();
-    tuple2<int,int>* c2p = pipe();
-    tuple2<int,int>* erp = pipe();
+tuple2<file*,file*>* popen3(str* cmd, str* mode, __ss_int bufsize) {
+    tuple2<__ss_int,__ss_int>* p2c = pipe();
+    tuple2<__ss_int,__ss_int>* c2p = pipe();
+    tuple2<__ss_int,__ss_int>* erp = pipe();
 
-    int pid = fork();
+    __ss_int pid = fork();
 
     if(pid == 0) {
         dup2( p2c->__getfirst__(), 0);
         dup2( c2p->__getsecond__(), 1);
         dup2( erp->__getsecond__(), 2);
 
-        for(int i = 3; i < MAXENTRIES; ++i) {
+        for(__ss_int i = 3; i < MAXENTRIES; ++i) {
             try {
                 close(i);
             }
@@ -1327,18 +1328,18 @@ tuple2<file*,file*>* popen4(str* cmd) {
     return popen4(cmd, new str("t"), -1);
 }
 
-tuple2<file*,file*>* popen4(str* cmd, str* mode, int bufsize) {
-    tuple2<int,int>* p2c = pipe();
-    tuple2<int,int>* c2p = pipe();
+tuple2<file*,file*>* popen4(str* cmd, str* mode, __ss_int bufsize) {
+    tuple2<__ss_int,__ss_int>* p2c = pipe();
+    tuple2<__ss_int,__ss_int>* c2p = pipe();
 
-    int pid = fork();
+    __ss_int pid = fork();
 
     if(pid == 0) {
         dup2( p2c->__getfirst__(), 0);
         dup2( c2p->__getsecond__(), 1);
         dup2( c2p->__getsecond__(), 2);
 
-        for(int i = 3; i < MAXENTRIES; ++i) {
+        for(__ss_int i = 3; i < MAXENTRIES; ++i) {
             try {
                 close(i);
             }
@@ -1361,9 +1362,9 @@ tuple2<file*,file*>* popen4(str* cmd, str* mode, int bufsize) {
 
 }
 
-tuple2<int,int>* pipe() {
+tuple2<__ss_int,__ss_int>* pipe() {
     int fds[2];
-    int ret;
+    __ss_int ret;
 
     ret = ::pipe(fds);
 
@@ -1373,7 +1374,7 @@ tuple2<int,int>* pipe() {
         throw new OSError(s);
     }
 
-    return new tuple2<int,int>(2,fds[0],fds[1]);
+    return new tuple2<__ss_int,__ss_int>(2,(__ss_int)fds[0],(__ss_int)fds[1]);
 }
 #endif
 
@@ -1392,9 +1393,9 @@ void __init() {
 
     __ss_environ = new dict<str *, str *>();
 
-    for (int n = 0; environ[n]; n++) {
+    for (__ss_int n = 0; environ[n]; n++) {
         str *line = new str(environ[n]);
-        int pos = line->find(new str("="));
+        __ss_int pos = line->find(new str("="));
         __ss_environ->__setitem__(line->__slice__(2, 0, pos, 0), line->__slice__(1, (pos+1), 0, 0));
     }
 
@@ -1588,7 +1589,7 @@ void __init() {
     __ss_SEEK_SET = SEEK_SET;
 #endif
 
-    pathconf_names = new dict<str *, int>();
+    pathconf_names = new dict<str *, __ss_int>();
 #ifdef _PC_ABI_AIO_XFER_MAX
     pathconf_names->__setitem__(new str("PC_ABI_AIO_XFER_MAX"), _PC_ABI_AIO_XFER_MAX);
 #endif
@@ -1641,7 +1642,7 @@ void __init() {
     pathconf_names->__setitem__(new str("PC_VDISABLE"), _PC_VDISABLE);
 #endif
 
-    confstr_names = new dict<str *, int>();
+    confstr_names = new dict<str *, __ss_int>();
 #ifdef _CS_ARCHITECTURE
     confstr_names->__setitem__(new str("CS_ARCHITECTURE"), _CS_ARCHITECTURE);
 #endif
@@ -1787,7 +1788,7 @@ void __init() {
     confstr_names->__setitem__(new str("MIPS_CS_VENDOR"), _MIPS_CS_VENDOR);
 #endif
 
-    sysconf_names = new dict<str *, int>();
+    sysconf_names = new dict<str *, __ss_int>();
 #ifdef _SC_2_CHAR_TERM
     sysconf_names->__setitem__(new str("SC_2_CHAR_TERM"), _SC_2_CHAR_TERM);
 #endif
