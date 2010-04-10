@@ -2035,7 +2035,7 @@ class generateVisitor(ASTVisitor):
             if declare:
                 self.listcomp_head(listcomp, True, genexpr)
             elif genexpr:
-                self.genexpr_class(listcomp)
+                self.genexpr_class(listcomp, declare)
             else:
                 self.listcomp_func(listcomp)
 
@@ -2045,8 +2045,7 @@ class generateVisitor(ASTVisitor):
         ts = typesetreprnew(node, lcfunc)
         if not ts.endswith('*'): ts += ' '
         if genexpr:
-            if not declare: # XXX
-                self.output('class '+lcfunc.ident+' : public '+ts[:-2]+[' {', ';'][declare])
+            self.genexpr_class(node, declare)
         else:
             self.output('static inline '+ts+lcfunc.ident+'('+', '.join(args)+')'+[' {', ';'][declare])
 
@@ -2068,31 +2067,39 @@ class generateVisitor(ASTVisitor):
         self.deindent();
         self.output('}\n')
 
-    def genexpr_class(self, node):
+    def genexpr_class(self, node, declare):
         lcfunc, func = self.listcomps[node]
-        self.listcomp_head(node, False, True)
-        self.output('public:')
-        self.indent()
-        self.lc_locals(lcfunc)
         args = self.lc_args(lcfunc, func)
-        for a,b in args:
-            self.output(a+b+';');
-        self.output('int __last_yield;\n')
-        self.output(lcfunc.ident+'('+', '.join([a+b for a,b in args])+') {')
-        for a,b in args:
-            self.output('    this->%s = %s;' % (b,b))
-        self.output('    __last_yield = -1;')
-        self.output('}\n')
-        self.output('%s next() {' % typesetreprnew(node, lcfunc)[7:-3])
-        self.indent();
-        self.output('if(!__last_yield) goto __after_yield_0;')
-        self.output('__last_yield = 0;\n')
-        self.listcomp_rec(node, node.quals, lcfunc, True)
-        self.output('throw new StopIteration();')
-        self.deindent();
-        self.output('}')
-        self.deindent();
-        self.output('};\n')
+        func1 = lcfunc.ident+'('+', '.join([a+b for a,b in args])+')'
+        func2 = typesetreprnew(node, lcfunc)[7:-3]
+        if declare:
+            ts = typesetreprnew(node, lcfunc)
+            if not ts.endswith('*'): ts += ' '
+            self.output('class '+lcfunc.ident+' : public '+ts[:-2]+' {')
+            self.output('public:')
+            self.indent()
+            self.lc_locals(lcfunc)
+            for a,b in args:
+                self.output(a+b+';');
+            self.output('int __last_yield;\n')
+            self.output(func1+';')
+            self.output(func2+' next();')
+            self.deindent();
+            self.output('};\n')
+        else:
+            self.output(lcfunc.ident+'::'+func1+' {')
+            for a,b in args:
+                self.output('    this->%s = %s;' % (b,b))
+            self.output('    __last_yield = -1;')
+            self.output('}\n')
+            self.output(func2+' '+lcfunc.ident+'::next() {')
+            self.indent();
+            self.output('if(!__last_yield) goto __after_yield_0;')
+            self.output('__last_yield = 0;\n')
+            self.listcomp_rec(node, node.quals, lcfunc, True)
+            self.output('throw new StopIteration();')
+            self.deindent();
+            self.output('}\n')
 
     def lc_locals(self, lcfunc):
         decl = {}
