@@ -22,14 +22,14 @@ tuple2<str *, str *> *const_2;
 str *const_0, *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_19, *const_3, *const_4, *const_5, *const_6, *const_7, *const_8, *const_9;
 str *__name__, *altsep, *curdir, *defpath, *devnull, *extsep, *pardir, *pathsep, *sep;
 #ifdef WIN32
-int supports_unicode_filenames;
+__ss_int supports_unicode_filenames;
 #endif
 
-str *join(int n, ...) { /* varargs hack */
+str *join(__ss_int n, ...) { /* varargs hack */
     list<str *> *p = new list<str *>();
     va_list ap;
     va_start(ap, n);
-    for(int i=0; i<n; i++) {
+    for(__ss_int i=0; i<n; i++) {
         str *t = va_arg(ap, str *);
         p->append(t);
     }
@@ -86,7 +86,7 @@ str *joinl(list<str *> *l) {
     list<str *> *__1, *__2, *p;
     __iter<str *> *__3;
     str *__0, *b, *path;
-    int __4, __5, __6;
+    __ss_int __4, __5, __6;
 
     __0 = l->__getfast__(0);
     __1 = l->__slice__(1, 1, 0, 0);
@@ -114,7 +114,7 @@ tuple2<str *, str *> *split(str *p) {
     everything after the final slash.  Either part may be empty.
     */
     str *__7, *__8, *head, *tail;
-    int __10, __9, i;
+    __ss_int __10, __9, i;
 
     i = (p->rfind(const_4)+1);
     __7 = p->__slice__(2, 0, i, 0);
@@ -132,7 +132,7 @@ tuple2<str *, str *> *splitext(str *p) {
     Split the extension from a pathname.  Extension is everything from the
     last dot to the end.  Returns "(root, ext)", either part may be empty.
     */
-    int i;
+    __ss_int i;
 
     i = p->rfind(const_1);
     if ((i<=p->rfind(const_4))) {
@@ -174,7 +174,7 @@ str *commonprefix(list<str *> *m) {
     Given a list of pathnames, returns the longest common leading component
     */
     str *s1, *s2;
-    int __11, __12, i, n;
+    __ss_int __11, __12, i, n;
 
     if ((!___bool(m))) {
         return const_0;
@@ -192,7 +192,7 @@ str *commonprefix(list<str *> *m) {
     return s1->__slice__(2, 0, n, 0);
 }
 
-int getsize(str *filename) {
+__ss_int getsize(str *filename) {
     /**
     Return the size of a file, reported by os.stat().
     */
@@ -309,7 +309,7 @@ __ss_bool samestat(__os__::__cstat *s1, __os__::__cstat *s2) {
     /**
     Test whether two stat buffers reference the same file
     */
-    int __18;
+    __ss_int __18;
     return __mbool(__AND((s1->st_ino==s2->st_ino), (s1->st_dev==s2->st_dev), 18));
 }
 
@@ -320,7 +320,7 @@ str *normpath(str *path) {
     list<str *> *__28, *__31, *__34, *__35, *__36, *__37, *comps, *new_comps;
     __iter<str *> *__29;
     str *__38, *__39, *comp;
-    int __25, __26, __27, __30, __32, __33, initial_slashes;
+    __ss_int __25, __26, __27, __30, __32, __33, initial_slashes;
 
     if (__eq(path, const_0)) {
         return const_1;
@@ -370,7 +370,7 @@ str *realpath(str *filename) {
     */
     list<str *> *bits;
     str *component, *newpath, *resolved;
-    int __40, __41, i;
+    __ss_int __40, __41, i;
 
     if (isabs(filename)) {
         bits = ((new list<str *>(1, const_4)))->__add__((filename->split(const_4))->__slice__(1, 1, 0, 0));
@@ -464,7 +464,7 @@ __ss_bool isabs(str *s) {
     /**
     Test whether a path is absolute
     */
-    int __0, __1;
+    __ss_int __0, __1;
 
     s = (splitdrive(s))->__getsecond__();
     return __mbool(__AND(__ne(s, const_1), (const_18)->__contains__(s->__slice__(2, 0, 1, 0)), 0));
@@ -477,7 +477,7 @@ str *joinl(list<str *> *l) {
     list<str *> *__3, *__4, *p;
     __iter<str *> *__5;
     str *__2, *b, *path;
-    int __10, __11, __12, __13, __14, __6, __7, __8, __9, b_wins;
+    __ss_int __10, __11, __12, __13, __14, __6, __7, __8, __9, b_wins;
 
     __2 = l->__getfast__(0);
     __3 = l->__slice__(1, 1, 0, 0);
@@ -551,7 +551,7 @@ tuple2<str *, str *> *split(str *p) {
     */
     tuple2<str *, str *> *__15;
     str *__18, *__19, *__22, *__23, *d, *head, *head2, *tail;
-    int __16, __17, __20, __21, i;
+    __ss_int __16, __17, __20, __21, i;
 
     __15 = splitdrive(p);
     d = __15->__getfirst__();
@@ -581,7 +581,7 @@ tuple2<str *, str *> *splitext(str *p) {
     Extension is everything from the last dot to the end.
     Return (root, ext), either part may be empty.
     */
-    int i;
+    __ss_int i;
 
     i = p->rfind(const_0);
     if ((i<=__max(2, 0, p->rfind(const_6), p->rfind(const_4)))) {
@@ -615,7 +615,7 @@ str *commonprefix(list<str *> *m) {
     */
     list<str *> *__24;
     __iter<str *> *__25;
-    int __26, __27, __28, i;
+    __ss_int __26, __27, __28, i;
     str *item, *prefix;
 
     if ((!___bool(m))) {
@@ -640,7 +640,7 @@ str *commonprefix(list<str *> *m) {
     return prefix;
 }
 
-int getsize(str *filename) {
+__ss_int getsize(str *filename) {
     /**
     Return the size of a file, reported by os.stat()
     */
@@ -733,7 +733,7 @@ str *normpath(str *path) {
     tuple2<str *, str *> *__36;
     list<str *> *comps;
     str *prefix;
-    int __37, __38, __39, __40, __41, __42, i;
+    __ss_int __37, __38, __39, __40, __41, __42, i;
 
     path = path->replace(const_6, const_4);
     __36 = splitdrive(path);

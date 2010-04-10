@@ -6,7 +6,7 @@
 
 namespace __stat__ {
 
-int __ss_ST_MODE, __ss_ST_INO, __ss_ST_DEV, __ss_ST_NLINK, __ss_ST_UID, __ss_ST_GID, __ss_ST_SIZE, __ss_ST_ATIME, __ss_ST_MTIME, __ss_ST_CTIME, __ss_S_IFDIR, __ss_S_IFCHR, __ss_S_IFBLK, __ss_S_IFREG, __ss_S_IFIFO, __ss_S_IFLNK, __ss_S_IFSOCK, __ss_S_ISUID, __ss_S_ISGID, __ss_S_ENFMT, __ss_S_ISVTX, __ss_S_IREAD, __ss_S_IWRITE, __ss_S_IEXEC, __ss_S_IRWXU, __ss_S_IRUSR, __ss_S_IWUSR, __ss_S_IXUSR, __ss_S_IRWXG, __ss_S_IRGRP, __ss_S_IWGRP, __ss_S_IXGRP, __ss_S_IRWXO, __ss_S_IROTH, __ss_S_IWOTH, __ss_S_IXOTH;
+__ss_int __ss_ST_MODE, __ss_ST_INO, __ss_ST_DEV, __ss_ST_NLINK, __ss_ST_UID, __ss_ST_GID, __ss_ST_SIZE, __ss_ST_ATIME, __ss_ST_MTIME, __ss_ST_CTIME, __ss_S_IFDIR, __ss_S_IFCHR, __ss_S_IFBLK, __ss_S_IFREG, __ss_S_IFIFO, __ss_S_IFLNK, __ss_S_IFSOCK, __ss_S_ISUID, __ss_S_ISGID, __ss_S_ENFMT, __ss_S_ISVTX, __ss_S_IREAD, __ss_S_IWRITE, __ss_S_IEXEC, __ss_S_IRWXU, __ss_S_IRUSR, __ss_S_IWUSR, __ss_S_IXUSR, __ss_S_IRWXG, __ss_S_IRGRP, __ss_S_IWGRP, __ss_S_IXGRP, __ss_S_IRWXO, __ss_S_IROTH, __ss_S_IWOTH, __ss_S_IXOTH;
 
 void __init() {
    __ss_ST_MODE = 0; /* XXX */
@@ -51,46 +51,46 @@ void __init() {
 #endif
 }
 
-int __ss_S_IMODE(int mode) {
+__ss_int __ss_S_IMODE(__ss_int mode) {
     return (mode&4095); /* XXX */
 }
 
-int __ss_S_IFMT(int mode) {
+__ss_int __ss_S_IFMT(__ss_int mode) {
     return (mode&61440); /* XXX */
 }
 
-int __ss_S_ISDIR(int mode) {
+__ss_int __ss_S_ISDIR(__ss_int mode) {
 
     return S_ISDIR(mode);
 }
 
-int __ss_S_ISCHR(int mode) {
+__ss_int __ss_S_ISCHR(__ss_int mode) {
 
     return S_ISCHR(mode);
 }
 
-int __ss_S_ISBLK(int mode) {
+__ss_int __ss_S_ISBLK(__ss_int mode) {
 
     return S_ISBLK(mode);
 }
 
-int __ss_S_ISREG(int mode) {
+__ss_int __ss_S_ISREG(__ss_int mode) {
 
     return S_ISREG(mode);
 }
 
-int __ss_S_ISFIFO(int mode) {
+__ss_int __ss_S_ISFIFO(__ss_int mode) {
 
     return S_ISFIFO(mode);
 }
 
 #ifndef WIN32
-int __ss_S_ISLNK(int mode) {
+__ss_int __ss_S_ISLNK(__ss_int mode) {
 
     return S_ISLNK(mode);
 }
 
-int __ss_S_ISSOCK(int mode) {
+__ss_int __ss_S_ISSOCK(__ss_int mode) {
 
     return S_ISSOCK(mode);
 }

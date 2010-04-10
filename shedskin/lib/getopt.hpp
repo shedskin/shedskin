@@ -13,7 +13,7 @@ extern str *const_0, *const_1, *const_10, *const_11, *const_12, *const_2, *const
 class GetoptError;
 
 extern str *__name__;
-extern int __18;
+extern __ss_int __18;
 
 extern class_ *cl_GetoptError;
 class GetoptError : public Exception {
@@ -24,7 +24,6 @@ public:
 };
 
 
-extern int  __18;
 extern str * __name__;
 void __init();
 
