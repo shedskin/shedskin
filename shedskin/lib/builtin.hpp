@@ -646,8 +646,6 @@ public:
     str *__repr__();
     __ss_bool __eq__(pyobj *l);
 
-    T __getfirst__() { return this->units[0]; } // XXX remove
-    T __getsecond__() { return this->units[1]; }
     inline T __getfast__(__ss_int i);
 
     T pop();
@@ -734,8 +732,6 @@ public:
     str *__mul__(__ss_int n);
     inline str *__getitem__(__ss_int n);
     inline str *__getfast__(__ss_int i);
-    str *__getfirst__();
-    str *__getsecond__();
     __ss_int __len__();
     str *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
 
@@ -1399,6 +1395,7 @@ template<class T> static inline int __wrap(T a, int i) {
     return i;
 }
 
+/* XXX deprecated */
 #define ELEM(a,i) a->units[__wrap(a,i)]
 
 /* representation */
