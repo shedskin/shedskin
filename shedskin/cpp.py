@@ -1867,13 +1867,19 @@ class generateVisitor(ASTVisitor):
                 self.visitm(item, ' = ', self.get_selector(temp, item, i), func)
                 self.eol()
 
+    def getfast(self, node):
+        for clname in ('list', 'str_', 'tuple'):
+            if self.only_classes(node, (clname,)):
+                return True
+        return False
+
     def get_selector(self, temp, item, i):
         rvalue_node = getgx().item_rvalue[item]
         sel = '__getitem__(%d)' % i
-        if self.only_classes(rvalue_node, ('list',)):
-            sel = '__getfast__(%d)' % i
-        elif i < 2 and self.only_classes(rvalue_node, ('tuple2',)):
+        if i < 2 and self.only_classes(rvalue_node, ('tuple2',)):
             sel = ['__getfirst__()', '__getsecond__()'][i]
+        elif self.getfast(rvalue_node):
+            sel = '__getfast__(%d)' % i
         return '%s->%s' % (temp, sel)
 
     def subs_assign(self, lvalue, func):
@@ -2371,7 +2377,7 @@ class generateVisitor(ASTVisitor):
             return
 
         # getfast
-        if ident == '__getitem__' and self.only_classes(node.expr, ('list',)):
+        if ident == '__getitem__' and self.getfast(node.expr):
             ident = '__getfast__'
 
         self.append(self.cpp_name(ident))

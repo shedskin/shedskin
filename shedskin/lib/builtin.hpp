@@ -648,10 +648,7 @@ public:
 
     T __getfirst__() { return this->units[0]; } // XXX remove
     T __getsecond__() { return this->units[1]; }
-    T __getfast__(int i) {
-        i = __wrap(this, i);
-        return this->units[i];
-    }
+    inline T __getfast__(__ss_int i);
 
     T pop();
     T pop(int m);
@@ -735,7 +732,8 @@ public:
     str *__str__();
     str *__repr__();
     str *__mul__(__ss_int n);
-    str *__getitem__(int i);
+    inline str *__getitem__(__ss_int n);
+    inline str *__getfast__(__ss_int i);
     str *__getfirst__();
     str *__getsecond__();
     __ss_int __len__();
@@ -835,7 +833,7 @@ public:
     T __getfirst__();
     T __getsecond__();
 
-    T __getfast__(int i);
+    inline T __getfast__(__ss_int i);
 
     str *__repr__();
 
@@ -1856,18 +1854,6 @@ template<class T> PyObject *list<T>::__to_py__() {
 }
 #endif
 
-/*template<class T> void list<T>::init(int count, ...)  {
-    clear();
-
-    va_list ap;
-    va_start(ap, count);
-    for(int i=0; i<count; i++) {
-        T t = va_arg(ap, T);
-        append(t);
-    }
-    va_end(ap);
-}*/
-
 template<class T> void list<T>::clear() {
     units.resize(0);
 }
@@ -1903,6 +1889,11 @@ template<class T> void *list<T>::extend(pyseq<T> *p) {
 template<class T> void *list<T>::extend(str *s) {
     extend((pyiter<str *> *)s);
     return NULL;
+}
+
+template<class T> inline T list<T>::__getfast__(__ss_int i) {
+    i = __wrap(this, i);
+    return this->units[i];
 }
 
 template<class T> void *list<T>::__setitem__(__ss_int i, T e) {
@@ -2170,6 +2161,18 @@ template<class T> void *list<T>::remove(T e) {
             return NULL;
         }
     return NULL;
+}
+
+/* str */
+
+inline str *str::__getitem__(__ss_int i) {
+    i = __wrap(this, i);
+    return __char_cache[(unsigned char)unit[i]];
+}
+
+inline str *str::__getfast__(__ss_int i) {
+    i = __wrap(this, i);
+    return __char_cache[(unsigned char)unit[i]];
 }
 
 /*
@@ -2922,7 +2925,8 @@ template<class T> T tuple2<T, T>::__getfirst__() {
 template<class T> T tuple2<T, T>::__getsecond__() {
     return this->units[1];
 }
-template<class T> T tuple2<T, T>::__getfast__(int i) {
+template<class T> inline T tuple2<T, T>::__getfast__(__ss_int i) {
+    i = __wrap(this, i);
     return this->units[i];
 }
 
