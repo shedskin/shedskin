@@ -22,7 +22,7 @@ namespace __getopt__ {
 str *const_0, *const_1, *const_10, *const_11, *const_12, *const_2, *const_3, *const_4, *const_5, *const_6, *const_7, *const_8, *const_9;
 
 str *__name__;
-int __18;
+__ss_int __18;
 
 static inline list<str *> *list_comp_0(str *opt, pyiter<str *> *longopts) {
     __iter<str *> *__17;
@@ -160,7 +160,7 @@ tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *gnu_getopt(list<str *> *a
     */
     list<str *> *prog_args;
     list<tuple2<str *, str *> *> *opts;
-    int all_options_first;
+    __ss_int all_options_first;
     tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *__5, *__6;
 
     opts = (new list<tuple2<str *, str *> *>());
@@ -209,7 +209,7 @@ tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *gnu_getopt(list<str *> *a
 tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *do_longs(list<tuple2<str *, str *> *> *opts, str *opt, pyiter<str *> *longopts, list<str *> *args) {
     list<str *> *__13;
     str *__12, *__14, *__15, *__8, *__9, *optarg;
-    int __10, i;
+    __ss_int __10, i;
     __ss_bool has_arg;
     tuple2<__ss_bool, str *> *__11;
 
@@ -308,7 +308,7 @@ tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *do_shorts(list<tuple2<str
 
 __ss_bool short_has_arg(str *opt, str *shortopts) {
     str *__26;
-    int __24, __25, i;
+    __ss_int __24, __25, i;
 
 
     FAST_FOR(i,0,len(shortopts),1,24,25)

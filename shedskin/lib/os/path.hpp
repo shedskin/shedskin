@@ -14,20 +14,20 @@ extern str *__name__, *altsep, *curdir, *defpath, *devnull, *extsep, *pardir, *p
 extern tuple2<str *, str *> *const_2;
 extern str *const_0, *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_19, *const_3, *const_4, *const_5, *const_6, *const_7, *const_8, *const_9;
 #ifdef WIN32
-extern int supports_unicode_filenames;
+extern __ss_int supports_unicode_filenames;
 #endif
 
 str *normcase(str *s);
 __ss_bool isabs(str *s);
 str *joinl(list<str *> *l);
-str *join(int n, ...);
+str *join(__ss_int n, ...);
 tuple2<str *, str *> *split(str *p);
 tuple2<str *, str *> *splitext(str *p);
 tuple2<str *, str *> *splitdrive(str *p);
 str *basename(str *p);
 str *dirname(str *p);
 str *commonprefix(list<str *> *m);
-int getsize(str *filename);
+__ss_int getsize(str *filename);
 double getmtime(str *filename);
 double getatime(str *filename);
 double getctime(str *filename);
@@ -51,7 +51,7 @@ template <class A> void *walk(str *top, void *(*func)(A, str *, list<str *> *), 
     list<str *> *__21, *names;
     __iter<str *> *__22;
     str *name;
-    int __23;
+    __ss_int __23;
     __os__::__cstat *st;
 
     try {
@@ -82,7 +82,7 @@ template <class A> void *walk(str *top, void *(*func)(A, str *, list<str *> *), 
     __iter<str *> *__34;
     str *name;
     tuple2<str *, str *> *exceptions;
-    int __35;
+    __ss_int __35;
 
     try {
         names = __os__::listdir(top);

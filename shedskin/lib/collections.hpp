@@ -51,18 +51,18 @@ public:
         return x;
     }
 
-    A __getitem__(int i) {
+    A __getitem__(__ss_int i) {
         i = __wrap(this, i);
         return units[i];
     }
 
-    void *__setitem__(int i, A value) {
+    void *__setitem__(__ss_int i, A value) {
         i = __wrap(this, i);
         units[i] = value;
         return NULL;
     }
 
-    void *__delitem__(int i) {
+    void *__delitem__(__ss_int i) {
         i = __wrap(this, i);
         units.erase(units.begin()+i);
         return NULL;
@@ -86,7 +86,7 @@ public:
 
     str * __repr__() {
         str *r = new str("deque([");
-        for(int i = 0; i<this->__len__();i++) {
+        for(__ss_int i = 0; i<this->__len__();i++) {
             r->unit += repr(units[i])->unit;
             if (i<this->__len__()-1)
                 r->unit += ", ";
@@ -126,14 +126,14 @@ public:
        return NULL;
    }
 
-   void *rotate(int n) {
+   void *rotate(__ss_int n) {
        if(!units.empty()) {
            n = n % __len__();
            if(n<0)
-               for(int i=0; i>n; i--)
+               for(__ss_int i=0; i>n; i--)
                    append(popleft());
            else
-               for(int i=0; i<n; i++)
+               for(__ss_int i=0; i<n; i++)
                    appendleft(pop());
        }
        return NULL;
@@ -144,7 +144,7 @@ public:
        return NULL;
    }
 
-   int truth() {
+   __ss_int truth() {
        return !units.empty();
    }
 
@@ -157,7 +157,7 @@ public:
    deque<A> *__deepcopy__(dict<void *, pyobj *> *memo) {
        deque<A> *c = new deque<A>();
        memo->__setitem__(this, c);
-       for(int i=0; i<this->__len__(); i++)
+       for(__ss_int i=0; i<this->__len__(); i++)
            c->units.push_back(__deepcopy(this->units[i], memo));
        return c;
    }
@@ -167,7 +167,7 @@ public:
 template <class T> class __dequeiter : public __iter<T> {
 public:
     deque<T> *p;
-    int i, size;
+    __ss_int i, size;
 
     __dequeiter(deque<T> *p) {
         this->p = p;
@@ -185,7 +185,7 @@ public:
 template <class T> class __dequereviter : public __iter<T> {
 public:
     deque<T> *p;
-    int i;
+    __ss_int i;
 
     __dequereviter(deque<T> *p) {
         this->p = p;
@@ -294,7 +294,7 @@ namespace __defaultdict__ {
         return d;
     }
 
-    template<class A> defaultdict<A, int> *fromkeys(pyiter<A> *f) {
+    template<class A> defaultdict<A, __ss_int> *fromkeys(pyiter<A> *f) {
         return fromkeys(f, 0);
     }
 
