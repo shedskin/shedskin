@@ -613,7 +613,7 @@ def analyze_callfunc(node, check_exist=False): # XXX generate target list XXX un
             if namespace != inode(node).mv.module:
                 return objexpr, ident, None, False, None, False
             elif check_exist:
-                traceback.print_stack()
+#                traceback.print_stack()
                 error("unbound identifier '"+ident+"'", node)
 
     return objexpr, ident, direct_call, method_call, constructor, parent_constr
