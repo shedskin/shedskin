@@ -27,7 +27,15 @@
 
 namespace __shedskin__ {
 
-/* builtin class forward declarations */
+/* integer type */
+
+#ifdef __SS_LONG
+    typedef long long __ss_int;
+#else
+    typedef int __ss_int;
+#endif
+
+/* forward declarations */
 
 class class_;
 class pyobj;
@@ -38,11 +46,56 @@ class file;
 class bool_;
 class complex;
 
-#ifdef __SS_LONG
-    typedef long long __ss_int;
-#else
-    typedef int __ss_int;
-#endif
+template <class T> class pyiter;
+template <class T> class pyseq;
+
+template <class T> class list;
+template <class A, class B> class tuple2;
+template <class T> class set;
+template <class K, class V> class dict;
+
+template <class T> class __iter;
+template <class T> class __seqiter;
+template <class T> class __setiter;
+template <class T, class U> class __dictiterkeys;
+template <class T, class U> class __dictitervalues;
+template <class T, class U> class __dictiteritems;
+class __fileiter;
+class __striter;
+class __xrange;
+class __rangeiter;
+
+class BaseException;
+class Exception;
+class StandardError;
+class AssertionError;
+class KeyError;
+class ValueError;
+class IndexError;
+class NotImplementedError;
+class IOError;
+class OSError;
+class SyntaxError;
+class StopIteration;
+class TypeError;
+class RuntimeError;
+class OverflowError;
+
+/* STL types */
+
+#define __GC_VECTOR(T) std::vector< T, gc_allocator< T > >
+#define __GC_DEQUE(T) std::deque< T, gc_allocator< T > >
+#define __GC_STRING std::basic_string<char,std::char_traits<char>,gc_allocator<char> >
+#define __GC_HASH_MAP __gnu_cxx::hash_map<K, V, hashfunc<K>, hasheq<K>, gc_allocator<std::pair<K, V> > >
+
+/* externs */
+
+extern class_ *cl_str_, *cl_int_, *cl_float_, *cl_complex, *cl_list, *cl_tuple, *cl_dict, *cl_set, *cl_object, *cl_xrange, *cl_rangeiter;
+
+extern __GC_VECTOR(str *) __letters;
+extern __GC_VECTOR(str *) __char_cache;
+
+/* builtins */
 
 class __ss_bool {
 public:
@@ -61,74 +114,6 @@ extern __ss_bool False;
 
 static inline __ss_bool __mbool(bool c) { __ss_bool b; b.value=(int)c; return b; }
 
-template <class T> class pyiter;
-template <class T> class pyseq;
-
-template <class T> class __iter;
-template <class T> class __seqiter;
-template <class T> class __setiter;
-template <class T, class U> class __dictiterkeys;
-template <class T, class U> class __dictitervalues;
-template <class T, class U> class __dictiteritems;
-class __fileiter;
-class __striter;
-class __xrange;
-class __rangeiter;
-
-template <class T> class list;
-template <class A, class B> class tuple2;
-
-template <class T> class set;
-template <class K, class V> class dict;
-
-class BaseException; class Exception; class StandardError;
-class AssertionError; class KeyError; class ValueError; class IndexError;
-class NotImplementedError; class IOError; class OSError; class SyntaxError;
-class StopIteration; class TypeError; class RuntimeError; class OverflowError;
-
-/* builtin function forward declarations */
-
-inline __ss_int __int() { return 0; }
-__ss_int __int(str *s, __ss_int base);
-
-template<class T> inline __ss_int __int(T t) { return t->__int__(); }
-#ifdef __SS_LONG
-template<> inline __ss_int __int(__ss_int i) { return i; }
-#endif
-template<> inline __ss_int __int(int i) { return i; }
-template<> inline __ss_int __int(str *s) { return __int(s, 10); }
-template<> inline __ss_int __int(__ss_bool b) { return b.value; }
-template<> inline __ss_int __int(double d) { return (int)d; }
-
-inline double __float() { return 0; }
-template<class T> inline double __float(T t) { return t->__float__(); }
-#ifdef __SS_LONG
-template<> inline double __float(__ss_int p) { return p; }
-#endif
-template<> inline double __float(int p) { return p; }
-template<> inline double __float(__ss_bool b) { return __float(b.value); }
-template<> inline double __float(double d) { return d; }
-template<> double __float(str *s);
-
-str *__str();
-template<class T> str *__str(T t);
-template<> str *__str(double t);
-#ifdef __SS_LONG
-str *__str(__ss_int t, __ss_int base=10);
-#endif
-str *__str(int t, int base=10);
-str *__str(__ss_bool b);
-
-template<class T> str *repr(T t);
-template<> str *repr(double t);
-#ifdef __SS_LONG
-template<> str *repr(__ss_int t);
-#endif
-template<> str *repr(int t);
-template<> str *repr(__ss_bool b);
-template<> str *repr(void *t);
-
-
 file *open(str *name, str *flags = 0);
 str *raw_input(str *msg = 0);
 
@@ -146,19 +131,16 @@ list<__ss_int> *range(__ss_int a, __ss_int b, __ss_int s=1);
 __xrange *xrange(__ss_int b);
 __xrange *xrange(__ss_int a, __ss_int b, __ss_int s=1);
 
-int ord(str *c);
-
-#ifdef __SS_LONG
-str *chr(__ss_int i);
-#endif
-str *chr(int i);
-str *chr(__ss_bool b);
-template<class T> str *chr(T t) {
-    return chr(t->__int__());
+static inline double __portableround(double x) {
+    if(x<0) return ceil(x-0.5);
+    return floor(x+0.5);
 }
-
-double ___round(double a);
-double ___round(double a, int n);
+inline double ___round(double a) {
+    return __portableround(a);
+}
+inline double ___round(double a, int n) {
+    return __portableround(pow(10,n)*a)/pow(10,n);
+}
 
 template<class T> inline T __abs(T t) { return t->__abs__(); }
 #ifdef __SS_LONG
@@ -204,11 +186,6 @@ template<class T> str *__modtuple(str *fmt, tuple2<T,T> *t);
 template<class A, class B> str *__modtuple(str *fmt, tuple2<A,B> *t);
 
 /* internal use */
-
-#define __GC_VECTOR(T) std::vector< T, gc_allocator< T > >
-#define __GC_DEQUE(T) std::deque< T, gc_allocator< T > >
-#define __GC_STRING std::basic_string<char,std::char_traits<char>,gc_allocator<char> >
-#define __GC_HASH_MAP __gnu_cxx::hash_map<K, V, hashfunc<K>, hasheq<K>, gc_allocator<std::pair<K, V> > >
 
 #ifdef __sun
 #define INFINITY __builtin_inff()
@@ -378,13 +355,6 @@ template<> PyObject *__to_py(void *);
 extern dict<void *, void *> *__ss_proxy;
 #endif
 
-/* externs */
-
-extern class_ *cl_str_, *cl_int_, *cl_float_, *cl_complex, *cl_list, *cl_tuple, *cl_dict, *cl_set, *cl_object, *cl_xrange, *cl_rangeiter;
-
-extern __GC_VECTOR(str *) __letters;
-extern __GC_VECTOR(str *) __char_cache;
-
 /* builtin class declarations */
 
 class pyobj : public gc {
@@ -507,12 +477,6 @@ public:
     PyObject *__to_py__();
 #endif
 };
-
-template<class T> complex::complex(T t) {
-    __class__ = cl_complex;
-    real = __float(t);
-    imag = 0;
-}
 
 template <class T> class pyiter : public pyobj {
 public:
@@ -732,7 +696,7 @@ public:
     str *__mul__(__ss_int n);
     inline str *__getitem__(__ss_int n);
     inline str *__getfast__(__ss_int i);
-    __ss_int __len__();
+    inline __ss_int __len__();
     str *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
 
     list<str *> *rsplit(str *sep = 0, int maxsplit = -1);
@@ -1120,6 +1084,52 @@ public:
     str *__repr__();
 };
 
+/* int */
+
+inline __ss_int __int() { return 0; }
+__ss_int __int(str *s, __ss_int base);
+
+template<class T> inline __ss_int __int(T t) { return t->__int__(); }
+#ifdef __SS_LONG
+template<> inline __ss_int __int(__ss_int i) { return i; }
+#endif
+template<> inline __ss_int __int(int i) { return i; }
+template<> inline __ss_int __int(str *s) { return __int(s, 10); }
+template<> inline __ss_int __int(__ss_bool b) { return b.value; }
+template<> inline __ss_int __int(double d) { return (int)d; }
+
+/* float */
+
+inline double __float() { return 0; }
+template<class T> inline double __float(T t) { return t->__float__(); }
+#ifdef __SS_LONG
+template<> inline double __float(__ss_int p) { return p; }
+#endif
+template<> inline double __float(int p) { return p; }
+template<> inline double __float(__ss_bool b) { return __float(b.value); }
+template<> inline double __float(double d) { return d; }
+template<> double __float(str *s);
+
+/* str */
+
+str *__str();
+template<class T> str *__str(T t);
+template<> str *__str(double t);
+#ifdef __SS_LONG
+str *__str(__ss_int t, __ss_int base=10);
+#endif
+str *__str(int t, int base=10);
+str *__str(__ss_bool b);
+
+template<class T> str *repr(T t);
+template<> str *repr(double t);
+#ifdef __SS_LONG
+template<> str *repr(__ss_int t);
+#endif
+template<> str *repr(int t);
+template<> str *repr(__ss_bool b);
+template<> str *repr(void *t);
+
 /* exceptions */
 
 class BaseException : public pyobj {
@@ -1318,6 +1328,13 @@ public:
 
 #define ASSERT(x, y) if(!(x)) throw new AssertionError(y);
 
+static void __throw_index_out_of_range() { /* improve inlining */
+   throw new IndexError(new str("index out of range"));
+}
+static void __throw_range_step_zero() {
+    throw new ValueError(new str("range() step argument must not be zero"));
+}
+
 #define FOR_IN(i, m, temp) \
     __ ## temp = ___iter(m); \
     while((__ ## temp)->for_has_next()) { \
@@ -1344,13 +1361,13 @@ public:
 
 #define FAST_FOR(i, l, u, s, t1, t2) \
     if(s==0) \
-        throw new ValueError(new str("range() step argument must not be zero")); \
+        __throw_range_step_zero(); \
     for(__ ## t1 = l, __ ## t2 = u; __ ## t1 < __ ## t2; __ ## t1 += s) { \
         i=__ ## t1; \
 
 #define FAST_FOR_NEG(i, l, u, s, t1, t2) \
     if(s==0) \
-        throw new ValueError(new str("range() step argument must not be zero")); \
+        __throw_range_step_zero(); \
     for(__ ## t1 = l, __ ## t2 = u; __ ## t1 > __ ## t2; __ ## t1 += s) { \
         i=__ ## t1; \
 
@@ -1379,10 +1396,6 @@ private:
     typeof(e) v = __with##n;
 
 #define END_WITH }
-
-static void __throw_index_out_of_range() { /* improve inlining of __wrap */
-   throw new IndexError(new str("index out of range"));
-}
 
 template<class T> static inline int __wrap(T a, int i) {
 #ifndef __SS_NOWRAP
@@ -2167,6 +2180,10 @@ inline str *str::__getitem__(__ss_int i) {
 inline str *str::__getfast__(__ss_int i) {
     i = __wrap(this, i);
     return __char_cache[(unsigned char)unit[i]];
+}
+
+inline __ss_int str::__len__() {
+    return unit.size();
 }
 
 /*
@@ -3956,6 +3973,45 @@ template<class A> __ss_bool all(pyseq<A> *a) {
 }
 
 inline __ss_bool all(str *s) { return True; }
+
+/* ord, chr */
+
+int ord(str *c);
+
+inline str *chr(int i) {
+    if(i < 0 || i > 255)
+        throw new ValueError(new str("chr() arg not in range(256)"));
+    return __char_cache[i];
+}
+inline str *chr(__ss_bool b) { return chr(b.value); }
+
+template<class T> inline str *chr(T t) {
+    return chr(t->__int__());
+}
+
+#ifdef __SS_LONG
+inline str *chr(__ss_int i) {
+    return chr((int)i);
+}
+
+template<> inline str *hex(__ss_int i) {
+    return hex((int)i);
+}
+template<> inline str *oct(__ss_int i) {
+    return oct((int)i);
+}
+template<> inline str *bin(__ss_int i) {
+    return bin((int)i);
+}
+#endif
+
+/* complex */
+
+template<class T> complex::complex(T t) {
+    __class__ = cl_complex;
+    real = __float(t);
+    imag = 0;
+}
 
 } // namespace __shedskin__
 #endif
