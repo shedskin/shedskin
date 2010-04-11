@@ -178,7 +178,7 @@ def possible_functions(node):
     expr = node.thing
 
     # --- determine possible target functions
-    objexpr, ident, direct_call, method_call, constructor, parent_constr = analyze_callfunc(expr, True)
+    objexpr, ident, direct_call, method_call, constructor, parent_constr = analyze_callfunc(expr)
     funcs = []
 
     if is_anon_func(expr, node):
