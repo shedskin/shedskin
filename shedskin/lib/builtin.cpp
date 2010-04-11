@@ -57,11 +57,6 @@ void __init() {
     }
 }
 
-double __portableround(double x) {
-    if(x<0) return ceil(x-0.5);
-    return floor(x+0.5);
-}
-
 /* int_ methods */
 
 int_::int_(__ss_int i) {
@@ -255,10 +250,6 @@ str::str(__GC_STRING s) : unit(s), cached_hash(0) {
 
 str::str(const char *s, int size) : unit(__GC_STRING(s, size)), cached_hash(0) { /* '\0' delimiter in C */
     __class__ = cl_str_;
-}
-
-__ss_int str::__len__() {
-    return unit.size();
 }
 
 str *str::__str__() { // weg?
@@ -1319,7 +1310,7 @@ list<__ss_int> *range(__ss_int a, __ss_int b, __ss_int s) {
     i = a;
 
     if(s==0)
-        throw new ValueError(new str("range() step argument must not be zero"));
+        __throw_range_step_zero();
 
     if(s==1) {
         r->units.resize(b-a);
@@ -1422,29 +1413,6 @@ int ord(str *s) {
         throw new TypeError(__modct(new str("ord() expected a character, but string of length %d found"), 1, __box(len(s))));
     return (unsigned char)(s->unit[0]);
 }
-
-str *chr(__ss_bool b) { return chr(b.value); }
-
-str *chr(int i) {
-    if(i < 0 || i > 255)
-        throw new ValueError(new str("chr() arg not in range(256)"));
-    return __char_cache[i];
-}
-
-#ifdef __SS_LONG
-str *chr(__ss_int i) {
-    return chr((int)i);
-}
-template<> str *hex(__ss_int i) {
-    return hex((int)i);
-}
-template<> str *oct(__ss_int i) {
-    return oct((int)i);
-}
-template<> str *bin(__ss_int i) {
-    return bin((int)i);
-}
-#endif
 
 /* representation */
 
@@ -1683,13 +1651,6 @@ template<> str *__str(double t) {
     return new str(s);
 }
 
-double ___round(double a) {
-    return __portableround(a);
-}
-double ___round(double a, int n) {
-    return __portableround(pow(10,n)*a)/pow(10,n);
-}
-
 /* sum */
 
 __ss_int __sum(pyiter<__ss_bool> *l, __ss_int b) {
@@ -1812,7 +1773,7 @@ void __modfill(str **fmt, pyobj *t, str **s, pyobj *a1, pyobj *a2) {
         add = new str("%");
     else if(t->__class__ == cl_int_) {
 #ifdef __SS_LONG
-        add = do_asprintf(((*fmt)->unit.substr(i, j-i)+__GC_STRING("lld")).c_str(), ((int_ *)t)->unit, a1, a2);
+        add = do_asprintf(((*fmt)->unit.substr(i, j-i)+__GC_STRING("ll")+(*fmt)->unit[j]).c_str(), ((int_ *)t)->unit, a1, a2);
 #else
         add = do_asprintf((*fmt)->unit.substr(i, j+1-i).c_str(), ((int_ *)t)->unit, a1, a2);
 #endif
@@ -2189,6 +2150,5 @@ template<> double __none() { throw new TypeError(new str("mixing None with float
 list<tuple2<void *, void *> *> *__zip(int) {
     return new list<tuple2<void *, void *> *>();
 }
-
 
 } // namespace __shedskin__
