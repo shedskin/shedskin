@@ -35,12 +35,13 @@ namespace __shedskin__ {
     typedef int __ss_int;
 #endif
 
-/* forward declarations */
+/* forward class declarations */
 
-class class_;
 class pyobj;
+class class_;
 class str;
 class int_;
+class __ss_bool;
 class float_;
 class file;
 class bool_;
@@ -83,36 +84,715 @@ class OverflowError;
 
 /* STL types */
 
+template<class T> class hashfunc;
+template<class T> class hasheq;
+
 #define __GC_VECTOR(T) std::vector< T, gc_allocator< T > >
 #define __GC_DEQUE(T) std::deque< T, gc_allocator< T > >
 #define __GC_STRING std::basic_string<char,std::char_traits<char>,gc_allocator<char> >
 #define __GC_HASH_MAP __gnu_cxx::hash_map<K, V, hashfunc<K>, hasheq<K>, gc_allocator<std::pair<K, V> > >
 
-/* externs */
+/* builtin class declarations */
 
-extern class_ *cl_str_, *cl_int_, *cl_float_, *cl_complex, *cl_list, *cl_tuple, *cl_dict, *cl_set, *cl_object, *cl_xrange, *cl_rangeiter;
+class pyobj : public gc {
+public:
+    class_ *__class__;
 
-extern __GC_VECTOR(str *) __letters;
-extern __GC_VECTOR(str *) __char_cache;
+    virtual str *__repr__();
+    virtual str *__str__();
 
-/* builtins */
+    virtual int __hash__();
+    virtual __ss_int __cmp__(pyobj *p);
+
+    virtual __ss_bool __eq__(pyobj *p);
+    virtual __ss_bool __ne__(pyobj *p);
+    virtual __ss_bool __gt__(pyobj *p);
+    virtual __ss_bool __lt__(pyobj *p);
+    virtual __ss_bool __ge__(pyobj *p);
+    virtual __ss_bool __le__(pyobj *p);
+
+    virtual pyobj *__copy__();
+    virtual pyobj *__deepcopy__(dict<void *, pyobj *> *);
+
+    virtual __ss_int __len__();
+    virtual __ss_int __int__();
+
+    virtual __ss_bool __nonzero__();
+};
+
+template <class T> class pyiter : public pyobj {
+public:
+    virtual __iter<T> *__iter__() = 0;
+
+    typedef T for_in_unit;
+    typedef __iter<T> * for_in_loop;
+
+    inline __iter<T> *for_in_init();
+    inline bool for_in_has_next(__iter<T> *iter);
+    inline T for_in_next(__iter<T> *iter);
+};
+
+template <class T> class pyseq : public pyiter<T> {
+public:
+    __GC_VECTOR(T) units;
+
+    virtual __ss_int __len__();
+    virtual T __getitem__(int i);
+    virtual void *append(T t);
+    virtual void slice(__ss_int x, __ss_int l, __ss_int u, __ss_int s, pyseq<T> *c);
+    virtual __ss_int __cmp__(pyobj *p);
+    virtual __ss_bool __contains__(T t) = 0;
+    void resize(int n);
+
+    /* iteration */
+
+    __iter<T> *__iter__();
+
+    typedef T for_in_unit;
+    typedef int for_in_loop;
+
+    inline int for_in_init();
+    inline bool for_in_has_next(int i);
+    inline T for_in_next(int &i);
+};
+
+template <class T> class list : public pyseq<T> {
+public:
+    using pyseq<T>::units;
+
+    list();
+    list(int count, ...);
+    list(pyiter<T> *p);
+    list(pyseq<T> *p);
+    list(str *s);
+
+    void clear();
+    void *__setitem__(__ss_int i, T e);
+    void *__delitem__(__ss_int i);
+    //void init(int count, ...);
+    int empty();
+    list<T> *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
+    void *__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, pyiter<T> *b);
+    void *__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, list<T> *b);
+    void *__delete__(__ss_int i);
+    void *__delete__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
+    void *__delslice__(__ss_int a, __ss_int b);
+    __ss_bool __contains__(T a);
+
+    list<T> *__add__(list<T> *b);
+    list<T> *__mul__(__ss_int b);
+
+    list<T> *__iadd__(pyiter<T> *b);
+    list<T> *__iadd__(pyseq<T> *b);
+    list<T> *__iadd__(str *s);
+    list<T> *__imul__(__ss_int n);
+
+    void *extend(pyiter<T> *p);
+    void *extend(pyseq<T> *p);
+    void *extend(str *s);
+
+    __ss_int index(T a);
+    __ss_int index(T a, __ss_int s);
+    __ss_int index(T a, __ss_int s, __ss_int e);
+
+    __ss_int count(T a);
+    str *__repr__();
+    __ss_bool __eq__(pyobj *l);
+
+    inline T __getfast__(__ss_int i);
+
+    T pop();
+    T pop(int m);
+    void *remove(T e);
+    void *insert(int m, T e);
+
+    void *reverse();
+    template<class U> void *sort(__ss_int (*cmp)(T, T), U (*key)(T), __ss_int reverse);
+    template<class U> void *sort(__ss_int cmp, U (*key)(T), __ss_int reverse);
+    void *sort(__ss_int (*cmp)(T, T), __ss_int key, __ss_int reverse);
+    void *sort(__ss_int cmp, __ss_int key, __ss_int reverse);
+
+    list<T> *__copy__();
+    list<T> *__deepcopy__(dict<void *, pyobj *> *memo);
+
+#ifdef __SS_BIND
+    list(PyObject *);
+    PyObject *__to_py__();
+#endif
+};
+
+template<class A, class B> class tuple2 : public pyseq<A> {
+public:
+    A first;
+    B second;
+
+    tuple2();
+    tuple2(int n, A a, B b);
+    void __init2__(A a, B b);
+
+    A __getfirst__();
+    B __getsecond__();
+
+    str *__repr__();
+
+    __ss_bool __contains__(A a);
+    __ss_bool __contains__(B b);
+
+    __ss_int __len__();
+
+    __ss_bool __eq__(tuple2<A,B> *b);
+    __ss_int __cmp__(pyobj *p);
+    int __hash__();
+
+    tuple2<A,B> *__copy__();
+    tuple2<A,B> *__deepcopy__(dict<void *, pyobj *> *memo);
+
+#ifdef __SS_BIND
+    tuple2(PyObject *p);
+    PyObject *__to_py__();
+#endif
+};
+
+template<class T> class tuple2<T,T> : public pyseq<T> {
+public:
+    using pyseq<T>::units;
+
+    tuple2();
+    tuple2(int count, ...);
+    tuple2(pyiter<T> *p);
+    tuple2(pyseq<T> *p);
+    tuple2(str *s);
+    void __init2__(T a, T b);
+
+    T __getfirst__();
+    T __getsecond__();
+
+    inline T __getfast__(__ss_int i);
+
+    str *__repr__();
+
+    tuple2<T,T> *__add__(tuple2<T,T> *b);
+    tuple2<T,T> *__mul__(__ss_int b);
+
+    tuple2<T,T> *__iadd__(tuple2<T,T> *b);
+    tuple2<T,T> *__imul__(__ss_int n);
+
+    __ss_bool __contains__(T a);
+    __ss_bool __eq__(pyobj *p);
+
+    tuple2<T,T> *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
+
+    int __hash__();
+
+    tuple2<T,T> *__deepcopy__(dict<void *, pyobj *> *memo);
+    tuple2<T,T> *__copy__();
+
+#ifdef __SS_BIND
+    tuple2(PyObject *p);
+    PyObject *__to_py__();
+#endif
+};
+
+class str : public pyseq<str *> {
+public:
+    __GC_STRING unit;
+    int cached_hash;
+
+    str();
+    str(const char *s);
+    str(__GC_STRING s);
+    str(const char *s, int size); /* '\0' delimiter in C */
+
+    __ss_bool __contains__(str *s);
+    str *strip(str *chars=0);
+    str *lstrip(str *chars=0);
+    str *rstrip(str *chars=0);
+    list<str *> *split(str *sep=0, int maxsplit=-1);
+    __ss_bool __eq__(pyobj *s);
+    str *__add__(str *b);
+    str *join(pyiter<str *> *l);
+    str *__join(pyseq<str *> *l, int total_len);
+    str *join(pyseq<str *> *l);
+    str *join(str *s);
+    str *__str__();
+    str *__repr__();
+    str *__mul__(__ss_int n);
+    inline str *__getitem__(__ss_int n);
+    inline str *__getfast__(__ss_int i);
+    inline __ss_int __len__();
+    str *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
+
+    list<str *> *rsplit(str *sep = 0, int maxsplit = -1);
+    tuple2<str *, str *> *rpartition(str *sep);
+    tuple2<str *, str *> *partition(str *sep);
+    list<str *> *splitlines(int keepends = 0);
+
+    int __fixstart(int a, int b);
+    int __checkneg(int i);
+
+    int find(str *s, int a=0);
+    int find(str *s, int a, int b);
+    int rfind(str *s, int a=0);
+    int rfind(str *s, int a, int b);
+    int index(str *s, int a=0);
+    int index(str *s, int a, int b);
+    int rindex(str *s, int a=0);
+    int rindex(str *s, int a, int b);
+
+    __ss_int count(str *s, __ss_int start=0);
+    __ss_int count(str *s, __ss_int start, __ss_int end);
+
+    str *upper();
+    str *lower();
+    str *title();
+    str *capitalize();
+    str *replace(str *a, str *b, int c=-1);
+    str *translate(str *table, str *delchars=0);
+    str *swapcase();
+    str *center(int w, str *fill=0);
+
+    __ss_bool __ctype_function(int (*cfunc)(int));
+
+    __ss_bool istitle();
+    __ss_bool isspace();
+    __ss_bool isalpha();
+    __ss_bool isdigit();
+    __ss_bool islower();
+    __ss_bool isupper();
+    __ss_bool isalnum();
+
+    __ss_bool startswith(str *s, __ss_int start=0);
+    __ss_bool startswith(str *s, __ss_int start, __ss_int end);
+    __ss_bool endswith(str *s, __ss_int start=0);
+    __ss_bool endswith(str *s, __ss_int start, __ss_int end);
+
+    str *zfill(int width);
+    str *expandtabs(int width=8);
+
+    str *ljust(int width, str *fchar=0);
+    str *rjust(int width, str *fchar=0);
+
+    __ss_int __cmp__(pyobj *p);
+    int __hash__();
+
+    __ss_int __int__(); /* XXX compilation warning for int(pyseq<str *> *) */
+
+    __iter<str *> *__iter__();
+
+    str *__iadd__(str *b);
+    str *__imul__(__ss_int n);
+
+    /* iteration */
+
+    typedef str * for_in_unit;
+    typedef int for_in_loop;
+
+    inline int for_in_init();
+    inline bool for_in_has_next(int i);
+    inline str *for_in_next(int &i);
+
+#ifdef __SS_BIND
+    str(PyObject *p);
+    PyObject *__to_py__();
+#endif
+};
+
+template <class K, class V> class dict : public pyiter<K> {
+public:
+    __GC_HASH_MAP units;
+    typename __GC_HASH_MAP::iterator it;
+
+    dict();
+    dict(int count, ...);
+    dict(dict<K, V> *p);
+    dict(pyiter<tuple2<K,V> *> *p);
+    dict(pyiter<pyseq<K> *> *p);
+    dict(pyiter<str *> *p);
+
+    void *__setitem__(K k, V v);
+    V __getitem__(K k);
+    void *__delitem__(K k);
+    list<K> *keys();
+    list<V> *values();
+    list<tuple2<K, V> *> *items();
+    __ss_int __len__();
+    str *__repr__();
+    __ss_bool has_key(K k);
+    void *clear();
+    dict<K,V> *copy();
+    V get(K k);
+    V get(K k, V v);
+    V pop(K k);
+    tuple2<K, V> *popitem();
+    void *update(dict<K, V> *e);
+    __ss_bool __contains__(K k);
+    __ss_bool __eq__(pyobj *e);
+    V setdefault(K k, V v=0);
+
+    __dictiterkeys<K, V> *__iter__();
+    __dictiterkeys<K, V> *iterkeys();
+    __dictitervalues<K, V> *itervalues();
+    __dictiteritems<K, V> *iteritems();
+
+    dict<K, V> *__deepcopy__(dict<void *, pyobj *> *memo);
+    dict<K, V> *__copy__();
+
+    void *__addtoitem__(K k, V v);
+
+    /* iteration */
+
+    typedef K for_in_unit;
+    typedef typeof(it) for_in_loop;
+
+    inline for_in_loop for_in_init() { return units.begin(); }
+    inline bool for_in_has_next(for_in_loop l) { return l != units.end(); } /* XXX opt */
+    inline K for_in_next(for_in_loop &l) { return (*l++).first; }
+
+#ifdef __SS_BIND
+    dict(PyObject *);
+    PyObject *__to_py__();
+#endif
+};
+
+template<class T> class setentry;
+
+const int MINSIZE = 8;
+
+template<class T> class set : public pyiter<T> {
+public:
+    int frozen;
+    int fill;
+    int used;
+    int mask;
+    setentry<T> *table;
+    setentry<T> smalltable[MINSIZE];
+
+    set(int frozen=0);
+    set(pyiter<T> *p, int frozen=0);
+
+    set<T>& operator=(const set<T>& other);
+
+    void *add(T key);
+    void *add(setentry<T>* entry);
+    void *discard(T key);
+    int do_discard(T key);
+    void *remove(T key);
+    T pop();
+
+    str* __repr__();
+
+    __ss_bool __contains__(T key);
+    __ss_bool __contains__(setentry<T>* entry);
+    __ss_int __len__();
+
+    void *clear();
+    set<T> *copy();
+
+    void *update(pyiter<T> *s);
+    void *update(const set<T>* other);
+
+    void *difference_update(set<T> *s);
+    void *intersection_update(set<T> *s);
+    void *symmetric_difference_update(set<T> *s);
+
+    set<T> *intersection(set<T> *s);
+    set<T> *__ss_union(pyiter<T> *s);
+    set<T> *__ss_union(set<T> *s);
+    set<T> *symmetric_difference(set<T> *s);
+    set<T> *difference(set<T> *other);
+
+    set<T> *__and__(set<T> *s);
+    set<T> *__or__(set<T> *s);
+    set<T> *__xor__(set<T> *s);
+    set<T> *__sub__(set<T> *s);
+
+    set<T> *__iand__(set<T> *s);
+    set<T> *__ior__(set<T> *s);
+    set<T> *__ixor__(set<T> *s);
+    set<T> *__isub__(set<T> *s);
+
+    __ss_bool issubset(pyiter<T> *s);
+    __ss_bool issubset(set<T> *s);
+    __ss_bool issuperset(set<T> *s);
+    __ss_bool issuperset(pyiter<T> *s);
+
+    __ss_bool __gt__(set<T> *s);
+    __ss_bool __lt__(set<T> *s);
+    __ss_bool __ge__(set<T> *s);
+    __ss_bool __le__(set<T> *s);
+    __ss_bool __eq__(pyobj *p);
+
+    __ss_int __cmp__(pyobj *p);
+
+    __setiter<T> *__iter__() {
+        return new __setiter<T>(this);
+    }
+
+    set<T> *__copy__();
+    set<T> *__deepcopy__(dict<void *, pyobj *> *memo);
+
+#ifdef __SS_BIND
+    set(PyObject *);
+    PyObject *__to_py__();
+#endif
+
+    int __hash__();
+
+    // used internally
+    setentry<T>* lookup(T key, long hash) const;
+    void insert_key(T key, long hash);
+    void insert_clean(T key, long hash);
+    int next(int *pos_ptr, setentry<T> **entry_ptr);
+    void resize(int minused);
+};
+
+class file : public pyiter<str *> {
+public:
+    FILE *f;
+    int endoffile;
+    char print_lastchar;
+    int print_space;
+
+    str *name;
+    str *mode;
+    int closed;
+
+    bool universal_mode;
+    bool cr;
+
+    file(str *name, str *mode=0);
+    file(FILE *g);
+    file();
+
+    str *read(int n=-1);
+    str *readline(int n=-1);
+    list<str *> *readlines();
+    void *write(str *s);
+    void *writelines(pyseq<str *> *p);
+    void *flush();
+    int __ss_fileno();
+
+    void __check_closed();
+
+    virtual int getchar();
+    virtual void *putchar(int c);
+    virtual void *seek(int i, int w=0);
+    virtual void *close();
+
+    int tell();
+
+    void __enter__();
+    void __exit__();
+
+    str *__repr__();
+
+    __iter<str *> *__iter__();
+    str *next();
+};
 
 class __ss_bool {
 public:
     int value;
-    inline __ss_int operator+(__ss_bool b) { return value+b.value; }
-    inline __ss_bool operator==(__ss_bool b) { __ss_bool c; c.value=value==b.value; return c; }
-    inline __ss_bool operator&(__ss_bool b) { __ss_bool c; c.value=value&b.value; return c; }
-    inline __ss_bool operator|(__ss_bool b) { __ss_bool c; c.value=value|b.value; return c; }
-    inline __ss_bool operator^(__ss_bool b) { __ss_bool c; c.value=value^b.value; return c; }
-    inline bool operator!() { return !value; }
-    inline operator bool() { return bool(value); }
+    inline __ss_int operator+(__ss_bool b);
+    inline __ss_bool operator==(__ss_bool b);
+    inline __ss_bool operator&(__ss_bool b);
+    inline __ss_bool operator|(__ss_bool b);
+    inline __ss_bool operator^(__ss_bool b);
+    inline bool operator!();
+    inline operator bool();
 };
 
-extern __ss_bool True;
-extern __ss_bool False;
+class complex : public pyobj {
+public:
+    double real, imag;
+
+    complex(double real=0.0, double imag=0.0);
+    template<class T> complex(T t);
+    complex(str *s);
+
+    complex *__add__(complex *b);
+    complex *__add__(double b);
+    complex *__iadd__(complex *b);
+    complex *__iadd__(double b);
+
+    complex *__sub__(complex *b);
+    complex *__sub__(double b);
+    complex *__rsub__(double b);
+    complex *__isub__(complex *b);
+    complex *__isub__(double b);
+
+    complex *__mul__(complex *b);
+    complex *__mul__(double b);
+    complex *__imul__(complex *b);
+    complex *__imul__(double b);
+
+    complex *__div__(complex *b);
+    complex *__div__(double b);
+    complex *__rdiv__(double b);
+    complex *__idiv__(complex *b);
+    complex *__idiv__(double b);
+
+    complex *__floordiv__(complex *b);
+    complex *__floordiv__(double b);
+    complex *__mod__(complex *b);
+    complex *__mod__(double b);
+    tuple2<complex *, complex *> *__divmod__(complex *b);
+    tuple2<complex *, complex *> *__divmod__(double b);
+
+    complex *conjugate();
+    complex *__pos__();
+    complex *__neg__();
+    double __abs__();
+
+    str *__repr__();
+
+    complex *parsevalue(str *s);
+
+    __ss_bool __eq__(pyobj *p);
+    int __hash__();
+    __ss_bool __nonzero__();
+
+#ifdef __SS_BIND
+    complex(PyObject *);
+    PyObject *__to_py__();
+#endif
+};
+
+class class_: public pyobj {
+public:
+    int low, high;
+    str *__name__;
+
+    class_(const char *name, int low, int high);
+    str *__repr__();
+    __ss_bool __eq__(pyobj *c);
+
+};
+
+class int_ : public pyobj {
+public:
+    __ss_int unit;
+    int_(__ss_int i);
+    str *__repr__();
+};
+
+class float_ : public pyobj {
+public:
+    double unit;
+    float_(double f);
+    str *__repr__();
+};
+
+class bool_ : public pyobj {
+public:
+    __ss_bool unit;
+    bool_(__ss_bool i);
+    str *__repr__();
+};
+
+class object : public pyobj {
+public:
+    object();
+
+};
+
+template<class T> class __iter : public pyiter<T> {
+public:
+    virtual T next() = 0;
+
+    __iter<T> *__iter__() { return this; }
+
+    T temp; /* used by FOR_IN macros */
+    int for_has_next();
+    T for_get_next();
+
+    str *__repr__();
+};
+
+template <class T> class __setiter : public __iter<T> {
+public:
+    set<T> *p;
+    int pos;
+    int si_used;
+    int len;
+    setentry<T>* entry;
+
+    __setiter<T>(set<T> *p);
+    T next();
+};
+
+class __fileiter : public __iter<str *> {
+public:
+    file *p;
+    __fileiter(file *p);
+    str *next();
+};
+
+class __xrange : public pyiter<__ss_int> {
+public:
+    __ss_int a, b, s;
+
+    __xrange(__ss_int a, __ss_int b, __ss_int s);
+    __iter<__ss_int> *__iter__();
+    __ss_int __len__();
+    str *__repr__();
+};
+
+template <class T> class __seqiter : public __iter<T> {
+public:
+    unsigned int counter;
+    pyseq<T> *p;
+    __seqiter<T>();
+    __seqiter<T>(pyseq<T> *p);
+    T next();
+};
+
+class __striter : public __seqiter<str *> {
+public:
+    int counter, size;
+    str *p;
+
+    __striter(str *p);
+    str *next();
+};
+
+template <class K, class V> class __dictiterkeys : public __iter<K> {
+public:
+    dict<K, V> *p;
+    typename __GC_HASH_MAP::iterator iter;
+    int counter;
+
+    __dictiterkeys<K, V>(dict<K, V> *p);
+    K next();
+};
+
+template <class K, class V> class __dictitervalues : public __iter<V> {
+public:
+    dict<K, V> *p;
+    typename __GC_HASH_MAP::iterator iter;
+    int counter;
+
+    __dictitervalues<K, V>(dict<K, V> *p);
+    V next();
+};
+
+template <class K, class V> class __dictiteritems : public __iter<tuple2<K, V> *> {
+public:
+    dict<K, V> *p;
+    typename __GC_HASH_MAP::iterator iter;
+    int counter;
+
+    __dictiteritems<K, V>(dict<K, V> *p);
+    tuple2<K, V> *next();
+};
 
 static inline __ss_bool __mbool(bool c) { __ss_bool b; b.value=(int)c; return b; }
+
+/* builtin function declarations */
+
+template <class T> __iter<T> *___iter(pyiter<T> *p) {
+    return p->__iter__();
+}
 
 file *open(str *name, str *flags = 0);
 str *raw_input(str *msg = 0);
@@ -355,574 +1035,17 @@ template<> PyObject *__to_py(void *);
 extern dict<void *, void *> *__ss_proxy;
 #endif
 
-/* builtin class declarations */
+/* externs */
 
-class pyobj : public gc {
-public:
-    class_ *__class__;
+extern class_ *cl_str_, *cl_int_, *cl_float_, *cl_complex, *cl_list, *cl_tuple, *cl_dict, *cl_set, *cl_object, *cl_xrange, *cl_rangeiter;
 
-    virtual str *__repr__();
-    virtual str *__str__() { return __repr__(); }
+extern __GC_VECTOR(str *) __char_cache;
 
-    virtual int __hash__() {
-        return __gnu_cxx::hash<intptr_t>()((intptr_t)this);
-    }
+extern __ss_bool True;
+extern __ss_bool False;
 
-    virtual __ss_int __cmp__(pyobj *p) {
-        return __cmp<void *>(this, p);
-    }
+/* set */
 
-    virtual __ss_bool __eq__(pyobj *p) { return __mbool(this == p); }
-    virtual __ss_bool __ne__(pyobj *p) { return __mbool(!__eq__(p)); }
-
-    virtual __ss_bool __gt__(pyobj *p) { return __mbool(__cmp__(p) == 1); }
-    virtual __ss_bool __lt__(pyobj *p) { return __mbool(__cmp__(p) == -1); }
-    virtual __ss_bool __ge__(pyobj *p) { return __mbool(__cmp__(p) != -1); }
-    virtual __ss_bool __le__(pyobj *p) { return __mbool(__cmp__(p) != 1); }
-
-    virtual pyobj *__copy__() { return this; }
-    virtual pyobj *__deepcopy__(dict<void *, pyobj *> *) { return this; }
-
-    virtual __ss_int __len__() { return 1; } /* XXX exceptions? */
-    virtual __ss_int __int__() { return 0; }
-
-    virtual __ss_bool __nonzero__() { return __mbool(__len__() != 0); }
-};
-
-class class_: public pyobj {
-public:
-    int low, high;
-    str *__name__;
-
-    class_(const char *name, int low, int high);
-    str *__repr__();
-    __ss_bool __eq__(pyobj *c);
-
-};
-
-class int_ : public pyobj {
-public:
-    __ss_int unit;
-    int_(__ss_int i);
-    str *__repr__();
-};
-
-class float_ : public pyobj {
-public:
-    double unit;
-    float_(double f);
-    str *__repr__();
-};
-
-class bool_ : public pyobj {
-public:
-    __ss_bool unit;
-    bool_(__ss_bool i);
-    str *__repr__();
-};
-
-
-class complex : public pyobj {
-public:
-    double real, imag;
-
-    complex(double real=0.0, double imag=0.0);
-    template<class T> complex(T t);
-    complex(str *s);
-
-    complex *__add__(complex *b);
-    complex *__add__(double b);
-    complex *__iadd__(complex *b);
-    complex *__iadd__(double b);
-
-    complex *__sub__(complex *b);
-    complex *__sub__(double b);
-    complex *__rsub__(double b);
-    complex *__isub__(complex *b);
-    complex *__isub__(double b);
-
-    complex *__mul__(complex *b);
-    complex *__mul__(double b);
-    complex *__imul__(complex *b);
-    complex *__imul__(double b);
-
-    complex *__div__(complex *b);
-    complex *__div__(double b);
-    complex *__rdiv__(double b);
-    complex *__idiv__(complex *b);
-    complex *__idiv__(double b);
-
-    complex *__floordiv__(complex *b);
-    complex *__floordiv__(double b);
-    complex *__mod__(complex *b);
-    complex *__mod__(double b);
-    tuple2<complex *, complex *> *__divmod__(complex *b);
-    tuple2<complex *, complex *> *__divmod__(double b);
-
-    complex *conjugate();
-    complex *__pos__();
-    complex *__neg__();
-    double __abs__();
-
-    str *__repr__();
-
-    complex *parsevalue(str *s);
-
-    __ss_bool __eq__(pyobj *p);
-    int __hash__();
-    __ss_bool __nonzero__();
-
-#ifdef __SS_BIND
-    complex(PyObject *);
-    PyObject *__to_py__();
-#endif
-};
-
-template <class T> class pyiter : public pyobj {
-public:
-    virtual __iter<T> *__iter__() = 0;
-
-    typedef T for_in_unit;
-    typedef __iter<T> * for_in_loop;
-    inline __iter<T> *for_in_init() { return __iter__(); }
-    inline bool for_in_has_next(__iter<T> *iter) { return iter->for_has_next(); } /* XXX opt end cond */
-    inline T for_in_next(__iter<T> *iter) { return iter->for_get_next(); }
-};
-
-template<class T> class __iter : public pyiter<T> {
-public:
-    virtual T next() = 0;
-
-    __iter<T> *__iter__() { return this; }
-
-    T temp; /* used by FOR_IN macros */
-    int for_has_next();
-    T for_get_next();
-
-    str *__repr__();
-};
-
-template <class T> __iter<T> *___iter(pyiter<T> *p) {
-    return p->__iter__();
-}
-
-template <class T> class pyseq : public pyiter<T> {
-public:
-    __GC_VECTOR(T) units;
-
-    typedef T for_in_unit;
-    typedef int for_in_loop;
-    inline int for_in_init() { return 0; }
-    inline bool for_in_has_next(int i) { return i != units.size(); } /* XXX opt end cond */
-    inline T for_in_next(int &i) { return units[i++]; }
-
-    virtual __ss_int __len__() {
-        return units.size();
-    }
-
-    virtual T __getitem__(int i) {
-        i = __wrap(this, i);
-        return units[i];
-    }
-
-    virtual void *append(T t) {
-        units.push_back(t);
-        return NULL;
-    }
-
-    virtual void slice(__ss_int x, __ss_int l, __ss_int u, __ss_int s, pyseq<T> *c) {
-        slicenr(x, l, u, s, __len__());
-        if(s == 1) {
-            c->units.resize(u-l);
-            memcpy(&(c->units[0]), &(this->units[l]), sizeof(T)*(u-l));
-        } else if(s > 0)
-            for(int i=l; i<u; i += s)
-                c->append(units[i]);
-        else
-            for(int i=l; i>u; i += s)
-                c->append(units[i]);
-    }
-
-    virtual __ss_int __cmp__(pyobj *p) {
-        if (!p) return 1;
-        pyseq<T> *b = (pyseq<T> *)p;
-        int i, cmp;
-        int mnm = __min(2, 0, this->__len__(), b->__len__());
-
-        for(i = 0; i < mnm; i++) {
-            cmp = __cmp(this->units[i], b->units[i]);
-            if(cmp)
-                return cmp;
-        }
-        return __cmp(this->__len__(), b->__len__());
-    }
-
-    virtual __ss_bool __contains__(T t) = 0;
-
-    void resize(int n) {
-        units.resize(n);
-    }
-
-    __seqiter<T> *__iter__() {
-        return new __seqiter<T>(this);
-    }
-
-};
-
-template <class T> class __seqiter : public __iter<T> {
-public:
-    unsigned int counter;
-    pyseq<T> *p;
-    __seqiter<T>();
-    __seqiter<T>(pyseq<T> *p);
-    T next();
-};
-
-template <class T> class list : public pyseq<T> {
-public:
-    using pyseq<T>::units;
-
-    list();
-    list(int count, ...);
-    list(pyiter<T> *p);
-    list(pyseq<T> *p);
-    list(str *s);
-
-    void clear();
-    void *__setitem__(__ss_int i, T e);
-    void *__delitem__(__ss_int i);
-    //void init(int count, ...);
-    int empty();
-    list<T> *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
-    void *__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, pyiter<T> *b);
-    void *__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, list<T> *b);
-    void *__delete__(__ss_int i);
-    void *__delete__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
-    void *__delslice__(__ss_int a, __ss_int b);
-    __ss_bool __contains__(T a);
-
-    list<T> *__add__(list<T> *b);
-    list<T> *__mul__(__ss_int b);
-
-    list<T> *__iadd__(pyiter<T> *b);
-    list<T> *__iadd__(pyseq<T> *b);
-    list<T> *__iadd__(str *s);
-    list<T> *__imul__(__ss_int n);
-
-    void *extend(pyiter<T> *p);
-    void *extend(pyseq<T> *p);
-    void *extend(str *s);
-
-    __ss_int index(T a);
-    __ss_int index(T a, __ss_int s);
-    __ss_int index(T a, __ss_int s, __ss_int e);
-
-    __ss_int count(T a);
-    str *__repr__();
-    __ss_bool __eq__(pyobj *l);
-
-    inline T __getfast__(__ss_int i);
-
-    T pop();
-    T pop(int m);
-    void *remove(T e);
-    void *insert(int m, T e);
-
-    void *reverse();
-    template<class U> void *sort(__ss_int (*cmp)(T, T), U (*key)(T), __ss_int reverse);
-    template<class U> void *sort(__ss_int cmp, U (*key)(T), __ss_int reverse);
-    void *sort(__ss_int (*cmp)(T, T), __ss_int key, __ss_int reverse);
-    void *sort(__ss_int cmp, __ss_int key, __ss_int reverse);
-
-    list<T> *__copy__();
-    list<T> *__deepcopy__(dict<void *, pyobj *> *memo);
-
-#ifdef __SS_BIND
-    list(PyObject *);
-    PyObject *__to_py__();
-#endif
-};
-
-template<class A, class B> class tuple2 : public pyseq<A> {
-public:
-    A first;
-    B second;
-
-    tuple2();
-    tuple2(int n, A a, B b);
-
-    void __init2__(A a, B b) {
-        first = a;
-        second = b;
-    }
-
-    A __getfirst__();
-    B __getsecond__();
-
-    str *__repr__();
-
-    //void init(int count, A a, B b);
-
-    __ss_bool __contains__(A a);
-    __ss_bool __contains__(B b);
-
-    __ss_int __len__();
-
-    __ss_bool __eq__(tuple2<A,B> *b);
-    __ss_int __cmp__(pyobj *p);
-    int __hash__();
-
-    tuple2<A,B> *__copy__();
-    tuple2<A,B> *__deepcopy__(dict<void *, pyobj *> *memo);
-
-#ifdef __SS_BIND
-    tuple2(PyObject *p);
-    PyObject *__to_py__();
-#endif
-};
-
-class str : public pyseq<str *> {
-public:
-    __GC_STRING unit;
-    int cached_hash;
-
-    typedef str * for_in_unit;
-    typedef int for_in_loop;
-    inline int for_in_init() { return 0; }
-    inline bool for_in_has_next(int i) { return i != unit.size(); } /* XXX opt end cond */
-    inline str *for_in_next(int &i) { return __char_cache[unit[i++]]; }
-
-    str();
-    str(const char *s);
-    str(__GC_STRING s);
-    str(const char *s, int size); /* '\0' delimiter in C */
-
-    __ss_bool __contains__(str *s);
-    str *strip(str *chars=0);
-    str *lstrip(str *chars=0);
-    str *rstrip(str *chars=0);
-    list<str *> *split(str *sep=0, int maxsplit=-1);
-    __ss_bool __eq__(pyobj *s);
-    str *__add__(str *b);
-    str *join(pyiter<str *> *l);
-    str *__join(pyseq<str *> *l, int total_len);
-    str *join(pyseq<str *> *l);
-    str *join(str *s);
-    str *__str__();
-    str *__repr__();
-    str *__mul__(__ss_int n);
-    inline str *__getitem__(__ss_int n);
-    inline str *__getfast__(__ss_int i);
-    inline __ss_int __len__();
-    str *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
-
-    list<str *> *rsplit(str *sep = 0, int maxsplit = -1);
-    tuple2<str *, str *> *rpartition(str *sep);
-    tuple2<str *, str *> *partition(str *sep);
-    list<str *> *splitlines(int keepends = 0);
-
-    int __fixstart(int a, int b);
-    int __checkneg(int i);
-
-    int find(str *s, int a=0);
-    int find(str *s, int a, int b);
-    int rfind(str *s, int a=0);
-    int rfind(str *s, int a, int b);
-    int index(str *s, int a=0);
-    int index(str *s, int a, int b);
-    int rindex(str *s, int a=0);
-    int rindex(str *s, int a, int b);
-
-    __ss_int count(str *s, __ss_int start=0);
-    __ss_int count(str *s, __ss_int start, __ss_int end);
-
-    str *upper();
-    str *lower();
-    str *title();
-    str *capitalize();
-    str *replace(str *a, str *b, int c=-1);
-    str *translate(str *table, str *delchars=0);
-    str *swapcase();
-    str *center(int w, str *fill=0);
-
-    __ss_bool __ctype_function(int (*cfunc)(int));
-
-    __ss_bool istitle();
-    __ss_bool isspace();
-    __ss_bool isalpha();
-    __ss_bool isdigit();
-    __ss_bool islower();
-    __ss_bool isupper();
-    __ss_bool isalnum();
-
-    __ss_bool startswith(str *s, __ss_int start=0);
-    __ss_bool startswith(str *s, __ss_int start, __ss_int end);
-    __ss_bool endswith(str *s, __ss_int start=0);
-    __ss_bool endswith(str *s, __ss_int start, __ss_int end);
-
-    str *zfill(int width);
-    str *expandtabs(int width=8);
-
-    str *ljust(int width, str *fchar=0);
-    str *rjust(int width, str *fchar=0);
-
-    __ss_int __cmp__(pyobj *p);
-    int __hash__();
-
-    __ss_int __int__(); /* XXX compilation warning for int(pyseq<str *> *) */
-
-    __seqiter<str *> *__iter__();
-
-    str *__iadd__(str *b);
-    str *__imul__(__ss_int n);
-
-#ifdef __SS_BIND
-    str(PyObject *p);
-    PyObject *__to_py__();
-#endif
-};
-
-class __striter : public __seqiter<str *> {
-public:
-    int counter, size;
-    str *p;
-
-    __striter(str *p);
-    str *next();
-};
-
-template<class T> class tuple2<T,T> : public pyseq<T> {
-public:
-    using pyseq<T>::units;
-
-    tuple2();
-    tuple2(int count, ...);
-    tuple2(pyiter<T> *p);
-    tuple2(pyseq<T> *p);
-    tuple2(str *s);
-
-    void __init2__(T a, T b) {
-        units.resize(2);
-        units[0] = a;
-        units[1] = b;
-    }
-
-    T __getfirst__();
-    T __getsecond__();
-
-    inline T __getfast__(__ss_int i);
-
-    str *__repr__();
-
-    tuple2<T,T> *__add__(tuple2<T,T> *b);
-    tuple2<T,T> *__mul__(__ss_int b);
-
-    tuple2<T,T> *__iadd__(tuple2<T,T> *b);
-    tuple2<T,T> *__imul__(__ss_int n);
-
-    //void init(int count, ...);
-
-    __ss_bool __contains__(T a);
-    __ss_bool __eq__(pyobj *p);
-
-    tuple2<T,T> *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
-
-    int __hash__();
-
-    tuple2<T,T> *__deepcopy__(dict<void *, pyobj *> *memo);
-    tuple2<T,T> *__copy__();
-
-#ifdef __SS_BIND
-    tuple2(PyObject *p);
-    PyObject *__to_py__();
-#endif
-};
-
-template <class K, class V> class dict : public pyiter<K> {
-public:
-    __GC_HASH_MAP units;
-    typename __GC_HASH_MAP::iterator it;
-    typedef K for_in_unit;
-    typedef typeof(it) for_in_loop;
-    inline for_in_loop for_in_init() { return units.begin(); }
-    inline bool for_in_has_next(for_in_loop l) { return l != units.end(); } /* XXX opt */
-    inline K for_in_next(for_in_loop &l) { return (*l++).first; }
-
-    dict();
-    dict(int count, ...);
-    dict(dict<K, V> *p);
-    dict(pyiter<tuple2<K,V> *> *p);
-    dict(pyiter<pyseq<K> *> *p);
-    dict(pyiter<str *> *p);
-
-    void *__setitem__(K k, V v);
-    V __getitem__(K k);
-    void *__delitem__(K k);
-    list<K> *keys();
-    list<V> *values();
-    list<tuple2<K, V> *> *items();
-    __ss_int __len__();
-    str *__repr__();
-    __ss_bool has_key(K k);
-    void *clear();
-    dict<K,V> *copy();
-    V get(K k);
-    V get(K k, V v);
-    V pop(K k);
-    tuple2<K, V> *popitem();
-    void *update(dict<K, V> *e);
-    __ss_bool __contains__(K k);
-    __ss_bool __eq__(pyobj *e);
-    V setdefault(K k, V v=0);
-
-    __dictiterkeys<K, V> *__iter__();
-    __dictiterkeys<K, V> *iterkeys();
-    __dictitervalues<K, V> *itervalues();
-    __dictiteritems<K, V> *iteritems();
-
-    dict<K, V> *__deepcopy__(dict<void *, pyobj *> *memo);
-    dict<K, V> *__copy__();
-
-    void *__addtoitem__(K k, V v);
-
-#ifdef __SS_BIND
-    dict(PyObject *);
-    PyObject *__to_py__();
-#endif
-};
-
-template <class K, class V> class __dictiterkeys : public __iter<K> {
-public:
-    dict<K, V> *p;
-    typename __GC_HASH_MAP::iterator iter;
-    int counter;
-
-    __dictiterkeys<K, V>(dict<K, V> *p);
-    K next();
-};
-
-template <class K, class V> class __dictitervalues : public __iter<V> {
-public:
-    dict<K, V> *p;
-    typename __GC_HASH_MAP::iterator iter;
-    int counter;
-
-    __dictitervalues<K, V>(dict<K, V> *p);
-    V next();
-};
-
-template <class K, class V> class __dictiteritems : public __iter<tuple2<K, V> *> {
-public:
-    dict<K, V> *p;
-    typename __GC_HASH_MAP::iterator iter;
-    int counter;
-
-    __dictiteritems<K, V>(dict<K, V> *p);
-    tuple2<K, V> *next();
-};
-
-
-const int MINSIZE = 8;
 const int PERTURB_SHIFT = 5;
 
 const int DISCARD_NOTFOUND = 0;
@@ -936,174 +1059,6 @@ template<class T> struct setentry {
     long hash; // avoid rehashings...
     T key;
     int use;
-};
-
-template<class T> class set : public pyiter<T> {
-public:
-    int frozen;
-    int fill;
-    int used;
-    int mask;
-    setentry<T> *table;
-    setentry<T> smalltable[MINSIZE];
-
-    set(int frozen=0);
-    set(pyiter<T> *p, int frozen=0);
-
-    set<T>& operator=(const set<T>& other);
-
-    void *add(T key);
-    void *add(setentry<T>* entry);
-    void *discard(T key);
-    int do_discard(T key);
-    void *remove(T key);
-    T pop();
-
-    str* __repr__();
-
-    __ss_bool __contains__(T key);
-    __ss_bool __contains__(setentry<T>* entry);
-    __ss_int __len__();
-
-    void *clear();
-    set<T> *copy();
-
-    void *update(pyiter<T> *s);
-    void *update(const set<T>* other);
-
-    void *difference_update(set<T> *s);
-    void *intersection_update(set<T> *s);
-    void *symmetric_difference_update(set<T> *s);
-
-    set<T> *intersection(set<T> *s);
-    set<T> *__ss_union(pyiter<T> *s);
-    set<T> *__ss_union(set<T> *s);
-    set<T> *symmetric_difference(set<T> *s);
-    set<T> *difference(set<T> *other);
-
-    set<T> *__and__(set<T> *s);
-    set<T> *__or__(set<T> *s);
-    set<T> *__xor__(set<T> *s);
-    set<T> *__sub__(set<T> *s);
-
-    set<T> *__iand__(set<T> *s);
-    set<T> *__ior__(set<T> *s);
-    set<T> *__ixor__(set<T> *s);
-    set<T> *__isub__(set<T> *s);
-
-    __ss_bool issubset(pyiter<T> *s);
-    __ss_bool issubset(set<T> *s);
-    __ss_bool issuperset(set<T> *s);
-    __ss_bool issuperset(pyiter<T> *s);
-
-    __ss_bool __gt__(set<T> *s);
-    __ss_bool __lt__(set<T> *s);
-    __ss_bool __ge__(set<T> *s);
-    __ss_bool __le__(set<T> *s);
-    __ss_bool __eq__(pyobj *p);
-
-    __ss_int __cmp__(pyobj *p);
-
-    __setiter<T> *__iter__() {
-        return new __setiter<T>(this);
-    }
-
-    set<T> *__copy__();
-    set<T> *__deepcopy__(dict<void *, pyobj *> *memo);
-
-#ifdef __SS_BIND
-    set(PyObject *);
-    PyObject *__to_py__();
-#endif
-
-    int __hash__();
-
-    // used internally
-    setentry<T>* lookup(T key, long hash) const;
-    void insert_key(T key, long hash);
-    void insert_clean(T key, long hash);
-    int next(int *pos_ptr, setentry<T> **entry_ptr);
-    void resize(int minused);
-};
-
-template <class T> class __setiter : public __iter<T> {
-public:
-    set<T> *p;
-    int pos;
-    int si_used;
-    int len;
-    setentry<T>* entry;
-
-    __setiter<T>(set<T> *p);
-    T next();
-};
-
-class file : public pyiter<str *> {
-public:
-    FILE *f;
-    int endoffile;
-    char print_lastchar;
-    int print_space;
-
-    str *name;
-    str *mode;
-    int closed;
-
-    bool universal_mode;
-    bool cr;
-
-    file(str *name, str *mode=0);
-    file(FILE *g);
-    file();
-
-    str *read(int n=-1);
-    str *readline(int n=-1);
-    list<str *> *readlines();
-    void *write(str *s);
-    void *writelines(pyseq<str *> *p);
-    void *flush();
-    int __ss_fileno();
-
-    void __check_closed();
-
-    virtual int getchar();
-    virtual void *putchar(int c);
-    virtual void *seek(int i, int w=0);
-    virtual void *close();
-
-    int tell();
-
-    void __enter__();
-    void __exit__();
-
-    str *__repr__();
-
-    __iter<str *> *__iter__();
-    str *next();
-
-};
-
-class __fileiter : public __iter<str *> {
-public:
-    file *p;
-    __fileiter(file *p);
-    str *next();
-};
-
-class object : public pyobj {
-public:
-    object() { this->__class__ = cl_object; }
-
-};
-
-class __xrange : public pyiter<__ss_int> {
-public:
-    __ss_int a, b, s;
-
-    __xrange(__ss_int a, __ss_int b, __ss_int s);
-    __iter<__ss_int> *__iter__();
-    __ss_int __len__();
-    str *__repr__();
 };
 
 /* int */
@@ -1544,7 +1499,16 @@ template<> inline void *__deepcopy(void *p, dict<void *, pyobj *> *) { return p;
 template<class T> inline __ss_int len(T x) { return x->__len__(); }
 template<class T> inline __ss_int len(list<T> *x) { return x->units.size(); } /* XXX more general solution? */
 
+
 /* bool */
+
+inline __ss_int __ss_bool::operator+(__ss_bool b) { return value+b.value; }
+inline __ss_bool __ss_bool::operator==(__ss_bool b) { __ss_bool c; c.value=value==b.value; return c; }
+inline __ss_bool __ss_bool::operator&(__ss_bool b) { __ss_bool c; c.value=value&b.value; return c; }
+inline __ss_bool __ss_bool::operator|(__ss_bool b) { __ss_bool c; c.value=value|b.value; return c; }
+inline __ss_bool __ss_bool::operator^(__ss_bool b) { __ss_bool c; c.value=value^b.value; return c; }
+inline bool __ss_bool::operator!() { return !value; }
+inline __ss_bool::operator bool() { return bool(value); }
 
 inline __ss_bool ___bool() { return __mbool(false); }
 
@@ -1565,21 +1529,86 @@ template<> inline __ss_bool ___bool(long int) { return False; } /* XXX bool(None
 #define __AND(a, b, t) ((!___bool(__ ## t = a))?(__ ## t):(b))
 #define __NOT(x) (__mbool(!x))
 
-/* __iter<T> methods */
+/* pyiter methods */
 
-template<class T> int __iter<T>::for_has_next() {
-    try {
-        temp = next();
-    } catch(StopIteration *) {
-        return 0;
+template<class T> inline __iter<T> *pyiter<T>::for_in_init() {
+    return this->__iter__();
+}
+
+template<class T> inline bool pyiter<T>::for_in_has_next(__iter<T> *iter) {
+    return iter->for_has_next(); /* XXX opt end cond */
+}
+
+template<class T> inline T pyiter<T>::for_in_next(__iter<T> *iter) {
+    return iter->for_get_next();
+}
+
+/* pyseq methods */
+
+template<class T> __ss_int pyseq<T>::__len__() {
+    return units.size();
+}
+
+template<class T> T pyseq<T>::__getitem__(int i) {
+    i = __wrap(this, i);
+    return units[i];
+}
+
+template<class T> void *pyseq<T>::append(T t) {
+    units.push_back(t);
+    return NULL;
+}
+
+template<class T> void pyseq<T>::slice(__ss_int x, __ss_int l, __ss_int u, __ss_int s, pyseq<T> *c) {
+    slicenr(x, l, u, s, __len__());
+    if(s == 1) {
+        c->units.resize(u-l);
+        memcpy(&(c->units[0]), &(this->units[l]), sizeof(T)*(u-l));
+    } else if(s > 0)
+        for(int i=l; i<u; i += s)
+            c->append(units[i]);
+    else
+        for(int i=l; i>u; i += s)
+            c->append(units[i]);
+}
+
+template<class T> __ss_int pyseq<T>::__cmp__(pyobj *p) {
+    if (!p) return 1;
+    pyseq<T> *b = (pyseq<T> *)p;
+    int i, cmp;
+    int mnm = __min(2, 0, this->__len__(), b->__len__());
+
+    for(i = 0; i < mnm; i++) {
+        cmp = __cmp(this->units[i], b->units[i]);
+        if(cmp)
+            return cmp;
     }
-    return 1;
-}
-template<class T> T __iter<T>::for_get_next() {
-    return temp;
+    return __cmp(this->__len__(), b->__len__());
 }
 
-/* dict<K, V> methods */
+template<class T> __ss_bool pyseq<T>::__contains__(T t) = 0;
+
+template<class T> void pyseq<T>::resize(int n) {
+    units.resize(n);
+}
+
+template<class T> __iter<T> *pyseq<T>::__iter__() {
+    return new __seqiter<T>(this);
+}
+
+template<class T> inline int pyseq<T>::for_in_init() {
+    return 0;
+}
+
+template<class T> inline bool pyseq<T>::for_in_has_next(int i) {
+    return i != units.size(); /* XXX opt end cond */
+}
+
+template<class T> inline T pyseq<T>::for_in_next(int &i) {
+    return units[i++];
+}
+
+/* dict methods */
 
 template<class K, class V> dict<K,V>::dict() {
     this->__class__ = cl_dict;
@@ -2199,7 +2228,7 @@ template<class T> void *list<T>::remove(T e) {
     return NULL;
 }
 
-/* str */
+/* str methods */
 
 inline str *str::__getitem__(__ss_int i) {
     i = __wrap(this, i);
@@ -2213,6 +2242,33 @@ inline str *str::__getfast__(__ss_int i) {
 
 inline __ss_int str::__len__() {
     return unit.size();
+}
+
+inline int str::for_in_init() {
+    return 0;
+}
+
+inline bool str::for_in_has_next(int i) {
+    return i != unit.size(); /* XXX opt end cond */
+}
+
+inline str *str::for_in_next(int &i) {
+    return __char_cache[unit[i++]];
+}
+
+/* __iter methods */
+
+template<class T> int __iter<T>::for_has_next() {
+    try {
+        temp = next();
+    } catch(StopIteration *) {
+        return 0;
+    }
+    return 1;
+}
+
+template<class T> T __iter<T>::for_get_next() {
+    return temp;
 }
 
 /*
@@ -2920,7 +2976,13 @@ template<class T> T __setiter<T>::next() {
     return entry->key;
 }
 
-/* tuple2<T, T> */
+/* tuple2 methods */
+
+template<class T> void tuple2<T, T>::__init2__(T a, T b) {
+    units.resize(2);
+    units[0] = a;
+    units[1] = b;
+}
 
 template<class T> tuple2<T, T>::tuple2() {
     this->__class__ = cl_tuple;
@@ -3091,7 +3153,12 @@ template<class T> PyObject *tuple2<T, T>::__to_py__() {
 }
 #endif
 
-/* tuple2<A, B> */
+/* tuple2 methods (binary) */
+
+template<class A, class B> void tuple2<A, B>::__init2__(A a, B b) {
+    first = a;
+    second = b;
+}
 
 template<class A, class B> tuple2<A, B>::tuple2() {
     this->__class__ = cl_tuple;
@@ -3109,11 +3176,6 @@ template<class A, class B> A tuple2<A, B>::__getfirst__() {
 template<class A, class B> B tuple2<A, B>::__getsecond__() {
     return second;
 }
-
-/*template<class A, class B> void tuple2<A, B>::init(int count, A a, B b) {
-    first = a;
-    second = b;
-} */
 
 template<class A, class B> __ss_bool tuple2<A, B>::__contains__(A a) {
     return __mbool(__eq(first, a));

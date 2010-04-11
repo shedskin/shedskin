@@ -2040,7 +2040,7 @@ void printc(file *f, int n, ...) {
 
 /* str, file iteration */
 
-__seqiter<str *> *str::__iter__() {
+__iter<str *> *str::__iter__() {
     return new __striter(this);
 }
 
@@ -2150,5 +2150,37 @@ template<> double __none() { throw new TypeError(new str("mixing None with float
 list<tuple2<void *, void *> *> *__zip(int) {
     return new list<tuple2<void *, void *> *>();
 }
+
+/* pyobj */
+
+str *pyobj::__str__() { return __repr__(); }
+
+int pyobj::__hash__() {
+    return __gnu_cxx::hash<intptr_t>()((intptr_t)this);
+}
+
+__ss_int pyobj::__cmp__(pyobj *p) {
+    return __cmp<void *>(this, p);
+}
+
+__ss_bool pyobj::__eq__(pyobj *p) { return __mbool(this == p); }
+__ss_bool pyobj::__ne__(pyobj *p) { return __mbool(!__eq__(p)); }
+
+__ss_bool pyobj::__gt__(pyobj *p) { return __mbool(__cmp__(p) == 1); }
+__ss_bool pyobj::__lt__(pyobj *p) { return __mbool(__cmp__(p) == -1); }
+__ss_bool pyobj::__ge__(pyobj *p) { return __mbool(__cmp__(p) != -1); }
+__ss_bool pyobj::__le__(pyobj *p) { return __mbool(__cmp__(p) != 1); }
+
+pyobj *pyobj::__copy__() { return this; }
+pyobj *pyobj::__deepcopy__(dict<void *, pyobj *> *) { return this; }
+
+__ss_int pyobj::__len__() { return 1; } /* XXX exceptions? */
+__ss_int pyobj::__int__() { return 0; }
+
+__ss_bool pyobj::__nonzero__() { return __mbool(__len__() != 0); }
+
+/* object */
+
+object::object() { this->__class__ = cl_object; }
 
 } // namespace __shedskin__
