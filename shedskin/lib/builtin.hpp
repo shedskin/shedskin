@@ -215,6 +215,10 @@ public:
     list<T> *__copy__();
     list<T> *__deepcopy__(dict<void *, pyobj *> *memo);
 
+    /* iteration */
+
+    inline bool for_in_has_next(int i);
+    inline T for_in_next(int &i);
 #ifdef __SS_BIND
     list(PyObject *);
     PyObject *__to_py__();
@@ -286,6 +290,11 @@ public:
 
     tuple2<T,T> *__deepcopy__(dict<void *, pyobj *> *memo);
     tuple2<T,T> *__copy__();
+
+    /* iteration */
+
+    inline bool for_in_has_next(int i);
+    inline T for_in_next(int &i);
 
 #ifdef __SS_BIND
     tuple2(PyObject *p);
@@ -384,10 +393,6 @@ public:
 
     /* iteration */
 
-    typedef str * for_in_unit;
-    typedef int for_in_loop;
-
-    inline int for_in_init();
     inline bool for_in_has_next(int i);
     inline str *for_in_next(int &i);
 
@@ -457,6 +462,14 @@ public:
 template<class T> class setentry;
 
 const int MINSIZE = 8;
+
+template<class T> struct set_looper {
+    int pos;
+    int si_used;
+    setentry<T> *entry;
+};
+
+static void __throw_set_changed();
 
 template<class T> class set : public pyiter<T> {
 public:
@@ -530,6 +543,23 @@ public:
 
     set<T> *__copy__();
     set<T> *__deepcopy__(dict<void *, pyobj *> *memo);
+
+    /* iteration */
+
+    typedef T for_in_unit;
+    typedef set_looper<T> for_in_loop;
+
+    inline set_looper<T> for_in_init() { set_looper<T> l; l.pos = 0; l.si_used = used; return l; }
+    inline bool for_in_has_next(set_looper<T> &l) {
+        if (l.si_used != used) {
+            l.si_used = -1;
+            __throw_set_changed();
+        }
+        int ret = next(&l.pos, &l.entry);
+        if (!ret) return false;
+        return true;
+    }
+    inline T for_in_next(set_looper<T> &l) { return l.entry->key; }
 
 #ifdef __SS_BIND
     set(PyObject *);
@@ -1311,6 +1341,9 @@ static void __throw_index_out_of_range() { /* improve inlining */
 static void __throw_range_step_zero() {
     throw new ValueError(new str("range() step argument must not be zero"));
 }
+static void __throw_set_changed() {
+    throw new RuntimeError(new str("set changed size during iteration"));
+}
 
 #define FOR_IN_NEW(e, iter, temp, t, please) \
     __ ## temp = iter; \
@@ -1601,11 +1634,11 @@ template<class T> inline int pyseq<T>::for_in_init() {
 }
 
 template<class T> inline bool pyseq<T>::for_in_has_next(int i) {
-    return i != units.size(); /* XXX opt end cond */
+    return i != __len__(); /* XXX opt end cond */
 }
 
 template<class T> inline T pyseq<T>::for_in_next(int &i) {
-    return units[i++];
+    return __getitem__(i++);
 }
 
 /* dict methods */
@@ -1860,7 +1893,7 @@ template<class K, class V> __dictiteritems<K, V> *dict<K, V>::iteritems() {
     return new __dictiteritems<K, V>(this);
 }
 
-/* list<T> methods */
+/* list methods */
 
 template<class T> list<T>::list() {
     this->__class__ = cl_list;
@@ -2228,6 +2261,14 @@ template<class T> void *list<T>::remove(T e) {
     return NULL;
 }
 
+template<class T> inline bool list<T>::for_in_has_next(int i) {
+    return i != units.size(); /* XXX opt end cond */
+}
+
+template<class T> inline T list<T>::for_in_next(int &i) {
+    return units[i++];
+}
+
 /* str methods */
 
 inline str *str::__getitem__(__ss_int i) {
@@ -2242,10 +2283,6 @@ inline str *str::__getfast__(__ss_int i) {
 
 inline __ss_int str::__len__() {
     return unit.size();
-}
-
-inline int str::for_in_init() {
-    return 0;
 }
 
 inline bool str::for_in_has_next(int i) {
@@ -2968,8 +3005,8 @@ template<class T> __setiter<T>::__setiter(set<T> *p) {
 
 template<class T> T __setiter<T>::next() {
     if (si_used != p->used) {
-        throw new RuntimeError(new str("set changed size during iteration"));
         si_used = -1;
+        throw new RuntimeError(new str("set changed size during iteration"));
     }
     int ret = p->next(&pos, &entry);
     if (!ret) throw new StopIteration();
@@ -3073,18 +3110,6 @@ template<class T> tuple2<T,T> *tuple2<T, T>::__imul__(__ss_int b) {
     return __mul__(b);
 }
 
-/*template<class T> void tuple2<T, T>::init(int count, ...) {
-    this->units.resize(0);
-
-    va_list ap;
-    va_start(ap, count);
-    for(int i=0; i<count; i++) {
-        T t = va_arg(ap, T);
-        this->units.push_back(t);
-    }
-    va_end(ap);
-} */
-
 template<class T> __ss_bool tuple2<T, T>::__contains__(T a) {
     for(int i=0; i<this->__len__(); i++)
         if(__eq(this->units[i], a))
@@ -3131,6 +3156,14 @@ template<class T> tuple2<T,T> *tuple2<T,T>::__deepcopy__(dict<void *, pyobj *> *
     for(int i=0; i<this->__len__(); i++)
         c->units[i] = __deepcopy(this->units[i], memo);
     return c;
+}
+
+template<class T> inline bool tuple2<T,T>::for_in_has_next(int i) {
+    return i != units.size(); /* XXX opt end cond */
+}
+
+template<class T> inline T tuple2<T,T>::for_in_next(int &i) {
+    return units[i++];
 }
 
 #ifdef __SS_BIND
