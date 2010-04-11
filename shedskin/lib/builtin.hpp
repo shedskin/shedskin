@@ -482,6 +482,11 @@ template <class T> class pyiter : public pyobj {
 public:
     virtual __iter<T> *__iter__() = 0;
 
+    typedef T for_in_unit;
+    typedef __iter<T> * for_in_loop;
+    inline __iter<T> *for_in_init() { return __iter__(); }
+    inline bool for_in_has_next(__iter<T> *iter) { return iter->for_has_next(); } /* XXX opt end cond */
+    inline T for_in_next(__iter<T> *iter) { return iter->for_get_next(); }
 };
 
 template<class T> class __iter : public pyiter<T> {
@@ -504,6 +509,12 @@ template <class T> __iter<T> *___iter(pyiter<T> *p) {
 template <class T> class pyseq : public pyiter<T> {
 public:
     __GC_VECTOR(T) units;
+
+    typedef T for_in_unit;
+    typedef int for_in_loop;
+    inline int for_in_init() { return 0; }
+    inline bool for_in_has_next(int i) { return i != units.size(); } /* XXX opt end cond */
+    inline T for_in_next(int &i) { return units[i++]; }
 
     virtual __ss_int __len__() {
         return units.size();
@@ -675,6 +686,12 @@ public:
     __GC_STRING unit;
     int cached_hash;
 
+    typedef str * for_in_unit;
+    typedef int for_in_loop;
+    inline int for_in_init() { return 0; }
+    inline bool for_in_has_next(int i) { return i != unit.size(); } /* XXX opt end cond */
+    inline str *for_in_next(int &i) { return __char_cache[unit[i++]]; }
+
     str();
     str(const char *s);
     str(__GC_STRING s);
@@ -825,6 +842,11 @@ template <class K, class V> class dict : public pyiter<K> {
 public:
     __GC_HASH_MAP units;
     typename __GC_HASH_MAP::iterator it;
+    typedef K for_in_unit;
+    typedef typeof(it) for_in_loop;
+    inline for_in_loop for_in_init() { return units.begin(); }
+    inline bool for_in_has_next(for_in_loop l) { return l != units.end(); } /* XXX opt */
+    inline K for_in_next(for_in_loop &l) { return (*l++).first; }
 
     dict();
     dict(int count, ...);
@@ -1334,6 +1356,13 @@ static void __throw_index_out_of_range() { /* improve inlining */
 static void __throw_range_step_zero() {
     throw new ValueError(new str("range() step argument must not be zero"));
 }
+
+#define FOR_IN_NEW(e, iter, temp, t, please) \
+    __ ## temp = iter; \
+    please dereference<typeof(iter)>::type::for_in_loop __ ## t = __ ## temp->for_in_init(); \
+    while(__ ## temp->for_in_has_next(__ ## t)) \
+    { \
+        e = __ ## temp->for_in_next(__ ## t);
 
 #define FOR_IN(i, m, temp) \
     __ ## temp = ___iter(m); \
@@ -3931,48 +3960,27 @@ float_ *__box(double);
 
 /* any */
 
-template<class A> __ss_bool any(pyiter<A> *a) {
-    A b;
-    __iter<A> *__0;
-    FOR_IN(b,a,0)
-        if(___bool(b))
+template<class A> __ss_bool any(A *iter) {
+    typename A::for_in_unit e;
+    A *__1;
+    FOR_IN_NEW(e,iter,1,0, typename)
+        if(___bool(e))
             return True;
     END_FOR
     return False;
 }
-
-template<class A> __ss_bool any(pyseq<A> *a) {
-    unsigned int len = a->units.size();
-    for(unsigned int i=0; i<len; i++)
-        if (___bool(a->units[i]))
-            return True;
-    return False;
-}
-
-inline __ss_bool any(str *s) { return __mbool(s->__len__()); }
 
 /* all */
 
-template<class A> __ss_bool all(pyiter<A> *a) {
-    A b;
-    __iter<A> *__0;
-    FOR_IN(b,a,0)
-        if(!___bool(b))
+template<class A> __ss_bool all(A *iter) {
+    typename A::for_in_unit e;
+    A *__1;
+    FOR_IN_NEW(e,iter,1,0, typename)
+        if(!___bool(e))
             return False;
     END_FOR
     return True;
 }
-
-
-template<class A> __ss_bool all(pyseq<A> *a) {
-    unsigned int len = a->units.size();
-    for(unsigned int i=0; i<len; i++)
-        if (!___bool(a->units[i]))
-            return False;
-    return True;
-}
-
-inline __ss_bool all(str *s) { return True; }
 
 /* ord, chr */
 
