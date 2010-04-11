@@ -5,6 +5,10 @@ import traceback, sys, os, time
 
 tests = [
 ('''fixes for 0.5''', '''
+# unbound ident
+import testdata.subsub
+print list(testdata.subsub.blah(4))
+
 # exception hierarchy
 try:
     try:
@@ -13,10 +17,6 @@ try:
         print 'foute boel'
 except BaseException as ork:
     print 'base exc', ork
-
-# unbound ident
-import testdata.subsub
-print list(testdata.subsub.blah(4))
 
 ''', '''
 output(equal=True)

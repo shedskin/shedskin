@@ -560,7 +560,7 @@ def lookup_class_module(objexpr, mv, parent):
     return lookupclass(objexpr, mv), lookupmodule(objexpr, mv)
 
 # --- analyze call expression: namespace, method call, direct call/constructor..
-def analyze_callfunc(node, check_exist=False): # XXX generate target list XXX uniform variable system!
+def analyze_callfunc(node): # XXX generate target list XXX uniform variable system!
     #print 'analyze callnode', node, inode(node).parent
     namespace, objexpr, method_call, parent_constr = inode(node).mv.module, None, False, False 
     constructor, direct_call = None, None
@@ -612,9 +612,6 @@ def analyze_callfunc(node, check_exist=False): # XXX generate target list XXX un
         else:
             if namespace != inode(node).mv.module:
                 return objexpr, ident, None, False, None, False
-            elif check_exist:
-#                traceback.print_stack()
-                error("unbound identifier '"+ident+"'", node)
 
     return objexpr, ident, direct_call, method_call, constructor, parent_constr
 
