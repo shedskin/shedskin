@@ -5,7 +5,7 @@ using namespace std;
 namespace __re__ {
 
 //flags
-const int
+const __ss_int
     I = 0x02, IGNORECASE    = 0x02,
     L = 0x04, LOCALE        = 0x04,
     M = 0x08, MULTILINE     = 0x08,
@@ -16,71 +16,71 @@ const int
 const unsigned char *local_table;
 
 //match_object functions
-str *match_object::group(int /* n */, __ss_int matchid)
+str *match_object::group(__ss_int /* n */, __ss_int matchid)
 {
     return new str(re->__group(&string->unit, captured, matchid));
 }
 
-str *match_object::group(int /* n */, str *mname)
+str *match_object::group(__ss_int /* n */, str *mname)
 {
     return new str(re->__group(&string->unit, captured, mname));
 }
 
-tuple2<str *, str *> *match_object::group(int n, __ss_int m, __ss_int o, ...) {
+tuple2<str *, str *> *match_object::group(__ss_int n, __ss_int m, __ss_int o, ...) {
     tuple2<str *, str *> *t = new tuple2<str *, str *>();
     va_list ap;
     va_start(ap, o);
     t->append(group(1, m));
     t->append(group(1, o));
-    for(int i=0; i<n-2; i++)
+    for(__ss_int i=0; i<n-2; i++)
         t->append(group(1, va_arg(ap, __ss_int)));
     va_end(ap);
     return t;
 }
 
-tuple2<str *, str *> *match_object::group(int n, str *m, str *o, ...) {
+tuple2<str *, str *> *match_object::group(__ss_int n, str *m, str *o, ...) {
     tuple2<str *, str *> *t = new tuple2<str *, str *>();
     va_list ap;
     va_start(ap, o);
     t->append(group(1, m));
     t->append(group(1, o));
-    for(int i=0; i<n-2; i++)
+    for(__ss_int i=0; i<n-2; i++)
         t->append(group(1, va_arg(ap, str *)));
     va_end(ap);
     return t;
 }
 
 //index functions
-int match_object::__index(int matchid, char isend)
+__ss_int match_object::__index(__ss_int matchid, char isend)
 {
     if(matchid > lastindex) throw new error(new str("group does not exist or is unmatched"));
 
     return captured[matchid * 2 + isend];
 }
 
-int match_object::__index(str *mname, char isend)
+__ss_int match_object::__index(str *mname, char isend)
 {
     if(!re->groupindex->has_key(mname)) throw new error(new str("no such group exists"));
 
     return __index(re->groupindex->__getitem__(mname), isend);
 }
 
-int match_object::end(int matchid)
+__ss_int match_object::end(__ss_int matchid)
 {
     return __index(matchid, 1);
 }
 
-int match_object::end(str *mname)
+__ss_int match_object::end(str *mname)
 {
     return __index(mname, 1);
 }
 
-int match_object::start(int matchid)
+__ss_int match_object::start(__ss_int matchid)
 {
     return __index(matchid, 0);
 }
 
-int match_object::start(str *mname)
+__ss_int match_object::start(str *mname)
 {
     return __index(mname, 0);
 }
@@ -138,7 +138,7 @@ str *re_object::__repr__() {
 }
 
 //these are for internal use
-__GC_STRING re_object::__group(__GC_STRING *subj, int *captured, int matchid)
+__GC_STRING re_object::__group(__GC_STRING *subj, int *captured, __ss_int matchid)
 {
     if(matchid > capture_count || matchid < 0) throw new error(new str("group does not exist"));
     if(captured[matchid * 2] == -1) throw new error(new str("group is unmatched"));
@@ -250,7 +250,7 @@ void re_free(void *o)
     GC_FREE(o);
 }
 
-str *re_object::__subn(str *repl, str *subj, int maxn, int *howmany)
+str *re_object::__subn(str *repl, str *subj, __ss_int maxn, int *howmany)
 {
     __GC_STRING *s, out;
     int *captured, clen, i, cur;
@@ -298,12 +298,12 @@ str *re_object::__subn(str *repl, str *subj, int maxn, int *howmany)
     return new str(out);
 }
 
-str *re_object::sub(str *repl, str *subj, int maxn)
+str *re_object::sub(str *repl, str *subj, __ss_int maxn)
 {
     return __subn(repl, subj, maxn, 0);
 }
 
-str *re_object::sub(replfunc func, str *string, int maxn) {
+str *re_object::sub(replfunc func, str *string, __ss_int maxn) {
     list<str *> *l;
     __re__::match_object *match;
     __iter<__re__::match_object *> *__1;
@@ -329,7 +329,7 @@ str *re_object::sub(replfunc func, str *string, int maxn) {
 }
 
 
-tuple2<str *, __ss_int> *re_object::subn(str *repl, str *subj, int maxn)
+tuple2<str *, __ss_int> *re_object::subn(str *repl, str *subj, __ss_int maxn)
 {
     str *r;
     int n;
@@ -339,7 +339,7 @@ tuple2<str *, __ss_int> *re_object::subn(str *repl, str *subj, int maxn)
     return new tuple2<str *, __ss_int>(2, r, n);
 }
 
-list<str *> *re_object::__splitfind(str *subj, int maxn, char onlyfind, int flags)
+list<str *> *re_object::__splitfind(str *subj, __ss_int maxn, char onlyfind, __ss_int flags)
 {
     __GC_STRING *subjs;
     list<str *> *r;
@@ -409,17 +409,17 @@ list<str *> *re_object::__splitfind(str *subj, int maxn, char onlyfind, int flag
     return r;
 }
 
-list<str *> *re_object::split(str *subj, int maxn)
+list<str *> *re_object::split(str *subj, __ss_int maxn)
 {
     return __splitfind(subj, maxn, 0, 0);
 }
 
-list<str *> *re_object::findall(str *subj, int flags)
+list<str *> *re_object::findall(str *subj, __ss_int flags)
 {
     return __splitfind(subj, -1, 1, flags);
 }
 
-match_iter::match_iter(re_object *ro, str *subj, int pos, int endpos, int flags)
+match_iter::match_iter(re_object *ro, str *subj, __ss_int pos, __ss_int endpos, __ss_int flags)
 {
     this->subj = subj;
     this->pos = pos;
@@ -444,7 +444,7 @@ match_object *match_iter::next(void)
     return mobj;
 }
 
-__iter<match_object *> *re_object::finditer(str *subj, int pos, int endpos, int flags)
+__iter<match_object *> *re_object::finditer(str *subj, __ss_int pos, __ss_int endpos, __ss_int flags)
 {
     if(endpos < pos && endpos != -1) throw new error(new str("end position less than initial"));
     if((unsigned int)pos >= subj->unit.size()) throw new error(new str("starting position >= string length"));
@@ -452,7 +452,7 @@ __iter<match_object *> *re_object::finditer(str *subj, int pos, int endpos, int 
     return new match_iter(this, subj, pos, endpos, flags);
 }
 
-match_object *re_object::__exec(str *subj, int pos, int endpos, int flags)
+match_object *re_object::__exec(str *subj, __ss_int pos, __ss_int endpos, __ss_int flags)
 {
     match_object *mobj;
     int *captured, clen, r, t, mx_i, nendpos;
@@ -512,19 +512,19 @@ match_object *re_object::__exec(str *subj, int pos, int endpos, int flags)
     return mobj;
 }
 
-match_object *re_object::match(str *subj, int pos, int endpos)
+match_object *re_object::match(str *subj, __ss_int pos, __ss_int endpos)
 {
     return __exec(subj, pos, endpos, PCRE_ANCHORED);
 }
 
-match_object *re_object::search(str *subj, int pos, int endpos)
+match_object *re_object::search(str *subj, __ss_int pos, __ss_int endpos)
 {
     return __exec(subj, pos, endpos, 0);
 }
 
 
 //re.* functions
-int __convert_flags(int flags)
+__ss_int __convert_flags(__ss_int flags)
 {
     int ta[] = {IGNORECASE, MULTILINE, DOTALL, UNICODE, VERBOSE},
         tb[] = {PCRE_CASELESS, PCRE_MULTILINE, PCRE_DOTALL, PCRE_UTF8, PCRE_EXTENDED};
@@ -537,7 +537,7 @@ int __convert_flags(int flags)
     return r;
 }
 
-re_object *compile(str *pat, int flags)
+re_object *compile(str *pat, __ss_int flags)
 {
     re_object *reobj;
     __GC_STRING fullerr;
@@ -575,7 +575,7 @@ re_object *compile(str *pat, int flags)
     reobj->study_info = pcre_study(cpat, 0, (const char **)&errmsg);
 
     //any named indices?
-    reobj->groupindex = new dict<str *, int>();
+    reobj->groupindex = new dict<str *, __ss_int>();
 
     pcre_fullinfo(cpat, reobj->study_info, PCRE_INFO_NAMECOUNT, (void *)&ntlen);
     pcre_fullinfo(cpat, reobj->study_info, PCRE_INFO_NAMEENTRYSIZE, (void *)&nteach);
@@ -630,7 +630,7 @@ str *escape(str *s)
     return new str(out);
 }
 
-match_object *__exec_once(str *pat, str *subj, int flags)
+match_object *__exec_once(str *pat, str *subj, __ss_int flags)
 {
     re_object *r;
     match_object *mo;
@@ -643,17 +643,17 @@ match_object *__exec_once(str *pat, str *subj, int flags)
     return mo;
 }
 
-match_object *search(str *pat, str *subj, int flags)
+match_object *search(str *pat, str *subj, __ss_int flags)
 {
     return __exec_once(pat, subj, flags);
 }
 
-match_object *match(str *pat, str *subj, int flags)
+match_object *match(str *pat, str *subj, __ss_int flags)
 {
     return __exec_once(pat, subj, flags | PCRE_ANCHORED);
 }
 
-__iter<match_object *> *finditer(str *pat, str *subj, int pos, int endpos, int flags)
+__iter<match_object *> *finditer(str *pat, str *subj, __ss_int pos, __ss_int endpos, __ss_int flags)
 {
     re_object *ro;
     __iter<match_object *> *r;
@@ -664,7 +664,7 @@ __iter<match_object *> *finditer(str *pat, str *subj, int pos, int endpos, int f
     return r;
 }
 
-str *sub(str *pat, str *repl, str *subj, int maxn)
+str *sub(str *pat, str *repl, str *subj, __ss_int maxn)
 {
     re_object *ro;
     str *r;
@@ -675,7 +675,7 @@ str *sub(str *pat, str *repl, str *subj, int maxn)
     return r;
 }
 
-str *sub(str *pat, replfunc func, str *subj, int maxn) {
+str *sub(str *pat, replfunc func, str *subj, __ss_int maxn) {
     re_object *ro;
     str *r;
 
@@ -685,7 +685,7 @@ str *sub(str *pat, replfunc func, str *subj, int maxn) {
     return r;
 }
 
-tuple2<str *, __ss_int> *subn(str *pat, str *repl, str *subj, int maxn)
+tuple2<str *, __ss_int> *subn(str *pat, str *repl, str *subj, __ss_int maxn)
 {
     re_object *ro;
     tuple2<str *, __ss_int> *r;
@@ -696,7 +696,7 @@ tuple2<str *, __ss_int> *subn(str *pat, str *repl, str *subj, int maxn)
     return r;
 }
 
-list<str *> *__splitfind_once(str *pat, str *subj, int maxn, char onlyfind, int flags)
+list<str *> *__splitfind_once(str *pat, str *subj, __ss_int maxn, char onlyfind, __ss_int flags)
 {
     re_object *ro;
     list<str *> *r;
@@ -708,12 +708,12 @@ list<str *> *__splitfind_once(str *pat, str *subj, int maxn, char onlyfind, int 
     return r;
 }
 
-list<str *> *split(str *pat, str *subj, int maxn)
+list<str *> *split(str *pat, str *subj, __ss_int maxn)
 {
     return __splitfind_once(pat, subj, maxn, 0, 0);
 }
 
-list<str *> *findall(str *pat, str *subj, int flags)
+list<str *> *findall(str *pat, str *subj, __ss_int flags)
 {
     return __splitfind_once(pat, subj, -1, 1, flags);
 }

@@ -17,7 +17,7 @@ using namespace __shedskin__;
 
 namespace __re__ {
 
-extern const int I, L, M, S, U, X,
+extern const __ss_int I, L, M, S, U, X,
     IGNORECASE, LOCALE, MULTILINE, DOTALL, UNICODE, VERBOSE;
 
 class match_object;
@@ -50,10 +50,10 @@ public:
     int *captured;
 
     //self-explanatory
-    int pos, endpos;
+    __ss_int pos, endpos;
 
     //last match and last named match
-    int lastindex;
+    __ss_int lastindex;
 
     //subject string
     str *string;
@@ -64,21 +64,21 @@ public:
     //functions
     str *expand(str *tpl);
 
-    str *group(int n, __ss_int m = 0);
-    tuple2<str *, str *> *group(int n, __ss_int m, __ss_int o, ...);
-    str *group(int n, str *m);
-    tuple2<str *, str *> *group(int n, str *m, str *o, ...);
+    str *group(__ss_int n, __ss_int m = 0);
+    tuple2<str *, str *> *group(__ss_int n, __ss_int m, __ss_int o, ...);
+    str *group(__ss_int n, str *m);
+    tuple2<str *, str *> *group(__ss_int n, str *m, str *o, ...);
 
     dict<str *, str *> *groupdict(str *defval = 0);
     tuple2<str *, str *> *groups(str *defval = 0);
 
-    int __index(int matchid, char isend);
-    int __index(str *mname, char isend);
+    __ss_int __index(__ss_int matchid, char isend);
+    __ss_int __index(str *mname, char isend);
 
-    int end(int matchid = 0);
-    int end(str *mname);
-    int start(int matchid = 0);
-    int start(str *mname);
+    __ss_int end(__ss_int matchid = 0);
+    __ss_int end(str *mname);
+    __ss_int start(__ss_int matchid = 0);
+    __ss_int start(str *mname);
 
     str *__repr__();
 };
@@ -90,19 +90,19 @@ class re_object : public pyobj
 public:
 
     //named captured subpatterns
-    dict<str *, int> *groupindex;
+    dict<str *, __ss_int> *groupindex;
 
     //how many captured subpatterns there are
-    int capture_count;
+    __ss_int capture_count;
 
     //the original pattern
     str *pattern;
 
     //the flags used
-    int flags;
+    __ss_int flags;
 
     //internal functions
-    __GC_STRING __group(__GC_STRING *subj, int *captured, int m);
+    __GC_STRING __group(__GC_STRING *subj, int *captured, __ss_int m);
     __GC_STRING __group(__GC_STRING *subj, int *captured, str *m);
     __GC_STRING __expand(__GC_STRING *subj, int *captured, __GC_STRING tpl);
 
@@ -110,19 +110,19 @@ public:
     pcre *compiled_pattern;
     pcre_extra *study_info;
 
-    match_object *__exec(str *subj, int pos = 0, int endpos = -1, int flags = 0);
-    str *__subn(str *repl, str *subj, int maxn = -1, int *howmany = 0);
-    list<str *> *__splitfind(str *subj, int maxn, char onlyfind, int flags);
-    int __convert_flags(int flags);
+    match_object *__exec(str *subj, __ss_int pos = 0, __ss_int endpos = -1, __ss_int flags = 0);
+    str *__subn(str *repl, str *subj, __ss_int maxn = -1, int *howmany = 0);
+    list<str *> *__splitfind(str *subj, __ss_int maxn, char onlyfind, __ss_int flags);
+    __ss_int __convert_flags(__ss_int flags);
 
-    match_object *match(str *subj, int pos = 0, int endpos = -1);
-    match_object *search(str *subj, int pos = 0, int endpos = -1);
-    __iter<match_object *> *finditer(str *subj, int pos = 0, int endpos = -1, int flags = 0);
-    list<str *> *split(str *subj, int maxn = -1);
-    str *sub(str *repl, str *subj, int maxn = -1);
-    str *sub(replfunc repl, str *subj, int maxn = -1);
-    tuple2<str *, __ss_int> *subn(str *repl, str *subj, int maxn = -1);
-    list<str *> *findall(str *subj, int flags = 0);
+    match_object *match(str *subj, __ss_int pos = 0, __ss_int endpos = -1);
+    match_object *search(str *subj, __ss_int pos = 0, __ss_int endpos = -1);
+    __iter<match_object *> *finditer(str *subj, __ss_int pos = 0, __ss_int endpos = -1, __ss_int flags = 0);
+    list<str *> *split(str *subj, __ss_int maxn = -1);
+    str *sub(str *repl, str *subj, __ss_int maxn = -1);
+    str *sub(replfunc repl, str *subj, __ss_int maxn = -1);
+    tuple2<str *, __ss_int> *subn(str *repl, str *subj, __ss_int maxn = -1);
+    list<str *> *findall(str *subj, __ss_int flags = 0);
 
     str *__repr__();
 };
@@ -132,26 +132,26 @@ class match_iter : public __iter<match_object *>
 public:
     re_object *ro;
     str *subj;
-    int pos, endpos, flags;
+    __ss_int pos, endpos, flags;
 
-    match_iter(re_object *ro, str *subj, int pos, int endpos, int flags);
+    match_iter(re_object *ro, str *subj, __ss_int pos, __ss_int endpos, __ss_int flags);
     match_object *next();
 };
 
-re_object *compile(str *pat, int flags = 0);
+re_object *compile(str *pat, __ss_int flags = 0);
 
-match_object *match(str *pat, str *subj, int flags = 0);
-match_object *search(str *pat, str *subj, int flags = 0);
-__iter<match_object *> *finditer(str *pat, str *subj, int pos = 0, int endpos = -1, int flags = 0);
-list<str *> *split(str *pat, str *subj, int maxn = 0);
-str *sub(str *pat, str *repl, str *subj, int maxn = 0);
-str *sub(str *pat, replfunc repl, str *subj, int maxn = 0);
-tuple2<str *, __ss_int> *subn(str *pat, str *repl, str *subj, int maxn = 0);
-list<str *> *findall(str *pat, str *subj, int flags = 0);
+match_object *match(str *pat, str *subj, __ss_int flags = 0);
+match_object *search(str *pat, str *subj, __ss_int flags = 0);
+__iter<match_object *> *finditer(str *pat, str *subj, __ss_int pos = 0, __ss_int endpos = -1, __ss_int flags = 0);
+list<str *> *split(str *pat, str *subj, __ss_int maxn = 0);
+str *sub(str *pat, str *repl, str *subj, __ss_int maxn = 0);
+str *sub(str *pat, replfunc repl, str *subj, __ss_int maxn = 0);
+tuple2<str *, __ss_int> *subn(str *pat, str *repl, str *subj, __ss_int maxn = 0);
+list<str *> *findall(str *pat, str *subj, __ss_int flags = 0);
 str *escape(str *s);
 
-list<str *> *__splitfind_once(str *pat, str *subj, int maxn, char onlyfind, int flags);
-match_object *__exec_once(str *subj, int flags);
+list<str *> *__splitfind_once(str *pat, str *subj, __ss_int maxn, char onlyfind, __ss_int flags);
+match_object *__exec_once(str *subj, __ss_int flags);
 
 //internal functions
 void __init(void);
