@@ -2088,7 +2088,7 @@ str *reduce(str *(*func)(str *, str *), str *a, str *initial) { return reduce(fu
 
 #ifdef __SS_BIND
 #ifdef __SS_LONG
-template<> PyObject *__to_py(__ss_int i) { return PyInt_FromLong(i); }
+template<> PyObject *__to_py(__ss_int i) { return PyLong_FromLongLong(i); }
 #endif
 template<> PyObject *__to_py(int i) { return PyInt_FromLong(i); }
 template<> PyObject *__to_py(__ss_bool i) { return PyBool_FromLong(i.value); }
@@ -2097,9 +2097,12 @@ template<> PyObject *__to_py(void *v) { Py_INCREF(Py_None); return Py_None; }
 
 #ifdef __SS_LONG
 template<> __ss_int __to_ss(PyObject *p) {
-    if(!PyInt_Check(p))
+    if(PyLong_Check(p))
+        return PyLong_AsLongLong(p);
+    else if (PyInt_Check(p))
+        return PyInt_AsLong(p);
+    else
         throw new TypeError(new str("error in conversion to Shed Skin (integer expected)"));
-    return PyInt_AsLong(p);
 }
 #endif
 
