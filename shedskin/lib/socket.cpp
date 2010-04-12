@@ -52,8 +52,8 @@ str *__name__;
 str *invalid_address;
 str *timed_out;
 str *host_not_found;
-int default_0;
-int default_1;
+__ss_int default_0;
+__ss_int default_1;
 
 /**
   class error
@@ -85,36 +85,36 @@ class_ *cl_timeout;
 
 class_ *cl_socket;
 
-int __ss_AF_INET6 = AF_INET6;
-int __ss_AF_INET = AF_INET;
-int __ss_AF_UNIX = AF_UNIX;
-int __ss_SOCK_STREAM = SOCK_STREAM;
-int __ss_SOCK_DGRAM = SOCK_DGRAM;
+__ss_int __ss_AF_INET6 = AF_INET6;
+__ss_int __ss_AF_INET = AF_INET;
+__ss_int __ss_AF_UNIX = AF_UNIX;
+__ss_int __ss_SOCK_STREAM = SOCK_STREAM;
+__ss_int __ss_SOCK_DGRAM = SOCK_DGRAM;
 #ifndef WIN32
-int __ss_AI_PASSIVE = AI_PASSIVE;
+__ss_int __ss_AI_PASSIVE = AI_PASSIVE;
 #ifndef __APPLE__
 #ifndef __sun
 #ifndef __FreeBSD__
-int __ss_SOL_IP = SOL_IP;
+__ss_int __ss_SOL_IP = SOL_IP;
 #endif
 #endif
 #endif
-int __ss_IP_TOS = IP_TOS;
-int __ss_IP_TTL = IP_TTL;
+__ss_int __ss_IP_TOS = IP_TOS;
+__ss_int __ss_IP_TTL = IP_TTL;
 #endif
-int __ss_SOL_SOCKET = SOL_SOCKET;
-int __ss_SO_REUSEADDR = SO_REUSEADDR;
-int __ss_INADDR_ANY = INADDR_ANY;
-int __ss_INADDR_LOOPBACK = INADDR_LOOPBACK;
+__ss_int __ss_SOL_SOCKET = SOL_SOCKET;
+__ss_int __ss_SO_REUSEADDR = SO_REUSEADDR;
+__ss_int __ss_INADDR_ANY = INADDR_ANY;
+__ss_int __ss_INADDR_LOOPBACK = INADDR_LOOPBACK;
 #ifndef __sun
-int __ss_INADDR_NULL = INADDR_NONE;
+__ss_int __ss_INADDR_NULL = INADDR_NONE;
 #endif
-int __ss_INADDR_BROADCAST = INADDR_BROADCAST;
-int __ss_SOMAXCONN = SOMAXCONN;
+__ss_int __ss_INADDR_BROADCAST = INADDR_BROADCAST;
+__ss_int __ss_SOMAXCONN = SOMAXCONN;
 
 double __ss_default_timeout = -1.0;
 
-int socket::__ss_fileno() {
+__ss_int socket::__ss_fileno() {
 
     return this->_fd;
 }
@@ -136,7 +136,7 @@ str* make_errstring(const char *prefix)
     return new str( os.str().c_str() );
 }
 
-str *socket::getsockopt(int level, int optname, int value) {
+str *socket::getsockopt(__ss_int level, __ss_int optname, __ss_int value) {
 
     socklen_t buflen = value;
     char buf[buflen];
@@ -209,7 +209,7 @@ socket *socket::bind(socket::inet_address address)
     return bind(reinterpret_cast<sockaddr *>(&sin), sizeof(sin));
 }
 
-socket *socket::setsockopt(int level, int optname, int value) {
+socket *socket::setsockopt(__ss_int level, __ss_int optname, __ss_int value) {
     if (::setsockopt(_fd, level, optname, SOCKOPT_CAST &value, sizeof(value)) == SOCKET_ERROR)
         throw new error(make_errstring("setsockopt"));
 
@@ -320,7 +320,7 @@ socket *socket::connect(const sockaddr *sa, socklen_t salen)
     return this;
 }
 
-socket *socket::setblocking(int flag)
+socket *socket::setblocking(__ss_int flag)
 {
     if (flag)  {
         //blocking mode
@@ -342,7 +342,7 @@ socket *socket::settimeout(double val)
     return this;
 }
 
-socket *socket::shutdown(int how)
+socket *socket::shutdown(__ss_int how)
 {
     if (::shutdown(_fd, how) == SOCKET_ERROR)
         throw new error(make_errstring("shutdown"));
@@ -375,12 +375,12 @@ int socket::send(const char *s, size_t len, int flags)
     return r;
 }
 
-int socket::send(str *string, int flags) {
+__ss_int socket::send(str *string, __ss_int flags) {
     const char *s = string->unit.c_str();
     return send( s, strlen(s), flags );
 }
 
-int socket::sendall(str *string, int flags) {
+__ss_int socket::sendall(str *string, __ss_int flags) {
     const char *s = string->unit.c_str();
     size_t offset = 0;
     size_t len = string->__len__(); //FIXME is this guaranteed to be the same as the C string length, even if we are dealing with wide/unicode?
@@ -390,7 +390,7 @@ int socket::sendall(str *string, int flags) {
     return len;
 }
 
-int socket::sendto(str* msg, int flags, socket::inet_address addr)
+__ss_int socket::sendto(str* msg, __ss_int flags, socket::inet_address addr)
 {
     write_wait();
 
@@ -414,7 +414,7 @@ int socket::sendto(str* msg, int flags, socket::inet_address addr)
     return len;
 }
 
-int socket::sendto(str* msg, socket::inet_address addr)
+__ss_int socket::sendto(str* msg, socket::inet_address addr)
 {
     return sendto(msg, 0, addr);
 }
@@ -444,7 +444,7 @@ void socket::read_wait()
     }
 }
 
-str *socket::recv(int bufsize, int flags)
+str *socket::recv(__ss_int bufsize, __ss_int flags)
 {
     read_wait();
 
@@ -467,7 +467,7 @@ static socket::inet_address sin_addr_to_tuple(const sockaddr_in *sin)
 {
     char ip[sizeof("xxx.xxx.xxx.xxx")];
     inet_ntop(AF_INET, &sin->sin_addr, ip, sizeof(ip));
-    socket::inet_address addr = new tuple2<str *, int>(2, new str(ip), static_cast<int>(ntohs(sin->sin_port)));
+    socket::inet_address addr = new tuple2<str *, __ss_int>(2, new str(ip), static_cast<__ss_int>(ntohs(sin->sin_port)));
     return addr;
 }
 
@@ -480,7 +480,7 @@ ssize_t socket::recvfrom(char *buf, size_t bufsize, int flags, sockaddr *sa, soc
     return len;
 }
 
-tuple2<str *, socket::inet_address> *socket::recvfrom(int bufsize, int flags)
+tuple2<str *, socket::inet_address> *socket::recvfrom(__ss_int bufsize, __ss_int flags)
 {
     char buf[bufsize];
     struct sockaddr_in sin;
@@ -489,7 +489,7 @@ tuple2<str *, socket::inet_address> *socket::recvfrom(int bufsize, int flags)
     return new tuple2<str *, inet_address>(2, new str(buf, len), sin_addr_to_tuple(&sin));
 }
 
-socket::socket(int family, int type, int proto) {
+socket::socket(__ss_int family, __ss_int type, __ss_int proto) {
     this->__class__ = cl_socket;
 
     this->family = family;
@@ -507,7 +507,7 @@ socket::~socket()
     ::CLOSE(_fd); // ignore errror since we can't throw
 }
 
-socket *socket::listen(int backlog)
+socket *socket::listen(__ss_int backlog)
 {
     if(::listen(_fd, backlog) == SOCKET_ERROR)
         throw new error(make_errstring("listen"));
@@ -601,19 +601,19 @@ str *gethostname()
     return new str(name);
 }
 
-int _ss_htonl(int x) {
+__ss_int _ss_htonl(__ss_int x) {
     return htonl(x);
 }
 
-int _ss_htons(int x) {
+__ss_int _ss_htons(__ss_int x) {
     return htons(x);
 }
 
-int _ss_ntohl(int x) {
+__ss_int _ss_ntohl(__ss_int x) {
     return ntohl(x);
 }
 
-int _ss_ntohs(int x) {
+__ss_int _ss_ntohs(__ss_int x) {
     return ntohs(x);
 }
 
