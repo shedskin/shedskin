@@ -93,6 +93,7 @@ class variable:
         self.imported = False
         self.initexpr = None
         self.registered = False
+        self.looper = None
 
     def types(self):
         return inode(self).types()

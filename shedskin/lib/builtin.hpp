@@ -1345,22 +1345,26 @@ static void __throw_set_changed() {
     throw new RuntimeError(new str("set changed size during iteration"));
 }
 
-#define FOR_IN_NEW(e, iter, temp, t) \
+#define FOR_IN_NEW(e, iter, temp, i, t) \
     __ ## temp = iter; \
-    typeof(__ ## temp->for_in_init()) __ ## t = __ ## temp->for_in_init(); \
+    __ ## i = -1; \
+    __ ## t = __ ## temp->for_in_init(); \
     while(__ ## temp->for_in_has_next(__ ## t)) \
     { \
+        __ ## i ++; \
         e = __ ## temp->for_in_next(__ ## t);
 
-#define FOR_IN(i, m, temp) \
-    __ ## temp = ___iter(m); \
-    while((__ ## temp)->for_has_next()) { \
-        i = (__ ## temp)->for_get_next(); \
+#define FAST_FOR(i, l, u, s, t1, t2) \
+    if(s==0) \
+        __throw_range_step_zero(); \
+    for(__ ## t1 = l, __ ## t2 = u; __ ## t1 < __ ## t2; __ ## t1 += s) { \
+        i=__ ## t1; \
 
-#define FOR_IN_SEQ(i, m, temp, n) \
-    __ ## temp = m; \
-    for(__ ## n = 0; (unsigned int)__ ## n < (__ ## temp)->units.size(); __ ## n ++) { \
-        i = (__ ## temp)->units[__ ## n]; \
+#define FAST_FOR_NEG(i, l, u, s, t1, t2) \
+    if(s==0) \
+        __throw_range_step_zero(); \
+    for(__ ## t1 = l, __ ## t2 = u; __ ## t1 > __ ## t2; __ ## t1 += s) { \
+        i=__ ## t1; \
 
 #define FOR_IN_ZIP(a,b, k,l, t,u, n,m) \
     __ ## m = __SS_MIN(k->units.size(), l->units.size()); \
@@ -1376,19 +1380,19 @@ static void __throw_set_changed() {
         if (! __ ## n) i = (__ ## obj)->__getfirst__(); \
         else i = (__ ## obj)->__getsecond__(); \
 
-#define FAST_FOR(i, l, u, s, t1, t2) \
-    if(s==0) \
-        __throw_range_step_zero(); \
-    for(__ ## t1 = l, __ ## t2 = u; __ ## t1 < __ ## t2; __ ## t1 += s) { \
-        i=__ ## t1; \
-
-#define FAST_FOR_NEG(i, l, u, s, t1, t2) \
-    if(s==0) \
-        __throw_range_step_zero(); \
-    for(__ ## t1 = l, __ ## t2 = u; __ ## t1 > __ ## t2; __ ## t1 += s) { \
-        i=__ ## t1; \
-
 #define END_FOR }
+
+/* deprecated by FOR_IN_NEW */
+
+#define FOR_IN(i, m, temp) \
+    __ ## temp = ___iter(m); \
+    while((__ ## temp)->for_has_next()) { \
+        i = (__ ## temp)->for_get_next(); \
+
+#define FOR_IN_SEQ(i, m, temp, n) \
+    __ ## temp = m; \
+    for(__ ## n = 0; (unsigned int)__ ## n < (__ ## temp)->units.size(); __ ## n ++) { \
+        i = (__ ## temp)->units[__ ## n]; \
 
 template<class T> class __With {
 public:
@@ -4057,8 +4061,10 @@ float_ *__box(double);
 
 template<class A> __ss_bool any(A *iter) {
     typename A::for_in_unit e;
+    typename A::for_in_loop __3;
+    int __2;
     A *__1;
-    FOR_IN_NEW(e,iter,1,0)
+    FOR_IN_NEW(e,iter,1,2,3)
         if(___bool(e))
             return True;
     END_FOR
@@ -4069,8 +4075,10 @@ template<class A> __ss_bool any(A *iter) {
 
 template<class A> __ss_bool all(A *iter) {
     typename A::for_in_unit e;
+    typename A::for_in_loop __3;
+    int __2;
     A *__1;
-    FOR_IN_NEW(e,iter,1,0)
+    FOR_IN_NEW(e,iter,1,2,3)
         if(!___bool(e))
             return False;
     END_FOR

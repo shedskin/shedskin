@@ -978,15 +978,12 @@ class generateVisitor(ASTVisitor):
             self.tuple_assign(right, getmv().tempcount[right], func)
 
     def forin_preftail(self, node):
-        pref = ''
+        pref = '_NEW'
+        tail = getmv().tempcount[node][2:]+','+getmv().tempcount[node.list][2:]
         if self.only_classes(node.list, ('tuple2',)):
             pref = '_T2'
-        if self.only_classes(node.list, ('tuple', 'list')):
-            pref = '_SEQ'
-        if pref == '':
-            tail = getmv().tempcount[(node,1)][2:]
         else:
-            tail = getmv().tempcount[node][2:]+','+getmv().tempcount[node.list][2:]
+            tail += ','+getmv().tempcount[(node,5)][2:]
         return pref, tail
 
     def forbody(self, node, quals, iter, func, skip, genexpr):
@@ -1867,8 +1864,8 @@ class generateVisitor(ASTVisitor):
                 self.visitm(item, ' = ', self.get_selector(temp, item, i), func)
                 self.eol()
 
-    def getfast(self, node):
-        for clname in ('list', 'str_', 'tuple'):
+    def one_class(self, node, names):
+        for clname in names:
             if self.only_classes(node, (clname,)):
                 return True
         return False
@@ -1878,7 +1875,7 @@ class generateVisitor(ASTVisitor):
         sel = '__getitem__(%d)' % i
         if i < 2 and self.only_classes(rvalue_node, ('tuple2',)):
             sel = ['__getfirst__()', '__getsecond__()'][i]
-        elif self.getfast(rvalue_node):
+        elif self.one_class(rvalue_node, ('list', 'str_', 'tuple')):
             sel = '__getfast__(%d)' % i
         return '%s->%s' % (temp, sel)
 
@@ -2135,7 +2132,7 @@ class generateVisitor(ASTVisitor):
                 self.visit(node.expr, lcfunc)
                 self.eol()
                 self.start('__after_yield_0:')
-            elif len(node.quals) == 1 and not fastfor(node.quals[0]) and not self.fastenum(node.quals[0]) and not self.fastzip2(node.quals[0]) and not node.quals[0].ifs and self.only_classes(node.quals[0].list, ('tuple', 'list')):
+            elif len(node.quals) == 1 and not fastfor(node.quals[0]) and not self.fastenum(node.quals[0]) and not self.fastzip2(node.quals[0]) and not node.quals[0].ifs and self.one_class(node.quals[0].list, ('tuple', 'list', 'str_', 'dict','set')):
                 self.start('__ss_result->units['+getmv().tempcount[node.quals[0].list]+'] = ')
                 self.visit(node.expr, lcfunc)
             else:
@@ -2173,8 +2170,9 @@ class generateVisitor(ASTVisitor):
 
             pref, tail = self.forin_preftail(qual)
 
-            if len(node.quals) == 1 and not qual.ifs and pref == '_SEQ' and not genexpr:
-                self.output('__ss_result->resize(len('+itervar+'));')
+            if len(node.quals) == 1 and not qual.ifs and not genexpr:
+                if self.one_class(qual.list, ('list', 'tuple', 'str_', 'dict', 'set')):
+                    self.output('__ss_result->resize(len('+itervar+'));')
 
             self.start('FOR_IN'+pref+'('+iter+','+itervar+','+tail)
             print >>self.out, self.line+')'
@@ -2372,7 +2370,7 @@ class generateVisitor(ASTVisitor):
             return
 
         # getfast
-        if ident == '__getitem__' and self.getfast(node.expr):
+        if ident == '__getitem__' and self.one_class(node.expr, ('list', 'str_', 'tuple')):
             ident = '__getfast__'
 
         self.append(self.cpp_name(ident))
@@ -2501,6 +2499,9 @@ def typesetreprnew(node, parent, cplusplus=True, check_extmod=False, check_ret=F
     orig_parent = parent
     while is_listcomp(parent): # XXX redundant with typesplit?
         parent = parent.parent
+
+    if cplusplus and isinstance(node, variable) and node.looper:
+        return typesetreprnew(node.looper, parent, cplusplus)[:-2]+'::for_in_loop '
 
     # --- separate types in multiple duplicates, so we can do parallel template matching of subtypes..
     split = typesplit(node, parent)
