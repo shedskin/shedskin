@@ -1345,9 +1345,9 @@ static void __throw_set_changed() {
     throw new RuntimeError(new str("set changed size during iteration"));
 }
 
-#define FOR_IN_NEW(e, iter, temp, t, please) \
+#define FOR_IN_NEW(e, iter, temp, t) \
     __ ## temp = iter; \
-    please dereference<typeof(iter)>::type::for_in_loop __ ## t = __ ## temp->for_in_init(); \
+    typeof(__ ## temp->for_in_init()) __ ## t = __ ## temp->for_in_init(); \
     while(__ ## temp->for_in_has_next(__ ## t)) \
     { \
         e = __ ## temp->for_in_next(__ ## t);
@@ -4058,7 +4058,7 @@ float_ *__box(double);
 template<class A> __ss_bool any(A *iter) {
     typename A::for_in_unit e;
     A *__1;
-    FOR_IN_NEW(e,iter,1,0, typename)
+    FOR_IN_NEW(e,iter,1,0)
         if(___bool(e))
             return True;
     END_FOR
@@ -4070,7 +4070,7 @@ template<class A> __ss_bool any(A *iter) {
 template<class A> __ss_bool all(A *iter) {
     typename A::for_in_unit e;
     A *__1;
-    FOR_IN_NEW(e,iter,1,0, typename)
+    FOR_IN_NEW(e,iter,1,0)
         if(!___bool(e))
             return False;
     END_FOR
