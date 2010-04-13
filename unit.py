@@ -3672,7 +3672,7 @@ def r(a):
   i=a.find('0')
   if not ~i: print a; sys.exit()
   [m in [a[j] for j in range(81) if not (i-j)%9*(i/9^j/9)*(i/27^j/27|i%9/3^j%9/3)] or r(a[:i]+m+a[i+1:]) for m in '3814697265625']
-  return 1 # because the type of an 'or' clause is the superset of its terms, we cannot (implicitly) return None here
+  return True # because the type of an 'or' clause is the superset of its terms, we cannot (implicitly) return None here
 
 r(81*'0')
 
