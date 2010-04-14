@@ -137,7 +137,7 @@ public:
     __GC_VECTOR(T) units;
 
     virtual __ss_int __len__();
-    virtual T __getitem__(int i);
+    virtual T __getitem__(__ss_int i);
     virtual void *append(T t);
     virtual void slice(__ss_int x, __ss_int l, __ss_int u, __ss_int s, pyseq<T> *c);
     virtual __ss_int __cmp__(pyobj *p);
@@ -1586,7 +1586,7 @@ template<class T> __ss_int pyseq<T>::__len__() {
     return units.size();
 }
 
-template<class T> T pyseq<T>::__getitem__(int i) {
+template<class T> T pyseq<T>::__getitem__(__ss_int i) {
     i = __wrap(this, i);
     return units[i];
 }
@@ -3582,15 +3582,15 @@ list<str *> *sorted(str *x, __ss_int cmp, __ss_int key, __ss_int reverse);
 template<class A> class __ss_reverse : public __iter<A> {
 public:
     pyseq<A> *p;
-    int i;
+    __ss_int i;
     __ss_reverse(pyseq<A> *p) {
         this->p = p;
-        i = len(p)-1;
+        i = len(p);
     }
 
     A next() {
-        if(i>=0)
-            return p->units[i--];
+        if(i>0)
+            return p->__getitem__(--i); /* XXX avoid wrap, str spec? */
         throw new StopIteration;
     }
 };
@@ -3601,7 +3601,6 @@ template <class A> __iter<A> *reversed(pyiter<A> *x) {
 template <class A> __iter<A> *reversed(pyseq<A> *x) {
     return new __ss_reverse<A>(x);
 }
-__iter<str *> *reversed(str *s);
 __iter<__ss_int> *reversed(__xrange *x);
 
 /* enumerate */
