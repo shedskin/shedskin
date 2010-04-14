@@ -77,7 +77,7 @@ template <class A> __ss_int bisect_left(list<A> *a, A x, __ss_int lo, __ss_int h
     __pos_check(lo, hi);
 
     while((lo<hi)) {
-        mid = __divs((lo+hi), 2);
+        mid = (lo+hi)/2;
         if (__cmp(a->units[mid], x)==-1) {
             lo = (mid+1);
         }
