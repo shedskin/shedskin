@@ -1404,9 +1404,6 @@ __xrange *xrange(__ss_int n) { return new __xrange(0, n, 1); }
 __iter<__ss_int> *reversed(__xrange *x) {
    return new __rangeiter(x->a+(range_len(x->a,x->b,x->s)-1)*x->s, x->a-x->s, -x->s);
 }
-__iter<str *> *reversed(str *s) {
-    return reversed((pyiter<str *> *)s);
-}
 
 int ord(str *s) {
     if(len(s) != 1)
