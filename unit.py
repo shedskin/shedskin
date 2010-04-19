@@ -18,6 +18,11 @@ try:
 except BaseException as ork:
     print 'base exc', ork
 
+# sum map problem
+import math
+som=sum(map(math.factorial, [1,2,3]))
+print som
+
 ''', '''
 output(equal=True)
 '''),
