@@ -35,23 +35,6 @@ double clock()
        return diff / divisor; */
 }
 
-__ss_int gettimeofday (struct timeval *tv, struct __ss_timezone *tz)
-{
-   struct _timeb tb;
-
-   if (!tv)
-      return -1;
-
-  _ftime (&tb);
-  tv->tv_sec  = tb.time;
-  tv->tv_usec = tb.millitm * 1000 + 500;
-  if (tz)
-  {
-    tz->tz_minuteswest = -60 * _timezone;
-    tz->tz_dsttime = _daylight;
-  }
-  return 0;
-}
 #else
 
 double clock() {
@@ -246,15 +229,9 @@ http://cvsweb.netbsd.org/bsdweb.cgi/src/lib/libc/time/strptime.c?rev=HEAD
 
 struct_time *strptime(str *string, str *format) {
     tm time_tuple = {0, 0, 0, 1, 0, 0, 0, 1, -1};
-#ifndef WIN32
     if (!::strptime(string->unit.c_str(), format->unit.c_str(), &time_tuple)) {
         throw  new ValueError(new str("time data did not match format:  data="+string->unit+" fmt="+format->unit));
     }
-#else
-    if (!strptime(string->unit.c_str(), format->unit.c_str(), &time_tuple)) {
-        throw  new ValueError(new str("time data did not match format:  data="+string->unit+" fmt="+format->unit));
-    }
-#endif
     return tm2tuple(&time_tuple);
 }
 
