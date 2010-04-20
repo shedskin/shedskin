@@ -26,6 +26,12 @@ from testdata.subsub import fact
 som=sum(map(fact, [1,2,3]))
 print som
 
+# comparing frozensets
+collector = set()
+collector.add(frozenset([1,2]))
+collector.add(frozenset([1,2,3]))
+print sorted(collector)
+
 ''', '''
 output(equal=True)
 '''),
