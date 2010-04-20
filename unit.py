@@ -26,11 +26,16 @@ from testdata.subsub import fact
 som=sum(map(fact, [1,2,3]))
 print som
 
-# comparing frozensets
+# set problems
 collector = set()
 collector.add(frozenset([1,2]))
 collector.add(frozenset([1,2,3]))
 print sorted(collector)
+
+low_hits = set([19460, 19877, 20294, 20711, 21128, 21545, 21962, 19599, 20016, 20433, 20850, 21267, 21684, 22101, 19738, 20155, 20572, 20989, 21406, 21823]) 
+high_hits = set([22052, 21605, 21158, 20711, 20264, 19817, 19370, 21903, 21456, 21009, 20562, 20115, 19668, 21754, 21307, 20860, 20413, 19966, 19519])
+hits = low_hits.symmetric_difference(high_hits)
+print hits
 
 ''', '''
 output(equal=True)
