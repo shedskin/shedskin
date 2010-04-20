@@ -1,4 +1,11 @@
 
+def fact(n):
+    """Return n factorial"""
+    product = 1
+    for ii in range(2, n + 1):
+        product *= ii
+    return product
+
 l = lambda x: -x
 a = [1 for x in range(10)]
 b = (x for x in range(10))

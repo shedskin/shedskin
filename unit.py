@@ -18,9 +18,12 @@ try:
 except BaseException as ork:
     print 'base exc', ork
 
-# sum map problem
+# map external func
 import math
 som=sum(map(math.factorial, [1,2,3]))
+print som
+from testdata.subsub import fact
+som=sum(map(fact, [1,2,3]))
 print som
 
 ''', '''
