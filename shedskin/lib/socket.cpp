@@ -276,35 +276,46 @@ static void set_nonblocking(socket_type fd)
 }
 socket *socket::connect(const sockaddr *sa, socklen_t salen)
 {
-    if (_blocking && _timeout >= 0) {
+    if (_blocking && _timeout > 0) {
         // temporarily set the socket to nonblocking
         set_nonblocking(_fd);
     }
 
     if (::connect(_fd, sa, salen) == SOCKET_ERROR) {
-        if (ERRNO != EINPROGRESS)
-            throw new error(make_errstring("connect"));
+	if (ERRNO != EINPROGRESS) {
+	    if (_blocking && _timeout > 0)
+		set_blocking(_fd); // turn blocking back on
+	    throw new error(make_errstring("connect"));
+	}
     }
 
-    if (_blocking && _timeout >= 0) {
+    if (_blocking && _timeout > 0) {
         fd_set s;
         FD_ZERO(&s);
         FD_SET(_fd, &s);
+
         timeval to;
         to.tv_sec = static_cast<tv_sec_type>(_timeout);
         to.tv_usec = static_cast<tv_usec_type>(1000000 * (_timeout - (double)to.tv_sec));
-        if (::select(_fd+1, 0, &s, 0, &to) == SOCKET_ERROR)
+
+        if (::select(_fd+1, 0, &s, 0, &to) == SOCKET_ERROR) {
+	    set_blocking(_fd); // turn blocking back on
             throw new error(make_errstring("select"));
+	}
         if (! FD_ISSET(_fd, &s)) {
-            //FIXME socket is left in nonblocking state, is this ok?
-            throw new timeout(timed_out);
-        }
+	    set_blocking(_fd); // turn blocking back on
+	    throw new timeout(timed_out);
+	}
 
         // get connection status
         int err = 0;
         socklen_t errsize = sizeof(err);
-        if (::getsockopt(_fd, SOL_SOCKET, SO_ERROR, SOCKOPT_CAST &err, &errsize) == SOCKET_ERROR)
+        if (::getsockopt(_fd, SOL_SOCKET, SO_ERROR, SOCKOPT_CAST &err, &errsize) == SOCKET_ERROR) {
+	    set_blocking(_fd); // turn blocking back on
             throw new error(make_errstring("getsockopt"));
+	}
+
+        set_blocking(_fd); // turn blocking back on
 
         if (err != 0) {
             std::ostringstream os;
@@ -312,9 +323,6 @@ socket *socket::connect(const sockaddr *sa, socklen_t salen)
             const std::string& s = os.str();
             throw new error(new str( s.c_str() ));
         }
-
-        // turn blocking back on
-        set_nonblocking(_fd);
     }
 
     return this;
@@ -325,7 +333,7 @@ socket *socket::setblocking(__ss_int flag)
     if (flag)  {
         //blocking mode
         _blocking = true;
-        _timeout = -1.0; //reset
+	_timeout = __ss_default_timeout;	// use default value set by socket.setdefaulttimeout()
         set_blocking(_fd);
     } else {
         //non-blocking
@@ -337,8 +345,17 @@ socket *socket::setblocking(__ss_int flag)
 
 socket *socket::settimeout(double val)
 {
-    _blocking = true;
-    _timeout = val;
+    if (val < 0)
+	throw new ValueError(new str("Timeout value out of range"));
+
+    if (val == 0) { // s.settimeout(0.0) is equivalent to s.setblocking(0)
+        set_nonblocking(_fd);
+	_blocking = false;
+    } else {
+        set_blocking(_fd);
+	_blocking = true;
+	_timeout = val;
+    }
     return this;
 }
 
@@ -629,7 +646,7 @@ double getdefaulttimeout()
 void *setdefaulttimeout(double x)
 {
     if (x < 0)
-        throw new ValueError(new str("invalid argument"));
+        throw new ValueError(new str("Timeout value out of range"));
     __ss_default_timeout = x;
     return NULL;
 }
