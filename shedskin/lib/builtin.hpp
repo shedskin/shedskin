@@ -447,7 +447,7 @@ public:
     /* iteration */
 
     typedef K for_in_unit;
-    typedef typeof(it) for_in_loop;
+    typedef typename __GC_HASH_MAP::iterator for_in_loop;
 
     inline for_in_loop for_in_init() { return units.begin(); }
     inline bool for_in_has_next(for_in_loop l) { return l != units.end(); } /* XXX opt */
@@ -1557,7 +1557,7 @@ template<> inline __ss_bool ___bool(int x) { return __mbool(x!=0); }
 template<> inline __ss_bool ___bool(bool x) { return __mbool(x); }
 template<> inline __ss_bool ___bool(__ss_bool x) { return x; }
 template<> inline __ss_bool ___bool(double x) { return __mbool(x!=0); }
-template<> inline __ss_bool ___bool(void *x) { return False; }
+template<> inline __ss_bool ___bool(void *) { return False; }
 template<> inline __ss_bool ___bool(long int) { return False; } /* XXX bool(None) 64-bit */
 
 /* and, or, not */
@@ -1623,7 +1623,9 @@ template<class T> __ss_int pyseq<T>::__cmp__(pyobj *p) {
     return __cmp(this->__len__(), b->__len__());
 }
 
-template<class T> __ss_bool pyseq<T>::__contains__(T t) = 0;
+template<class T> __ss_bool pyseq<T>::__contains__(T t) {
+    return false;
+}
 
 template<class T> void pyseq<T>::resize(int n) {
     units.resize(n);
