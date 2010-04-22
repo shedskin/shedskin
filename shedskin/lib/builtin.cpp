@@ -1252,9 +1252,13 @@ str *raw_input(str *msg) {
 
 __ss_int __int(str *s, __ss_int base) {
     char *cp;
-    if(!s->isdigit())
+    if(!s->isdigit()) /* XXX */
         s = s->strip();
-    int i = strtol(s->unit.c_str(), &cp, base); /* XXX long long */
+#ifdef __SS_LONG
+    __ss_int i = strtoll(s->unit.c_str(), &cp, base);
+#else
+    __ss_int i = strtol(s->unit.c_str(), &cp, base);
+#endif
     if(cp != s->unit.c_str()+s->unit.size())
         throw new ValueError(new str("invalid literal for int()"));
     return i;
