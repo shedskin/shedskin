@@ -501,8 +501,8 @@ public:
     void *clear();
     set<T> *copy();
 
-    void *update(pyiter<T> *s);
-    void *update(const set<T>* other);
+    template <class U> void *update(U *other);
+    void *update(set<T> *other);
 
     void *difference_update(set<T> *s);
     void *intersection_update(set<T> *s);
@@ -2787,16 +2787,19 @@ template <class T> void *set<T>::clear()
 	return NULL;
 }
 
-template<class T> void *set<T>::update(pyiter<T> *s) {
-    T e;
-    __iter<T> *__0;
-    FOR_IN(e, s, 0)
+
+template<class T> template<class U> void *set<T>::update(U *iter) {
+    typename U::for_in_unit e;
+    typename U::for_in_loop __3;
+    int __2;
+    U *__1;
+    FOR_IN_NEW(e,iter,1,2,3)
         add(e);
     END_FOR
     return NULL;
 }
 
-template <class T> void *set<T>::update(const set<T>* other)
+template <class T> void *set<T>::update(set<T>* other)
 {
 	register int i;
 	register setentry<T> *entry;
