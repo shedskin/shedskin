@@ -180,24 +180,24 @@ double __abs(complex *c) { return c->__abs__(); }
 
 complex *complex::__floordiv__(complex *b) {
     complex *c = __div__(b);
-    c->real = ((int)c->real);
+    c->real = ((__ss_int)c->real);
     c->imag = 0;
     return c;
 }
 complex *complex::__floordiv__(double b) {
     complex *c = __div__(b);
-    c->real = ((int)c->real);
+    c->real = ((__ss_int)c->real);
     c->imag = 0;
     return c;
 }
 
 complex *complex::__mod__(complex *b) {
     complex *c = __div__(b);
-    return __sub__(b->__mul__(((int)c->real)));
+    return __sub__(b->__mul__(((__ss_int)c->real)));
 }
 complex *complex::__mod__(double b) {
     complex *c = __div__(b);
-    return __sub__(b*((int)c->real));
+    return __sub__(b*((__ss_int)c->real));
 }
 
 tuple2<complex *, complex *> *complex::__divmod__(complex *b) {
@@ -214,7 +214,7 @@ __ss_bool complex::__eq__(pyobj *p) {
 }
 
 int complex::__hash__() {
-    return ((int)imag)*1000003+((int)real);
+    return ((__ss_int)imag)*1000003+((__ss_int)real);
 }
 
 __ss_bool complex::__nonzero__() {
