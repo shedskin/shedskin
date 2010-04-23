@@ -861,7 +861,7 @@ str *str::__join(pyseq<str *> *l, int total_len) {
     return new str(s->unit);
 }
 
-str *str::join(pyiter<str *> *l) {
+str *str::join(pyiter<str *> *l) { /* XXX slow */
     list<str *> *rl = new list<str *>();
     str *i;
     int count, total_len;
@@ -879,9 +879,22 @@ str *str::join(pyiter<str *> *l) {
 
 str *str::join(pyseq<str *> *l) {
     int total_len = 0;
+    int sz;
+    bool only_ones = true;
     __GC_VECTOR(str *)::const_iterator it;
-    for(it = l->units.begin(); it < l->units.end(); it++)
-        total_len += (*it)->unit.size();
+    for(it = l->units.begin(); it < l->units.end(); it++) {
+        sz = (*it)->unit.size();
+        if(sz!=1) 
+            only_ones = false;
+        total_len += sz;
+    }
+    if(unit.size()==0 and only_ones) {
+        str *s = new str();
+        s->unit.resize(total_len);
+        for(int i=0; i<total_len; i++)
+            s->unit[i] = l->units[i]->unit[0];
+        return s;
+    }
     if(total_len)
         total_len += (len(l)-1)*unit.size();
     return __join(l, total_len);
