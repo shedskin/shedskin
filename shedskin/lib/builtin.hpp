@@ -480,8 +480,9 @@ public:
     setentry<T> *table;
     setentry<T> smalltable[MINSIZE];
 
+    template<class U> set(U *other, int frozen);
+    template<class U> set(U *other);
     set(int frozen=0);
-    set(pyiter<T> *p, int frozen=0);
 
     set<T>& operator=(const set<T>& other);
 
@@ -2373,12 +2374,18 @@ template<class T> PyObject *set<T>::__to_py__() {
 #endif
 #endif
 
-template<class T> set<T>::set(pyiter<T> *p, int frozen) {
+template<class T> template<class U> set<T>::set(U *other, int frozen) {
     this->__class__ = cl_set;
     this->frozen = frozen;
     EMPTY_TO_MINSIZE(this);
+    update(other);
+}
 
-    update(p);
+template<class T> template<class U> set<T>::set(U *other) {
+    this->__class__ = cl_set;
+    this->frozen = 0;
+    EMPTY_TO_MINSIZE(this);
+    update(other);
 }
 
 template <class T> set<T>& set<T>::operator=(const set<T>& other) {
