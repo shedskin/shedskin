@@ -47,6 +47,7 @@ namespace __random__ {
 str *const_0, *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *const_15, *const_16, *const_17, *const_18, *const_19, *const_2, *const_20, *const_21, *const_22, *const_23, *const_24, *const_25, *const_26, *const_27, *const_28, *const_29, *const_3, *const_30, *const_31, *const_32, *const_33, *const_34, *const_35, *const_36, *const_4, *const_7, *const_8, *const_9;
 
 list<str *> *__all__;
+list<int> *mag01;
 double LOG4, NV_MAGICCONST, SG_MAGICCONST;
 int BPF, LOWER, M, MATRIX_A, MAXBITS, MAXINT, MAXWIDTH, N, UPPER;
 str *__name__;
@@ -572,10 +573,9 @@ int Random::_genrand_int32() {
     /**
     Generate a random number on [0,0xffffffff]-interval.
     */
-    list<int> *__2, *__5, *__6, *mag01;
+    list<int> *__2, *__5, *__6;
     int __0, __1, __3, __4, kk, y;
 
-    mag01 = (new list<int>(2, 0, MATRIX_A));
     if ((this->mti>=N)) {
         if ((this->mti==(N+1))) {
             this->_init_genrand(5489);
@@ -986,6 +986,7 @@ void __init() {
     MATRIX_A = 2567483615u;
     UPPER = 2147483648u;
     LOWER = 2147483647;
+    mag01 = (new list<int>(2, 0, MATRIX_A));
     _inst = (new Random());
 }
 
