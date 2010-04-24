@@ -856,7 +856,13 @@ str *str::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
         return new str(unit.substr(l, u-l));
     else {
         __GC_STRING r;
-        if(s > 0)
+        if(!(x&1) && !(x&2) && s==-1) {
+            int sz = unit.size();
+            r.resize(sz);
+            for(int i=0; i<sz; i++)
+                r[i] = unit[sz-i-1];
+        }
+        else if(s > 0)
             for(int i=l; i<u; i += s)
                 r += unit[i];
         else
