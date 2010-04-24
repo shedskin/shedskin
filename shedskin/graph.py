@@ -875,8 +875,6 @@ class moduleVisitor(ASTVisitor):
         error("'try..finally' is not supported", node)
 
     def visitYield(self, node, func):
-        if func.parent:
-            error("generator _methods_ are not supported", node)
         func.isGenerator = True
         func.yieldNodes.append(node)
         self.visit(Return(CallFunc(Name('__iter'), [node.value])), func)
