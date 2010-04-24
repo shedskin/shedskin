@@ -19,6 +19,8 @@ __GC_VECTOR(str *) __char_cache;
 __ss_bool True;
 __ss_bool False;
 
+list<str *> *__join_cache;
+
 #ifdef __SS_BIND
 dict<void *, void *> *__ss_proxy;
 #endif
@@ -55,6 +57,8 @@ void __init() {
         char c = i;
         __char_cache.push_back(new str(&c, 1));
     }
+
+    __join_cache = new list<str *>();
 }
 
 /* int_ methods */
@@ -843,65 +847,6 @@ str *__add_strs(int n, ...) {
     va_end(ap);
 
     return result;
-}
-
-str *str::__join(pyseq<str *> *l, int total_len) {
-    str *s = new str();
-    s->unit.resize(total_len);
-    int k = 0;
-    for(int i = 0; i < len(l); i++) {
-        str *t = l->units[i];
-        memcpy((void *)(s->unit.data()+k), t->unit.data(), t->unit.size());
-        k += t->unit.size();
-        if(unit.size() && i < len(l)-1) {
-            memcpy((void *)(s->unit.data()+k), unit.data(), unit.size());
-            k += unit.size();
-        }
-    }
-    return new str(s->unit);
-}
-
-str *str::join(pyiter<str *> *l) { /* XXX slow */
-    list<str *> *rl = new list<str *>();
-    str *i;
-    int count, total_len;
-    count = total_len = 0;
-    __iter<str *> *__0;
-    FOR_IN(i, l, 0)
-        rl->append(i);
-        total_len += i->unit.size();
-        ++count;
-    END_FOR
-    if(total_len)
-        total_len += (count-1)*unit.size();
-    return __join(rl, total_len);
-}
-
-str *str::join(pyseq<str *> *l) {
-    int total_len = 0;
-    int sz;
-    bool only_ones = true;
-    __GC_VECTOR(str *)::const_iterator it;
-    for(it = l->units.begin(); it < l->units.end(); it++) {
-        sz = (*it)->unit.size();
-        if(sz!=1) 
-            only_ones = false;
-        total_len += sz;
-    }
-    if(unit.size()==0 and only_ones) {
-        str *s = new str();
-        s->unit.resize(total_len);
-        for(int i=0; i<total_len; i++)
-            s->unit[i] = l->units[i]->unit[0];
-        return s;
-    }
-    if(total_len)
-        total_len += (len(l)-1)*unit.size();
-    return __join(l, total_len);
-}
-
-str *str::join(str *s) {
-    return join((pyiter<str *> *)s);
 }
 
 str *str::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
