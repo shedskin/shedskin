@@ -37,6 +37,29 @@ high_hits = set([22052, 21605, 21158, 20711, 20264, 19817, 19370, 21903, 21456, 
 hits = low_hits.symmetric_difference(high_hits)
 print hits
 
+# generator methods
+class GM:
+    def loop(self):
+        yield self.loop2(4)
+        yield 
+    def loop2(self, x):
+        return x*'patattie'
+
+g = GM()
+for xn in g.loop():
+    print xn
+    
+class GenMeth2:
+    def __init__(self, y):
+        self.y = y
+    def loop(self, x):
+        z = self.y
+        for i in x:
+            yield i+z
+
+gm2 = GenMeth2(2)
+print list(gm2.loop([4,1,5]))
+
 ''', '''
 output(equal=True)
 '''),

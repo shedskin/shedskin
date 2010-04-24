@@ -1174,8 +1174,14 @@ class generateVisitor(ASTVisitor):
         self.deindent()
         self.output('}\n')
 
+    def generator_ident(self, func): # XXX merge?
+        if func.parent:
+            return func.parent.ident + '_' + func.ident
+        return func.ident
+    
     def generator_class(self, func):
-        self.output('class __gen_%s : public %s {' % (func.ident, typesetreprnew(func.retnode.thing, func)[:-2]))
+        ident = self.generator_ident(func)
+        self.output('class __gen_%s : public %s {' % (ident, typesetreprnew(func.retnode.thing, func)[:-2]))
         self.output('public:')
         self.indent()
         pairs = [(typesetreprnew(func.vars[f], func), self.cpp_name(f)) for f in func.vars]
@@ -1185,7 +1191,7 @@ class generateVisitor(ASTVisitor):
         args = []
         for f in func.formals:
             args.append(typesetreprnew(func.vars[f], func)+self.cpp_name(f))
-        self.output(('__gen_%s(' % func.ident) + ','.join(args)+') {')
+        self.output(('__gen_%s(' % ident) + ','.join(args)+') {')
         self.indent()
         for f in func.formals:
             self.output('this->%s = %s;' % (self.cpp_name(f),self.cpp_name(f)))
@@ -1213,7 +1219,12 @@ class generateVisitor(ASTVisitor):
         self.output('};\n')
 
     def generator_body(self, func):
-        self.output('return new __gen_%s(%s);\n' % (func.ident, ','.join([self.cpp_name(f) for f in func.formals]))) # XXX formals
+        ident = self.generator_ident(func)
+        if not (func.isGenerator and func.parent):
+            formals = [self.cpp_name(f) for f in func.formals]
+        else:
+            formals = ['this'] + [self.cpp_name(f) for f in func.formals if f != 'self']
+        self.output('return new __gen_%s(%s);\n' % (ident, ','.join(formals)))
         self.deindent()
         self.output('}\n')
 
@@ -2409,7 +2420,9 @@ class generateVisitor(ASTVisitor):
             self.append(getmv().lwrapper[node])
         elif node.name == 'None':
             self.append('NULL')
-        elif node.name == 'self' and (not func or func.listcomp or not isinstance(func.parent, class_)): # XXX lookupvar
+        elif node.name == 'self' and \
+            ((not func or func.listcomp or not isinstance(func.parent, class_)) or \
+             (func and func.parent and func.isGenerator)): # XXX lookupvar?
             self.append('self')
         elif node.name in map:
             self.append(map[node.name])
