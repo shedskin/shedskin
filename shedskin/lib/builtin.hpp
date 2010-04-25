@@ -1344,6 +1344,9 @@ static void __throw_range_step_zero() {
 static void __throw_set_changed() {
     throw new RuntimeError(new str("set changed size during iteration"));
 }
+static void __throw_stop_iteration() {
+    throw new StopIteration();
+}
 
 #define FOR_IN_NEW(e, iter, temp, i, t) \
     __ ## temp = iter; \
@@ -3068,7 +3071,7 @@ template<class T> T __setiter<T>::next() {
         throw new RuntimeError(new str("set changed size during iteration"));
     }
     int ret = p->next(&pos, &entry);
-    if (!ret) throw new StopIteration();
+    if (!ret) __throw_stop_iteration();
     return entry->key;
 }
 
@@ -3366,7 +3369,7 @@ template<class T> __seqiter<T>::__seqiter(pyseq<T> *p) {
 
 template<class T> T __seqiter<T>::next() {
     if(counter==p->units.size())
-        throw new StopIteration();
+        __throw_stop_iteration();
     return p->units[counter++];
 }
 
@@ -3378,7 +3381,7 @@ template<class K, class V> __dictiterkeys<K, V>::__dictiterkeys(dict<K, V> *p) {
 
 template<class K, class V> K __dictiterkeys<K, V>::next() {
     if(iter == p->units.end())
-        throw new StopIteration();
+        __throw_stop_iteration();
     return iter++->first;
 }
 
@@ -3390,7 +3393,7 @@ template<class K, class V> __dictitervalues<K, V>::__dictitervalues(dict<K, V> *
 
 template<class K, class V> V __dictitervalues<K, V>::next() {
     if(iter == p->units.end())
-        throw new StopIteration();
+        __throw_stop_iteration();
     return iter++->second;
 }
 
@@ -3402,7 +3405,7 @@ template<class K, class V> __dictiteritems<K, V>::__dictiteritems(dict<K, V> *p)
 
 template<class K, class V> tuple2<K, V> *__dictiteritems<K, V>::next() {
     if(iter == p->units.end())
-        throw new StopIteration();
+        __throw_stop_iteration();
     tuple2<K, V> *t = new tuple2<K, V>(2, iter->first, iter->second);
     iter++;
     return t;
@@ -3648,15 +3651,40 @@ public:
     A next() {
         if(i>0)
             return p->__getitem__(--i); /* XXX avoid wrap, str spec? */
-        throw new StopIteration;
+        __throw_stop_iteration();
     }
 };
 
-template <class A> __iter<A> *reversed(pyiter<A> *x) {
+class __ss_reverse_str : public __iter<str *> {
+public:
+    str *p;
+    __ss_int i, sz;
+    __ss_reverse_str(str *p) {
+        this->p = p;
+        i = sz = len(p);
+    }
+
+    str *next() {
+        return NULL;
+    }
+
+    typedef int for_in_loop;
+
+    inline int for_in_init() { return sz; }
+    inline bool for_in_has_next(int i) { return i > 0; }
+    inline str *for_in_next(int &i) { 
+        return __char_cache[(unsigned char)p->unit[--i]];
+    }
+};
+
+template <class A> __ss_reverse<A> *reversed(pyiter<A> *x) {
     return new __ss_reverse<A>(new list<A>(x));
 }
-template <class A> __iter<A> *reversed(pyseq<A> *x) {
+template <class A> __ss_reverse<A> *reversed(pyseq<A> *x) {
     return new __ss_reverse<A>(x);
+}
+inline __ss_reverse_str *reversed(str *s) {
+    return new __ss_reverse_str(s);
 }
 __iter<__ss_int> *reversed(__xrange *x);
 
