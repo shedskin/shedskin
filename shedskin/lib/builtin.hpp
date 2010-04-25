@@ -162,7 +162,7 @@ public:
 
     list();
     list(int count, ...);
-    list(pyiter<T> *p);
+    template <class U> list(U *iter);
     list(pyseq<T> *p);
     list(str *s);
 
@@ -182,14 +182,12 @@ public:
     list<T> *__add__(list<T> *b);
     list<T> *__mul__(__ss_int b);
 
-    list<T> *__iadd__(pyiter<T> *b);
-    list<T> *__iadd__(pyseq<T> *b);
-    list<T> *__iadd__(str *s);
-    list<T> *__imul__(__ss_int n);
-
-    void *extend(pyiter<T> *p);
+    template <class U> void *extend(U *iter);
     void *extend(pyseq<T> *p);
     void *extend(str *s);
+
+    template <class U> list<T> *__iadd__(U *iter);
+    list<T> *__imul__(__ss_int n);
 
     __ss_int index(T a);
     __ss_int index(T a, __ss_int s);
@@ -263,7 +261,7 @@ public:
 
     tuple2();
     tuple2(int count, ...);
-    tuple2(pyiter<T> *p);
+    template <class U> tuple2(U *iter);
     tuple2(pyseq<T> *p);
     tuple2(str *s);
     void __init2__(T a, T b);
@@ -1918,11 +1916,13 @@ template<class T> list<T>::list(int count, ...) {
     va_end(ap);
 }
 
-template<class T> list<T>::list(pyiter<T> *p) {
+template<class T> template<class U> list<T>::list(U *iter) {
     this->__class__ = cl_list;
-    T e;
-    __iter<T> *__0;
-    FOR_IN(e, p, 0)
+    typename U::for_in_unit e;
+    typename U::for_in_loop __3;
+    int __2;
+    U *__1;
+    FOR_IN_NEW(e,iter,1,2,3)
         this->units.push_back(e);
     END_FOR
 }
@@ -1974,11 +1974,13 @@ template<class T> __ss_bool list<T>::__eq__(pyobj *p) {
    return True;
 }
 
-template<class T> void *list<T>::extend(pyiter<T> *p) {
-    __iter<T> *__0;
-    T e;
-    FOR_IN(e, p, 0)
-        append(e);
+template<class T> template<class U> void *list<T>::extend(U *iter) {
+    typename U::for_in_unit e;
+    typename U::for_in_loop __3;
+    int __2;
+    U *__1;
+    FOR_IN_NEW(e,iter,1,2,3)
+        this->units.push_back(e);
     END_FOR
     return NULL;
 }
@@ -1986,14 +1988,15 @@ template<class T> void *list<T>::extend(pyiter<T> *p) {
 template<class T> void *list<T>::extend(pyseq<T> *p) {
     int l1, l2;
     l1 = this->__len__(); l2 = p->__len__();
-
     this->units.resize(l1+l2);
     memcpy(&(this->units[l1]), &(p->units[0]), sizeof(T)*l2);
     return NULL;
 }
 
 template<class T> void *list<T>::extend(str *s) {
-    extend((pyiter<str *> *)s);
+    int sz = s->unit.size();
+    for(int i=0; i<sz; i++)
+        this->units.push_back(__char_cache[s->unit[i]]);
     return NULL;
 }
 
@@ -2154,16 +2157,8 @@ template<class T> list<T> *list<T>::__deepcopy__(dict<void *, pyobj *> *memo) {
     return c;
 }
 
-template<class T> list<T> *list<T>::__iadd__(pyiter<T> *b) {
-    extend(b);
-    return this;
-}
-template<class T> list<T> *list<T>::__iadd__(pyseq<T> *b) {
-    extend(b);
-    return this;
-}
-template<class T> list<T> *list<T>::__iadd__(str *s) {
-    extend(s);
+template<class T> template<class U> list<T> *list<T>::__iadd__(U *iter) {
+    extend(iter);
     return this;
 }
 
@@ -3100,11 +3095,13 @@ template<class T> tuple2<T, T>::tuple2(int count, ...) {
     va_end(ap);
 }
 
-template<class T> tuple2<T, T>::tuple2(pyiter<T> *p) {
+template<class T> template<class U> tuple2<T, T>::tuple2(U *iter) {
     this->__class__ = cl_tuple;
-    T e;
-    __iter<T> *__0;
-    FOR_IN(e, p, 0)
+    typename U::for_in_unit e;
+    typename U::for_in_loop __3;
+    int __2;
+    U *__1;
+    FOR_IN_NEW(e,iter,1,2,3)
         this->units.push_back(e);
     END_FOR
 }
