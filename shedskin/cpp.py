@@ -1199,7 +1199,7 @@ class generateVisitor(ASTVisitor):
         self.deindent()
         self.output('}\n')
 
-        self.output('%s next() {' % typesetreprnew(func.retnode.thing, func)[7:-3])
+        self.output('%s __get_next() {' % typesetreprnew(func.retnode.thing, func)[7:-3])
         self.indent()
         self.output('switch(__last_yield) {')
         self.indent()
@@ -1211,7 +1211,7 @@ class generateVisitor(ASTVisitor):
 
         for child in func.node.code.getChildNodes():
             self.visit(child, func)
-        self.output('throw new StopIteration();')
+        self.output('__stop_iteration = true;')
         self.deindent()
         self.output('}\n')
 
@@ -1230,7 +1230,7 @@ class generateVisitor(ASTVisitor):
 
     def visitYield(self, node, func):
         self.output('__last_yield = %d;' % func.yieldNodes.index(node))
-        self.return_expr(node.value, func.yieldnode, func)
+        self.return_expr(node.value, func.yieldnode, func, yield_=True)
         self.output('__after_yield_%d:;' % func.yieldNodes.index(node))
         self.start()
 
@@ -1817,13 +1817,15 @@ class generateVisitor(ASTVisitor):
 
     def visitReturn(self, node, func=None):
         if func.isGenerator:
-            self.output('throw new StopIteration();')
+            self.output('__stop_iteration = true;')
             return
         self.return_expr(node.value, func.retnode, func)
 
-    def return_expr(self, expr, retnode, func):
-        self.start('return ')
-
+    def return_expr(self, expr, retnode, func, yield_=False):
+        if yield_:
+            self.start('__result = ')
+        else:
+            self.start('return ')
         cast = assign_needs_cast(expr, func, retnode.thing, func)
         if cast:
             self.append('(('+typesetreprnew(retnode.thing, func)+')(')
@@ -1838,6 +1840,8 @@ class generateVisitor(ASTVisitor):
         self.visit(expr, func)
         if cast: self.append('))')
         self.eol()
+        if yield_:
+            self.output('return __result;')
 
     def tuple_assign(self, lvalue, rvalue, func):
         temp = getmv().tempcount[lvalue]
@@ -2091,7 +2095,7 @@ class generateVisitor(ASTVisitor):
                 self.output(a+b+';');
             self.output('int __last_yield;\n')
             self.output(func1+';')
-            self.output(func2+' next();')
+            self.output(func2+' __get_next();')
             self.deindent();
             self.output('};\n')
         else:
@@ -2100,12 +2104,12 @@ class generateVisitor(ASTVisitor):
                 self.output('    this->%s = %s;' % (b,b))
             self.output('    __last_yield = -1;')
             self.output('}\n')
-            self.output(func2+' '+lcfunc.ident+'::next() {')
+            self.output(func2+' '+lcfunc.ident+'::__get_next() {')
             self.indent();
             self.output('if(!__last_yield) goto __after_yield_0;')
             self.output('__last_yield = 0;\n')
             self.listcomp_rec(node, node.quals, lcfunc, True)
-            self.output('throw new StopIteration();')
+            self.output('__stop_iteration = true;')
             self.deindent();
             self.output('}\n')
 
@@ -2139,9 +2143,10 @@ class generateVisitor(ASTVisitor):
     def listcomp_rec(self, node, quals, lcfunc, genexpr):
         if not quals:
             if genexpr:
-                self.start('return ')
+                self.start('__result = ')
                 self.visit(node.expr, lcfunc)
                 self.eol()
+                self.output('return __result;')
                 self.start('__after_yield_0:')
             elif len(node.quals) == 1 and not fastfor(node.quals[0]) and not self.fastenum(node.quals[0]) and not self.fastzip2(node.quals[0]) and not node.quals[0].ifs and self.one_class(node.quals[0].list, ('tuple', 'list', 'str_', 'dict','set')):
                 self.start('__ss_result->units['+getmv().tempcount[node.quals[0].list]+'] = ')
