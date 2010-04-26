@@ -724,77 +724,26 @@ public:
 
 };
 
-class BaseException : public pyobj {
-public:
-    str *msg;
-    BaseException(str *msg=0) { __init__(msg); }
-
-    void __init__(str *msg) { this->msg = msg; }
-    void __init__(void *) { this->msg = 0; } /* XXX */
-    void __init__(int) { this->msg = 0; } /* XXX */
-    str *__repr__() { return msg ? msg : new str("0"); }
-};
-
-class Exception: public BaseException {
-public:
-    Exception(str *msg=0) : BaseException(msg) {}
-
-#ifdef __SS_BIND
-   virtual PyObject *__to_py__() { return PyExc_Exception; }
-#endif
-};
-
-class StopIteration : public Exception {
-public:
-    StopIteration(str *msg=0) : Exception(msg) {}
-};
-
 template<class T> class __iter : public pyiter<T> {
 public:
-    __iter<T> *__iter__() { __stop_iteration = false; return this; }
     T __result;
     bool __stop_iteration;
 
-    virtual T next() { /* subclasses must implement 'next' or '__get_next' */
-        __result = this->__get_next();
-        if(__stop_iteration)
-            throw new StopIteration();
-        return __result;
-    } 
+    __iter<T> *__iter__();
 
-    virtual T __get_next() {
-        try {
-            __result = this->next();
-            return __result;
-        } catch (StopIteration *) {
-            __stop_iteration = true;
-        }
-    }
+    virtual T next();  /* subclasses must implement 'next' or '__get_next' */
+    virtual T __get_next();
 
-    str *__repr__();
-
-    inline __iter<T> *for_in_init() {
-        __stop_iteration = false;
-        return this;
-    }
-    inline bool for_in_has_next(__iter<T> *iter) {
-         iter->__result = iter->__get_next();
-         return not iter->__stop_iteration;
-    }
-    inline T for_in_next(__iter<T> *iter) {
-         return iter->__result;
-    }
+    inline __iter<T> *for_in_init();
+    inline bool for_in_has_next(__iter<T> *iter);
+    inline T for_in_next(__iter<T> *iter);
 
     /* deprecated, used by FOR_IN */
 
-    int for_has_next() {
-        __result = this->__get_next();
-        return not this->__stop_iteration;
-    }
+    int for_has_next();
+    T for_get_next();
 
-    T for_get_next() {
-        return __result;
-    }
+    str *__repr__();
 };
 
 template <class T> class __setiter : public __iter<T> {
@@ -1199,6 +1148,30 @@ template<> str *repr(void *t);
 
 /* exceptions */
 
+class BaseException : public pyobj {
+public:
+    str *msg;
+    BaseException(str *msg=0) { __init__(msg); }
+
+    void __init__(str *msg) { this->msg = msg; }
+    void __init__(void *) { this->msg = 0; } /* XXX */
+    void __init__(int) { this->msg = 0; } /* XXX */
+    str *__repr__() { return msg ? msg : new str("0"); }
+};
+
+class Exception: public BaseException {
+public:
+    Exception(str *msg=0) : BaseException(msg) {}
+
+#ifdef __SS_BIND
+   virtual PyObject *__to_py__() { return PyExc_Exception; }
+#endif
+};
+
+class StopIteration : public Exception {
+public:
+    StopIteration(str *msg=0) : Exception(msg) {}
+};
 class StandardError : public Exception {
 public:
     StandardError(str *msg=0) : Exception(msg) {}
@@ -2383,6 +2356,48 @@ template <class U> str *str::join(U *iter) {
 
 /* __iter methods */
 
+template<class T> __iter<T> *__iter<T>::__iter__() { __stop_iteration = false; return this; }
+
+template<class T> T __iter<T>::next() { /* subclasses must implement 'next' or '__get_next' */
+    __result = this->__get_next();
+    if(__stop_iteration)
+        throw new StopIteration();
+    return __result;
+} 
+
+template<class T> T __iter<T>::__get_next() {
+    try {
+        __result = this->next();
+        return __result;
+    } catch (StopIteration *) {
+        __stop_iteration = true;
+    }
+}
+
+template<class T> inline __iter<T> *__iter<T>::for_in_init() {
+    __stop_iteration = false;
+    return this;
+}
+
+template<class T> inline bool __iter<T>::for_in_has_next(__iter<T> *iter) {
+     iter->__result = iter->__get_next();
+     return not iter->__stop_iteration;
+}
+
+template<class T> inline T __iter<T>::for_in_next(__iter<T> *iter) {
+     return iter->__result;
+}
+
+/* deprecated, used by FOR_IN */
+
+template<class T> int __iter<T>::for_has_next() {
+    __result = this->__get_next();
+    return not this->__stop_iteration;
+}
+
+template<class T> T __iter<T>::for_get_next() {
+    return __result;
+}
 
 /*
 set implementation, partially derived from CPython,
