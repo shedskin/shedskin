@@ -1818,6 +1818,7 @@ class generateVisitor(ASTVisitor):
     def visitReturn(self, node, func=None):
         if func.isGenerator:
             self.output('__stop_iteration = true;')
+            self.output('return 0;')
             return
         self.return_expr(node.value, func.retnode, func)
 
