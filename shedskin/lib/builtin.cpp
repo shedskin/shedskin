@@ -1634,17 +1634,6 @@ __ss_int __sum(pyseq<__ss_bool> *l, __ss_int b) { return accumulate(l->units.beg
 double __sum(pyseq<__ss_int> *l, double b) { return accumulate(l->units.begin(), l->units.end(), 0)+b; }
 double __sum(pyseq<double> *l, double b) { return accumulate(l->units.begin(), l->units.end(), b); }
 
-/* sorted */
-
-list<str *> *sorted(str *t, __ss_int (*cmp)(str *, str *), __ss_int key, __ss_int reverse) {
-    list<str *> *l = new list<str *>(t);
-    l->sort(cmp, key, reverse);
-    return l;
-}
-list<str *> *sorted(str *t, __ss_int, __ss_int key, __ss_int reverse) {
-    return sorted(t, (__ss_int (*)(str *, str *))0, key, reverse);
-}
-
 /* mod helpers */
 
 #if defined(WIN32) || defined(__sun)
