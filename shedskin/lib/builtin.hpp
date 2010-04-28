@@ -3686,32 +3686,10 @@ public:
         i = len(p);
     }
 
-    A next() {
+    A __get_next() {
         if(i>0)
             return p->__getitem__(--i); /* XXX avoid wrap, str spec? */
-        __throw_stop_iteration();
-    }
-};
-
-class __ss_reverse_str : public __iter<str *> {
-public:
-    str *p;
-    __ss_int i, sz;
-    __ss_reverse_str(str *p) {
-        this->p = p;
-        i = sz = len(p);
-    }
-
-    str *next() {
-        return NULL;
-    }
-
-    typedef int for_in_loop;
-
-    inline int for_in_init() { return sz; }
-    inline bool for_in_has_next(int i) { return i > 0; }
-    inline str *for_in_next(int &i) { 
-        return __char_cache[(unsigned char)p->unit[--i]];
+        this->__stop_iteration = true;
     }
 };
 
@@ -3720,9 +3698,6 @@ template <class A> __ss_reverse<A> *reversed(pyiter<A> *x) {
 }
 template <class A> __ss_reverse<A> *reversed(pyseq<A> *x) {
     return new __ss_reverse<A>(x);
-}
-inline __ss_reverse_str *reversed(str *s) {
-    return new __ss_reverse_str(s);
 }
 __iter<__ss_int> *reversed(__xrange *x);
 
