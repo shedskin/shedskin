@@ -3631,49 +3631,31 @@ template<class T> T __min(int n, int key, T a, T b, T c, ...) { /* XXX */
 
 /* sorted */
 
-template <class A, class B> list<A> *sorted(pyiter<A> *x, __ss_int (*cmp)(A, A), B (*key)(A), __ss_int reverse) {
-    list<A> *r = new list<A>();
-    A e;
-    __iter<A> *__0;
-    FOR_IN(e, x, 0)
-        r->append(e);
+template <class U, class V, class W> list<typename U::for_in_unit> *sorted(U *iter, V cmp, W key, __ss_int reverse) {
+    typename U::for_in_unit e;
+    typename U::for_in_loop __3;
+    int __2;
+    U *__1;
+    list<typename U::for_in_unit> *l = new list<typename U::for_in_unit>();
+    FOR_IN_NEW(e,iter,1,2,3)
+        l->units.push_back(e);
     END_FOR
-    r->sort(cmp, key, reverse);
-    return r;
+    l->sort(cmp, key, reverse);
+    return l;
 }
 
-template <class A> list<A> *sorted(pyiter<A> *x, __ss_int (*cmp)(A, A), __ss_int key, __ss_int reverse) {
-    return sorted(x, cmp, (__ss_int (*)(A))0, reverse);
-}
-template <class A, class B> list<A> *sorted(pyiter<A> *x, __ss_int cmp, B (*key)(A), __ss_int reverse) {
-    return sorted(x, (__ss_int (*)(A,A))0, key, reverse);
-}
-template <class A> list<A> *sorted(pyiter<A> *x, __ss_int cmp,  __ss_int key, __ss_int reverse) {
-    return sorted(x, (__ss_int (*)(A,A))0, (__ss_int (*)(A))0, reverse);
+template <class A, class V, class W> list<A> *sorted(pyseq<A> *x, V cmp, W key, __ss_int reverse) {
+    list<A> *l = new list<A>();
+    l->units = x->units;
+    l->sort(cmp, key, reverse);
+    return l;
 }
 
-template <class A> list<A> *sorted(pyseq<A> *x, __ss_int (*cmp)(A, A), __ss_int key, __ss_int reverse) {
-    list<A> *r = new list<A>();
-    r->units = x->units;
-    r->sort(cmp, key, reverse);
-    return r;
-}
-template <class A> list<A> *sorted(pyseq<A> *x, __ss_int, __ss_int key, __ss_int reverse) {
-    return sorted(x, (__ss_int(*)(A, A))0, key, reverse);
-}
-
-template <class U> list<str *> *sorted(str *x, __ss_int (*cmp)(str *, str *), U (*key)(str *), __ss_int reverse) {
+template <class V, class W> list<str *> *sorted(str *x, V cmp, W key, __ss_int reverse) {
     list<str *> *l = new list<str *>(x);
     l->sort(cmp, key, reverse);
     return l;
 }
-list<str *> *sorted(str *x, __ss_int (*cmp)(str *, str *), __ss_int key, __ss_int reverse);
-template <class U> list<str *> *sorted(str *x, __ss_int cmp, U (*key)(str *), __ss_int reverse) {
-    list<str *> *l = new list<str *>(x);
-    l->sort(cmp, key, reverse);
-    return l;
-}
-list<str *> *sorted(str *x, __ss_int cmp, __ss_int key, __ss_int reverse);
 
 /* reversed */
 
