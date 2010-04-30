@@ -252,7 +252,7 @@ str::str(__GC_STRING s) : unit(s), cached_hash(0) {
     __class__ = cl_str_;
 }
 
-str::str(const char *s, int size) : unit(__GC_STRING(s, size)), cached_hash(0) { /* '\0' delimiter in C */
+str::str(const char *s, int size) : unit(s, size), cached_hash(0) { /* '\0' delimiter in C */
     __class__ = cl_str_;
 }
 
@@ -1609,7 +1609,7 @@ str *__str(__ss_int i, __ss_int base) {
     }
     while(i != 0);
     if(neg) *(--psz) = '-';
-    return new str(psz);
+    return new str(psz, buf+23-psz);
 }
 #endif
 
@@ -1632,7 +1632,7 @@ str *__str(int i, int base) {
     }
     while(i != 0);
     if(neg) *(--psz) = '-';
-    return new str(psz);
+    return new str(psz, buf+11-psz);
 }
 
 str *__str(__ss_bool b) {
