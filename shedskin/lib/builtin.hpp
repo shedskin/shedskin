@@ -1732,7 +1732,7 @@ template<class K, class V> dict<K, V>::dict(PyObject *p) {
 template<class K, class V> PyObject *dict<K, V>::__to_py__() {
     PyObject *p = PyDict_New();
     int len = this->__len__();
-    for (it = units.begin(); it != units.end(); it++)
+    for (it = units.begin(); it != units.end(); ++it)
         PyDict_SetItem(p, __to_py(it->first), __to_py(it->second));
     return p;
 }
@@ -1796,9 +1796,11 @@ template<class K, class V> tuple2<K,V> *dict<K,V>::popitem() {
 
 template<class K, class V> list<K> *dict<K,V>::keys() {
     list<K> *l = new list<K>();
-    l->units.reserve(__len__());
-    for (it = units.begin(); it != units.end(); it++)
-        l->append(it->first);
+    l->units.resize(__len__());
+    int i = 0;
+    typename __GC_HASH_MAP::iterator end = units.end();
+    for(it = units.begin(); it != end; ++it)
+        l->units[i++] = it->first;
     return l;
 }
 
@@ -1824,30 +1826,35 @@ template<class K, class V> dict<K,V> *dict<K,V>::__copy__() {
 template<class K, class V> dict<K,V> *dict<K,V>::__deepcopy__(dict<void *, pyobj *> *memo) {
     dict<K,V> *n = new dict<K,V>();
     memo->__setitem__(this, n);
-    for (it = units.begin(); it != units.end(); it++)
+    for (it = units.begin(); it != units.end(); ++it)
         n->units[__deepcopy(it->first, memo)] = __deepcopy(it->second, memo);
     return n;
 }
 
 template<class K, class V> list<V> *dict<K,V>::values() {
     list<V> *l = new list<V>();
-    l->units.reserve(__len__());
-    for (it = units.begin(); it != units.end(); it++)
-        l->append(it->second);
+    l->units.resize(__len__());
+    int i = 0;
+    typename __GC_HASH_MAP::iterator end = units.end();
+    for (it = units.begin(); it != end; ++it)
+        l->units[i++] = it->second;
     return l;
 }
 
 template<class K, class V> void *dict<K,V>::update(dict<K,V> *e) {
-    for (it = e->units.begin(); it != e->units.end(); it++)
+    typename __GC_HASH_MAP::iterator end = e->units.end();
+    for (it = e->units.begin(); it != end; ++it)
         this->__setitem__(it->first, it->second);
     return NULL;
 }
 
 template<class K, class V> list<tuple2<K,V> *> *dict<K,V>::items() {
     list<tuple2<K,V> *> *l = new list<tuple2<K,V> *>();
-    l->units.reserve(__len__());
-    for (it = units.begin(); it != units.end(); it++)
-        l->append(new tuple2<K,V>(2, it->first, it->second));
+    l->units.resize(__len__());
+    int i = 0;
+    typename __GC_HASH_MAP::iterator end = units.end();
+    for (it = units.begin(); it != end; ++it)
+        l->units[i++] = new tuple2<K,V>(2, it->first, it->second);
     return l;
 }
 
@@ -1859,7 +1866,7 @@ template<class K, class V> str *dict<K,V>::__repr__() {
     str *r = new str("{");
     int i = units.size();
 
-    for (it = units.begin(); it != units.end(); i--, it++) {
+    for (it = units.begin(); it != units.end(); i--, ++it) {
         r->unit += repr(it->first)->unit + ": " + repr(it->second)->unit;
         if( i > 1 )
            r->unit += ", ";
