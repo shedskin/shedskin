@@ -318,7 +318,11 @@ public:
     __ss_bool __eq__(pyobj *s);
     str *__add__(str *b);
 
-    template<class U> str *join(U *u);
+    str *__join(pyseq<str *> *l, bool only_ones, int total);
+    template<class U> str *join(U *);
+    str *join(list<str *> *); /* XXX why can't we use pyseq<str *> *? */
+    str *join(tuple2<str *, str *> *);
+    str *join(str *);
 
     str *__str__();
     str *__repr__();
@@ -2308,50 +2312,22 @@ inline str *str::for_in_next(int &i) {
 }
 
 template <class U> str *str::join(U *iter) {
-    int i, sz, total, __2, tsz;
+    int sz, total, __2, tsz;
     bool only_ones = true;
     int unitsize = unit.size();
     typename U::for_in_unit e;
     typename U::for_in_loop __3;
     U *__1;
     __join_cache->units.resize(0);
-    i = total = 0;
+    total = 0;
     FOR_IN_NEW(e,iter,1,2,3)
         __join_cache->units.push_back(e);
         sz = e->unit.size();
         if(sz != 1)
             only_ones = false;
         total += sz;
-        i++;
     END_FOR
-    str *s = new str();
-    if(unitsize == 0 and only_ones) {
-        s->unit.resize(total);
-        for(int j=0; j<i; j++)
-            s->unit[j] = __join_cache->units[j]->unit[0];
-    }
-    else if (i) {
-        total += (i-1)*unitsize;
-        s->unit.resize(total);
-        int k = 0;
-        for(int l = 0; l<i; l++) {
-            str *t = __join_cache->units[l];
-            tsz = t->unit.size();
-            if (tsz == 1)
-                s->unit[k] = t->unit[0];
-            else
-                memcpy((void *)(s->unit.data()+k), t->unit.data(), tsz);
-            k += tsz;
-            if (unitsize && l < i-1) {
-                if (unitsize==1)
-                    s->unit[k] = unit[0];
-                else
-                    memcpy((void *)(s->unit.data()+k), unit.data(), unit.size());
-                k += unitsize;
-            }
-        }
-    }
-    return s;
+    return __join(__join_cache, only_ones, total);
 }
 
 /* __iter methods */
