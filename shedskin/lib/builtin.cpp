@@ -1287,18 +1287,24 @@ str *raw_input(str *msg) {
     return new str(s);
 }
 
-
 __ss_int __int(str *s, __ss_int base) {
     char *cp;
-    if(!s->isdigit()) /* XXX */
-        s = s->strip();
+    __ss_int i;
 #ifdef __SS_LONG
-    __ss_int i = strtoll(s->unit.c_str(), &cp, base);
+    i = strtoll(s->unit.c_str(), &cp, base);
 #else
-    __ss_int i = strtol(s->unit.c_str(), &cp, base);
+    i = strtol(s->unit.c_str(), &cp, base);
 #endif
-    if(cp != s->unit.c_str()+s->unit.size())
-        throw new ValueError(new str("invalid literal for int()"));
+    if(*cp != '\0') {
+        s = s->rstrip();
+        #ifdef __SS_LONG
+            i = strtoll(s->unit.c_str(), &cp, base);
+        #else
+            i = strtol(s->unit.c_str(), &cp, base);
+        #endif
+        if(*cp != '\0')
+            throw new ValueError(new str("invalid literal for int()"));
+    }
     return i;
 }
 
