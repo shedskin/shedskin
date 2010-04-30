@@ -21,6 +21,8 @@ __ss_bool False;
 
 list<str *> *__join_cache;
 
+char __str_cache[4000];
+
 #ifdef __SS_BIND
 dict<void *, void *> *__ss_proxy;
 #endif
@@ -59,6 +61,12 @@ void __init() {
     }
 
     __join_cache = new list<str *>();
+
+   for(int i=0; i<1000; i++) {
+       __str_cache[4*i] = '0' + (i % 10);
+       __str_cache[4*i+1] = '0' + ((i/10) % 10);
+       __str_cache[4*i+2] = '0' + ((i/100) % 10);
+   }
 }
 
 /* int_ methods */
@@ -1593,8 +1601,6 @@ void slicenr(__ss_int x, __ss_int &l, __ss_int &u, __ss_int &s, __ss_int len) {
 str *__str(__ss_int i, __ss_int base) {
     if(i<10 && i>=0 && base==10)
         return __char_cache['0'+i];
-
-    char asc[] = "0123456789abcdefghijklmnopqrstuvwxyz";
     char buf[24];
     char *psz = buf+23;
 /*    if(i==INT_MIN)
@@ -1602,22 +1608,41 @@ str *__str(__ss_int i, __ss_int base) {
     int neg = i<0;
     *psz = 0;
     if(neg) i = -i;
-    do {
-        unsigned long long lsd = i%base;
-        i = i/base;
-        *(--psz) = asc[lsd];
+    if(base == 10) {
+        int pos;
+        while(i > 999) {
+            pos = 4*(i%1000);
+            i = i/1000;
+            *(--psz) = __str_cache[pos];
+            *(--psz) = __str_cache[pos+1];
+            *(--psz) = __str_cache[pos+2];
+        }
+        pos = 4*i;
+        if(i>99) {
+            *(--psz) = __str_cache[pos];
+            *(--psz) = __str_cache[pos+1];
+            *(--psz) = __str_cache[pos+2];
+        }
+        else if(i>9) {
+            *(--psz) = __str_cache[pos];
+            *(--psz) = __str_cache[pos+1];
+        }
+        else
+            *(--psz) = __str_cache[pos];
     }
-    while(i != 0);
+    else do {
+        *(--psz) = "0123456789abcdefghijklmnopqrstuvwxyz"[i%base];
+        i = i/base;
+    } while(i);
     if(neg) *(--psz) = '-';
     return new str(psz, buf+23-psz);
 }
 #endif
 
 str *__str(int i, int base) {
-    if(i<10 && i>=0 && base==10)
+    if(base==10 && i<10 && i>=0)
         return __char_cache['0'+i];
 
-    char asc[] = "0123456789abcdefghijklmnopqrstuvwxyz";
     char buf[12];
     char *psz = buf+11;
     if(i==INT_MIN)
@@ -1625,12 +1650,32 @@ str *__str(int i, int base) {
     int neg = i<0;
     *psz = 0;
     if(neg) i = -i;
-    do {
-        unsigned lsd = i%base;
-        i = i/base;
-        *(--psz) = asc[lsd];
+    if(base == 10) {
+        int pos;
+        while(i > 999) {
+            pos = 4*(i%1000);
+            i = i/1000;
+            *(--psz) = __str_cache[pos];
+            *(--psz) = __str_cache[pos+1];
+            *(--psz) = __str_cache[pos+2];
+        }
+        pos = 4*i;
+        if(i>99) {
+            *(--psz) = __str_cache[pos];
+            *(--psz) = __str_cache[pos+1];
+            *(--psz) = __str_cache[pos+2];
+        }
+        else if(i>9) {
+            *(--psz) = __str_cache[pos];
+            *(--psz) = __str_cache[pos+1];
+        }
+        else
+            *(--psz) = __str_cache[pos];
     }
-    while(i != 0);
+    else do {
+        *(--psz) = "0123456789abcdefghijklmnopqrstuvwxyz"[i%base];
+        i = i/base;
+    } while(i);
     if(neg) *(--psz) = '-';
     return new str(psz, buf+11-psz);
 }
