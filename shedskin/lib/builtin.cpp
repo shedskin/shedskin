@@ -299,6 +299,72 @@ str *str::__repr__() {
     return new str(ss.str().c_str());
 }
 
+str *str::__join(pyseq<str *> *l, bool only_ones, int total) {
+    int unitsize = unit.size();
+    int elems = len(l);
+    str *s = new str();
+    if(unitsize == 0 and only_ones) {
+        s->unit.resize(total);
+        for(int j=0; j<elems; j++)
+            s->unit[j] = l->units[j]->unit[0];
+    }
+    else if(elems) {
+        total += (elems-1)*unitsize;
+        s->unit.resize(total);
+        int tsz;
+        int k = 0;
+        for(int m = 0; m<elems; m++) {
+            str *t = l->units[m];
+            tsz = t->unit.size();
+            if (tsz == 1)
+                s->unit[k] = t->unit[0];
+            else
+                memcpy((void *)(s->unit.data()+k), t->unit.data(), tsz);
+            k += tsz;
+            if (unitsize && m < elems-1) {
+                if (unitsize==1)
+                    s->unit[k] = unit[0];
+                else
+                    memcpy((void *)(s->unit.data()+k), unit.data(), unit.size());
+                k += unitsize;
+            }
+        }
+    }
+    return s;
+}
+
+str * str::join(list<str *> *l) {
+    int lsz = len(l);
+    int sz, total;
+    bool only_ones = true;
+    total = 0;
+    for(int i=0; i<lsz; i++) {
+        sz = l->units[i]->unit.size();
+        if(sz!=1)
+            only_ones = false;
+        total += sz;
+    }
+    return __join(l, only_ones, total);
+}
+
+str * str::join(tuple2<str *, str *> *l) { /* XXX merge */
+    int lsz = len(l);
+    int sz, total;
+    bool only_ones = true;
+    total = 0;
+    for(int i=0; i<lsz; i++) {
+        sz = l->units[i]->unit.size();
+        if(sz!=1)
+            only_ones = false;
+        total += sz;
+    }
+    return __join(l, only_ones, total);
+}
+
+str * str::join(str *l) {
+    return __join(new list<str *>(l), true, len(l));
+}
+
 __ss_int str::__int__() {
     return __int(this);
 }
