@@ -303,7 +303,7 @@ public:
 class str : public pyseq<str *> {
 public:
     __GC_STRING unit;
-    int cached_hash;
+    int hash;
 
     str();
     str(const char *s);
@@ -479,6 +479,7 @@ public:
     int mask;
     setentry<T> *table;
     setentry<T> smalltable[MINSIZE];
+    int hash;
 
     template<class U> set(U *other, int frozen);
     template<class U> set(U *other);
@@ -2403,6 +2404,7 @@ template <> void *myallocate<int>(int n);
 
 template <class T> set<T>::set(int frozen) : frozen(frozen) {
     this->__class__ = cl_set;
+    this->hash = -1;
     EMPTY_TO_MINSIZE(this);
 }
 
@@ -2412,6 +2414,7 @@ template <class T> set<T>::set(int frozen) : frozen(frozen) {
 
 template<class T> set<T>::set(PyObject *p) {
     this->__class__ = cl_set;
+    this->hash = -1;
     EMPTY_TO_MINSIZE(this);
     if(PyFrozenSet_CheckExact(p))
         frozen = 1;
@@ -2443,6 +2446,7 @@ template<class T> PyObject *set<T>::__to_py__() {
 template<class T> template<class U> set<T>::set(U *other, int frozen) {
     this->__class__ = cl_set;
     this->frozen = frozen;
+    this->hash = -1;
     EMPTY_TO_MINSIZE(this);
     update(other);
 }
@@ -2450,6 +2454,7 @@ template<class T> template<class U> set<T>::set(U *other, int frozen) {
 template<class T> template<class U> set<T>::set(U *other) {
     this->__class__ = cl_set;
     this->frozen = 0;
+    this->hash = -1;
     EMPTY_TO_MINSIZE(this);
     update(other);
 }
@@ -2519,19 +2524,22 @@ template<class T> __ss_int set<T>::__cmp__(pyobj *) {
 template<class T> int set<T>::__hash__() {
     if(!this->frozen)
         throw new TypeError(new str("unhashable type: 'set'"));
-    list<int> *seeds = new list<int>();
-
-    T e;
-    __iter<T> *__0;
-    FOR_IN(e, this, 0)
-        seeds->append(hasher<T>(e));
-    END_FOR
-
-    seeds->sort((__ss_int)0, (__ss_int)0, (__ss_int)0);
-    int seed = 0;
-    for(int i = 0; i < len(seeds); i++)
-        seed = hash_combine(seed, seeds->units[i]);
-    return seed;
+    /* from CPython */
+    long h, hash = 1927868237L;
+    if (this->hash != -1)
+        return this->hash;
+    hash *= __len__() + 1;
+    int pos = 0;
+    setentry<T> *entry;
+    while (next(&pos, &entry)) {
+        h = entry->hash;
+        hash ^= (h ^ (h << 16) ^ 89869747L)  * 3644798167u;
+    }
+    hash = hash * 69069L + 907133923L;
+    if (hash == -1)
+        hash = 590923713L;
+    this->hash = hash;
+    return hash;
 }
 
 template <class T> setentry<T>* set<T>::lookup(T key, long hash) const {
