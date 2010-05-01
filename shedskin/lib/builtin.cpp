@@ -369,10 +369,6 @@ str * str::join(tuple2<str *, str *> *l) { /* XXX merge */
     return __join(l, only_ones, total);
 }
 
-str * str::join(str *l) {
-    return __join(new list<str *>(l), true, len(l));
-}
-
 __ss_int str::__int__() {
     return __int(this);
 }
