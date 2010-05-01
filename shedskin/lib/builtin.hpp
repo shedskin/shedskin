@@ -2937,16 +2937,10 @@ template<class T> set<T> *set<T>::symmetric_difference(set<T> *s) {
     setentry<T> *entry;
 
     while (a->next(&pos, &entry)) {
-        setentry<T> *new_entry = c->lookup(entry->key, entry->hash);
-        if (new_entry->use == active) {
-            new_entry->use = dummy;
-            c->used--;
-       }
-        else {
-            if (!(new_entry->use)) c->fill++;
-            memcpy(new_entry, entry, sizeof(setentry<T>));
-            c->used++;
-        }
+        if (b->__contains__(entry)) 
+            c->discard(entry->key);
+        else
+            c->add(entry);
     }
 
     return c;
