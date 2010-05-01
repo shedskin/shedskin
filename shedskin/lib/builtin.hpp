@@ -2479,7 +2479,7 @@ template <class T> set<T>& set<T>::operator=(const set<T>& other) {
     memcpy(table, other.table, table_size);
 }
 
-template<class T> __ss_bool set<T>::__eq__(pyobj *p) {
+template<class T> __ss_bool set<T>::__eq__(pyobj *p) { /* XXX check hash */
     set<T> *b = (set<T> *)p;
 
     if( b->__len__() != this->__len__())
@@ -2515,16 +2515,17 @@ template<class T> __ss_bool set<T>::__gt__(set<T> *s) {
     return issuperset(s);
 }
 
-template<class T> __ss_int set<T>::__cmp__(pyobj *) {
-    //note: originally SS did cmp() by using issubset() and issuperset().
-    //I'm, however, following the Python specifications here...
-    throw new TypeError(new str("cannot compare sets using cmp()"));
+template<class T> __ss_int set<T>::__cmp__(pyobj *p) {
+    /* XXX sometimes TypeError, sometimes not? */
+    set<T> *s = (set<T> *)p;
+    if(issubset(s)) return -1;
+    else if(issuperset(s)) return 1;
+    return 0;
 }
 
 template<class T> int set<T>::__hash__() {
     if(!this->frozen)
         throw new TypeError(new str("unhashable type: 'set'"));
-    /* from CPython */
     long h, hash = 1927868237L;
     if (this->hash != -1)
         return this->hash;
