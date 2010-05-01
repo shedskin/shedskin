@@ -248,19 +248,19 @@ str *complex::__repr__() {
 
 /* str methods */
 
-str::str() : cached_hash(0) {
+str::str() : hash(0) {
     __class__ = cl_str_;
 }
 
-str::str(const char *s) : unit(s), cached_hash(0) {
+str::str(const char *s) : unit(s), hash(0) {
     __class__ = cl_str_;
 }
 
-str::str(__GC_STRING s) : unit(s), cached_hash(0) {
+str::str(__GC_STRING s) : unit(s), hash(0) {
     __class__ = cl_str_;
 }
 
-str::str(const char *s, int size) : unit(s, size), cached_hash(0) { /* '\0' delimiter in C */
+str::str(const char *s, int size) : unit(s, size), hash(0) { /* '\0' delimiter in C */
     __class__ = cl_str_;
 }
 
@@ -791,10 +791,10 @@ static inline unsigned int SuperFastHash (const char * data, int len) {
 /* ======================================================================== */
 
 int str::__hash__() {
-    if(cached_hash)
-        return cached_hash;
-    cached_hash = SuperFastHash(unit.c_str(), unit.size());
-    return cached_hash;
+    if(hash)
+        return hash;
+    hash = SuperFastHash(unit.c_str(), unit.size());
+    return hash;
 
     //return __gnu_cxx::hash<char *>()(unit.c_str());
 }
@@ -1057,7 +1057,7 @@ str *str::capitalize() {
 }
 
 #ifdef __SS_BIND
-str::str(PyObject *p) : cached_hash(0) {
+str::str(PyObject *p) : hash(0) {
     if(!PyString_Check(p))
         throw new TypeError(new str("error in conversion to Shed Skin (string expected)"));
 
