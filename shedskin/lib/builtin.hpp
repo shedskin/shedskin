@@ -322,7 +322,6 @@ public:
     template<class U> str *join(U *);
     str *join(list<str *> *); /* XXX why can't we use pyseq<str *> *? */
     str *join(tuple2<str *, str *> *);
-    str *join(str *);
 
     str *__str__();
     str *__repr__();
