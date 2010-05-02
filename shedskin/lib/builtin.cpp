@@ -2182,7 +2182,7 @@ template<> int __to_ss(PyObject *p) {
 template<> __ss_bool __to_ss(PyObject *p) {
     if(!PyBool_Check(p))
         throw new TypeError(new str("error in conversion to Shed Skin (boolean expected)"));
-    return (p==Py_True)?(__mbool(false)):(__mbool(true));
+    return (p==Py_True)?(__mbool(true)):(__mbool(false));
 }
 
 template<> double __to_ss(PyObject *p) {
