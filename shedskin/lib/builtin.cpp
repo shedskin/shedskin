@@ -2213,6 +2213,7 @@ str *OSError::__repr__() {
 }
 
 template <> void *myallocate<int>(int n) { return GC_MALLOC_ATOMIC(n); }
+template <> void *myallocate<int, int>(int n) { return GC_MALLOC_ATOMIC(n); }
 
 template<> int __none() { throw new TypeError(new str("mixing None with int")); }
 template<> double __none() { throw new TypeError(new str("mixing None with float")); }

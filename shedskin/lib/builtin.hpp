@@ -90,7 +90,6 @@ template<class T> class hasheq;
 #define __GC_VECTOR(T) std::vector< T, gc_allocator< T > >
 #define __GC_DEQUE(T) std::deque< T, gc_allocator< T > >
 #define __GC_STRING std::basic_string<char,std::char_traits<char>,gc_allocator<char> >
-#define __GC_HASH_MAP __gnu_cxx::hash_map<K, V, hashfunc<K>, hasheq<K>, gc_allocator<std::pair<K, V> > >
 
 /* builtin class declarations */
 
@@ -402,10 +401,26 @@ public:
 #endif
 };
 
+template<class K, class V> class dictentry;
+
+const int MINSIZE = 8;
+
+template<class K, class V> struct dict_looper {
+    int pos;
+    int si_used;
+    dictentry<K,V> *entry;
+};
+
+static void __throw_dict_changed();
+
 template <class K, class V> class dict : public pyiter<K> {
 public:
-    __GC_HASH_MAP units;
-    typename __GC_HASH_MAP::iterator it;
+
+	int fill;
+    int used;
+    int mask;
+    dictentry<K,V> *table;
+    dictentry<K,V> smalltable[MINSIZE];
 
     dict();
     dict(int count, ...);
@@ -413,16 +428,21 @@ public:
     dict(pyiter<tuple2<K,V> *> *p);
     dict(pyiter<pyseq<K> *> *p);
     dict(pyiter<str *> *p);
+    
+    dict<K,V>& operator=(const dict<K,V>& other);
 
     void *__setitem__(K k, V v);
     V __getitem__(K k);
     void *__delitem__(K k);
+    int do_discard(K key);
     list<K> *keys();
     list<V> *values();
     list<tuple2<K, V> *> *items();
     __ss_int __len__();
     str *__repr__();
     __ss_bool has_key(K k);
+    __ss_bool __contains__(K key);
+    __ss_bool __contains__(dictentry<K,V>* entry);
     void *clear();
     dict<K,V> *copy();
     V get(K k);
@@ -430,14 +450,20 @@ public:
     V pop(K k);
     tuple2<K, V> *popitem();
     void *update(dict<K, V> *e);
-    __ss_bool __contains__(K k);
-    __ss_bool __eq__(pyobj *e);
+
+    __ss_bool __gt__(dict<K,V> *s);
+    __ss_bool __lt__(dict<K,V> *s);
+    __ss_bool __ge__(dict<K,V> *s);
+    __ss_bool __le__(dict<K,V> *s);
+    __ss_bool __eq__(pyobj *p);
+
+    __ss_int __cmp__(pyobj *p);
     V setdefault(K k, V v=0);
 
-    __dictiterkeys<K, V> *__iter__();
-    __dictiterkeys<K, V> *iterkeys();
-    __dictitervalues<K, V> *itervalues();
-    __dictiteritems<K, V> *iteritems();
+    __dictiterkeys<K, V> *__iter__() { return new __dictiterkeys<K,V>(this);}
+    __dictiterkeys<K, V> *iterkeys() { return new __dictiterkeys<K,V>(this);}
+    __dictitervalues<K, V> *itervalues() { return new __dictitervalues<K,V>(this);}
+    __dictiteritems<K, V> *iteritems() { return new __dictiteritems<K,V>(this);}
 
     dict<K, V> *__deepcopy__(dict<void *, pyobj *> *memo);
     dict<K, V> *__copy__();
@@ -447,21 +473,34 @@ public:
     /* iteration */
 
     typedef K for_in_unit;
-    typedef typename __GC_HASH_MAP::iterator for_in_loop;
+    typedef dict_looper<K,V> for_in_loop;
 
-    inline for_in_loop for_in_init() { return units.begin(); }
-    inline bool for_in_has_next(for_in_loop l) { return l != units.end(); } /* XXX opt */
-    inline K for_in_next(for_in_loop &l) { return (*l++).first; }
+    inline dict_looper<K,V> for_in_init() { dict_looper<K,V> l; l.pos = 0; l.si_used = used; return l; }
+    inline bool for_in_has_next(dict_looper<K,V> &l) {
+        if (l.si_used != used) {
+            l.si_used = -1;
+            __throw_dict_changed();
+        }
+        int ret = next(&l.pos, &l.entry);
+        if (!ret) return false;
+        return true;
+    }
+    inline K for_in_next(dict_looper<K,V> &l) { return l.entry->key; }
 
 #ifdef __SS_BIND
     dict(PyObject *);
     PyObject *__to_py__();
 #endif
+
+	// used internally
+    dictentry<K,V>* lookup(K key, long hash) const;
+    void insert_key(K key, V value, long hash);
+    void insert_clean(K key, V value, long hash);
+    int next(int *pos_ptr, dictentry<K,V> **entry_ptr);
+    void resize(int minused);
 };
 
 template<class T> class setentry;
-
-const int MINSIZE = 8;
 
 template<class T> struct set_looper {
     int pos;
@@ -799,9 +838,11 @@ public:
 
 template <class K, class V> class __dictiterkeys : public __iter<K> {
 public:
-    dict<K, V> *p;
-    typename __GC_HASH_MAP::iterator iter;
-    int counter;
+    dict<K,V> *p;
+    int pos;
+    int si_used;
+    int len;
+    dictentry<K,V>* entry;
 
     __dictiterkeys<K, V>(dict<K, V> *p);
     K next();
@@ -809,9 +850,11 @@ public:
 
 template <class K, class V> class __dictitervalues : public __iter<V> {
 public:
-    dict<K, V> *p;
-    typename __GC_HASH_MAP::iterator iter;
-    int counter;
+    dict<K,V> *p;
+    int pos;
+    int si_used;
+    int len;
+    dictentry<K,V>* entry;
 
     __dictitervalues<K, V>(dict<K, V> *p);
     V next();
@@ -819,9 +862,11 @@ public:
 
 template <class K, class V> class __dictiteritems : public __iter<tuple2<K, V> *> {
 public:
-    dict<K, V> *p;
-    typename __GC_HASH_MAP::iterator iter;
-    int counter;
+    dict<K,V> *p;
+    int pos;
+    int si_used;
+    int len;
+    dictentry<K,V>* entry;
 
     __dictiteritems<K, V>(dict<K, V> *p);
     tuple2<K, V> *next();
@@ -1104,6 +1149,13 @@ template<class T> struct setentry {
     int use;
 };
 
+template<class K, class V> struct dictentry {
+    long hash;
+    K key;
+    V value;
+    int use;
+};
+
 /* int */
 
 inline __ss_int __int() { return 0; }
@@ -1355,6 +1407,9 @@ static void __throw_range_step_zero() {
 }
 static void __throw_set_changed() {
     throw new RuntimeError(new str("set changed size during iteration"));
+}
+static void __throw_dict_changed() {
+    throw new RuntimeError(new str("dict changed size during iteration"));
 }
 static void __throw_stop_iteration() {
     throw new StopIteration();
@@ -1662,14 +1717,36 @@ template<class T> inline T pyseq<T>::for_in_next(int &i) {
     return __getitem__(i++);
 }
 
-/* dict methods */
+/* 
+dict implementation, partially derived from CPython,
+copyright Python Software Foundation (http://www.python.org/download/releases/2.6.2/license/) */
+
+#define INIT_NONZERO_SET_SLOTS(so) do {				\
+	(so)->table = (so)->smalltable;				\
+	(so)->mask = MINSIZE - 1;				\
+    } while(0)
+
+
+#define EMPTY_TO_MINSIZE(so) do {				\
+	memset((so)->smalltable, 0, sizeof((so)->smalltable));	\
+	(so)->used = (so)->fill = 0;				\
+	INIT_NONZERO_SET_SLOTS(so);				\
+    } while(0)
+
+template <class T> void *myallocate(int n) { return GC_MALLOC(n); }
+template <> void *myallocate<int>(int n);
+
+template <class K, class V> void *myallocate(int n) { return GC_MALLOC(n); }
+template <> void *myallocate<int, int>(int n);
 
 template<class K, class V> dict<K,V>::dict() {
     this->__class__ = cl_dict;
+    EMPTY_TO_MINSIZE(this);
 }
 
 template<class K, class V> dict<K, V>::dict(int count, ...)  {
     this->__class__ = cl_dict;
+    EMPTY_TO_MINSIZE(this);
     va_list ap;
     va_start(ap, count);
     for(int i=0; i<count; i++) {
@@ -1682,11 +1759,14 @@ template<class K, class V> dict<K, V>::dict(int count, ...)  {
 
 template<class K, class V> dict<K, V>::dict(dict<K, V> *p)  {
     this->__class__ = cl_dict;
-    this->units = p->units;
+    EMPTY_TO_MINSIZE(this);
+
+    *this = *p;
 }
 
 template<class K, class V> dict<K, V>::dict(pyiter<tuple2<K,V> *> *p) {
     this->__class__ = cl_dict;
+    EMPTY_TO_MINSIZE(this);
     tuple2<K,V> *t;
     __iter<tuple2<K,V> *> *__0;
     FOR_IN(t, p, 0)
@@ -1696,7 +1776,8 @@ template<class K, class V> dict<K, V>::dict(pyiter<tuple2<K,V> *> *p) {
 
 template<class K, class V> dict<K, V>::dict(pyiter<pyseq<K> *> *p) {
     this->__class__ = cl_dict;
-    pyseq<K> *t;
+    EMPTY_TO_MINSIZE(this);
+	pyseq<K> *t;
     __iter<pyseq<K> *> *__0;
     FOR_IN(t, p, 0)
         __setitem__(t->__getitem__(0), t->__getitem__(1));
@@ -1704,7 +1785,8 @@ template<class K, class V> dict<K, V>::dict(pyiter<pyseq<K> *> *p) {
 }
 
 template<class K, class V> dict<K, V>::dict(pyiter<str *> *p) { /* XXX why necessary */
-    this->__class__ = cl_dict;
+	this->__class__ = cl_dict;
+	EMPTY_TO_MINSIZE(this);
     str *t;
     __iter<str *> *__0;
     FOR_IN(t, p, 0)
@@ -1738,137 +1820,449 @@ template<class K, class V> PyObject *dict<K, V>::__to_py__() {
 }
 #endif
 
-template<class K, class V> void *dict<K,V>::__setitem__(K k, V v) {
-    units[k] = v;
-    return NULL;
+template <class K, class V> dict<K,V>& dict<K,V>::operator=(const dict<K,V>& other) {
+    memcpy(this, &other, sizeof(dict<K,V>));
+    int table_size = sizeof(dictentry<K,V>) * (other.mask+1);
+    table = (dictentry<K,V>*)myallocate<K,V>(table_size);
+    memcpy(table, other.table, table_size);
+}
+
+template<class K, class V> __ss_bool dict<K,V>::__eq__(pyobj *p) { /* XXX check hash */
+    dict<K,V> *b = (dict<K,V> *)p;
+
+    if( b->__len__() != this->__len__())
+        return False;
+
+    int pos = 0;
+    dictentry<K,V> *entry;
+    while (next(&pos, &entry)) {
+        if(!b->__contains__(entry))
+            return False;
+    }
+    return True;
+}
+
+template <class K, class V> int characterize(dict<K,V> *a, dict<K,V> *b, V *pval)
+{
+	int i;
+	int difference_found = 0;
+	K akey;
+	V aval;
+	int cmp;
+
+	for (i = 0; i <= a->mask; i++) {
+		dictentry<K, V> *entry;
+		K thiskey;
+		V thisaval, thisbval;
+		if (a->table[i].use != active) continue;
+
+		thiskey = a->table[i].key;
+		if (difference_found) {
+			cmp = __cmp(akey, thiskey);
+			if (cmp < 0) continue;
+		}
+
+		thisaval = a->table[i].value;
+		entry = b->lookup(thiskey, a->table[i].hash);
+
+		if (entry->use != active) cmp = 1;
+		else {
+			thisbval = entry->value;
+			cmp = __cmp(thisaval, thisbval);
+		}
+
+		if (cmp != 0) {
+			difference_found = 1;
+			akey = thiskey;
+			aval = thisaval;
+		}
+	}
+
+	*pval = aval;
+	return difference_found;
+}
+
+
+template<class K, class V> __ss_bool dict<K,V>::__ge__(dict<K,V> *s) {
+    return __mbool(__cmp__(s) >= 0);
+}
+
+template<class K, class V> __ss_bool dict<K,V>::__le__(dict<K,V> *s) {
+    return __mbool(__cmp__(s) <= 0);
+}
+
+template<class K, class V> __ss_bool dict<K,V>::__lt__(dict<K,V> *s) {
+    return __mbool(__cmp__(s) < 0);
+}
+
+template<class K, class V> __ss_bool dict<K,V>::__gt__(dict<K,V> *s) {
+    return __mbool(__cmp__(s) > 0);
+}
+
+template<class K, class V> __ss_int dict<K,V>::__cmp__(pyobj *p) {
+    dict<K,V> *s = (dict<K,V> *)p;
+	int difference_found;
+	V aval, bval;
+
+    if (this->used < s->used) return -1;
+    else if (this->used > s->used) return 1;
+
+	difference_found = characterize(this, s, &aval);
+	if (!difference_found) return 0;
+
+	characterize(s, this, &bval);
+
+	return __cmp(aval, bval);
+}
+
+template <class K, class V> dictentry<K,V>* dict<K,V>::lookup(K key, long hash) const {
+
+    int i = hash & mask;
+    dictentry<K,V>* entry = &table[i];
+    if (!(entry->use) || __eq(entry->key, key))
+        return entry;
+
+    dictentry <K,V>* freeslot;
+
+    if (entry->use == dummy)
+        freeslot = entry;
+    else
+        freeslot = NULL;
+
+    unsigned int perturb;
+    for (perturb = hash; ; perturb >>= PERTURB_SHIFT) {
+        i = (i << 2) + i + perturb + 1;
+        entry = &table[i & mask];
+        if (!(entry->use)) {
+            if (freeslot != NULL)
+                entry = freeslot;
+            break;
+        }
+        if (__eq(entry->key, key))
+            break;
+
+        else if (entry->use == dummy && freeslot == NULL)
+            freeslot = entry;
+	}
+	return entry;
+}
+
+template <class K, class V> void dict<K,V>::insert_key(K key, V value, long hash) {
+    dictentry<K,V>* entry;
+
+    entry = lookup(key, hash);
+    if (!(entry->use)) {
+        fill++;
+        entry->key = key;
+        entry->value = value;
+        entry->hash = hash;
+        entry->use = active;
+        used++;
+    }
+    else if (entry->use == dummy) {
+        entry->key = key;
+        entry->value = value;
+        entry->hash = hash;
+        entry->use = active;
+        used++;
+    }
+    else {
+		entry->value = value;
+	}
+}
+
+template <class K, class V> void *dict<K,V>::__setitem__(K key, V value)
+{
+    long hash = hasher<K>(key);
+    int n_used = used;
+
+    insert_key(key, value, hash);
+    if ((used > n_used && fill*3 >= (mask+1)*2))
+        resize(used>50000 ? used*2 : used*4);
 }
 
 template<class T> T __none() { return NULL; }
 template<> int __none();
 template<> double __none();
 
-template<class K, class V> V dict<K,V>::get(K k) {
-    it = units.find(k);
-    if(it == units.end())
-        return __none<V>();
-    return it->second;
+template <class K, class V> V dict<K,V>::__getitem__(K key) {
+	register long hash = hasher<K>(key);
+	register dictentry<K, V> *entry;
+
+	entry = lookup(key, hash);
+
+	if (entry->use != active)
+		throw new KeyError(repr(key));
+	
+	return entry->value;
 }
 
-template<class K, class V> V dict<K,V>::get(K k, V v) {
-    it = units.find(k);
-    if(it == units.end())
-        return v;
-    return it->second;
-}
+template<class K, class V> void *dict<K,V>::__addtoitem__(K key, V value) {
+	register long hash = hasher<K>(key);
+	register dictentry<K, V> *entry;
 
-template<class K, class V> V dict<K,V>::setdefault(K k, V v) {
-    it = units.find(k);
-    if(it == units.end())
-    {
-        this->__setitem__(k, v);
-        return v;
-    }
+	entry = lookup(key, hash);
+	if (entry->use != active)
+		throw new KeyError(repr(key));
 
-    return it->second;
-}
-
-template<class K, class V> V dict<K,V>::pop(K k) {
-    V v = this->__getitem__(k);
-    units.erase(k);
-    return v;
-}
-
-template<class K, class V> void *dict<K,V>::__delitem__(K k) {
-    units.erase(k);
+    entry->value = __add(entry->value, value);
     return NULL;
 }
 
-template<class K, class V> __ss_int dict<K,V>::__len__() {
-    return units.size();
+template <class K, class V> V dict<K,V>::get(K key) {
+    register long hash = hasher<K>(key);
+	register dictentry<K, V> *entry;
+
+	entry = lookup(key, hash);
+	if (entry->use != active)
+        return __none<V>();
+	
+	return entry->value;
+}
+
+template <class K, class V> V dict<K,V>::get(K key, V d) {
+    register long hash = hasher<K>(key);
+	register dictentry<K, V> *entry;
+
+	entry = lookup(key, hash);
+	if (entry->use != active)
+		return d;
+	
+	return entry->value;
+}
+
+template <class K, class V> V dict<K,V>::setdefault(K key, V value)
+{
+    register long hash = hasher<K>(key);
+	register dictentry<K, V> *entry;
+
+	entry = lookup(key, hash);
+
+    if (entry->use != active)
+		__setitem__(key, value);
+
+	return entry->value;
+}
+
+template <class K, class V> void *dict<K,V>::__delitem__(K key) {
+    if (!do_discard(key)) throw new KeyError(repr(key));
+}
+
+template <class K, class V> int dict<K,V>::do_discard(K key) {
+	register long hash = hasher<K>(key);
+	register dictentry<K,V> *entry;
+
+	entry = lookup(key, hash);
+
+	if (entry->use != active)
+		return DISCARD_NOTFOUND; // nothing to discard
+
+	entry->use = dummy;
+	used--;
+	return DISCARD_FOUND;
+}
+
+template <class K, class V> list<K> *dict<K,V>::keys() {
+	return new list<K>(this);
+}
+
+template <class K, class V> list<V> *dict<K,V>::values() {
+	int pos;
+	dictentry<K,V> *entry;
+	list<V> *ret = new list<V>;
+
+	pos = 0;
+	while (next(&pos, &entry)) {
+		ret->append(entry->value);
+	}
+	
+	return ret;
+}
+
+template <class K, class V> list<tuple2<K, V> *> *dict<K,V>::items() {
+	int pos;
+	dictentry<K,V> *entry;
+	list<tuple2<K, V> *> *ret = new list<tuple2<K, V> *>;
+	tuple2<K, V> *item;
+
+	pos = 0;
+	while (next(&pos, &entry)) {
+		item = new tuple2<K, V>(2, entry->key, entry->value);
+		ret->append(item);
+	}
+
+    return ret;
+}
+
+template<class K, class V> V dict<K,V>::pop(K key) {
+	register long hash = hasher<K>(key);
+    register dictentry<K,V> *entry;
+
+    entry = lookup(key, hash);
+
+	if (entry->use != active)
+		throw new KeyError(__str(key));
+
+	entry->use = dummy;
+	used--;
+	return entry->value;
 }
 
 template<class K, class V> tuple2<K,V> *dict<K,V>::popitem() {
-    it = units.begin();
-    tuple2<K, V> *t = new tuple2<K, V>(2, it->first, it->second);
-    units.erase(it->first);
-    return t;
+    register int i = 0;
+	register dictentry<K,V> *entry;
+
+	if (used == 0)
+		throw new KeyError(new str("popitem(): dictionary is empty"));
+
+	entry = &table[0];
+	if (entry->use != active) {
+		i = entry->hash;
+		if (i > mask || i < 1)
+			i = 1;	/* skip slot 0 */
+		while ((entry = &table[i])->use != active) {
+			i++;
+			if (i > mask)
+				i = 1;
+		}
+	}
+	entry->use = dummy;
+	used--;
+	table[0].hash = i + 1;  /* next place to start */
+	return new tuple2<K,V>(entry->key, entry->value);
 }
 
-template<class K, class V> list<K> *dict<K,V>::keys() {
-    list<K> *l = new list<K>();
-    l->units.resize(__len__());
-    int i = 0;
-    typename __GC_HASH_MAP::iterator end = units.end();
-    for(it = units.begin(); it != end; ++it)
-        l->units[i++] = it->first;
-    return l;
+/*
+ * Iterate over a dict table.  Use like so:
+ *
+ *     int pos;
+ *     dictentry<K,V> *entry;
+ *     pos = 0;   # important!  pos should not otherwise be changed by you
+ *     while (dict_next(yourdict, &pos, &entry)) {
+ *              Refer to borrowed reference in entry->key.
+ *     }
+ */
+template <class K, class V> int dict<K,V>::next(int *pos_ptr, dictentry<K,V> **entry_ptr)
+{
+	int i;
+
+	i = *pos_ptr;
+
+	while (i <= mask && (table[i].use != active))
+		i++;
+	*pos_ptr = i+1;
+	if (i > mask)
+		return 0;
+	*entry_ptr = &table[i];
+	return 1;
 }
 
-template<class K, class V> __ss_bool dict<K,V>::has_key(K k) {
-    return __mbool(units.find(k) != units.end());
+/*
+Internal routine used by dict_table_resize() to insert an item which is
+known to be absent from the dict.  This routine also assumes that
+the dict contains no deleted entries.  Besides the performance benefit,
+using insert() in resize() is dangerous (SF bug #1456209).
+*/
+template <class K, class V> void dict<K,V>::insert_clean(K key, V value, long hash)
+{
+	register size_t i;
+	register size_t perturb;
+	register dictentry<K,V> *entry;
+
+	i = hash & mask;
+
+	entry = &table[i];
+	for (perturb = hash; entry->use; perturb >>= PERTURB_SHIFT) {
+		i = (i << 2) + i + perturb + 1;
+		entry = &table[i & mask];
+	}
+	fill++;
+	entry->key = key;
+	entry->value = value;
+	entry->hash = hash;
+	entry->use = active;
+	used++;
 }
 
-template<class K, class V> void *dict<K,V>::clear() {
-    this->units.clear();
-    return NULL;
-}
 
-template<class K, class V> dict<K,V> *dict<K,V>::copy() {
-    dict<K,V> *n = new dict<K,V>();
-    n->units = units;
-    return n;
-}
+/*
+Restructure the table by allocating a new table and reinserting all
+keys again.  When entries have been deleted, the new table may
+actually be smaller than the old one.
+*/
+template <class K, class V> void dict<K,V>::resize(int minused)
+{
+	int newsize;
+	dictentry<K,V> *oldtable, *newtable, *entry;
+	int i;
+	dictentry<K,V> small_copy[MINSIZE];
 
-template<class K, class V> dict<K,V> *dict<K,V>::__copy__() {
-    return copy();
-}
+	/* Find the smallest table size > minused. */
+	for (newsize = MINSIZE;
+	     newsize <= minused && newsize > 0;
+	     newsize <<= 1)
+		;
+	if (newsize <= 0) {
+		//XXX raise memory error
+	}
 
-template<class K, class V> dict<K,V> *dict<K,V>::__deepcopy__(dict<void *, pyobj *> *memo) {
-    dict<K,V> *n = new dict<K,V>();
-    memo->__setitem__(this, n);
-    for (it = units.begin(); it != units.end(); ++it)
-        n->units[__deepcopy(it->first, memo)] = __deepcopy(it->second, memo);
-    return n;
-}
+	/* Get space for a new table. */
+	oldtable = table;
 
-template<class K, class V> list<V> *dict<K,V>::values() {
-    list<V> *l = new list<V>();
-    l->units.resize(__len__());
-    int i = 0;
-    typename __GC_HASH_MAP::iterator end = units.end();
-    for (it = units.begin(); it != end; ++it)
-        l->units[i++] = it->second;
-    return l;
-}
+	if (newsize == MINSIZE) {
+		/* A large table is shrinking, or we can't get any smaller. */
+		newtable = smalltable;
+		if (newtable == oldtable) {
+			if (fill == used) {
+				/* No dummies, so no point doing anything. */
+				return;
+			}
+			/* We're not going to resize it, but rebuild the
+			   table anyway to purge old dummy entries.
+			   Subtle:  This is *necessary* if fill==size,
+			   as dict_lookkey needs at least one virgin slot to
+			   terminate failing searches.  If fill < size, it's
+			   merely desirable, as dummies slow searches. */
+			memcpy(small_copy, oldtable, sizeof(small_copy));
+			oldtable = small_copy;
+		}
+	}
+	else {
+        newtable = (dictentry<K,V>*) myallocate<K,V>(sizeof(dictentry<K,V>) * newsize);
+	}
 
-template<class K, class V> void *dict<K,V>::update(dict<K,V> *e) {
-    typename __GC_HASH_MAP::iterator end = e->units.end();
-    for (it = e->units.begin(); it != end; ++it)
-        this->__setitem__(it->first, it->second);
-    return NULL;
-}
+	/* Make the dict empty, using the new table. */
+	table = newtable;
+	mask = newsize - 1;
 
-template<class K, class V> list<tuple2<K,V> *> *dict<K,V>::items() {
-    list<tuple2<K,V> *> *l = new list<tuple2<K,V> *>();
-    l->units.resize(__len__());
-    int i = 0;
-    typename __GC_HASH_MAP::iterator end = units.end();
-    for (it = units.begin(); it != end; ++it)
-        l->units[i++] = new tuple2<K,V>(2, it->first, it->second);
-    return l;
-}
+	memset(newtable, 0, sizeof(dictentry<K,V>) * newsize);
 
-template<class K, class V> __ss_bool dict<K, V>::__contains__(K k) {
-    return __mbool(units.find(k) != units.end());
+    i = used;
+    used = 0;
+	fill = 0;
+
+	/* Copy the data over;
+	   dummy entries aren't copied over */
+	for (entry = oldtable; i > 0; entry++) {
+		if (entry->use == active) {
+			/* ACTIVE */
+			--i;
+			insert_clean(entry->key, entry->value, entry->hash);
+		}
+	}
 }
 
 template<class K, class V> str *dict<K,V>::__repr__() {
     str *r = new str("{");
-    int i = units.size();
+    dictentry<K,V> *entry;
+    
+    int i = __len__();
+    int pos = 0;
 
-    for (it = units.begin(); it != units.end(); i--, ++it) {
-        r->unit += repr(it->first)->unit + ": " + repr(it->second)->unit;
-        if( i > 1 )
+    while (next(&pos, &entry)) {
+		--i;
+        r->unit += repr(entry->key)->unit + ": " + repr(entry->value)->unit;
+        if( i > 0 )
            r->unit += ", ";
     }
 
@@ -1876,50 +2270,111 @@ template<class K, class V> str *dict<K,V>::__repr__() {
     return r;
 }
 
-template<class K, class V> V dict<K,V>::__getitem__(K k) {
-    typename __GC_HASH_MAP::iterator iter;
-    iter = units.find(k);
-    if(iter == units.end()) throw new KeyError(repr(k));
-    return iter->second;
+template<class K, class V> __ss_int dict<K,V>::__len__() {
+    return used;
 }
 
-template<class K, class V> void *dict<K,V>::__addtoitem__(K k, V v) {
-    typename __GC_HASH_MAP::iterator iter;
-    iter = units.find(k);
-    if(iter == units.end()) throw new KeyError(repr(k));
-    iter->second = __add(iter->second, v);
+template <class K, class V> __ss_bool dict<K,V>::__contains__(K key) {
+    long hash = hasher(key);
+	dictentry<K,V> *entry;
+
+	entry = lookup(key, hash);
+
+	return __mbool(entry->use==active);
+}
+
+template <class K, class V> __ss_bool dict<K,V>::__contains__(dictentry<K,V>* entry) {
+	entry = lookup(entry->key, entry->hash);
+
+	return __mbool(entry->use == active);
+}
+
+template <class K, class V> __ss_bool dict<K,V>::has_key(K key) {
+	return __contains__(key);
+}
+
+template <class K, class V> void *dict<K,V>::clear()
+{
+	dictentry<K,V> *entry, *table;
+	int table_is_malloced;
+	ssize_t fill;
+	dictentry<K,V> small_copy[MINSIZE];
+
+    table = this->table;
+	table_is_malloced = table != smalltable;
+
+	/* This is delicate.  During the process of clearing the dict,
+	 * decrefs can cause the dict to mutate.  To avoid fatal confusion
+	 * (voice of experience), we have to make the dict empty before
+	 * clearing the slots, and never refer to anything via so->ref while
+	 * clearing.
+	 */
+	fill = this->fill;
+	if (table_is_malloced)
+		EMPTY_TO_MINSIZE(this);
+
+	else if (fill > 0) {
+		/* It's a small table with something that needs to be cleared.
+		 * Afraid the only safe way is to copy the dict entries into
+		 * another small table first.
+		 */
+		// ffao: is this really needed without reference counting?
+		//memcpy(small_copy, table, sizeof(small_copy));
+		//table = small_copy;
+		EMPTY_TO_MINSIZE(this);
+	}
+	/* else it's a small table that's already empty */
+
+	/* if (table_is_malloced)
+		PyMem_DEL(table); */
+	return NULL;
+}
+
+template <class K, class V> void *dict<K,V>::update(dict<K,V>* other)
+{
+	register int i;
+	register dictentry<K,V> *entry;
+
+	/* Do one big resize at the start, rather than
+	 * incrementally resizing as we insert new keys.  Expect
+	 * that there will be no (or few) overlapping keys.
+	 */
+	if ((fill + other->used)*3 >= (mask+1)*2)
+	   resize((used + other->used)*2);
+	for (i = 0; i <= other->mask; i++) {
+		entry = &other->table[i];
+		if (entry->use == active) {
+			insert_key(entry->key, entry->value, entry->hash);
+		}
+	}
     return NULL;
 }
 
-template<class K, class V> __ss_bool dict<K,V>::__eq__(pyobj *e) {
-   dict<K, V> *b = (dict<K,V> *)e;
-   if( b->__len__() != this->__len__())
-       return False;
-
-   K k;
-   __iter<K> *__0;
-   FOR_IN(k, this, 0)
-       if( !b->__contains__(k) || !__eq(this->__getitem__(k), b->__getitem__(k)))
-           return False;
-   END_FOR
-   return True;
+template<class K, class V> dict<K,V> *dict<K,V>::copy() {
+    dict<K,V> *c = new dict<K,V>;
+    *c = *this;
+    return c;
 }
 
-template<class K, class V> __dictiterkeys<K, V> *dict<K, V>::__iter__() {
-    return new __dictiterkeys<K, V>(this);
+template<class K, class V> dict<K,V> *dict<K,V>::__copy__() {
+    dict<K,V> *c = new dict<K,V>;
+    *c = *this;
+    return c;
 }
 
-template<class K, class V> __dictiterkeys<K, V> *dict<K, V>::iterkeys() {
-    return new __dictiterkeys<K, V>(this);
+template<class K, class V> dict<K,V> *dict<K,V>::__deepcopy__(dict<void *, pyobj *> *memo) {
+    dict<K,V> *c = new dict<K,V>();
+    memo->__setitem__(this, c);
+
+    K e;
+    __iter<K> *__0;
+    FOR_IN(e, this, 0)
+        c->__setitem__(__deepcopy(e, memo), __deepcopy(this->__getitem__(e), memo));
+    END_FOR
+    return c;
 }
 
-template<class K, class V> __dictitervalues<K, V> *dict<K, V>::itervalues() {
-    return new __dictitervalues<K, V>(this);
-}
 
-template<class K, class V> __dictiteritems<K, V> *dict<K, V>::iteritems() {
-    return new __dictiteritems<K, V>(this);
-}
 
 /* list methods */
 
@@ -2386,21 +2841,6 @@ template<class T> T __iter<T>::for_get_next() {
 set implementation, partially derived from CPython,
 copyright Python Software Foundation (http://www.python.org/download/releases/2.6.2/license/)
 */
-
-template <class T> void *myallocate(int n) { return GC_MALLOC(n); }
-template <> void *myallocate<int>(int n);
-
-#define INIT_NONZERO_SET_SLOTS(so) do {				\
-	(so)->table = (so)->smalltable;				\
-	(so)->mask = MINSIZE - 1;				\
-    } while(0)
-
-
-#define EMPTY_TO_MINSIZE(so) do {				\
-	memset((so)->smalltable, 0, sizeof((so)->smalltable));	\
-	(so)->used = (so)->fill = 0;				\
-	INIT_NONZERO_SET_SLOTS(so);				\
-    } while(0)
 
 template <class T> set<T>::set(int frozen) : frozen(frozen) {
     this->__class__ = cl_set;
@@ -3396,42 +3836,52 @@ template<class T> T __seqiter<T>::next() {
     return p->units[counter++];
 }
 
-template<class K, class V> __dictiterkeys<K, V>::__dictiterkeys(dict<K, V> *p) {
+template<class K, class V> __dictiterkeys<K, V>::__dictiterkeys(dict<K,V> *p) {
     this->p = p;
-    iter = p->units.begin();
-    counter = 0;
+    this->pos = 0;
+    this->si_used = p->used;
 }
 
 template<class K, class V> K __dictiterkeys<K, V>::next() {
-    if(iter == p->units.end())
-        __throw_stop_iteration();
-    return iter++->first;
+    if (si_used != p->used) {
+        si_used = -1;
+        throw new RuntimeError(new str("dict changed size during iteration"));
+    }
+    int ret = p->next(&pos, &entry);
+    if (!ret) __throw_stop_iteration();
+    return entry->key;
 }
 
-template<class K, class V> __dictitervalues<K, V>::__dictitervalues(dict<K, V> *p) {
+template<class K, class V> __dictitervalues<K, V>::__dictitervalues(dict<K,V> *p) {
     this->p = p;
-    iter = p->units.begin();
-    counter = 0;
+    this->pos = 0;
+    this->si_used = p->used;
 }
 
 template<class K, class V> V __dictitervalues<K, V>::next() {
-    if(iter == p->units.end())
-        __throw_stop_iteration();
-    return iter++->second;
+    if (si_used != p->used) {
+        si_used = -1;
+        throw new RuntimeError(new str("dict changed size during iteration"));
+    }
+    int ret = p->next(&pos, &entry);
+    if (!ret) __throw_stop_iteration();
+    return entry->value;
 }
 
-template<class K, class V> __dictiteritems<K, V>::__dictiteritems(dict<K, V> *p) {
+template<class K, class V> __dictiteritems<K, V>::__dictiteritems(dict<K,V> *p) {
     this->p = p;
-    iter = p->units.begin();
-    counter = 0;
+    this->pos = 0;
+    this->si_used = p->used;
 }
 
 template<class K, class V> tuple2<K, V> *__dictiteritems<K, V>::next() {
-    if(iter == p->units.end())
-        __throw_stop_iteration();
-    tuple2<K, V> *t = new tuple2<K, V>(2, iter->first, iter->second);
-    iter++;
-    return t;
+    if (si_used != p->used) {
+        si_used = -1;
+        throw new RuntimeError(new str("dict changed size during iteration"));
+    }
+    int ret = p->next(&pos, &entry);
+    if (!ret) __throw_stop_iteration();
+    return new tuple2<K, V>(2, entry->key, entry->value);
 }
 
 /* sum */

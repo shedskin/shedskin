@@ -203,10 +203,7 @@ template <class T> __iter<T> *reversed(deque<T> *d) {
     return new __dequereviter<T>(d);
 }
 
-#define __GC_HASH_MAP2 __gnu_cxx::hash_map<K, V, __shedskin__::hashfunc<K>, hasheq<K>, gc_allocator<std::pair<K, V> > >
-
 template <class K, class V> class defaultdict : public dict<K, V> {
-    typename __GC_HASH_MAP2::iterator iter;
     V (*func)();
 
 public:
@@ -214,42 +211,48 @@ public:
         this->func = func;
     }
 
-    defaultdict(V (*func)(), dict<K, V> *d) {
+    defaultdict(V (*func)(), dict<K, V> *d) : dict<K,V>(d) {
         this->func = func;
-        this->units = d->units;
     }
 
-    defaultdict(V (*func)(), pyiter<tuple2<K, V> *> *i) {
+    defaultdict(V (*func)(), pyiter<tuple2<K, V> *> *i) { /* XXX */
         this->func = func;
         __iter<tuple2<K, __ss_int> *> *__0;
-        tuple2<K, __ss_int> *k;
+        tuple2<K, __ss_int> *k; /* XXX */
         FOR_IN(k, i, 0)
-            this->units[k->__getfirst__()] = k->__getsecond__();
+            this->__setitem__(k->__getfirst__(), k->__getsecond__());
         END_FOR
     }
 
-    V __getitem__(K k) {
-        iter = this->units.find(k);
-        if(iter == this->units.end())
-            return __missing__(k);
-        return iter->second;
+    V __getitem__(K key) {
+        register long hash = hasher<K>(key);
+        register dictentry<K, V> *entry;
+        entry = lookup(key, hash);
+        if (entry->use != active)
+            return __missing__(key);
+        return entry->value;
     }
 
     V __missing__(K k) {
-        if(func)
-            return (this->units[k] = func());
+        if(func) {
+            V v = func();
+            this->__setitem__(k, v);
+            return v;
+        }
         throw new KeyError(repr(k));
     }
 
-    void *__addtoitem__(K k, V v) {
-        iter = this->units.find(k);
-        if(iter == this->units.end()) {
+    void *__addtoitem__(K key, V value) { /* XXX */
+        register long hash = hasher<K>(key);
+        register dictentry<K, V> *entry;
+        entry = lookup(key, hash);
+        if (entry->use != active) {
             if(func)
-                this->units[k] = __add(func(), v);
+                __setitem__(key, __add(func(), value));
             else
-                throw new KeyError(repr(k));
+                throw new KeyError(repr(key));
         } else
-            iter->second = __add(iter->second, v);
+            entry->value = __add(entry->value, value);
         return NULL;
     }
 
