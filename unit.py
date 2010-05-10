@@ -1812,7 +1812,7 @@ rcp = ConfigParser.RawConfigParser()
 rcp.read(["testdata/test.conf"])
 
 print rcp.get('ematter', 'pages') #, vars={'var': 'blah'})
-print rcp.items('ematter')
+print sorted(rcp.items('ematter'))
 
 # catch str exception
 try:
