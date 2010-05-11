@@ -162,13 +162,13 @@ public:
     list();
     list(int count, ...);
     template <class U> list(U *iter);
-    list(pyseq<T> *p);
+    list(list<T> *p);
+    list(tuple2<T, T> *p);
     list(str *s);
 
     void clear();
     void *__setitem__(__ss_int i, T e);
     void *__delitem__(__ss_int i);
-    //void init(int count, ...);
     int empty();
     list<T> *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
     void *__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, pyiter<T> *b);
@@ -261,8 +261,10 @@ public:
     tuple2();
     tuple2(int count, ...);
     template <class U> tuple2(U *iter);
-    tuple2(pyseq<T> *p);
+    tuple2(list<T> *p);
+    tuple2(tuple2<T, T> *p);
     tuple2(str *s);
+
     void __init2__(T a, T b);
 
     T __getfirst__();
@@ -424,11 +426,9 @@ public:
 
     dict();
     dict(int count, ...);
+    template<class U> dict(U *other);
     dict(dict<K, V> *p);
-    dict(pyiter<tuple2<K,V> *> *p);
-    dict(pyiter<pyseq<K> *> *p);
-    dict(pyiter<str *> *p);
-    
+
     dict<K,V>& operator=(const dict<K,V>& other);
 
     void *__setitem__(K k, V v);
@@ -1734,10 +1734,10 @@ copyright Python Software Foundation (http://www.python.org/download/releases/2.
     } while(0)
 
 template <class T> void *myallocate(int n) { return GC_MALLOC(n); }
-template <> void *myallocate<int>(int n);
+template <> void *myallocate<__ss_int>(int n);
 
 template <class K, class V> void *myallocate(int n) { return GC_MALLOC(n); }
-template <> void *myallocate<int, int>(int n);
+template <> void *myallocate<__ss_int, __ss_int>(int n);
 
 template<class K, class V> dict<K,V>::dict() {
     this->__class__ = cl_dict;
@@ -1757,41 +1757,31 @@ template<class K, class V> dict<K, V>::dict(int count, ...)  {
     va_end(ap);
 }
 
+template<class K, class V> static inline void __add_to_dict(dict<K, V> *d, tuple2<K, V> *t) {
+    d->__setitem__(t->__getfirst__(), t->__getsecond__());
+}
+
+template<class K, class V> static inline void __add_to_dict(dict<K, V> *d, pyseq<K> *t) {
+    d->__setitem__(t->__getitem__(0), t->__getitem__(1));
+}
+
+template<class K, class V> template<class U> dict<K, V>::dict(U *other) {
+    this->__class__ = cl_dict;
+    EMPTY_TO_MINSIZE(this);
+    typename U::for_in_unit e;
+    typename U::for_in_loop __3;
+    int __2;
+    U *__1;
+    FOR_IN_NEW(e,other,1,2,3)
+        __add_to_dict(this, e);
+    END_FOR
+}
+
 template<class K, class V> dict<K, V>::dict(dict<K, V> *p)  {
     this->__class__ = cl_dict;
     EMPTY_TO_MINSIZE(this);
 
     *this = *p;
-}
-
-template<class K, class V> dict<K, V>::dict(pyiter<tuple2<K,V> *> *p) {
-    this->__class__ = cl_dict;
-    EMPTY_TO_MINSIZE(this);
-    tuple2<K,V> *t;
-    __iter<tuple2<K,V> *> *__0;
-    FOR_IN(t, p, 0)
-        __setitem__(t->__getfirst__(), t->__getsecond__());
-    END_FOR
-}
-
-template<class K, class V> dict<K, V>::dict(pyiter<pyseq<K> *> *p) {
-    this->__class__ = cl_dict;
-    EMPTY_TO_MINSIZE(this);
-	pyseq<K> *t;
-    __iter<pyseq<K> *> *__0;
-    FOR_IN(t, p, 0)
-        __setitem__(t->__getitem__(0), t->__getitem__(1));
-    END_FOR
-}
-
-template<class K, class V> dict<K, V>::dict(pyiter<str *> *p) { /* XXX why necessary */
-	this->__class__ = cl_dict;
-	EMPTY_TO_MINSIZE(this);
-    str *t;
-    __iter<str *> *__0;
-    FOR_IN(t, p, 0)
-        __setitem__(t->__getitem__(0), t->__getitem__(1));
-    END_FOR
 }
 
 #ifdef __SS_BIND
@@ -2063,34 +2053,35 @@ template <class K, class V> int dict<K,V>::do_discard(K key) {
 }
 
 template <class K, class V> list<K> *dict<K,V>::keys() {
-	return new list<K>(this);
+	int pos, i;
+	dictentry<K,V> *entry;
+	list<K> *ret = new list<K>;
+    ret->units.resize(used);
+	pos = i = 0;
+	while (next(&pos, &entry))
+        ret->units[i++] = entry->key;
+    return ret;
 }
 
 template <class K, class V> list<V> *dict<K,V>::values() {
-	int pos;
+	int pos, i;
 	dictentry<K,V> *entry;
 	list<V> *ret = new list<V>;
-
-	pos = 0;
-	while (next(&pos, &entry)) {
-		ret->append(entry->value);
-	}
-	
+    ret->units.resize(used);
+	pos = i = 0;
+	while (next(&pos, &entry))
+        ret->units[i++] = entry->value;
 	return ret;
 }
 
 template <class K, class V> list<tuple2<K, V> *> *dict<K,V>::items() {
-	int pos;
+	int pos, i;
 	dictentry<K,V> *entry;
 	list<tuple2<K, V> *> *ret = new list<tuple2<K, V> *>;
-	tuple2<K, V> *item;
-
-	pos = 0;
-	while (next(&pos, &entry)) {
-		item = new tuple2<K, V>(2, entry->key, entry->value);
-		ret->append(item);
-	}
-
+    ret->units.resize(used);
+	pos = i = 0;
+	while (next(&pos, &entry))
+        ret->units[i++] = new tuple2<K, V>(2, entry->key, entry->value);
     return ret;
 }
 
@@ -2404,7 +2395,12 @@ template<class T> template<class U> list<T>::list(U *iter) {
     END_FOR
 }
 
-template<class T> list<T>::list(pyseq<T> *p) {
+template<class T> list<T>::list(list<T> *p) {
+    this->__class__ = cl_list;
+    this->units = p->units;
+}
+
+template<class T> list<T>::list(tuple2<T, T> *p) {
     this->__class__ = cl_list;
     this->units = p->units;
 }
@@ -3531,7 +3527,7 @@ template<class T> __setiter<T>::__setiter(set<T> *p) {
 template<class T> T __setiter<T>::next() {
     if (si_used != p->used) {
         si_used = -1;
-        throw new RuntimeError(new str("set changed size during iteration"));
+        __throw_set_changed();
     }
     int ret = p->next(&pos, &entry);
     if (!ret) __throw_stop_iteration();
@@ -3572,7 +3568,12 @@ template<class T> template<class U> tuple2<T, T>::tuple2(U *iter) {
     END_FOR
 }
 
-template<class T> tuple2<T, T>::tuple2(pyseq<T> *p) {
+template<class T> tuple2<T, T>::tuple2(list<T> *p) {
+    this->__class__ = cl_tuple;
+    this->units = p->units;
+}
+
+template<class T> tuple2<T, T>::tuple2(tuple2<T, T> *p) {
     this->__class__ = cl_tuple;
     this->units = p->units;
 }
@@ -3845,7 +3846,7 @@ template<class K, class V> __dictiterkeys<K, V>::__dictiterkeys(dict<K,V> *p) {
 template<class K, class V> K __dictiterkeys<K, V>::next() {
     if (si_used != p->used) {
         si_used = -1;
-        throw new RuntimeError(new str("dict changed size during iteration"));
+        __throw_dict_changed();
     }
     int ret = p->next(&pos, &entry);
     if (!ret) __throw_stop_iteration();
@@ -3861,7 +3862,7 @@ template<class K, class V> __dictitervalues<K, V>::__dictitervalues(dict<K,V> *p
 template<class K, class V> V __dictitervalues<K, V>::next() {
     if (si_used != p->used) {
         si_used = -1;
-        throw new RuntimeError(new str("dict changed size during iteration"));
+        __throw_dict_changed();
     }
     int ret = p->next(&pos, &entry);
     if (!ret) __throw_stop_iteration();
@@ -3877,7 +3878,7 @@ template<class K, class V> __dictiteritems<K, V>::__dictiteritems(dict<K,V> *p) 
 template<class K, class V> tuple2<K, V> *__dictiteritems<K, V>::next() {
     if (si_used != p->used) {
         si_used = -1;
-        throw new RuntimeError(new str("dict changed size during iteration"));
+        __throw_dict_changed();
     }
     int ret = p->next(&pos, &entry);
     if (!ret) __throw_stop_iteration();
