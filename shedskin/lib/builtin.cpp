@@ -12,7 +12,7 @@ namespace __shedskin__ {
 
 class_ *cl_class_, *cl_none, *cl_str_, *cl_int_, *cl_float_, *cl_complex, *cl_list, *cl_tuple, *cl_dict, *cl_set, *cl_object, *cl_rangeiter, *cl_xrange;
 
-str *sp;
+str *sp, *nl;
 __GC_STRING ws, __fmtchars;
 __GC_VECTOR(str *) __char_cache;
 
@@ -54,6 +54,7 @@ void __init() {
     ws = " \n\r\t\f\v";
     __fmtchars = "#*-+ .0123456789hlL";
     sp = new str(" ");
+    nl = new str("\n");
 
     for(int i=0;i<256;i++) {
         char c = i;
@@ -1918,8 +1919,6 @@ str *__mod5(list<pyobj *> *vals, int newline) {
             fmt->append(new str("%s"));
     }
     str *s = (new str(" "))->join(fmt);
-    if(newline)
-        s = s->__add__(new str("\n"));
     return __mod4(s, vals);
 }
 
@@ -2051,10 +2050,11 @@ void print(int n, ...) { // XXX merge four functions
          vals->append(va_arg(args, pyobj *));
      va_end(args);
      str *s = __mod5(vals, 1);
-     if(print_space && (!isspace(print_lastchar) || print_lastchar==' ') && !(len(s) && s->unit[0] == '\n'))
+     if(print_space && (!isspace(print_lastchar) || print_lastchar==' ') && len(s) && !(len(s) && s->unit[0] == '\n'))
          std::cout << " ";
      std::cout << s->unit;
-     print_lastchar = s->unit[len(s)-1];
+     std::cout << "\n";
+     print_lastchar = '\n';
      print_space = 0;
 }
 
@@ -2066,10 +2066,11 @@ void print(file *f, int n, ...) {
          vals->append(va_arg(args, pyobj *));
      va_end(args);
      str *s = __mod5(vals, 1);
-     if(f->print_space && (!isspace(f->print_lastchar) || f->print_lastchar==' ') && !(len(s) && s->unit[0] == '\n'))
+     if(f->print_space && (!isspace(f->print_lastchar) || f->print_lastchar==' ') && len(s) && !(len(s) && s->unit[0] == '\n'))
          f->putchar(' ');
      f->write(s);
-     f->print_lastchar = s->unit[len(s)-1];
+     f->write(nl);
+     f->print_lastchar = '\n';
      f->print_space = 0;
 }
 
@@ -2081,7 +2082,7 @@ void printc(int n, ...) {
          vals->append(va_arg(args, pyobj *));
      va_end(args);
      str *s = __mod5(vals, 0);
-     if(print_space && (!isspace(print_lastchar) || print_lastchar==' ') && !(len(s) && s->unit[0] == '\n'))
+     if(print_space && (!isspace(print_lastchar) || print_lastchar==' ') && len(s) && !(len(s) && s->unit[0] == '\n'))
          std::cout << " ";
      std::cout << s->unit;
      if(len(s)) print_lastchar = s->unit[len(s)-1];
@@ -2097,7 +2098,7 @@ void printc(file *f, int n, ...) {
          vals->append(va_arg(args, pyobj *));
      va_end(args);
      str *s = __mod5(vals, 0);
-     if(f->print_space && (!isspace(f->print_lastchar) || f->print_lastchar==' ') && !(len(s) && s->unit[0] == '\n'))
+     if(f->print_space && (!isspace(f->print_lastchar) || f->print_lastchar==' ') && len(s) && !(len(s) && s->unit[0] == '\n'))
          f->putchar(' ');
      f->write(s);
      if(len(s)) f->print_lastchar = s->unit[len(s)-1];
