@@ -2212,8 +2212,8 @@ str *OSError::__repr__() {
     return __add_strs(5, new str("OSError("), __str(__ss_errno), new str(", '"), strerror, new str("')"));
 }
 
-template <> void *myallocate<int>(int n) { return GC_MALLOC_ATOMIC(n); }
-template <> void *myallocate<int, int>(int n) { return GC_MALLOC_ATOMIC(n); }
+template <> void *myallocate<__ss_int>(int n) { return GC_MALLOC_ATOMIC(n); }
+template <> void *myallocate<__ss_int, __ss_int>(int n) { return GC_MALLOC_ATOMIC(n); }
 
 template<> int __none() { throw new TypeError(new str("mixing None with int")); }
 template<> double __none() { throw new TypeError(new str("mixing None with float")); }
