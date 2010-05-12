@@ -12,14 +12,15 @@ namespace __shedskin__ {
 
 class_ *cl_class_, *cl_none, *cl_str_, *cl_int_, *cl_float_, *cl_complex, *cl_list, *cl_tuple, *cl_dict, *cl_set, *cl_object, *cl_rangeiter, *cl_xrange;
 
-str *sp, *nl;
+str *sp, *nl, *__fmt_s, *__fmt_H, *__fmt_d;
 __GC_STRING ws, __fmtchars;
 __GC_VECTOR(str *) __char_cache;
 
 __ss_bool True;
 __ss_bool False;
 
-list<str *> *__join_cache;
+list<str *> *__join_cache, *__mod5_cache;
+list<pyobj *> *__print_cache;
 
 char __str_cache[4000];
 
@@ -55,6 +56,9 @@ void __init() {
     __fmtchars = "#*-+ .0123456789hlL";
     sp = new str(" ");
     nl = new str("\n");
+    __fmt_s = new str("%s");
+    __fmt_H = new str("%H");
+    __fmt_d = new str("%d");
 
     for(int i=0;i<256;i++) {
         char c = i;
@@ -62,6 +66,8 @@ void __init() {
     }
 
     __join_cache = new list<str *>();
+    __print_cache = new list<pyobj *>();
+    __mod5_cache = new list<str *>();
 
    for(int i=0; i<1000; i++) {
        __str_cache[4*i] = '0' + (i % 10);
@@ -311,6 +317,8 @@ str *str::__repr__() {
 str *str::__join(pyseq<str *> *l, bool only_ones, int total) {
     int unitsize = unit.size();
     int elems = len(l);
+    if(elems==1)
+        return l->units[0];
     str *s = new str();
     if(unitsize == 0 and only_ones) {
         s->unit.resize(total);
@@ -344,6 +352,8 @@ str *str::__join(pyseq<str *> *l, bool only_ones, int total) {
 
 str * str::join(list<str *> *l) {
     int lsz = len(l);
+    if(lsz==1)
+        return l->units[0];
     int sz, total;
     bool only_ones = true;
     total = 0;
@@ -1906,20 +1916,19 @@ str *__mod4(str *fmts, list<pyobj *> *vals) {
 }
 
 str *__mod5(list<pyobj *> *vals, int newline) {
-    list<str *> *fmt = new list<str *>();
+    __mod5_cache->units.resize(0);
     for(int i=0;i<len(vals);i++) {
         pyobj *p = vals->__getitem__(i);
         if(p == NULL)
-            fmt->append(new str("%s"));
+            __mod5_cache->append(__fmt_s);
         else if(p->__class__ == cl_float_)
-            fmt->append(new str("%H"));
+            __mod5_cache->append(__fmt_H);
         else if(p->__class__== cl_int_)
-            fmt->append(new str("%d"));
+            __mod5_cache->append(__fmt_d);
         else
-            fmt->append(new str("%s"));
+            __mod5_cache->append(__fmt_s);
     }
-    str *s = (new str(" "))->join(fmt);
-    return __mod4(s, vals);
+    return __mod4(sp->join(__mod5_cache), vals);
 }
 
 str *__modcd(str *fmt, list<str *> *names, ...) {
@@ -2043,13 +2052,13 @@ void __start(void (*initfunc)()) {
 }
 
 void print(int n, ...) { // XXX merge four functions
-     list<pyobj *> *vals = new list<pyobj *>();
+     __print_cache->units.resize(0);
      va_list args;
      va_start(args, n);
      for(int i=0; i<n; i++)
-         vals->append(va_arg(args, pyobj *));
+         __print_cache->append(va_arg(args, pyobj *));
      va_end(args);
-     str *s = __mod5(vals, 1);
+     str *s = __mod5(__print_cache, 1);
      if(len(s)) {
          if(print_space && (!isspace(print_lastchar) || print_lastchar==' ') && s->unit[0] != '\n')
              printf(" ");
@@ -2061,13 +2070,13 @@ void print(int n, ...) { // XXX merge four functions
 }
 
 void print(file *f, int n, ...) {
-     list<pyobj *> *vals = new list<pyobj *>();
+     __print_cache->units.resize(0);
      va_list args;
      va_start(args, n);
      for(int i=0; i<n; i++)
-         vals->append(va_arg(args, pyobj *));
+         __print_cache->append(va_arg(args, pyobj *));
      va_end(args);
-     str *s = __mod5(vals, 1);
+     str *s = __mod5(__print_cache, 1);
      if(len(s)) {
          if(f->print_space && (!isspace(f->print_lastchar) || f->print_lastchar==' ') && s->unit[0] != '\n')
              f->putchar(' ');
@@ -2079,13 +2088,13 @@ void print(file *f, int n, ...) {
 }
 
 void printc(int n, ...) {
-     list<pyobj *> *vals = new list<pyobj *>();
+     __print_cache->units.resize(0);
      va_list args;
      va_start(args, n);
      for(int i=0; i<n; i++)
-         vals->append(va_arg(args, pyobj *));
+         __print_cache->append(va_arg(args, pyobj *));
      va_end(args);
-     str *s = __mod5(vals, 0);
+     str *s = __mod5(__print_cache, 0);
      if(len(s)) {
          if(print_space && (!isspace(print_lastchar) || print_lastchar==' ') && s->unit[0] != '\n')
              printf(" ");
@@ -2098,13 +2107,13 @@ void printc(int n, ...) {
 }
 
 void printc(file *f, int n, ...) {
-     list<pyobj *> *vals = new list<pyobj *>();
+     __print_cache->units.resize(0);
      va_list args;
      va_start(args, n);
      for(int i=0; i<n; i++)
-         vals->append(va_arg(args, pyobj *));
+         __print_cache->append(va_arg(args, pyobj *));
      va_end(args);
-     str *s = __mod5(vals, 0);
+     str *s = __mod5(__print_cache, 0);
      if(len(s)) {
          if(f->print_space && (!isspace(f->print_lastchar) || f->print_lastchar==' ') && s->unit[0] != '\n')
              f->putchar(' ');
