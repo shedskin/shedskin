@@ -1740,24 +1740,6 @@ template<> str *__str(double t) {
     return new str(s);
 }
 
-/* sum */
-
-__ss_int __sum(pyiter<__ss_bool> *l, __ss_int b) {
-    __ss_bool e;
-    __iter<__ss_bool> *__0;
-    FOR_IN(e,l,0)
-        b += e.value;
-    END_FOR
-    return b;
-}
-__ss_int __sum(pyiter<__ss_bool> *l) { return __sum(l, (__ss_int)0); }
-
-__ss_int __sum(pyseq<__ss_int> *l) { return __sum(l, (__ss_int)0); }
-__ss_int __sum(pyseq<__ss_int> *l, __ss_int b) { return accumulate(l->units.begin(), l->units.end(), b); }
-__ss_int __sum(pyseq<__ss_bool> *l, __ss_int b) { return accumulate(l->units.begin(), l->units.end(), b); }
-double __sum(pyseq<__ss_int> *l, double b) { return accumulate(l->units.begin(), l->units.end(), 0)+b; }
-double __sum(pyseq<double> *l, double b) { return accumulate(l->units.begin(), l->units.end(), b); }
-
 /* mod helpers */
 
 #if defined(WIN32) || defined(__sun)
