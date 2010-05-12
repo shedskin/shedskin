@@ -2050,10 +2050,12 @@ void print(int n, ...) { // XXX merge four functions
          vals->append(va_arg(args, pyobj *));
      va_end(args);
      str *s = __mod5(vals, 1);
-     if(print_space && (!isspace(print_lastchar) || print_lastchar==' ') && len(s) && !(len(s) && s->unit[0] == '\n'))
-         std::cout << " ";
-     std::cout << s->unit;
-     std::cout << "\n";
+     if(len(s)) {
+         if(print_space && (!isspace(print_lastchar) || print_lastchar==' ') && s->unit[0] != '\n')
+             printf(" ");
+         printf("%s", s->unit.c_str());
+     }
+     printf("\n");
      print_lastchar = '\n';
      print_space = 0;
 }
@@ -2066,9 +2068,11 @@ void print(file *f, int n, ...) {
          vals->append(va_arg(args, pyobj *));
      va_end(args);
      str *s = __mod5(vals, 1);
-     if(f->print_space && (!isspace(f->print_lastchar) || f->print_lastchar==' ') && len(s) && !(len(s) && s->unit[0] == '\n'))
-         f->putchar(' ');
-     f->write(s);
+     if(len(s)) {
+         if(f->print_space && (!isspace(f->print_lastchar) || f->print_lastchar==' ') && s->unit[0] != '\n')
+             f->putchar(' ');
+         f->write(s);
+     }
      f->write(nl);
      f->print_lastchar = '\n';
      f->print_space = 0;
@@ -2082,11 +2086,14 @@ void printc(int n, ...) {
          vals->append(va_arg(args, pyobj *));
      va_end(args);
      str *s = __mod5(vals, 0);
-     if(print_space && (!isspace(print_lastchar) || print_lastchar==' ') && len(s) && !(len(s) && s->unit[0] == '\n'))
-         std::cout << " ";
-     std::cout << s->unit;
-     if(len(s)) print_lastchar = s->unit[len(s)-1];
-     else print_lastchar = ' ';
+     if(len(s)) {
+         if(print_space && (!isspace(print_lastchar) || print_lastchar==' ') && s->unit[0] != '\n')
+             printf(" ");
+         printf("%s", s->unit.c_str());
+         print_lastchar = s->unit[len(s)-1];
+     }
+     else 
+         print_lastchar = ' ';
      print_space = 1;
 }
 
@@ -2098,11 +2105,13 @@ void printc(file *f, int n, ...) {
          vals->append(va_arg(args, pyobj *));
      va_end(args);
      str *s = __mod5(vals, 0);
-     if(f->print_space && (!isspace(f->print_lastchar) || f->print_lastchar==' ') && len(s) && !(len(s) && s->unit[0] == '\n'))
-         f->putchar(' ');
-     f->write(s);
-     if(len(s)) f->print_lastchar = s->unit[len(s)-1];
-     else f->print_lastchar = ' ';
+     if(len(s)) {
+         if(f->print_space && (!isspace(f->print_lastchar) || f->print_lastchar==' ') && s->unit[0] != '\n')
+             f->putchar(' ');
+         f->write(s);
+         f->print_lastchar = s->unit[len(s)-1];
+     } else 
+         f->print_lastchar = ' ';
      f->print_space = 1;
 }
 
