@@ -3887,24 +3887,37 @@ template<class K, class V> tuple2<K, V> *__dictiteritems<K, V>::next() {
 
 /* sum */
 
-template <class A, class B> A __sum(pyiter<A> *l, B b) {
-    A e;
-    A result = (A)b; /* XXX */
-    __iter<A> *__0;
-    FOR_IN(e,l,0)
-        result = __add(result, e);
+template<class A> struct __sumtype1 { typedef A type; };
+template<> struct __sumtype1<__ss_bool> { typedef int type; };
+
+template<class A, class B> struct __sumtype2 { typedef A type; };
+template<> struct __sumtype2<__ss_bool, __ss_bool> { typedef __ss_int type; };
+template<> struct __sumtype2<__ss_bool, __ss_int> { typedef __ss_int type; };
+template<> struct __sumtype2<__ss_bool, double> { typedef double type; };
+template<> struct __sumtype2<__ss_int, double> { typedef double type; };
+
+template <class U> typename __sumtype1<typename U::for_in_unit>::type __sum(U *iter) {
+    typename __sumtype1<typename U::for_in_unit>::type result;
+    typename U::for_in_unit e;
+    typename U::for_in_loop __3;
+    int __2;
+    U *__1;
+    bool first = true;
+    FOR_IN_NEW(e,iter,1,2,3)
+        if(first) {
+            result = (typename __sumtype1<typename U::for_in_unit>::type)e;
+            first = false;
+        }
+        else
+            result = __add(result, (typename __sumtype1<typename U::for_in_unit>::type)e);
     END_FOR
     return result;
 }
-template <class A> A __sum(pyiter<A> *l) { return __sum(l, 0); }
 
-__ss_int __sum(pyiter<__ss_bool> *l);
-__ss_int __sum(pyiter<__ss_bool> *l, __ss_int b);
-
-__ss_int __sum(pyseq<__ss_int> *l);
-__ss_int __sum(pyseq<__ss_int> *l, __ss_int b);
-double __sum(pyseq<__ss_int> *l, double b);
-double __sum(pyseq<double> *l, double b=0);
+template <class U, class B> typename __sumtype2<typename U::for_in_unit,B>::type __sum(U *iter, B b) {
+    typename __sumtype1<typename U::for_in_unit>::type result1 = __sum(iter);
+    return __add((typename __sumtype2<typename U::for_in_unit,B>::type)b, (typename __sumtype2<typename U::for_in_unit,B>::type)result1);
+}
 
 /* max */
 
