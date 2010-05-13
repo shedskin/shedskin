@@ -182,7 +182,8 @@ public:
     list<T> *__mul__(__ss_int b);
 
     template <class U> void *extend(U *iter);
-    void *extend(pyseq<T> *p);
+    void *extend(list<T> *p);
+    void *extend(tuple2<T,T> *p);
     void *extend(str *s);
 
     template <class U> list<T> *__iadd__(U *iter);
@@ -2458,7 +2459,14 @@ template<class T> template<class U> void *list<T>::extend(U *iter) {
     return NULL;
 }
 
-template<class T> void *list<T>::extend(pyseq<T> *p) {
+template<class T> void *list<T>::extend(list<T> *p) {
+    int l1, l2;
+    l1 = this->__len__(); l2 = p->__len__();
+    this->units.resize(l1+l2);
+    memcpy(&(this->units[l1]), &(p->units[0]), sizeof(T)*l2);
+    return NULL;
+}
+template<class T> void *list<T>::extend(tuple2<T,T> *p) {
     int l1, l2;
     l1 = this->__len__(); l2 = p->__len__();
     this->units.resize(l1+l2);
@@ -4093,7 +4101,14 @@ template <class U, class V, class W> list<typename U::for_in_unit> *sorted(U *it
     return l;
 }
 
-template <class A, class V, class W> list<A> *sorted(pyseq<A> *x, V cmp, W key, __ss_int reverse) {
+template <class A, class V, class W> list<A> *sorted(list<A> *x, V cmp, W key, __ss_int reverse) {
+    list<A> *l = new list<A>();
+    l->units = x->units;
+    l->sort(cmp, key, reverse);
+    return l;
+}
+
+template <class A, class V, class W> list<A> *sorted(tuple2<A,A> *x, V cmp, W key, __ss_int reverse) {
     list<A> *l = new list<A>();
     l->units = x->units;
     l->sort(cmp, key, reverse);
