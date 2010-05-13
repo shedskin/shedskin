@@ -3906,6 +3906,7 @@ template<> struct __sumtype2<__ss_int, double> { typedef double type; };
 
 template <class U> typename __sumtype1<typename U::for_in_unit>::type __sum(U *iter) {
     typename __sumtype1<typename U::for_in_unit>::type result;
+    result = (typename __sumtype1<typename U::for_in_unit>::type)0;
     typename U::for_in_unit e;
     typename U::for_in_loop __3;
     int __2;
