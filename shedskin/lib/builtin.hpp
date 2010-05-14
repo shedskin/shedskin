@@ -884,10 +884,8 @@ template <class T> __iter<T> *___iter(pyiter<T> *p) {
 file *open(str *name, str *flags = 0);
 str *raw_input(str *msg = 0);
 
-void print(int n,  ...);
-void print(file *f, int n, ...);
-void printc(int n, ...); /* print comma */
-void printc(file *f, int n, ...);
+void print(int comma, int n,  ...);
+void print(file *f, int comma, int n, ...);
 
 __ss_bool isinstance(pyobj *, class_ *);
 __ss_bool isinstance(pyobj *, tuple2<class_ *, class_ *> *);

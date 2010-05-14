@@ -2317,13 +2317,14 @@ class generateVisitor(ASTVisitor):
         self.append(')')
 
     def visitPrintnl(self, node, func=None):
-        self.visitPrint(node, func, '\\n')
+        self.visitPrint(node, func, print_space=False)
 
-    def visitPrint(self, node, func=None, newline=None):
-        if newline: self.start('print(')
-        else: self.start('printc(')
+    def visitPrint(self, node, func=None, print_space=True):
+        self.start('print(')
         if node.dest:
             self.visitm(node.dest, ', ', func)
+        if print_space: self.append('1,')
+        else: self.append('0,')
         self.append(str(len(node.nodes)))
         for n in node.nodes:
             types = [t[0].ident for t in self.mergeinh[n]]
