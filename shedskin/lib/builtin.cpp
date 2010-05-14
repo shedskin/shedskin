@@ -2025,7 +2025,7 @@ void __start(void (*initfunc)()) {
         initfunc();
     } catch (SystemExit *s) {
         if(s->message)
-            print(1, s->message);
+            print(0, 1, s->message);
         code = s->code;
     }
     if(print_lastchar != '\n')
@@ -2033,7 +2033,7 @@ void __start(void (*initfunc)()) {
     std::exit(code);
 }
 
-void print(int n, ...) { // XXX merge four functions
+void print(int comma, int n, ...) { // XXX merge four functions
      __print_cache->units.resize(0);
      va_list args;
      va_start(args, n);
@@ -2041,69 +2041,42 @@ void print(int n, ...) { // XXX merge four functions
          __print_cache->append(va_arg(args, pyobj *));
      va_end(args);
      str *s = __mod5(__print_cache, 1);
-     if(len(s)) {
-         if(print_space && (!isspace(print_lastchar) || print_lastchar==' ') && s->unit[0] != '\n')
-             printf(" ");
-         printf("%s", s->unit.c_str());
-     }
-     printf("\n");
-     print_lastchar = '\n';
-     print_space = 0;
-}
-
-void print(file *f, int n, ...) {
-     __print_cache->units.resize(0);
-     va_list args;
-     va_start(args, n);
-     for(int i=0; i<n; i++)
-         __print_cache->append(va_arg(args, pyobj *));
-     va_end(args);
-     str *s = __mod5(__print_cache, 1);
-     if(len(s)) {
-         if(f->print_space && (!isspace(f->print_lastchar) || f->print_lastchar==' ') && s->unit[0] != '\n')
-             f->putchar(' ');
-         f->write(s);
-     }
-     f->write(nl);
-     f->print_lastchar = '\n';
-     f->print_space = 0;
-}
-
-void printc(int n, ...) {
-     __print_cache->units.resize(0);
-     va_list args;
-     va_start(args, n);
-     for(int i=0; i<n; i++)
-         __print_cache->append(va_arg(args, pyobj *));
-     va_end(args);
-     str *s = __mod5(__print_cache, 0);
      if(len(s)) {
          if(print_space && (!isspace(print_lastchar) || print_lastchar==' ') && s->unit[0] != '\n')
              printf(" ");
          printf("%s", s->unit.c_str());
          print_lastchar = s->unit[len(s)-1];
      }
-     else 
+     else if (comma)
          print_lastchar = ' ';
-     print_space = 1;
+     if(!comma) {
+         printf("\n");
+         print_lastchar = '\n';
+     }
+     print_space = comma;
 }
 
-void printc(file *f, int n, ...) {
+void print(file *f, int comma, int n, ...) {
      __print_cache->units.resize(0);
      va_list args;
      va_start(args, n);
      for(int i=0; i<n; i++)
          __print_cache->append(va_arg(args, pyobj *));
      va_end(args);
-     str *s = __mod5(__print_cache, 0);
+     str *s = __mod5(__print_cache, 1);
      if(len(s)) {
          if(f->print_space && (!isspace(f->print_lastchar) || f->print_lastchar==' ') && s->unit[0] != '\n')
              f->putchar(' ');
          f->write(s);
          f->print_lastchar = s->unit[len(s)-1];
-     } else 
+     }
+     else if (comma)
          f->print_lastchar = ' ';
-     f->print_space = 1;
+     if(!comma) {
+         f->write(nl);
+         f->print_lastchar = '\n';
+     }
+     f->print_space = comma;
 }
 
 /* str, file iteration */
