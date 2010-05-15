@@ -38,7 +38,7 @@ class moduleVisitor(ASTVisitor):
         self.lambdaname = {}
         self.lwrapper = {}
 
-        self.tempcount = {}
+        self.tempcount = getgx().tempcount
         self.callfuncs = []
         self.for_in_iters = []
         self.listcomps = []
@@ -308,7 +308,7 @@ class moduleVisitor(ASTVisitor):
 
                     # deep-copy AST Function nodes
                     func_copy = copy.deepcopy(func.node)
-                    inherit_rec(func.node, func_copy)
+                    inherit_rec(func.node, func_copy, func.mv)
 
                     #print 'inherit func in', func.ident, getmv().module, func.mv.module
                     tempmv, mv = getmv(), func.mv
@@ -808,7 +808,7 @@ class moduleVisitor(ASTVisitor):
             self.fakefunc(inode(child), child, '__str__', [], func)
 
     def tempvar(self, node, func=None, looper=None):
-        if node in getgx().parent_nodes and getgx().parent_nodes[node] in self.tempcount: # XXX inheritance across files, test 192?
+        if node in getgx().parent_nodes:
             varname = self.tempcount[getgx().parent_nodes[node]]
         elif node in self.tempcount: # XXX investigate why this happens
             varname = self.tempcount[node]
@@ -1540,13 +1540,13 @@ def check_redef(node, s=None, onlybuiltins=False): # XXX to modvisitor, rewrite
                 error("function/class redefinition is not supported ('%s')" % name, node)
 
 # --- maintain inheritance relations between copied AST nodes
-def inherit_rec(original, copy):
+def inherit_rec(original, copy, mv):
     getgx().inheritance_relations.setdefault(original, []).append(copy)
     getgx().inherited.add(copy)
     getgx().parent_nodes[copy] = original
 
     for (a,b) in zip(original.getChildNodes(), copy.getChildNodes()):
-        inherit_rec(a,b)
+        inherit_rec(a,b, mv)
 
 def register_node(node, func):
     if func:
