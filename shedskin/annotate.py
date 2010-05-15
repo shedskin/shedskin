@@ -1,3 +1,11 @@
+'''
+*** SHED SKIN Python-to-C++ Compiler ***
+Copyright 2005-2009 Mark Dufour; License GNU GPL version 3 (See LICENSE)
+
+annotate.py: annotate source code with inferred types, as *.ss.py (shedskin -a)
+
+'''
+
 import re, string
 
 from compiler import *
@@ -7,7 +15,6 @@ from compiler.visitor import *
 from shared import *
 from cpp import typesetreprnew
 
-# --- annotate original code
 def annotate():
     if not getgx().annotation:
         return

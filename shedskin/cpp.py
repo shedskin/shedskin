@@ -4,11 +4,12 @@ Copyright 2005-2009 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 
 cpp.py: output C++ code
 
-output equivalent C++ code, using templates and virtuals to support data, parametric and OO polymorphism.
+output equivalent C++ code, using templates and virtuals to support data and OO polymorphism.
 
 class generateVisitor: inherits visitor pattern from compiler.visitor.ASTVisitor, to recursively generate C++ code for each syntactical Python construct. the constraint graph, with inferred types, is first 'merged' back to program dimensions (getgx().merged_inh).
 
 '''
+
 import textwrap, string
 from distutils import sysconfig
 

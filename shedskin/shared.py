@@ -1,8 +1,15 @@
+'''
+*** SHED SKIN Python-to-C++ Compiler ***
+Copyright 2005-2009 Mark Dufour; License GNU GPL version 3 (See LICENSE)
+
+shared.py: global variables, datastructures, shared functionality
+
+'''
+
 import os, sys, traceback
 from compiler import *
 from compiler.ast import *
 from compiler.visitor import *
-
 
 # --- global variables gx, mv
 

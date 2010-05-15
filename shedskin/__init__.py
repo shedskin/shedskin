@@ -2,27 +2,13 @@
 *** SHED SKIN Python-to-C++ Compiler ***
 Copyright 2005-2009 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 
-ss.py: main program file
-
-uses: graph.py (build constraint graph for dataflow analysis)
-      infer.py (iterative type analysis over constraint graph)
-      cpp.py (generate C++ code)
-      shared.py (functions shared by several of these modules)
-
-analysis(): call into above modules to compile a Python program
-annotate(): output type-annotated Python files (*.ss.py)
-generate_code(): generate Makefile and use cpp.py to output C++ code
-main(): parse command-line options, call analysis and annotate
-
-TODO: move generate_code() to cpp.py
-      move and revisit confusion misc()
 '''
+
 import sys, getopt, os.path
 from distutils import sysconfig
 
 import infer, cpp, annotate
 from shared import newgx, setgx, getgx
-
 
 def usage():
     print """Usage: shedskin [OPTION]... FILE

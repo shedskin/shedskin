@@ -11,11 +11,12 @@ constraint graph nodes are stored in getgx().cnode, and the set of types of for 
 class moduleVisitor: inherits visitor pattern from compiler.visitor.ASTVisitor, to recursively generate constraints for each syntactical Python construct. for example, the visitFor method is called in case of a for-loop. temporary variables are introduced in many places, to enable translation to a lower-level language.
 
 parse_module(): locate module by name (e.g. 'os.path'), and use moduleVisitor if not cached
+
 '''
+
 import sys, string, copy, re
 
 from shared import *
-
 
 # --- module visitor; analyze program, build constraint graph
 
