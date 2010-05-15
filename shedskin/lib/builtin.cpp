@@ -1897,7 +1897,7 @@ str *__mod4(str *fmts, list<pyobj *> *vals) {
     return r;
 }
 
-str *__mod5(list<pyobj *> *vals, int newline) {
+str *__mod5(list<pyobj *> *vals, str *sep) {
     __mod5_cache->units.resize(0);
     for(int i=0;i<len(vals);i++) {
         pyobj *p = vals->__getitem__(i);
@@ -1910,7 +1910,7 @@ str *__mod5(list<pyobj *> *vals, int newline) {
         else
             __mod5_cache->append(__fmt_s);
     }
-    return __mod4(sp->join(__mod5_cache), vals);
+    str *s = __mod4(sep->join(__mod5_cache), vals);
 }
 
 str *__modcd(str *fmt, list<str *> *names, ...) {
@@ -2034,7 +2034,21 @@ void __start(void (*initfunc)()) {
 }
 
 void print(int n, file *f, str *end, str *sep, ...) {
-    printf("hello __future__\n");
+    __print_cache->units.resize(0);
+    va_list args;
+    va_start(args, sep);
+    for(int i=0; i<n; i++)
+        __print_cache->append(va_arg(args, pyobj *));
+    va_end(args);
+    str *s = __mod5(__print_cache, sep?sep:sp);
+    if(!end)
+        end = nl;
+    if(f) {
+        f->write(s);
+        f->write(end);
+    }
+    else 
+        printf("%s%s", s->unit.c_str(), end->unit.c_str());
 }
 
 void print2(int comma, int n, ...) {
@@ -2044,7 +2058,7 @@ void print2(int comma, int n, ...) {
      for(int i=0; i<n; i++)
          __print_cache->append(va_arg(args, pyobj *));
      va_end(args);
-     str *s = __mod5(__print_cache, 1);
+     str *s = __mod5(__print_cache, sp);
      if(len(s)) {
          if(print_space && (!isspace(print_lastchar) || print_lastchar==' ') && s->unit[0] != '\n')
              printf(" ");
@@ -2067,7 +2081,7 @@ void print2(file *f, int comma, int n, ...) {
      for(int i=0; i<n; i++)
          __print_cache->append(va_arg(args, pyobj *));
      va_end(args);
-     str *s = __mod5(__print_cache, 1);
+     str *s = __mod5(__print_cache, sp);
      if(len(s)) {
          if(f->print_space && (!isspace(f->print_lastchar) || f->print_lastchar==' ') && s->unit[0] != '\n')
              f->putchar(' ');

@@ -1712,6 +1712,8 @@ class generateVisitor(ASTVisitor):
         objexpr, ident, direct_call, method_call, constructor, parent_constr = analyze_callfunc(node)
         target = funcs[0] # XXX
 
+        print_function = self.library_func(funcs, 'builtin', None, 'print')
+
         castnull = False # XXX
         if (self.library_func(funcs, 'random', None, 'seed') or \
             self.library_func(funcs, 'random', None, 'triangular') or \
@@ -1770,6 +1772,12 @@ class generateVisitor(ASTVisitor):
             elif castnull and isinstance(arg, Name) and arg.name == 'None':
                 cast = True
                 self.append('((void *)(')
+
+            if print_function and not formal.name.startswith('__kw_'):
+                types = [t[0].ident for t in self.mergeinh[arg]]
+                if 'float_' in types or 'int_' in types or 'bool_' in types:
+                    cast = True
+                    self.append('__box((')
 
             if arg in target.mv.defaults:
                 if self.mergeinh[arg] == set([(defclass('none'),0)]):
