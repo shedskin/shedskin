@@ -2347,7 +2347,7 @@ class generateVisitor(ASTVisitor):
 
         # module.attr
         if module:
-            self.append(namespace(module)+'::')
+            self.append(mod_namespace(module)+'::')
 
         # class.attr: staticmethod
         elif cl and node.attrname in cl.staticmethods:
@@ -2356,7 +2356,7 @@ class generateVisitor(ASTVisitor):
                 self.append('__'+cl.ident+'__::')
             elif isinstance(node.expr, Getattr):
                 submod = lookupmodule(node.expr.expr, inode(node).mv)
-                self.append(namespace(submod)+'::'+ident+'::')
+                self.append(mod_namespace(submod)+'::'+ident+'::')
             else:
                 self.append(ident+'::')
 
@@ -2365,7 +2365,7 @@ class generateVisitor(ASTVisitor):
             ident = cl.ident
             if isinstance(node.expr, Getattr):
                 submod = lookupmodule(node.expr.expr, inode(node).mv)
-                self.append(namespace(submod)+'::'+cl.cpp_name+'::')
+                self.append(mod_namespace(submod)+'::'+cl.cpp_name+'::')
             else:
                 self.append(ident+'::')
 
@@ -2406,13 +2406,13 @@ class generateVisitor(ASTVisitor):
 
         # module.attr
         if module:
-            self.append(namespace(module)+'::')
+            self.append(mod_namespace(module)+'::')
 
         # class.attr
         elif cl:
             if isinstance(node.expr, Getattr):
                 submod = lookupmodule(node.expr.expr, inode(node).mv)
-                self.append(namespace(submod)+'::'+cl.cpp_name+'::')
+                self.append(mod_namespace(submod)+'::'+cl.cpp_name+'::')
             else:
                 self.append(cl.ident+'::')
 
@@ -2511,14 +2511,14 @@ def singletype2(types, type):
     if len(types) == 1 and isinstance(ltypes[0][0], type):
         return ltypes[0][0]
 
-def namespace(module):
+def mod_namespace(module):
     return '__'+'__::__'.join(module.mod_path)+'__'
 
 def namespaceclass(cl):
     module = cl.mv.module
 
     if module.ident != 'builtin' and module != getmv().module and module.mod_path:
-        return namespace(module)+'::'+nokeywords(cl.ident)
+        return mod_namespace(module)+'::'+nokeywords(cl.ident)
     else:
         return nokeywords(cl.ident)
 
@@ -2574,7 +2574,10 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None, check_extmo
     if anon_funcs and check_extmod:
         raise ExtmodError()
     if anon_funcs:
-        return 'lambda%d' % anon_funcs.pop().lambdanr
+        f = anon_funcs.pop()
+        if f.mv != getmv():
+            return mod_namespace(f.mv.module)+'::'+'lambda%d' % f.lambdanr
+        return 'lambda%d' % f.lambdanr
 
     classes = polymorphic_cl(split_classes(split))
     lcp = lowest_common_parents(classes)
