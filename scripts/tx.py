@@ -1,9 +1,13 @@
-import sys, os
+import sys, os, random
+random.seed(1666008) # 1666008
 
 total = 193
 parts, part = map(int, sys.argv[1:])
 
-tests = range(total)[part::parts]
+alles = range(total)
+random.shuffle(alles)
+
+tests = alles[part::parts]
 
 os.system('rm -fR tx%d' % part)
 os.system('mkdir tx%d' % part)
