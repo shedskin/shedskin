@@ -2320,7 +2320,7 @@ class generateVisitor(ASTVisitor):
         self.visitPrint(node, func, print_space=False)
 
     def visitPrint(self, node, func=None, print_space=True):
-        self.start('print(')
+        self.start('print2(')
         if node.dest:
             self.visitm(node.dest, ', ', func)
         if print_space: self.append('1,')

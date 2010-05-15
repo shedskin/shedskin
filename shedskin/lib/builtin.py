@@ -845,3 +845,7 @@ def reduce(func, iter1, init=None):
 def next(iter1, fillvalue=None):
     return iter1.next()
     return fillvalue
+
+from __future__ import print_function
+def print(__kw_sep=0, __kw_end=0, __kw_func=0, *value):
+    value.__str__()
