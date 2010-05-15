@@ -69,6 +69,7 @@ class globalInfo: # XXX add comments, split up
         self.item_rvalue = {}
         self.genexp_to_lc = {}
         self.bool_test_only = set()
+        self.tempcount = {}
 
 def newgx():
     return globalInfo()
