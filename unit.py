@@ -60,6 +60,19 @@ class GenMeth2:
 gm2 = GenMeth2(2)
 print list(gm2.loop([4,1,5]))
 
+# __future__ print_function
+from __future__ import print_function
+
+class B:
+    def __init__(self, value):
+        self.value = value
+    def __repr__(self):
+        return 'B(%d)' % self.value
+        
+b = B(14)
+print(b, b, b, sep='hoi', end='\\n\\n')
+print(min(1,2,3, key=lambda x:-x))
+
 ''', '''
 output(equal=True)
 '''),
