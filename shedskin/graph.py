@@ -1379,9 +1379,9 @@ class moduleVisitor(ASTVisitor):
                 if lfunc:
                     if lfunc.mv.module.builtin:
                         lfunc = self.builtinwrapper(node, func)
-                    elif node.name not in self.lambdas:
-                        lfunc.lambdanr = len(self.lambdas)
-                        self.lambdas[node.name] = lfunc
+                    elif node.name not in lfunc.mv.lambdas:
+                        lfunc.lambdanr = len(lfunc.mv.lambdas)
+                        lfunc.mv.lambdas[node.name] = lfunc
                     getgx().types[newnode] = set([(lfunc, 0)])
                     newnode.copymetoo = True
                 elif lclass:
