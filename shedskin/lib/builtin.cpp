@@ -2025,7 +2025,7 @@ void __start(void (*initfunc)()) {
         initfunc();
     } catch (SystemExit *s) {
         if(s->message)
-            print(0, 1, s->message);
+            print2(0, 1, s->message);
         code = s->code;
     }
     if(print_lastchar != '\n')
@@ -2033,7 +2033,11 @@ void __start(void (*initfunc)()) {
     std::exit(code);
 }
 
-void print(int comma, int n, ...) { // XXX merge four functions
+void print(int n, file *f, str *end, str *sep, ...) {
+    printf("hello __future__\n");
+}
+
+void print2(int comma, int n, ...) {
      __print_cache->units.resize(0);
      va_list args;
      va_start(args, n);
@@ -2056,7 +2060,7 @@ void print(int comma, int n, ...) { // XXX merge four functions
      print_space = comma;
 }
 
-void print(file *f, int comma, int n, ...) {
+void print2(file *f, int comma, int n, ...) {
      __print_cache->units.resize(0);
      va_list args;
      va_start(args, n);

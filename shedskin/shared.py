@@ -753,7 +753,7 @@ def connect_actual_formal(expr, func, parent_constr=False, check_error=False, me
         missing = formals[len(actuals):-len(func.defaults)]
 
     skip_defaults = True # XXX
-    if not func.mv.module.builtin or func.mv.module.ident in ['random', 'itertools', 'datetime', 'ConfigParser', 'csv'] or (func.ident in ('sort','sorted', 'min', 'max')):
+    if not func.mv.module.builtin or func.mv.module.ident in ['random', 'itertools', 'datetime', 'ConfigParser', 'csv'] or (func.ident in ('sort','sorted', 'min', 'max', 'print')):
         if not (func.mv.module.builtin and func.ident == 'randrange'):
             skip_defaults = False
 

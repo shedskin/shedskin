@@ -434,7 +434,7 @@ class moduleVisitor(ASTVisitor):
 
         if node.modname == '__future__':
             for name, _ in node.names:
-                if name not in ['with_statement']:
+                if name not in ['with_statement', 'print_function']:
                     error("future '%s' is not yet supported" % name, node)
             return
 
