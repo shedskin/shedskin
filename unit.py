@@ -5,37 +5,39 @@ import traceback, sys, os, time
 
 tests = [
 ('''fixes for 0.5''', '''
+from __future__ import print_function
+
 # unbound ident
 import testdata.subsub
-print list(testdata.subsub.blah(4))
+print(list(testdata.subsub.blah(4)))
 
 # exception hierarchy
 try:
     try:
         raise SystemExit('hoei')
     except Exception, msg:
-        print 'foute boel'
+        print('foute boel')
 except BaseException as ork:
-    print 'base exc', ork
+    print('base exc', ork)
 
 # map external func
 import math
 som=sum(map(math.factorial, [1,2,3]))
-print som
+print(som)
 from testdata.subsub import fact
 som=sum(map(fact, [1,2,3]))
-print som
+print(som)
 
 # set problems
 collector = set()
 collector.add(frozenset([1,2]))
 collector.add(frozenset([1,2,3]))
-print sorted(collector)
+print(sorted(collector))
 
 low_hits = set([19460, 19877, 20294, 20711, 21128, 21545, 21962, 19599, 20016, 20433, 20850, 21267, 21684, 22101, 19738, 20155, 20572, 20989, 21406, 21823]) 
 high_hits = set([22052, 21605, 21158, 20711, 20264, 19817, 19370, 21903, 21456, 21009, 20562, 20115, 19668, 21754, 21307, 20860, 20413, 19966, 19519])
 hits = low_hits.symmetric_difference(high_hits)
-print hits
+print(sorted(hits))
 
 # generator methods
 class GM:
@@ -47,7 +49,7 @@ class GM:
 
 g = GM()
 for xn in g.loop():
-    print xn
+    print(xn)
     
 class GenMeth2:
     def __init__(self, y):
@@ -58,11 +60,9 @@ class GenMeth2:
             yield i+z
 
 gm2 = GenMeth2(2)
-print list(gm2.loop([4,1,5]))
+print(list(gm2.loop([4,1,5])))
 
 # __future__ print_function
-from __future__ import print_function
-
 class B:
     def __init__(self, value):
         self.value = value
@@ -72,6 +72,16 @@ class B:
 b = B(14)
 print(b, b, b, sep='hoi', end='\\n\\n')
 print(min(1,2,3, key=lambda x:-x))
+
+# problem with inheritance across files
+from testdata.subsub import aa
+
+class baa(aa):
+  def __init__(self):
+    aa.__init__(self)
+    print("init b")
+
+baa()
 
 ''', '''
 output(equal=True)

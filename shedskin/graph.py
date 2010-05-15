@@ -808,9 +808,9 @@ class moduleVisitor(ASTVisitor):
             self.fakefunc(inode(child), child, '__str__', [], func)
 
     def tempvar(self, node, func=None, looper=None):
-        if node in getgx().parent_nodes:
+        if node in getgx().parent_nodes and getgx().parent_nodes[node] in self.tempcount: # XXX inheritance across files, test 192?
             varname = self.tempcount[getgx().parent_nodes[node]]
-        elif node in self.tempcount: # XXX investigate why this happens (patrick down)
+        elif node in self.tempcount: # XXX investigate why this happens
             varname = self.tempcount[node]
         else:
             varname = '__'+str(len(self.tempcount))
