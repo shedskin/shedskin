@@ -3047,9 +3047,10 @@ def generate_code():
         print >>makefile, ident+suffix+':\t$(CPPFILES) $(HPPFILES)'
         print >>makefile, '\t$(CC) '+options+' $(CCFLAGS) $(CPPFILES) $(LFLAGS) -o '+ident+suffix+'\n'
 
+    ext = ''
     if sys.platform == 'win32':
-        ident += '.exe'
+        ext = '.exe'
     print >>makefile, 'clean:'
-    print >>makefile, '\trm -f %s %s %s' % (ident, ident+'_prof', ident+'_debug')
+    print >>makefile, '\trm -f %s %s %s' % (ident+ext, ident+'_prof'+ext, ident+'_debug'+ext)
 
     makefile.close()
