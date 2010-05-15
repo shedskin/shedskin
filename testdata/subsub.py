@@ -20,3 +20,11 @@ print l(3)
 #print a
 #print list(b)
 #print c
+
+class aa(object):
+  def __init__(self):
+    print "init a"
+    aa=[1,2]
+    for i in aa:
+      print i
+
