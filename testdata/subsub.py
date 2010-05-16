@@ -17,9 +17,15 @@ c = list(blah(4))
 
 print 'subsub:'
 print l(3)
-#print a
-#print list(b)
-#print c
+
+GLOBAL = 'global'
+
+class helper():
+  flag=0
+  @staticmethod
+  def enable(flag):
+    helper.flag=flag
+    print 'enabled'
 
 class aa(object):
   def __init__(self):
@@ -28,3 +34,7 @@ class aa(object):
     for i in aa:
       print i
 
+  def hoppa(self):
+    x = GLOBAL
+    print x
+    helper.enable(1)
