@@ -1187,7 +1187,7 @@ class moduleVisitor(ASTVisitor):
             elif isinstance(node.node, fakeGetattr3):
                 pass
             else:
-                self.visit(node.node, func)
+                self.visitGetattr(node.node, func, callfunc=True)
                 inode(node.node).callfuncs.append(node) # XXX iterative dataflow analysis: move there?
                 inode(node.node).fakert = True
 
@@ -1333,7 +1333,7 @@ class moduleVisitor(ASTVisitor):
                 self.visit(Function('__str__', ['self'], [], 0, None, Return(CallFunc(Getattr(Name('self'), '__repr__'), []))), newclass)
             newclass.funcs['__str__'].invisible = True
 
-    def visitGetattr(self, node, func=None):
+    def visitGetattr(self, node, func=None, callfunc=False):
         if node.attrname in ['__doc__']:
             error('%s attribute is not supported' % node.attrname, node)
 
@@ -1346,16 +1346,34 @@ class moduleVisitor(ASTVisitor):
 
         self.callfuncs.append((fakefunc, func))
 
-        cl = lookupclass(node, self) # XXX merge with analyze_callfunc, cpp.visitGetattr
-        if cl:
-            getgx().types[newnode] = set([(cl.parent, 0)])
-            newnode.copymetoo = True
+        if not callfunc:
+            self.fncl_passing(node, newnode, func)
 
     def visitConst(self, node, func=None):
         if type(node.value) == unicode:
             error('unicode is not supported', node)
         map = {int: 'int_', str: 'str_', float: 'float_', type(None): 'none', long: 'int_', complex: 'complex'} # XXX 'return' -> Return(Const(None))?
         self.instance(node, defclass(map[type(node.value)]), func)
+
+    def fncl_passing(self, node, newnode, func):
+        lfunc, lclass = lookupfunc(node, self), lookupclass(node, self)
+        if lfunc:
+            if lfunc.mv.module.builtin:
+                lfunc = self.builtinwrapper(node, func)
+            elif lfunc.ident not in lfunc.mv.lambdas:
+                lfunc.lambdanr = len(lfunc.mv.lambdas)
+                lfunc.mv.lambdas[lfunc.ident] = lfunc
+            getgx().types[newnode] = set([(lfunc, 0)])
+        elif lclass:
+            if lclass.mv.module.builtin:
+                lclass = self.builtinwrapper(node, func)
+            else:
+                lclass = lclass.parent
+            getgx().types[newnode] = set([(lclass, 0)])
+        else: 
+            return False
+        newnode.copymetoo = True # XXX merge into some kind of 'seeding' function
+        return True
 
     def visitName(self, node, func=None):
         newnode = cnode(node, parent=func)
@@ -1376,22 +1394,8 @@ class moduleVisitor(ASTVisitor):
         else:
             var = lookupvar(node.name, func)
             if not var:
-                lfunc, lclass = lookupfunc(node, self), lookupclass(node, self)
-                if lfunc:
-                    if lfunc.mv.module.builtin:
-                        lfunc = self.builtinwrapper(node, func)
-                    elif node.name not in lfunc.mv.lambdas:
-                        lfunc.lambdanr = len(lfunc.mv.lambdas)
-                        lfunc.mv.lambdas[node.name] = lfunc
-                    getgx().types[newnode] = set([(lfunc, 0)])
-                    newnode.copymetoo = True
-                elif lclass:
-                    if lclass.mv.module.builtin:
-                        lclass = self.builtinwrapper(node, func)
-                    else:
-                        lclass = lclass.parent
-                    getgx().types[newnode] = set([(lclass, 0)])
-                    newnode.copymetoo = True # XXX merge into some kind of 'seeding' function
+                if self.fncl_passing(node, newnode, func):
+                    pass
                 elif node.name in ['int', 'float', 'str']: # XXX
                     cl = self.ext_classes[node.name+'_']
                     getgx().types[newnode] = set([(cl.parent, 0)])
@@ -1402,7 +1406,7 @@ class moduleVisitor(ASTVisitor):
             self.addconstraint((inode(var), newnode), func)
 
     def builtinwrapper(self, node, func):
-        node2 = CallFunc(Name(node.name), [Name(x) for x in 'abcde'])
+        node2 = CallFunc(copy.deepcopy(node), [Name(x) for x in 'abcde'])
         l = Lambda(list('abcde'), [], 0, node2)
         self.visit(l, func)
         self.lwrapper[node] = self.lambdaname[l]
