@@ -1802,11 +1802,12 @@ template<class K, class V> dict<K, V>::dict(PyObject *p) {
 }
 
 template<class K, class V> PyObject *dict<K, V>::__to_py__() {
-    PyObject *p = PyDict_New();
-    int len = this->__len__();
-    for (it = units.begin(); it != units.end(); ++it)
-        PyDict_SetItem(p, __to_py(it->first), __to_py(it->second));
-    return p;
+   PyObject *p = PyDict_New();
+   int pos = 0;
+   dictentry<K,V> *entry;
+   while(next(&pos, &entry))
+       PyDict_SetItem(p, __to_py(entry->key), __to_py(entry->value));
+   return p;
 }
 #endif
 
