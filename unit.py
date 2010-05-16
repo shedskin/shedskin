@@ -87,6 +87,7 @@ class baa(aa):
   def __init__(self):
     aa.__init__(self)
     print("init b")
+    self.hoppa()
 
 baa()
 

@@ -113,6 +113,7 @@ class variable:
 class function:
     def __init__(self, node=None, parent=None, inherited_from=None):
         self.node = node
+        self.inherited_from = inherited_from
         if node:
             ident = node.name
             if inherited_from and ident in parent.funcs:
