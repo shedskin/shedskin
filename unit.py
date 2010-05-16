@@ -27,6 +27,13 @@ print(som)
 from testdata.subsub import fact
 som=sum(map(fact, [1,2,3]))
 print(som)
+mf = math.factorial
+print(map(mf, range(10)))
+import testdata.subsub
+som=sum(map(testdata.subsub.fact, [1,2,3]))
+print(som)
+tsf = testdata.subsub.fact
+print(tsf(10))
 
 # set problems
 collector = set()
