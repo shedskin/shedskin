@@ -1,5 +1,5 @@
 import sys, os, random
-random.seed(1666008) # 1666008
+random.seed(442648)
 
 total = 193
 parts, part = map(int, sys.argv[1:])
