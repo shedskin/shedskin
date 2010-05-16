@@ -1876,19 +1876,38 @@ str *__mod4(str *fmts, list<pyobj *> *vals) {
         char c = fmt->unit[j];
         if(c != '%')
             p = modgetitem(vals, i++);
-
-        if(c == 'c')
-            __modfill(&fmt, mod_to_c2(p), &r, a1, a2);
-        else if(c == 's' || c == 'r')
-            __modfill(&fmt, p, &r, a1, a2);
-        else if(__GC_STRING("diouxX").find(c) != -1)
-            __modfill(&fmt, mod_to_int(p), &r, a1, a2);
-        else if(__GC_STRING("eEfFgGH").find(c) != -1)
-            __modfill(&fmt, mod_to_float(p), &r, a1, a2);
-        else if(c == '%')
-            __modfill(&fmt, NULL, &r, a1, a2);
-        else
-            throw new ValueError(new str("unsupported format character"));
+    
+        switch(c) {
+            case 'c':
+                __modfill(&fmt, mod_to_c2(p), &r, a1, a2);
+                break;
+            case 's': 
+            case 'r':
+                __modfill(&fmt, p, &r, a1, a2);
+                break;
+            case 'd':
+            case 'i':
+            case 'o':
+            case 'u':
+            case 'x':
+            case 'X':
+                __modfill(&fmt, mod_to_int(p), &r, a1, a2);
+                break;
+            case 'e':
+            case 'E':
+            case 'f':
+            case 'F':
+            case 'g':
+            case 'G':
+            case 'H':
+                __modfill(&fmt, mod_to_float(p), &r, a1, a2);
+                break;
+            case '%':
+                __modfill(&fmt, NULL, &r, a1, a2);
+                break;
+            default:
+                throw new ValueError(new str("unsupported format character"));
+        }
     }
     if(i!=len(vals))
         throw new TypeError(new str("not all arguments converted during string formatting"));
