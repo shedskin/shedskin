@@ -264,7 +264,7 @@ int Random::_init_by_array(list<int> *init_key) {
     this->_init_genrand(19650218);
     i = 1;
     j = 0;
-    k = __max(2, 0, N, key_length);
+    k = ___max(2, 0, N, key_length);
 
     FAST_FOR_NEG(k,k,0,-1,12,13)
         __14 = this->mt;
@@ -499,7 +499,7 @@ void *Random::setstate(list<double> *state) {
 
     version = __int(state->__getfast__(0));
     if ((version!=2)) {
-        throw ((new ValueError(__modct(const_10, 2, __box(version), __box(this->VERSION)))));
+        throw ((new ValueError(__modct(const_10, 2, ___box(version), ___box(this->VERSION)))));
     }
     this->mti = __int(state->__getfast__(1));
     this->gauss_switch = __int(state->__getfast__(2));
@@ -822,7 +822,7 @@ void *WichmannHill::setstate(list<double> *state) {
         this->gauss_next = state->__getfast__(5);
     }
     else {
-        throw ((new ValueError(__modct(const_10, 2, __box(version), __box(this->VERSION)))));
+        throw ((new ValueError(__modct(const_10, 2, ___box(version), ___box(this->VERSION)))));
     }
     return NULL;
 }

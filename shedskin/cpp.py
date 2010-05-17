@@ -1639,9 +1639,9 @@ class generateVisitor(ASTVisitor):
             if ident == 'float' and node.args and self.mergeinh[node.args[0]] == set([(defclass('float_'), 0)]):
                 self.visit(node.args[0], func)
                 return
-            if ident in ['abs', 'int', 'float', 'str', 'dict', 'tuple', 'list', 'type', 'cmp', 'sum', 'zip', 'max', 'min']:
+            if ident in ['abs', 'int', 'float', 'str', 'dict', 'tuple', 'list', 'type', 'cmp', 'sum', 'zip']:
                 self.append('__'+ident+'(')
-            elif ident in ['iter', 'round']:
+            elif ident in ['min', 'max', 'iter', 'round']:
                 self.append('___'+ident+'(')
             elif ident == 'bool':
                 self.bool_test(node.args[0], func, always_wrap=True)
@@ -1778,7 +1778,7 @@ class generateVisitor(ASTVisitor):
                 types = [t[0].ident for t in self.mergeinh[arg]]
                 if 'float_' in types or 'int_' in types or 'bool_' in types:
                     cast = True
-                    self.append('__box((')
+                    self.append('___box((')
 
             if arg in target.mv.defaults:
                 if self.mergeinh[arg] == set([(defclass('none'),0)]):
@@ -2320,7 +2320,7 @@ class generateVisitor(ASTVisitor):
         # --- visit nodes, boxing scalars
         for n in nodes:
             if [clname for clname in ('float_', 'int_', 'bool_') if (defclass(clname), 0) in self.mergeinh[n]]:
-                self.visitm(', __box(', n, ')', func)
+                self.visitm(', ___box(', n, ')', func)
             else:
                 self.visitm(', ', n, func)
         self.append(')')
@@ -2338,7 +2338,7 @@ class generateVisitor(ASTVisitor):
         for n in node.nodes:
             types = [t[0].ident for t in self.mergeinh[n]]
             if 'float_' in types or 'int_' in types or 'bool_' in types:
-                self.visitm(', __box(', n, ')', func)
+                self.visitm(', ___box(', n, ')', func)
             else:
                 self.visitm(', ', n, func)
         self.eol(')')

@@ -1683,7 +1683,7 @@ template<class T> __ss_int pyseq<T>::__cmp__(pyobj *p) {
     if (!p) return 1;
     pyseq<T> *b = (pyseq<T> *)p;
     int i, cmp;
-    int mnm = __min(2, 0, this->__len__(), b->__len__());
+    int mnm = ___min(2, 0, this->__len__(), b->__len__());
 
     for(i = 0; i < mnm; i++) {
         cmp = __cmp(this->units[i], b->units[i]);
@@ -3930,7 +3930,7 @@ template <class U, class B> typename __sumtype2<typename U::for_in_unit,B>::type
 
 /* max */
 
-template<class T, class B> T __max(int, B (*key)(T), pyiter<T> *a) {
+template<class T, class B> T ___max(int, B (*key)(T), pyiter<T> *a) {
     T e, max = 0;
     B maxkey, maxkey2;
     int first = 1;
@@ -3951,9 +3951,9 @@ template<class T, class B> T __max(int, B (*key)(T), pyiter<T> *a) {
         throw new ValueError(new str("max() arg is an empty sequence"));
     return max;
 }
-template<class T> T __max(int nn, int, pyiter<T> *a) { return __max(nn, (int (*)(T))0, a); } /* XXX */
+template<class T> T ___max(int nn, int, pyiter<T> *a) { return ___max(nn, (int (*)(T))0, a); } /* XXX */
 
-template<class T, class B> T __max(int, B (*key)(T), pyseq<T> *l) {
+template<class T, class B> T ___max(int, B (*key)(T), pyseq<T> *l) {
     int len = l->units.size();
     int i;
     if(len==0)
@@ -3975,15 +3975,15 @@ template<class T, class B> T __max(int, B (*key)(T), pyseq<T> *l) {
     }
     return m;
 }
-template<class T> T __max(int nn, int, pyseq<T> *a) { return __max(nn, (int (*)(T))0, a); } /* XXX */
-template<class B> str *__max(int nn, B (*key)(str *), str *l) { return __max(nn, key, (pyiter<str *> *)l); }
-inline str *__max(int nn, int key, str *l) { return __max(nn, key, (pyiter<str *> *)l); }
+template<class T> T ___max(int nn, int, pyseq<T> *a) { return ___max(nn, (int (*)(T))0, a); } /* XXX */
+template<class B> str *___max(int nn, B (*key)(str *), str *l) { return ___max(nn, key, (pyiter<str *> *)l); }
+inline str *___max(int nn, int key, str *l) { return ___max(nn, key, (pyiter<str *> *)l); }
 
-template<class T, class B> inline T __max(int, B (*key)(T), T a, T b) { return (__cmp(key(a), key(b))==1)?a:b; }
-template<class T> inline  T __max(int, int, T a, T b) { return (__cmp(a, b)==1)?a:b; }
+template<class T, class B> inline T ___max(int, B (*key)(T), T a, T b) { return (__cmp(key(a), key(b))==1)?a:b; }
+template<class T> inline  T ___max(int, int, T a, T b) { return (__cmp(a, b)==1)?a:b; }
 
-template<class T, class B> T __max(int n, B (*key)(T), T a, T b, T c, ...) {
-    T m = __max(2, key, __max(2, key, a, b), c);
+template<class T, class B> T ___max(int n, B (*key)(T), T a, T b, T c, ...) {
+    T m = ___max(2, key, ___max(2, key, a, b), c);
     B maxkey = key(m);
     va_list ap;
     va_start(ap, c);
@@ -3995,8 +3995,8 @@ template<class T, class B> T __max(int n, B (*key)(T), T a, T b, T c, ...) {
     va_end(ap);
     return m;
 }
-template<class T> T __max(int n, int key, T a, T b, T c, ...) { /* XXX */
-    T m = __max(2, key, __max(2, key, a, b), c);
+template<class T> T ___max(int n, int key, T a, T b, T c, ...) { /* XXX */
+    T m = ___max(2, key, ___max(2, key, a, b), c);
     va_list ap;
     va_start(ap, c);
     for(int i=0; i<n-3; i++) {
@@ -4009,7 +4009,7 @@ template<class T> T __max(int n, int key, T a, T b, T c, ...) { /* XXX */
 
 /* min */
 
-template<class T, class B> T __min(int, B (*key)(T), pyiter<T> *a) {
+template<class T, class B> T ___min(int, B (*key)(T), pyiter<T> *a) {
     T e, min = 0;
     B minkey, minkey2;
     int first = 1;
@@ -4030,9 +4030,9 @@ template<class T, class B> T __min(int, B (*key)(T), pyiter<T> *a) {
         throw new ValueError(new str("min() arg is an empty sequence"));
     return min;
 }
-template<class T> T __min(int nn, int, pyiter<T> *a) { return __min(nn, (int (*)(T))0, a); }
+template<class T> T ___min(int nn, int, pyiter<T> *a) { return ___min(nn, (int (*)(T))0, a); }
 
-template<class T, class B> T __min(int, B (*key)(T), pyseq<T> *l) {
+template<class T, class B> T ___min(int, B (*key)(T), pyseq<T> *l) {
     int len = l->units.size();
     int i;
     if(len==0)
@@ -4054,15 +4054,15 @@ template<class T, class B> T __min(int, B (*key)(T), pyseq<T> *l) {
     }
     return m;
 }
-template<class T> T __min(int nn, int, pyseq<T> *a) { return __min(nn, (int (*)(T))0, a); }
-template<class B> str *__min(int nn, B (*key)(str *), str *l) { return __min(nn, key, (pyiter<str *> *)l); }
-inline str *__min(int nn, int key, str *l) { return __min(nn, key, (pyiter<str *> *)l); }
+template<class T> T ___min(int nn, int, pyseq<T> *a) { return ___min(nn, (int (*)(T))0, a); }
+template<class B> str *___min(int nn, B (*key)(str *), str *l) { return ___min(nn, key, (pyiter<str *> *)l); }
+inline str *___min(int nn, int key, str *l) { return ___min(nn, key, (pyiter<str *> *)l); }
 
-template<class T, class B> inline T __min(int, B (*key)(T), T a, T b) { return (__cmp(key(a), key(b))==-1)?a:b; }
-template<class T> inline  T __min(int, int, T a, T b) { return (__cmp(a, b)==-1)?a:b; }
+template<class T, class B> inline T ___min(int, B (*key)(T), T a, T b) { return (__cmp(key(a), key(b))==-1)?a:b; }
+template<class T> inline  T ___min(int, int, T a, T b) { return (__cmp(a, b)==-1)?a:b; }
 
-template<class T, class B> T __min(int n, B (*key)(T), T a, T b, T c, ...) {
-    T m = __min(2, key, __min(2, key, a, b), c);
+template<class T, class B> T ___min(int n, B (*key)(T), T a, T b, T c, ...) {
+    T m = ___min(2, key, ___min(2, key, a, b), c);
     B minkey = key(m);
     va_list ap;
     va_start(ap, c);
@@ -4074,8 +4074,8 @@ template<class T, class B> T __min(int n, B (*key)(T), T a, T b, T c, ...) {
     va_end(ap);
     return m;
 }
-template<class T> T __min(int n, int key, T a, T b, T c, ...) { /* XXX */
-    T m = __min(2, key, __min(2, key, a, b), c);
+template<class T> T ___min(int n, int key, T a, T b, T c, ...) { /* XXX */
+    T m = ___min(2, key, ___min(2, key, a, b), c);
     va_list ap;
     va_start(ap, c);
     for(int i=0; i<n-3; i++) {
@@ -4207,7 +4207,7 @@ template <class A, class B> list<tuple2<A, B> *> *__zip(int, pyiter<A> *a, pyite
     __list_comp_0(&lb, b);
     result = (new list<tuple2<A, B> *>());
 
-    FAST_FOR(i,0,__min(2, 0, len(&la), len(&lb)),1,1,2)
+    FAST_FOR(i,0,___min(2, 0, len(&la), len(&lb)),1,1,2)
         result->append((new tuple2<A, B>(2, la.units[i], lb.units[i])));
     END_FOR
     return result;
@@ -4219,7 +4219,7 @@ template <class A, class B> list<tuple2<A, B> *> *__zip(int, pyseq<A> *a, pyseq<
     list<tuple2<A, B> *> *result;
     result = new list<tuple2<A, B> *>();
 
-    int n = __min(2, 0, len(a), len(b));
+    int n = ___min(2, 0, len(a), len(b));
     result->units.reserve(n);
 
     tuple2<A, B> *v = new tuple2<A, B>[n];
@@ -4245,7 +4245,7 @@ template <class A> list<tuple2<A,A> *> *__zip(int, pyiter<A> *a, pyiter<A> *b, p
 
     result = (new list<tuple2<A,A> *>());
 
-    FAST_FOR(i,0,__min(3, 0, len(&la), len(&lb), len(&lc)),1,1,2)
+    FAST_FOR(i,0,___min(3, 0, len(&la), len(&lb), len(&lc)),1,1,2)
         result->append((new tuple2<A,A>(3, la.units[i], lb.units[i], lc.units[i])));
     END_FOR
     return result;
@@ -4257,7 +4257,7 @@ template <class A> list<tuple2<A,A> *> *__zip(int, pyseq<A> *a, pyseq<A> *b, pys
     list<tuple2<A, A> *> *result;
     result = new list<tuple2<A, A> *>();
 
-    int n = __min(3, 0, len(a), len(b), len(c));
+    int n = ___min(3, 0, len(a), len(b), len(c));
     result->units.reserve(n);
 
     tuple2<A, A> *v = new tuple2<A, A>[n];
@@ -4565,12 +4565,12 @@ float_ *mod_to_float(pyobj *t);
 template<class T> str *__modtuple(str *fmt, tuple2<T,T> *t) {
     list<pyobj *> *vals = new list<pyobj *>();
     for(int i=0;i<len(t);i++)
-        vals->append(__box(t->__getitem__(i)));
+        vals->append(___box(t->__getitem__(i)));
     return __mod4(fmt, vals);
 }
 
 template<class A, class B> str *__modtuple(str *fmt, tuple2<A,B> *t) {
-    list<pyobj *> *vals = new list<pyobj *>(2, __box(t->__getfirst__()), __box(t->__getsecond__()));
+    list<pyobj *> *vals = new list<pyobj *>(2, ___box(t->__getfirst__()), ___box(t->__getsecond__()));
     return __mod4(fmt, vals);
 }
 
@@ -4587,19 +4587,19 @@ template<class T> str *__moddict(str *v, dict<str *, T> *d) {
 
     list<pyobj *> *vals = new list<pyobj *>();
     for(i=0;i<len(names);i++)
-        vals->append(__box(d->__getitem__(names->__getitem__(i))));
+        vals->append(___box(d->__getitem__(names->__getitem__(i))));
     return __mod4(v, vals);
 }
 
 /* boxing */
 
-template<class T> T __box(T t) { return t; } /* XXX */
+template<class T> T ___box(T t) { return t; } /* XXX */
 #ifdef __SS_LONG
-int_ *__box(__ss_int);
+int_ *___box(__ss_int);
 #endif
-int_ *__box(int);
-bool_ *__box(__ss_bool);
-float_ *__box(double);
+int_ *___box(int);
+bool_ *___box(__ss_bool);
+float_ *___box(double);
 
 /* any */
 

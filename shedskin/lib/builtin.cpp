@@ -243,13 +243,13 @@ __ss_bool complex::__nonzero__() {
 str *complex::__repr__() {
     str *left, *middle, *right;
     if(real==0)
-        return __modct(new str("%gj"), 1, __box(imag));
-    left = __modct(new str("(%g"), 1, __box(real));
+        return __modct(new str("%gj"), 1, ___box(imag));
+    left = __modct(new str("(%g"), 1, ___box(real));
     if(imag<0)
         middle = new str("");
     else
         middle = new str("+");
-    right = __modct(new str("%gj)"), 1, __box(imag));
+    right = __modct(new str("%gj)"), 1, ___box(imag));
     return __add_strs(3, left, middle, right);
 }
 
@@ -1446,11 +1446,11 @@ __ss_int __xrange::__len__() {
 str *__xrange::__repr__() {
     if(s==1) {
         if(a==0)
-            return __modct(new str("xrange(%d)"), 1, __box(b));
+            return __modct(new str("xrange(%d)"), 1, ___box(b));
         else
-            return __modct(new str("xrange(%d, %d)"), 2, __box(a), __box(b));
+            return __modct(new str("xrange(%d, %d)"), 2, ___box(a), ___box(b));
     }
-    return __modct(new str("xrange(%d, %d, %d)"), 3, __box(a), __box(b), __box(s)); /* XXX */
+    return __modct(new str("xrange(%d, %d, %d)"), 3, ___box(a), ___box(b), ___box(s)); /* XXX */
 }
 
 __xrange *xrange(__ss_int a, __ss_int b, __ss_int s) { return new __xrange(a,b,s); }
@@ -1462,7 +1462,7 @@ __iter<__ss_int> *reversed(__xrange *x) {
 
 int ord(str *s) {
     if(len(s) != 1)
-        throw new TypeError(__modct(new str("ord() expected a character, but string of length %d found"), 1, __box(len(s))));
+        throw new TypeError(__modct(new str("ord() expected a character, but string of length %d found"), 1, ___box(len(s))));
     return (unsigned char)(s->unit[0]);
 }
 
@@ -2015,17 +2015,17 @@ str *__modct(str *fmt, int n, ...) {
 }
 
 #ifdef __SS_LONG
-int_ *__box(__ss_int i) {
+int_ *___box(__ss_int i) {
     return new int_(i);
 }
 #endif
-int_ *__box(int i) {
+int_ *___box(int i) {
     return new int_(i);
 }
-bool_ *__box(__ss_bool b) {
+bool_ *___box(__ss_bool b) {
     return new bool_(b);
 }
-float_ *__box(double d) {
+float_ *___box(double d) {
     return new float_(d);
 }
 

@@ -75,7 +75,7 @@ struct_time::struct_time(tuple2<__ss_int, __ss_int> *_tuple) {
 
 str *struct_time::__repr__() {
 
-    return __modct(const_1, 9, __box(this->tm_year), __box(this->tm_mon), __box(this->tm_mday), __box(this->tm_hour), __box(this->tm_min), __box(this->tm_sec), __box(this->tm_wday), __box(this->tm_yday), __box(this->tm_isdst));
+    return __modct(const_1, 9, ___box(this->tm_year), ___box(this->tm_mon), ___box(this->tm_mday), ___box(this->tm_hour), ___box(this->tm_min), ___box(this->tm_sec), ___box(this->tm_wday), ___box(this->tm_yday), ___box(this->tm_isdst));
 }
 
 tm* tuple2tm(struct_time* tuple) {
