@@ -325,7 +325,7 @@ void *reader::parse_save_field() {
 void *reader::parse_add_char(str *c) {
     
     if ((len(this->field)>=_field_limit)) {
-        throw ((new Error(__modct(const_17, 1, __box(_field_limit)))));
+        throw ((new Error(__modct(const_17, 1, ___box(_field_limit)))));
     }
     (this->field)->append(c);
     return NULL;

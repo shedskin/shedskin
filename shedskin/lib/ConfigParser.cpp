@@ -283,7 +283,7 @@ void *ParsingError::__init__(str *filename) {
 void *ParsingError::append(__ss_int lineno, str *line) {
 
     (this->errors)->append((new tuple2<__ss_int, str *>(2, lineno, line)));
-    this->message = (this->message)->__iadd__(__modct(const_9, 2, __box(lineno), line));
+    this->message = (this->message)->__iadd__(__modct(const_9, 2, ___box(lineno), line));
     return NULL;
 }
 
@@ -295,7 +295,7 @@ class_ *cl_MissingSectionHeaderError;
 
 void *MissingSectionHeaderError::__init__(str *filename, __ss_int lineno, str *line) {
 
-    Error::__init__(__modct(const_10, 3, filename, __box(lineno), line));
+    Error::__init__(__modct(const_10, 3, filename, ___box(lineno), line));
     this->filename = filename;
     this->lineno = lineno;
     this->line = line;
