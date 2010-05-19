@@ -816,3 +816,6 @@ def confusion_misc():
                                 getgx().types[getgx().cnode[var1, t[1], 0]].update(getgx().types[getgx().cnode[var2, t[1], 0]])
 
                             tupletypes.update(getgx().types[getgx().cnode[var1, t[1], 0]])
+
+def property_setter(dec):
+    return isinstance(dec, Getattr) and isinstance(dec.expr, Name) and dec.attrname == 'setter'
