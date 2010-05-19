@@ -1181,7 +1181,7 @@ void file::__check_closed() {
         throw new ValueError(new str("I/O operation on closed file"));
 }
 
-void *file::seek(int i, int w) {
+void *file::seek(__ss_int i, __ss_int w) {
     __check_closed();
     fseek(f, i, w);
     endoffile = 0; /* XXX add check */

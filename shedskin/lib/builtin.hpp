@@ -648,7 +648,7 @@ public:
 
     virtual int getchar();
     virtual void *putchar(int c);
-    virtual void *seek(int i, int w=0);
+    virtual void *seek(__ss_int i, __ss_int w=0);
     virtual void *close();
 
     int tell();
