@@ -351,6 +351,8 @@ class moduleVisitor(ASTVisitor):
 
             # methods
             for m in self.stmt_nodes(n, Function):
+                if hasattr(m, 'decorators') and m.decorators and [dec for dec in m.decorators if property_setter(dec)]:
+                    m.name = m.name+'__setter__'
                 if m.name in newclass.funcs: # and func.ident not in ['__getattr__', '__setattr__']: # XXX
                     error("function/class redefinition is not allowed ('%s')" % m.name, m)
                 func = function(m, newclass)
@@ -498,15 +500,15 @@ class moduleVisitor(ASTVisitor):
                 error("non-global function '%s'" % node.name, node)
 
         if hasattr(node, 'decorators') and node.decorators:
-            for decorator in node.decorators.nodes:
-                if not isinstance(decorator, Name):
-                    error("complex decorators are not supported", decorator)
-                if decorator.name == 'staticmethod':
+            for dec in node.decorators.nodes:
+                if isinstance(dec, Name) and dec.name == 'staticmethod':
                     parent.staticmethods.append(node.name)
-                elif decorator.name == 'property':
-                    parent.properties[node.name] = node.name, None
+                elif isinstance(dec, Name) and dec.name == 'property':
+                    parent.properties[node.name] = [node.name, None]
+                elif property_setter(dec):
+                    parent.properties[dec.expr.name][1] = node.name
                 else:
-                    error("'%s' decorator is not supported" % decorator.name, decorator)
+                    error("unsupported type of decorator", dec)
 
         if parent:
             if not inherited_from and not func.ident in parent.staticmethods and (not func.formals or func.formals[0] != 'self'):
