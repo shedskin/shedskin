@@ -14,7 +14,7 @@ public:
     StringI(str *s);
 
     int getchar();
-    void *putchar(__ss_int c);
+    void *putchar(int c);
     void *seek(__ss_int i, __ss_int w=0);
 };
 

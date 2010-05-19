@@ -24,7 +24,7 @@ int StringI::getchar() {
     return s->unit[pos++];
 }
 
-void *StringI::putchar(__ss_int c) {
+void *StringI::putchar(int c) {
     if(pos < len(s))
         s->unit[pos] = c;
     else
