@@ -91,6 +91,21 @@ class baa(aa):
 
 baa()
 
+class bert(object):
+    @property
+    def patat(self):
+        print('get')
+        return self._x
+
+    @patat.setter
+    def patat(self, y):
+        print('set')
+        self._x = y
+
+b1 = bert()
+b1.patat = 12
+print(b1.patat)
+
 ''', '''
 output(equal=True)
 '''),

@@ -503,6 +503,7 @@ I would like to thank the following company/people, for their help with **Shed S
 * Van Lindberg
 * David Marek
 * Douglas McNeil
+* Andy Miller
 * Jeff Miller
 * Joaquin Abian Monux
 * Harri Pasanen
