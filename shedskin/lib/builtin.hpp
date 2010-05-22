@@ -32,7 +32,6 @@
     #include <unordered_map>
     #include <limits>
     #define INFINITY std::numeric_limits<double>::infinity()
-    #include "WinTypeofImpl.hpp"
 #else
     #include <ext/hash_map>
 #endif
