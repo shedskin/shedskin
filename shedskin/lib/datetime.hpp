@@ -4,12 +4,15 @@
 #include "builtin.hpp"
 #include "time.hpp"
 #include <ctime>
-#include <sys/time.h>
-#include <assert.h>
-
-#ifdef WIN32
-#include <sys/timeb.h>
+#if defined( _MSC_VER )
+    #include <time.h>
+#else
+    #include <sys/time.h>
 #endif
+#ifdef WIN32
+    #include <sys/timeb.h>
+#endif
+#include <assert.h>
 
 using namespace __shedskin__;
 namespace __datetime__ {
