@@ -2,7 +2,12 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <unistd.h>
+#if defined( _MSC_VER )
+    #include <stdlib.h>
+    #include <io.h>
+#else
+    #include <unistd.h>
+#endif
 
 namespace __stat__ {
 
@@ -20,6 +25,7 @@ void __init() {
    __ss_ST_MTIME = 8;
    __ss_ST_CTIME = 9;
 
+#if !defined( _MSC_VER )
    __ss_S_IFDIR = S_IFDIR;
    __ss_S_IFCHR = S_IFCHR;
    __ss_S_IFBLK = S_IFBLK;
@@ -32,6 +38,7 @@ void __init() {
    __ss_S_IRUSR = S_IRUSR;
    __ss_S_IWUSR = S_IWUSR;
    __ss_S_IXUSR = S_IXUSR;
+#endif
 
 #ifndef WIN32
    __ss_S_ISUID = S_ISUID;
@@ -51,6 +58,7 @@ void __init() {
 #endif
 }
 
+#if !defined( _MSC_VER )
 __ss_int __ss_S_IMODE(__ss_int mode) {
     return (mode&4095); /* XXX */
 }
@@ -83,6 +91,7 @@ __ss_int __ss_S_ISFIFO(__ss_int mode) {
 
     return S_ISFIFO(mode);
 }
+#endif
 
 #ifndef WIN32
 __ss_int __ss_S_ISLNK(__ss_int mode) {
