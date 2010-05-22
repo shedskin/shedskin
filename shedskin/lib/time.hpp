@@ -3,14 +3,26 @@
 
 #include "builtin.hpp"
 #include <ctime>
-#include <sys/time.h>
-
-#ifdef WIN32
-#include <sys/timeb.h>
+#if defined( _MSC_VER )
+   struct timeval {
+        long    tv_sec;         /* seconds */
+        long    tv_usec;        /* and microseconds */
+   };
+   #include <time.h>
+   #include <sys/timeb.h>
+#else
+   #include <sys/time.h>
 #endif
 
 using namespace __shedskin__;
 namespace __time__ {
+#if defined( _MSC_VER )
+   struct  __ss_timezone {
+       int     tz_minuteswest;
+       int     tz_dsttime;
+   };
+   __ss_int gettimeofday (struct timeval *tv, struct __ss_timezone *tz);
+#endif
 
 extern __ss_int timezone;
 extern tuple2<str *, str *> *tzname;

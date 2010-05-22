@@ -34,6 +34,25 @@ double clock()
        diff = (double)(now.QuadPart - ctrStart.QuadPart);
        return diff / divisor; */
 }
+#if defined( _MSC_VER )
+__ss_int gettimeofday (struct timeval *tv, struct __ss_timezone *tz)
+{
+   struct _timeb tb;
+
+   if (!tv)
+      return -1;
+
+  _ftime (&tb);
+  tv->tv_sec  = (long) tb.time;
+  tv->tv_usec = tb.millitm * 1000 + 500;
+  if (tz)
+  {
+    tz->tz_minuteswest = -60 * _timezone;
+    tz->tz_dsttime = _daylight;
+  }
+  return 0;
+}
+#endif
 
 #else
 
@@ -127,10 +146,15 @@ void *sleep(double s) {
 
     return NULL;
 }
+#else
+// TOFIX
+void *sleep(double s) {
+    return NULL;
+    }
 #endif
 
 double mktime(struct_time *tuple) {
-    return ::mktime(tuple2tm(tuple));
+    return (double)::mktime(tuple2tm(tuple));
 }
 
 double mktime(tuple2<__ss_int, __ss_int> *tuple) {
@@ -140,7 +164,7 @@ double mktime(tuple2<__ss_int, __ss_int> *tuple) {
     } catch(...) {
         throw;
     }
-    return ::mktime(tuple2tm(st));
+    return (double)::mktime(tuple2tm(st));
 }
 
 struct_time *localtime() {
@@ -211,30 +235,36 @@ str *strftime(str *format, tuple2<__ss_int, __ss_int> *tuple) {
     return strftime(format, st);
 }
 
+#ifdef WIN32
+
 /******************************************************************************
  * STRPTIME FOR WINDOWS
  *****************************************************************************/
-#ifdef WIN32
 
 /*
 removed because of licensing issues. we might want to use this instead:
 http://cvsweb.netbsd.org/bsdweb.cgi/src/lib/libc/time/strptime.c?rev=HEAD
 */
 
-#endif
-
 /******************************************************************************
  * END OF STRPTIME FOR WINDOWS
  *****************************************************************************/
 
+#endif 
+
 struct_time *strptime(str *string, str *format) {
     tm time_tuple = {0, 0, 0, 1, 0, 0, 0, 1, -1};
+#ifdef WIN32
+    if (!strptime(string->unit.c_str(), format->unit.c_str(), &time_tuple)) {
+        throw  new ValueError(new str("time data did not match format:  data="+string->unit+" fmt="+format->unit));
+    }
+#else
     if (!::strptime(string->unit.c_str(), format->unit.c_str(), &time_tuple)) {
         throw  new ValueError(new str("time data did not match format:  data="+string->unit+" fmt="+format->unit));
     }
+#endif
     return tm2tuple(&time_tuple);
 }
-
 
 void __init() {
     start = std::clock();
