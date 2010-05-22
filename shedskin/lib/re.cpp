@@ -1,7 +1,5 @@
 #include "re.hpp"
 
-using namespace std;
-
 namespace __re__ {
 
 //flags
@@ -10,7 +8,7 @@ const __ss_int
     L = 0x04, LOCALE        = 0x04,
     M = 0x08, MULTILINE     = 0x08,
     S = 0x10, DOTALL        = 0x10,
-    U = 0x20, UNICODE       = 0x20,
+    U = 0x20, __ss_UNICODE  = 0x20,
     X = 0x40, VERBOSE       = 0x40;
 
 const unsigned char *local_table;
@@ -526,7 +524,7 @@ match_object *re_object::search(str *subj, __ss_int pos, __ss_int endpos)
 //re.* functions
 __ss_int __convert_flags(__ss_int flags)
 {
-    int ta[] = {IGNORECASE, MULTILINE, DOTALL, UNICODE, VERBOSE},
+    int ta[] = {IGNORECASE, MULTILINE, DOTALL, __ss_UNICODE, VERBOSE},
         tb[] = {PCRE_CASELESS, PCRE_MULTILINE, PCRE_DOTALL, PCRE_UTF8, PCRE_EXTENDED};
     int i, r;
 
