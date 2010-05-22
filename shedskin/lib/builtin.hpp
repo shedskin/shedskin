@@ -22,8 +22,20 @@
 #include <iterator>
 #include <ctype.h>
 
-#include <ext/hash_map>
-#include <ext/hash_set>
+#if defined( _MSC_VER )
+    #pragma warning( disable : 4996 ) // CRT security warning
+    #pragma warning( disable : 4800 ) // forcing bool
+    #pragma warning( disable : 4101 ) // unreferences var
+    #pragma warning( disable : 4396 ) // can't use inline
+    #pragma warning( disable : 4099 ) // mixing struct and class defs
+    #pragma warning( disable : 4715 ) // not all paths return a value
+    #include <unordered_map>
+    #include <limits>
+    #define INFINITY std::numeric_limits<double>::infinity()
+    #include "WinTypeofImpl.hpp"
+#else
+    #include <ext/hash_map>
+#endif
 
 namespace __shedskin__ {
 
@@ -501,7 +513,7 @@ public:
     void resize(int minused);
 };
 
-template<class T> class setentry;
+template<class T> struct setentry;
 
 template<class T> struct set_looper {
     int pos;
@@ -905,7 +917,7 @@ inline double ___round(double a) {
     return __portableround(a);
 }
 inline double ___round(double a, int n) {
-    return __portableround(pow(10,n)*a)/pow(10,n);
+    return __portableround(pow((double)10,n)*a)/pow((double)10,n);
 }
 
 template<class T> inline T __abs(T t) { return t->__abs__(); }
@@ -1694,7 +1706,7 @@ template<class T> __ss_int pyseq<T>::__cmp__(pyobj *p) {
 }
 
 template<class T> __ss_bool pyseq<T>::__contains__(T t) {
-    return false;
+    return __mbool(false);
 }
 
 template<class T> void pyseq<T>::resize(int n) {
@@ -1816,6 +1828,7 @@ template <class K, class V> dict<K,V>& dict<K,V>::operator=(const dict<K,V>& oth
     int table_size = sizeof(dictentry<K,V>) * (other.mask+1);
     table = (dictentry<K,V>*)myallocate<K,V>(table_size);
     memcpy(table, other.table, table_size);
+    return *this;
 }
 
 template<class K, class V> __ss_bool dict<K,V>::__eq__(pyobj *p) { /* XXX check hash */
@@ -1970,6 +1983,7 @@ template <class K, class V> void *dict<K,V>::__setitem__(K key, V value)
     insert_key(key, value, hash);
     if ((used > n_used && fill*3 >= (mask+1)*2))
         resize(used>50000 ? used*2 : used*4);
+    return NULL;
 }
 
 template<class T> T __none() { return NULL; }
@@ -2921,6 +2935,7 @@ template <class T> set<T>& set<T>::operator=(const set<T>& other) {
     int table_size = sizeof(setentry<T>) * (other.mask+1);
     table = (setentry<T>*)myallocate<T>(table_size);
     memcpy(table, other.table, table_size);
+    return *this;
 }
 
 template<class T> __ss_bool set<T>::__eq__(pyobj *p) { /* XXX check hash */
@@ -3280,7 +3295,11 @@ template <class T> void *set<T>::clear()
 {
 	setentry<T> *entry, *table;
 	int table_is_malloced;
+#if defined( _MSC_VER )
+	size_t fill;
+#else
 	ssize_t fill;
+#endif
 	setentry<T> small_copy[MINSIZE];
 
     table = this->table;

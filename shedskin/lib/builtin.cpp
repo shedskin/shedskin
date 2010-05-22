@@ -1743,6 +1743,9 @@ template<> str *__str(double t) {
 /* mod helpers */
 
 #if defined(WIN32) || defined(__sun)
+#   if defined (_MSC_VER)
+#       define va_copy(dest, src) ((void)((dest) = (src)))
+#   endif
 int vasprintf(char **ret, const char *format, va_list ap)
 {
     va_list ap2;
@@ -1930,6 +1933,7 @@ str *__mod5(list<pyobj *> *vals, str *sep) {
             __mod5_cache->append(__fmt_s);
     }
     str *s = __mod4(sep->join(__mod5_cache), vals);
+    return s;
 }
 
 str *__modcd(str *fmt, list<str *> *names, ...) {
@@ -2238,7 +2242,11 @@ list<tuple2<void *, void *> *> *__zip(int) {
 str *pyobj::__str__() { return __repr__(); }
 
 int pyobj::__hash__() {
+#if defined( _MSC_VER )
+    return std::hash<intptr_t>()((intptr_t)this);
+#else
     return __gnu_cxx::hash<intptr_t>()((intptr_t)this);
+#endif
 }
 
 __ss_int pyobj::__cmp__(pyobj *p) {
