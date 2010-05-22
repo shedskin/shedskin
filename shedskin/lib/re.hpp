@@ -18,7 +18,7 @@ using namespace __shedskin__;
 namespace __re__ {
 
 extern const __ss_int I, L, M, S, U, X,
-    IGNORECASE, LOCALE, MULTILINE, DOTALL, UNICODE, VERBOSE;
+    IGNORECASE, LOCALE, MULTILINE, DOTALL, __ss_UNICODE, VERBOSE;
 
 class match_object;
 typedef str *(*replfunc)(match_object *);
