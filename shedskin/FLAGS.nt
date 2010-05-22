@@ -1,0 +1,4 @@
+CC=g++
+#CCFLAGS=-O2 -msse2 -fomit-frame-pointer -pipe -Wno-deprecated $(CPPFLAGS)
+CCFLAGS=-O0 -pipe -Wno-deprecated $(CPPFLAGS)
+LFLAGS=-lgc -lpcre $(LDFLAGS)

@@ -703,7 +703,7 @@ class generateVisitor(ASTVisitor):
                 if ident in cl.funcs and self.inhcpa(cl.funcs[ident]):
                     self.eol(')')
                 else:
-                    self.eol(') {}') # XXX
+                    self.eol(') { return 0; }') # XXX
 
                 if ident in cl.funcs: cl.funcs[ident].declared = True
 
@@ -2939,7 +2939,7 @@ def generate_code():
 
     if sys.platform == 'win32':
         pyver = '%d%d' % sys.version_info[:2]
-	prefix = sysconfig.get_config_var('prefix').replace('\\', '/')
+        prefix = sysconfig.get_config_var('prefix').replace('\\', '/')
     else:
         pyver = sysconfig.get_config_var('VERSION')
         includes = '-I' + sysconfig.get_python_inc() + ' ' + \
@@ -2991,6 +2991,7 @@ def generate_code():
     # import flags
     if getgx().flags: flags = getgx().flags
     elif os.path.isfile('FLAGS'): flags = 'FLAGS'
+    elif getgx().msvc: flags = connect_paths(getgx().sysdir, 'FLAGS.nt')
     else: flags = connect_paths(getgx().sysdir, 'FLAGS')
 
     for line in file(flags):
@@ -3007,7 +3008,8 @@ def generate_code():
             if getgx().fast_random: line += ' -D__SS_FASTRANDOM'
             if getgx().longlong: line += ' -D__SS_LONG'
             if getgx().extension_module:
-                if sys.platform == 'win32': line += ' -I%s/include -D__SS_BIND' % prefix
+                if getgx().msvc: line += ' /DLL /LIBPATH:%s/libs /LIBPATH:python%s' % (prefix, pyver)
+                elif sys.platform == 'win32': line += ' -I%s/include -D__SS_BIND' % prefix
                 else: line += ' -g -fPIC -D__SS_BIND ' + includes
 
         elif line[:line.find('=')].strip() == 'LFLAGS':
@@ -3033,7 +3035,6 @@ def generate_code():
         print >>makefile, line
     print >>makefile
 
-    print >>makefile, '.PHONY: all run clean\n'
     print >>makefile, 'all:\t'+ident+'\n'
 
     if not getgx().extension_module:
@@ -3043,14 +3044,24 @@ def generate_code():
     print >>makefile, 'CPPFILES='+cppfiles
     print >>makefile, 'HPPFILES='+hppfiles+'\n'
 
+    _out = '-o '
+    _ext=''
+    if getgx().msvc:
+        _out = '/out:'
+        _ext = ''
+        if not getgx().extension_module:
+            _ext = '.exe'
+
     for suffix, options in [('', ''), ('_prof', '-pg -ggdb'), ('_debug', '-g -ggdb')]:
         print >>makefile, ident+suffix+':\t$(CPPFILES) $(HPPFILES)'
-        print >>makefile, '\t$(CC) '+options+' $(CCFLAGS) $(CPPFILES) $(LFLAGS) -o '+ident+suffix+'\n'
+        print >>makefile, '\t$(CC) '+options+' $(CCFLAGS) $(CPPFILES) $(LFLAGS) '+_out+ident+suffix+_ext + '\n'
 
     ext = ''
     if sys.platform == 'win32':
         ext = '.exe'
     print >>makefile, 'clean:'
-    print >>makefile, '\trm -f %s %s %s' % (ident+ext, ident+'_prof'+ext, ident+'_debug'+ext)
+    print >>makefile, '\trm -f %s %s %s\n' % (ident+ext, ident+'_prof'+ext, ident+'_debug'+ext)
+
+    print >>makefile, '.PHONY: all run clean\n'
 
     makefile.close()
