@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import shedskin.infer, shedskin.cpp
-import traceback, sys, os, time
+import traceback, sys, os, time, subprocess
 
 tests = [
 ('''fixes for 0.5''', '''
@@ -10931,39 +10931,32 @@ def unittest(i):
 
 def output(text=None, equal=False):
     global native_output
-    if only_analyze: return
 
     # compare with compiled c++ output
     print '*** compiling & running..'
 
-    os.system('make clean')
-
-    # --- unix
-    if sys.platform != 'win32':
-        os.system('make') # >& /dev/null')
-        t1 = os.times()
-        com = os.popen('./test')
-
-    # --- windows
+    # --- make clean; make
+    if msvc:
+        assert os.system('nmake /C /S clean') == 0, 'does not compile'
+        assert os.system('nmake /C /S') == 0, 'does not compile'
+        command = '.\\test'
     else:
-        os.system('make')
-        t1 = os.times()
-        com = os.popen('test')
+        assert os.system('make clean; make') == 0, 'does not compile'
+        command = './test'
 
+    # --- run, catch output
+    t1 = os.times()
+    com = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE).stdout
     native_output = ''.join(com.readlines())
-
-    if com.close():
-        print 'does not compile:', name
-        raise Exception('hell')
-
-    results[number]['runtime'] = os.times()[2]-t1[2]
+    com.close()
 
     # --- run test in CPython
-    if equal or try_cpython:
+    if equal:
         print '*** running test using CPython..'
         file('wahh','w').write(code)
         t1 = os.times()
-        com2 = os.popen('python wahh')
+        com2 = subprocess.Popen('python wahh',shell=True, stdout=subprocess.PIPE).stdout
+
         if equal:
             text = ''.join(com2.readlines())
         else:
@@ -10971,30 +10964,11 @@ def output(text=None, equal=False):
         com2.close()
         results[number]['cpython'] = os.times()[2]-t1[2]
 
-    # --- run test using Psyco
-    if try_psyco:
-        print '*** running test using CPython/Psyco..'
-        file('wahh','w').write('import psyco\npsyco.profile()\n'+code)
-        t1 = os.times()
-        com2 = os.popen('python wahh')
-        if equal:
-            text = ''.join(com2.readlines())
-        else:
-            com2.readlines()
-        com2.close()
-        results[number]['psyco'] = os.times()[2]-t1[2]
-
     if text and native_output != text:
         print 'output:'
         print native_output
         print 'expected output:', name
         print text
-
-        #for (i, (a,b)) in enumerate(zip(text, native_output)):
-        #    if a != b:
-        #        native_output = native_output[:i]+'>>>'+native_output[i:]
-        #        break
-
         raise Exception('hell')
 
 # --- parse arguments and options
@@ -11008,7 +10982,7 @@ for arg in sys.argv[1:]:
 
 if not 'p' in options:
     print '*** SHEDSKIN Python->C++ Compiler ***'
-    print 'Copyright 2005-2008 Mark Dufour; License GNU GPL version 3 (See LICENSE)'
+    print 'Copyright 2005-2010 Mark Dufour; License GNU GPL version 3 (See LICENSE)'
     print
 
 if 'h' in options:
@@ -11018,16 +10992,10 @@ if 'h' in options:
     print
     print "options:"
     print "'-p': print test"
-    print "'-a': only analyze and generate code"
     print "'-l': give individual test numbers"
     print "'-t': show available tests"
     print "'-r': reverse test order"
     print "'-f': break after first failure"
-    print "'-n': show analysis times"
-    print "'-o': show running times"
-    print "'-y': show psyco times"
-    print "'-c': show cpython times"
-    print "'-s': use hardcoded set of tests"
 
     sys.exit()
 
@@ -11058,14 +11026,7 @@ if 't' in options:
         print str(test)+': '+tests[test][0]
     sys.exit()
 
-only_analyze = 'a' in options
-try_cpython = 'c' in options
-try_psyco = 'y' in options
-analysis_time = 'n' in options
-runtime = 'o' in options
-
-if 's' in options:
-    test_nrs = [99, 122, 123, 132, 133, 148, 149, 151, 153, 154, 157]
+msvc = 'v' in options
 
 disabled = [14, 27, 34, 35, 41, 42, 47, 48, 49, 57, 58, 61, 62, 63, 65, 66, 67, 68, 72, 80, 85, 90, 91, 92, 96, 101, 116, 121, 117, 145, 149]
 results = [{} for test in tests]
@@ -11074,47 +11035,11 @@ results = [{} for test in tests]
 for test in test_nrs:
     if test not in disabled:
         unittest(test)
-        #print 'end', os.times()
     if failures and 'f' in options:
         break
 
 if not failures:
     print '*** no failures, yay!'
-
-    # --- performance table
-    if runtime or analysis_time or try_cpython or try_psyco:
-        print '*** performance table:\n'
-        header = '\t'
-        if try_cpython: header += 'cpython\t'
-        if try_psyco: header += 'psyco\t'
-        if runtime: header += 'time\t'
-        if try_cpython and runtime: header += 'xcpy\t'
-        if try_psyco and runtime: header += 'xpsy\t'
-        if analysis_time: header += 'anal\t'
-        header += 'loc'
-        print header
-
-        for i in test_nrs:
-            if runtime and results[i]['runtime'] == 0:
-                print "UHOH", i
-                results[i]['runtime'] = 0.00001
-
-            line = str(i)+'\t'
-
-            if try_cpython: line += '%.2f\t' % results[i]['cpython']
-            if try_psyco: line += '%.2f\t' % results[i]['psyco']
-            if runtime: line += '%.2f\t' % results[i]['runtime']
-            if try_cpython and runtime: line += '%.2f\t' % (results[i]['cpython'] / results[i]['runtime'])
-            if try_psyco and runtime: line += '%.2f\t' % (results[i]['psyco'] / results[i]['runtime'])
-            if analysis_time: line += '%.2f\t' % results[i]['analysis']
-            line += str(len([x for x in tests[i][1].split('\n') if x.strip() and x.strip()[0] != '#'])-1) # loc
-            line += '\t'+tests[i][0]
-
-            print line
 else:
     print '*** tests failed:', len(failures)
     print [(i, tests[i][0]) for i in failures]
-
-
-
-
