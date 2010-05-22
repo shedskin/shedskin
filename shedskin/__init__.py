@@ -43,7 +43,7 @@ def main():
 
     # --- command-line options
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'bchef:wad:m:rl', ['extmod', 'nobounds', 'nowrap', 'flags=', 'dir=', 'makefile=', 'random', 'long'])
+        opts, args = getopt.getopt(sys.argv[1:], 'vbchef:wad:m:rl', ['extmod', 'nobounds', 'nowrap', 'flags=', 'dir=', 'makefile=', 'random', 'long', 'msvc'])
     except getopt.GetoptError:
         usage()
 
@@ -57,6 +57,7 @@ def main():
         if o in ['-w', '--nowrap']: getgx().wrap_around_check = False
         if o in ['-r', '--random']: getgx().fast_random = True
         if o in ['-m', '--makefile']: getgx().makefile_name = a
+        if o in ['-v', '--msvc']: getgx().msvc = True
         if o in ['-f', '--flags']:
             if not os.path.isfile(a):
                 print "*ERROR* no such file: '%s'" % a
