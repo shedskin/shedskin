@@ -8429,9 +8429,7 @@ def joink(d):                            # d: [bla(A)]
 e = joink(a)                                 # [bla(int)]
 f = joink(b)                                 # [bla(float)]
 ''', '''
-check('e', ['bla(int)'])
-check('f', ['bla(float)'])
-output()
+output(equal=True)
 
 '''),
 
@@ -8587,10 +8585,7 @@ def best_move(xx):                       # xx: [int]
 
 a, b = best_move(1)                      # [tuple2(tuple2(int, int), int)]
 ''', '''
-check('a', ['tuple(int)'])
-#check('a', ['tuple2(int, int)'])
-check('b', ['int'])
-output()
+output(equal=True)
 
 '''),
 
@@ -8617,9 +8612,7 @@ output(equal=True)
 l = [(1,2.0),(2,4.0)]                    # [list(tuple2(int, float))]
 m = [(bh, ah) for (ah, bh) in l]         # [list(tuple2(float, int))]
 ''', '''
-check('l', ['list(tuple(int, float))'])
-check('m', ['list(tuple(float, int))'])
-output()
+output(equal=True)
 
 '''),
 
@@ -8637,13 +8630,7 @@ d = aha[1]                                   # [float]
 for e,f in l:
     pass
 ''', '''
-check('a', ['int'])
-check('b', ['float'])
-check('c', ['int'])
-check('d', ['float'])
-check('e', ['int'])
-check('f', ['float'])
-output()
+output(equal=True)
 
 '''),
 
@@ -8660,11 +8647,7 @@ hans = (1.0,2.0,3.0)                     # [tuple(float)]
 bert_list = [bert]                       # [list(tuple(int))]
 hans_list = [hans]                       # [list(tuple(float))]
 ''', '''
-check('bert_list', ['list(tuple(int))'])
-check('hans_list', ['list(tuple(float))'])
-check('x', ['list(tuple(int, float))'])
-
-output()
+output(equal=True)
 '''),
 
 ('parameterize list comprehension on pyiter (dict, list) XXX add set', '''
@@ -8692,9 +8675,7 @@ h = {3.0: 3}
 a = doubles(f)
 b = doubles(h)
 ''', '''
-check('a', ['list(float)'])
-check('b', ['list(int)'])
-output()
+output(equal=True)
 
 '''),
 
@@ -8706,8 +8687,6 @@ a = bla([1, 2, 3])                                 # [list(int)]
 b = bla([1.1, 2.2, 3.3])                               # [list(float)]
 print a, b
 ''', '''
-check('a', ['list(int)'])
-check('b', ['list(float)'])
 output(equal=True)
 
 '''),
@@ -8723,12 +8702,7 @@ e = {}                                   # [dict(int, float)]
 e[4] = 1.0                               # [float]
 
 ''', '''
-check('f', ['dict(float, int)'])
-check('g', ['dict(int, float)'])
-check('e', ['dict(int, float)'])
-#cl = gx.modules['builtin'].classes['dict']
-#assert cl.dcpa - len(cl.unused) -1 == 2
-output()
+output(equal=True)
 
 '''),
 
@@ -8799,10 +8773,7 @@ s = row_perm_rec()                       # [pyobj]
 puzzleboard = [['']]                     # [list(list(str))]
 puzzleboard[1][1] = s[1]                 # [str]
 ''', '''
-check('s', ['pyobj'])
-check('a', ['list(list(int))'])
-check('puzzleboard', ['list(list(str))'])
-output()
+output(equal=True)
 
 '''),
 
@@ -8846,7 +8817,7 @@ def bla():
 
 a = bla()                                    # []
 ''', '''
-check('a', ['list(int)'])
+output(equal=True)
 
 '''),
 
@@ -8926,8 +8897,7 @@ cnf = ['']                               # [list(str)]
 for x in cnf:                            # [list(str)]
     d = int(x)                               # [int]
 ''', '''
-check('cnf', ['list(str)'])
-check('d', ['int'])
+output(equal=True)
 
 '''),
 
@@ -8936,16 +8906,14 @@ u = [' p  o', 'c o ']                    # [list(str)]
 cnf = [x.strip().split() for x in u if not x.startswith('x')] # [list(list(str))]
 cnf2 = [[3] for x in u]                  # [list(list(int))]
 ''', '''
-check('u', ['list(str)'])
-check('cnf', ['list(list(str))'])
-check('cnf2', ['list(list(int))'])
+output(equal=True)
 
 '''),
 
 ('simple list(list(str))', '''
 cnf = [''.split()]                       # [list()]
 ''', '''
-check('cnf', ['list(list(str))'])
+output(equal=True)
 '''),
 
 ('simple constructor code test XXX ua', '''
@@ -8959,12 +8927,7 @@ e = [[1, 2],[2, 3, 4]]                   # [list(list(int))]
 
 #f = [[1, 2.0],[2, 3, 4]]                 # [list(list(pyobj))]
 ''', '''
-check('a', ['list(int)'])
-check('b', ['list(float)'])
-#check('c', ['list(float)'])
-check('d', ['list(tuple(int))'])
-check('e', ['list(list(int))'])
-#check('f', ['list(list(float))'])
+output(equal=True)
 
 '''),
 
@@ -9059,13 +9022,7 @@ e = [1.0]                                # [list(float)]
 d = [c]                                  # [list(list(int))]
 f = [e]                                  # [list(list(float))]
 ''', '''
-check('a', ['tuple(int)'])
-check('b', ['list(tuple(int))'])
-check('c', ['list(int)'])
-check('d', ['list(list(int))'])
-check('e', ['list(float)'])
-check('f', ['list(list(float))'])
-output()
+output(equal=True)
 
 '''),
 
@@ -9081,8 +9038,7 @@ bh = []                                  # [list(pyobj)]
 #ident(bh).append(1)                      # []
 ident(bh).append(1.0)                    # []
 ''', '''
-check('ah', ['list(int)'])
-check('bh', ['list(float)'])
+output(equal=True)
 
 '''),
 
@@ -9094,8 +9050,7 @@ ah = []                                  # [list(pyobj)]
 #ident(ah).append(1)                      # []
 ident(ah).append(1.0)                    # []
 ''', '''
-check('ah', ['list(float)'])
-
+output(equal=True)
 
 '''),
 
@@ -9117,13 +9072,7 @@ def hoppa(y):                            # y: [list(A)]
 c = hoppa(a)                             # [list(int)]
 d = hoppa(b)                             # [list(float)]
 ''', '''
-check('a', ['list(int)'])
-check('b', ['list(float)'])
-check('c', ['list(int)'])
-check('d', ['list(float)'])
-dupl = gx.main_module.funcs['hoppa']
-assert shedskin.cpp.typesetreprnew(dupl.vars['k'], dupl, False) == '[list(float)]'
-output()
+output(equal=True)
 
 '''),
 
@@ -9137,11 +9086,7 @@ b = [1.0]                                # [list(float)]
 c = dupl(a)                                  # [list(int)]
 d = dupl(b)                                  # [list(float)]
 ''', '''
-check('a', ['list(int)'])
-check('b', ['list(float)'])
-check('c', ['list(int)'])
-check('d', ['list(float)'])
-output()
+output(equal=True)
 
 '''),
 
@@ -9190,18 +9135,7 @@ def makel(x):                            # x: [A]
 d = makel(1)                                 # [list(int)]
 e = makel(1.0)                               # [list(float)]
 ''', '''
-check('a', ['list(int)'])
-check('b', ['list(float)'])
-check('c', ['list(int)'])
-check('d', ['list(int)'])
-check('e', ['list(float)'])
-dupl = gx.main_module.funcs['dupl']
-assert shedskin.cpp.typesetreprnew(dupl.vars['l'], dupl, False) == '[list(A)]'
-assert shedskin.cpp.typesetreprnew(dupl.vars['k'], dupl, False) == '[list(float)]'
-assert shedskin.cpp.typesetreprnew(dupl.vars['v'], dupl, False) == '[list(int)]'
-makel = gx.main_module.funcs['makel']
-assert shedskin.cpp.typesetreprnew(makel.vars['l'], makel, False) == '[list(A)]'
-output()
+output(equal=True)
 
 '''),
 
@@ -9224,14 +9158,7 @@ def hoppa(y):
 c = hoppa(a)
 d = hoppa(b)
 ''', '''
-check('a', ['list(int)'])
-check('b', ['list(float)'])
-check('c', ['list(int)'])
-check('d', ['list(float)'])
-hoppa = gx.main_module.funcs['hoppa']
-assert shedskin.cpp.typesetreprnew(hoppa.vars['l'], hoppa, False) == '[list(A)]'
-assert shedskin.cpp.typesetreprnew(hoppa.vars['k'], hoppa, False) == '[list(float)]'
-output()
+output(equal=True)
 
 '''),
 
@@ -9245,10 +9172,7 @@ a = []                                   # [list(int)]
 a.append(1)                              # []
 dupl(a)                                  # []
 ''', '''
-check('a', ['list(int)'])
-hoppa = gx.main_module.funcs['dupl']
-assert shedskin.cpp.typesetreprnew(hoppa.vars['k'], hoppa, False) == '[list(float)]'
-output()
+output(equal=True)
 
 '''),
 
@@ -9266,11 +9190,7 @@ def dupl(y):                             # y: [list(A)]
 c = dupl(a)                                  # [list(int)]
 d = dupl(b)                                  # [list(float)]
 ''', '''
-check('a', ['list(int)'])
-check('b', ['list(float)'])
-check('c', ['list(int)'])
-check('d', ['list(float)'])
-output()
+output(equal=True)
 
 '''),
 
@@ -9286,10 +9206,7 @@ ident(a).append(1)                       # []
 ident(b).append(1.0)                     # []
 ident(c).append(1)                       # []
 ''','''
-check('a', ['list(int)'])
-check('b', ['list(float)'])
-check('c', ['list(int)'])
-output()
+output(equal=True)
 
 '''),
 
@@ -9302,9 +9219,7 @@ def makel(x):                            # x: [A]
 c = makel(1)                                 # [list(int)]
 d = makel(1.0)                               # [list(float)]
 ''', '''
-check('c', ['list(int)'])
-check('d', ['list(float)'])
-output()
+output(equal=True)
 
 '''),
 
@@ -9446,10 +9361,7 @@ m = node()                               # [node(evert)]
 m.next = m                               # [node(evert)]
 m.value = e                              # [evert]
 ''','''
-check('n', ['node(bert)'])
-check('m', ['node(evert)'])
-
-output()
+output(equal=True)
 
 '''),
 
@@ -9476,7 +9388,7 @@ a.setdefault(1,[]).append(1.0)           # []
 
 b= a[1]                                  # [list(float)]
 ''','''
-check('b', ['list(float)'])
+output(equal=True)
 '''),
 
 ('simple deep copy test (XXX)', '''
@@ -9802,9 +9714,7 @@ a = hu(10)                                   # [list(int)]
 #b = hu(10,'2')                               # [list(int,str)]
 c = [i for i in hu(10)]                      # [list(int)]
 ''', '''
-check('a', ['list(int)'])
-#check('b', ['list(int,str)'])
-check('c', ['list(int)'])
+output(equal=True)
 '''),
 
 ('modules, namespaces, lambdas', '''
@@ -9853,7 +9763,7 @@ def hu(n, s=-1):                         # s: [int], n: [int]
 
 a = [i for i in hu(10)]                      # []
 ''','''
-check('a', ['list(int)'])
+output(equal=True)
 '''),
 
 ('mask algorithm', '''
@@ -10045,7 +9955,7 @@ def ffile(name):                          # name: [str]
 x = argv[0]                              # [str]
 cnf = [y for y in ffile(x)]               # [list(int)]
 ''', '''
-check('cnf', ['list(int)'])
+output(equal=True)
 '''),
 
 ('copy-by-value test (XXX print inside templates XXX ua)', '''
@@ -10441,12 +10351,7 @@ vars = range(nrofvars+1)
 occurrence = [[[c for c in clauses if -v in c],[c for c in clauses if v in c]] for v in vars]
 fixedt = [-1 for var in vars]
 ''', '''
-check('cnf',['list(list(str))'])
-check('clauses',['list(list(int))'])
-check('nrofvars',['int'])
-check('occurrence',['list(list(list(list(int))))'])
-check('fixedt',['list(int)'])
-output()
+output(equal=True)
 '''),
 
 ('simple cpa crap','''
@@ -10497,14 +10402,13 @@ output(equal=True)
 cube = [(1,2),(3,4)]                     # [list_tuple_int]
 cube[0] = (1,2)                          # [tuple_int]
 ''','''
-check('cube',['list(tuple(int))'])
-#check('cube',['list(tuple2(int, int))'])
+output(equal=True)
 '''),
 
 ('list_list_int_tuple_int','''
 cube = [[1,2],(3,4)]
 ''','''
-check('cube',['list(pyseq(int))'])
+output(equal=True)
 '''),
 
 ('fred = fred + fred', '''
@@ -10521,7 +10425,7 @@ def hoei():
 
 a = hoei()
 ''','''
-check('a',['integer'])
+output(equal=True)
 '''),
 
 ('function nested for-in..','''
@@ -10534,16 +10438,14 @@ def hoei(cube):                          # x: [tuple_int], cube: [list_tuple_int
 cube = [(1,2),(3,4),(5,6)]               # [list_tuple_int]
 b = hoei(cube)                               # [tuple_int]
 ''','''
-check('b',['tuple(int)'])
-#check('b',['tuple2(int, int)'])
+output(equal=True)
 '''),
 
 ('simple for-in', '''
 for a in [(1,2),(3,4)]:                  # [list_tuple_int]
     pass
 ''','''
-check('a',['tuple(int)'])
-#check('a',['tuple2(int, int)'])
+output(equal=True)
 '''),
 
 ('list_float_tuple_int XXX ua', '''
@@ -10554,10 +10456,7 @@ a = gettuple()
 cube = [(1,2),(3,4),a,gettuple()]
 #cube.append(1.0)
 ''','''
-check('a',['tuple(int)'])
-#check('a',['tuple2(int, int)'])
-check('cube',['list(tuple(int))'])
-#check('cube',['list(tuple2(int, int))'])
+output(equal=True)
 '''),
 
 ('return self.unit', '''
@@ -10565,7 +10464,7 @@ cube = []
 cube.append(1.0)
 y = cube[0]
 ''','''
-check('y',['float'])
+output(equal=True)
 '''),
 
 ('simple list indexing', '''
@@ -10582,7 +10481,7 @@ cube.append(1.0)                         # []
 
 y = cube[0]                                  # [float]
 ''','''
-check('y',['float'])
+output(equal=True)
 '''),
 
 ('the same, now using append', '''
@@ -10590,7 +10489,7 @@ cube = []                                # [list_float_int]
 #cube.append(1)                           # [None]
 cube.append(1.0)                         # [None]
 ''', '''
-check('cube',['list(float)'])
+output(equal=True)
 '''),
 
 ('simple real data polymorphism on list XXX ua', '''
@@ -10600,7 +10499,7 @@ cube.unit = 1.0                          # [float]
 #cube.unit = 1                            # [int]
 
 ''', '''
-check('cube', ['list(float)'])
+output(equal=True)
 '''),
 
 ('max escape', '''
@@ -10667,10 +10566,7 @@ c = h.init(1)
 g = fred()
 e = g.init('ho')
 ''','''
-check('h', ['fred(int)'])
-check('g', ['fred(str)'])
-check('e', ['str'])
-check('c', ['int'])
+output(equal=True)
 '''),
 
 ('stupid escape visitor mess-up', '''
@@ -10685,7 +10581,7 @@ def hottum():
 h = fred()                               # [fred]
 c = h.hottum('jo')                       # [int]
 ''', '''
-check('c', ['int'])
+output(equal=True)
 '''),
 
 ('max, integer class, __gt__, bool type', '''
@@ -10718,7 +10614,7 @@ a = fred()                               # [fred]
 a.huh()
 b = a.a                                  # [int]
 ''', '''
-check('b',['int'])
+output(equal=True)
 '''),
 
 ('__setattr__ -> __getattr__', '''
@@ -10733,8 +10629,7 @@ c = fred()                               # [fred_str]
 c.a = 'god'                              # [str]
 d = c.a                                  # [str]
 ''', '''
-check('b',['int'])
-check('d',['str'])
+output(equal=True)
 '''),
 
 ('addition operator', '''
@@ -10746,7 +10641,6 @@ a = fred()                               # [fred] = [fred]
 b = a + a                                # [int] = [int]
 ''', '''
 output(equal=True)
-#check('b',['int'])
 
 '''),
 
@@ -10808,8 +10702,7 @@ def hap(y):
 x = aap(1)
 y = hap(1.0)
 ''','''
-check('x', ['int'])
-check('y', ['float'])
+output(equal=True)
 '''),
 
 ('return via', '''
@@ -10818,7 +10711,7 @@ def bwa():
     return d
 a = bwa()
 ''','''
-check('a',['str'])
+output(equal=True)
 '''),
 
 ('return const', '''
@@ -10826,7 +10719,7 @@ def bla():
     return 8
 a = bla()
 ''','''
-check('a',['int'])
+output(equal=True)
 '''),
 
 ('simple class method', '''
@@ -10836,13 +10729,13 @@ class fred:
 b = fred()
 c = b.speak('goedzo!')
 ''','''
-check('c', ['str'])
+output(equal=True)
 '''),
 
 ('list instantiation', '''
 a = [1]
 ''','''
-check('a',['list(int)'])
+output(equal=True)
 '''),
 
 ('boing boing boing', '''
@@ -10853,14 +10746,14 @@ def boing(c, d):
 a = 1
 h = boing(boing(a,1.0),boing(3.0,a))
 ''','''
-check('h', ['int'])
+output(equal=True)
 '''),
 
 ('simple class', '''
 class fred: pass
 x = fred()
 ''','''
-check('x', ['fred'])
+output(equal=True)
 '''),
 
 ('double call', '''
@@ -10870,32 +10763,17 @@ def boing(c, d):
     return ident(c)
 aap = boing(1,1.0)
 ''','''
-check('aap', ['int'])
+output(equal=True)
 '''),
 
 ('simple assignment', '''
 a = 1
 ''','''
-check('a', ['int'])
+output(equal=True)
 ''')]
 
 tests.reverse()
 failures = []
-
-def check(name, typelist):
-    ts = shedskin.cpp.typesetreprnew(cv.globals[name], None, False)
-    if ts != '['+typelist[0]+']':
-        print 'expected for', name+':'
-        print '['+typelist[0]+']'
-        print 'and not:'
-        print ts
-
-        raise Exception('hell')
-
-def getvar(name):
-    if len(name) == 3:
-        return cv.classes[name[0]].funcs[name[1]].vars[name[2]]
-    return cv.funcs[name[0]].vars[name[1]]
 
 def unittest(i):
     global gx, cv, number, code, name, test
@@ -10912,7 +10790,6 @@ def unittest(i):
 
         t1 = os.times()
         gx = shedskin.infer.analyze(code, True)
-        results[i]['analysis'] = os.times()[0]-t1[0]
         cv = gx.main_module.mv
         shedskin.cpp.generate_code()
 
@@ -10962,7 +10839,6 @@ def output(text=None, equal=False):
         else:
             com2.readlines()
         com2.close()
-        results[number]['cpython'] = os.times()[2]-t1[2]
 
     if text and native_output != text:
         print 'output:'
@@ -11028,8 +10904,7 @@ if 't' in options:
 
 msvc = 'v' in options
 
-disabled = [14, 27, 34, 35, 41, 42, 47, 48, 49, 57, 58, 61, 62, 63, 65, 66, 67, 68, 72, 80, 85, 90, 91, 92, 96, 101, 116, 121, 117, 145, 149]
-results = [{} for test in tests]
+disabled = [14, 17, 27, 34, 35, 41, 42, 47, 48, 49, 57, 58, 61, 62, 63, 65, 66, 67, 68, 70, 72, 80, 85, 90, 91, 92, 96, 101, 116, 121, 117, 145, 149]
 
 # --- execute tests
 for test in test_nrs:
