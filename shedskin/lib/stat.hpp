@@ -43,6 +43,7 @@ extern __ss_int __ss_S_IRWXO;
 extern __ss_int __ss_ST_DEV;
 extern __ss_int __ss_ST_SIZE;
 
+#if !defined (_MSC_VER)
 __ss_int __ss_S_IMODE(__ss_int mode);
 __ss_int __ss_S_IFMT(__ss_int mode);
 __ss_int __ss_S_ISDIR(__ss_int mode);
@@ -50,8 +51,11 @@ __ss_int __ss_S_ISCHR(__ss_int mode);
 __ss_int __ss_S_ISBLK(__ss_int mode);
 __ss_int __ss_S_ISREG(__ss_int mode);
 __ss_int __ss_S_ISFIFO(__ss_int mode);
+#endif
+#ifndef WIN32
 __ss_int __ss_S_ISLNK(__ss_int mode);
 __ss_int __ss_S_ISSOCK(__ss_int mode);
+#endif
 
 void __init();
 
