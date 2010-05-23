@@ -218,10 +218,9 @@ class moduleVisitor(ASTVisitor):
     def addconstraint(self, constraint, func):
         in_out(constraint[0], constraint[1])
         getgx().constraints.add(constraint)
-        if isinstance(func, class_): # XXX
-            func = None
-        while func and func.listcomp: func = func.parent # XXX
-        if func:
+        while isinstance(func, function) and func.listcomp: 
+            func = func.parent # XXX
+        if isinstance(func, function):
             func.constraints.add(constraint)
 
     def visitGenExpr(self, node, func=None):
