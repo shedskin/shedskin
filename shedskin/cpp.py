@@ -703,7 +703,10 @@ class generateVisitor(ASTVisitor):
                 if ident in cl.funcs and self.inhcpa(cl.funcs[ident]):
                     self.eol(')')
                 else:
-                    self.eol(') { return 0; }') # XXX
+                    if retexpr and self.mergeinh[func.retnode.thing] == set([(defclass('bool_'), 0)]):
+                        self.eol(') { return False; }') # XXX msvc needs return statement
+                    else:
+                        self.eol(') { return 0; }') # XXX msvc needs return statement
 
                 if ident in cl.funcs: cl.funcs[ident].declared = True
 
