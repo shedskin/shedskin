@@ -147,7 +147,7 @@ class generateVisitor(ASTVisitor):
     def connector(self, node, func):
         if singletype(node, module): return '::'
 
-        elif func and func.listcomp:
+        elif isinstance(func, function) and func.listcomp:
             return '->'
         elif isinstance(node, Name) and not lookupvar(node.name, func): # XXX
             return '::'
