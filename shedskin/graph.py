@@ -121,8 +121,6 @@ class moduleVisitor(ASTVisitor):
                 getgx().types[newnode] = set([(cl, cl.dcpa)])
 
     def constructor(self, node, classname, func):
-        if isinstance(func, class_): # XXX
-            func = None
         cl = defclass(classname)
 
         self.instance(node, cl, func)
