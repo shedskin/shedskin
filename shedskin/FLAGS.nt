@@ -1,4 +1,3 @@
-CC=g++
-#CCFLAGS=-O2 -msse2 -fomit-frame-pointer -pipe -Wno-deprecated $(CPPFLAGS)
-CCFLAGS=-O0 -pipe -Wno-deprecated $(CPPFLAGS)
-LFLAGS=-lgc -lpcre $(LDFLAGS)
+CC=cl
+CCFLAGS=/Ox $(CPPFLAGS) /EHsc /TP /MD /Zi /nologo /W3 /WX- /O2 /Oi /Oy- /GL /Gm- /EHsc /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /D "and"="&&" /D "or"="||" /D "not"="!" /D "WIN32" /D "_CONSOLE" /D "ALL_INTERIOR_POINTERS" /D "GC_NOT_DLL" /D "_UNICODE" /I. /I$(GC_HOME) /I$(PCRE_HOME)
+LFLAGS= $(LDFLAGS) /link gc.lib pcre.lib user32.lib /libpath:$(PCRE_HOME) /libpath:$(GC_HOME) /NODEFAULTLIB:"libcmt" /subsystem:console  /OPT:REF /OPT:ICF
