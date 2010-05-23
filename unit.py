@@ -10820,6 +10820,7 @@ def unittest(i):
 
         t1 = os.times()
         gx = shedskin.infer.analyze(code, True)
+        if msvc: gx.msvc = True
         cv = gx.main_module.mv
         shedskin.cpp.generate_code()
 
@@ -10869,6 +10870,10 @@ def output(text=None, equal=False):
         else:
             com2.readlines()
         com2.close()
+    else:
+      # Classic EOL issue between 'native' Windows and Linux needs to be resolved here
+      if text and msvc:
+         native_output = native_output.replace('\r','')
 
     if text and native_output != text:
         print 'output:'
