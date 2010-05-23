@@ -169,7 +169,7 @@ double mktime(tuple2<__ss_int, __ss_int> *tuple) {
 
 struct_time *localtime() {
     time_t time = ::time(NULL);
-    return localtime(time);
+    return localtime((double)time);
 }
 
 struct_time *localtime(const double timep) {
@@ -180,7 +180,7 @@ struct_time *localtime(const double timep) {
 
 struct_time *gmtime() {
     time_t time = ::time(NULL);
-    return gmtime(time);
+    return gmtime((double)time);
 }
 
 struct_time *gmtime(const double seconds) {

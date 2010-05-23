@@ -18,7 +18,7 @@ void __init(int c, char **v) {
 
 #if defined( _MSC_VER )
     version = new str("Shed Skin Python-to-C++ Compiler 0.5\n[MSVC ");
-    version = version->__add__(new str(_MSC_VER))->__add__(new str("]"));
+    version = version->__add__(__str(_MSC_VER))->__add__(new str("]"));
 #else
     version = new str("Shed Skin Python-to-C++ Compiler 0.5\n[GCC ");
     version = version->__add__(new str(__VERSION__))->__add__(new str("]"));
