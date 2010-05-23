@@ -2681,13 +2681,13 @@ def typesplit(node, parent):
         parent = parent.parent
 
     if isinstance(parent, class_): # class variables
-        for dcpa in range(1, parent.dcpa):
+        for dcpa in range(parent.dcpa):
             if (node, dcpa, 0) in getgx().cnode:
                 split[dcpa, 0] = getgx().cnode[node, dcpa, 0].types()
 
     elif isinstance(parent, function):
         if isinstance(parent.parent, class_): # method variables/expressions (XXX nested functions)
-            for dcpa in range(1, parent.parent.dcpa):
+            for dcpa in range(parent.parent.dcpa):
                 if dcpa in parent.cp:
                     for cpa in range(len(parent.cp[dcpa])):
                         if (node, dcpa, cpa) in getgx().cnode:

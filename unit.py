@@ -91,6 +91,7 @@ class baa(aa):
 
 baa()
 
+# @x.setter syntax
 class bert(object):
     @property
     def patat(self):
@@ -105,6 +106,35 @@ class bert(object):
 b1 = bert()
 b1.patat = 12
 print(b1.patat)
+
+# class-level constructors
+class aazz:
+  class_dict_var={}
+  class_dict_var2={}
+  class_dict_var3={(1,2): 7}
+  kwek = []
+  kwad = (1,2)
+  wof = 'wof'
+  s = set()
+  t = s 
+  z = t | s
+  wa = [2*x for x in range(10)]
+  def __init__(self):
+    self.y = 10
+    aazz.class_dict_var[4] = 5
+    aazz.class_dict_var2['4'] = 5
+    aazz.kwek.append('1')
+    aazz.s.update(aazz.kwad)
+
+print(aazz().y)
+print(aazz.class_dict_var)
+print(aazz.class_dict_var2)
+print(aazz.class_dict_var3)
+print(aazz.kwek)
+print(aazz.kwad)
+print(aazz.wof)
+print(aazz.s, aazz.t, aazz.z)
+print(aazz.wa)
 
 ''', '''
 output(equal=True)
