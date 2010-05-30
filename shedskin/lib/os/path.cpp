@@ -84,9 +84,8 @@ str *joinl(list<str *> *l) {
     Join two or more pathname components, inserting '/' as needed
     */
     list<str *> *__1, *__2, *p;
-    __iter<str *> *__3;
     str *__0, *b, *path;
-    __ss_int __4, __5, __6;
+    __ss_int __4, __5;
 
     __0 = l->__getfast__(0);
     __1 = l->__slice__(1, 1, 0, 0);
@@ -114,7 +113,7 @@ tuple2<str *, str *> *split(str *p) {
     everything after the final slash.  Either part may be empty.
     */
     str *__7, *__8, *head, *tail;
-    __ss_int __10, __9, i;
+    __ss_int i;
 
     i = (p->rfind(const_4)+1);
     __7 = p->__slice__(2, 0, i, 0);
@@ -317,10 +316,9 @@ str *normpath(str *path) {
     /**
     Normalize path, eliminating double slashes, etc.
     */
-    list<str *> *__28, *__31, *__34, *__35, *__36, *__37, *comps, *new_comps;
-    __iter<str *> *__29;
-    str *__38, *__39, *comp;
-    __ss_int __25, __26, __27, __30, __32, __33, initial_slashes;
+    list<str *> *__28, *comps, *new_comps;
+    str *__38, *comp;
+    __ss_int __25, __26, __30, __32, initial_slashes;
 
     if (__eq(path, const_0)) {
         return const_1;

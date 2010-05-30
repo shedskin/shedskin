@@ -74,11 +74,10 @@ list<str *> *listdir(str *path) {
     list<str *> *r = new list<str *>();
     DIR *dp;
     struct dirent *ep;
-    __ss_int count = 0;
 
     dp = opendir(path->unit.c_str());
 
-    while (ep = readdir(dp))
+    while ((ep = readdir(dp)))
         if(strcmp(ep->d_name, ".") && strcmp(ep->d_name, ".."))
             r->append(new str(ep->d_name));
 
@@ -140,7 +139,7 @@ void *rmdir(str *a) {
 
 void *removedirs(str *name) {
     tuple2<str *, str *> *__0, *__1, *__5;
-    str *__2, *__3, *head, *tail;
+    str *__2, *head, *tail;
 
     rmdir(name);
     __0 = __path__::split(name);
@@ -183,7 +182,6 @@ void _exit(__ss_int code) {
 void *makedirs(str *name, __ss_int mode) {
     tuple2<str *, str *> *__0, *__1;
     str *head, *tail;
-    __ss_int __2, __3, __4;
 
     __0 = __path__::split(name);
     head = __0->__getfirst__();
@@ -218,7 +216,6 @@ void *abort() {
 class_ *cl___cstat;
 
 __cstat::__cstat(str *path, __ss_int t) {
-    __ss_int hop;
     this->__class__ = cl___cstat;
 
     if(t==1) {
@@ -235,7 +232,6 @@ __cstat::__cstat(str *path, __ss_int t) {
 }
 
 __cstat::__cstat(__ss_int fd) {
-    __ss_int hop;
     this->__class__ = cl___cstat;
 
     if(fstat(fd, &sbuf) == -1)
@@ -372,8 +368,7 @@ __ss_int chmod (str* path, __ss_int val) {
 
 void *renames(str* old, str* _new) {
     tuple2<str *, str *> *__0, *__1, *__5;
-    str *__2, *__3, *head, *tail;
-
+    str *__2, *head, *tail;
 
     __0 = __path__::split(_new);
     head = __0->__getfirst__();
@@ -1025,6 +1020,7 @@ __ss_int __ss_minor(__ss_int dev) {
 void *mknod(str *filename, __ss_int mode, __ss_int device) {
     if(::mknod(filename->unit.c_str(), mode, device) == -1)
         throw new OSError(new str("os.mknod"));
+    return NULL;
 }
 
 char **__exec_argvlist(list<str *> *args) {
@@ -1063,6 +1059,7 @@ void *execl(__ss_int n, str *file, ...) {
          vals->append(va_arg(args, str *)); /* XXX check str */
      va_end(args);
      execv(file, vals);
+     return NULL;
 }
 
 void *execlp(__ss_int n, str *file, ...) {
@@ -1073,6 +1070,7 @@ void *execlp(__ss_int n, str *file, ...) {
          vals->append(va_arg(args, str *)); /* XXX check str */
      va_end(args);
      execvp(file, vals);
+     return NULL;
 }
 
 void *execle(__ss_int n, str *file, ...) {
@@ -1084,6 +1082,7 @@ void *execle(__ss_int n, str *file, ...) {
      va_end(args);
      dict<str *, str *> *env = (dict<str *, str *> *)(va_arg(args, pyobj *)); /* XXX check */
      execve(file, vals, env);
+     return NULL;
 }
 
 void *execlpe(__ss_int n, str *file, ...) {
@@ -1095,6 +1094,7 @@ void *execlpe(__ss_int n, str *file, ...) {
      va_end(args);
      dict<str *, str *> *env = (dict<str *, str *> *)(va_arg(args, pyobj *)); /* XXX check */
      execvpe(file, vals, env);
+     return NULL;
 }
 
 void *execv(str* file, list<str*>* args) {
@@ -1190,7 +1190,7 @@ __ss_int spawnlpe(__ss_int n, __ss_int mode, str *file, ...) {
 }
 
 __ss_int spawnv(__ss_int mode, str *file, list<str *> *args) {
-    __ss_int pid, retval;
+    __ss_int pid;
     tuple2<__ss_int, __ss_int> *t;
     if(!(pid = fork())) /* XXX no spawn* for C++..? */
         execv(file, args);
@@ -1198,12 +1198,11 @@ __ss_int spawnv(__ss_int mode, str *file, list<str *> *args) {
         t = waitpid(pid, 0);
         return t->__getsecond__();
     }
-    else
-        return pid;
+    return pid;
 }
 
 __ss_int spawnvp(__ss_int mode, str *file, list<str *> *args) {
-    __ss_int pid, retval;
+    __ss_int pid;
     tuple2<__ss_int, __ss_int> *t;
     if(!(pid = fork())) /* XXX no spawn* for C++..? */
         execvp(file, args);
@@ -1211,12 +1210,11 @@ __ss_int spawnvp(__ss_int mode, str *file, list<str *> *args) {
         t = waitpid(pid, 0);
         return t->__getsecond__();
     }
-    else
-        return pid;
+    return pid;
 }
 
 __ss_int spawnve(__ss_int mode, str *file, list<str *> *args, dict<str *, str *> *env) {
-    __ss_int pid, retval;
+    __ss_int pid;
     tuple2<__ss_int, __ss_int> *t;
     if(!(pid = fork())) /* XXX no spawn* for C++..? */
         execve(file, args, env);
@@ -1224,12 +1222,11 @@ __ss_int spawnve(__ss_int mode, str *file, list<str *> *args, dict<str *, str *>
         t = waitpid(pid, 0);
         return t->__getsecond__();
     }
-    else
-        return pid;
+    return pid;
 }
 
 __ss_int spawnvpe(__ss_int mode, str *file, list<str *> *args, dict<str *, str *> *env) {
-    __ss_int pid, retval;
+    __ss_int pid;
     tuple2<__ss_int, __ss_int> *t;
     if(!(pid = fork())) /* XXX no spawn* for C++..? */
         execvpe(file, args, env);
@@ -1237,8 +1234,7 @@ __ss_int spawnvpe(__ss_int mode, str *file, list<str *> *args, dict<str *, str *
         t = waitpid(pid, 0);
         return t->__getsecond__();
     }
-    else
-        return pid;
+    return pid;
 }
 
 __ss_int getpid() {
