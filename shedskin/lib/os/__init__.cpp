@@ -441,7 +441,7 @@ popen_pipe* popen(str* cmd, str* mode) {
     return popen(cmd, mode, -1);
 }
 
-popen_pipe* popen(str* cmd, str* mode, __ss_int bufsize) {
+popen_pipe* popen(str* cmd, str* mode, __ss_int) {
     FILE* fp = ::popen(cmd->unit.c_str(), mode->unit.c_str());
 
     if(!fp) throw new OSError(cmd);
@@ -476,7 +476,7 @@ __ss_int open(str *name, __ss_int flags) { /* XXX mode argument */
     return fp;
 }
 
-file* fdopen(__ss_int fd, str* mode, __ss_int bufsize) {
+file* fdopen(__ss_int fd, str* mode, __ss_int) {
     if(!mode)
         mode = new str("r");
 /* XXX ValueError: mode string must begin with one of 'r', 'w', 'a' or 'U' */
@@ -1251,7 +1251,7 @@ tuple2<file*,file*>* popen2(str* cmd) {
     return popen2(cmd, new str("t"), -1);
 }
 
-tuple2<file*,file*>* popen2(str* cmd, str* mode, __ss_int bufsize) {
+tuple2<file*,file*>* popen2(str* cmd, str*, __ss_int) {
     tuple2<__ss_int,__ss_int>* p2c = pipe();
     tuple2<__ss_int,__ss_int>* c2p = pipe();
 
@@ -1288,7 +1288,7 @@ tuple2<file*,file*>* popen3(str* cmd) {
 }
 
 
-tuple2<file*,file*>* popen3(str* cmd, str* mode, __ss_int bufsize) {
+tuple2<file*,file*>* popen3(str* cmd, str*, __ss_int) {
     tuple2<__ss_int,__ss_int>* p2c = pipe();
     tuple2<__ss_int,__ss_int>* c2p = pipe();
     tuple2<__ss_int,__ss_int>* erp = pipe();
@@ -1324,7 +1324,7 @@ tuple2<file*,file*>* popen4(str* cmd) {
     return popen4(cmd, new str("t"), -1);
 }
 
-tuple2<file*,file*>* popen4(str* cmd, str* mode, __ss_int bufsize) {
+tuple2<file*,file*>* popen4(str* cmd, str*, __ss_int) {
     tuple2<__ss_int,__ss_int>* p2c = pipe();
     tuple2<__ss_int,__ss_int>* c2p = pipe();
 

@@ -2917,10 +2917,10 @@ template<class T> T __iter<T>::next() { /* subclasses must implement 'next' or '
 template<class T> T __iter<T>::__get_next() {
     try {
         __result = this->next();
-        return __result;
     } catch (StopIteration *) {
         __stop_iteration = true;
     }
+    return __result;
 }
 
 template<class T> inline __iter<T> *__iter<T>::for_in_init() {
