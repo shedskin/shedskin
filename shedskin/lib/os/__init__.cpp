@@ -670,10 +670,10 @@ tuple2<__ss_int, __ss_int> *openpty() {
 #endif
 
 tuple2<__ss_int, __ss_int> *wait() {
-    __ss_int pid, status;
+    int pid, status;
     if((pid = ::wait(&status)) == -1)
         throw new OSError(new str("os.wait"));
-    return new tuple2<__ss_int, __ss_int>(2, pid, status);
+    return new tuple2<__ss_int, __ss_int>(2, (__ss_int)pid, (__ss_int)status);
 }
 
 tuple2<__ss_int, __ss_int> *waitpid(__ss_int pid, __ss_int options) {
