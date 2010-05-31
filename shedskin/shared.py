@@ -668,7 +668,7 @@ def callfunc_targets(node, merge):
         funcs = [direct_call]
 
     elif method_call:
-        classes = set([t[0] for t in merge[objexpr]])
+        classes = set([t[0] for t in merge[objexpr] if isinstance(t[0], class_)])
         funcs = [cl.funcs[ident] for cl in classes if ident in cl.funcs]
 
     return funcs
