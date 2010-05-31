@@ -1672,7 +1672,7 @@ class generateVisitor(ASTVisitor):
 
         elif method_call:
             for cl, _ in self.mergeinh[objexpr]:
-                if cl.ident != 'none' and ident not in cl.funcs:
+                if isinstance(cl, class_) and cl.ident != 'none' and ident not in cl.funcs:
                     conv = {'int_': 'int', 'float_': 'float', 'str_': 'str', 'class_': 'class', 'none': 'none'}
                     clname = conv.get(cl.ident, cl.ident)
                     error("class '%s' has no method '%s'" % (clname, ident), node, warning=True)
