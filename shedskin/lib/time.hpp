@@ -4,10 +4,7 @@
 #include "builtin.hpp"
 #include <ctime>
 #if defined( _MSC_VER )
-   struct timeval {
-        long    tv_sec;         /* seconds */
-        long    tv_usec;        /* and microseconds */
-   };
+   #include <windows.h>
    #include <time.h>
    #include <sys/timeb.h>
 #else
