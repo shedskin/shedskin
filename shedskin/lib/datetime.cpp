@@ -266,7 +266,7 @@ str *tzinfo::minutes_to_str(datetime *dt) {
 
 
 //class datetime
-datetime::datetime(__ss_int year, __ss_int month, __ss_int day, __ss_int hour, __ss_int minute, __ss_int second, __ss_int microsecond, tzinfo *tzinfo):date::date(year,month,day) {
+datetime::datetime(__ss_int year, __ss_int month, __ss_int day, __ss_int hour, __ss_int minute, __ss_int second, __ss_int microsecond, tzinfo *tzinfo) : date(year,month,day) {
     __class__=cl_datetime;
 
     if(hour>=24 || hour<0) throw new ValueError(new str("hour must be in 0..23"));

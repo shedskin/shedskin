@@ -94,7 +94,7 @@ public:
     __ss_int hour, minute, second, microsecond;
     tzinfo *_tzinfo;
 
-    datetime(datetime *d):date::date(d),hour(d->hour),minute(d->minute),second(d->second),microsecond(d->microsecond),_tzinfo(d->_tzinfo)
+    datetime(datetime *d) : date(d),hour(d->hour),minute(d->minute),second(d->second),microsecond(d->microsecond),_tzinfo(d->_tzinfo)
                 {__class__=cl_datetime;};
     datetime(__ss_int year, __ss_int month, __ss_int day, __ss_int hour=0, __ss_int minute=0, __ss_int second=0, __ss_int microsecond=0, tzinfo *tzinfo=NULL);
 
