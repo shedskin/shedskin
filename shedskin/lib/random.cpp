@@ -49,7 +49,7 @@ str *const_0, *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *
 list<str *> *__all__;
 list<int> *mag01;
 double LOG4, NV_MAGICCONST, SG_MAGICCONST;
-int BPF, LOWER, M, MATRIX_A, MAXBITS, MAXINT, MAXWIDTH, N, UPPER;
+int BPF, LOWER, M, MATRIX_A, MAXBITS, __ss_MAXINT, MAXWIDTH, N, UPPER;
 str *__name__;
 Random *_inst;
 
@@ -646,7 +646,7 @@ void *WichmannHill::__whseed(int x, int y, int z) {
         hophop = __time__::time();
         secs = __int(hophop);
         usec = __int((1000000*(hophop-__int(hophop))));
-        t = ((__mods(secs, (MAXINT/1000000))*1000000)|usec);
+        t = ((__mods(secs, (__ss_MAXINT/1000000))*1000000)|usec);
         __59 = divmod(t, 256);
         t = __59->__getfirst__();
         x = __59->__getsecond__();
@@ -718,7 +718,7 @@ void *WichmannHill::seed(int a) {
         hophop = __time__::time();
         secs = __int(hophop);
         usec = __int((1000000*(hophop-__int(hophop))));
-        a = ((__mods(secs, (MAXINT/1000000))*1000000)|usec);
+        a = ((__mods(secs, (__ss_MAXINT/1000000))*1000000)|usec);
     }
     __40 = divmod(a, 30268);
     a = __40->__getfirst__();
@@ -980,7 +980,7 @@ void __init() {
     BPF = 53;
     MAXWIDTH = (1<<BPF);
     MAXBITS = 31;
-    MAXINT = 2147483647;
+    __ss_MAXINT = 2147483647;
     N = 624;
     M = 397;
     MATRIX_A = 2567483615u;

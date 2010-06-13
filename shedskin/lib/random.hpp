@@ -99,7 +99,7 @@ extern int  M;
 extern int  LOWER;
 extern int  N;
 extern int  MAXWIDTH;
-extern int  MAXINT;
+extern int  __ss_MAXINT;
 extern str * __name__;
 extern double  NV_MAGICCONST;
 extern int  MAXBITS;
@@ -267,7 +267,7 @@ template <class A> void *Random::seed(A a) {
         double hophop = __time__::time();
         secs = __int(hophop);
         usec = __int((1000000*(hophop-__int(hophop))));
-        h = ((__mods(secs, (MAXINT/1000000))*1000000)|usec);
+        h = ((__mods(secs, (__ss_MAXINT/1000000))*1000000)|usec);
     }
     else
         h = hasher(a);
