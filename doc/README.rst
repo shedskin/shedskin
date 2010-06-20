@@ -1,8 +1,8 @@
 Shed Skin Tutorial
 ==================
 
-:Version: 0.4
-:Date: March 27 2010
+:Version: 0.5
+:Date: June 20 2010
 :Authors: Mark Dufour and James Coughlan
 
 .. _Parallel Python: http://www.parallelpython.com/
@@ -101,7 +101,7 @@ Python Subset Restrictions
 **Shed Skin** will only ever support a subset of all Python features. The following common features are currently not supported:
 
   - reflection (getattr, hasattr), eval, or other really dynamic stuff
-  - arbitrary-size arithmetic (integers become 32-bit on most architectures!)
+  - arbitrary-size arithmetic (integers become 32-bit by default on most architectures, see `Command-line Options`_)
   - variable numbers of arguments and keyword arguments
   - multiple inheritance
   - nested functions and classes
@@ -119,7 +119,7 @@ Some other features are currently only partially supported:
 
         SomeClass.some_static_method() # good
 
-  - function references be passed around, but not method references, and they cannot be contained: ::
+  - function references can be passed around, but not method references, and they cannot be contained: ::
 
         var = lambda x, y: x+y # good
         var = some_func # good
@@ -163,81 +163,37 @@ See `How to help out in Shed Skin Development`_ on how to help improve or add to
 Installation
 ------------
 
-The latest version of **Shed Skin** can be downloaded from the `Googlecode site`_. There are three types of packages available: a **Debian** package, an **RPM** package, and a **UNIX** source package.
+The latest version of **Shed Skin** can be downloaded from the `Googlecode site`_. There are three types of packages available: a **Debian** package, an **RPM** package, and a **UNIX** source package. The Windows version has been discontinued as of **Shed Skin** 0.4.
 
 **Debian**
 
-To install the **Debian** package, simply download and install it using your package manager.
+To install the **Debian** package, simply download and install it using your package manager. Make sure the following packages are installed:
 
-If there are complaints about missing dependencies, the following explicitly installs these:
-
-``sudo apt-get install g++ libpcre3-dev libgc-dev``
+``sudo apt-get install g++ libpcre3-dev libgc-dev python-dev``
 
 **RPM**
 
-To install the **RPM** package, simply download and install it using your package manager.
+To install the **RPM** package, simply download and install it using your package manager. Make sure the following packages are installed:
 
-If there are complaints about missing dependencies, the following explicitly installs these:
+``sudo yum install gcc-c++ pcre-devel gc-devel python-devel``
 
-``sudo yum install gcc-c++ pcre-devel gc-devel``
+**UNIX**
 
-**GNU/Linux**
-
-To install the **UNIX** source package on a **GNU/Linux** system, take the following steps:
+To install the **UNIX** source package on a **GNU/Linux** or **OSX** system, take the following steps:
 
  - download and unpack it
 
  - run ``sudo python setup.py install``
+
+ - For **OSX**: install the Apple XCode development environment
 
  - make sure you can run ``g++``, the C++ compiler
 
- - install the `Boehm`_ garbage collector
+ - install the `Boehm`_ garbage collector (including development files)
 
- - install the `PCRE`_ library
+ - install the `PCRE`_ library (including development files)
 
-**FreeBSD**
-
-To install the **UNIX** source package on a **FreeBSD** system, take the following steps:
-
- - download and unpack it
-
- - run ``sudo python setup.py install``
-
- - install the `Boehm`_ garbage collector, making sure to disable threading support:
-
-   ``./configure --enable-cplusplus --disable-threads --prefix=/usr && make install``
-
- - install the `PCRE`_ library
-
-**OpenSolaris**
-
-To install the **UNIX** source package on an **OpenSolaris** system, take the following steps:
-
- - download and unpack it
-
- - run ``sudo python setup.py install``
-
- - install the following packages: ::
-
-    SUNWgcc
-    SUNWhea
-    SUNWarc
-    SUNWlibgc
-    SUNWpcre
-
-**OSX**
-
-To install the **UNIX** source package on an **OSX** system, take the following steps:
-
- - download and unpack it
-
- - run ``sudo python setup.py install``
-
- - install the Apple XCode development environment
-
- - install the `Boehm`_ garbage collector
-
- - install the `PCRE`_ library
+ - make sure the Python development files are installed
 
 .. _Compiling a Stand-Alone Program:
 
@@ -285,7 +241,7 @@ Type: ::
 
 For 'make' to succeed, make sure to have the Python development files installed (under **Debian**, install ``python-dev``; under **Fedora**, install ``python-devel``).
 
-Note that for type inference to be possible, the module must (indirectly) call its own functions. This is accomplished in the example by putting the function calls under the ``if __name__=='__main__'`` statement, so that they will not be executed when the module is imported.
+Note that for type inference to be possible, the module must (indirectly) call its own functions. This is accomplished in the example by putting the function calls under the ``if __name__=='__main__'`` statement, so that they are not executed when the module is imported.
 
 The extension module can now be simply imported and used as usual: ::
 
@@ -417,8 +373,10 @@ The ``shedskin`` command can be given the following options: ::
     -d --dir               Specify alternate directory for output files
     -e --extmod            Generate extension module
     -f --flags             Provide alternate Makefile flags
+    -l --long              Use long long integers (usually 64-bit)
     -m --makefile          Specify alternate Makefile name
     -r --random            Use fast random number generator
+    -v --msvc              Output MSVC-style Makefile
     -w --nowrap            Disable wrap-around checking
 
 For example, to compile the file ``test.py`` as an extension module, type ``shedskin –e test`` or ``shedskin ––extmod test``.
