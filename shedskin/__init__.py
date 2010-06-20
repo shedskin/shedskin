@@ -21,6 +21,7 @@ def usage():
  -l --long              Use long long integers
  -m --makefile          Specify alternate Makefile name
  -r --random            Use fast random number generator
+ -v --msvc              Output MSVC-style Makefile
  -w --nowrap            Disable wrap-around checking
 """
     sys.exit(1)
