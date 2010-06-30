@@ -1867,7 +1867,7 @@ str *__mod4(str *fmts, list<pyobj *> *vals) {
     while((j = __fmtpos(fmt)) != -1) {
         pyobj *p, *a1, *a2;
 
-        int asterisks = count(fmt->unit.begin(), fmt->unit.begin()+j, '*');
+        int asterisks = std::count(fmt->unit.begin(), fmt->unit.begin()+j, '*');
         a1 = a2 = NULL;
         if(asterisks==1) {
             a1 = modgetitem(vals, i++);
