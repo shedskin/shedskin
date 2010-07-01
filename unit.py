@@ -446,6 +446,7 @@ print [None] == [[1]]
 print [[1]] == []
 #print [[]] == [[1]]
 
+
 ''', '''
 output(equal=True)
 '''),
@@ -4578,7 +4579,6 @@ print 'aaaa'.split('a', -1)
 
 ''', '''
 output(equal=True)
-#output("1 0\\n([-4, -2, 0, 2, 4], [-5, -3, -1, 1, 3, 5])\\n99 99\\n10.0\\n10\\n1\\n2\\n1\\n2\\n1\\n2\\n3\\nbbaa\\nbbbb\\n['', '', 'aa']\\n['', '', '', '', '']\\n")
 
 '''),
 
@@ -7526,7 +7526,7 @@ def subsets(sequence):
 print subsets(range(4))
 
 ''', '''
-output("['hop', 'hop']\\n[[], [0], [1], [0, 1], [2], [0, 2], [1, 2], [0, 1, 2], [3], [0, 3], [1, 3], [0, 1, 3], [2, 3], [0, 2, 3], [1, 2, 3], [0, 1, 2, 3]]\\n")
+output(equal=True)
 
 '''),
 
@@ -7638,7 +7638,7 @@ print conv["A"], conv["B"]               # [int], [int]
 
 print [{"A": 0, "B": 1}[c] for c in "ABABABA"] # [list(int)]
 ''', '''
-output("hello, world!\\n1000\\n1331\\n1728\\n2197\\nl\\nu\\ni\\ns\\n['ll', 'uu', 'ii', 'ss']\\nlc ['hop\\\\n', 'hop\\\\n', 'hoppa!\\\\n']\\nread hop\\nhop\\nhoppa!\\n\\nlines ['hop\\\\n', 'hop\\\\n', 'hoppa!\\\\n']\\n0 1\\n[0, 1, 0, 1, 0, 1, 0]\\n")
+output(equal=True)
 
 '''),
 
@@ -8123,7 +8123,7 @@ def _sum(l):                              # l: [pyiter(A)]
 print _sum([1,2,3,4])                     # [int]
 print _sum({1.1: 2.2, 3.3: 4.4})          # [float]
 ''', '''
-output("[(0, '0'), (1, '1'), (2, '2')]\\n[(0, 2), (1, 1), (2, 0)]\\n[(0, 1), (1, 3)]\\n7\\n1\\n1.1\\n[(1, 1.1), (2, 2.2)]\\n[(1.1, 1), (2.2, 2)]\\n10\\n4.4\\n")
+output(equal=True)
 
 
 '''),
@@ -8144,7 +8144,7 @@ l = [((v,u),w) for u,(v,w) in [d]]       # [list(tuple2(tuple2(float, int), str)
 
 print 'u', l                                  # [list(tuple2(tuple2(float, int), str))]
 ''', '''
-output("u [((1.1, 1), 'u')]\\n")
+output(equal=True)
 
 '''),
 
@@ -8622,7 +8622,7 @@ output(equal=True)
 ('list comprehensions with multiple qualifiers XXX \'1\'', '''
 print [(2*a, b) for a in range(4) if a > 0 for b in ['1','2']] # [list(tuple2(int, str))]
 ''', '''
-output("[(2, '1'), (2, '2'), (4, '1'), (4, '2'), (6, '1'), (6, '2')]\\n")
+output(equal=True)
 '''),
 
 ('compact combination: swap bin. tuples in list comprehion parameterized on iterable', '''
@@ -9733,7 +9733,7 @@ print k*l                                # [list(int)]
 print 1+1                                # [int]
 print 1+2                                # [int]
 ''', '''
-output(6*'[1, 2, 1, 2]\\n'+2*'hoihoi\\n'+2*'[2, 2, 2, 2]\\n'+'2\\n3\\n')
+output(equal=True)
 '''),
 
 ('''default argument crap (XXX)''', '''
@@ -10020,7 +10020,7 @@ e = 'crap'                               # [str]
 huhu2(e)                                 # [int, str]
 print e                                  # [int, str]
 ''', '''
-output("['b', 'e', 'r', 't']\\nc\\n['c', '3', 'r', 't']\\ncrap\\ncrap\\n")
+output(equal=True)
 '''),
 
 ('japanese puzzle solver by Jack Ha', '''
@@ -10837,9 +10837,7 @@ def unittest(i):
 
     return
 
-def output(text=None, equal=False):
-    global native_output
-
+def output(equal=False):
     # compare with compiled c++ output
     print '*** compiling & running..'
 
@@ -10864,23 +10862,14 @@ def output(text=None, equal=False):
         file('wahh','w').write(code)
         t1 = os.times()
         com2 = subprocess.Popen('python wahh',shell=True, stdout=subprocess.PIPE).stdout
-
-        if equal:
-            text = ''.join(com2.readlines())
-        else:
-            com2.readlines()
+        cpython_output = ''.join(com2.readlines())
         com2.close()
-    else:
-      # Classic EOL issue between 'native' Windows and Linux needs to be resolved here
-      if text and msvc:
-         native_output = native_output.replace('\r','')
-
-    if text and native_output != text:
-        print 'output:'
-        print native_output
-        print 'expected output:', name
-        print text
-        raise Exception('hell')
+        if native_output != cpython_output:
+            print 'output:'
+            print native_output
+            print 'expected output:', name
+            print cpython_output
+            raise Exception('hell')
 
 # --- parse arguments and options
 
