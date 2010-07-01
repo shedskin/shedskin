@@ -1,6 +1,6 @@
-48 programs that work with Shed Skin 0.5.
+49 programs that work with Shed Skin 0.6.
 
-10,700 lines in total (using sloccount, around 14,600 otherwise)
+11,000 lines in total (using sloccount, around 15,000 otherwise)
 
 If you have another interesting test case, please send it to:
    mark.dufour@gmail.com
@@ -16,6 +16,7 @@ lines  name               description                   notes
    321 chess.py           chess engine
    105 dijkstra.py        dijkstra's algorithm
     80 dijkstra2.py       bidirectional dijkstra search
+   220 chaos.py           chaosgame-like fractals
     65 circle.py          circle packing animation      shedskin -e circle && make && python circle_main.py
                                                         (drag circles with mouse)
    147 fysphun.py         physics animation             shedskin -e fysphun && make && python fysphun_main.py
