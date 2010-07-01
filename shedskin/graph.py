@@ -1356,7 +1356,7 @@ class moduleVisitor(ASTVisitor):
 
     def fncl_passing(self, node, newnode, func):
         mv = self
-        if func and func.inherited_from: 
+        if isinstance(func, function) and func.inherited_from: 
             mv = func.inherited_from.mv # XXX XXX XXX generalize XXX XXX XXX
         lfunc, lclass = lookupfunc(node, mv), lookupclass(node, mv)
         if lfunc:
