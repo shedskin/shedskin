@@ -444,7 +444,11 @@ class moduleVisitor(ASTVisitor):
             if name == '*':
                 self.ext_funcs.update(mod.funcs)
                 self.ext_classes.update(mod.classes)
-
+                for import_name, import_mod in mod.mv.imports.items():
+                    var = defaultvar(import_name, None) # XXX merge
+                    var.imported = True
+                    getgx().types[inode(var)] = set([(import_mod, 0)])
+                    self.imports[import_name] = import_mod
                 for name, extvar in mod.mv.globals.items():
                     if not extvar.imported and not name in ['__name__']:
                         var = defaultvar(name, None) # XXX merge
