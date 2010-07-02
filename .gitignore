@@ -1,0 +1,14 @@
+*.pyc
+*.ppm
+*.txt
+*.ini
+*.csv
+FLAGS
+Makefile
+/lib
+/test.*
+testdata/*.?pp
+testdata/crap2/*.?pp
+testdata/humba
+testdata/lop
+wahh
