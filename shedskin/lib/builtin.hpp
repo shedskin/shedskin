@@ -4710,6 +4710,9 @@ template<class T> T ___box(T t) { return t; } /* XXX */
 int_ *___box(__ss_int);
 #endif
 int_ *___box(int);
+int_ *___box(unsigned int); /* XXX */
+int_ *___box(unsigned long);
+int_ *___box(unsigned long long);
 bool_ *___box(__ss_bool);
 float_ *___box(double);
 
