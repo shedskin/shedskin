@@ -1,3 +1,4 @@
+import os, sys
 
 class zeug:                             
     purple = 3
