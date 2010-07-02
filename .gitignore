@@ -6,7 +6,8 @@
 FLAGS
 Makefile
 /lib
-/test.*
+test.*
+test
 testdata/*.?pp
 testdata/crap2/*.?pp
 testdata/humba
