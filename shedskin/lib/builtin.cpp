@@ -2026,6 +2026,15 @@ int_ *___box(__ss_int i) {
 int_ *___box(int i) {
     return new int_(i);
 }
+int_ *___box(unsigned int i) {
+    return new int_(i);
+}
+int_ *___box(unsigned long i) {
+    return new int_(i);
+}
+int_ *___box(unsigned long long i) {
+    return new int_(i);
+}
 bool_ *___box(__ss_bool b) {
     return new bool_(b);
 }
