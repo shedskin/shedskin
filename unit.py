@@ -4,6 +4,15 @@ import shedskin.infer, shedskin.cpp
 import traceback, sys, os, time, subprocess
 
 tests = [
+('''fixes for 0.6''', '''
+# ugly imports
+from testdata.bert import *
+print os.getcwd(), len(sys.argv)
+
+''', '''
+output(equal=True)
+'''),
+
 ('''fixes for 0.5''', '''
 from __future__ import print_function
 
