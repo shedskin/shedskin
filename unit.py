@@ -8138,20 +8138,20 @@ output(equal=True)
 '''),
 
 ('nested tuple assignments', '''
-d = (1, (1.1, 'u'))                      # [tuple2(int, tuple2(float, str))]
+d = (1, (1.1, 'u'))
 
-a, (b, c) = d                            # [tuple2(int, tuple2(float, str))]
-e, f = d                                 # [tuple2(int, tuple2(float, str))]
+a, (b, c) = d
+e, f = d
 
 
-for x,(y,z) in [d]:                      # [tuple2(int, tuple2(float, str))]
-    x                                    # [int]
-    y                                    # [float]
-    z                                    # [str]
+for x,(y,z) in [d]:
+    x
+    y
+    z
 
-l = [((v,u),w) for u,(v,w) in [d]]       # [list(tuple2(tuple2(float, int), str))]
+l = [((v,u),w) for u,(v,w) in [d]]
+print 'uh', '%.2f %d' % l[0][0], l[0][1], len(l)
 
-print 'u', l                                  # [list(tuple2(tuple2(float, int), str))]
 ''', '''
 output(equal=True)
 
