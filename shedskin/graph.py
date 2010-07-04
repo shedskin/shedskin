@@ -1204,6 +1204,8 @@ class moduleVisitor(ASTVisitor):
         elif isinstance(node.node, Name):
             # direct call
             ident = node.node.name
+            if ident == 'print':
+                ident = node.node.name = '__print' # XXX
 
             if ident in ['getattr', 'setattr', 'slice', 'type']:
                 error("'%s' function is not supported" % ident, node.node)
