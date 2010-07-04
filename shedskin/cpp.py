@@ -1656,6 +1656,8 @@ class generateVisitor(ASTVisitor):
                 return
             elif ident == 'hash':
                 self.append('hasher(') # XXX cleanup
+            elif ident == '__print': # XXX
+                self.append('print(')
             elif ident == 'isinstance' and isinstance(node.args[1], Name) and node.args[1].name in ['float','int']:
                 error("'isinstance' cannot be used with ints or floats; assuming always true", node, warning=True)
                 self.append('1')
@@ -1716,7 +1718,7 @@ class generateVisitor(ASTVisitor):
         objexpr, ident, direct_call, method_call, constructor, parent_constr = analyze_callfunc(node)
         target = funcs[0] # XXX
 
-        print_function = self.library_func(funcs, 'builtin', None, 'print')
+        print_function = self.library_func(funcs, 'builtin', None, '__print')
 
         castnull = False # XXX
         if (self.library_func(funcs, 'random', None, 'seed') or \
