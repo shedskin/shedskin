@@ -17,14 +17,14 @@ void __init(int c, char **v) {
     argv = new list<str *>();
 
 #if defined( _MSC_VER )
-    version = new str("Shed Skin Python-to-C++ Compiler 0.5\n[MSVC ");
+    version = new str("Shed Skin Python-to-C++ Compiler 0.6\n[MSVC ");
     version = version->__add__(__str(_MSC_VER))->__add__(new str("]"));
 #else
-    version = new str("Shed Skin Python-to-C++ Compiler 0.5\n[GCC ");
+    version = new str("Shed Skin Python-to-C++ Compiler 0.6\n[GCC ");
     version = version->__add__(new str(__VERSION__))->__add__(new str("]"));
 #endif
-    version_info = new tuple2<__ss_int, __ss_int>(5, (__ss_int)0, (__ss_int)5, (__ss_int)0, (__ss_int)0, (__ss_int)0);
-    hexversion = 0x00050000;
+    version_info = new tuple2<__ss_int, __ss_int>(5, (__ss_int)0, (__ss_int)6, (__ss_int)0, (__ss_int)0, (__ss_int)0);
+    hexversion = 0x00060000;
 
     copyright = new str("Copyright (c) Mark Dufour 2005-2010.\nAll Rights Reserved.");
     platform = new str("shedskin");
