@@ -572,11 +572,14 @@ def lookup_class_module(objexpr, mv, parent):
     return lookupclass(objexpr, mv), lookupmodule(objexpr, mv)
 
 # --- analyze call expression: namespace, method call, direct call/constructor..
-def analyze_callfunc(node): # XXX generate target list XXX uniform variable system!
+def analyze_callfunc(node, node2=None, merge=None): # XXX generate target list XXX uniform variable system! XXX node2, merge?
     #print 'analyze callnode', node, inode(node).parent
     namespace, objexpr, method_call, parent_constr = inode(node).mv.module, None, False, False 
     constructor, direct_call = None, None
     mv = inode(node).mv
+ 
+    # anon func call
+    anon_func = is_anon_func(node, node2, merge)
 
     # method call
     if isinstance(node.node, Getattr):
@@ -587,7 +590,7 @@ def analyze_callfunc(node): # XXX generate target list XXX uniform variable syst
             # staticmethod call
             if ident in cl.staticmethods:
                 direct_call = cl.funcs[ident]
-                return objexpr, ident, direct_call, method_call, constructor, parent_constr
+                return objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func
 
             # ancestor call
             elif ident not in ['__setattr__', '__getattr__'] and inode(node).parent:
@@ -596,7 +599,7 @@ def analyze_callfunc(node): # XXX generate target list XXX uniform variable syst
                     if lookupimplementor(cl,ident):
                         parent_constr = True
                         ident = ident+lookupimplementor(cl, ident)+'__' # XXX change data structure
-                        return objexpr, ident, direct_call, method_call, constructor, parent_constr
+                        return objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func
 
         if module: # XXX elif?
             namespace, objexpr = module, None
@@ -612,7 +615,7 @@ def analyze_callfunc(node): # XXX generate target list XXX uniform variable syst
     if isinstance(node.node, Name) or namespace != inode(node).mv.module:
         if isinstance(node.node, Name):
             if lookupvar(ident, inode(node).parent):
-                return objexpr, ident, direct_call, method_call, constructor, parent_constr
+                return objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func
         if ident in namespace.mv.classes:
             constructor = namespace.mv.classes[ident]
         elif ident in namespace.mv.funcs:
@@ -623,9 +626,9 @@ def analyze_callfunc(node): # XXX generate target list XXX uniform variable syst
             direct_call = namespace.mv.ext_funcs[ident]
         else:
             if namespace != inode(node).mv.module:
-                return objexpr, ident, None, False, None, False
+                return objexpr, ident, None, False, None, False, False
 
-    return objexpr, ident, direct_call, method_call, constructor, parent_constr
+    return objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func
 
 # XXX ugly: find ancestor class that implements function 'ident'
 def lookupimplementor(cl, ident):
@@ -645,7 +648,7 @@ def nrargs(node):
 
 # --- return list of potential call targets
 def callfunc_targets(node, merge):
-    objexpr, ident, direct_call, method_call, constructor, parent_constr = analyze_callfunc(node)
+    objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func = analyze_callfunc(node)
     funcs = []
 
     if node.node in merge and [t for t in merge[node.node] if isinstance(t[0], function)]: # anonymous function call
@@ -674,8 +677,7 @@ def callfunc_targets(node, merge):
     return funcs
 
 def analyze_args(expr, func, node=None, skip_defaults=False, merge=None):
-    objexpr, ident, direct_call, method_call, constructor, parent_constr = analyze_callfunc(expr)
-    anon_func = is_anon_func(expr, node, merge)
+    objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func = analyze_callfunc(expr, node, merge)
 
     args = []
     kwdict = {}
@@ -732,15 +734,17 @@ def analyze_args(expr, func, node=None, skip_defaults=False, merge=None):
 
     return actuals, formals, defaults, extra, error
 
-def is_anon_func(expr, node, merge=None): # XXX move to analyze_callfunc
+def is_anon_func(expr, node, merge=None):
     types = set()
     if node:
         node = (expr.node, node.dcpa, node.cpa)
         if node in getgx().cnode:
             types = getgx().cnode[node].types()
-    else:
+    elif merge:
         if expr.node in merge:
             types = merge[expr.node]
+    else:
+        return False
     return bool([t for t in types if isinstance(t[0], function)])
 
 def connect_actual_formal(expr, func, parent_constr=False, check_error=False, merge=None):

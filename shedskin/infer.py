@@ -180,10 +180,10 @@ def possible_functions(node):
     expr = node.thing
 
     # --- determine possible target functions
-    objexpr, ident, direct_call, method_call, constructor, parent_constr = analyze_callfunc(expr)
+    objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func = analyze_callfunc(expr, node)
     funcs = []
 
-    if is_anon_func(expr, node):
+    if anon_func:
         # anonymous call
         types = getgx().cnode[expr.node, node.dcpa, node.cpa].types()
         types = [t for t in types if isinstance(t[0], function)] # XXX XXX analyse per t, sometimes class, sometimes function..
@@ -213,7 +213,7 @@ def possible_functions(node):
 
 def possible_argtypes(node, funcs, worklist):
     expr = node.thing
-    objexpr, ident, direct_call, method_call, constructor, parent_constr = analyze_callfunc(expr)
+    objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func = analyze_callfunc(expr)
     if funcs:
         func = funcs[0][0] # XXX
 
@@ -325,7 +325,7 @@ def redirect(c, dcpa, func, callfunc, ident, callnode):
 # --- cartesian product algorithm; adds interprocedural constraints
 def cpa(callnode, worklist):
     cp = cartesian_product(callnode, worklist)
-    objexpr, ident, direct_call, method_call, constructor, parent_constr = analyze_callfunc(callnode.thing)
+    objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func = analyze_callfunc(callnode.thing)
 
     # --- iterate over argument type combinations
     for c in cp:
@@ -395,7 +395,7 @@ def create_template(func, dcpa, c, worklist):
     func_copy(func, dcpa, cpa, worklist, c)
 
 def actuals_formals(expr, func, node, dcpa, cpa, types, worklist):
-    objexpr, ident, direct_call, method_call, constructor, parent_constr = analyze_callfunc(expr)
+    objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func = analyze_callfunc(expr)
 
     if expr.star_args: # XXX only in lib/
         formals = func.formals
@@ -897,7 +897,7 @@ def analyze(source, testing=False):
     # --- determine which classes need an __init__ method
     for node, types in getgx().merged_all.items():
         if isinstance(node, CallFunc):
-            objexpr, ident, _ , method_call, _, _ = analyze_callfunc(node)
+            objexpr, ident, _ , method_call, _, _, _ = analyze_callfunc(node)
             if method_call and ident == '__init__':
                 for t in getgx().merged_all[objexpr]:
                     t[0].has_init = True
