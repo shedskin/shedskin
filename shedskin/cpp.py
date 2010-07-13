@@ -484,7 +484,8 @@ class generateVisitor(ASTVisitor):
             self.deindent()
             self.output('}')
 
-    def class_hpp(self, node, declare=True): # XXX remove declare
+    def class_hpp(self, node):
+        declare = True
         cl = getmv().classes[node.name]
         self.output('extern class_ *cl_'+cl.cpp_name+';')
 
@@ -544,7 +545,8 @@ class generateVisitor(ASTVisitor):
         self.deindent()
         self.output('};\n')
 
-    def class_cpp(self, node, declare=False): # XXX declare
+    def class_cpp(self, node):
+        declare = False
         cl = getmv().classes[node.name]
 
         if cl.virtuals:
