@@ -249,10 +249,7 @@ class moduleVisitor(ASTVisitor):
                 self.visit(Class(dummy, [], None, Pass()))
 
         if self.module.ident != 'builtin':
-            try:
-                n = From('builtin', [('*', None)], None) # Python2.5+
-            except TypeError:
-                n = From('builtin', [('*', None)])       # Python2.4
+            n = From('builtin', [('*', None)], None) # Python2.5+
             getmv().importnodes.append(n)
             self.visit(n)
 
@@ -554,10 +551,7 @@ class moduleVisitor(ASTVisitor):
     def visitLambda(self, node, func=None):
         lambdanr = len(self.lambdas)
         name = '__lambda%d__' % lambdanr
-        try:
-            fakenode = Function(None, name, node.argnames, node.defaults, node.flags, None, Return(node.code))
-        except TypeError:
-            fakenode = Function(name, node.argnames, node.defaults, node.flags, None, Return(node.code)) # XXX 2.3?
+        fakenode = Function(None, name, node.argnames, node.defaults, node.flags, None, Return(node.code))
         self.visit(fakenode, None, True)
         f = self.lambdas[name]
         f.lambdanr = lambdanr
@@ -1325,17 +1319,11 @@ class moduleVisitor(ASTVisitor):
             if newclass.ident in ['int_']: msgs += ['lshift', 'rshift', 'and', 'xor', 'or']
             for msg in msgs:
                 if not '__i'+msg+'__' in newclass.funcs:
-                    try:
-                        self.visit(Function(None, '__i'+msg+'__', ['self', 'other'], [], 0, None, Stmt([Return(CallFunc(Getattr(Name('self'), '__'+msg+'__'), [Name('other')], None, None))])), newclass)
-                    except TypeError:
-                        self.visit(Function('__i'+msg+'__', ['self', 'other'], [], 0, None, Stmt([Return(CallFunc(Getattr(Name('self'), '__'+msg+'__'), [Name('other')], None, None))])), newclass)
+                    self.visit(Function(None, '__i'+msg+'__', ['self', 'other'], [], 0, None, Stmt([Return(CallFunc(Getattr(Name('self'), '__'+msg+'__'), [Name('other')], None, None))])), newclass)
 
         # --- __str__
         if not newclass.mv.module.builtin and not '__str__' in newclass.funcs:
-            try:
-                self.visit(Function(None, '__str__', ['self'], [], 0, None, Return(CallFunc(Getattr(Name('self'), '__repr__'), []))), newclass)
-            except TypeError:
-                self.visit(Function('__str__', ['self'], [], 0, None, Return(CallFunc(Getattr(Name('self'), '__repr__'), []))), newclass)
+            self.visit(Function(None, '__str__', ['self'], [], 0, None, Return(CallFunc(Getattr(Name('self'), '__repr__'), []))), newclass)
             newclass.funcs['__str__'].invisible = True
 
     def visitGetattr(self, node, func=None, callfunc=False):
