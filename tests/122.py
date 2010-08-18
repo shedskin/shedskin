@@ -2,7 +2,8 @@
 # (c) Mark Dufour
 # --- mark.dufour@gmail.com
 
-from random import random
+import random
+random.seed(42)
 from math import sqrt, e
 
 sigmoid = lambda x: pow((1+pow(e,-x)),-1) # [lambda0]
@@ -11,7 +12,7 @@ deriv = lambda x: pow(e,-x) * pow((1+pow(e,-x)),-2) # [lambda0]
 class link:                             # in_node: [node], weight: [float], activation: [], out_node: [node], delta: [], input: [], output: [], unit: []
     def __init__(self, in_node, out_node): # self: [nlink], in_node: [node]*, out_node: [node]*
         self.in_node = in_node; self.out_node = out_node # [node]
-        self.weight = (random()-0.5)/2  # [float]
+        self.weight = (random.random()-0.5)/2  # [float]
 
 class node:                              # in_node: [], weight: [], activation: [float], out_node: [], delta: [float], output: [list(nlink)], input: [list(nlink)], unit: []
     def __init__(self, input_nodes):     # self: [node], input_nodes: [list(node)]
@@ -95,5 +96,6 @@ examples = [ ([1,0,0,1,1,2,0,1,0,0], [1]), # [list(tuple(list(int)))]
 
 epochs = 1000                            # [int]
 train_network(network, examples, epochs) # []
-print [neural_network_output(network, example) for example, answer in examples] # [list(list(float))]
+for hup in [neural_network_output(network, example) for example, answer in examples]:
+    print [('%.2f'%hap) for hap in hup]
 

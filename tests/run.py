@@ -45,10 +45,11 @@ def main():
 
     failures = []
     for test_nr in test_nrs:
-        run_test(test_nr, failures, msvc)
-        if failures and 'f' in options:
-            break
-        print
+        if os.path.exists('%d.py' % test_nr): # XXX
+            run_test(test_nr, failures, msvc)
+            if failures and 'f' in options:
+                break
+            print
 
     if not failures:
         print '*** no failures, yay!'
@@ -89,7 +90,7 @@ def check_output(command, test_nr):
     if native_output != cpython_output:
         print 'output:'
         print native_output
-        print 'expected:', name
+        print 'expected:'
         print cpython_output
         raise AssertionError
 

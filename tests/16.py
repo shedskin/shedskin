@@ -1,7 +1,7 @@
 
 class integer:
     def __gt__(self, b):            # self: [integer], b: [integer]
-        return 1
+        return True
 
 def maxi(a, b):                           # a: [integer]r, b: [integer]r
     if a > b:                            # [bool]

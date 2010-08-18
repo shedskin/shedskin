@@ -25,9 +25,6 @@ def main(loops=LOOPS):
     benchtime, stones = pystones(loops)
 #    print "Pystone(%s) time for %d passes = %g" % #          (__version__, loops, benchtime)
 #    print "This machine benchmarks at %g pystones/second" % stones
-    print 'ugh', benchtime, stones
-    print "This machine benchmarks at %f pystones/second" % stones
-
 
 def pystones(loops=LOOPS):
     return Proc0(loops)

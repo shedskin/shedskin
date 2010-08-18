@@ -17,7 +17,7 @@ from os.path import *
 
 print join('a','b','c')
 
-realpath('unit.py')
+realpath('run.py')
 commonprefix(['xxx', 'xxxx'])
 normcase('hoei')
 splitext('hoei/woei')
@@ -37,10 +37,10 @@ def bleh2(arg, top, names):
 walk('testdata', bleh, 77)
 walk('testdata', bleh2, 'hoei')
 
-getsize('unit.py')
-getatime('unit.py')
-getctime('unit.py')
-getmtime('unit.py')
+getsize('run.py')
+getatime('run.py')
+getctime('run.py')
+getmtime('run.py')
 
 #locally overloading builtin definition
 str = '4'

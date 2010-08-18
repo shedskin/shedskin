@@ -97,9 +97,9 @@ print int(''.istitle())
 
 #glob, fnmatch
 import glob
-print glob.glob('unit.py')
+print glob.glob('run.py')
 import fnmatch
-print int(fnmatch.fnmatch('unit.py', 'unit.[py]y'))
+print int(fnmatch.fnmatch('run.py', 'run.[py]y'))
 
 #staticmethod, property
 class woef(object):

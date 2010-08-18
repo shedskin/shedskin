@@ -2,7 +2,8 @@
 # Textual Voronoi code modified from: <abhishek@ocf.berkeley.edu>
 # http://www.ocf.berkeley.edu/~Eabhishek/
 
-from random import random # for generateRandomPoints
+import random # for generateRandomPoints
+random.seed(42)
 from math import sqrt
 
 def generateRandomPoints(npoints=6):
@@ -10,8 +11,8 @@ def generateRandomPoints(npoints=6):
     print npoints, "points x,y:"
     points = []
     for i in xrange(npoints):
-        xrand, yrand = random(), random()
-        print xrand, yrand
+        xrand, yrand = random.random(), random.random()
+        print '%.2f' % xrand, '%.2f' % yrand
         for xoff in range(-1, 2):
             for yoff in range(-1, 2):
                 points.append( (xrand + xoff, yrand + yoff) )
@@ -49,5 +50,4 @@ print
 t1 = clock()
 print generateScreen(points, 40, 80)
 t2 = clock()
-print round(t2-t1, 3)
-
+round(t2-t1, 3)

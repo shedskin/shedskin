@@ -1,6 +1,6 @@
 
 # file.next
-print file('unit.py').next().strip()
+print file('run.py').next().strip()
 
 # re.groups returns tuple
 import re
