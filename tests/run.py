@@ -62,13 +62,13 @@ def run_test(test_nr, failures, msvc):
         if msvc: 
             assert os.system('shedskin -v %d' % test_nr) == 0
         else:
-            assert os.system('shedskin %d' % test_nr) == 0
+            assert os.system('shedskin -m Makefile.%d %d' % (test_nr, test_nr)) == 0
         if msvc:
             assert os.system('nmake /C /S clean') == 0
             assert os.system('nmake /C /S') == 0
             command = '.\\%d' % test_nr
         else:
-            assert os.system('make clean; make') == 0
+            assert os.system('make clean; make -f Makefile.%d' % test_nr) == 0
             command = './%d' % test_nr
         check_output(command, test_nr)
         print '*** success:', test_nr
