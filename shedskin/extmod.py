@@ -9,6 +9,9 @@ extmod.py: extension module support
 from shared import *
 import cpp
 
+OVERLOAD_SINGLE = ['__neg__', '__pos__', '__abs__', '__nonzero__']
+OVERLOAD = ['__add__', '__sub__', '__mul__', '__div__', '__mod__', '__divmod__', '__pow__'] + OVERLOAD_SINGLE
+
 def do_extmod(gv):
     print >>gv.out, '/* extension module glue */\n'
     print >>gv.out, 'extern "C" {'
@@ -69,6 +72,16 @@ def exported_classes():
     return classes
 
 def do_extmod_methoddef(gv, ident, funcs):
+    print >>gv.out, 'static PyNumberMethods %s_as_number = {' % ident
+    for overload in OVERLOAD:
+        if [f for f in funcs if f.ident == overload]:
+            if overload in OVERLOAD_SINGLE:
+                print >>gv.out, '    (PyObject *(*)(PyObject *))%s_%s,' % (f.parent.ident, overload)
+            else:
+                print >>gv.out, '    (PyCFunction)%s_%s,' % (f.parent.ident, overload)
+        else:
+            print >>gv.out, '    0,'
+    print >>gv.out, '};\n'
     print >>gv.out, 'static PyMethodDef %sMethods[] = {' % ident
     for func in funcs:
         if isinstance(func.parent, class_): id = func.parent.ident+'_'+func.ident
@@ -93,6 +106,9 @@ def do_extmod_method(gv, func):
         cls = [c for c in cls if c.mv.module == getgx().main_module]
         if cls:
             typ = ('__%s__::' % cls[0].mv.module.ident)+typ
+        if func.ident in OVERLOAD:
+            print >>gv.out, '        %(type)sarg_%(num)d = __to_ss<%(type)s>(args);' % {'type' : typ, 'num' : i}
+            continue
         gv.append('        %(type)sarg_%(num)d = __ss_arg<%(type)s>("%(name)s", %(num)d, ' % {'type' : typ, 'num' : i, 'name': formal})
         if i >= len(formals)-len(func.defaults):
             gv.append('1, ')
@@ -264,7 +280,7 @@ def do_extmod_class(gv, cl):
         print >>gv.out, '    (PyObject *(*)(PyObject *))%s___repr__, /* tp_repr           */' % cl.ident
     else:
         print >>gv.out, '    0,              /* tp_repr           */'
-    print >>gv.out, '    0,              /* tp_as_number      */'
+    print >>gv.out, '    &%s_as_number,  /* tp_as_number      */' % cl.ident
     print >>gv.out, '    0,              /* tp_as_sequence    */'
     print >>gv.out, '    0,              /* tp_as_mapping     */'
     print >>gv.out, '    0,              /* tp_hash           */'
