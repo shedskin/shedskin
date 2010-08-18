@@ -43,8 +43,6 @@ def main():
     test_nrs = test_numbers(args, options)
     msvc = 'v' in options
 
-    #disabled = [14, 17, 27, 34, 35, 41, 42, 47, 48, 49, 57, 58, 61, 62, 63, 65, 66, 67, 68, 70, 72, 80, 85, 90, 91, 92, 96, 101, 116, 121, 117, 145, 149]
-
     failures = []
     for test_nr in test_nrs:
         run_test(test_nr, failures, msvc)
@@ -62,19 +60,19 @@ def run_test(test_nr, failures, msvc):
     try:
         print '*** test:', test_nr
         if msvc: 
-            os.system('shedskin -v %d' % test_nr)
+            assert os.system('shedskin -v %d' % test_nr) == 0
         else:
-            os.system('shedskin %d' % test_nr)
+            assert os.system('shedskin %d' % test_nr) == 0
         if msvc:
-            assert os.system('nmake /C /S clean') == 0, 'does not compile'
-            assert os.system('nmake /C /S') == 0, 'does not compile'
+            assert os.system('nmake /C /S clean') == 0
+            assert os.system('nmake /C /S') == 0
             command = '.\\%d' % test_nr
         else:
-            assert os.system('make clean; make') == 0, 'does not compile'
+            assert os.system('make clean; make') == 0
             command = './%d' % test_nr
         check_output(command, test_nr)
         print '*** success:', test_nr
-    except:
+    except AssertionError:
         print '*** failure:', test_nr
         traceback.print_exc()
         failures.append(test_nr)
@@ -87,14 +85,13 @@ def get_output(command):
 
 def check_output(command, test_nr):
     native_output = get_output(command)
-    cpython_output = get_output('python %d.py')
+    cpython_output = get_output('python %d.py' % test_nr)
     if native_output != cpython_output:
         print 'output:'
         print native_output
         print 'expected:', name
         print cpython_output
-        raise Exception('hell')
+        raise AssertionError
 
 if __name__ == '__main__':
     main()
-
