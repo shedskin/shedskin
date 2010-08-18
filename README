@@ -1,0 +1,8 @@
+for a quick start:
+
+python setup.py install
+shedskin test
+make
+./test
+
+see doc/README.html for details.
