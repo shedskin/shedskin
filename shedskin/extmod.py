@@ -136,7 +136,7 @@ def do_extmod_method(gv, func):
 
     # call
     if is_method: where = '((%sObject *)self)->__ss_object->' % func.parent.ident
-    else: where = '__'+cl.module.ident+'__::'
+    else: where = '__'+gv.module.ident+'__::'
     print >>gv.out, '        return __to_py('+where+gv.cpp_name(func.ident)+'('+', '.join(['arg_%d' % i for i in range(len(formals))])+'));\n'
 
     # convert exceptions
