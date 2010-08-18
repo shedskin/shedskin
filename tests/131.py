@@ -1,10 +1,11 @@
 
 # (c) Bearophile
 
-from random import random
+import random
+random.seed(42)
 #from sets import Set
 
-points = [ (random(), random()) for i in xrange(200) ]
+points = [ (random.random(), random.random()) for i in xrange(200) ]
 
 def isntRightTurn(e):
     p0, p1 = e[-3]
@@ -24,5 +25,5 @@ points = sorted(set(points))
 upper = half(points)
 points.reverse()
 lower = half(points)
-print upper + lower[1:-1]
+print [('%.2f' % x, '%.2f' % y) for x, y in upper + lower[1:-1]]
 
