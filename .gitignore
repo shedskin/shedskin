@@ -6,7 +6,7 @@
 *.?pp
 *.so
 FLAGS
-Makefile
+Makefile*
 /lib
 test.*
 test
@@ -14,5 +14,9 @@ testdata/*.?pp
 testdata/crap2/*.?pp
 testdata/humba
 testdata/lop
-wahh
+aap
+aap2
 tx?
+tests/?
+tests/??
+tests/???
