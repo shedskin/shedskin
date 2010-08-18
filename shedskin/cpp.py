@@ -270,7 +270,7 @@ class generateVisitor(ASTVisitor):
             print >>self.out, '} // module namespace'
 
         if getgx().extension_module and self.module == getgx().main_module:
-            extmod.convert_methods2(self, self.module.classes.values())
+            extmod.convert_methods2(self)
 
         print >>self.out, '#endif'
 
