@@ -69,7 +69,7 @@ def run_test(test_nr, failures, msvc):
             assert os.system('nmake /C /S') == 0
             command = '.\\%d' % test_nr
         else:
-            assert os.system('make clean; make -f Makefile.%d' % test_nr) == 0
+            assert os.system('make clean -f Makefile.%d; make -f Makefile.%d' % (test_nr, test_nr)) == 0
             command = './%d' % test_nr
         check_output(command, test_nr)
         print '*** success:', test_nr
