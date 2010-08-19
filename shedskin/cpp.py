@@ -2458,9 +2458,9 @@ class generateVisitor(ASTVisitor):
                 self.append('__'+singletype(node, module).ident+'__')
             else:
                 if (defclass('class_'),0) in self.mergeinh[node]:
-                    self.append('cl_'+node.name)
+                    self.append(namespaceclass(lookupclass(node, getmv()), add_cl='cl_'))
                 elif add_cl and [t for t in self.mergeinh[node] if isinstance(t[0], static_class)]:
-                    self.append('cl_'+node.name)
+                    self.append(namespaceclass(lookupclass(node, getmv()), add_cl='cl_'))
                 else:
                     if isinstance(func, class_) and node.name in func.parent.vars: # XXX
                         self.append(func.ident+'::')
@@ -2522,13 +2522,13 @@ def singletype2(types, type):
 def mod_namespace(module):
     return '__'+'__::__'.join(module.mod_path)+'__'
 
-def namespaceclass(cl):
+def namespaceclass(cl, add_cl=''):
     module = cl.mv.module
 
     if module.ident != 'builtin' and module != getmv().module and module.mod_path:
-        return mod_namespace(module)+'::'+nokeywords(cl.ident)
+        return mod_namespace(module)+'::'+add_cl+nokeywords(cl.ident)
     else:
-        return nokeywords(cl.ident)
+        return add_cl+nokeywords(cl.ident)
 
 # --- determine representation of node type set (within parameterized context)
 def typesetreprnew(node, parent, cplusplus=True, check_extmod=False, check_ret=False, var=None):
