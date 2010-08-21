@@ -8,5 +8,5 @@ def lookahead():                     # mods: [list(int)]
     lit_mask = [1]
 
 lookahead()
-propagate(10)
+propagate(0)
 
