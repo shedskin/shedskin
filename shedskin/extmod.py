@@ -304,7 +304,10 @@ def do_extmod_class(gv, cl):
     print >>gv.out, '    %sMethods,      /* tp_methods        */' % cl.ident
     print >>gv.out, '    %sMembers,      /* tp_members        */' % cl.ident
     print >>gv.out, '    %sGetSet,       /* tp_getset         */' % cl.ident
-    print >>gv.out, '    0,              /* tp_base           */'
+    if cl.bases:
+        print >>gv.out, '    &%sObjectType,              /* tp_base           */' % cl.bases[0].ident
+    else:
+        print >>gv.out, '    0,              /* tp_base           */'
     print >>gv.out, '    0,              /* tp_dict           */'
     print >>gv.out, '    0,              /* tp_descr_get      */'
     print >>gv.out, '    0,              /* tp_descr_set      */'
@@ -334,7 +337,7 @@ def convert_methods(gv, cl, declare):
 
         print >>gv.out, 'template<> __%s__::%s *__to_ss(PyObject *p) {' % (cl.module.ident, cl.cpp_name)
         print >>gv.out, '    if(p == Py_None) return NULL;'
-        print >>gv.out, '    if(p->ob_type != &__%s__::%sObjectType)' % (cl.module.ident, cl.ident)
+        print >>gv.out, '    if(PyObject_IsInstance(p, (PyObject *)&__%s__::%sObjectType)!=1)' % (cl.module.ident, cl.ident)
         print >>gv.out, '        throw new TypeError(new str("error in conversion to Shed Skin (%s expected)"));' % cl.ident
         print >>gv.out, '    return ((__%s__::%sObject *)p)->__ss_object;' % (cl.module.ident, cl.ident)
         print >>gv.out, '}\n}'
