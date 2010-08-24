@@ -57,6 +57,7 @@ class globalInfo: # XXX add comments, split up
         self.loopstack = [] # track nested loops
         self.comments = {}
         self.import_order = 0 # module import order
+        self.class_def_order = 0
         # command-line options
         self.wrap_around_check = True
         self.bounds_checking = True
@@ -181,6 +182,8 @@ class class_:
         getgx().nrcltypes += 1
         self.splits = {}                # contour: old contour (used between iterations)
         self.has_init = self.has_copy = self.has_deepcopy = False
+        self.def_order = getgx().class_def_order
+        getgx().class_def_order += 1
 
     def ancestors(self): # XXX attribute (faster)
         a = set(self.bases)

@@ -68,8 +68,8 @@ def exported_classes():
     classes = []
     for mod in getgx().modules.values():
         if not mod.builtin:
-            classes.extend(mod.classes.values())
-    return classes
+            classes.extend([cl for cl in mod.classes.values() if not defclass('Exception') in cl.ancestors()])
+    return sorted(classes, key=lambda x: x.def_order)
 
 def do_extmod_methoddef(gv, ident, funcs):
     print >>gv.out, 'static PyNumberMethods %s_as_number = {' % ident
@@ -304,7 +304,7 @@ def do_extmod_class(gv, cl):
     print >>gv.out, '    %sMethods,      /* tp_methods        */' % cl.ident
     print >>gv.out, '    %sMembers,      /* tp_members        */' % cl.ident
     print >>gv.out, '    %sGetSet,       /* tp_getset         */' % cl.ident
-    if cl.bases:
+    if cl.bases and not cl.bases[0].ident == 'object':
         print >>gv.out, '    &%sObjectType,              /* tp_base           */' % cl.bases[0].ident
     else:
         print >>gv.out, '    0,              /* tp_base           */'
