@@ -5,6 +5,7 @@ def usage():
     print "'-l': give individual test numbers"
     print "'-r': reverse test order"
     print "'-f': break after first failure"
+    print "'-e': run extension module tests"
     sys.exit()
 
 def parse_options():
@@ -35,11 +36,7 @@ def test_numbers(args, options):
 
     return test_nrs
 
-def main():
-    args, options = parse_options()
-    if 'h' in options:
-        usage()
-
+def tests(args, options):
     test_nrs = test_numbers(args, options)
     msvc = 'v' in options
 
@@ -50,6 +47,18 @@ def main():
             if failures and 'f' in options:
                 break
             print
+
+    return failures
+
+def main():
+    args, options = parse_options()
+    if 'h' in options:
+        usage()
+
+    if 'e' in options:
+        failures = extmod_tests(args, options)
+    else:
+        failures = tests(args, options)
 
     if not failures:
         print '*** no failures, yay!'
@@ -71,12 +80,37 @@ def run_test(test_nr, failures, msvc):
         else:
             assert os.system('make clean -f Makefile.%d; make -f Makefile.%d' % (test_nr, test_nr)) == 0
             command = './%d' % test_nr
-        check_output(command, test_nr)
+        check_output(command, 'python %d.py' % test_nr)
         print '*** success:', test_nr
     except AssertionError:
         print '*** failure:', test_nr
         traceback.print_exc()
         failures.append(test_nr)
+
+def extmod_tests(args, options):
+    failures = []
+    for test in glob.glob('e*'):
+        print '*** test:', test
+        os.chdir(test)
+        try:
+            extmod = file('main.py').next()[1:].strip()
+            assert os.system('shedskin -e %s' % extmod) == 0
+            assert os.system('make') == 0
+            native_output = get_output('python main.py')
+            assert os.system('rm %s.so' % extmod) == 0
+            cpython_output = get_output('python main.py')
+            if native_output != cpython_output:
+                print 'output:'
+                print native_output
+                print 'expected:'
+                print cpython_output
+                raise AssertionError
+            print '*** success:', test
+        except AssertionError:
+            print '*** failure:', test
+            failures.append(test)
+        os.chdir('..')
+    return failures
 
 def get_output(command):
     com = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE).stdout
@@ -84,9 +118,9 @@ def get_output(command):
     com.close()
     return output
 
-def check_output(command, test_nr):
+def check_output(command, command2):
     native_output = get_output(command)
-    cpython_output = get_output('python %d.py' % test_nr)
+    cpython_output = get_output(command2)
     if native_output != cpython_output:
         print 'output:'
         print native_output
