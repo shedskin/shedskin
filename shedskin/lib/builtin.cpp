@@ -750,14 +750,19 @@ str *str::__imul__(__ss_int n) {
 
 /* ======================================================================== */
 
+#include "lookup3.c"
+
 int str::__hash__() {
-    unsigned int hash = 0;
+    if (hash)
+        return hash;
+
+    hash = hashlittle(unit.c_str(), unit.length(), 42);
+    /*
     const char *c = unit.c_str();
-    int pow = 1;
-    for(int i = 0; i < unit.length(); ++i){
-        pow *= 31;
-        hash += pow * (int)(c[i]);
-    }
+    int l = unit.length();
+    for(int i = 0; i < l; ++i){
+        hash += pow(31,i) * (int)(c[i]);
+    }*/
     return hash;
 
     //return __gnu_cxx::hash<char *>()(unit.c_str());

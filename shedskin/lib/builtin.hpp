@@ -315,7 +315,7 @@ public:
 class str : public pyseq<str *> {
 public:
     __GC_STRING unit;
-    int hash;
+    unsigned int hash;
 
     str();
     str(const char *s);
@@ -529,7 +529,7 @@ public:
     int mask;
     setentry<T> *table;
     setentry<T> smalltable[MINSIZE];
-    int hash;
+    unsigned int hash;
 
     template<class U> set(U *other, int frozen);
     template<class U> set(U *other);
