@@ -2264,8 +2264,8 @@ using insert() in resize() is dangerous (SF bug #1456209).
 */
 template <class K, class V> void dict<K,V>::insert_clean(K key, V value, long hash)
 {
-	register size_t i;
-	register size_t perturb;
+	int i;
+	unsigned int perturb;
 	register dictentry<K,V> *entry;
 
 	i = hash & mask;
@@ -3259,8 +3259,8 @@ using insert() in resize() is dangerous (SF bug #1456209).
 */
 template <class T> void set<T>::insert_clean(T key, long hash)
 {
-	register size_t i;
-	register size_t perturb;
+	int i;
+	unsigned int perturb;
 	register setentry<T> *entry;
 
 	i = hash & mask;
