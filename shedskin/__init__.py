@@ -44,7 +44,7 @@ def main():
 
     # --- command-line options
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'vbchef:wad:m:rl', ['extmod', 'nobounds', 'nowrap', 'flags=', 'dir=', 'makefile=', 'random', 'long', 'msvc'])
+        opts, args = getopt.getopt(sys.argv[1:], 'vbchef:wad:m:rl', ['help', 'extmod', 'nobounds', 'nowrap', 'flags=', 'dir=', 'makefile=', 'random', 'long', 'msvc', 'ann'])
     except getopt.GetoptError:
         usage()
 
