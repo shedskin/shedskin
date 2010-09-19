@@ -68,7 +68,7 @@ def create_rects(layer_sizes,start_width,lmax):
         for my_iter in range(layer_sizes[q][2]):
             rects.append([])
             if counter == 4:
-                print 'change layer depth'
+                #print 'change layer depth'
                 layer_depth = layer_depth +layer_sizes[0][0]*16 + 5
                 layer_width = 0
                 counter = 0
@@ -86,9 +86,7 @@ def create_rects(layer_sizes,start_width,lmax):
             layer_width = layer_width + 16*layer[1] + 5
     return rects,flat_rects
 
-
-def display_cells(ctime, my_env, layer_sizes, spirit_brain, rects, flat_rects):
-     screen = my_env.screen
+def display_cells(ctime, screen, layer_sizes, spirit_brain, rects, flat_rects):
      counter = 0
      for num,layer in enumerate(layer_sizes):
          for k in range(layer[2]):
@@ -144,11 +142,6 @@ def display_cells(ctime, my_env, layer_sizes, spirit_brain, rects, flat_rects):
                          #    pygame.draw.polygon(screen,(int(color),int(color),0),dimond)
 
              counter = counter +1
-
-     if movie:
-          pass
-          my_env.display(flat_rects)
-#}
 
 def determine_heading(max_index):
     if len(max_index) > 0:
@@ -231,7 +224,7 @@ def main():
     for ctime in range(2,univ.ttime):
         univ.advance(ctime)
         if movie and ctime%100 == 0:
-            display.update()
+            display.update(ctime)
         if ctime%10000 == 0:
             print('time: ' + str(ctime) + ' happy: ' + str(univ.happyness))
 
@@ -240,12 +233,13 @@ def main():
 
 class Display:
     def __init__(self, univ):
-        self.my_env = univ.my_env
+        self.univ = univ
         self.window = pygame.display.set_mode((1200, 1200)) 
         self.screen = pygame.display.get_surface() 
 
-    def update(self):
-        my_env = self.my_env
+    def update(self, ctime):
+        univ = self.univ
+        my_env = univ.my_env
         update_rects = []
         for i in range(my_env.xsize):
              for j in range(my_env.ysize):
@@ -258,6 +252,9 @@ class Display:
                      self.screen.fill((0,255,0), rect)
                  if obj == 2:
                      self.screen.fill((0,0,255), rect)
+        rects, flat_rects = create_rects(univ.layer_sizes,univ.start_width,univ.lmax)
+        display_cells(ctime, self.screen, univ.layer_sizes, univ.spirit_brain, rects, flat_rects)
+        update_rects.extend(flat_rects)
         pygame.display.update(update_rects)
         
 class Universe:
@@ -321,10 +318,6 @@ class Universe:
         self.total_wrong_food = 0
 
 
-        #{
-        if movie:
-            self.rects, self.flat_rects = create_rects(self.layer_sizes,self.start_width,self.lmax)
-        #}
 
         self.spirit_brain = spirit.Brain(self.lmax,self.layer_sizes,self.ttime,self.average_syn_file,self.reward,self.connex_file,self.base_noise,self.base_noise_rate)
         self.last='north'
