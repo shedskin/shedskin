@@ -57,7 +57,6 @@ def record(ctime):
     food_file.close()
     out_spike_file.close()
 
-    return 'hoi'
 
 #{
 def create_rects(layer_sizes,start_width,lmax):
