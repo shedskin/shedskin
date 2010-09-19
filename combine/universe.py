@@ -1,6 +1,47 @@
 import time, math, random, os, sys
 import spirit, enviroment
 
+def record(univ):
+    ctime = univ.ttime
+    points_file=open(univ.folder_name+'/points'+(str(ctime/1000000)),'w')
+    points_file.write('points: '+ str(univ.points) +' rewarded: ' + str(univ.reward))
+    connex_final_file=open(univ.folder_name+'/connex'+(str(ctime/1000000)),'w')
+    food_file=open(univ.folder_name+'/burger_time','w')
+    out_spike_file=open(univ.folder_name+'/out_spike','w')
+    
+    if univ.total_wrong_food > 0:
+        food_type_file.write(str(float(univ.total_food)/float(univ.total_wrong_food))+ '\n')
+    
+    connex_final_file.write(str(univ.lmax)+'\n')
+    for layer_size in univ.layer_sizes:
+        connex_final_file.write(str(layer_size[0]) +' ' + str(layer_size[1]) + ' '+ str(layer_size[2]) + '\n')
+
+    for syn_sum in univ.synsumco:
+        connex_final_file.write(str(syn_sum) + ' ' )
+        connex_final_file.write('\n')
+
+    for layer in univ.spirit_brain.cell_array:
+        for row in layer:
+            for item in row:
+                for cell in item:
+                    for connection in cell.connections:
+                        other_cell = connection.post_cell
+                        connex_final_file.write( str(cell.cell_type)  + ' ' + str(cell.layer) + ' ' +  str(cell.x) + ' ' +  str(cell.y) + ' ' + str(other_cell.cell_type) + ' ' +str(other_cell.layer)  + ' ' +  str(other_cell.x) + ' ' +  str(other_cell.y) + ' ' +   str(connection.s) + ' ' + str(int(connection.fast))+ ' ' + str(int(connection.plastic)) +'\n')
+
+    univ.food_times.append(ctime)
+    for food_time in univ.food_times:
+        food_file.write(str(food_time) +'\n')
+
+    univ.out_spikes.append(ctime)
+    for out_spike in univ.out_spikes:
+        out_spike_file.write(str(out_spike) +'\n')
+
+    points_file.close()
+    connex_final_file.close()
+    food_file.close()
+    out_spike_file.close()
+
+
 def determine_heading(max_index):
     if len(max_index) > 0:
         x,y = random.choice(max_index);
@@ -81,6 +122,7 @@ def main():
         univ.advance(ctime)
         if ctime%10000 == 0:
             print('time: ' + str(ctime) + ' happy: ' + str(univ.happyness))
+    record(univ)
     print('finish calc')
         
 class Universe:
