@@ -64,17 +64,19 @@ class Enviroment:
                 self.update_land(obj,x,y)
                 return x,y
     
-    def wrap_calc(self,x,y):
+    def wrap_calc_x(self,x):
         while x >= self.xsize:
             x = x- self.xsize
         while x< 0:
             x = x + self.xsize
+        return x
+
+    def wrap_calc_y(self,y):
         while y >= self.ysize:
             y = y- self.ysize
         while y< 0:
             y = y + self.ysize
-        return x,y
-
+        return y
 
     def teleport(self):
         while True:
@@ -89,38 +91,38 @@ class Enviroment:
 
     def move_crit(self,direction):
         if direction=='north':
-            newcrit=(self.critx,self.crity-1)
-            newcrit=self.wrap_calc(newcrit[0],newcrit[1])
+            new_critx = self.wrap_calc_x(self.critx)
+            new_crity = self.wrap_calc_y(self.crity-1)
         if direction=='south':
-            newcrit=(self.critx,self.crity+1)
-            newcrit=self.wrap_calc(newcrit[0],newcrit[1])
+            new_critx = self.wrap_calc_x(self.critx)
+            new_crity = self.wrap_calc_y(self.crity+1)
         if direction=='east':
-            newcrit=(self.critx+1,self.crity)
-            newcrit=self.wrap_calc(newcrit[0],newcrit[1])
+            new_critx = self.wrap_calc_x(self.critx+1)
+            new_crity = self.wrap_calc_y(self.crity)
         if direction=='west':
-            newcrit=(self.critx-1,self.crity)
-            newcrit=self.wrap_calc(newcrit[0],newcrit[1])
+            new_critx = self.wrap_calc_x(self.critx-1)
+            new_crity = self.wrap_calc_y(self.crity)
 
         if direction=='north_west':
-            newcrit=(self.critx-1,self.crity-1)
-            newcrit=self.wrap_calc(newcrit[0],newcrit[1])
+            new_critx = self.wrap_calc_x(self.critx-1)
+            new_crity = self.wrap_calc_y(self.crity-1)
         if direction=='south_west':
-            newcrit=(self.critx-1,self.crity+1)
-            newcrit=self.wrap_calc(newcrit[0],newcrit[1])
+            new_critx = self.wrap_calc_x(self.critx-1)
+            new_crity = self.wrap_calc_y(self.crity+1)
         if direction=='north_east':
-            newcrit=(self.critx+1,self.crity-1)
-            newcrit=self.wrap_calc(newcrit[0],newcrit[1])
+            new_critx = self.wrap_calc_x(self.critx+1)
+            new_crity = self.wrap_calc_y(self.crity-1)
         if direction=='south_east':
-            newcrit=(self.critx+1,self.crity+1)
-            newcrit=self.wrap_calc(newcrit[0],newcrit[1])
-        if direction=='null':
-            newcrit=(self.critx,self.crity)
-            newcrit=self.wrap_calc(newcrit[0],newcrit[1])
+            new_critx = self.wrap_calc_x(self.critx+1)
+            new_crity = self.wrap_calc_y(self.crity+1)
 
+        if direction=='null':
+            new_critx = self.wrap_calc_x(self.critx)
+            new_crity = self.wrap_calc_y(self.crity)
 
         self.update_land(0,self.critx,self.crity)
-        self.critx = newcrit[0]
-        self.crity = newcrit[1]
+        self.critx = new_critx
+        self.crity = new_crity
         if self.landscape[self.critx][self.crity]==1:
             self.update_land(2,self.critx,self.crity)
             self.gen_object(1)
@@ -163,7 +165,7 @@ class Enviroment:
         for i in range((x_range*2)+1):
             array.append([])
             for j in range((y_range*2)+1):
-                wxloc,wyloc = self.wrap_calc(xloc+i,yloc+j)
+                wxloc,wyloc = self.wrap_calc_x(xloc+i), self.wrap_calc_y(yloc+j)
                 array[i].append(self.landscape[wxloc][wyloc])
         return array
 
