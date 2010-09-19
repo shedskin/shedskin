@@ -225,11 +225,12 @@ def determine_heading(max_index):
 
 def main():
     univ = Universe()
-    display = Display(univ)
+    if movie:
+        display = Display(univ)
 
     for ctime in range(2,univ.ttime):
         univ.advance(ctime)
-        if ctime%100 == 0:
+        if movie and ctime%100 == 0:
             display.update()
         if ctime%10000 == 0:
             print('time: ' + str(ctime) + ' happy: ' + str(univ.happyness))
@@ -242,32 +243,22 @@ class Display:
         self.my_env = univ.my_env
         self.window = pygame.display.set_mode((1200, 1200)) 
         self.screen = pygame.display.get_surface() 
-        self.clock = pygame.time.Clock()
 
     def update(self):
-        self.clock.tick(10000)
         my_env = self.my_env
         update_rects = []
         for i in range(my_env.xsize):
              for j in range(my_env.ysize):
-                  obj = my_env.landscape[i][j]
-                  rect = my_env.rects[i][j]
-                  self.screen.fill((100,0,0),rect)
-                  update_rects.append(rect)
+                 obj = my_env.landscape[i][j]
+                 rect = my_env.rects[i][j]
+                 update_rects.append(rect)
+                 if obj == 0:
+                     self.screen.fill((100,0,0), rect)
+                 if obj == 1 or obj == 3 or obj ==4:
+                     self.screen.fill((0,255,0), rect)
+                 if obj == 2:
+                     self.screen.fill((0,0,255), rect)
         pygame.display.update(update_rects)
-
-#        if self.movie:
-#            if obj == 0:
-##                self.screen.fill((100,0,0),self.rects[x][y])
-#                self.update_rects.append(self.rects[x][y])
-#            if obj == 1 or obj == 3 or obj ==4:
-##                self.screen.fill((0,255,0),self.rects[x][y])
-#                self.update_rects.append(self.rects[x][y])
-#            if obj == 2:
-#                #self.screen.blit(self.face,(x,y),(10,10,5,5))
-##                self.screen.fill((0,0,255),self.rects[x][y])
-#                self.update_rects.append(self.rects[x][y])
-
         
 class Universe:
     def __init__(self):
