@@ -225,11 +225,50 @@ def determine_heading(max_index):
 
 def main():
     univ = Universe()
+    display = Display(univ)
+
     for ctime in range(2,univ.ttime):
         univ.advance(ctime)
+        if ctime%100 == 0:
+            display.update()
+        if ctime%10000 == 0:
+            print('time: ' + str(ctime) + ' happy: ' + str(univ.happyness))
+
     record(univ.ttime, univ.layer_sizes, univ.spirit_brain)
     print('finish calc')
 
+class Display:
+    def __init__(self, univ):
+        self.my_env = univ.my_env
+        self.window = pygame.display.set_mode((1200, 1200)) 
+        self.screen = pygame.display.get_surface() 
+        self.clock = pygame.time.Clock()
+
+    def update(self):
+        self.clock.tick(10000)
+        my_env = self.my_env
+        update_rects = []
+        for i in range(my_env.xsize):
+             for j in range(my_env.ysize):
+                  obj = my_env.landscape[i][j]
+                  rect = my_env.rects[i][j]
+                  self.screen.fill((100,0,0),rect)
+                  update_rects.append(rect)
+        pygame.display.update(update_rects)
+
+#        if self.movie:
+#            if obj == 0:
+##                self.screen.fill((100,0,0),self.rects[x][y])
+#                self.update_rects.append(self.rects[x][y])
+#            if obj == 1 or obj == 3 or obj ==4:
+##                self.screen.fill((0,255,0),self.rects[x][y])
+#                self.update_rects.append(self.rects[x][y])
+#            if obj == 2:
+#                #self.screen.blit(self.face,(x,y),(10,10,5,5))
+##                self.screen.fill((0,0,255),self.rects[x][y])
+#                self.update_rects.append(self.rects[x][y])
+
+        
 class Universe:
     def __init__(self):
         self.parse_options()
@@ -315,9 +354,6 @@ class Universe:
         self.flash_grid = []
 
     def advance(self, ctime):
-        if ctime%10000 == 0:
-            print('time: ' + str(ctime) + ' happy: ' + str(self.happyness))
-
         spirit_brain = self.spirit_brain
         spikes_per_e = self.spikes_per_e
         my_env = self.my_env
@@ -417,15 +453,6 @@ class Universe:
                 self.food = False
                 self.food_times.append(ctime)
             
-    #{
-            if movie:
-                pass
-                #time.sleep(1)
-                display_cells(ctime, my_env, self.layer_sizes, spirit_brain, self.rects, self.flat_rects)
-                #time.sleep(1)
-    #}
-
-
         # start of epock get vision
         if ctime%self.epoch==0:
 
@@ -452,13 +479,6 @@ class Universe:
 
         if ctime%1000000==0:
             record(ctime, self.layer_sizes, spirit_brain)
-
-    #{
-        if movie:
-            pass
-            display_cells(ctime, my_env, self.layer_sizes, spirit_brain, self.rects, self.flat_rects)
-    #}
-
 
     def get_folder_name(self):
         count = 1
