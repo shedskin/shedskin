@@ -6,17 +6,17 @@ movie = True
 class Display:
     def __init__(self, univ):
         self.univ = univ
+        self.my_env = univ.my_env
         self.window = pygame.display.set_mode((1200, 1200)) 
         self.screen = pygame.display.get_surface() 
 
     def update(self, ctime):
         univ = self.univ
-        my_env = univ.my_env
-        landscape = my_env.landscape
-        rects = my_env.rects
         update_rects = []
-        for i in range(my_env.xsize):
-             for j in range(my_env.ysize):
+        rects = self.my_env.rects
+        landscape = self.my_env.landscape
+        for i in range(self.my_env.xsize):
+             for j in range(self.my_env.ysize):
                  obj = landscape[i][j]
                  rect = rects[i][j]
                  update_rects.append(rect)
@@ -127,7 +127,7 @@ def main():
     print('start calc')
     for ctime in range(2,univ.ttime):
         univ.advance(ctime)
-        if movie and ctime%100 == 0:
+        if movie and ctime%1000 == 0:
             display.update(ctime)
         if ctime%10000 == 0:
             print('time: ' + str(ctime) + ' happy: ' + str(univ.happyness))

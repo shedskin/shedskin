@@ -341,7 +341,7 @@ class Universe:
             
             self.reward = True
             self.control_cond = False
-            self.ttime=10000000 # number of iterations
+            self.ttime=100000 # number of iterations
             self.food_type = "vert"
         else:
             self.ttime=int(sys.argv[2]) # number of iterations
