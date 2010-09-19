@@ -651,6 +651,7 @@ def iterative_dataflow_analysis():
             if getgx().added_funcs:
                 print '\nADDED FUNCS, continue!'
                 getgx().added_funcs = 0
+                getgx().iterations = 0
             else:
                 print '\niterations:', getgx().iterations, 'templates:', getgx().templates
                 return
