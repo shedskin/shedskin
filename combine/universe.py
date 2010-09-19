@@ -17,7 +17,7 @@ import os
 import sys
 
 
-def record(ctime):
+def record(ctime, layer_sizes, spirit_brain):
     points_file=open(folder_name+'/points'+(str(ctime/1000000)),'w')
     points_file.write('points: '+ str(points) +' rewarded: ' + str(reward))
     connex_final_file=open(folder_name+'/connex'+(str(ctime/1000000)),'w')
@@ -87,7 +87,7 @@ def create_rects(layer_sizes,start_width,lmax):
     return rects,flat_rects
 
 
-def display_cells(ctime):            
+def display_cells(ctime, my_env, layer_sizes, spirit_brain, rects, flat_rects):
      screen = my_env.screen
      counter = 0
      for num,layer in enumerate(layer_sizes):
@@ -150,347 +150,350 @@ def display_cells(ctime):
           my_env.display(flat_rects)
 #}
 
-if len(sys.argv) != 5:
-    print 'bad ars need reward[True|False] run_time[int] control[True|False] food_type[horz|vert]'
-    
-    reward = True
-    control_cond = False
-    ttime=10000000 # number of iterations
-    food_type = "vert"
-else:
-    ttime=int(sys.argv[2]) # number of iterations
-    if sys.argv[1] == 'False':
-        reward = False
-    elif sys.argv[1] == 'True':
+def main():
+    if len(sys.argv) != 5:
+        print 'bad ars need reward[True|False] run_time[int] control[True|False] food_type[horz|vert]'
+        
         reward = True
-    else:
-        print 'bad ars need reward[True|False] run_time[int] control[True|False] food_type[horz|vert]'
-        exit(1)
-
-    if sys.argv[3] == 'False':
         control_cond = False
-    elif sys.argv[3] == 'True':
-        control_cond = True
+        ttime=10000000 # number of iterations
+        food_type = "vert"
     else:
-        print 'bad ars need reward[True|False] run_time[int] control[True|False] food_type[horz|vert]'
-        exit(1)
-
-    if sys.argv[4] == 'vert':
-        food_type = 'vert'
-    elif sys.argv[4] == 'horz':
-        food_type = 'horz'
-    else:
-        print 'bad ars need reward[True|False] run_time[int] control[True|False] food_type[horz|vert]'
-        exit(1)
-
-count = 1
-while True:
-    if not os.access('output/'+str(count),os.F_OK):
-        os.mkdir('output/'+str(count))
-        os.popen('cp connex output/' + str(count))
-        folder_name = 'output/'+str(count)
-        break
-    print count
-    count = count + 1
-
-epoch = 800
-start_width = 600
-points= 0
-env_size = 100
-my_env = enviroment.Enviroment(env_size,env_size,env_size**2/10,movie,food_type,"homo")
-sleeper=False
-reward_hold=reward
-wake=True
-up_time=400000
-down_time=400
-alert=up_time
-cyclet=50
-base_noise_rate = 0.000
-base_noise = 0.00
-msouth = True
-out_per_f=0
-happyness=0.1
-
-
-cycle=cyclet
-sleep_noise_level = 0.05
-#{
-if movie:
-    pygame.init()
-#}  
-
-cell_array = []
-connex_file=open('connex','r')
-layer_sizes=[]
-lmax=int(connex_file.readline()) #number of layers
-spikes_per_e=[0]*lmax
-totalstuff=[0]*lmax
-for i in range(lmax):
-    layer_sizes.append([])
-    for char in connex_file.readline().split():
-        layer_sizes[i].append(int(char))
-
-synsumco = []
-syn_line = connex_file.readline()
-for syn in syn_line.split():
-    synsumco.append(float(syn))
-#synsumco = [0.153,.153,1.95]
-
-
-average_syn_file = open(folder_name+'/average_syn','w')
-if control_cond:
-    control_file = open(folder_name+'/control','w')
-average_syn_file = open(folder_name+'/average_syn','w')
-#food_file = open(folder_name+'/burger_time','w')
-#connex_final_file = open(folder_name + '/connex_final','w')
-#points_file = open(folder_name + '/points','w')
-layertotals_file=open(folder_name + '/layertotals','w')
-happyfile=open(folder_name + '/happyfile','w')
-food_type_file= open(folder_name + '/food_types','w')
-total_food = 0
-total_wrong_food = 0
-
-
-#{
-if movie:
-    rects,flat_rects = create_rects(layer_sizes,start_width,lmax)
-#}
-
-spirit_brain = spirit.Brain(lmax,layer_sizes,ttime,average_syn_file,reward,connex_file,base_noise,base_noise_rate)
-last='north'
-
-print('start calc')
-still = 0
-fired_yet = False
-yum = 0
-dir_time = 0
-flash_on  = True
-heading = 'north'
-food_times = []  
-out_spikes = []         
-food_all = []
-fire_now =False
-choices = [[0,0,0],[0,0,0],[0,0,0]] 
-spike_counter = [[0,0,0],[0,0,0],[0,0,0]]
-flash_grid = []
-
-for ctime in range(2,ttime):
-            
-    if ctime%10000 == 0:
-        print('time: ' + str(ctime) + ' happy: ' + str(happyness))
-
-    spirit_brain.calc(ctime)
-    if ctime%epoch==0:
-        
-        if spikes_per_e[0]>0:
-            #top to bottum
-            #if spikes_per_e[1]>spikes_per_e[2]:
-                #synsumco[1]=synsumco[1]*1.001
-            #if spikes_per_e[1]<spikes_per_e[2]:
-                #synsumco[1]=synsumco[1]*.999
-
-            #bottum to output
-
-            if spikes_per_e[1] > spikes_per_e[0]:
-                for row in spirit_brain.cell_array[1]:
-                    for item in row:
-                        for cell in item:
-                            cell.dc = cell.dc - .0001
-
-                print spirit_brain.cell_array[1][0][0][0].dc,'down'
-
-            if spikes_per_e[1] < spikes_per_e[0]:
-                for row in spirit_brain.cell_array[1]:
-                    for item in row:
-                        for cell in item:
-                            cell.dc = cell.dc + 0.0001
-                print spirit_brain.cell_array[1][0][0][0].dc,'up'
-
-
-            #print out_per_f
-            #if out_per_f > 1:
-            #    out_spikes.append(ctime)
-            #if out_per_f>1:
-            #    synsumco[1]=synsumco[1]*.999 #for a 5 total 
-            #if out_per_f==0:
-            #    synsumco[1]=synsumco[1]*1.001
-
-        choices = [[0,0,0],[0,0,0],[0,0,0]]
-
-
-        if spirit_brain.noise_rate < base_noise_rate * 10:
-            spirit_brain.noise_rate = spirit_brain.noise_rate * 1.1
-            spirit_brain.noise = spirit_brain.noise * 1.05
-
-        for layer in spirit_brain.cell_array[1:len(spirit_brain.cell_array)-1]:
-            for row in layer:
-                for item in row:
-                    for cell in item:
-                        cell.balance_connections(synsumco)
-
-        for i,layer_print in enumerate(totalstuff[:-1]):
-            totalstuff[i] = layer_print + spikes_per_e[i] 
-        totalstuff[-1] = points
-
-        out_per_f=0
-        spikes_per_e=[0]*lmax
-        
-        for i,layer_print in enumerate(totalstuff):
-            layertotals_file.write(str(layer_print) + ' ' )
-        layertotals_file.write('\n')
-
- 
-    #half way through epoch
-    if (ctime+epoch/2)%epoch==0 and wake:
-        spirit_brain.unflash(flash_grid)
-        visionsum=0
-
-        max_index = []
-        maximum = -1
-        for i,line in enumerate(spike_counter):
-            for j,out_cell_spikes in enumerate(line):
-                if out_cell_spikes > maximum:
-                    maximum = out_cell_spikes
-                    max_index = [[i,j]]
-                if out_cell_spikes == maximum:
-                    max_index.append([i,j])
-
-        spike_counter = [[0,0,0],[0,0,0],[0,0,0]]
-        if len(max_index) > 0:
-            x,y = random.choice(max_index);
-            if x==0 and y==0:
-                heading = 'north_west'
-            if x==0 and y==1:
-                heading = 'west'
-            if x==0 and y==2:
-                heading = 'south_west'
-            if x==1 and y==0:
-                heading='north'
-            if x==1 and y==1:
-                heading='north'#could be null but that tends to mess things up
-            if x==1 and y==2:
-                heading='south'
-            if x==2 and y==0:
-                heading='north_east'
-            if x==2 and y==1:
-                heading='east'
-            if x==2 and y==2:
-                heading='south_east'
-
-            #print heading
+        ttime=int(sys.argv[2]) # number of iterations
+        if sys.argv[1] == 'False':
+            reward = False
+        elif sys.argv[1] == 'True':
+            reward = True
         else:
-            if random.random() > 0.98:
-                x = random.randint(0,1)
-                if x==0 and heading == 'north':
-                    heading = 'north_east'
-                elif x==1 and heading == 'north':
+            print 'bad ars need reward[True|False] run_time[int] control[True|False] food_type[horz|vert]'
+            exit(1)
+
+        if sys.argv[3] == 'False':
+            control_cond = False
+        elif sys.argv[3] == 'True':
+            control_cond = True
+        else:
+            print 'bad ars need reward[True|False] run_time[int] control[True|False] food_type[horz|vert]'
+            exit(1)
+
+        if sys.argv[4] == 'vert':
+            food_type = 'vert'
+        elif sys.argv[4] == 'horz':
+            food_type = 'horz'
+        else:
+            print 'bad ars need reward[True|False] run_time[int] control[True|False] food_type[horz|vert]'
+            exit(1)
+
+    count = 1
+    while True:
+        if not os.access('output/'+str(count),os.F_OK):
+            os.mkdir('output/'+str(count))
+            os.popen('cp connex output/' + str(count))
+            folder_name = 'output/'+str(count)
+            break
+        print count
+        count = count + 1
+
+    epoch = 800
+    start_width = 600
+    points= 0
+    env_size = 100
+    my_env = enviroment.Enviroment(env_size,env_size,env_size**2/10,movie,food_type,"homo")
+    sleeper=False
+    reward_hold=reward
+    wake=True
+    up_time=400000
+    down_time=400
+    alert=up_time
+    cyclet=50
+    base_noise_rate = 0.000
+    base_noise = 0.00
+    msouth = True
+    out_per_f=0
+    happyness=0.1
+
+
+    cycle=cyclet
+    sleep_noise_level = 0.05
+    #{
+    if movie:
+        pygame.init()
+    #}  
+
+    cell_array = []
+    connex_file=open('connex','r')
+    layer_sizes=[]
+    lmax=int(connex_file.readline()) #number of layers
+    spikes_per_e=[0]*lmax
+    totalstuff=[0]*lmax
+    for i in range(lmax):
+        layer_sizes.append([])
+        for char in connex_file.readline().split():
+            layer_sizes[i].append(int(char))
+
+    synsumco = []
+    syn_line = connex_file.readline()
+    for syn in syn_line.split():
+        synsumco.append(float(syn))
+    #synsumco = [0.153,.153,1.95]
+
+
+    average_syn_file = open(folder_name+'/average_syn','w')
+    if control_cond:
+        control_file = open(folder_name+'/control','w')
+    average_syn_file = open(folder_name+'/average_syn','w')
+    #food_file = open(folder_name+'/burger_time','w')
+    #connex_final_file = open(folder_name + '/connex_final','w')
+    #points_file = open(folder_name + '/points','w')
+    layertotals_file=open(folder_name + '/layertotals','w')
+    happyfile=open(folder_name + '/happyfile','w')
+    food_type_file= open(folder_name + '/food_types','w')
+    total_food = 0
+    total_wrong_food = 0
+
+
+    #{
+    if movie:
+        rects,flat_rects = create_rects(layer_sizes,start_width,lmax)
+    #}
+
+    spirit_brain = spirit.Brain(lmax,layer_sizes,ttime,average_syn_file,reward,connex_file,base_noise,base_noise_rate)
+    last='north'
+
+    print('start calc')
+    still = 0
+    fired_yet = False
+    yum = 0
+    dir_time = 0
+    flash_on  = True
+    heading = 'north'
+    food_times = []  
+    out_spikes = []         
+    food_all = []
+    fire_now =False
+    choices = [[0,0,0],[0,0,0],[0,0,0]] 
+    spike_counter = [[0,0,0],[0,0,0],[0,0,0]]
+    flash_grid = []
+
+    for ctime in range(2,ttime):
+                
+        if ctime%10000 == 0:
+            print('time: ' + str(ctime) + ' happy: ' + str(happyness))
+
+        spirit_brain.calc(ctime)
+        if ctime%epoch==0:
+            
+            if spikes_per_e[0]>0:
+                #top to bottum
+                #if spikes_per_e[1]>spikes_per_e[2]:
+                    #synsumco[1]=synsumco[1]*1.001
+                #if spikes_per_e[1]<spikes_per_e[2]:
+                    #synsumco[1]=synsumco[1]*.999
+
+                #bottum to output
+
+                if spikes_per_e[1] > spikes_per_e[0]:
+                    for row in spirit_brain.cell_array[1]:
+                        for item in row:
+                            for cell in item:
+                                cell.dc = cell.dc - .0001
+
+                    print spirit_brain.cell_array[1][0][0][0].dc,'down'
+
+                if spikes_per_e[1] < spikes_per_e[0]:
+                    for row in spirit_brain.cell_array[1]:
+                        for item in row:
+                            for cell in item:
+                                cell.dc = cell.dc + 0.0001
+                    print spirit_brain.cell_array[1][0][0][0].dc,'up'
+
+
+                #print out_per_f
+                #if out_per_f > 1:
+                #    out_spikes.append(ctime)
+                #if out_per_f>1:
+                #    synsumco[1]=synsumco[1]*.999 #for a 5 total 
+                #if out_per_f==0:
+                #    synsumco[1]=synsumco[1]*1.001
+
+            choices = [[0,0,0],[0,0,0],[0,0,0]]
+
+
+            if spirit_brain.noise_rate < base_noise_rate * 10:
+                spirit_brain.noise_rate = spirit_brain.noise_rate * 1.1
+                spirit_brain.noise = spirit_brain.noise * 1.05
+
+            for layer in spirit_brain.cell_array[1:len(spirit_brain.cell_array)-1]:
+                for row in layer:
+                    for item in row:
+                        for cell in item:
+                            cell.balance_connections(synsumco)
+
+            for i,layer_print in enumerate(totalstuff[:-1]):
+                totalstuff[i] = layer_print + spikes_per_e[i] 
+            totalstuff[-1] = points
+
+            out_per_f=0
+            spikes_per_e=[0]*lmax
+            
+            for i,layer_print in enumerate(totalstuff):
+                layertotals_file.write(str(layer_print) + ' ' )
+            layertotals_file.write('\n')
+
+     
+        #half way through epoch
+        if (ctime+epoch/2)%epoch==0 and wake:
+            spirit_brain.unflash(flash_grid)
+            visionsum=0
+
+            max_index = []
+            maximum = -1
+            for i,line in enumerate(spike_counter):
+                for j,out_cell_spikes in enumerate(line):
+                    if out_cell_spikes > maximum:
+                        maximum = out_cell_spikes
+                        max_index = [[i,j]]
+                    if out_cell_spikes == maximum:
+                        max_index.append([i,j])
+
+            spike_counter = [[0,0,0],[0,0,0],[0,0,0]]
+            if len(max_index) > 0:
+                x,y = random.choice(max_index);
+                if x==0 and y==0:
                     heading = 'north_west'
-
-                elif x==0 and heading == 'south':
-                    heading = 'south_east'
-                elif x==1 and heading == 'south':
+                if x==0 and y==1:
+                    heading = 'west'
+                if x==0 and y==2:
                     heading = 'south_west'
-
-                elif x==0 and heading== 'east':
-                        heading = 'north_east'
-                elif x==1 and heading== 'east':
+                if x==1 and y==0:
+                    heading='north'
+                if x==1 and y==1:
+                    heading='north'#could be null but that tends to mess things up
+                if x==1 and y==2:
+                    heading='south'
+                if x==2 and y==0:
+                    heading='north_east'
+                if x==2 and y==1:
+                    heading='east'
+                if x==2 and y==2:
                     heading='south_east'
 
-                elif x==0 and heading== 'west':
+                #print heading
+            else:
+                if random.random() > 0.98:
+                    x = random.randint(0,1)
+                    if x==0 and heading == 'north':
+                        heading = 'north_east'
+                    elif x==1 and heading == 'north':
                         heading = 'north_west'
-                elif x==1 and heading== 'west':
-                    heading='south_west'
 
-                elif x==0 and heading== 'north_west':
-                        heading = 'west'
-                elif x==1 and heading== 'north_west':
-                    heading='north'
+                    elif x==0 and heading == 'south':
+                        heading = 'south_east'
+                    elif x==1 and heading == 'south':
+                        heading = 'south_west'
 
-                elif x==0 and heading== 'north_east':
-                        heading = 'east'
-                elif x==1 and heading== 'north_east':
-                    heading='east'
+                    elif x==0 and heading== 'east':
+                            heading = 'north_east'
+                    elif x==1 and heading== 'east':
+                        heading='south_east'
 
-                elif x==0 and heading== 'south_east':
-                        heading = 'east'
-                elif x==1 and heading== 'south_east':
-                    heading='south'
+                    elif x==0 and heading== 'west':
+                            heading = 'north_west'
+                    elif x==1 and heading== 'west':
+                        heading='south_west'
 
-                elif x==0 and heading== 'south_west':
-                        heading = 'south'
-                elif x==1 and heading== 'south_west':
-                    heading='west'
+                    elif x==0 and heading== 'north_west':
+                            heading = 'west'
+                    elif x==1 and heading== 'north_west':
+                        heading='north'
 
-                elif x==0 and heading== 'null':
-                        heading = 'north'
-                elif x==1 and heading== 'null':
-                    heading='south'
+                    elif x==0 and heading== 'north_east':
+                            heading = 'east'
+                    elif x==1 and heading== 'north_east':
+                        heading='east'
+
+                    elif x==0 and heading== 'south_east':
+                            heading = 'east'
+                    elif x==1 and heading== 'south_east':
+                        heading='south'
+
+                    elif x==0 and heading== 'south_west':
+                            heading = 'south'
+                    elif x==1 and heading== 'south_west':
+                        heading='west'
+
+                    elif x==0 and heading== 'null':
+                            heading = 'north'
+                    elif x==1 and heading== 'null':
+                        heading='south'
+                    
                 
+            food_type = my_env.move_crit(heading)
+            if food_type == "bacon": 
+                total_food = total_food + 1
+                food = True
+            if food_type== "grass":
+                total_wrong_food = total_wrong_food + 1
+                food = False
+            if food_type== "blank":
+                food = False
+
+                    
+            spirit_brain.reward(food)
+            if food:
+                food = False
+                food_times.append(ctime)
             
-        food_type = my_env.move_crit(heading)
-        if food_type == "bacon": 
-            total_food = total_food + 1
-            food = True
-        if food_type== "grass":
-            total_wrong_food = total_wrong_food + 1
-            food = False
-        if food_type== "blank":
-            food = False
+    #{
+            if movie:
+                pass
+                #time.sleep(1)
+                display_cells(ctime, my_env, layer_sizes, spirit_brain, rects, flat_rects)
+                #time.sleep(1)
+    #}
 
-                
-        spirit_brain.reward(food)
-        if food:
-            food = False
-            food_times.append(ctime)
-        
-#{
+
+        # start of epock get vision
+        if ctime%epoch==0:
+
+            vision = my_env.get_vision(my_env.critx,my_env.crity,(layer_sizes[0][0]-1)/2,(layer_sizes[0][1]-1)/2)
+            for vision_row in vision:
+                for vis_cell in vision_row:
+                    if vis_cell==1:
+                        visionsum=visionsum+1
+
+             
+            if visionsum==0:
+                visionsum=1
+
+            spirit_brain.inscale=1.0/float(visionsum)
+            flash_grid = spirit_brain.apply_inputs(vision)
+
+
+        array = []
+        array=spirit_brain.fire(ctime,epoch,spikes_per_e,happyness,happyfile,choices)
+        out_per_f=sum(choices[0])+sum(choices[1]) + sum(choices[2])
+        happyness = array[3]
+        for m in range(3):
+            for n in range(3):
+                spike_counter[m][n] = spike_counter[m][n] + choices[m][n]
+
+        if ctime%1000000==0:
+            record(ctime, layer_sizes, spirit_brain)
+
+    #{
         if movie:
             pass
-            #time.sleep(1)
-            display_cells(ctime)
-            #time.sleep(1)
-#}
-
-
-    # start of epock get vision
-    if ctime%epoch==0:
-
-        vision = my_env.get_vision(my_env.critx,my_env.crity,(layer_sizes[0][0]-1)/2,(layer_sizes[0][1]-1)/2)
-        for vision_row in vision:
-            for vis_cell in vision_row:
-                if vis_cell==1:
-                    visionsum=visionsum+1
-
-         
-        if visionsum==0:
-            visionsum=1
-
-        spirit_brain.inscale=1.0/float(visionsum)
-        flash_grid = spirit_brain.apply_inputs(vision)
-
-
-    array = []
-    array=spirit_brain.fire(ctime,epoch,spikes_per_e,happyness,happyfile,choices)
-    out_per_f=sum(choices[0])+sum(choices[1]) + sum(choices[2])
-    happyness = array[3]
-    for m in range(3):
-        for n in range(3):
-            spike_counter[m][n] = spike_counter[m][n] + choices[m][n]
-
-    if ctime%1000000==0:
-        record(ctime)
-
-#{
-    if movie:
-        pass
-        display_cells(ctime)
-#}
+            display_cells(ctime, my_env, layer_sizes, spirit_brain, rects, flat_rects)
+    #}
 
 
 
 
 
 
-record(ttime)
-print('finish calc')
+    record(ttime, layer_sizes, spirit_brain)
+    print('finish calc')
 
+if __name__ == '__main__':
+    main()
