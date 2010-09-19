@@ -1,21 +1,8 @@
+import time, math, random, os, sys
+import pygame
+import spirit, enviroment
 
 movie = True
-
-import time
-import spirit
-import enviroment
-import math
-
-#{
-if movie:
-    import pygame
-    pass
-#}
-
-import random
-import os
-import sys
-
 
 def record(ctime, layer_sizes, spirit_brain):
     points_file=open(folder_name+'/points'+(str(ctime/1000000)),'w')
@@ -57,7 +44,6 @@ def record(ctime, layer_sizes, spirit_brain):
     food_file.close()
     out_spike_file.close()
 
-#{
 def create_rects(layer_sizes,start_width,lmax):
     rects = []
     flat_rects = []
@@ -217,6 +203,9 @@ def determine_heading(max_index):
     return heading
 
 def main():
+    if movie:
+        pygame.init()
+
     univ = Universe()
     if movie:
         display = Display(univ)
@@ -281,11 +270,6 @@ class Universe:
         self.happyness=0.1
         self.cycle=self.cyclet
         self.sleep_noise_level = 0.05
-
-        #{
-        if movie:
-            pygame.init()
-        #}  
 
         self.cell_array = []
         self.connex_file=open('connex','r')
