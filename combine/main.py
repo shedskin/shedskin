@@ -129,8 +129,6 @@ def main():
             display.update(ctime)
         if ctime%10000 == 0:
             print('time: ' + str(ctime) + ' happy: ' + str(univ.happyness))
-
-    record(univ.ttime, univ.layer_sizes, univ.spirit_brain)
     print('finish calc')
 
 if __name__ == '__main__':
