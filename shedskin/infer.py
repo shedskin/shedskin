@@ -330,6 +330,8 @@ def cpa(callnode, worklist):
     # --- iterate over argument type combinations
     for c in cp:
         (func, dcpa, objtype), c = c[0], c[1:]
+        if not func.mv.module.builtin:
+            continue
 
         if objtype: objtype = (objtype,)
         else: objtype = ()
