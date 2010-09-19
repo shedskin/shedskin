@@ -10,7 +10,7 @@ def record(univ):
     out_spike_file=open(univ.folder_name+'/out_spike','w')
     
     if univ.total_wrong_food > 0:
-        food_type_file.write(str(float(univ.total_food)/float(univ.total_wrong_food))+ '\n')
+        univ.food_type_file.write(str(float(univ.total_food)/float(univ.total_wrong_food))+ '\n')
     
     connex_final_file.write(str(univ.lmax)+'\n')
     for layer_size in univ.layer_sizes:
