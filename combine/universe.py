@@ -1,5 +1,4 @@
 import time, math, random, os, sys
-import pygame
 import spirit, enviroment
 
 def record(ctime, layer_sizes, spirit_brain):
@@ -117,23 +116,14 @@ def determine_heading(max_index):
     return heading
 
 def main():
-    if movie:
-        pygame.init()
-
+    print('start calc')
     univ = Universe()
-    if movie:
-        display = Display(univ)
-
     for ctime in range(2,univ.ttime):
         univ.advance(ctime)
-        if movie and ctime%100 == 0:
-            display.update(ctime)
         if ctime%10000 == 0:
             print('time: ' + str(ctime) + ' happy: ' + str(univ.happyness))
-
     record(univ.ttime, univ.layer_sizes, univ.spirit_brain)
     print('finish calc')
-
         
 class Universe:
     def __init__(self):
