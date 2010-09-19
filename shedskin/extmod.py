@@ -225,7 +225,7 @@ def do_extmod_class(gv, cl):
     print >>gv.out, '    self->__ss_object = new __%s__::%s();' % (cl.module.ident, cl.ident)
     print >>gv.out, '    self->__ss_object->__class__ = __%s__::cl_%s;' % (cl.module.ident, cl.ident)
     print >>gv.out, '    __ss_proxy->__setitem__(self->__ss_object, self);'
-    if hasmethod(cl, '__init__'):
+    if hasmethod(cl, '__init__') and cl.funcs['__init__'] in funcs:
         print >>gv.out, '    if(%s___init__((PyObject *)self, args, kwargs) == 0)' % cl.ident
         print >>gv.out, '        return 0;'
     print >>gv.out, '    return (PyObject *)self;'
