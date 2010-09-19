@@ -623,6 +623,10 @@ def iterative_dataflow_analysis():
     print '[iterative type analysis..]'
     backup = backup_network()
 
+    getgx().orig_types = {}
+    for n, t in getgx().types.iteritems():
+        getgx().orig_types[n] = t
+
     while True:
         getgx().iterations += 1
         if getgx().iterations > 30:
@@ -672,8 +676,7 @@ def iterative_dataflow_analysis():
             func = parent_func(node.thing)
             if isinstance(func, function):
                 if node.constructor and isinstance(node.thing, (List,Dict,Tuple,ListComp,CallFunc)):
-                    if func.mv.module.builtin or func in getgx().added_funcs_set or func.ident in ['__getattr__', '__setattr__']:
-                        beforetypes[node] = set()
+                     beforetypes[node] = set()
 
         # --- create new class types, and seed global nodes
         for cl, dcpa, nodes, newnr in split:
@@ -725,9 +728,9 @@ def ifa_seed_template(func, cart, dcpa, cpa, worklist):
                     if mother_alloc_id in getgx().alloc_info:
                         getgx().alloc_info[alloc_id] = getgx().alloc_info[mother_alloc_id]
                         #print 'mothered', alloc_node, getgx().alloc_info[mother_alloc_id]
-                    elif getgx().types[node]: # empty constructors that do not flow to assignments have no type
+                    elif getgx().orig_types[node]: # empty constructors that do not flow to assignments have no type
                         #print 'no mother', func.ident, cart, mother_alloc_id, alloc_node, getgx().types[node]
-                        getgx().alloc_info[alloc_id] = list(getgx().types[node])[0]
+                        getgx().alloc_info[alloc_id] = list(getgx().orig_types[node])[0]
                     else:
                         #print 'oh boy'
                         for (id, c, thing) in getgx().alloc_info: # XXX vhy?
