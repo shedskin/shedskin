@@ -3,13 +3,12 @@
 import random
 
 class Enviroment:
-    def __init__(self,xsize,ysize,num_food,movie,food_type,dist_type):
+    def __init__(self,xsize,ysize,num_food,food_type,dist_type):
         #1 norm food
         #2 creature
         #0 blank
         #3 horz food
         #4 vert food
-        self.movie = movie
         self.landscape = [ [0 for x in range(ysize)] for y in range(xsize)]
         self.xsize = xsize
         self.ysize = ysize
