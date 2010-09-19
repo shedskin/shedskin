@@ -96,15 +96,15 @@ class Enviroment:
 
 
     def teleport(self):
-	while True:
-	    new_x = random.randint(0,self.xsize-1)
-	    new_y = random.randint(0,self.ysize-1)
-	    if self.landscape[new_x][new_y] == 0:
-	        self.update_land(2,new_x,new_y)
-		self.update_land(0,self.critx,self.crity)
-		self.critx = new_x
-		self.crity = new_y
-		return
+        while True:
+            new_x = random.randint(0,self.xsize-1)
+            new_y = random.randint(0,self.ysize-1)
+            if self.landscape[new_x][new_y] == 0:
+                self.update_land(2,new_x,new_y)
+                self.update_land(0,self.critx,self.crity)
+                self.critx = new_x
+                self.crity = new_y
+                return
 
     def move_crit(self,direction):
         if direction=='north':
@@ -120,19 +120,19 @@ class Enviroment:
             newcrit=(self.critx-1,self.crity)
             newcrit=self.wrap_calc(newcrit[0],newcrit[1])
 
-	if direction=='north_west':
+        if direction=='north_west':
             newcrit=(self.critx-1,self.crity-1)
             newcrit=self.wrap_calc(newcrit[0],newcrit[1])
-	if direction=='south_west':
+        if direction=='south_west':
             newcrit=(self.critx-1,self.crity+1)
             newcrit=self.wrap_calc(newcrit[0],newcrit[1])
-	if direction=='north_east':
+        if direction=='north_east':
             newcrit=(self.critx+1,self.crity-1)
             newcrit=self.wrap_calc(newcrit[0],newcrit[1])
-	if direction=='south_east':
+        if direction=='south_east':
             newcrit=(self.critx+1,self.crity+1)
             newcrit=self.wrap_calc(newcrit[0],newcrit[1])
-	if direction=='null':
+        if direction=='null':
             newcrit=(self.critx,self.crity)
             newcrit=self.wrap_calc(newcrit[0],newcrit[1])
 
