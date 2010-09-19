@@ -12,11 +12,13 @@ class Display:
     def update(self, ctime):
         univ = self.univ
         my_env = univ.my_env
+        landscape = my_env.landscape
+        rects = my_env.rects
         update_rects = []
         for i in range(my_env.xsize):
              for j in range(my_env.ysize):
-                 obj = my_env.landscape[i][j]
-                 rect = my_env.rects[i][j]
+                 obj = landscape[i][j]
+                 rect = rects[i][j]
                  update_rects.append(rect)
                  if obj == 0:
                      self.screen.fill((100,0,0), rect)
