@@ -150,6 +150,79 @@ def display_cells(ctime, my_env, layer_sizes, spirit_brain, rects, flat_rects):
           my_env.display(flat_rects)
 #}
 
+def determine_heading(max_index):
+    if len(max_index) > 0:
+        x,y = random.choice(max_index);
+        if x==0 and y==0:
+            heading = 'north_west'
+        if x==0 and y==1:
+            heading = 'west'
+        if x==0 and y==2:
+            heading = 'south_west'
+        if x==1 and y==0:
+            heading='north'
+        if x==1 and y==1:
+            heading='north'#could be null but that tends to mess things up
+        if x==1 and y==2:
+            heading='south'
+        if x==2 and y==0:
+            heading='north_east'
+        if x==2 and y==1:
+            heading='east'
+        if x==2 and y==2:
+            heading='south_east'
+
+        #print heading
+    else:
+        if random.random() > 0.98:
+            x = random.randint(0,1)
+            if x==0 and heading == 'north':
+                heading = 'north_east'
+            elif x==1 and heading == 'north':
+                heading = 'north_west'
+
+            elif x==0 and heading == 'south':
+                heading = 'south_east'
+            elif x==1 and heading == 'south':
+                heading = 'south_west'
+
+            elif x==0 and heading== 'east':
+                    heading = 'north_east'
+            elif x==1 and heading== 'east':
+                heading='south_east'
+
+            elif x==0 and heading== 'west':
+                    heading = 'north_west'
+            elif x==1 and heading== 'west':
+                heading='south_west'
+
+            elif x==0 and heading== 'north_west':
+                    heading = 'west'
+            elif x==1 and heading== 'north_west':
+                heading='north'
+
+            elif x==0 and heading== 'north_east':
+                    heading = 'east'
+            elif x==1 and heading== 'north_east':
+                heading='east'
+
+            elif x==0 and heading== 'south_east':
+                    heading = 'east'
+            elif x==1 and heading== 'south_east':
+                heading='south'
+
+            elif x==0 and heading== 'south_west':
+                heading = 'south'
+            elif x==1 and heading== 'south_west':
+                heading='west'
+
+            elif x==0 and heading== 'null':
+                heading = 'north'
+            elif x==1 and heading== 'null':
+                heading='south'
+
+    return heading
+
 class Options:
     def __init__(self):
         if len(sys.argv) != 5:
@@ -365,75 +438,8 @@ def main():
                         max_index.append([i,j])
 
             spike_counter = [[0,0,0],[0,0,0],[0,0,0]]
-            if len(max_index) > 0:
-                x,y = random.choice(max_index);
-                if x==0 and y==0:
-                    heading = 'north_west'
-                if x==0 and y==1:
-                    heading = 'west'
-                if x==0 and y==2:
-                    heading = 'south_west'
-                if x==1 and y==0:
-                    heading='north'
-                if x==1 and y==1:
-                    heading='north'#could be null but that tends to mess things up
-                if x==1 and y==2:
-                    heading='south'
-                if x==2 and y==0:
-                    heading='north_east'
-                if x==2 and y==1:
-                    heading='east'
-                if x==2 and y==2:
-                    heading='south_east'
 
-                #print heading
-            else:
-                if random.random() > 0.98:
-                    x = random.randint(0,1)
-                    if x==0 and heading == 'north':
-                        heading = 'north_east'
-                    elif x==1 and heading == 'north':
-                        heading = 'north_west'
-
-                    elif x==0 and heading == 'south':
-                        heading = 'south_east'
-                    elif x==1 and heading == 'south':
-                        heading = 'south_west'
-
-                    elif x==0 and heading== 'east':
-                            heading = 'north_east'
-                    elif x==1 and heading== 'east':
-                        heading='south_east'
-
-                    elif x==0 and heading== 'west':
-                            heading = 'north_west'
-                    elif x==1 and heading== 'west':
-                        heading='south_west'
-
-                    elif x==0 and heading== 'north_west':
-                            heading = 'west'
-                    elif x==1 and heading== 'north_west':
-                        heading='north'
-
-                    elif x==0 and heading== 'north_east':
-                            heading = 'east'
-                    elif x==1 and heading== 'north_east':
-                        heading='east'
-
-                    elif x==0 and heading== 'south_east':
-                            heading = 'east'
-                    elif x==1 and heading== 'south_east':
-                        heading='south'
-
-                    elif x==0 and heading== 'south_west':
-                            heading = 'south'
-                    elif x==1 and heading== 'south_west':
-                        heading='west'
-
-                    elif x==0 and heading== 'null':
-                            heading = 'north'
-                    elif x==1 and heading== 'null':
-                        heading='south'
+            heading = determine_heading(max_index)
                     
                 
             food_type = my_env.move_crit(heading)
@@ -494,11 +500,6 @@ def main():
             pass
             display_cells(ctime, my_env, layer_sizes, spirit_brain, rects, flat_rects)
     #}
-
-
-
-
-
 
     record(ttime, layer_sizes, spirit_brain)
     print('finish calc')
