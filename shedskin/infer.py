@@ -330,8 +330,12 @@ def cpa(callnode, worklist):
     # --- iterate over argument type combinations
     for c in cp:
         (func, dcpa, objtype), c = c[0], c[1:]
-        if not func.mv.module.builtin:
-            continue
+        if not func.mv.module.builtin and func not in getgx().added_funcs_set and not func.ident in ['__getattr__', '__setattr__']:
+            if getgx().added_funcs == 5:
+                continue
+            getgx().added_funcs += 1
+            getgx().added_funcs_set.add(func)
+            print 'adding', func
 
         if objtype: objtype = (objtype,)
         else: objtype = ()
@@ -641,8 +645,12 @@ def iterative_dataflow_analysis():
         if DEBUG and split: print 'IFA splits', [(s[0], s[1], s[3]) for s in split]
 
         if not split: # nothing has changed
-            print '\niterations:', getgx().iterations, 'templates:', getgx().templates
-            return
+            if getgx().added_funcs:
+                print '\nadded funcs'
+                getgx().added_funcs = 0
+            else:
+                print '\niterations:', getgx().iterations, 'templates:', getgx().templates
+                return
 
         # --- update alloc info table for split contours
         for cl, dcpa, nodes, newnr in split:
