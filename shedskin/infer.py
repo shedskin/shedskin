@@ -61,7 +61,7 @@ def class_copy(cl, dcpa):
 
 # --- use dcpa=0,cpa=0 mold created by module visitor to duplicate function
 def func_copy(func, dcpa, cpa, worklist=None, cart=None):
-    #print 'funccopy', self, cart, dcpa, cpa
+    #print 'funccopy', func, cart, dcpa, cpa
 
     # --- copy local end points of each constraint
     for (a,b) in func.constraints:
@@ -390,7 +390,6 @@ def connect_getsetattr(func, callnode, callfunc, dcpa, worklist):
 
 def create_template(func, dcpa, c, worklist):
     # --- unseen cartesian product: create new template
-
     if not dcpa in func.cp: func.cp[dcpa] = {}
     func.cp[dcpa][c] = cpa = len(func.cp[dcpa]) # XXX +1
 
@@ -632,8 +631,8 @@ def iterative_dataflow_analysis():
 
         # --- propagate using cartesian product algorithm
         getgx().new_alloc_info = {}
-        #print 'table'
-        #print '\n'.join([repr(e)+': '+repr(l) for e,l in getgx().alloc_info.items()])
+#        print 'table'
+#        print '\n'.join([repr(e)+': '+repr(l) for e,l in getgx().alloc_info.items()])
         #print 'propagate'
         propagate()
         getgx().alloc_info = getgx().new_alloc_info
@@ -646,7 +645,7 @@ def iterative_dataflow_analysis():
 
         if not split: # nothing has changed
             if getgx().added_funcs:
-                print '\nadded funcs'
+                print '\nADDED FUNCS, continue!'
                 getgx().added_funcs = 0
             else:
                 print '\niterations:', getgx().iterations, 'templates:', getgx().templates
@@ -670,9 +669,11 @@ def iterative_dataflow_analysis():
 
         # --- clean out constructor node types in functions, possibly to be seeded again
         for node in beforetypes:
-            if isinstance(parent_func(node.thing), function):
+            func = parent_func(node.thing)
+            if isinstance(func, function):
                 if node.constructor and isinstance(node.thing, (List,Dict,Tuple,ListComp,CallFunc)):
-                    beforetypes[node] = set()
+                    if func.mv.module.builtin or func in getgx().added_funcs_set or func.ident in ['__getattr__', '__setattr__']:
+                        beforetypes[node] = set()
 
         # --- create new class types, and seed global nodes
         for cl, dcpa, nodes, newnr in split:
@@ -705,7 +706,8 @@ def ifa_seed_template(func, cart, dcpa, cpa, worklist):
                 alloc_node = getgx().cnode[node.thing, dcpa, cpa]
 
                 if alloc_id in getgx().alloc_info:
-                    pass # print 'specified', func.ident, cart, alloc_node, alloc_node.callfuncs, getgx().alloc_info[alloc_id]
+                    pass
+#                    print 'specified' # print 'specified', func.ident, cart, alloc_node, alloc_node.callfuncs, getgx().alloc_info[alloc_id]
                 # --- contour is newly split: copy allocation type for 'mother' contour; modify alloc_info
                 else:
                     mother_alloc_id = alloc_id
