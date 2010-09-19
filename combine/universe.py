@@ -150,39 +150,47 @@ def display_cells(ctime, my_env, layer_sizes, spirit_brain, rects, flat_rects):
           my_env.display(flat_rects)
 #}
 
+class Options:
+    def __init__(self):
+        if len(sys.argv) != 5:
+            print 'bad ars need reward[True|False] run_time[int] control[True|False] food_type[horz|vert]'
+            
+            self.reward = True
+            self.control_cond = False
+            self.ttime=10000000 # number of iterations
+            self.food_type = "vert"
+        else:
+            self.ttime=int(sys.argv[2]) # number of iterations
+            if sys.argv[1] == 'False':
+                self.reward = False
+            elif sys.argv[1] == 'True':
+                self.reward = True
+            else:
+                print 'bad ars need reward[True|False] run_time[int] control[True|False] food_type[horz|vert]'
+                exit(1)
+
+            if sys.argv[3] == 'False':
+                self.control_cond = False
+            elif sys.argv[3] == 'True':
+                self.control_cond = True
+            else:
+                print 'bad ars need reward[True|False] run_time[int] control[True|False] food_type[horz|vert]'
+                exit(1)
+
+            if sys.argv[4] == 'vert':
+                self.food_type = 'vert'
+            elif sys.argv[4] == 'horz':
+                self.food_type = 'horz'
+            else:
+                print 'bad ars need reward[True|False] run_time[int] control[True|False] food_type[horz|vert]'
+                exit(1)
+
 def main():
-    if len(sys.argv) != 5:
-        print 'bad ars need reward[True|False] run_time[int] control[True|False] food_type[horz|vert]'
-        
-        reward = True
-        control_cond = False
-        ttime=10000000 # number of iterations
-        food_type = "vert"
-    else:
-        ttime=int(sys.argv[2]) # number of iterations
-        if sys.argv[1] == 'False':
-            reward = False
-        elif sys.argv[1] == 'True':
-            reward = True
-        else:
-            print 'bad ars need reward[True|False] run_time[int] control[True|False] food_type[horz|vert]'
-            exit(1)
-
-        if sys.argv[3] == 'False':
-            control_cond = False
-        elif sys.argv[3] == 'True':
-            control_cond = True
-        else:
-            print 'bad ars need reward[True|False] run_time[int] control[True|False] food_type[horz|vert]'
-            exit(1)
-
-        if sys.argv[4] == 'vert':
-            food_type = 'vert'
-        elif sys.argv[4] == 'horz':
-            food_type = 'horz'
-        else:
-            print 'bad ars need reward[True|False] run_time[int] control[True|False] food_type[horz|vert]'
-            exit(1)
+    options = Options()
+    reward = options.reward
+    control_cond = options.control_cond
+    ttime = options.ttime
+    food_type = options.food_type
 
     count = 1
     while True:
