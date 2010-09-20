@@ -61,7 +61,7 @@ def class_copy(cl, dcpa):
 
 # --- use dcpa=0,cpa=0 mold created by module visitor to duplicate function
 def func_copy(func, dcpa, cpa, worklist=None, cart=None):
-    #print 'funccopy', self, cart, dcpa, cpa
+    #print 'funccopy', func, cart, dcpa, cpa
 
     # --- copy local end points of each constraint
     for (a,b) in func.constraints:
@@ -330,6 +330,12 @@ def cpa(callnode, worklist):
     # --- iterate over argument type combinations
     for c in cp:
         (func, dcpa, objtype), c = c[0], c[1:]
+        if not func.mv.module.builtin and func not in getgx().added_funcs_set and not func.ident in ['__getattr__', '__setattr__']:
+            if getgx().added_funcs == 5:
+                continue
+            getgx().added_funcs += 1
+            getgx().added_funcs_set.add(func)
+            print 'adding', func
 
         if objtype: objtype = (objtype,)
         else: objtype = ()
@@ -384,7 +390,6 @@ def connect_getsetattr(func, callnode, callfunc, dcpa, worklist):
 
 def create_template(func, dcpa, c, worklist):
     # --- unseen cartesian product: create new template
-
     if not dcpa in func.cp: func.cp[dcpa] = {}
     func.cp[dcpa][c] = cpa = len(func.cp[dcpa]) # XXX +1
 
@@ -618,6 +623,10 @@ def iterative_dataflow_analysis():
     print '[iterative type analysis..]'
     backup = backup_network()
 
+    getgx().orig_types = {}
+    for n, t in getgx().types.iteritems():
+        getgx().orig_types[n] = t
+
     while True:
         getgx().iterations += 1
         if getgx().iterations > 30:
@@ -626,8 +635,8 @@ def iterative_dataflow_analysis():
 
         # --- propagate using cartesian product algorithm
         getgx().new_alloc_info = {}
-        #print 'table'
-        #print '\n'.join([repr(e)+': '+repr(l) for e,l in getgx().alloc_info.items()])
+#        print 'table'
+#        print '\n'.join([repr(e)+': '+repr(l) for e,l in getgx().alloc_info.items()])
         #print 'propagate'
         propagate()
         getgx().alloc_info = getgx().new_alloc_info
@@ -639,8 +648,13 @@ def iterative_dataflow_analysis():
         if DEBUG and split: print 'IFA splits', [(s[0], s[1], s[3]) for s in split]
 
         if not split: # nothing has changed
-            print '\niterations:', getgx().iterations, 'templates:', getgx().templates
-            return
+            if getgx().added_funcs:
+                print '\nADDED FUNCS, continue!'
+                getgx().added_funcs = 0
+                getgx().iterations = 0
+            else:
+                print '\niterations:', getgx().iterations, 'templates:', getgx().templates
+                return
 
         # --- update alloc info table for split contours
         for cl, dcpa, nodes, newnr in split:
@@ -660,9 +674,10 @@ def iterative_dataflow_analysis():
 
         # --- clean out constructor node types in functions, possibly to be seeded again
         for node in beforetypes:
-            if isinstance(parent_func(node.thing), function):
+            func = parent_func(node.thing)
+            if isinstance(func, function):
                 if node.constructor and isinstance(node.thing, (List,Dict,Tuple,ListComp,CallFunc)):
-                    beforetypes[node] = set()
+                     beforetypes[node] = set()
 
         # --- create new class types, and seed global nodes
         for cl, dcpa, nodes, newnr in split:
@@ -695,7 +710,8 @@ def ifa_seed_template(func, cart, dcpa, cpa, worklist):
                 alloc_node = getgx().cnode[node.thing, dcpa, cpa]
 
                 if alloc_id in getgx().alloc_info:
-                    pass # print 'specified', func.ident, cart, alloc_node, alloc_node.callfuncs, getgx().alloc_info[alloc_id]
+                    pass
+#                    print 'specified' # print 'specified', func.ident, cart, alloc_node, alloc_node.callfuncs, getgx().alloc_info[alloc_id]
                 # --- contour is newly split: copy allocation type for 'mother' contour; modify alloc_info
                 else:
                     mother_alloc_id = alloc_id
@@ -713,9 +729,9 @@ def ifa_seed_template(func, cart, dcpa, cpa, worklist):
                     if mother_alloc_id in getgx().alloc_info:
                         getgx().alloc_info[alloc_id] = getgx().alloc_info[mother_alloc_id]
                         #print 'mothered', alloc_node, getgx().alloc_info[mother_alloc_id]
-                    elif getgx().types[node]: # empty constructors that do not flow to assignments have no type
+                    elif getgx().orig_types[node]: # empty constructors that do not flow to assignments have no type
                         #print 'no mother', func.ident, cart, mother_alloc_id, alloc_node, getgx().types[node]
-                        getgx().alloc_info[alloc_id] = list(getgx().types[node])[0]
+                        getgx().alloc_info[alloc_id] = list(getgx().orig_types[node])[0]
                     else:
                         #print 'oh boy'
                         for (id, c, thing) in getgx().alloc_info: # XXX vhy?
