@@ -73,6 +73,8 @@ class globalInfo: # XXX add comments, split up
         self.genexp_to_lc = {}
         self.bool_test_only = set()
         self.tempcount = {}
+        self.added_funcs = 5
+        self.added_funcs_set = set()
 
 def newgx():
     return globalInfo()
