@@ -37,6 +37,7 @@ class globalInfo: # XXX add comments, split up
         self.assign_target = {}              # instance node for instance variable assignment
         self.alloc_info = {}                 # allocation site type information across iterations
         self.iterations = 0
+        self.total_iterations = 0
         self.lambdawrapper = {}
         self.sysdir = '/'.join(__file__.split(os.sep)[:-1])
         self.libdir = connect_paths(self.sysdir, 'lib')
