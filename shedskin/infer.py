@@ -335,7 +335,7 @@ def cpa(callnode, worklist):
                 continue
             getgx().added_funcs += 1
             getgx().added_funcs_set.add(func)
-            print 'adding', func
+#            print 'adding', func
 
         if objtype: objtype = (objtype,)
         else: objtype = ()
@@ -618,6 +618,10 @@ def ifa_split_class(cl, dcpa, things, split):
     cl.splits[cl.newdcpa] = dcpa
     cl.newdcpa += 1
 
+def update_progressbar(perc):
+    print '\r%s%d%%' % (int(perc*32)*'*', 100*perc),
+    sys.stdout.flush()
+
 # --- cartesian product algorithm (cpa) & iterative flow analysis (ifa)
 def iterative_dataflow_analysis():
     print '[iterative type analysis..]'
@@ -629,6 +633,7 @@ def iterative_dataflow_analysis():
 
     while True:
         getgx().iterations += 1
+        getgx().total_iterations += 1
         if getgx().iterations > 30:
             print '\n*WARNING* reached maximum number of iterations'
             break
@@ -643,17 +648,24 @@ def iterative_dataflow_analysis():
 
         # --- ifa: detect conflicting assignments to instance variables, and split contours to resolve these
         if DEBUG: print '\n*** iteration ***'
-        else: sys.stdout.write('*'); sys.stdout.flush()
+        else:
+            allfuncs = len([f for f in getgx().allfuncs if not f.mv.module.builtin and not f.ident in ['__iadd__', '__imul__', '__str__']])
+            perc = 1.0 
+            if allfuncs:
+                perc = min(len(getgx().added_funcs_set) / float(allfuncs), 1.0)
+            update_progressbar(perc)
         split = ifa()
         if DEBUG and split: print 'IFA splits', [(s[0], s[1], s[3]) for s in split]
 
         if not split: # nothing has changed
             if getgx().added_funcs:
-                print '\nADDED FUNCS, continue!'
+#                print '\nADDED FUNCS, continue!'
                 getgx().added_funcs = 0
                 getgx().iterations = 0
             else:
-                print '\niterations:', getgx().iterations, 'templates:', getgx().templates
+                update_progressbar(1.0)
+                print
+#                print '\niterations:', getgx().total_iterations, 'templates:', getgx().templates
                 return
 
         # --- update alloc info table for split contours
