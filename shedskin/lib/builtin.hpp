@@ -315,7 +315,7 @@ public:
 class str : public pyseq<str *> {
 public:
     __GC_STRING unit;
-    int hash;
+    long hash;
 
     str();
     str(const char *s);

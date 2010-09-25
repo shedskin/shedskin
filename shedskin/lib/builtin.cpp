@@ -255,19 +255,19 @@ str *complex::__repr__() {
 
 /* str methods */
 
-str::str() : hash(0) {
+str::str() : hash(-1) {
     __class__ = cl_str_;
 }
 
-str::str(const char *s) : unit(s), hash(0) {
+str::str(const char *s) : unit(s), hash(-1) {
     __class__ = cl_str_;
 }
 
-str::str(__GC_STRING s) : unit(s), hash(0) {
+str::str(__GC_STRING s) : unit(s), hash(-1) {
     __class__ = cl_str_;
 }
 
-str::str(const char *s, int size) : unit(s, size), hash(0) { /* '\0' delimiter in C */
+str::str(const char *s, int size) : unit(s, size), hash(-1) { /* '\0' delimiter in C */
     __class__ = cl_str_;
 }
 
@@ -748,66 +748,23 @@ str *str::__imul__(__ss_int n) {
     return __mul__(n);
 }
 
-/* ======================================================================== */
-
-/* (C) Paul Hsieh. http://www.azillionmonkeys.com/qed/{hash,weblicense}.html */
-
-#define get16bits(d) (*((const unsigned short int *) (d)))
-
-static inline unsigned int SuperFastHash (const char * data, int len) {
-    unsigned int hash = 0, tmp;
-    int rem;
-
-    if (len <= 0 || data == NULL) return 0;
-
-    rem = len & 3;
-    len >>= 2;
-
-    /* Main loop */
-    for (;len > 0; len--) {
-        hash  += get16bits (data);
-        tmp    = (get16bits (data+2) << 11) ^ hash;
-        hash   = (hash << 16) ^ tmp;
-        data  += 2*sizeof (unsigned short int);
-        hash  += hash >> 11;
-    }
-
-    /* Handle end cases */
-    switch (rem) {
-        case 3: hash += get16bits (data);
-                hash ^= hash << 16;
-                hash ^= data[sizeof (unsigned short int)] << 18;
-                hash += hash >> 11;
-                break;
-        case 2: hash += get16bits (data);
-                hash ^= hash << 11;
-                hash += hash >> 17;
-                break;
-        case 1: hash += *data;
-                hash ^= hash << 10;
-                hash += hash >> 1;
-    }
-
-    /* Force "avalanching" of final 127 bits */
-    hash ^= hash << 3;
-    hash += hash >> 5;
-    hash ^= hash << 4;
-    hash += hash >> 17;
-    hash ^= hash << 25;
-    hash += hash >> 6;
-
-    return hash;
-}
-
-/* ======================================================================== */
-
 int str::__hash__() {
-    if(hash)
+    /* modified from CPython */
+    register int len;
+    register unsigned char *p;
+    register long x;
+    if(hash != -1)
         return hash;
-    hash = SuperFastHash(unit.c_str(), unit.size());
-    return hash;
-
-    //return __gnu_cxx::hash<char *>()(unit.c_str());
+    len = __len__();
+    p = (unsigned char *)unit.data();
+    x = *p << 7;
+    while (--len >= 0)
+        x = (1000003*x) ^ *p++;
+    x ^= __len__();
+    if (x == -1)
+        x = -2;
+    hash = x;
+    return x; 
 }
 
 str *str::__add__(str *b) {
