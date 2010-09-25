@@ -970,7 +970,7 @@ class generateVisitor(ASTVisitor):
         self.append(',')
 
     def do_fastenum(self, node, func, genexpr):
-        self.start('FOR_IN_SEQ(')
+        self.start('FOR_IN_ENUM(')
         left, right = node.assign.nodes
         self.do_fastzip2_one(right, func)
         self.visit(node.list.args[0], func)
