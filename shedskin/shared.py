@@ -76,6 +76,7 @@ class globalInfo: # XXX add comments, split up
         self.tempcount = {}
         self.added_funcs = 5
         self.added_funcs_set = set()
+        self.fast_hash = False
 
 def newgx():
     return globalInfo()
