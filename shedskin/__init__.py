@@ -20,7 +20,8 @@ def usage():
  -f --flags             Provide alternate Makefile flags
  -l --long              Use long long integers
  -m --makefile          Specify alternate Makefile name
- -r --random            Use fast random number generator
+ -r --random            Use fast random number generator (rand())
+ -s --strhash           Use fast string hashing algorithm (murmur)
  -v --msvc              Output MSVC-style Makefile
  -w --nowrap            Disable wrap-around checking
 """
@@ -44,7 +45,7 @@ def main():
 
     # --- command-line options
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'vbchef:wad:m:rl', ['help', 'extmod', 'nobounds', 'nowrap', 'flags=', 'dir=', 'makefile=', 'random', 'long', 'msvc', 'ann'])
+        opts, args = getopt.getopt(sys.argv[1:], 'vbchef:wad:m:rls', ['help', 'extmod', 'nobounds', 'nowrap', 'flags=', 'dir=', 'makefile=', 'random', 'long', 'msvc', 'ann', 'strhash'])
     except getopt.GetoptError:
         usage()
 
@@ -58,6 +59,7 @@ def main():
         if o in ['-w', '--nowrap']: getgx().wrap_around_check = False
         if o in ['-r', '--random']: getgx().fast_random = True
         if o in ['-m', '--makefile']: getgx().makefile_name = a
+        if o in ['-s', '--strhash']: getgx().fast_hash = True
         if o in ['-v', '--msvc']: getgx().msvc = True
         if o in ['-f', '--flags']:
             if not os.path.isfile(a):
