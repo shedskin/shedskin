@@ -37,5 +37,5 @@ for (i, file) in enumerate(files):
     do_cmd('make')
     do_cmd('shedskin -e %s' % file)
     do_cmd('make')
-    do_cmd('shedskin -lar %s' % file)
+    do_cmd('shedskin -lars %s' % file)
     do_cmd('make')
