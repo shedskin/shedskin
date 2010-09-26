@@ -16,3 +16,11 @@ for i in range(-x, x+1):
        S[i, j] = 'hi'
 if t2 in S:
     print "we got 'em"
+
+# cast subtype in container
+class Bla:
+    pass
+class Sub(Bla):
+    pass
+blas = [Bla()]
+blas = [Sub()]

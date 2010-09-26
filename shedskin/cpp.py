@@ -2780,20 +2780,19 @@ def assign_needs_cast_rec(argsplit, func, formalsplit, target, depth=0):
     if argclasses == noneset and formalclasses != noneset:
         return True
 
-    # no type
-    if not argclasses and formalclasses: # a = [[]]
+    # no type, e.g. [[]]
+    if not argclasses and formalclasses:
         return True
 
-    if defclass('none') in formalclasses:
-        formalclasses.remove(defclass('none'))
-    if defclass('tuple2') in formalclasses and defclass('tuple') in formalclasses: # XXX generalize? lcp?
-        formalclasses.remove(defclass('tuple'))
-    if len(formalclasses) != 1:
+    # subtype
+    lcp_args, lcp_formals = lowest_common_parents(polymorphic_cl(argclasses)), lowest_common_parents(polymorphic_cl(formalclasses))
+    if depth > 0 and len(lcp_args) == 1 and len(lcp_formals) == 1 and lcp_args != lcp_formals:
+        return True
+
+    # recurse on tvars
+    if not lcp_formals:
         return False
-
-    cl = formalclasses.pop()
-
-    tvars = cl.tvar_names()
+    tvars = lcp_formals[0].tvar_names()
     if tvars:
         for tvar in tvars:
             argsubsplit = split_subsplit(argsplit, tvar)
