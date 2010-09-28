@@ -29,6 +29,8 @@ iterative_dataflow_analysis():
     -otherwise, restore the constraint graph to its original state and restart
     -all the while maintaining types for each allocation point in getgx().alloc_info
 
+update: we now analyze programs incrementally, adding several functions and redoing the full analysis each time. this seems to greatly help the CPA from exploding early on. 
+
 '''
 
 import gc, random
@@ -38,6 +40,7 @@ from shared import *
 import graph, cpp
 
 DEBUG = False
+INCREMENTAL = True
 
 def class_copy(cl, dcpa):
     for var in cl.vars.values(): # XXX
@@ -330,12 +333,12 @@ def cpa(callnode, worklist):
     # --- iterate over argument type combinations
     for c in cp:
         (func, dcpa, objtype), c = c[0], c[1:]
-        if not func.mv.module.builtin and func not in getgx().added_funcs_set and not func.ident in ['__getattr__', '__setattr__']:
+        if INCREMENTAL and not func.mv.module.builtin and func not in getgx().added_funcs_set and not func.ident in ['__getattr__', '__setattr__']:
             if getgx().added_funcs == 5:
                 continue
             getgx().added_funcs += 1
             getgx().added_funcs_set.add(func)
-#            print 'adding', func
+            if DEBUG: print 'adding', func
 
         if objtype: objtype = (objtype,)
         else: objtype = ()
@@ -649,23 +652,28 @@ def iterative_dataflow_analysis():
         # --- ifa: detect conflicting assignments to instance variables, and split contours to resolve these
         if DEBUG: print '\n*** iteration ***'
         else:
-            allfuncs = len([f for f in getgx().allfuncs if not f.mv.module.builtin and not f.ident in ['__iadd__', '__imul__', '__str__']])
-            perc = 1.0 
-            if allfuncs:
-                perc = min(len(getgx().added_funcs_set) / float(allfuncs), 1.0)
-            update_progressbar(perc)
+            if INCREMENTAL:
+                allfuncs = len([f for f in getgx().allfuncs if not f.mv.module.builtin and not f.ident in ['__iadd__', '__imul__', '__str__']])
+                perc = 1.0 
+                if allfuncs:
+                    perc = min(len(getgx().added_funcs_set) / float(allfuncs), 1.0)
+                update_progressbar(perc)
+            else:
+                sys.stdout.write('*')
+                sys.stdout.flush()
+ 
         split = ifa()
         if DEBUG and split: print 'IFA splits', [(s[0], s[1], s[3]) for s in split]
 
         if not split: # nothing has changed
-            if getgx().added_funcs:
-#                print '\nADDED FUNCS, continue!'
+            if INCREMENTAL and getgx().added_funcs:
                 getgx().added_funcs = 0
                 getgx().iterations = 0
             else:
-                update_progressbar(1.0)
-                print
-#                print '\niterations:', getgx().total_iterations, 'templates:', getgx().templates
+                if INCREMENTAL: 
+                    update_progressbar(1.0)
+                if DEBUG: print '\niterations:', getgx().total_iterations, 'templates:', getgx().templates
+                else: print
                 return
 
         # --- update alloc info table for split contours
