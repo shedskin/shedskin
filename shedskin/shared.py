@@ -376,8 +376,8 @@ def is_enum(node):
 def is_zip2(node):
     return isinstance(node.list, CallFunc) and isinstance(node.list.node, Name) and node.list.node.name == 'zip' and len(node.list.args) == 2 and isinstance(node.assign, (AssList, AssTuple))
 
-def lookupvar(name, parent):
-    return defvar(name, parent, False)
+def lookupvar(name, parent, mv=None):
+    return defvar(name, parent, False, mv=mv)
 
 def defaultvar(name, parent, worklist=None):
     var = defvar(name, parent, True, worklist)
@@ -390,7 +390,9 @@ def defaultvar(name, parent, worklist=None):
 
     return var
 
-def defvar(name, parent, local, worklist=None):
+def defvar(name, parent, local, worklist=None, mv=None):
+    if not mv:
+        mv=getmv()
     if isinstance(parent, class_) and name in parent.parent.vars: # XXX
         return parent.parent.vars[name]
     if parent and name in parent.vars:
@@ -410,9 +412,9 @@ def defvar(name, parent, local, worklist=None):
             parent = parent.parent
 
         # not found: global
-        if name in getmv().globals:
-            return getmv().globals[name]
-        dest = getmv().globals
+        if name in mv.globals:
+            return mv.globals[name]
+        dest = mv.globals
 
     if not local:
         return None
@@ -424,6 +426,8 @@ def defvar(name, parent, local, worklist=None):
     newnode = cnode(var, parent=parent)
     if parent:
         newnode.mv = parent.mv
+    else:
+        newnode.mv = mv
     addtoworklist(worklist, newnode)
     getgx().types[newnode] = set()
 
@@ -573,7 +577,7 @@ def merged(nodes, dcpa=False, inheritance=False):
 
 def lookup_class_module(objexpr, mv, parent):
     if isinstance(objexpr, Name): # XXX Getattr?
-        var = lookupvar(objexpr.name, parent)
+        var = lookupvar(objexpr.name, parent, mv=mv)
         if var and not var.imported: # XXX cl?
             return None, None
     return lookupclass(objexpr, mv), lookupmodule(objexpr, mv)
@@ -621,7 +625,7 @@ def analyze_callfunc(node, node2=None, merge=None): # XXX generate target list X
     # direct [constructor] call
     if isinstance(node.node, Name) or namespace != inode(node).mv.module:
         if isinstance(node.node, Name):
-            if lookupvar(ident, inode(node).parent):
+            if lookupvar(ident, inode(node).parent, mv=mv):
                 return objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func
         if ident in namespace.mv.classes:
             constructor = namespace.mv.classes[ident]
