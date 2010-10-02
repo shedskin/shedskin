@@ -52,7 +52,7 @@ class globalInfo: # XXX add comments, split up
         self.cpp_keywords.update(['main'])
         self.cpp_keywords.update(['sun'])
         self.cpp_keywords.update(['UNICODE', 'MAXINT'])
-        self.cpp_keywords.update(['WITH', 'WITH_VAR', 'END_WITH', 'FOR_IN', 'FOR_IN_SEQ', 'FOR_IN_T2', 'FOR_IN_ZIP', 'FOR_IN_ENUM', 'FOR_IN_NEW', 'FAST_FOR', 'FAST_FOR_NEG', 'END_FOR'])
+        self.cpp_keywords.update(['WITH', 'WITH_VAR', 'END_WITH', 'FOR_IN', 'FOR_IN_T2', 'FOR_IN_ZIP', 'FOR_IN_ENUM', 'FOR_IN_NEW', 'FOR_IN_SEQ', 'FAST_FOR', 'END_FOR'])
         self.ss_prefix = '__ss_'
         self.list_types = {}
         self.loopstack = [] # track nested loops

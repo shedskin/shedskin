@@ -1428,6 +1428,14 @@ static void __throw_stop_iteration() {
     throw new StopIteration();
 }
 
+#define FAST_FOR(i, l, u, s, t1, t2) \
+    if(s==0) \
+        __throw_range_step_zero(); \
+    for(__ ## t1 = l, __ ## t2 = u; ; __ ## t1 += s) { \
+        if (s >= 0) { if (__ ## t1 >= __ ## t2) break; } \
+        else { if (__ ## t1 <= __ ## t2) break; } \
+        i=__ ## t1; \
+
 #define FOR_IN_NEW(e, iter, temp, i, t) \
     __ ## temp = iter; \
     __ ## i = -1; \
@@ -1436,18 +1444,6 @@ static void __throw_stop_iteration() {
     { \
         __ ## i ++; \
         e = __ ## temp->for_in_next(__ ## t);
-
-#define FAST_FOR(i, l, u, s, t1, t2) \
-    if(s==0) \
-        __throw_range_step_zero(); \
-    for(__ ## t1 = l, __ ## t2 = u; __ ## t1 < __ ## t2; __ ## t1 += s) { \
-        i=__ ## t1; \
-
-#define FAST_FOR_NEG(i, l, u, s, t1, t2) \
-    if(s==0) \
-        __throw_range_step_zero(); \
-    for(__ ## t1 = l, __ ## t2 = u; __ ## t1 > __ ## t2; __ ## t1 += s) { \
-        i=__ ## t1; \
 
 #define FOR_IN_ZIP(a,b, k,l, t,u, n,m) \
     __ ## m = __SS_MIN(k->units.size(), l->units.size()); \

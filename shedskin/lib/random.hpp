@@ -164,7 +164,7 @@ template <class A> void *Random::shuffle(list<A> *x) {
     int __29, __30, i, j;
 
 
-    FAST_FOR_NEG(i,(len(x)-1),0,-1,29,30)
+    FAST_FOR(i,(len(x)-1),0,-1,29,30)
         j = __int((this->random()*(i+1)));
         __31 = x->__getitem__(j);
         __32 = x->__getitem__(i);
