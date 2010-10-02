@@ -27,3 +27,11 @@ class Sub(Bla):
     pass
 blas = [Bla()]
 blas = [Sub()]
+
+# generator and FAST_FOR_NEG
+def gen(s):
+    for i in range(1,10,s):
+        yield i
+
+for i in gen(2):
+    print i

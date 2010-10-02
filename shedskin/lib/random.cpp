@@ -266,7 +266,7 @@ int Random::_init_by_array(list<int> *init_key) {
     j = 0;
     k = ___max(2, 0, N, key_length);
 
-    FAST_FOR_NEG(k,k,0,-1,12,13)
+    FAST_FOR(k,k,0,-1,12,13)
         __14 = this->mt;
         __14->__setitem__(i, (((this->mt)->__getfast__(i)^(((this->mt)->__getfast__((i-1))^(((this->mt)->__getfast__((i-1))>>30)&3))*1664525))+init_key->__getfast__(j))+j);
         __15 = this->mt;
@@ -284,7 +284,7 @@ int Random::_init_by_array(list<int> *init_key) {
     END_FOR
 
 
-    FAST_FOR_NEG(k,(N-1),0,-1,17,18)
+    FAST_FOR(k,(N-1),0,-1,17,18)
         __19 = this->mt;
         __19->__setitem__(i, (((this->mt)->__getfast__(i)^(((this->mt)->__getfast__((i-1))^(((this->mt)->__getfast__((i-1))>>30)&3))*1566083941))-i));
         __20 = this->mt;

@@ -871,10 +871,20 @@ class generateVisitor(ASTVisitor):
             self.deindent()
             self.output('}')
 
-    def fastfor(self, node, assname, neg, func=None):
+    def do_fastfor(self, node, qual, quals, iter, func, genexpr):
+        if len(qual.list.args) == 3 and not const_literal(qual.list.args[2]): 
+            for arg in qual.list.args: # XXX simplify
+                if arg in getmv().tempcount:
+                    self.start()
+                    self.visitm(getmv().tempcount[arg], ' = ', arg, func)
+                    self.eol()
+        self.fastfor(qual, iter, func)
+        self.forbody(node, quals, iter, func, False, genexpr)
+
+    def fastfor(self, node, assname, func=None):
         # --- for i in range(..) -> for( i=l, u=expr; i < u; i++ ) ..
         ivar, evar = getmv().tempcount[node.assign], getmv().tempcount[node.list]
-        self.start('FAST_FOR%s('%neg+assname+',')
+        self.start('FAST_FOR(%s,' % assname)
 
         if len(node.list.args) == 1:
             self.append('0,')
@@ -926,11 +936,9 @@ class generateVisitor(ASTVisitor):
         else:
             assname = getmv().tempcount[node.assign]
         assname = self.cpp_name(assname)
-
         print >>self.out
         if node.else_:
             self.output('%s = 0;' % getmv().tempcount[node.else_])
-
         if fastfor(node):
             self.do_fastfor(node, node, None, assname, func, False)
         elif self.fastenum(node):
@@ -2141,21 +2149,6 @@ class generateVisitor(ASTVisitor):
             else:
                 self.output(ts+', '.join(names)+';')
 
-    def fastfor_switch(self, node, func):
-        self.start()
-        for arg in node.list.args:
-            if arg in getmv().tempcount:
-                self.start()
-                self.visitm(getmv().tempcount[arg], ' = ', arg, func)
-                self.eol()
-        self.start('if(')
-        if node.list.args[2] in getmv().tempcount:
-            self.append(getmv().tempcount[node.list.args[2]])
-        else:
-            self.visit(node.list.args[2])
-        self.append('>0) {')
-        print >>self.out, self.line
-
     # --- nested for loops: loop headers, if statements
     def listcomp_rec(self, node, quals, lcfunc, genexpr):
         if not quals:
@@ -2210,26 +2203,6 @@ class generateVisitor(ASTVisitor):
             self.start('FOR_IN'+pref+'('+iter+','+itervar+','+tail)
             print >>self.out, self.line+')'
             self.listcompfor_body(node, quals, iter, lcfunc, False, genexpr)
-
-    def do_fastfor(self, node, qual, quals, iter, func, genexpr):
-        if len(qual.list.args) == 3 and not const_literal(qual.list.args[2]):
-            self.fastfor_switch(qual, func)
-            self.indent()
-            self.fastfor(qual, iter, '', func)
-            self.forbody(node, quals, iter, func, False, genexpr)
-            self.deindent()
-            self.output('} else {')
-            self.indent()
-            self.fastfor(qual, iter, '_NEG', func)
-            self.forbody(node, quals, iter, func, False, genexpr)
-            self.deindent()
-            self.output('}')
-        else:
-            neg=''
-            if len(qual.list.args) == 3 and const_literal(qual.list.args[2]) and isinstance(qual.list.args[2], UnarySub):
-                neg = '_NEG'
-            self.fastfor(qual, iter, neg, func)
-            self.forbody(node, quals, iter, func, False, genexpr)
 
     def listcompfor_body(self, node, quals, iter, lcfunc, skip, genexpr):
         qual = quals[0]
