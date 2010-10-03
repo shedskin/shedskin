@@ -921,12 +921,7 @@ def analyze(source, testing=False):
     cpp.upgrade_variables()
     getgx().merged_all = merged(getgx().types)
     getgx().merged_inh = merged(getgx().types, inheritance=True)
-
     cpp.analyze_virtuals()
-
-    # --- check some sources of confusion # XXX can we remove this
-    confusion_misc()
-
     getgx().merge_dcpa = merged(getgx().types, dcpa=True)
     getgx().merged_all = merged(getgx().types) #, inheritance=True) # XXX
 

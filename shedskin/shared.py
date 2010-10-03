@@ -31,7 +31,6 @@ class globalInfo: # XXX add comments, split up
         self.empty_constructors = set()
         self.sig_nr = {}
         self.nameclasses = {}
-        self.tuple2 = set()             # binary typed tuples
         self.module = None
         self.builtins = ['none', 'str_', 'float_', 'int_', 'class_', 'list', 'tuple', 'tuple2', 'dict', 'set', 'frozenset', 'bool_']
         self.assign_target = {}              # instance node for instance variable assignment
@@ -805,34 +804,6 @@ def const_literal(node):
     if isinstance(node, (UnarySub, UnaryAdd)):
         node = node.expr
     return isinstance(node, Const) and isinstance(node.value, (int, float))
-
-# --- XXX description, confusion_misc? what's this for..
-def confusion_misc():
-    confusion = set()
-
-    # use regular tuple if both elements have the same type representation
-    cl = defclass('tuple')
-    var1 = lookupvar('first', cl)
-    var2 = lookupvar('second', cl)
-    if not var1 or not var2: return # XXX ?
-
-    for dcpa in getgx().tuple2.copy():
-        getgx().tuple2.remove(dcpa)
-
-    # use regular tuple template for tuples used in addition
-    for node in getgx().merged_all:
-        if isinstance(node, CallFunc):
-            if isinstance(node.node, Getattr) and node.node.attrname in ['__add__','__iadd__'] and not isinstance(node.args[0], Const):
-
-                tupletypes = set()
-                for types in [getgx().merged_all[node.node.expr], getgx().merged_all[node.args[0]]]:
-                    for t in types:
-                        if t[0].ident == 'tuple':
-                            if t[1] in getgx().tuple2:
-                                getgx().tuple2.remove(t[1])
-                                getgx().types[getgx().cnode[var1, t[1], 0]].update(getgx().types[getgx().cnode[var2, t[1], 0]])
-
-                            tupletypes.update(getgx().types[getgx().cnode[var1, t[1], 0]])
 
 def property_setter(dec):
     return isinstance(dec, Getattr) and isinstance(dec.expr, Name) and dec.attrname == 'setter'
