@@ -1050,7 +1050,7 @@ class generateVisitor(ASTVisitor):
         if is_init:
             ident = nokeywords(func.parent.ident)
         elif func.ident in ['__hash__']:
-            header += 'int '
+            header += '__ss_int '
         elif func.returnexpr:
             header += typesetreprnew(func.retnode.thing, func) # XXX mult
         else:
@@ -1115,15 +1115,12 @@ class generateVisitor(ASTVisitor):
             self.deindent()
 
     def cpp_name(self, name, func=None):
-        if self.module == getgx().main_module and name == 'init'+self.module.ident: # conflict with extmod init
-            return '_'+name
-        if name in [cl.ident for cl in getgx().allclasses]:
-            return '_'+name
-        elif name+'_' in [cl.ident for cl in getgx().allclasses]:
+        if ((self.module == getgx().main_module and name == 'init'+self.module.ident) or \
+            name in [cl.ident for cl in getgx().allclasses] or \
+            name+'_' in [cl.ident for cl in getgx().allclasses]):
             return '_'+name
         elif name in self.module.funcs and func and isinstance(func.parent, class_) and name in func.parent.funcs:
             return '__'+func.mv.module.ident+'__::'+name
-
         return nokeywords(name)
 
     def visitFunction(self, node, parent=None, declare=False):
@@ -1134,7 +1131,6 @@ class generateVisitor(ASTVisitor):
             func = getmv().funcs[node.name]
         else:
             func = getmv().lambdas[node.name]
-
         if func.invisible or (func.inherited and not func.ident == '__init__'):
             return
         if declare and func.declared: # XXX
@@ -2687,8 +2683,6 @@ def polymorphic_cl(classes):
     cls = set([cl for cl in classes])
     if len(cls) > 1 and defclass('none') in cls and not defclass('int_') in cls and not defclass('float_') in cls and not defclass('bool_') in cls:
         cls.remove(defclass('none'))
-#    if defclass('float_') in cls and defclass('int_') in cls:
-#        cls.remove(defclass('int_'))
     if defclass('tuple2') in cls and defclass('tuple') in cls: # XXX hmm
         cls.remove(defclass('tuple2'))
     return cls
