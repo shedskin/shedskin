@@ -29,7 +29,7 @@ def test_numbers(args, options):
             options.add('r')
         test_nrs = range(args[0],args[1])
     else:
-        test_nrs = [int(os.path.splitext(f)[0]) for f in glob.glob('*.py') if f != 'run.py']
+        test_nrs = sorted([int(os.path.splitext(f)[0]) for f in glob.glob('*.py') if f != 'run.py'])
 
     if 'r' in options:
         test_nrs.reverse()
