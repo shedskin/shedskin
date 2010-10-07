@@ -19,7 +19,7 @@ def do_extmod(gv):
     print >>gv.out, '#include <structmember.h>\n'
 
     # classes
-    classes = exported_classes()
+    classes = exported_classes(gv)
     for cl in classes:
         do_extmod_class(gv, cl)
 
@@ -64,11 +64,8 @@ def do_extmod(gv):
     for cl in classes:
         convert_methods(gv, cl, False)
 
-def exported_classes():
-    classes = []
-    for mod in getgx().modules.values():
-        if not mod.builtin:
-            classes.extend([cl for cl in mod.classes.values() if not defclass('Exception') in cl.ancestors()])
+def exported_classes(gv):
+    classes = [cl for cl in gv.module.classes.values() if not defclass('Exception') in cl.ancestors()]
     return sorted(classes, key=lambda x: x.def_order)
 
 def do_extmod_methoddef(gv, ident, funcs):
@@ -344,6 +341,6 @@ def convert_methods(gv, cl, declare):
 
 def convert_methods2(gv):
     print >>gv.out, 'namespace __shedskin__ { /* XXX */\n'
-    for cl in exported_classes():
+    for cl in exported_classes(gv):
         print >>gv.out, 'template<> __%s__::%s *__to_ss(PyObject *p);' % (cl.module.ident, cl.cpp_name)
     print >>gv.out, '}'
