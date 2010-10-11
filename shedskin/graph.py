@@ -483,7 +483,7 @@ class moduleVisitor(ASTVisitor):
         return mod
 
     def visitFunction(self, node, parent=None, is_lambda=False, inherited_from=None):
-        if not getmv().module.builtin and (node.varargs or node.kwargs or [x for x in node.argnames if not isinstance(x, str)]):
+        if not getmv().module.builtin and (node.varargs or node.kwargs):
             error('argument (un)packing is not supported', node)
 
         if not parent and not is_lambda and node.name in getmv().funcs:
@@ -516,6 +516,11 @@ class moduleVisitor(ASTVisitor):
 
         if is_lambda:
             self.lambdas[node.name] = func
+
+        func.expand_args = {}
+        for i, formal in enumerate(func.formals):
+            if isinstance(formal, tuple):
+                print 'ah', formal
 
         formals = func.formals[:]
         func.defaults = node.defaults
