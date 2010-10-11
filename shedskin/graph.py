@@ -517,10 +517,15 @@ class moduleVisitor(ASTVisitor):
         if is_lambda:
             self.lambdas[node.name] = func
 
+        # --- add unpacking statement for tuple formals
         func.expand_args = {}
         for i, formal in enumerate(func.formals):
             if isinstance(formal, tuple):
-                print 'ah', formal
+                tmp = self.tempvar((node,i), func)
+                func.formals[i] = tmp.name
+                fake_unpack = Assign([self.unpack_rec(formal)], Name(tmp.name))
+                func.expand_args[tmp.name] = fake_unpack
+                self.visit(fake_unpack, func)
 
         formals = func.formals[:]
         func.defaults = node.defaults
@@ -552,6 +557,12 @@ class moduleVisitor(ASTVisitor):
             if func.ident not in parent.staticmethods: # XXX use flag
                 defaultvar('self', func)
             parent.funcs[func.ident] = func
+
+    def unpack_rec(self, formal):
+        if isinstance(formal, str):
+            return AssName(formal, 'OP_ASSIGN')
+        else:
+            return AssTuple([self.unpack_rec(elem) for elem in formal])
 
     def visitLambda(self, node, func=None):
         lambdanr = len(self.lambdas)
