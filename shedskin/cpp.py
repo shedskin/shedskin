@@ -1170,6 +1170,8 @@ class generateVisitor(ASTVisitor):
         self.output(self.indentation.join(self.group_declarations(pairs)))
 
         # --- function body
+        for fake_unpack in func.expand_args.values():
+            self.visit(fake_unpack, func)
         self.visit(node.code, func)
         if func.fakeret:
             self.visit(func.fakeret, func)
