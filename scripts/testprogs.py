@@ -35,7 +35,8 @@ for (i, file) in enumerate(files):
 
     do_cmd('shedskin %s' % file)
     do_cmd('make')
-    do_cmd('shedskin -e %s' % file)
-    do_cmd('make')
     do_cmd('shedskin -lars %s' % file)
     do_cmd('make')
+    do_cmd('shedskin -e %s' % file)
+    do_cmd('make')
+    do_cmd('python -c "import %s"' % file[:-3])
