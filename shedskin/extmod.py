@@ -234,19 +234,24 @@ def do_extmod_class(gv, cl):
         do_extmod_method(gv, func)
     do_extmod_methoddef(gv, cl.ident, funcs)
 
+    # tp_init
+    if hasmethod(cl, '__init__') and cl.funcs['__init__'] in funcs:
+        print >>gv.out, 'int %s___tpinit__(PyObject *self, PyObject *args, PyObject *kwargs) {' % cl.ident
+        print >>gv.out, '    if(!%s___init__(self, args, kwargs))' % cl.ident
+        print >>gv.out, '        return -1;'
+        print >>gv.out, '    return 0;'
+        print >>gv.out, '}\n'
+
     # tp_new
     print >>gv.out, 'PyObject *%sNew(PyTypeObject *type, PyObject *args, PyObject *kwargs) {' % cl.ident
     print >>gv.out, '    %sObject *self = (%sObject *)type->tp_alloc(type, 0);' % (cl.ident, cl.ident)
     print >>gv.out, '    self->__ss_object = new __%s__::%s();' % (cl.module.ident, cl.ident)
     print >>gv.out, '    self->__ss_object->__class__ = __%s__::cl_%s;' % (cl.module.ident, cl.ident)
     print >>gv.out, '    __ss_proxy->__setitem__(self->__ss_object, self);'
-    if hasmethod(cl, '__init__') and cl.funcs['__init__'] in funcs:
-        print >>gv.out, '    if(%s___init__((PyObject *)self, args, kwargs) == 0)' % cl.ident
-        print >>gv.out, '        return 0;'
     print >>gv.out, '    return (PyObject *)self;'
     print >>gv.out, '}\n'
 
-    # dealloc
+    # tp_dealloc
     print >>gv.out, 'void %sDealloc(%sObject *self) {' % (cl.ident, cl.ident)
     print >>gv.out, '    self->ob_type->tp_free((PyObject *)self);'
     print >>gv.out, '    __ss_proxy->__delitem__(self->__ss_object);'
@@ -327,7 +332,10 @@ def do_extmod_class(gv, cl):
     print >>gv.out, '    0,              /* tp_descr_get      */'
     print >>gv.out, '    0,              /* tp_descr_set      */'
     print >>gv.out, '    0,              /* tp_dictoffset     */'
-    print >>gv.out, '    0,              /* tp_init           */'
+    if hasmethod(cl, '__init__') and cl.funcs['__init__'] in funcs:
+        print >>gv.out, '    %s___tpinit__, /* tp_init           */' % cl.ident
+    else:
+        print >>gv.out, '    0,              /* tp_init           */'
     print >>gv.out, '    0,              /* tp_alloc          */'
     print >>gv.out, '    %sNew,          /* tp_new            */' % cl.ident
     print >>gv.out, '};\n'
