@@ -28,6 +28,7 @@ def do_extmod(gv):
     print >>gv.out, 'namespace __%s__ { /* XXX */\n' % gv.module.ident
 
     # global functions
+    do_newobj(gv)
     funcs = supported_funcs(gv, gv.module.funcs.values())
     for func in funcs:
         do_extmod_method(gv, func)
@@ -66,6 +67,13 @@ def do_extmod(gv):
     for cl in classes:
         convert_methods(gv, cl, False)
 
+def do_newobj(gv):
+    print >>gv.out, '''PyObject *__ss__newobj__(PyObject *, PyObject *args, PyObject *kwargs) {
+    PyObject *cls = PyTuple_GetItem(args, 0);
+    PyObject *__new__ = PyObject_GetAttrString(cls, "__new__");
+    return PyObject_Call(__new__, args, kwargs);
+}\n'''
+
 def exported_classes(gv):
     classes = [cl for cl in gv.module.classes.values() if not defclass('Exception') in cl.ancestors()]
     return sorted(classes, key=lambda x: x.def_order)
@@ -82,6 +90,8 @@ def do_extmod_methoddef(gv, ident, funcs):
             print >>gv.out, '    0,'
     print >>gv.out, '};\n'
     print >>gv.out, 'static PyMethodDef %sMethods[] = {' % ident
+    if ident.startswith('Global_'):
+        print >>gv.out, '    {(char *)"__newobj__", (PyCFunction)__ss__newobj__, METH_VARARGS | METH_KEYWORDS, (char *)""},' 
     for func in funcs:
         if isinstance(func.parent, class_): id = func.parent.ident+'_'+func.ident
         else: id = 'Global_'+func.ident
