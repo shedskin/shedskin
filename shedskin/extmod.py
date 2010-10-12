@@ -18,6 +18,8 @@ def do_extmod(gv):
     print >>gv.out, '#include <Python.h>'
     print >>gv.out, '#include <structmember.h>\n'
 
+    print >>gv.out, 'PyObject *__ss_module__;\n'
+
     # classes
     classes = exported_classes(gv)
     for cl in classes:
@@ -37,24 +39,24 @@ def do_extmod(gv):
     # initialize modules
     gv.do_init_modules()
     print >>gv.out, '    __'+gv.module.ident+'__::__init();'
-    print >>gv.out, '\n    PyObject *mod = Py_InitModule((char *)"%s", Global_%sMethods);' % (gv.module.ident, gv.module.ident)
-    print >>gv.out, '    if(!mod)'
+    print >>gv.out, '\n    __ss_module__ = Py_InitModule((char *)"%s", Global_%sMethods);' % (gv.module.ident, gv.module.ident)
+    print >>gv.out, '    if(!__ss_module__)'
     print >>gv.out, '        return;\n'
 
     # add types to module
     for cl in classes:
         print >>gv.out, '    if (PyType_Ready(&__%s__::%sObjectType) < 0)' % (cl.module.ident, cl.ident)
         print >>gv.out, '        return;\n'
-        print >>gv.out, '    PyModule_AddObject(mod, "%s", (PyObject *)&__%s__::%sObjectType);' % (cl.ident, cl.module.ident, cl.ident)
+        print >>gv.out, '    PyModule_AddObject(__ss_module__, "%s", (PyObject *)&__%s__::%sObjectType);' % (cl.ident, cl.module.ident, cl.ident)
     print >>gv.out
 
     # global variables
     for var in supported_vars(getmv().globals.values()):
         varname = gv.cpp_name(var.name)
         if [1 for t in gv.mergeinh[var] if t[0].ident in ['int_', 'float_', 'bool_']]:
-            print >>gv.out, '    PyModule_AddObject(mod, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+gv.module.ident+'__::'+varname}
+            print >>gv.out, '    PyModule_AddObject(__ss_module__, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+gv.module.ident+'__::'+varname}
         else:
-            print >>gv.out, '    PyModule_AddObject(mod, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+gv.module.ident+'__::'+varname}
+            print >>gv.out, '    PyModule_AddObject(__ss_module__, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+gv.module.ident+'__::'+varname}
 
     print >>gv.out, '\n}'
     print >>gv.out, '\n} // namespace __%s__' % gv.module.ident
