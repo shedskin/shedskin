@@ -89,8 +89,9 @@ def do_extmod_methoddef(gv, ident, funcs):
         else:
             print >>gv.out, '    0,'
     print >>gv.out, '};\n'
-    print >>gv.out, 'PyObject *%s__reduce__(PyObject *self, PyObject *args, PyObject *kwargs);' % ident
-    print >>gv.out, 'PyObject *%s__setstate__(PyObject *self, PyObject *args, PyObject *kwargs);\n' % ident
+    if not ident.startswith('Global_'):
+        print >>gv.out, 'PyObject *%s__reduce__(PyObject *self, PyObject *args, PyObject *kwargs);' % ident
+        print >>gv.out, 'PyObject *%s__setstate__(PyObject *self, PyObject *args, PyObject *kwargs);\n' % ident
     print >>gv.out, 'static PyMethodDef %sMethods[] = {' % ident
     if ident.startswith('Global_'):
         print >>gv.out, '    {(char *)"__newobj__", (PyCFunction)__ss__newobj__, METH_VARARGS | METH_KEYWORDS, (char *)""},' 
@@ -330,7 +331,30 @@ def do_extmod_class(gv, cl):
     print >>gv.out, '    0,              /* tp_alloc          */'
     print >>gv.out, '    %sNew,          /* tp_new            */' % cl.ident
     print >>gv.out, '};\n'
+    do_reduce_setstate(gv, cl, vars)
     print >>gv.out, '} // namespace %s\n' % cl.module.ident
+
+def do_reduce_setstate(gv, cl, vars):
+    print >>gv.out, 'PyObject *%s__reduce__(PyObject *self, PyObject *args, PyObject *kwargs) {' % cl.ident
+    print >>gv.out, '    PyObject *t = PyTuple_New(3);'
+    print >>gv.out, '    PyTuple_SetItem(t, 0, PyObject_GetAttrString(__ss_module__, "__newobj__"));'
+    print >>gv.out, '    PyObject *a = PyTuple_New(1);'
+    print >>gv.out, '    PyTuple_SetItem(a, 0, (PyObject *)&%sObjectType);' % cl.ident
+    print >>gv.out, '    PyTuple_SetItem(t, 1, a);'
+    print >>gv.out, '    PyObject *b = PyTuple_New(2);'
+    for i, var in enumerate(vars):
+        print >>gv.out, '    PyTuple_SetItem(b, %d, __to_py(((%sObject *)self)->__ss_object->%s));' % (i, cl.ident, var.name)
+    print >>gv.out, '    PyTuple_SetItem(t, 2, b);'
+    print >>gv.out, '    return t;'
+    print >>gv.out, '}\n'
+    print >>gv.out, 'PyObject *%s__setstate__(PyObject *self, PyObject *args, PyObject *kwargs) {' % cl.ident
+    print >>gv.out, '    int l = PyTuple_Size(args);'
+    print >>gv.out, '    PyObject *state = PyTuple_GetItem(args, 0);'
+    for i, var in enumerate(vars):
+        vartype = cpp.typesetreprnew(var, var.parent)
+        print >>gv.out, '    ((%sObject *)self)->__ss_object->%s = __to_ss<%s>(PyTuple_GetItem(state, %d));' % (cl.ident, var.name, vartype, i)
+    print >>gv.out, '    return Py_None;'
+    print >>gv.out, '}\n'
 
 def convert_methods(gv, cl, declare):
     if declare:
