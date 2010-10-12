@@ -35,3 +35,22 @@ def gen(s):
 
 for i in gen(2):
     print i
+
+# argument unpacking
+def blah((a,(b,c)), d):
+    print a, b, c, d
+t1 = (4, (3,2))
+t2 = (7,8)
+blah(t1, 1)
+blah((1, (2,3)), 4)
+blah((6,t2), 9)
+
+class Oink:
+    def __getitem__(self, (x,y)):
+        print 'get', x, y
+        return x*y
+    def __setitem__(self, (x,y), z):
+        print 'set', x, y, z
+oink = Oink()
+oink[4,5] = oink[2,3]
+oink[t2] = oink[t2]
