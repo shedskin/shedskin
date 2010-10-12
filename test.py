@@ -1,7 +1,6 @@
 
-def blup((a,(b,c))):
-    print a, b, c
+class Blah:
+    def __init__(self, a, b):
+        self.a, self.b = a, b
 
-    x,(y,z) = (a,(b,c))
-
-blup((1,('2',3.3)))
+blah = Blah(7, 'eight')
