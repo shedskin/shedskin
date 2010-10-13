@@ -21,7 +21,7 @@ def do_extmod(gv):
     print >>gv.out, 'PyObject *__ss_module__;\n'
 
     # classes
-    classes = exported_classes(gv)
+    classes = exported_classes(gv, warns=True)
     for cl in classes:
         do_extmod_class(gv, cl)
 
@@ -74,8 +74,14 @@ def do_newobj(gv):
     return PyObject_Call(__new__, args, kwargs);
 }\n'''
 
-def exported_classes(gv):
-    classes = [cl for cl in gv.module.classes.values() if not defclass('Exception') in cl.ancestors()]
+def exported_classes(gv, warns=False):
+    classes = []
+    for cl in gv.module.classes.values():
+        if defclass('Exception') in cl.ancestors():
+            if warns:
+                print '*WARNING* class not exported:', cl.ident
+        else:
+            classes.append(cl)
     return sorted(classes, key=lambda x: x.def_order)
 
 def do_extmod_methoddef(gv, ident, funcs):
