@@ -2310,8 +2310,12 @@ class generateVisitor(ASTVisitor):
         self.start('print2(')
         if node.dest:
             self.visitm(node.dest, ', ', func)
-        if print_space: self.append('1,')
-        else: self.append('0,')
+        else:
+            self.append('NULL,')
+        if print_space: 
+            self.append('1,')
+        else: 
+            self.append('0,')
         self.append(str(len(node.nodes)))
         for n in node.nodes:
             types = [t[0].ident for t in self.mergeinh[n]]
@@ -2958,10 +2962,11 @@ def generate_code():
 
     cppfiles = ' '.join([m.filename[:-3].replace(' ', '\ ')+'.cpp' for m in mods])
     hppfiles = ' '.join([m.filename[:-3].replace(' ', '\ ')+'.hpp' for m in mods])
-    repath = connect_paths(getgx().libdir.replace(' ', '\ '), 're.cpp')
-    if not repath in cppfiles:
-        cppfiles += ' '+repath
-        hppfiles += ' '+connect_paths(getgx().libdir.replace(' ', '\ '), 're.hpp')
+    for always in ('re',):
+        repath = connect_paths(getgx().libdir.replace(' ', '\ '), always+'.cpp')
+        if not repath in cppfiles:
+            cppfiles += ' '+repath
+            hppfiles += ' '+connect_paths(getgx().libdir.replace(' ', '\ '), always+'.hpp')
 
     # import flags
     if getgx().flags: flags = getgx().flags
