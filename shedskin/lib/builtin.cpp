@@ -1116,15 +1116,15 @@ __ss_bool class_::__eq__(pyobj *c) {
 /* file methods */
 
 file::file() {
-    endoffile = print_space = 0;
-    print_lastchar = '\n';
+    print_opt.endoffile = print_opt.space = 0;
+    print_opt.lastchar = '\n';
     universal_mode = false;
 }
 
 file::file(FILE *g) {
     f = g;
-    endoffile = print_space = 0;
-    print_lastchar = '\n';
+    print_opt.endoffile = print_opt.space = 0;
+    print_opt.lastchar = '\n';
     universal_mode = false;
 }
 
@@ -1146,8 +1146,8 @@ file::file(str *name, str *flags) {
     this->mode = flags;
     if (!f)
         throw new IOError(__modct(new str("No such file or directory: '%s'"), 1, name));
-    endoffile = print_space = 0;
-    print_lastchar = '\n';
+    print_opt.endoffile = print_opt.space = 0;
+    print_opt.lastchar = '\n';
 }
 
 file *open(str *name, str *flags) {
@@ -1203,7 +1203,7 @@ void file::__check_closed() {
 void *file::seek(__ss_int i, __ss_int w) {
     __check_closed();
     fseek(f, i, w);
-    endoffile = 0; /* XXX add check */
+    print_opt.endoffile = 0; /* XXX add check */
     return NULL;
 }
 
@@ -1227,7 +1227,7 @@ str *file::readline(int n) {
     while((n==-1) || (i < n)) {
         int c = getchar();
         if(c == EOF) {
-            endoffile = 1;
+            print_opt.endoffile = 1;
             break;
         }
         r->unit += c;
@@ -1247,7 +1247,7 @@ str *file::read(int n) {
     while((n==-1) || (i < n)) {
         int c = getchar();
         if(c == EOF) {
-            endoffile = 1;
+            print_opt.endoffile = 1;
             break;
         }
         r->unit += c;
@@ -1260,9 +1260,9 @@ str *file::read(int n) {
 list<str *> *file::readlines() {
     __check_closed();
     list<str *> *lines = new list<str *>();
-    while(!endoffile) {
+    while(!print_opt.endoffile) {
         str *line = readline();
-        if(endoffile && !len(line))
+        if(print_opt.endoffile && !len(line))
             break;
         lines->append(line);
     }
@@ -2063,8 +2063,7 @@ float_ *___box(double d) {
 
 /* print .., */
 
-char print_lastchar = '\n';
-int print_space = 0;
+print_options print_opt;
 
 void __ss_exit(int code) {
     throw new SystemExit(code);
@@ -2079,7 +2078,7 @@ void __start(void (*initfunc)()) {
             print2(0, 1, s->message);
         code = s->code;
     }
-    if(print_lastchar != '\n')
+    if(print_opt.lastchar != '\n')
         std::cout << '\n';
     std::exit(code);
 }
@@ -2111,18 +2110,18 @@ void print2(int comma, int n, ...) {
      va_end(args);
      str *s = __mod5(__print_cache, sp);
      if(len(s)) {
-         if(print_space && (!isspace(print_lastchar) || print_lastchar==' ') && s->unit[0] != '\n')
+         if(print_opt.space && (!isspace(print_opt.lastchar) || print_opt.lastchar==' ') && s->unit[0] != '\n')
              printf(" ");
          printf("%s", s->unit.c_str());
-         print_lastchar = s->unit[len(s)-1];
+         print_opt.lastchar = s->unit[len(s)-1];
      }
      else if (comma)
-         print_lastchar = ' ';
+         print_opt.lastchar = ' ';
      if(!comma) {
          printf("\n");
-         print_lastchar = '\n';
+         print_opt.lastchar = '\n';
      }
-     print_space = comma;
+     print_opt.space = comma;
 }
 
 void print2(file *f, int comma, int n, ...) {
@@ -2134,18 +2133,18 @@ void print2(file *f, int comma, int n, ...) {
      va_end(args);
      str *s = __mod5(__print_cache, sp);
      if(len(s)) {
-         if(f->print_space && (!isspace(f->print_lastchar) || f->print_lastchar==' ') && s->unit[0] != '\n')
+         if(f->print_opt.space && (!isspace(f->print_opt.lastchar) || f->print_opt.lastchar==' ') && s->unit[0] != '\n')
              f->putchar(' ');
          f->write(s);
-         f->print_lastchar = s->unit[len(s)-1];
+         f->print_opt.lastchar = s->unit[len(s)-1];
      }
      else if (comma)
-         f->print_lastchar = ' ';
+         f->print_opt.lastchar = ' ';
      if(!comma) {
          f->write(nl);
-         f->print_lastchar = '\n';
+         f->print_opt.lastchar = '\n';
      }
-     f->print_space = comma;
+     f->print_opt.space = comma;
 }
 
 /* str, file iteration */
@@ -2171,10 +2170,10 @@ __iter<str *> *file::__iter__() {
 }
 
 str *file::next() {
-    if(endoffile)
+    if(print_opt.endoffile)
         throw new StopIteration();
     str *line = readline();
-    if(endoffile && !len(line))
+    if(print_opt.endoffile && !len(line))
         throw new StopIteration();
     return line;
 }

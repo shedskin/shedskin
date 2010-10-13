@@ -628,12 +628,20 @@ public:
     void resize(int minused);
 };
 
+struct print_options {
+    int endoffile;
+    char lastchar;
+    int space;
+    print_options() {
+        lastchar = '\n';
+        space = 0;
+    }
+};
+
 class file : public pyiter<str *> {
 public:
     FILE *f;
-    int endoffile;
-    char print_lastchar;
-    int print_space;
+    print_options print_opt;
 
     str *name;
     str *mode;

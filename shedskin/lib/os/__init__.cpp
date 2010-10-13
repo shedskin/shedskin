@@ -417,14 +417,14 @@ popen_pipe::popen_pipe(str *cmd, str *mode) {
     this->name = cmd;
     this->mode = mode;
 
-    endoffile=print_space=0;
-    print_lastchar='\n';
+    print_opt.endoffile=print_opt.space=0;
+    print_opt.lastchar='\n';
 }
 
 popen_pipe::popen_pipe(FILE* pipe) {
     f = pipe;
-    endoffile=print_space=0;
-    print_lastchar='\n';
+    print_opt.endoffile=print_opt.space=0;
+    print_opt.lastchar='\n';
 }
 
 void *popen_pipe::close() {
