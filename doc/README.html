@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="Docutils 0.6: http://docutils.sourceforge.net/" />
 <title>Shed Skin Tutorial</title>
-<meta name="date" content="June 20 2010" />
+<meta name="date" content="October 16 2010" />
 <meta name="authors" content="Mark Dufour and James Coughlan" />
 <style type="text/css">
 
@@ -157,9 +157,9 @@ code, tt {
 <col class="docinfo-content" />
 <tbody valign="top">
 <tr><th class="docinfo-name">Version:</th>
-<td>0.5</td></tr>
+<td>0.6</td></tr>
 <tr><th class="docinfo-name">Date:</th>
-<td>June 20 2010</td></tr>
+<td>October 16 2010</td></tr>
 <tr><th class="docinfo-name">Authors:</th>
 <td>Mark Dufour and James Coughlan</td></tr>
 </tbody>
@@ -477,9 +477,9 @@ shedskin test
 </li>
 </ol>
 <p><strong>Standard Library</strong></p>
-<p>By moving <tt class="docutils literal">stuff.*</tt> to <tt class="docutils literal">lib/</tt>, we have in fact added support for an arbitrary module to <strong>Shed Skin</strong>. Other programs compiled by <strong>Shed Skin</strong> can now import <tt class="docutils literal">stuff</tt> and use <tt class="docutils literal">more_primes</tt>. There is no difference with adding support for a standard library module. In fact, in the <tt class="docutils literal">lib/</tt> directory, you can find type models and implementations for all supported modules (see <a class="reference internal" href="#library-limitations">Library Limitations</a>). As you may notice, some have been partially converted to C++ using <strong>Shed Skin</strong>.</p>
+<p>By moving <tt class="docutils literal">stuff.*</tt> to <tt class="docutils literal">lib/</tt>, we have in fact added support for an arbitrary library module to <strong>Shed Skin</strong>. Other programs compiled by <strong>Shed Skin</strong> can now import <tt class="docutils literal">stuff</tt> and use <tt class="docutils literal">more_primes</tt>. In fact, in the <tt class="docutils literal">lib/</tt> directory, you can find type models and implementations for all supported modules (see <a class="reference internal" href="#library-limitations">Library Limitations</a>). As you may notice, some have been partially converted to C++ using <strong>Shed Skin</strong>.</p>
 <p><strong>Shed Skin Types</strong></p>
-<p><strong>Shed Skin</strong> reimplements the Python builtins with its own set of C++ classes (built on the C++ Standard Template Library). These have a similar interface to their Python counterparts, so they should be easy to use (provided you have some basic C++ knowledge.) See the class definitions in <tt class="docutils literal">lib/builtin.hpp</tt> for details. If in doubt, convert some equivalent Python code to C++, and have a look at the result!</p>
+<p><strong>Shed Skin</strong> reimplements the Python builtins with its own set of C++ classes. These have a similar interface to their Python counterparts, so they should be easy to use (provided you have some basic C++ knowledge.) See the class definitions in <tt class="docutils literal">lib/builtin.hpp</tt> for details. If in doubt, convert some equivalent Python code to C++, and have a look at the result!</p>
 </div>
 <div class="section" id="id10">
 <span id="command-line-options"></span><h1><a class="toc-backref" href="#id22">Command-line Options</a></h1>
@@ -490,9 +490,10 @@ shedskin test
 -d --dir               Specify alternate directory for output files
 -e --extmod            Generate extension module
 -f --flags             Provide alternate Makefile flags
--l --long              Use long long integers (usually 64-bit)
+-l --long              Use long long integers
 -m --makefile          Specify alternate Makefile name
--r --random            Use fast random number generator
+-r --random            Use fast random number generator (rand())
+-s --strhash           Use fast string hashing algorithm (murmur)
 -v --msvc              Output MSVC-style Makefile
 -w --nowrap            Disable wrap-around checking
 </pre>
@@ -564,6 +565,7 @@ pl.show()
 <ul class="simple">
 <li>Google</li>
 <li>Bearophile</li>
+<li>Hakan Ardo</li>
 <li>Brian Blais</li>
 <li>Paul Boddie</li>
 <li>Djamel Cherif</li>
