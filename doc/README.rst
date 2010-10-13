@@ -448,6 +448,7 @@ I would like to thank the following company/people, for their help with **Shed S
 
 * Google
 * Bearophile
+* Hakan Ardo
 * Brian Blais
 * Paul Boddie
 * Djamel Cherif
