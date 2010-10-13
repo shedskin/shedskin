@@ -1,8 +1,8 @@
 Shed Skin Tutorial
 ==================
 
-:Version: 0.5
-:Date: June 20 2010
+:Version: 0.6
+:Date: October 16 2010
 :Authors: Mark Dufour and James Coughlan
 
 .. _Parallel Python: http://www.parallelpython.com/
@@ -355,11 +355,11 @@ To call manually written C/C++ code, follow these steps:
 
 **Standard Library**
 
-By moving ``stuff.*`` to ``lib/``, we have in fact added support for an arbitrary module to **Shed Skin**. Other programs compiled by **Shed Skin** can now import ``stuff`` and use ``more_primes``. There is no difference with adding support for a standard library module. In fact, in the ``lib/`` directory, you can find type models and implementations for all supported modules (see `Library Limitations`_). As you may notice, some have been partially converted to C++ using **Shed Skin**.
+By moving ``stuff.*`` to ``lib/``, we have in fact added support for an arbitrary library module to **Shed Skin**. Other programs compiled by **Shed Skin** can now import ``stuff`` and use ``more_primes``. In fact, in the ``lib/`` directory, you can find type models and implementations for all supported modules (see `Library Limitations`_). As you may notice, some have been partially converted to C++ using **Shed Skin**.
 
 **Shed Skin Types**
 
-**Shed Skin** reimplements the Python builtins with its own set of C++ classes (built on the C++ Standard Template Library). These have a similar interface to their Python counterparts, so they should be easy to use (provided you have some basic C++ knowledge.) See the class definitions in ``lib/builtin.hpp`` for details. If in doubt, convert some equivalent Python code to C++, and have a look at the result!
+**Shed Skin** reimplements the Python builtins with its own set of C++ classes. These have a similar interface to their Python counterparts, so they should be easy to use (provided you have some basic C++ knowledge.) See the class definitions in ``lib/builtin.hpp`` for details. If in doubt, convert some equivalent Python code to C++, and have a look at the result!
 
 .. _Command-line Options:
 
@@ -373,9 +373,10 @@ The ``shedskin`` command can be given the following options: ::
     -d --dir               Specify alternate directory for output files
     -e --extmod            Generate extension module
     -f --flags             Provide alternate Makefile flags
-    -l --long              Use long long integers (usually 64-bit)
+    -l --long              Use long long integers
     -m --makefile          Specify alternate Makefile name
-    -r --random            Use fast random number generator
+    -r --random            Use fast random number generator (rand())
+    -s --strhash           Use fast string hashing algorithm (murmur)
     -v --msvc              Output MSVC-style Makefile
     -w --nowrap            Disable wrap-around checking
 
