@@ -7,11 +7,10 @@ namespace __sys__ {
 list<str *> *argv;
 str *version;
 
-file *__ss_stdin, *__ss_stdout, *__ss_stderr;
-
 tuple2<__ss_int, __ss_int> *version_info;
 str *__name__, *copyright, *platform;
 __ss_int hexversion, maxint;
+file *__ss_stdin, *__ss_stdout, *__ss_stderr;
 
 void __init(int c, char **v) {
     argv = new list<str *>();
@@ -34,12 +33,9 @@ void __init(int c, char **v) {
     for(int i=0; i<c; i++)
         argv->append(new str(v[i]));
 
-    __ss_stdin = new file(stdin);
-    __ss_stdin->name = new str("<stdin>");
-    __ss_stdout = new file(stdout);
-    __ss_stdout->name = new str("<stdout>");
-    __ss_stderr = new file(stderr);
-    __ss_stderr->name = new str("<stderr>");
+    __ss_stdin = __shedskin__::__ss_stdin;
+    __ss_stdout = __shedskin__::__ss_stdout;
+    __ss_stderr = __shedskin__::__ss_stderr;
 }
 
 void __ss_exit() {

@@ -903,7 +903,6 @@ file *open(str *name, str *flags = 0);
 str *raw_input(str *msg = 0);
 
 void print(int n, file *f, str *end, str *sep, ...);
-void print2(int comma, int n,  ...);
 void print2(file *f, int comma, int n, ...);
 
 __ss_bool isinstance(pyobj *, class_ *);
@@ -1152,6 +1151,8 @@ extern __ss_bool True;
 extern __ss_bool False;
 
 extern list<str *> *__join_cache;
+
+extern file *__ss_stdin, *__ss_stdout, *__ss_stderr;
 
 /* set */
 
