@@ -39,4 +39,5 @@ for (i, file) in enumerate(files):
     do_cmd('make')
     do_cmd('shedskin -e %s' % file)
     do_cmd('make')
-    do_cmd('python -c "import %s"' % file[:-3])
+    if file not in ('amaze.py', 'tictactoe.py'): # XXX
+        do_cmd('python -c "import %s"' % file[:-3])
