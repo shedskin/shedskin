@@ -6,5 +6,12 @@ class Blah:
 def woef(x):
     print x
 
-blah = Blah(7, 'eight')
-woef(1)
+class do:
+    def __init__(self, public, do):
+        self.public = public
+        self.do = do
+
+if __name__ == '__main__':
+    blah = Blah(7, 'eight')
+    woef(1)
+    d = do('public', 'do')
