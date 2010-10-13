@@ -14,7 +14,7 @@ void *StringI::seek(__ss_int i, __ss_int w) {
     if(w==0) pos = i;
     else if(w==1) pos += i;
     else pos = len(s)+i;
-    endoffile = 0;
+    print_opt.endoffile = 0;
     return NULL;
 }
 
