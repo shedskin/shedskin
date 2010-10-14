@@ -266,10 +266,13 @@ class generateVisitor(ASTVisitor):
                     self.visitFunction(func.node, declare=True)
         print >>self.out
 
+        if getgx().extension_module:
+            extmod.pyinit_func(self)
+
         for n in self.module.mod_path:
             print >>self.out, '} // module namespace'
 
-        if getgx().extension_module and self.module == getgx().main_module:
+        if getgx().extension_module:
             extmod.convert_methods2(self)
 
         print >>self.out, '#endif'
@@ -390,11 +393,10 @@ class generateVisitor(ASTVisitor):
         print >>self.out
 
         # --- c++ main/extension module setup
+        if getgx().extension_module:
+            extmod.do_extmod(self)
         if self.module == getgx().main_module:
-            if getgx().extension_module:
-                extmod.do_extmod(self)
-            else:
-                self.do_main()
+            self.do_main()
 
     def visitModule(self, node, declare=False):
         if declare:
