@@ -52,6 +52,29 @@ def do_extmod(gv):
         print >>gv.out, '    PyModule_AddObject(%s, "%s", (PyObject *)&__%s__::%sObjectType);' % (__ss_mod, cl.ident, cl.module.ident, cl.ident)
     print >>gv.out
 
+    if gv.module == getgx().main_module:
+        do_init_mods(gv, 'init')
+        do_init_mods(gv, 'add')
+        print >>gv.out, '    add%s();' % gv.module.ident
+    print >>gv.out, '\n}\n'
+
+    print >>gv.out, 'PyMODINIT_FUNC add%s(void) {' % gv.module.ident
+    do_add_globals(gv, classes, __ss_mod)
+    print >>gv.out, '\n}'
+
+    print >>gv.out, '\n} // namespace __%s__' % gv.module.ident
+    print >>gv.out, '\n} // extern "C"'
+
+    # conversion methods to/from CPython/Shedskin
+    for cl in classes:
+        convert_methods(gv, cl, False)
+
+def do_init_mods(gv, what):
+    for mod in getgx().modules.values():
+        if not mod.builtin and not mod is gv.module:
+            print >>gv.out, '    __%s__::%s%s();' % (mod.ident, what, mod.ident)
+
+def do_add_globals(gv, classes, __ss_mod):
     # global variables
     for var in supported_vars(getmv().globals.values()):
         varname = gv.cpp_name(var.name)
@@ -59,19 +82,6 @@ def do_extmod(gv):
             print >>gv.out, '    PyModule_AddObject(%(ssmod)s, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+gv.module.ident+'__::'+varname, 'ssmod': __ss_mod}
         else:
             print >>gv.out, '    PyModule_AddObject(%(ssmod)s, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+gv.module.ident+'__::'+varname, 'ssmod': __ss_mod}
-
-    if gv.module == getgx().main_module:
-        for mod in getgx().modules.values():
-            if not mod.builtin and not mod is gv.module:
-                print >>gv.out, '__%s__::init%s();' % (mod.ident, mod.ident)
-
-    print >>gv.out, '\n}'
-    print >>gv.out, '\n} // namespace __%s__' % gv.module.ident
-    print >>gv.out, '\n} // extern "C"'
-
-    # conversion methods to/from CPython/Shedskin
-    for cl in classes:
-        convert_methods(gv, cl, False)
 
 def exported_classes(gv, warns=False):
     classes = []
@@ -394,7 +404,8 @@ def convert_methods(gv, cl, declare):
         print >>gv.out, '}\n}'
 
 def pyinit_func(gv):
-    print >>gv.out, 'PyMODINIT_FUNC init%s(void);\n' % gv.module.ident
+    for what in ('init', 'add'):
+        print >>gv.out, 'PyMODINIT_FUNC %s%s(void);\n' % (what, gv.module.ident)
  
 def convert_methods2(gv):
     print >>gv.out, 'namespace __shedskin__ { /* XXX */\n'
