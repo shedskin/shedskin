@@ -2521,9 +2521,10 @@ def typesetreprnew(node, parent, cplusplus=True, check_extmod=False, check_ret=F
     try:
         ts = typestrnew(split, parent, cplusplus, orig_parent, node, check_extmod, 0, check_ret, var)
     except RuntimeError:
-        if not hasattr(node, 'lineno'): node.lineno = None # XXX
         if not getmv().module.builtin and isinstance(node, variable) and not node.name.startswith('__'): # XXX startswith
-            error("variable %s has dynamic (sub)type" % repr(node), warning=True)
+            if node.parent: varname = repr(node)
+            else: varname = "'%s'" % node.name
+            error("variable %s has dynamic (sub)type" % varname, node, warning=True)
         ts = 'ERROR'
 
     if cplusplus:
@@ -2575,7 +2576,7 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None, check_extmo
             if not node.name.startswith('__') : # XXX startswith
                 if orig_parent: varname = "%s" % node
                 else: varname = "'%s'" % node
-                error("variable %s has dynamic (sub)type: {%s}" % (varname, ', '.join([conv2.get(cl.ident, cl.ident) for cl in lcp])), warning=True)
+                error("variable %s has dynamic (sub)type: {%s}" % (varname, ', '.join([conv2.get(cl.ident, cl.ident) for cl in lcp])), node, warning=True)
         elif node not in getgx().bool_test_only:
             error("expression has dynamic (sub)type: {%s}" % ', '.join([conv2.get(cl.ident, cl.ident) for cl in lcp]), node, warning=True)
 

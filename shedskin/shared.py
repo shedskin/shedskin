@@ -528,7 +528,9 @@ def error(msg, node=None, warning=False):
     else: 
         result = '*ERROR*'
     if node: 
-        result += ' '+inode(node).mv.module.filename+':'+str(node.lineno)
+        result += ' '+inode(node).mv.module.filename
+        if hasattr(node, 'lineno') and node.lineno is not None:
+            result += ':'+str(node.lineno)
     result += ': '+msg
     if result not in errormsgs:
         errormsgs.add(result)
