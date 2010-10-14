@@ -1428,10 +1428,13 @@ class moduleVisitor(ASTVisitor):
         inode(node2).lambdawrapper = f
         return f
 
+def clear_block(m):
+    return m.string.count('\n', m.start(), m.end())*'\n'
+
 def parsefile(name):
     # Convert block comments into strings which will be duely ignored.
     pat = re.compile(r"#{.*?#}", re.MULTILINE | re.DOTALL)
-    filebuf = re.sub(pat, '', ''.join(open(name, 'U').readlines()))
+    filebuf = re.sub(pat, clear_block, ''.join(open(name, 'U').readlines()))
     try:
         return parse(filebuf)
     except SyntaxError, s:
