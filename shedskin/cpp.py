@@ -2912,8 +2912,6 @@ def nokeywords(name):
 
 # --- generate C++ and Makefiles
 def generate_code():
-    print '[generating c++ code..]'
-
     ident = getgx().main_module.ident
 
     if sys.platform == 'win32':
