@@ -18,7 +18,7 @@ def do_extmod(gv):
     print >>gv.out, '#include <Python.h>'
     print >>gv.out, '#include <structmember.h>\n'
 
-    print >>gv.out, 'PyObject *__ss_module__;\n'
+    print >>gv.out, 'PyObject *__ss_mod_%s;\n' % gv.module.ident
 
     # classes
     classes = exported_classes(gv, warns=True)
@@ -28,7 +28,6 @@ def do_extmod(gv):
     print >>gv.out, 'namespace __%s__ { /* XXX */\n' % gv.module.ident
 
     # global functions
-    do_newobj(gv)
     funcs = supported_funcs(gv, gv.module.funcs.values())
     for func in funcs:
         do_extmod_method(gv, func)
@@ -38,26 +37,33 @@ def do_extmod(gv):
     print >>gv.out, 'PyMODINIT_FUNC init%s(void) {' % gv.module.ident
 
     # initialize modules
-    gv.do_init_modules()
-    print >>gv.out, '    __'+gv.module.ident+'__::__init();'
-    print >>gv.out, '\n    __ss_module__ = Py_InitModule((char *)"%s", Global_%sMethods);' % (gv.module.ident, gv.module.ident)
-    print >>gv.out, '    if(!__ss_module__)'
+    __ss_mod = '__ss_mod_%s' % gv.module.ident
+    if gv.module == getgx().main_module:
+        gv.do_init_modules()
+        print >>gv.out, '    __'+gv.module.ident+'__::__init();'
+    print >>gv.out, '\n    %s = Py_InitModule((char *)"%s", Global_%sMethods);' % (__ss_mod, gv.module.ident, gv.module.ident)
+    print >>gv.out, '    if(!%s)' % __ss_mod
     print >>gv.out, '        return;\n'
 
     # add types to module
     for cl in classes:
         print >>gv.out, '    if (PyType_Ready(&__%s__::%sObjectType) < 0)' % (cl.module.ident, cl.ident)
         print >>gv.out, '        return;\n'
-        print >>gv.out, '    PyModule_AddObject(__ss_module__, "%s", (PyObject *)&__%s__::%sObjectType);' % (cl.ident, cl.module.ident, cl.ident)
+        print >>gv.out, '    PyModule_AddObject(%s, "%s", (PyObject *)&__%s__::%sObjectType);' % (__ss_mod, cl.ident, cl.module.ident, cl.ident)
     print >>gv.out
 
     # global variables
     for var in supported_vars(getmv().globals.values()):
         varname = gv.cpp_name(var.name)
         if [1 for t in gv.mergeinh[var] if t[0].ident in ['int_', 'float_', 'bool_']]:
-            print >>gv.out, '    PyModule_AddObject(__ss_module__, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+gv.module.ident+'__::'+varname}
+            print >>gv.out, '    PyModule_AddObject(%(ssmod)s, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+gv.module.ident+'__::'+varname, 'ssmod': __ss_mod}
         else:
-            print >>gv.out, '    PyModule_AddObject(__ss_module__, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+gv.module.ident+'__::'+varname}
+            print >>gv.out, '    PyModule_AddObject(%(ssmod)s, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+gv.module.ident+'__::'+varname, 'ssmod': __ss_mod}
+
+    if gv.module == getgx().main_module:
+        for mod in getgx().modules.values():
+            if not mod.builtin and not mod is gv.module:
+                print >>gv.out, '__%s__::init%s();' % (mod.ident, mod.ident)
 
     print >>gv.out, '\n}'
     print >>gv.out, '\n} // namespace __%s__' % gv.module.ident
@@ -66,13 +72,6 @@ def do_extmod(gv):
     # conversion methods to/from CPython/Shedskin
     for cl in classes:
         convert_methods(gv, cl, False)
-
-def do_newobj(gv):
-    print >>gv.out, '''PyObject *__ss__newobj__(PyObject *, PyObject *args, PyObject *kwargs) {
-    PyObject *cls = PyTuple_GetItem(args, 0);
-    PyObject *__new__ = PyObject_GetAttrString(cls, "__new__");
-    return PyObject_Call(__new__, args, kwargs);
-}\n'''
 
 def exported_classes(gv, warns=False):
     classes = []
@@ -351,7 +350,7 @@ def do_extmod_class(gv, cl):
 def do_reduce_setstate(gv, cl, vars):
     print >>gv.out, 'PyObject *%s__reduce__(PyObject *self, PyObject *args, PyObject *kwargs) {' % cl.ident
     print >>gv.out, '    PyObject *t = PyTuple_New(3);'
-    print >>gv.out, '    PyTuple_SetItem(t, 0, PyObject_GetAttrString(__ss_module__, "__newobj__"));'
+    print >>gv.out, '    PyTuple_SetItem(t, 0, PyObject_GetAttrString(__ss_mod_%s, "__newobj__"));' % gv.module.ident
     print >>gv.out, '    PyObject *a = PyTuple_New(1);'
     print >>gv.out, '    PyTuple_SetItem(a, 0, (PyObject *)&%sObjectType);' % cl.ident
     print >>gv.out, '    PyTuple_SetItem(t, 1, a);'
@@ -394,6 +393,9 @@ def convert_methods(gv, cl, declare):
         print >>gv.out, '    return ((__%s__::%sObject *)p)->__ss_object;' % (cl.module.ident, cl.ident)
         print >>gv.out, '}\n}'
 
+def pyinit_func(gv):
+    print >>gv.out, 'PyMODINIT_FUNC init%s(void);\n' % gv.module.ident
+ 
 def convert_methods2(gv):
     print >>gv.out, 'namespace __shedskin__ { /* XXX */\n'
     for cl in exported_classes(gv):
