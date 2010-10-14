@@ -521,18 +521,18 @@ def augmsg(node, msg):
 errormsgs = set()
 
 def error(msg, node=None, warning=False):
-    if warning: type = '*WARNING*'
-    else: type = '*ERROR*'
-
-    if node: lineno = ':'+str(node.lineno)
-    else: lineno = ''
-
-    msg = type+' '+getmv().module.filename+lineno+': '+msg
-
-    if msg not in errormsgs:
-        errormsgs.add(msg)
-        print msg
-
+    if isinstance(node, Function):
+        return
+    if warning: 
+        result = '*WARNING*'
+    else: 
+        result = '*ERROR*'
+    if node: 
+        result += ' '+inode(node).mv.module.filename+':'+str(node.lineno)
+    result += ': '+msg
+    if result not in errormsgs:
+        errormsgs.add(result)
+        print result
     if not warning:
         sys.exit(1)
 

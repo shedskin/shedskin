@@ -902,6 +902,8 @@ def analyze(source, testing=False):
     # --- cartesian product algorithm & iterative flow analysis
     iterative_dataflow_analysis()
 
+    print '[generating c++ code..]' # XXX 
+
     for cl in getgx().allclasses:
         for name in cl.vars:
             if name in cl.parent.vars and not name.startswith('__'):
@@ -958,7 +960,7 @@ def analyze(source, testing=False):
 
     getgx().merged_inh = merged(getgx().types, inheritance=True) # XXX why X times
 
-    # error for dynamic expression (XXX before codegen)
+    # error for dynamic expression
     for node in getgx().merged_all:
         if isinstance(node, Node) and not isinstance(node, AssAttr) and not inode(node).mv.module.builtin:
             cpp.typesetreprnew(node, inode(node).parent)
