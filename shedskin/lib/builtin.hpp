@@ -4793,7 +4793,9 @@ template<class T> complex::complex(T t) {
     imag = 0;
 }
 
+#ifdef __SS_BIND
 PyObject *__ss__newobj__(PyObject *, PyObject *args, PyObject *kwargs);
+#endif
 
 } // namespace __shedskin__
 #endif

@@ -2287,10 +2287,12 @@ __ss_bool pyobj::__nonzero__() { return __mbool(__len__() != 0); }
 
 object::object() { this->__class__ = cl_object; }
 
+#ifdef __SS_BIND
 PyObject *__ss__newobj__(PyObject *, PyObject *args, PyObject *kwargs) {
     PyObject *cls = PyTuple_GetItem(args, 0);
     PyObject *__new__ = PyObject_GetAttrString(cls, "__new__");
     return PyObject_Call(__new__, args, kwargs);
 }
+#endif
 
 } // namespace __shedskin__
