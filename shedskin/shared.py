@@ -253,6 +253,9 @@ class module:
         self.prop_includes = set()
         self.import_order = 0
 
+    def full_path(self):
+        return '__'+'__::__'.join(self.mod_path)+'__'
+
     def __repr__(self):
         return 'module '+self.ident
 

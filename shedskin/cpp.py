@@ -426,7 +426,7 @@ class generateVisitor(ASTVisitor):
                     else:
                         print >>self.out, '    __sys__::__init(argc, argv);'
                 else:
-                    print >>self.out, '    __'+'__::__'.join([n for n in mod.mod_path])+'__::__init();' # XXX sep func
+                    print >>self.out, '    '+mod.full_path()+'::__init();'
 
     def do_comment(self, s):
         if not s: return
