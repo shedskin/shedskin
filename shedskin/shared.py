@@ -527,7 +527,7 @@ def error(msg, node=None, warning=False):
         result = '*WARNING*'
     else: 
         result = '*ERROR*'
-    if node: 
+    if node and (node,0,0) in getgx().cnode: 
         result += ' '+inode(node).mv.module.filename
         if hasattr(node, 'lineno') and node.lineno is not None:
             result += ':'+str(node.lineno)
