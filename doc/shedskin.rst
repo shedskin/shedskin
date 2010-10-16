@@ -7,9 +7,9 @@ An experimental (restricted) Python-to-C++ Compiler
 ---------------------------------------------------
 
 :Author: mark.dufour@gmail.com
-:Date:   2010-01-08
+:Date:   2010-10-16
 :Copyright: GPL version 3 or later
-:Version: 0.3
+:Version: 0.6
 :Manual section: 1
 
 SYNOPSIS
@@ -17,7 +17,7 @@ SYNOPSIS
 
 shedskin [OPTION]... FILE
 
- -a --ann               Output annotated source code
+ -a --ann               Output annotated source code (.ss.py)
 
  -b --nobounds          Disable bounds checking
 
@@ -27,9 +27,15 @@ shedskin [OPTION]... FILE
 
  -f --flags             Provide alternate Makefile flags
 
+ -l --long              Use long long integers
+
  -m --makefile          Specify alternate Makefile name
 
- -r --random            Use fast random number generator
+ -r --random            Use fast random number generator (rand())
+
+ -s --strhash           Use fast string hashing algorithm (murmur)
+
+ -v --msvc              Output MSVC-style Makefile
 
  -w --nowrap            Disable wrap-around checking
 
