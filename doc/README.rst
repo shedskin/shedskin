@@ -115,6 +115,7 @@ Some other features are currently only partially supported:
   - class attributes must always be accessed using a class identifier: ::
 
         self.class_attr # bad
+        self.__class__.class_attr # bad
         SomeClass.class_attr # good
 
         SomeClass.some_static_method() # good
@@ -241,7 +242,7 @@ Type: ::
 
 For 'make' to succeed, make sure to have the Python development files installed (under **Debian**, install ``python-dev``; under **Fedora**, install ``python-devel``).
 
-Note that for type inference to be possible, the module must (indirectly) call its own functions. This is accomplished in the example by putting the function calls under the ``if __name__=='__main__'`` statement, so that they are not executed when the module is imported.
+Note that for type inference to be possible, the module must (indirectly) call its own functions. This is accomplished in the example by putting the function calls under the ``if __name__=='__main__'`` statement, so that they are not executed when the module is imported. Note that functions only have to be called indirectly, so this often doesn't consist of more than a call to ``main``. 
 
 The extension module can now be simply imported and used as usual: ::
 

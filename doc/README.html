@@ -265,6 +265,7 @@ a = [1] # wrong - use a float here, too
 <li><p class="first">class attributes must always be accessed using a class identifier:</p>
 <pre class="literal-block">
 self.class_attr # bad
+self.__class__.class_attr # bad
 SomeClass.class_attr # good
 
 SomeClass.some_static_method() # good
@@ -373,7 +374,7 @@ shedskin -e simple_module
 make
 </pre>
 <p>For 'make' to succeed, make sure to have the Python development files installed (under <strong>Debian</strong>, install <tt class="docutils literal"><span class="pre">python-dev</span></tt>; under <strong>Fedora</strong>, install <tt class="docutils literal"><span class="pre">python-devel</span></tt>).</p>
-<p>Note that for type inference to be possible, the module must (indirectly) call its own functions. This is accomplished in the example by putting the function calls under the <tt class="docutils literal">if <span class="pre">__name__=='__main__'</span></tt> statement, so that they are not executed when the module is imported.</p>
+<p>Note that for type inference to be possible, the module must (indirectly) call its own functions. This is accomplished in the example by putting the function calls under the <tt class="docutils literal">if <span class="pre">__name__=='__main__'</span></tt> statement, so that they are not executed when the module is imported. Note that functions only have to be called indirectly, so this often doesn't consist of more than a call to <tt class="docutils literal">main</tt>.</p>
 <p>The extension module can now be simply imported and used as usual:</p>
 <pre class="literal-block">
 &gt;&gt;&gt; from simple_module import func1, func2
