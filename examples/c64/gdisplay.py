@@ -167,7 +167,7 @@ class GTextView(timer.Timer):
 
     def fire_timer(self):
         for n in range(2000):
-            self.c64.cycle()
+            self.c64.fire_timer()
         self.c64.VIC.repaint()
         self.repaint()
         return True

@@ -15,9 +15,7 @@ import sid
 import cia
 import time
 import timer
-#import gmonitor
 import memory
-import gtk
 
 class TextView(object):
     def __init__(self, VIC, controls):
@@ -166,7 +164,7 @@ class C64(timer.Timer):
         while True: # TODO terminate?
             self.cycle()
 
-    def cycle(self):
+    def fire_timer(self):
         self.iterate()
         self.interrupt_clock += 1
         if self.interrupt_clock >= 50: # FIXME remove
@@ -216,4 +214,6 @@ if __name__ == '__main__':
     c64 = C64()
     for i in range(800000):
         c64.iterate()
-    c64.run()
+    c64.CPU_clock = timer.timeout_add(20, c64)
+    while True:
+        pass
