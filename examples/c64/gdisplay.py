@@ -250,7 +250,7 @@ class Controls(gtk.VBox):
         for address in range(0x300, 0x400, 16):
             sys.stdout.write("(%04X) " % address)
             for c in range(address, address+40, 4):
-                v = MMU.read_memory(address, 4)
+                v = MMU.read_memory(c, 4)
                 sys.stdout.write("%02X " % v)
             sys.stdout.write("\n")
 
