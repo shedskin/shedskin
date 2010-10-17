@@ -27,7 +27,7 @@ import memory
 # $E000-$FFFF, 57344-65535 kernal ROM!!!
 # $FFFA-$FFFF, 65530-65535 hardware vectors.
 
-class ROM(memory.Memory):
+class ROM:
     def __init__(self, value, B_active = True):
         self.B_active = B_active
         self.memory = []
@@ -59,7 +59,7 @@ def one_big_value(part):
         f += 8
     return v
 
-class MMU(memory.Memory):
+class MMU:
     def __init__(self):
         self.overlays = {}
         self.memory = 65536 * [0]

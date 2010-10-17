@@ -49,7 +49,7 @@ class TextView(object):
 
     border_color = property(get_border_color, set_border_color)
 
-class CPUPort(memory.Memory): # $0..$1
+class CPUPort: # $0..$1
     def __init__(self, MMU):
         self.B_can_write = True # in the instance because of ShedSkin
         self.B_active = True

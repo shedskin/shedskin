@@ -4,7 +4,7 @@
 import sys
 import memory
 
-class SID(memory.Memory):
+class SID:
     def __init__(self):
         self.B_active = True
         self.B_can_write = True # in the instance because of ShedSkin

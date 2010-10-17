@@ -38,15 +38,14 @@ class Timer(object):
 
 # FIXME implement $DC02 data direction A bits
 # FIXME implement $DC03 data direction B bits
-class CIA1(memory.Memory):
+class CIA1:
     def __init__(self):
         self.B_can_write = True # in the instance because of ShedSkin
         self.B_active = True
         self.keyboard_matrix_rows = 0 # FIXME
         self.timer_A = Timer()
         self.timer_B = Timer()
-        self.pressed_keys = set("dummy")
-        self.pressed_keys.discard("dummy") # Shedskin hint...
+        self.pressed_keys = set()
         self.B_interrupt_pending = False
 
     matrix = [
@@ -127,7 +126,7 @@ class RS232Line(object):
     def get_control_mask(self):
         return 0 # FIXME
 
-class CIA2(memory.Memory):
+class CIA2:
     def __init__(self):
         self.B_can_write = True # in the instance because of ShedSkin
         self.VIC_bank = 0
