@@ -1,0 +1,31 @@
+#ifndef __TIMER_HPP
+#define __TIMER_HPP
+
+#include "builtin.hpp"
+
+using namespace __shedskin__;
+namespace __c64__ {
+class C64;
+};
+
+namespace __timer__ {
+
+
+class Timer;
+
+
+extern str *__name__;
+
+extern class_ *cl_Timer_0;
+class Timer : public object {
+public:
+
+    Timer() { this->__class__ = cl_Timer_0; }
+    virtual __ss_bool fire_timer();
+};
+
+void __init();
+__ss_int timeout_add(__ss_int timeout_ms, Timer* obj);
+
+} // module namespace
+#endif
