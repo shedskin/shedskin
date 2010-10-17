@@ -228,7 +228,7 @@ class Controls(gtk.VBox):
         self.update_status()
 
     def set_timer(self):
-        self.timer = gobject.timeout_add(50, self.fire_timer)
+        self.timer = gobject.timeout_add(20, self.fire_timer)
 
     def fire_timer(self):
         self.C64.fire_timer()
@@ -247,12 +247,12 @@ class Controls(gtk.VBox):
 
     def dump_memory(self, *args, **kwargs):
         MMU = self.C64.CPU.MMU
-        address = 0x300
-        sys.stdout.write("(%04X) " % address)
-        for c in MMU.read_memory(address, 10):
-            v = (c)
-            sys.stdout.write("%02X " % v)
-        sys.stdout.write("\n")
+        for address in range(0x300, 0x400, 16):
+            sys.stdout.write("(%04X) " % address)
+            for c in range(address, address+40, 4):
+                v = MMU.read_memory(address, 4)
+                sys.stdout.write("%02X " % v)
+            sys.stdout.write("\n")
 
     def update_status(self):
         C64 = self.C64
