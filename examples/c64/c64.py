@@ -20,6 +20,84 @@ import memory
 import gdisplay
 import gtk
 
+class TextView(object):
+    def __init__(self, VIC, controls):
+        self.gt = gdisplay.GTextView(VIC, controls, self)
+
+        self.VIC = VIC
+        self.first_column = 0
+        self.first_row = 0
+        self.last_column = 0
+        self.last_row = 0
+        self.character_bitmaps_offset = 0 # FIXME correct that.
+        self.video_offset = 0 # FIXME correct that.
+        self.mode = "normal-text"
+        self._border_color = 0 # FIXME default?
+        self.old_VIC_bank = None
+        self.background_color_0 = 0 # FIXME default?
+
+        self.viewport_column = 0 # FIXME
+        self.viewport_row = 0  # FIXME
+        self.VIC_bank = -1 # FIXME
+        self.characters = [] # code -> pixbuf.
+        self.width = 40
+        self.height = 25
+
+    def get_pixmap_mask(self, char_data_1, B_invert):
+            data = []
+            for row in char_data_1:
+                for column in range(8):
+                    if ((row & (1 << (7 - column))) != 0) ^ B_invert:
+                        data.append(0x0)
+                        data.append(0x0)
+                        data.append(0x0)
+                        data.append(0xFF)
+                    else:
+                        data.append(0xFF)
+                        data.append(0xFF)
+                        data.append(0xFF)
+                        data.append(0x00)
+
+            data = b"".join(map(chr, data))
+            pixbuf = gtk.gdk.pixbuf_new_from_data(data, gtk.gdk.COLORSPACE_RGB, True, 8, 8, 8, 8*4)
+            pixmap_part, mask_part = pixbuf.render_pixmap_and_mask()
+            return mask_part
+
+    #def use_pixmap(self, window):
+    #   self.pixmap = window
+
+    def unprepare(self):
+        self.old_VIC_bank = -1
+        print("unprepare...")
+
+    def prepare_characters(self):
+        print("preparing...")
+        self.characters = []
+        self.inverse_characters = []
+        character_bitmaps_offset = self.character_bitmaps_offset
+        #VIC_bank_offset = self.VIC_bank * 4096
+        #print("OFFS", character_bitmaps_offset)
+        character_data = self.VIC.load_chunk(character_bitmaps_offset, 8 * 256)
+        #print("L", len(character_data))
+        for i in range(0, len(character_data), 8):
+            char_data_1 = character_data[i : i + 8]
+            self.characters.append(self.get_pixmap_mask(char_data_1, False))
+            self.inverse_characters.append(self.get_pixmap_mask(char_data_1, True))
+        self.characters = self.characters + self.inverse_characters
+
+
+#    def repaint(self):
+#        self.gt.repaint()
+
+    def get_border_color(self):
+        return self._border_color
+
+    def set_border_color(self, value):
+        self._border_color = value
+        # TODO update pixbuf etc.
+
+    border_color = property(get_border_color, set_border_color)
+
 class CPUPort(memory.Memory): # $0..$1
     def __init__(self, MMU):
         self.B_can_write = True # in the instance because of ShedSkin
@@ -117,7 +195,7 @@ class C64(timer.Timer):
         cia2 = cia.CIA2()
         vic = vic_ii.VIC_II(self.CPU.MMU, cia2, char_ROM)
         self.VIC = vic
-        vic.text_view = gdisplay.TextView(vic, self.controls)
+        vic.text_view = TextView(vic, self.controls)
         self.CPU.MMU.map_IO("cia2", (0xDD00, 0xDE00), cia2)
         self.CPU.MMU.map_IO("vic", (0xD000, 0xD400), vic)
         self.CPU.MMU.map_IO("sid", (0xD400, 0xD800), sid.SID())
