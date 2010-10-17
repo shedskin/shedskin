@@ -70,10 +70,10 @@ class GTextView:
         self.window.show()
 
     def repaint_X(self, widget, event):
-        return self.tv.repaint_X(widget, event)
+        return self.tv.repaint()
 
     def repaint_T(self):
-        return self.tv.repaint_T()
+        return self.tv.repaint()
 
     def allocate_pixmap(self, *args, **kwargs):
         self.pixmap = gtk.gdk.Pixmap(self.window.window, WIDTH, HEIGHT) #.connect("realize", self.use_pixmap)
@@ -101,13 +101,6 @@ class TextView(object):
         self.characters = [] # code -> pixbuf.
         self.width = 40
         self.height = 25
-
-
-    def load_pixbuf(self, bits):
-        pixbuf = gtk.gdk.Pixbuf(gtk.gdk.COLORSPACE_RGB, True, 8, 8, 8)
-        pixbuf.fill(0)
-        # FIXME
-        return pixbuf
 
     def get_pixmap_mask(self, char_data_1, B_invert):
             data = []
@@ -200,15 +193,6 @@ class TextView(object):
         GC = widget.window.new_gc()
         widget.window.draw_drawable(GC, self.gt.pixmap, 0, 0, 0, 0, -1, -1)
         pass # TODO
-
-    def repaint_X(self, widget, event):
-        self.repaint()
-
-    def repaint_T(self):
-        #print("TIMER")
-        self.repaint()
-        #print("END")
-        return True
 
     def set_border_color(self, value):
         self._border_color = value
