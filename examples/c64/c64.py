@@ -165,19 +165,14 @@ class C64(timer.Timer):
             self.cycle()
 
     def fire_timer(self):
-        self.iterate()
-        self.interrupt_clock += 1
-        if self.interrupt_clock >= 50: # FIXME remove
-            self.interrupt_clock = 0
-            self.cause_interrupt()
-        self.VIC.increase_raster_position()
-
-    def iterate(self):
-        self.count += 1
-#        if self.count % 10000 == 0:
-#            print 'cycles', self.count
-        self.CPU.fetch_execute()
-        return True
+        for n in range(2000):
+            self.CPU.fetch_execute()
+            self.interrupt_clock += 1
+            if self.interrupt_clock >= 50: # FIXME remove
+                self.interrupt_clock = 0
+                self.cause_interrupt()
+            self.VIC.increase_raster_position()
+        self.VIC.repaint()
 
     def cause_interrupt(self):
         if "I" in self.CPU.flags: # interrupt DISABLE
@@ -212,8 +207,6 @@ I/O Area (memory mapped chip registers), Character ROM or RAM area (4096 bytes);
 
 if __name__ == '__main__':
     c64 = C64()
-    for i in range(800000):
-        c64.iterate()
     c64.CPU_clock = timer.timeout_add(20, c64)
     while True:
         pass
