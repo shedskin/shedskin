@@ -22,12 +22,15 @@ class EventBox(gtk.EventBox):
         self.props.can_focus = True
         self.connect("key-press-event", self.handle_key_press)
         self.connect("key-release-event", self.handle_key_release)
+        self.pressed_keys = set()
 
     def handle_key_press(self, widget, event):
-       return self.controls.handle_key_press(event.keyval)
+       n = gtk.gdk.keyval_name(event.keyval)
+       self.pressed_keys.add(n)
 
     def handle_key_release(self, widget, event):
-        return self.controls.handle_key_release(event.keyval)
+       n = gtk.gdk.keyval_name(event.keyval)
+       self.pressed_keys.discard(n)
 
 class GTextView:
     def __init__(self, controls, c64):
@@ -228,6 +231,7 @@ class Controls(gtk.VBox):
         self.timer = gobject.timeout_add(20, self.fire_timer)
 
     def fire_timer(self):
+        self.C64.CIA1.pressed_keys = self.gt.event_box.pressed_keys
         self.C64.fire_timer()
         self.gt.repaint()
         return True
@@ -257,17 +261,21 @@ class Controls(gtk.VBox):
             self.status_dialog.set_value(register, C64.CPU.read_register(register))
         return True
 
-    def handle_key_press(self, keycode):
-        n = gtk.gdk.keyval_name(keycode)
-        #if len(n) == 1:
-        #   n = keycode
-        return self.C64.CIA1.handle_key_press(n)
-
-    def handle_key_release(self, keycode):
-        n = gtk.gdk.keyval_name(keycode)
-        #if len(n) == 1:
-        #   n = keycode
-        return self.C64.CIA1.handle_key_release(n)
+#    def handle_key_press(self, keycode):
+#        n = gtk.gdk.keyval_name(keycode)
+#        #if len(n) == 1:
+#        #   n = keycode
+#        self.pressed_keys.add(n)
+#        print 'vast', repr(n)
+##        return self.C64.CIA1.handle_key_press(n)
+#
+#    def handle_key_release(self, keycode):
+#        n = gtk.gdk.keyval_name(keycode)
+#        #if len(n) == 1:
+#        #   n = keycode
+#        print 'los', repr(n)
+#        self.pressed_keys.discard(n)
+##        return self.C64.CIA1.handle_key_release(n)
 
 if __name__ == '__main__':
     c64 = C64()
