@@ -15,7 +15,7 @@ import sid
 import cia
 import time
 import timer
-import gmonitor
+#import gmonitor
 import memory
 import gdisplay
 
@@ -109,7 +109,7 @@ class C64(timer.Timer):
 			if ROM == "chargen":
 				char_ROM = ROM_obj
 
-		self.controls = gmonitor.Controls(self)
+		self.controls = {} #gmonitor.Controls(self)
 
 		cia1 = cia.CIA1()
 		self.CIA1 = cia1
