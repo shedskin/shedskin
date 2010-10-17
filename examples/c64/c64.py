@@ -17,12 +17,12 @@ import time
 import timer
 #import gmonitor
 import memory
-import gdisplay
 import gtk
 
 class TextView(object):
-    def __init__(self, VIC, controls):
-        self.gt = gdisplay.GTextView(VIC, controls, self)
+    def __init__(self, VIC, controls, gt):
+        self.gt = gt
+        gt.tv = self
 
         self.VIC = VIC
         self.first_column = 0
@@ -162,7 +162,7 @@ class CPUPort(memory.Memory): # $0..$1
             time.sleep(5.0)
 
 class C64(timer.Timer):
-    def __init__(self):
+    def __init__(self, gt):
         self.interrupt_clock = 0
         self.CPU = cpu.CPU()
         self.ROMs = [
@@ -195,7 +195,7 @@ class C64(timer.Timer):
         cia2 = cia.CIA2()
         vic = vic_ii.VIC_II(self.CPU.MMU, cia2, char_ROM)
         self.VIC = vic
-        vic.text_view = TextView(vic, self.controls)
+        vic.text_view = TextView(vic, self.controls, gt)
         self.CPU.MMU.map_IO("cia2", (0xDD00, 0xDE00), cia2)
         self.CPU.MMU.map_IO("vic", (0xD000, 0xD400), vic)
         self.CPU.MMU.map_IO("sid", (0xD400, 0xD800), sid.SID())
@@ -261,4 +261,3 @@ if __name__ == '__main__':
     c64.CPU_clock = timer.timeout_add(5, c64)
     for i in range(800000):
         c64.iterate()
-    gtk.main()
