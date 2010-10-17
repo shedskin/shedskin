@@ -69,6 +69,7 @@ class GTextView(timer.Timer):
         box.show()
         self.window.add(box)
         self.window.show()
+        self.characters = []
 
     def repaint_X(self, widget, event):
         return self.repaint()
@@ -108,7 +109,7 @@ class GTextView(timer.Timer):
         # FIXME support other modes.
         if self.tv.old_VIC_bank != self.tv.VIC_bank:
             self.tv.old_VIC_bank = self.tv.VIC_bank
-            self.tv.prepare_characters()
+            self.prepare_characters()
 
         VIC = self.tv.VIC
         offset = self.tv.video_offset
@@ -119,7 +120,7 @@ class GTextView(timer.Timer):
                 code_color = VIC.VIC_read_memory(offset, 1)
                 code = code_color & 255
                 color = code_color >> 8
-                pixmap = self.tv.characters[code] if code < 128 else self.tv.inverse_characters[code] # TODO inverse.
+                pixmap = self.characters[code] if code < 128 else self.inverse_characters[code] # TODO inverse.
                 if (color if code < 128 else self.tv.background_color_0) >= len(self.colors):
                     print("WHOOPS, code", code, "color", color)
                 GC.set_foreground(self.colors[color if code < 128 else self.tv.background_color_0]) # FIXME
@@ -128,6 +129,41 @@ class GTextView(timer.Timer):
                 window.draw_rectangle(GC, True, VX + column * 8, VY + row * 8, 8, 8)
                 #window.draw_pixbuf(GC, pixbuf, 0, 0, VX + column * 8, VY + row * 8)
                 offset += 1
+
+    def prepare_characters(self):
+        print("preparing...")
+        self.characters = []
+        self.inverse_characters = []
+        character_bitmaps_offset = self.tv.character_bitmaps_offset
+        #VIC_bank_offset = self.VIC_bank * 4096
+        #print("OFFS", character_bitmaps_offset)
+        character_data = self.tv.VIC.load_chunk(character_bitmaps_offset, 8 * 256)
+        #print("L", len(character_data))
+        for i in range(0, len(character_data), 8):
+            char_data_1 = character_data[i : i + 8]
+            self.characters.append(self.get_pixmap_mask(char_data_1, False))
+            self.inverse_characters.append(self.get_pixmap_mask(char_data_1, True))
+        self.characters = self.characters + self.inverse_characters
+
+    def get_pixmap_mask(self, char_data_1, B_invert):
+            data = []
+            for row in char_data_1:
+                for column in range(8):
+                    if ((row & (1 << (7 - column))) != 0) ^ B_invert:
+                        data.append(0x0)
+                        data.append(0x0)
+                        data.append(0x0)
+                        data.append(0xFF)
+                    else:
+                        data.append(0xFF)
+                        data.append(0xFF)
+                        data.append(0xFF)
+                        data.append(0x00)
+
+            data = b"".join(map(chr, data))
+            pixbuf = gtk.gdk.pixbuf_new_from_data(data, gtk.gdk.COLORSPACE_RGB, True, 8, 8, 8, 8*4)
+            pixmap_part, mask_part = pixbuf.render_pixmap_and_mask()
+            return mask_part
 
     def fire_timer(self):
         for n in range(2000):

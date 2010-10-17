@@ -36,51 +36,12 @@ class TextView(object):
         self.viewport_column = 0 # FIXME
         self.viewport_row = 0  # FIXME
         self.VIC_bank = -1 # FIXME
-        self.characters = [] # code -> pixbuf.
         self.width = 40
         self.height = 25
-
-    def get_pixmap_mask(self, char_data_1, B_invert):
-            data = []
-            for row in char_data_1:
-                for column in range(8):
-                    if ((row & (1 << (7 - column))) != 0) ^ B_invert:
-                        data.append(0x0)
-                        data.append(0x0)
-                        data.append(0x0)
-                        data.append(0xFF)
-                    else:
-                        data.append(0xFF)
-                        data.append(0xFF)
-                        data.append(0xFF)
-                        data.append(0x00)
-
-            data = b"".join(map(chr, data))
-            pixbuf = gtk.gdk.pixbuf_new_from_data(data, gtk.gdk.COLORSPACE_RGB, True, 8, 8, 8, 8*4)
-            pixmap_part, mask_part = pixbuf.render_pixmap_and_mask()
-            return mask_part
-
-    #def use_pixmap(self, window):
-    #   self.pixmap = window
 
     def unprepare(self):
         self.old_VIC_bank = -1
         print("unprepare...")
-
-    def prepare_characters(self):
-        print("preparing...")
-        self.characters = []
-        self.inverse_characters = []
-        character_bitmaps_offset = self.character_bitmaps_offset
-        #VIC_bank_offset = self.VIC_bank * 4096
-        #print("OFFS", character_bitmaps_offset)
-        character_data = self.VIC.load_chunk(character_bitmaps_offset, 8 * 256)
-        #print("L", len(character_data))
-        for i in range(0, len(character_data), 8):
-            char_data_1 = character_data[i : i + 8]
-            self.characters.append(self.get_pixmap_mask(char_data_1, False))
-            self.inverse_characters.append(self.get_pixmap_mask(char_data_1, True))
-        self.characters = self.characters + self.inverse_characters
 
     def get_border_color(self):
         return self._border_color
