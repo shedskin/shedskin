@@ -31,7 +31,7 @@ class EventBox(gtk.EventBox):
         #self.pressed_keys.discard(event.keycode)
 
 class GTextView:
-    def __init__(self):
+    def __init__(self, VIC, controls):
         self.colors = [
             gtk.gdk.Color(red = 0, green = 0, blue = 0),
             gtk.gdk.Color(red = 65535, green = 65535, blue = 65535),
@@ -53,6 +53,8 @@ class GTextView:
 
 class TextView(object):
     def __init__(self, VIC, controls):
+        self.gt = GTextView(VIC, controls)
+
         self.VIC = VIC
         self.first_column = 0
         self.first_row = 0
@@ -64,8 +66,6 @@ class TextView(object):
         self._border_color = 0 # FIXME default?
         self.old_VIC_bank = None
         self.background_color_0 = 0 # FIXME default?
-        self.gt = GTextView()
-
         self.pixmap = None
         self.window = gtk.Window()
         self.event_box = EventBox(controls)
