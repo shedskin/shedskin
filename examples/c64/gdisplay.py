@@ -69,7 +69,6 @@ class GTextView(timer.Timer):
         box.show()
         self.window.add(box)
         self.window.show()
-        self.count = 0
 
     def repaint_X(self, widget, event):
         return self.repaint()
@@ -131,20 +130,17 @@ class GTextView(timer.Timer):
                 offset += 1
 
     def fire_timer(self):
-        self.c64.fire()
-        self.count += 1
-        if self.count % 1000 == 0:
-            print 'REPAINT', self.count
-            self.c64.VIC.repaint()
-            self.repaint()
+        for n in range(200):
+            self.c64.cycle()
+        self.c64.VIC.repaint()
+        self.repaint()
         return True
 
 if __name__ == '__main__':
     gt = GTextView({})
     c64 = C64(gt)
     gt.c64 = c64
-    c64.CPU_clock = timer.timeout_add(2, gt)
-    for i in range(800000):
+    c64.CPU_clock = timer.timeout_add(20, gt)
+    for i in range(500000):
         c64.iterate()
-    gt.count = 800000
     gtk.main()
