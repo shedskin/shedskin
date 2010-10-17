@@ -70,14 +70,63 @@ class GTextView:
         self.window.show()
 
     def repaint_X(self, widget, event):
-        return self.tv.repaint()
+        return self.repaint()
 
     def repaint_T(self):
-        return self.tv.repaint()
+        return self.repaint()
 
     def allocate_pixmap(self, *args, **kwargs):
         self.pixmap = gtk.gdk.Pixmap(self.window.window, WIDTH, HEIGHT) #.connect("realize", self.use_pixmap)
         self.colors = [self.pixmap.get_colormap().alloc_color(color) for color in self.colors]
+
+    def repaint(self):
+        widget = self.drawing_area
+        if self.pixmap is None:
+            print("WHOOPS")
+            return
+        self.repaint_pixmap()
+        GC = widget.window.new_gc()
+        widget.window.draw_drawable(GC, self.pixmap, 0, 0, 0, 0, -1, -1)
+
+    def repaint_pixmap(self):
+        window = self.pixmap
+        GC = window.new_gc()
+        #print("=========== REPAINT ========")
+        #print(dir(self))
+        size = window.get_size()
+        color = self.colors[self.tv.border_color]
+        #color = gtk.gdk.Color(red = 123.039015) # * 65535.0 / 255.0, green = 72.130708003 * 65535.0 / 255.0, blue = 144.4171376 * 65535.0 / 255.0)
+        #print color.red, color.green, color.blue, self.border_color, "XX"
+        GC.set_foreground(self.colors[self.tv.border_color])
+        GC.set_fill(gtk.gdk.SOLID)
+        #GC.set_background(self.colors[self.border_color])
+        window.draw_rectangle(GC, True, 0, 0, size[0], size[1]) # TODO only draw border around it.
+        GC.set_foreground(self.colors[self.tv.background_color_0])
+        window.draw_rectangle(GC, True, self.tv.first_column, self.tv.first_row, self.tv.last_column - self.tv.first_column + 1, self.tv.last_row - self.tv.first_row + 1)
+
+        # FIXME support other modes.
+        if self.tv.old_VIC_bank != self.tv.VIC_bank:
+            self.tv.old_VIC_bank = self.tv.VIC_bank
+            self.tv.prepare_characters()
+
+        VIC = self.tv.VIC
+        offset = self.tv.video_offset
+        VX = self.tv.first_column - self.tv.viewport_column
+        VY = self.tv.first_row - self.tv.viewport_row
+        for row in range(24): # FIXME 25
+            for column in range(40): # FIXME configurable
+                code_color = VIC.VIC_read_memory(offset, 1)
+                code = code_color & 255
+                color = code_color >> 8
+                pixmap = self.tv.characters[code] if code < 128 else self.tv.inverse_characters[code] # TODO inverse.
+                if (color if code < 128 else self.tv.background_color_0) >= len(self.colors):
+                    print("WHOOPS, code", code, "color", color)
+                GC.set_foreground(self.colors[color if code < 128 else self.tv.background_color_0]) # FIXME
+                GC.set_clip_mask(pixmap)
+                GC.set_clip_origin(VX + column * 8, VY + row * 8)
+                window.draw_rectangle(GC, True, VX + column * 8, VY + row * 8, 8, 8)
+                #window.draw_pixbuf(GC, pixbuf, 0, 0, VX + column * 8, VY + row * 8)
+                offset += 1
 
 class TextView(object):
     def __init__(self, VIC, controls):
@@ -144,56 +193,9 @@ class TextView(object):
             self.inverse_characters.append(self.get_pixmap_mask(char_data_1, True))
         self.characters = self.characters + self.inverse_characters
 
-    def repaint_pixmap(self):
-        window = self.gt.pixmap
-        GC = window.new_gc()
-        #print("=========== REPAINT ========")
-        #print(dir(self))
-        size = window.get_size()
-        color = self.gt.colors[self.border_color]
-        #color = gtk.gdk.Color(red = 123.039015) # * 65535.0 / 255.0, green = 72.130708003 * 65535.0 / 255.0, blue = 144.4171376 * 65535.0 / 255.0)
-        #print color.red, color.green, color.blue, self.border_color, "XX"
-        GC.set_foreground(self.gt.colors[self.border_color])
-        GC.set_fill(gtk.gdk.SOLID)
-        #GC.set_background(self.colors[self.border_color])
-        window.draw_rectangle(GC, True, 0, 0, size[0], size[1]) # TODO only draw border around it.
-        GC.set_foreground(self.gt.colors[self.background_color_0])
-        window.draw_rectangle(GC, True, self.first_column, self.first_row, self.last_column - self.first_column + 1, self.last_row - self.first_row + 1)
-
-        # FIXME support other modes.
-        if self.old_VIC_bank != self.VIC_bank:
-            self.old_VIC_bank = self.VIC_bank
-            self.prepare_characters()
-
-        VIC = self.VIC
-        offset = self.video_offset
-        VX = self.first_column - self.viewport_column
-        VY = self.first_row - self.viewport_row
-        for row in range(24): # FIXME 25
-            for column in range(40): # FIXME configurable
-                code_color = VIC.VIC_read_memory(offset, 1)
-                code = code_color & 255
-                color = code_color >> 8
-                pixmap = self.characters[code] if code < 128 else self.inverse_characters[code] # TODO inverse.
-                if (color if code < 128 else self.background_color_0) >= len(self.gt.colors):
-                    print("WHOOPS, code", code, "color", color)
-                GC.set_foreground(self.gt.colors[color if code < 128 else self.background_color_0]) # FIXME
-                GC.set_clip_mask(pixmap)
-                GC.set_clip_origin(VX + column * 8, VY + row * 8)
-                window.draw_rectangle(GC, True, VX + column * 8, VY + row * 8, 8, 8)
-                #window.draw_pixbuf(GC, pixbuf, 0, 0, VX + column * 8, VY + row * 8)
-                offset += 1
 
     def repaint(self):
-        widget = self.gt.drawing_area
-        if self.gt.pixmap is None:
-            print("WHOOPS")
-            return
-        self.repaint_pixmap()
-        GC = widget.window.new_gc()
-        widget.window.draw_drawable(GC, self.gt.pixmap, 0, 0, 0, 0, -1, -1)
-        pass # TODO
-
+        self.gt.repaint()
     def set_border_color(self, value):
         self._border_color = value
         # TODO update pixbuf etc.
