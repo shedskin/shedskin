@@ -124,7 +124,7 @@ class VIC_II(memory.Memory):
             (True, True, True): "invalid-3",
         }[self.B_clip_address, self.B_bitmap, self.B_MCM]
 
-        self.text_view.repaint()
+#        self.text_view.repaint()
 
     def read_color_RAM(self, address):
         return self.MMU.read_memory(0xD800 + (address & 0x3FF))
