@@ -6,7 +6,6 @@ pygtk.require("2.0")
 import gtk
 import gobject
 from c64 import C64
-import timer
 
 # TODO 3 bit row counter.
 
@@ -32,7 +31,7 @@ class EventBox(gtk.EventBox):
         #return self.controls.handle_key_release(event.keyval)
         #self.pressed_keys.discard(event.keycode)
 
-class GTextView(timer.Timer):
+class GTextView:
     def __init__(self, controls):
         self.colors = [
             gtk.gdk.Color(red = 0, green = 0, blue = 0),
@@ -175,5 +174,5 @@ if __name__ == '__main__':
     c64 = C64()
     gt.c64 = c64
     gt.tv = c64.VIC.text_view
-    c64.CPU_clock = timer.timeout_add(20, gt)
+    gt.CPU_clock = gobject.timeout_add(20, gt.fire_timer)
     gtk.main()
