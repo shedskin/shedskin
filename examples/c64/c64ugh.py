@@ -54,7 +54,7 @@ class TextView(object):
 
     border_color = property(get_border_color, set_border_color)
 
-class CPUPort: # $0..$1
+class CPUPort(Memory): # $0..$1
     def __init__(self, MMU):
         self.B_can_write = True # in the instance because of ShedSkin
         self.B_active = True
@@ -1911,7 +1911,7 @@ class CPU(object):
 # $E000-$FFFF, 57344-65535 kernal ROM!!!
 # $FFFA-$FFFF, 65530-65535 hardware vectors.
 
-class ROM:
+class ROM(Memory):
     def __init__(self, value, B_active = True):
         self.B_active = B_active
         self.memory = []
@@ -2053,7 +2053,7 @@ A_COLOR_SPRITE_5 = 0x2C
 A_COLOR_SPRITE_6 = 0x2D
 A_COLOR_SPRITE_7 = 0x2E
 
-class VIC_II:
+class VIC_II(Memory):
     def __init__(self, MMU, CIA2, char_ROM):
         self.B_can_write = True # in the instance because of ShedSkin
         self.raster_counter = 0
@@ -2190,7 +2190,7 @@ http://codebase64.org/doku.php?id=base:built_in_screen_modes
 """
 # memory address $D02F (extra keys). Try to set to something else than $FF. If it works, it's a C128.
 
-class SID:
+class SID(Memory):
     def __init__(self):
         self.B_active = True
         self.B_can_write = True # in the instance because of ShedSkin
@@ -2586,7 +2586,7 @@ class Timer(object):
 
 # FIXME implement $DC02 data direction A bits
 # FIXME implement $DC03 data direction B bits
-class CIA1:
+class CIA1(Memory):
     def __init__(self):
         self.B_can_write = True # in the instance because of ShedSkin
         self.B_active = True
@@ -2674,7 +2674,7 @@ class RS232Line(object):
     def get_control_mask(self):
         return 0 # FIXME
 
-class CIA2:
+class CIA2(Memory):
     def __init__(self):
         self.B_can_write = True # in the instance because of ShedSkin
         self.VIC_bank = 0
