@@ -166,9 +166,7 @@ class GTextView(timer.Timer):
             return mask_part
 
     def fire_timer(self):
-        for n in range(2000):
-            self.c64.fire_timer()
-        self.c64.VIC.repaint()
+        self.c64.fire_timer()
         self.repaint()
         return True
 
@@ -178,6 +176,4 @@ if __name__ == '__main__':
     gt.c64 = c64
     gt.tv = c64.VIC.text_view
     c64.CPU_clock = timer.timeout_add(20, gt)
-    for i in range(500000):
-        c64.iterate()
     gtk.main()
