@@ -20,10 +20,7 @@ import memory
 import gtk
 
 class TextView(object):
-    def __init__(self, VIC, controls, gt):
-        self.gt = gt
-        gt.tv = self
-
+    def __init__(self, VIC, controls):
         self.VIC = VIC
         self.first_column = 0
         self.first_row = 0
@@ -84,10 +81,6 @@ class TextView(object):
             self.characters.append(self.get_pixmap_mask(char_data_1, False))
             self.inverse_characters.append(self.get_pixmap_mask(char_data_1, True))
         self.characters = self.characters + self.inverse_characters
-
-
-#    def repaint(self):
-#        self.gt.repaint()
 
     def get_border_color(self):
         return self._border_color
@@ -162,7 +155,7 @@ class CPUPort(memory.Memory): # $0..$1
             time.sleep(5.0)
 
 class C64(timer.Timer):
-    def __init__(self, gt):
+    def __init__(self):
         self.interrupt_clock = 0
         self.CPU = cpu.CPU()
         self.ROMs = [
@@ -195,7 +188,7 @@ class C64(timer.Timer):
         cia2 = cia.CIA2()
         vic = vic_ii.VIC_II(self.CPU.MMU, cia2, char_ROM)
         self.VIC = vic
-        vic.text_view = TextView(vic, self.controls, gt)
+        vic.text_view = TextView(vic, self.controls)
         self.CPU.MMU.map_IO("cia2", (0xDD00, 0xDE00), cia2)
         self.CPU.MMU.map_IO("vic", (0xD000, 0xD400), vic)
         self.CPU.MMU.map_IO("sid", (0xD400, 0xD800), sid.SID())

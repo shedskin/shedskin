@@ -130,7 +130,7 @@ class GTextView(timer.Timer):
                 offset += 1
 
     def fire_timer(self):
-        for n in range(20000):
+        for n in range(2000):
             self.c64.cycle()
         self.c64.VIC.repaint()
         self.repaint()
@@ -138,8 +138,9 @@ class GTextView(timer.Timer):
 
 if __name__ == '__main__':
     gt = GTextView({})
-    c64 = C64(gt)
+    c64 = C64()
     gt.c64 = c64
+    gt.tv = c64.VIC.text_view
     c64.CPU_clock = timer.timeout_add(20, gt)
     for i in range(500000):
         c64.iterate()
