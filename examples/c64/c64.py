@@ -14,7 +14,6 @@ import vic_ii
 import sid
 import cia
 import time
-import timer
 import memory
 
 class TextView(object):
@@ -113,7 +112,7 @@ class CPUPort(memory.Memory): # $0..$1
             sys.stderr.write("warning: KERNAL disabled!!!\n")
             time.sleep(5.0)
 
-class C64(timer.Timer):
+class C64:
     def __init__(self):
         self.interrupt_clock = 0
         self.CPU = cpu.CPU()
@@ -207,6 +206,5 @@ I/O Area (memory mapped chip registers), Character ROM or RAM area (4096 bytes);
 
 if __name__ == '__main__':
     c64 = C64()
-    c64.CPU_clock = timer.timeout_add(20, c64)
     while True:
-        pass
+        c64.fire_timer()
