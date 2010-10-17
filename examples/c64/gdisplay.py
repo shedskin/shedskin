@@ -32,7 +32,7 @@ class EventBox(gtk.EventBox):
         #return self.controls.handle_key_release(event.keyval)
         #self.pressed_keys.discard(event.keycode)
 
-class GTextView:
+class GTextView(timer.Timer):
     def __init__(self, controls):
         self.colors = [
             gtk.gdk.Color(red = 0, green = 0, blue = 0),
@@ -69,6 +69,7 @@ class GTextView:
         box.show()
         self.window.add(box)
         self.window.show()
+        self.count = 0
 
     def repaint_X(self, widget, event):
         return self.repaint()
@@ -129,10 +130,19 @@ class GTextView:
                 #window.draw_pixbuf(GC, pixbuf, 0, 0, VX + column * 8, VY + row * 8)
                 offset += 1
 
+    def fire_timer(self):
+        self.c64.fire()
+        self.count += 1
+        if self.count % 100 == 0:
+            print self.count
+        return True
+
 if __name__ == '__main__':
     gt = GTextView({})
     c64 = C64(gt)
-    c64.CPU_clock = timer.timeout_add(5, c64)
+    gt.c64 = c64
+    c64.CPU_clock = timer.timeout_add(2, gt)
     for i in range(800000):
         c64.iterate()
+    gt.count = 800000
     gtk.main()

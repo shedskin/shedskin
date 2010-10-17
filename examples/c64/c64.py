@@ -206,20 +206,21 @@ class C64(timer.Timer):
         MMU = self.CPU.MMU
         #MMU.write_memory(0xFFFA, b"\x43\xFE\xE2\xFC\x48\xFF") # FIXME endianness.
         self.CPU.write_register("PC", (MMU.read_memory(0xFFFC, 2)))
-        self.fire_timer() # ShedSkin
+        self.fire() # ShedSkin
 
     def run(self):
         while True: # TODO terminate?
             self.iterate()
 
-    def fire_timer(self):
+    def fire(self):
         self.iterate()
         self.interrupt_clock += 1
         if self.interrupt_clock >= 50: # FIXME remove
             self.interrupt_clock = 0
             self.cause_interrupt()
         self.VIC.increase_raster_position()
-        return timer.Timer.fire_timer(self)
+
+#        return timer.Timer.fire_timer(self)
 
     def iterate(self):
         self.CPU.fetch_execute()
