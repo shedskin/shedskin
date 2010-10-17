@@ -5,6 +5,7 @@ import pygtk
 pygtk.require("2.0")
 import gtk
 import gobject
+import sys
 from c64 import C64
 
 # TODO 3 bit row counter.
@@ -66,7 +67,7 @@ class GTextView:
         box = gtk.HBox()
         self.event_box.add(self.drawing_area)
         box.pack_start(self.event_box, False, False)
-#       box.pack_start(controls, False, False)
+        box.pack_start(controls, False, False)
         box.show()
         self.window.add(box)
         self.window.show()
@@ -166,11 +167,6 @@ class GTextView:
             pixmap_part, mask_part = pixbuf.render_pixmap_and_mask()
             return mask_part
 
-    def fire_timer(self):
-        self.c64.fire_timer()
-        self.repaint()
-        return True
-
 def unpack_unsigned(value):
     return value
 
@@ -231,15 +227,22 @@ class Controls(gtk.VBox):
 
         self.update_status()
 
+    def set_timer(self):
+        self.timer = gobject.timeout_add(20, self.fire_timer)
+
+    def fire_timer(self):
+        self.C64.fire_timer()
+        self.gt.repaint()
+        return True
+
     def pause_CPU(self, widget, *args, **kwargs):
         # FIXME abstract that properly.
-        C64 = self.C64
-        if C64.CPU_clock:
-            gobject.source_remove(C64.CPU_clock)
+        if self.CPU_clock:
+            gobject.source_remove(self.CPU_clock)
             widget.set_label("_Continue")
-            C64.CPU_clock = None
+            self.CPU_clock = None
         else:
-            C64.CPU_clock = gobject.timeout_add(10, C64.iterate)
+            self.CPU_clock = gobject.timeout_add(10, C64.iterate)
             widget.set_label("_Pause")
 
     def dump_memory(self, *args, **kwargs):
@@ -275,5 +278,6 @@ if __name__ == '__main__':
     c64 = C64()
     controls = Controls(c64)
     gt = GTextView(controls, c64)
-    gt.CPU_clock = gobject.timeout_add(20, gt.fire_timer)
+    controls.gt = gt
+    controls.set_timer()
     gtk.main()

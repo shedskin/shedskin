@@ -5,33 +5,33 @@ import sys
 import memory
 
 class SID(memory.Memory):
-	def __init__(self):
-		self.B_active = True
-		self.B_can_write = True # in the instance because of ShedSkin
-		pass
+    def __init__(self):
+        self.B_active = True
+        self.B_can_write = True # in the instance because of ShedSkin
+        pass
 
-	#@takes(int, int)
-	def read_memory(self, address, size):
-		sys.stderr.write("error: SID: do you really think this works? No.\n")
-		return 0xFF # FIXME
+    #@takes(int, int)
+    def read_memory(self, address, size):
+        sys.stderr.write("error: SID: do you really think this works? No.\n")
+        return 0xFF # FIXME
 
-	#@takes(int, int)
-	def write_memory(self, address, value, size):
-		print("SID $%X := %r" % (address, value))
+    #@takes(int, int)
+    def write_memory(self, address, value, size):
+        print("SID $%X := %r" % (address, value))
 
 """
 $D400-$D401
-54272-54273	
+54272-54273 
 
 Voice #1 frequency.
 Write-only.
 $D402-$D403
-54274-54275	
+54274-54275 
 
 Voice #1 pulse width.
 Write-only.
 $D404
-54276	
+54276   
 
 Voice #1 control register. Bits:
 
@@ -62,7 +62,7 @@ Voice #1 control register. Bits:
 
 Write-only.
 $D405
-54277	
+54277   
 
 Voice #1 Attack and Decay length. Bits:
 
@@ -171,7 +171,7 @@ Voice #1 Attack and Decay length. Bits:
 
 Write-only.
 $D406
-54278	
+54278   
 
 Voice #1 Sustain volume and Release length. Bits:
 
@@ -232,67 +232,67 @@ Voice #1 Sustain volume and Release length. Bits:
 
 Write-only.
 $D407-$D408
-54279-54280	
+54279-54280 
 
 Voice #2 frequency.
 Write-only.
 $D409-$D40A
-54281-54282	
+54281-54282 
 
 Voice #2 pulse width.
 Write-only.
 $D40B
-54283	
+54283   
 
 Voice #2 control register.
 Write-only.
 $D40C
-54284	
+54284   
 
 Voice #2 Attack and Decay length.
 Write-only.
 $D40D
-54285	
+54285   
 
 Voice #2 Sustain volume and Release length.
 Write-only.
 $D40E-$D40F
-54286-54287	
+54286-54287 
 
 Voice #3 frequency.
 Write-only.
 $D410-$D411
-54288-54289	
+54288-54289 
 
 Voice #3 pulse width.
 Write-only.
 $D412
-54290	
+54290   
 
 Voice #3 control register.
 Write-only.
 $D413
-54291	
+54291   
 
 Voice #3 Attack and Decay length.
 Write-only.
 $D414
-54292	
+54292   
 
 Voice #3 Sustain volume and Release length.
 Write-only.
 $D415
-54293	
+54293   
 
 Filter cut off frequency (bits #0-#2).
 Write-only.
 $D416
-54294	
+54294   
 
 Filter cut off frequency (bits #3-#10).
 Write-only.
 $D417
-54295	
+54295   
 
 Filter control. Bits:
 
@@ -314,7 +314,7 @@ Filter control. Bits:
 
 Write-only.
 $D418
-54296	
+54296   
 
 Volume and filter modes. Bits:
 
@@ -336,31 +336,31 @@ Volume and filter modes. Bits:
 
 Write-only.
 $D419
-54297	
+54297   
 
 X value of paddle selected at memory address $DD00. (Updates at every 512 system cycles.)
 Read-only.
 $D41A
-54298	
+54298   
 
 Y value of paddle selected at memory address $DD00. (Updates at every 512 system cycles.)
 Read-only.
 $D41B
-54299	
+54299   
 
 Voice #3 waveform output.
 Read-only.
 $D41C
-54300	
+54300   
 
 Voice #3 ADSR output.
 Read-only.
 $D41D-$D41F
-54301-54303	
+54301-54303 
 
 Unusable (3 bytes).
 $D420-$D7FF
-54304-55295	
+54304-55295 
 
 SID register images (repeated every $20, 32 bytes).
 """
