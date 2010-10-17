@@ -228,7 +228,7 @@ class Controls(gtk.VBox):
         self.update_status()
 
     def set_timer(self):
-        self.timer = gobject.timeout_add(20, self.fire_timer)
+        self.timer = gobject.timeout_add(50, self.fire_timer)
 
     def fire_timer(self):
         self.C64.fire_timer()
@@ -237,12 +237,12 @@ class Controls(gtk.VBox):
 
     def pause_CPU(self, widget, *args, **kwargs):
         # FIXME abstract that properly.
-        if self.CPU_clock:
-            gobject.source_remove(self.CPU_clock)
+        if self.timer:
+            gobject.source_remove(self.timer)
             widget.set_label("_Continue")
-            self.CPU_clock = None
+            self.timer = None
         else:
-            self.CPU_clock = gobject.timeout_add(10, C64.iterate)
+            self.set_timer()
             widget.set_label("_Pause")
 
     def dump_memory(self, *args, **kwargs):
