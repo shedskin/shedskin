@@ -5,7 +5,6 @@
 
 import sys
 import time
-import timer
 import memory
 
 A_X_SPRITE_0 = 0x00
