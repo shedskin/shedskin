@@ -27,12 +27,12 @@ class TextView(object):
         self.video_offset = 0 # FIXME correct that.
         self.mode = "normal-text"
         self._border_color = 0 # FIXME default?
-        self.old_VIC_bank = None
+        self.old_VIC_bank = -1
         self.background_color_0 = 0 # FIXME default?
 
         self.viewport_column = 0 # FIXME
         self.viewport_row = 0  # FIXME
-        self.VIC_bank = -1 # FIXME
+        self.VIC_bank = 0 # FIXME
         self.width = 40
         self.height = 25
 
