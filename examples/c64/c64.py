@@ -222,8 +222,8 @@ class C64(timer.Timer):
 
     def iterate(self):
         self.count += 1
-        if self.count % 10000 == 0:
-            print 'cycles', self.count
+#        if self.count % 10000 == 0:
+#            print 'cycles', self.count
         self.CPU.fetch_execute()
         return True
 
