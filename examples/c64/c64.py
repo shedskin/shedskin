@@ -3,10 +3,11 @@
 
 import sys
 import os
-sys.path = [os.path.realpath("pygtk_s")] + sys.path
 
-#import psyco
-#psyco.full()
+#{
+import psyco
+psyco.full()
+#}
 
 import cpu
 import vic_ii
