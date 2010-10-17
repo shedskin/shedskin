@@ -85,7 +85,7 @@ class CIA1(memory.Memory):
 			return self.timer_B.get_control_mask()
 		elif address == A_INTERRUPT_CONTROL_STATUS:
 			if self.B_interrupt_pending:
-				print("yes, we had an interrupt")
+#				print("yes, we had an interrupt")
 				self.B_interrupt_pending = False
 				return 1<<7 # FIXME the others
 			return 0
@@ -94,7 +94,7 @@ class CIA1(memory.Memory):
 			assert(False)
 
 	def write_memory(self, address, value, size):
-		print("CIA#1 $%X := %r" % (address, value))
+#		print("CIA#1 $%X := %r" % (address, value))
 		# TODO address == A_TIMER_A bit 0: active or not.
 		if address == A_KEYBOARD_MATRIX_JOYSTICK_2:
 			self.keyboard_matrix_rows = ~(value & 63)
