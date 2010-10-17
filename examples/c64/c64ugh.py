@@ -2608,19 +2608,18 @@ class CIA1(Memory):
         assert(size == 1)
         if address == A_KEYBOARD_KEY_JOYSTICK_1:
             if self.keyboard_matrix_rows != 0: # is not None:
-                #print("we think keys", self.pressed_keys)
+#                print("we think keys", self.pressed_keys)
                 v = 0
-                #matrix = self.__class__.matrix
                 for row in range(0, 8):
                     if (self.keyboard_matrix_rows & (1 << row)) != 0: # client wants to know
+#                        print 'wants', row
                         columns = CIA1.matrix[row]
-                        #print("possible", rows)
+##                        print("possible", columns)
                         for column_i, cell in enumerate(columns):
-                             pass
-#                            if cell in self.pressed_keys or (isinstance(cell, int) and cell < 128 and (cell | 0x20) in self.pressed_keys):
+                            if cell in self.pressed_keys or cell.lower() in self.pressed_keys:
 #                                print("YESSS, matched", cell)
-#                                v |= (1 << column_i)
-                #print("INVKEY", v)
+                                v |= (1 << column_i)
+#                print("INVKEY", v)
                 return 255 - v
 
             # return bits cleared in rows where a key is pressed in self.keyboard_matrix_column.
