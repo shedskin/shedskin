@@ -196,8 +196,12 @@ class TextView(object):
 
     def repaint(self):
         self.gt.repaint()
+
+    def get_border_color(self):
+        return self._border_color
+
     def set_border_color(self, value):
         self._border_color = value
         # TODO update pixbuf etc.
 
-    border_color = property(lambda self: self._border_color, set_border_color)
+    border_color = property(get_border_color, set_border_color)
