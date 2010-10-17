@@ -152,7 +152,6 @@ class C64:
         self.CPU.MMU.map_IO("sid", (0xD400, 0xD800), sid.SID())
         self.CPU.MMU.map_IO("cia1", (0xDC00, 0xDD00), cia1)
         self.CPU.MMU.map_IO("cpu", (0x0000, 0x0002), CPUPort(self.CPU.MMU))
-        vic.repaint() # ShedSkin
         vic.unprepare() # memory is not initialized yet, so unprepare...
         MMU = self.CPU.MMU
         #MMU.write_memory(0xFFFA, b"\x43\xFE\xE2\xFC\x48\xFF") # FIXME endianness.
