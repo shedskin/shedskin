@@ -55,7 +55,7 @@ A_COLOR_SPRITE_5 = 0x2C
 A_COLOR_SPRITE_6 = 0x2D
 A_COLOR_SPRITE_7 = 0x2E
 
-class VIC_II(memory.Memory):
+class VIC_II:
     def __init__(self, MMU, CIA2, char_ROM):
         self.B_can_write = True # in the instance because of ShedSkin
         self.raster_counter = 0
@@ -103,8 +103,8 @@ class VIC_II(memory.Memory):
         self.text_view.character_bitmaps_offset = (1 << 11) * CB_13_12_11
         self.text_view.video_offset = (1 << 10) * VM_13_12_11_10
         self.text_view.unprepare()
-        code_color = self.VIC_read_memory(0, 1) # ShedSkin
-        character_data = self.load_chunk(0, 8 * 256) # ShedSkin
+#        code_color = self.VIC_read_memory(0, 1) # ShedSkin
+#        character_data = self.load_chunk(0, 8 * 256) # ShedSkin
 
     def load_chunk(self, offset, size):
         #address = VIC_bank_offset + offset

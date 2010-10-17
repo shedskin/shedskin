@@ -27,8 +27,6 @@ class CPU(object):
 	def __init__(self):
 		self.B_disasm = False # True
 		self.B_debug_stack = False
-		CPU.opcode_to_mnem.append("X") # ShedSkin
-		CPU.opcode_to_mnem = CPU.opcode_to_mnem[:-1] # ShedSkin
 		assert(len(CPU.opcode_to_mnem) == 0x100)
 		self.B_in_interrupt = False
 		self.registers = Registers()
@@ -37,10 +35,10 @@ class CPU(object):
 		#for mnem in set(CPU.opcode_to_mnem):
 		#	if not hasattr(self, mnem) and mnem not in CPU.exotic_opcodes:
 		#		raise NotImplementedError("warning: instruction %r not implemented")
-		if False: # ShedSkin
-			value = self.load_value_unadvancing("Z")
-			value = self.load_value_advancing("Z")
-			self.update_flags_by_number(value)                 
+#		if False: # ShedSkin
+#			value = self.load_value_unadvancing("Z")
+#			value = self.load_value_advancing("Z")
+#			self.update_flags_by_number(value)                 
 
 	def write_register(self, name, value):
 		assert(isinstance(value, int))
