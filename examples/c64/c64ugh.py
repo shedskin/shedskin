@@ -1917,7 +1917,7 @@ class ROM(Memory):
         self.memory = []
         for i in range(len(value)):
             c = value[i]
-            print(c)
+#            print(c)
             v = ord(c)
             self.memory.append(v)
 
@@ -2616,9 +2616,12 @@ class CIA1(Memory):
                         columns = CIA1.matrix[row]
 ##                        print("possible", columns)
                         for column_i, cell in enumerate(columns):
-                            if cell in self.pressed_keys or cell.lower() in self.pressed_keys:
+                            for prkey in self.pressed_keys:
+                              if cell == prkey or cell.lower() == prkey:
+                            #if cell in self.pressed_keys or cell.lower() in self.pressed_keys:
 #                                print("YESSS, matched", cell)
                                 v |= (1 << column_i)
+                                break
 #                print("INVKEY", v)
                 return 255 - v
 
@@ -2648,11 +2651,11 @@ class CIA1(Memory):
             # TODO POKE 56322,224 deactivated the keyboard, because the pointer of the CIA 1 is changed. This POKE is using for the joystickscans.
             pass
 
-    def handle_key_press(self, keycode):
-        self.pressed_keys.add(keycode)
-
-    def handle_key_release(self, keycode):
-        self.pressed_keys.discard(keycode)
+#    def handle_key_press(self, keycode):
+#        self.pressed_keys.add(keycode)
+#
+#    def handle_key_release(self, keycode):
+#        self.pressed_keys.discard(keycode)
 
 class SerialLine(object): # TODO defaults.
     def __init__(self):
@@ -2701,5 +2704,6 @@ class CIA2(Memory):
 if __name__ == '__main__':
     c64 = C64()
     c64.VIC.load_chunk(0,0)
+    c64.CIA1.pressed_keys = set(['X'])
     while True:
         c64.fire_timer()
