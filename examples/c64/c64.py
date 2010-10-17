@@ -206,13 +206,13 @@ class C64(timer.Timer):
         MMU = self.CPU.MMU
         #MMU.write_memory(0xFFFA, b"\x43\xFE\xE2\xFC\x48\xFF") # FIXME endianness.
         self.CPU.write_register("PC", (MMU.read_memory(0xFFFC, 2)))
-        self.fire() # ShedSkin
+        self.count = 0
 
     def run(self):
         while True: # TODO terminate?
-            self.iterate()
+            self.cycle()
 
-    def fire(self):
+    def cycle(self):
         self.iterate()
         self.interrupt_clock += 1
         if self.interrupt_clock >= 50: # FIXME remove
@@ -220,9 +220,10 @@ class C64(timer.Timer):
             self.cause_interrupt()
         self.VIC.increase_raster_position()
 
-#        return timer.Timer.fire_timer(self)
-
     def iterate(self):
+        self.count += 1
+        if self.count % 10000 == 0:
+            print 'cycles', self.count
         self.CPU.fetch_execute()
         return True
 
@@ -259,6 +260,6 @@ I/O Area (memory mapped chip registers), Character ROM or RAM area (4096 bytes);
 
 if __name__ == '__main__':
     c64 = C64()
-    c64.CPU_clock = timer.timeout_add(1, c64)
     for i in range(800000):
         c64.iterate()
+    c64.run()
