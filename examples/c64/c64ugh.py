@@ -31,7 +31,7 @@ class TextView(object):
         self.character_bitmaps_offset = 0 # FIXME correct that.
         self.video_offset = 0 # FIXME correct that.
         self.mode = "normal-text"
-        self._border_color = 0 # FIXME default?
+        self.border_color = 0 # FIXME default?
         self.old_VIC_bank = -1
         self.background_color_0 = 0 # FIXME default?
 
@@ -45,14 +45,14 @@ class TextView(object):
         self.old_VIC_bank = -1
         print("unprepare...")
 
-    def get_border_color(self):
-        return self._border_color
-
-    def set_border_color(self, value):
-        self._border_color = value
-        # TODO update pixbuf etc.
-
-    border_color = property(get_border_color, set_border_color)
+#    def get_border_color(self):
+#        return self._border_color
+#
+#    def set_border_color(self, value):
+#        self._border_color = value
+#        # TODO update pixbuf etc.
+#
+#    border_color = property(get_border_color, set_border_color)
 
 class CPUPort(Memory): # $0..$1
     def __init__(self, MMU):
