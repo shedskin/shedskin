@@ -18,21 +18,16 @@ HEIGHT = 300
 class EventBox(gtk.EventBox):
     def __init__(self, controls):
         gtk.EventBox.__init__(self)
-#       self.controls = controls
+        self.controls = controls
         self.props.can_focus = True
-        #self.pressed_keys = set()
         self.connect("key-press-event", self.handle_key_press)
         self.connect("key-release-event", self.handle_key_release)
 
     def handle_key_press(self, widget, event):
-                pass
-#       return self.controls.handle_key_press(event.keyval)
+       return self.controls.handle_key_press(event.keyval)
 
     def handle_key_release(self, widget, event):
-        # hardware_keycode
-                pass
-        #return self.controls.handle_key_release(event.keyval)
-        #self.pressed_keys.discard(event.keycode)
+        return self.controls.handle_key_release(event.keyval)
 
 class GTextView:
     def __init__(self, controls, c64):
@@ -264,14 +259,12 @@ class Controls(gtk.VBox):
 
     def handle_key_press(self, keycode):
         n = gtk.gdk.keyval_name(keycode)
-        print 'PRESS!'
         #if len(n) == 1:
         #   n = keycode
         return self.C64.CIA1.handle_key_press(n)
 
     def handle_key_release(self, keycode):
         n = gtk.gdk.keyval_name(keycode)
-        print 'RELEASE!'
         #if len(n) == 1:
         #   n = keycode
         return self.C64.CIA1.handle_key_release(n)
