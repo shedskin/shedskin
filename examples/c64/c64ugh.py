@@ -2101,8 +2101,6 @@ class VIC_II(Memory):
         self.text_view.character_bitmaps_offset = (1 << 11) * CB_13_12_11
         self.text_view.video_offset = (1 << 10) * VM_13_12_11_10
         self.text_view.unprepare()
-#        code_color = self.VIC_read_memory(0, 1) # ShedSkin
-#        character_data = self.load_chunk(0, 8 * 256) # ShedSkin
 
     def load_chunk(self, offset, size):
         #address = VIC_bank_offset + offset
@@ -2618,9 +2616,10 @@ class CIA1(Memory):
                         columns = CIA1.matrix[row]
                         #print("possible", rows)
                         for column_i, cell in enumerate(columns):
-                            if cell in self.pressed_keys or (isinstance(cell, int) and cell < 128 and (cell | 0x20) in self.pressed_keys):
-                                print("YESSS, matched", cell)
-                                v |= (1 << column_i)
+                             pass
+#                            if cell in self.pressed_keys or (isinstance(cell, int) and cell < 128 and (cell | 0x20) in self.pressed_keys):
+#                                print("YESSS, matched", cell)
+#                                v |= (1 << column_i)
                 #print("INVKEY", v)
                 return 255 - v
 
@@ -2702,5 +2701,6 @@ class CIA2(Memory):
 
 if __name__ == '__main__':
     c64 = C64()
+    c64.VIC.load_chunk(0,0)
     while True:
         c64.fire_timer()
