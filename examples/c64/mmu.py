@@ -28,95 +28,95 @@ import memory
 # $FFFA-$FFFF, 65530-65535 hardware vectors.
 
 class ROM(memory.Memory):
-	def __init__(self, value, B_active = True):
-		self.B_active = B_active
-		self.memory = []
-		for i in range(len(value)):
-			c = value[i]
-			print(c)
-			v = ord(c)
-			self.memory.append(v)
+    def __init__(self, value, B_active = True):
+        self.B_active = B_active
+        self.memory = []
+        for i in range(len(value)):
+            c = value[i]
+            print(c)
+            v = ord(c)
+            self.memory.append(v)
 
-		#self.memory = [ord(c) for c in value]
-		self.B_can_write = False # in the instance because of ShedSkin
+        #self.memory = [ord(c) for c in value]
+        self.B_can_write = False # in the instance because of ShedSkin
 
-	def read_memory(self, address, size = 1):
-		if size == 1:
-			return self.memory[address]
-		return one_big_value(self.memory[address : address + size])
+    def read_memory(self, address, size = 1):
+        if size == 1:
+            return self.memory[address]
+        return one_big_value(self.memory[address : address + size])
 
-	def write_memory(self, address, value, size):
-		raise NotImplementedError("cannot write to ROM")
+    def write_memory(self, address, value, size):
+        raise NotImplementedError("cannot write to ROM")
 
 minimal_overlay_address = 0xA000
 
 def one_big_value(part):
-	assert(len(part) <= 4)
-	f = 0
-	v = 0
-	for c in part:
-		v = v | (c << f)
-		f += 8
-	return v
+    assert(len(part) <= 4)
+    f = 0
+    v = 0
+    for c in part:
+        v = v | (c << f)
+        f += 8
+    return v
 
 class MMU(memory.Memory):
-	def __init__(self):
-		self.overlays = {}
-		self.memory = 65536 * [0]
+    def __init__(self):
+        self.overlays = {}
+        self.memory = 65536 * [0]
 
-	def read_memory(self, address, size = 1):
-		value = self.xread_memory(address, size)
-		#if value is None:
-		#	print("memory at address $%X broken" % address)
-		#	assert(size == 1)
-		#	return 0xFF
-		#assert(value is not None)
-		#print("memory at $%X is %r=$%X" % (address, value, value))
-		return value
+    def read_memory(self, address, size = 1):
+        value = self.xread_memory(address, size)
+        #if value is None:
+        #   print("memory at address $%X broken" % address)
+        #   assert(size == 1)
+        #   return 0xFF
+        #assert(value is not None)
+        #print("memory at $%X is %r=$%X" % (address, value, value))
+        return value
 
-	def read_zero_page(self, address, size = 1):
-		return self.read_memory(address, size)
+    def read_zero_page(self, address, size = 1):
+        return self.read_memory(address, size)
 
-	def xread_memory(self, address, size = 1):
-		if address >= minimal_overlay_address or address < 2:
-			for range_1, controller in self.overlays.values():
-				if address >= range_1[0] and address < range_1[1] and controller.B_active:
-					return controller.read_memory(address - range_1[0], size)
-		if size == 1:
-			return (self.memory[address])
-		assert(size >= 0)
-		v = one_big_value(self.memory[address : address + size])
-		return v
+    def xread_memory(self, address, size = 1):
+        if address >= minimal_overlay_address or address < 2:
+            for range_1, controller in self.overlays.values():
+                if address >= range_1[0] and address < range_1[1] and controller.B_active:
+                    return controller.read_memory(address - range_1[0], size)
+        if size == 1:
+            return (self.memory[address])
+        assert(size >= 0)
+        v = one_big_value(self.memory[address : address + size])
+        return v
 
-	def write_memory(self, address, value, size):
-		a = address
-		if address >= minimal_overlay_address or address < 2:
-			for range_1, controller in self.overlays.values():
-				if address >= range_1[0] and address < range_1[1] and controller.B_active and controller.B_can_write: # FIXME and hasattr(controller, "write_memory"):
-					assert(address != 0x1FC and address != 0x1FD)
-					#print(address, range_1, controller)
-					return controller.write_memory(address - range_1[0], value, size)
+    def write_memory(self, address, value, size):
+        a = address
+        if address >= minimal_overlay_address or address < 2:
+            for range_1, controller in self.overlays.values():
+                if address >= range_1[0] and address < range_1[1] and controller.B_active and controller.B_can_write: # FIXME and hasattr(controller, "write_memory"):
+                    assert(address != 0x1FC and address != 0x1FD)
+                    #print(address, range_1, controller)
+                    return controller.write_memory(address - range_1[0], value, size)
 
-		assert(isinstance(value, int))
-		for i in range(size):
-			self.memory[address + i] = value & 0xFF
-			value >>= 8
+        assert(isinstance(value, int))
+        for i in range(size):
+            self.memory[address + i] = value & 0xFF
+            value >>= 8
 
-	def map_ROM(self, name, address, value, B_active):
-		assert(address >= minimal_overlay_address) # ??  or range_1[1] == 2)
-		ROM_1 = ROM(value, B_active)
-		self.overlays[name] = (((address, address + len(value)), ROM_1))
-		return ROM_1
+    def map_ROM(self, name, address, value, B_active):
+        assert(address >= minimal_overlay_address) # ??  or range_1[1] == 2)
+        ROM_1 = ROM(value, B_active)
+        self.overlays[name] = (((address, address + len(value)), ROM_1))
+        return ROM_1
 
-	def map_IO(self, name, range_1, IO):
-		assert(range_1[0] >= minimal_overlay_address or range_1[1] == 2)
-		self.overlays[name] = (((range_1[0], range_1[1]), IO))
+    def map_IO(self, name, range_1, IO):
+        assert(range_1[0] >= minimal_overlay_address or range_1[1] == 2)
+        self.overlays[name] = (((range_1[0], range_1[1]), IO))
 
-	def set_overlay_active(self, name, value):
-		print("setting overlay %r to %r" % (name, value))
-		self.overlays[name][1].B_active = value
-		if value == False:
-			for s in range(0xD1, 0xD1 + 4):
-				sys.stdout.write("%02X " % (self.read_memory(s)))
+    def set_overlay_active(self, name, value):
+        print("setting overlay %r to %r" % (name, value))
+        self.overlays[name][1].B_active = value
+        if value == False:
+            for s in range(0xD1, 0xD1 + 4):
+                sys.stdout.write("%02X " % (self.read_memory(s)))
 
 
