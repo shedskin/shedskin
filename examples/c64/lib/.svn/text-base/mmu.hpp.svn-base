@@ -1,0 +1,65 @@
+#ifndef __MMU_HPP
+#define __MMU_HPP
+
+#include "builtin.hpp"
+#include "sys.hpp"
+#include "time.hpp"
+#include "memory.hpp"
+
+using namespace __shedskin__;
+namespace __mmu__ {
+
+extern str *const_0, *const_1, *const_2;
+
+
+class ROM;
+class MMU;
+
+typedef void *(*lambda0)(void *, void *, void *, void *, void *);
+
+extern str *__name__;
+extern __ss_int minimal_overlay_address;
+
+extern class_ *cl_ROM;
+class ROM : public __memory__::Memory {
+public:
+    list<__ss_int> *memory;
+
+    ROM() {}
+    ROM(str *value, __ss_bool B_active) {
+        this->__class__ = cl_ROM;
+        __init__(value, B_active);
+    }
+    void *write_memory(__ss_int address, __ss_int value, __ss_int size);
+    void *__init__(str *value, __ss_bool B_active);
+    __ss_int read_memory(__ss_int address, __ss_int size);
+};
+
+extern class_ *cl_MMU;
+class MMU : public __memory__::Memory {
+public:
+    list<__ss_int> *memory;
+    dict<str *, tuple2<tuple2<__ss_int, __ss_int> *, __memory__::Memory *> *> *overlays;
+
+    MMU() {}
+    MMU(int __ss_init) {
+        this->__class__ = cl_MMU;
+        __init__();
+    }
+    ROM *map_ROM(str *name, __ss_int address, str *value, __ss_bool B_active);
+    void *set_overlay_active(str *name, __ss_bool value);
+    void *map_IO(str *name, tuple2<__ss_int, __ss_int> *range_1, __memory__::Memory *IO);
+    __ss_int read_memory(__ss_int address, __ss_int size);
+    __ss_int read_zero_page(__ss_int address, __ss_int size);
+    __ss_int xread_memory(__ss_int address, __ss_int size);
+    void *write_memory(__ss_int address, __ss_int value, __ss_int size);
+    void *__init__();
+};
+
+extern __ss_bool  default_0;
+
+void __init();
+__ss_int one_big_value(list<__ss_int> *part);
+
+} // module namespace
+#endif

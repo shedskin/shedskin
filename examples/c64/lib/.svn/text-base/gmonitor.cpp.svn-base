@@ -1,0 +1,52 @@
+#include <gtk/gtk.h>
+#include "gmonitor.hpp"
+#include "c64.hpp"
+
+namespace __gmonitor__ {
+
+str *__name__;
+
+
+/**
+class Controls
+*/
+
+class_ *cl_Controls;
+
+__ss_bool Controls::handle_key_release(str *keycode) {
+    str *n;
+
+    n = keycode;
+    ((this->_C64)->_CIA1)->handle_key_release(n);
+    return False;
+}
+
+GtkBox* Controls::get_box() const {
+  return box;
+}
+
+__ss_bool Controls::handle_key_press(str *keycode) {
+    str *n;
+
+    n = keycode;
+    ((this->_C64)->_CIA1)->handle_key_press(n);
+    return False;
+}
+
+void *Controls::__init__(__c64__::C64 *_C64) {
+  box = GTK_BOX(gtk_vbox_new(FALSE, 7));
+  gtk_widget_show(GTK_WIDGET(box));
+  // TODO fill box
+    this->_C64 = _C64;
+    return NULL;
+}
+
+void __init() {
+    gtk_init(NULL, NULL);
+    __name__ = new str("gmonitor");
+
+    cl_Controls = new class_("Controls", 50, 50);
+}
+
+} // module namespace
+
