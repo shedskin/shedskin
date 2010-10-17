@@ -31,7 +31,8 @@ class EventBox(gtk.EventBox):
         #self.pressed_keys.discard(event.keycode)
 
 class GTextView:
-    def __init__(self, VIC, controls):
+    def __init__(self, VIC, controls, tv):
+        self.tv = tv
         self.colors = [
             gtk.gdk.Color(red = 0, green = 0, blue = 0),
             gtk.gdk.Color(red = 65535, green = 65535, blue = 65535),
@@ -50,22 +51,6 @@ class GTextView:
             gtk.gdk.Color(red = 119.53125 / 255, green = 106.064029 / 255, blue = 188.53375 / 255),
             gtk.gdk.Color(red = 159.375 / 255, green = 159.375 / 255, blue = 159.375 / 255),
         ]
-
-class TextView(object):
-    def __init__(self, VIC, controls):
-        self.gt = GTextView(VIC, controls)
-
-        self.VIC = VIC
-        self.first_column = 0
-        self.first_row = 0
-        self.last_column = 0
-        self.last_row = 0
-        self.character_bitmaps_offset = 0 # FIXME correct that.
-        self.video_offset = 0 # FIXME correct that.
-        self.mode = "normal-text"
-        self._border_color = 0 # FIXME default?
-        self.old_VIC_bank = None
-        self.background_color_0 = 0 # FIXME default?
         self.pixmap = None
         self.window = gtk.Window()
         self.event_box = EventBox(controls)
@@ -83,6 +68,33 @@ class TextView(object):
         box.show()
         self.window.add(box)
         self.window.show()
+
+    def repaint_X(self, widget, event):
+        return self.tv.repaint_X(widget, event)
+
+    def repaint_T(self):
+        return self.tv.repaint_T()
+
+    def allocate_pixmap(self, *args, **kwargs):
+        self.pixmap = gtk.gdk.Pixmap(self.window.window, WIDTH, HEIGHT) #.connect("realize", self.use_pixmap)
+        self.colors = [self.pixmap.get_colormap().alloc_color(color) for color in self.colors]
+
+class TextView(object):
+    def __init__(self, VIC, controls):
+        self.gt = GTextView(VIC, controls, self)
+
+        self.VIC = VIC
+        self.first_column = 0
+        self.first_row = 0
+        self.last_column = 0
+        self.last_row = 0
+        self.character_bitmaps_offset = 0 # FIXME correct that.
+        self.video_offset = 0 # FIXME correct that.
+        self.mode = "normal-text"
+        self._border_color = 0 # FIXME default?
+        self.old_VIC_bank = None
+        self.background_color_0 = 0 # FIXME default?
+
         self.viewport_column = 0 # FIXME
         self.viewport_row = 0  # FIXME
         self.VIC_bank = -1 # FIXME
@@ -90,9 +102,6 @@ class TextView(object):
         self.width = 40
         self.height = 25
 
-    def allocate_pixmap(self, *args, **kwargs):
-        self.pixmap = gtk.gdk.Pixmap(self.window.window, WIDTH, HEIGHT) #.connect("realize", self.use_pixmap)
-        self.gt.colors = [self.pixmap.get_colormap().alloc_color(color) for color in self.gt.colors]
 
     def load_pixbuf(self, bits):
         pixbuf = gtk.gdk.Pixbuf(gtk.gdk.COLORSPACE_RGB, True, 8, 8, 8)
@@ -143,7 +152,7 @@ class TextView(object):
         self.characters = self.characters + self.inverse_characters
 
     def repaint_pixmap(self):
-        window = self.pixmap
+        window = self.gt.pixmap
         GC = window.new_gc()
         #print("=========== REPAINT ========")
         #print(dir(self))
@@ -183,13 +192,13 @@ class TextView(object):
                 offset += 1
 
     def repaint(self):
-        widget = self.drawing_area
-        if self.pixmap is None:
+        widget = self.gt.drawing_area
+        if self.gt.pixmap is None:
             print("WHOOPS")
             return
         self.repaint_pixmap()
         GC = widget.window.new_gc()
-        widget.window.draw_drawable(GC, self.pixmap, 0, 0, 0, 0, -1, -1)
+        widget.window.draw_drawable(GC, self.gt.pixmap, 0, 0, 0, 0, -1, -1)
         pass # TODO
 
     def repaint_X(self, widget, event):
