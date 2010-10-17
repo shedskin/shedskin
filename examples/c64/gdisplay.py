@@ -6,6 +6,7 @@ pygtk.require("2.0")
 import gtk
 import gobject
 from c64 import C64
+import timer
 
 # TODO 3 bit row counter.
 
@@ -32,8 +33,7 @@ class EventBox(gtk.EventBox):
         #self.pressed_keys.discard(event.keycode)
 
 class GTextView:
-    def __init__(self, VIC, controls, tv):
-        self.tv = tv
+    def __init__(self, controls):
         self.colors = [
             gtk.gdk.Color(red = 0, green = 0, blue = 0),
             gtk.gdk.Color(red = 65535, green = 65535, blue = 65535),
@@ -128,3 +128,11 @@ class GTextView:
                 window.draw_rectangle(GC, True, VX + column * 8, VY + row * 8, 8, 8)
                 #window.draw_pixbuf(GC, pixbuf, 0, 0, VX + column * 8, VY + row * 8)
                 offset += 1
+
+if __name__ == '__main__':
+    gt = GTextView({})
+    c64 = C64(gt)
+    c64.CPU_clock = timer.timeout_add(5, c64)
+    for i in range(800000):
+        c64.iterate()
+    gtk.main()
