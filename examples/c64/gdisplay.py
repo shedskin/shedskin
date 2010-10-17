@@ -6,6 +6,8 @@ pygtk.require("2.0")
 import gtk
 import gobject
 import sys
+import c64ugh
+print c64ugh.__file__
 from c64ugh import C64
 
 # TODO 3 bit row counter.
