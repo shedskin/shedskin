@@ -1,6 +1,0 @@
-VIC $D011 bit 4: 0=screen off, just show border.
-          bit 3: screen height: 0=24, 1=25
-          bit 0-2: vertical raster scroll
-          bit 5: 1=bitmap mode
-          bit 6: 1=extended background mode
-          bit 7: current raster line, BIT 8!!!
