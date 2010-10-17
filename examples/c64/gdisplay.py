@@ -5,6 +5,7 @@ import pygtk
 pygtk.require("2.0")
 import gtk
 import gobject
+from c64 import C64
 
 # TODO 3 bit row counter.
 
@@ -194,8 +195,8 @@ class TextView(object):
         self.characters = self.characters + self.inverse_characters
 
 
-    def repaint(self):
-        self.gt.repaint()
+#    def repaint(self):
+#        self.gt.repaint()
 
     def get_border_color(self):
         return self._border_color
@@ -205,3 +206,5 @@ class TextView(object):
         # TODO update pixbuf etc.
 
     border_color = property(get_border_color, set_border_color)
+
+

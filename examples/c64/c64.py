@@ -18,6 +18,7 @@ import timer
 #import gmonitor
 import memory
 import gdisplay
+import gtk
 
 class CPUPort(memory.Memory): # $0..$1
     def __init__(self, MMU):
@@ -177,15 +178,9 @@ I/O Area (memory mapped chip registers), Character ROM or RAM area (4096 bytes);
       %1xx: I/O Area. (Except for the value %100, see above.)
 """
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     c64 = C64()
+    c64.CPU_clock = timer.timeout_add(5, c64)
     for i in range(800000):
         c64.iterate()
-    c64.CPU_clock = timer.timeout_add(5, c64)
-    #c64.cause_interrupt() # ShedSkin
-    #{
-    import gtk
     gtk.main()
-    #}
-    #c64.run()
-    c64.run()
