@@ -231,8 +231,8 @@ class C64(timer.Timer):
             #print("not supposed to cause interrupts right now...")
             return True
         #print("at 0x0283: %r" % self.CPU.MMU.read_memory(0x0283, 2))
-        print("at 0x37: %r" % self.CPU.MMU.read_memory(0x37, 2))
-        print("at 0x2B: %r" % self.CPU.MMU.read_memory(0x2B, 2))
+#        print("at 0x37: %r" % self.CPU.MMU.read_memory(0x37, 2))
+#        print("at 0x2B: %r" % self.CPU.MMU.read_memory(0x2B, 2))
         #if not self.CIA1.B_interrupt_pending:
         if not self.CPU.B_in_interrupt:
             self.CIA1.B_interrupt_pending = True
@@ -259,6 +259,6 @@ I/O Area (memory mapped chip registers), Character ROM or RAM area (4096 bytes);
 
 if __name__ == '__main__':
     c64 = C64()
-    c64.CPU_clock = timer.timeout_add(5, c64)
+    c64.CPU_clock = timer.timeout_add(1, c64)
     for i in range(800000):
         c64.iterate()

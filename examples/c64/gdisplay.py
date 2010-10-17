@@ -133,8 +133,10 @@ class GTextView(timer.Timer):
     def fire_timer(self):
         self.c64.fire()
         self.count += 1
-        if self.count % 100 == 0:
-            print self.count
+        if self.count % 1000 == 0:
+            print 'REPAINT', self.count
+            self.c64.VIC.repaint()
+            self.repaint()
         return True
 
 if __name__ == '__main__':
