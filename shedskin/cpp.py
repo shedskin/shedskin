@@ -750,29 +750,58 @@ class generateVisitor(ASTVisitor):
                 self.append(', ')
         self.append(')')
 
-    def visitDict(self, node, func=None):
-        self.append('(new '+typesetreprnew(node, func)[:-2]+'(')
+    def subtypes(self, types, varname):
+        subtypes = set()
+        for t in types:
+            if isinstance(t[0], class_):
+                var = t[0].vars[varname]
+                if (var,t[1],0) in getgx().cnode: # XXX yeah?
+                    subtypes.update(getgx().cnode[var,t[1],0].types())
+        return subtypes
+
+    def visitDict(self, node, func=None, argtypes=None):
+        if argtypes is None:
+            argtypes = getgx().merged_inh[node]
+        ts = typestrnew({(1,0): argtypes}, None, True, None)
+        self.append('(new '+ts[:-2]+'(')
         if node.items:
             self.append(str(len(node.items))+', ')
         for (key, value) in node.items:
-            self.visitm('new tuple2'+typesetreprnew(node, func)[4:-2]+'(2,', key, ',', value, ')', func)
+            type_key = self.subtypes(argtypes, 'unit')
+            type_value = self.subtypes(argtypes, 'value')
+            ts_key = typestrnew({(1,0): type_key}, None, True, None)
+            ts_value = typestrnew({(1,0): type_value}, None, True, None)
+            self.visitm('(new tuple2<%s, %s>(2,' % (ts_key,ts_value), func)
+            self.visit(key, func)
+            self.append(',')
+            if isinstance(value, (Dict, Tuple)):
+                if isinstance(value, Dict): # XXX
+                    self.visitDict(value, func, argtypes=self.subtypes(argtypes, 'value'))
+                elif isinstance(value, Tuple): # XXX
+                    self.visitTuple(value, func, argtypes=self.subtypes(argtypes, 'value'))
+            else:
+                self.visit(value, func)
+            self.append('))')
             if (key, value) != node.items[-1]:
-                self.append(', ')
+                self.append(',')
         self.append('))')
 
-    def visittuplelist(self, node, func=None):
+    def visittuplelist(self, node, func=None, argtypes=None):
         if isinstance(func, class_): # XXX
             func=None
-        ts = typesetreprnew(node, func)
+        if argtypes is None:
+            ts = typesetreprnew(node, func)
+        else:
+            ts = typestrnew({(1,0): argtypes}, None, True, None)
         self.append('(new '+ts[:-2]+'(')
         self.children_args(node, ts, func)
         self.append(')')
 
-    def visitTuple(self, node, func=None):
-        self.visittuplelist(node, func)
+    def visitTuple(self, node, func=None, argtypes=None):
+        self.visittuplelist(node, func, argtypes)
 
-    def visitList(self, node, func=None):
-        self.visittuplelist(node, func)
+    def visitList(self, node, func=None, argtypes=None):
+        self.visittuplelist(node, func, argtypes)
 
     def visitAssert(self, node, func=None):
         self.start('ASSERT(')
