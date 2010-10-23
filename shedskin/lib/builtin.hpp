@@ -3160,7 +3160,6 @@ template <class T> void *set<T>::add(T key)
 {
     long hash = hasher<T>(key);
     int n_used = used;
-
     insert_key(key, hash);
     if ((used > n_used && fill*3 >= (mask+1)*2))
         resize(used>50000 ? used*2 : used*4);
