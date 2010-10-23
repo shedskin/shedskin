@@ -1096,7 +1096,7 @@ str *str::capitalize() {
 }
 
 #ifdef __SS_BIND
-str::str(PyObject *p) : hash(0) {
+str::str(PyObject *p) : hash(-1) {
     if(!PyString_Check(p))
         throw new TypeError(new str("error in conversion to Shed Skin (string expected)"));
 
