@@ -4,6 +4,7 @@
 # TODO DECIMAL MODE (CLD, SED)
 # TODO interrupts
 
+import sys
 import mmu
 
 def err(message):
