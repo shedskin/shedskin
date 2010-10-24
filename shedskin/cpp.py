@@ -728,59 +728,68 @@ class generateVisitor(ASTVisitor):
     def visitLambda(self, node, parent=None):
         self.append(getmv().lambdaname[node])
 
-    def children_args(self, node, ts, func=None):
-        if len(node.getChildNodes()):
-            self.append(str(len(node.getChildNodes()))+', ')
-
-        double = set(ts[ts.find('<')+1:-3].split(', ')) == set(['double']) # XXX whaa
-
-        for child in node.getChildNodes():
-            if double and self.mergeinh[child] == set([(defclass('int_'), 0)]):
-                self.append('(double)(')
-
-            if child in getmv().tempcount:
-                self.append(getmv().tempcount[child])
-            else:
-                self.visit(child, func)
-
-            if double and self.mergeinh[child] == set([(defclass('int_'), 0)]):
-                self.append(')')
-
-            if child != node.getChildNodes()[-1]:
-                self.append(', ')
-        self.append(')')
-
     def subtypes(self, types, varname):
         subtypes = set()
         for t in types:
             if isinstance(t[0], class_):
-                var = t[0].vars[varname]
-                if (var,t[1],0) in getgx().cnode: # XXX yeah?
+                var = t[0].vars.get(varname)
+                if var and (var,t[1],0) in getgx().cnode: # XXX yeah?
                     subtypes.update(getgx().cnode[var,t[1],0].types())
         return subtypes
+
+    def bin_tuple(self, types):
+        for t in types:
+            if isinstance(t[0], class_) and t[0].ident == 'tuple2':
+                var1 = t[0].vars.get('first')
+                var2 = t[0].vars.get('second')
+                if var1 and var2:
+                    if (var1,t[1],0) in getgx().cnode and \
+                       (var2,t[1],0) in getgx().cnode:
+                            if getgx().cnode[var1,t[1],0].types() != \
+                               getgx().cnode[var2,t[1],0].types():
+                                return True
+        return False
+
+    def visit_child(self, child, varname, func, argtypes):
+        type_child = self.subtypes(argtypes, varname)
+        actualtypes = getgx().merged_inh[child]
+        inttype = set([(defclass('int_'),0)])
+        floattype = (defclass('float_'),0)
+        double_cast = (actualtypes == inttype and floattype in type_child)
+        if double_cast:
+            self.append('(double)(')
+        if child in getmv().tempcount: # XXX
+            self.append(getmv().tempcount[child])
+        elif isinstance(child, Dict): # XXX
+            self.visitDict(child, func, argtypes=type_child)
+        elif isinstance(child, Tuple): # XXX
+            self.visitTuple(child, func, argtypes=type_child)
+        elif isinstance(child, List): # XXX
+            self.visitList(child, func, argtypes=type_child)
+        else:
+            self.visit(child, func)
+        if double_cast:
+            self.append(')')
 
     def visitDict(self, node, func=None, argtypes=None):
         if argtypes is None:
             argtypes = getgx().merged_inh[node]
         ts = typestrnew({(1,0): argtypes}, None, True, None)
+        if ts.startswith('pyseq') or ts.startswith('pyiter'): # XXX
+            argtypes = getgx().merged_inh[node]
+            ts = typestrnew({(1,0): argtypes}, None, True, None)
         self.append('(new '+ts[:-2]+'(')
         if node.items:
             self.append(str(len(node.items))+', ')
+        type_key = self.subtypes(argtypes, 'unit')
+        type_value = self.subtypes(argtypes, 'value')
+        ts_key = typestrnew({(1,0): type_key}, None, True, None)
+        ts_value = typestrnew({(1,0): type_value}, None, True, None)
         for (key, value) in node.items:
-            type_key = self.subtypes(argtypes, 'unit')
-            type_value = self.subtypes(argtypes, 'value')
-            ts_key = typestrnew({(1,0): type_key}, None, True, None)
-            ts_value = typestrnew({(1,0): type_value}, None, True, None)
-            self.visitm('(new tuple2<%s, %s>(2,' % (ts_key,ts_value), func)
-            self.visit(key, func)
+            self.visitm('(new tuple2<%s, %s>(2,' % (ts_key, ts_value), func)
+            self.visit_child(key, 'unit', func, argtypes)
             self.append(',')
-            if isinstance(value, (Dict, Tuple)):
-                if isinstance(value, Dict): # XXX
-                    self.visitDict(value, func, argtypes=self.subtypes(argtypes, 'value'))
-                elif isinstance(value, Tuple): # XXX
-                    self.visitTuple(value, func, argtypes=self.subtypes(argtypes, 'value'))
-            else:
-                self.visit(value, func)
+            self.visit_child(value, 'value', func, argtypes)
             self.append('))')
             if (key, value) != node.items[-1]:
                 self.append(',')
@@ -790,12 +799,25 @@ class generateVisitor(ASTVisitor):
         if isinstance(func, class_): # XXX
             func=None
         if argtypes is None:
-            ts = typesetreprnew(node, func)
-        else:
+            argtypes = getgx().merged_inh[node]
+        ts = typestrnew({(1,0): argtypes}, None, True, None)
+        if ts.startswith('pyseq') or ts.startswith('pyiter'): # XXX
+            argtypes = getgx().merged_inh[node]
             ts = typestrnew({(1,0): argtypes}, None, True, None)
         self.append('(new '+ts[:-2]+'(')
-        self.children_args(node, ts, func)
-        self.append(')')
+        children = node.getChildNodes()
+        if children:
+            self.append(str(len(children))+',')
+        if self.bin_tuple(argtypes):
+            self.visit_child(children[0], 'first', func, argtypes)
+            self.append(',')
+            self.visit_child(children[1], 'second', func, argtypes)
+        else:
+            for child in children:
+                self.visit_child(child, 'unit', func, argtypes)
+                if child != children[-1]:
+                    self.append(',')
+        self.append('))')
 
     def visitTuple(self, node, func=None, argtypes=None):
         self.visittuplelist(node, func, argtypes)
