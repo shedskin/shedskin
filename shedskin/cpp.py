@@ -84,10 +84,17 @@ class generateVisitor(ASTVisitor):
         file(self.output_base+suffix,'w').writelines(newlines2)
         self.filling_consts = False
 
+    def prop_include_path(self, module):
+        if module.filename.endswith('__init__.py'): # XXX only pass cl.module
+            include = '/'.join(module.mod_path)+'/__init__.hpp'
+        else:
+            include = '/'.join(module.mod_path)+'.hpp'
+        return include
+
     def insert_includes(self): # XXX ugly
         includes = get_includes(self.module)
-        prop_includes = set(self.module.prop_includes) - set(includes)
-        if not prop_includes: return
+        prop_paths = [self.prop_include_path(p) for p in self.module.prop_includes]
+        prop_includes = set(prop_paths) - set(includes)
 
         lines = file(self.output_base+'.hpp','r').readlines()
         newlines = []
@@ -97,11 +104,27 @@ class generateVisitor(ASTVisitor):
             if prev.startswith('#include') and not line.strip():
                 for include in prop_includes:
                     newlines.append('#include "%s"\n' % include)
+                newlines.extend(self.fwd_class_refs())
             newlines.append(line)
             prev = line
 
         file(self.output_base+'.hpp','w').writelines(newlines)
 
+    def fwd_class_refs(self):
+        lines = []
+        for module in self.module.prop_includes:
+            if module.builtin:
+                continue
+            for mod in module.mod_path:
+                lines.append('namespace __%s__ { /* XXX */\n' % mod)
+            for cl in module.classes.values():
+                lines.append('class %s;\n' % nokeywords(cl.ident)) # XXX cppname?
+            for mod in module.mod_path:
+                lines.append('}\n')
+        if lines: 
+            lines.insert(0, '\n')
+        return lines
+        
     # --- group pairs of (type, name) declarations, while paying attention to '*'
     def group_declarations(self, pairs):
         group = {}
@@ -2657,12 +2680,7 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None, check_extmo
     if cl.module not in [getmv().module, getgx().modules['builtin']] and not (cl.ident in getmv().ext_funcs or cl.ident in getmv().ext_classes):
         if cplusplus: namespace = '__'+'__::__'.join([n for n in cl.module.mod_path])+'__::'
         else: namespace = '::'.join([n for n in cl.module.mod_path])+'::'
-
-        if cl.module.filename.endswith('__init__.py'): # XXX only pass cl.module
-            include = '/'.join(cl.module.mod_path)+'/__init__.hpp'
-        else:
-            include = '/'.join(cl.module.mod_path)+'.hpp'
-        getmv().module.prop_includes.add(include)
+        getmv().module.prop_includes.add(cl.module)
 
     template_vars = cl.tvar_names()
     if template_vars:
