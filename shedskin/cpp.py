@@ -606,7 +606,7 @@ class generateVisitor(ASTVisitor):
                 for m in [getgx().merged_inh[subcl.vars[ident]] for subcl in subclasses if ident in subcl.vars and subcl.vars[ident] in getgx().merged_inh]: # XXX
                     merged.update(m)
 
-                ts = self.padme(typestrnew({(1,0): merged}, cl, True, cl))
+                ts = self.padme(typestr(merged))
                 if merged:
                     self.output(ts+self.cpp_name(ident)+';')
 
@@ -686,7 +686,7 @@ class generateVisitor(ASTVisitor):
                 merged.append(merge)
 
             formals = list(subclasses)[0].funcs[ident].formals[1:]
-            ftypes = [self.padme(typestrnew({(1,0): m}, func.parent, True, func.parent)) for m in merged]
+            ftypes = [self.padme(typestr(m)) for m in merged]
 
             # --- prepare for having to cast back arguments (virtual function call means multiple targets)
             for subcl in subclasses:
@@ -771,20 +771,22 @@ class generateVisitor(ASTVisitor):
         if double_cast:
             self.append(')')
 
-    def visitDict(self, node, func=None, argtypes=None):
+    def instance_new(self, node, argtypes):
         if argtypes is None:
             argtypes = getgx().merged_inh[node]
-        ts = typestrnew({(1,0): argtypes}, None, True, None)
+        ts = typestr(argtypes)
         if ts.startswith('pyseq') or ts.startswith('pyiter'): # XXX
             argtypes = getgx().merged_inh[node]
-            ts = typestrnew({(1,0): argtypes}, None, True, None)
+        ts = typestr(argtypes)
         self.append('(new '+ts[:-2]+'(')
+        return argtypes
+
+    def visitDict(self, node, func=None, argtypes=None):
+        argtypes = self.instance_new(node, argtypes)
         if node.items:
             self.append(str(len(node.items))+', ')
-        type_key = self.subtypes(argtypes, 'unit')
-        type_value = self.subtypes(argtypes, 'value')
-        ts_key = typestrnew({(1,0): type_key}, None, True, None)
-        ts_value = typestrnew({(1,0): type_value}, None, True, None)
+        ts_key = typestr(self.subtypes(argtypes, 'unit'))
+        ts_value = typestr(self.subtypes(argtypes, 'value'))
         for (key, value) in node.items:
             self.visitm('(new tuple2<%s, %s>(2,' % (ts_key, ts_value), func)
             self.visit_child(key, 'unit', func, argtypes)
@@ -798,13 +800,7 @@ class generateVisitor(ASTVisitor):
     def visittuplelist(self, node, func=None, argtypes=None):
         if isinstance(func, class_): # XXX
             func=None
-        if argtypes is None:
-            argtypes = getgx().merged_inh[node]
-        ts = typestrnew({(1,0): argtypes}, None, True, None)
-        if ts.startswith('pyseq') or ts.startswith('pyiter'): # XXX
-            argtypes = getgx().merged_inh[node]
-            ts = typestrnew({(1,0): argtypes}, None, True, None)
-        self.append('(new '+ts[:-2]+'(')
+        argtypes = self.instance_new(node, argtypes)
         children = node.getChildNodes()
         if children:
             self.append(str(len(children))+',')
@@ -2587,6 +2583,9 @@ def typesetreprnew(node, parent, cplusplus=True, check_extmod=False, check_ret=F
 
 class ExtmodError(Exception):
     pass
+
+def typestr(types): # XXX merge typestrnew
+    return typestrnew({(1,0): types}, None, True, None)
 
 def typestrnew(split, root_class, cplusplus, orig_parent, node=None, check_extmod=False, depth=0, check_ret=False, var=None):
     if depth==10:
