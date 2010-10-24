@@ -21,3 +21,10 @@ l = [[7,8,9], [7.7,8.8,9.9]]
 for ll in l:
     for lll in ll:
         print '%.2f' % lll
+
+#circular includes
+from testdata import bert
+class Here:
+    def __str__(self):
+        return 'here'
+bert.hello(Here())
