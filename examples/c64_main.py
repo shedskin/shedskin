@@ -6,9 +6,8 @@ pygtk.require("2.0")
 import gtk
 import gobject
 import sys
-import c64
+from c64 import c64
 print c64.__file__
-from c64 import C64
 
 # TODO 3 bit row counter.
 
@@ -261,26 +260,10 @@ class Controls(gtk.VBox):
             self.status_dialog.set_value(register, C64.CPU.read_register(register))
         return True
 
-#    def handle_key_press(self, keycode):
-#        n = gtk.gdk.keyval_name(keycode)
-#        #if len(n) == 1:
-#        #   n = keycode
-#        self.pressed_keys.add(n)
-#        print 'vast', repr(n)
-##        return self.C64.CIA1.handle_key_press(n)
-#
-#    def handle_key_release(self, keycode):
-#        n = gtk.gdk.keyval_name(keycode)
-#        #if len(n) == 1:
-#        #   n = keycode
-#        print 'los', repr(n)
-#        self.pressed_keys.discard(n)
-##        return self.C64.CIA1.handle_key_release(n)
-
 if __name__ == '__main__':
-    c64 = C64()
-    controls = Controls(c64)
-    gt = GTextView(controls, c64)
+    c_64 = c64.C64()
+    controls = Controls(c_64)
+    gt = GTextView(controls, c_64)
     controls.gt = gt
     controls.set_timer()
     gtk.main()
