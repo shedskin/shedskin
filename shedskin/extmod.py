@@ -134,10 +134,6 @@ def do_extmod_method(gv, func):
     for i, formal in enumerate(formals):
         gv.start('')
         typ = cpp.typesetreprnew(func.vars[formal], func)
-        cls = [t[0] for t in gv.mergeinh[func.vars[formal]] if isinstance(t[0], class_)]
-        cls = [c for c in cls if c.mv.module == getgx().main_module]
-        if cls:
-            typ = ('__%s__::' % cls[0].mv.module.ident)+typ
         if func.ident in OVERLOAD:
             print >>gv.out, '        %(type)sarg_%(num)d = __to_ss<%(type)s>(args);' % {'type' : typ, 'num' : i}
             continue
