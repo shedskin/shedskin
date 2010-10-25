@@ -301,7 +301,7 @@ def do_extmod_class(gv, cl):
     print >>gv.out, '    {NULL}\n};\n'
 
     # python type
-    print >>gv.out, 'static PyTypeObject %sObjectType = {' % cl.ident
+    print >>gv.out, 'PyTypeObject %sObjectType = {' % cl.ident
     print >>gv.out, '    PyObject_HEAD_INIT(NULL)'
     print >>gv.out, '    0,              /* ob_size           */'
     print >>gv.out, '    "%s.%s",        /* tp_name           */' % (cl.module.ident, cl.ident)
@@ -416,6 +416,8 @@ def pyinit_func(gv):
         print >>gv.out, 'PyMODINIT_FUNC %s%s(void);\n' % (what, '_'.join(gv.module.mod_path))
  
 def convert_methods2(gv):
+    for cl in exported_classes(gv):
+        print >>gv.out, 'extern PyTypeObject %sObjectType;' % cl.ident
     print >>gv.out, 'namespace __shedskin__ { /* XXX */\n'
     for cl in exported_classes(gv):
         print >>gv.out, 'template<> %s::%s *__to_ss(PyObject *p);' % (cl.module.full_path(), cpp.nokeywords(cl.ident))
