@@ -1185,7 +1185,7 @@ class moduleVisitor(ASTVisitor):
                 isinstance(node.expr.args[1], Name) and node.expr.args[1].name=='self'):
                 cl = lookupclass(node.expr.args[0], getmv())
                 if cl.node.bases:
-                    return lookupclass(cl.node.bases[0], getmv())
+                    return cl.node.bases[0]
             error("unsupported usage of 'super'", node)
 
     def visitCallFunc(self, node, func=None): # XXX clean up!!
@@ -1193,9 +1193,9 @@ class moduleVisitor(ASTVisitor):
 
         if isinstance(node.node, Getattr): # XXX import math; math.e
             # rewrite super(..) call
-            supercall = self.supercall(node.node, func)
-            if supercall:
-                node.node = Getattr(Name(supercall.ident), node.node.attrname)
+            base = self.supercall(node.node, func)
+            if base:
+                node.node = Getattr(copy.deepcopy(base), node.node.attrname)
                 node.args = [Name('self')]+node.args
 
             # method call
