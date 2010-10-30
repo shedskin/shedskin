@@ -1174,7 +1174,8 @@ class moduleVisitor(ASTVisitor):
             else:
                 error('unsupported type of assignment', item)
 
-    def supercall(self, node, parent):
+    def supercall(self, orig, parent):
+        node = orig.node
         while isinstance(parent, function):
             parent = parent.parent
         if (isinstance(node.expr, CallFunc) and \
@@ -1186,14 +1187,14 @@ class moduleVisitor(ASTVisitor):
                 cl = lookupclass(node.expr.args[0], getmv())
                 if cl.node.bases:
                     return cl.node.bases[0]
-            error("unsupported usage of 'super'", node)
+            error("unsupported usage of 'super'", orig)
 
     def visitCallFunc(self, node, func=None): # XXX clean up!!
         newnode = cnode(node, parent=func)
 
         if isinstance(node.node, Getattr): # XXX import math; math.e
             # rewrite super(..) call
-            base = self.supercall(node.node, func)
+            base = self.supercall(node, func)
             if base:
                 node.node = Getattr(copy.deepcopy(base), node.node.attrname)
                 node.args = [Name('self')]+node.args
