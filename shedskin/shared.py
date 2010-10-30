@@ -145,7 +145,6 @@ class function:
         if node and getmv().module.ident != 'builtin':
             getgx().allfuncs.add(self)
 
-        self.parent_constr = None
         self.retvars = []
         self.invisible = False
         self.fakeret = None

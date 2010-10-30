@@ -1174,16 +1174,29 @@ class moduleVisitor(ASTVisitor):
             else:
                 error('unsupported type of assignment', item)
 
+    def supercall(self, node, parent):
+        while isinstance(parent, function):
+            parent = parent.parent
+        if (isinstance(node.expr, CallFunc) and \
+            node.attrname not in ('__getattr__', '__setattr__') and \
+            isinstance(node.expr.node, Name) and \
+            node.expr.node.name == 'super'):
+            if (len(node.expr.args) >= 2 and \
+                isinstance(node.expr.args[1], Name) and node.expr.args[1].name=='self'):
+                cl = lookupclass(node.expr.args[0], getmv())
+                if cl.node.bases:
+                    return lookupclass(cl.node.bases[0], getmv())
+            error("unsupported usage of 'super'", node)
+
     def visitCallFunc(self, node, func=None): # XXX clean up!!
         newnode = cnode(node, parent=func)
 
         if isinstance(node.node, Getattr): # XXX import math; math.e
-            # parent constr
-            if isinstance(node.node.expr, Name) and inode(node).parent:
-                cl, ident = func.parent, node.node.expr.name
-
-                if isinstance(cl, class_) and ident in [b.name for b in cl.node.bases if isinstance(b, Name)] and not isinstance(node.node,fakeGetattr): # XXX fakegetattr
-                    func.parent_constr = [ident] + node.args[1:]
+            # rewrite super(..) call
+            supercall = self.supercall(node.node, func)
+            if supercall:
+                node.node = Getattr(Name(supercall.ident), node.node.attrname)
+                node.args = [Name('self')]+node.args
 
             # method call
             if isinstance(node.node, fakeGetattr): # XXX butt ugly

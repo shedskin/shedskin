@@ -28,3 +28,19 @@ class Here:
     def __str__(self):
         return 'here'
 bert.hello(Here())
+
+#partial support for 'super'
+class A(object):
+    def __init__(self, x):
+        print 'a', x
+class C(A):
+    def __init__(self, x):
+        print 'c', x
+class B(C):
+    def __init__(self, x):
+        super(B, self).__init__(x)
+        super(C, self).__init__(3*x)
+        A.__init__(self, 2*x)
+        C.__init__(self, 3*x)
+        print 'b', x
+B(7)
