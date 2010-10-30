@@ -246,6 +246,12 @@ class module:
     def full_path(self):
         return '__'+'__::__'.join(self.mod_path)+'__'
 
+    def include_path(self):
+        if self.filename.endswith('__init__.py'):
+            return '/'.join(self.mod_path)+'/__init__.hpp'
+        else:
+            return '/'.join(self.mod_path)+'.hpp'
+
     def __repr__(self):
         return 'module '+self.ident
 
@@ -428,10 +434,6 @@ def defvar(name, parent, local, worklist=None, mv=None):
 def defclass(name):
     if name in getmv().classes: return getmv().classes[name]
     else: return getmv().ext_classes[name]
-
-def deffunc(name):
-    if name in getmv().funcs: return getmv().funcs[name]
-    else: return getmv().ext_funcs[name]
 
 class fakeGetattr(Getattr): pass # XXX ugly
 class fakeGetattr2(Getattr): pass

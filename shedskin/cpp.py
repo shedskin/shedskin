@@ -84,21 +84,12 @@ class generateVisitor(ASTVisitor):
         file(self.output_base+suffix,'w').writelines(newlines2)
         self.filling_consts = False
 
-    def prop_include_path(self, module):
-        if module.filename.endswith('__init__.py'): # XXX only pass cl.module
-            include = '/'.join(module.mod_path)+'/__init__.hpp'
-        else:
-            include = '/'.join(module.mod_path)+'.hpp'
-        return include
-
     def insert_includes(self): # XXX ugly
         includes = get_includes(self.module)
-        prop_paths = [self.prop_include_path(p) for p in self.module.prop_includes]
+        prop_paths = [mod.include_path() for mod in self.module.prop_includes]
         prop_includes = set(prop_paths) - set(includes)
-
         lines = file(self.output_base+'.hpp','r').readlines()
         newlines = []
-
         prev = ''
         for line in lines:
             if prev.startswith('#include') and not line.strip():
@@ -107,7 +98,6 @@ class generateVisitor(ASTVisitor):
                 newlines.extend(self.fwd_class_refs())
             newlines.append(line)
             prev = line
-
         file(self.output_base+'.hpp','w').writelines(newlines)
 
     def fwd_class_refs(self):
@@ -1871,7 +1861,7 @@ class generateVisitor(ASTVisitor):
                 elif target.mv.module == getmv().module:
                     self.append('default_%d' % (target.mv.defaults[arg]))
                 else:
-                    self.append('%s::default_%d' % ('__'+'__::__'.join(target.mv.module.mod_path)+'__', target.mv.defaults[arg]))
+                    self.append('%s::default_%d' % (target.mv.module.full_path(), target.mv.defaults[arg]))
 
             elif arg in self.consts:
                 self.append(self.consts[arg])
@@ -2402,7 +2392,7 @@ class generateVisitor(ASTVisitor):
 
         # module.attr
         if module:
-            self.append(mod_namespace(module)+'::')
+            self.append(module.full_path()+'::')
 
         # class.attr: staticmethod
         elif cl and node.attrname in cl.staticmethods:
@@ -2411,7 +2401,7 @@ class generateVisitor(ASTVisitor):
                 self.append('__'+cl.ident+'__::')
             elif isinstance(node.expr, Getattr):
                 submod = lookupmodule(node.expr.expr, inode(node).mv)
-                self.append(mod_namespace(submod)+'::'+ident+'::')
+                self.append(submod.full_path()+'::'+ident+'::')
             else:
                 self.append(ident+'::')
 
@@ -2420,7 +2410,7 @@ class generateVisitor(ASTVisitor):
             ident = cl.ident
             if isinstance(node.expr, Getattr):
                 submod = lookupmodule(node.expr.expr, inode(node).mv)
-                self.append(mod_namespace(submod)+'::'+cl.cpp_name+'::')
+                self.append(submod.full_path()+'::'+cl.cpp_name+'::')
             else:
                 self.append(ident+'::')
 
@@ -2461,13 +2451,13 @@ class generateVisitor(ASTVisitor):
 
         # module.attr
         if module:
-            self.append(mod_namespace(module)+'::')
+            self.append(module.full_path()+'::')
 
         # class.attr
         elif cl:
             if isinstance(node.expr, Getattr):
                 submod = lookupmodule(node.expr.expr, inode(node).mv)
-                self.append(mod_namespace(submod)+'::'+cl.cpp_name+'::')
+                self.append(submod.full_path()+'::'+cl.cpp_name+'::')
             else:
                 self.append(cl.ident+'::')
 
@@ -2566,14 +2556,11 @@ def singletype2(types, type):
     if len(types) == 1 and isinstance(ltypes[0][0], type):
         return ltypes[0][0]
 
-def mod_namespace(module):
-    return '__'+'__::__'.join(module.mod_path)+'__'
-
 def namespaceclass(cl, add_cl=''):
     module = cl.mv.module
 
     if module.ident != 'builtin' and module != getmv().module and module.mod_path:
-        return mod_namespace(module)+'::'+add_cl+nokeywords(cl.ident)
+        return module.full_path()+'::'+add_cl+nokeywords(cl.ident)
     else:
         return add_cl+nokeywords(cl.ident)
 
@@ -2635,7 +2622,7 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None, check_extmo
     if anon_funcs:
         f = anon_funcs.pop()
         if f.mv != getmv():
-            return mod_namespace(f.mv.module)+'::'+'lambda%d' % f.lambdanr
+            return f.mv.module.full_path()+'::'+'lambda%d' % f.lambdanr
         return 'lambda%d' % f.lambdanr
 
     classes = polymorphic_cl(split_classes(split))
@@ -2678,8 +2665,8 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None, check_extmo
     # --- namespace prefix
     namespace = ''
     if cl.module not in [getmv().module, getgx().modules['builtin']] and not (cl.ident in getmv().ext_funcs or cl.ident in getmv().ext_classes):
-        if cplusplus: namespace = '__'+'__::__'.join([n for n in cl.module.mod_path])+'__::'
-        else: namespace = '::'.join([n for n in cl.module.mod_path])+'::'
+        if cplusplus: namespace = cl.module.full_path()+'::'
+        else: namespace = '::'.join(cl.module.mod_path)+'::'
         getmv().module.prop_includes.add(cl.module)
 
     template_vars = cl.tvar_names()
@@ -2900,12 +2887,8 @@ def get_includes(mod):
         d = mod.mv.imports.copy()
         d.update(mod.mv.fake_imports)
         mods = d.values()
-
     for mod in mods:
-        if mod.filename.endswith('__init__.py'): # XXX
-            imports.add('/'.join(mod.mod_path)+'/__init__.hpp')
-        else:
-            imports.add('/'.join(mod.mod_path)+'.hpp')
+        imports.add(mod.include_path())
     return imports
 
 def subclass(a, b):
