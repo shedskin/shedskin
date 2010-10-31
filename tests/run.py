@@ -92,11 +92,10 @@ def run_test(test_nr, failures, msvc):
 
 def extmod_tests(args, options):
     failures = []
-    for test in glob.glob('e*'):
-        if test == 'errs':
-            continue
+    tests = sorted([int(t[1:]) for t in glob.glob('e*') if t[1:].isdigit()])
+    for test in tests:
         print '*** test:', test
-        os.chdir(test)
+        os.chdir('e%d' % test)
         try:
             extmod = file('main.py').next()[1:].strip()
             assert os.system('shedskin -e %s' % extmod) == 0
@@ -120,16 +119,15 @@ def extmod_tests(args, options):
 def error_tests(args, options):
     failures = []
     os.chdir('errs')
-    for test in glob.glob('*.py'):
-        if not test[:-3].isdigit():
-            continue
+    tests = sorted([int(t[:-3]) for t in glob.glob('*.py') if t[:-3].isdigit()])
+    for test in tests:
         print '*** test:', test
         try:
             checks = []
-            for line in file(test):
+            for line in file('%d.py' % test):
                 if line.startswith('#*'):
                     checks.append(line[1:].strip())
-            output = get_output('shedskin %s 2>&1' % test).splitlines()
+            output = get_output('shedskin %d 2>&1' % test).splitlines()
             assert not [l for l in output if 'Traceback' in l]
             for check in checks:
                 assert [l for l in output if l.startswith(check)]
