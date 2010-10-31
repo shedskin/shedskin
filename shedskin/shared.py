@@ -768,7 +768,7 @@ def is_anon_func(expr, node, merge=None):
         return False
     return bool([t for t in types if isinstance(t[0], function)])
 
-def connect_actual_formal(expr, func, parent_constr=False, check_error=False, merge=None):
+def connect_actual_formal(expr, func, parent_constr=False, merge=None):
     pairs = []
 
     actuals = [a for a in expr.args if not isinstance(a, Keyword)]
@@ -780,13 +780,6 @@ def connect_actual_formal(expr, func, parent_constr=False, check_error=False, me
 
     if parent_constr:
         actuals = actuals[1:]
-
-    if check_error and func.ident != 'sum' and func.lambdanr is None and expr not in getgx().lambdawrapper: # XXX sum
-        if not func.node.varargs and not func.node.kwargs and len(actuals)+len(keywords) > len(formals):
-            error("too many arguments in call to '%s'" % func.ident, expr)
-        if not func.node.varargs and not func.node.kwargs and len(actuals)+len(keywords) < len(formals)-len(func.defaults) and not expr.star_args:
-            error("not enough arguments in call to '%s'" % func.ident, expr)
-        missing = formals[len(actuals):-len(func.defaults)]
 
     skip_defaults = True # XXX
     if not func.mv.module.builtin or func.mv.module.ident in ['random', 'itertools', 'datetime', 'ConfigParser', 'csv'] or (func.ident in ('sort','sorted', 'min', 'max', '__print')):
