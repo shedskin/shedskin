@@ -1,5 +1,3 @@
-#*ERROR* 1.py:10: function/class redefinition is not allowed
-
 #{
 print 'move along' 
 #}
@@ -9,3 +7,5 @@ class X:
         pass
     def m(self):
         pass
+
+#*ERROR* 1.py:8: function/class redefinition is not allowed
