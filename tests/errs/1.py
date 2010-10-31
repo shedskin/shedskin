@@ -1,4 +1,4 @@
-#*ERROR* 1.py:9: function/class redefinition is not allowed
+#*ERROR* 1.py:10: function/class redefinition is not allowed
 
 #{
 print 'move along' 

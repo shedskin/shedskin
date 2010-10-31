@@ -6,6 +6,7 @@ def usage():
     print "'-r': reverse test order"
     print "'-f': break after first failure"
     print "'-e': run extension module tests"
+    print "'-x': run error/warning message tests"
     sys.exit()
 
 def parse_options():
@@ -57,6 +58,8 @@ def main():
 
     if 'e' in options:
         failures = extmod_tests(args, options)
+    elif 'x'in options:
+        failures = error_tests(args, options)
     else:
         failures = tests(args, options)
 
@@ -90,6 +93,8 @@ def run_test(test_nr, failures, msvc):
 def extmod_tests(args, options):
     failures = []
     for test in glob.glob('e*'):
+        if test == 'errs':
+            continue
         print '*** test:', test
         os.chdir(test)
         try:
@@ -110,6 +115,28 @@ def extmod_tests(args, options):
             print '*** failure:', test
             failures.append(test)
         os.chdir('..')
+    return failures
+
+def error_tests(args, options):
+    failures = []
+    os.chdir('errs')
+    for test in glob.glob('*.py'):
+        print '*** test:', test
+        try:
+            checks = []
+            for line in file(test):
+                if not line.startswith('#'):
+                    break
+                checks.append(line[1:].strip())
+            output = get_output('shedskin %s 2>&1' % test).splitlines()
+            assert not [l for l in output if l.startswith('Traceback')]
+            for check in checks:
+                assert [l for l in output if l.startswith(check)]
+            print '*** success:', test
+        except AssertionError:
+            print '*** failure:', test
+            failures.append(test)
+    os.chdir('..')
     return failures
 
 def get_output(command):
