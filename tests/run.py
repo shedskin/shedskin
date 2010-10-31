@@ -130,7 +130,7 @@ def error_tests(args, options):
                 if line.startswith('#*'):
                     checks.append(line[1:].strip())
             output = get_output('shedskin %s 2>&1' % test).splitlines()
-            assert not [l for l in output if l.startswith('Traceback')]
+            assert not [l for l in output if 'Traceback' in l]
             for check in checks:
                 assert [l for l in output if l.startswith(check)]
             print '*** success:', test
