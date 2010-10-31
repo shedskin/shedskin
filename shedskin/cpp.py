@@ -2632,9 +2632,9 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None, check_extmo
     if len(lcp) > 1:
         if set(lcp) == set([defclass('int_'),defclass('float_')]):
             return conv['float_']
-        if inode(node).mv.module.builtin:
+        elif not node or inode(node).mv.module.builtin:
             return '***ERROR*** '
-        if isinstance(node, variable):
+        elif isinstance(node, variable):
             if not node.name.startswith('__') : # XXX startswith
                 if orig_parent: varname = "%s" % node
                 else: varname = "'%s'" % node

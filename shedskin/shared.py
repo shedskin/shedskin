@@ -515,16 +515,16 @@ def augmsg(node, msg):
 
 errormsgs = set()
 
-def error(msg, node=None, warning=False):
-    if isinstance(node, Function):
-        return
+def error(msg, node=None, warning=False, mv=None):
     if warning: 
         result = '*WARNING*'
     else: 
         result = '*ERROR*'
-    if node and (node,0,0) in getgx().cnode: 
-        result += ' '+inode(node).mv.module.filename
-        if hasattr(node, 'lineno') and node.lineno is not None:
+    if not mv and node and (node,0,0) in getgx().cnode:
+        mv = inode(node).mv
+    if mv:
+        result += ' '+mv.module.filename
+        if node and hasattr(node, 'lineno') and node.lineno is not None:
             result += ':'+str(node.lineno)
     result += ': '+msg
     if result not in errormsgs:
