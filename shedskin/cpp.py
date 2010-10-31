@@ -907,7 +907,7 @@ class generateVisitor(ASTVisitor):
                 elif h0:
                     cl = lookupclass(h0, getmv())
                     if cl.mv.module.builtin and cl.ident in ['KeyboardInterrupt', 'FloatingPointError', 'OverflowError', 'ZeroDivisionError', 'SystemExit']:
-                        error("system '%s' is not caught" % cl.ident, h0, warning=True)
+                        error("system '%s' is not caught" % cl.ident, h0, warning=True, mv=getmv())
                     arg = namespaceclass(cl)+' *'
                 else:
                     arg = 'Exception *'
@@ -1203,14 +1203,14 @@ class generateVisitor(ASTVisitor):
             if func.ident in ['__iadd__', '__isub__', '__imul__']:
                 return
             if func.lambdanr is None and not repr(node.code).startswith("Stmt([Raise(CallFunc(Name('NotImplementedError')"):
-                error(repr(func)+' not called!', node, warning=True)
+                error(repr(func)+' not called!', node, warning=True, mv=getmv())
             if not (declare and func.parent and func.ident in func.parent.virtuals):
                 return
 
         if func.isGenerator and not declare:
             for var in func.vars:
                 if var == 'next':
-                    error("variable name 'next' cannot be used in generator", node)
+                    error("variable name 'next' cannot be used in generator", node, mv=getmv())
             self.generator_class(func)
 
         self.func_header(func, declare)
@@ -1504,7 +1504,7 @@ class generateVisitor(ASTVisitor):
         inttype = set([(defclass('int_'),0)]) # XXX merge
         if self.mergeinh[left] == inttype and self.mergeinh[right] == inttype:
             if not isinstance(right, Const):
-                error("pow(int, int) returns int after compilation", left, warning=True)
+                error("pow(int, int) returns int after compilation", left, warning=True, mv=getmv())
 
         if mod: self.visitm('__power(', left, ', ', right, ', ', mod, ')', func)
         else:
@@ -1682,14 +1682,14 @@ class generateVisitor(ASTVisitor):
 
         if self.library_func(funcs, 're', None, 'findall') or \
            self.library_func(funcs, 're', 're_object', 'findall'):
-            error("'findall' does not work with groups (use 'finditer' instead)", node, warning=True)
+            error("'findall' does not work with groups (use 'finditer' instead)", node, warning=True, mv=getmv())
         if self.library_func(funcs, 'socket', 'socket', 'settimeout') or \
            self.library_func(funcs, 'socket', 'socket', 'gettimeout'):
-            error("socket.set/gettimeout do not accept/return None", node, warning=True)
+            error("socket.set/gettimeout do not accept/return None", node, warning=True, mv=getmv())
         if self.library_func(funcs, 'builtin', None, 'map') and len(node.args) > 2:
-            error("default fillvalue for 'map' becomes 0 for integers", node, warning=True)
+            error("default fillvalue for 'map' becomes 0 for integers", node, warning=True, mv=getmv())
         if self.library_func(funcs, 'itertools', None, 'izip_longest'):
-            error("default fillvalue for 'izip_longest' becomes 0 for integers", node, warning=True)
+            error("default fillvalue for 'izip_longest' becomes 0 for integers", node, warning=True, mv=getmv())
 
         nrargs = len(node.args)
         if isinstance(func, function) and func.largs:
@@ -1729,7 +1729,7 @@ class generateVisitor(ASTVisitor):
             elif ident == '__print': # XXX
                 self.append('print(')
             elif ident == 'isinstance' and isinstance(node.args[1], Name) and node.args[1].name in ['float','int']:
-                error("'isinstance' cannot be used with ints or floats; assuming always true", node, warning=True)
+                error("'isinstance' cannot be used with ints or floats; assuming always true", node, warning=True, mv=getmv())
                 self.append('1')
                 return
             else:
@@ -1747,7 +1747,7 @@ class generateVisitor(ASTVisitor):
                 if isinstance(cl, class_) and cl.ident != 'none' and ident not in cl.funcs:
                     conv = {'int_': 'int', 'float_': 'float', 'str_': 'str', 'class_': 'class', 'none': 'none'}
                     clname = conv.get(cl.ident, cl.ident)
-                    error("class '%s' has no method '%s'" % (clname, ident), node, warning=True)
+                    error("class '%s' has no method '%s'" % (clname, ident), node, warning=True, mv=getmv())
 
             # tuple2.__getitem -> __getfirst__/__getsecond
             if ident == '__getitem__' and isinstance(node.args[0], Const) and node.args[0].value in (0,1) and self.only_classes(objexpr, ('tuple2',)):
@@ -1758,7 +1758,7 @@ class generateVisitor(ASTVisitor):
             self.visitm(node.node, '(', func)
 
         else:
-            error("unbound identifier '"+ident+"'", node)
+            error("unbound identifier '"+ident+"'", node, mv=getmv())
 
         if not funcs:
             if constructor: self.append(')')
@@ -1803,7 +1803,7 @@ class generateVisitor(ASTVisitor):
 
         for f in funcs:
             if len(f.formals) != len(target.formals):
-                error('calling functions with different numbers of arguments', node, warning=True)
+                error('calling functions with different numbers of arguments', node, warning=True, mv=getmv())
                 self.append(')')
                 return
 
@@ -2418,7 +2418,7 @@ class generateVisitor(ASTVisitor):
         else:
             for t in self.mergeinh[node.expr]:
                 if isinstance(t[0], class_) and node.attrname in t[0].parent.vars:
-                    error("class attribute '"+node.attrname+"' accessed without using class name", node, warning=True)
+                    error("class attribute '"+node.attrname+"' accessed without using class name", node, warning=True, mv=getmv())
                     break
 
             if not isinstance(node.expr, (Name)):
@@ -2489,7 +2489,7 @@ class generateVisitor(ASTVisitor):
 
         else: # XXX clean up
             if not self.mergeinh[node] and not inode(node).parent in getgx().inheritance_relations:
-                error("variable '"+node.name+"' has no type", node, warning=True)
+                error("variable '"+node.name+"' has no type", node, warning=True, mv=getmv())
                 self.append(node.name)
             elif singletype(node, module):
                 self.append('__'+singletype(node, module).ident+'__')
