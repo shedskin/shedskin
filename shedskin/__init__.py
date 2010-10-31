@@ -7,7 +7,7 @@ Copyright 2005-2009 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 import sys, getopt, os.path
 from distutils import sysconfig
 
-import infer, cpp, annotate
+import infer, cpp, annotate, shared
 from shared import newgx, setgx, getgx
 
 def usage():
@@ -82,6 +82,7 @@ def main():
     infer.analyze(name)
     annotate.annotate()
     cpp.generate_code()
+    shared.print_errors()
 
 if __name__ == '__main__':
     main()
