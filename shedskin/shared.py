@@ -513,29 +513,39 @@ def augmsg(node, msg):
     if hasattr(node, 'augment'): return '__i'+msg+'__'
     return '__'+msg+'__'
 
-errormsgs = set()
+ERRORS = set()
 
 def error(msg, node=None, warning=False, mv=None):
     if warning: 
-        result = '*WARNING*'
+        kind = '*WARNING*'
     else: 
-        result = '*ERROR*'
+        kind = '*ERROR*'
     if not mv and node and (node,0,0) in getgx().cnode:
         mv = inode(node).mv
+    filename = lineno = None
     if mv:
-        result += ' '+mv.module.filename
-        if node and hasattr(node, 'lineno') and node.lineno is not None:
-            result += ':'+str(node.lineno)
-    result += ': '+msg
-    if result not in errormsgs:
-        errormsgs.add(result)
+        filename = mv.module.filename
+        if node and hasattr(node, 'lineno'):
+            lineno = node.lineno
+    result = (kind, filename, lineno, msg)
+    if result not in ERRORS:
+        ERRORS.add(result)
     if not warning:
-        print result
+        print format_error(result)
         sys.exit(1)
 
+def format_error(error):
+    (kind, filename, lineno, msg) = error
+    result = kind
+    if filename:
+        result += ' %s:' % filename
+        if lineno is not None:
+            result += '%d:' % lineno
+    return result+' '+msg
+
 def print_errors():
-    for result in sorted(errormsgs): # XXX sort better
-        print result
+    for error in sorted(ERRORS):
+        print format_error(error)
 
 # --- merge constraint network along combination of given dimensions (dcpa, cpa, inheritance)
 # e.g. for annotation we merge everything; for code generation, we might want to create specialized code
