@@ -529,9 +529,13 @@ def error(msg, node=None, warning=False, mv=None):
     result += ': '+msg
     if result not in errormsgs:
         errormsgs.add(result)
-        print result
     if not warning:
+        print result
         sys.exit(1)
+
+def print_errors():
+    for result in sorted(errormsgs): # XXX sort better
+        print result
 
 # --- merge constraint network along combination of given dimensions (dcpa, cpa, inheritance)
 # e.g. for annotation we merge everything; for code generation, we might want to create specialized code
