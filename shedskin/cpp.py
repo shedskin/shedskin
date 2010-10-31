@@ -1810,7 +1810,7 @@ class generateVisitor(ASTVisitor):
         if parent_constr and target.inherited_from: # XXX
             target = target.inherited_from
 
-        pairs, rest = connect_actual_formal(node, target, parent_constr, check_error=True, merge=self.mergeinh)
+        pairs, rest = connect_actual_formal(node, target, parent_constr, merge=self.mergeinh)
         if isinstance(func, function) and func.lambdawrapper:
             rest = func.largs
 
