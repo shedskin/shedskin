@@ -121,13 +121,14 @@ def error_tests(args, options):
     failures = []
     os.chdir('errs')
     for test in glob.glob('*.py'):
+        if not test[:-3].isdigit():
+            continue
         print '*** test:', test
         try:
             checks = []
             for line in file(test):
-                if not line.startswith('#'):
-                    break
-                checks.append(line[1:].strip())
+                if line.startswith('#*'):
+                    checks.append(line[1:].strip())
             output = get_output('shedskin %s 2>&1' % test).splitlines()
             assert not [l for l in output if l.startswith('Traceback')]
             for check in checks:
