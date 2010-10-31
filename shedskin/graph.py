@@ -348,7 +348,7 @@ class moduleVisitor(ASTVisitor):
                 if hasattr(m, 'decorators') and m.decorators and [dec for dec in m.decorators if property_setter(dec)]:
                     m.name = m.name+'__setter__'
                 if m.name in newclass.funcs: # and func.ident not in ['__getattr__', '__setattr__']: # XXX
-                    error("function/class redefinition is not allowed ('%s')" % m.name, m)
+                    error("function/class redefinition is not allowed", m, mv=self)
                 func = function(m, newclass)
                 newclass.funcs[func.ident] = func
                 self.set_default_vars(m, func)
@@ -1570,7 +1570,7 @@ def check_redef(node, s=None, onlybuiltins=False): # XXX to modvisitor, rewrite
             if s != None: name = s
             else: name = node.name
             if name in whatsit:
-                error("function/class redefinition is not supported ('%s')" % name, node)
+                error("function/class redefinition is not supported", node, mv=getmv())
 
 # --- maintain inheritance relations between copied AST nodes
 def inherit_rec(original, copy, mv):
