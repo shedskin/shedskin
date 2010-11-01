@@ -13,7 +13,7 @@ lines  name               description                   notes
    125 astar.py           a-star algorithm              shedskin -e astar && make && python astar_main.py
    415 bh.py              barnes-hut force calculation
     54 brainfuck.py       brainfuck interpreter
-  1949 c64.py             commodore 64 emulator         shedskin -e c64 && make && python c64_main.py
+  1949 c64.py             commodore 64 emulator         cd c64; shedskin -e c64 && make; cd ..; python c64_main.py
    321 chess.py           chess engine
    105 dijkstra.py        dijkstra's algorithm
     80 dijkstra2.py       bidirectional dijkstra search
