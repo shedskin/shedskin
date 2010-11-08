@@ -44,3 +44,8 @@ class B(C):
         C.__init__(self, 3*x)
         print 'b', x
 B(7)
+
+#update with genexpr
+_hextochr = dict(('%02x' % i, chr(i)) for i in range(256))
+_hextochr.update(('%02X' % i, chr(i)) for i in range(256))
+print(repr(_hextochr))
