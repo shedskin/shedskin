@@ -49,3 +49,16 @@ B(7)
 _hextochr = dict(('%02x' % i, chr(i)) for i in range(256))
 _hextochr.update(('%02X' % i, chr(i)) for i in range(256))
 print(repr(_hextochr))
+
+#C++ looks in classs namespace first
+class Test1(object) :
+    def __init__(self, lenin) :
+        self.len = lenin
+        self.buf = "x" * lenin  
+       
+    def getlen(self) :
+        return(len(self.buf))
+       
+f = Test1(100)
+n = f.getlen()
+print(n)
