@@ -147,7 +147,6 @@ class Viewport(object):
                                             use_processes=True)
     self.memo = []
     self.starttime = time.time()
-    self.done = 0
 
   def process(self):
     self.start_time = time.time()
@@ -161,6 +160,7 @@ class Viewport(object):
           self.initProcessor()
         BLOCKS_WIDE = 10
         BLOCKS_TALL = 10
+        self.todo = BLOCKS_WIDE*BLOCKS_TALL
         jobs = []
         for i in range(BLOCKS_WIDE):
           for j in range(BLOCKS_TALL):
@@ -197,7 +197,9 @@ class Viewport(object):
   def checkQueue(self):
     if self.processor:
         block = self.processor.get(False)
+        blocks = 0
         while block:
+          blocks += 1
           ((startCol, endCol), (startRow, endRow)), colors = block
           w,h = (endCol-startCol), (endRow-startRow)
           ork = [struct.pack('BBB', int(c[1:3],16), int(c[3:5],16), int(c[5:7],16)) for c in colors]
@@ -206,9 +208,11 @@ class Viewport(object):
           self.memo.append(tkpi)
           label_image = Label(self.app.root, image=tkpi)
           label_image.place(x=startCol, y=startRow+50,width=w, height=h)
-          self.done += 1
-          if self.done == 100:
+          self.todo -= 1
+          if self.todo == 0:
               print 'time: %.2f' % (time.time()-self.start_time)
+          if blocks == 25:
+              break
           block = self.processor.get(False)
         self.app.root.after(250, self.checkQueue)
 
