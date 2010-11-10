@@ -12,8 +12,10 @@ import Image
 import ImageTk
 import ImageDraw
 import random
+import struct
 import time
-from SimpleGeometry import getGeometry, getWorld, getCamera, getCamera2
+import SimpleGeometry
+print 'using', SimpleGeometry.__file__
 from Pool import ThreadedQueueProcessor
 
 class CameraHandler(object):
@@ -143,10 +145,7 @@ class Viewport(object):
   def initProcessor(self):
     self.processor = ThreadedQueueProcessor(CameraHandler(self.camera), 9,
                                             use_processes=True)
-    self.image = Image.new("RGBA", (self.camera.cols, self.camera.rows))
-    self.draw = ImageDraw.Draw(self.image)
-    self.draw.rectangle(((0, 0), (self.camera.cols, self.camera.rows)),
-                        fill="grey")
+    self.memo = []
 
   def process(self):
     self.start_time = time.time()
@@ -158,8 +157,8 @@ class Viewport(object):
       elif not self.count:
         if not self.processor:
           self.initProcessor()
-        BLOCKS_WIDE = 50
-        BLOCKS_TALL = 50
+        BLOCKS_WIDE = 2
+        BLOCKS_TALL = 2
         jobs = []
         for i in range(BLOCKS_WIDE):
           for j in range(BLOCKS_TALL):
@@ -194,25 +193,51 @@ class Viewport(object):
     self.label.config(image=self.imageTk)
 
   def checkQueue(self):
-    gotData = False
     if self.processor:
+        qsize = self.processor.outputQ.qsize()
+        print 'hum', qsize
+        if qsize == 4 and self.start_time:
+            print 'total time %.2f' % (time.time()-self.start_time)
+            self.start_time = None
+            t0 = time.time()
+            blocks = 0
+            while self.processor.outputQ.qsize(): 
+              block = self.processor.get()
+              blocks += 1
+              ((startCol, endCol), (startRow, endRow)), colors = block
+              w,h = (endCol-startCol), (endRow-startRow)
+              ork = [struct.pack('BBB', int(c[1:3],16), int(c[3:5],16), int(c[5:7],16)) for c in colors]
+              image1 = Image.fromstring('RGB', (w, h), ''.join(ork))
+              tkpi = ImageTk.PhotoImage(image1)
+              self.memo.append(tkpi)
+              label_image = Label(self.app.root, image=tkpi)
+              label_image.place(x=startCol, y=startRow+50,width=w, height=h)
+#              self.memo.append(label_image)
+
+            print 'dat duurde:', time.time()-t0
+        self.app.root.after(250, self.checkQueue)
+    return
+
+    '''
+      
       block = self.processor.get(False)
-      while block:
+      gotData = False
+      if block:
         gotData = True
-        self.count -= 1
         assert self.count >= 0
         for (i, j), c in block:
           self.draw.point((i, j), c)
-        block = self.processor.get(False)
+#        block = self.processor.get(False)
       if gotData:
         self.refreshImage()
       self.app.root.after(250, self.checkQueue)
       if self.processor.inputQ.empty() and self.start_time:
           print 'time: %.2f' % (time.time() - self.start_time)
-          self.start_time = None
+          self.start_time = None 
 #    else:
 #      self.debugPixel(208, 43)
 #      self.app.shutdown()
+          '''
 
   def drawDebugRays(self, debug_rays):
     for ray, color in debug_rays:
@@ -245,11 +270,11 @@ class Viewport(object):
 root = Tk()
 root.title("Pylot")
 
-geometry = getGeometry()
-world = getWorld(geometry)
-cameras = [getCamera(world), getCamera2(world)]
+geometry = SimpleGeometry.getGeometry()
+world = SimpleGeometry.getWorld(geometry)
+cameras = [SimpleGeometry.getCamera(world), SimpleGeometry.getCamera2(world)]
 #cameras = [getCamera(world)]
-viewports = [Viewport(c) for c in cameras]
+viewports = [Viewport(c) for c in cameras[:1]]
 app = App(root, viewports)
 
 single_threaded = False

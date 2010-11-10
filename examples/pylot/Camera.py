@@ -225,7 +225,7 @@ class Camera(object):
     if hit:
       return self.getLighting(ray, hit, lights).toImageColor()
     else:
-      return "black"
+      return "#000000"
 
   def pixelForCoords(self, i, j):
     ret = self.screenTopLeft + self.xIncrement.scale(i - 0.5) + \
@@ -235,9 +235,8 @@ class Camera(object):
   def runPixelRange(self, r):
     lights = self.world.lightSources()
     (startCol, endCol), (startRow, endRow) = r
-    return \
-        [((i, j), self.runPixel(self.pixelForCoords(i, j), lights))
-           for i in range(startCol, endCol) for j in range(startRow, endRow)]
+    return r, [self.runPixel(self.pixelForCoords(i, j), lights)
+           for j in range(startRow, endRow) for i in range(startCol, endCol)]
 
   # For raytracing, once you've got a hit, shoot rays at all light sources
   # [Shapes with emissive color set].  Skip any who are behind the surface hit

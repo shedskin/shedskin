@@ -7,8 +7,8 @@ import math
 # For Shedskin:
 from World import World
 
-COLS = 200
-ROWS = 200
+COLS = 512
+ROWS = 512
 EYE = Point(5, 1, 5)
 TARGET = Point(0, 0, 0)
 UP = Point(0, 2, 0)
@@ -18,8 +18,8 @@ H = 0.3
 
 EYE2 = Point(0, 2, 0)
 UP2 = Point(0, 2, -1)
-COLS2 = 100
-ROWS2 = 100
+COLS2 = 256
+ROWS2 = 256
 
 # Note: call these AFTER getGeometry as their inputs may change!
 def getCamera(world):
@@ -216,4 +216,4 @@ if __name__ == '__main__':
   world = getWorld(geometry)
   camera = getCamera(world)
   camera = getCamera2(world)
-  camera.runPixelRange(((0,0), (0,0)))
+  print camera.runPixelRange(((0,5), (0,5)))
