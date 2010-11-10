@@ -50,7 +50,7 @@ class App(object):
     self.button.pack(side=LEFT)
     self.labels = []
     for v in viewports:
-      label = Label(root)
+      label = Label(root, width=70, height=40)
       self.labels.append(label)
       label.pack(side=LEFT)
       def clickHandler(v):
