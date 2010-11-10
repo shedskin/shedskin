@@ -12,9 +12,9 @@ import Image
 import ImageTk
 import ImageDraw
 import random
+import time
 from SimpleGeometry import getGeometry, getWorld, getCamera, getCamera2
 from Pool import ThreadedQueueProcessor
-from Utils import *
 
 class CameraHandler(object):
   def __init__(self, camera):
@@ -23,7 +23,7 @@ class CameraHandler(object):
     
   def handle(self, job):
     realJob, debugFlag = job
-    set_debug(debugFlag)
+#    set_debug(debugFlag)
     return self.camera.runPixelRange(realJob)
 
 class App(object):
@@ -115,7 +115,7 @@ class Viewport(object):
       self.initProcessor()
     print "Processing pixel: ", x, ", ", y
     d = get_debug()
-    set_debug(True)
+#    set_debug(True)
     block = self.camera.runPixelRange( ((x, x+1), (y, y+1)) )
     for (i, j), c in block:
       self.draw.point((i, j), c)
@@ -124,7 +124,7 @@ class Viewport(object):
     debug_rays = get_debug_rays();
     self.app.drawDebugRays(debug_rays)
     print "Calling clear_debug_rays"
-    set_debug(False)
+#    set_debug(False)
     clear_debug_rays()
 
   def handleClick(self, event):
@@ -149,6 +149,7 @@ class Viewport(object):
                         fill="grey")
 
   def process(self):
+    self.start_time = time.time()
     try:
       jobs = []
       if self.jobs:
@@ -206,6 +207,9 @@ class Viewport(object):
       if gotData:
         self.refreshImage()
       self.app.root.after(250, self.checkQueue)
+      if self.processor.inputQ.empty() and self.start_time:
+          print 'time: %.2f' % (time.time() - self.start_time)
+          self.start_time = None
 #    else:
 #      self.debugPixel(208, 43)
 #      self.app.shutdown()

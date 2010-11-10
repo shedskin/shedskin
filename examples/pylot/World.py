@@ -4,7 +4,6 @@ from Shape import *
 import Color
 from Vector4 import Vector4, Point, Offset
 from Utils import Roughly
-import pdb
 
 class World(object):
   def __init__(self, shapes):

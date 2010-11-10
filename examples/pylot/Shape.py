@@ -205,7 +205,7 @@ class Polygon(Shape):
     assert not inside or not bidirectional
     assert Roughly(ray.offset.length(), 1.0)
     if inside: # Only spheres can be hit from the inside.
-      return False
+      return None
     hit = rayHitsPlane(self.normal, self.center, ray, bidirectional)
     if hit:
       ((hitLocation, distance), inverted) = hit
@@ -343,9 +343,9 @@ def rayHitsPlane(normal, point, ray, bidirectional=False):
   assert Roughly(ray.offset.length(), 1.0)
   inverted = False
   dot = normal.dot(ray.offset)
-  debug_print("dot is ", dot)
+#  debug_print("dot is ", dot)
   if Roughly(dot, 0.0):
-    return False
+    return None
   if bidirectional and dot > 0.0:
     normal = -normal
     dot = -dot
@@ -356,8 +356,8 @@ def rayHitsPlane(normal, point, ray, bidirectional=False):
     offsetOriginToCenter = point - ray.origin
     # Offset to nearest point on the plane from ray origin.
     distanceToPlane = -offsetOriginToCenter.dot(normal)
-    debug_print("offsetOriginToCenter is ", offsetOriginToCenter)
-    debug_print("distanceToPlane is ", distanceToPlane)
+#    debug_print("offsetOriginToCenter is ", offsetOriginToCenter)
+#    debug_print("distanceToPlane is ", distanceToPlane)
     if distanceToPlane > 0.0: # Else it's behind ray.
       progressTowardPlane = -dot
       distance = distanceToPlane / progressTowardPlane

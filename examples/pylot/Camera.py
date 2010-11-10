@@ -1,5 +1,5 @@
 import math
-from Utils import Roughly, debug_print, add_debug_ray, set_debug
+from Utils import Roughly
 import Color
 from Ray import Ray
 from Vector4 import Vector4, fresnel_reflectance_at_angle
@@ -68,33 +68,33 @@ class Camera(object):
                                           ignore=shape)
           # intersect *should* never miss, but...
           if lightHit and lightHit.shape == light:
-            debug_print("lightHit:", lightHit)
-            debug_print("lightDotSurfaceNormal:", lightDotSurfaceNormal)
-            debug_print("lightDirection:", lightDirection)
+#            debug_print("lightHit:", lightHit)
+#            debug_print("lightDotSurfaceNormal:", lightDotSurfaceNormal)
+#            debug_print("lightDirection:", lightDirection)
             lightReflection = -lightDirection.reflect(surfaceNormal)
-            debug_print("lightReflection:", lightReflection)
+#            debug_print("lightReflection:", lightReflection)
             highlight = math.pow(lightReflection.dot(-ray.offset), 20)
-            debug_print("highlight:", highlight)
+#            debug_print("highlight:", highlight)
             intensity = light.getIntensity(hitLocation)
-            debug_print("intensity:", intensity)
-            debug_print("color:", color)
+#            debug_print("intensity:", intensity)
+#            debug_print("color:", color)
             color = color + (material.color * light.material.emissive).scale(
                 lightDotSurfaceNormal * intensity)
-            debug_print("color1:", color)
+#            debug_print("color1:", color)
             color = color + (light.material.emissive * material.specular).scale(
                 highlight * intensity)
-            debug_print("color1:", color)
+#            debug_print("color1:", color)
     return color
 
   def getLightingFromSecondaryRay(self, ray, lights, generation, strength,
                                   materialStack, ignore=None, inside=None):
-    debug_print("in getLightingFromSecondaryRay %d" % generation)
+#    debug_print("in getLightingFromSecondaryRay %d" % generation)
     insideMaterial = materialStack[-1]
     hit = self.world.intersect(ray, ignore=ignore, inside=inside,
                                insideMaterial=insideMaterial)
     color = Color.BLACK
     if hit:
-      debug_print("Hit: ", hit)
+#      debug_print("Hit: ", hit)
       if insideMaterial.attenuation_distances:
         # Here we lower strength due to absorbtion in insideMaterial in the
         # hit.distance traveled.  We attenuate by 50% for each unit of distance,
@@ -116,34 +116,34 @@ class Camera(object):
                                generation=generation+1,
                                strength=strength,
                                materialStack=materialStack)
-    debug_print("out getLightingFromSecondaryRay %d" % generation)
+#    debug_print("out getLightingFromSecondaryRay %d" % generation)
     return color
 
   def getReflectedLighting(self, ray, hit, hitLocation, lights, shape,
                            surfaceNormal, materialStack, strength, generation):
-    debug_print("in getReflectedLighting %d" % generation)
+#    debug_print("in getReflectedLighting %d" % generation)
     material = shape.material
     reflection = Ray(hitLocation, ray.offset.reflect(surfaceNormal))
-    add_debug_ray(reflection, "orange")
+#    add_debug_ray(reflection, "orange")
     color = self.getLightingFromSecondaryRay(reflection, lights, generation,
                                              strength, materialStack,
                                              ignore=shape)
-    debug_print("out getReflectedLighting %d" % generation)
+#    debug_print("out getReflectedLighting %d" % generation)
     return color
 
   # TODO: Figure out why the reflection of the wall on the cube inside the glass
   # sphere looks round.  Where are the other walls, too?
   def getRefractedLighting(self, ray, hit, hitLocation, lights, shape,
                            surfaceNormal, materialStack, strength, generation):
-    debug_print("in getRefractedLighting %d" % generation)
+#    debug_print("in getRefractedLighting %d" % generation)
     fromMaterial = materialStack[-1]
     if hit.inverted:
-      debug_print("Popping off materialStack: ", materialStack[-1]);
+#      debug_print("Popping off materialStack: ", materialStack[-1]);
       assert len(materialStack) > 1
       refractMaterialStack = materialStack[:-1]
       inside = None
     else:
-      debug_print("Adding to materialStack: ", shape.material);
+#      debug_print("Adding to materialStack: ", shape.material);
       refractMaterialStack = materialStack + [shape.material]
       inside = shape
     toMaterial = refractMaterialStack[-1]
@@ -152,11 +152,11 @@ class Camera(object):
                      ray.offset.refract(surfaceNormal,
                                         fromMaterial.indexOfRefraction,
                                         toMaterial.indexOfRefraction))
-    add_debug_ray(ray, "yellow")
+#    add_debug_ray(ray, "yellow")
     color = self.getLightingFromSecondaryRay(refraction, lights, generation,
                                              strength, refractMaterialStack,
                                              inside=inside)
-    debug_print("out getRefractedLighting %d" % generation)
+#    debug_print("out getRefractedLighting %d" % generation)
     return color
 
   # By default this assumes that the camera is always in free space, not inside
@@ -165,7 +165,7 @@ class Camera(object):
   # appropriately.
   def getLighting(self, ray, hit, lights, generation=1, strength=None,
                   materialStack=None):
-    debug_print("in getLighting %d" % generation)
+#    debug_print("in getLighting %d" % generation)
     assert Roughly(ray.offset.length(), 1)
     if not materialStack:
       materialStack = [Material.EMPTY]
@@ -180,7 +180,7 @@ class Camera(object):
     else:
       color = Color.BLACK
     hitLocation = ray.origin + ray.offset.scale(hit.distance)
-    debug_print("hitLocation: ", hitLocation)
+#    debug_print("hitLocation: ", hitLocation)
     surfaceNormal = shape.getNormal(hitLocation)
 
     color = color + self.getDirectLighting(ray, hitLocation, lights, shape,
@@ -213,7 +213,7 @@ class Camera(object):
                                               shape, surfaceNormal,
                                               materialStack,
                                               transmittedStrength, generation)
-    debug_print("out getLighting %d" % generation)
+#    debug_print("out getLighting %d" % generation)
     return color
 
   def runPixel(self, pixel, lights):
