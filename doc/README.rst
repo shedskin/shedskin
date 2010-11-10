@@ -467,6 +467,7 @@ I would like to thank the following company/people, for their help with **Shed S
 * Andy Miller
 * Jeff Miller
 * Joaquin Abian Monux
+* John Nagle
 * Harri Pasanen
 * Jeremie Roquet
 * Mike Schrick
