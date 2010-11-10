@@ -12,7 +12,6 @@ import Image
 import ImageTk
 import ImageDraw
 import random
-import struct
 import time
 import SimpleGeometry
 print 'using', SimpleGeometry.__file__
@@ -202,7 +201,7 @@ class Viewport(object):
           blocks += 1
           ((startCol, endCol), (startRow, endRow)), colors = block
           w,h = (endCol-startCol), (endRow-startRow)
-          ork = [struct.pack('BBB', int(c[1:3],16), int(c[3:5],16), int(c[5:7],16)) for c in colors]
+          ork = [chr(int(c[1:3],16))+chr(int(c[3:5],16))+chr(int(c[5:7],16)) for c in colors] # XXX bleh
           image1 = Image.fromstring('RGB', (w, h), ''.join(ork))
           tkpi = ImageTk.PhotoImage(image1)
           self.memo.append(tkpi)
