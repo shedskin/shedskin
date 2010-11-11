@@ -62,3 +62,12 @@ class Test1(object) :
 f = Test1(100)
 n = f.getlen()
 print(n)
+
+# IOError.{errno, strerror}
+try :
+    print("Try block")
+    fd = open("nosuchfile") # open will fail
+    print("File opened")
+except IOError as e:
+    print e, repr(e)
+    print e.errno, e.strerror
