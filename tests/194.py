@@ -66,7 +66,7 @@ f = Test1(100)
 n = f.getlen()
 print(n)
 
-# IOError.{errno, strerror}
+# {IOError, OSError}.{errno, strerror}
 try :
     print("Try block")
     fd = open("nosuchfile") # open will fail
@@ -74,3 +74,8 @@ try :
 except IOError as e:
     print e, repr(e)
     print e.errno, e.strerror
+try:
+    os.chdir('meuheuheu')
+except OSError as e2:
+    print e2, repr(e2)
+    print e2.errno, e2.strerror
