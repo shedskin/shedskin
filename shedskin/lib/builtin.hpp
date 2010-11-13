@@ -460,6 +460,7 @@ public:
     V get(K k, V v);
     V pop(K k);
     tuple2<K, V> *popitem();
+    template <class U> void *update(U *other);
     void *update(dict<K, V> *e);
 
     __ss_bool __gt__(dict<K,V> *s);
@@ -2464,6 +2465,17 @@ template <class K, class V> void *dict<K,V>::update(dict<K,V>* other)
 			insert_key(entry->key, entry->value, entry->hash);
 		}
 	}
+    return NULL;
+}
+
+template <class K, class V> template<class U> void *dict<K,V>::update(U *iter) {
+    typename U::for_in_unit e;
+    typename U::for_in_loop __3;
+    int __2;
+    U *__1;
+    FOR_IN_NEW(e,iter,1,2,3)
+		__setitem__(e->__getitem__(0), e->__getitem__(1));
+    END_FOR
     return NULL;
 }
 
