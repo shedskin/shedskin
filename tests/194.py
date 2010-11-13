@@ -13,8 +13,8 @@ digit_dict = {
 }
 for d in sorted(digit_dict):
     d2 = digit_dict[d]
-    for e in sorted(d2):
-        print d, e, d2[e]
+    for g in sorted(d2):
+        print d, f, d2[g]
 
 l = [[7,8,9], [7.7,8.8,9.9]]
     
