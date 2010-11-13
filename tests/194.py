@@ -50,7 +50,7 @@ _hextochr = dict(('%02x' % i, chr(i)) for i in range(256))
 _hextochr.update(('%02X' % i, chr(i)) for i in range(256))
 print(repr(_hextochr))
 
-#C++ looks in classs namespace first
+#C++ looks in class namespace first
 kwek = 18
 class Test1(object) :
     def __init__(self, lenin) :
