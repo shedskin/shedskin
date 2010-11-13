@@ -14,7 +14,7 @@ while True:
     random.shuffle(nrs)
     times = []
     for part in range(parts):
-        times.append(sum([nr_time[nr] for nr in nrs[part::parts]]))
+        times.append(sum([nr_time.get(nr, 0) for nr in nrs[part::parts]]))
     if best_time is None or max(times) < best_time:
         best_time = max(times)
         print 'best_time:', best_time, seed
