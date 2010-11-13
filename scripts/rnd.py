@@ -18,4 +18,6 @@ while True:
     if best_time is None or max(times) < best_time:
         best_time = max(times)
         print 'best_time:', best_time, seed
+        for part in range(parts):
+            print part, nrs[part::parts]
     seed += 1
