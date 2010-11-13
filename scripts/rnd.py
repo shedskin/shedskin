@@ -10,7 +10,7 @@ best_time = None
 seed = 0
 while True:
     random.seed(seed)
-    nrs = sorted(nr_time)
+    nrs = range(max(nr_time)+1)
     random.shuffle(nrs)
     times = []
     for part in range(parts):
