@@ -70,8 +70,9 @@ def main():
         print failures
 
 def run_test(test_nr, failures, msvc):
+    print '*** test:', test_nr
+    t0 = time.time()
     try:
-        print '*** test:', test_nr
         if msvc: 
             assert os.system('shedskin -v %d' % test_nr) == 0
         else:
@@ -84,7 +85,7 @@ def run_test(test_nr, failures, msvc):
             assert os.system('make clean -f Makefile.%d; make -f Makefile.%d' % (test_nr, test_nr)) == 0
             command = './%d' % test_nr
         check_output(command, 'python %d.py' % test_nr)
-        print '*** success:', test_nr
+        print '*** success: %d (%.2f)' % (test_nr, time.time()-t0)
     except AssertionError:
         print '*** failure:', test_nr
         traceback.print_exc()
