@@ -1,7 +1,7 @@
 import sys, os, random
-random.seed(442648)
+random.seed(2283679)
 
-total = 193
+total = 195
 parts, part = map(int, sys.argv[1:])
 
 alles = range(total)
