@@ -1,0 +1,3 @@
+#!/bin/bash
+python tx.py $1 $2
+read
