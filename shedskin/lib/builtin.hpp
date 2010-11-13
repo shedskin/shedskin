@@ -1305,7 +1305,15 @@ public:
 
 class IOError : public StandardError {
 public:
-    IOError(str *msg=0) : StandardError(msg) {}
+    int __ss_errno;
+    str *filename;
+    str *message;
+    str *strerror;
+
+    IOError(str *msg=0);
+    str *__str__();
+    str *__repr__();
+
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_IOError; }
 #endif

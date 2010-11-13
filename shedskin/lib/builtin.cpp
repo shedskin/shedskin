@@ -1154,7 +1154,7 @@ file::file(str *name, str *flags) {
     this->name = name;
     this->mode = flags;
     if (!f)
-        throw new IOError(__modct(new str("No such file or directory: '%s'"), 1, name));
+        throw new IOError(name);
     print_opt.endoffile = print_opt.space = 0;
     print_opt.lastchar = '\n';
 }
@@ -2239,6 +2239,19 @@ str *OSError::__str__() {
 }
 str *OSError::__repr__() {
     return __add_strs(5, new str("OSError("), __str(__ss_errno), new str(", '"), strerror, new str("')"));
+}
+
+IOError::IOError(str *filename) {
+    this->filename = filename;
+    __ss_errno = errno;
+    message = new str("");
+    strerror = new str(::strerror(__ss_errno));
+}
+str *IOError::__str__() {
+    return __add_strs(7, new str("[Errno "), __str(__ss_errno), new str("] "), strerror, new str(": '"), filename, new str("'"));
+}
+str *IOError::__repr__() {
+    return __add_strs(5, new str("IOError("), __str(__ss_errno), new str(", '"), strerror, new str("')"));
 }
 
 template <> void *myallocate<__ss_int>(int n) { return GC_MALLOC_ATOMIC(n); }

@@ -622,6 +622,7 @@ class KeyboardInterrupt(BaseException): pass
 class SystemExit(BaseException): pass
 
 __exception = OSError('') # XXX remove
+__exception = IOError('') 
 __exception.errno = 0
 __exception.filename = ''
 __exception.message = ''
