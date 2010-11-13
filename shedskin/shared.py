@@ -103,6 +103,13 @@ class variable:
     def types(self):
         return inode(self).types()
 
+    def masks_global(self):
+        if isinstance(self.parent, class_):
+            mv = self.parent.mv
+            if not mv.module.builtin and mv.module.in_globals(self.name):
+                return True
+        return False
+
     def __repr__(self):
         if self.parent: return repr((self.parent, self.name))
         return self.name
@@ -251,6 +258,10 @@ class module:
             return '/'.join(self.mod_path)+'/__init__.hpp'
         else:
             return '/'.join(self.mod_path)+'.hpp'
+
+    def in_globals(self, ident):
+        mv = self.mv
+        return ident in mv.globals or ident in mv.funcs or ident in mv.ext_funcs or ident in mv.classes or ident in mv.ext_classes
 
     def __repr__(self):
         return 'module '+self.ident
@@ -469,7 +480,11 @@ def lookupclass(node, mv): # XXX lookupvar first?
         module = lookupmodule(node.expr, mv)
         if module and node.attrname in module.classes:
             return module.classes[node.attrname]
-    return None
+
+def lookupvariable(node, gv):
+    lcp = lowest_common_parents(polymorphic_t(gv.mergeinh[node.expr]))
+    if len(lcp) == 1 and isinstance(lcp[0], class_) and node.attrname in lcp[0].vars and not node.attrname in lcp[0].funcs:
+        return lcp[0].vars[node.attrname]
 
 def lookupfunc(node, mv): # XXX lookupvar first?
     if isinstance(node, Name):
@@ -480,7 +495,6 @@ def lookupfunc(node, mv): # XXX lookupvar first?
         module = lookupmodule(node.expr, mv)
         if module and node.attrname in module.funcs:
             return module.funcs[node.attrname]
-    return None
 
 # --- recursively determine (lvalue, rvalue) pairs in assignment expressions
 
@@ -811,3 +825,61 @@ def const_literal(node):
 
 def property_setter(dec):
     return isinstance(dec, Getattr) and isinstance(dec.expr, Name) and dec.attrname == 'setter'
+
+# --- determine lowest common parent classes (inclusive)
+def lowest_common_parents(classes):
+    lcp = set(classes)
+
+    changed = 1
+    while changed:
+        changed = 0
+        for cl in getgx().allclasses:
+             desc_in_classes = [[c for c in ch.descendants(inclusive=True) if c in lcp] for ch in cl.children]
+             if len([d for d in desc_in_classes if d]) > 1:
+                 for d in desc_in_classes:
+                     lcp.difference_update(d)
+                 lcp.add(cl)
+                 changed = 1
+
+    for cl in lcp.copy():
+        if isinstance(cl, class_): # XXX
+            lcp.difference_update(cl.descendants())
+
+    result = [] # XXX there shouldn't be doubles
+    for cl in lcp:
+        if cl.ident not in [r.ident for r in result]:
+            result.append(cl)
+    return result
+
+def hmcpa(func):
+    got_one = 0
+    for dcpa, cpas in func.cp.items():
+        if len(cpas) > 1: return len(cpas)
+        if len(cpas) == 1: got_one = 1
+    return got_one
+
+def polymorphic_cl(classes):
+    cls = set([cl for cl in classes])
+    if len(cls) > 1 and defclass('none') in cls and not defclass('int_') in cls and not defclass('float_') in cls and not defclass('bool_') in cls:
+        cls.remove(defclass('none'))
+    if defclass('tuple2') in cls and defclass('tuple') in cls: # XXX hmm
+        cls.remove(defclass('tuple2'))
+    return cls
+
+def polymorphic_t(types):
+    return polymorphic_cl([t[0] for t in types])
+
+# --- number classes with low and high numbers, to enable constant-time subclass check
+def number_classes():
+    counter = 0
+    for cl in getgx().allclasses:
+        if not cl.bases:
+            counter = number_class_rec(cl, counter+1)
+
+def number_class_rec(cl, counter):
+    cl.low = counter
+    for child in cl.children:
+        counter = number_class_rec(child, counter+1)
+    cl.high = counter
+    return counter
+
