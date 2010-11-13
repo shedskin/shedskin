@@ -1,4 +1,4 @@
 #!/bin/bash
 for i in `seq 0 $(($1-1))`; do
-    gnome-terminal -e "`pwd`/scripts/txhelp $1 $i"&
+    gnome-terminal --geometry +"$(($i*100))"+"$(($i*100))" -e "`pwd`/scripts/txhelp $1 $i"&
 done
