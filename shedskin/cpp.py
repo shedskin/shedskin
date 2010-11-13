@@ -610,6 +610,10 @@ class generateVisitor(ASTVisitor):
             if var.name in vars:
                 continue
 
+            cppname = self.cpp_name(var.name)
+            if var.masks_global():
+                cppname = '_'+var.name
+
             # virtual
             if var.name in cl.virtualvars:
                 ident = var.name
@@ -621,11 +625,11 @@ class generateVisitor(ASTVisitor):
 
                 ts = self.padme(typestr(merged))
                 if merged:
-                    self.output(ts+self.cpp_name(ident)+';')
+                    self.output(ts+cppname+';')
 
             # non-virtual
             elif var in getgx().merged_inh and getgx().merged_inh[var]:
-                self.output(typesetreprnew(var, cl)+self.cpp_name(var.name)+';')
+                self.output(typesetreprnew(var, cl)+cppname+';')
 
         if [v for v in cl.vars if not v.startswith('__')]:
             print >>self.out
@@ -2444,7 +2448,13 @@ class generateVisitor(ASTVisitor):
         if ident == '__getitem__' and self.one_class(node.expr, ('list', 'str_', 'tuple')):
             ident = '__getfast__'
 
-        self.append(self.cpp_name(ident))
+        self.append(self.attr_var_ref(node, ident))
+
+    def attr_var_ref(self, node, ident): # XXX cpp_name(node)?
+        var = lookupvariable(node, self)
+        if var and var.masks_global():
+            return '_'+ident
+        return self.cpp_name(ident)
 
     def visitAssAttr(self, node, func=None): # XXX merge with visitGetattr
         cl, module = lookup_class_module(node.expr, inode(node).mv, func)
@@ -2469,7 +2479,7 @@ class generateVisitor(ASTVisitor):
                 self.visit(node.expr, func)
             self.append(self.connector(node.expr, func)) # XXX '->'
 
-        self.append(self.cpp_name(node.attrname))
+        self.append(self.attr_var_ref(node, node.attrname))
 
     def visitAssName(self, node, func=None):
         self.append(self.cpp_name(node.name))
@@ -2743,51 +2753,12 @@ def typesplit(node, parent):
 
     return split
 
-def polymorphic_cl(classes):
-    cls = set([cl for cl in classes])
-    if len(cls) > 1 and defclass('none') in cls and not defclass('int_') in cls and not defclass('float_') in cls and not defclass('bool_') in cls:
-        cls.remove(defclass('none'))
-    if defclass('tuple2') in cls and defclass('tuple') in cls: # XXX hmm
-        cls.remove(defclass('tuple2'))
-    return cls
-
 def split_classes(split):
     alltypes = set()
     for (dcpa, cpa), types in split.items():
         alltypes.update(types)
     return set([t[0] for t in alltypes if isinstance(t[0], class_)])
 
-# --- determine lowest common parent classes (inclusive)
-def lowest_common_parents(classes):
-    lcp = set(classes)
-
-    changed = 1
-    while changed:
-        changed = 0
-        for cl in getgx().allclasses:
-             desc_in_classes = [[c for c in ch.descendants(inclusive=True) if c in lcp] for ch in cl.children]
-             if len([d for d in desc_in_classes if d]) > 1:
-                 for d in desc_in_classes:
-                     lcp.difference_update(d)
-                 lcp.add(cl)
-                 changed = 1
-
-    for cl in lcp.copy():
-        if isinstance(cl, class_): # XXX
-            lcp.difference_update(cl.descendants())
-
-    result = [] # XXX there shouldn't be doubles
-    for cl in lcp:
-        if cl.ident not in [r.ident for r in result]:
-            result.append(cl)
-    return result
-
-def hmcpa(func):
-    got_one = 0
-    for dcpa, cpas in func.cp.items():
-        if len(cpas) > 1: return len(cpas)
-        if len(cpas) == 1: got_one = 1
-    return got_one
 
 # --- assignment (incl. passing arguments, returning values) may require a cast
 def assign_needs_cast(arg, func, formal, target):
@@ -2843,23 +2814,6 @@ def split_subsplit(split, varname):
             if (var, t[1], 0) in getgx().cnode: # XXX yeah?
                 subsplit[dcpa, cpa].update(getgx().cnode[var, t[1], 0].types())
     return subsplit
-
-def polymorphic_t(types):
-    return polymorphic_cl([t[0] for t in types])
-
-# --- number classes with low and high numbers, to enable constant-time subclass check
-def number_classes():
-    counter = 0
-    for cl in getgx().allclasses:
-        if not cl.bases:
-            counter = number_class_rec(cl, counter+1)
-
-def number_class_rec(cl, counter):
-    cl.low = counter
-    for child in cl.children:
-        counter = number_class_rec(child, counter+1)
-    cl.high = counter
-    return counter
 
 class Bitpair:
     def __init__(self, nodes, msg, inline):
