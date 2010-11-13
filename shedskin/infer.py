@@ -627,7 +627,7 @@ def update_progressbar(perc):
 
 # --- cartesian product algorithm (cpa) & iterative flow analysis (ifa)
 def iterative_dataflow_analysis():
-    print '[iterative type analysis..]'
+    print '[analyzing types..]'
     backup = backup_network()
 
     getgx().orig_types = {}
