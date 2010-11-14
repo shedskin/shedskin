@@ -80,3 +80,14 @@ try:
 except OSError as e2:
     print e2, repr(e2)
     print e2.errno, e2.strerror, e2.filename
+
+# del crash
+class AA:
+    def __init__(self, x):
+        if x == 1:
+            self.a = AA(0)
+            self.b = AA(0)
+    def __del__(self):
+        pass
+aa = AA(1)
+del aa.a, aa.b
