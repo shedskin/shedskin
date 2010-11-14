@@ -1,4 +1,10 @@
 
+class CPU:
+    def AND(self):
+        print 'AND'
+c = CPU()
+c.AND()
+
 def press(keys):
     print sorted(list(keys))
     print 'h' in keys
