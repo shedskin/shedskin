@@ -90,4 +90,6 @@ class AA:
     def __del__(self):
         pass
 aa = AA(1)
-del aa.a, aa.b
+gg = {1:2,3:4,5:7}
+del aa.a, aa.b, gg[1], gg[5]
+print gg
