@@ -2457,6 +2457,9 @@ class generateVisitor(ASTVisitor):
         return self.cpp_name(ident)
 
     def visitAssAttr(self, node, func=None): # XXX merge with visitGetattr
+        if node.flags == 'OP_DELETE':
+            return
+
         cl, module = lookup_class_module(node.expr, inode(node).mv, func)
 
         # module.attr
