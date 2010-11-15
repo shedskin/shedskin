@@ -2548,7 +2548,7 @@ template<class T> list<T>::list(str *s) {
     this->units.resize(len(s));
     int sz = s->unit.size();
     for(int i=0; i<sz; i++)
-        this->units[i] = __char_cache[s->unit[i]];
+        this->units[i] = __char_cache[((unsigned char)(s->unit[i]))];
 }
 
 #ifdef __SS_BIND
@@ -2614,7 +2614,7 @@ template<class T> void *list<T>::extend(tuple2<T,T> *p) {
 template<class T> void *list<T>::extend(str *s) {
     int sz = s->unit.size();
     for(int i=0; i<sz; i++)
-        this->units.push_back(__char_cache[s->unit[i]]);
+        this->units.push_back(__char_cache[((unsigned char)(s->unit[i]))]);
     return NULL;
 }
 
@@ -2894,12 +2894,12 @@ template<class T> inline T list<T>::for_in_next(int &i) {
 
 inline str *str::__getitem__(__ss_int i) {
     i = __wrap(this, i);
-    return __char_cache[(unsigned char)unit[i]];
+    return __char_cache[((unsigned char)(unit[i]))];
 }
 
 inline str *str::__getfast__(__ss_int i) {
     i = __wrap(this, i);
-    return __char_cache[(unsigned char)unit[i]];
+    return __char_cache[((unsigned char)(unit[i]))];
 }
 
 inline __ss_int str::__len__() {
@@ -2911,7 +2911,7 @@ inline bool str::for_in_has_next(int i) {
 }
 
 inline str *str::for_in_next(int &i) {
-    return __char_cache[unit[i++]];
+    return __char_cache[((unsigned char)(unit[i++]))];
 }
 
 template <class U> str *str::join(U *iter) {
@@ -3732,7 +3732,7 @@ template<class T> tuple2<T, T>::tuple2(str *s) {
     this->units.resize(len(s));
     int sz = s->unit.size();
     for(int i=0; i<sz; i++)
-        this->units[i] = __char_cache[s->unit[i]];
+        this->units[i] = __char_cache[((unsigned char)(s->unit[i]))];
 }
 
 template<class T> T tuple2<T, T>::__getfirst__() {

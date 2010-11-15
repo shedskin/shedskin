@@ -1058,7 +1058,7 @@ str *str::replace(str *a, str *b, int c) {
 
 str *str::upper() {
     if(unit.size() == 1)
-        return __char_cache[::toupper(unit[0])];
+        return __char_cache[((unsigned char)(::toupper(unit[0])))];
 
     str *toReturn = new str(*this);
     std::transform(toReturn->unit.begin(), toReturn->unit.end(), toReturn->unit.begin(), toupper);
@@ -1068,7 +1068,7 @@ str *str::upper() {
 
 str *str::lower() {
     if(unit.size() == 1)
-        return __char_cache[::tolower(unit[0])];
+        return __char_cache[((unsigned char)(::tolower(unit[0])))];
 
     str *toReturn = new str(*this);
     std::transform(toReturn->unit.begin(), toReturn->unit.end(), toReturn->unit.begin(), tolower);
@@ -1641,7 +1641,7 @@ void slicenr(__ss_int x, __ss_int &l, __ss_int &u, __ss_int &s, __ss_int len) {
 #ifdef __SS_LONG
 str *__str(__ss_int i, __ss_int base) {
     if(i<10 && i>=0 && base==10)
-        return __char_cache['0'+i];
+        return __char_cache[((unsigned char)('0'+i))];
     char buf[24];
     char *psz = buf+23;
 /*    if(i==INT_MIN)
@@ -1682,7 +1682,7 @@ str *__str(__ss_int i, __ss_int base) {
 
 str *__str(int i, int base) {
     if(base==10 && i<10 && i>=0)
-        return __char_cache['0'+i];
+        return __char_cache[((unsigned char)('0'+i))];
 
     char buf[12];
     char *psz = buf+11;
