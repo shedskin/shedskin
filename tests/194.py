@@ -95,3 +95,7 @@ del aa.a, aa.b, gg[1], gg[5]
 print gg
 lx = [1,2]
 del aa, gg, lx
+
+# char_cache out of bounds
+for nnn in '"\xd8\xc3A~s':
+    print repr(nnn)
