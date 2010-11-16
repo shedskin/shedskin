@@ -99,3 +99,9 @@ del aa, gg, lx
 # char_cache out of bounds
 for nnn in '"\xd8\xc3A~s':
     print repr(nnn)
+
+# partition model
+(ar,br,cr) = 'allo ballo'.partition(' ')
+print ar
+print br
+print cr

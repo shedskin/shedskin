@@ -304,9 +304,9 @@ class str_(pyseq):
     def splitlines(self, c=0):
         return ['']
     def partition(self, sep):
-        return ['','','']
+        return ('',)
     def rpartition(self, sep):
-        return ['','','']
+        return ('',)
     def rsplit(self, sep='', c=-1):
         return ['']
     def split(self, sep='',c=-1):
