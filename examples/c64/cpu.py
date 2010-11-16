@@ -210,7 +210,7 @@ class CPU(object):
 		elif opcode == 0x20:
 			return self.JSR(opcode)
 		elif opcode == 0x21:
-			return self.ANDX(opcode)
+			return self.AND(opcode)
 		elif opcode == 0x22:
 			return self.KIL(opcode)
 		elif opcode == 0x23:
@@ -218,7 +218,7 @@ class CPU(object):
 		elif opcode == 0x24:
 			return self.BIT(opcode)
 		elif opcode == 0x25:
-			return self.ANDX(opcode)
+			return self.AND(opcode)
 		elif opcode == 0x26:
 			return self.ROL(opcode)
 		elif opcode == 0x27:
@@ -226,7 +226,7 @@ class CPU(object):
 		elif opcode == 0x28:
 			return self.PLP(opcode)
 		elif opcode == 0x29:
-			return self.ANDX(opcode)
+			return self.AND(opcode)
 		elif opcode == 0x2A:
 			return self.ROL(opcode)
 		elif opcode == 0x2B:
@@ -234,7 +234,7 @@ class CPU(object):
 		elif opcode == 0x2C:
 			return self.BIT(opcode)
 		elif opcode == 0x2D:
-			return self.ANDX(opcode)
+			return self.AND(opcode)
 		elif opcode == 0x2E:
 			return self.ROL(opcode)
 		elif opcode == 0x2F:
@@ -242,7 +242,7 @@ class CPU(object):
 		elif opcode == 0x30:
 			return self.BMI(opcode)
 		elif opcode == 0x31:
-			return self.ANDX(opcode)
+			return self.AND(opcode)
 		elif opcode == 0x32:
 			return self.KIL(opcode)
 		elif opcode == 0x33:
@@ -250,7 +250,7 @@ class CPU(object):
 		elif opcode == 0x34:
 			return self.NOP(opcode)
 		elif opcode == 0x35:
-			return self.ANDX(opcode)
+			return self.AND(opcode)
 		elif opcode == 0x36:
 			return self.ROL(opcode)
 		elif opcode == 0x37:
@@ -258,7 +258,7 @@ class CPU(object):
 		elif opcode == 0x38:
 			return self.SEC(opcode)
 		elif opcode == 0x39:
-			return self.ANDX(opcode)
+			return self.AND(opcode)
 		elif opcode == 0x3A:
 			return self.NOP(opcode)
 		elif opcode == 0x3B:
@@ -266,7 +266,7 @@ class CPU(object):
 		elif opcode == 0x3C:
 			return self.NOP(opcode)
 		elif opcode == 0x3D:
-			return self.ANDX(opcode)
+			return self.AND(opcode)
 		elif opcode == 0x3E:
 			return self.ROL(opcode)
 		elif opcode == 0x3F:
@@ -953,7 +953,7 @@ class CPU(object):
 			0x21: "IND+X",
 			0x31: "IND+Y",
 		}
-	def ANDX(self, opcode):
+	def AND(self, opcode):
 		""" AND with A """
 		value, operand = self.test_bits(CPU.AND_addressing_modes[opcode])
 		self.write_register("A", value)

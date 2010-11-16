@@ -115,7 +115,7 @@ def do_extmod_methoddef(gv, ident, funcs):
         print >>gv.out, '    {(char *)"__reduce__", (PyCFunction)%s__reduce__, METH_VARARGS | METH_KEYWORDS, (char *)""},' % ident
         print >>gv.out, '    {(char *)"__setstate__", (PyCFunction)%s__setstate__, METH_VARARGS | METH_KEYWORDS, (char *)""},' % ident
     for func in funcs:
-        if isinstance(func.parent, class_): id = func.parent.ident+'_'+func.ident
+        if isinstance(func.parent, class_): id = nokeywords(func.parent.ident+'_'+func.ident) # XXX
         else: id = 'Global_'+'_'.join(gv.module.mod_path)+'_'+func.ident
         print >>gv.out, '    {(char *)"%(id)s", (PyCFunction)%(id2)s, METH_VARARGS | METH_KEYWORDS, (char *)""},' % {'id': func.ident, 'id2': id}
     print >>gv.out, '    {NULL}\n};\n'
@@ -125,7 +125,7 @@ def do_extmod_method(gv, func):
     if is_method: formals = func.formals[1:]
     else: formals = func.formals
 
-    if isinstance(func.parent, class_): id = func.parent.ident+'_'+func.ident # XXX
+    if isinstance(func.parent, class_): id = nokeywords(func.parent.ident+'_'+func.ident) # XXX
     else: id = 'Global_'+'_'.join(gv.module.mod_path)+'_'+func.ident # XXX
     print >>gv.out, 'PyObject *%s(PyObject *self, PyObject *args, PyObject *kwargs) {' % id
     print >>gv.out, '    try {'
