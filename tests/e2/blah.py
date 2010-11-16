@@ -1,3 +1,8 @@
+import memory
+
+class meuk:
+    def __init__(self):
+        self.memory = 4
 
 class CPU:
     def AND(self):
@@ -14,3 +19,4 @@ def press(keys):
 
 if __name__ == '__main__':
     press(set('a'))
+    print meuk().memory
