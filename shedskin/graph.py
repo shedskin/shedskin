@@ -1169,7 +1169,10 @@ class moduleVisitor(ASTVisitor):
 
             getgx().item_rvalue[item] = rvalue
             if isinstance(item, AssName):
-                lvar = defaultvar(item.name, func)
+                if func and item.name in func.globals: # XXX merge
+                    lvar = defaultvar(item.name, None)
+                else:
+                    lvar = defaultvar(item.name, func)
                 self.addconstraint((inode(fakefunc), inode(lvar)), func)
             elif isinstance(item, (Subscript, AssAttr)):
                 self.assign_pair(item, fakefunc, func)

@@ -105,3 +105,15 @@ for nnn in '"\xd8\xc3A~s':
 print ar
 print br
 print cr
+
+# tuple_flow and globals 
+def bwa():
+   return (11,12)
+def bwb():
+   print bwg
+def bwmain():
+   global bwg
+   bwg=30
+   bwg,bwh=bwa()
+   bwb()
+bwmain()
