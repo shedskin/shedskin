@@ -1180,7 +1180,7 @@ class generateVisitor(ASTVisitor):
                 self.output(cast)
             self.deindent()
 
-    def cpp_name(self, name, func=None):
+    def cpp_name(self, name, func=None): # XXX breakup and remove
         if ((self.module == getgx().main_module and name == 'init'+self.module.ident) or \
             name in [cl.ident for cl in getgx().allclasses] or \
             name+'_' in [cl.ident for cl in getgx().allclasses]):
@@ -2915,11 +2915,6 @@ def upgrade_variables():
 
                 if inhvar in getgx().merged_all: # XXX ?
                     getgx().types[newnode].update(getgx().merged_all[inhvar])
-
-def nokeywords(name):
-    if name in getgx().cpp_keywords:
-        return getgx().ss_prefix+name
-    return name
 
 # --- generate C++ and Makefiles
 def generate_code():

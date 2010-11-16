@@ -110,6 +110,13 @@ class variable:
                 return True
         return False
 
+    def cpp_name(self):
+        name = self.name
+        if self.masks_global() or \
+           name in [cl.ident for cl in getgx().allclasses]:
+            name = '_'+name # XXX ss prefix
+        return nokeywords(name)
+
     def __repr__(self):
         if self.parent: return repr((self.parent, self.name))
         return self.name
@@ -883,3 +890,7 @@ def number_class_rec(cl, counter):
     cl.high = counter
     return counter
 
+def nokeywords(name):
+    if name in getgx().cpp_keywords:
+        return getgx().ss_prefix+name
+    return name

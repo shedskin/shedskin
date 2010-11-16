@@ -79,11 +79,10 @@ def do_init_mods(gv, what):
 def do_add_globals(gv, classes, __ss_mod):
     # global variables
     for var in supported_vars(getmv().globals.values()):
-        varname = gv.cpp_name(var.name)
         if [1 for t in gv.mergeinh[var] if t[0].ident in ['int_', 'float_', 'bool_']]:
-            print >>gv.out, '    PyModule_AddObject(%(ssmod)s, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+gv.module.ident+'__::'+varname, 'ssmod': __ss_mod}
+            print >>gv.out, '    PyModule_AddObject(%(ssmod)s, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+gv.module.ident+'__::'+var.cpp_name(), 'ssmod': __ss_mod}
         else:
-            print >>gv.out, '    PyModule_AddObject(%(ssmod)s, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+gv.module.ident+'__::'+varname, 'ssmod': __ss_mod}
+            print >>gv.out, '    PyModule_AddObject(%(ssmod)s, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+gv.module.ident+'__::'+var.cpp_name(), 'ssmod': __ss_mod}
 
 def exported_classes(gv, warns=False):
     classes = []
@@ -275,7 +274,7 @@ def do_extmod_class(gv, cl):
     # getset
     for var in vars:
         print >>gv.out, 'PyObject *__ss_get_%s_%s(%sObject *self, void *closure) {' % (cl.ident, var.name, cl.ident)
-        print >>gv.out, '    PyObject *p = __to_py(self->__ss_object->%s);' % gv.cpp_name(var.name)
+        print >>gv.out, '    PyObject *p = __to_py(self->__ss_object->%s);' % var.cpp_name()
         print >>gv.out, '    Py_INCREF(p);'
         print >>gv.out, '    return p;'
         print >>gv.out, '}\n'
@@ -284,9 +283,9 @@ def do_extmod_class(gv, cl):
         print >>gv.out, '    try {'
         typ = cpp.typesetreprnew(var, var.parent)
         if typ == 'void *': # XXX investigate
-            print >>gv.out, '        self->__ss_object->%s = NULL;' % gv.cpp_name(var.name)
+            print >>gv.out, '        self->__ss_object->%s = NULL;' % var.cpp_name()
         else:
-            print >>gv.out, '        self->__ss_object->%s = __to_ss<%s>(value);' % (gv.cpp_name(var.name), typ)
+            print >>gv.out, '        self->__ss_object->%s = __to_ss<%s>(value);' % (var.cpp_name(), typ)
         print >>gv.out, '    } catch (Exception *e) {'
         print >>gv.out, '        PyErr_SetString(__to_py(e), ((e->msg)?(e->msg->unit.c_str()):""));'
         print >>gv.out, '        return -1;'
@@ -368,7 +367,7 @@ def do_reduce_setstate(gv, cl, vars):
     print >>gv.out, '    PyTuple_SetItem(t, 1, a);'
     print >>gv.out, '    PyObject *b = PyTuple_New(2);'
     for i, var in enumerate(vars):
-        print >>gv.out, '    PyTuple_SetItem(b, %d, __to_py(((%sObject *)self)->__ss_object->%s));' % (i, cl.ident, gv.cpp_name(var.name))
+        print >>gv.out, '    PyTuple_SetItem(b, %d, __to_py(((%sObject *)self)->__ss_object->%s));' % (i, cl.ident, var.cpp_name())
     print >>gv.out, '    PyTuple_SetItem(t, 2, b);'
     print >>gv.out, '    return t;'
     print >>gv.out, '}\n'
@@ -377,7 +376,7 @@ def do_reduce_setstate(gv, cl, vars):
     print >>gv.out, '    PyObject *state = PyTuple_GetItem(args, 0);'
     for i, var in enumerate(vars):
         vartype = cpp.typesetreprnew(var, var.parent)
-        print >>gv.out, '    ((%sObject *)self)->__ss_object->%s = __to_ss<%s>(PyTuple_GetItem(state, %d));' % (cl.ident, gv.cpp_name(var.name), vartype, i)
+        print >>gv.out, '    ((%sObject *)self)->__ss_object->%s = __to_ss<%s>(PyTuple_GetItem(state, %d));' % (cl.ident, var.cpp_name(), vartype, i)
     print >>gv.out, '    return Py_None;'
     print >>gv.out, '}\n'
 
