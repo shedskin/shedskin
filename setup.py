@@ -8,5 +8,5 @@ setup(name='shedskin',
       url='http://code.google.com/p/shedskin/',
       scripts=['scripts/shedskin'],
       packages=['shedskin'],
-      package_data={'shedskin': ['lib/*.cpp', 'lib/*.hpp', 'lib/*.py', 'lib/os/*.cpp', 'lib/os/*.hpp', 'lib/os/*.py', 'FLAGS']},
+      package_data={'shedskin': ['lib/*.cpp', 'lib/*.hpp', 'lib/*.py', 'lib/os/*.cpp', 'lib/os/*.hpp', 'lib/os/*.py', 'FLAGS', 'illegal']},
      )
