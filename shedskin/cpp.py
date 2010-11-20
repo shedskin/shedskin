@@ -839,14 +839,13 @@ class generateVisitor(ASTVisitor):
         self.visittuplelist(node, func, argtypes)
 
     def visitAssert(self, node, func=None):
-        if getgx().assertions:
-            self.start('ASSERT(')
-            self.visitm(node.test, ', ', func)
-            if len(node.getChildNodes()) > 1:
-                self.visit(node.getChildNodes()[1], func)
-            else:
-                self.append('0')
-            self.eol(')')
+        self.start('ASSERT(')
+        self.visitm(node.test, ', ', func)
+        if len(node.getChildNodes()) > 1:
+            self.visit(node.getChildNodes()[1], func)
+        else:
+            self.append('0')
+        self.eol(')')
 
     def visitm(self, *args):
         if args and isinstance(args[-1], (function, class_)):
@@ -2991,6 +2990,7 @@ def generate_code():
             if not getgx().wrap_around_check: line += ' -D__SS_NOWRAP'
             if not getgx().bounds_checking: line += ' -D__SS_NOBOUNDS'
             if getgx().fast_random: line += ' -D__SS_FASTRANDOM'
+            if not getgx().assertions: line += ' -D__SS_NOASSERT'
             if getgx().fast_hash: line += ' -D__SS_FASTHASH'
             if getgx().longlong: line += ' -D__SS_LONG'
             if getgx().extension_module:
