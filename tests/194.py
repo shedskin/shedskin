@@ -117,3 +117,8 @@ def bwmain():
    bwg,bwh=bwa()
    bwb()
 bwmain()
+
+# dict.update model
+dikkie = {}
+dikkie.update((a,-a) for a in range(-5,5,2))
+print sorted(dikkie.keys()), sorted(dikkie.values())
