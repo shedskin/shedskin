@@ -15,6 +15,8 @@
 
 #ifdef WIN32
 
+#include <io.h>
+
 #define WIN32_LEAN_AND_MEAN
 #include <winsock2.h>
 #define socklen_t int
@@ -104,7 +106,7 @@ public:
     str *getsockopt(__ss_int level, __ss_int optname, __ss_int value);
     socket *bind(inet_address address);
     socket *bind(pyseq<str *> *address);
-//    file *makefile(str *flags=NULL);
+    file *makefile(str *flags=NULL);
     socket *setsockopt(__ss_int level, __ss_int optname, __ss_int value);
     socket *connect(inet_address address);
     socket *connect(pyseq<str *> *address);

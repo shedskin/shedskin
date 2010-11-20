@@ -147,9 +147,34 @@ str *socket::getsockopt(__ss_int level, __ss_int optname, __ss_int value) {
     return new str(buf, buflen);
 }
 
-/*file *socket::makefile(str *flags) {
-    return new file(new str(""), flags);
-} */
+file *socket::makefile(str *mode) {
+    if(!mode)
+        mode = new str("r");
+
+#ifdef WIN32
+	Py_intptr_t fd;
+#else
+	int fd;
+#endif
+	FILE *fp;
+
+#ifdef WIN32
+	if (((fd = _open_osfhandle(_fd, _O_BINARY)) < 0) ||
+	    ((fd = dup(fd)) < 0) || ((fp = fdopen(fd, mode->unit.c_str())) == NULL))
+#else
+	if ((fd = dup(_fd)) < 0 || (fp = fdopen(fd, mode->unit.c_str())) == NULL)
+#endif
+	{
+		/*if (fd >= 0)
+			SOCKETCLOSE(fd);
+		return s->errorhandler(); */
+        throw new error(make_errstring("makefile"));
+	}
+    file *f = new file(fp);
+    f->name = new str("<socket>");
+    f->mode = mode;
+    return f;
+}
 
 socket *socket::bind(const sockaddr *sa, socklen_t salen)
 {
