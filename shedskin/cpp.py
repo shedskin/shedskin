@@ -839,13 +839,14 @@ class generateVisitor(ASTVisitor):
         self.visittuplelist(node, func, argtypes)
 
     def visitAssert(self, node, func=None):
-        self.start('ASSERT(')
-        self.visitm(node.test, ', ', func)
-        if len(node.getChildNodes()) > 1:
-            self.visit(node.getChildNodes()[1], func)
-        else:
-            self.append('0')
-        self.eol(')')
+        if getgx().assertions:
+            self.start('ASSERT(')
+            self.visitm(node.test, ', ', func)
+            if len(node.getChildNodes()) > 1:
+                self.visit(node.getChildNodes()[1], func)
+            else:
+                self.append('0')
+            self.eol(')')
 
     def visitm(self, *args):
         if args and isinstance(args[-1], (function, class_)):

@@ -53,6 +53,7 @@ class globalInfo: # XXX add comments, split up
         self.wrap_around_check = True
         self.bounds_checking = True
         self.fast_random = False
+        self.assertions = True
         self.extension_module = False
         self.longlong = False
         self.flags = None
