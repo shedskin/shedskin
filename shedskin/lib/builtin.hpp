@@ -1428,7 +1428,11 @@ public:
 #endif
 };
 
+#ifndef __SS_NOASSERT
 #define ASSERT(x, y) if(!(x)) throw new AssertionError(y);
+#else
+#define ASSERT(x, y)
+#endif
 
 static void __throw_index_out_of_range() { /* improve inlining */
    throw new IndexError(new str("index out of range"));
