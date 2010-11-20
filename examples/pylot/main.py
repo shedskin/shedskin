@@ -50,7 +50,7 @@ class App(object):
     self.button.pack(side=LEFT)
     self.labels = []
     for v in viewports:
-      label = Label(root, width=70, height=40)
+      label = Label(root)
       self.labels.append(label)
       label.pack(side=LEFT)
       def clickHandler(v):
@@ -115,15 +115,15 @@ class Viewport(object):
     if not self.processor:
       self.initProcessor()
     print "Processing pixel: ", x, ", ", y
-    d = get_debug()
+#    d = get_debug()
 #    set_debug(True)
     block = self.camera.runPixelRange( ((x, x+1), (y, y+1)) )
     for (i, j), c in block:
       self.draw.point((i, j), c)
     self.refreshImage()
-    print "Calling get_debug_rays"
-    debug_rays = get_debug_rays();
-    self.app.drawDebugRays(debug_rays)
+#    print "Calling get_debug_rays"
+#    debug_rays = get_debug_rays();
+#    self.app.drawDebugRays(debug_rays)
     print "Calling clear_debug_rays"
 #    set_debug(False)
     clear_debug_rays()
@@ -144,8 +144,9 @@ class Viewport(object):
   def initProcessor(self):
     self.processor = ThreadedQueueProcessor(CameraHandler(self.camera), 9,
                                             use_processes=True)
-    self.memo = []
-    self.starttime = time.time()
+#    self.memo = []
+    self.image = Image.new("RGBA", (self.camera.cols, self.camera.rows))
+    self.draw = ImageDraw.Draw(self.image)
 
   def process(self):
     self.start_time = time.time()
@@ -159,7 +160,7 @@ class Viewport(object):
           self.initProcessor()
         BLOCKS_WIDE = 10
         BLOCKS_TALL = 10
-        self.todo = BLOCKS_WIDE*BLOCKS_TALL
+        self.count = BLOCKS_WIDE*BLOCKS_TALL
         jobs = []
         for i in range(BLOCKS_WIDE):
           for j in range(BLOCKS_TALL):
@@ -194,26 +195,30 @@ class Viewport(object):
     self.label.config(image=self.imageTk)
 
   def checkQueue(self):
+    gotData = False
     if self.processor:
-        block = self.processor.get(False)
-        blocks = 0
-        while block:
-          blocks += 1
-          ((startCol, endCol), (startRow, endRow)), colors = block
-          w,h = (endCol-startCol), (endRow-startRow)
-          ork = [chr(int(c[1:3],16))+chr(int(c[3:5],16))+chr(int(c[5:7],16)) for c in colors] # XXX bleh
-          image1 = Image.fromstring('RGB', (w, h), ''.join(ork))
-          tkpi = ImageTk.PhotoImage(image1)
-          self.memo.append(tkpi)
-          label_image = Label(self.app.root, image=tkpi)
-          label_image.place(x=startCol, y=startRow+50,width=w, height=h)
-          self.todo -= 1
-          if self.todo == 0:
-              print 'time: %.2f' % (time.time()-self.start_time)
-          if blocks == 25:
-              break
+      block = self.processor.get(False)
+      while block:
+        gotData = True
+        self.count -= 1
+        assert self.count >= 0
+        ((startCol, endCol), (startRow, endRow)), colors = block
+        w,h = (endCol-startCol), (endRow-startRow)
+        ork = [chr(int(c[1:3],16))+chr(int(c[3:5],16))+chr(int(c[5:7],16)) for c in colors] # XXX bleh
+        image1 = Image.fromstring('RGB', (w, h), ''.join(ork))
+        self.image.paste(image1, (startCol, startRow))
+#          tkpi = ImageTk.PhotoImage(image1)
+#          self.memo.append(tkpi)
+#          label_image = Label(self.app.root, image=tkpi)
+#          label_image.place(x=startCol, y=startRow+50,width=w, height=h)
+        if self.count == 0:
+          print 'time: %.2f' % (time.time()-self.start_time)
+          block = None
+        else:
           block = self.processor.get(False)
-        self.app.root.after(250, self.checkQueue)
+      if gotData:
+        self.refreshImage()
+      self.app.root.after(250, self.checkQueue)
 
   def drawDebugRays(self, debug_rays):
     for ray, color in debug_rays:
@@ -250,7 +255,7 @@ geometry = SimpleGeometry.getGeometry()
 world = SimpleGeometry.getWorld(geometry)
 cameras = [SimpleGeometry.getCamera(world), SimpleGeometry.getCamera2(world)]
 #cameras = [getCamera(world)]
-viewports = [Viewport(c) for c in cameras[:1]]
+viewports = [Viewport(c) for c in cameras]
 app = App(root, viewports)
 
 single_threaded = False
