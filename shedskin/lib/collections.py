@@ -123,8 +123,12 @@ class defaultdict:
         return self.value
     def popitem(self):
         return (self.unit, self.value)
+
     def update(self, d):
         self.__setunit__(d.unit, d.value)
+    def updateiter(self, other):
+        item = iter(other).next()
+        self.__setunit__(item[0], item[1])
 
     def __delete__(self, k):
         self.__key__(k)

@@ -122,3 +122,7 @@ bwmain()
 dikkie = {}
 dikkie.update((a,-a) for a in range(-5,5,2))
 print sorted(dikkie.keys()), sorted(dikkie.values())
+import collections
+dikkie2 = collections.defaultdict(int)
+dikkie2.update((a,-a) for a in range(-5,5,2))
+print sorted(dikkie2.keys()), sorted(dikkie2.values())

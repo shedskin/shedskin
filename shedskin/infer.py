@@ -292,13 +292,19 @@ def redirect(c, dcpa, func, callfunc, ident, callnode):
     if isinstance(func.parent, class_) and func.ident in func.parent.staticmethods:
         dcpa = 1
 
-    # dict, defaultdict
+    # dict.__init__
     if (ident, nrargs(callfunc)) in (('dict', 1), ('defaultdict', 2)):
         clnames = [x[0].ident for x in c if isinstance(x[0], class_)]
         if 'dict' in clnames or 'defaultdict' in clnames:
             func = list(callnode.types())[0][0].funcs['__initdict__']
         else:
             func = list(callnode.types())[0][0].funcs['__inititer__']
+
+    # dict.update
+    if func.ident == 'update' and isinstance(func.parent, class_) and func.parent.ident in ('dict', 'defaultdict'):
+        clnames = [x[0].ident for x in c if isinstance(x[0], class_)]
+        if not ('dict' in clnames or 'defaultdict' in clnames):
+            func = func.parent.funcs['updateiter']
 
     # list, tuple
     if ident in ('list', 'tuple', 'set', 'frozenset') and nrargs(callfunc) == 1:
