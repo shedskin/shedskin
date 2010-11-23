@@ -6,6 +6,7 @@
 *.?pp
 *.so
 FLAGS
+shedskin/FLAGS
 Makefile*
 /lib
 test.*
