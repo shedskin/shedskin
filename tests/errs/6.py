@@ -5,11 +5,17 @@ class AA:
             self.b = AA(0)
     def __del__(self):
         pass
+    def __iter__(self):
+        pass
+    def __call__(self):
+        pass
 aa = AA(1)
 gg = {1:2,3:4,5:7}
 del aa.a, aa.b, gg[1], gg[5]
 print gg
 
 #*WARNING* 6.py:6: '__del__' is not supported
+#*WARNING* 6.py:8: '__iter__' is not supported
+#*WARNING* 6.py:10: '__call__' is not supported
 #*WARNING* 6.py:6: function (class AA, '__del__') not called!
-#*WARNING* 6.py:10: attribute won't be deleted
+#*WARNING* 6.py:14: attribute won't be deleted
