@@ -17,7 +17,7 @@
 
 import math
 
-from Utils import Roughly, debug_print
+from Utils import Roughly #, debug_print
 #{
 from Utils import add_debug_ray
 #}
@@ -96,13 +96,13 @@ class Camera(object):
                 lightDotSurfaceNormal * intensity)
             color += (light.material.emissive * material.specular).scale(
                 highlight * intensity)
-            debug_print("light is " + repr(light))
-            debug_print("got direct lighting color " + repr(color))
+#            debug_print("light is " + repr(light))
+#            debug_print("got direct lighting color " + repr(color))
     return color
 
   def getLightingFromSecondaryRay(self, ray, lights, generation, strength,
                                   materialStack, ignore=None, inside=None):
-    debug_print("In getLightingFromSecondaryRay(%d)" % generation)
+#    debug_print("In getLightingFromSecondaryRay(%d)" % generation)
     insideMaterial = materialStack[-1]
     hit = self.world.intersect(ray, ignore=ignore, inside=inside,
                                insideMaterial=insideMaterial)
@@ -122,40 +122,40 @@ class Camera(object):
           else:
             p = 1.0
           attenuators.append(p)
-        debug_print("attenuators is " + repr(attenuators))
-        debug_print("strength was " + repr(strength))
+#        debug_print("attenuators is " + repr(attenuators))
+#        debug_print("strength was " + repr(strength))
         strength *= Color.fromList(attenuators)
-        debug_print("strength is " + repr(strength))
+#        debug_print("strength is " + repr(strength))
         # Too dim to matter after attenuation?
         if sum(strength.toList()) < 0.01:
-          debug_print("Out early getLightingFromSecondaryRay(%d)" % generation)
+#          debug_print("Out early getLightingFromSecondaryRay(%d)" % generation)
           return color
       color = self.getLighting(ray, hit, lights,
                                generation=generation+1,
                                strength=strength,
                                materialStack=materialStack)
-    debug_print("returning color " + repr(color))
-    debug_print("Out getLightingFromSecondaryRay(%d)" % generation)
+#    debug_print("returning color " + repr(color))
+#    debug_print("Out getLightingFromSecondaryRay(%d)" % generation)
     return color
 
   def getReflectedLighting(self, ray, hit, hitLocation, lights, shape,
                            surfaceNormal, materialStack, strength, generation):
-    debug_print("In getReflectedLighting(%d)" % generation)
+#    debug_print("In getReflectedLighting(%d)" % generation)
     material = shape.material
     reflection = Ray(hitLocation, ray.offset.reflect(surfaceNormal))
     color = self.getLightingFromSecondaryRay(reflection, lights, generation,
                                              strength, materialStack,
                                              ignore=shape)
-    debug_print("Reflected color is " + repr(color))
-    debug_print("Out getReflectedLighting(%d)" % generation)
+#    debug_print("Reflected color is " + repr(color))
+#    debug_print("Out getReflectedLighting(%d)" % generation)
     return color
 
   def getRefractedLighting(self, ray, hit, hitLocation, lights, shape,
                            surfaceNormal, materialStack, fromMaterial,
                            toMaterial, insideShape, strength, generation):
-    debug_print("In getRefractedLighting(%d)" % generation)
-    debug_print("strength is " + repr(strength))
-    debug_print("shape is " + repr(shape))
+#    debug_print("In getRefractedLighting(%d)" % generation)
+#    debug_print("strength is " + repr(strength))
+#    debug_print("shape is " + repr(shape))
 
     if fromMaterial == toMaterial:
       refractionVector = ray.offset
@@ -174,7 +174,7 @@ class Camera(object):
       color = self.getLightingFromSecondaryRay(refraction, lights, generation,
                                                strength, materialStack,
                                                inside=insideShape)
-    debug_print("Out getRefractedLighting(%d)" % generation)
+#    debug_print("Out getRefractedLighting(%d)" % generation)
     return color
 
   # By default this assumes that the camera is always in free space, not inside
@@ -183,7 +183,7 @@ class Camera(object):
   # appropriately.
   def getLighting(self, ray, hit, lights, generation=1, strength=None,
                   materialStack=None):
-    debug_print("In getLighting(%d)" % generation)
+#    debug_print("In getLighting(%d)" % generation)
     assert Roughly(ray.offset.length(), 1)
     shape = hit.shape
     if not materialStack:
@@ -212,15 +212,15 @@ class Camera(object):
     hitLocation = ray.origin + ray.offset.scale(hit.distance)
     surfaceNormal = shape.getNormal(hitLocation)
 
-    debug_print("Before getDirectLighting, strength is " + repr(strength))
-    debug_print("Before getDirectLighting, color is " + repr(color))
+#    debug_print("Before getDirectLighting, strength is " + repr(strength))
+#    debug_print("Before getDirectLighting, color is " + repr(color))
     temp = self.getDirectLighting(ray, hitLocation, lights, shape,
                                   surfaceNormal)
-    debug_print("getDirectLighting returned" + repr(temp))
-    debug_print("product is " + repr(temp * strength))
+#    debug_print("getDirectLighting returned" + repr(temp))
+#    debug_print("product is " + repr(temp * strength))
     color += temp * strength
-    debug_print("After getDirectLighting, strength is " + repr(strength))
-    debug_print("After getDirectLighting, color is " + repr(color))
+#    debug_print("After getDirectLighting, strength is " + repr(strength))
+#    debug_print("After getDirectLighting, color is " + repr(color))
     if generation < MAX_GENERATIONS:
       if toMaterial.attenuation_distances: # Refraction is possible.
         # Reflection:
@@ -257,7 +257,7 @@ class Camera(object):
                                            refractMaterialStack, fromMaterial,
                                            toMaterial, insideShape,
                                            transmittedStrength, generation)
-    debug_print("Out getLighting(%d)" % generation)
+#    debug_print("Out getLighting(%d)" % generation)
     return color
 
   def runPixel(self, pixel, lights):
