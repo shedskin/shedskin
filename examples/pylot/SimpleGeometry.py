@@ -317,4 +317,4 @@ if __name__ == '__main__':
   world = getWorld(geometry)
   camera1 = getCamera(world)
   camera2 = getCamera2(world)
-  camera1.runPixelRange(((0, 100), (0, 100)))
+  camera1.runPixelRange(((0, 150), (0, 150)))

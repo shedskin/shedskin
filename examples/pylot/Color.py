@@ -65,7 +65,7 @@ class Color(object):
     return self
 
   def __repr__(self):
-    return "#%02X%02X%02X" % tuple([int(c * 255) for c in self.toList()])
+    return "#%02X%02X%02X" % (int(self.r*255), int(self.g*255), int(self.b*255))
 
   def toImageColor(self):
     temp = Color(self.r, self.g, self.b).clip()
