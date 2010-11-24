@@ -17,6 +17,10 @@
 
 import math
 
+HEXVALUE = dict([(i, ('%02X' % i)) for i in range(300)])
+def myhex(c):
+  return HEXVALUE[int(c*255)]
+
 class Color(object):
   def __init__(self, r, g, b):
 #{
@@ -65,7 +69,7 @@ class Color(object):
     return self
 
   def __repr__(self):
-    return "#%02X%02X%02X" % (int(self.r*255), int(self.g*255), int(self.b*255))
+    return '#'+myhex(self.r)+myhex(self.g)+myhex(self.b)
 
   def toImageColor(self):
     temp = Color(self.r, self.g, self.b).clip()
