@@ -39,7 +39,7 @@ class World(object):
     assert Roughly(ray.offset.length(), 1)
     result = None
     for shape in self.shapes:
-      if shape <> ignore:
+      if shape is not ignore:
         insideThisShape = shape == inside
         bidirectional = not inside and (insideMaterial == shape.material)
         hit = shape.hitTest(ray,

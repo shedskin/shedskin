@@ -190,9 +190,9 @@ class Polygon(Shape):
     if inside: # Only spheres can be hit from the inside.
       return None
     hit = rayHitsPlane(self.normal, self.center, ray, bidirectional)
-    if hit:
+    if hit is not None:
       ((hitLocation, distance), inverted) = hit
-      if best and best.distance < distance:
+      if best is not None and best.distance < distance:
         return None
       if self.pointInPolygon(hitLocation, inverted):
         return HitResult(self, distance, inverted=inverted)
