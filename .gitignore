@@ -11,6 +11,7 @@ FLAGS
 shedskin/FLAGS
 Makefile*
 gmon.out
+*.gcda
 /lib
 test.*
 test
