@@ -505,12 +505,10 @@ class generateVisitor(ASTVisitor):
         self.output('extern class_ *cl_'+cl.cpp_name+';')
 
         # --- header
-        pyobjbase = []
-        if not cl.bases:
-            pyobjbase = ['public pyobj']
-
-        clnames = [namespaceclass(b) for b in cl.bases]
-        self.output('class '+nokeywords(cl.ident)+' : '+', '.join(pyobjbase+['public '+clname for clname in clnames])+' {')
+        clnames = [namespaceclass(b) for b in cl.bases if b.ident != 'object']
+        if not clnames:
+            clnames = ['pyobj']
+        self.output('class '+nokeywords(cl.ident)+' : '+', '.join(['public '+clname for clname in clnames])+' {')
 
         self.do_comment(node.doc)
         self.output('public:')

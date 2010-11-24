@@ -1,5 +1,7 @@
 *.pyc
+*.pyo
 *.ppm
+*.png
 *.txt
 *.ini
 *.csv
@@ -8,6 +10,7 @@
 FLAGS
 shedskin/FLAGS
 Makefile*
+gmon.out
 /lib
 test.*
 test
