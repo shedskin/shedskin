@@ -158,7 +158,7 @@ class Viewport(object):
              int(float(rows) / BLOCKS_TALL * (j + 1))))
 
   def initProcessor(self):
-    self.processor = ThreadedQueueProcessor(CameraHandler(self.camera), 9,
+    self.processor = ThreadedQueueProcessor(CameraHandler(self.camera), 4,
                                             use_processes=True)
     self.image = Image.new("RGBA", (self.camera.cols, self.camera.rows))
     self.draw = ImageDraw.Draw(self.image)
