@@ -1,6 +1,6 @@
-50 programs that work with Shed Skin 0.6.
+51 programs that work with Shed Skin 0.7.
 
-13,000 lines in total (using sloccount, around 18,000 otherwise)
+14,000 lines in total (using sloccount, around 20,000 otherwise)
 
 If you have another interesting test case, please send it to:
    mark.dufour@gmail.com
@@ -13,7 +13,7 @@ lines  name               description                   notes
    125 astar.py           a-star algorithm              shedskin -e astar && make && python astar_main.py
    415 bh.py              barnes-hut force calculation
     54 brainfuck.py       brainfuck interpreter
-  1949 c64.py             commodore 64 emulator         cd c64; shedskin -e c64 && make; cd ..; python c64_main.py
+  1949 c64_main.py        commodore 64 emulator         cd c64; shedskin -e c64 && make; cd ..; python c64_main.py
    321 chess.py           chess engine
    105 dijkstra.py        dijkstra's algorithm
     80 dijkstra2.py       bidirectional dijkstra search
@@ -51,6 +51,7 @@ lines  name               description                   notes
                                                         shedskin -r mao (fast random number generator)
    462 minilight.py       advanced raytracer            shedskin -r minilight (fast random number generator)
                           (triangle primitives, octree spatial index)
+  1050 pylot_main.py      advanced raytracer            cd pylot; shedskin -boe SimpleGeometry && make; cd ..; python pylot_main.py
    181 pystone.py         standard benchmark
    286 richards.py        standard benchmark
    469 rdb.py             iPod shuffle programmer       see comments in top
