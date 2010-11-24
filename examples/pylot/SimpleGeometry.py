@@ -315,6 +315,6 @@ def getWorld(geometry):
 if __name__ == '__main__':
   geometry = getGeometry()
   world = getWorld(geometry)
-  print getCamera(world)
-  camera = getCamera2(world)
-  camera.runPixelRange(((0, 1), (0, 1)))
+  camera1 = getCamera(world)
+  camera2 = getCamera2(world)
+  camera1.runPixelRange(((0, 100), (0, 100)))
