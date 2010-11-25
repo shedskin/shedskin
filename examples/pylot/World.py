@@ -40,8 +40,8 @@ class World(object):
     result = None
     for shape in self.shapes:
       if shape is not ignore:
-        insideThisShape = shape == inside
-        bidirectional = not inside and (insideMaterial == shape.material)
+        insideThisShape = shape is inside
+        bidirectional = not inside and (insideMaterial is shape.material)
         hit = shape.hitTest(ray,
                             bidirectional=bidirectional,
                             best=result,
