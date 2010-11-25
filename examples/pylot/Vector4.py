@@ -42,7 +42,10 @@ class Vector4(object):
 
   def __sub__(self, other):
     assert bool(self.w) or not other.w # Can't subtract point from offset
-    return self + (-other)
+    return Vector4(self.x - other.x,
+                   self.y - other.y,
+                   self.z - other.z,
+                   self.w - other.w)
 
   def toList(self):
     return [self.x, self.y, self.z, self.w]
