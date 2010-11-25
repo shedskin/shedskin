@@ -323,7 +323,7 @@ def rayHitsPlane(normal, point, ray, bidirectional=False):
   inverted = False
   dot = normal.dot(ray.offset)
   HIT.hit = False
-  if Roughly(dot, 0.0):
+  if -0.000001 < dot < 0.000001:
     return HIT
   if bidirectional and dot > 0.0:
     normal = -normal
