@@ -177,8 +177,8 @@ class Viewport(object):
         else:
           self.draw.rectangle(((0, 0), (self.camera.cols, self.camera.rows)),
                               fill="grey")
-        BLOCKS_WIDE = 10
-        BLOCKS_TALL = 10
+        BLOCKS_WIDE = 20
+        BLOCKS_TALL = 20
         jobs = []
         for i in range(BLOCKS_WIDE):
           for j in range(BLOCKS_TALL):
@@ -273,7 +273,7 @@ class Viewport(object):
 root = Tk()
 root.title("Pylot")
 
-geometry = SimpleGeometry.getGeometry(size=200, which=2)
+geometry = SimpleGeometry.getGeometry(size=256, which=2)
 world = SimpleGeometry.getWorld(geometry)
 cameras = [SimpleGeometry.getCamera(world)] #,
 #           SimpleGeometry.getCamera2(world, factor=2)]
