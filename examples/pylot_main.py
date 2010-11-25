@@ -273,7 +273,7 @@ class Viewport(object):
 root = Tk()
 root.title("Pylot")
 
-geometry = SimpleGeometry.getGeometry(size=256, which=2)
+geometry = SimpleGeometry.getGeometry(size=512, which=2)
 world = SimpleGeometry.getWorld(geometry)
 cameras = [SimpleGeometry.getCamera(world)] #,
 #           SimpleGeometry.getCamera2(world, factor=2)]
