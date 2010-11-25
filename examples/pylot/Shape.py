@@ -22,12 +22,17 @@ from Utils import *
 from Vector4 import Vector4, Mean, Point, Offset
 import Material
 
+SHAPE_NAME_COUNTER = 0
+
 class HitResult(object):
-  def __init__(self, shape, distance, inverted=False):
-    assert isinstance(shape, Shape)
-    self.distance = distance
-    self.shape = shape
-    self.inverted = inverted
+  def __init__(self):
+      self.hit = False
+
+  def update(self, shape, distance, inverted):
+      self.hit = True
+      self.shape = shape
+      self.distance = distance
+      self.inverted = inverted
 
   def __cmp__(self, other):
 #{
@@ -43,8 +48,6 @@ class HitResult(object):
   def __repr__(self):
     return "[HitResult: " + repr(self.distance) + ":" + repr(self.shape) + \
         " inverted: " + repr(self.inverted) + "]"
-
-SHAPE_NAME_COUNTER = 0
 
 class Shape(object):
   def __init__(self, material=None, name=None):
@@ -63,7 +66,6 @@ class Shape(object):
   def hitTest(self, ray, bidirectional=False, inside=False, best=None):
     assert not inside or not bidirectional
     assert False # Must override.
-    return HitResult(None, 0.0)
 
   # Used to do shadow ray calculations; later we should be able to return a list
   # of locations for soft shadows.
@@ -128,12 +130,8 @@ class Sphere(Shape):
         inverted = True
       else:
         distance = -B - sqrtD
-      if best and best.distance < distance:
-        return None
-      if distance >= 0:
-        return HitResult(self, distance, inverted)
-
-    return None
+      if 0 <= distance and (not best.hit or distance < best.distance):
+          best.update(self, distance, inverted)
 
   def getLocation(self):
     return self.center
@@ -188,15 +186,13 @@ class Polygon(Shape):
     assert not inside or not bidirectional
     assert Roughly(ray.offset.length(), 1.0)
     if inside: # Only spheres can be hit from the inside.
-      return None
+      return
     hit = rayHitsPlane(self.normal, self.center, ray, bidirectional)
     if hit is not None:
       ((hitLocation, distance), inverted) = hit
-      if best is not None and best.distance < distance:
-        return None
-      if self.pointInPolygon(hitLocation, inverted):
-        return HitResult(self, distance, inverted=inverted)
-    return None
+      if 0 <= distance and (not best.hit or distance < best.distance) and \
+         self.pointInPolygon(hitLocation, inverted):
+         best.update(self, distance, inverted)
 
   def getLocation(self):
     return self.center

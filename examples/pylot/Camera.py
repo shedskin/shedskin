@@ -81,14 +81,14 @@ class Camera(object):
     material = shape.material
     color = Color.BLACK
     for light in lights:
-      if light <> shape:
+      if light is not shape:
         lightDirection = (light.getLocation() - hitLocation).normalize()
         lightDotSurfaceNormal = lightDirection.dot(surfaceNormal)
         if lightDotSurfaceNormal > 0:
           lightHit = self.world.intersect(Ray(hitLocation, lightDirection),
                                           ignore=shape)
           # intersect *should* never miss, but...
-          if lightHit and lightHit.shape == light:
+          if lightHit.hit and lightHit.shape is light:
             lightReflection = -lightDirection.reflect(surfaceNormal)
             highlight = math.pow(lightReflection.dot(-ray.offset), 20)
             intensity = light.getIntensity(hitLocation)
@@ -107,7 +107,7 @@ class Camera(object):
     hit = self.world.intersect(ray, ignore=ignore, inside=inside,
                                insideMaterial=insideMaterial)
     color = Color.BLACK
-    if hit:
+    if hit.hit:
 #      add_debug_ray(Ray(ray.origin, ray.offset.scale(hit.distance)), "red")
       if insideMaterial.attenuation_distances:
         # Here we lower strength due to absorbtion in insideMaterial in the
@@ -266,7 +266,7 @@ class Camera(object):
     else:
       ray = Ray(self.eye, (pixel - self.eye).normalize())
     hit = self.world.intersect(ray)
-    if hit:
+    if hit.hit:
       return self.getLighting(ray, hit, lights).toImageColor()
     else:
       return Color.BLACK.toImageColor()
