@@ -307,7 +307,8 @@ class Camera(object):
     if hit.hit:
       assert not hit.inverted
     # TODO: This won't map points behind the eye.
-      offset = self.screenTopLeft - hit.location
+      location = ray.origin + ray.offset.scale(hit.distance)
+      offset = self.screenTopLeft - location
       distanceFromLeft = offset.dot(self.left)
       distanceFromTop = offset.dot(self.up)
       pixel = (int(distanceFromLeft / self.w * float(self.cols)),

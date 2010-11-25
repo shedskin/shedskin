@@ -191,9 +191,10 @@ class Polygon(Shape):
       return
     hit = rayHitsPlane(self.normal, self.center, ray, bidirectional)
     if hit.hit:
-      if 0 <= hit.distance and (not best.hit or hit.distance < best.distance) and \
-         self.pointInPolygon(hit.location, hit.inverted):
-         best.update(self, hit.distance, hit.inverted)
+      if 0 <= hit.distance and (not best.hit or hit.distance < best.distance):
+         location = ray.origin + ray.offset.scale(hit.distance)
+         if self.pointInPolygon(location, hit.inverted):
+             best.update(self, hit.distance, hit.inverted)
 
   def getLocation(self):
     return self.center
@@ -340,7 +341,6 @@ def rayHitsPlane(normal, point, ray, bidirectional=False):
       progressTowardPlane = -dot
       distance = distanceToPlane / progressTowardPlane
       HIT.hit = True
-      HIT.location = ray.origin + ray.offset.scale(distance)
       HIT.distance = distance
       HIT.inverted = inverted
   return HIT
