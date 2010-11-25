@@ -64,6 +64,11 @@ class Vector4(object):
     return self.x * other.x + self.y * other.y + \
            self.z * other.z + self.w * other.w
 
+  def subdot(self, other1, other2):
+    return (self.x - other1.x) * other2.x + \
+           (self.y - other1.y) * other2.y + \
+           (self.z - other1.z) * other2.z
+
   # Note: this defines a right-handed coordinate system, as x.cross(y) == z.
   def cross(self, other):
 #{
