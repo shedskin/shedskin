@@ -334,9 +334,8 @@ def rayHitsPlane(normal, point, ray, bidirectional=False):
   if (dot < 0.0): # Else it's parallel or facing away.
     # Vector from ray origin to center of polygon [a random point on the
     # plane].
-    offsetOriginToCenter = point - ray.origin
     # Offset to nearest point on the plane from ray origin.
-    distanceToPlane = -offsetOriginToCenter.dot(normal)
+    distanceToPlane = -point.subdot(ray.origin, normal)
     if distanceToPlane > 0.0: # Else it's behind ray.
       progressTowardPlane = -dot
       distance = distanceToPlane / progressTowardPlane
