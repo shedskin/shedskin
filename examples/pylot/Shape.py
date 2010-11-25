@@ -49,6 +49,8 @@ class HitResult(object):
     return "[HitResult: " + repr(self.distance) + ":" + repr(self.shape) + \
         " inverted: " + repr(self.inverted) + "]"
 
+HIT = HitResult()
+
 class Shape(object):
   def __init__(self, material=None, name=None):
     self.material = material
@@ -188,11 +190,10 @@ class Polygon(Shape):
     if inside: # Only spheres can be hit from the inside.
       return
     hit = rayHitsPlane(self.normal, self.center, ray, bidirectional)
-    if hit is not None:
-      ((hitLocation, distance), inverted) = hit
-      if 0 <= distance and (not best.hit or distance < best.distance) and \
-         self.pointInPolygon(hitLocation, inverted):
-         best.update(self, distance, inverted)
+    if hit.hit:
+      if 0 <= hit.distance and (not best.hit or hit.distance < best.distance) and \
+         self.pointInPolygon(hit.location, hit.inverted):
+         best.update(self, hit.distance, hit.inverted)
 
   def getLocation(self):
     return self.center
@@ -322,8 +323,9 @@ def rayHitsPlane(normal, point, ray, bidirectional=False):
   assert Roughly(ray.offset.length(), 1.0)
   inverted = False
   dot = normal.dot(ray.offset)
+  HIT.hit = False
   if Roughly(dot, 0.0):
-    return None
+    return HIT
   if bidirectional and dot > 0.0:
     normal = -normal
     dot = -dot
@@ -337,9 +339,11 @@ def rayHitsPlane(normal, point, ray, bidirectional=False):
     if distanceToPlane > 0.0: # Else it's behind ray.
       progressTowardPlane = -dot
       distance = distanceToPlane / progressTowardPlane
-      hitLocation = ray.origin + ray.offset.scale(distance)
-      return ((hitLocation, distance), inverted)
-  return None
+      HIT.hit = True
+      HIT.location = ray.origin + ray.offset.scale(distance)
+      HIT.distance = distance
+      HIT.inverted = inverted
+  return HIT
 
 # Algorithm taken from the equations at
 # http://en.wikipedia.org/wiki/Solid_angle#Tetrahedron

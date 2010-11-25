@@ -304,11 +304,10 @@ class Camera(object):
       direction = diff.normalize()
     ray = Ray(self.eye, direction)
     hit = rayHitsPlane(-self.direction, self.screenCenter, ray)
-    if hit:
-      (hitLocation, distance), inverted = hit
-      assert not inverted
+    if hit.hit:
+      assert not hit.inverted
     # TODO: This won't map points behind the eye.
-      offset = self.screenTopLeft - hitLocation
+      offset = self.screenTopLeft - hit.location
       distanceFromLeft = offset.dot(self.left)
       distanceFromTop = offset.dot(self.up)
       pixel = (int(distanceFromLeft / self.w * float(self.cols)),
