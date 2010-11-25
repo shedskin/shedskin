@@ -67,7 +67,15 @@ class Vector4(object):
   def subdot(self, other1, other2):
     return (self.x - other1.x) * other2.x + \
            (self.y - other1.y) * other2.y + \
-           (self.z - other1.z) * other2.z
+           (self.z - other1.z) * other2.z + \
+           (self.w - other1.w) * other2.w
+
+  def sublen(self, other):
+      x = self.x - other.x
+      y = self.y - other.y
+      z = self.z - other.z
+      w = self.w - other.w
+      return x*x + y*y + z*z + w*w
 
   # Note: this defines a right-handed coordinate system, as x.cross(y) == z.
   def cross(self, other):

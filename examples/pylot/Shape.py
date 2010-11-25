@@ -116,11 +116,9 @@ class Sphere(Shape):
 #}
     assert not inside or not bidirectional
     assert Roughly(ray.offset.length(), 1.0)
-    directlyFromSphere = ray.origin - self.center
-    originToSphereDistance_2 = directlyFromSphere.length_2() 
     # Here deal with originToSphereDistance_2 and insideMaterial.
-    B = directlyFromSphere.dot(ray.offset)
-    C = originToSphereDistance_2 - self.radius * self.radius
+    B = ray.origin.subdot(self.center, ray.offset)
+    C = ray.origin.sublen(self.center) - self.radius * self.radius
     D = B * B - C
     if (D >= 0):
       sqrtD = math.sqrt(D)
@@ -142,7 +140,7 @@ class Sphere(Shape):
     return (location - self.center).normalize()
 
   def getIntensity(self, point):
-    dist_2 = (point - self.center).length_2()
+    dist_2 = point.sublen(self.center)
     if dist_2 < self.r_2:
       return 1
     else:
@@ -175,7 +173,7 @@ class Polygon(Shape):
     edge02 = points[2] - points[0]
     self.normal = (edge01).cross(edge02).normalize()
     self.center = Mean(points)
-    self.r_2 = max([(p-self.center).length_2() for p in points])
+    self.r_2 = max([p.sublen(self.center) for p in points])
 
   def __repr__(self):
     return "[" + self.name + ": " + repr(self.points) + "; center: " + \
@@ -211,7 +209,7 @@ class Polygon(Shape):
 
 # Assumes the point's in our plane.
   def pointInPolygon(self, point, invertTest):
-    if (point - self.center).length_2() > self.r_2:
+    if point.sublen(self.center) > self.r_2:
       return False # Outside bounding circle.
 
     factor = 1.0
