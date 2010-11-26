@@ -315,6 +315,7 @@ public:
 class str : public pyseq<str *> {
 public:
     __GC_STRING unit;
+    bool charcache;
     long hash;
 
     str();
@@ -1646,6 +1647,15 @@ template<class T> inline __ss_bool __eq(T a, T b) { return ((a&&b)?(a->__eq__(b)
 #ifdef __SS_LONG /* XXX */
 template<> inline __ss_bool __eq(__ss_int a, __ss_int b) { return __mbool(a == b); }
 #endif
+template<> inline __ss_bool __eq(str *a, str *b) {
+    if(a&&b) {
+        if (a->charcache && b->charcache) 
+            return __mbool(a==b);
+        else
+            return __mbool(a->__eq__(b));
+    } else
+        return __mbool(a==b);
+}
 template<> inline __ss_bool __eq(int a, int b) { return __mbool(a == b); }
 template<> inline __ss_bool __eq(__ss_bool a, __ss_bool b) { return __mbool(a == b); }
 template<> inline __ss_bool __eq(double a, double b) { return __mbool(a == b); }
