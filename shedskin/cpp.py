@@ -76,7 +76,10 @@ class generateVisitor(ASTVisitor):
                     if self.mergeinh[todo[number]]: # XXX
                         name = 'const_'+str(number)
                         self.start('    '+name+' = ')
-                        self.visit(todo[number], inode(todo[number]).parent)
+                        if isinstance(todo[number], Const) and isinstance(todo[number].value, str) and len(todo[number].value) == 1:
+                            self.append("__char_cache[%d];" % ord(todo[number].value))
+                        else:
+                            self.visit(todo[number], inode(todo[number]).parent)
                         newlines2.append(self.line+';\n')
 
                 newlines2.append('\n')

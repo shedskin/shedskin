@@ -64,7 +64,9 @@ void __init() {
 
     for(int i=0;i<256;i++) {
         char c = i;
-        __char_cache.push_back(new str(&c, 1));
+        str *charstr = new str(&c, 1);
+        charstr->charcache = 1;
+        __char_cache.push_back(charstr);
     }
 
     __join_cache = new list<str *>();
@@ -264,19 +266,19 @@ str *complex::__repr__() {
 
 /* str methods */
 
-str::str() : hash(-1) {
+str::str() : hash(-1), charcache(0) {
     __class__ = cl_str_;
 }
 
-str::str(const char *s) : unit(s), hash(-1) {
+str::str(const char *s) : unit(s), hash(-1), charcache(0) {
     __class__ = cl_str_;
 }
 
-str::str(__GC_STRING s) : unit(s), hash(-1) {
+str::str(__GC_STRING s) : unit(s), hash(-1), charcache(0) {
     __class__ = cl_str_;
 }
 
-str::str(const char *s, int size) : unit(s, size), hash(-1) { /* '\0' delimiter in C */
+str::str(const char *s, int size) : unit(s, size), hash(-1), charcache(0) { /* '\0' delimiter in C */
     __class__ = cl_str_;
 }
 
