@@ -361,6 +361,10 @@ class moduleVisitor(ASTVisitor):
             func = getmv().funcs[n.name] = function(n)
             self.set_default_vars(n, func)
 
+        # global variables XXX visitGlobal
+        for assname in self.local_assignments(node, global_=True):
+            defaultvar(assname.name, None)
+
     def set_default_vars(self, node, func):
         globals = set(self.get_globals(node))
         for assname in self.local_assignments(node):
@@ -376,15 +380,17 @@ class moduleVisitor(ASTVisitor):
                 result.extend(self.get_globals(child))
         return result
 
-    def local_assignments(self, node):
-        if isinstance(node, ListComp):
+    def local_assignments(self, node, global_=False):
+        if global_ and isinstance(node, (Class, Function)):
+            return []
+        elif isinstance(node, (ListComp, GenExpr)):
             return []
         elif isinstance(node, AssName):
             result = [node]
         else:
             result = []
             for child in node.getChildNodes():
-                result.extend(self.local_assignments(child))
+                result.extend(self.local_assignments(child, global_))
         return result
 
     def visitImport(self, node, func=None):
