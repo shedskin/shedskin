@@ -130,3 +130,8 @@ print sorted(dikkie2.keys()), sorted(dikkie2.values())
 # unused import
 from testdata.bert2 import hello
 from testdata.bert2 import *
+
+# late binding 
+from testdata import board
+from testdata import piece
+piece.latebinding()
