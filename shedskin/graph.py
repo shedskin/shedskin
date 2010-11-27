@@ -439,8 +439,8 @@ class moduleVisitor(ASTVisitor):
 
         for name, pseudonym in node.names:
             if name == '*':
-                self.ext_funcs.update(mod.funcs)
-                self.ext_classes.update(mod.classes)
+                self.ext_funcs.update(mod.mv.funcs)
+                self.ext_classes.update(mod.mv.classes)
                 for import_name, import_mod in mod.mv.imports.items():
                     var = defaultvar(import_name, None) # XXX merge
                     var.imported = True
@@ -458,10 +458,10 @@ class moduleVisitor(ASTVisitor):
             if mod.builtin: localpath = connect_paths(getgx().libdir, mod.dir)
             else: localpath = mod.dir
 
-            if name in mod.funcs:
-                self.ext_funcs[pseudonym] = mod.funcs[name]
-            elif name in mod.classes:
-                self.ext_classes[pseudonym] = mod.classes[name]
+            if name in mod.mv.funcs:
+                self.ext_funcs[pseudonym] = mod.mv.funcs[name]
+            elif name in mod.mv.classes:
+                self.ext_classes[pseudonym] = mod.mv.classes[name]
             elif name in mod.mv.globals and not mod.mv.globals[name].imported: # XXX
                 extvar = mod.mv.globals[name]
                 var = defaultvar(pseudonym, None)
@@ -1553,8 +1553,6 @@ def parse_module(name, ast=None, parent=None, node=None):
 
     old_mv = getmv()
     mod.mv = mv = moduleVisitor(mod)
-    mod.funcs = mod.mv.funcs # XXX single place?
-    mod.classes = mod.mv.classes
     setmv(mv)
 
     mv.visit = mv.dispatch
