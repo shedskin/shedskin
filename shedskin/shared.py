@@ -486,8 +486,8 @@ def lookupclass(node, mv): # XXX lookupvar first?
         else: return None
     elif isinstance(node, Getattr):
         module = lookupmodule(node.expr, mv)
-        if module and node.attrname in module.classes:
-            return module.classes[node.attrname]
+        if module and node.attrname in module.mv.classes:
+            return module.mv.classes[node.attrname]
 
 def lookupvariable(node, gv):
     lcp = lowest_common_parents(polymorphic_t(gv.mergeinh[node.expr]))
@@ -501,8 +501,8 @@ def lookupfunc(node, mv): # XXX lookupvar first?
         else: return None
     elif isinstance(node, Getattr):
         module = lookupmodule(node.expr, mv)
-        if module and node.attrname in module.funcs:
-            return module.funcs[node.attrname]
+        if module and node.attrname in module.mv.funcs:
+            return module.mv.funcs[node.attrname]
 
 # --- recursively determine (lvalue, rvalue) pairs in assignment expressions
 

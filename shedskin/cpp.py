@@ -110,7 +110,7 @@ class generateVisitor(ASTVisitor):
                 continue
             for mod in module.mod_path:
                 lines.append('namespace __%s__ { /* XXX */\n' % mod)
-            for cl in module.classes.values():
+            for cl in module.mv.classes.values():
                 lines.append('class %s;\n' % nokeywords(cl.ident)) # XXX cppname?
             for mod in module.mod_path:
                 lines.append('}\n')
@@ -235,14 +235,14 @@ class generateVisitor(ASTVisitor):
                 for (name, pseudonym) in child.names:
                     pseudonym = pseudonym or name
                     if name == '*':
-                        for func in mod.funcs.values():
+                        for func in mod.mv.funcs.values():
                             if func.cp: # XXX 
                                 print >>self.out, using+self.cpp_name(func.ident)+';';
-                        for cl in mod.classes.values():
+                        for cl in mod.mv.classes.values():
                             print >>self.out, using+nokeywords(cl.ident)+';';
                     elif pseudonym not in self.module.mv.globals:
-                        if name in mod.funcs:
-                            func = mod.funcs[name]
+                        if name in mod.mv.funcs:
+                            func = mod.mv.funcs[name]
                             if func.cp:
                                 print >>self.out, using+self.cpp_name(func.ident)+';';
                         else:
@@ -1189,7 +1189,7 @@ class generateVisitor(ASTVisitor):
             name in [cl.ident for cl in getgx().allclasses] or \
             name+'_' in [cl.ident for cl in getgx().allclasses]):
             return '_'+name
-        elif name in self.module.funcs and func and isinstance(func.parent, class_) and name in func.parent.funcs:
+        elif name in self.module.mv.funcs and func and isinstance(func.parent, class_) and name in func.parent.funcs:
             return '__'+func.mv.module.ident+'__::'+name
         return nokeywords(name)
 

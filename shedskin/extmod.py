@@ -29,7 +29,7 @@ def do_extmod(gv):
         print >>gv.out, 'namespace __%s__ { /* XXX */' % n
 
     # global functions
-    funcs = supported_funcs(gv, gv.module.funcs.values())
+    funcs = supported_funcs(gv, gv.module.mv.funcs.values())
     for func in funcs:
         do_extmod_method(gv, func)
     do_extmod_methoddef(gv, 'Global_'+'_'.join(gv.module.mod_path), funcs)
@@ -86,7 +86,7 @@ def do_add_globals(gv, classes, __ss_mod):
 
 def exported_classes(gv, warns=False):
     classes = []
-    for cl in gv.module.classes.values():
+    for cl in gv.module.mv.classes.values():
         if defclass('Exception') in cl.ancestors():
             if warns:
                 print '*WARNING* class not exported:', cl.ident

@@ -848,10 +848,10 @@ def restore_network(backup):
     for func in getgx().allfuncs:
         func.cp = {}
 
-    for cl in getgx().modules['builtin'].classes.values():
+    for cl in getgx().modules['builtin'].mv.classes.values():
         for func in cl.funcs.values():
             func.cp = {}
-    for func in getgx().modules['builtin'].funcs.values():
+    for func in getgx().modules['builtin'].mv.funcs.values():
         func.cp = {}
 
 def merge_simple_types(types):
@@ -943,12 +943,12 @@ def analyze(source, testing=False):
 
     # --- determine which classes need copy, deepcopy methods
     if 'copy' in getgx().modules:
-        func = getgx().modules['copy'].funcs['copy']
+        func = getgx().modules['copy'].mv.funcs['copy']
         var = func.vars[func.formals[0]]
         for cl in set([t[0] for t in getgx().merged_inh[var]]):
             cl.has_copy = True # XXX transitive, modeling
 
-        func = getgx().modules['copy'].funcs['deepcopy']
+        func = getgx().modules['copy'].mv.funcs['deepcopy']
         var = func.vars[func.formals[0]]
         for cl in set([t[0] for t in getgx().merged_inh[var]]):
             cl.has_deepcopy = True # XXX transitive, modeling
