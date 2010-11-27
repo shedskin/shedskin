@@ -230,19 +230,23 @@ class generateVisitor(ASTVisitor):
 
         for child in node.node.getChildNodes():
             if isinstance(child, From) and child.modname != '__future__':
-                mod_id = '__'+'__::__'.join(child.modname.split('.'))+'__'
-
+                mod = getgx().modules[child.modname]
+                using = 'using __'+'__::__'.join(child.modname.split('.'))+'__::'
                 for (name, pseudonym) in child.names:
+                    pseudonym = pseudonym or name
                     if name == '*':
-                        for func in getgx().modules[child.modname].funcs.values():
+                        for func in mod.funcs.values():
+                            if func.cp: # XXX 
+                                print >>self.out, using+self.cpp_name(func.ident)+';';
+                        for cl in mod.classes.values():
+                            print >>self.out, using+nokeywords(cl.ident)+';';
+                    elif pseudonym not in self.module.mv.globals:
+                        if name in mod.funcs:
+                            func = mod.funcs[name]
                             if func.cp:
-                                print >>self.out, 'using '+mod_id+'::'+self.cpp_name(func.ident)+';';
-                        for cl in getgx().modules[child.modname].classes:
-                            print >>self.out, 'using '+mod_id+'::'+cl+';';
-                    else:
-                        if not pseudonym: pseudonym = name
-                        if not pseudonym in self.module.mv.globals:# or [t for t in self.module.mv.globals[pseudonym].types() if not isinstance(t[0], module)]:
-                            print >>self.out, 'using '+mod_id+'::'+nokeywords(name)+';'
+                                print >>self.out, using+self.cpp_name(func.ident)+';';
+                        else:
+                            print >>self.out, using+nokeywords(name)+';'
         print >>self.out
 
         # class declarations
@@ -385,16 +389,15 @@ class generateVisitor(ASTVisitor):
             elif isinstance(child, From):
                 mod_id = '__'+'__::__'.join(child.modname.split('.'))+'__'
                 for (name, pseudonym) in child.names:
+                    pseudonym = pseudonym or name
                     if name == '*':
                         for var in getgx().modules[child.modname].mv.globals.values():
                             if not var.invisible and not var.imported and not var.name.startswith('__') and var.types():
                                 self.start(nokeywords(var.name)+' = '+mod_id+'::'+nokeywords(var.name))
                                 self.eol()
-                    else:
-                        if not pseudonym: pseudonym = name
-                        if pseudonym in self.module.mv.globals and not [t for t in self.module.mv.globals[pseudonym].types() if isinstance(t[0], module)]:
-                            self.start(nokeywords(pseudonym)+' = '+mod_id+'::'+nokeywords(name))
-                            self.eol()
+                    elif pseudonym in self.module.mv.globals and not [t for t in self.module.mv.globals[pseudonym].types() if isinstance(t[0], module)]:
+                        self.start(nokeywords(pseudonym)+' = '+mod_id+'::'+nokeywords(name))
+                        self.eol()
 
             elif not isinstance(child, (Class, Function)):
                 self.do_comments(child)
