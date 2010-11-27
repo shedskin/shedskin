@@ -1553,6 +1553,8 @@ def parse_module(name, ast=None, parent=None, node=None):
 
     old_mv = getmv()
     mod.mv = mv = moduleVisitor(mod)
+    mod.funcs = mod.mv.funcs # XXX single place?
+    mod.classes = mod.mv.classes
     setmv(mv)
 
     mv.visit = mv.dispatch
@@ -1563,9 +1565,6 @@ def parse_module(name, ast=None, parent=None, node=None):
 
     mv = old_mv
     setmv(mv)
-
-    mod.funcs = mod.mv.funcs
-    mod.classes = mod.mv.classes
 
     return mod
 

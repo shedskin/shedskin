@@ -1,6 +1,9 @@
 import board
 
 def latebinding():
-    print board.WHITE
-    print board.white()
-    print board.Board()
+#    a = board.WHITE
+#    print a
+    b = board.white()
+    print b
+    c = board.Board()
+    print c
