@@ -58,6 +58,7 @@ class moduleVisitor(ASTVisitor):
             getgx().types[newnode] = set()
 
         fakefunc = CallFunc(Getattr(objexpr, attrname), args)
+        fakefunc.lineno = objexpr.lineno
         self.visit(fakefunc, func)
         self.addconstraint((inode(fakefunc), newnode), func)
 
