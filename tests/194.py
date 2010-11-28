@@ -135,3 +135,13 @@ from testdata.bert2 import *
 from testdata import board
 from testdata import piece
 piece.latebinding()
+
+# missing forward class declaration
+from testdata.Shape import Shape
+class HitResult(object):
+  def update(self, s):
+      print 'update'
+      self.s = s
+hitresult = HitResult()
+shape = Shape()
+shape.woef(hitresult)
