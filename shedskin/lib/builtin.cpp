@@ -735,7 +735,11 @@ __ss_int str::__cmp__(pyobj *p) {
 }
 
 __ss_bool str::__eq__(pyobj *p) {
-    return __mbool(unit == ((str *)p)->unit);
+    str *q = (str *)p;
+    int len = unit.size();
+    if(len != q->unit.size())
+        return __mbool(0);
+    return __mbool(strncmp(unit.data(), q->unit.data(), len) == 0);
 }
 
 str *str::__mul__(__ss_int n) { /* optimize */
