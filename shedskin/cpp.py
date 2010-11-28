@@ -2681,9 +2681,10 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None, check_extmo
 
     # --- namespace prefix
     namespace = ''
-    if cl.module not in [getmv().module, getgx().modules['builtin']] and not (cl.ident in getmv().ext_funcs or cl.ident in getmv().ext_classes):
-        if cplusplus: namespace = cl.module.full_path()+'::'
-        else: namespace = '::'.join(cl.module.mod_path)+'::'
+    if cl.module not in [getmv().module, getgx().modules['builtin']]:
+        if not (cl.ident in getmv().ext_funcs or cl.ident in getmv().ext_classes): # XXX too smart? can remove it, plus 'using'? 
+            if cplusplus: namespace = cl.module.full_path()+'::'
+            else: namespace = '::'.join(cl.module.mod_path)+'::'
         getmv().module.prop_includes.add(cl.module)
 
     template_vars = cl.tvar_names()
