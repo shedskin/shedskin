@@ -987,7 +987,10 @@ template<class A, class B> str *__modtuple(str *fmt, tuple2<A,B> *t);
 void __init();
 void __start(void (*initfunc)());
 void __ss_exit(int code=0);
-void slicenr(__ss_int x, __ss_int &l, __ss_int &u, __ss_int &s, __ss_int len);
+
+/* slicing */
+
+static void inline slicenr(__ss_int x, __ss_int &l, __ss_int &u, __ss_int &s, __ss_int len);
 
 /* hashing */
 
@@ -1446,6 +1449,9 @@ static void __throw_set_changed() {
 }
 static void __throw_dict_changed() {
     throw new RuntimeError(new str("dict changed size during iteration"));
+}
+static void __throw_slice_step_zero() {
+    throw new ValueError(new str("slice step cannot be zero"));
 }
 static void __throw_stop_iteration() {
     throw new StopIteration();
@@ -4829,6 +4835,44 @@ template<class T> complex::complex(T t) {
 #ifdef __SS_BIND
 PyObject *__ss__newobj__(PyObject *, PyObject *args, PyObject *kwargs);
 #endif
+
+/* slicing */
+
+static void inline slicenr(__ss_int x, __ss_int &l, __ss_int &u, __ss_int &s, __ss_int len) {
+    if(x&4) {
+        if (s == 0)
+            __throw_slice_step_zero();
+    } else
+        s = 1;
+
+    if (l>=len)
+        l = len;
+    else if (l<0) {
+        l = len+l;
+        if(l<0)
+            l = 0;
+    }
+    if (u>=len)
+        u = len;
+    else if (u<0) {
+        u = len+u;
+        if(u<0)
+            u = 0;
+    }
+
+    if(s<0) {
+        if (!(x&1))
+            l = len-1;
+        if (!(x&2))
+            u = -1;
+    }
+    else {
+        if (!(x&1))
+            l = 0;
+        if (!(x&2))
+            u = len;
+    }
+}
 
 } // namespace __shedskin__
 #endif
