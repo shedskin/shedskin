@@ -965,17 +965,16 @@ str *__add_strs(int n, ...) {
 }
 
 str *str::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
-    slicenr(x, l, u, s, __len__());
-
+    int len = unit.size();
+    slicenr(x, l, u, s, len);
     if(s == 1)
-        return new str(unit.substr(l, u-l));
+        return new str(unit.data()+l, u-l);
     else {
         __GC_STRING r;
         if(!(x&1) && !(x&2) && s==-1) {
-            int sz = unit.size();
-            r.resize(sz);
-            for(int i=0; i<sz; i++)
-                r[i] = unit[sz-i-1];
+            r.resize(len);
+            for(int i=0; i<len; i++)
+                r[i] = unit[len-i-1];
         }
         else if(s > 0)
             for(int i=l; i<u; i += s)
