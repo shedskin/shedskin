@@ -1605,43 +1605,6 @@ complex *__power(complex *a, double b) {
 tuple2<complex *, complex *> *divmod(complex *a, double b) { return a->__divmod__(b); }
 tuple2<complex *, complex *> *divmod(complex *a, __ss_int b) { return a->__divmod__(b); }
 
-/* slicing */
-
-void slicenr(__ss_int x, __ss_int &l, __ss_int &u, __ss_int &s, __ss_int len) {
-    if((x&4) && (s == 0))
-        throw new ValueError(new str("slice step cannot be zero"));
-
-    if (!(x&4))
-        s = 1;
-
-    if (l>=len)
-        l = len;
-    else if (l<0) {
-        l = len+l;
-        if(l<0)
-            l = 0;
-    }
-    if (u>=len)
-        u = len;
-    else if (u<0) {
-        u = len+u;
-        if(u<0)
-            u = 0;
-    }
-
-    if(s<0) {
-        if (!(x&1))
-            l = len-1;
-        if (!(x&2))
-            u = -1;
-    }
-    else {
-        if (!(x&1))
-            l = 0;
-        if (!(x&2))
-            u = len;
-    }
-}
 
 #ifdef __SS_LONG
 str *__str(__ss_int i, __ss_int base) {
