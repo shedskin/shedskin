@@ -145,3 +145,8 @@ class HitResult(object):
 hitresult = HitResult()
 shape = Shape()
 shape.woef(hitresult)
+
+# almost closure
+d3 = {1: 3, 2: 2, 3: 1}
+l3 = [1,2,3]
+print sorted(l3, key = lambda x: d3[x])

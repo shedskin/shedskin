@@ -13,7 +13,7 @@ from compiler.ast import *
 from compiler.visitor import *
 
 from shared import *
-from cpp import typesetreprnew
+from cpp import nodetypestr
 
 def annotate():
     if not getgx().annotation:
@@ -49,18 +49,18 @@ def annotate():
         # --- constants/names/attributes
         for expr in merge:
             if isinstance(expr, (Const, Name)):
-                paste(expr, typesetreprnew(expr, inode(expr).parent, False))
+                paste(expr, nodetypestr(expr, inode(expr).parent, False))
         for expr in merge:
             if isinstance(expr, Getattr):
-                paste(expr, typesetreprnew(expr, inode(expr).parent, False))
+                paste(expr, nodetypestr(expr, inode(expr).parent, False))
         for expr in merge:
             if isinstance(expr, (Tuple,List,Dict)):
-                paste(expr, typesetreprnew(expr, inode(expr).parent, False))
+                paste(expr, nodetypestr(expr, inode(expr).parent, False))
 
         # --- instance variables
         funcs = getmv().funcs.values()
         for cl in getmv().classes.values():
-            labels = [var.name+': '+typesetreprnew(var, cl, False) for var in cl.vars.values() if var in merge and merge[var] and not var.name.startswith('__')]
+            labels = [var.name+': '+nodetypestr(var, cl, False) for var in cl.vars.values() if var in merge and merge[var] and not var.name.startswith('__')]
             if labels: paste(cl.node, ', '.join(labels))
             funcs += cl.funcs.values()
 
@@ -68,35 +68,35 @@ def annotate():
         for func in funcs:
             if not func.node or func.node in getgx().inherited: continue
             vars = [func.vars[f] for f in func.formals]
-            labels = [var.name+': '+typesetreprnew(var, func, False) for var in vars if not var.name.startswith('__')]
+            labels = [var.name+': '+nodetypestr(var, func, False) for var in vars if not var.name.startswith('__')]
             paste(func.node, ', '.join(labels))
 
         # --- callfuncs
         for callfunc, _ in getmv().callfuncs:
             if isinstance(callfunc.node, Getattr):
                 if not isinstance(callfunc.node, (fakeGetattr, fakeGetattr2, fakeGetattr3)):
-                    paste(callfunc.node.expr, typesetreprnew(callfunc, inode(callfunc).parent, False))
+                    paste(callfunc.node.expr, nodetypestr(callfunc, inode(callfunc).parent, False))
             else:
-                paste(callfunc.node, typesetreprnew(callfunc, inode(callfunc).parent, False))
+                paste(callfunc.node, nodetypestr(callfunc, inode(callfunc).parent, False))
 
         # --- higher-level crap (listcomps, returns, assignments, prints)
         for expr in merge:
             if isinstance(expr, ListComp):
-                paste(expr, typesetreprnew(expr, inode(expr).parent, False))
+                paste(expr, nodetypestr(expr, inode(expr).parent, False))
             elif isinstance(expr, Return):
-                paste(expr, typesetreprnew(expr.value, inode(expr).parent, False))
+                paste(expr, nodetypestr(expr.value, inode(expr).parent, False))
             elif isinstance(expr, (AssTuple, AssList)):
-                paste(expr, typesetreprnew(expr, inode(expr).parent, False))
+                paste(expr, nodetypestr(expr, inode(expr).parent, False))
             elif isinstance(expr, (Print,Printnl)):
-                paste(expr, ', '.join([typesetreprnew(child, inode(child).parent, False) for child in expr.nodes]))
+                paste(expr, ', '.join([nodetypestr(child, inode(child).parent, False) for child in expr.nodes]))
 
         # --- assignments
         for expr in merge:
             if isinstance(expr, Assign):
                 pairs = assign_rec(expr.nodes[0], expr.expr)
-                paste(expr, ', '.join([typesetreprnew(r, inode(r).parent, False) for (l,r) in pairs]))
+                paste(expr, ', '.join([nodetypestr(r, inode(r).parent, False) for (l,r) in pairs]))
             elif isinstance(expr, AugAssign):
-                paste(expr, typesetreprnew(expr.expr, inode(expr).parent, False))
+                paste(expr, nodetypestr(expr.expr, inode(expr).parent, False))
 
         # --- output annotated file (skip if no write permission)
         try:

@@ -969,6 +969,6 @@ def analyze(source, testing=False):
     # error for dynamic expression
     for node in getgx().merged_all:
         if isinstance(node, Node) and not isinstance(node, AssAttr) and not inode(node).mv.module.builtin:
-            cpp.typesetreprnew(node, inode(node).parent)
+            cpp.nodetypestr(node, inode(node).parent)
 
     return getgx()
