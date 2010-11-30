@@ -123,7 +123,6 @@ class generateVisitor(ASTVisitor):
         group = {}
         for (type, name) in pairs:
             group.setdefault(type, []).append(name)
-
         result = []
         for (type, names) in group.items():
             names.sort()
@@ -131,7 +130,6 @@ class generateVisitor(ASTVisitor):
                 result.append(type+(', *'.join(names))+';\n')
             else:
                 result.append(type+(', '.join(names))+';\n')
-
         return result
 
     def header_file(self):
@@ -161,13 +159,8 @@ class generateVisitor(ASTVisitor):
         self.indentation = self.indentation[:-4]
 
     def connector(self, node, func):
-        if singletype(node, module): return '::'
-
-        elif isinstance(func, function) and func.listcomp:
-            return '->'
-        elif isinstance(node, Name) and not lookupvar(node.name, func): # XXX
+        if singletype(node, module):
             return '::'
-
         return '->'
 
     def declaredefs(self, vars, declare): # XXX use group_declarations
@@ -627,7 +620,7 @@ class generateVisitor(ASTVisitor):
                 for m in [getgx().merged_inh[subcl.vars[ident]] for subcl in subclasses if ident in subcl.vars and subcl.vars[ident] in getgx().merged_inh]: # XXX
                     merged.update(m)
 
-                ts = self.padme(typestr(merged))
+                ts = self.padme(typestrnew(merged))
                 if merged:
                     self.output(ts+cppname+';')
 
@@ -707,7 +700,7 @@ class generateVisitor(ASTVisitor):
                 merged.append(merge)
 
             formals = list(subclasses)[0].funcs[ident].formals[1:]
-            ftypes = [self.padme(typestr(m)) for m in merged]
+            ftypes = [self.padme(typestrnew(m)) for m in merged]
 
             # --- prepare for having to cast back arguments (virtual function call means multiple targets)
             for subcl in subclasses:
@@ -795,10 +788,10 @@ class generateVisitor(ASTVisitor):
     def instance_new(self, node, argtypes):
         if argtypes is None:
             argtypes = getgx().merged_inh[node]
-        ts = typestr(argtypes)
+        ts = typestrnew(argtypes)
         if ts.startswith('pyseq') or ts.startswith('pyiter'): # XXX
             argtypes = getgx().merged_inh[node]
-        ts = typestr(argtypes)
+        ts = typestrnew(argtypes)
         self.append('(new '+ts[:-2]+'(')
         return argtypes
 
@@ -806,8 +799,8 @@ class generateVisitor(ASTVisitor):
         argtypes = self.instance_new(node, argtypes)
         if node.items:
             self.append(str(len(node.items))+', ')
-        ts_key = typestr(self.subtypes(argtypes, 'unit'))
-        ts_value = typestr(self.subtypes(argtypes, 'value'))
+        ts_key = typestrnew(self.subtypes(argtypes, 'unit'))
+        ts_value = typestrnew(self.subtypes(argtypes, 'value'))
         for (key, value) in node.items:
             self.visitm('(new tuple2<%s, %s>(2,' % (ts_key, ts_value), func)
             self.visit_child(key, 'unit', func, argtypes)
@@ -2584,18 +2577,13 @@ def namespaceclass(cl, add_cl=''):
 # --- determine representation of node type set (within parameterized context)
 def typesetreprnew(node, parent, cplusplus=True, check_extmod=False, check_ret=False, var=None):
     orig_parent = parent
-    while is_listcomp(parent): # XXX redundant with typesplit?
+    while is_listcomp(parent): # XXX
         parent = parent.parent
-
     if cplusplus and isinstance(node, variable) and node.looper:
         return typesetreprnew(node.looper, parent, cplusplus)[:-2]+'::for_in_loop '
-
-    # --- separate types in multiple duplicates, so we can do parallel template matching of subtypes..
-    split = typesplit(node, parent)
-
-    # --- use this 'split' to determine type representation
+    types = getgx().merged_inh[node]
     try:
-        ts = typestrnew(split, parent, cplusplus, orig_parent, node, check_extmod, 0, check_ret, var)
+        ts = typestrnew(types, parent, cplusplus, orig_parent, node, check_extmod, 0, check_ret, var)
     except RuntimeError:
         if not getmv().module.builtin and isinstance(node, variable) and not node.name.startswith('__'): # XXX startswith
             if node.parent: varname = repr(node)
@@ -2611,10 +2599,7 @@ def typesetreprnew(node, parent, cplusplus=True, check_extmod=False, check_ret=F
 class ExtmodError(Exception):
     pass
 
-def typestr(types): # XXX merge typestrnew
-    return typestrnew({(1,0): types}, None, True, None)
-
-def typestrnew(split, root_class, cplusplus, orig_parent, node=None, check_extmod=False, depth=0, check_ret=False, var=None):
+def typestrnew(types, root_class=None, cplusplus=True, orig_parent=None, node=None, check_extmod=False, depth=0, check_ret=False, var=None):
     if depth==10:
         raise RuntimeError()
 
@@ -2628,12 +2613,7 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None, check_extmo
         if cplusplus: return ident+' *'
         return conv.get(ident, ident)
 
-    # --- examine split
-    alltypes = set() # XXX
-    for (dcpa, cpa), types in split.items():
-        alltypes.update(types)
-
-    anon_funcs = set([t[0] for t in alltypes if isinstance(t[0], function)])
+    anon_funcs = set([t[0] for t in types if isinstance(t[0], function)])
     if anon_funcs and check_extmod:
         raise ExtmodError()
     if anon_funcs:
@@ -2642,7 +2622,7 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None, check_extmo
             return f.mv.module.full_path()+'::'+'lambda%d' % f.lambdanr
         return 'lambda%d' % f.lambdanr
 
-    classes = polymorphic_cl(split_classes(split))
+    classes = polymorphic_cl(types_classes(types))
     lcp = lowest_common_parents(classes)
 
     # --- multiple parent classes
@@ -2691,15 +2671,14 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None, check_extmo
     if template_vars:
         subtypes = []
         for tvar in template_vars:
-            subsplit = split_subsplit(split, tvar)
-            ts = typestrnew(subsplit, root_class, cplusplus, orig_parent, node, check_extmod, depth+1)
+            vartypes = types_var_types(types, tvar)
+            ts = typestrnew(vartypes, root_class, cplusplus, orig_parent, node, check_extmod, depth+1)
             if tvar == var:
                 return ts
-            for (dcpa, cpa), types in subsplit.items():
-                if [t[0] for t in types if isinstance(t[0], function)]:
-                    ident = cl.ident
-                    if ident == 'tuple2': ident = 'tuple'
-                    error("'%s' instance containing function reference" % ident, node, warning=True)
+            if [t[0] for t in vartypes if isinstance(t[0], function)]:
+                ident = cl.ident
+                if ident == 'tuple2': ident = 'tuple'
+                error("'%s' instance containing function reference" % ident, node, warning=True) # XXX test
             subtypes.append(ts)
     else:
         if cl.ident in getgx().cpp_keywords:
@@ -2725,47 +2704,6 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None, check_extmo
 
     # --- final type representation
     return namespace+ident+sep[0]+', '.join(subtypes)+sep[1]+ptr
-
-# --- separate types in multiple duplicates
-def typesplit(node, parent): # XXX depr
-    split = {}
-
-    if isinstance(parent, function) and parent in getgx().inheritance_relations:
-        if node in getgx().merged_inh:
-            split[1,0] = getgx().merged_inh[node]
-        return split
-
-    while is_listcomp(parent):
-        parent = parent.parent
-
-    if isinstance(parent, class_): # class variables
-        for dcpa in range(parent.dcpa):
-            if (node, dcpa, 0) in getgx().cnode:
-                split[dcpa, 0] = getgx().cnode[node, dcpa, 0].types()
-
-    elif isinstance(parent, function):
-        if isinstance(parent.parent, class_): # method variables/expressions (XXX nested functions)
-            for dcpa in range(parent.parent.dcpa):
-                if dcpa in parent.cp:
-                    for cpa in range(len(parent.cp[dcpa])):
-                        if (node, dcpa, cpa) in getgx().cnode:
-                            split[dcpa, cpa] = getgx().cnode[node, dcpa, cpa].types()
-
-        else: # function variables/expressions
-            if 0 in parent.cp:
-                for cpa in range(len(parent.cp[0])):
-                    if (node, 0, cpa) in getgx().cnode:
-                        split[0, cpa] = getgx().cnode[node, 0, cpa].types()
-    else:
-        split[0, 0] = inode(node).types()
-
-    return split
-
-def split_classes(split): # XXX depr
-    alltypes = set()
-    for (dcpa, cpa), types in split.items():
-        alltypes.update(types)
-    return set([t[0] for t in alltypes if isinstance(t[0], class_)])
 
 def types_classes(types):
     return set([t[0] for t in types if isinstance(t[0], class_)])
@@ -2821,18 +2759,6 @@ def assign_needs_cast_rec(argtypes, formaltypes, depth=0):
             if assign_needs_cast_rec(argvartypes, formalvartypes, depth+1):
                 return True
     return False
-
-def split_subsplit(split, varname):
-    subsplit = {}
-    for (dcpa, cpa), types in split.items():
-        subsplit[dcpa, cpa] = set()
-        for t in types:
-            if not varname in t[0].vars: # XXX
-                continue
-            var = t[0].vars[varname]
-            if (var, t[1], 0) in getgx().cnode: # XXX yeah?
-                subsplit[dcpa, cpa].update(getgx().cnode[var, t[1], 0].types())
-    return subsplit
 
 class Bitpair:
     def __init__(self, nodes, msg, inline):
