@@ -5,7 +5,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="Docutils 0.6: http://docutils.sourceforge.net/" />
 <title>Shed Skin Tutorial</title>
-<meta name="date" content="October 16 2010" />
+<meta name="date" content="December 10 2010" />
 <meta name="authors" content="Mark Dufour and James Coughlan" />
 <style type="text/css">
 
@@ -157,9 +157,9 @@ code, tt {
 <col class="docinfo-content" />
 <tbody valign="top">
 <tr><th class="docinfo-name">Version:</th>
-<td>0.6</td></tr>
+<td>0.7</td></tr>
 <tr><th class="docinfo-name">Date:</th>
-<td>October 16 2010</td></tr>
+<td>December 10 2010</td></tr>
 <tr><th class="docinfo-name">Authors:</th>
 <td>Mark Dufour and James Coughlan</td></tr>
 </tbody>
@@ -186,9 +186,9 @@ code, tt {
 <p><strong>Shed Skin</strong> is an experimental <strong>Python-to-C++ compiler</strong> designed to speed up the execution of computation-intensive Python programs. It converts programs written in a static subset of Python to C++. The C++ code can be compiled to executable code, which can be run either as a standalone program or as an extension module easily imported and used in a regular Python program.</p>
 <p><strong>Shed Skin</strong> uses type inference techniques to determine the implicit types used in a Python program, in order to generate the explicit type declarations needed in a C++ version. Because C++ is statically typed, <strong>Shed Skin</strong> requires Python code to be written such that all variables are (implicitly) statically typed.</p>
 <p>Besides the typing and subset restrictions, supported programs cannot freely use the Python standard library, although about 20 common modules are supported, such as <tt class="docutils literal">random</tt> and <tt class="docutils literal">re</tt> (see <a class="reference internal" href="#library-limitations">Library Limitations</a>).</p>
-<p>Additionally, the type inference techniques employed by <strong>Shed Skin</strong> currently do not scale very well beyond several hundred lines of code (the largest compiled program is about 1,200 lines (sloccount)). In all, this means that <strong>Shed Skin</strong> is currently mostly useful to compile smallish programs and extension modules, that do not make extensive use of dynamic Python features or the standard library.</p>
+<p>Additionally, the type inference techniques employed by <strong>Shed Skin</strong> currently do not scale very well beyond several thousand lines of code (the largest compiled program is about 2,000 lines (sloccount)). In all, this means that <strong>Shed Skin</strong> is currently mostly useful to compile smallish programs and extension modules, that do not make extensive use of dynamic Python features or the standard library.</p>
 <p>Because <strong>Shed Skin</strong> is still in an early stage of development, it can also improve a lot. At the moment, you will probably run into some bugs when using it. Please report these, so they can be fixed!</p>
-<p>At the moment, <strong>Shed Skin</strong> is compatible with Python versions 2.4 to 2.6, behaves like 2.6, and should work on most UNIX platforms, such as GNU/Linux, OSX, FreeBSD and OpenSolaris. The Windows version has been discontinued as of <strong>Shed Skin</strong> 0.4.</p>
+<p>At the moment, <strong>Shed Skin</strong> is compatible with Python versions 2.4 to 2.6, behaves like 2.6, and should work on Windows and most UNIX platforms, such as GNU/Linux, OSX, FreeBSD and OpenSolaris.</p>
 </div>
 <div class="section" id="id2">
 <span id="typing-restrictions"></span><h1><a class="toc-backref" href="#id14">Typing Restrictions</a></h1>
@@ -374,7 +374,7 @@ shedskin -e simple_module
 make
 </pre>
 <p>For 'make' to succeed, make sure to have the Python development files installed (under <strong>Debian</strong>, install <tt class="docutils literal"><span class="pre">python-dev</span></tt>; under <strong>Fedora</strong>, install <tt class="docutils literal"><span class="pre">python-devel</span></tt>).</p>
-<p>Note that for type inference to be possible, the module must (indirectly) call its own functions. This is accomplished in the example by putting the function calls under the <tt class="docutils literal">if <span class="pre">__name__=='__main__'</span></tt> statement, so that they are not executed when the module is imported. Note that functions only have to be called indirectly, so this often doesn't consist of more than a call to <tt class="docutils literal">main</tt>.</p>
+<p>Note that for type inference to be possible, the module must (indirectly) call its own functions. This is accomplished in the example by putting the function calls under the <tt class="docutils literal">if <span class="pre">__name__=='__main__'</span></tt> statement, so that they are not executed when the module is imported. Note that functions only have to be called indirectly, so if <tt class="docutils literal">func2</tt> calls <tt class="docutils literal">func1</tt>, the call to <tt class="docutils literal">func1</tt> can be omitted.</p>
 <p>The extension module can now be simply imported and used as usual:</p>
 <pre class="literal-block">
 &gt;&gt;&gt; from simple_module import func1, func2
@@ -383,12 +383,13 @@ make
 &gt;&gt;&gt; func2(10)
 {0: 0, 1: 1, 2: 4, 3: 9, 4: 16, 5: 25, 6: 36, 7: 49, 8: 64, 9: 81}
 </pre>
-<p><strong>Differences</strong></p>
+<p><strong>Limitations</strong></p>
 <p>There are some important differences between using the compiled extension module and the original.</p>
 <ol class="arabic simple">
 <li>Only builtin scalar and container types (<tt class="docutils literal">int</tt>, <tt class="docutils literal">float</tt>, <tt class="docutils literal">complex</tt>, <tt class="docutils literal">str</tt>, <tt class="docutils literal">list</tt>, <tt class="docutils literal">tuple</tt>, <tt class="docutils literal">dict</tt>, <tt class="docutils literal">set</tt>, <tt class="docutils literal">frozenset</tt>) as well as <tt class="docutils literal">None</tt> and instances of user-defined classes can be passed/returned. So for instance, anonymous functions and iterators are currently not supported.</li>
 <li>Builtin objects are completely converted for each call/return from <strong>Shed Skin</strong> to <strong>CPython</strong> types and back, including their contents. This means you cannot change <strong>CPython</strong> builtin objects from the <strong>Shed Skin</strong> side and vice versa, and conversion may be slow. Instances of user-defined classes can be passed/returned without any conversion, and changed from either side.</li>
 <li>Global variables are converted once, at initialization time, from <strong>Shed Skin</strong> to <strong>CPython</strong>. This means that the value of the <strong>CPython</strong> version and <strong>Shed Skin</strong> version can change independently. This problem can be avoided by only using constant globals, or by adding getter/setter functions.</li>
+<li>Multiple (interacting) extension modules are not supported at the moment. Also, importing and using the Python version of a module and the compiled version at the same time may not work.</li>
 </ol>
 </div>
 <div class="section" id="id8">
@@ -491,8 +492,9 @@ shedskin test
 -d --dir               Specify alternate directory for output files
 -e --extmod            Generate extension module
 -f --flags             Provide alternate Makefile flags
--l --long              Use long long integers
+-l --long              Use long long (&quot;64-bit&quot;) integers
 -m --makefile          Specify alternate Makefile name
+-o --noassert          Disable assert statements
 -r --random            Use fast random number generator (rand())
 -s --strhash           Use fast string hashing algorithm (murmur)
 -v --msvc              Output MSVC-style Makefile
@@ -509,20 +511,12 @@ print a[5] # invalid index: out of bounds
 <div class="section" id="id11">
 <span id="tips-and-tricks"></span><h1><a class="toc-backref" href="#id23">Tips and Tricks</a></h1>
 <p><strong>Performance</strong></p>
-<ol class="arabic">
-<li><p class="first">Allocating many small objects (e.g. by using <tt class="docutils literal">zip</tt>) typically does not slow down Python programs by much. However, after compilation to C++, it can quickly become a bottleneck. The key to getting excellent performance is to allocate as few objects as possible.</p>
-</li>
-<li><p class="first"><strong>Shed Skin</strong> takes the flags it sends to the C++ compiler from the <tt class="docutils literal">FLAGS</tt> file in the <strong>Shed Skin</strong> installation directory. These flags can be modified or overruled by creating a local file with the same name. The following flags typically give good results:</p>
-<pre class="literal-block">
--O3 -s -fomit-frame-pointer -msse2
-</pre>
-</li>
-<li><p class="first">Profile-guided optimization can help to squeeze out even more performance. For a recent version of GCC, first compile and run the generated code with <tt class="docutils literal"><span class="pre">-fprofile-generate</span></tt>, then with <tt class="docutils literal"><span class="pre">fprofile-use</span></tt>.</p>
-</li>
-<li><p class="first">Several Python features (that may slow down generated code) are not always necessary, and can be turned off. See the section <a class="reference internal" href="#command-line-options">Command-line Options</a> for details.</p>
-</li>
-<li><p class="first">When optimizing, it is extremely useful to know exactly how much time is spent in each part of your program. The program <a class="reference external" href="http://code.google.com/p/jrfonseca/wiki/Gprof2Dot">Gprof2Dot</a> can be used to generate beautiful graphs for both the Python code and the compiled code.</p>
-</li>
+<ol class="arabic simple">
+<li>Allocating many small objects (e.g. by using <tt class="docutils literal">zip</tt>) typically does not slow down Python programs by much. However, after compilation to C++, it can quickly become a bottleneck. The key to getting excellent performance is to allocate as few objects as possible.</li>
+<li><strong>Shed Skin</strong> takes the flags it sends to the C++ compiler from the <tt class="docutils literal">FLAGS</tt> file in the <strong>Shed Skin</strong> installation directory. These flags can be modified or overruled by creating a local file with the same name.</li>
+<li>Profile-guided optimization can help to squeeze out even more performance. For a recent version of GCC, first compile and run the generated code with <tt class="docutils literal"><span class="pre">-fprofile-generate</span></tt>, then with <tt class="docutils literal"><span class="pre">fprofile-use</span></tt>.</li>
+<li>Several Python features (that may slow down generated code) are not always necessary, and can be turned off. See the section <a class="reference internal" href="#command-line-options">Command-line Options</a> for details.</li>
+<li>When optimizing, it is extremely useful to know exactly how much time is spent in each part of your program. The program <a class="reference external" href="http://code.google.com/p/jrfonseca/wiki/Gprof2Dot">Gprof2Dot</a> can be used to generate beautiful graphs for both the Python code and the compiled code.</li>
 </ol>
 <p><strong>Tricks</strong></p>
 <ol class="arabic">
@@ -539,13 +533,14 @@ s = statistics(); s.nodes = 28; s.solutions = set()
 print 'hoei', raw_input() # raw_input is called before printing 'hoei'!
 </pre>
 </li>
-<li><p class="first">Tuples with different types of elements and length &gt; 2 are not supported. It can however be useful to 'simulate' them:</p>
+<li><p class="first">Tuples with different types of elements and length &gt; 2 are currently not supported. It can however be useful to 'simulate' them:</p>
 <pre class="literal-block">
-a = (1, '1', 1.0) # bad
-a = (1, ('1', 1.0)) # good
+class mytuple:
+    def __init__(self, a, b, c):
+        self.a, self.b, self.c = a, b, c
 </pre>
 </li>
-<li><p class="first">Block comments surrounded by <tt class="docutils literal">#{</tt> and <tt class="docutils literal">#}</tt> are ignored by <strong>Shed Skin</strong>.  This can be used to comment out code that cannot be compiled.  For example, the following will only produce a plot when run using <strong>CPython</strong>:</p>
+<li><p class="first">Block comments surrounded by <tt class="docutils literal">#{</tt> and <tt class="docutils literal">#}</tt> are ignored by <strong>Shed Skin</strong>.  This can be used to comment out code that cannot be compiled. For example, the following will only produce a plot when run using <strong>CPython</strong>:</p>
 <pre class="literal-block">
 print &quot;x =&quot;, x
 print &quot;y =&quot;, y
@@ -560,7 +555,7 @@ pl.show()
 </div>
 <div class="section" id="id12">
 <span id="how-to-help-out-in-shed-skin-development"></span><h1><a class="toc-backref" href="#id24">How to help out in Shed Skin Development</a></h1>
-<p>Open source projects, especially new ones such as <strong>Shed Skin</strong>, thrive on user feedback. Please send in bug reports, patches or other code, or suggestions about this document; or join the mailing list and start or participate in discussions (see the <a class="reference external" href="http://shedskin.googlecode.com/">Googlecode site</a>.)</p>
+<p>Open source projects thrive on feedback. Please send in bug reports, patches or other code, or suggestions about this document; or join the mailing list and start or participate in discussions (see the <a class="reference external" href="http://shedskin.googlecode.com/">Googlecode site</a>.)</p>
 <p>If you are a student, you might want to consider applying for the yearly Google <a class="reference external" href="http://code.google.com/soc/">Summer of Code</a> or <a class="reference external" href="http://code.google.com/opensource/ghop/">GHOP</a> projects. <strong>Shed Skin</strong> has so far successfully participated in one Summer of Code and one GHOP.</p>
 <p>I would like to thank the following company/people, for their help with <strong>Shed Skin</strong> so far:</p>
 <ul class="simple">
@@ -583,6 +578,7 @@ pl.show()
 <li>Andy Miller</li>
 <li>Jeff Miller</li>
 <li>Joaquin Abian Monux</li>
+<li>John Nagle</li>
 <li>Harri Pasanen</li>
 <li>Jeremie Roquet</li>
 <li>Mike Schrick</li>

@@ -1,8 +1,8 @@
 Shed Skin Tutorial
 ==================
 
-:Version: 0.6
-:Date: October 16 2010
+:Version: 0.7
+:Date: December 10 2010
 :Authors: Mark Dufour and James Coughlan
 
 .. _Parallel Python: http://www.parallelpython.com/
@@ -29,11 +29,11 @@ Introduction
 
 Besides the typing and subset restrictions, supported programs cannot freely use the Python standard library, although about 20 common modules are supported, such as ``random`` and ``re`` (see `Library Limitations`_).
 
-Additionally, the type inference techniques employed by **Shed Skin** currently do not scale very well beyond several hundred lines of code (the largest compiled program is about 1,200 lines (sloccount)). In all, this means that **Shed Skin** is currently mostly useful to compile smallish programs and extension modules, that do not make extensive use of dynamic Python features or the standard library.
+Additionally, the type inference techniques employed by **Shed Skin** currently do not scale very well beyond several thousand lines of code (the largest compiled program is about 2,000 lines (sloccount)). In all, this means that **Shed Skin** is currently mostly useful to compile smallish programs and extension modules, that do not make extensive use of dynamic Python features or the standard library.
 
 Because **Shed Skin** is still in an early stage of development, it can also improve a lot. At the moment, you will probably run into some bugs when using it. Please report these, so they can be fixed!
 
-At the moment, **Shed Skin** is compatible with Python versions 2.4 to 2.6, behaves like 2.6, and should work on most UNIX platforms, such as GNU/Linux, OSX, FreeBSD and OpenSolaris. The Windows version has been discontinued as of **Shed Skin** 0.4.
+At the moment, **Shed Skin** is compatible with Python versions 2.4 to 2.6, behaves like 2.6, and should work on Windows and most UNIX platforms, such as GNU/Linux, OSX, FreeBSD and OpenSolaris.
 
 .. _Typing Restrictions:
 
@@ -242,7 +242,7 @@ Type: ::
 
 For 'make' to succeed, make sure to have the Python development files installed (under **Debian**, install ``python-dev``; under **Fedora**, install ``python-devel``).
 
-Note that for type inference to be possible, the module must (indirectly) call its own functions. This is accomplished in the example by putting the function calls under the ``if __name__=='__main__'`` statement, so that they are not executed when the module is imported. Note that functions only have to be called indirectly, so this often doesn't consist of more than a call to ``main``. 
+Note that for type inference to be possible, the module must (indirectly) call its own functions. This is accomplished in the example by putting the function calls under the ``if __name__=='__main__'`` statement, so that they are not executed when the module is imported. Note that functions only have to be called indirectly, so if ``func2`` calls ``func1``, the call to ``func1`` can be omitted.
 
 The extension module can now be simply imported and used as usual: ::
 
@@ -252,7 +252,7 @@ The extension module can now be simply imported and used as usual: ::
     >>> func2(10)
     {0: 0, 1: 1, 2: 4, 3: 9, 4: 16, 5: 25, 6: 36, 7: 49, 8: 64, 9: 81}
 
-**Differences**
+**Limitations**
 
 There are some important differences between using the compiled extension module and the original.
 
@@ -261,6 +261,8 @@ There are some important differences between using the compiled extension module
 2. Builtin objects are completely converted for each call/return from **Shed Skin** to **CPython** types and back, including their contents. This means you cannot change **CPython** builtin objects from the **Shed Skin** side and vice versa, and conversion may be slow. Instances of user-defined classes can be passed/returned without any conversion, and changed from either side.
 
 3. Global variables are converted once, at initialization time, from **Shed Skin** to **CPython**. This means that the value of the **CPython** version and **Shed Skin** version can change independently. This problem can be avoided by only using constant globals, or by adding getter/setter functions.
+
+4. Multiple (interacting) extension modules are not supported at the moment. Also, importing and using the Python version of a module and the compiled version at the same time may not work.
 
 .. _Parallel Processing:
 
@@ -374,8 +376,9 @@ The ``shedskin`` command can be given the following options: ::
     -d --dir               Specify alternate directory for output files
     -e --extmod            Generate extension module
     -f --flags             Provide alternate Makefile flags
-    -l --long              Use long long integers
+    -l --long              Use long long ("64-bit") integers
     -m --makefile          Specify alternate Makefile name
+    -o --noassert          Disable assert statements
     -r --random            Use fast random number generator (rand())
     -s --strhash           Use fast string hashing algorithm (murmur)
     -v --msvc              Output MSVC-style Makefile
@@ -399,9 +402,7 @@ Tips and Tricks
 
 1. Allocating many small objects (e.g. by using ``zip``) typically does not slow down Python programs by much. However, after compilation to C++, it can quickly become a bottleneck. The key to getting excellent performance is to allocate as few objects as possible.
 
-2. **Shed Skin** takes the flags it sends to the C++ compiler from the ``FLAGS`` file in the **Shed Skin** installation directory. These flags can be modified or overruled by creating a local file with the same name. The following flags typically give good results: ::
-
-    -O3 -s -fomit-frame-pointer -msse2
+2. **Shed Skin** takes the flags it sends to the C++ compiler from the ``FLAGS`` file in the **Shed Skin** installation directory. These flags can be modified or overruled by creating a local file with the same name. 
 
 3. Profile-guided optimization can help to squeeze out even more performance. For a recent version of GCC, first compile and run the generated code with ``-fprofile-generate``, then with ``fprofile-use``.
 
@@ -422,12 +423,13 @@ Tips and Tricks
 
     print 'hoei', raw_input() # raw_input is called before printing 'hoei'!
 
-3. Tuples with different types of elements and length > 2 are not supported. It can however be useful to 'simulate' them: ::
+3. Tuples with different types of elements and length > 2 are currently not supported. It can however be useful to 'simulate' them: ::
 
-    a = (1, '1', 1.0) # bad
-    a = (1, ('1', 1.0)) # good
+    class mytuple:
+        def __init__(self, a, b, c):
+            self.a, self.b, self.c = a, b, c
 
-4. Block comments surrounded by ``#{`` and ``#}`` are ignored by **Shed Skin**.  This can be used to comment out code that cannot be compiled.  For example, the following will only produce a plot when run using **CPython**: ::
+4. Block comments surrounded by ``#{`` and ``#}`` are ignored by **Shed Skin**.  This can be used to comment out code that cannot be compiled. For example, the following will only produce a plot when run using **CPython**: ::
 
     print "x =", x
     print "y =", y
@@ -442,7 +444,7 @@ Tips and Tricks
 How to help out in Shed Skin Development
 ----------------------------------------
 
-Open source projects, especially new ones such as **Shed Skin**, thrive on user feedback. Please send in bug reports, patches or other code, or suggestions about this document; or join the mailing list and start or participate in discussions (see the `Googlecode site`_.)
+Open source projects thrive on feedback. Please send in bug reports, patches or other code, or suggestions about this document; or join the mailing list and start or participate in discussions (see the `Googlecode site`_.)
 
 If you are a student, you might want to consider applying for the yearly Google `Summer of Code`_ or `GHOP`_ projects. **Shed Skin** has so far successfully participated in one Summer of Code and one GHOP.
 
