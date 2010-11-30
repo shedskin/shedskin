@@ -50,7 +50,7 @@ class generateVisitor(ASTVisitor):
                 done = set()
                 for (node, name) in self.consts.items():
                     if not name in done and node in self.mergeinh and self.mergeinh[node]: # XXX
-                        ts = typesetreprnew(node, inode(node).parent)
+                        ts = nodetypestr(node, inode(node).parent)
                         if declare: ts = 'extern '+ts
                         pairs.append((ts, name))
                         done.add(name)
@@ -168,7 +168,7 @@ class generateVisitor(ASTVisitor):
         for (name,var) in vars:
             if singletype(var, module) or var.invisible: # XXX buh
                 continue
-            typehu = typesetreprnew(var, var.parent)
+            typehu = nodetypestr(var, var.parent)
             if not var.name in ['__exception', '__exception2']: # XXX
                 decl.setdefault(typehu, []).append(self.cpp_name(name))
         decl2 = []
@@ -266,7 +266,7 @@ class generateVisitor(ASTVisitor):
         # --- defaults
         if self.module.mv.defaults.items():
             for default, nr in self.module.mv.defaults.items():
-                print >>self.out, 'extern '+typesetreprnew(default, None)+' '+('default_%d;'%nr)
+                print >>self.out, 'extern '+nodetypestr(default, None)+' '+('default_%d;'%nr)
             print >>self.out
 
         # function declarations
@@ -316,7 +316,7 @@ class generateVisitor(ASTVisitor):
         # --- defaults
         if self.module.mv.defaults.items():
             for default, nr in self.module.mv.defaults.items():
-                print >>self.out, typesetreprnew(default, None)+' '+('default_%d;'%nr)
+                print >>self.out, nodetypestr(default, None)+' '+('default_%d;'%nr)
             print >>self.out
 
         # --- declarations
@@ -583,7 +583,7 @@ class generateVisitor(ASTVisitor):
         if cl.parent.vars: # XXX merge with visitModule
             for var in cl.parent.vars.values():
                 if var in getgx().merged_inh and getgx().merged_inh[var]:
-                    self.start(typesetreprnew(var, cl.parent)+cl.ident+'::'+self.cpp_name(var.name))
+                    self.start(nodetypestr(var, cl.parent)+cl.ident+'::'+self.cpp_name(var.name))
                     self.eol()
             print >>self.out
 
@@ -592,7 +592,7 @@ class generateVisitor(ASTVisitor):
         if cl.parent.vars:
             for var in cl.parent.vars.values():
                 if var in getgx().merged_inh and getgx().merged_inh[var]:
-                    self.output('static '+typesetreprnew(var, cl.parent)+self.cpp_name(var.name)+';')
+                    self.output('static '+nodetypestr(var, cl.parent)+self.cpp_name(var.name)+';')
             print >>self.out
 
         # --- instance variables
@@ -620,13 +620,13 @@ class generateVisitor(ASTVisitor):
                 for m in [getgx().merged_inh[subcl.vars[ident]] for subcl in subclasses if ident in subcl.vars and subcl.vars[ident] in getgx().merged_inh]: # XXX
                     merged.update(m)
 
-                ts = self.padme(typestrnew(merged))
+                ts = self.padme(typestr(merged))
                 if merged:
                     self.output(ts+cppname+';')
 
             # non-virtual
             elif var in getgx().merged_inh and getgx().merged_inh[var]:
-                self.output(typesetreprnew(var, cl)+cppname+';')
+                self.output(nodetypestr(var, cl)+cppname+';')
 
         if [v for v in cl.vars if not v.startswith('__')]:
             print >>self.out
@@ -700,7 +700,7 @@ class generateVisitor(ASTVisitor):
                 merged.append(merge)
 
             formals = list(subclasses)[0].funcs[ident].formals[1:]
-            ftypes = [self.padme(typestrnew(m)) for m in merged]
+            ftypes = [self.padme(typestr(m)) for m in merged]
 
             # --- prepare for having to cast back arguments (virtual function call means multiple targets)
             for subcl in subclasses:
@@ -788,10 +788,10 @@ class generateVisitor(ASTVisitor):
     def instance_new(self, node, argtypes):
         if argtypes is None:
             argtypes = getgx().merged_inh[node]
-        ts = typestrnew(argtypes)
+        ts = typestr(argtypes)
         if ts.startswith('pyseq') or ts.startswith('pyiter'): # XXX
             argtypes = getgx().merged_inh[node]
-        ts = typestrnew(argtypes)
+        ts = typestr(argtypes)
         self.append('(new '+ts[:-2]+'(')
         return argtypes
 
@@ -799,8 +799,8 @@ class generateVisitor(ASTVisitor):
         argtypes = self.instance_new(node, argtypes)
         if node.items:
             self.append(str(len(node.items))+', ')
-        ts_key = typestrnew(self.subtypes(argtypes, 'unit'))
-        ts_value = typestrnew(self.subtypes(argtypes, 'value'))
+        ts_key = typestr(self.subtypes(argtypes, 'unit'))
+        ts_value = typestr(self.subtypes(argtypes, 'value'))
         for (key, value) in node.items:
             self.visitm('(new tuple2<%s, %s>(2,' % (ts_key, ts_value), func)
             self.visit_child(key, 'unit', func, argtypes)
@@ -1088,10 +1088,10 @@ class generateVisitor(ASTVisitor):
 
     def func_pointers(self):
         for func in getmv().lambdas.values():
-            argtypes = [typesetreprnew(func.vars[formal], func).rstrip() for formal in func.formals]
+            argtypes = [nodetypestr(func.vars[formal], func).rstrip() for formal in func.formals]
             if func.largs != None:
                 argtypes = argtypes[:func.largs]
-            rettype = typesetreprnew(func.retnode.thing,func)
+            rettype = nodetypestr(func.retnode.thing,func)
             print >>self.out, 'typedef %s(*lambda%d)(' % (rettype, func.lambdanr) + ', '.join(argtypes)+');'
         print >>self.out
 
@@ -1115,12 +1115,12 @@ class generateVisitor(ASTVisitor):
         elif func.ident in ['__hash__']:
             header += 'int ' # XXX __ss_int leads to problem with virtual parent
         elif func.returnexpr:
-            header += typesetreprnew(func.retnode.thing, func) # XXX mult
+            header += nodetypestr(func.retnode.thing, func) # XXX mult
         else:
             header += 'void '
             ident = self.cpp_name(ident)
 
-        ftypes = [typesetreprnew(func.vars[f], func) for f in formals]
+        ftypes = [nodetypestr(func.vars[f], func) for f in formals]
 
         # if arguments type too precise (e.g. virtually called) cast them back
         oldftypes = ftypes
@@ -1228,7 +1228,7 @@ class generateVisitor(ASTVisitor):
         for (name, var) in func.vars.items():
             if not var.invisible and name not in func.formals:
                 name = self.cpp_name(name)
-                ts = typesetreprnew(var, func)
+                ts = nodetypestr(var, func)
                 pairs.append((ts, name))
         self.output(self.indentation.join(self.group_declarations(pairs)))
 
@@ -1256,16 +1256,16 @@ class generateVisitor(ASTVisitor):
     
     def generator_class(self, func):
         ident = self.generator_ident(func)
-        self.output('class __gen_%s : public %s {' % (ident, typesetreprnew(func.retnode.thing, func)[:-2]))
+        self.output('class __gen_%s : public %s {' % (ident, nodetypestr(func.retnode.thing, func)[:-2]))
         self.output('public:')
         self.indent()
-        pairs = [(typesetreprnew(func.vars[f], func), self.cpp_name(f)) for f in func.vars]
+        pairs = [(nodetypestr(func.vars[f], func), self.cpp_name(f)) for f in func.vars]
         self.output(self.indentation.join(self.group_declarations(pairs)))
         self.output('int __last_yield;\n')
 
         args = []
         for f in func.formals:
-            args.append(typesetreprnew(func.vars[f], func)+self.cpp_name(f))
+            args.append(nodetypestr(func.vars[f], func)+self.cpp_name(f))
         self.output(('__gen_%s(' % ident) + ','.join(args)+') {')
         self.indent()
         for f in func.formals:
@@ -1274,7 +1274,7 @@ class generateVisitor(ASTVisitor):
         self.deindent()
         self.output('}\n')
 
-        self.output('%s __get_next() {' % typesetreprnew(func.retnode.thing, func)[7:-3])
+        self.output('%s __get_next() {' % nodetypestr(func.retnode.thing, func)[7:-3])
         self.indent()
         self.output('switch(__last_yield) {')
         self.indent()
@@ -1384,7 +1384,7 @@ class generateVisitor(ASTVisitor):
                 self.append(op+'(')
             cast = ''
             if assign_needs_cast(child, func, node, func):
-                cast = '(('+typesetreprnew(node, func)+')'
+                cast = '(('+nodetypestr(node, func)+')'
                 self.append(cast)
             self.visit(child, func)
             if cast:
@@ -1573,8 +1573,8 @@ class generateVisitor(ASTVisitor):
             self.append(middle[:-2]+'(')
             self.visit2(left, func)
             self.append(', ')
-            if typesetreprnew(left, func) != typesetreprnew(origright, func):
-                self.append('((%s)(' % typesetreprnew(left, func))
+            if nodetypestr(left, func) != nodetypestr(origright, func):
+                self.append('((%s)(' % nodetypestr(left, func))
                 self.visit2(origright, func)
                 self.append('))')
             else:
@@ -1701,7 +1701,7 @@ class generateVisitor(ASTVisitor):
             self.visitm(node.node, '(', func)
 
         elif constructor:
-            self.append('(new '+nokeywords(typesetreprnew(node, func)[:-2])+'(')
+            self.append('(new '+nokeywords(nodetypestr(node, func)[:-2])+'(')
             if funcs and len(funcs[0].formals) == 1 and not funcs[0].mv.module.builtin:
                 self.append('1') # don't call default constructor
 
@@ -1845,7 +1845,7 @@ class generateVisitor(ASTVisitor):
                 self.append('(('+builtin_cast+')(')
             elif not target.mv.module.builtin and assign_needs_cast(arg, func, formal, target): # XXX builtin (dict.fromkeys?)
                 cast = True
-                self.append('(('+typesetreprnew(formal, target)+')(')
+                self.append('(('+nodetypestr(formal, target)+')(')
             elif castnull and isinstance(arg, Name) and arg.name == 'None':
                 cast = True
                 self.append('((void *)(')
@@ -1867,7 +1867,7 @@ class generateVisitor(ASTVisitor):
             elif arg in self.consts:
                 self.append(self.consts[arg])
             else:
-                if constructor and ident in ['set', 'frozenset'] and typesetreprnew(arg, func) in ['list<void *> *', 'tuple<void *> *', 'pyiter<void *> *', 'pyseq<void *> *', 'pyset<void *>']: # XXX to needs_cast
+                if constructor and ident in ['set', 'frozenset'] and nodetypestr(arg, func) in ['list<void *> *', 'tuple<void *> *', 'pyiter<void *> *', 'pyseq<void *> *', 'pyset<void *>']: # XXX to needs_cast
                     pass # XXX assign_needs_cast
                 else:
                     self.refer(arg, func)
@@ -1885,8 +1885,8 @@ class generateVisitor(ASTVisitor):
         # type inference cannot deduce all necessary casts to builtin formals
         vars = {'u': 'unit', 'v': 'value', 'o': None}
         if target.mv.module.builtin and method_call and formal.name in vars and target.parent.ident in ('list', 'dict', 'set'):
-            to_ts = typesetreprnew(objexpr, func, var=vars[formal.name])
-            if typesetreprnew(arg, func) != to_ts:
+            to_ts = nodetypestr(objexpr, func, var=vars[formal.name])
+            if nodetypestr(arg, func) != to_ts:
                 return to_ts
 
     def cast_to_builtin2(self, arg, func, objexpr, msg, formal_nr):
@@ -1914,7 +1914,7 @@ class generateVisitor(ASTVisitor):
             self.start('return ')
         cast = assign_needs_cast(expr, func, retnode.thing, func)
         if cast:
-            self.append('(('+typesetreprnew(retnode.thing, func)+')(')
+            self.append('(('+nodetypestr(retnode.thing, func)+')(')
 
         elif isinstance(expr, Name) and expr.name == 'self': # XXX integrate with assign_needs_cast!? # XXX self?
             lcp = lowest_common_parents(polymorphic_t(self.mergeinh[retnode.thing])) # XXX simplify
@@ -2077,16 +2077,16 @@ class generateVisitor(ASTVisitor):
         if isinstance(expr, AssName):
             var = lookupvar(expr.name, func)
             if assign_needs_cast(rvalue, func, var, func):
-                cast = typesetreprnew(var, func)
+                cast = nodetypestr(var, func)
         elif isinstance(expr, AssAttr):
             lcp = lowest_common_parents(polymorphic_t(self.mergeinh[expr.expr]))
             if len(lcp) == 1 and isinstance(lcp[0], class_):
                 var = lookupvar(expr.attrname, lcp[0])
                 if assign_needs_cast(rvalue, func, var, lcp[0]):
-                    cast = typesetreprnew(var, lcp[0])
+                    cast = nodetypestr(var, lcp[0])
         else:
             if assign_needs_cast(rvalue, func, expr, func):
-                cast = typesetreprnew(expr, func)
+                cast = nodetypestr(expr, func)
         return cast
 
     def assign_pair(self, lvalue, rvalue, func):
@@ -2140,7 +2140,7 @@ class generateVisitor(ASTVisitor):
     def listcomp_head(self, node, declare, genexpr):
         lcfunc, func = self.listcomps[node]
         args = [a+b for a,b in self.lc_args(lcfunc, func)]
-        ts = typesetreprnew(node, lcfunc)
+        ts = nodetypestr(node, lcfunc)
         if not ts.endswith('*'): ts += ' '
         if genexpr:
             self.genexpr_class(node, declare)
@@ -2151,7 +2151,7 @@ class generateVisitor(ASTVisitor):
         args = []
         for name in lcfunc.misses:
             if lookupvar(name, func).parent:
-                args.append((typesetreprnew(lookupvar(name, lcfunc), lcfunc), self.cpp_name(name)))
+                args.append((nodetypestr(lookupvar(name, lcfunc), lcfunc), self.cpp_name(name)))
         return args
 
     def listcomp_func(self, node):
@@ -2159,7 +2159,7 @@ class generateVisitor(ASTVisitor):
         self.listcomp_head(node, False, False)
         self.indent()
         self.lc_locals(lcfunc)
-        self.output(typesetreprnew(node, lcfunc)+'__ss_result = new '+typesetreprnew(node, lcfunc)[:-2]+'();\n')
+        self.output(nodetypestr(node, lcfunc)+'__ss_result = new '+nodetypestr(node, lcfunc)[:-2]+'();\n')
         self.listcomp_rec(node, node.quals, lcfunc, False)
         self.output('return __ss_result;')
         self.deindent();
@@ -2169,9 +2169,9 @@ class generateVisitor(ASTVisitor):
         lcfunc, func = self.listcomps[node]
         args = self.lc_args(lcfunc, func)
         func1 = lcfunc.ident+'('+', '.join([a+b for a,b in args])+')'
-        func2 = typesetreprnew(node, lcfunc)[7:-3]
+        func2 = nodetypestr(node, lcfunc)[7:-3]
         if declare:
-            ts = typesetreprnew(node, lcfunc)
+            ts = nodetypestr(node, lcfunc)
             if not ts.endswith('*'): ts += ' '
             self.output('class '+lcfunc.ident+' : public '+ts[:-2]+' {')
             self.output('public:')
@@ -2203,7 +2203,7 @@ class generateVisitor(ASTVisitor):
         decl = {}
         for (name,var) in lcfunc.vars.items(): # XXX merge with visitFunction
             name = self.cpp_name(name)
-            decl.setdefault(typesetreprnew(var, lcfunc), []).append(name)
+            decl.setdefault(nodetypestr(var, lcfunc), []).append(name)
         for ts, names in decl.items():
             if ts.endswith('*'):
                 self.output(ts+', *'.join(names)+';')
@@ -2574,23 +2574,24 @@ def namespaceclass(cl, add_cl=''):
     else:
         return add_cl+nokeywords(cl.ident)
 
-# --- determine representation of node type set (within parameterized context)
-def typesetreprnew(node, parent, cplusplus=True, check_extmod=False, check_ret=False, var=None):
+def nodetypestr(node, parent, cplusplus=True, check_extmod=False, check_ret=False, var=None): # XXX minimize
     orig_parent = parent
     while is_listcomp(parent): # XXX
         parent = parent.parent
-    if cplusplus and isinstance(node, variable) and node.looper:
-        return typesetreprnew(node.looper, parent, cplusplus)[:-2]+'::for_in_loop '
+    if cplusplus and isinstance(node, variable) and node.looper: # XXX to declaredefs?
+        return nodetypestr(node.looper, parent, cplusplus)[:-2]+'::for_in_loop '
     types = getgx().merged_inh[node]
+    return typestr(types, parent, cplusplus, orig_parent, node, check_extmod, 0, check_ret, var)
+
+def typestr(types, parent=None, cplusplus=True, orig_parent=None, node=None, check_extmod=False, depth=0, check_ret=False, var=None):
     try:
-        ts = typestrnew(types, parent, cplusplus, orig_parent, node, check_extmod, 0, check_ret, var)
+        ts = typestrnew(types, parent, cplusplus, orig_parent, node, check_extmod, depth, check_ret, var)
     except RuntimeError:
         if not getmv().module.builtin and isinstance(node, variable) and not node.name.startswith('__'): # XXX startswith
             if node.parent: varname = repr(node)
             else: varname = "'%s'" % node.name
             error("variable %s has dynamic (sub)type" % varname, node, warning=True)
         ts = 'ERROR'
-
     if cplusplus:
         if not ts.endswith('*'): ts += ' '
         return ts
