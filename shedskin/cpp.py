@@ -2727,7 +2727,7 @@ def typestrnew(split, root_class, cplusplus, orig_parent, node=None, check_extmo
     return namespace+ident+sep[0]+', '.join(subtypes)+sep[1]+ptr
 
 # --- separate types in multiple duplicates
-def typesplit(node, parent):
+def typesplit(node, parent): # XXX depr
     split = {}
 
     if isinstance(parent, function) and parent in getgx().inheritance_relations:
@@ -2761,29 +2761,40 @@ def typesplit(node, parent):
 
     return split
 
-def split_classes(split):
+def split_classes(split): # XXX depr
     alltypes = set()
     for (dcpa, cpa), types in split.items():
         alltypes.update(types)
     return set([t[0] for t in alltypes if isinstance(t[0], class_)])
 
+def types_classes(types):
+    return set([t[0] for t in types if isinstance(t[0], class_)])
+
+def types_var_types(types, varname):
+    subtypes = set()
+    for t in types:
+        if not varname in t[0].vars:
+            continue
+        var = t[0].vars[varname]
+        if (var, t[1], 0) in getgx().cnode:
+            subtypes.update(getgx().cnode[var, t[1], 0].types())
+    return subtypes
 
 # --- assignment (incl. passing arguments, returning values) may require a cast
 def assign_needs_cast(arg, func, formal, target):
-    argsplit = typesplit(arg, func)
-    formalsplit = typesplit(formal, target)
-
+    argtypes = getgx().merged_inh[arg]
+    formaltypes = getgx().merged_inh[formal]
     try:
-        return assign_needs_cast_rec(argsplit, func, formalsplit, target)
+        return assign_needs_cast_rec(argtypes, formaltypes)
     except RuntimeError:
         return False
 
-def assign_needs_cast_rec(argsplit, func, formalsplit, target, depth=0):
+def assign_needs_cast_rec(argtypes, formaltypes, depth=0):
     if depth == 10:
         raise RuntimeError()
 
-    argclasses = split_classes(argsplit)
-    formalclasses = split_classes(formalsplit)
+    argclasses = types_classes(argtypes)
+    formalclasses = types_classes(formaltypes)
 
     # void *
     noneset = set([defclass('none')])
@@ -2795,7 +2806,7 @@ def assign_needs_cast_rec(argsplit, func, formalsplit, target, depth=0):
         return True
 
     # subtype
-    lcp_args, lcp_formals = lowest_common_parents(polymorphic_cl(argclasses)), lowest_common_parents(polymorphic_cl(formalclasses))
+    lcp_args, lcp_formals = lowest_common_parents(polymorphic_cl(argclasses)), lowest_common_parents(polymorphic_cl(formalclasses)) # XXX lcp(pol_cl) shortcut
     if depth > 0 and len(lcp_args) == 1 and len(lcp_formals) == 1 and lcp_args != lcp_formals:
         return True
 
@@ -2805,9 +2816,9 @@ def assign_needs_cast_rec(argsplit, func, formalsplit, target, depth=0):
     tvars = lcp_formals[0].tvar_names()
     if tvars:
         for tvar in tvars:
-            argsubsplit = split_subsplit(argsplit, tvar)
-            formalsubsplit = split_subsplit(formalsplit, tvar)
-            if assign_needs_cast_rec(argsubsplit, func, formalsubsplit, target, depth+1):
+            argvartypes = types_var_types(argtypes, tvar)
+            formalvartypes = types_var_types(formaltypes, tvar)
+            if assign_needs_cast_rec(argvartypes, formalvartypes, depth+1):
                 return True
     return False
 
