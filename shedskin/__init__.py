@@ -28,7 +28,7 @@ def usage():
 """
     sys.exit(1)
 
-def main():
+def start():
     setgx(newgx())
 
     print '*** SHED SKIN Python-to-C++ Compiler 0.7 ***'
@@ -85,6 +85,12 @@ def main():
     annotate.annotate()
     cpp.generate_code()
     shared.print_errors()
+
+def main():
+    try:
+        start()
+    except KeyboardInterrupt:
+        sys.exit(1)
 
 if __name__ == '__main__':
     main()
