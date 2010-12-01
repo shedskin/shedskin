@@ -314,7 +314,9 @@ var = self.some_method # bad, method reference
 </div>
 <div class="section" id="id5">
 <span id="installation"></span><h1><a class="toc-backref" href="#id17">Installation</a></h1>
-<p>The latest version of <strong>Shed Skin</strong> can be downloaded from the <a class="reference external" href="http://shedskin.googlecode.com/">Googlecode site</a>. There are three types of packages available: a <strong>Debian</strong> package, an <strong>RPM</strong> package, and a <strong>UNIX</strong> source package. The Windows version has been discontinued as of <strong>Shed Skin</strong> 0.4.</p>
+<p>The latest version of <strong>Shed Skin</strong> can be downloaded from the <a class="reference external" href="http://shedskin.googlecode.com/">Googlecode site</a>. There are four types of packages available: a self-extracting <strong>Windows</strong> installer, a <strong>Debian</strong> (<strong>Ubuntu</strong>) package, an <strong>RPM</strong> package, and a <strong>UNIX</strong> source package.</p>
+<p><strong>Windows</strong></p>
+<p>To install the <strong>Windows</strong> version, simply download and start it. (If you use <strong>ActivePython</strong> or some other non-standard Python distribution, or <strong>MingW</strong>, please deinstall this first.)</p>
 <p><strong>Debian</strong></p>
 <p>To install the <strong>Debian</strong> package, simply download and install it using your package manager. Make sure the following packages are installed:</p>
 <p><tt class="docutils literal">sudo <span class="pre">apt-get</span> install g++ <span class="pre">libpcre3-dev</span> <span class="pre">libgc-dev</span> <span class="pre">python-dev</span></tt></p>
@@ -337,6 +339,7 @@ var = self.some_method # bad, method reference
 </div>
 <div class="section" id="id6">
 <span id="compiling-a-stand-alone-program"></span><h1><a class="toc-backref" href="#id18">Compiling a Stand-Alone Program</a></h1>
+<p>Under Windows, first execute (double-click) the <tt class="docutils literal">init.bat</tt> file in the directory where you installed <strong>Shed Skin</strong>.</p>
 <p>To compile the following simple test program, called <tt class="docutils literal">test.py</tt>:</p>
 <pre class="literal-block">
 print 'hello, world!'
@@ -346,7 +349,7 @@ print 'hello, world!'
 shedskin test
 </pre>
 <p>This will create two C++ files, called <tt class="docutils literal">test.cpp</tt> and <tt class="docutils literal">test.hpp</tt>, as well as a <tt class="docutils literal">Makefile</tt>.</p>
-<p>To create an executable file, called <tt class="docutils literal">test</tt>, type:</p>
+<p>To create an executable file, called <tt class="docutils literal">test</tt> (or <tt class="docutils literal">test.exe</tt>), type:</p>
 <pre class="literal-block">
 make
 </pre>
@@ -373,7 +376,7 @@ if __name__ == '__main__':
 shedskin -e simple_module
 make
 </pre>
-<p>For 'make' to succeed, make sure to have the Python development files installed (under <strong>Debian</strong>, install <tt class="docutils literal"><span class="pre">python-dev</span></tt>; under <strong>Fedora</strong>, install <tt class="docutils literal"><span class="pre">python-devel</span></tt>).</p>
+<p>For 'make' to succeed on a non-Windows system, make sure to have the Python development files installed (under <strong>Debian</strong>, install <tt class="docutils literal"><span class="pre">python-dev</span></tt>; under <strong>Fedora</strong>, install <tt class="docutils literal"><span class="pre">python-devel</span></tt>).</p>
 <p>Note that for type inference to be possible, the module must (indirectly) call its own functions. This is accomplished in the example by putting the function calls under the <tt class="docutils literal">if <span class="pre">__name__=='__main__'</span></tt> statement, so that they are not executed when the module is imported. Note that functions only have to be called indirectly, so if <tt class="docutils literal">func2</tt> calls <tt class="docutils literal">func1</tt>, the call to <tt class="docutils literal">func1</tt> can be omitted.</p>
 <p>The extension module can now be simply imported and used as usual:</p>
 <pre class="literal-block">

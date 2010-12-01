@@ -164,7 +164,11 @@ See `How to help out in Shed Skin Development`_ on how to help improve or add to
 Installation
 ------------
 
-The latest version of **Shed Skin** can be downloaded from the `Googlecode site`_. There are three types of packages available: a **Debian** package, an **RPM** package, and a **UNIX** source package. The Windows version has been discontinued as of **Shed Skin** 0.4.
+The latest version of **Shed Skin** can be downloaded from the `Googlecode site`_. There are four types of packages available: a self-extracting **Windows** installer, a **Debian** (**Ubuntu**) package, an **RPM** package, and a **UNIX** source package.
+
+**Windows**
+
+To install the **Windows** version, simply download and start it. (If you use **ActivePython** or some other non-standard Python distribution, or **MingW**, please deinstall this first.)
 
 **Debian**
 
@@ -201,6 +205,8 @@ To install the **UNIX** source package on a **GNU/Linux** or **OSX** system, tak
 Compiling a Stand-Alone Program
 -------------------------------
 
+Under Windows, first execute (double-click) the ``init.bat`` file in the directory where you installed **Shed Skin**.
+
 To compile the following simple test program, called ``test.py``: ::
 
     print 'hello, world!'
@@ -211,7 +217,7 @@ Type: ::
 
 This will create two C++ files, called ``test.cpp`` and ``test.hpp``, as well as a ``Makefile``.
 
-To create an executable file, called ``test``, type: ::
+To create an executable file, called ``test`` (or ``test.exe``), type: ::
 
     make
 
@@ -240,7 +246,7 @@ Type: ::
     shedskin -e simple_module
     make
 
-For 'make' to succeed, make sure to have the Python development files installed (under **Debian**, install ``python-dev``; under **Fedora**, install ``python-devel``).
+For 'make' to succeed on a non-Windows system, make sure to have the Python development files installed (under **Debian**, install ``python-dev``; under **Fedora**, install ``python-devel``).
 
 Note that for type inference to be possible, the module must (indirectly) call its own functions. This is accomplished in the example by putting the function calls under the ``if __name__=='__main__'`` statement, so that they are not executed when the module is imported. Note that functions only have to be called indirectly, so if ``func2`` calls ``func1``, the call to ``func1`` can be omitted.
 
