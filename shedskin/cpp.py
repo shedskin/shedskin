@@ -2574,18 +2574,15 @@ def namespaceclass(cl, add_cl=''):
     else:
         return add_cl+nokeywords(cl.ident)
 
-def nodetypestr(node, parent, cplusplus=True, check_extmod=False, check_ret=False, var=None): # XXX minimize
-    orig_parent = parent
-    while is_listcomp(parent): # XXX
-        parent = parent.parent
+def nodetypestr(node, parent=None, cplusplus=True, check_extmod=False, check_ret=False, var=None): # XXX minimize
     if cplusplus and isinstance(node, variable) and node.looper: # XXX to declaredefs?
-        return nodetypestr(node.looper, parent, cplusplus)[:-2]+'::for_in_loop '
+        return nodetypestr(node.looper, None, cplusplus)[:-2]+'::for_in_loop '
     types = getgx().merged_inh[node]
-    return typestr(types, parent, cplusplus, orig_parent, node, check_extmod, 0, check_ret, var)
+    return typestr(types, None, cplusplus, node, check_extmod, 0, check_ret, var)
 
-def typestr(types, parent=None, cplusplus=True, orig_parent=None, node=None, check_extmod=False, depth=0, check_ret=False, var=None):
+def typestr(types, parent=None, cplusplus=True, node=None, check_extmod=False, depth=0, check_ret=False, var=None):
     try:
-        ts = typestrnew(types, parent, cplusplus, orig_parent, node, check_extmod, depth, check_ret, var)
+        ts = typestrnew(types, cplusplus, node, check_extmod, depth, check_ret, var)
     except RuntimeError:
         if not getmv().module.builtin and isinstance(node, variable) and not node.name.startswith('__'): # XXX startswith
             if node.parent: varname = repr(node)
@@ -2600,7 +2597,7 @@ def typestr(types, parent=None, cplusplus=True, orig_parent=None, node=None, che
 class ExtmodError(Exception):
     pass
 
-def typestrnew(types, root_class=None, cplusplus=True, orig_parent=None, node=None, check_extmod=False, depth=0, check_ret=False, var=None):
+def typestrnew(types, cplusplus=True, node=None, check_extmod=False, depth=0, check_ret=False, var=None):
     if depth==10:
         raise RuntimeError()
 
@@ -2634,7 +2631,7 @@ def typestrnew(types, root_class=None, cplusplus=True, orig_parent=None, node=No
             return '***ERROR*** '
         elif isinstance(node, variable):
             if not node.name.startswith('__') : # XXX startswith
-                if orig_parent: varname = "%s" % node
+                if node.parent: varname = "%s" % node
                 else: varname = "'%s'" % node
                 error("variable %s has dynamic (sub)type: {%s}" % (varname, ', '.join([conv2.get(cl.ident, cl.ident) for cl in lcp])), node, warning=True)
         elif node not in getgx().bool_test_only:
@@ -2647,7 +2644,7 @@ def typestrnew(types, root_class=None, cplusplus=True, orig_parent=None, node=No
     cl = lcp.pop()
 
     if check_ret and cl.mv.module.ident == 'collections' and cl.ident == 'defaultdict':
-        print '*WARNING* %s:defaultdicts are returned as dicts' % root_class.ident
+        print '*WARNING* defaultdicts are returned as dicts'
     elif check_extmod and cl.mv.module.builtin and not (cl.mv.module.ident == 'builtin' and cl.ident in ['int_', 'float_', 'complex', 'str_', 'list', 'tuple', 'tuple2', 'dict', 'set', 'frozenset', 'none', 'bool_']) and not (cl.mv.module.ident == 'collections' and cl.ident == 'defaultdict'):
         raise ExtmodError()
 
@@ -2673,7 +2670,7 @@ def typestrnew(types, root_class=None, cplusplus=True, orig_parent=None, node=No
         subtypes = []
         for tvar in template_vars:
             vartypes = types_var_types(types, tvar)
-            ts = typestrnew(vartypes, root_class, cplusplus, orig_parent, node, check_extmod, depth+1)
+            ts = typestrnew(vartypes, cplusplus, node, check_extmod, depth+1)
             if tvar == var:
                 return ts
             if [t[0] for t in vartypes if isinstance(t[0], function)]:
