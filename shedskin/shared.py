@@ -48,6 +48,7 @@ class globalInfo: # XXX add comments, split up
         self.loopstack = [] # track nested loops
         self.comments = {}
         self.import_order = 0 # module import order
+        self.from_mod = {}
         self.class_def_order = 0
         # command-line options
         self.wrap_around_check = True

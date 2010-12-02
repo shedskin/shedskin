@@ -223,8 +223,8 @@ class generateVisitor(ASTVisitor):
 
         for child in node.node.getChildNodes():
             if isinstance(child, From) and child.modname != '__future__':
-                mod = getgx().modules[child.modname]
-                using = 'using __'+'__::__'.join(child.modname.split('.'))+'__::'
+                mod = getgx().from_mod[child]
+                using = 'using '+mod.full_path()+'::'
                 for (name, pseudonym) in child.names:
                     pseudonym = pseudonym or name
                     if name == '*':
@@ -379,17 +379,17 @@ class generateVisitor(ASTVisitor):
                 self.visit(child)
                 self.eol()
 
-            elif isinstance(child, From):
-                mod_id = '__'+'__::__'.join(child.modname.split('.'))+'__'
+            elif isinstance(child, From) and child.modname != '__future__':
+                mod = getgx().from_mod[child]
                 for (name, pseudonym) in child.names:
                     pseudonym = pseudonym or name
                     if name == '*':
-                        for var in getgx().modules[child.modname].mv.globals.values():
+                        for var in mod.mv.globals.values():
                             if not var.invisible and not var.imported and not var.name.startswith('__') and var.types():
-                                self.start(nokeywords(var.name)+' = '+mod_id+'::'+nokeywords(var.name))
+                                self.start(nokeywords(var.name)+' = '+mod.full_path()+'::'+nokeywords(var.name))
                                 self.eol()
                     elif pseudonym in self.module.mv.globals and not [t for t in self.module.mv.globals[pseudonym].types() if isinstance(t[0], module)]:
-                        self.start(nokeywords(pseudonym)+' = '+mod_id+'::'+nokeywords(name))
+                        self.start(nokeywords(pseudonym)+' = '+mod.full_path()+'::'+nokeywords(name))
                         self.eol()
 
             elif not isinstance(child, (Class, Function)):
