@@ -443,6 +443,7 @@ class moduleVisitor(ASTVisitor):
             return
 
         mod = self.importmodules(node.modname, node, True)
+        getgx().from_mod[node] = mod
 
         for name, pseudonym in node.names:
             if name == '*':
