@@ -1,4 +1,4 @@
-51 programs that work with Shed Skin 0.7.
+52 programs that work with Shed Skin 0.7.
 
 14,000 lines in total (using sloccount, around 20,000 otherwise)
 
@@ -51,6 +51,7 @@ lines  name               description                   notes
                                                         shedskin -r mao (fast random number generator)
    462 minilight.py       advanced raytracer            shedskin -r minilight (fast random number generator)
                           (triangle primitives, octree spatial index)
+   208 path_tracing.py    path tracing raytracer        shedskin -r path_tracing
   1050 pylot_main.py      advanced raytracer            cd pylot; shedskin -boe SimpleGeometry && make; cd ..; python pylot_main.py
    181 pystone.py         standard benchmark
    286 richards.py        standard benchmark
