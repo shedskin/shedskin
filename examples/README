@@ -52,7 +52,7 @@ lines  name               description                   notes
    462 minilight.py       advanced raytracer            shedskin -r minilight (fast random number generator)
                           (triangle primitives, octree spatial index)
    208 path_tracing.py    path tracing raytracer        shedskin -r path_tracing
-  1050 pylot_main.py      advanced raytracer            cd pylot; shedskin -boe SimpleGeometry && make; cd ..; python pylot_main.py
+  1050 pylot_main.py      multiprocessing raytracer     cd pylot; shedskin -boe SimpleGeometry && make; cd ..; python pylot_main.py
    181 pystone.py         standard benchmark
    286 richards.py        standard benchmark
    469 rdb.py             iPod shuffle programmer       see comments in top
