@@ -1,0 +1,3 @@
+CC=g++
+CCFLAGS=-O2 -march=native -fomit-frame-pointer -Wno-deprecated -Wl,--enable-auto-import $(CPPFLAGS)
+LFLAGS=-lgc -lpcre $(LDFLAGS)
