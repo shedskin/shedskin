@@ -1,5 +1,6 @@
 #include "time.hpp"
 #include "time.h"
+#include <climits>
 
 namespace __time__ {
 
@@ -536,13 +537,10 @@ literal:
 			LEGAL_ALT(ALT_O);
 			continue;
 
-#ifndef TIME_MAX
-#define TIME_MAX	INT64_MAX
-#endif
 		case 's':	/* seconds since the epoch */
 			{
 				time_t sse = 0;
-				uint64_t rulim = TIME_MAX;
+				uint64_t rulim = LLONG_MAX;
 
 				if (*bp < '0' || *bp > '9') {
 					bp = NULL;
@@ -553,15 +551,15 @@ literal:
 					sse *= 10;
 					sse += *bp++ - '0';
 					rulim /= 10;
-				} while ((sse * 10 <= TIME_MAX) &&
+				} while ((sse * 10 <= LLONG_MAX) &&
 					 rulim && *bp >= '0' && *bp <= '9');
 
-				if (sse < 0 || (uint64_t)sse > TIME_MAX) {
+				if (sse < 0 || (uint64_t)sse > LLONG_MAX) {
 					bp = NULL;
 					continue;
 				}
 
-				if (localtime_s(tm, &sse) == NULL)
+				if (localtime_r(&sse, tm) == NULL)
 					bp = NULL;
 			}
 			continue;
