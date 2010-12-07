@@ -37,7 +37,7 @@ def start():
 
     # --- some checks
     major, minor = sys.version_info[:2]
-    if (major, minor) not in [(2, 4), (2, 5), (2, 6)]:
+    if (major, minor) not in [(2, 4), (2, 5), (2, 6), (2, 7)]:
         print '*ERROR* Shed Skin is not compatible with this version of Python'
         sys.exit(1)
     if sys.platform == 'win32' and os.path.isdir('c:/mingw'):

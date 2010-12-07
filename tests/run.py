@@ -82,8 +82,12 @@ def run_test(test_nr, failures, msvc):
             assert os.system('nmake /C /S') == 0
             command = '.\\%d' % test_nr
         else:
-            assert os.system('make clean -f Makefile.%d; make -f Makefile.%d' % (test_nr, test_nr)) == 0
-            command = './%d' % test_nr
+            assert os.system('make clean -f Makefile.%d' % test_nr) == 0
+            assert os.system('make -f Makefile.%d' % test_nr) == 0
+            if sys.platform == 'win32':
+                command = '%d' % test_nr
+            else:
+                command = './%d' % test_nr
         check_output(command, 'python %d.py' % test_nr)
         print '*** success: %d (%.2f)' % (test_nr, time.time()-t0)
     except AssertionError:
