@@ -2915,7 +2915,8 @@ def generate_code():
     # import flags
     if getgx().flags: flags = getgx().flags
     elif os.path.isfile('FLAGS'): flags = 'FLAGS'
-    elif getgx().msvc: flags = connect_paths(getgx().sysdir, 'FLAGS.nt')
+    elif getgx().msvc: flags = connect_paths(getgx().sysdir, 'FLAGS.msvc')
+    elif sys.platform == 'win32': flags = connect_paths(getgx().sysdir, 'FLAGS.mingw')
     else: flags = connect_paths(getgx().sysdir, 'FLAGS')
 
     for line in file(flags):
