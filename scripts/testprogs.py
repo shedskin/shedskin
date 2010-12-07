@@ -19,7 +19,7 @@ print '*** cmd-line options:'
 do_cmd('shedskin -b othello')
 do_cmd('make run')
 do_cmd('shedskin -w othello')
-do_cmd('make run')
+do_cmd('make')
 
 # ss-progs
 
