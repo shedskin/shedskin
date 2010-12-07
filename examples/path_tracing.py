@@ -2,8 +2,9 @@ from random import random
 from math import sqrt
 import sys
 
-# path tracer, (c) jonas wagner
+# path tracer, (c) jonas wagner (http://29a.ch/)
 # http://29a.ch/2010/5/17/path-tracing-a-cornell-box-in-javascript
+# converted to Python by <anonymous>
 
 ITERATIONS = 10 # should be much higher for good quality
 
