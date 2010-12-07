@@ -1,7 +1,5 @@
-for a quick start:
-
 python setup.py install
-shedskin test
+shedskin test.py
 make
 ./test
 
