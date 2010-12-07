@@ -2984,7 +2984,7 @@ def generate_code():
 
     # clean
     ext = ''
-    if sys.platform == 'win32':
+    if sys.platform == 'win32' and not getgx().extension_module:
         ext = '.exe'
     print >>makefile, 'clean:'
     targets = [ident+ext]
