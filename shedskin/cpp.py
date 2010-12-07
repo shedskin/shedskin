@@ -2963,13 +2963,10 @@ def generate_code():
 
     print >>makefile, 'all:\t'+ident+'\n'
 
-    if not getgx().extension_module:
-        print >>makefile, 'run:\tall'
-        print >>makefile, '\t./'+ident+'\n'
-
     print >>makefile, 'CPPFILES='+cppfiles
     print >>makefile, 'HPPFILES='+hppfiles+'\n'
 
+    # executable (normal, debug, profile) or extension module
     _out = '-o '
     _ext=''
     if getgx().msvc:
@@ -2977,17 +2974,26 @@ def generate_code():
         _ext = ''
         if not getgx().extension_module:
             _ext = '.exe'
-
-    for suffix, options in [('', ''), ('_prof', '-pg -ggdb'), ('_debug', '-g -ggdb')]:
+    targets = [('', '')]
+    if not getgx().extension_module:
+        targets += [('_prof', '-pg -ggdb'), ('_debug', '-g -ggdb')]
+    for suffix, options in targets:
         print >>makefile, ident+suffix+':\t$(CPPFILES) $(HPPFILES)'
         print >>makefile, '\t$(CC) '+options+' $(CCFLAGS) $(CPPFILES) $(LFLAGS) '+_out+ident+suffix+_ext + '\n'
 
+    # clean
     ext = ''
     if sys.platform == 'win32':
         ext = '.exe'
     print >>makefile, 'clean:'
-    print >>makefile, '\trm -f %s %s %s\n' % (ident+ext, ident+'_prof'+ext, ident+'_debug'+ext)
+    targets = [ident+ext]
+    if not getgx().extension_module:
+        targets += [ident+'_prof'+ext, ident+'_debug'+ext]
+    if sys.platform == 'win32':
+        print >>makefile, '\tdel %s > nul 2<&1\n' % ' '.join(targets)
+    else:
+        print >>makefile, '\trm -f %s\n' % ' '.join(targets)
 
-    print >>makefile, '.PHONY: all run clean\n'
-
+    # phony
+    print >>makefile, '.PHONY: all clean\n'
     makefile.close()
