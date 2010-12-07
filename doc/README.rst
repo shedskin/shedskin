@@ -33,7 +33,7 @@ Additionally, the type inference techniques employed by **Shed Skin** currently 
 
 Because **Shed Skin** is still in an early stage of development, it can also improve a lot. At the moment, you will probably run into some bugs when using it. Please report these, so they can be fixed!
 
-At the moment, **Shed Skin** is compatible with Python versions 2.4 to 2.6, behaves like 2.6, and should work on Windows and most UNIX platforms, such as GNU/Linux, OSX, FreeBSD and OpenSolaris.
+At the moment, **Shed Skin** is compatible with Python versions 2.4 to 2.7, behaves like 2.6, and should work on Windows and most UNIX platforms, such as GNU/Linux, OSX, FreeBSD and OpenSolaris.
 
 .. _Typing Restrictions:
 
