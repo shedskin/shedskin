@@ -560,7 +560,7 @@ literal:
 					continue;
 				}
 
-				if ((tm2 = localtime(&sse)) == NULL)
+				if ((tm2 = ::localtime(&sse)) == NULL)
 					bp = NULL;
                 else
                     *tm = *tm2;
