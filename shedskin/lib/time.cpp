@@ -541,6 +541,7 @@ literal:
 			{
 				time_t sse = 0;
 				uint64_t rulim = LLONG_MAX;
+                struct tm *tm2;
 
 				if (*bp < '0' || *bp > '9') {
 					bp = NULL;
@@ -559,8 +560,10 @@ literal:
 					continue;
 				}
 
-				if (localtime_r(&sse, tm) == NULL)
+				if ((tm2 = localtime(&sse)) == NULL)
 					bp = NULL;
+                else
+                    *tm = *tm2;
 			}
 			continue;
 
