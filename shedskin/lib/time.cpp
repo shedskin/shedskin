@@ -35,7 +35,7 @@ double clock()
        diff = (double)(now.QuadPart - ctrStart.QuadPart);
        return diff / divisor; */
 }
-#if defined( _MSC_VER )
+#ifdef WIN32
 __ss_int gettimeofday (struct timeval *tv, struct __ss_timezone *tz)
 {
    struct _timeb tb;
