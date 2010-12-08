@@ -10,6 +10,7 @@
 
 #include "socket.hpp"
 #include <climits>
+#include <fcntl.h>
 
 #ifdef WIN32
 
@@ -152,14 +153,14 @@ file *socket::makefile(str *mode) {
         mode = new str("r");
 
 #ifdef WIN32
-	Py_intptr_t fd;
+	intptr_t fd;
 #else
 	int fd;
 #endif
 	FILE *fp;
 
 #ifdef WIN32
-	if (((fd = _open_osfhandle(_fd, _O_BINARY)) < 0) ||
+	if (((fd = _open_osfhandle(_fd, O_BINARY)) < 0) ||
 	    ((fd = dup(fd)) < 0) || ((fp = fdopen(fd, mode->unit.c_str())) == NULL))
 #else
 	if ((fd = dup(_fd)) < 0 || (fp = fdopen(fd, mode->unit.c_str())) == NULL)
