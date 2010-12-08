@@ -3,7 +3,7 @@
 
 #include "builtin.hpp"
 #include <ctime>
-#if defined( _MSC_VER )
+#ifdef WIN32
    #include <windows.h>
    #include <time.h>
    #include <sys/timeb.h>
@@ -13,7 +13,7 @@
 
 using namespace __shedskin__;
 namespace __time__ {
-#if defined( _MSC_VER )
+#ifdef WIN32
    struct  __ss_timezone {
        int     tz_minuteswest;
        int     tz_dsttime;
