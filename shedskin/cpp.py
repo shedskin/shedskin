@@ -2990,10 +2990,7 @@ def generate_code():
     targets = [ident+ext]
     if not getgx().extension_module:
         targets += [ident+'_prof'+ext, ident+'_debug'+ext]
-    if sys.platform == 'win32':
-        print >>makefile, '\tdel %s > nul 2<&1\n' % ' '.join(targets)
-    else:
-        print >>makefile, '\trm -f %s\n' % ' '.join(targets)
+    print >>makefile, '\trm -f %s\n' % ' '.join(targets)
 
     # phony
     print >>makefile, '.PHONY: all clean\n'
