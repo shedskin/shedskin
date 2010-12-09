@@ -74,12 +74,12 @@ try :
 except IOError as e:
     print e, repr(e)
     print e.errno, e.strerror, e.filename
-import os
-try:
-    os.chdir('meuheuheu')
-except OSError as e2:
-    print e2, repr(e2)
-    print e2.errno, e2.strerror, e2.filename
+#import os XXX fix under windows
+#try:
+#    os.chdir('meuheuheu')
+#except OSError as e2:
+#    print e2, repr(e2)
+#    print e2.errno, e2.strerror, e2.filename
 
 # del crash
 class AA:
