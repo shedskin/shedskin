@@ -17,18 +17,14 @@ print 'examples: %d' % len(set(files))
 print '*** cmd-line options:'
 
 do_cmd('shedskin -b othello')
-do_cmd('make run')
+do_cmd('make')
 do_cmd('shedskin -w othello')
 do_cmd('make')
 
 # ss-progs
 
 print '*** examples:'
-
-if sys.platform == 'win32':
-    os.system('copy lib\*.* ..\lib')
-else:
-    os.system('cp lib/* ../shedskin/lib')
+os.system('cp lib/* ../shedskin/lib')
 
 for (i, file) in enumerate(files):
     print '*** test: %s %d' % (file, i)
