@@ -1349,7 +1349,7 @@ __ss_int __int(str *s, __ss_int base) {
 }
 
 template<> double __float(str *s) {
-    return atof((char *)(s->unit.c_str()));
+    return strtod(s->unit.c_str(), NULL);
 }
 
 __ss_bool isinstance(pyobj *p, class_ *c) {
