@@ -152,4 +152,4 @@ l3 = [1,2,3]
 print sorted(l3, key = lambda x: d3[x])
 
 # float(..)
-print float(' \n iNf'), float('INF '), float(' -inf'), float('NaN'), float('-nan'), float('infinity'), float('-infinITY\t')
+print float(' \n iNf'), float('INF'), float(' -inf'), float('NaN'), float('-nan'), float('infinity'), float('-infinITY')
