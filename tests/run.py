@@ -106,7 +106,9 @@ def extmod_tests(args, options):
             assert os.system('shedskin -e %s' % extmod) == 0
             assert os.system('make') == 0
             native_output = get_output('python main.py')
-            assert os.system('rm %s.so' % extmod) == 0
+            if sys.platform == 'win32': ext = '.pyd'
+            else: ext = '.so'
+            assert os.system('rm %s' % (extmod+ext)) == 0
             cpython_output = get_output('python main.py')
             if native_output != cpython_output:
                 print 'output:'
