@@ -21,6 +21,7 @@ os.system('cp shedskin/lib/os/*.py %s/shedskin/lib/os' % release)
 os.system('cp shedskin/lib/os/*.?pp %s/shedskin/lib/os' % release)
 os.system('cp shedskin/*.py %s/shedskin' % release)
 os.system('cp shedskin/FLAGS %s/shedskin' % release)
+os.system('cp shedskin/illegal %s/shedskin' % release)
 os.system('cp scripts/shedskin %s/scripts' % release)
 
 os.system("echo print \\'hello, world!\\' > %s/test.py" % release)
