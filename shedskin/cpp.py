@@ -1506,13 +1506,10 @@ class generateVisitor(ASTVisitor):
         if self.mergeinh[left] == inttype and self.mergeinh[right] == inttype:
             if not isinstance(right, Const):
                 error("pow(int, int) returns int after compilation", left, warning=True, mv=getmv())
-
-        if mod: self.visitm('__power(', left, ', ', right, ', ', mod, ')', func)
-        else:
-            if self.mergeinh[left].intersection(set([(defclass('int_'),0),(defclass('float_'),0)])) and isinstance(right, Const) and type(right.value) == int and right.value in [2,3]:
-                self.visitm(('__power%d(' % int(right.value)), left, ')', func)
-            else:
-                self.visitm('__power(', left, ', ', right, ')', func)
+        if mod: 
+            self.visitm('__power(', left, ', ', right, ', ', mod, ')', func)
+        else: 
+            self.visitm('__power(', left, ', ', right, ')', func)
 
     def visitSub(self, node, func=None):
         self.visitBinary(node.left, node.right, augmsg(node, 'sub'), '-', func)
