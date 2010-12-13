@@ -1518,55 +1518,6 @@ template<> class_ *__type(double) { return cl_float_; }
 
 /* pow */
 
-template<> __ss_int __power(__ss_int a, __ss_int b) {
-    __ss_int res, tmp;
-
-    res = 1;
-    tmp = a;
-
-    while((b>0)) {
-        if ((b%2)) {
-            res = (res*tmp);
-        }
-        tmp = (tmp*tmp);
-        b = (b/2);
-    }
-    return res;
-}
-
-#ifdef __SS_LONG
-__ss_int __power(__ss_int a, __ss_int b, __ss_int c) {
-    __ss_int res, tmp;
-
-    res = 1;
-    tmp = a;
-
-    while((b>0)) {
-        if ((b%2)) {
-            res = ((res*tmp)%c);
-        }
-        tmp = ((tmp*tmp)%c);
-        b = (b/2);
-    }
-    return res;
-}
-#endif
-
-int __power(int a, int b, int c) {
-    int res, tmp;
-
-    res = 1;
-    tmp = a;
-
-    while((b>0)) {
-        if ((b%2)) {
-            res = ((res*tmp)%c);
-        }
-        tmp = ((tmp*tmp)%c);
-        b = (b/2);
-    }
-    return res;
-}
 
 complex *__power(complex *a, complex *b) {
     complex *r = new complex();

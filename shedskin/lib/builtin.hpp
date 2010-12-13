@@ -4596,17 +4596,67 @@ complex *__power(complex *a, double b);
 
 template<class A> A __power(A a, A b);
 template<> inline double __power(double a, double b) { return pow(a,b); }
-template<> __ss_int __power(__ss_int a, __ss_int b);
+
+template<> inline __ss_int __power(__ss_int a, __ss_int b) {
+    switch(b) {
+        case 2: return a*a;
+        case 3: return a*a*a;
+        case 4: return a*a*a*a;
+        case 5: return a*a*a*a*a;
+        case 6: return a*a*a*a*a*a;
+        case 7: return a*a*a*a*a*a*a;
+        case 8: return a*a*a*a*a*a*a*a;
+        case 9: return a*a*a*a*a*a*a*a*a;
+        case 10: return a*a*a*a*a*a*a*a*a*a;
+    }
+    __ss_int res, tmp;
+
+    res = 1;
+    tmp = a;
+
+    while((b>0)) {
+        if ((b%2)) {
+            res = (res*tmp);
+        }
+        tmp = (tmp*tmp);
+        b = (b/2);
+    }
+    return res;
+}
 
 #ifdef __SS_LONG
-__ss_int __power(__ss_int a, __ss_int b, __ss_int c);
-#endif
-int __power(int a, int b, int c);
+inline __ss_int __power(__ss_int a, __ss_int b, __ss_int c) {
+    __ss_int res, tmp;
 
-inline __ss_int __power2(__ss_int a) { return a*a; }
-inline double __power2(double a) { return a*a; }
-inline __ss_int __power3(__ss_int a) { return a*a*a; }
-inline double __power3(double a) { return a*a*a; }
+    res = 1;
+    tmp = a;
+
+    while((b>0)) {
+        if ((b%2)) {
+            res = ((res*tmp)%c);
+        }
+        tmp = ((tmp*tmp)%c);
+        b = (b/2);
+    }
+    return res;
+}
+#endif
+
+inline int __power(int a, int b, int c) {
+    int res, tmp;
+
+    res = 1;
+    tmp = a;
+
+    while((b>0)) {
+        if ((b%2)) {
+            res = ((res*tmp)%c);
+        }
+        tmp = ((tmp*tmp)%c);
+        b = (b/2);
+    }
+    return res;
+}
 
 /* division */
 
