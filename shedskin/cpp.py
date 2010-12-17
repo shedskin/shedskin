@@ -2929,7 +2929,8 @@ def generate_code():
     for line in file(flags):
         line = line[:-1]
 
-        if line[:line.find('=')].strip() == 'CCFLAGS':
+        variable = line[:line.find('=')].strip()
+        if variable == 'CCFLAGS':
             line += ' -I. -I${SHEDSKIN_LIBDIR}'
             if sys.platform == 'darwin' and os.path.isdir('/usr/local/include'):
                 line += ' -I/usr/local/include' # XXX
@@ -2946,7 +2947,7 @@ def generate_code():
                 elif sys.platform == 'win32': line += ' -I%s/include -D__SS_BIND' % prefix
                 else: line += ' -g -fPIC -D__SS_BIND ' + includes
 
-        elif line[:line.find('=')].strip() == 'LFLAGS':
+        elif variable == 'LFLAGS':
             if sys.platform == 'darwin' and os.path.isdir('/opt/local/lib'): # XXX
                 line += ' -L/opt/local/lib'
             if sys.platform == 'darwin' and os.path.isdir('/usr/local/lib'): # XXX
