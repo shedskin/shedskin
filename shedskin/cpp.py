@@ -2901,13 +2901,23 @@ def generate_code():
     # --- generate Makefile
     makefile = file(os.path.join(getgx().output_dir, getgx().makefile_name), 'w')
 
-    cppfiles = ' '.join([m.filename[:-3].replace(' ', '\ ')+'.cpp' for m in mods])
-    hppfiles = ' '.join([m.filename[:-3].replace(' ', '\ ')+'.hpp' for m in mods])
+    libdir = getgx().libdir
+    print >>makefile, 'SHEDSKIN_LIBDIR=%s' % (libdir)
+    filenames = []
+    for mod in mods:
+        filename = mod.filename[:-3] # strip .py
+        filename = filename.replace(' ','\ ') # make paths valid
+        filename = filename.replace(libdir,'${SHEDSKIN_LIBDIR}')
+        filenames.append(filename)
+    #filenames = [m.filename[:-3].replace(' ', '\ ') for m in mods]
+
+    cppfiles = ' '.join([fn+'.cpp' for fn in filenames])
+    hppfiles = ' '.join([fn+'.hpp' for fn in filenames])
     for always in ('re',):
-        repath = connect_paths(getgx().libdir.replace(' ', '\ '), always+'.cpp')
+        repath = connect_paths('${SHEDSKIN_LIBDIR}', always+'.cpp')
         if not repath in cppfiles:
             cppfiles += ' '+repath
-            hppfiles += ' '+connect_paths(getgx().libdir.replace(' ', '\ '), always+'.hpp')
+            hppfiles += ' '+connect_paths('${SHEDSKIN_LIBDIR}', always+'.hpp')
 
     # import flags
     if getgx().flags: flags = getgx().flags
@@ -2920,7 +2930,7 @@ def generate_code():
         line = line[:-1]
 
         if line[:line.find('=')].strip() == 'CCFLAGS':
-            line += ' -I. -I'+getgx().libdir.replace(' ', '\ ')
+            line += ' -I. -I${SHEDSKIN_LIBDIR}'
             if sys.platform == 'darwin' and os.path.isdir('/usr/local/include'):
                 line += ' -I/usr/local/include' # XXX
             if sys.platform == 'darwin' and os.path.isdir('/opt/local/include'):
