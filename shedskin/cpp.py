@@ -2909,15 +2909,19 @@ def generate_code():
         filename = filename.replace(' ','\ ') # make paths valid
         filename = filename.replace(libdir,'${SHEDSKIN_LIBDIR}')
         filenames.append(filename)
-    #filenames = [m.filename[:-3].replace(' ', '\ ') for m in mods]
 
-    cppfiles = ' '.join([fn+'.cpp' for fn in filenames])
-    hppfiles = ' '.join([fn+'.hpp' for fn in filenames])
+    cppfiles = [fn+'.cpp' for fn in filenames]
+    hppfiles = [fn+'.hpp' for fn in filenames]
     for always in ('re',):
-        repath = connect_paths('${SHEDSKIN_LIBDIR}', always+'.cpp')
+        repath = connect_paths('${SHEDSKIN_LIBDIR}', always)
         if not repath in cppfiles:
-            cppfiles += ' '+repath
-            hppfiles += ' '+connect_paths('${SHEDSKIN_LIBDIR}', always+'.hpp')
+            cppfiles.append(repath+'.cpp')
+            hppfiles.append(repath+'.hpp')
+
+    cppfiles.sort(reverse=True)
+    hppfiles.sort(reverse=True)
+    cppfiles = ' \\\n\t'.join(cppfiles)
+    hppfiles = ' \\\n\t'.join(hppfiles)
 
     # import flags
     if getgx().flags: flags = getgx().flags
@@ -2970,10 +2974,10 @@ def generate_code():
         print >>makefile, line
     print >>makefile
 
-    print >>makefile, 'all:\t'+ident+'\n'
+    print >>makefile, 'CPPFILES=%s\n' % cppfiles
+    print >>makefile, 'HPPFILES=%s\n' % hppfiles
 
-    print >>makefile, 'CPPFILES='+cppfiles
-    print >>makefile, 'HPPFILES='+hppfiles+'\n'
+    print >>makefile, 'all:\t'+ident+'\n'
 
     # executable (normal, debug, profile) or extension module
     _out = '-o '
