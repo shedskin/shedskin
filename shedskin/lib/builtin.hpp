@@ -2840,10 +2840,16 @@ template<class T> str *list<T>::__repr__() {
     return r;
 }
 
-template<class T> T list<T>::pop(int m) {
-    if (m<0) m = this->__len__()+m;
-    T e = units[m];
-    units.erase(units.begin()+m);
+template<class T> T list<T>::pop(int i) {
+    int len = this->__len__();
+    if(len==0)
+        throw new IndexError(new str("pop from empty list"));
+    if(i<0) 
+        i = len+i;
+    if(i<0 or i>=len)
+        throw new IndexError(new str("pop index out of range"));
+    T e = units[i];
+    units.erase(units.begin()+i);
     return e;
 }
 template<class T> T list<T>::pop() {
@@ -2888,7 +2894,10 @@ template<class T> void *list<T>::sort(__ss_int, __ss_int, __ss_int reverse) {
 }
 
 template<class T> void *list<T>::insert(int m, T e) {
-    if (m<0) m = this->__len__()+m;
+    int len = this->__len__();
+    if (m<0) m = len+m;
+    if (m<0) m = 0;
+    if (m>=len) m = len;
     units.insert(units.begin()+m, e);
     return NULL;
 }
@@ -2899,7 +2908,7 @@ template<class T> void *list<T>::remove(T e) {
             units.erase(units.begin()+i);
             return NULL;
         }
-    return NULL;
+    throw new ValueError(new str("list.remove(x): x not in list"));
 }
 
 template<class T> inline bool list<T>::for_in_has_next(int i) {
