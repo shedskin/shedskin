@@ -2914,7 +2914,7 @@ def generate_code():
     hppfiles = [fn+'.hpp' for fn in filenames]
     for always in ('re',):
         repath = connect_paths('${SHEDSKIN_LIBDIR}', always)
-        if not repath in cppfiles:
+        if not repath in filenames:
             cppfiles.append(repath+'.cpp')
             hppfiles.append(repath+'.hpp')
 
