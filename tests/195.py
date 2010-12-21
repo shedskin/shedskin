@@ -16,3 +16,12 @@ l.insert(4, 1)
 l.insert(-1, 2)
 l.insert(-10, 3)
 print l
+
+# basic callable
+class meuk:
+    def __call__(self, x, y):
+        print 'called with:', x, y
+        return 'return'
+m = meuk()
+x = m(7,1)
+print x

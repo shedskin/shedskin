@@ -624,6 +624,9 @@ def analyze_callfunc(node, node2=None, merge=None): # XXX generate target list X
  
     # anon func call XXX refactor as __call__ method call below
     anon_func = is_anon_func(node, node2, merge)
+    if is_callable(node, node2, merge):
+        method_call, objexpr, ident = True, node.node, '__call__'
+        return objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func
 
     # method call
     if isinstance(node.node, Getattr):
@@ -779,6 +782,14 @@ def analyze_args(expr, func, node=None, skip_defaults=False, merge=None):
     return actuals, formals, defaults, extra, error
 
 def is_anon_func(expr, node, merge=None):
+    types = get_types(expr, node, merge)
+    return bool([t for t in types if isinstance(t[0], function)])
+
+def is_callable(expr, node, merge=None):
+    types = get_types(expr, node, merge)
+    return bool([t for t in types if isinstance(t[0], class_) and '__call__' in t[0].funcs])
+    
+def get_types(expr, node, merge):
     types = set()
     if merge:
         if expr.node in merge:
@@ -787,9 +798,7 @@ def is_anon_func(expr, node, merge=None):
         node = (expr.node, node.dcpa, node.cpa)
         if node in getgx().cnode:
             types = getgx().cnode[node].types()
-    else:
-        return False
-    return bool([t for t in types if isinstance(t[0], function)])
+    return types
 
 def connect_actual_formal(expr, func, parent_constr=False, merge=None):
     pairs = []
