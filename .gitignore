@@ -7,6 +7,7 @@
 *.csv
 *.?pp
 *.so
+*.vim
 FLAGS
 shedskin/FLAGS
 Makefile*
