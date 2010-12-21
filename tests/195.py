@@ -17,7 +17,7 @@ l.insert(-1, 2)
 l.insert(-10, 3)
 print l
 
-# basic callable
+# basic __call__ overloading
 class meuk:
     def __call__(self, x, y):
         print 'called with:', x, y
@@ -25,3 +25,12 @@ class meuk:
 m = meuk()
 x = m(7,1)
 print x
+
+# basic __iter__ overloading
+class itermeuk:
+    def __iter__(self):
+        return iter('itermeuk')
+
+i = itermeuk()
+for x in i:
+    print x
