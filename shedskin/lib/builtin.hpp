@@ -4343,103 +4343,56 @@ template <class A> __iter<tuple2<__ss_int, A> *> *enumerate(pyiter<A> *x) {
 
 list<tuple2<void *, void *> *> *__zip(int nn);
 
-template<class A> static inline list<A> *__list_comp_0(list<A> *result, pyiter<A> *a) {
-    A e;
-    result->clear();
-
-    __iter<A> *__0;
-    FOR_IN(e,a,0)
-        result->append(e);
+template <class A> list<tuple2<typename A::for_in_unit, typename A::for_in_unit> *> *__zip(int nn, A *iter) {
+    list<tuple2<typename A::for_in_unit, typename A::for_in_unit> *> *result = (new list<tuple2<typename A::for_in_unit, typename A::for_in_unit> *>());
+    typename A::for_in_unit e;
+    typename A::for_in_loop __3;
+    int __2;
+    A *__1;
+    FOR_IN_NEW(e,iter,1,2,3)
+        result->append((new tuple2<typename A::for_in_unit, typename A::for_in_unit>(1, e)));
     END_FOR
     return result;
 }
 
-template <class A> list<tuple2<A,A> *> *__zip(int nn, pyiter<A> *a) {
-    list<A> la;
-    list<tuple2<A,A> *> *result;
-    __list_comp_0(&la, a);
-    int __1, __2, i;
-    result = (new list<tuple2<A,A> *>());
-
-    FAST_FOR(i,0,len(&la),1,1,2)
-        result->append((new tuple2<A,A>(1, la.units[i])));
-    END_FOR
-    return result;
-}
-
-template <class A, class B> list<tuple2<A, B> *> *__zip(int, pyiter<A> *a, pyiter<B> *b) {
-    list<A> la;
-    list<B> lb;
-    int __1, __2, i;
-    list<tuple2<A, B> *> *result;
-
-    __list_comp_0(&la, a);
-    __list_comp_0(&lb, b);
-    result = (new list<tuple2<A, B> *>());
-
-    FAST_FOR(i,0,___min(2, 0, len(&la), len(&lb)),1,1,2)
-        result->append((new tuple2<A, B>(2, la.units[i], lb.units[i])));
-    END_FOR
-    return result;
-}
-
-template <class A, class B> list<tuple2<A, B> *> *__zip(int, pyseq<A> *a, pyseq<B> *b) {
-    if(a->__class__ == cl_str_ || b->__class__ == cl_str_) /* XXX */
-        return __zip(2, ((pyiter<A> *)((str *)a)), ((pyiter<B> *)((str *)b)));
-    list<tuple2<A, B> *> *result;
-    result = new list<tuple2<A, B> *>();
-
-    int n = ___min(2, 0, len(a), len(b));
-    result->units.reserve(n);
-
-    tuple2<A, B> *v = new tuple2<A, B>[n];
-
-    for(int i=0; i<n; i++) {
-        v[i].__init2__(a->units[i], b->units[i]);
-        result->units.push_back(&v[i]);
+template <class A, class B> list<tuple2<typename A::for_in_unit, typename B::for_in_unit> *> *__zip(int, A *itera, B *iterb) { /* XXX re-optimize for sequences */
+    list<tuple2<typename A::for_in_unit, typename B::for_in_unit> *> *result = (new list<tuple2<typename A::for_in_unit, typename B::for_in_unit> *>());
+    typename A::for_in_unit e;
+    typename A::for_in_loop __3 = itera->for_in_init();
+    int __2;
+    A *__1;
+    typename B::for_in_unit f;
+    typename B::for_in_loop __6 = iterb->for_in_init();
+    int __5;
+    B *__4;
+    while(itera->for_in_has_next(__3) and iterb->for_in_has_next(__6)) {
+        e = itera->for_in_next(__3);
+        f = iterb->for_in_next(__6);
+        result->append((new tuple2<typename A::for_in_unit, typename B::for_in_unit>(2, e, f)));
     }
-
     return result;
 }
 
-template <class A> list<tuple2<A,A> *> *__zip(int, pyiter<A> *a, pyiter<A> *b, pyiter<A> *c) {
-    list<int> *__0;
-    list<A> la, lb, lc;
-    int __1, __2, i;
-
-    list<tuple2<A,A> *> *result;
-
-    __list_comp_0(&la, a);
-    __list_comp_0(&lb, b);
-    __list_comp_0(&lc, c);
-
-    result = (new list<tuple2<A,A> *>());
-
-    FAST_FOR(i,0,___min(3, 0, len(&la), len(&lb), len(&lc)),1,1,2)
-        result->append((new tuple2<A,A>(3, la.units[i], lb.units[i], lc.units[i])));
-    END_FOR
-    return result;
-}
-
-template <class A> list<tuple2<A,A> *> *__zip(int, pyseq<A> *a, pyseq<A> *b, pyseq<A> *c) {
-    if(a->__class__ == cl_str_ || b->__class__ == cl_str_ || c->__class__ == cl_str_) /* XXX */
-        return __zip(3, ((pyiter<A> *)((str *)a)), ((pyiter<A> *)((str *)b)), ((pyiter<A> *)((str *)c)));
-    list<tuple2<A, A> *> *result;
-    result = new list<tuple2<A, A> *>();
-
-    int n = ___min(3, 0, len(a), len(b), len(c));
-    result->units.reserve(n);
-
-    tuple2<A, A> *v = new tuple2<A, A>[n];
-
-    for(int i=0; i<n; i++) {
-        v[i].units.resize(3);
-        v[i].units[0] = a->units[i];
-        v[i].units[1] = b->units[i];
-        v[i].units[2] = c->units[i];
-        result->units.push_back(&v[i]);
+template <class A, class B, class C> list<tuple2<typename A::for_in_unit, typename A::for_in_unit> *> *__zip(int, A *itera, B *iterb, C *iterc) { /* XXX re-optimize for sequences */
+    list<tuple2<typename A::for_in_unit, typename A::for_in_unit> *> *result = (new list<tuple2<typename A::for_in_unit, typename A::for_in_unit> *>());
+    typename A::for_in_unit e;
+    typename A::for_in_loop __3 = itera->for_in_init();
+    int __2;
+    A *__1;
+    typename B::for_in_unit f;
+    typename B::for_in_loop __6 = iterb->for_in_init();
+    int __5;
+    B *__4;
+    typename C::for_in_unit g;
+    typename C::for_in_loop __9 = iterc->for_in_init();
+    int __8;
+    C *__7;
+    while(itera->for_in_has_next(__3) and iterb->for_in_has_next(__6) and iterc->for_in_has_next(__9)) {
+        e = itera->for_in_next(__3);
+        f = iterb->for_in_next(__6);
+        g = iterc->for_in_next(__9);
+        result->append((new tuple2<typename A::for_in_unit, typename A::for_in_unit>(3, e, f, g)));
     }
-
     return result;
 }
 
