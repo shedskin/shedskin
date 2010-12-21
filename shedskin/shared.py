@@ -622,7 +622,7 @@ def analyze_callfunc(node, node2=None, merge=None): # XXX generate target list X
     constructor, direct_call = None, None
     mv = inode(node).mv
  
-    # anon func call
+    # anon func call XXX refactor as __call__ method call below
     anon_func = is_anon_func(node, node2, merge)
 
     # method call
@@ -692,7 +692,7 @@ def nrargs(node):
 
 # --- return list of potential call targets
 def callfunc_targets(node, merge):
-    objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func = analyze_callfunc(node)
+    objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func = analyze_callfunc(node, merge=merge)
     funcs = []
 
     if node.node in merge and [t for t in merge[node.node] if isinstance(t[0], function)]: # anonymous function call
@@ -780,13 +780,13 @@ def analyze_args(expr, func, node=None, skip_defaults=False, merge=None):
 
 def is_anon_func(expr, node, merge=None):
     types = set()
-    if node:
+    if merge:
+        if expr.node in merge:
+            types = merge[expr.node]
+    elif node:
         node = (expr.node, node.dcpa, node.cpa)
         if node in getgx().cnode:
             types = getgx().cnode[node].types()
-    elif merge:
-        if expr.node in merge:
-            types = merge[expr.node]
     else:
         return False
     return bool([t for t in types if isinstance(t[0], function)])
