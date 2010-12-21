@@ -175,7 +175,10 @@ class generateVisitor(ASTVisitor):
         for (t,names) in decl.items():
             names.sort()
             prefix=''
-            if declare: prefix='extern '
+            if declare: 
+                prefix='extern '
+                if 'for_in_loop' in t: # XXX
+                    continue
             if t.endswith('*'):
                 decl2.append(prefix+t+(', *'.join(names)))
             else:
@@ -507,6 +510,12 @@ class generateVisitor(ASTVisitor):
         clnames = [namespaceclass(b) for b in cl.bases if b.ident != 'object']
         if not clnames:
             clnames = ['pyobj']
+            if '__iter__' in cl.funcs: # XXX get return type of 'next'
+                typestr = nodetypestr(cl.funcs['__iter__'].retnode.thing)
+                if typestr.startswith('__iter<'):
+                    typestr = typestr[typestr.find('<')+1:typestr.find('>')]
+                    clnames = ['pyiter<%s>' % typestr] # XXX use iterable interface
+
         self.output('class '+nokeywords(cl.ident)+' : '+', '.join(['public '+clname for clname in clnames])+' {')
 
         self.do_comment(node.doc)
