@@ -1753,7 +1753,10 @@ class generateVisitor(ASTVisitor):
                 self.append('->%s()' % ['__getfirst__', '__getsecond__'][node.args[0].value])
                 return
 
-            self.visitm(node.node, '(', func)
+            if ident == '__call__':
+                self.visitm(node.node, '->__call__(', func)
+            else:
+                self.visitm(node.node, '(', func)
 
         else:
             error("unbound identifier '"+ident+"'", node, mv=getmv())
