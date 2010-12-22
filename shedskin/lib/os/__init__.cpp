@@ -300,10 +300,10 @@ tuple2<__ss_int, __ss_int> *namedtuple::__slice__(__ss_int x, __ss_int l, __ss_i
 
     if(s > 0)
         for(__ss_int i=l; i<u; i += s)
-            c->append(__getitem__(i));
+            c->units.push_back(__getitem__(i));
     else
         for(__ss_int i=l; i>u; i += s)
-            c->append(__getitem__(i));
+            c->units.push_back(__getitem__(i));
 
     return c;
 }

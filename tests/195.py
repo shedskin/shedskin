@@ -35,6 +35,12 @@ i = itermeuk()
 for x in i:
     print x
 
+# dict.__init__ takes iterable iterable
+da = iter([1,2])
+db = iter([3,4])
+dd = dict([da,db])
+print sorted(dd)
+
 # writelines takes iterable
 a = file('testdata/blah','w')
 a.writelines(set(['hoi\n', 'mama\n']))
