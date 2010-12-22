@@ -36,6 +36,6 @@ for x in i:
     print x
 
 # writelines takes iterable
-a = file('blah','w')
+a = file('testdata/blah','w')
 a.writelines(set(['hoi\n', 'mama\n']))
 a.close()

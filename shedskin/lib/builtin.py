@@ -818,6 +818,8 @@ class __iter(pyiter):
         return self
     def __len__(self): # xrange and such
         return 1
+    def __getitem__(self, i): # modeling shortcut
+        return self.unit
 
 def iter(a):
     return a.__iter__()
