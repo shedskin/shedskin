@@ -25,6 +25,10 @@ class meuk:
 m = meuk()
 x = m(7,1)
 print x
+class mycall:
+    def __call__(self, x):
+        return -x
+print max(range(17,80), key=mycall())
 
 # basic __iter__ overloading
 class itermeuk:

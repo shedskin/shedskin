@@ -515,6 +515,12 @@ class generateVisitor(ASTVisitor):
                 if typestr.startswith('__iter<'):
                     typestr = typestr[typestr.find('<')+1:typestr.find('>')]
                     clnames = ['pyiter<%s>' % typestr] # XXX use iterable interface
+            if '__call__' in cl.funcs:
+                callfunc = cl.funcs['__call__']
+                r_typestr = nodetypestr(callfunc.retnode.thing).strip()
+                nargs = len(callfunc.formals)-1
+                argtypes = [nodetypestr(callfunc.vars[callfunc.formals[i+1]]).strip() for i in range(nargs)]
+                clnames = ['pycall%d<%s,%s>' % (nargs, r_typestr, ','.join(argtypes))]
 
         self.output('class '+nokeywords(cl.ident)+' : '+', '.join(['public '+clname for clname in clnames])+' {')
 

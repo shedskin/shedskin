@@ -150,8 +150,6 @@ public:
     virtual __ss_int __cmp__(pyobj *p);
     virtual __ss_bool __contains__(T t) = 0;
 
-    /* iteration */
-
     __iter<T> *__iter__();
 
     typedef T for_in_unit;
@@ -160,6 +158,15 @@ public:
     inline int for_in_init();
     inline bool for_in_has_next(int i);
     inline T for_in_next(int &i);
+};
+
+template <class R, class A> class pycall1 : public pyobj {
+public:
+    virtual R __call__(A a) = 0;
+};
+template <class R, class A, class B> class pycall2 : public pyobj {
+public:
+    virtual R __call__(A a, B b) = 0;
 };
 
 template <class T> class list : public pyseq<T> {
@@ -4133,6 +4140,32 @@ template<class A, class B> typename A::for_in_unit ___max(int, B (*key)(typename
     FOR_IN_NEW(e,iter,1,2,3)
         if(key) {
             maxkey2 = key(e);
+            if(first || __cmp(maxkey2, maxkey) == 1) {
+                max = e;
+                maxkey = maxkey2;
+            }
+        } else if(first || __cmp(e, max) == 1)
+            max = e;
+        if(first)
+            first = 0;
+    END_FOR
+    if(first)
+        throw new ValueError(new str("max() arg is an empty sequence"));
+    return max;
+}
+
+/* XXX copy-pasto */
+template<class A, class B> typename A::for_in_unit ___max(int, pycall1<B, typename A::for_in_unit> *key, A *iter) {
+    typename A::for_in_unit max;
+    B maxkey, maxkey2;
+    int first = 1;
+    typename A::for_in_unit e;
+    typename A::for_in_loop __3;
+    int __2;
+    A *__1;
+    FOR_IN_NEW(e,iter,1,2,3)
+        if(key) {
+            maxkey2 = key->__call__(e);
             if(first || __cmp(maxkey2, maxkey) == 1) {
                 max = e;
                 maxkey = maxkey2;
