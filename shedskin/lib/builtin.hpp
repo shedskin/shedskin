@@ -145,11 +145,10 @@ template <class T> class pyseq : public pyiter<T> {
 public:
     __GC_VECTOR(T) units;
 
-    virtual __ss_int __len__();
-    virtual T __getitem__(__ss_int i);
+    virtual __ss_int __len__() = 0;
+    virtual T __getitem__(__ss_int i) = 0;
     virtual __ss_int __cmp__(pyobj *p);
     virtual __ss_bool __contains__(T t) = 0;
-    void resize(int n);
 
     /* iteration */
 
@@ -205,7 +204,11 @@ public:
     str *__repr__();
     __ss_bool __eq__(pyobj *l);
 
+    void resize(__ss_int i); /* XXX remove */
+
     inline T __getfast__(__ss_int i);
+    inline T __getitem__(__ss_int i);
+    inline __ss_int __len__();
 
     T pop();
     T pop(int m);
@@ -252,6 +255,8 @@ public:
 
     __ss_int __len__();
 
+    A __getitem__(__ss_int) {} /* XXX why sequence? */
+
     __ss_bool __eq__(tuple2<A,B> *b);
     __ss_int __cmp__(pyobj *p);
     int __hash__();
@@ -282,6 +287,9 @@ public:
     T __getsecond__();
 
     inline T __getfast__(__ss_int i);
+    inline T __getitem__(__ss_int i);
+
+    inline __ss_int __len__();
 
     str *__repr__();
 
@@ -1796,15 +1804,6 @@ template<class T> inline T pyiter<T>::for_in_next(__iter<T> *iter) {
 
 /* pyseq methods */
 
-template<class T> __ss_int pyseq<T>::__len__() {
-    return units.size();
-}
-
-template<class T> T pyseq<T>::__getitem__(__ss_int i) {
-    i = __wrap(this, i);
-    return units[i];
-}
-
 template<class T> __ss_int pyseq<T>::__cmp__(pyobj *p) {
     if (!p) return 1;
     pyseq<T> *b = (pyseq<T> *)p;
@@ -1817,14 +1816,6 @@ template<class T> __ss_int pyseq<T>::__cmp__(pyobj *p) {
             return cmp;
     }
     return __cmp(this->__len__(), b->__len__());
-}
-
-template<class T> __ss_bool pyseq<T>::__contains__(T t) {
-    return __mbool(false);
-}
-
-template<class T> void pyseq<T>::resize(int n) {
-    units.resize(n);
 }
 
 template<class T> __iter<T> *pyseq<T>::__iter__() {
@@ -2579,6 +2570,19 @@ template<class T> PyObject *list<T>::__to_py__() {
 
 template<class T> void list<T>::clear() {
     units.resize(0);
+}
+
+template<class T> void list<T>::resize(__ss_int i) {
+    units.resize(i);
+}
+
+template<class T> __ss_int list<T>::__len__() {
+    return units.size();
+}
+
+template<class T> T list<T>::__getitem__(__ss_int i) {
+    i = __wrap(this, i);
+    return units[i];
 }
 
 template<class T> __ss_bool list<T>::__eq__(pyobj *p) {
@@ -3773,6 +3777,15 @@ template<class T> T tuple2<T, T>::__getsecond__() {
 template<class T> inline T tuple2<T, T>::__getfast__(__ss_int i) {
     i = __wrap(this, i);
     return this->units[i];
+}
+
+template<class T> __ss_int tuple2<T, T>::__len__() {
+    return units.size();
+}
+
+template<class T> T tuple2<T, T>::__getitem__(__ss_int i) {
+    i = __wrap(this, i);
+    return units[i];
 }
 
 template<class T> str *tuple2<T, T>::__repr__() {
