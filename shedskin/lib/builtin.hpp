@@ -2471,16 +2471,15 @@ template<class K, class V> dict<K,V> *dict<K,V>::__copy__() {
 template<class K, class V> dict<K,V> *dict<K,V>::__deepcopy__(dict<void *, pyobj *> *memo) {
     dict<K,V> *c = new dict<K,V>();
     memo->__setitem__(this, c);
-
     K e;
-    __iter<K> *__0;
-    FOR_IN(e, this, 0)
+    dict<K,V>::for_in_loop __3;
+    int __2;
+    dict<K,V> *__1;
+    FOR_IN_NEW(e,this,1,2,3)
         c->__setitem__(__deepcopy(e, memo), __deepcopy(this->__getitem__(e), memo));
     END_FOR
     return c;
 }
-
-
 
 /* list methods */
 
@@ -2650,10 +2649,12 @@ template<class T> list<T> *list<T>::__slice__(__ss_int x, __ss_int l, __ss_int u
 }
 
 template<class T> void *list<T>::__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, pyiter<T> *b) {
-    T e;
     list<T> *la = new list<T>(); /* XXX avoid intermediate list */
-    __iter<T> *__0;
-    FOR_IN(e, b, 0)
+    typename pyiter<T>::for_in_unit e;
+    typename pyiter<T>::for_in_loop __3;
+    int __2;
+    pyiter<T> *__1;
+    FOR_IN_NEW(e,b,1,2,3)
         la->units.push_back(e);
     END_FOR
     this->__setslice__(x, l, u, s, la);
@@ -3634,9 +3635,11 @@ template<class T> set<T> *set<T>::copy() {
 
 template<class T> __ss_bool set<T>::issubset(set<T> *s) {
     if(__len__() > s->__len__()) { return False; }
-    T e;
-    __iter<T> *__0;
-    FOR_IN(e, this, 0)
+    typename set<T>::for_in_unit e;
+    typename set<T>::for_in_loop __3;
+    int __2;
+    set<T> *__1;
+    FOR_IN_NEW(e,this,1,2,3)
         if(!s->__contains__(e))
             return False;
     END_FOR
@@ -3645,9 +3648,11 @@ template<class T> __ss_bool set<T>::issubset(set<T> *s) {
 
 template<class T> __ss_bool set<T>::issuperset(set<T> *s) {
     if(__len__() < s->__len__()) return False;
-    T e;
-    __iter<T> *__0;
-    FOR_IN(e, s, 0)
+    typename set<T>::for_in_unit e;
+    typename set<T>::for_in_loop __3;
+    int __2;
+    set<T> *__1;
+    FOR_IN_NEW(e,s,1,2,3)
         if(!__contains__(e))
             return False;
     END_FOR
@@ -3671,10 +3676,11 @@ template<class T> set<T> *set<T>::__copy__() {
 template<class T> set<T> *set<T>::__deepcopy__(dict<void *, pyobj *> *memo) {
     set<T> *c = new set<T>();
     memo->__setitem__(this, c);
-
-    T e;
-    __iter<T> *__0;
-    FOR_IN(e, this, 0)
+    typename set<T>::for_in_unit e;
+    typename set<T>::for_in_loop __3;
+    int __2;
+    set<T> *__1;
+    FOR_IN_NEW(e,this,1,2,3)
         c->add(__deepcopy(e, memo));
     END_FOR
     return c;
@@ -4684,9 +4690,11 @@ tuple2<complex *, complex *> *divmod(complex *a, __ss_int b);
 namespace __dict__ {
     template<class A, class B> dict<A, B> *fromkeys(pyiter<A> *f, B b) {
         dict<A, B> *d = new dict<A, B>();
-        A e;
-        __iter<A> *__0;
-        FOR_IN(e, f, 0)
+        typename pyiter<A>::for_in_unit e;
+        typename pyiter<A>::for_in_loop __3;
+        int __2;
+        pyiter<A> *__1;
+        FOR_IN_NEW(e,f,1,2,3)
             d->__setitem__(e, b);
         END_FOR
         return d;
