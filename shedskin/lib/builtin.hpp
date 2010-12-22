@@ -660,7 +660,7 @@ public:
     str *readline(int n=-1);
     list<str *> *readlines();
     void *write(str *s);
-    void *writelines(pyseq<str *> *p);
+    template<class U> void *writelines(U *iter);
     void *flush();
     int __ss_fileno();
 
@@ -4838,6 +4838,20 @@ static void inline slicenr(__ss_int x, __ss_int &l, __ss_int &u, __ss_int &s, __
         if (!(x&2))
             u = len;
     }
+}
+
+/* file */
+
+template<class U> void *file::writelines(U *iter) {
+    __check_closed();
+    typename U::for_in_unit e;
+    typename U::for_in_loop __3;
+    int __2;
+    U *__1;
+    FOR_IN_NEW(e,iter,1,2,3)
+        write(e);
+    END_FOR
+    return NULL;
 }
 
 } // namespace __shedskin__

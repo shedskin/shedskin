@@ -1226,13 +1226,6 @@ int file::tell() {
     return ftell(f);
 }
 
-void *file::writelines(pyseq<str *> *l) {
-    __check_closed();
-    for(int i=0; i<len(l); i++)
-        write(l->__getitem__(i));
-    return NULL;
-}
-
 str *file::readline(int n) {
     __check_closed();
     int i = 0;
