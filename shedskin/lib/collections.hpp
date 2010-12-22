@@ -93,25 +93,29 @@ public:
         }
         r->unit += "])";
         return r;
-   }
+    }
 
-   void *extend(pyiter<A> *p) {
-       __iter<A> *__0;
-       A e;
-       FOR_IN(e, p, 0)
+    template<class U> void *extend(U *iter) {
+        typename U::for_in_unit e;
+        typename U::for_in_loop __3;
+        int __2;
+        U *__1;
+        FOR_IN_NEW(e,iter,1,2,3)
            append(e);
-       END_FOR
-       return NULL;
-   }
+        END_FOR
+        return NULL;
+    }
 
-   void *extendleft(pyiter<A> *p) {
-       __iter<A> *__0;
-       A e;
-       FOR_IN(e, p, 0)
+    template<class U> void *extendleft(U *iter) {
+        typename U::for_in_unit e;
+        typename U::for_in_loop __3;
+        int __2;
+        U *__1;
+        FOR_IN_NEW(e,iter,1,2,3)
            appendleft(e);
-       END_FOR
-       return NULL;
-   }
+        END_FOR
+        return NULL;
+    }
 
    void *remove(A value) {
        iter = units.begin();
