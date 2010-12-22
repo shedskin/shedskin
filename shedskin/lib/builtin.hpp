@@ -72,7 +72,6 @@ template <class T, class U> class __dictiterkeys;
 template <class T, class U> class __dictitervalues;
 template <class T, class U> class __dictiteritems;
 class __fileiter;
-class __striter;
 class __xrange;
 class __rangeiter;
 
@@ -150,7 +149,7 @@ public:
     virtual __ss_int __cmp__(pyobj *p);
     virtual __ss_bool __contains__(T t) = 0;
 
-    __iter<T> *__iter__();
+    virtual __iter<T> *__iter__();
 
     typedef T for_in_unit;
     typedef int for_in_loop;
@@ -413,8 +412,6 @@ public:
     int __hash__();
 
     __ss_int __int__(); /* XXX compilation warning for int(pyseq<str *> *) */
-
-    __iter<str *> *__iter__();
 
     str *__iadd__(str *b);
     str *__imul__(__ss_int n);
@@ -857,19 +854,11 @@ public:
 template <class T> class __seqiter : public __iter<T> {
 public:
     unsigned int counter;
+    int size;
     pyseq<T> *p;
     __seqiter<T>();
     __seqiter<T>(pyseq<T> *p);
     T next();
-};
-
-class __striter : public __seqiter<str *> {
-public:
-    int counter, size;
-    str *p;
-
-    __striter(str *p);
-    str *next();
 };
 
 template <class K, class V> class __dictiterkeys : public __iter<K> {
@@ -4035,13 +4024,14 @@ template<class T> str *__iter<T>::__repr__() {
 template<class T> __seqiter<T>::__seqiter() {}
 template<class T> __seqiter<T>::__seqiter(pyseq<T> *p) {
     this->p = p;
+    size = p->__len__();
     counter = 0;
 }
 
 template<class T> T __seqiter<T>::next() {
-    if(counter==p->units.size())
+    if(counter==size)
         __throw_stop_iteration();
-    return p->units[counter++];
+    return p->__getitem__(counter++);
 }
 
 template<class K, class V> __dictiterkeys<K, V>::__dictiterkeys(dict<K,V> *p) {

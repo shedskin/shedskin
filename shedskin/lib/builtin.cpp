@@ -2046,23 +2046,7 @@ void print2(file *f, int comma, int n, ...) {
     p_opt->space = comma;
 }
 
-/* str, file iteration */
-
-__iter<str *> *str::__iter__() {
-    return new __striter(this);
-}
-
-__striter::__striter(str *p) {
-    this->p = p;
-    counter = 0;
-    size = p->unit.size();
-}
-
-str *__striter::next() {
-    if(counter == size)
-        throw new StopIteration();
-    return __char_cache[((unsigned char)(p->unit[counter++]))];
-}
+/* file iteration */
 
 __iter<str *> *file::__iter__() {
     return new __fileiter(this);
