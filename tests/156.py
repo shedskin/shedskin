@@ -26,16 +26,16 @@ c = C()
 
 
 # Probably simpler OOP problems
-class Pet:
-    def speak(self): pass
-class Cat(Pet):
-    def speak(self): print "meow!"
-class Dog(Pet):
-    def speak(self): print "woof!"
-def command(pet): pet.speak()
-pets = Cat(), Dog()
-for pet in pets: command(pet)
-for pet in (pets[1], pets[0]): command(pet)
+#class Pet:
+#    def speak(self): pass
+#class Cat(Pet):
+#    def speak(self): print "meow!"
+#class Dog(Pet):
+#    def speak(self): print "woof!"
+#def command(pet): pet.speak()
+#pets = Cat(), Dog()
+#for pet in pets: command(pet)
+#for pet in (pets[1], pets[0]): command(pet)
 
 clearCastlingOpportunities = [None]
 clearCastlingOpportunities[0] = (10,)

@@ -1072,10 +1072,7 @@ class generateVisitor(ASTVisitor):
     def forin_preftail(self, node):
         pref = '_NEW'
         tail = getmv().tempcount[node][2:]+','+getmv().tempcount[node.list][2:]
-        if self.only_classes(node.list, ('tuple2',)):
-            pref = '_T2'
-        else:
-            tail += ','+getmv().tempcount[(node,5)][2:]
+        tail += ','+getmv().tempcount[(node,5)][2:]
         return pref, tail
 
     def forbody(self, node, quals, iter, func, skip, genexpr):

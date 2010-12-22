@@ -142,8 +142,6 @@ public:
 
 template <class T> class pyseq : public pyiter<T> {
 public:
-    __GC_VECTOR(T) units;
-
     virtual __ss_int __len__() = 0;
     virtual T __getitem__(__ss_int i) = 0;
     virtual __ss_int __cmp__(pyobj *p);
@@ -170,7 +168,7 @@ public:
 
 template <class T> class list : public pyseq<T> {
 public:
-    using pyseq<T>::units;
+    __GC_VECTOR(T) units;
 
     list();
     list(int count, ...);
@@ -242,7 +240,7 @@ public:
 #endif
 };
 
-template<class A, class B> class tuple2 : public pyseq<A> {
+template<class A, class B> class tuple2 : public pyobj {
 public:
     A first;
     B second;
@@ -255,13 +253,7 @@ public:
     B __getsecond__();
 
     str *__repr__();
-
-    __ss_bool __contains__(A a);
-    __ss_bool __contains__(B b);
-
     __ss_int __len__();
-
-    A __getitem__(__ss_int) {} /* XXX why sequence? */
 
     __ss_bool __eq__(tuple2<A,B> *b);
     __ss_int __cmp__(pyobj *p);
@@ -278,7 +270,7 @@ public:
 
 template<class T> class tuple2<T,T> : public pyseq<T> {
 public:
-    using pyseq<T>::units;
+    __GC_VECTOR(T) units;
 
     tuple2();
     tuple2(int count, ...);
@@ -441,7 +433,6 @@ static void __throw_dict_changed();
 
 template <class K, class V> class dict : public pyiter<K> {
 public:
-
 	int fill;
     int used;
     int mask;
@@ -1491,12 +1482,6 @@ static void __throw_stop_iteration() {
     for(__ ## n = 0; (unsigned int)__ ## n < (__ ## temp)->units.size(); __ ## n ++) { \
         i = (__ ## temp)->units[__ ## n]; \
 
-#define FOR_IN_T2(i, m, obj, n) \
-    __ ## obj = m; \
-    for(__ ## n = 0; __ ## n < 2; __ ## n ++) { \
-        if (! __ ## n) i = (__ ## obj)->__getfirst__(); \
-        else i = (__ ## obj)->__getsecond__(); \
-
 #define END_FOR }
 
 /* deprecated by FOR_IN_NEW */
@@ -1805,9 +1790,8 @@ template<class T> __ss_int pyseq<T>::__cmp__(pyobj *p) {
     pyseq<T> *b = (pyseq<T> *)p;
     int i, cmp;
     int mnm = ___min(2, 0, this->__len__(), b->__len__());
-
     for(i = 0; i < mnm; i++) {
-        cmp = __cmp(this->units[i], b->units[i]);
+        cmp = __cmp(this->__getitem__(i), b->__getitem__(i));
         if(cmp)
             return cmp;
     }
@@ -3934,14 +3918,6 @@ template<class A, class B> B tuple2<A, B>::__getsecond__() {
     return second;
 }
 
-template<class A, class B> __ss_bool tuple2<A, B>::__contains__(A a) {
-    return __mbool(__eq(first, a));
-}
-
-template<class A, class B> __ss_bool tuple2<A, B>::__contains__(B b) {
-    return __mbool(__eq(second, b));
-}
-
 template<class A, class B> __ss_int tuple2<A, B>::__len__() {
     return 2;
 }
@@ -4494,25 +4470,22 @@ template <class A> A reduce(A (*func)(A, A), pyiter<A> *a) {
 }
 
 template <class A> A reduce(A (*func)(A, A), pyseq<A> *a, A initial) {
-    unsigned int len = a->units.size();
+    unsigned int len = a->__len__();
     A result = initial;
     for(unsigned int i=0; i<len;i++)
-        result = (*func)(result, a->units[i]);
+        result = (*func)(result, a->__getitem__(i));
     return result;
 }
 
 template <class A> A reduce(A (*func)(A, A), pyseq<A> *a) {
-    unsigned int len = a->units.size();
+    unsigned int len = a->__len__();
     if(!len)
         throw new TypeError(new str("reduce() of empty sequence with no initial value"));
-    A result = a->units[0];
+    A result = a->__getitem__(0);
     for(unsigned int i=1; i<len;i++)
-        result = (*func)(result, a->units[i]);
+        result = (*func)(result, a->__getitem__(i));
     return result;
 }
-
-str *reduce(str *(*func)(str *, str *), str *a);
-str *reduce(str *(*func)(str *, str *), str *a, str *initial);
 
 /* filter */
 
@@ -4540,10 +4513,10 @@ template <class A, class B> tuple2<A,A> *filter(B (*func)(A), tuple2<A,A> *a) {
 template <class B> str *filter(B (*func)(str *), str *a) {
     return (new str())->join(filter(func, (pyiter<str *> *)a)); /* XXX inefficient */
 }
+inline str *filter(void *func, str *a) { return filter(((int(*)(str *))(func)), a); }
 
 template <class A> list<A> *filter(void *func, pyiter<A> *a) { return filter(((int(*)(A))(func)), a); }
 template <class A> tuple2<A,A> *filter(void *func, tuple2<A,A> *a) { return filter(((int(*)(A))(func)), a); }
-str *filter(void *func, str *a);
 
 /* pow */
 

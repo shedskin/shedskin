@@ -34,12 +34,12 @@ def hap():
 print hap()
 
 #FOR_IN_T2 for listcomp
-class animal:
-    def sound(self):
-        print 'oink'
-class dog(animal): pass
-class cat(animal): pass
-print [a.sound() for a in dog(), cat()]
+#class animal:
+#    def sound(self):
+#        print 'oink'
+#class dog(animal): pass
+#class cat(animal): pass
+#print [a.sound() for a in dog(), cat()]
 
 #tests used for optimizing enumerate/zip
 l = [(7,8),(9,10)]
