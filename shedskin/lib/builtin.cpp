@@ -329,12 +329,12 @@ str *str::__join(pyseq<str *> *l, bool only_ones, int total) {
     int unitsize = unit.size();
     int elems = len(l);
     if(elems==1)
-        return l->units[0];
+        return l->__getitem__(0);
     str *s = new str();
     if(unitsize == 0 and only_ones) {
         s->unit.resize(total);
         for(int j=0; j<elems; j++)
-            s->unit[j] = l->units[j]->unit[0];
+            s->unit[j] = l->__getitem__(j)->unit[0];
     }
     else if(elems) {
         total += (elems-1)*unitsize;
@@ -342,7 +342,7 @@ str *str::__join(pyseq<str *> *l, bool only_ones, int total) {
         int tsz;
         int k = 0;
         for(int m = 0; m<elems; m++) {
-            str *t = l->units[m];
+            str *t = l->__getitem__(m);
             tsz = t->unit.size();
             if (tsz == 1)
                 s->unit[k] = t->unit[0];
@@ -2068,13 +2068,6 @@ __fileiter::__fileiter(file *p) {
 str *__fileiter::next() {
     return p->next();
 }
-
-/* map, filter, reduce */
-
-str *filter(void *func, str *a) { return filter(((int(*)(str *))(func)), a); }
-
-str *reduce(str *(*func)(str *, str *), str *a) { return reduce(func, (pyiter<str *> *)a); }
-str *reduce(str *(*func)(str *, str *), str *a, str *initial) { return reduce(func, (pyiter<str *> *)a, initial); }
 
 /* glue */
 
