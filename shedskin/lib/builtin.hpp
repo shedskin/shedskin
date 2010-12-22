@@ -147,8 +147,6 @@ public:
 
     virtual __ss_int __len__();
     virtual T __getitem__(__ss_int i);
-    virtual void *append(T t);
-    virtual void slice(__ss_int x, __ss_int l, __ss_int u, __ss_int s, pyseq<T> *c);
     virtual __ss_int __cmp__(pyobj *p);
     virtual __ss_bool __contains__(T t) = 0;
     void resize(int n);
@@ -213,6 +211,8 @@ public:
     T pop(int m);
     void *remove(T e);
     void *insert(int m, T e);
+
+    void *append(T a);
 
     void *reverse();
     template<class U> void *sort(__ss_int (*cmp)(T, T), U (*key)(T), __ss_int reverse);
@@ -1805,24 +1805,6 @@ template<class T> T pyseq<T>::__getitem__(__ss_int i) {
     return units[i];
 }
 
-template<class T> void *pyseq<T>::append(T t) {
-    units.push_back(t);
-    return NULL;
-}
-
-template<class T> void pyseq<T>::slice(__ss_int x, __ss_int l, __ss_int u, __ss_int s, pyseq<T> *c) {
-    slicenr(x, l, u, s, __len__());
-    if(s == 1) {
-        c->units.resize(u-l);
-        memcpy(&(c->units[0]), &(this->units[l]), sizeof(T)*(u-l));
-    } else if(s > 0)
-        for(int i=l; i<u; i += s)
-            c->append(units[i]);
-    else
-        for(int i=l; i>u; i += s)
-            c->append(units[i]);
-}
-
 template<class T> __ss_int pyseq<T>::__cmp__(pyobj *p) {
     if (!p) return 1;
     pyseq<T> *b = (pyseq<T> *)p;
@@ -2609,6 +2591,11 @@ template<class T> __ss_bool list<T>::__eq__(pyobj *p) {
    return True;
 }
 
+template<class T> void *list<T>::append(T a) {
+    this->units.push_back(a);
+    return NULL;
+}
+
 template<class T> template<class U> void *list<T>::extend(U *iter) {
     typename U::for_in_unit e;
     typename U::for_in_loop __3;
@@ -2665,7 +2652,16 @@ template<class T> int list<T>::empty() {
 
 template<class T> list<T> *list<T>::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
     list<T> *c = new list<T>();
-    this->slice(x, l, u, s, c);
+    slicenr(x, l, u, s, this->__len__());
+    if(s == 1) {
+        c->units.resize(u-l);
+        memcpy(&(c->units[0]), &(this->units[l]), sizeof(T)*(u-l));
+    } else if(s > 0)
+        for(int i=l; i<u; i += s)
+            c->units.push_back(units[i]);
+    else
+        for(int i=l; i>u; i += s)
+            c->units.push_back(units[i]);
     return c;
 }
 
@@ -3841,7 +3837,16 @@ template<class T> __ss_bool tuple2<T, T>::__eq__(pyobj *p) {
 
 template<class T> tuple2<T,T> *tuple2<T, T>::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
     tuple2<T,T> *c = new tuple2<T,T>();
-    this->slice(x, l, u, s, c);
+    slicenr(x, l, u, s, this->__len__());
+    if(s == 1) {
+        c->units.resize(u-l);
+        memcpy(&(c->units[0]), &(this->units[l]), sizeof(T)*(u-l));
+    } else if(s > 0)
+        for(int i=l; i<u; i += s)
+            c->units.push_back(units[i]);
+    else
+        for(int i=l; i>u; i += s)
+            c->units.push_back(units[i]);
     return c;
 }
 
