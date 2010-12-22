@@ -39,6 +39,10 @@ i = itermeuk()
 for x in i:
     print x
 
+# __contains__ fallback to __iter__
+import string
+print [x for x in string.ascii_lowercase if x in i]
+
 # dict.__init__ takes iterable iterable
 da = iter([1,2])
 db = iter([3,4])

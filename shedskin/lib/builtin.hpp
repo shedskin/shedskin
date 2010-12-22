@@ -131,6 +131,7 @@ public:
 template <class T> class pyiter : public pyobj {
 public:
     virtual __iter<T> *__iter__() = 0;
+    virtual __ss_bool __contains__(T t);
 
     typedef T for_in_unit;
     typedef __iter<T> * for_in_loop;
@@ -145,7 +146,6 @@ public:
     virtual __ss_int __len__() = 0;
     virtual T __getitem__(__ss_int i) = 0;
     virtual __ss_int __cmp__(pyobj *p);
-    virtual __ss_bool __contains__(T t) = 0;
 
     virtual __iter<T> *__iter__();
 
@@ -1781,6 +1781,18 @@ template<class T> inline bool pyiter<T>::for_in_has_next(__iter<T> *iter) {
 
 template<class T> inline T pyiter<T>::for_in_next(__iter<T> *iter) {
     return iter->for_get_next();
+}
+
+template<class T> inline __ss_bool pyiter<T>::__contains__(T t) {
+    T e;
+    pyiter<T>::for_in_loop __3;
+    int __2;
+    pyiter<T> *__1;
+    FOR_IN_NEW(e,this,1,2,3)
+        if(__eq(e,t))
+            return __mbool(true);
+    END_FOR 
+    return __mbool(false);
 }
 
 /* pyseq methods */
