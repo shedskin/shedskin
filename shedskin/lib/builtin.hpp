@@ -1901,12 +1901,16 @@ template<class K, class V> dict<K, V>::dict(int count, ...)  {
     va_end(ap);
 }
 
-template<class K, class V> static inline void __add_to_dict(dict<K, V> *d, tuple2<K, V> *t) {
-    d->__setitem__(t->__getfirst__(), t->__getsecond__());
+template<class K, class V, class U> static inline void __add_to_dict(dict<K, V> *d, U *iter) {
+    __iter<typename U::for_in_unit> *it = ___iter(iter);
+    typename U::for_in_unit a, b;
+    a = it->next();
+    b = it->next();
+    d->__setitem__(a, b);
 }
 
-template<class K, class V> static inline void __add_to_dict(dict<K, V> *d, pyseq<K> *t) {
-    d->__setitem__(t->__getitem__(0), t->__getitem__(1));
+template<class K, class V> static inline void __add_to_dict(dict<K, V> *d, tuple2<K, V> *t) {
+    d->__setitem__(t->__getfirst__(), t->__getsecond__());
 }
 
 template<class K, class V> template<class U> dict<K, V>::dict(U *other) {
