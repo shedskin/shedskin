@@ -73,11 +73,12 @@ str *capitalize(str *s) {
 str *capwords(str *s, str *sep) {
     list<str *> *__3 = s->split(sep);
     list<str *> *result = new list<str *>();
-    __ss_int __2;
-
     result->resize(len(__3));
     str *e;
-    FOR_IN_SEQ(e,__3,3,2)
+    list<str *>::for_in_loop __4;
+    int __2;
+    list<str *> *__1;
+    FOR_IN_NEW(e,__3,1,2,4)
         result->units[__2] = e->capitalize();
     END_FOR
 
