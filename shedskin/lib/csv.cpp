@@ -64,18 +64,15 @@ __driter *DictReader::__iter__() {
 }
 
 static inline list<str *> *list_comp_0(DictWriter *self, dict<str *, str *> *rowdict) {
-    __iter<str *> *__35;
-    str *k;
-    __ss_int __36;
-    dict<str *, str *> *__34;
     list<str *> *__ss_result = new list<str *>();
-
-    FOR_IN(k,rowdict,35)
-        if ((!(self->fieldnames)->__contains__(k))) {
+    str *k;
+    dict<str *, str *>::for_in_loop __3;
+    int __2;
+    dict<str *, str *> *__1;
+    FOR_IN_NEW(k,rowdict,1,2,3)
+        if ((!(self->fieldnames)->__contains__(k)))
             __ss_result->append(k);
-        }
     END_FOR
-
     return __ss_result;
 }
 
@@ -273,17 +270,18 @@ void *reader::parse_reset() {
 
 list<str *> *reader::next() {
     list<str *> *fields;
-    str *__4, *c, *line;
-    __iter<str *> *__5;
-    __ss_int __6;
+    str *__4, *line;
 
     this->parse_reset();
 
     while (1) {
         line = (this->input_iter)->next();
         this->line_num = (this->line_num+1);
-
-        FOR_IN(c,line,5)
+        str *c;
+        str::for_in_loop __3;
+        int __2;
+        str *__1;
+        FOR_IN_NEW(c,line,1,2,3)
             if (__eq(c, const_7)) {
                 throw ((new Error(const_15)));
             }
@@ -338,8 +336,7 @@ class writer
 class_ *cl_writer;
 
 __ss_int writer::join_append_data(str *field, __ss_int quote_empty, __ss_int quoted) {
-    __iter<str *> *__16;
-    str *__15, *c, *lineterm;
+    str *lineterm;
     Excel *dialect;
     __ss_int __17, __18, __19, __20, __21, __22, __23, want_escape;
 
@@ -352,7 +349,11 @@ __ss_int writer::join_append_data(str *field, __ss_int quote_empty, __ss_int quo
         (this->rec)->append(dialect->quotechar);
     }
 
-    FOR_IN(c,field,16)
+    str *c;
+    str::for_in_loop __3;
+    int __2;
+    str *__1;
+    FOR_IN_NEW(c,field,1,2,3)
         want_escape = 0;
         if (__eq(c, const_7)) {
             break;

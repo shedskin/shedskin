@@ -25,17 +25,15 @@ str *__name__;
 __ss_int __18;
 
 static inline list<str *> *list_comp_0(str *opt, pyiter<str *> *longopts) {
-    __iter<str *> *__17;
-    pyiter<str *> *__16;
-    str *o;
     list<str *> *result = new list<str *>();
-
-    FOR_IN(o,longopts,17)
-        if (o->startswith(opt)) {
+    str *o;
+    pyiter<str *>::for_in_loop __3;
+    int __2;
+    pyiter<str *> *__1;
+    FOR_IN_NEW(o,longopts,1,2,3)
+        if (o->startswith(opt))
             result->append(o);
-        }
     END_FOR
-
     return result;
 }
 
