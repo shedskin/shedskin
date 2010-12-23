@@ -457,7 +457,11 @@ void *RawConfigParser::write(file *fp) {
         fp->write(const_13);
     }
 
-    FOR_IN(section,this->_sections,24)
+    dict<str *, dict<str *, str *> *>::for_in_loop __3;
+    int __2;
+    dict<str *, dict<str *, str *> *> *__1;
+
+    FOR_IN_NEW(section,this->_sections,1,2,3)
         fp->write(__modct(const_11, 1, section));
 
         FOR_IN_SEQ(__26,((this->_sections)->__getitem__(section))->items(),27,29)
