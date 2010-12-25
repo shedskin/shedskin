@@ -221,9 +221,11 @@ public:
 
     defaultdict(V (*func)(), pyiter<tuple2<K, V> *> *i) { /* XXX */
         this->func = func;
-        __iter<tuple2<K, __ss_int> *> *__0;
-        tuple2<K, __ss_int> *k; /* XXX */
-        FOR_IN(k, i, 0)
+        tuple2<K, __ss_int> *k;
+        typename pyiter<tuple2<K, V> *>::for_in_loop __3;
+        int __2;
+        pyiter<tuple2<K, V> *> *__1;
+        FOR_IN_NEW(k,i,1,2,3)
             this->__setitem__(k->__getfirst__(), k->__getsecond__());
         END_FOR
     }
@@ -294,8 +296,10 @@ namespace __defaultdict__ {
     template<class A, class B> defaultdict<A, B> *fromkeys(pyiter<A> *f, B b) {
         defaultdict<A, B> *d = new defaultdict<A, B>();
         A e;
-        __iter<A> *__0;
-        FOR_IN(e, f, 0)
+        typename pyiter<A>::for_in_loop __3;
+        int __2;
+        pyiter<A> *__1;
+        FOR_IN_NEW(e,f,1,2,3)
             d->__setitem__(e, b);
         END_FOR
         return d;
