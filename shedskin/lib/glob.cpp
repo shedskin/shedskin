@@ -35,13 +35,11 @@ list<str *> *glob(str *pathname) {
 class __gen_iglob : public __iter<str *> {
 public:
     pyiter<str *> *dirs;
-    __iter<str *> *__11;
     str *name;
     pyiter<str *> *__10;
     str *basename;
     __ss_int __15;
     list<str *> *__13;
-    __iter<str *> *__5;
     pyiter<str *> *__4;
     list<str *> *__7;
     __ss_int __6;
@@ -55,6 +53,9 @@ public:
     __iter<str *> *__8;
     __ss_int __12;
     __iter<str *> *__14;
+    pyiter<str *>::for_in_loop __103;
+    int __102;
+    pyiter<str *> *__101;
     int __last_yield;
 
     __gen_iglob(str *pathname) {
@@ -99,7 +100,7 @@ public:
         }
         if (has_magic(basename)) {
 
-            FOR_IN(dirname,dirs,5)
+            FOR_IN_NEW(dirname,dirs,101,102,103)
 
                 FOR_IN_SEQ(name,glob1(dirname, basename),7,9)
                     __last_yield = 2;
@@ -112,7 +113,7 @@ public:
         }
         else {
 
-            FOR_IN(dirname,dirs,11)
+            FOR_IN_NEW(dirname,dirs,101,102,103)
 
                 FOR_IN_SEQ(name,glob0(dirname, basename),13,15)
                     __last_yield = 3;

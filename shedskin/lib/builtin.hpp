@@ -1486,11 +1486,6 @@ static void __throw_stop_iteration() {
 
 /* deprecated by FOR_IN_NEW */
 
-#define FOR_IN(i, m, temp) \
-    __ ## temp = ___iter(m); \
-    while((__ ## temp)->for_has_next()) { \
-        i = (__ ## temp)->for_get_next(); \
-
 #define FOR_IN_SEQ(i, m, temp, n) \
     __ ## temp = m; \
     for(__ ## n = 0; (unsigned int)__ ## n < (__ ## temp)->units.size(); __ ## n ++) { \
