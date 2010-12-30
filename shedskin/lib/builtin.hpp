@@ -797,18 +797,8 @@ public:
     bool __stop_iteration;
 
     __iter<T> *__iter__();
-
-    virtual T next();  /* subclasses must implement 'next' or '__get_next' */
+    virtual T next(); /* __get_next can be overloaded to avoid (slow) exception handling */
     virtual T __get_next();
-
-    inline __iter<T> *for_in_init();
-    inline bool for_in_has_next(__iter<T> *iter);
-    inline T for_in_next(__iter<T> *iter);
-
-    /* deprecated, used by FOR_IN */
-
-    int for_has_next();
-    T for_get_next();
 
     str *__repr__();
 };
@@ -1486,11 +1476,6 @@ static void __throw_stop_iteration() {
 
 /* deprecated by FOR_IN_NEW */
 
-#define FOR_IN(i, m, temp) \
-    __ ## temp = ___iter(m); \
-    while((__ ## temp)->for_has_next()) { \
-        i = (__ ## temp)->for_get_next(); \
-
 #define FOR_IN_SEQ(i, m, temp, n) \
     __ ## temp = m; \
     for(__ ## n = 0; (unsigned int)__ ## n < (__ ## temp)->units.size(); __ ## n ++) { \
@@ -1776,11 +1761,12 @@ template<class T> inline __iter<T> *pyiter<T>::for_in_init() {
 }
 
 template<class T> inline bool pyiter<T>::for_in_has_next(__iter<T> *iter) {
-    return iter->for_has_next(); /* XXX opt end cond */
+    iter->__result = iter->__get_next();
+    return not iter->__stop_iteration;
 }
 
 template<class T> inline T pyiter<T>::for_in_next(__iter<T> *iter) {
-    return iter->for_get_next();
+    return iter->__result;
 }
 
 template<class T> inline __ss_bool pyiter<T>::__contains__(T t) {
@@ -2961,9 +2947,12 @@ template <class U> str *str::join(U *iter) {
 
 /* __iter methods */
 
-template<class T> __iter<T> *__iter<T>::__iter__() { __stop_iteration = false; return this; }
+template<class T> __iter<T> *__iter<T>::__iter__() { 
+    __stop_iteration = false; 
+    return this; 
+}
 
-template<class T> T __iter<T>::next() { /* subclasses must implement 'next' or '__get_next' */
+template<class T> T __iter<T>::next() { /* __get_next can be overloaded instead to avoid (slow) exception handling */
     __result = this->__get_next();
     if(__stop_iteration)
         throw new StopIteration();
@@ -2976,31 +2965,6 @@ template<class T> T __iter<T>::__get_next() {
     } catch (StopIteration *) {
         __stop_iteration = true;
     }
-    return __result;
-}
-
-template<class T> inline __iter<T> *__iter<T>::for_in_init() {
-    __stop_iteration = false;
-    return this;
-}
-
-template<class T> inline bool __iter<T>::for_in_has_next(__iter<T> *iter) {
-     iter->__result = iter->__get_next();
-     return not iter->__stop_iteration;
-}
-
-template<class T> inline T __iter<T>::for_in_next(__iter<T> *iter) {
-     return iter->__result;
-}
-
-/* deprecated, used by FOR_IN */
-
-template<class T> int __iter<T>::for_has_next() {
-    __result = this->__get_next();
-    return not this->__stop_iteration;
-}
-
-template<class T> T __iter<T>::for_get_next() {
     return __result;
 }
 
