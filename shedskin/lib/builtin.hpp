@@ -3864,7 +3864,7 @@ template<class T> tuple2<T, T>::tuple2(PyObject *p) {
     this->__class__ = cl_tuple;
     int size = PyTuple_Size(p);
     for(int i=0; i<size; i++)
-        append(__to_ss<T>(PyTuple_GetItem(p, i)));
+        this->units.push_back(__to_ss<T>(PyTuple_GetItem(p, i)));
 }
 
 template<class T> PyObject *tuple2<T, T>::__to_py__() {
