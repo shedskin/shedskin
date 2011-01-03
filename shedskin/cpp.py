@@ -2814,6 +2814,7 @@ def analyze_virtuals():
 
             # --- determine abstract receiver class
             classes = polymorphic_t(getgx().merged_inh[objexpr])
+            classes = [cl for cl in classes if isinstance(cl, class_)]
             if not classes:
                 continue
 
