@@ -58,7 +58,7 @@ void plemp(str *fmt, pyseq<__ss_int> *seq, str *s) {
             }
             else {
                 //printf("unpack H %s\n", CS(repr(s)));
-                t->append(unpack(s, j, 2, endian));
+                t->units.push_back(unpack(s, j, 2, endian));
                 j += 2;
             }
         }
@@ -70,7 +70,7 @@ void plemp(str *fmt, pyseq<__ss_int> *seq, str *s) {
             }
             else {
                 //printf("unpack H %s\n", CS(repr(s)));
-                t->append(unpack(s, j, 4, endian));
+                t->units.push_back(unpack(s, j, 4, endian));
                 j += 4;
             }
         }
@@ -82,7 +82,7 @@ void plemp(str *fmt, pyseq<__ss_int> *seq, str *s) {
             }
             else {
                 //printf("unpack B %s\n", CS(repr(s)));
-                t->append(unpack(s, j, 1, endian));
+                t->units.push_back(unpack(s, j, 1, endian));
                 j += 1;
             }
         }
