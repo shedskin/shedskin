@@ -155,14 +155,14 @@ if __name__ == '__main__':
     blocksize = 4096
 
     # On the system containing the file that needs to be patched
-    unpatched = open("unpatched.file", "rb")
+    unpatched = open("testdata/unpatched.file", "rb")
     hashes = blockchecksums(unpatched, blocksize)
 
     # On the remote system after having received `hashes`
-    patchedfile = open("patched.file", "rb")
+    patchedfile = open("testdata/patched.file", "rb")
     delta = rsyncdelta(patchedfile, hashes, blocksize)
 
     # System with the unpatched file after receiving `delta`
     unpatched.seek(0)
-    save_to = open("locally-patched.file", "wb")
+    save_to = open("testdata/locally-patched.file", "wb")
     patchstream(unpatched, save_to, delta, blocksize)
