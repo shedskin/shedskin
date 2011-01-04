@@ -126,6 +126,8 @@ public:
     virtual __ss_int __int__();
 
     virtual __ss_bool __nonzero__();
+
+    static const bool is_pyseq = false;
 };
 
 template <class T> class pyiter : public pyobj {
@@ -155,6 +157,8 @@ public:
     inline int for_in_init();
     inline bool for_in_has_next(int i);
     inline T for_in_next(int &i);
+
+    static const bool is_pyseq = true;
 };
 
 template <class R, class A> class pycall1 : public pyobj {
@@ -4312,20 +4316,34 @@ template <class A> list<tuple2<typename A::for_in_unit, typename A::for_in_unit>
     return result;
 }
 
-template <class A, class B> list<tuple2<typename A::for_in_unit, typename B::for_in_unit> *> *__zip(int, A *itera, B *iterb) { /* XXX re-optimize for sequences */
+template <class A, class B> list<tuple2<typename A::for_in_unit, typename B::for_in_unit> *> *__zip(int, A *itera, B *iterb) {
     list<tuple2<typename A::for_in_unit, typename B::for_in_unit> *> *result = (new list<tuple2<typename A::for_in_unit, typename B::for_in_unit> *>());
     typename A::for_in_unit e;
-    typename A::for_in_loop __3 = itera->for_in_init();
-    int __2;
-    A *__1;
     typename B::for_in_unit f;
-    typename B::for_in_loop __6 = iterb->for_in_init();
-    int __5;
-    B *__4;
-    while(itera->for_in_has_next(__3) and iterb->for_in_has_next(__6)) {
-        e = itera->for_in_next(__3);
-        f = iterb->for_in_next(__6);
-        result->append((new tuple2<typename A::for_in_unit, typename B::for_in_unit>(2, e, f)));
+    if(A::is_pyseq && B::is_pyseq) {
+        pyseq<typename A::for_in_unit> *seqa = (pyseq<typename A::for_in_unit> *)itera;
+        pyseq<typename B::for_in_unit> *seqb = (pyseq<typename B::for_in_unit> *)iterb;
+        int count = __SS_MIN(len(seqa), len(seqb));
+        tuple2<typename A::for_in_unit, typename B::for_in_unit> *tuples = new tuple2<typename A::for_in_unit, typename B::for_in_unit>[count];
+        result->units.resize(count);
+        for(int i=0; i<count; i++) {
+            e = seqa->__getitem__(i);
+            f = seqb->__getitem__(i);
+            result->units[i] = &tuples[i];
+            result->units[i]->__init2__(e, f);
+        }
+    } else {
+        typename A::for_in_loop __3 = itera->for_in_init();
+        int __2;
+        A *__1;
+        typename B::for_in_loop __6 = iterb->for_in_init();
+        int __5;
+        B *__4;
+        while(itera->for_in_has_next(__3) and iterb->for_in_has_next(__6)) {
+            e = itera->for_in_next(__3);
+            f = iterb->for_in_next(__6);
+            result->append((new tuple2<typename A::for_in_unit, typename B::for_in_unit>(2, e, f)));
+        }
     }
     return result;
 }
