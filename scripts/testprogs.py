@@ -39,7 +39,7 @@ for (i, file) in enumerate(files):
     do_cmd('make')
     do_cmd('shedskin -e %s' % file)
     do_cmd('make')
-    if file not in ('amaze.py', 'tictactoe.py'): # XXX
+    if file not in ('amaze.py', 'tictactoe.py', 'msp_ss.py'): # XXX
         do_cmd('python -c "import %s"' % file[:-3])
     if file in ('c64.py', 'SimpleGeometry.py'):
         os.chdir('..')
