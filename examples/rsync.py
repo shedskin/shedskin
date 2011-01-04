@@ -12,6 +12,8 @@ http://samba.anu.edu.au/rsync/.
 
 """
 
+# taken from: http://code.activestate.com/recipes/577518-rsync-algorithm/
+
 import collections
 import hashlib
 
