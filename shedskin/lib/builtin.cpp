@@ -1221,7 +1221,7 @@ void *file::seek(__ss_int i, __ss_int w) {
     return NULL;
 }
 
-int file::tell() {
+__ss_int file::tell() {
     __check_closed();
     return ftell(f);
 }
