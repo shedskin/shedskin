@@ -654,7 +654,7 @@ public:
 
     str *name;
     str *mode;
-    int closed;
+    __ss_int closed;
 
     bool universal_mode;
     bool cr;
@@ -678,7 +678,7 @@ public:
     virtual void *seek(__ss_int i, __ss_int w=0);
     virtual void *close();
 
-    int tell();
+    __ss_int tell();
 
     void __enter__();
     void __exit__();
