@@ -2672,7 +2672,8 @@ def typestrnew(types, cplusplus=True, node=None, check_extmod=False, depth=0, ch
         if not (cl.ident in getmv().ext_funcs or cl.ident in getmv().ext_classes): # XXX too smart? can remove it, plus 'using'? 
             if cplusplus: namespace = cl.module.full_path()+'::'
             else: namespace = '::'.join(cl.module.mod_path)+'::'
-        getmv().module.prop_includes.add(cl.module)
+        if cplusplus:
+            getmv().module.prop_includes.add(cl.module)
 
     template_vars = cl.tvar_names()
     if template_vars:
