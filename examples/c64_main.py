@@ -6,7 +6,7 @@ pygtk.require("2.0")
 import gtk
 import gobject
 import sys
-from c64 import c64, timer
+from c64 import c64
 print c64.__file__
 
 # TODO 3 bit row counter.
