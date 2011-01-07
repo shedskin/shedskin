@@ -230,4 +230,3 @@ if __name__ == "__main__":
     # timeout_remove
     for i in range(800000):
         c64.iterate()
-    c64.run()
