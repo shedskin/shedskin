@@ -3,49 +3,48 @@
 
 import sys
 import os
-import time
-
-import memory
 import cpu
-import cia
 import vic_ii
 import sid
+import cia
+import time
+import timer
+#import gmonitor
+import memory
+#import gdisplay
 
-class TextView(object):
-    def __init__(self, VIC, controls):
+#sys.path = [os.path.realpath("pygtk_s")] + sys.path
+
+class TextView(object): # ShedSkin stub, data part.
+    def __init__(self, VIC):
         self.VIC = VIC
         self.first_column = 0
         self.first_row = 0
         self.last_column = 0
         self.last_row = 0
-        self.character_bitmaps_offset = 0 # FIXME correct that.
-        self.video_offset = 0 # FIXME correct that.
-        self.mode = "normal-text"
-        self.border_color = 0 # FIXME default?
+        self.character_bitmaps_offset = 0 # that's wrong.
         self.old_VIC_bank = -1
-        self.background_color_0 = 0 # FIXME default?
+        self.VIC_bank = 0
+        self.border_color = 0
+        self.background_color_0 = 0
+        self.video_offset = 0
+        self.viewport_row = 0
+        #self.controls = controls
+        #self.controls.handle_key_press("foo")
+        #self.controls.handle_key_release("bar")
 
-        self.viewport_column = 0 # FIXME
-        self.viewport_row = 0  # FIXME
-        self.VIC_bank = 0 # FIXME
-        self.width = 40
-        self.height = 25
-
+    #def repaint(self):
+    #   pass
     def unprepare(self):
         self.old_VIC_bank = -1
-        print("unprepare...")
 
-#    def get_border_color(self):
-#        return self._border_color
-#
-#    def set_border_color(self, value):
-#        self._border_color = value
-#        # TODO update pixbuf etc.
-#
-#    border_color = property(get_border_color, set_border_color)
+#import psyco
+#psyco.full()
+
 
 class CPUPort(memory.Memory): # $0..$1
     def __init__(self, MMU):
+        memory.Memory.__init__(self)
         self.B_can_write = True # in the instance because of ShedSkin
         self.B_active = True
         self.MMU = MMU
@@ -107,10 +106,22 @@ class CPUPort(memory.Memory): # $0..$1
             sys.stderr.write("warning: KERNAL disabled!!!\n")
             time.sleep(5.0)
 
-class C64:
+class C64(timer.TimingOut):
     def __init__(self):
         self.interrupt_clock = 0
+        self.VIC_clock = 0
         self.CPU = cpu.CPU()
+        MMU = self.CPU.MMU
+        address = 0
+        # power-up pattern:
+        for i in range(512):
+            for b in range(64):
+                MMU.write_memory(address, 0, 1)
+                address += 1
+            for b in range(64):
+                MMU.write_memory(address, 0xFF, 1)
+                address += 1
+            
         self.ROMs = [
             ("basic",   (0xA000, 0xC000)),
             ("chargen", (0xD000, 0xE000)),
@@ -134,49 +145,57 @@ class C64:
             if ROM == "chargen":
                 char_ROM = ROM_obj
 
-        self.controls = {} #gmonitor.Controls(self)
 
         cia1 = cia.CIA1()
         self.CIA1 = cia1
         cia2 = cia.CIA2()
         vic = vic_ii.VIC_II(self.CPU.MMU, cia2, char_ROM)
         self.VIC = vic
-        vic.text_view = TextView(vic, self.controls)
         self.CPU.MMU.map_IO("cia2", (0xDD00, 0xDE00), cia2)
         self.CPU.MMU.map_IO("vic", (0xD000, 0xD400), vic)
         self.CPU.MMU.map_IO("sid", (0xD400, 0xD800), sid.SID())
         self.CPU.MMU.map_IO("cia1", (0xDC00, 0xDD00), cia1)
         self.CPU.MMU.map_IO("cpu", (0x0000, 0x0002), CPUPort(self.CPU.MMU))
+        vic.text_view = TextView(vic)
+        vic.repaint() # ShedSkin
         vic.unprepare() # memory is not initialized yet, so unprepare...
         MMU = self.CPU.MMU
         #MMU.write_memory(0xFFFA, b"\x43\xFE\xE2\xFC\x48\xFF") # FIXME endianness.
+        #self.CPU.BRK(0)
+        # done automatically on "BRK"?
         self.CPU.write_register("PC", (MMU.read_memory(0xFFFC, 2)))
-        self.count = 0
+        self.fire_timer() # ShedSkin
+        #self.controls = gmonitor.Controls(self)
+        #self.controls = {}
 
     def run(self):
         while True: # TODO terminate?
-            self.cycle()
+            self.iterate()
 
     def fire_timer(self):
         for n in range(2000):
-            self.CPU.fetch_execute()
+            self.iterate()
             self.interrupt_clock += 1
             if self.interrupt_clock >= 50: # FIXME remove
                 self.interrupt_clock = 0
                 self.cause_interrupt()
-            self.VIC.increase_raster_position()
         self.VIC.repaint()
+        return timer.TimingOut.fire_timer(self)
+
+    def iterate(self):
+        self.CPU.step()
+        return True
 
     def cause_interrupt(self):
         if "I" in self.CPU.flags: # interrupt DISABLE
             #print("not supposed to cause interrupts right now...")
             return True
         #print("at 0x0283: %r" % self.CPU.MMU.read_memory(0x0283, 2))
-#        print("at 0x37: %r" % self.CPU.MMU.read_memory(0x37, 2))
-#        print("at 0x2B: %r" % self.CPU.MMU.read_memory(0x2B, 2))
+        #print("at 0x37: %r" % self.CPU.MMU.read_memory(0x37, 2))
+        #print("at 0x2B: %r" % self.CPU.MMU.read_memory(0x2B, 2))
         #if not self.CIA1.B_interrupt_pending:
         if not self.CPU.B_in_interrupt:
-            self.CIA1.B_interrupt_pending = True
+            #self.CIA1.B_interrupt_pending = True
             self.CPU.cause_interrupt(False)
         return True
 
@@ -198,9 +217,20 @@ I/O Area (memory mapped chip registers), Character ROM or RAM area (4096 bytes);
       %1xx: I/O Area. (Except for the value %100, see above.)
 """
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     c64 = C64()
-    c64.VIC.load_chunk(0,0)
-    c64.CIA1.pressed_keys = set(['X'])
-    while True:
-        c64.fire_timer()
+    c64.CIA1.handle_key_press("X")
+    c64.CIA1.handle_key_release("X")
+    c64.CIA1.read_memory(0, 1)
+    # clear_Z, set_Z, clear_N, set_N, set_V
+    # timeout_remove
+    for i in range(800000):
+        c64.iterate()
+    c64.CPU_clock = timer.timeout_add(5, c64)
+    #c64.cause_interrupt() # ShedSkin
+    #{
+    import gtk
+    gtk.main()
+    #}
+    #c64.run()
+    c64.run()

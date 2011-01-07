@@ -10,3 +10,4 @@ class Memory(object):
 
     def write_memory(self, address, value, size):
         pass
+

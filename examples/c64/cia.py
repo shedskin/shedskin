@@ -40,43 +40,47 @@ class Timer(object):
 # FIXME implement $DC03 data direction B bits
 class CIA1(memory.Memory):
     def __init__(self):
+        memory.Memory.__init__(self)
         self.B_can_write = True # in the instance because of ShedSkin
         self.B_active = True
         self.keyboard_matrix_rows = 0 # FIXME
         self.timer_A = Timer()
         self.timer_B = Timer()
-        self.pressed_keys = set()
+        self.pressed_keys = set("dummy")
+        self.pressed_keys.discard("dummy") # Shedskin hint...
         self.B_interrupt_pending = False
+        self.known_keys = set()
+        for row in self.get_keyboard_matrix():
+            for cell in row:
+                self.known_keys.add(cell)
 
-    matrix = [
-        ["Delete", "Return", "Right",  "F7",     "F1",     "F3",     "F5"],
+    matrix = [ # broken: 1 pound plus
+        ["BackSpace", "Return", "Right",  "F7", "F1", "F3", "F5", "Down"],
         ["3", "W", "A", "4", "Z", "S", "E", "Shift_L"],
         ["5", "R", "D", "6", "C", "F", "T", "X"],
         ["7", "Y", "G", "8", "B", "H", "U", "V"],
         ["9", "I", "J", "0", "M", "K", "O", "N"],
         ["+", "P", "L", "-", ".", ":", "@", ","],
-        ["dollar", "*", ";", "Home", "Shift_R", "=", "grave", "/"], # FIXME should be "pound".
-        ["1", "BackSpace", "Control_L", "2", "Space", "Meta_L", "Break"],
+        ["pound", "*", ";", "Home", "Shift_R", "=", "grave", "/"], # FIXME should be "pound".
+        ["1", "LeftArrow", "Control_L", "2", "space", "Meta_L", "Q", "Break"],
     ]
     def read_memory(self, address, size = 1):
         assert(size == 1)
         if address == A_KEYBOARD_KEY_JOYSTICK_1:
+            # TODO: artificially make Up and Left work.
             if self.keyboard_matrix_rows != 0: # is not None:
-#                print("we think keys", self.pressed_keys)
+                #print("we think keys", self.pressed_keys)
                 v = 0
+                #matrix = self.__class__.matrix
                 for row in range(0, 8):
                     if (self.keyboard_matrix_rows & (1 << row)) != 0: # client wants to know
-#                        print 'wants', row
                         columns = CIA1.matrix[row]
-##                        print("possible", columns)
+                        #print("possible", rows)
                         for column_i, cell in enumerate(columns):
-                            for prkey in self.pressed_keys:
-                              if cell == prkey or cell.lower() == prkey:
-                            #if cell in self.pressed_keys or cell.lower() in self.pressed_keys:
-#                                print("YESSS, matched", cell)
+                            if cell in self.pressed_keys: # or (isinstance(cell, int) and cell < 128 and (cell | 0x20) in self.pressed_keys):
+                                #print("YESSS, matched", cell)
                                 v |= (1 << column_i)
-                                break
-#                print("INVKEY", v)
+                #print("INVKEY", v)
                 return 255 - v
 
             # return bits cleared in rows where a key is pressed in self.keyboard_matrix_column.
@@ -87,7 +91,7 @@ class CIA1(memory.Memory):
             return self.timer_B.get_control_mask()
         elif address == A_INTERRUPT_CONTROL_STATUS:
             if self.B_interrupt_pending:
-#               print("yes, we had an interrupt")
+                #print("yes, we had an interrupt")
                 self.B_interrupt_pending = False
                 return 1<<7 # FIXME the others
             return 0
@@ -95,21 +99,29 @@ class CIA1(memory.Memory):
             print(hex(address))
             assert(False)
 
+    def get_keyboard_matrix(self):
+        return CIA1.matrix
+
     def write_memory(self, address, value, size):
-#       print("CIA#1 $%X := %r" % (address, value))
+#        print("CIA#1 $%X := %r" % (address, value))
         # TODO address == A_TIMER_A bit 0: active or not.
         if address == A_KEYBOARD_MATRIX_JOYSTICK_2:
-            self.keyboard_matrix_rows = ~(value & 63)
+            self.keyboard_matrix_rows = ~(value & 0xFF)
             # other is paddle.
         elif address == A_DATA_DIRECTION:
             # TODO POKE 56322,224 deactivated the keyboard, because the pointer of the CIA 1 is changed. This POKE is using for the joystickscans.
             pass
 
-#    def handle_key_press(self, keycode):
-#        self.pressed_keys.add(keycode)
-#
-#    def handle_key_release(self, keycode):
-#        self.pressed_keys.discard(keycode)
+    def handle_key_press(self, name):
+        if name not in self.pressed_keys:
+            self.B_interrupt_pending = True
+            self.pressed_keys.add(name)
+        return name in self.known_keys
+
+    def handle_key_release(self, name):
+        self.B_interrupt_pending = True
+        self.pressed_keys.discard(name)
+        return name in self.known_keys
 
 class SerialLine(object): # TODO defaults.
     def __init__(self):
@@ -131,6 +143,7 @@ class RS232Line(object):
 
 class CIA2(memory.Memory):
     def __init__(self):
+        memory.Memory.__init__(self)
         self.B_can_write = True # in the instance because of ShedSkin
         self.VIC_bank = 0
         self.B_active = True
@@ -138,7 +151,6 @@ class CIA2(memory.Memory):
         self.RS232 = RS232Line()
 
     def read_memory(self, address, size = 1):
-        """ returns a string """
         assert(size == 1)
         if address == 0:
             return (3 - self.VIC_bank) + self.serial.get_control_mask()
@@ -149,7 +161,7 @@ class CIA2(memory.Memory):
             return 0
 
     def write_memory(self, address, value, size):
-        print("CIA#2 $%X := %r" % (address, value))
+#        print("CIA#2 $%X := %r" % (address, value))
         if address == 0:
             self.VIC_bank = 3 - (value & 3) # TODO emit notification?
             # TODO map Char ROM into VIC in banks 0 and 2 at $1000.
