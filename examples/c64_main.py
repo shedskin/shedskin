@@ -230,10 +230,13 @@ class Controls(gtk.VBox):
                 
         status_button = gtk.Button("_Status")
         status_button.connect("clicked", self.show_status)
+        status_button.set_focus_on_click(False)
         pause_button = gtk.Button("_Pause")
         pause_button.connect("clicked", self.pause_CPU)
+        pause_button.set_focus_on_click(False)
         read_memory_button = gtk.Button("_Read Memory...")
         read_memory_button.connect("clicked", self.dump_memory)
+        read_memory_button.set_focus_on_click(False)
         self.pack_start(status_button, False)
         self.pack_start(pause_button, False)
         self.pack_start(read_memory_button, False)
