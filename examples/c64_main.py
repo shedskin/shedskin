@@ -6,7 +6,7 @@ pygtk.require("2.0")
 import gtk
 import gobject
 import sys
-from c64 import c64
+from c64 import c64, timer
 print c64.__file__
 
 # TODO 3 bit row counter.
@@ -258,8 +258,7 @@ class Controls(gtk.VBox):
             self.status_dialog.set_transient_for(toplevel_widget)
             self.status_dialog.connect("delete-event", unset_status_dialog)
             self.status_dialog.show_all()
-#            gobject.timeout_add(50, self.update_status) # FIXME don't do that too often.
-
+            gobject.timeout_add(50, self.update_status) # FIXME don't do that too often.
         self.update_status()
 
     def pause_CPU(self, widget, *args, **kwargs):
@@ -276,17 +275,18 @@ class Controls(gtk.VBox):
     def dump_memory(self, *args, **kwargs):
         MMU = self.C64.CPU.MMU
         address = 0x300
-        sys.stdout.write("(%04X) " % address)
-        for c in MMU.read_memory(address, 10):
-            v = (c)
-            sys.stdout.write("%02X " % v)
+        for i in range(8):
+            sys.stdout.write("(%04X) " % (address+i*16))
+            for j in range(16):
+                b = MMU.read_memory(address+i*16+j, 1)
+                sys.stdout.write("%02X " % b)
+            sys.stdout.write("\n")
         sys.stdout.write("\n")
 
     def update_status(self):
-#       C64 = self.C64
         for register in ["A", "X", "Y", "SP", "PC"]:
-            print 'status', self.C64.CPU.read_register(register)
-#           self.status_dialog.set_value(register, C64.CPU.read_register(register))
+           if self.status_dialog:
+             self.status_dialog.set_value(register, self.C64.CPU.read_register(register))
         return True
 
     def handle_key_press(self, keycode):
@@ -301,6 +301,7 @@ class Controls(gtk.VBox):
 
 if __name__ == '__main__':
     c_64 = c64.C64()
+    c_64.CPU_clock = timer.timeout_add(5, c64)
     controls = Controls(c_64)
     gt = GTextView(controls, c_64)
     controls.gt = gt
