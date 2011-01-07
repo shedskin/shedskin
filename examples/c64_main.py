@@ -21,20 +21,19 @@ class EventBox(gtk.EventBox):
         self.props.can_focus = True
         self.connect("key-press-event", self.handle_key_press)
         self.connect("key-release-event", self.handle_key_release)
-        self.pressed_keys = set()
 
+    # TODO maybe use hardware_keycode.
     def handle_key_press(self, widget, event):
-       n = gtk.gdk.keyval_name(event.keyval)
-       self.pressed_keys.add(n)
+        return self.controls.handle_key_press(event.hardware_keycode)
 
     def handle_key_release(self, widget, event):
-       n = gtk.gdk.keyval_name(event.keyval)
-       self.pressed_keys.discard(n)
+        # hardware_keycode
+        return self.controls.handle_key_release(event.hardware_keycode)
 
 class GTextView:
     def __init__(self, controls, c64):
         self.c64 = c64
-        self.tv = c64.VIC.text_view
+        self.data = c64.VIC.text_view
         self.colors = [
             gtk.gdk.Color(red = 0, green = 0, blue = 0),
             gtk.gdk.Color(red = 65535, green = 65535, blue = 65535),
@@ -88,8 +87,9 @@ class GTextView:
             print("WHOOPS")
             return
         self.repaint_pixmap()
-        GC = widget.window.new_gc()
-        widget.window.draw_drawable(GC, self.pixmap, 0, 0, 0, 0, -1, -1)
+        if widget.window:
+            GC = widget.window.new_gc()
+            widget.window.draw_drawable(GC, self.pixmap, 0, 0, 0, 0, -1, -1)
 
     def repaint_pixmap(self):
         window = self.pixmap
@@ -97,34 +97,35 @@ class GTextView:
         #print("=========== REPAINT ========")
         #print(dir(self))
         size = window.get_size()
-        color = self.colors[self.tv.border_color]
+        color = self.colors[self.data.border_color]
         #color = gtk.gdk.Color(red = 123.039015) # * 65535.0 / 255.0, green = 72.130708003 * 65535.0 / 255.0, blue = 144.4171376 * 65535.0 / 255.0)
         #print color.red, color.green, color.blue, self.border_color, "XX"
-        GC.set_foreground(self.colors[self.tv.border_color])
+        GC.set_foreground(self.colors[self.data.border_color])
         GC.set_fill(gtk.gdk.SOLID)
         #GC.set_background(self.colors[self.border_color])
         window.draw_rectangle(GC, True, 0, 0, size[0], size[1]) # TODO only draw border around it.
-        GC.set_foreground(self.colors[self.tv.background_color_0])
-        window.draw_rectangle(GC, True, self.tv.first_column, self.tv.first_row, self.tv.last_column - self.tv.first_column + 1, self.tv.last_row - self.tv.first_row + 1)
+        GC.set_foreground(self.colors[self.data.background_color_0])
+        window.draw_rectangle(GC, True, self.data.first_column, self.data.first_row, self.data.last_column - self.data.first_column + 1, self.data.last_row - self.data.first_row + 1)
 
         # FIXME support other modes.
-        if self.tv.old_VIC_bank != self.tv.VIC_bank:
-            self.tv.old_VIC_bank = self.tv.VIC_bank
+        if self.data.old_VIC_bank != self.data.VIC_bank:
+            self.data.old_VIC_bank = self.data.VIC_bank
             self.prepare_characters()
 
-        VIC = self.tv.VIC
-        offset = self.tv.video_offset
-        VX = self.tv.first_column - self.tv.viewport_column
-        VY = self.tv.first_row - self.tv.viewport_row
+        VIC = self.data.VIC
+        offset = self.data.video_offset
+        VX = self.data.first_column - self.data.viewport_column
+        VY = self.data.first_row - self.data.viewport_row
         for row in range(24): # FIXME 25
             for column in range(40): # FIXME configurable
-                code_color = VIC.VIC_read_memory(offset, 1)
-                code = code_color & 255
+                code_color = VIC.VIC_read_memory(offset, 2)
+                code = code_color & 0xFF
                 color = code_color >> 8
-                pixmap = self.characters[code] if code < 128 else self.inverse_characters[code] # TODO inverse.
-                if (color if code < 128 else self.tv.background_color_0) >= len(self.colors):
-                    print("WHOOPS, code", code, "color", color)
-                GC.set_foreground(self.colors[color if code < 128 else self.tv.background_color_0]) # FIXME
+                pixmap = self.characters[code] # TODO does inverse work?
+                if (color if code < 128 else self.data.background_color_0) >= len(self.colors):
+#                    print("WHOOPS, code", code, "color", color)
+                    return
+                GC.set_foreground(self.colors[color if code < 128 else self.data.background_color_0]) # FIXME
                 GC.set_clip_mask(pixmap)
                 GC.set_clip_origin(VX + column * 8, VY + row * 8)
                 window.draw_rectangle(GC, True, VX + column * 8, VY + row * 8, 8, 8)
@@ -134,17 +135,17 @@ class GTextView:
     def prepare_characters(self):
         print("preparing...")
         self.characters = []
-        self.inverse_characters = []
-        character_bitmaps_offset = self.tv.character_bitmaps_offset
+        inverse_characters = []
+        character_bitmaps_offset = self.data.character_bitmaps_offset
         #VIC_bank_offset = self.VIC_bank * 4096
         #print("OFFS", character_bitmaps_offset)
-        character_data = self.tv.VIC.load_chunk(character_bitmaps_offset, 8 * 256)
+        character_data = self.data.VIC.load_chunk(character_bitmaps_offset, 8 * 256)
         #print("L", len(character_data))
         for i in range(0, len(character_data), 8):
             char_data_1 = character_data[i : i + 8]
             self.characters.append(self.get_pixmap_mask(char_data_1, False))
-            self.inverse_characters.append(self.get_pixmap_mask(char_data_1, True))
-        self.characters = self.characters + self.inverse_characters
+            inverse_characters.append(self.get_pixmap_mask(char_data_1, True))
+        self.characters = self.characters + inverse_characters
 
     def get_pixmap_mask(self, char_data_1, B_invert):
             data = []
@@ -180,6 +181,7 @@ class StatusDialog(gtk.Dialog):
         self.controls = {}
         for ID in ["A", "X", "Y", "SP", "PC"]:
             self.add_line(ID)
+        self.show_all()
 
     def add_line(self, ID):
         box = gtk.HBox()
@@ -202,6 +204,30 @@ class Controls(gtk.VBox):
         gtk.VBox.__init__(self)
         self.C64 = c64
         self.status_dialog = None
+        keyboard_matrix = self.C64.CIA1.get_keyboard_matrix()
+        self.hardware_keycodes = {} # keyval_name -> keycode
+        self.keycode_names = {}
+        self.keymap = gtk.gdk.keymap_get_default()
+        alternatives = { # C64_name: GDK_name
+            "grave": "numbersign", # German
+            "LeftArrow": "Escape",
+            "pound": "F9",
+            "/": "F8", # actually overwritten below :P
+        }
+        for row in keyboard_matrix:
+            for cell in row:
+                #print(cell)
+                entries = self.keymap.get_entries_for_keyval(gtk.gdk.keyval_from_name(alternatives.get(cell) or cell) or ord(cell))
+                if entries is None:
+                    entries = self.keymap.get_entries_for_keyval(gtk.gdk.keyval_from_name(alternatives[cell]))
+                    #print(cell)
+                assert(entries)
+                hardware_keycode = entries[0][0]
+                self.hardware_keycodes[cell] = hardware_keycode
+                self.keycode_names[hardware_keycode] = cell # for the C64, that is.
+        self.hardware_keycodes["/"] = 20 # FIXME remove this.
+        self.keycode_names[20] = "/" # FIXME remove this.
+                
         status_button = gtk.Button("_Status")
         status_button.connect("clicked", self.show_status)
         pause_button = gtk.Button("_Pause")
@@ -213,6 +239,16 @@ class Controls(gtk.VBox):
         self.pack_start(read_memory_button, False)
         self.show_all()
 
+    def set_timer(self):
+        self.timer = gobject.timeout_add(20, self.fire_timer)
+
+    def fire_timer(self):
+        self.C64.fire_timer()
+        self.gt.repaint()
+        while gtk.events_pending():
+            gtk.main_iteration(False)
+        return True
+
     def show_status(self, *args, **kwargs):
         toplevel_widget = self.get_toplevel()
         if self.status_dialog is None:
@@ -222,43 +258,46 @@ class Controls(gtk.VBox):
             self.status_dialog.set_transient_for(toplevel_widget)
             self.status_dialog.connect("delete-event", unset_status_dialog)
             self.status_dialog.show_all()
-            gobject.timeout_add(50, self.update_status) # FIXME don't do that too often.
+#            gobject.timeout_add(50, self.update_status) # FIXME don't do that too often.
 
         self.update_status()
 
-    def set_timer(self):
-        self.timer = gobject.timeout_add(20, self.fire_timer)
-
-    def fire_timer(self):
-        self.C64.CIA1.pressed_keys = self.gt.event_box.pressed_keys
-        self.C64.fire_timer()
-        self.gt.repaint()
-        return True
-
     def pause_CPU(self, widget, *args, **kwargs):
         # FIXME abstract that properly.
-        if self.timer:
-            gobject.source_remove(self.timer)
+        C64 = self.C64
+        if C64.CPU_clock:
+            gobject.source_remove(C64.CPU_clock)
             widget.set_label("_Continue")
-            self.timer = None
+            C64.CPU_clock = None
         else:
-            self.set_timer()
+            C64.CPU_clock = gobject.timeout_add(10, C64.iterate)
             widget.set_label("_Pause")
 
     def dump_memory(self, *args, **kwargs):
         MMU = self.C64.CPU.MMU
-        for address in range(0x300, 0x400, 16):
-            sys.stdout.write("(%04X) " % address)
-            for c in range(address, address+40, 4):
-                v = MMU.read_memory(c, 4)
-                sys.stdout.write("%02X " % v)
-            sys.stdout.write("\n")
+        address = 0x300
+        sys.stdout.write("(%04X) " % address)
+        for c in MMU.read_memory(address, 10):
+            v = (c)
+            sys.stdout.write("%02X " % v)
+        sys.stdout.write("\n")
 
     def update_status(self):
-        C64 = self.C64
+#       C64 = self.C64
         for register in ["A", "X", "Y", "SP", "PC"]:
-            self.status_dialog.set_value(register, C64.CPU.read_register(register))
+            print 'status', self.C64.CPU.read_register(register)
+#           self.status_dialog.set_value(register, C64.CPU.read_register(register))
         return True
+
+    def handle_key_press(self, keycode):
+        n = self.keycode_names.get(keycode)
+        if n:
+            return self.C64.CIA1.handle_key_press(n)
+
+    def handle_key_release(self, keycode):
+        n = self.keycode_names.get(keycode)
+        if n:
+            return self.C64.CIA1.handle_key_release(n)
 
 if __name__ == '__main__':
     c_64 = c64.C64()

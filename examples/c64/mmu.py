@@ -2,7 +2,6 @@
 # I, Danny Milosavljevic, hereby place this file into the public domain.
 
 import sys
-
 import memory
 
 # TODO actually the memory is separated into pages of 256 bytes each on a real C64.
@@ -31,9 +30,8 @@ class ROM(memory.Memory):
     def __init__(self, value, B_active = True):
         self.B_active = B_active
         self.memory = []
-        for i in range(len(value)):
+        for i in range(len(value)): # for some reason, in ShedSkin "for c in value: self.memory.append(ord(c))" doesn't work.
             c = value[i]
-#            print(c)
             v = ord(c)
             self.memory.append(v)
 
@@ -59,7 +57,7 @@ def one_big_value(part):
         f += 8
     return v
 
-class MMU:
+class MMU(memory.Memory):
     def __init__(self):
         self.overlays = {}
         self.memory = 65536 * [0]
@@ -118,4 +116,5 @@ class MMU:
         if value == False:
             for s in range(0xD1, 0xD1 + 4):
                 sys.stdout.write("%02X " % (self.read_memory(s)))
+
 

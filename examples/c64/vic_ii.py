@@ -3,6 +3,8 @@
 
 # TODO The 47 registers of the VIC are mapped in at $d000. Due to the incomplete address decoding, they are repeated every 64 bytes in the area $d000-$d3ff.
 
+import sys
+#import time
 import memory
 
 A_X_SPRITE_0 = 0x00
@@ -70,8 +72,9 @@ class VIC_II(memory.Memory):
 
     def increase_raster_position(self):
         self.raster_counter += 5 # 1
-        if self.raster_counter >= 255: # FIXME how could this get > 255?
+        if self.raster_counter >= 255:
             self.raster_counter = 0
+            # TODO self.repaint()
         return True
 
     def unprepare(self):
@@ -101,6 +104,8 @@ class VIC_II(memory.Memory):
         self.text_view.character_bitmaps_offset = (1 << 11) * CB_13_12_11
         self.text_view.video_offset = (1 << 10) * VM_13_12_11_10
         self.text_view.unprepare()
+        code_color = self.VIC_read_memory(0, 1) # ShedSkin
+        character_data = self.load_chunk(0, 8 * 256) # ShedSkin
 
     def load_chunk(self, offset, size):
         #address = VIC_bank_offset + offset
@@ -119,15 +124,15 @@ class VIC_II(memory.Memory):
             (True, True, True): "invalid-3",
         }[self.B_clip_address, self.B_bitmap, self.B_MCM]
 
-#        self.text_view.repaint()
+        #self.text_view.repaint()
 
     def read_color_RAM(self, address):
         return self.MMU.read_memory(0xD800 + (address & 0x3FF))
 
     def VIC_read_memory(self, address, size = 1):
-        assert(size == 1)
         if (self.CIA2.VIC_bank & 1) == 0: # have Char ROM
             if address >= 0x1000 and address < 0x2000:
+                assert(size == 1)
                 return self.char_ROM.read_memory(address - 0x1000, size) #| (self.read_color_RAM(address) << 8)
 
         # Video_Matrix|Chargen|Sprite_Data_Pointers|Sprite_Data.
@@ -137,7 +142,8 @@ class VIC_II(memory.Memory):
 
         # FIXME return self. | (self.read_color_RAM(address) << 8)
         VIC_bank_offset = self.CIA2.VIC_bank * 4096
-        return self.MMU.read_memory(address + VIC_bank_offset, size) | (self.read_color_RAM(address) << 8)
+        #assert(size == 2)
+        return self.MMU.read_memory(address + VIC_bank_offset, 1) | ((self.read_color_RAM(address) & 0xFF) << 8)
 
     def set_background_color_0(self, value):
         self.text_view.background_color_0 = value & 15
@@ -187,4 +193,3 @@ class VIC_II(memory.Memory):
 http://codebase64.org/doku.php?id=base:built_in_screen_modes
 """
 # memory address $D02F (extra keys). Try to set to something else than $FF. If it works, it's a C128.
-
