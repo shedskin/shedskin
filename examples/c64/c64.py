@@ -113,6 +113,7 @@ class C64(timer.TimingOut):
         self.CPU = cpu.CPU()
         MMU = self.CPU.MMU
         address = 0
+        self.paused = False
         # power-up pattern:
         for i in range(512):
             for b in range(64):
@@ -173,13 +174,14 @@ class C64(timer.TimingOut):
             self.iterate()
 
     def fire_timer(self):
-        for n in range(2000):
-            self.iterate()
-            self.interrupt_clock += 1
-            if self.interrupt_clock >= 50: # FIXME remove
-                self.interrupt_clock = 0
-                self.cause_interrupt()
-        self.VIC.repaint()
+        if not self.paused:
+            for n in range(2000):
+                self.iterate()
+                self.interrupt_clock += 1
+                if self.interrupt_clock >= 50: # FIXME remove
+                    self.interrupt_clock = 0
+                    self.cause_interrupt()
+            self.VIC.repaint()
         return timer.TimingOut.fire_timer(self)
 
     def iterate(self):
@@ -226,11 +228,4 @@ if __name__ == "__main__":
     # timeout_remove
     for i in range(800000):
         c64.iterate()
-    c64.CPU_clock = timer.timeout_add(5, c64)
-    #c64.cause_interrupt() # ShedSkin
-    #{
-    import gtk
-    gtk.main()
-    #}
-    #c64.run()
     c64.run()
