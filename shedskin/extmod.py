@@ -32,7 +32,7 @@ def do_extmod(gv):
     funcs = supported_funcs(gv, gv.module.mv.funcs.values())
     for func in funcs:
         do_extmod_method(gv, func)
-    do_extmod_methoddef(gv, 'Global_'+'_'.join(gv.module.mod_path), funcs)
+    do_extmod_methoddef(gv, 'Global_'+'_'.join(gv.module.mod_path), funcs, None)
 
     # module init function
     print >>gv.out, 'PyMODINIT_FUNC init%s(void) {' % '_'.join(gv.module.mod_path)
@@ -90,11 +90,10 @@ def exported_classes(gv, warns=False):
         if defclass('Exception') in cl.ancestors():
             if warns:
                 print '*WARNING* class not exported:', cl.ident
-        else:
-            classes.append(cl)
+        classes.append(cl)
     return sorted(classes, key=lambda x: x.def_order)
 
-def do_extmod_methoddef(gv, ident, funcs):
+def do_extmod_methoddef(gv, ident, funcs, cl):
     print >>gv.out, 'static PyNumberMethods %s_as_number = {' % ident
     for overload in OVERLOAD:
         if [f for f in funcs if f.ident == overload]:
@@ -105,13 +104,13 @@ def do_extmod_methoddef(gv, ident, funcs):
         else:
             print >>gv.out, '    0,'
     print >>gv.out, '};\n'
-    if not ident.startswith('Global_'):
+    if not ident.startswith('Global_') and not (cl and defclass('Exception') in cl.ancestors()):
         print >>gv.out, 'PyObject *%s__reduce__(PyObject *self, PyObject *args, PyObject *kwargs);' % ident
         print >>gv.out, 'PyObject *%s__setstate__(PyObject *self, PyObject *args, PyObject *kwargs);\n' % ident
     print >>gv.out, 'static PyMethodDef %sMethods[] = {' % ident
     if ident.startswith('Global_'):
         print >>gv.out, '    {(char *)"__newobj__", (PyCFunction)__ss__newobj__, METH_VARARGS | METH_KEYWORDS, (char *)""},' 
-    else:
+    elif not (cl and defclass('Exception') in cl.ancestors()):
         print >>gv.out, '    {(char *)"__reduce__", (PyCFunction)%s__reduce__, METH_VARARGS | METH_KEYWORDS, (char *)""},' % ident
         print >>gv.out, '    {(char *)"__setstate__", (PyCFunction)%s__setstate__, METH_VARARGS | METH_KEYWORDS, (char *)""},' % ident
     for func in funcs:
@@ -246,7 +245,7 @@ def do_extmod_class(gv, cl):
     # methods
     for func in funcs:
         do_extmod_method(gv, func)
-    do_extmod_methoddef(gv, cl.ident, funcs)
+    do_extmod_methoddef(gv, cl.ident, funcs, cl)
 
     # tp_init
     if hasmethod(cl, '__init__') and cl.funcs['__init__'] in funcs:
@@ -338,7 +337,7 @@ def do_extmod_class(gv, cl):
     print >>gv.out, '    %sMethods,      /* tp_methods        */' % cl.ident
     print >>gv.out, '    %sMembers,      /* tp_members        */' % cl.ident
     print >>gv.out, '    %sGetSet,       /* tp_getset         */' % cl.ident
-    if cl.bases and not cl.bases[0].ident == 'object':
+    if cl.bases and not cl.bases[0].ident == 'object' and not defclass('Exception') in cl.ancestors():
         print >>gv.out, '    &%sObjectType,              /* tp_base           */' % cl.bases[0].ident
     else:
         print >>gv.out, '    0,              /* tp_base           */'
@@ -359,6 +358,8 @@ def do_extmod_class(gv, cl):
     print >>gv.out
 
 def do_reduce_setstate(gv, cl, vars):
+    if defclass('Exception') in cl.ancestors(): # XXX
+        return
     print >>gv.out, 'PyObject *%s__reduce__(PyObject *self, PyObject *args, PyObject *kwargs) {' % cl.ident
     print >>gv.out, '    PyObject *t = PyTuple_New(3);'
     print >>gv.out, '    PyTuple_SetItem(t, 0, PyObject_GetAttrString(__ss_mod_%s, "__newobj__"));' % '_'.join(gv.module.mod_path)
