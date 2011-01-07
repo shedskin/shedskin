@@ -267,13 +267,11 @@ class Controls(gtk.VBox):
     def pause_CPU(self, widget, *args, **kwargs):
         # FIXME abstract that properly.
         C64 = self.C64
-        if C64.CPU_clock:
-            gobject.source_remove(C64.CPU_clock)
+        if not C64.paused:
             widget.set_label("_Continue")
-            C64.CPU_clock = None
         else:
-            C64.CPU_clock = gobject.timeout_add(10, C64.iterate)
             widget.set_label("_Pause")
+        C64.paused = not C64.paused
 
     def dump_memory(self, *args, **kwargs):
         MMU = self.C64.CPU.MMU
@@ -304,7 +302,6 @@ class Controls(gtk.VBox):
 
 if __name__ == '__main__':
     c_64 = c64.C64()
-    c_64.CPU_clock = timer.timeout_add(5, c64)
     controls = Controls(c_64)
     gt = GTextView(controls, c_64)
     controls.gt = gt
