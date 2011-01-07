@@ -177,7 +177,7 @@ class StatusDialog(gtk.Dialog):
     def __init__(self, *args, **kwargs):
         gtk.Dialog.__init__(self, *args, **kwargs)
         self.size_group = gtk.SizeGroup(gtk.SIZE_GROUP_HORIZONTAL)
-        self.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE)
+        #self.add_button(gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE)
         self.controls = {}
         for ID in ["A", "X", "Y", "SP", "PC"]:
             self.add_line(ID)
