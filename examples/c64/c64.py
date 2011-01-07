@@ -158,14 +158,14 @@ class C64(timer.TimingOut):
         self.CPU.MMU.map_IO("cia1", (0xDC00, 0xDD00), cia1)
         self.CPU.MMU.map_IO("cpu", (0x0000, 0x0002), CPUPort(self.CPU.MMU))
         vic.text_view = TextView(vic)
-        vic.repaint() # ShedSkin
+        #vic.repaint() # ShedSkin
         vic.unprepare() # memory is not initialized yet, so unprepare...
         MMU = self.CPU.MMU
         #MMU.write_memory(0xFFFA, b"\x43\xFE\xE2\xFC\x48\xFF") # FIXME endianness.
         #self.CPU.BRK(0)
         # done automatically on "BRK"?
         self.CPU.write_register("PC", (MMU.read_memory(0xFFFC, 2)))
-        self.fire_timer() # ShedSkin
+        #self.fire_timer() # ShedSkin
         #self.controls = gmonitor.Controls(self)
         #self.controls = {}
 
@@ -221,9 +221,11 @@ I/O Area (memory mapped chip registers), Character ROM or RAM area (4096 bytes);
 
 if __name__ == "__main__":
     c64 = C64()
-    c64.CIA1.handle_key_press("X")
-    c64.CIA1.handle_key_release("X")
-    c64.CIA1.read_memory(0, 1)
+    if False:
+        c64.CIA1.handle_key_press("X")
+        c64.CIA1.handle_key_release("X")
+        c64.CIA1.read_memory(0, 1)
+        c64.fire_timer()
     # clear_Z, set_Z, clear_N, set_N, set_V
     # timeout_remove
     for i in range(800000):
