@@ -100,9 +100,9 @@ def do_extmod_methoddef(gv, ident, funcs, cl):
     for overload in OVERLOAD:
         if [f for f in funcs if f.ident == overload]:
             if overload in OVERLOAD_SINGLE:
-                print >>gv.out, '    (PyObject *(*)(PyObject *))%s_%s,' % (f.parent.ident, overload)
+                print >>gv.out, '    (PyObject *(*)(PyObject *))%s_%s,' % (clname(f.parent), overload)
             else:
-                print >>gv.out, '    (PyCFunction)%s_%s,' % (f.parent.ident, overload)
+                print >>gv.out, '    (PyCFunction)%s_%s,' % (clname(f.parent), overload)
         else:
             print >>gv.out, '    0,'
     print >>gv.out, '};\n'
