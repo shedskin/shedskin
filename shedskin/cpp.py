@@ -364,7 +364,7 @@ class generateVisitor(ASTVisitor):
                                 self.eol()
                 if child.name in getmv().classes:
                     cl = getmv().classes[child.name]
-                    self.output('cl_'+cl.cpp_name+' = new class_("%s", %d, %d);' % (cl.cpp_name, cl.low, cl.high))
+                    self.output('cl_'+cl.ident+' = new class_("%s", %d, %d);' % (cl.ident, cl.low, cl.high))
                     for varname in cl.parent.varorder:
                         var = cl.parent.vars[varname]
                         if var.initexpr:
@@ -504,7 +504,7 @@ class generateVisitor(ASTVisitor):
     def class_hpp(self, node):
         declare = True
         cl = getmv().classes[node.name]
-        self.output('extern class_ *cl_'+cl.cpp_name+';')
+        self.output('extern class_ *cl_'+cl.ident+';')
 
         # --- header
         clnames = [namespaceclass(b) for b in cl.bases if b.ident != 'object']
@@ -541,13 +541,13 @@ class generateVisitor(ASTVisitor):
         if need_init:
             self.output(nokeywords(cl.ident)+'() {}')
         else:
-            self.output(nokeywords(cl.ident)+'() { this->__class__ = cl_'+cl.cpp_name+'; }')
+            self.output(nokeywords(cl.ident)+'() { this->__class__ = cl_'+cl.ident+'; }')
 
         # --- init constructor
         if need_init:
             self.func_header(initfunc, declare=True, is_init=True)
             self.indent()
-            self.output('this->__class__ = cl_'+cl.cpp_name+';')
+            self.output('this->__class__ = cl_'+cl.ident+';')
             self.output('__init__('+', '.join([self.cpp_name(f) for f in initfunc.formals[1:]])+');')
             self.deindent()
             self.output('}')
@@ -583,7 +583,7 @@ class generateVisitor(ASTVisitor):
             self.do_comments(node)
         else:
             self.output('/**\nclass %s\n*/\n' % cl.ident)
-        self.output('class_ *cl_'+cl.cpp_name+';\n')
+        self.output('class_ *cl_'+cl.ident+';\n')
 
         # --- method definitions
         for func in cl.funcs.values():
@@ -2420,7 +2420,7 @@ class generateVisitor(ASTVisitor):
             ident = cl.ident
             if isinstance(node.expr, Getattr):
                 submod = lookupmodule(node.expr.expr, inode(node).mv)
-                self.append(submod.full_path()+'::'+cl.cpp_name+'::')
+                self.append(submod.full_path()+'::'+cl.ident+'::')
             else:
                 self.append(ident+'::')
 
@@ -2476,7 +2476,7 @@ class generateVisitor(ASTVisitor):
         elif cl:
             if isinstance(node.expr, Getattr):
                 submod = lookupmodule(node.expr.expr, inode(node).mv)
-                self.append(submod.full_path()+'::'+cl.cpp_name+'::')
+                self.append(submod.full_path()+'::'+cl.ident+'::')
             else:
                 self.append(cl.ident+'::')
 

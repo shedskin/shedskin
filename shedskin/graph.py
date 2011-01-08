@@ -270,13 +270,6 @@ class moduleVisitor(ASTVisitor):
         # --- register classes
         for cl in getmv().classes.values():
             getgx().allclasses.add(cl)
-            # add '_NR' to duplicate class names
-            cl_list = getgx().nameclasses.setdefault(cl.ident, [])
-            cl.cpp_name = cl.ident
-            cl_list.append(cl)
-            if len(cl_list) > 1:
-                for (i, cl) in enumerate(cl_list):
-                    cl.cpp_name = cl.ident + '_' + str(i)
 
         # --- inheritance expansion
 
