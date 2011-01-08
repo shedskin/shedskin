@@ -78,7 +78,8 @@ def run_test(test_nr, failures, msvc, options):
             assert os.system('shedskin -v %d' % test_nr) == 0
         elif 'n' in options:
             assert os.system('shedskin -e -m Makefile.%d %d' % (test_nr, test_nr)) == 0
-            assert os.system('python -c "__import__(str(%d))"' % test_nr) == 0
+            if test_nr not in [136, 154, 163, 191]: # sys.exit
+                assert os.system('python -c "__import__(str(%d))"' % test_nr) == 0
         else:
             assert os.system('shedskin -m Makefile.%d %d' % (test_nr, test_nr)) == 0
         if msvc:
