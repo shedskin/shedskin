@@ -8,7 +8,6 @@ import vic_ii
 import sid
 import cia
 import time
-import timer
 #import gmonitor
 import memory
 #import gdisplay
@@ -106,7 +105,7 @@ class CPUPort(memory.Memory): # $0..$1
             sys.stderr.write("warning: KERNAL disabled!!!\n")
             time.sleep(5.0)
 
-class C64(timer.TimingOut):
+class C64:
     def __init__(self):
         self.interrupt_clock = 0
         self.VIC_clock = 0
@@ -182,7 +181,6 @@ class C64(timer.TimingOut):
                     self.interrupt_clock = 0
                     self.cause_interrupt()
             self.VIC.repaint()
-        return timer.TimingOut.fire_timer(self)
 
     def iterate(self):
         self.CPU.step()
