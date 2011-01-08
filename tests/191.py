@@ -2,7 +2,7 @@
 # defaultdict fixes
 from collections import defaultdict
 dnone = defaultdict()
-dnone = defaultdict(None)
+#dnone = defaultdict(None)
 dnone = defaultdict(None, [(8, 9)])
 dnone = defaultdict(None, dnone)
 dnone[4] = 5

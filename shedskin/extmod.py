@@ -80,9 +80,9 @@ def do_add_globals(gv, classes, __ss_mod):
     # global variables
     for var in supported_vars(getmv().globals.values()):
         if [1 for t in gv.mergeinh[var] if t[0].ident in ['int_', 'float_', 'bool_']]:
-            print >>gv.out, '    PyModule_AddObject(%(ssmod)s, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+gv.module.ident+'__::'+var.cpp_name(), 'ssmod': __ss_mod}
+            print >>gv.out, '    PyModule_AddObject(%(ssmod)s, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+gv.module.ident+'__::'+gv.cpp_name(var.name), 'ssmod': __ss_mod}
         else:
-            print >>gv.out, '    PyModule_AddObject(%(ssmod)s, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+gv.module.ident+'__::'+var.cpp_name(), 'ssmod': __ss_mod}
+            print >>gv.out, '    PyModule_AddObject(%(ssmod)s, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+gv.module.ident+'__::'+gv.cpp_name(var.name), 'ssmod': __ss_mod}
 
 def exported_classes(gv, warns=False):
     classes = []
@@ -99,7 +99,9 @@ def do_extmod_methoddef(gv, ident, funcs, cl):
     print >>gv.out, 'static PyNumberMethods %s_as_number = {' % ident
     for overload in OVERLOAD:
         if [f for f in funcs if f.ident == overload]:
-            if overload in OVERLOAD_SINGLE:
+            if overload == '__nonzero__': # XXX
+                print >>gv.out, '    (int (*)(PyObject *))%s_%s,' % (clname(f.parent), overload)
+            elif overload in OVERLOAD_SINGLE:
                 print >>gv.out, '    (PyObject *(*)(PyObject *))%s_%s,' % (clname(f.parent), overload)
             else:
                 print >>gv.out, '    (PyCFunction)%s_%s,' % (clname(f.parent), overload)
@@ -339,8 +341,8 @@ def do_extmod_class(gv, cl):
     print >>gv.out, '    %sMethods,      /* tp_methods        */' % clname(cl)
     print >>gv.out, '    %sMembers,      /* tp_members        */' % clname(cl)
     print >>gv.out, '    %sGetSet,       /* tp_getset         */' % clname(cl)
-    if cl.bases and not cl.bases[0].ident == 'object' and not defclass('Exception') in cl.ancestors():
-        print >>gv.out, '    &%sObjectType,              /* tp_base           */' % clname(cl.bases[0])
+    if cl.bases and not cl.bases[0].mv.module.builtin:
+            print >>gv.out, '    &%sObjectType,              /* tp_base           */' % clname(cl.bases[0])
     else:
         print >>gv.out, '    0,              /* tp_base           */'
     print >>gv.out, '    0,              /* tp_dict           */'
