@@ -1,11 +1,12 @@
 #!/usr/bin/env python
-import traceback, sys, os, time, subprocess, glob, getopt
+import traceback, sys, os, time, subprocess, glob
 
 def usage():
     print "'-l': give individual test numbers"
     print "'-r': reverse test order"
     print "'-f': break after first failure"
     print "'-e': run extension module tests"
+    print "'-n': normal tests as extension modules"
     print "'-x': run error/warning message tests"
     sys.exit()
 
@@ -44,7 +45,7 @@ def tests(args, options):
     failures = []
     for test_nr in test_nrs:
         if os.path.exists('%d.py' % test_nr): # XXX
-            run_test(test_nr, failures, msvc)
+            run_test(test_nr, failures, msvc, options)
             if failures and 'f' in options:
                 break
             print
@@ -69,12 +70,15 @@ def main():
         print '*** tests failed:', len(failures)
         print failures
 
-def run_test(test_nr, failures, msvc):
+def run_test(test_nr, failures, msvc, options):
     print '*** test:', test_nr
     t0 = time.time()
     try:
         if msvc: 
             assert os.system('shedskin -v %d' % test_nr) == 0
+        elif 'n' in options:
+            assert os.system('shedskin -e -m Makefile.%d %d' % (test_nr, test_nr)) == 0
+            assert os.system('python -c "__import__(str(%d))"' % test_nr) == 0
         else:
             assert os.system('shedskin -m Makefile.%d %d' % (test_nr, test_nr)) == 0
         if msvc:
@@ -88,7 +92,8 @@ def run_test(test_nr, failures, msvc):
                 command = '%d' % test_nr
             else:
                 command = './%d' % test_nr
-        check_output(command, 'python %d.py' % test_nr)
+        if not 'n' in options:
+            check_output(command, 'python %d.py' % test_nr)
         print '*** success: %d (%.2f)' % (test_nr, time.time()-t0)
     except AssertionError:
         print '*** failure:', test_nr

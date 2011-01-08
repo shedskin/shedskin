@@ -1,5 +1,5 @@
 #!/bin/bash
 for i in `seq 0 $(($1-1))`; do
-    gnome-terminal --geometry +"$(($i*150))"+"$(($i*150))" -e "`pwd`/scripts/txhelp $1 $i"&
+    gnome-terminal --geometry +"$(($i*150))"+"$(($i*150))" -e "`pwd`/scripts/txhelp $1 $i $2"&
     sleep 1
 done
