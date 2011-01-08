@@ -122,10 +122,9 @@ class GTextView:
                 code = code_color & 0xFF
                 color = code_color >> 8
                 pixmap = self.characters[code] # TODO does inverse work?
-                if (color if code < 128 else self.data.background_color_0) >= len(self.colors):
-#                    print("WHOOPS, code", code, "color", color)
+                if color >= len(self.colors):
                     return
-                GC.set_foreground(self.colors[color if code < 128 else self.data.background_color_0]) # FIXME
+                GC.set_foreground(self.colors[color]) # FIXME
                 GC.set_clip_mask(pixmap)
                 GC.set_clip_origin(VX + column * 8, VY + row * 8)
                 window.draw_rectangle(GC, True, VX + column * 8, VY + row * 8, 8, 8)
