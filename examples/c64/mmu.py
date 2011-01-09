@@ -60,7 +60,12 @@ def one_big_value(part):
 class MMU(memory.Memory):
     def __init__(self):
         self.overlays = {}
+        self.overlay_values = []
         self.memory = 65536 * [0]
+
+    def set_overlay(self, name, overlay):
+        self.overlays[name] = overlay
+        self.overlay_values = self.overlays.values()
 
     def read_memory(self, address, size = 1):
         value = self.xread_memory(address, size)
@@ -77,7 +82,7 @@ class MMU(memory.Memory):
 
     def xread_memory(self, address, size = 1):
         if address >= minimal_overlay_address or address < 2:
-            for range_1, controller in self.overlays.values():
+            for range_1, controller in self.overlay_values:
                 if address >= range_1[0] and address < range_1[1] and controller.B_active:
                     return controller.read_memory(address - range_1[0], size)
         if size == 1:
@@ -89,7 +94,7 @@ class MMU(memory.Memory):
     def write_memory(self, address, value, size):
         a = address
         if address >= minimal_overlay_address or address < 2:
-            for range_1, controller in self.overlays.values():
+            for range_1, controller in self.overlay_values:
                 if address >= range_1[0] and address < range_1[1] and controller.B_active and controller.B_can_write: # FIXME and hasattr(controller, "write_memory"):
                     assert(address != 0x1FC and address != 0x1FD)
                     #print(address, range_1, controller)
@@ -103,12 +108,12 @@ class MMU(memory.Memory):
     def map_ROM(self, name, address, value, B_active):
         assert(address >= minimal_overlay_address) # ??  or range_1[1] == 2)
         ROM_1 = ROM(value, B_active)
-        self.overlays[name] = (((address, address + len(value)), ROM_1))
+        self.set_overlay(name, (((address, address + len(value)), ROM_1)))
         return ROM_1
 
     def map_IO(self, name, range_1, IO):
         assert(range_1[0] >= minimal_overlay_address or range_1[1] == 2)
-        self.overlays[name] = (((range_1[0], range_1[1]), IO))
+        self.set_overlay(name, (((range_1[0], range_1[1]), IO)))
 
     def set_overlay_active(self, name, value):
         print("setting overlay %r to %r" % (name, value))

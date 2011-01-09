@@ -226,5 +226,5 @@ if __name__ == "__main__":
         c64.fire_timer()
     # clear_Z, set_Z, clear_N, set_N, set_V
     # timeout_remove
-    for i in range(800000):
+    for i in range(8000000):
         c64.iterate()
