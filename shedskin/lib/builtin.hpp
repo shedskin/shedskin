@@ -3685,9 +3685,8 @@ template<class T> T __setiter<T>::next() {
 /* tuple2 methods */
 
 template<class T> void tuple2<T, T>::__init2__(T a, T b) {
-    units.resize(2);
-    units[0] = a;
-    units[1] = b;
+    units.push_back(a);
+    units.push_back(b);
 }
 
 template<class T> tuple2<T, T>::tuple2() {
@@ -4318,55 +4317,61 @@ template <class A> list<tuple2<typename A::for_in_unit, typename A::for_in_unit>
 
 template <class A, class B> list<tuple2<typename A::for_in_unit, typename B::for_in_unit> *> *__zip(int, A *itera, B *iterb) {
     list<tuple2<typename A::for_in_unit, typename B::for_in_unit> *> *result = (new list<tuple2<typename A::for_in_unit, typename B::for_in_unit> *>());
-    typename A::for_in_unit e;
-    typename B::for_in_unit f;
+    tuple2<typename A::for_in_unit, typename B::for_in_unit> *tuples;
+    int count = -1;
     if(A::is_pyseq && B::is_pyseq) {
-        pyseq<typename A::for_in_unit> *seqa = (pyseq<typename A::for_in_unit> *)itera;
-        pyseq<typename B::for_in_unit> *seqb = (pyseq<typename B::for_in_unit> *)iterb;
-        int count = __SS_MIN(len(seqa), len(seqb));
-        tuple2<typename A::for_in_unit, typename B::for_in_unit> *tuples = new tuple2<typename A::for_in_unit, typename B::for_in_unit>[count];
+        count = __SS_MIN(len(itera), len(iterb));
+        tuples = new tuple2<typename A::for_in_unit, typename B::for_in_unit>[count];
         result->units.resize(count);
-        for(int i=0; i<count; i++) {
-            e = seqa->__getitem__(i);
-            f = seqb->__getitem__(i);
-            result->units[i] = &tuples[i];
-            result->units[i]->__init2__(e, f);
-        }
-    } else {
-        typename A::for_in_loop __3 = itera->for_in_init();
-        int __2;
-        A *__1;
-        typename B::for_in_loop __6 = iterb->for_in_init();
-        int __5;
-        B *__4;
-        while(itera->for_in_has_next(__3) and iterb->for_in_has_next(__6)) {
-            e = itera->for_in_next(__3);
-            f = iterb->for_in_next(__6);
+    }
+    typename A::for_in_unit e;
+    typename A::for_in_loop __3 = itera->for_in_init();
+    typename B::for_in_unit f;
+    typename B::for_in_loop __6 = iterb->for_in_init();
+    int i = 0;
+    while(itera->for_in_has_next(__3) and iterb->for_in_has_next(__6)) {
+        e = itera->for_in_next(__3);
+        f = iterb->for_in_next(__6);
+        if(count == -1)
             result->append((new tuple2<typename A::for_in_unit, typename B::for_in_unit>(2, e, f)));
+        else {
+            tuples[i].__init2__(e, f);
+            result->units[i] = &tuples[i];
+            i++;
         }
     }
     return result;
 }
 
-template <class A, class B, class C> list<tuple2<typename A::for_in_unit, typename A::for_in_unit> *> *__zip(int, A *itera, B *iterb, C *iterc) { /* XXX re-optimize for sequences */
+template <class A, class B, class C> list<tuple2<typename A::for_in_unit, typename A::for_in_unit> *> *__zip(int, A *itera, B *iterb, C *iterc) {
     list<tuple2<typename A::for_in_unit, typename A::for_in_unit> *> *result = (new list<tuple2<typename A::for_in_unit, typename A::for_in_unit> *>());
+    tuple2<typename A::for_in_unit, typename A::for_in_unit> *tuples;
+    int count = -1;
+    if(A::is_pyseq && B::is_pyseq && C::is_pyseq) {
+        count = __SS_MIN3(len(itera), len(iterb), len(iterc));
+        tuples = new tuple2<typename A::for_in_unit, typename A::for_in_unit>[count];
+        result->units.resize(count);
+    }
     typename A::for_in_unit e;
     typename A::for_in_loop __3 = itera->for_in_init();
-    int __2;
-    A *__1;
     typename B::for_in_unit f;
     typename B::for_in_loop __6 = iterb->for_in_init();
-    int __5;
-    B *__4;
     typename C::for_in_unit g;
-    typename C::for_in_loop __9 = iterc->for_in_init();
-    int __8;
-    C *__7;
-    while(itera->for_in_has_next(__3) and iterb->for_in_has_next(__6) and iterc->for_in_has_next(__9)) {
+    typename C::for_in_loop __7 = iterc->for_in_init();
+    int i = 0;
+    while(itera->for_in_has_next(__3) and iterb->for_in_has_next(__6) and iterc->for_in_has_next(__7)) {
         e = itera->for_in_next(__3);
         f = iterb->for_in_next(__6);
-        g = iterc->for_in_next(__9);
-        result->append((new tuple2<typename A::for_in_unit, typename A::for_in_unit>(3, e, f, g)));
+        g = iterc->for_in_next(__7);
+        if(count == -1)
+            result->append((new tuple2<typename A::for_in_unit, typename A::for_in_unit>(3, e, f, g)));
+        else {
+            tuples[i].units.push_back(e);
+            tuples[i].units.push_back(f);
+            tuples[i].units.push_back(g);
+            result->units[i] = &tuples[i];
+            i++;
+        }
     }
     return result;
 }
@@ -4783,9 +4788,12 @@ template<class A> __ss_bool all(A *iter) {
 
 int ord(str *c);
 
+static void __throw_chr_out_of_range() { /* improve inlining */
+    throw new ValueError(new str("chr() arg not in range(256)"));
+}
 inline str *chr(int i) {
     if(i < 0 || i > 255)
-        throw new ValueError(new str("chr() arg not in range(256)"));
+        __throw_chr_out_of_range();
     return __char_cache[i];
 }
 inline str *chr(__ss_bool b) { return chr(b.value); }
