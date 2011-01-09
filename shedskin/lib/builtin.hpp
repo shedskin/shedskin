@@ -4457,48 +4457,27 @@ template <class A, class B, class C, class D> list<A> *map(int, A (*func)(B, C, 
 
 /* reduce */
 
-template <class A> A reduce(A (*func)(A, A), pyiter<A> *a, A initial) {
-    __iter<A> *ita = a->__iter__();
-    A result = initial;
-    try {
-        while(1)
-            result = (*func)(result, ita->next());
-    } catch(StopIteration *) {
-        return result;
-    }
-}
-
-template <class A> A reduce(A (*func)(A, A), pyiter<A> *a) {
-    __iter<A> *ita = a->__iter__();
-    A result;
-    try {
-        result = ita->next();
-    } catch(StopIteration *) {
-        throw new TypeError(new str("reduce() of empty sequence with no initial value"));
-    }
-    try {
-        while(1)
-            result = (*func)(result, ita->next());
-    } catch(StopIteration *) {
-        return result;
-    }
-}
-
-template <class A> A reduce(A (*func)(A, A), pyseq<A> *a, A initial) {
-    unsigned int len = a->__len__();
-    A result = initial;
-    for(unsigned int i=0; i<len;i++)
-        result = (*func)(result, a->__getitem__(i));
+template<class A> typename A::for_in_unit reduce(typename A::for_in_unit (*func)(typename A::for_in_unit, typename A::for_in_unit), A *iter, typename A::for_in_unit initial) {
+    typename A::for_in_unit result = initial;
+    typename A::for_in_loop __7 = iter->for_in_init();
+    while(iter->for_in_has_next(__7))
+        result = (*func)(result, iter->for_in_next(__7));
     return result;
 }
 
-template <class A> A reduce(A (*func)(A, A), pyseq<A> *a) {
-    unsigned int len = a->__len__();
-    if(!len)
+template<class A> typename A::for_in_unit reduce(typename A::for_in_unit (*func)(typename A::for_in_unit, typename A::for_in_unit), A *iter) {
+    typename A::for_in_unit result;
+    typename A::for_in_loop __7 = iter->for_in_init();
+    int first = 1;
+    while(iter->for_in_has_next(__7)) {
+        if(first) {
+            result = iter->for_in_next(__7);
+            first = 0;
+        } else
+            result = (*func)(result, iter->for_in_next(__7));
+    }
+    if(first) 
         throw new TypeError(new str("reduce() of empty sequence with no initial value"));
-    A result = a->__getitem__(0);
-    for(unsigned int i=1; i<len;i++)
-        result = (*func)(result, a->__getitem__(i));
     return result;
 }
 
