@@ -4390,16 +4390,26 @@ template <class A> A next(__iter<A> *iter1) { return iter1->next(); }
 
 /* map */
 
-template <class A, class B> list<A> *map(int, A (*func)(B), pyiter<B> *b) {
+template <class A, class B> list<B> *map(int, B (*func)(typename A::for_in_unit), A *iter) {
     if(!func)
         throw new ValueError(new str("'map' function argument cannot be None"));
-    list<A> *result = new list<A>();
-    __iter<B> *itb = b->__iter__();
-    B nextb;
-    while(1) {
-        try { nextb = next(itb); } catch (StopIteration *) { return result; }
-        result->append((*func)(nextb));
+    list<B> *result = new list<B>();
+    int count = -1;
+    if(A::is_pyseq) {
+        count = len(iter);
+        result->units.resize(count);
     }
+    typename A::for_in_unit e;
+    typename A::for_in_loop __3 = iter->for_in_init();
+    int i = 0;
+    while(iter->for_in_has_next(__3)) {
+        e = iter->for_in_next(__3);
+        if(count == -1)
+            result->append((*func)(e));
+        else
+            result->units[i++] = (*func)(e);
+    }
+    return result;
 }
 
 template <class A, class B, class C> list<A> *map(int n, A (*func)(B, C), pyiter<B> *b, pyiter<C> *c) {
@@ -4494,33 +4504,55 @@ template <class A> A reduce(A (*func)(A, A), pyseq<A> *a) {
 
 /* filter */
 
-template <class A, class B> list<A> *filter(B (*func)(A), pyiter<A> *a) {
-    __iter<A> *ita = a->__iter__();
-    list<A> *result = new list<A>();
-    A value;
-    try {
-        while(1) {
-            value = ita->next();
-            if(func) {
-                if(___bool((*func)(value)))
-                    result->append(value);
-            } else if(___bool(value))
-                result->append(value);
-        }
-    } catch(StopIteration *) {
-        return result;
+template <class A, class B> list<typename A::for_in_unit> *filter(B (*func)(typename A::for_in_unit), A *iter) {
+    list<typename A::for_in_unit> *result = new list<typename A::for_in_unit>();
+    typename A::for_in_unit e;
+    typename A::for_in_loop __3 = iter->for_in_init();
+    while(iter->for_in_has_next(__3)) {
+        e = iter->for_in_next(__3);
+        if(func) {
+            if(___bool((*func)(e)))
+                result->append(e);
+        } else if(___bool(e))
+            result->append(e);
     }
+    return result;
 }
 
 template <class A, class B> tuple2<A,A> *filter(B (*func)(A), tuple2<A,A> *a) {
-    return new tuple2<A,A>(filter(func, (pyiter<A> *)a)); /* XXX inefficient */
+    tuple2<A,A> *result = new tuple2<A,A>();
+    int size = len(a);
+    A e;
+    for(int i=0; i<size; i++) {
+        e = a->units[i];
+        if(func) {
+            if(___bool((*func)(e)))
+                result->units.push_back(e);
+        } else if(___bool(e))
+            result->units.push_back(e);
+    }
+    return result;
 }
+
 template <class B> str *filter(B (*func)(str *), str *a) {
-    return (new str())->join(filter(func, (pyiter<str *> *)a)); /* XXX inefficient */
+    str *result = new str();
+    int size = len(a);
+    char e;
+    str *c;
+    for(int i=0; i<size; i++) {
+        e = a->unit[i];
+        if(func) {
+            c = __char_cache[((unsigned char)e)];
+            if(___bool((*func)(c)))
+                result->unit.push_back(e);
+        } else 
+            result->unit.push_back(e);
+    }
+    return result;
 }
-inline str *filter(void *func, str *a) { return filter(((int(*)(str *))(func)), a); }
 
 template <class A> list<A> *filter(void *func, pyiter<A> *a) { return filter(((int(*)(A))(func)), a); }
+inline str *filter(void *func, str *a) { return filter(((int(*)(str *))(func)), a); }
 template <class A> tuple2<A,A> *filter(void *func, tuple2<A,A> *a) { return filter(((int(*)(A))(func)), a); }
 
 /* pow */
