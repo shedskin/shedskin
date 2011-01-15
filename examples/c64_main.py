@@ -161,7 +161,7 @@ class GTextView:
                         data.append(0xFF)
                         data.append(0x00)
 
-            data = b"".join(map(chr, data))
+            data = "".join(map(chr, data))
             pixbuf = gtk.gdk.pixbuf_new_from_data(data, gtk.gdk.COLORSPACE_RGB, True, 8, 8, 8, 8*4)
             pixmap_part, mask_part = pixbuf.render_pixmap_and_mask()
             return mask_part
