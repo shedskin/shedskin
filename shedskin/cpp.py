@@ -845,6 +845,11 @@ class generateVisitor(ASTVisitor):
         self.append('))')
 
     def visitTuple(self, node, func=None, argtypes=None):
+        if len(node.nodes) > 2:
+            types = set()
+            for child in node.nodes:
+                types.update(self.mergeinh[child])
+            typestr(types, node=child, tuple_check=True)
         self.visittuplelist(node, func, argtypes)
 
     def visitList(self, node, func=None, argtypes=None):
@@ -2589,9 +2594,9 @@ def nodetypestr(node, parent=None, cplusplus=True, check_extmod=False, check_ret
     types = getgx().merged_inh[node]
     return typestr(types, None, cplusplus, node, check_extmod, 0, check_ret, var)
 
-def typestr(types, parent=None, cplusplus=True, node=None, check_extmod=False, depth=0, check_ret=False, var=None):
+def typestr(types, parent=None, cplusplus=True, node=None, check_extmod=False, depth=0, check_ret=False, var=None, tuple_check=False):
     try:
-        ts = typestrnew(types, cplusplus, node, check_extmod, depth, check_ret, var)
+        ts = typestrnew(types, cplusplus, node, check_extmod, depth, check_ret, var, tuple_check)
     except RuntimeError:
         if not getmv().module.builtin and isinstance(node, variable) and not node.name.startswith('__'): # XXX startswith
             if node.parent: varname = repr(node)
@@ -2606,7 +2611,7 @@ def typestr(types, parent=None, cplusplus=True, node=None, check_extmod=False, d
 class ExtmodError(Exception):
     pass
 
-def typestrnew(types, cplusplus=True, node=None, check_extmod=False, depth=0, check_ret=False, var=None):
+def typestrnew(types, cplusplus=True, node=None, check_extmod=False, depth=0, check_ret=False, var=None, tuple_check=False):
     if depth==10:
         raise RuntimeError()
 
@@ -2644,7 +2649,10 @@ def typestrnew(types, cplusplus=True, node=None, check_extmod=False, depth=0, ch
                 else: varname = "'%s'" % node
                 error("variable %s has dynamic (sub)type: {%s}" % (varname, ', '.join([conv2.get(cl.ident, cl.ident) for cl in lcp])), node, warning=True)
         elif node not in getgx().bool_test_only:
-            error("expression has dynamic (sub)type: {%s}" % ', '.join([conv2.get(cl.ident, cl.ident) for cl in lcp]), node, warning=True)
+            if tuple_check:
+                error("tuple with length > 2 and different types of elements", node, warning=True, mv=getmv())
+            else:
+                error("expression has dynamic (sub)type: {%s}" % ', '.join([conv2.get(cl.ident, cl.ident) for cl in lcp]), node, warning=True)
 
     elif not classes:
         if cplusplus: return 'void *'
@@ -2680,7 +2688,7 @@ def typestrnew(types, cplusplus=True, node=None, check_extmod=False, depth=0, ch
         subtypes = []
         for tvar in template_vars:
             vartypes = types_var_types(types, tvar)
-            ts = typestrnew(vartypes, cplusplus, node, check_extmod, depth+1)
+            ts = typestrnew(vartypes, cplusplus, node, check_extmod, depth+1, tuple_check=tuple_check)
             if tvar == var:
                 return ts
             if [t[0] for t in vartypes if isinstance(t[0], function)]:
