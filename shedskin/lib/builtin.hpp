@@ -1893,6 +1893,7 @@ template<class K, class V> dict<K, V>::dict(PyObject *p) {
         throw new TypeError(new str("error in conversion to Shed Skin (dictionary expected)"));
 
     this->__class__ = cl_dict;
+    EMPTY_TO_MINSIZE(this);
     PyObject *key, *value;
 
     PyObject *iter = PyObject_GetIter(p);
