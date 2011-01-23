@@ -17,6 +17,10 @@ def press(keys):
     print 'u' in keys
     print 'r' in keys
 
+def hoppa(d):
+    return d
+
 if __name__ == '__main__':
     press(set('a'))
     print meuk().memory
+    hoppa({'acht': 8.8})
