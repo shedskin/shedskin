@@ -3,6 +3,7 @@
 
 import pygame
 import fysphun
+print fysphun.__file__
 
 pygame.init()
 
