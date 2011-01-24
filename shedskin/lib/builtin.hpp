@@ -1121,7 +1121,9 @@ template<class T> PyObject *__to_py(T t) {
         Py_INCREF(Py_None);
         return Py_None;
     }
-    return t->__to_py__();
+    PyObject *p = t->__to_py__();
+    Py_INCREF(p);
+    return p;
 }
 
 #ifdef __SS_LONG
