@@ -863,7 +863,10 @@ def merge_simple_types(types):
     return frozenset(merge)
 
 def analyze(source, testing=False):
-    gc.set_threshold(23456, 10, 10)
+    try:
+        gc.set_threshold(23456, 10, 10)
+    except AttributeError: # not all Python implementations support this
+        pass
 
     if testing:
         setgx(newgx())
