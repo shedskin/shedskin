@@ -23,6 +23,9 @@ def test_none(n):
 def test_list(l):
     return l
 
+def test_list2(l):
+    return l
+
 def test_list_nested(l):
     return l
 
@@ -45,6 +48,7 @@ if __name__ == '__main__':
     test_str('hoi')
     test_none(None)
     test_list([1,2])
+    test_list2([1.0,2.0])
     test_list_nested([[1,2]])
     test_dict({'hoi': 8.8})
     test_set(set([1,2,3]))
