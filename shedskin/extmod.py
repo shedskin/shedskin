@@ -392,12 +392,17 @@ def convert_methods(gv, cl, declare):
         print >>gv.out
 
         print >>gv.out, 'PyObject *%s::__to_py__() {' % cpp.nokeywords(cl.ident)
+        print >>gv.out, '    PyObject *p;'
         print >>gv.out, '    if(__ss_proxy->has_key(this))'
-        print >>gv.out, '        return (PyObject *)(__ss_proxy->__getitem__(this));'
-        print >>gv.out, '    %sObject *self = (%sObject *)(%sObjectType.tp_alloc(&%sObjectType, 0));' % (4*(clname(cl),))
-        print >>gv.out, '    self->__ss_object = this;'
-        print >>gv.out, '    __ss_proxy->__setitem__(self->__ss_object, self);'
-        print >>gv.out, '    return (PyObject *)self;'
+        print >>gv.out, '        p = (PyObject *)(__ss_proxy->__getitem__(this));'
+        print >>gv.out, '    else {'
+        print >>gv.out, '        %sObject *self = (%sObject *)(%sObjectType.tp_alloc(&%sObjectType, 0));' % (4*(clname(cl),))
+        print >>gv.out, '        self->__ss_object = this;'
+        print >>gv.out, '        __ss_proxy->__setitem__(self->__ss_object, self);'
+        print >>gv.out, '        p = (PyObject *)self;'
+        print >>gv.out, '    }'
+        print >>gv.out, '    Py_INCREF(p);'
+        print >>gv.out, '    return p;'
         print >>gv.out, '}\n'
 
         for n in cl.module.mod_path:
