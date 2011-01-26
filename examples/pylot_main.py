@@ -34,6 +34,7 @@ from pylot.Pool import ThreadedQueueProcessor
 #from pylot.Camera import Camera
 from pylot.Utils import *
 from pylot import SimpleGeometry
+print SimpleGeometry.__file__
 
 class CameraHandler(object):
   def __init__(self, camera):

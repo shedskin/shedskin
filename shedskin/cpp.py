@@ -283,7 +283,9 @@ class generateVisitor(ASTVisitor):
         print >>self.out
 
         if getgx().extension_module:
+            print >>self.out, 'extern "C" {'
             extmod.pyinit_func(self)
+            print >>self.out, '}'
 
         for n in self.module.mod_path:
             print >>self.out, '} // module namespace'
@@ -2883,17 +2885,20 @@ def generate_code():
         pyver = '%d%d' % sys.version_info[:2]
         prefix = sysconfig.get_config_var('prefix').replace('\\', '/')
     else:
-        pyver = sysconfig.get_config_var('VERSION')
-        includes = '-I' + sysconfig.get_python_inc() + ' ' + \
-                   '-I' + sysconfig.get_python_inc(plat_specific=True)
+        pyver = sysconfig.get_config_var('VERSION') or sysconfig.get_python_version()
+        includes = '-I' + sysconfig.get_python_inc() + ' '
+        if not getgx().pypy:
+            includes += '-I' + sysconfig.get_python_inc(plat_specific=True)
+
         if sys.platform == 'darwin':
             ldflags = sysconfig.get_config_var('BASECFLAGS')
         else:
-            ldflags = sysconfig.get_config_var('LIBS') + ' ' + \
-                      sysconfig.get_config_var('SYSLIBS') + ' ' + \
-                      '-lpython'+pyver
-            if not sysconfig.get_config_var('Py_ENABLE_SHARED'):
-                ldflags += ' -L' + sysconfig.get_config_var('LIBPL')
+            ldflags = (sysconfig.get_config_var('LIBS') or '') + ' '
+            ldflags += (sysconfig.get_config_var('SYSLIBS') or '') + ' '
+            if not getgx().pypy:
+                ldflags += '-lpython'+pyver
+                if not sysconfig.get_config_var('Py_ENABLE_SHARED'):
+                    ldflags += ' -L' + sysconfig.get_config_var('LIBPL')
 
     if getgx().extension_module:
         if sys.platform == 'win32': ident += '.pyd'
@@ -2968,6 +2973,7 @@ def generate_code():
             if not getgx().assertions: line += ' -D__SS_NOASSERT'
             if getgx().fast_hash: line += ' -D__SS_FASTHASH'
             if getgx().longlong: line += ' -D__SS_LONG'
+            if getgx().pypy: line += ' -D__SS_PYPY'
             if getgx().extension_module:
                 if getgx().msvc: line += ' /DLL /LIBPATH:%s/libs /LIBPATH:python%s' % (prefix, pyver)
                 elif sys.platform == 'win32': line += ' -I%s/include -D__SS_BIND' % prefix

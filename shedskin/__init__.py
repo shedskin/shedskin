@@ -21,6 +21,7 @@ def usage():
  -l --long              Use long long ("64-bit") integers
  -m --makefile          Specify alternate Makefile name
  -o --noassert          Disable assert statements
+ -p --pypy              Make extension module PyPy-compatible
  -r --random            Use fast random number generator (rand())
  -s --strhash           Use fast string hashing algorithm (murmur)
  -v --msvc              Output MSVC-style Makefile
@@ -46,7 +47,7 @@ def start():
 
     # --- command-line options
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'vbchef:wad:m:rols', ['help', 'extmod', 'nobounds', 'nowrap', 'flags=', 'dir=', 'makefile=', 'random', 'noassert', 'long', 'msvc', 'ann', 'strhash'])
+        opts, args = getopt.getopt(sys.argv[1:], 'vbchef:wad:m:rolsp', ['help', 'extmod', 'nobounds', 'nowrap', 'flags=', 'dir=', 'makefile=', 'random', 'noassert', 'long', 'msvc', 'ann', 'strhash', 'pypy'])
     except getopt.GetoptError:
         usage()
 
@@ -60,6 +61,7 @@ def start():
         if o in ['-w', '--nowrap']: getgx().wrap_around_check = False
         if o in ['-r', '--random']: getgx().fast_random = True
         if o in ['-o', '--noassert']: getgx().assertions = False
+        if o in ['-p', '--pypy']: getgx().pypy = True
         if o in ['-m', '--makefile']: getgx().makefile_name = a
         if o in ['-s', '--strhash']: getgx().fast_hash = True
         if o in ['-v', '--msvc']: getgx().msvc = True

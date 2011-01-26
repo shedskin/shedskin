@@ -435,6 +435,7 @@ I would like to thank the following company/people, for their help with **Shed S
 * James Coughlan
 * Michael Elkins
 * FFAO
+* Victor Garcia
 * Luis M. Gonzales
 * Karel Heyse
 * Denis de Leeuw Duarte
