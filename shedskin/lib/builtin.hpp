@@ -1909,8 +1909,13 @@ template<class K, class V> PyObject *dict<K, V>::__to_py__() {
    PyObject *p = PyDict_New();
    int pos = 0;
    dictentry<K,V> *entry;
-   while(next(&pos, &entry))
-       PyDict_SetItem(p, __to_py(entry->key), __to_py(entry->value));
+   while(next(&pos, &entry)) {
+       PyObject *pkey = __to_py(entry->key);
+       PyObject *pvalue = __to_py(entry->value);
+       PyDict_SetItem(p, pkey, pvalue);
+       Py_DECREF(pkey);
+       Py_DECREF(pvalue);
+   }
    return p;
 }
 #endif
@@ -3009,10 +3014,14 @@ template<class T> set<T>::set(PyObject *p) {
 
 template<class T> PyObject *set<T>::__to_py__() {
     list<T> *l = new list<T>(this); /* XXX optimize */
+    PyObject *s;
+    PyObject *p = __to_py(l);
     if(frozen)
-        return PyFrozenSet_New(__to_py(l));
+        s = PyFrozenSet_New(p);
     else
-        return PySet_New(__to_py(l));
+        s = PySet_New(p);
+    Py_DECREF(p);
+    return s;
 }
 
 #endif
