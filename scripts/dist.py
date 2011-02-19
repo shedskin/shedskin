@@ -13,7 +13,7 @@ os.system('mkdir %s/shedskin/lib' % release)
 os.system('mkdir %s/shedskin/lib/os' % release)
 os.system('mkdir %s/scripts' % release)
 
-os.system('rm shedskin/lib/struct* shedskin/lib/pygame* shedskin/lib/serial* shedskin/lib/array*')
+os.system('rm shedskin/lib/struct* shedskin/lib/serial* shedskin/lib/array* shedskin/lib/hashlib*')
 
 os.system('cp shedskin/lib/*.py %s/shedskin/lib' % release)
 os.system('cp shedskin/lib/*.?pp %s/shedskin/lib' % release)
