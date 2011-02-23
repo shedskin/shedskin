@@ -28,5 +28,5 @@ class const_jastrow(base_jastrow):
     return [0.0]
   def set_vp(self,vp):
     pass
-  def satisfies_constraints(self,vp):
-    return True
+#  def satisfies_constraints(self,vp):
+#    return True

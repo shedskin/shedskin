@@ -38,8 +38,8 @@ class averager:
       var = (self.sum_sq - self.sum*self.sum/self.norm)/self.norm
     return var
 
-  def std_dev(self):
-    return math.sqrt(self.variance())
+#  def std_dev(self):
+#    return math.sqrt(self.variance())
 
   def error(self):
     err = 0.0
@@ -49,44 +49,44 @@ class averager:
     return err
 
 # the definition of variance and error might be wrong
-class weighted_averager:
-  """Compute average of a weighted set of data"""
-  def __init__(self):
-    self.sum = 0.0
-    self.sum_sq = 0.0
-    self.norm = 0
-    self.weight_sum = 0.0
-    self.weight_sum_sq = 0.0
-
-  def add_value(self,v,w):
-    self.sum += w*v
-    self.sum_sq += w*w*v*v
-    self.norm += 1
-    self.weight_sum += w
-    self.weight_sum_sq += w*w
-
-  def average(self):
-    if (self.norm == 0):
-      return 0.0
-    else:
-      return self.sum/self.weight_sum
-
-  def variance(self):
-    var = 0.0
-    if (self.norm != 0):
-      var = (self.sum_sq - self.sum*self.sum/self.weight_sum)/self.weight_sum
-    return var
-
-  def error(self):
-    err = 0.0
-    if (self.norm > 1):
-      var = self.variance()
-      err = math.sqrt(var/(self.norm-1))
-    return err
-
-  def get_neff(self):
-     neff = self.weight_sum**2/self.weight_sum_sq
-     return neff
+#class weighted_averager:
+#  """Compute average of a weighted set of data"""
+#  def __init__(self):
+#    self.sum = 0.0
+#    self.sum_sq = 0.0
+#    self.norm = 0
+#    self.weight_sum = 0.0
+#    self.weight_sum_sq = 0.0
+#
+#  def add_value(self,v,w):
+#    self.sum += w*v
+#    self.sum_sq += w*w*v*v
+#    self.norm += 1
+#    self.weight_sum += w
+#    self.weight_sum_sq += w*w
+#
+#  def average(self):
+#    if (self.norm == 0):
+#      return 0.0
+#    else:
+#      return self.sum/self.weight_sum
+#
+#  def variance(self):
+#    var = 0.0
+#    if (self.norm != 0):
+#      var = (self.sum_sq - self.sum*self.sum/self.weight_sum)/self.weight_sum
+#    return var
+#
+#  def error(self):
+#    err = 0.0
+#    if (self.norm > 1):
+#      var = self.variance()
+#      err = math.sqrt(var/(self.norm-1))
+#    return err
+#
+#  def get_neff(self):
+#     neff = self.weight_sum**2/self.weight_sum_sq
+#     return neff
 
 def compute_ave(filename,col):
   data = open(filename,"r")

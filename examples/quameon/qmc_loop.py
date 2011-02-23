@@ -96,70 +96,70 @@ class qmc_loop:
     else:
       return 0
 
-  def get_vp(self):
-    return self.wavef.get_vp()
+#  def get_vp(self):
+#    return self.wavef.get_vp()
 
-  def set_vp(self,vp):
-    return self.wavef.set_vp(vp)
+#  def set_vp(self,vp):
+#    return self.wavef.set_vp(vp)
 
-  def compute_reweight_variance(self,new_vp):
-    #print 'new_vp = ',new_vp
-    self.wavef.set_vp(new_vp)
-    ret = []
-    eave = average.averager()
-    eloc_list = []
-    for (pos,eloc,log_psi) in self.save_samples:
-      eloc_new = self.wavef.local_energy(pos)
-      eloc_list.append(eloc_new)
-      eave.add_value(eloc_new)
-    et = eave.average()
-    #for (pos,eloc,log_psi) in self.save_samples:
-    #  eloc_new = self.wavef.local_energy(pos)
-    #  #ret.append(eloc_new-self.etrial)
-    #  ret.append(eloc_new-et)
-    evar = average.averager()
-    for e in eloc_list:
-      evar.add_value((e-et)**2)
-      ret.append(e-et)
-    print 'var = ',evar.average()
-    return ret
+#  def compute_reweight_variance(self,new_vp):
+#    #print 'new_vp = ',new_vp
+#    self.wavef.set_vp(new_vp)
+#    ret = []
+#    eave = average.averager()
+#    eloc_list = []
+#    for (pos,eloc,log_psi) in self.save_samples:
+#      eloc_new = self.wavef.local_energy(pos)
+#      eloc_list.append(eloc_new)
+#      eave.add_value(eloc_new)
+#    et = eave.average()
+#    #for (pos,eloc,log_psi) in self.save_samples:
+#    #  eloc_new = self.wavef.local_energy(pos)
+#    #  #ret.append(eloc_new-self.etrial)
+#    #  ret.append(eloc_new-et)
+#    evar = average.averager()
+#    for e in eloc_list:
+#      evar.add_value((e-et)**2)
+#      ret.append(e-et)
+#    print 'var = ',evar.average()
+#    return ret
 
-  def compute_reweight_variance2(self,new_vp):
-    vals = self.compute_reweight_variance(new_vp)
-    evar = average.averager()
-    for v in vals:
-      evar.add_value(v**2)
-    return evar.average()
+#  def compute_reweight_variance2(self,new_vp):
+#    vals = self.compute_reweight_variance(new_vp)
+#    evar = average.averager()
+#    for v in vals:
+#      evar.add_value(v**2)
+#    return evar.average()
 
-  def compute_reweight_energy(self,new_vp):
-    #print 'new_vp = ',new_vp
-    self.wavef.set_vp(new_vp)
-    ave = average.weighted_averager()
-    for (pos,eloc,psi_old) in self.save_samples:
-      eloc_new = self.wavef.local_energy(pos)[0]
-      psi_new = self.wavef.compute_total_log_value(pos)
-      wt = math.exp(2*(psi_new-psi_old))
-      ave.add_value(eloc_new,wt)
-    return ave
+#  def compute_reweight_energy(self,new_vp):
+#    #print 'new_vp = ',new_vp
+#    self.wavef.set_vp(new_vp)
+#    ave = average.weighted_averager()
+#    for (pos,eloc,psi_old) in self.save_samples:
+#      eloc_new = self.wavef.local_energy(pos)[0]
+#      psi_new = self.wavef.compute_total_log_value(pos)
+#      wt = math.exp(2*(psi_new-psi_old))
+#      ave.add_value(eloc_new,wt)
+#    return ave
 
-  def derivative_vp(self,en):
-    vp = self.wavef.get_vp()
-    h = 0.001
-    deriv = []
-    for i in range(len(vp)):
-      new_vp = vp[:]
-      new_vp[i] += h
-      vph = self.compute_reweight_energy(new_vp).average()
-      val = (vph-en)/h
-      deriv.append(val)
-    self.wavef.set_vp(vp)
-    return deriv
+#  def derivative_vp(self,en):
+#    vp = self.wavef.get_vp()
+#    h = 0.001
+#    deriv = []
+#    for i in range(len(vp)):
+#      new_vp = vp[:]
+#      new_vp[i] += h
+#      vph = self.compute_reweight_energy(new_vp).average()
+#      val = (vph-en)/h
+#      deriv.append(val)
+#    self.wavef.set_vp(vp)
+#    return deriv
 
-def var_func(new_vp,qmcl):
-  return qmcl.compute_reweight_variance(new_vp)
-
-def var_func2(new_vp,qmcl):
-  return qmcl.compute_reweight_variance2(new_vp)
+#def var_func(new_vp,qmcl):
+#  return qmcl.compute_reweight_variance(new_vp)
+#
+#def var_func2(new_vp,qmcl):
+#  return qmcl.compute_reweight_variance2(new_vp)
 
 
 

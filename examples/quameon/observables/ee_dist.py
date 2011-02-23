@@ -17,25 +17,25 @@ class ee_dist(observable_base):
     self.dist_hist = histogram.histogram(0.0,4.0,nbins=50)
     self.box = box_bc.box_nopbc()
 
-  def accumulate(self,epos,wavef,loc_e):
-    #for i in range(len(epos)):
-    #  for j in range(i):
-    #    r = self.box.dist(epos[i],epos[j])
-    #    self.dist_hist.add_value(r)
-    np = [0.0, 0.0, 0.0]
-    ep0 = epos[0]
-    ep1 = epos[1]
-    r1 = self.box.dist(np,ep0)
-    r2 = self.box.dist(np,ep1)
-    r = self.box.dist(ep1,ep0)
-    print r1,r2,r,loc_e
+#  def accumulate(self,epos,wavef,loc_e):
+#    #for i in range(len(epos)):
+#    #  for j in range(i):
+#    #    r = self.box.dist(epos[i],epos[j])
+#    #    self.dist_hist.add_value(r)
+#    np = [0.0, 0.0, 0.0]
+#    ep0 = epos[0]
+#    ep1 = epos[1]
+#    r1 = self.box.dist(np,ep0)
+#    r2 = self.box.dist(np,ep1)
+#    r = self.box.dist(ep1,ep0)
+#    print r1,r2,r,loc_e
 
 
-  def output(self):
-    hist = self.dist_hist.get_histogram()
-    print '# e-e distance'
-    for x,val in hist:
-      print x,val
+#  def output(self):
+#    hist = self.dist_hist.get_histogram()
+#    print '# e-e distance'
+#    for x,val in hist:
+#      print x,val
 
 
 #if __name__ ==  '__main__':

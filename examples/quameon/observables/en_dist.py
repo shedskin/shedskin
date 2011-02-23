@@ -30,8 +30,8 @@ class en_dist(observable_base):
     #print r0,r1,loc_e
 
 
-  def output(self):
-    hist = self.dist_hist.get_histogram()
-    print '# e-n distance'
-    for x,val in hist:
-      print x,val
+#  def output(self):
+#    hist = self.dist_hist.get_histogram()
+#    print '# e-n distance'
+#    for x,val in hist:
+#      print x,val

@@ -40,11 +40,11 @@ class simple_jastrow(base_jastrow):
   def set_vp(self,vp):
     self.b = vp[0]
 
-  def satisfies_constraints(self,vp):
-    if vp[0] <= 0.0:
-      return False
-    else:
-      return True
+#  def satisfies_constraints(self,vp):
+#    if vp[0] <= 0.0:
+#      return False
+#    else:
+#      return True
 
 
 if __name__ == '__main__':
