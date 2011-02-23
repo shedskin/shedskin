@@ -5,6 +5,7 @@
 """
 
 # Copyright (C) 2006-2007, Mark Dewing
+# http://quameon.sourceforge.net/
 # Quameon is covered under the GNU General Public License.  Please see the
 # file LICENSE that is part of this distribution.
 
