@@ -5,9 +5,10 @@
 
 """
 
-#  Copyright (C) 2006, Mark Dewing
-#  Quameon is covered under the GNU General Public License.  Please see the
-#  file LICENSE that is part of this distribution.
+# Copyright (C) 2006, Mark Dewing
+# http://quameon.sourceforge.net/
+# Quameon is covered under the GNU General Public License.  Please see the
+# file LICENSE that is part of this distribution.
 
 import math
 import random
