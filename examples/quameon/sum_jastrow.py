@@ -24,8 +24,8 @@ class ee_jastrow:
     y = j < n/2
     return not(x^y)
 
-  def set_base_function(self,func):
-    self.func = func
+#  def set_base_function(self,func):
+#    self.func = func
 
   def compute_value(self,epos,p,idx):
     val = 0.0
@@ -64,8 +64,8 @@ class ee_jastrow:
   def set_vp(self,vp):
     self.func.set_vp(vp)
 
-  def satisfies_constraints(self,vp):
-    return self.func.satisfies_constraints(vp)
+#  def satisfies_constraints(self,vp):
+#    return self.func.satisfies_constraints(vp)
 
 
 class en_jastrow:
@@ -78,8 +78,8 @@ class en_jastrow:
   def set_npos(self,npos):
     self.npos = npos
 
-  def set_base_function(self,func):
-    self.func = func
+#  def set_base_function(self,func):
+#    self.func = func
 
   def compute_value(self,p):
     val = 0.0
@@ -112,5 +112,5 @@ class en_jastrow:
   def set_vp(self,vp):
     self.func.set_vp(vp)
 
-  def satisfies_constraints(self,vp):
-    return self.func.satisfies_constraints(vp)
+#  def satisfies_constraints(self,vp):
+#    return self.func.satisfies_constraints(vp)

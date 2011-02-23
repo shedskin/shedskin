@@ -35,12 +35,12 @@ class wave_func_single_det:
     if self.pot:
       self.pot.set_npos(npos)
 
-  def set_ee_jastrow(self,new_ee_jastrow):
-    self.ee_wv = new_ee_jastrow
+#  def set_ee_jastrow(self,new_ee_jastrow):
+#    self.ee_wv = new_ee_jastrow
 
-  def set_en_jastrow(self,new_en_jastrow):
-    self.en_wv = new_en_jastrow
-    self.en_wv.set_npos(npos)
+#  def set_en_jastrow(self,new_en_jastrow):
+#    self.en_wv = new_en_jastrow
+#    self.en_wv.set_npos(npos)
 
   def set_orbital(self,orb):
     self.orb = orb
@@ -77,19 +77,19 @@ class wave_func_single_det:
     self.en_wv.set_vp(en_vp)
     self.orb.set_vp(orb_vp)
 
-  def satisfies_constraints(self,vp):
-    if not(self.vp_size_set):
-      get_vp()
-    ee_vp = vp[:self.ee_vp_size]
-    en_vp = vp[self.ee_vp_size:(self.ee_vp_size + self.en_vp_size)]
-    orb_vp = vp[(self.en_vp_size + self.ee_vp_size):]
-    okay = True
-    okay = self.ee_wv.satisfies_constraints(ee_vp)
-    if okay:
-      okay = self.en_wv.satisfies_constraints(en_vp)
-    if okay:
-      okay = self.orb.satisfies_constraints(orb_vp)
-    return okay
+#  def satisfies_constraints(self,vp):
+#    if not(self.vp_size_set):
+#      get_vp()
+#    ee_vp = vp[:self.ee_vp_size]
+#    en_vp = vp[self.ee_vp_size:(self.ee_vp_size + self.en_vp_size)]
+#    orb_vp = vp[(self.en_vp_size + self.ee_vp_size):]
+#    okay = True
+#    okay = self.ee_wv.satisfies_constraints(ee_vp)
+#    if okay:
+#      okay = self.en_wv.satisfies_constraints(en_vp)
+#    if okay:
+#      okay = self.orb.satisfies_constraints(orb_vp)
+#    return okay
 
   def compute_jastrow_log_value(self,epos,p,idx):
     ee_wv = self.ee_wv.compute_value(epos,p,idx)
@@ -109,15 +109,15 @@ class wave_func_single_det:
     #val += self.fermion.compute_log_value(epos)
     return val
 
-  def compute_total_log_value(self,epos):
-    j_val = self.compute_partial_log_value(epos)
-    det_orig = self.fermion.compute_value(epos)
- 
-    try:
-      val = j_val*math.log(abs(det_orig))
-    except OverflowError:
-      val = 0.0
-    return val
+#  def compute_total_log_value(self,epos):
+#    j_val = self.compute_partial_log_value(epos)
+#    det_orig = self.fermion.compute_value(epos)
+# 
+#    try:
+#      val = j_val*math.log(abs(det_orig))
+#    except OverflowError:
+#      val = 0.0
+#    return val
 
   def local_energy(self,epos):
     pot_e = 0.0
@@ -177,8 +177,8 @@ class wave_func_single_det:
      return num_loc_e,kin_e,pot_e
 
 
-def test_orb_derivs(epos):
-  pass
+#def test_orb_derivs(epos):
+#  pass
   
 
 if __name__ == '__main__':

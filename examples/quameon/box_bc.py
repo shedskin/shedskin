@@ -39,36 +39,36 @@ class box_nopbc:
     #for d in diff:
     #  r2 += d*d
     #return (diff,math.sqrt(r2))
-  def move(self,pos):
-    return pos
+#  def move(self,pos):
+#    return pos
 
-class box_pbc:
-  def __init__(self,box_len):
-    self.box_len = box_len
-    self.inv_box_len = 1.0/box_len
-    self.ndim = 3
-  def dist(self,pos1,pos2):
-    r2 = 0.0
-    for i in range(len(pos1)):
-      d = pos2[i] - pos1[i]
-      if d > 0.0:
-        d = d - self.box_len*int(d*self.inv_box_len+0.5)
-      else:
-        d = d - self.box_len*int(d*self.inv_box_len-0.5)
-      r2 += d*d
-    return math.sqrt(r2)
-  def dist_v(self,vpos1,vpos2):
-    for j in range(len(vpos1)):
-      r2 = 0.0
-  def move(self,pos):
-    p = []
-    for i in range(len(pos)):
-      if pos[i] > 0.0:
-        d = pos[i] - self.box_len*int(pos[i]*self.inv_box_len)
-      else:
-        d = pos[i] - self.box_len*int(pos[i]*self.inv_box_len-1.0)
-      p.append(d)
-    return p
+#class box_pbc:
+#  def __init__(self,box_len):
+#    self.box_len = box_len
+#    self.inv_box_len = 1.0/box_len
+#    self.ndim = 3
+#  def dist(self,pos1,pos2):
+#    r2 = 0.0
+#    for i in range(len(pos1)):
+#      d = pos2[i] - pos1[i]
+#      if d > 0.0:
+#        d = d - self.box_len*int(d*self.inv_box_len+0.5)
+#      else:
+#        d = d - self.box_len*int(d*self.inv_box_len-0.5)
+#      r2 += d*d
+#    return math.sqrt(r2)
+#  def dist_v(self,vpos1,vpos2):
+#    for j in range(len(vpos1)):
+#      r2 = 0.0
+#  def move(self,pos):
+#    p = []
+#    for i in range(len(pos)):
+#      if pos[i] > 0.0:
+#        d = pos[i] - self.box_len*int(pos[i]*self.inv_box_len)
+#      else:
+#        d = pos[i] - self.box_len*int(pos[i]*self.inv_box_len-1.0)
+#      p.append(d)
+#    return p
 
 if (__name__ == '__main__'):
   pass

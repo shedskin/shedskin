@@ -1,6 +1,6 @@
-53 programs that work with Shed Skin 0.7.1.
+54 programs that work with Shed Skin 0.7.1.
 
-14,000 lines in total (using sloccount, around 20,000 otherwise)
+15,000 lines in total (using sloccount, around 21,000 otherwise)
 
 If you have another interesting test case, please send it to:
    mark.dufour@gmail.com
@@ -54,6 +54,8 @@ lines  name               description                   notes
    208 path_tracing.py    path tracing raytracer        shedskin -r path_tracing
   1050 pylot_main.py      multiprocessing raytracer     cd pylot; shedskin -boe SimpleGeometry && make; cd ..; python pylot_main.py
    181 pystone.py         standard benchmark
+  1181 quameon            quantum monte carlo algorithms
+                                                        cd quameon; shedskin sto_atom
    286 richards.py        standard benchmark
    469 rdb.py             iPod shuffle programmer       see comments in top
     82 rsync.py           rsync algorithm               see comments in top

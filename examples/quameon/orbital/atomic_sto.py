@@ -23,11 +23,11 @@ class atomic_STO(orbital_base):
     self.box = box_bc.box_nopbc()
     self.norm = 1.0
 
-  def set_npos_idx(self,idx):
-    pass
-
-  def set_npos(self,npos):
-    pass
+#  def set_npos_idx(self,idx):
+#    pass
+#
+#  def set_npos(self,npos):
+#    pass
 
   def set_exp_coeff(self,exp,coeff,orb_type,npos):
     self.coeff = coeff
@@ -64,9 +64,10 @@ class atomic_STO(orbital_base):
     if orb_type == 'd3z2r2':
       self.primitive = atomic_sto_primitive.d3z2r2()
 
-  def normalize(self):
-    overlap = 0.0
-    return 1.0
+#  def normalize(self):
+#    overlap = 0.0
+#    return 1.0
+
     #for c in self.coeff:
     #  overlap += c*c
 

@@ -19,9 +19,9 @@ class LCAO(orbital_base):
     self.vp_size_set = False
     self.orbs = [atomic_sto.atomic_STO()]
 
-  def set_npos(self,npos):
-    for orb in self.orbs:
-      orb.set_npos(npos)
+#  def set_npos(self,npos):
+#    for orb in self.orbs:
+#      orb.set_npos(npos)
 
   def get_vp(self):
     self.vp_size_set = True
