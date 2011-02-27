@@ -37,6 +37,49 @@
 
 namespace __shedskin__ {
 
+/* define preprocessor classes */
+#define CL_CLASS        0
+#define CL_NONE         1
+#define CL_STR          2
+#define CL_INT          3
+#define CL_FLOAT        4
+#define CL_LIST         5
+#define CL_TUPLE        6
+#define CL_DICT         7
+#define CL_SET          8
+#define CL_OBJECT       9
+#define CL_RANGEITER    10
+#define CL_COMPLEX      11
+#define CL_XRANGE       12
+
+#define GET_CLASS(num) \
+    if num == CL_CLASS_ \
+        "cl_class_" \
+    else if num == CL_NONE \
+        "none" \
+    else if num == CL_STR \
+        "str_" \
+    else if num == CL_INT \
+        "int_" \
+    else if num == CL_FLOAT \
+        "float_" \
+    else if num == CL_FLOAT \
+        "list" \
+    else if num == CL_TUPLE \
+        "tuple" \
+    else if num == CL_DICT \
+        "dict" \
+    else if num == CL_SET \
+        "set" \
+    else if num == CL_OBJECT \
+        "object" \
+    else if num == CL_RANGEITER \
+        "rangeiter" \
+    else if num == CL_COMPLEX \
+        "complex" \
+    else if num == CL_XRANGE \
+        "xrange"
+
 /* integer type */
 
 #ifdef __SS_LONG
@@ -105,6 +148,7 @@ template<class T> class hasheq;
 class pyobj : public gc {
 public:
     class_ *__class__;
+    int __CLASS__;
 
     virtual str *__repr__();
     virtual str *__str__();
@@ -1840,11 +1884,13 @@ template <> void *myallocate<__ss_int, __ss_int>(int n);
 
 template<class K, class V> dict<K,V>::dict() {
     this->__class__ = cl_dict;
+    this->__CLASS__ = CL_DICT;
     EMPTY_TO_MINSIZE(this);
 }
 
 template<class K, class V> dict<K, V>::dict(int count, ...)  {
     this->__class__ = cl_dict;
+    this->__CLASS__ = CL_DICT;
     EMPTY_TO_MINSIZE(this);
     va_list ap;
     va_start(ap, count);
@@ -1870,6 +1916,7 @@ template<class K, class V> static inline void __add_to_dict(dict<K, V> *d, tuple
 
 template<class K, class V> template<class U> dict<K, V>::dict(U *other) {
     this->__class__ = cl_dict;
+    this->__CLASS__ = CL_DICT;
     EMPTY_TO_MINSIZE(this);
     typename U::for_in_unit e;
     typename U::for_in_loop __3;
@@ -1882,6 +1929,7 @@ template<class K, class V> template<class U> dict<K, V>::dict(U *other) {
 
 template<class K, class V> dict<K, V>::dict(dict<K, V> *p)  {
     this->__class__ = cl_dict;
+    this->__CLASS__ = CL_DICT;
     EMPTY_TO_MINSIZE(this);
 
     *this = *p;
@@ -1893,6 +1941,7 @@ template<class K, class V> dict<K, V>::dict(PyObject *p) {
         throw new TypeError(new str("error in conversion to Shed Skin (dictionary expected)"));
 
     this->__class__ = cl_dict;
+    this->__CLASS__ = CL_DICT;
     EMPTY_TO_MINSIZE(this);
     PyObject *key, *value;
 
@@ -2493,10 +2542,12 @@ template<class K, class V> dict<K,V> *dict<K,V>::__deepcopy__(dict<void *, pyobj
 
 template<class T> list<T>::list() {
     this->__class__ = cl_list;
+    this->__CLASS__ = CL_LIST;
 }
 
 template<class T> list<T>::list(int count, ...) {
     this->__class__ = cl_list;
+    this->__CLASS__ = CL_LIST;
     va_list ap;
     va_start(ap, count);
     for(int i=0; i<count; i++) {
@@ -2508,6 +2559,7 @@ template<class T> list<T>::list(int count, ...) {
 
 template<class T> template<class U> list<T>::list(U *iter) {
     this->__class__ = cl_list;
+    this->__CLASS__ = CL_LIST;
     typename U::for_in_unit e;
     typename U::for_in_loop __3;
     int __2;
@@ -2519,16 +2571,19 @@ template<class T> template<class U> list<T>::list(U *iter) {
 
 template<class T> list<T>::list(list<T> *p) {
     this->__class__ = cl_list;
+    this->__CLASS__ = CL_LIST;
     this->units = p->units;
 }
 
 template<class T> list<T>::list(tuple2<T, T> *p) {
     this->__class__ = cl_list;
+    this->__CLASS__ = CL_LIST;
     this->units = p->units;
 }
 
 template<class T> list<T>::list(str *s) {
     this->__class__ = cl_list;
+    this->__CLASS__ = CL_LIST;
     this->units.resize(len(s));
     int sz = s->unit.size();
     for(int i=0; i<sz; i++)
@@ -2541,6 +2596,7 @@ template<class T> list<T>::list(PyObject *p) {
         throw new TypeError(new str("error in conversion to Shed Skin (list expected)"));
 
     this->__class__ = cl_list;
+    this->__CLASS__ = CL_LIST;
     int size = PyList_Size(p);
     for(int i=0; i<size; i++)
         append(__to_ss<T>(PyList_GetItem(p, i)));
@@ -2985,6 +3041,7 @@ copyright Python Software Foundation (http://www.python.org/download/releases/2.
 
 template <class T> set<T>::set(int frozen) : frozen(frozen) {
     this->__class__ = cl_set;
+    this->__CLASS__ = CL_SET;
     this->hash = -1;
     EMPTY_TO_MINSIZE(this);
 }
@@ -2995,6 +3052,7 @@ template <class T> set<T>::set(int frozen) : frozen(frozen) {
 
 template<class T> set<T>::set(PyObject *p) {
     this->__class__ = cl_set;
+    this->__CLASS__ = CL_SET;
     this->hash = -1;
     EMPTY_TO_MINSIZE(this);
     if(PyFrozenSet_CheckExact(p))
@@ -3030,6 +3088,7 @@ template<class T> PyObject *set<T>::__to_py__() {
 
 template<class T> template<class U> set<T>::set(U *other, int frozen) {
     this->__class__ = cl_set;
+    this->__CLASS__ = CL_SET;
     this->frozen = frozen;
     this->hash = -1;
     EMPTY_TO_MINSIZE(this);
@@ -3038,6 +3097,7 @@ template<class T> template<class U> set<T>::set(U *other, int frozen) {
 
 template<class T> template<class U> set<T>::set(U *other) {
     this->__class__ = cl_set;
+    this->__CLASS__ = CL_SET;
     this->frozen = 0;
     this->hash = -1;
     EMPTY_TO_MINSIZE(this);
@@ -3701,10 +3761,12 @@ template<class T> void tuple2<T, T>::__init2__(T a, T b) {
 
 template<class T> tuple2<T, T>::tuple2() {
     this->__class__ = cl_tuple;
+    this->__CLASS__ = CL_TUPLE;
 }
 
 template<class T> tuple2<T, T>::tuple2(int count, ...) {
     this->__class__ = cl_tuple;
+    this->__CLASS__ = CL_TUPLE;
     va_list ap;
     va_start(ap, count);
     for(int i=0; i<count; i++) {
@@ -3716,6 +3778,7 @@ template<class T> tuple2<T, T>::tuple2(int count, ...) {
 
 template<class T> template<class U> tuple2<T, T>::tuple2(U *iter) {
     this->__class__ = cl_tuple;
+    this->__CLASS__ = CL_TUPLE;
     typename U::for_in_unit e;
     typename U::for_in_loop __3;
     int __2;
@@ -3727,16 +3790,19 @@ template<class T> template<class U> tuple2<T, T>::tuple2(U *iter) {
 
 template<class T> tuple2<T, T>::tuple2(list<T> *p) {
     this->__class__ = cl_tuple;
+    this->__CLASS__ = CL_TUPLE;
     this->units = p->units;
 }
 
 template<class T> tuple2<T, T>::tuple2(tuple2<T, T> *p) {
     this->__class__ = cl_tuple;
+    this->__CLASS__ = CL_TUPLE;
     this->units = p->units;
 }
 
 template<class T> tuple2<T, T>::tuple2(str *s) {
     this->__class__ = cl_tuple;
+    this->__CLASS__ = CL_TUPLE;
     this->units.resize(len(s));
     int sz = s->unit.size();
     for(int i=0; i<sz; i++)
@@ -3875,6 +3941,7 @@ template<class T> tuple2<T, T>::tuple2(PyObject *p) {
         throw new TypeError(new str("error in conversion to Shed Skin (tuple expected)"));
 
     this->__class__ = cl_tuple;
+    this->__CLASS__ = CL_TUPLE;
     int size = PyTuple_Size(p);
     for(int i=0; i<size; i++)
         this->units.push_back(__to_ss<T>(PyTuple_GetItem(p, i)));
@@ -3898,10 +3965,12 @@ template<class A, class B> void tuple2<A, B>::__init2__(A a, B b) {
 
 template<class A, class B> tuple2<A, B>::tuple2() {
     this->__class__ = cl_tuple;
+    this->__CLASS__ = CL_TUPLE;
 }
 
 template<class A, class B> tuple2<A, B>::tuple2(int, A a, B b) {
     this->__class__ = cl_tuple;
+    this->__CLASS__ = CL_TUPLE;
     first = a;
     second = b;
 }
@@ -3957,6 +4026,7 @@ template<class A, class B> tuple2<A, B>::tuple2(PyObject *p) {
         throw new TypeError(new str("error in conversion to Shed Skin (tuple expected)"));
 
     this->__class__ = cl_tuple;
+    this->__CLASS__ = CL_TUPLE;
     first = __to_ss<A>(PyTuple_GetItem(p, 0));
     second = __to_ss<B>(PyTuple_GetItem(p, 1));
 }
@@ -4843,6 +4913,7 @@ template<> inline str *bin(__ss_int i) {
 
 template<class T> complex::complex(T t) {
     __class__ = cl_complex;
+    __CLASS__ = CL_COMPLEX;
     real = __float(t);
     imag = 0;
 }

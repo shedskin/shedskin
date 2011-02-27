@@ -94,6 +94,7 @@ void __init() {
 int_::int_(__ss_int i) {
     unit = i;
     __class__ = cl_int_;
+    __CLASS__ = CL_INT;
 }
 
 str *int_::__repr__() {
@@ -105,6 +106,7 @@ str *int_::__repr__() {
 float_::float_(double f) {
     unit = f;
     __class__ = cl_float_;
+    __CLASS__ = CL_FLOAT;
 }
 
 str *float_::__repr__() {
@@ -114,6 +116,7 @@ str *float_::__repr__() {
 bool_::bool_(__ss_bool i) {
     unit = i;
     //__class__ = cl_int_;
+    //__CLASS__ = CL_INT;
 }
 
 str *bool_::__repr__() {
@@ -127,12 +130,14 @@ str *bool_::__repr__() {
 
 complex::complex(double real, double imag) {
     this->__class__ = cl_complex;
+    this->__CLASS__ = CL_COMPLEX;
     this->real = real;
     this->imag = imag;
 }
 
 complex::complex(str *s) {
     this->__class__ = cl_complex;
+    this->__CLASS__ = CL_COMPLEX;
     __re__::match_object *m;
     __re__::re_object *p;
 
@@ -151,6 +156,7 @@ complex::complex(str *s) {
 #ifdef __SS_BIND
 complex::complex(PyObject *p) {
     this->__class__ = cl_complex;
+    this->__CLASS__ = CL_COMPLEX;
     real = PyComplex_RealAsDouble(p);
     imag = PyComplex_ImagAsDouble(p);
 }
@@ -270,18 +276,22 @@ str *complex::__repr__() {
 
 str::str() : hash(-1), charcache(0) {
     __class__ = cl_str_;
+    __CLASS__ = CL_STR;
 }
 
 str::str(const char *s) : unit(s), hash(-1), charcache(0) {
     __class__ = cl_str_;
+    __CLASS__ = CL_STR;
 }
 
 str::str(__GC_STRING s) : unit(s), hash(-1), charcache(0) {
     __class__ = cl_str_;
+    __CLASS__ = CL_STR;
 }
 
 str::str(const char *s, int size) : unit(s, size), hash(-1), charcache(0) { /* '\0' delimiter in C */
     __class__ = cl_str_;
+    __CLASS__ = CL_STR;
 }
 
 str *str::__str__() { // weg?
@@ -1108,6 +1118,7 @@ str::str(PyObject *p) : hash(-1) {
         throw new TypeError(new str("error in conversion to Shed Skin (string expected)"));
 
     __class__ = cl_str_;
+    __CLASS__ = CL_STR;
     unit = __GC_STRING(PyString_AsString(p), PyString_Size(p));
 }
 
@@ -1431,6 +1442,7 @@ public:
 
     __rangeiter(__ss_int a, __ss_int b, __ss_int s) {
         this->__class__ = cl_rangeiter;
+        this->__CLASS__ = CL_RANGEITER;
 
         this->a = a;
         this->b = b;
@@ -1776,7 +1788,7 @@ void __modfill(str **fmt, pyobj *t, str **s, pyobj *a1, pyobj *a2) {
         add = __str(t);
     else if(c == '%')
         add = new str("%");
-    else if(t->__class__ == cl_int_) {
+    else if(t->__CLASS__ == CL_INT) {
 #ifdef __SS_LONG
         add = do_asprintf(((*fmt)->unit.substr(i, j-i)+__GC_STRING("ll")+(*fmt)->unit[j]).c_str(), ((int_ *)t)->unit, a1, a2);
 #else
@@ -1867,9 +1879,9 @@ str *__mod5(list<pyobj *> *vals, str *sep) {
         pyobj *p = vals->__getitem__(i);
         if(p == NULL)
             __mod5_cache->append(__fmt_s);
-        else if(p->__class__ == cl_float_)
+        else if(p->__CLASS__ == CL_FLOAT)
             __mod5_cache->append(__fmt_H);
-        else if(p->__class__== cl_int_)
+        else if(p->__CLASS__== CL_INT)
             __mod5_cache->append(__fmt_d);
         else
             __mod5_cache->append(__fmt_s);
@@ -1931,9 +1943,9 @@ str *mod_to_c2(pyobj *t) {
 int_ *mod_to_int(pyobj *t) {
     if(t == NULL)
         throw new TypeError(new str("int argument required"));
-    if(t->__class__ == cl_int_)
+    if(t->__CLASS__ == CL_INT)
         return (int_ *)t;
-    else if(t->__class__ == cl_float_)
+    else if(t->__CLASS__ == CL_FLOAT)
         return new int_(((int)(((float_ *)t)->unit)));
     else
         return new int_(t->__int__());
@@ -1942,9 +1954,9 @@ int_ *mod_to_int(pyobj *t) {
 float_ *mod_to_float(pyobj *t) {
     if(t == NULL)
         throw new TypeError(new str("float argument required"));
-    if(t->__class__ == cl_float_)
+    if(t->__CLASS__ == CL_FLOAT)
         return (float_ *)t;
-    else if(t->__class__ == cl_int_)
+    else if(t->__CLASS__ == CL_INT)
         return new float_(((int_ *)t)->unit);
     throw new TypeError(new str("float argument required"));
 }
@@ -2189,7 +2201,10 @@ __ss_bool pyobj::__nonzero__() { return __mbool(__len__() != 0); }
 
 /* object */
 
-object::object() { this->__class__ = cl_object; }
+object::object() {
+    this->__class__ = cl_object;
+    this->__CLASS__ = CL_OBJECT;
+}
 
 #ifdef __SS_BIND
 PyObject *__ss__newobj__(PyObject *, PyObject *args, PyObject *kwargs) {
