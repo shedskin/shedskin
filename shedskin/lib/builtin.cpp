@@ -363,6 +363,14 @@ str *str::__join(pyseq<str *> *l, bool only_ones, int total) {
     return s;
 }
 
+const char *str::c_str() {
+    return unit.c_str();
+}
+
+int str::size() {
+    return unit.size();
+}
+
 str * str::join(list<str *> *l) {
     int lsz = len(l);
     if(lsz==1)
