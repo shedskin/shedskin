@@ -161,9 +161,9 @@ file *socket::makefile(str *mode) {
 
 #ifdef WIN32
 	if (((fd = _open_osfhandle(_fd, O_BINARY)) < 0) ||
-	    ((fd = dup(fd)) < 0) || ((fp = fdopen(fd, mode->unit.c_str())) == NULL))
+	    ((fd = dup(fd)) < 0) || ((fp = fdopen(fd, mode->c_str())) == NULL))
 #else
-	if ((fd = dup(_fd)) < 0 || (fp = fdopen(fd, mode->unit.c_str())) == NULL)
+	if ((fd = dup(_fd)) < 0 || (fp = fdopen(fd, mode->c_str())) == NULL)
 #endif
 	{
 		/*if (fd >= 0)
@@ -217,7 +217,7 @@ static void tuple_to_sin_addr(sockaddr_in *dst, socket::inet_address src)
 {
     memset(dst, 0, sizeof(sockaddr_in));
     dst->sin_family = AF_INET;
-    const char *host = src->first->unit.c_str();
+    const char *host = src->first->c_str();
     dst->sin_addr.s_addr = string_to_addr(host);
     dst->sin_port = htons(src->second);
 }
@@ -227,7 +227,7 @@ socket *socket::bind(socket::inet_address address)
     if (family != AF_INET)
         throw new ValueError(invalid_address);
 
-    const char *host = address->first->unit.c_str();
+    const char *host = address->first->c_str();
     int port = address->second;
 
     sockaddr_in sin;
@@ -245,7 +245,7 @@ socket *socket::setsockopt(__ss_int level, __ss_int optname, __ss_int value) {
 socket *socket::connect(socket::inet_address address) {
     if (family != AF_INET)
         throw new ValueError(invalid_address);
-    const char *host = address->first->unit.c_str();
+    const char *host = address->first->c_str();
     int port = address->second;
 
     sockaddr_in sin;
@@ -267,7 +267,7 @@ socket *socket::connect(pyseq<str *> *address)
     sockaddr_un smup;
     smup.sun_family = AF_UNIX;
     const str* __0 = address->__getitem__(0);
-    strcpy(smup.sun_path, __0->unit.c_str());
+    strcpy(smup.sun_path, __0->c_str());
 
     return connect(reinterpret_cast<sockaddr *>(&smup), sizeof(smup));
 }
@@ -419,12 +419,12 @@ int socket::send(const char *s, size_t len, int flags)
 }
 
 __ss_int socket::send(str *string, __ss_int flags) {
-    const char *s = string->unit.c_str();
+    const char *s = string->c_str();
     return send( s, strlen(s), flags );
 }
 
 __ss_int socket::sendall(str *string, __ss_int flags) {
-    const char *s = string->unit.c_str();
+    const char *s = string->c_str();
     size_t offset = 0;
     size_t len = string->__len__(); //FIXME is this guaranteed to be the same as the C string length, even if we are dealing with wide/unicode?
 
@@ -437,7 +437,7 @@ __ss_int socket::sendto(str* msg, __ss_int flags, socket::inet_address addr)
 {
     write_wait();
 
-    const char *buf = msg->unit.c_str();
+    const char *buf = msg->c_str();
     size_t buflen = strlen(buf);
 
     sockaddr *sa;
@@ -612,7 +612,7 @@ socket *socket::bind(pyseq<str *> *address)
     sockaddr_un smup;
     smup.sun_family = AF_UNIX;
     const str* __0 = address->__getitem__(0);
-    strcpy(smup.sun_path, __0->unit.c_str());
+    strcpy(smup.sun_path, __0->c_str());
 
     return bind(reinterpret_cast<sockaddr *>(&smup), sizeof(smup));
 }
@@ -718,7 +718,7 @@ void __exit()
 
 str *gethostbyname(str *hostname)
 {
-    hostent *he = ::gethostbyname(hostname->unit.c_str());
+    hostent *he = ::gethostbyname(hostname->c_str());
     if (!he)
         throw new herror(host_not_found);
     char ip[sizeof("xxx.xxx.xxx.xxx")];
@@ -729,13 +729,13 @@ str *gethostbyname(str *hostname)
 
 str *inet_aton(str *x)
 {
-    int addr = string_to_addr(x->unit.c_str());
+    int addr = string_to_addr(x->c_str());
     return new str((char *) &addr, 4);
 }
 
 str *inet_ntoa(str *x)
 {
-    const char *s = x->unit.c_str();
+    const char *s = x->c_str();
     int addr = *((int *) s);
     char ip[sizeof("xxx.xxx.xxx.xxx")];
     sprintf(ip, "%d.%d.%d.%d", ((addr >> 24) & 0xff), ((addr >> 16) & 0xff), ((addr >> 8) & 0xff), (addr & 0xff));

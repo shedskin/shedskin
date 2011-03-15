@@ -433,7 +433,7 @@ match_object *match_iter::next(void)
 {
     match_object *mobj;
 
-    if((pos > endpos && endpos != -1) || (unsigned int)pos >= subj->unit.size()) throw new StopIteration();
+    if((pos > endpos && endpos != -1) || (unsigned int)pos >= subj->size()) throw new StopIteration();
 
     //get next match
     mobj = ro->__exec(subj, pos, endpos, flags);
@@ -448,7 +448,7 @@ match_object *match_iter::next(void)
 __iter<match_object *> *re_object::finditer(str *subj, __ss_int pos, __ss_int endpos, __ss_int flags)
 {
     if(endpos < pos && endpos != -1) throw new error(new str("end position less than initial"));
-    if((unsigned int)pos >= subj->unit.size()) throw new error(new str("starting position >= string length"));
+    if((unsigned int)pos >= subj->size()) throw new error(new str("starting position >= string length"));
 
     return new match_iter(this, subj, pos, endpos, flags);
 }
@@ -465,16 +465,16 @@ match_object *re_object::__exec(str *subj, __ss_int pos, __ss_int endpos, __ss_i
     captured = (int *)GC_MALLOC(clen * sizeof(int));
 
     //sanity checking
-    if(endpos == -1) nendpos = subj->unit.size() - 1;
+    if(endpos == -1) nendpos = subj->size() - 1;
     else if(endpos < pos) throw new error(new str("end position less than initial"));
     else nendpos = endpos;
 
-    if((unsigned int)pos >= subj->unit.size()) throw new error(new str("starting position >= string length"));
+    if((unsigned int)pos >= subj->size()) throw new error(new str("starting position >= string length"));
 
     r = pcre_exec(
         compiled_pattern,
         study_info,
-        subj->unit.c_str(),
+        subj->c_str(),
         nendpos + 1,
         pos,
         flags,
@@ -555,7 +555,7 @@ re_object *compile(str *pat, __ss_int flags)
 
     //attempt a compilation
     cpat = pcre_compile(
-        pat->unit.c_str(),
+        pat->c_str(),
         options,
         (const char **)&errmsg,
         &erroff,

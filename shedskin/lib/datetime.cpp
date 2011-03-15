@@ -416,9 +416,9 @@ datetime *datetime::strptime(str *date_string, str *format) {
 	time_t rawtime;
 	struct tm t = {0, 0, 0, 1, 0, 0, 0, 1, -1};
 #ifdef WIN32
-    char *e = __time__::strptime(date_string->unit.c_str(), format->unit.c_str(), &t);
+    char *e = __time__::strptime(date_string->c_str(), format->c_str(), &t);
 #else
-    char *e = ::strptime(date_string->unit.c_str(), format->unit.c_str(), &t);
+    char *e = ::strptime(date_string->c_str(), format->c_str(), &t);
 #endif
     if(!e)
         throw new ValueError(new str("time data did not match format:  data="+date_string->unit+" fmt="+format->unit));

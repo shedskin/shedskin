@@ -75,7 +75,7 @@ list<str *> *listdir(str *path) {
     DIR *dp;
     struct dirent *ep;
 
-    dp = opendir(path->unit.c_str());
+    dp = opendir(path->c_str());
 
     while ((ep = readdir(dp)))
         if(strcmp(ep->d_name, ".") && strcmp(ep->d_name, ".."))
@@ -94,7 +94,7 @@ str *getcwd() {
 }
 
 void *chdir(str *dir) {
-    if(::chdir(dir->unit.c_str()) == -1)
+    if(::chdir(dir->c_str()) == -1)
         throw new OSError(dir);
     return NULL;
 }
@@ -104,24 +104,24 @@ str *strerror(__ss_int i) {
 }
 
 __ss_int system(str *c) {
-    return std::system(c->unit.c_str());
+    return std::system(c->c_str());
 }
 
 str *getenv(str *name, str *alternative) {
-    const char *waba = name->unit.c_str();
+    const char *waba = name->c_str();
     if(std::getenv(waba))
         return new str(std::getenv(waba));
     return alternative;
 }
 
 void *rename(str *a, str *b) {
-    if(std::rename(a->unit.c_str(), b->unit.c_str()) == -1)
+    if(std::rename(a->c_str(), b->c_str()) == -1)
         throw new OSError(a);
     return NULL;
 }
 
 void *remove(str *path) {
-    if(std::remove(path->unit.c_str()) == -1)
+    if(std::remove(path->c_str()) == -1)
         throw new OSError(path);
     return NULL;
 }
@@ -132,7 +132,7 @@ void *unlink(str *path) {
 }
 
 void *rmdir(str *a) {
-    if (::rmdir(a->unit.c_str()) == -1)
+    if (::rmdir(a->c_str()) == -1)
         throw new OSError(a);
     return NULL;
 }
@@ -167,9 +167,9 @@ void *removedirs(str *name) {
 
 void *mkdir(str *path, __ss_int mode) {
 #ifdef WIN32
-    if (::mkdir(path->unit.c_str()) == -1)
+    if (::mkdir(path->c_str()) == -1)
 #else
-    if (::mkdir(path->unit.c_str(), mode) == -1)
+    if (::mkdir(path->c_str(), mode) == -1)
 #endif
         throw new OSError(path);
     return NULL;
@@ -219,11 +219,11 @@ __cstat::__cstat(str *path, __ss_int t) {
     this->__class__ = cl___cstat;
 
     if(t==1) {
-        if(stat(path->unit.c_str(), &sbuf) == -1)
+        if(stat(path->c_str(), &sbuf) == -1)
             throw new OSError(path);
     } else if (t==2) {
 #ifndef WIN32
-        if(lstat(path->unit.c_str(), &sbuf) == -1)
+        if(lstat(path->c_str(), &sbuf) == -1)
 #endif
             throw new OSError(path);
     }
@@ -330,7 +330,7 @@ __ss_bool stat_float_times(__ss_int newvalue) {
 
 void *putenv(str* varname, str* value) {
     std::stringstream ss;
-    ss << varname->unit.c_str() << '=' << value->unit.c_str();
+    ss << varname->c_str() << '=' << value->c_str();
     ::putenv(const_cast<char*>(ss.str().c_str()));
     return NULL;
 }
@@ -344,14 +344,14 @@ __ss_int chmod (str* path, __ss_int val) {
 #ifdef WIN32
     DWORD attr;
     __ss_int res;
-    attr = GetFileAttributesA(var->unit.c_str());
+    attr = GetFileAttributesA(var->c_str());
 
     if (attr != 0xFFFFFFFF) {
         if (i & S_IWRITE)
             attr &= ~FILE_ATTRIBUTE_READONLY;
         else
             attr |= FILE_ATTRIBUTE_READONLY;
-        res = SetFileAttributesA(var->unit.c_str(), attr);
+        res = SetFileAttributesA(var->c_str(), attr);
     }
     else {
         res = 0;
@@ -361,7 +361,7 @@ __ss_int chmod (str* path, __ss_int val) {
     }
     return 0;
 #else
-    return ::chmod(path->unit.c_str(), val);
+    return ::chmod(path->c_str(), val);
 #endif
 }
 #endif
@@ -413,7 +413,7 @@ popen_pipe::popen_pipe(str *cmd, str *mode) {
 
     if(!mode)
         mode = new str("r");
-    fp = ::popen(cmd->unit.c_str(), mode->unit.c_str());
+    fp = ::popen(cmd->c_str(), mode->c_str());
     this->name = cmd;
     this->mode = mode;
 
@@ -442,7 +442,7 @@ popen_pipe* popen(str* cmd, str* mode) {
 }
 
 popen_pipe* popen(str* cmd, str* mode, __ss_int) {
-    FILE* fp = ::popen(cmd->unit.c_str(), mode->unit.c_str());
+    FILE* fp = ::popen(cmd->c_str(), mode->c_str());
 
     if(!fp) throw new OSError(cmd);
     return new popen_pipe(fp);
@@ -470,7 +470,7 @@ void *fdatasync(__ss_int f1) {
 #endif
 
 __ss_int open(str *name, __ss_int flags) { /* XXX mode argument */
-    __ss_int fp = ::open(name->unit.c_str(), flags);
+    __ss_int fp = ::open(name->c_str(), flags);
     if(fp == -1)
         throw new OSError(new str("os.open failed"));
     return fp;
@@ -480,7 +480,7 @@ file* fdopen(__ss_int fd, str* mode, __ss_int) {
     if(!mode)
         mode = new str("r");
 /* XXX ValueError: mode string must begin with one of 'r', 'w', 'a' or 'U' */
-    FILE* fp = ::fdopen(fd, mode->unit.c_str());
+    FILE* fp = ::fdopen(fd, mode->c_str());
     if(fp == NULL)
         throw new OSError(new str("os.fdopen failed"));
 
@@ -506,7 +506,7 @@ str *read(__ss_int fd, __ss_int n) {  /* XXX slowness */
 
 __ss_int write(__ss_int fd, str *s) {
     __ss_int r;
-    if((r=::write(fd, s->unit.c_str(), len(s))) == -1)
+    if((r=::write(fd, s->c_str(), len(s))) == -1)
         throw new OSError(new str("os.write"));
     return r;
 }
@@ -566,7 +566,7 @@ str *readlink(str *path) {
     while (1)
       {
         char *buffer = (char *) GC_malloc (size);
-	    __ss_int nchars = ::readlink(path->unit.c_str(), buffer, size);
+	    __ss_int nchars = ::readlink(path->c_str(), buffer, size);
     	if (nchars == -1) {
             throw new OSError(path);
   	    }
@@ -704,19 +704,19 @@ str *getlogin() {
 }
 
 void *chown(str *path, __ss_int uid, __ss_int gid) {
-    if (::chown(path->unit.c_str(), uid, gid) == -1)
+    if (::chown(path->c_str(), uid, gid) == -1)
         throw new OSError(path);
     return NULL;
 }
 
 void *lchown(str *path, __ss_int uid, __ss_int gid) {
-    if (::lchown(path->unit.c_str(), uid, gid) == -1)
+    if (::lchown(path->c_str(), uid, gid) == -1)
         throw new OSError(path);
     return NULL;
 }
 
 void *chroot(str *path) {
-    if (::chroot(path->unit.c_str()) == -1)
+    if (::chroot(path->c_str()) == -1)
         throw new OSError(path);
     return NULL;
 }
@@ -798,13 +798,13 @@ void *setpgrp() {
 }
 
 void *link(str *src, str *dst) {
-    if(::link(src->unit.c_str(), dst->unit.c_str()) == -1)
+    if(::link(src->c_str(), dst->c_str()) == -1)
         throw new OSError(new str("os.link"));
     return NULL;
 }
 
 void *symlink(str *src, str *dst) {
-    if(::symlink(src->unit.c_str(), dst->unit.c_str()) == -1)
+    if(::symlink(src->c_str(), dst->c_str()) == -1)
         throw new OSError(new str("os.symlink"));
     return NULL;
 }
@@ -815,7 +815,7 @@ __ss_int pathconf(str *path, str *name) {
     return pathconf(path, pathconf_names->__getitem__(name)); /* XXX errors */
 }
 __ss_int pathconf(str *path, __ss_int name) {
-    __ss_int limit = ::pathconf(path->unit.c_str(), name); /* XXX errors */
+    __ss_int limit = ::pathconf(path->c_str(), name); /* XXX errors */
     return limit;
 }
 
@@ -860,7 +860,7 @@ tuple2<double, double> *getloadavg() {
 }
 
 void *mkfifo(str *path, __ss_int mode) {
-    if(::mkfifo(path->unit.c_str(), mode) == -1)
+    if(::mkfifo(path->c_str(), mode) == -1)
         throw new OSError(new str("os.mkfifo"));
     return NULL;
 }
@@ -871,7 +871,7 @@ class_ *cl___vfsstat;
 
 __vfsstat::__vfsstat(str *path) {
     this->__class__ = cl___vfsstat;
-    if(statvfs(path->unit.c_str(), &vbuf) == -1)
+    if(statvfs(path->c_str(), &vbuf) == -1)
         throw new OSError(path);
     fill_er_up();
 }
@@ -948,14 +948,14 @@ str *urandom(__ss_int n) {
 }
 
 void __utime(str *path) {
-    if(::utime(path->unit.c_str(), NULL) == -1)
+    if(::utime(path->c_str(), NULL) == -1)
         throw new OSError(new str("os.utime"));
 }
 void __utime(str *path, double actime, double modtime) {
     struct utimbuf buf;
     buf.actime = (time_t)actime;
     buf.modtime = (time_t)modtime;
-    if(::utime(path->unit.c_str(), &buf) == -1)
+    if(::utime(path->c_str(), &buf) == -1)
         throw new OSError(new str("os.utime"));
 }
 
@@ -969,7 +969,7 @@ void *utime(str *path, tuple2<double, double> *times) { HOPPA }
 #undef HOPPA
 
 __ss_bool access(str *path, __ss_int mode) {
-    return __mbool(::access(path->unit.c_str(), mode) == 0);
+    return __mbool(::access(path->c_str(), mode) == 0);
 }
 
 tuple2<double, double> *times() {
@@ -999,8 +999,8 @@ file *tmpfile() {
     char *name;
     str *result;
     char *pfx = NULL;
-    if(prefix) pfx = (char *)(prefix->unit.c_str());
-    if((name = ::tempnam(dir->unit.c_str(), pfx)) == NULL)
+    if(prefix) pfx = (char *)(prefix->c_str());
+    if((name = ::tempnam(dir->c_str(), pfx)) == NULL)
         throw new OSError(new str("os.tempnam"));
     result = new str(name);
     free(name);
@@ -1018,7 +1018,7 @@ __ss_int __ss_minor(__ss_int dev) {
 }
 
 void *mknod(str *filename, __ss_int mode, __ss_int device) {
-    if(::mknod(filename->unit.c_str(), mode, device) == -1)
+    if(::mknod(filename->c_str(), mode, device) == -1)
         throw new OSError(new str("os.mknod"));
     return NULL;
 }
@@ -1026,7 +1026,7 @@ void *mknod(str *filename, __ss_int mode, __ss_int device) {
 char **__exec_argvlist(list<str *> *args) {
     char** argvlist = (char**)GC_malloc(sizeof(char*)*(args->__len__()+1));
     for(__ss_int i = 0; i < args->__len__(); ++i) {
-        argvlist[i] = (char *)(args->__getitem__(i)->unit.c_str());
+        argvlist[i] = (char *)(args->__getitem__(i)->c_str());
     }
     argvlist[args->__len__()] = NULL;
     return argvlist;
@@ -1036,7 +1036,7 @@ char **__exec_envplist(dict<str *, str *> *env) {
     char** envplist = (char**)GC_malloc(sizeof(char*)*(env->__len__()+1));
     list<tuple2<str *, str *> *> *items = env->items();
     for(__ss_int i=0; i < items->__len__(); i++) {
-        envplist[i] = (char *)(__add_strs(3, items->__getitem__(i)->__getfirst__(), new str("="), items->__getitem__(i)->__getsecond__())->unit.c_str());
+        envplist[i] = (char *)(__add_strs(3, items->__getitem__(i)->__getfirst__(), new str("="), items->__getitem__(i)->__getsecond__())->c_str());
     }
     envplist[items->__len__()] = NULL;
     return envplist;
@@ -1098,7 +1098,7 @@ void *execlpe(__ss_int n, str *file, ...) {
 }
 
 void *execv(str* file, list<str*>* args) {
-    ::execv(file->unit.c_str(), __exec_argvlist(args));
+    ::execv(file->c_str(), __exec_argvlist(args));
     throw new OSError(new str("os.execv"));
 }
 
@@ -1123,7 +1123,7 @@ void *execvp(str* file, list<str*>* args) {
 }
 
 void *execve(str* file, list<str*>* args, dict<str *, str *> *env) {
-    ::execve(file->unit.c_str(), __exec_argvlist(args), __exec_envplist(env));
+    ::execve(file->c_str(), __exec_argvlist(args), __exec_envplist(env));
     throw new OSError(new str("os.execve"));
 }
 
@@ -1243,7 +1243,7 @@ __ss_int getpid() {
 }
 
 void *unsetenv (str* var) {
-    ::unsetenv(var->unit.c_str());
+    ::unsetenv(var->c_str());
     return NULL;
 }
 

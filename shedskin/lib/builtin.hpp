@@ -2532,7 +2532,7 @@ template<class T> list<T>::list(tuple2<T, T> *p) {
 template<class T> list<T>::list(str *s) {
     this->__class__ = cl_list;
     this->units.resize(len(s));
-    int sz = s->unit.size();
+    int sz = s->size();
     for(int i=0; i<sz; i++)
         this->units[i] = __char_cache[((unsigned char)(s->unit[i]))];
 }
@@ -2616,7 +2616,7 @@ template<class T> void *list<T>::extend(tuple2<T,T> *p) {
 }
 
 template<class T> void *list<T>::extend(str *s) {
-    int sz = s->unit.size();
+    int sz = s->size();
     for(int i=0; i<sz; i++)
         this->units.push_back(__char_cache[((unsigned char)(s->unit[i]))]);
     return NULL;
@@ -2927,11 +2927,11 @@ inline str *str::__getfast__(__ss_int i) {
 }
 
 inline __ss_int str::__len__() {
-    return unit.size();
+    return size();
 }
 
 inline bool str::for_in_has_next(int i) {
-    return i != unit.size(); /* XXX opt end cond */
+    return i != size(); /* XXX opt end cond */
 }
 
 inline str *str::for_in_next(int &i) {
@@ -2941,7 +2941,7 @@ inline str *str::for_in_next(int &i) {
 template <class U> str *str::join(U *iter) {
     int sz, total, __2, tsz;
     bool only_ones = true;
-    int unitsize = unit.size();
+    int unitsize = size();
     typename U::for_in_unit e;
     typename U::for_in_loop __3;
     U *__1;
@@ -2949,7 +2949,7 @@ template <class U> str *str::join(U *iter) {
     total = 0;
     FOR_IN_NEW(e,iter,1,2,3)
         __join_cache->units.push_back(e);
-        sz = e->unit.size();
+        sz = e->size();
         if(sz != 1)
             only_ones = false;
         total += sz;
@@ -3740,7 +3740,7 @@ template<class T> tuple2<T, T>::tuple2(tuple2<T, T> *p) {
 template<class T> tuple2<T, T>::tuple2(str *s) {
     this->__class__ = cl_tuple;
     this->units.resize(len(s));
-    int sz = s->unit.size();
+    int sz = s->size();
     for(int i=0; i<sz; i++)
         this->units[i] = __char_cache[((unsigned char)(s->unit[i]))];
 }
