@@ -1775,7 +1775,7 @@ template<class T> inline T pyiter<T>::for_in_next(__iter<T> *iter) {
 
 template<class T> inline __ss_bool pyiter<T>::__contains__(T t) {
     T e;
-    pyiter<T>::for_in_loop __3;
+    typename pyiter<T>::for_in_loop __3;
     int __2;
     pyiter<T> *__1;
     FOR_IN_NEW(e,this,1,2,3)
@@ -2480,7 +2480,7 @@ template<class K, class V> dict<K,V> *dict<K,V>::__deepcopy__(dict<void *, pyobj
     dict<K,V> *c = new dict<K,V>();
     memo->__setitem__(this, c);
     K e;
-    dict<K,V>::for_in_loop __3;
+    typename dict<K,V>::for_in_loop __3;
     int __2;
     dict<K,V> *__1;
     FOR_IN_NEW(e,this,1,2,3)
