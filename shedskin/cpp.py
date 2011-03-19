@@ -2829,35 +2829,36 @@ def analyze_virtuals():
             if not classes:
                 continue
 
-            if isinstance(objexpr, Name) and objexpr.name == 'self' and inode(objexpr).parent: # XXX last check to avoid crash
+            if isinstance(objexpr, Name) and objexpr.name == 'self' and inode(objexpr).parent: # XXX see 'upgrade_variables' below
                 abstract_cl = inode(objexpr).parent.parent
-            else:
-                lcp = lowest_common_parents(classes)
-                lcp = [x for x in lcp if isinstance(x, class_)] # XXX
-                if not lcp:
-                    continue
-                abstract_cl = lcp[0]
+                upgrade_cl(abstract_cl, node, ident, classes)
 
-            if not abstract_cl or not isinstance(abstract_cl, class_):
-                continue
-            subclasses = [cl for cl in classes if subclass(cl, abstract_cl)]
+            lcp = lowest_common_parents(classes)
+            lcp = [x for x in lcp if isinstance(x, class_)] # XXX
+            if lcp:
+                upgrade_cl(lcp[0], node, ident, classes)
 
-            # --- register virtual method
-            if not ident.startswith('__'):
-                redefined = False
-                for concrete_cl in classes:
-                    if [cl for cl in concrete_cl.ancestors_upto(abstract_cl) if ident in cl.funcs and not cl.funcs[ident].inherited]:
-                        redefined = True
+def upgrade_cl(abstract_cl, node, ident, classes): # XXX ugly to do everything twice
+    if not abstract_cl or not isinstance(abstract_cl, class_):
+        return
+    subclasses = [cl for cl in classes if subclass(cl, abstract_cl)]
 
-                if redefined:
-                    abstract_cl.virtuals.setdefault(ident, set()).update(subclasses)
+    # --- register virtual method
+    if not ident.startswith('__'):
+        redefined = False
+        for concrete_cl in classes:
+            if [cl for cl in concrete_cl.ancestors_upto(abstract_cl) if ident in cl.funcs and not cl.funcs[ident].inherited]:
+                redefined = True
+        if redefined:
+            abstract_cl.virtuals.setdefault(ident, set()).update(subclasses)
 
-            # --- register virtual var
-            elif ident in ['__getattr__','__setattr__'] and subclasses:
-                var = defaultvar(node.args[0].value, abstract_cl)
-                abstract_cl.virtualvars.setdefault(node.args[0].value, set()).update(subclasses)
+    # --- register virtual var
+    elif ident in ['__getattr__','__setattr__'] and subclasses:
+        var = defaultvar(node.args[0].value, abstract_cl)
+        abstract_cl.virtualvars.setdefault(node.args[0].value, set()).update(subclasses)
 
 # --- merge variables assigned to via 'self.varname = ..' in inherited methods into base class
+# XXX similar upgrade checks above
 def upgrade_variables():
     for node, inheritnodes in getgx().inheritance_relations.items():
         if isinstance(node, AssAttr):
