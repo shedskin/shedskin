@@ -6,7 +6,7 @@ if __name__=='__main__':
     BadError()
     BadError("AOE")
 
-# crash in assign_needs_cast
+# crash in assign_needs_cast XXX try self.method() instead of self.msg!
 class MyBaseException:
     def __init__(self, msg=None):
         self.msg = msg

@@ -84,6 +84,7 @@ examples/tictactoe
 examples/voronoi
 examples/voronoi2
 examples/yopyra
+examples/quameon/sto_atom
 tests/0
 tests/1
 tests/2
@@ -280,3 +281,4 @@ tests/192
 tests/193
 tests/194
 tests/195
+tests/196
