@@ -48,7 +48,7 @@ class LCAO(orbital_base):
   def compute_value(self,p,n_orb):
     col = []
     for orb in self.orbs:
-      tmp = orb.compute_value(p,1)[0]
+      tmp = orb.compute_value2(p,1)
       col.append(tmp)
     val = []
     for i in range(n_orb):
