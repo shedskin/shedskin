@@ -1,5 +1,8 @@
 import memory
 
+class NotExported(Exception):
+    pass
+
 class meuk:
     def __init__(self):
         self.memory = 4
@@ -24,3 +27,4 @@ if __name__ == '__main__':
     press(set('a'))
     print meuk().memory
     hoppa({'acht': 8.8})
+    NotExported()
