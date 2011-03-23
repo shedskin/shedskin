@@ -90,7 +90,8 @@ def exported_classes(gv, warns=False):
         if defclass('Exception') in cl.ancestors():
             if warns:
                 print '*WARNING* class not exported:', cl.ident
-        classes.append(cl)
+        else:
+            classes.append(cl)
     return sorted(classes, key=lambda x: x.def_order)
 
 def do_extmod_methoddef(gv, ident, funcs, cl):
@@ -384,6 +385,8 @@ def do_reduce_setstate(gv, cl, vars):
     print >>gv.out, '}\n'
 
 def convert_methods(gv, cl, declare):
+    if defclass('Exception') in cl.ancestors():
+        return
     if declare:
         print >>gv.out, '    PyObject *__to_py__();'
     else:
