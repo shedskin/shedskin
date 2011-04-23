@@ -101,7 +101,7 @@ print hak('2e02'), hak('2e-02-2e+01j'), hak('-1.3e-3.1j')
 
 print complex(' 2.4+0j' ), complex('2.4'), complex(' .4j'), complex('1-j')
 print complex('-10-j'), complex('+10.1+2.4j'), complex('+j')
-print complex('2e02'), complex('2e-02-2e+01j'), complex('-1.3e-3.1j')
+#print complex('2e02'), complex('2e-02-2e+01j'), complex('-1.3e-3.1j') XXX 2.7?
 
 class PI:
     def __float__(self):
