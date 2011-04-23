@@ -18,3 +18,10 @@ class MyBadError(MyException):
 if __name__=='__main__':
     MyStandardError()
     MyBadError()
+
+# default hash method
+class waf(object):
+    pass
+
+w = waf()
+print hash(w) > 17
