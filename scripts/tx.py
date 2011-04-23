@@ -1,7 +1,7 @@
 import sys, os, random
-random.seed(1435440)
+random.seed(1435440) # XXX update!
 
-total = 195
+total = 197
 parts, part = map(int, sys.argv[1:3])
 extra = ''
 if len(sys.argv) == 4:
