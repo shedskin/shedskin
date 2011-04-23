@@ -1359,10 +1359,13 @@ class moduleVisitor(ASTVisitor):
                 if not '__i'+msg+'__' in newclass.funcs:
                     self.visit(Function(None, '__i'+msg+'__', ['self', 'other'], [], 0, None, Stmt([Return(CallFunc(Getattr(Name('self'), '__'+msg+'__'), [Name('other')], None, None))])), newclass)
 
-        # --- __str__
+        # --- __str__, __hash__ # XXX model in lib/builtin.py, other defaults?
         if not newclass.mv.module.builtin and not '__str__' in newclass.funcs:
             self.visit(Function(None, '__str__', ['self'], [], 0, None, Return(CallFunc(Getattr(Name('self'), '__repr__'), []))), newclass)
             newclass.funcs['__str__'].invisible = True
+        if not newclass.mv.module.builtin and not '__hash__' in newclass.funcs:
+            self.visit(Function(None, '__hash__', ['self'], [], 0, None, Return(Const(0)), []), newclass)
+            newclass.funcs['__hash__'].invisible = True
 
     def visitGetattr(self, node, func=None, callfunc=False):
         if node.attrname in ['__doc__']:

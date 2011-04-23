@@ -24,4 +24,4 @@ class waf(object):
     pass
 
 w = waf()
-print hash(w) > 17
+print hash(w) - hash(w)
