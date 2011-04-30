@@ -2034,6 +2034,9 @@ void print2(file *f, int comma, int n, ...) {
     print_options *p_opt = &f->print_opt;
     va_list args;
     va_start(args, n);
+    if (p_opt->lastchar == ' ') {
+        f->write(sp);
+    }
     for(int i=0; i<n-1; i++) {
         pyobj *tmp = va_arg(args, pyobj *);
         if (tmp)
@@ -2050,18 +2053,11 @@ void print2(file *f, int comma, int n, ...) {
             f->write(new str("None"));
     }
     va_end(args);
-    str *s = new str("");
-    if(len(s)) {
-        if(p_opt->space && (!isspace(p_opt->lastchar) || p_opt->lastchar==' ') && s->unit[0] != '\n') 
-            f->write(sp); /* space */
-        f->write(s);
-        p_opt->lastchar = s->unit[len(s)-1];
-    }
-    else if (comma)
-        p_opt->lastchar = ' ';
     if(!comma) {
         f->write(nl); /* newline */
         p_opt->lastchar = '\n';
+    } else {
+        p_opt->lastchar = ' ';
     }
     p_opt->space = comma;
 }
