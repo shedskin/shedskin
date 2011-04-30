@@ -2003,45 +2003,28 @@ void __start(void (*initfunc)()) {
 }
 
 void print(int n, file *f, str *end, str *sep, ...) {
+    if (!f)
+        f = __ss_stdout;
     if(!end)
         end = nl;
     va_list args;
     va_start(args, n);
-    if (f) {
-        for(int i=0; i<n-1; i++) {
-            pyobj *tmp = va_arg(args, pyobj *);
-            if (tmp)
-                f->write(new str (tmp->__str__()->unit));
-            else
-                f->write(new str("None"));
-            f->write(sp);
-        }
-        if (n) {
-            pyobj *tmp = va_arg(args, pyobj *);
-            if (tmp)
-                f->write(new str (tmp->__str__()->unit));
-            else
-                f->write(new str("None"));
-        }
-        f->write(end);
-    } else {
-        for(int i=0; i<n-1; i++) {
-            pyobj *tmp = va_arg(args, pyobj *);
-            if (tmp)
-                std::cout << tmp->__str__()->unit;
-            else
-                std::cout << "None";
-            std::cout << (sp->unit);
-        }
-        if (n) {
-            pyobj *tmp = va_arg(args, pyobj *);
-            if (tmp)
-                std::cout << tmp->__str__()->unit;
-            else
-                std::cout << "None";
-        }
-        std::cout << (end->unit);
+    for(int i=0; i<n-1; i++) {
+        pyobj *tmp = va_arg(args, pyobj *);
+        if (tmp)
+            f->write(new str (tmp->__str__()->unit));
+        else
+            f->write(new str("None"));
+        f->write(sp);
     }
+    if (n) {
+        pyobj *tmp = va_arg(args, pyobj *);
+        if (tmp)
+            f->write(new str (tmp->__str__()->unit));
+        else
+            f->write(new str("None"));
+    }
+    f->write(end);
     va_end(args);
 }
 
