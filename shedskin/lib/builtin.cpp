@@ -19,7 +19,7 @@ __GC_VECTOR(str *) __char_cache;
 __ss_bool True;
 __ss_bool False;
 
-list<str *> *__join_cache, *__mod5_cache;
+list<str *> *__join_cache;
 
 char __str_cache[4000];
 
@@ -71,7 +71,6 @@ void __init() {
     }
 
     __join_cache = new list<str *>();
-    __mod5_cache = new list<str *>();
 
     for(int i=0; i<1000; i++) {
         __str_cache[4*i] = '0' + (i % 10);
@@ -1857,23 +1856,6 @@ str *__mod4(str *fmts, list<pyobj *> *vals) {
 
     r->unit += fmt->unit;
     return r;
-}
-
-str *__mod5(list<pyobj *> *vals, str *sep) {
-    __mod5_cache->units.resize(0);
-    for(int i=0;i<len(vals);i++) {
-        pyobj *p = vals->__getitem__(i);
-        if(p == NULL)
-            __mod5_cache->append(__fmt_s);
-        else if(p->__class__ == cl_float_)
-            __mod5_cache->append(__fmt_H);
-        else if(p->__class__== cl_int_)
-            __mod5_cache->append(__fmt_d);
-        else
-            __mod5_cache->append(__fmt_s);
-    }
-    str *s = __mod4(sep->join(__mod5_cache), vals);
-    return s;
 }
 
 str *__modcd(str *fmt, list<str *> *names, ...) {
