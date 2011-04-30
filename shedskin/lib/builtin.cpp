@@ -2006,33 +2006,72 @@ void __start(void (*initfunc)()) {
 
 void print(int n, file *f, str *end, str *sep, ...) {
     __print_cache->units.resize(0);
-    va_list args;
-    va_start(args, sep);
-    for(int i=0; i<n; i++)
-        __print_cache->append(va_arg(args, pyobj *));
-    va_end(args);
-    str *s = __mod5(__print_cache, sep?sep:sp);
     if(!end)
         end = nl;
-    if(f) {
-        f->write(s);
+    va_list args;
+    va_start(args, n);
+    if (f) {
+        for(int i=0; i<n-1; i++) {
+            pyobj *tmp = va_arg(args, pyobj *);
+            if (tmp)
+                f->write(new str (tmp->__str__()->unit));
+            else
+                f->write(new str("None"));
+            f->write(sp);
+        }
+        if (n) {
+            pyobj *tmp = va_arg(args, pyobj *);
+            if (tmp)
+                f->write(new str (tmp->__str__()->unit));
+            else
+                f->write(new str("None"));
+        }
         f->write(end);
+    } else {
+        for(int i=0; i<n-1; i++) {
+            pyobj *tmp = va_arg(args, pyobj *);
+            if (tmp)
+                std::cout << tmp->__str__()->unit;
+            else
+                std::cout << "None";
+            std::cout << (sp->unit);
+        }
+        if (n) {
+            pyobj *tmp = va_arg(args, pyobj *);
+            if (tmp)
+                std::cout << tmp->__str__()->unit;
+            else
+                std::cout << "None";
+        }
+        std::cout << (end->unit);
     }
-    else 
-        printf("%s%s", s->unit.c_str(), end->unit.c_str());
+    va_end(args);
 }
 
 void print2(file *f, int comma, int n, ...) {
-    __print_cache->units.resize(0);
-    va_list args;
-    va_start(args, n);
-    for(int i=0; i<n; i++)
-        __print_cache->append(va_arg(args, pyobj *));
-    va_end(args);
     if (!f)
         f = __ss_stdout;
     print_options *p_opt = &f->print_opt;
-    str *s = __mod5(__print_cache, sp);
+    __print_cache->units.resize(0);
+    va_list args;
+    va_start(args, n);
+    for(int i=0; i<n-1; i++) {
+        pyobj *tmp = va_arg(args, pyobj *);
+        if (tmp)
+            f->write(new str (tmp->__str__()->unit));
+        else
+            f->write(new str("None"));
+        f->write(sp);
+    }
+    if (n) {
+        pyobj *tmp = va_arg(args, pyobj *);
+        if (tmp)
+            f->write(new str (tmp->__str__()->unit));
+        else
+            f->write(new str("None"));
+    }
+    va_end(args);
+    str *s = new str("");
     if(len(s)) {
         if(p_opt->space && (!isspace(p_opt->lastchar) || p_opt->lastchar==' ') && s->unit[0] != '\n') 
             f->write(sp); /* space */
