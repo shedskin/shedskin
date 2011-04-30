@@ -2160,7 +2160,7 @@ list<tuple2<void *, void *> *> *__zip(int) {
 str *pyobj::__str__() { return __repr__(); }
 
 int pyobj::__hash__() {
-    return (int)this;
+    return (intptr_t)this;
 }
 
 __ss_int pyobj::__cmp__(pyobj *p) {
