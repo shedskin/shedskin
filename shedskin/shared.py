@@ -159,7 +159,7 @@ class function:
         self.ftypes = []                # function is called via a virtual call: arguments may have to be cast
         self.inherited = None
 
-        if node and getmv().module.ident != 'builtin':
+        if node:
             getgx().allfuncs.add(self)
 
         self.retvars = []

@@ -70,7 +70,7 @@ print '%c %d %x %s %r' % t3
 
 t4 = (70.0, 71.0, 72.0, 73.0, 74.0)
 v4 = '%c %d %x %s %r'
-print v4 % t4
+#print v4 % t4 XXX 2.7?
 
 print '%(aap)s %(bert)d %% %(bert)c' % {'aap': 'hallo', 'bert': 72}
 
@@ -189,7 +189,7 @@ config.write(fl)
 fl.close()
 print sorted(open('testdata/test.ini').readlines())
 
-print config.defaults()
+print config.defaults().items()
 print sorted(config.items('ematter', vars={'var': 'blah'}))
 
 rcp = ConfigParser.RawConfigParser()

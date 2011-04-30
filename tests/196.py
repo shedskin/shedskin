@@ -1,4 +1,4 @@
-# exception hierarchy problem 1
+# template not removed after iteration
 class BadError(Exception):
     pass
 
@@ -6,7 +6,7 @@ if __name__=='__main__':
     BadError()
     BadError("AOE")
 
-# exception hierarchy problem 2
+# crash in assign_needs_cast XXX try self.method() instead of self.msg!
 class MyBaseException:
     def __init__(self, msg=None):
         self.msg = msg
@@ -18,3 +18,10 @@ class MyBadError(MyException):
 if __name__=='__main__':
     MyStandardError()
     MyBadError()
+
+# default hash method
+class waf(object):
+    pass
+
+w = waf()
+print hash(w) - hash(w)
