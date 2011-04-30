@@ -2037,26 +2037,30 @@ void print2(file *f, int comma, int n, ...) {
     if (p_opt->lastchar == ' ') {
         f->write(sp);
     }
+    str *print_str;
+    pyobj *tmp;
     for(int i=0; i<n-1; i++) {
-        pyobj *tmp = va_arg(args, pyobj *);
+        tmp = va_arg(args, pyobj *);
         if (tmp)
-            f->write(new str (tmp->__str__()->unit));
+            print_str = tmp->__str__();
         else
-            f->write(new str("None"));
+            print_str = new str("None");
+        f->write(print_str);
         f->write(sp);
     }
     if (n) {
-        pyobj *tmp = va_arg(args, pyobj *);
+        tmp = va_arg(args, pyobj *);
         if (tmp)
-            f->write(new str (tmp->__str__()->unit));
+            print_str = tmp->__str__();
         else
-            f->write(new str("None"));
+            print_str = new str("None");
+        f->write(print_str);
     }
     va_end(args);
     if(!comma) {
         f->write(nl); /* newline */
         p_opt->lastchar = '\n';
-    } else {
+    } else if (print_str->unit[len(print_str)-1] != '\n'){
         p_opt->lastchar = ' ';
     }
     p_opt->space = comma;
