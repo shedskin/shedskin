@@ -1994,7 +1994,7 @@ void print(int n, file *f, str *end, str *sep, ...) {
             f->write(new str (tmp->__str__()->unit));
         else
             f->write(new str("None"));
-        f->write(sp);
+        f->write(sep?sep:sp);
     }
     if (n) {
         pyobj *tmp = va_arg(args, pyobj *);
