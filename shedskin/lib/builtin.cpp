@@ -20,7 +20,6 @@ __ss_bool True;
 __ss_bool False;
 
 list<str *> *__join_cache, *__mod5_cache;
-list<pyobj *> *__print_cache;
 
 char __str_cache[4000];
 
@@ -72,7 +71,6 @@ void __init() {
     }
 
     __join_cache = new list<str *>();
-    __print_cache = new list<pyobj *>();
     __mod5_cache = new list<str *>();
 
     for(int i=0; i<1000; i++) {
@@ -2005,7 +2003,6 @@ void __start(void (*initfunc)()) {
 }
 
 void print(int n, file *f, str *end, str *sep, ...) {
-    __print_cache->units.resize(0);
     if(!end)
         end = nl;
     va_list args;
@@ -2052,7 +2049,6 @@ void print2(file *f, int comma, int n, ...) {
     if (!f)
         f = __ss_stdout;
     print_options *p_opt = &f->print_opt;
-    __print_cache->units.resize(0);
     va_list args;
     va_start(args, n);
     for(int i=0; i<n-1; i++) {
