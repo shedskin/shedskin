@@ -57,6 +57,6 @@ except KeyError, z:
 try:
     [1].index(2)
 except ValueError, v:
-    print 'hah', v
+    print 'hah'
 
 

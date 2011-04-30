@@ -844,14 +844,7 @@ def restore_network(backup):
         if not (var, 0, 0) in getgx().cnode:
             newnode = cnode(var, parent=var.parent)
 
-    # --- clear templates
     for func in getgx().allfuncs:
-        func.cp = {}
-
-    for cl in getgx().modules['builtin'].mv.classes.values():
-        for func in cl.funcs.values():
-            func.cp = {}
-    for func in getgx().modules['builtin'].mv.funcs.values():
         func.cp = {}
 
 def merge_simple_types(types):
@@ -958,7 +951,6 @@ def analyze(source, testing=False):
 
     # --- add inheritance relationships for non-original Nodes (and tempvars?); XXX register more, right solution?
     for func in getgx().allfuncs:
-        #if not func.mv.module.builtin and func.ident == '__init__':
         if func in getgx().inheritance_relations:
             for inhfunc in getgx().inheritance_relations[func]:
                 for a, b in zip(func.registered, inhfunc.registered):
