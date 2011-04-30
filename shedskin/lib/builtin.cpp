@@ -1200,10 +1200,7 @@ void *file::putchar(int c) {
 
 void *file::write(str *s) {
     __check_closed();
-  //  fputs(s->unit.c_str(), f);
-
-    for(unsigned int i = 0; i < s->unit.size(); i++)
-        putchar(s->unit[i]);
+    fwrite(s->unit.c_str(), 1, s->unit.size(), f);
 
     return NULL;
 }
