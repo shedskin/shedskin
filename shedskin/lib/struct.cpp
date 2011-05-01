@@ -3,6 +3,8 @@
 
 namespace __struct__ {
 
+__GC_STRING ordering;
+
 __ss_int unpack_one(str *s, __ss_int idx, __ss_int count, __ss_int endian) {
     unsigned int r = 0;
 
@@ -45,12 +47,33 @@ str * unpack_str(char o, char c, int d, str *data, __ss_int *pos) {
 }
 
 __ss_int calcsize(str *fmt) {
-    return 42;
-
+    __ss_int result = 0;
+    str *digits = new str();
+    for(unsigned int i=0; i<len(fmt); i++) {
+        char c = fmt->unit[i];
+        if(ordering.find(c) != -1)
+            continue;
+        if(::isdigit(c)) {
+            digits->unit += c;
+        } else {
+            int ndigits = 1;
+            if(len(digits)) {
+                ndigits = __int(digits);
+                digits = new str();
+            }
+            switch(c) {
+                case 'H': result += 2*ndigits; break;
+                case 'I': result += 4*ndigits; break;
+                case 'B': result += ndigits; break;
+                case 's': result += ndigits; break;
+            }
+        }
+    }
+    return result;
 }
 
 void __init() {
-
+    ordering = "@<>!=";
 }
 
 } // module namespace
