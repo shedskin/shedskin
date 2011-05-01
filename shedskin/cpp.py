@@ -2019,6 +2019,9 @@ class generateVisitor(ASTVisitor):
                     self.visitm(expr, ')', func)
                 elif isinstance(n, AssName):
                     self.visitm(n, ' = ', expr, func)
+                elif isinstance(n, AssAttr):
+                    self.visitAssAttr(n, func)
+                    self.visitm(' = ', expr, func)
                 self.eol()
             return
 

@@ -1069,7 +1069,7 @@ class moduleVisitor(ASTVisitor):
                     self.visit(node.expr, func)
                     sinfo = struct_info(rvalue.args[0], func)
                     faketuple = struct_faketuple(sinfo)
-                    self.visit(Assign(node.nodes, faketuple))
+                    self.visit(Assign(node.nodes, faketuple), func)
                     tvar = self.tempvar2(rvalue.args[1], inode(rvalue.args[1]), func)
                     tvar_pos = self.tempvar_int(rvalue.args[0], func)
                     getgx().struct_unpack[node] = (sinfo, tvar.name, tvar_pos.name)
