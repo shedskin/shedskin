@@ -2012,7 +2012,6 @@ class generateVisitor(ASTVisitor):
             self.eol()
             self.output('%s = 0;' % tvar_pos)
             for n, (o, c, t, d) in zip(node.nodes[0], sinfo):
-                print n, o, c, t, d
                 self.start()
                 self.visitm(n, ' = ', "__struct__::unpack_%s('%c', '%c', %d, %s, &%s);" % (t, o, c, d, tvar, tvar_pos), func)
                 self.eol()
