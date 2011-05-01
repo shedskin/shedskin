@@ -2004,6 +2004,20 @@ class generateVisitor(ASTVisitor):
         self.visitm(lvalue.expr, self.connector(lvalue.expr, func), '__setitem__(', subs, ', ', func)
 
     def visitAssign(self, node, func=None):
+        struct_unpack = getgx().struct_unpack.get(node)
+        if struct_unpack:
+            sinfo, tvar, tvar_pos = struct_unpack
+            self.start()
+            self.visitm(tvar, ' = ', node.expr.args[1], func)
+            self.eol()
+            self.output('%s = 0;' % tvar_pos)
+            for n, (o, c, t, d) in zip(node.nodes[0], sinfo):
+                print n, o, c, t, d
+                self.start()
+                self.visitm(n, ' = ', "__struct__::unpack_%s('%c', '%c', %d, %s, &%s);" % (t, o, c, d, tvar, tvar_pos), func)
+                self.eol()
+            return
+
         #temp vars
         if len(node.nodes) > 1 or isinstance(node.expr, Tuple):
             if isinstance(node.expr, Tuple):
