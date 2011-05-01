@@ -25,3 +25,8 @@ class waf(object):
 
 w = waf()
 print hash(w) - hash(w)
+
+# struct implementation
+import struct
+h1, h2, s1 = struct.unpack('HH5s', 9*'0')
+print h1, h2, s1
