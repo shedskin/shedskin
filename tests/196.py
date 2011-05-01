@@ -35,3 +35,6 @@ header_format = "<32s2BHHH24s"
 s1, b1, b2, h1, h2, h3, s2 = struct.unpack(header_format, 64*'0')
 print s1, b1, b2, h1, h2, h3, s2
 print struct.calcsize(header_format)
+version = [0,0]
+version[1], v2 = struct.unpack('HH', '0000')
+print version
