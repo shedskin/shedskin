@@ -843,11 +843,13 @@ class moduleVisitor(ASTVisitor):
     def tempvar2(self, node, source, func):
         tvar = self.tempvar(node, func)
         self.addconstraint((source, inode(tvar)), func)
+        return tvar
 
     def tempvar_int(self, node, func):
         var = self.tempvar(node, func)
         getgx().types[inode(var)] = set([(defclass('int_'),0)])
         inode(var).copymetoo = True
+        return var
 
     def visitRaise(self, node, func=None):
         if node.expr1 == None or node.expr2 != None or node.expr3 != None:
@@ -1059,6 +1061,20 @@ class moduleVisitor(ASTVisitor):
             self.addconstraint((inode(node.value), func.retnode), func)
 
     def visitAssign(self, node, func=None):
+        # --- rewrite for struct.unpack XXX move deeper into assign_rec?
+        if len(node.nodes) == 1:
+            lvalue, rvalue = node.nodes[0], node.expr
+            if isinstance(lvalue, (AssList, AssTuple)): # XXX check flat
+                if struct_unpack(rvalue, func):
+                    self.visit(node.expr, func)
+                    sinfo = struct_info(rvalue.args[0].value, lvalue)
+                    faketuple = struct_faketuple(sinfo)
+                    self.visit(Assign(node.nodes, faketuple))
+                    tvar = self.tempvar2(rvalue.args[1], inode(rvalue.args[1]), func)
+                    tvar_pos = self.tempvar_int(rvalue.args[0], func)
+                    getgx().struct_unpack[node] = (sinfo, tvar.name, tvar_pos.name)
+                    return
+
         # --- class-level attribute # XXX merge below
         if isinstance(func, class_):
             parent = func # XXX move above
@@ -1603,3 +1619,40 @@ def slicenums(nodes):
             nodes2.append(n)
             x |= (1 << i)
     return [Const(x)]+nodes2
+
+# --- struct.unpack "type inference"
+def struct_info(fmt, node):
+    char_type = dict(['Bi', 'Hi', 'Ii', 'ss'])
+    ordering = '@'
+    if fmt and fmt[0] in '@<>!=':
+        ordering, fmt = fmt[0], fmt[1:]
+    result = []
+    digits = ''
+    for i, c in enumerate(fmt):
+        if c.isdigit():
+            digits += c
+        elif c in char_type:
+            rtype = {'i': 'int', 's': 'str'}[char_type[c]]
+            if rtype == 'str':
+                result.append((ordering, c, 'str', int(digits)))
+            else:
+                result.extend(int(digits or '1')*[(ordering, c, rtype, 1)])
+            digits = ''
+        else:
+            error('unsupported format character: '+repr(c), node, mv=getmv())
+            digits = ''
+    return result
+
+def struct_unpack(rvalue, func): # XXX merge, analyze_callfunc?
+    if isinstance(rvalue, CallFunc):
+        if isinstance(rvalue.node, Getattr) and isinstance(rvalue.node.expr, Name) and rvalue.node.expr.name == 'struct' and rvalue.node.attrname == 'unpack' and lookupvar('struct', func).imported: # XXX imported from where?
+            return True
+        elif isinstance(rvalue.node, Name) and rvalue.node.name == 'unpack' and 'unpack' in getmv().ext_funcs and not lookupvar('unpack', func): # XXX imported from where?
+            return True
+
+def struct_faketuple(info):
+   result = []
+   for o, c, t, d in info:
+       if t == 'int': result.append(Const(0))
+       elif t == 'str': result.append(Const(''))
+   return Tuple(result)

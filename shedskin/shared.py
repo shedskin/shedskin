@@ -70,6 +70,7 @@ class globalInfo: # XXX add comments, split up
         self.added_funcs = 5
         self.added_funcs_set = set()
         self.fast_hash = False
+        self.struct_unpack = {}
 
 def newgx():
     return globalInfo()
