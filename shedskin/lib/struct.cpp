@@ -26,6 +26,10 @@ __ss_int unpack_int(char o, char c, int d, str *data, __ss_int *pos) {
             result = unpack_one(data, *pos, 2, 1);
              *pos += 2;
             break;
+        case 'I':
+            result = unpack_one(data, *pos, 4, 1);
+             *pos += 4;
+            break;
         case 'B':
             result = unpack_one(data, *pos, 1, 1);
              *pos += 1;

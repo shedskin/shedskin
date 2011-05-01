@@ -28,8 +28,9 @@ print hash(w) - hash(w)
 
 # struct implementation
 import struct
-h1, h2, s1 = struct.unpack('HH5s', 9*'0')
-print h1, h2, s1
-
-s1, b1, b2, h1, h2, h3, s2 = struct.unpack("<32s2BHHH24s", 64*'0')
+from struct import unpack
+b1, b2, h1, h2, h3, i1, i2, s1 = unpack("<BBHHHII16s", 32*'0')
+print b1, b2, h1, h2, h3, i1, i2, s1
+header_format = "<32s2BHHH24s"
+s1, b1, b2, h1, h2, h3, s2 = struct.unpack(header_format, 64*'0')
 print s1, b1, b2, h1, h2, h3, s2
