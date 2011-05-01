@@ -30,3 +30,6 @@ print hash(w) - hash(w)
 import struct
 h1, h2, s1 = struct.unpack('HH5s', 9*'0')
 print h1, h2, s1
+
+s1, b1, b2, h1, h2, h3, s2 = struct.unpack("<32s2BHHH24s", 64*'0')
+print s1, b1, b2, h1, h2, h3, s2
