@@ -103,6 +103,7 @@ class variable:
         self.initexpr = None
         self.registered = False
         self.looper = None
+        self.const_assign = []
 
     def types(self):
         return inode(self).types()

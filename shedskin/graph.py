@@ -1067,7 +1067,7 @@ class moduleVisitor(ASTVisitor):
             if isinstance(lvalue, (AssList, AssTuple)): # XXX check flat
                 if struct_unpack(rvalue, func):
                     self.visit(node.expr, func)
-                    sinfo = struct_info(rvalue.args[0].value, lvalue)
+                    sinfo = struct_info(rvalue.args[0], func)
                     faketuple = struct_faketuple(sinfo)
                     self.visit(Assign(node.nodes, faketuple))
                     tvar = self.tempvar2(rvalue.args[1], inode(rvalue.args[1]), func)
@@ -1115,6 +1115,9 @@ class moduleVisitor(ASTVisitor):
                         lvar = defaultvar(lvalue.name, None)
                     else:
                         lvar = defaultvar(lvalue.name, func)
+
+                    if isinstance(rvalue, Const):
+                        lvar.const_assign.append(rvalue)
 
                     self.addconstraint((inode(rvalue), inode(lvar)), func)
 
@@ -1621,7 +1624,17 @@ def slicenums(nodes):
     return [Const(x)]+nodes2
 
 # --- struct.unpack "type inference"
-def struct_info(fmt, node):
+def struct_info(node, func):
+    if isinstance(node, Name):
+        var = lookupvar(node.name, func) # XXX fwd ref?
+        if not var or len(var.const_assign) != 1:
+            error('non-constant format string', node, mv=getmv())
+        error('assuming constant format string', node, mv=getmv(), warning=True)
+        fmt = var.const_assign[0].value
+    elif isinstance(node, Const):
+        fmt = node.value
+    else:
+        error('non-constant format string', node, mv=getmv())
     char_type = dict(['Bi', 'Hi', 'Ii', 'ss'])
     ordering = '@'
     if fmt and fmt[0] in '@<>!=':
