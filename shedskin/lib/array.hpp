@@ -12,7 +12,7 @@ extern str *__name__;
 extern class_ *cl_array;
 template <class T> class array : public pyseq<T> {
 public:
-    __GC_VECTOR(T) units; /* XXX no pointers, so avoid GC */
+    __GC_VECTOR(char) units; /* XXX no pointers, so avoid GC */
     str *typecode;
 
     array(str *typecode) {
@@ -56,17 +56,11 @@ template<class T> template<class U> void *array<T>::extend(U *iter) {
     return NULL;
 }
 
-template<class T> list<T> *array<T>::tolist() {
-    return new list<T>();
-}
-
 template<class T> str *array<T>::tostring() {
-    return new str("beh");
-}
-
-
-template<class T> void *array<T>::append(T t) {
-    return NULL;
+    str *s = new str();
+    for(unsigned int i=0;i<units.size(); i++)
+        s->unit += units[i];
+    return s;
 }
 
 template<class T> void *array<T>::fromlist(list<T> *l) {
@@ -82,12 +76,20 @@ template<class T> __ss_int array<T>::__len__() {
 }
 
 template<class T> T array<T>::__getitem__(__ss_int i) {
-    return NULL;
+    return 0;
 }
 
-template<class T> str *array<T>::__repr__() {
-    return new str("array");
-}
+template<> void *array<__ss_int>::append(__ss_int t);
+template<> void *array<str *>::append(str * t);
+template<> void *array<double>::append(double t);
+
+template<> list<__ss_int> *array<__ss_int>::tolist();
+template<> list<str *> *array<str *>::tolist();
+template<> list<double> *array<double>::tolist();
+
+template<> str *array<__ss_int>::__repr__();
+template<> str *array<str *>::__repr__();
+template<> str *array<double>::__repr__();
 
 extern void * default_0;
 
