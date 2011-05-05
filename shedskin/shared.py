@@ -229,7 +229,7 @@ class class_:
 
     def tvar_names(self):
         if self.mv.module.builtin:
-            if self.ident in ['list', 'tuple', 'frozenset', 'set', 'frozenset', 'deque', '__iter', 'pyseq', 'pyiter', 'pyset']:
+            if self.ident in ['list', 'tuple', 'frozenset', 'set', 'frozenset', 'deque', '__iter', 'pyseq', 'pyiter', 'pyset', 'array']:
                 return ['unit']
             elif self.ident in ['dict', 'defaultdict']:
                 return ['unit', 'value']

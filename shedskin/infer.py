@@ -157,7 +157,7 @@ def propagate():
             # for builtin types, the set of instance variables is known, so do not flow into non-existent ones # XXX ifa
             if isinstance(b.thing, variable) and isinstance(b.thing.parent, class_) and b.thing.parent.ident in getgx().builtins:
                 if b.thing.parent.ident in ['int_', 'float_', 'str_', 'none', 'bool_']: continue
-                elif b.thing.parent.ident in ['list', 'tuple', 'frozenset', 'set', 'file','__iter', 'deque'] and b.thing.name != 'unit': continue
+                elif b.thing.parent.ident in ['list', 'tuple', 'frozenset', 'set', 'file','__iter', 'deque', 'array'] and b.thing.name != 'unit': continue
                 elif b.thing.parent.ident in ('dict', 'defaultdict') and b.thing.name not in ['unit', 'value']: continue
                 elif b.thing.parent.ident == 'tuple2' and b.thing.name not in ['unit', 'first', 'second']: continue
 
@@ -309,6 +309,14 @@ def redirect(c, dcpa, func, callfunc, ident, callnode):
     # list, tuple
     if ident in ('list', 'tuple', 'set', 'frozenset') and nrargs(callfunc) == 1:
         func = list(callnode.types())[0][0].funcs['__inititer__'] # XXX use __init__?
+
+    # array
+    if ident == 'array':
+        typecode = callnode.thing.args[0].value
+        if typecode == 'i': array_type = 'int'
+        elif typecode == 'c': array_type = 'str'
+        else: array_type = 'float'
+        func = list(callnode.types())[0][0].funcs['__init_%s__' % array_type]
 
     # tuple2.__getitem__(0/1) -> __getfirst__/__getsecond__
     if (isinstance(callfunc.node, Getattr) and callfunc.node.attrname == '__getitem__' and \
@@ -557,7 +565,7 @@ def ifa_determine_split(node, allnodes):
 def ifa_classes_to_split():
     ''' setup classes to perform splitting on '''
     classes = []
-    for ident in ['list', 'tuple', 'tuple2', 'dict', 'set', 'frozenset', 'deque', 'defaultdict', '__iter']:
+    for ident in ['list', 'tuple', 'tuple2', 'dict', 'set', 'frozenset', 'deque', 'defaultdict', '__iter', 'array']:
         for cl in getgx().allclasses:
             if cl.mv.module.builtin and cl.ident == ident:
                 cl.splits = {}
