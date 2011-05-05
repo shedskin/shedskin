@@ -45,9 +45,10 @@ woef()
 
 # array
 import array
-arr = array.array('i', [1,2,3])
+arr = array.array('i', [3,2,1])
 print arr
 print arr.tolist()
+print sorted(arr)
 arr2 = array.array('c')
 arr2.extend('hoei')
 print arr2, arr2.tostring()

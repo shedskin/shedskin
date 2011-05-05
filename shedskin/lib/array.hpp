@@ -33,8 +33,10 @@ public:
     void *append(T t);
     void *fromlist(list<T> *l);
     void *fromstring(str *s);
+
     __ss_int __len__();
     T __getitem__(__ss_int i);
+
     str *__repr__();
 };
 
@@ -72,12 +74,14 @@ template<class T> void *array<T>::fromstring(str *s) {
 }
 
 template<class T> __ss_int array<T>::__len__() {
+    if(typecode->unit[0] == 'i')
+        return units.size() >> 1;
     return 0;
 }
 
-template<class T> T array<T>::__getitem__(__ss_int i) {
-    return 0;
-}
+template<> __ss_int array<__ss_int>::__getitem__(__ss_int i);
+template<> str *array<str *>::__getitem__(__ss_int i);
+template<> double array<double>::__getitem__(__ss_int i);
 
 template<> void *array<__ss_int>::append(__ss_int t);
 template<> void *array<str *>::append(str * t);

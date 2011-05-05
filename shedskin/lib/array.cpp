@@ -39,6 +39,16 @@ template<> void *array<str *>::append(str * t) {
 template<> void *array<double>::append(double t) {
 }
 
+template<> __ss_int array<__ss_int>::__getitem__(__ss_int i) {
+    return units[i << 1] << 8 | units[(i << 1)+1];
+}
+template<> str *array<str *>::__getitem__(__ss_int i) {
+    return 0;
+}
+template<> double array<double>::__getitem__(__ss_int i) {
+    return 0;
+}
+
 void __init() {
     __name__ = new str("array");
     cl_array = new class_("array", 29, 29);

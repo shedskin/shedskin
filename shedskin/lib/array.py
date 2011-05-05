@@ -20,3 +20,6 @@ class array:
 
     def append(self, e):
         pass
+
+    def __iter__(self):
+        return __iter(self.unit)
