@@ -17,3 +17,6 @@ class array:
 
     def extend(self, it):
         pass
+
+    def append(self, e):
+        pass
