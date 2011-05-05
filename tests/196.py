@@ -26,7 +26,7 @@ class waf(object):
 w = waf()
 print hash(w) - hash(w)
 
-# struct implementation
+# struct
 import struct
 from struct import unpack
 b1, b2, h1, h2, h3, i1, i2, s1 = unpack("<BBHHHII16s", 32*'0')
@@ -42,3 +42,12 @@ class woef:
         magic, version[0], version[1], max_files, self.cur_files, reserved, user_description = struct.unpack(header_format, 64*'0')
         print magic, version, self.cur_files
 woef()
+
+# array
+import array
+arr = array.array('i', [1,2,3])
+print arr
+print arr.tolist()
+arr2 = array.array('c')
+arr2.extend('hoei')
+print arr2, arr2.tostring()
