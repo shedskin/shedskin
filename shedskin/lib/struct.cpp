@@ -72,6 +72,32 @@ __ss_int calcsize(str *fmt) {
     return result;
 }
 
+str *pack(int n, str *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    str *result = new str();
+    for(unsigned int i=0; i<n; i++) {
+        char c = fmt->unit[i];
+        if(ordering.find(c) != -1)
+            continue;
+        if(::isdigit(c))
+            continue;
+        pyobj *arg = va_arg(args, pyobj *);
+         
+        switch(c) {
+            case 'H': 
+                if(arg->__class__ == cl_int_) {
+                    result->unit += (char)((((int_ *)(arg))->unit) & 0xff);
+                    result->unit += (char)(((((int_ *)(arg))->unit) >> 8) & 0xff);
+                }
+
+        }
+
+    }
+    va_end(args);
+    return result;
+}
+
 void __init() {
     ordering = "@<>!=";
 }
