@@ -42,6 +42,7 @@ class woef:
         magic, version[0], version[1], max_files, self.cur_files, reserved, user_description = struct.unpack(header_format, 64*'0')
         print magic, version, self.cur_files
 woef()
+print repr(struct.pack('HH', 1, 2))
 
 # array
 import array

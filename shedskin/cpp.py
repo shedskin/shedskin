@@ -1866,7 +1866,7 @@ class generateVisitor(ASTVisitor):
                 cast = True
                 self.append('((void *)(')
 
-            if print_function and not formal.name.startswith('__kw_'):
+            if (print_function or self.library_func(funcs, 'struct', None, 'pack')) and not formal.name.startswith('__kw_'):
                 types = [t[0].ident for t in self.mergeinh[arg]]
                 if 'float_' in types or 'int_' in types or 'bool_' in types:
                     cast = True
