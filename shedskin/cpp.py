@@ -1704,6 +1704,8 @@ class generateVisitor(ASTVisitor):
             error("default fillvalue for 'map' becomes 0 for integers", node, warning=True, mv=getmv())
         if self.library_func(funcs, 'itertools', None, 'izip_longest'):
             error("default fillvalue for 'izip_longest' becomes 0 for integers", node, warning=True, mv=getmv())
+        if self.library_func(funcs, 'struct', None, 'unpack'):
+            error("unsupported use of struct.unpack result", node, warning=True, mv=getmv())
 
         nrargs = len(node.args)
         if isinstance(func, function) and func.largs:
