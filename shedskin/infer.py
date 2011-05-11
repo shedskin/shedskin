@@ -311,12 +311,14 @@ def redirect(c, dcpa, func, callfunc, ident, callnode):
         func = list(callnode.types())[0][0].funcs['__inititer__'] # XXX use __init__?
 
     # array
-    if ident == 'array':
-        typecode = callnode.thing.args[0].value
-        if typecode == 'i': array_type = 'int'
+    if ident == 'array' and isinstance(callfunc.args[0], Const):
+        typecode = callfunc.args[0].value
+        array_type = None
+        if typecode in 'bBhHiIlL': array_type = 'int'
         elif typecode == 'c': array_type = 'str'
-        else: array_type = 'float'
-        func = list(callnode.types())[0][0].funcs['__init_%s__' % array_type]
+        elif typecode in 'fd': array_type = 'float'
+        if array_type is not None:
+            func = list(callnode.types())[0][0].funcs['__init_%s__' % array_type]
 
     # tuple2.__getitem__(0/1) -> __getfirst__/__getsecond__
     if (isinstance(callfunc.node, Getattr) and callfunc.node.attrname == '__getitem__' and \

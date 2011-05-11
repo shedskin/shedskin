@@ -1706,6 +1706,9 @@ class generateVisitor(ASTVisitor):
             error("default fillvalue for 'izip_longest' becomes 0 for integers", node, warning=True, mv=getmv())
         if self.library_func(funcs, 'struct', None, 'unpack'):
             error("unsupported use of struct.unpack result", node, warning=True, mv=getmv())
+        if self.library_func(funcs, 'array', 'array', '__init__'):
+            if not node.args or not isinstance(node.args[0], Const) or node.args[0].value not in 'cbBhHiIlLfd':
+                error("non-constant or unsupported type code", node, warning=True, mv=getmv())
 
         nrargs = len(node.args)
         if isinstance(func, function) and func.largs:
