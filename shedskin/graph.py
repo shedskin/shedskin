@@ -1653,7 +1653,8 @@ def struct_info(node, func):
                 result.extend(int(digits or '1')*[(ordering, c, rtype, 1)])
             digits = ''
         else:
-            error('unsupported format character: '+repr(c), node, mv=getmv())
+            if c != 'x':
+                error('unsupported format character: '+repr(c), node, mv=getmv())
             digits = ''
     return result
 
