@@ -1061,19 +1061,22 @@ class moduleVisitor(ASTVisitor):
             self.addconstraint((inode(node.value), func.retnode), func)
 
     def visitAssign(self, node, func=None):
-        # --- rewrite for struct.unpack XXX move deeper into assign_rec?
+        # --- rewrite for struct.unpack XXX rewrite callfunc as tuple
         if len(node.nodes) == 1:
             lvalue, rvalue = node.nodes[0], node.expr
-            if isinstance(lvalue, (AssList, AssTuple)): # XXX check flat
-                if struct_unpack(rvalue, func):
-                    self.visit(node.expr, func)
-                    sinfo = struct_info(rvalue.args[0], func)
-                    faketuple = struct_faketuple(sinfo)
-                    self.visit(Assign(node.nodes, faketuple), func)
-                    tvar = self.tempvar2(rvalue.args[1], inode(rvalue.args[1]), func)
-                    tvar_pos = self.tempvar_int(rvalue.args[0], func)
-                    getgx().struct_unpack[node] = (sinfo, tvar.name, tvar_pos.name)
-                    return
+            if struct_unpack(rvalue, func):
+                if not isinstance(lvalue, (AssList, AssTuple)): # XXX check flat
+                    error('struct.unpack result not split up', node, mv=self)
+                if not isinstance(rvalue.args[0], (Const, Name)):
+                    error('non-constant format string', node, mv=self)
+                self.visit(node.expr, func)
+                sinfo = struct_info(rvalue.args[0], func)
+                faketuple = struct_faketuple(sinfo)
+                self.visit(Assign(node.nodes, faketuple), func)
+                tvar = self.tempvar2(rvalue.args[1], inode(rvalue.args[1]), func)
+                tvar_pos = self.tempvar_int(rvalue.args[0], func)
+                getgx().struct_unpack[node] = (sinfo, tvar.name, tvar_pos.name)
+                return
 
         # --- class-level attribute # XXX merge below
         if isinstance(func, class_):
@@ -1656,7 +1659,7 @@ def struct_info(node, func):
             digits = ''
     return result
 
-def struct_unpack(rvalue, func): # XXX merge, analyze_callfunc?
+def struct_unpack(rvalue, func):
     if isinstance(rvalue, CallFunc):
         if isinstance(rvalue.node, Getattr) and isinstance(rvalue.node.expr, Name) and rvalue.node.expr.name == 'struct' and rvalue.node.attrname == 'unpack' and lookupvar('struct', func).imported: # XXX imported from where?
             return True
