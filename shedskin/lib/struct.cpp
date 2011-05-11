@@ -45,6 +45,13 @@ str * unpack_str(char o, char c, int d, str *data, __ss_int *pos) {
     *pos += d;
     return result;
 }
+__ss_bool unpack_bool(char o, char c, int d, str *data, __ss_int *pos) {
+    return True;
+}
+
+double unpack_float(char o, char c, int d, str *data, __ss_int *pos) {
+    return 3.141;
+}
 
 __ss_int calcsize(str *fmt) {
     __ss_int result = 0;
