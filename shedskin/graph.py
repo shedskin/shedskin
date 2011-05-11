@@ -1636,7 +1636,7 @@ def struct_info(node, func):
         fmt = node.value
     else:
         error('non-constant format string', node, mv=getmv())
-    char_type = dict(['Bi', 'Hi', 'Ii', 'ss'])
+    char_type = dict(['cs', 'bi', 'Bi', '?b', 'hi', 'Hi', 'ii', 'Ii', 'li', 'Li', 'qi', 'Qi', 'ff', 'df', 'ss', 'ps', 'Pi'])
     ordering = '@'
     if fmt and fmt[0] in '@<>!=':
         ordering, fmt = fmt[0], fmt[1:]
@@ -1646,8 +1646,8 @@ def struct_info(node, func):
         if c.isdigit():
             digits += c
         elif c in char_type:
-            rtype = {'i': 'int', 's': 'str'}[char_type[c]]
-            if rtype == 'str':
+            rtype = {'i': 'int', 's': 'str', 'b': 'bool', 'f': 'float'}[char_type[c]]
+            if rtype == 'str' and c != 'c':
                 result.append((ordering, c, 'str', int(digits)))
             else:
                 result.extend(int(digits or '1')*[(ordering, c, rtype, 1)])
@@ -1668,6 +1668,8 @@ def struct_unpack(rvalue, func):
 def struct_faketuple(info):
    result = []
    for o, c, t, d in info:
-       if t == 'int': result.append(Const(0))
+       if t == 'int': result.append(Const(1))
        elif t == 'str': result.append(Const(''))
+       elif t == 'float': result.append(Const(1.0))
+       elif t == 'bool': result.append(Name('True'))
    return Tuple(result)
