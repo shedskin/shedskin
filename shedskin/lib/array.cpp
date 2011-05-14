@@ -18,52 +18,6 @@ template<> str *array<str *>::__repr__() {
     return __add_strs(5, new str("array('"), typecode, new str("', "), repr(tostring()), new str(")"));
 }
 
-template<> void *array<__ss_int>::append(__ss_int t) {
-    fillbuf(t);
-    for(unsigned int i=0; i<itemsize; i++)
-        units.push_back(buffy[i]);
-    return NULL;
-}
-
-template<> void *array<str *>::append(str * t) {
-    units.push_back(t->unit[0]);
-    return NULL;
-}
-template<> void *array<double>::append(double t) {
-    fillbuf(t);
-    for(unsigned int i=0; i<itemsize; i++)
-        units.push_back(buffy[i]);
-    return NULL;
-}
-
-template<> void *array<__ss_int>::__setitem__(__ss_int i, __ss_int t) {
-    int len = this->__len__();
-    if(i<0) i = len+i;
-    if(i<0 or i>=len)
-        throw new IndexError(new str("array index out of range"));
-    fillbuf(t);
-    for(unsigned int j=0; j<itemsize; j++)
-        this->units[i*itemsize+j] = buffy[j];
-}
-
-template<> void *array<str *>::__setitem__(__ss_int i, str *t) {
-    int len = this->__len__();
-    if(i<0) i = len+i;
-    if(i<0 or i>=len)
-        throw new IndexError(new str("array index out of range"));
-    this->units[i] = t->unit[0]; /* XXX */
-}
-
-template<> void *array<double>::__setitem__(__ss_int i, double t) {
-    int len = this->__len__();
-    if(i<0) i = len+i;
-    if(i<0 or i>=len)
-        throw new IndexError(new str("array index out of range"));
-    fillbuf(t);
-    for(unsigned int j=0; j<itemsize; j++)
-        this->units[i*itemsize+j] = buffy[j];
-}
-
 template<> __ss_int array<__ss_int>::__getitem__(__ss_int i) {
     int len = this->__len__();
     if(i<0) i = len+i;
@@ -96,6 +50,17 @@ template<> double array<double>::__getitem__(__ss_int i) {
         return *((float *)(&units[i*itemsize]));
     else
         return *((double *)(&units[i*itemsize]));
+}
+
+template<> void *array<str *>::append(str *t) {
+    units.push_back(t->unit[0]); /* XXX */
+    return NULL;
+}
+
+template<> void *array<str *>::__setitem__(__ss_int i, str *t) {
+    i = __wrap(this, i);
+    units[i*itemsize] = t->unit[0]; /* XXX */
+    return NULL;
 }
 
 int get_itemsize(str *typecode) {
