@@ -36,6 +36,34 @@ template<> void *array<double>::append(double t) {
     return NULL;
 }
 
+template<> void *array<__ss_int>::__setitem__(__ss_int i, __ss_int t) {
+    int len = this->__len__();
+    if(i<0) i = len+i;
+    if(i<0 or i>=len)
+        throw new IndexError(new str("array index out of range"));
+    fillbuf(t);
+    for(unsigned int j=0; j<itemsize; j++)
+        this->units[i*itemsize+j] = buffy[j];
+}
+
+template<> void *array<str *>::__setitem__(__ss_int i, str *t) {
+    int len = this->__len__();
+    if(i<0) i = len+i;
+    if(i<0 or i>=len)
+        throw new IndexError(new str("array index out of range"));
+    this->units[i] = t->unit[0]; /* XXX */
+}
+
+template<> void *array<double>::__setitem__(__ss_int i, double t) {
+    int len = this->__len__();
+    if(i<0) i = len+i;
+    if(i<0 or i>=len)
+        throw new IndexError(new str("array index out of range"));
+    fillbuf(t);
+    for(unsigned int j=0; j<itemsize; j++)
+        this->units[i*itemsize+j] = buffy[j];
+}
+
 template<> __ss_int array<__ss_int>::__getitem__(__ss_int i) {
     int len = this->__len__();
     if(i<0) i = len+i;
