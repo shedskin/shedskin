@@ -72,6 +72,14 @@ template<class T> str *array<T>::tostring() {
     return s;
 }
 
+template<class T> list<T> *array<T>::tolist() {
+    list<T> *l = new list<T>();
+    int len = __len__();
+    for(unsigned int i=0;i<len; i++)
+        l->units.push_back(__getitem__(i));
+    return l;
+}
+
 template<class T> void *array<T>::fromlist(list<T> *l) {
     return NULL;
 }
@@ -106,10 +114,6 @@ template<> double array<double>::__getitem__(__ss_int i);
 template<> void *array<__ss_int>::append(__ss_int t);
 template<> void *array<str *>::append(str * t);
 template<> void *array<double>::append(double t);
-
-template<> list<__ss_int> *array<__ss_int>::tolist();
-template<> list<str *> *array<str *>::tolist();
-template<> list<double> *array<double>::tolist();
 
 template<> str *array<__ss_int>::__repr__();
 template<> str *array<str *>::__repr__();

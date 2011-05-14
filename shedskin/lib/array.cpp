@@ -18,20 +18,6 @@ template<> str *array<double>::__repr__() {
     return NULL;
 }
 
-template<> list<__ss_int> *array<__ss_int>::tolist() {
-    list<__ss_int> *l = new list<__ss_int>();
-    unsigned int len = __len__();
-    for(unsigned int i=0; i<len; i++)
-        l->units.push_back(__getitem__(i));
-    return l;
-}
-template<> list<str *> *array<str *>::tolist() {
-    return NULL;
-}
-template<> list<double> *array<double>::tolist() {
-    return NULL;
-}
-
 template<> void *array<__ss_int>::append(__ss_int t) {
     fillbuf(t);
     for(unsigned int i=0; i<itemsize; i++)
