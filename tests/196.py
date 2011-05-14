@@ -64,6 +64,11 @@ print fla.typecode, fla.itemsize
 print repr(fla.tostring()), ['%.2f' % flah for flah in fla.tolist()]
 print '%.2f' % fla[1]
 print repr(fla)
+arr3 = array.array('i')
+arr3.fromstring(arr.tostring())
+print arr, arr3
+areq = (arr==arr3)
+print areq
 
 # binascii
 import binascii

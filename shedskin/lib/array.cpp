@@ -22,15 +22,18 @@ template<> void *array<__ss_int>::append(__ss_int t) {
     fillbuf(t);
     for(unsigned int i=0; i<itemsize; i++)
         units.push_back(buffy[i]);
+    return NULL;
 }
 
 template<> void *array<str *>::append(str * t) {
     units.push_back(t->unit[0]);
+    return NULL;
 }
 template<> void *array<double>::append(double t) {
     fillbuf(t);
     for(unsigned int i=0; i<itemsize; i++)
         units.push_back(buffy[i]);
+    return NULL;
 }
 
 template<> __ss_int array<__ss_int>::__getitem__(__ss_int i) {

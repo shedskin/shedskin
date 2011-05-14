@@ -20,6 +20,9 @@ class array:
     def tostring(self):
         return ''
 
+    def fromstring(self, s):
+        pass
+
     def extend(self, it):
         pass
 
