@@ -817,7 +817,7 @@ def connect_actual_formal(expr, func, parent_constr=False, merge=None):
         actuals = actuals[1:]
 
     skip_defaults = True # XXX
-    if not func.mv.module.builtin or func.mv.module.ident in ['random', 'itertools', 'datetime', 'ConfigParser', 'csv'] or (func.ident in ('sort','sorted', 'min', 'max', '__print')):
+    if not func.mv.module.builtin or func.mv.module.ident in ['random', 'itertools', 'datetime', 'ConfigParser', 'csv', 'binascii'] or (func.ident in ('sort','sorted', 'min', 'max', '__print')):
         if not (func.mv.module.builtin and func.ident == 'randrange'):
             skip_defaults = False
 
