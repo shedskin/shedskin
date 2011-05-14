@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 import traceback, sys, os, time, subprocess, glob
 
+SS = 'python ../shedskin/__init__.py'
+
 def usage():
     print "'-l': give individual test numbers"
     print "'-r': reverse test order"
@@ -75,11 +77,11 @@ def run_test(test_nr, failures, msvc, options):
     t0 = time.time()
     try:
         if msvc: 
-            assert os.system('shedskin -v %d' % test_nr) == 0
+            assert os.system('%s -v %d' % (SS, test_nr)) == 0
         elif 'n' in options:
-            assert os.system('shedskin -e -m Makefile.%d %d' % (test_nr, test_nr)) == 0
+            assert os.system('%s -e -m Makefile.%d %d' % (SS, test_nr, test_nr)) == 0
         else:
-            assert os.system('shedskin -m Makefile.%d %d' % (test_nr, test_nr)) == 0
+            assert os.system('%s -m Makefile.%d %d' % (SS, test_nr, test_nr)) == 0
         if msvc:
             assert os.system('nmake /C /S clean') == 0
             assert os.system('nmake /C /S') == 0
@@ -110,7 +112,7 @@ def extmod_tests(args, options):
         os.chdir('e%d' % test)
         try:
             extmod = file('main.py').next()[1:].strip()
-            assert os.system('shedskin -e %s' % extmod) == 0
+            assert os.system('%s -e %s' % (SS, extmod)) == 0
             assert os.system('make') == 0
             native_output = get_output('python main.py')
             if sys.platform == 'win32': ext = '.pyd'
@@ -141,7 +143,7 @@ def error_tests(args, options):
             for line in file('%d.py' % test):
                 if line.startswith('#*'):
                     checks.append(line[1:].strip())
-            output = get_output('shedskin %d 2>&1' % test).splitlines()
+            output = get_output('%s %d 2>&1' % (SS, test)).splitlines()
             assert not [l for l in output if 'Traceback' in l]
             for check in checks:
                 assert [l for l in output if l.startswith(check)]
