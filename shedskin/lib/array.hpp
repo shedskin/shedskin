@@ -98,8 +98,17 @@ template<class T> __ss_int array<T>::__len__() {
     return units.size() / itemsize;
 }
 
-template<class T> __ss_bool array<T>::__eq__(pyobj *p) {
-    return True;
+template<class T> __ss_bool array<T>::__eq__(pyobj *p) { /* move to pyseq? */
+   if(p->__class__ != cl_array)
+       return False;
+   array<T> *b = (array<T> *)p;
+   unsigned int len = this->__len__();
+   if(b->__len__() != len)
+       return False;
+   for(unsigned int i = 0; i < len; i++)
+       if(!__eq(this->__getitem__(i), b->__getitem__(i)))
+           return False;
+   return True;
 }
 
 template<class T> void array<T>::fillbuf(T t) {
