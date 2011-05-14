@@ -1,7 +1,10 @@
 #!/usr/bin/env python
-import traceback, sys, os, time, subprocess, glob
+import traceback, sys, os, time, subprocess, glob, os.path
 
-SS = 'python ../shedskin/__init__.py'
+if os.path.exists('../shedskin/__init__.py'):
+    SS = 'python ../shedskin/__init__.py'
+else:
+    SS = 'python ../../shedskin/__init__.py'
 
 def usage():
     print "'-l': give individual test numbers"
