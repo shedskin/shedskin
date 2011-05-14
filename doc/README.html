@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.6: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.7: http://docutils.sourceforge.net/" />
 <title>Shed Skin Tutorial</title>
 <meta name="date" content="December 10 2010" />
 <meta name="authors" content="Mark Dufour and James Coughlan" />
@@ -318,10 +318,10 @@ var = self.some_method # bad, method reference
 <p><strong>Windows</strong></p>
 <p>To install the <strong>Windows</strong> version, simply download and start it. (If you use <strong>ActivePython</strong> or some other non-standard Python distribution, or <strong>MingW</strong>, please deinstall this first.)</p>
 <p><strong>Debian</strong></p>
-<p>To install the <strong>Debian</strong> package, simply download and install it using your package manager. Make sure the following packages are installed:</p>
+<p>To install the <strong>Debian</strong> package, simply download and install it using your package manager. Make sure the following packages are installed (at least version 4.2 of g++):</p>
 <p><tt class="docutils literal">sudo <span class="pre">apt-get</span> install g++ <span class="pre">libpcre3-dev</span> <span class="pre">libgc-dev</span> <span class="pre">python-dev</span></tt></p>
 <p><strong>RPM</strong></p>
-<p>To install the <strong>RPM</strong> package, simply download and install it using your package manager. Make sure the following packages are installed:</p>
+<p>To install the <strong>RPM</strong> package, simply download and install it using your package manager. Make sure the following packages are installed (at least version 4.2 of g++):</p>
 <p><tt class="docutils literal">sudo yum install <span class="pre">gcc-c++</span> <span class="pre">pcre-devel</span> <span class="pre">gc-devel</span> <span class="pre">python-devel</span></tt></p>
 <p><strong>UNIX</strong></p>
 <p>To install the <strong>UNIX</strong> source package on a <strong>GNU/Linux</strong> or <strong>OSX</strong> system, take the following steps:</p>
@@ -330,12 +330,27 @@ var = self.some_method # bad, method reference
 <li>download and unpack it</li>
 <li>run <tt class="docutils literal">sudo python setup.py install</tt></li>
 <li>For <strong>OSX</strong>: install the Apple XCode development environment</li>
-<li>make sure you can run <tt class="docutils literal">g++</tt>, the C++ compiler</li>
+<li>make sure you can run <tt class="docutils literal">g++</tt>, the C++ compiler (version 4.2 or higher)</li>
 <li>install the <a class="reference external" href="http://www.hpl.hp.com/personal/Hans_Boehm/gc/">Boehm</a> garbage collector (including development files)</li>
 <li>install the <a class="reference external" href="http://www.pcre.org/">PCRE</a> library (including development files)</li>
 <li>make sure the Python development files are installed</li>
 </ul>
 </blockquote>
+<p><strong>BOEHM GC</strong></p>
+<p>If the <a class="reference external" href="http://www.hpl.hp.com/personal/Hans_Boehm/gc/">Boehm</a> garbage collector is not available via your package manager, the following is known to work. Download for example version 7.2alpha5 from the <a class="reference external" href="http://www.hpl.hp.com/personal/Hans_Boehm/gc/">Boehm</a> website, unpack it, and install it as follows:</p>
+<pre class="literal-block">
+./configure --prefix=/usr/local --enable-threads=posix --enable-cplusplus
+make
+make check
+sudo make install
+</pre>
+<p><strong>PCRE</strong></p>
+<p>If the <a class="reference external" href="http://www.pcre.org/">PCRE</a> library is not available via your package manager, the following is known to work. Download for example version 8.12 from the <a class="reference external" href="http://www.pcre.org/">PCRE</a> website, unpack it, and build as follows:</p>
+<pre class="literal-block">
+./configure --prefix=/usr/local
+make
+sudo make install
+</pre>
 </div>
 <div class="section" id="id6">
 <span id="compiling-a-stand-alone-program"></span><h1><a class="toc-backref" href="#id18">Compiling a Stand-Alone Program</a></h1>
@@ -545,7 +560,9 @@ pl.show()
 <li>James Coughlan</li>
 <li>Michael Elkins</li>
 <li>FFAO</li>
+<li>Victor Garcia</li>
 <li>Luis M. Gonzales</li>
+<li>Fahrzim Hemmati</li>
 <li>Karel Heyse</li>
 <li>Denis de Leeuw Duarte</li>
 <li>Van Lindberg</li>
