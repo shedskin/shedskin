@@ -54,9 +54,11 @@ print sorted(arr)
 arr2 = array.array('c')
 arr2.extend('hoei')
 print arr2, arr2.tostring()
+print arr2[0]
 fla = array.array('d', (142344, 2384234))
 print fla.typecode, fla.itemsize
 print repr(fla.tostring())
+print '%.2f' % fla[1]
 
 # binascii
 import binascii
