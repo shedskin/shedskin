@@ -9,13 +9,13 @@ class_ *cl_array;
 char buffy[32];
 
 template<> str *array<__ss_int>::__repr__() {
-    return __add_strs(3, new str("array('i', "), repr(tolist()), new str(")"));
-}
-template<> str *array<str *>::__repr__() {
-    return __add_strs(3, new str("array('c', "), repr(tostring()), new str(")"));
+    return __add_strs(5, new str("array('"), typecode, new str("', "), repr(tolist()), new str(")"));
 }
 template<> str *array<double>::__repr__() {
-    return NULL;
+    return __add_strs(5, new str("array('"), typecode, new str("', "), repr(tolist()), new str(")"));
+}
+template<> str *array<str *>::__repr__() {
+    return __add_strs(5, new str("array('"), typecode, new str("', "), repr(tostring()), new str(")"));
 }
 
 template<> void *array<__ss_int>::append(__ss_int t) {
