@@ -63,6 +63,7 @@ fla.fromlist([1234,])
 print fla.typecode, fla.itemsize
 print repr(fla.tostring()), ['%.2f' % flah for flah in fla.tolist()]
 print '%.2f' % fla[1]
+print repr(fla)
 
 # binascii
 import binascii
