@@ -69,6 +69,19 @@ arr3.fromstring(arr.tostring())
 print arr, arr3
 areq = (arr==arr3)
 print areq
+arradd = arr+arr
+print arradd
+beh = arr
+arr += arr
+print arr
+print beh
+mul1 = arr * 2
+mul2 = 2 * arr
+print mul1, mul2
+wah = mul1
+mul1 *= 2
+print mul1
+print wah
 
 # binascii
 import binascii
