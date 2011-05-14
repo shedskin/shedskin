@@ -82,6 +82,9 @@ wah = mul1
 mul1 *= 2
 print mul1
 print wah
+boolt = wah.__contains__(5), 6 in wah
+print boolt
+print len(wah)
 
 # binascii
 import binascii

@@ -44,6 +44,9 @@ class array:
     def __mul__(self, b):
         return self
 
+    def __len__(self):
+        return 1
+
     def __contains__(self, e):
         return True
 
