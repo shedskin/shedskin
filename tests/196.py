@@ -85,6 +85,12 @@ print wah
 boolt = wah.__contains__(5), 6 in wah
 print boolt
 print len(wah), wah.count(5), wah.index(5)
+print wah.pop(4)
+print wah.pop()
+print wah.pop(-2)
+print wah
+wah.remove(5)
+print wah
 
 # binascii
 import binascii

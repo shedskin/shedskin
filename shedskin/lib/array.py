@@ -38,6 +38,12 @@ class array:
     def index(self, e):
         return 1
 
+    def pop(self, i=-1):
+        return self.unit
+
+    def remove(self, e):
+        pass
+
     def __getitem__(self, i):
         return self.unit
 
