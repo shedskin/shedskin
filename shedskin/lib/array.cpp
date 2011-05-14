@@ -37,6 +37,10 @@ template<> void *array<str *>::append(str * t) {
     units.push_back(t->unit[0]);
 }
 template<> void *array<double>::append(double t) {
+    char s[sizeof(double)];
+    *((double *)s) = t;
+    for(unsigned int i=0; i<sizeof(double); i++)
+        units.push_back(s[i]);
 }
 
 template<> __ss_int array<__ss_int>::__getitem__(__ss_int i) {
@@ -47,6 +51,10 @@ template<> str *array<str *>::__getitem__(__ss_int i) {
 }
 template<> double array<double>::__getitem__(__ss_int i) {
     return 0;
+}
+
+int get_itemsize(str *typecode) {
+    return 8;
 }
 
 void __init() {
