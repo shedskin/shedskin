@@ -51,6 +51,8 @@ public:
 
     __ss_int count(T t);
     __ss_int index(T t);
+    void *remove(T t);
+    T pop(__ss_int i=-1);
 
     str *__repr__();
 
@@ -169,6 +171,23 @@ template<class T> __ss_int array<T>::index(T t) {
         if(__eq(t, this->__getitem__(i)))
             return i;
     throw new ValueError(new str("array.index(x): x not in list"));
+}
+
+template<class T> void *array<T>::remove(T t) {
+    this->pop(this->index(t));
+    return NULL;
+}
+
+template<class T> T array<T>::pop(__ss_int i) {
+    int len = this->__len__();
+    if(len==0)
+        throw new IndexError(new str("pop from empty list"));
+    if(i<0) i = len+i;
+    if(i<0 or i>=len)
+        throw new IndexError(new str("pop index out of range"));
+    T t = this->__getitem__(i);
+    this->units.erase(this->units.begin()+(i*itemsize), this->units.begin()+((i+1)*itemsize));
+    return t;
 }
 
 template<class T> void array<T>::fillbuf(T t) {
