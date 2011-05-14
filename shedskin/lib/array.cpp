@@ -8,21 +8,12 @@ class_ *cl_array;
 
 char buffy[32];
 
-template<> str *array<__ss_int>::__repr__() {
-    return __add_strs(5, new str("array('"), typecode, new str("', "), repr(tolist()), new str(")"));
-}
-template<> str *array<double>::__repr__() {
-    return __add_strs(5, new str("array('"), typecode, new str("', "), repr(tolist()), new str(")"));
-}
 template<> str *array<str *>::__repr__() {
     return __add_strs(5, new str("array('"), typecode, new str("', "), repr(tostring()), new str(")"));
 }
 
 template<> __ss_int array<__ss_int>::__getitem__(__ss_int i) {
-    int len = this->__len__();
-    if(i<0) i = len+i;
-    if(i<0 or i>=len)
-        throw new IndexError(new str("array index out of range"));
+    i = __wrap(this, i);
     switch(typecode->unit[0]) {
         case 'b': return *((signed char *)(&units[i*itemsize]));
         case 'B': return *((unsigned char *)(&units[i*itemsize]));
@@ -35,17 +26,11 @@ template<> __ss_int array<__ss_int>::__getitem__(__ss_int i) {
     }
 }
 template<> str *array<str *>::__getitem__(__ss_int i) {
-    int len = this->__len__();
-    if(i<0) i = len+i;
-    if(i<0 or i>=len)
-        throw new IndexError(new str("array index out of range"));
+    i = __wrap(this, i);
     return __char_cache[(unsigned char)units[i]];
 }
 template<> double array<double>::__getitem__(__ss_int i) {
-    int len = this->__len__();
-    if(i<0) i = len+i;
-    if(i<0 or i>=len)
-        throw new IndexError(new str("array index out of range"));
+    i = __wrap(this, i);
     if(typecode->unit[0] == 'f')
         return *((float *)(&units[i*itemsize]));
     else

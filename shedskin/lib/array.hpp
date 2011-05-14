@@ -229,9 +229,10 @@ template<class T> void *array<T>::__setitem__(__ss_int i, T t) {
 }
 template<> void *array<str *>::__setitem__(__ss_int i, str *t);
 
-template<> str *array<__ss_int>::__repr__();
+template<class T> str *array<T>::__repr__() {
+    return __add_strs(5, new str("array('"), typecode, new str("', "), repr(tolist()), new str(")"));
+}
 template<> str *array<str *>::__repr__();
-template<> str *array<double>::__repr__();
 
 template<class T> void *array<T>::reverse() { /* use fillbuf, __setitem__ or standard C function? */
     int len = this->__len__();
