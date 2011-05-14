@@ -54,7 +54,21 @@ template<> double array<double>::__getitem__(__ss_int i) {
 }
 
 int get_itemsize(str *typecode) {
-    return 8;
+    char c = typecode->unit[0];
+    switch(c) {
+        case 'c': return sizeof(char);
+        case 'b': return sizeof(signed char);
+        case 'B': return sizeof(unsigned char);
+        case 'h': return sizeof(signed short);
+        case 'H': return sizeof(unsigned short);
+        case 'i': return sizeof(signed int);
+        case 'I': return sizeof(unsigned int);
+        case 'l': return sizeof(signed long);
+        case 'L': return sizeof(unsigned long);
+        case 'f': return sizeof(float);
+        case 'd': return sizeof(double);
+    }
+    return 0;
 }
 
 void __init() {
