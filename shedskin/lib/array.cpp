@@ -37,6 +37,10 @@ template<> void *array<double>::append(double t) {
 }
 
 template<> __ss_int array<__ss_int>::__getitem__(__ss_int i) {
+    int len = this->__len__();
+    if(i<0) i = len+i;
+    if(i<0 or i>=len)
+        throw new IndexError(new str("array index out of range"));
     switch(typecode->unit[0]) {
         case 'b': return *((signed char *)(&units[i*itemsize]));
         case 'B': return *((unsigned char *)(&units[i*itemsize]));
@@ -49,9 +53,17 @@ template<> __ss_int array<__ss_int>::__getitem__(__ss_int i) {
     }
 }
 template<> str *array<str *>::__getitem__(__ss_int i) {
+    int len = this->__len__();
+    if(i<0) i = len+i;
+    if(i<0 or i>=len)
+        throw new IndexError(new str("array index out of range"));
     return __char_cache[(unsigned char)units[i]];
 }
 template<> double array<double>::__getitem__(__ss_int i) {
+    int len = this->__len__();
+    if(i<0) i = len+i;
+    if(i<0 or i>=len)
+        throw new IndexError(new str("array index out of range"));
     if(typecode->unit[0] == 'f')
         return *((float *)(&units[i*itemsize]));
     else

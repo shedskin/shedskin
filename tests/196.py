@@ -91,6 +91,9 @@ print wah.pop(-2)
 print wah
 wah.remove(5)
 print wah
+#wah[7], wah[8] = 123, 124
+#print wah
+print wah[-2]
 
 # binascii
 import binascii
