@@ -9,18 +9,22 @@ namespace __array__ {
 extern str *const_0;
 extern str *__name__;
 
+int get_itemsize(str *typecode);
+
 extern class_ *cl_array;
 template <class T> class array : public pyseq<T> {
 public:
     __GC_VECTOR(char) units; /* XXX no pointers, so avoid GC */
     str *typecode;
+    __ss_int itemsize;
 
     array(str *typecode) {
         this->__class__ = cl_array;
         this->typecode = typecode;
+        this->itemsize = get_itemsize(typecode);
     }
 
-    template<class U> array(str *typecode, U *iter) {
+    template<class U> array(str *typecode, U *iter) { /* XXX iter with type None */
         this->__class__ = cl_array;
         __init__(typecode, iter);
     }
@@ -42,8 +46,8 @@ public:
 
 template<class T> template<class U> void *array<T>::__init__(str *typecode, U *iter) {
     this->typecode = typecode;
-    if(iter)
-        this->extend(iter);
+    this->itemsize = get_itemsize(typecode);
+    this->extend(iter);
     return NULL;
 }
 

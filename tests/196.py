@@ -53,3 +53,6 @@ print sorted(arr)
 arr2 = array.array('c')
 arr2.extend('hoei')
 print arr2, arr2.tostring()
+fla = array.array('d', (142344, 2384234))
+print fla.typecode, fla.itemsize
+print repr(fla.tostring())
