@@ -47,6 +47,9 @@ class array:
     def __getitem__(self, i):
         return self.unit
 
+    def __setitem__(self, i, e):
+        pass
+
     def __iter__(self):
         return __iter(self.unit)
 
