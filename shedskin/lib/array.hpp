@@ -42,6 +42,7 @@ public:
 
     __ss_int __len__();
     T __getitem__(__ss_int i);
+    __ss_bool __eq__(pyobj *p);
 
     str *__repr__();
 
@@ -68,6 +69,7 @@ template<class T> template<class U> void *array<T>::extend(U *iter) {
 
 template<class T> template<class U> void *array<T>::fromlist(U *iter) {
     extend(iter);
+    return NULL;
 }
 
 template<class T> str *array<T>::tostring() {
@@ -75,6 +77,13 @@ template<class T> str *array<T>::tostring() {
     for(unsigned int i=0;i<units.size(); i++)
         s->unit += units[i];
     return s;
+}
+
+template<class T> void *array<T>::fromstring(str *s) {
+    int len = s->unit.size();
+    for(unsigned int i=0;i<len; i++)
+        units.push_back(s->unit[i]);
+    return NULL;
 }
 
 template<class T> list<T> *array<T>::tolist() {
@@ -87,6 +96,10 @@ template<class T> list<T> *array<T>::tolist() {
 
 template<class T> __ss_int array<T>::__len__() {
     return units.size() / itemsize;
+}
+
+template<class T> __ss_bool array<T>::__eq__(pyobj *p) {
+    return True;
 }
 
 template<class T> void array<T>::fillbuf(T t) {
