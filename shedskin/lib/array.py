@@ -25,5 +25,8 @@ class array:
     def append(self, e):
         pass
 
+    def __getitem__(self, i):
+        return self.unit
+
     def __iter__(self):
         return __iter(self.unit)

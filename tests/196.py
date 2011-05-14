@@ -49,6 +49,7 @@ import array
 arr = array.array('i', [3,2,1])
 print arr
 print arr.tolist()
+print arr[0], arr[1], arr[2]
 print sorted(arr)
 arr2 = array.array('c')
 arr2.extend('hoei')
