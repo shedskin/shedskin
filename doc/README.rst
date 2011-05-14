@@ -200,6 +200,23 @@ To install the **UNIX** source package on a **GNU/Linux** or **OSX** system, tak
 
  - make sure the Python development files are installed
 
+**BOEHM GC**
+
+If the `Boehm`_ garbage collector is not available via your package manager, the following is known to work. Download for example version 7.2alpha5 from the `Boehm`_ website, unpack it, and install it as follows: ::
+
+    ./configure --prefix=/usr/local --enable-threads=posix --enable-cplusplus
+    make
+    make check
+    sudo make install
+
+**PCRE**
+
+If the `PCRE`_ library is not available via your package manager, the following is known to work. Download for example version 8.12 from the `PCRE`_ website, unpack it, and build as follows: ::
+
+    ./configure --prefix=/usr/local
+    make
+    sudo make install
+
 .. _Compiling a Stand-Alone Program:
 
 Compiling a Stand-Alone Program
