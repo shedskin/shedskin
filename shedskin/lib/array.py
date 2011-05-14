@@ -44,6 +44,12 @@ class array:
     def remove(self, e):
         pass
 
+    def byteswap(self):
+        pass
+
+    def reverse(self):
+        pass
+
     def __getitem__(self, i):
         return self.unit
 

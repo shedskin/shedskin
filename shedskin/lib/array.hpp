@@ -56,6 +56,9 @@ public:
 
     str *__repr__();
 
+    void *reverse();
+    void *byteswap();
+
     void fillbuf(T t);
 };
 
@@ -216,6 +219,38 @@ template<> void *array<double>::append(double t);
 template<> str *array<__ss_int>::__repr__();
 template<> str *array<str *>::__repr__();
 template<> str *array<double>::__repr__();
+
+template<class T> void *array<T>::reverse() { /* use fillbuf, __setitem__ or standard C function? */
+    int len = this->__len__();
+    if(len > 1) {
+        char *first = &units[0];
+        char *second = &units[(len-1)*itemsize];
+        for(unsigned int i=0; i<len/2; i++) {
+            memcpy(buffy, first, itemsize);
+            memcpy(first, second, itemsize);
+            memcpy(second, buffy, itemsize);
+            first += itemsize; 
+            second -= itemsize;
+        }
+    }
+    return NULL;
+}
+
+template<class T> void *array<T>::byteswap() { /* standard C function? */
+    int len = this->__len__();
+    for(unsigned int i=0; i<len; i++) {
+        char *first = &units[i*itemsize];
+        char *second = &units[((i+1)*itemsize)-1];
+        for(unsigned int j=0; j<itemsize/2; j++) {
+            char tmp = *first;
+            *first = *second;
+            *second = tmp;
+            first++;
+            second--;
+        }
+    }
+    return NULL;
+}
 
 extern void * default_0;
 

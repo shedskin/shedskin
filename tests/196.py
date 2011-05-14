@@ -94,6 +94,10 @@ print wah
 #wah[7], wah[8] = 123, 124
 #print wah
 print wah[-2]
+wah.reverse()
+print wah
+wah.byteswap()
+print wah
 
 # binascii
 import binascii
