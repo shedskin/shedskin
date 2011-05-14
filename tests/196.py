@@ -57,3 +57,10 @@ print arr2, arr2.tostring()
 fla = array.array('d', (142344, 2384234))
 print fla.typecode, fla.itemsize
 print repr(fla.tostring())
+
+# binascii
+import binascii
+b2a = binascii.b2a_uu('my guitar wants to kill your mama')
+print repr(b2a)
+a2b = binascii.a2b_uu(b2a)
+print repr(a2b)
