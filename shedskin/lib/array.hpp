@@ -8,6 +8,7 @@ namespace __array__ {
 
 extern str *const_0;
 extern str *__name__;
+extern char buffy[];
 
 int get_itemsize(str *typecode);
 
@@ -42,6 +43,8 @@ public:
     T __getitem__(__ss_int i);
 
     str *__repr__();
+
+    void fillbuf(T t);
 };
 
 template<class T> template<class U> void *array<T>::__init__(str *typecode, U *iter) {
@@ -78,9 +81,22 @@ template<class T> void *array<T>::fromstring(str *s) {
 }
 
 template<class T> __ss_int array<T>::__len__() {
-    if(typecode->unit[0] == 'i')
-        return units.size() >> 1;
-    return 0;
+    return units.size() / itemsize;
+}
+
+template<class T> void array<T>::fillbuf(T t) {
+    switch(typecode->unit[0]) {
+        case 'b': *((signed char *)buffy) = t; break;
+        case 'B': *((unsigned char *)buffy) = t; break;
+        case 'h': *((signed short *)buffy) = t; break;
+        case 'H': *((unsigned short *)buffy) = t; break;
+        case 'i': *((signed int *)buffy) = t; break;
+        case 'I': *((unsigned int *)buffy) = t; break;
+        case 'l': *((signed long *)buffy) = t; break;
+        case 'L': *((unsigned long *)buffy) = t; break;
+        case 'f': *((float *)buffy) = t; break;
+        case 'd': *((double *)buffy) = t; break;
+    }
 }
 
 template<> __ss_int array<__ss_int>::__getitem__(__ss_int i);

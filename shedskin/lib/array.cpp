@@ -6,6 +6,8 @@ str *__name__;
 void * default_0;
 class_ *cl_array;
 
+char buffy[32];
+
 template<> str *array<__ss_int>::__repr__() {
     return __add_strs(3, new str("array('i', "), repr(tolist()), new str(")"));
 }
@@ -18,8 +20,8 @@ template<> str *array<double>::__repr__() {
 
 template<> list<__ss_int> *array<__ss_int>::tolist() {
     list<__ss_int> *l = new list<__ss_int>();
-    for(unsigned int i=0; i<units.size(); i += 2)
-        l->units.push_back((units[i] << 8) | units[i+1]);
+    for(unsigned int i=0; i<units.size(); i += itemsize)
+        l->units.push_back(*((signed int *)(&units[i])));
     return l;
 }
 template<> list<str *> *array<str *>::tolist() {
@@ -30,21 +32,25 @@ template<> list<double> *array<double>::tolist() {
 }
 
 template<> void *array<__ss_int>::append(__ss_int t) {
-    units.push_back((t >> 8) & 0xff);
-    units.push_back(t & 0xff);
+    fillbuf(t);
+    for(unsigned int i=0; i<itemsize; i++)
+        units.push_back(buffy[i]);
+    /* printf("na append\n");
+    for(unsigned int i=0; i<units.size(); i++)
+        printf("%d\n", units[i]); */
 }
+
 template<> void *array<str *>::append(str * t) {
     units.push_back(t->unit[0]);
 }
 template<> void *array<double>::append(double t) {
-    char s[sizeof(double)];
-    *((double *)s) = t;
-    for(unsigned int i=0; i<sizeof(double); i++)
-        units.push_back(s[i]);
+    fillbuf(t);
+    for(unsigned int i=0; i<itemsize; i++)
+        units.push_back(buffy[i]);
 }
 
 template<> __ss_int array<__ss_int>::__getitem__(__ss_int i) {
-    return units[i << 1] << 8 | units[(i << 1)+1];
+    return *((signed int *)(&units[i*itemsize]));
 }
 template<> str *array<str *>::__getitem__(__ss_int i) {
     return 0;
