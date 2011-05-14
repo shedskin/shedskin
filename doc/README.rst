@@ -172,13 +172,13 @@ To install the **Windows** version, simply download and start it. (If you use **
 
 **Debian**
 
-To install the **Debian** package, simply download and install it using your package manager. Make sure the following packages are installed:
+To install the **Debian** package, simply download and install it using your package manager. Make sure the following packages are installed (at least version 4.2 of g++):
 
 ``sudo apt-get install g++ libpcre3-dev libgc-dev python-dev``
 
 **RPM**
 
-To install the **RPM** package, simply download and install it using your package manager. Make sure the following packages are installed:
+To install the **RPM** package, simply download and install it using your package manager. Make sure the following packages are installed (at least version 4.2 of g++):
 
 ``sudo yum install gcc-c++ pcre-devel gc-devel python-devel``
 
@@ -192,7 +192,7 @@ To install the **UNIX** source package on a **GNU/Linux** or **OSX** system, tak
 
  - For **OSX**: install the Apple XCode development environment
 
- - make sure you can run ``g++``, the C++ compiler
+ - make sure you can run ``g++``, the C++ compiler (version 4.2 or higher)
 
  - install the `Boehm`_ garbage collector (including development files)
 
