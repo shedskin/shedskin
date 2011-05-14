@@ -32,6 +32,12 @@ class array:
     def append(self, e):
         pass
 
+    def count(self, e):
+        return 1
+
+    def index(self, e):
+        return 1
+
     def __getitem__(self, i):
         return self.unit
 

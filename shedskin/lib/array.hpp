@@ -49,6 +49,9 @@ public:
     array<T> *__add__(array<T> *a);
     array<T> *__iadd__(array<T> *a);
 
+    __ss_int count(T t);
+    __ss_int index(T t);
+
     str *__repr__();
 
     void fillbuf(T t);
@@ -149,6 +152,23 @@ template<class T> array<T> *array<T>::__iadd__(array<T> *b) { /* memcpy */
     for(unsigned int j=0;j<len; j++)
         this->units.push_back(b->units[j]);
     return this;
+}
+
+template<class T> __ss_int array<T>::count(T t) {
+    __ss_int result = 0;
+    int len = this->__len__();
+    for(unsigned int i=0;i<len; i++)
+        if(__eq(t, this->__getitem__(i)))
+            result += 1;
+    return result;
+}
+
+template<class T> __ss_int array<T>::index(T t) {
+    int len = this->__len__();
+    for(unsigned int i=0;i<len; i++)
+        if(__eq(t, this->__getitem__(i)))
+            return i;
+    throw new ValueError(new str("array.index(x): x not in list"));
 }
 
 template<class T> void array<T>::fillbuf(T t) {
