@@ -20,8 +20,9 @@ template<> str *array<double>::__repr__() {
 
 template<> list<__ss_int> *array<__ss_int>::tolist() {
     list<__ss_int> *l = new list<__ss_int>();
-    for(unsigned int i=0; i<units.size(); i += itemsize)
-        l->units.push_back(*((signed int *)(&units[i])));
+    unsigned int len = __len__();
+    for(unsigned int i=0; i<len; i++)
+        l->units.push_back(__getitem__(i));
     return l;
 }
 template<> list<str *> *array<str *>::tolist() {
@@ -35,9 +36,6 @@ template<> void *array<__ss_int>::append(__ss_int t) {
     fillbuf(t);
     for(unsigned int i=0; i<itemsize; i++)
         units.push_back(buffy[i]);
-    /* printf("na append\n");
-    for(unsigned int i=0; i<units.size(); i++)
-        printf("%d\n", units[i]); */
 }
 
 template<> void *array<str *>::append(str * t) {
@@ -50,13 +48,25 @@ template<> void *array<double>::append(double t) {
 }
 
 template<> __ss_int array<__ss_int>::__getitem__(__ss_int i) {
-    return *((signed int *)(&units[i*itemsize]));
+    switch(typecode->unit[0]) {
+        case 'b': return *((signed char *)(&units[i*itemsize]));
+        case 'B': return *((unsigned char *)(&units[i*itemsize]));
+        case 'h': return *((signed short *)(&units[i*itemsize]));
+        case 'H': return *((unsigned short *)(&units[i*itemsize]));
+        case 'i': return *((signed int *)(&units[i*itemsize]));
+        case 'I': return *((unsigned int *)(&units[i*itemsize]));
+        case 'l': return *((signed long *)(&units[i*itemsize]));
+        case 'L': return *((unsigned long *)(&units[i*itemsize]));
+    }
 }
 template<> str *array<str *>::__getitem__(__ss_int i) {
-    return 0;
+    return __char_cache[(unsigned char)units[i]];
 }
 template<> double array<double>::__getitem__(__ss_int i) {
-    return 0;
+    if(typecode->unit[0] == 'f')
+        return *((float *)(&units[i*itemsize]));
+    else
+        return *((double *)(&units[i*itemsize]));
 }
 
 int get_itemsize(str *typecode) {
