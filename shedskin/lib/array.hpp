@@ -42,6 +42,7 @@ public:
 
     __ss_int __len__();
     T __getitem__(__ss_int i);
+    void *__setitem__(__ss_int i, T t);
     __ss_bool __eq__(pyobj *p);
 
     array<T> *__mul__(__ss_int i);
@@ -215,6 +216,10 @@ template<> double array<double>::__getitem__(__ss_int i);
 template<> void *array<__ss_int>::append(__ss_int t);
 template<> void *array<str *>::append(str * t);
 template<> void *array<double>::append(double t);
+
+template<> void *array<__ss_int>::__setitem__(__ss_int i, __ss_int t);
+template<> void *array<str *>::__setitem__(__ss_int i, str *t);
+template<> void *array<double>::__setitem__(__ss_int i, double t);
 
 template<> str *array<__ss_int>::__repr__();
 template<> str *array<str *>::__repr__();
