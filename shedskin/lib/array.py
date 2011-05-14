@@ -3,6 +3,7 @@ class array:
     def __init__(self, flag, it=None):
         self.typecode = ''
         self.itemsize = 0
+
     def __init_int__(self, flag, it=None):
         self.unit = 1
         self.__init__(flag)
@@ -14,7 +15,7 @@ class array:
         self.__init__(flag)
 
     def tolist(self):
-        return [1]
+        return [self.unit]
 
     def tostring(self):
         return ''
