@@ -31,12 +31,13 @@ public:
     }
 
     template<class U> void *__init__(str *typecode, U *iter);
+
     template<class U> void *extend(U *iter);
+    template<class U> void *fromlist(U *iter);
 
     list<T> *tolist();
     str *tostring();
     void *append(T t);
-    void *fromlist(list<T> *l);
     void *fromstring(str *s);
 
     __ss_int __len__();
@@ -65,6 +66,10 @@ template<class T> template<class U> void *array<T>::extend(U *iter) {
     return NULL;
 }
 
+template<class T> template<class U> void *array<T>::fromlist(U *iter) {
+    extend(iter);
+}
+
 template<class T> str *array<T>::tostring() {
     str *s = new str();
     for(unsigned int i=0;i<units.size(); i++)
@@ -78,14 +83,6 @@ template<class T> list<T> *array<T>::tolist() {
     for(unsigned int i=0;i<len; i++)
         l->units.push_back(__getitem__(i));
     return l;
-}
-
-template<class T> void *array<T>::fromlist(list<T> *l) {
-    return NULL;
-}
-
-template<class T> void *array<T>::fromstring(str *s) {
-    return NULL;
 }
 
 template<class T> __ss_int array<T>::__len__() {
