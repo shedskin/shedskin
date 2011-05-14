@@ -37,3 +37,12 @@ class array:
 
     def __iter__(self):
         return __iter(self.unit)
+
+    def __add__(self, b):
+        return self
+
+    def __mul__(self, b):
+        return self
+
+    def __with_int__(self):
+        return self

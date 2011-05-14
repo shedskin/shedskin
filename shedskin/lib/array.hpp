@@ -44,6 +44,11 @@ public:
     T __getitem__(__ss_int i);
     __ss_bool __eq__(pyobj *p);
 
+    array<T> *__mul__(__ss_int i);
+    array<T> *__imul__(__ss_int i);
+    array<T> *__add__(array<T> *a);
+    array<T> *__iadd__(array<T> *a);
+
     str *__repr__();
 
     void fillbuf(T t);
@@ -56,7 +61,7 @@ template<class T> template<class U> void *array<T>::__init__(str *typecode, U *i
     return NULL;
 }
 
-template<class T> template<class U> void *array<T>::extend(U *iter) {
+template<class T> template<class U> void *array<T>::extend(U *iter) { /* array? memcpy */
     typename U::for_in_unit e;
     typename U::for_in_loop __3;
     int __2;
@@ -72,14 +77,14 @@ template<class T> template<class U> void *array<T>::fromlist(U *iter) {
     return NULL;
 }
 
-template<class T> str *array<T>::tostring() {
+template<class T> str *array<T>::tostring() { /* memcpy */
     str *s = new str();
     for(unsigned int i=0;i<units.size(); i++)
         s->unit += units[i];
     return s;
 }
 
-template<class T> void *array<T>::fromstring(str *s) {
+template<class T> void *array<T>::fromstring(str *s) { /* memcpy */
     int len = s->unit.size();
     for(unsigned int i=0;i<len; i++)
         units.push_back(s->unit[i]);
@@ -98,7 +103,7 @@ template<class T> __ss_int array<T>::__len__() {
     return units.size() / itemsize;
 }
 
-template<class T> __ss_bool array<T>::__eq__(pyobj *p) { /* move to pyseq? */
+template<class T> __ss_bool array<T>::__eq__(pyobj *p) { /* strncmp */
    if(p->__class__ != cl_array)
        return False;
    array<T> *b = (array<T> *)p;
@@ -109,6 +114,41 @@ template<class T> __ss_bool array<T>::__eq__(pyobj *p) { /* move to pyseq? */
        if(!__eq(this->__getitem__(i), b->__getitem__(i)))
            return False;
    return True;
+}
+
+template<class T> array<T> *array<T>::__mul__(__ss_int n) { /* memcpy */
+    array<T> *a = new array<T>(typecode);
+    int len = this->units.size();
+    for(unsigned int i=0; i<n; i++)
+        for(unsigned int j=0;j<len; j++)
+            a->units.push_back(this->units[j]);
+    return a;
+}
+
+template<class T> array<T> *array<T>::__imul__(__ss_int n) { /* memcpy */
+    int len = this->units.size();
+    for(unsigned int i=0; i<n-1; i++)
+        for(unsigned int j=0;j<len; j++)
+            this->units.push_back(this->units[j]);
+    return this;
+}
+
+template<class T> array<T> *array<T>::__add__(array<T> *b) { /* memcpy */
+    array<T> *a = new array<T>(typecode);
+    int len = this->units.size();
+    for(unsigned int j=0;j<len; j++)
+        a->units.push_back(this->units[j]);
+    len = b->units.size();
+    for(unsigned int j=0;j<len; j++)
+        a->units.push_back(b->units[j]);
+    return a;
+}
+
+template<class T> array<T> *array<T>::__iadd__(array<T> *b) { /* memcpy */
+    int len = b->units.size();
+    for(unsigned int j=0;j<len; j++)
+        this->units.push_back(b->units[j]);
+    return this;
 }
 
 template<class T> void array<T>::fillbuf(T t) {
