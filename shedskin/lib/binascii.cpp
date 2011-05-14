@@ -130,9 +130,9 @@ str *a2b_uu(str *string) {
     __ss_int bin_len = (*ascii_data++ - ' ') & 077;
     str * binary = new str("",bin_len);
     char * bin_data = &binary->unit[0];
-    char this_ch,leftchar=0;
+    unsigned char this_ch;
+    __ss_int leftchar=0, leftbits=0;
 
-    __ss_int leftbits=0;
     ascii_len--;
     for( ; bin_len > 0 ; ascii_len--, ascii_data++ ) {
         /* XXX is it really best to add NULs if there's no more data */
@@ -199,8 +199,8 @@ str *b2a_uu(str *binary) {
     str * ascii = new str("",ascii_len);
     char * ascii_data = &ascii->unit[0];
     char * ascii_start = ascii_data;
-    char this_ch,leftchar=0;
-    __ss_int leftbits=0;
+    unsigned char this_ch;
+    __ss_int leftchar=0, leftbits=0;
 
     /* Store the length */
     *ascii_data++ = ' ' + (bin_len & 077);
