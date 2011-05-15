@@ -73,3 +73,12 @@ class array:
 
     def __iter__(self):
         return __iter(self.unit)
+
+    def __slice__(self, x, lower, upper, step):
+        return self
+    def __delslice__(self, a, b):
+        pass
+    def __setslice__(self, x, lower, upper, step, r):
+        pass
+    def __delete__(self, x, a=1, b=1, s=1):
+        pass
