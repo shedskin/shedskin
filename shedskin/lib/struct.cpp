@@ -25,15 +25,15 @@ __ss_int unpack_int(char o, char c, int d, str *data, __ss_int *pos) {
     __ss_int result;
     switch(c) {
         case 'H':
-            result = unpack_one(data, *pos, 2, 1);
+            result = unpack_one(data, *pos, 2, o=='>');
              *pos += 2;
             break;
         case 'I':
-            result = unpack_one(data, *pos, 4, 1);
+            result = unpack_one(data, *pos, 4, o=='>');
              *pos += 4;
             break;
         case 'B':
-            result = unpack_one(data, *pos, 1, 1);
+            result = unpack_one(data, *pos, 1, o=='>');
              *pos += 1;
             break;
     }
