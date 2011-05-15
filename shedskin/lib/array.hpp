@@ -63,6 +63,9 @@ public:
     void *reverse();
     void *byteswap();
 
+    void *tofile(file *f);
+    void *fromfile(file *f, __ss_int n);
+
     void fillbuf(T t);
 };
 
@@ -273,6 +276,20 @@ template<class T> void *array<T>::byteswap() { /* standard C function? */
         }
     }
     return NULL;
+}
+
+template<class T> void *array<T>::tofile(file *f) {
+    f->write(this->tostring());
+}
+
+template<class T> void *array<T>::fromfile(file *f, __ss_int n) {
+    str *s = f->read(n*itemsize);
+    int len = s->__len__();
+    int bytes = (len/itemsize)*itemsize;
+    for(unsigned int i=0; i<bytes; i++)
+        units.push_back(s->unit[i]);
+    if (len < n*itemsize) 
+        throw new EOFError(new str("not enough items in file"));
 }
 
 extern void * default_0;

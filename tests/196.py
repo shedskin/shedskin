@@ -103,6 +103,20 @@ wah[3] = 99
 print wah
 wah.insert(7, 98)
 print wah
+arr4 = array.array('i', [3,2,1])
+print arr4
+f = open('testdata/blabla', 'w')
+arr4.tofile(f)
+f.close()
+arr5 = array.array('i')
+f = open('testdata/blabla')
+arr5.fromfile(f, 2)
+try:
+    arr5.fromfile(f, 2)
+except EOFError, e:
+    print e
+f.close()
+print arr5
 
 # binascii
 import binascii

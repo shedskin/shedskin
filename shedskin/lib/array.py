@@ -71,6 +71,12 @@ class array:
     def __len__(self):
         return 1
 
+    def tofile(self, f):
+        pass
+
+    def fromfile(self, f, n):
+        pass
+
     def __contains__(self, e):
         return True
 

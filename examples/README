@@ -1,4 +1,4 @@
-54 programs that work with Shed Skin 0.7.1.
+55 programs that work with Shed Skin 0.8.
 
 15,000 lines in total (using sloccount, around 21,000 otherwise)
 
@@ -60,6 +60,7 @@ lines  name               description                   notes
    469 rdb.py             iPod shuffle programmer       see comments in top
     82 rsync.py           rsync algorithm               see comments in top
     80 sieve.py           prime number sieves
+   102 solitaire.py       solitaire encryption algorithm
    139 sudoku1.py         sudoku solver
    148 sudoku2.py         sudoku solver
    155 sudoku3.py         sudoku solver
