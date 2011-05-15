@@ -54,6 +54,7 @@ arr.fromlist([4,5])
 print sorted(arr)
 arr2 = array.array('c')
 arr2.extend('hoei')
+print arr2.count('h'), arr2.index('h')
 arr2[-1] = 'X'
 arr2.insert(0, '-')
 arr2.fromlist(['a', 'b'])

@@ -70,6 +70,23 @@ int get_itemsize(str *typecode) {
     throw new TypeError(new str("must be char, not str"));
 }
 
+template<> __ss_int array<str *>::count(str *t) { 
+    if(len(t) != 1)
+        return 0;
+    return std::count(this->units.begin(), this->units.end(), t->unit[0]);
+}
+
+template<> __ss_int array<str *>::index(str *t) {
+    if(len(t) == 1) {
+        int len = this->__len__();
+        char c = t->unit[0];
+        for(unsigned int i=0; i<len; i++)
+            if(units[i] == c)
+                return i;
+    }
+    throw new ValueError(new str("array.index(x): x not in list"));
+}
+
 void __init() {
     __name__ = new str("array");
     cl_array = new class_("array", 29, 29);

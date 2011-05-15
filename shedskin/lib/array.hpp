@@ -185,6 +185,7 @@ template<class T> __ss_int array<T>::count(T t) {
             result += 1;
     return result;
 }
+template<> __ss_int array<str *>::count(str *t);
 
 template<class T> __ss_int array<T>::index(T t) {
     int len = this->__len__();
@@ -193,6 +194,7 @@ template<class T> __ss_int array<T>::index(T t) {
             return i;
     throw new ValueError(new str("array.index(x): x not in list"));
 }
+template<> __ss_int array<str *>::index(str *t);
 
 template<class T> void *array<T>::remove(T t) {
     this->pop(this->index(t));
