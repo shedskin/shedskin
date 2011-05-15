@@ -34,15 +34,15 @@ public:
 
     template<class U> void *extend(U *iter);
     template<class U> void *fromlist(U *iter);
+    void *fromstring(str *s);
 
     list<T> *tolist();
     str *tostring();
-    void *append(T t);
-    void *fromstring(str *s);
 
-    __ss_int __len__();
-    T __getitem__(__ss_int i);
     void *__setitem__(__ss_int i, T t);
+    void *append(T t);
+    void *insert(__ss_int i, T t);
+
     __ss_bool __eq__(pyobj *p);
 
     array<T> *__mul__(__ss_int i);
@@ -50,11 +50,14 @@ public:
     array<T> *__add__(array<T> *a);
     array<T> *__iadd__(array<T> *a);
 
+    T __getitem__(__ss_int i);
     __ss_int count(T t);
     __ss_int index(T t);
+
     void *remove(T t);
     T pop(__ss_int i=-1);
 
+    __ss_int __len__();
     str *__repr__();
 
     void *reverse();
@@ -228,6 +231,12 @@ template<class T> void *array<T>::__setitem__(__ss_int i, T t) {
         this->units[i*itemsize+j] = buffy[j];
 }
 template<> void *array<str *>::__setitem__(__ss_int i, str *t);
+
+template<class T> void *array<T>::insert(__ss_int i, T t) {
+    i = __wrap(this, i);
+    this->units.insert(this->units.begin()+(i*itemsize), itemsize, '\0');
+    this->__setitem__(i, t);
+}
 
 template<class T> str *array<T>::__repr__() {
     return __add_strs(5, new str("array('"), typecode, new str("', "), repr(tolist()), new str(")"));
