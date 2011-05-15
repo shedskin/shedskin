@@ -124,6 +124,9 @@ c1.append(4)
 c2 = copy.deepcopy(arr)
 c2.append(5)
 print c1, c2, arr
+arra = array.array('i', [1,2])
+arrb = array.array('i', [1,2,3])
+print arra == arrb, arra > arrb, arra < arrb, cmp(arra, arrb) # XXX compare with non-arrays
 
 # binascii
 import binascii
