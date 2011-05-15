@@ -127,6 +127,9 @@ print c1, c2, arr
 arra = array.array('i', [1,2])
 arrb = array.array('i', [1,2,3])
 print arra == arrb, arra > arrb, arra < arrb, cmp(arra, arrb) # XXX compare with non-arrays
+del arrb[1]
+del arrb[-1]
+print arrb
 
 # binascii
 import binascii
