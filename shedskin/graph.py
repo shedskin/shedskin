@@ -1095,7 +1095,6 @@ class moduleVisitor(ASTVisitor):
         # --- a,b,.. = c,(d,e),.. = .. = expr
         for target_expr in node.nodes:
             pairs = assign_rec(target_expr, node.expr)
-
             for (lvalue, rvalue) in pairs:
                 # expr[expr] = expr
                 if isinstance(lvalue, Subscript) and not isinstance(lvalue.subs[0], Sliceobj):

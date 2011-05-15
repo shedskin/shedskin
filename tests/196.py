@@ -185,3 +185,7 @@ all[1:3] = range(5)
 print all
 del all[1:7:2]
 print all
+
+# OMG
+omg, = (17,)
+print omg
