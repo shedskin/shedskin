@@ -288,6 +288,33 @@ There are some important differences between using the compiled extension module
 
 4. Multiple (interacting) extension modules are not supported at the moment. Also, importing and using the Python version of a module and the compiled version at the same time may not work.
 
+**Numpy Integration**
+
+**Shed Skin** does not currently come with direct support for **Numpy**. It is possible however to pass a **Numpy** array to a **Shed Skin** compiled extension module as a list, using its ``tolist`` method. Note that this is very inefficient (see above). Consider the following example: ::
+
+    # simple_module2.py
+
+    def my_sum(a):
+        """ compute sum of elements in list of lists (matrix) """
+        h = len(a) # number of rows in matrix
+        w = len(a[0]) # number of columns
+        s = 0.0
+        for i in range(h):
+            for j in range(w):
+                s += a[i][j]
+        return s
+
+    if __name__ == '__main__':
+        print my_sum([[1.0, 2.0], [3.0, 4.0]]) 
+
+After compiling this module as an extension module with **Shed Skin**, we can pass in a **Numpy** array as follows: ::
+
+    >>> import numpy
+    >>> import simple_module2
+    >>> a = numpy.array(([1.0, 2.0], [3.0, 4.0]))
+    >>> simple_module2.my_sum(a.tolist())
+    10.0
+
 .. _Parallel Processing:
 
 Parallel Processing
