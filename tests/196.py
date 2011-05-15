@@ -130,6 +130,13 @@ print arra == arrb, arra > arrb, arra < arrb, cmp(arra, arrb) # XXX compare with
 del arrb[1]
 del arrb[-1]
 print arrb
+allr = array.array('H', range(10))
+print allr
+print allr[2:8:2]
+allr[1:3] = array.array('H', range(5))
+print allr
+del allr[1:7:2]
+print allr
 
 # binascii
 import binascii
