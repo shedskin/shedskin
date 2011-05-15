@@ -489,6 +489,7 @@ The following people have already made significant contributions to **Shed Skin*
 * Douglas McNeil
 * Andy Miller
 * Jeff Miller
+* Danny Milosavljevic
 * Joaquin Abian Monux
 * John Nagle
 * Harri Pasanen
