@@ -511,29 +511,13 @@ def lookupfunc(node, mv): # XXX lookupvar first?
 # --- recursively determine (lvalue, rvalue) pairs in assignment expressions
 
 def assign_rec(left, right):
-    # determine lvalues and rvalues
-    if isinstance(left, (AssTuple, AssList)):
-        lvalues = left.getChildNodes()
-    else:
-        lvalues = [left]
-
-    if len(lvalues) > 1:
-        if isinstance(right, (Tuple, List)):
-            rvalues = right.getChildNodes()
-        else:
-            return [(left, right)]
-    else:
-        rvalues = [right]
-
-    # pair corresponding arguments
-    pairs = []
-    for (lvalue,rvalue) in zip(lvalues, rvalues):
-         if isinstance(lvalue, (AssTuple, AssList)):
+    if isinstance(left, (AssTuple, AssList)) and isinstance(right, (Tuple, List)):
+        pairs = []
+        for (lvalue, rvalue) in zip(left.getChildNodes(), right.getChildNodes()):
              pairs += assign_rec(lvalue, rvalue)
-         else:
-             pairs.append((lvalue, rvalue))
-
-    return pairs
+        return pairs
+    else:
+        return [(left, right)]
 
 def augmsg(node, msg):
     if hasattr(node, 'augment'): return '__i'+msg+'__'
