@@ -136,6 +136,7 @@ Programs to be compiled with **Shed Skin** cannot freely use the Python standard
 
 The following modules are largely supported at the moment. Several of these, such as ``os.path``, were compiled to C++ using **Shed Skin**.
 
+  - ``array``
   - ``bisect``
   - ``collections`` (defaultdict, deque)
   - ``ConfigParser`` (no SafeConfigParser)
