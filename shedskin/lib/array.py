@@ -56,6 +56,9 @@ class array:
     def __setitem__(self, i, e):
         pass
 
+    def insert(self, i, e):
+        pass
+
     def __iter__(self):
         return __iter(self.unit)
 

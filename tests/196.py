@@ -55,6 +55,7 @@ print sorted(arr)
 arr2 = array.array('c')
 arr2.extend('hoei')
 arr2[-1] = 'X'
+arr2.insert(0, '-')
 arr2.fromlist(['a', 'b'])
 print arr2, arr2.tolist(), arr2.tostring()
 print arr2[0]
@@ -93,14 +94,14 @@ print wah.pop(-2)
 print wah
 wah.remove(5)
 print wah
-#wah[7], wah[8] = 123, 124
-#print wah
 print wah[-2]
 wah.reverse()
 print wah
 wah.byteswap()
 print wah
 wah[3] = 99
+print wah
+wah.insert(7, 98)
 print wah
 
 # binascii
