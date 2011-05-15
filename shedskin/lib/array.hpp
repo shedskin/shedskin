@@ -39,7 +39,10 @@ public:
     list<T> *tolist();
     str *tostring();
 
+    T __getitem__(__ss_int i);
     void *__setitem__(__ss_int i, T t);
+    void *__delitem__(__ss_int i);
+
     void *append(T t);
     void *insert(__ss_int i, T t);
 
@@ -50,7 +53,6 @@ public:
     array<T> *__add__(array<T> *a);
     array<T> *__iadd__(array<T> *a);
 
-    T __getitem__(__ss_int i);
     __ss_int count(T t);
     __ss_int index(T t);
 
@@ -242,6 +244,12 @@ template<class T> void *array<T>::insert(__ss_int i, T t) {
     i = __wrap(this, i);
     this->units.insert(this->units.begin()+(i*itemsize), itemsize, '\0');
     this->__setitem__(i, t);
+}
+
+template<class T> void *array<T>::__delitem__(__ss_int i) {
+    i = __wrap(this, i);
+    this->units.erase(units.begin()+(i*itemsize), units.begin()+((i+1)*itemsize));
+    return NULL;
 }
 
 template<class T> str *array<T>::__repr__() {
