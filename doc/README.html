@@ -288,6 +288,7 @@ var = self.some_method # bad, method reference
 <p>The following modules are largely supported at the moment. Several of these, such as <tt class="docutils literal">os.path</tt>, were compiled to C++ using <strong>Shed Skin</strong>.</p>
 <blockquote>
 <ul class="simple">
+<li><tt class="docutils literal">array</tt></li>
 <li><tt class="docutils literal">bisect</tt></li>
 <li><tt class="docutils literal">collections</tt> (defaultdict, deque)</li>
 <li><tt class="docutils literal">ConfigParser</tt> (no SafeConfigParser)</li>
@@ -409,6 +410,32 @@ make
 <li>Global variables are converted once, at initialization time, from <strong>Shed Skin</strong> to <strong>CPython</strong>. This means that the value of the <strong>CPython</strong> version and <strong>Shed Skin</strong> version can change independently. This problem can be avoided by only using constant globals, or by adding getter/setter functions.</li>
 <li>Multiple (interacting) extension modules are not supported at the moment. Also, importing and using the Python version of a module and the compiled version at the same time may not work.</li>
 </ol>
+<p><strong>Numpy Integration</strong></p>
+<p><strong>Shed Skin</strong> does not currently come with direct support for <strong>Numpy</strong>. It is possible however to pass a <strong>Numpy</strong> array to a <strong>Shed Skin</strong> compiled extension module as a list, using its <tt class="docutils literal">tolist</tt> method. Note that this is very inefficient (see above). Consider the following example:</p>
+<pre class="literal-block">
+# simple_module2.py
+
+def my_sum(a):
+    &quot;&quot;&quot; compute sum of elements in list of lists (matrix) &quot;&quot;&quot;
+    h = len(a) # number of rows in matrix
+    w = len(a[0]) # number of columns
+    s = 0.0
+    for i in range(h):
+        for j in range(w):
+            s += a[i][j]
+    return s
+
+if __name__ == '__main__':
+    print my_sum([[1.0, 2.0], [3.0, 4.0]])
+</pre>
+<p>After compiling this module as an extension module with <strong>Shed Skin</strong>, we can pass in a <strong>Numpy</strong> array as follows:</p>
+<pre class="literal-block">
+&gt;&gt;&gt; import numpy
+&gt;&gt;&gt; import simple_module2
+&gt;&gt;&gt; a = numpy.array(([1.0, 2.0], [3.0, 4.0]))
+&gt;&gt;&gt; simple_module2.my_sum(a.tolist())
+10.0
+</pre>
 </div>
 <div class="section" id="id8">
 <span id="parallel-processing"></span><h1><a class="toc-backref" href="#id20">Parallel Processing</a></h1>
@@ -548,9 +575,8 @@ pl.show()
 <span id="how-to-help-out-in-shed-skin-development"></span><h1><a class="toc-backref" href="#id24">How to help out in Shed Skin Development</a></h1>
 <p>Open source projects thrive on feedback. Please send in bug reports, patches or other code, or suggestions about this document; or join the mailing list and start or participate in discussions (see the <a class="reference external" href="http://shedskin.googlecode.com/">Googlecode site</a>.)</p>
 <p>If you are a student, you might want to consider applying for the yearly Google <a class="reference external" href="http://code.google.com/soc/">Summer of Code</a> or <a class="reference external" href="http://code.google.com/opensource/ghop/">GHOP</a> projects. <strong>Shed Skin</strong> has so far successfully participated in one Summer of Code and one GHOP.</p>
-<p>I would like to thank the following company/people, for their help with <strong>Shed Skin</strong> so far:</p>
+<p>The following people have already made significant contributions to <strong>Shed Skin</strong>:</p>
 <ul class="simple">
-<li>Google</li>
 <li>Bearophile</li>
 <li>Hakan Ardo</li>
 <li>Brian Blais</li>
@@ -583,7 +609,6 @@ pl.show()
 <li>Pavel Vinogradov</li>
 <li>Jason Ye</li>
 </ul>
-<p>As well as all the other people who wrote and shared all the example programs.</p>
 </div>
 </div>
 </body>
