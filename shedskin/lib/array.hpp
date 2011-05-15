@@ -67,6 +67,9 @@ public:
     void *fromfile(file *f, __ss_int n);
 
     void fillbuf(T t);
+
+    array<T> *__copy__();
+    array<T> *__deepcopy__(dict<void *, pyobj *> *memo);
 };
 
 template<class T> template<class U> void *array<T>::__init__(str *typecode, U *iter) {
@@ -290,6 +293,16 @@ template<class T> void *array<T>::fromfile(file *f, __ss_int n) {
         units.push_back(s->unit[i]);
     if (len < n*itemsize) 
         throw new EOFError(new str("not enough items in file"));
+}
+
+template<class T> array<T> *array<T>::__copy__() {
+    array<T> *a = new array<T>(this->typecode);
+    a->units = this->units;
+    return a;
+}
+
+template<class T> array<T> *array<T>::__deepcopy__(dict<void *, pyobj *> *memo) {
+    return this->__copy__();
 }
 
 extern void * default_0;
