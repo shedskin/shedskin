@@ -38,13 +38,17 @@ template<> double array<double>::__getitem__(__ss_int i) {
 }
 
 template<> void *array<str *>::append(str *t) {
-    units.push_back(t->unit[0]); /* XXX */
+    if(len(t) != 1)
+        throw new TypeError(new str("array item must be char"));
+    units.push_back(t->unit[0]);
     return NULL;
 }
 
 template<> void *array<str *>::__setitem__(__ss_int i, str *t) {
+    if(len(t) != 1)
+        throw new TypeError(new str("array item must be char"));
     i = __wrap(this, i);
-    units[i*itemsize] = t->unit[0]; /* XXX */
+    units[i*itemsize] = t->unit[0];
     return NULL;
 }
 
@@ -63,7 +67,7 @@ int get_itemsize(str *typecode) {
         case 'f': return sizeof(float);
         case 'd': return sizeof(double);
     }
-    return 0;
+    throw new TypeError(new str("must be char, not str"));
 }
 
 void __init() {
