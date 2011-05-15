@@ -2722,7 +2722,7 @@ template<class T> void *list<T>::__delete__(__ss_int x, __ss_int l, __ss_int u, 
     else {
         __GC_VECTOR(T) v;
         for(int i=0; i<this->__len__();i++)
-            if((i+l) % s)
+            if(i < l or i >= u or (i-l)%s)
                 v.push_back(this->units[i]);
         units = v;
     }

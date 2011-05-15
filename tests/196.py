@@ -169,3 +169,11 @@ b2a = binascii.hexlify(str)
 print repr(b2a)
 a2b = binascii.unhexlify(b2a)
 print repr(a2b)
+
+# delslice bug
+all = range(10)
+print all[2:8:2]
+all[1:3] = range(5)
+print all
+del all[1:7:2]
+print all
