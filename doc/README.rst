@@ -441,9 +441,8 @@ Open source projects thrive on feedback. Please send in bug reports, patches or 
 
 If you are a student, you might want to consider applying for the yearly Google `Summer of Code`_ or `GHOP`_ projects. **Shed Skin** has so far successfully participated in one Summer of Code and one GHOP.
 
-I would like to thank the following company/people, for their help with **Shed Skin** so far:
+The following people have already made significant contributions to **Shed Skin**:
 
-* Google
 * Bearophile
 * Hakan Ardo
 * Brian Blais
@@ -475,5 +474,3 @@ I would like to thank the following company/people, for their help with **Shed S
 * Jaroslaw Tworek
 * Pavel Vinogradov
 * Jason Ye
-
-As well as all the other people who wrote and shared all the example programs.
