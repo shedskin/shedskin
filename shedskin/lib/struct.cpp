@@ -83,8 +83,8 @@ str *pack(int n, str *fmt, ...) {
     va_list args;
     va_start(args, fmt);
     str *result = new str();
-    for(unsigned int i=0; i<n; i++) {
-        char c = fmt->unit[i];
+    for(unsigned int i=0, j=0; i<n; j++) {
+        char c = fmt->unit[j];
         if(ordering.find(c) != -1)
             continue;
         if(::isdigit(c))
@@ -97,9 +97,17 @@ str *pack(int n, str *fmt, ...) {
                     result->unit += (char)((((int_ *)(arg))->unit) & 0xff);
                     result->unit += (char)(((((int_ *)(arg))->unit) >> 8) & 0xff);
                 }
-
+                break;
+            case 'I': 
+                if(arg->__class__ == cl_int_) {
+                    result->unit += (char)(((((int_ *)(arg))->unit) >> 24) & 0xff);
+                    result->unit += (char)(((((int_ *)(arg))->unit) >> 16) & 0xff);
+                    result->unit += (char)(((((int_ *)(arg))->unit) >> 8) & 0xff);
+                    result->unit += (char)((((int_ *)(arg))->unit) & 0xff);
+                }
+                break;
         }
-
+        i++;
     }
     va_end(args);
     return result;
