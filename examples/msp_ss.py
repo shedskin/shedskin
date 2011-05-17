@@ -1,4 +1,4 @@
-### to compile this, copy lib/serial.* and lib/struct.* to the shedskin lib dir!
+### to compile this, copy lib/serial.* to the shedskin lib dir!
 
 # Serial Bootstrap Loader software for the MSP430 embedded proccessor.
 #
@@ -658,8 +658,7 @@ class LowLevel:
 
        #Add necessary information data to frame
        # shed skin : use shed skin struct module
-       #dataOut =  struct.pack("<HH", addr, length)
-       dataOut =  struct.pack_ints("<HH", [addr, length])
+       dataOut =  struct.pack("<HH", addr, length)
 
        if blkout: #Copy data out of blkout into frame
            dataOut = dataOut + blkout
@@ -1013,9 +1012,7 @@ class BootStrapLoader(LowLevel):
        blkin = self.bslTxRx(BSL_RXBLK,        #Command: Read/Receive Block
                          0x0ff0,                   #Start address
                          16)                       #No. of bytes to read
-       # shed skin : use shed skin struct module
-       #dev_id, bslVerHi, bslVerLo = struct.unpack(">H8xBB4x", blkin[:-2]) #cut away checksum and extract data
-       dev_id, bslVerHi, bslVerLo = struct.unpack_ints(">H8xBB4x", blkin[:-2]) #cut away checksum and extract data
+       dev_id, bslVerHi, bslVerLo = struct.unpack(">H8xBB4x", blkin[:-2]) #cut away checksum and extract data
 
        if self.cpu is None:                        #cpy type forced?
            if deviceids.has_key(dev_id):
@@ -1111,9 +1108,7 @@ class BootStrapLoader(LowLevel):
        # shed skin : __getitem__ ?
        #blkin = self.bslTxRx(BSL_RXBLK, bslsegments[0].startaddress, 2)
        blkin = self.bslTxRx(BSL_RXBLK, bslsegments.segments[0].startaddress, 2)
-       # shed skin : use own struct module
-       #startaddr = struct.unpack("<H", blkin[:2])[0]
-       startaddr = struct.unpack_ints("<H", blkin[:2])[0]
+       startaddr, = struct.unpack("<H", blkin[:2])
 
        sys.stderr.write("Starting new BSL at 0x%04x...\n" % startaddr)
        sys.stderr.flush()
@@ -1201,9 +1196,7 @@ class BootStrapLoader(LowLevel):
        (newer MSP430-BSLs only)"""
        ans = self.bslTxRx(BSL_TXVERSION, 0) #Command: receive version info
        #the following values are in big endian style!!!
-       # shed skin : use own struct module
-       #family_type, bsl_version = struct.unpack(">H8xH4x", ans[:-2]) #cut away checksum and extract data
-       family_type, bsl_version = struct.unpack_ints(">H8xH4x", ans[:-2]) #cut away checksum and extract data
+       family_type, bsl_version = struct.unpack(">H8xH4x", ans[:-2]) #cut away checksum and extract data
        print "Device Type: 0x%04x\nBSL version: 0x%04x\n" % (family_type, bsl_version)
 
 
