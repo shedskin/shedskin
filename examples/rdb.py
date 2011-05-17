@@ -1,5 +1,3 @@
-### to compile this, copy lib/array.* to the shedskin lib dir!
-
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
