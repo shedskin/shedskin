@@ -32,7 +32,7 @@ def usage():
 def start():
     setgx(newgx())
 
-    print '*** SHED SKIN Python-to-C++ Compiler 0.7.1 ***'
+    print '*** SHED SKIN Python-to-C++ Compiler 0.8 ***'
     print 'Copyright 2005-2010 Mark Dufour; License GNU GPL version 3 (See LICENSE)'
     print
 

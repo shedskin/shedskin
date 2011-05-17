@@ -16,16 +16,16 @@ void __init(int c, char **v) {
     argv = new list<str *>();
 
 #if defined( _MSC_VER )
-    version = new str("Shed Skin Python-to-C++ Compiler 0.7.1\n[MSVC ");
+    version = new str("Shed Skin Python-to-C++ Compiler 0.8\n[MSVC ");
     version = version->__add__(__str(_MSC_VER))->__add__(new str("]"));
 #else
-    version = new str("Shed Skin Python-to-C++ Compiler 0.7.1\n[GCC ");
+    version = new str("Shed Skin Python-to-C++ Compiler 0.8\n[GCC ");
     version = version->__add__(new str(__VERSION__))->__add__(new str("]"));
 #endif
-    version_info = new tuple2<__ss_int, __ss_int>(5, (__ss_int)0, (__ss_int)7, (__ss_int)1, (__ss_int)0, (__ss_int)0);
-    hexversion = 0x00070100;
+    version_info = new tuple2<__ss_int, __ss_int>(5, (__ss_int)0, (__ss_int)8, (__ss_int)0, (__ss_int)0, (__ss_int)0);
+    hexversion = 0x00080000;
 
-    copyright = new str("Copyright (c) Mark Dufour 2005-2010.\nAll Rights Reserved.");
+    copyright = new str("Copyright (c) Mark Dufour 2005-2011.\nAll Rights Reserved.");
     platform = new str("shedskin");
 
     maxint = INT_MAX;
