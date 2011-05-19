@@ -214,6 +214,10 @@ str *pack(int n, str *fmt, ...) {
                     }
                 }
                 break;
+            case 'x':
+                for(unsigned int j=0; j<ndigits; j++)
+                    result->unit += '\x00';
+                break;
         }
         i++;
     }
