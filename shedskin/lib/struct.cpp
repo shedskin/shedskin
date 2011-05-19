@@ -148,8 +148,7 @@ str *pack(int n, str *fmt, ...) {
     char order = '@';
     str *digits = new str();
     int pos=0;
-    int itemsize;
-    int pad;
+    int itemsize, pad, itemsize2;
     for(unsigned int i=0, j=0; i<n; j++) {
         char c = fmt->unit[j];
         if(ordering.find(c) != -1) {
@@ -177,8 +176,9 @@ str *pack(int n, str *fmt, ...) {
             case 'q': 
             case 'Q':
                 itemsize = get_itemsize(order, c);
-                pad = itemsize - (pos % itemsize);
-                if(order == '@' and pad != itemsize) {
+                itemsize2 = itemsize==8?4:itemsize;
+                if(order == '@' and pos%itemsize2) {
+                    pad = itemsize2-(pos%itemsize2);
                     for(unsigned int j=0; j<pad; j++)
                         result->unit += '\x00';
                     pos += pad;
