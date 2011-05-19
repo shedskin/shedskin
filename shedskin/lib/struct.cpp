@@ -195,6 +195,17 @@ str *pack(int n, str *fmt, ...) {
                 if(arg->__class__ == cl_str_) 
                     result->unit += ((str *)(arg))->unit;
                 break;
+            case '?':
+                for(unsigned int j=0; j<ndigits; j++) {
+                    arg = va_arg(args, pyobj *);
+                    if(arg->__class__ == cl_bool) {
+                        if(((bool_ *)(arg))->unit)
+                            result->unit += '\x01';
+                        else
+                            result->unit += '\x00';
+                    }
+                }
+                break;
         }
         i++;
     }
