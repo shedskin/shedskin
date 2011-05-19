@@ -10,7 +10,7 @@
 
 namespace __shedskin__ {
 
-class_ *cl_class_, *cl_none, *cl_str_, *cl_int_, *cl_float_, *cl_complex, *cl_list, *cl_tuple, *cl_dict, *cl_set, *cl_object, *cl_rangeiter, *cl_xrange;
+class_ *cl_class_, *cl_none, *cl_str_, *cl_int_, *cl_bool, *cl_float_, *cl_complex, *cl_list, *cl_tuple, *cl_dict, *cl_set, *cl_object, *cl_rangeiter, *cl_xrange;
 
 str *sp, *nl, *__fmt_s, *__fmt_H, *__fmt_d;
 __GC_STRING ws, __fmtchars;
@@ -113,7 +113,7 @@ str *float_::__repr__() {
 
 bool_::bool_(__ss_bool i) {
     unit = i;
-    //__class__ = cl_int_;
+    __class__ = cl_bool;
 }
 
 str *bool_::__repr__() {
