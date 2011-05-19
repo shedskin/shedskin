@@ -84,11 +84,14 @@ str *pack(int n, str *fmt, ...) {
     va_list args;
     va_start(args, fmt);
     str *result = new str();
+    char order = '@';
     str *digits = new str();
     for(unsigned int i=0, j=0; i<n; j++) {
         char c = fmt->unit[j];
-        if(ordering.find(c) != -1)
+        if(ordering.find(c) != -1) {
+            order = c;
             continue;
+        }
         if(::isdigit(c)) {
             digits->unit += c;
             continue;
@@ -99,20 +102,58 @@ str *pack(int n, str *fmt, ...) {
             digits = new str();
         }
         switch(c) {
-            case 'H': 
-                arg = va_arg(args, pyobj *);
-                if(arg->__class__ == cl_int_) {
-                    result->unit += (char)((((int_ *)(arg))->unit) & 0xff);
-                    result->unit += (char)(((((int_ *)(arg))->unit) >> 8) & 0xff);
+            case 'b': 
+            case 'B': 
+                for(unsigned int j=0; j<ndigits; j++) {
+                    arg = va_arg(args, pyobj *);
+                    if(arg->__class__ == cl_int_)
+                        result->unit += (char)((((int_ *)(arg))->unit) & 0xff);
                 }
                 break;
+            case 'h': 
+            case 'H': 
+                for(unsigned int j=0; j<ndigits; j++) {
+                    arg = va_arg(args, pyobj *);
+                    if(arg->__class__ == cl_int_) {
+                        if(order == '!') {
+                            result->unit += (char)(((((int_ *)(arg))->unit) >> 8) & 0xff);
+                            result->unit += (char)((((int_ *)(arg))->unit) & 0xff);
+                        } else {
+                            result->unit += (char)((((int_ *)(arg))->unit) & 0xff);
+                            result->unit += (char)(((((int_ *)(arg))->unit) >> 8) & 0xff);
+                        }
+                    }
+                }
+                break;
+            case 'i':
             case 'I': 
-                arg = va_arg(args, pyobj *);
-                if(arg->__class__ == cl_int_) {
-                    result->unit += (char)(((((int_ *)(arg))->unit) >> 24) & 0xff);
-                    result->unit += (char)(((((int_ *)(arg))->unit) >> 16) & 0xff);
-                    result->unit += (char)(((((int_ *)(arg))->unit) >> 8) & 0xff);
-                    result->unit += (char)((((int_ *)(arg))->unit) & 0xff);
+            case 'l':
+            case 'L':
+                for(unsigned int j=0; j<ndigits; j++) {
+                    arg = va_arg(args, pyobj *);
+                    if(arg->__class__ == cl_int_) {
+                        result->unit += (char)(((((int_ *)(arg))->unit) >> 24) & 0xff);
+                        result->unit += (char)(((((int_ *)(arg))->unit) >> 16) & 0xff);
+                        result->unit += (char)(((((int_ *)(arg))->unit) >> 8) & 0xff);
+                        result->unit += (char)((((int_ *)(arg))->unit) & 0xff);
+                    }
+                }
+                break;
+            case 'q': 
+            case 'Q':
+                for(unsigned int j=0; j<ndigits; j++) {
+                    arg = va_arg(args, pyobj *);
+                    if(arg->__class__ == cl_int_) {
+                        long long value = ((int_ *)(arg))->unit;
+                        result->unit += (char)((value >> 56) & 0xff);
+                        result->unit += (char)((value >> 48) & 0xff);
+                        result->unit += (char)((value >> 40) & 0xff);
+                        result->unit += (char)((value >> 32) & 0xff);
+                        result->unit += (char)((value >> 24) & 0xff);
+                        result->unit += (char)((value >> 16) & 0xff);
+                        result->unit += (char)((value >> 8) & 0xff);
+                        result->unit += (char)((value >> 0) & 0xff);
+                    }
                 }
                 break;
             case 'c': 
@@ -127,24 +168,6 @@ str *pack(int n, str *fmt, ...) {
                     result->unit += (unsigned char)(len);
                     for(unsigned int j=0; j<len; j++)
                         result->unit += ((str *)(arg))->unit[j];
-                }
-                break;
-            case 'L': 
-                for(unsigned int j=0; j<ndigits; j++) {
-                    arg = va_arg(args, pyobj *);
-                    if(arg->__class__ == cl_int_) {
-                        result->unit += (char)(((((int_ *)(arg))->unit) >> 24) & 0xff);
-                        result->unit += (char)(((((int_ *)(arg))->unit) >> 16) & 0xff);
-                        result->unit += (char)(((((int_ *)(arg))->unit) >> 8) & 0xff);
-                        result->unit += (char)((((int_ *)(arg))->unit) & 0xff);
-                    }
-                }
-                break;
-            case 'b': 
-                for(unsigned int j=0; j<ndigits; j++) {
-                    arg = va_arg(args, pyobj *);
-                    if(arg->__class__ == cl_int_)
-                        result->unit += (char)((((int_ *)(arg))->unit) & 0xff);
                 }
                 break;
         }

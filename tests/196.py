@@ -44,6 +44,7 @@ class woef:
 woef()
 print repr(struct.pack('HH', 1, 2))
 print repr(struct.pack('!c3L2b3p','\xd5',39,77,77,55,50,'\xf3\x8bq'))
+print repr(struct.pack('!q2i2Q3H',91,62,118,45,113,72,117,92))
 
 # array
 import array
