@@ -43,6 +43,7 @@ class woef:
         print magic, version, self.cur_files
 woef()
 print repr(struct.pack('HH', 1, 2))
+print repr(struct.pack('!c3L2b3p','\xd5',39,77,77,55,50,'\xf3\x8bq'))
 
 # array
 import array
