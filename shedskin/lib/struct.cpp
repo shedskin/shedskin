@@ -147,7 +147,9 @@ str *pack(int n, str *fmt, ...) {
     str *result = new str();
     char order = '@';
     str *digits = new str();
+    int pos=0;
     int itemsize;
+    int pad;
     for(unsigned int i=0, j=0; i<n; j++) {
         char c = fmt->unit[j];
         if(ordering.find(c) != -1) {
@@ -175,20 +177,29 @@ str *pack(int n, str *fmt, ...) {
             case 'q': 
             case 'Q':
                 itemsize = get_itemsize(order, c);
+                pad = itemsize - (pos % itemsize);
+                if(order == '@' and pad != itemsize) {
+                    for(unsigned int j=0; j<pad; j++)
+                        result->unit += '\x00';
+                    pos += pad;
+                }
                 for(unsigned int j=0; j<ndigits; j++) {
                     arg = va_arg(args, pyobj *);
                     if(arg->__class__ == cl_int_) {
                         fillbuf(c, ((int_ *)arg)->unit, order, itemsize);
                         for(unsigned int k=0; k<itemsize; k++)
                             result->unit += buffy[k];
+                        pos += itemsize;
                     }
                 }
                 break;
             case 'c': 
                 for(unsigned int j=0; j<ndigits; j++) {
                     arg = va_arg(args, pyobj *);
-                    if(arg->__class__ == cl_str_)
+                    if(arg->__class__ == cl_str_) {
                         result->unit += ((str *)(arg))->unit[0];
+                        pos += 1;
+                    }
                 }
                 break;
             case 'p': 
@@ -198,12 +209,15 @@ str *pack(int n, str *fmt, ...) {
                     result->unit += (unsigned char)(len);
                     for(unsigned int j=0; j<len; j++)
                         result->unit += ((str *)(arg))->unit[j];
+                    pos += len;
                 }
                 break;
             case 's':
                 arg = va_arg(args, pyobj *);
-                if(arg->__class__ == cl_str_) 
+                if(arg->__class__ == cl_str_) {
                     result->unit += ((str *)(arg))->unit;
+                    pos += len((str *)(arg));
+                }
                 break;
             case '?':
                 for(unsigned int j=0; j<ndigits; j++) {
@@ -213,12 +227,14 @@ str *pack(int n, str *fmt, ...) {
                             result->unit += '\x01';
                         else
                             result->unit += '\x00';
+                        pos += 1;
                     }
                 }
                 break;
             case 'x':
                 for(unsigned int j=0; j<ndigits; j++)
                     result->unit += '\x00';
+                pos += ndigits;
                 break;
         }
         i++;
