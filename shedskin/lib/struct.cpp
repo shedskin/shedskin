@@ -185,9 +185,11 @@ str *pack(int n, str *fmt, ...) {
                 }
                 break;
             case 'c': 
-                arg = va_arg(args, pyobj *);
-                if(arg->__class__ == cl_str_)
-                    result->unit += ((str *)(arg))->unit[0];
+                for(unsigned int j=0; j<ndigits; j++) {
+                    arg = va_arg(args, pyobj *);
+                    if(arg->__class__ == cl_str_)
+                        result->unit += ((str *)(arg))->unit[0];
+                }
                 break;
             case 'p': 
                 arg = va_arg(args, pyobj *);
