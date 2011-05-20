@@ -63,6 +63,7 @@ print repr(struct.pack('<3c3i3l2p','\x84','\xb7','A',90,51,127,18,56,3,'\x82'))
 print repr(struct.pack('<0p3??','\x85',False,2,0,'huh'))
 print repr(struct.pack('!c3pp1q','\xe4','1','\xfeE\x9f\xdf`\x969\xdb',40))
 print repr(struct.pack('!3s',''))
+print repr(struct.pack('@0q3x0p0d','\x13\xe5\xb4\x98.\xff'))
 
 # array
 import array

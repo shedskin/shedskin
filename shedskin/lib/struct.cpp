@@ -245,6 +245,10 @@ str *pack(int n, str *fmt, ...) {
                 }
                 break;
             case 'p': 
+                if(ndigits==0 and prevndigits and prevc == 'x') { /* WTFIT */
+                    result->unit += '\xff';
+                    pos += 1;
+                }
                 arg = va_arg(args, pyobj *);
                 if(ndigits) {
                     if(arg->__class__ == cl_str_) {
