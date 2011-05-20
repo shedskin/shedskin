@@ -209,7 +209,7 @@ str *pack(int n, str *fmt, ...) {
                     result->unit += (unsigned char)(len);
                     for(unsigned int j=0; j<len; j++)
                         result->unit += ((str *)(arg))->unit[j];
-                    pos += len;
+                    pos += len+1;
                 }
                 break;
             case 's':
