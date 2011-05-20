@@ -161,6 +161,8 @@ str *pack(int n, str *fmt, ...) {
     int pos=0;
     int itemsize, pad, itemsize2;
     int fmtlen = fmt->__len__();
+    char prevc='_';
+    int prevndigits = -1;
     for(unsigned int j=0; j<fmtlen; j++) {
         char c = fmt->unit[j];
         if(ordering.find(c) != -1) {
@@ -271,11 +273,19 @@ str *pack(int n, str *fmt, ...) {
                 }
                 break;
             case 'x':
-                for(unsigned int j=0; j<ndigits; j++)
-                    result->unit += '\x00';
+                if(ndigits and prevc == 'p' and prevndigits == 0) { /* WTFIT */
+                    result->unit += '\xff';
+                    for(unsigned int j=0; j<ndigits-1; j++)
+                        result->unit += '\x00';
+                } else {
+                    for(unsigned int j=0; j<ndigits; j++)
+                        result->unit += '\x00';
+                }
                 pos += ndigits;
                 break;
         }
+        prevc = c;
+        prevndigits = ndigits;
     }
     va_end(args);
     return result;
