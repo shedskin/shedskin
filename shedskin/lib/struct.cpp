@@ -161,9 +161,8 @@ str *pack(int n, str *fmt, ...) {
     int pos=0;
     int itemsize, pad, itemsize2;
     int fmtlen = fmt->__len__();
-    char prevc='_';
-    int prevndigits = -1;
     str *strarg;
+    int pascal_ff = 0;
     for(unsigned int j=0; j<fmtlen; j++) {
         char c = fmt->unit[j];
         if(ordering.find(c) != -1) {
@@ -194,8 +193,13 @@ str *pack(int n, str *fmt, ...) {
                 itemsize2 = itemsize==8?4:itemsize;
                 if(order == '@' and pos%itemsize2) {
                     pad = itemsize2-(pos%itemsize2);
-                    for(unsigned int j=0; j<pad; j++)
-                        result->unit += '\x00';
+                    for(unsigned int j=0; j<pad; j++) {
+                        if(pascal_ff) {
+                            result->unit += '\xff';
+                            pascal_ff = 0;
+                        } else
+                            result->unit += '\x00';
+                    }
                     pos += pad;
                 }
                 for(unsigned int j=0; j<ndigits; j++) {
@@ -213,8 +217,13 @@ str *pack(int n, str *fmt, ...) {
                 itemsize = get_itemsize(order, c);
                 if(order == '@' and pos%4) {
                     pad = 4-(pos%4);
-                    for(unsigned int j=0; j<pad; j++)
-                        result->unit += '\x00';
+                    for(unsigned int j=0; j<pad; j++) {
+                        if(pascal_ff) {
+                            result->unit += '\xff';
+                            pascal_ff = 0;
+                        } else
+                            result->unit += '\x00';
+                    }
                     pos += pad;
                 }
                 for(unsigned int j=0; j<ndigits; j++) {
@@ -245,10 +254,6 @@ str *pack(int n, str *fmt, ...) {
                 }
                 break;
             case 'p': 
-                if(ndigits==0 and prevndigits and prevc == 'x') { /* WTFIT */
-                    result->unit += '\xff';
-                    pos += 1;
-                }
                 arg = va_arg(args, pyobj *);
                 if(ndigits) {
                     if(arg->__class__ == cl_str_) {
@@ -264,6 +269,8 @@ str *pack(int n, str *fmt, ...) {
                         pos += ndigits;
                     }
                 }
+                else
+                    pascal_ff = 1;
                 break;
             case 's':
                 arg = va_arg(args, pyobj *);
@@ -292,19 +299,17 @@ str *pack(int n, str *fmt, ...) {
                 }
                 break;
             case 'x':
-                if(ndigits and prevc == 'p' and prevndigits == 0) { /* WTFIT */
-                    result->unit += '\xff';
-                    for(unsigned int j=0; j<ndigits-1; j++)
-                        result->unit += '\x00';
-                } else {
-                    for(unsigned int j=0; j<ndigits; j++)
+                for(unsigned int j=0; j<ndigits; j++) {
+                    if(pascal_ff) {
+                        result->unit += '\xff';
+                        pascal_ff = 0;
+                    }
+                    else
                         result->unit += '\x00';
                 }
                 pos += ndigits;
                 break;
         }
-        prevc = c;
-        prevndigits = ndigits;
     }
     va_end(args);
     return result;
