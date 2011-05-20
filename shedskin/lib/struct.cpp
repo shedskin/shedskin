@@ -270,8 +270,13 @@ str *pack(int n, str *fmt, ...) {
                         result->unit += (unsigned char)(len);
                         for(unsigned int j=0; j<len; j++)
                             result->unit += strarg->unit[j];
-                        for(unsigned int j=0; j<ndigits-len-1; j++)
-                            result->unit += '\x00';
+                        for(unsigned int j=0; j<ndigits-len-1; j++) {
+                            if(!len and pascal_ff) {
+                                result->unit += '\xff';
+                                pascal_ff = 0;
+                            } else 
+                                result->unit += '\x00';
+                        }
                         pos += ndigits;
                     }
                     pascal_ff = 0;
@@ -289,8 +294,13 @@ str *pack(int n, str *fmt, ...) {
                             len = ndigits;
                         for(unsigned int j=0; j<len; j++)
                             result->unit += strarg->unit[j];
-                        for(unsigned int j=0; j<ndigits-len; j++)
-                            result->unit += '\x00';
+                        for(unsigned int j=0; j<ndigits-len; j++) {
+                            if(!len and pascal_ff) {
+                                result->unit += '\xff';
+                                pascal_ff = 0;
+                            } else 
+                                result->unit += '\x00';
+                        }
                         pos += ndigits;
                     }
                     pascal_ff = 0;
