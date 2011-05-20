@@ -94,6 +94,8 @@ int get_itemsize(char order, char c) {
             case 'L': return sizeof(unsigned long);
             case 'q': return sizeof(long long);
             case 'Q': return sizeof(unsigned long long);
+            case 'f': return sizeof(float);
+            case 'd': return sizeof(double);
         }
     } else {
         switch(c) {
@@ -107,6 +109,8 @@ int get_itemsize(char order, char c) {
             case 'L': return 4;
             case 'q': return 8;
             case 'Q': return 8;
+            case 'f': return 4;
+            case 'd': return 8;
         }
     }
 }
@@ -190,6 +194,19 @@ str *pack(int n, str *fmt, ...) {
                         fillbuf(c, ((int_ *)arg)->unit, order, itemsize);
                         for(unsigned int k=0; k<itemsize; k++)
                             result->unit += buffy[k];
+                        pos += itemsize;
+                    }
+                }
+                break;
+            case 'd':
+            case 'f':
+                itemsize = get_itemsize(order, c);
+                for(unsigned int j=0; j<ndigits; j++) {
+                    arg = va_arg(args, pyobj *);
+                    if(arg->__class__ == cl_float_) {
+                        //fillbuf(c, ((int_ *)arg)->unit, order, itemsize);
+                        for(unsigned int k=0; k<itemsize; k++)
+                            result->unit += '\x00';
                         pos += itemsize;
                     }
                 }
