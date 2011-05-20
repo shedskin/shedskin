@@ -100,6 +100,10 @@ str *int_::__repr__() {
     return __str(unit);
 }
 
+__ss_bool int_::__nonzero__() {
+    return __mbool(unit);
+}
+
 /* float methods */
 
 float_::float_(double f) {
@@ -111,6 +115,12 @@ str *float_::__repr__() {
     return __str(unit);
 }
 
+__ss_bool float_::__nonzero__() {
+    return __mbool(unit);
+}
+
+/* bool methods */
+
 bool_::bool_(__ss_bool i) {
     unit = i;
     __class__ = cl_bool;
@@ -120,6 +130,10 @@ str *bool_::__repr__() {
     if(unit.value)
         return new str("True");
     return new str("False");
+}
+
+__ss_bool bool_::__nonzero__() {
+    return unit;
 }
 
 /* float methods */
