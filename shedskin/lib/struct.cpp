@@ -211,6 +211,8 @@ str *pack(int n, str *fmt, ...) {
                         pos += itemsize;
                     }
                 }
+                if(ndigits)
+                    pascal_ff = 0;
                 break;
             case 'd':
             case 'f':
@@ -239,6 +241,8 @@ str *pack(int n, str *fmt, ...) {
                         pos += itemsize;
                     }
                 }
+                if(ndigits)
+                    pascal_ff = 0;
                 break;
             case 'c': 
                 for(unsigned int j=0; j<ndigits; j++) {
@@ -252,6 +256,8 @@ str *pack(int n, str *fmt, ...) {
                         pos += 1;
                     }
                 }
+                if(ndigits)
+                    pascal_ff = 0;
                 break;
             case 'p': 
                 arg = va_arg(args, pyobj *);
@@ -286,6 +292,7 @@ str *pack(int n, str *fmt, ...) {
                             result->unit += '\x00';
                         pos += ndigits;
                     }
+                    pascal_ff = 0;
                 }
                 break;
             case '?':
@@ -297,6 +304,8 @@ str *pack(int n, str *fmt, ...) {
                         result->unit += '\x00';
                     pos += 1;
                 }
+                if(ndigits)
+                    pascal_ff = 0;
                 break;
             case 'x':
                 for(unsigned int j=0; j<ndigits; j++) {
