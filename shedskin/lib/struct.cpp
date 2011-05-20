@@ -208,6 +208,12 @@ str *pack(int n, str *fmt, ...) {
             case 'd':
             case 'f':
                 itemsize = get_itemsize(order, c);
+                if(order == '@' and pos%4) {
+                    pad = 4-(pos%4);
+                    for(unsigned int j=0; j<pad; j++)
+                        result->unit += '\x00';
+                    pos += pad;
+                }
                 for(unsigned int j=0; j<ndigits; j++) {
                     arg = va_arg(args, pyobj *);
                     if(arg->__class__ == cl_float_) {
