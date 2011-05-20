@@ -238,20 +238,24 @@ str *pack(int n, str *fmt, ...) {
                 }
                 break;
             case 'p': 
-                arg = va_arg(args, pyobj *);
-                if(arg->__class__ == cl_str_) {
-                    int len = ((str *)(arg))->__len__()-1;
-                    result->unit += (unsigned char)(len);
-                    for(unsigned int j=0; j<len; j++)
-                        result->unit += ((str *)(arg))->unit[j];
-                    pos += len+1;
+                if(ndigits) {
+                    arg = va_arg(args, pyobj *);
+                    if(arg->__class__ == cl_str_) {
+                        int len = ((str *)(arg))->__len__()-1;
+                        result->unit += (unsigned char)(len);
+                        for(unsigned int j=0; j<len; j++)
+                            result->unit += ((str *)(arg))->unit[j];
+                        pos += len+1;
+                    }
                 }
                 break;
             case 's':
-                arg = va_arg(args, pyobj *);
-                if(arg->__class__ == cl_str_) {
-                    result->unit += ((str *)(arg))->unit;
-                    pos += len((str *)(arg));
+                if(ndigits) {
+                    arg = va_arg(args, pyobj *);
+                    if(arg->__class__ == cl_str_) {
+                        result->unit += ((str *)(arg))->unit;
+                        pos += len((str *)(arg));
+                    }
                 }
                 break;
             case '?':
