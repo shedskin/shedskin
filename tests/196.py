@@ -67,6 +67,7 @@ print repr(struct.pack('@0q3x0p0d','\x13\xe5\xb4\x98.\xff'))
 print repr(struct.pack('0p2I?H','\xe7\xa3\xd2',426,403,'hoi',85))
 print repr(struct.pack('>0i0p3p2x','g\xb0\x0c\x02\x89\xd3\xaf','\xfdK\xb4\xb1\xf6l'))
 print repr(struct.pack('>b0p2s',110,'\x1d',''))
+print repr(struct.pack('@2f0p3p1L',531.0,469.0,'1k\x1a\x8c\xfd\xc0u\xdf','',60))
 
 # array
 import array
