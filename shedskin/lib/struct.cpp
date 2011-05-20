@@ -163,6 +163,7 @@ str *pack(int n, str *fmt, ...) {
     int fmtlen = fmt->__len__();
     char prevc='_';
     int prevndigits = -1;
+    str *strarg;
     for(unsigned int j=0; j<fmtlen; j++) {
         char c = fmt->unit[j];
         if(ordering.find(c) != -1) {
@@ -255,8 +256,12 @@ str *pack(int n, str *fmt, ...) {
                 arg = va_arg(args, pyobj *);
                 if(ndigits) {
                     if(arg->__class__ == cl_str_) {
-                        result->unit += ((str *)(arg))->unit;
-                        pos += len((str *)(arg));
+                        strarg = ((str *)(arg));
+                        int len = strarg->__len__();
+                        for(unsigned int j=0; j<ndigits && j<len; j++) {
+                            result->unit += strarg->unit[j];
+                            pos += 1;
+                        }
                     }
                 }
                 break;
