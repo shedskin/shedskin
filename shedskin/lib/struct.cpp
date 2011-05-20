@@ -235,7 +235,7 @@ str *pack(int n, str *fmt, ...) {
                 for(unsigned int j=0; j<ndigits; j++)
                     result->unit += '\x00';
                 pos += ndigits;
-                break;
+                continue; /* same arg, don't increment i */
         }
         i++;
     }
