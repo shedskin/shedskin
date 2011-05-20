@@ -145,11 +145,9 @@ void fillbuf(char c, __ss_int t, char order, int itemsize) {
 }
 
 void fillbuf2(char c, double t, char order, int itemsize) {
-    if(order == '@') {
-        switch(c) {
-            case 'f': *((float *)buffy) = t; break;
-            case 'd': *((double *)buffy) = t; break;
-        }
+    switch(c) {
+        case 'f': *((float *)buffy) = t; break;
+        case 'd': *((double *)buffy) = t; break;
     }
 }
 
@@ -214,8 +212,12 @@ str *pack(int n, str *fmt, ...) {
                     arg = va_arg(args, pyobj *);
                     if(arg->__class__ == cl_float_) {
                         fillbuf2(c, ((float_ *)arg)->unit, order, itemsize);
-                        for(unsigned int k=0; k<itemsize; k++)
-                            result->unit += buffy[k];
+                        if(order == '>' or order == '!')
+                            for(int i=itemsize-1; i>=0; i--) 
+                                result->unit += buffy[i];
+                        else 
+                            for(int i=0; i<itemsize; i++) 
+                                result->unit += buffy[i];
                         pos += itemsize;
                     }
                 }
