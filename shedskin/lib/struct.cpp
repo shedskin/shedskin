@@ -274,6 +274,7 @@ str *pack(int n, str *fmt, ...) {
                             result->unit += '\x00';
                         pos += ndigits;
                     }
+                    pascal_ff = 0;
                 }
                 else
                     pascal_ff = 1;
