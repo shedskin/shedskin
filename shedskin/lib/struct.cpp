@@ -149,7 +149,8 @@ str *pack(int n, str *fmt, ...) {
     str *digits = new str();
     int pos=0;
     int itemsize, pad, itemsize2;
-    for(unsigned int i=0, j=0; i<n; j++) {
+    int fmtlen = fmt->__len__();
+    for(unsigned int j=0; j<fmtlen; j++) {
         char c = fmt->unit[j];
         if(ordering.find(c) != -1) {
             order = c;
@@ -235,9 +236,8 @@ str *pack(int n, str *fmt, ...) {
                 for(unsigned int j=0; j<ndigits; j++)
                     result->unit += '\x00';
                 pos += ndigits;
-                continue; /* same arg, don't increment i */
+                break;
         }
-        i++;
     }
     va_end(args);
     return result;

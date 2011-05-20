@@ -52,6 +52,7 @@ print repr(struct.pack('@3H3qs',67,14,69,12,66,91,'v'))
 print repr(struct.pack('I2qc2p',50,50,15,'\xd9','\xb1\x06'))
 print repr(struct.pack('b2x2s',77,'\xa5~'))
 print repr(struct.pack('Ip3si',60,'-','t\xf5\x10',9))
+print repr(struct.pack('<ibBx',82,108,61))
 
 # array
 import array
