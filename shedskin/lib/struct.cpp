@@ -238,8 +238,8 @@ str *pack(int n, str *fmt, ...) {
                 }
                 break;
             case 'p': 
+                arg = va_arg(args, pyobj *);
                 if(ndigits) {
-                    arg = va_arg(args, pyobj *);
                     if(arg->__class__ == cl_str_) {
                         int len = ((str *)(arg))->__len__()-1;
                         result->unit += (unsigned char)(len);
@@ -250,8 +250,8 @@ str *pack(int n, str *fmt, ...) {
                 }
                 break;
             case 's':
+                arg = va_arg(args, pyobj *);
                 if(ndigits) {
-                    arg = va_arg(args, pyobj *);
                     if(arg->__class__ == cl_str_) {
                         result->unit += ((str *)(arg))->unit;
                         pos += len((str *)(arg));

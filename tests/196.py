@@ -56,6 +56,7 @@ print repr(struct.pack('<ibBx',82,108,61))
 print repr(struct.pack('!c3q2b3d','\xd5',39,77,77,55,50,949.0,544.0,444.0))
 print repr(struct.pack('l2Qc2d',50,50,15,'\xd9',692.0,24.0))
 print repr(struct.pack('<0p0I',''))
+print repr(struct.pack('<3Q0s2B1i',64,117,20,'',48,38,50))
 
 # array
 import array
