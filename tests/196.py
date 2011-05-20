@@ -60,6 +60,7 @@ print repr(struct.pack('<3Q0s2B1i',64,117,20,'',48,38,50))
 print repr(struct.pack('<0L2f0p1x',682.0,307.0,''))
 print repr(struct.pack('=s','\xe6\xc1\xdc\xb4y9\xa9'))
 print repr(struct.pack('<3c3i3l2p','\x84','\xb7','A',90,51,127,18,56,3,'\x82'))
+print repr(struct.pack('<0p3??','\x85',False,2,0,'huh'))
 
 # array
 import array

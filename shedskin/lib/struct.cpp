@@ -234,6 +234,10 @@ str *pack(int n, str *fmt, ...) {
             case 'c': 
                 for(unsigned int j=0; j<ndigits; j++) {
                     arg = va_arg(args, pyobj *);
+                    strarg = ((str *)(arg));
+                    int len = strarg->__len__();
+                    if(len != 1)
+                        throw new ValueError(new str("char format require string of length 1"));
                     if(arg->__class__ == cl_str_) {
                         result->unit += ((str *)(arg))->unit[0];
                         pos += 1;
@@ -270,13 +274,11 @@ str *pack(int n, str *fmt, ...) {
             case '?':
                 for(unsigned int j=0; j<ndigits; j++) {
                     arg = va_arg(args, pyobj *);
-                    if(arg->__class__ == cl_bool) {
-                        if(((bool_ *)(arg))->unit)
-                            result->unit += '\x01';
-                        else
-                            result->unit += '\x00';
-                        pos += 1;
-                    }
+                    if(arg->__nonzero__())
+                        result->unit += '\x01';
+                    else
+                        result->unit += '\x00';
+                    pos += 1;
                 }
                 break;
             case 'x':

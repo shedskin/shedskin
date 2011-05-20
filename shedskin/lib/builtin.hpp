@@ -773,6 +773,7 @@ public:
     __ss_int unit;
     int_(__ss_int i);
     str *__repr__();
+    __ss_bool __nonzero__();
 };
 
 class float_ : public pyobj {
@@ -780,6 +781,7 @@ public:
     double unit;
     float_(double f);
     str *__repr__();
+    __ss_bool __nonzero__();
 };
 
 class bool_ : public pyobj {
@@ -787,6 +789,7 @@ public:
     __ss_bool unit;
     bool_(__ss_bool i);
     str *__repr__();
+    __ss_bool __nonzero__();
 };
 
 class object : public pyobj {
