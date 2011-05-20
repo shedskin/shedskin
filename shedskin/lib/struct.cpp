@@ -248,12 +248,13 @@ str *pack(int n, str *fmt, ...) {
                 arg = va_arg(args, pyobj *);
                 if(ndigits) {
                     if(arg->__class__ == cl_str_) {
-                        int len = ((str *)(arg))->__len__();
+                        strarg = ((str *)(arg));
+                        int len = strarg->__len__();
                         if(len+1 > ndigits)
                             len = ndigits-1;
                         result->unit += (unsigned char)(len);
                         for(unsigned int j=0; j<len; j++)
-                            result->unit += ((str *)(arg))->unit[j];
+                            result->unit += strarg->unit[j];
                         for(unsigned int j=0; j<ndigits-len-1; j++)
                             result->unit += '\x00';
                         pos += ndigits;
@@ -266,10 +267,13 @@ str *pack(int n, str *fmt, ...) {
                     if(arg->__class__ == cl_str_) {
                         strarg = ((str *)(arg));
                         int len = strarg->__len__();
-                        for(unsigned int j=0; j<ndigits && j<len; j++) {
+                        if(len > ndigits)
+                            len = ndigits;
+                        for(unsigned int j=0; j<len; j++)
                             result->unit += strarg->unit[j];
-                            pos += 1;
-                        }
+                        for(unsigned int j=0; j<ndigits-len; j++)
+                            result->unit += '\x00';
+                        pos += ndigits;
                     }
                 }
                 break;
