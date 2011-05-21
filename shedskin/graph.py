@@ -1647,7 +1647,7 @@ def struct_info(node, func):
         elif c in char_type:
             rtype = {'i': 'int', 's': 'str', 'b': 'bool', 'f': 'float'}[char_type[c]]
             if rtype == 'str' and c != 'c':
-                result.append((ordering, c, 'str', int(digits)))
+                result.append((ordering, c, 'str', int(digits or '1')))
             else:
                 result.extend(int(digits or '1')*[(ordering, c, rtype, 1)])
             digits = ''
