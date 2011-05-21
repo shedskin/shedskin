@@ -48,23 +48,8 @@ int get_itemsize(char order, char c) {
     }
 }
 
-__ss_int unpack_one(str *s, __ss_int idx, __ss_int count, __ss_int endian) {
-    unsigned int r = 0;
-
-    for(int i=0; i<count; i++) {
-        unsigned char c = s->__getitem__(i+idx)->unit[0];
-        if (endian)
-            r += (c << 8*(count-i-1));
-        else
-            r += (c << 8*i);
-
-    }
-
-    return r;
-}
-
 __ss_int unpack_int(char o, char c, int d, str *data, __ss_int *pos) {
-    __ss_int result;
+    unsigned long long result;
     int itemsize = get_itemsize(o, c);
     int itemsize2;
     itemsize2 = itemsize==8?4:itemsize;
@@ -72,7 +57,14 @@ __ss_int unpack_int(char o, char c, int d, str *data, __ss_int *pos) {
         *pos += itemsize2-(*pos%itemsize2);
     if(d==0)
         return 0;
-    result = unpack_one(data, *pos, itemsize, o=='>' or o=='!');
+    result = 0;
+    for(unsigned int i=0; i<itemsize; i++) {
+        unsigned char c = data->unit[*pos+i];
+        if (o=='>' or o=='!')
+            result |= (c << 8*(itemsize-i-1));
+        else
+            result |= (c << 8*i);
+    }
     *pos += itemsize;
     return result;
 }
