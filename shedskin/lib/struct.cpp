@@ -70,6 +70,8 @@ __ss_int unpack_int(char o, char c, int d, str *data, __ss_int *pos) {
     itemsize2 = itemsize==8?4:itemsize;
     if(o == '@' and *pos%itemsize2)
         *pos += itemsize2-(*pos%itemsize2);
+    if(d==0)
+        return 0;
     result = unpack_one(data, *pos, itemsize, o=='>' or o=='!');
     *pos += itemsize;
     return result;
@@ -104,7 +106,8 @@ __ss_bool unpack_bool(char o, char c, int d, str *data, __ss_int *pos) {
         result = True;
     else
         result = False;
-    *pos += 1;
+    if(d!=0)
+        *pos += 1;
     return result;
 }
 
@@ -115,6 +118,8 @@ double unpack_float(char o, char c, int d, str *data, __ss_int *pos) {
     itemsize2 = itemsize==8?4:itemsize;
     if(o == '@' and *pos%itemsize2)
         *pos += itemsize2-(*pos%itemsize2);
+    if(d==0)
+        return 0;
     if(o=='>' or o=='!')
         for(int i=0; i<itemsize; i++)
             buffy[itemsize-i-1] = data->unit[*pos+i];

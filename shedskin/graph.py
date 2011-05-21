@@ -1648,6 +1648,8 @@ def struct_info(node, func):
             rtype = {'i': 'int', 's': 'str', 'b': 'bool', 'f': 'float', 'x': 'pad'}[char_type[c]]
             if rtype == 'str' and c != 'c':
                 result.append((ordering, c, 'str', int(digits or '1')))
+            elif digits == '0':
+                result.append((ordering, c, rtype, 0))
             else:
                 result.extend(int(digits or '1')*[(ordering, c, rtype, 1)])
             digits = ''
@@ -1666,8 +1668,9 @@ def struct_unpack(rvalue, func):
 def struct_faketuple(info):
    result = []
    for o, c, t, d in info:
-       if t == 'int': result.append(Const(1))
-       elif t == 'str': result.append(Const(''))
-       elif t == 'float': result.append(Const(1.0))
-       elif t == 'bool': result.append(Name('True'))
+       if d != 0 or c == 's':
+           if t == 'int': result.append(Const(1))
+           elif t == 'str': result.append(Const(''))
+           elif t == 'float': result.append(Const(1.0))
+           elif t == 'bool': result.append(Name('True'))
    return Tuple(result)

@@ -2020,7 +2020,7 @@ class generateVisitor(ASTVisitor):
             for (o, c, t, d) in sinfo:
                 self.start()
                 expr = "__struct__::unpack_%s('%c', '%c', %d, %s, &%s)" % (t, o, c, d, tvar, tvar_pos)
-                if c == 'x':
+                if c == 'x' or (d == 0 and c != 's'):
                     self.visitm(expr, func)
                 else:
                     n = list(node.nodes[0])[hop]
