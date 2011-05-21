@@ -7,6 +7,11 @@ __GC_STRING ordering;
 
 char buffy[32];
 class_ *cl_error;
+bool little_endian;
+
+static inline bool swap_endian(char o) {
+    return (little_endian and (o=='>' or o=='!')) or (not little_endian and o=='<');
+}
 
 int get_itemsize(char order, char c) {
     switch(c) {
@@ -68,7 +73,7 @@ __ss_int unpack_int(char o, char c, int d, str *data, __ss_int *pos) {
     result = 0;
     for(unsigned int i=0; i<itemsize; i++) {
         unsigned char c = data->unit[*pos+i];
-        if (o=='>' or o=='!')
+        if(swap_endian(o))
             result |= (c << 8*(itemsize-i-1));
         else
             result |= (c << 8*i);
@@ -117,7 +122,7 @@ double unpack_float(char o, char c, int d, str *data, __ss_int *pos) {
     *pos += padding(o, *pos, itemsize);
     if(d==0)
         return 0;
-    if(o=='>' or o=='!')
+    if(swap_endian(o))
         for(int i=0; i<itemsize; i++)
             buffy[itemsize-i-1] = data->unit[*pos+i];
     else
@@ -201,7 +206,7 @@ void fillbuf(char c, __ss_int t, char order, int itemsize) {
             case 'Q': *((unsigned long long *)buffy) = t; break;
         }
     } else {
-        if(order == '>' or order == '!') {
+        if(swap_endian(order)) {
             for(int i=itemsize-1; i>=0; i--) {
                 buffy[i] = (unsigned char)(t & 0xff);
                 t >>= 8;
@@ -314,7 +319,7 @@ str *pack(int n, str *fmt, ...) {
                     else
                         throw new error(new str("required argument is not a float"));
                     fillbuf2(c, value, order, itemsize);
-                    if(order == '>' or order == '!')
+                    if(swap_endian(order))
                         for(int i=itemsize-1; i>=0; i--) 
                             result->unit += buffy[i];
                     else 
@@ -418,6 +423,8 @@ str *pack(int n, str *fmt, ...) {
 void __init() {
     ordering = "@<>!=";
     cl_error = new class_("error", 16, 16);
+    int num = 1;
+    little_endian = (*(char *)&num == 1);
 }
 
 } // module namespace
