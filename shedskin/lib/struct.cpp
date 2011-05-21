@@ -19,7 +19,7 @@ int get_itemsize(char order, char c) {
         switch(c) {
             case 'b': return sizeof(signed char);
             case 'B': return sizeof(unsigned char);
-            case 'h': return sizeof(short); /* XXX */
+            case 'h': return sizeof(short);
             case 'H': return sizeof(unsigned short);
             case 'i': return sizeof(int);
             case 'I': return sizeof(unsigned int);
@@ -66,6 +66,10 @@ __ss_int unpack_one(str *s, __ss_int idx, __ss_int count, __ss_int endian) {
 __ss_int unpack_int(char o, char c, int d, str *data, __ss_int *pos) {
     __ss_int result;
     int itemsize = get_itemsize(o, c);
+    int itemsize2;
+    itemsize2 = itemsize==8?4:itemsize;
+    if(o == '@' and *pos%itemsize2)
+        *pos += itemsize2-(*pos%itemsize2);
     result = unpack_one(data, *pos, itemsize, o=='>' or o=='!');
     *pos += itemsize;
     return result;
@@ -116,6 +120,7 @@ __ss_int calcsize(str *fmt) {
     __ss_int result = 0;
     str *digits = new str();
     char order = '@';
+    int itemsize, itemsize2;
     for(unsigned int i=0; i<len(fmt); i++) {
         char c = fmt->unit[i];
         if(ordering.find(c) != -1) {
@@ -131,7 +136,23 @@ __ss_int calcsize(str *fmt) {
             ndigits = __int(digits);
             digits = new str();
         }
-        result += ndigits * get_itemsize(order, c);
+        itemsize = get_itemsize(order, c);
+        result += ndigits * itemsize;
+        switch(c) {
+            case 'b': 
+            case 'B': 
+            case 'h': 
+            case 'H': 
+            case 'i':
+            case 'I': 
+            case 'l':
+            case 'L':
+            case 'q': 
+            case 'Q':
+                itemsize2 = itemsize==8?4:itemsize;
+                if(order == '@' and result%itemsize2)
+                    result += itemsize2-(result%itemsize2);
+        }
     }
     return result;
 }
