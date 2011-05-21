@@ -1635,7 +1635,7 @@ def struct_info(node, func):
         fmt = node.value
     else:
         error('non-constant format string', node, mv=getmv())
-    char_type = dict(['xx', 'cs', 'bi', 'Bi', '?b', 'hi', 'Hi', 'ii', 'Ii', 'li', 'Li', 'qi', 'Qi', 'ff', 'df', 'ss', 'ps', 'Pi'])
+    char_type = dict(['xx', 'cs', 'bi', 'Bi', '?b', 'hi', 'Hi', 'ii', 'Ii', 'li', 'Li', 'qi', 'Qi', 'ff', 'df', 'ss', 'ps'])
     ordering = '@'
     if fmt and fmt[0] in '@<>!=':
         ordering, fmt = fmt[0], fmt[1:]
@@ -1654,7 +1654,7 @@ def struct_info(node, func):
                 result.extend(int(digits or '1')*[(ordering, c, rtype, 1)])
             digits = ''
         else:
-            error('unsupported format character: '+repr(c), node, mv=getmv())
+            error('bad or unsupported char in struct format: '+repr(c), node, mv=getmv())
             digits = ''
     return result
 

@@ -167,6 +167,16 @@ __ss_int calcsize(str *fmt) {
                 itemsize2 = itemsize==8?4:itemsize;
                 if(order == '@' and result%itemsize2)
                     result += itemsize2-(result%itemsize2);
+            case 'c':
+            case 's':
+            case 'p':
+            case '?':
+            case 'x':
+                break;
+            case 'P':
+                throw new ValueError(new str("unsupported 'P' char in struct format"));
+            default:
+                throw new ValueError(new str("bad char in struct format"));
         }
         result += ndigits * itemsize;
     }
@@ -382,6 +392,10 @@ str *pack(int n, str *fmt, ...) {
                 }
                 pos += ndigits;
                 break;
+            case 'P':
+                 throw new ValueError(new str("unsupported 'P' char in struct format"));
+            default:
+                 throw new ValueError(new str("bad char in struct format"));
         }
     }
     va_end(args);
