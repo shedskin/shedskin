@@ -315,14 +315,14 @@ str *pack(int n, str *fmt, ...) {
             case 'c': 
                 for(unsigned int j=0; j<ndigits; j++) {
                     arg = va_arg(args, pyobj *);
+                    if(arg->__class__ != cl_str_)
+                        throw new ValueError(new str("char format require string of length 1"));
                     strarg = ((str *)(arg));
                     int len = strarg->__len__();
                     if(len != 1)
                         throw new ValueError(new str("char format require string of length 1"));
-                    if(arg->__class__ == cl_str_) {
-                        result->unit += ((str *)(arg))->unit[0];
-                        pos += 1;
-                    }
+                    result->unit += strarg->unit[0];
+                    pos += 1;
                 }
                 if(ndigits)
                     pascal_ff = 0;
