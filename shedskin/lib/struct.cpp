@@ -50,8 +50,10 @@ int get_itemsize(char order, char c) {
 }
 
 int padding(char o, int pos, int itemsize) {
+#ifndef WIN32
     if(itemsize == 8)
         itemsize = 4;
+#endif
     if(o == '@' and pos % itemsize)
         return itemsize - (pos % itemsize);
     return 0;
