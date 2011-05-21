@@ -80,7 +80,7 @@ str * unpack_str(char o, char c, int d, str *data, __ss_int *pos) {
         case 's':
              result = new str();
              for(unsigned int i=0; i<d; i++)
-                 result->unit += data->unit[i];
+                 result->unit += data->unit[*pos+i];
              break;
         case 'p':
              result = new str();
