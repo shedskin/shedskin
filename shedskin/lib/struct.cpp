@@ -7,54 +7,6 @@ __GC_STRING ordering;
 
 char buffy[32];
 
-__ss_int unpack_one(str *s, __ss_int idx, __ss_int count, __ss_int endian) {
-    unsigned int r = 0;
-
-    for(int i=0; i<count; i++) {
-        unsigned char c = s->__getitem__(i+idx)->unit[0];
-        if (endian)
-            r += (c << 8*(count-i-1));
-        else
-            r += (c << 8*i);
-
-    }
-
-    return r;
-}
-
-
-__ss_int unpack_int(char o, char c, int d, str *data, __ss_int *pos) {
-    __ss_int result;
-    switch(c) {
-        case 'H':
-            result = unpack_one(data, *pos, 2, o=='>');
-             *pos += 2;
-            break;
-        case 'I':
-            result = unpack_one(data, *pos, 4, o=='>');
-             *pos += 4;
-            break;
-        case 'B':
-            result = unpack_one(data, *pos, 1, o=='>');
-             *pos += 1;
-            break;
-    }
-    return result;
-}
-
-str * unpack_str(char o, char c, int d, str *data, __ss_int *pos) {
-    str *result = new str(data->unit.substr(*pos, d));
-    *pos += d;
-    return result;
-}
-__ss_bool unpack_bool(char o, char c, int d, str *data, __ss_int *pos) {
-    return True;
-}
-
-double unpack_float(char o, char c, int d, str *data, __ss_int *pos) {
-    return 3.141;
-}
-
 int get_itemsize(char order, char c) {
     if(order == '@') {
         switch(c) {
@@ -93,6 +45,43 @@ int get_itemsize(char order, char c) {
             case 'p': return 1;
         }
     }
+}
+
+__ss_int unpack_one(str *s, __ss_int idx, __ss_int count, __ss_int endian) {
+    unsigned int r = 0;
+
+    for(int i=0; i<count; i++) {
+        unsigned char c = s->__getitem__(i+idx)->unit[0];
+        if (endian)
+            r += (c << 8*(count-i-1));
+        else
+            r += (c << 8*i);
+
+    }
+
+    return r;
+}
+
+
+__ss_int unpack_int(char o, char c, int d, str *data, __ss_int *pos) {
+    __ss_int result;
+    int itemsize = get_itemsize(o, c);
+    result = unpack_one(data, *pos, itemsize, o=='>');
+    *pos += itemsize;
+    return result;
+}
+
+str * unpack_str(char o, char c, int d, str *data, __ss_int *pos) {
+    str *result = new str(data->unit.substr(*pos, d));
+    *pos += d;
+    return result;
+}
+__ss_bool unpack_bool(char o, char c, int d, str *data, __ss_int *pos) {
+    return True;
+}
+
+double unpack_float(char o, char c, int d, str *data, __ss_int *pos) {
+    return 3.141;
 }
 
 __ss_int calcsize(str *fmt) {
