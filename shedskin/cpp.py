@@ -2016,17 +2016,23 @@ class generateVisitor(ASTVisitor):
             self.visitm(tvar, ' = ', node.expr.args[1], func)
             self.eol()
             self.output('%s = 0;' % tvar_pos)
-            for n, (o, c, t, d) in zip(node.nodes[0], sinfo):
+            hop = 0
+            for (o, c, t, d) in sinfo:
                 self.start()
                 expr = "__struct__::unpack_%s('%c', '%c', %d, %s, &%s)" % (t, o, c, d, tvar, tvar_pos)
-                if isinstance(n, Subscript): # XXX merge
-                    self.subs_assign(n, func)
-                    self.visitm(expr, ')', func)
-                elif isinstance(n, AssName):
-                    self.visitm(n, ' = ', expr, func)
-                elif isinstance(n, AssAttr):
-                    self.visitAssAttr(n, func)
-                    self.visitm(' = ', expr, func)
+                if c == 'x':
+                    self.visitm(expr, func)
+                else:
+                    n = list(node.nodes[0])[hop]
+                    hop += 1
+                    if isinstance(n, Subscript): # XXX merge
+                        self.subs_assign(n, func)
+                        self.visitm(expr, ')', func)
+                    elif isinstance(n, AssName):
+                        self.visitm(n, ' = ', expr, func)
+                    elif isinstance(n, AssAttr):
+                        self.visitAssAttr(n, func)
+                        self.visitm(' = ', expr, func)
                 self.eol()
             return
 
