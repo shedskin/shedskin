@@ -308,16 +308,21 @@ str *pack(int n, str *fmt, ...) {
                 }
                 for(unsigned int j=0; j<ndigits; j++) {
                     arg = va_arg(args, pyobj *);
-                    if(arg->__class__ == cl_float_) {
-                        fillbuf2(c, ((float_ *)arg)->unit, order, itemsize);
-                        if(order == '>' or order == '!')
-                            for(int i=itemsize-1; i>=0; i--) 
-                                result->unit += buffy[i];
-                        else 
-                            for(int i=0; i<itemsize; i++) 
-                                result->unit += buffy[i];
-                        pos += itemsize;
-                    }
+                    double value;
+                    if(arg->__class__ == cl_float_)
+                        value = ((float_ *)arg)->unit;
+                    else if(arg->__class__ == cl_int_)
+                        value = ((int_ *)arg)->unit;
+                    else
+                        throw new ValueError(new str("required argument is not a float"));
+                    fillbuf2(c, value, order, itemsize);
+                    if(order == '>' or order == '!')
+                        for(int i=itemsize-1; i>=0; i--) 
+                            result->unit += buffy[i];
+                    else 
+                        for(int i=0; i<itemsize; i++) 
+                            result->unit += buffy[i];
+                    pos += itemsize;
                 }
                 if(ndigits)
                     pascal_ff = 0;
