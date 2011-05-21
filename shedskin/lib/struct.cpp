@@ -55,32 +55,6 @@ double unpack_float(char o, char c, int d, str *data, __ss_int *pos) {
     return 3.141;
 }
 
-__ss_int calcsize(str *fmt) {
-    __ss_int result = 0;
-    str *digits = new str();
-    for(unsigned int i=0; i<len(fmt); i++) {
-        char c = fmt->unit[i];
-        if(ordering.find(c) != -1)
-            continue;
-        if(::isdigit(c)) {
-            digits->unit += c;
-        } else {
-            int ndigits = 1;
-            if(len(digits)) {
-                ndigits = __int(digits);
-                digits = new str();
-            }
-            switch(c) {
-                case 'H': result += 2*ndigits; break;
-                case 'I': result += 4*ndigits; break;
-                case 'B': result += ndigits; break;
-                case 's': result += ndigits; break;
-            }
-        }
-    }
-    return result;
-}
-
 int get_itemsize(char order, char c) {
     if(order == '@') {
         switch(c) {
@@ -96,6 +70,9 @@ int get_itemsize(char order, char c) {
             case 'Q': return sizeof(unsigned long long);
             case 'f': return sizeof(float);
             case 'd': return sizeof(double);
+            case 'c': return 1;
+            case 's': return 1;
+            case 'p': return 1;
         }
     } else {
         switch(c) {
@@ -111,8 +88,35 @@ int get_itemsize(char order, char c) {
             case 'Q': return 8;
             case 'f': return 4;
             case 'd': return 8;
+            case 'c': return 1;
+            case 's': return 1;
+            case 'p': return 1;
         }
     }
+}
+
+__ss_int calcsize(str *fmt) {
+    __ss_int result = 0;
+    str *digits = new str();
+    char order = '@';
+    for(unsigned int i=0; i<len(fmt); i++) {
+        char c = fmt->unit[i];
+        if(ordering.find(c) != -1) {
+            order = c;
+            continue;
+        }
+        if(::isdigit(c)) {
+            digits->unit += c;
+            continue;
+        }
+        int ndigits = 1;
+        if(len(digits)) {
+            ndigits = __int(digits);
+            digits = new str();
+        }
+        result += ndigits * get_itemsize(order, c);
+    }
+    return result;
 }
 
 void fillbuf(char c, __ss_int t, char order, int itemsize) {
