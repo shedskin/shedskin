@@ -25,6 +25,7 @@ int get_itemsize(char order, char c) {
             case 'c': return 1;
             case 's': return 1;
             case 'p': return 1;
+            case '?': return 1;
         }
     } else {
         switch(c) {
@@ -43,6 +44,7 @@ int get_itemsize(char order, char c) {
             case 'c': return 1;
             case 's': return 1;
             case 'p': return 1;
+            case '?': return 1;
         }
     }
 }
@@ -94,7 +96,13 @@ str * unpack_str(char o, char c, int d, str *data, __ss_int *pos) {
 }
 
 __ss_bool unpack_bool(char o, char c, int d, str *data, __ss_int *pos) {
-    return True;
+    __ss_bool result;
+    if(data->unit[*pos] == '\x01')
+        result = True;
+    else
+        result = False;
+    *pos += 1;
+    return result;
 }
 
 double unpack_float(char o, char c, int d, str *data, __ss_int *pos) {
