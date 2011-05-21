@@ -1,8 +1,8 @@
 Shed Skin Tutorial
 ==================
 
-:Version: 0.7
-:Date: December 10 2010
+:Version: 0.8
+:Date: June 1 2011
 :Authors: Mark Dufour and James Coughlan
 
 .. _Parallel Python: http://www.parallelpython.com/
@@ -33,7 +33,7 @@ Additionally, the type inference techniques employed by **Shed Skin** currently 
 
 Because **Shed Skin** is still in an early stage of development, it can also improve a lot. At the moment, you will probably run into some bugs when using it. Please report these, so they can be fixed!
 
-At the moment, **Shed Skin** is compatible with Python versions 2.4 to 2.7, behaves like 2.6, and should work on Windows and most UNIX platforms, such as GNU/Linux, OSX, FreeBSD and OpenSolaris.
+At the moment, **Shed Skin** is compatible with Python versions 2.4 to 2.7, behaves like 2.6, and should work on Windows and most UNIX platforms, such as GNU/Linux and OSX. On UNIX platforms, GCC version 4.2 or higher is required.
 
 .. _Typing Restrictions:
 
@@ -132,9 +132,7 @@ Some other features are currently only partially supported:
 Library Limitations
 -------------------
 
-Programs to be compiled with **Shed Skin** cannot freely use the Python standard library. Only about 20 common modules are currently supported.
-
-The following modules are largely supported at the moment. Several of these, such as ``os.path``, were compiled to C++ using **Shed Skin**.
+Programs to be compiled with **Shed Skin** cannot freely use the Python standard library. At the moment, only the following 22 modules are supported. Several of these, such as ``os.path``, were compiled to C++ using **Shed Skin**.
 
   - ``array``
   - ``bisect``
@@ -155,6 +153,7 @@ The following modules are largely supported at the moment. Several of these, suc
   - ``re``
   - ``socket``
   - ``string``
+  - ``struct`` (no Struct, pack_into, unpack_from)
   - ``sys``
   - ``time``
 
