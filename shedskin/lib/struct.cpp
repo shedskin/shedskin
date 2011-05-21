@@ -154,7 +154,6 @@ __ss_int calcsize(str *fmt) {
             digits = new str();
         }
         itemsize = get_itemsize(order, c);
-        result += ndigits * itemsize;
         switch(c) {
             case 'b': 
             case 'B': 
@@ -166,10 +165,13 @@ __ss_int calcsize(str *fmt) {
             case 'L':
             case 'q': 
             case 'Q':
+            case 'd': 
+            case 'f':
                 itemsize2 = itemsize==8?4:itemsize;
                 if(order == '@' and result%itemsize2)
                     result += itemsize2-(result%itemsize2);
         }
+        result += ndigits * itemsize;
     }
     return result;
 }
