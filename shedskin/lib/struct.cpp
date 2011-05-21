@@ -329,19 +329,19 @@ str *pack(int n, str *fmt, ...) {
                 break;
             case 'p': 
                 arg = va_arg(args, pyobj *);
+                if(arg->__class__ != cl_str_)
+                    throw new ValueError(new str("argument for 'p' must be a string"));
                 if(ndigits) {
-                    if(arg->__class__ == cl_str_) {
-                        strarg = ((str *)(arg));
-                        int len = strarg->__len__();
-                        if(len+1 > ndigits)
-                            len = ndigits-1;
-                        result->unit += (unsigned char)(len);
-                        for(unsigned int j=0; j<len; j++)
-                            result->unit += strarg->unit[j];
-                        for(unsigned int j=0; j<ndigits-len-1; j++)
-                            result->unit += '\x00';
-                        pos += ndigits;
-                    }
+                    strarg = ((str *)(arg));
+                    int len = strarg->__len__();
+                    if(len+1 > ndigits)
+                        len = ndigits-1;
+                    result->unit += (unsigned char)(len);
+                    for(unsigned int j=0; j<len; j++)
+                        result->unit += strarg->unit[j];
+                    for(unsigned int j=0; j<ndigits-len-1; j++)
+                        result->unit += '\x00';
+                    pos += ndigits;
                     pascal_ff = 0;
                 }
                 else
@@ -349,23 +349,23 @@ str *pack(int n, str *fmt, ...) {
                 break;
             case 's':
                 arg = va_arg(args, pyobj *);
+                if(arg->__class__ != cl_str_)
+                    throw new ValueError(new str("argument for 's' must be a string"));
                 if(ndigits) {
-                    if(arg->__class__ == cl_str_) {
-                        strarg = ((str *)(arg));
-                        int len = strarg->__len__();
-                        if(len > ndigits)
-                            len = ndigits;
-                        for(unsigned int j=0; j<len; j++)
-                            result->unit += strarg->unit[j];
-                        for(unsigned int j=0; j<ndigits-len; j++) {
-                            if(!len and pascal_ff) {
-                                result->unit += '\xff';
-                                pascal_ff = 0;
-                            } else 
-                                result->unit += '\x00';
-                        }
-                        pos += ndigits;
+                    strarg = ((str *)(arg));
+                    int len = strarg->__len__();
+                    if(len > ndigits)
+                        len = ndigits;
+                    for(unsigned int j=0; j<len; j++)
+                        result->unit += strarg->unit[j];
+                    for(unsigned int j=0; j<ndigits-len; j++) {
+                        if(!len and pascal_ff) {
+                            result->unit += '\xff';
+                            pascal_ff = 0;
+                        } else 
+                            result->unit += '\x00';
                     }
+                    pos += ndigits;
                     pascal_ff = 0;
                 }
                 break;
