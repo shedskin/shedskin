@@ -8,6 +8,13 @@ __GC_STRING ordering;
 char buffy[32];
 
 int get_itemsize(char order, char c) {
+    switch(c) {
+        case 'c': return 1;
+        case 's': return 1;
+        case 'p': return 1;
+        case '?': return 1;
+        case 'x': return 1;
+    }
     if(order == '@') {
         switch(c) {
             case 'b': return sizeof(signed char);
@@ -22,10 +29,6 @@ int get_itemsize(char order, char c) {
             case 'Q': return sizeof(unsigned long long);
             case 'f': return sizeof(float);
             case 'd': return sizeof(double);
-            case 'c': return 1;
-            case 's': return 1;
-            case 'p': return 1;
-            case '?': return 1;
         }
     } else {
         switch(c) {
@@ -41,10 +44,6 @@ int get_itemsize(char order, char c) {
             case 'Q': return 8;
             case 'f': return 4;
             case 'd': return 8;
-            case 'c': return 1;
-            case 's': return 1;
-            case 'p': return 1;
-            case '?': return 1;
         }
     }
 }
