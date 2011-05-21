@@ -49,13 +49,18 @@ int get_itemsize(char order, char c) {
     }
 }
 
+int padding(char o, int pos, int itemsize) {
+    if(itemsize == 8)
+        itemsize = 4;
+    if(o == '@' and pos % itemsize)
+        return itemsize - (pos % itemsize);
+    return 0;
+}
+
 __ss_int unpack_int(char o, char c, int d, str *data, __ss_int *pos) {
     unsigned long long result;
     int itemsize = get_itemsize(o, c);
-    int itemsize2;
-    itemsize2 = itemsize==8?4:itemsize;
-    if(o == '@' and *pos%itemsize2)
-        *pos += itemsize2-(*pos%itemsize2);
+    *pos += padding(o, *pos, itemsize);
     if(d==0)
         return 0;
     result = 0;
@@ -107,10 +112,7 @@ __ss_bool unpack_bool(char o, char c, int d, str *data, __ss_int *pos) {
 double unpack_float(char o, char c, int d, str *data, __ss_int *pos) {
     double result;
     int itemsize = get_itemsize(o, c);
-    int itemsize2;
-    itemsize2 = itemsize==8?4:itemsize;
-    if(o == '@' and *pos%itemsize2)
-        *pos += itemsize2-(*pos%itemsize2);
+    *pos += padding(o, *pos, itemsize);
     if(d==0)
         return 0;
     if(o=='>' or o=='!')
@@ -135,7 +137,7 @@ __ss_int calcsize(str *fmt) {
     __ss_int result = 0;
     str *digits = new str();
     char order = '@';
-    int itemsize, itemsize2;
+    int itemsize;
     for(unsigned int i=0; i<len(fmt); i++) {
         char c = fmt->unit[i];
         if(ordering.find(c) != -1) {
@@ -165,9 +167,7 @@ __ss_int calcsize(str *fmt) {
             case 'Q':
             case 'd': 
             case 'f':
-                itemsize2 = itemsize==8?4:itemsize;
-                if(order == '@' and result%itemsize2)
-                    result += itemsize2-(result%itemsize2);
+                result += padding(order, result, itemsize);
             case 'c':
             case 's':
             case 'p':
@@ -228,7 +228,7 @@ str *pack(int n, str *fmt, ...) {
     char order = '@';
     str *digits = new str();
     int pos=0;
-    int itemsize, pad, itemsize2;
+    int itemsize, pad;
     int fmtlen = fmt->__len__();
     str *strarg;
     int pascal_ff = 0;
@@ -259,18 +259,15 @@ str *pack(int n, str *fmt, ...) {
             case 'q': 
             case 'Q':
                 itemsize = get_itemsize(order, c);
-                itemsize2 = itemsize==8?4:itemsize;
-                if(order == '@' and pos%itemsize2) {
-                    pad = itemsize2-(pos%itemsize2);
-                    for(unsigned int j=0; j<pad; j++) {
-                        if(pascal_ff) {
-                            result->unit += '\xff';
-                            pascal_ff = 0;
-                        } else
-                            result->unit += '\x00';
-                    }
-                    pos += pad;
+                pad = padding(order, pos, itemsize);
+                for(unsigned int j=0; j<pad; j++) {
+                    if(pascal_ff) {
+                        result->unit += '\xff';
+                        pascal_ff = 0;
+                    } else
+                        result->unit += '\x00';
                 }
+                pos += pad;
                 for(unsigned int j=0; j<ndigits; j++) {
                     arg = va_arg(args, pyobj *);
                     __ss_int value;
@@ -296,17 +293,15 @@ str *pack(int n, str *fmt, ...) {
             case 'd':
             case 'f':
                 itemsize = get_itemsize(order, c);
-                if(order == '@' and pos%4) {
-                    pad = 4-(pos%4);
-                    for(unsigned int j=0; j<pad; j++) {
-                        if(pascal_ff) {
-                            result->unit += '\xff';
-                            pascal_ff = 0;
-                        } else
-                            result->unit += '\x00';
-                    }
-                    pos += pad;
+                pad = padding(order, pos, itemsize);
+                for(unsigned int j=0; j<pad; j++) {
+                    if(pascal_ff) {
+                        result->unit += '\xff';
+                        pascal_ff = 0;
+                    } else
+                        result->unit += '\x00';
                 }
+                pos += pad;
                 for(unsigned int j=0; j<ndigits; j++) {
                     arg = va_arg(args, pyobj *);
                     double value;
