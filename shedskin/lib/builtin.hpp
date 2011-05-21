@@ -791,6 +791,7 @@ public:
     bool_(__ss_bool i);
     str *__repr__();
     __ss_bool __nonzero__();
+    __ss_int __index__();
 };
 
 class object : public pyobj {
