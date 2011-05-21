@@ -175,9 +175,9 @@ __ss_int calcsize(str *fmt) {
             case 'x':
                 break;
             case 'P':
-                throw new ValueError(new str("unsupported 'P' char in struct format"));
+                throw new error(new str("unsupported 'P' char in struct format"));
             default:
-                throw new ValueError(new str("bad char in struct format"));
+                throw new error(new str("bad char in struct format"));
         }
         result += ndigits * itemsize;
     }
@@ -282,7 +282,7 @@ str *pack(int n, str *fmt, ...) {
                         try {
                             value = arg->__index__();
                         } catch(Exception *e) {
-                            throw new ValueError(new str("cannot convert argument to integer"));
+                            throw new error(new str("cannot convert argument to integer"));
                         }
                     }
                     fillbuf(c, value, order, itemsize);
@@ -315,7 +315,7 @@ str *pack(int n, str *fmt, ...) {
                     else if(arg->__class__ == cl_int_)
                         value = ((int_ *)arg)->unit;
                     else
-                        throw new ValueError(new str("required argument is not a float"));
+                        throw new error(new str("required argument is not a float"));
                     fillbuf2(c, value, order, itemsize);
                     if(order == '>' or order == '!')
                         for(int i=itemsize-1; i>=0; i--) 
@@ -332,11 +332,11 @@ str *pack(int n, str *fmt, ...) {
                 for(unsigned int j=0; j<ndigits; j++) {
                     arg = va_arg(args, pyobj *);
                     if(arg->__class__ != cl_str_)
-                        throw new ValueError(new str("char format require string of length 1"));
+                        throw new error(new str("char format require string of length 1"));
                     strarg = ((str *)(arg));
                     int len = strarg->__len__();
                     if(len != 1)
-                        throw new ValueError(new str("char format require string of length 1"));
+                        throw new error(new str("char format require string of length 1"));
                     result->unit += strarg->unit[0];
                     pos += 1;
                 }
@@ -346,7 +346,7 @@ str *pack(int n, str *fmt, ...) {
             case 'p': 
                 arg = va_arg(args, pyobj *);
                 if(arg->__class__ != cl_str_)
-                    throw new ValueError(new str("argument for 'p' must be a string"));
+                    throw new error(new str("argument for 'p' must be a string"));
                 if(ndigits) {
                     strarg = ((str *)(arg));
                     int len = strarg->__len__();
@@ -366,7 +366,7 @@ str *pack(int n, str *fmt, ...) {
             case 's':
                 arg = va_arg(args, pyobj *);
                 if(arg->__class__ != cl_str_)
-                    throw new ValueError(new str("argument for 's' must be a string"));
+                    throw new error(new str("argument for 's' must be a string"));
                 if(ndigits) {
                     strarg = ((str *)(arg));
                     int len = strarg->__len__();
@@ -409,9 +409,9 @@ str *pack(int n, str *fmt, ...) {
                 pos += ndigits;
                 break;
             case 'P':
-                 throw new ValueError(new str("unsupported 'P' char in struct format"));
+                 throw new error(new str("unsupported 'P' char in struct format"));
             default:
-                 throw new ValueError(new str("bad char in struct format"));
+                 throw new error(new str("bad char in struct format"));
         }
     }
     va_end(args);
