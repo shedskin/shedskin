@@ -136,6 +136,10 @@ __ss_bool bool_::__nonzero__() {
     return unit;
 }
 
+__ss_int bool_::__index__() {
+    return unit.value;
+}
+
 /* float methods */
 /* complex methods */
 
