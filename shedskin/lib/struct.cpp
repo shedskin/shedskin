@@ -109,7 +109,25 @@ __ss_bool unpack_bool(char o, char c, int d, str *data, __ss_int *pos) {
 }
 
 double unpack_float(char o, char c, int d, str *data, __ss_int *pos) {
-    return 3.141;
+    double result;
+    int itemsize = get_itemsize(o, c);
+    int itemsize2;
+    itemsize2 = itemsize==8?4:itemsize;
+    if(o == '@' and *pos%itemsize2)
+        *pos += itemsize2-(*pos%itemsize2);
+    printf("pos %d o %c size %d\n", *pos, o, itemsize);
+    if(o=='>' or o=='!')
+        for(int i=0; i<itemsize; i++)
+            buffy[itemsize-i-1] = data->unit[*pos+i];
+    else
+        for(int i=0; i<itemsize; i++)
+            buffy[i] = data->unit[*pos+i];
+    if(c == 'f')
+        result = *((float *)(buffy));
+    else
+        result = *((double *)(buffy));
+    *pos += d;
+    return result;
 }
 
 void unpack_pad(char o, char c, int d, str *data, __ss_int *pos) {
