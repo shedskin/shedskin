@@ -115,7 +115,6 @@ double unpack_float(char o, char c, int d, str *data, __ss_int *pos) {
     itemsize2 = itemsize==8?4:itemsize;
     if(o == '@' and *pos%itemsize2)
         *pos += itemsize2-(*pos%itemsize2);
-    printf("pos %d o %c size %d\n", *pos, o, itemsize);
     if(o=='>' or o=='!')
         for(int i=0; i<itemsize; i++)
             buffy[itemsize-i-1] = data->unit[*pos+i];
@@ -126,7 +125,7 @@ double unpack_float(char o, char c, int d, str *data, __ss_int *pos) {
         result = *((float *)(buffy));
     else
         result = *((double *)(buffy));
-    *pos += d;
+    *pos += itemsize;
     return result;
 }
 
