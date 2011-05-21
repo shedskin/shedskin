@@ -108,6 +108,10 @@ double unpack_float(char o, char c, int d, str *data, __ss_int *pos) {
     return 3.141;
 }
 
+void unpack_pad(char o, char c, int d, str *data, __ss_int *pos) {
+    *pos += d;
+}
+
 __ss_int calcsize(str *fmt) {
     __ss_int result = 0;
     str *digits = new str();
