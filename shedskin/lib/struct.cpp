@@ -62,20 +62,37 @@ __ss_int unpack_one(str *s, __ss_int idx, __ss_int count, __ss_int endian) {
     return r;
 }
 
-
 __ss_int unpack_int(char o, char c, int d, str *data, __ss_int *pos) {
     __ss_int result;
     int itemsize = get_itemsize(o, c);
-    result = unpack_one(data, *pos, itemsize, o=='>');
+    result = unpack_one(data, *pos, itemsize, o=='>' or o=='!');
     *pos += itemsize;
     return result;
 }
 
 str * unpack_str(char o, char c, int d, str *data, __ss_int *pos) {
-    str *result = new str(data->unit.substr(*pos, d));
+    str *result;
+    int len;
+    switch(c) {
+        case 'c':
+             result = __char_cache[(unsigned char)(data->unit[*pos])];
+             break;
+        case 's':
+             result = new str();
+             for(unsigned int i=0; i<d; i++)
+                 result->unit += data->unit[i];
+             break;
+        case 'p':
+             result = new str();
+             len = data->unit[*pos];
+             for(unsigned int i=0; i<len; i++)
+                 result->unit += data->unit[*pos+i+1];
+             break;
+    }
     *pos += d;
     return result;
 }
+
 __ss_bool unpack_bool(char o, char c, int d, str *data, __ss_int *pos) {
     return True;
 }
