@@ -272,12 +272,22 @@ str *pack(int n, str *fmt, ...) {
                 }
                 for(unsigned int j=0; j<ndigits; j++) {
                     arg = va_arg(args, pyobj *);
-                    if(arg->__class__ == cl_int_) {
-                        fillbuf(c, ((int_ *)arg)->unit, order, itemsize);
-                        for(unsigned int k=0; k<itemsize; k++)
-                            result->unit += buffy[k];
-                        pos += itemsize;
+                    __ss_int value;
+                    if(arg->__class__ == cl_int_)
+                        value = ((int_ *)arg)->unit;
+                    else if(arg->__class__ == cl_float_)
+                        value = ((float_ *)arg)->unit;
+                    else {
+                        try {
+                            value = arg->__index__();
+                        } catch(Exception *e) {
+                            throw new ValueError(new str("cannot convert argument to integer"));
+                        }
                     }
+                    fillbuf(c, value, order, itemsize);
+                    for(unsigned int k=0; k<itemsize; k++)
+                        result->unit += buffy[k];
+                    pos += itemsize;
                 }
                 if(ndigits)
                     pascal_ff = 0;

@@ -1322,10 +1322,6 @@ void file::__exit__() {
 
 /* builtin functions */
 
-str *pyobj::__repr__() {
-    return __add_strs(3, new str("<"), __class__->__name__, new str(" instance>"));
-}
-
 str *raw_input(str *msg) {
     __GC_STRING s;
     if(msg)
@@ -2173,6 +2169,10 @@ list<tuple2<void *, void *> *> *__zip(int) {
 
 str *pyobj::__str__() { return __repr__(); }
 
+str *pyobj::__repr__() {
+    return __add_strs(3, new str("<"), __class__->__name__, new str(" instance>"));
+}
+
 int pyobj::__hash__() {
     return (intptr_t)this;
 }
@@ -2196,6 +2196,8 @@ __ss_int pyobj::__len__() { return 1; } /* XXX exceptions? */
 __ss_int pyobj::__int__() { return 0; }
 
 __ss_bool pyobj::__nonzero__() { return __mbool(__len__() != 0); }
+
+__ss_int pyobj::__index__() { throw new TypeError(new str("no such method: '__index__'")); }
 
 /* object */
 
