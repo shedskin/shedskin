@@ -1,5 +1,5 @@
-#class error(Exception): # XXX
-#    pass
+class error(Exception):
+    pass
 
 def pack(fmt, *vals):
     return ''

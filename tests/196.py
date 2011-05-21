@@ -174,6 +174,33 @@ print struct.calcsize( '>b0p2s' )
 packer = struct.pack( '@2f0p3p1L' ,531.0 ,469.0 ,'1k\x1a\x8c\xfd\xc0u\xdf' ,'' ,60 )
 print repr(packer)
 print struct.calcsize( '@2f0p3p1L' )
+try:
+    s = struct.pack('h', 18.18)
+    print repr(s)
+    dwah, = struct.unpack('h', s)
+    print dwah
+    s = struct.pack('h', '19')
+    print repr(s)
+    dwah, = struct.unpack('h', s)
+    print dwah
+    s = struct.pack('h', True)
+    print repr(s)
+    dwah, = struct.unpack('h', s)
+    print dwah
+except Exception, messg:
+    print messg
+try:
+    s = struct.pack('fd', 17, 18)
+    print repr(s)
+    dwad, ewad = struct.unpack('fd', s)
+    print dwad, ewad
+    s = struct.pack('fd', 'oi', 18)
+except Exception, e:
+    print e
+try:
+    raise struct.error("butkus")
+except struct.error, e:
+    print e
 
 # array
 import array

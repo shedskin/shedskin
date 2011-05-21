@@ -6,6 +6,7 @@ namespace __struct__ {
 __GC_STRING ordering;
 
 char buffy[32];
+class_ *cl_error;
 
 int get_itemsize(char order, char c) {
     switch(c) {
@@ -419,6 +420,7 @@ str *pack(int n, str *fmt, ...) {
 
 void __init() {
     ordering = "@<>!=";
+    cl_error = new class_("error", 16, 16);
 }
 
 } // module namespace

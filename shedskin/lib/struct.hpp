@@ -8,6 +8,14 @@ namespace __struct__ {
 
 extern char buffy[];
 
+extern class_ *cl_error;
+class error : public Exception {
+public:
+    error(str *msg=0) : Exception(msg) {
+        __class__ = cl_error;
+    }
+};
+
 __ss_int unpack_int(char o, char c, int d, str *data, __ss_int *pos);
 str * unpack_str(char o, char c, int d, str *data, __ss_int *pos);
 __ss_bool unpack_bool(char o, char c, int d, str *data, __ss_int *pos);
