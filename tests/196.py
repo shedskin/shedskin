@@ -356,3 +356,4 @@ import sys
 print sys.platform
 print sys.byteorder
 copyright = sys.copyright
+assert (sys.version_info[0], sys.version_info[1]) >= (2, 4)

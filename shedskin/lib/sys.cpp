@@ -22,8 +22,8 @@ void __init(int c, char **v) {
     version = new str("Shed Skin Python-to-C++ Compiler 0.8\n[GCC ");
     version = version->__add__(new str(__VERSION__))->__add__(new str("]"));
 #endif
-    version_info = new tuple2<__ss_int, __ss_int>(5, (__ss_int)0, (__ss_int)8, (__ss_int)0, (__ss_int)0, (__ss_int)0);
-    hexversion = 0x00080000;
+    version_info = new tuple2<__ss_int, __ss_int>(5, (__ss_int)2, (__ss_int)6, (__ss_int)6, (__ss_int)0, (__ss_int)0);
+    hexversion = 0x02060600;
 
     copyright = new str("Copyright (c) Mark Dufour 2005-2011.\nAll Rights Reserved.");
 
