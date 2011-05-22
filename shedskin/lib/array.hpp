@@ -144,7 +144,7 @@ template<class T> __ss_int array<T>::__len__() {
     return units.size() / itemsize;
 }
 
-template<class T> __ss_bool array<T>::__eq__(pyobj *p) { /* strncmp */
+template<class T> __ss_bool array<T>::__eq__(pyobj *p) {
    if(p->__class__ != cl_array)
        return False;
    array<T> *b = (array<T> *)p;
@@ -159,7 +159,7 @@ template<class T> __ss_bool array<T>::__eq__(pyobj *p) { /* strncmp */
    return True;
 }
 
-template<class T> array<T> *array<T>::__mul__(__ss_int n) { /* memcpy */
+template<class T> array<T> *array<T>::__mul__(__ss_int n) {
     array<T> *a = new array<T>(typecode);
     size_t len = this->units.size();
     a->units.resize(len*n);
@@ -168,29 +168,29 @@ template<class T> array<T> *array<T>::__mul__(__ss_int n) { /* memcpy */
     return a;
 }
 
-template<class T> array<T> *array<T>::__imul__(__ss_int n) { /* memcpy */
+template<class T> array<T> *array<T>::__imul__(__ss_int n) {
     size_t len = this->units.size();
-    for(size_t i=0; i<n-1; i++)
-        for(size_t j=0; j<len; j++)
-            this->units.push_back(this->units[j]);
+    this->units.resize(len*n);
+    for(size_t i=1; i<n; i++)
+        memcpy(&(this->units[i*len]), &(this->units[0]), len);
     return this;
 }
 
-template<class T> array<T> *array<T>::__add__(array<T> *b) { /* memcpy */
+template<class T> array<T> *array<T>::__add__(array<T> *b) {
     array<T> *a = new array<T>(typecode);
-    size_t len = this->units.size();
-    for(size_t j=0; j<len; j++)
-        a->units.push_back(this->units[j]);
-    len = b->units.size();
-    for(size_t j=0; j<len; j++)
-        a->units.push_back(b->units[j]);
+    size_t s1 = this->units.size();
+    size_t s2 = b->units.size();
+    a->units.resize(s1+s2);
+    memcpy(&(a->units[0]), &(this->units[0]), s1);
+    memcpy(&(a->units[s1]), &(b->units[0]), s2);
     return a;
 }
 
-template<class T> array<T> *array<T>::__iadd__(array<T> *b) { /* memcpy */
-    size_t len = b->units.size();
-    for(size_t j=0; j<len; j++)
-        this->units.push_back(b->units[j]);
+template<class T> array<T> *array<T>::__iadd__(array<T> *b) {
+    size_t s1 = this->units.size();
+    size_t s2 = b->units.size();
+    this->units.resize(s1+s2);
+    memcpy(&(this->units[s1]), &(b->units[0]), s2);
     return this;
 }
 
