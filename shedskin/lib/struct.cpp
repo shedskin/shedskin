@@ -107,10 +107,10 @@ str * unpack_str(char o, char c, int d, str *data, __ss_int *pos) {
 
 __ss_bool unpack_bool(char o, char c, int d, str *data, __ss_int *pos) {
     __ss_bool result;
-    if(data->unit[*pos] == '\x01')
-        result = True;
-    else
+    if(data->unit[*pos] == '\x00')
         result = False;
+    else
+        result = True;
     if(d!=0)
         *pos += 1;
     return result;
