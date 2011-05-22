@@ -162,9 +162,9 @@ template<class T> __ss_bool array<T>::__eq__(pyobj *p) { /* strncmp */
 template<class T> array<T> *array<T>::__mul__(__ss_int n) { /* memcpy */
     array<T> *a = new array<T>(typecode);
     size_t len = this->units.size();
+    a->units.resize(len*n);
     for(size_t i=0; i<n; i++)
-        for(size_t j=0; j<len; j++)
-            a->units.push_back(this->units[j]);
+        memcpy(&(a->units[i*len]), &(this->units[0]), len);
     return a;
 }
 
