@@ -87,14 +87,22 @@ template<class T> template<class U> void *array<T>::__init__(str *typecode, U *i
     return NULL;
 }
 
-template<class T> template<class U> void *array<T>::extend(U *iter) { /* array? memcpy */
-    typename U::for_in_unit e;
-    typename U::for_in_loop __3;
-    int __2;
-    U *__1;
-    FOR_IN_NEW(e,iter,1,2,3)
-        this->append(e);
-    END_FOR
+template<class T> template<class U> void *array<T>::extend(U *iter) {
+    if(iter->__class__ == cl_array) {
+        array<T> *arr = (array<T> *)iter;
+        size_t s1 = this->units.size();
+        size_t s2 = arr->units.size();
+        this->units.resize(s1+s2);
+        memcpy(&(this->units[s1]), &(arr->units[0]), s2);
+    } else {
+        typename U::for_in_unit e;
+        typename U::for_in_loop __3;
+        int __2;
+        U *__1;
+        FOR_IN_NEW(e,iter,1,2,3)
+            this->append(e);
+        END_FOR
+    }
     return NULL;
 }
 

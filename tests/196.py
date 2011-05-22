@@ -299,6 +299,9 @@ allr[1:3] = array.array('H', range(5))
 print allr
 del allr[1:7:2]
 print allr
+aahaa = array.array('i', range(5))
+aahaa.extend(aahaa)
+print aahaa
 
 # binascii
 import binascii
