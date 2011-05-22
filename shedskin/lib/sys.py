@@ -7,6 +7,7 @@ version = ''
 version_info = (0,)
 copyright = ''
 platform = ''
+byteorder = ''
 hexversion = 0
 maxint = 0
 

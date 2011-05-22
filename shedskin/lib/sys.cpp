@@ -8,7 +8,7 @@ list<str *> *argv;
 str *version;
 
 tuple2<__ss_int, __ss_int> *version_info;
-str *__name__, *copyright, *platform;
+str *__name__, *copyright, *platform, *byteorder;
 __ss_int hexversion, maxint;
 file *__ss_stdin, *__ss_stdout, *__ss_stderr;
 
@@ -26,7 +26,17 @@ void __init(int c, char **v) {
     hexversion = 0x00080000;
 
     copyright = new str("Copyright (c) Mark Dufour 2005-2011.\nAll Rights Reserved.");
-    platform = new str("shedskin");
+
+    platform = new str("unknown");
+#ifdef __linux__
+    platform = new str("linux2");
+#endif
+#ifdef __APPLE__
+    platform = new str("darwin");
+#endif
+#ifdef WIN32
+    platform = new str("win32");
+#endif
 
     maxint = INT_MAX;
 
@@ -36,6 +46,12 @@ void __init(int c, char **v) {
     __ss_stdin = __shedskin__::__ss_stdin;
     __ss_stdout = __shedskin__::__ss_stdout;
     __ss_stderr = __shedskin__::__ss_stderr;
+
+    int num = 1;
+    if (*(char *)&num == 1)
+        byteorder = new str("little");
+    else
+        byteorder = new str("big");
 }
 
 void __ss_exit() {
