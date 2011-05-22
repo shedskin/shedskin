@@ -133,9 +133,10 @@ template<class T> void *array<T>::fromstring(str *s) {
 
 template<class T> list<T> *array<T>::tolist() {
     list<T> *l = new list<T>();
-    size_t len = __len__();
+    size_t len = this->__len__();
+    l->resize(len);
     for(size_t i=0; i<len; i++)
-        l->units.push_back(__getitem__(i));
+        l->units[i] = __getitem__(i);
     return l;
 }
 
