@@ -111,17 +111,23 @@ template<class T> template<class U> void *array<T>::fromlist(U *iter) {
     return NULL;
 }
 
-template<class T> str *array<T>::tostring() { /* memcpy */
+template<class T> str *array<T>::tostring() {
     str *s = new str();
-    for(size_t i=0; i<units.size(); i++)
-        s->unit += units[i];
+    size_t s1 = this->units.size();
+    s->unit.resize(s1);
+    memcpy(&(s->unit[0]), &(this->units[0]), s1);
     return s;
 }
 
-template<class T> void *array<T>::fromstring(str *s) { /* memcpy */
+template<class T> void *array<T>::fromstring(str *s) {
     size_t len = s->unit.size();
-    for(size_t i=0; i<len; i++)
-        units.push_back(s->unit[i]);
+    if(len == 1)
+        this->units.push_back(s->unit[0]);
+    else {
+        size_t s1 = this->units.size();
+        this->units.resize(s1+len);
+        memcpy(&(this->units[0]), &(s->unit[0]), len);
+    }
     return NULL;
 }
 
