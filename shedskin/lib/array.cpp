@@ -80,7 +80,7 @@ template<> __ss_int array<str *>::index(str *t) {
     if(len(t) == 1) {
         int len = this->__len__();
         char c = t->unit[0];
-        for(unsigned int i=0; i<len; i++)
+        for(size_t i=0; i<len; i++)
             if(units[i] == c)
                 return i;
     }

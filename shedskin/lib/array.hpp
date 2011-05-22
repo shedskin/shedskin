@@ -105,22 +105,22 @@ template<class T> template<class U> void *array<T>::fromlist(U *iter) {
 
 template<class T> str *array<T>::tostring() { /* memcpy */
     str *s = new str();
-    for(unsigned int i=0;i<units.size(); i++)
+    for(size_t i=0; i<units.size(); i++)
         s->unit += units[i];
     return s;
 }
 
 template<class T> void *array<T>::fromstring(str *s) { /* memcpy */
-    int len = s->unit.size();
-    for(unsigned int i=0;i<len; i++)
+    size_t len = s->unit.size();
+    for(size_t i=0; i<len; i++)
         units.push_back(s->unit[i]);
     return NULL;
 }
 
 template<class T> list<T> *array<T>::tolist() {
     list<T> *l = new list<T>();
-    int len = __len__();
-    for(unsigned int i=0;i<len; i++)
+    size_t len = __len__();
+    for(size_t i=0; i<len; i++)
         l->units.push_back(__getitem__(i));
     return l;
 }
@@ -133,10 +133,10 @@ template<class T> __ss_bool array<T>::__eq__(pyobj *p) { /* strncmp */
    if(p->__class__ != cl_array)
        return False;
    array<T> *b = (array<T> *)p;
-   unsigned int len = this->__len__();
+   size_t len = this->__len__();
    if(b->__len__() != len)
        return False;
-   for(unsigned int i = 0; i < len; i++)
+   for(size_t i=0; i<len; i++)
        if(!__eq(this->__getitem__(i), b->__getitem__(i)))
            return False;
    return True;
@@ -144,43 +144,43 @@ template<class T> __ss_bool array<T>::__eq__(pyobj *p) { /* strncmp */
 
 template<class T> array<T> *array<T>::__mul__(__ss_int n) { /* memcpy */
     array<T> *a = new array<T>(typecode);
-    int len = this->units.size();
-    for(unsigned int i=0; i<n; i++)
-        for(unsigned int j=0;j<len; j++)
+    size_t len = this->units.size();
+    for(size_t i=0; i<n; i++)
+        for(size_t j=0; j<len; j++)
             a->units.push_back(this->units[j]);
     return a;
 }
 
 template<class T> array<T> *array<T>::__imul__(__ss_int n) { /* memcpy */
-    int len = this->units.size();
-    for(unsigned int i=0; i<n-1; i++)
-        for(unsigned int j=0;j<len; j++)
+    size_t len = this->units.size();
+    for(size_t i=0; i<n-1; i++)
+        for(size_t j=0; j<len; j++)
             this->units.push_back(this->units[j]);
     return this;
 }
 
 template<class T> array<T> *array<T>::__add__(array<T> *b) { /* memcpy */
     array<T> *a = new array<T>(typecode);
-    int len = this->units.size();
-    for(unsigned int j=0;j<len; j++)
+    size_t len = this->units.size();
+    for(size_t j=0; j<len; j++)
         a->units.push_back(this->units[j]);
     len = b->units.size();
-    for(unsigned int j=0;j<len; j++)
+    for(size_t j=0; j<len; j++)
         a->units.push_back(b->units[j]);
     return a;
 }
 
 template<class T> array<T> *array<T>::__iadd__(array<T> *b) { /* memcpy */
-    int len = b->units.size();
-    for(unsigned int j=0;j<len; j++)
+    size_t len = b->units.size();
+    for(size_t j=0; j<len; j++)
         this->units.push_back(b->units[j]);
     return this;
 }
 
 template<class T> __ss_int array<T>::count(T t) {
     __ss_int result = 0;
-    int len = this->__len__();
-    for(unsigned int i=0;i<len; i++)
+    size_t len = this->__len__();
+    for(size_t i=0; i<len; i++)
         if(__eq(t, this->__getitem__(i)))
             result += 1;
     return result;
@@ -188,8 +188,8 @@ template<class T> __ss_int array<T>::count(T t) {
 template<> __ss_int array<str *>::count(str *t);
 
 template<class T> __ss_int array<T>::index(T t) {
-    int len = this->__len__();
-    for(unsigned int i=0;i<len; i++)
+    size_t len = this->__len__();
+    for(size_t i=0; i<len; i++)
         if(__eq(t, this->__getitem__(i)))
             return i;
     throw new ValueError(new str("array.index(x): x not in list"));
@@ -266,11 +266,11 @@ template<class T> str *array<T>::__repr__() {
 template<> str *array<str *>::__repr__();
 
 template<class T> void *array<T>::reverse() { /* use fillbuf, __setitem__ or standard C function? */
-    int len = this->__len__();
+    size_t len = this->__len__();
     if(len > 1) {
         char *first = &units[0];
         char *second = &units[(len-1)*itemsize];
-        for(unsigned int i=0; i<len/2; i++) {
+        for(size_t i=0; i<len/2; i++) {
             memcpy(buffy, first, itemsize);
             memcpy(first, second, itemsize);
             memcpy(second, buffy, itemsize);
@@ -282,8 +282,8 @@ template<class T> void *array<T>::reverse() { /* use fillbuf, __setitem__ or sta
 }
 
 template<class T> void *array<T>::byteswap() { /* standard C function? */
-    int len = this->__len__();
-    for(unsigned int i=0; i<len; i++) {
+    size_t len = this->__len__();
+    for(size_t i=0; i<len; i++) {
         char *first = &units[i*itemsize];
         char *second = &units[((i+1)*itemsize)-1];
         for(unsigned int j=0; j<itemsize/2; j++) {
@@ -303,9 +303,9 @@ template<class T> void *array<T>::tofile(file *f) {
 
 template<class T> void *array<T>::fromfile(file *f, __ss_int n) {
     str *s = f->read(n*itemsize);
-    int len = s->__len__();
-    int bytes = (len/itemsize)*itemsize;
-    for(unsigned int i=0; i<bytes; i++)
+    size_t len = s->__len__();
+    size_t bytes = (len/itemsize)*itemsize;
+    for(size_t i=0; i<bytes; i++)
         units.push_back(s->unit[i]);
     if (len < n*itemsize) 
         throw new EOFError(new str("not enough items in file"));
