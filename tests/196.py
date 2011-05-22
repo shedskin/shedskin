@@ -240,11 +240,11 @@ beh = arr
 arr += arr
 print arr
 print beh
-mul1 = arr * 2
-mul2 = 2 * arr
+mul1 = arr * 4
+mul2 = 3 * arr
 print mul1, mul2
 wah = mul1
-mul1 *= 2
+mul1 *= 1
 print mul1
 print wah
 boolt = wah.__contains__(5), 6 in wah
