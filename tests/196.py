@@ -350,3 +350,9 @@ print all
 # OMG
 omg, = (17,)
 print omg
+
+# sys vars
+import sys
+print sys.platform
+print sys.byteorder
+copyright = sys.copyright
