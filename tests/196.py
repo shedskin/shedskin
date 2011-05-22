@@ -302,6 +302,11 @@ print allr
 aahaa = array.array('i', range(5))
 aahaa.extend(aahaa)
 print aahaa
+arghx = array.array('i', range(5))
+arghy = array.array('h', range(5))
+print arghx == arghy
+arghy.append(7)
+print arghx == arghy
 
 # binascii
 import binascii
