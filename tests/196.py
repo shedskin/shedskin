@@ -201,6 +201,9 @@ try:
     raise struct.error("butkus")
 except struct.error, e:
     print e
+booll, = struct.unpack('?', '\x02')
+print booll
+print repr(struct.pack('p', 300*'x'))
 
 # array
 import array
