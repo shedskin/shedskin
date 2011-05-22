@@ -177,6 +177,8 @@ template<class T> array<T> *array<T>::__imul__(__ss_int n) {
 }
 
 template<class T> array<T> *array<T>::__add__(array<T> *b) {
+    if(this->typecode != b->typecode)
+        throw new TypeError(new str("bad argument type for built-in operation")); 
     array<T> *a = new array<T>(typecode);
     size_t s1 = this->units.size();
     size_t s2 = b->units.size();
@@ -187,6 +189,8 @@ template<class T> array<T> *array<T>::__add__(array<T> *b) {
 }
 
 template<class T> array<T> *array<T>::__iadd__(array<T> *b) {
+    if(this->typecode != b->typecode)
+        throw new TypeError(new str("bad argument type for built-in operation")); 
     size_t s1 = this->units.size();
     size_t s2 = b->units.size();
     this->units.resize(s1+s2);
