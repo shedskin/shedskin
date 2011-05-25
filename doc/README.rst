@@ -23,17 +23,17 @@ Shed Skin Tutorial
 Introduction
 ------------
 
-**Shed Skin** is an experimental **Python-to-C++ compiler** designed to speed up the execution of computation-intensive Python programs. It converts programs written in a static subset of Python to C++. The C++ code can be compiled to executable code, which can be run either as a standalone program or as an extension module easily imported and used in a regular Python program.
+**Shed Skin** is an experimental **Python-to-C++ compiler** designed to speed up the execution of computation-intensive Python programs. It converts programs written in a restricted subset of Python to C++. The C++ code can be compiled to executable code, which can be run either as a standalone program or as an extension module easily imported and used in a regular Python program.
 
-**Shed Skin** uses type inference techniques to determine the implicit types used in a Python program, in order to generate the explicit type declarations needed in a C++ version. Because C++ is statically typed, **Shed Skin** requires Python code to be written such that all variables are (implicitly) statically typed.
+**Shed Skin** uses type inference techniques to determine the implicit types used in a Python program, in order to generate the explicit type declarations needed in a C++ version. Because C++ is statically typed, **Shed Skin** requires Python code to be written such that all variables are (implicitly!) statically typed.
 
-Besides the typing and subset restrictions, supported programs cannot freely use the Python standard library, although about 20 common modules are supported, such as ``random`` and ``re`` (see `Library Limitations`_).
+Besides the typing and subset restrictions, supported programs cannot freely use the Python standard library, although 22 common modules are supported, such as ``random`` and ``re`` (see `Library Limitations`_).
 
-Additionally, the type inference techniques employed by **Shed Skin** currently do not scale very well beyond several thousand lines of code (the largest compiled program is about 2,000 lines (sloccount)). In all, this means that **Shed Skin** is currently mostly useful to compile smallish programs and extension modules, that do not make extensive use of dynamic Python features or the standard library.
+Additionally, the type inference techniques employed by **Shed Skin** currently do not scale very well beyond several thousand lines of code (the largest compiled program is about 3,000 lines (sloccount)). In all, this means that **Shed Skin** is currently mostly useful to compile smallish programs and extension modules, that do not make extensive use of dynamic Python features or the standard or external libraries.
 
 Because **Shed Skin** is still in an early stage of development, it can also improve a lot. At the moment, you will probably run into some bugs when using it. Please report these, so they can be fixed!
 
-At the moment, **Shed Skin** is compatible with Python versions 2.4 to 2.7, behaves like 2.6, and should work on Windows and most UNIX platforms, such as GNU/Linux and OSX. On UNIX platforms, GCC version 4.2 or higher is required.
+At the moment, **Shed Skin** is compatible with Python versions 2.4 to 2.7, behaves like 2.6, and should work on Windows and most UNIX platforms, such as GNU/Linux and OSX. On UNIX platforms, GCC version 4.2 or higher is required to compile the resulting C++ code.
 
 .. _Typing Restrictions:
 
@@ -132,7 +132,7 @@ Some other features are currently only partially supported:
 Library Limitations
 -------------------
 
-Programs to be compiled with **Shed Skin** cannot freely use the Python standard library. At the moment, only the following 22 modules are supported. Several of these, such as ``os.path``, were compiled to C++ using **Shed Skin**.
+Programs to be compiled with **Shed Skin** cannot freely use the Python standard library. At the moment, the following 22 modules are largely supported. Several of these, such as ``os.path``, were compiled to C++ using **Shed Skin**.
 
   - ``array``
   - ``bisect``
@@ -170,7 +170,7 @@ The latest version of **Shed Skin** can be downloaded from the `Googlecode site`
 
 To install the **Windows** version, simply download and start it. (If you use **ActivePython** or some other non-standard Python distribution, or **MingW**, please deinstall this first.)
 
-**Debian**
+**Debian** (**Ubuntu**)
 
 To install the **Debian** package, simply download and install it using your package manager. Make sure the following packages are installed (at least version 4.2 of g++):
 
@@ -178,7 +178,7 @@ To install the **Debian** package, simply download and install it using your pac
 
 **RPM**
 
-To install the **RPM** package, simply download and install it using your package manager. Make sure the following packages are installed (at least version 4.2 of g++):
+To install the **RPM** package, simply download and install it using your package manager. Make sure the following packages are installed (at least version 4.2 of gcc-g++):
 
 ``sudo yum install gcc-c++ pcre-devel gc-devel python-devel``
 
@@ -238,6 +238,13 @@ To create an executable file, called ``test`` (or ``test.exe``), type: ::
 
     make
 
+Under Windows, if you wish to start it without having to double-click ``init.bat``, copy the following files into the same directory as the executable: ::
+
+  shedskin-0.8\shedskin\gc.dll
+  shedskin-0.8\shedskin-libpcre-0.dll
+  shedskin-0.8\bin\libgcc_s_dw-1.dll
+  shedskin-0.8\bin\libstdc++.dll
+
 .. _Generating an Extension Module:
 
 Generating an Extension Module
@@ -289,7 +296,7 @@ There are some important differences between using the compiled extension module
 
 **Numpy Integration**
 
-**Shed Skin** does not currently come with direct support for **Numpy**. It is possible however to pass a **Numpy** array to a **Shed Skin** compiled extension module as a list, using its ``tolist`` method. Note that this is very inefficient (see above). Consider the following example: ::
+**Shed Skin** does not currently come with direct support for **Numpy**. It is possible however to pass a **Numpy** array to a **Shed Skin** compiled extension module as a list, using its ``tolist`` method. Note that this is very inefficient (see above), so it is only useful if a relatively large amount of time is spent inside the extension module. Consider the following example: ::
 
     # simple_module2.py
 
