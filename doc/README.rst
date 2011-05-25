@@ -476,7 +476,6 @@ If you are a student, you might want to consider applying for the yearly Google 
 
 The following people have already made significant contributions to **Shed Skin**:
 
-* Bearophile
 * Hakan Ardo
 * Brian Blais
 * Paul Boddie
