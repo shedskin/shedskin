@@ -365,3 +365,6 @@ print sys.platform
 print sys.byteorder
 copyright = sys.copyright
 assert (sys.version_info[0], sys.version_info[1]) >= (2, 4)
+
+# str.title
+print '8RMgvsFN51QrM0sJeXU11yXodq1drv'.title()
