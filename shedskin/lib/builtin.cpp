@@ -1103,13 +1103,19 @@ str *str::lower() {
 
 str *str::title() {
     str *r = new str(unit);
-    unsigned int i = 0;
-    while( (i != -1) && (i<unit.size()) )
-    {
-        r->unit[i] = ::toupper(r->unit[i]);
-        i = unit.find(" ", i);
-        if (i != -1)
-            i++;
+    bool up = true;
+    size_t len = this->unit.size();
+    for(size_t i=0; i<len; i++) {
+        char c = this->unit[i];
+        if(!::isalpha(c))
+            up = true;
+        else if (up) {
+            c = ::toupper(c);
+            up = false;
+        }
+        else
+            c = ::tolower(c);
+        r->unit[i] = c;
     }
     return r;
 }
