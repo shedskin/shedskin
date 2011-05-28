@@ -372,5 +372,7 @@ print '8RMgvsFN51QrM0sJeXU11yXodq1drv'.title()
 # forward referencing base class doesn't work
 import testdata.timer
 class smurf (testdata.timer.TimingOut):
-    pass
-testdata.timer.timeout_add(42, smurf())
+    def __init__(self):
+        testdata.timer.TimingOut.fire_timer(self)
+smurfje = smurf()
+testdata.timer.timeout_add(42, smurfje)
