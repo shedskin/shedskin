@@ -87,6 +87,19 @@ template<> __ss_int array<str *>::index(str *t) {
     throw new ValueError(new str("array.index(x): x not in list"));
 }
 
+template<> template<> void *array<int>::extend(list<int> *l) { /* XXX generalize */
+    size_t len = l->__len__();
+    if(typecode->unit[0] != 'I') {
+        for(size_t i=0; i<len; i++)
+            append(l->units[i]);
+    } else {
+        this->units.resize(len*itemsize);
+        for(size_t i=0; i<len; i++)
+            *((unsigned int *)(&this->units[i*itemsize])) = l->units[i];
+    }
+    return NULL;
+}
+
 void __init() {
     __name__ = new str("array");
     cl_array = new class_("array", 29, 29);
