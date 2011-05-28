@@ -87,21 +87,16 @@ class generateVisitor(ASTVisitor):
         file(self.output_base+suffix,'w').writelines(newlines2)
         self.filling_consts = False
 
-    def insert_includes(self): # XXX ugly
-        includes = get_includes(self.module)
-        prop_paths = [mod.include_path() for mod in self.module.prop_includes]
-        prop_includes = set(prop_paths) - set(includes)
-        lines = file(self.output_base+'.hpp','r').readlines()
+    def insert_extras(self, suffix):
+        lines = file(self.output_base+suffix,'r').readlines()
         newlines = []
-        prev = ''
         for line in lines:
-            if prev.startswith('#include') and not line.strip():
-                for include in prop_includes:
-                    newlines.append('#include "%s"\n' % include)
-                newlines.extend(self.fwd_class_refs())
             newlines.append(line)
-            prev = line
-        file(self.output_base+'.hpp','w').writelines(newlines)
+            if suffix == '.cpp' and line.startswith('#include'):
+                newlines.extend(self.include_files())
+            elif suffix == '.hpp' and line.startswith('using namespace'):
+                newlines.extend(self.fwd_class_refs())
+        file(self.output_base+suffix, 'w').writelines(newlines)
 
     def fwd_class_refs(self):
         lines = []
@@ -117,7 +112,46 @@ class generateVisitor(ASTVisitor):
         if lines: 
             lines.insert(0, '\n')
         return lines
+
+    def include_files(self):
+        # find all (indirect) dependencies
+        includes = set()
+        includes.add(self.module)
+        changed = True
+        while changed:
+            size = len(includes)
+            for mod in list(includes):
+                includes.update(mod.prop_includes)
+                includes.update(mod.mv.imports.values())
+                includes.update(mod.mv.fake_imports.values())
+            changed = (size != len(includes))
+        includes = set([i for i in includes if i.ident != 'builtin'])
+        # order by cross-file inheritance dependencies
+        for include in includes:
+            include.deps = set()
+        for include in includes:
+            for cl in include.mv.classes.values():
+                if cl.bases:
+                    mod = cl.bases[0].mv.module
+                    if mod.ident != 'builtin' and mod != include:
+                        include.deps.add(mod)
+        includes1 = [i for i in includes if i.builtin]
+        includes2 = [i for i in includes if not i.builtin]
+        includes = includes1 + self.includes_rec(set(includes2))
+        return ['#include "%s"\n' % mod.include_path() for mod in includes]
         
+    def includes_rec(self, includes): # XXX should be recursive!
+        includes = includes.copy()
+        result = []
+        while includes:
+            include = includes.pop()
+            for dep in include.deps:
+                if dep in includes:
+                    result.append(dep)
+                    includes.remove(dep)
+            result.append(include)
+        return result
+
     # --- group pairs of (type, name) declarations, while paying attention to '*'
     def group_declarations(self, pairs):
         group = {}
@@ -202,47 +236,10 @@ class generateVisitor(ASTVisitor):
         print >>self.out, '#ifndef __'+define
         print >>self.out, '#define __'+define+'\n'
 
-        # --- include header files
-        if self.module.dir == '': depth = 0
-        else: depth = self.module.dir.count('/')+1
-
-        includes = get_includes(self.module)
-        if 'getopt.hpp' in includes: # XXX
-            includes.add('os/__init__.hpp')
-            includes.add('os/path.hpp')
-            includes.add('stat.hpp')
-        if 'os/__init__.hpp' in includes: # XXX
-            includes.add('os/path.hpp')
-            includes.add('stat.hpp')
-        for include in includes:
-            print >>self.out, '#include "'+include+'"'
-        if includes: print >>self.out
-
         # --- namespaces
         print >>self.out, 'using namespace __shedskin__;'
         for n in self.module.mod_path:
             print >>self.out, 'namespace __'+n+'__ {'
-        print >>self.out
-
-        for child in node.node.getChildNodes():
-            if isinstance(child, From) and child.modname != '__future__':
-                mod = getgx().from_mod[child]
-                using = 'using '+mod.full_path()+'::'
-                for (name, pseudonym) in child.names:
-                    pseudonym = pseudonym or name
-                    if name == '*':
-                        for func in mod.mv.funcs.values():
-                            if func.cp: # XXX 
-                                print >>self.out, using+self.cpp_name(func.ident)+';';
-                        for cl in mod.mv.classes.values():
-                            print >>self.out, using+nokeywords(cl.ident)+';';
-                    elif pseudonym not in self.module.mv.globals:
-                        if name in mod.mv.funcs:
-                            func = mod.mv.funcs[name]
-                            if func.cp:
-                                print >>self.out, using+self.cpp_name(func.ident)+';';
-                        else:
-                            print >>self.out, using+nokeywords(name)+';'
         print >>self.out
 
         # class declarations
@@ -296,20 +293,37 @@ class generateVisitor(ASTVisitor):
         print >>self.out, '#endif'
 
     def module_cpp(self, node):
-        # --- external dependencies
-        if self.module.filename.endswith('__init__.py'): # XXX nicer check
-            print >>self.out, '#include "__init__.hpp"\n'
-        else:
-            print >>self.out, '#include "%s.hpp"\n' % self.module.ident
+        print >>self.out, '#include "builtin.hpp"\n'
 
         # --- comments
         if node.doc:
             self.do_comment(node.doc)
             print >>self.out
 
-        # --- namespace
+        # --- namespace fun
         for n in self.module.mod_path:
             print >>self.out, 'namespace __'+n+'__ {'
+        print >>self.out
+
+        for child in node.node.getChildNodes():
+            if isinstance(child, From) and child.modname != '__future__':
+                mod = getgx().from_mod[child]
+                using = 'using '+mod.full_path()+'::'
+                for (name, pseudonym) in child.names:
+                    pseudonym = pseudonym or name
+                    if name == '*':
+                        for func in mod.mv.funcs.values():
+                            if func.cp: # XXX 
+                                print >>self.out, using+self.cpp_name(func.ident)+';';
+                        for cl in mod.mv.classes.values():
+                            print >>self.out, using+nokeywords(cl.ident)+';';
+                    elif pseudonym not in self.module.mv.globals:
+                        if name in mod.mv.funcs:
+                            func = mod.mv.funcs[name]
+                            if func.cp:
+                                print >>self.out, using+self.cpp_name(func.ident)+';';
+                        else:
+                            print >>self.out, using+nokeywords(name)+';'
         print >>self.out
 
         # --- globals
@@ -2711,9 +2725,8 @@ def typestrnew(types, cplusplus=True, node=None, check_extmod=False, depth=0, ch
     # --- namespace prefix
     namespace = ''
     if cl.module not in [getmv().module, getgx().modules['builtin']]:
-        if not (cl.ident in getmv().ext_funcs or cl.ident in getmv().ext_classes): # XXX too smart? can remove it, plus 'using'? 
-            if cplusplus: namespace = cl.module.full_path()+'::'
-            else: namespace = '::'.join(cl.module.mod_path)+'::'
+        if cplusplus: namespace = cl.module.full_path()+'::'
+        else: namespace = '::'.join(cl.module.mod_path)+'::'
         if cplusplus:
             getmv().module.prop_includes.add(cl.module)
 
@@ -2827,18 +2840,6 @@ def unboxable(types):
         if classes:
             return classes.pop().ident
         return None
-
-def get_includes(mod):
-    imports = set()
-    if mod == getgx().main_module:
-        mods = getgx().modules.values()
-    else:
-        d = mod.mv.imports.copy()
-        d.update(mod.mv.fake_imports)
-        mods = d.values()
-    for mod in mods:
-        imports.add(mod.include_path())
-    return imports
 
 def subclass(a, b):
     if b in a.bases:
@@ -2956,7 +2957,8 @@ def generate_code():
             gv.out.close()
             gv.insert_consts(declare=False)
             gv.insert_consts(declare=True)
-            gv.insert_includes()
+            gv.insert_extras('.hpp')
+            gv.insert_extras('.cpp')
 
     # --- generate Makefile
     makefile = file(os.path.join(getgx().output_dir, getgx().makefile_name), 'w')
