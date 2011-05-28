@@ -368,3 +368,9 @@ assert (sys.version_info[0], sys.version_info[1]) >= (2, 4)
 
 # str.title
 print '8RMgvsFN51QrM0sJeXU11yXodq1drv'.title()
+
+# forward referencing base class doesn't work
+import testdata.timer
+class smurf (testdata.timer.TimingOut):
+    pass
+testdata.timer.timeout_add(42, smurf())
