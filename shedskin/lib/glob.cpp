@@ -85,7 +85,7 @@ public:
         basename = __0->__getsecond__();
         if ((!___bool(dirname))) {
 
-            FOR_IN_NEW(name,glob1(__os__::curdir, basename),1,3,123)
+            FOR_IN(name,glob1(__os__::curdir, basename),1,3,123)
                 __last_yield = 1;
                 return name;
                 __after_yield_1:;
@@ -101,9 +101,9 @@ public:
         }
         if (has_magic(basename)) {
 
-            FOR_IN_NEW(dirname,dirs,101,102,103)
+            FOR_IN(dirname,dirs,101,102,103)
 
-                FOR_IN_NEW(name,glob1(dirname, basename),7,9,123)
+                FOR_IN(name,glob1(dirname, basename),7,9,123)
                     __last_yield = 2;
                     return __os__::__path__::join(2, dirname, name);
                     __after_yield_2:;
@@ -114,9 +114,9 @@ public:
         }
         else {
 
-            FOR_IN_NEW(dirname,dirs,101,102,103)
+            FOR_IN(dirname,dirs,101,102,103)
 
-                FOR_IN_NEW(name,glob0(dirname, basename),13,15,123)
+                FOR_IN(name,glob0(dirname, basename),13,15,123)
                     __last_yield = 3;
                     return __os__::__path__::join(2, dirname, name);
                     __after_yield_3:;
@@ -159,7 +159,7 @@ list<str *> *glob1(str *dirname, str *pattern) {
     if (__ne(pattern->__getitem__(0), const_2)) {
         n2 = (new list<str *>());
 
-        FOR_IN_NEW(nm,names,17,19,123)
+        FOR_IN(nm,names,17,19,123)
             if (__ne(nm->__getitem__(0), const_2)) {
                 n2->append(nm);
                 names = n2;

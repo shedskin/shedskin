@@ -59,7 +59,7 @@ static inline list<double> *list_comp_0(list<int> *__108) {
     list<int>::for_in_loop __123;
 
     result->resize(len(__108));
-    FOR_IN_NEW(s,__108,108,25,123)
+    FOR_IN(s,__108,108,25,123)
         result->units[__25] = __float(s);
     END_FOR
 
@@ -73,7 +73,7 @@ static inline list<int> *list_comp_1(list<double> *__108) {
     int __28;
 
     result->resize(len(__108));
-    FOR_IN_NEW(s,__108,108,28,123)
+    FOR_IN(s,__108,108,28,123)
         result->units[__28] = __int(s);
     END_FOR
 

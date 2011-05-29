@@ -93,7 +93,7 @@ str *joinl(list<str *> *l) {
     path = __0;
     p = __1;
 
-    FOR_IN_NEW(b,p,2,4,123)
+    FOR_IN(b,p,2,4,123)
         if (b->startswith(const_4)) {
             path = b;
         }
@@ -332,7 +332,7 @@ str *normpath(str *path) {
     comps = path->split(const_4);
     new_comps = (new list<str *>());
 
-    FOR_IN_NEW(comp,comps,28,30,123)
+    FOR_IN(comp,comps,28,30,123)
         if ((const_2)->__contains__(comp)) {
             continue;
         }
@@ -485,7 +485,7 @@ str *joinl(list<str *> *l) {
     path = __2;
     p = __3;
 
-    FOR_IN_NEW(b,p,4,6,123)
+    FOR_IN(b,p,4,6,123)
         b_wins = 0;
         if (__eq(path, const_1)) {
             b_wins = 1;
@@ -624,7 +624,7 @@ str *commonprefix(list<str *> *m) {
     }
     prefix = m->__getfast__(0);
 
-    FOR_IN_NEW(item,m,24,26,123)
+    FOR_IN(item,m,24,26,123)
 
         FAST_FOR(i,0,len(prefix),1,27,28)
             if (__ne(prefix->__slice__(2, 0, (i+1), 0), item->__slice__(2, 0, (i+1), 0))) {
