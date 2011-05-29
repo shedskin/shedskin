@@ -1483,13 +1483,6 @@ static void __throw_stop_iteration() {
 
 #define END_FOR }
 
-/* deprecated by FOR_IN_NEW */
-
-#define FOR_IN_SEQ(i, m, temp, n) \
-    __ ## temp = m; \
-    for(__ ## n = 0; (unsigned int)__ ## n < (__ ## temp)->units.size(); __ ## n ++) { \
-        i = (__ ## temp)->units[__ ## n]; \
-
 /* typeof for MSVC */
 
 #if defined(_MSC_VER) && _MSC_VER>=1400

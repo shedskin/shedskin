@@ -57,6 +57,7 @@ public:
     int __102;
     pyiter<str *> *__101;
     int __last_yield;
+    list<str *>::for_in_loop __123;
 
     __gen_iglob(str *pathname) {
         this->pathname = pathname;
@@ -84,7 +85,7 @@ public:
         basename = __0->__getsecond__();
         if ((!___bool(dirname))) {
 
-            FOR_IN_SEQ(name,glob1(__os__::curdir, basename),1,3)
+            FOR_IN_NEW(name,glob1(__os__::curdir, basename),1,3,123)
                 __last_yield = 1;
                 return name;
                 __after_yield_1:;
@@ -102,7 +103,7 @@ public:
 
             FOR_IN_NEW(dirname,dirs,101,102,103)
 
-                FOR_IN_SEQ(name,glob1(dirname, basename),7,9)
+                FOR_IN_NEW(name,glob1(dirname, basename),7,9,123)
                     __last_yield = 2;
                     return __os__::__path__::join(2, dirname, name);
                     __after_yield_2:;
@@ -115,7 +116,7 @@ public:
 
             FOR_IN_NEW(dirname,dirs,101,102,103)
 
-                FOR_IN_SEQ(name,glob0(dirname, basename),13,15)
+                FOR_IN_NEW(name,glob0(dirname, basename),13,15,123)
                     __last_yield = 3;
                     return __os__::__path__::join(2, dirname, name);
                     __after_yield_3:;
@@ -145,6 +146,7 @@ list<str *> *glob1(str *dirname, str *pattern) {
     __iter<str *> *__18;
     str *nm;
     __ss_int __19;
+    list<str *>::for_in_loop __123;
 
     if ((!___bool(dirname))) {
         dirname = __os__::curdir;
@@ -157,7 +159,7 @@ list<str *> *glob1(str *dirname, str *pattern) {
     if (__ne(pattern->__getitem__(0), const_2)) {
         n2 = (new list<str *>());
 
-        FOR_IN_SEQ(nm,names,17,19)
+        FOR_IN_NEW(nm,names,17,19,123)
             if (__ne(nm->__getitem__(0), const_2)) {
                 n2->append(nm);
                 names = n2;
