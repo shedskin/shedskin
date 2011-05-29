@@ -1,0 +1,2 @@
+recursive-include tests *.py *.csv
+recursive-include tests hoppa hopsakee humba life.txt lop uuf250-010.cnf words
