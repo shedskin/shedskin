@@ -194,27 +194,19 @@ class generateVisitor(ASTVisitor):
             return '::'
         return '->'
 
-    def declaredefs(self, vars, declare): # XXX use group_declarations
-        decl = {}
+    def declaredefs(self, vars, declare):
+        pairs = []
         for (name,var) in vars:
             if singletype(var, module) or var.invisible: # XXX buh
                 continue
-            typehu = nodetypestr(var, var.parent)
-            if not var.name in ['__exception', '__exception2']: # XXX
-                decl.setdefault(typehu, []).append(self.cpp_name(name))
-        decl2 = []
-        for (t,names) in decl.items():
-            names.sort()
-            prefix=''
+            ts = nodetypestr(var, var.parent)
             if declare: 
-                prefix='extern '
-                if 'for_in_loop' in t: # XXX
+                if 'for_in_loop' in ts: # XXX
                     continue
-            if t.endswith('*'):
-                decl2.append(prefix+t+(', *'.join(names)))
-            else:
-                decl2.append(prefix+t+(', '.join(names)))
-        return ';\n'.join(decl2)
+                ts = 'extern '+ts
+            if not var.name in ['__exception', '__exception2']: # XXX
+                pairs.append((ts, self.cpp_name(name)))
+        return ''.join(self.group_declarations(pairs))
 
     def get_constant(self, node):
         parent = inode(node).parent
@@ -1214,13 +1206,7 @@ class generateVisitor(ASTVisitor):
             return
 
         # --- local declarations
-        pairs = []
-        for (name, var) in func.vars.items():
-            if not var.invisible and name not in func.formals:
-                name = self.cpp_name(name)
-                ts = nodetypestr(var, func)
-                pairs.append((ts, name))
-        self.output(self.indentation.join(self.group_declarations(pairs)))
+        self.local_defs(func)
 
         # --- function body
         for fake_unpack in func.expand_args.values():
@@ -2180,7 +2166,7 @@ class generateVisitor(ASTVisitor):
         lcfunc, func = self.listcomps[node]
         self.listcomp_head(node, False, False)
         self.indent()
-        self.lc_locals(lcfunc)
+        self.local_defs(lcfunc)
         self.output(nodetypestr(node, lcfunc)+'__ss_result = new '+nodetypestr(node, lcfunc)[:-2]+'();\n')
         self.listcomp_rec(node, node.quals, lcfunc, False)
         self.output('return __ss_result;')
@@ -2198,7 +2184,7 @@ class generateVisitor(ASTVisitor):
             self.output('class '+lcfunc.ident+' : public '+ts[:-2]+' {')
             self.output('public:')
             self.indent()
-            self.lc_locals(lcfunc)
+            self.local_defs(lcfunc)
             for a,b in args:
                 self.output(a+b+';');
             self.output('int __last_yield;\n')
@@ -2221,16 +2207,12 @@ class generateVisitor(ASTVisitor):
             self.deindent();
             self.output('}\n')
 
-    def lc_locals(self, lcfunc):
-        decl = {}
-        for (name,var) in lcfunc.vars.items(): # XXX merge with visitFunction
-            name = self.cpp_name(name)
-            decl.setdefault(nodetypestr(var, lcfunc), []).append(name)
-        for ts, names in decl.items():
-            if ts.endswith('*'):
-                self.output(ts+', *'.join(names)+';')
-            else:
-                self.output(ts+', '.join(names)+';')
+    def local_defs(self, func):
+        pairs = []
+        for (name, var) in func.vars.items():
+            if not var.invisible and (not hasattr(func, 'formals') or name not in func.formals): # XXX
+                pairs.append((nodetypestr(var, func), self.cpp_name(name)))
+        self.output(self.indentation.join(self.group_declarations(pairs)))
 
     # --- nested for loops: loop headers, if statements
     def listcomp_rec(self, node, quals, lcfunc, genexpr):
