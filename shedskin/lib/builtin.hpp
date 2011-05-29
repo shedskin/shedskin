@@ -667,6 +667,7 @@ public:
     str *read(int n=-1);
     str *readline(int n=-1);
     list<str *> *readlines();
+    __iter<str *> *xreadlines();
     void *write(str *s);
     template<class U> void *writelines(U *iter);
     void *flush();

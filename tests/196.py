@@ -376,3 +376,8 @@ class smurf (testdata.timer.TimingOut):
         testdata.timer.TimingOut.fire_timer(self)
 smurfje = smurf()
 testdata.timer.timeout_add(42, smurfje)
+
+# file.xreadlines (deprecated but still)
+lines = open('testdata/crap.py','r').xreadlines()
+for line in lines:
+    print line.strip()
