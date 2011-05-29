@@ -84,6 +84,7 @@ str *joinl(list<str *> *l) {
     Join two or more pathname components, inserting '/' as needed
     */
     list<str *> *__1, *__2, *p;
+    list<str *>::for_in_loop __123;
     str *__0, *b, *path;
     __ss_int __4, __5;
 
@@ -92,7 +93,7 @@ str *joinl(list<str *> *l) {
     path = __0;
     p = __1;
 
-    FOR_IN_SEQ(b,p,2,4)
+    FOR_IN_NEW(b,p,2,4,123)
         if (b->startswith(const_4)) {
             path = b;
         }
@@ -317,6 +318,7 @@ str *normpath(str *path) {
     Normalize path, eliminating double slashes, etc.
     */
     list<str *> *__28, *comps, *new_comps;
+    list<str *>::for_in_loop __123;
     str *__38, *comp;
     __ss_int __25, __26, __30, __32, initial_slashes;
 
@@ -330,7 +332,7 @@ str *normpath(str *path) {
     comps = path->split(const_4);
     new_comps = (new list<str *>());
 
-    FOR_IN_SEQ(comp,comps,28,30)
+    FOR_IN_NEW(comp,comps,28,30,123)
         if ((const_2)->__contains__(comp)) {
             continue;
         }
@@ -473,6 +475,7 @@ str *joinl(list<str *> *l) {
     Join two or more pathname components, inserting "\" as needed
     */
     list<str *> *__3, *__4, *p;
+    list<str *>::for_in_loop __123;
     __iter<str *> *__5;
     str *__2, *b, *path;
     __ss_int __10, __11, __12, __13, __14, __6, __7, __8, __9, b_wins;
@@ -482,7 +485,7 @@ str *joinl(list<str *> *l) {
     path = __2;
     p = __3;
 
-    FOR_IN_SEQ(b,p,4,6)
+    FOR_IN_NEW(b,p,4,6,123)
         b_wins = 0;
         if (__eq(path, const_1)) {
             b_wins = 1;
@@ -612,7 +615,7 @@ str *commonprefix(list<str *> *m) {
     Given a list of pathnames, returns the longest common leading component
     */
     list<str *> *__24;
-    __iter<str *> *__25;
+    list<str *>::for_in_loop __123;
     __ss_int __26, __27, __28, i;
     str *item, *prefix;
 
@@ -621,7 +624,7 @@ str *commonprefix(list<str *> *m) {
     }
     prefix = m->__getfast__(0);
 
-    FOR_IN_SEQ(item,m,24,26)
+    FOR_IN_NEW(item,m,24,26,123)
 
         FAST_FOR(i,0,len(prefix),1,27,28)
             if (__ne(prefix->__slice__(2, 0, (i+1), 0), item->__slice__(2, 0, (i+1), 0))) {

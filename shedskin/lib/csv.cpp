@@ -78,14 +78,14 @@ static inline list<str *> *list_comp_0(DictWriter *self, dict<str *, str *> *row
 
 static inline list<str *> *list_comp_1(DictWriter *self, dict<str *, str *> *rowdict) {
     list<str *> *__37;
-    __iter<str *> *__38;
+    list<str *>::for_in_loop __123;
     __ss_int __39;
     str *key;
     list<str *> *__ss_result = new list<str *>();
 
     __37 = self->fieldnames;
     __ss_result->resize(len(__37));
-    FOR_IN_SEQ(key,__37,37,39)
+    FOR_IN_NEW(key,__37,37,39,123)
         __ss_result->units[__39] = rowdict->get(key, self->restval);
     END_FOR
 
@@ -401,7 +401,7 @@ __ss_int writer::join_append_data(str *field, __ss_int quote_empty, __ss_int quo
 
 void *writer::writerow(list<str *> *seq) {
     list<str *> *__24;
-    __iter<str *> *__25;
+    list<str *>::for_in_loop __123;
     Excel *dialect;
     __ss_int __26, quoted;
     str *field;
@@ -409,7 +409,7 @@ void *writer::writerow(list<str *> *seq) {
     dialect = this->dialect;
     this->join_reset();
 
-    FOR_IN_SEQ(field,seq,24,26)
+    FOR_IN_NEW(field,seq,24,26,123)
         quoted = 0;
         if ((dialect->quoting==QUOTE_NONNUMERIC)) {
             quoted = 1;
@@ -438,13 +438,12 @@ void *writer::join_reset() {
 }
 
 void *writer::writerows(list<list<str *> *> *seqs) {
-    __iter<list<str *> *> *__28;
     list<str *> *seq;
     list<list<str *> *> *__27;
+    list<list<str *> *>::for_in_loop __123;
     __ss_int __29;
 
-
-    FOR_IN_SEQ(seq,seqs,27,29)
+    FOR_IN_NEW(seq,seqs,27,29,123)
         this->writerow(seq);
     END_FOR
 
@@ -482,7 +481,7 @@ void *DictReader::setfieldnames(list<str *> *value) {
 dict<str *, str *> *DictReader::next() {
     str *key;
     list<str *> *__31, *row;
-    __iter<str *> *__32;
+    list<str *>::for_in_loop __123;
     __ss_int __33, lf, lr;
     dict<str *, str *> *d;
 
@@ -503,7 +502,7 @@ dict<str *, str *> *DictReader::next() {
     }
     else if ((lf>lr)) {
 
-        FOR_IN_SEQ(key,(this->getfieldnames())->__slice__(1, lr, 0, 0),31,33)
+        FOR_IN_NEW(key,(this->getfieldnames())->__slice__(1, lr, 0, 0),31,33,123)
             d->__setitem__(key, this->restval);
         END_FOR
 
@@ -558,15 +557,15 @@ void *DictWriter::writerow(dict<str *, str *> *rowdict) {
 }
 
 void *DictWriter::writerows(list<dict<str *, str *> *> *rowdicts) {
-    __iter<dict<str *, str *> *> *__41;
     list<list<str *> *> *rows;
     list<dict<str *, str *> *> *__40;
+    list<dict<str *, str *> *>::for_in_loop __123;
     __ss_int __42;
     dict<str *, str *> *rowdict;
 
     rows = (new list<list<str *> *>());
 
-    FOR_IN_SEQ(rowdict,rowdicts,40,42)
+    FOR_IN_NEW(rowdict,rowdicts,40,42,123)
         rows->append(this->_dict_to_list(rowdict));
     END_FOR
 

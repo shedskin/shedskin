@@ -72,6 +72,7 @@ list<str *> *filter(list<str *> *names, str *pat) {
     __re__::re_object *cpat;
     __iter<str *> *__1, *__4;
     __ss_int __2;
+    list<str *>::for_in_loop __123;
 
     result = (new list<str *>());
     pat = __os__::__path__::normcase(pat);
@@ -81,7 +82,7 @@ list<str *> *filter(list<str *> *names, str *pat) {
     }
     cpat = _cache->__getitem__(pat);
 
-        FOR_IN_SEQ(name,names,0,2)
+        FOR_IN_NEW(name,names,0,2,123)
 #ifndef WIN32
             if (___bool(cpat->match(name))) {
 #else

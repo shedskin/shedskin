@@ -49,7 +49,7 @@ str *_resolve_link(str *path);
 #ifndef WIN32
 template <class A> void *walk(str *top, void *(*func)(A, str *, list<str *> *), A arg) {
     list<str *> *__21, *names;
-    __iter<str *> *__22;
+    list<str *>::for_in_loop __123;
     str *name;
     __ss_int __23;
     __os__::__cstat *st;
@@ -61,7 +61,7 @@ template <class A> void *walk(str *top, void *(*func)(A, str *, list<str *> *), 
     }
     func(arg, top, names);
 
-    FOR_IN_SEQ(name,names,21,23)
+    FOR_IN_NEW(name,names,21,23,123)
         name = join(2, top, name);
         try {
             st = __os__::lstat(name);
@@ -79,7 +79,7 @@ template <class A> void *walk(str *top, void *(*func)(A, str *, list<str *> *), 
 #else
 template <class A> void *walk(str *top, void *(*func)(A, str *, list<str *> *), A arg) {
     list<str *> *__33, *names;
-    __iter<str *> *__34;
+    list<str *>::for_in_loop 123;
     str *name;
     tuple2<str *, str *> *exceptions;
     __ss_int __35;
@@ -92,7 +92,7 @@ template <class A> void *walk(str *top, void *(*func)(A, str *, list<str *> *), 
     func(arg, top, names);
     exceptions = (new tuple2<str *, str *>(2, const_0, const_3));
 
-    FOR_IN_SEQ(name,names,33,35)
+    FOR_IN_NEW(name,names,33,35,123)
         if ((!exceptions->__contains__(name))) {
             name = join(2, top, name);
             if (isdir(name)) {

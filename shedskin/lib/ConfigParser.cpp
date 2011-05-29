@@ -138,9 +138,10 @@ static inline list<tuple2<str *, str *> *> *list_comp_0(list<str *> *options, di
     str *option;
     __ss_int __58;
     list<tuple2<str *, str *> *> *result = new list<tuple2<str *, str *> *>();
+    list<str *>::for_in_loop __123;
 
     result->resize(len(options));
-    FOR_IN_SEQ(option,options,56,58)
+    FOR_IN_NEW(option,options,56,58,123)
         result->units[__58] = (new tuple2<str *, str *>(2, option, d->__getitem__(option)));
     END_FOR
 
@@ -153,9 +154,10 @@ static inline list<tuple2<str *, str *> *> *list_comp_1(dict<str *, str *> *d, C
     str *option;
     __ss_int __61;
     list<tuple2<str *, str *> *> *result = new list<tuple2<str *, str *> *>();
+    list<str *>::for_in_loop __123;
 
     result->resize(len(options));
-    FOR_IN_SEQ(option,options,59,61)
+    FOR_IN_NEW(option,options,59,61,123)
         result->units[__61] = (new tuple2<str *, str *>(2, option, self->_interpolate(section, option, d->__getitem__(option), d)));
     END_FOR
 
@@ -395,12 +397,13 @@ void *RawConfigParser::__init__(dict<str *, str *> *defaults) {
     list<tuple2<str *, str *> *> *__1;
     dict<str *, str *> *__4;
     __iter<tuple2<str *, str *> *> *__2;
+    list<tuple2<str *, str *> *>::for_in_loop __123;
 
     this->_sections = (new dict<str *, dict<str *, str *> *>());
     this->_defaults = (new dict<str *, str *>());
     if (___bool(defaults)) {
 
-        FOR_IN_SEQ(__0,defaults->items(),1,3)
+        FOR_IN_NEW(__0,defaults->items(),1,3,123)
             __0 = __0;
             key = __0->__getfirst__();
             value = __0->__getsecond__();
@@ -443,11 +446,12 @@ void *RawConfigParser::write(file *fp) {
     __iter<str *> *__24;
     list<tuple2<str *, str *> *> *__20, *__27;
     __iter<tuple2<str *, str *> *> *__21, *__28;
+    list<tuple2<str *, str *> *>::for_in_loop __123;
 
     if (___bool(this->_defaults)) {
         fp->write(__modct(const_11, 1, DEFAULTSECT));
 
-        FOR_IN_SEQ(__19,(this->_defaults)->items(),20,22)
+        FOR_IN_NEW(__19,(this->_defaults)->items(),20,22,123)
             __19 = __19;
             key = __19->__getfirst__();
             value = __19->__getsecond__();
@@ -464,7 +468,7 @@ void *RawConfigParser::write(file *fp) {
     FOR_IN_NEW(section,this->_sections,1,2,3)
         fp->write(__modct(const_11, 1, section));
 
-        FOR_IN_SEQ(__26,((this->_sections)->__getitem__(section))->items(),27,29)
+        FOR_IN_NEW(__26,((this->_sections)->__getitem__(section))->items(),27,29,123)
             __26 = __26;
             key = __26->__getfirst__();
             value = __26->__getsecond__();
@@ -552,10 +556,11 @@ list<str *> *RawConfigParser::read(list<str *> *filenames) {
     str *filename;
     __ss_int __9;
     file *fp;
+    list<str *>::for_in_loop __123;
 
     read_ok = (new list<str *>());
 
-    FOR_IN_SEQ(filename,filenames,7,9)
+    FOR_IN_NEW(filename,filenames,7,9,123)
         try {
             fp = open(filename);
         } catch (IOError *) {
@@ -775,6 +780,7 @@ str *ConfigParser::get(str *section, str *option, __ss_int raw, dict<str *, str 
     list<tuple2<str *, str *> *> *__47;
     dict<str *, str *> *d;
     __iter<tuple2<str *, str *> *> *__48;
+    list<tuple2<str *, str *> *>::for_in_loop __123;
 
     d = (this->_defaults)->copy();
     try {
@@ -786,7 +792,7 @@ str *ConfigParser::get(str *section, str *option, __ss_int raw, dict<str *, str 
     }
     if (___bool(vars)) {
 
-        FOR_IN_SEQ(__46,vars->items(),47,49)
+        FOR_IN_NEW(__46,vars->items(),47,49,123)
             __46 = __46;
             key = __46->__getfirst__();
             value = __46->__getsecond__();
@@ -829,6 +835,7 @@ list<tuple2<str *, str *> *> *ConfigParser::items(str *section, __ss_int raw, di
     list<tuple2<str *, str *> *> *__53;
     dict<str *, str *> *d;
     __iter<tuple2<str *, str *> *> *__54;
+    list<tuple2<str *, str *> *>::for_in_loop __123;
 
     d = (this->_defaults)->copy();
     try {
@@ -840,7 +847,7 @@ list<tuple2<str *, str *> *> *ConfigParser::items(str *section, __ss_int raw, di
     }
     if (___bool(vars)) {
 
-        FOR_IN_SEQ(__52,vars->items(),53,55)
+        FOR_IN_NEW(__52,vars->items(),53,55,123)
             __52 = __52;
             key = __52->__getfirst__();
             value = __52->__getsecond__();
