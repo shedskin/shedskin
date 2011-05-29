@@ -822,7 +822,7 @@ class generateVisitor(ASTVisitor):
         children = node.getChildNodes()
         if children:
             self.append(str(len(children))+',')
-        if self.bin_tuple(argtypes):
+        if len(children) >= 2 and self.bin_tuple(argtypes): # XXX >=2?
             self.visit_child(children[0], 'first', func, argtypes)
             self.append(',')
             self.visit_child(children[1], 'second', func, argtypes)
