@@ -2785,24 +2785,6 @@ class Bitpair:
         self.msg = msg
         self.inline = inline
 
-def unboxable(types):
-    if not isinstance(types, set):
-        types = inode(types).types()
-    classes = set([t[0] for t in types])
-
-    if [cl for cl in classes if cl.ident not in ['int_','float_','bool_']]:
-        return None
-    else:
-        if classes:
-            return classes.pop().ident
-        return None
-
-def subclass(a, b):
-    if b in a.bases:
-        return True
-    else:
-        return a.bases and subclass(a.bases[0], b) # XXX mult inh
-
 # --- determine virtual methods and variables
 def analyze_virtuals():
     for node in getgx().merged_inh: # XXX all:
