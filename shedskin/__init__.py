@@ -21,12 +21,12 @@ def usage():
  -l --long              Use long long ("64-bit") integers
  -m --makefile          Specify alternate Makefile name
  -o --noassert          Disable assert statements
- -p --pypy              Make extension module PyPy-compatible
  -r --random            Use fast random number generator (rand())
  -s --strhash           Use fast string hashing algorithm (murmur)
- -v --msvc              Output MSVC-style Makefile
  -w --nowrap            Disable wrap-around checking
 """
+# -p --pypy              Make extension module PyPy-compatible
+# -v --msvc              Output MSVC-style Makefile
     sys.exit(1)
 
 def start():
