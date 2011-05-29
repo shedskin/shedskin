@@ -115,7 +115,7 @@ dict<str *, str *> *match_object::groupdict(str *defval)
     dict<str *, __ss_int>::for_in_loop __3;
     int __2;
     dict<str *, __ss_int> *__1;
-    FOR_IN_NEW(k,re->groupindex,1,2,3)
+    FOR_IN(k,re->groupindex,1,2,3)
         t = re->groupindex->__getitem__(k);
 
         if(captured[t * 2] != -1) r->__setitem__(new str(k->unit),
@@ -313,7 +313,7 @@ str *re_object::sub(replfunc func, str *string, __ss_int maxn) {
     int __2;
     __iter<__re__::match_object *> *__1;
 
-    FOR_IN_NEW(match,finditer(string),1,2,3)
+    FOR_IN(match,finditer(string),1,2,3)
         l->append(string->__slice__(3, at, match->start(), 0));
         l->append(func(match));
         at = match->end();
@@ -503,7 +503,7 @@ match_object *re_object::__exec(str *subj, __ss_int pos, __ss_int endpos, __ss_i
     dict<str *, __ss_int>::for_in_loop __3;
     int __2;
     dict<str *, __ss_int> *__1;
-    FOR_IN_NEW(k,groupindex,1,2,3)
+    FOR_IN(k,groupindex,1,2,3)
         t = groupindex->__getitem__(k);
         if(captured[t * 2] != -1 && t > mx_i)
         {

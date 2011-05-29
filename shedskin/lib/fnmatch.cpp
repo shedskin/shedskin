@@ -82,7 +82,7 @@ list<str *> *filter(list<str *> *names, str *pat) {
     }
     cpat = _cache->__getitem__(pat);
 
-        FOR_IN_NEW(name,names,0,2,123)
+        FOR_IN(name,names,0,2,123)
 #ifndef WIN32
             if (___bool(cpat->match(name))) {
 #else

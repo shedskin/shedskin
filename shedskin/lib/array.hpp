@@ -99,7 +99,7 @@ template<class T> template<class U> void *array<T>::extend(U *iter) {
         typename U::for_in_loop __3;
         int __2;
         U *__1;
-        FOR_IN_NEW(e,iter,1,2,3)
+        FOR_IN(e,iter,1,2,3)
             this->append(e);
         END_FOR
     }

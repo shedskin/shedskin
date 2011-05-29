@@ -61,7 +61,7 @@ template <class A> void *walk(str *top, void *(*func)(A, str *, list<str *> *), 
     }
     func(arg, top, names);
 
-    FOR_IN_NEW(name,names,21,23,123)
+    FOR_IN(name,names,21,23,123)
         name = join(2, top, name);
         try {
             st = __os__::lstat(name);
@@ -92,7 +92,7 @@ template <class A> void *walk(str *top, void *(*func)(A, str *, list<str *> *), 
     func(arg, top, names);
     exceptions = (new tuple2<str *, str *>(2, const_0, const_3));
 
-    FOR_IN_NEW(name,names,33,35,123)
+    FOR_IN(name,names,33,35,123)
         if ((!exceptions->__contains__(name))) {
             name = join(2, top, name);
             if (isdir(name)) {

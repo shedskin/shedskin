@@ -100,7 +100,7 @@ public:
         typename U::for_in_loop __3;
         int __2;
         U *__1;
-        FOR_IN_NEW(e,iter,1,2,3)
+        FOR_IN(e,iter,1,2,3)
            append(e);
         END_FOR
         return NULL;
@@ -111,7 +111,7 @@ public:
         typename U::for_in_loop __3;
         int __2;
         U *__1;
-        FOR_IN_NEW(e,iter,1,2,3)
+        FOR_IN(e,iter,1,2,3)
            appendleft(e);
         END_FOR
         return NULL;
@@ -225,7 +225,7 @@ public:
         typename pyiter<tuple2<K, V> *>::for_in_loop __3;
         int __2;
         pyiter<tuple2<K, V> *> *__1;
-        FOR_IN_NEW(k,i,1,2,3)
+        FOR_IN(k,i,1,2,3)
             this->__setitem__(k->__getfirst__(), k->__getsecond__());
         END_FOR
     }
@@ -299,7 +299,7 @@ namespace __defaultdict__ {
         typename pyiter<A>::for_in_loop __3;
         int __2;
         pyiter<A> *__1;
-        FOR_IN_NEW(e,f,1,2,3)
+        FOR_IN(e,f,1,2,3)
             d->__setitem__(e, b);
         END_FOR
         return d;

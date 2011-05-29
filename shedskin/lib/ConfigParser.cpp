@@ -141,7 +141,7 @@ static inline list<tuple2<str *, str *> *> *list_comp_0(list<str *> *options, di
     list<str *>::for_in_loop __123;
 
     result->resize(len(options));
-    FOR_IN_NEW(option,options,56,58,123)
+    FOR_IN(option,options,56,58,123)
         result->units[__58] = (new tuple2<str *, str *>(2, option, d->__getitem__(option)));
     END_FOR
 
@@ -157,7 +157,7 @@ static inline list<tuple2<str *, str *> *> *list_comp_1(dict<str *, str *> *d, C
     list<str *>::for_in_loop __123;
 
     result->resize(len(options));
-    FOR_IN_NEW(option,options,59,61,123)
+    FOR_IN(option,options,59,61,123)
         result->units[__61] = (new tuple2<str *, str *>(2, option, self->_interpolate(section, option, d->__getitem__(option), d)));
     END_FOR
 
@@ -403,7 +403,7 @@ void *RawConfigParser::__init__(dict<str *, str *> *defaults) {
     this->_defaults = (new dict<str *, str *>());
     if (___bool(defaults)) {
 
-        FOR_IN_NEW(__0,defaults->items(),1,3,123)
+        FOR_IN(__0,defaults->items(),1,3,123)
             __0 = __0;
             key = __0->__getfirst__();
             value = __0->__getsecond__();
@@ -451,7 +451,7 @@ void *RawConfigParser::write(file *fp) {
     if (___bool(this->_defaults)) {
         fp->write(__modct(const_11, 1, DEFAULTSECT));
 
-        FOR_IN_NEW(__19,(this->_defaults)->items(),20,22,123)
+        FOR_IN(__19,(this->_defaults)->items(),20,22,123)
             __19 = __19;
             key = __19->__getfirst__();
             value = __19->__getsecond__();
@@ -465,10 +465,10 @@ void *RawConfigParser::write(file *fp) {
     int __2;
     dict<str *, dict<str *, str *> *> *__1;
 
-    FOR_IN_NEW(section,this->_sections,1,2,3)
+    FOR_IN(section,this->_sections,1,2,3)
         fp->write(__modct(const_11, 1, section));
 
-        FOR_IN_NEW(__26,((this->_sections)->__getitem__(section))->items(),27,29,123)
+        FOR_IN(__26,((this->_sections)->__getitem__(section))->items(),27,29,123)
             __26 = __26;
             key = __26->__getfirst__();
             value = __26->__getsecond__();
@@ -560,7 +560,7 @@ list<str *> *RawConfigParser::read(list<str *> *filenames) {
 
     read_ok = (new list<str *>());
 
-    FOR_IN_NEW(filename,filenames,7,9,123)
+    FOR_IN(filename,filenames,7,9,123)
         try {
             fp = open(filename);
         } catch (IOError *) {
@@ -792,7 +792,7 @@ str *ConfigParser::get(str *section, str *option, __ss_int raw, dict<str *, str 
     }
     if (___bool(vars)) {
 
-        FOR_IN_NEW(__46,vars->items(),47,49,123)
+        FOR_IN(__46,vars->items(),47,49,123)
             __46 = __46;
             key = __46->__getfirst__();
             value = __46->__getsecond__();
@@ -847,7 +847,7 @@ list<tuple2<str *, str *> *> *ConfigParser::items(str *section, __ss_int raw, di
     }
     if (___bool(vars)) {
 
-        FOR_IN_NEW(__52,vars->items(),53,55,123)
+        FOR_IN(__52,vars->items(),53,55,123)
             __52 = __52;
             key = __52->__getfirst__();
             value = __52->__getsecond__();

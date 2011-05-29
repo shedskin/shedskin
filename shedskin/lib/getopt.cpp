@@ -30,7 +30,7 @@ static inline list<str *> *list_comp_0(str *opt, pyiter<str *> *longopts) {
     pyiter<str *>::for_in_loop __3;
     int __2;
     pyiter<str *> *__1;
-    FOR_IN_NEW(o,longopts,1,2,3)
+    FOR_IN(o,longopts,1,2,3)
         if (o->startswith(opt))
             result->append(o);
     END_FOR

@@ -78,7 +78,7 @@ str *capwords(str *s, str *sep) {
     list<str *>::for_in_loop __4;
     int __2;
     list<str *> *__1;
-    FOR_IN_NEW(e,__3,1,2,4)
+    FOR_IN(e,__3,1,2,4)
         result->units[__2] = e->capitalize();
     END_FOR
 

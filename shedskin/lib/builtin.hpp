@@ -1459,7 +1459,7 @@ static void __throw_stop_iteration() {
         else { if (__ ## t1 <= __ ## t2) break; } \
         i=__ ## t1; \
 
-#define FOR_IN_NEW(e, iter, temp, i, t) \
+#define FOR_IN(e, iter, temp, i, t) \
     __ ## temp = iter; \
     __ ## i = -1; \
     __ ## t = __ ## temp->for_in_init(); \
@@ -1776,7 +1776,7 @@ template<class T> inline __ss_bool pyiter<T>::__contains__(T t) {
     typename pyiter<T>::for_in_loop __3;
     int __2;
     pyiter<T> *__1;
-    FOR_IN_NEW(e,this,1,2,3)
+    FOR_IN(e,this,1,2,3)
         if(__eq(e,t))
             return __mbool(true);
     END_FOR 
@@ -1873,7 +1873,7 @@ template<class K, class V> template<class U> dict<K, V>::dict(U *other) {
     typename U::for_in_loop __3;
     int __2;
     U *__1;
-    FOR_IN_NEW(e,other,1,2,3)
+    FOR_IN(e,other,1,2,3)
         __add_to_dict(this, e);
     END_FOR
 }
@@ -2456,7 +2456,7 @@ template <class K, class V> template<class U> void *dict<K,V>::update(U *iter) {
     typename U::for_in_loop __3;
     int __2;
     U *__1;
-    FOR_IN_NEW(e,iter,1,2,3)
+    FOR_IN(e,iter,1,2,3)
 		__setitem__(e->__getitem__(0), e->__getitem__(1));
     END_FOR
     return NULL;
@@ -2481,7 +2481,7 @@ template<class K, class V> dict<K,V> *dict<K,V>::__deepcopy__(dict<void *, pyobj
     typename dict<K,V>::for_in_loop __3;
     int __2;
     dict<K,V> *__1;
-    FOR_IN_NEW(e,this,1,2,3)
+    FOR_IN(e,this,1,2,3)
         c->__setitem__(__deepcopy(e, memo), __deepcopy(this->__getitem__(e), memo));
     END_FOR
     return c;
@@ -2510,7 +2510,7 @@ template<class T> template<class U> list<T>::list(U *iter) {
     typename U::for_in_loop __3;
     int __2;
     U *__1;
-    FOR_IN_NEW(e,iter,1,2,3)
+    FOR_IN(e,iter,1,2,3)
         this->units.push_back(e);
     END_FOR
 }
@@ -2590,7 +2590,7 @@ template<class T> template<class U> void *list<T>::extend(U *iter) {
     typename U::for_in_loop __3;
     int __2;
     U *__1;
-    FOR_IN_NEW(e,iter,1,2,3)
+    FOR_IN(e,iter,1,2,3)
         this->units.push_back(e);
     END_FOR
     return NULL;
@@ -2660,7 +2660,7 @@ template<class T> void *list<T>::__setslice__(__ss_int x, __ss_int l, __ss_int u
     typename pyiter<T>::for_in_loop __3;
     int __2;
     pyiter<T> *__1;
-    FOR_IN_NEW(e,b,1,2,3)
+    FOR_IN(e,b,1,2,3)
         la->units.push_back(e);
     END_FOR
     this->__setslice__(x, l, u, s, la);
@@ -2943,7 +2943,7 @@ template <class U> str *str::join(U *iter) {
     U *__1;
     __join_cache->units.resize(0);
     total = 0;
-    FOR_IN_NEW(e,iter,1,2,3)
+    FOR_IN(e,iter,1,2,3)
         __join_cache->units.push_back(e);
         sz = e->unit.size();
         if(sz != 1)
@@ -3462,7 +3462,7 @@ template<class T> template<class U> void *set<T>::update(U *iter) {
     typename U::for_in_loop __3;
     int __2;
     U *__1;
-    FOR_IN_NEW(e,iter,1,2,3)
+    FOR_IN(e,iter,1,2,3)
         add(e);
     END_FOR
     return NULL;
@@ -3627,7 +3627,7 @@ template<class T> __ss_bool set<T>::issubset(set<T> *s) {
     typename set<T>::for_in_loop __3;
     int __2;
     set<T> *__1;
-    FOR_IN_NEW(e,this,1,2,3)
+    FOR_IN(e,this,1,2,3)
         if(!s->__contains__(e))
             return False;
     END_FOR
@@ -3640,7 +3640,7 @@ template<class T> __ss_bool set<T>::issuperset(set<T> *s) {
     typename set<T>::for_in_loop __3;
     int __2;
     set<T> *__1;
-    FOR_IN_NEW(e,s,1,2,3)
+    FOR_IN(e,s,1,2,3)
         if(!__contains__(e))
             return False;
     END_FOR
@@ -3668,7 +3668,7 @@ template<class T> set<T> *set<T>::__deepcopy__(dict<void *, pyobj *> *memo) {
     typename set<T>::for_in_loop __3;
     int __2;
     set<T> *__1;
-    FOR_IN_NEW(e,this,1,2,3)
+    FOR_IN(e,this,1,2,3)
         c->add(__deepcopy(e, memo));
     END_FOR
     return c;
@@ -3718,7 +3718,7 @@ template<class T> template<class U> tuple2<T, T>::tuple2(U *iter) {
     typename U::for_in_loop __3;
     int __2;
     U *__1;
-    FOR_IN_NEW(e,iter,1,2,3)
+    FOR_IN(e,iter,1,2,3)
         this->units.push_back(e);
     END_FOR
 }
@@ -4070,7 +4070,7 @@ template <class U> typename __sumtype1<typename U::for_in_unit>::type __sum(U *i
     int __2;
     U *__1;
     bool first = true;
-    FOR_IN_NEW(e,iter,1,2,3)
+    FOR_IN(e,iter,1,2,3)
         if(first) {
             result = (typename __sumtype1<typename U::for_in_unit>::type)e;
             first = false;
@@ -4096,7 +4096,7 @@ template<class A, class B> typename A::for_in_unit ___max(int, B (*key)(typename
     typename A::for_in_loop __3;
     int __2;
     A *__1;
-    FOR_IN_NEW(e,iter,1,2,3)
+    FOR_IN(e,iter,1,2,3)
         if(key) {
             maxkey2 = key(e);
             if(first || __cmp(maxkey2, maxkey) == 1) {
@@ -4122,7 +4122,7 @@ template<class A, class B> typename A::for_in_unit ___max(int, pycall1<B, typena
     typename A::for_in_loop __3;
     int __2;
     A *__1;
-    FOR_IN_NEW(e,iter,1,2,3)
+    FOR_IN(e,iter,1,2,3)
         if(key) {
             maxkey2 = key->__call__(e);
             if(first || __cmp(maxkey2, maxkey) == 1) {
@@ -4178,7 +4178,7 @@ template<class A, class B> typename A::for_in_unit ___min(int, B (*key)(typename
     typename A::for_in_loop __3;
     int __2;
     A *__1;
-    FOR_IN_NEW(e,iter,1,2,3)
+    FOR_IN(e,iter,1,2,3)
         if(key) {
             minkey2 = key(e);
             if(first || __cmp(minkey2, minkey) == -1) {
@@ -4233,7 +4233,7 @@ template <class U, class V, class W> list<typename U::for_in_unit> *sorted(U *it
     int __2;
     U *__1;
     list<typename U::for_in_unit> *l = new list<typename U::for_in_unit>();
-    FOR_IN_NEW(e,iter,1,2,3)
+    FOR_IN(e,iter,1,2,3)
         l->units.push_back(e);
     END_FOR
     l->sort(cmp, key, reverse);
@@ -4317,7 +4317,7 @@ template <class A> list<tuple2<typename A::for_in_unit, typename A::for_in_unit>
     typename A::for_in_loop __3;
     int __2;
     A *__1;
-    FOR_IN_NEW(e,iter,1,2,3)
+    FOR_IN(e,iter,1,2,3)
         result->append((new tuple2<typename A::for_in_unit, typename A::for_in_unit>(1, e)));
     END_FOR
     return result;
@@ -4712,7 +4712,7 @@ namespace __dict__ {
         typename pyiter<A>::for_in_loop __3;
         int __2;
         pyiter<A> *__1;
-        FOR_IN_NEW(e,f,1,2,3)
+        FOR_IN(e,f,1,2,3)
             d->__setitem__(e, b);
         END_FOR
         return d;
@@ -4782,7 +4782,7 @@ template<class A> __ss_bool any(A *iter) {
     typename A::for_in_loop __3;
     int __2;
     A *__1;
-    FOR_IN_NEW(e,iter,1,2,3)
+    FOR_IN(e,iter,1,2,3)
         if(___bool(e))
             return True;
     END_FOR
@@ -4796,7 +4796,7 @@ template<class A> __ss_bool all(A *iter) {
     typename A::for_in_loop __3;
     int __2;
     A *__1;
-    FOR_IN_NEW(e,iter,1,2,3)
+    FOR_IN(e,iter,1,2,3)
         if(!___bool(e))
             return False;
     END_FOR
@@ -4895,7 +4895,7 @@ template<class U> void *file::writelines(U *iter) {
     typename U::for_in_loop __3;
     int __2;
     U *__1;
-    FOR_IN_NEW(e,iter,1,2,3)
+    FOR_IN(e,iter,1,2,3)
         write(e);
     END_FOR
     return NULL;

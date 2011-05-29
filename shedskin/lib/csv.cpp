@@ -69,7 +69,7 @@ static inline list<str *> *list_comp_0(DictWriter *self, dict<str *, str *> *row
     dict<str *, str *>::for_in_loop __3;
     int __2;
     dict<str *, str *> *__1;
-    FOR_IN_NEW(k,rowdict,1,2,3)
+    FOR_IN(k,rowdict,1,2,3)
         if ((!(self->fieldnames)->__contains__(k)))
             __ss_result->append(k);
     END_FOR
@@ -85,7 +85,7 @@ static inline list<str *> *list_comp_1(DictWriter *self, dict<str *, str *> *row
 
     __37 = self->fieldnames;
     __ss_result->resize(len(__37));
-    FOR_IN_NEW(key,__37,37,39,123)
+    FOR_IN(key,__37,37,39,123)
         __ss_result->units[__39] = rowdict->get(key, self->restval);
     END_FOR
 
@@ -281,7 +281,7 @@ list<str *> *reader::next() {
         str::for_in_loop __3;
         int __2;
         str *__1;
-        FOR_IN_NEW(c,line,1,2,3)
+        FOR_IN(c,line,1,2,3)
             if (__eq(c, const_7)) {
                 throw ((new Error(const_15)));
             }
@@ -353,7 +353,7 @@ __ss_int writer::join_append_data(str *field, __ss_int quote_empty, __ss_int quo
     str::for_in_loop __3;
     int __2;
     str *__1;
-    FOR_IN_NEW(c,field,1,2,3)
+    FOR_IN(c,field,1,2,3)
         want_escape = 0;
         if (__eq(c, const_7)) {
             break;
@@ -409,7 +409,7 @@ void *writer::writerow(list<str *> *seq) {
     dialect = this->dialect;
     this->join_reset();
 
-    FOR_IN_NEW(field,seq,24,26,123)
+    FOR_IN(field,seq,24,26,123)
         quoted = 0;
         if ((dialect->quoting==QUOTE_NONNUMERIC)) {
             quoted = 1;
@@ -443,7 +443,7 @@ void *writer::writerows(list<list<str *> *> *seqs) {
     list<list<str *> *>::for_in_loop __123;
     __ss_int __29;
 
-    FOR_IN_NEW(seq,seqs,27,29,123)
+    FOR_IN(seq,seqs,27,29,123)
         this->writerow(seq);
     END_FOR
 
@@ -502,7 +502,7 @@ dict<str *, str *> *DictReader::next() {
     }
     else if ((lf>lr)) {
 
-        FOR_IN_NEW(key,(this->getfieldnames())->__slice__(1, lr, 0, 0),31,33,123)
+        FOR_IN(key,(this->getfieldnames())->__slice__(1, lr, 0, 0),31,33,123)
             d->__setitem__(key, this->restval);
         END_FOR
 
@@ -565,7 +565,7 @@ void *DictWriter::writerows(list<dict<str *, str *> *> *rowdicts) {
 
     rows = (new list<list<str *> *>());
 
-    FOR_IN_NEW(rowdict,rowdicts,40,42,123)
+    FOR_IN(rowdict,rowdicts,40,42,123)
         rows->append(this->_dict_to_list(rowdict));
     END_FOR
 
