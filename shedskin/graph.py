@@ -23,9 +23,7 @@ from shared import *
 class moduleVisitor(ASTVisitor):
     def __init__(self, module):
         ASTVisitor.__init__(self)
-
         self.module = module
-
         self.classes = {}
         self.funcs = {}
         self.globals = {}
@@ -34,16 +32,13 @@ class moduleVisitor(ASTVisitor):
         self.fake_imports = {}
         self.ext_classes = {}
         self.ext_funcs = {}
-
         self.lambdaname = {}
         self.lwrapper = {}
-
         self.tempcount = getgx().tempcount
         self.callfuncs = []
         self.for_in_iters = []
         self.listcomps = []
         self.defaults = {}
-
         self.importnodes = []
 
     def dispatch(self, node, *args):
@@ -240,7 +235,6 @@ class moduleVisitor(ASTVisitor):
             elif comments:
                 getgx().comments[b] = comments
                 comments = []
-
             self.visit(b, func)
 
     def visitModule(self, node):
@@ -297,11 +291,8 @@ class moduleVisitor(ASTVisitor):
                     # deep-copy AST Function nodes
                     func_copy = copy.deepcopy(func.node)
                     inherit_rec(func.node, func_copy, func.mv)
-
-                    #print 'inherit func in', func.ident, getmv().module, func.mv.module
                     tempmv, mv = getmv(), func.mv
                     setmv(mv)
-                    #print 'tempmv', getmv().module
                     self.visitFunction(func_copy, cl, inherited_from=ancestor)
                     mv = tempmv
                     setmv(mv)
@@ -413,14 +404,10 @@ class moduleVisitor(ASTVisitor):
 
     def importmodule(self, name, pseudonym, node, fake):
         mod = self.analyzeModule(name, pseudonym, node, fake)
-
         if not fake:
-            if not pseudonym: pseudonym = name
-
-            var = defaultvar(pseudonym, None)
+            var = defaultvar(pseudonym or name, None)
             var.imported = True
             getgx().types[inode(var)] = set([(mod,0)])
-
         return mod
 
     def visitFrom(self, node, parent=None):
@@ -454,11 +441,10 @@ class moduleVisitor(ASTVisitor):
                         self.addconstraint((inode(extvar), inode(var)), None)
                 continue
 
-            if not pseudonym: pseudonym = name
-
             if mod.builtin: localpath = connect_paths(getgx().libdir, mod.dir)
             else: localpath = mod.dir
 
+            pseudonym = pseudonym or name
             if name in mod.mv.funcs:
                 self.ext_funcs[pseudonym] = mod.mv.funcs[name]
             elif name in mod.mv.classes:
@@ -685,9 +671,7 @@ class moduleVisitor(ASTVisitor):
         newnode = cnode(node, parent=func)
         newnode.copymetoo = True
         getgx().types[newnode] = set([(defclass('bool_'),0)]) # XXX new type?
-
         self.visit(node.expr, func)
-
         msgs = {'<': 'lt', '>': 'gt', 'in': 'contains', 'not in': 'contains', '!=': 'ne', '==': 'eq', '<=': 'le', '>=': 'ge'}
         left = node.expr
         for op, right in node.ops:
@@ -854,7 +838,6 @@ class moduleVisitor(ASTVisitor):
     def visitRaise(self, node, func=None):
         if node.expr1 == None or node.expr2 != None or node.expr3 != None:
             error('unsupported raise syntax', node, mv=self)
-
         for child in node.getChildNodes():
             self.visit(child, func)
 
@@ -863,8 +846,8 @@ class moduleVisitor(ASTVisitor):
 
         for handler in node.handlers:
             self.visit(handler[2], func)
-
-            if not handler[0]: continue
+            if not handler[0]: 
+                continue
 
             if isinstance(handler[0], Tuple):
                 pairs = [(n, handler[1]) for n in handler[0].nodes]
@@ -1108,17 +1091,13 @@ class moduleVisitor(ASTVisitor):
                 elif isinstance(lvalue, AssName):
                     if (rvalue, 0, 0) not in getgx().cnode: # XXX generalize
                         self.visit(rvalue, func)
-
                     self.visit(lvalue, func)
-
                     if func and lvalue.name in func.globals:
                         lvar = defaultvar(lvalue.name, None)
                     else:
                         lvar = defaultvar(lvalue.name, func)
-
                     if isinstance(rvalue, Const):
                         lvar.const_assign.append(rvalue)
-
                     self.addconstraint((inode(rvalue), inode(lvar)), func)
 
                 # (a,(b,c), ..) = expr
@@ -1166,10 +1145,8 @@ class moduleVisitor(ASTVisitor):
         # expr.attr = expr
         elif isinstance(lvalue, AssAttr):
             cnode(lvalue, parent=func)
-
             getgx().assign_target[rvalue] = lvalue.expr
             fakefunc = CallFunc(Getattr(lvalue.expr, '__setattr__'), [Const(lvalue.attrname), rvalue])
-
             self.visit(fakefunc, func)
 
     def tuple_flow(self, lvalue, rvalue, func=None):
