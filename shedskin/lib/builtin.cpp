@@ -1303,6 +1303,10 @@ list<str *> *file::readlines() {
     return lines;
 }
 
+__iter<str *> *file::xreadlines() {
+    return this->__iter__();
+}
+
 void *file::flush() {
     __check_closed();
     fflush(f);

@@ -682,6 +682,8 @@ class file(pyiter):
         return ''
     def readlines(self):
         return ['']
+    def xreadlines(self):
+        return iter(self)
 
     def write(self, s):
         pass
