@@ -188,7 +188,7 @@ try:
     dwah, = struct.unpack('h', s)
     print dwah
 except Exception, messg:
-    print messg
+    print 'baaah'
 try:
     s = struct.pack('fd', 17, 18)
     print repr(s)
