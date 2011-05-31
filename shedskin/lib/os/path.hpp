@@ -79,7 +79,7 @@ template <class A> void *walk(str *top, void *(*func)(A, str *, list<str *> *), 
 #else
 template <class A> void *walk(str *top, void *(*func)(A, str *, list<str *> *), A arg) {
     list<str *> *__33, *names;
-    list<str *>::for_in_loop 123;
+    list<str *>::for_in_loop __123;
     str *name;
     tuple2<str *, str *> *exceptions;
     __ss_int __35;
