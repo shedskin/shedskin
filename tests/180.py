@@ -82,7 +82,7 @@ try:
 #    print time.strftime("%d %b %Y %H:%M:%S", time.strptime("2001-11-12 18:31:01", "%Y-%m-%d %H:%M:%S")) # XXX %a
 #    print time.strftime("%Y", time.strptime("2001", "%Y")) # XXX %a
 #    print time.timezone
-    print time.tzname
+    print len(time.tzname)
 
 except TypeError, e:
     print e
