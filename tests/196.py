@@ -195,8 +195,8 @@ try:
     dwad, ewad = struct.unpack('fd', s)
     print dwad, ewad
     s = struct.pack('fd', 'oi', 18)
-except Exception, e:
-    print e
+except Exception:
+    print 'oopsie'
 try:
     raise struct.error("butkus")
 except struct.error, e:
