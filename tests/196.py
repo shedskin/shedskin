@@ -381,3 +381,6 @@ testdata.timer.timeout_add(42, smurfje)
 lines = open('testdata/crap.py','r').xreadlines()
 for line in lines:
     print line.strip()
+
+# bin() limited to 12 digits
+print bin(123456789)

@@ -1580,8 +1580,8 @@ tuple2<complex *, complex *> *divmod(complex *a, __ss_int b) { return a->__divmo
 str *__str(__ss_int i, __ss_int base) {
     if(i<10 && i>=0 && base==10)
         return __char_cache[((unsigned char)('0'+i))];
-    char buf[24];
-    char *psz = buf+23;
+    char buf[70];
+    char *psz = buf+69;
 /*    if(i==INT_MIN)
         return new str("-2147483648"); */
     int neg = i<0;
@@ -1614,7 +1614,7 @@ str *__str(__ss_int i, __ss_int base) {
         i = i/base;
     } while(i);
     if(neg) *(--psz) = '-';
-    return new str(psz, buf+23-psz);
+    return new str(psz, buf+69-psz);
 }
 #endif
 
@@ -1622,9 +1622,9 @@ str *__str(int i, int base) {
     if(base==10 && i<10 && i>=0)
         return __char_cache[((unsigned char)('0'+i))];
 
-    char buf[12];
-    char *psz = buf+11;
-    if(i==INT_MIN)
+    char buf[70];
+    char *psz = buf+69;
+    if(base==10 and i==INT_MIN)
         return new str("-2147483648");
     int neg = i<0;
     *psz = 0;
@@ -1656,7 +1656,7 @@ str *__str(int i, int base) {
         i = i/base;
     } while(i);
     if(neg) *(--psz) = '-';
-    return new str(psz, buf+11-psz);
+    return new str(psz, buf+69-psz);
 }
 
 str *__str(__ss_bool b) {
