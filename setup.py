@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from distutils.core import setup, Command
-import os, subprocess
+import os
 
 class run_tests(Command):
     description = "run testsuite"
@@ -15,7 +15,7 @@ class run_tests(Command):
         self.tests_dir = os.path.sep.join(ss_dir)
     def run(self):
         os.chdir(self.tests_dir)
-        subprocess.call('./run.py -r', shell=True)
+        os.system('./run.py')
         os.chdir(self.cwd)
 
 setup(name='shedskin',
