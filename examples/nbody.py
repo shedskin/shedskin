@@ -4,6 +4,8 @@
 #
 # contributed by Kevin Carson
 
+# add '-ffast-math' to the shedskin FLAGS for a huge speedup
+
 import sys
 
 pi = 3.14159265358979323
