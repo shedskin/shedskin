@@ -419,26 +419,30 @@ In Python, exceptions are raised for index out-of-bounds errors, as in the follo
 
 Also, negative index values can often be used to count 'backwards' (``a[-1]`` in the example). Because checking for this can also slow down certain programs, it can be turned off with the ``--nowrap`` option.
 
-.. _Tips and Tricks:
+.. _Performance Tips and Tricks:
 
-Tips and Tricks
----------------
+Performance Tips and Tricks
+---------------------------
 
-**Performance**
+**Performance Tips**
 
-1. Allocating many small objects (e.g. by using ``zip``) typically does not slow down Python programs by much. However, after compilation to C++, it can quickly become a bottleneck. The key to getting excellent performance is to allocate as few objects as possible.
+1. Allocating many small objects (e.g. tuples or complex numbers) typically does not slow down Python programs by much. However, after compilation to C++, it can quickly become a bottleneck. The key to getting excellent performance is to allocate as few small objects as possible. (Note that for the idiomatic ``for a, b in zip(..)`` and ``for a, b in enumerate(..)``, ``zip`` and ``enumerate`` are optimized away, and that 1-length strings are cached.)
 
-2. **Shed Skin** takes the flags it sends to the C++ compiler from the ``FLAGS`` file in the **Shed Skin** installation directory. These flags can be modified or overruled by creating a local file with the same name. 
+2. Attribute access is faster in the generated code than indexing. For example, ``v.x * v.y * v.z`` is faster than ``v[0] * v[1] * v[2]``.
 
-3. Profile-guided optimization can help to squeeze out even more performance. For a recent version of GCC, first compile and run the generated code with ``-fprofile-generate``, then with ``fprofile-use``.
+3. **Shed Skin** takes the flags it sends to the C++ compiler from the ``FLAGS*`` files in the **Shed Skin** installation directory. These flags can be modified, or overruled by creating a local file named ``FLAGS``.
 
-4. Several Python features (that may slow down generated code) are not always necessary, and can be turned off. See the section `Command-line Options`_ for details.
+4. When doing float-heavy calculations, it is not always necessary to follow exact IEEE floating-point specifications. Avoiding this by adding ``-ffast-math`` can sometimes greatly improve performance.
 
-5. When optimizing, it is extremely useful to know exactly how much time is spent in each part of your program. The program `Gprof2Dot`_ can be used to generate beautiful graphs for both the Python code and the compiled code.
+5. Profile-guided optimization can help to squeeze out even more performance. For a recent version of GCC, first compile and run the generated code with ``-fprofile-generate``, then with ``fprofile-use``.
+
+6. Several Python features (that may slow down generated code) are not always necessary, and can be turned off. See the section `Command-line Options`_ for details.
+
+7. When optimizing, it is extremely useful to know exactly how much time is spent in each part of your program. The program `Gprof2Dot`_ can be used to generate beautiful graphs for both the Python code and the compiled code.
 
 **Tricks**
 
-1. The following two code fragments work the same, but only the second one is supported (using attributes is also much faster in C++!): ::
+1. The following two code fragments work the same, but only the second one is supported: ::
 
     statistics = {'nodes': 28, 'solutions': set()}
 

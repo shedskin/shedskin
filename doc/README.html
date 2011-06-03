@@ -177,7 +177,7 @@ code, tt {
 <li><a class="reference internal" href="#id8" id="id20">Parallel Processing</a></li>
 <li><a class="reference internal" href="#id9" id="id21">Calling C/C++ Code</a></li>
 <li><a class="reference internal" href="#id10" id="id22">Command-line Options</a></li>
-<li><a class="reference internal" href="#id11" id="id23">Tips and Tricks</a></li>
+<li><a class="reference internal" href="#id11" id="id23">Performance Tips and Tricks</a></li>
 <li><a class="reference internal" href="#id12" id="id24">How to help out in Shed Skin Development</a></li>
 </ul>
 </div>
@@ -534,18 +534,20 @@ print a[5] # invalid index: out of bounds
 <p>Also, negative index values can often be used to count 'backwards' (<tt class="docutils literal"><span class="pre">a[-1]</span></tt> in the example). Because checking for this can also slow down certain programs, it can be turned off with the <tt class="docutils literal"><span class="pre">--nowrap</span></tt> option.</p>
 </div>
 <div class="section" id="id11">
-<span id="tips-and-tricks"></span><h1><a class="toc-backref" href="#id23">Tips and Tricks</a></h1>
-<p><strong>Performance</strong></p>
+<span id="performance-tips-and-tricks"></span><h1><a class="toc-backref" href="#id23">Performance Tips and Tricks</a></h1>
+<p><strong>Performance Tips</strong></p>
 <ol class="arabic simple">
-<li>Allocating many small objects (e.g. by using <tt class="docutils literal">zip</tt>) typically does not slow down Python programs by much. However, after compilation to C++, it can quickly become a bottleneck. The key to getting excellent performance is to allocate as few objects as possible.</li>
-<li><strong>Shed Skin</strong> takes the flags it sends to the C++ compiler from the <tt class="docutils literal">FLAGS</tt> file in the <strong>Shed Skin</strong> installation directory. These flags can be modified or overruled by creating a local file with the same name.</li>
+<li>Allocating many small objects (e.g. tuples or complex numbers) typically does not slow down Python programs by much. However, after compilation to C++, it can quickly become a bottleneck. The key to getting excellent performance is to allocate as few small objects as possible. (Note that for the idiomatic <tt class="docutils literal">for a, b in <span class="pre">zip(..)</span></tt> and <tt class="docutils literal">for a, b in <span class="pre">enumerate(..)</span></tt>, <tt class="docutils literal">zip</tt> and <tt class="docutils literal">enumerate</tt> are optimized away, and that 1-length strings are cached.)</li>
+<li>Attribute access is faster in the generated code than indexing. For example, <tt class="docutils literal">v.x * v.y * v.z</tt> is faster than <tt class="docutils literal">v[0] * v[1] * v[2]</tt>.</li>
+<li><strong>Shed Skin</strong> takes the flags it sends to the C++ compiler from the <tt class="docutils literal">FLAGS*</tt> files in the <strong>Shed Skin</strong> installation directory. These flags can be modified, or overruled by creating a local file named <tt class="docutils literal">FLAGS</tt>.</li>
+<li>When doing float-heavy calculations, it is not always necessary to follow exact IEEE floating-point specifications. Avoiding this by adding <tt class="docutils literal"><span class="pre">-ffast-math</span></tt> can sometimes greatly improve performance.</li>
 <li>Profile-guided optimization can help to squeeze out even more performance. For a recent version of GCC, first compile and run the generated code with <tt class="docutils literal"><span class="pre">-fprofile-generate</span></tt>, then with <tt class="docutils literal"><span class="pre">fprofile-use</span></tt>.</li>
 <li>Several Python features (that may slow down generated code) are not always necessary, and can be turned off. See the section <a class="reference internal" href="#command-line-options">Command-line Options</a> for details.</li>
 <li>When optimizing, it is extremely useful to know exactly how much time is spent in each part of your program. The program <a class="reference external" href="http://code.google.com/p/jrfonseca/wiki/Gprof2Dot">Gprof2Dot</a> can be used to generate beautiful graphs for both the Python code and the compiled code.</li>
 </ol>
 <p><strong>Tricks</strong></p>
 <ol class="arabic">
-<li><p class="first">The following two code fragments work the same, but only the second one is supported (using attributes is also much faster in C++!):</p>
+<li><p class="first">The following two code fragments work the same, but only the second one is supported:</p>
 <pre class="literal-block">
 statistics = {'nodes': 28, 'solutions': set()}
 
@@ -584,7 +586,6 @@ pl.show()
 <p>If you are a student, you might want to consider applying for the yearly Google <a class="reference external" href="http://code.google.com/soc/">Summer of Code</a> or <a class="reference external" href="http://code.google.com/opensource/ghop/">GHOP</a> projects. <strong>Shed Skin</strong> has so far successfully participated in one Summer of Code and one GHOP.</p>
 <p>The following people have already made significant contributions to <strong>Shed Skin</strong>:</p>
 <ul class="simple">
-<li>Bearophile</li>
 <li>Hakan Ardo</li>
 <li>Brian Blais</li>
 <li>Paul Boddie</li>
