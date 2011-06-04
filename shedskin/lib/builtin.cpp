@@ -2228,7 +2228,7 @@ PyObject *__ss__newobj__(PyObject *, PyObject *args, PyObject *kwargs) {
 /* throwing up */
 
 void __throw_index_out_of_range() {
-   throw new IndexError(new str("index out of range"));
+    throw new IndexError(new str("index out of range"));
 }
 void __throw_range_step_zero() {
     throw new ValueError(new str("range() step argument must not be zero"));

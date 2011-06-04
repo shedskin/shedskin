@@ -21,6 +21,8 @@
 #include <algorithm>
 #include <iterator>
 #include <ctype.h>
+#include <exception>
+#include <execinfo.h>
 
 #if defined( _MSC_VER )
     #pragma warning( disable : 4996 ) // CRT security warning
@@ -1232,7 +1234,17 @@ template<> str *repr(void *t);
 class BaseException : public pyobj {
 public:
     str *msg;
-    BaseException(str *msg=0) { __init__(msg); }
+    BaseException(str *msg=0) { 
+#ifdef __SS_BACKTRACE
+        void * array[25];
+        int nSize = backtrace(array, 25);
+        char ** symbols = backtrace_symbols(array, nSize);
+
+        for (int i = 0; i < nSize; i++)
+            printf("%s\n", symbols[i]);
+#endif
+        __init__(msg); 
+    }
 
     void __init__(str *msg) { this->msg = msg; }
     void __init__(void *) { this->msg = 0; } /* XXX */

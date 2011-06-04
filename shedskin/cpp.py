@@ -2929,6 +2929,7 @@ def generate_code():
             if not getgx().assertions: line += ' -D__SS_NOASSERT'
             if getgx().fast_hash: line += ' -D__SS_FASTHASH'
             if getgx().longlong: line += ' -D__SS_LONG'
+            if getgx().backtrace: line += ' -D__SS_BACKTRACE'
             if getgx().pypy: line += ' -D__SS_PYPY'
             if getgx().extension_module:
                 if getgx().msvc: line += ' /DLL /LIBPATH:%s/libs /LIBPATH:python%s' % (prefix, pyver)
