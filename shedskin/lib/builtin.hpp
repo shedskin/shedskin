@@ -424,6 +424,13 @@ public:
 #endif
 };
 
+void __throw_index_out_of_range();
+void __throw_range_step_zero();
+void __throw_set_changed();
+void __throw_dict_changed();
+void __throw_slice_step_zero();
+void __throw_stop_iteration();
+
 template<class K, class V> class dictentry;
 
 const int MINSIZE = 8;
@@ -433,8 +440,6 @@ template<class K, class V> struct dict_looper {
     int si_used;
     dictentry<K,V> *entry;
 };
-
-static void __throw_dict_changed();
 
 template <class K, class V> class dict : public pyiter<K> {
 public:
@@ -528,8 +533,6 @@ template<class T> struct set_looper {
     int si_used;
     setentry<T> *entry;
 };
-
-static void __throw_set_changed();
 
 template<class T> class set : public pyiter<T> {
 public:
@@ -1432,25 +1435,6 @@ public:
 #else
 #define ASSERT(x, y)
 #endif
-
-static void __throw_index_out_of_range() { /* improve inlining */
-   throw new IndexError(new str("index out of range"));
-}
-static void __throw_range_step_zero() {
-    throw new ValueError(new str("range() step argument must not be zero"));
-}
-static void __throw_set_changed() {
-    throw new RuntimeError(new str("set changed size during iteration"));
-}
-static void __throw_dict_changed() {
-    throw new RuntimeError(new str("dict changed size during iteration"));
-}
-static void __throw_slice_step_zero() {
-    throw new ValueError(new str("slice step cannot be zero"));
-}
-static void __throw_stop_iteration() {
-    throw new StopIteration();
-}
 
 #define FAST_FOR(i, l, u, s, t1, t2) \
     if(s==0) \
