@@ -4547,7 +4547,11 @@ template <class A> tuple2<A,A> *filter(void *func, tuple2<A,A> *a) { return filt
 
 template<class A, class B> double __power(A a, B b);
 template<> inline double __power(__ss_int a, double b) { return pow(a,b); }
-template<> inline double __power(double a, __ss_int b) { return pow(a,b); }
+template<> inline double __power(double a, __ss_int b) { 
+    if(b==2) return a*a;
+    else if(b==3) return a*a*a;
+    else return pow(a,b); 
+}
 
 complex *__power(complex *a, complex *b);
 complex *__power(complex *a, __ss_int b);
