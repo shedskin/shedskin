@@ -1243,7 +1243,7 @@ str *__add_strs(int n, ...);
 /** Print a demangled stack backtrace of the caller function to FILE* out. */
 static void print_stacktrace(FILE *out, unsigned int max_frames = 63)
 {
-    fprintf(out, "stack trace:\n");
+    fprintf(out, "Traceback (most recent call last):\n"); 
 
     // storage array for stack trace address data
     void* addrlist[max_frames+1];
@@ -1266,7 +1266,7 @@ static void print_stacktrace(FILE *out, unsigned int max_frames = 63)
 
     // iterate over the returned symbol lines. skip the first, it is the
     // address of this function.
-    for (int i = 1; i < addrlen; i++)
+    for (int i = addrlen-1; i > 0; i--)
     {
         char *begin_name = 0, *begin_offset = 0, *end_offset = 0;
 
@@ -1300,20 +1300,21 @@ static void print_stacktrace(FILE *out, unsigned int max_frames = 63)
                                             funcname, &funcnamesize, &status);
             if (status == 0) {
                 funcname = ret; // use possibly realloc()-ed string
-                fprintf(out, "  %s : %s+%s\n",
-                        symbollist[i], funcname, begin_offset);
+                if(strncmp(funcname, "__shedskin__::", 14) != 0)
+                    //fprintf(out, "  %s : %s+%s\n", symbollist[i], funcname, begin_offset);
+                    fprintf(out, "  %s : %s\n", symbollist[i], funcname);
             }
             else {
                 // demangling failed. Output function name as a C function with
                 // no arguments.
-                fprintf(out, "  %s : %s()+%s\n",
-                        symbollist[i], begin_name, begin_offset);
+                //fprintf(out, "  %s : %s()+%s\n",
+                //        symbollist[i], begin_name, begin_offset);
             }
         }
         else
         {
             // couldn't parse the line? print the whole line.
-            fprintf(out, "  %s\n", symbollist[i]);
+            //fprintf(out, "  %s\n", symbollist[i]);
         }
     }
 
