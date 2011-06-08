@@ -238,13 +238,6 @@ To create an executable file, called ``test`` (or ``test.exe``), type: ::
 
     make
 
-Under Windows, if you wish to start it without having to double-click ``init.bat``, copy the following files into the same directory as the executable: ::
-
-  shedskin-0.8\shedskin\gc.dll
-  shedskin-0.8\shedskin-libpcre-0.dll
-  shedskin-0.8\bin\libgcc_s_dw-1.dll
-  shedskin-0.8\bin\libstdc++.dll
-
 .. _Generating an Extension Module:
 
 Generating an Extension Module
@@ -320,6 +313,37 @@ After compiling this module as an extension module with **Shed Skin**, we can pa
     >>> a = numpy.array(([1.0, 2.0], [3.0, 4.0]))
     >>> simple_module2.my_sum(a.tolist())
     10.0
+
+.. _Distributing Binaries:
+
+Distributing Binaries
+---------------------
+
+**Windows**
+
+To use a generated Windows binary on another system, or to start it without having to double-click ``init.bat``, place the following files into the same directory as the binary: ::
+
+  shedskin-0.8\shedskin\gc.dll
+  shedskin-0.8\shedskin-libpcre-0.dll
+  shedskin-0.8\bin\libgcc_s_dw-1.dll
+  shedskin-0.8\bin\libstdc++.dll
+
+**UNIX**
+
+To use a generated binary on another system, make sure libgc and libpcre3 are installed there. If they are not, and you cannot install them globally, you can place copies of these libraries into the same directory as the binary, using the following approach: ::
+
+
+  $ ldd test
+
+  libgc.so.1 => /usr/lib/libgc.so.1
+  libpcre.so.3 => /lib/x86_64-linux-gnu/libpcre.so.3
+
+  $ cp /usr/lib/libgc.so.1 .
+  $ cp /lib/x86_64-linux-gnu/libpcre.so.3 .
+
+  $ LD_LIBRARY_PATH=. ./test
+
+Note that both systems have to be 32- or 64-bit for this to work. If not, **Shed Skin** must be installed on the other system, to recompile the binary.
 
 .. _Parallel Processing:
 
