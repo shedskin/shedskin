@@ -12,6 +12,8 @@ namespace __shedskin__ {
 
 class_ *cl_class_, *cl_none, *cl_str_, *cl_int_, *cl_bool, *cl_float_, *cl_complex, *cl_list, *cl_tuple, *cl_dict, *cl_set, *cl_object, *cl_rangeiter, *cl_xrange;
 
+class_ *cl_valueerror;
+
 str *sp, *nl, *__fmt_s, *__fmt_H, *__fmt_d;
 __GC_STRING ws, __fmtchars;
 __GC_VECTOR(str *) __char_cache;
@@ -87,6 +89,8 @@ void __init() {
     __ss_stdout->name = new str("<stdout>");
     __ss_stderr = new file(stderr);
     __ss_stderr->name = new str("<stderr>");
+
+    cl_valueerror = new class_("ValueError", 13, 13);
 }
 
 /* int_ methods */
@@ -2008,11 +2012,7 @@ float_ *___box(double d) {
     return new float_(d);
 }
 
-/* print .., */
-
-void __ss_exit(int code) {
-    throw new SystemExit(code);
-}
+/* start, stop */
 
 void __start(void (*initfunc)()) {
     int code = 0;
@@ -2027,6 +2027,13 @@ void __start(void (*initfunc)()) {
         __ss_stdout->write(nl);
     std::exit(code);
 }
+
+void __ss_exit(int code) {
+    throw new SystemExit(code);
+}
+
+
+/* print .., */
 
 void print(int n, file *f, str *end, str *sep, ...) {
     __print_cache->units.resize(0);
