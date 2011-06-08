@@ -2022,6 +2022,12 @@ void __start(void (*initfunc)()) {
         if(s->message)
             print2(NULL, 0, 1, s->message);
         code = s->code;
+    } catch (BaseException *e) {
+        if(e->__class__) /* XXX */
+            print2(NULL, 0, 1, __add_strs(3, e->__class__->__name__, new str(": "), e->msg));
+        else
+            print2(NULL, 0, 1, e->msg);
+        code = 1;
     }
     if(__ss_stdout->print_opt.lastchar != '\n')
         __ss_stdout->write(nl);
