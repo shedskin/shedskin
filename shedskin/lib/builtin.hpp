@@ -1230,6 +1230,11 @@ template<> str *repr(int t);
 template<> str *repr(__ss_bool b);
 template<> str *repr(void *t);
 
+str *__add_strs(int n, str *a, str *b, str *c);
+str *__add_strs(int n, str *a, str *b, str *c, str *d);
+str *__add_strs(int n, str *a, str *b, str *c, str *d, str *e);
+str *__add_strs(int n, ...);
+
 /* exceptions */
 
 // stacktrace.h (c) 2008, Timo Bingmann from http://idlebox.net/
@@ -1316,9 +1321,12 @@ static void print_stacktrace(FILE *out, unsigned int max_frames = 63)
     free(symbollist);
 }
 
+extern class_ *cl_valueerror;
+
 class BaseException : public pyobj {
 public:
-    str *msg;
+    str *msg; /* XXX needed? */
+    str *message; 
     BaseException(str *msg=0) { 
         __init__(msg); 
 #ifdef __SS_BACKTRACE
@@ -1326,10 +1334,18 @@ public:
 #endif
     }
 
-    void __init__(str *msg) { this->msg = msg; }
+    void __init__(str *msg) { this->__class__ = 0; this->msg = msg; this->message = msg; }
     void __init__(void *) { this->msg = 0; } /* XXX */
     void __init__(int) { this->msg = 0; } /* XXX */
-    str *__repr__() { return msg ? msg : new str("0"); }
+    str *__repr__() { 
+        if(this->__class__) /* XXX */
+            return msg ? __add_strs(4, this->__class__->__name__, new str("('"), msg, new str("',)")) : new str("0"); 
+        else
+            return msg ? msg : new str("0"); 
+    }
+    str *__str__() { 
+        return msg ? msg : new str("0"); 
+    }
 };
 
 class Exception: public BaseException {
@@ -1508,7 +1524,7 @@ public:
 
 class ValueError : public StandardError {
 public:
-    ValueError(str *msg=0) : StandardError(msg) {}
+    ValueError(str *msg=0) : StandardError(msg) { this->__class__ = cl_valueerror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_ValueError; }
 #endif
@@ -1755,11 +1771,6 @@ template<class T> T __mul2(__ss_bool n, T a) { return a->__mul__(n.value); }
 template<class T> T __mul2(double n, T a) { return a->__mul__(n); }
 template<class T> T __div2(__ss_int n, T a) { return a->__rdiv__(n); }
 template<class T> T __div2(double n, T a) { return a->__rdiv__(n); }
-
-str *__add_strs(int n, str *a, str *b, str *c);
-str *__add_strs(int n, str *a, str *b, str *c, str *d);
-str *__add_strs(int n, str *a, str *b, str *c, str *d, str *e);
-str *__add_strs(int n, ...);
 
 /* copy */
 

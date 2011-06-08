@@ -384,3 +384,10 @@ for line in lines:
 
 # bin() limited to 12 digits
 print bin(123456789)
+
+# exception printing
+valeur = ValueError('valeur')
+print valeur
+print repr(valeur)
+print valeur.message
+print valeur.__class__.__name__
