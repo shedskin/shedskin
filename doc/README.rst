@@ -507,6 +507,7 @@ The following people have already made significant contributions to **Shed Skin*
 * Hakan Ardo
 * Brian Blais
 * Paul Boddie
+* François Boutines
 * Djamel Cherif
 * Mark Dewing
 * James Coughlan
