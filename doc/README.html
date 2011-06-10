@@ -543,6 +543,7 @@ shedskin test
 -s --strhash           Use fast string hashing algorithm (murmur)
 -v --msvc              Output MSVC-style Makefile
 -w --nowrap            Disable wrap-around checking
+-x --backtrace         Print backtraces for all exceptions
 </pre>
 <p>For example, to compile the file <tt class="docutils literal">test.py</tt> as an extension module, type <tt class="docutils literal">shedskin –e test</tt> or <tt class="docutils literal">shedskin ––extmod test</tt>.</p>
 <p>In Python, exceptions are raised for index out-of-bounds errors, as in the following example. Because checking for these errors can slow down certain programs, it can be turned off with the <tt class="docutils literal"><span class="pre">--nobounds</span></tt> option.</p>

@@ -433,6 +433,7 @@ The ``shedskin`` command can be given the following options: ::
     -s --strhash           Use fast string hashing algorithm (murmur)
     -v --msvc              Output MSVC-style Makefile
     -w --nowrap            Disable wrap-around checking
+    -x --backtrace         Print backtraces for all exceptions
 
 For example, to compile the file ``test.py`` as an extension module, type ``shedskin –e test`` or ``shedskin ––extmod test``.
 
