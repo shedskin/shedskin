@@ -1,8 +1,8 @@
-Shed Skin Tutorial
-==================
+Shed Skin Documentation
+=======================
 
 :Version: 0.8
-:Date: June 1 2011
+:Date: June 15 2011
 :Authors: Mark Dufour and James Coughlan
 
 .. _Parallel Python: http://www.parallelpython.com/
