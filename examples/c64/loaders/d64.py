@@ -25,14 +25,14 @@ sector_size = 256
 
 """
 directory (btes)
-	next directory SECTOR track,sector or 0,0 (usually)
-	file type and flags
-	content track,sector
-	16 char petascii, Padded with $A0
-	REL_side-sector block track,sector
-	REL file record length (max. 254)
-	6 bytes unused (except GEOS)
-	file_size_sectorsLO,HI
+    next directory SECTOR track,sector or 0,0 (usually)
+    file type and flags
+    content track,sector
+    16 char petascii, Padded with $A0
+    REL_side-sector block track,sector
+    REL file record length (max. 254)
+    6 bytes unused (except GEOS)
+    file_size_sectorsLO,HI
 """
 
 """
@@ -52,8 +52,8 @@ rest 0 except for extended formats:
 DOLPHIN DOS / SPEED DOS BAM.
 
 BAM entry =
-	free_sector_count
-	3 bitmap: lowest sector first. bit 0=sector 0, bit 7=sector 7. Next byte again bit 0=sector 8 etc.
-	if bit=1: free.
-	Defaults to allocated for not-existing bits.
+    free_sector_count
+    3 bitmap: lowest sector first. bit 0=sector 0, bit 7=sector 7. Next byte again bit 0=sector 8 etc.
+    if bit=1: free.
+    Defaults to allocated for not-existing bits.
 """
