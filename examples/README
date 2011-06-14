@@ -1,4 +1,4 @@
-56 programs that work with Shed Skin 0.8.
+57 programs that work with Shed Skin 0.8.
 
 15,000 lines in total (using sloccount, around 21,000 otherwise)
 
@@ -34,6 +34,7 @@ lines  name               description                   notes
    130 adatron.py         Adatron SVM with polynomial kernel
    222 block.py           Huffman block compressor
    329 kanoodle.py        Knuth's dancing links
+   270 loop.py            Havlak loop recognition algorithm
     26 mandelbrot.py      mandelbrot fractal
    223 mastermind.py      mastermind against comp
    117 mastermind2.py     mastermind strategies
