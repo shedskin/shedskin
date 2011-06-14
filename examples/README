@@ -1,6 +1,6 @@
 57 programs that work with Shed Skin 0.8.
 
-15,000 lines in total (using sloccount, around 21,000 otherwise)
+16,000 lines in total (using sloccount, around 22,000 otherwise)
 
 If you have another interesting test case, please send it to:
    mark.dufour@gmail.com
@@ -13,7 +13,10 @@ lines  name               description                   notes
    125 astar.py           a-star algorithm              shedskin -e astar && make && python astar_main.py
    415 bh.py              barnes-hut force calculation
     54 brainfuck.py       brainfuck interpreter
-  1949 c64_main.py        commodore 64 emulator         cd c64; shedskin -e c64 && make; cd ..; python c64_main.py
+  1949 c64_main.py        commodore 64 emulator         cd c64; shedskin -oe c64 && make; cd ..
+                                                        python c64_main.py --tape=intkarat.t64
+                                                        load
+                                                        run
    321 chess.py           chess engine
    105 dijkstra.py        dijkstra's algorithm
     80 dijkstra2.py       bidirectional dijkstra search
