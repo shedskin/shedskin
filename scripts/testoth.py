@@ -1,11 +1,13 @@
 import os
 import sys
 
+SS = '../shedskin/__init__.py'
+
 if sys.platform == 'win32': ext = '.pyd'
 else: ext = '.so'
 
 os.system('rm othello'+ext)
-os.system('shedskin -e othello && make')
+os.system('python %s -e othello && make' % SS)
 
 import othello
 print othello.__file__
