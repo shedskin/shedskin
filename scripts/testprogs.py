@@ -1,6 +1,8 @@
 import os
 import sys
 
+SS = '../shedskin/__init__.py'
+
 def do_cmd(cmd):
     print '\n\n', cmd, '\n'
     assert os.system(cmd) == 0
@@ -16,9 +18,9 @@ print 'examples: %d' % len(set(files))
 
 print '*** cmd-line options:'
 
-do_cmd('shedskin -b othello')
+do_cmd('python %s -b othello' % SS)
 do_cmd('make')
-do_cmd('shedskin -w othello')
+do_cmd('python %s -w othello' % SS)
 do_cmd('make')
 
 # ss-progs
@@ -28,17 +30,22 @@ os.system('cp lib/* ../shedskin/lib')
 
 for (i, file) in enumerate(files):
     print '*** test: %s %d' % (file, i)
+    prefix = ''
     if file == 'c64.py':
         os.chdir('c64')
-    if file == 'SimpleGeometry.py':
+        prefix = '../'
+    elif file == 'SimpleGeometry.py':
         os.chdir('pylot')
-    if file == 'sto_atom.py':
+        prefix = '../'
+    elif file == 'sto_atom.py':
         os.chdir('quameon')
-    do_cmd('shedskin %s' % file)
+        prefix = '../'
+    do_cmd('python %s %s' % (prefix+SS, file))
     do_cmd('make')
-    do_cmd('shedskin -lars %s' % file)
+    do_cmd('python %s -lars %s' % (prefix+SS, file))
     do_cmd('make')
-    do_cmd('shedskin -e %s' % file)
+    do_cmd('python %s -e %s' % (prefix+SS, file))
     do_cmd('make')
     if file in ('c64.py', 'SimpleGeometry.py', 'sto_atom.py'):
         os.chdir('..')
+    break
