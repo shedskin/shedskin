@@ -48,4 +48,3 @@ for (i, file) in enumerate(files):
     do_cmd('make')
     if file in ('c64.py', 'SimpleGeometry.py', 'sto_atom.py'):
         os.chdir('..')
-    break
