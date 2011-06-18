@@ -339,6 +339,10 @@ def redirect(c, dcpa, func, callfunc, ident, callnode):
                 func = func.parent.funcs[func.parent.properties[arg][0]]
             c = c[1:]
 
+    # win32
+    if sys.platform == 'win32' and func.mv.module.builtin and isinstance(func.parent, class_) and '__win32'+func.ident in func.parent.funcs:
+        func = func.parent.funcs['__win32'+func.ident]
+
     return c, dcpa, func
 
 # --- cartesian product algorithm; adds interprocedural constraints
