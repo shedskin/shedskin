@@ -79,6 +79,7 @@ examples/sudo
 examples/sudoku1
 examples/sudoku2
 examples/sudoku3
+examples/testoth.py
 examples/testprogs.py
 examples/tictactoe
 examples/voronoi
@@ -284,3 +285,4 @@ tests/193
 tests/194
 tests/195
 tests/196
+tests/197
