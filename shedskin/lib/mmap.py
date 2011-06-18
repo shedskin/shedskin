@@ -6,11 +6,11 @@ MAP_SHARED, MAP_PRIVATE, MAP_ANON, MAP_ANONYMOUS = (1, 2, 32, 32)
 PROT_READ, PROT_WRITE, PROT_EXEC = (1, 2, 4)
 ACCESS_READ, ACCESS_WRITE, ACCESS_COPY = (1, 2, 3)
 
-class mmap(object):
+class mmap:
     def __init__(self, fileno, length, flags=MAP_SHARED, prot=PROT_READ | PROT_WRITE, access=0, offset=0):
         pass
 
-    def __win32__init__(self, fileno, length, tagname='', access=0):
+    def __win32__init__(self, fileno, length, tagname='', access=0, offset=0):
         pass
 
     def close(self):
@@ -59,7 +59,7 @@ class mmap(object):
         return False
         
     def __iter__(self):
-        return __mmapiter(self)
+        return __mmapiter()
 
     def __len__(self):
         return 0
@@ -76,8 +76,6 @@ class mmap(object):
     def __setslice__(self, kind, lower, upper, step, sequence):
         pass
 
-class __mmapiter(object):
-    def __init__(self, map):
-        self.map = map
+class __mmapiter:
     def next(self):
         return ''

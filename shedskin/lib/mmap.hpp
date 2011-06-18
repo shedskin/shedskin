@@ -36,6 +36,11 @@ MAP_ANON;      /* Syn. MAP_ANONYMOUS.   */
 extern str *__name__;
 extern class_ *cl_mmap;
 
+#ifndef WIN32 /* UNIX */
+extern __ss_int default_0,
+                default_1;
+#endif /* WIN32 */
+
 class __mmapiter;
 
 /**
@@ -84,7 +89,7 @@ class mmap : public pyseq<str *>
     // mmap
     void *   close();
     __ss_int flush(__ss_int offset=0, __ss_int size=-1);
-    __ss_int find(str *s, __ss_int start=-1, __ss_int end=0);
+    __ss_int find(str *s, __ss_int start=-1, __ss_int end=-1);
     void *   move(__ss_int destination, __ss_int source, __ss_int count);
     str *    read(__ss_int size=all);
     str *    read_byte();
