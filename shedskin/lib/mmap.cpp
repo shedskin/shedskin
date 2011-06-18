@@ -49,11 +49,11 @@ enum
 namespace __mmap__
 {
 #ifdef WIN32
-__ss_int ALLOCATIONGRANULARITY = 0x10000;
 const __ss_int PAGESIZE = 0x10000;
+__ss_int ALLOCATIONGRANULARITY = PAGESIZE;
 #else // UNIX
-__ss_int ALLOCATIONGRANULARITY = 0x1000;
 const __ss_int PAGESIZE = sysconf(_SC_PAGE_SIZE);
+__ss_int ALLOCATIONGRANULARITY = PAGESIZE;
 #endif
 const __ss_int
     ACCESS_DEFAULT = 0,
@@ -69,6 +69,12 @@ const __ss_int
     MAP_PRIVATE   = __MAP_PRIVATE,
     MAP_ANONYMOUS = __MAP_ANONYMOUS,
     MAP_ANON      = __MAP_ANON;
+
+// Default parameters.
+#ifndef WIN32 /* UNIX */
+__ss_int default_0 = MAP_SHARED,
+         default_1 = PROT_READ | PROT_WRITE;
+#endif /* WIN32 */
 
 // Error messages.
 str *const_0, *const_1, *const_2, *const_3, *const_4, *const_5,
@@ -134,6 +140,15 @@ void *mmap::__init__(int __ss_fileno_, __ss_int length_, __ss_int flags_, __ss_i
         if (fd == -1)
         {
             throw new IOError();
+        }
+        if(length_ == 0)
+        {
+            struct stat buf;
+            if (fstat(fd, &buf) == -1)
+            {
+                throw new IOError();
+            }
+            length_ = buf.st_size;
         }
     }
 
@@ -428,6 +443,10 @@ __ss_int mmap::find(str *needle, __ss_int start, __ss_int end)
     {
         start = __tell();
     }
+    if( end == -1)
+    {
+        end = __size();
+    }
     return __find(needle->unit, start, end);
 }
 
@@ -474,7 +493,16 @@ str *mmap::read(__ss_int size)
 
 str *mmap::read_byte()
 {
-    return read(1);
+    __raise_if_closed_or_not_readable();
+    if(m_position < m_end)
+    {
+        return __char_cache[(unsigned char)(*m_position++)];
+    }
+    else
+    {
+        m_position = m_end;
+        return new str("");
+    }
 }
 
 str *mmap::readline(__ss_int size, const char eol)
@@ -504,6 +532,10 @@ __ss_int mmap::rfind(str *needle, __ss_int start, __ss_int end)
     if (start == -1)
     {
         start = __tell();
+    }
+    if( end == -1)
+    {
+        end = __size();
     }
     return __find(needle->unit, start, end, true);
 }
