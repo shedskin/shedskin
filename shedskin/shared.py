@@ -803,10 +803,11 @@ def connect_actual_formal(expr, func, parent_constr=False, merge=None):
     if parent_constr:
         actuals = actuals[1:]
 
-    skip_defaults = True # XXX
-    if not func.mv.module.builtin or func.mv.module.ident in ['random', 'itertools', 'datetime', 'ConfigParser', 'csv', 'binascii', 'mmap'] or (func.ident in ('sort','sorted', 'min', 'max', '__print')):
-        if not (func.mv.module.builtin and func.ident == 'randrange'):
-            skip_defaults = False
+    skip_defaults = False # XXX investigate and further narrow down cases where we want to skip
+    if (func.mv.module.ident in ['string', 'collections', 'bisect', 'array', 'math', 'cStringIO', 'getopt']) or \
+       (func.mv.module.ident == 'random' and func.ident == 'randrange') or\
+       (func.mv.module.ident == 'builtin' and func.ident not in ('sort', 'sorted', 'min', 'max', '__print')):
+        skip_defaults = True
 
     actuals, formals, _, extra, _ = analyze_args(expr, func, skip_defaults=skip_defaults, merge=merge)
 
