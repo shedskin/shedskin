@@ -16,10 +16,10 @@ void __init(int c, char **v) {
     argv = new list<str *>();
 
 #if defined( _MSC_VER )
-    version = new str("Shed Skin Python-to-C++ Compiler 0.8\n[MSVC ");
+    version = new str("Shed Skin Python-to-C++ Compiler 0.9\n[MSVC ");
     version = version->__add__(__str(_MSC_VER))->__add__(new str("]"));
 #else
-    version = new str("Shed Skin Python-to-C++ Compiler 0.8\n[GCC ");
+    version = new str("Shed Skin Python-to-C++ Compiler 0.9\n[GCC ");
     version = version->__add__(new str(__VERSION__))->__add__(new str("]"));
 #endif
     version_info = new tuple2<__ss_int, __ss_int>(5, (__ss_int)2, (__ss_int)6, (__ss_int)6, (__ss_int)0, (__ss_int)0);
