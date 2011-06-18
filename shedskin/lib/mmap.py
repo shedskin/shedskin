@@ -8,12 +8,10 @@ ACCESS_READ, ACCESS_WRITE, ACCESS_COPY = (1, 2, 3)
 
 class mmap(object):
     def __init__(self, fileno, length, flags=MAP_SHARED, prot=PROT_READ | PROT_WRITE, access=0, offset=0):
-        ''' UNIX constructor '''
         pass
 
-##     def __init__(self, fileno, length, tagname='', access=0):
-##         ''' Windows constructor '''
-##         pass
+    def __win32__init__(self, fileno, length, tagname='', access=0):
+        pass
 
     def close(self):
         pass

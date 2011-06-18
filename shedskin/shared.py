@@ -694,6 +694,8 @@ def callfunc_targets(node, merge):
             funcs = [constructor.funcs['__inititer__']]
         elif (ident, nrargs(node)) in (('dict', 1), ('defaultdict', 2)): # XXX merge infer.redirect
             funcs = [constructor.funcs['__initdict__']] # XXX __inititer__?
+        elif sys.platform == 'win32' and '__win32__init__' in constructor.funcs:
+            funcs = [constructor.funcs['__win32__init__']]
         elif '__init__' in constructor.funcs:
             funcs = [constructor.funcs['__init__']]
 
@@ -802,7 +804,7 @@ def connect_actual_formal(expr, func, parent_constr=False, merge=None):
         actuals = actuals[1:]
 
     skip_defaults = True # XXX
-    if not func.mv.module.builtin or func.mv.module.ident in ['random', 'itertools', 'datetime', 'ConfigParser', 'csv', 'binascii'] or (func.ident in ('sort','sorted', 'min', 'max', '__print')):
+    if not func.mv.module.builtin or func.mv.module.ident in ['random', 'itertools', 'datetime', 'ConfigParser', 'csv', 'binascii', 'mmap'] or (func.ident in ('sort','sorted', 'min', 'max', '__print')):
         if not (func.mv.module.builtin and func.ident == 'randrange'):
             skip_defaults = False
 
