@@ -83,6 +83,17 @@ __ss_int match_object::start(str *mname)
     return __index(mname, 0);
 }
 
+tuple2<__ss_int, __ss_int> *match_object::span(__ss_int matchid)
+{
+    return new tuple2<__ss_int, __ss_int>(2, start(matchid), end(matchid));
+}
+tuple2<__ss_int, __ss_int> *match_object::span(str *mname)
+{
+    return new tuple2<__ss_int, __ss_int>(2, start(mname), end(mname));
+}
+
+
+
 str *match_object::expand(str *tpl)
 {
     return new str(re->__expand(&string->unit, captured, tpl->unit));
@@ -469,7 +480,7 @@ match_object *re_object::__exec(str *subj, __ss_int pos, __ss_int endpos, __ss_i
     else if(endpos < pos) throw new error(new str("end position less than initial"));
     else nendpos = endpos;
 
-    if((unsigned int)pos >= subj->unit.size()) throw new error(new str("starting position >= string length"));
+    if(subj->unit.size()!=0 and (unsigned int)pos >= subj->unit.size()) throw new error(new str("starting position >= string length"));
 
     r = pcre_exec(
         compiled_pattern,

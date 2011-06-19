@@ -79,6 +79,8 @@ public:
     __ss_int end(str *mname);
     __ss_int start(__ss_int matchid = 0);
     __ss_int start(str *mname);
+    tuple2<__ss_int, __ss_int> *span(__ss_int matchid = 0);
+    tuple2<__ss_int, __ss_int> *span(str *mname);
 
     str *__repr__();
 };

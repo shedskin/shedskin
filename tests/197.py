@@ -217,3 +217,13 @@ test_basic()
 test_readonly()
 test_rfind()
 test_tougher_find()
+
+# re search empty string, match_object.span
+import re
+r = re.compile('^a?$')
+print r.search('').start()
+print r.search('').end()
+print r.search('').span()
+print r.search('a').start()
+print r.search('a').end()
+print r.search('a').span()
