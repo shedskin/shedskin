@@ -8,6 +8,28 @@
 #include <errno.h>
 #include <limits.h>
 
+#if (_POSIX_C_SOURCE >= 1 or _XOPEN_SOURCE or _POSIX_SOURCE or _BSD_SOURCE or _SVID_SOURCE) and (_BSD_SOURCE or _SVID_SOURCE)
+#define HAVE_STDIO_UNLOCKED
+#endif
+
+#ifndef HAVE_STDIO_UNLOCKED
+#define GETC   getc
+#define PUTC   putc
+#define FGETC  fgetc
+#define FPUTC  fputc
+#define FFLUSH fflush
+#define FERROR ferror
+#define FEOF   feof
+#else // HAVE_STDIO_UNLOCKED
+#define GETC   getc_unlocked
+#define PUTC   putc_unlocked
+#define FGETC  fgetc_unlocked
+#define FPUTC  fputc_unlocked
+#define FFLUSH fflush_unlocked
+#define FERROR ferror_unlocked
+#define FEOF   feof_unlocked
+#endif // HAVE_STDIO_UNLOCKED
+
 namespace __shedskin__ {
 
 class_ *cl_class_, *cl_none, *cl_str_, *cl_int_, *cl_bool, *cl_float_, *cl_complex, *cl_list, *cl_tuple, *cl_dict, *cl_set, *cl_object, *cl_rangeiter, *cl_xrange;
@@ -1201,9 +1223,9 @@ file *open(str *name, str *flags) {
 int file::getchar() {
     int r;
     __check_closed();
-    r = fgetc(f);
+    r = GETC(f);
 
-    if(ferror(f))
+    if(FERROR(f))
         throw new IOError();
 
     if (universal_mode) {
@@ -1211,8 +1233,8 @@ int file::getchar() {
             cr = true;
             return '\n';
         } else if (cr && r == '\n') {
-            r = fgetc(f);
-            if (ferror(f))
+            r = GETC(f);
+            if (FERROR(f))
                 throw new IOError();
             cr = (r == '\r');
         }
@@ -1223,19 +1245,16 @@ int file::getchar() {
 
 void *file::putchar(int c) {
     __check_closed();
-    fputc(c, f);
-    if(ferror(f))
+    PUTC(c, f);
+    if(FERROR(f))
         throw new IOError();
     return NULL;
 }
 
 void *file::write(str *s) {
     __check_closed();
-  //  fputs(s->unit.c_str(), f);
-
     for(unsigned int i = 0; i < s->unit.size(); i++)
         putchar(s->unit[i]);
-
     return NULL;
 }
 
@@ -1259,7 +1278,7 @@ __ss_int file::tell() {
 str *file::readline(int n) {
     __check_closed();
     int i = 0;
-    str *r = new str();
+    __line_cache.clear();
 
     while((n==-1) || (i < n)) {
         int c = getchar();
@@ -1267,13 +1286,13 @@ str *file::readline(int n) {
             print_opt.endoffile = 1;
             break;
         }
-        r->unit += c;
+        __line_cache.push_back(c);
         if(c == '\n')
             break;
         i += 1;
     }
 
-    return r;
+    return new str(&__line_cache[0], __line_cache.size());
 }
 
 str *file::read(int n) {
@@ -1313,7 +1332,7 @@ __iter<str *> *file::xreadlines() {
 
 void *file::flush() {
     __check_closed();
-    fflush(f);
+    FFLUSH(f);
     return NULL;
 }
 

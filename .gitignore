@@ -88,6 +88,7 @@ examples/yopyra
 examples/quameon/sto_atom
 examples/solitaire
 examples/sha
+examples/loop
 tests/0
 tests/1
 tests/2

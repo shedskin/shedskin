@@ -907,7 +907,6 @@ timedelta *timedelta::__div__(__ss_int n) {
 	double d,s,us;
 	d = double(days)/n;
 	s = double(seconds)/n;
-	std::cout<<(long)days*24*3600*1000000 + (long)seconds*1000000 + (long)microseconds<<std::endl;
 	us = double(microseconds)/n+(((long double)(days)/n-double(days)/n)*24*3600+(long double)(seconds)/n-s)*1000000;
     return new timedelta(0,d*24*3600+s,us,0,0,0,0);
 }
