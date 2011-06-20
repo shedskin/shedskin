@@ -1244,7 +1244,7 @@ str *__add_strs(int n, ...);
 /** Print a demangled stack backtrace of the caller function to FILE* out. */
 static void print_stacktrace(FILE *out, unsigned int max_frames = 63)
 {
-    fprintf(out, "Traceback (most recent call last):\n"); 
+    fprintf(out, "\nTraceback (most recent call last):\n"); 
 
     // storage array for stack trace address data
     void* addrlist[max_frames+1];
@@ -1323,7 +1323,7 @@ static void print_stacktrace(FILE *out, unsigned int max_frames = 63)
     free(symbollist);
 }
 
-extern class_ *cl_valueerror;
+extern class_ *cl_valueerror, *cl_eoferror;
 
 class BaseException : public pyobj {
 public:
@@ -1378,7 +1378,7 @@ public:
 
 class EOFError : public StandardError {
 public:
-    EOFError(str *msg=0) : StandardError(msg) {}
+    EOFError(str *msg=0) : StandardError(msg) { this->__class__ = cl_eoferror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_EOFError; }
 #endif

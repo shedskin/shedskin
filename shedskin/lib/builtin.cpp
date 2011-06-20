@@ -34,7 +34,7 @@ namespace __shedskin__ {
 
 class_ *cl_class_, *cl_none, *cl_str_, *cl_int_, *cl_bool, *cl_float_, *cl_complex, *cl_list, *cl_tuple, *cl_dict, *cl_set, *cl_object, *cl_rangeiter, *cl_xrange;
 
-class_ *cl_valueerror;
+class_ *cl_valueerror, *cl_eoferror;
 
 str *sp, *nl, *__fmt_s, *__fmt_H, *__fmt_d;
 __GC_STRING ws, __fmtchars;
@@ -113,6 +113,7 @@ void __init() {
     __ss_stderr->name = new str("<stderr>");
 
     cl_valueerror = new class_("ValueError", 13, 13);
+    cl_eoferror = new class_("EOFError", 14, 14);
 }
 
 /* int_ methods */
@@ -1360,13 +1361,16 @@ void file::__exit__() {
 /* builtin functions */
 
 str *raw_input(str *msg) {
-    __GC_STRING s;
-    if(msg)
-        std::cout << msg->unit;
-    std::getline(std::cin, s);
-    if(std::cin.eof())
+    if(msg and len(msg)) {
+        __ss_stdout->write(msg);
+        __ss_stdout->print_opt.lastchar = msg->unit[len(msg)-1];
+    }
+    str *s = __ss_stdin->readline();
+    if(len(s) and s->unit[len(s)-1] == '\n')
+        s->unit.erase(s->unit.end()-1, s->unit.end());
+    if(__ss_stdin->print_opt.endoffile)
         throw new EOFError();
-    return new str(s);
+    return s;
 }
 
 __ss_int __int(str *s, __ss_int base) {
@@ -2033,23 +2037,32 @@ float_ *___box(double d) {
 
 /* start, stop */
 
+void __add_missing_newline() {
+    if(__ss_stdout->print_opt.lastchar != '\n')
+        __ss_stdout->write(new str("\n"));
+}
+
 void __start(void (*initfunc)()) {
     int code = 0;
     try {
         initfunc();
+        __add_missing_newline();
     } catch (SystemExit *s) {
+        __add_missing_newline();
         if(s->message)
             print2(NULL, 0, 1, s->message);
         code = s->code;
     } catch (BaseException *e) {
-        if(e->__class__) /* XXX */
-            print2(NULL, 0, 1, __add_strs(3, e->__class__->__name__, new str(": "), e->msg));
-        else
-            print2(NULL, 0, 1, e->msg);
+        __add_missing_newline();
+        if(e->__class__) { /* XXX */
+            if(e->msg)
+                print2(NULL, 0, 1, __add_strs(3, e->__class__->__name__, new str(": "), e->msg));
+            else
+                print2(NULL, 0, 1, e->__class__->__name__);
+        } else
+            print2(NULL, 0, 1, e->msg ? e->msg : new str("error")); /* XXX */
         code = 1;
     }
-    if(__ss_stdout->print_opt.lastchar != '\n')
-        __ss_stdout->write(nl);
     std::exit(code);
 }
 
