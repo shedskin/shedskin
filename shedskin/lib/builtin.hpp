@@ -695,6 +695,7 @@ public:
 
     __iter<str *> *__iter__();
     str *next();
+    std::vector<char> __line_cache;
 };
 
 class __ss_bool {
