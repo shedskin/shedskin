@@ -14,17 +14,13 @@
 
 #ifndef HAVE_STDIO_UNLOCKED
 #define GETC   getc
-#define PUTC   putc
-#define FGETC  fgetc
-#define FPUTC  fputc
+#define FWRITE fwrite
 #define FFLUSH fflush
 #define FERROR ferror
 #define FEOF   feof
 #else // HAVE_STDIO_UNLOCKED
 #define GETC   getc_unlocked
-#define PUTC   putc_unlocked
-#define FGETC  fgetc_unlocked
-#define FPUTC  fputc_unlocked
+#define FWRITE fwrite_unlocked
 #define FFLUSH fflush_unlocked
 #define FERROR ferror_unlocked
 #define FEOF   feof_unlocked
@@ -1182,148 +1178,108 @@ __ss_bool class_::__eq__(pyobj *c) {
 
 /* file methods */
 
-file::file() {
-    print_opt.endoffile = print_opt.space = 0;
-    print_opt.lastchar = '\n';
-    universal_mode = false;
-}
-
-file::file(FILE *g) {
-    f = g;
-    print_opt.endoffile = print_opt.space = 0;
-    print_opt.lastchar = '\n';
-    universal_mode = false;
-}
-
-file::file(str *name, str *flags) {
-    universal_mode = false;
-    cr = false;
-    if (!flags) {
+file::file(str *file_name, str *flags) {
+    if (flags)
+        options.universal_mode = (flags->unit.find_first_of("Uu") != std::string::npos);
+    else
         flags = new str("r");
-    } else {
-        for (__GC_STRING::iterator it = flags->unit.begin(); it != flags->unit.end(); ++it) {
-            if (*it == 'u' || *it == 'U') {
-                universal_mode = true;
-                break;
-            }
-        }
-    }
-    f = fopen(name->unit.c_str(), flags->unit.c_str());
-    this->name = name;
-    this->mode = flags;
-    if (!f)
-        throw new IOError(name);
-    print_opt.endoffile = print_opt.space = 0;
-    print_opt.lastchar = '\n';
+    f = fopen(file_name->unit.c_str(), flags->unit.c_str());
+    if(f == 0)
+        throw new IOError(file_name);
+    name = file_name;
+    mode = flags;
 }
 
 file *open(str *name, str *flags) {
     return new file(name, flags);
 }
 
-int file::getchar() {
-    int r;
-    __check_closed();
-    r = GETC(f);
-
-    if(FERROR(f))
-        throw new IOError();
-
-    if (universal_mode) {
-        if (r == '\r') {
-            cr = true;
-            return '\n';
-        } else if (cr && r == '\n') {
-            r = GETC(f);
-            if (FERROR(f))
-                throw new IOError();
-            cr = (r == '\r');
-        }
-    }
-
-    return r;
-}
-
-void *file::putchar(int c) {
-    __check_closed();
-    PUTC(c, f);
-    if(FERROR(f))
-        throw new IOError();
-    return NULL;
-}
-
 void *file::write(str *s) {
     __check_closed();
-    for(unsigned int i = 0; i < s->unit.size(); i++)
-        putchar(s->unit[i]);
+    if(f) {
+        size_t size = s->unit.size();
+        if(FWRITE(s->unit.data(), 1, size, f) != size and __error())
+            throw new IOError();
+    }
     return NULL;
-}
-
-void file::__check_closed() {
-    if(closed)
-        throw new ValueError(new str("I/O operation on closed file"));
 }
 
 void *file::seek(__ss_int i, __ss_int w) {
     __check_closed();
-    fseek(f, i, w);
-    print_opt.endoffile = 0; /* XXX add check */
+    if(f) {
+        if(fseek(f, i, w) == -1)
+            throw new IOError();
+    }
     return NULL;
 }
 
 __ss_int file::tell() {
     __check_closed();
-    return ftell(f);
+    if(f) {
+        long status = ftell(f);
+        if(status == -1)
+            throw new IOError();
+        return __ss_int(status);
+    }
+    return -1;
+}
+
+inline int file::__getchar() {
+    int r = GETC(f);
+    if (options.universal_mode) {
+        if (r == '\r') {
+            options.cr = true;
+            return '\n';
+        } else if (options.cr && r == '\n') {
+            if(not __eof())
+                r = GETC(f);
+            options.cr = (r == '\r');
+        }
+    }
+    return r;
 }
 
 str *file::readline(int n) {
     __check_closed();
-    int i = 0;
-    __line_cache.clear();
-
-    while((n==-1) || (i < n)) {
-        int c = getchar();
-        if(c == EOF) {
-            print_opt.endoffile = 1;
+    __read_cache.clear();
+    for(size_t i = 0; i < size_t(n); ++i) {
+        const int c = __getchar();
+        if(c == EOF)
             break;
-        }
-        __line_cache.push_back(c);
+        __read_cache.push_back(c);
         if(c == '\n')
             break;
-        i += 1;
     }
+    if(__error())
+        throw new IOError();
 
-    return new str(&__line_cache[0], __line_cache.size());
+    return new str(&__read_cache[0], __read_cache.size());
 }
 
 str *file::read(int n) {
     __check_closed();
-    int i = 0;
-    str *r = new str();
-
-    while((n==-1) || (i < n)) {
-        int c = getchar();
-        if(c == EOF) {
-            print_opt.endoffile = 1;
+    __read_cache.clear();
+    for(size_t i = 0; i < size_t(n); ++i) {
+        const int c = __getchar();
+        if(c == EOF)
             break;
-        }
-        r->unit += c;
-        i += 1;
+        __read_cache.push_back(c);
     }
+    if(__error())
+        throw new IOError();
 
-    return r;
+    return new str(&__read_cache[0], __read_cache.size());
 }
 
-list<str *> *file::readlines() {
+list<str *> *file::readlines(__ss_int /*size_hint*/) {
     __check_closed();
     list<str *> *lines = new list<str *>();
-    while(!print_opt.endoffile) {
+    while(not __eof()) {
         str *line = readline();
-        if(print_opt.endoffile && !len(line))
+        if(line->unit.empty())
             break;
         lines->append(line);
     }
-
     return lines;
 }
 
@@ -1331,21 +1287,46 @@ __iter<str *> *file::xreadlines() {
     return this->__iter__();
 }
 
-void *file::flush() {
-    __check_closed();
-    FFLUSH(f);
+void *file::close() {
+    if(f and not closed) {
+        flush();
+        if(fclose(f))
+            throw new IOError();
+        closed = 1;
+    }
     return NULL;
 }
 
-void *file::close() {
-    fclose(f);
-    closed = 1;
+void *file::flush() {
+    __check_closed();
+    if(f)
+        if(FFLUSH(f))
+            throw new IOError();
     return NULL;
 }
 
 int file::__ss_fileno() {
     __check_closed();
-    return fileno(f);
+    if(f)
+        return fileno(f);
+    return -1;
+}
+__ss_bool file::isatty()
+{
+    __check_closed();
+    return ___bool(::isatty(__ss_fileno()));
+}
+
+void *file::truncate(int size) {
+    __check_closed();
+    flush();
+    if(size == -1)
+        size = tell();  
+#if(_BSD_SOURCE || _XOPEN_SOURCE >= 500 || _POSIX_C_SOURCE >= 200112L)
+    if(ftruncate(__ss_fileno(), size) == -1)
+        throw new IOError();
+#endif
+    return NULL;
 }
 
 str *file::__repr__() {
@@ -1358,17 +1339,48 @@ void file::__exit__() {
     close();
 }
 
+bool file::__error() {
+    return (FERROR(f) != 0);
+}
+
+bool file::__eof() {
+    return (FEOF(f) != 0);
+}
+
+str *file::next() {
+    if(__eof())
+        throw new StopIteration();
+    str *line = readline();
+    if(__eof() and !len(line))
+        throw new StopIteration();
+    return line;
+}
+
+/* file iteration */
+
+__iter<str *> *file::__iter__() {
+    return new __fileiter(this);
+}
+
+__fileiter::__fileiter(file *p) {
+    this->p = p;
+}
+
+str *__fileiter::next() {
+    return p->next();
+}
+
 /* builtin functions */
 
 str *raw_input(str *msg) {
     if(msg and len(msg)) {
         __ss_stdout->write(msg);
-        __ss_stdout->print_opt.lastchar = msg->unit[len(msg)-1];
+        __ss_stdout->options.lastchar = msg->unit[len(msg)-1];
     }
     str *s = __ss_stdin->readline();
     if(len(s) and s->unit[len(s)-1] == '\n')
         s->unit.erase(s->unit.end()-1, s->unit.end());
-    if(__ss_stdin->print_opt.endoffile)
+    if(__ss_stdin->__eof())
         throw new EOFError();
     return s;
 }
@@ -2038,7 +2050,7 @@ float_ *___box(double d) {
 /* start, stop */
 
 void __add_missing_newline() {
-    if(__ss_stdout->print_opt.lastchar != '\n')
+    if(__ss_stdout->options.lastchar != '\n')
         __ss_stdout->write(new str("\n"));
 }
 
@@ -2070,7 +2082,6 @@ void __ss_exit(int code) {
     throw new SystemExit(code);
 }
 
-
 /* print .., */
 
 void print(int n, file *f, str *end, str *sep, ...) {
@@ -2100,7 +2111,7 @@ void print2(file *f, int comma, int n, ...) {
     va_end(args);
     if (!f)
         f = __ss_stdout;
-    print_options *p_opt = &f->print_opt;
+    __file_options *p_opt = &f->options;
     str *s = __mod5(__print_cache, sp);
     if(len(s)) {
         if(p_opt->space && (!isspace(p_opt->lastchar) || p_opt->lastchar==' ') && s->unit[0] != '\n') 
@@ -2115,29 +2126,6 @@ void print2(file *f, int comma, int n, ...) {
         p_opt->lastchar = '\n';
     }
     p_opt->space = comma;
-}
-
-/* file iteration */
-
-__iter<str *> *file::__iter__() {
-    return new __fileiter(this);
-}
-
-str *file::next() {
-    if(print_opt.endoffile)
-        throw new StopIteration();
-    str *line = readline();
-    if(print_opt.endoffile && !len(line))
-        throw new StopIteration();
-    return line;
-}
-
-__fileiter::__fileiter(file *p) {
-    this->p = p;
-}
-
-str *__fileiter::next() {
-    return p->next();
 }
 
 /* glue */

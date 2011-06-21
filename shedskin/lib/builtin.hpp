@@ -521,7 +521,7 @@ public:
     PyObject *__to_py__();
 #endif
 
-	// used internally
+    // used internally
     dictentry<K,V>* lookup(K key, long hash) const;
     void insert_key(K key, V value, long hash);
     void insert_clean(K key, V value, long hash);
@@ -642,60 +642,6 @@ public:
     void insert_clean(T key, long hash);
     int next(int *pos_ptr, setentry<T> **entry_ptr);
     void resize(int minused);
-};
-
-struct print_options {
-    int endoffile;
-    char lastchar;
-    int space;
-    print_options() {
-        lastchar = '\n';
-        space = 0;
-    }
-};
-
-class file : public pyiter<str *> {
-public:
-    FILE *f;
-    print_options print_opt;
-
-    str *name;
-    str *mode;
-    __ss_int closed;
-
-    bool universal_mode;
-    bool cr;
-
-    file(str *name, str *mode=0);
-    file(FILE *g);
-    file();
-
-    str *read(int n=-1);
-    str *readline(int n=-1);
-    list<str *> *readlines();
-    __iter<str *> *xreadlines();
-    void *write(str *s);
-    template<class U> void *writelines(U *iter);
-    void *flush();
-    int __ss_fileno();
-
-    void __check_closed();
-
-    virtual int getchar();
-    virtual void *putchar(int c);
-    virtual void *seek(__ss_int i, __ss_int w=0);
-    virtual void *close();
-
-    __ss_int tell();
-
-    void __enter__();
-    void __exit__();
-
-    str *__repr__();
-
-    __iter<str *> *__iter__();
-    str *next();
-    std::vector<char> __line_cache;
 };
 
 class __ss_bool {
@@ -830,13 +776,6 @@ public:
 
     __setiter<T>(set<T> *p);
     T next();
-};
-
-class __fileiter : public __iter<str *> {
-public:
-    file *p;
-    __fileiter(file *p);
-    str *next();
 };
 
 class __xrange : public pyiter<__ss_int> {
@@ -1667,6 +1606,66 @@ namespace msvc_typeof_impl {
 
 #define typeof(expression) msvc_typeof_impl::msvc_extract_type<sizeof(msvc_typeof_impl::vartypeID(expression))>::id2type::type
 #endif
+
+/* file objects */
+
+struct __file_options {
+    char lastchar;
+    int space;
+    bool universal_mode;
+    bool cr;
+    __file_options() : lastchar('\n'), space(0), universal_mode(false), cr(false) {}
+};
+
+class file : public pyiter<str *> {
+public:
+    str *name;
+    str *mode;
+
+    FILE *f;
+    __ss_int closed;
+    __file_options options;
+    std::vector<char> __read_cache;
+
+    file(FILE *g=0) : f(g) {}
+    file(str *name, str *mode=0);
+
+    virtual void * close();
+    virtual void * flush();
+    virtual int  __ss_fileno();
+    virtual __ss_bool isatty();
+    virtual str *  next();
+    virtual str *  read(int n=-1);
+    virtual str *  readline(int n=-1);
+    list<str *> *  readlines(__ss_int size_hint=-1);
+    virtual void * seek(__ss_int i, __ss_int w=0);
+    virtual __ss_int tell();
+    virtual void * truncate(int size);
+    virtual void * write(str *s);
+    template<class U> void *writelines(U *iter);
+    __iter<str *> *xreadlines();
+    virtual void __enter__();
+    virtual void __exit__();
+    virtual __iter<str *> *__iter__();
+    virtual str *__repr__();
+    
+    virtual bool __eof();
+    virtual bool __error();
+
+    int __getchar();
+    
+    inline void __check_closed() {
+        if(closed)
+            throw new ValueError(new str("I/O operation on closed file"));
+    }
+};
+
+class __fileiter : public __iter<str *> {
+public:
+    file *p;
+    __fileiter(file *p);
+    str *next();
+};
 
 /* with statement */
 

@@ -1,4 +1,3 @@
-
 # optional start/end arguments for str.{count, startswith, endswith}
 
 def hop(b):
@@ -40,6 +39,8 @@ s = cStringIO.StringIO(file('testdata/hopsakee').read())
 print s.readlines()
 
 s = file('testdata/hopsakee')
+print s.name
+print s.mode
 print s.read()
 
 f = file('testdata/hopsakee')
@@ -53,13 +54,17 @@ s.seek(-3, 2)
 print s.read()
 
 s = cStringIO.StringIO()
+print s.tell()
 s.write('hallo\njoh')
+print s.tell()
 s.seek(0, 0)
+print s.tell()
 print s.readlines()
+print s.tell()
 s.seek(0, 0)
+print s.tell()
 s.write('hoi')
+print s.tell()
 print s.readlines()
-
+print s.tell()
 blah = set([])
-
-

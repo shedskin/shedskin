@@ -408,23 +408,14 @@ void *renames(str* old, str* _new) {
     return NULL;
 }
 
-popen_pipe::popen_pipe(str *cmd, str *mode) {
-    FILE* fp;
-
-    if(!mode)
-        mode = new str("r");
-    fp = ::popen(cmd->unit.c_str(), mode->unit.c_str());
-    this->name = cmd;
-    this->mode = mode;
-
-    print_opt.endoffile=print_opt.space=0;
-    print_opt.lastchar='\n';
-}
-
-popen_pipe::popen_pipe(FILE* pipe) {
-    f = pipe;
-    print_opt.endoffile=print_opt.space=0;
-    print_opt.lastchar='\n';
+popen_pipe::popen_pipe(str *cmd, str *flags) {
+    if(flags == 0)
+        flags = new str("r");
+    f = ::popen(cmd->unit.c_str(), flags->unit.c_str());
+    if(f == 0)
+        throw new IOError(cmd);
+    name = cmd;
+    mode = flags;
 }
 
 void *popen_pipe::close() {

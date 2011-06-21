@@ -76,7 +76,8 @@ __ss_int write(__ss_int fd, str *s);
 class popen_pipe : public file {
 public:
     popen_pipe(str *name, str *mode=0);
-    popen_pipe(FILE* pipe);
+    popen_pipe(FILE* pipe=0) : file(pipe) {}
+
     void *close();
 };
 
