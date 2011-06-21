@@ -680,7 +680,7 @@ class file(pyiter):
         return ''
     def readline(self, n=-1):
         return ''
-    def readlines(self):
+    def readlines(self, sizehint=-1):
         return ['']
     def xreadlines(self):
         return iter(self)
@@ -705,6 +705,12 @@ class file(pyiter):
 
     def __repr__(self):
         return ''
+
+    def isatty(self):
+        return False
+
+    def truncate(self, size=-1):
+        pass
 
     def next(self):
         return ''
