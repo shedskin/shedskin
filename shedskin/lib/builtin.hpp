@@ -1255,7 +1255,7 @@ static void print_stacktrace(FILE *out)
 }
 #endif
 
-extern class_ *cl_valueerror, *cl_eoferror;
+extern class_ *cl_stopiteration, *cl_assertionerror, *cl_eoferror, *cl_floatingpointerror, *cl_keyerror, *cl_indexerror, *cl_typeerror, *cl_ioerror, *cl_valueerror, *cl_zerodivisionerror, *cl_keyboardinterrupt, *cl_memoryerror, *cl_nameerror, *cl_notimplementederror, *cl_oserror, *cl_overflowerror, *cl_runtimeerror, *cl_syntaxerror, *cl_systemerror, *cl_systemexit;
 
 class BaseException : public pyobj {
 public:
@@ -1293,8 +1293,9 @@ public:
 
 class StopIteration : public Exception {
 public:
-    StopIteration(str *msg=0) : Exception(msg) {}
+    StopIteration(str *msg=0) : Exception(msg) { this->__class__ = cl_stopiteration; }
 };
+
 class StandardError : public Exception {
 public:
     StandardError(str *msg=0) : Exception(msg) {}
@@ -1302,7 +1303,7 @@ public:
 
 class AssertionError : public StandardError {
 public:
-    AssertionError(str *msg=0) : StandardError(msg) {}
+    AssertionError(str *msg=0) : StandardError(msg) { this->__class__ = cl_assertionerror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_AssertionError; }
 #endif
@@ -1318,7 +1319,7 @@ public:
 
 class FloatingPointError : public StandardError {
 public:
-    FloatingPointError(str *msg=0) : StandardError(msg) {}
+    FloatingPointError(str *msg=0) : StandardError(msg) { this->__class__ = cl_floatingpointerror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_FloatingPointError; }
 #endif
@@ -1326,7 +1327,7 @@ public:
 
 class KeyError : public StandardError {
 public:
-    KeyError(str *msg=0) : StandardError(msg) {}
+    KeyError(str *msg=0) : StandardError(msg) { this->__class__ = cl_keyerror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_KeyError; }
 #endif
@@ -1334,7 +1335,7 @@ public:
 
 class IndexError : public StandardError {
 public:
-    IndexError(str *msg=0) : StandardError(msg) {}
+    IndexError(str *msg=0) : StandardError(msg) { this->__class__ = cl_indexerror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_IndexError; }
 #endif
@@ -1342,7 +1343,7 @@ public:
 
 class TypeError : public StandardError {
 public:
-    TypeError(str *msg=0) : StandardError(msg) {}
+    TypeError(str *msg=0) : StandardError(msg) { this->__class__ = cl_typeerror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_TypeError; }
 #endif
@@ -1366,7 +1367,7 @@ public:
 
 class KeyboardInterrupt : public BaseException {
 public:
-    KeyboardInterrupt(str *msg=0) : BaseException(msg) {}
+    KeyboardInterrupt(str *msg=0) : BaseException(msg) { this->__class__ = cl_keyboardinterrupt; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_KeyboardInterrupt; }
 #endif
@@ -1374,7 +1375,7 @@ public:
 
 class MemoryError : public StandardError {
 public:
-    MemoryError(str *msg=0) : StandardError(msg) {}
+    MemoryError(str *msg=0) : StandardError(msg) { this->__class__ = cl_memoryerror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_MemoryError; }
 #endif
@@ -1382,7 +1383,7 @@ public:
 
 class NameError : public StandardError {
 public:
-    NameError(str *msg=0) : StandardError(msg) {}
+    NameError(str *msg=0) : StandardError(msg) { this->__class__ = cl_nameerror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_NameError; }
 #endif
@@ -1390,7 +1391,7 @@ public:
 
 class NotImplementedError : public StandardError {
 public:
-    NotImplementedError(str *msg=0) : StandardError(msg) {}
+    NotImplementedError(str *msg=0) : StandardError(msg) { this->__class__ = cl_notimplementederror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_NotImplementedError; }
 #endif
@@ -1414,7 +1415,7 @@ public:
 
 class OverflowError : public StandardError {
 public:
-    OverflowError(str *msg=0) : StandardError(msg) {}
+    OverflowError(str *msg=0) : StandardError(msg) { this->__class__ = cl_overflowerror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_OverflowError; }
 #endif
@@ -1422,7 +1423,7 @@ public:
 
 class RuntimeError : public StandardError {
 public:
-    RuntimeError(str *msg=0) : StandardError(msg) {}
+    RuntimeError(str *msg=0) : StandardError(msg) { this->__class__ = cl_runtimeerror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_RuntimeError; }
 #endif
@@ -1430,7 +1431,7 @@ public:
 
 class SyntaxError : public StandardError {
 public:
-    SyntaxError(str *msg=0) : StandardError(msg) {}
+    SyntaxError(str *msg=0) : StandardError(msg) { this->__class__ = cl_syntaxerror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_SyntaxError; }
 #endif
@@ -1438,7 +1439,7 @@ public:
 
 class SystemError : public StandardError {
 public:
-    SystemError(str *msg=0) : StandardError(msg) {}
+    SystemError(str *msg=0) : StandardError(msg) { this->__class__ = cl_systemerror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_SystemError; }
 #endif
@@ -1448,9 +1449,9 @@ class SystemExit : public BaseException {
 public:
     int code;
     str *message;
-    SystemExit(str *msg) { this->message = msg; this->msg = msg; this->code = 1; }
-    SystemExit(__ss_int code) { this->message = NULL; this->msg = __str(code); this->code = code; }
-    SystemExit() { this->message = NULL; this->msg = __str(0); this->code = 0; }
+    SystemExit(str *msg) { this->__class__ = cl_systemexit; this->message = msg; this->msg = msg; this->code = 1; }
+    SystemExit(__ss_int code) { this->__class__ = cl_systemexit; this->message = NULL; this->msg = __str(code); this->code = code; }
+    SystemExit() { this->__class__ = cl_systemexit; this->message = NULL; this->msg = __str(0); this->code = 0; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_SystemExit; }
 #endif
@@ -1466,7 +1467,7 @@ public:
 
 class ZeroDivisionError : public StandardError {
 public:
-    ZeroDivisionError(str *msg=0) : StandardError(msg) {}
+    ZeroDivisionError(str *msg=0) : StandardError(msg) { this->__class__ = cl_zerodivisionerror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_ZeroDivisionError; }
 #endif

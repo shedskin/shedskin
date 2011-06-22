@@ -30,7 +30,7 @@ namespace __shedskin__ {
 
 class_ *cl_class_, *cl_none, *cl_str_, *cl_int_, *cl_bool, *cl_float_, *cl_complex, *cl_list, *cl_tuple, *cl_dict, *cl_set, *cl_object, *cl_rangeiter, *cl_xrange;
 
-class_ *cl_valueerror, *cl_eoferror;
+class_ *cl_stopiteration, *cl_assertionerror, *cl_eoferror, *cl_floatingpointerror, *cl_keyerror, *cl_indexerror, *cl_typeerror, *cl_ioerror, *cl_valueerror, *cl_zerodivisionerror, *cl_keyboardinterrupt, *cl_memoryerror, *cl_nameerror, *cl_notimplementederror, *cl_oserror, *cl_overflowerror, *cl_runtimeerror, *cl_syntaxerror, *cl_systemerror, *cl_systemexit;
 
 str *sp, *nl, *__fmt_s, *__fmt_H, *__fmt_d;
 __GC_STRING ws, __fmtchars;
@@ -108,8 +108,27 @@ void __init() {
     __ss_stderr = new file(stderr);
     __ss_stderr->name = new str("<stderr>");
 
-    cl_valueerror = new class_("ValueError", 13, 13);
-    cl_eoferror = new class_("EOFError", 14, 14);
+    cl_stopiteration = new class_("StopIteration", 13, 13);
+    cl_assertionerror = new class_("AssertionError", 14, 14);
+    cl_eoferror = new class_("EOFError", 15, 15);
+    cl_floatingpointerror = new class_("FloatingPointError", 16, 16);
+    cl_keyerror = new class_("KeyError", 17, 17);
+    cl_indexerror = new class_("IndexError", 18, 18);
+    cl_typeerror = new class_("TypeError", 19, 19);
+    cl_ioerror = new class_("IOError", 20, 20);
+    cl_valueerror = new class_("ValueError", 21, 21);
+    cl_zerodivisionerror = new class_("ZeroDivisionError", 22, 22);
+    cl_keyboardinterrupt = new class_("KeyboardInterrupt", 23, 23);
+    cl_memoryerror = new class_("MemoryError", 24, 24);
+    cl_nameerror = new class_("NameError", 25, 25);
+    cl_notimplementederror = new class_("NotImplementedError", 26, 26);
+    cl_oserror = new class_("OSError", 27, 27);
+    cl_overflowerror = new class_("OverflowError", 28, 28);
+    cl_runtimeerror = new class_("RuntimeError", 29, 29);
+    cl_syntaxerror = new class_("SyntaxError", 30, 30);
+    cl_systemerror = new class_("SystemError", 31, 31);
+    cl_systemexit = new class_("SystemExit", 32, 32);
+
 }
 
 /* int_ methods */
@@ -2178,6 +2197,7 @@ template<> void * __to_ss(PyObject *p) {
 /* Exceptions */
 OSError::OSError(str *filename) {
     this->filename = filename;
+    this->__class__ = cl_oserror;
     __ss_errno = errno;
     message = new str("");
     strerror = new str(::strerror(__ss_errno));
@@ -2191,6 +2211,7 @@ str *OSError::__repr__() {
 
 IOError::IOError(str *filename) {
     this->filename = filename;
+    this->__class__ = cl_ioerror;
     __ss_errno = errno;
     message = new str("");
     strerror = new str(::strerror(__ss_errno));
