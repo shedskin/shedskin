@@ -125,7 +125,7 @@ class_ *cl_reader;
 
 void *reader::parse_process_char(str *c) {
     Excel *dialect;
-    __ss_int __10, __11, __12, __13, __14, __7, __8, __9;
+    __ss_int __11, __13, __7, __9;
 
     dialect = this->dialect;
     if ((this->state==START_RECORD)) {
@@ -338,7 +338,7 @@ class_ *cl_writer;
 __ss_int writer::join_append_data(str *field, __ss_int quote_empty, __ss_int quoted) {
     str *lineterm;
     Excel *dialect;
-    __ss_int __17, __18, __19, __20, __21, __22, __23, want_escape;
+    __ss_int __18, __19, __20, __22, want_escape;
 
     dialect = this->dialect;
     lineterm = dialect->lineterminator;
@@ -673,7 +673,7 @@ list<str *> *list_dialects() {
 
 Excel *_get_dialect(str *name, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
     Excel *dialect;
-    __ss_int __2, __3;
+    __ss_int __2;
 
     if (__OR((name==NULL), __eq(name, const_24), 2)) {
         dialect = (new Excel(1));

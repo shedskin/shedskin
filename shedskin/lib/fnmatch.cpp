@@ -70,7 +70,6 @@ list<str *> *filter(list<str *> *names, str *pat) {
     list<str *> *__0, *result;
     str *name, *res;
     __re__::re_object *cpat;
-    __iter<str *> *__1, *__4;
     __ss_int __2;
     list<str *>::for_in_loop __123;
 
@@ -118,7 +117,7 @@ str *translate(str *pat) {
     There is no way to quote meta-characters.
     */
     str *c, *res, *stuff;
-    __ss_int __10, __11, __12, __6, __7, __8, __9, i, j, n;
+    __ss_int __11, __6, __7, __9, i, j, n;
 
     __6 = len(pat);
     i = 0;

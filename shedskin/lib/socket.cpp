@@ -227,9 +227,6 @@ socket *socket::bind(socket::inet_address address)
     if (family != AF_INET)
         throw new ValueError(invalid_address);
 
-    const char *host = address->first->unit.c_str();
-    int port = address->second;
-
     sockaddr_in sin;
     tuple_to_sin_addr(&sin, address);
     return bind(reinterpret_cast<sockaddr *>(&sin), sizeof(sin));
@@ -249,9 +246,7 @@ socket *socket::connect(socket::inet_address address) {
     int port = address->second;
 
     sockaddr_in sin;
-    sockaddr* sa = reinterpret_cast<sockaddr *>(&sin);
     memset(&sin, 0, sizeof(sin));
-    socklen_t salen = sizeof(sin);
     sin.sin_family = family;
     sin.sin_port = htons(port);
     sin.sin_addr.s_addr = string_to_addr(host);
