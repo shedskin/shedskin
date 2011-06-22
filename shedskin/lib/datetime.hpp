@@ -75,12 +75,12 @@ extern class_ *cl_tzinfo;
 class tzinfo : public pyobj {
 public:
     tzinfo(){__class__=cl_tzinfo;};
-    virtual timedelta *utcoffset(datetime *dt) {throw new NotImplementedError(new str("a tzinfo subclass must implement utcoffset()"));};
-    virtual timedelta *dst(datetime *dt) {throw new NotImplementedError(new str("a tzinfo subclass must implement dst()"));};
-    virtual str *tzname(datetime *dt) {throw new NotImplementedError(new str("a tzinfo subclass must implement tzname()"));};
+    virtual timedelta *utcoffset(datetime *) {throw new NotImplementedError(new str("a tzinfo subclass must implement utcoffset()"));};
+    virtual timedelta *dst(datetime *) {throw new NotImplementedError(new str("a tzinfo subclass must implement dst()"));};
+    virtual str *tzname(datetime *) {throw new NotImplementedError(new str("a tzinfo subclass must implement tzname()"));};
     virtual datetime *fromutc(datetime *dt);
 	str *minutes_to_str(datetime *dt);
-    __ss_int __init__() {};
+    void __init__() {};
 };
 
 

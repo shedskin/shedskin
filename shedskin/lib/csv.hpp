@@ -46,7 +46,7 @@ public:
     __ss_int doublequote;
 
     Excel() {}
-    Excel(__ss_int __ss_init) {
+    Excel(__ss_int) {
         this->__class__ = cl_Excel;
         __init__();
     }

@@ -267,6 +267,7 @@ template<class T> void *array<T>::__setitem__(__ss_int i, T t) {
     fillbuf(t);
     for(unsigned int j=0; j<itemsize; j++)
         this->units[i*itemsize+j] = buffy[j];
+    return NULL;
 }
 template<> void *array<str *>::__setitem__(__ss_int i, str *t);
 
@@ -274,6 +275,7 @@ template<class T> void *array<T>::insert(__ss_int i, T t) {
     i = __wrap(this, i);
     this->units.insert(this->units.begin()+(i*itemsize), itemsize, '\0');
     this->__setitem__(i, t);
+    return NULL;
 }
 
 template<class T> void *array<T>::__delitem__(__ss_int i) {
@@ -321,6 +323,7 @@ template<class T> void *array<T>::byteswap() { /* standard C function? */
 
 template<class T> void *array<T>::tofile(file *f) {
     f->write(this->tostring());
+    return NULL;
 }
 
 template<class T> void *array<T>::fromfile(file *f, __ss_int n) {
