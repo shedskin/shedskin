@@ -134,7 +134,7 @@ __ss_int  default_21;
 
 static inline list<tuple2<str *, str *> *> *list_comp_0(list<str *> *options, dict<str *, str *> *d) {
     list<str *> *__56;
-    __iter<str *> *__57;
+
     str *option;
     __ss_int __58;
     list<tuple2<str *, str *> *> *result = new list<tuple2<str *, str *> *>();
@@ -150,7 +150,7 @@ static inline list<tuple2<str *, str *> *> *list_comp_0(list<str *> *options, di
 
 static inline list<tuple2<str *, str *> *> *list_comp_1(dict<str *, str *> *d, ConfigParser *self, list<str *> *options, str *section) {
     list<str *> *__59;
-    __iter<str *> *__60;
+
     str *option;
     __ss_int __61;
     list<tuple2<str *, str *> *> *result = new list<tuple2<str *, str *> *>();
@@ -324,7 +324,7 @@ void *RawConfigParser::_set(str *section, str *option, str *value) {
     /**
     Set an option.
     */
-    __ss_int __16, __17;
+    __ss_int __16;
     dict<str *, str *> *sectdict;
 
     if (__OR((!___bool(section)), __eq(section, DEFAULTSECT), 16)) {
@@ -355,7 +355,7 @@ __ss_bool RawConfigParser::remove_option(str *section, str *option) {
     /**
     Remove an option.
     */
-    __ss_int __30, __31;
+    __ss_int __30;
     __ss_bool existed;
     dict<str *, str *> *sectdict;
 
@@ -395,8 +395,8 @@ void *RawConfigParser::__init__(dict<str *, str *> *defaults) {
     tuple2<str *, str *> *__0;
     str *key, *value;
     list<tuple2<str *, str *> *> *__1;
-    dict<str *, str *> *__4;
-    __iter<tuple2<str *, str *> *> *__2;
+
+
     list<tuple2<str *, str *> *>::for_in_loop __123;
 
     this->_sections = (new dict<str *, dict<str *, str *> *>());
@@ -418,7 +418,7 @@ __ss_bool RawConfigParser::has_option(str *section, str *option) {
     /**
     Check for the existence of a given option in a given section.
     */
-    __ss_int __12, __13, __15;
+    __ss_int __12;
     __ss_bool __14;
 
     if (__OR((!___bool(section)), __eq(section, DEFAULTSECT), 12)) {
@@ -439,13 +439,13 @@ void *RawConfigParser::write(file *fp) {
     /**
     Write an .ini-format representation of the configuration state.
     */
-    __ss_int __22, __25, __29;
-    dict<str *, dict<str *, str *> *> *__23;
+    __ss_int __22, __29;
+
     str *key, *section, *value;
     tuple2<str *, str *> *__19, *__26;
-    __iter<str *> *__24;
+
     list<tuple2<str *, str *> *> *__20, *__27;
-    __iter<tuple2<str *, str *> *> *__21, *__28;
+
     list<tuple2<str *, str *> *>::for_in_loop __123;
 
     if (___bool(this->_defaults)) {
@@ -490,7 +490,7 @@ void *RawConfigParser::add_section(str *section) {
     Raise DuplicateSectionError if a section by the specified name
     already exists.
     */
-    dict<str *, dict<str *, str *> *> *__5;
+
 
     if ((this->_sections)->__contains__(section)) {
         throw ((new DuplicateSectionError(section)));
@@ -507,7 +507,7 @@ list<str *> *RawConfigParser::sections() {
     return (this->_sections)->keys();
 }
 
-str *RawConfigParser::get(str *section, str *option, __ss_int raw, dict<str *, str *> *vars) {
+str *RawConfigParser::get(str *section, str *option, __ss_int, dict<str *, str *> *) {
     str *opt;
 
     opt = this->optionxform(option);
@@ -552,7 +552,7 @@ list<str *> *RawConfigParser::read(list<str *> *filenames) {
     Return list of successfully read files.
     */
     list<str *> *__7, *read_ok;
-    __iter<str *> *__8;
+
     str *filename;
     __ss_int __9;
     file *fp;
@@ -615,10 +615,10 @@ void *RawConfigParser::_read(file *fp, str *fpname) {
     and just about everything else are ignored.
     */
     __re__::match_object *mo;
-    __ss_int __33, __34, __35, __36, __41, __42, __43, __44, lineno, pos;
-    dict<str *, dict<str *, str *> *> *__40;
+    __ss_int __33, __35, __41, __43, lineno, pos;
+
     ParsingError *e;
-    str *__37, *__38, *__39, *line, *optname, *optval, *sectname, *value, *vi;
+    str *line, *optname, *optval, *sectname, *value, *vi;
     dict<str *, str *> *cursect;
 
     cursect = 0;
@@ -779,7 +779,7 @@ str *ConfigParser::get(str *section, str *option, __ss_int raw, dict<str *, str 
     str *key, *value;
     list<tuple2<str *, str *> *> *__47;
     dict<str *, str *> *d;
-    __iter<tuple2<str *, str *> *> *__48;
+
     list<tuple2<str *, str *> *>::for_in_loop __123;
 
     d = (this->_defaults)->copy();
@@ -834,7 +834,7 @@ list<tuple2<str *, str *> *> *ConfigParser::items(str *section, __ss_int raw, di
     str *key, *value;
     list<tuple2<str *, str *> *> *__53;
     dict<str *, str *> *d;
-    __iter<tuple2<str *, str *> *> *__54;
+
     list<tuple2<str *, str *> *>::for_in_loop __123;
 
     d = (this->_defaults)->copy();
