@@ -2027,8 +2027,8 @@ template <class K, class V> int characterize(dict<K,V> *a, dict<K,V> *b, V *pval
 {
 	int i;
 	int difference_found = 0;
-	K akey;
-	V aval;
+	K akey = 0;
+	V aval = 0;
 	int cmp;
 
 	for (i = 0; i <= a->mask; i++) {
