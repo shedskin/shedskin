@@ -17,7 +17,10 @@ public:
     str * readline(int n=-1);
     void *seek(__ss_int i, __ss_int w=0);
     __ss_int tell() { return pos; }
-    void *truncate(int size=-1) { s->unit.resize(size == -1 ? pos : size); }
+    void *truncate(int size=-1) { 
+        s->unit.resize(size == -1 ? pos : size); 
+        return NULL;
+    }
     void *write(str* data);
 
     bool __error() { return false; }
