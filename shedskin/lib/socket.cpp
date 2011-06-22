@@ -138,14 +138,13 @@ str* make_errstring(const char *prefix)
 }
 
 str *socket::getsockopt(__ss_int level, __ss_int optname, __ss_int value) {
-
     socklen_t buflen = value;
-    char buf[buflen];
+    std::vector<char> buf(buflen);
 
-    if (::getsockopt(_fd, level, optname, buf, &buflen) == SOCKET_ERROR)
+    if (::getsockopt(_fd, level, optname, buf.data(), &buflen) == SOCKET_ERROR)
         throw new error(make_errstring("getsockopt"));
 
-    return new str(buf, buflen);
+    return new str(buf.data(), buflen);
 }
 
 file *socket::makefile(str *mode) {
@@ -486,11 +485,11 @@ str *socket::recv(__ss_int bufsize, __ss_int flags)
 {
     read_wait();
 
-    char buf[bufsize];
-    ssize_t len = ::recv(_fd, buf, bufsize, flags);
+    std::vector<char> buf(bufsize);
+    ssize_t len = ::recv(_fd, buf.data(), bufsize, flags);
     if (len == SOCKET_ERROR)
         throw new error(make_errstring("recv"));
-    return new str(buf, len);
+    return new str(buf.data(), len);
 }
 
 #ifdef WIN32
@@ -520,11 +519,11 @@ ssize_t socket::recvfrom(char *buf, size_t bufsize, int flags, sockaddr *sa, soc
 
 tuple2<str *, socket::inet_address> *socket::recvfrom(__ss_int bufsize, __ss_int flags)
 {
-    char buf[bufsize];
+    std::vector<char> buf(bufsize);
     struct sockaddr_in sin;
     socklen_t salen = sizeof(sin);
-    ssize_t len = recvfrom(buf, bufsize, flags, reinterpret_cast<sockaddr *>(&sin), &salen);
-    return new tuple2<str *, inet_address>(2, new str(buf, len), sin_addr_to_tuple(&sin));
+    ssize_t len = recvfrom(buf.data(), bufsize, flags, reinterpret_cast<sockaddr *>(&sin), &salen);
+    return new tuple2<str *, inet_address>(2, new str(buf.data(), len), sin_addr_to_tuple(&sin));
 }
 
 socket::socket(__ss_int family, __ss_int type, __ss_int proto) {
