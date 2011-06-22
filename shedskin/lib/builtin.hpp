@@ -144,11 +144,11 @@ public:
     virtual __iter<T> *__iter__();
 
     typedef T for_in_unit;
-    typedef int for_in_loop;
+    typedef size_t for_in_loop;
 
-    inline int for_in_init();
-    inline bool for_in_has_next(int i);
-    inline T for_in_next(int &i);
+    inline size_t for_in_init();
+    inline bool for_in_has_next(size_t i);
+    inline T for_in_next(size_t &i);
 
     static const bool is_pyseq = true;
 };
@@ -228,8 +228,8 @@ public:
 
     /* iteration */
 
-    inline bool for_in_has_next(int i);
-    inline T for_in_next(int &i);
+    inline bool for_in_has_next(size_t i);
+    inline T for_in_next(size_t &i);
 #ifdef __SS_BIND
     list(PyObject *);
     PyObject *__to_py__();
@@ -305,8 +305,8 @@ public:
 
     /* iteration */
 
-    inline bool for_in_has_next(int i);
-    inline T for_in_next(int &i);
+    inline bool for_in_has_next(size_t i);
+    inline T for_in_next(size_t &i);
 
 #ifdef __SS_BIND
     tuple2(PyObject *p);
@@ -406,8 +406,8 @@ public:
 
     /* iteration */
 
-    inline bool for_in_has_next(int i);
-    inline str *for_in_next(int &i);
+    inline bool for_in_has_next(size_t i);
+    inline str *for_in_next(size_t &i);
 
 #ifdef __SS_BIND
     str(PyObject *p);
@@ -1169,12 +1169,12 @@ str *__add_strs(int n, ...);
 // published under the WTFPL v2.0
 
 /** Print a demangled stack backtrace of the caller function to FILE* out. */
-static void print_stacktrace(FILE *out, unsigned int max_frames = 63)
+static void print_stacktrace(FILE *out)
 {
     fprintf(out, "\nTraceback (most recent call last):\n"); 
 
     // storage array for stack trace address data
-    void* addrlist[max_frames+1];
+    void* addrlist[64];
 
     // retrieve current stack addresses
     int addrlen = backtrace(addrlist, sizeof(addrlist) / sizeof(void*));
@@ -1879,15 +1879,15 @@ template<class T> __iter<T> *pyseq<T>::__iter__() {
     return new __seqiter<T>(this);
 }
 
-template<class T> inline int pyseq<T>::for_in_init() {
+template<class T> inline size_t pyseq<T>::for_in_init() {
     return 0;
 }
 
-template<class T> inline bool pyseq<T>::for_in_has_next(int i) {
+template<class T> inline bool pyseq<T>::for_in_has_next(size_t i) {
     return i != __len__(); /* XXX opt end cond */
 }
 
-template<class T> inline T pyseq<T>::for_in_next(int &i) {
+template<class T> inline T pyseq<T>::for_in_next(size_t &i) {
     return __getitem__(i++);
 }
 
@@ -2979,11 +2979,11 @@ template<class T> void *list<T>::remove(T e) {
     throw new ValueError(new str("list.remove(x): x not in list"));
 }
 
-template<class T> inline bool list<T>::for_in_has_next(int i) {
+template<class T> inline bool list<T>::for_in_has_next(size_t i) {
     return i != units.size(); /* XXX opt end cond */
 }
 
-template<class T> inline T list<T>::for_in_next(int &i) {
+template<class T> inline T list<T>::for_in_next(size_t &i) {
     return units[i++];
 }
 
@@ -3003,11 +3003,11 @@ inline __ss_int str::__len__() {
     return unit.size();
 }
 
-inline bool str::for_in_has_next(int i) {
+inline bool str::for_in_has_next(size_t i) {
     return i != unit.size(); /* XXX opt end cond */
 }
 
-inline str *str::for_in_next(int &i) {
+inline str *str::for_in_next(size_t &i) {
     return __char_cache[((unsigned char)(unit[i++]))];
 }
 
@@ -3936,11 +3936,11 @@ template<class T> tuple2<T,T> *tuple2<T,T>::__deepcopy__(dict<void *, pyobj *> *
     return c;
 }
 
-template<class T> inline bool tuple2<T,T>::for_in_has_next(int i) {
+template<class T> inline bool tuple2<T,T>::for_in_has_next(size_t i) {
     return i != units.size(); /* XXX opt end cond */
 }
 
-template<class T> inline T tuple2<T,T>::for_in_next(int &i) {
+template<class T> inline T tuple2<T,T>::for_in_next(size_t &i) {
     return units[i++];
 }
 
