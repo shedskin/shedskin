@@ -91,7 +91,7 @@ template<class T> class hasheq;
 #define __GC_DEQUE(T) std::deque< T, gc_allocator< T > >
 #define __GC_STRING std::basic_string<char,std::char_traits<char>,gc_allocator<char> >
 
-/* builtin class declarations */
+/* class declarations */
 
 class pyobj : public gc {
 public:
@@ -4616,7 +4616,7 @@ template <class B> str *filter(B (*func)(str *), str *a) {
 }
 
 template <class A> list<A> *filter(void *func, pyiter<A> *a) { return filter(((int(*)(A))(func)), a); }
-inline str *filter(void *func, str *a) { return filter(((int(*)(str *))(func)), a); }
+inline str *filter(void *, str *a) { return filter(((int(*)(str *))(0)), a); }
 template <class A> tuple2<A,A> *filter(void *func, tuple2<A,A> *a) { return filter(((int(*)(A))(func)), a); }
 
 /* pow */
