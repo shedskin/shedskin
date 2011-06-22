@@ -577,6 +577,7 @@ int Random::_genrand_int32() {
     */
     list<int> *__2, *__5, *__6;
     int __0, __1, __3, __4, kk, y;
+    kk = 0;
 
     if ((this->mti>=N)) {
         if ((this->mti==(N+1))) {
