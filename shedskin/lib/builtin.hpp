@@ -4173,8 +4173,9 @@ template <class U, class B> typename __sumtype2<typename U::for_in_unit,B>::type
 /* max */
 
 template<class A, class B> typename A::for_in_unit ___max(int, B (*key)(typename A::for_in_unit), A *iter) {
-    typename A::for_in_unit max;
+    typename A::for_in_unit max = 0;
     B maxkey, maxkey2;
+    maxkey = 0;
     int first = 1;
     typename A::for_in_unit e;
     typename A::for_in_loop __3;
@@ -4255,8 +4256,9 @@ template<class T> T ___max(int n, int key, T a, T b, T c, ...) {
 /* min */
 
 template<class A, class B> typename A::for_in_unit ___min(int, B (*key)(typename A::for_in_unit), A *iter) {
-    typename A::for_in_unit min;
+    typename A::for_in_unit min = 0;
     B minkey, minkey2;
+    minkey = 0;
     int first = 1;
     typename A::for_in_unit e;
     typename A::for_in_loop __3;
