@@ -650,7 +650,7 @@ str *str::rstrip(str *chars) {
 list<str *> *str::split(str *sp, int max_splits) {
     __GC_STRING s = unit;
     int num_splits = 0;
-    unsigned int sep_iter, tmp, chunk_iter = 0;
+    int sep_iter, tmp, chunk_iter = 0;
     list<str *> *result = new list<str *>();
     if (sp == NULL)
     {
@@ -731,7 +731,7 @@ str *str::translate(str *table, str *delchars) {
     int self_size = unit.size();
     for(int i = 0; i < self_size; i++) {
         char c = unit[i];
-        if(!delchars || delchars->unit.find(c) == -1)
+        if(!delchars || delchars->unit.find(c) == std::string::npos)
             newstr->unit.push_back(table->unit[(unsigned char)c]);
     }
 
