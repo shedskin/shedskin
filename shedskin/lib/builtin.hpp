@@ -1172,6 +1172,8 @@ str *__add_strs(int n, ...);
 // published under the WTFPL v2.0
 
 /** Print a demangled stack backtrace of the caller function to FILE* out. */
+
+#ifdef __SS_BACKTRACE
 static void print_stacktrace(FILE *out)
 {
     fprintf(out, "\nTraceback (most recent call last):\n"); 
@@ -1252,6 +1254,7 @@ static void print_stacktrace(FILE *out)
     free(funcname);
     free(symbollist);
 }
+#endif
 
 extern class_ *cl_valueerror, *cl_eoferror;
 
