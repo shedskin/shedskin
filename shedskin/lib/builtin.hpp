@@ -781,8 +781,7 @@ public:
 
 template <class T> class __seqiter : public __iter<T> {
 public:
-    unsigned int counter;
-    int size;
+    size_t counter, size;
     pyseq<T> *p;
     __seqiter<T>();
     __seqiter<T>(pyseq<T> *p);
