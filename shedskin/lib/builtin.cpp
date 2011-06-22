@@ -439,7 +439,7 @@ __ss_int str::__int__() {
 }
 
 __ss_bool str::__contains__(str *s) {
-    return __mbool(unit.find(s->unit) != -1);
+    return __mbool(unit.find(s->unit) != std::string::npos);
 }
 
 __ss_bool str::__ctype_function(int (*cfunc)(int))
@@ -454,7 +454,7 @@ __ss_bool str::__ctype_function(int (*cfunc)(int))
   return True;
 }
 
-__ss_bool str::isspace() { return __mbool(unit.size() && (unit.find_first_not_of(ws) == -1)); }
+__ss_bool str::isspace() { return __mbool(unit.size() && (unit.find_first_not_of(ws) == std::string::npos)); }
 __ss_bool str::isdigit() { return __ctype_function(&::isdigit); }
 __ss_bool str::isalpha() { return __ctype_function(&::isalpha); }
 __ss_bool str::isalnum() { return __ctype_function(&::isalnum); }
@@ -650,7 +650,7 @@ str *str::rstrip(str *chars) {
 list<str *> *str::split(str *sp, int max_splits) {
     __GC_STRING s = unit;
     int num_splits = 0;
-    int sep_iter, tmp, chunk_iter = 0;
+    int sep_iter = 0, tmp, chunk_iter = 0;
     list<str *> *result = new list<str *>();
     if (sp == NULL)
     {
@@ -779,7 +779,7 @@ __ss_int str::__cmp__(pyobj *p) {
 
 __ss_bool str::__eq__(pyobj *p) {
     str *q = (str *)p;
-    int len = unit.size();
+    size_t len = unit.size();
     if(len != q->unit.size())
         return __mbool(0);
     return __mbool(strncmp(unit.data(), q->unit.data(), len) == 0);
@@ -1736,7 +1736,7 @@ template<> str *__str(double t) {
     ss.precision(12);
     ss << std::showpoint << t;
     __GC_STRING s = ss.str().c_str();
-    if(s.find('e') == -1)
+    if(s.find('e') == std::string::npos)
     {
         unsigned int j = s.find_last_not_of("0");
         if( s[j] == '.') j++;
