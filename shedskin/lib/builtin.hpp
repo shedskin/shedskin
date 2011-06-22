@@ -21,10 +21,13 @@
 #include <algorithm>
 #include <iterator>
 #include <ctype.h>
+#include <limits>
+
+#ifdef __SS_BACKTRACE
 #include <exception>
 #include <execinfo.h>
 #include <cxxabi.h>
-#include <limits>
+#endif
 
 namespace __shedskin__ {
 
