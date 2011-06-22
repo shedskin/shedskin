@@ -1890,7 +1890,7 @@ template<class T> inline size_t pyseq<T>::for_in_init() {
 }
 
 template<class T> inline bool pyseq<T>::for_in_has_next(size_t i) {
-    return i != __len__(); /* XXX opt end cond */
+    return (__ss_int)i != __len__(); /* XXX opt end cond */
 }
 
 template<class T> inline T pyseq<T>::for_in_next(size_t &i) {

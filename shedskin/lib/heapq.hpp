@@ -27,8 +27,8 @@ template<class T> struct CmpSecond {
 };
 
 template<class T, class U, template <class V, class W> class X, template <class Y> class Cmp> inline void _siftdown(X<T, U>& heap, __ss_int startpos, __ss_int pos) {
-    assert(startpos < heap.size());
-    assert(pos < heap.size());
+    assert((size_t)startpos < heap.size());
+    assert((size_t)pos < heap.size());
 
     Cmp<T> cmp;
 
@@ -58,7 +58,7 @@ template<class T> inline void _siftdown(list<T> *heap, __ss_int startpos, __ss_i
 }
 
 template<class T, class U, template <class V, class W> class X, template <class Y> class Cmp> inline void _siftup(X<T, U>& heap, __ss_int pos) {
-    assert(pos < heap.size());
+    assert((size_t)pos < heap.size());
 
     Cmp<T> cmp;
 
@@ -67,7 +67,7 @@ template<class T, class U, template <class V, class W> class X, template <class 
 
     T item = heap[pos];
 
-    for (; ; ) {
+    for (;;) {
         __ss_int leftsonpos = 2 * pos + 1;
         __ss_int rightsonpos = leftsonpos + 1;
 
@@ -220,7 +220,7 @@ template<class T> T mergeiter<T>::next() {
     }
 
     if (!this->heap.size()) {
-        for (__ss_int i = 0; i < this->iters.size(); ++i) {
+        for (size_t i = 0; i < this->iters.size(); ++i) {
 	  try  {
 	      heappush<iter_heap, iter_heapallocator, std::vector, CmpSecond>(this->heap, iter_heap(i, this->iters[i]->next()));
 	  } catch (StopIteration *) {

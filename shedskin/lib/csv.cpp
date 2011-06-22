@@ -270,7 +270,7 @@ void *reader::parse_reset() {
 
 list<str *> *reader::next() {
     list<str *> *fields;
-    str *__4, *line;
+    str *line;
 
     this->parse_reset();
 
