@@ -242,9 +242,9 @@ class generateVisitor(ASTVisitor):
         self.func_pointers()
 
         # globals
-        defs = self.declaredefs(list(getmv().globals.items()), declare=True);
+        defs = self.declaredefs(list(getmv().globals.items()), declare=True)
         if defs:
-            self.output(defs+';')
+            self.output(defs)
             print >>self.out
 
         # --- class definitions
@@ -303,22 +303,22 @@ class generateVisitor(ASTVisitor):
                     if name == '*':
                         for func in mod.mv.funcs.values():
                             if func.cp: # XXX 
-                                print >>self.out, using+self.cpp_name(func.ident)+';';
+                                print >>self.out, using+self.cpp_name(func.ident)+';'
                         for cl in mod.mv.classes.values():
-                            print >>self.out, using+nokeywords(cl.ident)+';';
+                            print >>self.out, using+nokeywords(cl.ident)+';'
                     elif pseudonym not in self.module.mv.globals:
                         if name in mod.mv.funcs:
                             func = mod.mv.funcs[name]
                             if func.cp:
-                                print >>self.out, using+self.cpp_name(func.ident)+';';
+                                print >>self.out, using+self.cpp_name(func.ident)+';'
                         else:
                             print >>self.out, using+nokeywords(name)+';'
         print >>self.out
 
         # --- globals
-        defs = self.declaredefs(list(getmv().globals.items()), declare=False);
+        defs = self.declaredefs(list(getmv().globals.items()), declare=False)
         if defs:
-            self.output(defs+';')
+            self.output(defs)
             print >>self.out
 
         # --- defaults
@@ -2170,7 +2170,7 @@ class generateVisitor(ASTVisitor):
         self.output(nodetypestr(node, lcfunc)+'__ss_result = new '+nodetypestr(node, lcfunc)[:-2]+'();\n')
         self.listcomp_rec(node, node.quals, lcfunc, False)
         self.output('return __ss_result;')
-        self.deindent();
+        self.deindent()
         self.output('}\n')
 
     def genexpr_class(self, node, declare):
@@ -2186,11 +2186,11 @@ class generateVisitor(ASTVisitor):
             self.indent()
             self.local_defs(lcfunc)
             for a,b in args:
-                self.output(a+b+';');
+                self.output(a+b+';')
             self.output('int __last_yield;\n')
             self.output(func1+';')
             self.output(func2+' __get_next();')
-            self.deindent();
+            self.deindent()
             self.output('};\n')
         else:
             self.output(lcfunc.ident+'::'+func1+' {')
@@ -2199,12 +2199,12 @@ class generateVisitor(ASTVisitor):
             self.output('    __last_yield = -1;')
             self.output('}\n')
             self.output(func2+' '+lcfunc.ident+'::__get_next() {')
-            self.indent();
+            self.indent()
             self.output('if(!__last_yield) goto __after_yield_0;')
             self.output('__last_yield = 0;\n')
             self.listcomp_rec(node, node.quals, lcfunc, True)
             self.output('__stop_iteration = true;')
-            self.deindent();
+            self.deindent()
             self.output('}\n')
 
     def local_defs(self, func):
@@ -2293,9 +2293,9 @@ class generateVisitor(ASTVisitor):
 
         # --- nested for loops: loop tails
         if qual.ifs:
-            self.deindent();
+            self.deindent()
             self.output('}')
-        self.deindent();
+        self.deindent()
         self.output('END_FOR\n')
 
     def visitGenExpr(self, node, func=None):
