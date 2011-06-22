@@ -1040,7 +1040,7 @@ template<class T> struct dereference <T*> {
 };
 
 template<class T> inline int __is_none(T *t) { return !t; }
-template<class T> inline int __is_none(T t) { return 0; }
+template<class T> inline int __is_none(T) { return 0; }
 
 /* binding */
 
@@ -2228,7 +2228,9 @@ template <class K, class V> V dict<K,V>::setdefault(K key, V value)
 }
 
 template <class K, class V> void *dict<K,V>::__delitem__(K key) {
-    if (!do_discard(key)) throw new KeyError(repr(key));
+    if (!do_discard(key)) 
+        throw new KeyError(repr(key));
+    return NULL;
 }
 
 template <class K, class V> int dict<K,V>::do_discard(K key) {
@@ -3018,9 +3020,8 @@ inline str *str::for_in_next(size_t &i) {
 }
 
 template <class U> str *str::join(U *iter) {
-    int sz, total, __2, tsz;
+    int sz, total, __2;
     bool only_ones = true;
-    int unitsize = unit.size();
     typename U::for_in_unit e;
     typename U::for_in_loop __3;
     U *__1;

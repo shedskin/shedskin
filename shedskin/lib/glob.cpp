@@ -143,7 +143,6 @@ __iter<str *> *iglob(str *pathname) {
 
 list<str *> *glob1(str *dirname, str *pattern) {
     list<str *> *__17, *n2, *names;
-    __iter<str *> *__18;
     str *nm;
     __ss_int __19;
     list<str *>::for_in_loop __123;

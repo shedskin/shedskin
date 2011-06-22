@@ -56,9 +56,9 @@ void __init(int c, char **v) {
 
 void __ss_exit() {
     throw new SystemExit((__ss_int)0);
-};
+}
 
-void *setrecursionlimit(__ss_int limit) {
+void *setrecursionlimit(__ss_int) {
     return NULL;
 }
 

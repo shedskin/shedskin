@@ -84,7 +84,7 @@ __ss_int unpack_int(char o, char c, int d, str *data, __ss_int *pos) {
     return result;
 }
 
-str * unpack_str(char o, char c, int d, str *data, __ss_int *pos) {
+str * unpack_str(char, char c, int d, str *data, __ss_int *pos) {
     str *result;
     int len;
     switch(c) {
@@ -107,7 +107,7 @@ str * unpack_str(char o, char c, int d, str *data, __ss_int *pos) {
     return result;
 }
 
-__ss_bool unpack_bool(char o, char c, int d, str *data, __ss_int *pos) {
+__ss_bool unpack_bool(char, char, int d, str *data, __ss_int *pos) {
     __ss_bool result;
     if(data->unit[*pos] == '\x00')
         result = False;
@@ -138,7 +138,7 @@ double unpack_float(char o, char c, int d, str *data, __ss_int *pos) {
     return result;
 }
 
-void unpack_pad(char o, char c, int d, str *data, __ss_int *pos) {
+void unpack_pad(char, char, int d, str *, __ss_int *pos) {
     *pos += d;
 }
 

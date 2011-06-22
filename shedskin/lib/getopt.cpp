@@ -108,7 +108,6 @@ tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *getopt(list<str *> *args,
     multiple occurrences.  Long and short options may be mixed.
 
     */
-    list<str *> *__0, *__1, *__2;
     list<tuple2<str *, str *> *> *opts;
     tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *__3, *__4;
 
@@ -206,7 +205,7 @@ tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *gnu_getopt(list<str *> *a
 
 tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *do_longs(list<tuple2<str *, str *> *> *opts, str *opt, pyiter<str *> *longopts, list<str *> *args) {
     list<str *> *__13;
-    str *__12, *__14, *__15, *__8, *__9, *optarg;
+    str *__12, *__14, *__8, *__9, *optarg;
     __ss_int __10, i;
     __ss_bool has_arg;
     tuple2<__ss_bool, str *> *__11;

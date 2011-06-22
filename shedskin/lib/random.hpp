@@ -263,7 +263,7 @@ template <class A> void *Random::seed(A a) {
     int h;
 
     if(__is_none(a)) {
-        int secs, usec, a;
+        int secs, usec;
         double hophop = __time__::time();
         secs = __int(hophop);
         usec = __int((1000000*(hophop-__int(hophop))));
