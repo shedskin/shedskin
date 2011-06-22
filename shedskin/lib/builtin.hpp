@@ -320,8 +320,8 @@ public:
 class str : public pyseq<str *> {
 public:
     __GC_STRING unit;
-    bool charcache;
     long hash;
+    bool charcache;
 
     str();
     str(const char *s);
