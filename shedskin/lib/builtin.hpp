@@ -24,19 +24,7 @@
 #include <exception>
 #include <execinfo.h>
 #include <cxxabi.h>
-
-#if defined( _MSC_VER )
-    #pragma warning( disable : 4996 ) // CRT security warning
-    #pragma warning( disable : 4800 ) // forcing bool
-    #pragma warning( disable : 4101 ) // unreferences var
-    #pragma warning( disable : 4396 ) // can't use inline
-    #pragma warning( disable : 4099 ) // mixing struct and class defs
-    #pragma warning( disable : 4715 ) // not all paths return a value
-    #include <unordered_map>
-    #include <limits>
-#else
-    #include <ext/hash_map>
-#endif
+#include <limits>
 
 namespace __shedskin__ {
 
