@@ -426,7 +426,10 @@ class generateVisitor(ASTVisitor):
 
     def do_main(self):
         mods = getgx().modules.values()
-        print >>self.out, 'int main(int __ss_argc, char **__ss_argv) {'
+        if [mod for mod in mods if mod.builtin and mod.ident == 'sys']:
+            print >>self.out, 'int main(int __ss_argc, char **__ss_argv) {'
+        else:
+            print >>self.out, 'int main(int, char **) {'
         self.do_init_modules()
         print >>self.out, '    __shedskin__::__start(__%s__::__init);' % self.module.ident
         print >>self.out, '}'
