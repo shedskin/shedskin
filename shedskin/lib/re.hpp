@@ -23,6 +23,8 @@ extern const __ss_int I, L, M, S, U, X,
 class match_object;
 typedef str *(*replfunc)(match_object *);
 
+extern class_ *cl_error;
+
 //re.error
 class error : public Exception
 {

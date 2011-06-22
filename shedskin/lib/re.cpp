@@ -13,6 +13,8 @@ const __ss_int
 
 const unsigned char *local_table;
 
+class_ *cl_error;
+
 //match_object functions
 str *match_object::group(__ss_int /* n */, __ss_int matchid)
 {
@@ -736,6 +738,7 @@ list<str *> *findall(str *pat, str *subj, __ss_int flags)
 
 void __init(void)
 {
+    cl_error = new class_("error", 33, 33);
 
     pcre_malloc = &re_malloc;
     pcre_free = &re_free;
