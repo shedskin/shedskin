@@ -27,9 +27,6 @@ class tzinfo;
 class datetime;
 class timedelta;
 class time;
-class ZeroDivisionError : public Exception { public: ZeroDivisionError(str *msg=0) : Exception(msg) {} };
-class OverflowError : public Exception { public: OverflowError(str *msg=0) : Exception(msg) {} };
-class NotImplementedError : public Exception { public: NotImplementedError(str *msg=0) : Exception(msg) {} };
 
 //todo:
 //timedelta::timedelta() rounding problems
