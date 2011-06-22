@@ -413,7 +413,7 @@ datetime *datetime::combine(date *d, time *t) {
 }
 
 datetime *datetime::strptime(str *date_string, str *format) {
-	struct tm t = {0, 0, 0, 1, 0, 0, 0, 1, -1};
+	struct tm t = {0, 0, 0, 1, 0, 0, 0, 1, -1, 0, 0};
 #ifdef WIN32
     char *e = __time__::strptime(date_string->unit.c_str(), format->unit.c_str(), &t);
 #else
