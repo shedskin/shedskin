@@ -73,6 +73,13 @@ print af
 s3 = set([3,2,1])
 while s3: print s3.pop()
 
+
+s6 = set(["a", "b", "c"])
+
+assert not s6.isdisjoint(s6)
+assert not s6.isdisjoint(["a"])
+assert s6.isdisjoint(["d"])
+
 import random as rr
 from random import randint as ri
 #print rr.randint(0,0), rr.randint(0,2), ri(8, 12)
