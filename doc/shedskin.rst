@@ -58,4 +58,4 @@ OPTIONS
 
 THANKS
 ======
-Google, Bearophile, Hakan Ardo, Brian Blais, Paul Boddie, François Boutines, Djamel Cherif, Mark Dewing, James Coughlan, Victor Garcia, Luis M. Gonzales, Karel Heyse, Denis de Leeuw Duarte, Michael Elkins, FFAO, Fahrzim Hemmati, Van Lindberg, David Marek, Douglas McNeil, Andy Miller, Jeff Miller, Danny Milosavljevic, Joaquin Abian Monux, John Nagle, Harri Pasanen, Joris van Rantwijk, Jeremie Roquet, Mike Schrick, SirNotAppearingInThisManPage, Thomas Spura, Dave Tweed, Jaroslaw Tworek, Pavel Vinogradov, Jason Ye
+Google, Bearophile, Hakan Ardo, Brian Blais, Paul Boddie, François Boutines, Djamel Cherif, Mark Dewing, James Coughlan, Victor Garcia, Luis M. Gonzales, Karel Heyse, Denis de Leeuw Duarte, Michael Elkins, FFAO, Fahrzim Hemmati, Van Lindberg, David Marek, Douglas McNeil, Andy Miller, Jeff Miller, Danny Milosavljevic, Joaquin Abian Monux, John Nagle, Harri Pasanen, Brent Pedersen, Joris van Rantwijk, Jeremie Roquet, Mike Schrick, SirNotAppearingInThisManPage, Thomas Spura, Dave Tweed, Jaroslaw Tworek, Pavel Vinogradov, Jason Ye

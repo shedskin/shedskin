@@ -528,6 +528,7 @@ The following people have already made significant contributions to **Shed Skin*
 * Joaquin Abian Monux
 * John Nagle
 * Harri Pasanen
+* Brent Pedersen
 * Jeremie Roquet
 * Mike Schrick
 * SirNotAppearingInThisTutorial
