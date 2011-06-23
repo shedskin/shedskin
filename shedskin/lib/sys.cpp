@@ -9,7 +9,7 @@ str *version;
 
 tuple2<__ss_int, __ss_int> *version_info;
 str *__name__, *copyright, *platform, *byteorder;
-__ss_int hexversion, maxint;
+__ss_int hexversion, maxint, maxsize;
 file *__ss_stdin, *__ss_stdout, *__ss_stderr;
 
 void __init(int c, char **v) {
@@ -39,6 +39,7 @@ void __init(int c, char **v) {
 #endif
 
     maxint = INT_MAX;
+    maxsize = INT_MAX;
 
     for(int i=0; i<c; i++)
         argv->append(new str(v[i]));

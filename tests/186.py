@@ -8,13 +8,17 @@ print hex(200), hex(-200)
 
 # import as
 from sys import maxint as MAXINT
+from sys import maxsize as MAXSIZE
 import random
 from random import random as randum
 from string import *
 random.seed(1)
 a = MAXINT
+bb = MAXSIZE
 #print a
 print randum()
+
+print a == bb
 
 #default argument problem
 import getopt
