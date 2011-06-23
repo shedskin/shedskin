@@ -10,6 +10,7 @@ platform = ''
 byteorder = ''
 hexversion = 0
 maxint = 0
+maxsize = 0
 
 def setrecursionlimit(limit):
     pass
