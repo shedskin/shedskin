@@ -588,6 +588,9 @@ public:
     __ss_bool issuperset(set<T> *s);
     __ss_bool issuperset(pyiter<T> *s);
 
+    __ss_bool isdisjoint(set<T> *s);
+    __ss_bool isdisjoint(pyiter<T> *s);
+
     __ss_bool __gt__(set<T> *s);
     __ss_bool __lt__(set<T> *s);
     __ss_bool __ge__(set<T> *s);
@@ -3731,12 +3734,28 @@ template<class T> __ss_bool set<T>::issuperset(set<T> *s) {
     return True;
 }
 
+template<class T> __ss_bool set<T>::isdisjoint(set<T> *other) {
+    int pos = 0;
+    setentry<T> *entry;
+    while (next(&pos, &entry)) {
+        if (other->__contains__(entry)) {
+            return False;
+        }
+    }
+    return True;
+}
+
+
 template<class T> __ss_bool set<T>::issubset(pyiter<T> *s) {
     return issubset(new set<T>(s));
 }
 
 template<class T> __ss_bool set<T>::issuperset(pyiter<T> *s) {
     return issuperset(new set<T>(s));
+}
+
+template<class T> __ss_bool set<T>::isdisjoint(pyiter<T> *s) {
+    return isdisjoint(new set<T>(s));
 }
 
 template<class T> set<T> *set<T>::__copy__() {

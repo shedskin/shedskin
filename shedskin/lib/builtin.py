@@ -490,6 +490,8 @@ class pyset(pyiter):
         return True
     def issuperset(self, b):
         return True
+    def isdisjoint(self, b):
+        return True
 
     def intersection(self, b):
         return self
