@@ -648,6 +648,7 @@ public:
     inline __ss_bool operator^(__ss_bool b);
     inline bool operator!();
     inline operator bool();
+    inline __ss_bool& operator=(int a);
 };
 
 class complex : public pyobj {
@@ -1822,6 +1823,7 @@ inline __ss_bool __ss_bool::operator|(__ss_bool b) { __ss_bool c; c.value=value|
 inline __ss_bool __ss_bool::operator^(__ss_bool b) { __ss_bool c; c.value=value^b.value; return c; }
 inline bool __ss_bool::operator!() { return !value; }
 inline __ss_bool::operator bool() { return bool(value); }
+inline __ss_bool& __ss_bool::operator=(int a) { value=a; return *this; }
 
 inline __ss_bool ___bool() { return __mbool(false); }
 
@@ -2031,8 +2033,9 @@ template <class K, class V> int characterize(dict<K,V> *a, dict<K,V> *b, V *pval
 {
 	int i;
 	int difference_found = 0;
-	K akey = 0;
-	V aval = 0;
+	K akey;
+	V aval;
+    akey = 0; aval = 0;
 	int cmp;
 
 	for (i = 0; i <= a->mask; i++) {
@@ -4194,6 +4197,7 @@ template <class U, class B> typename __sumtype2<typename U::for_in_unit,B>::type
 template<class A, class B> typename A::for_in_unit ___max(int, B (*key)(typename A::for_in_unit), A *iter) {
     typename A::for_in_unit max;
     B maxkey, maxkey2;
+    max = 0; maxkey = 0; maxkey2 = 0;
     int first = 1;
     typename A::for_in_unit e;
     typename A::for_in_loop __3;
@@ -4276,6 +4280,7 @@ template<class T> T ___max(int n, int key, T a, T b, T c, ...) {
 template<class A, class B> typename A::for_in_unit ___min(int, B (*key)(typename A::for_in_unit), A *iter) {
     typename A::for_in_unit min;
     B minkey, minkey2;
+    min = 0; minkey = 0; minkey2 = 0;
     int first = 1;
     typename A::for_in_unit e;
     typename A::for_in_loop __3;
