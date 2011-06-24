@@ -119,8 +119,8 @@ class mmap : public pyseq<str *>
     // impl
     inline size_t __size()  const { return (m_end - m_begin); }
     inline bool   __eof()   const { return (m_position >= m_end); }
-    inline bool for_in_has_next(int i) const { return (size_t(i) < __size()); }
-    inline str *for_in_next(int &i) const { return __char_cache[(unsigned char)(m_begin[i++])]; }
+    inline bool for_in_has_next(size_t i) const { return i < __size(); }
+    inline str *for_in_next(size_t &i) const { return __char_cache[(unsigned char)(m_begin[i++])]; }
 
   private:
     iterator m_begin;
