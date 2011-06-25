@@ -561,17 +561,21 @@ public:
     set<T> *copy();
 
     template <class U> void *update(U *other);
-    void *update(set<T> *other);
+    void *update(set<T> *s);
+
+    template <class U> set<T> *intersection(U *other);
+    set<T> *intersection(set<T> *s);
+
+    template <class U> set<T> *difference(U *other);
+    set<T> *difference(set<T> *s);
 
     void *difference_update(set<T> *s);
     void *intersection_update(set<T> *s);
     void *symmetric_difference_update(set<T> *s);
 
-    set<T> *intersection(set<T> *s);
     set<T> *__ss_union(pyiter<T> *s);
     set<T> *__ss_union(set<T> *s);
     set<T> *symmetric_difference(set<T> *s);
-    set<T> *difference(set<T> *other);
 
     set<T> *__and__(set<T> *s);
     set<T> *__or__(set<T> *s);
@@ -3621,6 +3625,20 @@ template<class T> set<T> *set<T>::symmetric_difference(set<T> *s) {
     return c;
 }
 
+template<class T> template <class U> set<T> *set<T>::intersection(U *iter) {
+    set<T>* result = new set<T>;
+    typename U::for_in_unit e;
+    typename U::for_in_loop __3;
+    int __2;
+    U *__1;
+    FOR_IN(e,iter,1,2,3)
+        if (__contains__(e)) {
+            result->add(e);
+        }
+    END_FOR
+    return result;
+}
+
 template<class T> set<T> *set<T>::intersection(set<T> *s) {
     set<T> *a, *b;
     set<T> *c = new set<T>(this->frozen);
@@ -3637,6 +3655,10 @@ template<class T> set<T> *set<T>::intersection(set<T> *s) {
     }
 
     return c;
+}
+
+template<class T> template<class U> set<T>* set<T>::difference(U *other) {
+    return difference(new set<T>(other));
 }
 
 template <class T> set<T>* set<T>::difference(set<T> *other)

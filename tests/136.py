@@ -92,6 +92,25 @@ for (i,ee) in reversed(list(enumerate(reversed([1,2,3])))):
 
 print set([1,2,3]).symmetric_difference(set([2,3,4]))
 
+###################################################################
+sa1 = set([1,2,3])
+sa2 = set([3,4,5])
+sa3 = set([4,5,6])
+
+assert sa1.difference(sa2) == set([1, 2])
+assert sa1.difference(sa3) == sa1
+assert sa1.difference([1, 2, 3]) == set([])
+assert sa2.difference([4, 5, 6]) == set([3])
+
+assert sa1.intersection([4, 5, 6]) == set([])
+assert sa1.intersection([3, 4, 5, 6]) == set([3])
+
+sa4 = set(["a", "b", "d"])
+sa5 = set(["d", "e", "f"])
+
+assert sa4.intersection(sa5) == sa4.intersection(["d", "e", "f"])
+###################################################################
+
 print {1:2, 2:3}.copy()
 
 ff = file('testdata/bla','w')
