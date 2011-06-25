@@ -33,6 +33,9 @@ class match_object:
     def end(self, i = 0):
         return 1
 
+    def span(self):
+        return (1,)
+
     def groups(self, defval = 0):
         return ('',)
 
