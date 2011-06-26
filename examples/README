@@ -13,7 +13,7 @@ lines  name               description                   notes
    125 astar.py           a-star algorithm              shedskin -e astar && make && python astar_main.py
    415 bh.py              barnes-hut force calculation
     54 brainfuck.py       brainfuck interpreter
-  3600 c64_main.py        commodore 64 emulator         cd c64; shedskin -oe c64 && make; cd ..
+  3600 c64_main.py        commodore 64 emulator         cd c64; shedskin -boe c64 && make; cd ..
                                                         python c64_main.py --tape=intkarat.t64
                                                         load
                                                         run
