@@ -10,14 +10,14 @@ extern str *const_0;
 extern str *__name__;
 extern void *buffy;
 
-int get_itemsize(str *typecode);
+unsigned int get_itemsize(str *typecode);
 
 extern class_ *cl_array;
 template <class T> class array : public pyseq<T> {
 public:
     __GC_VECTOR(char) units; /* XXX no pointers, so avoid GC */
     str *typecode;
-    __ss_int itemsize;
+    unsigned int itemsize;
 
     array(str *typecode) {
         this->__class__ = cl_array;
@@ -224,7 +224,7 @@ template<class T> void *array<T>::remove(T t) {
 }
 
 template<class T> T array<T>::pop(__ss_int i) {
-    int len = this->__len__();
+    size_t len = this->__len__();
     if(len==0)
         throw new IndexError(new str("pop from empty list"));
     if(i<0) i = len+i;

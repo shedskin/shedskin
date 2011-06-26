@@ -52,7 +52,7 @@ template<> void *array<str *>::__setitem__(__ss_int i, str *t) {
     return NULL;
 }
 
-int get_itemsize(str *typecode) {
+unsigned int get_itemsize(str *typecode) {
     char c = typecode->unit[0];
     switch(c) {
         case 'c': return sizeof(char);
@@ -78,7 +78,7 @@ template<> __ss_int array<str *>::count(str *t) {
 
 template<> __ss_int array<str *>::index(str *t) {
     if(len(t) == 1) {
-        int len = this->__len__();
+        size_t len = this->__len__();
         char c = t->unit[0];
         for(size_t i=0; i<len; i++)
             if(units[i] == c)
