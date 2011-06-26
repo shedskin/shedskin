@@ -52,6 +52,7 @@ int get_itemsize(char order, char c) {
             case 'd': return 8;
         }
     }
+    return 0;
 }
 
 int padding(char o, int pos, unsigned int itemsize) {
@@ -85,7 +86,7 @@ __ss_int unpack_int(char o, char c, unsigned int d, str *data, __ss_int *pos) {
 }
 
 str * unpack_str(char, char c, unsigned int d, str *data, __ss_int *pos) {
-    str *result;
+    str *result = 0;
     unsigned int len;
     switch(c) {
         case 'c':
@@ -222,14 +223,14 @@ void fillbuf(char c, __ss_int t, char order, unsigned int itemsize) {
     }
 }
 
-void fillbuf2(char c, double t, char order, unsigned int itemsize) {
+void fillbuf2(char c, double t, char, unsigned int) {
     switch(c) {
         case 'f': *((float *)buffy) = t; break;
         case 'd': *((double *)buffy) = t; break;
     }
 }
 
-str *pack(int n, str *fmt, ...) {
+str *pack(int, str *fmt, ...) {
     pyobj *arg;
     va_list args;
     va_start(args, fmt);

@@ -24,6 +24,7 @@ template<> __ss_int array<__ss_int>::__getitem__(__ss_int i) {
         case 'l': return *((signed long *)(&units[i*itemsize]));
         case 'L': return *((unsigned long *)(&units[i*itemsize]));
     }
+    return 0;
 }
 template<> str *array<str *>::__getitem__(__ss_int i) {
     i = __wrap(this, i);
