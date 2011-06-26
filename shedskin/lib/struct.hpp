@@ -6,7 +6,7 @@
 using namespace __shedskin__;
 namespace __struct__ {
 
-extern char buffy[];
+extern void *buffy;
 
 extern class_ *cl_error;
 class error : public Exception {
