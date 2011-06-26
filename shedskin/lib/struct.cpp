@@ -5,7 +5,7 @@ namespace __struct__ {
 
 __GC_STRING ordering;
 
-char buffy[32];
+void *buffy;
 class_ *cl_error;
 bool little_endian;
 
@@ -126,10 +126,10 @@ double unpack_float(char o, char c, int d, str *data, __ss_int *pos) {
         return 0;
     if(swap_endian(o))
         for(int i=0; i<itemsize; i++)
-            buffy[itemsize-i-1] = data->unit[*pos+i];
+            ((char *)buffy)[itemsize-i-1] = data->unit[*pos+i];
     else
         for(int i=0; i<itemsize; i++)
-            buffy[i] = data->unit[*pos+i];
+            ((char *)buffy)[i] = data->unit[*pos+i];
     if(c == 'f')
         result = *((float *)(buffy));
     else
@@ -210,12 +210,12 @@ void fillbuf(char c, __ss_int t, char order, int itemsize) {
     } else {
         if(swap_endian(order)) {
             for(int i=itemsize-1; i>=0; i--) {
-                buffy[i] = (unsigned char)(t & 0xff);
+                ((char *)buffy)[i] = (unsigned char)(t & 0xff);
                 t >>= 8;
             }
         } else {
             for(unsigned int i=0; i<itemsize; i++) {
-                buffy[i] = (unsigned char)(t & 0xff);
+                ((char *)buffy)[i] = (unsigned char)(t & 0xff);
                 t >>= 8;
             }
         }
@@ -293,7 +293,7 @@ str *pack(int n, str *fmt, ...) {
                     }
                     fillbuf(c, value, order, itemsize);
                     for(unsigned int k=0; k<itemsize; k++)
-                        result->unit += buffy[k];
+                        result->unit += ((char *)buffy)[k];
                     pos += itemsize;
                 }
                 if(ndigits)
@@ -323,10 +323,10 @@ str *pack(int n, str *fmt, ...) {
                     fillbuf2(c, value, order, itemsize);
                     if(swap_endian(order))
                         for(int i=itemsize-1; i>=0; i--) 
-                            result->unit += buffy[i];
+                            result->unit += ((char *)buffy)[i];
                     else 
                         for(int i=0; i<itemsize; i++) 
-                            result->unit += buffy[i];
+                            result->unit += ((char *)buffy)[i];
                     pos += itemsize;
                 }
                 if(ndigits)
@@ -427,6 +427,7 @@ void __init() {
     cl_error = new class_("error", 16, 16);
     int num = 1;
     little_endian = (*(char *)&num == 1);
+    buffy = malloc(8);
 }
 
 } // module namespace

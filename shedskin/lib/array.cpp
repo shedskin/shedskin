@@ -6,7 +6,7 @@ str *__name__;
 void * default_0;
 class_ *cl_array;
 
-char buffy[32];
+void *buffy;
 
 template<> str *array<str *>::__repr__() {
     return __add_strs(5, new str("array('"), typecode, new str("', "), repr(tostring()), new str(")"));
@@ -104,6 +104,7 @@ void __init() {
     __name__ = new str("array");
     cl_array = new class_("array", 29, 29);
 
+    buffy = malloc(8);
     default_0 = NULL;
 }
 

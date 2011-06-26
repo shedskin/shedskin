@@ -8,7 +8,7 @@ namespace __array__ {
 
 extern str *const_0;
 extern str *__name__;
-extern char buffy[];
+extern void *buffy;
 
 int get_itemsize(str *typecode);
 
@@ -257,7 +257,7 @@ template<> double array<double>::__getitem__(__ss_int i);
 template<class T> void *array<T>::append(T t) {
     fillbuf(t);
     for(unsigned int i=0; i<itemsize; i++)
-        units.push_back(buffy[i]);
+        units.push_back(((char *)buffy)[i]);
     return NULL;
 }
 template<> void *array<str *>::append(str *t);
@@ -266,7 +266,7 @@ template<class T> void *array<T>::__setitem__(__ss_int i, T t) {
     i = __wrap(this, i);
     fillbuf(t);
     for(unsigned int j=0; j<itemsize; j++)
-        this->units[i*itemsize+j] = buffy[j];
+        this->units[i*itemsize+j] = ((char *)buffy)[j];
     return NULL;
 }
 template<> void *array<str *>::__setitem__(__ss_int i, str *t);
