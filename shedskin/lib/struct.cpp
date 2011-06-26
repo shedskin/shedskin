@@ -54,7 +54,7 @@ int get_itemsize(char order, char c) {
     }
 }
 
-int padding(char o, int pos, int itemsize) {
+int padding(char o, int pos, unsigned int itemsize) {
     if(sizeof(void *) == 4) {
 #ifndef WIN32
         if(itemsize == 8)
@@ -66,9 +66,9 @@ int padding(char o, int pos, int itemsize) {
     return 0;
 }
 
-__ss_int unpack_int(char o, char c, int d, str *data, __ss_int *pos) {
+__ss_int unpack_int(char o, char c, unsigned int d, str *data, __ss_int *pos) {
     unsigned long long result;
-    int itemsize = get_itemsize(o, c);
+    unsigned int itemsize = get_itemsize(o, c);
     *pos += padding(o, *pos, itemsize);
     if(d==0)
         return 0;
@@ -84,9 +84,9 @@ __ss_int unpack_int(char o, char c, int d, str *data, __ss_int *pos) {
     return result;
 }
 
-str * unpack_str(char, char c, int d, str *data, __ss_int *pos) {
+str * unpack_str(char, char c, unsigned int d, str *data, __ss_int *pos) {
     str *result;
-    int len;
+    unsigned int len;
     switch(c) {
         case 'c':
              result = __char_cache[(unsigned char)(data->unit[*pos])];
@@ -107,7 +107,7 @@ str * unpack_str(char, char c, int d, str *data, __ss_int *pos) {
     return result;
 }
 
-__ss_bool unpack_bool(char, char, int d, str *data, __ss_int *pos) {
+__ss_bool unpack_bool(char, char, unsigned int d, str *data, __ss_int *pos) {
     __ss_bool result;
     if(data->unit[*pos] == '\x00')
         result = False;
@@ -118,17 +118,17 @@ __ss_bool unpack_bool(char, char, int d, str *data, __ss_int *pos) {
     return result;
 }
 
-double unpack_float(char o, char c, int d, str *data, __ss_int *pos) {
+double unpack_float(char o, char c, unsigned int d, str *data, __ss_int *pos) {
     double result;
-    int itemsize = get_itemsize(o, c);
+    unsigned int itemsize = get_itemsize(o, c);
     *pos += padding(o, *pos, itemsize);
     if(d==0)
         return 0;
     if(swap_endian(o))
-        for(int i=0; i<itemsize; i++)
+        for(unsigned int i=0; i<itemsize; i++)
             ((char *)buffy)[itemsize-i-1] = data->unit[*pos+i];
     else
-        for(int i=0; i<itemsize; i++)
+        for(unsigned int i=0; i<itemsize; i++)
             ((char *)buffy)[i] = data->unit[*pos+i];
     if(c == 'f')
         result = *((float *)(buffy));
@@ -138,7 +138,7 @@ double unpack_float(char o, char c, int d, str *data, __ss_int *pos) {
     return result;
 }
 
-void unpack_pad(char, char, int d, str *, __ss_int *pos) {
+void unpack_pad(char, char, unsigned int d, str *, __ss_int *pos) {
     *pos += d;
 }
 
@@ -146,10 +146,10 @@ __ss_int calcsize(str *fmt) {
     __ss_int result = 0;
     str *digits = new str();
     char order = '@';
-    int itemsize;
-    for(unsigned int i=0; i<len(fmt); i++) {
+    unsigned int itemsize;
+    for(unsigned int i=0; i<(unsigned int)len(fmt); i++) {
         char c = fmt->unit[i];
-        if(ordering.find(c) != -1) {
+        if(ordering.find(c) != std::string::npos) {
             order = c;
             continue;
         }
@@ -157,7 +157,7 @@ __ss_int calcsize(str *fmt) {
             digits->unit += c;
             continue;
         }
-        int ndigits = 1;
+        unsigned int ndigits = 1;
         if(len(digits)) {
             ndigits = __int(digits);
             digits = new str();
@@ -193,7 +193,7 @@ __ss_int calcsize(str *fmt) {
     return result;
 }
 
-void fillbuf(char c, __ss_int t, char order, int itemsize) {
+void fillbuf(char c, __ss_int t, char order, unsigned int itemsize) {
     if(order == '@') {
         switch(c) {
             case 'b': *((signed char *)buffy) = t; break;
@@ -222,7 +222,7 @@ void fillbuf(char c, __ss_int t, char order, int itemsize) {
     }
 }
 
-void fillbuf2(char c, double t, char order, int itemsize) {
+void fillbuf2(char c, double t, char order, unsigned int itemsize) {
     switch(c) {
         case 'f': *((float *)buffy) = t; break;
         case 'd': *((double *)buffy) = t; break;
@@ -237,13 +237,13 @@ str *pack(int n, str *fmt, ...) {
     char order = '@';
     str *digits = new str();
     int pos=0;
-    int itemsize, pad;
-    int fmtlen = fmt->__len__();
+    unsigned int itemsize, pad;
+    unsigned int fmtlen = fmt->__len__();
     str *strarg;
     int pascal_ff = 0;
     for(unsigned int j=0; j<fmtlen; j++) {
         char c = fmt->unit[j];
-        if(ordering.find(c) != -1) {
+        if(ordering.find(c) != std::string::npos) {
             order = c;
             continue;
         }
@@ -251,7 +251,7 @@ str *pack(int n, str *fmt, ...) {
             digits->unit += c;
             continue;
         }
-        int ndigits = 1;
+        unsigned int ndigits = 1;
         if(len(digits)) {
             ndigits = __int(digits);
             digits = new str();
@@ -325,7 +325,7 @@ str *pack(int n, str *fmt, ...) {
                         for(int i=itemsize-1; i>=0; i--) 
                             result->unit += ((char *)buffy)[i];
                     else 
-                        for(int i=0; i<itemsize; i++) 
+                        for(unsigned int i=0; i<itemsize; i++) 
                             result->unit += ((char *)buffy)[i];
                     pos += itemsize;
                 }
@@ -338,7 +338,7 @@ str *pack(int n, str *fmt, ...) {
                     if(arg->__class__ != cl_str_)
                         throw new error(new str("char format require string of length 1"));
                     strarg = ((str *)(arg));
-                    int len = strarg->__len__();
+                    unsigned int len = strarg->__len__();
                     if(len != 1)
                         throw new error(new str("char format require string of length 1"));
                     result->unit += strarg->unit[0];
@@ -353,7 +353,7 @@ str *pack(int n, str *fmt, ...) {
                     throw new error(new str("argument for 'p' must be a string"));
                 if(ndigits) {
                     strarg = ((str *)(arg));
-                    int len = strarg->__len__();
+                    unsigned int len = strarg->__len__();
                     if(len+1 > ndigits)
                         len = ndigits-1;
                     result->unit += (unsigned char)(len);
@@ -373,7 +373,7 @@ str *pack(int n, str *fmt, ...) {
                     throw new error(new str("argument for 's' must be a string"));
                 if(ndigits) {
                     strarg = ((str *)(arg));
-                    int len = strarg->__len__();
+                    unsigned int len = strarg->__len__();
                     if(len > ndigits)
                         len = ndigits;
                     for(unsigned int j=0; j<len; j++)
