@@ -20,7 +20,7 @@ class GetoptError : public Exception {
 public:
     str *opt;
 
-    GetoptError(str *msg, str *opt=0);
+    GetoptError(str *message, str *opt=0);
 };
 
 

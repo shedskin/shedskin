@@ -43,10 +43,10 @@ class GetoptError
 
 class_ *cl_GetoptError;
 
-GetoptError::GetoptError(str *msg, str *opt) {
+GetoptError::GetoptError(str *message, str *opt) {
     this->__class__ = cl_GetoptError;
 
-    this->msg = msg;
+    this->message = message;
     if(opt)
         this->opt = opt;
     else

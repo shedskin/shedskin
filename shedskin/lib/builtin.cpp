@@ -2080,18 +2080,16 @@ void __start(void (*initfunc)()) {
         __add_missing_newline();
     } catch (SystemExit *s) {
         __add_missing_newline();
-        if(s->message)
+        if(s->code)
             print2(NULL, 0, 1, s->message);
         code = s->code;
     } catch (BaseException *e) {
         __add_missing_newline();
-        if(e->__class__) { /* XXX */
-            if(e->msg)
-                print2(NULL, 0, 1, __add_strs(3, e->__class__->__name__, new str(": "), e->msg));
-            else
-                print2(NULL, 0, 1, e->__class__->__name__);
-        } else
-            print2(NULL, 0, 1, e->msg ? e->msg : new str("error")); /* XXX */
+        str *s = __str(e);
+        if(___bool(s))
+            print2(NULL, 0, 1, __add_strs(3, e->__class__->__name__, new str(": "), s));
+        else
+            print2(NULL, 0, 1, e->__class__->__name__);
         code = 1;
     }
     std::exit(code);
