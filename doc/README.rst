@@ -461,9 +461,11 @@ Performance Tips and Tricks
 
 5. Profile-guided optimization can help to squeeze out even more performance. For a recent version of GCC, first compile and run the generated code with ``-fprofile-generate``, then with ``fprofile-use``.
 
-6. Several Python features (that may slow down generated code) are not always necessary, and can be turned off. See the section `Command-line Options`_ for details.
+6. Several Python features (that may slow down generated code) are not always necessary, and can be turned off. See the section `Command-line Options`_ for details. Turning off bounds checking is usually a very safe optimization, and can help a lot for indexing-heavy code.
 
 7. When optimizing, it is extremely useful to know exactly how much time is spent in each part of your program. The program `Gprof2Dot`_ can be used to generate beautiful graphs for both the Python code and the compiled code.
+
+8. For best results, use a recent version of the Boehm GC. Many distributions still use 6.8, but 7.2 can be much faster. Additionally, parallellising the GC may also improve performance (``./configure --enable-parallel-mark``).
 
 **Tricks**
 

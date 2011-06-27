@@ -10,142 +10,304 @@
 <style type="text/css">
 
 /*
-:Authors: Ian Bicking, Michael Foord
-:Contact: fuzzyman@voidspace.org.uk
-:Date: 2005/08/26 
-:Version: 0.1.0
+:Author: David Goodger (goodger@python.org)
+:Id: $Id: html4css1.css 6253 2010-03-02 00:24:53Z milde $
 :Copyright: This stylesheet has been placed in the public domain.
 
-Stylesheet for Docutils.
-Based on ``blue_box.css`` by Ian Bicking
-and ``html4css1.css`` revision 1.46.
+Default cascading style sheet for the HTML output of Docutils.
+
+See http://docutils.sf.net/docs/howto/html-stylesheets.html for how to
+customize this style sheet.
 */
 
-@import url(html4css1.css);
+/* used to remove borders from tables and images */
+.borderless, table.borderless td, table.borderless th {
+  border: 0 }
 
-body {
-  font-family: Arial, sans-serif;
-}
+table.borderless td, table.borderless th {
+  /* Override padding for "table.docutils td" with "! important".
+     The right padding separates the table cells. */
+  padding: 0 0.5em 0 0 ! important }
 
-em, i {
-  /* Typically serif fonts have much nicer italics */
-  font-family: Times New Roman, Times, serif;
-}
+.first {
+  /* Override more specific margin styles with "! important". */
+  margin-top: 0 ! important }
 
-a.target {
-  color: blue;
-}
+.last, .with-subtitle {
+  margin-bottom: 0 ! important }
 
-a.target {
-  color: blue;
-}
+.hidden {
+  display: none }
 
 a.toc-backref {
-  text-decoration: none;
-  color: black;
-}
+  text-decoration: none ;
+  color: black }
 
-a.toc-backref:hover {
-  background-color: inherit;
-}
+blockquote.epigraph {
+  margin: 2em 5em ; }
 
-a:hover {
-  background-color: #cccccc;
-}
+dl.docutils dd {
+  margin-bottom: 0.5em }
 
-div.attention, div.caution, div.danger, div.error, div.hint,
-div.important, div.note, div.tip, div.warning {
-  background-color: #cccccc;
-  padding: 3px;
-  width: 80%;
-}
+/* Uncomment (and remove this text!) to get bold-faced definition list terms
+dl.docutils dt {
+  font-weight: bold }
+*/
+
+div.abstract {
+  margin: 2em 5em }
+
+div.abstract p.topic-title {
+  font-weight: bold ;
+  text-align: center }
+
+div.admonition, div.attention, div.caution, div.danger, div.error,
+div.hint, div.important, div.note, div.tip, div.warning {
+  margin: 2em ;
+  border: medium outset ;
+  padding: 1em }
 
 div.admonition p.admonition-title, div.hint p.admonition-title,
 div.important p.admonition-title, div.note p.admonition-title,
-div.tip p.admonition-title  {
-  text-align: center;
-  background-color: #999999;
-  display: block;
-  margin: 0;
-}
+div.tip p.admonition-title {
+  font-weight: bold ;
+  font-family: sans-serif }
 
 div.attention p.admonition-title, div.caution p.admonition-title,
 div.danger p.admonition-title, div.error p.admonition-title,
 div.warning p.admonition-title {
-  color: #cc0000;
-  font-family: sans-serif;
-  text-align: center;
-  background-color: #999999;
-  display: block;
-  margin: 0;
-}
+  color: red ;
+  font-weight: bold ;
+  font-family: sans-serif }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: Helvetica, Arial, sans-serif;
-  border: thin solid black;
-  /* This makes the borders rounded on Mozilla, which pleases me */
-  -moz-border-radius: 8px;
-  padding: 4px;
-}
+/* Uncomment (and remove this text!) to get reduced vertical space in
+   compound paragraphs.
+div.compound .compound-first, div.compound .compound-middle {
+  margin-bottom: 0.5em }
 
-h1 {
-  background-color: #444499;
-  color: #ffffff;
-  border: medium solid black;
-}
+div.compound .compound-last, div.compound .compound-middle {
+  margin-top: 0.5em }
+*/
 
-h1 a.toc-backref, h2 a.toc-backref { 
-  color: #ffffff;
-}
+div.dedication {
+  margin: 2em 5em ;
+  text-align: center ;
+  font-style: italic }
 
-h2 {
-  background-color: #666666;
-  color: #ffffff;
-  border: medium solid black;
-}
+div.dedication p.topic-title {
+  font-weight: bold ;
+  font-style: normal }
 
-h3, h4, h5, h6 {
-  background-color: #cccccc;
-  color: #000000;
-}
+div.figure {
+  margin-left: 2em ;
+  margin-right: 2em }
 
-h3 a.toc-backref, h4 a.toc-backref, h5 a.toc-backref, 
-h6 a.toc-backref { 
-  color: #000000;
-}
+div.footer, div.header {
+  clear: both;
+  font-size: smaller }
+
+div.line-block {
+  display: block ;
+  margin-top: 1em ;
+  margin-bottom: 1em }
+
+div.line-block div.line-block {
+  margin-top: 0 ;
+  margin-bottom: 0 ;
+  margin-left: 1.5em }
+
+div.sidebar {
+  margin: 0 0 0.5em 1em ;
+  border: medium outset ;
+  padding: 1em ;
+  background-color: #ffffee ;
+  width: 40% ;
+  float: right ;
+  clear: right }
+
+div.sidebar p.rubric {
+  font-family: sans-serif ;
+  font-size: medium }
+
+div.system-messages {
+  margin: 5em }
+
+div.system-messages h1 {
+  color: red }
+
+div.system-message {
+  border: medium outset ;
+  padding: 1em }
+
+div.system-message p.system-message-title {
+  color: red ;
+  font-weight: bold }
+
+div.topic {
+  margin: 2em }
+
+h1.section-subtitle, h2.section-subtitle, h3.section-subtitle,
+h4.section-subtitle, h5.section-subtitle, h6.section-subtitle {
+  margin-top: 0.4em }
 
 h1.title {
-  text-align: center;
-  background-color: #444499;
-  color: #eeeeee;
-  border: thick solid black;
-  -moz-border-radius: 20px;
+  text-align: center }
+
+h2.subtitle {
+  text-align: center }
+
+hr.docutils {
+  width: 75% }
+
+img.align-left, .figure.align-left, object.align-left {
+  clear: left ;
+  float: left ;
+  margin-right: 1em }
+
+img.align-right, .figure.align-right, object.align-right {
+  clear: right ;
+  float: right ;
+  margin-left: 1em }
+
+img.align-center, .figure.align-center, object.align-center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-table.footnote {
-  padding-left: 0.5ex;
-}
+.align-left {
+  text-align: left }
 
-table.citation {
-  padding-left: 0.5ex
-}
+.align-center {
+  clear: both ;
+  text-align: center }
+
+.align-right {
+  text-align: right }
+
+/* reset inner alignment in figures */
+div.align-right {
+  text-align: left }
+
+/* div.align-center * { */
+/*   text-align: left } */
+
+ol.simple, ul.simple {
+  margin-bottom: 1em }
+
+ol.arabic {
+  list-style: decimal }
+
+ol.loweralpha {
+  list-style: lower-alpha }
+
+ol.upperalpha {
+  list-style: upper-alpha }
+
+ol.lowerroman {
+  list-style: lower-roman }
+
+ol.upperroman {
+  list-style: upper-roman }
+
+p.attribution {
+  text-align: right ;
+  margin-left: 50% }
+
+p.caption {
+  font-style: italic }
+
+p.credits {
+  font-style: italic ;
+  font-size: smaller }
+
+p.label {
+  white-space: nowrap }
+
+p.rubric {
+  font-weight: bold ;
+  font-size: larger ;
+  color: maroon ;
+  text-align: center }
+
+p.sidebar-title {
+  font-family: sans-serif ;
+  font-weight: bold ;
+  font-size: larger }
+
+p.sidebar-subtitle {
+  font-family: sans-serif ;
+  font-weight: bold }
+
+p.topic-title {
+  font-weight: bold }
+
+pre.address {
+  margin-bottom: 0 ;
+  margin-top: 0 ;
+  font: inherit }
 
 pre.literal-block, pre.doctest-block {
-  border: thin black solid;
-  padding: 5px;
-}
+  margin-left: 2em ;
+  margin-right: 2em }
 
-.image img { border-style : solid;
-            border-width : 2px;
-}
+span.classifier {
+  font-family: sans-serif ;
+  font-style: oblique }
 
-h1 tt, h2 tt, h3 tt, h4 tt, h5 tt, h6 tt {
-  font-size: 100%;
-}
+span.classifier-delimiter {
+  font-family: sans-serif ;
+  font-weight: bold }
 
-code, tt {
-  color: #000066;
-}
+span.interpreted {
+  font-family: sans-serif }
+
+span.option {
+  white-space: nowrap }
+
+span.pre {
+  white-space: pre }
+
+span.problematic {
+  color: red }
+
+span.section-subtitle {
+  /* font-size relative to parent (h1..h6 element) */
+  font-size: 80% }
+
+table.citation {
+  border-left: solid 1px gray;
+  margin-left: 1px }
+
+table.docinfo {
+  margin: 2em 4em }
+
+table.docutils {
+  margin-top: 0.5em ;
+  margin-bottom: 0.5em }
+
+table.footnote {
+  border-left: solid 1px black;
+  margin-left: 1px }
+
+table.docutils td, table.docutils th,
+table.docinfo td, table.docinfo th {
+  padding-left: 0.5em ;
+  padding-right: 0.5em ;
+  vertical-align: top }
+
+table.docutils th.field-name, table.docinfo th.docinfo-name {
+  font-weight: bold ;
+  text-align: left ;
+  white-space: nowrap ;
+  padding-left: 0 }
+
+h1 tt.docutils, h2 tt.docutils, h3 tt.docutils,
+h4 tt.docutils, h5 tt.docutils, h6 tt.docutils {
+  font-size: 100% }
+
+ul.auto-toc {
+  list-style-type: none }
 
 </style>
 </head>
@@ -562,8 +724,9 @@ print a[5] # invalid index: out of bounds
 <li><strong>Shed Skin</strong> takes the flags it sends to the C++ compiler from the <tt class="docutils literal">FLAGS*</tt> files in the <strong>Shed Skin</strong> installation directory. These flags can be modified, or overruled by creating a local file named <tt class="docutils literal">FLAGS</tt>.</li>
 <li>When doing float-heavy calculations, it is not always necessary to follow exact IEEE floating-point specifications. Avoiding this by adding <tt class="docutils literal"><span class="pre">-ffast-math</span></tt> can sometimes greatly improve performance.</li>
 <li>Profile-guided optimization can help to squeeze out even more performance. For a recent version of GCC, first compile and run the generated code with <tt class="docutils literal"><span class="pre">-fprofile-generate</span></tt>, then with <tt class="docutils literal"><span class="pre">fprofile-use</span></tt>.</li>
-<li>Several Python features (that may slow down generated code) are not always necessary, and can be turned off. See the section <a class="reference internal" href="#command-line-options">Command-line Options</a> for details.</li>
+<li>Several Python features (that may slow down generated code) are not always necessary, and can be turned off. See the section <a class="reference internal" href="#command-line-options">Command-line Options</a> for details. Turning off bounds checking is usually a very safe optimization, and can help a lot for indexing-heavy code.</li>
 <li>When optimizing, it is extremely useful to know exactly how much time is spent in each part of your program. The program <a class="reference external" href="http://code.google.com/p/jrfonseca/wiki/Gprof2Dot">Gprof2Dot</a> can be used to generate beautiful graphs for both the Python code and the compiled code.</li>
+<li>For best results, use a recent version of the Boehm GC. Many distributions still use 6.8, but 7.2 can be much faster. Additionally, parallellising the GC may also improve performance (<tt class="docutils literal">./configure <span class="pre">--enable-parallel-mark</span></tt>).</li>
 </ol>
 <p><strong>Tricks</strong></p>
 <ol class="arabic">
@@ -629,6 +792,7 @@ pl.show()
 <li>Joaquin Abian Monux</li>
 <li>John Nagle</li>
 <li>Harri Pasanen</li>
+<li>Brent Pedersen</li>
 <li>Jeremie Roquet</li>
 <li>Mike Schrick</li>
 <li>SirNotAppearingInThisTutorial</li>
