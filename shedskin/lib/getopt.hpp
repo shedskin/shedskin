@@ -18,7 +18,7 @@ extern __ss_int __18;
 extern class_ *cl_GetoptError;
 class GetoptError : public Exception {
 public:
-    str *opt;
+    str *opt, *msg;
 
     GetoptError(str *message, str *opt=0);
 };
