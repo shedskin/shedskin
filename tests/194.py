@@ -48,7 +48,7 @@ B(7)
 #update with genexpr
 _hextochr = dict(('%02x' % i, chr(i)) for i in range(256))
 _hextochr.update(('%02X' % i, chr(i)) for i in range(256))
-print(repr(_hextochr))
+print(sorted(_hextochr))
 
 #C++ looks in class namespace first
 kwek = 18
