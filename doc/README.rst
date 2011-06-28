@@ -204,7 +204,7 @@ To install the **UNIX** source package on a **GNU/Linux** or **OSX** system, tak
 
 If the `Boehm`_ garbage collector is not available via your package manager, the following is known to work. Download for example version 7.2alpha5 from the `Boehm`_ website, unpack it, and install it as follows: ::
 
-    ./configure --prefix=/usr/local --enable-threads=posix --enable-cplusplus
+    ./configure --prefix=/usr/local --enable-threads=posix --enable-cplusplus --enable-thread-local-alloc --enable-large-config
     make
     make check
     sudo make install
@@ -465,7 +465,7 @@ Performance Tips and Tricks
 
 7. When optimizing, it is extremely useful to know exactly how much time is spent in each part of your program. The program `Gprof2Dot`_ can be used to generate beautiful graphs for both the Python code and the compiled code.
 
-8. For best results, use a recent version of the Boehm GC. Many distributions still use 6.8, but 7.2 can be much faster. Additionally, parallellising the GC may also improve performance (``./configure --enable-parallel-mark``).
+8. For best results, configure the Boehm GC using ``./configure --enable-cplusplus --enable-threads=pthreads --enable-thread-local-alloc --enable-large-config --enable-parallel-mark``. The last option allows the GC to take advantage of having multiple cores.
 
 **Tricks**
 
