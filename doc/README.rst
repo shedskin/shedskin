@@ -465,7 +465,7 @@ Performance Tips and Tricks
 
 7. When optimizing, it is extremely useful to know exactly how much time is spent in each part of your program. The program `Gprof2Dot`_ can be used to generate beautiful graphs for both the Python code and the compiled code.
 
-8. For best results, configure the Boehm GC using ``./configure --enable-cplusplus --enable-threads=pthreads --enable-thread-local-alloc --enable-large-config --enable-parallel-mark``. The last option allows the GC to take advantage of having multiple cores.
+8. For best results, configure a recent version of the Boehm GC using ``./configure --enable-cplusplus --enable-threads=pthreads --enable-thread-local-alloc --enable-large-config --enable-parallel-mark``. The last option allows the GC to take advantage of having multiple cores.
 
 **Tricks**
 
