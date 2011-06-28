@@ -503,7 +503,7 @@ var = self.some_method # bad, method reference
 <p><strong>BOEHM GC</strong></p>
 <p>If the <a class="reference external" href="http://www.hpl.hp.com/personal/Hans_Boehm/gc/">Boehm</a> garbage collector is not available via your package manager, the following is known to work. Download for example version 7.2alpha5 from the <a class="reference external" href="http://www.hpl.hp.com/personal/Hans_Boehm/gc/">Boehm</a> website, unpack it, and install it as follows:</p>
 <pre class="literal-block">
-./configure --prefix=/usr/local --enable-threads=posix --enable-cplusplus
+./configure --prefix=/usr/local --enable-threads=posix --enable-cplusplus --enable-thread-local-alloc --enable-large-config
 make
 make check
 sudo make install
@@ -726,7 +726,7 @@ print a[5] # invalid index: out of bounds
 <li>Profile-guided optimization can help to squeeze out even more performance. For a recent version of GCC, first compile and run the generated code with <tt class="docutils literal"><span class="pre">-fprofile-generate</span></tt>, then with <tt class="docutils literal"><span class="pre">fprofile-use</span></tt>.</li>
 <li>Several Python features (that may slow down generated code) are not always necessary, and can be turned off. See the section <a class="reference internal" href="#command-line-options">Command-line Options</a> for details. Turning off bounds checking is usually a very safe optimization, and can help a lot for indexing-heavy code.</li>
 <li>When optimizing, it is extremely useful to know exactly how much time is spent in each part of your program. The program <a class="reference external" href="http://code.google.com/p/jrfonseca/wiki/Gprof2Dot">Gprof2Dot</a> can be used to generate beautiful graphs for both the Python code and the compiled code.</li>
-<li>For best results, use a recent version of the Boehm GC. Many distributions still use 6.8, but 7.2 can be much faster. Additionally, parallellising the GC may also improve performance (<tt class="docutils literal">./configure <span class="pre">--enable-parallel-mark</span></tt>).</li>
+<li>For best results, configure a recent version of the Boehm GC using <tt class="docutils literal">./configure <span class="pre">--enable-cplusplus</span> <span class="pre">--enable-threads=pthreads</span> <span class="pre">--enable-thread-local-alloc</span> <span class="pre">--enable-large-config</span> <span class="pre">--enable-parallel-mark</span></tt>. The last option allows the GC to take advantage of having multiple cores.</li>
 </ol>
 <p><strong>Tricks</strong></p>
 <ol class="arabic">
