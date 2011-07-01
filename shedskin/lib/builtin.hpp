@@ -849,6 +849,8 @@ void print2(file *f, int comma, int n, ...);
 __ss_bool isinstance(pyobj *, class_ *);
 __ss_bool isinstance(pyobj *, tuple2<class_ *, class_ *> *);
 
+__ss_int id(pyobj *);
+
 list<__ss_int> *range(__ss_int b);
 list<__ss_int> *range(__ss_int a, __ss_int b, __ss_int s=1);
 

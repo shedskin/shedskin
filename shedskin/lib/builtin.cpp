@@ -1445,6 +1445,10 @@ __ss_bool isinstance(pyobj *p, tuple2<class_ *, class_ *> *t) {
     return False;
 }
 
+__ss_int id(pyobj *p) {
+    return (intptr_t)p;
+}
+
 static int range_len(int lo, int hi, int step) {
     /* modified from CPython */
     int n = 0;
