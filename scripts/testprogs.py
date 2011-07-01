@@ -42,7 +42,7 @@ for (i, file) in enumerate(files):
         prefix = '../'
     do_cmd('python %s %s' % (prefix+SS, file))
     do_cmd('make')
-    do_cmd('python %s -lars %s' % (prefix+SS, file))
+    do_cmd('python %s -wboxlars %s' % (prefix+SS, file))
     do_cmd('make')
     do_cmd('python %s -e %s' % (prefix+SS, file))
     do_cmd('make')
