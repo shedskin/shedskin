@@ -1202,8 +1202,14 @@ __ss_bool class_::__eq__(pyobj *c) {
 /* file methods */
 
 file::file(str *file_name, str *flags) {
-    if (flags)
-        options.universal_mode = (flags->unit.find_first_of("Uu") != std::string::npos);
+    if (flags) {
+        size_t universal = flags->unit.find_first_of("Uu");
+        if(universal != std::string::npos) {
+            options.universal_mode = true;
+            flags = new str(flags->unit);
+            flags->unit[universal] = 'b'; // force binary mode as expected by readline
+        }
+    }
     else
         flags = new str("r");
     f = fopen(file_name->unit.c_str(), flags->unit.c_str());
@@ -1255,7 +1261,6 @@ str *file::readline(int n) {
             int c = GETC(f);
             if(c == EOF)
                 break;
-#ifndef WIN32
             if(options.cr) {
                 options.cr = false;
                 if(c == '\n') {
@@ -1264,7 +1269,6 @@ str *file::readline(int n) {
                         break;
                 }
             }
-#endif // !WIN32
             if(c == '\r') {
                 options.cr = true;
                 c = '\n';
