@@ -1445,9 +1445,9 @@ __ss_bool isinstance(pyobj *p, tuple2<class_ *, class_ *> *t) {
     return False;
 }
 
-__ss_int id(pyobj *p) {
-    return (intptr_t)p;
-}
+template<> __ss_int id(__ss_int) { throw new TypeError(new str("'id' called with integer")); }
+template<> __ss_int id(double) { throw new TypeError(new str("'id' called with float")); }
+template<> __ss_int id(__ss_bool) { throw new TypeError(new str("'id' called with bool")); }
 
 static int range_len(int lo, int hi, int step) {
     /* modified from CPython */

@@ -849,8 +849,6 @@ void print2(file *f, int comma, int n, ...);
 __ss_bool isinstance(pyobj *, class_ *);
 __ss_bool isinstance(pyobj *, tuple2<class_ *, class_ *> *);
 
-__ss_int id(pyobj *);
-
 list<__ss_int> *range(__ss_int b);
 list<__ss_int> *range(__ss_int a, __ss_int b, __ss_int s=1);
 
@@ -1843,6 +1841,15 @@ template<> inline __ss_bool ___bool(__ss_bool x) { return x; }
 template<> inline __ss_bool ___bool(double x) { return __mbool(x!=0); }
 template<> inline __ss_bool ___bool(void *) { return False; }
 template<> inline __ss_bool ___bool(long int) { return False; } /* XXX bool(None) 64-bit */
+
+/* id */
+
+template <class T> __ss_int id(T t) { 
+    return (intptr_t)t;
+}
+template <> __ss_int id(__ss_int);
+template <> __ss_int id(double);
+template <> __ss_int id(__ss_bool);
 
 /* and, or, not */
 
