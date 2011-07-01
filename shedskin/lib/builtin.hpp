@@ -1627,7 +1627,7 @@ public:
     FILE *f;
     __ss_int closed;
     __file_options options;
-    std::vector<char> __read_cache;
+    __GC_VECTOR(char) __read_cache;
 
     file(FILE *g=0) : f(g) {}
     file(str *name, str *mode=0);
@@ -1654,8 +1654,6 @@ public:
     virtual bool __eof();
     virtual bool __error();
 
-    int __getchar();
-    
     inline void __check_closed() {
         if(closed)
             throw new ValueError(new str("I/O operation on closed file"));

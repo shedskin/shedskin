@@ -8,6 +8,10 @@
 #include <errno.h>
 #include <limits.h>
 
+#ifdef WIN32
+#include <io.h> // for _isatty
+#endif // WIN32
+
 #if (_POSIX_C_SOURCE >= 1 or _XOPEN_SOURCE or _POSIX_SOURCE or _BSD_SOURCE or _SVID_SOURCE) and (_BSD_SOURCE or _SVID_SOURCE)
 #define HAVE_STDIO_UNLOCKED
 #endif
@@ -1243,31 +1247,41 @@ __ss_int file::tell() {
     return -1;
 }
 
-inline int file::__getchar() {
-    int r = GETC(f);
-    if (options.universal_mode) {
-        if (r == '\r') {
-            options.cr = true;
-            return '\n';
-        } else if (options.cr && r == '\n') {
-            if(not __eof())
-                r = GETC(f);
-            options.cr = (r == '\r');
-        }
-    }
-    return r;
-}
-
 str *file::readline(int n) {
     __check_closed();
     __read_cache.clear();
-    for(size_t i = 0; i < size_t(n); ++i) {
-        const int c = __getchar();
-        if(c == EOF)
-            break;
-        __read_cache.push_back(c);
-        if(c == '\n')
-            break;
+    if (options.universal_mode) {
+        for(size_t i = 0; i < size_t(n); ++i) {
+            int c = GETC(f);
+            if(c == EOF)
+                break;
+#ifndef WIN32
+            if(options.cr) {
+                options.cr = false;
+                if(c == '\n') {
+                    c = GETC(f);
+                    if(c == EOF)
+                        break;
+                }
+            }
+#endif // !WIN32
+            if(c == '\r') {
+                options.cr = true;
+                c = '\n';
+            }
+            __read_cache.push_back(c);
+            if(c == '\n')
+                break;
+        }
+    } else {  /* If not universal mode, use the normal loop */
+        for(size_t i = 0; i < size_t(n); ++i) {
+            const int c = GETC(f);
+            if(c == EOF)
+                break;
+            __read_cache.push_back(c);
+            if(c == '\n')
+                break;
+        }
     }
     if(__error())
         throw new IOError();
@@ -1279,7 +1293,7 @@ str *file::read(int n) {
     __check_closed();
     __read_cache.clear();
     for(size_t i = 0; i < size_t(n); ++i) {
-        const int c = __getchar();
+        const int c = GETC(f);
         if(c == EOF)
             break;
         __read_cache.push_back(c);
@@ -1333,7 +1347,11 @@ int file::__ss_fileno() {
 __ss_bool file::isatty()
 {
     __check_closed();
+#ifdef WIN32
+    return ___bool(_isatty(__ss_fileno()));
+#else // WIN32
     return ___bool(::isatty(__ss_fileno()));
+#endif // WIN32
 }
 
 void *file::truncate(int size) {
