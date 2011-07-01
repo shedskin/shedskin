@@ -227,3 +227,7 @@ print r.search('').span()
 print r.search('a').start()
 print r.search('a').end()
 print r.search('a').span()
+
+# id
+foo_a="foo";foo_b="foo";foo_c="foo";
+print id(foo_a)==id(foo_b)==id(foo_c)

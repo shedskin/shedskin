@@ -863,5 +863,8 @@ def next(iter1, fillvalue=None):
     return iter1.next()
     return fillvalue
 
+def id(x):
+    return 1
+
 def __print(__kw_sep=0, __kw_end=0, __kw_file=0, *value):
     value.__str__()
