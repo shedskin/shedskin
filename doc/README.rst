@@ -475,7 +475,7 @@ To use Gprof2dot, download gprof2dot.py from the website, and install Graphviz f
     ./program_prof
     gprof program_prof | gprof2dot.py | dot -Tpng -ooutput.png
 
-To use Oprofile, install it and use it as follows. ::
+To use OProfile, install it and use it as follows. ::
 
     shedskin -e extmod
     make
