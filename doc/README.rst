@@ -15,6 +15,7 @@ Shed Skin Documentation
 .. _Boehm: http://www.hpl.hp.com/personal/Hans_Boehm/gc/
 .. _PCRE: http://www.pcre.org/
 .. _Gprof2Dot: http://code.google.com/p/jrfonseca/wiki/Gprof2Dot
+.. _OProfile: http://oprofile.sourceforge.net/
 
 .. contents::
 
@@ -463,9 +464,25 @@ Performance Tips and Tricks
 
 6. Several Python features (that may slow down generated code) are not always necessary, and can be turned off. See the section `Command-line Options`_ for details. Turning off bounds checking is usually a very safe optimization, and can help a lot for indexing-heavy code.
 
-7. When optimizing, it is extremely useful to know exactly how much time is spent in each part of your program. The program `Gprof2Dot`_ can be used to generate beautiful graphs for both the Python code and the compiled code.
+7. For best results, configure a recent version of the Boehm GC using ``./configure --enable-cplusplus --enable-threads=pthreads --enable-thread-local-alloc --enable-large-config --enable-parallel-mark``. The last option allows the GC to take advantage of having multiple cores.
 
-8. For best results, configure a recent version of the Boehm GC using ``./configure --enable-cplusplus --enable-threads=pthreads --enable-thread-local-alloc --enable-large-config --enable-parallel-mark``. The last option allows the GC to take advantage of having multiple cores.
+8. When optimizing, it is extremely useful to know exactly how much time is spent in each part of your program. The program `Gprof2Dot`_ can be used to generate beautiful graphs for a stand-alone program, as well as the original Python code. The program `OProfile`_ can be used to profile an extension module.
+
+To use Gprof2dot, download gprof2dot.py from the website, and install Graphviz first. ::
+
+    shedskin program
+    make program_prof
+    ./program_prof
+    gprof program_prof | gprof2dot.py | dot -Tpng -ooutput.png
+
+To use Oprofile, install it and use it as follows. ::
+
+    shedskin -e extmod
+    make
+    sudo opcontrol --start
+    python main_program_that_imports_extmod
+    sudo opcontrol --shutdown
+    opreport -l extmod.so
 
 **Tricks**
 
