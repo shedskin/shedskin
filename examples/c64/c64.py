@@ -166,11 +166,11 @@ class C64(object):
             self.iterate()
 
     def fire_timer(self):
-        for n in range(2000):
+        for n in range(19800):
             self.iterate()
             self.interrupt_clock += 1
             self.VIC_clock += 1
-            if self.VIC_clock >= 10: # 6:
+            if self.VIC_clock >= 66: # 6:
                 self.VIC_clock = 0
                 self.VIC.increase_raster_position()
         if self.interrupt_clock >= 50: # FIXME remove

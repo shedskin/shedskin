@@ -197,7 +197,7 @@ class View(object): # graphical part.
         self.drawing_area = gtk.DrawingArea()
         self.drawing_area.connect("realize", self.allocate_GC)
         self.drawing_area.connect("expose-event", self.repaint_X)
-        self.drawing_area.set_size_request(screens.WIDTH, screens.HEIGHT) # FIXME make configurable.
+        self.drawing_area.set_size_request(screens.WIDTH*2, screens.HEIGHT*2) # FIXME make configurable.
         self.drawing_area.show()
         self.event_box.show()
         gobject.timeout_add(16, self.repaint_T)
@@ -221,10 +221,10 @@ class View(object): # graphical part.
             assert(len(s) == 439200)
             self.pixbuf = gtk.gdk.pixbuf_new_from_data(s, gtk.gdk.COLORSPACE_RGB, True, 8, screens.WIDTH, screens.HEIGHT, screens.WIDTH * 4) # TODO optimize!!
         widget = self.drawing_area
-#        self.pixbuf = self.pixbuf.scale_simple(screens.WIDTH*2, screens.HEIGHT*2, gtk.gdk.INTERP_TILES)
+        self.pixbuf = self.pixbuf.scale_simple(screens.WIDTH*2, screens.HEIGHT*2, gtk.gdk.INTERP_NEAREST)
         if widget.window: # window already realized
             #print("YEP", data)
-            widget.window.draw_pixbuf(self.GC, self.pixbuf, 0, 0, 0, 0, screens.WIDTH, screens.HEIGHT, gtk.gdk.RGB_DITHER_NONE, 0, 0)
+            widget.window.draw_pixbuf(self.GC, self.pixbuf, 0, 0, 0, 0, screens.WIDTH*2, screens.HEIGHT*2, gtk.gdk.RGB_DITHER_NONE, 0, 0)
             #drawable(self.pixmap_GC, self.pixmap, 0, 0, 0, 0, -1, -1)
 
 def main():
