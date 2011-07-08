@@ -235,3 +235,4 @@ print id(foo_a)==id(foo_b)==id(foo_c)
 # russian test case
 from math import fabs
 print reduce(lambda x,y: x + fabs(y), xrange(10)) 
+print reduce(lambda x,y: x + fabs(y), map(float, xrange(10))) 
