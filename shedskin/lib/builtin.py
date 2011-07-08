@@ -857,7 +857,9 @@ def __filter(func, iter1):
 
 def reduce(func, iter1, init=None):
     elem = iter(iter1).next()
-    return func(elem, elem)
+    f = func(elem, elem)
+    f = func(f, f)
+    return f
 
 def next(iter1, fillvalue=None):
     return iter1.next()
