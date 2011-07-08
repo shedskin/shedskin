@@ -8,10 +8,6 @@ template<> inline double __power(double a, __ss_int b) {
     else return pow(a,b); 
 }
 
-complex *__power(complex *a, complex *b);
-complex *__power(complex *a, __ss_int b);
-complex *__power(complex *a, double b);
-
 template<class A> A __power(A a, A b);
 template<> inline double __power(double a, double b) { return pow(a,b); }
 
@@ -159,17 +155,6 @@ template<> inline tuple2<double, double> *divmod(__ss_int a, double b) { return 
 #endif
 template<> inline tuple2<double, double> *divmod(double a, int b) { return divmod(a, (double)b); }
 template<> inline tuple2<double, double> *divmod(int a, double b) { return divmod((double)a, b); }
-
-tuple2<complex *, complex *> *divmod(complex *a, double b);
-tuple2<complex *, complex *> *divmod(complex *a, __ss_int b);
-
-/* complex */
-
-template<class T> complex::complex(T t) {
-    __class__ = cl_complex;
-    real = __float(t);
-    imag = 0;
-}
 
 /* add */
 

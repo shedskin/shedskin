@@ -1489,6 +1489,7 @@ template<class T> T __iter<T>::__get_next() {
 #include "builtin/set.hpp"
 #include "builtin/file.hpp"
 #include "builtin/function.hpp"
+#include "builtin/complex.hpp"
 #include "builtin/math.hpp"
 
 /* binding args */
@@ -1529,18 +1530,6 @@ template<class T> T __seqiter<T>::next() {
 
 #include "builtin/format.hpp"
 
-/* boxing */
-
-template<class T> T ___box(T t) { return t; } /* XXX */
-#ifdef __SS_LONG
-int_ *___box(__ss_int);
-#endif
-int_ *___box(int);
-int_ *___box(unsigned int); /* XXX */
-int_ *___box(unsigned long);
-int_ *___box(unsigned long long);
-bool_ *___box(__ss_bool);
-float_ *___box(double);
 
 #ifdef __SS_BIND
 PyObject *__ss__newobj__(PyObject *, PyObject *args, PyObject *kwargs);
