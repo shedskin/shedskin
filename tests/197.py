@@ -231,3 +231,7 @@ print r.search('a').span()
 # id
 foo_a="foo";foo_b="foo";foo_c="foo";
 print id(foo_a)==id(foo_b)==id(foo_c)
+
+# russian test case
+from math import fabs
+print reduce(lambda x,y: x + fabs(y), xrange(10)) 
