@@ -831,7 +831,6 @@ public:
     __dictiteritems<K, V>(dict<K, V> *p);
     tuple2<K, V> *next();
 };
-
 static inline __ss_bool __mbool(bool c) { __ss_bool b; b.value=(int)c; return b; }
 
 /* builtin function declarations */
@@ -1211,96 +1210,20 @@ str *__add_strs(int n, ...);
 
 #define END_FOR }
 
-/* typeof for MSVC */
+/* len */
 
-#if defined(_MSC_VER) && _MSC_VER>=1400
-namespace msvc_typeof_impl {
-	/* This is a fusion of Igor Chesnokov's method (http://rsdn.ru/forum/src/1094305.aspx)
-	and Steven Watanabe's method (http://lists.boost.org/Archives/boost/2006/12/115006.php)
+template<class T> inline __ss_int len(T x) { return x->__len__(); }
+template<class T> inline __ss_int len(list<T> *x) { return x->units.size(); } /* XXX more general solution? */
 
-	How it works:
-	C++ allows template type inference for templated function parameters but nothing else.
-	What we do is to pass the expression sent to typeof() into the templated function vartypeID()
-	as its parameter, thus extracting its type. The big problem traditionally now is how to get
-	that type out of the vartypeID() instance, and here's how we do it:
-		1. unique_type_id() returns a monotonically increasing integer for every unique type
-		   passed to it during this compilation unit. It also specialises an instance of
-		   msvc_extract_type<unique_type_id, type>::id2type_impl<true>.
-		2. vartypeID() returns a sized<unique_type_id> for the type where
-		   sizeof(sized<unique_type_id>)==unique_type_id. We vector through sized as a means
-		   of returning the unique_type_id at compile time rather than runtime.
-		3. msvc_extract_type<unique_type_id> then extracts the type by using a bug in MSVC to
-		   reselect the specialised child type (id2type_impl<true>) from within the specialisation
-		   of itself originally performed by the above instance of unique_type_id. This bug works
-		   because when MSVC calculated the signature of the specialised
-		   msvc_extract_type<unique_type_id, type>::id2type_impl<true>, it does not include the
-		   value of type in the signature of id2type_impl<true>. Therefore when we reselect
-		   msvc_extract_type<unique_type_id>::id2type_impl<true> it erroneously returns the one
-		   already in its list of instantiated types rather than correctly generating a newly
-		   specialised msvc_extract_type<unique_type_id, msvc_extract_type_default_param>::id2type_impl<true>
+/* repr, str */
 
-	This bug allows the impossible and gives us a working typeof() in MSVC. Hopefully Microsoft
-	won't fix this bug until they implement a native typeof.
-	*/
+template<class T> str *__str(T t) { if (!t) return new str("None"); return t->__str__(); }
+template<class T> str *repr(T t) { if (!t) return new str("None"); return t->__repr__(); }
 
-	struct msvc_extract_type_default_param {};
-	template<int ID, typename T = msvc_extract_type_default_param> struct msvc_extract_type;
+str *__str(void *);
 
-	template<int ID> struct msvc_extract_type<ID, msvc_extract_type_default_param>
-	{
-		template<bool> struct id2type_impl;
-
-		typedef id2type_impl<true> id2type;
-	};
-
-	template<int ID, typename T> struct msvc_extract_type : msvc_extract_type<ID, msvc_extract_type_default_param>
-	{
-		template<> struct id2type_impl<true> //VC8.0 specific bugfeature
-		{
-			typedef T type;
-		};
-		template<bool> struct id2type_impl;
-
-		typedef id2type_impl<true> id2type;
-	};
-
-
-	template<int N> class CCounter;
-
-	// TUnused is required to force compiler to recompile CCountOf class
-	template<typename TUnused, int NTested = 0> struct CCountOf
-	{
-		enum
-		{
-			__if_exists(CCounter<NTested>) { count = CCountOf<TUnused, NTested + 1>::count }
-			__if_not_exists(CCounter<NTested>) { count = NTested }
-		};
-	};
-
-	template<class TTypeReg, class TUnused, int NValue> struct CProvideCounterValue { enum { value = NValue }; };
-
-	// type_id
-	#define unique_type_id(type) \
-		(CProvideCounterValue< \
-			/*register TYPE--ID*/ typename msvc_extract_type<CCountOf<type >::count, type>::id2type, \
-			/*increment compile-time Counter*/ CCounter<CCountOf<type >::count>, \
-			/*pass value of Counter*/CCountOf<type >::count \
-		 >::value)
-
-	// Lets type_id() be > than 0
-	class __Increment_type_id { enum { value = unique_type_id(__Increment_type_id) }; };
-
-	// vartypeID() returns a type with sizeof(type_id)
-	template<int NSize>	class sized { char m_pad[NSize]; };
-	template<typename T> typename sized<unique_type_id(T)> vartypeID(T&);
-	template<typename T> typename sized<unique_type_id(const T)> vartypeID(const T&);
-	template<typename T> typename sized<unique_type_id(volatile  T)> vartypeID(volatile T&);
-	template<typename T> typename sized<unique_type_id(const volatile T)> vartypeID(const volatile T&);
-}
-
-#define typeof(expression) msvc_typeof_impl::msvc_extract_type<sizeof(msvc_typeof_impl::vartypeID(expression))>::id2type::type
-#endif
-
+#include "builtin/bool.hpp"
+#include "builtin/typeof.hpp"
 #include "builtin/exception.hpp"
 
 /* file objects */
@@ -1398,19 +1321,6 @@ template<class T> static inline int __wrap(T a, int i) {
     return i;
 }
 
-/* representation */
-
-template<class T> str *__str(T t) { if (!t) return new str("None"); return t->__str__(); }
-template<class T> str *repr(T t) { if (!t) return new str("None"); return t->__repr__(); }
-
-str *__str(void *);
-
-/* return pointer to class object */
-
-template<class T> class_ *__type(T t) { return t->__class__; }
-template<> class_ *__type(int i);
-template<> class_ *__type(double d);
-
 /* equality, comparison */
 
 template<class T> inline __ss_bool __eq(T a, T b) { return ((a&&b)?(a->__eq__(b)):__mbool(a==b)); }
@@ -1448,25 +1358,6 @@ template<class T> inline __ss_bool __le(T a, T b) { return a->__le__(b); }
 template<> inline __ss_bool __le(int a, int b) { return __mbool(a <= b); }
 template<> inline __ss_bool __le(double a, double b) { return __mbool(a <= b); }
 
-/* add */
-
-template<class T> inline T __add(T a, T b) { return a->__add__(b); }
-#ifdef __SS_LONG
-template<> inline __ss_int __add(__ss_int a, __ss_int b) { return a + b; }
-#endif
-template<> inline int __add(int a, int b) { return a + b; }
-template<> inline double __add(double a, double b) { return a + b; }
-
-/* reverse */
-
-template<class U> U __add2(double a, U b) { return b->__add__(a); }
-template<class U> U __sub2(double a, U b) { return b->__rsub__(a); }
-template<class T> T __mul2(__ss_int n, T a) { return a->__mul__(n); }
-template<class T> T __mul2(__ss_bool n, T a) { return a->__mul__(n.value); }
-template<class T> T __mul2(double n, T a) { return a->__mul__(n); }
-template<class T> T __div2(__ss_int n, T a) { return a->__rdiv__(n); }
-template<class T> T __div2(double n, T a) { return a->__rdiv__(n); }
-
 /* copy */
 
 template<class T> T __copy(T t) {
@@ -1503,45 +1394,6 @@ template<> inline int __deepcopy(int i, dict<void *, pyobj *> *) { return i; }
 template<> inline __ss_bool __deepcopy(__ss_bool b, dict<void *, pyobj *> *) { return b; }
 template<> inline double __deepcopy(double d, dict<void *, pyobj *> *) { return d; }
 template<> inline void *__deepcopy(void *p, dict<void *, pyobj *> *) { return p; }
-
-/* len */
-
-template<class T> inline __ss_int len(T x) { return x->__len__(); }
-template<class T> inline __ss_int len(list<T> *x) { return x->units.size(); } /* XXX more general solution? */
-
-
-/* bool */
-
-inline __ss_int __ss_bool::operator+(__ss_bool b) { return value+b.value; }
-inline __ss_bool __ss_bool::operator==(__ss_bool b) { __ss_bool c; c.value=value==b.value; return c; }
-inline __ss_bool __ss_bool::operator&(__ss_bool b) { __ss_bool c; c.value=value&b.value; return c; }
-inline __ss_bool __ss_bool::operator|(__ss_bool b) { __ss_bool c; c.value=value|b.value; return c; }
-inline __ss_bool __ss_bool::operator^(__ss_bool b) { __ss_bool c; c.value=value^b.value; return c; }
-inline bool __ss_bool::operator!() { return !value; }
-inline __ss_bool::operator bool() { return bool(value); }
-inline __ss_bool& __ss_bool::operator=(int a) { value=a; return *this; }
-
-inline __ss_bool ___bool() { return __mbool(false); }
-
-template<class T> inline __ss_bool ___bool(T x) { return __mbool(x && x->__nonzero__()); }
-#ifdef __SS_LONG
-template<> inline __ss_bool ___bool(__ss_int x) { return __mbool(x!=0); }
-#endif
-template<> inline __ss_bool ___bool(int x) { return __mbool(x!=0); }
-template<> inline __ss_bool ___bool(bool x) { return __mbool(x); }
-template<> inline __ss_bool ___bool(__ss_bool x) { return x; }
-template<> inline __ss_bool ___bool(double x) { return __mbool(x!=0); }
-template<> inline __ss_bool ___bool(void *) { return False; }
-template<> inline __ss_bool ___bool(long int) { return False; } /* XXX bool(None) 64-bit */
-
-/* id */
-
-template <class T> __ss_int id(T t) { 
-    return (intptr_t)t;
-}
-template <> __ss_int id(__ss_int);
-template <> __ss_int id(double);
-template <> __ss_int id(__ss_bool);
 
 /* and, or, not */
 
@@ -1635,8 +1487,9 @@ template<class T> T __iter<T>::__get_next() {
 #include "builtin/str.hpp"
 #include "builtin/dict.hpp"
 #include "builtin/set.hpp"
-
+#include "builtin/file.hpp"
 #include "builtin/function.hpp"
+#include "builtin/math.hpp"
 
 /* binding args */
 
@@ -1674,277 +1527,7 @@ template<class T> T __seqiter<T>::next() {
     return p->__getitem__(counter++);
 }
 
-template<class K, class V> __dictiterkeys<K, V>::__dictiterkeys(dict<K,V> *p) {
-    this->p = p;
-    this->pos = 0;
-    this->si_used = p->used;
-}
-
-template<class K, class V> K __dictiterkeys<K, V>::next() {
-    if (si_used != p->used) {
-        si_used = -1;
-        __throw_dict_changed();
-    }
-    int ret = p->next(&pos, &entry);
-    if (!ret) __throw_stop_iteration();
-    return entry->key;
-}
-
-template<class K, class V> __dictitervalues<K, V>::__dictitervalues(dict<K,V> *p) {
-    this->p = p;
-    this->pos = 0;
-    this->si_used = p->used;
-}
-
-template<class K, class V> V __dictitervalues<K, V>::next() {
-    if (si_used != p->used) {
-        si_used = -1;
-        __throw_dict_changed();
-    }
-    int ret = p->next(&pos, &entry);
-    if (!ret) __throw_stop_iteration();
-    return entry->value;
-}
-
-template<class K, class V> __dictiteritems<K, V>::__dictiteritems(dict<K,V> *p) {
-    this->p = p;
-    this->pos = 0;
-    this->si_used = p->used;
-}
-
-template<class K, class V> tuple2<K, V> *__dictiteritems<K, V>::next() {
-    if (si_used != p->used) {
-        si_used = -1;
-        __throw_dict_changed();
-    }
-    int ret = p->next(&pos, &entry);
-    if (!ret) __throw_stop_iteration();
-    return new tuple2<K, V>(2, entry->key, entry->value);
-}
-
-/* pow */
-
-template<class A, class B> double __power(A a, B b);
-template<> inline double __power(__ss_int a, double b) { return pow(a,b); }
-template<> inline double __power(double a, __ss_int b) { 
-    if(b==2) return a*a;
-    else if(b==3) return a*a*a;
-    else return pow(a,b); 
-}
-
-complex *__power(complex *a, complex *b);
-complex *__power(complex *a, __ss_int b);
-complex *__power(complex *a, double b);
-
-template<class A> A __power(A a, A b);
-template<> inline double __power(double a, double b) { return pow(a,b); }
-
-template<> inline __ss_int __power(__ss_int a, __ss_int b) {
-    switch(b) {
-        case 2: return a*a;
-        case 3: return a*a*a;
-        case 4: return a*a*a*a;
-        case 5: return a*a*a*a*a;
-        case 6: return a*a*a*a*a*a;
-        case 7: return a*a*a*a*a*a*a;
-        case 8: return a*a*a*a*a*a*a*a;
-        case 9: return a*a*a*a*a*a*a*a*a;
-        case 10: return a*a*a*a*a*a*a*a*a*a;
-    }
-    __ss_int res, tmp;
-
-    res = 1;
-    tmp = a;
-
-    while((b>0)) {
-        if ((b%2)) {
-            res = (res*tmp);
-        }
-        tmp = (tmp*tmp);
-        b = (b/2);
-    }
-    return res;
-}
-
-#ifdef __SS_LONG
-inline __ss_int __power(__ss_int a, __ss_int b, __ss_int c) {
-    __ss_int res, tmp;
-
-    res = 1;
-    tmp = a;
-
-    while((b>0)) {
-        if ((b%2)) {
-            res = ((res*tmp)%c);
-        }
-        tmp = ((tmp*tmp)%c);
-        b = (b/2);
-    }
-    return res;
-}
-#endif
-
-inline int __power(int a, int b, int c) {
-    int res, tmp;
-
-    res = 1;
-    tmp = a;
-
-    while((b>0)) {
-        if ((b%2)) {
-            res = ((res*tmp)%c);
-        }
-        tmp = ((tmp*tmp)%c);
-        b = (b/2);
-    }
-    return res;
-}
-
-/* division */
-
-template<class A, class B> double __divs(A a, B b);
-template<> inline double __divs(__ss_int a, double b) { return (double)a/b; }
-template<> inline double __divs(double a, __ss_int b) { return a/((double)b); }
-
-template<class A> A __divs(A a, A b);
-template<> inline double __divs(double a, double b) { return a/b; }
-#ifdef __SS_LONG
-template<> inline __ss_int __divs(__ss_int a, __ss_int b) {
-    if(a<0 && b>0) return (a-b+1)/b;
-    else if(b<0 && a>0) return (a-b-1)/b;
-    else return a/b;
-}
-#endif
-template<> inline int __divs(int a, int b) {
-    if(a<0 && b>0) return (a-b+1)/b;
-    else if(b<0 && a>0) return (a-b-1)/b;
-    else return a/b;
-}
-
-template<class A, class B> double __floordiv(A a, B b);
-template<> inline double __floordiv(__ss_int a, double b) { return floor((double)a/b); }
-template<> inline double __floordiv(double a, __ss_int b) { return floor(a/((double)b)); }
-
-template<class A> inline A __floordiv(A a, A b) { return a->__floordiv__(b); }
-template<> inline double __floordiv(double a, double b) { return floor(a/b); }
-
-#ifdef __SS_LONG /* XXX */
-template<> inline __ss_int __floordiv(__ss_int a, __ss_int b) { return (__ss_int)floor((double)a/b); } /* XXX */
-#endif
-template<> inline int __floordiv(int a, int b) { return (int)floor((double)a/b); } /* XXX */
-
-/* modulo */
-
-template<class A> A __mods(A a, A b);
-#ifdef __SS_LONG /* XXX */
-template<> inline __ss_int __mods(__ss_int a, __ss_int b) {
-    int m = a%b;
-    if((m<0 && b>0)||(m>0 && b<0)) m+=b;
-    return m;
-}
-#endif
-template<> inline int __mods(int a, int b) {
-    int m = a%b;
-    if((m<0 && b>0)||(m>0 && b<0)) m+=b;
-    return m;
-}
-template<> inline double __mods(double a, double b) {
-    double f = fmod(a,b);
-    if((f<0 && b>0)||(f>0 && b<0)) f+=b;
-    return f;
-}
-
-template<class A, class B> double __mods(A a, B b);
-#ifdef __SS_LONG
-template<> inline double __mods(__ss_int a, double b) { return __mods((double)a, b); }
-template<> inline double __mods(double a, __ss_int b) { return __mods(a, (double)b); }
-#endif
-template<> inline double __mods(int a, double b) { return __mods((double)a, b); }
-template<> inline double __mods(double a, int b) { return __mods(a, (double)b); }
-
-/* divmod */
-
-template<class A> inline tuple2<A, A> *divmod(A a, A b) { return a->__divmod__(b); }
-template<> inline tuple2<double, double> *divmod(double a, double b) {
-    return new tuple2<double, double>(2, __floordiv(a,b), __mods(a,b));
-}
-#ifdef __SS_LONG
-template<> inline tuple2<__ss_int, __ss_int> *divmod(__ss_int a, __ss_int b) {
-    return new tuple2<__ss_int, __ss_int>(2, __floordiv(a,b), __mods(a,b));
-}
-#endif
-template<> inline tuple2<int, int> *divmod(int a, int b) {
-    return new tuple2<int, int>(2, __floordiv(a,b), __mods(a,b));
-}
-template<class A, class B> tuple2<double, double> *divmod(A a, B b);
-#ifdef __SS_LONG
-template<> inline tuple2<double, double> *divmod(double a, __ss_int b) { return divmod(a, (double)b); }
-template<> inline tuple2<double, double> *divmod(__ss_int a, double b) { return divmod((double)a, b); }
-#endif
-template<> inline tuple2<double, double> *divmod(double a, int b) { return divmod(a, (double)b); }
-template<> inline tuple2<double, double> *divmod(int a, double b) { return divmod((double)a, b); }
-
-tuple2<complex *, complex *> *divmod(complex *a, double b);
-tuple2<complex *, complex *> *divmod(complex *a, __ss_int b);
-
-/* dict.fromkeys */
-
-namespace __dict__ {
-    template<class A, class B> dict<A, B> *fromkeys(pyiter<A> *f, B b) {
-        dict<A, B> *d = new dict<A, B>();
-        typename pyiter<A>::for_in_unit e;
-        typename pyiter<A>::for_in_loop __3;
-        int __2;
-        pyiter<A> *__1;
-        FOR_IN(e,f,1,2,3)
-            d->__setitem__(e, b);
-        END_FOR
-        return d;
-    }
-
-    template<class A> dict<A, void *> *fromkeys(pyiter<A> *f) {
-        return fromkeys(f, (void *)0);
-    }
-
-}
-
-/* string formatting */
-
-int __fmtpos(str *fmt);
-int __fmtpos2(str *fmt);
-void __modfill(str **fmt, pyobj *t, str **s);
-str *mod_to_c2(pyobj *t);
-int_ *mod_to_int(pyobj *t);
-float_ *mod_to_float(pyobj *t);
-
-template<class T> str *__modtuple(str *fmt, tuple2<T,T> *t) {
-    list<pyobj *> *vals = new list<pyobj *>();
-    for(int i=0;i<len(t);i++)
-        vals->append(___box(t->__getitem__(i)));
-    return __mod4(fmt, vals);
-}
-
-template<class A, class B> str *__modtuple(str *fmt, tuple2<A,B> *t) {
-    list<pyobj *> *vals = new list<pyobj *>(2, ___box(t->__getfirst__()), ___box(t->__getsecond__()));
-    return __mod4(fmt, vals);
-}
-
-template<class T> str *__moddict(str *v, dict<str *, T> *d) {
-    str *const_6 = new str(")");
-    int i, pos, pos2;
-    list<str *> *names = (new list<str *>());
-
-    while((pos = __fmtpos2(v)) != -1) {
-        pos2 = v->find(const_6, pos);
-        names->append(v->__slice__(3, (pos+2), pos2, 0));
-        v = (v->__slice__(2, 0, (pos+1), 0))->__add__(v->__slice__(1, (pos2+1), 0, 0));
-    }
-
-    list<pyobj *> *vals = new list<pyobj *>();
-    for(i=0;i<len(names);i++)
-        vals->append(___box(d->__getitem__(names->__getitem__(i))));
-    return __mod4(v, vals);
-}
+#include "builtin/format.hpp"
 
 /* boxing */
 
@@ -1958,76 +1541,6 @@ int_ *___box(unsigned long);
 int_ *___box(unsigned long long);
 bool_ *___box(__ss_bool);
 float_ *___box(double);
-
-/* any */
-
-template<class A> __ss_bool any(A *iter) {
-    typename A::for_in_unit e;
-    typename A::for_in_loop __3;
-    int __2;
-    A *__1;
-    FOR_IN(e,iter,1,2,3)
-        if(___bool(e))
-            return True;
-    END_FOR
-    return False;
-}
-
-/* all */
-
-template<class A> __ss_bool all(A *iter) {
-    typename A::for_in_unit e;
-    typename A::for_in_loop __3;
-    int __2;
-    A *__1;
-    FOR_IN(e,iter,1,2,3)
-        if(!___bool(e))
-            return False;
-    END_FOR
-    return True;
-}
-
-/* ord, chr */
-
-int ord(str *c);
-
-static void __throw_chr_out_of_range() { /* improve inlining */
-    throw new ValueError(new str("chr() arg not in range(256)"));
-}
-inline str *chr(int i) {
-    if(i < 0 || i > 255)
-        __throw_chr_out_of_range();
-    return __char_cache[i];
-}
-inline str *chr(__ss_bool b) { return chr(b.value); }
-
-template<class T> inline str *chr(T t) {
-    return chr(t->__int__());
-}
-
-#ifdef __SS_LONG
-inline str *chr(__ss_int i) {
-    return chr((int)i);
-}
-
-template<> inline str *hex(__ss_int i) {
-    return hex((int)i);
-}
-template<> inline str *oct(__ss_int i) {
-    return oct((int)i);
-}
-template<> inline str *bin(__ss_int i) {
-    return bin((int)i);
-}
-#endif
-
-/* complex */
-
-template<class T> complex::complex(T t) {
-    __class__ = cl_complex;
-    real = __float(t);
-    imag = 0;
-}
 
 #ifdef __SS_BIND
 PyObject *__ss__newobj__(PyObject *, PyObject *args, PyObject *kwargs);
@@ -2071,19 +1584,6 @@ static void inline slicenr(__ss_int x, __ss_int &l, __ss_int &u, __ss_int &s, __
     }
 }
 
-/* file */
-
-template<class U> void *file::writelines(U *iter) {
-    __check_closed();
-    typename U::for_in_unit e;
-    typename U::for_in_loop __3;
-    int __2;
-    U *__1;
-    FOR_IN(e,iter,1,2,3)
-        write(e);
-    END_FOR
-    return NULL;
-}
 
 } // namespace __shedskin__
 #endif

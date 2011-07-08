@@ -674,3 +674,74 @@ template<class K, class V> dict<K,V> *dict<K,V>::__deepcopy__(dict<void *, pyobj
     END_FOR
     return c;
 }
+
+/* dictiterkeys/values/items */
+
+template<class K, class V> __dictiterkeys<K, V>::__dictiterkeys(dict<K,V> *p) {
+    this->p = p;
+    this->pos = 0;
+    this->si_used = p->used;
+}
+
+template<class K, class V> K __dictiterkeys<K, V>::next() {
+    if (si_used != p->used) {
+        si_used = -1;
+        __throw_dict_changed();
+    }
+    int ret = p->next(&pos, &entry);
+    if (!ret) __throw_stop_iteration();
+    return entry->key;
+}
+
+template<class K, class V> __dictitervalues<K, V>::__dictitervalues(dict<K,V> *p) {
+    this->p = p;
+    this->pos = 0;
+    this->si_used = p->used;
+}
+
+template<class K, class V> V __dictitervalues<K, V>::next() {
+    if (si_used != p->used) {
+        si_used = -1;
+        __throw_dict_changed();
+    }
+    int ret = p->next(&pos, &entry);
+    if (!ret) __throw_stop_iteration();
+    return entry->value;
+}
+
+template<class K, class V> __dictiteritems<K, V>::__dictiteritems(dict<K,V> *p) {
+    this->p = p;
+    this->pos = 0;
+    this->si_used = p->used;
+}
+
+template<class K, class V> tuple2<K, V> *__dictiteritems<K, V>::next() {
+    if (si_used != p->used) {
+        si_used = -1;
+        __throw_dict_changed();
+    }
+    int ret = p->next(&pos, &entry);
+    if (!ret) __throw_stop_iteration();
+    return new tuple2<K, V>(2, entry->key, entry->value);
+}
+
+/* dict.fromkeys */
+
+namespace __dict__ {
+    template<class A, class B> dict<A, B> *fromkeys(pyiter<A> *f, B b) {
+        dict<A, B> *d = new dict<A, B>();
+        typename pyiter<A>::for_in_unit e;
+        typename pyiter<A>::for_in_loop __3;
+        int __2;
+        pyiter<A> *__1;
+        FOR_IN(e,f,1,2,3)
+            d->__setitem__(e, b);
+        END_FOR
+        return d;
+    }
+
+    template<class A> dict<A, void *> *fromkeys(pyiter<A> *f) {
+        return fromkeys(f, (void *)0);
+    }
+
+}

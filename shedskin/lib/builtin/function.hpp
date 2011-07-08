@@ -491,3 +491,80 @@ template <class A> list<A> *filter(void *func, pyiter<A> *a) { return filter(((i
 inline str *filter(void *, str *a) { return filter(((int(*)(str *))(0)), a); }
 template <class A> tuple2<A,A> *filter(void *func, tuple2<A,A> *a) { return filter(((int(*)(A))(func)), a); }
 
+/* any */
+
+template<class A> __ss_bool any(A *iter) {
+    typename A::for_in_unit e;
+    typename A::for_in_loop __3;
+    int __2;
+    A *__1;
+    FOR_IN(e,iter,1,2,3)
+        if(___bool(e))
+            return True;
+    END_FOR
+    return False;
+}
+
+/* all */
+
+template<class A> __ss_bool all(A *iter) {
+    typename A::for_in_unit e;
+    typename A::for_in_loop __3;
+    int __2;
+    A *__1;
+    FOR_IN(e,iter,1,2,3)
+        if(!___bool(e))
+            return False;
+    END_FOR
+    return True;
+}
+
+/* ord, chr, hex, oct, bin */
+
+int ord(str *c);
+
+static void __throw_chr_out_of_range() { /* improve inlining */
+    throw new ValueError(new str("chr() arg not in range(256)"));
+}
+inline str *chr(int i) {
+    if(i < 0 || i > 255)
+        __throw_chr_out_of_range();
+    return __char_cache[i];
+}
+inline str *chr(__ss_bool b) { return chr(b.value); }
+
+template<class T> inline str *chr(T t) {
+    return chr(t->__int__());
+}
+
+#ifdef __SS_LONG
+inline str *chr(__ss_int i) {
+    return chr((int)i);
+}
+
+template<> inline str *hex(__ss_int i) {
+    return hex((int)i);
+}
+template<> inline str *oct(__ss_int i) {
+    return oct((int)i);
+}
+template<> inline str *bin(__ss_int i) {
+    return bin((int)i);
+}
+#endif
+
+/* id */
+
+template <class T> __ss_int id(T t) { 
+    return (intptr_t)t;
+}
+template <> __ss_int id(__ss_int);
+template <> __ss_int id(double);
+template <> __ss_int id(__ss_bool);
+
+/* type */
+
+template<class T> class_ *__type(T t) { return t->__class__; }
+template<> class_ *__type(int i);
+template<> class_ *__type(double d);
+
