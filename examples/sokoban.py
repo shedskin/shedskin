@@ -9,6 +9,14 @@ def tab_to_str(tab):
 def copy_tab(tab):
     return [arr.__copy__() for arr in tab]
  
+class Direction:
+    def __init__(self, dx, dy, letter):
+        self.dx, self.dy, self.letter = dx, dy, letter
+
+class Open:
+    def __init__(self, cur, csol, x, y):
+        self.cur, self.csol, self.x, self.y = cur, csol, x, y
+
 class Board(object):
     def __init__(self, board):
         data = filter(None, board.splitlines())
@@ -57,33 +65,37 @@ class Board(object):
         visited = set()
         open = deque()
  
-        open.append((copy_tab(self.ddata), "", self.px, self.py))
+        open.append(Open(copy_tab(self.ddata), "", self.px, self.py))
         visited.add(tab_to_str(self.ddata))
  
-        dirs = ((0, -1, 'u', 'U'), ( 1, 0, 'r', 'R'),
-                (0,  1, 'd', 'D'), (-1, 0, 'l', 'L'))
+        dirs = (
+            Direction( 0, -1, 'u'), 
+            Direction( 1,  0, 'r'),
+            Direction( 0,  1, 'd'), 
+            Direction(-1,  0, 'l'),
+        )
  
         while open:
-            cur, csol, x, y = open.popleft()
+            o = open.popleft()
+            cur, csol, x, y = o.cur, o.csol, o.x, o.y
  
             for i in xrange(4):
                 temp = copy_tab(cur)
-                dx, dy = dirs[i][0], dirs[i][1]
+                dir = dirs[i]
+                dx, dy = dir.dx, dir.dy
  
                 if temp[y+dy][x+dx] == '*':
                     if self.push(x, y, dx, dy, temp) and \
                        tab_to_str(temp) not in visited:
                         if self.is_solved(temp):
-                            return csol + dirs[i][3]
-                        open.append((copy_tab(temp),
-                                     csol + dirs[i][3], x+dx, y+dy))
+                            return csol + dir.letter.upper()
+                        open.append(Open(copy_tab(temp), csol + dir.letter.upper(), x+dx, y+dy))
                         visited.add(tab_to_str(temp))
                 elif self.move(x, y, dx, dy, temp) and \
                      tab_to_str(temp) not in visited:
                     if self.is_solved(temp):
-                        return csol + dirs[i][2]
-                    open.append((copy_tab(temp),
-                                 csol + dirs[i][2], x+dx, y+dy))
+                        return csol + dir.letter
+                    open.append(Open(copy_tab(temp), csol + dir.letter, x+dx, y+dy))
                     visited.add(tab_to_str(temp))
  
         return "No solution"
