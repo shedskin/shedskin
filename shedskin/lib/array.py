@@ -82,3 +82,6 @@ class array:
         pass
     def __delete__(self, x, a=1, b=1, s=1):
         pass
+
+    def __copy__(self):
+        return self
