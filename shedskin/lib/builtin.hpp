@@ -23,7 +23,7 @@
 #include <ctype.h>
 #include <limits>
 
-#ifdef __SS_BACKTRACE
+#ifndef WIN32
 #include <exception>
 #include <execinfo.h>
 #include <cxxabi.h>

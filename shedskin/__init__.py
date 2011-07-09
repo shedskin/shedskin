@@ -24,7 +24,7 @@ def usage():
  -r --random            Use fast random number generator (rand())
  -s --strhash           Use fast string hashing algorithm (murmur)
  -w --nowrap            Disable wrap-around checking
- -x --backtrace         Print backtraces for all exceptions
+ -x --traceback         Print traceback for uncaught exceptions (slow)
 """
 # -p --pypy              Make extension module PyPy-compatible
 # -v --msvc              Output MSVC-style Makefile
@@ -48,7 +48,7 @@ def start():
 
     # --- command-line options
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'vbchef:wad:m:rolspx', ['help', 'extmod', 'nobounds', 'nowrap', 'flags=', 'dir=', 'makefile=', 'random', 'noassert', 'long', 'msvc', 'ann', 'strhash', 'pypy', 'backtrace'])
+        opts, args = getopt.getopt(sys.argv[1:], 'vbchef:wad:m:rolspx', ['help', 'extmod', 'nobounds', 'nowrap', 'flags=', 'dir=', 'makefile=', 'random', 'noassert', 'long', 'msvc', 'ann', 'strhash', 'pypy', 'traceback'])
     except getopt.GetoptError:
         usage()
 
@@ -66,7 +66,7 @@ def start():
         if o in ['-m', '--makefile']: getgx().makefile_name = a
         if o in ['-s', '--strhash']: getgx().fast_hash = True
         if o in ['-v', '--msvc']: getgx().msvc = True
-        if o in ['-x', '--backtrace']: getgx().backtrace = True
+        if o in ['-x', '--traceback']: getgx().backtrace = True
         if o in ['-f', '--flags']:
             if not os.path.isfile(a):
                 print "*ERROR* no such file: '%s'" % a

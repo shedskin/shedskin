@@ -137,25 +137,43 @@ __ss_bool class_::__eq__(pyobj *c) {
 #include "builtin/format.cpp"
 
 
-/* start, stop */
-
 void __add_missing_newline() {
     if(__ss_stdout->options.lastchar != '\n')
         __ss_stdout->write(new str("\n"));
 }
 
-void __start(void (*initfunc)()) {
+/* print traceback for uncaught exception, may only work for GCC */
+
+void terminate_handler() {
     int code = 0;
-    try {
-        initfunc();
-        __add_missing_newline();
+
+    static bool terminating = false;
+    if(terminating)
+        abort();
+
+    terminating = true;
+    try
+    {
+        // rethrow to detect uncaught exception, will recursively
+        // call terminate() if no exception is active (which is
+        // detected above).
+        throw;
+
     } catch (SystemExit *s) {
         __add_missing_newline();
         if(s->code)
             print2(NULL, 0, 1, s->message);
         code = s->code;
+
     } catch (BaseException *e) {
         __add_missing_newline();
+
+#ifndef WIN32
+#ifdef __SS_BACKTRACE
+        print_traceback(stdout);
+#endif
+#endif
+
         str *s = __str(e);
         if(___bool(s))
             print2(NULL, 0, 1, __add_strs(3, e->__class__->__name__, new str(": "), s));
@@ -163,7 +181,16 @@ void __start(void (*initfunc)()) {
             print2(NULL, 0, 1, e->__class__->__name__);
         code = 1;
     }
+
     std::exit(code);
+}
+
+/* starting and stopping */
+
+void __start(void (*initfunc)()) {
+    std::set_terminate(terminate_handler);
+    initfunc();
+    std::exit(0);
 }
 
 void __ss_exit(int code) {

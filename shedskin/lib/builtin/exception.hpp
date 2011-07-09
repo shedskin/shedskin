@@ -1,12 +1,13 @@
 /* exceptions */
 
+#ifndef WIN32
+
 // stacktrace.h (c) 2008, Timo Bingmann from http://idlebox.net/
 // published under the WTFPL v2.0
 
 /** Print a demangled stack backtrace of the caller function to FILE* out. */
 
-#ifdef __SS_BACKTRACE
-static void print_stacktrace(FILE *out)
+static void print_traceback(FILE *out)
 {
     fprintf(out, "\nTraceback (most recent call last):\n"); 
 
@@ -95,9 +96,6 @@ public:
     str *message; 
     BaseException(str *message=0) { 
         __init__(message); 
-#ifdef __SS_BACKTRACE
-        print_stacktrace(stdout);
-#endif
     }
     void __init__(str *message) { 
         if(message) 
