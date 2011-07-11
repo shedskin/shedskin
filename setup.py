@@ -25,5 +25,5 @@ setup(name='shedskin',
       scripts=['scripts/shedskin'],
       cmdclass={'test':run_tests},
       packages=['shedskin'],
-      package_data={'shedskin': ['lib/*.cpp', 'lib/*.hpp', 'lib/*.py', 'lib/os/*.cpp', 'lib/os/*.hpp', 'lib/os/*.py', 'FLAGS*', 'illegal']},
+      package_data={'shedskin': ['lib/*.cpp', 'lib/*.hpp', 'lib/builtin/*.cpp', 'lib/builtin/*.hpp', 'lib/*.py', 'lib/os/*.cpp', 'lib/os/*.hpp', 'lib/os/*.py', 'FLAGS*', 'illegal']},
      )
