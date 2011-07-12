@@ -250,3 +250,8 @@ class Aap:
 aaplist = [Aap(3), Aap(4), Aap(5)]
 print sum(aaplist, Aap(6))
 print reduce(lambda a,b:a+b, aaplist), reduce(lambda a,b:a+b, aaplist, Aap(6))
+
+# set methods now often take multiple args
+sett = set(range(3))
+sett.update(range(2,5), range(12,14))
+print sorted(sett)

@@ -53,7 +53,7 @@ template<class T> template<class U> set<T>::set(U *other, int frozen) {
     this->frozen = frozen;
     this->hash = -1;
     EMPTY_TO_MINSIZE(this);
-    update(other);
+    update(1, other);
 }
 
 template<class T> template<class U> set<T>::set(U *other) {
@@ -61,7 +61,7 @@ template<class T> template<class U> set<T>::set(U *other) {
     this->frozen = 0;
     this->hash = -1;
     EMPTY_TO_MINSIZE(this);
-    update(other);
+    update(1, other);
 }
 
 template <class T> set<T>& set<T>::operator=(const set<T>& other) {
@@ -478,8 +478,13 @@ template <class T> void *set<T>::clear()
 	return NULL;
 }
 
+template<class T> template<class U, class V> void *set<T>::update(int, U *iter, V *iter2) {
+    update(1, iter);
+    update(1, iter2);
+    return NULL;
+}
 
-template<class T> template<class U> void *set<T>::update(U *iter) {
+template<class T> template<class U> void *set<T>::update(int, U *iter) {
     typename U::for_in_unit e;
     typename U::for_in_loop __3;
     int __2;
@@ -490,7 +495,7 @@ template<class T> template<class U> void *set<T>::update(U *iter) {
     return NULL;
 }
 
-template <class T> void *set<T>::update(set<T>* other)
+template <class T> void *set<T>::update(int, set<T>* other)
 {
 	register int i;
 	register setentry<T> *entry;
@@ -516,7 +521,7 @@ template <class T> void *set<T>::update(set<T>* other)
 template<class T> set<T> *set<T>::__ss_union(pyiter<T> *s) {
     set<T> *c = new set<T>(this->frozen);
     *c = *this;
-    c->update(s);
+    c->update(1, s);
 
     return c;
 }
@@ -529,7 +534,7 @@ template<class T> set<T> *set<T>::__ss_union(set<T> *s) {
     else { a = this; b = s; }
 
     *c = *b;
-    c->update(a);
+    c->update(1, a);
 
     return c;
 }
