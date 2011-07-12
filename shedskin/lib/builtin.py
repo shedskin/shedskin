@@ -543,8 +543,8 @@ class set(pyset):
         return self.unit
     def clear(self):
         pass
-    def update(self, b):
-        self.unit = b.unit
+    def update(self, *b):
+        self.unit = iter(b).next()
     def difference_update(self, b):
         pass
     def symmetric_difference_update(self, b):

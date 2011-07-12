@@ -560,8 +560,9 @@ public:
     void *clear();
     set<T> *copy();
 
-    template <class U> void *update(U *other);
-    void *update(set<T> *s);
+    template <class U> void *update(int, U *other);
+    template <class U, class V> void *update(int, U *other, V *other2);
+    void *update(int, set<T> *s);
 
     template <class U> set<T> *intersection(U *other);
     set<T> *intersection(set<T> *s);
