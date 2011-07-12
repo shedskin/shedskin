@@ -414,17 +414,17 @@ template <class A, class B, class C, class D> list<A> *map(int, A (*func)(B, C, 
 
 /* reduce */
 
-template<class A> typename A::for_in_unit reduce(typename A::for_in_unit (*func)(typename A::for_in_unit, typename A::for_in_unit), A *iter, typename A::for_in_unit initial) {
-    typename A::for_in_unit result = initial;
-    typename A::for_in_loop __7 = iter->for_in_init();
+template<class A, class B, class C> A reduce(A (*func)(A, A), B *iter, C initial) {
+    A result = initial;
+    typename B::for_in_loop __7 = iter->for_in_init();
     while(iter->for_in_has_next(__7))
         result = (*func)(result, iter->for_in_next(__7));
     return result;
 }
 
-template<class A> typename A::for_in_unit reduce(typename A::for_in_unit (*func)(typename A::for_in_unit, typename A::for_in_unit), A *iter) {
-    typename A::for_in_unit result;
-    typename A::for_in_loop __7 = iter->for_in_init();
+template<class A, class B> A reduce(A (*func)(A, A), B *iter) {
+    A result;
+    typename B::for_in_loop __7 = iter->for_in_init();
     int first = 1;
     while(iter->for_in_has_next(__7)) {
         if(first) {

@@ -232,7 +232,21 @@ print r.search('a').span()
 foo_a="foo";foo_b="foo";foo_c="foo";
 print id(foo_a)==id(foo_b)==id(foo_c)
 
-# russian test case
+# reduce fixes, more tests
 from math import fabs
-print reduce(lambda x,y: x + fabs(y), xrange(10)) 
-print reduce(lambda x,y: x + fabs(y), map(float, xrange(10))) 
+print reduce(lambda x,y: x + fabs(y), xrange(10))
+print reduce(lambda x,y: x + fabs(y), xrange(10), 1)
+print reduce(lambda x,y: x + fabs(y), xrange(10), 1.0)
+print reduce(lambda x,y: x + fabs(y), map(float, xrange(10)))
+print reduce(lambda x,y: x + fabs(y), map(float, xrange(10)), 2)
+print reduce(lambda x,y: x + fabs(y), map(float, xrange(10)), 2.0)
+class Aap:
+    def __init__(self, value):
+        self.value = value
+    def __add__(self, other):
+        return Aap(self.value+other.value)
+    def __str__(self):
+        return 'Aap(%s)' % self.value
+aaplist = [Aap(3), Aap(4), Aap(5)]
+print sum(aaplist, Aap(6))
+print reduce(lambda a,b:a+b, aaplist), reduce(lambda a,b:a+b, aaplist, Aap(6))
