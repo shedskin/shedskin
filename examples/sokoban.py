@@ -30,23 +30,23 @@ class Board(object):
     def move(self, x, y, dx, dy, data):
         if self.sdata[(y+dy) * self.nrows + x+dx] == '#' or \
            data[(y+dy) * self.nrows + x+dx] != ' ':
-            return (False, None)
+            return None
 
         data2 = array("c", data)
         data2[y * self.nrows + x] = ' '
         data2[(y+dy) * self.nrows + x+dx] = '@'
-        return (True, data2.tostring())
+        return data2.tostring()
 
     def push(self, x, y, dx, dy, data):
         if self.sdata[(y+2*dy) * self.nrows + x+2*dx] == '#' or \
            data[(y+2*dy) * self.nrows + x+2*dx] != ' ':
-            return (False, None)
+            return None
 
         data2 = array("c", data)
         data2[y * self.nrows + x] = ' '
         data2[(y+dy) * self.nrows + x+dx] = '@'
         data2[(y+2*dy) * self.nrows + x+2*dx] = '*'
-        return (True, data2.tostring())
+        return data2.tostring()
 
     def is_solved(self, data):
         for i in xrange(len(data)):
@@ -78,15 +78,15 @@ class Board(object):
                 dx, dy = dir.dx, dir.dy
 
                 if temp[(y+dy) * self.nrows + x+dx] == '*':
-                    r, temp = self.push(x, y, dx, dy, temp)
-                    if r and temp not in visited:
+                    temp = self.push(x, y, dx, dy, temp)
+                    if temp and temp not in visited:
                         if self.is_solved(temp):
                             return csol + dir.letter.upper()
                         open.append(Open(temp, csol + dir.letter.upper(), x+dx, y+dy))
                         visited.add(temp)
                 else:
-                    r, temp = self.move(x, y, dx, dy, temp)
-                    if r and temp not in visited:
+                    temp = self.move(x, y, dx, dy, temp)
+                    if temp and temp not in visited:
                         if self.is_solved(temp):
                             return csol + dir.letter
                         open.append(Open(temp, csol + dir.letter, x+dx, y+dy))
