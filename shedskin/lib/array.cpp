@@ -104,6 +104,9 @@ template<> template<> void *array<int>::extend(list<int> *l) { /* XXX generalize
     }
     return NULL;
 }
+template<> template<> void *array<str *>::extend(str *s) {
+    fromstring(s);
+}
 
 void __init() {
     __name__ = new str("array");
