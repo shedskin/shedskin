@@ -38,16 +38,20 @@ template<> double array<double>::__getitem__(__ss_int i) {
         return *((double *)(&units[i*itemsize]));
 }
 
+void __throw_no_char() {
+    throw new TypeError(new str("array item must be char"));
+}
+
 template<> void *array<str *>::append(str *t) {
-    if(len(t) != 1)
-        throw new TypeError(new str("array item must be char"));
+    if(t->unit.size() != 1)
+        __throw_no_char();
     units.push_back(t->unit[0]);
     return NULL;
 }
 
 template<> void *array<str *>::__setitem__(__ss_int i, str *t) {
-    if(len(t) != 1)
-        throw new TypeError(new str("array item must be char"));
+    if(t->unit.size() != 1)
+        __throw_no_char();
     i = __wrap(this, i);
     units[i*itemsize] = t->unit[0];
     return NULL;
