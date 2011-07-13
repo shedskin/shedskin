@@ -42,11 +42,11 @@ void __init() {
     __ss_proxy = new dict<void *, void *>();
 #endif
 
-    cl_class_ = new class_ ("class_", 0, 0);
-    cl_none = new class_("none", 1, 1);
-    cl_str_ = new class_("str_", 2, 2);
-    cl_int_ = new class_("int_", 3, 3);
-    cl_float_ = new class_("float_", 4, 4);
+    cl_class_ = new class_ ("class", 0, 0);
+    cl_none = new class_("None", 1, 1);
+    cl_str_ = new class_("str", 2, 2);
+    cl_int_ = new class_("int", 3, 3);
+    cl_float_ = new class_("float", 4, 4);
     cl_list = new class_("list", 5, 5);
     cl_tuple = new class_("tuple", 6, 6);
     cl_dict = new class_("dict", 7, 7);
