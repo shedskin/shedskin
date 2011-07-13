@@ -464,7 +464,7 @@ Performance Tips and Tricks
 
 6. Several Python features (that may slow down generated code) are not always necessary, and can be turned off. See the section `Command-line Options`_ for details. Turning off bounds checking is usually a very safe optimization, and can help a lot for indexing-heavy code.
 
-7. For best results, configure a recent version of the Boehm GC using ``./configure --enable-cplusplus --enable-threads=pthreads --enable-thread-local-alloc --enable-large-config --enable-parallel-mark``. The last option allows the GC to take advantage of having multiple cores.
+7. For best results, configure a recent version of the Boehm GC using ``CPPFLAGS="-O3 -march=native" ./configure --enable-cplusplus --enable-threads=pthreads --enable-thread-local-alloc --enable-large-config --enable-parallel-mark``. The last option allows the GC to take advantage of having multiple cores.
 
 8. When optimizing, it is extremely useful to know exactly how much time is spent in each part of your program. The program `Gprof2Dot`_ can be used to generate beautiful graphs for a stand-alone program, as well as the original Python code. The program `OProfile`_ can be used to profile an extension module.
 
