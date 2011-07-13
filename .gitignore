@@ -31,6 +31,8 @@ shedskin/lib/array.py
 shedskin/lib/hashlib.py
 shedskin/lib/serial.py
 examples/LZ2
+examples/sokoban
+examples/score4
 examples/TonyJpegDecoder
 examples/ac_encode
 examples/adatron
