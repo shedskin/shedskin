@@ -255,3 +255,7 @@ print reduce(lambda a,b:a+b, aaplist), reduce(lambda a,b:a+b, aaplist, Aap(6))
 sett = set(range(3))
 sett.update(range(2,5), range(12,14))
 print sorted(sett)
+
+#cannot hurt to test this
+print [].__class__.__name__
+print 'hoi'.__class__.__name__
