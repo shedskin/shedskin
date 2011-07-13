@@ -2,6 +2,8 @@
 
 16,000 lines in total (using sloccount, around 23,000 otherwise)
 
+shedskin -b (disable index-out-of-bounds checking) often improves performance.
+
 If you have another interesting test case, please send it to:
    mark.dufour@gmail.com
 
@@ -65,7 +67,7 @@ lines  name               description                   notes
    286 richards.py        standard benchmark
    469 rdb.py             iPod shuffle programmer       see comments in top
     82 rsync.py           rsync algorithm               see comments in top
-   129 score4.py          connect four/four-in-a-row    shedskin -b 
+   129 score4.py          connect four/four-in-a-row
     80 sieve.py           prime number sieves
    192 sha.py             SHA-1 algorithm               shedskin -l sha
     92 sokoban.py         sokoban solver
