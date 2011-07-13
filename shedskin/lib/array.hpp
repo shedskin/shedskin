@@ -154,7 +154,7 @@ template<class T> __ss_bool array<T>::__eq__(pyobj *p) {
    if(b->__len__() != len)
        return False;
    if(this->typecode->unit[0] == b->typecode->unit[0])
-       return __mbool(strncmp(&(this->units[0]), &(b->units[0]), this->units.size()) == 0);
+       return __mbool(memcmp(&(this->units[0]), &(b->units[0]), this->units.size()) == 0);
    for(size_t i=0; i<len; i++)
        if(!__eq(this->__getitem__(i), b->__getitem__(i)))
            return False;
