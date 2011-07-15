@@ -2425,7 +2425,7 @@ class generateVisitor(ASTVisitor):
         # obj.attr
         else:
             for t in self.mergeinh[node.expr]:
-                if isinstance(t[0], class_) and node.attrname in t[0].parent.vars:
+                if isinstance(t[0], class_) and node.attrname in t[0].parent.vars and not node.attrname in t[0].funcs:
                     error("class attribute '"+node.attrname+"' accessed without using class name", node, warning=True, mv=getmv())
                     break
 
