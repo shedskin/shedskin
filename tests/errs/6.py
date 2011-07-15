@@ -20,6 +20,7 @@ class meuh:
         b = self.attr
 #        self.attr = 2 XXX add warning
 meuh()
+meuh().attr
 
 #*WARNING* 6.py:6: '__del__' is not supported
 #*WARNING* 6.py:8: '__iter__' is not supported
@@ -27,3 +28,4 @@ meuh()
 #*WARNING* 6.py:6: function (class AA, '__del__') not called!
 #*WARNING* 6.py:14: attribute won't be deleted
 #*WARNING* 6.py:20: class attribute 'attr' accessed without using class name
+#*WARNING* 6.py:23: class attribute 'attr' accessed without using class name
