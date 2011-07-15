@@ -259,3 +259,8 @@ print sorted(sett)
 #cannot hurt to test this
 print [].__class__.__name__
 print 'hoi'.__class__.__name__
+
+#string formatting asterisk
+print "%d * %d" % (1,2)
+print "%d* %% %d" % (1,2)
+print "%d%% *%d" % (1,2)
