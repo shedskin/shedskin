@@ -1742,7 +1742,11 @@ class generateVisitor(ASTVisitor):
                 self.visitm(node.node, '(', func)
 
         else:
-            error("unbound identifier '"+ident+"'", node, mv=getmv())
+            if ident:
+                error("unresolved call to '"+ident+"'", node, mv=getmv(), warning=True)
+            else:
+                error("unresolved call (possibly caused by method passing, which is currently not allowed)", node, mv=getmv(), warning=True)
+            return
 
         if not funcs:
             if constructor: self.append(')')
