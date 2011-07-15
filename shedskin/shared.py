@@ -607,7 +607,7 @@ def lookup_class_module(objexpr, mv, parent):
 def analyze_callfunc(node, node2=None, merge=None): # XXX generate target list XXX uniform variable system! XXX node2, merge?
     #print 'analyze callnode', node, inode(node).parent
     namespace, objexpr, method_call, parent_constr = inode(node).mv.module, None, False, False 
-    constructor, direct_call = None, None
+    constructor, direct_call, ident = None, None, None
     mv = inode(node).mv
  
     # anon func call XXX refactor as __call__ method call below
@@ -643,8 +643,6 @@ def analyze_callfunc(node, node2=None, merge=None): # XXX generate target list X
 
     elif isinstance(node.node, Name):
         ident = node.node.name
-    else:
-        ident = 'meuk' # XXX ?
 
     # direct [constructor] call
     if isinstance(node.node, Name) or namespace != inode(node).mv.module:
