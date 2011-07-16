@@ -29,6 +29,10 @@
 #include <cxxabi.h>
 #endif
 
+#if defined(_MSC_VER)
+#include "builtin/msvc.hpp"
+#endif
+
 namespace __shedskin__ {
 
 /* integer type */
@@ -1224,7 +1228,6 @@ template<class T> str *repr(T t) { if (!t) return new str("None"); return t->__r
 str *__str(void *);
 
 #include "builtin/bool.hpp"
-#include "builtin/typeof.hpp"
 #include "builtin/exception.hpp"
 
 /* file objects */
