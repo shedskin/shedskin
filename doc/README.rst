@@ -532,6 +532,7 @@ The following people have contributed to **Shed Skin** development so far:
 * Mark Dewing
 * James Coughlan
 * Michael Elkins
+* Enzo Erbano
 * FFAO
 * Victor Garcia
 * Luis M. Gonzales
