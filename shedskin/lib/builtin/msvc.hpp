@@ -1,6 +1,13 @@
-/* typeof for MSVC */
-
 #if defined(_MSC_VER) && _MSC_VER>=1400
+
+/* logical operator keywords */
+
+#define and &&
+#define or ||
+#define not ~
+
+/* typeof */
+
 namespace msvc_typeof_impl {
 	/* This is a fusion of Igor Chesnokov's method (http://rsdn.ru/forum/src/1094305.aspx)
 	and Steven Watanabe's method (http://lists.boost.org/Archives/boost/2006/12/115006.php)
