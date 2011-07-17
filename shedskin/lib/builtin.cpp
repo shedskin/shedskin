@@ -262,7 +262,7 @@ str *pyobj::__repr__() {
     return __add_strs(3, new str("<"), __class__->__name__, new str(" instance>"));
 }
 
-int pyobj::__hash__() {
+long pyobj::__hash__() {
     return (intptr_t)this;
 }
 

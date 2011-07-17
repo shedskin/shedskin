@@ -1108,7 +1108,7 @@ class generateVisitor(ASTVisitor):
         if is_init:
             ident = nokeywords(func.parent.ident)
         elif func.ident in ['__hash__']:
-            header += 'int ' # XXX __ss_int leads to problem with virtual parent
+            header += 'long ' # XXX __ss_int leads to problem with virtual parent
         elif func.returnexpr:
             header += nodetypestr(func.retnode.thing, func) # XXX mult
         else:

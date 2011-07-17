@@ -91,9 +91,6 @@ class OverflowError;
 
 /* STL types */
 
-template<class T> class hashfunc;
-template<class T> class hasheq;
-
 #define __GC_VECTOR(T) std::vector< T, gc_allocator< T > >
 #define __GC_DEQUE(T) std::deque< T, gc_allocator< T > >
 #define __GC_STRING std::basic_string<char,std::char_traits<char>,gc_allocator<char> >
@@ -107,7 +104,7 @@ public:
     virtual str *__repr__();
     virtual str *__str__();
 
-    virtual int __hash__();
+    virtual long __hash__();
     virtual __ss_int __cmp__(pyobj *p);
 
     virtual __ss_bool __eq__(pyobj *p);
@@ -260,7 +257,7 @@ public:
 
     __ss_bool __eq__(tuple2<A,B> *b);
     __ss_int __cmp__(pyobj *p);
-    int __hash__();
+    long __hash__();
 
     tuple2<A,B> *__copy__();
     tuple2<A,B> *__deepcopy__(dict<void *, pyobj *> *memo);
@@ -305,7 +302,7 @@ public:
 
     tuple2<T,T> *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
 
-    int __hash__();
+    long __hash__();
 
     tuple2<T,T> *__deepcopy__(dict<void *, pyobj *> *memo);
     tuple2<T,T> *__copy__();
@@ -404,7 +401,7 @@ public:
     str *rjust(int width, str *fchar=0);
 
     __ss_int __cmp__(pyobj *p);
-    int __hash__();
+    long __hash__();
 
     __ss_int __int__(); /* XXX compilation warning for int(pyseq<str *> *) */
 
@@ -540,7 +537,7 @@ public:
     int mask;
     setentry<T> *table;
     setentry<T> smalltable[MINSIZE];
-    int hash;
+    long hash;
 
     template<class U> set(U *other, int frozen);
     template<class U> set(U *other);
@@ -637,7 +634,7 @@ public:
     PyObject *__to_py__();
 #endif
 
-    int __hash__();
+    long __hash__();
 
     // used internally
     setentry<T>* lookup(T key, long hash) const;
@@ -707,7 +704,7 @@ public:
     complex *parsevalue(str *s);
 
     __ss_bool __eq__(pyobj *p);
-    int __hash__();
+    long __hash__();
     __ss_bool __nonzero__();
 
 #ifdef __SS_BIND
@@ -937,21 +934,21 @@ static void inline slicenr(__ss_int x, __ss_int &l, __ss_int &u, __ss_int &s, __
 
 /* hashing */
 
-static inline int hash_combine(int seed, int other) {
+static inline long hash_combine(long seed, long other) {
     return seed ^ (other + 0x9e3779b9 + (seed << 6) + (seed >> 2));
 }
 
-template<class T> inline int hasher(T t) {
+template<class T> inline long hasher(T t) {
     if(t == NULL) return 0;
     return t->__hash__();
 }
 #ifdef __SS_LONG
-template<> inline int hasher(__ss_int a) { return (a==-1)?-2:a; }
+template<> inline long hasher(__ss_int a) { return (a==-1)?-2:a; }
 #endif
-template<> inline int hasher(int a) { return (a==-1)?-2:a; }
-template<> inline int hasher(__ss_bool a) { return a.value; }
-template<> inline int hasher(void *a) { return (intptr_t)a; }
-template<> inline int hasher(double v) {
+template<> inline long hasher(int a) { return (a==-1)?-2:a; }
+template<> inline long hasher(__ss_bool a) { return a.value; }
+template<> inline long hasher(void *a) { return (intptr_t)a; }
+template<> inline long hasher(double v) {
     long hipart, x; /* modified from CPython */
     int expo;
     v = frexp(v, &expo);
@@ -963,17 +960,6 @@ template<> inline int hasher(double v) {
         x = -2;
     return x;
 }
-
-template<class T> class hashfunc
-{
-public:
-    int operator()(T t) const { return hasher<T>(t); }
-};
-
-template<class T> class hasheq {
-public:
-    int operator()(T t, T v) const { return __eq(t, v); }
-};
 
 /* comparison */
 

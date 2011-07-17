@@ -497,7 +497,7 @@ str *str::__imul__(__ss_int n) {
     return __mul__(n);
 }
 
-int str::__hash__() {
+long str::__hash__() {
     if(hash != -1)
         return hash;
     long x;

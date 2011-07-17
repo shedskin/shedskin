@@ -129,7 +129,7 @@ template<class T> __ss_int set<T>::__cmp__(pyobj *p) {
     return 0;
 }
 
-template<class T> int set<T>::__hash__() {
+template<class T> long set<T>::__hash__() {
     if(!this->frozen)
         throw new TypeError(new str("unhashable type: 'set'"));
     long h, hash = 1927868237L;

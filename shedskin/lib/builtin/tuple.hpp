@@ -144,10 +144,10 @@ template<class T> tuple2<T,T> *tuple2<T, T>::__slice__(__ss_int x, __ss_int l, _
     return c;
 }
 
-template<class T> int tuple2<T, T>::__hash__() {
-    int seed = 0;
-    int sz = this->units.size();
-    for(int i = 0; i<sz; i++)
+template<class T> long tuple2<T, T>::__hash__() {
+    long seed = 0;
+    ssize_t sz = this->units.size();
+    for(ssize_t i = 0; i<sz; i++)
         seed = hash_combine(seed, hasher<T>(this->units[i]));
     return seed;
 }
@@ -234,8 +234,8 @@ template<class A, class B> __ss_int tuple2<A, B>::__cmp__(pyobj *p) {
     return __cmp(second, b->second);
 }
 
-template<class A, class B> int tuple2<A, B>::__hash__() {
-    int seed = 0;
+template<class A, class B> long tuple2<A, B>::__hash__() {
+    long seed = 0;
     seed = hash_combine(seed, hasher<A>(first));
     seed = hash_combine(seed, hasher<B>(second));
     return seed;
