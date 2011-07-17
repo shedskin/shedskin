@@ -756,6 +756,7 @@ def sorted(it, cmp=0, key=0, reverse=0):
     elem = iter(it).next()
     cmp(elem, elem)
     elem.__cmp__(elem)
+    elem.__lt__(elem)
     key(elem)
     return [elem]
 
@@ -811,6 +812,7 @@ def __sum1(l):
 
 def cmp(a, b):
     a.__cmp__(b)
+    a.__lt__(b)
     return 1
 
 def any(a):
