@@ -977,9 +977,41 @@ public:
 
 /* comparison */
 
-template<class T> inline __ss_int __cmp(T a, T b) {
+template<class T> struct dereference {};
+template<class T> struct dereference <T*> {
+    typedef T type;
+};
+
+template<typename T, typename Sig>
+struct has_cmp {
+    template <typename U, U> struct type_check;
+    template <typename V> static char (& chk(type_check<Sig, &V::__cmp__>*))[1];
+    template <typename  > static char (& chk(...))[2];
+    static bool const value = (sizeof(chk<T>(0)) == 1);
+};
+
+template<typename T, typename Sig>
+struct has_eq {
+    template <typename U, U> struct type_check;
+    template <typename V> static char (& chk(type_check<Sig, &V::__eq__>*))[1];
+    template <typename  > static char (& chk(...))[2];
+    static bool const value = (sizeof(chk<T>(0)) == 1);
+};
+
+template<class T> inline __ss_int __cmp(T a, T b) { /* XXX check all possibilities here */
+    typedef typename dereference<T>::type T2;
     if (!a) return -1;
-    return a->__cmp__(b);
+    if (has_cmp<T2, int (T2::*)(T)>::value)
+        return a->__cmp__(b);
+    else {
+        if (has_eq<T2, __ss_bool (T2::*)(T)>::value and a->__eq__(b))
+            return 0;
+        if(a->__lt__(b))
+            return -1;
+        else
+            return 1;
+    }
+    return 0;
 }
 
 #ifdef __SS_LONG
@@ -1044,11 +1076,6 @@ template<class T, class V> class cpp_cmp_key_rev {
 public:
     cpp_cmp_key_rev(hork a) { key = a; }
     __ss_int operator()(T a, T b) const { return __cmp(key(a), key(b)) == 1; }
-};
-
-template<class T> struct dereference {};
-template<class T> struct dereference <T*> {
-    typedef T type;
 };
 
 template<class T> inline int __is_none(T *t) { return !t; }

@@ -125,7 +125,7 @@ class A(object):
     def __repr__(self):
         return "A(%s, %s)" % (self.x, self.y)
     def __cmp__(self, other):
-        return self.x + self.y > other.x + other.y
+        return cmp(self.x + self.y, other.x + other.y)
 
 pairs = [[18, 6], [28, 5], [35, 26], [31, 28], [3, 3], [32, 37], [11, 17], [28, 29]]
 items = []

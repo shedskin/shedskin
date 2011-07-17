@@ -264,3 +264,20 @@ print 'hoi'.__class__.__name__
 print "%d * %d" % (1,2)
 print "%d* %% %d" % (1,2)
 print "%d%% *%d" % (1,2)
+
+#cmp fallback to rich comparison
+class inst(object):
+    def __init__(self, num, opcode='add', pc='1'):
+        self.opcode = opcode
+        self.pc = pc
+        self.num = num
+    
+    def __lt__( self, other):
+        return self.num < other.num
+
+    def __repr__(self): 
+        return "%d" % self.num
+        
+Seq = [inst(3),inst(1),inst(4),inst(2)]
+print Seq
+print sorted(Seq)
