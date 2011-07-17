@@ -334,6 +334,9 @@ int_ *___box(int i) {
 int_ *___box(unsigned int i) {
     return new int_(i);
 }
+int_ *___box(long i) {
+    return new int_(i);
+}
 int_ *___box(unsigned long i) {
     return new int_(i);
 }

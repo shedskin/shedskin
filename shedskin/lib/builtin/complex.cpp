@@ -120,7 +120,7 @@ __ss_bool complex::__eq__(pyobj *p) {
     return __mbool(real == ((complex *)p)->real && imag == ((complex *)p)->imag);
 }
 
-int complex::__hash__() {
+long complex::__hash__() {
     return ((__ss_int)imag)*1000003+((__ss_int)real);
 }
 
