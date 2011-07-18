@@ -968,6 +968,7 @@ template<class T> struct dereference <T*> {
     typedef T type;
 };
 
+/* 
 template<typename T, typename Sig>
 struct has_cmp {
     template <typename U, U> struct type_check;
@@ -984,7 +985,7 @@ struct has_eq {
     static bool const value = (sizeof(chk<T>(0)) == 1);
 };
 
-template<class T> inline __ss_int __cmp(T a, T b) { /* XXX check all possibilities here */
+template<class T> inline __ss_int __cmp(T a, T b) {
     typedef typename dereference<T>::type T2;
     if (!a) return -1;
     if (has_cmp<T2, int (T2::*)(T)>::value)
@@ -998,6 +999,12 @@ template<class T> inline __ss_int __cmp(T a, T b) { /* XXX check all possibiliti
             return 1;
     }
     return 0;
+}
+*/
+
+template<class T> inline __ss_int __cmp(T a, T b) {
+    if (!a) return -1;
+    return a->__cmp__(b);
 }
 
 #ifdef __SS_LONG
