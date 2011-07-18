@@ -234,7 +234,7 @@ class list(pyseq):
     def sort(self, cmp=0, key=0, reverse=0):
         elem = self.unit
         cmp(elem, elem)
-        elem.__cmp__(elem)
+        cmp2(elem, elem)
         key(elem)
 
 class tuple(pyseq):
@@ -755,8 +755,7 @@ def abs(x):
 def sorted(it, cmp=0, key=0, reverse=0):
     elem = iter(it).next()
     cmp(elem, elem)
-    elem.__cmp__(elem)
-    elem.__lt__(elem)
+    cmp2(elem, elem)
     key(elem)
     return [elem]
 
@@ -783,22 +782,22 @@ def __zip2(arg1, arg2):
     return [(iter(arg1).next(), iter(arg2).next())]
 
 def max(__kw_key=0, *arg): # XXX 0
-    arg.__cmp__(arg)
+    cmp(arg, arg)
     __kw_key(arg)
     return arg
 def __max1(arg, __kw_key=0):
     elem = iter(arg).next()
-    elem.__cmp__(elem)
+    cmp(elem, elem)
     __kw_key(elem)
     return elem
 
 def min(__kw_key=0, *arg): # XXX 0
-    arg.__cmp__(arg)
+    cmp(arg, arg)
     __kw_key(arg)
     return arg
 def __min1(arg, __kw_key=0):
     elem = iter(arg).next()
-    elem.__cmp__(elem)
+    cmp(elem, elem)
     __kw_key(elem)
     return elem
 
@@ -812,8 +811,13 @@ def __sum1(l):
 
 def cmp(a, b):
     a.__cmp__(b)
+    a.__eq__(b)
     a.__lt__(b)
+    a.__gt__(b)
     return 1
+
+def cmp2(a, b):
+    cmp(a, b)
 
 def any(a):
     return True

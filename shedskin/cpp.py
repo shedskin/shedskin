@@ -276,10 +276,34 @@ class generateVisitor(ASTVisitor):
         for n in self.module.mod_path:
             print >>self.out, '} // module namespace'
 
+        self.rich_comparison()
+
         if getgx().extension_module:
             extmod.convert_methods2(self)
 
         print >>self.out, '#endif'
+
+    def rich_comparison(self):
+        rich_cls = []
+        for cl in getmv().classes.values():
+            if not '__cmp__' in cl.funcs and [f for f in ('__eq__', '__lt__', '__gt__') if f in cl.funcs]:
+                rich_cls.append(cl)
+        if rich_cls:
+            print >>self.out, 'namespace __shedskin__ { /* XXX */'
+            for cl in rich_cls:
+                t = '__%s__::%s *' % (getmv().module.ident, nokeywords(cl.ident))
+                print >>self.out, 'template<> __ss_int __cmp(%sa, %sb) {' % (t, t)
+                print >>self.out, '    if (!a) return -1;'
+                if '__eq__' in cl.funcs:
+                    print >>self.out, '    if(a->__eq__(b)) return 0;'
+                if '__lt__' in cl.funcs:
+                    print >>self.out, '    return (a->__lt__(b))?-1:1;'
+                elif '__gt__' in cl.funcs:
+                    print >>self.out, '    return (a->__gt__(b))?1:-1;'
+                else:
+                    print >>self.out, '    return __cmp<void *>(a, b);'
+                print >>self.out, '}'
+            print >>self.out, '}'
 
     def module_cpp(self, node):
         print >>self.out, '#include "builtin.hpp"\n'
