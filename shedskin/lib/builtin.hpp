@@ -1102,6 +1102,7 @@ template<class T> PyObject *__to_py(T t) {
 template<> PyObject *__to_py(__ss_int i);
 #endif
 template<> PyObject *__to_py(int i);
+template<> PyObject *__to_py(long i);
 template<> PyObject *__to_py(__ss_bool i);
 template<> PyObject *__to_py(double i);
 template<> PyObject *__to_py(void *);
