@@ -1538,27 +1538,27 @@ class generateVisitor(ASTVisitor):
             if inline in ['%'] or (inline in ['/'] and not (floattype.intersection(ltypes) or floattype.intersection(rtypes))):
                 if not defclass('complex') in [t[0] for t in rtypes]: # XXX
                     self.append({'%': '__mods', '/': '__divs'}[inline]+'(')
-                    self.visit2(left, func)
+                    self.visit(left, func)
                     self.append(', ')
-                    self.visit2(origright, func)
+                    self.visit(origright, func)
                     self.append(')')
                     return
 
         # --- inline floordiv # XXX merge above?
         if (inline and ul and ur) and inline in ['//']:
             self.append({'//': '__floordiv'}[inline]+'(')
-            self.visit2(left, func)
+            self.visit(left, func)
             self.append(',')
-            self.visit2(right, func)
+            self.visit(right, func)
             self.append(')')
             return
 
         # --- inline other
         if inline and ((ul and ur) or not middle or (isinstance(left, Name) and left.name == 'None') or (isinstance(origright, Name) and origright.name == 'None')): # XXX not middle, cleanup?
             self.append('(')
-            self.visit2(left, func)
+            self.visit(left, func)
             self.append(inline)
-            self.visit2(origright, func)
+            self.visit(origright, func)
             self.append(')')
             return
 
@@ -1566,28 +1566,28 @@ class generateVisitor(ASTVisitor):
         if inline in ['+', '-'] and isinstance(origright, Const) and isinstance(origright.value, complex):
             if floattype.intersection(ltypes) or inttype.intersection(ltypes):
                 self.append('(new complex(')
-                self.visit2(left, func)
+                self.visit(left, func)
                 self.append(', '+{'+':'', '-':'-'}[inline]+str(origright.value.imag)+'))')
                 return
 
         # --- 'a.__mul__(b)': use template to call to b.__mul__(a), while maintaining evaluation order
         if inline in ['+', '*', '-', '/'] and ul and not ur:
             self.append('__'+{'+':'add', '*':'mul', '-':'sub', '/':'div'}[inline]+'2(')
-            self.visit2(left, func)
+            self.visit(left, func)
             self.append(', ')
-            self.visit2(origright, func)
+            self.visit(origright, func)
             self.append(')')
             return
 
         # --- default: left, connector, middle, right
         self.append(self.par(left, '('))
-        self.visit2(left, func)
+        self.visit(left, func)
         self.append(self.par(left, ')'))
         self.append(self.connector(left, func)+middle+'(')
-        self.refer(origright, func, visit2=True) # XXX bleh
+        self.refer(origright, func)
         self.append(')')
 
-    def do_compare(self, left, right, middle, inline, func=None, prefix=''): # XXX cleanup please
+    def do_compare(self, left, right, middle, inline, func=None, prefix=''):
         ltypes = self.mergeinh[left]
         origright = right
         if isinstance(right, Bitpair):
@@ -1635,7 +1635,7 @@ class generateVisitor(ASTVisitor):
             self.append('==(')
         else:
             self.append(self.connector(left, func)+middle+'(')
-        self.refer(origright, func, visit2=True) # XXX bleh
+        self.refer(origright, func) # XXX bleh
         self.append(')'+postfix)
 
     def visit2(self, node, func): # XXX use temp vars in comparisons, e.g. (t1=fun())
@@ -1664,16 +1664,13 @@ class generateVisitor(ASTVisitor):
             self.visitCallFunc(inode(node.expr).fakefunc, func)
         self.visitm(')', func)
 
-    def refer(self, node, func, visit2=False):
+    def refer(self, node, func):
         if isinstance(node, str):
             var = lookupvar(node, func)
             return node
         if isinstance(node, Name) and not node.name in ['None','True','False']:
             var = lookupvar(node.name, func)
-        if visit2:
-            self.visit2(node, func)
-        else:
-            self.visit(node, func)
+        self.visit(node, func)
 
     def library_func(self, funcs, modname, clname, funcname):
         for func in funcs:
