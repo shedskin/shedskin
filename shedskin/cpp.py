@@ -1522,7 +1522,7 @@ class generateVisitor(ASTVisitor):
             return thingy
         return ''
 
-    def visitBinary(self, left, right, middle, inline, func=None, prefix=''): # XXX cleanup please
+    def visitBinary(self, left, right, middle, inline, func=None): # XXX cleanup please
         ltypes = self.mergeinh[left]
         origright = right
         if isinstance(right, Bitpair):
@@ -1562,26 +1562,6 @@ class generateVisitor(ASTVisitor):
             self.append(')')
             return
 
-        # --- prefix '!'
-        postfix = ''
-        if prefix:
-            self.append('('+prefix)
-            postfix = ')'
-
-        # --- comparison
-        if middle in ['__eq__', '__ne__', '__gt__', '__ge__', '__lt__', '__le__']:
-            self.append(middle[:-2]+'(')
-            self.visit2(left, func)
-            self.append(', ')
-            if nodetypestr(left, func) != nodetypestr(origright, func):
-                self.append('((%s)(' % nodetypestr(left, func))
-                self.visit2(origright, func)
-                self.append('))')
-            else:
-                self.visit2(origright, func)
-            self.append(')'+postfix)
-            return
-
         # --- 1 +- ..j
         if inline in ['+', '-'] and isinstance(origright, Const) and isinstance(origright.value, complex):
             if floattype.intersection(ltypes) or inttype.intersection(ltypes):
@@ -1596,19 +1576,16 @@ class generateVisitor(ASTVisitor):
             self.visit2(left, func)
             self.append(', ')
             self.visit2(origright, func)
-            self.append(')'+postfix)
+            self.append(')')
             return
 
         # --- default: left, connector, middle, right
         self.append(self.par(left, '('))
         self.visit2(left, func)
         self.append(self.par(left, ')'))
-        if middle == '==':
-            self.append('==(')
-        else:
-            self.append(self.connector(left, func)+middle+'(')
+        self.append(self.connector(left, func)+middle+'(')
         self.refer(origright, func, visit2=True) # XXX bleh
-        self.append(')'+postfix)
+        self.append(')')
 
     def do_compare(self, left, right, middle, inline, func=None, prefix=''): # XXX cleanup please
         ltypes = self.mergeinh[left]
