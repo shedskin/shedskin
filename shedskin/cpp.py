@@ -1475,10 +1475,19 @@ class generateVisitor(ASTVisitor):
         self.visitBitpair(Bitpair(node.nodes, msg, inline), func)
 
     def visitBitpair(self, node, func=None):
-        if len(node.nodes) == 1:
-            self.visit(node.nodes[0], func)
-        else:
-            self.visitBinary(node.nodes[0], Bitpair(node.nodes[1:], node.msg, node.inline), node.msg, node.inline, func)
+        ltypes = self.mergeinh[node.nodes[0]]
+        ul = unboxable(ltypes)
+        self.append('(')
+        for child in node.nodes:
+            self.append('(')
+            self.visit(child, func)
+            self.append(')')
+            if child is not node.nodes[-1]:
+                if ul:
+                    self.append(node.inline)
+                else:
+                    self.append('->'+node.msg)
+        self.append(')')
 
     def visitRightShift(self, node, func=None):
         self.visitBinary(node.left, node.right, augmsg(node, 'rshift'), '>>', func)
@@ -1524,9 +1533,6 @@ class generateVisitor(ASTVisitor):
 
     def visitBinary(self, left, right, middle, inline, func=None): # XXX cleanup please
         ltypes = self.mergeinh[left]
-        origright = right
-        if isinstance(right, Bitpair):
-            right = right.nodes[0]
         rtypes = self.mergeinh[right]
         ul, ur = unboxable(ltypes), unboxable(rtypes)
 
@@ -1540,7 +1546,7 @@ class generateVisitor(ASTVisitor):
                     self.append({'%': '__mods', '/': '__divs'}[inline]+'(')
                     self.visit(left, func)
                     self.append(', ')
-                    self.visit(origright, func)
+                    self.visit(right, func)
                     self.append(')')
                     return
 
@@ -1554,20 +1560,20 @@ class generateVisitor(ASTVisitor):
             return
 
         # --- inline other
-        if inline and ((ul and ur) or not middle or (isinstance(left, Name) and left.name == 'None') or (isinstance(origright, Name) and origright.name == 'None')): # XXX not middle, cleanup?
+        if inline and ((ul and ur) or not middle or (isinstance(left, Name) and left.name == 'None') or (isinstance(right, Name) and right.name == 'None')): # XXX not middle, cleanup?
             self.append('(')
             self.visit(left, func)
             self.append(inline)
-            self.visit(origright, func)
+            self.visit(right, func)
             self.append(')')
             return
 
         # --- 1 +- ..j
-        if inline in ['+', '-'] and isinstance(origright, Const) and isinstance(origright.value, complex):
+        if inline in ['+', '-'] and isinstance(right, Const) and isinstance(right.value, complex):
             if floattype.intersection(ltypes) or inttype.intersection(ltypes):
                 self.append('(new complex(')
                 self.visit(left, func)
-                self.append(', '+{'+':'', '-':'-'}[inline]+str(origright.value.imag)+'))')
+                self.append(', '+{'+':'', '-':'-'}[inline]+str(right.value.imag)+'))')
                 return
 
         # --- 'a.__mul__(b)': use template to call to b.__mul__(a), while maintaining evaluation order
@@ -1575,7 +1581,7 @@ class generateVisitor(ASTVisitor):
             self.append('__'+{'+':'add', '*':'mul', '-':'sub', '/':'div'}[inline]+'2(')
             self.visit(left, func)
             self.append(', ')
-            self.visit(origright, func)
+            self.visit(right, func)
             self.append(')')
             return
 
@@ -1584,14 +1590,11 @@ class generateVisitor(ASTVisitor):
         self.visit(left, func)
         self.append(self.par(left, ')'))
         self.append(self.connector(left, func)+middle+'(')
-        self.refer(origright, func)
+        self.refer(right, func)
         self.append(')')
 
     def do_compare(self, left, right, middle, inline, func=None, prefix=''):
         ltypes = self.mergeinh[left]
-        origright = right
-        if isinstance(right, Bitpair):
-            right = right.nodes[0]
         rtypes = self.mergeinh[right]
         ul, ur = unboxable(ltypes), unboxable(rtypes)
 
@@ -1599,11 +1602,11 @@ class generateVisitor(ASTVisitor):
         floattype = set([(defclass('float_'),0)]) # XXX new type?
 
         # --- inline other
-        if inline and ((ul and ur) or not middle or (isinstance(left, Name) and left.name == 'None') or (isinstance(origright, Name) and origright.name == 'None')): # XXX not middle, cleanup?
+        if inline and ((ul and ur) or not middle or (isinstance(left, Name) and left.name == 'None') or (isinstance(right, Name) and right.name == 'None')): # XXX not middle, cleanup?
             self.append('(')
             self.visit2(left, func)
             self.append(inline)
-            self.visit2(origright, func)
+            self.visit2(right, func)
             self.append(')')
             return
 
@@ -1618,12 +1621,12 @@ class generateVisitor(ASTVisitor):
             self.append(middle[:-2]+'(')
             self.visit2(left, func)
             self.append(', ')
-            if nodetypestr(left, func) != nodetypestr(origright, func):
+            if nodetypestr(left, func) != nodetypestr(right, func):
                 self.append('((%s)(' % nodetypestr(left, func))
-                self.visit2(origright, func)
+                self.visit2(right, func)
                 self.append('))')
             else:
-                self.visit2(origright, func)
+                self.visit2(right, func)
             self.append(')'+postfix)
             return
 
@@ -1635,7 +1638,7 @@ class generateVisitor(ASTVisitor):
             self.append('==(')
         else:
             self.append(self.connector(left, func)+middle+'(')
-        self.refer(origright, func) # XXX bleh
+        self.refer(right, func) # XXX bleh
         self.append(')'+postfix)
 
     def visit2(self, node, func): # XXX use temp vars in comparisons, e.g. (t1=fun())
