@@ -1416,9 +1416,9 @@ class generateVisitor(ASTVisitor):
             elif op == '>=': msg, short, pre = '__ge__', '>=', None
 
             if msg == '__contains__':
-                self.visitBinary(right, left, msg, short, func, pre)
+                self.do_compare(right, left, msg, short, func, pre)
             else:
-                self.visitBinary(left, right, msg, short, func, pre)
+                self.do_compare(left, right, msg, short, func, pre)
 
             if right != node.ops[-1][1]:
                 self.append('&&')
@@ -1596,6 +1596,57 @@ class generateVisitor(ASTVisitor):
             self.visit2(left, func)
             self.append(', ')
             self.visit2(origright, func)
+            self.append(')'+postfix)
+            return
+
+        # --- default: left, connector, middle, right
+        self.append(self.par(left, '('))
+        self.visit2(left, func)
+        self.append(self.par(left, ')'))
+        if middle == '==':
+            self.append('==(')
+        else:
+            self.append(self.connector(left, func)+middle+'(')
+        self.refer(origright, func, visit2=True) # XXX bleh
+        self.append(')'+postfix)
+
+    def do_compare(self, left, right, middle, inline, func=None, prefix=''): # XXX cleanup please
+        ltypes = self.mergeinh[left]
+        origright = right
+        if isinstance(right, Bitpair):
+            right = right.nodes[0]
+        rtypes = self.mergeinh[right]
+        ul, ur = unboxable(ltypes), unboxable(rtypes)
+
+        inttype = set([(defclass('int_'),0)]) # XXX new type?
+        floattype = set([(defclass('float_'),0)]) # XXX new type?
+
+        # --- inline other
+        if inline and ((ul and ur) or not middle or (isinstance(left, Name) and left.name == 'None') or (isinstance(origright, Name) and origright.name == 'None')): # XXX not middle, cleanup?
+            self.append('(')
+            self.visit2(left, func)
+            self.append(inline)
+            self.visit2(origright, func)
+            self.append(')')
+            return
+
+        # --- prefix '!'
+        postfix = ''
+        if prefix:
+            self.append('('+prefix)
+            postfix = ')'
+
+        # --- comparison
+        if middle in ['__eq__', '__ne__', '__gt__', '__ge__', '__lt__', '__le__']:
+            self.append(middle[:-2]+'(')
+            self.visit2(left, func)
+            self.append(', ')
+            if nodetypestr(left, func) != nodetypestr(origright, func):
+                self.append('((%s)(' % nodetypestr(left, func))
+                self.visit2(origright, func)
+                self.append('))')
+            else:
+                self.visit2(origright, func)
             self.append(')'+postfix)
             return
 
