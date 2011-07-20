@@ -1095,8 +1095,8 @@ str *a2b_hex(str *data) {
 void __init() {
     __name__ = new str("binascii");
 
-    cl_Error = new class_("Error", 43, 43);
-    cl_Incomplete = new class_("Incomplete", 42, 42);
+    cl_Error = new class_("Error");
+    cl_Incomplete = new class_("Incomplete");
     default_0 = False;
     default_1 = False;
     default_2 = False;

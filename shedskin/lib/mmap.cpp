@@ -903,7 +903,7 @@ void __init()
 
         __name__ = new str("mmap");
 
-        cl_mmap = new class_("mmap", 32, 32);
+        cl_mmap = new class_("mmap");
 
         __initialized = true;
     }

@@ -941,21 +941,21 @@ void __init() {
 
     __name__ = new str("ConfigParser");
 
-    cl_InterpolationError = new class_("InterpolationError", 16, 19);
-    cl_InterpolationMissingOptionError = new class_("InterpolationMissingOptionError", 17, 17);
-    cl_Error = new class_("Error", 15, 24);
-    cl_InterpolationDepthError = new class_("InterpolationDepthError", 18, 18);
-    cl_InterpolationSyntaxError = new class_("InterpolationSyntaxError", 19, 19);
-    cl_MissingSectionHeaderError = new class_("MissingSectionHeaderError", 21, 21);
-    cl_RawConfigParser = new class_("RawConfigParser", 27, 28);
+    cl_InterpolationError = new class_("InterpolationError");
+    cl_InterpolationMissingOptionError = new class_("InterpolationMissingOptionError");
+    cl_Error = new class_("Error");
+    cl_InterpolationDepthError = new class_("InterpolationDepthError");
+    cl_InterpolationSyntaxError = new class_("InterpolationSyntaxError");
+    cl_MissingSectionHeaderError = new class_("MissingSectionHeaderError");
+    cl_RawConfigParser = new class_("RawConfigParser");
     RawConfigParser::_boolean_states = (new dict<str *, __ss_int>(8, new tuple2<str *, __ss_int>(2,const_29,1), new tuple2<str *, __ss_int>(2,const_30,1), new tuple2<str *, __ss_int>(2,const_31,1), new tuple2<str *, __ss_int>(2,const_32,1), new tuple2<str *, __ss_int>(2,const_33,0), new tuple2<str *, __ss_int>(2,const_34,0), new tuple2<str *, __ss_int>(2,const_35,0), new tuple2<str *, __ss_int>(2,const_36,0)));
     RawConfigParser::SECTCRE = __re__::compile(const_37);
     RawConfigParser::OPTCRE = __re__::compile(const_38);
-    cl_ParsingError = new class_("ParsingError", 20, 21);
-    cl_DuplicateSectionError = new class_("DuplicateSectionError", 22, 22);
-    cl_NoOptionError = new class_("NoOptionError", 23, 23);
-    cl_NoSectionError = new class_("NoSectionError", 24, 24);
-    cl_ConfigParser = new class_("ConfigParser", 28, 28);
+    cl_ParsingError = new class_("ParsingError");
+    cl_DuplicateSectionError = new class_("DuplicateSectionError");
+    cl_NoOptionError = new class_("NoOptionError");
+    cl_NoSectionError = new class_("NoSectionError");
+    cl_ConfigParser = new class_("ConfigParser");
     ConfigParser::_KEYCRE = __re__::compile(const_39);
 
     __all__ = (new list<str *>(13, const_40, const_41, const_42, const_43, const_44, const_45, const_46, const_47, const_48, const_49, const_50, const_51, const_52));

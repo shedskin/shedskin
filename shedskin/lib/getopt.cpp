@@ -70,7 +70,7 @@ void __init() {
 
     __name__ = new str("getopt");
 
-    cl_GetoptError = new class_("GetoptError", 15, 15);
+    cl_GetoptError = new class_("GetoptError");
 
 }
 

@@ -110,7 +110,7 @@ template<> template<> void *array<str *>::extend(str *s) {
 
 void __init() {
     __name__ = new str("array");
-    cl_array = new class_("array", 29, 29);
+    cl_array = new class_("array");
 
     buffy = malloc(8);
     default_0 = NULL;
