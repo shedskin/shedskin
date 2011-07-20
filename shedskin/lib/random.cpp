@@ -917,8 +917,8 @@ void __init() {
 
     __name__ = new str("random");
 
-    cl_WichmannHill = new class_("WichmannHill", 14, 14);
-    cl_Random = new class_("Random", 13, 14);
+    cl_WichmannHill = new class_("WichmannHill");
+    cl_Random = new class_("Random");
 
     /**
     =========================== Source Notes ==============================

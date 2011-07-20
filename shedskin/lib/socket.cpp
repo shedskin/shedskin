@@ -675,11 +675,11 @@ void __init()
 {
     __name__ = new str("socket");
 
-    cl_socket = new class_("socket", 33, 33);
-    cl_herror = new class_("herror", 13, 13);
-    cl_gaierror = new class_("gaierror", 14, 14);
-    cl_timeout = new class_("timeout", 15, 15);
-    cl_error = new class_("error", 16, 16);
+    cl_socket = new class_("socket");
+    cl_herror = new class_("herror");
+    cl_gaierror = new class_("gaierror");
+    cl_timeout = new class_("timeout");
+    cl_error = new class_("error");
 
     default_0 = __ss_AF_INET;
     default_1 = __ss_SOCK_STREAM;

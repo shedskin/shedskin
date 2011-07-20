@@ -876,20 +876,6 @@ def polymorphic_cl(classes):
 def polymorphic_t(types):
     return polymorphic_cl([t[0] for t in types])
 
-# --- number classes with low and high numbers, to enable constant-time subclass check
-def number_classes():
-    counter = 0
-    for cl in getgx().allclasses:
-        if not cl.bases:
-            counter = number_class_rec(cl, counter+1)
-
-def number_class_rec(cl, counter):
-    cl.low = counter
-    for child in cl.children:
-        counter = number_class_rec(child, counter+1)
-    cl.high = counter
-    return counter
-
 def nokeywords(name):
     if name in getgx().cpp_keywords:
         return getgx().ss_prefix+name

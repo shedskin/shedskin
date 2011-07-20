@@ -1368,14 +1368,14 @@ tuple2<__ss_int,__ss_int>* pipe() {
 void __init() {
     const_0 = new str("(%d, %d, %d, %d, %d, %d, %d, %d, %d, %d)");
 
-    cl___cstat = new class_("__cstat", 4, 4);
+    cl___cstat = new class_("__cstat");
 
     linesep = new str("\n");
 #ifdef WIN32
     name = new str("nt");
 #else
     name = new str("posix");
-    cl___vfsstat = new class_("__vfsstat", 4, 4);
+    cl___vfsstat = new class_("__vfsstat");
 #endif
 
     __ss_environ = new dict<str *, str *>();

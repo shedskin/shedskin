@@ -715,10 +715,9 @@ public:
 
 class class_: public pyobj {
 public:
-    int low, high;
     str *__name__;
 
-    class_(const char *name, int low, int high);
+    class_(const char *name);
     str *__repr__();
     __ss_bool __eq__(pyobj *c);
 
@@ -846,9 +845,6 @@ str *raw_input(str *msg = 0);
 
 void print(int n, file *f, str *end, str *sep, ...);
 void print2(file *f, int comma, int n, ...);
-
-__ss_bool isinstance(pyobj *, class_ *);
-__ss_bool isinstance(pyobj *, tuple2<class_ *, class_ *> *);
 
 list<__ss_int> *range(__ss_int b);
 list<__ss_int> *range(__ss_int a, __ss_int b, __ss_int s=1);

@@ -425,7 +425,7 @@ str *pack(int, str *fmt, ...) {
 
 void __init() {
     ordering = "@<>!=";
-    cl_error = new class_("error", 16, 16);
+    cl_error = new class_("error");
     int num = 1;
     little_endian = (*(char *)&num == 1);
     buffy = malloc(8);

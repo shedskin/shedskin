@@ -393,7 +393,7 @@ class generateVisitor(ASTVisitor):
                                 self.eol()
                 if child.name in getmv().classes:
                     cl = getmv().classes[child.name]
-                    self.output('cl_'+cl.ident+' = new class_("%s", %d, %d);' % (cl.ident, cl.low, cl.high))
+                    self.output('cl_'+cl.ident+' = new class_("%s");' % (cl.ident))
                     for varname in cl.parent.varorder:
                         var = cl.parent.vars[varname]
                         if var.initexpr:
@@ -1761,9 +1761,9 @@ class generateVisitor(ASTVisitor):
                 self.append('hasher(') # XXX cleanup
             elif ident == '__print': # XXX
                 self.append('print(')
-            elif ident == 'isinstance' and isinstance(node.args[1], Name) and node.args[1].name in ['float','int']:
-                error("'isinstance' cannot be used with ints or floats; assuming always true", node, warning=True, mv=getmv())
-                self.append('1')
+            elif ident == 'isinstance':
+                error("'isinstance' is not supported; always returns True", node, warning=True, mv=getmv())
+                self.append('True')
                 return
             else:
                 if ident in self.module.mv.ext_funcs: # XXX using as? :P

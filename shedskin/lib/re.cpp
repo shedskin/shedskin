@@ -738,7 +738,7 @@ list<str *> *findall(str *pat, str *subj, __ss_int flags)
 
 void __init(void)
 {
-    cl_error = new class_("error", 33, 33);
+    cl_error = new class_("error");
 
     pcre_malloc = &re_malloc;
     pcre_free = &re_free;

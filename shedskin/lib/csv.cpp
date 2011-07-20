@@ -617,12 +617,12 @@ void __init() {
 
     __name__ = new str("csv");
 
-    cl_writer = new class_("writer", 21, 21);
-    cl_DictReader = new class_("DictReader", 48, 48);
-    cl_Excel = new class_("Excel", 46, 46);
-    cl_reader = new class_("reader", 44, 44);
-    cl_Error = new class_("Error", 43, 43);
-    cl_DictWriter = new class_("DictWriter", 2, 2);
+    cl_writer = new class_("writer");
+    cl_DictReader = new class_("DictReader");
+    cl_Excel = new class_("Excel");
+    cl_reader = new class_("reader");
+    cl_Error = new class_("Error");
+    cl_DictWriter = new class_("DictWriter");
 
     __0 = range(8);
     START_RECORD = __0->__getfast__(0);

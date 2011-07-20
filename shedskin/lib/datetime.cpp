@@ -15,11 +15,11 @@ list<str *> *DayNames, *MonthNames;
 class_ *cl_date, *cl_tzinfo, *cl_timedelta, *cl_time, *cl_datetime;
 
 void __init() {
-	cl_date = new class_("date", 34, 34);				//is this right?
-	cl_tzinfo = new class_("tzinfo", 35, 35);
-	cl_datetime = new class_("datetime", 36, 36);
-	cl_time = new class_("time", 37, 37);
-	cl_timedelta = new class_("timedelta", 38, 38);
+	cl_date = new class_("date");
+	cl_tzinfo = new class_("tzinfo");
+	cl_datetime = new class_("datetime");
+	cl_time = new class_("time");
+	cl_timedelta = new class_("timedelta");
 	
     date_format = new str("%04d-%02d-%02d");
     hour_format1 = new str("%d:%02d:%02d");

@@ -897,9 +897,6 @@ def analyze(source, testing=False):
             var = defaultvar('__name__', cl)
             getgx().types[inode(var)] = set([(defclass('str_'), 0)])
 
-    # --- number classes (-> constant-time subclass check)
-    cpp.number_classes()
-
     # --- non-ifa: copy classes for each allocation site
     for cl in getgx().allclasses:
         if cl.ident in ['int_','float_','none', 'class_','str_', 'bool_']:

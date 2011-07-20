@@ -42,19 +42,19 @@ void __init() {
     __ss_proxy = new dict<void *, void *>();
 #endif
 
-    cl_class_ = new class_ ("class", 0, 0);
-    cl_none = new class_("None", 1, 1);
-    cl_str_ = new class_("str", 2, 2);
-    cl_int_ = new class_("int", 3, 3);
-    cl_float_ = new class_("float", 4, 4);
-    cl_list = new class_("list", 5, 5);
-    cl_tuple = new class_("tuple", 6, 6);
-    cl_dict = new class_("dict", 7, 7);
-    cl_set = new class_("set", 8, 8);
-    cl_object = new class_("object", 9, 9);
-    cl_rangeiter = new class_("rangeiter", 10, 10);
-    cl_complex = new class_("complex", 11, 11);
-    cl_xrange = new class_("xrange", 12, 12);
+    cl_class_ = new class_ ("class");
+    cl_none = new class_("None");
+    cl_str_ = new class_("str");
+    cl_int_ = new class_("int");
+    cl_float_ = new class_("float");
+    cl_list = new class_("list");
+    cl_tuple = new class_("tuple");
+    cl_dict = new class_("dict");
+    cl_set = new class_("set");
+    cl_object = new class_("object");
+    cl_rangeiter = new class_("rangeiter");
+    cl_complex = new class_("complex");
+    cl_xrange = new class_("xrange");
 
     True.value = 1;
     False.value = 0;
@@ -91,32 +91,31 @@ void __init() {
     __ss_stderr = new file(stderr);
     __ss_stderr->name = new str("<stderr>");
 
-    cl_stopiteration = new class_("StopIteration", 13, 13);
-    cl_assertionerror = new class_("AssertionError", 14, 14);
-    cl_eoferror = new class_("EOFError", 15, 15);
-    cl_floatingpointerror = new class_("FloatingPointError", 16, 16);
-    cl_keyerror = new class_("KeyError", 17, 17);
-    cl_indexerror = new class_("IndexError", 18, 18);
-    cl_typeerror = new class_("TypeError", 19, 19);
-    cl_ioerror = new class_("IOError", 20, 20);
-    cl_valueerror = new class_("ValueError", 21, 21);
-    cl_zerodivisionerror = new class_("ZeroDivisionError", 22, 22);
-    cl_keyboardinterrupt = new class_("KeyboardInterrupt", 23, 23);
-    cl_memoryerror = new class_("MemoryError", 24, 24);
-    cl_nameerror = new class_("NameError", 25, 25);
-    cl_notimplementederror = new class_("NotImplementedError", 26, 26);
-    cl_oserror = new class_("OSError", 27, 27);
-    cl_overflowerror = new class_("OverflowError", 28, 28);
-    cl_runtimeerror = new class_("RuntimeError", 29, 29);
-    cl_syntaxerror = new class_("SyntaxError", 30, 30);
-    cl_systemerror = new class_("SystemError", 31, 31);
-    cl_systemexit = new class_("SystemExit", 32, 32);
+    cl_stopiteration = new class_("StopIteration");
+    cl_assertionerror = new class_("AssertionError");
+    cl_eoferror = new class_("EOFError");
+    cl_floatingpointerror = new class_("FloatingPointError");
+    cl_keyerror = new class_("KeyError");
+    cl_indexerror = new class_("IndexError");
+    cl_typeerror = new class_("TypeError");
+    cl_ioerror = new class_("IOError");
+    cl_valueerror = new class_("ValueError");
+    cl_zerodivisionerror = new class_("ZeroDivisionError");
+    cl_keyboardinterrupt = new class_("KeyboardInterrupt");
+    cl_memoryerror = new class_("MemoryError");
+    cl_nameerror = new class_("NameError");
+    cl_notimplementederror = new class_("NotImplementedError");
+    cl_oserror = new class_("OSError");
+    cl_overflowerror = new class_("OverflowError");
+    cl_runtimeerror = new class_("RuntimeError");
+    cl_syntaxerror = new class_("SyntaxError");
+    cl_systemerror = new class_("SystemError");
+    cl_systemexit = new class_("SystemExit");
 
 }
 
-class_::class_(const char *name, int low, int high) {
+class_::class_(const char *name) {
     this->__name__ = new str(name);
-    this->low = low; this->high = high;
 }
 
 str *class_::__repr__() {

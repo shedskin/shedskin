@@ -38,22 +38,6 @@ template<> double __float(str *s) {
     return strtod(s->unit.c_str(), NULL);
 }
 
-__ss_bool isinstance(pyobj *p, class_ *c) {
-    int classnr = p->__class__->low;
-    return __mbool(((classnr >= c->low) && (classnr <= c->high)));
-}
-
-__ss_bool isinstance(pyobj *p, tuple2<class_ *, class_ *> *t) {
-    int classnr = p->__class__->low;
-    for(int i = 0; i < t->__len__(); i++)
-    {
-       class_ *c = t->__getitem__(i);
-       if ((classnr >= c->low) && (classnr <= c->high))
-           return True;
-    }
-    return False;
-}
-
 template<> __ss_int id(__ss_int) { throw new TypeError(new str("'id' called with integer")); }
 template<> __ss_int id(double) { throw new TypeError(new str("'id' called with float")); }
 template<> __ss_int id(__ss_bool) { throw new TypeError(new str("'id' called with bool")); }
