@@ -1,5 +1,6 @@
 /* complex methods */
 
+/*
 complex::complex(double real, double imag) {
     this->__class__ = cl_complex;
     this->real = real;
@@ -79,7 +80,6 @@ complex *complex::__idiv__(complex *b) { return __div__(b); }
 complex *complex::__idiv__(double b) { return __div__(b); }
 complex *complex::__rdiv__(double b) { complex *c=new complex(); __complexdiv(c, new complex(b), this); return c; }
 
-complex *complex::conjugate() { return new complex(real, -imag); }
 complex *complex::__pos__() { return this; }
 complex *complex::__neg__() { return new complex(-real, -imag); }
 double complex::__abs__() { return std::sqrt(real*real+imag*imag); }
@@ -128,20 +128,8 @@ __ss_bool complex::__nonzero__() {
     return __mbool(real != 0 || imag != 0);
 }
 
-str *complex::__repr__() {
-    str *left, *middle, *right;
-    if(real==0)
-        return __modct(new str("%gj"), 1, ___box(imag));
-    left = __modct(new str("(%g"), 1, ___box(real));
-    if(imag<0)
-        middle = new str("");
-    else
-        middle = new str("+");
-    right = __modct(new str("%gj)"), 1, ___box(imag));
-    return __add_strs(3, left, middle, right);
-}
 
-/* pow */
+// pow 
 
 complex *__power(complex *a, complex *b) {
     complex *r = new complex();
@@ -175,7 +163,41 @@ complex *__power(complex *a, double b) {
     return __power(a, new complex(b, 0));
 }
 
-/* division */
+// division
 
 tuple2<complex *, complex *> *divmod(complex *a, double b) { return a->__divmod__(b); }
 tuple2<complex *, complex *> *divmod(complex *a, __ss_int b) { return a->__divmod__(b); }
+
+*/
+
+/* complex methods */
+
+complex_::complex_(complex c) {
+    unit = c;
+    __class__ = cl_complex;
+}
+
+str *complex_::__repr__() {
+    return unit.__repr__();
+}
+
+__ss_bool complex_::__nonzero__() {
+    return __mbool(unit.real == 0 and unit.imag == 0);
+}
+
+str *complex::__repr__() {
+    str *left, *middle, *right;
+    if(real==0)
+        return __modct(new str("%gj"), 1, ___box(imag));
+    left = __modct(new str("(%g"), 1, ___box(real));
+    if(imag<0)
+        middle = new str("");
+    else
+        middle = new str("+");
+    right = __modct(new str("%gj)"), 1, ___box(imag));
+    return __add_strs(3, left, middle, right);
+}
+
+long complex::__hash__() {
+    return ((__ss_int)imag)*1000003+((__ss_int)real);
+}

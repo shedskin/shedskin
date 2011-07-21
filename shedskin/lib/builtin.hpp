@@ -45,15 +45,18 @@ namespace __shedskin__ {
 
 /* forward class declarations */
 
+class __ss_bool;
+class complex;
+
 class pyobj;
 class class_;
 class str;
-class int_;
-class __ss_bool;
-class float_;
 class file;
+
+class int_;
 class bool_;
-class complex;
+class float_;
+class complex_;
 
 template <class T> class pyiter;
 template <class T> class pyseq;
@@ -657,7 +660,7 @@ public:
     inline __ss_bool& operator=(int a);
 };
 
-class complex : public pyobj {
+class complex {
 public:
     double real, imag;
 
@@ -665,52 +668,11 @@ public:
     template<class T> complex(T t);
     complex(str *s);
 
-    complex *__add__(complex *b);
-    complex *__add__(double b);
-    complex *__iadd__(complex *b);
-    complex *__iadd__(double b);
-
-    complex *__sub__(complex *b);
-    complex *__sub__(double b);
-    complex *__rsub__(double b);
-    complex *__isub__(complex *b);
-    complex *__isub__(double b);
-
-    complex *__mul__(complex *b);
-    complex *__mul__(double b);
-    complex *__imul__(complex *b);
-    complex *__imul__(double b);
-
-    complex *__div__(complex *b);
-    complex *__div__(double b);
-    complex *__rdiv__(double b);
-    complex *__idiv__(complex *b);
-    complex *__idiv__(double b);
-
-    complex *__floordiv__(complex *b);
-    complex *__floordiv__(double b);
-    complex *__mod__(complex *b);
-    complex *__mod__(double b);
-    tuple2<complex *, complex *> *__divmod__(complex *b);
-    tuple2<complex *, complex *> *__divmod__(double b);
-
-    complex *conjugate();
-    complex *__pos__();
-    complex *__neg__();
-    double __abs__();
-
     str *__repr__();
-
-    complex *parsevalue(str *s);
-
-    __ss_bool __eq__(pyobj *p);
     long __hash__();
-    __ss_bool __nonzero__();
 
-#ifdef __SS_BIND
-    complex(PyObject *);
-    PyObject *__to_py__();
-#endif
+    inline complex operator+(complex b);
+    inline complex conjugate();
 };
 
 class class_: public pyobj {
@@ -746,6 +708,14 @@ public:
     str *__repr__();
     __ss_bool __nonzero__();
     __ss_int __index__();
+};
+
+class complex_ : public pyobj {
+public:
+    complex unit;
+    complex_(complex i);
+    str *__repr__();
+    __ss_bool __nonzero__();
 };
 
 class object : public pyobj {
@@ -955,6 +925,9 @@ template<> inline long hasher(double v) {
     if (x== -1)
         x = -2;
     return x;
+}
+template<> inline long hasher(complex c) {
+    return c.__hash__();
 }
 
 /* comparison */
