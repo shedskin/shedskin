@@ -281,3 +281,8 @@ class inst(object):
 Seq = [inst(3),inst(1),inst(4),inst(2)]
 print Seq
 print sorted(Seq)
+
+#complex problem
+a = 4j + 3j
+print a
+b = a.real
