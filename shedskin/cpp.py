@@ -192,7 +192,7 @@ class generateVisitor(ASTVisitor):
     def connector(self, node, func):
         if singletype(node, module):
             return '::'
-        return '->'
+        return '.'
 
     def declaredefs(self, vars, declare):
         pairs = []
@@ -1568,14 +1568,6 @@ class generateVisitor(ASTVisitor):
             self.append(')')
             return
 
-        # --- 1 +- ..j
-        if inline in ['+', '-'] and isinstance(right, Const) and isinstance(right.value, complex):
-            if floattype.intersection(ltypes) or inttype.intersection(ltypes):
-                self.append('(new complex(')
-                self.visit(left, func)
-                self.append(', '+{'+':'', '-':'-'}[inline]+str(right.value.imag)+'))')
-                return
-
         # --- 'a.__mul__(b)': use template to call to b.__mul__(a), while maintaining evaluation order
         if inline in ['+', '*', '-', '/'] and ul and not ur:
             self.append('__'+{'+':'add', '*':'mul', '-':'sub', '/':'div'}[inline]+'2(')
@@ -1891,7 +1883,7 @@ class generateVisitor(ASTVisitor):
 
             if (print_function or self.library_func(funcs, 'struct', None, 'pack')) and not formal.name.startswith('__kw_'):
                 types = [t[0].ident for t in self.mergeinh[arg]]
-                if 'float_' in types or 'int_' in types or 'bool_' in types:
+                if 'float_' in types or 'int_' in types or 'bool_' in types or 'complex' in types:
                     cast = True
                     self.append('___box((')
 
@@ -2423,7 +2415,7 @@ class generateVisitor(ASTVisitor):
 
         # --- visit nodes, boxing scalars
         for n in nodes:
-            if [clname for clname in ('float_', 'int_', 'bool_') if (defclass(clname), 0) in self.mergeinh[n]]:
+            if [clname for clname in ('float_', 'int_', 'bool_', 'complex') if (defclass(clname), 0) in self.mergeinh[n]]:
                 self.visitm(', ___box(', n, ')', func)
             else:
                 self.visitm(', ', n, func)
@@ -2445,7 +2437,7 @@ class generateVisitor(ASTVisitor):
         self.append(str(len(node.nodes)))
         for n in node.nodes:
             types = [t[0].ident for t in self.mergeinh[n]]
-            if 'float_' in types or 'int_' in types or 'bool_' in types:
+            if 'float_' in types or 'int_' in types or 'bool_' in types or 'complex' in types:
                 self.visitm(', ___box(', n, ')', func)
             else:
                 self.visitm(', ', n, func)
@@ -2610,7 +2602,7 @@ class generateVisitor(ASTVisitor):
                 self.append(', %d' % len(node.value))
             self.append(')')
         elif t[0].ident == 'complex':
-            self.append('new complex(%s, %s)' % (node.value.real, node.value.imag))
+            self.append('complex(%s, %s)' % (node.value.real, node.value.imag))
         else:
             self.append('new %s(%s)' % (t[0].ident, node.value))
 
@@ -2661,8 +2653,8 @@ def typestrnew(types, cplusplus=True, node=None, check_extmod=False, depth=0, ch
         raise RuntimeError()
 
     # --- annotation or c++ code
-    conv1 = {'int_': '__ss_int', 'float_': 'double', 'str_': 'str', 'none': 'int', 'bool_':'__ss_bool'}
-    conv2 = {'int_': 'int', 'float_': 'float', 'str_': 'str', 'class_': 'class', 'none': 'None','bool_': 'bool'}
+    conv1 = {'int_': '__ss_int', 'float_': 'double', 'str_': 'str', 'none': 'int', 'bool_':'__ss_bool', 'complex':'complex'}
+    conv2 = {'int_': 'int', 'float_': 'float', 'str_': 'str', 'class_': 'class', 'none': 'None','bool_': 'bool', 'complex':'complex'}
     if cplusplus: sep, ptr, conv = '<>', ' *', conv1
     else: sep, ptr, conv = '()', '', conv2
 
@@ -2711,7 +2703,7 @@ def typestrnew(types, cplusplus=True, node=None, check_extmod=False, depth=0, ch
         raise ExtmodError()
 
     # --- simple built-in types
-    if cl.ident in ['int_', 'float_', 'bool_']:
+    if cl.ident in ['int_', 'float_', 'bool_', 'complex']:
         return conv[cl.ident]
     elif cl.ident == 'str_':
         return 'str'+ptr
