@@ -671,9 +671,6 @@ public:
     template<class T> complex(T t) { real = __float(t); imag = 0; } 
     complex(str *s);
 
-    str *__repr__();
-    long __hash__();
-
     inline complex operator+(complex b) { return complex(1.0, 1.0); }
     inline complex operator-(complex b) { return complex(1.0, 1.0);}
     inline complex operator%(complex b) { return complex(1.0, 1.0);}
@@ -685,8 +682,6 @@ public:
 
     inline complex& operator=(int a);
     inline complex& operator=(double a);
-
-    inline complex conjugate() { return complex(real, -imag); }
 
     inline complex __div__(complex b) {
         double norm = b.real*b.real+b.imag*b.imag;
@@ -703,7 +698,11 @@ public:
         return c;
     }
 
+    inline complex conjugate() { return complex(real, -imag); }
+
     complex parsevalue(str *s);
+    str *__repr__();
+    inline long __hash__() { return ((__ss_int)imag)*1000003+((__ss_int)real); }
 };
 
 template<class T> inline complex operator+(T t, complex c) { return c+t; }
