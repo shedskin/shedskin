@@ -93,9 +93,8 @@ template<> inline int __divs(int a, int b) {
     else return a/b;
 }
 
-template<class A, class B> double __floordiv(A a, B b);
-template<> inline double __floordiv(__ss_int a, double b) { return floor((double)a/b); }
-template<> inline double __floordiv(double a, __ss_int b) { return floor(a/((double)b)); }
+inline double __floordiv(__ss_int a, double b) { return floor((double)a/b); }
+inline double __floordiv(double a, __ss_int b) { return floor(a/((double)b)); }
 
 template<class A> inline A __floordiv(A a, A b) { return a->__floordiv__(b); }
 template<> inline double __floordiv(double a, double b) { return floor(a/b); }

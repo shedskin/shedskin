@@ -1,7 +1,9 @@
-
-class fred:
-    def speak(self, x):
-        return x
-b = fred()
-c = b.speak('goedzo!')
-
+print 1 // 1j
+print 0j // 1
+print 1.0 // 1j
+print 0j // 1.0
+print 1 // 1
+print 1.0 // 1.0
+print 0j // 1j
+print 1 // 1.0
+print 1.0 // 1

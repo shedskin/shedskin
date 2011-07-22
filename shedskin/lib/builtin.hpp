@@ -98,6 +98,9 @@ class OverflowError;
 #define __GC_DEQUE(T) std::deque< T, gc_allocator< T > >
 #define __GC_STRING std::basic_string<char,std::char_traits<char>,gc_allocator<char> >
 
+extern __ss_bool True;
+extern __ss_bool False;
+
 /* class declarations */
 
 class pyobj : public gc {
@@ -664,16 +667,50 @@ class complex {
 public:
     double real, imag;
 
-    complex(double real=0.0, double imag=0.0);
-    template<class T> complex(T t);
+    inline complex(double real=0.0, double imag=0.0) { this->real = real; this->imag = imag; }
+    template<class T> complex(T t) { real = __float(t); imag = 0; } 
     complex(str *s);
 
     str *__repr__();
     long __hash__();
 
-    inline complex operator+(complex b);
-    inline complex conjugate();
+    inline complex operator+(complex b) { return complex(1.0, 1.0); }
+    inline complex operator-(complex b) { return complex(1.0, 1.0);}
+    inline complex operator%(complex b) { return complex(1.0, 1.0);}
+    inline complex operator+() { return complex(1.0, 1.0);}
+    inline complex operator-() { return complex(1.0, 1.0);}
+
+    inline __ss_bool operator==(complex b) { return True; }
+    inline __ss_bool operator!=(complex b) { return True; }
+
+    inline complex& operator=(int a);
+    inline complex& operator=(double a);
+
+    inline complex conjugate() { return complex(real, -imag); }
+
+    inline complex __div__(complex b) {
+        double norm = b.real*b.real+b.imag*b.imag;
+        complex c;
+        c.real = (real*b.real+imag*b.imag)/norm;
+        c.imag = (imag*b.real-b.imag*real)/norm;
+        return c;
+    }
+
+    inline complex __floordiv__(complex b) { 
+        complex c = __div__(b);
+        c.real = ((__ss_int)c.real);
+        c.imag = 0;
+        return c;
+    }
+
+    complex parsevalue(str *s);
 };
+
+template<class T> inline complex operator+(T t, complex c) { return c+t; }
+template<class T> inline complex operator-(T t, complex c) { return -c+t; }
+template<class T> inline complex operator*(T t, complex c) { return c*t; }
+template<class T> inline complex operator/(T t, complex c) { return c/t; }
+template<class T> inline complex operator%(T t, complex c) { return c%t; } 
 
 class class_: public pyobj {
 public:
@@ -840,7 +877,6 @@ template<> inline __ss_int __abs(__ss_int a) { return a<0?-a:a; }
 template<> inline int __abs(int a) { return a<0?-a:a; }
 template<> inline double __abs(double a) { return a<0?-a:a; }
 inline int __abs(__ss_bool b) { return __abs(b.value); }
-double __abs(complex *c);
 
 template<class T> str *hex(T t) {
     return t->__hex__();
@@ -1084,9 +1120,6 @@ extern dict<void *, void *> *__ss_proxy;
 extern class_ *cl_str_, *cl_int_, *cl_bool, *cl_float_, *cl_complex, *cl_list, *cl_tuple, *cl_dict, *cl_set, *cl_object, *cl_xrange, *cl_rangeiter;
 
 extern __GC_VECTOR(str *) __char_cache;
-
-extern __ss_bool True;
-extern __ss_bool False;
 
 extern list<str *> *__join_cache;
 
@@ -1483,8 +1516,8 @@ template<class T> T __iter<T>::__get_next() {
 #include "builtin/set.hpp"
 #include "builtin/file.hpp"
 #include "builtin/function.hpp"
-#include "builtin/complex.hpp"
 #include "builtin/math.hpp"
+#include "builtin/complex.hpp"
 
 /* binding args */
 
