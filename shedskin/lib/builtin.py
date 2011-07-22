@@ -555,8 +555,7 @@ class set(pyset):
 class complex:
     def __init__(self, real=None, imag=None):
         real.__float__()
-        self.real = 1.0
-        self.imag = 1.0
+        self.real = self.imag = 1.0
 
     def __add__(self, c):
         return self
@@ -595,6 +594,8 @@ class complex:
 
     def __repr__(self):
         return ''
+
+complex(1.0, 1.0)
 
 class object: pass
 
