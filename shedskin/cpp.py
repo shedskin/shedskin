@@ -192,7 +192,10 @@ class generateVisitor(ASTVisitor):
     def connector(self, node, func):
         if singletype(node, module):
             return '::'
-        return '.'
+        elif unboxable(self.mergeinh[node]):
+            return '.'
+        else:
+            return '->'
 
     def declaredefs(self, vars, declare):
         pairs = []

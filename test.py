@@ -1,10 +1,7 @@
-print 'hello, world'
 
-a = 4j + 3j
-print a
+class fred:
+    def speak(self, x):
+        return x
+b = fred()
+c = b.speak('goedzo!')
 
-print a.real, a.imag
-
-print a.conjugate()
-
-print hash(a)
