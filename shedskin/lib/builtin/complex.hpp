@@ -8,14 +8,18 @@ complex *__power(complex *a, double b);
 tuple2<complex *, complex *> *divmod(complex *a, double b);
 tuple2<complex *, complex *> *divmod(complex *a, __ss_int b);
 
-template<class T> complex::complex(T t) {
-    __class__ = cl_complex;
-    real = __float(t);
-    imag = 0;
-} */
+*/
 
-inline complex::complex(double a, double b) { real=a; imag=b; }
-inline complex complex::operator+(complex b) { return complex(real+b.real, imag+b.imag); }
 
-inline complex complex::conjugate() { return complex(real, -imag); }
+inline double __abs(complex c) { return 1.0; };
 
+template<> inline __ss_bool ___bool(complex c) { return False; }
+
+template<> inline complex __floordiv(complex a, complex b) { return a.__floordiv__(b); }
+inline complex __floordiv(complex a, int b) { return a.__floordiv__(b); }
+inline complex __floordiv(complex a, double b) { return a.__floordiv__(b); }
+inline complex __floordiv(int a, complex b) { return ((complex)(a)).__floordiv__(b); }
+inline complex __floordiv(double a, complex b) { return ((complex)(a)).__floordiv__(b); }
+
+tuple2<complex, complex> *divmod(complex a, complex b);
+tuple2<complex, complex> *divmod(complex a, int b);

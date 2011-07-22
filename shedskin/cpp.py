@@ -1728,7 +1728,12 @@ class generateVisitor(ASTVisitor):
             self.visitm(node.node, '(', func)
 
         elif constructor:
-            self.append('(new '+nokeywords(nodetypestr(node, func)[:-2])+'(')
+            ts = nokeywords(nodetypestr(node, func))
+            if ts == 'complex ':
+                self.append('complex(')
+                constructor = False # XXX
+            else:
+                self.append('(new '+ts[:-2]+'(')
             if funcs and len(funcs[0].formals) == 1 and not funcs[0].mv.module.builtin:
                 self.append('1') # don't call default constructor
 

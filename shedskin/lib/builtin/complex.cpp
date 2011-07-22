@@ -7,22 +7,6 @@ complex::complex(double real, double imag) {
     this->imag = imag;
 }
 
-complex::complex(str *s) {
-    this->__class__ = cl_complex;
-    __re__::match_object *m;
-    __re__::re_object *p;
-
-    p = __re__::compile(new str("(?P<one>[+-]?([\\d\\.]+e[+-]?\\d+|[\\d\\.]*)j?)(?P<two>[+-]?([\\d\\.]+e[+-]?\\d+|[\\d\\.]*)j?)?$"));
-    m = p->match(s->strip());
-    if (___bool(m)) {
-        complex *c = (parsevalue(m->group(1, new str("one"))))->__add__(parsevalue(m->group(1, new str("two"))));
-        real = c->real;
-        imag = c->imag;
-    }
-    else {
-        throw ((new ValueError(new str("complex() arg is a malformed string"))));
-    }
-}
 
 #ifdef __SS_BIND
 complex::complex(PyObject *p) {
@@ -34,23 +18,6 @@ PyObject *complex::__to_py__() {
     return PyComplex_FromDoubles(real, imag);
 }
 #endif
-
-complex *complex::parsevalue(str *s) {
-    complex *mult;
-
-    if ((!___bool(s))) {
-        return __add2(0, new complex(0.0, 0.0));
-    }
-    mult = __add2(1, new complex(0.0, 0.0));
-    if (__eq(s->__getitem__((-1)), new str("j"))) {
-        s = s->__slice__(2, 0, (-1), 0);
-        mult = __add2(0, new complex(0.0, 1.0));
-    }
-    if (((new list<str *>(2, new str("+"), new str("-"))))->__contains__(s)) {
-        s = s->__iadd__(new str("1"));
-    }
-    return __mul2(__float(s), mult);
-}
 
 complex *complex::__add__(complex *b) { return new complex(real+b->real, imag+b->imag); }
 complex *complex::__add__(double b) { return new complex(b+real, imag); }
@@ -177,6 +144,22 @@ complex_::complex_(complex c) {
     __class__ = cl_complex;
 }
 
+complex::complex(str *s) {
+    __re__::match_object *m;
+    __re__::re_object *p;
+
+    p = __re__::compile(new str("(?P<one>[+-]?([\\d\\.]+e[+-]?\\d+|[\\d\\.]*)j?)(?P<two>[+-]?([\\d\\.]+e[+-]?\\d+|[\\d\\.]*)j?)?$"));
+    m = p->match(s->strip());
+    if (___bool(m)) {
+        complex c = (parsevalue(m->group(1, new str("one")))) + (parsevalue(m->group(1, new str("two"))));
+        real = c.real;
+        imag = c.imag;
+    }
+    else {
+        throw ((new ValueError(new str("complex() arg is a malformed string"))));
+    }
+}
+
 str *complex_::__repr__() {
     return unit.__repr__();
 }
@@ -200,4 +183,28 @@ str *complex::__repr__() {
 
 long complex::__hash__() {
     return ((__ss_int)imag)*1000003+((__ss_int)real);
+}
+
+tuple2<complex, complex> *divmod(complex a, complex b) { 
+    return NULL;
+}
+tuple2<complex, complex> *divmod(complex a, int b) { 
+    return NULL;
+}
+
+complex complex::parsevalue(str *s) {
+    complex mult;
+
+    if ((!___bool(s))) {
+        return complex(0.0, 0.0);
+    }
+    mult = complex(1.0, 0.0);
+    if (__eq(s->__getitem__((-1)), new str("j"))) {
+        s = s->__slice__(2, 0, (-1), 0);
+        mult = complex(0.0, 1.0);
+    }
+    if (((new list<str *>(2, new str("+"), new str("-"))))->__contains__(s)) {
+        s = s->__iadd__(new str("1"));
+    }
+    return mult * __float(s);
 }
