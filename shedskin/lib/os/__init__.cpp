@@ -844,10 +844,14 @@ __ss_int sysconf(__ss_int name) {
 }
 
 tuple2<double, double> *getloadavg() {
+#ifdef __CYGWIN__
+    throw new NotImplementedError();
+#else
     double load[3];
     if(::getloadavg(load, 3) != 3)
         throw new OSError(new str("os.getloadavg"));
     return new tuple2<double, double>(3, load[0], load[1], load[2]);
+#endif
 }
 
 void *mkfifo(str *path, __ss_int mode) {
