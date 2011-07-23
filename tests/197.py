@@ -287,3 +287,4 @@ a = 4j + 3j
 print a
 b = a.real
 print sum([1j, 2j, 3j])
+print '%s' % (1+3j)
