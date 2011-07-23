@@ -1035,42 +1035,6 @@ public:
 template<class T> inline int __is_none(T *t) { return !t; }
 template<class T> inline int __is_none(T) { return 0; }
 
-/* binding */
-
-#ifdef __SS_BIND
-template<class T> T __to_ss(PyObject *p) {
-    if(p==Py_None) return (T)NULL;
-    return new (typename dereference<T>::type)(p); /* isn't C++ pretty :-) */
-}
-
-#ifdef __SS_LONG
-template<> __ss_int __to_ss(PyObject *p);
-#endif
-template<> int __to_ss(PyObject *p);
-template<> __ss_bool __to_ss(PyObject *p);
-template<> double __to_ss(PyObject *p);
-template<> void *__to_ss(PyObject *p);
-
-template<class T> PyObject *__to_py(T t) {
-    if(!t) {
-        Py_INCREF(Py_None);
-        return Py_None;
-    }
-    return t->__to_py__();
-}
-
-#ifdef __SS_LONG
-template<> PyObject *__to_py(__ss_int i);
-#endif
-template<> PyObject *__to_py(int i);
-template<> PyObject *__to_py(long i);
-template<> PyObject *__to_py(__ss_bool i);
-template<> PyObject *__to_py(double i);
-template<> PyObject *__to_py(void *);
-
-extern dict<void *, void *> *__ss_proxy;
-#endif
-
 /* externs */
 
 extern class_ *cl_str_, *cl_int_, *cl_bool, *cl_float_, *cl_complex, *cl_list, *cl_tuple, *cl_dict, *cl_set, *cl_object, *cl_xrange, *cl_rangeiter;
@@ -1206,6 +1170,8 @@ template<class T> inline __ss_int len(list<T> *x) { return x->units.size(); } /*
 
 #include "builtin/bool.hpp"
 #include "builtin/exception.hpp"
+#include "builtin/extmod.hpp"
+
 
 /* file objects */
 
@@ -1473,23 +1439,6 @@ template<class T> T __iter<T>::__get_next() {
 #include "builtin/math.hpp"
 #include "builtin/complex.hpp"
 
-/* binding args */
-
-#ifdef __SS_BIND
-template<class T> T __ss_arg(const char *name, int pos, int has_default, T default_value, PyObject *args, PyObject *kwargs) {
-    PyObject *kwarg;
-    int nrofargs = PyTuple_Size(args);
-    if (pos < nrofargs)
-        return __to_ss<T>(PyTuple_GetItem(args, pos));
-    else if (kwargs && (kwarg = PyDict_GetItemString(kwargs, name)))
-        return __to_ss<T>(kwarg);
-    else if (has_default)
-        return default_value;
-    else
-        throw new TypeError(new str("missing argument"));
-}
-#endif
-
 /* iterators */
 
 template<class T> str *__iter<T>::__repr__() {
@@ -1510,11 +1459,6 @@ template<class T> T __seqiter<T>::next() {
 }
 
 #include "builtin/format.hpp"
-
-
-#ifdef __SS_BIND
-PyObject *__ss__newobj__(PyObject *, PyObject *args, PyObject *kwargs);
-#endif
 
 /* slicing */
 
