@@ -685,9 +685,6 @@ public:
 
     str *__repr__();
 
-
-
-
     inline complex& operator=(double a) { real = a; imag = 0.0; }
 
     inline complex conjugate() { return complex(real, -imag); }
@@ -695,7 +692,6 @@ public:
     complex parsevalue(str *s);
     inline long __hash__() { return ((__ss_int)imag)*1000003+((__ss_int)real); }
 
-    /* XXX bind */
 };
 
 inline complex operator+(double a, complex b) { return ((complex)(a))+b; }

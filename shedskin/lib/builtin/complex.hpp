@@ -115,3 +115,10 @@ template<> inline __ss_bool ___bool(complex c) { return __mbool(c.real != 0.0 or
 template<> complex __power(complex a, complex b);
 inline complex __power(complex a, double b) { return __power(a, (complex)b); }
 inline complex __power(double a, complex b) { return __power((complex)a, b); }
+
+/* glue */
+
+#ifdef __SS_BIND
+template<> PyObject *__to_py(complex c);
+template<> complex __to_ss(PyObject *p);
+#endif
