@@ -312,10 +312,10 @@ print arghx == arghy
 import binascii
 str = 'my guitar wants to strum all night long'
 
-#b2a = binascii.b2a_qp(str)
-#print repr(b2a)
-#a2b = binascii.a2b_qp(b2a)
-#print repr(a2b)
+b2a = binascii.b2a_qp(str)
+print repr(b2a)
+a2b = binascii.a2b_qp(b2a)
+print repr(a2b)
 
 b2a = binascii.b2a_uu(str)
 print repr(b2a)
@@ -329,8 +329,8 @@ print repr(a2b)
 
 b2a = binascii.b2a_hqx(str)
 print repr(b2a)
-#a2b = binascii.a2b_hqx(b2a)
-#print repr(a2b)
+a2b,done = binascii.a2b_hqx(b2a) # returns a string instead of a tuple
+print repr(a2b),done
 
 b2a = binascii.b2a_base64(str)
 print repr(b2a)

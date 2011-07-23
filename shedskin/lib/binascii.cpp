@@ -460,7 +460,7 @@ str *a2b_qp(str *pdata, __ss_bool header) {
 
 static unsigned char table_b2a_hex[] = "0123456789ABCDEF";
 
-void to_hex (unsigned char ch, char *s)
+void to_hex (unsigned char ch, unsigned char *s)
 {
     unsigned int uvalue = ch;
 
@@ -558,7 +558,7 @@ str *b2a_qp(str *pdata, __ss_bool quotetabs, __ss_bool istext, __ss_bool header)
      * memory here too, since PyMem_Malloc() does not guarantee that.
      */
     str * outdata = new str("",odatalen);
-    char * odata = &outdata->unit[0];
+    unsigned char * odata = (unsigned char *)&outdata->unit[0];
     memset(odata, 0, odatalen);
 
     in = out = linelen = 0;
@@ -694,7 +694,7 @@ static unsigned char table_a2b_hqx[256] = {
 };
 
 
-int a2b_hqx(str *pascii, str ** outptr) {
+tuple2<str*,int> * a2b_hqx(str *pascii) {
     __ss_int len = pascii->__len__();
     if (len > PY_SSIZE_T_MAX - 2){
         throw new Error(0); //No memory
@@ -708,7 +708,6 @@ int a2b_hqx(str *pascii, str ** outptr) {
        Add two to the initial length to prevent interning which
        would preclude subsequent resizing.  */
     str * outdata = new str("",len+2);
-    *outptr = outdata;
     unsigned char * bin_data = (unsigned char *)&outdata->unit[0];
     unsigned char * bin_start = bin_data;
 
@@ -741,7 +740,7 @@ int a2b_hqx(str *pascii, str ** outptr) {
         throw new Error(0); //(Incomplete) String has incomplete number of bytes 
 
     outdata->unit.resize(bin_data-bin_start);
-    return done;
+    return new tuple2<str*,int>(2,outdata,done);
 }
 
 static unsigned char table_b2a_hqx[] =
@@ -1100,7 +1099,7 @@ void __init() {
     default_0 = False;
     default_1 = False;
     default_2 = False;
-    default_3 = True;
+    default_3 = False;
 
 }
 
