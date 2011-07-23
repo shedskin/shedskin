@@ -1,8 +1,7 @@
 /* pow */
 
-template<class A, class B> double __power(A a, B b);
-template<> inline double __power(__ss_int a, double b) { return pow(a,b); }
-template<> inline double __power(double a, __ss_int b) { 
+inline double __power(__ss_int a, double b) { return pow(a,b); }
+inline double __power(double a, __ss_int b) { 
     if(b==2) return a*a;
     else if(b==3) return a*a*a;
     else return pow(a,b); 
@@ -93,10 +92,6 @@ template<> inline int __divs(int a, int b) {
     else return a/b;
 }
 
-template<class A, class B> double __floordiv(A a, B b);
-template<> inline double __floordiv(__ss_int a, double b) { return floor((double)a/b); }
-template<> inline double __floordiv(double a, __ss_int b) { return floor(a/((double)b)); }
-
 template<class A> inline A __floordiv(A a, A b) { return a->__floordiv__(b); }
 template<> inline double __floordiv(double a, double b) { return floor(a/b); }
 
@@ -104,6 +99,9 @@ template<> inline double __floordiv(double a, double b) { return floor(a/b); }
 template<> inline __ss_int __floordiv(__ss_int a, __ss_int b) { return (__ss_int)floor((double)a/b); } /* XXX */
 #endif
 template<> inline int __floordiv(int a, int b) { return (int)floor((double)a/b); } /* XXX */
+
+inline double __floordiv(__ss_int a, double b) { return floor((double)a/b); }
+inline double __floordiv(double a, __ss_int b) { return floor(a/((double)b)); }
 
 /* modulo */
 
@@ -148,13 +146,9 @@ template<> inline tuple2<__ss_int, __ss_int> *divmod(__ss_int a, __ss_int b) {
 template<> inline tuple2<int, int> *divmod(int a, int b) {
     return new tuple2<int, int>(2, __floordiv(a,b), __mods(a,b));
 }
-template<class A, class B> tuple2<double, double> *divmod(A a, B b);
-#ifdef __SS_LONG
-template<> inline tuple2<double, double> *divmod(double a, __ss_int b) { return divmod(a, (double)b); }
-template<> inline tuple2<double, double> *divmod(__ss_int a, double b) { return divmod((double)a, b); }
-#endif
-template<> inline tuple2<double, double> *divmod(double a, int b) { return divmod(a, (double)b); }
-template<> inline tuple2<double, double> *divmod(int a, double b) { return divmod((double)a, b); }
+
+inline tuple2<double, double> *divmod(double a, __ss_int b) { return divmod(a, (double)b); }
+inline tuple2<double, double> *divmod(__ss_int a, double b) { return divmod((double)a, b); }
 
 /* add */
 
