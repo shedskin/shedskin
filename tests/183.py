@@ -94,6 +94,7 @@ def hak(s):
         return parsevalue(m.group('one')) + parsevalue(m.group('two'))
     else:
         raise ValueError('complex() arg is a malformed string')
+    return 0j # XXX
 
 print hak(' 2.4+0j' ), hak('2.4'), hak(' .4j'), hak('1-j')
 print hak('-10-j'), hak('+10.1+2.4j'), hak('+j')

@@ -2,24 +2,29 @@
 
 /* constructors */
 
-inline complex::complex(double real, double imag) {
-    (*this).real = real; (*this).imag = imag;
+inline complex mcomplex(double real, double imag) {
+    complex c;
+    c.real = real; c.imag = imag;
+    return c;
 }
 
-template<class T> inline complex::complex(T t) {
-    real = __float(t); 
-    imag = 0;
+template<class T> inline complex mcomplex(T t) {
+    complex c;
+    c.real = __float(t); c.imag = 0;
+    return c;
 }
 
 /* operators */
 
 inline complex complex::operator+(complex b) {
-    return complex(real+b.real, imag+b.imag);
+    return mcomplex(real+b.real, imag+b.imag);
 }
+inline complex complex::operator+(double b) { return (*this) + mcomplex(b); }
 
 inline complex complex::operator-(complex b) {
-    return complex(real-b.real, imag-b.imag);
+    return mcomplex(real-b.real, imag-b.imag);
 }
+inline complex complex::operator-(double b) { return (*this) - mcomplex(b); }
 
 inline complex complex::operator/(complex b) {
     complex c;
@@ -28,18 +33,21 @@ inline complex complex::operator/(complex b) {
     c.imag = (imag*b.real-b.imag*real)/norm;
     return c;
 }
+inline complex complex::operator/(double b) { return (*this) / mcomplex(b); }
 
 inline complex complex::operator*(complex b) {
-    return complex(real*b.real-imag*b.imag, real*b.imag+imag*b.real); 
+    return mcomplex(real*b.real-imag*b.imag, real*b.imag+imag*b.real); 
 }
+inline complex complex::operator*(double b) { return (*this) * mcomplex(b); }
 
 inline complex complex::operator%(complex b) {
     complex c = (*this) / b;
     return (*this) - (b * (((__ss_int)c.real)));
 }
+inline complex complex::operator%(double b) { return (*this) % mcomplex(b); }
 
 inline complex complex::operator-() {
-    return complex(-real, -imag);
+    return mcomplex(-real, -imag);
 }
 
 inline complex complex::operator+() {
@@ -69,8 +77,8 @@ static inline complex __complexfloordiv(complex a, complex b) {
 }
 
 template<> inline complex __floordiv(complex a, complex b) { return __complexfloordiv(a, b); }
-inline complex __floordiv(complex a, double b) { return __complexfloordiv(a, b); }
-inline complex __floordiv(double a, complex b) { return __complexfloordiv(a, b); }
+inline complex __floordiv(complex a, double b) { return __complexfloordiv(a, mcomplex(b)); }
+inline complex __floordiv(double a, complex b) { return __complexfloordiv(mcomplex(a), b); }
 
 /* divmod */
 
@@ -79,8 +87,8 @@ static tuple2<complex, complex> *__complexdivmod(complex a, complex b) {
 }
 
 template<> inline tuple2<complex, complex> *divmod(complex a, complex b) { return __complexdivmod(a, b); }
-inline tuple2<complex, complex> *divmod(complex a, double b) { return __complexdivmod(a, b); }
-inline tuple2<complex, complex> *divmod(double a, complex b) { return __complexdivmod(a, b); }
+inline tuple2<complex, complex> *divmod(complex a, double b) { return __complexdivmod(a, mcomplex(b)); }
+inline tuple2<complex, complex> *divmod(double a, complex b) { return __complexdivmod(mcomplex(a), b); }
 
 /* str, repr */
 
@@ -118,8 +126,8 @@ template<> inline __ss_bool ___bool(complex c) { return __mbool(c.real != 0.0 or
 /* power */
 
 template<> complex __power(complex a, complex b);
-inline complex __power(complex a, double b) { return __power(a, (complex)b); }
-inline complex __power(double a, complex b) { return __power((complex)a, b); }
+inline complex __power(complex a, double b) { return __power(a, mcomplex(b)); }
+inline complex __power(double a, complex b) { return __power(mcomplex(a), b); }
 
 /* hashing */
 
@@ -130,7 +138,7 @@ inline long complex::__hash__() { return ((__ss_int)imag)*1000003+((__ss_int)rea
 
 /* conjugate */
 
-inline complex complex::conjugate() { return complex(real, -imag); }
+inline complex complex::conjugate() { return mcomplex(real, -imag); }
 
 /* glue */
 

@@ -1,19 +1,19 @@
 /* complex methods */
 
-complex::complex(str *s) {
+complex mcomplex(str *s) {
+    complex c;
     __re__::match_object *m;
     __re__::re_object *p;
 
     p = __re__::compile(new str("(?P<one>[+-]?([\\d\\.]+e[+-]?\\d+|[\\d\\.]*)j?)(?P<two>[+-]?([\\d\\.]+e[+-]?\\d+|[\\d\\.]*)j?)?$"));
     m = p->match(s->strip());
     if (___bool(m)) {
-        complex c = (parsevalue(m->group(1, new str("one")))) + (parsevalue(m->group(1, new str("two"))));
-        real = c.real;
-        imag = c.imag;
+        c = (c.parsevalue(m->group(1, new str("one")))) + (c.parsevalue(m->group(1, new str("two"))));
     }
     else {
         throw ((new ValueError(new str("complex() arg is a malformed string"))));
     }
+    return c;
 }
 
 
@@ -21,12 +21,12 @@ complex complex::parsevalue(str *s) {
     complex mult;
 
     if ((!___bool(s))) {
-        return complex(0.0, 0.0);
+        return mcomplex(0.0, 0.0);
     }
-    mult = complex(1.0, 0.0);
+    mult = mcomplex(1.0, 0.0);
     if (__eq(s->__getitem__((-1)), new str("j"))) {
         s = s->__slice__(2, 0, (-1), 0);
-        mult = complex(0.0, 1.0);
+        mult = mcomplex(0.0, 1.0);
     }
     if (((new list<str *>(2, new str("+"), new str("-"))))->__contains__(s)) {
         s = s->__iadd__(new str("1"));
@@ -79,7 +79,7 @@ template<> complex __power(complex a, complex b) {
 
 #ifdef __SS_BIND
 template<> complex __to_ss(PyObject *p) {
-    return complex(PyComplex_RealAsDouble(p), PyComplex_ImagAsDouble(p));
+    return mcomplex(PyComplex_RealAsDouble(p), PyComplex_ImagAsDouble(p));
 }
 
 template<> PyObject *__to_py(complex c) {
