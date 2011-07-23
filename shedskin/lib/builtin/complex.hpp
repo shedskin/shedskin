@@ -121,8 +121,11 @@ template<> complex __power(complex a, complex b);
 inline complex __power(complex a, double b) { return __power(a, (complex)b); }
 inline complex __power(double a, complex b) { return __power((complex)a, b); }
 
-/* hash */
+/* hashing */
 
+template<> inline long hasher(complex c) {
+    return c.__hash__();
+}
 inline long complex::__hash__() { return ((__ss_int)imag)*1000003+((__ss_int)real); }
 
 /* conjugate */
