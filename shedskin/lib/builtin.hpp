@@ -45,15 +45,18 @@ namespace __shedskin__ {
 
 /* forward class declarations */
 
+class __ss_bool;
+class complex;
+
 class pyobj;
 class class_;
 class str;
-class int_;
-class __ss_bool;
-class float_;
 class file;
+
+class int_;
 class bool_;
-class complex;
+class float_;
+class complex_;
 
 template <class T> class pyiter;
 template <class T> class pyseq;
@@ -94,6 +97,9 @@ class OverflowError;
 #define __GC_VECTOR(T) std::vector< T, gc_allocator< T > >
 #define __GC_DEQUE(T) std::deque< T, gc_allocator< T > >
 #define __GC_STRING std::basic_string<char,std::char_traits<char>,gc_allocator<char> >
+
+extern __ss_bool True;
+extern __ss_bool False;
 
 /* class declarations */
 
@@ -657,61 +663,49 @@ public:
     inline __ss_bool& operator=(int a);
 };
 
-class complex : public pyobj {
+class complex {
 public:
     double real, imag;
 
-    complex(double real=0.0, double imag=0.0);
-    template<class T> complex(T t);
+    inline complex(double real=0.0, double imag=0.0);
+    template<class T> inline complex(T t);
     complex(str *s);
 
-    complex *__add__(complex *b);
-    complex *__add__(double b);
-    complex *__iadd__(complex *b);
-    complex *__iadd__(double b);
+    inline complex operator+(complex b);
+    inline complex operator-(complex b);
+    inline complex operator*(complex b);
+    inline complex operator/(complex b);
+    inline complex operator%(complex b);
 
-    complex *__sub__(complex *b);
-    complex *__sub__(double b);
-    complex *__rsub__(double b);
-    complex *__isub__(complex *b);
-    complex *__isub__(double b);
+    inline complex operator+();
+    inline complex operator-();
 
-    complex *__mul__(complex *b);
-    complex *__mul__(double b);
-    complex *__imul__(complex *b);
-    complex *__imul__(double b);
-
-    complex *__div__(complex *b);
-    complex *__div__(double b);
-    complex *__rdiv__(double b);
-    complex *__idiv__(complex *b);
-    complex *__idiv__(double b);
-
-    complex *__floordiv__(complex *b);
-    complex *__floordiv__(double b);
-    complex *__mod__(complex *b);
-    complex *__mod__(double b);
-    tuple2<complex *, complex *> *__divmod__(complex *b);
-    tuple2<complex *, complex *> *__divmod__(double b);
-
-    complex *conjugate();
-    complex *__pos__();
-    complex *__neg__();
-    double __abs__();
+    inline __ss_bool operator==(complex b);
+    inline __ss_bool operator!=(complex b);
 
     str *__repr__();
 
-    complex *parsevalue(str *s);
 
-    __ss_bool __eq__(pyobj *p);
-    long __hash__();
-    __ss_bool __nonzero__();
 
-#ifdef __SS_BIND
-    complex(PyObject *);
-    PyObject *__to_py__();
-#endif
+
+    inline complex& operator=(double a) { real = a; imag = 0.0; }
+
+    inline complex conjugate() { return complex(real, -imag); }
+
+    complex parsevalue(str *s);
+    inline long __hash__() { return ((__ss_int)imag)*1000003+((__ss_int)real); }
+
+    /* XXX bind */
 };
+
+inline complex operator+(double a, complex b) { return ((complex)(a))+b; }
+inline complex operator-(double a, complex b) { return ((complex)(a))-b; }
+inline complex operator*(double a, complex b) { return ((complex)(a))*b; }
+inline complex operator/(double a, complex b) { return ((complex)(a))/b; }
+inline complex operator%(double a, complex b) { return ((complex)(a))%b; }
+
+inline __ss_bool operator==(double a, complex b) { return ((complex)(a))==b; }
+inline __ss_bool operator!=(double a, complex b) { return ((complex)(a))!=b; }
 
 class class_: public pyobj {
 public:
@@ -746,6 +740,14 @@ public:
     str *__repr__();
     __ss_bool __nonzero__();
     __ss_int __index__();
+};
+
+class complex_ : public pyobj {
+public:
+    complex unit;
+    complex_(complex i);
+    str *__repr__();
+    __ss_bool __nonzero__();
 };
 
 class object : public pyobj {
@@ -870,7 +872,6 @@ template<> inline __ss_int __abs(__ss_int a) { return a<0?-a:a; }
 template<> inline int __abs(int a) { return a<0?-a:a; }
 template<> inline double __abs(double a) { return a<0?-a:a; }
 inline int __abs(__ss_bool b) { return __abs(b.value); }
-double __abs(complex *c);
 
 template<class T> str *hex(T t) {
     return t->__hex__();
@@ -955,6 +956,9 @@ template<> inline long hasher(double v) {
     if (x== -1)
         x = -2;
     return x;
+}
+template<> inline long hasher(complex c) {
+    return c.__hash__();
 }
 
 /* comparison */
@@ -1112,9 +1116,6 @@ extern class_ *cl_str_, *cl_int_, *cl_bool, *cl_float_, *cl_complex, *cl_list, *
 
 extern __GC_VECTOR(str *) __char_cache;
 
-extern __ss_bool True;
-extern __ss_bool False;
-
 extern list<str *> *__join_cache;
 
 extern file *__ss_stdin, *__ss_stdout, *__ss_stderr;
@@ -1171,16 +1172,24 @@ template<> double __float(str *s);
 
 /* str */
 
-str *__str();
-template<class T> str *__str(T t);
+template<class T> str *__str(T t) { if (!t) return new str("None"); return t->__str__(); }
 template<> str *__str(double t);
 #ifdef __SS_LONG
 str *__str(__ss_int t, __ss_int base=10);
 #endif
 str *__str(int t, int base=10);
 str *__str(__ss_bool b);
+str *__str(void *);
+str *__str();
 
-template<class T> str *repr(T t);
+str *__add_strs(int n, str *a, str *b, str *c);
+str *__add_strs(int n, str *a, str *b, str *c, str *d);
+str *__add_strs(int n, str *a, str *b, str *c, str *d, str *e);
+str *__add_strs(int n, ...);
+
+/* repr */
+
+template<class T> str *repr(T t) { if (!t) return new str("None"); return t->__repr__(); }
 template<> str *repr(double t);
 #ifdef __SS_LONG
 template<> str *repr(__ss_int t);
@@ -1189,16 +1198,13 @@ template<> str *repr(int t);
 template<> str *repr(__ss_bool b);
 template<> str *repr(void *t);
 
-str *__add_strs(int n, str *a, str *b, str *c);
-str *__add_strs(int n, str *a, str *b, str *c, str *d);
-str *__add_strs(int n, str *a, str *b, str *c, str *d, str *e);
-str *__add_strs(int n, ...);
-
 #ifndef __SS_NOASSERT
 #define ASSERT(x, y) if(!(x)) throw new AssertionError(y);
 #else
 #define ASSERT(x, y)
 #endif
+
+/* iteration macros */
 
 #define FAST_FOR(i, l, u, s, t1, t2) \
     if(s==0) \
@@ -1236,13 +1242,6 @@ str *__add_strs(int n, ...);
 
 template<class T> inline __ss_int len(T x) { return x->__len__(); }
 template<class T> inline __ss_int len(list<T> *x) { return x->units.size(); } /* XXX more general solution? */
-
-/* repr, str */
-
-template<class T> str *__str(T t) { if (!t) return new str("None"); return t->__str__(); }
-template<class T> str *repr(T t) { if (!t) return new str("None"); return t->__repr__(); }
-
-str *__str(void *);
 
 #include "builtin/bool.hpp"
 #include "builtin/exception.hpp"
@@ -1510,8 +1509,8 @@ template<class T> T __iter<T>::__get_next() {
 #include "builtin/set.hpp"
 #include "builtin/file.hpp"
 #include "builtin/function.hpp"
-#include "builtin/complex.hpp"
 #include "builtin/math.hpp"
+#include "builtin/complex.hpp"
 
 /* binding args */
 

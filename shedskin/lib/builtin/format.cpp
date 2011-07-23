@@ -349,3 +349,6 @@ bool_ *___box(__ss_bool b) {
 float_ *___box(double d) {
     return new float_(d);
 }
+complex_ *___box(complex c) {
+    return new complex_(c);
+}

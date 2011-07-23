@@ -282,7 +282,8 @@ Seq = [inst(3),inst(1),inst(4),inst(2)]
 print Seq
 print sorted(Seq)
 
-#complex problem
+#complex
 a = 4j + 3j
 print a
 b = a.real
+print sum([1j, 2j, 3j])
