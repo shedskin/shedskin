@@ -1566,7 +1566,7 @@ class generateVisitor(ASTVisitor):
         # --- beauty fix for '1 +- nj' notation
         if inline in ['+', '-'] and isinstance(right, Const) and isinstance(right.value, complex):
             if floattype.intersection(ltypes) or inttype.intersection(ltypes):
-                self.append('complex(')
+                self.append('mcomplex(')
                 self.visit(left, func)
                 self.append(', '+{'+':'', '-':'-'}[inline]+str(right.value.imag)+')')
                 return
@@ -1739,7 +1739,7 @@ class generateVisitor(ASTVisitor):
         elif constructor:
             ts = nokeywords(nodetypestr(node, func))
             if ts == 'complex ':
-                self.append('complex(')
+                self.append('mcomplex(')
                 constructor = False # XXX
             else:
                 self.append('(new '+ts[:-2]+'(')
@@ -2619,7 +2619,7 @@ class generateVisitor(ASTVisitor):
                 self.append(', %d' % len(node.value))
             self.append(')')
         elif t[0].ident == 'complex':
-            self.append('complex(%s, %s)' % (node.value.real, node.value.imag))
+            self.append('mcomplex(%s, %s)' % (node.value.real, node.value.imag))
         else:
             self.append('new %s(%s)' % (t[0].ident, node.value))
 

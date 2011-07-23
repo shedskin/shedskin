@@ -667,15 +667,16 @@ class complex {
 public:
     double real, imag;
 
-    inline complex(double real=0.0, double imag=0.0);
-    template<class T> inline complex(T t);
-    complex(str *s);
-
     inline complex operator+(complex b);
+    inline complex operator+(double b);
     inline complex operator-(complex b);
+    inline complex operator-(double b);
     inline complex operator*(complex b);
+    inline complex operator*(double b);
     inline complex operator/(complex b);
+    inline complex operator/(double b);
     inline complex operator%(complex b);
+    inline complex operator%(double b);
     inline complex operator+();
     inline complex operator-();
     inline __ss_bool operator==(complex b);
@@ -689,14 +690,18 @@ public:
     str *__repr__();
 };
 
-inline complex operator+(double a, complex b) { return ((complex)(a))+b; }
-inline complex operator-(double a, complex b) { return ((complex)(a))-b; }
-inline complex operator*(double a, complex b) { return ((complex)(a))*b; }
-inline complex operator/(double a, complex b) { return ((complex)(a))/b; }
-inline complex operator%(double a, complex b) { return ((complex)(a))%b; }
+complex mcomplex(double real=0.0, double imag=0.0);
+template<class T> complex mcomplex(T t);
+complex mcomplex(str *s);
 
-inline __ss_bool operator==(double a, complex b) { return ((complex)(a))==b; }
-inline __ss_bool operator!=(double a, complex b) { return ((complex)(a))!=b; }
+inline complex operator+(double a, complex b) { return mcomplex(a)+b; }
+inline complex operator-(double a, complex b) { return mcomplex(a)-b; }
+inline complex operator*(double a, complex b) { return mcomplex(a)*b; }
+inline complex operator/(double a, complex b) { return mcomplex(a)/b; }
+inline complex operator%(double a, complex b) { return mcomplex(a)%b; }
+
+inline __ss_bool operator==(double a, complex b) { return mcomplex(a)==b; }
+inline __ss_bool operator!=(double a, complex b) { return mcomplex(a)!=b; }
 
 class class_: public pyobj {
 public:
@@ -1252,6 +1257,9 @@ template<class T> T __iter<T>::__get_next() {
     }
     return __result;
 }
+
+template<class T> T __zero() { return 0; }
+template<> inline complex __zero<complex>() { return mcomplex(0,0); }
 
 #include "builtin/list.hpp"
 #include "builtin/tuple.hpp"
