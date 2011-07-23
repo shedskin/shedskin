@@ -1,25 +1,117 @@
 /* complex */
 
-/*
-complex *__power(complex *a, complex *b);
-complex *__power(complex *a, __ss_int b);
-complex *__power(complex *a, double b);
+/* constructors */
 
-tuple2<complex *, complex *> *divmod(complex *a, double b);
-tuple2<complex *, complex *> *divmod(complex *a, __ss_int b);
+inline complex::complex(double real, double imag) {
+    (*this).real = real; (*this).imag = imag;
+}
 
-*/
+template<class T> inline complex::complex(T t) {
+    real = __float(t); 
+    imag = 0;
+}
 
+/* operators */
 
-inline double __abs(complex c) { return 1.0; };
+inline complex complex::operator+(complex b) {
+    return complex(real+b.real, imag+b.imag);
+}
 
-template<> inline __ss_bool ___bool(complex c) { return False; }
+inline complex complex::operator-(complex b) {
+    return complex(real-b.real, imag-b.imag);
+}
 
-template<> inline complex __floordiv(complex a, complex b) { return a.__floordiv__(b); }
-inline complex __floordiv(complex a, int b) { return a.__floordiv__(b); }
-inline complex __floordiv(complex a, double b) { return a.__floordiv__(b); }
-inline complex __floordiv(int a, complex b) { return ((complex)(a)).__floordiv__(b); }
-inline complex __floordiv(double a, complex b) { return ((complex)(a)).__floordiv__(b); }
+inline complex complex::operator/(complex b) {
+    complex c;
+    double norm = b.real*b.real+b.imag*b.imag;
+    c.real = (real*b.real+imag*b.imag)/norm;
+    c.imag = (imag*b.real-b.imag*real)/norm;
+    return c;
+}
 
-tuple2<complex, complex> *divmod(complex a, complex b);
-tuple2<complex, complex> *divmod(complex a, int b);
+inline complex complex::operator*(complex b) {
+    return complex(real*b.real-imag*b.imag, real*b.imag+imag*b.real); 
+}
+
+inline complex complex::operator%(complex b) {
+    complex c = (*this) / b;
+    return (*this) - (b * (((__ss_int)c.real)));
+}
+
+inline complex complex::operator-() {
+    return complex(-real, -imag);
+}
+
+inline complex complex::operator+() {
+    return *this;
+}
+
+inline __ss_bool complex::operator==(complex b) {
+    return __mbool(real==b.real and imag==b.imag);
+}
+
+inline __ss_bool complex::operator!=(complex b) {
+    return __mbool(real!=b.real or imag!=b.imag);
+}
+
+/* floordiv */
+
+static inline complex __complexfloordiv(complex a, complex b) {
+    complex c = a / b;
+    c.real = ((__ss_int)c.real);
+    c.imag = 0;
+    return c;
+}
+
+template<> inline complex __floordiv(complex a, complex b) { return __complexfloordiv(a, b); }
+inline complex __floordiv(complex a, double b) { return __complexfloordiv(a, b); }
+inline complex __floordiv(double a, complex b) { return __complexfloordiv(a, b); }
+
+/* divmod */
+
+static tuple2<complex, complex> *__complexdivmod(complex a, complex b) {
+    return new tuple2<complex, complex>(2, __complexfloordiv(a, b), a % b);
+}
+
+template<> inline tuple2<complex, complex> *divmod(complex a, complex b) { return __complexdivmod(a, b); }
+inline tuple2<complex, complex> *divmod(complex a, double b) { return __complexdivmod(a, b); }
+inline tuple2<complex, complex> *divmod(double a, complex b) { return __complexdivmod(a, b); }
+
+/* str, repr */
+
+inline str *__str(complex c) { return c.__repr__(); }
+inline str *repr(complex c) { return c.__repr__(); }
+
+/* comparison */
+
+template<> inline __ss_bool __eq(complex a, complex b) { return a == b; }
+template<> inline __ss_bool __ne(complex a, complex b) { return a != b; }
+
+template<> inline __ss_int __cmp(complex a, complex b) {} /* unused, satisfy templates */
+template<> inline __ss_bool __gt(complex a, complex b) {}
+template<> inline __ss_bool __ge(complex a, complex b) {}
+template<> inline __ss_bool __lt(complex a, complex b) {}
+template<> inline __ss_bool __le(complex a, complex b) {}
+
+/* copy, deepcopy */
+
+template<> inline complex __copy(complex a) { return a; }
+template<> inline complex __deepcopy(complex a, dict<void *, pyobj *> *) { return a; }
+
+/* add */
+
+template<> inline complex __add(complex a, complex b) { return a + b; }
+
+/* abs */
+
+inline double __abs(complex c) { return std::sqrt(c.real*c.real+c.imag*c.imag); }
+
+/* bool */
+
+template<> inline __ss_bool ___bool(complex c) { return __mbool(c.real != 0.0 or c.imag != 0); }
+
+/* power */
+
+template<> complex __power(complex a, complex b);
+inline complex __power(complex a, double b) { return __power(a, (complex)b); }
+inline complex __power(double a, complex b) { return __power((complex)a, b); }

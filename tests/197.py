@@ -281,3 +281,6 @@ class inst(object):
 Seq = [inst(3),inst(1),inst(4),inst(2)]
 print Seq
 print sorted(Seq)
+
+#complex
+print sum([1j, 2j, 3j])

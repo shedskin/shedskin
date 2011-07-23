@@ -667,49 +667,45 @@ class complex {
 public:
     double real, imag;
 
-    inline complex(double real=0.0, double imag=0.0) { this->real = real; this->imag = imag; }
-    template<class T> complex(T t) { real = __float(t); imag = 0; } 
+    inline complex(double real=0.0, double imag=0.0);
+    template<class T> inline complex(T t);
     complex(str *s);
 
-    inline complex operator+(complex b) { return complex(1.0, 1.0); }
-    inline complex operator-(complex b) { return complex(1.0, 1.0);}
-    inline complex operator%(complex b) { return complex(1.0, 1.0);}
-    inline complex operator+() { return complex(1.0, 1.0);}
-    inline complex operator-() { return complex(1.0, 1.0);}
+    inline complex operator+(complex b);
+    inline complex operator-(complex b);
+    inline complex operator*(complex b);
+    inline complex operator/(complex b);
+    inline complex operator%(complex b);
 
-    inline __ss_bool operator==(complex b) { return True; }
-    inline __ss_bool operator!=(complex b) { return True; }
+    inline complex operator+();
+    inline complex operator-();
 
-    inline complex& operator=(int a);
-    inline complex& operator=(double a);
+    inline __ss_bool operator==(complex b);
+    inline __ss_bool operator!=(complex b);
 
-    inline complex __div__(complex b) {
-        double norm = b.real*b.real+b.imag*b.imag;
-        complex c;
-        c.real = (real*b.real+imag*b.imag)/norm;
-        c.imag = (imag*b.real-b.imag*real)/norm;
-        return c;
-    }
+    str *__repr__();
 
-    inline complex __floordiv__(complex b) { 
-        complex c = __div__(b);
-        c.real = ((__ss_int)c.real);
-        c.imag = 0;
-        return c;
-    }
+
+
+
+    inline complex& operator=(double a) { real = a; imag = 0.0; }
 
     inline complex conjugate() { return complex(real, -imag); }
 
     complex parsevalue(str *s);
-    str *__repr__();
     inline long __hash__() { return ((__ss_int)imag)*1000003+((__ss_int)real); }
+
+    /* XXX bind */
 };
 
-template<class T> inline complex operator+(T t, complex c) { return c+t; }
-template<class T> inline complex operator-(T t, complex c) { return -c+t; }
-template<class T> inline complex operator*(T t, complex c) { return c*t; }
-template<class T> inline complex operator/(T t, complex c) { return c/t; }
-template<class T> inline complex operator%(T t, complex c) { return c%t; } 
+inline complex operator+(double a, complex b) { return ((complex)(a))+b; }
+inline complex operator-(double a, complex b) { return ((complex)(a))-b; }
+inline complex operator*(double a, complex b) { return ((complex)(a))*b; }
+inline complex operator/(double a, complex b) { return ((complex)(a))/b; }
+inline complex operator%(double a, complex b) { return ((complex)(a))%b; }
+
+inline __ss_bool operator==(double a, complex b) { return ((complex)(a))==b; }
+inline __ss_bool operator!=(double a, complex b) { return ((complex)(a))!=b; }
 
 class class_: public pyobj {
 public:
@@ -1176,16 +1172,24 @@ template<> double __float(str *s);
 
 /* str */
 
-str *__str();
-template<class T> str *__str(T t);
+template<class T> str *__str(T t) { if (!t) return new str("None"); return t->__str__(); }
 template<> str *__str(double t);
 #ifdef __SS_LONG
 str *__str(__ss_int t, __ss_int base=10);
 #endif
 str *__str(int t, int base=10);
 str *__str(__ss_bool b);
+str *__str(void *);
+str *__str();
 
-template<class T> str *repr(T t);
+str *__add_strs(int n, str *a, str *b, str *c);
+str *__add_strs(int n, str *a, str *b, str *c, str *d);
+str *__add_strs(int n, str *a, str *b, str *c, str *d, str *e);
+str *__add_strs(int n, ...);
+
+/* repr */
+
+template<class T> str *repr(T t) { if (!t) return new str("None"); return t->__repr__(); }
 template<> str *repr(double t);
 #ifdef __SS_LONG
 template<> str *repr(__ss_int t);
@@ -1194,16 +1198,13 @@ template<> str *repr(int t);
 template<> str *repr(__ss_bool b);
 template<> str *repr(void *t);
 
-str *__add_strs(int n, str *a, str *b, str *c);
-str *__add_strs(int n, str *a, str *b, str *c, str *d);
-str *__add_strs(int n, str *a, str *b, str *c, str *d, str *e);
-str *__add_strs(int n, ...);
-
 #ifndef __SS_NOASSERT
 #define ASSERT(x, y) if(!(x)) throw new AssertionError(y);
 #else
 #define ASSERT(x, y)
 #endif
+
+/* iteration macros */
 
 #define FAST_FOR(i, l, u, s, t1, t2) \
     if(s==0) \
@@ -1241,13 +1242,6 @@ str *__add_strs(int n, ...);
 
 template<class T> inline __ss_int len(T x) { return x->__len__(); }
 template<class T> inline __ss_int len(list<T> *x) { return x->units.size(); } /* XXX more general solution? */
-
-/* repr, str */
-
-template<class T> str *__str(T t) { if (!t) return new str("None"); return t->__str__(); }
-template<class T> str *repr(T t) { if (!t) return new str("None"); return t->__repr__(); }
-
-str *__str(void *);
 
 #include "builtin/bool.hpp"
 #include "builtin/exception.hpp"
