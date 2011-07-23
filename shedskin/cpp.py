@@ -1543,6 +1543,7 @@ class generateVisitor(ASTVisitor):
         floattype = set([(defclass('float_'),0)]) # XXX new type?
 
         # --- inline mod/div
+        # XXX C++ knows %, /, so we can overload?
         if (floattype.intersection(ltypes) or inttype.intersection(ltypes)):
             if inline in ['%'] or (inline in ['/'] and not (floattype.intersection(ltypes) or floattype.intersection(rtypes))):
                 if not defclass('complex') in [t[0] for t in rtypes]: # XXX
@@ -1553,7 +1554,7 @@ class generateVisitor(ASTVisitor):
                     self.append(')')
                     return
 
-        # --- inline floordiv # XXX merge above?
+        # --- inline floordiv
         if (inline and ul and ur) and inline in ['//']:
             self.append({'//': '__floordiv'}[inline]+'(')
             self.visit(left, func)
@@ -1570,6 +1571,8 @@ class generateVisitor(ASTVisitor):
             self.visit(right, func)
             self.append(')')
             return
+
+        # XXX complex 1+0j merging
 
         # --- 'a.__mul__(b)': use template to call to b.__mul__(a), while maintaining evaluation order
         if inline in ['+', '*', '-', '/'] and ul and not ur:
