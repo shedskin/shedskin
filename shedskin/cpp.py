@@ -2432,7 +2432,7 @@ class generateVisitor(ASTVisitor):
 
         # --- visit nodes, boxing scalars
         for n in nodes:
-            if [clname for clname in ('float_', 'int_', 'bool_', 'complex') if (defclass(clname), 0) in self.mergeinh[n]]:
+            if [clname for clname in ('float_', 'int_', 'bool_', 'complex') if defclass(clname) in [t[0] for t in self.mergeinh[n]]]:
                 self.visitm(', ___box(', n, ')', func)
             else:
                 self.visitm(', ', n, func)
