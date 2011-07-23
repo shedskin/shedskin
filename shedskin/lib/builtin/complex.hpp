@@ -54,6 +54,11 @@ inline __ss_bool complex::operator!=(complex b) {
     return __mbool(real!=b.real or imag!=b.imag);
 }
 
+inline complex& complex::operator=(double a) { 
+    real = a; 
+    imag = 0.0; 
+}
+
 /* floordiv */
 
 static inline complex __complexfloordiv(complex a, complex b) {
@@ -116,9 +121,18 @@ template<> complex __power(complex a, complex b);
 inline complex __power(complex a, double b) { return __power(a, (complex)b); }
 inline complex __power(double a, complex b) { return __power((complex)a, b); }
 
+/* hash */
+
+inline long complex::__hash__() { return ((__ss_int)imag)*1000003+((__ss_int)real); }
+
+/* conjugate */
+
+inline complex complex::conjugate() { return complex(real, -imag); }
+
 /* glue */
 
 #ifdef __SS_BIND
 template<> PyObject *__to_py(complex c);
 template<> complex __to_ss(PyObject *p);
 #endif
+
