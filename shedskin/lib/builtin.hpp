@@ -1128,42 +1128,6 @@ template<class T> static inline int __wrap(T a, int i) {
     return i;
 }
 
-/* equality, comparison */
-
-template<class T> inline __ss_bool __eq(T a, T b) { return ((a&&b)?(a->__eq__(b)):__mbool(a==b)); }
-#ifdef __SS_LONG /* XXX */
-template<> inline __ss_bool __eq(__ss_int a, __ss_int b) { return __mbool(a == b); }
-#endif
-template<> inline __ss_bool __eq(str *a, str *b) {
-    if(a&&b) {
-        if (a->charcache && b->charcache) 
-            return __mbool(a==b);
-        else
-            return __mbool(a->__eq__(b));
-    } else
-        return __mbool(a==b);
-}
-template<> inline __ss_bool __eq(int a, int b) { return __mbool(a == b); }
-template<> inline __ss_bool __eq(__ss_bool a, __ss_bool b) { return __mbool(a == b); }
-template<> inline __ss_bool __eq(double a, double b) { return __mbool(a == b); }
-template<> inline __ss_bool __eq(void *a, void *b) { return __mbool(a == b); }
-
-template<class T> inline __ss_bool __ne(T a, T b) { return ((a&&b)?(a->__ne__(b)):__mbool(a!=b)); }
-template<> inline __ss_bool __ne(int a, int b) { return __mbool(a != b); }
-template<> inline __ss_bool __ne(double a, double b) { return __mbool(a != b); }
-template<> inline __ss_bool __ne(void *a, void *b) { return __mbool(a != b); }
-template<class T> inline __ss_bool __gt(T a, T b) { return a->__gt__(b); }
-template<> inline __ss_bool __gt(int a, int b) { return __mbool(a > b); }
-template<> inline __ss_bool __gt(double a, double b) { return __mbool(a > b); }
-template<class T> inline __ss_bool __ge(T a, T b) { return a->__ge__(b); }
-template<> inline __ss_bool __ge(int a, int b) { return __mbool(a >= b); }
-template<> inline __ss_bool __ge(double a, double b) { return __mbool(a >= b); }
-template<class T> inline __ss_bool __lt(T a, T b) { return a->__lt__(b); }
-template<> inline __ss_bool __lt(int a, int b) { return __mbool(a < b); }
-template<> inline __ss_bool __lt(double a, double b) { return __mbool(a < b); }
-template<class T> inline __ss_bool __le(T a, T b) { return a->__le__(b); }
-template<> inline __ss_bool __le(int a, int b) { return __mbool(a <= b); }
-template<> inline __ss_bool __le(double a, double b) { return __mbool(a <= b); }
 
 /* copy */
 
