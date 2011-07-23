@@ -676,22 +676,17 @@ public:
     inline complex operator*(complex b);
     inline complex operator/(complex b);
     inline complex operator%(complex b);
-
     inline complex operator+();
     inline complex operator-();
-
     inline __ss_bool operator==(complex b);
     inline __ss_bool operator!=(complex b);
+    inline complex& operator=(double a);
 
-    str *__repr__();
-
-    inline complex& operator=(double a) { real = a; imag = 0.0; }
-
-    inline complex conjugate() { return complex(real, -imag); }
-
+    inline complex conjugate();
     complex parsevalue(str *s);
-    inline long __hash__() { return ((__ss_int)imag)*1000003+((__ss_int)real); }
 
+    inline long __hash__();
+    str *__repr__();
 };
 
 inline complex operator+(double a, complex b) { return ((complex)(a))+b; }
