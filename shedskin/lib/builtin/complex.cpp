@@ -16,21 +16,6 @@ complex::complex(str *s) {
     }
 }
 
-/*
-
-#ifdef __SS_BIND
-complex::complex(PyObject *p) {
-    this->__class__ = cl_complex;
-    real = PyComplex_RealAsDouble(p);
-    imag = PyComplex_ImagAsDouble(p);
-}
-PyObject *complex::__to_py__() {
-    return PyComplex_FromDoubles(real, imag);
-}
-#endif
-
-
-*/
 
 complex complex::parsevalue(str *s) {
     complex mult;
@@ -89,6 +74,18 @@ template<> complex __power(complex a, complex b) {
     }
     return r;
 }
+
+/* glue */
+
+#ifdef __SS_BIND
+template<> complex __to_ss(PyObject *p) {
+    return complex(PyComplex_RealAsDouble(p), PyComplex_ImagAsDouble(p));
+}
+
+template<> PyObject *__to_py(complex c) {
+    return PyComplex_FromDoubles(c.real, c.imag);
+}
+#endif
 
 /* boxed methods */
 

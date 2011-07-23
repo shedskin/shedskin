@@ -1563,6 +1563,14 @@ class generateVisitor(ASTVisitor):
             self.append(')')
             return
 
+        # --- beauty fix for '1 +- nj' notation
+        if inline in ['+', '-'] and isinstance(right, Const) and isinstance(right.value, complex):
+            if floattype.intersection(ltypes) or inttype.intersection(ltypes):
+                self.append('complex(')
+                self.visit(left, func)
+                self.append(', '+{'+':'', '-':'-'}[inline]+str(right.value.imag)+')')
+                return
+
         # --- inline other
         if inline and ((ul and ur) or not middle or (isinstance(left, Name) and left.name == 'None') or (isinstance(right, Name) and right.name == 'None')): # XXX not middle, cleanup?
             self.append('(')
@@ -1571,8 +1579,6 @@ class generateVisitor(ASTVisitor):
             self.visit(right, func)
             self.append(')')
             return
-
-        # XXX complex 1+0j merging
 
         # --- 'a.__mul__(b)': use template to call to b.__mul__(a), while maintaining evaluation order
         if inline in ['+', '*', '-', '/'] and ul and not ur:
