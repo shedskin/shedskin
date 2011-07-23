@@ -14,10 +14,10 @@ def b2a_base64(data):
     return ""
 def a2b_qp(string, header=False):
     return ""
-def b2a_qp(data, quotetabs=False, istext=False, header=True):
+def b2a_qp(data, quotetabs=False, istext=False, header=False):
     return ""
 def a2b_hqx(string):
-    return ""
+    return ("",0)
 def b2a_hqx(data):
     return ""
 def rledecode_hqx(data):
