@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import traceback, sys, os, time, subprocess, glob, os.path
+from difflib import unified_diff
 
 if os.path.exists('../shedskin/__init__.py'):
     SS = '../shedskin/__init__.py'
@@ -123,10 +124,8 @@ def extmod_tests(args, options):
             assert os.system('rm %s' % (extmod+ext)) == 0
             cpython_output = get_output('python main.py')
             if native_output != cpython_output:
-                print 'output:'
-                print native_output
-                print 'expected:'
-                print cpython_output
+                print 'diff:'
+                print generate_diff(native_output, cpython_output)
                 raise AssertionError
             print '*** success:', test
         except AssertionError:
@@ -146,7 +145,7 @@ def error_tests(args, options):
             for line in file('%d.py' % test):
                 if line.startswith('#*'):
                     checks.append(line[1:].strip())
-            output = get_output('python ../%s %d 2>&1' % (SS, test)).splitlines()
+            output = get_output('python ../%s %d 2>&1' % (SS, test))
             assert not [l for l in output if 'Traceback' in l]
             for check in checks:
                 assert [l for l in output if l.startswith(check)]
@@ -159,7 +158,7 @@ def error_tests(args, options):
 
 def get_output(command):
     com = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE).stdout
-    output = ''.join(com.readlines())
+    output = com.readlines()
     com.close()
     return output
 
@@ -167,11 +166,12 @@ def check_output(command, command2):
     native_output = get_output(command)
     cpython_output = get_output(command2)
     if native_output != cpython_output:
-        print 'output:'
-        print native_output
-        print 'expected:'
-        print cpython_output
+        print 'diff:'
+        print generate_diff(native_output, cpython_output)
         raise AssertionError
 
+def generate_diff(native_output, cpython_output):
+    return '\n'.join(unified_diff(native_output, cpython_output,lineterm="\n"))
+    
 if __name__ == '__main__':
     main()
