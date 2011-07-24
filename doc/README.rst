@@ -133,9 +133,10 @@ Some other features are currently only partially supported:
 Library Limitations
 -------------------
 
-Programs to be compiled with **Shed Skin** cannot freely use the Python standard library. At the moment, the following 22 modules are largely supported. Several of these, such as ``os.path``, were compiled to C++ using **Shed Skin**.
+Programs to be compiled with **Shed Skin** cannot freely use the Python standard library. At the moment, the following 24 modules are largely supported. Several of these, such as ``os.path``, were compiled to C++ using **Shed Skin**.
 
   - ``array``
+  - ``binascii``
   - ``bisect``
   - ``collections`` (defaultdict, deque)
   - ``ConfigParser`` (no SafeConfigParser)
@@ -148,6 +149,7 @@ Programs to be compiled with **Shed Skin** cannot freely use the Python standard
   - ``heapq``
   - ``itertools`` (no starmap)
   - ``math``
+  - ``mmap``
   - ``os``
   - ``os.path``
   - ``random``
