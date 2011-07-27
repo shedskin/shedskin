@@ -757,13 +757,18 @@ class generateVisitor(ASTVisitor):
                 if ident in cl.funcs and self.inhcpa(cl.funcs[ident]):
                     self.eol(')')
                 else:
-                    if retexpr and self.mergeinh[func.retnode.thing] == set([(defclass('bool_'), 0)]):
-                        self.eol(') { return False; }') # XXX msvc needs return statement
-                    else:
-                        self.eol(') { return 0; }') # XXX msvc needs return statement
+                    self.eol(') { return %s; }' % self.nothing(merged[0])) # XXX msvc needs return statement
 
                 if ident in cl.funcs: cl.funcs[ident].declared = True
 
+    def nothing(self, types):
+        if defclass('complex') in [t[0] for t in types]:
+            return 'mcomplex(0.0, 0.0)'
+        elif defclass('bool_') in [t[0] for t in types]:
+            return 'False'
+        else:
+            return '0'
+        
     def inhcpa(self, func):
         return hmcpa(func) or (func in getgx().inheritance_relations and [1 for f in getgx().inheritance_relations[func] if hmcpa(f)])
 
@@ -1249,8 +1254,7 @@ class generateVisitor(ASTVisitor):
         if node.getChildNodes():
             lastnode = node.getChildNodes()[-1]
             if not func.ident == '__init__' and not func.fakeret and not isinstance(lastnode, Return) and not (isinstance(lastnode, Stmt) and isinstance(lastnode.nodes[-1], Return)): # XXX use Stmt in moduleVisitor
-                if not [1 for t in self.mergeinh[func.retnode.thing] if isinstance(t[0], class_) and t[0].ident == 'bool_']:
-                    self.output('return 0;')
+                self.output('return %s;' % self.nothing(self.mergeinh[func.retnode.thing]))
 
         self.deindent()
         self.output('}\n')
