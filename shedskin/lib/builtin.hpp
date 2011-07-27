@@ -1261,6 +1261,7 @@ template<class T> T __iter<T>::__get_next() {
 }
 
 template<class T> T __zero() { return 0; }
+template<> inline __ss_bool __zero<__ss_bool>() { return False; }
 template<> inline complex __zero<complex>() { return mcomplex(0,0); }
 
 #include "builtin/list.hpp"
