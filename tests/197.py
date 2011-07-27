@@ -288,3 +288,20 @@ print a
 b = a.real
 print sum([1j, 2j, 3j])
 print '%s' % (1+3j)
+
+#colorsys
+import colorsys
+
+print '%.2f' % colorsys.ONE_THIRD
+print '%.2f' % colorsys.ONE_SIXTH
+print '%.2f' % colorsys.TWO_THIRD
+
+def pr(t):
+    print [('%.2f'%x) for x in t]
+
+pr(colorsys.hls_to_rgb(1.0, 0.5, 0.7))
+pr(colorsys.rgb_to_hls(1.0, 0.5, 0.7))
+pr(colorsys.yiq_to_rgb(1.0, 0.5, 0.7))
+pr(colorsys.rgb_to_yiq(1.0, 0.5, 0.7))
+pr(colorsys.hsv_to_rgb(1.0, 0.5, 0.7))
+pr(colorsys.rgb_to_hsv(1.0, 0.5, 0.7))
