@@ -680,7 +680,9 @@ public:
     inline complex operator+();
     inline complex operator-();
     inline __ss_bool operator==(complex b);
+    inline __ss_bool operator==(double b);
     inline __ss_bool operator!=(complex b);
+    inline __ss_bool operator!=(double b);
     inline complex& operator=(double a);
 
     inline complex conjugate();

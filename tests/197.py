@@ -288,6 +288,7 @@ print a
 b = a.real
 print sum([1j, 2j, 3j])
 print '%s' % (1+3j)
+print 1==0j, 0.0==0j, 1.0==0j, 0j==0.0
 
 #colorsys
 import colorsys
