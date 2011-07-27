@@ -57,10 +57,12 @@ inline complex complex::operator+() {
 inline __ss_bool complex::operator==(complex b) {
     return __mbool(real==b.real and imag==b.imag);
 }
+inline __ss_bool complex::operator==(double b) { return (*this) == mcomplex(b); }
 
 inline __ss_bool complex::operator!=(complex b) {
     return __mbool(real!=b.real or imag!=b.imag);
 }
+inline __ss_bool complex::operator!=(double b) { return (*this) != mcomplex(b); }
 
 inline complex& complex::operator=(double a) { 
     real = a; 
