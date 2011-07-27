@@ -38,7 +38,9 @@ template <class U, class B> typename __sumtype2<typename U::for_in_unit,B>::type
 template<class A, class B> typename A::for_in_unit ___max(int, B (*key)(typename A::for_in_unit), A *iter) {
     typename A::for_in_unit max;
     B maxkey, maxkey2;
-    max = 0; maxkey = 0; maxkey2 = 0;
+    max = __zero<typename A::for_in_unit>(); 
+    maxkey = __zero<B>(); 
+    maxkey2 = __zero<B>();;
     int first = 1;
     typename A::for_in_unit e;
     typename A::for_in_loop __3;
@@ -121,7 +123,9 @@ template<class T> T ___max(int n, int key, T a, T b, T c, ...) {
 template<class A, class B> typename A::for_in_unit ___min(int, B (*key)(typename A::for_in_unit), A *iter) {
     typename A::for_in_unit min;
     B minkey, minkey2;
-    min = 0; minkey = 0; minkey2 = 0;
+    min = __zero<typename A::for_in_unit>(); 
+    minkey = __zero<B>(); 
+    minkey2 = __zero<B>();
     int first = 1;
     typename A::for_in_unit e;
     typename A::for_in_loop __3;
@@ -342,7 +346,7 @@ template <class A> A next(__iter<A> *iter1, A fillvalue) {
         return fillvalue;
     }
 }
-template <class A> A next(__iter<A> *iter1, void *) { return next(iter1, (A)NULL); }
+template <class A> A next(__iter<A> *iter1, void *) { return next(iter1, __zero<A>()); }
 template <class A> A next(__iter<A> *iter1) { return iter1->next(); }
 
 /* map */
@@ -380,8 +384,8 @@ template <class A, class B, class C> list<A> *map(int n, A (*func)(B, C), pyiter
     int total;
     while(1) {
         total = 0;
-        try { nextb = next(itb); total += 1; } catch (StopIteration *) { nextb = 0; }
-        try { nextc = next(itc); total += 1; } catch (StopIteration *) { nextc = 0; }
+        try { nextb = next(itb); total += 1; } catch (StopIteration *) { nextb = __zero<B>(); }
+        try { nextc = next(itc); total += 1; } catch (StopIteration *) { nextc = __zero<C>(); }
         if(total == 0)
             break;
         result->append((*func)(nextb, nextc));
@@ -402,9 +406,9 @@ template <class A, class B, class C, class D> list<A> *map(int, A (*func)(B, C, 
     int total;
     while(1)  {
         total = 0;
-        try { nextb1 = next(itb1); total += 1; } catch (StopIteration *) { nextb1 = 0; }
-        try { nextb2 = next(itb2); total += 1; } catch (StopIteration *) { nextb2 = 0; }
-        try { nextb3 = next(itb3); total += 1; } catch (StopIteration *) { nextb3 = 0; }
+        try { nextb1 = next(itb1); total += 1; } catch (StopIteration *) { nextb1 = __zero<B>(); }
+        try { nextb2 = next(itb2); total += 1; } catch (StopIteration *) { nextb2 = __zero<C>(); }
+        try { nextb3 = next(itb3); total += 1; } catch (StopIteration *) { nextb3 = __zero<D>(); }
         if(total == 0)
             break;
         result->append((*func)(nextb1, nextb2, nextb3));
