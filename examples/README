@@ -1,4 +1,4 @@
-59 programs that work with Shed Skin 0.9.
+60 programs that work with Shed Skin 0.9.
 
 16,000 lines in total (using sloccount, around 23,000 otherwise)
 
@@ -7,76 +7,76 @@ shedskin -b (disable index-out-of-bounds checking) often improves performance.
 If you have another interesting test case, please send it to:
    mark.dufour@gmail.com
 
-lines  name               description                   notes
+lines  name                 description                     notes
 (sloccount)
 
-    84 ant.py             TSP approximation
-   327 amaze.py           maze generator/solver
-   125 astar.py           a-star algorithm              shedskin -e astar && make && python astar_main.py
-   415 bh.py              barnes-hut force calculation
-    54 brainfuck.py       brainfuck interpreter
-  3600 c64_main.py        commodore 64 emulator         cd c64; shedskin -boe c64 && make; cd ..
-                                                        python c64_main.py --tape=intkarat.t64
-                                                        load
-                                                        run
-   321 chess.py           chess engine
-   105 dijkstra.py        dijkstra's algorithm
-    80 dijkstra2.py       bidirectional dijkstra search
-   220 chaos.py           chaosgame-like fractals
-    65 circle.py          circle packing animation      shedskin -e circle && make 
-                                                        python circle_main.py (drag circles with mouse)
-   147 fysphun.py         physics animation             shedskin -e fysphun && make 
-                                                        python fysphun_main.py (drag points with mouse)
-    92 genetic.py         genetic algorithm
-   168 genetic2.py        another genetic algorithm
-   446 go.py              go player (monte carlo/UCT)   shedskin -r go (fast random number generator)
-                                                        (see DISCO for details)
-    74 life.py            conway's game of life
-   218 pylife.py          hashlife-based game of life   shedskin -e pylife && make 
-                                                        python pylife_main.py
-   186 linalg.py          linear algebra
-   190 LZ2.py             Lempel-Ziv compressor
-   174 ac_encode.py       Arithmetic coding compressor
-   130 adatron.py         Adatron SVM with polynomial kernel
-   222 block.py           Huffman block compressor
-   329 kanoodle.py        Knuth's dancing links
-   270 loop.py            Havlak loop recognition algorithm
-    26 mandelbrot.py      mandelbrot fractal
-   223 mastermind_main.py mastermind against comp
-   117 mastermind2.py     mastermind strategies
- 1,201 msp_ss.py          serial bootstrap loader       see comments in top
-   482 mwmatching.py      maximum weighted matching algorithm
-   101 nbody.py           planet body physics
-   154 neural1.py         back-prop neural network
-   109 neural2.py         back-prop neural network
-    78 oliva2.py          sea shell patterns
-    95 othello.py         othello player
-    80 pisang.py          satisfiability solver
-   272 pygmy.py           raytracer
-   276 yopyra.py          raytracer
-   195 mao.py             raytracer (ao benchmark)      see comments in top
-                                                        shedskin -r mao (fast random number generator)
-   462 minilight_main.py  advanced raytracer            shedskin -r minilight (fast random number generator)
-                          (triangle primitives, octree spatial index)
-   208 path_tracing.py    path tracing raytracer        shedskin -r path_tracing
-  1050 pylot_main.py      multiprocessing raytracer     cd pylot; shedskin -boe SimpleGeometry && make; cd ..
-                                                        python pylot_main.py
-   181 pystone.py         standard benchmark
-  1181 quameon            quantum monte carlo algorithms
-                                                        cd quameon; shedskin sto_atom
-   286 richards.py        standard benchmark
-   469 rdb.py             iPod shuffle programmer       see comments in top
-    82 rsync.py           rsync algorithm               see comments in top
-   129 score4.py          connect four/four-in-a-row
-    80 sieve.py           prime number sieves
-   192 sha.py             SHA-1 algorithm               shedskin -l sha
-    92 sokoban.py         sokoban solver
-   102 solitaire.py       solitaire encryption algorithm
-   139 sudoku1.py         sudoku solver
-   148 sudoku2.py         sudoku solver
-   155 sudoku3.py         sudoku solver
-    68 sudo.py            norvig's sudoku solver
-   113 tictactoe.py       tictactoe on large boards
-   753 TonyJpegDecoder.py jpeg decoder
-    39 voronoi.py         textual voronoi
-   526 voronoi2.py        voronoi algoritm
+    84 ant.py               TSP approximation
+   327 amaze.py             maze generator/solver
+   125 astar.py             a-star algorithm                shedskin -e astar && make && python astar_main.py
+   415 bh.py                barnes-hut force calculation
+    54 brainfuck.py         brainfuck interpreter
+  3600 c64_main.py          commodore 64 emulator           cd c64; shedskin -boe c64 && make; cd ..
+                                                            python c64_main.py --tape=intkarat.t64
+                                                            load
+                                                            run
+   321 chess.py             chess engine
+   105 dijkstra.py          dijkstra's algorithm
+    80 dijkstra2.py         bidirectional dijkstra search
+   220 chaos.py             chaosgame-like fractals
+    65 circle.py            circle packing animation        shedskin -e circle && make 
+                                                            python circle_main.py (drag circles with mouse)
+   147 fysphun.py           physics animation               shedskin -e fysphun && make 
+                                                            python fysphun_main.py (drag points with mouse)
+    92 genetic.py           genetic algorithm
+   168 genetic2.py          another genetic algorithm
+   446 go.py                go player (monte carlo/UCT)     shedskin -r go (fast random number generator)
+                                                            (see DISCO for details)
+    74 life.py              conway's game of life
+   218 pylife.py            hashlife-based game of life     shedskin -e pylife && make 
+                                                            python pylife_main.py
+   186 linalg.py            linear algebra
+   190 LZ2.py               Lempel-Ziv compressor
+   174 ac_encode.py         Arithmetic coding compressor
+   130 adatron.py           Adatron SVM with polynomial kernel
+   222 block.py             Huffman block compressor
+   329 kanoodle.py          Knuth's dancing links
+   270 loop.py              Havlak loop recognition algorithm
+    26 mandelbrot.py        mandelbrot fractal
+   108 mandelbrot2_main.py  interactive mandelbrot fractal  shedskin -e mandelbrot2 && make && python mandelbrot2_main.py
+   223 mastermind_main.py   mastermind against comp
+   117 mastermind2.py       mastermind strategies
+ 1,201 msp_ss.py            serial bootstrap loader         see comments in top
+   482 mwmatching.py        maximum weighted matching algorithm
+   101 nbody.py             planet body physics
+   154 neural1.py           back-prop neural network
+   109 neural2.py           back-prop neural network
+    78 oliva2.py            sea shell patterns
+    95 othello.py           othello player
+    80 pisang.py            satisfiability solver
+   272 pygmy.py             raytracer
+   276 yopyra.py            raytracer
+   195 mao.py               raytracer (ao benchmark)        see comments in top
+                                                            shedskin -r mao (fast random number generator)
+   462 minilight_main.py    advanced raytracer              shedskin -r minilight (fast random number generator)
+                            (triangle primitives, octree spatial index)
+   208 path_tracing.py      path tracing raytracer          shedskin -r path_tracing
+  1050 pylot_main.py        multiprocessing raytracer       cd pylot; shedskin -boe SimpleGeometry && make; cd ..
+                                                            python pylot_main.py
+   181 pystone.py           standard benchmark
+  1181 quameon              quantum monte carlo algorithms  cd quameon; shedskin sto_atom
+   286 richards.py          standard benchmark
+   469 rdb.py               iPod shuffle programmer         see comments in top
+    82 rsync.py             rsync algorithm                 see comments in top
+   129 score4.py            connect four/four-in-a-row
+    80 sieve.py             prime number sieves
+   192 sha.py               SHA-1 algorithm                 shedskin -l sha
+    92 sokoban.py           sokoban solver
+   102 solitaire.py         solitaire encryption algorithm
+   139 sudoku1.py           sudoku solver
+   148 sudoku2.py           sudoku solver
+   155 sudoku3.py           sudoku solver
+    68 sudo.py              norvig's sudoku solver
+   113 tictactoe.py         tictactoe on large boards
+   753 TonyJpegDecoder.py   jpeg decoder
+    39 voronoi.py           textual voronoi
+   526 voronoi2.py          voronoi algoritm
