@@ -2955,7 +2955,7 @@ def generate_code():
     # --- generate Makefile
     makefile = file(os.path.join(getgx().output_dir, getgx().makefile_name), 'w')
 
-    libdir = getgx().libdir
+    libdir = getgx().libdir.replace(' ','\ ')
     print >>makefile, 'SHEDSKIN_LIBDIR=%s' % (libdir)
     filenames = []
     for mod in mods:
