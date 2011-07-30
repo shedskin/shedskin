@@ -1,4 +1,6 @@
-"""Rect Tracker class for Python Tkinter Canvas"""
+# interactive mandelbrot program
+# copyright Tony Veijalainen, tony.veijalainen@gmail.com
+
 try:
     import tkinter as tk
 except ImportError:

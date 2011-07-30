@@ -1,4 +1,6 @@
-#!/usr/bin/python
+# interactive mandelbrot program
+# copyright Tony Veijalainen, tony.veijalainen@gmail.com
+
 from __future__ import print_function
 import sys
 import time
