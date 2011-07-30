@@ -91,6 +91,7 @@ def start():
     shared.print_errors()
 
 def main():
+    sys.setrecursionlimit(100000)
     try:
         start()
     except KeyboardInterrupt:
