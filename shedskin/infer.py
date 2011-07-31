@@ -418,8 +418,8 @@ def create_template(func, dcpa, c, worklist):
     if not dcpa in func.cp: func.cp[dcpa] = {}
     func.cp[dcpa][c] = cpa = len(func.cp[dcpa]) # XXX +1
 
-    #if not func.mv.module.builtin and not func.ident in ['__getattr__', '__setattr__']:
-    #    print 'template', (func, dcpa), c
+    if DEBUG(2) and not func.mv.module.builtin and not func.ident in ['__getattr__', '__setattr__']:
+        print 'template', (func, dcpa), c
 
     getgx().templates += 1
     func_copy(func, dcpa, cpa, worklist, c)
