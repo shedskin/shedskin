@@ -15,7 +15,6 @@ def usage():
 
  -a --ann               Output annotated source code (.ss.py)
  -b --nobounds          Disable bounds checking
- -d --dir               Specify alternate directory for output files
  -e --extmod            Generate extension module
  -f --flags             Provide alternate Makefile flags
  -l --long              Use long long ("64-bit") integers
@@ -48,7 +47,7 @@ def start():
 
     # --- command-line options
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'vbchef:wad:m:rolspx', ['help', 'extmod', 'nobounds', 'nowrap', 'flags=', 'dir=', 'makefile=', 'random', 'noassert', 'long', 'msvc', 'ann', 'strhash', 'pypy', 'traceback'])
+        opts, args = getopt.getopt(sys.argv[1:], 'vbchef:wad:m:rolspx', ['help', 'extmod', 'nobounds', 'nowrap', 'flags=', 'debug=', 'makefile=', 'random', 'noassert', 'long', 'msvc', 'ann', 'strhash', 'pypy', 'traceback'])
     except getopt.GetoptError:
         usage()
 
@@ -57,7 +56,7 @@ def start():
         if o in ['-b', '--nobounds']: getgx().bounds_checking = False
         if o in ['-e', '--extmod']: getgx().extension_module = True
         if o in ['-a', '--ann']: getgx().annotation = True
-        if o in ['-d', '--dir']: getgx().output_dir = a
+        if o in ['-d', '--debug']: getgx().debug_level = a
         if o in ['-l', '--long']: getgx().longlong = True
         if o in ['-w', '--nowrap']: getgx().wrap_around_check = False
         if o in ['-r', '--random']: getgx().fast_random = True
