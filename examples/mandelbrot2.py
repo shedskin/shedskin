@@ -4,6 +4,7 @@
 from __future__ import print_function
 import sys
 import time
+import colorsys
 
 class kohn_bmp:
     '''py_kohn_bmp - Copyright 2007 by Michael Kohn
@@ -88,46 +89,46 @@ def mandel(real, imag, max_iterations=20):
             return i % max_iterations
     return -1
 
-res = 0
-res = mandel(1.0, 1.0, 128)
-colors = [[0, 100, 100], [127, 0, 0], [127, 127, 0], [0, 127, 0], [0, 255, 0],
-           [0, 255, 0], [0, 255, 127], [0, 127, 127], [255, 0, 0],
-           [0, 127, 255], [0, 0, 255], [127, 0, 255],
-           [127, 0, 255], [255, 0, 255], [255, 0, 127],
-           [127, 127, 0], [0, 0, 0]]
+
+def make_colors(number_of_colors, saturation=0.8, value=0.9):
+    number_of_colors -= 1  # first reserved for black
+    tuples = [colorsys.hsv_to_rgb(x*1.0/number_of_colors, saturation, value) for x in range(number_of_colors)]
+    return [(0,0,0)] + [(int(256*r),int(256*g),int(256*b)) for r,g,b in tuples]
+
+# colors can be writen over to module by user
+colors = make_colors(1024)
 
 # Changing the values below will change the resulting image
 def mandel_file(cx=-0.7, cy=0.0, size=3.2, max_iterations=512, width = 640, height = 480):
     t0 = time.clock()
-    try:
-        increment = min(size / width, size / height)
-        proportion = 1.0 * width / height
-        start_real, start_imag = cx - increment * width/2, cy - increment * height/2
+    increment = min(size / width, size / height)
+    proportion = 1.0 * width / height
+    start_real, start_imag = cx - increment * width/2, cy - increment * height/2
 
-        mandel_pos = "%f %fi_%f_%i" % (cx, cy, size, max_iterations)
-        fname = "m%s.bmp" % mandel_pos
-        my_bmp = kohn_bmp(fname, width, height, 3)
+    mandel_pos = "%g %gi_%g_%i" % (cx, cy, size, max_iterations)
+    fname = "m%s.bmp" % mandel_pos
+    my_bmp = kohn_bmp(fname, width, height, 3)
 
-        current_y = start_imag
-        for y in range(height):
-            if not y % 10:
-                sys.stdout.write('\rrow %i / %i'  % (y + 1, height))
-            sys.stdout.flush()
-            current_x = start_real
+    current_y = start_imag
+    for y in range(height):
+        if not y % 10:
+            sys.stdout.write('\rrow %i / %i'  % (y + 1, height))
+        sys.stdout.flush()
+        current_x = start_real
 
-            for x in range(width):
-                c = mandel(current_x, current_y, max_iterations)
-                c %= len(colors) 
-                current_x += increment
-                my_bmp.write_pixel(colors[c][0], colors[c][1], colors[c][2])
-            current_y += increment
+        for x in range(width):
+            c = mandel(current_x, current_y, max_iterations)
+            c = (c % (len(colors) - 1) + 1) if c != -1 else 0 
+            current_x += increment
+            my_bmp.write_pixel(colors[c][0], colors[c][1], colors[c][2])
+        current_y += increment
 
-        print("\r%.3f s             " % (time.clock() - t0))
-        my_bmp.close()
-        return fname
-    except IOError as e:
-         print(e,'x %i, y %i, current_x %f, colors %s' %(x, y, current_x, colors))
+    print("\r%.3f s             " % (time.clock() - t0))
+    my_bmp.close()
+    return fname
         
 
 if __name__ == '__main__':
+    res = 0
+    res = mandel(1.0, 1.0, 128)
     mandel_file(max_iterations=256)
