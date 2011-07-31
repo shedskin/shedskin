@@ -71,6 +71,7 @@ class globalInfo: # XXX add comments, split up
         self.added_funcs_set = set()
         self.fast_hash = False
         self.struct_unpack = {}
+        self.debug_level = 0
 
 def newgx():
     return globalInfo()

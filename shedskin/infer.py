@@ -39,8 +39,10 @@ random.seed(42)
 from shared import *
 import graph, cpp
 
-DEBUG = False
 INCREMENTAL = True
+
+def DEBUG(level):
+    return getgx().debug_level >= level
 
 def class_copy(cl, dcpa):
     for var in cl.vars.values(): # XXX
@@ -358,7 +360,7 @@ def cpa(callnode, worklist):
                 continue
             getgx().added_funcs += 1
             getgx().added_funcs_set.add(func)
-            if DEBUG: print 'adding', func
+            if DEBUG(1): print 'adding', func
 
         if objtype: objtype = (objtype,)
         else: objtype = ()
@@ -457,15 +459,15 @@ def actuals_formals(expr, func, node, dcpa, cpa, types, worklist):
 def ifa():
     split = [] # [(set of creation nodes, new type number), ..]
     for cl in ifa_classes_to_split():
-        if DEBUG: print 'IFA: --- class %s ---' % cl.ident
+        if DEBUG(3): print 'IFA: --- class %s ---' % cl.ident
         cl.newdcpa = cl.dcpa
         vars = [cl.vars[name] for name in cl.tvar_names() if name in cl.vars]
         classes_nr, nr_classes = ifa_class_types(cl, vars)
         for dcpa in range(1, cl.dcpa):
             if ifa_split_vars(cl, dcpa, vars, nr_classes, classes_nr, split) != None:
-                if DEBUG: print 'IFA found splits, return'
+                if DEBUG(3): print 'IFA found splits, return'
                 return split
-    if DEBUG: print 'IFA final return'
+    if DEBUG(3): print 'IFA final return'
     return split
 
 def ifa_split_vars(cl, dcpa, vars, nr_classes, classes_nr, split):
@@ -474,7 +476,7 @@ def ifa_split_vars(cl, dcpa, vars, nr_classes, classes_nr, split):
             continue
         node = getgx().cnode[var, dcpa, 0]
         creation_points, paths, assignsets, allnodes, csites, emptycsites = ifa_flow_graph(cl, dcpa, node)
-        if DEBUG: print 'IFA visit var %s.%s, %d, csites %d' % (cl.ident, var.name, dcpa, len(csites))
+        if DEBUG(3): print 'IFA visit var %s.%s, %d, csites %d' % (cl.ident, var.name, dcpa, len(csites))
         if len(csites)+len(emptycsites) == 1:
             continue
         if ((len(merge_simple_types(getgx().types[node])) > 1 and len(assignsets) > 1) or \
@@ -491,14 +493,14 @@ def ifa_split_vars(cl, dcpa, vars, nr_classes, classes_nr, split):
             if len(remaining) < 2 or len(remaining) >= 10:
                 continue
             # --- if it exists, perform actual splitting
-            if DEBUG: print 'IFA normal split, remaining:', len(remaining)
+            if DEBUG(3): print 'IFA normal split, remaining:', len(remaining)
             for splitsites in remaining[1:]:
                 ifa_split_class(cl, dcpa, splitsites, split)
             return split
         # --- if all else fails, perform wholesale splitting
         # XXX assign sets should be different; len(paths) > 1?
         if len(paths) > 1 and 1 < len(csites) < 10:
-            if DEBUG: print 'IFA wholesale splitting, csites:', len(csites)
+            if DEBUG(3): print 'IFA wholesale splitting, csites:', len(csites)
             for csite in csites[1:]:
                 ifa_split_class(cl, dcpa, [csite], split)
             return split
@@ -533,7 +535,7 @@ def ifa_split_no_confusion(cl, dcpa, varnum, classes_nr, nr_classes, csites, emp
         else: # create new contour
             classes_nr[subtype] = cl.newdcpa
             ifa_split_class(cl, dcpa, csites, split)
-    if DEBUG and subtype_csites:
+    if DEBUG(3) and subtype_csites:
         print 'IFA found simple split', subtype_csites.keys()
 
 def ifa_class_types(cl, vars):
@@ -547,7 +549,7 @@ def ifa_class_types(cl, vars):
             else:
                 attr_types.append(frozenset())
         attr_types = tuple(attr_types)
-        if DEBUG and [x for x in attr_types if x]:
+        if DEBUG(3) and [x for x in attr_types if x]:
             print 'IFA', str(dcpa)+':', zip([var.name for var in vars], map(list, attr_types))
         nr_classes[dcpa] = attr_types
         classes_nr[attr_types] = dcpa
@@ -670,7 +672,7 @@ def iterative_dataflow_analysis():
         getgx().alloc_info = getgx().new_alloc_info
 
         # --- ifa: detect conflicting assignments to instance variables, and split contours to resolve these
-        if DEBUG: print '\n*** iteration ***'
+        if DEBUG(3): print '\n*** iteration ***'
         else:
             if INCREMENTAL:
                 allfuncs = len([f for f in getgx().allfuncs if not f.mv.module.builtin and not f.ident in ['__iadd__', '__imul__', '__str__']])
@@ -683,7 +685,7 @@ def iterative_dataflow_analysis():
                 sys.stdout.flush()
  
         split = ifa()
-        if DEBUG and split: print 'IFA splits', [(s[0], s[1], s[3]) for s in split]
+        if DEBUG(3) and split: print 'IFA splits', [(s[0], s[1], s[3]) for s in split]
 
         if not split: # nothing has changed
             if INCREMENTAL and getgx().added_funcs:
@@ -692,7 +694,7 @@ def iterative_dataflow_analysis():
             else:
                 if INCREMENTAL: 
                     update_progressbar(1.0)
-                if DEBUG: print '\niterations:', getgx().total_iterations, 'templates:', getgx().templates
+                if DEBUG(1): print '\niterations:', getgx().total_iterations, 'templates:', getgx().templates
                 else: print
                 return
 
