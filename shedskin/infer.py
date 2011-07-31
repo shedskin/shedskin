@@ -125,7 +125,7 @@ def init_worklist():
 # --- iterative dataflow analysis
 
 def propagate():
-    #print 'propagate'
+    if DEBUG(1): print 'propagate'
     seed_nodes()
     worklist = init_worklist()
     getgx().checkcallfunc = [] # XXX
@@ -645,7 +645,10 @@ def ifa_split_class(cl, dcpa, things, split):
 
 def update_progressbar(perc):
     print '\r%s%d%%' % (int(perc*32)*'*', 100*perc),
-    sys.stdout.flush()
+    if DEBUG(1):
+        print
+    else:
+        sys.stdout.flush()
 
 # --- cartesian product algorithm (cpa) & iterative flow analysis (ifa)
 def iterative_dataflow_analysis():
@@ -667,12 +670,11 @@ def iterative_dataflow_analysis():
         getgx().new_alloc_info = {}
 #        print 'table'
 #        print '\n'.join([repr(e)+': '+repr(l) for e,l in getgx().alloc_info.items()])
-        #print 'propagate'
         propagate()
         getgx().alloc_info = getgx().new_alloc_info
 
         # --- ifa: detect conflicting assignments to instance variables, and split contours to resolve these
-        if DEBUG(3): print '\n*** iteration ***'
+        if DEBUG(1): print '\n*** iteration %d ***' % getgx().iterations
         else:
             if INCREMENTAL:
                 allfuncs = len([f for f in getgx().allfuncs if not f.mv.module.builtin and not f.ident in ['__iadd__', '__imul__', '__str__']])
@@ -685,9 +687,11 @@ def iterative_dataflow_analysis():
                 sys.stdout.flush()
  
         split = ifa()
-        if DEBUG(3) and split: print 'IFA splits', [(s[0], s[1], s[3]) for s in split]
-
-        if not split: # nothing has changed
+        if split:
+            if DEBUG(1): print '%d splits' % len(split)
+            elif DEBUG(3): print 'IFA splits', [(s[0], s[1], s[3]) for s in split]
+        else:
+            if DEBUG(1): print 'no splits'
             if INCREMENTAL and getgx().added_funcs:
                 getgx().added_funcs = 0
                 getgx().iterations = 0

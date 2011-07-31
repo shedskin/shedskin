@@ -4,7 +4,7 @@ Copyright 2005-2009 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 
 '''
 
-import sys, getopt, os.path
+import sys, getopt, os.path, traceback
 from distutils import sysconfig
 
 import infer, cpp, annotate, shared
@@ -93,7 +93,9 @@ def main():
     sys.setrecursionlimit(100000)
     try:
         start()
-    except KeyboardInterrupt:
+    except KeyboardInterrupt, e:
+        if getgx().debug_level > 0:
+            print traceback.format_exc(e)
         sys.exit(1)
 
 if __name__ == '__main__':
