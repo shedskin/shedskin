@@ -56,7 +56,7 @@ def start():
         if o in ['-b', '--nobounds']: getgx().bounds_checking = False
         if o in ['-e', '--extmod']: getgx().extension_module = True
         if o in ['-a', '--ann']: getgx().annotation = True
-        if o in ['-d', '--debug']: getgx().debug_level = a
+        if o in ['-d', '--debug']: getgx().debug_level = int(a)
         if o in ['-l', '--long']: getgx().longlong = True
         if o in ['-w', '--nowrap']: getgx().wrap_around_check = False
         if o in ['-r', '--random']: getgx().fast_random = True
