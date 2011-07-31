@@ -75,7 +75,8 @@ lines  name                 description                     notes
    139 sudoku1.py           sudoku solver
    148 sudoku2.py           sudoku solver
    155 sudoku3.py           sudoku solver
-    68 sudo.py              norvig's sudoku solver
+    68 sudoku4.py           norvig's sudoku solver
+    73 sudoku5.py           dancing links sudoku solver
    113 tictactoe.py         tictactoe on large boards
    753 TonyJpegDecoder.py   jpeg decoder
     39 voronoi.py           textual voronoi
