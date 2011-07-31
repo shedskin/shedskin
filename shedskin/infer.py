@@ -666,6 +666,8 @@ def iterative_dataflow_analysis():
             print '\n*WARNING* reached maximum number of iterations'
             break
 
+        if DEBUG(1): print '\n*** iteration %d ***' % getgx().iterations
+
         # --- propagate using cartesian product algorithm
         getgx().new_alloc_info = {}
 #        print 'table'
@@ -674,8 +676,7 @@ def iterative_dataflow_analysis():
         getgx().alloc_info = getgx().new_alloc_info
 
         # --- ifa: detect conflicting assignments to instance variables, and split contours to resolve these
-        if DEBUG(1): print '\n*** iteration %d ***' % getgx().iterations
-        else:
+        if not DEBUG(1):
             if INCREMENTAL:
                 allfuncs = len([f for f in getgx().allfuncs if not f.mv.module.builtin and not f.ident in ['__iadd__', '__imul__', '__str__']])
                 perc = 1.0 
