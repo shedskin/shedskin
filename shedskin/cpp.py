@@ -19,7 +19,7 @@ import extmod
 # --- code generation visitor; use type information
 class generateVisitor(ASTVisitor):
     def __init__(self, module):
-        self.output_base = os.path.join(getgx().output_dir, module.filename[:-3])
+        self.output_base = module.filename[:-3]
         self.out = file(self.output_base+'.cpp','w')
         self.indentation = ''
         self.consts = {}
@@ -2934,12 +2934,6 @@ def generate_code():
     mods = getgx().modules.values()
     for module in mods:
         if not module.builtin:
-            # create output directory if necessary
-            if getgx().output_dir:
-                output_dir = os.path.join(getgx().output_dir, module.dir)
-                if not os.path.exists(output_dir):
-                    os.makedirs(output_dir)
-
             gv = generateVisitor(module)
             mv = module.mv
             setmv(mv)
@@ -2953,7 +2947,7 @@ def generate_code():
             gv.insert_extras('.cpp')
 
     # --- generate Makefile
-    makefile = file(os.path.join(getgx().output_dir, getgx().makefile_name), 'w')
+    makefile = file(getgx().makefile_name, 'w')
 
     libdir = getgx().libdir.replace(' ','\ ')
     print >>makefile, 'SHEDSKIN_LIBDIR=%s' % (libdir)

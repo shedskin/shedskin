@@ -100,7 +100,7 @@ def annotate():
 
         # --- output annotated file (skip if no write permission)
         try:
-            out = open(os.path.join(getgx().output_dir, module.filename[:-3]+'.ss.py'),'w')
+            out = open(module.filename[:-3]+'.ss.py', 'w')
             out.write(''.join(source))
             out.close()
         except IOError:

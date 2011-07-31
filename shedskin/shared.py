@@ -62,7 +62,6 @@ class globalInfo: # XXX add comments, split up
         self.msvc = False
         self.pypy = False
         self.backtrace = False
-        self.output_dir= ''
         self.makefile_name = 'Makefile' # XXX other default?
         self.item_rvalue = {}
         self.genexp_to_lc = {}
