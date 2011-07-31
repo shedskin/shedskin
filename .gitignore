@@ -57,9 +57,9 @@ examples/life
 examples/linalg
 examples/mandelbrot
 examples/mao
-examples/mastermind
+examples/mastermind_main
 examples/mastermind2
-examples/minilight
+examples/minilight_main
 examples/msp_ss
 examples/mwmatching
 examples/nbody
