@@ -692,7 +692,7 @@ def iterative_dataflow_analysis():
         else:
             if DEBUG(1): print 'no splits'
             if INCREMENTAL:
-                allfuncs = len([f for f in getgx().allfuncs if not f.mv.module.builtin and not f.ident in ['__iadd__', '__imul__', '__str__']])
+                allfuncs = len([f for f in getgx().allfuncs if not f.mv.module.builtin and not [start for start in ('__iadd__', '__imul__', '__str__', '__hash__') if f.ident.startswith(start)]])
                 perc = 1.0 
                 if allfuncs:
                     perc = min(len(getgx().added_funcs_set) / float(allfuncs), 1.0)
