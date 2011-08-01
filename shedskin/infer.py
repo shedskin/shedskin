@@ -457,6 +457,7 @@ def actuals_formals(expr, func, node, dcpa, cpa, types, worklist):
 
 # --- iterative flow analysis: after each iteration, detect imprecisions, and split involved contours
 def ifa():
+    if DEBUG(1): print 'ifa'
     split = [] # [(set of creation nodes, new type number), ..]
     for cl in ifa_classes_to_split():
         if DEBUG(3): print 'IFA: --- class %s ---' % cl.ident
