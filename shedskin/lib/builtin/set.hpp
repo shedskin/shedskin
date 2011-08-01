@@ -484,6 +484,13 @@ template<class T> template<class U, class V> void *set<T>::update(int, U *iter, 
     return NULL;
 }
 
+template<class T> template<class U, class V, class W> void *set<T>::update(int, U *iter, V *iter2, W *iter3) {
+    update(1, iter);
+    update(1, iter2);
+    update(1, iter3);
+    return NULL;
+}
+
 template<class T> template<class U> void *set<T>::update(int, U *iter) {
     typename U::for_in_unit e;
     typename U::for_in_loop __3;
@@ -573,6 +580,10 @@ template<class T> template <class U> set<T> *set<T>::intersection(U *iter) {
         }
     END_FOR
     return result;
+}
+
+template<class T> template<class U, class V> set<T> *set<T>::intersection(int, U *iter, V *iter2) {
+    return intersection(iter)->intersection(iter2);
 }
 
 template<class T> set<T> *set<T>::intersection(set<T> *s) {

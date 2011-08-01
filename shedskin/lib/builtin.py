@@ -493,7 +493,7 @@ class pyset(pyiter):
     def isdisjoint(self, b):
         return True
 
-    def intersection(self, b):
+    def intersection(self, *b):
         return self
 
     def difference(self, b):
