@@ -568,7 +568,7 @@ template<class T> set<T> *set<T>::symmetric_difference(set<T> *s) {
     return c;
 }
 
-template<class T> template <class U> set<T> *set<T>::intersection(U *iter) {
+template<class T> template <class U> set<T> *set<T>::intersection(int, U *iter) {
     set<T>* result = new set<T>;
     typename U::for_in_unit e;
     typename U::for_in_loop __3;
