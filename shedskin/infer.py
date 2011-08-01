@@ -660,6 +660,9 @@ def iterative_dataflow_analysis():
     for n, t in getgx().types.iteritems():
         getgx().orig_types[n] = t
 
+    if INCREMENTAL:
+        update_progressbar(0)
+
     while True:
         getgx().iterations += 1
         getgx().total_iterations += 1
@@ -677,28 +680,28 @@ def iterative_dataflow_analysis():
         getgx().alloc_info = getgx().new_alloc_info
 
         # --- ifa: detect conflicting assignments to instance variables, and split contours to resolve these
-        if not DEBUG(1):
+        split = ifa()
+
+        if not INCREMENTAL and not DEBUG(1):
+            sys.stdout.write('*')
+            sys.stdout.flush()
+
+        if split:
+            if DEBUG(1): print '%d splits' % len(split)
+            elif DEBUG(3): print 'IFA splits', [(s[0], s[1], s[3]) for s in split]
+        else:
+            if DEBUG(1): print 'no splits'
             if INCREMENTAL:
                 allfuncs = len([f for f in getgx().allfuncs if not f.mv.module.builtin and not f.ident in ['__iadd__', '__imul__', '__str__']])
                 perc = 1.0 
                 if allfuncs:
                     perc = min(len(getgx().added_funcs_set) / float(allfuncs), 1.0)
                 update_progressbar(perc)
-            else:
-                sys.stdout.write('*')
-                sys.stdout.flush()
- 
-        split = ifa()
-        if split:
-            if DEBUG(1): print '%d splits' % len(split)
-            elif DEBUG(3): print 'IFA splits', [(s[0], s[1], s[3]) for s in split]
-        else:
-            if DEBUG(1): print 'no splits'
             if INCREMENTAL and getgx().added_funcs:
                 getgx().added_funcs = 0
                 getgx().iterations = 0
             else:
-                if INCREMENTAL: 
+                if INCREMENTAL:
                     update_progressbar(1.0)
                 if DEBUG(1): print '\niterations:', getgx().total_iterations, 'templates:', getgx().templates
                 else: print
