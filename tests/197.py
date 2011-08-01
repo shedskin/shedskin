@@ -306,3 +306,9 @@ pr(colorsys.yiq_to_rgb(1.0, 0.5, 0.7))
 pr(colorsys.rgb_to_yiq(1.0, 0.5, 0.7))
 pr(colorsys.hsv_to_rgb(1.0, 0.5, 0.7))
 pr(colorsys.rgb_to_hsv(1.0, 0.5, 0.7))
+
+#tuple inequality
+t1 = ('rc', (0, 0)) 
+t2 =('rc', (0, 0) )
+print t1!=t2
+print t1==t2
