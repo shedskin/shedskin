@@ -255,6 +255,9 @@ print reduce(lambda a,b:a+b, aaplist), reduce(lambda a,b:a+b, aaplist, Aap(6))
 sett = set(range(3))
 sett.update(range(2,5), range(12,14))
 print sorted(sett)
+sett.update(range(2,5), range(12,14), range(18, 20))
+print sorted(sett)
+print sett.intersection(range(1, 4), range(2, 5)) == set([2])
 
 #cannot hurt to test this
 print [].__class__.__name__
