@@ -223,8 +223,9 @@ template<class A, class B> __ss_int tuple2<A, B>::__len__() {
     return 2;
 }
 
-template<class A, class B> __ss_bool tuple2<A, B>::__eq__(tuple2<A,B> *b) {
-    return __mbool(__eq(first, b->__getfirst__()) && __eq(second, b->__getsecond__()));
+template<class A, class B> __ss_bool tuple2<A, B>::__eq__(pyobj *p) {
+    tuple2<A,B> *b = (tuple2<A,B> *)p;
+    return __mbool(__eq(first, b->__getfirst__()) & __eq(second, b->__getsecond__()));
 }
 
 template<class A, class B> __ss_int tuple2<A, B>::__cmp__(pyobj *p) {

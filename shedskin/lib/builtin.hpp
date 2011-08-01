@@ -261,7 +261,7 @@ public:
     str *__repr__();
     __ss_int __len__();
 
-    __ss_bool __eq__(tuple2<A,B> *b);
+    __ss_bool __eq__(pyobj *p);
     __ss_int __cmp__(pyobj *p);
     long __hash__();
 
