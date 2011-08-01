@@ -572,7 +572,7 @@ public:
     template <class U, class V, class W> void *update(int, U *other, V *other2, W *other3);
     void *update(int, set<T> *s);
 
-    template <class U> set<T> *intersection(U *other);
+    template <class U> set<T> *intersection(int, U *other);
     template <class U, class V> set<T> *intersection(int, U *iter, V *iter2);
 
     set<T> *intersection(set<T> *s);

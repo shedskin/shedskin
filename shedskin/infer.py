@@ -819,7 +819,7 @@ def backflow_path(worklist, t):
 
 def flow_creation_sites(worklist, allnodes):
     while worklist:
-        new = []
+        new = set()
         for node in worklist:
             for out in node.fout:
                 if out in allnodes:
@@ -828,7 +828,7 @@ def flow_creation_sites(worklist, allnodes):
                     if difference:
                         out.csites.update(difference)
                         if not out in new:
-                            new.append(out)
+                            new.add(out)
         worklist = new
 
 # --- backup constraint network
