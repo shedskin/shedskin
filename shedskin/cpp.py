@@ -10,7 +10,7 @@ class generateVisitor: inherits visitor pattern from compiler.visitor.ASTVisitor
 
 '''
 
-import textwrap, string
+import textwrap, string, struct
 from distutils import sysconfig
 
 from shared import *
@@ -1731,6 +1731,9 @@ class generateVisitor(ASTVisitor):
         if self.library_func(funcs, 'array', 'array', '__init__'):
             if not node.args or not isinstance(node.args[0], Const) or node.args[0].value not in 'cbBhHiIlLfd':
                 error("non-constant or unsupported type code", node, warning=True, mv=getmv())
+        if self.library_func(funcs, 'builtin', None, 'id'):
+            if struct.calcsize("P") == 8 and struct.calcsize('i') == 4 and not getgx().longlong:
+                error("return value of 'id' does not fit in 32-bit integer (try shedskin -l)", node, warning=True, mv=getmv())
 
         nrargs = len(node.args)
         if isinstance(func, function) and func.largs:
