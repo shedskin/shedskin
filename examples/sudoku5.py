@@ -41,15 +41,15 @@ def exact_cover(X1, Y):
 
 def solve(X, Y, solution):
     if not X:
-        yield list(solution)
+        yield solution
     else:
         #c = min(X, key=lambda c: len(X[c])) # shedskin doesn't support closures!
         c = min([(len(X[c]), c) for c in X])[1]
         for r in list(X[c]):
             solution.append(r)
             cols = select(X, Y, r)
-            for s in solve(X, Y, solution):
-                yield s
+            for solution in solve(X, Y, solution):
+                yield solution
             deselect(X, Y, r, cols)
             solution.pop()
 
