@@ -770,11 +770,12 @@ def ifa_seed_template(func, cart, dcpa, cpa, worklist):
         for node in func.nodes_ordered:
             if node.constructor and isinstance(node.thing, (List, Dict, Tuple, ListComp, CallFunc)):
                 if node.thing not in added:
-                    if INCREMENTAL_DATA and getgx().added_allocs >= INCREMENTAL_ALLOCS:
-                        continue
                     added.add(node.thing)
-                    added_new += 1
-                    getgx().added_allocs += 1
+                    if INCREMENTAL_DATA and not func.mv.module.builtin:
+                        if getgx().added_allocs >= INCREMENTAL_ALLOCS:
+                            continue
+                        added_new += 1
+                        getgx().added_allocs += 1
                 # --- contour is specified in alloc_info
                 parent = node.parent
                 while isinstance(parent.parent, function): parent = parent.parent
