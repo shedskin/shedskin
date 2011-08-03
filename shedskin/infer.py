@@ -40,6 +40,7 @@ from shared import *
 import graph, cpp
 
 INCREMENTAL = True
+INCREMENTAL_FUNCS = 5
 INCREMENTAL_ALLOC = True
 
 def DEBUG(level):
@@ -357,7 +358,7 @@ def cpa(callnode, worklist):
     for c in cp:
         (func, dcpa, objtype), c = c[0], c[1:]
         if INCREMENTAL and not func.mv.module.builtin and func not in getgx().added_funcs_set and not func.ident in ['__getattr__', '__setattr__']:
-            if getgx().added_funcs == 5:
+            if getgx().added_funcs == INCREMENTAL_FUNCS:
                 continue
             getgx().added_funcs += 1
             getgx().added_funcs_set.add(func)
@@ -664,7 +665,10 @@ def iterative_dataflow_analysis():
     if INCREMENTAL:
         update_progressbar(0)
 
-    getgx().added_allocs = set()
+    getgx().added_funcs = INCREMENTAL_FUNCS # analyze root of callgraph in first round
+    getgx().added_funcs_set = set()
+    getgx().added_allocs = 0
+    getgx().added_allocs_set = set()
 
     while True:
         getgx().iterations += 1
@@ -700,8 +704,9 @@ def iterative_dataflow_analysis():
                 if allfuncs:
                     perc = min(len(getgx().added_funcs_set) / float(allfuncs), 1.0)
                 update_progressbar(perc)
-            if INCREMENTAL and getgx().added_funcs:
+            if INCREMENTAL and (getgx().added_funcs or getgx().added_allocs):
                 getgx().added_funcs = 0
+                getgx().added_allocs = 0
                 getgx().iterations = 0
             else:
                 if INCREMENTAL:
@@ -754,7 +759,7 @@ def ifa_seed_template(func, cart, dcpa, cpa, worklist):
         if isinstance(func.parent, class_): # self
             cart = ((func.parent, dcpa),)+cart
 
-        added = getgx().added_allocs
+        added = getgx().added_allocs_set
         added_new = 0
 
         for node in func.nodes_ordered:
