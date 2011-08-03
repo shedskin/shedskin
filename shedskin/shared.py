@@ -150,6 +150,7 @@ class function:
         self.mv = getmv()
         self.lnodes = []
         self.nodes = set()
+        self.nodes_ordered = []
         self.defaults = []
         self.misses = set()
         self.cp = {}
@@ -321,6 +322,7 @@ class cnode:
             if isinstance(parent, function):
                 if self not in parent.nodes:
                     parent.nodes.add(self)
+                    parent.nodes_ordered.append(self)
 
     def copy(self, dcpa, cpa, worklist=None): # XXX to infer.py
         #if not self.mv.module.builtin: print 'copy', self

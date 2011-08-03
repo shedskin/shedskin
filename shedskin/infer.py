@@ -40,6 +40,7 @@ from shared import *
 import graph, cpp
 
 INCREMENTAL = True
+INCREMENTAL_ALLOC = True
 
 def DEBUG(level):
     return getgx().debug_level >= level
@@ -663,6 +664,8 @@ def iterative_dataflow_analysis():
     if INCREMENTAL:
         update_progressbar(0)
 
+    getgx().added_allocs = set()
+
     while True:
         getgx().iterations += 1
         getgx().total_iterations += 1
@@ -751,8 +754,14 @@ def ifa_seed_template(func, cart, dcpa, cpa, worklist):
         if isinstance(func.parent, class_): # self
             cart = ((func.parent, dcpa),)+cart
 
-        for node in func.nodes:
+        added = getgx().added_allocs
+        added_new = 0
+
+        for node in func.nodes_ordered:
             if node.constructor and isinstance(node.thing, (List, Dict, Tuple, ListComp, CallFunc)):
+                if node.thing not in added:
+                    added.add(node.thing)
+                    added_new += 1
                 # --- contour is specified in alloc_info
                 parent = node.parent
                 while isinstance(parent.parent, function): parent = parent.parent
@@ -800,6 +809,9 @@ def ifa_seed_template(func, cart, dcpa, cpa, worklist):
 
                     if alloc_node.callfuncs: # XXX
                         getgx().checkcallfunc.append(alloc_node)
+
+        if DEBUG(1) and added_new and not func.mv.module.builtin:
+            print '%d seed(s)' % added_new
 
 # --- for a set of target nodes of a specific type of assignment (e.g. int to (list,7)), flow back to creation points
 def backflow_path(worklist, t):
