@@ -41,7 +41,7 @@ import graph, cpp
 
 INCREMENTAL = True
 INCREMENTAL_FUNCS = 5
-INCREMENTAL_DATA = False
+INCREMENTAL_DATA = True
 INCREMENTAL_ALLOCS = 20
 
 def DEBUG(level):
@@ -703,7 +703,7 @@ def iterative_dataflow_analysis():
             elif DEBUG(3): print 'IFA splits', [(s[0], s[1], s[3]) for s in split]
         else:
             if DEBUG(1): print 'no splits'
-            if INCREMENTAL:
+            if INCREMENTAL and not getgx().added_allocs:
                 allfuncs = len([f for f in getgx().allfuncs if not f.mv.module.builtin and not [start for start in ('__iadd__', '__imul__', '__str__', '__hash__') if f.ident.startswith(start)]])
                 perc = 1.0 
                 if allfuncs:
@@ -770,6 +770,8 @@ def ifa_seed_template(func, cart, dcpa, cpa, worklist):
         for node in func.nodes_ordered:
             if node.constructor and isinstance(node.thing, (List, Dict, Tuple, ListComp, CallFunc)):
                 if node.thing not in added:
+                    if INCREMENTAL_DATA and getgx().added_allocs >= INCREMENTAL_ALLOCS:
+                        continue
                     added.add(node.thing)
                     added_new += 1
                     getgx().added_allocs += 1
