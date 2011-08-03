@@ -828,33 +828,30 @@ def ifa_seed_template(func, cart, dcpa, cpa, worklist):
             print '%d seed(s)' % added_new
 
 # --- for a set of target nodes of a specific type of assignment (e.g. int to (list,7)), flow back to creation points
-def backflow_path(worklist, t):
+def backflow_path(worklist, t): 
     path = set(worklist)
     while worklist:
-        new = []
+        new = set()
         for node in worklist:
             for incoming in node.in_:
                 if t in getgx().types[incoming]:
                     incoming.fout.add(node)
-
                     if not incoming in path:
                         path.add(incoming)
-                        new.append(incoming)
+                        new.add(incoming)
         worklist = new
     return path
 
-def flow_creation_sites(worklist, allnodes):
+def flow_creation_sites(worklist, allnodes): 
     while worklist:
         new = set()
         for node in worklist:
             for out in node.fout:
                 if out in allnodes:
-                    difference = node.csites - out.csites
-
-                    if difference:
-                        out.csites.update(difference)
-                        if not out in new:
-                            new.add(out)
+                    oldsize = len(out.csites)
+                    out.csites.update(node.csites)
+                    if len(out.csites) > oldsize:
+                        new.add(out)
         worklist = new
 
 # --- backup constraint network
