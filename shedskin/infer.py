@@ -41,7 +41,8 @@ import graph, cpp
 
 INCREMENTAL = True
 INCREMENTAL_FUNCS = 5
-INCREMENTAL_ALLOC = True
+INCREMENTAL_DATA = False
+INCREMENTAL_ALLOCS = 20
 
 def DEBUG(level):
     return getgx().debug_level >= level
@@ -358,8 +359,12 @@ def cpa(callnode, worklist):
     for c in cp:
         (func, dcpa, objtype), c = c[0], c[1:]
         if INCREMENTAL and not func.mv.module.builtin and func not in getgx().added_funcs_set and not func.ident in ['__getattr__', '__setattr__']:
-            if getgx().added_funcs == INCREMENTAL_FUNCS:
-                continue
+            if INCREMENTAL_DATA:
+                if getgx().added_allocs >= INCREMENTAL_ALLOCS:
+                    continue
+            else:
+                if getgx().added_funcs >= INCREMENTAL_FUNCS:
+                    continue
             getgx().added_funcs += 1
             getgx().added_funcs_set.add(func)
             if DEBUG(1): print 'adding', func
@@ -767,6 +772,7 @@ def ifa_seed_template(func, cart, dcpa, cpa, worklist):
                 if node.thing not in added:
                     added.add(node.thing)
                     added_new += 1
+                    getgx().added_allocs += 1
                 # --- contour is specified in alloc_info
                 parent = node.parent
                 while isinstance(parent.parent, function): parent = parent.parent
