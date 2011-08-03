@@ -1280,6 +1280,8 @@ class generateVisitor(ASTVisitor):
         self.indent()
         for f in func.formals:
             self.output('this->%s = %s;' % (self.cpp_name(f),self.cpp_name(f)))
+        for fake_unpack in func.expand_args.values():
+            self.visit(fake_unpack, func)
         self.output('__last_yield = -1;')
         self.deindent()
         self.output('}\n')

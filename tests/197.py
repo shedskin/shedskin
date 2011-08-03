@@ -315,3 +315,13 @@ t1 = ('rc', (0, 0))
 t2 =('rc', (0, 0) )
 print t1!=t2
 print t1==t2
+
+#generator and arg unpacking
+def genpack((i,j),a,b):
+    yield i
+    yield j
+    yield a
+    yield b
+ttt = (1,2)
+for aaa in genpack(ttt,3,4):
+    print aaa
