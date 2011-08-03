@@ -583,10 +583,10 @@ template<class T> template <class U> set<T> *set<T>::intersection(int, U *iter) 
 }
 
 template<class T> template<class U, class V> set<T> *set<T>::intersection(int, U *iter, V *iter2) {
-    return intersection(iter)->intersection(iter2);
+    return intersection(1, iter)->intersection(1, iter2);
 }
 
-template<class T> set<T> *set<T>::intersection(set<T> *s) {
+template<class T> set<T> *set<T>::intersection(int, set<T> *s) {
     set<T> *a, *b;
     set<T> *c = new set<T>(this->frozen);
 
@@ -624,7 +624,7 @@ template <class T> set<T>* set<T>::difference(set<T> *other)
 }
 
 template<class T> set<T> *set<T>::__and__(set<T> *s) {
-    return intersection(s);
+    return intersection(1, s);
 }
 template<class T> set<T> *set<T>::__or__(set<T> *s) {
     return __ss_union(s);
@@ -636,7 +636,7 @@ template<class T> set<T> *set<T>::__sub__(set<T> *s) {
     return difference(s);
 }
 template<class T> set<T> *set<T>::__iand__(set<T> *s) {
-    *this = intersection(s);
+    *this = intersection(1, s);
     return this;
 }
 template<class T> set<T> *set<T>::__ior__(set<T> *s) {
@@ -666,7 +666,7 @@ template<class T> void *set<T>::symmetric_difference_update(set<T> *s) {
 }
 
 template<class T> void *set<T>::intersection_update(set<T> *s) {
-    set<T> *c = intersection(s);
+    set<T> *c = intersection(1, s);
     *this = *c;
     return NULL;
 }

@@ -575,7 +575,7 @@ public:
     template <class U> set<T> *intersection(int, U *other);
     template <class U, class V> set<T> *intersection(int, U *iter, V *iter2);
 
-    set<T> *intersection(set<T> *s);
+    set<T> *intersection(int, set<T> *s);
 
     template <class U> set<T> *difference(U *other);
     set<T> *difference(set<T> *s);
