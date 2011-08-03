@@ -934,7 +934,6 @@ def analyze(source, testing=False):
                 error("instance variable '%s' of class '%s' shadows class variable" % (name, cl.ident))
 
     getgx().merged_all = merged(getgx().types) #, inheritance=True)
-    getgx().merge_dcpa = merged(getgx().types, dcpa=True)
 
     mv = getgx().main_module.mv
     setmv(mv)
@@ -948,7 +947,6 @@ def analyze(source, testing=False):
     getgx().merged_all = merged(getgx().types)
     getgx().merged_inh = merged(getgx().types, inheritance=True)
     cpp.analyze_virtuals()
-    getgx().merge_dcpa = merged(getgx().types, dcpa=True)
     getgx().merged_all = merged(getgx().types) #, inheritance=True) # XXX
 
     # --- determine which classes need an __init__ method
