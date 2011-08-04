@@ -171,7 +171,7 @@ def check_output(command, command2):
         raise AssertionError
 
 def generate_diff(native_output, cpython_output):
-    return '\n'.join(unified_diff(native_output, cpython_output,lineterm="\n"))
+    return ''.join(unified_diff(native_output, cpython_output,lineterm="\n"))
     
 if __name__ == '__main__':
     main()
