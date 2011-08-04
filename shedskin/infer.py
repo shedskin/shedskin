@@ -466,24 +466,31 @@ def actuals_formals(expr, func, node, dcpa, cpa, types, worklist):
 def ifa():
     if DEBUG(1): print 'ifa'
     split = [] # [(set of creation nodes, new type number), ..]
+
+    allcsites = {}
+    for n, types in getgx().types.iteritems():
+        if not n.in_:
+            for (cl, dcpa) in types:
+                allcsites.setdefault((cl, dcpa), set()).add(n)
+
     for cl in ifa_classes_to_split():
         if DEBUG(3): print 'IFA: --- class %s ---' % cl.ident
         cl.newdcpa = cl.dcpa
         vars = [cl.vars[name] for name in cl.tvar_names() if name in cl.vars]
         classes_nr, nr_classes = ifa_class_types(cl, vars)
         for dcpa in range(1, cl.dcpa):
-            if ifa_split_vars(cl, dcpa, vars, nr_classes, classes_nr, split) != None:
+            if ifa_split_vars(cl, dcpa, vars, nr_classes, classes_nr, split, allcsites) != None:
                 if DEBUG(3): print 'IFA found splits, return'
                 return split
     if DEBUG(3): print 'IFA final return'
     return split
 
-def ifa_split_vars(cl, dcpa, vars, nr_classes, classes_nr, split):
+def ifa_split_vars(cl, dcpa, vars, nr_classes, classes_nr, split, allcsites):
     for (varnum, var) in enumerate(vars):
         if not (var, dcpa, 0) in getgx().cnode:
             continue
         node = getgx().cnode[var, dcpa, 0]
-        creation_points, paths, assignsets, allnodes, csites, emptycsites = ifa_flow_graph(cl, dcpa, node)
+        creation_points, paths, assignsets, allnodes, csites, emptycsites = ifa_flow_graph(cl, dcpa, node, allcsites)
         if DEBUG(3): print 'IFA visit var %s.%s, %d, csites %d' % (cl.ident, var.name, dcpa, len(csites))
         if len(csites)+len(emptycsites) == 1:
             continue
@@ -599,7 +606,7 @@ def ifa_confluence_point(node, creation_points):
                 return True
     return False
 
-def ifa_flow_graph(cl, dcpa, node):
+def ifa_flow_graph(cl, dcpa, node, allcsites):
     creation_points, paths, assignsets = {}, {}, {}
     allnodes = set()
     csites = []
@@ -636,11 +643,8 @@ def ifa_flow_graph(cl, dcpa, node):
     flow_creation_sites(csites, allnodes)
 
     # csites not flowing to any assignment
-    allcsites = set()
-    for n, types in getgx().types.iteritems():
-        if (cl, dcpa) in types and not n.in_:
-            allcsites.add(n)
-    emptycsites = list(allcsites-set(csites))
+    allcsites2 = allcsites.get((cl, dcpa), set())
+    emptycsites = list(allcsites2-set(csites))
     for n in emptycsites:
         n.paths = []
 
