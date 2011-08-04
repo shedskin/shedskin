@@ -1,4 +1,4 @@
-61 programs that work with Shed Skin 0.9.
+60 programs that work with Shed Skin 0.9.
 
 16,000 lines in total (using sloccount, around 23,000 otherwise)
 
@@ -76,7 +76,6 @@ lines  name                 description                     notes
    148 sudoku2.py           sudoku solver
    155 sudoku3.py           sudoku solver
     68 sudoku4.py           norvig's sudoku solver
-    73 sudoku5.py           dancing links sudoku solver
    113 tictactoe.py         tictactoe on large boards
    753 TonyJpegDecoder.py   jpeg decoder
     39 voronoi.py           textual voronoi
