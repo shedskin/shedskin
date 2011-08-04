@@ -2518,7 +2518,7 @@ class generateVisitor(ASTVisitor):
 
         # property
         lcp = lowest_common_parents(polymorphic_t(self.mergeinh[node.expr]))
-        if len(lcp) == 1 and isinstance(lcp[0], class_) and node.attrname in lcp[0].properties:
+        if len(lcp) == 1 and node.attrname in lcp[0].properties:
             self.append(self.cpp_name(lcp[0].properties[node.attrname][0])+'()')
             return
 
