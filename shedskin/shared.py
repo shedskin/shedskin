@@ -835,28 +835,43 @@ def property_setter(dec):
 
 # --- determine lowest common parent classes (inclusive)
 def lowest_common_parents(classes):
-    lcp = set(classes)
+    classes = [cl for cl in classes if isinstance(cl, class_)]
 
-    changed = 1
-    while changed:
-        changed = 0
-        for cl in getgx().allclasses:
-             desc_in_classes = [[c for c in ch.descendants(inclusive=True) if c in lcp] for ch in cl.children]
-             if len([d for d in desc_in_classes if d]) > 1:
-                 for d in desc_in_classes:
-                     lcp.difference_update(d)
-                 lcp.add(cl)
-                 changed = 1
+    # collect all possible parent classes
+    parents = set()
+    for parent in classes:
+        while parent:
+            parent.lcpcount = 0
+            parents.add(parent)
+            if parent.bases:
+                parent = parent.bases[0]
+            else:
+                parent = None
 
-    for cl in lcp.copy():
-        if isinstance(cl, class_): # XXX
-            lcp.difference_update(cl.descendants())
+    # count how many descendants in 'classes' each has
+    for parent in classes:
+        while parent:
+            parent.lcpcount += 1
+            if parent.bases:
+                parent = parent.bases[0]
+            else:
+                parent = None
 
-    result = [] # XXX there shouldn't be doubles
-    for cl in lcp:
-        if cl.ident not in [r.ident for r in result]:
-            result.append(cl)
-    return result
+    # remove those that don't add anything 
+    useless = set()
+    for parent in parents:
+        orig = parent
+        while parent:
+            if parent != orig:
+                if parent.lcpcount > orig.lcpcount:
+                    useless.add(orig)
+                elif parent.lcpcount == orig.lcpcount:
+                    useless.add(parent)
+            if parent.bases:
+                parent = parent.bases[0]
+            else:
+                parent = None
+    return list(parents - useless)
 
 def hmcpa(func):
     got_one = 0
