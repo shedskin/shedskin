@@ -31,7 +31,7 @@ void *md5::__init__(str *data) {
 void __init() {
     __name__ = new str("hashlib");
 
-    cl_md5 = new class_("md5", 28, 28);
+    cl_md5 = new class_("md5");
 }
 
 } // module namespace
