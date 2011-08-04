@@ -113,14 +113,16 @@ template <class K, class V> dict<K,V>& dict<K,V>::operator=(const dict<K,V>& oth
 
 template<class K, class V> __ss_bool dict<K,V>::__eq__(pyobj *p) { /* XXX check hash */
     dict<K,V> *b = (dict<K,V> *)p;
-
-    if( b->__len__() != this->__len__())
+    if(b->__len__() != this->__len__())
         return False;
-
     int pos = 0;
     dictentry<K,V> *entry;
     while (next(&pos, &entry)) {
-        if(!b->__contains__(entry))
+        register dictentry<K, V> *entryb;
+        entryb = b->lookup(entry->key, entry->hash);
+        if (entryb->use != active)
+            return False;
+        if(!__eq(entry->value, entryb->value))
             return False;
     }
     return True;
