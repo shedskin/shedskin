@@ -70,9 +70,11 @@ public:
 
     __ss_bool __contains__(A value) {
         iter = units.begin();
-        while(iter != units.end())
-            if(*iter++ == value)
+        while(iter != units.end()) {
+            if(__eq(*iter, value))
                 return True;
+            iter++;
+        }
         return False;
     }
 
@@ -120,7 +122,7 @@ public:
    void *remove(A value) {
        iter = units.begin();
        while(iter != units.end()) {
-           if(*iter == value) {
+           if(__eq(*iter, value)) {
                units.erase(iter);
                return NULL;
            }
