@@ -277,22 +277,6 @@ def product(*lists):
 
 def cartesian_product(node, worklist):
     funcs = possible_functions(node)
-    if INCREMENTAL:
-        funcs2 = []
-        for f in funcs:
-            func = f[0]
-            if not func.mv.module.builtin and func not in getgx().added_funcs_set and not func.ident in ['__getattr__', '__setattr__']:
-                if INCREMENTAL_DATA:
-                    if getgx().added_allocs >= INCREMENTAL_ALLOCS:
-                        continue
-                else:
-                    if getgx().added_funcs >= INCREMENTAL_FUNCS:
-                        continue
-                getgx().added_funcs += 1
-                getgx().added_funcs_set.add(func)
-                if DEBUG(1): print 'adding', func
-            funcs2.append(f)
-        funcs = funcs2
     if not funcs:
         return []
     argtypes = possible_argtypes(node, funcs, worklist)
@@ -379,6 +363,19 @@ def cpa(callnode, worklist):
     # --- iterate over argument type combinations
     for c in cp:
         (func, dcpa, objtype), c = c[0], c[1:]
+
+        if INCREMENTAL:
+            if not func.mv.module.builtin and func not in getgx().added_funcs_set and not func.ident in ['__getattr__', '__setattr__']:
+                if INCREMENTAL_DATA:
+                    if getgx().added_allocs >= INCREMENTAL_ALLOCS:
+                        continue
+                else:
+                    if getgx().added_funcs >= INCREMENTAL_FUNCS:
+                        continue
+                getgx().added_funcs += 1
+                getgx().added_funcs_set.add(func)
+                if DEBUG(1): print 'adding', func
+
         if objtype: objtype = (objtype,)
         else: objtype = ()
 
