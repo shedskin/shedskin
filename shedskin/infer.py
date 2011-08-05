@@ -783,12 +783,13 @@ def ifa_seed_template(func, cart, dcpa, cpa, worklist):
         for node in func.nodes_ordered:
             if node.constructor and isinstance(node.thing, (List, Dict, Tuple, ListComp, CallFunc)):
                 if node.thing not in added:
-                    added.add(node.thing)
                     if INCREMENTAL_DATA and not func.mv.module.builtin:
                         if getgx().added_allocs >= INCREMENTAL_ALLOCS:
                             continue
                         added_new += 1
                         getgx().added_allocs += 1
+                    added.add(node.thing)
+
                 # --- contour is specified in alloc_info
                 parent = node.parent
                 while isinstance(parent.parent, function): parent = parent.parent
@@ -838,7 +839,7 @@ def ifa_seed_template(func, cart, dcpa, cpa, worklist):
                         getgx().checkcallfunc.append(alloc_node)
 
         if DEBUG(1) and added_new and not func.mv.module.builtin:
-            print '%d seed(s)' % added_new
+            print '%d seed(s)' % added_new, func
 
 # --- for a set of target nodes of a specific type of assignment (e.g. int to (list,7)), flow back to creation points
 def backflow_path(worklist, t): 
