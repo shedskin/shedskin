@@ -44,6 +44,7 @@ INCREMENTAL_FUNCS = 5
 INCREMENTAL_DATA = True
 INCREMENTAL_ALLOCS = 20
 MAXITERS = 30
+CPA_LIMIT = 10
 
 def DEBUG(level):
     return getgx().debug_level >= level
@@ -280,7 +281,8 @@ def cartesian_product(node, worklist):
     if not funcs:
         return []
     argtypes = possible_argtypes(node, funcs, worklist)
-    return product(*([funcs]+argtypes))
+    alltypes = [funcs]+argtypes
+    return product(*alltypes)
 
 def redirect(c, dcpa, func, callfunc, ident, callnode):
     # redirect based on number of arguments (__%s%d syntax in builtins)
@@ -358,6 +360,9 @@ def cpa(callnode, worklist):
     cp = cartesian_product(callnode, worklist)
     if not cp:
         return
+    if len(cp) > getgx().cpa_limit and not getgx().cpa_clean:
+        getgx().cpa_limited = True
+        return []
     objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func = analyze_callfunc(callnode.thing)
 
     # --- iterate over argument type combinations
@@ -685,6 +690,8 @@ def iterative_dataflow_analysis():
     getgx().added_funcs_set = set()
     getgx().added_allocs = 0
     getgx().added_allocs_set = set()
+    getgx().cpa_limit = CPA_LIMIT
+    getgx().cpa_clean = False
 
     while True:
         getgx().iterations += 1
@@ -696,8 +703,16 @@ def iterative_dataflow_analysis():
         getgx().new_alloc_info = {}
 #        print 'table'
 #        print '\n'.join([repr(e)+': '+repr(l) for e,l in getgx().alloc_info.items()])
+        getgx().cpa_limited = False
         propagate()
         getgx().alloc_info = getgx().new_alloc_info
+
+        if getgx().cpa_limited:
+            if DEBUG(1): print 'CPA limit %d reached!' % getgx().cpa_limit
+        else:
+           getgx().cpa_clean = True
+        #else:
+        #    getgx().cpa_limit = CPA_LIMIT
 
         # --- ifa: detect conflicting assignments to instance variables, and split contours to resolve these
         split = ifa()
@@ -715,9 +730,13 @@ def iterative_dataflow_analysis():
                 update_progressbar(perc)
             if maxiter:
                 print '\n*WARNING* reached maximum number of iterations'
+            getgx().cpa_clean = False
             if INCREMENTAL and (getgx().added_funcs or getgx().added_allocs):
                 getgx().added_funcs = 0
                 getgx().added_allocs = 0
+                getgx().iterations = 0
+            elif getgx().cpa_limited:
+                getgx().cpa_limit *= 2
                 getgx().iterations = 0
             else:
                 if INCREMENTAL:
