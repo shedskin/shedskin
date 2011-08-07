@@ -2887,27 +2887,6 @@ def upgrade_cl(abstract_cl, node, ident, classes): # XXX ugly to do everything t
         var = defaultvar(node.args[0].value, abstract_cl)
         abstract_cl.virtualvars.setdefault(node.args[0].value, set()).update(subclasses)
 
-# --- merge variables assigned to via 'self.varname = ..' in inherited methods into base class
-# XXX similar upgrade checks above
-def upgrade_variables():
-    for node, inheritnodes in getgx().inheritance_relations.items():
-        if isinstance(node, AssAttr):
-            baseclass = inode(node).parent.parent
-            inhclasses = [inode(x).parent.parent for x in inheritnodes]
-            var = defaultvar(node.attrname, baseclass)
-
-            for inhclass in inhclasses:
-                inhvar = lookupvar(node.attrname, inhclass)
-
-                if (var, 1, 0) in getgx().cnode:
-                    newnode = getgx().cnode[var,1,0]
-                else:
-                    newnode = cnode(var, 1, 0, parent=baseclass)
-                    getgx().types[newnode] = set()
-
-                if inhvar in getgx().merged_all: # XXX ?
-                    getgx().types[newnode].update(getgx().merged_all[inhvar])
-
 # --- generate C++ and Makefiles
 def generate_code():
     ident = getgx().main_module.ident
