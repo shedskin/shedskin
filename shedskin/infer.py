@@ -989,11 +989,7 @@ def analyze(source, testing=False):
     mv = getgx().main_module.mv
     setmv(mv)
 
-    getgx().merged_all = merged(getgx().types) #, inheritance=True)
-    getgx().merged_inh = merged(getgx().types, inheritance=True)
-
     # --- detect inheritance stuff
-    cpp.upgrade_variables()
     getgx().merged_all = merged(getgx().types)
     getgx().merged_inh = merged(getgx().types, inheritance=True)
     cpp.analyze_virtuals()
