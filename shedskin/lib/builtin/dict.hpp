@@ -420,7 +420,7 @@ template<class K, class V> tuple2<K,V> *dict<K,V>::popitem() {
 	entry->use = dummy;
 	used--;
 	table[0].hash = i + 1;  /* next place to start */
-	return new tuple2<K,V>(entry->key, entry->value);
+	return new tuple2<K,V>(2, entry->key, entry->value);
 }
 
 /*
