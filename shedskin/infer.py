@@ -986,11 +986,8 @@ def analyze(source, testing=False):
             if name in cl.parent.vars and not name.startswith('__'):
                 error("instance variable '%s' of class '%s' shadows class variable" % (name, cl.ident))
 
-    getgx().merged_all = merged(getgx().types) #, inheritance=True)
-
     mv = getgx().main_module.mv
     setmv(mv)
-    propagate() # XXX remove
 
     getgx().merged_all = merged(getgx().types) #, inheritance=True)
     getgx().merged_inh = merged(getgx().types, inheritance=True)
