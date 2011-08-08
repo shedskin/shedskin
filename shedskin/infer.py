@@ -148,8 +148,6 @@ def propagate():
                 elif b.thing.parent.ident in ('dict', 'defaultdict') and b.thing.name not in ['unit', 'value']: continue
                 elif b.thing.parent.ident == 'tuple2' and b.thing.name not in ['unit', 'first', 'second']: continue
 
-                #print 'flow', a, b #, difference #, difference, getgx().types[b], b.callfunc
-
             difference = getgx().types[a] - getgx().types[b]
             if difference:
                 getgx().types[b].update(difference)
