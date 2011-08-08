@@ -112,40 +112,28 @@ def printconstraints():
                 print 'NOTYPE', a in getgx().types, b in getgx().types
     print
 
-def seed_nodes(): # XXX redundant - can be removed?
-    for node in getgx().types:
-        if isinstance(node.thing, Name):
-            if node.thing.name in ['True', 'False']:
-                getgx().types[node] = set([(defclass('bool_'), 0)])
-            elif node.thing.name == 'None':
-                getgx().types[node] = set([(defclass('none'), 0)])
-
-def init_worklist():
-    worklist = []
-    for node, types in getgx().types.items():
-        if types:
-            addtoworklist(worklist, node)
-    return worklist
-
 # --- iterative dataflow analysis
 
 def propagate():
     if DEBUG(1): print 'propagate'
-    seed_nodes()
-    worklist = init_worklist()
-    getgx().checkcallfunc = [] # XXX
+    ggx = getgx()
 
-    # --- check whether seeded nodes are object/argument to call
+    # --- initialize working sets
+    worklist = []
     changed = set()
-    for w in worklist:
-        for callfunc in w.callfuncs:
-            changed.add(getgx().cnode[callfunc, w.dcpa, w.cpa])
-
-    # --- statically bind calls without object/arguments
-    for node in getgx().types:
+    for node in ggx.types:
+        if ggx.types[node]:
+            addtoworklist(worklist, node)
         expr = node.thing
         if (isinstance(expr, CallFunc) and not expr.args) or expr in getgx().lambdawrapper: # XXX
             changed.add(node)
+
+    getgx().checkcallfunc = [] # XXX
+
+    # --- check whether seeded nodes are object/argument to call
+    for w in worklist:
+        for callfunc in w.callfuncs:
+            changed.add(getgx().cnode[callfunc, w.dcpa, w.cpa])
 
     for node in changed:
         cpa(node, worklist)
