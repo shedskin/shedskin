@@ -23,7 +23,7 @@ class generateVisitor(ASTVisitor):
         self.out = file(self.output_base+'.cpp','w')
         self.indentation = ''
         self.consts = {}
-        self.mergeinh = merged(getgx().types, inheritance=True)
+        self.mergeinh = getgx().merged_inh
         self.module = module
         self.name = module.ident
         self.filling_consts = False
@@ -2846,7 +2846,7 @@ class Bitpair:
 
 # --- determine virtual methods and variables
 def analyze_virtuals():
-    for node in getgx().merged_inh: # XXX all:
+    for node in getgx().merged_inh:
         # --- for every message
         if isinstance(node, CallFunc) and not inode(node).mv.module.builtin: #ident == 'builtin':
             objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func = analyze_callfunc(node, merge=getgx().merged_inh)
@@ -2859,16 +2859,15 @@ def analyze_virtuals():
             if not classes:
                 continue
 
-            if isinstance(objexpr, Name) and objexpr.name == 'self' and inode(objexpr).parent: # XXX see 'upgrade_variables' below
+            if isinstance(objexpr, Name) and objexpr.name == 'self' and inode(objexpr).parent:
                 abstract_cl = inode(objexpr).parent.parent
                 upgrade_cl(abstract_cl, node, ident, classes)
 
             lcp = lowest_common_parents(classes)
-            lcp = [x for x in lcp if isinstance(x, class_)] # XXX
             if lcp:
                 upgrade_cl(lcp[0], node, ident, classes)
 
-def upgrade_cl(abstract_cl, node, ident, classes): # XXX ugly to do everything twice
+def upgrade_cl(abstract_cl, node, ident, classes):
     if not abstract_cl or not isinstance(abstract_cl, class_):
         return
     subclasses = [cl for cl in classes if subclass(cl, abstract_cl)]
