@@ -128,13 +128,6 @@ def propagate():
         if (isinstance(expr, CallFunc) and not expr.args) or expr in getgx().lambdawrapper: # XXX
             changed.add(node)
 
-    getgx().checkcallfunc = [] # XXX
-
-    # --- check whether seeded nodes are object/argument to call
-    for w in worklist:
-        for callfunc in w.callfuncs:
-            changed.add(getgx().cnode[callfunc, w.dcpa, w.cpa])
-
     for node in changed:
         cpa(node, worklist)
 
@@ -143,10 +136,9 @@ def propagate():
         a = worklist.pop(0)
         a.in_list = 0
 
-        if not a.mv.module.builtin and a.changed: # XXX general mechanism for seeding/changes -> cpa
-            for callfunc in a.callfuncs:
-                cpa(getgx().cnode[callfunc, a.dcpa, a.cpa], worklist)
-            a.changed = False
+        for callfunc in a.callfuncs:
+            if (callfunc, a.dcpa, a.cpa) in ggx.cnode:
+                cpa(ggx.cnode[callfunc, a.dcpa, a.cpa], worklist)
 
         for b in a.out.copy(): # XXX can change...?
             # for builtin types, the set of instance variables is known, so do not flow into non-existent ones # XXX ifa
@@ -161,17 +153,7 @@ def propagate():
             difference = getgx().types[a] - getgx().types[b]
             if difference:
                 getgx().types[b].update(difference)
-
-                # --- check whether node corresponds to actual argument: if so, perform cartesian product algorithm
-                for callfunc in b.callfuncs:
-                    cpa(getgx().cnode[callfunc, b.dcpa, b.cpa], worklist)
-
                 addtoworklist(worklist, b)
-
-                while getgx().checkcallfunc: # XXX
-                    b = getgx().checkcallfunc.pop()
-                    for callfunc in b.callfuncs:
-                        cpa(getgx().cnode[callfunc, b.dcpa, b.cpa], worklist)
 
 # --- determine cartesian product of possible function and argument types
 def possible_functions(node):
@@ -838,9 +820,6 @@ def ifa_seed_template(func, cart, dcpa, cpa, worklist):
                     #print 'seeding..', alloc_node, getgx().alloc_info[alloc_id], alloc_node.thing in getgx().empty_constructors
                     getgx().types[alloc_node].add(getgx().alloc_info[alloc_id])
                     addtoworklist(worklist, alloc_node)
-
-                    if alloc_node.callfuncs: # XXX
-                        getgx().checkcallfunc.append(alloc_node)
 
         if DEBUG(1) and added_new and not func.mv.module.builtin:
             print '%d seed(s)' % added_new, func

@@ -281,7 +281,7 @@ class module:
 # --- constraint graph node
 
 class cnode:
-    __slots__ = ['thing', 'dcpa', 'cpa', 'fakefunc', 'parent', 'defnodes', 'mv', 'constructor', 'copymetoo', 'fakert', 'in_', 'out', 'fout', 'in_list', 'callfuncs', 'nodecp', 'changed']
+    __slots__ = ['thing', 'dcpa', 'cpa', 'fakefunc', 'parent', 'defnodes', 'mv', 'constructor', 'copymetoo', 'fakert', 'in_', 'out', 'fout', 'in_list', 'callfuncs', 'nodecp']
 
     def __init__(self, thing, dcpa=0, cpa=0, parent=None):
         self.thing = thing
@@ -312,7 +312,6 @@ class cnode:
         self.callfuncs = []    # callfuncs to which node is object/argument
 
         self.nodecp = set()        # already analyzed cp's # XXX kill!?
-        self.changed = 0
 
         # --- add node to surrounding non-listcomp function
         if parent: # do this only once! (not when copying)
@@ -340,7 +339,6 @@ class cnode:
 
         if self.constructor or self.copymetoo or isinstance(self.thing, (Not, Compare)): # XXX XXX
             getgx().types[newnode] = getgx().types[self].copy()
-            newnode.changed = 1
         else:
             getgx().types[newnode] = set()
         return newnode
