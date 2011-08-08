@@ -990,18 +990,8 @@ def analyze(source, testing=False):
     setmv(mv)
 
     # --- detect inheritance stuff
-    getgx().merged_all = merged(getgx().types)
     getgx().merged_inh = merged(getgx().types, inheritance=True)
     cpp.analyze_virtuals()
-    getgx().merged_all = merged(getgx().types) #, inheritance=True) # XXX
-
-    # --- determine which classes need an __init__ method
-    for node, types in getgx().merged_all.items():
-        if isinstance(node, CallFunc):
-            objexpr, ident, _ , method_call, _, _, _ = analyze_callfunc(node)
-            if method_call and ident == '__init__':
-                for t in getgx().merged_all[objexpr]:
-                    t[0].has_init = True
 
     # --- determine which classes need copy, deepcopy methods
     if 'copy' in getgx().modules:
@@ -1028,7 +1018,7 @@ def analyze(source, testing=False):
     getgx().merged_inh = merged(getgx().types, inheritance=True) # XXX why X times
 
     # error for dynamic expression
-    for node in getgx().merged_all:
+    for node in getgx().merged_inh:
         if isinstance(node, Node) and not isinstance(node, AssAttr) and not inode(node).mv.module.builtin:
             cpp.nodetypestr(node, inode(node).parent)
 

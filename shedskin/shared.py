@@ -193,7 +193,7 @@ class class_:
         self.typenr = getgx().nrcltypes
         getgx().nrcltypes += 1
         self.splits = {}                # contour: old contour (used between iterations)
-        self.has_init = self.has_copy = self.has_deepcopy = False
+        self.has_copy = self.has_deepcopy = False
         self.def_order = getgx().class_def_order
         getgx().class_def_order += 1
 
