@@ -679,8 +679,6 @@ def iterative_dataflow_analysis():
             if DEBUG(1): print 'CPA limit %d reached!' % getgx().cpa_limit
         else:
            getgx().cpa_clean = True
-        #else:
-        #    getgx().cpa_limit = CPA_LIMIT
 
         # --- ifa: detect conflicting assignments to instance variables, and split contours to resolve these
         split = ifa()
