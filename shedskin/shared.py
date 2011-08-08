@@ -560,7 +560,7 @@ def print_errors():
 
 # --- merge constraint network along combination of given dimensions (dcpa, cpa, inheritance)
 # e.g. for annotation we merge everything; for code generation, we might want to create specialized code
-def merged(nodes, dcpa=False, inheritance=False):
+def merged(nodes, inheritance=False):
     ggx = getgx()
     merge = {}
     if inheritance: # XXX do we really need this crap
@@ -569,9 +569,7 @@ def merged(nodes, dcpa=False, inheritance=False):
 
     for node in nodes:
         # --- merge node types
-        if dcpa: sort = (node.thing, node.dcpa)
-        else: sort = node.thing
-        sortdefault = merge.setdefault(sort, set())
+        sortdefault = merge.setdefault(node.thing, set())
         sortdefault.update(ggx.types[node])
 
         # --- merge inheritance nodes

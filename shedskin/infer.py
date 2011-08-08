@@ -979,7 +979,7 @@ def analyze(source, testing=False):
     # --- cartesian product algorithm & iterative flow analysis
     iterative_dataflow_analysis()
 
-    print '[generating c++ code..]' # XXX 
+    print '[generating c++ code..]'
 
     for cl in getgx().allclasses:
         for name in cl.vars:
@@ -1015,9 +1015,9 @@ def analyze(source, testing=False):
                 for a, b in zip(func.registered_tempvars, inhfunc.registered_tempvars): # XXX more general
                     getgx().inheritance_tempvars.setdefault(a, []).append(b)
 
-    getgx().merged_inh = merged(getgx().types, inheritance=True) # XXX why X times
+    getgx().merged_inh = merged(getgx().types, inheritance=True)
 
-    # error for dynamic expression
+    # error for dynamic expression without explicit type declaration
     for node in getgx().merged_inh:
         if isinstance(node, Node) and not isinstance(node, AssAttr) and not inode(node).mv.module.builtin:
             cpp.nodetypestr(node, inode(node).parent)
