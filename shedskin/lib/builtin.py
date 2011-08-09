@@ -820,6 +820,19 @@ def cmp(a, b):
 def cmp2(a, b):
     cmp(a, b)
 
+def __lt(a, b):
+    a.__lt__(b)
+    b.__gt__(a)
+def __gt(a, b):
+    a.__gt__(b)
+    b.__lt__(a)
+def __le(a, b):
+    a.__le__(b)
+    b.__ge__(a)
+def __ge(a, b):
+    a.__ge__(b)
+    b.__le__(a)
+
 def any(a):
     return True
 
