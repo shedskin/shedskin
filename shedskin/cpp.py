@@ -287,13 +287,17 @@ class generateVisitor(ASTVisitor):
         print >>self.out, '#endif'
 
     def rich_comparison(self):
-        rich_cls = []
+        cmp_cls, lt_cls, gt_cls, le_cls, ge_cls = [], [], [], [], []
         for cl in getmv().classes.values():
             if not '__cmp__' in cl.funcs and [f for f in ('__eq__', '__lt__', '__gt__') if f in cl.funcs]:
-                rich_cls.append(cl)
-        if rich_cls:
+                cmp_cls.append(cl)
+            if not '__lt__' in cl.funcs and '__gt__' in cl.funcs: lt_cls.append(cl)
+            if not '__gt__' in cl.funcs and '__lt__' in cl.funcs: gt_cls.append(cl)
+            if not '__le__' in cl.funcs and '__ge__' in cl.funcs: le_cls.append(cl)
+            if not '__ge__' in cl.funcs and '__le__' in cl.funcs: ge_cls.append(cl)
+        if cmp_cls or lt_cls or gt_cls or le_cls or ge_cls:
             print >>self.out, 'namespace __shedskin__ { /* XXX */'
-            for cl in rich_cls:
+            for cl in cmp_cls:
                 t = '__%s__::%s *' % (getmv().module.ident, nokeywords(cl.ident))
                 print >>self.out, 'template<> __ss_int __cmp(%sa, %sb) {' % (t, t)
                 print >>self.out, '    if (!a) return -1;'
@@ -306,6 +310,18 @@ class generateVisitor(ASTVisitor):
                 else:
                     print >>self.out, '    return __cmp<void *>(a, b);'
                 print >>self.out, '}'
+            self.rich_compare(lt_cls, 'lt', 'gt')
+            self.rich_compare(gt_cls, 'gt', 'lt')
+            self.rich_compare(le_cls, 'le', 'ge')
+            self.rich_compare(ge_cls, 'ge', 'le')
+            print >>self.out, '}'
+
+    def rich_compare(self, cls, msg, fallback_msg):
+        for cl in cls:
+            t = '__%s__::%s *' % (getmv().module.ident, nokeywords(cl.ident))
+            print >>self.out, 'template<> __ss_bool __%s(%sa, %sb) {' % (msg, t, t)
+            #print >>self.out, '    if (!a) return -1;' # XXX check
+            print >>self.out, '    return b->__%s__(a);' % fallback_msg
             print >>self.out, '}'
 
     def module_cpp(self, node):
