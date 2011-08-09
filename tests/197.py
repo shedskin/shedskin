@@ -268,7 +268,7 @@ print "%d * %d" % (1,2)
 print "%d* %% %d" % (1,2)
 print "%d%% *%d" % (1,2)
 
-#cmp fallback to rich comparison
+#rich comparison fallbacks
 class inst(object):
     def __init__(self, num, opcode='add', pc='1'):
         self.opcode = opcode
@@ -284,6 +284,26 @@ class inst(object):
 Seq = [inst(3),inst(1),inst(4),inst(2)]
 print Seq
 print sorted(Seq)
+
+class LT:
+    def __gt__(self, o):
+        print 'gt!'
+        return False
+    def __le__(self, o):
+        print 'le!'
+        return True
+print LT() < LT()
+print LT() >= LT()
+
+class LT2:
+    def __lt__(self, o):
+        print 'lt!'
+        return False
+    def __ge__(self, o):
+        print 'ge!'
+        return True
+print LT2() > LT2()
+print LT2() <= LT2()
 
 #complex
 a = 4j + 3j
