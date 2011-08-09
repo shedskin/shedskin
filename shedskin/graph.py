@@ -679,6 +679,10 @@ class moduleVisitor(ASTVisitor):
             msg = msgs.get(op)
             if msg == 'contains':
                 self.fakefunc(node, right, '__'+msg+'__', [left], func)
+            elif msg in ('lt', 'gt', 'le', 'ge'):
+                fakefunc = CallFunc(Name('__%s' % msg), [left, right])
+                fakefunc.lineno = left.lineno
+                self.visit(fakefunc, func)
             elif msg:
                 self.fakefunc(node, left, '__'+msg+'__', [right], func)
             left = right
