@@ -326,3 +326,19 @@ def genpack((i,j),a,b):
 ttt = (1,2)
 for aaa in genpack(ttt,3,4):
     print aaa
+
+#cut away too much code? :)
+class CCache:
+    def Probe(self):
+        self.VictimLineAddr = [1]
+        self.VictimLineAddr = None
+
+class CCache1(CCache):
+    pass
+
+class CCache2(CCache):
+    pass
+
+c = CCache1()
+c = CCache2()
+c.Probe()
