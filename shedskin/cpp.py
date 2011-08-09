@@ -649,19 +649,7 @@ class generateVisitor(ASTVisitor):
             if var.masks_global():
                 cppname = '_'+var.name
 
-            # virtual
-            if var.name in cl.virtualvars:
-                ident = var.name
-                subclasses = cl.virtualvars[ident]
-
-                merged = set()
-                for m in [getgx().merged_inh[subcl.vars[ident]] for subcl in subclasses if ident in subcl.vars and subcl.vars[ident] in getgx().merged_inh]: # XXX
-                    merged.update(m)
-                if merged:
-                    self.output(self.padme(typestr(merged))+cppname+';')
-
-            # non-virtual
-            elif var in getgx().merged_inh and getgx().merged_inh[var]:
+            if var in getgx().merged_inh and getgx().merged_inh[var]:
                 self.output(nodetypestr(var, cl)+cppname+';')
 
         if [v for v in cl.vars if not v.startswith('__')]:
@@ -2884,6 +2872,9 @@ def upgrade_cl(abstract_cl, node, ident, classes):
     # --- register virtual var
     elif ident in ['__getattr__','__setattr__'] and subclasses:
         var = defaultvar(node.args[0].value, abstract_cl)
+        for subcl in subclasses:
+            if var.name in subcl.vars and subcl.vars[var.name] in getgx().merged_inh:
+                getgx().types.setdefault(getgx().cnode[var,0,0], set()).update(getgx().merged_inh[subcl.vars[var.name]]) # XXX shouldn't this be merged automatically already?
         abstract_cl.virtualvars.setdefault(node.args[0].value, set()).update(subclasses)
 
 # --- generate C++ and Makefiles
