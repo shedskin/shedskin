@@ -602,9 +602,10 @@ def lookup_class_module(objexpr, mv, parent):
 # --- analyze call expression: namespace, method call, direct call/constructor..
 def analyze_callfunc(node, node2=None, merge=None): # XXX generate target list XXX uniform variable system! XXX node2, merge?
     #print 'analyze callnode', node, inode(node).parent
-    namespace, objexpr, method_call, parent_constr = inode(node).mv.module, None, False, False 
+    cnode = inode(node)
+    mv = cnode.mv
+    namespace, objexpr, method_call, parent_constr = mv.module, None, False, False 
     constructor, direct_call, ident = None, None, None
-    mv = inode(node).mv
  
     # anon func call XXX refactor as __call__ method call below
     anon_func = is_anon_func(node, node2, merge)
@@ -615,7 +616,7 @@ def analyze_callfunc(node, node2=None, merge=None): # XXX generate target list X
     # method call
     if isinstance(node.node, Getattr):
         objexpr, ident = node.node.expr, node.node.attrname
-        cl, module = lookup_class_module(objexpr, mv, inode(node).parent)
+        cl, module = lookup_class_module(objexpr, mv, cnode.parent)
 
         if cl:
             # staticmethod call
@@ -624,8 +625,8 @@ def analyze_callfunc(node, node2=None, merge=None): # XXX generate target list X
                 return objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func
 
             # ancestor call
-            elif ident not in ['__setattr__', '__getattr__'] and inode(node).parent:
-                thiscl = inode(node).parent.parent
+            elif ident not in ['__setattr__', '__getattr__'] and cnode.parent:
+                thiscl = cnode.parent.parent
                 if isinstance(thiscl, class_) and cl.ident in [x.ident for x in thiscl.ancestors_upto(None)]: # XXX
                     if lookupimplementor(cl,ident):
                         parent_constr = True
@@ -641,9 +642,9 @@ def analyze_callfunc(node, node2=None, merge=None): # XXX generate target list X
         ident = node.node.name
 
     # direct [constructor] call
-    if isinstance(node.node, Name) or namespace != inode(node).mv.module:
+    if isinstance(node.node, Name) or namespace != mv.module:
         if isinstance(node.node, Name):
-            if lookupvar(ident, inode(node).parent, mv=mv):
+            if lookupvar(ident, cnode.parent, mv=mv):
                 return objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func
         if ident in namespace.mv.classes:
             constructor = namespace.mv.classes[ident]
@@ -654,7 +655,7 @@ def analyze_callfunc(node, node2=None, merge=None): # XXX generate target list X
         elif ident in namespace.mv.ext_funcs:
             direct_call = namespace.mv.ext_funcs[ident]
         else:
-            if namespace != inode(node).mv.module:
+            if namespace != mv.module:
                 return objexpr, ident, None, False, None, False, False
 
     return objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func
