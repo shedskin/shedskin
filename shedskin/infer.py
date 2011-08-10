@@ -154,11 +154,11 @@ def propagate():
                 addtoworklist(worklist, b)
 
 # --- determine cartesian product of possible function and argument types
-def possible_functions(node):
+def possible_functions(node, analysis):
     expr = node.thing
 
     # --- determine possible target functions
-    objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func = analyze_callfunc(expr, node)
+    objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func = analysis
     funcs = []
 
     if anon_func:
@@ -189,9 +189,9 @@ def possible_functions(node):
 
     return funcs
 
-def possible_argtypes(node, funcs, worklist):
+def possible_argtypes(node, funcs, analysis, worklist):
     expr = node.thing
-    objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func = analyze_callfunc(expr)
+    objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func = analysis
     if funcs:
         func = funcs[0][0] # XXX
 
@@ -244,11 +244,11 @@ def product(*lists):
             result.append(x + (y,))
     return result
 
-def cartesian_product(node, worklist):
-    funcs = possible_functions(node)
+def cartesian_product(node, analysis, worklist):
+    funcs = possible_functions(node, analysis)
     if not funcs:
         return []
-    argtypes = possible_argtypes(node, funcs, worklist)
+    argtypes = possible_argtypes(node, funcs, analysis, worklist)
     alltypes = [funcs]+argtypes
     return product(*alltypes)
 
@@ -325,13 +325,14 @@ def redirect(c, dcpa, func, callfunc, ident, callnode):
 
 # --- cartesian product algorithm; adds interprocedural constraints
 def cpa(callnode, worklist):
-    cp = cartesian_product(callnode, worklist)
+    analysis = analyze_callfunc(callnode.thing, callnode)
+    cp = cartesian_product(callnode, analysis, worklist)
     if not cp:
         return
     if len(cp) > getgx().cpa_limit and not getgx().cpa_clean:
         getgx().cpa_limited = True
         return []
-    objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func = analyze_callfunc(callnode.thing)
+    objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func = analysis
 
     # --- iterate over argument type combinations
     for c in cp:
@@ -372,7 +373,7 @@ def cpa(callnode, worklist):
             continue
 
         # connect actuals and formals
-        actuals_formals(callfunc, func, callnode, dcpa, cpa, objtype+c, worklist)
+        actuals_formals(callfunc, func, callnode, dcpa, cpa, objtype+c, analysis, worklist)
 
         # connect call and return expressions
         if func.retnode and not constructor:
@@ -411,8 +412,8 @@ def create_template(func, dcpa, c, worklist):
     getgx().templates += 1
     func_copy(func, dcpa, cpa, worklist, c)
 
-def actuals_formals(expr, func, node, dcpa, cpa, types, worklist):
-    objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func = analyze_callfunc(expr)
+def actuals_formals(expr, func, node, dcpa, cpa, types, analysis, worklist):
+    objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func = analysis
 
     if expr.star_args: # XXX only in lib/
         formals = func.formals
