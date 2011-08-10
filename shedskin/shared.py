@@ -608,8 +608,8 @@ def analyze_callfunc(node, node2=None, merge=None): # XXX generate target list X
     constructor, direct_call, ident = None, None, None
  
     # anon func call XXX refactor as __call__ method call below
-    anon_func = is_anon_func(node, node2, merge)
-    if is_callable(node, node2, merge):
+    anon_func, is_callable = is_anon_callable(node, node2, merge)
+    if is_callable:
         method_call, objexpr, ident = True, node.node, '__call__'
         return objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func
 
@@ -766,13 +766,11 @@ def analyze_args(expr, func, node=None, skip_defaults=False, merge=None):
 
     return actuals, formals, defaults, extra, error
 
-def is_anon_func(expr, node, merge=None):
+def is_anon_callable(expr, node, merge=None):
     types = get_types(expr, node, merge)
-    return bool([t for t in types if isinstance(t[0], function)])
-
-def is_callable(expr, node, merge=None):
-    types = get_types(expr, node, merge)
-    return bool([t for t in types if isinstance(t[0], class_) and '__call__' in t[0].funcs])
+    anon = bool([t for t in types if isinstance(t[0], function)])
+    call = bool([t for t in types if isinstance(t[0], class_) and '__call__' in t[0].funcs])
+    return anon, call
     
 def get_types(expr, node, merge):
     types = set()
