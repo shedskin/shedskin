@@ -125,11 +125,15 @@ def propagate():
         if ggx.types[node]:
             addtoworklist(worklist, node)
         expr = node.thing
-        if (isinstance(expr, CallFunc) and not expr.args) or expr in getgx().lambdawrapper: # XXX
+        if (isinstance(expr, CallFunc) and not expr.args) or expr in ggx.lambdawrapper: # XXX
             changed.add(node)
 
     for node in changed:
         cpa(node, worklist)
+
+    builtins = set(ggx.builtins)
+    cnode = ggx.cnode
+    types = ggx.types
 
     # --- iterative dataflow analysis
     while worklist:
@@ -139,20 +143,25 @@ def propagate():
             a.in_list = 0
 
             for callfunc in a.callfuncs:
-                if (callfunc, a.dcpa, a.cpa) in ggx.cnode:
-                    callnodes.add(ggx.cnode[callfunc, a.dcpa, a.cpa])
+                t = (callfunc, a.dcpa, a.cpa)
+                if t in cnode:
+                    callnodes.add(cnode[t])
 
             for b in a.out.copy(): # XXX can change...?
                 # for builtin types, the set of instance variables is known, so do not flow into non-existent ones # XXX ifa
-                if isinstance(b.thing, variable) and isinstance(b.thing.parent, class_) and b.thing.parent.ident in getgx().builtins:
-                    if b.thing.parent.ident in ['int_', 'float_', 'str_', 'none', 'bool_']: continue
-                    elif b.thing.parent.ident in ['list', 'tuple', 'frozenset', 'set', 'file','__iter', 'deque', 'array'] and b.thing.name != 'unit': continue
-                    elif b.thing.parent.ident in ('dict', 'defaultdict') and b.thing.name not in ['unit', 'value']: continue
-                    elif b.thing.parent.ident == 'tuple2' and b.thing.name not in ['unit', 'first', 'second']: continue
+                if isinstance(b.thing, variable) and isinstance(b.thing.parent, class_):
+                    parent_ident = b.thing.parent.ident 
+                    if parent_ident in builtins:
+                        if parent_ident in ['int_', 'float_', 'str_', 'none', 'bool_']: continue
+                        elif parent_ident in ['list', 'tuple', 'frozenset', 'set', 'file','__iter', 'deque', 'array'] and b.thing.name != 'unit': continue
+                        elif parent_ident in ('dict', 'defaultdict') and b.thing.name not in ['unit', 'value']: continue
+                        elif parent_ident == 'tuple2' and b.thing.name not in ['unit', 'first', 'second']: continue
 
-                difference = getgx().types[a] - getgx().types[b]
-                if difference:
-                    getgx().types[b].update(difference)
+                typesa = types[a]
+                typesb = types[b]
+                oldsize = len(typesb)
+                typesb.update(typesa)
+                if len(typesb) > oldsize:
                     addtoworklist(worklist, b)
 
         for callnode in callnodes:
