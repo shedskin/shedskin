@@ -133,25 +133,30 @@ def propagate():
 
     # --- iterative dataflow analysis
     while worklist:
-        a = worklist.pop(0)
-        a.in_list = 0
+        callnodes = set()
+        while worklist:
+            a = worklist.pop(0)
+            a.in_list = 0
 
-        for callfunc in a.callfuncs:
-            if (callfunc, a.dcpa, a.cpa) in ggx.cnode:
-                cpa(ggx.cnode[callfunc, a.dcpa, a.cpa], worklist)
+            for callfunc in a.callfuncs:
+                if (callfunc, a.dcpa, a.cpa) in ggx.cnode:
+                    callnodes.add(ggx.cnode[callfunc, a.dcpa, a.cpa])
 
-        for b in a.out.copy(): # XXX can change...?
-            # for builtin types, the set of instance variables is known, so do not flow into non-existent ones # XXX ifa
-            if isinstance(b.thing, variable) and isinstance(b.thing.parent, class_) and b.thing.parent.ident in getgx().builtins:
-                if b.thing.parent.ident in ['int_', 'float_', 'str_', 'none', 'bool_']: continue
-                elif b.thing.parent.ident in ['list', 'tuple', 'frozenset', 'set', 'file','__iter', 'deque', 'array'] and b.thing.name != 'unit': continue
-                elif b.thing.parent.ident in ('dict', 'defaultdict') and b.thing.name not in ['unit', 'value']: continue
-                elif b.thing.parent.ident == 'tuple2' and b.thing.name not in ['unit', 'first', 'second']: continue
+            for b in a.out.copy(): # XXX can change...?
+                # for builtin types, the set of instance variables is known, so do not flow into non-existent ones # XXX ifa
+                if isinstance(b.thing, variable) and isinstance(b.thing.parent, class_) and b.thing.parent.ident in getgx().builtins:
+                    if b.thing.parent.ident in ['int_', 'float_', 'str_', 'none', 'bool_']: continue
+                    elif b.thing.parent.ident in ['list', 'tuple', 'frozenset', 'set', 'file','__iter', 'deque', 'array'] and b.thing.name != 'unit': continue
+                    elif b.thing.parent.ident in ('dict', 'defaultdict') and b.thing.name not in ['unit', 'value']: continue
+                    elif b.thing.parent.ident == 'tuple2' and b.thing.name not in ['unit', 'first', 'second']: continue
 
-            difference = getgx().types[a] - getgx().types[b]
-            if difference:
-                getgx().types[b].update(difference)
-                addtoworklist(worklist, b)
+                difference = getgx().types[a] - getgx().types[b]
+                if difference:
+                    getgx().types[b].update(difference)
+                    addtoworklist(worklist, b)
+
+        for callnode in callnodes:
+            cpa(callnode, worklist)
 
 # --- determine cartesian product of possible function and argument types
 def possible_functions(node, analysis):
