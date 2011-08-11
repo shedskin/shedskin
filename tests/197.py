@@ -362,3 +362,20 @@ class CCache2(CCache):
 c = CCache1()
 c = CCache2()
 c.Probe()
+
+# use-before-define and inheritance
+class TraceParser:
+    def parseProgramCode(self):
+        self.basicBlockList = []
+#        basicblock = 1
+        for x in range(2):
+            if x == 1:
+                self.basicBlockList.append(basicblock)
+            else:
+                basicblock = 2
+        print self.basicBlockList
+
+class CUnifiedTraceParser(TraceParser):
+    pass
+
+CUnifiedTraceParser().parseProgramCode()
