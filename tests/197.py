@@ -347,7 +347,7 @@ ttt = (1,2)
 for aaa in genpack(ttt,3,4):
     print aaa
 
-#cut away too much code? :)
+#fill in virtual variable types
 class CCache:
     def Probe(self):
         self.VictimLineAddr = [1]
@@ -363,7 +363,7 @@ c = CCache1()
 c = CCache2()
 c.Probe()
 
-# use-before-define and inheritance
+# forward referencing vars in inherited method
 class TraceParser:
     def parseProgramCode(self):
         self.basicBlockList = []
