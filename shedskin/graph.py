@@ -479,6 +479,8 @@ class moduleVisitor(ASTVisitor):
             func = parent.funcs[node.name]
         else:
             func = function(node, parent, inherited_from)
+            if inherited_from:
+                self.set_default_vars(node, func)
 
         if not is_method(func):
             if not getmv().module.builtin and not node in getmv().funcnodes and not is_lambda:
