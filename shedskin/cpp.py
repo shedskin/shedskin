@@ -1604,7 +1604,7 @@ class generateVisitor(ASTVisitor):
         self.visit(left, func)
         self.append(self.par(left, ')'))
         self.append(self.connector(left, func)+middle+'(')
-        self.refer(right, func)
+        self.visit(right, func)
         self.append(')')
 
     def do_compare(self, left, right, middle, inline, func=None, prefix=''):
@@ -1652,7 +1652,7 @@ class generateVisitor(ASTVisitor):
             self.append('==(')
         else:
             self.append(self.connector(left, func)+middle+'(')
-        self.refer(right, func) # XXX bleh
+        self.visit(right, func) # XXX bleh
         self.append(')'+postfix)
 
     def visit2(self, node, func): # XXX use temp vars in comparisons, e.g. (t1=fun())
@@ -1680,14 +1680,6 @@ class generateVisitor(ASTVisitor):
         else:
             self.visitCallFunc(inode(node.expr).fakefunc, func)
         self.visitm(')', func)
-
-    def refer(self, node, func):
-        if isinstance(node, str):
-            var = lookupvar(node, func)
-            return node
-        if isinstance(node, Name) and not node.name in ['None','True','False']:
-            var = lookupvar(node.name, func)
-        self.visit(node, func)
 
     def library_func(self, funcs, modname, clname, funcname):
         for func in funcs:
@@ -1931,7 +1923,7 @@ class generateVisitor(ASTVisitor):
                 if constructor and ident in ['set', 'frozenset'] and nodetypestr(arg, func) in ['list<void *> *', 'tuple<void *> *', 'pyiter<void *> *', 'pyseq<void *> *', 'pyset<void *>']: # XXX to needs_cast
                     pass # XXX assign_needs_cast
                 else:
-                    self.refer(arg, func)
+                    self.visit(arg, func)
 
             if cast:
                 self.append('))')
