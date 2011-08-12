@@ -379,3 +379,9 @@ class CUnifiedTraceParser(TraceParser):
     pass
 
 CUnifiedTraceParser().parseProgramCode()
+
+# rewrite incompatible types if possible
+C1 = {1: 'een'}
+C2 = (1.0, 'woef')
+D = (C1, C2) if True else ({}, None)
+print D
