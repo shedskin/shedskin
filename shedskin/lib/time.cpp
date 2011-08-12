@@ -881,12 +881,13 @@ find_string(const u_char *bp, int *tgt, const char * const *n1,
 #endif 
 
 struct_time *strptime(str *string, str *format) {
-    tm time_tuple = {0, 0, 0, 1, 0, 0, 0, 1, -1, 0, 0};
 #ifdef WIN32
+    tm time_tuple = {0, 0, 0, 1, 0, 0, 0, 1, -1};
     /* XXX check if newer MinGW supports this */
     if(!strptime(string->unit.c_str(), format->unit.c_str(), &time_tuple))
         throw  new ValueError(new str("time data did not match format:  data="+string->unit+" fmt="+format->unit));
 #else
+    tm time_tuple = {0, 0, 0, 1, 0, 0, 0, 1, -1, 0, 0};
     if(!::strptime(string->unit.c_str(), format->unit.c_str(), &time_tuple))
         throw  new ValueError(new str("time data did not match format:  data="+string->unit+" fmt="+format->unit));
 #endif
