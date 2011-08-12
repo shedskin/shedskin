@@ -1560,11 +1560,6 @@ class generateVisitor(ASTVisitor):
     def visitSub(self, node, func=None):
         self.visitBinary(node.left, node.right, augmsg(node, 'sub'), '-', func)
 
-    def par(self, node, thingy):
-        if (isinstance(node, Const) and not isinstance(node.value, (int, float))) or not isinstance(node, (Name, Const)):
-            return thingy
-        return ''
-
     def visitBinary(self, left, right, middle, inline, func=None): # XXX cleanup please
         ltypes = self.mergeinh[left]
         rtypes = self.mergeinh[right]
@@ -1621,9 +1616,9 @@ class generateVisitor(ASTVisitor):
             return
 
         # --- default: left, connector, middle, right
-        self.append(self.par(left, '('))
+        self.append('(')
         self.visit(left, func)
-        self.append(self.par(left, ')'))
+        self.append(')')
         self.append(self.connector(left, func)+middle+'(')
         self.visit(right, func)
         self.append(')')
@@ -1662,9 +1657,9 @@ class generateVisitor(ASTVisitor):
             return
 
         # --- default: left, connector, middle, right
-        self.append(self.par(left, '('))
+        self.append('(')
         self.visit2(left, func)
-        self.append(self.par(left, ')'))
+        self.append(')')
         if middle == '==':
             self.append('==(')
         else:
