@@ -1366,10 +1366,18 @@ class generateVisitor(ASTVisitor):
         self.visit_conv(node.else_, types, func)
         self.append('))')
 
-    def visit_conv(self, node, argtypes, func):
-        if isinstance(node, Tuple): # XXX
+    def visit_conv(self, node, argtypes, func): # XXX merge 
+        if isinstance(node, Tuple):
             self.visitTuple(node, func, argtypes=argtypes)
+        elif isinstance(node, Dict):
+            self.visitDict(node, func, argtypes=argtypes)
+        elif isinstance(node, List):
+            self.visitList(node, func, argtypes=argtypes)
+        elif isinstance(node, Name) and node.name == 'None':
+            self.visit(node, func)
         else:
+            if typestr(argtypes) != typestr(self.mergeinh[node]):
+                error("incompatible types", node, warning=True, mv=getmv())
             self.visit(node, func)
 
     def visitBreak(self, node, func=None):
