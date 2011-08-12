@@ -1373,6 +1373,8 @@ class generateVisitor(ASTVisitor):
             self.visitDict(node, func, argtypes=argtypes)
         elif isinstance(node, List):
             self.visitList(node, func, argtypes=argtypes)
+        elif isinstance(node, CallFunc) and isinstance(node.node, Name) and node.node.name in ('list', 'tuple', 'dict', 'set'): # XXX
+            self.visitCallFunc(node, func, argtypes=argtypes)
         elif isinstance(node, Name) and node.name == 'None':
             self.visit(node, func)
         else:
@@ -1650,16 +1652,12 @@ class generateVisitor(ASTVisitor):
             postfix = ')'
 
         # --- comparison
+        argtypes = ltypes | rtypes
         if middle in ['__eq__', '__ne__', '__gt__', '__ge__', '__lt__', '__le__']:
             self.append(middle[:-2]+'(')
-            self.visit2(left, func)
+            self.visit2(left, func, argtypes=argtypes)
             self.append(', ')
-            if nodetypestr(left, func) != nodetypestr(right, func):
-                self.append('((%s)(' % nodetypestr(left, func))
-                self.visit2(right, func)
-                self.append('))')
-            else:
-                self.visit2(right, func)
+            self.visit2(right, func, argtypes=argtypes)
             self.append(')'+postfix)
             return
 
@@ -1671,16 +1669,18 @@ class generateVisitor(ASTVisitor):
             self.append('==(')
         else:
             self.append(self.connector(left, func)+middle+'(')
-        self.visit(right, func) # XXX bleh
+        self.visit(right, func)
         self.append(')'+postfix)
 
-    def visit2(self, node, func): # XXX use temp vars in comparisons, e.g. (t1=fun())
+    def visit2(self, node, func, argtypes=None): # XXX use temp vars in comparisons, e.g. (t1=fun())
         if node in getmv().tempcount:
             if node in self.done:
                 self.append(getmv().tempcount[node])
             else:
                 self.visitm('('+getmv().tempcount[node]+'=', node, ')', func)
                 self.done.add(node)
+        elif argtypes is not None:
+            self.visit_conv(node, argtypes, func)
         else:
             self.visit(node, func)
 
@@ -1729,7 +1729,7 @@ class generateVisitor(ASTVisitor):
             else:
                 self.append('0, ')
 
-    def visitCallFunc(self, node, func=None):
+    def visitCallFunc(self, node, func=None, argtypes=None):
         objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func = analyze_callfunc(node, merge=getgx().merged_inh)
         funcs = callfunc_targets(node, getgx().merged_inh)
 
@@ -1766,7 +1766,10 @@ class generateVisitor(ASTVisitor):
                 self.append('mcomplex(')
                 constructor = False # XXX
             else:
-                self.append('(new '+ts[:-2]+'(')
+                if argtypes is not None:
+                    self.append('(new '+typestr(argtypes)[:-2]+'(') # XXX args?
+                else:
+                    self.append('(new '+ts[:-2]+'(')
             if funcs and len(funcs[0].formals) == 1 and not funcs[0].mv.module.builtin:
                 self.append('1') # don't call default constructor
 

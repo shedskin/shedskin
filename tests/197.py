@@ -386,4 +386,9 @@ C2 = (1.0, 'woef')
 D = (C1, C2) if True else ({}, None)
 print D
 print [1] if True else None
-print [1] if True else []
+print [] if True else [1]
+print [[]] == [[1]], [[1]] == [[]]
+print dict([(1,2.0)]) == dict()
+print dict([(1,2.0)]) == {}
+print set() == set([1,2])
+#print (set(['a']), set([1.0])) == (set(), None)
