@@ -1357,9 +1357,20 @@ class generateVisitor(ASTVisitor):
             self.output('}')
 
     def visitIfExp(self, node, func=None):
+        types = self.mergeinh[node]
         self.append('((')
         self.bool_test(node.test, func)
-        self.visitm(')?(', node.then, '):(', node.else_, '))', func)
+        self.append(')?(')
+        self.visit_conv(node.then, types, func)
+        self.append('):(')
+        self.visit_conv(node.else_, types, func)
+        self.append('))')
+
+    def visit_conv(self, node, argtypes, func):
+        if isinstance(node, Tuple): # XXX
+            self.visitTuple(node, func, argtypes=argtypes)
+        else:
+            self.visit(node, func)
 
     def visitBreak(self, node, func=None):
         if getgx().loopstack[-1].else_ in getmv().tempcount:
