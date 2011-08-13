@@ -4,7 +4,7 @@ Copyright 2005-2009 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 
 '''
 
-import sys, getopt, os.path, traceback
+import sys, getopt, os.path, traceback, time
 from distutils import sysconfig
 
 import infer, cpp, annotate, shared
@@ -22,6 +22,7 @@ def usage():
  -o --noassert          Disable assert statements
  -r --random            Use fast random number generator (rand())
  -s --strhash           Use fast string hashing algorithm (murmur)
+ -n --silent            Silent mode, only show warnings
  -w --nowrap            Disable wrap-around checking
  -x --traceback         Print traceback for uncaught exceptions (slow)
 """
@@ -32,22 +33,9 @@ def usage():
 def start():
     setgx(newgx())
 
-    print '*** SHED SKIN Python-to-C++ Compiler 0.9 ***'
-    print 'Copyright 2005-2011 Mark Dufour; License GNU GPL version 3 (See LICENSE)'
-    print
-
-    # --- some checks
-    major, minor = sys.version_info[:2]
-    if (major, minor) not in [(2, 4), (2, 5), (2, 6), (2, 7)]:
-        print '*ERROR* Shed Skin is not compatible with this version of Python'
-        sys.exit(1)
-    if sys.platform == 'win32' and os.path.isdir('c:/mingw'):
-        print '*ERROR* please rename or remove c:/mingw, as it conflicts with Shed Skin'
-        sys.exit()
-
     # --- command-line options
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'vbchef:wad:m:rolspx', ['help', 'extmod', 'nobounds', 'nowrap', 'flags=', 'debug=', 'makefile=', 'random', 'noassert', 'long', 'msvc', 'ann', 'strhash', 'pypy', 'traceback'])
+        opts, args = getopt.getopt(sys.argv[1:], 'vbchef:wad:m:rolspxn', ['help', 'extmod', 'nobounds', 'nowrap', 'flags=', 'debug=', 'makefile=', 'random', 'noassert', 'long', 'msvc', 'ann', 'strhash', 'pypy', 'traceback', 'silent'])
     except getopt.GetoptError:
         usage()
 
@@ -63,6 +51,7 @@ def start():
         if o in ['-o', '--noassert']: getgx().assertions = False
         if o in ['-p', '--pypy']: getgx().pypy = True
         if o in ['-m', '--makefile']: getgx().makefile_name = a
+        if o in ['-n', '--silent']: getgx().silent = True
         if o in ['-s', '--strhash']: getgx().fast_hash = True
         if o in ['-v', '--msvc']: getgx().msvc = True
         if o in ['-x', '--traceback']: getgx().backtrace = True
@@ -71,6 +60,21 @@ def start():
                 print "*ERROR* no such file: '%s'" % a
                 sys.exit(1)
             getgx().flags = a
+
+
+    if not getgx().silent:
+        print '*** SHED SKIN Python-to-C++ Compiler 0.9 ***'
+        print 'Copyright 2005-2011 Mark Dufour; License GNU GPL version 3 (See LICENSE)'
+        print
+
+    # --- some checks
+    major, minor = sys.version_info[:2]
+    if (major, minor) not in [(2, 4), (2, 5), (2, 6), (2, 7)]:
+        print '*ERROR* Shed Skin is not compatible with this version of Python'
+        sys.exit(1)
+    if sys.platform == 'win32' and os.path.isdir('c:/mingw'):
+        print '*ERROR* please rename or remove c:/mingw, as it conflicts with Shed Skin'
+        sys.exit()
 
     # --- argument
     if len(args) != 1:
@@ -84,9 +88,12 @@ def start():
     getgx().main_mod = name[:-3]
 
     # --- analyze & annotate
+    t0 = time.time()
     infer.analyze(name)
     annotate.annotate()
     cpp.generate_code()
+    if not getgx().silent:
+        print '[elapsed time: %.2f seconds]' % (time.time()-t0)
     shared.print_errors()
 
 def main():

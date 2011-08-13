@@ -61,6 +61,7 @@ class globalInfo: # XXX add comments, split up
         self.annotation = False
         self.msvc = False
         self.pypy = False
+        self.silent = False
         self.backtrace = False
         self.makefile_name = 'Makefile' # XXX other default?
         self.item_rvalue = {}

@@ -651,15 +651,17 @@ def ifa_split_class(cl, dcpa, things, split):
     cl.newdcpa += 1
 
 def update_progressbar(perc):
-    print '\r%s%d%%' % (int(perc*32)*'*', 100*perc),
-    if DEBUG(1):
-        print
-    else:
-        sys.stdout.flush()
+    if not getgx().silent:
+        print '\r%s%d%%' % (int(perc*32)*'*', 100*perc),
+        if DEBUG(1):
+            print
+        else:
+            sys.stdout.flush()
 
 # --- cartesian product algorithm (cpa) & iterative flow analysis (ifa)
 def iterative_dataflow_analysis():
-    print '[analyzing types..]'
+    if not getgx().silent:
+        print '[analyzing types..]'
     backup = backup_network()
 
     getgx().orig_types = {}
@@ -723,7 +725,8 @@ def iterative_dataflow_analysis():
                 if INCREMENTAL:
                     update_progressbar(1.0)
                 if DEBUG(1): print '\niterations:', getgx().total_iterations, 'templates:', getgx().templates
-                else: print
+                elif not getgx().silent: 
+                    print
                 return
 
         if not INCREMENTAL and not DEBUG(1):
@@ -957,7 +960,8 @@ def analyze(source, testing=False):
     # --- cartesian product algorithm & iterative flow analysis
     iterative_dataflow_analysis()
 
-    print '[generating c++ code..]'
+    if not getgx().silent:
+        print '[generating c++ code..]'
 
     for cl in getgx().allclasses:
         for name in cl.vars:
