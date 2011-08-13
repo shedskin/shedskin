@@ -825,7 +825,11 @@ class generateVisitor(ASTVisitor):
             self.visitList(child, func, argtypes=type_child)
         elif isinstance(child, CallFunc) and isinstance(child.node, Name) and child.node.name in ('list', 'tuple', 'dict', 'set'): # XXX
             self.visitCallFunc(child, func, argtypes=type_child)
+        elif isinstance(child, Name) and child.name == 'None':
+            self.visit(child, func)
         else:
+            if typestr(actualtypes) != typestr(type_child):
+                error("incompatible types", child, warning=True, mv=getmv())
             self.visit(child, func)
         if double_cast:
             self.append(')')
