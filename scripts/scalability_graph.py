@@ -1,5 +1,6 @@
 import sys
 import Gnuplot
+import math
 
 name_sloc = {}
 grab = False
@@ -10,6 +11,7 @@ for line in file('README'):
     elif grab:
         split = line.split()
         if len(split) >= 2 and split[0].isdigit():
+            #name_sloc[split[1]] = math.log(int(split[0]))
             name_sloc[split[1]] = int(split[0])
 print len(name_sloc)
 
@@ -18,7 +20,7 @@ g = Gnuplot.Gnuplot()
 for filename in sys.argv[1:]:
     print filename
     name_time = {}
-    for line in file(sys.argv[1]):
+    for line in file(filename):
         line = line.strip()
         if line.startswith('*** test'):
             name = line.split()[-2]
@@ -43,7 +45,12 @@ for filename in sys.argv[1:]:
             else:
                 print 'NG!', name
 
-    g.replot(data)
+    for x,y in data:
+        print x, y
+
+    g.replot(Gnuplot.Data(data, with_='linespoints'))
+
+#g.replot('17.2768267-0.0596341*x+0.0000533*x**2')
 
 while True: 
     pass
