@@ -738,8 +738,8 @@ class generateVisitor(ASTVisitor):
             ftypes = []
             for m in merged:
                 ts = typestr(m)
-                if not ts.endswith('*'): ftypes.append(m+' ')
-                else: ftypes.append(m)
+                if not ts.endswith('*'): ftypes.append(ts+' ')
+                else: ftypes.append(ts)
 
             # --- prepare for having to cast back arguments (virtual function call means multiple targets)
             for subcl in subclasses:
@@ -828,7 +828,8 @@ class generateVisitor(ASTVisitor):
             self.visit(child, func)
         else:
             if typestr(actualtypes) != typestr(type_child):
-                error("incompatible types", child, warning=True, mv=getmv())
+                if assign_needs_cast_rec(actualtypes, type_child):
+                    error("incompatible types", child, warning=True, mv=getmv())
             self.visit(child, func)
         if double_cast:
             self.append(')')
@@ -1368,7 +1369,8 @@ class generateVisitor(ASTVisitor):
         self.visit_conv(node.else_, types, func)
         self.append('))')
 
-    def visit_conv(self, node, argtypes, func): # XXX merge 
+    def visit_conv(self, node, argtypes, func): # XXX merge visit_child
+        actualtypes = self.mergeinh[node]
         if isinstance(node, Tuple):
             self.visitTuple(node, func, argtypes=argtypes)
         elif isinstance(node, Dict):
@@ -1380,8 +1382,9 @@ class generateVisitor(ASTVisitor):
         elif isinstance(node, Name) and node.name == 'None':
             self.visit(node, func)
         else:
-            if typestr(argtypes) != typestr(self.mergeinh[node]):
-                error("incompatible types", node, warning=True, mv=getmv())
+            if typestr(argtypes) != typestr(actualtypes):
+                if assign_needs_cast_rec(actualtypes, argtypes):
+                    error("incompatible types", node, warning=True, mv=getmv())
             self.visit(node, func)
 
     def visitBreak(self, node, func=None):
@@ -1628,6 +1631,7 @@ class generateVisitor(ASTVisitor):
     def do_compare(self, left, right, middle, inline, func=None, prefix=''):
         ltypes = self.mergeinh[left]
         rtypes = self.mergeinh[right]
+        argtypes = ltypes | rtypes
         ul, ur = unboxable(ltypes), unboxable(rtypes)
 
         inttype = set([(defclass('int_'),0)]) # XXX new type?
@@ -1636,9 +1640,9 @@ class generateVisitor(ASTVisitor):
         # --- inline other
         if inline and ((ul and ur) or not middle or (isinstance(left, Name) and left.name == 'None') or (isinstance(right, Name) and right.name == 'None')): # XXX not middle, cleanup?
             self.append('(')
-            self.visit2(left, func)
+            self.visit2(left, argtypes, middle, func)
             self.append(inline)
-            self.visit2(right, func)
+            self.visit2(right, argtypes, middle, func)
             self.append(')')
             return
 
@@ -1649,37 +1653,36 @@ class generateVisitor(ASTVisitor):
             postfix = ')'
 
         # --- comparison
-        argtypes = ltypes | rtypes
         if middle in ['__eq__', '__ne__', '__gt__', '__ge__', '__lt__', '__le__']:
             self.append(middle[:-2]+'(')
-            self.visit2(left, func, argtypes=argtypes)
+            self.visit2(left, argtypes, middle, func)
             self.append(', ')
-            self.visit2(right, func, argtypes=argtypes)
+            self.visit2(right, argtypes, middle, func)
             self.append(')'+postfix)
             return
 
         # --- default: left, connector, middle, right
         self.append('(')
-        self.visit2(left, func)
+        self.visit2(left, argtypes, middle, func)
         self.append(')')
         if middle == '==':
             self.append('==(')
         else:
             self.append(self.connector(left, func)+middle+'(')
-        self.visit(right, func)
+        self.visit2(right, argtypes, middle, func)
         self.append(')'+postfix)
 
-    def visit2(self, node, func, argtypes=None): # XXX use temp vars in comparisons, e.g. (t1=fun())
+    def visit2(self, node, argtypes, middle, func): # XXX use temp vars in comparisons, e.g. (t1=fun())
         if node in getmv().tempcount:
             if node in self.done:
                 self.append(getmv().tempcount[node])
             else:
                 self.visitm('('+getmv().tempcount[node]+'=', node, ')', func)
                 self.done.add(node)
-        elif argtypes is not None:
-            self.visit_conv(node, argtypes, func)
-        else:
+        elif middle == '__contains__':
             self.visit(node, func)
+        else:
+            self.visit_conv(node, argtypes, func)
 
     def visitUnarySub(self, node, func=None):
         self.visitm('(', func)
