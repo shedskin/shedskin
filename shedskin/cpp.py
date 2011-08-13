@@ -806,34 +806,6 @@ class generateVisitor(ASTVisitor):
                                 return True
         return False
 
-    def visit_child(self, child, varname, func, argtypes): # XXX merge visit_conv
-        type_child = self.subtypes(argtypes, varname)
-        actualtypes = getgx().merged_inh[child]
-        inttype = set([(defclass('int_'),0)])
-        floattype = (defclass('float_'),0)
-        double_cast = (actualtypes == inttype and floattype in type_child)
-        if double_cast:
-            self.append('(double)(')
-        if child in getmv().tempcount: # XXX
-            self.append(getmv().tempcount[child])
-        elif isinstance(child, Dict): # XXX
-            self.visitDict(child, func, argtypes=type_child)
-        elif isinstance(child, Tuple): # XXX
-            self.visitTuple(child, func, argtypes=type_child)
-        elif isinstance(child, List): # XXX
-            self.visitList(child, func, argtypes=type_child)
-        elif isinstance(child, CallFunc) and isinstance(child.node, Name) and child.node.name in ('list', 'tuple', 'dict', 'set'): # XXX
-            self.visitCallFunc(child, func, argtypes=type_child)
-        elif isinstance(child, Name) and child.name == 'None':
-            self.visit(child, func)
-        else:
-            if typestr(actualtypes) != typestr(type_child):
-                if assign_needs_cast_rec(actualtypes, type_child):
-                    error("incompatible types", child, warning=True, mv=getmv())
-            self.visit(child, func)
-        if double_cast:
-            self.append(')')
-
     def instance_new(self, node, argtypes):
         if argtypes is None:
             argtypes = getgx().merged_inh[node]
@@ -852,9 +824,11 @@ class generateVisitor(ASTVisitor):
         ts_value = typestr(self.subtypes(argtypes, 'value'))
         for (key, value) in node.items:
             self.visitm('(new tuple2<%s, %s>(2,' % (ts_key, ts_value), func)
-            self.visit_child(key, 'unit', func, argtypes)
+            type_child = self.subtypes(argtypes, 'unit')
+            self.visit_conv(key, type_child, func, doublecast=True)
             self.append(',')
-            self.visit_child(value, 'value', func, argtypes)
+            type_child = self.subtypes(argtypes, 'value')
+            self.visit_conv(value, type_child, func, doublecast=True)
             self.append('))')
             if (key, value) != node.items[-1]:
                 self.append(',')
@@ -868,12 +842,15 @@ class generateVisitor(ASTVisitor):
         if children:
             self.append(str(len(children))+',')
         if len(children) >= 2 and self.bin_tuple(argtypes): # XXX >=2?
-            self.visit_child(children[0], 'first', func, argtypes)
+            type_child = self.subtypes(argtypes, 'first')
+            self.visit_conv(children[0], type_child, func, doublecast=True)
             self.append(',')
-            self.visit_child(children[1], 'second', func, argtypes)
+            type_child = self.subtypes(argtypes, 'second')
+            self.visit_conv(children[1], type_child, func, doublecast=True)
         else:
             for child in children:
-                self.visit_child(child, 'unit', func, argtypes)
+                type_child = self.subtypes(argtypes, 'unit')
+                self.visit_conv(child, type_child, func, doublecast=True)
                 if child != children[-1]:
                     self.append(',')
         self.append('))')
@@ -1369,23 +1346,32 @@ class generateVisitor(ASTVisitor):
         self.visit_conv(node.else_, types, func)
         self.append('))')
 
-    def visit_conv(self, node, argtypes, func): # XXX merge visit_child
+    def visit_conv(self, node, argtypes, func, doublecast=False):
         actualtypes = self.mergeinh[node]
-        if isinstance(node, Tuple):
-            self.visitTuple(node, func, argtypes=argtypes)
+        inttype = set([(defclass('int_'),0)])
+        floattype = (defclass('float_'),0)
+        double_cast = doublecast and (actualtypes == inttype and floattype in argtypes)
+        if double_cast:
+            self.append('(double)(')
+        if node in getmv().tempcount: # XXX
+            self.append(getmv().tempcount[node])
         elif isinstance(node, Dict):
             self.visitDict(node, func, argtypes=argtypes)
+        elif isinstance(node, Tuple):
+            self.visitTuple(node, func, argtypes=argtypes)
         elif isinstance(node, List):
             self.visitList(node, func, argtypes=argtypes)
-        elif isinstance(node, CallFunc) and isinstance(node.node, Name) and node.node.name in ('list', 'tuple', 'dict', 'set'): # XXX
+        elif isinstance(node, CallFunc) and isinstance(node.node, Name) and node.node.name in ('list', 'tuple', 'dict', 'set'):
             self.visitCallFunc(node, func, argtypes=argtypes)
         elif isinstance(node, Name) and node.name == 'None':
             self.visit(node, func)
         else:
-            if typestr(argtypes) != typestr(actualtypes):
+            if typestr(actualtypes) != typestr(argtypes):
                 if assign_needs_cast_rec(actualtypes, argtypes):
                     error("incompatible types", node, warning=True, mv=getmv())
             self.visit(node, func)
+        if double_cast:
+            self.append(')')
 
     def visitBreak(self, node, func=None):
         if getgx().loopstack[-1].else_ in getmv().tempcount:
