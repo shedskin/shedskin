@@ -807,7 +807,7 @@ class generateVisitor(ASTVisitor):
                                 return True
         return False
 
-    def visit_child(self, child, varname, func, argtypes):
+    def visit_child(self, child, varname, func, argtypes): # XXX merge visit_conv
         type_child = self.subtypes(argtypes, varname)
         actualtypes = getgx().merged_inh[child]
         inttype = set([(defclass('int_'),0)])
@@ -823,6 +823,8 @@ class generateVisitor(ASTVisitor):
             self.visitTuple(child, func, argtypes=type_child)
         elif isinstance(child, List): # XXX
             self.visitList(child, func, argtypes=type_child)
+        elif isinstance(child, CallFunc) and isinstance(child.node, Name) and child.node.name in ('list', 'tuple', 'dict', 'set'): # XXX
+            self.visitCallFunc(child, func, argtypes=type_child)
         else:
             self.visit(child, func)
         if double_cast:
