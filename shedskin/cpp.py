@@ -691,7 +691,6 @@ class generateVisitor(ASTVisitor):
 
             for var in cl.vars.values():
                 if var in getgx().merged_inh and getgx().merged_inh[var]:
-                #if var not in cl.funcs and not var.invisible:
                     if name == '__deepcopy__':
                         self.output('c->%s = __deepcopy(%s);' % (var.name, var.name))
                     else:
@@ -702,10 +701,6 @@ class generateVisitor(ASTVisitor):
             self.output('}\n')
         else:
             self.eol()
-
-    def padme(self, x):
-        if not x.endswith('*'): return x+' '
-        return x
 
     def virtuals(self, cl, declare):
         for ident, subclasses in cl.virtuals.items():
@@ -740,7 +735,11 @@ class generateVisitor(ASTVisitor):
                 merged.append(merge)
 
             formals = list(subclasses)[0].funcs[ident].formals[1:]
-            ftypes = [self.padme(typestr(m)) for m in merged]
+            ftypes = []
+            for m in merged:
+                ts = typestr(m)
+                if not ts.endswith('*'): ftypes.append(m+' ')
+                else: ftypes.append(m)
 
             # --- prepare for having to cast back arguments (virtual function call means multiple targets)
             for subcl in subclasses:
