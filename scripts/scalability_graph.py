@@ -22,6 +22,15 @@ for filename in sys.argv[1:]:
         line = line.strip()
         if line.startswith('*** test'):
             name = line.split()[-2]
+            if name == 'sto_atom.py':
+                name = 'quameon'
+            elif name == 'c64.py':
+                name = 'c64_main.py'
+            elif name == 'SimpleGeometry.py':
+                name = 'pylot_main.py'
+            elif name == 'mandelbrot2.py':
+                name = 'mandelbrot2_main.py'
+
         if line.startswith('[elapsed'):
             name_time[name] = float(line.split()[-2])
 
@@ -30,6 +39,7 @@ for filename in sys.argv[1:]:
         if name not in ['amaze.py', 'life.py']:
             if name in name_time:
                 data.append((name_sloc[name], name_time[name]))
+                #print name, name_sloc[name], name_time[name]
             else:
                 print 'NG!', name
 
