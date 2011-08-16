@@ -26,7 +26,7 @@ namespace std {
 }
 
 #ifdef WIN32
-//#include <windows.h>
+#include <windows.h>
 #endif
 
 #ifdef __FreeBSD__
@@ -509,6 +509,78 @@ void *close(__ss_int fd) {
    return NULL;
 }
 
+/* utime */
+
+#ifdef WIN32
+/* win32 implementation based on cpython */
+
+static __int64 secs_between_epochs = 11644473600; /* Seconds between 1.1.1601 and 1.1.1970 */
+
+static void
+time_t_to_FILE_TIME(time_t time_in, int nsec_in, FILETIME *out_ptr)
+{
+    /* XXX endianness */
+    __int64 out;
+    out = time_in + secs_between_epochs;
+    out = out * 10000000 + nsec_in / 100;
+    memcpy(out_ptr, &out, sizeof(out));
+}
+
+void __utime_win32(str *path, FILETIME atime, FILETIME mtime) {
+    HANDLE hFile;
+    const char *apath = path->unit.c_str();
+    hFile = CreateFileA(apath, FILE_WRITE_ATTRIBUTES, 0, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+    if (hFile == INVALID_HANDLE_VALUE)
+       throw new OSError(new str("os.utime"));
+    if (!SetFileTime(hFile, NULL, &atime, &mtime))
+       throw new OSError(new str("os.utime"));
+    CloseHandle(hFile);
+}
+
+void __utime(str *path) {
+    SYSTEMTIME now;
+    FILETIME atime, mtime;
+    GetSystemTime(&now);
+    if (!SystemTimeToFileTime(&now, &mtime) ||
+        !SystemTimeToFileTime(&now, &atime)) {
+        throw new OSError(new str("os.utime"));
+    }
+    __utime_win32(path, atime, mtime);
+}
+void __utime(str *path, double actime, double modtime) {
+    time_t atimesec, mtimesec;
+    FILETIME atime, mtime;
+    atimesec = (time_t)actime;
+    mtimesec = (time_t)modtime;
+    time_t_to_FILE_TIME(atimesec, 0, &atime); /* XXX nanoseconds */
+    time_t_to_FILE_TIME(mtimesec, 0, &mtime);
+    __utime_win32(path, atime, mtime);
+}
+
+#else
+void __utime(str *path, double actime, double modtime) {
+    struct utimbuf buf;
+    buf.actime = (time_t)actime;
+    buf.modtime = (time_t)modtime;
+    if(::utime(path->unit.c_str(), &buf) == -1)
+        throw new OSError(new str("os.utime"));
+}
+
+void __utime(str *path) {
+    if(::utime(path->unit.c_str(), NULL) == -1)
+        throw new OSError(new str("os.utime"));
+}
+#endif
+
+#define HOPPA if (times) __utime(path, times->__getfirst__(), times->__getsecond__()); else __utime(path); return NULL;
+
+void *utime(str *path, tuple2<__ss_int, __ss_int> *times) { HOPPA }
+void *utime(str *path, tuple2<__ss_int, double> *times) { HOPPA }
+void *utime(str *path, tuple2<double, __ss_int> *times) { HOPPA }
+void *utime(str *path, tuple2<double, double> *times) { HOPPA }
+
+#undef HOPPA
+
 /* UNIX-only functionality */
 
 #ifndef WIN32
@@ -941,27 +1013,6 @@ str *urandom(__ss_int n) {
     close(fd);
     return s;
 }
-
-void __utime(str *path) {
-    if(::utime(path->unit.c_str(), NULL) == -1)
-        throw new OSError(new str("os.utime"));
-}
-void __utime(str *path, double actime, double modtime) {
-    struct utimbuf buf;
-    buf.actime = (time_t)actime;
-    buf.modtime = (time_t)modtime;
-    if(::utime(path->unit.c_str(), &buf) == -1)
-        throw new OSError(new str("os.utime"));
-}
-
-#define HOPPA if (times) __utime(path, times->__getfirst__(), times->__getsecond__()); else __utime(path); return NULL;
-
-void *utime(str *path, tuple2<__ss_int, __ss_int> *times) { HOPPA }
-void *utime(str *path, tuple2<__ss_int, double> *times) { HOPPA }
-void *utime(str *path, tuple2<double, __ss_int> *times) { HOPPA }
-void *utime(str *path, tuple2<double, double> *times) { HOPPA }
-
-#undef HOPPA
 
 __ss_bool access(str *path, __ss_int mode) {
     return __mbool(::access(path->unit.c_str(), mode) == 0);
