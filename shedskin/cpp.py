@@ -1973,19 +1973,15 @@ class generateVisitor(ASTVisitor):
             self.start('__result = ')
         else:
             self.start('return ')
-        cast = assign_needs_cast(expr, func, retnode.thing, func)
-        if cast:
-            self.append('(('+nodetypestr(retnode.thing, func)+')(')
 
-        elif isinstance(expr, Name) and expr.name == 'self': # XXX integrate with assign_needs_cast!? # XXX self?
+        if isinstance(expr, Name) and expr.name == 'self': # XXX integrate with assign_needs_cast!? # XXX self?
             lcp = lowest_common_parents(polymorphic_t(self.mergeinh[retnode.thing])) # XXX simplify
             if lcp:
                 cl = lcp[0] # XXX simplify
                 if not (cl == func.parent or cl in func.parent.ancestors()):
                     self.append('('+cl.ident+' *)')
 
-        self.visit(expr, func)
-        if cast: self.append('))')
+        self.visit_conv(expr, self.mergeinh[retnode.thing], func)
         self.eol()
         if yield_:
             self.output('return __result;')
