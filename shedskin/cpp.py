@@ -1304,7 +1304,10 @@ class generateVisitor(ASTVisitor):
 
     def visitYield(self, node, func):
         self.output('__last_yield = %d;' % func.yieldNodes.index(node))
-        self.return_expr(node.value, func.yieldnode, func, yield_=True)
+        self.start('__result = ')
+        self.visit_conv(node.value, self.mergeinh[func.yieldnode.thing], func)
+        self.eol()
+        self.output('return __result;')
         self.output('__after_yield_%d:;' % func.yieldNodes.index(node))
         self.start()
 
@@ -1367,7 +1370,7 @@ class generateVisitor(ASTVisitor):
             self.visit(node, func)
         else:
             if typestr(actualtypes) != typestr(argtypes):
-                if assign_needs_cast_rec(actualtypes, argtypes):
+                if assign_needs_cast_rec(actualtypes, argtypes): # XXX
                     error("incompatible types", node, warning=True, mv=getmv())
             self.visit(node, func)
         if double_cast:
@@ -1964,27 +1967,11 @@ class generateVisitor(ASTVisitor):
     def visitReturn(self, node, func=None):
         if func.isGenerator:
             self.output('__stop_iteration = true;')
-            self.output('return 0;')
+            self.output('return 0;') # XXX
             return
-        self.return_expr(node.value, func.retnode, func)
-
-    def return_expr(self, expr, retnode, func, yield_=False):
-        if yield_:
-            self.start('__result = ')
-        else:
-            self.start('return ')
-
-        if isinstance(expr, Name) and expr.name == 'self': # XXX integrate with assign_needs_cast!? # XXX self?
-            lcp = lowest_common_parents(polymorphic_t(self.mergeinh[retnode.thing])) # XXX simplify
-            if lcp:
-                cl = lcp[0] # XXX simplify
-                if not (cl == func.parent or cl in func.parent.ancestors()):
-                    self.append('('+cl.ident+' *)')
-
-        self.visit_conv(expr, self.mergeinh[retnode.thing], func)
+        self.start('return ')
+        self.visit_conv(node.value, self.mergeinh[func.retnode.thing], func)
         self.eol()
-        if yield_:
-            self.output('return __result;')
 
     def tuple_assign(self, lvalue, rvalue, func):
         temp = getmv().tempcount[lvalue]
@@ -2566,15 +2553,20 @@ class generateVisitor(ASTVisitor):
         self.append(self.cpp_name(node.name))
 
     def visitName(self, node, func=None, add_cl=True):
-        map = {'True': 'True', 'False': 'False', 'self': 'this'}
+        map = {'True': 'True', 'False': 'False'}
         if node in getmv().lwrapper:
             self.append(getmv().lwrapper[node])
         elif node.name == 'None':
             self.append('NULL')
-        elif node.name == 'self' and \
-            ((not func or func.listcomp or not isinstance(func.parent, class_)) or \
-             (func and func.parent and func.isGenerator)): # XXX lookupvar?
-            self.append('self')
+        elif node.name == 'self':
+            lcp = lowest_common_parents(polymorphic_t(self.mergeinh[node]))
+            if ((not func or func.listcomp or not isinstance(func.parent, class_)) or \
+                 (func and func.parent and func.isGenerator)): # XXX lookupvar?
+                self.append('self')
+            elif lcp and not (lcp[0] is func.parent or lcp[0] in func.parent.ancestors()): # see test 160
+                self.append('(('+nokeywords(lcp[0].ident)+' *)this)')
+            else:
+                self.append('this')
         elif node.name in map:
             self.append(map[node.name])
 
