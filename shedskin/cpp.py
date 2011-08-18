@@ -2103,8 +2103,11 @@ class generateVisitor(ASTVisitor):
                     continue
 
                 # expr[a:b:c] = expr
-                elif isinstance(lvalue, Subscript) and isinstance(lvalue.subs[0], Sliceobj):
-                    self.visit(inode(lvalue.expr).fakefunc, func)
+                elif isinstance(lvalue, Subscript) and isinstance(lvalue.subs[0], Sliceobj): # XXX see comment above
+                    fakefunc = inode(lvalue.expr).fakefunc
+                    self.visitm('(', fakefunc.node.expr, ')->__setslice__(', fakefunc.args[0], ',', fakefunc.args[1], ',', fakefunc.args[2], ',', fakefunc.args[3], ',', func)
+                    self.visit_conv(fakefunc.args[4], self.mergeinh[lvalue.expr], func)
+                    self.append(')')
                     self.eol()
                     continue
 
