@@ -2094,12 +2094,11 @@ class generateVisitor(ASTVisitor):
                 elif isinstance(lvalue, Slice):
                     if isinstance(rvalue, Slice) and lvalue.upper == rvalue.upper == None and lvalue.lower == rvalue.lower == None:
                         self.visitm(lvalue.expr, self.connector(lvalue.expr, func), 'units = ', rvalue.expr, self.connector(rvalue.expr, func), 'units', func)
-                    else:
+                    else: # XXX let visitCallFunc(fakefunc) use cast_to_builtin
                         fakefunc = inode(lvalue.expr).fakefunc
                         self.visitm('(', fakefunc.node.expr, ')->__setslice__(', fakefunc.args[0], ',', fakefunc.args[1], ',', fakefunc.args[2], ',', fakefunc.args[3], ',', func)
-                        cast = self.var_assign_needs_cast(lvalue.expr, rvalue, func)
-                        if cast: self.visitm('(('+cast+')', fakefunc.args[4], '))', func)
-                        else: self.visitm(fakefunc.args[4], ')', func)
+                        self.visit_conv(fakefunc.args[4], self.mergeinh[lvalue.expr], func)
+                        self.append(')')
                     self.eol()
                     continue
 
