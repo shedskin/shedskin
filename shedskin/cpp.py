@@ -14,6 +14,7 @@ import textwrap, string, struct
 from distutils import sysconfig
 
 from shared import *
+from struct_ import *
 import extmod
 
 # --- code generation visitor; use type information
@@ -2032,32 +2033,7 @@ class generateVisitor(ASTVisitor):
         self.visitm(lvalue.expr, self.connector(lvalue.expr, func), '__setitem__(', subs, ', ', func)
 
     def visitAssign(self, node, func=None):
-        # struct.unpack
-        struct_unpack = getgx().struct_unpack.get(node)
-        if struct_unpack:
-            sinfo, tvar, tvar_pos = struct_unpack
-            self.start()
-            self.visitm(tvar, ' = ', node.expr.args[1], func)
-            self.eol()
-            self.output('%s = 0;' % tvar_pos)
-            hop = 0
-            for (o, c, t, d) in sinfo:
-                self.start()
-                expr = "__struct__::unpack_%s('%c', '%c', %d, %s, &%s)" % (t, o, c, d, tvar, tvar_pos)
-                if c == 'x' or (d == 0 and c != 's'):
-                    self.visitm(expr, func)
-                else:
-                    n = list(node.nodes[0])[hop]
-                    hop += 1
-                    if isinstance(n, Subscript): # XXX merge
-                        self.subs_assign(n, func)
-                        self.visitm(expr, ')', func)
-                    elif isinstance(n, AssName):
-                        self.visitm(n, ' = ', expr, func)
-                    elif isinstance(n, AssAttr):
-                        self.visitAssAttr(n, func)
-                        self.visitm(' = ', expr, func)
-                self.eol()
+        if struct_unpack_cpp(self, node, func):
             return
 
         #temp vars
