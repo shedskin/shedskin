@@ -2563,7 +2563,7 @@ class generateVisitor(ASTVisitor):
             if ((not func or func.listcomp or not isinstance(func.parent, class_)) or \
                  (func and func.parent and func.isGenerator)): # XXX lookupvar?
                 self.append('self')
-            elif lcp and not (lcp[0] is func.parent or lcp[0] in func.parent.ancestors()): # see test 160
+            elif len(lcp) == 1 and not (lcp[0] is func.parent or lcp[0] in func.parent.ancestors()): # see test 160
                 self.append('(('+nokeywords(lcp[0].ident)+' *)this)')
             else:
                 self.append('this')
