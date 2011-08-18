@@ -393,3 +393,14 @@ print dict([(1,2.0)]) == {}
 print set() == set([1,2])
 print (set(['a']), set([1.0])) == (set(), set())
 print (set(['a']), set([1.0])) == (set(), None)
+def slicing():
+    a = range(10)
+    a[2:] = range(4)
+    a[2:] = []
+    print a
+    b = map(str, a)
+    b[2:] = []
+    b[2:] = ['woef']
+    b[2:] = [None]
+    print b
+slicing()
