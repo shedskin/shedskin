@@ -15,6 +15,7 @@ template<class T> inline __ss_bool ___bool(T x) { return __mbool(x && x->__nonze
 #ifdef __SS_LONG
 template<> inline __ss_bool ___bool(__ss_int x) { return __mbool(x!=0); }
 #endif
+template<> inline __ss_bool ___bool(str *s) { return __mbool(s && s->unit.size() > 0); }
 template<> inline __ss_bool ___bool(int x) { return __mbool(x!=0); }
 template<> inline __ss_bool ___bool(bool x) { return __mbool(x); }
 template<> inline __ss_bool ___bool(__ss_bool x) { return x; }
