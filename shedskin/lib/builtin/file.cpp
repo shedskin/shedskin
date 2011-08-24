@@ -30,7 +30,7 @@ file::file(str *file_name, str *flags) {
         }
     }
     else
-        flags = new str("r");
+        flags = __char_cache['r'];
     f = fopen(file_name->unit.c_str(), flags->unit.c_str());
     if(f == 0)
         throw new IOError(file_name);
@@ -114,6 +114,15 @@ str *file::readline(int n) {
 
 str *file::read(int n) {
     __check_closed();
+    if(n == 1) {
+        const int c = GETC(f);
+        if(__error())
+            throw new IOError();
+        if(c != EOF)
+            return __char_cache[static_cast<unsigned char>(c)];
+        else
+            return new str();
+    } // other cases (n != 1):
     __read_cache.clear();
     for(size_t i = 0; i < size_t(n); ++i) {
         const int c = GETC(f);
