@@ -525,7 +525,16 @@ template<class A> __ss_bool all(A *iter) {
 
 /* ord, chr, hex, oct, bin */
 
-int ord(str *c);
+static void __throw_ord_exc(size_t s) { /* improve inlining */
+    throw new TypeError(__modct(new str("ord() expected a character, but string of length %d found"), 1, ___box(s)));
+}
+
+inline __ss_int ord(str *s) {
+    size_t len = s->unit.size();
+    if(len != 1)
+        __throw_ord_exc(len);
+    return (unsigned char)(s->unit[0]);
+}
 
 static void __throw_chr_out_of_range() { /* improve inlining */
     throw new ValueError(new str("chr() arg not in range(256)"));
