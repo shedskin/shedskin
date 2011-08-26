@@ -112,12 +112,16 @@ str *file::readline(int n) {
     return new str(&__read_cache[0], __read_cache.size());
 }
 
+static void __throw_io_error() {
+    throw new IOError();
+}
+
 str *file::read(int n) {
     __check_closed();
     if(n == 1) {
         const int c = GETC(f);
-        if(__error())
-            throw new IOError();
+        if(FERROR(f) != 0) /* avoid virtual call */
+            __throw_io_error();
         if(c != EOF)
             return __char_cache[static_cast<unsigned char>(c)];
         else
@@ -131,8 +135,7 @@ str *file::read(int n) {
         __read_cache.push_back(c);
     }
     if(__error())
-        throw new IOError();
-
+        __throw_io_error();
     return new str(&__read_cache[0], __read_cache.size());
 }
 

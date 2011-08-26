@@ -167,12 +167,6 @@ __iter<__ss_int> *reversed(__xrange *x) {
    return new __rangeiter(x->a+(range_len(x->a,x->b,x->s)-1)*x->s, x->a-x->s, -x->s);
 }
 
-int ord(str *s) {
-    if(len(s) != 1)
-        throw new TypeError(__modct(new str("ord() expected a character, but string of length %d found"), 1, ___box(len(s))));
-    return (unsigned char)(s->unit[0]);
-}
-
 /* representation */
 
 template<> str *repr(double d) { return __str(d); }

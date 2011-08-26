@@ -1273,8 +1273,9 @@ template<> inline complex __zero<complex>() { return mcomplex(0,0); }
 #include "builtin/dict.hpp"
 #include "builtin/set.hpp"
 #include "builtin/file.hpp"
-#include "builtin/function.hpp"
 #include "builtin/math.hpp"
+#include "builtin/format.hpp"
+#include "builtin/function.hpp"
 #include "builtin/complex.hpp"
 
 /* iterators */
@@ -1296,7 +1297,6 @@ template<class T> T __seqiter<T>::next() {
     return p->__getitem__(counter++);
 }
 
-#include "builtin/format.hpp"
 
 /* slicing */
 
