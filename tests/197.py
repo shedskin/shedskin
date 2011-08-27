@@ -431,3 +431,5 @@ print None or 'waf'
 print [1]+[]
 print [[]]+[[1]]
 print [None]+[['uh']]
+print set([]) == set([1])
+print set([1]) == set([1.0])
