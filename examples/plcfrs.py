@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from math import exp, log
 from array import array
-from itertools import chain
 from heapq import heappush, heappop, heapify
 
 def parse(sent, grammar, tags, start, exhaustive):
