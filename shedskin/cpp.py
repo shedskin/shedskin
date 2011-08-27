@@ -1350,14 +1350,14 @@ class generateVisitor(ASTVisitor):
         self.visit_conv(node.else_, types, func)
         self.append('))')
 
-    def visit_conv(self, node, argtypes, func, doublecast=False):
+    def visit_conv(self, node, argtypes, func, doublecast=False, check_temp=True):
         actualtypes = self.mergeinh[node]
         inttype = set([(defclass('int_'),0)])
         floattype = (defclass('float_'),0)
         double_cast = doublecast and (actualtypes == inttype and floattype in argtypes)
         if double_cast:
             self.append('(double)(')
-        if node in getmv().tempcount: # XXX
+        if check_temp and node in getmv().tempcount: # XXX
             self.append(getmv().tempcount[node])
         elif isinstance(node, Dict):
             self.visitDict(node, func, argtypes=argtypes)
@@ -1370,10 +1370,18 @@ class generateVisitor(ASTVisitor):
         elif isinstance(node, Name) and node.name == 'None':
             self.visit(node, func)
         else:
+            # XXX prototyping here, merge/rewrite assign_needs_cast_rec later
+            cast = ''
             if typestr(actualtypes) != typestr(argtypes):
-                if assign_needs_cast_rec(actualtypes, argtypes): # XXX
+                if typestr(actualtypes) == 'void *':
+                    cast = typestr(argtypes)
+                elif assign_needs_cast_rec(actualtypes, argtypes): # XXX
                     error("incompatible types", node, warning=True, mv=getmv())
+            if cast:
+                self.append('(('+cast+')(')
             self.visit(node, func)
+            if cast:
+                self.append('))')
         if double_cast:
             self.append(')')
 
@@ -1414,13 +1422,7 @@ class generateVisitor(ASTVisitor):
             child = nodes[0]
             if len(nodes) > 1:
                 self.append(op+'(')
-            cast = ''
-            if assign_needs_cast(child, func, node, func):
-                cast = '(('+nodetypestr(node, func)+')'
-                self.append(cast)
-            self.visit(child, func)
-            if cast:
-                self.append(')')
+            self.visit_conv(child, self.mergeinh[node], func, check_temp=False)
             if len(nodes) > 1:
                 self.append(', ')
                 self.visitandor(node, nodes[1:], op, mix, func)
