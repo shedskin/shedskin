@@ -575,19 +575,30 @@ public:
     template <class U> set<T> *intersection(int, U *other);
     set<T> *intersection(int, set<T> *s);
     template <class U, class V> set<T> *intersection(int, U *iter, V *iter2);
-    void *intersection_update(set<T> *s);
+    template <class U, class V, class W> set<T> *intersection(int, U *iter, V *iter2, W *iter3);
 
-    template <class U> set<T> *difference(U *other);
-    set<T> *difference(set<T> *s);
-    void *difference_update(int, set<T> *s);
+    template <class U> void *intersection_update(int, U *other);
+    void *intersection_update(int, set<T> *s);
+    template <class U, class V> void *intersection_update(int, U *other, V *other2);
+    template <class U, class V, class W> void *intersection_update(int, U *other, V *other2, W *other3);
+
+    template <class U> set<T> *difference(int, U *other);
+    set<T> *difference(int, set<T> *s);
+    template <class U, class V> set<T> *difference(int, U *other, V *other2);
+    template <class U, class V, class W> set<T> *difference(int, U *other, V *other2, W *other3);
+
     template <class U> void *difference_update(int, U *other);
+    void *difference_update(int, set<T> *s);
     template <class U, class V> void *difference_update(int, U *other, V *other2);
+    template <class U, class V, class W> void *difference_update(int, U *other, V *other2, W *other3);
 
     set<T> *symmetric_difference(set<T> *s);
     void *symmetric_difference_update(set<T> *s);
 
-    set<T> *__ss_union(pyiter<T> *s);
-    set<T> *__ss_union(set<T> *s);
+    template <class U> set<T> *__ss_union(int, U *other);
+    set<T> *__ss_union(int, set<T> *s);
+    template <class U, class V> set<T> *__ss_union(int, U *other, V *other2);
+    template <class U, class V, class W> set<T> *__ss_union(int, U *other, V *other2, W *other3);
 
     set<T> *__and__(set<T> *s);
     set<T> *__or__(set<T> *s);
