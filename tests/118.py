@@ -8,7 +8,7 @@ e = [12]                                 # [list(int)]
 
 x = []                                   # [list(int)]
 y = x                                    # [list(int)]
-a = node(1, y)                           # [node]
+#a = node(1, y)                           # [node]
 b = node(2, d)                           # [node]
 c = node(3, e)                           # [node]
 

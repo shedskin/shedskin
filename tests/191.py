@@ -278,10 +278,10 @@ print None in [[None]]
 # casting to builtins (inference not enough)
 definiteinnerlist=[1]
 outerlist=[[1]]
-emptyinnerlist=[]
+#emptyinnerlist=[]
 outerlist.append(definiteinnerlist)
-outerlist.append(emptyinnerlist)
-outerlist[0] = emptyinnerlist
+outerlist.append([])
+outerlist[0] = []
 print outerlist
 
 dikkie={1:1}
