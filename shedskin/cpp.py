@@ -257,10 +257,7 @@ class generateVisitor(ASTVisitor):
                 self.class_hpp(child)
 
         # --- defaults
-        if self.module.mv.defaults.items():
-            for default, nr in self.module.mv.defaults.items():
-                print >>self.out, 'extern '+nodetypestr(default, None)+' '+('default_%d;'%nr)
-            print >>self.out
+        self.defaults(declare=True)
 
         # function declarations
         if self.module != getgx().main_module:
@@ -286,6 +283,25 @@ class generateVisitor(ASTVisitor):
             extmod.convert_methods2(self)
 
         print >>self.out, '#endif'
+
+    def defaults(self, declare):
+        if self.module.mv.defaults:
+            extern = ['', 'extern '][declare]
+            for default, (nr, func, func_def_nr) in self.module.mv.defaults.items():
+                formal = func.formals[len(func.formals)-len(func.defaults)+func_def_nr]
+                var = func.vars[formal]
+                print >>self.out, extern+typestr(self.mergeinh[var], func)+' '+('default_%d;' % nr)
+            print >>self.out
+
+    def init_defaults(self, func):
+        for default in func.defaults:
+            if default in getmv().defaults:
+                nr, func, func_def_nr = getmv().defaults[default]
+                formal = func.formals[len(func.formals)-len(func.defaults)+func_def_nr]
+                var = func.vars[formal]
+                self.start('default_%d = ' % nr)
+                self.visit_conv(default, self.mergeinh[var], None)
+                self.eol()
 
     def rich_comparison(self):
         cmp_cls, lt_cls, gt_cls, le_cls, ge_cls = [], [], [], [], []
@@ -366,10 +382,7 @@ class generateVisitor(ASTVisitor):
             print >>self.out
 
         # --- defaults
-        if self.module.mv.defaults.items():
-            for default, nr in self.module.mv.defaults.items():
-                print >>self.out, nodetypestr(default, None)+' '+('default_%d;'%nr)
-            print >>self.out
+        self.defaults(declare=False)
 
         # --- declarations
         self.listcomps = {}
@@ -397,20 +410,11 @@ class generateVisitor(ASTVisitor):
 
         for child in node.node.getChildNodes():
             if isinstance(child, Function):
-                for default in child.defaults:
-                    if default in getmv().defaults:
-                        self.start('')
-                        self.visitm('default_%d = ' % getmv().defaults[default], default, ';')
-                        self.eol()
-
+                self.init_defaults(child)
             elif isinstance(child, Class):
                 for child2 in child.code.getChildNodes():
                     if isinstance(child2, Function):
-                        for default in child2.defaults:
-                            if default in getmv().defaults:
-                                self.start('')
-                                self.visitm('default_%d = ' % getmv().defaults[default], default, ';')
-                                self.eol()
+                        self.init_defaults(child2)
                 if child.name in getmv().classes:
                     cl = getmv().classes[child.name]
                     self.output('cl_'+cl.ident+' = new class_("%s");' % (cl.ident))
@@ -1910,7 +1914,7 @@ class generateVisitor(ASTVisitor):
             elif builtin_cast:
                 cast = True
                 self.append('(('+builtin_cast+')(')
-            elif not target.mv.module.builtin and assign_needs_cast(arg, func, formal, target): # XXX builtin (dict.fromkeys?)
+            elif not target.mv.module.builtin and assign_needs_cast(arg, func, formal, target) and not arg in target.mv.defaults: # XXX builtin (dict.fromkeys?)
                 cast = True
                 self.append('(('+nodetypestr(formal, target)+')(')
             elif castnull and isinstance(arg, Name) and arg.name == 'None':
@@ -1927,9 +1931,9 @@ class generateVisitor(ASTVisitor):
                 if self.mergeinh[arg] == set([(defclass('none'),0)]):
                     self.append('NULL')
                 elif target.mv.module == getmv().module:
-                    self.append('default_%d' % (target.mv.defaults[arg]))
+                    self.append('default_%d' % (target.mv.defaults[arg][0]))
                 else:
-                    self.append('%s::default_%d' % (target.mv.module.full_path(), target.mv.defaults[arg]))
+                    self.append('%s::default_%d' % (target.mv.module.full_path(), target.mv.defaults[arg][0]))
 
             elif arg in self.consts:
                 self.append(self.consts[arg])

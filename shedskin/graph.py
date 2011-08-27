@@ -532,9 +532,9 @@ class moduleVisitor(ASTVisitor):
 
         self.visit(node.code, func)
 
-        for default in func.defaults:
+        for i, default in enumerate(func.defaults):
             if not const_literal(default):
-                self.defaults[default] = len(self.defaults)
+                self.defaults[default] = (len(self.defaults), func, i)
             self.visit(default, None) # defaults are global
 
         # --- add implicit 'return None' if no return expressions
