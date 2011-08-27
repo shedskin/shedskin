@@ -144,19 +144,13 @@ def do_extmod_method(gv, func):
         if i >= len(formals)-len(func.defaults):
             gv.append('1, ')
             defau = func.defaults[i-(len(formals)-len(func.defaults))]
-            cast = cpp.assign_needs_cast(defau, None, func.vars[formal], func)
-            if cast:
-                gv.append('(('+cpp.nodetypestr(func.vars[formal], func)+')')
-
             if defau in func.mv.defaults:
                 if gv.mergeinh[defau] == set([(defclass('none'),0)]):
                     gv.append('0')
                 else:
-                    gv.append('%s::default_%d' % ('__'+func.mv.module.ident+'__', func.mv.defaults[defau]))
+                    gv.append('%s::default_%d' % ('__'+func.mv.module.ident+'__', func.mv.defaults[defau][0]))
             else:
                 gv.visit(defau, func)
-            if cast:
-                gv.append(')')
         elif typ.strip() == '__ss_bool':
             gv.append('0, False')
         else:
