@@ -544,9 +544,9 @@ class set(pyset):
     def clear(self):
         pass
     def update(self, *b):
-        self.unit = iter(b).next()
-    def difference_update(self, b):
-        pass
+        self.__setunit__(iter(b).next())
+    def difference_update(self, *b):
+        self.__setunit__(iter(b).next())
     def symmetric_difference_update(self, b):
         self.__setunit__(b.unit)
     def intersection_update(self, b):

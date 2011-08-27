@@ -653,11 +653,24 @@ template<class T> set<T> *set<T>::__isub__(set<T> *s) {
 }
 
 
-template<class T> void *set<T>::difference_update(set<T> *s) {
+template<class T> void *set<T>::difference_update(int, set<T> *s) {
     set<T> *c = difference(s);
     *this = *c; /* XXX don't copy */
     return NULL;
 }
+
+
+template<class T> template <class U> void *set<T>::difference_update(int, U *iter) {
+    difference_update(1, new set<T>(iter));
+    return NULL;
+}
+
+template<class T> template<class U, class V> void *set<T>::difference_update(int, U *iter, V *iter2) {
+    difference_update(1, iter);
+    difference_update(1, iter2);
+    return NULL;
+}
+
 
 template<class T> void *set<T>::symmetric_difference_update(set<T> *s) {
     set<T> *c = symmetric_difference(s);
