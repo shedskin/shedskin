@@ -1913,7 +1913,10 @@ class generateVisitor(ASTVisitor):
 
         for (arg, formal) in pairs:
             cast = False
-            builtin_cast = self.cast_to_builtin(arg, func, formal, target, method_call, objexpr)
+            builtin_cast = None
+            builtin_types = self.cast_to_builtin(arg, func, formal, target, method_call, objexpr)
+            if builtin_types:
+                builtin_cast = typestr(builtin_types)
 
             if double and self.mergeinh[arg] == set([(defclass('int_'),0)]):
                 cast = True
@@ -1945,8 +1948,8 @@ class generateVisitor(ASTVisitor):
             elif arg in self.consts:
                 self.append(self.consts[arg])
             else:
-                if constructor and ident in ['set', 'frozenset'] and nodetypestr(arg, func) in ['list<void *> *', 'tuple<void *> *', 'pyiter<void *> *', 'pyseq<void *> *', 'pyset<void *>']: # XXX to needs_cast
-                    pass # XXX assign_needs_cast
+                if constructor and ident in ['set', 'frozenset'] and nodetypestr(arg, func) in ['list<void *> *', 'tuple<void *> *', 'pyiter<void *> *', 'pyseq<void *> *', 'pyset<void *>']: # XXX
+                    pass
                 else:
                     self.visit(arg, func)
 
@@ -1963,9 +1966,9 @@ class generateVisitor(ASTVisitor):
         # type inference cannot deduce all necessary casts to builtin formals
         vars = {'u': 'unit', 'v': 'value', 'o': None}
         if target.mv.module.builtin and method_call and formal.name in vars and target.parent.ident in ('list', 'dict', 'set'):
-            to_ts = nodetypestr(objexpr, func, var=vars[formal.name])
-            if nodetypestr(arg, func) != to_ts:
-                return to_ts
+            subtypes = self.subtypes(self.mergeinh[objexpr], vars[formal.name])
+            if nodetypestr(arg, func) != typestr(subtypes):
+                return subtypes
 
     def cast_to_builtin2(self, arg, func, objexpr, msg, formal_nr):
         # shortcut for outside of visitCallFunc XXX merge with visitCallFunc?
@@ -1976,7 +1979,9 @@ class generateVisitor(ASTVisitor):
                 target = cl.funcs[msg]
                 if formal_nr < len(target.formals):
                     formal = target.vars[target.formals[formal_nr]]
-                    return self.cast_to_builtin(arg, func, formal, target, True, objexpr)
+                    builtin_types = self.cast_to_builtin(arg, func, formal, target, True, objexpr)
+                    if builtin_types:
+                        return typestr(builtin_types)
 
     def visitReturn(self, node, func=None):
         if func.isGenerator:
