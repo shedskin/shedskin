@@ -1915,18 +1915,14 @@ class generateVisitor(ASTVisitor):
             cast = False
             builtin_cast = None
             builtin_types = self.cast_to_builtin(arg, func, formal, target, method_call, objexpr)
+            formal_types = builtin_types or self.mergeinh[formal]
+
             if builtin_types:
                 builtin_cast = typestr(builtin_types)
 
             if double and self.mergeinh[arg] == set([(defclass('int_'),0)]):
                 cast = True
                 self.append('((double)(')
-            elif builtin_cast:
-                cast = True
-                self.append('(('+builtin_cast+')(')
-            elif not target.mv.module.builtin and assign_needs_cast(arg, func, formal, target) and not arg in target.mv.defaults: # XXX builtin (dict.fromkeys?)
-                cast = True
-                self.append('(('+nodetypestr(formal, target)+')(')
             elif castnull and isinstance(arg, Name) and arg.name == 'None':
                 cast = True
                 self.append('((void *)(')
@@ -1950,8 +1946,10 @@ class generateVisitor(ASTVisitor):
             else:
                 if constructor and ident in ['set', 'frozenset'] and nodetypestr(arg, func) in ['list<void *> *', 'tuple<void *> *', 'pyiter<void *> *', 'pyseq<void *> *', 'pyset<void *>']: # XXX
                     pass
-                else:
+                elif not builtin_types and target.mv.module.builtin:
                     self.visit(arg, func)
+                else:
+                    self.visit_conv(arg, formal_types, func)
 
             if cast:
                 self.append('))')
