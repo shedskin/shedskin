@@ -478,19 +478,6 @@ template <class T> void *set<T>::clear()
 	return NULL;
 }
 
-template<class T> template<class U, class V> void *set<T>::update(int, U *iter, V *iter2) {
-    update(1, iter);
-    update(1, iter2);
-    return NULL;
-}
-
-template<class T> template<class U, class V, class W> void *set<T>::update(int, U *iter, V *iter2, W *iter3) {
-    update(1, iter);
-    update(1, iter2);
-    update(1, iter3);
-    return NULL;
-}
-
 template<class T> template<class U> void *set<T>::update(int, U *iter) {
     typename U::for_in_unit e;
     typename U::for_in_loop __3;
@@ -525,15 +512,28 @@ template <class T> void *set<T>::update(int, set<T>* other)
     return NULL;
 }
 
-template<class T> set<T> *set<T>::__ss_union(pyiter<T> *s) {
+template<class T> template<class U, class V> void *set<T>::update(int, U *iter, V *iter2) {
+    update(1, iter);
+    update(1, iter2);
+    return NULL;
+}
+
+template<class T> template<class U, class V, class W> void *set<T>::update(int, U *iter, V *iter2, W *iter3) {
+    update(1, iter);
+    update(1, iter2);
+    update(1, iter3);
+    return NULL;
+}
+
+
+template<class T> template<class U> set<T> *set<T>::__ss_union(int, U *other) {
     set<T> *c = new set<T>(this->frozen);
     *c = *this;
-    c->update(1, s);
-
+    c->update(1, other);
     return c;
 }
 
-template<class T> set<T> *set<T>::__ss_union(set<T> *s) {
+template<class T> set<T> *set<T>::__ss_union(int, set<T> *s) {
     set<T> *a, *b;
     set<T> *c = new set<T>(this->frozen);
 
@@ -543,6 +543,21 @@ template<class T> set<T> *set<T>::__ss_union(set<T> *s) {
     *c = *b;
     c->update(1, a);
 
+    return c;
+}
+
+
+template<class T> template<class U, class V> set<T> *set<T>::__ss_union(int, U *other, V *other2) {
+    set<T> *c = new set<T>(this->frozen);
+    *c = *this;
+    c->update(1, other, other2);
+    return c;
+}
+
+template<class T> template<class U, class V, class W> set<T> *set<T>::__ss_union(int, U *other, V *other2, W *other3) {
+    set<T> *c = new set<T>(this->frozen);
+    *c = *this;
+    c->update(1, other, other2, other3);
     return c;
 }
 
@@ -559,7 +574,7 @@ template<class T> set<T> *set<T>::symmetric_difference(set<T> *s) {
     setentry<T> *entry;
 
     while (a->next(&pos, &entry)) {
-        if (b->__contains__(entry)) 
+        if (b->__contains__(entry))
             c->discard(entry->key);
         else
             c->add(entry);
@@ -582,10 +597,6 @@ template<class T> template <class U> set<T> *set<T>::intersection(int, U *iter) 
     return result;
 }
 
-template<class T> template<class U, class V> set<T> *set<T>::intersection(int, U *iter, V *iter2) {
-    return intersection(1, iter)->intersection(1, iter2);
-}
-
 template<class T> set<T> *set<T>::intersection(int, set<T> *s) {
     set<T> *a, *b;
     set<T> *c = new set<T>(this->frozen);
@@ -604,11 +615,31 @@ template<class T> set<T> *set<T>::intersection(int, set<T> *s) {
     return c;
 }
 
-template<class T> template<class U> set<T>* set<T>::difference(U *other) {
-    return difference(new set<T>(other));
+template<class T> template<class U, class V> set<T> *set<T>::intersection(int, U *iter, V *iter2) {
+    return intersection(1, iter)->intersection(1, iter2);
 }
 
-template <class T> set<T>* set<T>::difference(set<T> *other)
+template<class T> template<class U, class V, class W> set<T> *set<T>::intersection(int, U *iter, V *iter2, W *iter3) {
+    return intersection(1, iter)->intersection(1, iter2)->intersection(1, iter3);
+}
+
+
+template<class T> template<class U> set<T>* set<T>::difference(int, U *other) {
+    return difference(1, new set<T>(other));
+}
+
+template<class T> template<class U, class V> set<T>* set<T>::difference(int, U *other, V *other2) {
+    set<T> *result = difference(1, new set<T>(other));
+    return result->difference(1, new set<T>(other2));
+}
+
+template<class T> template<class U, class V, class W> set<T>* set<T>::difference(int, U *other, V *other2, W *other3) {
+    set<T> *result = difference(1, new set<T>(other));
+    result = result->difference(1, new set<T>(other2));
+    return result->difference(1, new set<T>(other3));
+}
+
+template <class T> set<T>* set<T>::difference(int, set<T> *other)
 {
     set<T>* result = new set<T>;
     int pos = 0;
@@ -627,20 +658,20 @@ template<class T> set<T> *set<T>::__and__(set<T> *s) {
     return intersection(1, s);
 }
 template<class T> set<T> *set<T>::__or__(set<T> *s) {
-    return __ss_union(s);
+    return __ss_union(1, s);
 }
 template<class T> set<T> *set<T>::__xor__(set<T> *s) {
     return symmetric_difference(s);
 }
 template<class T> set<T> *set<T>::__sub__(set<T> *s) {
-    return difference(s);
+    return difference(1, s);
 }
 template<class T> set<T> *set<T>::__iand__(set<T> *s) {
     *this = intersection(1, s);
     return this;
 }
 template<class T> set<T> *set<T>::__ior__(set<T> *s) {
-    *this = __ss_union(s);
+    *this = __ss_union(1, s);
     return this;
 }
 template<class T> set<T> *set<T>::__ixor__(set<T> *s) {
@@ -648,13 +679,12 @@ template<class T> set<T> *set<T>::__ixor__(set<T> *s) {
     return this;
 }
 template<class T> set<T> *set<T>::__isub__(set<T> *s) {
-    *this = difference(s);
+    *this = difference(1, s);
     return this;
 }
 
-
 template<class T> void *set<T>::difference_update(int, set<T> *s) {
-    set<T> *c = difference(s);
+    set<T> *c = difference(1, s);
     *this = *c; /* XXX don't copy */
     return NULL;
 }
@@ -671,6 +701,12 @@ template<class T> template<class U, class V> void *set<T>::difference_update(int
     return NULL;
 }
 
+template<class T> template<class U, class V, class W> void *set<T>::difference_update(int, U *iter, V *iter2, W *iter3) {
+    difference_update(1, iter);
+    difference_update(1, iter2);
+    difference_update(1, iter3);
+    return NULL;
+}
 
 template<class T> void *set<T>::symmetric_difference_update(set<T> *s) {
     set<T> *c = symmetric_difference(s);
@@ -678,9 +714,27 @@ template<class T> void *set<T>::symmetric_difference_update(set<T> *s) {
     return NULL;
 }
 
-template<class T> void *set<T>::intersection_update(set<T> *s) {
+template<class T> void *set<T>::intersection_update(int, set<T> *s) {
     set<T> *c = intersection(1, s);
     *this = *c;
+    return NULL;
+}
+
+template<class T> template<class U> void *set<T>::intersection_update(int, U *iter) {
+    intersection_update(1, new set<T>(iter));
+    return NULL;
+}
+
+template<class T> template<class U, class V> void *set<T>::intersection_update(int, U *iter, V *iter2) {
+    intersection_update(1, new set<T>(iter));
+    intersection_update(1, new set<T>(iter2));
+    return NULL;
+}
+
+template<class T> template<class U, class V, class W> void *set<T>::intersection_update(int, U *iter, V *iter2, W *iter3) {
+    intersection_update(1, new set<T>(iter));
+    intersection_update(1, new set<T>(iter2));
+    intersection_update(1, new set<T>(iter3));
     return NULL;
 }
 

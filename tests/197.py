@@ -257,9 +257,27 @@ sett.update(range(2,5), range(12,14))
 print sorted(sett)
 sett.update(range(2,5), range(12,14), range(18, 20))
 print sorted(sett)
-print sett.intersection(range(1, 4), range(2, 5)) == set([2])
+
+sett = set(range(4))
+print sorted(sett.union(set(range(6)), (6,7)))
+print sorted(sett.union([5], [3, 4], range(3)))
+print sorted(sett.intersection(range(1, 4), range(2, 5)))
+print sorted(sett.intersection(range(3), [2], range(4)))
+print sorted(sett.difference(range(2), range(3)))
+print sorted(sett.difference(range(2), range(3), [3, 6]))
+
+sett = set(range(4))
+sett.intersection_update(range(2), range(3))
+print sorted(sett)
+sett = set(range(3))
+sett.intersection_update(range(2), range(3), range(4))
+print sorted(sett)
+
 sett = set(range(4))
 sett.difference_update(range(2), range(3))
+print sorted(sett)
+sett = set(range(5))
+sett.difference_update(range(2), range(3), [3, 6])
 print sorted(sett)
 
 #cannot hurt to test this

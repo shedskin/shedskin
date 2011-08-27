@@ -496,7 +496,7 @@ class pyset(pyiter):
     def intersection(self, *b):
         return self
 
-    def difference(self, b):
+    def difference(self, *b):
         return self
     def symmetric_difference(self, b):
         return self
@@ -511,7 +511,7 @@ class pyset(pyiter):
     def __xor__(self, b):
         return self
 
-    def union(self, b):
+    def union(self, *b):
         return self
         return set(b)
 
@@ -548,9 +548,9 @@ class set(pyset):
     def difference_update(self, *b):
         self.__setunit__(iter(b).next())
     def symmetric_difference_update(self, b):
-        self.__setunit__(b.unit)
-    def intersection_update(self, b):
-        pass
+        self.__setunit__(iter(b).next())
+    def intersection_update(self, *b):
+        self.__setunit__(iter(b).next())
 
 class complex:
     def __init__(self, real=None, imag=None):
