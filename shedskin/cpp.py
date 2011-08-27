@@ -2067,7 +2067,6 @@ class generateVisitor(ASTVisitor):
                 # expr[expr] = expr
                 if isinstance(lvalue, Subscript) and not isinstance(lvalue.subs[0], Sliceobj):
                     self.assign_pair(lvalue, rvalue, func)
-                    continue
 
                 # expr.attr = expr
                 elif isinstance(lvalue, AssAttr):
@@ -2075,27 +2074,26 @@ class generateVisitor(ASTVisitor):
                     # property
                     if len(lcp) == 1 and isinstance(lcp[0], class_) and lvalue.attrname in lcp[0].properties:
                         self.visitm(lvalue.expr, '->'+self.cpp_name(lcp[0].properties[lvalue.attrname][1])+'(', rvalue, ')', func)
-                        self.eol()
-                        continue
-                    if len(lcp) == 1 and isinstance(lcp[0], class_):
-                        var = lookupvar(lvalue.attrname, lcp[0])
-                        if assign_needs_cast(rvalue, func, var, lcp[0]):
-                            cast = nodetypestr(var, lcp[0])
-                    self.assign_pair(lvalue, rvalue, func)
-                    self.append(' = ')
+                    elif lcp and isinstance(lcp[0], class_):
+                        vartypes = self.mergeinh[lookupvar(lvalue.attrname, lcp[0])]
+                        self.visit(lvalue, func)
+                        self.append(' = ')
+                        self.visit_conv(rvalue, vartypes, func)
+                    else:
+                        self.visitm(lvalue, ' = ', rvalue, func)
+                    self.eol()
 
                 # name = expr
                 elif isinstance(lvalue, AssName):
-                    var = lookupvar(lvalue.name, func)
-                    if assign_needs_cast(rvalue, func, var, func):
-                        cast = nodetypestr(var, func)
+                    vartypes = self.mergeinh[lookupvar(lvalue.name, func)]
                     self.visit(lvalue, func)
                     self.append(' = ')
+                    self.visit_conv(rvalue, vartypes, func)
+                    self.eol()
 
                 # (a,(b,c), ..) = expr
                 elif isinstance(lvalue, (AssTuple, AssList)):
                     self.tuple_assign(lvalue, rvalue, func)
-                    continue
 
                 # expr[a:b] = expr
                 elif isinstance(lvalue, Slice):
@@ -2107,7 +2105,6 @@ class generateVisitor(ASTVisitor):
                         self.visit_conv(fakefunc.args[4], self.mergeinh[lvalue.expr], func)
                         self.append(')')
                     self.eol()
-                    continue
 
                 # expr[a:b:c] = expr
                 elif isinstance(lvalue, Subscript) and isinstance(lvalue.subs[0], Sliceobj): # XXX see comment above
@@ -2116,18 +2113,6 @@ class generateVisitor(ASTVisitor):
                     self.visit_conv(fakefunc.args[4], self.mergeinh[lvalue.expr], func)
                     self.append(')')
                     self.eol()
-                    continue
-
-                # rvalue, optionally with cast
-                if cast:
-                    self.append('(('+cast+')(')
-                if rvalue in getmv().tempcount:
-                    self.append(getmv().tempcount[rvalue])
-                else:
-                    self.visit(rvalue, func)
-                if cast: self.append('))')
-
-                self.eol()
 
     def assign_pair(self, lvalue, rvalue, func):
         self.start('')
