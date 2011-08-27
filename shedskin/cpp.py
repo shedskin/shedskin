@@ -2077,13 +2077,18 @@ class generateVisitor(ASTVisitor):
                         self.visitm(lvalue.expr, '->'+self.cpp_name(lcp[0].properties[lvalue.attrname][1])+'(', rvalue, ')', func)
                         self.eol()
                         continue
-                    cast = self.var_assign_needs_cast(lvalue, rvalue, func)
+                    if len(lcp) == 1 and isinstance(lcp[0], class_):
+                        var = lookupvar(lvalue.attrname, lcp[0])
+                        if assign_needs_cast(rvalue, func, var, lcp[0]):
+                            cast = nodetypestr(var, lcp[0])
                     self.assign_pair(lvalue, rvalue, func)
                     self.append(' = ')
 
                 # name = expr
                 elif isinstance(lvalue, AssName):
-                    cast = self.var_assign_needs_cast(lvalue, rvalue, func)
+                    var = lookupvar(lvalue.name, func)
+                    if assign_needs_cast(rvalue, func, var, func):
+                        cast = nodetypestr(var, func)
                     self.visit(lvalue, func)
                     self.append(' = ')
 
@@ -2123,23 +2128,6 @@ class generateVisitor(ASTVisitor):
                 if cast: self.append('))')
 
                 self.eol()
-
-    def var_assign_needs_cast(self, expr, rvalue, func):
-        cast = None
-        if isinstance(expr, AssName):
-            var = lookupvar(expr.name, func)
-            if assign_needs_cast(rvalue, func, var, func):
-                cast = nodetypestr(var, func)
-        elif isinstance(expr, AssAttr):
-            lcp = lowest_common_parents(polymorphic_t(self.mergeinh[expr.expr]))
-            if len(lcp) == 1 and isinstance(lcp[0], class_):
-                var = lookupvar(expr.attrname, lcp[0])
-                if assign_needs_cast(rvalue, func, var, lcp[0]):
-                    cast = nodetypestr(var, lcp[0])
-        else:
-            if assign_needs_cast(rvalue, func, expr, func):
-                cast = nodetypestr(expr, func)
-        return cast
 
     def assign_pair(self, lvalue, rvalue, func):
         self.start('')
