@@ -404,3 +404,6 @@ def slicing():
     b[2:] = [None]
     print b
 slicing()
+print [1] or []
+print [] or ['uhm']
+print None or 'waf'
