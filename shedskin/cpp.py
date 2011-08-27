@@ -1617,11 +1617,18 @@ class generateVisitor(ASTVisitor):
             return
 
         # --- default: left, connector, middle, right
+        argtypes = ltypes | rtypes
         self.append('(')
-        self.visit(left, func)
+        if middle == '__add__':
+            self.visit_conv(left, argtypes, func)
+        else:
+            self.visit(left, func)
         self.append(')')
         self.append(self.connector(left, func)+middle+'(')
-        self.visit(right, func)
+        if middle == '__add__':
+            self.visit_conv(right, argtypes, func)
+        else:
+            self.visit(right, func)
         self.append(')')
 
     def do_compare(self, left, right, middle, inline, func=None, prefix=''):
