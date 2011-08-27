@@ -428,3 +428,6 @@ slicing()
 print [1] or []
 print [] or ['uhm']
 print None or 'waf'
+print [1]+[]
+print [[]]+[[1]]
+print [None]+[['uh']]
