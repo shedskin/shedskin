@@ -49,7 +49,7 @@ def propagate(lit, mods):
                 elif cl_len == 2:
                     bincount += 1
 
-        elif fixedt[abs(lit)] != (lit>0):
+        elif fixedt[abs(lit)] != int(lit>0):
             return 0
 
         current += 1
@@ -88,7 +88,7 @@ def length(clause):
     len = 0
     for lit in clause:
         fixed = fixedt[abs(lit)]
-        if fixed == (lit>0):
+        if fixed == int(lit>0):
             return -1
         if fixed == -1:
             len += 1
