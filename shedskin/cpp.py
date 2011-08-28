@@ -830,10 +830,10 @@ class generateVisitor(ASTVisitor):
         for (key, value) in node.items:
             self.visitm('(new tuple2<%s, %s>(2,' % (ts_key, ts_value), func)
             type_child = self.subtypes(argtypes, 'unit')
-            self.visit_conv(key, type_child, func, doublecast=True)
+            self.visit_conv(key, type_child, func)
             self.append(',')
             type_child = self.subtypes(argtypes, 'value')
-            self.visit_conv(value, type_child, func, doublecast=True)
+            self.visit_conv(value, type_child, func)
             self.append('))')
             if (key, value) != node.items[-1]:
                 self.append(',')
@@ -848,14 +848,14 @@ class generateVisitor(ASTVisitor):
             self.append(str(len(children))+',')
         if len(children) >= 2 and self.bin_tuple(argtypes): # XXX >=2?
             type_child = self.subtypes(argtypes, 'first')
-            self.visit_conv(children[0], type_child, func, doublecast=True)
+            self.visit_conv(children[0], type_child, func)
             self.append(',')
             type_child = self.subtypes(argtypes, 'second')
-            self.visit_conv(children[1], type_child, func, doublecast=True)
+            self.visit_conv(children[1], type_child, func)
         else:
             for child in children:
                 type_child = self.subtypes(argtypes, 'unit')
-                self.visit_conv(child, type_child, func, doublecast=True)
+                self.visit_conv(child, type_child, func)
                 if child != children[-1]:
                     self.append(',')
         self.append('))')
@@ -1354,13 +1354,9 @@ class generateVisitor(ASTVisitor):
         self.visit_conv(node.else_, types, func)
         self.append('))')
 
-    def visit_conv(self, node, argtypes, func, doublecast=False, check_temp=True):
+    def visit_conv(self, node, argtypes, func, check_temp=True):
+        # convert/cast node to type it is assigned to
         actualtypes = self.mergeinh[node]
-        inttype = set([(defclass('int_'),0)])
-        floattype = (defclass('float_'),0)
-        double_cast = doublecast and (actualtypes == inttype and floattype in argtypes)
-        if double_cast:
-            self.append('(double)(')
         if check_temp and node in getmv().tempcount: # XXX
             self.append(getmv().tempcount[node])
         elif isinstance(node, Dict):
@@ -1373,21 +1369,20 @@ class generateVisitor(ASTVisitor):
             self.visitCallFunc(node, func, argtypes=argtypes)
         elif isinstance(node, Name) and node.name == 'None':
             self.visit(node, func)
-        else:
-            # XXX prototyping here, merge/rewrite assign_needs_cast_rec later
+        else: # XXX messy
             cast = ''
-            if typestr(actualtypes) != typestr(argtypes):
-                if typestr(actualtypes) == 'void *':
-                    cast = typestr(argtypes)
-                elif assign_needs_cast_rec(actualtypes, argtypes): # XXX
+            if actualtypes and argtypes and typestr(actualtypes) != typestr(argtypes) and typestr(actualtypes) != 'str *': # XXX
+                if incompatible_assignment_rec(actualtypes, argtypes):
                     error("incompatible types", node, warning=True, mv=getmv())
+                else:
+                    cast = '('+typestr(argtypes).strip()+')'
+                    if cast == '(complex)':
+                        cast = 'mcomplex'
             if cast:
-                self.append('(('+cast+')(')
+                self.append('('+cast+'(')
             self.visit(node, func)
             if cast:
                 self.append('))')
-        if double_cast:
-            self.append(')')
 
     def visitBreak(self, node, func=None):
         if getgx().loopstack[-1].else_ in getmv().tempcount:
@@ -2664,6 +2659,8 @@ def typestrnew(types, cplusplus=True, node=None, check_extmod=False, depth=0, ch
         if set(lcp) == set([defclass('int_'),defclass('float_')]):
             return conv['float_']
         elif not node or inode(node).mv.module.builtin:
+            if defclass('complex') in lcp:
+                return conv['complex']
             return '***ERROR*** '
         elif isinstance(node, variable):
             if not node.name.startswith('__') : # XXX startswith
@@ -2675,7 +2672,6 @@ def typestrnew(types, cplusplus=True, node=None, check_extmod=False, depth=0, ch
                 error("tuple with length > 2 and different types of elements", node, warning=True, mv=getmv())
             else:
                 error("expression has dynamic (sub)type: {%s}" % ', '.join([conv2.get(cl.ident, cl.ident) for cl in lcp]), node, warning=True)
-
     elif not classes:
         if cplusplus: return 'void *'
         return ''
@@ -2755,37 +2751,36 @@ def types_var_types(types, varname):
             subtypes.update(getgx().cnode[var, t[1], 0].types())
     return subtypes
 
-def assign_needs_cast_rec(argtypes, formaltypes, depth=0):
+def incompatible_assignment_rec(argtypes, formaltypes, depth=0):
     if depth == 10:
-        raise RuntimeError()
-
+        return False
     argclasses = types_classes(argtypes)
     formalclasses = types_classes(formaltypes)
+    inttype = set([(defclass('int_'),0)])
+    floattype = (defclass('float_'),0)
 
-    # void *
-    noneset = set([defclass('none')])
-    if argclasses == noneset and formalclasses != noneset:
+    # int -> float
+    if depth > 0 and (argtypes == inttype and floattype in formaltypes):
         return True
 
-    # no type, e.g. [[]]
-    if not argclasses and formalclasses:
+    # void * -> non-pointer
+    if not argclasses and [cl for cl in formalclasses if cl.ident in ['int_', 'float_', 'bool_', 'complex']]:
         return True
 
-    # subtype
-    lcp_args, lcp_formals = lowest_common_parents(polymorphic_cl(argclasses)), lowest_common_parents(polymorphic_cl(formalclasses)) # XXX lcp(pol_cl) shortcut
-    if depth > 0 and len(lcp_args) == 1 and len(lcp_formals) == 1 and lcp_args != lcp_formals:
-        return True
-
-    # recurse on tvars
-    if not lcp_formals:
+    # None -> anything
+    if len(argclasses) == 1 and defclass('none') in argclasses:
         return False
-    tvars = lcp_formals[0].tvar_names()
-    if tvars:
-        for tvar in tvars:
-            argvartypes = types_var_types(argtypes, tvar)
-            formalvartypes = types_var_types(formaltypes, tvar)
-            if assign_needs_cast_rec(argvartypes, formalvartypes, depth+1):
-                return True
+
+    # recurse on subvars
+    lcp = lowest_common_parents(polymorphic_cl(formalclasses))
+    if len(lcp) != 1: # XXX
+        return False
+    tvars = lcp[0].tvar_names()
+    for tvar in tvars:
+        argvartypes = types_var_types(argtypes, tvar)
+        formalvartypes = types_var_types(formaltypes, tvar)
+        if incompatible_assignment_rec(argvartypes, formalvartypes, depth+1):
+            return True
     return False
 
 class Bitpair:
