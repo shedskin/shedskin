@@ -299,9 +299,10 @@ class generateVisitor(ASTVisitor):
                 nr, func, func_def_nr = getmv().defaults[default]
                 formal = func.formals[len(func.formals)-len(func.defaults)+func_def_nr]
                 var = func.vars[formal]
-                self.start('default_%d = ' % nr)
-                self.visit_conv(default, self.mergeinh[var], None)
-                self.eol()
+                if self.mergeinh[var]:
+                    self.start('default_%d = ' % nr)
+                    self.visit_conv(default, self.mergeinh[var], None)
+                    self.eol()
 
     def rich_comparison(self):
         cmp_cls, lt_cls, gt_cls, le_cls, ge_cls = [], [], [], [], []
