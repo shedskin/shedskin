@@ -160,7 +160,7 @@ tuple2<double, double> *hsv_to_rgb(double h, double s, double v) {
     p = (v*(1.0-s));
     q = (v*(1.0-(s*f)));
     t = (v*(1.0-(s*(1.0-f))));
-    i = __mods(i, 6);
+    i = __mods(i, (__ss_int)6);
     if ((i==0)) {
         return (new tuple2<double, double>(3,v,t,p));
     }

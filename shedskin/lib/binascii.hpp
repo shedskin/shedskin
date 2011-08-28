@@ -52,7 +52,7 @@ str *a2b_base64(str *string);
 str *b2a_base64(str *data);
 str *a2b_qp(str *string, __ss_bool header);
 str *b2a_qp(str *data, __ss_bool quotetabs, __ss_bool istext, __ss_bool header);
-tuple2<str*,int> *a2b_hqx(str *string);
+tuple2<str*, __ss_int> *a2b_hqx(str *string);
 str *b2a_hqx(str *data);
 str *rledecode_hqx(str *data);
 str *rlecode_hqx(str *data);
