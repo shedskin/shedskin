@@ -1,3 +1,11 @@
+'''
+*** SHED SKIN Python-to-C++ Compiler ***
+Copyright 2005-2011 Mark Dufour; License GNU GPL version 3 (See LICENSE)
+
+makefile.py: generate makefile
+
+'''
+
 import sys
 from distutils import sysconfig
 
