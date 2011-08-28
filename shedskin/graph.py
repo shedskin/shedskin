@@ -554,10 +554,6 @@ class moduleVisitor(ASTVisitor):
         else:
             return AssTuple([self.unpack_rec(elem) for elem in formal])
 
-    def visitAssAttr(self, node, func=None):
-        if node.flags == 'OP_DELETE':
-            error("attribute won't be deleted", node, warning=True, mv=self)
-
     def visitLambda(self, node, func=None):
         lambdanr = len(self.lambdas)
         name = '__lambda%d__' % lambdanr

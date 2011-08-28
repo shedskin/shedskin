@@ -48,8 +48,6 @@ def solve(X, Y, solution):
         for r in list(X[c]):
             solution.append(r)
             cols = select(X, Y, r)
-            #for solution in solve(X, Y, solution): # XXX should work with shedskin!
-            #    yield solution
             for solution in solve(X, Y, solution):
                 yield solution
             deselect(X, Y, r, cols)
