@@ -1,3 +1,5 @@
+# Copyright 2005-2011 Mark Dufour and contributors; License MIT (See LICENSE)
+
 
 PAGESIZE = 0x1000
 ALLOCATIONGRANULARITY = 0x10000

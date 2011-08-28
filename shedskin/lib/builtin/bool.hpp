@@ -1,3 +1,5 @@
+/* Copyright 2005-2011 Mark Dufour and contributors; License MIT (See LICENSE) */
+
 /* bool */
 
 inline __ss_int __ss_bool::operator+(__ss_bool b) { return value+b.value; }

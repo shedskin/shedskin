@@ -1,3 +1,5 @@
+/* Copyright 2005-2011 Mark Dufour and contributors; License MIT (See LICENSE) */
+
 #ifndef __CSV_HPP
 #define __CSV_HPP
 

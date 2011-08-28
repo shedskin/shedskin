@@ -1,3 +1,5 @@
+# Copyright 2005-2011 Mark Dufour and contributors; License MIT (See LICENSE)
+
 
 class array:
     def __init__(self, flag, it=None):

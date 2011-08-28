@@ -1,3 +1,5 @@
+/* Copyright 2005-2011 Mark Dufour and contributors; License MIT (See LICENSE) */
+
 #include "string.hpp"
 #include <stdio.h>
 #include <ctype.h>

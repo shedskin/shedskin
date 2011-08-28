@@ -1,3 +1,5 @@
+# Copyright 2005-2011 Mark Dufour and contributors; License MIT (See LICENSE)
+
 def insort_right(a, x, lo=0, hi=0):
     insort(a, x)
 def insort_left(a, x, lo=0, hi=0):

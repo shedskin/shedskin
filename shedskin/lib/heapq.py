@@ -1,3 +1,5 @@
+# Copyright 2005-2011 Mark Dufour and contributors; License MIT (See LICENSE)
+
 # http://docs.python.org/dev/_sources/library/heapq.txt
 
 def heappush(heap, item):

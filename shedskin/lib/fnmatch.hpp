@@ -1,3 +1,5 @@
+/* Copyright 2005-2011 Mark Dufour and contributors; License MIT (See LICENSE) */
+
 #ifndef __FNMATCH_HPP
 #define __FNMATCH_HPP
 

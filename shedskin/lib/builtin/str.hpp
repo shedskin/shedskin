@@ -1,3 +1,5 @@
+/* Copyright 2005-2011 Mark Dufour and contributors; License MIT (See LICENSE) */
+
 /* str methods */
 
 inline str *str::__getitem__(__ss_int i) {

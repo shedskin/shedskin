@@ -1,3 +1,5 @@
+/* Copyright 2005-2011 Mark Dufour and contributors; License MIT (See LICENSE) */
+
 #ifndef __COLORSYS_HPP
 #define __COLORSYS_HPP
 

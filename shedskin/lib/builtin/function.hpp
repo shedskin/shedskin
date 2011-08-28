@@ -1,3 +1,5 @@
+/* Copyright 2005-2011 Mark Dufour and contributors; License MIT (See LICENSE) */
+
 /* sum */
 
 template<class A> struct __sumtype1 { typedef A type; };

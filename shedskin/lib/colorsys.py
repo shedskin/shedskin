@@ -1,3 +1,5 @@
+# Copyright 2005-2011 Mark Dufour and contributors; License MIT (See LICENSE)
+
 
 ONE_THIRD = 1.0
 ONE_SIXTH = 1.0

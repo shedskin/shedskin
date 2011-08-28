@@ -1,3 +1,5 @@
+/* Copyright 2005-2011 Mark Dufour and contributors; License MIT (See LICENSE) */
+
 /* pow */
 
 inline double __power(__ss_int a, double b) { return pow(a,b); }

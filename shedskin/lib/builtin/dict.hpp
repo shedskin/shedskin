@@ -1,3 +1,5 @@
+/* Copyright 2005-2011 Mark Dufour and contributors; License MIT (See LICENSE) */
+
 /* 
 dict implementation, partially derived from CPython,
 copyright Python Software Foundation (http://www.python.org/download/releases/2.6.2/license/)

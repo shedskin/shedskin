@@ -1,3 +1,5 @@
+# Copyright 2005-2011 Mark Dufour and contributors; License MIT (See LICENSE)
+
 # copied from pypy:
 # https://codespeak.net/viewvc/pypy/dist/lib-python/2.4.1/stat.py?revision=16842&view=markup
 
