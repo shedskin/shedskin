@@ -98,7 +98,7 @@ class Loop_structure_graph(object):
         loop.dump()
 
         for liter in loop.children_:
-            self.dump_rec(liter, indent + 1)
+            pass # self.dump_rec(liter, indent + 1)
 
     def calculate_nesting_level(self):
         # link up all 1st level loops to artificial root node.
