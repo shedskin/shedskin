@@ -236,6 +236,7 @@ class class_:
                 return ['unit', 'value']
             elif self.ident == 'tuple2':
                 return ['first', 'second']
+        return []
 
     def __repr__(self):
         return 'class '+self.ident

@@ -433,3 +433,5 @@ print [[]]+[[1]]
 print [None]+[['uh']]
 print set([]) == set([1])
 print set([1]) == set([1.0])
+print 1==0j
+print [1j]==[1.0]

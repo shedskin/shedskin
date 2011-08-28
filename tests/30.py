@@ -67,7 +67,7 @@ def propagate(lit, mods):                # current: [int], unfixed: [int], mods:
                 elif length == 1: mods.append(unfixed) # []
                 elif length == 2: bincount += 1 # []
 
-        elif fixedt[abs(lit)] != (lit>0): return 0 # [int]
+        elif fixedt[abs(lit)] != int(lit>0): return 0 # [int]
 
         current += 1                     # []
         if current == len(mods): break   # [int]
@@ -102,7 +102,7 @@ def info(clause):                        # lit: [int], clause: [list(int)], unfi
     len, unfixed = 0, 0                  # [int], [int]
     for lit in clause:                   # [int]
         if fixedt[abs(lit)] == -1: unfixed, len = lit, len+1 # [int], [int]
-        elif fixedt[abs(lit)] == (lit>0): return -1, 0 # [tuple(int)]
+        elif fixedt[abs(lit)] == int(lit>0): return -1, 0 # [tuple(int)]
     return len, unfixed                  # [tuple(int)]
 
 def unfixed_vars(): return [var for var in vars[1:] if fixedt[var] == -1] # [list(int)]
