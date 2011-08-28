@@ -1765,10 +1765,12 @@ class generateVisitor(ASTVisitor):
                 self.append('mcomplex(')
                 constructor = False # XXX
             else:
-                if argtypes is not None:
-                    self.append('(new '+typestr(argtypes)[:-2]+'(') # XXX args?
-                else:
-                    self.append('(new '+ts[:-2]+'(')
+                if argtypes is not None: # XXX merge instance_new
+                    ts = typestr(argtypes) 
+                    if ts.startswith('pyseq') or ts.startswith('pyiter'): # XXX
+                        argtypes = getgx().merged_inh[node]
+                        ts = typestr(argtypes)
+                self.append('(new '+ts[:-2]+'(')
             if funcs and len(funcs[0].formals) == 1 and not funcs[0].mv.module.builtin:
                 self.append('1') # don't call default constructor
 
