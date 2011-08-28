@@ -694,7 +694,7 @@ static unsigned char table_a2b_hqx[256] = {
 };
 
 
-tuple2<str*,int> * a2b_hqx(str *pascii) {
+tuple2<str*, __ss_int> *a2b_hqx(str *pascii) {
     __ss_int len = pascii->__len__();
     if (len > PY_SSIZE_T_MAX - 2){
         throw new Error(0); //No memory
@@ -740,7 +740,7 @@ tuple2<str*,int> * a2b_hqx(str *pascii) {
         throw new Error(0); //(Incomplete) String has incomplete number of bytes 
 
     outdata->unit.resize(bin_data-bin_start);
-    return new tuple2<str*,int>(2,outdata,done);
+    return new tuple2<str*, __ss_int>(2,outdata,done);
 }
 
 static unsigned char table_b2a_hqx[] =
