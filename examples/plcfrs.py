@@ -1,5 +1,8 @@
 """
-A natural language parser using RCG (Range Concatenation Grammar).
+A natural language parser for PLCFRS (probabilistic linear context-free
+rewriting systems). PLCFRS is an extension of context-free grammar which
+rewrites tuples of strings instead of strings; this allows it to produce
+parse trees with discontinuous constituents.
 
 Copyright 2011 Andreas van Cranenburgh <andreas@unstable.nl>
 This program is free software: you can redistribute it and/or modify
@@ -16,6 +19,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+from sys import argv, stderr
 from math import exp, log
 from array import array
 from heapq import heappush, heappop, heapify
@@ -30,7 +34,6 @@ def parse(sent, grammar, tags, start, exhaustive):
     lexical = grammar.lexical
     toid = grammar.toid
     tolabel = grammar.tolabel
-    if start == -1: start = toid['S']
     goal = ChartItem(start, (1 << len(sent)) - 1)
     maxA = 0
     blocked = 0
@@ -95,11 +98,12 @@ def parse(sent, grammar, tags, start, exhaustive):
                              e.inside + edge.inside + rule.prob,
                              rule.prob, sibling, item), A, C, exhaustive)
         if len(A) > maxA: maxA = len(A)
-        if len(A) % 10000 == 0:
-            print "agenda max %d, now %d, items %d" % (maxA, len(A), len(C))
-    print "agenda max %d, now %d, items %d (%d labels)," % (
-                                  maxA, len(A), len(C), len(filter(None, Cx))),
-    print "edges %d, blocked %d" % (sum(map(len, C.values())), blocked)
+        #if len(A) % 10000 == 0:
+        #    print "agenda max %d, now %d, items %d" % (maxA, len(A), len(C))
+    stderr.write("agenda max %d, now %d, items %d (%d labels), " % (
+                                maxA, len(A), len(C), len(filter(None, Cx))))
+    stderr.write("edges %d, blocked %d\n"
+							% (sum(map(len, C.values())), blocked))
     if goal not in C: goal = None
     return (C, goal)
 
@@ -204,7 +208,7 @@ def pprint_chart(chart, sent, tolabel):
 
 def do(sent, grammar):
     print "sentence", sent
-    chart, start = parse(sent.split(), grammar, None, -1, False)
+    chart, start = parse(sent.split(), grammar, None, grammar.toid['S'], False)
     pprint_chart(chart, sent.split(), grammar.tolabel)
     if start:
         t, p = mostprobablederivation(chart, start, grammar.tolabel)
@@ -218,8 +222,10 @@ def read_srcg_grammar(rulefile, lexiconfile):
     srules = [line[:len(line)-1].split('\t') for line in open(rulefile)]
     slexicon = [line[:len(line)-1].split('\t') for line in open(lexiconfile)]
     rules = [((tuple(a[:len(a)-2]), tuple(tuple(map(int, b))
-            for b in a[len(a)-2].split(","))), float(a[len(a)-1])) for a in srules]
-    lexicon = [((tuple(a[:len(a)-2]), a[len(a)-2]), float(a[len(a)-1])) for a in slexicon]
+                    for b in a[len(a)-2].split(","))),
+                float(a[len(a)-1])) for a in srules]
+    lexicon = [((tuple(a[:len(a)-2]), a[len(a)-2]), float(a[len(a)-1]))
+                    for a in slexicon]
     return rules, lexicon
 
 def splitgrammar(grammar, lexicon):
@@ -227,8 +233,8 @@ def splitgrammar(grammar, lexicon):
     labels to numeric identifiers. Also negates log-probabilities to
     accommodate min-heaps.
     Can only represent ordered SRCG rules (monotone LCFRS). """
-    # get a list of all nonterminals; make sure Epsilon and ROOT are first, and
-    # assign them unique IDs
+    # get a list of all nonterminals; make sure Epsilon and ROOT are first,
+    # and assign them unique IDs
     nonterminals = list(enumerate(["Epsilon", "ROOT"]
         + sorted(set(nt for (rule, yf), weight in grammar for nt in rule)
             - set(["Epsilon", "ROOT"]))))
@@ -331,7 +337,7 @@ class ChartItem:
         self.label = label      #the category of this item (NP/PP/VP etc)
         self.vec = vec          #bitvector describing the spans of this item
     def __hash__(self):
-        #form some reason this does not work well:
+        #form some reason this does not work well w/shedskin:
         #h = self.label ^ (self.vec << 31) ^ (self.vec >> 31)
         #the DJB hash function:
         h = ((5381 << 5) + 5381) * 33 ^ self.label
@@ -421,49 +427,78 @@ class agenda(object):
         del self.mapping[entry.key]
         return entry.key, entry.value
 
-
-def heavytest():
-    try: rules, lexicon = read_srcg_grammar("testdata/rules.srcg", "testdata/lexicon.srcg")
-    except IOError:
-        print "large grammar not found."
-        return
+def batch(rulefile, lexiconfile, sentfile):
+    rules, lexicon = read_srcg_grammar(rulefile, lexiconfile)
+    root = rules[0][0][0][0]
     grammar = splitgrammar(rules, lexicon)
-    wordstags = "Diese/PDAT Ansicht/NN vertrat/VVFIN am/APPRART Donnerstag/NN ein/ART leitender/ADJA Arzt/NN der/ART Heidelberger/ADJA Rehabilitationsklinik/NN ,/$, Wolfgang/NE Huber/NE ,/$, im/APPRART sogenannten/ADJA Holzschutzmittelprozess/NN vor/APPR dem/ART Frankfurter/ADJA Landgericht/NN ./$."
+    lines = open(sentfile).read().splitlines()
+    sents = [[a.split("/") for a in sent.split()] for sent in lines]
+    for wordstags in sents:
+        sent = [a[0] for a in wordstags]
+        tags = [a[1] for a in wordstags]
+        stderr.write("parsing: %s\n" % " ".join(sent))
+        chart, start = parse(sent, grammar, tags, grammar.toid[root], False)
+        if start:
+            t, p = mostprobablederivation(chart, start, grammar.tolabel)
+            print "p=%g\n%s\n\n" % (exp(-p), t)
+        else: print "no parse\n"
 
-    sent = [a.split("/")[0] for a in wordstags.split()]
-    tags = [a.split("/")[1] for a in wordstags.split()]
-    chart, start = parse(sent, grammar, tags, grammar.toid['ROOT'], False)
-    assert start
-    t, p = mostprobablederivation(chart, start, grammar.tolabel)
-    print exp(-p), t, '\n'
-
-def main():
+def demo():
     rules = [
         ((('S','VP2','VMFIN'),    ((0,1,0),)),   log(1.0)),
         ((('VP2','VP2','VAINF'),  ((0,),(0,1))), log(0.5)),
         ((('VP2','PROAV','VVPP'), ((0,),(1,))),  log(0.5)),
         ((('VP2','VP2'),          ((0,),(0,))),  log(0.1))]
     lexicon = [
-        ((('PROAV', 'Epsilon'), 'Daruber'),     0.0),
+        ((('PROAV', 'Epsilon'), 'Darueber'),     0.0),
         ((('VAINF', 'Epsilon'), 'werden'),      0.0),
         ((('VMFIN', 'Epsilon'), 'muss'),        0.0),
         ((('VVPP', 'Epsilon'),  'nachgedacht'), 0.0)]
     grammar = splitgrammar(rules, lexicon)
 
-    chart, start = parse("Daruber muss nachgedacht werden".split(),
+    chart, start = parse("Darueber muss nachgedacht werden".split(),
           grammar, "PROAV VMFIN VVPP VAINF".split(), grammar.toid['S'], False)
-    pprint_chart(chart, "Daruber muss nachgedacht werden".split(),
+    pprint_chart(chart, "Darueber muss nachgedacht werden".split(),
           grammar.tolabel)
     assert (mostprobablederivation(chart, start, grammar.tolabel) ==
         ('(S (VP2 (VP2 (PROAV 0) (VVPP 2)) (VAINF 3)) (VMFIN 1))', -log(0.25)))
-    assert do("Daruber muss nachgedacht werden", grammar)
-    assert do("Daruber muss nachgedacht werden werden", grammar)
-    assert do("Daruber muss nachgedacht werden werden werden", grammar)
+    assert do("Darueber muss nachgedacht werden", grammar)
+    assert do("Darueber muss nachgedacht werden werden", grammar)
+    assert do("Darueber muss nachgedacht werden werden werden", grammar)
     print "ungrammatical sentence:"
-    assert not do("werden nachgedacht muss Daruber", grammar)
+    assert not do("werden nachgedacht muss Darueber", grammar)
     print "(as expected)\n"
-    heavytest()
-    print 'it worked'
 
 if __name__ == '__main__':
-    main()
+    if len(argv) == 4:
+        batch(argv[1], argv[2], argv[3])
+    else:
+        demo()
+        print """usage: %s grammar lexicon sentences
+
+grammar is a tab-separated text file with one rule per line, in this format:
+
+LHS	RHS1	RHS2	YIELD-FUNC	LOGPROB
+e.g., S	NP	VP	[01,10]	0.1
+
+LHS, RHS1, and RHS2 are strings specifying the labels of this rule.
+The yield function is described by a list of bit vectors such as [01,10],
+where 0 is a variable that refers to a contribution by RHS1, and 1 refers to
+one by RHS2. Adjacent variables are concatenated, comma-separated components
+indicate discontinuities.
+The final element of a rule is its log probability.
+The LHS of the first rule will be used as the start symbol.
+
+lexicon is also tab-separated, in this format:
+
+WORD	Epsilon	TAG	LOGPROB
+e.g., nachgedacht	Epsilon	VVPP	0.1
+
+Finally, sentences is a file with one sentence per line, consisting of a space
+separated list of word/tag pairs, for example:
+
+Darueber/PROAV muss/VMFIN nachgedacht/VVPP werden/VAINF
+
+The output consists of Viterbi parse trees where terminals have been replaced
+by indices; this makes it possible to express discontinuities in otherwise
+context-free trees.""" % argv[0]
