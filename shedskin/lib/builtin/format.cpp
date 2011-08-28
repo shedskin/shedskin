@@ -1,3 +1,5 @@
+/* Copyright 2005-2011 Mark Dufour and contributors; License MIT (See LICENSE) */
+
 /* mod helpers */
 
 #if defined(WIN32) || defined(__sun)

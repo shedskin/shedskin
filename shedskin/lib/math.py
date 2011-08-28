@@ -1,3 +1,5 @@
+# Copyright 2005-2011 Mark Dufour and contributors; License MIT (See LICENSE)
+
 
 e = 2.7182818284590451
 pi = 3.1415926535897931

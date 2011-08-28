@@ -1,3 +1,5 @@
+/* Copyright 2005-2011 Mark Dufour and contributors; License MIT (See LICENSE) */
+
 /*
  * Implementation of the Python 2.5.1 socket module for Shed Skin
  * by: Michael Elkins <me@cs.hmc.edu>

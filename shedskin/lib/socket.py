@@ -1,3 +1,5 @@
+# Copyright 2005-2011 Mark Dufour and contributors; License MIT (See LICENSE)
+
 # model for module socket for shed skin
 # from python 2.5.1 documentation
 

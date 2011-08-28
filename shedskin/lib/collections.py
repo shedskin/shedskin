@@ -1,3 +1,5 @@
+# Copyright 2005-2011 Mark Dufour and contributors; License MIT (See LICENSE)
+
 class deque(pyiter):
     def __init__(self, iterable=None):
         self.unit = iterable.unit

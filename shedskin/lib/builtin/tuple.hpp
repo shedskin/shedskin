@@ -1,3 +1,5 @@
+/* Copyright 2005-2011 Mark Dufour and contributors; License MIT (See LICENSE) */
+
 /* tuple2 methods */
 
 template<class T> void tuple2<T, T>::__init2__(T a, T b) {

@@ -1,3 +1,5 @@
+# Copyright 2005-2011 Mark Dufour and contributors; License MIT (See LICENSE)
+
 
 I = IGNORECASE = 2
 L = LOCALE = 4

@@ -1,3 +1,5 @@
+/* Copyright 2005-2011 Mark Dufour and contributors; License MIT (See LICENSE) */
+
 #if defined(_MSC_VER) && _MSC_VER>=1400
 
 /* logical operator keywords */

@@ -1,3 +1,5 @@
+/* Copyright 2005-2011 Mark Dufour and contributors; License MIT (See LICENSE) */
+
 /* bool methods */
 
 bool_::bool_(__ss_bool i) {

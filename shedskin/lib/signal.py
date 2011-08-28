@@ -1,3 +1,5 @@
+# Copyright 2005-2011 Mark Dufour and contributors; License MIT (See LICENSE)
+
 SIGABRT = 1
 SIGALRM = 1
 SIGBUS = 1
