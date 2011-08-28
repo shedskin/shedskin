@@ -2755,15 +2755,6 @@ def types_var_types(types, varname):
             subtypes.update(getgx().cnode[var, t[1], 0].types())
     return subtypes
 
-# --- assignment (incl. passing arguments, returning values) may require a cast
-def assign_needs_cast(arg, func, formal, target):
-    argtypes = getgx().merged_inh[arg]
-    formaltypes = getgx().merged_inh[formal]
-    try:
-        return assign_needs_cast_rec(argtypes, formaltypes)
-    except RuntimeError:
-        return False
-
 def assign_needs_cast_rec(argtypes, formaltypes, depth=0):
     if depth == 10:
         raise RuntimeError()
