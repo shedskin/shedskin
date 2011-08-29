@@ -2666,9 +2666,14 @@ def typestrnew(types, cplusplus=True, node=None, check_extmod=False, depth=0, ch
         if set(lcp) == set([defclass('int_'),defclass('float_')]):
             return conv['float_']
         elif not node or inode(node).mv.module.builtin:
-            if defclass('complex') in lcp:
+            if defclass('complex') in lcp: # XXX
                 return conv['complex']
-            return '***ERROR*** '
+            elif defclass('float_') in lcp:
+                return conv['float_']
+            elif defclass('int_') in lcp:
+                return conv['int_']
+            else:
+                return '***ERROR*** '
         elif isinstance(node, variable):
             if not node.name.startswith('__') : # XXX startswith
                 if node.parent: varname = "%s" % node
@@ -2763,11 +2768,16 @@ def incompatible_assignment_rec(argtypes, formaltypes, depth=0):
         return False
     argclasses = types_classes(argtypes)
     formalclasses = types_classes(formaltypes)
-    inttype = set([(defclass('int_'),0)])
+    inttype = (defclass('int_'),0)
+    booltype = (defclass('bool_'),0)
     floattype = (defclass('float_'),0)
 
     # int -> float
-    if depth > 0 and (argtypes == inttype and floattype in formaltypes):
+    if depth > 0 and (argtypes == set([inttype]) and floattype in formaltypes):
+        return True
+
+    # bool -> int
+    if depth > 0 and (argtypes == set([booltype]) and inttype in formaltypes):
         return True
 
     # void * -> non-pointer
