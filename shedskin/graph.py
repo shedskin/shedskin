@@ -812,7 +812,7 @@ class moduleVisitor(ASTVisitor):
             self.visit(child, func)
             self.fakefunc(inode(child), child, '__str__', [], func)
 
-    def tempvar(self, node, func=None, looper=None):
+    def tempvar(self, node, func=None, looper=None, wopper=None):
         if node in getgx().parent_nodes:
             varname = self.tempcount[getgx().parent_nodes[node]]
         elif node in self.tempcount: # XXX investigate why this happens
@@ -822,6 +822,7 @@ class moduleVisitor(ASTVisitor):
 
         var = defaultvar(varname, func)
         var.looper = looper
+        var.wopper = wopper
         self.tempcount[node] = varname
 
         register_tempvar(var, func)
@@ -955,6 +956,9 @@ class moduleVisitor(ASTVisitor):
                     self.tempvar_int((node,4), func)
 
             self.tempvar((node,5), func, looper=node.list)
+            if isinstance(node.list, CallFunc) and isinstance(node.list.node, Getattr):
+                self.tempvar((node,6), func, wopper=node.list.node.expr)
+                self.tempvar2((node,7), inode(node.list.node.expr), func)
 
     def bool_test_add(self, node):
         if isinstance(node, (And, Or, Not)):
