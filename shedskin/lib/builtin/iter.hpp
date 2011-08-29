@@ -20,7 +20,7 @@
         __ ## i ++; \
         e = __ ## temp->for_in_next(__ ## t);
 
-#define FOR_IN_ZIP(a,b, k,l, t,u, n,m) \
+#define FOR_IN_ZIP(a, b, k, l, t, u, n, m) \
     __ ## m = __SS_MIN(k->units.size(), l->units.size()); \
     __ ## t = k; \
     __ ## u = l; \
@@ -32,6 +32,11 @@
     __ ## temp = m; \
     for(__ ## n = 0; (unsigned int)__ ## n < (__ ## temp)->units.size(); __ ## n ++) { \
         i = (__ ## temp)->units[__ ## n]; \
+
+#define FOR_IN_DICT(m, temp, entry, pos) \
+    __ ## temp = m; \
+    __ ## pos = 0; \
+	while (__ ## temp->next(& __ ## pos, & __ ## entry)) { \
 
 #define END_FOR }
 

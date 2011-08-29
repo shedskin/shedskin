@@ -1012,6 +1012,9 @@ class generateVisitor(ASTVisitor):
         names = ('tuple', 'list')
         return is_zip2(node) and self.only_classes(node.list.args[0], names) and self.only_classes(node.list.args[1], names)
 
+    def fastdictiter(self, node):
+        return isinstance(node.list, CallFunc) and isinstance(node.assign, (AssList, AssTuple)) and self.only_classes(node.list.node, ('dict',)) and isinstance(node.list.node, Getattr) and node.list.node.attrname == 'iteritems'
+
     def only_classes(self, node, names):
         classes = [defclass(name) for name in names]+[defclass('none')]
         return not [t for t in self.mergeinh[node] if t[0] not in classes]
@@ -1037,6 +1040,9 @@ class generateVisitor(ASTVisitor):
         elif self.fastzip2(node):
             self.do_fastzip2(node, func, False)
             self.forbody(node, None, assname, func, True, False)
+#        elif self.fastdictiter(node):
+#            self.do_fastdictiter(node, func, False)
+#            self.forbody(node, None, assname, func, True, False)
         else:
             pref, tail = self.forin_preftail(node)
             self.start('FOR_IN%s(%s,' % (pref, assname))
@@ -1077,6 +1083,22 @@ class generateVisitor(ASTVisitor):
         self.indent()
         self.start()
         self.visitm(left, ' = '+getmv().tempcount[node.list], func)
+        self.eol()
+        if isinstance(right, (AssTuple, AssList)):
+            self.tuple_assign(right, getmv().tempcount[right], func)
+
+    def do_fastdictiter(self, node, func, genexpr):
+        self.start('FOR_IN_DICT(')
+        left, right = node.assign.nodes
+        tail = getmv().tempcount[node,7][2:]+','+getmv().tempcount[node,6][2:]+','+getmv().tempcount[node.list][2:]
+        self.visit(node.list.node.expr, func)
+        print >>self.out, self.line+','+tail+')'
+        self.indent()
+        self.start()
+        self.visitm(left, ' = %s->key' % getmv().tempcount[node,6], func)
+        self.eol()
+        self.start()
+        self.visitm(right, ' = %s->value' % getmv().tempcount[node,6], func)
         self.eol()
         if isinstance(right, (AssTuple, AssList)):
             self.tuple_assign(right, getmv().tempcount[right], func)
@@ -2615,6 +2637,10 @@ def namespaceclass(cl, add_cl=''):
 def nodetypestr(node, parent=None, cplusplus=True, check_extmod=False, check_ret=False, var=None): # XXX minimize
     if cplusplus and isinstance(node, variable) and node.looper: # XXX to declaredefs?
         return nodetypestr(node.looper, None, cplusplus)[:-2]+'::for_in_loop '
+    if cplusplus and isinstance(node, variable) and node.wopper: # XXX to declaredefs?
+        ts = nodetypestr(node.wopper, None, cplusplus)
+        if ts.startswith('dict<'):
+            return 'dictentry'+ts[4:]
     types = getgx().merged_inh[node]
     return typestr(types, None, cplusplus, node, check_extmod, 0, check_ret, var)
 
