@@ -435,3 +435,7 @@ print set([]) == set([1])
 print set([1]) == set([1.0])
 print 1==0j
 print [1j]==[1.0]
+print 0 == True, 1 == True, 2 == True
+print 0 == False, 1 == False, 2 == False
+print [x == True for x in range(3)]
+print [1] == [True]

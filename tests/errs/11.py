@@ -24,9 +24,13 @@ c = [[1.0]]
 c = [[1]]
 c = r
 
+bp = [True]
+print [1] == bp
+
 #*WARNING* 11.py:3: incompatible types
 #*WARNING* 11.py:4: incompatible types
 #*WARNING* 11.py:6: incompatible types
 #*WARNING* 11.py:14: incompatible types
 #*WARNING* 11.py:20: incompatible types
 #*WARNING* 11.py:25: incompatible types
+#*WARNING* 11.py:28: incompatible types
