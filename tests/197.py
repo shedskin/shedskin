@@ -451,8 +451,10 @@ def fastdictiteritems():
     print [(a, b) for a,b in d.iteritems()]
     print [c for c in d.iteritems()]
 
-
     d2 = {(3,4): (4,5)}
     for (e,f), (g,h) in d2.iteritems():
         print e,f,g,h
+
+    d3 = {1.0: 'hallo'}
+    print [(x, y) for x,y in d3.iteritems()]
 fastdictiteritems()
