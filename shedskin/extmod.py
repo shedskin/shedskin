@@ -8,6 +8,7 @@ extmod.py: extension module support
 
 from shared import *
 import cpp
+import typestr
 
 OVERLOAD_SINGLE = ['__neg__', '__pos__', '__abs__', '__nonzero__']
 OVERLOAD = ['__add__', '__sub__', '__mul__', '__div__', '__mod__', '__divmod__', '__pow__'] + OVERLOAD_SINGLE
@@ -136,7 +137,7 @@ def do_extmod_method(gv, func):
 
     for i, formal in enumerate(formals):
         gv.start('')
-        typ = cpp.nodetypestr(func.vars[formal], func)
+        typ = typestr.nodetypestr(func.vars[formal], func)
         if func.ident in OVERLOAD:
             print >>gv.out, '        %(type)sarg_%(num)d = __to_ss<%(type)s>(args);' % {'type' : typ, 'num' : i}
             continue
@@ -187,9 +188,9 @@ def supported_funcs(gv, funcs):
         builtins = True
         for formal in func.formals:
             try:
-                cpp.nodetypestr(func.vars[formal], func, check_extmod=True)
-                cpp.nodetypestr(func.retnode.thing, func, check_extmod=True, check_ret=True)
-            except cpp.ExtmodError:
+                typestr.nodetypestr(func.vars[formal], func, check_extmod=True)
+                typestr.nodetypestr(func.retnode.thing, func, check_extmod=True, check_ret=True)
+            except typestr.ExtmodError:
                 builtins = False
         if builtins:
             supported.append(func)
@@ -207,11 +208,11 @@ def supported_vars(vars): # XXX virtuals?
             continue
         if var.name.startswith('__'): # XXX
             continue
-        if var.invisible or cpp.singletype2(getgx().merged_inh[var], module):
+        if var.invisible or singletype2(getgx().merged_inh[var], module):
             continue
         try:
-            typehu = cpp.nodetypestr(var, var.parent, check_extmod=True)
-        except cpp.ExtmodError:
+            typehu = typestr.nodetypestr(var, var.parent, check_extmod=True)
+        except typestr.ExtmodError:
             if isinstance(var.parent, class_):
                 print '*WARNING* variable not exported:', var.parent.ident+'.'+var.name
             else:
@@ -277,7 +278,7 @@ def do_extmod_class(gv, cl):
 
         print >>gv.out, 'int __ss_set_%s_%s(%sObject *self, PyObject *value, void *closure) {' % (clname(cl), var.name, clname(cl))
         print >>gv.out, '    try {'
-        typ = cpp.nodetypestr(var, var.parent)
+        typ = typestr.nodetypestr(var, var.parent)
         if typ == 'void *': # XXX investigate
             print >>gv.out, '        self->__ss_object->%s = NULL;' % var.cpp_name()
         else:
@@ -373,7 +374,7 @@ def do_reduce_setstate(gv, cl, vars):
     print >>gv.out, '    int l = PyTuple_Size(args);'
     print >>gv.out, '    PyObject *state = PyTuple_GetItem(args, 0);'
     for i, var in enumerate(vars):
-        vartype = cpp.nodetypestr(var, var.parent)
+        vartype = typestr.nodetypestr(var, var.parent)
         print >>gv.out, '    ((%sObject *)self)->__ss_object->%s = __to_ss<%s>(PyTuple_GetItem(state, %d));' % (clname(cl), var.cpp_name(), vartype, i)
     print >>gv.out, '    return Py_None;'
     print >>gv.out, '}\n'
