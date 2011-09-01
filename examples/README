@@ -40,6 +40,7 @@ lines  name                 description                     notes
    130 adatron.py           Adatron SVM with polynomial kernel
    222 block.py             Huffman block compressor
    329 kanoodle.py          Knuth's dancing links
+   118 kmeanspp.py          K-means++ Clustering
    270 loop.py              Havlak loop recognition algorithm
     26 mandelbrot.py        mandelbrot fractal
    108 mandelbrot2_main.py  interactive mandelbrot fractal  shedskin -e mandelbrot2 && make && python mandelbrot2_main.py
