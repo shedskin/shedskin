@@ -439,3 +439,20 @@ print 0 == True, 1 == True, 2 == True
 print 0 == False, 1 == False, 2 == False
 print [x == True for x in range(3)]
 print [1] == [True]
+
+# for .., .. in somedict.iteritems()
+def fastdictiteritems():
+    d = {3: 4}
+    for a,b in d.iteritems():
+        print a, b
+    for c in d.iteritems():
+        print c
+
+    print [(a, b) for a,b in d.iteritems()]
+    print [c for c in d.iteritems()]
+
+
+    d2 = {(3,4): (4,5)}
+    for (e,f), (g,h) in d2.iteritems():
+        print e,f,g,h
+fastdictiteritems()
