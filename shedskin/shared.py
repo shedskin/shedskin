@@ -911,3 +911,33 @@ def subclass(a, b):
         return True
     else:
         return a.bases and subclass(a.bases[0], b) # XXX mult inh
+
+def singletype(node, type):
+    types = [t[0] for t in inode(node).types()]
+    if len(types) == 1 and isinstance(types[0], type):
+        return types[0]
+
+def singletype2(types, type):
+    ltypes = list(types)
+    if len(types) == 1 and isinstance(ltypes[0][0], type):
+        return ltypes[0][0]
+
+def namespaceclass(cl, add_cl=''):
+    module = cl.mv.module
+    if module.ident != 'builtin' and module != getmv().module and module.mod_path:
+        return module.full_path()+'::'+add_cl+nokeywords(cl.ident)
+    else:
+        return add_cl+nokeywords(cl.ident)
+
+def types_classes(types):
+    return set([t[0] for t in types if isinstance(t[0], class_)])
+
+def types_var_types(types, varname):
+    subtypes = set()
+    for t in types:
+        if not varname in t[0].vars:
+            continue
+        var = t[0].vars[varname]
+        if (var, t[1], 0) in getgx().cnode:
+            subtypes.update(getgx().cnode[var, t[1], 0].types())
+    return subtypes
