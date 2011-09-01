@@ -1016,6 +1016,8 @@ class generateVisitor(ASTVisitor):
         return isinstance(node.list, CallFunc) and isinstance(node.assign, (AssList, AssTuple)) and self.only_classes(node.list.node, ('dict',)) and isinstance(node.list.node, Getattr) and node.list.node.attrname == 'iteritems'
 
     def only_classes(self, node, names):
+        if node not in self.mergeinh:
+            return False
         classes = [defclass(name) for name in names]+[defclass('none')]
         return not [t for t in self.mergeinh[node] if t[0] not in classes]
 
@@ -1040,9 +1042,9 @@ class generateVisitor(ASTVisitor):
         elif self.fastzip2(node):
             self.do_fastzip2(node, func, False)
             self.forbody(node, None, assname, func, True, False)
-#        elif self.fastdictiter(node):
-#            self.do_fastdictiter(node, func, False)
-#            self.forbody(node, None, assname, func, True, False)
+        elif self.fastdictiter(node):
+            self.do_fastdictiter(node, func, False)
+            self.forbody(node, None, assname, func, True, False)
         else:
             pref, tail = self.forin_preftail(node)
             self.start('FOR_IN%s(%s,' % (pref, assname))
@@ -1095,11 +1097,19 @@ class generateVisitor(ASTVisitor):
         print >>self.out, self.line+','+tail+')'
         self.indent()
         self.start()
-        self.visitm(left, ' = %s->key' % getmv().tempcount[node,6], func)
+        if left in getmv().tempcount: # XXX not for zip, enum..?
+            self.visitm('%s = %s->key' % (getmv().tempcount[left], getmv().tempcount[node,6]), func)
+        else:
+            self.visitm(left, ' = %s->key' % getmv().tempcount[node,6], func)
         self.eol()
         self.start()
-        self.visitm(right, ' = %s->value' % getmv().tempcount[node,6], func)
+        if right in getmv().tempcount:
+            self.visitm('%s = %s->value' % (getmv().tempcount[right], getmv().tempcount[node,6]), func)
+        else:
+            self.visitm(right, ' = %s->value' % getmv().tempcount[node,6], func)
         self.eol()
+        if isinstance(left, (AssTuple, AssList)):
+            self.tuple_assign(left, getmv().tempcount[left], func)
         if isinstance(right, (AssTuple, AssList)):
             self.tuple_assign(right, getmv().tempcount[right], func)
 
@@ -2300,6 +2310,9 @@ class generateVisitor(ASTVisitor):
             self.listcompfor_body(node, quals, iter, lcfunc, True, genexpr)
         elif self.fastzip2(qual):
             self.do_fastzip2(qual, lcfunc, genexpr)
+            self.listcompfor_body(node, quals, iter, lcfunc, True, genexpr)
+        elif self.fastdictiter(qual):
+            self.do_fastdictiter(qual, lcfunc, genexpr)
             self.listcompfor_body(node, quals, iter, lcfunc, True, genexpr)
         else:
             if not isinstance(qual.list, Name):
