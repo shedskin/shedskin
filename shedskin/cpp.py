@@ -14,6 +14,7 @@ import textwrap, string, struct
 
 from shared import *
 from struct_ import *
+from copy_ import *
 from makefile import *
 import extmod
 
@@ -598,20 +599,13 @@ class generateVisitor(ASTVisitor):
             self.deindent()
             self.output('}')
 
-        # --- virtual methods
+        # --- methods
         if cl.virtuals:
             self.virtuals(cl, True)
-
-        # --- regular methods
         for func in cl.funcs.values():
             if func.node and not (func.ident=='__init__' and func.inherited):
                 self.visitFunction(func.node, cl, True)
-
-        if cl.has_copy and not 'copy' in cl.funcs:
-            self.copy_method(cl, '__copy__', True)
-        if cl.has_deepcopy and not 'deepcopy' in cl.funcs:
-            self.copy_method(cl, '__deepcopy__', True)
-
+        copy_methods(self, cl, True)
         if getgx().extension_module:
             extmod.convert_methods(self, cl, True)
 
@@ -634,10 +628,7 @@ class generateVisitor(ASTVisitor):
         for func in cl.funcs.values():
             if func.node and not (func.ident=='__init__' and func.inherited):
                 self.visitFunction(func.node, cl, False)
-        if cl.has_copy and not 'copy' in cl.funcs:
-            self.copy_method(cl, '__copy__', False)
-        if cl.has_deepcopy and not 'deepcopy' in cl.funcs:
-            self.copy_method(cl, '__deepcopy__', False)
+        copy_methods(self, cl, False)
 
         # --- class variable declarations
         if cl.parent.vars: # XXX merge with visitModule
@@ -676,40 +667,6 @@ class generateVisitor(ASTVisitor):
 
         if [v for v in cl.vars if not v.startswith('__')]:
             print >>self.out
-
-    def copy_method(self, cl, name, declare): # XXX merge?
-        header = nokeywords(cl.ident)+' *'
-        if not declare:
-            header += nokeywords(cl.ident)+'::'
-        header += name+'('
-        self.start(header)
-
-        if name == '__deepcopy__':
-            self.append('dict<void *, pyobj *> *memo')
-        self.append(')')
-
-        if not declare:
-            print >>self.out, self.line+' {'
-            self.indent()
-            self.output(nokeywords(cl.ident)+' *c = new '+nokeywords(cl.ident)+'();')
-            if name == '__deepcopy__':
-                self.output('memo->__setitem__(this, c);')
-
-            for var in cl.vars.values():
-                if var in getgx().merged_inh and getgx().merged_inh[var]:
-                    varname = var.name
-                    if var.masks_global(): # XXX merge
-                        varname = '_'+varname
-                    if name == '__deepcopy__':
-                        self.output('c->%s = __deepcopy(%s);' % (varname, varname))
-                    else:
-                        self.output('c->%s = %s;' % (varname, varname))
-            self.output('return c;')
-
-            self.deindent()
-            self.output('}\n')
-        else:
-            self.eol()
 
     def virtuals(self, cl, declare):
         for ident, subclasses in cl.virtuals.items():
