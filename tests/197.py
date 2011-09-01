@@ -458,3 +458,18 @@ def fastdictiteritems():
     d3 = {1.0: 'hallo'}
     print [(x, y) for x,y in d3.iteritems()]
 fastdictiteritems()
+
+# deepcopy improvement
+import copy
+class A:
+    pass
+class B:
+    pass
+def copytest():
+    a = A()
+    a.b = B()
+    c = copy.deepcopy(a)
+    a.b.x = 18
+    c.b.x = 19
+    print a.b.x, c.b.x
+copytest()
