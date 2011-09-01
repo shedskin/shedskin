@@ -697,10 +697,13 @@ class generateVisitor(ASTVisitor):
 
             for var in cl.vars.values():
                 if var in getgx().merged_inh and getgx().merged_inh[var]:
+                    varname = var.name
+                    if var.masks_global(): # XXX merge
+                        varname = '_'+varname
                     if name == '__deepcopy__':
-                        self.output('c->%s = __deepcopy(%s);' % (var.name, var.name))
+                        self.output('c->%s = __deepcopy(%s);' % (varname, varname))
                     else:
-                        self.output('c->%s = %s;' % (var.name, var.name))
+                        self.output('c->%s = %s;' % (varname, varname))
             self.output('return c;')
 
             self.deindent()
