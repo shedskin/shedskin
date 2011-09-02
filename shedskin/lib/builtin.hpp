@@ -58,7 +58,6 @@ class __ss_bool;
 class float_;
 class file;
 class bool_;
-class complex;
 
 template <class T> class pyiter;
 template <class T> class pyseq;
@@ -697,6 +696,21 @@ public:
     str *next();
 };
 
+class complex {
+public:
+    double real, imag;
+    inline complex() {}
+    inline complex(double r, double i) { real = r; imag = i; }
+    inline complex operator+(complex b) { return complex(real+b.real, imag+b.imag); }
+};
+
+inline complex operator+(__ss_int a, complex b) {
+    return complex(a+b.real, b.imag);
+}
+inline complex operator*(__ss_int a, complex b) {
+    return complex(a*b.real, a*b.imag);
+}
+
 class __ss_bool {
 public:
     int value;
@@ -709,62 +723,6 @@ public:
     inline operator bool();
 };
 
-class complex : public pyobj {
-public:
-    double real, imag;
-
-    complex(double real=0.0, double imag=0.0);
-    template<class T> complex(T t);
-    complex(str *s);
-
-    complex *__add__(complex *b);
-    complex *__add__(double b);
-    complex *__iadd__(complex *b);
-    complex *__iadd__(double b);
-
-    complex *__sub__(complex *b);
-    complex *__sub__(double b);
-    complex *__rsub__(double b);
-    complex *__isub__(complex *b);
-    complex *__isub__(double b);
-
-    complex *__mul__(complex *b);
-    complex *__mul__(double b);
-    complex *__imul__(complex *b);
-    complex *__imul__(double b);
-
-    complex *__div__(complex *b);
-    complex *__div__(double b);
-    complex *__rdiv__(double b);
-    complex *__idiv__(complex *b);
-    complex *__idiv__(double b);
-
-    complex *__floordiv__(complex *b);
-    complex *__floordiv__(double b);
-    complex *__mod__(complex *b);
-    complex *__mod__(double b);
-    tuple2<complex *, complex *> *__divmod__(complex *b);
-    tuple2<complex *, complex *> *__divmod__(double b);
-
-    complex *conjugate();
-    complex *__pos__();
-    complex *__neg__();
-    double __abs__();
-
-    str *__repr__();
-
-    complex *parsevalue(str *s);
-
-    __ss_bool __eq__(pyobj *p);
-    int __hash__();
-    __ss_bool __nonzero__();
-
-#ifdef __SS_BIND
-    complex(PyObject *);
-    PyObject *__to_py__();
-#endif
-};
-
 class class_: public pyobj {
 public:
     int low, high;
@@ -774,6 +732,14 @@ public:
     str *__repr__();
     __ss_bool __eq__(pyobj *c);
 
+};
+
+class complex_ : public pyobj {
+public:
+    complex unit;
+    complex_(complex i);
+    str *__repr__();
+    __ss_bool __nonzero__();
 };
 
 class int_ : public pyobj {
@@ -935,7 +901,6 @@ template<> inline __ss_int __abs(__ss_int a) { return a<0?-a:a; }
 template<> inline int __abs(int a) { return a<0?-a:a; }
 template<> inline double __abs(double a) { return a<0?-a:a; }
 inline int __abs(__ss_bool b) { return __abs(b.value); }
-double __abs(complex *c);
 
 template<class T> str *hex(T t) {
     return t->__hex__();
@@ -1149,7 +1114,7 @@ extern dict<void *, void *> *__ss_proxy;
 
 /* externs */
 
-extern class_ *cl_str_, *cl_int_, *cl_bool, *cl_float_, *cl_complex, *cl_list, *cl_tuple, *cl_dict, *cl_set, *cl_object, *cl_xrange, *cl_rangeiter;
+extern class_ *cl_str_, *cl_int_, *cl_bool, *cl_float_, *cl_list, *cl_tuple, *cl_dict, *cl_set, *cl_object, *cl_xrange, *cl_rangeiter;
 
 extern __GC_VECTOR(str *) __char_cache;
 
@@ -4641,10 +4606,6 @@ template<> inline double __power(double a, __ss_int b) {
     else return pow(a,b); 
 }
 
-complex *__power(complex *a, complex *b);
-complex *__power(complex *a, __ss_int b);
-complex *__power(complex *a, double b);
-
 template<class A> A __power(A a, A b);
 template<> inline double __power(double a, double b) { return pow(a,b); }
 
@@ -4793,9 +4754,6 @@ template<> inline tuple2<double, double> *divmod(__ss_int a, double b) { return 
 template<> inline tuple2<double, double> *divmod(double a, int b) { return divmod(a, (double)b); }
 template<> inline tuple2<double, double> *divmod(int a, double b) { return divmod((double)a, b); }
 
-tuple2<complex *, complex *> *divmod(complex *a, double b);
-tuple2<complex *, complex *> *divmod(complex *a, __ss_int b);
-
 /* dict.fromkeys */
 
 namespace __dict__ {
@@ -4867,6 +4825,7 @@ int_ *___box(unsigned long);
 int_ *___box(unsigned long long);
 bool_ *___box(__ss_bool);
 float_ *___box(double);
+complex_ *___box(complex);
 
 /* any */
 
@@ -4929,14 +4888,6 @@ template<> inline str *bin(__ss_int i) {
     return bin((int)i);
 }
 #endif
-
-/* complex */
-
-template<class T> complex::complex(T t) {
-    __class__ = cl_complex;
-    real = __float(t);
-    imag = 0;
-}
 
 #ifdef __SS_BIND
 PyObject *__ss__newobj__(PyObject *, PyObject *args, PyObject *kwargs);

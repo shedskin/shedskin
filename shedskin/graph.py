@@ -108,7 +108,7 @@ class moduleVisitor(ASTVisitor):
 
         newnode.constructor = True
 
-        if cl.ident in ['int_','float_','str_','none', 'class_','bool_']:
+        if cl.ident in ['int_','float_','str_','none', 'class_','bool_', 'complex']:
             getgx().types[newnode] = set([(cl, cl.dcpa-1)])
         else:
             if cl.ident == 'list' and self.list_type(node):

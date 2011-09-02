@@ -899,7 +899,7 @@ def unboxable(types):
         types = inode(types).types()
     classes = set([t[0] for t in types])
 
-    if [cl for cl in classes if cl.ident not in ['int_','float_','bool_']]:
+    if [cl for cl in classes if cl.ident not in ['int_','float_','bool_','complex']]:
         return None
     else:
         if classes:
