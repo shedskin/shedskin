@@ -24,7 +24,7 @@ def usage():
  -r --random            Use fast random number generator (rand())
  -s --strhash           Use fast string hashing algorithm (murmur)
  -w --nowrap            Disable wrap-around checking
- -x --traceback         Print traceback for uncaught exceptions (slow)
+ -x --traceback         Print traceback for uncaught exceptions
 """
 # -p --pypy              Make extension module PyPy-compatible
 # -v --msvc              Output MSVC-style Makefile
