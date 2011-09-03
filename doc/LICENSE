@@ -1,10 +1,10 @@
 
 This package is comprised of two parts:
 
-    - the Shed Skin compiler, plus testing framework (shedskin/*.py, unit.py)
-    - a C++ implementation of the Python builtins and libraries (lib/*.?pp, lib/os/*.?pp)
+    - the Shed Skin compiler (shedskin/*.py); License GNU GPL version 3
+    - a C++ implementation of the Python builtins and libraries (everything under shedskin/lib/); License MIT
 
-Concerning the Shed Skin compiler, plus testing framework (shedskin/*.py, unit.py):
+Concerning the Shed Skin compiler (shedskin/*.py):
 
                     GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
@@ -682,7 +682,7 @@ Public License instead of this License.  But first, please read
 <http://www.gnu.org/philosophy/why-not-lgpl.html>.
 
 
-Concerning the C++ implementation of Python builtins and libraries (lib/*.?pp, lib/os/*.?pp), except as otherwise mentioned below:
+Concerning the C++ implementation of Python builtins and libraries (everything under shedskin/lib/):
 
     MIT License
 
@@ -694,7 +694,7 @@ Concerning the C++ implementation of Python builtins and libraries (lib/*.?pp, l
 
     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-Concerning the C++ implementation of Python itertools and heapq libraries (lib/(itertools|heapq).?pp):
+Concerning the C++ implementation of Python itertools and heapq libraries (shedskin/lib/(itertools|heapq).?pp):
 
     MIT License
 
