@@ -37,7 +37,7 @@ import gc, random
 random.seed(42)
 
 from shared import *
-import graph, cpp
+import graph, cpp, virtual, copy_, typestr
 
 INCREMENTAL = True
 INCREMENTAL_FUNCS = 5
@@ -971,21 +971,9 @@ def analyze(source, testing=False):
     mv = getgx().main_module.mv
     setmv(mv)
 
-    # --- detect inheritance stuff
     getgx().merged_inh = merged(getgx().types, inheritance=True)
-    cpp.analyze_virtuals()
-
-    # --- determine which classes need copy, deepcopy methods
-    if 'copy' in getgx().modules:
-        func = getgx().modules['copy'].mv.funcs['copy']
-        var = func.vars[func.formals[0]]
-        for cl in set([t[0] for t in getgx().merged_inh[var]]):
-            cl.has_copy = True # XXX transitive, modeling
-
-        func = getgx().modules['copy'].mv.funcs['deepcopy']
-        var = func.vars[func.formals[0]]
-        for cl in set([t[0] for t in getgx().merged_inh[var]]):
-            cl.has_deepcopy = True # XXX transitive, modeling
+    virtual.analyze_virtuals()
+    copy_.determine_classes()
 
     # --- add inheritance relationships for non-original Nodes (and tempvars?); XXX register more, right solution?
     for func in getgx().allfuncs:
@@ -1002,6 +990,6 @@ def analyze(source, testing=False):
     # error for dynamic expression without explicit type declaration
     for node in getgx().merged_inh:
         if isinstance(node, Node) and not isinstance(node, AssAttr) and not inode(node).mv.module.builtin:
-            cpp.nodetypestr(node, inode(node).parent)
+            typestr.nodetypestr(node, inode(node).parent)
 
     return getgx()
