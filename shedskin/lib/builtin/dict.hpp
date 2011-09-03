@@ -117,7 +117,7 @@ template<class K, class V> __ss_bool dict<K,V>::__eq__(pyobj *p) { /* XXX check 
     dict<K,V> *b = (dict<K,V> *)p;
     if(b->__len__() != this->__len__())
         return False;
-    int pos = 0;
+    __ss_int pos = 0;
     dictentry<K,V> *entry;
     while (next(&pos, &entry)) {
         register dictentry<K, V> *entryb;
@@ -435,7 +435,7 @@ template<class K, class V> tuple2<K,V> *dict<K,V>::popitem() {
  *              Refer to borrowed reference in entry->key.
  *     }
  */
-template <class K, class V> int dict<K,V>::next(int *pos_ptr, dictentry<K,V> **entry_ptr)
+template <class K, class V> int dict<K,V>::next(__ss_int *pos_ptr, dictentry<K,V> **entry_ptr)
 {
 	int i;
 
@@ -550,7 +550,7 @@ template<class K, class V> str *dict<K,V>::__repr__() {
     dictentry<K,V> *entry;
     
     int i = __len__();
-    int pos = 0;
+    __ss_int pos = 0;
 
     while (next(&pos, &entry)) {
 		--i;
