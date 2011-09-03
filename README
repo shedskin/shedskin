@@ -3,4 +3,6 @@ shedskin test.py
 make
 ./test
 
-see doc/README.html for details.
+see the online documentation for details:
+
+http://code.google.com/p/shedskin/wiki/docs
