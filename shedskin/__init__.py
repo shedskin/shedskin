@@ -19,10 +19,10 @@ def usage():
  -f --flags             Provide alternate Makefile flags
  -l --long              Use long long ("64-bit") integers
  -m --makefile          Specify alternate Makefile name
+ -n --silent            Silent mode, only show warnings
  -o --noassert          Disable assert statements
  -r --random            Use fast random number generator (rand())
  -s --strhash           Use fast string hashing algorithm (murmur)
- -n --silent            Silent mode, only show warnings
  -w --nowrap            Disable wrap-around checking
  -x --traceback         Print traceback for uncaught exceptions (slow)
 """
