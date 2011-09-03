@@ -473,3 +473,12 @@ def copytest():
     c.b.x = 19
     print a.b.x, c.b.x
 copytest()
+
+# return 'nothing' in generator
+def hoppagen():
+    yield True
+    yield False
+    print 'hoppa'
+    return
+for hoppax in hoppagen():
+    print hoppax
