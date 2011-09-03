@@ -439,7 +439,7 @@ template<class K, class V> class dictentry;
 const int MINSIZE = 8;
 
 template<class K, class V> struct dict_looper {
-    int pos;
+    __ss_int pos;
     int si_used;
     dictentry<K,V> *entry;
 };
@@ -525,7 +525,7 @@ public:
     dictentry<K,V>* lookup(K key, long hash) const;
     void insert_key(K key, V value, long hash);
     void insert_clean(K key, V value, long hash);
-    int next(int *pos_ptr, dictentry<K,V> **entry_ptr);
+    int next(__ss_int *pos_ptr, dictentry<K,V> **entry_ptr);
     void resize(int minused);
 };
 
@@ -817,7 +817,7 @@ public:
 template <class K, class V> class __dictiterkeys : public __iter<K> {
 public:
     dict<K,V> *p;
-    int pos;
+    __ss_int pos;
     int si_used;
     int len;
     dictentry<K,V>* entry;
@@ -829,7 +829,7 @@ public:
 template <class K, class V> class __dictitervalues : public __iter<V> {
 public:
     dict<K,V> *p;
-    int pos;
+    __ss_int pos;
     int si_used;
     int len;
     dictentry<K,V>* entry;
@@ -841,7 +841,7 @@ public:
 template <class K, class V> class __dictiteritems : public __iter<tuple2<K, V> *> {
 public:
     dict<K,V> *p;
-    int pos;
+    __ss_int pos;
     int si_used;
     int len;
     dictentry<K,V>* entry;
