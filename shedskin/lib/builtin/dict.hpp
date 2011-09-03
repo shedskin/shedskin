@@ -92,7 +92,7 @@ template<class K, class V> dict<K, V>::dict(PyObject *p) {
 
 template<class K, class V> PyObject *dict<K, V>::__to_py__() {
    PyObject *p = PyDict_New();
-   int pos = 0;
+   __ss_int pos = 0;
    dictentry<K,V> *entry;
    while(next(&pos, &entry)) {
        PyObject *pkey = __to_py(entry->key);
@@ -355,7 +355,7 @@ template <class K, class V> int dict<K,V>::do_discard(K key) {
 }
 
 template <class K, class V> list<K> *dict<K,V>::keys() {
-	int pos, i;
+	__ss_int pos, i;
 	dictentry<K,V> *entry;
 	list<K> *ret = new list<K>;
     ret->units.resize(used);
@@ -366,7 +366,7 @@ template <class K, class V> list<K> *dict<K,V>::keys() {
 }
 
 template <class K, class V> list<V> *dict<K,V>::values() {
-	int pos, i;
+	__ss_int pos, i;
 	dictentry<K,V> *entry;
 	list<V> *ret = new list<V>;
     ret->units.resize(used);
@@ -377,7 +377,7 @@ template <class K, class V> list<V> *dict<K,V>::values() {
 }
 
 template <class K, class V> list<tuple2<K, V> *> *dict<K,V>::items() {
-	int pos, i;
+	__ss_int pos, i;
 	dictentry<K,V> *entry;
 	list<tuple2<K, V> *> *ret = new list<tuple2<K, V> *>;
     ret->units.resize(used);
