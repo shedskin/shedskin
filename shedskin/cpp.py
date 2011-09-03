@@ -1909,7 +1909,7 @@ class generateVisitor(ASTVisitor):
     def visitReturn(self, node, func=None):
         if func.isGenerator:
             self.output('__stop_iteration = true;')
-            self.output('return 0;') # XXX
+            self.output('return __zero<%s>();' % nodetypestr(func.retnode.thing)[7:-3]) # XXX meugh
             return
         self.start('return ')
         self.visit_conv(node.value, self.mergeinh[func.retnode.thing], func)
