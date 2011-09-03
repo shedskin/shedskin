@@ -7,9 +7,9 @@ An experimental (restricted) Python-to-C++ Compiler
 ---------------------------------------------------
 
 :Author: mark.dufour@gmail.com
-:Date:   2010-10-16
+:Date:   2011-09-01
 :Copyright: GPL version 3 or later
-:Version: 0.6
+:Version: 0.9
 :Manual section: 1
 
 SYNOPSIS
@@ -21,8 +21,6 @@ shedskin [OPTION]... FILE
 
  -b --nobounds          Disable bounds checking
 
- -d --dir               Specify alternate directory for output files
-
  -e --extmod            Generate extension module
 
  -f --flags             Provide alternate Makefile flags
@@ -31,13 +29,17 @@ shedskin [OPTION]... FILE
 
  -m --makefile          Specify alternate Makefile name
 
+ -n --silent            Silent mode, only show warnings
+
+ -o --noassert          Disable assert statements
+
  -r --random            Use fast random number generator (rand())
 
  -s --strhash           Use fast string hashing algorithm (murmur)
 
- -v --msvc              Output MSVC-style Makefile
-
  -w --nowrap            Disable wrap-around checking
+
+ -x --traceback         Print traceback for uncaught exceptions
 
 DESCRIPTION
 ===========
@@ -46,7 +48,7 @@ Shed Skin is an experimental Python-to-C++ compiler designed to speed up the exe
 
 LIMITATIONS
 ===========
-(See the documentation for a more detailed overview.)
+(See the online documentation for a more detailed overview.)
 
 1. Variables must be (implicitly) statically typed. Abstract types (as in C++) are supported.
 2. Several Python features cannot be used or only partially. For example, nested functions and variable numbers of arguments are not supported.
