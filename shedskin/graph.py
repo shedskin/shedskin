@@ -566,7 +566,7 @@ class moduleVisitor(ASTVisitor):
         getgx().types[newnode] = set([(f, 0)])
         newnode.copymetoo = True
 
-    def visitAnd(self, node, func=None): # XXX merge
+    def visitAnd(self, node, func=None):
         self.visitandor(node, func)
 
     def visitOr(self, node, func=None):
