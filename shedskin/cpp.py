@@ -1358,30 +1358,29 @@ class generateVisitor(ASTVisitor):
     def visitCompare(self, node, func=None, wrapper=True):
         if not node in self.bool_wrapper:
             self.append('___bool(')
-        self.done = set() # (tvar=fun())
-
+        self.done = set()
+        mapping = {
+            '>': ('__gt__', '>', None),
+            '<': ('__lt__', '<', None),
+            '!=': ('__ne__', '!=', None),
+            '==': ('__eq__', '==', None),
+            '<=': ('__le__', '<=', None),
+            '>=': ('__ge__', '>=', None),
+            'is': (None, '==', None),
+            'is not': (None, '!=', None),
+            'in': ('__contains__', None, None),
+            'not in': ('__contains__', None, '!'),
+        }
         left = node.expr
         for op, right in node.ops:
-            if op == '>': msg, short, pre = '__gt__', '>', None # XXX map = {}!
-            elif op == '<': msg, short, pre = '__lt__', '<', None
-            elif op == 'in': msg, short, pre = '__contains__', None, None
-            elif op == 'not in': msg, short, pre = '__contains__', None, '!'
-            elif op == '!=': msg, short, pre = '__ne__', '!=', None
-            elif op == '==': msg, short, pre = '__eq__', '==', None
-            elif op == 'is': msg, short, pre = None, '==', None
-            elif op == 'is not': msg, short, pre = None, '!=', None
-            elif op == '<=': msg, short, pre = '__le__', '<=', None
-            elif op == '>=': msg, short, pre = '__ge__', '>=', None
-
+            msg, short, pre = mapping[op]
             if msg == '__contains__':
                 self.do_compare(right, left, msg, short, func, pre)
             else:
                 self.do_compare(left, right, msg, short, func, pre)
-
             if right != node.ops[-1][1]:
                 self.append('&&')
             left = right
-
         if not node in self.bool_wrapper:
             self.append(')')
 
