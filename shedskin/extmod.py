@@ -237,7 +237,7 @@ def do_extmod_class(gv, cl):
     print >>gv.out, '/* class %s */\n' % cl.ident
     print >>gv.out, 'typedef struct {'
     print >>gv.out, '    PyObject_HEAD'
-    print >>gv.out, '    %s::%s *__ss_object;' % (cl.module.full_path(), cpp.nokeywords(cl.ident))
+    print >>gv.out, '    %s::%s *__ss_object;' % (cl.module.full_path(), cl.cpp_name())
     print >>gv.out, '} %sObject;\n' % clname(cl)
     print >>gv.out, 'static PyMemberDef %sMembers[] = {' % clname(cl)
     print >>gv.out, '    {NULL}\n};\n'
@@ -258,7 +258,7 @@ def do_extmod_class(gv, cl):
     # tp_new
     print >>gv.out, 'PyObject *%sNew(PyTypeObject *type, PyObject *args, PyObject *kwargs) {' % clname(cl)
     print >>gv.out, '    %sObject *self = (%sObject *)type->tp_alloc(type, 0);' % (clname(cl), clname(cl))
-    print >>gv.out, '    self->__ss_object = new %s::%s();' % (cl.module.full_path(), cpp.nokeywords(cl.ident))
+    print >>gv.out, '    self->__ss_object = new %s::%s();' % (cl.module.full_path(), cl.cpp_name())
     print >>gv.out, '    self->__ss_object->__class__ = %s::cl_%s;' % (cl.module.full_path(), cl.ident)
     print >>gv.out, '    __ss_proxy->__setitem__(self->__ss_object, self);'
     print >>gv.out, '    return (PyObject *)self;'
@@ -389,7 +389,7 @@ def convert_methods(gv, cl, declare):
             print >>gv.out, 'namespace __%s__ { /* XXX */' % n
         print >>gv.out
 
-        print >>gv.out, 'PyObject *%s::__to_py__() {' % cpp.nokeywords(cl.ident)
+        print >>gv.out, 'PyObject *%s::__to_py__() {' % cl.cpp_name()
         print >>gv.out, '    PyObject *p;'
         print >>gv.out, '    if(__ss_proxy->has_key(this))'
         print >>gv.out, '        p = (PyObject *)(__ss_proxy->__getitem__(this));'
@@ -409,7 +409,7 @@ def convert_methods(gv, cl, declare):
 
         print >>gv.out, 'namespace __shedskin__ { /* XXX */\n'
 
-        print >>gv.out, 'template<> %s::%s *__to_ss(PyObject *p) {' % (cl.module.full_path(), cpp.nokeywords(cl.ident))
+        print >>gv.out, 'template<> %s::%s *__to_ss(PyObject *p) {' % (cl.module.full_path(), cl.cpp_name())
         print >>gv.out, '    if(p == Py_None) return NULL;'
         print >>gv.out, '    if(PyObject_IsInstance(p, (PyObject *)&%sObjectType)!=1)' % clname(cl)
         print >>gv.out, '        throw new TypeError(new str("error in conversion to Shed Skin (%s expected)"));' % cl.ident
@@ -425,7 +425,7 @@ def convert_methods2(gv):
         print >>gv.out, 'extern PyTypeObject %sObjectType;' % clname(cl)
     print >>gv.out, 'namespace __shedskin__ { /* XXX */\n'
     for cl in exported_classes(gv):
-        print >>gv.out, 'template<> %s::%s *__to_ss(PyObject *p);' % (cl.module.full_path(), cpp.nokeywords(cl.ident))
+        print >>gv.out, 'template<> %s::%s *__to_ss(PyObject *p);' % (cl.module.full_path(), cl.cpp_name())
     print >>gv.out, '}'
 
 def clname(cl):
