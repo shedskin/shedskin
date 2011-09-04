@@ -9,9 +9,9 @@ copy_.py: hacks to support copy module
 from shared import *
 
 def copy_method(self, cl, name, declare):
-    header = nokeywords(cl.ident)+' *'
+    header = cl.cpp_name()+' *'
     if not declare:
-        header += nokeywords(cl.ident)+'::'
+        header += cl.cpp_name()+'::'
     header += name+'('
     self.start(header)
     if name == '__deepcopy__':
@@ -20,7 +20,7 @@ def copy_method(self, cl, name, declare):
     if not declare:
         print >>self.out, self.line+' {'
         self.indent()
-        self.output(nokeywords(cl.ident)+' *c = new '+nokeywords(cl.ident)+'();')
+        self.output(cl.cpp_name()+' *c = new '+cl.cpp_name()+'();')
         if name == '__deepcopy__':
             self.output('memo->__setitem__(this, c);')
         for var in cl.vars.values():

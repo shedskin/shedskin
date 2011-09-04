@@ -239,6 +239,9 @@ class class_:
                 return ['first', 'second']
         return []
 
+    def cpp_name(self):
+        return nokeywords(self.ident)
+
     def __repr__(self):
         return 'class '+self.ident
 
@@ -925,9 +928,9 @@ def singletype2(types, type):
 def namespaceclass(cl, add_cl=''):
     module = cl.mv.module
     if module.ident != 'builtin' and module != getmv().module and module.mod_path:
-        return module.full_path()+'::'+add_cl+nokeywords(cl.ident)
+        return module.full_path()+'::'+add_cl+cl.cpp_name()
     else:
-        return add_cl+nokeywords(cl.ident)
+        return add_cl+cl.cpp_name()
 
 def types_classes(types):
     return set([t[0] for t in types if isinstance(t[0], class_)])

@@ -110,7 +110,7 @@ class generateVisitor(ASTVisitor):
             for mod in module.mod_path:
                 lines.append('namespace __%s__ { /* XXX */\n' % mod)
             for cl in module.mv.classes.values():
-                lines.append('class %s;\n' % nokeywords(cl.ident)) # XXX cppname?
+                lines.append('class %s;\n' % cl.cpp_name());
             for mod in module.mod_path:
                 lines.append('}\n')
         if lines: 
@@ -214,7 +214,7 @@ class generateVisitor(ASTVisitor):
     def declaredefs(self, vars, declare):
         pairs = []
         for (name,var) in vars:
-            if singletype(var, module) or var.invisible: # XXX buh
+            if singletype(var, module) or var.invisible:
                 continue
             ts = nodetypestr(var, var.parent)
             if declare: 
@@ -252,7 +252,7 @@ class generateVisitor(ASTVisitor):
         for child in node.node.getChildNodes():
             if isinstance(child, Class):
                 cl = defclass(child.name)
-                print >>self.out, 'class '+nokeywords(cl.ident)+';'
+                print >>self.out, 'class '+cl.cpp_name()+';'
         print >>self.out
 
         # --- lambda typedefs
@@ -329,7 +329,7 @@ class generateVisitor(ASTVisitor):
         if cmp_cls or lt_cls or gt_cls or le_cls or ge_cls:
             print >>self.out, 'namespace __shedskin__ { /* XXX */'
             for cl in cmp_cls:
-                t = '__%s__::%s *' % (getmv().module.ident, nokeywords(cl.ident))
+                t = '__%s__::%s *' % (getmv().module.ident, cl.cpp_name())
                 print >>self.out, 'template<> __ss_int __cmp(%sa, %sb) {' % (t, t)
                 print >>self.out, '    if (!a) return -1;'
                 if '__eq__' in cl.funcs:
@@ -349,7 +349,7 @@ class generateVisitor(ASTVisitor):
 
     def rich_compare(self, cls, msg, fallback_msg):
         for cl in cls:
-            t = '__%s__::%s *' % (getmv().module.ident, nokeywords(cl.ident))
+            t = '__%s__::%s *' % (getmv().module.ident, cl.cpp_name())
             print >>self.out, 'template<> __ss_bool __%s(%sa, %sb) {' % (msg, t, t)
             #print >>self.out, '    if (!a) return -1;' # XXX check
             print >>self.out, '    return b->__%s__(a);' % fallback_msg
@@ -379,7 +379,7 @@ class generateVisitor(ASTVisitor):
                             if func.cp: # XXX 
                                 print >>self.out, using+self.cpp_name(func.ident)+';'
                         for cl in mod.mv.classes.values():
-                            print >>self.out, using+nokeywords(cl.ident)+';'
+                            print >>self.out, using+cl.cpp_name()+';'
                     elif pseudonym not in self.module.mv.globals:
                         if name in mod.mv.funcs:
                             func = mod.mv.funcs[name]
@@ -583,7 +583,7 @@ class generateVisitor(ASTVisitor):
                 nargs = len(callfunc.formals)-1
                 argtypes = [nodetypestr(callfunc.vars[callfunc.formals[i+1]]).strip() for i in range(nargs)]
                 clnames = ['pycall%d<%s,%s>' % (nargs, r_typestr, ','.join(argtypes))]
-        self.output('class '+nokeywords(cl.ident)+' : '+', '.join(['public '+clname for clname in clnames])+' {')
+        self.output('class '+cl.cpp_name()+' : '+', '.join(['public '+clname for clname in clnames])+' {')
         self.do_comment(node.doc)
         self.output('public:')
         self.indent()
@@ -598,9 +598,9 @@ class generateVisitor(ASTVisitor):
 
         # --- default constructor
         if need_init:
-            self.output(nokeywords(cl.ident)+'() {}')
+            self.output(cl.cpp_name()+'() {}')
         else:
-            self.output(nokeywords(cl.ident)+'() { this->__class__ = cl_'+cl.ident+'; }')
+            self.output(cl.cpp_name()+'() { this->__class__ = cl_'+cl.ident+'; }')
 
         # --- init constructor
         if need_init:
@@ -1058,7 +1058,7 @@ class generateVisitor(ASTVisitor):
         # --- return expression
         header = ''
         if is_init:
-            ident = nokeywords(func.parent.ident)
+            ident = func.parent.cpp_name()
         elif func.ident in ['__hash__']:
             header += 'long ' # XXX __ss_int leads to problem with virtual parent
         elif func.returnexpr:
@@ -1076,7 +1076,7 @@ class generateVisitor(ASTVisitor):
 
         # --- method header
         if method and not declare:
-            header += nokeywords(func.parent.ident)+'::'
+            header += func.parent.cpp_name()+'::'
         if is_init:
             header += ident
         else:
