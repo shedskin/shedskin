@@ -213,7 +213,7 @@ class generateVisitor(ASTVisitor):
 
     def declaredefs(self, vars, declare):
         pairs = []
-        for (name,var) in vars:
+        for (name, var) in vars:
             if singletype(var, module) or var.invisible:
                 continue
             ts = nodetypestr(var, var.parent)
@@ -222,7 +222,7 @@ class generateVisitor(ASTVisitor):
                     continue
                 ts = 'extern '+ts
             if not var.name in ['__exception', '__exception2']: # XXX
-                pairs.append((ts, self.cpp_name(name)))
+                pairs.append((ts, var.cpp_name()))
         return ''.join(self.group_declarations(pairs))
 
     def get_constant(self, node):
@@ -436,7 +436,7 @@ class generateVisitor(ASTVisitor):
                         var = cl.parent.vars[varname]
                         if var.initexpr:
                             self.start()
-                            self.visitm(cl.ident+'::'+self.cpp_name(var.name)+' = ', var.initexpr, cl)
+                            self.visitm(cl.ident+'::'+var.cpp_name()+' = ', var.initexpr, cl)
                             self.eol()
 
             elif isinstance(child, Discard):
@@ -642,7 +642,7 @@ class generateVisitor(ASTVisitor):
         if cl.parent.vars: # XXX merge with visitModule
             for var in cl.parent.vars.values():
                 if var in getgx().merged_inh and getgx().merged_inh[var]:
-                    self.start(nodetypestr(var, cl.parent)+cl.ident+'::'+self.cpp_name(var.name))
+                    self.start(nodetypestr(var, cl.parent)+cl.ident+'::'+var.cpp_name())
                     self.eol()
             print >>self.out
 
@@ -651,26 +651,20 @@ class generateVisitor(ASTVisitor):
         if cl.parent.vars:
             for var in cl.parent.vars.values():
                 if var in getgx().merged_inh and getgx().merged_inh[var]:
-                    self.output('static '+nodetypestr(var, cl.parent)+self.cpp_name(var.name)+';')
+                    self.output('static '+nodetypestr(var, cl.parent)+var.cpp_name()+';')
             print >>self.out
 
         # --- instance variables
         for var in cl.vars.values():
             if var.invisible: continue # var.name in cl.virtualvars: continue
-
             # var is masked by ancestor var
             vars = set()
             for ancestor in cl.ancestors():
                 vars.update(ancestor.vars)
             if var.name in vars:
                 continue
-
-            cppname = self.cpp_name(var.name)
-            if var.masks_global():
-                cppname = '_'+var.name
-
             if var in getgx().merged_inh and getgx().merged_inh[var]:
-                self.output(nodetypestr(var, cl)+cppname+';')
+                self.output(nodetypestr(var, cl)+var.cpp_name()+';')
 
         if [v for v in cl.vars if not v.startswith('__')]:
             print >>self.out
@@ -2166,7 +2160,7 @@ class generateVisitor(ASTVisitor):
         pairs = []
         for (name, var) in func.vars.items():
             if not var.invisible and (not hasattr(func, 'formals') or name not in func.formals): # XXX
-                pairs.append((nodetypestr(var, func), self.cpp_name(name)))
+                pairs.append((nodetypestr(var, func), var.cpp_name()))
         self.output(self.indentation.join(self.group_declarations(pairs)))
 
     # --- nested for loops: loop headers, if statements
@@ -2195,7 +2189,7 @@ class generateVisitor(ASTVisitor):
             var = lookupvar(qual.assign.name, lcfunc)
         else:
             var = lookupvar(getmv().tempcount[qual.assign], lcfunc)
-        iter = self.cpp_name(var.name)
+        iter = var.cpp_name()
 
         if fastfor(qual):
             self.do_fastfor(node, qual, quals, iter, lcfunc, genexpr)
@@ -2270,7 +2264,7 @@ class generateVisitor(ASTVisitor):
                 if name == 'self' and not func.listcomp: # XXX parent?
                     args.append('this')
                 else:
-                    args.append(self.cpp_name(name))
+                    args.append(var.cpp_name())
 
         self.line = temp
         if node in getgx().genexp_to_lc.values():
@@ -2409,7 +2403,7 @@ class generateVisitor(ASTVisitor):
 
         self.append(self.attr_var_ref(node, ident))
 
-    def attr_var_ref(self, node, ident): # XXX cpp_name(node)?
+    def attr_var_ref(self, node, ident): # XXX blegh
         var = lookupvariable(node, self)
         if var and var.masks_global():
             return '_'+ident
