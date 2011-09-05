@@ -119,8 +119,10 @@ class variable:
     def cpp_name(self):
         name = self.name
         if self.masks_global() or \
-           name in [cl.ident for cl in getgx().allclasses]:
-            name = '_'+name # XXX ss prefix
+           name in [cl.ident for cl in getgx().allclasses] or \
+           name+'_' in [cl.ident for cl in getgx().allclasses]: # XXX name in..
+            #name = getgx().ss_prefix+name
+            name = '_'+name # XXX use prefix
         return nokeywords(name)
 
     def __repr__(self):
