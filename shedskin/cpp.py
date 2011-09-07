@@ -607,7 +607,7 @@ class generateVisitor(ASTVisitor):
             self.func_header(initfunc, declare=True, is_init=True)
             self.indent()
             self.output('this->__class__ = cl_'+cl.ident+';')
-            self.output('__init__('+', '.join([self.cpp_name(f) for f in initfunc.formals[1:]])+');')
+            self.output('__init__('+', '.join([initfunc.vars[f].cpp_name() for f in initfunc.formals[1:]])+');')
             self.deindent()
             self.output('}')
 
@@ -1183,17 +1183,17 @@ class generateVisitor(ASTVisitor):
         self.output('class __gen_%s : public %s {' % (ident, nodetypestr(func.retnode.thing, func)[:-2]))
         self.output('public:')
         self.indent()
-        pairs = [(nodetypestr(func.vars[f], func), self.cpp_name(f)) for f in func.vars]
+        pairs = [(nodetypestr(func.vars[f], func), func.vars[f].cpp_name()) for f in func.vars]
         self.output(self.indentation.join(self.group_declarations(pairs)))
         self.output('int __last_yield;\n')
 
         args = []
         for f in func.formals:
-            args.append(nodetypestr(func.vars[f], func)+self.cpp_name(f))
+            args.append(nodetypestr(func.vars[f], func)+func.vars[f].cpp_name())
         self.output(('__gen_%s(' % ident) + ','.join(args)+') {')
         self.indent()
         for f in func.formals:
-            self.output('this->%s = %s;' % (self.cpp_name(f),self.cpp_name(f)))
+            self.output('this->%s = %s;' % (func.vars[f].cpp_name(), func.vars[f].cpp_name()))
         for fake_unpack in func.expand_args.values():
             self.visit(fake_unpack, func)
         self.output('__last_yield = -1;')
@@ -1222,9 +1222,9 @@ class generateVisitor(ASTVisitor):
     def generator_body(self, func):
         ident = self.generator_ident(func)
         if not (func.isGenerator and func.parent):
-            formals = [self.cpp_name(f) for f in func.formals]
+            formals = [func.vars[f].cpp_name() for f in func.formals]
         else:
-            formals = ['this'] + [self.cpp_name(f) for f in func.formals if f != 'self']
+            formals = ['this'] + [func.vars[f].cpp_name() for f in func.formals if f != 'self']
         self.output('return new __gen_%s(%s);\n' % (ident, ','.join(formals)))
         self.deindent()
         self.output('}\n')
@@ -2405,8 +2405,8 @@ class generateVisitor(ASTVisitor):
 
     def attr_var_ref(self, node, ident): # XXX blegh
         var = lookupvariable(node, self)
-        if var and var.masks_global():
-            return '_'+ident
+        if var:
+            return var.cpp_name()
         return self.cpp_name(ident)
 
     def visitAssAttr(self, node, func=None): # XXX merge with visitGetattr
