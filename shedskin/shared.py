@@ -176,6 +176,12 @@ class function:
         self.registered = []
         self.registered_tempvars = []
 
+    def cpp_name(self): # XXX merge
+        if self.ident in [cl.ident for cl in getgx().allclasses] or \
+            self.ident+'_' in [cl.ident for cl in getgx().allclasses]:
+                return '_'+self.ident # XXX ss_prefix
+        return nokeywords(self.ident)
+
     def __repr__(self):
         if self.parent: return 'function '+repr((self.parent, self.ident))
         return 'function '+self.ident

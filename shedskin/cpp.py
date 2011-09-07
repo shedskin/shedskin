@@ -377,14 +377,14 @@ class generateVisitor(ASTVisitor):
                     if name == '*':
                         for func in mod.mv.funcs.values():
                             if func.cp: # XXX 
-                                print >>self.out, using+self.cpp_name(func.ident)+';'
+                                print >>self.out, using+func.cpp_name()+';'
                         for cl in mod.mv.classes.values():
                             print >>self.out, using+cl.cpp_name()+';'
                     elif pseudonym not in self.module.mv.globals:
                         if name in mod.mv.funcs:
                             func = mod.mv.funcs[name]
                             if func.cp:
-                                print >>self.out, using+self.cpp_name(func.ident)+';'
+                                print >>self.out, using+func.cpp_name()+';'
                         else:
                             print >>self.out, using+nokeywords(name)+';'
         print >>self.out

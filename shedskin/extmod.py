@@ -81,9 +81,9 @@ def do_add_globals(gv, classes, __ss_mod):
     # global variables
     for var in supported_vars(getmv().globals.values()):
         if [1 for t in gv.mergeinh[var] if t[0].ident in ['int_', 'float_', 'bool_']]:
-            print >>gv.out, '    PyModule_AddObject(%(ssmod)s, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+gv.module.ident+'__::'+gv.cpp_name(var.name), 'ssmod': __ss_mod}
+            print >>gv.out, '    PyModule_AddObject(%(ssmod)s, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+gv.module.ident+'__::'+var.cpp_name(), 'ssmod': __ss_mod}
         else:
-            print >>gv.out, '    PyModule_AddObject(%(ssmod)s, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+gv.module.ident+'__::'+gv.cpp_name(var.name), 'ssmod': __ss_mod}
+            print >>gv.out, '    PyModule_AddObject(%(ssmod)s, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+gv.module.ident+'__::'+var.cpp_name(), 'ssmod': __ss_mod}
 
 def exported_classes(gv, warns=False):
     classes = []
