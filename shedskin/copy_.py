@@ -25,9 +25,7 @@ def copy_method(self, cl, name, declare):
             self.output('memo->__setitem__(this, c);')
         for var in cl.vars.values():
             if not var.invisible and var in getgx().merged_inh and getgx().merged_inh[var]:
-                varname = var.name
-                if var.masks_global(): # XXX merge
-                    varname = '_'+varname
+                varname = var.cpp_name()
                 if name == '__deepcopy__':
                     self.output('c->%s = __deepcopy(%s);' % (varname, varname))
                 else:
