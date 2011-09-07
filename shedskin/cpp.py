@@ -1111,13 +1111,11 @@ class generateVisitor(ASTVisitor):
                 self.output(cast)
             self.deindent()
 
-    def cpp_name(self, name, func=None): # XXX breakup and remove
+    def cpp_name(self, name): # XXX breakup and remove
         if ((self.module == getgx().main_module and name == 'init'+self.module.ident) or \
             name in [cl.ident for cl in getgx().allclasses] or \
             name+'_' in [cl.ident for cl in getgx().allclasses]):
             return '_'+name
-        elif name in self.module.mv.funcs and func and isinstance(func.parent, class_) and name in func.parent.funcs:
-            return '__'+func.mv.module.ident+'__::'+name
         return nokeywords(name)
 
     def visitFunction(self, node, parent=None, declare=False):
@@ -1723,11 +1721,10 @@ class generateVisitor(ASTVisitor):
                 self.append('True')
                 return
             else:
-                if ident in self.module.mv.ext_funcs: # XXX using as? :P
-                     ident = self.module.mv.ext_funcs[ident].ident
-
-                if isinstance(node.node, Name): # XXX ugly
-                    self.append(self.cpp_name(ident, func))
+                if isinstance(node.node, Name):
+                    if func and isinstance(func.parent, class_) and ident in func.parent.funcs: # masked by method
+                        self.append(funcs[0].mv.module.full_path()+'::')
+                    self.append(funcs[0].cpp_name())
                 else:
                     self.visit(node.node)
                 self.append('(')
