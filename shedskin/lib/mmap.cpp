@@ -76,6 +76,8 @@ const __ss_int
 #ifndef WIN32 /* UNIX */
 __ss_int default_0 = MAP_SHARED,
          default_1 = PROT_READ | PROT_WRITE;
+#else
+str *default_2;
 #endif /* WIN32 */
 
 // Error messages.
@@ -885,6 +887,8 @@ void __init()
         SYSTEM_INFO si;
         GetSystemInfo(&si);
         ALLOCATIONGRANULARITY = si.dwAllocationGranularity;
+
+        default_2 = new str("");
 #endif /* WIN32 */
         const_0  = new str("mmap object is not open for reading");
         const_1  = new str("source, destination, or count out of range");
