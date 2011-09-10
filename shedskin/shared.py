@@ -71,6 +71,7 @@ class globalInfo: # XXX add comments, split up
         self.fast_hash = False
         self.struct_unpack = {}
         self.debug_level = 0
+        self.maxhits = 0 # XXX amaze.py termination
 
 def newgx():
     return globalInfo()

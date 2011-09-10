@@ -713,6 +713,10 @@ def iterative_dataflow_analysis():
                 update_progressbar(perc)
             if maxiter:
                 print '\n*WARNING* reached maximum number of iterations'
+                getgx().maxhits += 1
+                if getgx().maxhits == 3:
+                    return
+
             getgx().cpa_clean = False
             if INCREMENTAL and (getgx().added_funcs or getgx().added_allocs):
                 getgx().added_funcs = 0
