@@ -42,7 +42,7 @@ extern class_ *cl_mmap;
 extern __ss_int default_0,
                 default_1;
 #else
-extern default_2;
+extern str *default_2;
 #endif /* WIN32 */
 
 class __mmapiter;
