@@ -1,4 +1,4 @@
-/* Copyright 2005-2011 Mark Dufour and contributors; License MIT (See LICENSE) */
+/* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
 
 #ifdef WIN32
 #include <io.h> // for _isatty

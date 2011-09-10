@@ -1,4 +1,4 @@
-/* Copyright 2005-2011 Mark Dufour and contributors; License MIT (See LICENSE) */
+/* Copyright 1997-2002 Makoto Matsumoto, Takuji Nishimura, License BSD-3 (See LICENSE) */
 
 #ifndef __RANDOM_HPP
 #define __RANDOM_HPP

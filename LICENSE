@@ -2,7 +2,7 @@
 This package is comprised of two parts:
 
     - the Shed Skin compiler (shedskin/*.py); License GNU GPL version 3
-    - a C++ implementation of the Python builtins and libraries (everything under shedskin/lib/); License MIT
+    - a C++ implementation of the Python builtins and libraries (everything under shedskin/lib/); License Expat (with the exception of shedskin/lib/random.?pp, license BSD-3, see below)
 
 Concerning the Shed Skin compiler (shedskin/*.py):
 
@@ -682,9 +682,9 @@ Public License instead of this License.  But first, please read
 <http://www.gnu.org/philosophy/why-not-lgpl.html>.
 
 
-Concerning the C++ implementation of Python builtins and libraries (everything under shedskin/lib/):
+Concerning the C++ implementation of Python builtins and libraries (everything under shedskin/lib/, with some exceptions, see below):
 
-    MIT License
+    Expat License
 
     Copyright (c) 2005-2011 Mark Dufour and contributors
 
@@ -696,7 +696,7 @@ Concerning the C++ implementation of Python builtins and libraries (everything u
 
 Concerning the C++ implementation of Python itertools and heapq libraries (shedskin/lib/(itertools|heapq).?pp):
 
-    MIT License
+    Expat License
 
     Copyright (c) 2009 Jérémie Roquet <arkanosis@gmail.com>
 
@@ -705,3 +705,63 @@ Concerning the C++ implementation of Python itertools and heapq libraries (sheds
     The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+Concerning the C++ implementation of the Python random library (shedskin/lib/random.?pp):
+
+    BSD-3 License
+
+Copyright 1997-2002 Makoto Matsumoto, Takuji Nishimura
+
+=========================== Source Notes ==============================
+Translated by Guido van Rossum from C source provided by Adrian Baddeley.
+Adapted by Raymond Hettinger for use with the Mersenne Twister core generator.
+Adapted by Jeff Miller for compatibility with the Shed Skin Python-to-C++
+compiler.
+
+Mersenne Twister was converted to Python by Jeff Miller
+2007-02-03
+jwmillerusa (at) gmail (dot) com
+http://millerideas.com
+
+Below are the original comments from the authors' C source file.
+=======================================================================
+
+A C-program for MT19937, with initialization improved 2002/1/26.
+Coded by Takuji Nishimura and Makoto Matsumoto.
+
+Before using, initialize the state by using init_genrand(seed)
+or init_by_array(init_key, key_length).
+
+Copyright (C) 1997 - 2002, Makoto Matsumoto and Takuji Nishimura,
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+
+  1. Redistributions of source code must retain the above copyright
+     notice, this list of conditions and the following disclaimer.
+
+  2. Redistributions in binary form must reproduce the above copyright
+     notice, this list of conditions and the following disclaimer in the
+     documentation and/or other materials provided with the distribution.
+
+  3. The names of its contributors may not be used to endorse or promote
+     products derived from this software without specific prior written
+     permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+
+Any feedback is very welcome.
+http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html
+email: m-mat @ math.sci.hiroshima-u.ac.jp (remove space)

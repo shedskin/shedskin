@@ -1,4 +1,4 @@
-/* Copyright 2005-2011 Mark Dufour and contributors; License MIT (See LICENSE) */
+/* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
 
 #ifndef __RE_HPP
 #define __RE_HPP
