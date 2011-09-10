@@ -1,4 +1,4 @@
-/* Copyright 2005-2011 Mark Dufour and contributors; License MIT (See LICENSE) */
+/* Copyright (c) 2009 Jérémie Roquet <arkanosis@gmail.com>; License Expat (See LICENSE) */
 
 #ifndef ITERTOOLS_HPP
 #define ITERTOOLS_HPP

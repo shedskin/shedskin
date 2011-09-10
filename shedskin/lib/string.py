@@ -1,4 +1,4 @@
-# Copyright 2005-2011 Mark Dufour and contributors; License MIT (See LICENSE)
+# Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE)
 
 
 ascii_letters = letters = ascii_lowercase = lowercase = ascii_uppercase = uppercase = whitespace = ''

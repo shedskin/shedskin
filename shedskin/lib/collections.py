@@ -1,4 +1,4 @@
-# Copyright 2005-2011 Mark Dufour and contributors; License MIT (See LICENSE)
+# Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE)
 
 class deque(pyiter):
     def __init__(self, iterable=None):
