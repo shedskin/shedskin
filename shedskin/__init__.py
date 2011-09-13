@@ -25,6 +25,7 @@ def usage():
  -s --strhash           Use fast string hashing algorithm (murmur)
  -w --nowrap            Disable wrap-around checking
  -x --traceback         Print traceback for uncaught exceptions
+ -L --lib               Add a library directory
 """
 # -p --pypy              Make extension module PyPy-compatible
 # -v --msvc              Output MSVC-style Makefile
@@ -35,7 +36,7 @@ def start():
 
     # --- command-line options
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'vbchef:wad:m:rolspxn', ['help', 'extmod', 'nobounds', 'nowrap', 'flags=', 'debug=', 'makefile=', 'random', 'noassert', 'long', 'msvc', 'ann', 'strhash', 'pypy', 'traceback', 'silent'])
+        opts, args = getopt.getopt(sys.argv[1:], 'vbchef:wad:m:rolspxnL:', ['help', 'extmod', 'nobounds', 'nowrap', 'flags=', 'debug=', 'makefile=', 'random', 'noassert', 'long', 'msvc', 'ann', 'strhash', 'pypy', 'traceback', 'silent', 'lib'])
     except getopt.GetoptError:
         usage()
 
@@ -55,6 +56,7 @@ def start():
         if o in ['-s', '--strhash']: getgx().fast_hash = True
         if o in ['-v', '--msvc']: getgx().msvc = True
         if o in ['-x', '--traceback']: getgx().backtrace = True
+        if o in ['-L', '--lib']: getgx().libdirs = [a] + getgx().libdirs
         if o in ['-f', '--flags']:
             if not os.path.isfile(a):
                 print "*ERROR* no such file: '%s'" % a

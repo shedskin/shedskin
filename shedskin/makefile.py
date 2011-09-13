@@ -38,14 +38,14 @@ def generate_makefile():
 
     makefile = file(getgx().makefile_name, 'w')
 
-    libdir = getgx().libdir.replace(' ','\ ')
-    print >>makefile, 'SHEDSKIN_LIBDIR=%s' % (libdir)
+    libdirs = [d.replace(' ','\ ') for d in getgx().libdirs]
+    print >>makefile, 'SHEDSKIN_LIBDIR=%s' % (libdirs[-1])
     filenames = []
     mods = getgx().modules.values()
     for mod in mods:
         filename = mod.filename[:-3] # strip .py
         filename = filename.replace(' ','\ ') # make paths valid
-        filename = filename.replace(libdir,'${SHEDSKIN_LIBDIR}')
+        filename = filename.replace(libdirs[-1],'${SHEDSKIN_LIBDIR}')
         filenames.append(filename)
 
     cppfiles = [fn+'.cpp' for fn in filenames]
@@ -75,6 +75,7 @@ def generate_makefile():
         variable = line[:line.find('=')].strip()
         if variable == 'CCFLAGS':
             line += ' -I. -I${SHEDSKIN_LIBDIR}'
+            line += ''.join([' -I'+libdir for libdir in libdirs[:-1]])
             if sys.platform == 'darwin' and os.path.isdir('/usr/local/include'):
                 line += ' -I/usr/local/include' # XXX
             if sys.platform == 'darwin' and os.path.isdir('/opt/local/include'):
