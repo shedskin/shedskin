@@ -1194,7 +1194,7 @@ template<> inline void *__deepcopy(void *p, dict<void *, pyobj *> *) { return p;
 
 #define __OR(a, b, t) ((___bool(__ ## t = a))?(__ ## t):(b))
 #define __AND(a, b, t) ((!___bool(__ ## t = a))?(__ ## t):(b))
-#define __NOT(x) (__mbool(!x))
+#define __NOT(x) (__mbool(!(x)))
 
 /* pyiter methods */
 
