@@ -8,7 +8,7 @@ An experimental (restricted) Python-to-C++ Compiler
 
 :Author: mark.dufour@gmail.com
 :Date:   2011-09-01
-:Copyright: GPL version 3 or later
+:Copyright: GPL version 3
 :Version: 0.9
 :Manual section: 1
 
@@ -16,6 +16,22 @@ SYNOPSIS
 ========
 
 shedskin [OPTION]... FILE
+
+DESCRIPTION
+===========
+
+Shed Skin is an experimental Python-to-C++ compiler designed to speed up the execution of Python programs. It converts programs written in a static subset of Python to C++. The C++ code can be compiled to executable code, which can be run either as a standalone program or as a module imported and called from CPython.
+
+LIMITATIONS
+===========
+(See the online documentation for a more detailed overview.)
+
+1. Variables must be (implicitly) statically typed.
+2. Several Python features cannot be used or only partially. For example, nested functions and variable numbers of arguments are not supported.
+3. Programs cannot freely use the standard library, only about 25 common ones (such as random and re).
+
+OPTIONS
+=======
 
  -a --ann               Output annotated source code (.ss.py)
 
@@ -41,23 +57,6 @@ shedskin [OPTION]... FILE
 
  -x --traceback         Print traceback for uncaught exceptions
 
-DESCRIPTION
-===========
-
-Shed Skin is an experimental Python-to-C++ compiler designed to speed up the execution of Python programs. It converts programs written in a static subset of Python to C++. The C++ code can be compiled to executable code, which can be run either as a standalone program or as a module imported and called from CPython.
-
-LIMITATIONS
-===========
-(See the online documentation for a more detailed overview.)
-
-1. Variables must be (implicitly) statically typed. Abstract types (as in C++) are supported.
-2. Several Python features cannot be used or only partially. For example, nested functions and variable numbers of arguments are not supported.
-3. Programs cannot freely use the standard library, only those available in ``lib/``.
-
-OPTIONS
-=======
-
-
 THANKS
 ======
-Google, Bearophile, Hakan Ardo, Brian Blais, Paul Boddie, François Boutines, Djamel Cherif, Mark Dewing, James Coughlan, Victor Garcia, Luis M. Gonzales, Karel Heyse, Denis de Leeuw Duarte, Michael Elkins, Enzo Erbano, FFAO, Fahrzim Hemmati, Van Lindberg, David Marek, Douglas McNeil, Andy Miller, Jeff Miller, Danny Milosavljevic, Joaquin Abian Monux, John Nagle, Harri Pasanen, Brent Pedersen, Joris van Rantwijk, Jeremie Roquet, Mike Schrick, SirNotAppearingInThisManPage, Thomas Spura, Dave Tweed, Jaroslaw Tworek, Pavel Vinogradov, Jason Ye, Joris van Zwieten
+Hakan Ardo, Brian Blais, Paul Boddie, François Boutines, Djamel Cherif, James Coughlan, Mark Dewing, Mark Dufour, Artem Egorkine, Michael Elkins, Enzo Erbano, FFAO, Victor Garcia, Luis M. Gonzales, Fahrzin Hemmati, Karel Heyse, Denis de Leeuw Duarte, Van Lindberg, David Marek, Douglas McNeil, Andy Miller, Jeff Miller, Danny Milosavljevic, Joaquin Abian Monux, John Nagle, Harri Pasanen, Brent Pedersen, Joris van Rantwijk, Jeremie Roquet, Mike Schrick, SirNotAppearingInThisTutorial, Thomas Spura, Dave Tweed, Jaroslaw Tworek, Tony Veijalainen, Pavel Vinogradov, Jason Ye, Joris van Zwieten
