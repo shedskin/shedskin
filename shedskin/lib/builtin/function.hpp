@@ -248,9 +248,9 @@ public:
     __iter<A> *p;
     __ss_int i;
 
-    __enumiter(pyiter<A> *p) {
+    __enumiter(pyiter<A> *p, __ss_int start=0) {
         this->p = ___iter(p);
-        i = 0;
+        i = start;
     }
 
     tuple2<__ss_int, A> *next() {
@@ -260,6 +260,10 @@ public:
 
 template <class A> __iter<tuple2<__ss_int, A> *> *enumerate(pyiter<A> *x) {
     return new __enumiter<A>(x);
+}
+
+template <class A> __iter<tuple2<__ss_int, A> *> *enumerate(pyiter<A> *x, __ss_int start) {
+    return new __enumiter<A>(x, start);
 }
 
 /* zip */
