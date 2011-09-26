@@ -765,7 +765,7 @@ def sorted(it, cmp=0, key=0, reverse=0):
 def reversed(l):
     return iter(l)
 
-def enumerate(x):
+def enumerate(x, start=0):
     return __iter((1, iter(x).next()))
 
 class __xrange:
