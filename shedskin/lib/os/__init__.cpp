@@ -1331,6 +1331,10 @@ tuple2<file*,file*>* popen2(str* cmd, str*, __ss_int) {
     return ret;
 }
 
+tuple2<file*,file*>* popen2(pyseq<str *> *cmd, str *, __ss_int) { /* XXX */
+    return popen2((new str(" "))->join(cmd)); 
+}
+
 tuple2<file*,file*>* popen3(str* cmd) {
     return popen3(cmd, new str("t"), -1);
 }
