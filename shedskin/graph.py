@@ -218,6 +218,9 @@ class moduleVisitor(ASTVisitor):
         if isinstance(func, function):
             func.constraints.add(constraint)
 
+    def visitExec(self, node, func=None):
+        error("'exec' is not supported", node, mv=self)
+
     def visitGenExpr(self, node, func=None):
         newnode = cnode(node, parent=func)
         getgx().types[newnode] = set()
