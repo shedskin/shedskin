@@ -30,7 +30,7 @@ class RawConfigParser:
     def defaults(self):
         return self._defaults
     def sections(self):
-        return self._sections
+        return ['']
     def add_section(self, section):
         pass
     def has_section(self, section):
@@ -44,7 +44,7 @@ class RawConfigParser:
     def get(self, section, option, raw=False, vars=None): # XXX
         return ''
     def items(self, section):
-        return {'':''}
+        return [('',)]
     def getint(self, section, option):
         return 1
     def getfloat(self, section, option):
@@ -70,8 +70,6 @@ class ConfigParser(RawConfigParser):
     def get(self, section, option, raw=False, vars=None):
         return ''
     def items(self, section, raw=False, vars=None):
-        return {'':''}
+        return [('',)]
     def _interpolate(self, section, option, rawval, vars):
         return ''
-    #def _interpolation_replace(self, match):
-
