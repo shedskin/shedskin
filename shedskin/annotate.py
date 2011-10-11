@@ -6,7 +6,7 @@ annotate.py: annotate source code with inferred types, as *.ss.py (shedskin -a)
 
 '''
 
-import re, string
+import re
 
 from compiler import *
 from compiler.ast import *
@@ -22,13 +22,13 @@ def annotate():
     def paste(expr, text):
         if not expr.lineno: return
         if (expr,0,0) in getgx().cnode and inode(expr).mv != mv: return # XXX
-        line = source[expr.lineno-1][:-1]
+        line = source[expr.lineno-1]
         match = re_comment.search(line)
         if match:
             line = line[:match.start()]
         if text:
             text = '# '+text
-        line = string.rstrip(line)
+        line = line.rstrip()
         if text and len(line) < 40: line += (40-len(line))*' '
         source[expr.lineno-1] = line
         if text: source[expr.lineno-1] += ' ' + text
