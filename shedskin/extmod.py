@@ -411,7 +411,7 @@ def convert_methods(gv, cl, declare):
 
         print >>gv.out, 'template<> %s::%s *__to_ss(PyObject *p) {' % (cl.module.full_path(), cl.cpp_name())
         print >>gv.out, '    if(p == Py_None) return NULL;'
-        print >>gv.out, '    if(PyObject_IsInstance(p, (PyObject *)&%sObjectType)!=1)' % clname(cl)
+        print >>gv.out, '    if(PyObject_IsInstance(p, (PyObject *)&%s::%sObjectType)!=1)' % (cl.module.full_path(), clname(cl))
         print >>gv.out, '        throw new TypeError(new str("error in conversion to Shed Skin (%s expected)"));' % cl.ident
         print >>gv.out, '    return ((%s::%sObject *)p)->__ss_object;' % (cl.module.full_path(), clname(cl))
         print >>gv.out, '}\n}'
