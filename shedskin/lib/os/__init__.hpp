@@ -128,6 +128,8 @@ __ss_int getpid();
 tuple2<file*,file*>* popen2(str* cmd);
 tuple2<file*,file*>* popen2(str* cmd, str* mode, __ss_int bufsize);
 
+tuple2<file*,file*>* popen2(pyseq<str *> *cmd, str *mode, __ss_int bufsize); /* XXX */
+
 tuple2<file*,file*>* popen3(str* cmd);
 tuple2<file*,file*>* popen3(str* cmd, str* mode, __ss_int bufsize);
 
