@@ -107,7 +107,7 @@ def generate_makefile():
             if sys.platform == 'darwin' and os.path.isdir('/usr/local/lib'): # XXX
                 line += ' -L/usr/local/lib'
             if getgx().extension_module:
-                if getgx().msvc: line += ' -shared -L%s/libs -lpython%s' % (prefix, pyver)
+                if getgx().msvc: line += ' /dll /libpath:%s/libs ' % prefix
                 elif sys.platform == 'win32': line += ' -shared -L%s/libs -lpython%s' % (prefix, pyver)
                 elif sys.platform == 'darwin': line += ' -bundle -undefined dynamic_lookup ' + ldflags
                 elif sys.platform == 'sunos5': line += ' -shared -Xlinker ' + ldflags
