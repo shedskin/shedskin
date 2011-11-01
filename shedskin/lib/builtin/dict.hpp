@@ -590,7 +590,7 @@ template <class K, class V> void *dict<K,V>::clear()
 {
 	dictentry<K,V> *entry, *table;
 	int table_is_malloced;
-	ssize_t fill;
+	size_t fill;
 	dictentry<K,V> small_copy[MINSIZE];
 
     table = this->table;

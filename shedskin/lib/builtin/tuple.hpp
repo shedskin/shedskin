@@ -148,8 +148,8 @@ template<class T> tuple2<T,T> *tuple2<T, T>::__slice__(__ss_int x, __ss_int l, _
 
 template<class T> long tuple2<T, T>::__hash__() {
     long seed = 0;
-    ssize_t sz = this->units.size();
-    for(ssize_t i = 0; i<sz; i++)
+    size_t sz = this->units.size();
+    for(size_t i = 0; i<sz; i++)
         seed = hash_combine(seed, hasher<T>(this->units[i]));
     return seed;
 }
