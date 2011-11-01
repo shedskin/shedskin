@@ -443,11 +443,7 @@ template <class T> void *set<T>::clear()
 {
 	setentry<T> *entry, *table;
 	int table_is_malloced;
-#if defined( _MSC_VER )
 	size_t fill;
-#else
-	ssize_t fill;
-#endif
 	setentry<T> small_copy[MINSIZE];
 
     table = this->table;
