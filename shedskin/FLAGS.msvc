@@ -1,3 +1,3 @@
 CC=cl
-CCFLAGS=/Ox $(CPPFLAGS) /EHsc /TP /MD /Zi /nologo /W3 /WX- /O2 /Oi /Oy- /GL /Gm- /EHsc /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /D "and"="&&" /D "or"="||" /D "not"="!" /D "WIN32" /D "_CONSOLE" /D "ALL_INTERIOR_POINTERS" /D "GC_NOT_DLL" /D "_UNICODE" /I. /I$(GC_HOME) /I$(PCRE_HOME)
-LFLAGS= $(LDFLAGS) /link gc.lib pcre.lib user32.lib /libpath:$(PCRE_HOME) /libpath:$(GC_HOME) /NODEFAULTLIB:"libcmt" /subsystem:console  /OPT:REF /OPT:ICF
+CCFLAGS=$(CPPFLAGS) /MP /O2 /EHsc /TP /MD /Zi /nologo /W0  /Oi /Oy- /GL /Gm- /GS /fp:precise /Zc:wchar_t /Zc:forScope /D "and"="&&" /D "or"="||" /D "not"="!" /D "WIN32" /D "_CONSOLE" /D "ALL_INTERIOR_POINTERS" /D "GC_NOT_DLL" /D "_UNICODE" /D "PCRE_STATIC" /I$(EXTRA_INCLUDE)
+LFLAGS= $(LDFLAGS) /link /libpath:$(EXTRA_LIB) gc.lib pcre.lib user32.lib  /NODEFAULTLIB:"libcmt" /subsystem:console  /OPT:REF /OPT:ICF
