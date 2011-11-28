@@ -33,8 +33,7 @@ update: we now analyze programs incrementally, adding several functions and redo
 
 '''
 
-import gc, random
-random.seed(42)
+import random
 
 from shared import *
 import graph, cpp, virtual, copy_, typestr
@@ -919,11 +918,6 @@ def merge_simple_types(types):
     return frozenset(merge)
 
 def analyze(source, testing=False):
-    try:
-        gc.set_threshold(23456, 10, 10)
-    except AttributeError: # not all Python implementations support this
-        pass
-
     if testing:
         setgx(newgx())
         ast = parse(source+'\n')
