@@ -39,7 +39,10 @@ class globalInfo: # XXX add comments, split up
         self.total_iterations = 0
         self.lambdawrapper = {}
         self.sysdir = '/'.join(__file__.split(os.sep)[:-1])
-        self.libdirs = [connect_paths(self.sysdir, 'lib')]
+        if os.path.isdir('/usr/share/shedskin/lib'):
+            self.libdirs = ['/usr/share/shedskin/lib']
+        else:
+            self.libdirs = [connect_paths(self.sysdir, 'lib')]
         self.main_mod = 'test'
         illegal_file = file(os.path.join(self.sysdir, 'illegal'))
         self.cpp_keywords = set([line.strip() for line in illegal_file])

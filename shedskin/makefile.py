@@ -73,6 +73,7 @@ def generate_makefile():
     # import flags
     if getgx().flags: flags = getgx().flags
     elif os.path.isfile('FLAGS'): flags = 'FLAGS'
+    elif os.path.isfile('/etc/shedskin/FLAGS'): flags = '/etc/shedskin/FLAGS'
     elif getgx().msvc: flags = connect_paths(getgx().sysdir, 'FLAGS.msvc')
     elif sys.platform == 'win32': flags = connect_paths(getgx().sysdir, 'FLAGS.mingw')
     elif sys.platform == 'darwin': flags = connect_paths(getgx().sysdir, 'FLAGS.osx')
