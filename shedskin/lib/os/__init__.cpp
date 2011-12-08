@@ -78,6 +78,8 @@ list<str *> *listdir(str *path) {
     struct dirent *ep;
 
     dp = opendir(path->unit.c_str());
+    if (dp == 0)
+        throw new OSError(path);
 
     while ((ep = readdir(dp)))
         if(strcmp(ep->d_name, ".") && strcmp(ep->d_name, ".."))
