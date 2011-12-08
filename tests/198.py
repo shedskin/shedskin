@@ -23,3 +23,8 @@ try:
     print os.listdir('/does/not/exist')
 except OSError:
     print 'path does not exist!'
+
+# itertools.izip missing constructor
+import itertools
+for a,b in itertools.izip(range(4), range(4)):
+    print a+b
