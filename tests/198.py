@@ -16,3 +16,10 @@ items = p.defaults().items()
 print items
 sections = p.sections()
 print sections
+
+# os.listdir crash
+import os
+try:
+    print os.listdir('/does/not/exist')
+except OSError:
+    print 'path does not exist!'
