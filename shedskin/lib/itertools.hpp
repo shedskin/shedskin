@@ -729,6 +729,7 @@ public:
 
     izipiter();
     izipiter(pyiter<T> *iterable);
+    izipiter(pyiter<T> *iterable1, pyiter<T> *iterable2);
 
     void push_iter(pyiter<T> *iterable);
 
@@ -743,6 +744,11 @@ template<class T> inline izipiter<T, T>::izipiter() {
 template<class T> inline izipiter<T, T>::izipiter(pyiter<T> *iterable) {
     this->exhausted = false;
     this->push_iter(iterable);
+}
+template<class T> inline izipiter<T, T>::izipiter(pyiter<T> *iterable1, pyiter<T> *iterable2) {
+    this->exhausted = false;
+    this->push_iter(iterable1);
+    this->push_iter(iterable2);
 }
 template<class T> void izipiter<T, T>::push_iter(pyiter<T> *iterable) {
     this->iters.push_back(iterable->__iter__());
