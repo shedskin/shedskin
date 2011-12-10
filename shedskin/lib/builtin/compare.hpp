@@ -25,6 +25,10 @@ template<class T> inline __ss_bool __ne(T a, T b) { return ((a&&b)?(a->__ne__(b)
 template<> inline __ss_bool __ne(int a, int b) { return __mbool(a != b); }
 template<> inline __ss_bool __ne(double a, double b) { return __mbool(a != b); }
 template<> inline __ss_bool __ne(void *a, void *b) { return __mbool(a != b); }
+template<> inline __ss_bool __ne(str *a, str *b) {
+    return __mbool(!__eq(a, b));
+}
+
 template<class T> inline __ss_bool __gt(T a, T b) { return a->__gt__(b); }
 template<> inline __ss_bool __gt(int a, int b) { return __mbool(a > b); }
 template<> inline __ss_bool __gt(double a, double b) { return __mbool(a > b); }
