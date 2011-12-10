@@ -345,10 +345,7 @@ public:
     __ss_bool __eq__(pyobj *s);
     str *__add__(str *b);
 
-    str *__join(pyseq<str *> *l, bool only_ones, int total);
     template<class U> str *join(U *);
-    str *join(list<str *> *); /* XXX why can't we use pyseq<str *> *? */
-    str *join(tuple2<str *, str *> *);
 
     str *__str__();
     str *__repr__();

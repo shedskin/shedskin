@@ -39,5 +39,37 @@ template <class U> str *str::join(U *iter) {
             only_ones = false;
         total += sz;
     END_FOR
-    return __join(__join_cache, only_ones, total);
+    int unitsize = unit.size();
+    int elems = len(__join_cache);
+    if(elems==1)
+        return __join_cache->__getitem__(0);
+    str *s = new str();
+    if(unitsize == 0 and only_ones) {
+        s->unit.resize(total);
+        for(int j=0; j<elems; j++)
+            s->unit[j] = __join_cache->__getitem__(j)->unit[0];
+    }
+    else if(elems) {
+        total += (elems-1)*unitsize;
+        s->unit.resize(total);
+        int tsz;
+        int k = 0;
+        for(int m = 0; m<elems; m++) {
+            str *t = __join_cache->__getitem__(m);
+            tsz = t->unit.size();
+            if (tsz == 1)
+                s->unit[k] = t->unit[0];
+            else
+                memcpy((void *)(s->unit.data()+k), t->unit.data(), tsz);
+            k += tsz;
+            if (unitsize && m < elems-1) {
+                if (unitsize==1)
+                    s->unit[k] = unit[0];
+                else
+                    memcpy((void *)(s->unit.data()+k), unit.data(), unit.size());
+                k += unitsize;
+            }
+        }
+    }
+    return s;
 }
