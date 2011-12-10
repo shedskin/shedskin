@@ -42,12 +42,12 @@ template <class U> str *str::join(U *iter) {
     int unitsize = unit.size();
     int elems = len(__join_cache);
     if(elems==1)
-        return __join_cache->__getitem__(0);
+        return __join_cache->units[0];
     str *s = new str();
     if(unitsize == 0 and only_ones) {
         s->unit.resize(total);
         for(int j=0; j<elems; j++)
-            s->unit[j] = __join_cache->__getitem__(j)->unit[0];
+            s->unit[j] = __join_cache->units[j]->unit[0];
     }
     else if(elems) {
         total += (elems-1)*unitsize;
@@ -55,7 +55,7 @@ template <class U> str *str::join(U *iter) {
         int tsz;
         int k = 0;
         for(int m = 0; m<elems; m++) {
-            str *t = __join_cache->__getitem__(m);
+            str *t = __join_cache->units[m];
             tsz = t->unit.size();
             if (tsz == 1)
                 s->unit[k] = t->unit[0];
