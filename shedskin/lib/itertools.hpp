@@ -1082,9 +1082,11 @@ template<class T> tuple2<T, T> *productiter<T, T>::next() {
     tuple2<T, T> *tuple = new tuple2<T, T>;
 
     if (this->iter.size()) {
-        for (int i = 0; i < (int)this->iter.size(); ++i) {
+        size_t iter_size = this->iter.size();
+        tuple->units.resize(iter_size);
+        for (size_t i = 0; i < iter_size; ++i) {
             int j = this->iter[i];
-            tuple->units.push_back(this->values[j][this->indices[i]]);
+            tuple->units[i] = this->values[j][this->indices[i]];
         }
         for (int i = this->iter.size() - 1; i > -1; --i) {
             int j = this->iter[i];
