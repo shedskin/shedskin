@@ -6,6 +6,7 @@
 #include "builtin.hpp"
 #include <cassert>
 
+#define __SS_ALLOC_TUPLES 25
 
 using namespace __shedskin__;
 
@@ -1024,6 +1025,9 @@ public:
     std::vector<unsigned int> iter;
     std::vector<unsigned int> indices;
 
+    tuple2<T, T> *__tuple_cache;
+    int __tuple_count; 
+
     productiter();
 
     void push_iter(pyiter<T> *iterable);
@@ -1037,6 +1041,9 @@ public:
 template<class T> inline productiter<T, T>::productiter() {
     this->exhausted = false;
     this->highest_exhausted = 0;
+
+    this->__tuple_cache = new tuple2<T,T>[__SS_ALLOC_TUPLES];
+    this->__tuple_count = 0; 
 }
 
 template<class T> void productiter<T, T>::push_iter(pyiter<T> *iterable) {
@@ -1079,7 +1086,11 @@ template<class T> tuple2<T, T> *productiter<T, T>::next() {
         throw new StopIteration();
     }
 
-    tuple2<T, T> *tuple = new tuple2<T, T>;
+    tuple2<T, T> *tuple = &(this->__tuple_cache[this->__tuple_count++]);
+    if(this->__tuple_count == __SS_ALLOC_TUPLES) { /* XXX make this more generic? */
+        this->__tuple_count = 0;
+        this->__tuple_cache = new tuple2<T,T>[__SS_ALLOC_TUPLES];
+    } 
 
     if (this->iter.size()) {
         size_t iter_size = this->iter.size();
