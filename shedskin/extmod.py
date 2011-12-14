@@ -90,7 +90,7 @@ def exported_classes(gv, warns=False):
     for cl in gv.module.mv.classes.values():
         if defclass('Exception') in cl.ancestors():
             if warns:
-                print '*WARNING* class not exported:', cl.ident
+                print "*WARNING* '%s' class not exported (inherits from Exception)" % cl.ident
         else:
             classes.append(cl)
     return sorted(classes, key=lambda x: x.def_order)
@@ -183,22 +183,27 @@ def supported_funcs(gv, funcs):
             if func.invisible or func.inherited or not gv.inhcpa(func):
                 continue
         if isinstance(func.parent, class_) and func.ident in func.parent.staticmethods:
-            print '*WARNING* method not exported:', func.parent.ident+'.'+func.ident
+            print "*WARNING* '%s' method not exported (staticmethod)" % (func.parent.ident+'.'+func.ident)
             continue
         builtins = True
         for formal in func.formals:
             try:
                 typestr.nodetypestr(func.vars[formal], func, check_extmod=True)
-                typestr.nodetypestr(func.retnode.thing, func, check_extmod=True, check_ret=True)
             except typestr.ExtmodError:
                 builtins = False
+                reason = "cannot convert argument '%s'" % formal
+        try:
+            typestr.nodetypestr(func.retnode.thing, func, check_extmod=True, check_ret=True)
+        except typestr.ExtmodError:
+            builtins = False
+            reason = 'cannot convert return value'
         if builtins:
             supported.append(func)
         else:
             if isinstance(func.parent, class_):
-                print '*WARNING* method not exported:', func.parent.ident+'.'+func.ident
+                print "*WARNING* '%s' method not exported (%s)" % (func.parent.ident+'.'+func.ident, reason)
             else:
-                print '*WARNING* function not exported:', func.ident
+                print "*WARNING* '%s' function not exported (%s)" % (func.ident, reason)
     return supported
 
 def supported_vars(vars): # XXX virtuals?
@@ -214,9 +219,9 @@ def supported_vars(vars): # XXX virtuals?
             typehu = typestr.nodetypestr(var, var.parent, check_extmod=True)
         except typestr.ExtmodError:
             if isinstance(var.parent, class_):
-                print '*WARNING* variable not exported:', var.parent.ident+'.'+var.name
+                print "*WARNING* '%s' variable not exported (cannot convert)" % (var.parent.ident+'.'+var.name)
             else:
-                print '*WARNING* variable not exported:', var.name
+                print "*WARNING* '%s' variable not exported (cannot convert)" % var.name
             continue
         supported.append(var)
     return supported
