@@ -94,9 +94,9 @@ def start():
     infer.analyze(name)
     annotate.annotate()
     cpp.generate_code()
+    shared.print_errors()
     if not getgx().silent:
         print '[elapsed time: %.2f seconds]' % (time.time()-t0)
-    shared.print_errors()
 
 def main():
     sys.setrecursionlimit(100000)
