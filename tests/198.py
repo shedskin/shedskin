@@ -28,3 +28,10 @@ except OSError:
 import itertools
 for a,b in itertools.izip(range(4), range(4)):
     print a+b
+
+# multi-module/inheritance problem
+from testdata import iec2
+from testdata import d1541
+IEC = iec2.IECBus()
+hop = d1541.D1541(IEC, 8)
+print hop.get_data()
