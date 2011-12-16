@@ -29,7 +29,7 @@ import itertools
 for a,b in itertools.izip(range(4), range(4)):
     print a+b
 
-# multi-module/inheritance problem
+# qualify & add include for class name
 from testdata import iec2
 from testdata import d1541
 IEC = iec2.IECBus()
