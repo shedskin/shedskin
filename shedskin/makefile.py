@@ -123,7 +123,7 @@ def generate_makefile():
                 if sys.platform not in ['win32', 'darwin', 'sunos5']:
                     line += ' -lutil'
             if 'hashlib' in [m.ident for m in mods]:
-                line += ' -lssl'
+                line += ' -lcrypto'
 
         print >>makefile, line
     print >>makefile

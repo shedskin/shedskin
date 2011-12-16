@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-### to compile this, copy lib/hashlib.* to the shedskin lib dir!
+### to compile this, copy lib/hashlib.* to the shedskin lib dir, or use shedskin -Llib!
 
 """
 This is a pure Python implementation of the [rsync algorithm](TM96).
