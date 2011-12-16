@@ -2453,7 +2453,8 @@ class generateVisitor(ASTVisitor):
                  (func and func.parent and func.isGenerator)): # XXX lookupvar?
                 self.append('self')
             elif len(lcp) == 1 and not (lcp[0] is func.parent or lcp[0] in func.parent.ancestors()): # see test 160
-                self.append('(('+nokeywords(lcp[0].ident)+' *)this)')
+                getmv().module.prop_includes.add(lcp[0].module) # XXX generalize
+                self.append('(('+namespaceclass(lcp[0])+' *)this)')
             else:
                 self.append('this')
         elif node.name in map:
