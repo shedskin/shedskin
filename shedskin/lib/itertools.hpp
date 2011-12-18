@@ -959,13 +959,19 @@ public:
     unsigned int indice1;
     unsigned int indice2;
 
+    tuple2<T, U> *__tuple_cache;
+    int __tuple_count; 
+
     productiter();
     productiter(pyiter<T> *iterable1, pyiter<U> *iterable2);
 
     tuple2<T, U> *next();
 };
 
-template<class T, class U> inline productiter<T, U>::productiter() { }
+template<class T, class U> inline productiter<T, U>::productiter() {
+    this->__tuple_cache = new tuple2<T,T>[__SS_ALLOC_TUPLES];
+    this->__tuple_count = 0; 
+}
 template<class T, class U> inline productiter<T, U>::productiter(pyiter<T> *iterable1, pyiter<U> *iterable2) {
     this->exhausted = false;
     this->indice1 = 0;
@@ -992,6 +998,9 @@ template<class T, class U> inline productiter<T, U>::productiter(pyiter<T> *iter
     CACHE_VALUES(U, 2)
 
     #undef CACHE_VALUES
+
+    this->__tuple_cache = new tuple2<T,U>[__SS_ALLOC_TUPLES];
+    this->__tuple_count = 0; 
 }
 
 template<class T, class U> tuple2<T, U> *productiter<T, U>::next() {
@@ -999,7 +1008,11 @@ template<class T, class U> tuple2<T, U> *productiter<T, U>::next() {
         throw new StopIteration();
     }
 
-    tuple2<T, U> *tuple = new tuple2<T, U>;
+    tuple2<T, U> *tuple = &(this->__tuple_cache[this->__tuple_count++]);
+    if(this->__tuple_count == __SS_ALLOC_TUPLES) { /* XXX make this more generic? */
+        this->__tuple_count = 0;
+        this->__tuple_cache = new tuple2<T,U>[__SS_ALLOC_TUPLES];
+    }
 
     tuple->first = this->values1[this->indice1];
     tuple->second = this->values2[this->indice2];
