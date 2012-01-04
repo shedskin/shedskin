@@ -35,3 +35,7 @@ from testdata import d1541
 IEC = iec2.IECBus()
 hop = d1541.D1541(IEC, 8)
 print hop.get_data()
+
+# sys.exit case
+import sys
+sys.exit(7)

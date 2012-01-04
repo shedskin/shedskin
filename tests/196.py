@@ -391,3 +391,7 @@ print valeur
 print repr(valeur)
 print valeur.message
 print valeur.__class__.__name__
+
+# sys.exit case
+import sys
+sys.exit()

@@ -482,3 +482,7 @@ def hoppagen():
     return
 for hoppax in hoppagen():
     print hoppax
+
+# sys.exit case
+import sys
+sys.exit('woef')
