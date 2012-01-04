@@ -161,9 +161,9 @@ void terminate_handler() {
         throw;
 
     } catch (SystemExit *s) {
-        __add_missing_newline();
-        if(s->code)
-            print2(NULL, 0, 1, s->message);
+        __add_missing_newline(); /* XXX s->message -> stderr? */
+        if(s->show_message)
+            print2(__ss_stderr, 0, 1, s->message);
         code = s->code;
 
     } catch (BaseException *e) {
