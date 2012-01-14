@@ -19,7 +19,7 @@ class run_tests(Command):
         os.chdir(self.cwd)
 
 setup(name='shedskin',
-      version='0.9',
+      version='0.9.1',
       description='Shed Skin is an experimental compiler, that can translate pure, but implicitly statically typed Python programs into optimized C++. It can generate stand-alone programs or extension modules that can be imported and used in larger Python programs.',
       url='http://code.google.com/p/shedskin/',
       scripts=['scripts/shedskin'],
