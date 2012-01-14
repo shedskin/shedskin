@@ -65,7 +65,7 @@ def start():
 
 
     if not getgx().silent:
-        print '*** SHED SKIN Python-to-C++ Compiler 0.9 ***'
+        print '*** SHED SKIN Python-to-C++ Compiler 0.9.1 ***'
         print 'Copyright 2005-2011 Mark Dufour; License GNU GPL version 3 (See LICENSE)'
         print
 
