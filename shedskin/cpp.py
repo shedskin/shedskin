@@ -2397,6 +2397,8 @@ class generateVisitor(ASTVisitor):
         # getfast
         if ident == '__getitem__' and self.one_class(node.expr, ('list', 'str_', 'tuple')):
             ident = '__getfast__'
+        elif ident == '__getitem__' and len(lcp) == 1 and lcp[0].ident == 'array': # XXX merge into above
+            ident = '__getfast__'
 
         self.append(self.attr_var_ref(node, ident))
 
