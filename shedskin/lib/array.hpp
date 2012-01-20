@@ -42,6 +42,7 @@ public:
     str *tostring();
 
     T __getitem__(__ss_int i);
+    T __getfast__(__ss_int i);
     void *__setitem__(__ss_int i, T t);
     void *__delitem__(__ss_int i);
 
@@ -253,9 +254,35 @@ template<class T> void array<T>::fillbuf(T t) {
     }
 }
 
-template<> __ss_int array<__ss_int>::__getitem__(__ss_int i);
-template<> str *array<str *>::__getitem__(__ss_int i);
-template<> double array<double>::__getitem__(__ss_int i);
+template<class T> T array<T>::__getitem__(__ss_int i) {
+    return __getfast__(i);
+}
+
+template<> inline __ss_int array<__ss_int>::__getfast__(__ss_int i) {
+    i = __wrap(this, i);
+    switch(typecode->unit[0]) {
+        case 'b': return *((signed char *)(&units[i*itemsize]));
+        case 'B': return *((unsigned char *)(&units[i*itemsize]));
+        case 'h': return *((signed short *)(&units[i*itemsize]));
+        case 'H': return *((unsigned short *)(&units[i*itemsize]));
+        case 'i': return *((signed int *)(&units[i*itemsize]));
+        case 'I': return *((unsigned int *)(&units[i*itemsize]));
+        case 'l': return *((signed long *)(&units[i*itemsize]));
+        case 'L': return *((unsigned long *)(&units[i*itemsize]));
+    }
+    return 0;
+}
+template<> inline str *array<str *>::__getfast__(__ss_int i) {
+    i = __wrap(this, i);
+    return __char_cache[(unsigned char)units[i]];
+}
+template<> inline double array<double>::__getfast__(__ss_int i) {
+    i = __wrap(this, i);
+    if(typecode->unit[0] == 'f')
+        return *((float *)(&units[i*itemsize]));
+    else
+        return *((double *)(&units[i*itemsize]));
+}
 
 template<class T> void *array<T>::append(T t) {
     fillbuf(t);
