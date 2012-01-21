@@ -33,9 +33,8 @@ template<> void *array<str *>::__setitem__(__ss_int i, str *t) {
     return NULL;
 }
 
-unsigned int get_itemsize(str *typecode) {
-    char c = typecode->unit[0];
-    switch(c) {
+unsigned int get_itemsize(char typechar) {
+    switch(typechar) {
         case 'c': return sizeof(char);
         case 'b': return sizeof(signed char);
         case 'B': return sizeof(unsigned char);
@@ -70,7 +69,7 @@ template<> __ss_int array<str *>::index(str *t) {
 
 template<> template<> void *array<int>::extend(list<int> *l) { /* XXX generalize */
     size_t len = l->__len__();
-    if(typecode->unit[0] != 'I') {
+    if(typechar != 'I') {
         for(size_t i=0; i<len; i++)
             append(l->units[i]);
     } else {
