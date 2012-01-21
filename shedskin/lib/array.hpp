@@ -12,19 +12,21 @@ extern str *const_0;
 extern str *__name__;
 extern void *buffy;
 
-unsigned int get_itemsize(str *typecode);
+unsigned int get_itemsize(char typechar);
 
 extern class_ *cl_array;
 template <class T> class array : public pyseq<T> {
 public:
     __GC_VECTOR(char) units; /* XXX no pointers, so avoid GC */
     str *typecode;
+    char typechar;
     unsigned int itemsize;
 
     array(str *typecode) {
         this->__class__ = cl_array;
         this->typecode = typecode;
-        this->itemsize = get_itemsize(typecode);
+        this->typechar = typecode->unit[0];
+        this->itemsize = get_itemsize(typechar);
     }
 
     template<class U> array(str *typecode, U *iter) { /* XXX iter with type None */
@@ -85,7 +87,8 @@ public:
 
 template<class T> template<class U> void *array<T>::__init__(str *typecode, U *iter) {
     this->typecode = typecode;
-    this->itemsize = get_itemsize(typecode);
+    this->typechar = typecode->unit[0];
+    this->itemsize = get_itemsize(typechar);
     this->extend(iter);
     return NULL;
 }
@@ -156,7 +159,7 @@ template<class T> __ss_bool array<T>::__eq__(pyobj *p) {
    size_t len = this->__len__();
    if(b->__len__() != len)
        return False;
-   if(this->typecode->unit[0] == b->typecode->unit[0])
+   if(this->typechar == b->typechar)
        return __mbool(memcmp(&(this->units[0]), &(b->units[0]), this->units.size()) == 0);
    for(size_t i=0; i<len; i++)
        if(!__eq(this->__getitem__(i), b->__getitem__(i)))
@@ -240,7 +243,7 @@ template<class T> T array<T>::pop(__ss_int i) {
 }
 
 template<class T> void array<T>::fillbuf(T t) {
-    switch(typecode->unit[0]) {
+    switch(typechar) {
         case 'b': *((signed char *)buffy) = t; break;
         case 'B': *((unsigned char *)buffy) = t; break;
         case 'h': *((signed short *)buffy) = t; break;
@@ -260,7 +263,7 @@ template<class T> T array<T>::__getitem__(__ss_int i) {
 
 template<> inline __ss_int array<__ss_int>::__getfast__(__ss_int i) {
     i = __wrap(this, i);
-    switch(typecode->unit[0]) {
+    switch(typechar) {
         case 'b': return *((signed char *)(&units[i*itemsize]));
         case 'B': return *((unsigned char *)(&units[i*itemsize]));
         case 'h': return *((signed short *)(&units[i*itemsize]));
@@ -278,7 +281,7 @@ template<> inline str *array<str *>::__getfast__(__ss_int i) {
 }
 template<> inline double array<double>::__getfast__(__ss_int i) {
     i = __wrap(this, i);
-    if(typecode->unit[0] == 'f')
+    if(typechar == 'f')
         return *((float *)(&units[i*itemsize]));
     else
         return *((double *)(&units[i*itemsize]));
