@@ -513,6 +513,19 @@ class pyset(pyiter):
     def __xor__(self, b):
         return self
 
+    def __ior__(self, b):
+        self.__setunit__(iter(b).next())
+        return self
+    def __iand__(self, b):
+        self.__setunit__(iter(b).next())
+        return self
+    def __ixor__(self, b):
+        self.__setunit__(iter(b).next())
+        return self
+    def __isub__(self, b):
+        self.__setunit__(iter(b).next())
+        return self
+
     def union(self, *b):
         return self
         return set(b)
