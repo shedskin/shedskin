@@ -548,8 +548,6 @@ class frozenset(pyset):
 class set(pyset):
     def add(self, u):
         self.__setunit__(u)
-    def __isub__(self, b):
-        return self
     def discard(self, u):
         pass
     def remove(self, u):

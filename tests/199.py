@@ -26,7 +26,6 @@ set3 = set()
 set3 ^= set([2,3])
 print set3
 
-# XXX is this one always overridden perhaps?
-#set4 = set()
-#set4 -= set([2,3])
-#print set4
+set4 = set()
+set4 -= set([2,3])
+print set4
