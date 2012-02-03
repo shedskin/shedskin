@@ -29,3 +29,6 @@ print set3
 set4 = set()
 set4 -= set([2,3])
 print set4
+
+# overflow in pow, use long long internally
+print pow(290797,2,50515093)
