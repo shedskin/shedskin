@@ -1744,6 +1744,9 @@ class generateVisitor(ASTVisitor):
 
             if ident == '__call__':
                 self.visitm(node.node, '->__call__(', func)
+            elif ident == 'is_integer' and (defclass('float_'),0) in self.mergeinh[node.node.expr]:
+                self.visitm('__ss_is_integer(', node.node.expr, ')', func)
+                return
             else:
                 self.visitm(node.node, '(', func)
 

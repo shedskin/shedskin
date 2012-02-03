@@ -170,3 +170,9 @@ template<class T> T __mul2(__ss_bool n, T a) { return a->__mul__(n.value); }
 template<class T> T __mul2(double n, T a) { return a->__mul__(n); }
 template<class T> T __div2(__ss_int n, T a) { return a->__rdiv__(n); }
 template<class T> T __div2(double n, T a) { return a->__rdiv__(n); }
+
+/* float.is_integer */
+
+inline __ss_bool __ss_is_integer(double d) {
+    return __mbool((long long)d == d);
+}

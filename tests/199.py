@@ -32,3 +32,10 @@ print set4
 
 # overflow in pow, use long long internally
 print pow(290797,2,50515093)
+
+# float.is_integer
+print 7.7.is_integer()
+print 7.0.is_integer()
+a = 3.14
+print a.is_integer(), (a+a).is_integer()
+print 2*a.is_integer()
