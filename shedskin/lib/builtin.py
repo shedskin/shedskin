@@ -135,6 +135,9 @@ class float_:
     def __pow__(self, b):
         return b.__with_float__()
 
+    def is_integer(self):
+        return True
+
     def __neg__(self):
         return 1.0
     def __pos__(self):
