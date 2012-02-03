@@ -58,7 +58,7 @@ inline __ss_int __power(__ss_int a, __ss_int b, __ss_int c) {
 #endif
 
 inline int __power(int a, int b, int c) {
-    int res, tmp;
+    long long res, tmp;
 
     res = 1;
     tmp = a;
@@ -70,7 +70,7 @@ inline int __power(int a, int b, int c) {
         tmp = ((tmp*tmp)%c);
         b = (b/2);
     }
-    return res;
+    return (int)res;
 }
 
 /* division */
