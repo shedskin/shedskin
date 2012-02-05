@@ -181,6 +181,10 @@ class pyiter:
     def __with_int__(self):
         return self
 
+    def __contains__(self, x):
+        x == self.unit
+        return True
+
 class pyseq(pyiter):
     pass
 
