@@ -191,10 +191,15 @@ class pyseq(pyiter):
 class list(pyseq):
     def append(self, u):
         self.unit = u
+
     def index(self, u, s=0, e=0):
+        u == self.unit
         return 1
     def count(self, u):
+        u == self.unit
         return 1
+    def remove(self, u):
+        u == self.unit
 
     def __getitem__(self, i):
         return self.unit
@@ -228,15 +233,14 @@ class list(pyseq):
         return ''
     def __str__(self):
         return self.__repr__()
+
     def extend(self, other):
         self.unit = other.unit
+    def insert(self, i, u):
+        self.unit = u
 
     def pop(self, m=0):
         return self.unit
-    def remove(self, u):
-        pass
-    def insert(self, i, u):
-        self.unit = u
 
     def reverse(self):
         pass
