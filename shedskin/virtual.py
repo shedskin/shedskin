@@ -43,7 +43,11 @@ def virtuals(self, cl, declare):
             for types in z: merge.update(types)
             merged.append(merge)
 
-        formals = list(subclasses)[0].funcs[ident].formals[1:]
+        formals = []
+        subcl0 = list(subclasses)[0]
+        if ident in subcl0.funcs:
+            formals = list(subclasses)[0].funcs[ident].formals[1:]
+
         ftypes = []
         for m in merged:
             ts = typestr(m)
@@ -52,7 +56,8 @@ def virtuals(self, cl, declare):
 
         # --- prepare for having to cast back arguments (virtual function call means multiple targets)
         for subcl in subclasses:
-            subcl.funcs[ident].ftypes = ftypes
+            if ident in subcl.funcs:
+                subcl.funcs[ident].ftypes = ftypes
 
         # --- virtual function declaration
         if declare:
