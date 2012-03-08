@@ -55,3 +55,12 @@ def wof():
     return p if p not in (a, b, c, d) else None
 
 print wof()
+
+# context of inherited method?
+import testdata.CCMView
+
+class GameView(testdata.CCMView.CCMView):
+    pass
+
+gv = GameView()
+gv.wa()
