@@ -569,7 +569,7 @@ class generateVisitor(ASTVisitor):
         self.output('extern class_ *cl_'+cl.ident+';')
 
         # --- header
-        clnames = [namespaceclass(b) for b in cl.bases if b.ident != 'object']
+        clnames = [namespaceclass(b) for b in cl.bases]
         if not clnames:
             clnames = ['pyobj']
             if '__iter__' in cl.funcs: # XXX get return type of 'next'
