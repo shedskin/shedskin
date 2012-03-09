@@ -41,20 +41,20 @@ print a.is_integer(), (a+a).is_integer()
 print 2*a.is_integer()
 
 # model __eq__ from __contains__
-#class Point:
-#    def __init__(self, x, y):
-#        self.x, self.y = x, y
-#    def __eq__(self, other):
-#        return (self.x, self.y) == (other.x, other.y)
-#    def __str__(self):
-#        return 'Point(%s, %s)' % (self.x, self.y)
+class Point:
+    def __init__(self, x, y):
+        self.x, self.y = x, y
+    def __eq__(self, other):
+        return (self.x, self.y) == (other.x, other.y)
+    def __str__(self):
+        return 'Point(%s, %s)' % (self.x, self.y)
 
-#def wof():
-#    a = b = c = d = Point(7,8)
-#    p = Point(7,8)
-#    return p if p not in (a, b, c, d) else None
+def wof():
+    a = b = c = d = Point(7,8)
+    p = Point(7,8)
+    return p if p not in (a, b, c, d) else None
 
-#print wof()
+print wof()
 
 # context of inherited method?
 import testdata.CCMView

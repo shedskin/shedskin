@@ -330,7 +330,7 @@ class generateVisitor(ASTVisitor):
             print >>self.out, 'namespace __shedskin__ { /* XXX */'
             for cl in cmp_cls:
                 t = '__%s__::%s *' % (getmv().module.ident, cl.cpp_name())
-                print >>self.out, 'template<> __ss_int __cmp(%sa, %sb) {' % (t, t)
+                print >>self.out, 'template<> inline __ss_int __cmp(%sa, %sb) {' % (t, t)
                 print >>self.out, '    if (!a) return -1;'
                 if '__eq__' in cl.funcs:
                     print >>self.out, '    if(a->__eq__(b)) return 0;'
@@ -350,7 +350,7 @@ class generateVisitor(ASTVisitor):
     def rich_compare(self, cls, msg, fallback_msg):
         for cl in cls:
             t = '__%s__::%s *' % (getmv().module.ident, cl.cpp_name())
-            print >>self.out, 'template<> __ss_bool __%s(%sa, %sb) {' % (msg, t, t)
+            print >>self.out, 'template<> inline __ss_bool __%s(%sa, %sb) {' % (msg, t, t)
             #print >>self.out, '    if (!a) return -1;' # XXX check
             print >>self.out, '    return b->__%s__(a);' % fallback_msg
             print >>self.out, '}'
