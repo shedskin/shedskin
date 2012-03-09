@@ -1272,7 +1272,10 @@ class moduleVisitor(ASTVisitor):
             inode(arg).callfuncs.append(node) # this one too
 
         # --- handle instantiation or call
-        constructor = lookupclass(node.node, self)
+        context = self # XXX move context to lookupclass? check related problems
+        if isinstance(func, function) and func.inherited_from:
+            context = func.inherited_from.mv
+        constructor = lookupclass(node.node, context)
         if constructor and (not isinstance(node.node, Name) or not lookupvar(node.node.name, func)):
             self.instance(node, constructor, func)
             inode(node).callfuncs.append(node) # XXX see above, investigate
