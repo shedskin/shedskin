@@ -56,7 +56,7 @@ def wof():
 
 print wof()
 
-# context of inherited method?
+# context of inherited method
 import testdata.CCMView
 
 class GameView(testdata.CCMView.CCMView):
