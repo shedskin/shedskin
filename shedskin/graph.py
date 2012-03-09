@@ -273,10 +273,11 @@ class moduleVisitor(ASTVisitor):
 
         # determine base classes
         for cl in self.classes.values():
-            for base in cl.node.bases: # XXX getattr
-                ancestor = lookupclass(base, getmv())
-                cl.bases.append(ancestor)
-                ancestor.children.append(cl)
+            for base in cl.node.bases:
+                if not (isinstance(base, Name) and base.name == 'object'):
+                    ancestor = lookupclass(base, getmv())
+                    cl.bases.append(ancestor)
+                    ancestor.children.append(cl)
 
         # for each base class, duplicate methods
         for cl in self.classes.values():
