@@ -1,3 +1,17 @@
+# code generator crashes, skips call
+def streams(archive):
+    archive.seek(4) # Skip magic number
+    print 'zoek', archive.tell()
+    stream = ''
+    yield stream
+
+def decompressor(archive):
+    for stream in streams(archive):
+        pass
+ 
+if __name__ == '__main__':
+    decompressor(open('testdata/binas', 'rb'))
+
 # set.__ior__ etc. model
 class waf:
     def __init__(self, value):
@@ -64,3 +78,4 @@ class GameView(testdata.CCMView.CCMView):
 
 gv = GameView()
 gv.wa()
+
