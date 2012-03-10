@@ -1209,7 +1209,13 @@ class generateVisitor(ASTVisitor):
         self.output('}')
 
         for child in func.node.code.getChildNodes():
-            self.visit(child, func)
+            if isinstance(child, Discard): # XXX merge Discard/Stmt code?
+                self.start()
+                self.visit(child, func)
+                self.eol()
+            else:
+                self.visit(child, func)
+
         self.output('__stop_iteration = true;')
         self.deindent()
         self.output('}\n')
