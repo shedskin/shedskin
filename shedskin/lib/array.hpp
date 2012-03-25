@@ -379,11 +379,25 @@ template<class T> array<T> *array<T>::__deepcopy__(dict<void *, pyobj *> *memo) 
     return this->__copy__();
 }
 
-/* XXX XXX optimize slicing */
-
 template<class T> array<T> *array<T>::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
-    return new array<T>(typecode, this->tolist()->__slice__(x, l, u, s));
+    array<T> *c = new array<T>(typecode);
+    slicenr(x, l, u, s, this->__len__());
+    if(s == 1) {
+        c->units.resize((u-l)*itemsize);
+        memcpy(&(c->units[0]), &(this->units[l*itemsize]), (u-l)*itemsize);
+    } else if(s > 0)
+        for(int i=l; i<u; i += s)
+            for(int j=0; j<itemsize; j++)
+                c->units.push_back(units[i*itemsize+j]);
+    else
+        for(int i=l; i>u; i += s)
+            for(int j=0; j<itemsize; j++)
+                c->units.push_back(units[i*itemsize+j]);
+    return c;
 }
+
+/* XXX optimize XXX */
+
 template<class T> void *array<T>::__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, array<T> *b) {
     list<T> *l2 = this->tolist();
     l2->__setslice__(x, l, u, s, b->tolist());
@@ -391,11 +405,15 @@ template<class T> void *array<T>::__setslice__(__ss_int x, __ss_int l, __ss_int 
     this->fromlist(l2);
     return NULL;
 }
+
 template<class T> void *array<T>::__delete__(__ss_int i) {
     i = __wrap(this, i);
     this->units.erase(units.begin()+(i*itemsize), units.begin()+((i+1)*itemsize));
     return NULL;
 }
+
+/* XXX optimize XXX */
+
 template<class T> void *array<T>::__delete__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
     list<T> *l2 = this->tolist();
     l2->__delete__(x, l, u, s);
