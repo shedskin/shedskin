@@ -77,3 +77,14 @@ class GameView(testdata.CCMView.CCMView):
 
 gv = GameView()
 gv.wa()
+
+# optimized array slicing, test
+import array
+arr = array.array('B')
+arr.extend(range(20))
+print arr
+print arr[:]
+print arr[-7:]
+print arr[-7::2]
+print arr[:8:3]
+print arr[15:1:-2]
