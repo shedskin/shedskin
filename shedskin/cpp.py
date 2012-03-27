@@ -440,14 +440,7 @@ class generateVisitor(ASTVisitor):
                             self.eol()
 
             elif isinstance(child, Discard):
-                if isinstance(child.expr, Const) and child.expr.value == None: # XXX merge with visitStmt
-                    continue
-                if isinstance(child.expr, Const) and type(child.expr.value) == str:
-                    continue
-
-                self.start('')
-                self.visit(child)
-                self.eol()
+                self.visit_discard(child)
 
             elif isinstance(child, From) and child.modname != '__future__':
                 mod = getgx().from_mod[child]
@@ -479,6 +472,16 @@ class generateVisitor(ASTVisitor):
             extmod.do_extmod(self)
         if self.module == getgx().main_module:
             self.do_main()
+
+    def visit_discard(self, node, func=None):
+        if isinstance(node.expr, Const) and node.expr.value == None: # XXX merge with visitStmt
+            pass
+        elif isinstance(node.expr, Const) and type(node.expr.value) == str:
+            self.do_comment(node.expr.value)
+        else:
+            self.start('')
+            self.visit(node, func)
+            self.eol()
 
     def visitModule(self, node, declare=False):
         if declare:
@@ -1209,10 +1212,8 @@ class generateVisitor(ASTVisitor):
         self.output('}')
 
         for child in func.node.code.getChildNodes():
-            if isinstance(child, Discard): # XXX merge Discard/Stmt code?
-                self.start()
-                self.visit(child, func)
-                self.eol()
+            if isinstance(child, Discard):
+                self.visit_discard(child, func)
             else:
                 self.visit(child, func)
 
@@ -1318,14 +1319,7 @@ class generateVisitor(ASTVisitor):
     def visitStmt(self, node, func=None):
         for b in node.nodes:
             if isinstance(b, Discard):
-                if isinstance(b.expr, Const) and b.expr.value == None:
-                    continue
-                if isinstance(b.expr, Const) and type(b.expr.value) == str:
-                    self.do_comment(b.expr.value)
-                    continue
-                self.start('')
-                self.visit(b, func)
-                self.eol()
+                self.visit_discard(b, func)
             else:
                 self.visit(b, func)
 
