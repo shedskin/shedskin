@@ -1,4 +1,4 @@
-64 programs that work with Shed Skin 0.9.1.
+65 programs that work with Shed Skin 0.9.2.
 
 16,000 lines in total (using sloccount, around 24,000 otherwise)
 
@@ -75,6 +75,7 @@ lines  name                 description                     notes
    192 sha.py               SHA-1 algorithm                 shedskin -l sha
     92 sokoban.py           sokoban solver
    102 solitaire.py         solitaire encryption algorithm
+   200 stereo.py            stereo computer vision          shedskin -web stereo && make; python stereo_main.py
    139 sudoku1.py           sudoku solver
    148 sudoku2.py           sudoku solver
    155 sudoku3.py           sudoku solver
