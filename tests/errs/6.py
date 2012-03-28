@@ -22,6 +22,12 @@ class meuh:
 meuh()
 meuh().attr
 
+import struct
+data = 'data'
+unpacked = struct.unpack('<I', data)[0]
+struct.unpack('<I', data)
+tuple_unpacked = struct.unpack('<I', data)
+
 #*WARNING* 6.py:6: '__del__' is not supported
 #*WARNING* 6.py:8: '__iter__' is not supported
 #*WARNING* 6.py:10: '__call__' is not supported
@@ -29,3 +35,6 @@ meuh().attr
 #*WARNING* 6.py:14: attribute won't be deleted
 #*WARNING* 6.py:20: class attribute 'attr' accessed without using class name
 #*WARNING* 6.py:23: class attribute 'attr' accessed without using class name
+#*WARNING* 6.py:27: struct.unpack should be used as follows: 'a, .. = struct.unpack(..)'
+#*WARNING* 6.py:28: struct.unpack should be used as follows: 'a, .. = struct.unpack(..)'
+#*WARNING* 6.py:29: struct.unpack should be used as follows: 'a, .. = struct.unpack(..)'
