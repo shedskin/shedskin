@@ -7,7 +7,7 @@ extra = ''
 if len(sys.argv) == 4:
     extra = sys.argv[3]
 
-alles = range(total)
+alles = [a for a in range(total) if a != 172]
 random.shuffle(alles)
 
 tests = alles[part::parts]
