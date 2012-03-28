@@ -78,12 +78,12 @@ def typestrnew(types, cplusplus=True, node=None, check_extmod=False, depth=0, ch
             if not node.name.startswith('__') : # XXX startswith
                 if node.parent: varname = "%s" % node
                 else: varname = "'%s'" % node
-                error("variable %s has dynamic (sub)type: {%s}" % (varname, ', '.join([conv2.get(cl.ident, cl.ident) for cl in lcp])), node, warning=True)
+                error("variable %s has dynamic (sub)type: {%s}" % (varname, ', '.join(sorted([conv2.get(cl.ident, cl.ident) for cl in lcp]))), node, warning=True)
         elif node not in getgx().bool_test_only:
             if tuple_check:
                 error("tuple with length > 2 and different types of elements", node, warning=True, mv=getmv())
             else:
-                error("expression has dynamic (sub)type: {%s}" % ', '.join([conv2.get(cl.ident, cl.ident) for cl in lcp]), node, warning=True)
+                error("expression has dynamic (sub)type: {%s}" % ', '.join(sorted([conv2.get(cl.ident, cl.ident) for cl in lcp])), node, warning=True)
     elif not classes:
         if cplusplus: return 'void *'
         return ''
