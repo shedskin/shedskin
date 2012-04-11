@@ -88,3 +88,10 @@ print arr[-7:]
 print arr[-7::2]
 print arr[:8:3]
 print arr[15:1:-2]
+
+#os.popen2 improvement
+import os
+child_stdin, child_stdout = os.popen2(["echo", "a  text"], "r")
+print repr(child_stdout.read())
+child_stdin, child_stdout = os.popen2("echo a  text", "r")
+print repr(child_stdout.read())

@@ -1301,7 +1301,12 @@ tuple2<file*,file*>* popen2(str* cmd) {
     return popen2(cmd, new str("t"), -1);
 }
 
-tuple2<file*,file*>* popen2(str* cmd, str*, __ss_int) {
+tuple2<file*,file*>* popen2(list<str *> *cmd_l) {
+    return popen2(cmd_l, new str("t"), -1);
+}
+
+tuple2<file*,file*>* popen2(list<str *> *cmd_l, str *, __ss_int) {
+    // TODO what if there is not even 1 element in cmd_l ?
     tuple2<__ss_int,__ss_int>* p2c = pipe();
     tuple2<__ss_int,__ss_int>* c2p = pipe();
 
@@ -1317,10 +1322,7 @@ tuple2<file*,file*>* popen2(str* cmd, str*, __ss_int) {
             }
             catch(OSError*) {}
         }
-
-        list<str*>* cmd_l = new list<str*>(3, new str("/bin/sh"),
-                new str("-c"), cmd);
-        execvp(new str("/bin/sh"), cmd_l);
+        execvp(cmd_l->__getitem__(0), cmd_l);
         ::exit(1);
     }
 
@@ -1332,9 +1334,10 @@ tuple2<file*,file*>* popen2(str* cmd, str*, __ss_int) {
 
     return ret;
 }
-
-tuple2<file*,file*>* popen2(pyseq<str *> *cmd, str *, __ss_int) { /* XXX */
-    return popen2((new str(" "))->join(cmd)); 
+tuple2<file*,file*>* popen2(str* cmd, str*, __ss_int) {
+    list<str*>* cmd_l = new list<str*>(3, new str("/bin/sh"),
+             new str("-c"), cmd);
+    return popen2(cmd_l);
 }
 
 tuple2<file*,file*>* popen3(str* cmd) {
