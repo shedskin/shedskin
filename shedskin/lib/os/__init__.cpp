@@ -1301,11 +1301,12 @@ tuple2<file*,file*>* popen2(str* cmd) {
     return popen2(cmd, new str("t"), -1);
 }
 
-tuple2<file*,file*>* popen2(pyseq<str *> *cmd_l) {
+tuple2<file*,file*>* popen2(pyiter<str *> *cmd_l) {
     return popen2(cmd_l, new str("t"), -1);
 }
 
-tuple2<file*,file*>* popen2(pyseq<str *> *cmd_l, str *, __ss_int) {
+tuple2<file*,file*>* popen2(pyiter<str *> *cmd_i, str *, __ss_int) {
+    list<str *> *cmd_l = new list<str *>(cmd_i);
     // TODO what if there is not even 1 element in cmd_l ?
     tuple2<__ss_int,__ss_int>* p2c = pipe();
     tuple2<__ss_int,__ss_int>* c2p = pipe();
@@ -1322,7 +1323,7 @@ tuple2<file*,file*>* popen2(pyseq<str *> *cmd_l, str *, __ss_int) {
             }
             catch(OSError*) {}
         }
-        execvp(cmd_l->__getitem__(0), new list<str *>(cmd_l)); /* XXX pass pyseq? */
+        execvp(cmd_l->__getitem__(0), cmd_l); /* XXX pass cmd_i? */
         ::exit(1);
     }
 
