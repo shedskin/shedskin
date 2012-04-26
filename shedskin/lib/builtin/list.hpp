@@ -344,7 +344,7 @@ template<class T> str *list<T>::__repr__() {
     return r;
 }
 
-template<class T> T list<T>::pop(int i) {
+template<class T> T list<T>::pop(int i) { /* XXX optimize */
     int len = this->__len__();
     if(len==0)
         throw new IndexError(new str("pop from empty list"));
@@ -356,8 +356,13 @@ template<class T> T list<T>::pop(int i) {
     units.erase(units.begin()+i);
     return e;
 }
+
 template<class T> T list<T>::pop() {
-    return pop(-1);
+    if(this->units.size()==0)
+        throw new IndexError(new str("pop from empty list"));
+    T e = units.back();
+    units.pop_back();
+    return e;
 }
 
 template<class T> void *list<T>::reverse() {
