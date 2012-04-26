@@ -24,3 +24,5 @@ template<> inline __ss_bool ___bool(__ss_bool x) { return x; }
 template<> inline __ss_bool ___bool(double x) { return __mbool(x!=0); }
 template<> inline __ss_bool ___bool(void *) { return False; }
 template<> inline __ss_bool ___bool(long int) { return False; } /* XXX bool(None) 64-bit */
+
+template<class T> inline __ss_bool ___bool(list<T> *x) { return __mbool(x && (x->units.size() != 0)); } /* XXX more general solution */
