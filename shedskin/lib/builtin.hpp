@@ -1194,6 +1194,23 @@ template<> inline void *__deepcopy(void *p, dict<void *, pyobj *> *) { return p;
 #define __AND(a, b, t) ((!___bool(__ ## t = a))?(__ ## t):(b))
 #define __NOT(x) (__mbool(!(x)))
 
+/* 'zero' value for type */
+
+template<class T> T __zero() { return 0; }
+template<> inline __ss_bool __zero<__ss_bool>() { return False; }
+template<> inline complex __zero<complex>() { return mcomplex(0,0); }
+
+#include "builtin/list.hpp"
+#include "builtin/tuple.hpp"
+#include "builtin/str.hpp"
+#include "builtin/dict.hpp"
+#include "builtin/set.hpp"
+#include "builtin/file.hpp"
+#include "builtin/math.hpp"
+#include "builtin/format.hpp"
+#include "builtin/function.hpp"
+#include "builtin/complex.hpp"
+
 /* pyiter methods */
 
 template<class T> inline __iter<T> *pyiter<T>::for_in_init() {
@@ -1274,22 +1291,6 @@ template<class T> T __iter<T>::__get_next() {
     }
     return __result;
 }
-
-template<class T> T __zero() { return 0; }
-template<> inline __ss_bool __zero<__ss_bool>() { return False; }
-template<> inline complex __zero<complex>() { return mcomplex(0,0); }
-
-#include "builtin/list.hpp"
-#include "builtin/tuple.hpp"
-#include "builtin/str.hpp"
-#include "builtin/dict.hpp"
-#include "builtin/set.hpp"
-#include "builtin/file.hpp"
-#include "builtin/math.hpp"
-#include "builtin/format.hpp"
-#include "builtin/function.hpp"
-#include "builtin/complex.hpp"
-
 /* iterators */
 
 template<class T> str *__iter<T>::__repr__() {
