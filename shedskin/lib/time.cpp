@@ -282,7 +282,6 @@ str *strftime(str *format, tuple2<__ss_int, __ss_int> *tuple) {
 #include <ctype.h>
 #include <string.h>
 #include <time.h>
-#include <stdint.h>
 
 typedef struct {
     const char *abday[7];

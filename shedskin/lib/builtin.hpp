@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <iterator>
 #include <ctype.h>
+#include <stdint.h>
 #include <limits>
 
 #ifndef WIN32

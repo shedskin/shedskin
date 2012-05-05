@@ -6,8 +6,6 @@
 #include <cstddef>
 #include <cstring>
 
-#include <stdint.h>
-
 #ifndef WIN32
 #include <sys/mman.h>  // mmap, munmap, msync, mremap
 #include <sys/types.h>
