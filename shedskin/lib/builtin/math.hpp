@@ -75,10 +75,6 @@ inline int __power(int a, int b, int c) {
 
 /* division */
 
-template<class A, class B> double __divs(A a, B b);
-template<> inline double __divs(__ss_int a, double b) { return (double)a/b; }
-template<> inline double __divs(double a, __ss_int b) { return a/((double)b); }
-
 template<class A> A __divs(A a, A b);
 template<> inline double __divs(double a, double b) { return a/b; }
 #ifdef __SS_LONG
@@ -93,6 +89,10 @@ template<> inline int __divs(int a, int b) {
     else if(b<0 && a>0) return (a-b-1)/b;
     else return a/b;
 }
+
+template<class A, class B> double __divs(A a, B b);
+template<> inline double __divs(__ss_int a, double b) { return (double)a/b; }
+template<> inline double __divs(double a, __ss_int b) { return a/((double)b); }
 
 template<class A> inline A __floordiv(A a, A b) { return a->__floordiv__(b); }
 template<> inline double __floordiv(double a, double b) { return floor(a/b); }
