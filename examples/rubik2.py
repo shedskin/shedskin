@@ -1,5 +1,8 @@
+import random
+random.seed(1)
 
 faces = U, R, F, D, L, B = range(6)
+facenames = ["U", "R", "F", "D", "L", "B"]
 
 facelets = U1, U2, U3, U4, U5, U6, U7, U8, U9, R1, R2, R3, R4, R5, R6, R7, R8, R9, F1, F2, F3, F4, F5, F6, F7, F8, F9, D1, D2, D3, D4, D5, D6, D7, D8, D9, L1, L2, L3, L4, L5, L6, L7, L8, L9, B1, B2, B3, B4, B5, B6, B7, B8, B9 = range(54)
 
@@ -14,6 +17,17 @@ facelet_turn = [
     [L7,L4,L1,U4,U5,U6,U7,U8,U9,R1,R2,U1,R4,R5,U2,R7,R8,U3,F1,F2,F3,F4,F5,F6,F7,F8,F9,D1,D2,D3,D4,D5,D6,R9,R6,R3,D7,L2,L3,D8,L5,L6,D9,L8,L9,B3,B6,B9,B2,B5,B8,B1,B4,B7],
 ]
 
+facemap = [0, 5, 2, 1, 4, 3] # XXX use URFDLB above so this is not needed
+
+affected_cubies = [
+  [  0,  1,  2,  3,  0,  1,  2,  3 ],   # U
+  [  4,  7,  6,  5,  4,  5,  6,  7 ],   # D
+  [  0,  9,  4,  8,  0,  3,  5,  4 ],   # F
+  [  2, 10,  6, 11,  2,  1,  7,  6 ],   # B
+  [  3, 11,  7,  9,  3,  2,  6,  5 ],   # L
+  [  1,  8,  5, 10,  1,  0,  4,  7 ],   # R
+]
+
 def row(state, i):
     return ' '.join([facelet_color[state[i]] for i in range(i, i+3)])
 
@@ -25,18 +39,92 @@ def visual(state):
    for i in range(3):
        print 8*' '+row(state, D*9+3*i)
 
+def move_str(move):
+    return facenames[move/3]+{1: '', 2: '2', 3: "'"}[move%3+1]
+
+def apply_move(move, state, state2):
+    turns = move % 3 + 1;
+    face = move / 3;
+
+    for turn in range(turns):
+        newstate = 54*[0]
+        for i in range(54):
+            newstate[facelet_turn[face][i]] = state[i]
+        state = newstate
+   # visual(newstate)
+
+    face = facemap[face]
+#    print 'facemap', face
+
+#    print 'prestate edges', state2, state2[20:32]
+    newstate2 = state2[:]
+    for turn in range(turns):
+        oldstate = newstate2[:]
+        for i in range(8):
+            isCorner = int(i > 3)
+            target = affected_cubies[face][i] + isCorner*12
+            killer = affected_cubies[face][(i-3) if (i&3)==3 else i+1] + isCorner*12
+            orientationDelta = int(1<face<4) if i<4 else (0 if face<2 else 2 - (i&1))
+            newstate2[target] = oldstate[killer]
+            newstate2[target+20] = oldstate[killer+20] + orientationDelta
+            if turn == turns-1:
+                newstate2[target+20] %= 2 + isCorner
+
+#    print 'aftstate', newstate2[20:32]
+    return newstate, newstate2
+
+print 'start'
 state = range(54)
-print state
 visual(state)
 
-state2 = 54*[0]
-for i in range(54):
-    state2[facelet_turn[F][i]] = state[i]
-print state2
-visual(state2)
+state2 = range(20)+20*[0]
+print state2, state2[20:32]
+visual(state)
 
-state3 = 54*[0]
-for i in range(54):
-    state3[facelet_turn[R][i]] = state2[i]
-print state3
-visual(state3)
+print 'randomize'
+for x in range(5):
+    move = random.randrange(0,18)
+    print move_str(move)
+    state, state2 = apply_move(move, state, state2)
+print 'start:'
+visual(state)
+print 'start edges:', state2[20:32]
+
+class cube_state:
+    def __init__(self, state, state2, route):
+        self.state = state
+        self.state2 = state2
+        self.route = route
+
+    def apply_move(self, move):
+        state, state2 = apply_move(move, self.state, self.state2)
+        return cube_state(state, state2, self.route+[move])
+
+#solve
+
+print 'solve'
+depth = 0
+state_ids = set()
+states = [cube_state(state, state2, [])]
+
+for deepening in range(3):
+    print 'DEPTH', depth
+    new_states = []
+    for state in states:
+        for move in range(18):
+            new_state = state.apply_move(move)
+            id_ = tuple(new_state.state2[20:32])
+            if sum(id_) == 0:
+                print 'gevonden!', move_str(move), id_
+                print 'route', [move_str(m) for m in new_state.route]
+                stop
+            if id_ not in state_ids:
+#                print 'ok move', move_str(move), id_
+                state_ids.add(id_)
+                new_states.append(new_state)
+#            else:
+#                print 'not ok', move_str(move), id_
+    
+    depth += 1
+    print 'new states', len(new_states)
+    states = new_states
