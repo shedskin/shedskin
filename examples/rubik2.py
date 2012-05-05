@@ -28,8 +28,8 @@ affected_cubies = [
   [  1,  8,  5, 10,  1,  0,  4,  7 ],   # R
 ]
 
-def row(state, i):
-    return ' '.join([facelet_color[state[i]] for i in range(i, i+3)])
+def row(state, j):
+    return ' '.join([facelet_color[state[i]] for i in range(j, j+3)])
 
 def visual(state):
    for i in range(3):
@@ -73,23 +73,6 @@ def apply_move(move, state, state2):
 #    print 'aftstate', newstate2[20:32]
     return newstate, newstate2
 
-print 'start'
-state = range(54)
-visual(state)
-
-state2 = range(20)+20*[0]
-print state2, state2[20:32]
-visual(state)
-
-print 'randomize'
-for x in range(5):
-    move = random.randrange(0,18)
-    print move_str(move)
-    state, state2 = apply_move(move, state, state2)
-print 'start:'
-visual(state)
-print 'start edges:', state2[20:32]
-
 class cube_state:
     def __init__(self, state, state2, route):
         self.state = state
@@ -100,31 +83,79 @@ class cube_state:
         state, state2 = apply_move(move, self.state, self.state2)
         return cube_state(state, state2, self.route+[move])
 
+def get_id(cube_state, phase):
+    if phase == 0:
+        return tuple(cube_state.state2[20:32])
+
+    if phase == 1:
+        result = cube_state.state2[31:40]
+        for e in range(12):
+            result[0] |= (cube_state.state2[e] / 8) << e;
+        return tuple(result)
+
+goal_state = range(20)+20*[0]
+print 'goal id 0', get_id(cube_state(None, goal_state, []), 0)
+print 'goal id 1', get_id(cube_state(None, goal_state, []), 1)
+
+print 'start'
+state = range(54)
+visual(state)
+
+state2 = range(20)+20*[0]
+print state2, state2[20:32]
+visual(state)
+
+print 'start id', get_id(cube_state(state, state2, []), 1)
+
+print 'randomize'
+for x in range(4):
+    move = random.randrange(0,18)
+    print move_str(move)
+    state, state2 = apply_move(move, state, state2)
+print 'start:'
+visual(state)
+
+applicable_moves = [262143, 259263, 74943, 74898]
+
 #solve
 
 print 'solve'
-depth = 0
 state_ids = set()
 states = [cube_state(state, state2, [])]
 
-for deepening in range(3):
-    print 'DEPTH', depth
-    new_states = []
-    for state in states:
-        for move in range(18):
-            new_state = state.apply_move(move)
-            id_ = tuple(new_state.state2[20:32])
-            if sum(id_) == 0:
-                print 'gevonden!', move_str(move), id_
-                print 'route', [move_str(m) for m in new_state.route]
-                stop
-            if id_ not in state_ids:
-#                print 'ok move', move_str(move), id_
-                state_ids.add(id_)
-                new_states.append(new_state)
-#            else:
-#                print 'not ok', move_str(move), id_
-    
-    depth += 1
-    print 'new states', len(new_states)
-    states = new_states
+for phase in range(2):
+    print 'PHASE', phase
+    phase_ok = False
+    depth = 0
+    goal_id = get_id(cube_state(None, goal_state, []), phase)
+    current_id = get_id(states[0], phase)
+    print 'current_id', current_id
+    if current_id == goal_id: # XXX needed?
+        print 'al ok'
+        continue
+
+    while not phase_ok:
+        print 'DEPTH', depth
+        new_states = []
+        for cstate in states:
+            for move in range(18):
+                if applicable_moves[phase] & (1<<move):
+                    new_state = cstate.apply_move(move)
+                    id_ = get_id(new_state, phase)
+#                    print 'move', move_str(move), id_
+                    if id_ == goal_id:
+                        print 'gevonden!', move_str(move), id_
+                        print 'route:', [move_str(m) for m in new_state.route]
+                        phase_ok = True
+                        break
+                    elif id_ not in state_ids:
+                        state_ids.add(id_)
+                        new_states.append(new_state)
+            if phase_ok:
+                break
+        depth += 1
+        print 'new states at depth %d: %d' % (depth, len(new_states))
+        states = new_states
+
+    state_ids = set()
+    states = [new_state]
