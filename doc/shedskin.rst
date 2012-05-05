@@ -6,8 +6,8 @@ Shedskin
 An experimental (restricted) Python-to-C++ Compiler
 ---------------------------------------------------
 
-:Date:   2012-01-14
-:Version: 0.9.1
+:Date:   2012-05-05
+:Version: 0.9.2
 :Manual section: 1
 
 SYNOPSIS
