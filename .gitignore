@@ -292,7 +292,10 @@ tests/195
 tests/196
 tests/197
 tests/198
+tests/199
 speed/rc4
 examples/plcfrs
 examples/kmeanspp
 examples/hq2x
+examples/rubik
+examples/stereo
