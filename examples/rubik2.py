@@ -84,14 +84,28 @@ class cube_state:
         return cube_state(state, state2, self.route+[move])
 
 def get_id(cube_state, phase):
+    state = cube_state.state2
     if phase == 0:
-        return tuple(cube_state.state2[20:32])
+        return tuple(state[20:32])
 
     if phase == 1:
-        result = cube_state.state2[31:40]
+        result = state[31:40]
         for e in range(12):
-            result[0] |= (cube_state.state2[e] / 8) << e;
+            result[0] |= (state[e] / 8) << e;
         return tuple(result)
+
+    if phase == 2:
+        result = [0,0,0]
+        for e in range(12):
+            result[0] |= (2 if (state[e] > 7) else (state[e] & 1)) << (2*e)
+        for c in range(8):
+            result[1] |= ((state[c+12]-12) & 5) << (3*c)
+        for i in range(12, 20):
+            for j in range(i+1, 20):
+                result[2] ^= int(state[i] > state[j])
+        return tuple(result)
+
+    return tuple(cube_state.state2)
 
 goal_state = range(20)+20*[0]
 print 'goal id 0', get_id(cube_state(None, goal_state, []), 0)
@@ -123,7 +137,7 @@ print 'solve'
 state_ids = set()
 states = [cube_state(state, state2, [])]
 
-for phase in range(2):
+for phase in range(4):
     print 'PHASE', phase
     phase_ok = False
     depth = 0
