@@ -109,7 +109,7 @@ def run():
         drawsurf.fill((0, 0, 0))
 
         for c in circles:
-            pygame.draw.circle(drawsurf, pygame.Color(*c.color), (int(c.x), int(c.y)), c.radius, 0)
+            pygame.draw.circle(drawsurf, pygame.Color(*c.color), (int(c.x), int(c.y)), int(c.radius), 0)
 
         for i in xrange(1, ITERATIONS):
             circle.pack(circles, 0.1/i, 2, dragged)
