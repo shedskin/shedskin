@@ -41,54 +41,48 @@ applicable_moves = [262143, 259263, 74943, 74898]
 def move_str(move):
     return facenames[move/3]+{1: '', 2: '2', 3: "'"}[move%3+1]
 
-def apply_move(move, state):
-    turns = move % 3 + 1
-    face = move / 3
-    newstate = state[:]
-    for turn in range(turns):
-        oldstate = newstate[:]
-        for i in range(8):
-            isCorner = int(i > 3)
-            target = affected_cubies[face][i] + isCorner*12
-            killer = affected_cubies[face][(i-3) if (i&3)==3 else i+1] + isCorner*12
-            orientationDelta = int(1<face<4) if i<4 else (0 if face<2 else 2 - (i&1))
-            newstate[target] = oldstate[killer]
-            newstate[target+20] = oldstate[killer+20] + orientationDelta
-            if turn == turns-1:
-                newstate[target+20] %= 2 + isCorner
-    return newstate
-
-def get_id(state, phase):
-    if phase == 0:
-        return tuple(state[20:32])
-    if phase == 1:
-        result = state[31:40]
-        for e in range(12):
-            result[0] |= (state[e] / 8) << e;
-        return tuple(result)
-    if phase == 2:
-        result = [0,0,0]
-        for e in range(12):
-            result[0] |= (2 if (state[e] > 7) else (state[e] & 1)) << (2*e)
-        for c in range(8):
-            result[1] |= ((state[c+12]-12) & 5) << (3*c)
-        for i in range(12, 20):
-            for j in range(i+1, 20):
-                result[2] ^= int(state[i] > state[j])
-        return tuple(result)
-    return tuple(state)
-
 class cube_state:
     def __init__(self, state, route=None):
         self.state = state
         self.route = route or []
 
     def id_(self, phase):
-        return get_id(self.state, phase)
+        if phase == 0:
+            return tuple(self.state[20:32])
+        elif phase == 1:
+            result = self.state[31:40]
+            for e in range(12):
+                result[0] |= (self.state[e] / 8) << e;
+            return tuple(result)
+        elif phase == 2:
+            result = [0,0,0]
+            for e in range(12):
+                result[0] |= (2 if (self.state[e] > 7) else (self.state[e] & 1)) << (2*e)
+            for c in range(8):
+                result[1] |= ((self.state[c+12]-12) & 5) << (3*c)
+            for i in range(12, 20):
+                for j in range(i+1, 20):
+                    result[2] ^= int(self.state[i] > self.state[j])
+            return tuple(result)
+        else:
+            return tuple(self.state)
 
     def apply_move(self, move):
-        state = apply_move(move, self.state)
-        return cube_state(state, self.route+[move])
+        turns = move % 3 + 1
+        face = move / 3
+        newstate = self.state[:]
+        for turn in range(turns):
+            oldstate = newstate[:]
+            for i in range(8):
+                isCorner = int(i > 3)
+                target = affected_cubies[face][i] + isCorner*12
+                killer = affected_cubies[face][(i-3) if (i&3)==3 else i+1] + isCorner*12
+                orientationDelta = int(1<face<4) if i<4 else (0 if face<2 else 2 - (i&1))
+                newstate[target] = oldstate[killer]
+                newstate[target+20] = oldstate[killer+20] + orientationDelta
+                if turn == turns-1:
+                    newstate[target+20] %= 2 + isCorner
+        return cube_state(newstate, self.route+[move])
 
 goal_state = cube_state(range(20)+20*[0])
 state = cube_state(goal_state.state[:])
