@@ -17,6 +17,7 @@ def usage():
  -b --nobounds          Disable bounds checking
  -e --extmod            Generate extension module
  -f --flags             Provide alternate Makefile flags
+ -g --nogcwarns         Disable runtime GC warnings
  -l --long              Use long long ("64-bit") integers
  -m --makefile          Specify alternate Makefile name
  -n --silent            Silent mode, only show warnings
@@ -36,7 +37,7 @@ def start():
 
     # --- command-line options
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'vbchef:wad:m:rolspxnL:', ['help', 'extmod', 'nobounds', 'nowrap', 'flags=', 'debug=', 'makefile=', 'random', 'noassert', 'long', 'msvc', 'ann', 'strhash', 'pypy', 'traceback', 'silent', 'lib'])
+        opts, args = getopt.getopt(sys.argv[1:], 'vbchef:wad:m:rolspxngL:', ['help', 'extmod', 'nobounds', 'nowrap', 'flags=', 'debug=', 'makefile=', 'random', 'noassert', 'long', 'msvc', 'ann', 'strhash', 'pypy', 'traceback', 'silent', 'nogcwarns', 'lib'])
     except getopt.GetoptError:
         usage()
 
@@ -47,6 +48,7 @@ def start():
         if o in ['-a', '--ann']: getgx().annotation = True
         if o in ['-d', '--debug']: getgx().debug_level = int(a)
         if o in ['-l', '--long']: getgx().longlong = True
+        if o in ['-g', '--nogcwarns']: getgx().gcwarns = False
         if o in ['-w', '--nowrap']: getgx().wrap_around_check = False
         if o in ['-r', '--random']: getgx().fast_random = True
         if o in ['-o', '--noassert']: getgx().assertions = False

@@ -35,8 +35,17 @@ file *__ss_stdin, *__ss_stdout, *__ss_stderr;
 dict<void *, void *> *__ss_proxy;
 #endif
 
+void gc_warning_handler(char *msg, GC_word arg) {
+#ifndef __SS_NOGCWARNS
+    printf(msg, arg);
+    printf("(use a 64-bit system to possibly avoid GC warnings, or use shedskin -g to disable them)\n");
+#endif
+}
+
 void __init() {
     GC_INIT();
+    GC_set_warn_proc(gc_warning_handler);
+
 #ifdef __SS_BIND
 #ifndef __SS_PYPY
     Py_Initialize();
