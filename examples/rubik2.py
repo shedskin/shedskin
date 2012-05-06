@@ -1,3 +1,27 @@
+# Rubik's cube solver using Thistlethwaite's algorithm
+#
+# translated from Stefan Pochmann's C++ implementation:
+#
+# http://www.stefan-pochmann.info/spocc/other_stuff/tools/
+#
+# by Mark Dufour
+#
+# but without the bidirectional search, for readability..
+# you probably want to have at least 2 GB of RAM because of this
+# 
+# comments from the C++ version:
+#
+# cube 'state' is a list with 40 entries, the first 20
+# are a permutation of {0,...,19} and describe which cubie is at
+# a certain position (regarding the input ordering). The first
+# twelve are for edges, the last eight for corners.
+# 
+# The last 20 entries are for the orientations, each describing
+# how often the cubie at a certain position has been turned
+# counterclockwise away from the correct orientation. Again the
+# first twelve are edges, the last eight are corners. The values
+# are 0 or 1 for edges and 0, 1 or 2 for corners.
+
 import random
 random.seed(1)
 
@@ -20,7 +44,6 @@ def move_str(move):
 def apply_move(move, state):
     turns = move % 3 + 1
     face = move / 3
-
     newstate = state[:]
     for turn in range(turns):
         oldstate = newstate[:]
@@ -33,19 +56,16 @@ def apply_move(move, state):
             newstate[target+20] = oldstate[killer+20] + orientationDelta
             if turn == turns-1:
                 newstate[target+20] %= 2 + isCorner
-
     return newstate
 
 def get_id(state, phase):
     if phase == 0:
         return tuple(state[20:32])
-
     if phase == 1:
         result = state[31:40]
         for e in range(12):
             result[0] |= (state[e] / 8) << e;
         return tuple(result)
-
     if phase == 2:
         result = [0,0,0]
         for e in range(12):
@@ -56,62 +76,46 @@ def get_id(state, phase):
             for j in range(i+1, 20):
                 result[2] ^= int(state[i] > state[j])
         return tuple(result)
-
     return tuple(state)
 
 class cube_state:
     def __init__(self, state, route=None):
         self.state = state
-        self.route = route
+        self.route = route or []
 
-    def id_(self, phase): # XXX inline
+    def id_(self, phase):
         return get_id(self.state, phase)
 
     def apply_move(self, move):
         state = apply_move(move, self.state)
         return cube_state(state, self.route+[move])
 
-print 'start'
-end_state = range(20)+20*[0]
-start_state = end_state[:]
-print start_state
+goal_state = cube_state(range(20)+20*[0])
+state = cube_state(goal_state.state[:])
 
-#for move in [2,15,13,4,8,8,11,14,1,0,0,12,9,0,13,17,0,7,15]:
-#    start_state = apply_move(move, start_state)
-#print 'hum', start_state
-#stop
+print '*** randomize ***'
+moves = [random.randrange(0,18) for x in range(30)]
+print ','.join([move_str(move) for move in moves])
+print
+for move in moves:
+    state = state.apply_move(move)
 
-print 'randomize'
-for x in range(50):
-    move = random.randrange(0,18)
-    print move, move_str(move)
-    start_state = apply_move(move, start_state)
-print start_state
-print 'start id', get_id(start_state, 0)
-
-print 'solve'
-
-state = cube_state(start_state, [])
-goal_state = cube_state(end_state, [])
+print '*** solve ***'
+state.route = []
 
 for phase in range(4):
-    print 'PHASE', phase
     current_id = state.id_(phase)
-    print 'current_id', current_id
     goal_id = goal_state.id_(phase)
-    print 'goal_id', goal_id
 
     states = [state]
     state_ids = set([current_id])
 
     if current_id == goal_id:
-      print 'phase skip!'
       continue
 
     depth = 0
     phase_ok = False
     while not phase_ok:
-        print 'DEPTH', depth
         next_states = []
         for cur_state in states:
             for move in range(18):
@@ -119,7 +123,7 @@ for phase in range(4):
                     next_state = cur_state.apply_move(move)
                     next_id = next_state.id_(phase)
                     if next_id == goal_id:
-                        print 'gevonden!', next_state.route, ','.join([move_str(m) for m in next_state.route])
+                        print ','.join([move_str(m) for m in next_state.route])
                         phase_ok = True
                         state = next_state
                         break
@@ -133,6 +137,5 @@ for phase in range(4):
 
         depth += 1
         states = next_states
-        print 'next states', len(next_states)
 
-print 'used moves:', len(state.route)
+print 'needed %d moves' % len(state.route)
