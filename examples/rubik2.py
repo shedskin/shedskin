@@ -17,7 +17,7 @@ facelet_turn = [
     [L7,L4,L1,U4,U5,U6,U7,U8,U9,R1,R2,U1,R4,R5,U2,R7,R8,U3,F1,F2,F3,F4,F5,F6,F7,F8,F9,D1,D2,D3,D4,D5,D6,R9,R6,R3,D7,L2,L3,D8,L5,L6,D9,L8,L9,B3,B6,B9,B2,B5,B8,B1,B4,B7],
 ]
 
-facemap = [0, 5, 2, 1, 4, 3] # XXX use URFDLB above so this is not needed
+facemap = [0, 3, 2, 5, 4, 1]
 
 affected_cubies = [
   [  0,  1,  2,  3,  0,  1,  2,  3 ],   # U
@@ -40,19 +40,18 @@ def visual(state):
        print 8*' '+row(state, D*9+3*i)
 
 def move_str(move):
-    return facenames[move/3]+{1: '', 2: '2', 3: "'"}[move%3+1]
+    return facenames[facemap[move/3]]+{1: '', 2: '2', 3: "'"}[move%3+1]
 
 def apply_move(move, state, state2):
     turns = move % 3 + 1;
     face = move / 3;
 
+    face2 = facemap[face]
     for turn in range(turns):
         newstate = 54*[0]
         for i in range(54):
-            newstate[facelet_turn[face][i]] = state[i]
+            newstate[facelet_turn[face2][i]] = state[i]
         state = newstate
-
-    face = facemap[face]
 
     newstate2 = state2[:]
     for turn in range(turns):
@@ -123,8 +122,12 @@ for x in range(4):
     state, state2 = apply_move(move, state, state2)
 visual(state)
 
-applicable_moves = [262143, 259263, 74943, 74898]
+applicable_moves = [262143, 262098, 259218, 74898]
 
+for phase in range(4):
+    for move in range(18):
+        if applicable_moves[phase] & (1<<move):
+            print 'ok', phase, move, move_str(move)
 #solve
 
 print 'solve'
