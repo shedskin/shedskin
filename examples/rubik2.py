@@ -28,15 +28,16 @@ random.seed(1)
 facenames = ["U", "D", "F", "B", "L", "R"]
 
 affected_cubies = [
-  [  0,  1,  2,  3,  0,  1,  2,  3 ],   # U
-  [  4,  7,  6,  5,  4,  5,  6,  7 ],   # D
-  [  0,  9,  4,  8,  0,  3,  5,  4 ],   # F
-  [  2, 10,  6, 11,  2,  1,  7,  6 ],   # B
-  [  3, 11,  7,  9,  3,  2,  6,  5 ],   # L
-  [  1,  8,  5, 10,  1,  0,  4,  7 ],   # R
+    [0, 1, 2, 3, 0, 1, 2, 3], [4, 7, 6, 5, 4, 5, 6, 7], [0, 9, 4, 8, 0, 3, 5, 4],
+    [2, 10, 6, 11, 2, 1, 7, 6], [3, 11, 7, 9, 3, 2, 6, 5], [1, 8, 5, 10, 1, 0, 4, 7],
 ]
 
-applicable_moves = [262143, 259263, 74943, 74898]
+phase_moves = [
+    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
+    [0, 1, 2, 3, 4, 5, 7, 10, 12, 13, 14, 15, 16, 17],
+    [0, 1, 2, 3, 4, 5, 7, 10, 13, 16],
+    [1, 4, 7, 10, 13, 16],
+]
 
 def move_str(move):
     return facenames[move/3]+{1: '', 2: '2', 3: "'"}[move%3+1]
@@ -112,18 +113,17 @@ for phase in range(4):
     while not phase_ok:
         next_states = []
         for cur_state in states:
-            for move in range(18):
-                if applicable_moves[phase] & (1<<move):
-                    next_state = cur_state.apply_move(move)
-                    next_id = next_state.id_(phase)
-                    if next_id == goal_id:
-                        print ','.join([move_str(m) for m in next_state.route])
-                        phase_ok = True
-                        state = next_state
-                        break
-                    if next_id not in state_ids:
-                        state_ids.add(next_id)
-                        next_states.append(next_state)
+            for move in phase_moves[phase]:
+                next_state = cur_state.apply_move(move)
+                next_id = next_state.id_(phase)
+                if next_id == goal_id:
+                    print ','.join([move_str(m) for m in next_state.route])
+                    phase_ok = True
+                    state = next_state
+                    break
+                if next_id not in state_ids:
+                    state_ids.add(next_id)
+                    next_states.append(next_state)
             if phase_ok:
                 break
         if phase_ok:
