@@ -1,15 +1,8 @@
 # Rubik's cube solver using Thistlethwaite's algorithm
 #
-# translated from Stefan Pochmann's C++ implementation:
-#
+# Python translation of Stefan Pochmann's C++ implementation
 # http://www.stefan-pochmann.info/spocc/other_stuff/tools/
-#
-# by Mark Dufour
-#
-# but without the bidirectional search, for readability..
-# you probably want to have at least 2 GB of RAM because of this
-# 
-# comments from the C++ version:
+# by Mark Dufour (mark.dufour@gmail.com)
 #
 # cube 'state' is a list with 40 entries, the first 20
 # are a permutation of {0,...,19} and describe which cubie is at
@@ -21,23 +14,12 @@
 # counterclockwise away from the correct orientation. Again the
 # first twelve are edges, the last eight are corners. The values
 # are 0 or 1 for edges and 0, 1 or 2 for corners.
-
 import random
 random.seed(1)
 
 facenames = ["U", "D", "F", "B", "L", "R"]
-
-affected_cubies = [
-    [0, 1, 2, 3, 0, 1, 2, 3], [4, 7, 6, 5, 4, 5, 6, 7], [0, 9, 4, 8, 0, 3, 5, 4],
-    [2, 10, 6, 11, 2, 1, 7, 6], [3, 11, 7, 9, 3, 2, 6, 5], [1, 8, 5, 10, 1, 0, 4, 7],
-]
-
-phase_moves = [
-    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
-    [0, 1, 2, 3, 4, 5, 7, 10, 12, 13, 14, 15, 16, 17],
-    [0, 1, 2, 3, 4, 5, 7, 10, 13, 16],
-    [1, 4, 7, 10, 13, 16],
-]
+affected_cubies = [[0, 1, 2, 3, 0, 1, 2, 3], [4, 7, 6, 5, 4, 5, 6, 7], [0, 9, 4, 8, 0, 3, 5, 4], [2, 10, 6, 11, 2, 1, 7, 6], [3, 11, 7, 9, 3, 2, 6, 5], [1, 8, 5, 10, 1, 0, 4, 7]]
+phase_moves = [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17], [0, 1, 2, 3, 4, 5, 7, 10, 12, 13, 14, 15, 16, 17], [0, 1, 2, 3, 4, 5, 7, 10, 13, 16], [1, 4, 7, 10, 13, 16]]
 
 def move_str(move):
     return facenames[move/3]+{1: '', 2: '2', 3: "'"}[move%3+1]
@@ -69,8 +51,7 @@ class cube_state:
             return tuple(self.state)
 
     def apply_move(self, move):
-        turns = move % 3 + 1
-        face = move / 3
+        face, turns = move / 3, move % 3 + 1
         newstate = self.state[:]
         for turn in range(turns):
             oldstate = newstate[:]
@@ -87,50 +68,33 @@ class cube_state:
 
 goal_state = cube_state(range(20)+20*[0])
 state = cube_state(goal_state.state[:])
-
 print '*** randomize ***'
 moves = [random.randrange(0,18) for x in range(30)]
-print ','.join([move_str(move) for move in moves])
-print
+print ','.join([move_str(move) for move in moves])+'\n'
 for move in moves:
     state = state.apply_move(move)
-
-print '*** solve ***'
 state.route = []
-
+print '*** solve ***'
 for phase in range(4):
-    current_id = state.id_(phase)
-    goal_id = goal_state.id_(phase)
-
+    current_id, goal_id = state.id_(phase), goal_state.id_(phase)
     states = [state]
     state_ids = set([current_id])
-
-    if current_id == goal_id:
-      continue
-
-    depth = 0
-    phase_ok = False
-    while not phase_ok:
-        next_states = []
-        for cur_state in states:
-            for move in phase_moves[phase]:
-                next_state = cur_state.apply_move(move)
-                next_id = next_state.id_(phase)
-                if next_id == goal_id:
-                    print ','.join([move_str(m) for m in next_state.route])
-                    phase_ok = True
-                    state = next_state
+    if current_id != goal_id:
+        phase_ok = False
+        while not phase_ok:
+            next_states = []
+            for cur_state in states:
+                for move in phase_moves[phase]:
+                    next_state = cur_state.apply_move(move)
+                    next_id = next_state.id_(phase)
+                    if next_id == goal_id:
+                        print ','.join([move_str(m) for m in next_state.route]) + ' (%d moves)'% len(next_state.route)
+                        phase_ok = True
+                        state = next_state
+                        break
+                    if next_id not in state_ids:
+                        state_ids.add(next_id)
+                        next_states.append(next_state)
+                if phase_ok:
                     break
-                if next_id not in state_ids:
-                    state_ids.add(next_id)
-                    next_states.append(next_state)
-            if phase_ok:
-                break
-        if phase_ok:
-            break
-
-        depth += 1
-        states = next_states
-
-print
-print 'solved in %d moves' % len(state.route)
+            states = next_states
