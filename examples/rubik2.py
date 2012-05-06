@@ -103,8 +103,6 @@ def get_id(cube_state, phase):
     return tuple(cube_state.state2)
 
 goal_state = range(20)+20*[0]
-#print 'goal id 0', get_id(cube_state(None, goal_state, []), 0)
-#print 'goal id 1', get_id(cube_state(None, goal_state, []), 1)
 
 print 'start'
 state = range(54)
@@ -113,10 +111,8 @@ visual(state)
 state2 = range(20)+20*[0]
 #print state2, state2[20:32]
 
-#print 'start id', get_id(cube_state(state, state2, []), 1)
-
 print 'randomize'
-for x in range(4):
+for x in range(2):
     move = random.randrange(0,18)
     print move_str(move)
     state, state2 = apply_move(move, state, state2)
@@ -124,10 +120,10 @@ visual(state)
 
 applicable_moves = [262143, 262098, 259218, 74898]
 
-for phase in range(4):
-    for move in range(18):
-        if applicable_moves[phase] & (1<<move):
-            print 'ok', phase, move, move_str(move)
+#for phase in range(4):
+#    for move in range(18):
+#        if applicable_moves[phase] & (1<<move):
+#            print 'ok', phase, move, move_str(move)
 #solve
 
 print 'solve'
@@ -135,6 +131,7 @@ state_ids = set()
 states = [cube_state(state, state2, [])]
 
 for phase in range(4):
+    cs = states[0]
     print 'PHASE', phase
     phase_ok = False
     depth = 0
@@ -157,8 +154,7 @@ for phase in range(4):
                     if id_ == goal_id:
 #                        print 'gevonden!', move_str(move), id_
                         for m in new_state.route:
-                            print move_str(m)
-                        cs = cube_state(state, state2, [])
+                            print m, move_str(m)
                         for m in new_state.route:
                             cs = cs.apply_move(m)
                         visual(cs.state)
@@ -174,6 +170,7 @@ for phase in range(4):
         states = new_states
 
     state_ids = set()
-    states = [new_state]
+    states = [cs]
 
+visual(cs.state)
 print 'used moves:', len(new_state.route)
