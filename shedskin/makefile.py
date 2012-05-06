@@ -98,6 +98,7 @@ def generate_makefile():
             if getgx().longlong: line += ' -D__SS_LONG'
             if getgx().backtrace: line += ' -D__SS_BACKTRACE -rdynamic -fno-inline'
             if getgx().pypy: line += ' -D__SS_PYPY'
+            if not getgx().gcwarns: line += ' -D__SS_NOGCWARNS'
             if getgx().extension_module:
                 if sys.platform == 'win32': line += ' -I%s/include -D__SS_BIND' % prefix
                 else: line += ' -g -fPIC -D__SS_BIND ' + includes

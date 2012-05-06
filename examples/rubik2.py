@@ -132,4 +132,5 @@ for phase in range(4):
         depth += 1
         states = next_states
 
-print 'needed %d moves' % len(state.route)
+print
+print 'solved in %d moves' % len(state.route)

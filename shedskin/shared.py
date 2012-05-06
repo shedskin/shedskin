@@ -63,6 +63,7 @@ class globalInfo: # XXX add comments, split up
         self.flags = None
         self.annotation = False
         self.msvc = False
+        self.gcwarns = True
         self.pypy = False
         self.silent = False
         self.backtrace = False
