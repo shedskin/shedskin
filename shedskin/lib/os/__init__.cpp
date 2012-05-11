@@ -23,9 +23,7 @@
 #include <sysexits.h>
 #endif
 
-namespace std {
 #include <unistd.h>
-}
 
 #ifdef WIN32
 #include <windows.h>
