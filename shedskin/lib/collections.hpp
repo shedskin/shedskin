@@ -237,7 +237,7 @@ public:
     V __getitem__(K key) {
         register long hash = hasher<K>(key);
         register dictentry<K, V> *entry;
-        entry = lookup(key, hash);
+        entry = this->lookup(key, hash);
         if (entry->use != active)
             return __missing__(key);
         return entry->value;
@@ -255,10 +255,10 @@ public:
     void *__addtoitem__(K key, V value) { /* XXX */
         register long hash = hasher<K>(key);
         register dictentry<K, V> *entry;
-        entry = lookup(key, hash);
+        entry = this->lookup(key, hash);
         if (entry->use != active) {
             if(func)
-                __setitem__(key, __add(func(), value));
+                this->__setitem__(key, __add(func(), value));
             else
                 throw new KeyError(repr(key));
         } else
@@ -281,7 +281,7 @@ public:
         PyObject *iter = PyObject_GetIter(p);
         while(key = PyIter_Next(iter)) {
             value = PyDict_GetItem(p, key);
-            __setitem__(__to_ss<K>(key), __to_ss<V>(value));
+            this->__setitem__(__to_ss<K>(key), __to_ss<V>(value));
             Py_DECREF(key);
         }
         Py_DECREF(iter);

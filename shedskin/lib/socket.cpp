@@ -13,6 +13,7 @@
 #include "socket.hpp"
 #include <climits>
 #include <fcntl.h>
+#include <unistd.h>
 
 #ifdef WIN32
 
