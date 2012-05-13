@@ -83,7 +83,7 @@ class globalInfo: # XXX add comments, split up
             print 'Running "make" in tmpdir ...'
             cwd = os.path.abspath(os.path.curdir)
             os.chdir(self.tmpdir)
-            subprocess.call(["make"])
+            subprocess.call(["make","-f",self.makefile_name])
             os.chdir(cwd)
             # XXX copied from makefile.py, cleanup
             ident = self.main_module.ident
