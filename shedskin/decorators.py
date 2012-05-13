@@ -130,18 +130,13 @@ class shedskinner(object):
     def _run_shedskin(self, name, makefile):
         old = sys.stdout
         log = sys.stdout = open(name + ".log", "w")
+        getgx().log = log
         getgx().main_mod = name[:-3]
         infer.analyze(name)
         annotate.annotate()
         cpp.generate_code()
         shared.print_errors()
-        ret = subprocess.call("make -f %s" % makefile, shell=True,
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        log.close()
         sys.stdout = old
-        if ret != 0:
-            print >>sys.stderr, "error making %s" % makefile
-            print open(log.name).read()
 
     def _get_module(self, name):
         if name.endswith(".py"):

@@ -80,10 +80,16 @@ class globalInfo: # XXX add comments, split up
 
     def __del__(self):
         if self.tmpdir:
+            old = sys.stdout
+            try:
+                sys.stdout = self.log
+            except AttributeError:
+                pass
             print 'Running "make" in tmpdir ...'
             cwd = os.path.abspath(os.path.curdir)
             os.chdir(self.tmpdir)
-            subprocess.call(["make","-f",self.makefile_name])
+            ret = subprocess.call(["make","-f",self.makefile_name],
+                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             os.chdir(cwd)
             # XXX copied from makefile.py, cleanup
             ident = self.main_module.ident
@@ -99,6 +105,7 @@ class globalInfo: # XXX add comments, split up
             shutil.move(self.tmpdir+os.sep+ident, os.path.curdir)
             print 'Cleaning up tmpdir:', self.tmpdir
             shutil.rmtree(self.tmpdir)
+            sys.stdout = old
 
 def newgx():
     return globalInfo()
