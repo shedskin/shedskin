@@ -6,7 +6,7 @@ shared.py: global variables, datastructures, shared functionality
 
 '''
 
-import os, sys, traceback
+import os, shutil, subprocess, sys, traceback
 from compiler import *
 from compiler.ast import *
 from compiler.visitor import *
@@ -67,6 +67,7 @@ class globalInfo: # XXX add comments, split up
         self.pypy = False
         self.silent = False
         self.backtrace = False
+        self.tmpdir = None
         self.makefile_name = 'Makefile' # XXX other default?
         self.item_rvalue = {}
         self.genexp_to_lc = {}
@@ -76,6 +77,28 @@ class globalInfo: # XXX add comments, split up
         self.struct_unpack = {}
         self.debug_level = 0
         self.maxhits = 0 # XXX amaze.py termination
+
+    def __del__(self):
+        if self.tmpdir:
+            print 'Running "make" in tmpdir ...'
+            cwd = os.path.abspath(os.path.curdir)
+            os.chdir(self.tmpdir)
+            subprocess.call(["make"])
+            os.chdir(cwd)
+            # XXX copied from makefile.py, cleanup
+            ident = self.main_module.ident
+            if self.extension_module:
+                if sys.platform == 'win32': ident += '.pyd'
+                else: ident += '.so'
+            print 'Copying result back:', ident
+            try:
+                shutil.rmtree(ident)
+            except OSError:
+                # file not there
+                pass
+            shutil.move(self.tmpdir+os.sep+ident, os.path.curdir)
+            print 'Cleaning up tmpdir:', self.tmpdir
+            shutil.rmtree(self.tmpdir)
 
 def newgx():
     return globalInfo()

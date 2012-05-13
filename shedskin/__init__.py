@@ -9,6 +9,7 @@ from distutils import sysconfig
 
 import infer, cpp, annotate, shared
 from shared import newgx, setgx, getgx
+from tempfile import mkdtemp
 
 def usage():
     print """Usage: shedskin [OPTION]... FILE
@@ -27,6 +28,7 @@ def usage():
  -w --nowrap            Disable wrap-around checking
  -x --traceback         Print traceback for uncaught exceptions
  -L --lib               Add a library directory
+    --tmpdir            Directly compile in a tmpdir
 """
 # -p --pypy              Make extension module PyPy-compatible
 # -v --msvc              Output MSVC-style Makefile
@@ -37,7 +39,7 @@ def start():
 
     # --- command-line options
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'vbchef:wad:m:rolspxngL:', ['help', 'extmod', 'nobounds', 'nowrap', 'flags=', 'debug=', 'makefile=', 'random', 'noassert', 'long', 'msvc', 'ann', 'strhash', 'pypy', 'traceback', 'silent', 'nogcwarns', 'lib'])
+        opts, args = getopt.getopt(sys.argv[1:], 'vbchef:wad:m:rolspxngL:', ['help', 'extmod', 'nobounds', 'nowrap', 'flags=', 'debug=', 'makefile=', 'random', 'noassert', 'long', 'msvc', 'ann', 'strhash', 'pypy', 'traceback', 'silent', 'nogcwarns', 'lib', 'tmpdir'])
     except getopt.GetoptError:
         usage()
 
@@ -64,6 +66,9 @@ def start():
                 print "*ERROR* no such file: '%s'" % a
                 sys.exit(1)
             getgx().flags = a
+        if o in ['--tmpdir']:
+            getgx().tmpdir = mkdtemp()
+            print 'Created tempdir:', getgx().tmpdir
 
 
     if not getgx().silent:

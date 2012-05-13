@@ -6,7 +6,7 @@ makefile.py: generate makefile
 
 '''
 
-import sys
+import os, sys
 from distutils import sysconfig
 
 from shared import *
@@ -36,7 +36,10 @@ def generate_makefile():
         if sys.platform == 'win32': ident += '.pyd'
         else: ident += '.so'
 
-    makefile = file(getgx().makefile_name, 'w')
+    if getgx().tmpdir:
+        makefile = file(getgx().tmpdir+os.sep+getgx().makefile_name, 'w')
+    else:
+        makefile = file(getgx().makefile_name, 'w')
 
     if getgx().msvc:
         esc_space = '/ '

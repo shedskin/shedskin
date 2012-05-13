@@ -23,7 +23,12 @@ import extmod
 # --- code generation visitor; use type information
 class generateVisitor(ASTVisitor):
     def __init__(self, module):
-        self.output_base = module.filename[:-3]
+        gx = getgx()
+        if getgx().tmpdir:
+            self.output_base = getgx().tmpdir+os.sep+module.filename[:-3]
+        else:
+            self.output_base = module.filename[:-3]
+
         self.out = file(self.output_base+'.cpp','w')
         self.indentation = ''
         self.consts = {}
