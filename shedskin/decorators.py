@@ -30,6 +30,7 @@ from shedskin import setgx, newgx, getgx, infer, annotate, cpp, shared
 import inspect
 import hashlib
 import subprocess
+from tempfile import mkdtemp
 
 class shedskinner(object):
     r"""
@@ -94,6 +95,7 @@ class shedskinner(object):
         if self._is_up_to_date(source_hash):
             mod = self._get_module(self._tmp(source_hash))
             return getattr(mod, fn.func_name)
+        getgx().tmpdir = mkdtemp()
 
         tmp = open(self._tmp(source_hash), "w")
         for mod in self.modules:
