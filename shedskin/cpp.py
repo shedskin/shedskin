@@ -2007,10 +2007,12 @@ class generateVisitor(ASTVisitor):
                     if len(lcp) == 1 and isinstance(lcp[0], class_) and lvalue.attrname in lcp[0].properties:
                         self.visitm(lvalue.expr, '->'+self.cpp_name(lcp[0].properties[lvalue.attrname][1])+'(', rvalue, ')', func)
                     elif lcp and isinstance(lcp[0], class_):
-                        vartypes = self.mergeinh[lookupvar(lvalue.attrname, lcp[0])]
-                        self.visit(lvalue, func)
-                        self.append(' = ')
-                        self.visit_conv(rvalue, vartypes, func)
+                        var = lookupvar(lvalue.attrname, lcp[0])
+                        if var:
+                            vartypes = self.mergeinh[var]
+                            self.visit(lvalue, func)
+                            self.append(' = ')
+                            self.visit_conv(rvalue, vartypes, func)
                     else:
                         self.visitm(lvalue, ' = ', rvalue, func)
                     self.eol()
