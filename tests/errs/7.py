@@ -27,9 +27,17 @@ p = P1()
 p = P2()
 p.handle_key_press("X")
 
+class meuh:
+    def __init__(self):
+        moi = self.mmu.hoepa()
+        self.moi = moi
+
+meuh()
+
 #*WARNING* 7.py: variable 'l' has dynamic (sub)type
 #*WARNING* 7.py: variable 'r' has dynamic (sub)type
 #*WARNING* 7.py:5: variable 'snuif' has no type
 #*WARNING* 7.py:6: unresolved call to 'friet'
 #*WARNING* 7.py:12: unresolved call (possibly caused by method passing, which is currently not allowed)
 #*WARNING* 7.py:28: class 'P1' has no method 'handle_key_press'
+#*WARNING* 7.py:33: variable 'moi' has no type
