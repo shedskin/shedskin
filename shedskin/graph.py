@@ -1491,6 +1491,7 @@ def parse_module(name, ast=None, parent=None, node=None):
         mod.dir = ''
         mod.mod_path = [name]
         mod.mod_dir = []
+        getgx().modules[name] = mod
     else:
         # --- locate module
         relname = name.replace('.', '/')
