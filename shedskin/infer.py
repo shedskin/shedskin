@@ -917,18 +917,12 @@ def merge_simple_types(types):
 
     return frozenset(merge)
 
-def analyze(source, testing=False):
-    if testing:
-        setgx(newgx())
-        ast = parse(source+'\n')
-    else:
-        ast = graph.parsefile(source)
-
+def analyze():
     mv = None
     setmv(mv)
 
     # --- build dataflow graph from source code
-    getgx().main_module = graph.parse_module(getgx().main_mod, ast)
+    getgx().main_module = graph.parse_module(getgx().main_mod)
     getgx().main_module.filename = getgx().main_mod+'.py'
     getgx().modules[getgx().main_mod] = getgx().main_module
     mv = getgx().main_module.mv

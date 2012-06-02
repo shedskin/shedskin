@@ -93,7 +93,7 @@ def start():
 
     # --- analyze & annotate
     t0 = time.time()
-    infer.analyze(name)
+    infer.analyze()
     annotate.annotate()
     cpp.generate_code()
     shared.print_errors()

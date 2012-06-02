@@ -467,7 +467,7 @@ class moduleVisitor(ASTVisitor):
                 error("no identifier '%s' in module '%s'" % (name, node.modname), node, mv=self)
 
     def analyzeModule(self, name, pseud, node, fake):
-        mod = parse_module(name, None, getmv().module, node)
+        mod = parse_module(name, getmv().module, node)
         if not fake:
             self.imports[pseud] = mod
         else:
@@ -1472,7 +1472,7 @@ def parsefile(name):
         print '*ERROR* %s:%d: %s' % (name, s.lineno, s.msg)
         sys.exit(1)
 
-def parse_module(name, ast=None, parent=None, node=None):
+def parse_module(name, parent=None, node=None):
     # --- valid name?
     for c in name:
         if not c in string.letters+string.digits+'_.':
@@ -1485,90 +1485,83 @@ def parse_module(name, ast=None, parent=None, node=None):
     mod.builtin = False
     mod.libdir = ''
 
-    if ast: # XXX
-        mod.ast = ast
-        mod.filename = name+'.py'
-        mod.dir = ''
-        mod.mod_path = [name]
-        mod.mod_dir = []
-        getgx().modules[name] = mod
+    # --- locate module
+    relname = name.replace('.', '/')
+    relpath = name.split('.')
+    if parent: path = connect_paths(parent.dir, relname)
+    else: path = relname
+
+    # --- absolute paths for local module and 'root' module
+    if parent and parent.builtin: localpath = connect_paths(parent.libdir, path)
+    else: localpath = path
+    rootpath = connect_paths(os.getcwd(), relname)
+
+    # --- try local path
+    if os.path.isfile(localpath+'.py'):
+        mod.filename = localpath+'.py'
+        if parent: mod.mod_path = parent.mod_dir + relpath
+        else: mod.mod_path = relpath
+        split = path.split('/')
+        mod.dir = '/'.join(split[:-1])
+        mod.mod_dir = mod.mod_path[:-1]
+        if parent:
+            mod.builtin = parent.builtin
+            mod.libdir = parent.libdir
+
+    elif os.path.isfile(connect_paths(path, '__init__.py')):
+        mod.filename = path+'/__init__.py'
+        if parent: mod.mod_path = parent.mod_dir + relpath
+        else: mod.mod_path = relpath
+        mod.dir = path
+        mod.mod_dir = mod.mod_path
+        mod.builtin = parent.builtin
+        mod.libdir = parent.libdir
+
+    # --- try root path
+    elif os.path.isfile(rootpath+'.py'):
+        mod.filename = relname+'.py'
+        mod.mod_path = relpath
+        mod.dir = '/'.join(relpath[:-1])
+        mod.mod_dir = relpath[:-1]
+
+    elif os.path.isfile(connect_paths(rootpath, '__init__.py')):
+        mod.filename = relname+'/__init__.py'
+        mod.mod_path = relpath
+        mod.dir = relname
+        mod.mod_dir = mod.mod_path
+
+    # --- try lib path
     else:
-        # --- locate module
-        relname = name.replace('.', '/')
-        relpath = name.split('.')
-        if parent: path = connect_paths(parent.dir, relname)
-        else: path = relname
+        for libdir in getgx().libdirs:
+            libpath = connect_paths(libdir, relname)
 
-        # --- absolute paths for local module and 'root' module
-        if parent.builtin: localpath = connect_paths(parent.libdir, path)
-        else: localpath = path
-        rootpath = connect_paths(os.getcwd(), relname)
+            if os.path.isfile(libpath+'.py'):
+                mod.filename = libpath+'.py'
+                mod.mod_path = relpath
+                mod.dir = '/'.join(relpath[:-1])
+                mod.mod_dir = relpath[:-1]
+                mod.builtin = True
+                mod.libdir = libdir
 
-        # --- try local path
-        if os.path.isfile(localpath+'.py'):
-            mod.filename = localpath+'.py'
-            if parent: mod.mod_path = parent.mod_dir + relpath
-            else: mod.mod_path = relpath
-            split = path.split('/')
-            mod.dir = '/'.join(split[:-1])
-            mod.mod_dir = mod.mod_path[:-1]
-            mod.builtin = parent.builtin
-            mod.libdir = parent.libdir
+            elif os.path.isfile(connect_paths(libpath, '__init__.py')):
+                mod.filename = libpath+'/__init__.py'
+                mod.mod_path = relpath
+                mod.dir = relname
+                mod.mod_dir = relpath
+                mod.builtin = True
+                mod.libdir = libdir
 
-        elif os.path.isfile(connect_paths(path, '__init__.py')):
-            mod.filename = path+'/__init__.py'
-            if parent: mod.mod_path = parent.mod_dir + relpath
-            else: mod.mod_path = relpath
-            mod.dir = path
-            mod.mod_dir = mod.mod_path
-            mod.builtin = parent.builtin
-            mod.libdir = parent.libdir
+    if not hasattr(mod, 'filename'):
+        error('cannot locate module: '+name, node, mv=getmv())
 
-        # --- try root path
-        elif os.path.isfile(rootpath+'.py'):
-            mod.filename = relname+'.py'
-            mod.mod_path = relpath
-            mod.dir = '/'.join(relpath[:-1])
-            mod.mod_dir = relpath[:-1]
+    # --- check cache
+    modpath = '.'.join(mod.mod_path)
+    if modpath in getgx().modules: # cached?
+        return getgx().modules[modpath]
+    getgx().modules[modpath] = mod
 
-        elif os.path.isfile(connect_paths(rootpath, '__init__.py')):
-            mod.filename = relname+'/__init__.py'
-            mod.mod_path = relpath
-            mod.dir = relname
-            mod.mod_dir = mod.mod_path
-
-        # --- try lib path
-        else:
-            for libdir in getgx().libdirs:
-                libpath = connect_paths(libdir, relname)
-
-                if os.path.isfile(libpath+'.py'):
-                    mod.filename = libpath+'.py'
-                    mod.mod_path = relpath
-                    mod.dir = '/'.join(relpath[:-1])
-                    mod.mod_dir = relpath[:-1]
-                    mod.builtin = True
-                    mod.libdir = libdir
-
-                elif os.path.isfile(connect_paths(libpath, '__init__.py')):
-                    mod.filename = libpath+'/__init__.py'
-                    mod.mod_path = relpath
-                    mod.dir = relname
-                    mod.mod_dir = relpath
-                    mod.builtin = True
-                    mod.libdir = libdir
-
-        if not hasattr(mod, 'filename'):
-            error('cannot locate module: '+name, node, mv=getmv())
-
-        # --- check cache
-        modpath = '.'.join(mod.mod_path)
-        if modpath in getgx().modules: # cached?
-            return getgx().modules[modpath]
-        getgx().modules[modpath] = mod
-
-        # --- not cached, so parse
-        mod.ast = parsefile(mod.filename)
+    # --- not cached, so parse
+    mod.ast = parsefile(mod.filename)
 
     old_mv = getmv()
     mod.mv = mv = moduleVisitor(mod)
