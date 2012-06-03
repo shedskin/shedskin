@@ -144,16 +144,17 @@ class generateVisitor(ASTVisitor):
         includes = includes1 + self.includes_rec(set(includes2))
         return ['#include "%s"\n' % mod.include_path() for mod in includes]
         
-    def includes_rec(self, includes): # XXX should be recursive!
-        includes = includes.copy()
+    def includes_rec(self, includes): # XXX should be recursive!? ugh
+        todo = includes.copy()
         result = []
-        while includes:
-            include = includes.pop()
-            for dep in include.deps:
-                if dep in includes:
-                    result.append(dep)
-                    includes.remove(dep)
-            result.append(include)
+        while todo:
+            for include in todo:
+                if not include.deps-set(result):
+                    todo.remove(include)
+                    result.append(include)
+                    break
+            else: # XXX circular dependency warning?
+                result.append(todo.pop())
         return result
 
     # --- group pairs of (type, name) declarations, while paying attention to '*'
