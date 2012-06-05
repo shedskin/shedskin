@@ -349,7 +349,7 @@ def user_move(board):
         if text == 'q':
             raise EOFError
         try:
-            x, y = [int(i) for i in text.split()]
+            x, y = [int(i) for i in text.split(',')]
         except ValueError:
             continue
         if not (0 <= x < SIZE and 0 <= y < SIZE):
@@ -389,6 +389,7 @@ def versus_cpu():
             break
         if board.lastmove != PASS:
             print board
+        print 'x,y=move, p=pass, q=quit'
         pos = user_move(board)
         board.move(pos)
         if board.finished:
