@@ -1,7 +1,18 @@
+''' 
+UCT go player in python, by mark.dufour@gmail.com.
+
+techniques used:
+
+-http://en.wikipedia.org/wiki/Disjoint-set_data_structure (to maintain groups)
+-http://senseis.xmp.net/?UCT (UCT monte carlo search)
+-http://en.wikipedia.org/wiki/Zobrist_hashing (incremental hash values)
+-timestamps, to be able to invalidate things with a single increment
+
+'''
 import random, math, sys
 
 SIZE = 9
-GAMES = 15000
+GAMES = 50000
 KOMI = 7.5
 COUNT_DEAD = False
 EMPTY, WHITE, BLACK = 0, 1, 2
