@@ -3,6 +3,7 @@ import random, math, sys
 SIZE = 9
 GAMES = 15000
 KOMI = 7.5
+COUNT_DEAD = False
 EMPTY, WHITE, BLACK = 0, 1, 2
 SHOW = {EMPTY: '.', WHITE: 'o', BLACK: 'x'}
 PASS = -1
@@ -63,12 +64,13 @@ class Square:
         self.board.zobrist.update(self, EMPTY)
         self.removestamp = TIMESTAMP
         if update:
+            if COUNT_DEAD:
+                if self.color == BLACK:
+                    self.board.black_dead += 1
+                else:
+                    self.board.white_dead += 1
             self.color = EMPTY
             self.board.emptyset.add(self.pos)
-#            if color == BLACK:
-#                self.board.black_dead += 1
-#            else:
-#                self.board.white_dead += 1
         for neighbour in self.neighbours:
             if neighbour.color != EMPTY and neighbour.removestamp != TIMESTAMP:
                 neighbour_ref = neighbour.find(update)
@@ -215,7 +217,7 @@ class Board:
         strong_neighs = neighs-weak_neighs
         strong_opps = opps-weak_opps
         return not dupe and \
-               (empties or weak_opps or (strong_neighs and (strong_opps or weak_neighs)))
+               bool(empties or weak_opps or (strong_neighs and (strong_opps or weak_neighs)))
 
     def useful_moves(self):
         return [pos for pos in self.emptyset.empties if self.useful(pos)]
@@ -335,8 +337,6 @@ class UCTNode:
         maxvisits = -1
         maxchild = None
         for child in self.pos_child:
-#            if child:
-#                print to_xy(child.pos), child.wins, child.losses, child.score()
             if child and (child.wins+child.losses) > maxvisits:
                 maxvisits, maxchild = (child.wins+child.losses), child
         return maxchild
@@ -371,7 +371,6 @@ def computer_move(board):
         nboard.reset()
         nboard.replay(board.history)
         node.play(nboard)
-#    print 'moves', MOVES
     return tree.best_visited().pos
 
 def versus_cpu():
@@ -386,7 +385,6 @@ def versus_cpu():
         else:
             print 'I move here:', to_xy(pos)
         board.move(pos)
-        break
         if board.finished:
             break
         if board.lastmove != PASS:
