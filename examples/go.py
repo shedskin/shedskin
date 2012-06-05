@@ -242,50 +242,6 @@ class Board:
                     count += 1
         return count
 
-    def check(self):
-       for square in self.squares:
-           if square.color == EMPTY:
-               continue
-
-           members1 = set([square])
-           changed = True
-           while changed:
-               changed = False
-               for member in members1.copy():
-                   for neighbour in member.neighbours:
-                       if neighbour.color == square.color and neighbour not in members1:
-                           changed = True
-                           members1.add(neighbour)
-           ledges1 = 0
-           for member in members1:
-               for neighbour in member.neighbours:
-                   if neighbour.color == EMPTY:
-                       ledges1 += 1
-
-           root = square.find()
-
-           #print 'members1', square, root, members1
-           #print 'ledges1', square, ledges1
-
-           members2 = set()
-           for square2 in self.squares:
-               if square2.color != EMPTY and square2.find() == root:
-                   members2.add(square2)
-
-           ledges2 = root.ledges
-           #print 'members2', square, root, members1
-           #print 'ledges2', square, ledges2
-
-           assert members1 == members2
-           assert ledges1 == ledges2, ('ledges differ at %r: %d %d' % (square, ledges1, ledges2))
-
-           empties1 = set(self.emptyset.empties)
-
-           empties2 = set()
-           for square in self.squares:
-               if square.color == EMPTY:
-                   empties2.add(square.pos)
-
     def __repr__(self):
         result = []
         for y in range(SIZE):
@@ -431,14 +387,12 @@ def versus_cpu():
             print 'I move here:', to_xy(pos)
         board.move(pos)
         break
-        #board.check()
         if board.finished:
             break
         if board.lastmove != PASS:
             print board
         pos = user_move(board)
         board.move(pos)
-        #board.check()
         if board.finished:
             break
     print 'WHITE:', board.score(WHITE)
