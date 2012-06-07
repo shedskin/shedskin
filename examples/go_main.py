@@ -7,13 +7,11 @@ def random_playout((playouts, history)):
     import go
     return go.random_playout(playouts, history)
 
-hist = [7]
+#hist = [7]
 
 GAMES = 10000
-PLAYOUTS = 2
+PLAYOUTS = 3
 POOL = Pool(3)
-
-#print POOL.map(random_playout, 10*[(PLAYOUTS, hist)])
 
 class UCTNode:
     def __init__(self):
@@ -45,7 +43,7 @@ class UCTNode:
             path.append(child)
             node = child
 
-        bwins = sum(POOL.map(random_playout, 3*[(PLAYOUTS, hist)]))
+        bwins = sum(POOL.map(random_playout, 3*[(PLAYOUTS, board.history)]))
         self.update_path(color, path, bwins > 1)
 
     def select(self, board):
