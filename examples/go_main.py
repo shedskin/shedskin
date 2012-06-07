@@ -7,9 +7,10 @@ def random_playout((playouts, history)):
     import go
     return go.random_playout(playouts, history)
 
-GAMES = 10000
-PLAYOUTS = 3
-POOL = Pool(4)
+GAMES = 25000
+PLAYOUTS = 10
+NPROC = 4
+POOL = Pool(NPROC)
 
 class UCTNode:
     def __init__(self):
@@ -41,8 +42,8 @@ class UCTNode:
             path.append(child)
             node = child
 
-        bwins = sum(POOL.map(random_playout, 4*[(PLAYOUTS, board.history)]))
-        self.update_path(color, path, bwins > PLAYOUTS*4/2)
+        bwins = sum(POOL.map(random_playout, NPROC*[(PLAYOUTS, board.history)]))
+        self.update_path(color, path, bwins > PLAYOUTS*NPROC/2)
 
     def select(self, board):
         """ select move; unexplored children first, then according to uct value """
