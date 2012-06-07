@@ -274,7 +274,7 @@ def random_playout(playouts, hist):
             board.move(board.random_move())
         if (board.score(BLACK) >= board.score(WHITE)):
             black_wins += 1
-    return (black_wins > playouts/2)
+    return black_wins
 
 if __name__ == '__main__':
     b = Board()
