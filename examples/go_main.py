@@ -1,10 +1,19 @@
 import math
 import random
+from multiprocessing import Pool
 import go
 
+def random_playout((playouts, history)):
+    import go
+    return go.random_playout(playouts, history)
+
+hist = [7]
+
 GAMES = 10000
-PLAYOUTS = 3
-PROCESSES = 4
+PLAYOUTS = 2
+POOL = Pool(3)
+
+#print POOL.map(random_playout, 10*[(PLAYOUTS, hist)])
 
 class UCTNode:
     def __init__(self):
@@ -35,8 +44,9 @@ class UCTNode:
                 break
             path.append(child)
             node = child
-        black_wins = board.random_playout(PLAYOUTS)
-        self.update_path(color, path, black_wins)
+
+        bwins = sum(POOL.map(random_playout, 3*[(PLAYOUTS, hist)]))
+        self.update_path(color, path, bwins > 1)
 
     def select(self, board):
         """ select move; unexplored children first, then according to uct value """
