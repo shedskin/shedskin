@@ -188,16 +188,17 @@ class Board:
 
     def random_playout(self, playouts):
         """ random play until both players pass """
+        black_wins = 0
         hist = self.history[:]
-        black_wins = False
-        for x in range(playouts):
+        for p in range(playouts):
             self.reset()
             self.replay(hist)
-            for x in range(MAXMOVES): # XXX while not self.finished?
+            for m in range(MAXMOVES): # XXX while not self.finished?
                 if self.finished:
                     break
                 self.move(self.random_move())
-            black_wins = (self.score(BLACK) >= self.score(WHITE))
+            if (self.score(BLACK) >= self.score(WHITE)):
+                black_wins += 1
         return (black_wins > playouts/2)
 
     def useful_fast(self, square):
@@ -280,6 +281,7 @@ if __name__ == '__main__':
     b.move(0)
     b.useful(0)
     b.random_move()
+    b.random_playout(0)
     b.replay([1])
     b.score(BLACK)
     b.useful_moves()

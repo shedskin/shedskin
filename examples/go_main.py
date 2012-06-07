@@ -3,7 +3,8 @@ import random
 import go
 
 GAMES = 10000
-PLAYOUTS = 1
+PLAYOUTS = 3
+PROCESSES = 4
 
 class UCTNode:
     def __init__(self):
