@@ -186,21 +186,6 @@ class Board:
     def random_move(self):
         return self.emptyset.random_choice()
 
-    def random_playout(self, playouts):
-        """ random play until both players pass """
-        black_wins = 0
-        hist = self.history[:]
-        for p in range(playouts):
-            self.reset()
-            self.replay(hist)
-            for m in range(MAXMOVES): # XXX while not self.finished?
-                if self.finished:
-                    break
-                self.move(self.random_move())
-            if (self.score(BLACK) >= self.score(WHITE)):
-                black_wins += 1
-        return (black_wins > playouts/2)
-
     def useful_fast(self, square):
         if not square.used:
             for neighbour in square.neighbours:
@@ -276,14 +261,29 @@ class Board:
             result.append(''.join([SHOW[square.color]+' ' for square in self.squares[start:start+SIZE]]))
         return '\n'.join(result)
 
+def random_playout(playouts, hist):
+    """ random play until both players pass """
+    black_wins = 0
+    board = Board()
+    for p in range(playouts):
+        board.reset()
+        board.replay(hist)
+        for m in range(MAXMOVES): # XXX while not board.finished?
+            if board.finished:
+                break
+            board.move(board.random_move())
+        if (board.score(BLACK) >= board.score(WHITE)):
+            black_wins += 1
+    return (black_wins > playouts/2)
+
 if __name__ == '__main__':
     b = Board()
     b.move(0)
     b.useful(0)
     b.random_move()
-    b.random_playout(0)
     b.replay([1])
     b.score(BLACK)
     b.useful_moves()
     to_xy(0)
+    random_playout(0, [1])
     print b
