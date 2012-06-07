@@ -3,7 +3,7 @@ import random
 import go
 
 GAMES = 10000
-MAXMOVES = go.SIZE*go.SIZE*3
+PLAYOUTS = 1
 
 class UCTNode:
     def __init__(self):
@@ -34,8 +34,8 @@ class UCTNode:
                 break
             path.append(child)
             node = child
-        self.random_playout(board)
-        self.update_path(board, color, path)
+        black_wins = board.random_playout(PLAYOUTS)
+        self.update_path(color, path, black_wins)
 
     def select(self, board):
         """ select move; unexplored children first, then according to uct value """
@@ -50,20 +50,12 @@ class UCTNode:
         else:
             return go.PASS
 
-    def random_playout(self, board):
-        """ random play until both players pass """
-        for x in range(MAXMOVES): # XXX while not self.finished?
-            if board.finished:
-                break
-            board.move(board.random_move())
-
-    def update_path(self, board, color, path):
+    def update_path(self, color, path, black_wins):
         """ update win/loss count along path """
-        wins = board.score(go.BLACK) >= board.score(go.WHITE)
         for node in path:
             if color == go.BLACK: color = go.WHITE
             else: color = go.BLACK
-            if wins == (color == go.BLACK):
+            if black_wins == (color == go.BLACK):
                 node.wins += 1
             else:
                 node.losses += 1

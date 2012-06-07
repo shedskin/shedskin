@@ -19,6 +19,7 @@ SHOW = {EMPTY: '.', WHITE: 'o', BLACK: 'x'}
 PASS = -1
 TIMESTAMP = 0
 MOVES = 0
+MAXMOVES = SIZE*SIZE*3
 
 def to_pos(x,y):
     return y * SIZE + x
@@ -184,6 +185,20 @@ class Board:
 
     def random_move(self):
         return self.emptyset.random_choice()
+
+    def random_playout(self, playouts):
+        """ random play until both players pass """
+        hist = self.history[:]
+        black_wins = False
+        for x in range(playouts):
+            self.reset()
+            self.replay(hist)
+            for x in range(MAXMOVES): # XXX while not self.finished?
+                if self.finished:
+                    break
+                self.move(self.random_move())
+            black_wins = (self.score(BLACK) >= self.score(WHITE))
+        return (black_wins > playouts/2)
 
     def useful_fast(self, square):
         if not square.used:
