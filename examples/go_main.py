@@ -7,10 +7,11 @@ def random_playout((playouts, history)):
     import go
     return go.random_playout(playouts, history)
 
-GAMES = 25000
-PLAYOUTS = 10
-NPROC = 4
+NPROC = 8 # worker processes, 1 disables concurrency
 POOL = Pool(NPROC)
+LEAVES = 25000 # nodes to add to UCT tree per move
+PLAYOUTS = 20 # playouts for each new new node per process
+# total number of playouts is NPROC*LEAVES*PLAYOUTS
 
 class UCTNode:
     def __init__(self):
@@ -42,7 +43,10 @@ class UCTNode:
             path.append(child)
             node = child
 
-        bwins = sum(POOL.map(random_playout, NPROC*[(PLAYOUTS, board.history)]))
+        if NPROC==1:
+            bwins = go.random_playout(PLAYOUTS, board.history)
+        else:
+            bwins = sum(POOL.map(random_playout, NPROC*[(PLAYOUTS, board.history)]))
         self.update_path(color, path, bwins > PLAYOUTS*NPROC/2)
 
     def select(self, board):
@@ -120,7 +124,7 @@ def computer_move(board):
     tree = UCTNode()
     tree.unexplored = board.useful_moves()
     nboard = go.Board()
-    for game in range(GAMES):
+    for leaf in range(LEAVES):
         node = tree
         nboard.reset()
         nboard.replay(board.history)
