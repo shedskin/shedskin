@@ -816,7 +816,7 @@ def connect_actual_formal(expr, func, parent_constr=False, merge=None):
         actuals = actuals[1:]
 
     skip_defaults = False # XXX investigate and further narrow down cases where we want to skip
-    if (func.mv.module.ident in ['string', 'collections', 'bisect', 'array', 'math', 'cStringIO', 'getopt']) or \
+    if (func.mv.module.ident in ['time', 'string', 'collections', 'bisect', 'array', 'math', 'cStringIO', 'getopt']) or \
        (func.mv.module.ident == 'random' and func.ident == 'randrange') or\
        (func.mv.module.ident == 'builtin' and func.ident not in ('sort', 'sorted', 'min', 'max', '__print')):
         skip_defaults = True
