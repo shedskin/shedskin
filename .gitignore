@@ -293,6 +293,7 @@ tests/196
 tests/197
 tests/198
 tests/199
+tests/200
 speed/rc4
 examples/plcfrs
 examples/kmeanspp
