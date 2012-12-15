@@ -10,3 +10,11 @@ print len(rFDs), len(wFDs), len(xFDs)
 import time
 print time.asctime()[:10]
 print str(time.localtime())[:50]
+
+#don't crash, keep going
+class Lg2(object):
+    lgLut = [-1]
+    for i in xrange(1, 256):
+        lgLut.append(1 + lgLut[i / 2])
+lgLut = Lg2.lgLut
+print lgLut[:10]
