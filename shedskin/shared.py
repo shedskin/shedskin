@@ -424,8 +424,7 @@ def defaultvar(name, parent, worklist=None):
     if isinstance(parent, function) and parent.listcomp and not var.registered:
         while isinstance(parent, function) and parent.listcomp: # XXX
             parent = parent.parent
-        if isinstance(parent, function):
-            register_tempvar(var, parent)
+        register_tempvar(var, parent)
 
     return var
 
@@ -835,9 +834,9 @@ def parent_func(thing):
             return parent
         parent = parent.parent
 
-def register_tempvar(var, func):
-    if func:
-        func.registered_tempvars.append(var)
+def register_tempvar(var, parent):
+    if isinstance(parent, function):
+        parent.registered_tempvars.append(var)
 
 def const_literal(node):
     if isinstance(node, (UnarySub, UnaryAdd)):

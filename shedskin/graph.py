@@ -1017,7 +1017,6 @@ class moduleVisitor(ASTVisitor):
 
             if isinstance(qual.assign, AssName): # XXX merge with visitFor
                 lvar = defaultvar(qual.assign.name, lcfunc) # XXX str or Name?
-                #register_tempvar(lvar, func)
                 self.addconstraint((inode(qual.assign), inode(lvar)), lcfunc)
             else: # AssTuple, AssList
                 self.tuple_flow(qual.assign, qual.assign, lcfunc)
