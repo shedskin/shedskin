@@ -34,7 +34,7 @@ int asprintf(char **ret, const char *format, ...)
     va_list ap;
     int nc;
     va_start (ap, format);
-    nc= vasprintf(ret, format, ap);
+    nc = vasprintf(ret, format, ap);
     va_end(ap);
     return nc;
 }
@@ -77,6 +77,34 @@ template<class T> str *do_asprintf(const char *fmt, T t, pyobj *a1, pyobj *a2) {
     return r;
 }
 
+/* XXX deal with null-chars.. ugh */
+str *do_asprintf_str(const char *fmt, str *s, pyobj *a1, pyobj *a2) {
+    char *d;
+    int x;
+    str *r;
+    int nullchars = (s->unit.find('\0') != -1); /* XXX %6.s */
+    ssize_t len = s->unit.size();
+    str *old_s = s;
+    if(nullchars) {
+        s = new str(s->unit);
+        std::replace(s->unit.begin(), s->unit.end(), '\0', ' ');
+    }
+    if(a2)
+        x = asprintf(&d, fmt, ((int)(((int_ *)a1)->unit)), ((int)(((int_ *)a2)->unit)), s->unit.c_str());
+    else if(a1)
+        x = asprintf(&d, fmt, ((int)(((int_ *)a1)->unit)), s->unit.c_str());
+    else
+        x = asprintf(&d, fmt, s->unit.c_str());
+    if(nullchars) {
+        for(int i=0; i<x && i<len; i++)
+            if(old_s->unit[i] == '\0')
+                d[i] = '\0';
+    }
+    r = new str(d, x);
+    free(d);
+    return r;
+}
+
 void __modfill(str **fmt, pyobj *t, str **s, pyobj *a1, pyobj *a2) {
     char c;
     int i = (*fmt)->unit.find('%');
@@ -89,7 +117,7 @@ void __modfill(str **fmt, pyobj *t, str **s, pyobj *a1, pyobj *a2) {
         if(c == 's') add = __str(t);
         else add = repr(t);
         (*fmt)->unit[j] = 's';
-        add = do_asprintf((*fmt)->unit.substr(i, j+1-i).c_str(), add->unit.c_str(), a1, a2);
+        add = do_asprintf_str((*fmt)->unit.substr(i, j+1-i).c_str(), add, a1, a2);
     } else if(c  == 'c')
         add = __str(t);
     else if(c == '%')
