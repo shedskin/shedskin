@@ -225,6 +225,7 @@ class moduleVisitor(ASTVisitor):
         newnode = cnode(node, parent=func)
         getgx().types[newnode] = set()
         lc = ListComp(node.code.expr, [ListCompFor(qual.assign, qual.iter, qual.ifs, qual.lineno) for qual in node.code.quals], lineno=node.lineno)
+        register_node(lc, func)
         getgx().genexp_to_lc[node] = lc
         self.visit(lc, func)
         self.addconstraint((inode(lc), newnode), func)
