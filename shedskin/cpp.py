@@ -2377,12 +2377,16 @@ class generateVisitor(ASTVisitor):
 
         # obj.attr
         else:
+            checkcls = [] # XXX better to just inherit vars?
             for t in self.mergeinh[node.expr]:
-                if isinstance(t[0], class_) and node.attrname in t[0].parent.vars and not node.attrname in t[0].funcs:
+                if isinstance(t[0], class_) and not node.attrname in t[0].funcs:
+                    checkcls.extend(t[0].ancestors(True))
+            for cl in checkcls:
+                if node.attrname in cl.parent.vars:
                     error("class attribute '"+node.attrname+"' accessed without using class name", node, warning=True, mv=getmv())
                     break
 
-            if not isinstance(node.expr, (Name)):
+            if not isinstance(node.expr, Name):
                 self.append('(')
             if isinstance(node.expr, Name) and not lookupvar(node.expr.name, func): # XXX XXX
                 self.append(node.expr.name)

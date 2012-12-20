@@ -28,6 +28,15 @@ unpacked = struct.unpack('<I', data)[0]
 struct.unpack('<I', data)
 tuple_unpacked = struct.unpack('<I', data)
 
+class wafwaf:
+    x = 1
+
+class wof(wafwaf):
+    def hap(self):
+        self.x
+
+wof().hap()
+
 #*WARNING* 6.py:6: '__del__' is not supported
 #*WARNING* 6.py:8: '__iter__' is not supported
 #*WARNING* 6.py:10: '__call__' is not supported
@@ -35,6 +44,7 @@ tuple_unpacked = struct.unpack('<I', data)
 #*WARNING* 6.py:14: attribute won't be deleted
 #*WARNING* 6.py:20: class attribute 'attr' accessed without using class name
 #*WARNING* 6.py:23: class attribute 'attr' accessed without using class name
+#*WARNING* 6.py:36: class attribute 'x' accessed without using class name
 #*WARNING* 6.py:27: struct.unpack should be used as follows: 'a, .. = struct.unpack(..)'
 #*WARNING* 6.py:28: struct.unpack should be used as follows: 'a, .. = struct.unpack(..)'
 #*WARNING* 6.py:29: struct.unpack should be used as follows: 'a, .. = struct.unpack(..)'
