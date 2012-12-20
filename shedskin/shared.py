@@ -212,7 +212,7 @@ class class_:
         self.def_order = getgx().class_def_order
         getgx().class_def_order += 1
 
-    def ancestors(self): # XXX attribute (faster)
+    def ancestors(self, inclusive=False): # XXX attribute (faster)
         a = set(self.bases)
         changed = 1
         while changed:
@@ -221,6 +221,8 @@ class class_:
                 if set(cl.bases)-a:
                     changed = 1
                     a.update(cl.bases)
+        if inclusive:
+            a.add(self)
         return a
 
     def ancestors_upto(self, other):
