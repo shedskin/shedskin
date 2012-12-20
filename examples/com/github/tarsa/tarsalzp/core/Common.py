@@ -76,7 +76,7 @@ class Common(object):
         self.rangesTotal = array.array("H",
             (self.literalCoderInit * 256 for _ in xrange(1
             << literalCoderContextMaskSize)))
-        self.recentCost = 8 << self.CostScale + 14
+        self.recentCost = 8 << Common.CostScale + 14
         # Adaptive probability map init
         self.apmLow = array.array("H", (0x4000 for _ in xrange(16 * 256)))
         if self.onlyLowLzp:
@@ -227,9 +227,9 @@ class Common(object):
             self.rescaleLiteralCoder()
 
     def useFixedProbabilities(self):
-        return self.recentCost > 8 << self.CostScale + 14
+        return self.recentCost > 8 << Common.CostScale + 14
 
     def updateRecentCost(self, symbolFrequency, totalFrequency):
-        self.recentCost -= self.recentCost >> self.CostScale
+        self.recentCost -= self.recentCost >> Common.CostScale
         self.recentCost += Lg2.nLog2(totalFrequency)
         self.recentCost -= Lg2.nLog2(symbolFrequency)
