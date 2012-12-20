@@ -433,12 +433,8 @@ class generateVisitor(ASTVisitor):
                 if child.name in getmv().classes:
                     cl = getmv().classes[child.name]
                     self.output('cl_'+cl.ident+' = new class_("%s");' % (cl.ident))
-                    for varname in cl.parent.varorder:
-                        var = cl.parent.vars[varname]
-                        if var.initexpr:
-                            self.start()
-                            self.visitm(cl.ident+'::'+var.cpp_name()+' = ', var.initexpr, cl)
-                            self.eol()
+                    if cl.parent.static_nodes:
+                        self.output('%s::__static__();' % cl.cpp_name())
 
             elif isinstance(child, Discard):
                 self.visit_discard(child)
@@ -615,6 +611,10 @@ class generateVisitor(ASTVisitor):
             self.deindent()
             self.output('}')
 
+        # --- static code
+        if cl.parent.static_nodes:
+            self.output('static void __static__();');
+
         # --- methods
         virtuals(self, cl, True)
         for func in cl.funcs.values():
@@ -648,6 +648,16 @@ class generateVisitor(ASTVisitor):
                 if var in getgx().merged_inh and getgx().merged_inh[var]:
                     self.start(nodetypestr(var, cl.parent)+cl.ident+'::'+var.cpp_name())
                     self.eol()
+            print >>self.out
+
+        # --- static init
+        if cl.parent.static_nodes:
+            self.output('void %s::__static__() {' % cl.cpp_name())
+            self.indent()
+            for node in cl.parent.static_nodes:
+                self.visit(node, cl.parent)
+            self.deindent()
+            self.output('}')
             print >>self.out
 
     def class_variables(self, cl):

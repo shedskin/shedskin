@@ -105,7 +105,6 @@ class variable:
         self.invisible = False            # not in C++ output
         self.formal_arg = False
         self.imported = False
-        self.initexpr = None
         self.registered = False
         self.looper = None
         self.wopper = None
@@ -263,7 +262,7 @@ class class_:
 class static_class: # XXX merge with regular class
     def __init__(self, cl):
         self.vars = {}
-        self.varorder = [] # XXX
+        self.static_nodes = []
         self.funcs = {}
         self.class_ = cl
         cl.static_class = self
@@ -833,7 +832,8 @@ def parent_func(thing):
     parent = inode(thing).parent
     while parent:
         if not isinstance(parent, function) or not parent.listcomp:
-            return parent
+            if not isinstance(parent, static_class):
+                return parent
         parent = parent.parent
 
 def register_tempvar(var, parent):

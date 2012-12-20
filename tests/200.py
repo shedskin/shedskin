@@ -34,3 +34,24 @@ class Decoder(Common):
 
 d = Decoder(None, None, None)
 print d.lzpLow
+
+#static code
+class moeha:
+    x = 4
+    print 'joeh'
+    l = []
+    for i in range(10):
+        l.append(x)
+        l.append(i)
+    y = [[1.0]]
+
+    def mwa(self):
+        pass
+
+    @property
+    def ole(self):
+        return 7
+
+print moeha.x
+print moeha.l
+print moeha.y

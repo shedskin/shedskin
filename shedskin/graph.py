@@ -1077,10 +1077,8 @@ class moduleVisitor(ASTVisitor):
                 error('at the class-level, only simple assignments are supported', node, mv=self)
             name = node.nodes[0].name
             lvar = defaultvar(name, parent.parent)
-            parent.parent.varorder.append(name)
             self.visit(node.expr, func)
             self.addconstraint((inode(node.expr), inode(lvar)), None)
-            lvar.initexpr = node.expr
             return
 
         newnode = cnode(node, parent=func)
@@ -1103,7 +1101,7 @@ class moduleVisitor(ASTVisitor):
                     if (rvalue, 0, 0) not in getgx().cnode: # XXX generalize
                         self.visit(rvalue, func)
                     self.visit(lvalue, func)
-                    if func and lvalue.name in func.globals:
+                    if isinstance(func, function) and lvalue.name in func.globals:
                         lvar = defaultvar(lvalue.name, None)
                     else:
                         lvar = defaultvar(lvalue.name, func)
@@ -1357,7 +1355,12 @@ class moduleVisitor(ASTVisitor):
         # --- children
         for child in node.code.getChildNodes():
             if child not in skip:
-                self.visit(child, self.classes[node.name])
+                cl = self.classes[node.name]
+                if isinstance(child, Function):
+                    self.visit(child, cl)
+                else:
+                    cl.parent.static_nodes.append(child)
+                    self.visit(child, cl.parent)
 
         # --- __iadd__ etc.
         if not newclass.mv.module.builtin or newclass.ident in ['int_', 'float_', 'str_', 'tuple', 'complex']:
