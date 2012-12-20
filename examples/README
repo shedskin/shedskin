@@ -1,6 +1,6 @@
-67 programs that work with Shed Skin 0.9.2.
+69 programs that work with Shed Skin 0.9.3.
 
-17,000 lines in total (using sloccount, around 25,000 otherwise)
+18,000 lines in total (using sloccount, around 26,000 otherwise)
 
 shedskin -b (disable index-out-of-bounds checking) often improves performance.
 
@@ -48,6 +48,7 @@ lines  name                 description                     notes
    108 mandelbrot2_main.py  interactive mandelbrot fractal  shedskin -e mandelbrot2 && make && python mandelbrot2_main.py
    223 mastermind_main.py   mastermind against comp
    117 mastermind2.py       mastermind strategies
+    49 minpng.py            uncompressed PNG encoder
  1,201 msp_ss.py            serial bootstrap loader         see comments in top
    482 mwmatching.py        maximum weighted matching algorithm
    101 nbody.py             planet body physics
@@ -85,6 +86,7 @@ lines  name                 description                     notes
     68 sudoku4.py           norvig's sudoku solver
     74 sudoku5.py           dancing links sudoku solver
    113 tictactoe.py         tictactoe on large boards
+   883 TarsaLZP.py          Data Compression Algorithm
    753 TonyJpegDecoder.py   jpeg decoder
     39 voronoi.py           textual voronoi
    526 voronoi2.py          voronoi algoritm
