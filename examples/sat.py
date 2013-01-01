@@ -19,6 +19,8 @@ from __future__ import print_function
 #   the same input). We do not do random restarts, etc.
 # - We add an AtMostOneClause (the paper suggests this in the Excercises, and
 #   it's very useful for our purposes).
+#
+# modified by mark.dufour@gmail.com to work with shedskin
 
 TRUE, FALSE, NONE = 1, 0, -1
 
