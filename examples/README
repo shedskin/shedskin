@@ -1,6 +1,6 @@
-69 programs that work with Shed Skin 0.9.3.
+70 programs that work with Shed Skin 0.9.3.
 
-18,000 lines in total (using sloccount, around 26,000 otherwise)
+18,250 lines in total (using sloccount, around 27,000 otherwise)
 
 shedskin -b (disable index-out-of-bounds checking) often improves performance.
 
@@ -74,6 +74,7 @@ lines  name                 description                     notes
     82 rsync.py             rsync algorithm                 see comments in top
    846 rubik.py             rubik solver
     78 rubik2.py            thistlethwaite rubik solver
+   259 sat.py               conflict-driven satisfiability solver
    129 score4.py            connect four/four-in-a-row
     80 sieve.py             prime number sieves
    192 sha.py               SHA-1 algorithm                 shedskin -l sha
