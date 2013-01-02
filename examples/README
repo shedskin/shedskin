@@ -1,6 +1,6 @@
-70 programs that work with Shed Skin 0.9.3.
+71 programs that work with Shed Skin 0.9.3.
 
-18,250 lines in total (using sloccount, around 27,000 otherwise)
+20,000 lines in total (using sloccount, around 30,000 otherwise)
 
 shedskin -b (disable index-out-of-bounds checking) often improves performance.
 
@@ -65,6 +65,8 @@ lines  name                 description                     notes
                             (triangle primitives, octree spatial index)
    208 path_tracing.py      path tracing raytracer          shedskin -r path_tracing
    392 plcfrs.py            natural language parser
+  1543 pygasus_main.py      NES emulator                    shedskin -be pygasus && make
+                                                            python pygasus_main.py mario_bros.nes
   1050 pylot_main.py        multiprocessing raytracer       cd pylot; shedskin -boe SimpleGeometry && make; cd ..
                                                             python pylot_main.py
    181 pystone.py           standard benchmark
