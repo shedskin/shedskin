@@ -34,6 +34,11 @@ class meuh:
 
 meuh()
 
+a = []
+while a:
+    print a.pop().frut
+    print a.pop().fledder()
+
 #*WARNING* 7.py: variable 'l' has dynamic (sub)type
 #*WARNING* 7.py: variable 'r' has dynamic (sub)type
 #*WARNING* 7.py:5: variable 'snuif' has no type
@@ -41,3 +46,7 @@ meuh()
 #*WARNING* 7.py:12: unresolved call (possibly caused by method passing, which is currently not allowed)
 #*WARNING* 7.py:28: class 'P1' has no method 'handle_key_press'
 #*WARNING* 7.py:33: variable 'moi' has no type
+#*WARNING* 7.py:32: expression has no type
+#*WARNING* 7.py:39: expression has no type
+#*WARNING* 7.py:40: expression has no type
+

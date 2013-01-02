@@ -2388,6 +2388,8 @@ class generateVisitor(ASTVisitor):
         # obj.attr
         else:
             checkcls = [] # XXX better to just inherit vars?
+            if not self.mergeinh[node.expr] and not node.attrname.startswith('__'):
+                error('expression has no type', node, warning=True, mv=getmv())
             for t in self.mergeinh[node.expr]:
                 if isinstance(t[0], class_) and not node.attrname in t[0].funcs:
                     checkcls.extend(t[0].ancestors(True))
