@@ -382,7 +382,8 @@ def ppuDoScanline(n):
 					if indx==0 and screen[xpos+x][n]==bgcolor:
 						ppuStatusRegstr|=0x40
 					if finalColor!=bgcolor:
-						screen[xpos+x][n] = finalColor
+                                                if (xpos+x) < 255 and n < 240:
+                                                        screen[xpos+x][n] = finalColor
 			else:
 				ypos=ord(SPRRAM[(i2)])
 				if ypos>n or ypos<=(n-8): 
@@ -416,7 +417,8 @@ def ppuDoScanline(n):
 							ppuStatusRegstr|=0x40
 					except: pass
 					if finalColor!=bgcolor:
-						screen[xpos+x][n] = finalColor
+                                                if (xpos+x) < 255 and n < 240:
+                                                        screen[xpos+x][n] = finalColor
 
 def setkeys(keys):
     global pygamekeys
