@@ -412,12 +412,10 @@ def ppuDoScanline(n):
 					if col%4==0: col=0x3f00
 					color=ord(ppuRAM[col])&0x3f
 					finalColor=pallete[color]
-					try: 
-						if indx==0 and screen[xpos+x][n]==bgcolor:
-							ppuStatusRegstr|=0x40
-					except: pass
-					if finalColor!=bgcolor:
-                                                if (xpos+x) < 255 and n < 240:
+                                        if (xpos+x) < 256 and n < 240:
+                                                if indx==0 and screen[xpos+x][n]==bgcolor:
+                                                        ppuStatusRegstr|=0x40
+                                                if finalColor!=bgcolor:
                                                         screen[xpos+x][n] = finalColor
 
 def setkeys(keys):
@@ -1695,8 +1693,12 @@ def read_ines(name):
 
 if __name__ == '__main__':
     read_ines('mario_bros.nes')
-    pReset()
-    pExec()
-    setkeys({'q': 1})
+    setkeys({'q': 0, 'w': 0, 'a': 0, 's': 0, 'UP': 0, 'DOWN': 0, 'LEFT': 0, 'RIGHT': 0})
     setkeys2((0,))
     getscreen()
+    pReset()
+    x = 0
+    while True:
+        print x
+        x += 1
+        pExec()
