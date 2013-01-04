@@ -1545,6 +1545,7 @@ def parse_module(name, parent=None, node=None):
                 mod.mod_dir = relpath[:-1]
                 mod.builtin = True
                 mod.libdir = libdir
+                break
 
             elif os.path.isfile(connect_paths(libpath, '__init__.py')):
                 mod.filename = libpath+'/__init__.py'
@@ -1553,6 +1554,7 @@ def parse_module(name, parent=None, node=None):
                 mod.mod_dir = relpath
                 mod.builtin = True
                 mod.libdir = libdir
+                break
 
     if not hasattr(mod, 'filename'):
         error('cannot locate module: '+name, node, mv=getmv())
