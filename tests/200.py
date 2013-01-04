@@ -55,3 +55,8 @@ class moeha:
 print moeha.x
 print moeha.l
 print moeha.y
+
+#unused default func
+def bla(hop=cmp):
+    print 'ole', hop(9,10)
+bla(lambda a,b:a+b)
