@@ -21,7 +21,7 @@ def annotate():
     re_comment = re.compile(r'#[^\"\']*$')
     def paste(expr, text):
         if not expr.lineno: return
-        if (expr,0,0) in getgx().cnode and inode(expr).mv != mv: return # XXX
+        if (expr,0,0) not in getgx().cnode or inode(expr).mv != mv: return # XXX
         line = source[expr.lineno-1]
         match = re_comment.search(line)
         if match:
