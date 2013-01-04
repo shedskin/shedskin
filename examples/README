@@ -1,6 +1,4 @@
-71 programs that work with Shed Skin 0.9.3.
-
-20,000 lines in total (using sloccount, around 30,000 otherwise)
+72 programs that work with Shed Skin 0.9.3.
 
 shedskin -b (disable index-out-of-bounds checking) often improves performance.
 
@@ -89,7 +87,8 @@ lines  name                 description                     notes
     68 sudoku4.py           norvig's sudoku solver
     74 sudoku5.py           dancing links sudoku solver
    113 tictactoe.py         tictactoe on large boards
-   883 TarsaLZP.py          Data Compression Algorithm
+   651 timsort.py           advanced sorting algorithm
+   883 TarsaLZP.py          data compression algorithm
    753 TonyJpegDecoder.py   jpeg decoder
     39 voronoi.py           textual voronoi
    526 voronoi2.py          voronoi algoritm
