@@ -1,5 +1,6 @@
 #include "serial.hpp"
 #include <assert.h>
+#include <unistd.h>
 
 namespace __serial__ {
 
