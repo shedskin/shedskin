@@ -1,3 +1,9 @@
+'''
+NES emulator by Maciek "Mistrall" Żuk
+
+modified by mark.dufour@gmail.com to work with shedskin
+'''
+
 import array
 import struct
 
