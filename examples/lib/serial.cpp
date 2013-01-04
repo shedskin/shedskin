@@ -126,9 +126,9 @@ str *Serial::read(int size) {
     unsigned char c;
 
     for(int i=0; i<size;i++) {
-        ::read(fd, &c, 1);
+        ssize_t result = ::read(fd, &c, 1);
+        assert(result==1);
         r->unit += c; 
-        //printf("read %d\n", c);  
     }
     return r;   
 
@@ -166,10 +166,8 @@ int Serial::write(str *data) {
     unsigned char c;
     for(int i=0; i<data->unit.size(); i++) {
         c = data->unit[i];
-        int result = ::write(fd, &c, 1);
+        ssize_t result = ::write(fd, &c, 1);
         assert(result==1);
-
-        //printf("write %d\n", c); 
     }
     flushOutput();
     flushInput();
