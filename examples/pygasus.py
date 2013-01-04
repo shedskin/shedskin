@@ -338,10 +338,10 @@ def ppuDoScanline(n):
                 sy=((n+ppuVerticScroll)>>3)%30
 		if n%8==0:
 			for x in xrange(32):
-                            sx=(sx+1)%64
                             for wa in range(8):
                                 for ha in range(8):
                                     screen[(x<<3)-hor0+wa][n-ver0+ha] = tilePrefetch[sy][sx][wa][ha]
+                            sx=(sx+1)%64
 	if ppuShowSprites_:
 		sprPerScln=0
 		ppuStatusRegstr^=ppuStatusRegstr&0x20
