@@ -1,25 +1,26 @@
-''' 
-UCT go player in python, by mark.dufour@gmail.com.
+-''' 
+-UCT go player in python, by mark.dufour@gmail.com.
+-
+-techniques used:
+-
+--http://en.wikipedia.org/wiki/Disjoint-set_data_structure (to maintain groups)
+--http://senseis.xmp.net/?UCT (UCT monte carlo search)
+--http://en.wikipedia.org/wiki/Zobrist_hashing (incremental hash values)
+--timestamps, to be able to invalidate things with a single increment
+-
+-'''
 
-techniques used:
-
--http://en.wikipedia.org/wiki/Disjoint-set_data_structure (to maintain groups)
--http://senseis.xmp.net/?UCT (UCT monte carlo search)
--http://en.wikipedia.org/wiki/Zobrist_hashing (incremental hash values)
--timestamps, to be able to invalidate things with a single increment
-
-'''
-import random, sys
+import random, math, sys
 
 SIZE = 9
+GAMES = 15000
 KOMI = 7.5
-COUNT_DEAD = False
 EMPTY, WHITE, BLACK = 0, 1, 2
 SHOW = {EMPTY: '.', WHITE: 'o', BLACK: 'x'}
 PASS = -1
+MAXMOVES = SIZE*SIZE*3
 TIMESTAMP = 0
 MOVES = 0
-MAXMOVES = SIZE*SIZE*3
 
 def to_pos(x,y):
     return y * SIZE + x
@@ -74,13 +75,12 @@ class Square:
         self.board.zobrist.update(self, EMPTY)
         self.removestamp = TIMESTAMP
         if update:
-            if COUNT_DEAD:
-                if self.color == BLACK:
-                    self.board.black_dead += 1
-                else:
-                    self.board.white_dead += 1
             self.color = EMPTY
             self.board.emptyset.add(self.pos)
+#            if color == BLACK:
+#                self.board.black_dead += 1
+#            else:
+#                self.board.white_dead += 1
         for neighbour in self.neighbours:
             if neighbour.color != EMPTY and neighbour.removestamp != TIMESTAMP:
                 neighbour_ref = neighbour.find(update)
@@ -254,6 +254,50 @@ class Board:
                     count += 1
         return count
 
+    def check(self):
+       for square in self.squares:
+           if square.color == EMPTY:
+               continue
+
+           members1 = set([square])
+           changed = True
+           while changed:
+               changed = False
+               for member in members1.copy():
+                   for neighbour in member.neighbours:
+                       if neighbour.color == square.color and neighbour not in members1:
+                           changed = True
+                           members1.add(neighbour)
+           ledges1 = 0
+           for member in members1:
+               for neighbour in member.neighbours:
+                   if neighbour.color == EMPTY:
+                       ledges1 += 1
+
+           root = square.find()
+
+           #print 'members1', square, root, members1
+           #print 'ledges1', square, ledges1
+
+           members2 = set()
+           for square2 in self.squares:
+               if square2.color != EMPTY and square2.find() == root:
+                   members2.add(square2)
+
+           ledges2 = root.ledges
+           #print 'members2', square, root, members1
+           #print 'ledges2', square, ledges2
+
+           assert members1 == members2
+           assert ledges1 == ledges2, ('ledges differ at %r: %d %d' % (square, ledges1, ledges2))
+
+           empties1 = set(self.emptyset.empties)
+
+           empties2 = set()
+           for square in self.squares:
+               if square.color == EMPTY:
+                   empties2.add(square.pos)
+
     def __repr__(self):
         result = []
         for y in range(SIZE):
@@ -261,29 +305,160 @@ class Board:
             result.append(''.join([SHOW[square.color]+' ' for square in self.squares[start:start+SIZE]]))
         return '\n'.join(result)
 
-def random_playout(playouts, hist):
-    """ random play until both players pass """
-    black_wins = 0
-    board = Board()
-    for p in range(playouts):
-        board.reset()
-        board.replay(hist)
-        for m in range(MAXMOVES): # XXX while not board.finished?
+class UCTNode:
+    def __init__(self):
+        self.bestchild = None
+        self.pos = -1
+        self.wins = 0
+        self.losses = 0
+        self.pos_child = [None for x in range(SIZE*SIZE)]
+        self.parent = None
+
+    def play(self, board):
+        """ uct tree search """
+        color = board.color
+        node = self
+        path = [node]
+        while True:
+            pos = node.select(board)
+            if pos == PASS:
+                break
+            board.move(pos)
+            child = node.pos_child[pos]
+            if not child:
+                child = node.pos_child[pos] = UCTNode()
+                child.unexplored = board.useful_moves()
+                child.pos = pos
+                child.parent = node
+                path.append(child)
+                break
+            path.append(child)
+            node = child
+        self.random_playout(board)
+        self.update_path(board, color, path)
+
+    def select(self, board):
+        """ select move; unexplored children first, then according to uct value """
+        if self.unexplored:
+            i = random.randrange(len(self.unexplored))
+            pos = self.unexplored[i]
+            self.unexplored[i] = self.unexplored[len(self.unexplored)-1]
+            self.unexplored.pop()
+            return pos
+        elif self.bestchild:
+            return self.bestchild.pos
+        else:
+            return PASS
+
+    def random_playout(self, board):
+        """ random play until both players pass """
+        for x in range(MAXMOVES): # XXX while not self.finished?
             if board.finished:
                 break
             board.move(board.random_move())
-        if (board.score(BLACK) >= board.score(WHITE)):
-            black_wins += 1
-    return black_wins
+
+    def update_path(self, board, color, path):
+        """ update win/loss count along path """
+        wins = board.score(BLACK) >= board.score(WHITE)
+        for node in path:
+            if color == BLACK: color = WHITE
+            else: color = BLACK
+            if wins == (color == BLACK):
+                node.wins += 1
+            else:
+                node.losses += 1
+            if node.parent:
+                node.parent.bestchild = node.parent.best_child()
+
+    def score(self):
+        winrate = self.wins/float(self.wins+self.losses)
+        parentvisits = self.parent.wins+self.parent.losses
+        if not parentvisits:
+            return winrate
+        nodevisits = self.wins+self.losses
+        return winrate + math.sqrt((math.log(parentvisits))/(5*nodevisits))
+
+    def best_child(self):
+        maxscore = -1
+        maxchild = None
+        for child in self.pos_child:
+            if child and child.score() > maxscore:
+                maxchild = child
+                maxscore = child.score()
+        return maxchild
+
+    def best_visited(self):
+        maxvisits = -1
+        maxchild = None
+        for child in self.pos_child:
+#            if child:
+#                print to_xy(child.pos), child.wins, child.losses, child.score()
+            if child and (child.wins+child.losses) > maxvisits:
+                maxvisits, maxchild = (child.wins+child.losses), child
+        return maxchild
+
+def user_move(board):
+    while True:
+        text = raw_input('?').strip()
+        if text == 'p':
+            return PASS
+        if text == 'q':
+            raise EOFError
+        try:
+            x, y = [int(i) for i in text.split()]
+        except ValueError:
+            continue
+        if not (0 <= x < SIZE and 0 <= y < SIZE):
+            continue
+        pos = to_pos(x, y)
+        if board.useful(pos): 
+            return pos
+
+def computer_move(board):
+    global MOVES
+    pos = board.random_move()
+    if pos == PASS:
+        return PASS
+    tree = UCTNode()
+    tree.unexplored = board.useful_moves()
+    nboard = Board()
+    for game in range(GAMES):
+        node = tree
+        nboard.reset()
+        nboard.replay(board.history)
+        node.play(nboard)
+#    print 'moves', MOVES
+    return tree.best_visited().pos
+
+def versus_cpu():
+    board = Board()
+    while True:
+        if board.lastmove != PASS:
+            print board
+        print 'thinking..'
+        pos = computer_move(board)
+        if pos == PASS:
+            print 'I pass.'
+        else:
+            print 'I move here:', to_xy(pos)
+        board.move(pos)
+        #break
+        #board.check()
+        if board.finished:
+            break
+        if board.lastmove != PASS:
+            print board
+        pos = user_move(board)
+        board.move(pos)
+        #board.check()
+        if board.finished:
+            break
+    print 'WHITE:', board.score(WHITE)
+    print 'BLACK:', board.score(BLACK)
 
 if __name__ == '__main__':
-    b = Board()
-    b.move(0)
-    b.useful(0)
-    b.random_move()
-    b.replay([1])
-    b.score(BLACK)
-    b.useful_moves()
-    to_xy(0)
-    random_playout(0, [1])
-    print b
+    random.seed(1)
+    try:
+        versus_cpu()
+    except EOFError:
+        pass
