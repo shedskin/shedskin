@@ -56,12 +56,15 @@ print moeha.x
 print moeha.l
 print moeha.y
 
+#add case from issue 125, plus a few more tests
+class MyClass(object):
+    A, B, C = range(3)
+    x, y = 9, (10, 11)
+    z = zz = B*x
+    t, t2 = v, v2 = y
+print MyClass.A, MyClass.B, MyClass.C, MyClass.x, MyClass.y, MyClass.z, MyClass.zz, MyClass.t, MyClass.t2, MyClass.v, MyClass.v2
+
 #unused default func
 def bla(hop=cmp):
     print 'ole', hop(9,10)
 bla(lambda a,b:a+b)
-
-#issue 125 should now be solved
-class MyClass(object):
-    A, B, C = range(3)
-print MyClass.A, MyClass.B, MyClass.C
