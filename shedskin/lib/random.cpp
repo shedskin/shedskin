@@ -471,6 +471,10 @@ double Random::expovariate(double lambd) {
             values range from 0 to positive infinity.
 
     */
+
+    /*
+    python 2.6 behaviour, changed in 2.7:
+
     double u;
 
     u = this->random();
@@ -479,6 +483,9 @@ double Random::expovariate(double lambd) {
         u = this->random();
     }
     return (-__math__::log(u)/lambd);
+    */
+
+    return (-__math__::log(1.0 - this->random())/lambd);
 }
 
 int Random::getrandbits(int k) {
