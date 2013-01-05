@@ -1070,17 +1070,6 @@ class moduleVisitor(ASTVisitor):
                 getgx().struct_unpack[node] = (sinfo, tvar.name, tvar_pos.name)
                 return
 
-        # --- class-level attribute # XXX merge below
-        if isinstance(func, class_):
-            parent = func # XXX move above
-            if len(node.nodes) > 1 or not isinstance(node.nodes[0], AssName):
-                error('at the class-level, only simple assignments are supported', node, mv=self)
-            name = node.nodes[0].name
-            lvar = defaultvar(name, parent.parent)
-            self.visit(node.expr, func)
-            self.addconstraint((inode(node.expr), inode(lvar)), None)
-            return
-
         newnode = cnode(node, parent=func)
         getgx().types[newnode] = set()
 
