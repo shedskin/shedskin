@@ -1175,7 +1175,7 @@ class moduleVisitor(ASTVisitor):
 
             getgx().item_rvalue[item] = rvalue
             if isinstance(item, AssName):
-                if func and item.name in func.globals: # XXX merge
+                if isinstance(func, function) and item.name in func.globals: # XXX merge
                     lvar = defaultvar(item.name, None)
                 else:
                     lvar = defaultvar(item.name, func)
