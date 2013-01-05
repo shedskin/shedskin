@@ -60,3 +60,8 @@ print moeha.y
 def bla(hop=cmp):
     print 'ole', hop(9,10)
 bla(lambda a,b:a+b)
+
+#issue 125 should now be solved
+class MyClass(object):
+    A, B, C = range(3)
+print MyClass.A, MyClass.B, MyClass.C
