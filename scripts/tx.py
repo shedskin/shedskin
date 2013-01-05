@@ -1,13 +1,13 @@
 import sys, os, random
 random.seed(328497)
 
-total = 200
+total = 201
 parts, part = map(int, sys.argv[1:3])
 extra = ''
 if len(sys.argv) == 4:
     extra = sys.argv[3]
 
-alles = [a for a in range(total) if a != 172]
+alles = [a for a in range(total)]
 random.shuffle(alles)
 
 tests = alles[part::parts]
