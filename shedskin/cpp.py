@@ -1733,7 +1733,7 @@ class generateVisitor(ASTVisitor):
                 return
             else:
                 if isinstance(node.node, Name):
-                    if func and isinstance(func.parent, class_) and ident in func.parent.funcs: # masked by method
+                    if isinstance(func, function) and isinstance(func.parent, class_) and ident in func.parent.funcs: # masked by method
                         self.append(funcs[0].mv.module.full_path()+'::')
                     self.append(funcs[0].cpp_name())
                 else:
