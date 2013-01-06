@@ -418,7 +418,7 @@ class Timsort:
 	# @param list_ the array to be sorted
 	# @param comparefn the comparator to determine the order of the sort
 	#
-	def __init__(self, list_, comparefn):
+	def __init__(self, list_, comparefn=cmp):
 		self.min_merge = 32
 		self.initial_min_gallop = 7
 		self.stack_size = 0
