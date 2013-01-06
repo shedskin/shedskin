@@ -4,7 +4,7 @@ Copyright 2005-2011 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 
 '''
 
-import sys, getopt, os.path, traceback, time
+import sys, getopt, os.path, traceback, time, struct
 from distutils import sysconfig
 
 import infer, cpp, annotate, shared
@@ -79,6 +79,8 @@ def start():
     if sys.platform == 'win32' and os.path.isdir('c:/mingw'):
         print '*ERROR* please rename or remove c:/mingw, as it conflicts with Shed Skin'
         sys.exit()
+    if sys.platform == 'win32' and struct.calcsize('P') == 8 and getgx().extension_module:
+        print '*WARNING* 64-bit python may not come with necessary file to build extension module'
 
     # --- argument
     if len(args) != 1:
