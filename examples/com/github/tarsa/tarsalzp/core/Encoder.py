@@ -65,9 +65,10 @@ class Encoder(Common):
 
     def addWithCarry(self, value):
         self.rcBuffer += value
-        if self.rcBuffer > 0x7fffffff:
+        maskedBuffer = self.rcBuffer & 0x7fffffff
+        if self.rcBuffer != maskedBuffer:
             self.carry = True
-            self.rcBuffer &= 0x7fffffff
+        self.rcBuffer = maskedBuffer
 
     def encodeFlag(self, probability, match):
         self.normalize()
