@@ -1,15 +1,19 @@
 '''
 timsort
 
+converted from java version by dan stromberg
+
 modified by mark.dufour@gmail.com to work with shedskin
 
 '''
+import random
+random.seed(1)
 
 def timsort(list_, comparefn=cmp):
 	'''Sort function for timsort'''
 	timsort_object = Timsort(list_, comparefn=comparefn)
 	timsort_object.sort(low = 0, high = len(list_))
-        print timsort_object.list_
+        assert timsort_object.list_ == sorted(timsort_object.list_)
 	
 def array_copy(list1, base1, list2, base2, length):
 	'''
@@ -1031,7 +1035,9 @@ def range_check(array_len, from_index, to_index):
 		raise IndexError(str(to_index))
 
 def main():
-    timsort([10,9,2,7,8,9,7,2,11])
+    l = range(1000000)
+    random.shuffle(l)
+    timsort(l)
 
 if __name__ == '__main__':
     main()
