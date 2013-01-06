@@ -9,22 +9,22 @@ class meuk:
 
 class CPU:
     def AND(self):
-        print 'AND'
+        return 'AND'
 c = CPU()
-c.AND()
 
 def press(keys):
-    print sorted(list(keys))
-    print 'h' in keys
-    print 'x' in keys
-    print 'u' in keys
-    print 'r' in keys
+    return sorted(list(keys))
+
+def press2(keys):
+    return ('h' in keys, 'x' in keys, 'u' in keys, 'r' in keys)
 
 def hoppa(d):
     return d
 
 if __name__ == '__main__':
+    c.AND()
     press(set('a'))
+    press2(set('a'))
     print meuk().memory
     hoppa({'acht': 8.8})
     NotExported()
