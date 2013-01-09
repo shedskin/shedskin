@@ -6,8 +6,8 @@ Shedskin
 An experimental (restricted) Python-to-C++ Compiler
 ---------------------------------------------------
 
-:Date:   2012-05-05
-:Version: 0.9.2
+:Date:   2013-01-09
+:Version: 0.9.3
 :Manual section: 1
 
 SYNOPSIS
@@ -32,6 +32,8 @@ OPTIONS
  -e --extmod            Generate extension module
 
  -f --flags             Provide alternate Makefile flags
+
+ -g --nogcwarns         Disable runtime GC warnings
 
  -l --long              Use long long integers
 
