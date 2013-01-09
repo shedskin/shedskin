@@ -1,9 +1,10 @@
 72 programs that work with Shed Skin 0.9.3.
 
-shedskin -b (disable index-out-of-bounds checking) often improves performance.
+shedskin -b (disable index-out-of-bounds checking) often improves performance. see the documentation for more performance tips:
 
-If you have another interesting test case, please send it to:
-   mark.dufour@gmail.com
+https://code.google.com/p/shedskin/wiki/docs
+
+if you know of another interesting test case, please mention it in the shedskin discussion group or to: mark.dufour@gmail.com.
 
 lines  name                 description                     notes
 (sloccount)
