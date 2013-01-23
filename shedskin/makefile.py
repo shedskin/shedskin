@@ -93,6 +93,7 @@ def generate_makefile():
             if not getgx().wrap_around_check: line += ' -D__SS_NOWRAP'
             if not getgx().bounds_checking: line += ' -D__SS_NOBOUNDS'
             if getgx().fast_random: line += ' -D__SS_FASTRANDOM'
+            if getgx().gc_cleanup: line += ' -D__SS_GC_CLEANUP'
             if not getgx().assertions: line += ' -D__SS_NOASSERT'
             if getgx().fast_hash: line += ' -D__SS_FASTHASH'
             if getgx().longlong: line += ' -D__SS_LONG'
