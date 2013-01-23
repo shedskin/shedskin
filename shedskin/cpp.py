@@ -2438,7 +2438,7 @@ class generateVisitor(ASTVisitor):
 
     def visitAssAttr(self, node, func=None): # XXX merge with visitGetattr
         if node.flags == 'OP_DELETE':
-            error("attribute won't be deleted", node, warning=True, mv=getmv())
+            error("'del' has no effect without refcounting", node, warning=True, mv=getmv())
             return
 
         cl, module = lookup_class_module(node.expr, inode(node).mv, func)
@@ -2467,7 +2467,7 @@ class generateVisitor(ASTVisitor):
 
     def visitAssName(self, node, func=None):
         if node.flags == 'OP_DELETE':
-            error("variable won't be deleted", node, warning=True, mv=getmv())
+            error("'del' has no effect without refcounting", node, warning=True, mv=getmv())
             return
         self.append(self.cpp_name(node.name))
 
