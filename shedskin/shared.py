@@ -76,6 +76,7 @@ class globalInfo: # XXX add comments, split up
         self.struct_unpack = {}
         self.debug_level = 0
         self.maxhits = 0 # XXX amaze.py termination
+        self.gc_cleanup = False
 
 def newgx():
     return globalInfo()
