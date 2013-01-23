@@ -551,6 +551,8 @@ class moduleVisitor(ASTVisitor):
         if isinstance(parent, class_):
             if func.ident not in parent.staticmethods: # XXX use flag
                 defaultvar('self', func)
+                if func.ident == '__init__' and '__del__' in parent.funcs: # XXX what if no __init__
+                    self.visit(CallFunc(Getattr(Name('self'), '__del__'), []), func)
             parent.funcs[func.ident] = func
 
     def unpack_rec(self, formal):
