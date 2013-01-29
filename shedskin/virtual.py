@@ -62,7 +62,7 @@ def virtuals(self, cl, declare):
         # --- virtual function declaration
         if declare:
             self.start('virtual ')
-            if retexpr:
+            if retexpr and ftypes:
                 self.append(ftypes[0])
                 ftypes = ftypes[1:]
             else:
@@ -74,7 +74,10 @@ def virtuals(self, cl, declare):
             if ident in cl.funcs and self.inhcpa(cl.funcs[ident]):
                 self.eol(')')
             else:
-                self.eol(') { return %s; }' % self.nothing(merged[0])) # XXX msvc needs return statement
+                if merged:
+                    self.eol(') { return %s; }' % self.nothing(merged[0])) # XXX msvc needs return statement
+                else:
+                    self.eol(') { }') # XXX merged may be empty because of dynamic typing
 
             if ident in cl.funcs: cl.funcs[ident].declared = True
 
