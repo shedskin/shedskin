@@ -84,6 +84,8 @@ __ss_int unpack_int(char o, char c, unsigned int d, str *data, __ss_int *pos) {
             result |= (c << 8*i);
     }
     *pos += itemsize;
+    if(c == 'h')
+        return (short)result;
     return result;
 }
 
