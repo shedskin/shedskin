@@ -369,7 +369,7 @@ def do_reduce_setstate(gv, cl, vars):
     print >>gv.out, '    PyObject *a = PyTuple_New(1);'
     print >>gv.out, '    PyTuple_SetItem(a, 0, (PyObject *)&%sObjectType);' % clname(cl)
     print >>gv.out, '    PyTuple_SetItem(t, 1, a);'
-    print >>gv.out, '    PyObject *b = PyTuple_New(2);'
+    print >>gv.out, '    PyObject *b = PyTuple_New(%d);' % len(vars)
     for i, var in enumerate(vars):
         print >>gv.out, '    PyTuple_SetItem(b, %d, __to_py(((%sObject *)self)->__ss_object->%s));' % (i, clname(cl), var.cpp_name())
     print >>gv.out, '    PyTuple_SetItem(t, 2, b);'
