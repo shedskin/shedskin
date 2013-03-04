@@ -40,8 +40,7 @@ wof().hap()
 #*WARNING* 6.py:6: '__del__' is not supported
 #*WARNING* 6.py:8: '__iter__' is not supported
 #*WARNING* 6.py:10: '__call__' is not supported
-#*WARNING* 6.py:6: function (class AA, '__del__') not called!
-#*WARNING* 6.py:14: attribute won't be deleted
+#*WARNING* 6.py:14: 'del' has no effect without refcounting
 #*WARNING* 6.py:20: class attribute 'attr' accessed without using class name
 #*WARNING* 6.py:23: class attribute 'attr' accessed without using class name
 #*WARNING* 6.py:36: class attribute 'x' accessed without using class name
