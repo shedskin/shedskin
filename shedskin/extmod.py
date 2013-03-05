@@ -367,6 +367,7 @@ def do_reduce_setstate(gv, cl, vars):
     print >>gv.out, '    PyObject *t = PyTuple_New(3);'
     print >>gv.out, '    PyTuple_SetItem(t, 0, PyObject_GetAttrString(__ss_mod_%s, "__newobj__"));' % '_'.join(gv.module.mod_path)
     print >>gv.out, '    PyObject *a = PyTuple_New(1);'
+    print >>gv.out, '    Py_INCREF((PyObject *)&%sObjectType);' % clname(cl)
     print >>gv.out, '    PyTuple_SetItem(a, 0, (PyObject *)&%sObjectType);' % clname(cl)
     print >>gv.out, '    PyTuple_SetItem(t, 1, a);'
     print >>gv.out, '    PyObject *b = PyTuple_New(%d);' % len(vars)
@@ -381,6 +382,7 @@ def do_reduce_setstate(gv, cl, vars):
     for i, var in enumerate(vars):
         vartype = typestr.nodetypestr(var, var.parent)
         print >>gv.out, '    ((%sObject *)self)->__ss_object->%s = __to_ss<%s>(PyTuple_GetItem(state, %d));' % (clname(cl), var.cpp_name(), vartype, i)
+    print >>gv.out, '    Py_INCREF(Py_None);'
     print >>gv.out, '    return Py_None;'
     print >>gv.out, '}\n'
 
