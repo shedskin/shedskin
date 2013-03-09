@@ -390,7 +390,7 @@ def convert_methods(gv, cl, declare):
     if defclass('Exception') in cl.ancestors():
         return
     if declare:
-        print >>gv.out, '    PyObject *__to_py__();'
+        print >>gv.out, '    virtual PyObject *__to_py__();'
     else:
         for n in cl.module.mod_path:
             print >>gv.out, 'namespace __%s__ { /* XXX */' % n
