@@ -8,4 +8,15 @@ xx, = struct.unpack('i', s)
 print xx
 s = struct.pack('l', -14)
 xx, = struct.unpack('l', s)
+
+# block comment fix
 print xx
+print "hi there"
+
+#{ comment here ok
+
+# nothing
+
+#} not ok
+
+print "hi there 3"
