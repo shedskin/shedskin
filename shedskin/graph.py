@@ -1459,7 +1459,7 @@ def clear_block(m):
 
 def parsefile(name):
     # Convert block comments into strings which will be duely ignored.
-    pat = re.compile(r"#{.*?#}", re.MULTILINE | re.DOTALL)
+    pat = re.compile(r"#{.*?#}[^\r\n]*$", re.MULTILINE | re.DOTALL)
     filebuf = re.sub(pat, clear_block, ''.join(open(name, 'U').readlines()))
     try:
         return parse(filebuf)
