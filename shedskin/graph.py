@@ -14,7 +14,7 @@ parse_module(): locate module by name (e.g. 'os.path'), and use moduleVisitor if
 
 '''
 
-import sys, string, copy, re
+import os, sys, string, copy, re
 
 from shared import *
 from struct_ import *
@@ -447,7 +447,7 @@ class moduleVisitor(ASTVisitor):
                         self.addconstraint((inode(extvar), inode(var)), None)
                 continue
 
-            if mod.builtin: localpath = connect_paths(mod.libdir, mod.dir)
+            if mod.builtin: localpath = os.path.join(mod.libdir, mod.dir)
             else: localpath = mod.dir
 
             pseudonym = pseudonym or name
@@ -1483,13 +1483,13 @@ def parse_module(name, parent=None, node=None):
     # --- locate module
     relname = name.replace('.', '/')
     relpath = name.split('.')
-    if parent: path = connect_paths(parent.dir, relname)
+    if parent: path = os.path.join(parent.dir, relname)
     else: path = relname
 
     # --- absolute paths for local module and 'root' module
-    if parent and parent.builtin: localpath = connect_paths(parent.libdir, path)
+    if parent and parent.builtin: localpath = os.path.join(parent.libdir, path)
     else: localpath = path
-    rootpath = connect_paths(os.getcwd(), relname)
+    rootpath = os.path.join(os.getcwd(), relname)
 
     # --- try local path
     if os.path.isfile(localpath+'.py'):
@@ -1503,7 +1503,7 @@ def parse_module(name, parent=None, node=None):
             mod.builtin = parent.builtin
             mod.libdir = parent.libdir
 
-    elif os.path.isfile(connect_paths(path, '__init__.py')):
+    elif os.path.isfile(os.path.join(path, '__init__.py')):
         mod.filename = path+'/__init__.py'
         if parent: mod.mod_path = parent.mod_dir + relpath
         else: mod.mod_path = relpath
@@ -1519,7 +1519,7 @@ def parse_module(name, parent=None, node=None):
         mod.dir = '/'.join(relpath[:-1])
         mod.mod_dir = relpath[:-1]
 
-    elif os.path.isfile(connect_paths(rootpath, '__init__.py')):
+    elif os.path.isfile(os.path.join(rootpath, '__init__.py')):
         mod.filename = relname+'/__init__.py'
         mod.mod_path = relpath
         mod.dir = relname
@@ -1528,7 +1528,7 @@ def parse_module(name, parent=None, node=None):
     # --- try lib path
     else:
         for libdir in getgx().libdirs:
-            libpath = connect_paths(libdir, relname)
+            libpath = os.path.join(libdir, relname)
 
             if os.path.isfile(libpath+'.py'):
                 mod.filename = libpath+'.py'
@@ -1539,7 +1539,7 @@ def parse_module(name, parent=None, node=None):
                 mod.libdir = libdir
                 break
 
-            elif os.path.isfile(connect_paths(libpath, '__init__.py')):
+            elif os.path.isfile(os.path.join(libpath, '__init__.py')):
                 mod.filename = libpath+'/__init__.py'
                 mod.mod_path = relpath
                 mod.dir = relname

@@ -42,7 +42,7 @@ class globalInfo: # XXX add comments, split up
         if os.path.isdir('/usr/share/shedskin/lib'):
             self.libdirs = ['/usr/share/shedskin/lib']
         else:
-            self.libdirs = [connect_paths(self.sysdir, 'lib')]
+            self.libdirs = [os.path.join(self.sysdir, 'lib')]
         self.main_mod = 'test'
         illegal_file = file(os.path.join(self.sysdir, 'illegal'))
         self.cpp_keywords = set([line.strip() for line in illegal_file])
@@ -391,11 +391,6 @@ def addconstraint(a, b, worklist=None):
 
 def inode(node):
     return getgx().cnode[node,0,0]
-
-def connect_paths(a, b, conn='/'):
-    if a == '':
-        return b
-    return a+conn+b
 
 def relative_path(a, b):
     c = b[len(a):]
