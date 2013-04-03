@@ -96,7 +96,7 @@ def exported_classes(gv, warns=False):
     return sorted(classes, key=lambda x: x.def_order)
 
 def do_extmod_methoddef(gv, ident, funcs, cl):
-    if cl: 
+    if cl:
         ident = clname(cl)
     print >>gv.out, 'static PyNumberMethods %s_as_number = {' % ident
     for overload in OVERLOAD:
@@ -115,7 +115,7 @@ def do_extmod_methoddef(gv, ident, funcs, cl):
         print >>gv.out, 'PyObject *%s__setstate__(PyObject *self, PyObject *args, PyObject *kwargs);\n' % ident
     print >>gv.out, 'static PyMethodDef %sMethods[] = {' % ident
     if not cl:
-        print >>gv.out, '    {(char *)"__newobj__", (PyCFunction)__ss__newobj__, METH_VARARGS | METH_KEYWORDS, (char *)""},' 
+        print >>gv.out, '    {(char *)"__newobj__", (PyCFunction)__ss__newobj__, METH_VARARGS | METH_KEYWORDS, (char *)""},'
     elif cl and not defclass('Exception') in cl.ancestors():
         print >>gv.out, '    {(char *)"__reduce__", (PyCFunction)%s__reduce__, METH_VARARGS | METH_KEYWORDS, (char *)""},' % ident
         print >>gv.out, '    {(char *)"__setstate__", (PyCFunction)%s__setstate__, METH_VARARGS | METH_KEYWORDS, (char *)""},' % ident
@@ -426,7 +426,7 @@ def convert_methods(gv, cl, declare):
 def pyinit_func(gv):
     for what in ('init', 'add'):
         print >>gv.out, 'PyMODINIT_FUNC %s%s(void);\n' % (what, '_'.join(gv.module.mod_path))
- 
+
 def convert_methods2(gv):
     for cl in exported_classes(gv):
         print >>gv.out, 'extern PyTypeObject %sObjectType;' % clname(cl)

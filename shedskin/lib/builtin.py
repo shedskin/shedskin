@@ -626,7 +626,7 @@ class object: pass
 class BaseException:
     def __init__(self, msg=None):
         self.msg = msg # XXX needed?
-        self.message = msg 
+        self.message = msg
 class Exception(BaseException): pass
 class StandardError(Exception): pass
 
@@ -654,7 +654,7 @@ class KeyboardInterrupt(BaseException): pass
 class SystemExit(BaseException): pass
 
 __exception = OSError('') # XXX remove
-__exception = IOError('') 
+__exception = IOError('')
 __exception.errno = 0
 __exception.filename = ''
 __exception.strerror = ''

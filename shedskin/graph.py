@@ -213,7 +213,7 @@ class moduleVisitor(ASTVisitor):
     def addconstraint(self, constraint, func):
         in_out(constraint[0], constraint[1])
         getgx().constraints.add(constraint)
-        while isinstance(func, function) and func.listcomp: 
+        while isinstance(func, function) and func.listcomp:
             func = func.parent # XXX
         if isinstance(func, function):
             func.constraints.add(constraint)
@@ -858,7 +858,7 @@ class moduleVisitor(ASTVisitor):
 
         for handler in node.handlers:
             self.visit(handler[2], func)
-            if not handler[0]: 
+            if not handler[0]:
                 continue
 
             if isinstance(handler[0], Tuple):
@@ -1000,7 +1000,7 @@ class moduleVisitor(ASTVisitor):
         self.bool_test_add(node.test)
         for child in node.getChildNodes():
             self.visit(child, func)
-    
+
     def visitListComp(self, node, func=None):
         # --- [expr for iter in list for .. if cond ..]
         lcfunc = function()
@@ -1408,7 +1408,7 @@ class moduleVisitor(ASTVisitor):
             else:
                 lclass = lclass.parent
             getgx().types[newnode] = set([(lclass, 0)])
-        else: 
+        else:
             return False
         newnode.copymetoo = True # XXX merge into some kind of 'seeding' function
         return True

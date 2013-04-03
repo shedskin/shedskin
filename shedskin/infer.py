@@ -29,7 +29,7 @@ iterative_dataflow_analysis():
     -otherwise, restore the constraint graph to its original state and restart
     -all the while maintaining types for each allocation point in getgx().alloc_info
 
-update: we now analyze programs incrementally, adding several functions and redoing the full analysis each time. this seems to greatly help the CPA from exploding early on. 
+update: we now analyze programs incrementally, adding several functions and redoing the full analysis each time. this seems to greatly help the CPA from exploding early on.
 
 '''
 
@@ -149,7 +149,7 @@ def propagate():
             for b in a.out.copy(): # XXX can change...?
                 # for builtin types, the set of instance variables is known, so do not flow into non-existent ones # XXX ifa
                 if isinstance(b.thing, variable) and isinstance(b.thing.parent, class_):
-                    parent_ident = b.thing.parent.ident 
+                    parent_ident = b.thing.parent.ident
                     if parent_ident in builtins:
                         if parent_ident in ['int_', 'float_', 'str_', 'none', 'bool_']: continue
                         elif parent_ident in ['list', 'tuple', 'frozenset', 'set', 'file','__iter', 'deque', 'array'] and b.thing.name != 'unit': continue
@@ -706,7 +706,7 @@ def iterative_dataflow_analysis():
             if DEBUG(1) and not maxiter: print 'no splits'
             if INCREMENTAL:
                 allfuncs = len([f for f in getgx().allfuncs if not f.mv.module.builtin and not [start for start in ('__iadd__', '__imul__', '__str__', '__hash__') if f.ident.startswith(start)]])
-                perc = 1.0 
+                perc = 1.0
                 if allfuncs:
                     perc = min(len(getgx().added_funcs_set) / float(allfuncs), 1.0)
                 update_progressbar(perc)
@@ -728,7 +728,7 @@ def iterative_dataflow_analysis():
                 if INCREMENTAL:
                     update_progressbar(1.0)
                 if DEBUG(1): print '\niterations:', getgx().total_iterations, 'templates:', getgx().templates
-                elif not getgx().silent: 
+                elif not getgx().silent:
                     print
                 return
 
@@ -842,7 +842,7 @@ def ifa_seed_template(func, cart, dcpa, cpa, worklist):
             print '%d seed(s)' % added_new, func
 
 # --- for a set of target nodes of a specific type of assignment (e.g. int to (list,7)), flow back to creation points
-def backflow_path(worklist, t): 
+def backflow_path(worklist, t):
     path = set(worklist)
     while worklist:
         new = set()
@@ -856,7 +856,7 @@ def backflow_path(worklist, t):
         worklist = new
     return path
 
-def flow_creation_sites(worklist, allnodes): 
+def flow_creation_sites(worklist, allnodes):
     while worklist:
         new = set()
         for node in worklist:

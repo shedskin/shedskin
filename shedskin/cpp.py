@@ -113,7 +113,7 @@ class generateVisitor(ASTVisitor):
                 lines.append('class %s;\n' % cl.cpp_name());
             for mod in module.mod_path:
                 lines.append('}\n')
-        if lines: 
+        if lines:
             lines.insert(0, '\n')
         return lines
 
@@ -143,7 +143,7 @@ class generateVisitor(ASTVisitor):
         includes2 = [i for i in includes if not i.builtin]
         includes = includes1 + self.includes_rec(set(includes2))
         return ['#include "%s"\n' % mod.include_path() for mod in includes]
-        
+
     def includes_rec(self, includes): # XXX should be recursive!? ugh
         todo = includes.copy()
         result = []
@@ -218,7 +218,7 @@ class generateVisitor(ASTVisitor):
             if singletype(var, module) or var.invisible:
                 continue
             ts = nodetypestr(var, var.parent)
-            if declare: 
+            if declare:
                 if 'for_in_loop' in ts: # XXX
                     continue
                 ts = 'extern '+ts
@@ -379,7 +379,7 @@ class generateVisitor(ASTVisitor):
                     pseudonym = pseudonym or name
                     if name == '*':
                         for func in mod.mv.funcs.values():
-                            if func.cp: # XXX 
+                            if func.cp: # XXX
                                 print >>self.out, using+func.cpp_name()+';'
                         for cl in mod.mv.classes.values():
                             print >>self.out, using+cl.cpp_name()+';'
@@ -696,7 +696,7 @@ class generateVisitor(ASTVisitor):
             return 'False'
         else:
             return '0'
-        
+
     def inhcpa(self, func):
         return hmcpa(func) or (func in getgx().inheritance_relations and [1 for f in getgx().inheritance_relations[func] if hmcpa(f)])
 
@@ -877,7 +877,7 @@ class generateVisitor(ASTVisitor):
             self.output('}')
 
     def do_fastfor(self, node, qual, quals, iter, func, genexpr):
-        if len(qual.list.args) == 3 and not const_literal(qual.list.args[2]): 
+        if len(qual.list.args) == 3 and not const_literal(qual.list.args[2]):
             for arg in qual.list.args: # XXX simplify
                 if arg in getmv().tempcount:
                     self.start()
@@ -1195,7 +1195,7 @@ class generateVisitor(ASTVisitor):
         if func.parent:
             return func.parent.ident + '_' + func.ident
         return func.ident
-    
+
     def generator_class(self, func):
         ident = self.generator_ident(func)
         self.output('class __gen_%s : public %s {' % (ident, nodetypestr(func.retnode.thing, func)[:-2]))
@@ -1484,9 +1484,9 @@ class generateVisitor(ASTVisitor):
         if self.mergeinh[left] == inttype and self.mergeinh[right] == inttype:
             if not isinstance(right, Const):
                 error("pow(int, int) returns int after compilation", left, warning=True, mv=getmv())
-        if mod: 
+        if mod:
             self.visitm('__power(', left, ', ', right, ', ', mod, ')', func)
-        else: 
+        else:
             self.visitm('__power(', left, ', ', right, ')', func)
 
     def visitSub(self, node, func=None):
@@ -1701,7 +1701,7 @@ class generateVisitor(ASTVisitor):
                 constructor = False # XXX
             else:
                 if argtypes is not None: # XXX merge instance_new
-                    ts = typestr(argtypes) 
+                    ts = typestr(argtypes)
                     if ts.startswith('pyseq') or ts.startswith('pyiter'): # XXX
                         argtypes = getgx().merged_inh[node]
                         ts = typestr(argtypes)
@@ -2025,7 +2025,7 @@ class generateVisitor(ASTVisitor):
                         self.visitm(lvalue.expr, '->'+self.cpp_name(lcp[0].properties[lvalue.attrname][1])+'(', rvalue, ')', func)
                     elif lcp and isinstance(lcp[0], class_):
                         var = lookupvar(lvalue.attrname, lcp[0])
-                        vartypes = set() 
+                        vartypes = set()
                         if var:
                             vartypes = self.mergeinh[var]
                         self.visit(lvalue, func)
@@ -2351,9 +2351,9 @@ class generateVisitor(ASTVisitor):
             self.visitm(node.dest, ', ', func)
         else:
             self.append('NULL,')
-        if print_space: 
+        if print_space:
             self.append('1,')
-        else: 
+        else:
             self.append('0,')
         self.append(str(len(node.nodes)))
         for n in node.nodes:

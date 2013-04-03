@@ -59,7 +59,7 @@ class mmap:
 
     def __contains(self, string):
         return False
-        
+
     def __iter__(self):
         return __mmapiter()
 
