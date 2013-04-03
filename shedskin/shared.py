@@ -392,11 +392,6 @@ def addconstraint(a, b, worklist=None):
 def inode(node):
     return getgx().cnode[node,0,0]
 
-def relative_path(a, b):
-    c = b[len(a):]
-    if c.startswith('/'): c = c[1:]
-    return c
-
 def is_method(parent):
     return isinstance(parent, function) and isinstance(parent.parent, class_)
 
