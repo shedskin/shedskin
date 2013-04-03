@@ -545,9 +545,9 @@ def augmsg(node, msg):
 ERRORS = set()
 
 def error(msg, node=None, warning=False, mv=None):
-    if warning: 
+    if warning:
         kind = '*WARNING*'
-    else: 
+    else:
         kind = '*ERROR*'
     if not mv and node and (node,0,0) in getgx().cnode:
         mv = inode(node).mv
@@ -624,9 +624,9 @@ def analyze_callfunc(node, node2=None, merge=None): # XXX generate target list X
     #print 'analyze callnode', node, inode(node).parent
     cnode = inode(node)
     mv = cnode.mv
-    namespace, objexpr, method_call, parent_constr = mv.module, None, False, False 
+    namespace, objexpr, method_call, parent_constr = mv.module, None, False, False
     constructor, direct_call, ident = None, None, None
- 
+
     # anon func call XXX refactor as __call__ method call below
     anon_func, is_callable = is_anon_callable(node, node2, merge)
     if is_callable:
@@ -791,7 +791,7 @@ def is_anon_callable(expr, node, merge=None):
     anon = bool([t for t in types if isinstance(t[0], function)])
     call = bool([t for t in types if isinstance(t[0], class_) and '__call__' in t[0].funcs])
     return anon, call
-    
+
 def get_types(expr, node, merge):
     types = set()
     if merge:
@@ -873,7 +873,7 @@ def lowest_common_parents(classes):
             else:
                 parent = None
 
-    # remove those that don't add anything 
+    # remove those that don't add anything
     useless = set()
     for parent in parents:
         orig = parent
