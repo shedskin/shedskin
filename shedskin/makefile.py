@@ -6,7 +6,7 @@ makefile.py: generate makefile
 
 '''
 
-import sys
+import os, sys
 from distutils import sysconfig
 
 from shared import *
@@ -60,7 +60,7 @@ def generate_makefile():
     cppfiles = [fn+'.cpp' for fn in filenames]
     hppfiles = [fn+'.hpp' for fn in filenames]
     for always in ('re',):
-        repath = connect_paths(env_var('SHEDSKIN_LIBDIR'), always)
+        repath = os.path.join(env_var('SHEDSKIN_LIBDIR'), always)
         if not repath in filenames:
             cppfiles.append(repath+'.cpp')
             hppfiles.append(repath+'.hpp')
@@ -74,10 +74,10 @@ def generate_makefile():
     if getgx().flags: flags = getgx().flags
     elif os.path.isfile('FLAGS'): flags = 'FLAGS'
     elif os.path.isfile('/etc/shedskin/FLAGS'): flags = '/etc/shedskin/FLAGS'
-    elif getgx().msvc: flags = connect_paths(getgx().sysdir, 'FLAGS.msvc')
-    elif sys.platform == 'win32': flags = connect_paths(getgx().sysdir, 'FLAGS.mingw')
-    elif sys.platform == 'darwin': flags = connect_paths(getgx().sysdir, 'FLAGS.osx')
-    else: flags = connect_paths(getgx().sysdir, 'FLAGS')
+    elif getgx().msvc: flags = os.path.join(getgx().sysdir, 'FLAGS.msvc')
+    elif sys.platform == 'win32': flags = os.path.join(getgx().sysdir, 'FLAGS.mingw')
+    elif sys.platform == 'darwin': flags = os.path.join(getgx().sysdir, 'FLAGS.osx')
+    else: flags = os.path.join(getgx().sysdir, 'FLAGS')
 
     for line in file(flags):
         line = line[:-1]
