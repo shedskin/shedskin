@@ -3,9 +3,17 @@
 Copyright 2005-2011 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 
 '''
-import sys, getopt, os.path, traceback, time, struct
+import sys
+import getopt
+import os.path
+import traceback
+import time
+import struct
 
-import infer, cpp, annotate, shared
+import infer
+import cpp
+import annotate
+import shared
 from shared import newgx, setgx, getgx
 
 
@@ -31,6 +39,7 @@ def usage():
 # -v --msvc              Output MSVC-style Makefile
     sys.exit(1)
 
+
 def start():
     setgx(newgx())
 
@@ -41,29 +50,45 @@ def start():
         usage()
 
     for o, a in opts:
-        if o in ['-h', '--help']: usage()
-        if o in ['-b', '--nobounds']: getgx().bounds_checking = False
-        if o in ['-e', '--extmod']: getgx().extension_module = True
-        if o in ['-a', '--ann']: getgx().annotation = True
-        if o in ['-d', '--debug']: getgx().debug_level = int(a)
-        if o in ['-l', '--long']: getgx().longlong = True
-        if o in ['-g', '--nogcwarns']: getgx().gcwarns = False
-        if o in ['-w', '--nowrap']: getgx().wrap_around_check = False
-        if o in ['-r', '--random']: getgx().fast_random = True
-        if o in ['-o', '--noassert']: getgx().assertions = False
-        if o in ['-p', '--pypy']: getgx().pypy = True
-        if o in ['-m', '--makefile']: getgx().makefile_name = a
-        if o in ['-n', '--silent']: getgx().silent = True
-        if o in ['-s', '--strhash']: getgx().fast_hash = True
-        if o in ['-v', '--msvc']: getgx().msvc = True
-        if o in ['-x', '--traceback']: getgx().backtrace = True
-        if o in ['-L', '--lib']: getgx().libdirs = [a] + getgx().libdirs
+        if o in ['-h', '--help']:
+            usage()
+        if o in ['-b', '--nobounds']:
+            getgx().bounds_checking = False
+        if o in ['-e', '--extmod']:
+            getgx().extension_module = True
+        if o in ['-a', '--ann']:
+            getgx().annotation = True
+        if o in ['-d', '--debug']:
+            getgx().debug_level = int(a)
+        if o in ['-l', '--long']:
+            getgx().longlong = True
+        if o in ['-g', '--nogcwarns']:
+            getgx().gcwarns = False
+        if o in ['-w', '--nowrap']:
+            getgx().wrap_around_check = False
+        if o in ['-r', '--random']:
+            getgx().fast_random = True
+        if o in ['-o', '--noassert']:
+            getgx().assertions = False
+        if o in ['-p', '--pypy']:
+            getgx().pypy = True
+        if o in ['-m', '--makefile']:
+            getgx().makefile_name = a
+        if o in ['-n', '--silent']:
+            getgx().silent = True
+        if o in ['-s', '--strhash']:
+            getgx().fast_hash = True
+        if o in ['-v', '--msvc']:
+            getgx().msvc = True
+        if o in ['-x', '--traceback']:
+            getgx().backtrace = True
+        if o in ['-L', '--lib']:
+            getgx().libdirs = [a] + getgx().libdirs
         if o in ['-f', '--flags']:
             if not os.path.isfile(a):
                 print "*ERROR* no such file: '%s'" % a
                 sys.exit(1)
             getgx().flags = a
-
 
     if not getgx().silent:
         print '*** SHED SKIN Python-to-C++ Compiler 0.9.3 ***'
@@ -99,7 +124,8 @@ def start():
     cpp.generate_code()
     shared.print_errors()
     if not getgx().silent:
-        print '[elapsed time: %.2f seconds]' % (time.time()-t0)
+        print '[elapsed time: %.2f seconds]' % (time.time() - t0)
+
 
 def main():
     sys.setrecursionlimit(100000)
