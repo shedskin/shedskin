@@ -5,8 +5,10 @@ Copyright 2005-2011 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 typestr.py: generate type declarations
 
 '''
+from shared import variable, inode, polymorphic_cl, function, \
+    lowest_common_parents, getmv, error, defclass, getgx, \
+    types_var_types, types_classes
 
-from shared import *
 
 def nodetypestr(node, parent=None, cplusplus=True, check_extmod=False, check_ret=False, var=None): # XXX minimize
     if cplusplus and isinstance(node, variable) and node.looper: # XXX to declaredefs?

@@ -5,9 +5,12 @@ Copyright 2005-2011 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 virtual.py: virtual methods and variables
 
 '''
+from compiler.ast import CallFunc, Name
 
-from shared import *
-from typestr import *
+from shared import analyze_callfunc, inode, lowest_common_parents, \
+    defaultvar, subclass, getgx, class_, polymorphic_t
+from typestr import typestr
+
 
 def virtuals(self, cl, declare):
     if not cl.virtuals:

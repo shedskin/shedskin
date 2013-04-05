@@ -9,16 +9,26 @@ output equivalent C++ code, using templates and virtuals to support data and OO 
 class generateVisitor: inherits visitor pattern from compiler.visitor.ASTVisitor, to recursively generate C++ code for each syntactical Python construct. the constraint graph, with inferred types, is first 'merged' back to program dimensions (getgx().merged_inh).
 
 '''
-
 import textwrap, string, struct
+from compiler import walk
+from compiler.ast import Const, AssTuple, AssList, From, Add, Stmt, AssAttr, \
+    Keyword, AssName, name, CallFunc, Slice, Getattr, Dict, Subscript, \
+    Function, Return, Class, Name, List, Discard, Sliceobj, Tuple
+from compiler.visitor import ASTVisitor
 
-from shared import *
-from struct_ import *
-from copy_ import *
-from virtual import *
-from typestr import *
-from makefile import *
 import extmod
+from copy_ import copy_methods
+from makefile import generate_makefile
+from shared import analyze_callfunc, setmv, inode, is_zip2, lookupmodule, \
+    function, static_class, hmcpa, lowest_common_parents, getmv, \
+    singletype, nokeywords, lookupclass, callfunc_targets, namespaceclass, \
+    error, augmsg, module, lookup_class_module, const_literal, \
+    connect_actual_formal, lookupvariable, is_enum, defclass, getgx, \
+    fastfor, assign_rec, class_, unboxable, polymorphic_t, lookupvar
+from struct_ import struct_unpack_cpp
+from typestr import incompatible_assignment_rec, nodetypestr
+from virtual import virtuals, typestr
+
 
 # --- code generation visitor; use type information
 class generateVisitor(ASTVisitor):

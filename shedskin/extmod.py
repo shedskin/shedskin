@@ -5,10 +5,10 @@ Copyright 2005-2011 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 extmod.py: extension module support
 
 '''
-
-from shared import *
 import cpp
 import typestr
+from shared import singletype2, getmv, module, defclass, getgx, class_
+
 
 OVERLOAD_SINGLE = ['__neg__', '__pos__', '__abs__', '__nonzero__']
 OVERLOAD = ['__add__', '__sub__', '__mul__', '__div__', '__mod__', '__divmod__', '__pow__'] + OVERLOAD_SINGLE

@@ -5,11 +5,11 @@ Copyright 2005-2011 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 makefile.py: generate makefile
 
 '''
-
 import os, sys
 from distutils import sysconfig
 
-from shared import *
+from shared import getgx
+
 
 def generate_makefile():
     if sys.platform == 'win32':

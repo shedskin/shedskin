@@ -5,15 +5,14 @@ Copyright 2005-2011 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 annotate.py: annotate source code with inferred types, as *.ss.py (shedskin -a)
 
 '''
-
 import re
+from compiler.ast import Const, AssTuple, AssList, Assign, AugAssign, \
+    Getattr, Dict, Print, Return, Printnl, Name, List, Tuple, ListComp
 
-from compiler import *
-from compiler.ast import *
-from compiler.visitor import *
-
-from shared import *
 from cpp import nodetypestr
+from shared import setmv, inode, fakeGetattr, merged, getmv, fakeGetattr2, \
+    fakeGetattr3, getgx, assign_rec
+
 
 def annotate():
     if not getgx().annotation:

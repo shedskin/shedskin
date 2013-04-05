@@ -5,11 +5,10 @@ Copyright 2005-2011 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 shared.py: global variables, datastructures, shared functionality
 
 '''
+import os, sys
+from compiler.ast import Const, AssTuple, AssList, UnaryAdd, Not, Keyword, \
+    Compare, CallFunc, Getattr, Name, List, Tuple, UnarySub
 
-import os, sys, traceback
-from compiler import *
-from compiler.ast import *
-from compiler.visitor import *
 
 # --- global variables gx, mv
 

@@ -32,11 +32,16 @@ iterative_dataflow_analysis():
 update: we now analyze programs incrementally, adding several functions and redoing the full analysis each time. this seems to greatly help the CPA from exploding early on.
 
 '''
-
 import random
+from compiler.ast import Const, Node, AssAttr, Keyword, CallFunc, \
+        Getattr, Dict, List, Tuple, ListComp
 
-from shared import *
-import graph, cpp, virtual, copy_, typestr
+import graph, virtual, copy_, typestr
+from shared import analyze_callfunc, parent_func, variable, setmv, \
+    inode, merged, function, addtoworklist, \
+    error, defaultvar, analyze_args, addconstraint, defclass, \
+    getgx, cnode, nrargs, sys, class_, lookupvar
+
 
 INCREMENTAL = True
 INCREMENTAL_FUNCS = 5

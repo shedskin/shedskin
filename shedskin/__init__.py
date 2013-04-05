@@ -3,12 +3,11 @@
 Copyright 2005-2011 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 
 '''
-
 import sys, getopt, os.path, traceback, time, struct
-from distutils import sysconfig
 
 import infer, cpp, annotate, shared
 from shared import newgx, setgx, getgx
+
 
 def usage():
     print """Usage: shedskin [OPTION]... FILE

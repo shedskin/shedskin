@@ -5,8 +5,8 @@ Copyright 2005-2011 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 copy_.py: hacks to support copy module
 
 '''
+from shared import getgx, class_
 
-from shared import *
 
 def copy_method(self, cl, name, declare):
     header = cl.cpp_name()+' *'
