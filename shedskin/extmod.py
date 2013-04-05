@@ -13,6 +13,7 @@ from shared import singletype2, getmv, module, defclass, getgx, class_
 OVERLOAD_SINGLE = ['__neg__', '__pos__', '__abs__', '__nonzero__']
 OVERLOAD = ['__add__', '__sub__', '__mul__', '__div__', '__mod__', '__divmod__', '__pow__'] + OVERLOAD_SINGLE
 
+
 def do_extmod(gv):
     print >>gv.out, '/* extension module glue */\n'
     print >>gv.out, 'extern "C" {'
@@ -33,7 +34,7 @@ def do_extmod(gv):
     funcs = supported_funcs(gv, gv.module.mv.funcs.values())
     for func in funcs:
         do_extmod_method(gv, func)
-    do_extmod_methoddef(gv, 'Global_'+'_'.join(gv.module.mod_path), funcs, None)
+    do_extmod_methoddef(gv, 'Global_' + '_'.join(gv.module.mod_path), funcs, None)
 
     # module init function
     print >>gv.out, 'PyMODINIT_FUNC init%s(void) {' % '_'.join(gv.module.mod_path)
@@ -42,7 +43,7 @@ def do_extmod(gv):
     __ss_mod = '__ss_mod_%s' % '_'.join(gv.module.mod_path)
     if gv.module == getgx().main_module:
         gv.do_init_modules()
-        print >>gv.out, '    __'+gv.module.ident+'__::__init();'
+        print >>gv.out, '    __' + gv.module.ident + '__::__init();'
     print >>gv.out, '\n    %s = Py_InitModule((char *)"%s", Global_%sMethods);' % (__ss_mod, gv.module.ident, '_'.join(gv.module.mod_path))
     print >>gv.out, '    if(!%s)' % __ss_mod
     print >>gv.out, '        return;\n'
@@ -72,18 +73,21 @@ def do_extmod(gv):
     for cl in classes:
         convert_methods(gv, cl, False)
 
+
 def do_init_mods(gv, what):
     for mod in getgx().modules.values():
         if not mod.builtin and not mod is gv.module:
             print >>gv.out, '    %s::%s%s();' % (mod.full_path(), what, '_'.join(mod.mod_path))
 
+
 def do_add_globals(gv, classes, __ss_mod):
     # global variables
     for var in supported_vars(getmv().globals.values()):
         if [1 for t in gv.mergeinh[var] if t[0].ident in ['int_', 'float_', 'bool_']]:
-            print >>gv.out, '    PyModule_AddObject(%(ssmod)s, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+gv.module.ident+'__::'+var.cpp_name(), 'ssmod': __ss_mod}
+            print >>gv.out, '    PyModule_AddObject(%(ssmod)s, (char *)"%(name)s", __to_py(%(var)s));' % {'name': var.name, 'var': '__' + gv.module.ident + '__::' + var.cpp_name(), 'ssmod': __ss_mod}
         else:
-            print >>gv.out, '    PyModule_AddObject(%(ssmod)s, (char *)"%(name)s", __to_py(%(var)s));' % {'name' : var.name, 'var': '__'+gv.module.ident+'__::'+var.cpp_name(), 'ssmod': __ss_mod}
+            print >>gv.out, '    PyModule_AddObject(%(ssmod)s, (char *)"%(name)s", __to_py(%(var)s));' % {'name': var.name, 'var': '__' + gv.module.ident + '__::' + var.cpp_name(), 'ssmod': __ss_mod}
+
 
 def exported_classes(gv, warns=False):
     classes = []
@@ -95,13 +99,14 @@ def exported_classes(gv, warns=False):
             classes.append(cl)
     return sorted(classes, key=lambda x: x.def_order)
 
+
 def do_extmod_methoddef(gv, ident, funcs, cl):
     if cl:
         ident = clname(cl)
     print >>gv.out, 'static PyNumberMethods %s_as_number = {' % ident
     for overload in OVERLOAD:
         if [f for f in funcs if f.ident == overload]:
-            if overload == '__nonzero__': # XXX
+            if overload == '__nonzero__':  # XXX
                 print >>gv.out, '    (int (*)(PyObject *))%s_%s,' % (clname(f.parent), overload)
             elif overload in OVERLOAD_SINGLE:
                 print >>gv.out, '    (PyObject *(*)(PyObject *))%s_%s,' % (clname(f.parent), overload)
@@ -120,18 +125,25 @@ def do_extmod_methoddef(gv, ident, funcs, cl):
         print >>gv.out, '    {(char *)"__reduce__", (PyCFunction)%s__reduce__, METH_VARARGS | METH_KEYWORDS, (char *)""},' % ident
         print >>gv.out, '    {(char *)"__setstate__", (PyCFunction)%s__setstate__, METH_VARARGS | METH_KEYWORDS, (char *)""},' % ident
     for func in funcs:
-        if isinstance(func.parent, class_): id = clname(func.parent)+'_'+func.ident
-        else: id = 'Global_'+'_'.join(gv.module.mod_path)+'_'+func.ident
+        if isinstance(func.parent, class_):
+            id = clname(func.parent) + '_' + func.ident
+        else:
+            id = 'Global_' + '_'.join(gv.module.mod_path) + '_' + func.ident
         print >>gv.out, '    {(char *)"%(id)s", (PyCFunction)%(id2)s, METH_VARARGS | METH_KEYWORDS, (char *)""},' % {'id': func.ident, 'id2': id}
     print >>gv.out, '    {NULL}\n};\n'
 
+
 def do_extmod_method(gv, func):
     is_method = isinstance(func.parent, class_)
-    if is_method: formals = func.formals[1:]
-    else: formals = func.formals
+    if is_method:
+        formals = func.formals[1:]
+    else:
+        formals = func.formals
 
-    if isinstance(func.parent, class_): id = clname(func.parent)+'_'+func.ident
-    else: id = 'Global_'+'_'.join(gv.module.mod_path)+'_'+func.ident
+    if isinstance(func.parent, class_):
+        id = clname(func.parent) + '_' + func.ident
+    else:
+        id = 'Global_' + '_'.join(gv.module.mod_path) + '_' + func.ident
     print >>gv.out, 'PyObject *%s(PyObject *self, PyObject *args, PyObject *kwargs) {' % id
     print >>gv.out, '    try {'
 
@@ -139,17 +151,17 @@ def do_extmod_method(gv, func):
         gv.start('')
         typ = typestr.nodetypestr(func.vars[formal], func)
         if func.ident in OVERLOAD:
-            print >>gv.out, '        %(type)sarg_%(num)d = __to_ss<%(type)s>(args);' % {'type' : typ, 'num' : i}
+            print >>gv.out, '        %(type)sarg_%(num)d = __to_ss<%(type)s>(args);' % {'type': typ, 'num': i}
             continue
-        gv.append('        %(type)sarg_%(num)d = __ss_arg<%(type)s>("%(name)s", %(num)d, ' % {'type' : typ, 'num' : i, 'name': formal})
-        if i >= len(formals)-len(func.defaults):
+        gv.append('        %(type)sarg_%(num)d = __ss_arg<%(type)s>("%(name)s", %(num)d, ' % {'type': typ, 'num': i, 'name': formal})
+        if i >= len(formals) - len(func.defaults):
             gv.append('1, ')
-            defau = func.defaults[i-(len(formals)-len(func.defaults))]
+            defau = func.defaults[i - (len(formals) - len(func.defaults))]
             if defau in func.mv.defaults:
-                if gv.mergeinh[defau] == set([(defclass('none'),0)]):
+                if gv.mergeinh[defau] == set([(defclass('none'), 0)]):
                     gv.append('0')
                 else:
-                    gv.append('%s::default_%d' % ('__'+func.mv.module.ident+'__', func.mv.defaults[defau][0]))
+                    gv.append('%s::default_%d' % ('__' + func.mv.module.ident + '__', func.mv.defaults[defau][0]))
             else:
                 gv.visit(defau, func)
         elif typ.strip() == '__ss_bool':
@@ -161,9 +173,11 @@ def do_extmod_method(gv, func):
     print >>gv.out
 
     # call
-    if is_method: where = '((%sObject *)self)->__ss_object->' % clname(func.parent)
-    else: where = '__'+gv.module.ident+'__::'
-    print >>gv.out, '        return __to_py('+where+gv.cpp_name(func.ident)+'('+', '.join(['arg_%d' % i for i in range(len(formals))])+'));\n'
+    if is_method:
+        where = '((%sObject *)self)->__ss_object->' % clname(func.parent)
+    else:
+        where = '__' + gv.module.ident + '__::'
+    print >>gv.out, '        return __to_py(' + where + gv.cpp_name(func.ident) + '(' + ', '.join(['arg_%d' % i for i in range(len(formals))]) + '));\n'
 
     # convert exceptions
     print >>gv.out, '    } catch (Exception *e) {'
@@ -172,18 +186,19 @@ def do_extmod_method(gv, func):
     print >>gv.out, '    }'
     print >>gv.out, '}\n'
 
+
 def supported_funcs(gv, funcs):
     supported = []
     for func in funcs:
         if func.isGenerator or not cpp.hmcpa(func):
             continue
-        if func.ident in ['__setattr__', '__getattr__', '__iadd__', '__isub__', '__imul__']: # XXX
+        if func.ident in ['__setattr__', '__getattr__', '__iadd__', '__isub__', '__imul__']:  # XXX
             continue
         if isinstance(func.parent, class_):
             if func.invisible or func.inherited or not gv.inhcpa(func):
                 continue
         if isinstance(func.parent, class_) and func.ident in func.parent.staticmethods:
-            print "*WARNING* '%s' method not exported (staticmethod)" % (func.parent.ident+'.'+func.ident)
+            print "*WARNING* '%s' method not exported (staticmethod)" % (func.parent.ident + '.' + func.ident)
             continue
         builtins = True
         for formal in func.formals:
@@ -201,33 +216,36 @@ def supported_funcs(gv, funcs):
             supported.append(func)
         else:
             if isinstance(func.parent, class_):
-                print "*WARNING* '%s' method not exported (%s)" % (func.parent.ident+'.'+func.ident, reason)
+                print "*WARNING* '%s' method not exported (%s)" % (func.parent.ident + '.' + func.ident, reason)
             else:
                 print "*WARNING* '%s' function not exported (%s)" % (func.ident, reason)
     return supported
 
-def supported_vars(vars): # XXX virtuals?
+
+def supported_vars(vars):  # XXX virtuals?
     supported = []
     for var in vars:
         if not var in getgx().merged_inh or not getgx().merged_inh[var]:
             continue
-        if var.name.startswith('__'): # XXX
+        if var.name.startswith('__'):  # XXX
             continue
         if var.invisible or singletype2(getgx().merged_inh[var], module):
             continue
         try:
-            typehu = typestr.nodetypestr(var, var.parent, check_extmod=True)
+            typestr.nodetypestr(var, var.parent, check_extmod=True)
         except typestr.ExtmodError:
             if isinstance(var.parent, class_):
-                print "*WARNING* '%s' variable not exported (cannot convert)" % (var.parent.ident+'.'+var.name)
+                print "*WARNING* '%s' variable not exported (cannot convert)" % (var.parent.ident + '.' + var.name)
             else:
                 print "*WARNING* '%s' variable not exported (cannot convert)" % var.name
             continue
         supported.append(var)
     return supported
 
-def hasmethod(cl, name): # XXX shared.py
+
+def hasmethod(cl, name):  # XXX shared.py
     return name in cl.funcs and not cl.funcs[name].invisible and not cl.funcs[name].inherited and cpp.hmcpa(cl.funcs[name])
+
 
 def do_extmod_class(gv, cl):
     for n in cl.module.mod_path:
@@ -284,7 +302,7 @@ def do_extmod_class(gv, cl):
         print >>gv.out, 'int __ss_set_%s_%s(%sObject *self, PyObject *value, void *closure) {' % (clname(cl), var.name, clname(cl))
         print >>gv.out, '    try {'
         typ = typestr.nodetypestr(var, var.parent)
-        if typ == 'void *': # XXX investigate
+        if typ == 'void *':  # XXX investigate
             print >>gv.out, '        self->__ss_object->%s = NULL;' % var.cpp_name()
         else:
             print >>gv.out, '        self->__ss_object->%s = __to_ss<%s>(value);' % (var.cpp_name(), typ)
@@ -360,8 +378,9 @@ def do_extmod_class(gv, cl):
         print >>gv.out, '} // namespace __%s__' % n
     print >>gv.out
 
+
 def do_reduce_setstate(gv, cl, vars):
-    if defclass('Exception') in cl.ancestors(): # XXX
+    if defclass('Exception') in cl.ancestors():  # XXX
         return
     print >>gv.out, 'PyObject *%s__reduce__(PyObject *self, PyObject *args, PyObject *kwargs) {' % clname(cl)
     print >>gv.out, '    PyObject *t = PyTuple_New(3);'
@@ -386,6 +405,7 @@ def do_reduce_setstate(gv, cl, vars):
     print >>gv.out, '    return Py_None;'
     print >>gv.out, '}\n'
 
+
 def convert_methods(gv, cl, declare):
     if defclass('Exception') in cl.ancestors():
         return
@@ -401,7 +421,7 @@ def convert_methods(gv, cl, declare):
         print >>gv.out, '    if(__ss_proxy->has_key(this))'
         print >>gv.out, '        p = (PyObject *)(__ss_proxy->__getitem__(this));'
         print >>gv.out, '    else {'
-        print >>gv.out, '        %sObject *self = (%sObject *)(%sObjectType.tp_alloc(&%sObjectType, 0));' % (4*(clname(cl),))
+        print >>gv.out, '        %sObject *self = (%sObject *)(%sObjectType.tp_alloc(&%sObjectType, 0));' % (4 * (clname(cl),))
         print >>gv.out, '        self->__ss_object = this;'
         print >>gv.out, '        __ss_proxy->__setitem__(self->__ss_object, self);'
         print >>gv.out, '        p = (PyObject *)self;'
@@ -423,9 +443,11 @@ def convert_methods(gv, cl, declare):
         print >>gv.out, '    return ((%s::%sObject *)p)->__ss_object;' % (cl.module.full_path(), clname(cl))
         print >>gv.out, '}\n}'
 
+
 def pyinit_func(gv):
     for what in ('init', 'add'):
         print >>gv.out, 'PyMODINIT_FUNC %s%s(void);\n' % (what, '_'.join(gv.module.mod_path))
+
 
 def convert_methods2(gv):
     for cl in exported_classes(gv):
@@ -434,6 +456,7 @@ def convert_methods2(gv):
     for cl in exported_classes(gv):
         print >>gv.out, 'template<> %s::%s *__to_ss(PyObject *p);' % (cl.module.full_path(), cl.cpp_name())
     print >>gv.out, '}'
+
 
 def clname(cl):
     return '__ss_%s_%s' % ('_'.join(cl.mv.module.mod_path), cl.ident)

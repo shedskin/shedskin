@@ -14,7 +14,7 @@ from shared import getmv, error, getgx, lookupvar
 # --- struct.unpack "type inference"
 def struct_info(node, func):
     if isinstance(node, Name):
-        var = lookupvar(node.name, func) # XXX fwd ref?
+        var = lookupvar(node.name, func)  # XXX fwd ref?
         if not var or len(var.const_assign) != 1:
             error('non-constant format string', node, mv=getmv())
         error('assuming constant format string', node, mv=getmv(), warning=True)
@@ -39,29 +39,36 @@ def struct_info(node, func):
             elif digits == '0':
                 result.append((ordering, c, rtype, 0))
             else:
-                result.extend(int(digits or '1')*[(ordering, c, rtype, 1)])
+                result.extend(int(digits or '1') * [(ordering, c, rtype, 1)])
             digits = ''
         else:
-            error('bad or unsupported char in struct format: '+repr(c), node, mv=getmv())
+            error('bad or unsupported char in struct format: ' + repr(c), node, mv=getmv())
             digits = ''
     return result
 
+
 def struct_unpack(rvalue, func):
     if isinstance(rvalue, CallFunc):
-        if isinstance(rvalue.node, Getattr) and isinstance(rvalue.node.expr, Name) and rvalue.node.expr.name == 'struct' and rvalue.node.attrname == 'unpack' and lookupvar('struct', func).imported: # XXX imported from where?
+        if isinstance(rvalue.node, Getattr) and isinstance(rvalue.node.expr, Name) and rvalue.node.expr.name == 'struct' and rvalue.node.attrname == 'unpack' and lookupvar('struct', func).imported:  # XXX imported from where?
             return True
-        elif isinstance(rvalue.node, Name) and rvalue.node.name == 'unpack' and 'unpack' in getmv().ext_funcs and not lookupvar('unpack', func): # XXX imported from where?
+        elif isinstance(rvalue.node, Name) and rvalue.node.name == 'unpack' and 'unpack' in getmv().ext_funcs and not lookupvar('unpack', func):  # XXX imported from where?
             return True
 
+
 def struct_faketuple(info):
-   result = []
-   for o, c, t, d in info:
-       if d != 0 or c == 's':
-           if t == 'int': result.append(Const(1))
-           elif t == 'str': result.append(Const(''))
-           elif t == 'float': result.append(Const(1.0))
-           elif t == 'bool': result.append(Name('True'))
-   return Tuple(result)
+    result = []
+    for o, c, t, d in info:
+        if d != 0 or c == 's':
+            if t == 'int':
+                result.append(Const(1))
+            elif t == 'str':
+                result.append(Const(''))
+            elif t == 'float':
+                result.append(Const(1.0))
+            elif t == 'bool':
+                result.append(Name('True'))
+    return Tuple(result)
+
 
 def struct_unpack_cpp(self, node, func):
     struct_unpack = getgx().struct_unpack.get(node)
@@ -80,7 +87,7 @@ def struct_unpack_cpp(self, node, func):
             else:
                 n = list(node.nodes[0])[hop]
                 hop += 1
-                if isinstance(n, Subscript): # XXX merge
+                if isinstance(n, Subscript):  # XXX merge
                     self.subs_assign(n, func)
                     self.visitm(expr, ')', func)
                 elif isinstance(n, AssName):

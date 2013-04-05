@@ -9,18 +9,18 @@ from shared import getgx, class_
 
 
 def copy_method(self, cl, name, declare):
-    header = cl.cpp_name()+' *'
+    header = cl.cpp_name() + ' *'
     if not declare:
-        header += cl.cpp_name()+'::'
-    header += name+'('
+        header += cl.cpp_name() + '::'
+    header += name + '('
     self.start(header)
     if name == '__deepcopy__':
         self.append('dict<void *, pyobj *> *memo')
     self.append(')')
     if not declare:
-        print >>self.out, self.line+' {'
+        print >>self.out, self.line + ' {'
         self.indent()
-        self.output(cl.cpp_name()+' *c = new '+cl.cpp_name()+'();')
+        self.output(cl.cpp_name() + ' *c = new ' + cl.cpp_name() + '();')
         if name == '__deepcopy__':
             self.output('memo->__setitem__(this, c);')
         for var in cl.vars.values():
@@ -36,11 +36,13 @@ def copy_method(self, cl, name, declare):
     else:
         self.eol()
 
+
 def copy_methods(self, cl, declare):
     if cl.has_copy:
         copy_method(self, cl, '__copy__', declare)
     if cl.has_deepcopy:
         copy_method(self, cl, '__deepcopy__', declare)
+
 
 def deepcopy_classes(classes):
     changed = True
@@ -55,7 +57,8 @@ def deepcopy_classes(classes):
                         classes.update(newcl)
     return classes
 
-def determine_classes(): # XXX modeling..?
+
+def determine_classes():  # XXX modeling..?
     if 'copy' not in getgx().modules:
         return
     func = getgx().modules['copy'].mv.funcs['copy']
