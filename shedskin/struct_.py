@@ -5,8 +5,11 @@ Copyright 2005-2011 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 struct_.py: hacks to support struct module
 
 '''
+from compiler.ast import Const, AssAttr, AssName, CallFunc, Getattr, \
+    Subscript, Name, Tuple
 
-from shared import *
+from shared import getmv, error, getgx, lookupvar
+
 
 # --- struct.unpack "type inference"
 def struct_info(node, func):

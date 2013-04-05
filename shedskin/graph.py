@@ -13,11 +13,23 @@ class moduleVisitor: inherits visitor pattern from compiler.visitor.ASTVisitor, 
 parse_module(): locate module by name (e.g. 'os.path'), and use moduleVisitor if not cached
 
 '''
-
 import os, sys, string, copy, re
+from compiler import parse
+from compiler.ast import Const, AssTuple, AssList, From, Add, ListCompFor, \
+    UnaryAdd, Import, Bitand, Stmt, Assign, FloorDiv, Not, Mod, AssAttr, \
+    Keyword, GenExpr, LeftShift, AssName, Div, Or, Lambda, And, CallFunc, \
+    Global, Slice, RightShift, Sub, Getattr, Dict, Ellipsis, Mul, \
+    Subscript, Function, Return, Power, Bitxor, Class, Name, List, \
+    Discard, Sliceobj, Tuple, Pass, UnarySub, Bitor, ListComp
+from compiler.visitor import ASTVisitor
 
-from shared import *
-from struct_ import *
+from shared import setmv, inode, is_zip2, fakeGetattr, in_out, function, \
+    static_class, getmv, register_tempvar, lookupclass, error, augmsg, \
+    lookupfunc, defaultvar, fakeGetattr2, fakeGetattr3, module, \
+    const_literal, is_enum, is_method, defclass, getgx, cnode, \
+    fastfor, assign_rec, class_, property_setter, lookupvar
+from struct_ import struct_faketuple, struct_info, struct_unpack
+
 
 # --- module visitor; analyze program, build constraint graph
 
