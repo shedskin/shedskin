@@ -98,7 +98,7 @@ def run_test(test_nr, failures, msvc, options):
             else:
                 command = './%d' % test_nr
         if 'n' in options:
-            if test_nr not in [136, 154, 163, 191]: # sys.exit
+            if test_nr not in [136, 154, 163, 191, 196, 197, 198]: # sys.exit
                 assert os.system('python -c "__import__(str(%d))"' % test_nr) == 0
         else:
             check_output(command, 'python %d.py' % test_nr)
