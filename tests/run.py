@@ -140,7 +140,6 @@ def run_test(test, msvc, options):
             print '*** failure:', test
             traceback.print_exc()
             return test
-        return test == 0
 
 
 def extmod_tests(args, options):
