@@ -1,11 +1,18 @@
 #!/usr/bin/env python
-import traceback, sys, os, time, subprocess, glob, os.path
+import traceback
+import sys
+import os
+import time
+import subprocess
+import glob
+import os.path
 from difflib import unified_diff
 
 if os.path.exists('../shedskin/__init__.py'):
     SS = '../shedskin/__init__.py'
 else:
     SS = '../../shedskin/__init__.py'
+
 
 def usage():
     print "'-l': give individual test numbers"
@@ -16,14 +23,16 @@ def usage():
     print "'-x': run error/warning message tests"
     sys.exit()
 
+
 def parse_options():
     args, options = [], set()
     for arg in sys.argv[1:]:
         if arg.startswith('-'):
             options.update(arg[1:])
-        else: 
+        else:
             args.append(int(arg))
     return args, options
+
 
 def test_numbers(args, options):
     if 'l' in options:
@@ -35,7 +44,7 @@ def test_numbers(args, options):
         if args[0] > args[1]:
             args[0], args[1] = args[1], args[0]
             options.add('r')
-        test_nrs = range(args[0],args[1])
+        test_nrs = range(args[0], args[1])
     else:
         test_nrs = sorted([int(os.path.splitext(f)[0]) for f in glob.glob('*.py') if f != 'run.py'])
 
@@ -44,19 +53,21 @@ def test_numbers(args, options):
 
     return test_nrs
 
+
 def tests(args, options):
     test_nrs = test_numbers(args, options)
     msvc = 'v' in options
 
     failures = []
     for test_nr in test_nrs:
-        if os.path.exists('%d.py' % test_nr): # XXX
+        if os.path.exists('%d.py' % test_nr):  # XXX
             run_test(test_nr, failures, msvc, options)
             if failures and 'f' in options:
                 break
             print
 
     return failures
+
 
 def main():
     args, options = parse_options()
@@ -76,11 +87,12 @@ def main():
         print '*** tests failed:', len(failures)
         print failures
 
+
 def run_test(test_nr, failures, msvc, options):
     print '*** test:', test_nr
     t0 = time.time()
     try:
-        if msvc: 
+        if msvc:
             assert os.system('python %s -v %d' % (SS, test_nr)) == 0
         elif 'n' in options:
             assert os.system('python %s -e -m Makefile.%d %d' % (SS, test_nr, test_nr)) == 0
@@ -98,15 +110,16 @@ def run_test(test_nr, failures, msvc, options):
             else:
                 command = './%d' % test_nr
         if 'n' in options:
-            if test_nr not in [136, 154, 163, 191, 196, 197, 198]: # sys.exit
+            if test_nr not in [136, 154, 163, 191, 196, 197, 198]:  # sys.exit
                 assert os.system('python -c "__import__(str(%d))"' % test_nr) == 0
         else:
             check_output(command, 'python %d.py' % test_nr)
-        print '*** success: %d (%.2f)' % (test_nr, time.time()-t0)
+        print '*** success: %d (%.2f)' % (test_nr, time.time() - t0)
     except AssertionError:
         print '*** failure:', test_nr
         traceback.print_exc()
         failures.append(test_nr)
+
 
 def extmod_tests(args, options):
     failures = []
@@ -119,9 +132,11 @@ def extmod_tests(args, options):
             assert os.system('python ../%s -e %s' % (SS, extmod)) == 0
             assert os.system('make') == 0
             native_output = get_output('python main.py')
-            if sys.platform == 'win32': ext = '.pyd'
-            else: ext = '.so'
-            assert os.system('rm %s' % (extmod+ext)) == 0
+            if sys.platform == 'win32':
+                ext = '.pyd'
+            else:
+                ext = '.so'
+            assert os.system('rm %s' % (extmod + ext)) == 0
             cpython_output = get_output('python main.py')
             if native_output != cpython_output:
                 print 'diff:'
@@ -133,6 +148,7 @@ def extmod_tests(args, options):
             failures.append(test)
         os.chdir('..')
     return failures
+
 
 def error_tests(args, options):
     failures = []
@@ -157,11 +173,13 @@ def error_tests(args, options):
     os.chdir('..')
     return failures
 
+
 def get_output(command):
     com = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE).stdout
     output = com.readlines()
     com.close()
     return output
+
 
 def check_output(command, command2):
     native_output = get_output(command)
@@ -171,8 +189,9 @@ def check_output(command, command2):
         print generate_diff(native_output, cpython_output)
         raise AssertionError
 
+
 def generate_diff(native_output, cpython_output):
-    return ''.join(unified_diff(native_output, cpython_output,lineterm="\n"))
-    
+    return ''.join(unified_diff(native_output, cpython_output, lineterm="\n"))
+
 if __name__ == '__main__':
     main()
