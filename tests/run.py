@@ -6,7 +6,17 @@ import time
 import subprocess
 import glob
 import os.path
+import functools
+import itertools
 from difflib import unified_diff
+from multiprocessing import Pool
+from multiprocessing.pool import IMapIterator
+
+
+#Fix for multiprocessing. Without this, Ctrl+C will not kill the process immediately
+set_timeout_decorator = lambda func: lambda self: func(self, timeout=1e100)
+IMapIterator.next = set_timeout_decorator(IMapIterator.next)
+
 
 if os.path.exists('../shedskin/__init__.py'):
     SS = '../shedskin/__init__.py'
@@ -21,6 +31,7 @@ def usage():
     print "'-e': run extension module tests"
     print "'-n': normal tests as extension modules"
     print "'-x': run error/warning message tests"
+    print "'-p': run the tests in parallel"
     sys.exit()
 
 
@@ -36,35 +47,38 @@ def parse_options():
 
 def test_numbers(args, options):
     if 'l' in options:
-        test_nrs = args
+        tests = args
 
     elif len(args) == 1:
-        test_nrs = [args[0]]
+        tests = [args[0]]
     elif len(args) == 2:
         if args[0] > args[1]:
             args[0], args[1] = args[1], args[0]
             options.add('r')
-        test_nrs = range(args[0], args[1])
+        tests = range(args[0], args[1])
     else:
-        test_nrs = sorted([int(os.path.splitext(f)[0]) for f in glob.glob('*.py') if f != 'run.py'])
+        tests = sorted([int(os.path.splitext(f)[0]) for f in glob.glob('*.py') if f != 'run.py'])
 
     if 'r' in options:
-        test_nrs.reverse()
+        tests.reverse()
 
-    return test_nrs
+    return tests
 
 
 def tests(args, options):
-    test_nrs = test_numbers(args, options)
+    parallel = 'p' in options
     msvc = 'v' in options
-
+    partial_run_test = functools.partial(run_test, msvc=msvc, options=options)
+    tests = [test for test in test_numbers(args, options)
+             if os.path.exists('%d.py' % test)]
     failures = []
-    for test_nr in test_nrs:
-        if os.path.exists('%d.py' % test_nr):  # XXX
-            run_test(test_nr, failures, msvc, options)
-            if failures and 'f' in options:
+    imap = Pool().imap if parallel else itertools.imap
+
+    for result in imap(partial_run_test, tests):
+        if result is not None:
+            failures.append(result)
+            if 'f' in options:
                 break
-            print
 
     return failures
 
@@ -88,37 +102,45 @@ def main():
         print failures
 
 
-def run_test(test_nr, failures, msvc, options):
-    print '*** test:', test_nr
-    t0 = time.time()
-    try:
-        if msvc:
-            assert os.system('python %s -v %d' % (SS, test_nr)) == 0
-        elif 'n' in options:
-            assert os.system('python %s -e -m Makefile.%d %d' % (SS, test_nr, test_nr)) == 0
-        else:
-            assert os.system('python %s -m Makefile.%d %d' % (SS, test_nr, test_nr)) == 0
-        if msvc:
-            assert os.system('nmake /C /S clean') == 0
-            assert os.system('nmake /C /S') == 0
-            command = '.\\%d' % test_nr
-        else:
-            assert os.system('make clean -f Makefile.%d' % test_nr) == 0
-            assert os.system('make -f Makefile.%d' % test_nr) == 0
-            if sys.platform == 'win32':
-                command = '%d' % test_nr
+def run_test(test, msvc, options):
+    parallel = 'p' in options
+    show_output = not parallel
+
+    print '*** test:', test
+    with open(os.devnull, "w") as fnull:
+        if show_output:
+            fnull = None
+        execute = functools.partial(subprocess.call, stdout=fnull, stderr=fnull, shell=True)
+        t0 = time.time()
+        try:
+            if msvc:
+                assert execute('python %s -v %d' % (SS, test)) == 0
+            elif 'n' in options:
+                assert execute('python %s -e -m Makefile.%d %d' % (SS, test, test)) == 0
             else:
-                command = './%d' % test_nr
-        if 'n' in options:
-            if test_nr not in [136, 154, 163, 191, 196, 197, 198]:  # sys.exit
-                assert os.system('python -c "__import__(str(%d))"' % test_nr) == 0
-        else:
-            check_output(command, 'python %d.py' % test_nr)
-        print '*** success: %d (%.2f)' % (test_nr, time.time() - t0)
-    except AssertionError:
-        print '*** failure:', test_nr
-        traceback.print_exc()
-        failures.append(test_nr)
+                assert execute('python %s -m Makefile.%d %d' % (SS, test, test)) == 0
+            if msvc:
+                assert execute('nmake /C /S clean') == 0
+                assert execute('nmake /C /S') == 0
+                command = '.\\%d' % test
+            else:
+                assert execute('make clean -f Makefile.%d' % test) == 0
+                assert execute('make -f Makefile.%d' % test) == 0
+                if sys.platform == 'win32':
+                    command = '%d' % test
+                else:
+                    command = './%d' % test
+            if 'n' in options:
+                if test not in [136, 154, 163, 191, 196, 197, 198]:  # sys.exit
+                    assert execute('python -c "__import__(str(%d))"' % test) == 0
+            else:
+                check_output(command, 'python %d.py' % test)
+            print '*** success: %d (%.2f)' % (test, time.time() - t0)
+        except AssertionError:
+            print '*** failure:', test
+            traceback.print_exc()
+            return test
+        return test == 0
 
 
 def extmod_tests(args, options):
