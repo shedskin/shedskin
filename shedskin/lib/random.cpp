@@ -324,31 +324,33 @@ double Random::vonmisesvariate(double mu, double kappa) {
             to a uniform random angle over the range 0 to 2*pi.
 
     */
-    double a, b, c, f, r, theta, u1, u2, u3, z;
+    double d, f, q, r, s, theta, u1, u2, u3, z, TWOPI;
+    __ss_bool __0, __1;
+    TWOPI = 2*__math__::pi;
 
     if ((kappa<=1e-06)) {
-        return ((2*__math__::pi)*this->random());
+        return (TWOPI*this->random());
     }
-    a = (1.0+__math__::sqrt((1.0+((4.0*kappa)*kappa))));
-    b = ((a-__math__::sqrt((2.0*a)))/(2.0*kappa));
-    r = ((1.0+(b*b))/(2.0*b));
+    s = (0.5/kappa);
+    r = (s+__math__::sqrt((1.0+(s*s))));
 
-    while(1) {
+    while (1) {
         u1 = this->random();
         z = __math__::cos((__math__::pi*u1));
-        f = ((1.0+(r*z))/(r+z));
-        c = (kappa*(r-f));
+        d = (z/(r+z));
         u2 = this->random();
-        if ((!((u2>=(c*(2.0-c))) && (u2>(c*__math__::exp((1.0-c))))))) {
+        if (((u2<(1.0-(d*d))) or (u2<=((1.0-d)*__math__::exp(d))))) {
             break;
         }
     }
+    q = (1.0/r);
+    f = ((q+z)/(1.0+(q*z)));
     u3 = this->random();
     if ((u3>0.5)) {
-        theta = (__math__::fmod(mu, (2*__math__::pi))+__math__::acos(f));
+        theta = __mods((mu+__math__::acos(f)), TWOPI);
     }
     else {
-        theta = (__math__::fmod(mu, (2*__math__::pi))-__math__::acos(f));
+        theta = __mods((mu-__math__::acos(f)), TWOPI);
     }
     return theta;
 }
