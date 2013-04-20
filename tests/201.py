@@ -20,3 +20,28 @@ print "hi there"
 #} not ok
 
 print "hi there 3"
+
+# virtual function: merge parent as well
+
+class X:
+   def __str__(self):
+       return 'X'
+
+class Y(X):
+   def __str__(self):
+       return 'Y'
+
+class A:
+    def woef(self, l):
+        print l
+
+class B(A):
+    def woef(self, l):
+        print l
+
+x = A()
+x.woef(X())
+
+y = A()
+y = B()
+y.woef(Y())

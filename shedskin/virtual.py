@@ -8,7 +8,7 @@ virtual.py: virtual methods and variables
 from compiler.ast import CallFunc, Name
 
 from shared import analyze_callfunc, inode, lowest_common_parents, \
-    defaultvar, subclass, getgx, class_, polymorphic_t
+    defaultvar, subclass, getgx, class_, polymorphic_t, hmcpa
 from typestr import typestr
 
 
@@ -18,6 +18,9 @@ def virtuals(self, cl, declare):
     for ident, subclasses in cl.virtuals.items():
         if not subclasses:
             continue
+        if ident in cl.funcs and hmcpa(cl.funcs[ident]):
+            subclasses = subclasses.copy()
+            subclasses.add(cl)
 
         # --- merge arg/return types
         formals = []
