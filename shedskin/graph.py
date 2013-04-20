@@ -1548,8 +1548,11 @@ def parse_module(name, parent=None, node=None):
 
     # --- create module
     try:
-        basepath = (parent and parent.path) or os.getcwd()
-        module_paths = [basepath] + getgx().libdirs
+        if parent:
+            basepaths = [parent.path, os.getcwd()]
+        else:
+            basepaths = [os.getcwd()]
+        module_paths = basepaths + getgx().libdirs
         absolute_name, filename, relative_filename, builtin = find_module(name, module_paths)
         module = Module(absolute_name, filename, relative_filename, builtin, node)
     except ImportError:
