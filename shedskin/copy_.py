@@ -51,7 +51,7 @@ def deepcopy_classes(classes):
         for cl in classes.copy():
             for var in cl.vars.values():
                 if var in getgx().merged_inh:
-                    newcl = set([t[0] for t in getgx().merged_inh[var] if isinstance(t[0], class_) and not t[0].mv.module.builtin])
+                    newcl = set(t[0] for t in getgx().merged_inh[var] if isinstance(t[0], class_) and not t[0].mv.module.builtin)
                     if newcl - classes:
                         changed = True
                         classes.update(newcl)
@@ -63,11 +63,11 @@ def determine_classes():  # XXX modeling..?
         return
     func = getgx().modules['copy'].mv.funcs['copy']
     var = func.vars[func.formals[0]]
-    classes = set([t[0] for t in getgx().merged_inh[var] if isinstance(t[0], class_) and not t[0].mv.module.builtin])
+    classes = set(t[0] for t in getgx().merged_inh[var] if isinstance(t[0], class_) and not t[0].mv.module.builtin)
     for cl in classes:
         cl.has_copy = True
     func = getgx().modules['copy'].mv.funcs['deepcopy']
     var = func.vars[func.formals[0]]
-    classes = set([t[0] for t in getgx().merged_inh[var] if isinstance(t[0], class_) and not t[0].mv.module.builtin])
+    classes = set(t[0] for t in getgx().merged_inh[var] if isinstance(t[0], class_) and not t[0].mv.module.builtin)
     for cl in deepcopy_classes(classes):
         cl.has_deepcopy = True

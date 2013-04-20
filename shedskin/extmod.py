@@ -7,7 +7,7 @@ extmod.py: extension module support
 '''
 import cpp
 import typestr
-from shared import singletype2, getmv, module, defclass, getgx, class_
+from shared import singletype2, getmv, Module, defclass, getgx, class_
 
 
 OVERLOAD_SINGLE = ['__neg__', '__pos__', '__abs__', '__nonzero__']
@@ -20,31 +20,31 @@ def do_extmod(gv):
     print >>gv.out, '#include <Python.h>'
     print >>gv.out, '#include <structmember.h>\n'
 
-    print >>gv.out, 'PyObject *__ss_mod_%s;\n' % '_'.join(gv.module.mod_path)
+    print >>gv.out, 'PyObject *__ss_mod_%s;\n' % '_'.join(gv.module.name_list)
 
     # classes
     classes = exported_classes(gv, warns=True)
     for cl in classes:
         do_extmod_class(gv, cl)
 
-    for n in gv.module.mod_path:
+    for n in gv.module.name_list:
         print >>gv.out, 'namespace __%s__ { /* XXX */' % n
 
     # global functions
     funcs = supported_funcs(gv, gv.module.mv.funcs.values())
     for func in funcs:
         do_extmod_method(gv, func)
-    do_extmod_methoddef(gv, 'Global_' + '_'.join(gv.module.mod_path), funcs, None)
+    do_extmod_methoddef(gv, 'Global_' + '_'.join(gv.module.name_list), funcs, None)
 
     # module init function
-    print >>gv.out, 'PyMODINIT_FUNC init%s(void) {' % '_'.join(gv.module.mod_path)
+    print >>gv.out, 'PyMODINIT_FUNC init%s(void) {' % '_'.join(gv.module.name_list)
 
     # initialize modules
-    __ss_mod = '__ss_mod_%s' % '_'.join(gv.module.mod_path)
+    __ss_mod = '__ss_mod_%s' % '_'.join(gv.module.name_list)
     if gv.module == getgx().main_module:
         gv.do_init_modules()
         print >>gv.out, '    __' + gv.module.ident + '__::__init();'
-    print >>gv.out, '\n    %s = Py_InitModule((char *)"%s", Global_%sMethods);' % (__ss_mod, gv.module.ident, '_'.join(gv.module.mod_path))
+    print >>gv.out, '\n    %s = Py_InitModule((char *)"%s", Global_%sMethods);' % (__ss_mod, gv.module.ident, '_'.join(gv.module.name_list))
     print >>gv.out, '    if(!%s)' % __ss_mod
     print >>gv.out, '        return;\n'
 
@@ -61,11 +61,11 @@ def do_extmod(gv):
         print >>gv.out, '    add%s();' % gv.module.ident
     print >>gv.out, '\n}\n'
 
-    print >>gv.out, 'PyMODINIT_FUNC add%s(void) {' % '_'.join(gv.module.mod_path)
+    print >>gv.out, 'PyMODINIT_FUNC add%s(void) {' % '_'.join(gv.module.name_list)
     do_add_globals(gv, classes, __ss_mod)
     print >>gv.out, '\n}'
 
-    for n in gv.module.mod_path:
+    for n in gv.module.name_list:
         print >>gv.out, '\n} // namespace __%s__' % n
     print >>gv.out, '\n} // extern "C"'
 
@@ -75,9 +75,9 @@ def do_extmod(gv):
 
 
 def do_init_mods(gv, what):
-    for mod in getgx().modules.values():
-        if not mod.builtin and not mod is gv.module:
-            print >>gv.out, '    %s::%s%s();' % (mod.full_path(), what, '_'.join(mod.mod_path))
+    for module in getgx().modules.values():
+        if not module.builtin and not module is gv.module:
+            print >>gv.out, '    %s::%s%s();' % (module.full_path(), what, '_'.join(module.name_list))
 
 
 def do_add_globals(gv, classes, __ss_mod):
@@ -128,7 +128,7 @@ def do_extmod_methoddef(gv, ident, funcs, cl):
         if isinstance(func.parent, class_):
             id = clname(func.parent) + '_' + func.ident
         else:
-            id = 'Global_' + '_'.join(gv.module.mod_path) + '_' + func.ident
+            id = 'Global_' + '_'.join(gv.module.name_list) + '_' + func.ident
         print >>gv.out, '    {(char *)"%(id)s", (PyCFunction)%(id2)s, METH_VARARGS | METH_KEYWORDS, (char *)""},' % {'id': func.ident, 'id2': id}
     print >>gv.out, '    {NULL}\n};\n'
 
@@ -143,7 +143,7 @@ def do_extmod_method(gv, func):
     if isinstance(func.parent, class_):
         id = clname(func.parent) + '_' + func.ident
     else:
-        id = 'Global_' + '_'.join(gv.module.mod_path) + '_' + func.ident
+        id = 'Global_' + '_'.join(gv.module.name_list) + '_' + func.ident
     print >>gv.out, 'PyObject *%s(PyObject *self, PyObject *args, PyObject *kwargs) {' % id
     print >>gv.out, '    try {'
 
@@ -177,7 +177,7 @@ def do_extmod_method(gv, func):
         where = '((%sObject *)self)->__ss_object->' % clname(func.parent)
     else:
         where = '__' + gv.module.ident + '__::'
-    print >>gv.out, '        return __to_py(' + where + gv.cpp_name(func.ident) + '(' + ', '.join(['arg_%d' % i for i in range(len(formals))]) + '));\n'
+    print >>gv.out, '        return __to_py(' + where + gv.cpp_name(func.ident) + '(' + ', '.join('arg_%d' % i for i in range(len(formals))) + '));\n'
 
     # convert exceptions
     print >>gv.out, '    } catch (Exception *e) {'
@@ -229,7 +229,7 @@ def supported_vars(vars):  # XXX virtuals?
             continue
         if var.name.startswith('__'):  # XXX
             continue
-        if var.invisible or singletype2(getgx().merged_inh[var], module):
+        if var.invisible or singletype2(getgx().merged_inh[var], Module):
             continue
         try:
             typestr.nodetypestr(var, var.parent, check_extmod=True)
@@ -248,7 +248,7 @@ def hasmethod(cl, name):  # XXX shared.py
 
 
 def do_extmod_class(gv, cl):
-    for n in cl.module.mod_path:
+    for n in cl.module.name_list:
         print >>gv.out, 'namespace __%s__ { /* XXX */' % n
     print >>gv.out
 
@@ -374,7 +374,7 @@ def do_extmod_class(gv, cl):
     print >>gv.out, '    %sNew,          /* tp_new            */' % clname(cl)
     print >>gv.out, '};\n'
     do_reduce_setstate(gv, cl, vars)
-    for n in cl.module.mod_path:
+    for n in cl.module.name_list:
         print >>gv.out, '} // namespace __%s__' % n
     print >>gv.out
 
@@ -384,7 +384,7 @@ def do_reduce_setstate(gv, cl, vars):
         return
     print >>gv.out, 'PyObject *%s__reduce__(PyObject *self, PyObject *args, PyObject *kwargs) {' % clname(cl)
     print >>gv.out, '    PyObject *t = PyTuple_New(3);'
-    print >>gv.out, '    PyTuple_SetItem(t, 0, PyObject_GetAttrString(__ss_mod_%s, "__newobj__"));' % '_'.join(gv.module.mod_path)
+    print >>gv.out, '    PyTuple_SetItem(t, 0, PyObject_GetAttrString(__ss_mod_%s, "__newobj__"));' % '_'.join(gv.module.name_list)
     print >>gv.out, '    PyObject *a = PyTuple_New(1);'
     print >>gv.out, '    Py_INCREF((PyObject *)&%sObjectType);' % clname(cl)
     print >>gv.out, '    PyTuple_SetItem(a, 0, (PyObject *)&%sObjectType);' % clname(cl)
@@ -412,7 +412,7 @@ def convert_methods(gv, cl, declare):
     if declare:
         print >>gv.out, '    virtual PyObject *__to_py__();'
     else:
-        for n in cl.module.mod_path:
+        for n in cl.module.name_list:
             print >>gv.out, 'namespace __%s__ { /* XXX */' % n
         print >>gv.out
 
@@ -430,7 +430,7 @@ def convert_methods(gv, cl, declare):
         print >>gv.out, '    return p;'
         print >>gv.out, '}\n'
 
-        for n in cl.module.mod_path:
+        for n in cl.module.name_list:
             print >>gv.out, '} // module namespace'
         print >>gv.out
 
@@ -446,7 +446,7 @@ def convert_methods(gv, cl, declare):
 
 def pyinit_func(gv):
     for what in ('init', 'add'):
-        print >>gv.out, 'PyMODINIT_FUNC %s%s(void);\n' % (what, '_'.join(gv.module.mod_path))
+        print >>gv.out, 'PyMODINIT_FUNC %s%s(void);\n' % (what, '_'.join(gv.module.name_list))
 
 
 def convert_methods2(gv):
@@ -459,4 +459,4 @@ def convert_methods2(gv):
 
 
 def clname(cl):
-    return '__ss_%s_%s' % ('_'.join(cl.mv.module.mod_path), cl.ident)
+    return '__ss_%s_%s' % ('_'.join(cl.mv.module.name_list), cl.ident)

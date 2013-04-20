@@ -108,11 +108,11 @@ class generateVisitor(ASTVisitor):
         for module in self.module.prop_includes:
             if module.builtin:
                 continue
-            for mod in module.mod_path:
+            for mod in module.name_list:
                 lines.append('namespace __%s__ { /* XXX */\n' % mod)
             for cl in module.mv.classes.values():
                 lines.append('class %s;\n' % nokeywords(cl.ident)) # XXX cppname?
-            for mod in module.mod_path:
+            for mod in module.name_list:
                 lines.append('}\n')
         if lines: 
             lines.insert(0, '\n')
@@ -198,7 +198,7 @@ class generateVisitor(ASTVisitor):
         return self.consts[node]
 
     def module_hpp(self, node):
-        define = '_'.join(self.module.mod_path).upper()+'_HPP'
+        define = '_'.join(self.module.name_list).upper()+'_HPP'
         print >>self.out, '#ifndef __'+define
         print >>self.out, '#define __'+define+'\n'
 
@@ -220,7 +220,7 @@ class generateVisitor(ASTVisitor):
 
         # --- namespaces
         print >>self.out, 'using namespace __shedskin__;'
-        for n in self.module.mod_path:
+        for n in self.module.name_list:
             print >>self.out, 'namespace __'+n+'__ {'
         print >>self.out
 
@@ -285,7 +285,7 @@ class generateVisitor(ASTVisitor):
         if getgx().extension_module:
             extmod.pyinit_func(self)
 
-        for n in self.module.mod_path:
+        for n in self.module.name_list:
             print >>self.out, '} // module namespace'
 
         if getgx().extension_module:
@@ -306,7 +306,7 @@ class generateVisitor(ASTVisitor):
             print >>self.out
 
         # --- namespace
-        for n in self.module.mod_path:
+        for n in self.module.name_list:
             print >>self.out, 'namespace __'+n+'__ {'
         print >>self.out
 
@@ -403,7 +403,7 @@ class generateVisitor(ASTVisitor):
         self.output('}\n')
 
         # --- close namespace
-        for n in self.module.mod_path:
+        for n in self.module.name_list:
             print >>self.out, '} // module namespace'
         print >>self.out
 
@@ -2578,7 +2578,7 @@ def singletype2(types, type):
 def namespaceclass(cl, add_cl=''):
     module = cl.mv.module
 
-    if module.ident != 'builtin' and module != getmv().module and module.mod_path:
+    if module.ident != 'builtin' and module != getmv().module and module.name_list:
         return module.full_path()+'::'+add_cl+nokeywords(cl.ident)
     else:
         return add_cl+nokeywords(cl.ident)
@@ -2671,7 +2671,7 @@ def typestrnew(types, cplusplus=True, node=None, check_extmod=False, depth=0, ch
     if cl.module not in [getmv().module, getgx().modules['builtin']]:
         if not (cl.ident in getmv().ext_funcs or cl.ident in getmv().ext_classes): # XXX too smart? can remove it, plus 'using'? 
             if cplusplus: namespace = cl.module.full_path()+'::'
-            else: namespace = '::'.join(cl.module.mod_path)+'::'
+            else: namespace = '::'.join(cl.module.name_list)+'::'
         getmv().module.prop_includes.add(cl.module)
 
     template_vars = cl.tvar_names()

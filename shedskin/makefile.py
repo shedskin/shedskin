@@ -55,9 +55,9 @@ def generate_makefile():
     libdirs = [d.replace(' ', esc_space) for d in getgx().libdirs]
     print >>makefile, 'SHEDSKIN_LIBDIR=%s' % (libdirs[-1])
     filenames = []
-    mods = getgx().modules.values()
-    for mod in mods:
-        filename = mod.filename[:-3]  # strip .py
+    modules = getgx().modules.values()
+    for module in modules:
+        filename = os.path.splitext(module.filename)[0]  # strip .py
         filename = filename.replace(' ', esc_space)  # make paths valid
         filename = filename.replace(libdirs[-1], env_var('SHEDSKIN_LIBDIR'))
         filenames.append(filename)
@@ -97,7 +97,7 @@ def generate_makefile():
         variable = line[:line.find('=')].strip()
         if variable == 'CCFLAGS':
             line += ' -I. -I%s' % env_var('SHEDSKIN_LIBDIR')
-            line += ''.join([' -I' + libdir for libdir in libdirs[:-1]])
+            line += ''.join(' -I' + libdir for libdir in libdirs[:-1])
             if sys.platform == 'darwin' and os.path.isdir('/usr/local/include'):
                 line += ' -I/usr/local/include'  # XXX
             if sys.platform == 'darwin' and os.path.isdir('/opt/local/include'):
@@ -145,15 +145,15 @@ def generate_makefile():
                 else:
                     line += ' -shared -Xlinker -export-dynamic ' + ldflags
 
-            if 'socket' in [m.ident for m in mods]:
+            if 'socket' in (m.ident for m in modules):
                 if sys.platform == 'win32':
                     line += ' -lws2_32'
                 elif sys.platform == 'sunos5':
                     line += ' -lsocket -lnsl'
-            if 'os' in [m.ident for m in mods]:
+            if 'os' in (m.ident for m in modules):
                 if sys.platform not in ['win32', 'darwin', 'sunos5']:
                     line += ' -lutil'
-            if 'hashlib' in [m.ident for m in mods]:
+            if 'hashlib' in (m.ident for m in modules):
                 line += ' -lcrypto'
 
         print >>makefile, line

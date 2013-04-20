@@ -43,15 +43,14 @@ class globalInfo:  # XXX add comments, split up
             self.libdirs = ['/usr/share/shedskin/lib']
         else:
             self.libdirs = [os.path.join(self.sysdir, 'lib')]
-        self.main_mod = 'test'
         illegal_file = file(os.path.join(self.sysdir, 'illegal'))
-        self.cpp_keywords = set([line.strip() for line in illegal_file])
+        self.cpp_keywords = set(line.strip() for line in illegal_file)
         self.ss_prefix = '__ss_'
         self.list_types = {}
         self.loopstack = []  # track nested loops
         self.comments = {}
         self.import_order = 0  # module import order
-        self.from_mod = {}
+        self.from_module = {}
         self.class_def_order = 0
         # command-line options
         self.wrap_around_check = True
@@ -130,9 +129,8 @@ class variable:
     def cpp_name(self):
         name = self.name
         if self.masks_global() or \
-                name in [cl.ident for cl in getgx().allclasses] or \
-                name + '_' in [cl.ident for cl in getgx().allclasses]:  # XXX name in..
-            # name = getgx().ss_prefix+name
+                name in (cl.ident for cl in getgx().allclasses) or \
+                name + '_' in (cl.ident for cl in getgx().allclasses):  # XXX name in..
             name = '_' + name  # XXX use prefix
         return nokeywords(name)
 
@@ -190,8 +188,8 @@ class function:
         self.registered_tempvars = []
 
     def cpp_name(self):  # XXX merge
-        if self.ident in [cl.ident for cl in getgx().allclasses] or \
-                self.ident + '_' in [cl.ident for cl in getgx().allclasses]:
+        if self.ident in (cl.ident for cl in getgx().allclasses) or \
+                self.ident + '_' in (cl.ident for cl in getgx().allclasses):
             return '_' + self.ident  # XXX ss_prefix
         return nokeywords(self.ident)
 
@@ -288,32 +286,47 @@ class static_class:  # XXX merge with regular class
         return 'static class ' + self.class_.ident
 
 
-class module:
-    def __init__(self, ident, node):
-        self.ident = ident
+class Module(object):
+    def __init__(self, name, filename, relative_filename, builtin, node):
+        #set name and its dependent fields
+        self.name = name
+        self.name_list = name.split('.')
+        self.ident = self.name_list[-1]
+
+        #set filename and its dependent fields
+        self.filename = filename
+        self.path = os.path.dirname(filename)
+        self.relative_filename = relative_filename
+        self.relative_path = os.path.dirname(relative_filename)
+
+        #set the rest
+        self.builtin = builtin
         self.node = node
         self.prop_includes = set()
         self.import_order = 0
 
     def full_path(self):
-        return '__' + '__::__'.join(self.mod_path) + '__'
+        return '__' + '__::__'.join(self.name_list) + '__'
 
     def include_path(self):
-        if self.filename.endswith('__init__.py'):
-            return '/'.join(self.mod_path) + '/__init__.hpp'
+        if self.relative_filename.endswith('__init__.py'):
+            return os.path.join(self.relative_path, '__init__.hpp')
         else:
-            return '/'.join(self.mod_path) + '.hpp'
+            filename_without_ext = os.path.splitext(self.relative_filename)[0]
+            return filename_without_ext + '.hpp'
 
     def in_globals(self, ident):
-        mv = self.mv
-        return ident in mv.globals or ident in mv.funcs or ident in mv.ext_funcs or ident in mv.classes or ident in mv.ext_classes
+        return ident in self.mv.globals \
+            or ident in self.mv.funcs \
+            or ident in self.mv.ext_funcs \
+            or ident in self.mv.classes \
+            or ident in self.mv.ext_classes
 
     def __repr__(self):
-        return 'module ' + self.ident
+        return 'Module ' + self.ident
+
 
 # --- constraint graph node
-
-
 class cnode:
     __slots__ = ['thing', 'dcpa', 'cpa', 'fakefunc', 'parent', 'defnodes', 'mv', 'constructor', 'copymetoo', 'fakert', 'in_', 'out', 'fout', 'in_list', 'callfuncs', 'nodecp']
 
@@ -523,12 +536,12 @@ def lookupmodule(node, mv):
         # --- search import chain
         for ident in path:
             if ident in imports:
-                mod = imports[ident]
-                imports = mod.mv.imports
+                module = imports[ident]
+                imports = module.mv.imports
             else:
                 return None
 
-        return mod
+        return module
 
 
 def lookupclass(node, mv):  # XXX lookupvar first?
@@ -695,7 +708,7 @@ def analyze_callfunc(node, node2=None, merge=None):  # XXX generate target list 
             # ancestor call
             elif ident not in ['__setattr__', '__getattr__'] and cnode.parent:
                 thiscl = cnode.parent.parent
-                if isinstance(thiscl, class_) and cl.ident in [x.ident for x in thiscl.ancestors_upto(None)]:  # XXX
+                if isinstance(thiscl, class_) and cl.ident in (x.ident for x in thiscl.ancestors_upto(None)):  # XXX
                     if lookupimplementor(cl, ident):
                         parent_constr = True
                         ident = ident + lookupimplementor(cl, ident) + '__'  # XXX change data structure
@@ -776,7 +789,7 @@ def callfunc_targets(node, merge):
         funcs = [direct_call]
 
     elif method_call:
-        classes = set([t[0] for t in merge[objexpr] if isinstance(t[0], class_)])
+        classes = set(t[0] for t in merge[objexpr] if isinstance(t[0], class_))
         funcs = [cl.funcs[ident] for cl in classes if ident in cl.funcs]
 
     return funcs
@@ -963,7 +976,7 @@ def hmcpa(func):
 
 
 def polymorphic_cl(classes):
-    cls = set([cl for cl in classes])
+    cls = set(cl for cl in classes)
     if len(cls) > 1 and defclass('none') in cls and not defclass('int_') in cls and not defclass('float_') in cls and not defclass('bool_') in cls:
         cls.remove(defclass('none'))
     if defclass('tuple2') in cls and defclass('tuple') in cls:  # XXX hmm
@@ -972,7 +985,7 @@ def polymorphic_cl(classes):
 
 
 def polymorphic_t(types):
-    return polymorphic_cl([t[0] for t in types])
+    return polymorphic_cl(t[0] for t in types)
 
 
 def nokeywords(name):
@@ -984,7 +997,7 @@ def nokeywords(name):
 def unboxable(types):
     if not isinstance(types, set):
         types = inode(types).types()
-    classes = set([t[0] for t in types])
+    classes = set(t[0] for t in types)
 
     if [cl for cl in classes if cl.ident not in ['int_', 'float_', 'bool_', 'complex']]:
         return None
@@ -1015,14 +1028,14 @@ def singletype2(types, type):
 
 def namespaceclass(cl, add_cl=''):
     module = cl.mv.module
-    if module.ident != 'builtin' and module != getmv().module and module.mod_path:
+    if module.ident != 'builtin' and module != getmv().module and module.name_list:
         return module.full_path() + '::' + add_cl + cl.cpp_name()
     else:
         return add_cl + cl.cpp_name()
 
 
 def types_classes(types):
-    return set([t[0] for t in types if isinstance(t[0], class_)])
+    return set(t[0] for t in types if isinstance(t[0], class_))
 
 
 def types_var_types(types, varname):

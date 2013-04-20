@@ -14,8 +14,8 @@ parse_module(): locate module by name (e.g. 'os.path'), and use moduleVisitor if
 
 '''
 import os
+import imp
 import sys
-import string
 import copy
 import re
 from compiler import parse
@@ -29,7 +29,7 @@ from compiler.visitor import ASTVisitor
 
 from shared import setmv, inode, is_zip2, fakeGetattr, in_out, function, \
     static_class, getmv, register_tempvar, lookupclass, error, augmsg, \
-    lookupfunc, defaultvar, fakeGetattr2, fakeGetattr3, module, \
+    lookupfunc, defaultvar, fakeGetattr2, fakeGetattr3, Module, \
     const_literal, is_enum, is_method, defclass, getgx, cnode, \
     fastfor, assign_rec, class_, property_setter, lookupvar
 from struct_ import struct_faketuple, struct_info, struct_unpack
@@ -96,7 +96,7 @@ class moduleVisitor(ASTVisitor):
                 count, child = count + 1, int
             elif child.node.name in map:
                 child = map[child.node.name]
-            elif child.node.name in [cl.ident for cl in getgx().allclasses] or child.node.name in getmv().classes:  # XXX getmv().classes
+            elif child.node.name in (cl.ident for cl in getgx().allclasses) or child.node.name in getmv().classes:  # XXX getmv().classes
                 child = child.node.name
             else:
                 if count == 1:
@@ -284,7 +284,7 @@ class moduleVisitor(ASTVisitor):
         # --- visit children
         for child in node.getChildNodes():
             if isinstance(child, Stmt):
-                getmv().importnodes.extend([n for n in child.nodes if isinstance(n, (Import, From))])
+                getmv().importnodes.extend(n for n in child.nodes if isinstance(n, (Import, From)))
             self.visit(child, None)
 
         # --- register classes
@@ -420,23 +420,23 @@ class moduleVisitor(ASTVisitor):
     def importmodules(self, name, node, fake):
         # --- import a.b.c: import a, then a.b, then a.b.c
         split = name.split('.')
-        mod = getmv().module
+        module = getmv().module
         for i in range(len(split)):
             subname = '.'.join(split[:i + 1])
-            parent = mod
-            mod = self.importmodule(subname, subname, node, fake)
-            if mod.ident not in parent.mv.imports:  # XXX
+            parent = module
+            module = self.importmodule(subname, subname, node, fake)
+            if module.ident not in parent.mv.imports:  # XXX
                 if not fake:
-                    parent.mv.imports[mod.ident] = mod
-        return mod
+                    parent.mv.imports[module.ident] = module
+        return module
 
     def importmodule(self, name, pseudonym, node, fake):
-        mod = self.analyzeModule(name, pseudonym, node, fake)
+        module = self.analyzeModule(name, pseudonym, node, fake)
         if not fake:
             var = defaultvar(pseudonym or name, None)
             var.imported = True
-            getgx().types[inode(var)] = set([(mod, 0)])
-        return mod
+            getgx().types[inode(var)] = set([(module, 0)])
+        return module
 
     def visitFrom(self, node, parent=None):
         if not node in getmv().importnodes:  # XXX use (func, node) as parent..
@@ -450,54 +450,50 @@ class moduleVisitor(ASTVisitor):
                     error("future '%s' is not yet supported" % name, node, mv=self)
             return
 
-        mod = self.importmodules(node.modname, node, True)
-        getgx().from_mod[node] = mod
+        module = self.importmodules(node.modname, node, True)
+        getgx().from_module[node] = module
 
         for name, pseudonym in node.names:
             if name == '*':
-                self.ext_funcs.update(mod.mv.funcs)
-                self.ext_classes.update(mod.mv.classes)
-                for import_name, import_mod in mod.mv.imports.items():
+                self.ext_funcs.update(module.mv.funcs)
+                self.ext_classes.update(module.mv.classes)
+                for import_name, import_module in module.mv.imports.items():
                     var = defaultvar(import_name, None)  # XXX merge
                     var.imported = True
-                    getgx().types[inode(var)] = set([(import_mod, 0)])
-                    self.imports[import_name] = import_mod
-                for name, extvar in mod.mv.globals.items():
+                    getgx().types[inode(var)] = set([(import_module, 0)])
+                    self.imports[import_name] = import_module
+                for name, extvar in module.mv.globals.items():
                     if not extvar.imported and not name in ['__name__']:
                         var = defaultvar(name, None)  # XXX merge
                         var.imported = True
                         self.addconstraint((inode(extvar), inode(var)), None)
                 continue
 
-            if mod.builtin:
-                localpath = os.path.join(mod.libdir, mod.dir)
-            else:
-                localpath = mod.dir
-
+            path = module.path
             pseudonym = pseudonym or name
-            if name in mod.mv.funcs:
-                self.ext_funcs[pseudonym] = mod.mv.funcs[name]
-            elif name in mod.mv.classes:
-                self.ext_classes[pseudonym] = mod.mv.classes[name]
-            elif name in mod.mv.globals and not mod.mv.globals[name].imported:  # XXX
-                extvar = mod.mv.globals[name]
+            if name in module.mv.funcs:
+                self.ext_funcs[pseudonym] = module.mv.funcs[name]
+            elif name in module.mv.classes:
+                self.ext_classes[pseudonym] = module.mv.classes[name]
+            elif name in module.mv.globals and not module.mv.globals[name].imported:  # XXX
+                extvar = module.mv.globals[name]
                 var = defaultvar(pseudonym, None)
                 var.imported = True
                 self.addconstraint((inode(extvar), inode(var)), None)
-            elif os.path.isfile(localpath + '/' + name + '.py') or \
-                    os.path.isfile(localpath + '/' + name + '/__init__.py'):
-                modname = '.'.join(mod.mod_path + [name])
+            elif os.path.isfile(os.path.join(path, name + '.py')) or \
+                    os.path.isfile(os.path.join(path, name, '__init__.py')):
+                modname = '.'.join(module.name_list + [name])
                 self.importmodule(modname, name, node, False)
             else:
                 error("no identifier '%s' in module '%s'" % (name, node.modname), node, mv=self)
 
     def analyzeModule(self, name, pseud, node, fake):
-        mod = parse_module(name, getmv().module, node)
+        module = parse_module(name, getmv().module, node)
         if not fake:
-            self.imports[pseud] = mod
+            self.imports[pseud] = module
         else:
-            self.fake_imports[pseud] = mod
-        return mod
+            self.fake_imports[pseud] = module
+        return module
 
     def visitFunction(self, node, parent=None, is_lambda=False, inherited_from=None):
         if not getmv().module.builtin and (node.varargs or node.kwargs):
@@ -1513,121 +1509,74 @@ def parsefile(name):
         sys.exit(1)
 
 
+def find_module(name, paths):
+    if '.' in name:
+        name, module_name = name.rsplit('.', 1)
+        name_as_path = name.replace('.', os.path.sep)
+        import_paths = [os.path.join(path, name_as_path) for path in paths]
+    else:
+        module_name = name
+        import_paths = paths
+    _, filename, description = imp.find_module(module_name, import_paths)
+    filename = os.path.splitext(filename)[0]
+
+    absolute_import_paths = [os.getcwd()] + getgx().libdirs
+    absolute_import_path = next(
+        path for path in absolute_import_paths
+        if filename.startswith(path)
+    )
+    relative_filename = os.path.relpath(filename, absolute_import_path)
+    absolute_name = relative_filename.replace(os.path.sep, '.')
+    builtin = absolute_import_path in getgx().libdirs
+
+    is_a_package = description[2] == imp.PKG_DIRECTORY
+    if is_a_package:
+        filename = os.path.join(filename, '__init__.py')
+        relative_filename = os.path.join(relative_filename, '__init__.py')
+    else:
+        filename = filename + '.py'
+        relative_filename = relative_filename + '.py'
+
+    return absolute_name, filename, relative_filename, builtin
+
+
 def parse_module(name, parent=None, node=None):
     # --- valid name?
-    for c in name:
-        if not c in string.letters + string.digits + '_.':
-            print ("*ERROR*:%s.py: module names should consist of letters, digits and underscores" % name)
-            sys.exit(1)
+    if not re.match("^[a-zA-Z0-9_.]+$", name):
+        print ("*ERROR*:%s.py: module names should consist of letters, digits and underscores" % name)
+        sys.exit(1)
 
-    # --- parse
-    ident = name.split('.')[-1]
-    mod = module(ident, node)
-    mod.builtin = False
-    mod.libdir = ''
-
-    # --- locate module
-    relname = name.replace('.', '/')
-    relpath = name.split('.')
-    if parent:
-        path = os.path.join(parent.dir, relname)
-    else:
-        path = relname
-
-    # --- absolute paths for local module and 'root' module
-    if parent and parent.builtin:
-        localpath = os.path.join(parent.libdir, path)
-    else:
-        localpath = path
-    rootpath = os.path.join(os.getcwd(), relname)
-
-    # --- try local path
-    if os.path.isfile(localpath + '.py'):
-        mod.filename = localpath + '.py'
-        if parent:
-            mod.mod_path = parent.mod_dir + relpath
-        else:
-            mod.mod_path = relpath
-        split = path.split('/')
-        mod.dir = '/'.join(split[:-1])
-        mod.mod_dir = mod.mod_path[:-1]
-        if parent:
-            mod.builtin = parent.builtin
-            mod.libdir = parent.libdir
-
-    elif os.path.isfile(os.path.join(path, '__init__.py')):
-        mod.filename = path + '/__init__.py'
-        if parent:
-            mod.mod_path = parent.mod_dir + relpath
-        else:
-            mod.mod_path = relpath
-        mod.dir = path
-        mod.mod_dir = mod.mod_path
-        mod.builtin = parent.builtin
-        mod.libdir = parent.libdir
-
-    # --- try root path
-    elif os.path.isfile(rootpath + '.py'):
-        mod.filename = relname + '.py'
-        mod.mod_path = relpath
-        mod.dir = '/'.join(relpath[:-1])
-        mod.mod_dir = relpath[:-1]
-
-    elif os.path.isfile(os.path.join(rootpath, '__init__.py')):
-        mod.filename = relname + '/__init__.py'
-        mod.mod_path = relpath
-        mod.dir = relname
-        mod.mod_dir = mod.mod_path
-
-    # --- try lib path
-    else:
-        for libdir in getgx().libdirs:
-            libpath = os.path.join(libdir, relname)
-
-            if os.path.isfile(libpath + '.py'):
-                mod.filename = libpath + '.py'
-                mod.mod_path = relpath
-                mod.dir = '/'.join(relpath[:-1])
-                mod.mod_dir = relpath[:-1]
-                mod.builtin = True
-                mod.libdir = libdir
-                break
-
-            elif os.path.isfile(os.path.join(libpath, '__init__.py')):
-                mod.filename = libpath + '/__init__.py'
-                mod.mod_path = relpath
-                mod.dir = relname
-                mod.mod_dir = relpath
-                mod.builtin = True
-                mod.libdir = libdir
-                break
-
-    if not hasattr(mod, 'filename'):
+    # --- create module
+    try:
+        basepath = (parent and parent.path) or os.getcwd()
+        module_paths = [basepath] + getgx().libdirs
+        absolute_name, filename, relative_filename, builtin = find_module(name, module_paths)
+        module = Module(absolute_name, filename, relative_filename, builtin, node)
+    except ImportError:
         error('cannot locate module: ' + name, node, mv=getmv())
 
     # --- check cache
-    modpath = '.'.join(mod.mod_path)
-    if modpath in getgx().modules:  # cached?
-        return getgx().modules[modpath]
-    getgx().modules[modpath] = mod
+    if module.name in getgx().modules:  # cached?
+        return getgx().modules[module.name]
+    getgx().modules[module.name] = module
 
     # --- not cached, so parse
-    mod.ast = parsefile(mod.filename)
+    module.ast = parsefile(module.filename)
 
     old_mv = getmv()
-    mod.mv = mv = moduleVisitor(mod)
+    module.mv = mv = moduleVisitor(module)
     setmv(mv)
 
     mv.visit = mv.dispatch
     mv.visitor = mv
-    mv.dispatch(mod.ast)
-    mod.import_order = getgx().import_order
+    mv.dispatch(module.ast)
+    module.import_order = getgx().import_order
     getgx().import_order += 1
 
     mv = old_mv
     setmv(mv)
 
-    return mod
+    return module
 
 
 def check_redef(node, s=None, onlybuiltins=False):  # XXX to modvisitor, rewrite
