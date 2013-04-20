@@ -260,13 +260,13 @@ class module:
         self.import_order = 0
 
     def full_path(self):
-        return '__'+'__::__'.join(self.mod_path)+'__'
+        return '__'+'__::__'.join(self.name_list)+'__'
 
     def include_path(self):
         if self.filename.endswith('__init__.py'):
-            return '/'.join(self.mod_path)+'/__init__.hpp'
+            return '/'.join(self.name_list)+'/__init__.hpp'
         else:
-            return '/'.join(self.mod_path)+'.hpp'
+            return '/'.join(self.name_list)+'.hpp'
 
     def in_globals(self, ident):
         mv = self.mv

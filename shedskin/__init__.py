@@ -115,11 +115,11 @@ def start():
     if not os.path.isfile(name):
         print "*ERROR* no such file: '%s'" % name
         sys.exit(1)
-    getgx().main_mod = name[:-3]
+    main_module_name = os.path.splitext(name)[0]
 
     # --- analyze & annotate
     t0 = time.time()
-    infer.analyze()
+    infer.analyze(main_module_name)
     annotate.annotate()
     cpp.generate_code()
     shared.print_errors()

@@ -80,7 +80,7 @@ def virtuals(self, cl, declare):
                 self.append('void ')
             self.append(self.cpp_name(ident) + '(')
 
-            self.append(', '.join([t + f for (t, f) in zip(ftypes, formals)]))
+            self.append(', '.join(t + f for (t, f) in zip(ftypes, formals)))
 
             if ident in cl.funcs and self.inhcpa(cl.funcs[ident]):
                 self.eol(')')

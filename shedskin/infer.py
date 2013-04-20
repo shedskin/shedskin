@@ -999,14 +999,12 @@ def merge_simple_types(types):
     return frozenset(merge)
 
 
-def analyze():
+def analyze(module_name):
     mv = None
     setmv(mv)
 
     # --- build dataflow graph from source code
-    getgx().main_module = graph.parse_module(getgx().main_mod)
-    getgx().main_module.filename = getgx().main_mod + '.py'
-    getgx().modules[getgx().main_mod] = getgx().main_module
+    getgx().main_module = graph.parse_module(module_name)
     mv = getgx().main_module.mv
     setmv(mv)
 

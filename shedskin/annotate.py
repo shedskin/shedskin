@@ -94,13 +94,13 @@ def annotate():
             elif isinstance(expr, (AssTuple, AssList)):
                 paste(expr, nodetypestr(expr, inode(expr).parent, False))
             elif isinstance(expr, (Print, Printnl)):
-                paste(expr, ', '.join([nodetypestr(child, inode(child).parent, False) for child in expr.nodes]))
+                paste(expr, ', '.join(nodetypestr(child, inode(child).parent, False) for child in expr.nodes))
 
         # --- assignments
         for expr in merge:
             if isinstance(expr, Assign):
                 pairs = assign_rec(expr.nodes[0], expr.expr)
-                paste(expr, ', '.join([nodetypestr(r, inode(r).parent, False) for (l, r) in pairs]))
+                paste(expr, ', '.join(nodetypestr(r, inode(r).parent, False) for (l, r) in pairs))
             elif isinstance(expr, AugAssign):
                 paste(expr, nodetypestr(expr.expr, inode(expr).parent, False))
 
