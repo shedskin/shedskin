@@ -6,7 +6,7 @@ infer.py: perform iterative type analysis
 
 we combine two techniques from the literature, to analyze both parametric polymorphism and data polymorphism adaptively. these techniques are agesen's cartesian product algorithm and plevyak's iterative flow analysis (the data polymorphic part). for details about these algorithms, see ole agesen's excellent Phd thesis. for details about the Shed Skin implementation, see mark dufour's MsC thesis.
 
-the cartesian product algorithm duplicates functions (or their graph counterpart), based on the cartesian product of possible argument types, whereas iterative flow analysis duplicates classes based on observed imprecisions at assignment points. the two integers mentioned in the graph.py description are used to keep track of duplicates along these dimensions (first class duplicate nr, then function duplicate nr).
+the cartesian product algorithm duplicates functions (or their graph counterpart), based on the cartesian product of possible argument types, whereas iterative flow analysis duplicates classes based on observed imprecisions at assignment points. the two integers mentioned in the graph.py description are used to keep track of duplicates along these dimensions (first class duplicate nr, then Function duplicate nr).
 
 the combined technique scales reasonably well, but can explode in many cases. there are many ways to improve this. some ideas:
 
@@ -18,8 +18,8 @@ a complementary but very practical approach to (greatly) improve scalability wou
 iterative_dataflow_analysis():
     (FORWARD PHASE)
     -propagate types along constraint graph (propagate())
-    -all the while creating function duplicates using the cartesian product algorithm(cpa())
-    -when creating a function duplicate, fill in allocation points with correct type (ifa_seed_template())
+    -all the while creating Function duplicates using the cartesian product algorithm(cpa())
+    -when creating a Function duplicate, fill in allocation points with correct type (ifa_seed_template())
     (BACKWARD PHASE)
     -determine classes to be duplicated, according to found imprecision points (ifa())
     -from imprecision points, follow the constraint graph (backwards) to find involved allocation points
@@ -40,10 +40,10 @@ import graph
 import virtual
 import copy_
 import typestr
-from shared import analyze_callfunc, parent_func, variable, setmv, \
-    inode, merged, function, addtoworklist, \
+from shared import analyze_callfunc, parent_func, Variable, setmv, \
+    inode, merged, Function, addtoworklist, \
     error, defaultvar, analyze_args, addconstraint, defclass, \
-    getgx, cnode, nrargs, sys, class_, lookupvar
+    getgx, CNode, nrargs, sys, class_, lookupvar
 
 
 INCREMENTAL = True
@@ -79,7 +79,7 @@ def class_copy(cl, dcpa):
 
         func_copy(func, dcpa, 0)
 
-# --- use dcpa=0,cpa=0 mold created by module visitor to duplicate function
+# --- use dcpa=0,cpa=0 mold created by module visitor to duplicate Function
 
 
 def func_copy(func, dcpa, cpa, worklist=None, cart=None):
@@ -87,9 +87,9 @@ def func_copy(func, dcpa, cpa, worklist=None, cart=None):
 
     # --- copy local end points of each constraint
     for (a, b) in func.constraints:
-        if not (isinstance(a.thing, variable) and parent_func(a.thing) != func) and a.dcpa == 0:
+        if not (isinstance(a.thing, Variable) and parent_func(a.thing) != func) and a.dcpa == 0:
             a = a.copy(dcpa, cpa, worklist)
-        if not (isinstance(b.thing, variable) and parent_func(b.thing) != func) and b.dcpa == 0:
+        if not (isinstance(b.thing, Variable) and parent_func(b.thing) != func) and b.dcpa == 0:
             b = b.copy(dcpa, cpa, worklist)
 
         addconstraint(a, b, worklist)
@@ -165,7 +165,7 @@ def propagate():
 
             for b in a.out.copy():  # XXX can change...?
                 # for builtin types, the set of instance variables is known, so do not flow into non-existent ones # XXX ifa
-                if isinstance(b.thing, variable) and isinstance(b.thing.parent, class_):
+                if isinstance(b.thing, Variable) and isinstance(b.thing.parent, class_):
                     parent_ident = b.thing.parent.ident
                     if parent_ident in builtins:
                         if parent_ident in ['int_', 'float_', 'str_', 'none', 'bool_']:
@@ -187,7 +187,7 @@ def propagate():
         for callnode in callnodes:
             cpa(callnode, worklist)
 
-# --- determine cartesian product of possible function and argument types
+# --- determine cartesian product of possible Function and argument types
 
 
 def possible_functions(node, analysis):
@@ -200,12 +200,12 @@ def possible_functions(node, analysis):
     if anon_func:
         # anonymous call
         types = getgx().cnode[expr.node, node.dcpa, node.cpa].types()
-        types = [t for t in types if isinstance(t[0], function)]  # XXX XXX analyse per t, sometimes class, sometimes function..
+        types = [t for t in types if isinstance(t[0], Function)]  # XXX XXX analyse per t, sometimes class, sometimes Function..
 
         if list(types)[0][0].parent:  # method reference XXX merge below?
             funcs = [(f[0], f[1], (f[0].parent, f[1])) for f in types]  # node.dcpa: connect to right dcpa duplicate version
-        else:  # function reference
-            funcs = [(f[0], f[1], None) for f in types]  # function call: only one version; no objtype
+        else:  # Function reference
+            funcs = [(f[0], f[1], None) for f in types]  # Function call: only one version; no objtype
 
     elif constructor:
         funcs = [(t[0].funcs['__init__'], t[1], t) for t in node.types() if '__init__' in t[0].funcs]
@@ -219,7 +219,7 @@ def possible_functions(node, analysis):
 
     elif method_call:
         objtypes = getgx().cnode[objexpr, node.dcpa, node.cpa].types()
-        objtypes = [t for t in objtypes if not isinstance(t[0], function)]  # XXX
+        objtypes = [t for t in objtypes if not isinstance(t[0], Function)]  # XXX
 
         funcs = [(t[0].funcs[ident], t[1], t) for t in objtypes if ident in t[0].funcs]
 
@@ -242,7 +242,7 @@ def possible_argtypes(node, funcs, analysis, worklist):
 
         if not node.defnodes:
             for i, default in enumerate(used_defaults):
-                defnode = cnode((inode(node.thing), i), node.dcpa, node.cpa, parent=func)
+                defnode = CNode((inode(node.thing), i), node.dcpa, node.cpa, parent=func)
                 getgx().types[defnode] = set()
                 defnode.callfuncs.append(node.thing)
                 addconstraint(getgx().cnode[default, 0, 0], defnode, worklist)  # XXX bad place
@@ -651,7 +651,7 @@ def ifa_classes_to_split():
 
 def ifa_confluence_point(node, creation_points):
     ''' determine if node is confluence point '''
-    if len(node.in_) > 1 and isinstance(node.thing, variable):
+    if len(node.in_) > 1 and isinstance(node.thing, Variable):
         for csite in node.csites:
             occ = [csite in crpoints for crpoints in creation_points.values()].count(True)
             if occ > 1:
@@ -825,7 +825,7 @@ def iterative_dataflow_analysis():
         # --- clean out constructor node types in functions, possibly to be seeded again
         for node in beforetypes:
             func = parent_func(node.thing)
-            if isinstance(func, function):
+            if isinstance(func, Function):
                 if node.constructor and isinstance(node.thing, (List, Dict, Tuple, ListComp, CallFunc)):
                     beforetypes[node] = set()
 
@@ -843,7 +843,7 @@ def iterative_dataflow_analysis():
         # --- restore network
         restore_network(backup)
 
-# --- seed allocation sites in newly created templates (called by function.copy())
+# --- seed allocation sites in newly created templates (called by Function.copy())
 
 
 def ifa_seed_template(func, cart, dcpa, cpa, worklist):
@@ -867,7 +867,7 @@ def ifa_seed_template(func, cart, dcpa, cpa, worklist):
 
                 # --- contour is specified in alloc_info
                 parent = node.parent
-                while isinstance(parent.parent, function):
+                while isinstance(parent.parent, Function):
                     parent = parent.parent
 
                 alloc_id = (parent.ident, cart, node.thing)  # XXX ident?
@@ -982,9 +982,9 @@ def restore_network(backup):
         node.in_, node.out = befinout[0].copy(), befinout[1].copy()
         node.fout = set()  # XXX ?
 
-    for var in getgx().allvars:  # XXX we have to restore some variable constraint nodes.. remove vars?
+    for var in getgx().allvars:  # XXX we have to restore some Variable constraint nodes.. remove vars?
         if not (var, 0, 0) in getgx().cnode:
-            cnode(var, parent=var.parent)
+            CNode(var, parent=var.parent)
 
     for func in getgx().allfuncs:
         func.cp = {}
@@ -1038,7 +1038,7 @@ def analyze(module_name):
     for cl in getgx().allclasses:
         for name in cl.vars:
             if name in cl.parent.vars and not name.startswith('__'):
-                error("instance variable '%s' of class '%s' shadows class variable" % (name, cl.ident))
+                error("instance Variable '%s' of class '%s' shadows class Variable" % (name, cl.ident))
 
     mv = getgx().main_module.mv
     setmv(mv)

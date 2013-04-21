@@ -13,7 +13,7 @@ from compiler.ast import Const, AssTuple, AssList, UnaryAdd, Not, Keyword, \
 
 # --- global variables gx, mv
 
-class globalInfo:  # XXX add comments, split up
+class GlobalInfo:  # XXX add comments, split up
     def __init__(self):
         self.constraints = set()
         self.allvars = set()
@@ -33,7 +33,7 @@ class globalInfo:  # XXX add comments, split up
         self.nameclasses = {}
         self.module = None
         self.builtins = ['none', 'str_', 'float_', 'int_', 'class_', 'list', 'tuple', 'tuple2', 'dict', 'set', 'frozenset', 'bool_']
-        self.assign_target = {}              # instance node for instance variable assignment
+        self.assign_target = {}              # instance node for instance Variable assignment
         self.alloc_info = {}                 # allocation site type information across iterations
         self.iterations = 0
         self.total_iterations = 0
@@ -79,7 +79,7 @@ class globalInfo:  # XXX add comments, split up
 
 
 def newgx():
-    return globalInfo()
+    return GlobalInfo()
 
 
 def getgx():
@@ -101,10 +101,10 @@ def setmv(mv):
     _mv = mv
     return _mv
 
-# --- python variable, function, class, module..
+# --- python Variable, Function, class, module..
 
 
-class variable:
+class Variable:
     def __init__(self, name, parent):
         self.name = name
         self.parent = parent
@@ -140,7 +140,7 @@ class variable:
         return self.name
 
 
-class function:
+class Function:
     def __init__(self, node=None, parent=None, inherited_from=None):
         self.node = node
         self.inherited_from = inherited_from
@@ -173,7 +173,7 @@ class function:
         self.isGenerator = False
         self.yieldNodes = []
         self.tvars = set()
-        self.ftypes = []                # function is called via a virtual call: arguments may have to be cast
+        self.ftypes = []                # Function is called via a virtual call: arguments may have to be cast
         self.inherited = None
 
         if node:
@@ -195,8 +195,8 @@ class function:
 
     def __repr__(self):
         if self.parent:
-            return 'function ' + repr((self.parent, self.ident))
-        return 'function ' + self.ident
+            return 'Function ' + repr((self.parent, self.ident))
+        return 'Function ' + self.ident
 
 
 class class_:
@@ -269,7 +269,7 @@ class class_:
         return 'class ' + self.ident
 
 
-class static_class:  # XXX merge with regular class
+class StaticClass:  # XXX merge with regular class
     def __init__(self, cl):
         self.vars = {}
         self.static_nodes = []
@@ -327,7 +327,7 @@ class Module(object):
 
 
 # --- constraint graph node
-class cnode:
+class CNode:
     __slots__ = ['thing', 'dcpa', 'cpa', 'fakefunc', 'parent', 'defnodes', 'mv', 'constructor', 'copymetoo', 'fakert', 'in_', 'out', 'fout', 'in_list', 'callfuncs', 'nodecp']
 
     def __init__(self, thing, dcpa=0, cpa=0, parent=None):
@@ -360,11 +360,11 @@ class cnode:
 
         self.nodecp = set()        # already analyzed cp's # XXX kill!?
 
-        # --- add node to surrounding non-listcomp function
+        # --- add node to surrounding non-listcomp Function
         if parent:  # do this only once! (not when copying)
-            while parent and isinstance(parent, function) and parent.listcomp:
+            while parent and isinstance(parent, Function) and parent.listcomp:
                 parent = parent.parent
-            if isinstance(parent, function):
+            if isinstance(parent, Function):
                 if self not in parent.nodes:
                     parent.nodes.add(self)
                     parent.nodes_ordered.append(self)
@@ -375,7 +375,7 @@ class cnode:
         if (self.thing, dcpa, cpa) in getgx().cnode:
             return getgx().cnode[self.thing, dcpa, cpa]
 
-        newnode = cnode(self.thing, dcpa, cpa)
+        newnode = CNode(self.thing, dcpa, cpa)
 
         newnode.callfuncs = self.callfuncs[:]  # XXX no copy?
         newnode.constructor = self.constructor
@@ -425,11 +425,11 @@ def inode(node):
 
 
 def is_method(parent):
-    return isinstance(parent, function) and isinstance(parent.parent, class_)
+    return isinstance(parent, Function) and isinstance(parent.parent, class_)
 
 
 def is_listcomp(parent):
-    return isinstance(parent, function) and parent.listcomp
+    return isinstance(parent, Function) and parent.listcomp
 
 
 def fastfor(node):
@@ -451,8 +451,8 @@ def lookupvar(name, parent, mv=None):
 def defaultvar(name, parent, worklist=None):
     var = defvar(name, parent, True, worklist)
 
-    if isinstance(parent, function) and parent.listcomp and not var.registered:
-        while isinstance(parent, function) and parent.listcomp:  # XXX
+    if isinstance(parent, Function) and parent.listcomp and not var.registered:
+        while isinstance(parent, Function) and parent.listcomp:  # XXX
             parent = parent.parent
         register_tempvar(var, parent)
 
@@ -471,10 +471,10 @@ def defvar(name, parent, local, worklist=None, mv=None):
     else:
         # recursive lookup
         chain = []
-        while isinstance(parent, function):
+        while isinstance(parent, Function):
             if name in parent.vars:
                 for ancestor in chain:
-                    if isinstance(ancestor, function):  # XXX optimize
+                    if isinstance(ancestor, Function):  # XXX optimize
                         ancestor.misses.add(name)
                 return parent.vars[name]
             chain.append(parent)
@@ -488,11 +488,11 @@ def defvar(name, parent, local, worklist=None, mv=None):
     if not local:
         return None
 
-    var = variable(name, parent)
+    var = Variable(name, parent)
     getgx().allvars.add(var)
 
     dest[name] = var
-    newnode = cnode(var, parent=parent)
+    newnode = CNode(var, parent=parent)
     if parent:
         newnode.mv = parent.mv
     else:
@@ -510,15 +510,15 @@ def defclass(name):
         return getmv().ext_classes[name]
 
 
-class fakeGetattr(Getattr):
+class FakeGetattr(Getattr):
     pass  # XXX ugly
 
 
-class fakeGetattr2(Getattr):
+class FakeGetattr2(Getattr):
     pass
 
 
-class fakeGetattr3(Getattr):
+class FakeGetattr3(Getattr):
     pass
 
 
@@ -652,8 +652,8 @@ def merged(nodes, inheritance=False):
         if inheritance:
             inh = ggx.inheritance_relations.get(node.thing, [])
 
-            # merge function variables with their inherited versions (we don't customize!)
-            if isinstance(node.thing, variable) and isinstance(node.thing.parent, function):
+            # merge Function variables with their inherited versions (we don't customize!)
+            if isinstance(node.thing, Variable) and isinstance(node.thing.parent, Function):
                 var = node.thing
                 for inhfunc in ggx.inheritance_relations.get(var.parent, []):
                     if var.name in inhfunc.vars:
@@ -663,7 +663,7 @@ def merged(nodes, inheritance=False):
                     if inhvar in mergenoinh:
                         sortdefault.update(mergenoinh[inhvar])
 
-            # node is not a function variable
+            # node is not a Function Variable
             else:
                 for n in inh:
                     if n in mergeinh:  # XXX ook mergenoinh?
@@ -681,7 +681,7 @@ def lookup_class_module(objexpr, mv, parent):
 # --- analyze call expression: namespace, method call, direct call/constructor..
 
 
-def analyze_callfunc(node, node2=None, merge=None):  # XXX generate target list XXX uniform variable system! XXX node2, merge?
+def analyze_callfunc(node, node2=None, merge=None):  # XXX generate target list XXX uniform Variable system! XXX node2, merge?
     # print 'analyze callnode', node, inode(node).parent
     cnode = inode(node)
     mv = cnode.mv
@@ -741,7 +741,7 @@ def analyze_callfunc(node, node2=None, merge=None):  # XXX generate target list 
 
     return objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func
 
-# XXX ugly: find ancestor class that implements function 'ident'
+# XXX ugly: find ancestor class that implements Function 'ident'
 
 
 def lookupimplementor(cl, ident):
@@ -767,8 +767,8 @@ def callfunc_targets(node, merge):
     objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func = analyze_callfunc(node, merge=merge)
     funcs = []
 
-    if node.node in merge and [t for t in merge[node.node] if isinstance(t[0], function)]:  # anonymous function call
-        funcs = [t[0] for t in merge[node.node] if isinstance(t[0], function)]
+    if node.node in merge and [t for t in merge[node.node] if isinstance(t[0], Function)]:  # anonymous Function call
+        funcs = [t[0] for t in merge[node.node] if isinstance(t[0], Function)]
 
     elif constructor:
         if ident in ('list', 'tuple', 'set', 'frozenset') and nrargs(node) == 1:
@@ -856,7 +856,7 @@ def analyze_args(expr, func, node=None, skip_defaults=False, merge=None):
 
 def is_anon_callable(expr, node, merge=None):
     types = get_types(expr, node, merge)
-    anon = bool([t for t in types if isinstance(t[0], function)])
+    anon = bool([t for t in types if isinstance(t[0], Function)])
     call = bool([t for t in types if isinstance(t[0], class_) and '__call__' in t[0].funcs])
     return anon, call
 
@@ -902,14 +902,14 @@ def connect_actual_formal(expr, func, parent_constr=False, merge=None):
 def parent_func(thing):
     parent = inode(thing).parent
     while parent:
-        if not isinstance(parent, function) or not parent.listcomp:
-            if not isinstance(parent, static_class):
+        if not isinstance(parent, Function) or not parent.listcomp:
+            if not isinstance(parent, StaticClass):
                 return parent
         parent = parent.parent
 
 
 def register_tempvar(var, parent):
-    if isinstance(parent, function):
+    if isinstance(parent, Function):
         parent.registered_tempvars.append(var)
 
 

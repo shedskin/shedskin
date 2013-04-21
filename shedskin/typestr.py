@@ -5,15 +5,15 @@ Copyright 2005-2011 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 typestr.py: generate type declarations
 
 '''
-from shared import variable, inode, polymorphic_cl, function, \
+from shared import Variable, inode, polymorphic_cl, Function, \
     lowest_common_parents, getmv, error, defclass, getgx, \
     types_var_types, types_classes
 
 
 def nodetypestr(node, parent=None, cplusplus=True, check_extmod=False, check_ret=False, var=None):  # XXX minimize
-    if cplusplus and isinstance(node, variable) and node.looper:  # XXX to declaredefs?
+    if cplusplus and isinstance(node, Variable) and node.looper:  # XXX to declaredefs?
         return nodetypestr(node.looper, None, cplusplus)[:-2] + '::for_in_loop '
-    if cplusplus and isinstance(node, variable) and node.wopper:  # XXX to declaredefs?
+    if cplusplus and isinstance(node, Variable) and node.wopper:  # XXX to declaredefs?
         ts = nodetypestr(node.wopper, None, cplusplus)
         if ts.startswith('dict<'):
             return 'dictentry' + ts[4:]
@@ -25,12 +25,12 @@ def typestr(types, parent=None, cplusplus=True, node=None, check_extmod=False, d
     try:
         ts = typestrnew(types, cplusplus, node, check_extmod, depth, check_ret, var, tuple_check)
     except RuntimeError:
-        if not getmv().module.builtin and isinstance(node, variable) and not node.name.startswith('__'):  # XXX startswith
+        if not getmv().module.builtin and isinstance(node, Variable) and not node.name.startswith('__'):  # XXX startswith
             if node.parent:
                 varname = repr(node)
             else:
                 varname = "'%s'" % node.name
-            error("variable %s has dynamic (sub)type" % varname, node, warning=True)
+            error("Variable %s has dynamic (sub)type" % varname, node, warning=True)
         ts = 'ERROR'
     if cplusplus:
         if not ts.endswith('*'):
@@ -60,7 +60,7 @@ def typestrnew(types, cplusplus=True, node=None, check_extmod=False, depth=0, ch
             return ident + ' *'
         return conv.get(ident, ident)
 
-    anon_funcs = set(t[0] for t in types if isinstance(t[0], function))
+    anon_funcs = set(t[0] for t in types if isinstance(t[0], Function))
     if anon_funcs and check_extmod:
         raise ExtmodError()
     if anon_funcs:
@@ -85,13 +85,13 @@ def typestrnew(types, cplusplus=True, node=None, check_extmod=False, depth=0, ch
                 return conv['int_']
             else:
                 return '***ERROR*** '
-        elif isinstance(node, variable):
+        elif isinstance(node, Variable):
             if not node.name.startswith('__'):  # XXX startswith
                 if node.parent:
                     varname = "%s" % node
                 else:
                     varname = "'%s'" % node
-                error("variable %s has dynamic (sub)type: {%s}" % (varname, ', '.join(sorted(conv2.get(cl.ident, cl.ident) for cl in lcp))), node, warning=True)
+                error("Variable %s has dynamic (sub)type: {%s}" % (varname, ', '.join(sorted(conv2.get(cl.ident, cl.ident) for cl in lcp))), node, warning=True)
         elif node not in getgx().bool_test_only:
             if tuple_check:
                 error("tuple with length > 2 and different types of elements", node, warning=True, mv=getmv())
@@ -137,11 +137,11 @@ def typestrnew(types, cplusplus=True, node=None, check_extmod=False, depth=0, ch
             ts = typestrnew(vartypes, cplusplus, node, check_extmod, depth + 1, tuple_check=tuple_check)
             if tvar == var:
                 return ts
-            if [t[0] for t in vartypes if isinstance(t[0], function)]:
+            if [t[0] for t in vartypes if isinstance(t[0], Function)]:
                 ident = cl.ident
                 if ident == 'tuple2':
                     ident = 'tuple'
-                error("'%s' instance containing function reference" % ident, node, warning=True)  # XXX test
+                error("'%s' instance containing Function reference" % ident, node, warning=True)  # XXX test
             subtypes.append(ts)
     else:
         if cl.ident in getgx().cpp_keywords:

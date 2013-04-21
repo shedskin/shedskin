@@ -6,7 +6,7 @@ cpp.py: output C++ code
 
 output equivalent C++ code, using templates and virtuals to support data and OO polymorphism.
 
-class generateVisitor: inherits visitor pattern from compiler.visitor.ASTVisitor, to recursively generate C++ code for each syntactical Python construct. the constraint graph, with inferred types, is first 'merged' back to program dimensions (getgx().merged_inh).
+class GenerateVisitor: inherits visitor pattern from compiler.visitor.ASTVisitor, to recursively generate C++ code for each syntactical Python construct. the constraint graph, with inferred types, is first 'merged' back to program dimensions (getgx().merged_inh).
 
 '''
 import textwrap
@@ -15,14 +15,14 @@ import struct
 from compiler import walk
 from compiler.ast import Const, AssTuple, AssList, From, Add, Stmt, AssAttr, \
     Keyword, AssName, CallFunc, Slice, Getattr, Dict, Subscript, \
-    Function, Return, Class, Name, List, Discard, Sliceobj, Tuple
+    Function as FunctionNode, Return, Class, Name, List, Discard, Sliceobj, Tuple
 from compiler.visitor import ASTVisitor
 
 import extmod
 from copy_ import copy_methods
 from makefile import generate_makefile
 from shared import analyze_callfunc, setmv, inode, is_zip2, lookupmodule, \
-    function, static_class, hmcpa, lowest_common_parents, getmv, \
+    Function, StaticClass, hmcpa, lowest_common_parents, getmv, \
     singletype, nokeywords, lookupclass, callfunc_targets, namespaceclass, \
     error, augmsg, Module, lookup_class_module, const_literal, \
     connect_actual_formal, lookupvariable, is_enum, defclass, getgx, \
@@ -33,7 +33,7 @@ from virtual import virtuals, typestr
 
 
 # --- code generation visitor; use type information
-class generateVisitor(ASTVisitor):
+class GenerateVisitor(ASTVisitor):
     def __init__(self, module):
         self.output_base = module.filename[:-3]
         self.out = file(self.output_base + '.cpp', 'w')
@@ -217,7 +217,7 @@ class generateVisitor(ASTVisitor):
 
     def visitm(self, *args):
         func = None
-        if args and isinstance(args[-1], (function, class_)):
+        if args and isinstance(args[-1], (Function, class_)):
             func = args[-1]
         for arg in args[:-1]:
             if isinstance(arg, str):
@@ -249,9 +249,9 @@ class generateVisitor(ASTVisitor):
 
     def get_constant(self, node):
         parent = inode(node).parent
-        while isinstance(parent, function) and parent.listcomp:  # XXX
+        while isinstance(parent, Function) and parent.listcomp:  # XXX
             parent = parent.parent
-        if isinstance(parent, function) and (parent.inherited or not self.inhcpa(parent)):  # XXX
+        if isinstance(parent, Function) and (parent.inherited or not self.inhcpa(parent)):  # XXX
             return
         for other in self.consts:  # XXX use mapping
             if node.value == other.value:
@@ -298,7 +298,7 @@ class generateVisitor(ASTVisitor):
         if self.module != getgx().main_module:
             print >>self.out, 'void __init();'
         for child in node.node.getChildNodes():
-            if isinstance(child, Function):
+            if isinstance(child, FunctionNode):
                 func = getmv().funcs[child.name]
                 if self.inhcpa(func):
                     self.visitFunction(func.node, declare=True)
@@ -335,7 +335,7 @@ class generateVisitor(ASTVisitor):
                 formal = func.formals[len(func.formals) - len(func.defaults) + func_def_nr]
                 var = func.vars[formal]
                 if self.mergeinh[var]:
-                    ts = [t for t in self.mergeinh[default] if isinstance(t[0], function)]
+                    ts = [t for t in self.mergeinh[default] if isinstance(t[0], Function)]
                     if not ts or [t for t in ts if hmcpa(t[0])]:
                         self.start('default_%d = ' % nr)
                         self.visit_conv(default, self.mergeinh[var], None)
@@ -440,7 +440,7 @@ class generateVisitor(ASTVisitor):
         for child in node.node.getChildNodes():
             if isinstance(child, Class):
                 self.class_cpp(child)
-            elif isinstance(child, Function):
+            elif isinstance(child, FunctionNode):
                 self.do_comments(child)
                 self.visit(child)
 
@@ -453,11 +453,11 @@ class generateVisitor(ASTVisitor):
             self.output('__name__ = new str("%s");\n' % self.module.ident)
 
         for child in node.node.getChildNodes():
-            if isinstance(child, Function):
+            if isinstance(child, FunctionNode):
                 self.init_defaults(child)
             elif isinstance(child, Class):
                 for child2 in child.code.getChildNodes():
-                    if isinstance(child2, Function):
+                    if isinstance(child2, FunctionNode):
                         self.init_defaults(child2)
                 if child.name in getmv().classes:
                     cl = getmv().classes[child.name]
@@ -481,7 +481,7 @@ class generateVisitor(ASTVisitor):
                         self.start(nokeywords(pseudonym) + ' = ' + module.full_path() + '::' + nokeywords(name))
                         self.eol()
 
-            elif not isinstance(child, (Class, Function)):
+            elif not isinstance(child, (Class, FunctionNode)):
                 self.do_comments(child)
                 self.visit(child)
 
@@ -1713,11 +1713,11 @@ class generateVisitor(ASTVisitor):
                 error("return value of 'id' does not fit in 32-bit integer (try shedskin -l)", node, warning=True, mv=getmv())
 
         nrargs = len(node.args)
-        if isinstance(func, function) and func.largs:
+        if isinstance(func, Function) and func.largs:
             nrargs = func.largs
 
         # --- target expression
-        if node.node in self.mergeinh and [t for t in self.mergeinh[node.node] if isinstance(t[0], function)]:  # anonymous function
+        if node.node in self.mergeinh and [t for t in self.mergeinh[node.node] if isinstance(t[0], Function)]:  # anonymous function
             self.visitm(node.node, '(', func)
 
         elif constructor:
@@ -1767,7 +1767,7 @@ class generateVisitor(ASTVisitor):
                 return
             else:
                 if isinstance(node.node, Name):
-                    if isinstance(func, function) and isinstance(func.parent, class_) and ident in func.parent.funcs:  # masked by method
+                    if isinstance(func, Function) and isinstance(func.parent, class_) and ident in func.parent.funcs:  # masked by method
                         self.append(funcs[0].mv.module.full_path() + '::')
                     self.append(funcs[0].cpp_name())
                 else:
@@ -1821,7 +1821,7 @@ class generateVisitor(ASTVisitor):
         elif wrapper:
             self.append('___bool(')
             self.visit(node, func)
-            is_func = bool([1 for t in self.mergeinh[node] if isinstance(t[0], function)])
+            is_func = bool([1 for t in self.mergeinh[node] if isinstance(t[0], Function)])
             self.append(('', '!=NULL')[is_func] + ')')  # XXX
         else:
             self.bool_wrapper[node] = True
@@ -1854,7 +1854,7 @@ class generateVisitor(ASTVisitor):
             target = target.inherited_from
 
         pairs, rest = connect_actual_formal(node, target, parent_constr, merge=self.mergeinh)
-        if isinstance(func, function) and func.lambdawrapper:
+        if isinstance(func, Function) and func.lambdawrapper:
             rest = func.largs
 
         if target.node.varargs:
@@ -1870,7 +1870,7 @@ class generateVisitor(ASTVisitor):
 
         self.add_args_arg(node, funcs)
 
-        if isinstance(func, function) and func.largs is not None:
+        if isinstance(func, Function) and func.largs is not None:
             kw = [p for p in pairs if p[1].name.startswith('__kw_')]
             nonkw = [p for p in pairs if not p[1].name.startswith('__kw_')]
             pairs = kw + nonkw[:func.largs]
@@ -2126,10 +2126,10 @@ class generateVisitor(ASTVisitor):
                 continue
 
             parent = func
-            while isinstance(parent, function) and parent.listcomp:
+            while isinstance(parent, Function) and parent.listcomp:
                 parent = parent.parent
 
-            if isinstance(parent, function):
+            if isinstance(parent, Function):
                 if not self.inhcpa(parent) or parent.inherited:
                     continue
 
@@ -2532,7 +2532,7 @@ class generateVisitor(ASTVisitor):
             else:
                 if (defclass('class_'), 0) in self.mergeinh[node]:
                     self.append(namespaceclass(lookupclass(node, getmv()), add_cl='cl_'))
-                elif add_cl and [t for t in self.mergeinh[node] if isinstance(t[0], static_class)]:
+                elif add_cl and [t for t in self.mergeinh[node] if isinstance(t[0], StaticClass)]:
                     self.append(namespaceclass(lookupclass(node, getmv()), add_cl='cl_'))
                 else:
                     if isinstance(func, class_) and node.name in func.parent.vars:  # XXX
@@ -2591,7 +2591,7 @@ class Bitpair:
 def generate_code():
     for module in getgx().modules.values():
         if not module.builtin:
-            gv = generateVisitor(module)
+            gv = GenerateVisitor(module)
             mv = module.mv
             setmv(mv)
             walk(module.ast, gv)
