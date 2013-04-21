@@ -10,8 +10,8 @@ from compiler.ast import Const, AssTuple, AssList, Assign, AugAssign, \
     Getattr, Dict, Print, Return, Printnl, Name, List, Tuple, ListComp
 
 from cpp import nodetypestr
-from shared import setmv, inode, fakeGetattr, merged, getmv, fakeGetattr2, \
-    fakeGetattr3, getgx, assign_rec
+from shared import setmv, inode, FakeGetattr, merged, getmv, FakeGetattr2, \
+    FakeGetattr3, getgx, assign_rec
 
 
 def annotate():
@@ -80,7 +80,7 @@ def annotate():
         # --- callfuncs
         for callfunc, _ in getmv().callfuncs:
             if isinstance(callfunc.node, Getattr):
-                if not isinstance(callfunc.node, (fakeGetattr, fakeGetattr2, fakeGetattr3)):
+                if not isinstance(callfunc.node, (FakeGetattr, FakeGetattr2, FakeGetattr3)):
                     paste(callfunc.node.expr, nodetypestr(callfunc, inode(callfunc).parent, False))
             else:
                 paste(callfunc.node, nodetypestr(callfunc, inode(callfunc).parent, False))
