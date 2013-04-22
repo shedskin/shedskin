@@ -8,7 +8,7 @@ virtual.py: virtual methods and variables
 from compiler.ast import CallFunc, Name
 
 from shared import analyze_callfunc, inode, lowest_common_parents, \
-    defaultvar, subclass, getgx, class_, polymorphic_t, hmcpa
+    default_var, subclass, getgx, class_, polymorphic_t, hmcpa
 from typestr import typestr
 
 
@@ -135,7 +135,7 @@ def upgrade_cl(abstract_cl, node, ident, classes):
 
     # --- register virtual var
     elif ident in ['__getattr__', '__setattr__'] and subclasses:
-        var = defaultvar(node.args[0].value, abstract_cl)
+        var = default_var(node.args[0].value, abstract_cl)
         for subcl in subclasses:
             if var.name in subcl.vars and subcl.vars[var.name] in getgx().merged_inh:
                 getgx().types.setdefault(getgx().cnode[var, 0, 0], set()).update(getgx().merged_inh[subcl.vars[var.name]])  # XXX shouldn't this be merged automatically already?

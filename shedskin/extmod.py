@@ -7,7 +7,7 @@ extmod.py: extension module support
 '''
 import cpp
 import typestr
-from shared import singletype2, getmv, Module, defclass, getgx, class_
+from shared import singletype2, getmv, Module, def_class, getgx, class_
 
 
 OVERLOAD_SINGLE = ['__neg__', '__pos__', '__abs__', '__nonzero__']
@@ -92,7 +92,7 @@ def do_add_globals(gv, classes, __ss_mod):
 def exported_classes(gv, warns=False):
     classes = []
     for cl in gv.module.mv.classes.values():
-        if defclass('Exception') in cl.ancestors():
+        if def_class('Exception') in cl.ancestors():
             if warns:
                 print "*WARNING* '%s' class not exported (inherits from Exception)" % cl.ident
         else:
@@ -115,13 +115,13 @@ def do_extmod_methoddef(gv, ident, funcs, cl):
         else:
             print >>gv.out, '    0,'
     print >>gv.out, '};\n'
-    if cl and not defclass('Exception') in cl.ancestors():
+    if cl and not def_class('Exception') in cl.ancestors():
         print >>gv.out, 'PyObject *%s__reduce__(PyObject *self, PyObject *args, PyObject *kwargs);' % ident
         print >>gv.out, 'PyObject *%s__setstate__(PyObject *self, PyObject *args, PyObject *kwargs);\n' % ident
     print >>gv.out, 'static PyMethodDef %sMethods[] = {' % ident
     if not cl:
         print >>gv.out, '    {(char *)"__newobj__", (PyCFunction)__ss__newobj__, METH_VARARGS | METH_KEYWORDS, (char *)""},'
-    elif cl and not defclass('Exception') in cl.ancestors():
+    elif cl and not def_class('Exception') in cl.ancestors():
         print >>gv.out, '    {(char *)"__reduce__", (PyCFunction)%s__reduce__, METH_VARARGS | METH_KEYWORDS, (char *)""},' % ident
         print >>gv.out, '    {(char *)"__setstate__", (PyCFunction)%s__setstate__, METH_VARARGS | METH_KEYWORDS, (char *)""},' % ident
     for func in funcs:
@@ -158,7 +158,7 @@ def do_extmod_method(gv, func):
             gv.append('1, ')
             defau = func.defaults[i - (len(formals) - len(func.defaults))]
             if defau in func.mv.defaults:
-                if gv.mergeinh[defau] == set([(defclass('none'), 0)]):
+                if gv.mergeinh[defau] == set([(def_class('none'), 0)]):
                     gv.append('0')
                 else:
                     gv.append('%s::default_%d' % ('__' + func.mv.module.ident + '__', func.mv.defaults[defau][0]))
@@ -243,7 +243,7 @@ def supported_vars(vars):  # XXX virtuals?
     return supported
 
 
-def hasmethod(cl, name):  # XXX shared.py
+def has_method(cl, name):  # XXX shared.py
     return name in cl.funcs and not cl.funcs[name].invisible and not cl.funcs[name].inherited and cpp.hmcpa(cl.funcs[name])
 
 
@@ -271,7 +271,7 @@ def do_extmod_class(gv, cl):
     do_extmod_methoddef(gv, cl.ident, funcs, cl)
 
     # tp_init
-    if hasmethod(cl, '__init__') and cl.funcs['__init__'] in funcs:
+    if has_method(cl, '__init__') and cl.funcs['__init__'] in funcs:
         print >>gv.out, 'int %s___tpinit__(PyObject *self, PyObject *args, PyObject *kwargs) {' % clname(cl)
         print >>gv.out, '    if(!%s___init__(self, args, kwargs))' % clname(cl)
         print >>gv.out, '        return -1;'
@@ -331,7 +331,7 @@ def do_extmod_class(gv, cl):
     print >>gv.out, '    0,              /* tp_getattr        */'
     print >>gv.out, '    0,              /* tp_setattr        */'
     print >>gv.out, '    0,              /* tp_compare        */'
-    if hasmethod(cl, '__repr__'):
+    if has_method(cl, '__repr__'):
         print >>gv.out, '    (PyObject *(*)(PyObject *))%s___repr__, /* tp_repr           */' % clname(cl)
     else:
         print >>gv.out, '    0,              /* tp_repr           */'
@@ -340,7 +340,7 @@ def do_extmod_class(gv, cl):
     print >>gv.out, '    0,              /* tp_as_mapping     */'
     print >>gv.out, '    0,              /* tp_hash           */'
     print >>gv.out, '    0,              /* tp_call           */'
-    if hasmethod(cl, '__str__'):
+    if has_method(cl, '__str__'):
         print >>gv.out, '    (PyObject *(*)(PyObject *))%s___str__, /* tp_str           */' % clname(cl)
     else:
         print >>gv.out, '    0,              /* tp_str            */'
@@ -366,7 +366,7 @@ def do_extmod_class(gv, cl):
     print >>gv.out, '    0,              /* tp_descr_get      */'
     print >>gv.out, '    0,              /* tp_descr_set      */'
     print >>gv.out, '    0,              /* tp_dictoffset     */'
-    if hasmethod(cl, '__init__') and cl.funcs['__init__'] in funcs:
+    if has_method(cl, '__init__') and cl.funcs['__init__'] in funcs:
         print >>gv.out, '    %s___tpinit__, /* tp_init           */' % clname(cl)
     else:
         print >>gv.out, '    0,              /* tp_init           */'
@@ -380,7 +380,7 @@ def do_extmod_class(gv, cl):
 
 
 def do_reduce_setstate(gv, cl, vars):
-    if defclass('Exception') in cl.ancestors():  # XXX
+    if def_class('Exception') in cl.ancestors():  # XXX
         return
     print >>gv.out, 'PyObject *%s__reduce__(PyObject *self, PyObject *args, PyObject *kwargs) {' % clname(cl)
     print >>gv.out, '    PyObject *t = PyTuple_New(3);'
@@ -407,7 +407,7 @@ def do_reduce_setstate(gv, cl, vars):
 
 
 def convert_methods(gv, cl, declare):
-    if defclass('Exception') in cl.ancestors():
+    if def_class('Exception') in cl.ancestors():
         return
     if declare:
         print >>gv.out, '    virtual PyObject *__to_py__();'

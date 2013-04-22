@@ -8,13 +8,13 @@ struct_.py: hacks to support struct module
 from compiler.ast import Const, AssAttr, AssName, CallFunc, Getattr, \
     Subscript, Name, Tuple
 
-from shared import getmv, error, getgx, lookupvar
+from shared import getmv, error, getgx, lookup_var
 
 
 # --- struct.unpack "type inference"
 def struct_info(node, func):
     if isinstance(node, Name):
-        var = lookupvar(node.name, func)  # XXX fwd ref?
+        var = lookup_var(node.name, func)  # XXX fwd ref?
         if not var or len(var.const_assign) != 1:
             error('non-constant format string', node, mv=getmv())
         error('assuming constant format string', node, mv=getmv(), warning=True)
@@ -49,9 +49,9 @@ def struct_info(node, func):
 
 def struct_unpack(rvalue, func):
     if isinstance(rvalue, CallFunc):
-        if isinstance(rvalue.node, Getattr) and isinstance(rvalue.node.expr, Name) and rvalue.node.expr.name == 'struct' and rvalue.node.attrname == 'unpack' and lookupvar('struct', func).imported:  # XXX imported from where?
+        if isinstance(rvalue.node, Getattr) and isinstance(rvalue.node.expr, Name) and rvalue.node.expr.name == 'struct' and rvalue.node.attrname == 'unpack' and lookup_var('struct', func).imported:  # XXX imported from where?
             return True
-        elif isinstance(rvalue.node, Name) and rvalue.node.name == 'unpack' and 'unpack' in getmv().ext_funcs and not lookupvar('unpack', func):  # XXX imported from where?
+        elif isinstance(rvalue.node, Name) and rvalue.node.name == 'unpack' and 'unpack' in getmv().ext_funcs and not lookup_var('unpack', func):  # XXX imported from where?
             return True
 
 
