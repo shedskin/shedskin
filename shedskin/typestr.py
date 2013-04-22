@@ -6,7 +6,7 @@ typestr.py: generate type declarations
 
 '''
 from shared import Variable, inode, polymorphic_cl, Function, \
-    lowest_common_parents, getmv, error, defclass, getgx, \
+    lowest_common_parents, getmv, error, def_class, getgx, \
     types_var_types, types_classes
 
 
@@ -74,14 +74,14 @@ def typestrnew(types, cplusplus=True, node=None, check_extmod=False, depth=0, ch
 
     # --- multiple parent classes
     if len(lcp) > 1:
-        if set(lcp) == set([defclass('int_'), defclass('float_')]):
+        if set(lcp) == set([def_class('int_'), def_class('float_')]):
             return conv['float_']
         elif not node or inode(node).mv.module.builtin:
-            if defclass('complex') in lcp:  # XXX
+            if def_class('complex') in lcp:  # XXX
                 return conv['complex']
-            elif defclass('float_') in lcp:
+            elif def_class('float_') in lcp:
                 return conv['float_']
-            elif defclass('int_') in lcp:
+            elif def_class('int_') in lcp:
                 return conv['int_']
             else:
                 return '***ERROR*** '
@@ -141,7 +141,7 @@ def typestrnew(types, cplusplus=True, node=None, check_extmod=False, depth=0, ch
                 ident = cl.ident
                 if ident == 'tuple2':
                     ident = 'tuple'
-                error("'%s' instance containing Function reference" % ident, node, warning=True)  # XXX test
+                error("'%s' instance containing function reference" % ident, node, warning=True)  # XXX test
             subtypes.append(ts)
     else:
         if cl.ident in getgx().cpp_keywords:
@@ -174,9 +174,9 @@ def incompatible_assignment_rec(argtypes, formaltypes, depth=0):
         return False
     argclasses = types_classes(argtypes)
     formalclasses = types_classes(formaltypes)
-    inttype = (defclass('int_'), 0)
-    booltype = (defclass('bool_'), 0)
-    floattype = (defclass('float_'), 0)
+    inttype = (def_class('int_'), 0)
+    booltype = (def_class('bool_'), 0)
+    floattype = (def_class('float_'), 0)
 
     # int -> float
     if depth > 0 and (argtypes == set([inttype]) and floattype in formaltypes):
@@ -191,7 +191,7 @@ def incompatible_assignment_rec(argtypes, formaltypes, depth=0):
         return True
 
     # None -> anything
-    if len(argclasses) == 1 and defclass('none') in argclasses:
+    if len(argclasses) == 1 and def_class('none') in argclasses:
         return False
 
     # recurse on subvars

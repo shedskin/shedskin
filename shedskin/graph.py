@@ -9,6 +9,7 @@ constraint graph: graph along which possible types 'flow' during an 'abstract ex
 constraint graph nodes are stored in getgx().cnode, and the set of types of for each node in getgx().types. nodes are identified by an AST Node, and two integers. the integers are used in infer.py to duplicate parts of the constraint graph along two dimensions. in the initial constraint graph, these integers are always 0.
 
 class ModuleVisitor: inherits visitor pattern from compiler.visitor.ASTVisitor, to recursively generate constraints for each syntactical Python construct. for example, the visitFor method is called in case of a for-loop. temporary variables are introduced in many places, to enable translation to a lower-level language.
+    import ipdb; ipdb.set_trace()  # BREAKPOINT
 
 parse_module(): locate module by name (e.g. 'os.path'), and use ModuleVisitor if not cached
 
@@ -28,10 +29,10 @@ from compiler.ast import Const, AssTuple, AssList, From, Add, ListCompFor, \
 from compiler.visitor import ASTVisitor
 
 from shared import setmv, inode, is_zip2, FakeGetattr, in_out, \
-    Function, StaticClass, getmv, register_tempvar, \
-    lookupclass, error, augmsg, lookupfunc, defaultvar, FakeGetattr2, \
-    FakeGetattr3, Module, const_literal, is_enum, is_method, defclass, \
-    getgx, CNode, fastfor, assign_rec, class_, property_setter, lookupvar
+    Function, StaticClass, getmv, register_temp_var, \
+    lookup_class, error, aug_msg, lookup_func, default_var, FakeGetattr2, \
+    FakeGetattr3, Module, const_literal, is_enum, is_method, def_class, \
+    getgx, CNode, fastfor, assign_rec, class_, property_setter, lookup_var
 from struct_ import struct_faketuple, struct_info, struct_unpack
 
 
@@ -62,7 +63,7 @@ class ModuleVisitor(ASTVisitor):
         if (node, 0, 0) not in getgx().cnode:
             ASTVisitor.dispatch(self, node, *args)
 
-    def fakefunc(self, node, objexpr, attrname, args, func):
+    def fake_func(self, node, objexpr, attrname, args, func):
         if (node, 0, 0) in getgx().cnode:  # XXX
             newnode = getgx().cnode[node, 0, 0]
         else:
@@ -72,7 +73,7 @@ class ModuleVisitor(ASTVisitor):
         fakefunc = CallFunc(Getattr(objexpr, attrname), args)
         fakefunc.lineno = objexpr.lineno
         self.visit(fakefunc, func)
-        self.addconstraint((inode(fakefunc), newnode), func)
+        self.add_constraint((inode(fakefunc), newnode), func)
 
         inode(objexpr).fakefunc = fakefunc
         return fakefunc
@@ -136,18 +137,18 @@ class ModuleVisitor(ASTVisitor):
                 getgx().types[newnode] = set([(cl, cl.dcpa)])
 
     def constructor(self, node, classname, func):
-        cl = defclass(classname)
+        cl = def_class(classname)
 
         self.instance(node, cl, func)
-        defaultvar('unit', cl)
+        default_var('unit', cl)
 
         if classname in ['list', 'tuple'] and not node.nodes:
             getgx().empty_constructors.add(node)  # ifa disables those that flow to instance variable assignments
 
         # --- internally flow binary tuples
         if cl.ident == 'tuple2':
-            defaultvar('first', cl)
-            defaultvar('second', cl)
+            default_var('first', cl)
+            default_var('second', cl)
             elem0, elem1 = node.nodes
 
             self.visit(elem0, func)
@@ -163,8 +164,8 @@ class ModuleVisitor(ASTVisitor):
 
         # --- add dynamic children constraints for other types
         if classname == 'dict':  # XXX filter children
-            defaultvar('unit', cl)
-            defaultvar('value', cl)
+            default_var('unit', cl)
+            default_var('value', cl)
 
             for child in node.getChildNodes():
                 self.visit(child, func)
@@ -198,11 +199,11 @@ class ModuleVisitor(ASTVisitor):
 
         if isinstance(node, (List, Tuple)):
             if isinstance(node, List):
-                cl = defclass('list')
+                cl = def_class('list')
             elif len(node.nodes) == 2:
-                cl = defclass('tuple2')
+                cl = def_class('tuple2')
             else:
-                cl = defclass('tuple')
+                cl = def_class('tuple')
 
             merged = set()
             for child in node.nodes:
@@ -227,11 +228,11 @@ class ModuleVisitor(ASTVisitor):
         fakechildnode = CNode((child, varname), parent=func)  # create separate 'fake' CNode per child, so we can have multiple 'callfuncs'
         getgx().types[fakechildnode] = set()
 
-        self.addconstraint((inode(parent), fakechildnode), func)  # add constraint from parent to fake child node. if parent changes, all fake child nodes change, and the callfunc for each child node is triggered
+        self.add_constraint((inode(parent), fakechildnode), func)  # add constraint from parent to fake child node. if parent changes, all fake child nodes change, and the callfunc for each child node is triggered
         fakechildnode.callfuncs.append(fakefunc)
 
-    # --- add regular constraint to Function
-    def addconstraint(self, constraint, func):
+    # --- add regular constraint to function
+    def add_constraint(self, constraint, func):
         in_out(constraint[0], constraint[1])
         getgx().constraints.add(constraint)
         while isinstance(func, Function) and func.listcomp:
@@ -249,7 +250,7 @@ class ModuleVisitor(ASTVisitor):
         register_node(lc, func)
         getgx().genexp_to_lc[node] = lc
         self.visit(lc, func)
-        self.addconstraint((inode(lc), newnode), func)
+        self.add_constraint((inode(lc), newnode), func)
 
     def visitStmt(self, node, func=None):
         comments = []
@@ -276,8 +277,8 @@ class ModuleVisitor(ASTVisitor):
 
         # --- __name__
         if self.module.ident != 'builtin':
-            namevar = defaultvar('__name__', None)
-            getgx().types[inode(namevar)] = set([(defclass('str_'), 0)])
+            namevar = default_var('__name__', None)
+            getgx().types[inode(namevar)] = set([(def_class('str_'), 0)])
 
         self.forward_references(node)
 
@@ -297,7 +298,7 @@ class ModuleVisitor(ASTVisitor):
         for cl in self.classes.values():
             for base in cl.node.bases:
                 if not (isinstance(base, Name) and base.name == 'object'):
-                    ancestor = lookupclass(base, getmv())
+                    ancestor = lookup_class(base, getmv())
                     cl.bases.append(ancestor)
                     ancestor.children.append(cl)
 
@@ -376,13 +377,13 @@ class ModuleVisitor(ASTVisitor):
 
         # global variables XXX visitGlobal
         for assname in self.local_assignments(node, global_=True):
-            defaultvar(assname.name, None)
+            default_var(assname.name, None)
 
     def set_default_vars(self, node, func):
         globals = set(self.get_globals(node))
         for assname in self.local_assignments(node):
             if assname.name not in globals:
-                defaultvar(assname.name, func)
+                default_var(assname.name, func)
 
     def get_globals(self, node):
         if isinstance(node, Global):
@@ -413,27 +414,27 @@ class ModuleVisitor(ASTVisitor):
         for (name, pseudonym) in node.names:
             if pseudonym:
                 # --- import a.b as c: don't import a
-                self.importmodule(name, pseudonym, node, False)
+                self.import_module(name, pseudonym, node, False)
             else:
-                self.importmodules(name, node, False)
+                self.import_modules(name, node, False)
 
-    def importmodules(self, name, node, fake):
+    def import_modules(self, name, node, fake):
         # --- import a.b.c: import a, then a.b, then a.b.c
         split = name.split('.')
         module = getmv().module
         for i in range(len(split)):
             subname = '.'.join(split[:i + 1])
             parent = module
-            module = self.importmodule(subname, subname, node, fake)
+            module = self.import_module(subname, subname, node, fake)
             if module.ident not in parent.mv.imports:  # XXX
                 if not fake:
                     parent.mv.imports[module.ident] = module
         return module
 
-    def importmodule(self, name, pseudonym, node, fake):
-        module = self.analyzeModule(name, pseudonym, node, fake)
+    def import_module(self, name, pseudonym, node, fake):
+        module = self.analyze_module(name, pseudonym, node, fake)
         if not fake:
-            var = defaultvar(pseudonym or name, None)
+            var = default_var(pseudonym or name, None)
             var.imported = True
             getgx().types[inode(var)] = set([(module, 0)])
         return module
@@ -450,7 +451,7 @@ class ModuleVisitor(ASTVisitor):
                     error("future '%s' is not yet supported" % name, node, mv=self)
             return
 
-        module = self.importmodules(node.modname, node, True)
+        module = self.import_modules(node.modname, node, True)
         getgx().from_module[node] = module
 
         for name, pseudonym in node.names:
@@ -458,15 +459,15 @@ class ModuleVisitor(ASTVisitor):
                 self.ext_funcs.update(module.mv.funcs)
                 self.ext_classes.update(module.mv.classes)
                 for import_name, import_module in module.mv.imports.items():
-                    var = defaultvar(import_name, None)  # XXX merge
+                    var = default_var(import_name, None)  # XXX merge
                     var.imported = True
                     getgx().types[inode(var)] = set([(import_module, 0)])
                     self.imports[import_name] = import_module
                 for name, extvar in module.mv.globals.items():
                     if not extvar.imported and not name in ['__name__']:
-                        var = defaultvar(name, None)  # XXX merge
+                        var = default_var(name, None)  # XXX merge
                         var.imported = True
-                        self.addconstraint((inode(extvar), inode(var)), None)
+                        self.add_constraint((inode(extvar), inode(var)), None)
                 continue
 
             path = module.path
@@ -477,17 +478,17 @@ class ModuleVisitor(ASTVisitor):
                 self.ext_classes[pseudonym] = module.mv.classes[name]
             elif name in module.mv.globals and not module.mv.globals[name].imported:  # XXX
                 extvar = module.mv.globals[name]
-                var = defaultvar(pseudonym, None)
+                var = default_var(pseudonym, None)
                 var.imported = True
-                self.addconstraint((inode(extvar), inode(var)), None)
+                self.add_constraint((inode(extvar), inode(var)), None)
             elif os.path.isfile(os.path.join(path, name + '.py')) or \
                     os.path.isfile(os.path.join(path, name, '__init__.py')):
                 modname = '.'.join(module.name_list + [name])
-                self.importmodule(modname, name, node, False)
+                self.import_module(modname, name, node, False)
             else:
                 error("no identifier '%s' in module '%s'" % (name, node.modname), node, mv=self)
 
-    def analyzeModule(self, name, pseud, node, fake):
+    def analyze_module(self, name, pseud, node, fake):
         module = parse_module(name, getmv().module, node)
         if not fake:
             self.imports[pseud] = module
@@ -536,7 +537,7 @@ class ModuleVisitor(ASTVisitor):
         func.expand_args = {}
         for i, formal in enumerate(func.formals):
             if isinstance(formal, tuple):
-                tmp = self.tempvar((node, i), func)
+                tmp = self.temp_var((node, i), func)
                 func.formals[i] = tmp.name
                 fake_unpack = Assign([self.unpack_rec(formal)], Name(tmp.name))
                 func.expand_args[tmp.name] = fake_unpack
@@ -545,7 +546,7 @@ class ModuleVisitor(ASTVisitor):
         func.defaults = node.defaults
 
         for formal in func.formals:
-            var = defaultvar(formal, func)
+            var = default_var(formal, func)
             var.formal_arg = True
 
         # --- flow return expressions together into single node
@@ -569,7 +570,7 @@ class ModuleVisitor(ASTVisitor):
         # --- register function
         if isinstance(parent, class_):
             if func.ident not in parent.staticmethods:  # XXX use flag
-                defaultvar('self', func)
+                default_var('self', func)
                 if func.ident == '__init__' and '__del__' in parent.funcs:  # XXX what if no __init__
                     self.visit(CallFunc(Getattr(Name('self'), '__del__'), []), func)
                     getgx().gc_cleanup = True
@@ -594,20 +595,20 @@ class ModuleVisitor(ASTVisitor):
         newnode.copymetoo = True
 
     def visitAnd(self, node, func=None):
-        self.visitandor(node, func)
+        self.visit_and_or(node, func)
 
     def visitOr(self, node, func=None):
-        self.visitandor(node, func)
+        self.visit_and_or(node, func)
 
-    def visitandor(self, node, func):
+    def visit_and_or(self, node, func):
         newnode = CNode(node, parent=func)
         getgx().types[newnode] = set()
         for child in node.getChildNodes():
             if node in getgx().bool_test_only:
                 self.bool_test_add(child)
             self.visit(child, func)
-            self.addconstraint((inode(child), newnode), func)
-            self.tempvar2(child, newnode, func)
+            self.add_constraint((inode(child), newnode), func)
+            self.temp_var2(child, newnode, func)
 
     def visitIf(self, node, func=None):
         for test, code in node.tests:
@@ -625,8 +626,8 @@ class ModuleVisitor(ASTVisitor):
         for child in node.getChildNodes():
             self.visit(child, func)
 
-        self.addconstraint((inode(node.then), newnode), func)
-        self.addconstraint((inode(node.else_), newnode), func)
+        self.add_constraint((inode(node.then), newnode), func)
+        self.add_constraint((inode(node.else_), newnode), func)
 
     def visitGlobal(self, node, func=None):
         func.globals += node.names
@@ -643,11 +644,11 @@ class ModuleVisitor(ASTVisitor):
         self.bool_test_add(node.expr)
         newnode = CNode(node, parent=func)
         newnode.copymetoo = True
-        getgx().types[newnode] = set([(defclass('bool_'), 0)])  # XXX new type?
+        getgx().types[newnode] = set([(def_class('bool_'), 0)])  # XXX new type?
         self.visit(node.expr, func)
 
     def visitBackquote(self, node, func=None):
-        self.fakefunc(node, node.expr, '__repr__', [], func)
+        self.fake_func(node, node.expr, '__repr__', [], func)
 
     def visitTuple(self, node, func=None):
         if len(node.nodes) == 2:
@@ -668,35 +669,35 @@ class ModuleVisitor(ASTVisitor):
             self.slice(node, node.expr, subscript.nodes, func)
         else:
             if node.flags == 'OP_DELETE':
-                self.fakefunc(node, node.expr, '__delitem__', [subscript], func)
+                self.fake_func(node, node.expr, '__delitem__', [subscript], func)
             elif len(node.subs) > 1:
-                self.fakefunc(node, node.expr, '__getitem__', [subscript], func)
+                self.fake_func(node, node.expr, '__getitem__', [subscript], func)
             else:
                 ident = '__getitem__'
-                self.fakefunc(node, node.expr, ident, [subscript], func)
+                self.fake_func(node, node.expr, ident, [subscript], func)
 
     def visitSlice(self, node, func=None):
         self.slice(node, node.expr, [node.lower, node.upper, None], func)
 
     def slice(self, node, expr, nodes, func, replace=None):
-        nodes2 = slicenums(nodes)
+        nodes2 = slice_nums(nodes)
         if replace:
-            self.fakefunc(node, expr, '__setslice__', nodes2 + [replace], func)
+            self.fake_func(node, expr, '__setslice__', nodes2 + [replace], func)
         elif node.flags == 'OP_DELETE':
-            self.fakefunc(node, expr, '__delete__', nodes2, func)
+            self.fake_func(node, expr, '__delete__', nodes2, func)
         else:
-            self.fakefunc(node, expr, '__slice__', nodes2, func)
+            self.fake_func(node, expr, '__slice__', nodes2, func)
 
     def visitUnarySub(self, node, func=None):
-        self.fakefunc(node, node.expr, '__neg__', [], func)
+        self.fake_func(node, node.expr, '__neg__', [], func)
 
     def visitUnaryAdd(self, node, func=None):
-        self.fakefunc(node, node.expr, '__pos__', [], func)
+        self.fake_func(node, node.expr, '__pos__', [], func)
 
     def visitCompare(self, node, func=None):
         newnode = CNode(node, parent=func)
         newnode.copymetoo = True
-        getgx().types[newnode] = set([(defclass('bool_'), 0)])  # XXX new type?
+        getgx().types[newnode] = set([(def_class('bool_'), 0)])  # XXX new type?
         self.visit(node.expr, func)
         msgs = {'<': 'lt', '>': 'gt', 'in': 'contains', 'not in': 'contains', '!=': 'ne', '==': 'eq', '<=': 'le', '>=': 'ge'}
         left = node.expr
@@ -704,49 +705,49 @@ class ModuleVisitor(ASTVisitor):
             self.visit(right, func)
             msg = msgs.get(op)
             if msg == 'contains':
-                self.fakefunc(node, right, '__' + msg + '__', [left], func)
+                self.fake_func(node, right, '__' + msg + '__', [left], func)
             elif msg in ('lt', 'gt', 'le', 'ge'):
                 fakefunc = CallFunc(Name('__%s' % msg), [left, right])
                 fakefunc.lineno = left.lineno
                 self.visit(fakefunc, func)
             elif msg:
-                self.fakefunc(node, left, '__' + msg + '__', [right], func)
+                self.fake_func(node, left, '__' + msg + '__', [right], func)
             left = right
 
         # tempvars, e.g. (t1=fun())
         for term in node.ops[:-1]:
             if not isinstance(term[1], (Name, Const)):
-                self.tempvar2(term[1], inode(term[1]), func)
+                self.temp_var2(term[1], inode(term[1]), func)
 
     def visitBitand(self, node, func=None):
-        self.visitbitpair(node, augmsg(node, 'and'), func)
+        self.visitBitpair(node, aug_msg(node, 'and'), func)
 
     def visitBitor(self, node, func=None):
-        self.visitbitpair(node, augmsg(node, 'or'), func)
+        self.visitBitpair(node, aug_msg(node, 'or'), func)
 
     def visitBitxor(self, node, func=None):
-        self.visitbitpair(node, augmsg(node, 'xor'), func)
+        self.visitBitpair(node, aug_msg(node, 'xor'), func)
 
-    def visitbitpair(self, node, msg, func=None):
+    def visitBitpair(self, node, msg, func=None):
         CNode(node, parent=func)
         getgx().types[inode(node)] = set()
         left = node.nodes[0]
         for i, right in enumerate(node.nodes[1:]):
-            faker = self.fakefunc((left, i), left, msg, [right], func)
+            faker = self.fake_func((left, i), left, msg, [right], func)
             left = faker
-        self.addconstraint((inode(faker), inode(node)), func)
+        self.add_constraint((inode(faker), inode(node)), func)
 
     def visitAdd(self, node, func=None):
-        self.fakefunc(node, node.left, augmsg(node, 'add'), [node.right], func)
+        self.fake_func(node, node.left, aug_msg(node, 'add'), [node.right], func)
 
     def visitInvert(self, node, func=None):
-        self.fakefunc(node, node.expr, '__invert__', [], func)
+        self.fake_func(node, node.expr, '__invert__', [], func)
 
     def visitRightShift(self, node, func=None):
-        self.fakefunc(node, node.left, augmsg(node, 'rshift'), [node.right], func)
+        self.fake_func(node, node.left, aug_msg(node, 'rshift'), [node.right], func)
 
     def visitLeftShift(self, node, func=None):
-        self.fakefunc(node, node.left, augmsg(node, 'lshift'), [node.right], func)
+        self.fake_func(node, node.left, aug_msg(node, 'lshift'), [node.right], func)
 
     def visitAugAssign(self, node, func=None):  # a[b] += c -> a[b] = a[b]+c, using tempvars to handle sidefx
         newnode = CNode(node, parent=func)
@@ -760,21 +761,21 @@ class ModuleVisitor(ASTVisitor):
         elif isinstance(node.node, Getattr):
             blah = AssAttr(clone.node.expr, clone.node.attrname, 'OP_ASSIGN')
         elif isinstance(node.node, Subscript):
-            t1 = self.tempvar(node.node.expr, func)
+            t1 = self.temp_var(node.node.expr, func)
             a1 = Assign([AssName(t1.name, 'OP_ASSIGN')], node.node.expr)
             self.visit(a1, func)
-            self.addconstraint((inode(node.node.expr), inode(t1)), func)
+            self.add_constraint((inode(node.node.expr), inode(t1)), func)
 
             if len(node.node.subs) > 1:
                 subs = Tuple(node.node.subs)
             else:
                 subs = node.node.subs[0]
-            t2 = self.tempvar(subs, func)
+            t2 = self.temp_var(subs, func)
             a2 = Assign([AssName(t2.name, 'OP_ASSIGN')], subs)
 
             self.visit(a1, func)
             self.visit(a2, func)
-            self.addconstraint((inode(subs), inode(t2)), func)
+            self.add_constraint((inode(subs), inode(t2)), func)
 
             inode(node).temp1 = t1.name
             inode(node).temp2 = t2.name
@@ -818,29 +819,29 @@ class ModuleVisitor(ASTVisitor):
         self.visit(assign, func)
 
     def visitSub(self, node, func=None):
-        self.fakefunc(node, node.left, augmsg(node, 'sub'), [node.right], func)
+        self.fake_func(node, node.left, aug_msg(node, 'sub'), [node.right], func)
 
     def visitMul(self, node, func=None):
-        self.fakefunc(node, node.left, augmsg(node, 'mul'), [node.right], func)
+        self.fake_func(node, node.left, aug_msg(node, 'mul'), [node.right], func)
 
     def visitDiv(self, node, func=None):
-        self.fakefunc(node, node.left, augmsg(node, 'div'), [node.right], func)
+        self.fake_func(node, node.left, aug_msg(node, 'div'), [node.right], func)
 
     def visitFloorDiv(self, node, func=None):
-        self.fakefunc(node, node.left, augmsg(node, 'floordiv'), [node.right], func)
+        self.fake_func(node, node.left, aug_msg(node, 'floordiv'), [node.right], func)
 
     def visitPower(self, node, func=None):
-        self.fakefunc(node, node.left, '__pow__', [node.right], func)
+        self.fake_func(node, node.left, '__pow__', [node.right], func)
 
     def visitMod(self, node, func=None):
         if isinstance(node.right, (Tuple, Dict)):
-            self.fakefunc(node, node.left, '__mod__', [], func)
+            self.fake_func(node, node.left, '__mod__', [], func)
             for child in node.right.getChildNodes():
                 self.visit(child, func)
                 if isinstance(node.right, Tuple):
-                    self.fakefunc(inode(child), child, '__str__', [], func)
+                    self.fake_func(inode(child), child, '__str__', [], func)
         else:
-            self.fakefunc(node, node.left, '__mod__', [node.right], func)
+            self.fake_func(node, node.left, '__mod__', [node.right], func)
 
     def visitPrintnl(self, node, func=None):
         self.visitPrint(node, func)
@@ -851,9 +852,9 @@ class ModuleVisitor(ASTVisitor):
 
         for child in node.getChildNodes():
             self.visit(child, func)
-            self.fakefunc(inode(child), child, '__str__', [], func)
+            self.fake_func(inode(child), child, '__str__', [], func)
 
-    def tempvar(self, node, func=None, looper=None, wopper=None):
+    def temp_var(self, node, func=None, looper=None, wopper=None):
         if node in getgx().parent_nodes:
             varname = self.tempcount[getgx().parent_nodes[node]]
         elif node in self.tempcount:  # XXX investigate why this happens
@@ -861,22 +862,22 @@ class ModuleVisitor(ASTVisitor):
         else:
             varname = '__' + str(len(self.tempcount))
 
-        var = defaultvar(varname, func)
+        var = default_var(varname, func)
         var.looper = looper
         var.wopper = wopper
         self.tempcount[node] = varname
 
-        register_tempvar(var, func)
+        register_temp_var(var, func)
         return var
 
-    def tempvar2(self, node, source, func):
-        tvar = self.tempvar(node, func)
-        self.addconstraint((source, inode(tvar)), func)
+    def temp_var2(self, node, source, func):
+        tvar = self.temp_var(node, func)
+        self.add_constraint((source, inode(tvar)), func)
         return tvar
 
-    def tempvar_int(self, node, func):
-        var = self.tempvar(node, func)
-        getgx().types[inode(var)] = set([(defclass('int_'), 0)])
+    def temp_var_int(self, node, func):
+        var = self.temp_var(node, func)
+        getgx().types[inode(var)] = set([(def_class('int_'), 0)])
         inode(var).copymetoo = True
         return var
 
@@ -901,15 +902,15 @@ class ModuleVisitor(ASTVisitor):
 
             for (h0, h1) in pairs:
                 if isinstance(h0, Name) and h0.name in ['int', 'float', 'str', 'class']:
-                    continue  # handle in lookupclass
-                cl = lookupclass(h0, getmv())
+                    continue  # handle in lookup_class
+                cl = lookup_class(h0, getmv())
                 if not cl:
                     error("unknown or unsupported exception type", h0, mv=self)
 
                 if isinstance(h1, AssName):
-                    var = defaultvar(h1.name, func)
+                    var = default_var(h1.name, func)
                 else:
-                    var = self.tempvar(h0, func)
+                    var = self.temp_var(h0, func)
 
                 var.invisible = True
                 inode(var).copymetoo = True
@@ -918,7 +919,7 @@ class ModuleVisitor(ASTVisitor):
         # else
         if node.else_:
             self.visit(node.else_, func)
-            self.tempvar_int(node.else_, func)
+            self.temp_var_int(node.else_, func)
 
     def visitTryFinally(self, node, func=None):
         error("'try..finally' is not supported", node, mv=self)
@@ -927,7 +928,7 @@ class ModuleVisitor(ASTVisitor):
         func.isGenerator = True
         func.yieldNodes.append(node)
         self.visit(Return(CallFunc(Name('__iter'), [node.value])), func)
-        self.addconstraint((inode(node.value), func.yieldnode), func)
+        self.add_constraint((inode(node.value), func.yieldnode), func)
 
     def visitFor(self, node, func=None):
         # --- iterable contents -> assign node
@@ -938,13 +939,13 @@ class ModuleVisitor(ASTVisitor):
         fakefunc = CallFunc(Getattr(get_iter, 'next'), [])
 
         self.visit(fakefunc, func)
-        self.addconstraint((inode(fakefunc), assnode), func)
+        self.add_constraint((inode(fakefunc), assnode), func)
 
         # --- assign node -> variables  XXX merge into assign_pair
         if isinstance(node.assign, AssName):
             # for x in..
-            lvar = defaultvar(node.assign.name, func)
-            self.addconstraint((assnode, inode(lvar)), func)
+            lvar = default_var(node.assign.name, func)
+            self.add_constraint((assnode, inode(lvar)), func)
 
         elif isinstance(node.assign, AssAttr):  # XXX experimental :)
             # for expr.x in..
@@ -964,7 +965,7 @@ class ModuleVisitor(ASTVisitor):
 
         # --- for-else
         if node.else_:
-            self.tempvar_int(node.else_, func)
+            self.temp_var_int(node.else_, func)
             self.visit(node.else_, func)
 
         # --- loop body
@@ -976,30 +977,30 @@ class ModuleVisitor(ASTVisitor):
     def do_for(self, node, assnode, get_iter, func):
         # --- for i in range(..) XXX i should not be modified.. use tempcounter; two bounds
         if fastfor(node):
-            self.tempvar2(node.assign, assnode, func)
-            self.tempvar2(node.list, inode(node.list.args[0]), func)
+            self.temp_var2(node.assign, assnode, func)
+            self.temp_var2(node.list, inode(node.list.args[0]), func)
 
             if len(node.list.args) == 3 and not isinstance(node.list.args[2], Name) and not const_literal(node.list.args[2]):  # XXX merge with ListComp
                 for arg in node.list.args:
                     if not isinstance(arg, Name) and not const_literal(arg):  # XXX create func for better check
-                        self.tempvar2(arg, inode(arg), func)
+                        self.temp_var2(arg, inode(arg), func)
 
         # --- temp vars for list, iter etc.
         else:
-            self.tempvar2(node, inode(node.list), func)
-            self.tempvar2((node, 1), inode(get_iter), func)
-            self.tempvar_int(node.list, func)
+            self.temp_var2(node, inode(node.list), func)
+            self.temp_var2((node, 1), inode(get_iter), func)
+            self.temp_var_int(node.list, func)
 
             if is_enum(node) or is_zip2(node):
-                self.tempvar2((node, 2), inode(node.list.args[0]), func)
+                self.temp_var2((node, 2), inode(node.list.args[0]), func)
                 if is_zip2(node):
-                    self.tempvar2((node, 3), inode(node.list.args[1]), func)
-                    self.tempvar_int((node, 4), func)
+                    self.temp_var2((node, 3), inode(node.list.args[1]), func)
+                    self.temp_var_int((node, 4), func)
 
-            self.tempvar((node, 5), func, looper=node.list)
+            self.temp_var((node, 5), func, looper=node.list)
             if isinstance(node.list, CallFunc) and isinstance(node.list.node, Getattr):
-                self.tempvar((node, 6), func, wopper=node.list.node.expr)
-                self.tempvar2((node, 7), inode(node.list.node.expr), func)
+                self.temp_var((node, 6), func, wopper=node.list.node.expr)
+                self.temp_var2((node, 7), inode(node.list.node.expr), func)
 
     def bool_test_add(self, node):
         if isinstance(node, (And, Or, Not)):
@@ -1013,7 +1014,7 @@ class ModuleVisitor(ASTVisitor):
         getgx().loopstack.pop()
 
         if node.else_:
-            self.tempvar_int(node.else_, func)
+            self.temp_var_int(node.else_, func)
             self.visit(node.else_, func)
 
     def visitWith(self, node, func=None):
@@ -1021,9 +1022,9 @@ class ModuleVisitor(ASTVisitor):
             varnode = CNode(node.vars, parent=func)
             getgx().types[varnode] = set()
             self.visit(node.expr, func)
-            self.addconstraint((inode(node.expr), varnode), func)
-            lvar = defaultvar(node.vars.name, func)
-            self.addconstraint((varnode, inode(lvar)), func)
+            self.add_constraint((inode(node.expr), varnode), func)
+            lvar = default_var(node.vars.name, func)
+            self.add_constraint((varnode, inode(lvar)), func)
         else:
             self.visit(node.expr, func)
         for child in node.getChildNodes():
@@ -1050,11 +1051,11 @@ class ModuleVisitor(ASTVisitor):
             get_iter = CallFunc(Getattr(qual.list, '__iter__'), [])
             fakefunc = CallFunc(Getattr(get_iter, 'next'), [])
             self.visit(fakefunc, lcfunc)
-            self.addconstraint((inode(fakefunc), inode(qual.assign)), lcfunc)
+            self.add_constraint((inode(fakefunc), inode(qual.assign)), lcfunc)
 
             if isinstance(qual.assign, AssName):  # XXX merge with visitFor
-                lvar = defaultvar(qual.assign.name, lcfunc)  # XXX str or Name?
-                self.addconstraint((inode(qual.assign), inode(lvar)), lcfunc)
+                lvar = default_var(qual.assign.name, lcfunc)  # XXX str or Name?
+                self.add_constraint((inode(qual.assign), inode(lvar)), lcfunc)
             else:  # AssTuple, AssList
                 self.tuple_flow(qual.assign, qual.assign, lcfunc)
 
@@ -1068,9 +1069,9 @@ class ModuleVisitor(ASTVisitor):
 
         # node type
         if node in getgx().genexp_to_lc.values():  # converted generator expression
-            self.instance(node, defclass('__iter'), func)
+            self.instance(node, def_class('__iter'), func)
         else:
-            self.instance(node, defclass('list'), func)
+            self.instance(node, def_class('list'), func)
 
         # expr->instance.unit
         self.visit(node.expr, lcfunc)
@@ -1088,7 +1089,7 @@ class ModuleVisitor(ASTVisitor):
             if isinstance(node.value, Name):
                 func.retvars.append(node.value.name)
         if func.retnode:
-            self.addconstraint((inode(node.value), func.retnode), func)
+            self.add_constraint((inode(node.value), func.retnode), func)
 
     def visitAssign(self, node, func=None):
         # --- rewrite for struct.unpack XXX rewrite callfunc as tuple
@@ -1101,8 +1102,8 @@ class ModuleVisitor(ASTVisitor):
                 sinfo = struct_info(rvalue.args[0], func)
                 faketuple = struct_faketuple(sinfo)
                 self.visit(Assign(node.nodes, faketuple), func)
-                tvar = self.tempvar2(rvalue.args[1], inode(rvalue.args[1]), func)
-                tvar_pos = self.tempvar_int(rvalue.args[0], func)
+                tvar = self.temp_var2(rvalue.args[1], inode(rvalue.args[1]), func)
+                tvar_pos = self.temp_var_int(rvalue.args[0], func)
                 getgx().struct_unpack[node] = (sinfo, tvar.name, tvar_pos.name)
                 return
 
@@ -1127,12 +1128,12 @@ class ModuleVisitor(ASTVisitor):
                         self.visit(rvalue, func)
                     self.visit(lvalue, func)
                     if isinstance(func, Function) and lvalue.name in func.globals:
-                        lvar = defaultvar(lvalue.name, None)
+                        lvar = default_var(lvalue.name, None)
                     else:
-                        lvar = defaultvar(lvalue.name, func)
+                        lvar = default_var(lvalue.name, func)
                     if isinstance(rvalue, Const):
                         lvar.const_assign.append(rvalue)
-                    self.addconstraint((inode(rvalue), inode(lvar)), func)
+                    self.add_constraint((inode(rvalue), inode(lvar)), func)
 
                 # (a,(b,c), ..) = expr
                 elif isinstance(lvalue, (AssTuple, AssList)):
@@ -1155,9 +1156,9 @@ class ModuleVisitor(ASTVisitor):
                         if (child, 0, 0) not in getgx().cnode:  # (a,b) = (1,2): (1,2) never visited
                             continue
                         if not isinstance(child, Const) and not (isinstance(child, Name) and child.name == 'None'):
-                            self.tempvar2(child, inode(child), func)
+                            self.temp_var2(child, inode(child), func)
             elif not isinstance(node.expr, Const) and not (isinstance(node.expr, Name) and node.expr.name == 'None'):
-                self.tempvar2(node.expr, inode(node.expr), func)
+                self.temp_var2(node.expr, inode(node.expr), func)
 
     def assign_pair(self, lvalue, rvalue, func):
         # expr[expr] = expr
@@ -1174,7 +1175,7 @@ class ModuleVisitor(ASTVisitor):
                 inode(lvalue.expr).faketuple = subscript
 
             if not isinstance(lvalue.expr, Name):
-                self.tempvar2(lvalue.expr, inode(lvalue.expr), func)
+                self.temp_var2(lvalue.expr, inode(lvalue.expr), func)
 
         # expr.attr = expr
         elif isinstance(lvalue, AssAttr):
@@ -1184,14 +1185,14 @@ class ModuleVisitor(ASTVisitor):
             self.visit(fakefunc, func)
 
     def tuple_flow(self, lvalue, rvalue, func=None):
-        self.tempvar2(lvalue, inode(rvalue), func)
+        self.temp_var2(lvalue, inode(rvalue), func)
 
         if isinstance(lvalue, (AssTuple, AssList)):
             lvalue = lvalue.nodes
         for (i, item) in enumerate(lvalue):
             fakenode = CNode((item,), parent=func)  # fake node per item, for multiple callfunc triggers
             getgx().types[fakenode] = set()
-            self.addconstraint((inode(rvalue), fakenode), func)
+            self.add_constraint((inode(rvalue), fakenode), func)
 
             fakefunc = CallFunc(FakeGetattr3(rvalue, '__getitem__'), [Const(i)])
 
@@ -1201,10 +1202,10 @@ class ModuleVisitor(ASTVisitor):
             getgx().item_rvalue[item] = rvalue
             if isinstance(item, AssName):
                 if isinstance(func, Function) and item.name in func.globals:  # XXX merge
-                    lvar = defaultvar(item.name, None)
+                    lvar = default_var(item.name, None)
                 else:
-                    lvar = defaultvar(item.name, func)
-                self.addconstraint((inode(fakefunc), inode(lvar)), func)
+                    lvar = default_var(item.name, func)
+                self.add_constraint((inode(fakefunc), inode(lvar)), func)
             elif isinstance(item, (Subscript, AssAttr)):
                 self.assign_pair(item, fakefunc, func)
             elif isinstance(item, (AssTuple, AssList)):  # recursion
@@ -1212,7 +1213,7 @@ class ModuleVisitor(ASTVisitor):
             else:
                 error('unsupported type of assignment', item, mv=self)
 
-    def supercall(self, orig, parent):
+    def super_call(self, orig, parent):
         node = orig.node
         while isinstance(parent, Function):
             parent = parent.parent
@@ -1222,7 +1223,7 @@ class ModuleVisitor(ASTVisitor):
                 node.expr.node.name == 'super'):
             if (len(node.expr.args) >= 2 and
                     isinstance(node.expr.args[1], Name) and node.expr.args[1].name == 'self'):
-                cl = lookupclass(node.expr.args[0], getmv())
+                cl = lookup_class(node.expr.args[0], getmv())
                 if cl.node.bases:
                     return cl.node.bases[0]
             error("unsupported usage of 'super'", orig, mv=self)
@@ -1232,7 +1233,7 @@ class ModuleVisitor(ASTVisitor):
 
         if isinstance(node.node, Getattr):  # XXX import math; math.e
             # rewrite super(..) call
-            base = self.supercall(node, func)
+            base = self.super_call(node, func)
             if base:
                 node.node = Getattr(copy.deepcopy(base), node.node.attrname)
                 node.args = [Name('self')] + node.args
@@ -1261,7 +1262,7 @@ class ModuleVisitor(ASTVisitor):
 
             if isinstance(node.node.expr, Name) and node.node.expr.name in getmv().imports and node.node.attrname == '__getattr__':  # XXX analyze_callfunc
                 if node.args[0].value in getmv().imports[node.node.expr.name].mv.globals:  # XXX bleh
-                    self.addconstraint((inode(getmv().imports[node.node.expr.name].mv.globals[node.args[0].value]), newnode), func)
+                    self.add_constraint((inode(getmv().imports[node.node.expr.name].mv.globals[node.args[0].value]), newnode), func)
 
         elif isinstance(node.node, Name):
             # direct call
@@ -1276,7 +1277,7 @@ class ModuleVisitor(ASTVisitor):
             if ident == 'isinstance' and isinstance(node.args[1], Tuple):
                 error("isinstance(.., (a, b, ..)) is not supported", node, mv=getmv())
 
-            if lookupvar(ident, func):
+            if lookup_var(ident, func):
                 self.visit(node.node, func)
                 inode(node.node).callfuncs.append(node)  # XXX iterative dataflow analysis: move there
         else:
@@ -1298,8 +1299,8 @@ class ModuleVisitor(ASTVisitor):
             inode(arg).callfuncs.append(node)  # this one too
 
         # --- handle instantiation or call
-        constructor = lookupclass(node.node, getmv())
-        if constructor and (not isinstance(node.node, Name) or not lookupvar(node.node.name, func)):
+        constructor = lookup_class(node.node, getmv())
+        if constructor and (not isinstance(node.node, Name) or not lookup_var(node.node.name, func)):
             self.instance(node, constructor, func)
             inode(node).callfuncs.append(node)  # XXX see above, investigate
         else:
@@ -1323,12 +1324,12 @@ class ModuleVisitor(ASTVisitor):
                 else:
                     name = base.attrname
 
-                cl = lookupclass(base, getmv())
+                cl = lookup_class(base, getmv())
                 if not cl:
                     error("no such class: '%s'" % name, node, mv=self)
 
                 elif cl.mv.module.builtin and name not in ['object', 'Exception', 'tzinfo']:
-                    if defclass('Exception') not in cl.ancestors():
+                    if def_class('Exception') not in cl.ancestors():
                         error("inheritance from builtin class '%s' is not supported" % name, node, mv=self)
 
         if node.name in getmv().classes:
@@ -1359,10 +1360,10 @@ class ModuleVisitor(ASTVisitor):
 
         # --- built-in attributes
         if 'class_' in getmv().classes or 'class_' in getmv().ext_classes:
-            var = defaultvar('__class__', newclass)
+            var = default_var('__class__', newclass)
             var.invisible = True
-            getgx().types[inode(var)] = set([(defclass('class_'), defclass('class_').dcpa)])
-            defclass('class_').dcpa += 1
+            getgx().types[inode(var)] = set([(def_class('class_'), def_class('class_').dcpa)])
+            def_class('class_').dcpa += 1
 
         # --- staticmethod, property
         skip = []
@@ -1419,7 +1420,7 @@ class ModuleVisitor(ASTVisitor):
 
         fakefunc = CallFunc(FakeGetattr(node.expr, '__getattr__'), [Const(node.attrname)])
         self.visit(fakefunc, func)
-        self.addconstraint((getgx().cnode[fakefunc, 0, 0], newnode), func)
+        self.add_constraint((getgx().cnode[fakefunc, 0, 0], newnode), func)
 
         self.callfuncs.append((fakefunc, func))
 
@@ -1430,20 +1431,20 @@ class ModuleVisitor(ASTVisitor):
         if type(node.value) == unicode:
             error('unicode is not supported', node, mv=self)
         map = {int: 'int_', str: 'str_', float: 'float_', type(None): 'none', long: 'int_', complex: 'complex'}  # XXX 'return' -> Return(Const(None))?
-        self.instance(node, defclass(map[type(node.value)]), func)
+        self.instance(node, def_class(map[type(node.value)]), func)
 
     def fncl_passing(self, node, newnode, func):
-        lfunc, lclass = lookupfunc(node, getmv()), lookupclass(node, getmv())
+        lfunc, lclass = lookup_func(node, getmv()), lookup_class(node, getmv())
         if lfunc:
             if lfunc.mv.module.builtin:
-                lfunc = self.builtinwrapper(node, func)
+                lfunc = self.builtin_wrapper(node, func)
             elif lfunc.ident not in lfunc.mv.lambdas:
                 lfunc.lambdanr = len(lfunc.mv.lambdas)
                 lfunc.mv.lambdas[lfunc.ident] = lfunc
             getgx().types[newnode] = set([(lfunc, 0)])
         elif lclass:
             if lclass.mv.module.builtin:
-                lclass = self.builtinwrapper(node, func)
+                lclass = self.builtin_wrapper(node, func)
             else:
                 lclass = lclass.parent
             getgx().types[newnode] = set([(lclass, 0)])
@@ -1461,15 +1462,15 @@ class ModuleVisitor(ASTVisitor):
 
         if node.name in ['None', 'True', 'False']:
             if node.name == 'None':  # XXX also bools, remove def seed_nodes()
-                self.instance(node, defclass('none'), func)
+                self.instance(node, def_class('none'), func)
             else:
-                self.instance(node, defclass('bool_'), func)
+                self.instance(node, def_class('bool_'), func)
             return
 
         if isinstance(func, Function) and node.name in func.globals:
-            var = defaultvar(node.name, None)
+            var = default_var(node.name, None)
         else:
-            var = lookupvar(node.name, func)
+            var = lookup_var(node.name, func)
             if not var:
                 if self.fncl_passing(node, newnode, func):
                     pass
@@ -1478,11 +1479,11 @@ class ModuleVisitor(ASTVisitor):
                     getgx().types[newnode] = set([(cl.parent, 0)])
                     newnode.copymetoo = True
                 else:
-                    var = defaultvar(node.name, None)
+                    var = default_var(node.name, None)
         if var:
-            self.addconstraint((inode(var), newnode), func)
+            self.add_constraint((inode(var), newnode), func)
 
-    def builtinwrapper(self, node, func):
+    def builtin_wrapper(self, node, func):
         node2 = CallFunc(copy.deepcopy(node), [Name(x) for x in 'abcde'])
         l = Lambda(list('abcde'), [], 0, node2)
         self.visit(l, func)
@@ -1498,7 +1499,7 @@ def clear_block(m):
     return m.string.count('\n', m.start(), m.end()) * '\n'
 
 
-def parsefile(name):
+def parse_file(name):
     # Convert block comments into strings which will be duely ignored.
     pat = re.compile(r"#{.*?#}[^\r\n]*$", re.MULTILINE | re.DOTALL)
     filebuf = re.sub(pat, clear_block, ''.join(open(name, 'U').readlines()))
@@ -1564,7 +1565,7 @@ def parse_module(name, parent=None, node=None):
     getgx().modules[module.name] = module
 
     # --- not cached, so parse
-    module.ast = parsefile(module.filename)
+    module.ast = parse_file(module.filename)
 
     old_mv = getmv()
     module.mv = mv = ModuleVisitor(module)
@@ -1612,7 +1613,7 @@ def register_node(node, func):
         func.registered.append(node)
 
 
-def slicenums(nodes):
+def slice_nums(nodes):
     nodes2 = []
     x = 0
     for i, n in enumerate(nodes):
