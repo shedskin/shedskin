@@ -15,7 +15,7 @@ from shared import getgx
 def generate_makefile():
     if sys.platform == 'win32':
         pyver = '%d%d' % sys.version_info[:2]
-        prefix = sysconfig.get_config_var('prefix').replace('\\', '/')
+        prefix = sysconfig.get_config_var('prefix')
     else:
         pyver = sysconfig.get_config_var('VERSION') or sysconfig.get_python_version()
         includes = '-I' + sysconfig.get_python_inc() + ' '
@@ -124,7 +124,7 @@ def generate_makefile():
                 line += ' -D__SS_NOGCWARNS'
             if getgx().extension_module:
                 if sys.platform == 'win32':
-                    line += ' -I%s/include -D__SS_BIND' % prefix
+                    line += ' -I%s\\include -D__SS_BIND' % prefix
                 else:
                     line += ' -g -fPIC -D__SS_BIND ' + includes
 
@@ -135,9 +135,9 @@ def generate_makefile():
                 line += ' -L/usr/local/lib'
             if getgx().extension_module:
                 if getgx().msvc:
-                    line += ' /dll /libpath:%s/libs ' % prefix
+                    line += ' /dll /libpath:%s\\libs ' % prefix
                 elif sys.platform == 'win32':
-                    line += ' -shared -L%s/libs -lpython%s' % (prefix, pyver)
+                    line += ' -shared -L%s\\libs -lpython%s' % (prefix, pyver)
                 elif sys.platform == 'darwin':
                     line += ' -bundle -undefined dynamic_lookup ' + ldflags
                 elif sys.platform == 'sunos5':
