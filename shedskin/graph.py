@@ -1521,7 +1521,7 @@ def find_module(name, paths):
     _, filename, description = imp.find_module(module_name, import_paths)
     filename = os.path.splitext(filename)[0]
 
-    absolute_import_paths = [os.getcwd()] + getgx().libdirs
+    absolute_import_paths = getgx().libdirs + [os.getcwd()]
     absolute_import_path = next(
         path for path in absolute_import_paths
         if filename.startswith(path)
@@ -1549,7 +1549,7 @@ def parse_module(name, parent=None, node=None):
 
     # --- create module
     try:
-        if parent:
+        if parent and parent.path != os.getcwd():
             basepaths = [parent.path, os.getcwd()]
         else:
             basepaths = [os.getcwd()]
