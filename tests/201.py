@@ -45,3 +45,12 @@ x.woef(X())
 y = A()
 y = B()
 y.woef(Y())
+
+# using builtin names
+class meuh:
+    def set(self, x):
+        self.x = x
+
+mmm = meuh()
+mmm.set(8)
+print mmm.x
