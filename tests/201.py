@@ -50,9 +50,15 @@ y.woef(Y())
 class meuh:
     def set(self, x):
         self.x = x
+    def filter(self, x):
+        self.x = x
+    def array(self, x):
+        self.x = x
 
 mmm = meuh()
 mmm.set(8)
+mmm.filter(8)
+mmm.array(8)
 print mmm.x
 
 # class passing is not supported, but at least we shouldn't crash on this

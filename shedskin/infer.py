@@ -292,7 +292,7 @@ def cartesian_product(node, analysis, worklist):
     return product(*alltypes)
 
 
-def redirect(c, dcpa, func, callfunc, ident, callnode):
+def redirect(c, dcpa, func, callfunc, ident, callnode, direct_call, constructor):
     # redirect based on number of arguments (__%s%d syntax in builtins)
     if func.mv.module.builtin:
         if isinstance(func.parent, class_):
@@ -303,7 +303,7 @@ def redirect(c, dcpa, func, callfunc, ident, callnode):
         func = funcs.get(redir, func)
 
     # filter
-    if ident == 'filter':
+    if direct_call and ident == 'filter':
         clnames = [x[0].ident for x in c if isinstance(x[0], class_)]
         if 'str_' in clnames or 'tuple' in clnames or 'tuple2' in clnames:
             func = func.mv.funcs['__' + ident]
@@ -313,7 +313,7 @@ def redirect(c, dcpa, func, callfunc, ident, callnode):
         dcpa = 1
 
     # dict.__init__
-    if (ident, nrargs(callfunc)) in (('dict', 1), ('defaultdict', 2)):
+    if constructor and (ident, nrargs(callfunc)) in (('dict', 1), ('defaultdict', 2)):
         clnames = [x[0].ident for x in c if isinstance(x[0], class_)]
         if 'dict' in clnames or 'defaultdict' in clnames:
             func = list(callnode.types())[0][0].funcs['__initdict__']
@@ -327,11 +327,11 @@ def redirect(c, dcpa, func, callfunc, ident, callnode):
             func = func.parent.funcs['updateiter']
 
     # list, tuple
-    if ident in ('list', 'tuple', 'set', 'frozenset') and nrargs(callfunc) == 1:
+    if constructor and ident in ('list', 'tuple', 'set', 'frozenset') and nrargs(callfunc) == 1:
         func = list(callnode.types())[0][0].funcs['__inititer__']  # XXX use __init__?
 
     # array
-    if ident == 'array' and isinstance(callfunc.args[0], Const):
+    if constructor and ident == 'array' and isinstance(callfunc.args[0], Const):
         typecode = callfunc.args[0].value
         array_type = None
         if typecode in 'bBhHiIlL':
@@ -405,7 +405,7 @@ def cpa(callnode, worklist):
 
         # redirect in special cases
         callfunc = callnode.thing
-        c, dcpa, func = redirect(c, dcpa, func, callfunc, ident, callnode)
+        c, dcpa, func = redirect(c, dcpa, func, callfunc, ident, callnode, direct_call, constructor)
 
         # already connected to template
         if (func,) + objtype + c in callnode.nodecp:
