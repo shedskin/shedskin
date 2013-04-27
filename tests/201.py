@@ -54,3 +54,10 @@ class meuh:
 mmm = meuh()
 mmm.set(8)
 print mmm.x
+
+# class passing is not supported, but at least we shouldn't crash on this
+class wowf:
+    pass
+
+x = wowf
+x
