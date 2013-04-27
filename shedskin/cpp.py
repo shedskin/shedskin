@@ -2530,10 +2530,13 @@ class GenerateVisitor(ASTVisitor):
             elif singletype(node, Module):
                 self.append('__' + singletype(node, Module).ident + '__')
             else:
-                if (def_class('class_'), 0) in self.mergeinh[node]:
-                    self.append(namespaceclass(lookup_class(node, getmv()), add_cl='cl_'))
-                elif add_cl and [t for t in self.mergeinh[node] if isinstance(t[0], StaticClass)]:
-                    self.append(namespaceclass(lookup_class(node, getmv()), add_cl='cl_'))
+                if ((def_class('class_'), 0) in self.mergeinh[node] or \
+                   (add_cl and [t for t in self.mergeinh[node] if isinstance(t[0], StaticClass)])):
+                    cl = lookup_class(node, getmv())
+                    if cl:
+                        self.append(namespaceclass(cl, add_cl='cl_'))
+                    else:
+                        self.append(self.cpp_name(node.name))
                 else:
                     if isinstance(func, class_) and node.name in func.parent.vars:  # XXX
                         self.append(func.ident + '::')
