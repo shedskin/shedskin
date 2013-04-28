@@ -556,15 +556,29 @@ def ifa_split_vars(cl, dcpa, vars, nr_classes, classes_nr, split, allcsites):
             for splitsites in remaining[1:]:
                 ifa_split_class(cl, dcpa, splitsites, split)
             return split
+
+        # --- try to partition csites across paths
+        prt = {}
+        for c in csites:
+            ts = set()
+            for p in c.paths:
+                ts.update(p)
+            ts = frozenset(ts)
+            if ts not in prt:
+                prt[ts] = []
+            prt[ts].append(c)
+        if len(prt) > 1:
+            if DEBUG(3):
+                print 'IFA partition csites:', prt.values()[0]
+            ifa_split_class(cl, dcpa, prt.values()[0], split)
+
         # --- if all else fails, perform wholesale splitting
-        # XXX assign sets should be different; len(paths) > 1?
-        if len(paths) > 1 and 1 < len(csites) < 10:
+        elif len(paths) > 1 and 1 < len(csites) < 10:
             if DEBUG(3):
                 print 'IFA wholesale splitting, csites:', len(csites)
             for csite in csites[1:]:
                 ifa_split_class(cl, dcpa, [csite], split)
             return split
-
 
 def ifa_split_no_confusion(cl, dcpa, varnum, classes_nr, nr_classes, csites, emptycsites, allnodes, split):
     '''creation sites on single path: split them off, possibly reusing contour'''
