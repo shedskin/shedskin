@@ -67,3 +67,30 @@ class wowf:
 
 x = wowf
 x
+
+# type inference bug uncovered by C64 SVN (list type is incorrectly not split)
+class BRKHandler:
+    pass
+
+class Tape(BRKHandler):
+    pass
+    
+class IECMember(BRKHandler):
+    pass
+    
+class ComputerDevice(IECMember):
+    pass
+
+def wop(a, b):
+    t = Tape()
+    c = ComputerDevice()
+    hooks = [t, c]
+    x, y = 1, 1.0
+    y = 1.0
+    blah = [x, y]
+
+bla = Tape()
+bla = IECMember()
+bla = ComputerDevice()
+
+wop(bla, bla)
