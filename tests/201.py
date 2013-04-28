@@ -68,7 +68,7 @@ class wowf:
 x = wowf
 x
 
-# type inference bug uncovered by C64 SVN (list type is incorrectly not split)
+# type inference bug uncovered by C64 SVN (list type is left unsplit)
 class BRKHandler:
     pass
 
