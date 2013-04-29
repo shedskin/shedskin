@@ -42,6 +42,18 @@ def typestr(types, parent=None, cplusplus=True, node=None, check_extmod=False, d
 class ExtmodError(Exception):
     pass
 
+def dynamic_variable_error(node, types, conv2):
+    if not node.name.startswith('__'):  # XXX startswith
+        classes = polymorphic_cl(types_classes(types))
+        lcp = lowest_common_parents(classes)
+        if node.parent:
+            varname = "%s" % node
+        else:
+            varname = "'%s'" % node
+        if [t for t in types if isinstance(t[0], Function)]:
+            error("Variable %s has dynamic (sub)type: {%s, function}" % (varname, ', '.join(sorted(conv2.get(cl.ident, cl.ident) for cl in lcp))), node, warning=True)
+        else:
+            error("Variable %s has dynamic (sub)type: {%s}" % (varname, ', '.join(sorted(conv2.get(cl.ident, cl.ident) for cl in lcp))), node, warning=True)
 
 def typestrnew(types, cplusplus=True, node=None, check_extmod=False, depth=0, check_ret=False, var=None, tuple_check=False):
     if depth == 10:
@@ -64,6 +76,11 @@ def typestrnew(types, cplusplus=True, node=None, check_extmod=False, depth=0, ch
     if anon_funcs and check_extmod:
         raise ExtmodError()
     if anon_funcs:
+        if [t for t in types if not isinstance(t[0], Function)]:
+            if isinstance(node, Variable):
+                dynamic_variable_error(node, types, conv2)
+            else:
+                error("function mixed with non-function", node, warning=True)
         f = anon_funcs.pop()
         if f.mv != getmv():
             return f.mv.module.full_path() + '::' + 'lambda%d' % f.lambdanr
@@ -86,12 +103,7 @@ def typestrnew(types, cplusplus=True, node=None, check_extmod=False, depth=0, ch
             else:
                 return '***ERROR*** '
         elif isinstance(node, Variable):
-            if not node.name.startswith('__'):  # XXX startswith
-                if node.parent:
-                    varname = "%s" % node
-                else:
-                    varname = "'%s'" % node
-                error("Variable %s has dynamic (sub)type: {%s}" % (varname, ', '.join(sorted(conv2.get(cl.ident, cl.ident) for cl in lcp))), node, warning=True)
+            dynamic_variable_error(node, types, conv2)
         elif node not in getgx().bool_test_only:
             if tuple_check:
                 error("tuple with length > 2 and different types of elements", node, warning=True, mv=getmv())

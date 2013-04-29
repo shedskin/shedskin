@@ -23,6 +23,6 @@ print s
 #*WARNING* 3.py:3: Function hap not called!
 #*WARNING* 3.py:9: 'list' instance containing function reference
 #*WARNING* 3.py:10: variable 'hop2' has no type
-#*WARNING* 3.py: Variable 's' has dynamic (sub)type: {A, B}
-#*WARNING* 3.py:20: expression has dynamic (sub)type: {A, B}
+#*WARNING* 3.py: Variable 's' has dynamic (sub)type
+#*WARNING* 3.py:20: expression has dynamic (sub)type
 
