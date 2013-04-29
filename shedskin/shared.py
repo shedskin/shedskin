@@ -607,7 +607,7 @@ def error(msg, node=None, warning=False, mv=None):
         mv = inode(node).mv
     filename = lineno = None
     if mv:
-        filename = mv.module.filename
+        filename = mv.module.relative_filename
         if node and hasattr(node, 'lineno'):
             lineno = node.lineno
     result = (kind, filename, lineno, msg)
