@@ -76,7 +76,7 @@ def typestrnew(types, cplusplus=True, node=None, check_extmod=False, depth=0, ch
     if anon_funcs and check_extmod:
         raise ExtmodError()
     if anon_funcs:
-        if [t for t in types if not isinstance(t[0], Function)]:
+        if [t for t in types if not isinstance(t[0], Function) and t[0] is not def_class('none')]:
             if isinstance(node, Variable):
                 dynamic_variable_error(node, types, conv2)
             else:
