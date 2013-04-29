@@ -1853,7 +1853,10 @@ class GenerateVisitor(ASTVisitor):
         if parent_constr and target.inherited_from:  # XXX
             target = target.inherited_from
 
-        pairs, rest = connect_actual_formal(node, target, parent_constr, merge=self.mergeinh)
+        pairs, rest, err = connect_actual_formal(node, target, parent_constr, merge=self.mergeinh)
+        if err:
+            error('call with incorrect number of arguments', node, warning=True, mv=getmv())
+
         if isinstance(func, Function) and func.lambdawrapper:
             rest = func.largs
 
