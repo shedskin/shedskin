@@ -891,12 +891,12 @@ def connect_actual_formal(expr, func, parent_constr=False, merge=None):
        (func.mv.module.ident == 'builtin' and func.ident not in ('sort', 'sorted', 'min', 'max', '__print')):
         skip_defaults = True
 
-    actuals, formals, _, extra, _ = analyze_args(expr, func, skip_defaults=skip_defaults, merge=merge)
+    actuals, formals, _, extra, error = analyze_args(expr, func, skip_defaults=skip_defaults, merge=merge)
 
     for (actual, formal) in zip(actuals, formals):
         if not (isinstance(func.parent, class_) and formal == 'self'):
             pairs.append((actual, func.vars[formal]))
-    return pairs, len(extra)
+    return pairs, len(extra), error
 
 
 def parent_func(thing):
