@@ -64,8 +64,8 @@ flutattr = flut.attr
 flut2 = woef()
 flut2attr = flut2.attr
 
-#*WARNING* 7.py: variable 'l' has dynamic (sub)type
-#*WARNING* 7.py: variable 'r' has dynamic (sub)type
+#*WARNING* 7.py: Variable 'l' has dynamic (sub)type
+#*WARNING* 7.py: Variable 'r' has dynamic (sub)type
 #*WARNING* 7.py:5: variable 'snuif' has no type
 #*WARNING* 7.py:6: unresolved call to 'friet'
 #*WARNING* 7.py:12: unresolved call (possibly caused by method passing, which is currently not allowed)
