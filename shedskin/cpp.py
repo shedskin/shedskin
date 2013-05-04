@@ -1850,7 +1850,7 @@ class GenerateVisitor(ASTVisitor):
                 self.append(')')
                 return
 
-        if parent_constr and target.inherited_from:  # XXX
+        if target.inherited_from:
             target = target.inherited_from
 
         pairs, rest, err = connect_actual_formal(node, target, parent_constr, merge=self.mergeinh)
