@@ -1854,7 +1854,7 @@ class GenerateVisitor(ASTVisitor):
             target = target.inherited_from
 
         pairs, rest, err = connect_actual_formal(node, target, parent_constr, merge=self.mergeinh)
-        if err:
+        if err and not target.mv.module.builtin: # XXX
             error('call with incorrect number of arguments', node, warning=True, mv=getmv())
 
         if isinstance(func, Function) and func.lambdawrapper:
