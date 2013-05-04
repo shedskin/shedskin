@@ -94,3 +94,14 @@ bla = IECMember()
 bla = ComputerDevice()
 
 wop(bla, bla)
+
+# default args and inheritance
+class Alpha:
+    def func(self, value=True):
+        print("value is:" + str(value))
+
+class Beta(Alpha):
+    pass
+
+beta = Beta()
+beta.func();
