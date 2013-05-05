@@ -421,7 +421,7 @@ template<class T> void *list<T>::remove(T e) {
 }
 
 template<class T> inline bool list<T>::for_in_has_next(size_t i) {
-    return i != units.size(); /* XXX opt end cond */
+    return i < units.size(); /* XXX opt end cond */
 }
 
 template<class T> inline T list<T>::for_in_next(size_t &i) {
