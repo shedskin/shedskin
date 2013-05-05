@@ -170,7 +170,7 @@ template<class T> tuple2<T,T> *tuple2<T,T>::__deepcopy__(dict<void *, pyobj *> *
 }
 
 template<class T> inline bool tuple2<T,T>::for_in_has_next(size_t i) {
-    return i != units.size(); /* XXX opt end cond */
+    return i < units.size(); /* XXX opt end cond */
 }
 
 template<class T> inline T tuple2<T,T>::for_in_next(size_t &i) {

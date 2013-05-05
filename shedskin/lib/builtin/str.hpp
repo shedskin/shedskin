@@ -17,7 +17,7 @@ inline __ss_int str::__len__() {
 }
 
 inline bool str::for_in_has_next(size_t i) {
-    return i != unit.size(); /* XXX opt end cond */
+    return i < unit.size(); /* XXX opt end cond */
 }
 
 inline str *str::for_in_next(size_t &i) {

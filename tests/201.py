@@ -105,3 +105,29 @@ class Beta(Alpha):
 
 beta = Beta()
 beta.func();
+
+# changing list while iterating over it..
+testdellastelem = []
+testdellastelem.append("test1")
+testdellastelem.append("test2")
+testdellastelem.append("test3")
+for v in testdellastelem:
+  if (v == "test3"):
+    testdellastelem.remove("test3")
+print testdellastelem
+testdellastelem = []
+testdellastelem.append("test1")
+testdellastelem.append("test2")
+testdellastelem.append("test3")
+for v in testdellastelem:
+  if (v == "test2"):
+    testdellastelem.remove("test3")
+print testdellastelem
+testdellastelem = []
+testdellastelem.append("test1")
+testdellastelem.append("test2")
+testdellastelem.append("test3")
+for v in testdellastelem:
+  if (v == "test2"):
+    testdellastelem.remove("test1")
+print testdellastelem
