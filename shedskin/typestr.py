@@ -5,9 +5,10 @@ Copyright 2005-2011 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 typestr.py: generate type declarations
 
 '''
-from shared import Variable, inode, polymorphic_cl, Function, lowest_common_parents, getmv, def_class, types_var_types, types_classes
+from shared import Variable, inode, polymorphic_cl, Function, lowest_common_parents, def_class, types_var_types, types_classes
 from error import error
 import config
+import graph
 
 
 def nodetypestr(node, parent=None, cplusplus=True, check_extmod=False, check_ret=False, var=None):  # XXX minimize
@@ -25,7 +26,7 @@ def typestr(types, parent=None, cplusplus=True, node=None, check_extmod=False, d
     try:
         ts = typestrnew(types, cplusplus, node, check_extmod, depth, check_ret, var, tuple_check)
     except RuntimeError:
-        if not getmv().module.builtin and isinstance(node, Variable) and not node.name.startswith('__'):  # XXX startswith
+        if not graph.getmv().module.builtin and isinstance(node, Variable) and not node.name.startswith('__'):  # XXX startswith
             if node.parent:
                 varname = repr(node)
             else:
@@ -82,7 +83,7 @@ def typestrnew(types, cplusplus=True, node=None, check_extmod=False, depth=0, ch
             else:
                 error("function mixed with non-function", node, warning=True)
         f = anon_funcs.pop()
-        if f.mv != getmv():
+        if f.mv != graph.getmv():
             return f.mv.module.full_path() + '::' + 'lambda%d' % f.lambdanr
         return 'lambda%d' % f.lambdanr
 
@@ -106,7 +107,7 @@ def typestrnew(types, cplusplus=True, node=None, check_extmod=False, depth=0, ch
             dynamic_variable_error(node, types, conv2)
         elif node not in config.getgx().bool_test_only:
             if tuple_check:
-                error("tuple with length > 2 and different types of elements", node, warning=True, mv=getmv())
+                error("tuple with length > 2 and different types of elements", node, warning=True, mv=graph.getmv())
             else:
                 error("expression has dynamic (sub)type: {%s}" % ', '.join(sorted(conv2.get(cl.ident, cl.ident) for cl in lcp)), node, warning=True)
     elif not classes:
@@ -133,13 +134,13 @@ def typestrnew(types, cplusplus=True, node=None, check_extmod=False, depth=0, ch
 
     # --- namespace prefix
     namespace = ''
-    if cl.module not in [getmv().module, config.getgx().modules['builtin']]:
+    if cl.module not in [graph.getmv().module, config.getgx().modules['builtin']]:
         if cplusplus:
             namespace = cl.module.full_path() + '::'
         else:
             namespace = '::'.join(cl.module.name_list) + '::'
         if cplusplus:
-            getmv().module.prop_includes.add(cl.module)
+            graph.getmv().module.prop_includes.add(cl.module)
 
     template_vars = cl.tvar_names()
     if template_vars:

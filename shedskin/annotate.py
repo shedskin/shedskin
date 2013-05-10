@@ -10,8 +10,9 @@ from compiler.ast import Const, AssTuple, AssList, Assign, AugAssign, \
     Getattr, Dict, Print, Return, Printnl, Name, List, Tuple, ListComp
 
 from cpp import nodetypestr
-from shared import setmv, inode, FakeGetattr, merged, getmv, FakeGetattr2, FakeGetattr3, assign_rec
+from shared import inode, merged, assign_rec
 import config
+import graph
 
 
 def annotate():
@@ -43,7 +44,7 @@ def annotate():
             continue
 
         mv = module.mv
-        setmv(mv)
+        graph.setmv(mv)
 
         # merge type information for nodes in module XXX inheritance across modules?
         merge = merged([n for n in config.getgx().types if n.mv == mv], inheritance=True)
@@ -62,8 +63,8 @@ def annotate():
                 paste(expr, nodetypestr(expr, inode(expr).parent, False))
 
         # --- instance variables
-        funcs = getmv().funcs.values()
-        for cl in getmv().classes.values():
+        funcs = graph.getmv().funcs.values()
+        for cl in graph.getmv().classes.values():
             labels = [var.name + ': ' + nodetypestr(var, cl, False) for var in cl.vars.values() if var in merge and merge[var] and not var.name.startswith('__')]
             if labels:
                 paste(cl.node, ', '.join(labels))
@@ -78,9 +79,9 @@ def annotate():
             paste(func.node, ', '.join(labels))
 
         # --- callfuncs
-        for callfunc, _ in getmv().callfuncs:
+        for callfunc, _ in graph.getmv().callfuncs:
             if isinstance(callfunc.node, Getattr):
-                if not isinstance(callfunc.node, (FakeGetattr, FakeGetattr2, FakeGetattr3)):
+                if not isinstance(callfunc.node, (graph.FakeGetattr, graph.FakeGetattr2, graph.FakeGetattr3)):
                     paste(callfunc.node.expr, nodetypestr(callfunc, inode(callfunc).parent, False))
             else:
                 paste(callfunc.node, nodetypestr(callfunc, inode(callfunc).parent, False))

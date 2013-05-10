@@ -7,8 +7,9 @@ extmod.py: extension module support
 '''
 import cpp
 import typestr
-from shared import singletype2, getmv, Module, def_class, class_
+from shared import singletype2, Module, def_class, class_
 import config
+import graph
 
 
 OVERLOAD_SINGLE = ['__neg__', '__pos__', '__abs__', '__nonzero__']
@@ -83,7 +84,7 @@ def do_init_mods(gv, what):
 
 def do_add_globals(gv, classes, __ss_mod):
     # global variables
-    for var in supported_vars(getmv().globals.values()):
+    for var in supported_vars(graph.getmv().globals.values()):
         if [1 for t in gv.mergeinh[var] if t[0].ident in ['int_', 'float_', 'bool_']]:
             print >>gv.out, '    PyModule_AddObject(%(ssmod)s, (char *)"%(name)s", __to_py(%(var)s));' % {'name': var.name, 'var': '__' + gv.module.ident + '__::' + var.cpp_name(), 'ssmod': __ss_mod}
         else:

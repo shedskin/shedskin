@@ -10,18 +10,10 @@ import sys
 from compiler.ast import Const, AssTuple, AssList, UnaryAdd, Not, Keyword, \
     Compare, CallFunc, Getattr, Name, List, Tuple, UnarySub
 import config
+import graph
 
 
 # --- global variable mv
-
-def getmv():
-    return _mv
-
-
-def setmv(mv):
-    global _mv
-    _mv = mv
-    return _mv
 
 # --- python variable, function, class, module..
 
@@ -82,7 +74,7 @@ class Function:
         self.constraints = set()
         self.vars = {}
         self.globals = []
-        self.mv = getmv()
+        self.mv = graph.getmv()
         self.lnodes = []
         self.nodes = set()
         self.nodes_ordered = []
@@ -128,7 +120,7 @@ class class_:
         self.bases = []
         self.children = []
         self.dcpa = 1
-        self.mv = getmv()
+        self.mv = graph.getmv()
         self.vars = {}
         self.funcs = {}
         self.virtuals = {}              # 'virtually' called methods
@@ -201,7 +193,7 @@ class StaticClass:  # XXX merge with regular class
         self.ident = cl.ident
         self.bases = []
         self.parent = None
-        self.mv = getmv()
+        self.mv = graph.getmv()
         self.module = cl.module
 
     def __repr__(self):
@@ -261,7 +253,7 @@ class CNode:
             parent = None
         self.parent = parent
         self.defnodes = False  # if callnode, notification nodes were made for default arguments
-        self.mv = getmv()
+        self.mv = graph.getmv()
         self.constructor = False  # allocation site
         self.copymetoo = False
         self.fakert = False
@@ -379,7 +371,7 @@ def default_var(name, parent, worklist=None):
 
 def def_var(name, parent, local, worklist=None, mv=None):
     if not mv:
-        mv = getmv()
+        mv = graph.getmv()
     if isinstance(parent, class_) and name in parent.parent.vars:  # XXX
         return parent.parent.vars[name]
     if parent and name in parent.vars:
@@ -422,22 +414,10 @@ def def_var(name, parent, local, worklist=None, mv=None):
 
 
 def def_class(name):
-    if name in getmv().classes:
-        return getmv().classes[name]
+    if name in graph.getmv().classes:
+        return graph.getmv().classes[name]
     else:
-        return getmv().ext_classes[name]
-
-
-class FakeGetattr(Getattr):
-    pass  # XXX ugly
-
-
-class FakeGetattr2(Getattr):
-    pass
-
-
-class FakeGetattr3(Getattr):
-    pass
+        return graph.getmv().ext_classes[name]
 
 
 def lookup_module(node, mv):
@@ -911,7 +891,7 @@ def singletype2(types, type):
 
 def namespaceclass(cl, add_cl=''):
     module = cl.mv.module
-    if module.ident != 'builtin' and module != getmv().module and module.name_list:
+    if module.ident != 'builtin' and module != graph.getmv().module and module.name_list:
         return module.full_path() + '::' + add_cl + cl.cpp_name()
     else:
         return add_cl + cl.cpp_name()
