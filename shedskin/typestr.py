@@ -5,7 +5,8 @@ Copyright 2005-2011 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 typestr.py: generate type declarations
 
 '''
-from shared import Variable, inode, polymorphic_cl, Function, lowest_common_parents, getmv, error, def_class, types_var_types, types_classes
+from shared import Variable, inode, polymorphic_cl, Function, lowest_common_parents, getmv, def_class, types_var_types, types_classes
+from error import error
 import config
 
 

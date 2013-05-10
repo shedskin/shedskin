@@ -8,8 +8,9 @@ struct_.py: hacks to support struct module
 from compiler.ast import Const, AssAttr, AssName, CallFunc, Getattr, \
     Subscript, Name, Tuple
 
-from shared import getmv, error, lookup_var
+from shared import getmv, lookup_var
 import config
+from error import error
 
 
 # --- struct.unpack "type inference"

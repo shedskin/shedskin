@@ -40,8 +40,9 @@ import graph
 import virtual
 import copy_
 import typestr
-from shared import analyze_callfunc, parent_func, Variable, setmv, inode, merged, Function, add_to_worklist, error, default_var, analyze_args, add_constraint, def_class, CNode, nrargs, sys, class_, lookup_var
+from shared import analyze_callfunc, parent_func, Variable, setmv, inode, merged, Function, add_to_worklist, default_var, analyze_args, add_constraint, def_class, CNode, nrargs, sys, class_, lookup_var
 import config
+from error import error
 
 
 INCREMENTAL = True

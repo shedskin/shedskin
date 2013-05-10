@@ -15,6 +15,7 @@ import cpp
 import annotate
 import shared
 import config
+import error
 
 
 def usage():
@@ -122,7 +123,7 @@ def start():
     infer.analyze(main_module_name)
     annotate.annotate()
     cpp.generate_code()
-    shared.print_errors()
+    error.print_errors()
     if not config.getgx().silent:
         print '[elapsed time: %.2f seconds]' % (time.time() - t0)
 

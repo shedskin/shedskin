@@ -21,10 +21,11 @@ from compiler.visitor import ASTVisitor
 import extmod
 from copy_ import copy_methods
 from makefile import generate_makefile
-from shared import analyze_callfunc, setmv, inode, is_zip2, lookup_module, Function, StaticClass, hmcpa, lowest_common_parents, getmv, singletype, nokeywords, lookup_class, callfunc_targets, namespaceclass, error, aug_msg, Module, lookup_class_module, is_literal, connect_actual_formal, lookup_variable, is_enum, def_class, is_fastfor, assign_rec, class_, unboxable, polymorphic_t, lookup_var
+from shared import analyze_callfunc, setmv, inode, is_zip2, lookup_module, Function, StaticClass, hmcpa, lowest_common_parents, getmv, singletype, nokeywords, lookup_class, callfunc_targets, namespaceclass, aug_msg, Module, lookup_class_module, is_literal, connect_actual_formal, lookup_variable, is_enum, def_class, is_fastfor, assign_rec, class_, unboxable, polymorphic_t, lookup_var
 from struct_ import struct_unpack_cpp
 from typestr import incompatible_assignment_rec, nodetypestr
 from virtual import virtuals, typestr
+from error import error
 import config
 
 
@@ -1850,7 +1851,7 @@ class GenerateVisitor(ASTVisitor):
             target = target.inherited_from
 
         pairs, rest, err = connect_actual_formal(node, target, parent_constr, merge=self.mergeinh)
-        if err and not target.mv.module.builtin: # XXX
+        if err and not target.mv.module.builtin:  # XXX
             error('call with incorrect number of arguments', node, warning=True, mv=getmv())
 
         if isinstance(func, Function) and func.lambdawrapper:
@@ -2529,7 +2530,7 @@ class GenerateVisitor(ASTVisitor):
             elif singletype(node, Module):
                 self.append('__' + singletype(node, Module).ident + '__')
             else:
-                if ((def_class('class_'), 0) in self.mergeinh[node] or \
+                if ((def_class('class_'), 0) in self.mergeinh[node] or
                    (add_cl and [t for t in self.mergeinh[node] if isinstance(t[0], StaticClass)])):
                     cl = lookup_class(node, getmv())
                     if cl:
