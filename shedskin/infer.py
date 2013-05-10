@@ -40,7 +40,7 @@ import graph
 import virtual
 import copy_
 import typestr
-from shared import analyze_callfunc, parent_func, Variable, setmv, inode, merged, Function, add_to_worklist, default_var, analyze_args, add_constraint, def_class, CNode, nrargs, sys, class_, lookup_var
+from shared import analyze_callfunc, parent_func, Variable, inode, merged, Function, add_to_worklist, default_var, analyze_args, add_constraint, def_class, CNode, nrargs, sys, class_, lookup_var
 import config
 from error import error
 
@@ -1014,12 +1014,12 @@ def merge_simple_types(types):
 
 def analyze(module_name):
     mv = None
-    setmv(mv)
+    graph.setmv(mv)
 
     # --- build dataflow graph from source code
     config.getgx().main_module = graph.parse_module(module_name)
     mv = config.getgx().main_module.mv
-    setmv(mv)
+    graph.setmv(mv)
 
     # --- seed class_.__name__ attributes..
     for cl in config.getgx().allclasses:
@@ -1054,7 +1054,7 @@ def analyze(module_name):
                 error("instance variable '%s' of class '%s' shadows class variable" % (name, cl.ident))
 
     mv = config.getgx().main_module.mv
-    setmv(mv)
+    graph.setmv(mv)
 
     config.getgx().merged_inh = merged(config.getgx().types, inheritance=True)
     virtual.analyze_virtuals()

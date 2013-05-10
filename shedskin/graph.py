@@ -28,10 +28,36 @@ from compiler.ast import Const, AssTuple, AssList, From, Add, ListCompFor, \
     Discard, Sliceobj, Tuple, Pass, UnarySub, Bitor, ListComp
 from compiler.visitor import ASTVisitor
 
-from shared import setmv, inode, is_zip2, FakeGetattr, in_out, Function, StaticClass, getmv, register_temp_var, lookup_class, aug_msg, lookup_func, default_var, FakeGetattr2, FakeGetattr3, Module, is_literal, is_enum, is_method, def_class, CNode, is_fastfor, assign_rec, class_, is_property_setter, lookup_var
+from shared import inode, is_zip2, in_out, Function, StaticClass, register_temp_var, lookup_class, aug_msg, lookup_func, default_var, Module, is_literal, is_enum, is_method, def_class, CNode, is_fastfor, assign_rec, class_, is_property_setter, lookup_var
 from struct_ import struct_faketuple, struct_info, struct_unpack
 from error import error
 import config
+
+
+# --- global variable mv
+_mv = None
+
+
+def setmv(mv):
+    global _mv
+    _mv = mv
+    return _mv
+
+
+def getmv():
+    return _mv
+
+
+class FakeGetattr3(Getattr):
+    pass
+
+
+class FakeGetattr2(Getattr):
+    pass
+
+
+class FakeGetattr(Getattr):
+    pass  # XXX ugly
 
 
 # --- module visitor; analyze program, build constraint graph
