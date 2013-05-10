@@ -28,8 +28,9 @@ from compiler.ast import Const, AssTuple, AssList, From, Add, ListCompFor, \
     Discard, Sliceobj, Tuple, Pass, UnarySub, Bitor, ListComp
 from compiler.visitor import ASTVisitor
 
-from shared import setmv, inode, is_zip2, FakeGetattr, in_out, Function, StaticClass, getmv, register_temp_var, lookup_class, error, aug_msg, lookup_func, default_var, FakeGetattr2, FakeGetattr3, Module, is_literal, is_enum, is_method, def_class, CNode, is_fastfor, assign_rec, class_, is_property_setter, lookup_var
+from shared import setmv, inode, is_zip2, FakeGetattr, in_out, Function, StaticClass, getmv, register_temp_var, lookup_class, aug_msg, lookup_func, default_var, FakeGetattr2, FakeGetattr3, Module, is_literal, is_enum, is_method, def_class, CNode, is_fastfor, assign_rec, class_, is_property_setter, lookup_var
 from struct_ import struct_faketuple, struct_info, struct_unpack
+from error import error
 import config
 
 
