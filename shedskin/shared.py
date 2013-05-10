@@ -428,10 +428,6 @@ def is_method(parent):
     return isinstance(parent, Function) and isinstance(parent.parent, class_)
 
 
-def is_listcomp(parent):
-    return isinstance(parent, Function) and parent.listcomp
-
-
 def fastfor(node):
     return isinstance(node.list, CallFunc) and isinstance(node.list.node, Name) and node.list.node.name in ['range', 'xrange']
 
