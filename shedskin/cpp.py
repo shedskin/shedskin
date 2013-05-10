@@ -21,15 +21,11 @@ from compiler.visitor import ASTVisitor
 import extmod
 from copy_ import copy_methods
 from makefile import generate_makefile
-from shared import analyze_callfunc, setmv, inode, is_zip2, lookup_module, \
-    Function, StaticClass, hmcpa, lowest_common_parents, getmv, \
-    singletype, nokeywords, lookup_class, callfunc_targets, namespaceclass, \
-    error, aug_msg, Module, lookup_class_module, is_literal, \
-    connect_actual_formal, lookup_variable, is_enum, def_class, getgx, \
-    is_fastfor, assign_rec, class_, unboxable, polymorphic_t, lookup_var
+from shared import analyze_callfunc, setmv, inode, is_zip2, lookup_module, Function, StaticClass, hmcpa, lowest_common_parents, getmv, singletype, nokeywords, lookup_class, callfunc_targets, namespaceclass, error, aug_msg, Module, lookup_class_module, is_literal, connect_actual_formal, lookup_variable, is_enum, def_class, is_fastfor, assign_rec, class_, unboxable, polymorphic_t, lookup_var
 from struct_ import struct_unpack_cpp
 from typestr import incompatible_assignment_rec, nodetypestr
 from virtual import virtuals, typestr
+import config
 
 
 # --- code generation visitor; use type information
@@ -39,7 +35,7 @@ class GenerateVisitor(ASTVisitor):
         self.out = file(self.output_base + '.cpp', 'w')
         self.indentation = ''
         self.consts = {}
-        self.mergeinh = getgx().merged_inh
+        self.mergeinh = config.getgx().merged_inh
         self.module = module
         self.name = module.ident
         self.filling_consts = False
@@ -295,7 +291,7 @@ class GenerateVisitor(ASTVisitor):
         self.defaults(declare=True)
 
         # function declarations
-        if self.module != getgx().main_module:
+        if self.module != config.getgx().main_module:
             print >>self.out, 'void __init();'
         for child in node.node.getChildNodes():
             if isinstance(child, FunctionNode):
@@ -304,7 +300,7 @@ class GenerateVisitor(ASTVisitor):
                     self.visitFunction(func.node, declare=True)
         print >>self.out
 
-        if getgx().extension_module:
+        if config.getgx().extension_module:
             print >>self.out, 'extern "C" {'
             extmod.pyinit_func(self)
             print >>self.out, '}'
@@ -314,7 +310,7 @@ class GenerateVisitor(ASTVisitor):
 
         self.rich_comparison()
 
-        if getgx().extension_module:
+        if config.getgx().extension_module:
             extmod.convert_methods2(self)
 
         print >>self.out, '#endif'
@@ -398,7 +394,7 @@ class GenerateVisitor(ASTVisitor):
 
         for child in node.node.getChildNodes():
             if isinstance(child, From) and child.modname != '__future__':
-                module = getgx().from_module[child]
+                module = config.getgx().from_module[child]
                 using = 'using ' + module.full_path() + '::'
                 for (name, pseudonym) in child.names:
                     pseudonym = pseudonym or name
@@ -447,7 +443,7 @@ class GenerateVisitor(ASTVisitor):
         # --- __init
         self.output('void __init() {')
         self.indent()
-        if self.module == getgx().main_module and not getgx().extension_module:
+        if self.module == config.getgx().main_module and not config.getgx().extension_module:
             self.output('__name__ = new str("__main__");\n')
         else:
             self.output('__name__ = new str("%s");\n' % self.module.ident)
@@ -469,7 +465,7 @@ class GenerateVisitor(ASTVisitor):
                 self.visit_discard(child)
 
             elif isinstance(child, From) and child.modname != '__future__':
-                module = getgx().from_module[child]
+                module = config.getgx().from_module[child]
                 for (name, pseudonym) in child.names:
                     pseudonym = pseudonym or name
                     if name == '*':
@@ -494,9 +490,9 @@ class GenerateVisitor(ASTVisitor):
         print >>self.out
 
         # --- c++ main/extension module setup
-        if getgx().extension_module:
+        if config.getgx().extension_module:
             extmod.do_extmod(self)
-        if self.module == getgx().main_module:
+        if self.module == config.getgx().main_module:
             self.do_main()
 
     def visit_discard(self, node, func=None):
@@ -516,7 +512,7 @@ class GenerateVisitor(ASTVisitor):
             self.module_cpp(node)
 
     def do_main(self):
-        modules = getgx().modules.values()
+        modules = config.getgx().modules.values()
         if any(module.builtin and module.ident == 'sys' for module in modules):
             print >>self.out, 'int main(int __ss_argc, char **__ss_argv) {'
         else:
@@ -527,10 +523,10 @@ class GenerateVisitor(ASTVisitor):
 
     def do_init_modules(self):
         print >>self.out, '    __shedskin__::__init();'
-        for module in sorted(getgx().modules.values(), key=lambda x: x.import_order):
-            if module != getgx().main_module and module.ident != 'builtin':
+        for module in sorted(config.getgx().modules.values(), key=lambda x: x.import_order):
+            if module != config.getgx().main_module and module.ident != 'builtin':
                 if module.ident == 'sys':
-                    if getgx().extension_module:
+                    if config.getgx().extension_module:
                         print >>self.out, '    __sys__::__init(0, 0);'
                     else:
                         print >>self.out, '    __sys__::__init(__ss_argc, __ss_argv);'
@@ -550,8 +546,8 @@ class GenerateVisitor(ASTVisitor):
         self.output('*/')
 
     def do_comments(self, child):
-        if child in getgx().comments:
-            for n in getgx().comments[child]:
+        if child in config.getgx().comments:
+            for n in config.getgx().comments[child]:
                 self.do_comment(n)
 
     def visitContinue(self, node, func=None):
@@ -581,9 +577,9 @@ class GenerateVisitor(ASTVisitor):
         self.append(') {')
         print >>self.out, self.line
         self.indent()
-        getgx().loopstack.append(node)
+        config.getgx().loopstack.append(node)
         self.visit(node.body, func)
-        getgx().loopstack.pop()
+        config.getgx().loopstack.pop()
         self.deindent()
         self.output('}')
 
@@ -655,7 +651,7 @@ class GenerateVisitor(ASTVisitor):
             if func.node and not (func.ident == '__init__' and func.inherited):
                 self.visitFunction(func.node, cl, True)
         copy_methods(self, cl, True)
-        if getgx().extension_module:
+        if config.getgx().extension_module:
             extmod.convert_methods(self, cl, True)
 
         self.deindent()
@@ -663,7 +659,7 @@ class GenerateVisitor(ASTVisitor):
 
     def class_cpp(self, node):
         cl = getmv().classes[node.name]
-        if node in getgx().comments:
+        if node in config.getgx().comments:
             self.do_comments(node)
         else:
             self.output('/**\nclass %s\n*/\n' % cl.ident)
@@ -679,7 +675,7 @@ class GenerateVisitor(ASTVisitor):
         # --- class variable declarations
         if cl.parent.vars:  # XXX merge with visitModule
             for var in cl.parent.vars.values():
-                if var in getgx().merged_inh and getgx().merged_inh[var]:
+                if var in config.getgx().merged_inh and config.getgx().merged_inh[var]:
                     self.start(nodetypestr(var, cl.parent) + cl.ident + '::' + var.cpp_name())
                     self.eol()
             print >>self.out
@@ -698,7 +694,7 @@ class GenerateVisitor(ASTVisitor):
         # --- class variables
         if cl.parent.vars:
             for var in cl.parent.vars.values():
-                if var in getgx().merged_inh and getgx().merged_inh[var]:
+                if var in config.getgx().merged_inh and config.getgx().merged_inh[var]:
                     self.output('static ' + nodetypestr(var, cl.parent) + var.cpp_name() + ';')
             print >>self.out
 
@@ -712,7 +708,7 @@ class GenerateVisitor(ASTVisitor):
                 vars.update(ancestor.vars)
             if var.name in vars:
                 continue
-            if var in getgx().merged_inh and getgx().merged_inh[var]:
+            if var in config.getgx().merged_inh and config.getgx().merged_inh[var]:
                 self.output(nodetypestr(var, cl) + var.cpp_name() + ';')
 
         if [v for v in cl.vars if not v.startswith('__')]:
@@ -727,7 +723,7 @@ class GenerateVisitor(ASTVisitor):
             return '0'
 
     def inhcpa(self, func):
-        return hmcpa(func) or (func in getgx().inheritance_relations and [1 for f in getgx().inheritance_relations[func] if hmcpa(f)])
+        return hmcpa(func) or (func in config.getgx().inheritance_relations and [1 for f in config.getgx().inheritance_relations[func] if hmcpa(f)])
 
     def visitSlice(self, node, func=None):
         if node.flags == 'OP_DELETE':
@@ -745,8 +741,8 @@ class GenerateVisitor(ASTVisitor):
         for t in types:
             if isinstance(t[0], class_):
                 var = t[0].vars.get(varname)
-                if var and (var, t[1], 0) in getgx().cnode:  # XXX yeah?
-                    subtypes.update(getgx().cnode[var, t[1], 0].types())
+                if var and (var, t[1], 0) in config.getgx().cnode:  # XXX yeah?
+                    subtypes.update(config.getgx().cnode[var, t[1], 0].types())
         return subtypes
 
     def bin_tuple(self, types):
@@ -755,17 +751,17 @@ class GenerateVisitor(ASTVisitor):
                 var1 = t[0].vars.get('first')
                 var2 = t[0].vars.get('second')
                 if var1 and var2:
-                    if (var1, t[1], 0) in getgx().cnode and (var2, t[1], 0) in getgx().cnode:
-                        if getgx().cnode[var1, t[1], 0].types() != getgx().cnode[var2, t[1], 0].types():
+                    if (var1, t[1], 0) in config.getgx().cnode and (var2, t[1], 0) in config.getgx().cnode:
+                        if config.getgx().cnode[var1, t[1], 0].types() != config.getgx().cnode[var2, t[1], 0].types():
                             return True
         return False
 
     def instance_new(self, node, argtypes):
         if argtypes is None:
-            argtypes = getgx().merged_inh[node]
+            argtypes = config.getgx().merged_inh[node]
         ts = typestr(argtypes)
         if ts.startswith('pyseq') or ts.startswith('pyiter'):  # XXX
-            argtypes = getgx().merged_inh[node]
+            argtypes = config.getgx().merged_inh[node]
         ts = typestr(argtypes)
         self.append('(new ' + ts[:-2] + '(')
         return argtypes
@@ -1065,9 +1061,9 @@ class GenerateVisitor(ASTVisitor):
             self.indent()
             if isinstance(node.assign, (AssTuple, AssList)):
                 self.tuple_assign(node.assign, getmv().tempcount[node.assign], func)
-        getgx().loopstack.append(node)
+        config.getgx().loopstack.append(node)
         self.visit(node.body, func)
-        getgx().loopstack.pop()
+        config.getgx().loopstack.pop()
         self.deindent()
         self.output('END_FOR')
         if node.else_:
@@ -1162,9 +1158,9 @@ class GenerateVisitor(ASTVisitor):
             self.deindent()
 
     def cpp_name(self, name):  # XXX breakup and remove
-        if ((self.module == getgx().main_module and name == 'init' + self.module.ident) or
-            name in (cl.ident for cl in getgx().allclasses) or
-                name + '_' in (cl.ident for cl in getgx().allclasses)):
+        if ((self.module == config.getgx().main_module and name == 'init' + self.module.ident) or
+            name in (cl.ident for cl in config.getgx().allclasses) or
+                name + '_' in (cl.ident for cl in config.getgx().allclasses)):
             return '_' + name
         return nokeywords(name)
 
@@ -1359,8 +1355,8 @@ class GenerateVisitor(ASTVisitor):
                 self.append('))')
 
     def visitBreak(self, node, func=None):
-        if getgx().loopstack[-1].else_ in getmv().tempcount:
-            self.output('%s = 1;' % getmv().tempcount[getgx().loopstack[-1].else_])
+        if config.getgx().loopstack[-1].else_ in getmv().tempcount:
+            self.output('%s = 1;' % getmv().tempcount[config.getgx().loopstack[-1].else_])
         self.output('break;')
 
     def visitStmt(self, node, func=None):
@@ -1377,7 +1373,7 @@ class GenerateVisitor(ASTVisitor):
         self.visit_and_or(node, node.nodes,  '__AND', 'and', func)
 
     def visit_and_or(self, node, nodes, op, mix, func=None):
-        if node in getgx().bool_test_only:
+        if node in config.getgx().bool_test_only:
             self.append('(')
             for n in nodes:
                 self.bool_test(n, func)
@@ -1690,8 +1686,8 @@ class GenerateVisitor(ASTVisitor):
                 self.append('0, ')
 
     def visitCallFunc(self, node, func=None, argtypes=None):
-        objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func = analyze_callfunc(node, merge=getgx().merged_inh)
-        funcs = callfunc_targets(node, getgx().merged_inh)
+        objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func = analyze_callfunc(node, merge=config.getgx().merged_inh)
+        funcs = callfunc_targets(node, config.getgx().merged_inh)
 
         if self.library_func(funcs, 're', None, 'findall') or \
                 self.library_func(funcs, 're', 're_object', 'findall'):
@@ -1709,7 +1705,7 @@ class GenerateVisitor(ASTVisitor):
             if not node.args or not isinstance(node.args[0], Const) or node.args[0].value not in 'cbBhHiIlLfd':
                 error("non-constant or unsupported type code", node, warning=True, mv=getmv())
         if self.library_func(funcs, 'builtin', None, 'id'):
-            if struct.calcsize("P") == 8 and struct.calcsize('i') == 4 and not getgx().longlong:
+            if struct.calcsize("P") == 8 and struct.calcsize('i') == 4 and not config.getgx().longlong:
                 error("return value of 'id' does not fit in 32-bit integer (try shedskin -l)", node, warning=True, mv=getmv())
 
         nrargs = len(node.args)
@@ -1729,7 +1725,7 @@ class GenerateVisitor(ASTVisitor):
                 if argtypes is not None:  # XXX merge instance_new
                     ts = typestr(argtypes)
                     if ts.startswith('pyseq') or ts.startswith('pyiter'):  # XXX
-                        argtypes = getgx().merged_inh[node]
+                        argtypes = config.getgx().merged_inh[node]
                         ts = typestr(argtypes)
                 self.append('(new ' + ts[:-2] + '(')
             if funcs and len(funcs[0].formals) == 1 and not funcs[0].mv.module.builtin:
@@ -1816,7 +1812,7 @@ class GenerateVisitor(ASTVisitor):
 
     def bool_test(self, node, func, always_wrap=False):
         wrapper = always_wrap or not self.only_classes(node, ('int_', 'bool_'))
-        if node in getgx().bool_test_only:
+        if node in config.getgx().bool_test_only:
             self.visit(node, func)
         elif wrapper:
             self.append('___bool(')
@@ -1828,7 +1824,7 @@ class GenerateVisitor(ASTVisitor):
             self.visit(node, func)
 
     def visit_callfunc_args(self, funcs, node, func):
-        objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func = analyze_callfunc(node, merge=getgx().merged_inh)
+        objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func = analyze_callfunc(node, merge=config.getgx().merged_inh)
         target = funcs[0]  # XXX
 
         print_function = self.library_func(funcs, 'builtin', None, '__print')
@@ -1999,7 +1995,7 @@ class GenerateVisitor(ASTVisitor):
         return False
 
     def get_selector(self, temp, item, i):
-        rvalue_node = getgx().item_rvalue[item]
+        rvalue_node = config.getgx().item_rvalue[item]
         sel = '__getitem__(%d)' % i
         if i < 2 and self.only_classes(rvalue_node, ('tuple2',)):
             sel = ['__getfirst__()', '__getsecond__()'][i]
@@ -2023,7 +2019,7 @@ class GenerateVisitor(ASTVisitor):
             if isinstance(node.expr, Tuple):
                 if [n for n in node.nodes if isinstance(n, AssTuple)]:  # XXX a,b=d[i,j]=..?
                     for child in node.expr.nodes:
-                        if not (child, 0, 0) in getgx().cnode:  # (a,b) = (1,2): (1,2) never visited
+                        if not (child, 0, 0) in config.getgx().cnode:  # (a,b) = (1,2): (1,2) never visited
                             continue
                         if not isinstance(child, Const) and not (isinstance(child, Name) and child.name == 'None'):
                             self.start(getmv().tempcount[child] + ' = ')
@@ -2136,7 +2132,7 @@ class GenerateVisitor(ASTVisitor):
                 if not self.inhcpa(parent) or parent.inherited:
                     continue
 
-            genexpr = listcomp in getgx().genexp_to_lc.values()
+            genexpr = listcomp in config.getgx().genexp_to_lc.values()
             if declare:
                 self.listcomp_head(listcomp, True, genexpr)
             elif genexpr:
@@ -2303,7 +2299,7 @@ class GenerateVisitor(ASTVisitor):
         self.output('END_FOR\n')
 
     def visitGenExpr(self, node, func=None):
-        self.visit(getgx().genexp_to_lc[node], func)
+        self.visit(config.getgx().genexp_to_lc[node], func)
 
     def visitListComp(self, node, func=None):
         lcfunc, _ = self.listcomps[node]
@@ -2319,7 +2315,7 @@ class GenerateVisitor(ASTVisitor):
                     args.append(var.cpp_name())
 
         self.line = temp
-        if node in getgx().genexp_to_lc.values():
+        if node in config.getgx().genexp_to_lc.values():
             self.append('new ')
         self.append(lcfunc.ident + '(' + ', '.join(args) + ')')
 
@@ -2336,16 +2332,16 @@ class GenerateVisitor(ASTVisitor):
 
     def visitMod(self, node, func=None):
         # --- non-str % ..
-        if [t for t in getgx().merged_inh[node.left] if t[0].ident != 'str_']:
+        if [t for t in config.getgx().merged_inh[node.left] if t[0].ident != 'str_']:
             self.visitBinary(node.left, node.right, '__mod__', '%', func)
             return
 
         # --- str % non-constant dict/tuple
-        if not isinstance(node.right, (Tuple, Dict)) and node.right in getgx().merged_inh:  # XXX
-            if [t for t in getgx().merged_inh[node.right] if t[0].ident == 'dict']:
+        if not isinstance(node.right, (Tuple, Dict)) and node.right in config.getgx().merged_inh:  # XXX
+            if [t for t in config.getgx().merged_inh[node.right] if t[0].ident == 'dict']:
                 self.visitm('__moddict(', node.left, ', ', node.right, ')', func)
                 return
-            elif [t for t in getgx().merged_inh[node.right] if t[0].ident in ['tuple', 'tuple2']]:
+            elif [t for t in config.getgx().merged_inh[node.right] if t[0].ident in ['tuple', 'tuple2']]:
                 self.visitm('__modtuple(', node.left, ', ', node.right, ')', func)
                 return
 
@@ -2527,7 +2523,7 @@ class GenerateVisitor(ASTVisitor):
             self.append(map[node.name])
 
         else:  # XXX clean up
-            if not self.mergeinh[node] and not inode(node).parent in getgx().inheritance_relations:
+            if not self.mergeinh[node] and not inode(node).parent in config.getgx().inheritance_relations:
                 error("variable '" + node.name + "' has no type", node, warning=True, mv=getmv())
                 self.append(node.name)
             elif singletype(node, Module):
@@ -2567,7 +2563,7 @@ class GenerateVisitor(ASTVisitor):
         t = list(inode(node).types())[0]
         if t[0].ident == 'int_':
             self.append(str(node.value))
-            if getgx().longlong:
+            if config.getgx().longlong:
                 self.append('LL')
         elif t[0].ident == 'float_':
             if str(node.value) in ['inf', '1.#INF', 'Infinity']:
@@ -2595,7 +2591,7 @@ class Bitpair:
 
 
 def generate_code():
-    for module in getgx().modules.values():
+    for module in config.getgx().modules.values():
         if not module.builtin:
             gv = GenerateVisitor(module)
             mv = module.mv

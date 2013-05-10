@@ -5,9 +5,8 @@ Copyright 2005-2011 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 typestr.py: generate type declarations
 
 '''
-from shared import Variable, inode, polymorphic_cl, Function, \
-    lowest_common_parents, getmv, error, def_class, getgx, \
-    types_var_types, types_classes
+from shared import Variable, inode, polymorphic_cl, Function, lowest_common_parents, getmv, error, def_class, types_var_types, types_classes
+import config
 
 
 def nodetypestr(node, parent=None, cplusplus=True, check_extmod=False, check_ret=False, var=None):  # XXX minimize
@@ -17,7 +16,7 @@ def nodetypestr(node, parent=None, cplusplus=True, check_extmod=False, check_ret
         ts = nodetypestr(node.wopper, None, cplusplus)
         if ts.startswith('dict<'):
             return 'dictentry' + ts[4:]
-    types = getgx().merged_inh[node]
+    types = config.getgx().merged_inh[node]
     return typestr(types, None, cplusplus, node, check_extmod, 0, check_ret, var)
 
 
@@ -104,7 +103,7 @@ def typestrnew(types, cplusplus=True, node=None, check_extmod=False, depth=0, ch
                 return '***ERROR*** '
         elif isinstance(node, Variable):
             dynamic_variable_error(node, types, conv2)
-        elif node not in getgx().bool_test_only:
+        elif node not in config.getgx().bool_test_only:
             if tuple_check:
                 error("tuple with length > 2 and different types of elements", node, warning=True, mv=getmv())
             else:
@@ -133,7 +132,7 @@ def typestrnew(types, cplusplus=True, node=None, check_extmod=False, depth=0, ch
 
     # --- namespace prefix
     namespace = ''
-    if cl.module not in [getmv().module, getgx().modules['builtin']]:
+    if cl.module not in [getmv().module, config.getgx().modules['builtin']]:
         if cplusplus:
             namespace = cl.module.full_path() + '::'
         else:
@@ -156,8 +155,8 @@ def typestrnew(types, cplusplus=True, node=None, check_extmod=False, depth=0, ch
                 error("'%s' instance containing function reference" % ident, node, warning=True)  # XXX test
             subtypes.append(ts)
     else:
-        if cl.ident in getgx().cpp_keywords:
-            return namespace + getgx().ss_prefix + map(cl.ident)
+        if cl.ident in config.getgx().cpp_keywords:
+            return namespace + config.getgx().ss_prefix + map(cl.ident)
         return namespace + map(cl.ident)
 
     ident = cl.ident
@@ -174,8 +173,8 @@ def typestrnew(types, cplusplus=True, node=None, check_extmod=False, depth=0, ch
     if ident in ['frozenset', 'pyset'] and cplusplus:
         ident = 'set'
 
-    if ident in getgx().cpp_keywords:
-        ident = getgx().ss_prefix + ident
+    if ident in config.getgx().cpp_keywords:
+        ident = config.getgx().ss_prefix + ident
 
     # --- final type representation
     return namespace + ident + sep[0] + ', '.join(subtypes) + sep[1] + ptr

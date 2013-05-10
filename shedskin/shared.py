@@ -9,88 +9,10 @@ import os
 import sys
 from compiler.ast import Const, AssTuple, AssList, UnaryAdd, Not, Keyword, \
     Compare, CallFunc, Getattr, Name, List, Tuple, UnarySub
+import config
 
 
-# --- global variables gx, mv
-
-class GlobalInfo:  # XXX add comments, split up
-    def __init__(self):
-        self.constraints = set()
-        self.allvars = set()
-        self.allfuncs = set()
-        self.allclasses = set()
-        self.cnode = {}
-        self.types = {}
-        self.templates = 0
-        self.modules = {}
-        self.inheritance_relations = {}
-        self.inheritance_temp_vars = {}
-        self.parent_nodes = {}
-        self.inherited = set()
-        self.nrcltypes = 8
-        self.empty_constructors = set()
-        self.sig_nr = {}
-        self.nameclasses = {}
-        self.module = None
-        self.builtins = ['none', 'str_', 'float_', 'int_', 'class_', 'list', 'tuple', 'tuple2', 'dict', 'set', 'frozenset', 'bool_']
-        self.assign_target = {}              # instance node for instance Variable assignment
-        self.alloc_info = {}                 # allocation site type information across iterations
-        self.iterations = 0
-        self.total_iterations = 0
-        self.lambdawrapper = {}
-        self.sysdir = '/'.join(__file__.split(os.sep)[:-1])
-        if os.path.isdir('/usr/share/shedskin/lib'):
-            self.libdirs = ['/usr/share/shedskin/lib']
-        else:
-            self.libdirs = [os.path.join(self.sysdir, 'lib')]
-        illegal_file = file(os.path.join(self.sysdir, 'illegal'))
-        self.cpp_keywords = set(line.strip() for line in illegal_file)
-        self.ss_prefix = '__ss_'
-        self.list_types = {}
-        self.loopstack = []  # track nested loops
-        self.comments = {}
-        self.import_order = 0  # module import order
-        self.from_module = {}
-        self.class_def_order = 0
-        # command-line options
-        self.wrap_around_check = True
-        self.bounds_checking = True
-        self.fast_random = False
-        self.assertions = True
-        self.extension_module = False
-        self.longlong = False
-        self.flags = None
-        self.annotation = False
-        self.msvc = False
-        self.gcwarns = True
-        self.pypy = False
-        self.silent = False
-        self.backtrace = False
-        self.makefile_name = 'Makefile'  # XXX other default?
-        self.item_rvalue = {}
-        self.genexp_to_lc = {}
-        self.bool_test_only = set()
-        self.tempcount = {}
-        self.fast_hash = False
-        self.struct_unpack = {}
-        self.debug_level = 0
-        self.maxhits = 0  # XXX amaze.py termination
-        self.gc_cleanup = False
-
-
-def newgx():
-    return GlobalInfo()
-
-
-def getgx():
-    return _gx
-
-
-def setgx(gx):
-    global _gx
-    _gx = gx
-    return _gx
-
+# --- global variable mv
 
 def getmv():
     return _mv
@@ -129,8 +51,8 @@ class Variable:
     def cpp_name(self):
         name = self.name
         if self.masks_global() or \
-                name in (cl.ident for cl in getgx().allclasses) or \
-                name + '_' in (cl.ident for cl in getgx().allclasses):  # XXX name in..
+                name in (cl.ident for cl in config.getgx().allclasses) or \
+                name + '_' in (cl.ident for cl in config.getgx().allclasses):  # XXX name in..
             name = '_' + name  # XXX use prefix
         return nokeywords(name)
 
@@ -177,7 +99,7 @@ class Function:
         self.inherited = None
 
         if node:
-            getgx().allfuncs.add(self)
+            config.getgx().allfuncs.add(self)
 
         self.retvars = []
         self.invisible = False
@@ -188,8 +110,8 @@ class Function:
         self.registered_temp_vars = []
 
     def cpp_name(self):  # XXX merge
-        if self.ident in (cl.ident for cl in getgx().allclasses) or \
-                self.ident + '_' in (cl.ident for cl in getgx().allclasses):
+        if self.ident in (cl.ident for cl in config.getgx().allclasses) or \
+                self.ident + '_' in (cl.ident for cl in config.getgx().allclasses):
             return '_' + self.ident  # XXX ss_prefix
         return nokeywords(self.ident)
 
@@ -213,12 +135,12 @@ class class_:
         self.virtualvars = {}           # 'virtual' variables
         self.properties = {}
         self.staticmethods = []
-        self.typenr = getgx().nrcltypes
-        getgx().nrcltypes += 1
+        self.typenr = config.getgx().nrcltypes
+        config.getgx().nrcltypes += 1
         self.splits = {}                # contour: old contour (used between iterations)
         self.has_copy = self.has_deepcopy = False
-        self.def_order = getgx().class_def_order
-        getgx().class_def_order += 1
+        self.def_order = config.getgx().class_def_order
+        config.getgx().class_def_order += 1
 
     def ancestors(self, inclusive=False):  # XXX attribute (faster)
         a = set(self.bases)
@@ -345,7 +267,7 @@ class CNode:
         self.fakert = False
         self.lambdawrapper = None
 
-        getgx().cnode[self.thing, self.dcpa, self.cpa] = self
+        config.getgx().cnode[self.thing, self.dcpa, self.cpa] = self
 
         # --- in, outgoing constraints
 
@@ -372,8 +294,8 @@ class CNode:
     def copy(self, dcpa, cpa, worklist=None):  # XXX to infer.py
         # if not self.mv.module.builtin: print 'copy', self
 
-        if (self.thing, dcpa, cpa) in getgx().cnode:
-            return getgx().cnode[self.thing, dcpa, cpa]
+        if (self.thing, dcpa, cpa) in config.getgx().cnode:
+            return config.getgx().cnode[self.thing, dcpa, cpa]
 
         newnode = CNode(self.thing, dcpa, cpa)
 
@@ -386,14 +308,14 @@ class CNode:
         add_to_worklist(worklist, newnode)
 
         if self.constructor or self.copymetoo or isinstance(self.thing, (Not, Compare)):  # XXX XXX
-            getgx().types[newnode] = getgx().types[self].copy()
+            config.getgx().types[newnode] = config.getgx().types[self].copy()
         else:
-            getgx().types[newnode] = set()
+            config.getgx().types[newnode] = set()
         return newnode
 
     def types(self):
-        if self in getgx().types:
-            return getgx().types[self]
+        if self in config.getgx().types:
+            return config.getgx().types[self]
         else:
             return set()  # XXX
 
@@ -413,7 +335,7 @@ def in_out(a, b):
 
 
 def add_constraint(a, b, worklist=None):
-    getgx().constraints.add((a, b))
+    config.getgx().constraints.add((a, b))
     in_out(a, b)
     add_to_worklist(worklist, a)
 
@@ -421,7 +343,7 @@ def add_constraint(a, b, worklist=None):
 
 
 def inode(node):
-    return getgx().cnode[node, 0, 0]
+    return config.getgx().cnode[node, 0, 0]
 
 
 def is_method(parent):
@@ -485,7 +407,7 @@ def def_var(name, parent, local, worklist=None, mv=None):
         return None
 
     var = Variable(name, parent)
-    getgx().allvars.add(var)
+    config.getgx().allvars.add(var)
 
     dest[name] = var
     newnode = CNode(var, parent=parent)
@@ -494,7 +416,7 @@ def def_var(name, parent, local, worklist=None, mv=None):
     else:
         newnode.mv = mv
     add_to_worklist(worklist, newnode)
-    getgx().types[newnode] = set()
+    config.getgx().types[newnode] = set()
 
     return var
 
@@ -599,7 +521,7 @@ def error(msg, node=None, warning=False, mv=None):
         kind = '*WARNING*'
     else:
         kind = '*ERROR*'
-    if not mv and node and (node, 0, 0) in getgx().cnode:
+    if not mv and node and (node, 0, 0) in config.getgx().cnode:
         mv = inode(node).mv
     filename = lineno = None
     if mv:
@@ -633,7 +555,7 @@ def print_errors():
 
 
 def merged(nodes, inheritance=False):
-    ggx = getgx()
+    ggx = config.getgx()
     merge = {}
     if inheritance:  # XXX do we really need this crap
         mergeinh = merged([n for n in nodes if n.thing in ggx.inherited])
@@ -840,7 +762,7 @@ def analyze_args(expr, func, node=None, skip_defaults=False, merge=None):
             missing = True
     extra = args[argnr:]
 
-    error = (missing or extra) and not func.node.varargs and not func.node.kwargs and not expr.star_args and func.lambdanr is None and expr not in getgx().lambdawrapper  # XXX
+    error = (missing or extra) and not func.node.varargs and not func.node.kwargs and not expr.star_args and func.lambdanr is None and expr not in config.getgx().lambdawrapper  # XXX
 
     if func.node.varargs:
         for arg in extra:
@@ -864,8 +786,8 @@ def get_types(expr, node, merge):
             types = merge[expr.node]
     elif node:
         node = (expr.node, node.dcpa, node.cpa)
-        if node in getgx().cnode:
-            types = getgx().cnode[node].types()
+        if node in config.getgx().cnode:
+            types = config.getgx().cnode[node].types()
     return types
 
 
@@ -985,8 +907,8 @@ def polymorphic_t(types):
 
 
 def nokeywords(name):
-    if name in getgx().cpp_keywords:
-        return getgx().ss_prefix + name
+    if name in config.getgx().cpp_keywords:
+        return config.getgx().ss_prefix + name
     return name
 
 
@@ -1040,6 +962,6 @@ def types_var_types(types, varname):
         if not varname in t[0].vars:
             continue
         var = t[0].vars[varname]
-        if (var, t[1], 0) in getgx().cnode:
-            subtypes.update(getgx().cnode[var, t[1], 0].types())
+        if (var, t[1], 0) in config.getgx().cnode:
+            subtypes.update(config.getgx().cnode[var, t[1], 0].types())
     return subtypes

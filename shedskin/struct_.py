@@ -8,7 +8,8 @@ struct_.py: hacks to support struct module
 from compiler.ast import Const, AssAttr, AssName, CallFunc, Getattr, \
     Subscript, Name, Tuple
 
-from shared import getmv, error, getgx, lookup_var
+from shared import getmv, error, lookup_var
+import config
 
 
 # --- struct.unpack "type inference"
@@ -71,7 +72,7 @@ def struct_faketuple(info):
 
 
 def struct_unpack_cpp(self, node, func):
-    struct_unpack = getgx().struct_unpack.get(node)
+    struct_unpack = config.getgx().struct_unpack.get(node)
     if struct_unpack:
         sinfo, tvar, tvar_pos = struct_unpack
         self.start()

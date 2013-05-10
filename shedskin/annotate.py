@@ -10,19 +10,19 @@ from compiler.ast import Const, AssTuple, AssList, Assign, AugAssign, \
     Getattr, Dict, Print, Return, Printnl, Name, List, Tuple, ListComp
 
 from cpp import nodetypestr
-from shared import setmv, inode, FakeGetattr, merged, getmv, FakeGetattr2, \
-    FakeGetattr3, getgx, assign_rec
+from shared import setmv, inode, FakeGetattr, merged, getmv, FakeGetattr2, FakeGetattr3, assign_rec
+import config
 
 
 def annotate():
-    if not getgx().annotation:
+    if not config.getgx().annotation:
         return
     re_comment = re.compile(r'#[^\"\']*$')
 
     def paste(expr, text):
         if not expr.lineno:
             return
-        if (expr, 0, 0) not in getgx().cnode or inode(expr).mv != mv:
+        if (expr, 0, 0) not in config.getgx().cnode or inode(expr).mv != mv:
             return  # XXX
         line = source[expr.lineno - 1]
         match = re_comment.search(line)
@@ -38,7 +38,7 @@ def annotate():
             source[expr.lineno - 1] += ' ' + text
         source[expr.lineno - 1] += '\n'
 
-    for module in getgx().modules.values():
+    for module in config.getgx().modules.values():
         if module.builtin:
             continue
 
@@ -46,7 +46,7 @@ def annotate():
         setmv(mv)
 
         # merge type information for nodes in module XXX inheritance across modules?
-        merge = merged([n for n in getgx().types if n.mv == mv], inheritance=True)
+        merge = merged([n for n in config.getgx().types if n.mv == mv], inheritance=True)
 
         source = open(module.filename).readlines()
 
@@ -71,7 +71,7 @@ def annotate():
 
         # --- function variables
         for func in funcs:
-            if not func.node or func.node in getgx().inherited:
+            if not func.node or func.node in config.getgx().inherited:
                 continue
             vars = [func.vars[f] for f in func.formals]
             labels = [var.name + ': ' + nodetypestr(var, func, False) for var in vars if not var.name.startswith('__')]
