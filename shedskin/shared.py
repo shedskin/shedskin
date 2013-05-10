@@ -428,7 +428,7 @@ def is_method(parent):
     return isinstance(parent, Function) and isinstance(parent.parent, class_)
 
 
-def fastfor(node):
+def is_fastfor(node):
     return isinstance(node.list, CallFunc) and isinstance(node.list.node, Name) and node.list.node.name in ['range', 'xrange']
 
 
@@ -909,13 +909,13 @@ def register_temp_var(var, parent):
         parent.registered_temp_vars.append(var)
 
 
-def const_literal(node):
+def is_literal(node):
     if isinstance(node, (UnarySub, UnaryAdd)):
         node = node.expr
     return isinstance(node, Const) and isinstance(node.value, (int, float))
 
 
-def property_setter(dec):
+def is_property_setter(dec):
     return isinstance(dec, Getattr) and isinstance(dec.expr, Name) and dec.attrname == 'setter'
 
 # --- determine lowest common parent classes (inclusive)

@@ -31,8 +31,8 @@ from compiler.visitor import ASTVisitor
 from shared import setmv, inode, is_zip2, FakeGetattr, in_out, \
     Function, StaticClass, getmv, register_temp_var, \
     lookup_class, error, aug_msg, lookup_func, default_var, FakeGetattr2, \
-    FakeGetattr3, Module, const_literal, is_enum, is_method, def_class, \
-    getgx, CNode, fastfor, assign_rec, class_, property_setter, lookup_var
+    FakeGetattr3, Module, is_literal, is_enum, is_method, def_class, \
+    getgx, CNode, is_fastfor, assign_rec, class_, is_property_setter, lookup_var
 from struct_ import struct_faketuple, struct_info, struct_unpack
 
 
@@ -359,7 +359,7 @@ class ModuleVisitor(ASTVisitor):
 
             # methods
             for m in self.stmt_nodes(n, FunctionNode):
-                if hasattr(m, 'decorators') and m.decorators and [dec for dec in m.decorators if property_setter(dec)]:
+                if hasattr(m, 'decorators') and m.decorators and [dec for dec in m.decorators if is_property_setter(dec)]:
                     m.name = m.name + '__setter__'
                 if m.name in newclass.funcs:  # and func.ident not in ['__getattr__', '__setattr__']: # XXX
                     error("function/class redefinition is not allowed", m, mv=self)
@@ -519,7 +519,7 @@ class ModuleVisitor(ASTVisitor):
                     parent.staticmethods.append(node.name)
                 elif isinstance(dec, Name) and dec.name == 'property':
                     parent.properties[node.name] = [node.name, None]
-                elif property_setter(dec):
+                elif is_property_setter(dec):
                     parent.properties[dec.expr.name][1] = node.name
                 else:
                     error("unsupported type of decorator", dec, mv=self)
@@ -558,7 +558,7 @@ class ModuleVisitor(ASTVisitor):
         self.visit(node.code, func)
 
         for i, default in enumerate(func.defaults):
-            if not const_literal(default):
+            if not is_literal(default):
                 self.defaults[default] = (len(self.defaults), func, i)
             self.visit(default, None)  # defaults are global
 
@@ -976,13 +976,13 @@ class ModuleVisitor(ASTVisitor):
 
     def do_for(self, node, assnode, get_iter, func):
         # --- for i in range(..) XXX i should not be modified.. use tempcounter; two bounds
-        if fastfor(node):
+        if is_fastfor(node):
             self.temp_var2(node.assign, assnode, func)
             self.temp_var2(node.list, inode(node.list.args[0]), func)
 
-            if len(node.list.args) == 3 and not isinstance(node.list.args[2], Name) and not const_literal(node.list.args[2]):  # XXX merge with ListComp
+            if len(node.list.args) == 3 and not isinstance(node.list.args[2], Name) and not is_literal(node.list.args[2]):  # XXX merge with ListComp
                 for arg in node.list.args:
-                    if not isinstance(arg, Name) and not const_literal(arg):  # XXX create func for better check
+                    if not isinstance(arg, Name) and not is_literal(arg):  # XXX create func for better check
                         self.temp_var2(arg, inode(arg), func)
 
         # --- temp vars for list, iter etc.

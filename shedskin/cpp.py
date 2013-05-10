@@ -24,9 +24,9 @@ from makefile import generate_makefile
 from shared import analyze_callfunc, setmv, inode, is_zip2, lookup_module, \
     Function, StaticClass, hmcpa, lowest_common_parents, getmv, \
     singletype, nokeywords, lookup_class, callfunc_targets, namespaceclass, \
-    error, aug_msg, Module, lookup_class_module, const_literal, \
+    error, aug_msg, Module, lookup_class_module, is_literal, \
     connect_actual_formal, lookup_variable, is_enum, def_class, getgx, \
-    fastfor, assign_rec, class_, unboxable, polymorphic_t, lookup_var
+    is_fastfor, assign_rec, class_, unboxable, polymorphic_t, lookup_var
 from struct_ import struct_unpack_cpp
 from typestr import incompatible_assignment_rec, nodetypestr
 from virtual import virtuals, typestr
@@ -907,7 +907,7 @@ class GenerateVisitor(ASTVisitor):
             self.output('}')
 
     def do_fastfor(self, node, qual, quals, iter, func, genexpr):
-        if len(qual.list.args) == 3 and not const_literal(qual.list.args[2]):
+        if len(qual.list.args) == 3 and not is_literal(qual.list.args[2]):
             for arg in qual.list.args:  # XXX simplify
                 if arg in getmv().tempcount:
                     self.start()
@@ -973,7 +973,7 @@ class GenerateVisitor(ASTVisitor):
         print >>self.out
         if node.else_:
             self.output('%s = 0;' % getmv().tempcount[node.else_])
-        if fastfor(node):
+        if is_fastfor(node):
             self.do_fastfor(node, node, None, assname, func, False)
         elif self.fastenum(node):
             self.do_fastenum(node, func, False)
@@ -2224,7 +2224,7 @@ class GenerateVisitor(ASTVisitor):
                 self.eol()
                 self.output('return __result;')
                 self.start('__after_yield_0:')
-            elif len(node.quals) == 1 and not fastfor(node.quals[0]) and not self.fastenum(node.quals[0]) and not self.fastzip2(node.quals[0]) and not node.quals[0].ifs and self.one_class(node.quals[0].list, ('tuple', 'list', 'str_', 'dict', 'set')):
+            elif len(node.quals) == 1 and not is_fastfor(node.quals[0]) and not self.fastenum(node.quals[0]) and not self.fastzip2(node.quals[0]) and not node.quals[0].ifs and self.one_class(node.quals[0].list, ('tuple', 'list', 'str_', 'dict', 'set')):
                 self.start('__ss_result->units[' + getmv().tempcount[node.quals[0].list] + '] = ')
                 self.visit(node.expr, lcfunc)
             else:
@@ -2243,7 +2243,7 @@ class GenerateVisitor(ASTVisitor):
             var = lookup_var(getmv().tempcount[qual.assign], lcfunc)
         iter = var.cpp_name()
 
-        if fastfor(qual):
+        if is_fastfor(qual):
             self.do_fastfor(node, qual, quals, iter, lcfunc, genexpr)
         elif self.fastenum(qual):
             self.do_fastenum(qual, lcfunc, genexpr)
