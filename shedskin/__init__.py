@@ -14,7 +14,7 @@ import infer
 import cpp
 import annotate
 import shared
-from shared import newgx, setgx, getgx
+import config
 
 
 def usage():
@@ -41,7 +41,7 @@ def usage():
 
 
 def start():
-    setgx(newgx())
+    config.setgx(config.newgx())
 
     # --- command-line options
     try:
@@ -53,44 +53,44 @@ def start():
         if o in ['-h', '--help']:
             usage()
         if o in ['-b', '--nobounds']:
-            getgx().bounds_checking = False
+            config.getgx().bounds_checking = False
         if o in ['-e', '--extmod']:
-            getgx().extension_module = True
+            config.getgx().extension_module = True
         if o in ['-a', '--ann']:
-            getgx().annotation = True
+            config.getgx().annotation = True
         if o in ['-d', '--debug']:
-            getgx().debug_level = int(a)
+            config.getgx().debug_level = int(a)
         if o in ['-l', '--long']:
-            getgx().longlong = True
+            config.getgx().longlong = True
         if o in ['-g', '--nogcwarns']:
-            getgx().gcwarns = False
+            config.getgx().gcwarns = False
         if o in ['-w', '--nowrap']:
-            getgx().wrap_around_check = False
+            config.getgx().wrap_around_check = False
         if o in ['-r', '--random']:
-            getgx().fast_random = True
+            config.getgx().fast_random = True
         if o in ['-o', '--noassert']:
-            getgx().assertions = False
+            config.getgx().assertions = False
         if o in ['-p', '--pypy']:
-            getgx().pypy = True
+            config.getgx().pypy = True
         if o in ['-m', '--makefile']:
-            getgx().makefile_name = a
+            config.getgx().makefile_name = a
         if o in ['-n', '--silent']:
-            getgx().silent = True
+            config.getgx().silent = True
         if o in ['-s', '--strhash']:
-            getgx().fast_hash = True
+            config.getgx().fast_hash = True
         if o in ['-v', '--msvc']:
-            getgx().msvc = True
+            config.getgx().msvc = True
         if o in ['-x', '--traceback']:
-            getgx().backtrace = True
+            config.getgx().backtrace = True
         if o in ['-L', '--lib']:
-            getgx().libdirs = [a] + getgx().libdirs
+            config.getgx().libdirs = [a] + config.getgx().libdirs
         if o in ['-f', '--flags']:
             if not os.path.isfile(a):
                 print "*ERROR* no such file: '%s'" % a
                 sys.exit(1)
-            getgx().flags = a
+            config.getgx().flags = a
 
-    if not getgx().silent:
+    if not config.getgx().silent:
         print '*** SHED SKIN Python-to-C++ Compiler 0.9.3 ***'
         print 'Copyright 2005-2011 Mark Dufour; License GNU GPL version 3 (See LICENSE)'
         print
@@ -103,7 +103,7 @@ def start():
     if sys.platform == 'win32' and os.path.isdir('c:/mingw'):
         print '*ERROR* please rename or remove c:/mingw, as it conflicts with Shed Skin'
         sys.exit()
-    if sys.platform == 'win32' and struct.calcsize('P') == 8 and getgx().extension_module:
+    if sys.platform == 'win32' and struct.calcsize('P') == 8 and config.getgx().extension_module:
         print '*WARNING* 64-bit python may not come with necessary file to build extension module'
 
     # --- argument
@@ -123,7 +123,7 @@ def start():
     annotate.annotate()
     cpp.generate_code()
     shared.print_errors()
-    if not getgx().silent:
+    if not config.getgx().silent:
         print '[elapsed time: %.2f seconds]' % (time.time() - t0)
 
 
@@ -132,7 +132,7 @@ def main():
     try:
         start()
     except KeyboardInterrupt, e:
-        if getgx().debug_level > 0:
+        if config.getgx().debug_level > 0:
             print traceback.format_exc(e)
         sys.exit(1)
 

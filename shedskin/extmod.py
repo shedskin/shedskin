@@ -7,7 +7,8 @@ extmod.py: extension module support
 '''
 import cpp
 import typestr
-from shared import singletype2, getmv, Module, def_class, getgx, class_
+from shared import singletype2, getmv, Module, def_class, class_
+import config
 
 
 OVERLOAD_SINGLE = ['__neg__', '__pos__', '__abs__', '__nonzero__']
@@ -41,7 +42,7 @@ def do_extmod(gv):
 
     # initialize modules
     __ss_mod = '__ss_mod_%s' % '_'.join(gv.module.name_list)
-    if gv.module == getgx().main_module:
+    if gv.module == config.getgx().main_module:
         gv.do_init_modules()
         print >>gv.out, '    __' + gv.module.ident + '__::__init();'
     print >>gv.out, '\n    %s = Py_InitModule((char *)"%s", Global_%sMethods);' % (__ss_mod, gv.module.ident, '_'.join(gv.module.name_list))
@@ -55,7 +56,7 @@ def do_extmod(gv):
         print >>gv.out, '    PyModule_AddObject(%s, "%s", (PyObject *)&%sObjectType);' % (__ss_mod, cl.ident, clname(cl))
     print >>gv.out
 
-    if gv.module == getgx().main_module:
+    if gv.module == config.getgx().main_module:
         do_init_mods(gv, 'init')
         do_init_mods(gv, 'add')
         print >>gv.out, '    add%s();' % gv.module.ident
@@ -75,7 +76,7 @@ def do_extmod(gv):
 
 
 def do_init_mods(gv, what):
-    for module in getgx().modules.values():
+    for module in config.getgx().modules.values():
         if not module.builtin and not module is gv.module:
             print >>gv.out, '    %s::%s%s();' % (module.full_path(), what, '_'.join(module.name_list))
 
@@ -225,11 +226,11 @@ def supported_funcs(gv, funcs):
 def supported_vars(vars):  # XXX virtuals?
     supported = []
     for var in vars:
-        if not var in getgx().merged_inh or not getgx().merged_inh[var]:
+        if not var in config.getgx().merged_inh or not config.getgx().merged_inh[var]:
             continue
         if var.name.startswith('__'):  # XXX
             continue
-        if var.invisible or singletype2(getgx().merged_inh[var], Module):
+        if var.invisible or singletype2(config.getgx().merged_inh[var], Module):
             continue
         try:
             typestr.nodetypestr(var, var.parent, check_extmod=True)

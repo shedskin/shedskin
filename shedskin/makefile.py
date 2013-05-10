@@ -8,8 +8,7 @@ makefile.py: generate makefile
 import os
 import sys
 from distutils import sysconfig
-
-from shared import getgx
+import config
 
 
 def generate_makefile():
@@ -19,7 +18,7 @@ def generate_makefile():
     else:
         pyver = sysconfig.get_config_var('VERSION') or sysconfig.get_python_version()
         includes = '-I' + sysconfig.get_python_inc() + ' '
-        if not getgx().pypy:
+        if not config.getgx().pypy:
             includes += '-I' + sysconfig.get_python_inc(plat_specific=True)
 
         if sys.platform == 'darwin':
@@ -27,21 +26,21 @@ def generate_makefile():
         else:
             ldflags = (sysconfig.get_config_var('LIBS') or '') + ' '
             ldflags += (sysconfig.get_config_var('SYSLIBS') or '') + ' '
-            if not getgx().pypy:
+            if not config.getgx().pypy:
                 ldflags += '-lpython' + pyver
                 if not sysconfig.get_config_var('Py_ENABLE_SHARED'):
                     ldflags += ' -L' + sysconfig.get_config_var('LIBPL')
 
-    ident = getgx().main_module.ident
-    if getgx().extension_module:
+    ident = config.getgx().main_module.ident
+    if config.getgx().extension_module:
         if sys.platform == 'win32':
             ident += '.pyd'
         else:
             ident += '.so'
 
-    makefile = file(getgx().makefile_name, 'w')
+    makefile = file(config.getgx().makefile_name, 'w')
 
-    if getgx().msvc:
+    if config.getgx().msvc:
         esc_space = '/ '
 
         def env_var(name):
@@ -52,10 +51,10 @@ def generate_makefile():
         def env_var(name):
             return '${%s}' % name
 
-    libdirs = [d.replace(' ', esc_space) for d in getgx().libdirs]
+    libdirs = [d.replace(' ', esc_space) for d in config.getgx().libdirs]
     print >>makefile, 'SHEDSKIN_LIBDIR=%s' % (libdirs[-1])
     filenames = []
-    modules = getgx().modules.values()
+    modules = config.getgx().modules.values()
     for module in modules:
         filename = os.path.splitext(module.filename)[0]  # strip .py
         filename = filename.replace(' ', esc_space)  # make paths valid
@@ -76,20 +75,20 @@ def generate_makefile():
     hppfiles = ' \\\n\t'.join(hppfiles)
 
     # import flags
-    if getgx().flags:
-        flags = getgx().flags
+    if config.getgx().flags:
+        flags = config.getgx().flags
     elif os.path.isfile('FLAGS'):
         flags = 'FLAGS'
     elif os.path.isfile('/etc/shedskin/FLAGS'):
         flags = '/etc/shedskin/FLAGS'
-    elif getgx().msvc:
-        flags = os.path.join(getgx().sysdir, 'FLAGS.msvc')
+    elif config.getgx().msvc:
+        flags = os.path.join(config.getgx().sysdir, 'FLAGS.msvc')
     elif sys.platform == 'win32':
-        flags = os.path.join(getgx().sysdir, 'FLAGS.mingw')
+        flags = os.path.join(config.getgx().sysdir, 'FLAGS.mingw')
     elif sys.platform == 'darwin':
-        flags = os.path.join(getgx().sysdir, 'FLAGS.osx')
+        flags = os.path.join(config.getgx().sysdir, 'FLAGS.osx')
     else:
-        flags = os.path.join(getgx().sysdir, 'FLAGS')
+        flags = os.path.join(config.getgx().sysdir, 'FLAGS')
 
     for line in file(flags):
         line = line[:-1]
@@ -102,27 +101,27 @@ def generate_makefile():
                 line += ' -I/usr/local/include'  # XXX
             if sys.platform == 'darwin' and os.path.isdir('/opt/local/include'):
                 line += ' -I/opt/local/include'  # XXX
-            if not getgx().wrap_around_check:
+            if not config.getgx().wrap_around_check:
                 line += ' -D__SS_NOWRAP'
-            if not getgx().bounds_checking:
+            if not config.getgx().bounds_checking:
                 line += ' -D__SS_NOBOUNDS'
-            if getgx().fast_random:
+            if config.getgx().fast_random:
                 line += ' -D__SS_FASTRANDOM'
-            if getgx().gc_cleanup:
+            if config.getgx().gc_cleanup:
                 line += ' -D__SS_GC_CLEANUP'
-            if not getgx().assertions:
+            if not config.getgx().assertions:
                 line += ' -D__SS_NOASSERT'
-            if getgx().fast_hash:
+            if config.getgx().fast_hash:
                 line += ' -D__SS_FASTHASH'
-            if getgx().longlong:
+            if config.getgx().longlong:
                 line += ' -D__SS_LONG'
-            if getgx().backtrace:
+            if config.getgx().backtrace:
                 line += ' -D__SS_BACKTRACE -rdynamic -fno-inline'
-            if getgx().pypy:
+            if config.getgx().pypy:
                 line += ' -D__SS_PYPY'
-            if not getgx().gcwarns:
+            if not config.getgx().gcwarns:
                 line += ' -D__SS_NOGCWARNS'
-            if getgx().extension_module:
+            if config.getgx().extension_module:
                 if sys.platform == 'win32':
                     line += ' -I%s\\include -D__SS_BIND' % prefix
                 else:
@@ -133,8 +132,8 @@ def generate_makefile():
                 line += ' -L/opt/local/lib'
             if sys.platform == 'darwin' and os.path.isdir('/usr/local/lib'):  # XXX
                 line += ' -L/usr/local/lib'
-            if getgx().extension_module:
-                if getgx().msvc:
+            if config.getgx().extension_module:
+                if config.getgx().msvc:
                     line += ' /dll /libpath:%s\\libs ' % prefix
                 elif sys.platform == 'win32':
                     line += ' -shared -L%s\\libs -lpython%s' % (prefix, pyver)
@@ -168,13 +167,13 @@ def generate_makefile():
     _out = '-o '
     _ext = ''
     targets = [('', '')]
-    if not getgx().extension_module:
+    if not config.getgx().extension_module:
         targets += [('_prof', '-pg -ggdb'), ('_debug', '-g -ggdb')]
-    if getgx().msvc:
+    if config.getgx().msvc:
         _out = '/out:'
         _ext = ''
         targets = [('', '')]
-        if not getgx().extension_module:
+        if not config.getgx().extension_module:
             _ext = '.exe'
     for suffix, options in targets:
         print >>makefile, ident + suffix + ':\t$(CPPFILES) $(HPPFILES)'
@@ -182,12 +181,12 @@ def generate_makefile():
 
     # clean
     ext = ''
-    if sys.platform == 'win32' and not getgx().extension_module:
+    if sys.platform == 'win32' and not config.getgx().extension_module:
         ext = '.exe'
     print >>makefile, 'clean:'
     targets = [ident + ext]
-    if not getgx().extension_module:
-        if not getgx().msvc:
+    if not config.getgx().extension_module:
+        if not config.getgx().msvc:
             targets += [ident + '_prof' + ext, ident + '_debug' + ext]
     print >>makefile, '\trm -f %s\n' % ' '.join(targets)
 

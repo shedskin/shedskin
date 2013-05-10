@@ -7,9 +7,9 @@ virtual.py: virtual methods and variables
 '''
 from compiler.ast import CallFunc, Name
 
-from shared import analyze_callfunc, inode, lowest_common_parents, \
-    default_var, subclass, getgx, class_, polymorphic_t, hmcpa
+from shared import analyze_callfunc, inode, lowest_common_parents, default_var, subclass, class_, polymorphic_t, hmcpa
 from typestr import typestr
+import config
 
 
 def virtuals(self, cl, declare):
@@ -97,15 +97,15 @@ def virtuals(self, cl, declare):
 
 
 def analyze_virtuals():
-    for node in getgx().merged_inh:
+    for node in config.getgx().merged_inh:
         # --- for every message
         if isinstance(node, CallFunc) and not inode(node).mv.module.builtin:  # ident == 'builtin':
-            objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func = analyze_callfunc(node, merge=getgx().merged_inh)
-            if not method_call or objexpr not in getgx().merged_inh:
+            objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func = analyze_callfunc(node, merge=config.getgx().merged_inh)
+            if not method_call or objexpr not in config.getgx().merged_inh:
                 continue  # XXX
 
             # --- determine abstract receiver class
-            classes = polymorphic_t(getgx().merged_inh[objexpr])
+            classes = polymorphic_t(config.getgx().merged_inh[objexpr])
             classes = [cl for cl in classes if isinstance(cl, class_)]
             if not classes:
                 continue
@@ -137,6 +137,6 @@ def upgrade_cl(abstract_cl, node, ident, classes):
     elif ident in ['__getattr__', '__setattr__'] and subclasses:
         var = default_var(node.args[0].value, abstract_cl)
         for subcl in subclasses:
-            if var.name in subcl.vars and subcl.vars[var.name] in getgx().merged_inh:
-                getgx().types.setdefault(getgx().cnode[var, 0, 0], set()).update(getgx().merged_inh[subcl.vars[var.name]])  # XXX shouldn't this be merged automatically already?
+            if var.name in subcl.vars and subcl.vars[var.name] in config.getgx().merged_inh:
+                config.getgx().types.setdefault(config.getgx().cnode[var, 0, 0], set()).update(config.getgx().merged_inh[subcl.vars[var.name]])  # XXX shouldn't this be merged automatically already?
         abstract_cl.virtualvars.setdefault(node.args[0].value, set()).update(subclasses)
