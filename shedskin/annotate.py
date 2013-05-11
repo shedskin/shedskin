@@ -9,21 +9,22 @@ import re
 from compiler.ast import Const, AssTuple, AssList, Assign, AugAssign, \
     Getattr, Dict, Print, Return, Printnl, Name, List, Tuple, ListComp
 
-from cpp import nodetypestr
-from shared import inode, merged, assign_rec
-import config
-import graph
+from config import getgx
+from graph import getmv, setmv, FakeGetattr, FakeGetattr2, FakeGetattr3
+from infer import inode, merged
+from python import assign_rec
+from typestr import nodetypestr
 
 
 def annotate():
-    if not config.getgx().annotation:
+    if not getgx().annotation:
         return
     re_comment = re.compile(r'#[^\"\']*$')
 
     def paste(expr, text):
         if not expr.lineno:
             return
-        if (expr, 0, 0) not in config.getgx().cnode or inode(expr).mv != mv:
+        if (expr, 0, 0) not in getgx().cnode or inode(expr).mv != mv:
             return  # XXX
         line = source[expr.lineno - 1]
         match = re_comment.search(line)
@@ -39,15 +40,15 @@ def annotate():
             source[expr.lineno - 1] += ' ' + text
         source[expr.lineno - 1] += '\n'
 
-    for module in config.getgx().modules.values():
+    for module in getgx().modules.values():
         if module.builtin:
             continue
 
         mv = module.mv
-        graph.setmv(mv)
+        setmv(mv)
 
         # merge type information for nodes in module XXX inheritance across modules?
-        merge = merged([n for n in config.getgx().types if n.mv == mv], inheritance=True)
+        merge = merged([n for n in getgx().types if n.mv == mv], inheritance=True)
 
         source = open(module.filename).readlines()
 
@@ -63,8 +64,8 @@ def annotate():
                 paste(expr, nodetypestr(expr, inode(expr).parent, False))
 
         # --- instance variables
-        funcs = graph.getmv().funcs.values()
-        for cl in graph.getmv().classes.values():
+        funcs = getmv().funcs.values()
+        for cl in getmv().classes.values():
             labels = [var.name + ': ' + nodetypestr(var, cl, False) for var in cl.vars.values() if var in merge and merge[var] and not var.name.startswith('__')]
             if labels:
                 paste(cl.node, ', '.join(labels))
@@ -72,16 +73,16 @@ def annotate():
 
         # --- function variables
         for func in funcs:
-            if not func.node or func.node in config.getgx().inherited:
+            if not func.node or func.node in getgx().inherited:
                 continue
             vars = [func.vars[f] for f in func.formals]
             labels = [var.name + ': ' + nodetypestr(var, func, False) for var in vars if not var.name.startswith('__')]
             paste(func.node, ', '.join(labels))
 
         # --- callfuncs
-        for callfunc, _ in graph.getmv().callfuncs:
+        for callfunc, _ in getmv().callfuncs:
             if isinstance(callfunc.node, Getattr):
-                if not isinstance(callfunc.node, (graph.FakeGetattr, graph.FakeGetattr2, graph.FakeGetattr3)):
+                if not isinstance(callfunc.node, (FakeGetattr, FakeGetattr2, FakeGetattr3)):
                     paste(callfunc.node.expr, nodetypestr(callfunc, inode(callfunc).parent, False))
             else:
                 paste(callfunc.node, nodetypestr(callfunc, inode(callfunc).parent, False))
