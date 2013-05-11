@@ -5,20 +5,119 @@ Copyright 2005-2011 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 typestr.py: generate type declarations
 
 '''
-from shared import Variable, inode, polymorphic_cl, Function, lowest_common_parents, def_class, types_var_types, types_classes
-from error import error
-import config
+import error
 import graph
+import python
+import infer
+from config import getgx
+
+
+class ExtmodError(Exception):
+    pass
+
+
+def types_var_types(types, varname):
+    subtypes = set()
+    for t in types:
+        if not varname in t[0].vars:
+            continue
+        var = t[0].vars[varname]
+        if (var, t[1], 0) in getgx().cnode:
+            subtypes.update(getgx().cnode[var, t[1], 0].types())
+    return subtypes
+
+
+def types_classes(types):
+    return set(t[0] for t in types if isinstance(t[0], python.class_))
+
+
+def unboxable(types):
+    if not isinstance(types, set):
+        types = infer.inode(types).types()
+    classes = set(t[0] for t in types)
+
+    if [cl for cl in classes if cl.ident not in ['int_', 'float_', 'bool_', 'complex']]:
+        return None
+    else:
+        if classes:
+            return classes.pop().ident
+        return None
+
+
+def singletype(node, type):
+    types = [t[0] for t in infer.inode(node).types()]
+    if len(types) == 1 and isinstance(types[0], type):
+        return types[0]
+
+
+def singletype2(types, type):
+    ltypes = list(types)
+    if len(types) == 1 and isinstance(ltypes[0][0], type):
+        return ltypes[0][0]
+
+
+def polymorphic_t(types):
+    return polymorphic_cl(t[0] for t in types)
+
+
+def polymorphic_cl(classes):
+    cls = set(cl for cl in classes)
+    if len(cls) > 1 and python.def_class('none') in cls and not python.def_class('int_') in cls and not python.def_class('float_') in cls and not python.def_class('bool_') in cls:
+        cls.remove(python.def_class('none'))
+    if python.def_class('tuple2') in cls and python.def_class('tuple') in cls:  # XXX hmm
+        cls.remove(python.def_class('tuple2'))
+    return cls
+
+
+# --- determine lowest common parent classes (inclusive)
+def lowest_common_parents(classes):
+    classes = [cl for cl in classes if isinstance(cl, python.class_)]
+
+    # collect all possible parent classes
+    parents = set()
+    for parent in classes:
+        while parent:
+            parent.lcpcount = 0
+            parents.add(parent)
+            if parent.bases:
+                parent = parent.bases[0]
+            else:
+                parent = None
+
+    # count how many descendants in 'classes' each has
+    for parent in classes:
+        while parent:
+            parent.lcpcount += 1
+            if parent.bases:
+                parent = parent.bases[0]
+            else:
+                parent = None
+
+    # remove those that don't add anything
+    useless = set()
+    for parent in parents:
+        orig = parent
+        while parent:
+            if parent != orig:
+                if parent.lcpcount > orig.lcpcount:
+                    useless.add(orig)
+                elif parent.lcpcount == orig.lcpcount:
+                    useless.add(parent)
+            if parent.bases:
+                parent = parent.bases[0]
+            else:
+                parent = None
+    return list(parents - useless)
 
 
 def nodetypestr(node, parent=None, cplusplus=True, check_extmod=False, check_ret=False, var=None):  # XXX minimize
-    if cplusplus and isinstance(node, Variable) and node.looper:  # XXX to declaredefs?
+    if cplusplus and isinstance(node, python.Variable) and node.looper:  # XXX to declaredefs?
         return nodetypestr(node.looper, None, cplusplus)[:-2] + '::for_in_loop '
-    if cplusplus and isinstance(node, Variable) and node.wopper:  # XXX to declaredefs?
+    if cplusplus and isinstance(node, python.Variable) and node.wopper:  # XXX to declaredefs?
         ts = nodetypestr(node.wopper, None, cplusplus)
         if ts.startswith('dict<'):
             return 'dictentry' + ts[4:]
-    types = config.getgx().merged_inh[node]
+    types = getgx().merged_inh[node]
     return typestr(types, None, cplusplus, node, check_extmod, 0, check_ret, var)
 
 
@@ -26,12 +125,12 @@ def typestr(types, parent=None, cplusplus=True, node=None, check_extmod=False, d
     try:
         ts = typestrnew(types, cplusplus, node, check_extmod, depth, check_ret, var, tuple_check)
     except RuntimeError:
-        if not graph.getmv().module.builtin and isinstance(node, Variable) and not node.name.startswith('__'):  # XXX startswith
+        if not graph.getmv().module.builtin and isinstance(node, python.Variable) and not node.name.startswith('__'):  # XXX startswith
             if node.parent:
                 varname = repr(node)
             else:
                 varname = "'%s'" % node.name
-            error("Variable %s has dynamic (sub)type" % varname, node, warning=True)
+            error.error("Variable %s has dynamic (sub)type" % varname, node, warning=True)
         ts = 'ERROR'
     if cplusplus:
         if not ts.endswith('*'):
@@ -39,9 +138,6 @@ def typestr(types, parent=None, cplusplus=True, node=None, check_extmod=False, d
         return ts
     return '[' + ts + ']'
 
-
-class ExtmodError(Exception):
-    pass
 
 def dynamic_variable_error(node, types, conv2):
     if not node.name.startswith('__'):  # XXX startswith
@@ -51,10 +147,11 @@ def dynamic_variable_error(node, types, conv2):
             varname = "%s" % node
         else:
             varname = "'%s'" % node
-        if [t for t in types if isinstance(t[0], Function)]:
-            error("Variable %s has dynamic (sub)type: {%s, function}" % (varname, ', '.join(sorted(conv2.get(cl.ident, cl.ident) for cl in lcp))), node, warning=True)
+        if [t for t in types if isinstance(t[0], python.Function)]:
+            error.error("Variable %s has dynamic (sub)type: {%s, function}" % (varname, ', '.join(sorted(conv2.get(cl.ident, cl.ident) for cl in lcp))), node, warning=True)
         else:
-            error("Variable %s has dynamic (sub)type: {%s}" % (varname, ', '.join(sorted(conv2.get(cl.ident, cl.ident) for cl in lcp))), node, warning=True)
+            error.error("Variable %s has dynamic (sub)type: {%s}" % (varname, ', '.join(sorted(conv2.get(cl.ident, cl.ident) for cl in lcp))), node, warning=True)
+
 
 def typestrnew(types, cplusplus=True, node=None, check_extmod=False, depth=0, check_ret=False, var=None, tuple_check=False):
     if depth == 10:
@@ -73,15 +170,15 @@ def typestrnew(types, cplusplus=True, node=None, check_extmod=False, depth=0, ch
             return ident + ' *'
         return conv.get(ident, ident)
 
-    anon_funcs = set(t[0] for t in types if isinstance(t[0], Function))
+    anon_funcs = set(t[0] for t in types if isinstance(t[0], python.Function))
     if anon_funcs and check_extmod:
         raise ExtmodError()
     if anon_funcs:
-        if [t for t in types if not isinstance(t[0], Function) and t[0] is not def_class('none')]:
-            if isinstance(node, Variable):
+        if [t for t in types if not isinstance(t[0], python.Function) and t[0] is not python.def_class('none')]:
+            if isinstance(node, python.Variable):
                 dynamic_variable_error(node, types, conv2)
             else:
-                error("function mixed with non-function", node, warning=True)
+                error.error("function mixed with non-function", node, warning=True)
         f = anon_funcs.pop()
         if f.mv != graph.getmv():
             return f.mv.module.full_path() + '::' + 'lambda%d' % f.lambdanr
@@ -92,24 +189,24 @@ def typestrnew(types, cplusplus=True, node=None, check_extmod=False, depth=0, ch
 
     # --- multiple parent classes
     if len(lcp) > 1:
-        if set(lcp) == set([def_class('int_'), def_class('float_')]):
+        if set(lcp) == set([python.def_class('int_'), python.def_class('float_')]):
             return conv['float_']
-        elif not node or inode(node).mv.module.builtin:
-            if def_class('complex') in lcp:  # XXX
+        elif not node or infer.inode(node).mv.module.builtin:
+            if python.def_class('complex') in lcp:  # XXX
                 return conv['complex']
-            elif def_class('float_') in lcp:
+            elif python.def_class('float_') in lcp:
                 return conv['float_']
-            elif def_class('int_') in lcp:
+            elif python.def_class('int_') in lcp:
                 return conv['int_']
             else:
                 return '***ERROR*** '
-        elif isinstance(node, Variable):
+        elif isinstance(node, python.Variable):
             dynamic_variable_error(node, types, conv2)
-        elif node not in config.getgx().bool_test_only:
+        elif node not in getgx().bool_test_only:
             if tuple_check:
-                error("tuple with length > 2 and different types of elements", node, warning=True, mv=graph.getmv())
+                error.error("tuple with length > 2 and different types of elements", node, warning=True, mv=graph.getmv())
             else:
-                error("expression has dynamic (sub)type: {%s}" % ', '.join(sorted(conv2.get(cl.ident, cl.ident) for cl in lcp)), node, warning=True)
+                error.error("expression has dynamic (sub)type: {%s}" % ', '.join(sorted(conv2.get(cl.ident, cl.ident) for cl in lcp)), node, warning=True)
     elif not classes:
         if cplusplus:
             return 'void *'
@@ -134,7 +231,7 @@ def typestrnew(types, cplusplus=True, node=None, check_extmod=False, depth=0, ch
 
     # --- namespace prefix
     namespace = ''
-    if cl.module not in [graph.getmv().module, config.getgx().modules['builtin']]:
+    if cl.module not in [graph.getmv().module, getgx().modules['builtin']]:
         if cplusplus:
             namespace = cl.module.full_path() + '::'
         else:
@@ -150,15 +247,15 @@ def typestrnew(types, cplusplus=True, node=None, check_extmod=False, depth=0, ch
             ts = typestrnew(vartypes, cplusplus, node, check_extmod, depth + 1, tuple_check=tuple_check)
             if tvar == var:
                 return ts
-            if [t[0] for t in vartypes if isinstance(t[0], Function)]:
+            if [t[0] for t in vartypes if isinstance(t[0], python.Function)]:
                 ident = cl.ident
                 if ident == 'tuple2':
                     ident = 'tuple'
-                error("'%s' instance containing function reference" % ident, node, warning=True)  # XXX test
+                error.error("'%s' instance containing function reference" % ident, node, warning=True)  # XXX test
             subtypes.append(ts)
     else:
-        if cl.ident in config.getgx().cpp_keywords:
-            return namespace + config.getgx().ss_prefix + map(cl.ident)
+        if cl.ident in getgx().cpp_keywords:
+            return namespace + getgx().ss_prefix + map(cl.ident)
         return namespace + map(cl.ident)
 
     ident = cl.ident
@@ -175,8 +272,8 @@ def typestrnew(types, cplusplus=True, node=None, check_extmod=False, depth=0, ch
     if ident in ['frozenset', 'pyset'] and cplusplus:
         ident = 'set'
 
-    if ident in config.getgx().cpp_keywords:
-        ident = config.getgx().ss_prefix + ident
+    if ident in getgx().cpp_keywords:
+        ident = getgx().ss_prefix + ident
 
     # --- final type representation
     return namespace + ident + sep[0] + ', '.join(subtypes) + sep[1] + ptr
@@ -187,9 +284,9 @@ def incompatible_assignment_rec(argtypes, formaltypes, depth=0):
         return False
     argclasses = types_classes(argtypes)
     formalclasses = types_classes(formaltypes)
-    inttype = (def_class('int_'), 0)
-    booltype = (def_class('bool_'), 0)
-    floattype = (def_class('float_'), 0)
+    inttype = (python.def_class('int_'), 0)
+    booltype = (python.def_class('bool_'), 0)
+    floattype = (python.def_class('float_'), 0)
 
     # int -> float
     if depth > 0 and (argtypes == set([inttype]) and floattype in formaltypes):
@@ -204,7 +301,7 @@ def incompatible_assignment_rec(argtypes, formaltypes, depth=0):
         return True
 
     # None -> anything
-    if len(argclasses) == 1 and def_class('none') in argclasses:
+    if len(argclasses) == 1 and python.def_class('none') in argclasses:
         return False
 
     # recurse on subvars

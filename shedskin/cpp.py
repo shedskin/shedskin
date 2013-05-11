@@ -9,25 +9,38 @@ output equivalent C++ code, using templates and virtuals to support data and OO 
 class GenerateVisitor: inherits visitor pattern from compiler.visitor.ASTVisitor, to recursively generate C++ code for each syntactical Python construct. the constraint graph, with inferred types, is first 'merged' back to program dimensions (getgx().merged_inh).
 
 '''
-import textwrap
 import string
 import struct
+import textwrap
 from compiler import walk
 from compiler.ast import Const, AssTuple, AssList, From, Add, Stmt, AssAttr, \
     Keyword, AssName, CallFunc, Slice, Getattr, Dict, Subscript, \
     Function as FunctionNode, Return, Class, Name, List, Discard, Sliceobj, Tuple
 from compiler.visitor import ASTVisitor
 
-import extmod
-from copy_ import copy_methods
-from makefile import generate_makefile
-from shared import analyze_callfunc, inode, is_zip2, lookup_module, Function, StaticClass, hmcpa, lowest_common_parents, singletype, nokeywords, lookup_class, callfunc_targets, namespaceclass, aug_msg, Module, lookup_class_module, is_literal, connect_actual_formal, lookup_variable, is_enum, def_class, is_fastfor, assign_rec, class_, unboxable, polymorphic_t, lookup_var
-from struct_ import struct_unpack_cpp
-from typestr import incompatible_assignment_rec, nodetypestr
-from virtual import virtuals, typestr
+import copy_
+from config import getgx
 from error import error
-import config
-import graph
+from extmod import convert_methods, convert_methods2, do_extmod, pyinit_func
+from graph import getmv, setmv
+from infer import analyze_callfunc, callfunc_targets, connect_actual_formal, \
+    hmcpa, inode
+from makefile import generate_makefile
+from python import assign_rec, aug_msg, class_, def_class, \
+    is_enum, is_fastfor, is_literal, is_zip2, \
+    lookup_class, lookup_class_module, lookup_var, lookup_variable, lookup_module, \
+    Function, Module, StaticClass
+from struct_ import struct_unpack_cpp
+from typestr import incompatible_assignment_rec, lowest_common_parents, \
+    nodetypestr, polymorphic_t, singletype, unboxable, typestr
+from virtual import virtuals
+
+
+class Bitpair:
+    def __init__(self, nodes, msg, inline):
+        self.nodes = nodes
+        self.msg = msg
+        self.inline = inline
 
 
 # --- code generation visitor; use type information
@@ -37,7 +50,7 @@ class GenerateVisitor(ASTVisitor):
         self.out = file(self.output_base + '.cpp', 'w')
         self.indentation = ''
         self.consts = {}
-        self.mergeinh = config.getgx().merged_inh
+        self.mergeinh = getgx().merged_inh
         self.module = module
         self.name = module.ident
         self.filling_consts = False
@@ -279,7 +292,7 @@ class GenerateVisitor(ASTVisitor):
         self.func_pointers()
 
         # globals
-        defs = self.declare_defs(list(graph.getmv().globals.items()), declare=True)
+        defs = self.declare_defs(list(getmv().globals.items()), declare=True)
         if defs:
             self.output(defs)
             print >>self.out
@@ -293,18 +306,18 @@ class GenerateVisitor(ASTVisitor):
         self.defaults(declare=True)
 
         # function declarations
-        if self.module != config.getgx().main_module:
+        if self.module != getgx().main_module:
             print >>self.out, 'void __init();'
         for child in node.node.getChildNodes():
             if isinstance(child, FunctionNode):
-                func = graph.getmv().funcs[child.name]
+                func = getmv().funcs[child.name]
                 if self.inhcpa(func):
                     self.visitFunction(func.node, declare=True)
         print >>self.out
 
-        if config.getgx().extension_module:
+        if getgx().extension_module:
             print >>self.out, 'extern "C" {'
-            extmod.pyinit_func(self)
+            pyinit_func(self)
             print >>self.out, '}'
 
         for n in self.module.name_list:
@@ -312,8 +325,8 @@ class GenerateVisitor(ASTVisitor):
 
         self.rich_comparison()
 
-        if config.getgx().extension_module:
-            extmod.convert_methods2(self)
+        if getgx().extension_module:
+            convert_methods2(self)
 
         print >>self.out, '#endif'
 
@@ -328,8 +341,8 @@ class GenerateVisitor(ASTVisitor):
 
     def init_defaults(self, func):
         for default in func.defaults:
-            if default in graph.getmv().defaults:
-                nr, func, func_def_nr = graph.getmv().defaults[default]
+            if default in getmv().defaults:
+                nr, func, func_def_nr = getmv().defaults[default]
                 formal = func.formals[len(func.formals) - len(func.defaults) + func_def_nr]
                 var = func.vars[formal]
                 if self.mergeinh[var]:
@@ -341,7 +354,7 @@ class GenerateVisitor(ASTVisitor):
 
     def rich_comparison(self):
         cmp_cls, lt_cls, gt_cls, le_cls, ge_cls = [], [], [], [], []
-        for cl in graph.getmv().classes.values():
+        for cl in getmv().classes.values():
             if not '__cmp__' in cl.funcs and [f for f in ('__eq__', '__lt__', '__gt__') if f in cl.funcs]:
                 cmp_cls.append(cl)
             if not '__lt__' in cl.funcs and '__gt__' in cl.funcs:
@@ -355,7 +368,7 @@ class GenerateVisitor(ASTVisitor):
         if cmp_cls or lt_cls or gt_cls or le_cls or ge_cls:
             print >>self.out, 'namespace __shedskin__ { /* XXX */'
             for cl in cmp_cls:
-                t = '__%s__::%s *' % (graph.getmv().module.ident, cl.cpp_name())
+                t = '__%s__::%s *' % (getmv().module.ident, cl.cpp_name())
                 print >>self.out, 'template<> inline __ss_int __cmp(%sa, %sb) {' % (t, t)
                 print >>self.out, '    if (!a) return -1;'
                 if '__eq__' in cl.funcs:
@@ -375,7 +388,7 @@ class GenerateVisitor(ASTVisitor):
 
     def rich_compare(self, cls, msg, fallback_msg):
         for cl in cls:
-            t = '__%s__::%s *' % (graph.getmv().module.ident, cl.cpp_name())
+            t = '__%s__::%s *' % (getmv().module.ident, cl.cpp_name())
             print >>self.out, 'template<> inline __ss_bool __%s(%sa, %sb) {' % (msg, t, t)
             # print >>self.out, '    if (!a) return -1;' # XXX check
             print >>self.out, '    return b->__%s__(a);' % fallback_msg
@@ -396,7 +409,7 @@ class GenerateVisitor(ASTVisitor):
 
         for child in node.node.getChildNodes():
             if isinstance(child, From) and child.modname != '__future__':
-                module = config.getgx().from_module[child]
+                module = getgx().from_module[child]
                 using = 'using ' + module.full_path() + '::'
                 for (name, pseudonym) in child.names:
                     pseudonym = pseudonym or name
@@ -416,7 +429,7 @@ class GenerateVisitor(ASTVisitor):
         print >>self.out
 
         # --- globals
-        defs = self.declare_defs(list(graph.getmv().globals.items()), declare=False)
+        defs = self.declare_defs(list(getmv().globals.items()), declare=False)
         if defs:
             self.output(defs)
             print >>self.out
@@ -426,7 +439,7 @@ class GenerateVisitor(ASTVisitor):
 
         # --- declarations
         self.listcomps = {}
-        for (listcomp, lcfunc, func) in graph.getmv().listcomps:
+        for (listcomp, lcfunc, func) in getmv().listcomps:
             self.listcomps[listcomp] = (lcfunc, func)
         self.do_listcomps(True)
         self.do_lambdas(True)
@@ -445,7 +458,7 @@ class GenerateVisitor(ASTVisitor):
         # --- __init
         self.output('void __init() {')
         self.indent()
-        if self.module == config.getgx().main_module and not config.getgx().extension_module:
+        if self.module == getgx().main_module and not getgx().extension_module:
             self.output('__name__ = new str("__main__");\n')
         else:
             self.output('__name__ = new str("%s");\n' % self.module.ident)
@@ -457,8 +470,8 @@ class GenerateVisitor(ASTVisitor):
                 for child2 in child.code.getChildNodes():
                     if isinstance(child2, FunctionNode):
                         self.init_defaults(child2)
-                if child.name in graph.getmv().classes:
-                    cl = graph.getmv().classes[child.name]
+                if child.name in getmv().classes:
+                    cl = getmv().classes[child.name]
                     self.output('cl_' + cl.ident + ' = new class_("%s");' % (cl.ident))
                     if cl.parent.static_nodes:
                         self.output('%s::__static__();' % cl.cpp_name())
@@ -467,7 +480,7 @@ class GenerateVisitor(ASTVisitor):
                 self.visit_discard(child)
 
             elif isinstance(child, From) and child.modname != '__future__':
-                module = config.getgx().from_module[child]
+                module = getgx().from_module[child]
                 for (name, pseudonym) in child.names:
                     pseudonym = pseudonym or name
                     if name == '*':
@@ -492,9 +505,9 @@ class GenerateVisitor(ASTVisitor):
         print >>self.out
 
         # --- c++ main/extension module setup
-        if config.getgx().extension_module:
-            extmod.do_extmod(self)
-        if self.module == config.getgx().main_module:
+        if getgx().extension_module:
+            do_extmod(self)
+        if self.module == getgx().main_module:
             self.do_main()
 
     def visit_discard(self, node, func=None):
@@ -514,7 +527,7 @@ class GenerateVisitor(ASTVisitor):
             self.module_cpp(node)
 
     def do_main(self):
-        modules = config.getgx().modules.values()
+        modules = getgx().modules.values()
         if any(module.builtin and module.ident == 'sys' for module in modules):
             print >>self.out, 'int main(int __ss_argc, char **__ss_argv) {'
         else:
@@ -525,10 +538,10 @@ class GenerateVisitor(ASTVisitor):
 
     def do_init_modules(self):
         print >>self.out, '    __shedskin__::__init();'
-        for module in sorted(config.getgx().modules.values(), key=lambda x: x.import_order):
-            if module != config.getgx().main_module and module.ident != 'builtin':
+        for module in sorted(getgx().modules.values(), key=lambda x: x.import_order):
+            if module != getgx().main_module and module.ident != 'builtin':
                 if module.ident == 'sys':
-                    if config.getgx().extension_module:
+                    if getgx().extension_module:
                         print >>self.out, '    __sys__::__init(0, 0);'
                     else:
                         print >>self.out, '    __sys__::__init(__ss_argc, __ss_argv);'
@@ -548,8 +561,8 @@ class GenerateVisitor(ASTVisitor):
         self.output('*/')
 
     def do_comments(self, child):
-        if child in config.getgx().comments:
-            for n in config.getgx().comments[child]:
+        if child in getgx().comments:
+            for n in getgx().comments[child]:
                 self.do_comment(n)
 
     def visitContinue(self, node, func=None):
@@ -572,28 +585,28 @@ class GenerateVisitor(ASTVisitor):
     def visitWhile(self, node, func=None):
         print >>self.out
         if node.else_:
-            self.output('%s = 0;' % graph.getmv().tempcount[node.else_])
+            self.output('%s = 0;' % getmv().tempcount[node.else_])
 
         self.start('while (')
         self.bool_test(node.test, func)
         self.append(') {')
         print >>self.out, self.line
         self.indent()
-        config.getgx().loopstack.append(node)
+        getgx().loopstack.append(node)
         self.visit(node.body, func)
-        config.getgx().loopstack.pop()
+        getgx().loopstack.pop()
         self.deindent()
         self.output('}')
 
         if node.else_:
-            self.output('if (!%s) {' % graph.getmv().tempcount[node.else_])
+            self.output('if (!%s) {' % getmv().tempcount[node.else_])
             self.indent()
             self.visit(node.else_, func)
             self.deindent()
             self.output('}')
 
     def class_hpp(self, node):
-        cl = graph.getmv().classes[node.name]
+        cl = getmv().classes[node.name]
         self.output('extern class_ *cl_' + cl.ident + ';')
 
         # --- header
@@ -601,10 +614,10 @@ class GenerateVisitor(ASTVisitor):
         if not clnames:
             clnames = ['pyobj']
             if '__iter__' in cl.funcs:  # XXX get return type of 'next'
-                typestr = nodetypestr(cl.funcs['__iter__'].retnode.thing)
-                if typestr.startswith('__iter<'):
-                    typestr = typestr[typestr.find('<') + 1:typestr.find('>')]
-                    clnames = ['pyiter<%s>' % typestr]  # XXX use iterable interface
+                ts = nodetypestr(cl.funcs['__iter__'].retnode.thing)
+                if ts.startswith('__iter<'):
+                    ts = ts[ts.find('<') + 1:ts.find('>')]
+                    clnames = ['pyiter<%s>' % ts]  # XXX use iterable interface
             if '__call__' in cl.funcs:
                 callfunc = cl.funcs['__call__']
                 r_typestr = nodetypestr(callfunc.retnode.thing).strip()
@@ -652,16 +665,16 @@ class GenerateVisitor(ASTVisitor):
         for func in cl.funcs.values():
             if func.node and not (func.ident == '__init__' and func.inherited):
                 self.visitFunction(func.node, cl, True)
-        copy_methods(self, cl, True)
-        if config.getgx().extension_module:
-            extmod.convert_methods(self, cl, True)
+        copy_.copy_methods(self, cl, True)
+        if getgx().extension_module:
+            convert_methods(self, cl, True)
 
         self.deindent()
         self.output('};\n')
 
     def class_cpp(self, node):
-        cl = graph.getmv().classes[node.name]
-        if node in config.getgx().comments:
+        cl = getmv().classes[node.name]
+        if node in getgx().comments:
             self.do_comments(node)
         else:
             self.output('/**\nclass %s\n*/\n' % cl.ident)
@@ -672,12 +685,12 @@ class GenerateVisitor(ASTVisitor):
         for func in cl.funcs.values():
             if func.node and not (func.ident == '__init__' and func.inherited):
                 self.visitFunction(func.node, cl, False)
-        copy_methods(self, cl, False)
+        copy_.copy_methods(self, cl, False)
 
         # --- class variable declarations
         if cl.parent.vars:  # XXX merge with visitModule
             for var in cl.parent.vars.values():
-                if var in config.getgx().merged_inh and config.getgx().merged_inh[var]:
+                if var in getgx().merged_inh and getgx().merged_inh[var]:
                     self.start(nodetypestr(var, cl.parent) + cl.ident + '::' + var.cpp_name())
                     self.eol()
             print >>self.out
@@ -696,7 +709,7 @@ class GenerateVisitor(ASTVisitor):
         # --- class variables
         if cl.parent.vars:
             for var in cl.parent.vars.values():
-                if var in config.getgx().merged_inh and config.getgx().merged_inh[var]:
+                if var in getgx().merged_inh and getgx().merged_inh[var]:
                     self.output('static ' + nodetypestr(var, cl.parent) + var.cpp_name() + ';')
             print >>self.out
 
@@ -710,7 +723,7 @@ class GenerateVisitor(ASTVisitor):
                 vars.update(ancestor.vars)
             if var.name in vars:
                 continue
-            if var in config.getgx().merged_inh and config.getgx().merged_inh[var]:
+            if var in getgx().merged_inh and getgx().merged_inh[var]:
                 self.output(nodetypestr(var, cl) + var.cpp_name() + ';')
 
         if [v for v in cl.vars if not v.startswith('__')]:
@@ -725,7 +738,7 @@ class GenerateVisitor(ASTVisitor):
             return '0'
 
     def inhcpa(self, func):
-        return hmcpa(func) or (func in config.getgx().inheritance_relations and [1 for f in config.getgx().inheritance_relations[func] if hmcpa(f)])
+        return hmcpa(func) or (func in getgx().inheritance_relations and [1 for f in getgx().inheritance_relations[func] if hmcpa(f)])
 
     def visitSlice(self, node, func=None):
         if node.flags == 'OP_DELETE':
@@ -736,15 +749,15 @@ class GenerateVisitor(ASTVisitor):
             self.visit(inode(node.expr).fakefunc, func)
 
     def visitLambda(self, node, parent=None):
-        self.append(graph.getmv().lambdaname[node])
+        self.append(getmv().lambdaname[node])
 
     def subtypes(self, types, varname):
         subtypes = set()
         for t in types:
             if isinstance(t[0], class_):
                 var = t[0].vars.get(varname)
-                if var and (var, t[1], 0) in config.getgx().cnode:  # XXX yeah?
-                    subtypes.update(config.getgx().cnode[var, t[1], 0].types())
+                if var and (var, t[1], 0) in getgx().cnode:  # XXX yeah?
+                    subtypes.update(getgx().cnode[var, t[1], 0].types())
         return subtypes
 
     def bin_tuple(self, types):
@@ -753,17 +766,17 @@ class GenerateVisitor(ASTVisitor):
                 var1 = t[0].vars.get('first')
                 var2 = t[0].vars.get('second')
                 if var1 and var2:
-                    if (var1, t[1], 0) in config.getgx().cnode and (var2, t[1], 0) in config.getgx().cnode:
-                        if config.getgx().cnode[var1, t[1], 0].types() != config.getgx().cnode[var2, t[1], 0].types():
+                    if (var1, t[1], 0) in getgx().cnode and (var2, t[1], 0) in getgx().cnode:
+                        if getgx().cnode[var1, t[1], 0].types() != getgx().cnode[var2, t[1], 0].types():
                             return True
         return False
 
     def instance_new(self, node, argtypes):
         if argtypes is None:
-            argtypes = config.getgx().merged_inh[node]
+            argtypes = getgx().merged_inh[node]
         ts = typestr(argtypes)
         if ts.startswith('pyseq') or ts.startswith('pyiter'):  # XXX
-            argtypes = config.getgx().merged_inh[node]
+            argtypes = getgx().merged_inh[node]
         ts = typestr(argtypes)
         self.append('(new ' + ts[:-2] + '(')
         return argtypes
@@ -860,10 +873,10 @@ class GenerateVisitor(ASTVisitor):
         print >>self.out, self.line
         self.indent()
         if node.else_:
-            self.output('%s = 0;' % graph.getmv().tempcount[node.else_])
+            self.output('%s = 0;' % getmv().tempcount[node.else_])
         self.visit(node.body, func)
         if node.else_:
-            self.output('%s = 1;' % graph.getmv().tempcount[node.else_])
+            self.output('%s = 1;' % getmv().tempcount[node.else_])
         self.deindent()
         self.start('}')
 
@@ -878,9 +891,9 @@ class GenerateVisitor(ASTVisitor):
                 if isinstance(h0, Name) and h0.name in ['int', 'float', 'str', 'class']:
                     continue  # XXX lookup_class
                 elif h0:
-                    cl = lookup_class(h0, graph.getmv())
+                    cl = lookup_class(h0, getmv())
                     if cl.mv.module.builtin and cl.ident in ['KeyboardInterrupt', 'FloatingPointError', 'OverflowError', 'ZeroDivisionError', 'SystemExit']:
-                        error("system '%s' is not caught" % cl.ident, h0, warning=True, mv=graph.getmv())
+                        error("system '%s' is not caught" % cl.ident, h0, warning=True, mv=getmv())
                     arg = namespaceclass(cl) + ' *'
                 else:
                     arg = 'Exception *'
@@ -898,7 +911,7 @@ class GenerateVisitor(ASTVisitor):
 
         # else
         if node.else_:
-            self.output('if(%s) { // else' % graph.getmv().tempcount[node.else_])
+            self.output('if(%s) { // else' % getmv().tempcount[node.else_])
             self.indent()
             self.visit(node.else_, func)
             self.deindent()
@@ -907,22 +920,22 @@ class GenerateVisitor(ASTVisitor):
     def do_fastfor(self, node, qual, quals, iter, func, genexpr):
         if len(qual.list.args) == 3 and not is_literal(qual.list.args[2]):
             for arg in qual.list.args:  # XXX simplify
-                if arg in graph.getmv().tempcount:
+                if arg in getmv().tempcount:
                     self.start()
-                    self.visitm(graph.getmv().tempcount[arg], ' = ', arg, func)
+                    self.visitm(getmv().tempcount[arg], ' = ', arg, func)
                     self.eol()
         self.fastfor(qual, iter, func)
         self.forbody(node, quals, iter, func, False, genexpr)
 
     def visit_temp(self, node, func):  # XXX generalize?
-        if node in graph.getmv().tempcount:
-            self.append(graph.getmv().tempcount[node])
+        if node in getmv().tempcount:
+            self.append(getmv().tempcount[node])
         else:
             self.visit(node, func)
 
     def fastfor(self, node, assname, func=None):
         # --- for i in range(..) -> for( i=l, u=expr; i < u; i++ ) ..
-        ivar, evar = graph.getmv().tempcount[node.assign], graph.getmv().tempcount[node.list]
+        ivar, evar = getmv().tempcount[node.assign], getmv().tempcount[node.list]
         self.start('FAST_FOR(%s,' % assname)
 
         if len(node.list.args) == 1:
@@ -966,11 +979,11 @@ class GenerateVisitor(ASTVisitor):
             self.visitAssAttr(node.assign, func)
             assname = self.line.strip()  # XXX yuck
         else:
-            assname = graph.getmv().tempcount[node.assign]
+            assname = getmv().tempcount[node.assign]
         assname = self.cpp_name(assname)
         print >>self.out
         if node.else_:
-            self.output('%s = 0;' % graph.getmv().tempcount[node.else_])
+            self.output('%s = 0;' % getmv().tempcount[node.else_])
         if is_fastfor(node):
             self.do_fastfor(node, node, None, assname, func, False)
         elif self.fastenum(node):
@@ -996,18 +1009,18 @@ class GenerateVisitor(ASTVisitor):
         self.do_fastzip2_one(left, func)
         self.do_fastzip2_one(right, func)
         self.visitm(node.list.args[0], ',', node.list.args[1], ',', func)
-        tail1 = graph.getmv().tempcount[(node, 2)][2:] + ',' + graph.getmv().tempcount[(node, 3)][2:] + ','
-        tail2 = graph.getmv().tempcount[(node.list)][2:] + ',' + graph.getmv().tempcount[(node, 4)][2:]
+        tail1 = getmv().tempcount[(node, 2)][2:] + ',' + getmv().tempcount[(node, 3)][2:] + ','
+        tail2 = getmv().tempcount[(node.list)][2:] + ',' + getmv().tempcount[(node, 4)][2:]
         print >>self.out, self.line + tail1 + tail2 + ')'
         self.indent()
         if isinstance(left, (AssTuple, AssList)):
-            self.tuple_assign(left, graph.getmv().tempcount[left], func)
+            self.tuple_assign(left, getmv().tempcount[left], func)
         if isinstance(right, (AssTuple, AssList)):
-            self.tuple_assign(right, graph.getmv().tempcount[right], func)
+            self.tuple_assign(right, getmv().tempcount[right], func)
 
     def do_fastzip2_one(self, node, func):
         if isinstance(node, (AssTuple, AssList)):
-            self.append(graph.getmv().tempcount[node])
+            self.append(getmv().tempcount[node])
         else:
             self.visit(node, func)
         self.append(',')
@@ -1017,42 +1030,42 @@ class GenerateVisitor(ASTVisitor):
         left, right = node.assign.nodes
         self.do_fastzip2_one(right, func)
         self.visit(node.list.args[0], func)
-        tail = graph.getmv().tempcount[(node, 2)][2:] + ',' + graph.getmv().tempcount[node.list][2:]
+        tail = getmv().tempcount[(node, 2)][2:] + ',' + getmv().tempcount[node.list][2:]
         print >>self.out, self.line + ',' + tail + ')'
         self.indent()
         self.start()
-        self.visitm(left, ' = ' + graph.getmv().tempcount[node.list], func)
+        self.visitm(left, ' = ' + getmv().tempcount[node.list], func)
         self.eol()
         if isinstance(right, (AssTuple, AssList)):
-            self.tuple_assign(right, graph.getmv().tempcount[right], func)
+            self.tuple_assign(right, getmv().tempcount[right], func)
 
     def do_fastdictiter(self, node, func, genexpr):
         self.start('FOR_IN_DICT(')
         left, right = node.assign.nodes
-        tail = graph.getmv().tempcount[node, 7][2:] + ',' + graph.getmv().tempcount[node, 6][2:] + ',' + graph.getmv().tempcount[node.list][2:]
+        tail = getmv().tempcount[node, 7][2:] + ',' + getmv().tempcount[node, 6][2:] + ',' + getmv().tempcount[node.list][2:]
         self.visit(node.list.node.expr, func)
         print >>self.out, self.line + ',' + tail + ')'
         self.indent()
         self.start()
-        if left in graph.getmv().tempcount:  # XXX not for zip, enum..?
-            self.visitm('%s = %s->key' % (graph.getmv().tempcount[left], graph.getmv().tempcount[node, 6]), func)
+        if left in getmv().tempcount:  # XXX not for zip, enum..?
+            self.visitm('%s = %s->key' % (getmv().tempcount[left], getmv().tempcount[node, 6]), func)
         else:
-            self.visitm(left, ' = %s->key' % graph.getmv().tempcount[node, 6], func)
+            self.visitm(left, ' = %s->key' % getmv().tempcount[node, 6], func)
         self.eol()
         self.start()
-        if right in graph.getmv().tempcount:
-            self.visitm('%s = %s->value' % (graph.getmv().tempcount[right], graph.getmv().tempcount[node, 6]), func)
+        if right in getmv().tempcount:
+            self.visitm('%s = %s->value' % (getmv().tempcount[right], getmv().tempcount[node, 6]), func)
         else:
-            self.visitm(right, ' = %s->value' % graph.getmv().tempcount[node, 6], func)
+            self.visitm(right, ' = %s->value' % getmv().tempcount[node, 6], func)
         self.eol()
         if isinstance(left, (AssTuple, AssList)):
-            self.tuple_assign(left, graph.getmv().tempcount[left], func)
+            self.tuple_assign(left, getmv().tempcount[left], func)
         if isinstance(right, (AssTuple, AssList)):
-            self.tuple_assign(right, graph.getmv().tempcount[right], func)
+            self.tuple_assign(right, getmv().tempcount[right], func)
 
     def forin_preftail(self, node):
-        tail = graph.getmv().tempcount[node][2:] + ',' + graph.getmv().tempcount[node.list][2:]
-        tail += ',' + graph.getmv().tempcount[(node, 5)][2:]
+        tail = getmv().tempcount[node][2:] + ',' + getmv().tempcount[node.list][2:]
+        tail += ',' + getmv().tempcount[(node, 5)][2:]
         return '', tail
 
     def forbody(self, node, quals, iter, func, skip, genexpr):
@@ -1062,21 +1075,21 @@ class GenerateVisitor(ASTVisitor):
         if not skip:
             self.indent()
             if isinstance(node.assign, (AssTuple, AssList)):
-                self.tuple_assign(node.assign, graph.getmv().tempcount[node.assign], func)
-        config.getgx().loopstack.append(node)
+                self.tuple_assign(node.assign, getmv().tempcount[node.assign], func)
+        getgx().loopstack.append(node)
         self.visit(node.body, func)
-        config.getgx().loopstack.pop()
+        getgx().loopstack.pop()
         self.deindent()
         self.output('END_FOR')
         if node.else_:
-            self.output('if (!%s) {' % graph.getmv().tempcount[node.else_])
+            self.output('if (!%s) {' % getmv().tempcount[node.else_])
             self.indent()
             self.visit(node.else_, func)
             self.deindent()
             self.output('}')
 
     def func_pointers(self):
-        for func in graph.getmv().lambdas.values():
+        for func in getmv().lambdas.values():
             argtypes = [nodetypestr(func.vars[formal], func).rstrip() for formal in func.formals]
             if func.largs is not None:
                 argtypes = argtypes[:func.largs]
@@ -1160,9 +1173,9 @@ class GenerateVisitor(ASTVisitor):
             self.deindent()
 
     def cpp_name(self, name):  # XXX breakup and remove
-        if ((self.module == config.getgx().main_module and name == 'init' + self.module.ident) or
-            name in (cl.ident for cl in config.getgx().allclasses) or
-                name + '_' in (cl.ident for cl in config.getgx().allclasses)):
+        if ((self.module == getgx().main_module and name == 'init' + self.module.ident) or
+            name in (cl.ident for cl in getgx().allclasses) or
+                name + '_' in (cl.ident for cl in getgx().allclasses)):
             return '_' + name
         return nokeywords(name)
 
@@ -1170,10 +1183,10 @@ class GenerateVisitor(ASTVisitor):
         # locate right func instance
         if parent and isinstance(parent, class_):
             func = parent.funcs[node.name]
-        elif node.name in graph.getmv().funcs:
-            func = graph.getmv().funcs[node.name]
+        elif node.name in getmv().funcs:
+            func = getmv().funcs[node.name]
         else:
-            func = graph.getmv().lambdas[node.name]
+            func = getmv().lambdas[node.name]
         if func.invisible or (func.inherited and not func.ident == '__init__'):
             return
         if declare and func.declared:  # XXX
@@ -1184,7 +1197,7 @@ class GenerateVisitor(ASTVisitor):
             if func.ident in ['__iadd__', '__isub__', '__imul__']:
                 return
             if func.lambdanr is None and not repr(node.code).startswith("Stmt([Raise(CallFunc(Name('NotImplementedError')"):
-                error(repr(func) + ' not called!', node, warning=True, mv=graph.getmv())
+                error(repr(func) + ' not called!', node, warning=True, mv=getmv())
             if not (declare and func.parent and func.ident in func.parent.virtuals):
                 return
 
@@ -1329,8 +1342,8 @@ class GenerateVisitor(ASTVisitor):
     def visit_conv(self, node, argtypes, func, check_temp=True):
         # convert/cast node to type it is assigned to
         actualtypes = self.mergeinh[node]
-        if check_temp and node in graph.getmv().tempcount:  # XXX
-            self.append(graph.getmv().tempcount[node])
+        if check_temp and node in getmv().tempcount:  # XXX
+            self.append(getmv().tempcount[node])
         elif isinstance(node, Dict):
             self.visitDict(node, func, argtypes=argtypes)
         elif isinstance(node, Tuple):
@@ -1345,7 +1358,7 @@ class GenerateVisitor(ASTVisitor):
             cast = ''
             if actualtypes and argtypes and typestr(actualtypes) != typestr(argtypes) and typestr(actualtypes) != 'str *':  # XXX
                 if incompatible_assignment_rec(actualtypes, argtypes):
-                    error("incompatible types", node, warning=True, mv=graph.getmv())
+                    error("incompatible types", node, warning=True, mv=getmv())
                 else:
                     cast = '(' + typestr(argtypes).strip() + ')'
                     if cast == '(complex)':
@@ -1357,8 +1370,8 @@ class GenerateVisitor(ASTVisitor):
                 self.append('))')
 
     def visitBreak(self, node, func=None):
-        if config.getgx().loopstack[-1].else_ in graph.getmv().tempcount:
-            self.output('%s = 1;' % graph.getmv().tempcount[config.getgx().loopstack[-1].else_])
+        if getgx().loopstack[-1].else_ in getmv().tempcount:
+            self.output('%s = 1;' % getmv().tempcount[getgx().loopstack[-1].else_])
         self.output('break;')
 
     def visitStmt(self, node, func=None):
@@ -1375,7 +1388,7 @@ class GenerateVisitor(ASTVisitor):
         self.visit_and_or(node, node.nodes,  '__AND', 'and', func)
 
     def visit_and_or(self, node, nodes, op, mix, func=None):
-        if node in config.getgx().bool_test_only:
+        if node in getgx().bool_test_only:
             self.append('(')
             for n in nodes:
                 self.bool_test(n, func)
@@ -1390,7 +1403,7 @@ class GenerateVisitor(ASTVisitor):
             if len(nodes) > 1:
                 self.append(', ')
                 self.visit_and_or(node, nodes[1:], op, mix, func)
-                self.append(', ' + graph.getmv().tempcount[child][2:] + ')')
+                self.append(', ' + getmv().tempcount[child][2:] + ')')
 
     def visitCompare(self, node, func=None, wrapper=True):
         if not node in self.bool_wrapper:
@@ -1511,7 +1524,7 @@ class GenerateVisitor(ASTVisitor):
         inttype = set([(def_class('int_'), 0)])  # XXX merge
         if self.mergeinh[left] == inttype and self.mergeinh[right] == inttype:
             if not isinstance(right, Const):
-                error("pow(int, int) returns int after compilation", left, warning=True, mv=graph.getmv())
+                error("pow(int, int) returns int after compilation", left, warning=True, mv=getmv())
         if mod:
             self.visitm('__power(', left, ', ', right, ', ', mod, ')', func)
         else:
@@ -1632,11 +1645,11 @@ class GenerateVisitor(ASTVisitor):
         self.append(')' + postfix)
 
     def visit2(self, node, argtypes, middle, func):  # XXX use temp vars in comparisons, e.g. (t1=fun())
-        if node in graph.getmv().tempcount:
+        if node in getmv().tempcount:
             if node in self.done:
-                self.append(graph.getmv().tempcount[node])
+                self.append(getmv().tempcount[node])
             else:
-                self.visitm('(' + graph.getmv().tempcount[node] + '=', node, ')', func)
+                self.visitm('(' + getmv().tempcount[node] + '=', node, ')', func)
                 self.done.add(node)
         elif middle == '__contains__':
             self.visit(node, func)
@@ -1688,27 +1701,27 @@ class GenerateVisitor(ASTVisitor):
                 self.append('0, ')
 
     def visitCallFunc(self, node, func=None, argtypes=None):
-        objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func = analyze_callfunc(node, merge=config.getgx().merged_inh)
-        funcs = callfunc_targets(node, config.getgx().merged_inh)
+        objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func = analyze_callfunc(node, merge=getgx().merged_inh)
+        funcs = callfunc_targets(node, getgx().merged_inh)
 
         if self.library_func(funcs, 're', None, 'findall') or \
                 self.library_func(funcs, 're', 're_object', 'findall'):
-            error("'findall' does not work with groups (use 'finditer' instead)", node, warning=True, mv=graph.getmv())
+            error("'findall' does not work with groups (use 'finditer' instead)", node, warning=True, mv=getmv())
         if self.library_func(funcs, 'socket', 'socket', 'settimeout') or \
                 self.library_func(funcs, 'socket', 'socket', 'gettimeout'):
-            error("socket.set/gettimeout do not accept/return None", node, warning=True, mv=graph.getmv())
+            error("socket.set/gettimeout do not accept/return None", node, warning=True, mv=getmv())
         if self.library_func(funcs, 'builtin', None, 'map') and len(node.args) > 2:
-            error("default fillvalue for 'map' becomes 0 for integers", node, warning=True, mv=graph.getmv())
+            error("default fillvalue for 'map' becomes 0 for integers", node, warning=True, mv=getmv())
         if self.library_func(funcs, 'itertools', None, 'izip_longest'):
-            error("default fillvalue for 'izip_longest' becomes 0 for integers", node, warning=True, mv=graph.getmv())
+            error("default fillvalue for 'izip_longest' becomes 0 for integers", node, warning=True, mv=getmv())
         if self.library_func(funcs, 'struct', None, 'unpack'):
-            error("struct.unpack should be used as follows: 'a, .. = struct.unpack(..)'", node, warning=True, mv=graph.getmv())
+            error("struct.unpack should be used as follows: 'a, .. = struct.unpack(..)'", node, warning=True, mv=getmv())
         if self.library_func(funcs, 'array', 'array', '__init__'):
             if not node.args or not isinstance(node.args[0], Const) or node.args[0].value not in 'cbBhHiIlLfd':
-                error("non-constant or unsupported type code", node, warning=True, mv=graph.getmv())
+                error("non-constant or unsupported type code", node, warning=True, mv=getmv())
         if self.library_func(funcs, 'builtin', None, 'id'):
-            if struct.calcsize("P") == 8 and struct.calcsize('i') == 4 and not config.getgx().longlong:
-                error("return value of 'id' does not fit in 32-bit integer (try shedskin -l)", node, warning=True, mv=graph.getmv())
+            if struct.calcsize("P") == 8 and struct.calcsize('i') == 4 and not getgx().longlong:
+                error("return value of 'id' does not fit in 32-bit integer (try shedskin -l)", node, warning=True, mv=getmv())
 
         nrargs = len(node.args)
         if isinstance(func, Function) and func.largs:
@@ -1727,14 +1740,14 @@ class GenerateVisitor(ASTVisitor):
                 if argtypes is not None:  # XXX merge instance_new
                     ts = typestr(argtypes)
                     if ts.startswith('pyseq') or ts.startswith('pyiter'):  # XXX
-                        argtypes = config.getgx().merged_inh[node]
+                        argtypes = getgx().merged_inh[node]
                         ts = typestr(argtypes)
                 self.append('(new ' + ts[:-2] + '(')
             if funcs and len(funcs[0].formals) == 1 and not funcs[0].mv.module.builtin:
                 self.append('1')  # don't call default constructor
 
         elif parent_constr:
-            cl = lookup_class(node.node.expr, graph.getmv())
+            cl = lookup_class(node.node.expr, getmv())
             self.append(namespaceclass(cl) + '::' + node.node.attrname + '(')
 
         elif direct_call:  # XXX no namespace (e.g., math.pow), check nr of args
@@ -1760,7 +1773,7 @@ class GenerateVisitor(ASTVisitor):
             elif ident == '__print':  # XXX
                 self.append('print(')
             elif ident == 'isinstance':
-                error("'isinstance' is not supported; always returns True", node, warning=True, mv=graph.getmv())
+                error("'isinstance' is not supported; always returns True", node, warning=True, mv=getmv())
                 self.append('True')
                 return
             else:
@@ -1777,7 +1790,7 @@ class GenerateVisitor(ASTVisitor):
                 if isinstance(cl, class_) and cl.ident != 'none' and ident not in cl.funcs:
                     conv = {'int_': 'int', 'float_': 'float', 'str_': 'str', 'class_': 'class', 'none': 'none'}
                     clname = conv.get(cl.ident, cl.ident)
-                    error("class '%s' has no method '%s'" % (clname, ident), node, warning=True, mv=graph.getmv())
+                    error("class '%s' has no method '%s'" % (clname, ident), node, warning=True, mv=getmv())
 
             # tuple2.__getitem -> __getfirst__/__getsecond
             if ident == '__getitem__' and isinstance(node.args[0], Const) and node.args[0].value in (0, 1) and self.only_classes(objexpr, ('tuple2',)):
@@ -1795,9 +1808,9 @@ class GenerateVisitor(ASTVisitor):
 
         else:
             if ident:
-                error("unresolved call to '" + ident + "'", node, mv=graph.getmv(), warning=True)
+                error("unresolved call to '" + ident + "'", node, mv=getmv(), warning=True)
             else:
-                error("unresolved call (possibly caused by method passing, which is currently not allowed)", node, mv=graph.getmv(), warning=True)
+                error("unresolved call (possibly caused by method passing, which is currently not allowed)", node, mv=getmv(), warning=True)
             return
 
         if not funcs:
@@ -1814,7 +1827,7 @@ class GenerateVisitor(ASTVisitor):
 
     def bool_test(self, node, func, always_wrap=False):
         wrapper = always_wrap or not self.only_classes(node, ('int_', 'bool_'))
-        if node in config.getgx().bool_test_only:
+        if node in getgx().bool_test_only:
             self.visit(node, func)
         elif wrapper:
             self.append('___bool(')
@@ -1826,7 +1839,7 @@ class GenerateVisitor(ASTVisitor):
             self.visit(node, func)
 
     def visit_callfunc_args(self, funcs, node, func):
-        objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func = analyze_callfunc(node, merge=config.getgx().merged_inh)
+        objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func = analyze_callfunc(node, merge=getgx().merged_inh)
         target = funcs[0]  # XXX
 
         print_function = self.library_func(funcs, 'builtin', None, '__print')
@@ -1844,7 +1857,7 @@ class GenerateVisitor(ASTVisitor):
 
         for f in funcs:
             if len(f.formals) != len(target.formals):
-                error('calling functions with different numbers of arguments', node, warning=True, mv=graph.getmv())
+                error('calling functions with different numbers of arguments', node, warning=True, mv=getmv())
                 self.append(')')
                 return
 
@@ -1853,7 +1866,7 @@ class GenerateVisitor(ASTVisitor):
 
         pairs, rest, err = connect_actual_formal(node, target, parent_constr, merge=self.mergeinh)
         if err and not target.mv.module.builtin:  # XXX
-            error('call with incorrect number of arguments', node, warning=True, mv=graph.getmv())
+            error('call with incorrect number of arguments', node, warning=True, mv=getmv())
 
         if isinstance(func, Function) and func.lambdawrapper:
             rest = func.largs
@@ -1897,7 +1910,7 @@ class GenerateVisitor(ASTVisitor):
             if arg in target.mv.defaults:
                 if self.mergeinh[arg] == set([(def_class('none'), 0)]):
                     self.append('NULL')
-                elif target.mv.module == graph.getmv().module:
+                elif target.mv.module == getmv().module:
                     self.append('default_%d' % (target.mv.defaults[arg][0]))
                 else:
                     self.append('%s::default_%d' % (target.mv.module.full_path(), target.mv.defaults[arg][0]))
@@ -1953,7 +1966,7 @@ class GenerateVisitor(ASTVisitor):
         self.eol()
 
     def tuple_assign(self, lvalue, rvalue, func):
-        temp = graph.getmv().tempcount[lvalue]
+        temp = getmv().tempcount[lvalue]
         if isinstance(lvalue, tuple):
             nodes = lvalue
         else:
@@ -1997,7 +2010,7 @@ class GenerateVisitor(ASTVisitor):
         return False
 
     def get_selector(self, temp, item, i):
-        rvalue_node = config.getgx().item_rvalue[item]
+        rvalue_node = getgx().item_rvalue[item]
         sel = '__getitem__(%d)' % i
         if i < 2 and self.only_classes(rvalue_node, ('tuple2',)):
             sel = ['__getfirst__()', '__getsecond__()'][i]
@@ -2021,14 +2034,14 @@ class GenerateVisitor(ASTVisitor):
             if isinstance(node.expr, Tuple):
                 if [n for n in node.nodes if isinstance(n, AssTuple)]:  # XXX a,b=d[i,j]=..?
                     for child in node.expr.nodes:
-                        if not (child, 0, 0) in config.getgx().cnode:  # (a,b) = (1,2): (1,2) never visited
+                        if not (child, 0, 0) in getgx().cnode:  # (a,b) = (1,2): (1,2) never visited
                             continue
                         if not isinstance(child, Const) and not (isinstance(child, Name) and child.name == 'None'):
-                            self.start(graph.getmv().tempcount[child] + ' = ')
+                            self.start(getmv().tempcount[child] + ' = ')
                             self.visit(child, func)
                             self.eol()
             elif not isinstance(node.expr, Const) and not (isinstance(node.expr, Name) and node.expr.name == 'None'):
-                self.start(graph.getmv().tempcount[node.expr] + ' = ')
+                self.start(getmv().tempcount[node.expr] + ' = ')
                 self.visit(node.expr, func)
                 self.eol()
 
@@ -2100,8 +2113,8 @@ class GenerateVisitor(ASTVisitor):
             self.subs_assign(lvalue, func)
             if isinstance(rvalue, str):
                 self.append(rvalue)
-            elif rvalue in graph.getmv().tempcount:
-                self.append(graph.getmv().tempcount[rvalue])
+            elif rvalue in getmv().tempcount:
+                self.append(getmv().tempcount[rvalue])
             else:
                 cast = self.cast_to_builtin2(rvalue, func, lvalue.expr, '__setitem__', 2)
                 if cast:
@@ -2117,12 +2130,12 @@ class GenerateVisitor(ASTVisitor):
             self.visitAssAttr(lvalue, func)
 
     def do_lambdas(self, declare):
-        for l in graph.getmv().lambdas.values():
-            if l.ident not in graph.getmv().funcs:
+        for l in getmv().lambdas.values():
+            if l.ident not in getmv().funcs:
                 self.visitFunction(l.node, declare=declare)
 
     def do_listcomps(self, declare):
-        for (listcomp, lcfunc, func) in graph.getmv().listcomps:  # XXX cleanup
+        for (listcomp, lcfunc, func) in getmv().listcomps:  # XXX cleanup
             if lcfunc.mv.module.builtin:
                 continue
 
@@ -2134,7 +2147,7 @@ class GenerateVisitor(ASTVisitor):
                 if not self.inhcpa(parent) or parent.inherited:
                     continue
 
-            genexpr = listcomp in config.getgx().genexp_to_lc.values()
+            genexpr = listcomp in getgx().genexp_to_lc.values()
             if declare:
                 self.listcomp_head(listcomp, True, genexpr)
             elif genexpr:
@@ -2223,7 +2236,7 @@ class GenerateVisitor(ASTVisitor):
                 self.output('return __result;')
                 self.start('__after_yield_0:')
             elif len(node.quals) == 1 and not is_fastfor(node.quals[0]) and not self.fastenum(node.quals[0]) and not self.fastzip2(node.quals[0]) and not node.quals[0].ifs and self.one_class(node.quals[0].list, ('tuple', 'list', 'str_', 'dict', 'set')):
-                self.start('__ss_result->units[' + graph.getmv().tempcount[node.quals[0].list] + '] = ')
+                self.start('__ss_result->units[' + getmv().tempcount[node.quals[0].list] + '] = ')
                 self.visit(node.expr, lcfunc)
             else:
                 self.start('__ss_result->append(')
@@ -2238,7 +2251,7 @@ class GenerateVisitor(ASTVisitor):
         if isinstance(qual.assign, AssName):
             var = lookup_var(qual.assign.name, lcfunc)
         else:
-            var = lookup_var(graph.getmv().tempcount[qual.assign], lcfunc)
+            var = lookup_var(getmv().tempcount[qual.assign], lcfunc)
         iter = var.cpp_name()
 
         if is_fastfor(qual):
@@ -2254,7 +2267,7 @@ class GenerateVisitor(ASTVisitor):
             self.listcompfor_body(node, quals, iter, lcfunc, True, genexpr)
         else:
             if not isinstance(qual.list, Name):
-                itervar = graph.getmv().tempcount[qual]
+                itervar = getmv().tempcount[qual]
                 self.start('')
                 self.visitm(itervar, ' = ', qual.list, lcfunc)
                 self.eol()
@@ -2301,7 +2314,7 @@ class GenerateVisitor(ASTVisitor):
         self.output('END_FOR\n')
 
     def visitGenExpr(self, node, func=None):
-        self.visit(config.getgx().genexp_to_lc[node], func)
+        self.visit(getgx().genexp_to_lc[node], func)
 
     def visitListComp(self, node, func=None):
         lcfunc, _ = self.listcomps[node]
@@ -2317,7 +2330,7 @@ class GenerateVisitor(ASTVisitor):
                     args.append(var.cpp_name())
 
         self.line = temp
-        if node in config.getgx().genexp_to_lc.values():
+        if node in getgx().genexp_to_lc.values():
             self.append('new ')
         self.append(lcfunc.ident + '(' + ', '.join(args) + ')')
 
@@ -2334,16 +2347,16 @@ class GenerateVisitor(ASTVisitor):
 
     def visitMod(self, node, func=None):
         # --- non-str % ..
-        if [t for t in config.getgx().merged_inh[node.left] if t[0].ident != 'str_']:
+        if [t for t in getgx().merged_inh[node.left] if t[0].ident != 'str_']:
             self.visitBinary(node.left, node.right, '__mod__', '%', func)
             return
 
         # --- str % non-constant dict/tuple
-        if not isinstance(node.right, (Tuple, Dict)) and node.right in config.getgx().merged_inh:  # XXX
-            if [t for t in config.getgx().merged_inh[node.right] if t[0].ident == 'dict']:
+        if not isinstance(node.right, (Tuple, Dict)) and node.right in getgx().merged_inh:  # XXX
+            if [t for t in getgx().merged_inh[node.right] if t[0].ident == 'dict']:
                 self.visitm('__moddict(', node.left, ', ', node.right, ')', func)
                 return
-            elif [t for t in config.getgx().merged_inh[node.right] if t[0].ident in ['tuple', 'tuple2']]:
+            elif [t for t in getgx().merged_inh[node.right] if t[0].ident in ['tuple', 'tuple2']]:
                 self.visitm('__modtuple(', node.left, ', ', node.right, ')', func)
                 return
 
@@ -2429,13 +2442,13 @@ class GenerateVisitor(ASTVisitor):
                     checkcls.extend(t[0].ancestors(True))
             for cl in checkcls:
                 if not node.attrname in t[0].funcs and node.attrname in cl.parent.vars:  # XXX
-                    error("class attribute '" + node.attrname + "' accessed without using class name", node, warning=True, mv=graph.getmv())
+                    error("class attribute '" + node.attrname + "' accessed without using class name", node, warning=True, mv=getmv())
                     break
             else:
                 if not self.mergeinh[node.expr] and not node.attrname.startswith('__'):  # XXX
-                    error('expression has no type', node, warning=True, mv=graph.getmv())
+                    error('expression has no type', node, warning=True, mv=getmv())
                 elif not self.mergeinh[node] and not [cl for cl in checkcls if node.attrname in cl.funcs] and not node.attrname.startswith('__'):  # XXX
-                    error('expression has no type', node, warning=True, mv=graph.getmv())
+                    error('expression has no type', node, warning=True, mv=getmv())
 
             if not isinstance(node.expr, Name):
                 self.append('(')
@@ -2472,7 +2485,7 @@ class GenerateVisitor(ASTVisitor):
 
     def visitAssAttr(self, node, func=None):  # XXX merge with visitGetattr
         if node.flags == 'OP_DELETE':
-            error("'del' has no effect without refcounting", node, warning=True, mv=graph.getmv())
+            error("'del' has no effect without refcounting", node, warning=True, mv=getmv())
             return
 
         cl, module = lookup_class_module(node.expr, inode(node).mv, func)
@@ -2501,14 +2514,14 @@ class GenerateVisitor(ASTVisitor):
 
     def visitAssName(self, node, func=None):
         if node.flags == 'OP_DELETE':
-            error("'del' has no effect without refcounting", node, warning=True, mv=graph.getmv())
+            error("'del' has no effect without refcounting", node, warning=True, mv=getmv())
             return
         self.append(self.cpp_name(node.name))
 
     def visitName(self, node, func=None, add_cl=True):
         map = {'True': 'True', 'False': 'False'}
-        if node in graph.getmv().lwrapper:
-            self.append(graph.getmv().lwrapper[node])
+        if node in getmv().lwrapper:
+            self.append(getmv().lwrapper[node])
         elif node.name == 'None':
             self.append('NULL')
         elif node.name == 'self':
@@ -2517,7 +2530,7 @@ class GenerateVisitor(ASTVisitor):
                (func and func.parent and func.isGenerator)):  # XXX lookup_var?
                 self.append('self')
             elif len(lcp) == 1 and not (lcp[0] is func.parent or lcp[0] in func.parent.ancestors()):  # see test 160
-                graph.getmv().module.prop_includes.add(lcp[0].module)  # XXX generalize
+                getmv().module.prop_includes.add(lcp[0].module)  # XXX generalize
                 self.append('((' + namespaceclass(lcp[0]) + ' *)this)')
             else:
                 self.append('this')
@@ -2525,15 +2538,15 @@ class GenerateVisitor(ASTVisitor):
             self.append(map[node.name])
 
         else:  # XXX clean up
-            if not self.mergeinh[node] and not inode(node).parent in config.getgx().inheritance_relations:
-                error("variable '" + node.name + "' has no type", node, warning=True, mv=graph.getmv())
+            if not self.mergeinh[node] and not inode(node).parent in getgx().inheritance_relations:
+                error("variable '" + node.name + "' has no type", node, warning=True, mv=getmv())
                 self.append(node.name)
             elif singletype(node, Module):
                 self.append('__' + singletype(node, Module).ident + '__')
             else:
                 if ((def_class('class_'), 0) in self.mergeinh[node] or
                    (add_cl and [t for t in self.mergeinh[node] if isinstance(t[0], StaticClass)])):
-                    cl = lookup_class(node, graph.getmv())
+                    cl = lookup_class(node, getmv())
                     if cl:
                         self.append(namespaceclass(cl, add_cl='cl_'))
                     else:
@@ -2565,7 +2578,7 @@ class GenerateVisitor(ASTVisitor):
         t = list(inode(node).types())[0]
         if t[0].ident == 'int_':
             self.append(str(node.value))
-            if config.getgx().longlong:
+            if getgx().longlong:
                 self.append('LL')
         elif t[0].ident == 'float_':
             if str(node.value) in ['inf', '1.#INF', 'Infinity']:
@@ -2585,19 +2598,26 @@ class GenerateVisitor(ASTVisitor):
             self.append('new %s(%s)' % (t[0].ident, node.value))
 
 
-class Bitpair:
-    def __init__(self, nodes, msg, inline):
-        self.nodes = nodes
-        self.msg = msg
-        self.inline = inline
+def nokeywords(name):
+    if name in getgx().cpp_keywords:
+        return getgx().ss_prefix + name
+    return name
+
+
+def namespaceclass(cl, add_cl=''):
+    module = cl.mv.module
+    if module.ident != 'builtin' and module != getmv().module and module.name_list:
+        return module.full_path() + '::' + add_cl + cl.cpp_name()
+    else:
+        return add_cl + cl.cpp_name()
 
 
 def generate_code():
-    for module in config.getgx().modules.values():
+    for module in getgx().modules.values():
         if not module.builtin:
             gv = GenerateVisitor(module)
             mv = module.mv
-            graph.setmv(mv)
+            setmv(mv)
             walk(module.ast, gv)
             gv.out.close()
             gv.header_file()

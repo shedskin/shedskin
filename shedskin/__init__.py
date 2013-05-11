@@ -3,19 +3,18 @@
 Copyright 2005-2011 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 
 '''
-import sys
 import getopt
 import os.path
-import traceback
-import time
 import struct
+import sys
+import time
+import traceback
 
-import infer
-import cpp
-import annotate
-import shared
-import config
-import error
+from annotate import annotate
+from config import newgx, setgx, getgx
+from cpp import generate_code
+from error import print_errors
+from infer import analyze
 
 
 def usage():
@@ -42,7 +41,7 @@ def usage():
 
 
 def start():
-    config.setgx(config.newgx())
+    setgx(newgx())
 
     # --- command-line options
     try:
@@ -54,44 +53,44 @@ def start():
         if o in ['-h', '--help']:
             usage()
         if o in ['-b', '--nobounds']:
-            config.getgx().bounds_checking = False
+            getgx().bounds_checking = False
         if o in ['-e', '--extmod']:
-            config.getgx().extension_module = True
+            getgx().extension_module = True
         if o in ['-a', '--ann']:
-            config.getgx().annotation = True
+            getgx().annotation = True
         if o in ['-d', '--debug']:
-            config.getgx().debug_level = int(a)
+            getgx().debug_level = int(a)
         if o in ['-l', '--long']:
-            config.getgx().longlong = True
+            getgx().longlong = True
         if o in ['-g', '--nogcwarns']:
-            config.getgx().gcwarns = False
+            getgx().gcwarns = False
         if o in ['-w', '--nowrap']:
-            config.getgx().wrap_around_check = False
+            getgx().wrap_around_check = False
         if o in ['-r', '--random']:
-            config.getgx().fast_random = True
+            getgx().fast_random = True
         if o in ['-o', '--noassert']:
-            config.getgx().assertions = False
+            getgx().assertions = False
         if o in ['-p', '--pypy']:
-            config.getgx().pypy = True
+            getgx().pypy = True
         if o in ['-m', '--makefile']:
-            config.getgx().makefile_name = a
+            getgx().makefile_name = a
         if o in ['-n', '--silent']:
-            config.getgx().silent = True
+            getgx().silent = True
         if o in ['-s', '--strhash']:
-            config.getgx().fast_hash = True
+            getgx().fast_hash = True
         if o in ['-v', '--msvc']:
-            config.getgx().msvc = True
+            getgx().msvc = True
         if o in ['-x', '--traceback']:
-            config.getgx().backtrace = True
+            getgx().backtrace = True
         if o in ['-L', '--lib']:
-            config.getgx().libdirs = [a] + config.getgx().libdirs
+            getgx().libdirs = [a] + getgx().libdirs
         if o in ['-f', '--flags']:
             if not os.path.isfile(a):
                 print "*ERROR* no such file: '%s'" % a
                 sys.exit(1)
-            config.getgx().flags = a
+            getgx().flags = a
 
-    if not config.getgx().silent:
+    if not getgx().silent:
         print '*** SHED SKIN Python-to-C++ Compiler 0.9.3 ***'
         print 'Copyright 2005-2011 Mark Dufour; License GNU GPL version 3 (See LICENSE)'
         print
@@ -104,7 +103,7 @@ def start():
     if sys.platform == 'win32' and os.path.isdir('c:/mingw'):
         print '*ERROR* please rename or remove c:/mingw, as it conflicts with Shed Skin'
         sys.exit()
-    if sys.platform == 'win32' and struct.calcsize('P') == 8 and config.getgx().extension_module:
+    if sys.platform == 'win32' and struct.calcsize('P') == 8 and getgx().extension_module:
         print '*WARNING* 64-bit python may not come with necessary file to build extension module'
 
     # --- argument
@@ -120,11 +119,11 @@ def start():
 
     # --- analyze & annotate
     t0 = time.time()
-    infer.analyze(main_module_name)
-    annotate.annotate()
-    cpp.generate_code()
-    error.print_errors()
-    if not config.getgx().silent:
+    analyze(main_module_name)
+    annotate()
+    generate_code()
+    print_errors()
+    if not getgx().silent:
         print '[elapsed time: %.2f seconds]' % (time.time() - t0)
 
 
@@ -133,9 +132,10 @@ def main():
     try:
         start()
     except KeyboardInterrupt, e:
-        if config.getgx().debug_level > 0:
+        if getgx().debug_level > 0:
             print traceback.format_exc(e)
         sys.exit(1)
+
 
 if __name__ == '__main__':
     main()

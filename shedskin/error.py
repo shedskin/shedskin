@@ -1,6 +1,12 @@
+'''
+*** SHED SKIN Python-to-C++ Compiler ***
+Copyright 2005-2011 Mark Dufour; License GNU GPL version 3 (See LICENSE)
+
+'''
 import sys
-import config
-from shared import inode
+
+import infer
+from config import getgx
 
 
 ERRORS = set()
@@ -11,8 +17,8 @@ def error(msg, node=None, warning=False, mv=None):
         kind = '*WARNING*'
     else:
         kind = '*ERROR*'
-    if not mv and node and (node, 0, 0) in config.getgx().cnode:
-        mv = inode(node).mv
+    if not mv and node and (node, 0, 0) in getgx().cnode:
+        mv = infer.inode(node).mv
     filename = lineno = None
     if mv:
         filename = mv.module.relative_filename

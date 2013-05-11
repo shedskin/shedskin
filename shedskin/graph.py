@@ -6,7 +6,7 @@ graph.py: build constraint graph used in dataflow analysis
 
 constraint graph: graph along which possible types 'flow' during an 'abstract execution' of a program (a dataflow analysis). consider the assignment statement 'a = b'. it follows that the set of possible types of b is smaller than or equal to that of a (a constraint). we can determine possible types of a, by 'flowing' the types from b to a, in other words, along the constraint.
 
-constraint graph nodes are stored in getgx().cnode, and the set of types of for each node in getgx().types. nodes are identified by an AST Node, and two integers. the integers are used in infer.py to duplicate parts of the constraint graph along two dimensions. in the initial constraint graph, these integers are always 0.
+constraint graph nodes are stored in getgx().cnode, and the set of types of for each node in getgx().types. nodes are identified by an AST Node, and two integers. the integers are used in py to duplicate parts of the constraint graph along two dimensions. in the initial constraint graph, these integers are always 0.
 
 class ModuleVisitor: inherits visitor pattern from compiler.visitor.ASTVisitor, to recursively generate constraints for each syntactical Python construct. for example, the visitFor method is called in case of a for-loop. temporary variables are introduced in many places, to enable translation to a lower-level language.
     import ipdb; ipdb.set_trace()  # BREAKPOINT
@@ -14,11 +14,11 @@ class ModuleVisitor: inherits visitor pattern from compiler.visitor.ASTVisitor, 
 parse_module(): locate module by name (e.g. 'os.path'), and use ModuleVisitor if not cached
 
 '''
-import os
-import imp
-import sys
 import copy
+import imp
+import os
 import re
+import sys
 from compiler import parse
 from compiler.ast import Const, AssTuple, AssList, From, Add, ListCompFor, \
     UnaryAdd, Import, Bitand, Stmt, Assign, FloorDiv, Not, Mod, AssAttr, \
@@ -28,10 +28,14 @@ from compiler.ast import Const, AssTuple, AssList, From, Add, ListCompFor, \
     Discard, Sliceobj, Tuple, Pass, UnarySub, Bitor, ListComp
 from compiler.visitor import ASTVisitor
 
-from shared import inode, is_zip2, in_out, Function, StaticClass, register_temp_var, lookup_class, aug_msg, lookup_func, default_var, Module, is_literal, is_enum, is_method, def_class, CNode, is_fastfor, assign_rec, class_, is_property_setter, lookup_var
-from struct_ import struct_faketuple, struct_info, struct_unpack
 from error import error
-import config
+from config import getgx
+from infer import inode, in_out, CNode
+from python import StaticClass, lookup_func, default_var, Function, is_zip2, \
+    lookup_class, is_method, is_literal, is_enum, lookup_var, assign_rec, \
+    class_, is_property_setter, is_fastfor, register_temp_var, aug_msg, \
+    Module, def_class
+from struct_ import struct_faketuple, struct_info, struct_unpack
 
 
 # --- global variable mv
@@ -60,8 +64,48 @@ class FakeGetattr(Getattr):
     pass  # XXX ugly
 
 
-# --- module visitor; analyze program, build constraint graph
+def check_redef(node, s=None, onlybuiltins=False):  # XXX to modvisitor, rewrite
+    if not getmv().module.builtin:
+        existing = [getmv().ext_classes, getmv().ext_funcs]
+        if not onlybuiltins:
+            existing += [getmv().classes, getmv().funcs]
+        for whatsit in existing:
+            if s is not None:
+                name = s
+            else:
+                name = node.name
+            if name in whatsit:
+                error("function/class redefinition is not supported", node, mv=getmv())
 
+
+# --- maintain inheritance relations between copied AST nodes
+def inherit_rec(original, copy, mv):
+    getgx().inheritance_relations.setdefault(original, []).append(copy)
+    getgx().inherited.add(copy)
+    getgx().parent_nodes[copy] = original
+
+    for (a, b) in zip(original.getChildNodes(), copy.getChildNodes()):
+        inherit_rec(a, b, mv)
+
+
+def register_node(node, func):
+    if func:
+        func.registered.append(node)
+
+
+def slice_nums(nodes):
+    nodes2 = []
+    x = 0
+    for i, n in enumerate(nodes):
+        if not n or (isinstance(n, Const) and n.value is None):
+            nodes2.append(Const(0))
+        else:
+            nodes2.append(n)
+            x |= (1 << i)
+    return [Const(x)] + nodes2
+
+
+# --- module visitor; analyze program, build constraint graph
 class ModuleVisitor(ASTVisitor):
     def __init__(self, module):
         ASTVisitor.__init__(self)
@@ -76,7 +120,7 @@ class ModuleVisitor(ASTVisitor):
         self.ext_funcs = {}
         self.lambdaname = {}
         self.lwrapper = {}
-        self.tempcount = config.getgx().tempcount
+        self.tempcount = getgx().tempcount
         self.callfuncs = []
         self.for_in_iters = []
         self.listcomps = []
@@ -84,15 +128,15 @@ class ModuleVisitor(ASTVisitor):
         self.importnodes = []
 
     def dispatch(self, node, *args):
-        if (node, 0, 0) not in config.getgx().cnode:
+        if (node, 0, 0) not in getgx().cnode:
             ASTVisitor.dispatch(self, node, *args)
 
     def fake_func(self, node, objexpr, attrname, args, func):
-        if (node, 0, 0) in config.getgx().cnode:  # XXX
-            newnode = config.getgx().cnode[node, 0, 0]
+        if (node, 0, 0) in getgx().cnode:  # XXX
+            newnode = getgx().cnode[node, 0, 0]
         else:
             newnode = CNode(node, parent=func)
-            config.getgx().types[newnode] = set()
+            getgx().types[newnode] = set()
 
         fakefunc = CallFunc(Getattr(objexpr, attrname), args)
         fakefunc.lineno = objexpr.lineno
@@ -121,7 +165,7 @@ class ModuleVisitor(ASTVisitor):
                 count, child = count + 1, int
             elif child.node.name in map:
                 child = map[child.node.name]
-            elif child.node.name in (cl.ident for cl in config.getgx().allclasses) or child.node.name in getmv().classes:  # XXX getmv().classes
+            elif child.node.name in (cl.ident for cl in getgx().allclasses) or child.node.name in getmv().classes:  # XXX getmv().classes
                 child = child.node.name
             else:
                 if count == 1:
@@ -140,25 +184,25 @@ class ModuleVisitor(ASTVisitor):
                 return None
             child = None
 
-        config.getgx().list_types.setdefault((count, child), len(config.getgx().list_types) + 2)
+        getgx().list_types.setdefault((count, child), len(getgx().list_types) + 2)
         # print 'listtype', node, getgx().list_types[count, child]
-        return config.getgx().list_types[count, child]
+        return getgx().list_types[count, child]
 
     def instance(self, node, cl, func=None):
-        if (node, 0, 0) in config.getgx().cnode:  # XXX to create_node() func
-            newnode = config.getgx().cnode[node, 0, 0]
+        if (node, 0, 0) in getgx().cnode:  # XXX to create_node() func
+            newnode = getgx().cnode[node, 0, 0]
         else:
             newnode = CNode(node, parent=func)
 
         newnode.constructor = True
 
         if cl.ident in ['int_', 'float_', 'str_', 'none', 'class_', 'bool_']:
-            config.getgx().types[newnode] = set([(cl, cl.dcpa - 1)])
+            getgx().types[newnode] = set([(cl, cl.dcpa - 1)])
         else:
             if cl.ident == 'list' and self.list_type(node):
-                config.getgx().types[newnode] = set([(cl, self.list_type(node))])
+                getgx().types[newnode] = set([(cl, self.list_type(node))])
             else:
-                config.getgx().types[newnode] = set([(cl, cl.dcpa)])
+                getgx().types[newnode] = set([(cl, cl.dcpa)])
 
     def constructor(self, node, classname, func):
         cl = def_class(classname)
@@ -167,7 +211,7 @@ class ModuleVisitor(ASTVisitor):
         default_var('unit', cl)
 
         if classname in ['list', 'tuple'] and not node.nodes:
-            config.getgx().empty_constructors.add(node)  # ifa disables those that flow to instance variable assignments
+            getgx().empty_constructors.add(node)  # ifa disables those that flow to instance variable assignments
 
         # --- internally flow binary tuples
         if cl.ident == 'tuple2':
@@ -243,14 +287,14 @@ class ModuleVisitor(ASTVisitor):
     def add_dynamic_constraint(self, parent, child, varname, func):
         # print 'dynamic constr', child, parent
 
-        config.getgx().assign_target[child] = parent
+        getgx().assign_target[child] = parent
         cu = Const(varname)
         self.visit(cu, func)
         fakefunc = CallFunc(FakeGetattr2(parent, '__setattr__'), [cu, child])
         self.visit(fakefunc, func)
 
         fakechildnode = CNode((child, varname), parent=func)  # create separate 'fake' CNode per child, so we can have multiple 'callfuncs'
-        config.getgx().types[fakechildnode] = set()
+        getgx().types[fakechildnode] = set()
 
         self.add_constraint((inode(parent), fakechildnode), func)  # add constraint from parent to fake child node. if parent changes, all fake child nodes change, and the callfunc for each child node is triggered
         fakechildnode.callfuncs.append(fakefunc)
@@ -258,7 +302,7 @@ class ModuleVisitor(ASTVisitor):
     # --- add regular constraint to function
     def add_constraint(self, constraint, func):
         in_out(constraint[0], constraint[1])
-        config.getgx().constraints.add(constraint)
+        getgx().constraints.add(constraint)
         while isinstance(func, Function) and func.listcomp:
             func = func.parent  # XXX
         if isinstance(func, Function):
@@ -269,10 +313,10 @@ class ModuleVisitor(ASTVisitor):
 
     def visitGenExpr(self, node, func=None):
         newnode = CNode(node, parent=func)
-        config.getgx().types[newnode] = set()
+        getgx().types[newnode] = set()
         lc = ListComp(node.code.expr, [ListCompFor(qual.assign, qual.iter, qual.ifs, qual.lineno) for qual in node.code.quals], lineno=node.lineno)
         register_node(lc, func)
-        config.getgx().genexp_to_lc[node] = lc
+        getgx().genexp_to_lc[node] = lc
         self.visit(lc, func)
         self.add_constraint((inode(lc), newnode), func)
 
@@ -284,14 +328,14 @@ class ModuleVisitor(ASTVisitor):
             if isinstance(b, Discard) and isinstance(b.expr, Const) and type(b.expr.value) == str:
                 comments.append(b.expr.value)
             elif comments:
-                config.getgx().comments[b] = comments
+                getgx().comments[b] = comments
                 comments = []
             self.visit(b, func)
 
     def visitModule(self, node):
         # --- bootstrap built-in classes
         if self.module.ident == 'builtin':
-            for dummy in config.getgx().builtins:
+            for dummy in getgx().builtins:
                 self.visit(Class(dummy, [], None, Pass()))
 
         if self.module.ident != 'builtin':
@@ -302,7 +346,7 @@ class ModuleVisitor(ASTVisitor):
         # --- __name__
         if self.module.ident != 'builtin':
             namevar = default_var('__name__', None)
-            config.getgx().types[inode(namevar)] = set([(def_class('str_'), 0)])
+            getgx().types[inode(namevar)] = set([(def_class('str_'), 0)])
 
         self.forward_references(node)
 
@@ -314,7 +358,7 @@ class ModuleVisitor(ASTVisitor):
 
         # --- register classes
         for cl in getmv().classes.values():
-            config.getgx().allclasses.add(cl)
+            getgx().allclasses.add(cl)
 
         # --- inheritance expansion
 
@@ -351,7 +395,7 @@ class ModuleVisitor(ASTVisitor):
                     setmv(mv)
 
                     # maintain relation with original
-                    config.getgx().inheritance_relations.setdefault(func, []).append(cl.funcs[ident])
+                    getgx().inheritance_relations.setdefault(func, []).append(cl.funcs[ident])
                     cl.funcs[ident].inherited = func.node
                     cl.funcs[ident].inherited_from = func
                     func_copy.name = ident
@@ -460,7 +504,7 @@ class ModuleVisitor(ASTVisitor):
         if not fake:
             var = default_var(pseudonym or name, None)
             var.imported = True
-            config.getgx().types[inode(var)] = set([(module, 0)])
+            getgx().types[inode(var)] = set([(module, 0)])
         return module
 
     def visitFrom(self, node, parent=None):
@@ -476,7 +520,7 @@ class ModuleVisitor(ASTVisitor):
             return
 
         module = self.import_modules(node.modname, node, True)
-        config.getgx().from_module[node] = module
+        getgx().from_module[node] = module
 
         for name, pseudonym in node.names:
             if name == '*':
@@ -485,7 +529,7 @@ class ModuleVisitor(ASTVisitor):
                 for import_name, import_module in module.mv.imports.items():
                     var = default_var(import_name, None)  # XXX merge
                     var.imported = True
-                    config.getgx().types[inode(var)] = set([(import_module, 0)])
+                    getgx().types[inode(var)] = set([(import_module, 0)])
                     self.imports[import_name] = import_module
                 for name, extvar in module.mv.globals.items():
                     if not extvar.imported and not name in ['__name__']:
@@ -575,9 +619,9 @@ class ModuleVisitor(ASTVisitor):
 
         # --- flow return expressions together into single node
         func.retnode = retnode = CNode(node, parent=func)
-        config.getgx().types[retnode] = set()
+        getgx().types[retnode] = set()
         func.yieldnode = yieldnode = CNode((node, 'yield'), parent=func)
-        config.getgx().types[yieldnode] = set()
+        getgx().types[yieldnode] = set()
 
         self.visit(node.code, func)
 
@@ -597,7 +641,7 @@ class ModuleVisitor(ASTVisitor):
                 default_var('self', func)
                 if func.ident == '__init__' and '__del__' in parent.funcs:  # XXX what if no __init__
                     self.visit(CallFunc(Getattr(Name('self'), '__del__'), []), func)
-                    config.getgx().gc_cleanup = True
+                    getgx().gc_cleanup = True
             parent.funcs[func.ident] = func
 
     def unpack_rec(self, formal):
@@ -615,7 +659,7 @@ class ModuleVisitor(ASTVisitor):
         f.lambdanr = lambdanr
         self.lambdaname[node] = name
         newnode = CNode(node, parent=func)
-        config.getgx().types[newnode] = set([(f, 0)])
+        getgx().types[newnode] = set([(f, 0)])
         newnode.copymetoo = True
 
     def visitAnd(self, node, func=None):
@@ -626,9 +670,9 @@ class ModuleVisitor(ASTVisitor):
 
     def visit_and_or(self, node, func):
         newnode = CNode(node, parent=func)
-        config.getgx().types[newnode] = set()
+        getgx().types[newnode] = set()
         for child in node.getChildNodes():
-            if node in config.getgx().bool_test_only:
+            if node in getgx().bool_test_only:
                 self.bool_test_add(child)
             self.visit(child, func)
             self.add_constraint((inode(child), newnode), func)
@@ -645,7 +689,7 @@ class ModuleVisitor(ASTVisitor):
 
     def visitIfExp(self, node, func=None):
         newnode = CNode(node, parent=func)
-        config.getgx().types[newnode] = set()
+        getgx().types[newnode] = set()
 
         for child in node.getChildNodes():
             self.visit(child, func)
@@ -668,7 +712,7 @@ class ModuleVisitor(ASTVisitor):
         self.bool_test_add(node.expr)
         newnode = CNode(node, parent=func)
         newnode.copymetoo = True
-        config.getgx().types[newnode] = set([(def_class('bool_'), 0)])  # XXX new type?
+        getgx().types[newnode] = set([(def_class('bool_'), 0)])  # XXX new type?
         self.visit(node.expr, func)
 
     def visitBackquote(self, node, func=None):
@@ -721,7 +765,7 @@ class ModuleVisitor(ASTVisitor):
     def visitCompare(self, node, func=None):
         newnode = CNode(node, parent=func)
         newnode.copymetoo = True
-        config.getgx().types[newnode] = set([(def_class('bool_'), 0)])  # XXX new type?
+        getgx().types[newnode] = set([(def_class('bool_'), 0)])  # XXX new type?
         self.visit(node.expr, func)
         msgs = {'<': 'lt', '>': 'gt', 'in': 'contains', 'not in': 'contains', '!=': 'ne', '==': 'eq', '<=': 'le', '>=': 'ge'}
         left = node.expr
@@ -754,7 +798,7 @@ class ModuleVisitor(ASTVisitor):
 
     def visitBitpair(self, node, msg, func=None):
         CNode(node, parent=func)
-        config.getgx().types[inode(node)] = set()
+        getgx().types[inode(node)] = set()
         left = node.nodes[0]
         for i, right in enumerate(node.nodes[1:]):
             faker = self.fake_func((left, i), left, msg, [right], func)
@@ -775,7 +819,7 @@ class ModuleVisitor(ASTVisitor):
 
     def visitAugAssign(self, node, func=None):  # a[b] += c -> a[b] = a[b]+c, using tempvars to handle sidefx
         newnode = CNode(node, parent=func)
-        config.getgx().types[newnode] = set()
+        getgx().types[newnode] = set()
 
         clone = copy.deepcopy(node)
         lnode = node.node
@@ -872,15 +916,15 @@ class ModuleVisitor(ASTVisitor):
 
     def visitPrint(self, node, func=None):
         pnode = CNode(node, parent=func)
-        config.getgx().types[pnode] = set()
+        getgx().types[pnode] = set()
 
         for child in node.getChildNodes():
             self.visit(child, func)
             self.fake_func(inode(child), child, '__str__', [], func)
 
     def temp_var(self, node, func=None, looper=None, wopper=None):
-        if node in config.getgx().parent_nodes:
-            varname = self.tempcount[config.getgx().parent_nodes[node]]
+        if node in getgx().parent_nodes:
+            varname = self.tempcount[getgx().parent_nodes[node]]
         elif node in self.tempcount:  # XXX investigate why this happens
             varname = self.tempcount[node]
         else:
@@ -901,7 +945,7 @@ class ModuleVisitor(ASTVisitor):
 
     def temp_var_int(self, node, func):
         var = self.temp_var(node, func)
-        config.getgx().types[inode(var)] = set([(def_class('int_'), 0)])
+        getgx().types[inode(var)] = set([(def_class('int_'), 0)])
         inode(var).copymetoo = True
         return var
 
@@ -938,7 +982,7 @@ class ModuleVisitor(ASTVisitor):
 
                 var.invisible = True
                 inode(var).copymetoo = True
-                config.getgx().types[inode(var)] = set([(cl, 1)])
+                getgx().types[inode(var)] = set([(cl, 1)])
 
         # else
         if node.else_:
@@ -957,7 +1001,7 @@ class ModuleVisitor(ASTVisitor):
     def visitFor(self, node, func=None):
         # --- iterable contents -> assign node
         assnode = CNode(node.assign, parent=func)
-        config.getgx().types[assnode] = set()
+        getgx().types[assnode] = set()
 
         get_iter = CallFunc(Getattr(node.list, '__iter__'), [])
         fakefunc = CallFunc(Getattr(get_iter, 'next'), [])
@@ -975,7 +1019,7 @@ class ModuleVisitor(ASTVisitor):
             # for expr.x in..
             CNode(node.assign, parent=func)
 
-            config.getgx().assign_target[node.assign.expr] = node.assign.expr  # XXX multiple targets possible please
+            getgx().assign_target[node.assign.expr] = node.assign.expr  # XXX multiple targets possible please
             fakefunc2 = CallFunc(Getattr(node.assign.expr, '__setattr__'), [Const(node.assign.attrname), fakefunc])
             self.visit(fakefunc2, func)
 
@@ -993,9 +1037,9 @@ class ModuleVisitor(ASTVisitor):
             self.visit(node.else_, func)
 
         # --- loop body
-        config.getgx().loopstack.append(node)
+        getgx().loopstack.append(node)
         self.visit(node.body, func)
-        config.getgx().loopstack.pop()
+        getgx().loopstack.pop()
         self.for_in_iters.append(node.list)
 
     def do_for(self, node, assnode, get_iter, func):
@@ -1028,14 +1072,14 @@ class ModuleVisitor(ASTVisitor):
 
     def bool_test_add(self, node):
         if isinstance(node, (And, Or, Not)):
-            config.getgx().bool_test_only.add(node)
+            getgx().bool_test_only.add(node)
 
     def visitWhile(self, node, func=None):
-        config.getgx().loopstack.append(node)
+        getgx().loopstack.append(node)
         self.bool_test_add(node.test)
         for child in node.getChildNodes():
             self.visit(child, func)
-        config.getgx().loopstack.pop()
+        getgx().loopstack.pop()
 
         if node.else_:
             self.temp_var_int(node.else_, func)
@@ -1044,7 +1088,7 @@ class ModuleVisitor(ASTVisitor):
     def visitWith(self, node, func=None):
         if node.vars:
             varnode = CNode(node.vars, parent=func)
-            config.getgx().types[varnode] = set()
+            getgx().types[varnode] = set()
             self.visit(node.expr, func)
             self.add_constraint((inode(node.expr), varnode), func)
             lvar = default_var(node.vars.name, func)
@@ -1069,7 +1113,7 @@ class ModuleVisitor(ASTVisitor):
         for qual in node.quals:
             # iter
             assnode = CNode(qual.assign, parent=func)
-            config.getgx().types[assnode] = set()
+            getgx().types[assnode] = set()
 
             # list.unit->iter
             get_iter = CallFunc(Getattr(qual.list, '__iter__'), [])
@@ -1092,7 +1136,7 @@ class ModuleVisitor(ASTVisitor):
             self.for_in_iters.append(qual.list)
 
         # node type
-        if node in config.getgx().genexp_to_lc.values():  # converted generator expression
+        if node in getgx().genexp_to_lc.values():  # converted generator expression
             self.instance(node, def_class('__iter'), func)
         else:
             self.instance(node, def_class('list'), func)
@@ -1109,7 +1153,7 @@ class ModuleVisitor(ASTVisitor):
         func.returnexpr.append(node.value)
         if not (isinstance(node.value, Const) and node.value.value is None):
             newnode = CNode(node, parent=func)
-            config.getgx().types[newnode] = set()
+            getgx().types[newnode] = set()
             if isinstance(node.value, Name):
                 func.retvars.append(node.value.name)
         if func.retnode:
@@ -1128,11 +1172,11 @@ class ModuleVisitor(ASTVisitor):
                 self.visit(Assign(node.nodes, faketuple), func)
                 tvar = self.temp_var2(rvalue.args[1], inode(rvalue.args[1]), func)
                 tvar_pos = self.temp_var_int(rvalue.args[0], func)
-                config.getgx().struct_unpack[node] = (sinfo, tvar.name, tvar_pos.name)
+                getgx().struct_unpack[node] = (sinfo, tvar.name, tvar_pos.name)
                 return
 
         newnode = CNode(node, parent=func)
-        config.getgx().types[newnode] = set()
+        getgx().types[newnode] = set()
 
         # --- a,b,.. = c,(d,e),.. = .. = expr
         for target_expr in node.nodes:
@@ -1148,7 +1192,7 @@ class ModuleVisitor(ASTVisitor):
 
                 # name = expr
                 elif isinstance(lvalue, AssName):
-                    if (rvalue, 0, 0) not in config.getgx().cnode:  # XXX generalize
+                    if (rvalue, 0, 0) not in getgx().cnode:  # XXX generalize
                         self.visit(rvalue, func)
                     self.visit(lvalue, func)
                     if isinstance(func, Function) and lvalue.name in func.globals:
@@ -1177,7 +1221,7 @@ class ModuleVisitor(ASTVisitor):
             if isinstance(node.expr, Tuple):
                 if [n for n in node.nodes if isinstance(n, AssTuple)]:
                     for child in node.expr.nodes:
-                        if (child, 0, 0) not in config.getgx().cnode:  # (a,b) = (1,2): (1,2) never visited
+                        if (child, 0, 0) not in getgx().cnode:  # (a,b) = (1,2): (1,2) never visited
                             continue
                         if not isinstance(child, Const) and not (isinstance(child, Name) and child.name == 'None'):
                             self.temp_var2(child, inode(child), func)
@@ -1204,7 +1248,7 @@ class ModuleVisitor(ASTVisitor):
         # expr.attr = expr
         elif isinstance(lvalue, AssAttr):
             CNode(lvalue, parent=func)
-            config.getgx().assign_target[rvalue] = lvalue.expr
+            getgx().assign_target[rvalue] = lvalue.expr
             fakefunc = CallFunc(Getattr(lvalue.expr, '__setattr__'), [Const(lvalue.attrname), rvalue])
             self.visit(fakefunc, func)
 
@@ -1215,7 +1259,7 @@ class ModuleVisitor(ASTVisitor):
             lvalue = lvalue.nodes
         for (i, item) in enumerate(lvalue):
             fakenode = CNode((item,), parent=func)  # fake node per item, for multiple callfunc triggers
-            config.getgx().types[fakenode] = set()
+            getgx().types[fakenode] = set()
             self.add_constraint((inode(rvalue), fakenode), func)
 
             fakefunc = CallFunc(FakeGetattr3(rvalue, '__getitem__'), [Const(i)])
@@ -1223,7 +1267,7 @@ class ModuleVisitor(ASTVisitor):
             fakenode.callfuncs.append(fakefunc)
             self.visit(fakefunc, func)
 
-            config.getgx().item_rvalue[item] = rvalue
+            getgx().item_rvalue[item] = rvalue
             if isinstance(item, AssName):
                 if isinstance(func, Function) and item.name in func.globals:  # XXX merge
                     lvar = default_var(item.name, None)
@@ -1266,7 +1310,7 @@ class ModuleVisitor(ASTVisitor):
             if isinstance(node.node, FakeGetattr):  # XXX butt ugly
                 self.visit(node.node, func)
             elif isinstance(node.node, FakeGetattr2):
-                config.getgx().types[newnode] = set()  # XXX move above
+                getgx().types[newnode] = set()  # XXX move above
 
                 self.callfuncs.append((node, func))
 
@@ -1328,7 +1372,7 @@ class ModuleVisitor(ASTVisitor):
             self.instance(node, constructor, func)
             inode(node).callfuncs.append(node)  # XXX see above, investigate
         else:
-            config.getgx().types[newnode] = set()
+            getgx().types[newnode] = set()
 
         self.callfuncs.append((node, func))
 
@@ -1386,7 +1430,7 @@ class ModuleVisitor(ASTVisitor):
         if 'class_' in getmv().classes or 'class_' in getmv().ext_classes:
             var = default_var('__class__', newclass)
             var.invisible = True
-            config.getgx().types[inode(var)] = set([(def_class('class_'), def_class('class_').dcpa)])
+            getgx().types[inode(var)] = set([(def_class('class_'), def_class('class_').dcpa)])
             def_class('class_').dcpa += 1
 
         # --- staticmethod, property
@@ -1440,11 +1484,11 @@ class ModuleVisitor(ASTVisitor):
             error('%s attribute is not supported' % node.attrname, node, mv=self)
 
         newnode = CNode(node, parent=func)
-        config.getgx().types[newnode] = set()
+        getgx().types[newnode] = set()
 
         fakefunc = CallFunc(FakeGetattr(node.expr, '__getattr__'), [Const(node.attrname)])
         self.visit(fakefunc, func)
-        self.add_constraint((config.getgx().cnode[fakefunc, 0, 0], newnode), func)
+        self.add_constraint((getgx().cnode[fakefunc, 0, 0], newnode), func)
 
         self.callfuncs.append((fakefunc, func))
 
@@ -1465,13 +1509,13 @@ class ModuleVisitor(ASTVisitor):
             elif lfunc.ident not in lfunc.mv.lambdas:
                 lfunc.lambdanr = len(lfunc.mv.lambdas)
                 lfunc.mv.lambdas[lfunc.ident] = lfunc
-            config.getgx().types[newnode] = set([(lfunc, 0)])
+            getgx().types[newnode] = set([(lfunc, 0)])
         elif lclass:
             if lclass.mv.module.builtin:
                 lclass = self.builtin_wrapper(node, func)
             else:
                 lclass = lclass.parent
-            config.getgx().types[newnode] = set([(lclass, 0)])
+            getgx().types[newnode] = set([(lclass, 0)])
         else:
             return False
         newnode.copymetoo = True  # XXX merge into some kind of 'seeding' function
@@ -1479,7 +1523,7 @@ class ModuleVisitor(ASTVisitor):
 
     def visitName(self, node, func=None):
         newnode = CNode(node, parent=func)
-        config.getgx().types[newnode] = set()
+        getgx().types[newnode] = set()
 
         if node.name == '__doc__':
             error("'%s' attribute is not supported" % node.name, node, mv=self)
@@ -1500,7 +1544,7 @@ class ModuleVisitor(ASTVisitor):
                     pass
                 elif node.name in ['int', 'float', 'str']:  # XXX
                     cl = self.ext_classes[node.name + '_']
-                    config.getgx().types[newnode] = set([(cl.parent, 0)])
+                    getgx().types[newnode] = set([(cl.parent, 0)])
                     newnode.copymetoo = True
                 else:
                     var = default_var(node.name, None)
@@ -1512,7 +1556,7 @@ class ModuleVisitor(ASTVisitor):
         l = Lambda(list('abcde'), [], 0, node2)
         self.visit(l, func)
         self.lwrapper[node] = self.lambdaname[l]
-        config.getgx().lambdawrapper[node2] = self.lambdaname[l]
+        getgx().lambdawrapper[node2] = self.lambdaname[l]
         f = self.lambdas[self.lambdaname[l]]
         f.lambdawrapper = True
         inode(node2).lambdawrapper = f
@@ -1545,14 +1589,14 @@ def find_module(name, paths):
     _, filename, description = imp.find_module(module_name, import_paths)
     filename = os.path.splitext(filename)[0]
 
-    absolute_import_paths = config.getgx().libdirs + [os.getcwd()]
+    absolute_import_paths = getgx().libdirs + [os.getcwd()]
     absolute_import_path = next(
         path for path in absolute_import_paths
         if filename.startswith(path)
     )
     relative_filename = os.path.relpath(filename, absolute_import_path)
     absolute_name = relative_filename.replace(os.path.sep, '.')
-    builtin = absolute_import_path in config.getgx().libdirs
+    builtin = absolute_import_path in getgx().libdirs
 
     is_a_package = description[2] == imp.PKG_DIRECTORY
     if is_a_package:
@@ -1577,16 +1621,16 @@ def parse_module(name, parent=None, node=None):
             basepaths = [parent.path, os.getcwd()]
         else:
             basepaths = [os.getcwd()]
-        module_paths = basepaths + config.getgx().libdirs
+        module_paths = basepaths + getgx().libdirs
         absolute_name, filename, relative_filename, builtin = find_module(name, module_paths)
         module = Module(absolute_name, filename, relative_filename, builtin, node)
     except ImportError:
         error('cannot locate module: ' + name, node, mv=getmv())
 
     # --- check cache
-    if module.name in config.getgx().modules:  # cached?
-        return config.getgx().modules[module.name]
-    config.getgx().modules[module.name] = module
+    if module.name in getgx().modules:  # cached?
+        return getgx().modules[module.name]
+    getgx().modules[module.name] = module
 
     # --- not cached, so parse
     module.ast = parse_file(module.filename)
@@ -1598,52 +1642,10 @@ def parse_module(name, parent=None, node=None):
     mv.visit = mv.dispatch
     mv.visitor = mv
     mv.dispatch(module.ast)
-    module.import_order = config.getgx().import_order
-    config.getgx().import_order += 1
+    module.import_order = getgx().import_order
+    getgx().import_order += 1
 
     mv = old_mv
     setmv(mv)
 
     return module
-
-
-def check_redef(node, s=None, onlybuiltins=False):  # XXX to modvisitor, rewrite
-    if not getmv().module.builtin:
-        existing = [getmv().ext_classes, getmv().ext_funcs]
-        if not onlybuiltins:
-            existing += [getmv().classes, getmv().funcs]
-        for whatsit in existing:
-            if s is not None:
-                name = s
-            else:
-                name = node.name
-            if name in whatsit:
-                error("function/class redefinition is not supported", node, mv=getmv())
-
-# --- maintain inheritance relations between copied AST nodes
-
-
-def inherit_rec(original, copy, mv):
-    config.getgx().inheritance_relations.setdefault(original, []).append(copy)
-    config.getgx().inherited.add(copy)
-    config.getgx().parent_nodes[copy] = original
-
-    for (a, b) in zip(original.getChildNodes(), copy.getChildNodes()):
-        inherit_rec(a, b, mv)
-
-
-def register_node(node, func):
-    if func:
-        func.registered.append(node)
-
-
-def slice_nums(nodes):
-    nodes2 = []
-    x = 0
-    for i, n in enumerate(nodes):
-        if not n or (isinstance(n, Const) and n.value is None):
-            nodes2.append(Const(0))
-        else:
-            nodes2.append(n)
-            x |= (1 << i)
-    return [Const(x)] + nodes2
