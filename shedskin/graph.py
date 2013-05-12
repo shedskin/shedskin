@@ -24,7 +24,7 @@ from compiler.ast import Const, AssTuple, AssList, From, Add, ListCompFor, \
     UnaryAdd, Import, Bitand, Stmt, Assign, FloorDiv, Not, Mod, AssAttr, \
     Keyword, GenExpr, LeftShift, AssName, Div, Or, Lambda, And, CallFunc, \
     Global, Slice, RightShift, Sub, Getattr, Dict, Ellipsis, Mul, \
-    Subscript, Function as FunctionNode, Return, Power, Bitxor, Class, Name, List, \
+    Subscript, Function as FunctionNode, Return, Power, Bitxor, Class as ClassNode, Name, List, \
     Discard, Sliceobj, Tuple, Pass, UnarySub, Bitor, ListComp
 from compiler.visitor import ASTVisitor
 
@@ -336,7 +336,7 @@ class ModuleVisitor(ASTVisitor):
         # --- bootstrap built-in classes
         if self.module.ident == 'builtin':
             for dummy in getgx().builtins:
-                self.visit(Class(dummy, [], None, Pass()))
+                self.visit(ClassNode(dummy, [], None, Pass()))
 
         if self.module.ident != 'builtin':
             n = From('builtin', [('*', None)], None)  # Python2.5+
@@ -416,7 +416,7 @@ class ModuleVisitor(ASTVisitor):
         getmv().classnodes = []
 
         # classes
-        for n in self.stmt_nodes(node, Class):
+        for n in self.stmt_nodes(node, ClassNode):
             check_redef(n)
             getmv().classnodes.append(n)
             newclass = class_(n)
@@ -463,7 +463,7 @@ class ModuleVisitor(ASTVisitor):
         return result
 
     def local_assignments(self, node, global_=False):
-        if global_ and isinstance(node, (Class, FunctionNode)):
+        if global_ and isinstance(node, (ClassNode, FunctionNode)):
             return []
         elif isinstance(node, (ListComp, GenExpr)):
             return []
