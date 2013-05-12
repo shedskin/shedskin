@@ -123,21 +123,18 @@ class Class:
         return 'class ' + self.ident
 
 
-class StaticClass:  # XXX merge with regular class
+class StaticClass:
     def __init__(self, cl):
         self.vars = {}
         self.static_nodes = []
         self.funcs = {}
-        self.class_ = cl
-        cl.static_class = self
         self.ident = cl.ident
-        self.bases = []
         self.parent = None
         self.mv = graph.getmv()
         self.module = cl.module
 
     def __repr__(self):
-        return 'static class ' + self.class_.ident
+        return 'static class ' + self.ident
 
 
 class Function:
