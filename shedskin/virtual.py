@@ -9,7 +9,7 @@ from compiler.ast import CallFunc, Name
 
 import infer
 from config import getgx
-from python import default_var, subclass, class_
+from python import default_var, subclass, Class
 from typestr import lowest_common_parents, typestr, polymorphic_t
 
 
@@ -106,7 +106,7 @@ def analyze_virtuals():
 
             # --- determine abstract receiver class
             classes = polymorphic_t(getgx().merged_inh[objexpr])
-            classes = [cl for cl in classes if isinstance(cl, class_)]
+            classes = [cl for cl in classes if isinstance(cl, Class)]
             if not classes:
                 continue
 
@@ -120,7 +120,7 @@ def analyze_virtuals():
 
 
 def upgrade_cl(abstract_cl, node, ident, classes):
-    if not abstract_cl or not isinstance(abstract_cl, class_):
+    if not abstract_cl or not isinstance(abstract_cl, Class):
         return
     subclasses = [cl for cl in classes if subclass(cl, abstract_cl)]
 

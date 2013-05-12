@@ -26,7 +26,7 @@ from graph import getmv, setmv
 from infer import analyze_callfunc, callfunc_targets, connect_actual_formal, \
     hmcpa, inode
 from makefile import generate_makefile
-from python import assign_rec, aug_msg, class_, def_class, \
+from python import assign_rec, aug_msg, Class, def_class, \
     is_enum, is_fastfor, is_literal, is_zip2, \
     lookup_class, lookup_class_module, lookup_var, lookup_variable, lookup_module, \
     Function, Module, StaticClass
@@ -228,7 +228,7 @@ class GenerateVisitor(ASTVisitor):
 
     def visitm(self, *args):
         func = None
-        if args and isinstance(args[-1], (Function, class_)):
+        if args and isinstance(args[-1], (Function, Class)):
             func = args[-1]
         for arg in args[:-1]:
             if isinstance(arg, str):
@@ -754,7 +754,7 @@ class GenerateVisitor(ASTVisitor):
     def subtypes(self, types, varname):
         subtypes = set()
         for t in types:
-            if isinstance(t[0], class_):
+            if isinstance(t[0], Class):
                 var = t[0].vars.get(varname)
                 if var and (var, t[1], 0) in getgx().cnode:  # XXX yeah?
                     subtypes.update(getgx().cnode[var, t[1], 0].types())
@@ -762,7 +762,7 @@ class GenerateVisitor(ASTVisitor):
 
     def bin_tuple(self, types):
         for t in types:
-            if isinstance(t[0], class_) and t[0].ident == 'tuple2':
+            if isinstance(t[0], Class) and t[0].ident == 'tuple2':
                 var1 = t[0].vars.get('first')
                 var2 = t[0].vars.get('second')
                 if var1 and var2:
@@ -800,7 +800,7 @@ class GenerateVisitor(ASTVisitor):
         self.append('))')
 
     def visit_tuple_list(self, node, func=None, argtypes=None):
-        if isinstance(func, class_):  # XXX
+        if isinstance(func, Class):  # XXX
             func = None
         argtypes = self.instance_new(node, argtypes)
         children = node.getChildNodes()
@@ -861,7 +861,7 @@ class GenerateVisitor(ASTVisitor):
             self.append(')')
 
         # --- raise instance
-        elif isinstance(cl, class_) and cl.mv.module.ident == 'builtin' and not [a for a in cl.ancestors_upto(None) if a.ident == 'BaseException']:
+        elif isinstance(cl, Class) and cl.mv.module.ident == 'builtin' and not [a for a in cl.ancestors_upto(None) if a.ident == 'BaseException']:
             self.append('new Exception()')
         else:
             self.visit(node.expr1, func)
@@ -1099,7 +1099,7 @@ class GenerateVisitor(ASTVisitor):
 
     # --- function/method header
     def func_header(self, func, declare, is_init=False):
-        method = isinstance(func.parent, class_)
+        method = isinstance(func.parent, Class)
         if method:
             formals = [f for f in func.formals if f != 'self']
         else:
@@ -1150,7 +1150,7 @@ class GenerateVisitor(ASTVisitor):
         for (i, f) in enumerate(formals2):  # XXX
             formals2[i] = self.cpp_name(f)
         formaldecs = [o + f for (o, f) in zip(ftypes, formals2)]
-        if declare and isinstance(func.parent, class_) and func.ident in func.parent.staticmethods:
+        if declare and isinstance(func.parent, Class) and func.ident in func.parent.staticmethods:
             header = 'static ' + header
         if is_init and not formaldecs:
             formaldecs = ['int __ss_init']
@@ -1181,7 +1181,7 @@ class GenerateVisitor(ASTVisitor):
 
     def visitFunction(self, node, parent=None, declare=False):
         # locate right func instance
-        if parent and isinstance(parent, class_):
+        if parent and isinstance(parent, Class):
             func = parent.funcs[node.name]
         elif node.name in getmv().funcs:
             func = getmv().funcs[node.name]
@@ -1437,7 +1437,7 @@ class GenerateVisitor(ASTVisitor):
     def visitAugAssign(self, node, func=None):
         if isinstance(node.node, Subscript):
             self.start()
-            if set([t[0].ident for t in self.mergeinh[node.node.expr] if isinstance(t[0], class_)]) in [set(['dict']), set(['defaultdict'])] and node.op == '+=':
+            if set([t[0].ident for t in self.mergeinh[node.node.expr] if isinstance(t[0], Class)]) in [set(['dict']), set(['defaultdict'])] and node.op == '+=':
                 self.visitm(node.node.expr, '->__addtoitem__(', inode(node).subs, ', ', node.expr, ')', func)
                 self.eol()
                 return
@@ -1778,7 +1778,7 @@ class GenerateVisitor(ASTVisitor):
                 return
             else:
                 if isinstance(node.node, Name):
-                    if isinstance(func, Function) and isinstance(func.parent, class_) and ident in func.parent.funcs:  # masked by method
+                    if isinstance(func, Function) and isinstance(func.parent, Class) and ident in func.parent.funcs:  # masked by method
                         self.append(funcs[0].mv.module.full_path() + '::')
                     self.append(funcs[0].cpp_name())
                 else:
@@ -1787,7 +1787,7 @@ class GenerateVisitor(ASTVisitor):
 
         elif method_call:
             for cl, _ in self.mergeinh[objexpr]:
-                if isinstance(cl, class_) and cl.ident != 'none' and ident not in cl.funcs:
+                if isinstance(cl, Class) and cl.ident != 'none' and ident not in cl.funcs:
                     conv = {'int_': 'int', 'float_': 'float', 'str_': 'str', 'class_': 'class', 'none': 'none'}
                     clname = conv.get(cl.ident, cl.ident)
                     error("class '%s' has no method '%s'" % (clname, ident), node, warning=True, mv=getmv())
@@ -1945,7 +1945,7 @@ class GenerateVisitor(ASTVisitor):
 
     def cast_to_builtin2(self, arg, func, objexpr, msg, formal_nr):
         # shortcut for outside of visitCallFunc XXX merge with visitCallFunc?
-        cls = [t[0] for t in self.mergeinh[objexpr] if isinstance(t[0], class_)]
+        cls = [t[0] for t in self.mergeinh[objexpr] if isinstance(t[0], Class)]
         if cls:
             cl = cls.pop()
             if msg in cl.funcs:
@@ -2060,9 +2060,9 @@ class GenerateVisitor(ASTVisitor):
                 elif isinstance(lvalue, AssAttr):
                     lcp = lowest_common_parents(polymorphic_t(self.mergeinh[lvalue.expr]))
                     # property
-                    if len(lcp) == 1 and isinstance(lcp[0], class_) and lvalue.attrname in lcp[0].properties:
+                    if len(lcp) == 1 and isinstance(lcp[0], Class) and lvalue.attrname in lcp[0].properties:
                         self.visitm(lvalue.expr, '->' + self.cpp_name(lcp[0].properties[lvalue.attrname][1]) + '(', rvalue, ')', func)
-                    elif lcp and isinstance(lcp[0], class_):
+                    elif lcp and isinstance(lcp[0], Class):
                         var = lookup_var(lvalue.attrname, lcp[0])
                         vartypes = set()
                         if var:
@@ -2438,7 +2438,7 @@ class GenerateVisitor(ASTVisitor):
         else:
             checkcls = []  # XXX better to just inherit vars?
             for t in self.mergeinh[node.expr]:
-                if isinstance(t[0], class_):
+                if isinstance(t[0], Class):
                     checkcls.extend(t[0].ancestors(True))
             for cl in checkcls:
                 if not node.attrname in t[0].funcs and node.attrname in cl.parent.vars:  # XXX
@@ -2526,7 +2526,7 @@ class GenerateVisitor(ASTVisitor):
             self.append('NULL')
         elif node.name == 'self':
             lcp = lowest_common_parents(polymorphic_t(self.mergeinh[node]))
-            if ((not func or func.listcomp or not isinstance(func.parent, class_)) or
+            if ((not func or func.listcomp or not isinstance(func.parent, Class)) or
                (func and func.parent and func.isGenerator)):  # XXX lookup_var?
                 self.append('self')
             elif len(lcp) == 1 and not (lcp[0] is func.parent or lcp[0] in func.parent.ancestors()):  # see test 160
@@ -2552,7 +2552,7 @@ class GenerateVisitor(ASTVisitor):
                     else:
                         self.append(self.cpp_name(node.name))
                 else:
-                    if isinstance(func, class_) and node.name in func.parent.vars:  # XXX
+                    if isinstance(func, Class) and node.name in func.parent.vars:  # XXX
                         self.append(func.ident + '::')
                     self.append(self.cpp_name(node.name))
 

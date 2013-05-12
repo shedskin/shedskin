@@ -33,7 +33,7 @@ from config import getgx
 from infer import inode, in_out, CNode
 from python import StaticClass, lookup_func, default_var, Function, is_zip2, \
     lookup_class, is_method, is_literal, is_enum, lookup_var, assign_rec, \
-    class_, is_property_setter, is_fastfor, register_temp_var, aug_msg, \
+    Class, is_property_setter, is_fastfor, register_temp_var, aug_msg, \
     Module, def_class
 from struct_ import struct_faketuple, struct_info, struct_unpack
 
@@ -419,7 +419,7 @@ class ModuleVisitor(ASTVisitor):
         for n in self.stmt_nodes(node, ClassNode):
             check_redef(n)
             getmv().classnodes.append(n)
-            newclass = class_(n)
+            newclass = Class(n)
             self.classes[n.name] = newclass
             getmv().classes[n.name] = newclass
             newclass.module = self.module
@@ -570,7 +570,7 @@ class ModuleVisitor(ASTVisitor):
 
         if not parent and not is_lambda and node.name in getmv().funcs:
             func = getmv().funcs[node.name]
-        elif isinstance(parent, class_) and not inherited_from and node.name in parent.funcs:
+        elif isinstance(parent, Class) and not inherited_from and node.name in parent.funcs:
             func = parent.funcs[node.name]
         else:
             func = Function(node, parent, inherited_from)
@@ -636,7 +636,7 @@ class ModuleVisitor(ASTVisitor):
             self.visit(func.fakeret, func)
 
         # --- register function
-        if isinstance(parent, class_):
+        if isinstance(parent, Class):
             if func.ident not in parent.staticmethods:  # XXX use flag
                 default_var('self', func)
                 if func.ident == '__init__' and '__del__' in parent.funcs:  # XXX what if no __init__
@@ -1404,7 +1404,7 @@ class ModuleVisitor(ASTVisitor):
             newclass = getmv().classes[node.name]  # set in visitModule, for forward references
         else:
             check_redef(node)  # XXX merge with visitModule
-            newclass = class_(node)
+            newclass = Class(node)
             self.classes[node.name] = newclass
             getmv().classes[node.name] = newclass
             newclass.module = self.module

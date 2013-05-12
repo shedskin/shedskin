@@ -41,7 +41,7 @@ import graph
 from config import getgx
 from copy_ import determine_classes
 from python import StaticClass, lookup_class_module, default_var, Function, \
-    Variable, lookup_var, class_, lookup_implementor, def_class
+    Variable, lookup_var, Class, lookup_implementor, def_class
 from typestr import nodetypestr
 from virtual import analyze_virtuals
 
@@ -77,7 +77,7 @@ def get_types(expr, node, merge):
 def is_anon_callable(expr, node, merge=None):
     types = get_types(expr, node, merge)
     anon = bool([t for t in types if isinstance(t[0], Function)])
-    call = bool([t for t in types if isinstance(t[0], class_) and '__call__' in t[0].funcs])
+    call = bool([t for t in types if isinstance(t[0], Class) and '__call__' in t[0].funcs])
     return anon, call
 
 
@@ -153,7 +153,7 @@ def connect_actual_formal(expr, func, parent_constr=False, merge=None):
     pairs = []
 
     actuals = [a for a in expr.args if not isinstance(a, Keyword)]
-    if isinstance(func.parent, class_):
+    if isinstance(func.parent, Class):
         formals = [f for f in func.formals if f != 'self']
     else:
         formals = [f for f in func.formals]
@@ -170,7 +170,7 @@ def connect_actual_formal(expr, func, parent_constr=False, merge=None):
     actuals, formals, _, extra, _error = analyze_args(expr, func, skip_defaults=skip_defaults, merge=merge)
 
     for (actual, formal) in zip(actuals, formals):
-        if not (isinstance(func.parent, class_) and formal == 'self'):
+        if not (isinstance(func.parent, Class) and formal == 'self'):
             pairs.append((actual, func.vars[formal]))
     return pairs, len(extra), _error
 
@@ -202,7 +202,7 @@ def callfunc_targets(node, merge):
         funcs = [direct_call]
 
     elif method_call:
-        classes = set(t[0] for t in merge[objexpr] if isinstance(t[0], class_))
+        classes = set(t[0] for t in merge[objexpr] if isinstance(t[0], Class))
         funcs = [cl.funcs[ident] for cl in classes if ident in cl.funcs]
 
     return funcs
@@ -236,7 +236,7 @@ def analyze_callfunc(node, node2=None, merge=None):  # XXX generate target list 
             # ancestor call
             elif ident not in ['__setattr__', '__getattr__'] and cnode.parent:
                 thiscl = cnode.parent.parent
-                if isinstance(thiscl, class_) and cl.ident in (x.ident for x in thiscl.ancestors_upto(None)):  # XXX
+                if isinstance(thiscl, Class) and cl.ident in (x.ident for x in thiscl.ancestors_upto(None)):  # XXX
                     if lookup_implementor(cl, ident):
                         parent_constr = True
                         ident = ident + lookup_implementor(cl, ident) + '__'  # XXX change data structure
@@ -336,7 +336,7 @@ class CNode:
         self.dcpa = dcpa
         self.cpa = cpa
         self.fakefunc = None
-        if isinstance(parent, class_):  # XXX
+        if isinstance(parent, Class):  # XXX
             parent = None
         self.parent = parent
         self.defnodes = False  # if callnode, notification nodes were made for default arguments
@@ -521,7 +521,7 @@ def propagate():
 
             for b in a.out.copy():  # XXX can change...?
                 # for builtin types, the set of instance variables is known, so do not flow into non-existent ones # XXX ifa
-                if isinstance(b.thing, Variable) and isinstance(b.thing.parent, class_):
+                if isinstance(b.thing, Variable) and isinstance(b.thing.parent, Class):
                     parent_ident = b.thing.parent.ident
                     if parent_ident in builtins:
                         if parent_ident in ['int_', 'float_', 'str_', 'none', 'bool_']:
@@ -605,7 +605,7 @@ def possible_argtypes(node, funcs, analysis, worklist):
         node.defnodes = True
 
         for act, form in zip(actuals, formals):
-            if parent_constr or not (isinstance(func.parent, class_) and form == 'self'):  # XXX merge
+            if parent_constr or not (isinstance(func.parent, Class) and form == 'self'):  # XXX merge
                 args.append(act)
 
     argtypes = []
@@ -651,7 +651,7 @@ def cartesian_product(node, analysis, worklist):
 def redirect(c, dcpa, func, callfunc, ident, callnode, direct_call, constructor):
     # redirect based on number of arguments (__%s%d syntax in builtins)
     if func.mv.module.builtin:
-        if isinstance(func.parent, class_):
+        if isinstance(func.parent, Class):
             funcs = func.parent.funcs
         else:
             funcs = func.mv.funcs
@@ -660,25 +660,25 @@ def redirect(c, dcpa, func, callfunc, ident, callnode, direct_call, constructor)
 
     # filter
     if direct_call and ident == 'filter':
-        clnames = [x[0].ident for x in c if isinstance(x[0], class_)]
+        clnames = [x[0].ident for x in c if isinstance(x[0], Class)]
         if 'str_' in clnames or 'tuple' in clnames or 'tuple2' in clnames:
             func = func.mv.funcs['__' + ident]
 
     # staticmethod
-    if isinstance(func.parent, class_) and func.ident in func.parent.staticmethods:
+    if isinstance(func.parent, Class) and func.ident in func.parent.staticmethods:
         dcpa = 1
 
     # dict.__init__
     if constructor and (ident, nrargs(callfunc)) in (('dict', 1), ('defaultdict', 2)):
-        clnames = [x[0].ident for x in c if isinstance(x[0], class_)]
+        clnames = [x[0].ident for x in c if isinstance(x[0], Class)]
         if 'dict' in clnames or 'defaultdict' in clnames:
             func = list(callnode.types())[0][0].funcs['__initdict__']
         else:
             func = list(callnode.types())[0][0].funcs['__inititer__']
 
     # dict.update
-    if func.ident == 'update' and isinstance(func.parent, class_) and func.parent.ident in ('dict', 'defaultdict'):
-        clnames = [x[0].ident for x in c if isinstance(x[0], class_)]
+    if func.ident == 'update' and isinstance(func.parent, Class) and func.parent.ident in ('dict', 'defaultdict'):
+        clnames = [x[0].ident for x in c if isinstance(x[0], Class)]
         if not ('dict' in clnames or 'defaultdict' in clnames):
             func = func.parent.funcs['updateiter']
 
@@ -710,7 +710,7 @@ def redirect(c, dcpa, func, callfunc, ident, callnode, direct_call, constructor)
 
     # property
     if isinstance(callfunc.node, Getattr) and callfunc.node.attrname in ['__setattr__', '__getattr__']:
-        if isinstance(func.parent, class_) and callfunc.args and callfunc.args[0].value in func.parent.properties:
+        if isinstance(func.parent, Class) and callfunc.args and callfunc.args[0].value in func.parent.properties:
             arg = callfunc.args[0].value
             if callfunc.node.attrname == '__setattr__':
                 func = func.parent.funcs[func.parent.properties[arg][1]]
@@ -719,7 +719,7 @@ def redirect(c, dcpa, func, callfunc, ident, callnode, direct_call, constructor)
             c = c[1:]
 
     # win32
-    if sys.platform == 'win32' and func.mv.module.builtin and isinstance(func.parent, class_) and '__win32' + func.ident in func.parent.funcs:
+    if sys.platform == 'win32' and func.mv.module.builtin and isinstance(func.parent, Class) and '__win32' + func.ident in func.parent.funcs:
         func = func.parent.funcs['__win32' + func.ident]
 
     return c, dcpa, func
@@ -789,7 +789,7 @@ def cpa(callnode, worklist):
 
 def connect_getsetattr(func, callnode, callfunc, dcpa, worklist):
     if (isinstance(callfunc.node, Getattr) and callfunc.node.attrname in ['__setattr__', '__getattr__'] and
-            not (isinstance(func.parent, class_) and callfunc.args and callfunc.args[0].value in func.parent.properties)):
+            not (isinstance(func.parent, Class) and callfunc.args and callfunc.args[0].value in func.parent.properties)):
         varname = callfunc.args[0].value
         parent = func.parent
 
@@ -901,7 +901,7 @@ def ifa_split_vars(cl, dcpa, vars, nr_classes, classes_nr, split, allcsites):
         for node in allnodes:
             if not ifa_confluence_point(node, creation_points):
                 continue
-            if not node.thing.formal_arg and not isinstance(node.thing.parent, class_):
+            if not node.thing.formal_arg and not isinstance(node.thing.parent, Class):
                 continue
             remaining = ifa_determine_split(node, allnodes)
             if len(remaining) < 2 or len(remaining) >= 10:
@@ -1185,7 +1185,7 @@ def iterative_dataflow_analysis():
                     if n.dcpa in parent.cp:
                         for cart, cpa in parent.cp[n.dcpa].items():  # XXX not very fast
                             if cpa == n.cpa:
-                                if parent.parent and isinstance(parent.parent, class_):  # self
+                                if parent.parent and isinstance(parent.parent, Class):  # self
                                     cart = ((parent.parent, n.dcpa),) + cart
 
                                 getgx().alloc_info[parent.ident, cart, n.thing] = (cl, newnr)
@@ -1220,7 +1220,7 @@ def iterative_dataflow_analysis():
 def ifa_seed_template(func, cart, dcpa, cpa, worklist):
     if cart is not None:  # (None means we are not in the process of propagation)
         # print 'funccopy', func.ident #, func.nodes
-        if isinstance(func.parent, class_):  # self
+        if isinstance(func.parent, Class):  # self
             cart = ((func.parent, dcpa),) + cart
 
         added = getgx().added_allocs_set
@@ -1254,7 +1254,7 @@ def ifa_seed_template(func, cart, dcpa, cpa, worklist):
                     for (id, c, thing) in getgx().alloc_info:
                         if id == parent.ident and thing is node.thing:
                             for a, b in zip(cart, c):
-                                if a != b and not (isinstance(a[0], class_) and a[0] is b[0] and a[1] in a[0].splits and a[0].splits[a[1]] == b[1]):
+                                if a != b and not (isinstance(a[0], Class) and a[0] is b[0] and a[1] in a[0].splits and a[0].splits[a[1]] == b[1]):
                                     break
                             else:
                                 mother_alloc_id = (id, c, thing)
