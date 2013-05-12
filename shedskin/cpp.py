@@ -15,7 +15,7 @@ import textwrap
 from compiler import walk
 from compiler.ast import Const, AssTuple, AssList, From, Add, Stmt, AssAttr, \
     Keyword, AssName, CallFunc, Slice, Getattr, Dict, Subscript, \
-    Function as FunctionNode, Return, Class, Name, List, Discard, Sliceobj, Tuple
+    Function as FunctionNode, Return, Class as ClassNode, Name, List, Discard, Sliceobj, Tuple
 from compiler.visitor import ASTVisitor
 
 import copy_
@@ -283,7 +283,7 @@ class GenerateVisitor(ASTVisitor):
 
         # class declarations
         for child in node.node.getChildNodes():
-            if isinstance(child, Class):
+            if isinstance(child, ClassNode):
                 cl = def_class(child.name)
                 print >>self.out, 'class ' + cl.cpp_name() + ';'
         print >>self.out
@@ -299,7 +299,7 @@ class GenerateVisitor(ASTVisitor):
 
         # --- class definitions
         for child in node.node.getChildNodes():
-            if isinstance(child, Class):
+            if isinstance(child, ClassNode):
                 self.class_hpp(child)
 
         # --- defaults
@@ -449,7 +449,7 @@ class GenerateVisitor(ASTVisitor):
         self.do_listcomps(False)
         self.do_lambdas(False)
         for child in node.node.getChildNodes():
-            if isinstance(child, Class):
+            if isinstance(child, ClassNode):
                 self.class_cpp(child)
             elif isinstance(child, FunctionNode):
                 self.do_comments(child)
@@ -466,7 +466,7 @@ class GenerateVisitor(ASTVisitor):
         for child in node.node.getChildNodes():
             if isinstance(child, FunctionNode):
                 self.init_defaults(child)
-            elif isinstance(child, Class):
+            elif isinstance(child, ClassNode):
                 for child2 in child.code.getChildNodes():
                     if isinstance(child2, FunctionNode):
                         self.init_defaults(child2)
@@ -492,7 +492,7 @@ class GenerateVisitor(ASTVisitor):
                         self.start(nokeywords(pseudonym) + ' = ' + module.full_path() + '::' + nokeywords(name))
                         self.eol()
 
-            elif not isinstance(child, (Class, FunctionNode)):
+            elif not isinstance(child, (ClassNode, FunctionNode)):
                 self.do_comments(child)
                 self.visit(child)
 
