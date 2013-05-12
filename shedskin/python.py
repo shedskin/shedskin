@@ -53,7 +53,7 @@ class Module(object):
         return 'Module ' + self.ident
 
 
-class class_:
+class Class:
     def __init__(self, node):
         self.node = node
         self.ident = node.name
@@ -215,7 +215,7 @@ class Variable:
         return infer.inode(self).types()
 
     def masks_global(self):
-        if isinstance(self.parent, class_):
+        if isinstance(self.parent, Class):
             mv = self.parent.mv
             if not mv.module.builtin and mv.module.in_globals(self.name):
                 return True
@@ -313,7 +313,7 @@ def lookup_module(node, mv):
 
 def lookup_variable(node, gv):
     lcp = lowest_common_parents(polymorphic_t(gv.mergeinh[node.expr]))
-    if len(lcp) == 1 and isinstance(lcp[0], class_) and node.attrname in lcp[0].vars and not node.attrname in lcp[0].funcs:
+    if len(lcp) == 1 and isinstance(lcp[0], Class) and node.attrname in lcp[0].vars and not node.attrname in lcp[0].funcs:
         return lcp[0].vars[node.attrname]
 
 
@@ -336,7 +336,7 @@ def def_class(name):
 def def_var(name, parent, local, worklist=None, mv=None):
     if not mv:
         mv = graph.getmv()
-    if isinstance(parent, class_) and name in parent.parent.vars:  # XXX
+    if isinstance(parent, Class) and name in parent.parent.vars:  # XXX
         return parent.parent.vars[name]
     if parent and name in parent.vars:
         return parent.vars[name]
@@ -410,7 +410,7 @@ def is_fastfor(node):
 
 
 def is_method(parent):
-    return isinstance(parent, Function) and isinstance(parent.parent, class_)
+    return isinstance(parent, Function) and isinstance(parent.parent, Class)
 
 
 def is_enum(node):

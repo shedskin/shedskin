@@ -28,7 +28,7 @@ def types_var_types(types, varname):
 
 
 def types_classes(types):
-    return set(t[0] for t in types if isinstance(t[0], python.class_))
+    return set(t[0] for t in types if isinstance(t[0], python.Class))
 
 
 def unboxable(types):
@@ -71,7 +71,7 @@ def polymorphic_cl(classes):
 
 # --- determine lowest common parent classes (inclusive)
 def lowest_common_parents(classes):
-    classes = [cl for cl in classes if isinstance(cl, python.class_)]
+    classes = [cl for cl in classes if isinstance(cl, python.Class)]
 
     # collect all possible parent classes
     parents = set()

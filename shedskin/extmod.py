@@ -8,7 +8,7 @@ extmod.py: extension module support
 from config import getgx
 from graph import getmv
 from infer import hmcpa
-from python import class_, def_class, Module
+from python import Class, def_class, Module
 from typestr import ExtmodError, nodetypestr, singletype2
 
 
@@ -38,7 +38,7 @@ def supported_vars(vars):  # XXX virtuals?
         try:
             nodetypestr(var, var.parent, check_extmod=True)
         except ExtmodError:
-            if isinstance(var.parent, class_):
+            if isinstance(var.parent, Class):
                 print "*WARNING* '%s' variable not exported (cannot convert)" % (var.parent.ident + '.' + var.name)
             else:
                 print "*WARNING* '%s' variable not exported (cannot convert)" % var.name
@@ -54,10 +54,10 @@ def supported_funcs(gv, funcs):
             continue
         if func.ident in ['__setattr__', '__getattr__', '__iadd__', '__isub__', '__imul__']:  # XXX
             continue
-        if isinstance(func.parent, class_):
+        if isinstance(func.parent, Class):
             if func.invisible or func.inherited or not gv.inhcpa(func):
                 continue
-        if isinstance(func.parent, class_) and func.ident in func.parent.staticmethods:
+        if isinstance(func.parent, Class) and func.ident in func.parent.staticmethods:
             print "*WARNING* '%s' method not exported (staticmethod)" % (func.parent.ident + '.' + func.ident)
             continue
         builtins = True
@@ -75,7 +75,7 @@ def supported_funcs(gv, funcs):
         if builtins:
             supported.append(func)
         else:
-            if isinstance(func.parent, class_):
+            if isinstance(func.parent, Class):
                 print "*WARNING* '%s' method not exported (%s)" % (func.parent.ident + '.' + func.ident, reason)
             else:
                 print "*WARNING* '%s' function not exported (%s)" % (func.ident, reason)
@@ -185,7 +185,7 @@ def do_extmod_methoddef(gv, ident, funcs, cl):
         print >>gv.out, '    {(char *)"__reduce__", (PyCFunction)%s__reduce__, METH_VARARGS | METH_KEYWORDS, (char *)""},' % ident
         print >>gv.out, '    {(char *)"__setstate__", (PyCFunction)%s__setstate__, METH_VARARGS | METH_KEYWORDS, (char *)""},' % ident
     for func in funcs:
-        if isinstance(func.parent, class_):
+        if isinstance(func.parent, Class):
             id = clname(func.parent) + '_' + func.ident
         else:
             id = 'Global_' + '_'.join(gv.module.name_list) + '_' + func.ident
@@ -194,13 +194,13 @@ def do_extmod_methoddef(gv, ident, funcs, cl):
 
 
 def do_extmod_method(gv, func):
-    is_method = isinstance(func.parent, class_)
+    is_method = isinstance(func.parent, Class)
     if is_method:
         formals = func.formals[1:]
     else:
         formals = func.formals
 
-    if isinstance(func.parent, class_):
+    if isinstance(func.parent, Class):
         id = clname(func.parent) + '_' + func.ident
     else:
         id = 'Global_' + '_'.join(gv.module.name_list) + '_' + func.ident
