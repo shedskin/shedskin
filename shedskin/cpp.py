@@ -28,7 +28,7 @@ from infer import analyze_callfunc, callfunc_targets, connect_actual_formal, \
 from makefile import generate_makefile
 from python import assign_rec, aug_msg, Class, def_class, \
     is_enum, is_fastfor, is_literal, is_zip2, \
-    lookup_class, lookup_class_module, lookup_var, lookup_variable, lookup_module, \
+    lookup_class, lookup_class_module, lookup_var, lookup_module, \
     Function, Module, StaticClass
 from struct_ import struct_unpack_cpp
 from typestr import incompatible_assignment_rec, lowest_common_parents, \
@@ -2478,9 +2478,9 @@ class GenerateVisitor(ASTVisitor):
         self.append(self.attr_var_ref(node, ident))
 
     def attr_var_ref(self, node, ident):  # XXX blegh
-        var = lookup_variable(node, self)
-        if var:
-            return var.cpp_name()
+        lcp = lowest_common_parents(polymorphic_t(self.mergeinh[node.expr]))
+        if len(lcp) == 1 and isinstance(lcp[0], Class) and node.attrname in lcp[0].vars and not node.attrname in lcp[0].funcs:
+            return lcp[0].vars[node.attrname].cpp_name()
         return self.cpp_name(ident)
 
     def visitAssAttr(self, node, func=None):  # XXX merge with visitGetattr

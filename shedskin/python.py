@@ -10,7 +10,6 @@ from compiler.ast import AssTuple, AssList, List, Tuple, CallFunc, Name, \
 import graph
 import infer
 from config import getgx
-from typestr import lowest_common_parents, polymorphic_t
 
 
 class Module(object):
@@ -306,12 +305,6 @@ def lookup_module(node, mv):
                 return None
 
         return module
-
-
-def lookup_variable(node, gv):
-    lcp = lowest_common_parents(polymorphic_t(gv.mergeinh[node.expr]))
-    if len(lcp) == 1 and isinstance(lcp[0], Class) and node.attrname in lcp[0].vars and not node.attrname in lcp[0].funcs:
-        return lcp[0].vars[node.attrname]
 
 
 def lookup_var(name, parent, mv=None):
