@@ -46,21 +46,100 @@ from typestr import nodetypestr
 from virtual import analyze_virtuals
 
 
+INCREMENTAL = True
+INCREMENTAL_FUNCS = 5
+INCREMENTAL_DATA = True
+INCREMENTAL_ALLOCS = 20
+MAXITERS = 30
+CPA_LIMIT = 10
+
+
+class CNode:
+    __slots__ = ['thing', 'dcpa', 'cpa', 'fakefunc', 'parent', 'defnodes', 'mv', 'constructor', 'copymetoo', 'fakert', 'in_', 'out', 'fout', 'in_list', 'callfuncs', 'nodecp']
+
+    def __init__(self, thing, dcpa=0, cpa=0, parent=None):
+        self.thing = thing
+        self.dcpa = dcpa
+        self.cpa = cpa
+        self.fakefunc = None
+        if isinstance(parent, Class):  # XXX
+            parent = None
+        self.parent = parent
+        self.defnodes = False  # if callnode, notification nodes were made for default arguments
+        self.mv = graph.getmv()
+        self.constructor = False  # allocation site
+        self.copymetoo = False
+        self.fakert = False
+        self.lambdawrapper = None
+
+        getgx().cnode[self.thing, self.dcpa, self.cpa] = self
+
+        # --- in, outgoing constraints
+
+        self.in_ = set()        # incoming nodes
+        self.out = set()        # outgoing nodes
+        self.fout = set()       # unreal outgoing edges, used in ifa
+
+        # --- iterative dataflow analysis
+
+        self.in_list = 0        # node in work-list
+        self.callfuncs = []    # callfuncs to which node is object/argument
+
+        self.nodecp = set()        # already analyzed cp's # XXX kill!?
+
+        # --- add node to surrounding non-listcomp function
+        if parent:  # do this only once! (not when copying)
+            while parent and isinstance(parent, Function) and parent.listcomp:
+                parent = parent.parent
+            if isinstance(parent, Function):
+                if self not in parent.nodes:
+                    parent.nodes.add(self)
+                    parent.nodes_ordered.append(self)
+
+    def copy(self, dcpa, cpa, worklist=None):  # XXX to infer.py
+        # if not self.mv.module.builtin: print 'copy', self
+
+        if (self.thing, dcpa, cpa) in getgx().cnode:
+            return getgx().cnode[self.thing, dcpa, cpa]
+
+        newnode = CNode(self.thing, dcpa, cpa)
+
+        newnode.callfuncs = self.callfuncs[:]  # XXX no copy?
+        newnode.constructor = self.constructor
+        newnode.copymetoo = self.copymetoo
+        newnode.parent = self.parent
+        newnode.mv = self.mv
+
+        add_to_worklist(worklist, newnode)
+
+        if self.constructor or self.copymetoo or isinstance(self.thing, (Not, Compare)):  # XXX XXX
+            getgx().types[newnode] = getgx().types[self].copy()
+        else:
+            getgx().types[newnode] = set()
+        return newnode
+
+    def types(self):
+        if self in getgx().types:
+            return getgx().types[self]
+        else:
+            return set()  # XXX
+
+    def __repr__(self):
+        return repr((self.thing, self.dcpa, self.cpa))
+
+
+def DEBUG(level):
+    return getgx().debug_level >= level
+
+
 def nrargs(node):
     if inode(node).lambdawrapper:
         return inode(node).lambdawrapper.largs
     return len(node.args)
 
 
-def hmcpa(func):
-    got_one = 0
-    for dcpa, cpas in func.cp.items():
-        if len(cpas) > 1:
-            return len(cpas)
-        if len(cpas) == 1:
-            got_one = 1
-    return got_one
-
+def called(func):
+    return bool([cpas for cpas in func.cp.values() if cpas])
 
 def get_types(expr, node, merge):
     types = set()
@@ -326,92 +405,6 @@ def add_to_worklist(worklist, node):  # XXX to infer.py
     if worklist is not None and not node.in_list:
         worklist.append(node)
         node.in_list = 1
-
-
-class CNode:
-    __slots__ = ['thing', 'dcpa', 'cpa', 'fakefunc', 'parent', 'defnodes', 'mv', 'constructor', 'copymetoo', 'fakert', 'in_', 'out', 'fout', 'in_list', 'callfuncs', 'nodecp']
-
-    def __init__(self, thing, dcpa=0, cpa=0, parent=None):
-        self.thing = thing
-        self.dcpa = dcpa
-        self.cpa = cpa
-        self.fakefunc = None
-        if isinstance(parent, Class):  # XXX
-            parent = None
-        self.parent = parent
-        self.defnodes = False  # if callnode, notification nodes were made for default arguments
-        self.mv = graph.getmv()
-        self.constructor = False  # allocation site
-        self.copymetoo = False
-        self.fakert = False
-        self.lambdawrapper = None
-
-        getgx().cnode[self.thing, self.dcpa, self.cpa] = self
-
-        # --- in, outgoing constraints
-
-        self.in_ = set()        # incoming nodes
-        self.out = set()        # outgoing nodes
-        self.fout = set()       # unreal outgoing edges, used in ifa
-
-        # --- iterative dataflow analysis
-
-        self.in_list = 0        # node in work-list
-        self.callfuncs = []    # callfuncs to which node is object/argument
-
-        self.nodecp = set()        # already analyzed cp's # XXX kill!?
-
-        # --- add node to surrounding non-listcomp function
-        if parent:  # do this only once! (not when copying)
-            while parent and isinstance(parent, Function) and parent.listcomp:
-                parent = parent.parent
-            if isinstance(parent, Function):
-                if self not in parent.nodes:
-                    parent.nodes.add(self)
-                    parent.nodes_ordered.append(self)
-
-    def copy(self, dcpa, cpa, worklist=None):  # XXX to infer.py
-        # if not self.mv.module.builtin: print 'copy', self
-
-        if (self.thing, dcpa, cpa) in getgx().cnode:
-            return getgx().cnode[self.thing, dcpa, cpa]
-
-        newnode = CNode(self.thing, dcpa, cpa)
-
-        newnode.callfuncs = self.callfuncs[:]  # XXX no copy?
-        newnode.constructor = self.constructor
-        newnode.copymetoo = self.copymetoo
-        newnode.parent = self.parent
-        newnode.mv = self.mv
-
-        add_to_worklist(worklist, newnode)
-
-        if self.constructor or self.copymetoo or isinstance(self.thing, (Not, Compare)):  # XXX XXX
-            getgx().types[newnode] = getgx().types[self].copy()
-        else:
-            getgx().types[newnode] = set()
-        return newnode
-
-    def types(self):
-        if self in getgx().types:
-            return getgx().types[self]
-        else:
-            return set()  # XXX
-
-    def __repr__(self):
-        return repr((self.thing, self.dcpa, self.cpa))
-
-
-INCREMENTAL = True
-INCREMENTAL_FUNCS = 5
-INCREMENTAL_DATA = True
-INCREMENTAL_ALLOCS = 20
-MAXITERS = 30
-CPA_LIMIT = 10
-
-
-def DEBUG(level):
-    return getgx().debug_level >= level
 
 
 def class_copy(cl, dcpa):
