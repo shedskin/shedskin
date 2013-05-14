@@ -36,13 +36,6 @@ from typestr import incompatible_assignment_rec, lowest_common_parents, \
 from virtual import virtuals
 
 
-class Bitpair:
-    def __init__(self, nodes, msg, inline):
-        self.nodes = nodes
-        self.msg = msg
-        self.inline = inline
-
-
 # --- code generation visitor; use type information
 class GenerateVisitor(ASTVisitor):
     def __init__(self, module):
@@ -1479,9 +1472,6 @@ class GenerateVisitor(ASTVisitor):
         self.visit_bitop(node, aug_msg(node, 'xor'), '^', func)
 
     def visit_bitop(self, node, msg, inline, func=None):
-        self.visit_bitpair(Bitpair(node.nodes, msg, inline), func)
-
-    def visit_bitpair(self, node, func=None):
         ltypes = self.mergeinh[node.nodes[0]]
         ul = unboxable(ltypes)
         self.append('(')
@@ -1491,9 +1481,9 @@ class GenerateVisitor(ASTVisitor):
             self.append(')')
             if child is not node.nodes[-1]:
                 if ul:
-                    self.append(node.inline)
+                    self.append(inline)
                 else:
-                    self.append('->' + node.msg)
+                    self.append('->' + msg)
         self.append(')')
 
     def visitRightShift(self, node, func=None):
