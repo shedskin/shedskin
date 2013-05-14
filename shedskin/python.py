@@ -3,7 +3,10 @@
 Copyright 2005-2011 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 
 '''
+import imp
 import os
+import re
+from compiler import parse
 from compiler.ast import AssTuple, AssList, List, Tuple, CallFunc, Name, \
     Const, UnaryAdd, UnarySub, Getattr
 
@@ -230,6 +233,51 @@ class Variable:
             return repr((self.parent, self.name))
         return self.name
 
+
+def clear_block(m):
+    return m.string.count('\n', m.start(), m.end()) * '\n'
+
+
+def parse_file(name):
+    # Convert block comments into strings which will be duely ignored.
+    pat = re.compile(r"#{.*?#}[^\r\n]*$", re.MULTILINE | re.DOTALL)
+    filebuf = re.sub(pat, clear_block, ''.join(open(name, 'U').readlines()))
+    try:
+        return parse(filebuf)
+    except SyntaxError, s:
+        print '*ERROR* %s:%d: %s' % (name, s.lineno, s.msg)
+        sys.exit(1)
+
+
+def find_module(name, paths):
+    if '.' in name:
+        name, module_name = name.rsplit('.', 1)
+        name_as_path = name.replace('.', os.path.sep)
+        import_paths = [os.path.join(path, name_as_path) for path in paths]
+    else:
+        module_name = name
+        import_paths = paths
+    _, filename, description = imp.find_module(module_name, import_paths)
+    filename = os.path.splitext(filename)[0]
+
+    absolute_import_paths = getgx().libdirs + [os.getcwd()]
+    absolute_import_path = next(
+        path for path in absolute_import_paths
+        if filename.startswith(path)
+    )
+    relative_filename = os.path.relpath(filename, absolute_import_path)
+    absolute_name = relative_filename.replace(os.path.sep, '.')
+    builtin = absolute_import_path in getgx().libdirs
+
+    is_a_package = description[2] == imp.PKG_DIRECTORY
+    if is_a_package:
+        filename = os.path.join(filename, '__init__.py')
+        relative_filename = os.path.join(relative_filename, '__init__.py')
+    else:
+        filename = filename + '.py'
+        relative_filename = relative_filename + '.py'
+
+    return absolute_name, filename, relative_filename, builtin
 
 def nokeywords(name):
     if name in getgx().cpp_keywords:

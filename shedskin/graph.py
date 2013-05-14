@@ -9,17 +9,14 @@ constraint graph: graph along which possible types 'flow' during an 'abstract ex
 constraint graph nodes are stored in getgx().cnode, and the set of types of for each node in getgx().types. nodes are identified by an AST Node, and two integers. the integers are used in py to duplicate parts of the constraint graph along two dimensions. in the initial constraint graph, these integers are always 0.
 
 class ModuleVisitor: inherits visitor pattern from compiler.visitor.ASTVisitor, to recursively generate constraints for each syntactical Python construct. for example, the visitFor method is called in case of a for-loop. temporary variables are introduced in many places, to enable translation to a lower-level language.
-    import ipdb; ipdb.set_trace()  # BREAKPOINT
 
 parse_module(): locate module by name (e.g. 'os.path'), and use ModuleVisitor if not cached
 
 '''
 import copy
-import imp
 import os
 import re
 import sys
-from compiler import parse
 from compiler.ast import Const, AssTuple, AssList, From, Add, ListCompFor, \
     UnaryAdd, Import, Bitand, Stmt, Assign, FloorDiv, Not, Mod, AssAttr, \
     Keyword, GenExpr, LeftShift, AssName, Div, Or, Lambda, And, CallFunc, \
@@ -34,7 +31,7 @@ from infer import inode, in_out, CNode
 from python import StaticClass, lookup_func, default_var, Function, is_zip2, \
     lookup_class, is_method, is_literal, is_enum, lookup_var, assign_rec, \
     Class, is_property_setter, is_fastfor, register_temp_var, aug_msg, \
-    Module, def_class
+    Module, def_class, parse_file, find_module
 from struct_ import struct_faketuple, struct_info, struct_unpack
 
 
@@ -1561,52 +1558,6 @@ class ModuleVisitor(ASTVisitor):
         f.lambdawrapper = True
         inode(node2).lambdawrapper = f
         return f
-
-
-def clear_block(m):
-    return m.string.count('\n', m.start(), m.end()) * '\n'
-
-
-def parse_file(name):
-    # Convert block comments into strings which will be duely ignored.
-    pat = re.compile(r"#{.*?#}[^\r\n]*$", re.MULTILINE | re.DOTALL)
-    filebuf = re.sub(pat, clear_block, ''.join(open(name, 'U').readlines()))
-    try:
-        return parse(filebuf)
-    except SyntaxError, s:
-        print '*ERROR* %s:%d: %s' % (name, s.lineno, s.msg)
-        sys.exit(1)
-
-
-def find_module(name, paths):
-    if '.' in name:
-        name, module_name = name.rsplit('.', 1)
-        name_as_path = name.replace('.', os.path.sep)
-        import_paths = [os.path.join(path, name_as_path) for path in paths]
-    else:
-        module_name = name
-        import_paths = paths
-    _, filename, description = imp.find_module(module_name, import_paths)
-    filename = os.path.splitext(filename)[0]
-
-    absolute_import_paths = getgx().libdirs + [os.getcwd()]
-    absolute_import_path = next(
-        path for path in absolute_import_paths
-        if filename.startswith(path)
-    )
-    relative_filename = os.path.relpath(filename, absolute_import_path)
-    absolute_name = relative_filename.replace(os.path.sep, '.')
-    builtin = absolute_import_path in getgx().libdirs
-
-    is_a_package = description[2] == imp.PKG_DIRECTORY
-    if is_a_package:
-        filename = os.path.join(filename, '__init__.py')
-        relative_filename = os.path.join(relative_filename, '__init__.py')
-    else:
-        filename = filename + '.py'
-        relative_filename = relative_filename + '.py'
-
-    return absolute_name, filename, relative_filename, builtin
 
 
 def parse_module(name, parent=None, node=None):
