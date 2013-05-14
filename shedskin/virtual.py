@@ -19,7 +19,7 @@ def virtuals(self, cl, declare):
     for ident, subclasses in cl.virtuals.items():
         if not subclasses:
             continue
-        if ident in cl.funcs and infer.hmcpa(cl.funcs[ident]):
+        if ident in cl.funcs and infer.called(cl.funcs[ident]):
             subclasses = subclasses.copy()
             subclasses.add(cl)
 

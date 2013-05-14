@@ -24,7 +24,7 @@ from error import error
 from extmod import convert_methods, convert_methods2, do_extmod, pyinit_func
 from graph import getmv, setmv
 from infer import analyze_callfunc, callfunc_targets, connect_actual_formal, \
-    hmcpa, inode
+    called, inode
 from makefile import generate_makefile
 from python import assign_rec, aug_msg, Class, def_class, \
     is_enum, is_fastfor, is_literal, is_zip2, \
@@ -340,7 +340,7 @@ class GenerateVisitor(ASTVisitor):
                 var = func.vars[formal]
                 if self.mergeinh[var]:
                     ts = [t for t in self.mergeinh[default] if isinstance(t[0], Function)]
-                    if not ts or [t for t in ts if hmcpa(t[0])]:
+                    if not ts or [t for t in ts if called(t[0])]:
                         self.start('default_%d = ' % nr)
                         self.visit_conv(default, self.mergeinh[var], None)
                         self.eol()
@@ -731,7 +731,7 @@ class GenerateVisitor(ASTVisitor):
             return '0'
 
     def inhcpa(self, func):
-        return hmcpa(func) or (func in getgx().inheritance_relations and [1 for f in getgx().inheritance_relations[func] if hmcpa(f)])
+        return called(func) or (func in getgx().inheritance_relations and [1 for f in getgx().inheritance_relations[func] if called(f)])
 
     def visitSlice(self, node, func=None):
         if node.flags == 'OP_DELETE':

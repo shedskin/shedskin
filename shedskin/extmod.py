@@ -7,7 +7,7 @@ extmod.py: extension module support
 '''
 from config import getgx
 from graph import getmv
-from infer import hmcpa
+from infer import called
 from python import Class, def_class, Module
 from typestr import ExtmodError, nodetypestr, singletype2
 
@@ -50,7 +50,7 @@ def supported_vars(vars):  # XXX virtuals?
 def supported_funcs(gv, funcs):
     supported = []
     for func in funcs:
-        if func.isGenerator or not hmcpa(func):
+        if func.isGenerator or not called(func):
             continue
         if func.ident in ['__setattr__', '__getattr__', '__iadd__', '__isub__', '__imul__']:  # XXX
             continue
@@ -83,7 +83,7 @@ def supported_funcs(gv, funcs):
 
 
 def has_method(cl, name):  # XXX shared.py
-    return name in cl.funcs and not cl.funcs[name].invisible and not cl.funcs[name].inherited and hmcpa(cl.funcs[name])
+    return name in cl.funcs and not cl.funcs[name].invisible and not cl.funcs[name].inherited and called(cl.funcs[name])
 
 
 def do_add_globals(gv, classes, __ss_mod):
