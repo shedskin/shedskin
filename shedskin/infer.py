@@ -141,6 +141,7 @@ def nrargs(node):
 def called(func):
     return bool([cpas for cpas in func.cp.values() if cpas])
 
+
 def get_types(expr, node, merge):
     types = set()
     if merge:

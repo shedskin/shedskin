@@ -10,9 +10,10 @@ from python import Class
 
 
 def copy_method(self, cl, name, declare):
-    header = cl.cpp_name() + ' *'
+    class_name = self.cpp_name(cl)
+    header = class_name + ' *'
     if not declare:
-        header += cl.cpp_name() + '::'
+        header += class_name + '::'
     header += name + '('
     self.start(header)
     if name == '__deepcopy__':
@@ -21,12 +22,12 @@ def copy_method(self, cl, name, declare):
     if not declare:
         print >>self.out, self.line + ' {'
         self.indent()
-        self.output(cl.cpp_name() + ' *c = new ' + cl.cpp_name() + '();')
+        self.output(class_name + ' *c = new ' + class_name + '();')
         if name == '__deepcopy__':
             self.output('memo->__setitem__(this, c);')
         for var in cl.vars.values():
             if not var.invisible and var in getgx().merged_inh and getgx().merged_inh[var]:
-                varname = var.cpp_name()
+                varname = self.cpp_name(var)
                 if name == '__deepcopy__':
                     self.output('c->%s = __deepcopy(%s);' % (varname, varname))
                 else:
