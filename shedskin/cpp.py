@@ -29,11 +29,74 @@ from makefile import generate_makefile
 from python import assign_rec, aug_msg, Class, def_class, \
     is_enum, is_fastfor, is_literal, is_zip2, \
     lookup_class, lookup_class_module, lookup_var, lookup_module, \
-    Function, Module, StaticClass
+    Function, Module, Variable, StaticClass
 from struct_ import struct_unpack_cpp
 from typestr import incompatible_assignment_rec, lowest_common_parents, \
     nodetypestr, polymorphic_t, singletype, unboxable, typestr
 from virtual import virtuals
+
+
+class CPPNamer(object):
+    #XXX I don't like the fact that it has a dependency with the
+    # GenerateVisitor. Can we improve this?
+    def __init__(self, generate_visitor):
+        self.generate_visitor = generate_visitor
+        self.class_names = [cl.ident for cl in getgx().allclasses]
+        self.cpp_keywords = getgx().cpp_keywords
+        self.ss_prefix = getgx().ss_prefix
+        self.name_by_type = {
+            str: self.name_str,
+            Class: self.name_class,
+            Function: self.name_function,
+            Variable: self.name_variable,
+        }
+
+    def is_name_taken(self, name):
+        return name in self.class_names or name + '_' in self.class_names
+
+    def nokeywords(self, name):
+        if name in self.cpp_keywords:
+            return self.ss_prefix + name
+        return name
+
+    def namespace_class(self, cl, add_cl=''):
+        module = cl.mv.module
+        if module.ident != 'builtin' and module != getmv().module and module.name_list:
+            return module.full_path() + '::' + add_cl + self.name(cl)
+        else:
+            return add_cl + self.name(cl)
+
+    def name(self, obj):
+        get_name = self.name_by_type[type(obj)]
+        name = get_name(obj)
+
+        return self.nokeywords(name)
+
+    def name_variable(self, obj):
+        name = obj.name
+        if obj.masks_global() or self.is_name_taken(name):
+            name = '_' + name
+        return name
+
+    def name_function(self, obj):
+        name = obj.ident
+        if self.is_name_taken(name):
+            name = '_' + name
+        return name
+
+    def name_class(self, obj):
+        return obj.ident
+
+    def name_str(self, obj):
+        name = obj
+        main_module = getgx().main_module
+        module = self.generate_visitor.module
+        init_name = 'init' + module.ident
+
+        if (module == main_module and name == init_name) or \
+                self.is_name_taken(name):
+            name = '_' + name
+        return name
 
 
 # --- code generation visitor; use type information
@@ -49,6 +112,10 @@ class GenerateVisitor(ASTVisitor):
         self.filling_consts = False
         self.with_count = 0
         self.bool_wrapper = {}
+        self.namer = CPPNamer(self)
+
+    def cpp_name(self, obj):
+        return self.namer.name(obj)
 
     def insert_consts(self, declare):  # XXX ugly
         if not self.consts:
@@ -130,7 +197,7 @@ class GenerateVisitor(ASTVisitor):
             for name in _module.name_list:
                 lines.append('namespace __%s__ { /* XXX */\n' % name)
             for cl in _module.mv.classes.values():
-                lines.append('class %s;\n' % cl.cpp_name())
+                lines.append('class %s;\n' % self.cpp_name(cl))
             for name in _module.name_list:
                 lines.append('}\n')
         if lines:
@@ -248,7 +315,7 @@ class GenerateVisitor(ASTVisitor):
                     continue
                 ts = 'extern ' + ts
             if not var.name in ['__exception', '__exception2']:  # XXX
-                pairs.append((ts, var.cpp_name()))
+                pairs.append((ts, self.cpp_name(var)))
         return ''.join(self.group_declarations(pairs))
 
     def get_constant(self, node):
@@ -278,7 +345,7 @@ class GenerateVisitor(ASTVisitor):
         for child in node.node.getChildNodes():
             if isinstance(child, ClassNode):
                 cl = def_class(child.name)
-                print >>self.out, 'class ' + cl.cpp_name() + ';'
+                print >>self.out, 'class ' + self.cpp_name(cl) + ';'
         print >>self.out
 
         # --- lambda typedefs
@@ -361,7 +428,7 @@ class GenerateVisitor(ASTVisitor):
         if cmp_cls or lt_cls or gt_cls or le_cls or ge_cls:
             print >>self.out, 'namespace __shedskin__ { /* XXX */'
             for cl in cmp_cls:
-                t = '__%s__::%s *' % (getmv().module.ident, cl.cpp_name())
+                t = '__%s__::%s *' % (getmv().module.ident, self.cpp_name(cl))
                 print >>self.out, 'template<> inline __ss_int __cmp(%sa, %sb) {' % (t, t)
                 print >>self.out, '    if (!a) return -1;'
                 if '__eq__' in cl.funcs:
@@ -381,7 +448,7 @@ class GenerateVisitor(ASTVisitor):
 
     def rich_compare(self, cls, msg, fallback_msg):
         for cl in cls:
-            t = '__%s__::%s *' % (getmv().module.ident, cl.cpp_name())
+            t = '__%s__::%s *' % (getmv().module.ident, self.cpp_name(cl))
             print >>self.out, 'template<> inline __ss_bool __%s(%sa, %sb) {' % (msg, t, t)
             # print >>self.out, '    if (!a) return -1;' # XXX check
             print >>self.out, '    return b->__%s__(a);' % fallback_msg
@@ -409,16 +476,16 @@ class GenerateVisitor(ASTVisitor):
                     if name == '*':
                         for func in module.mv.funcs.values():
                             if func.cp:  # XXX
-                                print >>self.out, using + func.cpp_name() + ';'
+                                print >>self.out, using + self.cpp_name(func) + ';'
                         for cl in module.mv.classes.values():
-                            print >>self.out, using + cl.cpp_name() + ';'
+                            print >>self.out, using + self.cpp_name(cl) + ';'
                     elif pseudonym not in self.module.mv.globals:
                         if name in module.mv.funcs:
                             func = module.mv.funcs[name]
                             if func.cp:
-                                print >>self.out, using + func.cpp_name() + ';'
+                                print >>self.out, using + self.cpp_name(func) + ';'
                         else:
-                            print >>self.out, using + nokeywords(name) + ';'
+                            print >>self.out, using + self.namer.nokeywords(name) + ';'
         print >>self.out
 
         # --- globals
@@ -467,7 +534,7 @@ class GenerateVisitor(ASTVisitor):
                     cl = getmv().classes[child.name]
                     self.output('cl_' + cl.ident + ' = new class_("%s");' % (cl.ident))
                     if cl.parent.static_nodes:
-                        self.output('%s::__static__();' % cl.cpp_name())
+                        self.output('%s::__static__();' % self.cpp_name(cl))
 
             elif isinstance(child, Discard):
                 self.visit_discard(child)
@@ -479,10 +546,10 @@ class GenerateVisitor(ASTVisitor):
                     if name == '*':
                         for var in module.mv.globals.values():
                             if not var.invisible and not var.imported and not var.name.startswith('__') and var.types():
-                                self.start(nokeywords(var.name) + ' = ' + module.full_path() + '::' + nokeywords(var.name))
+                                self.start(self.namer.nokeywords(var.name) + ' = ' + module.full_path() + '::' + self.namer.nokeywords(var.name))
                                 self.eol()
                     elif pseudonym in self.module.mv.globals and not [t for t in self.module.mv.globals[pseudonym].types() if isinstance(t[0], Module)]:
-                        self.start(nokeywords(pseudonym) + ' = ' + module.full_path() + '::' + nokeywords(name))
+                        self.start(self.namer.nokeywords(pseudonym) + ' = ' + module.full_path() + '::' + self.namer.nokeywords(name))
                         self.eol()
 
             elif not isinstance(child, (ClassNode, FunctionNode)):
@@ -603,7 +670,7 @@ class GenerateVisitor(ASTVisitor):
         self.output('extern class_ *cl_' + cl.ident + ';')
 
         # --- header
-        clnames = [namespaceclass(b) for b in cl.bases]
+        clnames = [self.namer.namespace_class(b) for b in cl.bases]
         if not clnames:
             clnames = ['pyobj']
             if '__iter__' in cl.funcs:  # XXX get return type of 'next'
@@ -617,7 +684,7 @@ class GenerateVisitor(ASTVisitor):
                 nargs = len(callfunc.formals) - 1
                 argtypes = [nodetypestr(callfunc.vars[callfunc.formals[i + 1]]).strip() for i in range(nargs)]
                 clnames = ['pycall%d<%s,%s>' % (nargs, r_typestr, ','.join(argtypes))]
-        self.output('class ' + cl.cpp_name() + ' : ' + ', '.join(['public ' + clname for clname in clnames]) + ' {')
+        self.output('class ' + self.cpp_name(cl) + ' : ' + ', '.join(['public ' + clname for clname in clnames]) + ' {')
         self.do_comment(node.doc)
         self.output('public:')
         self.indent()
@@ -632,22 +699,22 @@ class GenerateVisitor(ASTVisitor):
 
         # --- default constructor
         if need_init:
-            self.output(cl.cpp_name() + '() {}')
+            self.output(self.cpp_name(cl) + '() {}')
         else:
-            self.output(cl.cpp_name() + '() { this->__class__ = cl_' + cl.ident + '; }')
+            self.output(self.cpp_name(cl) + '() { this->__class__ = cl_' + cl.ident + '; }')
 
         # --- init constructor
         if need_init:
             self.func_header(initfunc, declare=True, is_init=True)
             self.indent()
             self.output('this->__class__ = cl_' + cl.ident + ';')
-            self.output('__init__(' + ', '.join(initfunc.vars[f].cpp_name() for f in initfunc.formals[1:]) + ');')
+            self.output('__init__(' + ', '.join(self.cpp_name(initfunc.vars[f]) for f in initfunc.formals[1:]) + ');')
             self.deindent()
             self.output('}')
 
         # --- destructor call
         if '__del__' in cl.funcs and self.inhcpa(cl.funcs['__del__']):
-            self.output('~%s() { this->__del__(); }' % cl.cpp_name())
+            self.output('~%s() { this->__del__(); }' % self.cpp_name(cl))
 
         # --- static code
         if cl.parent.static_nodes:
@@ -684,13 +751,13 @@ class GenerateVisitor(ASTVisitor):
         if cl.parent.vars:  # XXX merge with visitModule
             for var in cl.parent.vars.values():
                 if var in getgx().merged_inh and getgx().merged_inh[var]:
-                    self.start(nodetypestr(var, cl.parent) + cl.ident + '::' + var.cpp_name())
+                    self.start(nodetypestr(var, cl.parent) + cl.ident + '::' + self.cpp_name(var))
                     self.eol()
             print >>self.out
 
         # --- static init
         if cl.parent.static_nodes:
-            self.output('void %s::__static__() {' % cl.cpp_name())
+            self.output('void %s::__static__() {' % self.cpp_name(cl))
             self.indent()
             for node in cl.parent.static_nodes:
                 self.visit(node, cl.parent)
@@ -703,7 +770,7 @@ class GenerateVisitor(ASTVisitor):
         if cl.parent.vars:
             for var in cl.parent.vars.values():
                 if var in getgx().merged_inh and getgx().merged_inh[var]:
-                    self.output('static ' + nodetypestr(var, cl.parent) + var.cpp_name() + ';')
+                    self.output('static ' + nodetypestr(var, cl.parent) + self.cpp_name(var) + ';')
             print >>self.out
 
         # --- instance variables
@@ -717,7 +784,7 @@ class GenerateVisitor(ASTVisitor):
             if var.name in vars:
                 continue
             if var in getgx().merged_inh and getgx().merged_inh[var]:
-                self.output(nodetypestr(var, cl) + var.cpp_name() + ';')
+                self.output(nodetypestr(var, cl) + self.cpp_name(var) + ';')
 
         if [v for v in cl.vars if not v.startswith('__')]:
             print >>self.out
@@ -887,7 +954,7 @@ class GenerateVisitor(ASTVisitor):
                     cl = lookup_class(h0, getmv())
                     if cl.mv.module.builtin and cl.ident in ['KeyboardInterrupt', 'FloatingPointError', 'OverflowError', 'ZeroDivisionError', 'SystemExit']:
                         error("system '%s' is not caught" % cl.ident, h0, warning=True, mv=getmv())
-                    arg = namespaceclass(cl) + ' *'
+                    arg = self.namer.namespace_class(cl) + ' *'
                 else:
                     arg = 'Exception *'
 
@@ -1106,7 +1173,7 @@ class GenerateVisitor(ASTVisitor):
         # --- return expression
         header = ''
         if is_init:
-            ident = func.parent.cpp_name()
+            ident = self.cpp_name(func.parent)
         elif func.ident in ['__hash__']:
             header += 'long '  # XXX __ss_int leads to problem with virtual parent
         elif func.returnexpr:
@@ -1124,7 +1191,7 @@ class GenerateVisitor(ASTVisitor):
 
         # --- method header
         if method and not declare:
-            header += func.parent.cpp_name() + '::'
+            header += self.cpp_name(func.parent) + '::'
         if is_init:
             header += ident
         else:
@@ -1164,13 +1231,6 @@ class GenerateVisitor(ASTVisitor):
             for cast in casts:
                 self.output(cast)
             self.deindent()
-
-    def cpp_name(self, name):  # XXX breakup and remove
-        if ((self.module == getgx().main_module and name == 'init' + self.module.ident) or
-            name in (cl.ident for cl in getgx().allclasses) or
-                name + '_' in (cl.ident for cl in getgx().allclasses)):
-            return '_' + name
-        return nokeywords(name)
 
     def visitFunction(self, node, parent=None, declare=False):
         # locate right func instance
@@ -1235,17 +1295,17 @@ class GenerateVisitor(ASTVisitor):
         self.output('class __gen_%s : public %s {' % (ident, nodetypestr(func.retnode.thing, func)[:-2]))
         self.output('public:')
         self.indent()
-        pairs = [(nodetypestr(func.vars[f], func), func.vars[f].cpp_name()) for f in func.vars]
+        pairs = [(nodetypestr(func.vars[f], func), self.cpp_name(func.vars[f])) for f in func.vars]
         self.output(self.indentation.join(self.group_declarations(pairs)))
         self.output('int __last_yield;\n')
 
         args = []
         for f in func.formals:
-            args.append(nodetypestr(func.vars[f], func) + func.vars[f].cpp_name())
+            args.append(nodetypestr(func.vars[f], func) + self.cpp_name(func.vars[f]))
         self.output(('__gen_%s(' % ident) + ','.join(args) + ') {')
         self.indent()
         for f in func.formals:
-            self.output('this->%s = %s;' % (func.vars[f].cpp_name(), func.vars[f].cpp_name()))
+            self.output('this->%s = %s;' % (self.cpp_name(func.vars[f]), self.cpp_name(func.vars[f])))
         for fake_unpack in func.expand_args.values():
             self.visit(fake_unpack, func)
         self.output('__last_yield = -1;')
@@ -1278,9 +1338,9 @@ class GenerateVisitor(ASTVisitor):
     def generator_body(self, func):
         ident = self.generator_ident(func)
         if not (func.isGenerator and func.parent):
-            formals = [func.vars[f].cpp_name() for f in func.formals]
+            formals = [self.cpp_name(func.vars[f]) for f in func.formals]
         else:
-            formals = ['this'] + [func.vars[f].cpp_name() for f in func.formals if f != 'self']
+            formals = ['this'] + [self.cpp_name(func.vars[f]) for f in func.formals if f != 'self']
         self.output('return new __gen_%s(%s);\n' % (ident, ','.join(formals)))
         self.deindent()
         self.output('}\n')
@@ -1722,7 +1782,7 @@ class GenerateVisitor(ASTVisitor):
             self.visitm(node.node, '(', func)
 
         elif constructor:
-            ts = nokeywords(nodetypestr(node, func))
+            ts = self.namer.nokeywords(nodetypestr(node, func))
             if ts == 'complex ':
                 self.append('mcomplex(')
                 constructor = False  # XXX
@@ -1738,7 +1798,7 @@ class GenerateVisitor(ASTVisitor):
 
         elif parent_constr:
             cl = lookup_class(node.node.expr, getmv())
-            self.append(namespaceclass(cl) + '::' + node.node.attrname + '(')
+            self.append(self.namer.namespace_class(cl) + '::' + node.node.attrname + '(')
 
         elif direct_call:  # XXX no namespace (e.g., math.pow), check nr of args
             if ident == 'float' and node.args and self.mergeinh[node.args[0]] == set([(def_class('float_'), 0)]):
@@ -1770,7 +1830,7 @@ class GenerateVisitor(ASTVisitor):
                 if isinstance(node.node, Name):
                     if isinstance(func, Function) and isinstance(func.parent, Class) and ident in func.parent.funcs:  # masked by method
                         self.append(funcs[0].mv.module.full_path() + '::')
-                    self.append(funcs[0].cpp_name())
+                    self.append(self.cpp_name(funcs[0]))
                 else:
                     self.visit(node.node)
                 self.append('(')
@@ -2213,7 +2273,7 @@ class GenerateVisitor(ASTVisitor):
         pairs = []
         for (name, var) in func.vars.items():
             if not var.invisible and (not hasattr(func, 'formals') or name not in func.formals):  # XXX
-                pairs.append((nodetypestr(var, func), var.cpp_name()))
+                pairs.append((nodetypestr(var, func), self.cpp_name(var)))
         self.output(self.indentation.join(self.group_declarations(pairs)))
 
     # --- nested for loops: loop headers, if statements
@@ -2242,7 +2302,7 @@ class GenerateVisitor(ASTVisitor):
             var = lookup_var(qual.assign.name, lcfunc)
         else:
             var = lookup_var(getmv().tempcount[qual.assign], lcfunc)
-        iter = var.cpp_name()
+        iter = self.cpp_name(var)
 
         if is_fastfor(qual):
             self.do_fastfor(node, qual, quals, iter, lcfunc, genexpr)
@@ -2317,7 +2377,7 @@ class GenerateVisitor(ASTVisitor):
                 if name == 'self' and not func.listcomp:  # XXX parent?
                     args.append('this')
                 else:
-                    args.append(var.cpp_name())
+                    args.append(self.cpp_name(var))
 
         self.line = temp
         if node in getgx().genexp_to_lc.values():
@@ -2470,7 +2530,7 @@ class GenerateVisitor(ASTVisitor):
     def attr_var_ref(self, node, ident):  # XXX blegh
         lcp = lowest_common_parents(polymorphic_t(self.mergeinh[node.expr]))
         if len(lcp) == 1 and isinstance(lcp[0], Class) and node.attrname in lcp[0].vars and not node.attrname in lcp[0].funcs:
-            return lcp[0].vars[node.attrname].cpp_name()
+            return self.cpp_name(lcp[0].vars[node.attrname])
         return self.cpp_name(ident)
 
     def visitAssAttr(self, node, func=None):  # XXX merge with visitGetattr
@@ -2521,7 +2581,7 @@ class GenerateVisitor(ASTVisitor):
                 self.append('self')
             elif len(lcp) == 1 and not (lcp[0] is func.parent or lcp[0] in func.parent.ancestors()):  # see test 160
                 getmv().module.prop_includes.add(lcp[0].module)  # XXX generalize
-                self.append('((' + namespaceclass(lcp[0]) + ' *)this)')
+                self.append('((' + self.namer.namespace_class(lcp[0]) + ' *)this)')
             else:
                 self.append('this')
         elif node.name in map:
@@ -2538,7 +2598,7 @@ class GenerateVisitor(ASTVisitor):
                    (add_cl and [t for t in self.mergeinh[node] if isinstance(t[0], StaticClass)])):
                     cl = lookup_class(node, getmv())
                     if cl:
-                        self.append(namespaceclass(cl, add_cl='cl_'))
+                        self.append(self.namer.namespace_class(cl, add_cl='cl_'))
                     else:
                         self.append(self.cpp_name(node.name))
                 else:
@@ -2586,20 +2646,6 @@ class GenerateVisitor(ASTVisitor):
             self.append('mcomplex(%s, %s)' % (node.value.real, node.value.imag))
         else:
             self.append('new %s(%s)' % (t[0].ident, node.value))
-
-
-def nokeywords(name):
-    if name in getgx().cpp_keywords:
-        return getgx().ss_prefix + name
-    return name
-
-
-def namespaceclass(cl, add_cl=''):
-    module = cl.mv.module
-    if module.ident != 'builtin' and module != getmv().module and module.name_list:
-        return module.full_path() + '::' + add_cl + cl.cpp_name()
-    else:
-        return add_cl + cl.cpp_name()
 
 
 def generate_code():

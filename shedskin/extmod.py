@@ -90,9 +90,9 @@ def do_add_globals(gv, classes, __ss_mod):
     # global variables
     for var in supported_vars(getmv().globals.values()):
         if [1 for t in gv.mergeinh[var] if t[0].ident in ['int_', 'float_', 'bool_']]:
-            print >>gv.out, '    PyModule_AddObject(%(ssmod)s, (char *)"%(name)s", __to_py(%(var)s));' % {'name': var.name, 'var': '__' + gv.module.ident + '__::' + var.cpp_name(), 'ssmod': __ss_mod}
+            print >>gv.out, '    PyModule_AddObject(%(ssmod)s, (char *)"%(name)s", __to_py(%(var)s));' % {'name': var.name, 'var': '__' + gv.module.ident + '__::' + gv.cpp_name(var), 'ssmod': __ss_mod}
         else:
-            print >>gv.out, '    PyModule_AddObject(%(ssmod)s, (char *)"%(name)s", __to_py(%(var)s));' % {'name': var.name, 'var': '__' + gv.module.ident + '__::' + var.cpp_name(), 'ssmod': __ss_mod}
+            print >>gv.out, '    PyModule_AddObject(%(ssmod)s, (char *)"%(name)s", __to_py(%(var)s));' % {'name': var.name, 'var': '__' + gv.module.ident + '__::' + gv.cpp_name(var), 'ssmod': __ss_mod}
 
 
 def do_reduce_setstate(gv, cl, vars):
@@ -107,7 +107,7 @@ def do_reduce_setstate(gv, cl, vars):
     print >>gv.out, '    PyTuple_SetItem(t, 1, a);'
     print >>gv.out, '    PyObject *b = PyTuple_New(%d);' % len(vars)
     for i, var in enumerate(vars):
-        print >>gv.out, '    PyTuple_SetItem(b, %d, __to_py(((%sObject *)self)->__ss_object->%s));' % (i, clname(cl), var.cpp_name())
+        print >>gv.out, '    PyTuple_SetItem(b, %d, __to_py(((%sObject *)self)->__ss_object->%s));' % (i, clname(cl), gv.cpp_name(var))
     print >>gv.out, '    PyTuple_SetItem(t, 2, b);'
     print >>gv.out, '    return t;'
     print >>gv.out, '}\n'
@@ -116,7 +116,7 @@ def do_reduce_setstate(gv, cl, vars):
     print >>gv.out, '    PyObject *state = PyTuple_GetItem(args, 0);'
     for i, var in enumerate(vars):
         vartype = nodetypestr(var, var.parent)
-        print >>gv.out, '    ((%sObject *)self)->__ss_object->%s = __to_ss<%s>(PyTuple_GetItem(state, %d));' % (clname(cl), var.cpp_name(), vartype, i)
+        print >>gv.out, '    ((%sObject *)self)->__ss_object->%s = __to_ss<%s>(PyTuple_GetItem(state, %d));' % (clname(cl), gv.cpp_name(var), vartype, i)
     print >>gv.out, '    Py_INCREF(Py_None);'
     print >>gv.out, '    return Py_None;'
     print >>gv.out, '}\n'
@@ -132,7 +132,7 @@ def convert_methods(gv, cl, declare):
             print >>gv.out, 'namespace __%s__ { /* XXX */' % n
         print >>gv.out
 
-        print >>gv.out, 'PyObject *%s::__to_py__() {' % cl.cpp_name()
+        print >>gv.out, 'PyObject *%s::__to_py__() {' % gv.cpp_name(cl)
         print >>gv.out, '    PyObject *p;'
         print >>gv.out, '    if(__ss_proxy->has_key(this))'
         print >>gv.out, '        p = (PyObject *)(__ss_proxy->__getitem__(this));'
@@ -152,7 +152,7 @@ def convert_methods(gv, cl, declare):
 
         print >>gv.out, 'namespace __shedskin__ { /* XXX */\n'
 
-        print >>gv.out, 'template<> %s::%s *__to_ss(PyObject *p) {' % (cl.module.full_path(), cl.cpp_name())
+        print >>gv.out, 'template<> %s::%s *__to_ss(PyObject *p) {' % (cl.module.full_path(), gv.cpp_name(cl))
         print >>gv.out, '    if(p == Py_None) return NULL;'
         print >>gv.out, '    if(PyObject_IsInstance(p, (PyObject *)&%s::%sObjectType)!=1)' % (cl.module.full_path(), clname(cl))
         print >>gv.out, '        throw new TypeError(new str("error in conversion to Shed Skin (%s expected)"));' % cl.ident
@@ -320,7 +320,7 @@ def do_extmod_class(gv, cl):
     print >>gv.out, '/* class %s */\n' % cl.ident
     print >>gv.out, 'typedef struct {'
     print >>gv.out, '    PyObject_HEAD'
-    print >>gv.out, '    %s::%s *__ss_object;' % (cl.module.full_path(), cl.cpp_name())
+    print >>gv.out, '    %s::%s *__ss_object;' % (cl.module.full_path(), gv.cpp_name(cl))
     print >>gv.out, '} %sObject;\n' % clname(cl)
     print >>gv.out, 'static PyMemberDef %sMembers[] = {' % clname(cl)
     print >>gv.out, '    {NULL}\n};\n'
@@ -341,7 +341,7 @@ def do_extmod_class(gv, cl):
     # tp_new
     print >>gv.out, 'PyObject *%sNew(PyTypeObject *type, PyObject *args, PyObject *kwargs) {' % clname(cl)
     print >>gv.out, '    %sObject *self = (%sObject *)type->tp_alloc(type, 0);' % (clname(cl), clname(cl))
-    print >>gv.out, '    self->__ss_object = new %s::%s();' % (cl.module.full_path(), cl.cpp_name())
+    print >>gv.out, '    self->__ss_object = new %s::%s();' % (cl.module.full_path(), gv.cpp_name(cl))
     print >>gv.out, '    self->__ss_object->__class__ = %s::cl_%s;' % (cl.module.full_path(), cl.ident)
     print >>gv.out, '    __ss_proxy->__setitem__(self->__ss_object, self);'
     print >>gv.out, '    return (PyObject *)self;'
@@ -356,16 +356,16 @@ def do_extmod_class(gv, cl):
     # getset
     for var in vars:
         print >>gv.out, 'PyObject *__ss_get_%s_%s(%sObject *self, void *closure) {' % (clname(cl), var.name, clname(cl))
-        print >>gv.out, '    return __to_py(self->__ss_object->%s);' % var.cpp_name()
+        print >>gv.out, '    return __to_py(self->__ss_object->%s);' % gv.cpp_name(var)
         print >>gv.out, '}\n'
 
         print >>gv.out, 'int __ss_set_%s_%s(%sObject *self, PyObject *value, void *closure) {' % (clname(cl), var.name, clname(cl))
         print >>gv.out, '    try {'
         typ = nodetypestr(var, var.parent)
         if typ == 'void *':  # XXX investigate
-            print >>gv.out, '        self->__ss_object->%s = NULL;' % var.cpp_name()
+            print >>gv.out, '        self->__ss_object->%s = NULL;' % gv.cpp_name(var)
         else:
-            print >>gv.out, '        self->__ss_object->%s = __to_ss<%s>(value);' % (var.cpp_name(), typ)
+            print >>gv.out, '        self->__ss_object->%s = __to_ss<%s>(value);' % (gv.cpp_name(var), typ)
         print >>gv.out, '    } catch (Exception *e) {'
         print >>gv.out, '        PyErr_SetString(__to_py(e), ((e->message)?(e->message->unit.c_str()):""));'
         print >>gv.out, '        return -1;'
@@ -460,5 +460,5 @@ def convert_methods2(gv):
         print >>gv.out, 'extern PyTypeObject %sObjectType;' % clname(cl)
     print >>gv.out, 'namespace __shedskin__ { /* XXX */\n'
     for cl in exported_classes(gv):
-        print >>gv.out, 'template<> %s::%s *__to_ss(PyObject *p);' % (cl.module.full_path(), cl.cpp_name())
+        print >>gv.out, 'template<> %s::%s *__to_ss(PyObject *p);' % (cl.module.full_path(), gv.cpp_name(cl))
     print >>gv.out, '}'

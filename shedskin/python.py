@@ -6,6 +6,7 @@ Copyright 2005-2011 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 import imp
 import os
 import re
+import sys
 from compiler import parse
 from compiler.ast import AssTuple, AssList, List, Tuple, CallFunc, Name, \
     Const, UnaryAdd, UnarySub, Getattr
@@ -55,7 +56,7 @@ class Module(object):
         return 'Module ' + self.ident
 
 
-class Class:
+class Class(object):
     def __init__(self, node):
         self.node = node
         self.ident = node.name
@@ -118,14 +119,11 @@ class Class:
                 return ['first', 'second']
         return []
 
-    def cpp_name(self):
-        return nokeywords(self.ident)
-
     def __repr__(self):
         return 'class ' + self.ident
 
 
-class StaticClass:
+class StaticClass(object):
     def __init__(self, cl):
         self.vars = {}
         self.static_nodes = []
@@ -139,7 +137,7 @@ class StaticClass:
         return 'static class ' + self.ident
 
 
-class Function:
+class Function(object):
     def __init__(self, node=None, parent=None, inherited_from=None):
         self.node = node
         self.inherited_from = inherited_from
@@ -186,19 +184,13 @@ class Function:
         self.registered = []
         self.registered_temp_vars = []
 
-    def cpp_name(self):  # XXX merge
-        if self.ident in (cl.ident for cl in getgx().allclasses) or \
-                self.ident + '_' in (cl.ident for cl in getgx().allclasses):
-            return '_' + self.ident  # XXX ss_prefix
-        return nokeywords(self.ident)
-
     def __repr__(self):
         if self.parent:
             return 'Function ' + repr((self.parent, self.ident))
         return 'Function ' + self.ident
 
 
-class Variable:
+class Variable(object):
     def __init__(self, name, parent):
         self.name = name
         self.parent = parent
@@ -219,14 +211,6 @@ class Variable:
             if not mv.module.builtin and mv.module.in_globals(self.name):
                 return True
         return False
-
-    def cpp_name(self):
-        name = self.name
-        if self.masks_global() or \
-                name in (cl.ident for cl in getgx().allclasses) or \
-                name + '_' in (cl.ident for cl in getgx().allclasses):  # XXX name in..
-            name = '_' + name  # XXX use prefix
-        return nokeywords(name)
 
     def __repr__(self):
         if self.parent:
@@ -278,11 +262,6 @@ def find_module(name, paths):
         relative_filename = relative_filename + '.py'
 
     return absolute_name, filename, relative_filename, builtin
-
-def nokeywords(name):
-    if name in getgx().cpp_keywords:
-        return getgx().ss_prefix + name
-    return name
 
 
 # XXX ugly: find ancestor class that implements function 'ident'

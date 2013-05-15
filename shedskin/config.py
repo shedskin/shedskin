@@ -1,5 +1,6 @@
 import os
 
+
 class GlobalInfo:  # XXX add comments, split up
     def __init__(self):
         self.constraints = set()
@@ -63,6 +64,9 @@ class GlobalInfo:  # XXX add comments, split up
         self.debug_level = 0
         self.maxhits = 0  # XXX amaze.py termination
         self.gc_cleanup = False
+
+
+_gx = None
 
 
 def newgx():
