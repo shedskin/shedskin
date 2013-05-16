@@ -37,10 +37,7 @@ from virtual import virtuals
 
 
 class CPPNamer(object):
-    #XXX I don't like the fact that it has a dependency with the
-    # GenerateVisitor. Can we improve this?
-    def __init__(self, generate_visitor):
-        self.generate_visitor = generate_visitor
+    def __init__(self):
         self.class_names = [cl.ident for cl in getgx().allclasses]
         self.cpp_keywords = getgx().cpp_keywords
         self.ss_prefix = getgx().ss_prefix
@@ -74,7 +71,8 @@ class CPPNamer(object):
 
     def name_variable(self, obj):
         name = obj.name
-        if obj.masks_global() or self.is_name_taken(name):
+        if obj.masks_global() or self.is_name_taken(name) or \
+            [x for x in ('init', 'add') if name == x+getgx().main_module.ident]:
             name = '_' + name
         return name
 
@@ -87,13 +85,8 @@ class CPPNamer(object):
     def name_class(self, obj):
         return obj.ident
 
-    def name_str(self, obj):
-        name = obj
-        main_module = getgx().main_module
-        module = self.generate_visitor.module
-        init_name = 'init' + module.ident
-
-        if (module == main_module and name == init_name) or \
+    def name_str(self, name): # XXX this one should probably be killed off
+        if [x for x in ('init', 'add') if name == x+getgx().main_module.ident] or \
                 self.is_name_taken(name):
             name = '_' + name
         return name
@@ -112,7 +105,7 @@ class GenerateVisitor(ASTVisitor):
         self.filling_consts = False
         self.with_count = 0
         self.bool_wrapper = {}
-        self.namer = CPPNamer(self)
+        self.namer = CPPNamer()
 
     def cpp_name(self, obj):
         return self.namer.name(obj)
