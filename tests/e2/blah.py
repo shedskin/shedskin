@@ -28,3 +28,9 @@ if __name__ == '__main__':
     print meuk().memory
     hoppa({'acht': 8.8})
     NotExported()
+
+    initblah = 4
+    print initblah
+    addblah = 5
+    print addblah
+
