@@ -41,7 +41,7 @@ import graph
 from config import getgx
 from copy_ import determine_classes
 from python import StaticClass, lookup_class_module, Function, \
-    Variable, lookup_var, Class, lookup_implementor, def_class, def_var
+    Variable, lookup_var, Class, lookup_implementor, def_class
 from typestr import nodetypestr
 from virtual import analyze_virtuals
 
@@ -1438,7 +1438,14 @@ def register_temp_var(var, parent):
 
 
 def default_var(name, parent, worklist=None):
-    var = def_var(name, parent, True, worklist)
+    var = lookup_var(name, parent, local=True)
+    if not var:
+        var = Variable(name, parent)
+        if parent: # XXX move to Variable?
+            parent.vars[name] = var
+        else:
+            graph.getmv().globals[name] = var
+        getgx().allvars.add(var)
 
     if (var, 0, 0) not in getgx().cnode:
         newnode = CNode(var, parent=parent)

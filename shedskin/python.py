@@ -330,10 +330,6 @@ def lookup_module(node, mv):
         return module
 
 
-def lookup_var(name, parent, mv=None):
-    return def_var(name, parent, False, mv=mv)
-
-
 def def_class(name):
     if name in graph.getmv().classes:
         return graph.getmv().classes[name]
@@ -341,16 +337,14 @@ def def_class(name):
         return graph.getmv().ext_classes[name]
 
 
-def def_var(name, parent, local, worklist=None, mv=None):
+def lookup_var(name, parent, local=False, mv=None):
     if not mv:
         mv = graph.getmv()
     if isinstance(parent, Class) and name in parent.parent.vars:  # XXX
         return parent.parent.vars[name]
-    if parent and name in parent.vars:
+    elif parent and name in parent.vars:
         return parent.vars[name]
-    if parent and local:
-        dest = parent.vars
-    else:
+    elif not (parent and local):
         # recursive lookup
         chain = []
         while isinstance(parent, Function):
@@ -365,15 +359,6 @@ def def_var(name, parent, local, worklist=None, mv=None):
         # not found: global
         if name in mv.globals:
             return mv.globals[name]
-        dest = mv.globals
-
-    if not local:
-        return None
-
-    var = Variable(name, parent)
-    getgx().allvars.add(var)
-    dest[name] = var
-    return var
 
 
 def subclass(a, b):
