@@ -338,11 +338,6 @@ def lookup_var(name, parent, mv=None):
     return def_var(name, parent, False, mv=mv)
 
 
-def register_temp_var(var, parent):
-    if isinstance(parent, Function):
-        parent.registered_temp_vars.append(var)
-
-
 def def_class(name):
     if name in graph.getmv().classes:
         return graph.getmv().classes[name]
@@ -381,27 +376,7 @@ def def_var(name, parent, local, worklist=None, mv=None):
 
     var = Variable(name, parent)
     getgx().allvars.add(var)
-
     dest[name] = var
-    newnode = infer.CNode(var, parent=parent)
-    if parent:
-        newnode.mv = parent.mv
-    else:
-        newnode.mv = mv
-    infer.add_to_worklist(worklist, newnode)
-    getgx().types[newnode] = set()
-
-    return var
-
-
-def default_var(name, parent, worklist=None):
-    var = def_var(name, parent, True, worklist)
-
-    if isinstance(parent, Function) and parent.listcomp and not var.registered:
-        while isinstance(parent, Function) and parent.listcomp:  # XXX
-            parent = parent.parent
-        register_temp_var(var, parent)
-
     return var
 
 

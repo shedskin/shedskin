@@ -27,10 +27,10 @@ from compiler.visitor import ASTVisitor
 
 from error import error
 from config import getgx
-from infer import inode, in_out, CNode
-from python import StaticClass, lookup_func, default_var, Function, is_zip2, \
+from infer import inode, in_out, CNode, default_var, register_temp_var
+from python import StaticClass, lookup_func, Function, is_zip2, \
     lookup_class, is_method, is_literal, is_enum, lookup_var, assign_rec, \
-    Class, is_property_setter, is_fastfor, register_temp_var, aug_msg, \
+    Class, is_property_setter, is_fastfor, aug_msg, \
     Module, def_class, parse_file, find_module
 from struct_ import struct_faketuple, struct_info, struct_unpack
 

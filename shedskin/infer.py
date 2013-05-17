@@ -40,8 +40,8 @@ import error
 import graph
 from config import getgx
 from copy_ import determine_classes
-from python import StaticClass, lookup_class_module, default_var, Function, \
-    Variable, lookup_var, Class, lookup_implementor, def_class
+from python import StaticClass, lookup_class_module, Function, \
+    Variable, lookup_var, Class, lookup_implementor, def_class, def_var
 from typestr import nodetypestr
 from virtual import analyze_virtuals
 
@@ -1430,3 +1430,28 @@ def analyze(module_name):
             nodetypestr(node, inode(node).parent)
 
     return getgx()
+
+
+def register_temp_var(var, parent):
+    if isinstance(parent, Function):
+        parent.registered_temp_vars.append(var)
+
+
+def default_var(name, parent, worklist=None):
+    var = def_var(name, parent, True, worklist)
+
+    if (var, 0, 0) not in getgx().cnode:
+        newnode = CNode(var, parent=parent)
+        if parent:
+            newnode.mv = parent.mv
+        else:
+            newnode.mv = graph.getmv()
+        add_to_worklist(worklist, newnode)
+        getgx().types[newnode] = set()
+
+    if isinstance(parent, Function) and parent.listcomp and not var.registered:
+        while isinstance(parent, Function) and parent.listcomp:  # XXX
+            parent = parent.parent
+        register_temp_var(var, parent)
+
+    return var
