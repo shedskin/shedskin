@@ -9,7 +9,7 @@ from compiler.ast import CallFunc, Name
 
 import infer
 from config import getgx
-from python import default_var, subclass, Class
+from python import subclass, Class
 from typestr import lowest_common_parents, typestr, polymorphic_t
 
 
@@ -135,7 +135,7 @@ def upgrade_cl(abstract_cl, node, ident, classes):
 
     # --- register virtual var
     elif ident in ['__getattr__', '__setattr__'] and subclasses:
-        var = default_var(node.args[0].value, abstract_cl)
+        var = infer.default_var(node.args[0].value, abstract_cl)
         for subcl in subclasses:
             if var.name in subcl.vars and subcl.vars[var.name] in getgx().merged_inh:
                 getgx().types.setdefault(getgx().cnode[var, 0, 0], set()).update(getgx().merged_inh[subcl.vars[var.name]])  # XXX shouldn't this be merged automatically already?
