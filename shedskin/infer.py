@@ -1455,3 +1455,7 @@ def default_var(name, parent, worklist=None):
         register_temp_var(var, parent)
 
     return var
+
+def var_types(var):
+    return inode(var).types()
+

@@ -12,7 +12,6 @@ from compiler.ast import AssTuple, AssList, List, Tuple, CallFunc, Name, \
     Const, UnaryAdd, UnarySub, Getattr
 
 import graph
-import infer
 from config import getgx
 
 
@@ -201,9 +200,6 @@ class Variable(object):
         self.looper = None
         self.wopper = None
         self.const_assign = []
-
-    def types(self):
-        return infer.inode(self).types()
 
     def masks_global(self):
         if isinstance(self.parent, Class):

@@ -24,7 +24,7 @@ from error import error
 from extmod import convert_methods, convert_methods2, do_extmod, pyinit_func
 from graph import getmv, setmv
 from infer import analyze_callfunc, callfunc_targets, connect_actual_formal, \
-    called, inode
+    called, inode, var_types
 from makefile import generate_makefile
 from python import assign_rec, aug_msg, Class, def_class, \
     is_enum, is_fastfor, is_literal, is_zip2, \
@@ -538,10 +538,10 @@ class GenerateVisitor(ASTVisitor):
                     pseudonym = pseudonym or name
                     if name == '*':
                         for var in module.mv.globals.values():
-                            if not var.invisible and not var.imported and not var.name.startswith('__') and var.types():
+                            if not var.invisible and not var.imported and not var.name.startswith('__') and var_types(var):
                                 self.start(self.namer.nokeywords(var.name) + ' = ' + module.full_path() + '::' + self.namer.nokeywords(var.name))
                                 self.eol()
-                    elif pseudonym in self.module.mv.globals and not [t for t in self.module.mv.globals[pseudonym].types() if isinstance(t[0], Module)]:
+                    elif pseudonym in self.module.mv.globals and not [t for t in var_types(self.module.mv.globals[pseudonym]) if isinstance(t[0], Module)]:
                         self.start(self.namer.nokeywords(pseudonym) + ' = ' + module.full_path() + '::' + self.namer.nokeywords(name))
                         self.eol()
 
@@ -2639,7 +2639,6 @@ class GenerateVisitor(ASTVisitor):
             self.append('mcomplex(%s, %s)' % (node.value.real, node.value.imag))
         else:
             self.append('new %s(%s)' % (t[0].ident, node.value))
-
 
 def generate_code():
     for module in getgx().modules.values():
