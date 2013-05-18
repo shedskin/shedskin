@@ -1160,20 +1160,23 @@ class GenerateVisitor(ASTVisitor):
         if func.largs is not None:
             formals = formals[:func.largs]
 
-        ident = func.ident
+        if is_init:
+            ident = self.cpp_name(func.parent)
+        else:
+            ident = self.cpp_name(func)
+
         self.start()
 
         # --- return expression
         header = ''
         if is_init:
-            ident = self.cpp_name(func.parent)
+            pass
         elif func.ident in ['__hash__']:
             header += 'long '  # XXX __ss_int leads to problem with virtual parent
         elif func.returnexpr:
             header += nodetypestr(func.retnode.thing, func)  # XXX mult
         else:
             header += 'void '
-            ident = self.cpp_name(ident)
 
         ftypes = [nodetypestr(func.vars[f], func) for f in formals]
 
@@ -1185,10 +1188,7 @@ class GenerateVisitor(ASTVisitor):
         # --- method header
         if method and not declare:
             header += self.cpp_name(func.parent) + '::'
-        if is_init:
-            header += ident
-        else:
-            header += self.cpp_name(ident)
+        header += ident
 
         # --- cast arguments if necessary (explained above)
         casts = []
