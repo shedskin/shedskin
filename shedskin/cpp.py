@@ -48,9 +48,6 @@ class CPPNamer(object):
             Variable: self.name_variable,
         }
 
-    def is_name_taken(self, name):
-        return name in self.class_names or name + '_' in self.class_names
-
     def nokeywords(self, name):
         if name in self.cpp_keywords:
             return self.ss_prefix + name
@@ -69,25 +66,20 @@ class CPPNamer(object):
 
         return self.nokeywords(name)
 
-    def name_variable(self, obj):
-        name = obj.name
-        if obj.masks_global() or self.is_name_taken(name) or \
-            [x for x in ('init', 'add') if name == x+getgx().main_module.ident]:
-            name = '_' + name
-        return name
+    def name_variable(self, var):
+        if var.masks_global():
+            return '_' + var.name
+        return self.name_str(var.name)
 
-    def name_function(self, obj):
-        name = obj.ident
-        if self.is_name_taken(name):
-            name = '_' + name
-        return name
+    def name_function(self, func):
+        return self.name_str(func.ident)
 
     def name_class(self, obj):
         return obj.ident
 
-    def name_str(self, name): # XXX this one should probably be killed off
+    def name_str(self, name):
         if [x for x in ('init', 'add') if name == x+getgx().main_module.ident] or \
-                self.is_name_taken(name):
+               name in self.class_names or name + '_' in self.class_names:
             name = '_' + name
         return name
 
