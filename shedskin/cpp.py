@@ -1192,16 +1192,19 @@ class GenerateVisitor(ASTVisitor):
 
         # --- cast arguments if necessary (explained above)
         casts = []
+        casters = set()
         if func.ftypes:
             for i in range(min(len(oldftypes), len(ftypes))):  # XXX this is 'cast on specialize'.. how about generalization?
                 if oldftypes[i] != ftypes[i]:
                     casts.append(oldftypes[i] + formals[i] + ' = (' + oldftypes[i] + ')__' + formals[i] + ';')
                     if not declare:
-                        formals[i] = '__' + formals[i]
+                        casters.add(i)
 
         formals2 = formals[:]
         for (i, f) in enumerate(formals2):  # XXX
-            formals2[i] = self.cpp_name(f)
+            formals2[i] = self.cpp_name(func.vars[f])
+            if i in casters:
+                formals2[i] = '__'+formals2[i]
         formaldecs = [o + f for (o, f) in zip(ftypes, formals2)]
         if declare and isinstance(func.parent, Class) and func.ident in func.parent.staticmethods:
             header = 'static ' + header
