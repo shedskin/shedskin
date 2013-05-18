@@ -56,13 +56,13 @@ class Module(object):
 
 
 class Class(object):
-    def __init__(self, node):
+    def __init__(self, node, mv):
         self.node = node
         self.ident = node.name
         self.bases = []
         self.children = []
         self.dcpa = 1
-        self.mv = graph.getmv()
+        self.mv = mv
         self.vars = {}
         self.funcs = {}
         self.virtuals = {}              # 'virtually' called methods
@@ -123,13 +123,13 @@ class Class(object):
 
 
 class StaticClass(object):
-    def __init__(self, cl):
+    def __init__(self, cl, mv):
         self.vars = {}
         self.static_nodes = []
         self.funcs = {}
         self.ident = cl.ident
         self.parent = None
-        self.mv = graph.getmv()
+        self.mv = mv
         self.module = cl.module
 
     def __repr__(self):
@@ -137,7 +137,7 @@ class StaticClass(object):
 
 
 class Function(object):
-    def __init__(self, node=None, parent=None, inherited_from=None):
+    def __init__(self, node=None, parent=None, inherited_from=None, mv=None):
         self.node = node
         self.inherited_from = inherited_from
         if node:
@@ -156,7 +156,7 @@ class Function(object):
         self.constraints = set()
         self.vars = {}
         self.globals = []
-        self.mv = graph.getmv()
+        self.mv = mv
         self.lnodes = []
         self.nodes = set()
         self.nodes_ordered = []
