@@ -416,11 +416,11 @@ class ModuleVisitor(ASTVisitor):
         for n in self.stmt_nodes(node, ClassNode):
             check_redef(n)
             getmv().classnodes.append(n)
-            newclass = Class(n)
+            newclass = Class(n, getmv())
             self.classes[n.name] = newclass
             getmv().classes[n.name] = newclass
             newclass.module = self.module
-            newclass.parent = StaticClass(newclass)
+            newclass.parent = StaticClass(newclass, getmv())
 
             # methods
             for m in self.stmt_nodes(n, FunctionNode):
@@ -428,7 +428,7 @@ class ModuleVisitor(ASTVisitor):
                     m.name = m.name + '__setter__'
                 if m.name in newclass.funcs:  # and func.ident not in ['__getattr__', '__setattr__']: # XXX
                     error("function/class redefinition is not allowed", m, mv=self)
-                func = Function(m, newclass)
+                func = Function(m, newclass, mv=getmv())
                 newclass.funcs[func.ident] = func
                 self.set_default_vars(m, func)
 
@@ -437,7 +437,7 @@ class ModuleVisitor(ASTVisitor):
         for n in self.stmt_nodes(node, FunctionNode):
             check_redef(n)
             getmv().funcnodes.append(n)
-            func = getmv().funcs[n.name] = Function(n)
+            func = getmv().funcs[n.name] = Function(n, mv=getmv())
             self.set_default_vars(n, func)
 
         # global variables XXX visitGlobal
@@ -570,7 +570,7 @@ class ModuleVisitor(ASTVisitor):
         elif isinstance(parent, Class) and not inherited_from and node.name in parent.funcs:
             func = parent.funcs[node.name]
         else:
-            func = Function(node, parent, inherited_from)
+            func = Function(node, parent, inherited_from, mv=getmv())
             if inherited_from:
                 self.set_default_vars(node, func)
 
@@ -1102,7 +1102,7 @@ class ModuleVisitor(ASTVisitor):
 
     def visitListComp(self, node, func=None):
         # --- [expr for iter in list for .. if cond ..]
-        lcfunc = Function()
+        lcfunc = Function(mv=getmv())
         lcfunc.listcomp = True
         lcfunc.ident = 'l.c.'  # XXX
         lcfunc.parent = func
@@ -1401,16 +1401,16 @@ class ModuleVisitor(ASTVisitor):
             newclass = getmv().classes[node.name]  # set in visitModule, for forward references
         else:
             check_redef(node)  # XXX merge with visitModule
-            newclass = Class(node)
+            newclass = Class(node, getmv())
             self.classes[node.name] = newclass
             getmv().classes[node.name] = newclass
             newclass.module = self.module
-            newclass.parent = StaticClass(newclass)
+            newclass.parent = StaticClass(newclass, getmv())
 
         # --- built-in functions
         for cl in [newclass, newclass.parent]:
             for ident in ['__setattr__', '__getattr__']:
-                func = Function()
+                func = Function(mv=getmv())
                 func.ident = ident
                 func.parent = cl
 
