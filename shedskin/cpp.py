@@ -2600,7 +2600,11 @@ class GenerateVisitor(ASTVisitor):
                 else:
                     if isinstance(func, Class) and node.name in func.parent.vars:  # XXX
                         self.append(func.ident + '::')
-                    self.append(self.cpp_name(node.name))
+                    var = lookup_var(node.name, func)
+                    if var:
+                        self.append(self.cpp_name(var))
+                    else:
+                        self.append(node.name) # XXX
 
     def expand_special_chars(self, value):
         value = list(value)
