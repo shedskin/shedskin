@@ -9,7 +9,6 @@ import re
 from compiler.ast import Const, AssTuple, AssList, Assign, AugAssign, \
     Getattr, Dict, Print, Return, Printnl, Name, List, Tuple, ListComp
 
-from graph import setmv
 from config import getgx
 from infer import inode
 from python import assign_rec
