@@ -561,7 +561,7 @@ def possible_functions(node, analysis):
         funcs = [(t[0].funcs['__init__'], t[1], t) for t in node.types() if '__init__' in t[0].funcs]
 
     elif parent_constr:
-        objtypes = getgx().cnode[lookup_var('self', node.parent), node.dcpa, node.cpa].types()
+        objtypes = getgx().cnode[lookup_var('self', node.parent, mv=graph.getmv()), node.dcpa, node.cpa].types()
         funcs = [(t[0].funcs[ident], t[1], None) for t in objtypes if ident in t[0].funcs]
 
     elif direct_call:
@@ -1438,7 +1438,7 @@ def register_temp_var(var, parent):
 
 
 def default_var(name, parent, worklist=None):
-    var = lookup_var(name, parent, local=True)
+    var = lookup_var(name, parent, local=True, mv=graph.getmv())
     if not var:
         var = Variable(name, parent)
         if parent: # XXX move to Variable?

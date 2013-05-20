@@ -1342,7 +1342,7 @@ class ModuleVisitor(ASTVisitor):
             if ident == 'isinstance' and isinstance(node.args[1], Tuple):
                 error("isinstance(.., (a, b, ..)) is not supported", node, mv=getmv())
 
-            if lookup_var(ident, func):
+            if lookup_var(ident, func, mv=getmv()):
                 self.visit(node.node, func)
                 inode(node.node).callfuncs.append(node)  # XXX iterative dataflow analysis: move there
         else:
@@ -1365,7 +1365,7 @@ class ModuleVisitor(ASTVisitor):
 
         # --- handle instantiation or call
         constructor = lookup_class(node.node, getmv())
-        if constructor and (not isinstance(node.node, Name) or not lookup_var(node.node.name, func)):
+        if constructor and (not isinstance(node.node, Name) or not lookup_var(node.node.name, func, mv=getmv())):
             self.instance(node, constructor, func)
             inode(node).callfuncs.append(node)  # XXX see above, investigate
         else:
@@ -1535,7 +1535,7 @@ class ModuleVisitor(ASTVisitor):
         if isinstance(func, Function) and node.name in func.globals:
             var = default_var(node.name, None)
         else:
-            var = lookup_var(node.name, func)
+            var = lookup_var(node.name, func, mv=getmv())
             if not var:
                 if self.fncl_passing(node, newnode, func):
                     pass

@@ -11,7 +11,6 @@ from compiler import parse
 from compiler.ast import AssTuple, AssList, List, Tuple, CallFunc, Name, \
     Const, UnaryAdd, UnarySub, Getattr
 
-import graph
 from config import getgx
 
 
@@ -339,8 +338,6 @@ def def_class(name, mv=None):
         return mv.ext_classes[name]
 
 def lookup_var(name, parent, local=False, mv=None):
-    if not mv:
-        mv = graph.getmv()
     if isinstance(parent, Class) and name in parent.parent.vars:  # XXX
         return parent.parent.vars[name]
     elif parent and name in parent.vars:

@@ -895,7 +895,7 @@ class GenerateVisitor(ASTVisitor):
         self.start('throw (')
 
         # --- raise class [, constructor args]
-        if isinstance(node.expr1, Name) and not lookup_var(node.expr1.name, func):  # XXX lookup_class
+        if isinstance(node.expr1, Name) and not lookup_var(node.expr1.name, func, mv=self.mv):  # XXX lookup_class
             self.append('new %s(' % node.expr1.name)
             if node.expr2:
                 if isinstance(node.expr2, Tuple) and node.expr2.nodes:
@@ -2103,7 +2103,7 @@ class GenerateVisitor(ASTVisitor):
                     if len(lcp) == 1 and isinstance(lcp[0], Class) and lvalue.attrname in lcp[0].properties:
                         self.visitm(lvalue.expr, '->' + self.cpp_name(lcp[0].properties[lvalue.attrname][1]) + '(', rvalue, ')', func)
                     elif lcp and isinstance(lcp[0], Class):
-                        var = lookup_var(lvalue.attrname, lcp[0])
+                        var = lookup_var(lvalue.attrname, lcp[0], mv=self.mv)
                         vartypes = set()
                         if var:
                             vartypes = self.mergeinh[var]
@@ -2116,7 +2116,7 @@ class GenerateVisitor(ASTVisitor):
 
                 # name = expr
                 elif isinstance(lvalue, AssName):
-                    vartypes = self.mergeinh[lookup_var(lvalue.name, func)]
+                    vartypes = self.mergeinh[lookup_var(lvalue.name, func, mv=self.mv)]
                     self.visit(lvalue, func)
                     self.append(' = ')
                     self.visit_conv(rvalue, vartypes, func)
@@ -2209,8 +2209,8 @@ class GenerateVisitor(ASTVisitor):
     def lc_args(self, lcfunc, func):
         args = []
         for name in lcfunc.misses:
-            if lookup_var(name, func).parent:
-                args.append((nodetypestr(lookup_var(name, lcfunc), lcfunc), self.cpp_name(name)))
+            if lookup_var(name, func, mv=self.mv).parent:
+                args.append((nodetypestr(lookup_var(name, lcfunc, mv=self.mv), lcfunc), self.cpp_name(name)))
         return args
 
     def listcomp_func(self, node):
@@ -2289,9 +2289,9 @@ class GenerateVisitor(ASTVisitor):
 
         # iter var
         if isinstance(qual.assign, AssName):
-            var = lookup_var(qual.assign.name, lcfunc)
+            var = lookup_var(qual.assign.name, lcfunc, mv=self.mv)
         else:
-            var = lookup_var(self.mv.tempcount[qual.assign], lcfunc)
+            var = lookup_var(self.mv.tempcount[qual.assign], lcfunc, mv=self.mv)
         iter = self.cpp_name(var)
 
         if is_fastfor(qual):
@@ -2362,7 +2362,7 @@ class GenerateVisitor(ASTVisitor):
         temp = self.line
 
         for name in lcfunc.misses:
-            var = lookup_var(name, func)
+            var = lookup_var(name, func, mv=self.mv)
             if var.parent:
                 if name == 'self' and not func.listcomp:  # XXX parent?
                     args.append('this')
@@ -2492,7 +2492,7 @@ class GenerateVisitor(ASTVisitor):
 
             if not isinstance(node.expr, Name):
                 self.append('(')
-            if isinstance(node.expr, Name) and not lookup_var(node.expr.name, func):  # XXX XXX
+            if isinstance(node.expr, Name) and not lookup_var(node.expr.name, func, mv=self.mv):  # XXX XXX
                 self.append(node.expr.name)
             else:
                 self.visit(node.expr, func)
@@ -2544,7 +2544,7 @@ class GenerateVisitor(ASTVisitor):
 
         # obj.attr
         else:
-            if isinstance(node.expr, Name) and not lookup_var(node.expr.name, func):  # XXX
+            if isinstance(node.expr, Name) and not lookup_var(node.expr.name, func, mv=self.mv):  # XXX
                 self.append(node.expr.name)
             else:
                 self.visit(node.expr, func)
@@ -2594,7 +2594,7 @@ class GenerateVisitor(ASTVisitor):
                 else:
                     if isinstance(func, Class) and node.name in func.parent.vars:  # XXX
                         self.append(func.ident + '::')
-                    var = lookup_var(node.name, func)
+                    var = lookup_var(node.name, func, mv=self.mv)
                     if var:
                         self.append(self.cpp_name(var))
                     else:
