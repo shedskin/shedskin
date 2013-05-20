@@ -330,12 +330,13 @@ def lookup_module(node, mv):
         return module
 
 
-def def_class(name):
-    if name in graph.getmv().classes:
-        return graph.getmv().classes[name]
-    else:
-        return graph.getmv().ext_classes[name]
-
+def def_class(name, mv=None):
+    if mv is None:
+        mv = getgx().modules['builtin'].mv
+    if name in mv.classes:
+        return mv.classes[name]
+    elif name in mv.ext_classes:
+        return mv.ext_classes[name]
 
 def lookup_var(name, parent, local=False, mv=None):
     if not mv:

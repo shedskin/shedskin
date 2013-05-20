@@ -331,7 +331,7 @@ class GenerateVisitor(ASTVisitor):
         # class declarations
         for child in node.node.getChildNodes():
             if isinstance(child, ClassNode):
-                cl = def_class(child.name)
+                cl = def_class(child.name, mv=self.mv)
                 print >>self.out, 'class ' + self.cpp_name(cl) + ';'
         print >>self.out
 
@@ -1015,7 +1015,7 @@ class GenerateVisitor(ASTVisitor):
     def only_classes(self, node, names):
         if node not in self.mergeinh:
             return False
-        classes = [def_class(name) for name in names] + [def_class('none')]
+        classes = [def_class(name, mv=self.mv) for name in names] + [def_class('none')]
         return not [t for t in self.mergeinh[node] if t[0] not in classes]
 
     def visitFor(self, node, func=None):
