@@ -1160,11 +1160,11 @@ class ModuleVisitor(ASTVisitor):
         # --- rewrite for struct.unpack XXX rewrite callfunc as tuple
         if len(node.nodes) == 1:
             lvalue, rvalue = node.nodes[0], node.expr
-            if struct_unpack(rvalue, func) and isinstance(lvalue, (AssList, AssTuple)) and not [n for n in lvalue.nodes if isinstance(n, (AssList, AssTuple))]:
+            if struct_unpack(rvalue, func, self) and isinstance(lvalue, (AssList, AssTuple)) and not [n for n in lvalue.nodes if isinstance(n, (AssList, AssTuple))]:
                 if not isinstance(rvalue.args[0], (Const, Name)):
                     error('non-constant format string', node, mv=self)
                 self.visit(node.expr, func)
-                sinfo = struct_info(rvalue.args[0], func)
+                sinfo = struct_info(rvalue.args[0], func, self)
                 faketuple = struct_faketuple(sinfo)
                 self.visit(Assign(node.nodes, faketuple), func)
                 tvar = self.temp_var2(rvalue.args[1], inode(rvalue.args[1]), func)
