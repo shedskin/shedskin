@@ -9,7 +9,7 @@ import re
 from compiler.ast import Const, AssTuple, AssList, Assign, AugAssign, \
     Getattr, Dict, Print, Return, Printnl, Name, List, Tuple, ListComp
 
-from graph import setmv, getmv
+from graph import setmv
 from config import getgx
 from infer import inode
 from python import assign_rec
@@ -63,7 +63,7 @@ def annotate():
 
         # --- instance variables
         funcs = mv.funcs.values()
-        for cl in getmv().classes.values():
+        for cl in mv.classes.values():
             labels = [var.name + ': ' + nodetypestr(var, cl, False) for var in cl.vars.values() if var in merge and merge[var] and not var.name.startswith('__')]
             if labels:
                 paste(source, cl.node, ', '.join(labels), mv)
@@ -78,7 +78,7 @@ def annotate():
             paste(source, func.node, ', '.join(labels), mv)
 
         # --- callfuncs
-        for callfunc, _ in getmv().callfuncs:
+        for callfunc, _ in mv.callfuncs:
             if isinstance(callfunc.node, Getattr):
                 if not callfunc.node.__class__.__name__.startswith('FakeGetattr'): # XXX
                     paste(source, callfunc.node.expr, nodetypestr(callfunc, inode(callfunc).parent, False), mv)
