@@ -16,7 +16,7 @@ from python import lookup_var
 # --- struct.unpack "type inference"
 def struct_info(node, func, mv):
     if isinstance(node, Name):
-        var = lookup_var(node.name, func)  # XXX fwd ref?
+        var = lookup_var(node.name, func, mv=mv)  # XXX fwd ref?
         if not var or len(var.const_assign) != 1:
             error('non-constant format string', node, mv=mv)
         error('assuming constant format string', node, mv=mv, warning=True)
@@ -51,9 +51,9 @@ def struct_info(node, func, mv):
 
 def struct_unpack(rvalue, func, mv):
     if isinstance(rvalue, CallFunc):
-        if isinstance(rvalue.node, Getattr) and isinstance(rvalue.node.expr, Name) and rvalue.node.expr.name == 'struct' and rvalue.node.attrname == 'unpack' and lookup_var('struct', func).imported:  # XXX imported from where?
+        if isinstance(rvalue.node, Getattr) and isinstance(rvalue.node.expr, Name) and rvalue.node.expr.name == 'struct' and rvalue.node.attrname == 'unpack' and lookup_var('struct', func, mv=mv).imported:  # XXX imported from where?
             return True
-        elif isinstance(rvalue.node, Name) and rvalue.node.name == 'unpack' and 'unpack' in mv.ext_funcs and not lookup_var('unpack', func):  # XXX imported from where?
+        elif isinstance(rvalue.node, Name) and rvalue.node.name == 'unpack' and 'unpack' in mv.ext_funcs and not lookup_var('unpack', func, mv=mv):  # XXX imported from where?
             return True
 
 
