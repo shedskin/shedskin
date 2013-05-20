@@ -10,6 +10,7 @@ import sys
 import time
 import traceback
 
+import graph
 from annotate import annotate
 from config import newgx, setgx, getgx
 from cpp import generate_code

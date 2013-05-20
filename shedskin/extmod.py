@@ -6,7 +6,6 @@ extmod.py: extension module support
 
 '''
 from config import getgx
-from graph import getmv
 from infer import called
 from python import Class, def_class, Module
 from typestr import ExtmodError, nodetypestr, singletype2
@@ -88,7 +87,7 @@ def has_method(cl, name):  # XXX shared.py
 
 def do_add_globals(gv, classes, __ss_mod):
     # global variables
-    for var in supported_vars(getmv().globals.values()):
+    for var in supported_vars(gv.mv.globals.values()):
         if [1 for t in gv.mergeinh[var] if t[0].ident in ['int_', 'float_', 'bool_']]:
             print >>gv.out, '    PyModule_AddObject(%(ssmod)s, (char *)"%(name)s", __to_py(%(var)s));' % {'name': var.name, 'var': '__' + gv.module.ident + '__::' + gv.cpp_name(var), 'ssmod': __ss_mod}
         else:
