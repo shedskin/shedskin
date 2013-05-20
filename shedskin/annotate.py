@@ -44,27 +44,26 @@ def annotate():
         if module.builtin:
             continue
         mv = module.mv
-        setmv(mv)
         merge = dict((k,v) for k,v in getgx().merged_inh.items() if (k,0,0) in getgx().cnode and inode(k).mv == mv)
         source = open(module.filename).readlines()
 
         # --- constants/names/attributes
         for expr in merge:
             if isinstance(expr, (Const, Name)):
-                paste(source, expr, nodetypestr(expr, inode(expr).parent, False), mv)
+                paste(source, expr, nodetypestr(expr, inode(expr).parent, False, mv=mv), mv)
 
         for expr in merge:
             if isinstance(expr, Getattr):
-                paste(source, expr, nodetypestr(expr, inode(expr).parent, False), mv)
+                paste(source, expr, nodetypestr(expr, inode(expr).parent, False, mv=mv), mv)
 
         for expr in merge:
             if isinstance(expr, (Tuple, List, Dict)):
-                paste(source, expr, nodetypestr(expr, inode(expr).parent, False), mv)
+                paste(source, expr, nodetypestr(expr, inode(expr).parent, False, mv=mv), mv)
 
         # --- instance variables
         funcs = mv.funcs.values()
         for cl in mv.classes.values():
-            labels = [var.name + ': ' + nodetypestr(var, cl, False) for var in cl.vars.values() if var in merge and merge[var] and not var.name.startswith('__')]
+            labels = [var.name + ': ' + nodetypestr(var, cl, False, mv=mv) for var in cl.vars.values() if var in merge and merge[var] and not var.name.startswith('__')]
             if labels:
                 paste(source, cl.node, ', '.join(labels), mv)
             funcs += cl.funcs.values()
@@ -74,35 +73,35 @@ def annotate():
             if not func.node or func.node in getgx().inherited:
                 continue
             vars = [func.vars[f] for f in func.formals]
-            labels = [var.name + ': ' + nodetypestr(var, func, False) for var in vars if not var.name.startswith('__')]
+            labels = [var.name + ': ' + nodetypestr(var, func, False, mv=mv) for var in vars if not var.name.startswith('__')]
             paste(source, func.node, ', '.join(labels), mv)
 
         # --- callfuncs
         for callfunc, _ in mv.callfuncs:
             if isinstance(callfunc.node, Getattr):
                 if not callfunc.node.__class__.__name__.startswith('FakeGetattr'): # XXX
-                    paste(source, callfunc.node.expr, nodetypestr(callfunc, inode(callfunc).parent, False), mv)
+                    paste(source, callfunc.node.expr, nodetypestr(callfunc, inode(callfunc).parent, False, mv=mv), mv)
             else:
-                paste(source, callfunc.node, nodetypestr(callfunc, inode(callfunc).parent, False), mv)
+                paste(source, callfunc.node, nodetypestr(callfunc, inode(callfunc).parent, False, mv=mv), mv)
 
         # --- higher-level crap (listcomps, returns, assignments, prints)
         for expr in merge:
             if isinstance(expr, ListComp):
-                paste(source, expr, nodetypestr(expr, inode(expr).parent, False), mv)
+                paste(source, expr, nodetypestr(expr, inode(expr).parent, False, mv=mv), mv)
             elif isinstance(expr, Return):
-                paste(source, expr, nodetypestr(expr.value, inode(expr).parent, False), mv)
+                paste(source, expr, nodetypestr(expr.value, inode(expr).parent, False, mv=mv), mv)
             elif isinstance(expr, (AssTuple, AssList)):
-                paste(source, expr, nodetypestr(expr, inode(expr).parent, False), mv)
+                paste(source, expr, nodetypestr(expr, inode(expr).parent, False, mv=mv), mv)
             elif isinstance(expr, (Print, Printnl)):
-                paste(source, expr, ', '.join(nodetypestr(child, inode(child).parent, False) for child in expr.nodes), mv)
+                paste(source, expr, ', '.join(nodetypestr(child, inode(child).parent, False, mv=mv) for child in expr.nodes), mv)
 
         # --- assignments
         for expr in merge:
             if isinstance(expr, Assign):
                 pairs = assign_rec(expr.nodes[0], expr.expr)
-                paste(source, expr, ', '.join(nodetypestr(r, inode(r).parent, False) for (l, r) in pairs), mv)
+                paste(source, expr, ', '.join(nodetypestr(r, inode(r).parent, False, mv=mv) for (l, r) in pairs), mv)
             elif isinstance(expr, AugAssign):
-                paste(source, expr, nodetypestr(expr.expr, inode(expr).parent, False), mv)
+                paste(source, expr, nodetypestr(expr.expr, inode(expr).parent, False, mv=mv), mv)
 
         # --- output annotated file (skip if no write permission)
         try:

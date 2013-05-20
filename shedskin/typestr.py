@@ -110,7 +110,7 @@ def lowest_common_parents(classes):
     return list(parents - useless)
 
 
-def nodetypestr(node, parent=None, cplusplus=True, check_extmod=False, check_ret=False, var=None):  # XXX minimize
+def nodetypestr(node, parent=None, cplusplus=True, check_extmod=False, check_ret=False, var=None, mv=None):  # XXX minimize
     if cplusplus and isinstance(node, python.Variable) and node.looper:  # XXX to declaredefs?
         return nodetypestr(node.looper, None, cplusplus)[:-2] + '::for_in_loop '
     if cplusplus and isinstance(node, python.Variable) and node.wopper:  # XXX to declaredefs?
@@ -118,14 +118,16 @@ def nodetypestr(node, parent=None, cplusplus=True, check_extmod=False, check_ret
         if ts.startswith('dict<'):
             return 'dictentry' + ts[4:]
     types = getgx().merged_inh[node]
-    return typestr(types, None, cplusplus, node, check_extmod, 0, check_ret, var)
+    return typestr(types, None, cplusplus, node, check_extmod, 0, check_ret, var, mv=mv)
 
 
-def typestr(types, parent=None, cplusplus=True, node=None, check_extmod=False, depth=0, check_ret=False, var=None, tuple_check=False):
+def typestr(types, parent=None, cplusplus=True, node=None, check_extmod=False, depth=0, check_ret=False, var=None, tuple_check=False, mv=None):
+    if mv is None:
+        mv = graph.getmv()
     try:
-        ts = typestrnew(types, cplusplus, node, check_extmod, depth, check_ret, var, tuple_check)
+        ts = typestrnew(types, cplusplus, node, check_extmod, depth, check_ret, var, tuple_check, mv=mv)
     except RuntimeError:
-        if not graph.getmv().module.builtin and isinstance(node, python.Variable) and not node.name.startswith('__'):  # XXX startswith
+        if not mv.module.builtin and isinstance(node, python.Variable) and not node.name.startswith('__'):  # XXX startswith
             if node.parent:
                 varname = repr(node)
             else:
@@ -153,7 +155,7 @@ def dynamic_variable_error(node, types, conv2):
             error.error("Variable %s has dynamic (sub)type: {%s}" % (varname, ', '.join(sorted(conv2.get(cl.ident, cl.ident) for cl in lcp))), node, warning=True)
 
 
-def typestrnew(types, cplusplus=True, node=None, check_extmod=False, depth=0, check_ret=False, var=None, tuple_check=False):
+def typestrnew(types, cplusplus=True, node=None, check_extmod=False, depth=0, check_ret=False, var=None, tuple_check=False, mv=None):
     if depth == 10:
         raise RuntimeError()
 
@@ -180,7 +182,7 @@ def typestrnew(types, cplusplus=True, node=None, check_extmod=False, depth=0, ch
             else:
                 error.error("function mixed with non-function", node, warning=True)
         f = anon_funcs.pop()
-        if f.mv != graph.getmv():
+        if f.mv != mv:
             return f.mv.module.full_path() + '::' + 'lambda%d' % f.lambdanr
         return 'lambda%d' % f.lambdanr
 
@@ -204,7 +206,7 @@ def typestrnew(types, cplusplus=True, node=None, check_extmod=False, depth=0, ch
             dynamic_variable_error(node, types, conv2)
         elif node not in getgx().bool_test_only:
             if tuple_check:
-                error.error("tuple with length > 2 and different types of elements", node, warning=True, mv=graph.getmv())
+                error.error("tuple with length > 2 and different types of elements", node, warning=True, mv=mv)
             else:
                 error.error("expression has dynamic (sub)type: {%s}" % ', '.join(sorted(conv2.get(cl.ident, cl.ident) for cl in lcp)), node, warning=True)
     elif not classes:
@@ -231,20 +233,20 @@ def typestrnew(types, cplusplus=True, node=None, check_extmod=False, depth=0, ch
 
     # --- namespace prefix
     namespace = ''
-    if cl.module not in [graph.getmv().module, getgx().modules['builtin']]:
+    if cl.module not in [mv.module, getgx().modules['builtin']]:
         if cplusplus:
             namespace = cl.module.full_path() + '::'
         else:
             namespace = '::'.join(cl.module.name_list) + '::'
         if cplusplus:
-            graph.getmv().module.prop_includes.add(cl.module)
+            mv.module.prop_includes.add(cl.module)
 
     template_vars = cl.tvar_names()
     if template_vars:
         subtypes = []
         for tvar in template_vars:
             vartypes = types_var_types(types, tvar)
-            ts = typestrnew(vartypes, cplusplus, node, check_extmod, depth + 1, tuple_check=tuple_check)
+            ts = typestrnew(vartypes, cplusplus, node, check_extmod, depth + 1, tuple_check=tuple_check, mv=mv)
             if tvar == var:
                 return ts
             if [t[0] for t in vartypes if isinstance(t[0], python.Function)]:
