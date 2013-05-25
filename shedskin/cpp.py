@@ -18,7 +18,6 @@ from compiler.ast import Const, AssTuple, AssList, From, Add, Stmt, AssAttr, \
     Function as FunctionNode, Return, Class as ClassNode, Name, List, Discard, Sliceobj, Tuple
 from compiler.visitor import ASTVisitor
 
-import copy_
 from config import getgx
 from error import error
 from extmod import convert_methods, convert_methods2, do_extmod, pyinit_func
@@ -79,8 +78,8 @@ class CPPNamer(object):
         return obj.ident
 
     def name_str(self, name):
-        if [x for x in ('init', 'add') if name == x+getgx().main_module.ident] or \
-               name in self.class_names or name + '_' in self.class_names:
+        if [x for x in ('init', 'add') if name == x + getgx().main_module.ident] or \
+                name in self.class_names or name + '_' in self.class_names:
             name = '_' + name
         return name
 
@@ -652,6 +651,41 @@ class GenerateVisitor(ASTVisitor):
             self.deindent()
             self.output('}')
 
+    def copy_method(self, cl, name, declare):
+        class_name = self.cpp_name(cl)
+        header = class_name + ' *'
+        if not declare:
+            header += class_name + '::'
+        header += name + '('
+        self.start(header)
+        if name == '__deepcopy__':
+            self.append('dict<void *, pyobj *> *memo')
+        self.append(')')
+        if not declare:
+            print >>self.out, self.line + ' {'
+            self.indent()
+            self.output(class_name + ' *c = new ' + class_name + '();')
+            if name == '__deepcopy__':
+                self.output('memo->__setitem__(this, c);')
+            for var in cl.vars.values():
+                if not var.invisible and var in getgx().merged_inh and getgx().merged_inh[var]:
+                    varname = self.cpp_name(var)
+                    if name == '__deepcopy__':
+                        self.output('c->%s = __deepcopy(%s);' % (varname, varname))
+                    else:
+                        self.output('c->%s = %s;' % (varname, varname))
+            self.output('return c;')
+            self.deindent()
+            self.output('}\n')
+        else:
+            self.eol()
+
+    def copy_methods(self, cl, declare):
+        if cl.has_copy:
+            self.copy_method(cl, '__copy__', declare)
+        if cl.has_deepcopy:
+            self.copy_method(cl, '__deepcopy__', declare)
+
     def class_hpp(self, node):
         cl = self.mv.classes[node.name]
         self.output('extern class_ *cl_' + cl.ident + ';')
@@ -712,7 +746,7 @@ class GenerateVisitor(ASTVisitor):
         for func in cl.funcs.values():
             if func.node and not (func.ident == '__init__' and func.inherited):
                 self.visitFunction(func.node, cl, True)
-        copy_.copy_methods(self, cl, True)
+        self.copy_methods(cl, True)
         if getgx().extension_module:
             convert_methods(self, cl, True)
 
@@ -732,7 +766,7 @@ class GenerateVisitor(ASTVisitor):
         for func in cl.funcs.values():
             if func.node and not (func.ident == '__init__' and func.inherited):
                 self.visitFunction(func.node, cl, False)
-        copy_.copy_methods(self, cl, False)
+        self.copy_methods(cl, False)
 
         # --- class variable declarations
         if cl.parent.vars:  # XXX merge with visitModule
@@ -1198,7 +1232,7 @@ class GenerateVisitor(ASTVisitor):
         for (i, f) in enumerate(formals2):  # XXX
             formals2[i] = self.cpp_name(func.vars[f])
             if i in casters:
-                formals2[i] = '__'+formals2[i]
+                formals2[i] = '__' + formals2[i]
         formaldecs = [o + f for (o, f) in zip(ftypes, formals2)]
         if declare and isinstance(func.parent, Class) and func.ident in func.parent.staticmethods:
             header = 'static ' + header
@@ -2598,7 +2632,7 @@ class GenerateVisitor(ASTVisitor):
                     if var:
                         self.append(self.cpp_name(var))
                     else:
-                        self.append(node.name) # XXX
+                        self.append(node.name)  # XXX
 
     def expand_special_chars(self, value):
         value = list(value)
@@ -2640,6 +2674,7 @@ class GenerateVisitor(ASTVisitor):
             self.append('mcomplex(%s, %s)' % (node.value.real, node.value.imag))
         else:
             self.append('new %s(%s)' % (t[0].ident, node.value))
+
 
 def generate_code():
     for module in getgx().modules.values():
