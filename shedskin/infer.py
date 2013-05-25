@@ -39,7 +39,6 @@ from compiler.ast import Const, Node, AssAttr, Keyword, CallFunc, Getattr, Dict,
 import error
 import graph
 from config import getgx
-from copy_ import determine_classes
 from python import StaticClass, lookup_class_module, Function, \
     Variable, lookup_var, Class, lookup_implementor, def_class
 from typestr import nodetypestr
@@ -537,9 +536,8 @@ def propagate():
         for callnode in callnodes:
             cpa(callnode, worklist)
 
+
 # --- determine cartesian product of possible function and argument types
-
-
 def possible_functions(node, analysis):
     expr = node.thing
 
@@ -1364,6 +1362,39 @@ def merge_simple_types(types):
     return frozenset(merge)
 
 
+def get_classes(var):
+    return set(t[0] for t in getgx().merged_inh[var]
+               if isinstance(t[0], Class) and not t[0].mv.module.builtin)
+
+
+def deepcopy_classes(classes):
+    changed = True
+    while changed:
+        changed = False
+        for cl in classes.copy():
+            for var in cl.vars.values():
+                if var not in getgx().merged_inh:
+                    continue
+                newcl = get_classes(var)
+                if newcl - classes:
+                    changed = True
+                    classes.update(newcl)
+    return classes
+
+
+def determine_classes():  # XXX modeling..?
+    if 'copy' not in getgx().modules:
+        return
+    func = getgx().modules['copy'].mv.funcs['copy']
+    var = func.vars[func.formals[0]]
+    for cl in get_classes(var):
+        cl.has_copy = True
+    func = getgx().modules['copy'].mv.funcs['deepcopy']
+    var = func.vars[func.formals[0]]
+    for cl in deepcopy_classes(get_classes(var)):
+        cl.has_deepcopy = True
+
+
 def analyze(module_name):
     mv = None
     graph.setmv(mv)
@@ -1441,7 +1472,7 @@ def default_var(name, parent, worklist=None):
     var = lookup_var(name, parent, local=True, mv=graph.getmv())
     if not var:
         var = Variable(name, parent)
-        if parent: # XXX move to Variable?
+        if parent:  # XXX move to Variable?
             parent.vars[name] = var
         else:
             graph.getmv().globals[name] = var
@@ -1463,6 +1494,6 @@ def default_var(name, parent, worklist=None):
 
     return var
 
+
 def var_types(var):
     return inode(var).types()
-
