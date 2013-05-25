@@ -6,19 +6,18 @@ Copyright 2005-2011 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 import sys
 
 import infer
-from config import getgx
 
 
 ERRORS = set()
 
 
-def error(msg, node=None, warning=False, mv=None):
+def error(msg, gx, node=None, warning=False, mv=None):
     if warning:
         kind = '*WARNING*'
     else:
         kind = '*ERROR*'
-    if not mv and node and (node, 0, 0) in getgx().cnode:
-        mv = infer.inode(node).mv
+    if not mv and node and (node, 0, 0) in gx.cnode:
+        mv = infer.inode(gx, node).mv
     filename = lineno = None
     if mv:
         filename = mv.module.relative_filename

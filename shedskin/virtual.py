@@ -8,7 +8,6 @@ virtual.py: virtual methods and variables
 from compiler.ast import CallFunc, Name
 
 import infer
-from config import getgx
 from python import subclass, Class
 from typestr import lowest_common_parents, typestr, polymorphic_t
 
@@ -60,7 +59,7 @@ def virtuals(self, cl, declare):
 
         ftypes = []
         for m in merged:
-            ts = typestr(m)
+            ts = typestr(self.gx, m)
             if not ts.endswith('*'):
                 ftypes.append(ts + ' ')
             else:
@@ -96,30 +95,30 @@ def virtuals(self, cl, declare):
 
 
 # --- determine virtual methods and variables
-def analyze_virtuals():
-    for node in getgx().merged_inh:
+def analyze_virtuals(gx):
+    for node in gx.merged_inh:
         # --- for every message
-        if isinstance(node, CallFunc) and not infer.inode(node).mv.module.builtin:  # ident == 'builtin':
-            objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func = infer.analyze_callfunc(node, merge=getgx().merged_inh)
-            if not method_call or objexpr not in getgx().merged_inh:
+        if isinstance(node, CallFunc) and not infer.inode(gx, node).mv.module.builtin:  # ident == 'builtin':
+            objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func = infer.analyze_callfunc(gx, node, merge=gx.merged_inh)
+            if not method_call or objexpr not in gx.merged_inh:
                 continue  # XXX
 
             # --- determine abstract receiver class
-            classes = polymorphic_t(getgx().merged_inh[objexpr])
+            classes = polymorphic_t(gx, gx.merged_inh[objexpr])
             classes = [cl for cl in classes if isinstance(cl, Class)]
             if not classes:
                 continue
 
-            if isinstance(objexpr, Name) and objexpr.name == 'self' and infer.inode(objexpr).parent:
-                abstract_cl = infer.inode(objexpr).parent.parent
-                upgrade_cl(abstract_cl, node, ident, classes)
+            if isinstance(objexpr, Name) and objexpr.name == 'self' and infer.inode(gx, objexpr).parent:
+                abstract_cl = infer.inode(gx, objexpr).parent.parent
+                upgrade_cl(gx, abstract_cl, node, ident, classes)
 
             lcp = lowest_common_parents(classes)
             if lcp:
-                upgrade_cl(lcp[0], node, ident, classes)
+                upgrade_cl(gx, lcp[0], node, ident, classes)
 
 
-def upgrade_cl(abstract_cl, node, ident, classes):
+def upgrade_cl(gx, abstract_cl, node, ident, classes):
     if not abstract_cl or not isinstance(abstract_cl, Class):
         return
     subclasses = [cl for cl in classes if subclass(cl, abstract_cl)]
@@ -135,8 +134,8 @@ def upgrade_cl(abstract_cl, node, ident, classes):
 
     # --- register virtual var
     elif ident in ['__getattr__', '__setattr__'] and subclasses:
-        var = infer.default_var(node.args[0].value, abstract_cl)
+        var = infer.default_var(gx, node.args[0].value, abstract_cl)
         for subcl in subclasses:
-            if var.name in subcl.vars and subcl.vars[var.name] in getgx().merged_inh:
-                getgx().types.setdefault(getgx().cnode[var, 0, 0], set()).update(getgx().merged_inh[subcl.vars[var.name]])  # XXX shouldn't this be merged automatically already?
+            if var.name in subcl.vars and subcl.vars[var.name] in gx.merged_inh:
+                gx.types.setdefault(gx.cnode[var, 0, 0], set()).update(gx.merged_inh[subcl.vars[var.name]])  # XXX shouldn't this be merged automatically already?
         abstract_cl.virtualvars.setdefault(node.args[0].value, set()).update(subclasses)

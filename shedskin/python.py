@@ -11,8 +11,6 @@ from compiler import parse
 from compiler.ast import AssTuple, AssList, List, Tuple, CallFunc, Name, \
     Const, UnaryAdd, UnarySub, Getattr
 
-from config import getgx
-
 
 class Module(object):
     def __init__(self, name, filename, relative_filename, builtin, node):
@@ -55,25 +53,26 @@ class Module(object):
 
 
 class Class(object):
-    def __init__(self, node, mv):
+    def __init__(self, gx, node, mv):
+        self.gx = gx
         self.node = node
+        self.mv = mv
         self.ident = node.name
         self.bases = []
         self.children = []
         self.dcpa = 1
-        self.mv = mv
         self.vars = {}
         self.funcs = {}
         self.virtuals = {}              # 'virtually' called methods
         self.virtualvars = {}           # 'virtual' variables
         self.properties = {}
         self.staticmethods = []
-        self.typenr = getgx().nrcltypes
-        getgx().nrcltypes += 1
+        self.typenr = self.gx.nrcltypes
+        self.gx.nrcltypes += 1
         self.splits = {}                # contour: old contour (used between iterations)
         self.has_copy = self.has_deepcopy = False
-        self.def_order = getgx().class_def_order
-        getgx().class_def_order += 1
+        self.def_order = self.gx.class_def_order
+        self.gx.class_def_order += 1
 
     def ancestors(self, inclusive=False):  # XXX attribute (faster)
         a = set(self.bases)
@@ -136,7 +135,8 @@ class StaticClass(object):
 
 
 class Function(object):
-    def __init__(self, node=None, parent=None, inherited_from=None, mv=None):
+    def __init__(self, gx, node=None, parent=None, inherited_from=None, mv=None):
+        self.gx = gx
         self.node = node
         self.inherited_from = inherited_from
         if node:
@@ -172,7 +172,7 @@ class Function(object):
         self.inherited = None
 
         if node:
-            getgx().allfuncs.add(self)
+            self.gx.allfuncs.add(self)
 
         self.retvars = []
         self.invisible = False
@@ -228,7 +228,7 @@ def parse_file(name):
         sys.exit(1)
 
 
-def find_module(name, paths):
+def find_module(gx, name, paths):
     if '.' in name:
         name, module_name = name.rsplit('.', 1)
         name_as_path = name.replace('.', os.path.sep)
@@ -239,14 +239,14 @@ def find_module(name, paths):
     _, filename, description = imp.find_module(module_name, import_paths)
     filename = os.path.splitext(filename)[0]
 
-    absolute_import_paths = getgx().libdirs + [os.getcwd()]
+    absolute_import_paths = gx.libdirs + [os.getcwd()]
     absolute_import_path = next(
         path for path in absolute_import_paths
         if filename.startswith(path)
     )
     relative_filename = os.path.relpath(filename, absolute_import_path)
     absolute_name = relative_filename.replace(os.path.sep, '.')
-    builtin = absolute_import_path in getgx().libdirs
+    builtin = absolute_import_path in gx.libdirs
 
     is_a_package = description[2] == imp.PKG_DIRECTORY
     if is_a_package:
@@ -329,13 +329,14 @@ def lookup_module(node, mv):
         return module
 
 
-def def_class(name, mv=None):
+def def_class(gx, name, mv=None):
     if mv is None:
-        mv = getgx().modules['builtin'].mv
+        mv = gx.modules['builtin'].mv
     if name in mv.classes:
         return mv.classes[name]
     elif name in mv.ext_classes:
         return mv.ext_classes[name]
+
 
 def lookup_var(name, parent, local=False, mv=None):
     if isinstance(parent, Class) and name in parent.parent.vars:  # XXX

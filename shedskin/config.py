@@ -68,20 +68,3 @@ class GlobalInfo:  # XXX add comments, split up
         self.debug_level = 0
         self.maxhits = 0  # XXX amaze.py termination
         self.gc_cleanup = False
-
-
-_gx = None
-
-
-def newgx():
-    return GlobalInfo()
-
-
-def getgx():
-    return _gx
-
-
-def setgx(gx):
-    global _gx
-    _gx = gx
-    return _gx
