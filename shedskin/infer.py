@@ -1391,13 +1391,8 @@ def determine_classes(gx):  # XXX modeling..?
 
 
 def analyze(gx, module_name):
-    mv = None
-    graph.setmv(mv)
-
     # --- build dataflow graph from source code
     gx.main_module = graph.parse_module(module_name, gx)
-    mv = gx.main_module.mv
-    graph.setmv(mv)
 
     # --- seed class_.__name__ attributes..
     for cl in gx.allclasses:
@@ -1431,9 +1426,6 @@ def analyze(gx, module_name):
             if name in cl.parent.vars and not name.startswith('__'):
                 error.error("instance variable '%s' of class '%s' shadows class variable" % (name, cl.ident))
 
-    mv = gx.main_module.mv
-    graph.setmv(mv)
-
     gx.merged_inh = merged(gx, gx.types, inheritance=True)
     analyze_virtuals(gx)
     determine_classes(gx)
@@ -1453,7 +1445,7 @@ def analyze(gx, module_name):
     # error for dynamic expression without explicit type declaration
     for node in gx.merged_inh:
         if isinstance(node, Node) and not isinstance(node, AssAttr) and not inode(gx, node).mv.module.builtin:
-            nodetypestr(gx, node, inode(gx, node).parent)
+            nodetypestr(gx, node, inode(gx, node).parent, mv=inode(gx, node).mv)
 
     return gx
 
