@@ -24,7 +24,7 @@ def clname(cl):
     return '__ss_%s_%s' % ('_'.join(cl.mv.module.name_list), cl.ident)
 
 
-def supported_vars(gx, vars):  # XXX virtuals?
+def supported_vars(gx, gv, vars):  # XXX virtuals?
     supported = []
     for var in vars:
         if not var in gx.merged_inh or not gx.merged_inh[var]:
@@ -34,7 +34,7 @@ def supported_vars(gx, vars):  # XXX virtuals?
         if var.invisible or singletype2(gx.merged_inh[var], Module):
             continue
         try:
-            nodetypestr(gx, var, var.parent, check_extmod=True)
+            nodetypestr(gx, var, var.parent, check_extmod=True, mv=gv.mv)
         except ExtmodError:
             if isinstance(var.parent, Class):
                 print "*WARNING* '%s' variable not exported (cannot convert)" % (var.parent.ident + '.' + var.name)
@@ -61,12 +61,12 @@ def supported_funcs(gx, gv, funcs):
         builtins = True
         for formal in func.formals:
             try:
-                nodetypestr(gx, func.vars[formal], func, check_extmod=True)
+                nodetypestr(gx, func.vars[formal], func, check_extmod=True, mv=gv.mv)
             except ExtmodError:
                 builtins = False
                 reason = "cannot convert argument '%s'" % formal
         try:
-            nodetypestr(gx, func.retnode.thing, func, check_extmod=True, check_ret=True)
+            nodetypestr(gx, func.retnode.thing, func, check_extmod=True, check_ret=True, mv=gv.mv)
         except ExtmodError:
             builtins = False
             reason = 'cannot convert return value'
@@ -86,7 +86,7 @@ def has_method(cl, name):  # XXX shared.py
 
 def do_add_globals(gx, gv, classes, __ss_mod):
     # global variables
-    for var in supported_vars(gx, gv.mv.globals.values()):
+    for var in supported_vars(gx, gv, gv.mv.globals.values()):
         if [1 for t in gv.mergeinh[var] if t[0].ident in ['int_', 'float_', 'bool_']]:
             print >>gv.out, '    PyModule_AddObject(%(ssmod)s, (char *)"%(name)s", __to_py(%(var)s));' % {'name': var.name, 'var': '__' + gv.module.ident + '__::' + gv.cpp_name(var), 'ssmod': __ss_mod}
         else:
@@ -113,7 +113,7 @@ def do_reduce_setstate(gx, gv, cl, vars):
     print >>gv.out, '    int l = PyTuple_Size(args);'
     print >>gv.out, '    PyObject *state = PyTuple_GetItem(args, 0);'
     for i, var in enumerate(vars):
-        vartype = nodetypestr(gx, var, var.parent)
+        vartype = nodetypestr(gx, var, var.parent, mv=gv.mv)
         print >>gv.out, '    ((%sObject *)self)->__ss_object->%s = __to_ss<%s>(PyTuple_GetItem(state, %d));' % (clname(cl), gv.cpp_name(var), vartype, i)
     print >>gv.out, '    Py_INCREF(Py_None);'
     print >>gv.out, '    return Py_None;'
@@ -207,7 +207,7 @@ def do_extmod_method(gx, gv, func):
 
     for i, formal in enumerate(formals):
         gv.start('')
-        typ = nodetypestr(gx, func.vars[formal], func)
+        typ = nodetypestr(gx, func.vars[formal], func, mv=gv.mv)
         if func.ident in OVERLOAD:
             print >>gv.out, '        %(type)sarg_%(num)d = __to_ss<%(type)s>(args);' % {'type': typ, 'num': i}
             continue
@@ -312,7 +312,7 @@ def do_extmod_class(gx, gv, cl):
 
     # determine methods, vars to expose
     funcs = supported_funcs(gx, gv, cl.funcs.values())
-    vars = supported_vars(gx, cl.vars.values())
+    vars = supported_vars(gx, gv, cl.vars.values())
 
     # python object
     print >>gv.out, '/* class %s */\n' % cl.ident
@@ -359,7 +359,7 @@ def do_extmod_class(gx, gv, cl):
 
         print >>gv.out, 'int __ss_set_%s_%s(%sObject *self, PyObject *value, void *closure) {' % (clname(cl), var.name, clname(cl))
         print >>gv.out, '    try {'
-        typ = nodetypestr(gx, var, var.parent)
+        typ = nodetypestr(gx, var, var.parent, mv=gv.mv)
         if typ == 'void *':  # XXX investigate
             print >>gv.out, '        self->__ss_object->%s = NULL;' % gv.cpp_name(var)
         else:
