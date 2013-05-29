@@ -6,7 +6,6 @@ typestr.py: generate type declarations
 
 '''
 import error
-import graph
 import python
 import infer
 
@@ -111,9 +110,9 @@ def lowest_common_parents(classes):
 
 def nodetypestr(gx, node, parent=None, cplusplus=True, check_extmod=False, check_ret=False, var=None, mv=None):  # XXX minimize
     if cplusplus and isinstance(node, python.Variable) and node.looper:  # XXX to declaredefs?
-        return nodetypestr(gx, node.looper, None, cplusplus)[:-2] + '::for_in_loop '
+        return nodetypestr(gx, node.looper, None, cplusplus, mv=mv)[:-2] + '::for_in_loop '
     if cplusplus and isinstance(node, python.Variable) and node.wopper:  # XXX to declaredefs?
-        ts = nodetypestr(gx, node.wopper, None, cplusplus)
+        ts = nodetypestr(gx, node.wopper, None, cplusplus, mv=mv)
         if ts.startswith('dict<'):
             return 'dictentry' + ts[4:]
     types = gx.merged_inh[node]
@@ -121,8 +120,6 @@ def nodetypestr(gx, node, parent=None, cplusplus=True, check_extmod=False, check
 
 
 def typestr(gx, types, parent=None, cplusplus=True, node=None, check_extmod=False, depth=0, check_ret=False, var=None, tuple_check=False, mv=None):
-    if mv is None:
-        mv = graph.getmv()
     try:
         ts = typestrnew(gx, types, cplusplus, node, check_extmod, depth, check_ret, var, tuple_check, mv=mv)
     except RuntimeError:

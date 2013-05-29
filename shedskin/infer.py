@@ -1458,7 +1458,6 @@ def register_temp_var(var, parent):
 def default_var(gx, name, parent, worklist=None, mv=None):
     if parent:
         mv = parent.mv
-    assert mv
     var = lookup_var(name, parent, local=True, mv=mv)
     if not var:
         var = Variable(name, parent)
