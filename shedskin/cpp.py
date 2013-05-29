@@ -20,7 +20,6 @@ from compiler.visitor import ASTVisitor
 
 from error import error
 from extmod import convert_methods, convert_methods2, do_extmod, pyinit_func
-from graph import setmv
 from infer import analyze_callfunc, callfunc_targets, connect_actual_formal, \
     called, inode, var_types
 from makefile import generate_makefile
