@@ -782,7 +782,7 @@ def connect_getsetattr(gx, func, callnode, callfunc, dcpa, worklist):
         varname = callfunc.args[0].value
         parent = func.parent
 
-        var = default_var(gx, varname, parent, worklist)  # XXX always make new var??
+        var = default_var(gx, varname, parent, worklist, mv=parent.module.mv)  # XXX always make new var??
         inode(gx, var).copy(dcpa, 0, worklist)
 
         if not gx.cnode[var, dcpa, 0] in gx.types:
@@ -1455,14 +1455,17 @@ def register_temp_var(var, parent):
         parent.registered_temp_vars.append(var)
 
 
-def default_var(gx, name, parent, worklist=None):
-    var = lookup_var(name, parent, local=True, mv=graph.getmv())
+def default_var(gx, name, parent, worklist=None, mv=None):
+    if parent:
+        mv = parent.mv
+    assert mv
+    var = lookup_var(name, parent, local=True, mv=mv)
     if not var:
         var = Variable(name, parent)
         if parent:  # XXX move to Variable?
             parent.vars[name] = var
         else:
-            graph.getmv().globals[name] = var
+            mv.globals[name] = var
         gx.allvars.add(var)
 
     if (var, 0, 0) not in gx.cnode:
@@ -1470,7 +1473,7 @@ def default_var(gx, name, parent, worklist=None):
         if parent:
             newnode.mv = parent.mv
         else:
-            newnode.mv = graph.getmv()
+            newnode.mv = mv
         add_to_worklist(worklist, newnode)
         gx.types[newnode] = set()
 
