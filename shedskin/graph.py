@@ -306,7 +306,7 @@ class ModuleVisitor(ASTVisitor):
             func.constraints.add(constraint)
 
     def visitExec(self, node, func=None):
-        error("'exec' is not supported", node, mv=self)
+        error("'exec' is not supported", node, mv=getmv())
 
     def visitGenExpr(self, node, func=None):
         newnode = CNode(self.gx, node, parent=func)
@@ -342,7 +342,7 @@ class ModuleVisitor(ASTVisitor):
 
         # --- __name__
         if self.module.ident != 'builtin':
-            namevar = default_var(self.gx, '__name__', None)
+            namevar = default_var(self.gx, '__name__', None, mv=getmv())
             self.gx.types[inode(self.gx, namevar)] = set([(def_class(self.gx, 'str_'), 0)])
 
         self.forward_references(node)
@@ -427,7 +427,7 @@ class ModuleVisitor(ASTVisitor):
                 if hasattr(m, 'decorators') and m.decorators and [dec for dec in m.decorators if is_property_setter(dec)]:
                     m.name = m.name + '__setter__'
                 if m.name in newclass.funcs:  # and func.ident not in ['__getattr__', '__setattr__']: # XXX
-                    error("function/class redefinition is not allowed", m, mv=self)
+                    error("function/class redefinition is not allowed", m, mv=getmv())
                 func = Function(self.gx, m, newclass, mv=getmv())
                 newclass.funcs[func.ident] = func
                 self.set_default_vars(m, func)
@@ -442,7 +442,7 @@ class ModuleVisitor(ASTVisitor):
 
         # global variables XXX visitGlobal
         for assname in self.local_assignments(node, global_=True):
-            default_var(self.gx, assname.name, None)
+            default_var(self.gx, assname.name, None, mv=getmv())
 
     def set_default_vars(self, node, func):
         globals = set(self.get_globals(node))
@@ -474,7 +474,7 @@ class ModuleVisitor(ASTVisitor):
 
     def visitImport(self, node, func=None):
         if not node in getmv().importnodes:
-            error("please place all imports (no 'try:' etc) at the top of the file", node, mv=self)
+            error("please place all imports (no 'try:' etc) at the top of the file", node, mv=getmv())
 
         for (name, pseudonym) in node.names:
             if pseudonym:
@@ -499,21 +499,21 @@ class ModuleVisitor(ASTVisitor):
     def import_module(self, name, pseudonym, node, fake):
         module = self.analyze_module(name, pseudonym, node, fake)
         if not fake:
-            var = default_var(self.gx, pseudonym or name, None)
+            var = default_var(self.gx, pseudonym or name, None, mv=getmv())
             var.imported = True
             self.gx.types[inode(self.gx, var)] = set([(module, 0)])
         return module
 
     def visitFrom(self, node, parent=None):
         if not node in getmv().importnodes:  # XXX use (func, node) as parent..
-            error("please place all imports (no 'try:' etc) at the top of the file", node, mv=self)
+            error("please place all imports (no 'try:' etc) at the top of the file", node, mv=getmv())
         if hasattr(node, 'level') and node.level:
-            error("relative imports are not supported", node, mv=self)
+            error("relative imports are not supported", node, mv=getmv())
 
         if node.modname == '__future__':
             for name, _ in node.names:
                 if name not in ['with_statement', 'print_function']:
-                    error("future '%s' is not yet supported" % name, node, mv=self)
+                    error("future '%s' is not yet supported" % name, node, mv=getmv())
             return
 
         module = self.import_modules(node.modname, node, True)
@@ -524,13 +524,13 @@ class ModuleVisitor(ASTVisitor):
                 self.ext_funcs.update(module.mv.funcs)
                 self.ext_classes.update(module.mv.classes)
                 for import_name, import_module in module.mv.imports.items():
-                    var = default_var(self.gx, import_name, None)  # XXX merge
+                    var = default_var(self.gx, import_name, None, mv=getmv())  # XXX merge
                     var.imported = True
                     self.gx.types[inode(self.gx, var)] = set([(import_module, 0)])
                     self.imports[import_name] = import_module
                 for name, extvar in module.mv.globals.items():
                     if not extvar.imported and not name in ['__name__']:
-                        var = default_var(self.gx, name, None)  # XXX merge
+                        var = default_var(self.gx, name, None, mv=getmv())  # XXX merge
                         var.imported = True
                         self.add_constraint((inode(self.gx, extvar), inode(self.gx, var)), None)
                 continue
@@ -543,7 +543,7 @@ class ModuleVisitor(ASTVisitor):
                 self.ext_classes[pseudonym] = module.mv.classes[name]
             elif name in module.mv.globals and not module.mv.globals[name].imported:  # XXX
                 extvar = module.mv.globals[name]
-                var = default_var(self.gx, pseudonym, None)
+                var = default_var(self.gx, pseudonym, None, mv=getmv())
                 var.imported = True
                 self.add_constraint((inode(self.gx, extvar), inode(self.gx, var)), None)
             elif os.path.isfile(os.path.join(path, name + '.py')) or \
@@ -551,7 +551,7 @@ class ModuleVisitor(ASTVisitor):
                 modname = '.'.join(module.name_list + [name])
                 self.import_module(modname, name, node, False)
             else:
-                error("no identifier '%s' in module '%s'" % (name, node.modname), node, mv=self)
+                error("no identifier '%s' in module '%s'" % (name, node.modname), node, mv=getmv())
 
     def analyze_module(self, name, pseud, node, fake):
         module = parse_module(name, self.gx, getmv().module, node)
@@ -563,7 +563,7 @@ class ModuleVisitor(ASTVisitor):
 
     def visitFunction(self, node, parent=None, is_lambda=False, inherited_from=None):
         if not getmv().module.builtin and (node.varargs or node.kwargs):
-            error('argument (un)packing is not supported', node, mv=self)
+            error('argument (un)packing is not supported', node, mv=getmv())
 
         if not parent and not is_lambda and node.name in getmv().funcs:
             func = getmv().funcs[node.name]
@@ -576,7 +576,7 @@ class ModuleVisitor(ASTVisitor):
 
         if not is_method(func):
             if not getmv().module.builtin and not node in getmv().funcnodes and not is_lambda:
-                error("non-global function '%s'" % node.name, node, mv=self)
+                error("non-global function '%s'" % node.name, node, mv=getmv())
 
         if hasattr(node, 'decorators') and node.decorators:
             for dec in node.decorators.nodes:
@@ -587,13 +587,13 @@ class ModuleVisitor(ASTVisitor):
                 elif is_property_setter(dec):
                     parent.properties[dec.expr.name][1] = node.name
                 else:
-                    error("unsupported type of decorator", dec, mv=self)
+                    error("unsupported type of decorator", dec, mv=getmv())
 
         if parent:
             if not inherited_from and not func.ident in parent.staticmethods and (not func.formals or func.formals[0] != 'self'):
-                error("formal arguments of method must start with 'self'", node, mv=self)
+                error("formal arguments of method must start with 'self'", node, mv=getmv())
             if not func.mv.module.builtin and func.ident in ['__new__', '__getattr__', '__setattr__', '__radd__', '__rsub__', '__rmul__', '__rdiv__', '__rtruediv__', '__rfloordiv__', '__rmod__', '__rdivmod__', '__rpow__', '__rlshift__', '__rrshift__', '__rand__', '__rxor__', '__ror__', '__iter__', '__call__', '__enter__', '__exit__', '__del__', '__copy__', '__deepcopy__']:
-                error("'%s' is not supported" % func.ident, node, warning=True, mv=self)
+                error("'%s' is not supported" % func.ident, node, warning=True, mv=getmv())
 
         if is_lambda:
             self.lambdas[node.name] = func
@@ -728,7 +728,7 @@ class ModuleVisitor(ASTVisitor):
             subscript = node.subs[0]
 
         if isinstance(subscript, Ellipsis):  # XXX also check at setitem
-            error('ellipsis is not supported', node, mv=self)
+            error('ellipsis is not supported', node, mv=getmv())
 
         if isinstance(subscript, Sliceobj):
             self.slice(node, node.expr, subscript.nodes, func)
@@ -849,7 +849,7 @@ class ModuleVisitor(ASTVisitor):
             blah = Subscript(Name(t1.name), 'OP_APPLY', [Name(t2.name)])
             lnode = Subscript(Name(t1.name), 'OP_APPLY', [Name(t2.name)])
         else:
-            error('unsupported type of assignment', node, mv=self)
+            error('unsupported type of assignment', node, mv=getmv())
 
         if node.op == '-=':
             blah2 = Sub((lnode, node.expr))
@@ -927,7 +927,7 @@ class ModuleVisitor(ASTVisitor):
         else:
             varname = '__' + str(len(self.tempcount))
 
-        var = default_var(self.gx, varname, func)
+        var = default_var(self.gx, varname, func, mv=getmv())
         var.looper = looper
         var.wopper = wopper
         self.tempcount[node] = varname
@@ -948,7 +948,7 @@ class ModuleVisitor(ASTVisitor):
 
     def visitRaise(self, node, func=None):
         if node.expr1 is None or node.expr2 is not None or node.expr3 is not None:
-            error('unsupported raise syntax', node, mv=self)
+            error('unsupported raise syntax', node, mv=getmv())
         for child in node.getChildNodes():
             self.visit(child, func)
 
@@ -970,10 +970,10 @@ class ModuleVisitor(ASTVisitor):
                     continue  # handle in lookup_class
                 cl = lookup_class(h0, getmv())
                 if not cl:
-                    error("unknown or unsupported exception type", h0, mv=self)
+                    error("unknown or unsupported exception type", h0, mv=getmv())
 
                 if isinstance(h1, AssName):
-                    var = default_var(self.gx, h1.name, func)
+                    var = default_var(self.gx, h1.name, func, mv=getmv())
                 else:
                     var = self.temp_var(h0, func)
 
@@ -987,7 +987,7 @@ class ModuleVisitor(ASTVisitor):
             self.temp_var_int(node.else_, func)
 
     def visitTryFinally(self, node, func=None):
-        error("'try..finally' is not supported", node, mv=self)
+        error("'try..finally' is not supported", node, mv=getmv())
 
     def visitYield(self, node, func):
         func.isGenerator = True
@@ -1009,7 +1009,7 @@ class ModuleVisitor(ASTVisitor):
         # --- assign node -> variables  XXX merge into assign_pair
         if isinstance(node.assign, AssName):
             # for x in..
-            lvar = default_var(self.gx, node.assign.name, func)
+            lvar = default_var(self.gx, node.assign.name, func, mv=getmv())
             self.add_constraint((assnode, inode(self.gx, lvar)), func)
 
         elif isinstance(node.assign, AssAttr):  # XXX experimental :)
@@ -1024,7 +1024,7 @@ class ModuleVisitor(ASTVisitor):
             # for (a,b, ..) in..
             self.tuple_flow(node.assign, node.assign, func)
         else:
-            error('unsupported type of assignment', node, mv=self)
+            error('unsupported type of assignment', node, mv=getmv())
 
         self.do_for(node, assnode, get_iter, func)
 
@@ -1088,7 +1088,7 @@ class ModuleVisitor(ASTVisitor):
             self.gx.types[varnode] = set()
             self.visit(node.expr, func)
             self.add_constraint((inode(self.gx, node.expr), varnode), func)
-            lvar = default_var(self.gx, node.vars.name, func)
+            lvar = default_var(self.gx, node.vars.name, func, mv=getmv())
             self.add_constraint((varnode, inode(self.gx, lvar)), func)
         else:
             self.visit(node.expr, func)
@@ -1162,7 +1162,7 @@ class ModuleVisitor(ASTVisitor):
             lvalue, rvalue = node.nodes[0], node.expr
             if struct_unpack(rvalue, func, self) and isinstance(lvalue, (AssList, AssTuple)) and not [n for n in lvalue.nodes if isinstance(n, (AssList, AssTuple))]:
                 if not isinstance(rvalue.args[0], (Const, Name)):
-                    error('non-constant format string', node, mv=self)
+                    error('non-constant format string', node, mv=getmv())
                 self.visit(node.expr, func)
                 sinfo = struct_info(rvalue.args[0], func, self)
                 faketuple = struct_faketuple(sinfo)
@@ -1193,9 +1193,9 @@ class ModuleVisitor(ASTVisitor):
                         self.visit(rvalue, func)
                     self.visit(lvalue, func)
                     if isinstance(func, Function) and lvalue.name in func.globals:
-                        lvar = default_var(self.gx, lvalue.name, None)
+                        lvar = default_var(self.gx, lvalue.name, None, mv=getmv())
                     else:
-                        lvar = default_var(self.gx, lvalue.name, func)
+                        lvar = default_var(self.gx, lvalue.name, func, mv=getmv())
                     if isinstance(rvalue, Const):
                         lvar.const_assign.append(rvalue)
                     self.add_constraint((inode(self.gx, rvalue), inode(self.gx, lvar)), func)
@@ -1267,16 +1267,16 @@ class ModuleVisitor(ASTVisitor):
             self.gx.item_rvalue[item] = rvalue
             if isinstance(item, AssName):
                 if isinstance(func, Function) and item.name in func.globals:  # XXX merge
-                    lvar = default_var(self.gx, item.name, None)
+                    lvar = default_var(self.gx, item.name, None, mv=getmv())
                 else:
-                    lvar = default_var(self.gx, item.name, func)
+                    lvar = default_var(self.gx, item.name, func, mv=getmv())
                 self.add_constraint((inode(self.gx, fakefunc), inode(self.gx, lvar)), func)
             elif isinstance(item, (Subscript, AssAttr)):
                 self.assign_pair(item, fakefunc, func)
             elif isinstance(item, (AssTuple, AssList)):  # recursion
                 self.tuple_flow(item, fakefunc, func)
             else:
-                error('unsupported type of assignment', item, mv=self)
+                error('unsupported type of assignment', item, mv=getmv())
 
     def super_call(self, orig, parent):
         node = orig.node
@@ -1291,7 +1291,7 @@ class ModuleVisitor(ASTVisitor):
                 cl = lookup_class(node.expr.args[0], getmv())
                 if cl.node.bases:
                     return cl.node.bases[0]
-            error("unsupported usage of 'super'", orig, mv=self)
+            error("unsupported usage of 'super'", orig, mv=getmv())
 
     def visitCallFunc(self, node, func=None):  # XXX clean up!!
         newnode = CNode(self.gx, node, parent=func)
@@ -1336,9 +1336,9 @@ class ModuleVisitor(ASTVisitor):
                 ident = node.node.name = '__print'  # XXX
 
             if ident in ['getattr', 'setattr', 'slice', 'type']:
-                error("'%s' function is not supported" % ident, node.node, mv=self)
+                error("'%s' function is not supported" % ident, node.node, mv=getmv())
             if ident == 'dict' and [x for x in node.args if isinstance(x, Keyword)]:
-                error('unsupported method of initializing dictionaries', node, mv=self)
+                error('unsupported method of initializing dictionaries', node, mv=getmv())
             if ident == 'isinstance' and isinstance(node.args[1], Tuple):
                 error("isinstance(.., (a, b, ..)) is not supported", node, mv=getmv())
 
@@ -1351,7 +1351,7 @@ class ModuleVisitor(ASTVisitor):
 
         # --- arguments
         if not getmv().module.builtin and (node.star_args or node.dstar_args):
-            error('argument (un)packing is not supported', node, mv=self)
+            error('argument (un)packing is not supported', node, mv=getmv())
         args = node.args[:]
         if node.star_args:
             args.append(node.star_args)  # partially allowed in builtins
@@ -1375,14 +1375,14 @@ class ModuleVisitor(ASTVisitor):
 
     def visitClass(self, node, parent=None):
         if not getmv().module.builtin and not node in getmv().classnodes:
-            error("non-global class '%s'" % node.name, node, mv=self)
+            error("non-global class '%s'" % node.name, node, mv=getmv())
         if len(node.bases) > 1:
-            error('multiple inheritance is not supported', node, mv=self)
+            error('multiple inheritance is not supported', node, mv=getmv())
 
         if not getmv().module.builtin:
             for base in node.bases:
                 if not isinstance(base, (Name, Getattr)):
-                    error("invalid expression for base class", node, mv=self)
+                    error("invalid expression for base class", node, mv=getmv())
 
                 if isinstance(base, Name):
                     name = base.name
@@ -1391,11 +1391,11 @@ class ModuleVisitor(ASTVisitor):
 
                 cl = lookup_class(base, getmv())
                 if not cl:
-                    error("no such class: '%s'" % name, node, mv=self)
+                    error("no such class: '%s'" % name, node, mv=getmv())
 
                 elif cl.mv.module.builtin and name not in ['object', 'Exception', 'tzinfo']:
                     if def_class(self.gx, 'Exception') not in cl.ancestors():
-                        error("inheritance from builtin class '%s' is not supported" % name, node, mv=self)
+                        error("inheritance from builtin class '%s' is not supported" % name, node, mv=getmv())
 
         if node.name in getmv().classes:
             newclass = getmv().classes[node.name]  # set in visitModule, for forward references
@@ -1442,7 +1442,7 @@ class ModuleVisitor(ASTVisitor):
                         elif len(rvalue.args) == 2 and isinstance(rvalue.args[0], Name) and isinstance(rvalue.args[1], Name):
                             newclass.properties[lvalue.name] = rvalue.args[0].name, rvalue.args[1].name
                         else:
-                            error("complex properties are not supported", rvalue, mv=self)
+                            error("complex properties are not supported", rvalue, mv=getmv())
                     else:
                         newclass.staticmethods.append(lvalue.name)
                     skip.append(child)
@@ -1478,7 +1478,7 @@ class ModuleVisitor(ASTVisitor):
 
     def visitGetattr(self, node, func=None, callfunc=False):
         if node.attrname in ['__doc__']:
-            error('%s attribute is not supported' % node.attrname, node, mv=self)
+            error('%s attribute is not supported' % node.attrname, node, mv=getmv())
 
         newnode = CNode(self.gx, node, parent=func)
         self.gx.types[newnode] = set()
@@ -1494,7 +1494,7 @@ class ModuleVisitor(ASTVisitor):
 
     def visitConst(self, node, func=None):
         if type(node.value) == unicode:
-            error('unicode is not supported', node, mv=self)
+            error('unicode is not supported', node, mv=getmv())
         map = {int: 'int_', str: 'str_', float: 'float_', type(None): 'none', long: 'int_', complex: 'complex'}  # XXX 'return' -> Return(Const(None))?
         self.instance(node, def_class(self.gx, map[type(node.value)]), func)
 
@@ -1523,7 +1523,7 @@ class ModuleVisitor(ASTVisitor):
         self.gx.types[newnode] = set()
 
         if node.name == '__doc__':
-            error("'%s' attribute is not supported" % node.name, node, mv=self)
+            error("'%s' attribute is not supported" % node.name, node, mv=getmv())
 
         if node.name in ['None', 'True', 'False']:
             if node.name == 'None':  # XXX also bools, remove def seed_nodes()
@@ -1533,7 +1533,7 @@ class ModuleVisitor(ASTVisitor):
             return
 
         if isinstance(func, Function) and node.name in func.globals:
-            var = default_var(self.gx, node.name, None)
+            var = default_var(self.gx, node.name, None, mv=getmv())
         else:
             var = lookup_var(node.name, func, mv=getmv())
             if not var:
@@ -1544,7 +1544,7 @@ class ModuleVisitor(ASTVisitor):
                     self.gx.types[newnode] = set([(cl.parent, 0)])
                     newnode.copymetoo = True
                 else:
-                    var = default_var(self.gx, node.name, None)
+                    var = default_var(self.gx, node.name, None, mv=getmv())
         if var:
             self.add_constraint((inode(self.gx, var), newnode), func)
 
