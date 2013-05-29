@@ -59,7 +59,7 @@ def virtuals(self, cl, declare):
 
         ftypes = []
         for m in merged:
-            ts = typestr(self.gx, m)
+            ts = typestr(self.gx, m, mv=self.mv)
             if not ts.endswith('*'):
                 ftypes.append(ts + ' ')
             else:
