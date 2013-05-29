@@ -132,7 +132,7 @@ class ModuleVisitor(ASTVisitor):
         if (node, 0, 0) in self.gx.cnode:  # XXX
             newnode = self.gx.cnode[node, 0, 0]
         else:
-            newnode = CNode(self.gx, node, parent=func)
+            newnode = CNode(self.gx, node, parent=func, mv=getmv())
             self.gx.types[newnode] = set()
 
         fakefunc = CallFunc(Getattr(objexpr, attrname), args)
@@ -189,7 +189,7 @@ class ModuleVisitor(ASTVisitor):
         if (node, 0, 0) in self.gx.cnode:  # XXX to create_node() func
             newnode = self.gx.cnode[node, 0, 0]
         else:
-            newnode = CNode(self.gx, node, parent=func)
+            newnode = CNode(self.gx, node, parent=func, mv=getmv())
 
         newnode.constructor = True
 
@@ -290,7 +290,7 @@ class ModuleVisitor(ASTVisitor):
         fakefunc = CallFunc(FakeGetattr2(parent, '__setattr__'), [cu, child])
         self.visit(fakefunc, func)
 
-        fakechildnode = CNode(self.gx, (child, varname), parent=func)  # create separate 'fake' CNode per child, so we can have multiple 'callfuncs'
+        fakechildnode = CNode(self.gx, (child, varname), parent=func, mv=getmv())  # create separate 'fake' CNode per child, so we can have multiple 'callfuncs'
         self.gx.types[fakechildnode] = set()
 
         self.add_constraint((inode(self.gx, parent), fakechildnode), func)  # add constraint from parent to fake child node. if parent changes, all fake child nodes change, and the callfunc for each child node is triggered
@@ -309,7 +309,7 @@ class ModuleVisitor(ASTVisitor):
         error("'exec' is not supported", node, mv=getmv())
 
     def visitGenExpr(self, node, func=None):
-        newnode = CNode(self.gx, node, parent=func)
+        newnode = CNode(self.gx, node, parent=func, mv=getmv())
         self.gx.types[newnode] = set()
         lc = ListComp(node.code.expr, [ListCompFor(qual.assign, qual.iter, qual.ifs, qual.lineno) for qual in node.code.quals], lineno=node.lineno)
         register_node(lc, func)
@@ -615,9 +615,9 @@ class ModuleVisitor(ASTVisitor):
             var.formal_arg = True
 
         # --- flow return expressions together into single node
-        func.retnode = retnode = CNode(self.gx, node, parent=func)
+        func.retnode = retnode = CNode(self.gx, node, parent=func, mv=getmv())
         self.gx.types[retnode] = set()
-        func.yieldnode = yieldnode = CNode(self.gx, (node, 'yield'), parent=func)
+        func.yieldnode = yieldnode = CNode(self.gx, (node, 'yield'), parent=func, mv=getmv())
         self.gx.types[yieldnode] = set()
 
         self.visit(node.code, func)
@@ -655,7 +655,7 @@ class ModuleVisitor(ASTVisitor):
         f = self.lambdas[name]
         f.lambdanr = lambdanr
         self.lambdaname[node] = name
-        newnode = CNode(self.gx, node, parent=func)
+        newnode = CNode(self.gx, node, parent=func, mv=getmv())
         self.gx.types[newnode] = set([(f, 0)])
         newnode.copymetoo = True
 
@@ -666,7 +666,7 @@ class ModuleVisitor(ASTVisitor):
         self.visit_and_or(node, func)
 
     def visit_and_or(self, node, func):
-        newnode = CNode(self.gx, node, parent=func)
+        newnode = CNode(self.gx, node, parent=func, mv=getmv())
         self.gx.types[newnode] = set()
         for child in node.getChildNodes():
             if node in self.gx.bool_test_only:
@@ -685,7 +685,7 @@ class ModuleVisitor(ASTVisitor):
             self.visit(node.else_, func)
 
     def visitIfExp(self, node, func=None):
-        newnode = CNode(self.gx, node, parent=func)
+        newnode = CNode(self.gx, node, parent=func, mv=getmv())
         self.gx.types[newnode] = set()
 
         for child in node.getChildNodes():
@@ -707,7 +707,7 @@ class ModuleVisitor(ASTVisitor):
 
     def visitNot(self, node, func=None):
         self.bool_test_add(node.expr)
-        newnode = CNode(self.gx, node, parent=func)
+        newnode = CNode(self.gx, node, parent=func, mv=getmv())
         newnode.copymetoo = True
         self.gx.types[newnode] = set([(def_class(self.gx, 'bool_'), 0)])  # XXX new type?
         self.visit(node.expr, func)
@@ -760,7 +760,7 @@ class ModuleVisitor(ASTVisitor):
         self.fake_func(node, node.expr, '__pos__', [], func)
 
     def visitCompare(self, node, func=None):
-        newnode = CNode(self.gx, node, parent=func)
+        newnode = CNode(self.gx, node, parent=func, mv=getmv())
         newnode.copymetoo = True
         self.gx.types[newnode] = set([(def_class(self.gx, 'bool_'), 0)])  # XXX new type?
         self.visit(node.expr, func)
@@ -794,7 +794,7 @@ class ModuleVisitor(ASTVisitor):
         self.visitBitpair(node, aug_msg(node, 'xor'), func)
 
     def visitBitpair(self, node, msg, func=None):
-        CNode(self.gx, node, parent=func)
+        CNode(self.gx, node, parent=func, mv=getmv())
         self.gx.types[inode(self.gx, node)] = set()
         left = node.nodes[0]
         for i, right in enumerate(node.nodes[1:]):
@@ -815,7 +815,7 @@ class ModuleVisitor(ASTVisitor):
         self.fake_func(node, node.left, aug_msg(node, 'lshift'), [node.right], func)
 
     def visitAugAssign(self, node, func=None):  # a[b] += c -> a[b] = a[b]+c, using tempvars to handle sidefx
-        newnode = CNode(self.gx, node, parent=func)
+        newnode = CNode(self.gx, node, parent=func, mv=getmv())
         self.gx.types[newnode] = set()
 
         clone = copy.deepcopy(node)
@@ -912,7 +912,7 @@ class ModuleVisitor(ASTVisitor):
         self.visitPrint(node, func)
 
     def visitPrint(self, node, func=None):
-        pnode = CNode(self.gx, node, parent=func)
+        pnode = CNode(self.gx, node, parent=func, mv=getmv())
         self.gx.types[pnode] = set()
 
         for child in node.getChildNodes():
@@ -997,7 +997,7 @@ class ModuleVisitor(ASTVisitor):
 
     def visitFor(self, node, func=None):
         # --- iterable contents -> assign node
-        assnode = CNode(self.gx, node.assign, parent=func)
+        assnode = CNode(self.gx, node.assign, parent=func, mv=getmv())
         self.gx.types[assnode] = set()
 
         get_iter = CallFunc(Getattr(node.list, '__iter__'), [])
@@ -1014,7 +1014,7 @@ class ModuleVisitor(ASTVisitor):
 
         elif isinstance(node.assign, AssAttr):  # XXX experimental :)
             # for expr.x in..
-            CNode(self.gx, node.assign, parent=func)
+            CNode(self.gx, node.assign, parent=func, mv=getmv())
 
             self.gx.assign_target[node.assign.expr] = node.assign.expr  # XXX multiple targets possible please
             fakefunc2 = CallFunc(Getattr(node.assign.expr, '__setattr__'), [Const(node.assign.attrname), fakefunc])
@@ -1084,7 +1084,7 @@ class ModuleVisitor(ASTVisitor):
 
     def visitWith(self, node, func=None):
         if node.vars:
-            varnode = CNode(self.gx, node.vars, parent=func)
+            varnode = CNode(self.gx, node.vars, parent=func, mv=getmv())
             self.gx.types[varnode] = set()
             self.visit(node.expr, func)
             self.add_constraint((inode(self.gx, node.expr), varnode), func)
@@ -1109,7 +1109,7 @@ class ModuleVisitor(ASTVisitor):
 
         for qual in node.quals:
             # iter
-            assnode = CNode(self.gx, qual.assign, parent=func)
+            assnode = CNode(self.gx, qual.assign, parent=func, mv=getmv())
             self.gx.types[assnode] = set()
 
             # list.unit->iter
@@ -1149,7 +1149,7 @@ class ModuleVisitor(ASTVisitor):
         self.visit(node.value, func)
         func.returnexpr.append(node.value)
         if not (isinstance(node.value, Const) and node.value.value is None):
-            newnode = CNode(self.gx, node, parent=func)
+            newnode = CNode(self.gx, node, parent=func, mv=getmv())
             self.gx.types[newnode] = set()
             if isinstance(node.value, Name):
                 func.retvars.append(node.value.name)
@@ -1172,7 +1172,7 @@ class ModuleVisitor(ASTVisitor):
                 self.gx.struct_unpack[node] = (sinfo, tvar.name, tvar_pos.name)
                 return
 
-        newnode = CNode(self.gx, node, parent=func)
+        newnode = CNode(self.gx, node, parent=func, mv=getmv())
         self.gx.types[newnode] = set()
 
         # --- a,b,.. = c,(d,e),.. = .. = expr
@@ -1244,7 +1244,7 @@ class ModuleVisitor(ASTVisitor):
 
         # expr.attr = expr
         elif isinstance(lvalue, AssAttr):
-            CNode(self.gx, lvalue, parent=func)
+            CNode(self.gx, lvalue, parent=func, mv=getmv())
             self.gx.assign_target[rvalue] = lvalue.expr
             fakefunc = CallFunc(Getattr(lvalue.expr, '__setattr__'), [Const(lvalue.attrname), rvalue])
             self.visit(fakefunc, func)
@@ -1255,7 +1255,7 @@ class ModuleVisitor(ASTVisitor):
         if isinstance(lvalue, (AssTuple, AssList)):
             lvalue = lvalue.nodes
         for (i, item) in enumerate(lvalue):
-            fakenode = CNode(self.gx, (item,), parent=func)  # fake node per item, for multiple callfunc triggers
+            fakenode = CNode(self.gx, (item,), parent=func, mv=getmv())  # fake node per item, for multiple callfunc triggers
             self.gx.types[fakenode] = set()
             self.add_constraint((inode(self.gx, rvalue), fakenode), func)
 
@@ -1294,7 +1294,7 @@ class ModuleVisitor(ASTVisitor):
             error("unsupported usage of 'super'", orig, mv=getmv())
 
     def visitCallFunc(self, node, func=None):  # XXX clean up!!
-        newnode = CNode(self.gx, node, parent=func)
+        newnode = CNode(self.gx, node, parent=func, mv=getmv())
 
         if isinstance(node.node, Getattr):  # XXX import math; math.e
             # rewrite super(..) call
@@ -1480,7 +1480,7 @@ class ModuleVisitor(ASTVisitor):
         if node.attrname in ['__doc__']:
             error('%s attribute is not supported' % node.attrname, node, mv=getmv())
 
-        newnode = CNode(self.gx, node, parent=func)
+        newnode = CNode(self.gx, node, parent=func, mv=getmv())
         self.gx.types[newnode] = set()
 
         fakefunc = CallFunc(FakeGetattr(node.expr, '__getattr__'), [Const(node.attrname)])
@@ -1519,7 +1519,7 @@ class ModuleVisitor(ASTVisitor):
         return True
 
     def visitName(self, node, func=None):
-        newnode = CNode(self.gx, node, parent=func)
+        newnode = CNode(self.gx, node, parent=func, mv=getmv())
         self.gx.types[newnode] = set()
 
         if node.name == '__doc__':

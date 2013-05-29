@@ -55,7 +55,7 @@ CPA_LIMIT = 10
 class CNode:
     __slots__ = ['thing', 'dcpa', 'cpa', 'fakefunc', 'parent', 'defnodes', 'mv', 'constructor', 'copymetoo', 'fakert', 'in_', 'out', 'fout', 'in_list', 'callfuncs', 'nodecp']
 
-    def __init__(self, gx, thing, dcpa=0, cpa=0, parent=None):
+    def __init__(self, gx, thing, dcpa=0, cpa=0, parent=None, mv=None):
         self.gx = gx
         self.thing = thing
         self.dcpa = dcpa
@@ -65,7 +65,7 @@ class CNode:
             parent = None
         self.parent = parent
         self.defnodes = False  # if callnode, notification nodes were made for default arguments
-        self.mv = graph.getmv()
+        self.mv = mv
         self.constructor = False  # allocation site
         self.copymetoo = False
         self.fakert = False
@@ -101,13 +101,12 @@ class CNode:
         if (self.thing, dcpa, cpa) in self.gx.cnode:
             return self.gx.cnode[self.thing, dcpa, cpa]
 
-        newnode = CNode(self.gx, self.thing, dcpa, cpa)
+        newnode = CNode(self.gx, self.thing, dcpa, cpa, mv=self.mv)
 
         newnode.callfuncs = self.callfuncs[:]  # XXX no copy?
         newnode.constructor = self.constructor
         newnode.copymetoo = self.copymetoo
         newnode.parent = self.parent
-        newnode.mv = self.mv
 
         add_to_worklist(worklist, newnode)
 
@@ -556,7 +555,7 @@ def possible_functions(gx, node, analysis):
         funcs = [(t[0].funcs['__init__'], t[1], t) for t in node.types() if '__init__' in t[0].funcs]
 
     elif parent_constr:
-        objtypes = gx.cnode[lookup_var('self', node.parent, mv=graph.getmv()), node.dcpa, node.cpa].types()
+        objtypes = gx.cnode[lookup_var('self', node.parent, mv=node.mv), node.dcpa, node.cpa].types()
         funcs = [(t[0].funcs[ident], t[1], None) for t in objtypes if ident in t[0].funcs]
 
     elif direct_call:
@@ -587,7 +586,7 @@ def possible_argtypes(gx, node, funcs, analysis, worklist):
 
         if not node.defnodes:
             for i, default in enumerate(used_defaults):
-                defnode = CNode(gx, (inode(gx, node.thing), i), node.dcpa, node.cpa, parent=func)
+                defnode = CNode(gx, (inode(gx, node.thing), i), node.dcpa, node.cpa, parent=func, mv=node.mv)
                 gx.types[defnode] = set()
                 defnode.callfuncs.append(node.thing)
                 add_constraint(gx, gx.cnode[default, 0, 0], defnode, worklist)  # XXX bad place
@@ -1468,7 +1467,7 @@ def default_var(gx, name, parent, worklist=None, mv=None):
         gx.allvars.add(var)
 
     if (var, 0, 0) not in gx.cnode:
-        newnode = CNode(gx, var, parent=parent)
+        newnode = CNode(gx, var, parent=parent, mv=mv)
         if parent:
             newnode.mv = parent.mv
         else:
