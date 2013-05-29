@@ -2681,8 +2681,6 @@ def generate_code(gx):
     for module in gx.modules.values():
         if not module.builtin:
             gv = GenerateVisitor(gx, module)
-            mv = module.mv
-            setmv(mv)
             walk(module.ast, gv)
             gv.out.close()
             gv.header_file()
