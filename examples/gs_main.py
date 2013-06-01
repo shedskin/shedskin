@@ -1,5 +1,8 @@
 #!/usr/bin/env python2
-# I, Danny Milosavljevic, hereby place this file into the public domain.
+# Original author Mariano Lambir. https://github.com/mlambir/Pygame-FPS
+# Modified by Ernesto Ferro and Mark Dufour to work with Shed Skin Python-to-C++ compiler by Mark Dufour
+# Shed Skin homepage: http://mark.dufour.googlepages.com
+
 
 import pygtk
 pygtk.require("2.0")
