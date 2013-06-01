@@ -4,23 +4,23 @@
 
 import array
 import math
-import random
 
 import world_draw
+
 
 class Image(object):
     def __init__(self, data, w, h):
         self.data, self.w, self.h = data, w, h
 
+
 class WorldManager(object):
     def __init__(self, w, h, worldMap, sprite_positions, x, y, dirx, diry, planex, planey):
         self.w, self.h = w, h
-        colorKey = (0, 0, 0)
         self.images = {}
         self.camera = Camera(x, y, dirx, diry, planex, planey)
         self.worldMap = worldMap
         self.sprite_positions = sprite_positions
-        self.screen = w*h*[0]
+        self.screen = w * h * [0]
 
     def dump(self):
         return array.array('I', self.screen).tostring()
@@ -29,9 +29,9 @@ class WorldManager(object):
         data2 = []
         for d in data:
             if len(d) == 4:
-                data2.append((d[3]<<24) | (d[2]<<16) | (d[1]<<8) | d[0])
+                data2.append((d[3] << 24) | (d[2] << 16) | (d[1] << 8) | d[0])
             else:
-                data2.append((0xff<<24) | (d[2]<<16) | (d[1]<<8) | d[0])
+                data2.append((0xff << 24) | (d[2] << 16) | (d[1] << 8) | d[0])
         self.images[n] = Image(data2, w, h)
 
     def draw(self):
@@ -50,14 +50,14 @@ class WorldManager(object):
             is_sprite = blit[0]
             image = self.images[blit[1]]
             if blit[3] <= self.h:
-                low, high = 0+blit[5], blit[3]+blit[5]
+                low, high = 0 + blit[5], blit[3] + blit[5]
             else:
                 low = 0
                 high = self.h
             for y in range(low, high):
-                px = image.data[blit[2]+64*int(64*(float(y-blit[5])/blit[3]))]
+                px = image.data[blit[2] + 64 * int(64 * (float(y - blit[5]) / blit[3]))]
                 if not is_sprite or px != 0xff000000:
-                    self.screen[self.w*y+blit[4]] = px
+                    self.screen[self.w * y + blit[4]] = px
 
     def move(self, dir, moveSpeed, rotSpeed):
         wm = self
@@ -102,6 +102,7 @@ class WorldManager(object):
             wm.camera.planey = oldPlaneX * math.sin(
                 rotSpeed) + wm.camera.planey * math.cos(rotSpeed)
 
+
 class Camera(object):
     def __init__(self, x, y, dirx, diry, planex, planey):
         self.x = float(x)
@@ -110,6 +111,7 @@ class Camera(object):
         self.diry = float(diry)
         self.planex = float(planex)
         self.planey = float(planey)
+
 
 def main():
     # modeling for shedskin extension module

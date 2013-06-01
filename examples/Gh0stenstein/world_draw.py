@@ -109,7 +109,7 @@ def draw(w, h,
         drawStart = -lineHeight / 2 + h / 2
 
         # texturing calculations
-        texNum = worldMap[mapX][mapY] #- 1
+        texNum = worldMap[mapX][mapY]  # - 1
         # 1 subtracted from it so that texture 0 can be used!
 
         # calculate value of wallX
