@@ -69,6 +69,7 @@ sprite_positions = [
     (10.5, 15.8, 9),
 ]
 
+
 class EventBox(gtk.EventBox):
     def __init__(self, view):
         gtk.EventBox.__init__(self)
@@ -86,6 +87,7 @@ class EventBox(gtk.EventBox):
 
     def handle_key_release(self, widget, event):
         self.pressed[gtk.gdk.keyval_name(event.keyval)] = False
+
 
 class View(object):
     def __init__(self):
@@ -138,36 +140,39 @@ class View(object):
     def repaint(self):
         for key, val in self.event_box.pressed.items():
             if val:
-                move_speed = self.frame_time * 6.0 # the constant value is in squares / second
+                move_speed = self.frame_time * 6.0  # the constant value is in squares / second
                 rot_speed = self.frame_time * 2.0
                 self.wm.move(key, move_speed, rot_speed)
         t0 = time.time()
         self.wm.draw()
         s = self.wm.dump()
-        self.pixbuf = gtk.gdk.pixbuf_new_from_data(s, gtk.gdk.COLORSPACE_RGB, True, 8, WIDTH, HEIGHT, WIDTH*4) # TODO optimize!!
+        self.pixbuf = gtk.gdk.pixbuf_new_from_data(s, gtk.gdk.COLORSPACE_RGB, True, 8, WIDTH, HEIGHT, WIDTH * 4)  # TODO optimize!!
         widget = self.drawing_area
-        if widget.window: # window already realized
+        if widget.window:  # window already realized
             widget.window.draw_pixbuf(self.GC, self.pixbuf, 0, 0, 0, 0, WIDTH, HEIGHT, gtk.gdk.RGB_DITHER_NONE, 0, 0)
-        self.frame_time = time.time()-t0
+        self.frame_time = time.time() - t0
         self.times += 1
-        if self.times==10:
-            print 'FPS: %.2f' % (1/((time.time()-self.t0)/10))
-            self.times=0
+        if self.times == 10:
+            print 'FPS: %.2f' % (1 / ((time.time() - self.t0) / 10))
+            self.times = 0
             self.t0 = time.time()
+
 
 def load_image(wm, pos, filename, w, h):
     pb = gtk.gdk.pixbuf_new_from_file(filename)
     pb = pb.scale_simple(w, h, gtk.gdk.INTERP_NEAREST)
     pixels = pb.get_pixels_array().tolist()
-    data = [0 for i in range(w*h)]
+    data = [0 for i in range(w * h)]
     for x in range(w):
         for y in range(h):
-            data[w*y+x] = pixels[y][x]
+            data[w * y + x] = pixels[y][x]
     wm.load_image(pos, data, w, h)
 
+
 def main():
-    graphics_view = View()
+    View()
     gtk.main()
+
 
 if __name__ == '__main__':
     main()
