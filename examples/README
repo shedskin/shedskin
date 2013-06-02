@@ -22,6 +22,7 @@ lines  name                 description                     notes
    105 dijkstra.py          dijkstra's algorithm
     80 dijkstra2.py         bidirectional dijkstra search
    220 chaos.py             chaosgame-like fractals
+   290 chull.py             3D convex hull
     65 circle.py            circle packing animation        shedskin -e circle && make 
                                                             python circle_main.py (drag circles with mouse)
    147 fysphun.py           physics animation               shedskin -e fysphun && make 
