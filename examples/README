@@ -1,4 +1,4 @@
-73 programs that work with Shed Skin 0.9.3.
+74 programs that work with Shed Skin 0.9.3.
 
 shedskin -b (disable index-out-of-bounds checking) often improves performance. see the documentation for more performance tips:
 
