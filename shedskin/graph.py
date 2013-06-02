@@ -31,7 +31,6 @@ from python import StaticClass, lookup_func, Function, is_zip2, \
     lookup_class, is_method, is_literal, is_enum, lookup_var, assign_rec, \
     Class, is_property_setter, is_fastfor, aug_msg, \
     Module, def_class, parse_file, find_module
-from struct_ import struct_faketuple, struct_info, struct_unpack
 
 
 # --- global variable mv
@@ -304,6 +303,61 @@ class ModuleVisitor(ASTVisitor):
             func = func.parent  # XXX
         if isinstance(func, Function):
             func.constraints.add(constraint)
+
+    def struct_unpack(self, rvalue, func):
+        if isinstance(rvalue, CallFunc):
+            if isinstance(rvalue.node, Getattr) and isinstance(rvalue.node.expr, Name) and rvalue.node.expr.name == 'struct' and rvalue.node.attrname == 'unpack' and lookup_var('struct', func, mv=self).imported:  # XXX imported from where?
+                return True
+            elif isinstance(rvalue.node, Name) and rvalue.node.name == 'unpack' and 'unpack' in self.ext_funcs and not lookup_var('unpack', func, mv=self):  # XXX imported from where?
+                return True
+
+    def struct_info(self, node, func):
+        if isinstance(node, Name):
+            var = lookup_var(node.name, func, mv=self)  # XXX fwd ref?
+            if not var or len(var.const_assign) != 1:
+                error('non-constant format string', node, mv=self)
+            error('assuming constant format string', node, mv=self, warning=True)
+            fmt = var.const_assign[0].value
+        elif isinstance(node, Const):
+            fmt = node.value
+        else:
+            error('non-constant format string', node, mv=self)
+        char_type = dict(['xx', 'cs', 'bi', 'Bi', '?b', 'hi', 'Hi', 'ii', 'Ii', 'li', 'Li', 'qi', 'Qi', 'ff', 'df', 'ss', 'ps'])
+        ordering = '@'
+        if fmt and fmt[0] in '@<>!=':
+            ordering, fmt = fmt[0], fmt[1:]
+        result = []
+        digits = ''
+        for i, c in enumerate(fmt):
+            if c.isdigit():
+                digits += c
+            elif c in char_type:
+                rtype = {'i': 'int', 's': 'str', 'b': 'bool', 'f': 'float', 'x': 'pad'}[char_type[c]]
+                if rtype == 'str' and c != 'c':
+                    result.append((ordering, c, 'str', int(digits or '1')))
+                elif digits == '0':
+                    result.append((ordering, c, rtype, 0))
+                else:
+                    result.extend(int(digits or '1') * [(ordering, c, rtype, 1)])
+                digits = ''
+            else:
+                error('bad or unsupported char in struct format: ' + repr(c), node, mv=self)
+                digits = ''
+        return result
+
+    def struct_faketuple(self, info):
+        result = []
+        for o, c, t, d in info:
+            if d != 0 or c == 's':
+                if t == 'int':
+                    result.append(Const(1))
+                elif t == 'str':
+                    result.append(Const(''))
+                elif t == 'float':
+                    result.append(Const(1.0))
+                elif t == 'bool':
+                    result.append(Name('True'))
+        return Tuple(result)
 
     def visitExec(self, node, func=None):
         error("'exec' is not supported", node, mv=getmv())
@@ -1160,12 +1214,12 @@ class ModuleVisitor(ASTVisitor):
         # --- rewrite for struct.unpack XXX rewrite callfunc as tuple
         if len(node.nodes) == 1:
             lvalue, rvalue = node.nodes[0], node.expr
-            if struct_unpack(rvalue, func, self) and isinstance(lvalue, (AssList, AssTuple)) and not [n for n in lvalue.nodes if isinstance(n, (AssList, AssTuple))]:
+            if self.struct_unpack(rvalue, func) and isinstance(lvalue, (AssList, AssTuple)) and not [n for n in lvalue.nodes if isinstance(n, (AssList, AssTuple))]:
                 if not isinstance(rvalue.args[0], (Const, Name)):
                     error('non-constant format string', node, mv=getmv())
                 self.visit(node.expr, func)
-                sinfo = struct_info(rvalue.args[0], func, self)
-                faketuple = struct_faketuple(sinfo)
+                sinfo = self.struct_info(rvalue.args[0], func)
+                faketuple = self.struct_faketuple(sinfo)
                 self.visit(Assign(node.nodes, faketuple), func)
                 tvar = self.temp_var2(rvalue.args[1], inode(self.gx, rvalue.args[1]), func)
                 tvar_pos = self.temp_var_int(rvalue.args[0], func)

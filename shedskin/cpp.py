@@ -27,7 +27,6 @@ from python import assign_rec, aug_msg, Class, def_class, \
     is_enum, is_fastfor, is_literal, is_zip2, \
     lookup_class, lookup_class_module, lookup_var, lookup_module, \
     Function, Module, Variable, StaticClass
-from struct_ import struct_unpack_cpp
 from typestr import incompatible_assignment_rec, lowest_common_parents, \
     nodetypestr, polymorphic_t, singletype, unboxable, typestr
 from virtual import virtuals
@@ -2099,8 +2098,37 @@ class GenerateVisitor(ASTVisitor):
             subs = lvalue.subs[0]
         self.visitm(lvalue.expr, self.connector(lvalue.expr, func), '__setitem__(', subs, ', ', func)
 
+    def struct_unpack_cpp(self, node, func):
+        struct_unpack = self.gx.struct_unpack.get(node)
+        if struct_unpack:
+            sinfo, tvar, tvar_pos = struct_unpack
+            self.start()
+            self.visitm(tvar, ' = ', node.expr.args[1], func)
+            self.eol()
+            self.output('%s = 0;' % tvar_pos)
+            hop = 0
+            for (o, c, t, d) in sinfo:
+                self.start()
+                expr = "__struct__::unpack_%s('%c', '%c', %d, %s, &%s)" % (t, o, c, d, tvar, tvar_pos)
+                if c == 'x' or (d == 0 and c != 's'):
+                    self.visitm(expr, func)
+                else:
+                    n = list(node.nodes[0])[hop]
+                    hop += 1
+                    if isinstance(n, Subscript):  # XXX merge
+                        self.subs_assign(n, func)
+                        self.visitm(expr, ')', func)
+                    elif isinstance(n, AssName):
+                        self.visitm(n, ' = ', expr, func)
+                    elif isinstance(n, AssAttr):
+                        self.visitAssAttr(n, func)
+                        self.visitm(' = ', expr, func)
+                self.eol()
+            return True
+        return False
+
     def visitAssign(self, node, func=None):
-        if struct_unpack_cpp(self, node, func):
+        if self.struct_unpack_cpp(node, func):
             return
 
         # temp vars
