@@ -1,6 +1,6 @@
 '''
 *** SHED SKIN Python-to-C++ Compiler ***
-Copyright 2005-2011 Mark Dufour; License GNU GPL version 3 (See LICENSE)
+Copyright 2005-2013 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 
 '''
 import getopt
@@ -91,7 +91,7 @@ def parse_command_line_options():
             gx.flags = value
 
     if not gx.silent:
-        print '*** SHED SKIN Python-to-C++ Compiler 0.9.3 ***'
+        print '*** SHED SKIN Python-to-C++ Compiler 0.9.4 ***'
         print 'Copyright 2005-2011 Mark Dufour; License GNU GPL version 3 (See LICENSE)'
         print
 
