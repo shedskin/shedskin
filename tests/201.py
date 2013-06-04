@@ -131,3 +131,12 @@ for v in testdellastelem:
   if (v == "test2"):
     testdellastelem.remove("test1")
 print testdellastelem
+
+# global declaration ignored
+day = 0
+def wopp():
+    global day
+    for day in range(3):
+        print day
+wopp()
+print day
