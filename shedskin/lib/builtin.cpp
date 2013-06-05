@@ -219,21 +219,35 @@ template<> PyObject *__to_py(__ss_bool i) { return PyBool_FromLong(i.value); }
 template<> PyObject *__to_py(double d) { return PyFloat_FromDouble(d); }
 template<> PyObject *__to_py(void *v) { Py_INCREF(Py_None); return Py_None; }
 
+void throw_exception() {
+    PyObject *ptype, *pvalue, *ptraceback;
+    PyErr_Fetch(&ptype, &pvalue, &ptraceback);
+    char *pStrErrorMessage = PyString_AsString(pvalue);
+    throw new TypeError(new str(pStrErrorMessage));
+}
+
 #ifdef __SS_LONG
 template<> __ss_int __to_ss(PyObject *p) {
-    if(PyLong_Check(p))
-        return PyLong_AsLongLong(p);
-    else if (PyInt_Check(p))
-        return PyInt_AsLong(p);
-    else
-        throw new TypeError(new str("error in conversion to Shed Skin (integer expected)"));
+    if(PyLong_Check(p) || PyInt_Check(p)) {
+        __ss_int result = PyLong_AsLongLong(p);
+        if (result == -1 && PyErr_Occurred() != NULL) {
+            throw_exception();
+        }
+        return result;
+    }
+    throw new TypeError(new str("error in conversion to Shed Skin (integer expected)"));
 }
 #endif
 
 template<> int __to_ss(PyObject *p) {
-    if(!PyInt_Check(p))
-        throw new TypeError(new str("error in conversion to Shed Skin (integer expected)"));
-    return PyInt_AsLong(p);
+    if(PyLong_Check(p) || PyInt_Check(p)) {
+        int result = PyInt_AsLong(p);
+        if (result == -1 && PyErr_Occurred() != NULL) {
+            throw_exception();
+        }
+        return result;
+    }
+    throw new TypeError(new str("error in conversion to Shed Skin (integer expected)"));
 }
 
 template<> __ss_bool __to_ss(PyObject *p) {
