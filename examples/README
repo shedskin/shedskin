@@ -65,7 +65,7 @@ lines  name                 description                     notes
    276 yopyra.py            raytracer
    195 mao.py               raytracer (ao benchmark)        see comments in top
                                                             shedskin -r mao (fast random number generator)
-   462 minilight_main.py    advanced raytracer              shedskin -r minilight (fast random number generator)
+   462 minilight.py         advanced raytracer              shedskin -r minilight (fast random number generator)
                             (triangle primitives, octree spatial index)
    208 path_tracing.py      path tracing raytracer          shedskin -r path_tracing
    392 plcfrs.py            natural language parser
