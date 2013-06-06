@@ -1,0 +1,84 @@
+# identical output (or should be?)
+ant.py 
+bh.py
+brainfuck.py
+chess.py
+chull.py
+genetic.py
+linalg.py
+LZ2.py
+dijkstra.py
+dijkstra2.py
+genetic2.py
+ac_encode.py
+life.py
+amaze.py
+adatron.py
+block.py
+kmeanspp.py
+kanoodle.py
+mandelbrot.py
+loop.py
+mastermind2.py
+msp_ss.py
+mwmatching.py
+nbody.py
+neural1.py (--test)
+neural2.py
+othello.py
+pisang.py
+plcfrs.py
+quameon.py
+richards.py
+rdb.py
+rsync.py
+rubik.py
+rubik2.py
+sat.py
+sieve.py
+score4.py
+sha.py
+sokoban.py
+solitaire.py (-test)
+sudoku1.py
+sudoku2.py
+sudoku3.py
+sudoku4.py
+sudoku5.py
+tictactoe.py
+timsort.py
+voronoi.py
+
+# output pics
+chaos.py: py.ppm
+hq2x.py: randam2.ppm
+imageproc.py: *.tga
+minpng.py: out.ppm, out.png
+oliva2.py: oliva.pgm
+pygmy.py: test.ppm
+yopyra.py: scene.txt.ppm
+mao.py: ao_py.ppm
+minilight.py: ml/cornellbox.txt.ppm
+path_tracing.py: pt.ppm
+TonyJpegDecoder.py: tiger1.bmp
+
+# interactive
+astar.py
+c64_main.py
+circle_main.py
+fysphun_main.py
+gs_main.py
+pylife.py
+mandelbrot2.py
+pylot_main.py
+pygasus_main.py
+stereo.py
+
+# interactive cmd-line
+go.py
+mastermind_main.py
+
+# need further looking into
+pystone.py
+TarsaLZP.py
+voronoi2.py
