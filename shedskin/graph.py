@@ -1027,7 +1027,7 @@ class ModuleVisitor(ASTVisitor):
                     error("unknown or unsupported exception type", h0, mv=getmv())
 
                 if isinstance(h1, AssName):
-                    var = default_var(self.gx, h1.name, func, mv=getmv())
+                    var = self.default_var(h1.name, func)
                 else:
                     var = self.temp_var(h0, func)
 
@@ -1063,7 +1063,7 @@ class ModuleVisitor(ASTVisitor):
         # --- assign node -> variables  XXX merge into assign_pair
         if isinstance(node.assign, AssName):
             # for x in..
-            lvar = default_var(self.gx, node.assign.name, func, mv=getmv())
+            lvar = self.default_var(node.assign.name, func)
             self.add_constraint((assnode, inode(self.gx, lvar)), func)
 
         elif isinstance(node.assign, AssAttr):  # XXX experimental :)
@@ -1142,7 +1142,7 @@ class ModuleVisitor(ASTVisitor):
             self.gx.types[varnode] = set()
             self.visit(node.expr, func)
             self.add_constraint((inode(self.gx, node.expr), varnode), func)
-            lvar = default_var(self.gx, node.vars.name, func, mv=getmv())
+            lvar = self.default_var(node.vars.name, func)
             self.add_constraint((varnode, inode(self.gx, lvar)), func)
         else:
             self.visit(node.expr, func)
@@ -1246,10 +1246,7 @@ class ModuleVisitor(ASTVisitor):
                     if (rvalue, 0, 0) not in self.gx.cnode:  # XXX generalize
                         self.visit(rvalue, func)
                     self.visit(lvalue, func)
-                    if isinstance(func, Function) and lvalue.name in func.globals:
-                        lvar = default_var(self.gx, lvalue.name, None, mv=getmv())
-                    else:
-                        lvar = default_var(self.gx, lvalue.name, func, mv=getmv())
+                    lvar = self.default_var(lvalue.name, func)
                     if isinstance(rvalue, Const):
                         lvar.const_assign.append(rvalue)
                     self.add_constraint((inode(self.gx, rvalue), inode(self.gx, lvar)), func)
@@ -1303,6 +1300,12 @@ class ModuleVisitor(ASTVisitor):
             fakefunc = CallFunc(Getattr(lvalue.expr, '__setattr__'), [Const(lvalue.attrname), rvalue])
             self.visit(fakefunc, func)
 
+    def default_var(self, name, func):
+        if isinstance(func, Function) and name in func.globals:
+            return default_var(self.gx, name, None, mv=getmv())
+        else:
+            return default_var(self.gx, name, func, mv=getmv())
+
     def tuple_flow(self, lvalue, rvalue, func=None):
         self.temp_var2(lvalue, inode(self.gx, rvalue), func)
 
@@ -1320,10 +1323,7 @@ class ModuleVisitor(ASTVisitor):
 
             self.gx.item_rvalue[item] = rvalue
             if isinstance(item, AssName):
-                if isinstance(func, Function) and item.name in func.globals:  # XXX merge
-                    lvar = default_var(self.gx, item.name, None, mv=getmv())
-                else:
-                    lvar = default_var(self.gx, item.name, func, mv=getmv())
+                lvar = self.default_var(item.name, func)
                 self.add_constraint((inode(self.gx, fakefunc), inode(self.gx, lvar)), func)
             elif isinstance(item, (Subscript, AssAttr)):
                 self.assign_pair(item, fakefunc, func)
