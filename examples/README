@@ -49,7 +49,8 @@ lines  name                 description                     notes
    270 loop.py              Havlak loop recognition algorithm
     26 mandelbrot.py        mandelbrot fractal
    108 mandelbrot2_main.py  interactive mandelbrot fractal  shedskin -e mandelbrot2 && make && python mandelbrot2_main.py
-   223 mastermind_main.py   mastermind against comp
+   223 mastermind_main.py   mastermind against comp         cd mm; shedskin -e mastermind && make
+                                                            cd ..; python mastermind_main.py
    117 mastermind2.py       mastermind strategies
     49 minpng.py            uncompressed PNG encoder
  1,201 msp_ss.py            serial bootstrap loader         see comments in top
