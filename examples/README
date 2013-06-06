@@ -56,7 +56,7 @@ lines  name                 description                     notes
  1,201 msp_ss.py            serial bootstrap loader         see comments in top
    482 mwmatching.py        maximum weighted matching algorithm
    101 nbody.py             planet body physics
-   154 neural1.py           back-prop neural network
+   154 neural1.py           back-prop neural network        python neural1.py --test
    109 neural2.py           back-prop neural network
     78 oliva2.py            sea shell patterns
     95 othello.py           othello player
