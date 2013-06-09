@@ -128,7 +128,7 @@ def typestr(gx, types, parent=None, cplusplus=True, node=None, check_extmod=Fals
                 varname = repr(node)
             else:
                 varname = "'%s'" % node.name
-            error.error("Variable %s has dynamic (sub)type" % varname, node, warning=True)
+            error.error("Variable %s has dynamic (sub)type" % varname, gx, node, warning=True)
         ts = 'ERROR'
     if cplusplus:
         if not ts.endswith('*'):
@@ -146,9 +146,9 @@ def dynamic_variable_error(gx, node, types, conv2):
         else:
             varname = "'%s'" % node
         if [t for t in types if isinstance(t[0], python.Function)]:
-            error.error("Variable %s has dynamic (sub)type: {%s, function}" % (varname, ', '.join(sorted(conv2.get(cl.ident, cl.ident) for cl in lcp))), node, warning=True)
+            error.error("Variable %s has dynamic (sub)type: {%s, function}" % (varname, ', '.join(sorted(conv2.get(cl.ident, cl.ident) for cl in lcp))), gx, node, warning=True)
         else:
-            error.error("Variable %s has dynamic (sub)type: {%s}" % (varname, ', '.join(sorted(conv2.get(cl.ident, cl.ident) for cl in lcp))), node, warning=True)
+            error.error("Variable %s has dynamic (sub)type: {%s}" % (varname, ', '.join(sorted(conv2.get(cl.ident, cl.ident) for cl in lcp))), gx, node, warning=True)
 
 
 def typestrnew(gx, types, cplusplus=True, node=None, check_extmod=False, depth=0, check_ret=False, var=None, tuple_check=False, mv=None):
@@ -176,7 +176,7 @@ def typestrnew(gx, types, cplusplus=True, node=None, check_extmod=False, depth=0
             if isinstance(node, python.Variable):
                 dynamic_variable_error(gx, node, types, conv2)
             else:
-                error.error("function mixed with non-function", node, warning=True)
+                error.error("function mixed with non-function", gx, node, warning=True)
         f = anon_funcs.pop()
         if f.mv != mv:
             return f.mv.module.full_path() + '::' + 'lambda%d' % f.lambdanr
@@ -202,9 +202,9 @@ def typestrnew(gx, types, cplusplus=True, node=None, check_extmod=False, depth=0
             dynamic_variable_error(gx, node, types, conv2)
         elif node not in gx.bool_test_only:
             if tuple_check:
-                error.error("tuple with length > 2 and different types of elements", node, warning=True, mv=mv)
+                error.error("tuple with length > 2 and different types of elements", gx, node, warning=True, mv=mv)
             else:
-                error.error("expression has dynamic (sub)type: {%s}" % ', '.join(sorted(conv2.get(cl.ident, cl.ident) for cl in lcp)), node, warning=True)
+                error.error("expression has dynamic (sub)type: {%s}" % ', '.join(sorted(conv2.get(cl.ident, cl.ident) for cl in lcp)), gx, node, warning=True)
     elif not classes:
         if cplusplus:
             return 'void *'
@@ -249,7 +249,7 @@ def typestrnew(gx, types, cplusplus=True, node=None, check_extmod=False, depth=0
                 ident = cl.ident
                 if ident == 'tuple2':
                     ident = 'tuple'
-                error.error("'%s' instance containing function reference" % ident, node, warning=True)  # XXX test
+                error.error("'%s' instance containing function reference" % ident, gx, node, warning=True)  # XXX test
             subtypes.append(ts)
     else:
         if cl.ident in gx.cpp_keywords:
