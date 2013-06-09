@@ -1423,7 +1423,7 @@ def analyze(gx, module_name):
     for cl in gx.allclasses:
         for name in cl.vars:
             if name in cl.parent.vars and not name.startswith('__'):
-                error.error("instance variable '%s' of class '%s' shadows class variable" % (name, cl.ident))
+                error.error("instance variable '%s' of class '%s' shadows class variable" % (name, cl.ident), gx)
 
     gx.merged_inh = merged(gx, gx.types, inheritance=True)
     analyze_virtuals(gx)
