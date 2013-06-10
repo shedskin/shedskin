@@ -1393,8 +1393,8 @@ class ModuleVisitor(ASTVisitor):
                 error("'%s' function is not supported" % ident, self.gx, node.node, mv=getmv())
             if ident == 'dict' and [x for x in node.args if isinstance(x, Keyword)]:
                 error('unsupported method of initializing dictionaries', self.gx, node, mv=getmv())
-            if ident == 'isinstance' and isinstance(node.args[1], Tuple):
-                error("isinstance(.., (a, b, ..)) is not supported", self.gx, node, mv=getmv())
+            if ident == 'isinstance':
+                error("'isinstance' is not supported; always returns True", self.gx, node, mv=getmv(), warning=True)
 
             if lookup_var(ident, func, mv=getmv()):
                 self.visit(node.node, func)

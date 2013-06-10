@@ -1846,7 +1846,6 @@ class GenerateVisitor(ASTVisitor):
             elif ident == '__print':  # XXX
                 self.append('print(')
             elif ident == 'isinstance':
-                error("'isinstance' is not supported; always returns True", self.gx, node, warning=True, mv=self.mv)
                 self.append('True')
                 return
             else:
