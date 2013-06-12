@@ -1863,6 +1863,9 @@ class GenerateVisitor(ASTVisitor):
                     conv = {'int_': 'int', 'float_': 'float', 'str_': 'str', 'class_': 'class', 'none': 'none'}
                     clname = conv.get(cl.ident, cl.ident)
                     error("class '%s' has no method '%s'" % (clname, ident), self.gx, node, warning=True, mv=self.mv)
+                if isinstance(cl, Class) and ident in cl.staticmethods:
+                    error("staticmethod '%s' called without using class name" % ident, self.gx, node, warning=True, mv=self.mv)
+                    return
 
             # tuple2.__getitem -> __getfirst__/__getsecond
             if ident == '__getitem__' and isinstance(node.args[0], Const) and node.args[0].value in (0, 1) and self.only_classes(objexpr, ('tuple2',)):
