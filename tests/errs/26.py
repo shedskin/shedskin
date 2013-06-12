@@ -26,6 +26,18 @@ import struct
 aa = 'b'
 mm, = struct.unpack(aa, 'ntohuntaehu')
 
+class meh:
+    @staticmethod 
+    def woeh(a,b):
+        pass
+
+    def hop(self):
+        self.woeh(9,10)
+
+m=meh()
+m.hop()
+m.woeh(1,2)
+
 #*WARNING* function mixed with non-function
 #*WARNING* 26.py: Variable 'a' has dynamic (sub)type
 #*WARNING* 26.py:1: pow(int, int) returns int after compilation
@@ -37,3 +49,6 @@ mm, = struct.unpack(aa, 'ntohuntaehu')
 #*WARNING* 26.py:19: non-constant or unsupported type code
 #*WARNING* 26.py:23: calling functions with different numbers of arguments
 #*WARNING* 26.py:27: assuming constant format string
+#*WARNING* 26.py:35: staticmethod 'woeh' called without using class name
+#*WARNING* 26.py:39: staticmethod 'woeh' called without using class name
+

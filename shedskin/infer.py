@@ -565,7 +565,7 @@ def possible_functions(gx, node, analysis):
         objtypes = gx.cnode[objexpr, node.dcpa, node.cpa].types()
         objtypes = [t for t in objtypes if not isinstance(t[0], Function)]  # XXX
 
-        funcs = [(t[0].funcs[ident], t[1], t) for t in objtypes if ident in t[0].funcs]
+        funcs = [(t[0].funcs[ident], t[1], t) for t in objtypes if ident in t[0].funcs and not (isinstance(t[0], Class) and ident in t[0].staticmethods)]
 
     return funcs
 
