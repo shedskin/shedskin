@@ -1,7 +1,9 @@
 *.pyc
 *.pyo
 *.ppm
+*.pgm
 *.png
+*.tga
 *.txt
 *.ini
 *.csv
@@ -42,7 +44,8 @@ examples/astar
 examples/bh
 examples/block
 examples/brainfuck
-examples/c64/c64
+examples/imageproc
+examples/minilight
 examples/chaos
 examples/chess
 examples/circle
@@ -294,6 +297,7 @@ tests/197
 tests/198
 tests/199
 tests/200
+tests/201
 speed/rc4
 examples/plcfrs
 examples/kmeanspp
