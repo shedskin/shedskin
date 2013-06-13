@@ -5,4 +5,5 @@ class X:
         self.x = 5
 X()
 
-#*WARNING* 41.py: instance variable 'x' of class 'X' shadows class variable
+#*WARNING* instance variable 'x' of class 'X' shadows class variable
+
