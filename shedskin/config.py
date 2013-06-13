@@ -30,7 +30,7 @@ class GlobalInfo:  # XXX add comments, split up
         self.iterations = 0
         self.total_iterations = 0
         self.lambdawrapper = {}
-        self.sysdir = '/'.join(__file__.split(os.sep)[:-1])
+        self.sysdir = os.sep.join(__file__.split(os.sep)[:-1])
         if os.path.isdir('/usr/share/shedskin/lib'):
             self.libdirs = ['/usr/share/shedskin/lib']
         else:
