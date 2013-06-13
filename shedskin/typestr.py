@@ -169,7 +169,8 @@ def typestrnew(gx, types, cplusplus=True, node=None, check_extmod=False, depth=0
         return conv.get(ident, ident)
 
     anon_funcs = set(t[0] for t in types if isinstance(t[0], python.Function))
-    if anon_funcs and check_extmod:
+    static_cls = set(t[0] for t in types if isinstance(t[0], python.StaticClass))
+    if (anon_funcs or static_cls) and check_extmod:
         raise ExtmodError()
     if anon_funcs:
         if [t for t in types if not isinstance(t[0], python.Function) and t[0] is not python.def_class(gx, 'none')]:
