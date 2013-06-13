@@ -1,3 +1,8 @@
+/*
+ *       C image processing example
+ *
+ *       Paul Haeberli
+ */
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -41,15 +46,16 @@ canvas *cannew(int sizex, int sizey)
     return c;
 }
 
-int infree = 1;
+int infree = 0;
 
 void canfree(canvas *c)
 {
     infree++;
-    //if(infree == 2) {
-	//fprintf(stderr, "ERROR: grr... canfree called from multiple threads\n");
-	//exit(1);
-   // }
+    fprintf(stderr, "    CANFREE called\n");
+    if(infree == 2) {
+	fprintf(stderr, "    ERROR: grr... canfree called from multiple threads\n");
+	exit(1);
+    }
     if(!c) {
         infree--;
 	return;
@@ -143,7 +149,7 @@ unsigned int cangetpix(canvas *c, int x, int y)
     return c->data[y*c->sizex+x];
 }
 
-unsigned int canputpix(canvas *c, int x, int y, unsigned int pix)
+unsigned int canputpix(canvas *c, int x, int y, int pix)
 {
     x = limit(x, 0, c->sizex-1);
     y = limit(y, 0, c->sizey-1);
@@ -182,9 +188,9 @@ canvas *canframe(canvas *c, float r, float g, float b, float a, int width)
 static int cansizecheck(canvas *c1, canvas *c2, const char *str)
 {
     if((c1->sizex != c2->sizex) || (c1->sizey != c2->sizey)) {
-        fprintf(stderr,"cansizecheck [%s] failed!\n",str);
-        fprintf(stderr,"can1: %d by %d\n",c1->sizex,c1->sizey);
-        fprintf(stderr,"can2: %d by %d\n",c2->sizex,c2->sizey);
+        fprintf(stderr,"    Error: cansizecheck [%s] failed!\n",str);
+        fprintf(stderr,"    can1: %d by %d\n",c1->sizex,c1->sizey);
+        fprintf(stderr,"    can2: %d by %d\n",c2->sizex,c2->sizey);
         return 0;
     }
     return 1;
@@ -267,11 +273,10 @@ canvas *canzoom(canvas *c, float zoomx, float zoomy)
 
 int cantofile(canvas *c, const char *outfilename)
 {
-
     FILE *fptr = fopen(outfilename, "wb");
     if(!fptr) {
-	fprintf(stderr, "cantofile: can't open output file\n");
-	fprintf(stderr, "[%s]\n",outfilename);
+	fprintf(stderr, "    Error: cantofile: can't open output file\n");
+	fprintf(stderr, "    [%s]\n",outfilename);
 	return 0;
     }
     int sizex = c->sizex;
@@ -294,14 +299,15 @@ int cantofile(canvas *c, const char *outfilename)
     putc(32,fptr);                        /* 32 bit bitmap */
     putc(0,fptr);
 
-    int npix = c->sizex * c->sizey;
-    unsigned int *lptr = c->data;
-    while(npix--) {
-        putc(BVAL(*lptr),fptr);
-        putc(GVAL(*lptr),fptr);
-        putc(RVAL(*lptr),fptr);
-        putc(AVAL(*lptr),fptr);
-	lptr++;
+    for(int y=0; y<sizey; y++) {
+        unsigned int *lptr = c->data+((sizey-1-y)*sizex);
+        for(int x=0; x<sizex; x++) {
+            putc(BVAL(*lptr),fptr);
+            putc(GVAL(*lptr),fptr);
+            putc(RVAL(*lptr),fptr);
+            putc(AVAL(*lptr),fptr);
+	    lptr++;
+        }
     }
     fclose(fptr);
     return 1;
@@ -313,7 +319,7 @@ static int fgetint(FILE *fptr)
     int hi = fgetc(fptr);
     int val = (hi<<8)+low;
     if(val>4096) {
-	fprintf(stderr, "canfromfile: strange int val: %d\n", val);
+	fprintf(stderr, "    Error: canfromfile: strange int val: %d\n", val);
 	return 4096;
     }
     return val;
@@ -324,15 +330,15 @@ canvas *canfromfile(const char *infilename)
     int i;
     FILE *fptr = fopen(infilename, "rb");
     if(!fptr) {
-	fprintf(stderr, "canfromfile: can't open input file\n");
-	fprintf(stderr, "[%s]\n",infilename);
+	fprintf(stderr, "    Error: canfromfile: can't open input file\n");
+	fprintf(stderr, "    [%s]\n",infilename);
 	return 0;
     }
     fgetc(fptr);
     fgetc(fptr);
     int imagetype =  fgetc(fptr);    
     if(imagetype != 2) {
-	fprintf(stderr, "canfromfile: strange imagetype %d\n", imagetype);
+	fprintf(stderr, "    Error: canfromfile: strange imagetype %d\n", imagetype);
 	exit(1);
     }
     for(i=0; i<9; i++)
@@ -341,30 +347,33 @@ canvas *canfromfile(const char *infilename)
     int sizey = fgetint(fptr);
     int imagebits =  fgetc(fptr);    
     if( (imagebits != 32) && (imagebits != 24)) {
-	fprintf(stderr, "canfromfile: strange imagebits %d\n", imagebits);
+	fprintf(stderr, "    Error: canfromfile: strange imagebits %d\n", imagebits);
 	exit(1);
     }
     fgetc(fptr);
 
     canvas *c = cannew(sizex, sizey);
-
-    int npix = c->sizex*c->sizey;
-    unsigned int *lptr = c->data;
     if(imagebits == 32) {
-	while(npix--) {
-	    int ib = fgetc(fptr);
-	    int ig = fgetc(fptr);
-	    int ir = fgetc(fptr);
-	    int ia = fgetc(fptr);
-	    *lptr++ = CPACK(ir, ig, ib, ia);
-	}
+        for(int y=0; y<sizey; y++) {
+            unsigned int *lptr = c->data+((sizey-1-y)*sizex);
+            for(int x=0; x<sizex; x++) {
+	        int ib = fgetc(fptr);
+	        int ig = fgetc(fptr);
+	        int ir = fgetc(fptr);
+	        int ia = fgetc(fptr);
+	        *lptr++ = CPACK(ir, ig, ib, ia);
+	    }
+        }
     } else {
-	while(npix--) {
-	    int ib = fgetc(fptr);
-	    int ig = fgetc(fptr);
-	    int ir = fgetc(fptr);
-	    int ia = 255;
-	    *lptr++ = CPACK(ir, ig, ib, ia);
+        for(int y=0; y<sizey; y++) {
+            unsigned int *lptr = c->data+((sizey-1-y)*sizex);
+            for(int x=0; x<sizex; x++) {
+	        int ib = fgetc(fptr);
+	        int ig = fgetc(fptr);
+	        int ir = fgetc(fptr);
+	        int ia = 255;
+	        *lptr++ = CPACK(ir, ig, ib, ia);
+	    }
 	}
     }
     fclose(fptr);
