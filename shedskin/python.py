@@ -339,7 +339,7 @@ def def_class(gx, name, mv=None):
 
 
 def lookup_var(name, parent, local=False, mv=None):
-    if isinstance(parent, Class) and name in parent.parent.vars:  # XXX
+    if not local and isinstance(parent, Class) and name in parent.parent.vars:  # XXX
         return parent.parent.vars[name]
     elif parent and name in parent.vars:
         return parent.vars[name]
