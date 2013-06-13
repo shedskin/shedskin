@@ -1387,7 +1387,7 @@ class ModuleVisitor(ASTVisitor):
             if ident == 'print':
                 ident = node.node.name = '__print'  # XXX
 
-            if ident in ['getattr', 'setattr', 'slice', 'type']:
+            if ident in ['hasattr', 'getattr', 'setattr', 'slice', 'type', 'Ellipsis']:
                 error("'%s' function is not supported" % ident, self.gx, node.node, mv=getmv())
             if ident == 'dict' and [x for x in node.args if isinstance(x, Keyword)]:
                 error('unsupported method of initializing dictionaries', self.gx, node, mv=getmv())
