@@ -1215,8 +1215,6 @@ class ModuleVisitor(ASTVisitor):
         if len(node.nodes) == 1:
             lvalue, rvalue = node.nodes[0], node.expr
             if self.struct_unpack(rvalue, func) and isinstance(lvalue, (AssList, AssTuple)) and not [n for n in lvalue.nodes if isinstance(n, (AssList, AssTuple))]:
-                if not isinstance(rvalue.args[0], (Const, Name)):
-                    error('non-constant format string', self.gx, node, mv=getmv())
                 self.visit(node.expr, func)
                 sinfo = self.struct_info(rvalue.args[0], func)
                 faketuple = self.struct_faketuple(sinfo)
