@@ -78,6 +78,5 @@ class GlobalInfo:  # XXX add comments, split up
         elif os.path.isdir(system_libdir):
             self.libdirs = [system_libdir]
         else:
-            print 'Could not find lib directory.\nThe alternatives are: {0} and {1}'.format(
-                shedskin_libdir, system_libdir)
+            print '*ERROR* Could not find lib directory.\n'
             sys.exit(1)
