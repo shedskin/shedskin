@@ -4,6 +4,8 @@ Copyright 2005-2013 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 
 '''
 import os
+import sys
+
 
 class GlobalInfo:  # XXX add comments, split up
     def __init__(self):
@@ -30,11 +32,7 @@ class GlobalInfo:  # XXX add comments, split up
         self.iterations = 0
         self.total_iterations = 0
         self.lambdawrapper = {}
-        self.sysdir = os.sep.join(__file__.split(os.sep)[:-1])
-        if os.path.isdir('/usr/share/shedskin/lib'):
-            self.libdirs = ['/usr/share/shedskin/lib']
-        else:
-            self.libdirs = [os.path.join(self.sysdir, 'lib')]
+        self.init_directories()
         illegal_file = file(os.path.join(self.sysdir, 'illegal'))
         self.cpp_keywords = set(line.strip() for line in illegal_file)
         self.ss_prefix = '__ss_'
@@ -68,3 +66,18 @@ class GlobalInfo:  # XXX add comments, split up
         self.debug_level = 0
         self.maxhits = 0  # XXX amaze.py termination
         self.gc_cleanup = False
+
+    def init_directories(self):
+        shedskin_directory = os.sep.join(__file__.split(os.sep)[:-1])
+        shedskin_libdir = os.path.join(shedskin_directory, 'lib')
+        system_libdir = '/usr/share/shedskin/lib'
+
+        self.sysdir = shedskin_directory
+        if os.path.isdir(shedskin_libdir):
+            self.libdirs = [shedskin_libdir]
+        elif os.path.isdir(system_libdir):
+            self.libdirs = [system_libdir]
+        else:
+            print 'Could not find lib directory.\nThe alternatives are: {0} and {1}'.format(
+                shedskin_libdir, system_libdir)
+            sys.exit(1)
