@@ -54,7 +54,15 @@ extern char **environ;
 
 namespace __os__ {
 
-str *const_0;
+str * default_0;
+str * default_3;
+str * default_5;
+str * default_2;
+void * default_7;
+str * default_4;
+str * default_6;
+__ss_bool  default_1;
+
 str *linesep, *name;
 dict<str *, str *> *__ss_environ;
 dict<str *, __ss_int> *pathconf_names, *confstr_names, *sysconf_names;
@@ -1431,7 +1439,17 @@ tuple2<__ss_int,__ss_int>* pipe() {
 #endif
 
 void __init() {
-    const_0 = new str("(%d, %d, %d, %d, %d, %d, %d, %d, %d, %d)");
+    str *const_0 = new str("");
+    str *const_1 = __char_cache['r'];
+
+    default_0 = const_0;
+    default_1 = False;
+    default_2 = const_1;
+    default_3 = const_1;
+    default_4 = const_1;
+    default_5 = const_1;
+    default_6 = const_1;
+    default_7 = NULL;
 
     cl___cstat = new class_("__cstat");
 
