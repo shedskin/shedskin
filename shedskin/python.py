@@ -392,6 +392,8 @@ def is_enum(node):
 def is_zip2(node):
     return isinstance(node.list, CallFunc) and isinstance(node.list.node, Name) and node.list.node.name == 'zip' and len(node.list.args) == 2 and isinstance(node.assign, (AssList, AssTuple))
 
+def is_isinstance(node):
+    return isinstance(node, CallFunc) and isinstance(node.node, Name) and node.node.name == 'isinstance'
 
 # --- recursively determine (lvalue, rvalue) pairs in assignment expressions
 def assign_rec(left, right):

@@ -190,7 +190,7 @@ def typestrnew(gx, types, cplusplus=True, node=None, check_extmod=False, depth=0
     if len(lcp) > 1:
         if set(lcp) == set([python.def_class(gx, 'int_'), python.def_class(gx, 'float_')]):
             return conv['float_']
-        elif not node or infer.inode(gx, node).mv.module.builtin:
+        elif not node or (infer.inode(gx,node).mv and infer.inode(gx, node).mv.module.builtin):
             if python.def_class(gx, 'complex') in lcp:  # XXX
                 return conv['complex']
             elif python.def_class(gx, 'float_') in lcp:

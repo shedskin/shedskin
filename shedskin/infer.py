@@ -525,6 +525,10 @@ def propagate(gx):
                 typesa = types[a]
                 typesb = types[b]
                 oldsize = len(typesb)
+
+                if b.thing in gx.filters:
+                    typesa = set([t for t in typesa if t[0] == gx.filters[b.thing]])
+
                 typesb.update(typesa)
                 if len(typesb) > oldsize:
                     add_to_worklist(worklist, b)

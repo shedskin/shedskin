@@ -1845,7 +1845,7 @@ class GenerateVisitor(ASTVisitor):
                 self.append('hasher(')  # XXX cleanup
             elif ident == '__print':  # XXX
                 self.append('print(')
-            elif ident == 'isinstance':
+            elif ident == 'isinstance' and node.args[0] not in self.gx.filters:
                 self.append('True')
                 return
             else:
@@ -2660,7 +2660,11 @@ class GenerateVisitor(ASTVisitor):
                         self.append(func.ident + '::')
                     var = lookup_var(node.name, func, mv=self.mv)
                     if var:
+                        if node in self.gx.filters:
+                            self.append('((%s *)' % self.gx.filters[node].ident)
                         self.append(self.cpp_name(var))
+                        if node in self.gx.filters:
+                            self.append(')')
                     else:
                         self.append(node.name)  # XXX
 
