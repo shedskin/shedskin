@@ -924,6 +924,8 @@ str *__modcd(str *fmt, list<str *> *l, ...);
 template<class T> str *__modtuple(str *fmt, tuple2<T,T> *t);
 template<class A, class B> str *__modtuple(str *fmt, tuple2<A,B> *t);
 
+__ss_bool isinstance(pyobj *p, class_ *cl);
+
 /* internal use */
 
 #ifdef __sun

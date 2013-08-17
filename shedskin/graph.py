@@ -29,7 +29,7 @@ from error import error
 from infer import inode, in_out, CNode, default_var, register_temp_var
 from python import StaticClass, lookup_func, Function, is_zip2, \
     lookup_class, is_method, is_literal, is_enum, lookup_var, assign_rec, \
-    Class, is_property_setter, is_fastfor, aug_msg, \
+    Class, is_property_setter, is_fastfor, aug_msg, is_isinstance, \
     Module, def_class, parse_file, find_module
 
 
@@ -731,10 +731,14 @@ class ModuleVisitor(ASTVisitor):
 
     def visitIf(self, node, func=None):
         for test, code in node.tests:
+            if is_isinstance(test):
+                self.gx.filterstack.append(test.args)
             self.bool_test_add(test)
             faker = CallFunc(Name('bool'), [test])
             self.visit(faker, func)
             self.visit(code, func)
+            if is_isinstance(test):
+                self.gx.filterstack.pop()
         if node.else_:
             self.visit(node.else_, func)
 
@@ -1599,6 +1603,9 @@ class ModuleVisitor(ASTVisitor):
                     var = default_var(self.gx, node.name, None, mv=getmv())
         if var:
             self.add_constraint((inode(self.gx, var), newnode), func)
+            for a, b in self.gx.filterstack:
+                if var.name == a.name:
+                    self.gx.filters[node] = lookup_class(b, getmv())
 
     def builtin_wrapper(self, node, func):
         node2 = CallFunc(copy.deepcopy(node), [Name(x) for x in 'abcde'])

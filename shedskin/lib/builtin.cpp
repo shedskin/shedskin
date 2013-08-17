@@ -325,4 +325,8 @@ PyObject *__ss__newobj__(PyObject *, PyObject *args, PyObject *kwargs) {
 }
 #endif
 
+__ss_bool isinstance(pyobj *p, class_ *cl) {
+    return __mbool(p->__class__ == cl);
+}
+
 } // namespace __shedskin__
