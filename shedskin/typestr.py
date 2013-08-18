@@ -129,7 +129,7 @@ def typestr(gx, types, parent=None, cplusplus=True, node=None, check_extmod=Fals
             else:
                 varname = "'%s'" % node.name
             error.error("Variable %s has dynamic (sub)type" % varname, gx, node, warning=True)
-        ts = 'ERROR'
+        ts = 'pyobj *'
     if cplusplus:
         if not ts.endswith('*'):
             ts += ' '
@@ -198,9 +198,10 @@ def typestrnew(gx, types, cplusplus=True, node=None, check_extmod=False, depth=0
             elif python.def_class(gx, 'int_') in lcp:
                 return conv['int_']
             else:
-                return '***ERROR*** '
+                return 'pyobj *'
         elif isinstance(node, python.Variable):
             dynamic_variable_error(gx, node, types, conv2)
+            return 'pyobj *'
         elif node not in gx.bool_test_only:
             if tuple_check:
                 error.error("tuple with length > 2 and different types of elements", gx, node, warning=True, mv=mv)
