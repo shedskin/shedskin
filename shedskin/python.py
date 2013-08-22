@@ -94,6 +94,8 @@ class Class(object):
             result.append(a)
             if not a.bases:
                 break
+            if len(a.bases) > 1: # XXX multiple inheritance quick hack
+                result = list(set(result) | set(a.bases))
             a = a.bases[0]
         return result
 
