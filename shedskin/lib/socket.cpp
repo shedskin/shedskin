@@ -416,8 +416,7 @@ int socket::send(const char *s, size_t len, int flags)
 }
 
 __ss_int socket::send(str *string, __ss_int flags) {
-    const char *s = string->unit.c_str();
-    return send( s, strlen(s), flags );
+    return send( string->unit.data(), string->unit.size(), flags );
 }
 
 __ss_int socket::sendall(str *string, __ss_int flags) {
