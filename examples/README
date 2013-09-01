@@ -1,4 +1,4 @@
-75 programs that work with Shed Skin 0.9.4.
+76 programs that work with Shed Skin 0.9.5.
 
 shedskin -b (disable index-out-of-bounds checking) often improves performance. see the documentation for more performance tips:
 
@@ -98,3 +98,4 @@ lines  name                 description                     notes
    753 TonyJpegDecoder.py   jpeg decoder
     39 voronoi.py           textual voronoi
    526 voronoi2.py          voronoi algoritm
+   112 WebServer.py         simple web server
