@@ -4,6 +4,7 @@
 #define __MATH_HPP
 
 #include "builtin.hpp"
+#include <math.h>
 
 using namespace __shedskin__;
 namespace __math__ {
@@ -123,6 +124,65 @@ inline double tanh(double x) {
 
 inline double pow(double x, double y) {
     return std::pow(x,y);
+}
+
+inline __ss_bool isinf(double x) {
+    return __mbool(std::isinf(x));
+}
+
+inline __ss_bool isnan(double x) {
+    return __mbool(std::isnan(x));
+}
+
+inline double acosh(double x) {
+    return ::acosh(x);
+}
+
+inline double asinh(double x) {
+    return ::asinh(x);
+}
+
+inline double atanh(double x) {
+    return ::atanh(x);
+}
+
+inline double copysign(double x, double y) {
+    return ::copysign(x, y);
+}
+
+inline double erf(double x) {
+    return ::erf(x);
+}
+
+inline double erfc(double x) {
+    return ::erfc(x);
+}
+
+inline double expm1(double x) {
+    return ::expm1(x);
+}
+
+inline tuple2<double, __ss_int> *frexp(double x) {
+    __ss_int n;
+    double mantisa = std::frexp(x, &n);
+
+    return (new tuple2<double, __ss_int>(2, mantisa, n));
+}
+
+inline double gamma(double x) {
+    return ::tgamma(x);
+}
+
+inline double lgamma(double x) {
+    return ::lgamma(x);
+}
+
+inline double log1p(double x) {
+    return ::log1p(x);
+}
+
+inline __ss_int trunc(double x) {
+    return ::trunc(x);
 }
 
 } // module namespace
