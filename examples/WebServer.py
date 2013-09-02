@@ -1,3 +1,5 @@
+# put in the public domain by Salvatore Ferro
+
 import select 
 import socket 
 import sys
