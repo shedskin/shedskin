@@ -185,5 +185,40 @@ inline __ss_int trunc(double x) {
     return ::trunc(x);
 }
 
+inline double fsum(pyiter<double> *iterable) {
+    list<double> *partials;
+    double hi, lo, x, y;
+    __ss_int i;
+
+    __ss_int __2;
+    pyiter<double> *__1;
+    pyiter<double>::for_in_loop __3;
+
+    partials = (new list<double>());
+
+    FOR_IN(x,iterable,1,2,3)
+        i = 0;
+        for(size_t j=0; j<partials->__len__(); j++) {
+            y = partials->__getitem__(i);
+            if ((__abs(x)<__abs(y))) {
+                double swap = y;
+                y = x;
+                x = swap;
+            }
+            hi = (x+y);
+            lo = (y-(hi-x));
+            if (___bool(lo)) {
+                partials->__setitem__(i, lo);
+                i = (i+1);
+            }
+            x = hi;
+        }
+
+        (partials)->__setslice__(1,i,0,0,(new list<double>(1,x)));
+    END_FOR
+
+    return __sum(partials);
+}
+
 } // module namespace
 #endif

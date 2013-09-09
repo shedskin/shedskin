@@ -18,6 +18,7 @@ def gamma(x): return 1.0
 def lgamma(x): return 1.0
 def log1p(x): return 1.0
 def trunc(x): return 1
+def fsum(x): return 1.0
 
 def sqrt(x): return 1.0
 def sin(x): return 1.0
