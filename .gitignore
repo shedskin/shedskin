@@ -301,6 +301,8 @@ tests/201
 tests/202
 tests/203
 tests/204
+tests/205
+tests/206
 speed/rc4
 examples/plcfrs
 examples/kmeanspp
