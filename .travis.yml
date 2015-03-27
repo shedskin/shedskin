@@ -4,5 +4,6 @@ python:
     - 2.7
 before_install:
     - sudo apt-get install libgc-dev
+cache: ccache
 script:
     - cd tests && ./run.py -p
