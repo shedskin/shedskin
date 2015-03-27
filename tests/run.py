@@ -72,7 +72,10 @@ def tests(args, options):
     tests = [test for test in test_numbers(args, options)
              if os.path.exists('%d.py' % test)]
     failures = []
-    imap = Pool().imap if parallel else itertools.imap
+    if "OMP_NUM_THREADS" in os.environ:
+        imap = Pool(int(os.environ["OMP_NUM_THREADS"])).imap if parallel else itertools.imap
+    else:
+        imap = Pool().imap if parallel else itertools.imap
 
     for result in imap(partial_run_test, tests):
         if result is not None:
