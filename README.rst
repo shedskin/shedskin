@@ -1,3 +1,10 @@
+.. image:: https://img.shields.io/travis/shedskin/shedskin.svg
+    :target: https://travis-ci.org/shedskin/shedskin
+
+=========
+Shed Skin
+=========
+
 Shed Skin is an experimental compiler, that can translate pure, but implicitly statically typed Python (2.4-2.6) programs into optimized C++. It can generate stand-alone programs or extension modules that can be imported and used in larger Python programs.
 
 Besides the typing restriction, programs cannot freely use the Python standard library (although about 25 common modules, such as random and re, are currently supported). Also, not all Python features, such as nested functions and variable numbers of arguments, are supported (see the documentation for details).
