@@ -100,6 +100,7 @@ def main():
     else:
         print '*** tests failed:', len(failures)
         print failures
+        sys.exit(failures)
 
 
 def run_test(test, msvc, options):
