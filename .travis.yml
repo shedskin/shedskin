@@ -9,3 +9,5 @@ env:
     - OMP_NUM_THREADS=4
 script:
     - cd tests && ./run.py -p
+notifications:
+    email: false
