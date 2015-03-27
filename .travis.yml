@@ -5,5 +5,7 @@ python:
 before_install:
     - sudo apt-get install libgc-dev
 cache: ccache
+env:
+    - OMP_NUM_THREADS=4
 script:
     - cd tests && ./run.py -p
