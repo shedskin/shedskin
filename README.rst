@@ -18,8 +18,11 @@ The following people have contributed to Shed Skin development so far:
 Installation:
 
   sudo python setup.py install
+  
   shedskin test.py
+  
   make
+  
   ./test
 
 see the online documentation for details:
