@@ -61,13 +61,15 @@ def usage():
     sys.exit(1)
 
 
-def parse_command_line_options():
+def parse_command_line_options(argv=None):
+    if argv is None:
+        argv = sys.argv[1:]
     gx = GlobalInfo()
     gx.terminal = blessings.Terminal()
 
     # --- command-line options
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'vbchef:wad:m:rolspxngL:', ['help', 'extmod', 'nobounds', 'nowrap', 'flags=', 'debug=', 'makefile=', 'random', 'noassert', 'long', 'msvc', 'ann', 'strhash', 'pypy', 'traceback', 'silent', 'nogcwarns', 'lib'])
+        opts, args = getopt.getopt(argv, 'vbchef:wad:m:rolspxngL:', ['help', 'extmod', 'nobounds', 'nowrap', 'flags=', 'debug=', 'makefile=', 'random', 'noassert', 'long', 'msvc', 'ann', 'strhash', 'pypy', 'traceback', 'silent', 'nogcwarns', 'lib'])
     except getopt.GetoptError:
         usage()
 
@@ -113,8 +115,7 @@ def parse_command_line_options():
             gx.libdirs = [value] + gx.libdirs
         if opt in ['-f', '--flags']:
             if not os.path.isfile(value):
-                logging.error("no such file: '%s'", value)
-                sys.exit(1)
+                raise RuntimeError("no such file: '%s'", value)
             gx.flags = value
 
     # silent -> WARNING only, debug -> DEBUG, default -> INFO
@@ -133,11 +134,9 @@ def parse_command_line_options():
     # --- some checks
     major, minor = sys.version_info[:2]
     if (major, minor) not in [(2, 4), (2, 5), (2, 6), (2, 7)]:
-        logging.error('Shed Skin is not compatible with this version of Python')
-        sys.exit(1)
+        raise RuntimeError('Shed Skin is not compatible with this version of Python')
     if sys.platform == 'win32' and os.path.isdir('c:/mingw'):
-        logging.error('please rename or remove c:/mingw, as it conflicts with Shed Skin')
-        sys.exit()
+        raise RuntimeError('please rename or remove c:/mingw, as it conflicts with Shed Skin')
     if sys.platform == 'win32' and struct.calcsize('P') == 8 and gx.extension_module:
         logging.warning('64-bit python may not come with necessary file to build extension module')
 
@@ -148,8 +147,7 @@ def parse_command_line_options():
     if not name.endswith('.py'):
         name += '.py'
     if not os.path.isfile(name):
-        logging.error("no such file: '%s'", name)
-        sys.exit(1)
+        raise RuntimeError("no such file: '%s'", name)
     main_module_name = os.path.splitext(name)[0]
 
     return gx, main_module_name
@@ -165,15 +163,17 @@ def start(gx, main_module_name):
     logging.info('[elapsed time: %.2f seconds]', (time.time() - t0))
 
 
-def main():
+def main(argv=None):
     sys.setrecursionlimit(100000)
-    gx, main_module_name = parse_command_line_options()
-    try:
-        start(gx, main_module_name)
-    except KeyboardInterrupt, e:
-        logging.debug('KeyboardInterrupt', exc_info=True)
-        sys.exit(1)
+    gx, main_module_name = parse_command_line_options(argv=argv)
+    start(gx, main_module_name)
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except KeyboardInterrupt, e:
+        logging.debug('KeyboardInterrupt', exc_info=True)
+        sys.exit(1)
+    except RuntimeError:
+        sys.exit(1)
