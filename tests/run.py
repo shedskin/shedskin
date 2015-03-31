@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 import traceback
 import sys
 import os
@@ -27,14 +28,14 @@ else:
 
 
 def usage():
-    print "'-l': give individual test numbers"
-    print "'-r': reverse test order"
-    print "'-f': break after first failure"
-    print "'-e': run extension module tests"
-    print "'-n': normal tests as extension modules"
-    print "'-x': run error/warning message tests"
-    print "'-p': run the tests in parallel"
-    print "'--output': show output even when run in parallel"
+    print("'-l': give individual test numbers")
+    print("'-r': reverse test order")
+    print("'-f': break after first failure")
+    print("'-e': run extension module tests")
+    print("'-n': normal tests as extension modules")
+    print("'-x': run error/warning message tests")
+    print("'-p': run the tests in parallel")
+    print("'--output': show output even when run in parallel")
     sys.exit()
 
 
@@ -60,7 +61,7 @@ def test_numbers(args, options):
         if args[0] > args[1]:
             args[0], args[1] = args[1], args[0]
             options.add('r')
-        tests = range(args[0], args[1])
+        tests = list(range(args[0], args[1]))
     else:
         tests = sorted([int(os.path.splitext(f)[0]) for f in glob.glob('*.py') if f != 'run.py'])
 
@@ -104,10 +105,10 @@ def main():
         failures = tests(args, options)
 
     if not failures:
-        print '*** no failures, yay!'
+        print('*** no failures, yay!')
     else:
-        print '*** tests failed:', len(failures)
-        print failures
+        print('*** tests failed:', len(failures))
+        print(failures)
         sys.exit(failures)
 
 
@@ -143,14 +144,14 @@ def run_test(test, msvc, options):
             else:
                 check_output(command, 'python %d.py' % test)
             with output_lock:
-                print '*** success: %d (%.2f)' % (test, time.time() - t0)
+                print('*** success: %d (%.2f)' % (test, time.time() - t0))
         except AssertionError:
             with output_lock:
-                print '*** failure:', test
+                print('*** failure:', test)
                 traceback.print_exc()
             return test
 
-    print '*** test:', test
+    print('*** test:', test)
     if parallel and not show_parallel_output:
         with open(os.devnull, "w") as fnull:
             return run_test_with_output(fnull)
@@ -161,8 +162,8 @@ def run_test(test, msvc, options):
             res = run_test_with_output(temp)
             temp.seek(0)
             with output_lock:
-                print '*** output:', test
-                print temp.read()
+                print('*** output:', test)
+                print(temp.read())
             return res
 
 
@@ -170,7 +171,7 @@ def extmod_tests(args, options):
     failures = []
     tests = sorted([int(t[1:]) for t in glob.glob('e*') if t[1:].isdigit()])
     for test in tests:
-        print '*** test:', test
+        print('*** test:', test)
         os.chdir('e%d' % test)
         try:
             extmod = file('main.py').next()[1:].strip()
@@ -184,12 +185,12 @@ def extmod_tests(args, options):
             assert os.system('rm %s' % (extmod + ext)) == 0
             cpython_output = get_output('python main.py')
             if native_output != cpython_output:
-                print 'diff:'
-                print generate_diff(native_output, cpython_output)
+                print('diff:')
+                print(generate_diff(native_output, cpython_output))
                 raise AssertionError
-            print '*** success:', test
+            print('*** success:', test)
         except AssertionError:
-            print '*** failure:', test
+            print('*** failure:', test)
             failures.append(test)
         os.chdir('..')
     return failures
@@ -200,7 +201,7 @@ def error_tests(args, options):
     os.chdir('errs')
     tests = sorted([int(t[:-3]) for t in glob.glob('*.py') if t[:-3].isdigit()])
     for test in tests:
-        print '*** test:', test
+        print('*** test:', test)
         try:
             checks = []
             for line in file('%d.py' % test):
@@ -209,11 +210,11 @@ def error_tests(args, options):
             output = get_output('python ../%s %d 2>&1' % (SS, test))
             assert not [l for l in output if 'Traceback' in l]
             for check in checks:
-                print check
+                print(check)
                 assert [l for l in output if l.startswith(check)]
-            print '*** success:', test
+            print('*** success:', test)
         except AssertionError:
-            print '*** failure:', test
+            print('*** failure:', test)
             failures.append(test)
     os.chdir('..')
     return failures
@@ -230,8 +231,8 @@ def check_output(command, command2):
     native_output = get_output(command)
     cpython_output = get_output(command2)
     if native_output != cpython_output:
-        print 'diff:'
-        print generate_diff(native_output, cpython_output)
+        print('diff:')
+        print(generate_diff(native_output, cpython_output))
         raise AssertionError
 
 
