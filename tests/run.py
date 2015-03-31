@@ -22,8 +22,6 @@ sys.path.append("..")
 sys.path.append(os.path.sep.join(["..",".."]))
 import shedskin
 
-SS = shedskin.__file__
-
 
 def usage():
     print("'-l': give individual test numbers")
@@ -119,11 +117,11 @@ def run_test(test, msvc, options):
         t0 = time.time()
         try:
             if msvc:
-                assert execute('python %s -v %d' % (SS, test)) == 0
+                shedskin.main(["-v", "%d"%test])
             elif 'n' in options:
-                assert execute('python %s -e -m Makefile.%d %d' % (SS, test, test)) == 0
+                shedskin.main(["-e", "-m", "Makefile.%d"%test, str(test)])
             else:
-                assert execute('python %s -m Makefile.%d %d' % (SS, test, test)) == 0
+                shedskin.main(["-m", "Makefile.%d"%test, str(test)])
             if msvc:
                 assert execute('nmake /C /S clean') == 0
                 assert execute('nmake /C /S') == 0
@@ -155,7 +153,7 @@ def extmod_tests(args, options):
         os.chdir('e%d' % test)
         try:
             extmod = file('main.py').next()[1:].strip()
-            assert os.system('python ../%s -e %s' % (SS, extmod)) == 0
+            shedskin.main(["-e", "%s"%extmod])
             assert os.system('make') == 0
             native_output = get_output('python main.py')
             if sys.platform == 'win32':
@@ -187,7 +185,10 @@ def error_tests(args, options):
             for line in file('%d.py' % test):
                 if line.startswith('#*'):
                     checks.append(line[1:].strip())
-            output = get_output('python ../%s %d 2>&1' % (SS, test))
+            #output = get_output('python ../%s %d 2>&1' % (SS, test))
+            #FIXME currently we have lost the output of the tests
+            output = shedskin.main([str(test)])
+            output = str(output)
             assert not [l for l in output if 'Traceback' in l]
             for check in checks:
                 print(check)
