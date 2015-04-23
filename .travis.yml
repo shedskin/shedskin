@@ -4,7 +4,9 @@ python:
     - 2.7
 before_install:
     - sudo apt-get install libgc-dev
-cache: ccache
+cache:
+    - ccache
+    - pip
 env:
     - OMP_NUM_THREADS=4
 script:
