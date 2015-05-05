@@ -5,9 +5,13 @@ Copyright 2005-2013 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 typestr.py: generate type declarations
 
 '''
+import logging
+
 import error
 import python
 import infer
+
+logger = logging.getLogger('typestr')
 
 
 class ExtmodError(Exception):
@@ -215,7 +219,7 @@ def typestrnew(gx, types, cplusplus=True, node=None, check_extmod=False, depth=0
     cl = lcp.pop()
 
     if check_ret and cl.mv.module.ident == 'collections' and cl.ident == 'defaultdict':
-        print '*WARNING* defaultdicts are returned as dicts'
+        logger.warn('defaultdicts are returned as dicts')
     elif check_extmod and cl.mv.module.builtin and not (cl.mv.module.ident == 'builtin' and cl.ident in ['int_', 'float_', 'complex', 'str_', 'list', 'tuple', 'tuple2', 'dict', 'set', 'frozenset', 'none', 'bool_']) and not (cl.mv.module.ident == 'collections' and cl.ident == 'defaultdict'):
         raise ExtmodError()
 

@@ -33,9 +33,12 @@ update: we now analyze programs incrementally, adding several functions and redo
 
 '''
 import itertools
+import logging
 import random
 import sys
 from compiler.ast import Const, Node, AssAttr, Keyword, CallFunc, Getattr, Dict, List, Tuple, ListComp, Not, Compare, Name
+
+import progressbar
 
 import error
 import graph
@@ -43,6 +46,9 @@ from python import StaticClass, lookup_class_module, Function, \
     Variable, lookup_var, Class, lookup_implementor, def_class
 from typestr import nodetypestr
 from virtual import analyze_virtuals
+
+logger = logging.getLogger('infer')
+ifa_logger = logging.getLogger('infer.ifa')
 
 
 INCREMENTAL = True
@@ -242,7 +248,7 @@ def connect_actual_formal(gx, expr, func, parent_constr=False, merge=None):
 
     skip_defaults = False  # XXX investigate and further narrow down cases where we want to skip
     if (func.mv.module.ident in ['time', 'string', 'collections', 'bisect', 'array', 'math', 'cStringIO', 'getopt']) or \
-       (func.mv.module.ident == 'random' and func.ident == 'randrange') or\
+       (func.mv.module.ident == 'random' and func.ident == 'randrange') or \
        (func.mv.module.ident == 'builtin' and func.ident not in ('sort', 'sorted', 'min', 'max', '__print')):
         skip_defaults = True
 
@@ -455,8 +461,8 @@ def print_typeset(types):
     l.sort(lambda x, y: cmp(repr(x[0]), repr(y[0])))
     for uh in l:
         if not uh[0].mv.module.builtin:
-            print repr(uh[0]) + ':', uh[1]  # , uh[0].parent
-    print
+            logger.info('%r: %s', uh[0], uh[1])
+    logger.info('')
 
 
 def print_state(gx):
@@ -470,16 +476,15 @@ def print_constraints(gx):
     l.sort(lambda x, y: cmp(repr(x[0]), repr(y[0])))
     for (a, b) in l:
         if not (a.mv.module.builtin and b.mv.module.builtin):
-            print a, '->', b
+            logger.info('%s -> %s', a, b)
             if not a in gx.types or not b in gx.types:
-                print 'NOTYPE', a in gx.types, b in gx.types
-    print
+                logger.info('NOTYPE %s %s', a in gx.types, b in gx.types)
+    logger.info('')
 
 
 # --- iterative dataflow analysis
 def propagate(gx):
-    if DEBUG(gx, 1):
-        print 'propagate'
+    logger.debug('propagate')
 
     # --- initialize working sets
     worklist = []
@@ -733,8 +738,7 @@ def cpa(gx, callnode, worklist):
                         continue
                 gx.added_funcs += 1
                 gx.added_funcs_set.add(func)
-                if DEBUG(gx, 1):
-                    print 'adding', func
+                logger.debug('adding %s', func)
 
         if objtype:
             objtype = (objtype,)
@@ -797,8 +801,8 @@ def create_template(gx, func, dcpa, c, worklist):
         func.cp[dcpa] = {}
     func.cp[dcpa][c] = cpa = len(func.cp[dcpa])  # XXX +1
 
-    if DEBUG(gx, 2) and not func.mv.module.builtin and not func.ident in ['__getattr__', '__setattr__']:
-        print 'template', (func, dcpa), c
+    if not func.mv.module.builtin and not func.ident in ['__getattr__', '__setattr__']:
+        logger.debug('template (%s, %s) %s', func, dcpa, c)
 
     gx.templates += 1
     func_copy(gx, func, dcpa, cpa, worklist, c)
@@ -839,8 +843,7 @@ def actuals_formals(gx, expr, func, node, dcpa, cpa, types, analysis, worklist):
 
 
 def ifa(gx):
-    if DEBUG(gx, 1):
-        print 'ifa'
+    logger.debug('ifa')
     split = []  # [(set of creation nodes, new type number), ..]
 
     allcsites = {}
@@ -850,18 +853,15 @@ def ifa(gx):
                 allcsites.setdefault((cl, dcpa), set()).add(n)
 
     for cl in ifa_classes_to_split(gx):
-        if DEBUG(gx, 3):
-            print 'IFA: --- class %s ---' % cl.ident
+        ifa_logger.debug('IFA: --- class %s ---', cl.ident)
         cl.newdcpa = cl.dcpa
         vars = [cl.vars[name] for name in cl.tvar_names() if name in cl.vars]
         classes_nr, nr_classes = ifa_class_types(gx, cl, vars)
         for dcpa in range(1, cl.dcpa):
             if ifa_split_vars(gx, cl, dcpa, vars, nr_classes, classes_nr, split, allcsites) is not None:
-                if DEBUG(gx, 3):
-                    print 'IFA found splits, return'
+                ifa_logger.debug('IFA found splits, return')
                 return split
-    if DEBUG(gx, 3):
-        print 'IFA final return'
+    ifa_logger.debug('IFA final return')
     return split
 
 
@@ -871,8 +871,7 @@ def ifa_split_vars(gx, cl, dcpa, vars, nr_classes, classes_nr, split, allcsites)
             continue
         node = gx.cnode[var, dcpa, 0]
         creation_points, paths, assignsets, allnodes, csites, emptycsites = ifa_flow_graph(gx, cl, dcpa, node, allcsites)
-        if DEBUG(gx, 3):
-            print 'IFA visit var %s.%s, %d, csites %d' % (cl.ident, var.name, dcpa, len(csites))
+        ifa_logger.debug('IFA visit var %s.%s, %d, csites %d', cl.ident, var.name, dcpa, len(csites))
         if len(csites) + len(emptycsites) == 1:
             continue
         if ((len(merge_simple_types(gx, gx.types[node])) > 1 and len(assignsets) > 1) or
@@ -889,8 +888,7 @@ def ifa_split_vars(gx, cl, dcpa, vars, nr_classes, classes_nr, split, allcsites)
             if len(remaining) < 2 or len(remaining) >= 10:
                 continue
             # --- if it exists, perform actual splitting
-            if DEBUG(gx, 3):
-                print 'IFA normal split, remaining:', len(remaining)
+            ifa_logger.debug('IFA normal split, remaining:', len(remaining))
             for splitsites in remaining[1:]:
                 ifa_split_class(cl, dcpa, splitsites, split)
             return split
@@ -906,14 +904,12 @@ def ifa_split_vars(gx, cl, dcpa, vars, nr_classes, classes_nr, split, allcsites)
                 prt[ts] = []
             prt[ts].append(c)
         if len(prt) > 1:
-            if DEBUG(gx, 3):
-                print 'IFA partition csites:', prt.values()[0]
+            ifa_logger.debug('IFA partition csites: %s', prt.values()[0])
             ifa_split_class(cl, dcpa, prt.values()[0], split)
 
         # --- if all else fails, perform wholesale splitting
         elif len(paths) > 1 and 1 < len(csites) < 10:
-            if DEBUG(gx, 3):
-                print 'IFA wholesale splitting, csites:', len(csites)
+            ifa_logger.debug('IFA wholesale splitting, csites: %d', len(csites))
             for csite in csites[1:]:
                 ifa_split_class(cl, dcpa, [csite], split)
             return split
@@ -951,8 +947,8 @@ def ifa_split_no_confusion(gx, cl, dcpa, varnum, classes_nr, nr_classes, csites,
         else:  # create new contour
             classes_nr[subtype] = cl.newdcpa
             ifa_split_class(cl, dcpa, csites, split)
-    if DEBUG(gx, 3) and subtype_csites:
-        print 'IFA found simple split', subtype_csites.keys()
+    if subtype_csites:
+        ifa_logger.debug('IFA found simple split: %s', subtype_csites.keys())
 
 
 def ifa_class_types(gx, cl, vars):
@@ -966,8 +962,8 @@ def ifa_class_types(gx, cl, vars):
             else:
                 attr_types.append(frozenset())
         attr_types = tuple(attr_types)
-        if DEBUG(gx, 3) and [x for x in attr_types if x]:
-            print 'IFA', str(dcpa) + ':', zip([var.name for var in vars], map(list, attr_types))
+        if all(attr_types):
+            ifa_logger.debug('IFA %s: %s %s', dcpa, zip([var.name for var in vars], map(list, attr_types)))
         nr_classes[dcpa] = attr_types
         classes_nr[attr_types] = dcpa
     return classes_nr, nr_classes
@@ -1065,19 +1061,25 @@ def ifa_split_class(cl, dcpa, things, split):
 
 
 def update_progressbar(gx, perc):
-    if not gx.silent:
-        print '\r%s%d%%' % (int(perc * 32) * '*', 100 * perc),
-        if DEBUG(gx, 1):
-            print
-        else:
-            sys.stdout.flush()
+    if gx.progressbar is None:
+        widgets = progressbar.widgets
+        gx.progressbar = progressbar.ProgressBar(
+            widgets=[widgets.Bar(marker='*'), widgets.Percentage()],
+            maxval=1,
+            term_width=33
+        )
+
+    with gx.terminal.location(x=0):
+        gx.progressbar.update(perc)
+    if perc == 1:
+        sys.stdout.write(gx.terminal.move_down)
+        # logger.info('%s%d%%', '*' * int(perc * 32), 100 * perc)
 
 # --- cartesian product algorithm (cpa) & iterative flow analysis (ifa)
 
 
 def iterative_dataflow_analysis(gx):
-    if not gx.silent:
-        print '[analyzing types..]'
+    logger.info('[analyzing types..]')
     backup = backup_network(gx)
 
     gx.orig_types = {}
@@ -1098,8 +1100,7 @@ def iterative_dataflow_analysis(gx):
         gx.iterations += 1
         gx.total_iterations += 1
         maxiter = (gx.iterations == MAXITERS)
-        if DEBUG(gx, 1):
-            print '\n*** iteration %d ***' % gx.iterations
+        logger.debug('*** iteration %d ***', gx.iterations)
 
         # --- propagate using cartesian product algorithm
         gx.new_alloc_info = {}
@@ -1110,22 +1111,20 @@ def iterative_dataflow_analysis(gx):
         gx.alloc_info = gx.new_alloc_info
 
         if gx.cpa_limited:
-            if DEBUG(gx, 1):
-                print 'CPA limit %d reached!' % gx.cpa_limit
+            logger.debug('CPA limit %d reached!', gx.cpa_limit)
         else:
             gx.cpa_clean = True
 
         # --- ifa: detect conflicting assignments to instance variables, and split contours to resolve these
         split = ifa(gx)
         if split:
-            if DEBUG(gx, 1):
-                print '%d splits' % len(split)
-            elif DEBUG(gx, 3):
-                print 'IFA splits', [(s[0], s[1], s[3]) for s in split]
+            logger.debug('%d splits', len(split))
+            if ifa_logger.isEnabledFor(logging.DEBUG):
+                ifa_logger.debug('IFA splits: %s', [(s[0], s[1], s[3]) for s in split])
 
         if not split or maxiter:
-            if DEBUG(gx, 1) and not maxiter:
-                print 'no splits'
+            if not maxiter:
+                logger.debug('no splits')
             if INCREMENTAL:
                 allfuncs = len([f for f in gx.allfuncs if not f.mv.module.builtin and not [start for start in ('__iadd__', '__imul__', '__str__', '__hash__') if f.ident.startswith(start)]])
                 perc = 1.0
@@ -1133,7 +1132,7 @@ def iterative_dataflow_analysis(gx):
                     perc = min(len(gx.added_funcs_set) / float(allfuncs), 1.0)
                 update_progressbar(gx, perc)
             if maxiter:
-                print '\n*WARNING* reached maximum number of iterations'
+                logger.warning('reached maximum number of iterations')
                 gx.maxhits += 1
                 if gx.maxhits == 3:
                     return
@@ -1149,13 +1148,10 @@ def iterative_dataflow_analysis(gx):
             else:
                 if INCREMENTAL:
                     update_progressbar(gx, 1.0)
-                if DEBUG(gx, 1):
-                    print '\niterations:', gx.total_iterations, 'templates:', gx.templates
-                elif not gx.silent:
-                    print
+                logger.debug('iterations: %s templates: %s', gx.total_iterations, gx.templates)
                 return
 
-        if not INCREMENTAL and not DEBUG(gx, 1):
+        if not INCREMENTAL and not logger.isEnabledFor(logging.DEBUG):
             sys.stdout.write('*')
             sys.stdout.flush()
 
@@ -1264,8 +1260,8 @@ def ifa_seed_template(gx, func, cart, dcpa, cpa, worklist):
                     gx.types[alloc_node].add(gx.alloc_info[alloc_id])
                     add_to_worklist(worklist, alloc_node)
 
-        if DEBUG(gx, 1) and added_new and not func.mv.module.builtin:
-            print '%d seed(s)' % added_new, func
+        if added_new and not func.mv.module.builtin:
+            logger.debug('%d seed(s): %s', added_new, func)
 
 # --- for a set of target nodes of a specific type of assignment (e.g. int to (list,7)), flow back to creation points
 
@@ -1411,8 +1407,7 @@ def analyze(gx, module_name):
     # --- cartesian product algorithm & iterative flow analysis
     iterative_dataflow_analysis(gx)
 
-    if not gx.silent:
-        print '[generating c++ code..]'
+    logger.info('[generating c++ code..]')
 
     for cl in gx.allclasses:
         for name in cl.vars:
