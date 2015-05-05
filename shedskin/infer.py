@@ -1061,6 +1061,8 @@ def ifa_split_class(cl, dcpa, things, split):
 
 
 def update_progressbar(gx, perc):
+    if not logger.isEnabledFor(logging.INFO):
+        return
     if gx.progressbar is None:
         widgets = progressbar.widgets
         gx.progressbar = progressbar.ProgressBar(
@@ -1072,8 +1074,8 @@ def update_progressbar(gx, perc):
     with gx.terminal.location(x=0):
         gx.progressbar.update(perc)
     if perc == 1:
-        sys.stdout.write(gx.terminal.move_down)
-        # logger.info('%s%d%%', '*' * int(perc * 32), 100 * perc)
+        # Finished, so add a new line.
+        sys.stdout.write('\n')
 
 # --- cartesian product algorithm (cpa) & iterative flow analysis (ifa)
 
