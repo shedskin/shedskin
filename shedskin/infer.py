@@ -32,6 +32,7 @@ iterative_dataflow_analysis():
 update: we now analyze programs incrementally, adding several functions and redoing the full analysis each time. this seems to greatly help the CPA from exploding early on.
 
 '''
+import itertools
 import random
 import sys
 from compiler.ast import Const, Node, AssAttr, Keyword, CallFunc, Getattr, Dict, List, Tuple, ListComp, Not, Compare, Name
@@ -620,24 +621,13 @@ def possible_argtypes(gx, node, funcs, analysis, worklist):
     return argtypes
 
 
-def product(*lists):
-    if not lists:
-        return [()]
-    result = []
-    prod = product(*lists[:-1])
-    for x in prod:
-        for y in lists[-1]:
-            result.append(x + (y,))
-    return result
-
-
 def cartesian_product(gx, node, analysis, worklist):
     funcs = possible_functions(gx, node, analysis)
     if not funcs:
         return []
     argtypes = possible_argtypes(gx, node, funcs, analysis, worklist)
     alltypes = [funcs] + argtypes
-    return product(*alltypes)
+    return list(itertools.product(*alltypes))
 
 
 def redirect(gx, c, dcpa, func, callfunc, ident, callnode, direct_call, constructor):
