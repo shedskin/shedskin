@@ -26,9 +26,12 @@ class GlobalInfo:  # XXX add comments, split up
         self.sig_nr = {}
         self.nameclasses = {}
         self.module = None
-        self.builtins = ['none', 'str_', 'float_', 'int_', 'class_', 'list', 'tuple', 'tuple2', 'dict', 'set', 'frozenset', 'bool_']
-        self.assign_target = {}              # instance node for instance Variable assignment
-        self.alloc_info = {}                 # allocation site type information across iterations
+        self.builtins = ['none', 'str_', 'float_', 'int_', 'class_', 'list',
+                         'tuple', 'tuple2', 'dict', 'set', 'frozenset', 'bool_']
+        # instance node for instance Variable assignment
+        self.assign_target = {}
+        # allocation site type information across iterations
+        self.alloc_info = {}
         self.iterations = 0
         self.total_iterations = 0
         self.lambdawrapper = {}
@@ -38,8 +41,8 @@ class GlobalInfo:  # XXX add comments, split up
         self.ss_prefix = '__ss_'
         self.list_types = {}
         self.loopstack = []  # track nested loops
-        self.filterstack = [] # track 'if isinstance(..)'
-        self.filters = {} # syntax node filter determined using filterstack
+        self.filterstack = []  # track 'if isinstance(..)'
+        self.filters = {}  # syntax node filter determined using filterstack
         self.comments = {}
         self.import_order = 0  # module import order
         self.from_module = {}
