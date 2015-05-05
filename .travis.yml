@@ -12,9 +12,10 @@ cache:
     - pip
 env:
     - OMP_NUM_THREADS=4
-script:
-    - cd tests && ./run.py -e && cd ..
-    - cd tests && ./run.py -p && cd ..
-    - cd tests && ./run.py -x && cd ..
+matrix:
+    include:
+        - script: cd tests && ./run.py -e && cd ..
+        - script: cd tests && ./run.py -p && cd ..
+        - script: cd tests && ./run.py -x && cd ..
 notifications:
     email: false
