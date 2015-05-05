@@ -2,7 +2,7 @@
 language: python
 sudo: false
 python:
-    - 2.7
+    - "2.7"
 addons:
     apt:
         packages:
@@ -11,12 +11,9 @@ cache:
     - ccache
     - pip
 env:
-    - OMP_NUM_THREADS=4
-matrix:
-    include:
-        - script: cd tests && ./run.py -e && cd ..
-        - script: cd tests && ./run.py -p && cd ..
-        - script: cd tests && ./run.py -x && cd ..
-script: python shedskin/__init__.py test.py
+    - OMP_NUM_THREADS=4 TEST_SUITE=-e
+    - OMP_NUM_THREADS=4 TEST_SUITE=-p
+    - OMP_NUM_THREADS=4 TEST_SUITE=-x
+script: cd tests && ./run.py $TEST_SUITE && cd ..
 notifications:
     email: false
