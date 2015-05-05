@@ -17,7 +17,6 @@ matrix:
         - script: cd tests && ./run.py -e && cd ..
         - script: cd tests && ./run.py -p && cd ..
         - script: cd tests && ./run.py -x && cd ..
-    exclude:
-        - script:
+script: python shedskin/__init__.py test.py
 notifications:
     email: false
