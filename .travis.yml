@@ -17,5 +17,7 @@ matrix:
         - script: cd tests && ./run.py -e && cd ..
         - script: cd tests && ./run.py -p && cd ..
         - script: cd tests && ./run.py -x && cd ..
+    exclude:
+        - script:
 notifications:
     email: false
