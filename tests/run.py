@@ -9,6 +9,8 @@ import glob
 import os.path
 import functools
 import itertools
+import logging
+import logging.handlers
 from difflib import unified_diff
 from multiprocessing import Pool
 from multiprocessing.pool import IMapIterator
@@ -178,21 +180,28 @@ def error_tests(args, options):
     failures = []
     os.chdir('errs')
     tests = sorted([int(t[:-3]) for t in glob.glob('*.py') if t[:-3].isdigit()])
+    # Disable exiting due to errors.
+    sys.exit = lambda _: None
     for test in tests:
         print('*** test:', test)
+        # Replace all logging with the memory handler.
+        for logger in logging.root.manager.loggerDict.values():
+            for handler in logger.handlers:
+                root_logger.removeHandler(handler)
+        buf_handler = logging.handlers.BufferingHandler(100)
+        logging.root.handlers = [buf_handler]
+
         try:
             checks = []
             for line in file('%d.py' % test):
                 if line.startswith('#*'):
                     checks.append(line[1:].strip())
-            #output = get_output('python ../%s %d 2>&1' % (SS, test))
-            #FIXME currently we have lost the output of the tests
-            output = shedskin.main([str(test)])
-            output = str(output)
-            assert not [l for l in output if 'Traceback' in l]
+            shedskin.main([str(test)])
+            output = [l.message for l in buf_handler.buffer]
+            assert not any('Traceback' in l for l in output)
             for check in checks:
                 print(check)
-                assert [l for l in output if l.startswith(check)]
+                assert all(l.startswith(check) for l in output)
             print('*** success:', test)
         except AssertionError:
             print('*** failure:', test)
