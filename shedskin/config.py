@@ -61,14 +61,16 @@ class GlobalInfo:  # XXX add comments, split up
         self.pypy = False
         self.silent = False
         self.backtrace = False
-        self.makefile_name = 'Makefile'  # XXX other default?
+        self.makefile_name = 'Makefile'
+        self.fast_hash = False
+        self.debug_level = 0
+
+        # Others
         self.item_rvalue = {}
         self.genexp_to_lc = {}
         self.bool_test_only = set()
         self.tempcount = {}
-        self.fast_hash = False
         self.struct_unpack = {}
-        self.debug_level = 0
         self.maxhits = 0  # XXX amaze.py termination
         self.gc_cleanup = False
 
