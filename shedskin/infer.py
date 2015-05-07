@@ -38,8 +38,6 @@ import random
 import sys
 from compiler.ast import Const, Node, AssAttr, Keyword, CallFunc, Getattr, Dict, List, Tuple, ListComp, Not, Compare, Name
 
-import progressbar
-
 import error
 import graph
 from python import StaticClass, lookup_class_module, Function, \
@@ -1064,6 +1062,7 @@ def update_progressbar(gx, perc):
     if not logger.isEnabledFor(logging.INFO):
         return
     if gx.progressbar is None:
+        import progressbar
         widgets = progressbar.widgets
         gx.progressbar = progressbar.ProgressBar(
             widgets=[widgets.Bar(marker='*'), widgets.Percentage()],
