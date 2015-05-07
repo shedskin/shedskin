@@ -28,7 +28,7 @@ namespace __{{name}}__ {
 {# group variables of the same type together, but watch out for pointers #}
 {% set pointer = '*' if type.endswith('*') else '' -%}
 
-{{ type|replace('*', '') }}
+{{ type|depointer }}
 {%- for var in vars -%}
   {% if not loop.first %}, {% endif -%}
   {{ pointer }}{{ var[1] }}

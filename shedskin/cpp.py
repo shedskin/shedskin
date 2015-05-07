@@ -108,6 +108,8 @@ class GenerateVisitor(ASTVisitor):
             trim_blocks=True,
             lstrip_blocks=True,
         )
+        self.jinja_env.filters['depointer'] = (
+            lambda ts: ts[:-1] if ts.endswith('*') else ts)
 
     def cpp_name(self, obj):
         return self.namer.name(obj)
