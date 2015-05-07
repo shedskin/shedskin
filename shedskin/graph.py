@@ -110,6 +110,8 @@ class ModuleVisitor(ASTVisitor):
         self.funcs = {}
         self.globals = {}
         self.exc_names = {}
+        self.current_with_vars = []
+
         self.lambdas = {}
         self.imports = {}
         self.fake_imports = {}

@@ -623,7 +623,9 @@ class GenerateVisitor(ASTVisitor):
         self.with_count += 1
         print >>self.out, self.line
         self.indent()
+        self.mv.current_with_vars.append(node.vars)
         self.visit(node.body, func)
+        self.mv.current_with_vars.pop()
         self.deindent()
         self.output('END_WITH')
 
