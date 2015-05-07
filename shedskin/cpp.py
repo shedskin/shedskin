@@ -26,7 +26,7 @@ from makefile import generate_makefile
 from python import assign_rec, aug_msg, Class, def_class, \
     is_enum, is_fastfor, is_literal, is_zip2, \
     lookup_class, lookup_class_module, lookup_var, lookup_module, \
-    Function, Module, Variable, StaticClass
+    Function, Module, Variable, StaticClass, smart_lookup_var
 from typestr import incompatible_assignment_rec, lowest_common_parents, \
     nodetypestr, polymorphic_t, singletype, unboxable, typestr
 from virtual import virtuals
@@ -2658,11 +2658,13 @@ class GenerateVisitor(ASTVisitor):
                 else:
                     if isinstance(func, Class) and node.name in func.parent.vars:  # XXX
                         self.append(func.ident + '::')
-                    var = lookup_var(node.name, func, mv=self.mv)
+                    var = smart_lookup_var(node.name, func, mv=self.mv)
                     if var:
                         if node in self.gx.filters:
                             self.append('((%s *)' % self.gx.filters[node].ident)
-                        self.append(self.cpp_name(var))
+                        if var.is_global:
+                            self.append(self.module.full_path() + '::')
+                        self.append(self.cpp_name(var.var))
                         if node in self.gx.filters:
                             self.append(')')
                     else:

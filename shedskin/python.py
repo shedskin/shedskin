@@ -3,6 +3,7 @@
 Copyright 2005-2013 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 
 '''
+import collections
 import imp
 import os
 import re
@@ -341,10 +342,18 @@ def def_class(gx, name, mv=None):
 
 
 def lookup_var(name, parent, local=False, mv=None):
+    var = smart_lookup_var(name, parent, local=local, mv=mv)
+    if var:
+        return var.var
+
+VarLookup = collections.namedtuple('VarLookup', ['var', 'is_global'])
+
+
+def smart_lookup_var(name, parent, local=False, mv=None):
     if not local and isinstance(parent, Class) and name in parent.parent.vars:  # XXX
-        return parent.parent.vars[name]
+        return VarLookup(parent.parent.vars[name], False)
     elif parent and name in parent.vars:
-        return parent.vars[name]
+        return VarLookup(parent.vars[name], False)
     elif not (parent and local):
         # recursive lookup
         chain = []
@@ -353,13 +362,13 @@ def lookup_var(name, parent, local=False, mv=None):
                 for ancestor in chain:
                     if isinstance(ancestor, Function):  # XXX optimize
                         ancestor.misses.add(name)
-                return parent.vars[name]
+                return VarLookup(parent.vars[name], False)
             chain.append(parent)
             parent = parent.parent
 
         # not found: global
         if name in mv.globals:
-            return mv.globals[name]
+            return VarLookup(mv.globals[name], True)
 
 
 def subclass(a, b):
