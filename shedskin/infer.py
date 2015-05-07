@@ -1444,7 +1444,7 @@ def register_temp_var(var, parent):
         parent.registered_temp_vars.append(var)
 
 
-def default_var(gx, name, parent, worklist=None, mv=None):
+def default_var(gx, name, parent, worklist=None, mv=None, exc_name=False):
     if parent:
         mv = parent.mv
     var = lookup_var(name, parent, local=True, mv=mv)
@@ -1452,6 +1452,8 @@ def default_var(gx, name, parent, worklist=None, mv=None):
         var = Variable(name, parent)
         if parent:  # XXX move to Variable?
             parent.vars[name] = var
+        elif exc_name:
+            mv.exc_names[name] = var
         else:
             mv.globals[name] = var
         gx.allvars.add(var)
