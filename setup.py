@@ -36,7 +36,7 @@ setup(
     url='http://code.google.com/p/shedskin/',
     scripts=['scripts/shedskin'],
     cmdclass={'test': run_tests},
-    install_requires=['blessings', 'progressbar2', 'jinja2'],
+    install_requires=['blessings', 'progressbar2', 'jinja2', 'six'],
     packages=['shedskin'],
     package_data={
         'shedskin': [
