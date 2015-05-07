@@ -109,6 +109,7 @@ class ModuleVisitor(ASTVisitor):
         self.classes = {}
         self.funcs = {}
         self.globals = {}
+        self.exc_names = {}
         self.lambdas = {}
         self.imports = {}
         self.fake_imports = {}
@@ -493,10 +494,6 @@ class ModuleVisitor(ASTVisitor):
             getmv().funcnodes.append(n)
             func = getmv().funcs[n.name] = Function(self.gx, n, mv=getmv())
             self.set_default_vars(n, func)
-
-        # global variables XXX visitGlobal
-        for assname in self.local_assignments(node, global_=True):
-            default_var(self.gx, assname.name, None, mv=getmv())
 
     def set_default_vars(self, node, func):
         globals = set(self.get_globals(node))
@@ -977,7 +974,7 @@ class ModuleVisitor(ASTVisitor):
             self.visit(child, func)
             self.fake_func(inode(self.gx, child), child, '__str__', [], func)
 
-    def temp_var(self, node, func=None, looper=None, wopper=None):
+    def temp_var(self, node, func=None, looper=None, wopper=None, exc_name=False):
         if node in self.gx.parent_nodes:
             varname = self.tempcount[self.gx.parent_nodes[node]]
         elif node in self.tempcount:  # XXX investigate why this happens
@@ -985,7 +982,7 @@ class ModuleVisitor(ASTVisitor):
         else:
             varname = '__' + str(len(self.tempcount))
 
-        var = default_var(self.gx, varname, func, mv=getmv())
+        var = default_var(self.gx, varname, func, mv=getmv(), exc_name=exc_name)
         var.looper = looper
         var.wopper = wopper
         self.tempcount[node] = varname
@@ -1014,7 +1011,6 @@ class ModuleVisitor(ASTVisitor):
         self.visit(node.body, func)
 
         for handler in node.handlers:
-            self.visit(handler[2], func)
             if not handler[0]:
                 continue
 
@@ -1031,13 +1027,16 @@ class ModuleVisitor(ASTVisitor):
                     error("unknown or unsupported exception type", self.gx, h0, mv=getmv())
 
                 if isinstance(h1, AssName):
-                    var = self.default_var(h1.name, func)
+                    var = self.default_var(h1.name, func, exc_name=True)
                 else:
-                    var = self.temp_var(h0, func)
+                    var = self.temp_var(h0, func, exc_name=True)
 
                 var.invisible = True
                 inode(self.gx, var).copymetoo = True
                 self.gx.types[inode(self.gx, var)] = set([(cl, 1)])
+
+        for handler in node.handlers:
+            self.visit(handler[2], func)
 
         # else
         if node.else_:
@@ -1302,11 +1301,11 @@ class ModuleVisitor(ASTVisitor):
             fakefunc = CallFunc(Getattr(lvalue.expr, '__setattr__'), [Const(lvalue.attrname), rvalue])
             self.visit(fakefunc, func)
 
-    def default_var(self, name, func):
+    def default_var(self, name, func, exc_name=False):
         if isinstance(func, Function) and name in func.globals:
-            return default_var(self.gx, name, None, mv=getmv())
+            return default_var(self.gx, name, None, mv=getmv(), exc_name=exc_name)
         else:
-            return default_var(self.gx, name, func, mv=getmv())
+            return default_var(self.gx, name, func, mv=getmv(), exc_name=exc_name)
 
     def tuple_flow(self, lvalue, rvalue, func=None):
         self.temp_var2(lvalue, inode(self.gx, rvalue), func)

@@ -366,7 +366,9 @@ def smart_lookup_var(name, parent, local=False, mv=None):
             chain.append(parent)
             parent = parent.parent
 
-        # not found: global
+        # not found: global or exception name
+        if name in mv.exc_names:
+            return VarLookup(mv.exc_names[name], False)
         if name in mv.globals:
             return VarLookup(mv.globals[name], True)
 
