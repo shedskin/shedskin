@@ -3,6 +3,7 @@
 Copyright 2005-2013 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 
 '''
+import logging
 import sys
 
 import infer
@@ -13,9 +14,9 @@ ERRORS = set()
 
 def error(msg, gx, node=None, warning=False, mv=None):
     if warning:
-        kind = '*WARNING*'
+        kind = logging.WARNING
     else:
-        kind = '*ERROR*'
+        kind = logging.ERROR
     if not mv and node and (node, 0, 0) in gx.cnode:
         mv = infer.inode(gx, node).mv
     filename = lineno = None
@@ -27,20 +28,21 @@ def error(msg, gx, node=None, warning=False, mv=None):
     if result not in ERRORS:
         ERRORS.add(result)
     if not warning:
-        print format_error(result)
+        print_error(result)
         sys.exit(1)
 
 
-def format_error(error):
+def print_error(error):
     (kind, filename, lineno, msg) = error
-    result = kind
+    result = ''
     if filename:
-        result += ' %s:' % filename
+        result += filename + ':'
         if lineno is not None:
-            result += '%d:' % lineno
-    return result + ' ' + msg
+            result += str(lineno) + ':'
+        result += ' '
+    logging.log(kind, result + msg)
 
 
 def print_errors():
     for error in sorted(ERRORS):
-        print format_error(error)
+        print_error(error)

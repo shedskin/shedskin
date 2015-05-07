@@ -4,11 +4,14 @@ Copyright 2005-2013 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 
 '''
 import getopt
+import logging
 import os.path
 import struct
 import sys
 import time
 import traceback
+
+import blessings
 
 import graph
 from annotate import annotate
@@ -16,6 +19,23 @@ from config import GlobalInfo
 from cpp import generate_code
 from error import print_errors
 from infer import analyze
+
+
+class ShedskinFormatter(logging.Formatter):
+
+    def __init__(self, gx, datefmt=None):
+        self.gx = gx
+        move = gx.terminal.move_x(0)
+        self._info_formatter = logging.Formatter(
+            move + '%(message)s', datefmt=datefmt)
+        self._other_formatter = logging.Formatter(
+            move + gx.terminal.bold('*%(levelname)s*') + ' %(message)s',
+            datefmt=datefmt)
+
+    def format(self, record):
+        if record.levelname == 'INFO':
+            return self._info_formatter.format(record)
+        return self._other_formatter.format(record)
 
 
 def usage():
@@ -43,11 +63,16 @@ def usage():
 
 def parse_command_line_options():
     gx = GlobalInfo()
+    gx.terminal = blessings.Terminal()
+
     # --- command-line options
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'vbchef:wad:m:rolspxngL:', ['help', 'extmod', 'nobounds', 'nowrap', 'flags=', 'debug=', 'makefile=', 'random', 'noassert', 'long', 'msvc', 'ann', 'strhash', 'pypy', 'traceback', 'silent', 'nogcwarns', 'lib'])
     except getopt.GetoptError:
         usage()
+
+    logging_level = logging.INFO
+    ifa_logging_level = logging.INFO
 
     for opt, value in opts:
         if opt in ['-h', '--help']:
@@ -59,7 +84,9 @@ def parse_command_line_options():
         if opt in ['-a', '--ann']:
             gx.annotation = True
         if opt in ['-d', '--debug']:
-            gx.debug_level = int(value)
+            logging_level = logging.DEBUG
+            if int(value) == 3:
+                ifa_logging_level = logging.DEBUG
         if opt in ['-l', '--long']:
             gx.longlong = True
         if opt in ['-g', '--nogcwarns']:
@@ -75,7 +102,7 @@ def parse_command_line_options():
         if opt in ['-m', '--makefile']:
             gx.makefile_name = value
         if opt in ['-n', '--silent']:
-            gx.silent = True
+            logging_level = logging.WARNING
         if opt in ['-s', '--strhash']:
             gx.fast_hash = True
         if opt in ['-v', '--msvc']:
@@ -86,25 +113,33 @@ def parse_command_line_options():
             gx.libdirs = [value] + gx.libdirs
         if opt in ['-f', '--flags']:
             if not os.path.isfile(value):
-                print "*ERROR* no such file: '%s'" % value
+                logging.error("no such file: '%s'", value)
                 sys.exit(1)
             gx.flags = value
 
-    if not gx.silent:
-        print '*** SHED SKIN Python-to-C++ Compiler 0.9.4 ***'
-        print 'Copyright 2005-2011 Mark Dufour; License GNU GPL version 3 (See LICENSE)'
-        print
+    # silent -> WARNING only, debug -> DEBUG, default -> INFO
+    console = logging.StreamHandler(stream=sys.stdout)
+    console.setFormatter(ShedskinFormatter(gx))
+    root = logging.getLogger('')
+    root.addHandler(console)
+    root.setLevel(logging_level)
+    # debug=3 -> IFA (iterative flow analysis) logging enabled.
+    logging.getLogger('infer.ifa').setLevel(ifa_logging_level)
+
+    logging.info('*** SHED SKIN Python-to-C++ Compiler 0.9.4 *** - ')
+    logging.info('Copyright 2005-2011 Mark Dufour; License GNU GPL version 3 (See LICENSE)')
+    logging.info('')
 
     # --- some checks
     major, minor = sys.version_info[:2]
     if (major, minor) not in [(2, 4), (2, 5), (2, 6), (2, 7)]:
-        print '*ERROR* Shed Skin is not compatible with this version of Python'
+        logging.error('Shed Skin is not compatible with this version of Python')
         sys.exit(1)
     if sys.platform == 'win32' and os.path.isdir('c:/mingw'):
-        print '*ERROR* please rename or remove c:/mingw, as it conflicts with Shed Skin'
+        logging.error('please rename or remove c:/mingw, as it conflicts with Shed Skin')
         sys.exit()
     if sys.platform == 'win32' and struct.calcsize('P') == 8 and gx.extension_module:
-        print '*WARNING* 64-bit python may not come with necessary file to build extension module'
+        logging.warning('64-bit python may not come with necessary file to build extension module')
 
     # --- argument
     if len(args) != 1:
@@ -113,7 +148,7 @@ def parse_command_line_options():
     if not name.endswith('.py'):
         name += '.py'
     if not os.path.isfile(name):
-        print "*ERROR* no such file: '%s'" % name
+        logging.error("no such file: '%s'", name)
         sys.exit(1)
     main_module_name = os.path.splitext(name)[0]
 
@@ -127,8 +162,7 @@ def start(gx, main_module_name):
     annotate(gx)
     generate_code(gx)
     print_errors()
-    if not gx.silent:
-        print '[elapsed time: %.2f seconds]' % (time.time() - t0)
+    logging.info('[elapsed time: %.2f seconds]', (time.time() - t0))
 
 
 def main():
@@ -137,8 +171,7 @@ def main():
     try:
         start(gx, main_module_name)
     except KeyboardInterrupt, e:
-        if gx.debug_level > 0:
-            print traceback.format_exc(e)
+        logging.debug('KeyboardInterrupt', exc_info=True)
         sys.exit(1)
 
 

@@ -59,7 +59,6 @@ class GlobalInfo:  # XXX add comments, split up
         self.msvc = False
         self.gcwarns = True
         self.pypy = False
-        self.silent = False
         self.backtrace = False
         self.makefile_name = 'Makefile'
         self.fast_hash = False
@@ -73,6 +72,8 @@ class GlobalInfo:  # XXX add comments, split up
         self.struct_unpack = {}
         self.maxhits = 0  # XXX amaze.py termination
         self.gc_cleanup = False
+        self.terminal = None
+        self.progressbar = None
 
     def init_directories(self):
         shedskin_directory = os.sep.join(__file__.split(os.sep)[:-1])

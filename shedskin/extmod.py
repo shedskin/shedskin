@@ -5,11 +5,14 @@ Copyright 2005-2013 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 extmod.py: extension module support
 
 '''
+import logging
+
 from infer import called
 from python import Class, def_class, Module
 from typestr import ExtmodError, nodetypestr, singletype2
 
 
+logger = logging.getLogger('extmod')
 OVERLOAD_SINGLE = ['__neg__', '__pos__', '__abs__', '__nonzero__']
 OVERLOAD = ['__add__', '__sub__', '__mul__', '__div__', '__mod__', '__divmod__', '__pow__'] + OVERLOAD_SINGLE
 
@@ -37,9 +40,9 @@ def supported_vars(gx, gv, vars):  # XXX virtuals?
             nodetypestr(gx, var, var.parent, check_extmod=True, mv=gv.mv)
         except ExtmodError:
             if isinstance(var.parent, Class):
-                print "*WARNING* '%s' variable not exported (cannot convert)" % (var.parent.ident + '.' + var.name)
+                logger.warning("'%s.%s' variable not exported (cannot convert)", var.parent.ident, var.name)
             else:
-                print "*WARNING* '%s' variable not exported (cannot convert)" % var.name
+                logger.warning("'%s' variable not exported (cannot convert)", var.name)
             continue
         supported.append(var)
     return supported
@@ -56,7 +59,7 @@ def supported_funcs(gx, gv, funcs):
             if func.invisible or func.inherited or not gv.inhcpa(func):
                 continue
         if isinstance(func.parent, Class) and func.ident in func.parent.staticmethods:
-            print "*WARNING* '%s' method not exported (staticmethod)" % (func.parent.ident + '.' + func.ident)
+            logger.warning("'%s.%s' method not exported (staticmethod)", func.parent.ident, func.ident)
             continue
         builtins = True
         for formal in func.formals:
@@ -74,9 +77,9 @@ def supported_funcs(gx, gv, funcs):
             supported.append(func)
         else:
             if isinstance(func.parent, Class):
-                print "*WARNING* '%s' method not exported (%s)" % (func.parent.ident + '.' + func.ident, reason)
+                logger.warning("'%s.%s' method not exported (%s)", func.parent.ident, func.ident, reason)
             else:
-                print "*WARNING* '%s' function not exported (%s)" % (func.ident, reason)
+                logger.warning("'%s' function not exported (%s)", func.ident, reason)
     return supported
 
 
@@ -447,7 +450,7 @@ def exported_classes(gx, gv, warns=False):
     for cl in gv.module.mv.classes.values():
         if def_class(gx, 'Exception') in cl.ancestors():
             if warns:
-                print "*WARNING* '%s' class not exported (inherits from Exception)" % cl.ident
+                logger.warning("'%s' class not exported (inherits from Exception)", cl.ident)
         else:
             classes.append(cl)
     return sorted(classes, key=lambda x: x.def_order)
