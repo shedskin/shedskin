@@ -2,6 +2,8 @@
 import traceback
 import sys
 import os
+import tempfile
+import threading
 import time
 import subprocess
 import glob
@@ -32,13 +34,16 @@ def usage():
     print "'-n': normal tests as extension modules"
     print "'-x': run error/warning message tests"
     print "'-p': run the tests in parallel"
+    print "'--output': show output even when run in parallel"
     sys.exit()
 
 
 def parse_options():
     args, options = [], set()
     for arg in sys.argv[1:]:
-        if arg.startswith('-'):
+        if arg.startswith('--'):
+            options.add(arg[2:])
+        elif arg.startswith('-'):
             options.update(arg[1:])
         else:
             args.append(int(arg))
@@ -106,15 +111,13 @@ def main():
         sys.exit(failures)
 
 
+output_lock = threading.Lock()
 def run_test(test, msvc, options):
     parallel = 'p' in options
-    show_output = not parallel
+    show_parallel_output = 'output' in options
 
-    print '*** test:', test
-    with open(os.devnull, "w") as fnull:
-        if show_output:
-            fnull = None
-        execute = functools.partial(subprocess.call, stdout=fnull, stderr=fnull, shell=True)
+    def run_test_with_output(output):
+        execute = functools.partial(subprocess.call, stdout=output, stderr=output, shell=True)
         t0 = time.time()
         try:
             if msvc:
@@ -139,11 +142,28 @@ def run_test(test, msvc, options):
                     assert execute('python -c "__import__(str(%d))"' % test) == 0
             else:
                 check_output(command, 'python %d.py' % test)
-            print '*** success: %d (%.2f)' % (test, time.time() - t0)
+            with output_lock:
+                print '*** success: %d (%.2f)' % (test, time.time() - t0)
         except AssertionError:
-            print '*** failure:', test
-            traceback.print_exc()
+            with output_lock:
+                print '*** failure:', test
+                traceback.print_exc()
             return test
+
+    print '*** test:', test
+    if parallel and not show_parallel_output:
+        with open(os.devnull, "w") as fnull:
+            return run_test_with_output(fnull)
+    elif not parallel:
+        return run_test_with_output(None)
+    elif parallel:
+        with tempfile.TemporaryFile() as temp:
+            res = run_test_with_output(temp)
+            temp.seek(0)
+            with output_lock:
+                print '*** output:', test
+                print temp.read()
+            return res
 
 
 def extmod_tests(args, options):
