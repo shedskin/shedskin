@@ -12,7 +12,7 @@ cache:
     - pip
 env:
     - OMP_NUM_THREADS=4 TEST_SUITE=-e
-    - OMP_NUM_THREADS=4 TEST_SUITE=-p
+    - OMP_NUM_THREADS=4 TEST_SUITE="-p --output"
     - OMP_NUM_THREADS=4 TEST_SUITE=-x
 script: cd tests && ./run.py $TEST_SUITE && cd ..
 notifications:
