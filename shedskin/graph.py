@@ -22,7 +22,7 @@ from compiler.ast import Const, AssTuple, AssList, From, Add, ListCompFor, \
     Keyword, GenExpr, LeftShift, AssName, Div, Or, Lambda, And, CallFunc, \
     Global, Slice, RightShift, Sub, Getattr, Dict, Ellipsis, Mul, \
     Subscript, Function as FunctionNode, Return, Power, Bitxor, Class as ClassNode, Name, List, \
-    Discard, Sliceobj, Tuple, Pass, UnarySub, Bitor, ListComp
+    Discard, Sliceobj, Tuple, Pass, UnarySub, Bitor, ListComp, TryExcept, With
 from compiler.visitor import ASTVisitor
 
 from error import error
@@ -497,6 +497,10 @@ class ModuleVisitor(ASTVisitor):
             func = getmv().funcs[n.name] = Function(self.gx, n, mv=getmv())
             self.set_default_vars(n, func)
 
+        # global variables XXX visitGlobal
+        for assname in self.local_assignments(node, global_=True):
+            default_var(self.gx, assname.name, None, mv=getmv())
+
     def set_default_vars(self, node, func):
         globals = set(self.get_globals(node))
         for assname in self.local_assignments(node):
@@ -520,8 +524,21 @@ class ModuleVisitor(ASTVisitor):
         elif isinstance(node, AssName):
             result = [node]
         else:
+            # Try-Excepts introduce a new small scope with the exception name,
+            # so we skip it here.
+            if isinstance(node, TryExcept):
+                children = list(node.body.getChildNodes())
+                for handler in node.handlers:
+                    children.extend(handler[2].getChildNodes())
+                if node.else_:
+                    children.extend(node.else_.getChildNodes())
+            elif isinstance(node, With):
+                children = node.body.getChildNodes()
+            else:
+                children = node.getChildNodes()
+
             result = []
-            for child in node.getChildNodes():
+            for child in children:
                 result.extend(self.local_assignments(child, global_))
         return result
 
