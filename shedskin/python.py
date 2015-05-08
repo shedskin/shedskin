@@ -369,7 +369,7 @@ def smart_lookup_var(name, parent, local=False, mv=None):
         # not found: global or exception name
         if name in mv.exc_names:
             return VarLookup(mv.exc_names[name], False)
-        if any(name in vars for vars in mv.current_with_vars):
+        if any(name in vars for vars in mv.current_with_vars if vars):
             return
         if name in mv.globals:
             return VarLookup(mv.globals[name], True)
