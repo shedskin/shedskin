@@ -465,6 +465,8 @@ class GenerateVisitor(ASTVisitor):
             nodetypestr=lambda var: nodetypestr(self.gx, var, var.parent, mv=self.mv),
             defaults=self.gen_defaults(),
             listcomps=self.mv.listcomps,
+            cpp_name=self.cpp_name,
+            namer=self.namer,
         )
         print >>self.out, file_top
 
