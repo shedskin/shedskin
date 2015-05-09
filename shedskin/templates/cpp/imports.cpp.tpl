@@ -1,5 +1,5 @@
 {# imports -> using #}
-{% for child_module in imports %}
+{% for child, child_module in imports %}
 
 {% for name, pseudo in child.names %}
 {% if name == '*' %}
