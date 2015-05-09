@@ -458,7 +458,7 @@ class GenerateVisitor(ASTVisitor):
             node=node,
             module=self.module,
             imports=[
-                self.gx.from_module[child]
+                (child, self.gx.from_module[child])
                 for child in node.node.getChildNodes()
                 if isinstance(child, From) and child.modname != '__future__'],
             globals=self.gen_declare_defs(self.mv.globals.items()),
