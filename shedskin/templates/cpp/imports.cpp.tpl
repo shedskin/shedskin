@@ -1,22 +1,23 @@
 {# imports -> using #}
 {% for child, child_module in imports %}
+{% set mod_name = child_module.full_path() %}
 
 {% for name, pseudo in child.names %}
 {% if name == '*' %}
 
 {% for func in child_module.mv.funcs.values()|selectattr("cp") %}
-using {{ child_module }}::{{cpp_name(func)}};
+using {{ mod_name }}::{{cpp_name(func)}};
 {% endfor %}
 
 {% for cl in child_module.mv.classes.values() %}
-using {{ child_module }}::{{cpp_name(cl)}};
+using {{ mod_name }}::{{cpp_name(cl)}};
 {% endfor %}
 
 {% elif pseudo not in module.mv.globals %}
 {% if name in child_module.mv.funcs %}
-using {{ child_module }}::{{cpp_name(func)}};
+using {{ mod_name }}::{{cpp_name(child_module.mv.funcs[name])}};
 {% else %}
-using {{ child_module }}::{{namer.nokeywords(name)}};
+using {{ mod_name }}::{{namer.nokeywords(name)}};
 {% endif %}
 {% endif %}
 
