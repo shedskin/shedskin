@@ -9,9 +9,13 @@ output equivalent C++ code, using templates and virtuals to support data and OO 
 class GenerateVisitor: inherits visitor pattern from compiler.visitor.ASTVisitor, to recursively generate C++ code for each syntactical Python construct. the constraint graph, with inferred types, is first 'merged' back to program dimensions (gx.merged_inh).
 
 '''
+import os
 import string
 import struct
 import textwrap
+
+import jinja2
+
 from compiler import walk
 from compiler.ast import Const, AssTuple, AssList, From, Add, Stmt, AssAttr, \
     Keyword, AssName, CallFunc, Slice, Getattr, Dict, Subscript, \
@@ -98,6 +102,14 @@ class GenerateVisitor(ASTVisitor):
         self.with_count = 0
         self.bool_wrapper = {}
         self.namer = CPPNamer(self.gx, self)
+        self.jinja_env = jinja2.Environment(
+            loader=jinja2.FileSystemLoader(
+                os.path.dirname(__file__) + '/templates/cpp/'),
+            trim_blocks=True,
+            lstrip_blocks=True,
+        )
+        self.jinja_env.filters['depointer'] = (
+            lambda ts: ts[:-1] if ts.endswith('*') else ts)
 
     def cpp_name(self, obj):
         return self.namer.name(obj)
@@ -289,18 +301,22 @@ class GenerateVisitor(ASTVisitor):
         else:
             return '->'
 
-    def declare_defs(self, vars, declare):
-        pairs = []
-        for (name, var) in vars:
-            if singletype(self.gx, var, Module) or var.invisible:
+    def gen_declare_defs(self, vars):
+        for name, var in vars:
+            if (singletype(self.gx, var, Module) or var.invisible
+                    or var.name in {'__exception', '__exception2'}):
                 continue
             ts = nodetypestr(self.gx, var, var.parent, mv=self.mv)
+            yield ts, self.cpp_name(var)
+
+    def declare_defs(self, vars, declare):
+        pairs = []
+        for ts, name in self.gen_declare_defs(vars):
             if declare:
                 if 'for_in_loop' in ts:  # XXX
                     continue
                 ts = 'extern ' + ts
-            if not var.name in ['__exception', '__exception2']:  # XXX
-                pairs.append((ts, self.cpp_name(var)))
+            pairs.append((ts, name))
         return ''.join(self.group_declarations(pairs))
 
     def get_constant(self, node):
@@ -348,7 +364,8 @@ class GenerateVisitor(ASTVisitor):
                 self.class_hpp(child)
 
         # --- defaults
-        self.defaults(declare=True)
+        for type, number in self.gen_defaults():
+            print >>self.out, 'extern %s default_%d;' % (type, number)
 
         # function declarations
         if self.module != self.gx.main_module:
@@ -375,14 +392,11 @@ class GenerateVisitor(ASTVisitor):
 
         print >>self.out, '#endif'
 
-    def defaults(self, declare):
-        if self.module.mv.defaults:
-            extern = ['', 'extern '][declare]
-            for default, (nr, func, func_def_nr) in self.module.mv.defaults.items():
-                formal = func.formals[len(func.formals) - len(func.defaults) + func_def_nr]
-                var = func.vars[formal]
-                print >>self.out, extern + typestr(self.gx, self.mergeinh[var], func, mv=self.mv) + ' ' + ('default_%d;' % nr)
-            print >>self.out
+    def gen_defaults(self):
+        for default, (nr, func, func_def_nr) in self.module.mv.defaults.items():
+            formal = func.formals[len(func.formals) - len(func.defaults) + func_def_nr]
+            var = func.vars[formal]
+            yield typestr(self.gx, self.mergeinh[var], func, mv=self.mv), nr  #  + ' ' + ('default_%d;' % nr)
 
     def init_defaults(self, func):
         for default in func.defaults:
@@ -440,47 +454,21 @@ class GenerateVisitor(ASTVisitor):
             print >>self.out, '}'
 
     def module_cpp(self, node):
-        print >>self.out, '#include "builtin.hpp"\n'
-
-        # --- comments
-        if node.doc:
-            self.do_comment(node.doc)
-            print >>self.out
-
-        # --- namespace fun
-        for n in self.module.name_list:
-            print >>self.out, 'namespace __' + n + '__ {'
-        print >>self.out
-
-        for child in node.node.getChildNodes():
-            if isinstance(child, From) and child.modname != '__future__':
-                module = self.gx.from_module[child]
-                using = 'using ' + module.full_path() + '::'
-                for (name, pseudonym) in child.names:
-                    pseudonym = pseudonym or name
-                    if name == '*':
-                        for func in module.mv.funcs.values():
-                            if func.cp:  # XXX
-                                print >>self.out, using + self.cpp_name(func) + ';'
-                        for cl in module.mv.classes.values():
-                            print >>self.out, using + self.cpp_name(cl) + ';'
-                    elif pseudonym not in self.module.mv.globals:
-                        if name in module.mv.funcs:
-                            func = module.mv.funcs[name]
-                            if func.cp:
-                                print >>self.out, using + self.cpp_name(func) + ';'
-                        else:
-                            print >>self.out, using + self.namer.nokeywords(name) + ';'
-        print >>self.out
-
-        # --- globals
-        defs = self.declare_defs(list(self.mv.globals.items()), declare=False)
-        if defs:
-            self.output(defs)
-            print >>self.out
-
-        # --- defaults
-        self.defaults(declare=False)
+        file_top = self.jinja_env.get_template('module.cpp.tpl').render(
+            node=node,
+            module=self.module,
+            imports=[
+                (child, self.gx.from_module[child])
+                for child in node.node.getChildNodes()
+                if isinstance(child, From) and child.modname != '__future__'],
+            globals=self.gen_declare_defs(self.mv.globals.items()),
+            nodetypestr=lambda var: nodetypestr(self.gx, var, var.parent, mv=self.mv),
+            defaults=self.gen_defaults(),
+            listcomps=self.mv.listcomps,
+            cpp_name=self.cpp_name,
+            namer=self.namer,
+        )
+        print >>self.out, file_top
 
         # --- declarations
         self.listcomps = {}
