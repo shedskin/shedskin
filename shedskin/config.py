@@ -3,6 +3,7 @@
 Copyright 2005-2013 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 
 '''
+from __future__ import print_function
 import os
 import sys
 
@@ -36,7 +37,7 @@ class GlobalInfo:  # XXX add comments, split up
         self.total_iterations = 0
         self.lambdawrapper = {}
         self.init_directories()
-        illegal_file = file(os.path.join(self.sysdir, 'illegal'))
+        illegal_file = open(os.path.join(self.sysdir, 'illegal'))
         self.cpp_keywords = set(line.strip() for line in illegal_file)
         self.ss_prefix = '__ss_'
         self.list_types = {}
@@ -86,5 +87,5 @@ class GlobalInfo:  # XXX add comments, split up
         elif os.path.isdir(system_libdir):
             self.libdirs = [system_libdir]
         else:
-            print '*ERROR* Could not find lib directory.\n'
+            print('*ERROR* Could not find lib directory in %s or %s.\n'%(shedskin_libdir, system_libdir))
             sys.exit(1)
