@@ -104,7 +104,7 @@ class GenerateVisitor(ASTVisitor):
         self.namer = CPPNamer(self.gx, self)
         self.jinja_env = jinja2.Environment(
             loader=jinja2.FileSystemLoader(
-                os.path.dirname(__file__) + '/templates/cpp/'),
+                self.gx.sysdir + '/templates/cpp/'),
             trim_blocks=True,
             lstrip_blocks=True,
         )
