@@ -9,6 +9,10 @@ import os
 import sys
 from distutils import sysconfig
 
+import jinja2
+
+from python import find_module, Module
+
 
 def generate_makefile(gx):
     if sys.platform == 'win32':
@@ -37,41 +41,32 @@ def generate_makefile(gx):
         else:
             ident += '.so'
 
-    makefile = file(gx.makefile_name, 'w')
+    context = {
+        'ident': ident,
+    }
 
     if gx.msvc:
-        esc_space = '/ '
-
-        def env_var(name):
-            return '$(%s)' % name
+        esc_space = lambda s: s.replace(' ', '/ ')
+        env_var = lambda s: '$(%s)' % s
     else:
-        esc_space = '\ '
+        esc_space = lambda s: s.replace(' ', '\ ')
+        env_var = lambda s: '${%s}' % s
 
-        def env_var(name):
-            return '${%s}' % name
+    context['libdirs'] = [
+        esc_space(lib) for lib in gx.libdirs[:-1]] + [
+        env_var('SHEDSKIN_LIBDIR')]
 
-    libdirs = [d.replace(' ', esc_space) for d in gx.libdirs]
-    print >>makefile, 'SHEDSKIN_LIBDIR=%s' % (libdirs[-1])
-    filenames = []
-    modules = gx.modules.values()
-    for module in modules:
-        filename = os.path.splitext(module.filename)[0]  # strip .py
-        filename = filename.replace(' ', esc_space)  # make paths valid
-        filename = filename.replace(libdirs[-1], env_var('SHEDSKIN_LIBDIR'))
-        filenames.append(filename)
+    shedskin_libdir = context['shedskin_libdir'] = esc_space(gx.libdirs[-1])
 
-    cppfiles = [fn + '.cpp' for fn in filenames]
-    hppfiles = [fn + '.hpp' for fn in filenames]
-    for always in ('re',):
-        repath = os.path.join(env_var('SHEDSKIN_LIBDIR'), always)
-        if not repath in filenames:
-            cppfiles.append(repath + '.cpp')
-            hppfiles.append(repath + '.hpp')
+    modules = context['modules'] = list(gx.modules.values())
+    if all(m.ident != 're' for m in modules):
+        re_module = Module(*find_module(gx, 're', gx.libdirs), node=None)
+        modules.append(re_module)
 
-    cppfiles.sort(reverse=True)
-    hppfiles.sort(reverse=True)
-    cppfiles = ' \\\n\t'.join(cppfiles)
-    hppfiles = ' \\\n\t'.join(hppfiles)
+    context['module_filenames'] = [
+        mod.filename.strip().replace(shedskin_libdir, env_var('SHEDSKIN_LIBDIR'))
+        for mod in sorted(modules, key=lambda m: m.ident, reverse=False)
+    ]
 
     # import flags
     if gx.flags:
@@ -89,106 +84,86 @@ def generate_makefile(gx):
     else:
         flags = os.path.join(gx.sysdir, 'FLAGS')
 
+    context['variables'] = [('SHEDSKIN_LIBDIR', shedskin_libdir)]
+
     for line in file(flags):
         line = line[:-1]
 
-        variable = line[:line.find('=')].strip()
+        variable, value = (s.strip() for s in line.split('=', 1))
+
         if variable == 'CCFLAGS':
-            line += ' -I. -I%s' % env_var('SHEDSKIN_LIBDIR')
-            line += ''.join(' -I' + libdir for libdir in libdirs[:-1])
             if sys.platform == 'darwin' and os.path.isdir('/usr/local/include'):
-                line += ' -I/usr/local/include'  # XXX
+                value += ' -I/usr/local/include'  # XXX
             if sys.platform == 'darwin' and os.path.isdir('/opt/local/include'):
-                line += ' -I/opt/local/include'  # XXX
+                value += ' -I/opt/local/include'  # XXX
             if not gx.wrap_around_check:
-                line += ' -D__SS_NOWRAP'
+                value += ' -D__SS_NOWRAP'
             if not gx.bounds_checking:
-                line += ' -D__SS_NOBOUNDS'
+                value += ' -D__SS_NOBOUNDS'
             if gx.fast_random:
-                line += ' -D__SS_FASTRANDOM'
+                value += ' -D__SS_FASTRANDOM'
             if gx.gc_cleanup:
-                line += ' -D__SS_GC_CLEANUP'
+                value += ' -D__SS_GC_CLEANUP'
             if not gx.assertions:
-                line += ' -D__SS_NOASSERT'
+                value += ' -D__SS_NOASSERT'
             if gx.fast_hash:
-                line += ' -D__SS_FASTHASH'
+                value += ' -D__SS_FASTHASH'
             if gx.longlong:
-                line += ' -D__SS_LONG'
+                value += ' -D__SS_LONG'
             if gx.backtrace:
-                line += ' -D__SS_BACKTRACE -rdynamic -fno-inline'
+                value += ' -D__SS_BACKTRACE -rdynamic -fno-inline'
             if gx.pypy:
-                line += ' -D__SS_PYPY'
+                value += ' -D__SS_PYPY'
             if not gx.gcwarns:
-                line += ' -D__SS_NOGCWARNS'
+                value += ' -D__SS_NOGCWARNS'
             if gx.extension_module:
                 if sys.platform == 'win32':
-                    line += ' -I%s\\include -D__SS_BIND' % prefix
+                    value += ' -I%s\\include -D__SS_BIND' % prefix
                 else:
-                    line += ' -g -fPIC -D__SS_BIND ' + includes
+                    value += ' -g -fPIC -D__SS_BIND ' + includes
 
         elif variable == 'LFLAGS':
             if sys.platform == 'darwin' and os.path.isdir('/opt/local/lib'):  # XXX
-                line += ' -L/opt/local/lib'
+                value += ' -L/opt/local/lib'
             if sys.platform == 'darwin' and os.path.isdir('/usr/local/lib'):  # XXX
-                line += ' -L/usr/local/lib'
+                value += ' -L/usr/local/lib'
             if gx.extension_module:
                 if gx.msvc:
-                    line += ' /dll /libpath:%s\\libs ' % prefix
+                    value += ' /dll /libpath:%s\\libs ' % prefix
                 elif sys.platform == 'win32':
-                    line += ' -shared -L%s\\libs -lpython%s' % (prefix, pyver)
+                    value += ' -shared -L%s\\libs -lpython%s' % (prefix, pyver)
                 elif sys.platform == 'darwin':
-                    line += ' -bundle -undefined dynamic_lookup ' + ldflags
+                    value += ' -bundle -undefined dynamic_lookup ' + ldflags
                 elif sys.platform == 'sunos5':
-                    line += ' -shared -Xlinker ' + ldflags
+                    value += ' -shared -Xlinker ' + ldflags
                 else:
-                    line += ' -shared -Xlinker -export-dynamic ' + ldflags
+                    value += ' -shared -Xlinker -export-dynamic ' + ldflags
 
-            if 'socket' in (m.ident for m in modules):
+            if any(m.ident == 'socket' for m in modules):
                 if sys.platform == 'win32':
-                    line += ' -lws2_32'
+                    value += ' -lws2_32'
                 elif sys.platform == 'sunos5':
-                    line += ' -lsocket -lnsl'
-            if 'os' in (m.ident for m in modules):
+                    value += ' -lsocket -lnsl'
+            if any(m.ident == 'os' for m in modules):
                 if sys.platform not in ['win32', 'darwin', 'sunos5']:
-                    line += ' -lutil'
-            if 'hashlib' in (m.ident for m in modules):
-                line += ' -lcrypto'
+                    value += ' -lutil'
+            if any(m.ident == 'hashlib' for m in modules):
+                value += ' -lcrypto'
 
-        print >>makefile, line
-    print >>makefile
+        context['variables'].append((variable, value))
 
-    print >>makefile, 'CPPFILES=%s\n' % cppfiles
-    print >>makefile, 'HPPFILES=%s\n' % hppfiles
+    context['extension_module'] = gx.extension_module
+    context['platform'] = sys.platform
 
-    print >>makefile, 'all:\t' + ident + '\n'
-
-    # executable (normal, debug, profile) or extension module
-    _out = '-o '
-    _ext = ''
-    targets = [('', '')]
-    if not gx.extension_module:
-        targets += [('_prof', '-pg -ggdb'), ('_debug', '-g -ggdb')]
+    jinja_env = jinja2.Environment(
+        loader=jinja2.FileSystemLoader(
+            os.path.dirname(__file__) + '/templates/makefile/'),
+        trim_blocks=True,
+        lstrip_blocks=True,
+    )
+    tpl = 'Makefile.tpl'
     if gx.msvc:
-        _out = '/out:'
-        _ext = ''
-        targets = [('', '')]
-        if not gx.extension_module:
-            _ext = '.exe'
-    for suffix, options in targets:
-        print >>makefile, ident + suffix + ':\t$(CPPFILES) $(HPPFILES)'
-        print >>makefile, '\t$(CC) ' + options + ' $(CCFLAGS) $(CPPFILES) $(LFLAGS) ' + _out + ident + suffix + _ext + '\n'
-
-    # clean
-    ext = ''
-    if sys.platform == 'win32' and not gx.extension_module:
-        ext = '.exe'
-    print >>makefile, 'clean:'
-    targets = [ident + ext]
-    if not gx.extension_module:
-        if not gx.msvc:
-            targets += [ident + '_prof' + ext, ident + '_debug' + ext]
-    print >>makefile, '\trm -f %s\n' % ' '.join(targets)
-
-    # phony
-    print >>makefile, '.PHONY: all clean\n'
-    makefile.close()
+        tpl = os.path.join('msvc', tpl)
+    contents = jinja_env.get_template(tpl).render(**context)
+    with open(gx.makefile_name, 'w') as f:
+        f.write(contents)
