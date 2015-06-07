@@ -24,6 +24,11 @@ class run_tests(Command):
         os.system('./run.py')
         os.chdir(self.cwd)
 
+templates = []
+for root, _, files in os.walk(os.path.join('shedskin', 'templates')):
+    templates.extend(os.path.join(root, f) for f in files)
+print templates
+
 setup(
     name='shedskin',
     version='0.9.4',
@@ -37,5 +42,5 @@ setup(
         'shedskin': [
             'lib/*.cpp', 'lib/*.hpp', 'lib/builtin/*.cpp', 'lib/builtin/*.hpp',
             'lib/*.py', 'lib/os/*.cpp', 'lib/os/*.hpp', 'lib/os/*.py',
-            'FLAGS*', 'illegal']},
+            'FLAGS*', 'illegal'] + templates},
 )
