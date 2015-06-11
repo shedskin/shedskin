@@ -9,6 +9,7 @@ addons:
     apt:
         packages:
             - libgc-dev
+before_script: pip install --upgrade pip
 cache:
     - ccache
     - pip
