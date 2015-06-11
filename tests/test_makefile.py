@@ -4,9 +4,9 @@ import tempfile
 import unittest
 from distutils import sysconfig
 
-from config import GlobalInfo
-from makefile import generate_makefile
-from python import Module
+from shedskin.config import GlobalInfo
+from shedskin.makefile import generate_makefile
+from shedskin.python import Module
 
 
 class TestMakefile(unittest.TestCase):
@@ -39,7 +39,7 @@ class TestMakefile(unittest.TestCase):
 
             # Get the expected output
             filename = os.path.join(
-                'testdata', 'makefile_outputs',
+                'tests', 'testdata', 'makefile_outputs',
                 '%d.Makefile' % (hash(tuple(sorted(env.items()))) % 10000))
 
             with open(filename) as f:
@@ -47,10 +47,23 @@ class TestMakefile(unittest.TestCase):
 
             if output != expected_output:
                 import difflib
-                diff = '\n'.join(difflib.context_diff(
+                diff = "\n".join(difflib.context_diff(
                     output.splitlines(), expected_output.splitlines()))
-                print diff
-                raise ValueError('Generated Makefile was different')
+                print 'full diff:', diff
+                expected_diff = ["SHEDSKIN_LIBDIR", "CC=", "CCFLAGS=", "LFLAGS="]
+                def strip_expected_diff(line):
+                    for item in expected_diff:
+                        if item in line:
+                            return ""
+                    else:
+                        return item
+                output = map(strip_expected_diff, output.splitlines())
+                expected_output = map(strip_expected_diff, expected_output.splitlines())
+                diff = "\n".join(difflib.context_diff(
+                    output, expected_output))
+                print 'stripped diff:', diff
+                if diff:
+                    raise ValueError('Generated Makefile was different')
 
 
 if __name__ == '__main__':
