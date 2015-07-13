@@ -417,10 +417,10 @@ datetime *datetime::combine(date *d, time *t) {
 datetime *datetime::strptime(str *date_string, str *format) {
 #ifdef WIN32
 	struct tm t = {0, 0, 0, 1, 0, 0, 0, 1, -1};
-    char *e = __time__::strptime(date_string->unit.c_str(), format->unit.c_str(), &t);
+    char *e = __time__::strptime(date_string->c_str(), format->c_str(), &t);
 #else
 	struct tm t = {0, 0, 0, 1, 0, 0, 0, 1, -1, 0, 0};
-    char *e = ::strptime(date_string->unit.c_str(), format->unit.c_str(), &t);
+    char *e = ::strptime(date_string->c_str(), format->c_str(), &t);
 #endif
     if(!e)
         throw new ValueError(new str("time data did not match format:  data="+date_string->unit+" fmt="+format->unit));

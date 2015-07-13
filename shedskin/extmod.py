@@ -242,7 +242,7 @@ def do_extmod_method(gx, gv, func):
 
     # convert exceptions
     print >>gv.out, '    } catch (Exception *e) {'
-    print >>gv.out, '        PyErr_SetString(__to_py(e), ((e->message)?(e->message->unit.c_str()):""));'
+    print >>gv.out, '        PyErr_SetString(__to_py(e), ((e->message)?(e->message->c_str()):""));'
     print >>gv.out, '        return 0;'
     print >>gv.out, '    }'
     print >>gv.out, '}\n'
@@ -368,7 +368,7 @@ def do_extmod_class(gx, gv, cl):
         else:
             print >>gv.out, '        self->__ss_object->%s = __to_ss<%s>(value);' % (gv.cpp_name(var), typ)
         print >>gv.out, '    } catch (Exception *e) {'
-        print >>gv.out, '        PyErr_SetString(__to_py(e), ((e->message)?(e->message->unit.c_str()):""));'
+        print >>gv.out, '        PyErr_SetString(__to_py(e), ((e->message)?(e->message->c_str()):""));'
         print >>gv.out, '        return -1;'
         print >>gv.out, '    }'
 

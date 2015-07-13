@@ -22,6 +22,10 @@ str *str::__str__() { // weg?
     return this;
 }
 
+const char *str::c_str() const {
+    return this->unit.c_str();
+}
+
 str *str::__repr__() {
     std::stringstream ss;
     __GC_STRING sep = "\\\n\r\t";
@@ -309,7 +313,7 @@ list<str *> *str::split(str *sp, int max_splits) {
 
     } else { /* given separator (slightly different algorithm required)
               * (python is very inconsistent in this respect) */
-        const char *sep = sp->unit.c_str();
+        const char *sep = sp->c_str();
         int sep_size = sp->unit.size();
 
 #define next_separator(iter) s.find(sep, (iter))
@@ -786,7 +790,7 @@ str::str(PyObject *p) : hash(-1) {
 }
 
 PyObject *str::__to_py__() {
-    return PyString_FromStringAndSize(unit.c_str(), unit.size());
+    return PyString_FromStringAndSize(c_str(), unit.size());
 }
 #endif
 
