@@ -352,6 +352,9 @@ public:
 
     template<class U> str *join(U *);
 
+    /* functions pointing to the underlying C++ implementation */
+    const char *c_str() const;
+
     str *__str__();
     str *__repr__();
     str *__mul__(__ss_int n);

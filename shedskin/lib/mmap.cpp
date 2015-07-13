@@ -239,7 +239,7 @@ void *mmap::__init__(int __ss_fileno_, __ss_int length_, str *tagname_, __ss_int
     DWORD dwErr = 0;
     HANDLE fh = 0;
     size_t size = 0;
-    const char *tagname = tagname_ ? tagname_->unit.c_str() : 0;
+    const char *tagname = tagname_ ? tagname_->c_str() : 0;
     switch (access_)
     {
     case ACCESS_READ:

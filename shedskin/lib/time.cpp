@@ -219,7 +219,7 @@ str *strftime(str *format, struct_time* tuple) {
     do {
         size *= 2;
         buf = new char[size];
-        n = ::strftime(buf, size, format->unit.c_str(), time_tuple);
+        n = ::strftime(buf, size, format->c_str(), time_tuple);
     } while(n == 0);
     return new str(buf);
 }
@@ -885,11 +885,11 @@ struct_time *strptime(str *string, str *format) {
 #ifdef WIN32
     tm time_tuple = {0, 0, 0, 1, 0, 0, 0, 1, -1};
     /* XXX check if newer MinGW supports this */
-    if(!strptime(string->unit.c_str(), format->unit.c_str(), &time_tuple))
+    if(!strptime(string->c_str(), format->c_str(), &time_tuple))
         throw  new ValueError(new str("time data did not match format:  data="+string->unit+" fmt="+format->unit));
 #else
     tm time_tuple = {0, 0, 0, 1, 0, 0, 0, 1, -1, 0, 0};
-    if(!::strptime(string->unit.c_str(), format->unit.c_str(), &time_tuple))
+    if(!::strptime(string->c_str(), format->c_str(), &time_tuple))
         throw  new ValueError(new str("time data did not match format:  data="+string->unit+" fmt="+format->unit));
 #endif
     return tm2tuple(&time_tuple);

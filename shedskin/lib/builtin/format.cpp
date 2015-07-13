@@ -90,11 +90,11 @@ str *do_asprintf_str(const char *fmt, str *s, pyobj *a1, pyobj *a2) {
         std::replace(s->unit.begin(), s->unit.end(), '\0', ' ');
     }
     if(a2)
-        x = asprintf(&d, fmt, ((int)(((int_ *)a1)->unit)), ((int)(((int_ *)a2)->unit)), s->unit.c_str());
+        x = asprintf(&d, fmt, ((int)(((int_ *)a1)->unit)), ((int)(((int_ *)a2)->unit)), s->c_str());
     else if(a1)
-        x = asprintf(&d, fmt, ((int)(((int_ *)a1)->unit)), s->unit.c_str());
+        x = asprintf(&d, fmt, ((int)(((int_ *)a1)->unit)), s->c_str());
     else
-        x = asprintf(&d, fmt, s->unit.c_str());
+        x = asprintf(&d, fmt, s->c_str());
     if(nullchars) {
         for(int i=0; i<x && i<len; i++)
             if(old_s->unit[i] == '\0')
@@ -324,7 +324,7 @@ void print(int n, file *f, str *end, str *sep, ...) {
         f->write(end);
     }
     else 
-        printf("%s%s", s->unit.c_str(), end->unit.c_str());
+        printf("%s%s", s->c_str(), end->c_str());
 }
 
 void print2(file *f, int comma, int n, ...) {

@@ -489,7 +489,7 @@ match_object *re_object::__exec(str *subj, __ss_int pos, __ss_int endpos, __ss_i
     r = pcre_exec(
         compiled_pattern,
         study_info,
-        subj->unit.c_str(),
+        subj->c_str(),
         nendpos + 1,
         pos,
         flags,
@@ -570,7 +570,7 @@ re_object *compile(str *pat, __ss_int flags)
 
     //attempt a compilation
     cpat = pcre_compile(
-        pat->unit.c_str(),
+        pat->c_str(),
         options,
         (const char **)&errmsg,
         &erroff,
