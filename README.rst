@@ -1,5 +1,7 @@
 .. image:: https://img.shields.io/travis/shedskin/shedskin.svg
     :target: https://travis-ci.org/shedskin/shedskin
+.. image:: http://img.shields.io/badge/benchmarked%20by-asv-green.svg?style=flat
+    :target: http://shedskin.github.io/benchmarks
 
 =========
 Shed Skin
