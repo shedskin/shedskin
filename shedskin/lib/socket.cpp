@@ -416,7 +416,7 @@ int socket::send(const char *s, size_t len, int flags)
 }
 
 __ss_int socket::send(str *string, __ss_int flags) {
-    return send( string->unit.data(), string->unit.size(), flags );
+    return send( string->unit.data(), string->size(), flags );
 }
 
 __ss_int socket::sendall(str *string, __ss_int flags) {

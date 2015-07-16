@@ -365,6 +365,7 @@ public:
 
     /* functions pointing to the underlying C++ implementation */
     const char *c_str() const;
+    const int size() const;
 
     str *__str__();
     str *__repr__();

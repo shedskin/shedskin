@@ -50,7 +50,7 @@ int __fmtpos(str *fmt) {
 int __fmtpos2(str *fmt) {
     unsigned int i = 0;
     while((i = fmt->unit.find('%', i)) != -1) {
-        if(i != fmt->unit.size()-1) {
+        if(i != fmt->size()-1) {
             char nextchar = fmt->unit[i+1];
             if(nextchar == '%')
                 i++;
@@ -83,7 +83,7 @@ str *do_asprintf_str(const char *fmt, str *s, pyobj *a1, pyobj *a2) {
     int x;
     str *r;
     int nullchars = (s->unit.find('\0') != -1); /* XXX %6.s */
-    ssize_t len = s->unit.size();
+    ssize_t len = s->size();
     str *old_s = s;
     if(nullchars) {
         s = new str(s->unit);
@@ -138,7 +138,7 @@ void __modfill(str **fmt, pyobj *t, str **s, pyobj *a1, pyobj *a2) {
             add->unit += ".0";
     }
     *s = (*s)->__add__(add);
-    *fmt = new str((*fmt)->unit.substr(j+1, (*fmt)->unit.size()-j-1));
+    *fmt = new str((*fmt)->unit.substr(j+1, (*fmt)->size()-j-1));
 }
 
 pyobj *modgetitem(list<pyobj *> *vals, int i) {
