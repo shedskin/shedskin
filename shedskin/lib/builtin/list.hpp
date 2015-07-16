@@ -336,11 +336,11 @@ template<class T> str *list<T>::__repr__() {
     str *r = new str("[");
     int len = this->__len__();
     for(int i = 0; i<len;i++) {
-        r->unit += repr(units[i])->unit;
+        *r += repr(units[i])->c_str();
         if (i<len-1)
-            r->unit += ", ";
+            *r += ", ";
     }
-    r->unit += "]";
+    *r += "]";
     return r;
 }
 

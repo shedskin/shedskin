@@ -74,13 +74,13 @@ template<class T> T tuple2<T, T>::__getitem__(__ss_int i) {
 template<class T> str *tuple2<T, T>::__repr__() {
     str *r = new str("(");
     for(int i = 0; i<this->__len__();i++) {
-        r->unit += repr(this->units[i])->unit;
+        *r += repr(this->units[i])->c_str();
         if(this->__len__() == 1 )
-            r->unit += ",";
+            *r += ",";
         if(i<this->__len__()-1)
-            r->unit += ", ";
+            *r += ", ";
     }
-    r->unit += ")";
+    *r += ")";
     return r;
 }
 

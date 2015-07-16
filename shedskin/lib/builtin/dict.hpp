@@ -548,18 +548,20 @@ template <class K, class V> void dict<K,V>::resize(int minused)
 template<class K, class V> str *dict<K,V>::__repr__() {
     str *r = new str("{");
     dictentry<K,V> *entry;
-    
+
     int i = __len__();
     __ss_int pos = 0;
 
     while (next(&pos, &entry)) {
 		--i;
-        r->unit += repr(entry->key)->unit + ": " + repr(entry->value)->unit;
+        *r += repr(entry->key)->c_str();
+        *r += ": ";
+        *r += repr(entry->value)->c_str();
         if( i > 0 )
-           r->unit += ", ";
+            *r += ", ";
     }
 
-    r->unit += "}";
+    r = *r + "}";
     return r;
 }
 

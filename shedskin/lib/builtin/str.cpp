@@ -73,6 +73,24 @@ __ss_bool str::__contains__(str *s) {
     return __mbool(unit.find(s->unit) != std::string::npos);
 }
 
+str *str::operator+ (const char *rhs) {
+    str *ret = new str(this->unit + rhs);
+    return ret;
+}
+
+str *str::operator+ (const char &rhs) {
+    str *ret = new str(this->unit + rhs);
+    return ret;
+}
+
+void str::operator+= (const char *rhs) {
+    this->unit += rhs;
+}
+
+void str::operator+= (const char &rhs) {
+    this->unit += rhs;
+}
+
 __ss_bool str::__ctype_function(int (*cfunc)(int))
 {
   int i, l = unit.size();
