@@ -43,7 +43,7 @@ void *StringI::seek(__ss_int i, __ss_int w) {
 void *StringI::write(str *data) {
     __check_closed();
     if(data) {
-        const size_t size = data->unit.size();
+        const size_t size = data->size();
         s->unit.insert(pos, data->unit);
         pos += size;
         s->unit.erase(pos, size);

@@ -13,11 +13,11 @@ inline str *str::__getfast__(__ss_int i) {
 }
 
 inline __ss_int str::__len__() {
-    return unit.size();
+    return size();
 }
 
 inline bool str::for_in_has_next(size_t i) {
-    return i < unit.size(); /* XXX opt end cond */
+    return i < size(); /* XXX opt end cond */
 }
 
 inline str *str::for_in_next(size_t &i) {
@@ -34,12 +34,12 @@ template <class U> str *str::join(U *iter) {
     total = 0;
     FOR_IN(e,iter,1,2,3)
         __join_cache->units.push_back(e);
-        sz = e->unit.size();
+        sz = e->size();
         if(sz != 1)
             only_ones = false;
         total += sz;
     END_FOR
-    int unitsize = unit.size();
+    int unitsize = size();
     int elems = len(__join_cache);
     if(elems==1)
         return __join_cache->units[0];
@@ -56,7 +56,7 @@ template <class U> str *str::join(U *iter) {
         int k = 0;
         for(int m = 0; m<elems; m++) {
             str *t = __join_cache->units[m];
-            tsz = t->unit.size();
+            tsz = t->size();
             if (tsz == 1)
                 s->unit[k] = t->unit[0];
             else
@@ -66,7 +66,7 @@ template <class U> str *str::join(U *iter) {
                 if (unitsize==1)
                     s->unit[k] = unit[0];
                 else
-                    memcpy((void *)(s->unit.data()+k), unit.data(), unit.size());
+                    memcpy((void *)(s->unit.data()+k), unit.data(), size());
                 k += unitsize;
             }
         }

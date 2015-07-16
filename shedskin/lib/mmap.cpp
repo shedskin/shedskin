@@ -627,7 +627,7 @@ __ss_int mmap::tell()
 void *mmap::write(str *string)
 {
     __raise_if_closed_or_not_writable();
-    size_t length = string->unit.size();
+    size_t length = string->size();
     if (m_position + length > m_end)
     {
         throw new ValueError(const_14);
@@ -641,7 +641,7 @@ void *mmap::write(str *string)
 void *mmap::write_byte(str *string)
 {
     __raise_if_closed_or_not_writable();
-    if (string == 0 or string->unit.size() != 1)
+    if (string == 0 or string->size() != 1)
     {
         throw new ValueError(const_8);
     }
@@ -656,7 +656,7 @@ void *mmap::write_byte(str *string)
 __ss_bool mmap::__contains__(str *string)
 {
     __raise_if_closed_or_not_readable();
-    if (string == 0 or string->unit.size() != 1)
+    if (string == 0 or string->size() != 1)
     {
         throw new ValueError(const_8);
     }
@@ -685,7 +685,7 @@ void *mmap::__setitem__(__ss_int index, str *character)
 {
     __raise_if_closed_or_not_writable();
     size_t id = __subscript(index);
-    if (character->unit.size() != 1)
+    if (character->size() != 1)
     {
         throw new IndexError(const_8);
     }

@@ -49,7 +49,7 @@ file *open(str *name, str *flags) {
 void *file::write(str *s) {
     __check_closed();
     if(f) {
-        size_t size = s->unit.size();
+        size_t size = s->size();
         if(FWRITE(s->unit.data(), 1, size, f) != size and __error())
             throw new IOError();
     }

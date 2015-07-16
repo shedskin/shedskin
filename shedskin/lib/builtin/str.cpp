@@ -26,6 +26,10 @@ const char *str::c_str() const {
     return this->unit.c_str();
 }
 
+const int str::size() const {
+    return this->unit.size();
+}
+
 str *str::__repr__() {
     std::stringstream ss;
     __GC_STRING sep = "\\\n\r\t";
@@ -42,7 +46,7 @@ str *str::__repr__() {
         quote = "\"";
 
     ss << quote;
-    for(unsigned int i=0; i<unit.size(); i++)
+    for(unsigned int i=0; i<size(); i++)
     {
         char c = unit[i];
         int k;
@@ -93,7 +97,7 @@ void str::operator+= (const char &rhs) {
 
 __ss_bool str::__ctype_function(int (*cfunc)(int))
 {
-  int i, l = unit.size();
+  int i, l = size();
   if(!l)
       return False;
 
@@ -103,7 +107,7 @@ __ss_bool str::__ctype_function(int (*cfunc)(int))
   return True;
 }
 
-__ss_bool str::isspace() { return __mbool(unit.size() && (unit.find_first_not_of(ws) == std::string::npos)); }
+__ss_bool str::isspace() { return __mbool(size() && (unit.find_first_not_of(ws) == std::string::npos)); }
 __ss_bool str::isdigit() { return __ctype_function(&::isdigit); }
 __ss_bool str::isalpha() { return __ctype_function(&::isalpha); }
 __ss_bool str::isalnum() { return __ctype_function(&::isalnum); }
@@ -146,7 +150,7 @@ str *str::lstrip(str *chars) {
     int first = unit.find_first_not_of(remove);
     if( first == -1 )
         return new str("");
-    return new str(unit.substr(first,unit.size()-first));
+    return new str(unit.substr(first,size()-first));
 }
 
 
@@ -180,7 +184,7 @@ list<str *> *str::rsplit(str *sep, int maxsep)
     int i, j, curi, tslen;
 
     curi = 0;
-    i = j = unit.size() - 1;
+    i = j = size() - 1;
 
     //split by whitespace
     if(!sep)
@@ -238,7 +242,7 @@ __ss_bool str::istitle()
 {
     int i, len;
 
-    len = unit.size();
+    len = size();
     if(!len)
         return False;
 
@@ -281,7 +285,7 @@ list<str *> *str::splitlines(int keepends)
     }
     while(i >= 0);
 
-    if(j != unit.size()) r->append(new str(unit.substr(j)));
+    if(j != size()) r->append(new str(unit.substr(j)));
 
     return r;
 }
@@ -332,7 +336,7 @@ list<str *> *str::split(str *sp, int max_splits) {
     } else { /* given separator (slightly different algorithm required)
               * (python is very inconsistent in this respect) */
         const char *sep = sp->c_str();
-        int sep_size = sp->unit.size();
+        int sep_size = sp->size();
 
 #define next_separator(iter) s.find(sep, (iter))
 #define skip_separator(iter) ((iter + sep_size) > s.size()? -1 : (iter + sep_size))
@@ -377,7 +381,7 @@ str *str::translate(str *table, str *delchars) {
 
     str *newstr = new str();
 
-    int self_size = unit.size();
+    int self_size = size();
     for(int i = 0; i < self_size; i++) {
         char c = unit[i];
         if(!delchars || delchars->unit.find(c) == std::string::npos)
@@ -428,8 +432,8 @@ __ss_int str::__cmp__(pyobj *p) {
 
 __ss_bool str::__eq__(pyobj *p) {
     str *q = (str *)p;
-    size_t len = unit.size();
-    if(len != q->unit.size() or (hash != -1 and q->hash != -1 and hash != q->hash))
+    size_t len = size();
+    if(len != q->size() or (hash != -1 and q->hash != -1 and hash != q->hash))
         return False;
     return __mbool(memcmp(unit.data(), q->unit.data(), len) == 0);
 }
@@ -438,7 +442,7 @@ str *str::__mul__(__ss_int n) { /* optimize */
     str *r = new str();
     if(n<=0) return r;
     __GC_STRING &s = r->unit;
-    __ss_int ulen = unit.size();
+    __ss_int ulen = size();
 
     if(ulen == 1)
        r->unit = __GC_STRING(n, unit[0]);
@@ -539,7 +543,7 @@ long str::__hash__() {
 str *str::__add__(str *b) {
     str *s = new str();
 
-    s->unit.reserve(unit.size()+b->unit.size());
+    s->unit.reserve(size()+b->size());
     s->unit.append(unit);
     s->unit.append(b->unit);
 
@@ -551,9 +555,9 @@ str *str::__iadd__(str *b) {
 
 str *__add_strs(int, str *a, str *b, str *c) {
     str *result = new str();
-    int asize = a->unit.size();
-    int bsize = b->unit.size();
-    int csize = c->unit.size();
+    int asize = a->size();
+    int bsize = b->size();
+    int csize = c->size();
     if(asize == 1 && bsize == 1 && csize == 1) {
         result->unit.resize(3);
         result->unit[0] = a->unit[0];
@@ -573,10 +577,10 @@ str *__add_strs(int, str *a, str *b, str *c) {
 
 str *__add_strs(int, str *a, str *b, str *c, str *d) {
     str *result = new str();
-    int asize = a->unit.size();
-    int bsize = b->unit.size();
-    int csize = c->unit.size();
-    int dsize = d->unit.size();
+    int asize = a->size();
+    int bsize = b->size();
+    int csize = c->size();
+    int dsize = d->size();
     if(asize == 1 && bsize == 1 && csize == 1 && dsize == 1) {
         result->unit.resize(4);
         result->unit[0] = a->unit[0];
@@ -599,11 +603,11 @@ str *__add_strs(int, str *a, str *b, str *c, str *d) {
 
 str *__add_strs(int, str *a, str *b, str *c, str *d, str *e) {
     str *result = new str();
-    int asize = a->unit.size();
-    int bsize = b->unit.size();
-    int csize = c->unit.size();
-    int dsize = d->unit.size();
-    int esize = e->unit.size();
+    int asize = a->size();
+    int bsize = b->size();
+    int csize = c->size();
+    int dsize = d->size();
+    int esize = e->size();
     if(asize == 1 && bsize == 1 && csize == 1 && dsize == 1 && esize == 1) {
         result->unit.resize(5);
         result->unit[0] = a->unit[0];
@@ -648,8 +652,8 @@ str *__add_strs(int n, ...) {
     for(int i=0; i<n; i++) {
         str *s = va_arg(ap, str *);
 
-        memcpy((void *)(result->unit.data()+pos), s->unit.data(), s->unit.size());
-        pos += s->unit.size();
+        memcpy((void *)(result->unit.data()+pos), s->unit.data(), s->size());
+        pos += s->size();
     }
     va_end(ap);
 
@@ -657,7 +661,7 @@ str *__add_strs(int n, ...) {
 }
 
 str *str::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
-    int len = unit.size();
+    int len = size();
     slicenr(x, l, u, s, len);
     if(s == 1)
         return new str(unit.data()+l, u-l);
@@ -683,10 +687,10 @@ int str::__fixstart(int a, int b) {
     return a+b;
 }
 
-int str::find(str *s, int a) { return __fixstart(unit.substr(a, unit.size()-a).find(s->unit), a); }
+int str::find(str *s, int a) { return __fixstart(unit.substr(a, size()-a).find(s->unit), a); }
 int str::find(str *s, int a, int b) { return __fixstart(unit.substr(a, b-a).find(s->unit), a); }
 
-int str::rfind(str *s, int a) { return __fixstart(unit.substr(a, unit.size()-a).rfind(s->unit), a); }
+int str::rfind(str *s, int a) { return __fixstart(unit.substr(a, size()-a).rfind(s->unit), a); }
 int str::rfind(str *s, int a, int b) { return __fixstart(unit.substr(a, b-a).rfind(s->unit), a); }
 
 int str::__checkneg(int i) {
@@ -743,8 +747,8 @@ __ss_bool str::endswith(str *s, __ss_int start, __ss_int end) {
 str *str::replace(str *a, str *b, int c) {
     __GC_STRING s = unit;
     int i, j, p;
-    int asize = a->unit.size();
-    int bsize = b->unit.size();
+    int asize = a->size();
+    int bsize = b->size();
     j = p = 0;
     while( ((c==-1) || (j++ != c)) && (i = s.find(a->unit, p)) != -1 ) {
       s.replace(i, asize, b->unit);
@@ -754,7 +758,7 @@ str *str::replace(str *a, str *b, int c) {
 }
 
 str *str::upper() {
-    if(unit.size() == 1)
+    if(size() == 1)
         return __char_cache[((unsigned char)(::toupper(unit[0])))];
 
     str *toReturn = new str(*this);
@@ -764,7 +768,7 @@ str *str::upper() {
 }
 
 str *str::lower() {
-    if(unit.size() == 1)
+    if(size() == 1)
         return __char_cache[((unsigned char)(::tolower(unit[0])))];
 
     str *toReturn = new str(*this);
@@ -776,7 +780,7 @@ str *str::lower() {
 str *str::title() {
     str *r = new str(unit);
     bool up = true;
-    size_t len = this->unit.size();
+    size_t len = this->size();
     for(size_t i=0; i<len; i++) {
         char c = this->unit[i];
         if(!::isalpha(c))
@@ -808,7 +812,7 @@ str::str(PyObject *p) : hash(-1) {
 }
 
 PyObject *str::__to_py__() {
-    return PyString_FromStringAndSize(c_str(), unit.size());
+    return PyString_FromStringAndSize(c_str(), size());
 }
 #endif
 
