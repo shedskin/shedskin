@@ -366,6 +366,8 @@ public:
     /* functions pointing to the underlying C++ implementation */
     const char *c_str() const;
     const int size() const;
+    const int find(const char c, int a=0) const;
+    const int find(const char *c, int a=0) const;
 
     str *__str__();
     str *__repr__();
