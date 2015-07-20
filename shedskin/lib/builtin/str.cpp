@@ -30,14 +30,22 @@ const int str::size() const {
     return this->unit.size();
 }
 
+const int str::find(const char c, int a) const {
+    return this->unit.find(c, a);
+}
+
+const int str::find(const char *c, int a) const {
+    return this->unit.find(c, a);
+}
+
 str *str::__repr__() {
     std::stringstream ss;
     __GC_STRING sep = "\\\n\r\t";
     __GC_STRING let = "\\nrt";
 
     const char *quote = "'";
-    int hasq = unit.find("'");
-    int hasd = unit.find("\"");
+    int hasq = find('\'');
+    int hasd = find('\"');
 
     if (hasq != -1 && hasd != -1) {
         sep += "'"; let += "'";
@@ -74,7 +82,7 @@ __ss_int str::__int__() {
 }
 
 __ss_bool str::__contains__(str *s) {
-    return __mbool(unit.find(s->unit) != std::string::npos);
+    return __mbool(find(s) != std::string::npos);
 }
 
 str *str::operator+ (const char *rhs) {
@@ -159,7 +167,7 @@ tuple2<str *, str *> *str::partition(str *sep)
 {
     int i;
 
-    i = unit.find(sep->unit);
+    i = find(sep->c_str());
     if(i != -1)
         return new tuple2<str *, str *>(3, new str(unit.substr(0, i)), new str(sep->unit), new str(unit.substr(i + sep->unit.length())));
     else
@@ -384,7 +392,7 @@ str *str::translate(str *table, str *delchars) {
     int self_size = size();
     for(int i = 0; i < self_size; i++) {
         char c = unit[i];
-        if(!delchars || delchars->unit.find(c) == std::string::npos)
+        if(!delchars || delchars->find(c) == std::string::npos)
             newstr->unit.push_back(table->unit[(unsigned char)c]);
     }
 
@@ -711,7 +719,7 @@ __ss_int str::count(str *s, __ss_int start, __ss_int end) {
     slicenr(7, start, end, one, __len__());
 
     i = start; count = 0;
-    while( ((i = unit.find(s->unit, i)) != -1) && (i <= end-len(s)) )
+    while( ((i = find(s->c_str(), i)) != -1) && (i <= end-len(s)) )
     {
         i += len(s);
         count++;

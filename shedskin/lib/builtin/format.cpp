@@ -41,7 +41,7 @@ int asprintf(char **ret, const char *format, ...)
 #endif
 
 int __fmtpos(str *fmt) {
-    int i = fmt->unit.find('%');
+    int i = fmt->find('%');
     if(i == -1)
         return -1;
     return fmt->unit.find_first_not_of(__fmtchars, i+1);
@@ -49,7 +49,7 @@ int __fmtpos(str *fmt) {
 
 int __fmtpos2(str *fmt) {
     unsigned int i = 0;
-    while((i = fmt->unit.find('%', i)) != -1) {
+    while((i = fmt->find('%', i)) != -1) {
         if(i != fmt->size()-1) {
             char nextchar = fmt->unit[i+1];
             if(nextchar == '%')
@@ -82,7 +82,7 @@ str *do_asprintf_str(const char *fmt, str *s, pyobj *a1, pyobj *a2) {
     char *d;
     int x;
     str *r;
-    int nullchars = (s->unit.find('\0') != -1); /* XXX %6.s */
+    int nullchars = (s->find('\0') != -1); /* XXX %6.s */
     ssize_t len = s->size();
     str *old_s = s;
     if(nullchars) {
@@ -107,7 +107,7 @@ str *do_asprintf_str(const char *fmt, str *s, pyobj *a1, pyobj *a2) {
 
 void __modfill(str **fmt, pyobj *t, str **s, pyobj *a1, pyobj *a2) {
     char c;
-    int i = (*fmt)->unit.find('%');
+    int i = (*fmt)->find('%');
     int j = __fmtpos(*fmt);
     *s = new str((*s)->unit + (*fmt)->unit.substr(0, i));
     str *add;
@@ -155,7 +155,7 @@ str *__mod4(str *fmts, list<pyobj *> *vals) {
     while((j = __fmtpos(fmt)) != -1) {
         pyobj *p, *a1, *a2;
 
-        int perc_pos = fmt->unit.find('%');
+        int perc_pos = fmt->find('%');
         int asterisks = std::count(fmt->unit.begin()+perc_pos+1, fmt->unit.begin()+j, '*');
         a1 = a2 = NULL;
         if(asterisks==1) {
