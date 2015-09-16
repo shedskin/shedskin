@@ -490,9 +490,9 @@ template <class B> str *filter(B (*func)(str *), str *a) {
         if(func) {
             c = __char_cache[((unsigned char)e)];
             if(___bool((*func)(c)))
-                result->unit.push_back(e);
+                result->push_back(e);
         } else 
-            result->unit.push_back(e);
+            result->push_back(e);
     }
     return result;
 }
