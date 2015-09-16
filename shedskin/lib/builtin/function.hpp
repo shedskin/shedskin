@@ -486,13 +486,13 @@ template <class B> str *filter(B (*func)(str *), str *a) {
     char e;
     str *c;
     for(int i=0; i<size; i++) {
-        e = a->unit[i];
+        e = a->c_str()[i];
         if(func) {
             c = __char_cache[((unsigned char)e)];
             if(___bool((*func)(c)))
-                result->push_back(e);
-        } else 
-            result->push_back(e);
+                *result += e;
+        } else
+            *result += e;
     }
     return result;
 }
@@ -539,7 +539,7 @@ inline __ss_int ord(str *s) {
     size_t len = s->size();
     if(len != 1)
         __throw_ord_exc(len);
-    return (unsigned char)(s->unit[0]);
+    return (unsigned char)(s->c_str()[0]);
 }
 
 static void __throw_chr_out_of_range() { /* improve inlining */
