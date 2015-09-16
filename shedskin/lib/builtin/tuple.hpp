@@ -245,7 +245,11 @@ template<class A, class B> long tuple2<A, B>::__hash__() {
 }
 
 template<class A, class B> str *tuple2<A, B>::__repr__() {
-    __GC_STRING s = "("+repr(first)->unit+", "+repr(second)->unit+")";
+    __GC_STRING s = "(";
+    s += repr(first)->c_str();
+    s += ", ";
+    s += repr(second)->c_str();
+    s += ")";
     return new str(s);
 }
 

@@ -393,7 +393,7 @@ str *str::translate(str *table, str *delchars) {
     for(int i = 0; i < self_size; i++) {
         char c = unit[i];
         if(!delchars || delchars->find(c) == std::string::npos)
-            newstr->push_back(table->unit[(unsigned char)c]);
+            *newstr += table->unit[(unsigned char)c];
     }
 
     return newstr;

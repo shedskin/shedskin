@@ -135,7 +135,7 @@ void __modfill(str **fmt, pyobj *t, str **s, pyobj *a1, pyobj *a2) {
         }
         add = do_asprintf((*fmt)->unit.substr(i, j+1-i).c_str(), ((float_ *)t)->unit, a1, a2);
         if(c == 'H' && ((float_ *)t)->unit-((int)(((float_ *)t)->unit)) == 0)
-            add->unit += ".0";
+            *add += ".0";
     }
     *s = (*s)->__add__(add);
     *fmt = new str((*fmt)->unit.substr(j+1, (*fmt)->size()-j-1));
@@ -150,7 +150,7 @@ pyobj *modgetitem(list<pyobj *> *vals, int i) {
 str *__mod4(str *fmts, list<pyobj *> *vals) {
     int i, j;
     str *r = new str();
-    str *fmt = new str(fmts->unit);
+    str *fmt = new str(fmts->c_str());
     i = 0;
     while((j = __fmtpos(fmt)) != -1) {
         pyobj *p, *a1, *a2;
@@ -165,7 +165,7 @@ str *__mod4(str *fmts, list<pyobj *> *vals) {
             a2 = modgetitem(vals, i++);
         }
 
-        char c = fmt->unit[j];
+        char c = fmt->c_str()[j];
         if(c != '%')
             p = modgetitem(vals, i++);
     
@@ -204,7 +204,7 @@ str *__mod4(str *fmts, list<pyobj *> *vals) {
     if(i!=len(vals))
         throw new TypeError(new str("not all arguments converted during string formatting"));
 
-    r->unit += fmt->unit;
+    *r += fmt->c_str();
     return r;
 }
 
@@ -339,10 +339,10 @@ void print2(file *f, int comma, int n, ...) {
     __file_options *p_opt = &f->options;
     str *s = __mod5(__print_cache, sp);
     if(len(s)) {
-        if(p_opt->space && (!isspace(p_opt->lastchar) || p_opt->lastchar==' ') && s->unit[0] != '\n') 
+        if(p_opt->space && (!isspace(p_opt->lastchar) || p_opt->lastchar==' ') && s->c_str()[0] != '\n')
             f->write(sp); /* space */
         f->write(s);
-        p_opt->lastchar = s->unit[len(s)-1];
+        p_opt->lastchar = s->c_str()[len(s)-1];
     }
     else if (comma)
         p_opt->lastchar = ' ';
