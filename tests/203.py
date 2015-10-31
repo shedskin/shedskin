@@ -1,4 +1,4 @@
-#http://code.google.com/p/shedskin/issues/detail?id=191
+#https://github.com/shedskin/shedskin/issues/191
 
 import os
 

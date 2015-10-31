@@ -33,7 +33,7 @@ setup(
     name='shedskin',
     version='0.9.4',
     description=description,
-    url='http://code.google.com/p/shedskin/',
+    url='https://shedskin.github.io/',
     scripts=['scripts/shedskin'],
     cmdclass={'test': run_tests},
     install_requires=['blessings', 'progressbar2', 'jinja2', 'six'],
