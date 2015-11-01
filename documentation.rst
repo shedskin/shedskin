@@ -265,22 +265,110 @@ If the PCRE library is not available via your package manager, the following is 
 Compiling a standalone program
 ------------------------------
 
-.. TODO
+Under Windows, first execute (double-click) the ``init.bat`` file in the directory where you installed Shed Skin.
+
+To compile the following simple test program, called ``test.py``:
+
+::
+
+  print 'hello, world!'
+
+Type:
+
+::
+
+  shedskin test
+
+This will create two C++ files, called ``test.cpp`` and ``test.hpp``, as well as a ``Makefile``.
+
+To create an executable file, called ``test`` (or ``test.exe``), type:
+
+::
+
+  make
 
 Generating an extension module
 ------------------------------
 
-.. TODO
+To compile the following program, called ``simple_module.py``, as an extension module:
+
+::
+
+  # simple_module.py
+
+  def func1(x):
+      return x+1
+
+  def func2(n):
+      d = dict([(i, i*i)  for i in range(n)])
+      return d
+
+  if __name__ == '__main__':
+      print func1(5)
+      print func2(10)
+
+Type:
+
+::
+
+  shedskin -e simple_module
+  make
+
+For 'make' to succeed on a non-Windows system, make sure to have the Python development files installed (under **Debian**, install ``python-dev``; under **Fedora**, install ``python-devel``).
+
+Note that for type inference to be possible, the module must (indirectly) call its own functions. This is accomplished in the example by putting the function calls under the :code:`if __name__=='__main__'` statement, so that they are not executed when the module is imported. Functions only have to be called indirectly, so if func2 calls func1, the call to func1 can be omitted.
+
+The extension module can now be simply imported and used as usual:
+
+::
+
+  >>> from simple_module import func1, func2
+  >>> func1(5)
+  6
+  >>> func2(10)
+  {0: 0, 1: 1, 2: 4, 3: 9, 4: 16, 5: 25, 6: 36, 7: 49, 8: 64, 9: 81}
 
 Limitations
 ~~~~~~~~~~~
 
-.. TODO
+There are some important differences between using the compiled extension module and the original.
+
+#. Only builtin scalar and container types (:code:`int`, :code:`float`, :code:`complex`, :code:`bool`, :code:`str`, :code:`list`, :code:`tuple`, :code:`dict`, :code:`set`) as well as :code:`None` and instances of user-defined classes can be passed/returned. So for instance, anonymous functions and iterators are currently not supported.
+#. Builtin objects are completely converted for each call/return from Shed Skin to CPython types and back, including their contents. This means you cannot change CPython builtin objects from the Shed Skin side and vice versa, and conversion may be slow. Instances of user-defined classes can be passed/returned without any conversion, and changed from either side.
+#. Global variables are converted once, at initialization time, from Shed Skin to CPython. This means that the value of the CPython version and Shed Skin version can change independently. This problem can be avoided by only using constant globals, or by adding getter/setter functions.
+#. Multiple (interacting) extension modules are not supported at the moment. Also, importing and using the Python version of a module and the compiled version at the same time may not work.
 
 Numpy integration
 ~~~~~~~~~~~~~~~~~
 
-.. TODO
+Shed Skin does not currently come with direct support for Numpy. It is possible however to pass a Numpy array to a Shed Skin compiled extension module as a list, using its :code:`tolist` method. Note that this is very inefficient (see above), so it is only useful if a relatively large amount of time is spent inside the extension module. Consider the following example:
+
+::
+
+  # simple_module2.py
+
+  def my_sum(a):
+      """ compute sum of elements in list of lists (matrix) """
+      h = len(a) # number of rows in matrix
+      w = len(a[0]) # number of columns
+      s = 0.0
+      for i in range(h):
+          for j in range(w):
+              s += a[i][j]
+      return s
+
+  if __name__ == '__main__':
+      print my_sum([[1.0, 2.0], [3.0, 4.0]])
+
+After compiling this module as an extension module with Shed Skin, we can pass in a Numpy array as follows:
+
+::
+
+  >>> import numpy
+  >>> import simple_module2
+  >>> a = numpy.array(([1.0, 2.0], [3.0, 4.0]))
+  >>> simple_module2.my_sum(a.tolist())
+  10.0
 
 Distributing binaries
 ---------------------
@@ -288,12 +376,28 @@ Distributing binaries
 Windows
 ~~~~~~~
 
-.. TODO
+To use a generated Windows binary on another system, or to start it without having to double-click ``init.bat``, place the following files into the same directory as the binary:
+
+* ``shedskin-0.9\shedskin\gc.dll``
+* ``shedskin-0.9\shedskin-libpcre-0.dll``
+* ``shedskin-0.9\bin\libgcc_s_dw-1.dll``
+* ``shedskin-0.9\bin\libstdc++.dll``
 
 UNIX
 ~~~~
 
-.. TODO
+To use a generated binary on another system, make sure ``libgc`` and ``libpcre3`` are installed there. If they are not, and you cannot install them globally, you can place copies of these libraries into the same directory as the binary, using the following approach:
+
+::
+
+  $ ldd test
+  libgc.so.1 => /usr/lib/libgc.so.1
+  libpcre.so.3 => /lib/x86_64-linux-gnu/libpcre.so.3
+  $ cp /usr/lib/libgc.so.1 .
+  $ cp /lib/x86_64-linux-gnu/libpcre.so.3 .
+  $ LD_LIBRARY_PATH=. ./test
+
+Note that both systems have to be 32- or 64-bit for this to work. If not, Shed Skin must be installed on the other system, to recompile the binary.
 
 Multiprocessing
 ---------------
