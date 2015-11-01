@@ -481,7 +481,41 @@ Shed Skin reimplements the Python builtins with its own set of C++ classes. Thes
 Command-line options
 --------------------
 
-.. TODO
+The shedskin command can be given the following options:
+
+* :code:`-a` :code:`--ann`               Output annotated source code (``.ss.py``)
+* :code:`-b` :code:`--nobounds`          Disable bounds checking
+* :code:`-e` :code:`--extmod`            Generate extension module
+* :code:`-f` :code:`--flags`             Provide alternate Makefile flags
+* :code:`-g` :code:`--nogcwarns`         Disable runtime GC warnings
+* :code:`-l` :code:`--long`              Use long long ("64-bit") integers
+* :code:`-m` :code:`--makefile`          Specify alternate Makefile name
+* :code:`-n` :code:`--silent`            Silent mode, only show warnings
+* :code:`-o` :code:`--noassert`          Disable assert statements
+* :code:`-r` :code:`--random`            Use fast random number generator (:code:`rand()`)
+* :code:`-s` :code:`--strhash`           Use fast string hashing algorithm (murmur)
+* :code:`-w` :code:`--nowrap`            Disable wrap-around checking
+* :code:`-x` :code:`--traceback`         Print traceback for uncaught exceptions
+* :code:`-L` :code:`--lib`               Add a library directory
+
+For example, to compile the file ``test.py`` as an extension module, type
+
+::
+
+  shedskin –e test
+
+or
+
+::
+
+  shedskin ––extmod test.
+
+Using :code:`-b` or :code:`--nobounds` is also very common, as it disables out-of-bounds exceptions (:code:`IndexError`), which can have a large impact on performance.
+
+::
+
+  a = [1, 2, 3]
+  print a[5] # invalid index: out of bounds
 
 Performance tips and tricks
 ---------------------------
@@ -489,12 +523,73 @@ Performance tips and tricks
 Performance tips
 ~~~~~~~~~~~~~~~~
 
-.. TODO
+* Small memory allocations (e.g. creating a new tuple, list or class instance..) typically do not slow down Python programs by much. However, after compilation to C++, they can quickly become a bottleneck. This is because for each allocation, memory has to be requested from the system, the memory has to be garbage-collected, and many memory allocations are further likely to cause cache misses. The key to getting very good performance is often to reduce the number of small allocations, for example by rewriting a small list comprehension by a for loop or by avoiding intermediate tuples in some calculation.
+* But note that for the idiomatic :code:`for a, b in enumerate(..)`, :code:`for a, b in enumerate(..)` and :code:`for a, b in somedict.iteritems()`, the intermediate small objects are optimized away, and that 1-length strings are cached.
+* Several Python features (that may slow down generated code) are not always necessary, and can be turned off. See the section `Command-line options` for details. Turning off bounds checking is usually a very safe optimization, and can help a lot for indexing-heavy code.
+* Attribute access is faster in the generated code than indexing. For example, :code:`v.x * v.y * v.z` is faster than :code:`v[0] * v[1] * v[2]`.
+* Shed Skin takes the flags it sends to the C++ compiler from the :code:`FLAGS*` files in the Shed Skin installation directory. These flags can be modified, or overruled by creating a local file named ``FLAGS``.
+* When doing float-heavy calculations, it is not always necessary to follow exact IEEE floating-point specifications. Avoiding this by adding -ffast-math can sometimes greatly improve performance.
+* Profile-guided optimization can help to squeeze out even more performance. For a recent version of GCC, first compile and run the generated code with :code:`-fprofile-generate`, then with :code:`-fprofile-use`.
+* For best results, configure a recent version of the Boehm GC using :code:`CPPFLAGS="-O3 -march=native" ./configure --enable-cplusplus --enable-threads=pthreads --enable-thread-local-alloc --enable-large-config --enable-parallel-mark`. The last option allows the GC to take advantage of having multiple cores.
+* When optimizing, it is extremely useful to know exactly how much time is spent in each part of your program. The program `Gprof2Dot <https://github.com/jrfonseca/gprof2dot>`_ can be used to generate beautiful graphs for a stand-alone program, as well as the original Python code. The program `OProfile <http://oprofile.sourceforge.net/news/>`_ can be used to profile an extension module.
+
+To use Gprof2dot, download ``gprof2dot.py`` from the website, and install Graphviz. Then:
+
+::
+
+  shedskin program
+  make program_prof
+  ./program_prof
+  gprof program_prof | gprof2dot.py | dot -Tpng -ooutput.png
+
+To use OProfile, install it and use it as follows.
+
+::
+
+  shedskin -e extmod
+  make
+  sudo opcontrol --start
+  python main_program_that_imports_extmod
+  sudo opcontrol --shutdown
+  opreport -l extmod.so
 
 Tricks
 ~~~~~~
 
-.. TODO
+* The following two code fragments work the same, but only the second one is supported:
+
+::
+
+  statistics = {'nodes': 28, 'solutions': set()}
+
+  class statistics: pass
+  s = statistics(); s.nodes = 28; s.solutions = set()
+
+* The evaluation order of arguments to a function or print changes with translation to C++, so it's better not to depend on this:
+
+::
+
+  print 'hoei', raw_input() # raw_input is called before printing 'hoei'!
+
+* Tuples with different types of elements and length > 2 are currently not supported. It can however be useful to 'simulate' them:
+
+::
+
+  class mytuple:
+      def __init__(self, a, b, c):
+          self.a, self.b, self.c = a, b, c
+
+* Block comments surrounded by #{ and #} are ignored by Shed Skin. This can be used to comment out code that cannot be compiled. For example, the following will only produce a plot when run using CPython:
+
+::
+
+  print "x =", x
+  print "y =", y
+  #{
+  import pylab as pl
+  pl.plot(x, y)
+  pl.show()
+  #}
 
 How to help out in development
 ------------------------------
