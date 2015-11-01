@@ -19,12 +19,103 @@ At the moment, Shed Skin is compatible with Python versions 2.4 to 2.7, behaves 
 Typing restrictions
 -------------------
 
-.. TODO
+Shed Skin translates pure, but implicitly statically typed, Python programs into C++. The static typing restriction means that variables can only ever have a single, static type. So, for example,
+
+::
+
+  a = 1
+  a = '1' # bad
+
+is not allowed. However, as in C++, types can be abstract, so that for example,
+
+::
+
+  a = A()
+  a = B() # good
+
+where A and B have a common base class, is allowed.
+
+The typing restriction also means that the elements of some collection (list, set, etc.) cannot have different types (because their subtype must also be static). Thus:
+
+::
+
+  a = ['apple', 'b', 'c'] # good
+  b = (1, 2, 3) # good
+  c = [[10.3, -2.0], [1.5, 2.3], []] # good
+
+is allowed, but
+
+::
+
+  d = [1, 2.5, 'abc'] # bad
+  e = [3, [1, 2]] # bad
+  f = (0, 'abc', [1, 2, 3]) # bad
+
+is not allowed. Dictionary keys and values may be of different types:
+
+::
+
+  g = {'a': 1, 'b': 2, 'c': 3} # good
+  h = {'a': 1, 'b': 'hello', 'c': [1, 2, 3]} # bad
+
+In the current version of Shed Skin, mixed types are also permitted in tuples of length two:
+
+::
+
+  a = (1, [1]) # good
+
+In the future, mixed tuples up to a certain length will probably be allowed.
+
+None may only be mixed with non-scalar types (i.e., not with int, float, bool or complex):
+
+::
+
+  l = [1]
+  l = None # good
+
+  m = 1
+  m = None # bad
+
+  def fun(x = None): # bad: use a special value for x here, e.g. x = -1
+      pass
+  fun(1)
+
+Integers and floats can usually be mixed (the integers become floats). Shed Skin should complain in cases where they can't.
 
 Python subset restrictions
 --------------------------
 
-.. TODO
+Shed Skin will only ever support a subset of all Python features. The following common features are currently not supported:
+
+* :code:`eval`, :code:`getattr`, :code:`hasattr`, :code:`isinstance`, anything really dynamic
+* arbitrary-size arithmetic (integers become 32-bit (signed) by default on most architectures, see `Command-line options`_)
+* argument (un)packing (:code:`*args` and :code:`**kwargs`)
+* multiple inheritance
+* nested functions and classes
+* unicode
+* inheritance from builtins (excluding :code:`Exception` and :code:`object`)
+* overloading :code:`__iter__`, :code:`__call__`, :code:`__del__`
+* closures
+
+Some other features are currently only partially supported:
+
+* class attributes must always be accessed using a class identifier:
+
+::
+
+  self.class_attr # bad
+  SomeClass.class_attr # good
+  SomeClass.some_static_method() # good
+
+* function references can be passed around, but not method references or class references, and they cannot be contained:
+
+::
+
+  var = lambda x, y: x+y # good
+  var = some_func # good
+  var = self.some_method # bad, method reference
+  var = SomeClass # bad
+  [var] # bad, contained
 
 Library limitations
 -------------------
@@ -65,12 +156,12 @@ See `How to help out in development`_ on how to help improve or add to the set o
 Installation
 ------------
 
-.. TODO
+There are two types of downloads available: a self-extracting **Windows** installer and a **UNIX** tarball. But preferrably of course, Shed Skin is installed via your **GNU/Linux** package manager (Shed Skin is available in at least **Debian**, **Ubuntu**, **Fedora** and **Arch**).
 
 Windows
 ~~~~~~~
 
-.. TODO
+To install the **Windows** version, simply download and start it. If you use **ActivePython** or some other non-standard Python distribution, or **MingW**, please deinstall this first. Note also that the 64-bit version of Python seems to be lacking a file, so it's not possible to build extension modules. Please use the 32-bit version instead.
 
 UNIX
 ~~~~
@@ -78,17 +169,56 @@ UNIX
 Using a package manager
 ```````````````````````
 
-.. TODO
+Example command for when using Ubuntu:
+
+::
+
+  sudo apt-get install shedskin
 
 Manual installation
 ```````````````````
 
-.. TODO
+To manually install the UNIX tarball, take the following steps:
+
+* download and unpack tarball
+* run:
+
+::
+
+  sudo python setup.py install
 
 Dependencies
 ............
 
-.. TODO
+To compile and run programs produced by shedskin the following libraries are needed:
+
+* g++, the C++ compiler (version 4.2 or higher).
+* pcre development files
+* Python development files
+* Boehm garbage collection
+
+To install these libraries under Ubuntu, type:
+
+::
+
+  sudo apt-get install g++ libpcre++-dev python-all-dev libgc-dev
+
+If the Boehm garbage collector is not available via your package manager, the following is known to work. Download for example version 7.2alpha6 from the `website <http://www.hboehm.info/gc/>`__, unpack it, and install it as follows:
+
+::
+
+  ./configure --prefix=/usr/local --enable-threads=posix --enable-cplusplus --enable-thread-local-alloc --enable-large-config
+  make
+  make check
+  sudo make install
+
+If the PCRE library is not available via your package manager, the following is known to work. Download for example version 8.12 from the `website <http://www.pcre.org/>`__, unpack it, and build as follows:
+
+::
+
+  ./configure --prefix=/usr/local
+  make
+  sudo make install
 
 OSX
 ~~~
@@ -96,12 +226,41 @@ OSX
 Manual installation
 ```````````````````
 
-.. TODO
+To install the UNIX tarball on an **OSX** system, take the following steps:
+
+* download and unpack tarball
+* run:
+
+::
+
+  sudo python setup.py install
 
 Dependencies
 ............
 
-.. TODO
+To compile and run programs produced by shedskin the following libraries are needed:
+
+* g++, the C++ compiler (version 4.2 or higher; comes with the Apple XCode development environment?)
+* pcre development files
+* Python development files
+* Boehm garbage collection
+
+If the Boehm garbage collector is not available via your package manager, the following is known to work. Download for example version 7.2alpha6 from the `website <http://www.hboehm.info/gc/>`__, unpack it, and install it as follows:
+
+::
+
+  ./configure --prefix=/usr/local --enable-threads=posix --enable-cplusplus --enable-thread-local-alloc --enable-large-config
+  make
+  make check
+  sudo make install
+
+If the PCRE library is not available via your package manager, the following is known to work. Download for example version 8.12 from the `website <http://www.pcre.org/>`__, unpack it, and build as follows:
+
+::
+
+  ./configure --prefix=/usr/local
+  make
+  sudo make install
 
 Compiling a standalone program
 ------------------------------
