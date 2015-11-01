@@ -402,22 +402,81 @@ Note that both systems have to be 32- or 64-bit for this to work. If not, Shed S
 Multiprocessing
 ---------------
 
-.. TODO
+Suppose we have defined the following function in a file, called ``meuk.py``:
+
+::
+
+  def part_sum(start, end):
+      """ calculate partial sum """
+      sum = 0
+      for x in xrange(start, end):
+          if x % 2 == 0:
+              sum -= 1.0 / x
+          else:
+              sum += 1.0 / x
+      return sum
+
+  if __name__ == '__main__':
+      part_sum(1, 10)
+
+To compile this into an extension module, type:
+
+::
+
+  shedskin -e meuk
+  make
+
+To use the generated extension module with the :code:`multiprocessing` standard library module, simply add a pure-Python wrapper:
+
+::
+
+  from multiprocessing import Pool
+
+  def part_sum((start, end)):
+      import meuk
+      return meuk.part_sum(start, end)
+
+  pool = Pool(processes=2)
+  print sum(pool.map(part_sum, [(1,10000000), (10000001, 20000000)]))
 
 Calling C/C++ code
 ------------------
 
-.. TODO
+To call manually written C/C++ code, follow these steps:
+
+* Provide Shed Skin with enough information to perform type inference, by providing it with a *type model* of the C/C++ code. Suppose we wish to call a simple function that returns a list with the n smallest prime numbers larger than some number. The following type model, contained in a file called ``stuff.py``, is sufficient for Shed Skin to perform type inference:
+
+::
+
+  #stuff.py
+
+  def more_primes(n, nr=10):
+      return [1]
+
+* To actually perform type inference, create a test program, called ``test.py``, that uses the type model, and compile it:
+
+::
+
+  #test.py
+
+  import stuff
+  print stuff.more_primes(100)
+
+::
+
+  shedskin test
+
+* Besides ``test.py``, this also compiles ``stuff.py`` to C++. Now you can fill in manual C/C++ code in ``stuff.cpp``. To avoid that it is overwritten the next time ``test.py`` is compiled, move ``stuff.*`` to the Shed Skin ``lib/`` dir.
 
 Standard library
 ~~~~~~~~~~~~~~~~
 
-.. TODO
+By moving ``stuff.*`` to ``lib/``, we have in fact added support for an arbitrary library module to Shed Skin. Other programs compiled by Shed Skin can now import :code:`stuff` and use :code:`more_primes`. In fact, in the ``lib/`` directory, you can find type models and implementations for all supported modules. As you may notice, some have been partially converted to C++ using Shed Skin.
 
 Shed Skin types
 ~~~~~~~~~~~~~~~
 
-.. TODO
+Shed Skin reimplements the Python builtins with its own set of C++ classes. These have a similar interface to their Python counterparts, so they should be easy to use (provided you have some basic C++ knowledge.) See the class definitions in ``lib/builtin.hpp`` for details. If in doubt, convert some equivalent Python code to C++, and have a look at the result!
 
 Command-line options
 --------------------
