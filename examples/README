@@ -2,7 +2,7 @@
 
 shedskin -b (disable index-out-of-bounds checking) often improves performance. see the documentation for more performance tips:
 
-https://shedskin.github.io/docs/
+https://shedskin.readthedocs.org/
 
 if you know of another interesting test case, please mention it in the shedskin discussion group or to: mark.dufour@gmail.com.
 
