@@ -17,3 +17,11 @@ Documentation
    :maxdepth: 5
 
    documentation
+
+Frequently occurring discussions
+--------------------------------
+
+.. toctree::
+   :maxdepth: 5
+
+   fod
