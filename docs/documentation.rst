@@ -517,6 +517,8 @@ Using :code:`-b` or :code:`--nobounds` is also very common, as it disables out-o
   a = [1, 2, 3]
   print a[5] # invalid index: out of bounds
 
+.. _performance-tips:
+
 Performance tips and tricks
 ---------------------------
 
