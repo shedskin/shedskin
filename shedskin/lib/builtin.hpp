@@ -332,6 +332,7 @@ public:
 };
 
 class str : public pyseq<str *> {
+protected:
 public:
     __GC_STRING unit;
     long hash;
@@ -351,6 +352,22 @@ public:
     str *__add__(str *b);
 
     template<class U> str *join(U *);
+
+    /* operators */
+    //inline void operator+= (const char *c);
+    str *operator+ (const char *c);
+    str *operator+ (const char &c);
+    void operator+= (const char *c);
+    void operator+= (const char &c);
+    //str *operator+ (const char c);
+    //str *operator+ (str *c);
+    //str *operator+ (basic_string c);
+
+    /* functions pointing to the underlying C++ implementation */
+    const char *c_str() const;
+    const int size() const;
+    const int find(const char c, int a=0) const;
+    const int find(const char *c, int a=0) const;
 
     str *__str__();
     str *__repr__();

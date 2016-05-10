@@ -19,16 +19,16 @@ __ss_int __int(str *s, __ss_int base) {
     char *cp;
     __ss_int i;
 #ifdef __SS_LONG
-    i = strtoll(s->unit.c_str(), &cp, base);
+    i = strtoll(s->c_str(), &cp, base);
 #else
-    i = strtol(s->unit.c_str(), &cp, base);
+    i = strtol(s->c_str(), &cp, base);
 #endif
     if(*cp != '\0') {
         s = s->rstrip();
         #ifdef __SS_LONG
-            i = strtoll(s->unit.c_str(), &cp, base);
+            i = strtoll(s->c_str(), &cp, base);
         #else
-            i = strtol(s->unit.c_str(), &cp, base);
+            i = strtol(s->c_str(), &cp, base);
         #endif
         if(*cp != '\0')
             throw new ValueError(new str("invalid literal for int()"));
@@ -37,7 +37,7 @@ __ss_int __int(str *s, __ss_int base) {
 }
 
 template<> double __float(str *s) {
-    return strtod(s->unit.c_str(), NULL);
+    return strtod(s->c_str(), NULL);
 }
 
 template<> __ss_int id(__ss_int) { throw new TypeError(new str("'id' called with integer")); }

@@ -41,7 +41,7 @@ int asprintf(char **ret, const char *format, ...)
 #endif
 
 int __fmtpos(str *fmt) {
-    int i = fmt->unit.find('%');
+    int i = fmt->find('%');
     if(i == -1)
         return -1;
     return fmt->unit.find_first_not_of(__fmtchars, i+1);
@@ -49,8 +49,8 @@ int __fmtpos(str *fmt) {
 
 int __fmtpos2(str *fmt) {
     unsigned int i = 0;
-    while((i = fmt->unit.find('%', i)) != -1) {
-        if(i != fmt->unit.size()-1) {
+    while((i = fmt->find('%', i)) != -1) {
+        if(i != fmt->size()-1) {
             char nextchar = fmt->unit[i+1];
             if(nextchar == '%')
                 i++;
@@ -82,19 +82,19 @@ str *do_asprintf_str(const char *fmt, str *s, pyobj *a1, pyobj *a2) {
     char *d;
     int x;
     str *r;
-    int nullchars = (s->unit.find('\0') != -1); /* XXX %6.s */
-    ssize_t len = s->unit.size();
+    int nullchars = (s->find('\0') != -1); /* XXX %6.s */
+    ssize_t len = s->size();
     str *old_s = s;
     if(nullchars) {
         s = new str(s->unit);
         std::replace(s->unit.begin(), s->unit.end(), '\0', ' ');
     }
     if(a2)
-        x = asprintf(&d, fmt, ((int)(((int_ *)a1)->unit)), ((int)(((int_ *)a2)->unit)), s->unit.c_str());
+        x = asprintf(&d, fmt, ((int)(((int_ *)a1)->unit)), ((int)(((int_ *)a2)->unit)), s->c_str());
     else if(a1)
-        x = asprintf(&d, fmt, ((int)(((int_ *)a1)->unit)), s->unit.c_str());
+        x = asprintf(&d, fmt, ((int)(((int_ *)a1)->unit)), s->c_str());
     else
-        x = asprintf(&d, fmt, s->unit.c_str());
+        x = asprintf(&d, fmt, s->c_str());
     if(nullchars) {
         for(int i=0; i<x && i<len; i++)
             if(old_s->unit[i] == '\0')
@@ -107,7 +107,7 @@ str *do_asprintf_str(const char *fmt, str *s, pyobj *a1, pyobj *a2) {
 
 void __modfill(str **fmt, pyobj *t, str **s, pyobj *a1, pyobj *a2) {
     char c;
-    int i = (*fmt)->unit.find('%');
+    int i = (*fmt)->find('%');
     int j = __fmtpos(*fmt);
     *s = new str((*s)->unit + (*fmt)->unit.substr(0, i));
     str *add;
@@ -135,10 +135,10 @@ void __modfill(str **fmt, pyobj *t, str **s, pyobj *a1, pyobj *a2) {
         }
         add = do_asprintf((*fmt)->unit.substr(i, j+1-i).c_str(), ((float_ *)t)->unit, a1, a2);
         if(c == 'H' && ((float_ *)t)->unit-((int)(((float_ *)t)->unit)) == 0)
-            add->unit += ".0";
+            *add += ".0";
     }
     *s = (*s)->__add__(add);
-    *fmt = new str((*fmt)->unit.substr(j+1, (*fmt)->unit.size()-j-1));
+    *fmt = new str((*fmt)->unit.substr(j+1, (*fmt)->size()-j-1));
 }
 
 pyobj *modgetitem(list<pyobj *> *vals, int i) {
@@ -150,12 +150,12 @@ pyobj *modgetitem(list<pyobj *> *vals, int i) {
 str *__mod4(str *fmts, list<pyobj *> *vals) {
     int i, j;
     str *r = new str();
-    str *fmt = new str(fmts->unit);
+    str *fmt = new str(fmts->c_str());
     i = 0;
     while((j = __fmtpos(fmt)) != -1) {
         pyobj *p, *a1, *a2;
 
-        int perc_pos = fmt->unit.find('%');
+        int perc_pos = fmt->find('%');
         int asterisks = std::count(fmt->unit.begin()+perc_pos+1, fmt->unit.begin()+j, '*');
         a1 = a2 = NULL;
         if(asterisks==1) {
@@ -165,7 +165,7 @@ str *__mod4(str *fmts, list<pyobj *> *vals) {
             a2 = modgetitem(vals, i++);
         }
 
-        char c = fmt->unit[j];
+        char c = fmt->c_str()[j];
         if(c != '%')
             p = modgetitem(vals, i++);
     
@@ -204,7 +204,7 @@ str *__mod4(str *fmts, list<pyobj *> *vals) {
     if(i!=len(vals))
         throw new TypeError(new str("not all arguments converted during string formatting"));
 
-    r->unit += fmt->unit;
+    *r += fmt->c_str();
     return r;
 }
 
@@ -324,7 +324,7 @@ void print(int n, file *f, str *end, str *sep, ...) {
         f->write(end);
     }
     else 
-        printf("%s%s", s->unit.c_str(), end->unit.c_str());
+        printf("%s%s", s->c_str(), end->c_str());
 }
 
 void print2(file *f, int comma, int n, ...) {
@@ -339,10 +339,10 @@ void print2(file *f, int comma, int n, ...) {
     __file_options *p_opt = &f->options;
     str *s = __mod5(__print_cache, sp);
     if(len(s)) {
-        if(p_opt->space && (!isspace(p_opt->lastchar) || p_opt->lastchar==' ') && s->unit[0] != '\n') 
+        if(p_opt->space && (!isspace(p_opt->lastchar) || p_opt->lastchar==' ') && s->c_str()[0] != '\n')
             f->write(sp); /* space */
         f->write(s);
-        p_opt->lastchar = s->unit[len(s)-1];
+        p_opt->lastchar = s->c_str()[len(s)-1];
     }
     else if (comma)
         p_opt->lastchar = ' ';

@@ -41,7 +41,7 @@ template<class T> list<T>::list(tuple2<T, T> *p) {
 template<class T> list<T>::list(str *s) {
     this->__class__ = cl_list;
     this->units.resize(len(s));
-    int sz = s->unit.size();
+    int sz = s->size();
     for(int i=0; i<sz; i++)
         this->units[i] = __char_cache[((unsigned char)(s->unit[i]))];
 }
@@ -125,7 +125,7 @@ template<class T> void *list<T>::extend(tuple2<T,T> *p) {
 }
 
 template<class T> void *list<T>::extend(str *s) {
-    int sz = s->unit.size();
+    int sz = s->size();
     for(int i=0; i<sz; i++)
         this->units.push_back(__char_cache[((unsigned char)(s->unit[i]))]);
     return NULL;
@@ -336,11 +336,11 @@ template<class T> str *list<T>::__repr__() {
     str *r = new str("[");
     int len = this->__len__();
     for(int i = 0; i<len;i++) {
-        r->unit += repr(units[i])->unit;
+        *r += repr(units[i])->c_str();
         if (i<len-1)
-            r->unit += ", ";
+            *r += ", ";
     }
-    r->unit += "]";
+    *r += "]";
     return r;
 }
 

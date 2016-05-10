@@ -128,7 +128,7 @@ template<class T> str *array<T>::tostring() {
 }
 
 template<class T> void *array<T>::fromstring(str *s) {
-    size_t len = s->unit.size();
+    size_t len = s->size();
     if(len == 1)
         this->units.push_back(s->unit[0]);
     else {
