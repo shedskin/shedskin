@@ -35,7 +35,7 @@ file::file(str *file_name, str *flags) {
     }
     else
         flags = __char_cache['r'];
-    f = fopen(file_name->unit.c_str(), flags->unit.c_str());
+    f = fopen(file_name->c_str(), flags->c_str());
     if(f == 0)
         throw new IOError(file_name);
     name = file_name;
@@ -49,7 +49,7 @@ file *open(str *name, str *flags) {
 void *file::write(str *s) {
     __check_closed();
     if(f) {
-        size_t size = s->unit.size();
+        size_t size = s->size();
         if(FWRITE(s->unit.data(), 1, size, f) != size and __error())
             throw new IOError();
     }

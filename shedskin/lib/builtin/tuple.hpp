@@ -46,7 +46,7 @@ template<class T> tuple2<T, T>::tuple2(tuple2<T, T> *p) {
 template<class T> tuple2<T, T>::tuple2(str *s) {
     this->__class__ = cl_tuple;
     this->units.resize(len(s));
-    int sz = s->unit.size();
+    int sz = s->size();
     for(int i=0; i<sz; i++)
         this->units[i] = __char_cache[((unsigned char)(s->unit[i]))];
 }
@@ -74,13 +74,13 @@ template<class T> T tuple2<T, T>::__getitem__(__ss_int i) {
 template<class T> str *tuple2<T, T>::__repr__() {
     str *r = new str("(");
     for(int i = 0; i<this->__len__();i++) {
-        r->unit += repr(this->units[i])->unit;
+        *r += repr(this->units[i])->c_str();
         if(this->__len__() == 1 )
-            r->unit += ",";
+            *r += ",";
         if(i<this->__len__()-1)
-            r->unit += ", ";
+            *r += ", ";
     }
-    r->unit += ")";
+    *r += ")";
     return r;
 }
 
@@ -245,7 +245,11 @@ template<class A, class B> long tuple2<A, B>::__hash__() {
 }
 
 template<class A, class B> str *tuple2<A, B>::__repr__() {
-    __GC_STRING s = "("+repr(first)->unit+", "+repr(second)->unit+")";
+    __GC_STRING s = "(";
+    s += repr(first)->c_str();
+    s += ", ";
+    s += repr(second)->c_str();
+    s += ")";
     return new str(s);
 }
 
