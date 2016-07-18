@@ -749,7 +749,7 @@ __ss_bool str::endswith(str *s, __ss_int start, __ss_int end) {
         if (unit[--i] != s->unit[--j])
             return False;
 
-    return True;
+    return __mbool(j == 0);
 }
 
 str *str::replace(str *a, str *b, int c) {
