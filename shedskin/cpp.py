@@ -467,6 +467,7 @@ class GenerateVisitor(ASTVisitor):
             listcomps=self.mv.listcomps,
             cpp_name=self.cpp_name,
             namer=self.namer,
+            dedent=textwrap.dedent
         )
         print >>self.out, file_top
 
