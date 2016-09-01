@@ -82,7 +82,7 @@ str *do_asprintf_str(const char *fmt, str *s, pyobj *a1, pyobj *a2) {
     char *d;
     int x;
     str *r;
-    int nullchars = (s->find('\0') != -1); /* XXX %6.s */
+    int nullchars = ((const str*)s)->find('\0') != -1; /* XXX %6.s */
     ssize_t len = s->size();
     str *old_s = s;
     if(nullchars) {
@@ -168,12 +168,12 @@ str *__mod4(str *fmts, list<pyobj *> *vals) {
         char c = fmt->c_str()[j];
         if(c != '%')
             p = modgetitem(vals, i++);
-    
+
         switch(c) {
             case 'c':
                 __modfill(&fmt, mod_to_c2(p), &r, a1, a2);
                 break;
-            case 's': 
+            case 's':
             case 'r':
                 __modfill(&fmt, p, &r, a1, a2);
                 break;
@@ -323,7 +323,7 @@ void print(int n, file *f, str *end, str *sep, ...) {
         f->write(s);
         f->write(end);
     }
-    else 
+    else
         printf("%s%s", s->c_str(), end->c_str());
 }
 
