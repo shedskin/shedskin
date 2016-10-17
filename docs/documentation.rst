@@ -596,6 +596,6 @@ Tricks
 How to help out in development
 ------------------------------
 
-Open source projects thrive on feedback. Please send in bug reports, patches or other code, or suggestions about this document; or join the mailing list and start or participate in discussions. There is also `a page with suggestions <https://github.com/shedskin/shedskin/labels/easytask>`_ for possible tasks to start out with.
+Open source projects thrive on feedback. Please send in bug reports, patches or other code, or suggestions about this document; or join the mailing list and start or participate in discussions. There is also `an “easytask” issue label <https://github.com/shedskin/shedskin/issues?q=is%3Aissue+is%3Aopen+label%3Aeasytask>`_ for possible tasks to start out with.
 
 If you are a student, you might want to consider applying for the yearly Google Summer of Code or GHOP projects. Shed Skin has so far successfully participated in one Summer of Code and one GHOP.
