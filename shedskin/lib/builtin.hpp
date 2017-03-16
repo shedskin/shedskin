@@ -27,9 +27,11 @@
 #include <limits>
 
 #ifndef WIN32
-#include <exception>
-#include <execinfo.h>
 #include <cxxabi.h>
+#include <exception>
+#ifndef __APPLE__
+#include <execinfo.h>
+#endif
 #endif
 
 #if defined(_MSC_VER)
@@ -1119,7 +1121,7 @@ public:
     virtual void __exit__();
     virtual __iter<str *> *__iter__();
     virtual str *__repr__();
-    
+
     virtual bool __eof();
     virtual bool __error();
 
@@ -1258,7 +1260,7 @@ template<class T> inline __ss_bool pyiter<T>::__contains__(T t) {
     FOR_IN(e,this,1,2,3)
         if(__eq(e,t))
             return __mbool(true);
-    END_FOR 
+    END_FOR
     return __mbool(false);
 }
 
@@ -1295,9 +1297,9 @@ template<class T> inline T pyseq<T>::for_in_next(size_t &i) {
 
 /* __iter methods */
 
-template<class T> __iter<T> *__iter<T>::__iter__() { 
-    __stop_iteration = false; 
-    return this; 
+template<class T> __iter<T> *__iter<T>::__iter__() {
+    __stop_iteration = false;
+    return this;
 }
 
 template<class T> T __iter<T>::next() { /* __get_next can be overloaded instead to avoid (slow) exception handling */
@@ -1305,7 +1307,7 @@ template<class T> T __iter<T>::next() { /* __get_next can be overloaded instead 
     if(__stop_iteration)
         throw new StopIteration();
     return __result;
-} 
+}
 
 template<class T> T __iter<T>::__get_next() {
     try {

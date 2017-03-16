@@ -2,7 +2,7 @@
 
 /* exceptions */
 
-#ifndef WIN32
+#if !defined(WIN32) && !defined(__APPLE__)
 
 // stacktrace.h (c) 2008, Timo Bingmann from http://idlebox.net/
 // published under the WTFPL v2.0
@@ -11,7 +11,7 @@
 
 static void print_traceback(FILE *out)
 {
-    fprintf(out, "\nTraceback (most recent call last):\n"); 
+    fprintf(out, "\nTraceback (most recent call last):\n");
 
     // storage array for stack trace address data
     void* addrlist[64];
@@ -95,12 +95,12 @@ extern class_ *cl_stopiteration, *cl_assertionerror, *cl_eoferror, *cl_floatingp
 
 class BaseException : public pyobj {
 public:
-    str *message; 
-    BaseException(str *message=0) { 
-        __init__(message); 
+    str *message;
+    BaseException(str *message=0) {
+        __init__(message);
     }
-    void __init__(str *message) { 
-        if(message) 
+    void __init__(str *message) {
+        if(message)
             this->message = message;
         else
             this->message = new str("");
@@ -111,7 +111,7 @@ public:
     str *__repr__() {
         return __add_strs(4, this->__class__->__name__, new str("('"), message, new str("',)"));
     }
-    str *__str__() { 
+    str *__str__() {
         return message;
     }
 };
@@ -283,21 +283,21 @@ class SystemExit : public BaseException {
 public:
     int code;
     int show_message;
-    SystemExit(__ss_int code) { 
-        this->__class__ = cl_systemexit; 
-        this->code = code; 
+    SystemExit(__ss_int code) {
+        this->__class__ = cl_systemexit;
+        this->code = code;
         this->message = __str(this->code);
         this->show_message = 0;
     }
     SystemExit() {
-        this->__class__ = cl_systemexit; 
-        this->code = 0; 
+        this->__class__ = cl_systemexit;
+        this->code = 0;
         this->message = __str(this->code);
         this->show_message = 0;
     }
-    SystemExit(str *message) : BaseException(message) { 
-        this->__class__ = cl_systemexit; 
-        this->code = 1; 
+    SystemExit(str *message) : BaseException(message) {
+        this->__class__ = cl_systemexit;
+        this->code = 1;
         this->show_message = 1;
     }
 #ifdef __SS_BIND
