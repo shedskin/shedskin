@@ -130,11 +130,7 @@ def parse_command_line_options():
     logging.info('Copyright 2005-2011 Mark Dufour; License GNU GPL version 3 (See LICENSE)')
     logging.info('')
 
-    # --- some checks
-    major, minor = sys.version_info[:2]
-    if (major, minor) not in [(2, 4), (2, 5), (2, 6), (2, 7)]:
-        logging.error('Shed Skin is not compatible with this version of Python')
-        sys.exit(1)
+    # --- some checks that are required to run shedskin
     if sys.platform == 'win32' and os.path.isdir('c:/mingw'):
         logging.error('please rename or remove c:/mingw, as it conflicts with Shed Skin')
         sys.exit()
