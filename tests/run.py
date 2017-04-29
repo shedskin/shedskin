@@ -111,6 +111,13 @@ def main():
         print(failures)
         sys.exit(failures)
 
+def execute(cmd, output):
+    """ Execude cmd and redirect output.
+    """
+    print("Executing:", cmd)
+    execute_ = functools.partial(subprocess.call, stdout=output, stderr=output, shell=True)
+    return execute_(cmd)
+
 
 output_lock = threading.Lock()
 def run_test(test, msvc, options):
@@ -118,29 +125,31 @@ def run_test(test, msvc, options):
     show_parallel_output = 'output' in options
 
     def run_test_with_output(output):
-        execute = functools.partial(subprocess.call, stdout=output, stderr=output, shell=True)
         t0 = time.time()
         try:
             if msvc:
-                assert execute('python %s -v %d' % (SS, test)) == 0
+                assert execute('python %s -v %d' % (SS, test), output) == 0
             elif 'n' in options:
-                assert execute('python %s -e -m Makefile.%d %d' % (SS, test, test)) == 0
+                assert execute('python %s -e -m Makefile.%d %d' % (SS, test, test),
+                               output) == 0
             else:
-                assert execute('python %s -m Makefile.%d %d' % (SS, test, test)) == 0
+                assert execute('python %s -m Makefile.%d %d' % (SS, test, test),
+                               output) == 0
             if msvc:
-                assert execute('nmake /C /S clean') == 0
-                assert execute('nmake /C /S') == 0
+                assert execute('nmake /C /S clean', output) == 0
+                assert execute('nmake /C /S', output) == 0
                 command = '.\\%d' % test
             else:
-                assert execute('make clean -f Makefile.%d' % test) == 0
-                assert execute('make -f Makefile.%d' % test) == 0
+                assert execute('make clean -f Makefile.%d' % test, output) == 0
+                assert execute('make -f Makefile.%d' % test, output) == 0
                 if sys.platform == 'win32':
                     command = '%d' % test
                 else:
                     command = './%d' % test
             if 'n' in options:
                 if test not in [136, 154, 163, 191, 196, 197, 198]:  # sys.exit
-                    assert execute('python -c "__import__(str(%d))"' % test) == 0
+                    assert execute('python -c "__import__(str(%d))"' % test,
+                                   output) == 0
             else:
                 check_output(command, 'python %d.py' % test)
             with output_lock:
