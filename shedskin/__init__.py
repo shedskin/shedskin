@@ -39,7 +39,7 @@ class ShedskinFormatter(logging.Formatter):
 
 
 def usage():
-    print """Usage: shedskin [OPTION]... FILE
+    print("""Usage: shedskin [OPTION]... FILE
 
  -a --ann               Output annotated source code (.ss.py)
  -b --nobounds          Disable bounds checking
@@ -55,7 +55,7 @@ def usage():
  -w --nowrap            Disable wrap-around checking
  -x --traceback         Print traceback for uncaught exceptions
  -L --lib               Add a library directory
-"""
+""")
 # -p --pypy              Make extension module PyPy-compatible
 # -v --msvc              Output MSVC-style Makefile
     sys.exit(1)
@@ -170,7 +170,7 @@ def main():
     gx, main_module_name = parse_command_line_options()
     try:
         start(gx, main_module_name)
-    except KeyboardInterrupt, e:
+    except KeyboardInterrupt as e:
         logging.debug('KeyboardInterrupt', exc_info=True)
         sys.exit(1)
 
