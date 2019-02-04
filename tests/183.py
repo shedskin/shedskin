@@ -101,7 +101,23 @@ print hak('2e02'), hak('2e-02-2e+01j'), hak('-1.3e-3.1j')
 
 print complex(' 2.4+0j' ), complex('2.4'), complex(' .4j'), complex('1-j')
 print complex('-10-j'), complex('+10.1+2.4j'), complex('+j')
+print complex('-j')
+print complex('j')
+print complex('0j')
 #print complex('2e02'), complex('2e-02-2e+01j'), complex('-1.3e-3.1j') XXX 2.7?
+
+def bad_complex(s):
+    try:
+        print complex(s)
+    except ValueError as e:
+        print repr(s) + ': ' + str(e)
+
+bad_complex('')
+bad_complex('i')
+bad_complex('0j0')
+bad_complex('j+1')
+bad_complex('1+jj')
+bad_complex('3+123')
 
 class PI:
     def __float__(self):
