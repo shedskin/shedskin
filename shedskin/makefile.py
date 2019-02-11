@@ -62,7 +62,8 @@ def generate_makefile(gx):
 
     cppfiles = [fn + '.cpp' for fn in filenames]
     hppfiles = [fn + '.hpp' for fn in filenames]
-    for always in ('re',):
+    # used to be 're', but currently unused, but kept around just in case
+    for always in ():
         repath = os.path.join(env_var('SHEDSKIN_LIBDIR'), always)
         if not repath in filenames:
             cppfiles.append(repath + '.cpp')
@@ -143,6 +144,8 @@ def generate_makefile(gx):
                 else:
                     line += ' -shared -Xlinker -export-dynamic ' + ldflags
 
+            if 're' in [m.ident for m in modules]:
+                line += ' -lpcre'
             if 'socket' in (m.ident for m in modules):
                 if sys.platform == 'win32':
                     line += ' -lws2_32'

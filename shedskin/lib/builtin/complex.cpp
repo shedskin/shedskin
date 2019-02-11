@@ -3,19 +3,41 @@
 /* complex methods */
 
 complex mcomplex(str *s) {
-    complex c;
-    __re__::match_object *m;
-    __re__::re_object *p;
+    const char *ptr = s->strip()->c_str();
+    char *ptr2;
+    double real, imag = 0;
 
-    p = __re__::compile(new str("(?P<one>[+-]?([\\d\\.]+e[+-]?\\d+|[\\d\\.]*)j?)(?P<two>[+-]?([\\d\\.]+e[+-]?\\d+|[\\d\\.]*)j?)?$"));
-    m = p->match(s->strip());
-    if (___bool(m)) {
-        c = (c.parsevalue(m->group(1, new str("one")))) + (c.parsevalue(m->group(1, new str("two"))));
+    if (*ptr == 0) {
+        goto error;
     }
-    else {
-        throw ((new ValueError(new str("complex() arg is a malformed string"))));
+
+    real = strtod(ptr, &ptr2);
+    if (ptr != ptr2 && *ptr2 == 'j') {
+        if (ptr2[1] != 0) {
+            goto error;
+        }
+        imag = real;
+        real = 0;
+    } else if (*ptr2 != 0) {
+        char *ptr3;
+        imag = strtod(ptr2, &ptr3);
+        if (ptr2 == ptr3) {
+            // No number before 'j', but possibly sign. Or completely malformed string
+            imag = 1;
+            if (*ptr3 == '-') {
+                imag = -1;
+                ptr3++;
+            } else if (*ptr3 == '+') {
+                ptr3++;
+            }
+        }
+        if (*ptr3 != 'j' || ptr3[1] != 0) {
+error:
+            throw ((new ValueError(new str("complex() arg is a malformed string"))));
+        }
     }
-    return c;
+
+    return mcomplex(real, imag);
 }
 
 
