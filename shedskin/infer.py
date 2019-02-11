@@ -1069,6 +1069,7 @@ def update_progressbar(gx, perc):
             maxval=1,
             term_width=33
         )
+        gx.progressbar.start()
 
     with gx.terminal.location(x=0):
         gx.progressbar.update(perc)
