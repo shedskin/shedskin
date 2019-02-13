@@ -1326,7 +1326,8 @@ class GenerateVisitor(ASTVisitor):
         self.deindent()
         self.output('}\n')
 
-        self.output('%s __get_next() {' % nodetypestr(self.gx, func.retnode.thing, func, mv=self.mv)[7:-3])
+        func2 = nodetypestr(self.gx, func.retnode.thing, func, mv=self.mv)[7:-3]
+        self.output('%s __get_next() {' % func2)
         self.indent()
         self.output('switch(__last_yield) {')
         self.indent()
@@ -1343,6 +1344,7 @@ class GenerateVisitor(ASTVisitor):
                 self.visit(child, func)
 
         self.output('__stop_iteration = true;')
+        self.output('return __zero<%s>();' % func2)
         self.deindent()
         self.output('}\n')
 
@@ -2025,7 +2027,8 @@ class GenerateVisitor(ASTVisitor):
     def visitReturn(self, node, func=None):
         if func.isGenerator:
             self.output('__stop_iteration = true;')
-            self.output('return __zero<%s>();' % nodetypestr(self.gx, func.retnode.thing, mv=self.mv)[7:-3])  # XXX meugh
+            func2 = nodetypestr(self.gx, func.retnode.thing, mv=self.mv)[7:-3] # XXX meugh
+            self.output('return __zero<%s>();' % func2)
             return
         self.start('return ')
         self.visit_conv(node.value, self.mergeinh[func.retnode.thing], func)
@@ -2311,6 +2314,7 @@ class GenerateVisitor(ASTVisitor):
             self.output('__last_yield = 0;\n')
             self.listcomp_rec(node, node.quals, lcfunc, True)
             self.output('__stop_iteration = true;')
+            self.output('return __zero<%s>();' % func2)
             self.deindent()
             self.output('}\n')
 
