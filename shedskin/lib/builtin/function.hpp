@@ -230,6 +230,7 @@ public:
         if(i>0)
             return p->__getitem__(--i); /* XXX avoid wrap, str spec? */
         this->__stop_iteration = true;
+        return __zero<A>();
     }
 };
 
