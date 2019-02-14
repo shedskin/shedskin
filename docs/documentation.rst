@@ -566,19 +566,6 @@ Tricks
 
   class statistics: pass
   s = statistics(); s.nodes = 28; s.solutions = set()
-  
-  
-* The same is also valid for the following two code fragments. Only the second one is supported:
-
-::
-
-  n = 20
-  mask = [0]*n
-  
-  mask = []
-  for i in range(n):
-      mask.append(0)
-
 
 * The evaluation order of arguments to a function or print changes with translation to C++, so it's better not to depend on this:
 

@@ -19,6 +19,7 @@
 #include <sys/wait.h>
 #include <sys/utsname.h>
 #include <sys/statvfs.h>
+#include <sys/sysmacros.h>
 #include <grp.h>
 #include <sysexits.h>
 #endif
