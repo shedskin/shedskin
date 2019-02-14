@@ -66,9 +66,10 @@ inline __ss_bool complex::operator!=(complex b) {
 }
 inline __ss_bool complex::operator!=(double b) { return (*this) != mcomplex(b); }
 
-inline complex& complex::operator=(double a) { 
-    real = a; 
-    imag = 0.0; 
+inline complex& complex::operator=(double a) {
+    real = a;
+    imag = 0.0;
+    return *this;
 }
 
 /* floordiv */
@@ -104,11 +105,11 @@ inline str *repr(complex c) { return c.__repr__(); }
 template<> inline __ss_bool __eq(complex a, complex b) { return a == b; }
 template<> inline __ss_bool __ne(complex a, complex b) { return a != b; }
 
-template<> inline __ss_int __cmp(complex a, complex b) {} /* unused, satisfy templates */
-template<> inline __ss_bool __gt(complex a, complex b) {}
-template<> inline __ss_bool __ge(complex a, complex b) {}
-template<> inline __ss_bool __lt(complex a, complex b) {}
-template<> inline __ss_bool __le(complex a, complex b) {}
+template<> inline __ss_int __cmp(complex a, complex b) { return __mbool(true); } /* unused, satisfy templates */
+template<> inline __ss_bool __gt(complex a, complex b) { return __mbool(true); }
+template<> inline __ss_bool __ge(complex a, complex b) { return __mbool(true); }
+template<> inline __ss_bool __lt(complex a, complex b) { return __mbool(true); }
+template<> inline __ss_bool __le(complex a, complex b) { return __mbool(true); }
 
 /* copy, deepcopy */
 
