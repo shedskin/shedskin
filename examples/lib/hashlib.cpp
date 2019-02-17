@@ -17,8 +17,8 @@ str *md5::hexdigest() {
     MD5((unsigned char *)data->unit.data(), data->unit.size(), (unsigned char *)digest->unit.data());
     str *hexdigest = new str();
     for(int i=0; i<16; i++) {
-        hexdigest->push_back(__str((digest->unit[i]>>4) & 0xf, 16)->unit[0]);
-        hexdigest->push_back(__str(digest->unit[i] & 0xf, 16)->unit[0]);
+        hexdigest->unit.push_back(__str((digest->unit[i]>>4) & 0xf, 16)->unit[0]);
+        hexdigest->unit.push_back(__str(digest->unit[i] & 0xf, 16)->unit[0]);
     }
     return hexdigest;
 }
