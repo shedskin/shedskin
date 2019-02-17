@@ -26,9 +26,9 @@
 
 import time
 from Tkinter import *
-import Image
-import ImageTk
-import ImageDraw
+from PIL import Image
+from PIL import ImageDraw
+from PIL import ImageTk
 import random
 from pylot.Pool import ThreadedQueueProcessor
 #from pylot.Camera import Camera
@@ -199,7 +199,7 @@ class Viewport(object):
     (x, xMax), (y, yMax) = r
     w = xMax - x
     h = yMax - y
-    return Image.fromstring('RGB', (w, h), pixels)
+    return Image.frombytes('RGB', (w, h), pixels)
 
   def processSingleThreaded(self):
     startTime = time.time()
