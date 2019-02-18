@@ -37,7 +37,10 @@ __ss_int __int(str *s, __ss_int base) {
 }
 
 template<> double __float(str *s) {
-    return strtod(s->c_str(), NULL);
+    double d = strtod(s->c_str(), NULL);
+    if(std::isnan(d))
+        d = NAN; // avoid "-nan" (test 194)
+    return d;
 }
 
 template<> __ss_int id(__ss_int) { throw new TypeError(new str("'id' called with integer")); }
