@@ -232,6 +232,7 @@ public:
     T pop();
     T pop(int m);
     void *remove(T e);
+    template <class U> void *remove(U e);
     void *insert(int m, T e);
 
     void *append(T a);
