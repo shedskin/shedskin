@@ -367,6 +367,7 @@ template<class T> void *array<T>::fromfile(file *f, __ss_int n) {
         units.push_back(s->unit[i]);
     if (len < n*itemsize) 
         throw new EOFError(new str("not enough items in file"));
+    return NULL;
 }
 
 template<class T> array<T> *array<T>::__copy__() {
