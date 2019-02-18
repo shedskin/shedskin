@@ -419,6 +419,9 @@ template<class T> void *list<T>::remove(T e) {
         }
     throw new ValueError(new str("list.remove(x): x not in list"));
 }
+template<class T> template <class U> void *list<T>::remove(U e) {
+    throw new ValueError(new str("list.remove(x): x not in list"));
+}
 
 template<class T> inline bool list<T>::for_in_has_next(size_t i) {
     return i < units.size(); /* XXX opt end cond */

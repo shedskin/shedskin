@@ -912,5 +912,5 @@ def next(iter1, fillvalue=None):
 def id(x):
     return 1
 
-def __print(__kw_sep=0, __kw_end=0, __kw_file=0, *value):
+def __print(__kw_sep=None, __kw_end=None, __kw_file=None, *value):
     value.__str__()
