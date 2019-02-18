@@ -38,10 +38,10 @@ class match_object:
     def span(self):
         return (1,)
 
-    def groups(self, defval = 0):
+    def groups(self, defval=None):
         return ('',)
 
-    def groupdict(self, defval = 0):
+    def groupdict(self, defval=None):
         return {'' : ''}
 
     def __repr__(self):

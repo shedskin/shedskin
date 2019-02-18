@@ -9,3 +9,7 @@ try:
     print [][-1]
 except IndexError:
     print 'nope..'
+
+# fix examples/Gh0stenstein
+px = 0xff << 24
+print (px == 0xff000000)
