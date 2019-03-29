@@ -226,8 +226,8 @@ def parse_file(name):
     filebuf = re.sub(pat, clear_block, ''.join(open(name, 'U').readlines()))
     try:
         return parse(filebuf)
-    except SyntaxError, s:
-        print '*ERROR* %s:%d: %s' % (name, s.lineno, s.msg)
+    except SyntaxError as s:
+        print('*ERROR* %s:%d: %s' % (name, s.lineno, s.msg))
         sys.exit(1)
 
 
