@@ -6,8 +6,9 @@ annotate.py: annotate source code with inferred types, as *.ss.py (shedskin -a)
 
 '''
 import re
-from compiler.ast import Const, AssTuple, AssList, Assign, AugAssign, \
-    Getattr, Dict, Print, Return, Printnl, Name, List, Tuple, ListComp
+from ast import Num, Str, Assign, AugAssign, \
+    Attribute, Dict, Print, Return, Name, List, Tuple, ListComp
+from ast_utils import is_assign_list_or_tuple
 
 from infer import inode
 from python import assign_rec
@@ -49,11 +50,11 @@ def annotate(gx):
 
         # --- constants/names/attributes
         for expr in merge:
-            if isinstance(expr, (Const, Name)):
+            if isinstance(expr, (Num, Str, Name)):
                 paste(gx, source, expr, nodetypestr(gx, expr, inode(gx, expr).parent, False, mv=mv), mv)
 
         for expr in merge:
-            if isinstance(expr, Getattr):
+            if isinstance(expr, Attribute):
                 paste(gx, source, expr, nodetypestr(gx, expr, inode(gx, expr).parent, False, mv=mv), mv)
 
         for expr in merge:
@@ -78,7 +79,7 @@ def annotate(gx):
 
         # --- callfuncs
         for callfunc, _ in mv.callfuncs:
-            if isinstance(callfunc.node, Getattr):
+            if isinstance(callfunc.node, Attribute):
                 if not callfunc.node.__class__.__name__.startswith('FakeGetattr'):  # XXX
                     paste(gx, source, callfunc.node.expr, nodetypestr(gx, callfunc, inode(gx, callfunc).parent, False, mv=mv), mv)
             else:
@@ -90,9 +91,9 @@ def annotate(gx):
                 paste(gx, source, expr, nodetypestr(gx, expr, inode(gx, expr).parent, False, mv=mv), mv)
             elif isinstance(expr, Return):
                 paste(gx, source, expr, nodetypestr(gx, expr.value, inode(gx, expr).parent, False, mv=mv), mv)
-            elif isinstance(expr, (AssTuple, AssList)):
+            elif is_assign_list_or_tuple(expr):
                 paste(gx, source, expr, nodetypestr(gx, expr, inode(gx, expr).parent, False, mv=mv), mv)
-            elif isinstance(expr, (Print, Printnl)):
+            elif isinstance(expr, Print):
                 paste(gx, source, expr, ', '.join(nodetypestr(gx, child, inode(gx, child).parent, False, mv=mv) for child in expr.nodes), mv)
 
         # --- assignments
