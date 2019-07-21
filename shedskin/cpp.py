@@ -1611,7 +1611,7 @@ class GenerateVisitor(BaseNodeVisitor):
     def power(self, left, right, mod, func=None):
         inttype = set([(def_class(self.gx, 'int_'), 0)])  # XXX merge
         if self.mergeinh[left] == inttype and self.mergeinh[right] == inttype:
-            if not isinstance(right, Num):
+            if not isinstance(right, Num) or right.n < 0:
                 error("pow(int, int) returns int after compilation", self.gx, left, warning=True, mv=self.mv)
         if mod:
             self.visitm('__power(', left, ', ', right, ', ', mod, ')', func)
