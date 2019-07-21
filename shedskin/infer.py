@@ -36,7 +36,8 @@ import itertools
 import logging
 import random
 import sys
-from compiler.ast import Const, Node, AssAttr, Keyword, CallFunc, Getattr, Dict, List, Tuple, ListComp, Not, Compare, Name
+from ast import Num, Str, Call, Attribute, Dict, List, Tuple, ListComp, Not, Compare, Name, keyword, AST, dump as ast_dump
+from ast_utils import is_assign_attribute
 
 import error
 import graph
@@ -148,10 +149,10 @@ def called(func):
 def get_types(gx, expr, node, merge):
     types = set()
     if merge:
-        if expr.node in merge:
-            types = merge[expr.node]
+        if expr.func in merge:
+            types = merge[expr.func]
     elif node:
-        node = (expr.node, node.dcpa, node.cpa)
+        node = (expr.func, node.dcpa, node.cpa)
         if node in gx.cnode:
             types = gx.cnode[node].types()
     return types
@@ -179,12 +180,11 @@ def analyze_args(gx, expr, func, node=None, skip_defaults=False, merge=None):
     args = []
     kwdict = {}
     for a in expr.args:
-        if isinstance(a, Keyword):
-            kwdict[a.name] = a.expr
-        else:
-            args.append(a)
+        args.append(a)
+    for a in expr.keywords:
+        kwdict[a.arg] = a.value
     formal_args = func.formals[:]
-    if func.node.varargs:
+    if func.node.args.vararg:
         formal_args = formal_args[:-1]
     default_start = len(formal_args) - len(func.defaults)
 
@@ -222,9 +222,9 @@ def analyze_args(gx, expr, func, node=None, skip_defaults=False, merge=None):
             missing = True
     extra = args[argnr:]
 
-    _error = (missing or extra) and not func.node.varargs and not func.node.kwargs and not expr.star_args and func.lambdanr is None and expr not in gx.lambdawrapper  # XXX
+    _error = (missing or extra) and not func.node.args.vararg and not func.node.args.kwarg and not expr.starargs and func.lambdanr is None and expr not in gx.lambdawrapper  # XXX
 
-    if func.node.varargs:
+    if func.node.args.vararg:
         for arg in extra:
             actuals.append(arg)
             formals.append(func.formals[-1])
@@ -235,7 +235,7 @@ def analyze_args(gx, expr, func, node=None, skip_defaults=False, merge=None):
 def connect_actual_formal(gx, expr, func, parent_constr=False, merge=None):
     pairs = []
 
-    actuals = [a for a in expr.args if not isinstance(a, Keyword)]
+    actuals = [a for a in expr.args if not isinstance(a, keyword)]
     if isinstance(func.parent, Class):
         formals = [f for f in func.formals if f != 'self']
     else:
@@ -263,8 +263,8 @@ def callfunc_targets(gx, node, merge):
     objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func = analyze_callfunc(gx, node, merge=merge)
     funcs = []
 
-    if node.node in merge and [t for t in merge[node.node] if isinstance(t[0], Function)]:  # anonymous function call
-        funcs = [t[0] for t in merge[node.node] if isinstance(t[0], Function)]
+    if node.func in merge and [t for t in merge[node.func] if isinstance(t[0], Function)]:  # anonymous function call
+        funcs = [t[0] for t in merge[node.func] if isinstance(t[0], Function)]
 
     elif constructor:
         if ident in ('list', 'tuple', 'set', 'frozenset') and nrargs(gx, node) == 1:
@@ -293,7 +293,7 @@ def callfunc_targets(gx, node, merge):
 
 # --- analyze call expression: namespace, method call, direct call/constructor..
 def analyze_callfunc(gx, node, node2=None, merge=None):  # XXX generate target list XXX uniform Variable system! XXX node2, merge?
-    # print 'analyze callnode', node, inode(gx, node).parent
+    # print 'analyze callnode', ast_dump(node), inode(gx, node).parent
     cnode = inode(gx, node)
     mv = cnode.mv
     namespace, objexpr, method_call, parent_constr = mv.module, None, False, False
@@ -302,12 +302,12 @@ def analyze_callfunc(gx, node, node2=None, merge=None):  # XXX generate target l
     # anon func call XXX refactor as __call__ method call below
     anon_func, is_callable = is_anon_callable(gx, node, node2, merge)
     if is_callable:
-        method_call, objexpr, ident = True, node.node, '__call__'
+        method_call, objexpr, ident = True, node.func, '__call__'
         return objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func
 
     # method call
-    if isinstance(node.node, Getattr):
-        objexpr, ident = node.node.expr, node.node.attrname
+    if isinstance(node.func, Attribute):
+        objexpr, ident = node.func.value, node.func.attr
         cl, module = lookup_class_module(objexpr, mv, cnode.parent)
 
         if cl:
@@ -330,12 +330,12 @@ def analyze_callfunc(gx, node, node2=None, merge=None):  # XXX generate target l
         else:
             method_call = True
 
-    elif isinstance(node.node, Name):
-        ident = node.node.name
+    elif isinstance(node.func, Name):
+        ident = node.func.id
 
     # direct [constructor] call
-    if isinstance(node.node, Name) or namespace != mv.module:
-        if isinstance(node.node, Name):
+    if isinstance(node.func, Name) or namespace != mv.module:
+        if isinstance(node.func, Name):
             if lookup_var(ident, cnode.parent, mv=mv):
                 return objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func
         if ident in namespace.mv.classes:
@@ -419,7 +419,7 @@ def class_copy(gx, cl, dcpa):
         gx.types[gx.cnode[var, dcpa, 0]] = inode(gx, var).types().copy()
 
         for n in inode(gx, var).in_:  # XXX
-            if isinstance(n.thing, Const):
+            if isinstance(n.thing, (Num, Str)):
                 add_constraint(gx, n, gx.cnode[var, dcpa, 0])
 
     for func in cl.funcs.values():
@@ -491,7 +491,7 @@ def propagate(gx):
         if gx.types[node]:
             add_to_worklist(worklist, node)
         expr = node.thing
-        if (isinstance(expr, CallFunc) and not expr.args) or expr in gx.lambdawrapper:  # XXX
+        if (isinstance(expr, Call) and not expr.args) or expr in gx.lambdawrapper:  # XXX
             changed.add(node)
 
     for node in changed:
@@ -551,7 +551,7 @@ def possible_functions(gx, node, analysis):
 
     if anon_func:
         # anonymous call
-        types = gx.cnode[expr.node, node.dcpa, node.cpa].types()
+        types = gx.cnode[expr.func, node.dcpa, node.cpa].types()
         types = [t for t in types if isinstance(t[0], Function)]  # XXX XXX analyse per t, sometimes class, sometimes function..
 
         if list(types)[0][0].parent:  # method reference XXX merge below?
@@ -585,8 +585,8 @@ def possible_argtypes(gx, node, funcs, analysis, worklist):
         func = funcs[0][0]  # XXX
 
     args = []
-    if expr.star_args:  # XXX
-        args = [expr.star_args]
+    if expr.starargs:  # XXX
+        args = [expr.starargs]
     elif funcs and not func.node:  # XXX getattr, setattr
         args = expr.args
     elif funcs:
@@ -616,7 +616,7 @@ def possible_argtypes(gx, node, funcs, analysis, worklist):
         while argtypes and not argtypes[-1]:
             argtypes = argtypes[:-1]
         if func.lambdawrapper:
-            if expr.star_args and node.parent and node.parent.node.varargs:
+            if expr.starargs and node.parent and node.parent.node.args.vararg:
                 func.largs = node.parent.xargs[node.dcpa, node.cpa] - len(node.parent.formals) + 1
             else:
                 func.largs = len(argtypes)
@@ -640,7 +640,7 @@ def redirect(gx, c, dcpa, func, callfunc, ident, callnode, direct_call, construc
             funcs = func.parent.funcs
         else:
             funcs = func.mv.funcs
-        redir = '__%s%d' % (func.ident, len([kwarg for kwarg in callfunc.args if not isinstance(kwarg, Keyword)]))
+        redir = '__%s%d' % (func.ident, len([kwarg for kwarg in callfunc.args if not isinstance(kwarg, keyword)]))
         func = funcs.get(redir, func)
 
     # filter
@@ -672,8 +672,8 @@ def redirect(gx, c, dcpa, func, callfunc, ident, callnode, direct_call, construc
         func = list(callnode.types())[0][0].funcs['__inititer__']  # XXX use __init__?
 
     # array
-    if constructor and ident == 'array' and isinstance(callfunc.args[0], Const):
-        typecode = callfunc.args[0].value
+    if constructor and ident == 'array' and isinstance(callfunc.args[0], Str):
+        typecode = callfunc.args[0].s
         array_type = None
         if typecode in 'bBhHiIlL':
             array_type = 'int'
@@ -685,19 +685,19 @@ def redirect(gx, c, dcpa, func, callfunc, ident, callnode, direct_call, construc
             func = list(callnode.types())[0][0].funcs['__init_%s__' % array_type]
 
     # tuple2.__getitem__(0/1) -> __getfirst__/__getsecond__
-    if (isinstance(callfunc.node, Getattr) and callfunc.node.attrname == '__getitem__' and
-        isinstance(callfunc.args[0], Const) and callfunc.args[0].value in (0, 1) and
+    if (isinstance(callfunc.func, Attribute) and callfunc.func.attr == '__getitem__' and
+        isinstance(callfunc.args[0], Num) and callfunc.args[0].n in (0, 1) and
             func.parent.mv.module.builtin and func.parent.ident == 'tuple2'):
-        if callfunc.args[0].value == 0:
+        if callfunc.args[0].n == 0:
             func = func.parent.funcs['__getfirst__']
         else:
             func = func.parent.funcs['__getsecond__']
 
     # property
-    if isinstance(callfunc.node, Getattr) and callfunc.node.attrname in ['__setattr__', '__getattr__']:
-        if isinstance(func.parent, Class) and callfunc.args and callfunc.args[0].value in func.parent.properties:
-            arg = callfunc.args[0].value
-            if callfunc.node.attrname == '__setattr__':
+    if isinstance(callfunc.func, Attribute) and callfunc.func.attr in ['__setattr__', '__getattr__']:
+        if isinstance(func.parent, Class) and callfunc.args and callfunc.args[0].s in func.parent.properties:
+            arg = callfunc.args[0].s
+            if callfunc.func.attr == '__setattr__':
                 func = func.parent.funcs[func.parent.properties[arg][1]]
             else:
                 func = func.parent.funcs[func.parent.properties[arg][0]]
@@ -772,9 +772,9 @@ def cpa(gx, callnode, worklist):
 
 
 def connect_getsetattr(gx, func, callnode, callfunc, dcpa, worklist):
-    if (isinstance(callfunc.node, Getattr) and callfunc.node.attrname in ['__setattr__', '__getattr__'] and
-            not (isinstance(func.parent, Class) and callfunc.args and callfunc.args[0].value in func.parent.properties)):
-        varname = callfunc.args[0].value
+    if (isinstance(callfunc.func, Attribute) and callfunc.func.attr in ['__setattr__', '__getattr__'] and
+            not (isinstance(func.parent, Class) and callfunc.args and callfunc.args[0].s in func.parent.properties)):
+        varname = callfunc.args[0].s
         parent = func.parent
 
         var = default_var(gx, varname, parent, worklist, mv=parent.module.mv)  # XXX always make new var??
@@ -785,7 +785,7 @@ def connect_getsetattr(gx, func, callnode, callfunc, dcpa, worklist):
 
         gx.cnode[var, dcpa, 0].mv = parent.module.mv  # XXX move into default_var
 
-        if callfunc.node.attrname == '__setattr__':
+        if callfunc.func.attr == '__setattr__':
             add_constraint(gx, gx.cnode[callfunc.args[1], callnode.dcpa, callnode.cpa], gx.cnode[var, dcpa, 0], worklist)
         else:
             add_constraint(gx, gx.cnode[var, dcpa, 0], callnode, worklist)
@@ -809,9 +809,9 @@ def create_template(gx, func, dcpa, c, worklist):
 def actuals_formals(gx, expr, func, node, dcpa, cpa, types, analysis, worklist):
     objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func = analysis
 
-    if expr.star_args:  # XXX only in lib/
+    if expr.starargs:  # XXX only in lib/
         formals = func.formals
-        actuals = len(formals) * [expr.star_args]
+        actuals = len(formals) * [expr.starargs]
         types = len(formals) * types
     else:
         actuals, formals, _, varargs, _error = analyze_args(gx, expr, func, node)
@@ -1177,7 +1177,7 @@ def iterative_dataflow_analysis(gx):
         for node in beforetypes:
             func = parent_func(gx, node.thing)
             if isinstance(func, Function):
-                if node.constructor and isinstance(node.thing, (List, Dict, Tuple, ListComp, CallFunc)):
+                if node.constructor and isinstance(node.thing, (List, Dict, Tuple, ListComp, Call)):
                     beforetypes[node] = set()
 
         # --- create new class types, and seed global nodes
@@ -1207,7 +1207,7 @@ def ifa_seed_template(gx, func, cart, dcpa, cpa, worklist):
         added_new = 0
 
         for node in func.nodes_ordered:
-            if node.constructor and isinstance(node.thing, (List, Dict, Tuple, ListComp, CallFunc)):
+            if node.constructor and isinstance(node.thing, (List, Dict, Tuple, ListComp, Call)):
                 if node.thing not in added:
                     if INCREMENTAL_DATA and not func.mv.module.builtin:
                         if gx.added_allocs >= INCREMENTAL_ALLOCS:
@@ -1434,7 +1434,7 @@ def analyze(gx, module_name):
 
     # error for dynamic expression without explicit type declaration
     for node in gx.merged_inh:
-        if isinstance(node, Node) and not isinstance(node, AssAttr) and not inode(gx, node).mv.module.builtin:
+        if isinstance(node, AST) and not is_assign_attribute(node) and not inode(gx, node).mv.module.builtin:
             nodetypestr(gx, node, inode(gx, node).parent, mv=inode(gx, node).mv)
 
     return gx

@@ -5,7 +5,7 @@ Copyright 2005-2013 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 virtual.py: virtual methods and variables
 
 '''
-from compiler.ast import CallFunc, Name
+from ast import Call, Name
 
 import infer
 from python import subclass, Class
@@ -98,7 +98,7 @@ def virtuals(self, cl, declare):
 def analyze_virtuals(gx):
     for node in gx.merged_inh:
         # --- for every message
-        if isinstance(node, CallFunc) and not infer.inode(gx, node).mv.module.builtin:  # ident == 'builtin':
+        if isinstance(node, Call) and not infer.inode(gx, node).mv.module.builtin:  # ident == 'builtin':
             objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func = infer.analyze_callfunc(gx, node, merge=gx.merged_inh)
             if not method_call or objexpr not in gx.merged_inh:
                 continue  # XXX
@@ -109,7 +109,7 @@ def analyze_virtuals(gx):
             if not classes:
                 continue
 
-            if isinstance(objexpr, Name) and objexpr.name == 'self' and infer.inode(gx, objexpr).parent:
+            if isinstance(objexpr, Name) and objexpr.id == 'self' and infer.inode(gx, objexpr).parent:
                 abstract_cl = infer.inode(gx, objexpr).parent.parent
                 upgrade_cl(gx, abstract_cl, node, ident, classes)
 
@@ -134,8 +134,8 @@ def upgrade_cl(gx, abstract_cl, node, ident, classes):
 
     # --- register virtual var
     elif ident in ['__getattr__', '__setattr__'] and subclasses:
-        var = infer.default_var(gx, node.args[0].value, abstract_cl)
+        var = infer.default_var(gx, node.args[0].s, abstract_cl)
         for subcl in subclasses:
             if var.name in subcl.vars and subcl.vars[var.name] in gx.merged_inh:
                 gx.types.setdefault(gx.cnode[var, 0, 0], set()).update(gx.merged_inh[subcl.vars[var.name]])  # XXX shouldn't this be merged automatically already?
-        abstract_cl.virtualvars.setdefault(node.args[0].value, set()).update(subclasses)
+        abstract_cl.virtualvars.setdefault(node.args[0].s, set()).update(subclasses)

@@ -8,9 +8,8 @@ import imp
 import os
 import re
 import sys
-from compiler import parse
-from compiler.ast import AssTuple, AssList, List, Tuple, CallFunc, Name, \
-    Const, UnaryAdd, UnarySub, Getattr
+from ast import parse, List, Tuple, Call, Name, Load, Num, UnaryOp, UAdd, USub, Attribute, get_docstring
+from ast_utils import extract_argnames, is_assign_list_or_tuple
 
 
 class Module(object):
@@ -147,9 +146,9 @@ class Function(object):
             if inherited_from and ident in parent.funcs:
                 ident += inherited_from.ident + '__'  # XXX ugly
             self.ident = ident
-            self.formals = node.argnames
-            self.flags = node.flags
-            self.doc = node.doc
+            self.formals = extract_argnames(node.args)
+            self.flags = None
+            self.doc = get_docstring(node)
         self.returnexpr = []
         self.retnode = None
         self.lambdanr = None
@@ -275,8 +274,8 @@ def lookup_implementor(cl, ident):
 
 
 def lookup_class_module(objexpr, mv, parent):
-    if isinstance(objexpr, Name):  # XXX Getattr?
-        var = lookup_var(objexpr.name, parent, mv=mv)
+    if isinstance(objexpr, Name):  # XXX Attribute?
+        var = lookup_var(objexpr.id, parent, mv=mv)
         if var and not var.imported:  # XXX cl?
             return None, None
     return lookup_class(objexpr, mv), lookup_module(objexpr, mv)
@@ -284,42 +283,42 @@ def lookup_class_module(objexpr, mv, parent):
 
 def lookup_func(node, mv):  # XXX lookup_var first?
     if isinstance(node, Name):
-        if node.name in mv.funcs:
-            return mv.funcs[node.name]
-        elif node.name in mv.ext_funcs:
-            return mv.ext_funcs[node.name]
+        if node.id in mv.funcs:
+            return mv.funcs[node.id]
+        elif node.id in mv.ext_funcs:
+            return mv.ext_funcs[node.id]
         else:
             return None
-    elif isinstance(node, Getattr):
-        module = lookup_module(node.expr, mv)
-        if module and node.attrname in module.mv.funcs:
-            return module.mv.funcs[node.attrname]
+    elif isinstance(node, Attribute):
+        module = lookup_module(node.value, mv)
+        if module and node.attr in module.mv.funcs:
+            return module.mv.funcs[node.attr]
 
 
 def lookup_class(node, mv):  # XXX lookup_var first?
     if isinstance(node, Name):
-        if node.name in mv.classes:
-            return mv.classes[node.name]
-        elif node.name in mv.ext_classes:
-            return mv.ext_classes[node.name]
+        if node.id in mv.classes:
+            return mv.classes[node.id]
+        elif node.id in mv.ext_classes:
+            return mv.ext_classes[node.id]
         else:
             return None
-    elif isinstance(node, Getattr):
-        module = lookup_module(node.expr, mv)
-        if module and node.attrname in module.mv.classes:
-            return module.mv.classes[node.attrname]
+    elif isinstance(node, Attribute):
+        module = lookup_module(node.value, mv)
+        if module and node.attr in module.mv.classes:
+            return module.mv.classes[node.attr]
 
 
 def lookup_module(node, mv):
     path = []
     imports = mv.imports
 
-    while isinstance(node, Getattr):
-        path = [node.attrname] + path
-        node = node.expr
+    while isinstance(node, Attribute) and type(node.ctx) == Load:
+        path = [node.attr] + path
+        node = node.value
 
     if isinstance(node, Name):
-        path = [node.name] + path
+        path = [node.id] + path
 
         # --- search import chain
         for ident in path:
@@ -383,17 +382,19 @@ def subclass(a, b):
 
 
 def is_property_setter(dec):
-    return isinstance(dec, Getattr) and isinstance(dec.expr, Name) and dec.attrname == 'setter'
+    return isinstance(dec, Attribute) and isinstance(dec.value, Name) and dec.attr == 'setter'
 
 
 def is_literal(node):
-    if isinstance(node, (UnarySub, UnaryAdd)):
-        node = node.expr
-    return isinstance(node, Const) and isinstance(node.value, (int, float))
+    # RESOLVE: Can all UnaryOps be literals, Not?, Invert?
+    if isinstance(node, UnaryOp) and isinstance(node.op, (USub, UAdd)):
+        node = node.operand
+    # RESOLVE: Isn't Str node also literal
+    return isinstance(node, Num) and isinstance(node.n, (int, float))
 
 
 def is_fastfor(node):
-    return isinstance(node.list, CallFunc) and isinstance(node.list.node, Name) and node.list.node.name in ['range', 'xrange']
+    return isinstance(node.iter, Call) and isinstance(node.iter.func, Name) and node.iter.func.id in ['range', 'xrange']
 
 
 def is_method(parent):
@@ -401,20 +402,20 @@ def is_method(parent):
 
 
 def is_enum(node):
-    return isinstance(node.list, CallFunc) and isinstance(node.list.node, Name) and node.list.node.name == 'enumerate' and len(node.list.args) == 1 and isinstance(node.assign, (AssList, AssTuple))
+    return isinstance(node.iter, Call) and isinstance(node.iter.func, Name) and node.iter.func.id == 'enumerate' and len(node.iter.args) == 1 and is_assign_list_or_tuple(node.target)
 
 
 def is_zip2(node):
-    return isinstance(node.list, CallFunc) and isinstance(node.list.node, Name) and node.list.node.name == 'zip' and len(node.list.args) == 2 and isinstance(node.assign, (AssList, AssTuple))
+    return isinstance(node.iter, Call) and isinstance(node.iter.func, Name) and node.iter.func.id == 'zip' and len(node.iter.args) == 2 and is_assign_list_or_tuple(node.target)
 
 def is_isinstance(node):
-    return isinstance(node, CallFunc) and isinstance(node.node, Name) and node.node.name == 'isinstance'
+    return isinstance(node, Call) and isinstance(node.func, Name) and node.func.id == 'isinstance'
 
 # --- recursively determine (lvalue, rvalue) pairs in assignment expressions
 def assign_rec(left, right):
-    if isinstance(left, (AssTuple, AssList)) and isinstance(right, (Tuple, List)):
+    if is_assign_list_or_tuple(left) and isinstance(right, (Tuple, List)):
         pairs = []
-        for (lvalue, rvalue) in zip(left.getChildNodes(), right.getChildNodes()):
+        for (lvalue, rvalue) in zip(left.elts, right.elts):
             pairs += assign_rec(lvalue, rvalue)
         return pairs
     else:
