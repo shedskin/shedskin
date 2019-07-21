@@ -2,8 +2,9 @@
 {% for child, child_module in imports -%}
 {% set mod_name = child_module.full_path() -%}
 
-{% for name, pseudo in child.names -%}
-{% set pseudo = pseudo or name -%}
+{% for n in child.names -%}
+{% set name = n.name -%}
+{% set pseudo = n.asname or n.name -%}
 {% if name == '*' -%}
 
   {% for func in child_module.mv.funcs.values()|selectattr("cp") -%}
@@ -22,7 +23,7 @@
     {% endif %}
   {% else -%}
     using {{ mod_name }}::{{namer.nokeywords(name)}};
-  {% endif %}
+  {%endif %}
 {% endif %}
 
 {% endfor %}
