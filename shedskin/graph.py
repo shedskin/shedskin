@@ -375,8 +375,8 @@ class ModuleVisitor(BaseNodeVisitor):
                     result.append(Name('True', Load()))
         return Tuple(result, Load())
 
-    #def visit_Exec(self, node, func=None):
-    #    error("'exec' is not supported", self.gx, node, mv=getmv())
+    def visit_Exec(self, node, func=None):
+        error("'exec' is not supported", self.gx, node, mv=getmv())
 
     def visit_GeneratorExp(self, node, func=None):
         newnode = CNode(self.gx, node, parent=func, mv=getmv())
@@ -806,13 +806,12 @@ class ModuleVisitor(BaseNodeVisitor):
             error('Unknown value of Tuple ctx', self.gx, node, mv=getmv())
 
     def visit_Subscript(self, node, func=None):  # XXX merge __setitem__, __getitem__
-        if isinstance(node.slice, Ellipsis):  # XXX also check at setitem
-            error('ellipsis is not supported', self.gx, node, mv=getmv())
-
         if isinstance(node.slice, Slice):
             nslice = node.slice
             self.slice(node, node.value, [nslice.lower, nslice.upper, nslice.step], func)
         elif isinstance(node.slice, ExtSlice):
+            if any(isinstance(dim, Ellipsis) for dim in node.slice.dims):  # XXX also check at setitem
+                error('ellipsis is not supported', self.gx, node, mv=getmv())
             raise NotImplementedError
         elif isinstance(node.slice, Index):
             subscript = node.slice.value
@@ -1427,7 +1426,7 @@ class ModuleVisitor(BaseNodeVisitor):
                 inode(self.gx, node.func).callfuncs.append(node)  # XXX iterative dataflow analysis: move there
         else:
             self.visit(node.func, func)
-            inode(self.gx, node.node).callfuncs.append(node)  # XXX iterative dataflow analysis: move there
+            inode(self.gx, node.func).callfuncs.append(node)  # XXX iterative dataflow analysis: move there
 
         # --- arguments
         if not getmv().module.builtin and (node.starargs or node.kwargs):
@@ -1588,6 +1587,8 @@ class ModuleVisitor(BaseNodeVisitor):
         self.instance(node, def_class(self.gx, map[type(node.n)]), func)
 
     def visit_Str(self, node, func=None):
+        if type(node.s) == unicode:
+            error('unicode is not supported', self.gx, node, mv=getmv())
         map = {str: 'str_'}
         self.instance(node, def_class(self.gx, map[type(node.s)]), func)
 
