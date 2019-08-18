@@ -2,6 +2,7 @@
 
 from distutils.core import setup, Command
 import os
+import sys
 
 with open('README.rst') as readme:
     description = [
@@ -21,7 +22,7 @@ class run_tests(Command):
         self.tests_dir = os.path.sep.join(ss_dir)
     def run(self):
         os.chdir(self.tests_dir)
-        os.system('./run.py')
+        os.system('%s ./run.py' % (sys.executable, ))
         os.chdir(self.cwd)
 
 setup(
