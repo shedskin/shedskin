@@ -20,15 +20,28 @@ except ModuleNotFoundError:
     def parse_expr(s):
         return parse(s).body[0]
 
-# sub-class to pass *args, as was possible with python2 compiler.ast..
+NODE_MAP = {
+    'From': 'ImportFrom',
+}
 
 class NodeVisitor(ast.NodeVisitor):
 
     def visit(self, node, *args):
-        method = 'visit_' + node.__class__.__name__
-        visitor = getattr(self, method, self.generic_visit)
+        class_name = node.__class__.__name__
+        if class_name in NODE_MAP:
+            class_name = NODE_MAP[class_name]
+
+        adapter = getattr(self, 'adapt_' + class_name, None)
+        if adapter:
+            adapter(node)
+
+        visitor = getattr(self, 'visit_' + class_name, self.generic_visit)
         return visitor(node, *args)
 
     def generic_visit(self, node, *args):  # TODO update to newer ast
         for child in node.getChildNodes():
             self.visit(child, *args)
+
+    def adapt_ImportFrom(self, node):
+#        node.names = [(alias.name, alias.asname) for alias in node.alias]
+        node.module = node.modname
