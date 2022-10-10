@@ -24,6 +24,8 @@ NODE_MAP = {
     'From': 'ImportFrom',
 }
 
+# sub-class NodeVisitor to pass *args
+
 class NodeVisitor(ast.NodeVisitor):
 
     def visit(self, node, *args):
@@ -38,10 +40,18 @@ class NodeVisitor(ast.NodeVisitor):
         visitor = getattr(self, 'visit_' + class_name, self.generic_visit)
         return visitor(node, *args)
 
-    def generic_visit(self, node, *args):  # TODO update to newer ast
-        for child in node.getChildNodes():
-            self.visit(child, *args)
+    def generic_visit(self, node, *args):
+        if hasattr(node, '_fields'):
+            for field, value in ast.iter_fields(node):
+                if isinstance(value, list):
+                    for item in value:
+                        if isinstance(item, ast.AST):
+                            self.visit(item, *args)
+                elif isinstance(value, ast.AST):
+                    self.visit(value, *args)
+        else:
+            for child in node.getChildNodes():
+                self.visit(child, *args)
 
     def adapt_ImportFrom(self, node):
-#        node.names = [(alias.name, alias.asname) for alias in node.names]
         node.module = node.modname
