@@ -8,6 +8,17 @@ compat.py: python2/3 related compatibility
 
 import ast
 
+try:
+    from compiler import parse
+
+    def parse_expr(s):
+        return parse(s).node.nodes[0]
+
+except ModuleNotFoundError:
+    from ast import parse
+
+    def parse_expr(s):
+        return parse(s).body[0]
 
 # sub-class to pass *args, as was possible with python2 compiler.ast..
 

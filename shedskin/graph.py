@@ -31,7 +31,7 @@ except ModuleNotFoundError:
     # python 3
     from ast import Attribute
 
-from .compat import NodeVisitor
+from .compat import NodeVisitor, parse_expr
 from .error import error
 from .infer import inode, in_out, CNode, default_var, register_temp_var
 from .python import StaticClass, lookup_func, Function, is_zip2, \
@@ -400,7 +400,7 @@ class ModuleVisitor(NodeVisitor):
                 self.visit(ClassNode(dummy, [], None, Pass()))
 
         if self.module.ident != 'builtin':
-            n = From('builtin', [('*', None)], None)  # Python2.5+
+            n = parse_expr('from builtin import *')
             getmv().importnodes.append(n)
             self.visit(n)
 
