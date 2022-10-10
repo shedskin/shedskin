@@ -15,16 +15,17 @@ from difflib import unified_diff
 from multiprocessing import Pool
 from multiprocessing.pool import IMapIterator
 
+if sys.version_info[0] == 2:
+    PYTHON = 'python2'
+else:
+    PYTHON = 'python3'
 
 #Fix for multiprocessing. Without this, Ctrl+C will not kill the process immediately
 set_timeout_decorator = lambda func: lambda self: func(self, timeout=1e100)
 IMapIterator.next = set_timeout_decorator(IMapIterator.next)
 
-
-if os.path.exists('../shedskin/__init__.py'):
-    SS = '../shedskin/__init__.py'
-else:
-    SS = '../../shedskin/__init__.py'
+os.environ['PYTHONPATH'] = '..'
+SS = '-m shedskin'
 
 
 def usage():
@@ -122,11 +123,11 @@ def run_test(test, msvc, options):
         t0 = time.time()
         try:
             if msvc:
-                assert execute('python %s -v %d' % (SS, test)) == 0
+                assert execute(PYTHON + ' %s -v %d' % (SS, test)) == 0
             elif 'n' in options:
-                assert execute('python %s -e -m Makefile.%d %d' % (SS, test, test)) == 0
+                assert execute(PYTHON + ' %s -e -m Makefile.%d %d' % (SS, test, test)) == 0
             else:
-                assert execute('python %s -m Makefile.%d %d' % (SS, test, test)) == 0
+                assert execute(PYTHON + ' %s -m Makefile.%d %d' % (SS, test, test)) == 0
             if msvc:
                 assert execute('nmake /C /S clean') == 0
                 assert execute('nmake /C /S') == 0
@@ -140,9 +141,9 @@ def run_test(test, msvc, options):
                     command = './%d' % test
             if 'n' in options:
                 if test not in [136, 154, 163, 191, 196, 197, 198]:  # sys.exit
-                    assert execute('python -c "__import__(str(%d))"' % test) == 0
+                    assert execute(PYTHON + ' -c "__import__(str(%d))"' % test) == 0
             else:
-                check_output(command, 'python %d.py' % test)
+                check_output(command, PYTHON + ' %d.py' % test)
             with output_lock:
                 print('*** success: %d (%.2f)' % (test, time.time() - t0))
         except AssertionError:
@@ -175,15 +176,15 @@ def extmod_tests(args, options):
         os.chdir('e%d' % test)
         try:
             extmod = file('main.py').next()[1:].strip()
-            assert os.system('python ../%s -e %s' % (SS, extmod)) == 0
+            assert os.system(PYTHON + ' ../%s -e %s' % (SS, extmod)) == 0
             assert os.system('make') == 0
-            native_output = get_output('python main.py')
+            native_output = get_output(PYTHON + ' main.py')
             if sys.platform == 'win32':
                 ext = '.pyd'
             else:
                 ext = '.so'
             assert os.system('rm %s' % (extmod + ext)) == 0
-            cpython_output = get_output('python main.py')
+            cpython_output = get_output(PYTHON + ' main.py')
             if native_output != cpython_output:
                 print('diff:')
                 print(generate_diff(native_output, cpython_output))
@@ -207,7 +208,7 @@ def error_tests(args, options):
             for line in file('%d.py' % test):
                 if line.startswith('#*'):
                     checks.append(line[1:].strip())
-            output = get_output('python ../%s %d 2>&1' % (SS, test))
+            output = get_output(PYTHON + ' ../%s %d 2>&1' % (SS, test))
             assert not [l for l in output if 'Traceback' in l]
             for check in checks:
                 print(check)
