@@ -16,11 +16,16 @@ import textwrap
 
 import jinja2
 
-from compiler import walk
-from compiler.ast import Const, AssTuple, AssList, From, Add, Stmt, AssAttr, \
-    Keyword, AssName, CallFunc, Slice, Getattr, Dict, Subscript, \
-    Function as FunctionNode, Return, Class as ClassNode, Name, List, Discard, Sliceobj, Tuple
-from compiler.visitor import ASTVisitor
+try:
+    from compiler import walk
+    from compiler.ast import Const, AssTuple, AssList, From, Add, Stmt, AssAttr, \
+        Keyword, AssName, CallFunc, Slice, Getattr, Dict, Subscript, \
+        Function as FunctionNode, Return, Class as ClassNode, Name, List, Discard, Sliceobj, Tuple
+    from compiler.visitor import ASTVisitor
+
+except ModuleNotFoundError:
+    from ast import NodeVisitor as ASTVisitor
+
 
 from .error import error
 from .extmod import convert_methods, convert_methods2, do_extmod, pyinit_func

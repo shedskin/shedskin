@@ -6,8 +6,13 @@ annotate.py: annotate source code with inferred types, as *.ss.py (shedskin -a)
 
 '''
 import re
-from compiler.ast import Const, AssTuple, AssList, Assign, AugAssign, \
-    Getattr, Dict, Print, Return, Printnl, Name, List, Tuple, ListComp
+
+try:
+    from compiler.ast import Const, AssTuple, AssList, Assign, AugAssign, \
+        Getattr, Dict, Print, Return, Printnl, Name, List, Tuple, ListComp
+
+except ModuleNotFoundError:
+    pass
 
 from .infer import inode
 from .python import assign_rec
