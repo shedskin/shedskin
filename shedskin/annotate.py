@@ -84,7 +84,7 @@ def annotate(gx):
         # --- callfuncs
         for callfunc, _ in mv.callfuncs:
             if isinstance(callfunc.node, Getattr):
-                if not callfunc.node.__class__.__name__.startswith('FakeGetattr'):  # XXX
+                if not callfunc.node.__class__.__name__.startswith('FakeAttribute'):  # XXX
                     paste(gx, source, callfunc.node.expr, nodetypestr(gx, callfunc, inode(gx, callfunc).parent, False, mv=mv), mv)
             else:
                 paste(gx, source, callfunc.node, nodetypestr(gx, callfunc, inode(gx, callfunc).parent, False, mv=mv), mv)
