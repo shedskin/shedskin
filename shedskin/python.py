@@ -8,9 +8,14 @@ import imp
 import os
 import re
 import sys
-from compiler import parse
-from compiler.ast import AssTuple, AssList, List, Tuple, CallFunc, Name, \
-    Const, UnaryAdd, UnarySub, Getattr
+
+try:
+    from compiler import parse
+    from compiler.ast import AssTuple, AssList, List, Tuple, CallFunc, Name, \
+        Const, UnaryAdd, UnarySub, Getattr
+
+except ModuleNotFoundError:
+    from ast import parse
 
 
 class Module(object):
