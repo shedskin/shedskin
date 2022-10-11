@@ -73,6 +73,9 @@ if OLD:
     def get_docstring(node):
         return node.doc
 
+    def get_formals(node):
+        return node.argnames
+
 else:
     def getChildNodes(node):
         return tuple(ast.iter_child_nodes(node))
@@ -82,3 +85,6 @@ else:
 
     def get_docstring(node):
         return ast.get_docstring(node)
+
+    def get_formals(node):
+        return [arg.arg for arg in node.args.args]
