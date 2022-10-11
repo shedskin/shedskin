@@ -29,9 +29,9 @@ try:
 
 except ModuleNotFoundError:
     # python 3
-    from ast import Attribute, ClassDef, FunctionDef, Global, ListComp, GeneratorExp
+    from ast import Attribute, ClassDef, FunctionDef, Global, ListComp, GeneratorExp, Assign
 
-from .compat import NodeVisitor, parse_expr, getChildNodes, filter_statements
+from .compat import NodeVisitor, parse_expr, getChildNodes, filter_statements, filter_rec
 from .error import error
 from .infer import inode, in_out, CNode, default_var, register_temp_var
 from .python import StaticClass, lookup_func, Function, is_zip2, \
@@ -496,14 +496,14 @@ class ModuleVisitor(NodeVisitor):
             self.set_default_vars(n, func)
 
         # global variables XXX visitGlobal
-        for assname in self.local_assignments(node, global_=True):
-            default_var(self.gx, assname.name, None, mv=getmv())
+        for name in self.local_assignments(node, global_=True):
+            default_var(self.gx, name, None, mv=getmv())
 
     def set_default_vars(self, node, func):
         globals = set(self.get_globals(node))
-        for assname in self.local_assignments(node):
-            if assname.name not in globals:
-                default_var(self.gx, assname.name, func)
+        for name in self.local_assignments(node):
+            if name not in globals:
+                default_var(self.gx, name, func)
 
     def get_globals(self, node):
         if isinstance(node, Global):
@@ -515,12 +515,14 @@ class ModuleVisitor(NodeVisitor):
         return result
 
     def local_assignments(self, node, global_=False):
+        result = []
         if global_ and isinstance(node, (ClassDef, FunctionDef)):
-            return []
+            pass
         elif isinstance(node, (ListComp, GeneratorExp)):
-            return []
-        elif isinstance(node, AssName):
-            result = [node]
+            pass
+        elif isinstance(node, Assign):
+            for target in filter_rec(node.nodes, AssName):
+                result.append(target.name)
         else:
             # Try-Excepts introduce a new small scope with the exception name,
             # so we skip it here.
@@ -535,9 +537,9 @@ class ModuleVisitor(NodeVisitor):
             else:
                 children = getChildNodes(node)
 
-            result = []
             for child in children:
                 result.extend(self.local_assignments(child, global_))
+
         return result
 
     def visit_Import(self, node, func=None):

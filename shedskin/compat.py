@@ -7,7 +7,7 @@ compat.py: python2/3 related compatibility
 '''
 
 try:
-    from compiler.ast import Stmt
+    from compiler.ast import Stmt, AssName, Assign
 
 except ModuleNotFoundError:
     pass
@@ -23,7 +23,7 @@ try:
     OLD = True
 
 except ModuleNotFoundError:
-    from ast import parse
+    from ast import parse, Assign
 
     def parse_expr(s):
         return parse(s).body[0]
@@ -58,6 +58,21 @@ class NodeVisitor(ast.NodeVisitor):
         def adapt_ImportFrom(self, node):
             node.module = node.modname
 
+def filter_rec(node, cl):
+    result = []
+
+    if isinstance(node, cl):
+        result.append(node)
+
+    elif isinstance(node, list):
+        for child in node:
+             result.extend(filter_rec(child, cl))
+
+    else:
+        for child in getChildNodes(node):
+             result.extend(filter_rec(child, cl))
+
+    return result
 
 if OLD:
     def getChildNodes(node):
@@ -77,6 +92,7 @@ if OLD:
         return node.argnames
 
 else:
+
     def getChildNodes(node):
         return tuple(ast.iter_child_nodes(node))
 
