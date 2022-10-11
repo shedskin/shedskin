@@ -70,9 +70,15 @@ if OLD:
                 result.extend([n for n in child.nodes if isinstance(n, cl)])
         return result
 
+    def get_docstring(node):
+        return node.doc
+
 else:
     def getChildNodes(node):
         return tuple(ast.iter_child_nodes(node))
 
     def filter_statements(node, cl):
         return [n for n in ast.iter_child_nodes(node) if isinstance(n, cl)]
+
+    def get_docstring(node):
+        return ast.get_docstring(node)
