@@ -25,13 +25,15 @@ try:
         Keyword, GenExpr as GeneratorExp, LeftShift, AssName, Div, Or, Lambda, And, CallFunc, \
         Global, Slice, RightShift, Sub, Getattr as Attribute, Dict, Ellipsis, Mul, \
         Subscript, Function as FunctionDef, Return, Power, Bitxor, Class as ClassDef, Name, List, \
-        Discard, Sliceobj, Tuple, Pass, UnarySub, Bitor, ListComp, TryExcept, With
+        Discard, Sliceobj, Tuple, Pass, UnarySub, Bitor, ListComp, TryExcept as Try, With
 
 except ModuleNotFoundError:
     # python 3
-    from ast import Attribute, ClassDef, FunctionDef, Global, ListComp, GeneratorExp, Assign
+    from ast import Attribute, ClassDef, FunctionDef, Global, ListComp, \
+        GeneratorExp, Assign, Try, With
 
-from .compat import NodeVisitor, parse_expr, getChildNodes, filter_statements, filter_rec
+from .compat import NodeVisitor, parse_expr, getChildNodes, \
+    filter_statements, filter_rec
 from .error import error
 from .infer import inode, in_out, CNode, default_var, register_temp_var
 from .python import StaticClass, lookup_func, Function, is_zip2, \
@@ -110,7 +112,6 @@ def slice_nums(nodes):
 # --- module visitor; analyze program, build constraint graph
 class ModuleVisitor(NodeVisitor):
     def __init__(self, module, gx):
-        NodeVisitor.__init__(self)
         self.module = module
         self.gx = gx
         self.classes = {}
@@ -526,7 +527,7 @@ class ModuleVisitor(NodeVisitor):
         else:
             # Try-Excepts introduce a new small scope with the exception name,
             # so we skip it here.
-            if isinstance(node, TryExcept):
+            if isinstance(node, Try):
                 children = list(getChildNodes(node.body))
                 for handler in node.handlers:
                     children.extend(getChildNodes(handler[2]))
