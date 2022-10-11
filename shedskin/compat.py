@@ -8,13 +8,13 @@ compat.py: python2/3 related compatibility
 
 try:
     from compiler import parse
-    from compiler.ast import Stmt, Assign
+    from compiler.ast import Stmt, Assign, AssName
 
     OLD = True
 
 except ModuleNotFoundError:
     import ast
-    from ast import parse, Assign
+    from ast import parse, Assign, Name
 
     OLD = False
 
@@ -81,6 +81,9 @@ if OLD:
     def get_formals(node):
         return node.argnames
 
+    def get_assnames(node):
+        return [n.name for n in filter_rec(node.nodes, AssName)]
+
 else:
     def parse_expr(s):
         return parse(s).body[0]
@@ -96,3 +99,6 @@ else:
 
     def get_formals(node):
         return [arg.arg for arg in node.args.args]
+
+    def get_assnames(node):
+        return [n.id for n in filter_rec(node.targets, Name)]

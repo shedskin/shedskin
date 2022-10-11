@@ -33,7 +33,7 @@ except ModuleNotFoundError:
         GeneratorExp, Assign, Try, With
 
 from .compat import NodeVisitor, parse_expr, getChildNodes, \
-    filter_statements, filter_rec
+    filter_statements, filter_rec, get_assnames
 from .error import error
 from .infer import inode, in_out, CNode, default_var, register_temp_var
 from .python import StaticClass, lookup_func, Function, is_zip2, \
@@ -522,8 +522,7 @@ class ModuleVisitor(NodeVisitor):
         elif isinstance(node, (ListComp, GeneratorExp)):
             pass
         elif isinstance(node, Assign):
-            for target in filter_rec(node.nodes, AssName):
-                result.append(target.name)
+            result.extend(get_assnames(node))
         else:
             # Try-Excepts introduce a new small scope with the exception name,
             # so we skip it here.
