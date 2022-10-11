@@ -17,7 +17,7 @@ try:
 except ModuleNotFoundError:
     from ast import parse
 
-from .compat import get_docstring
+from .compat import get_docstring, get_formals
 
 
 class Module(object):
@@ -154,7 +154,7 @@ class Function(object):
             if inherited_from and ident in parent.funcs:
                 ident += inherited_from.ident + '__'  # XXX ugly
             self.ident = ident
-            self.formals = node.argnames
+            self.formals = get_formals(node)
             self.doc = get_docstring(node)
         self.returnexpr = []
         self.retnode = None
