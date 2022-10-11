@@ -7,26 +7,14 @@ compat.py: python2/3 related compatibility
 '''
 
 try:
-    from compiler.ast import Stmt, AssName, Assign
-
-except ModuleNotFoundError:
-    pass
-
-import ast
-
-try:
     from compiler import parse
-
-    def parse_expr(s):
-        return parse(s).node.nodes[0]
+    from compiler.ast import Stmt, Assign
 
     OLD = True
 
 except ModuleNotFoundError:
+    import ast
     from ast import parse, Assign
-
-    def parse_expr(s):
-        return parse(s).body[0]
 
     OLD = False
 
@@ -36,8 +24,7 @@ NODE_MAP = {
 
 # sub-class NodeVisitor to pass *args
 
-class NodeVisitor(ast.NodeVisitor):
-
+class NodeVisitor:
     def visit(self, node, *args):
         class_name = node.__class__.__name__
         if class_name in NODE_MAP:
@@ -75,6 +62,9 @@ def filter_rec(node, cl):
     return result
 
 if OLD:
+    def parse_expr(s):
+        return parse(s).node.nodes[0]
+
     def getChildNodes(node):
         return node.getChildNodes()
 
@@ -92,6 +82,8 @@ if OLD:
         return node.argnames
 
 else:
+    def parse_expr(s):
+        return parse(s).body[0]
 
     def getChildNodes(node):
         return tuple(ast.iter_child_nodes(node))
