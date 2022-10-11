@@ -8,7 +8,7 @@ compat.py: python2/3 related compatibility
 
 try:
     from compiler import parse
-    from compiler.ast import Stmt, Assign, AssName
+    from compiler.ast import Stmt, Assign, AssName, Discard
 
     OLD = True
 
@@ -84,6 +84,9 @@ if OLD:
     def get_assnames(node):
         return [n.name for n in filter_rec(node.nodes, AssName)]
 
+    def get_statements(node):
+        return [n.expr if isinstance(n, Discard) else n for n in node.node.nodes]
+
 else:
     def parse_expr(s):
         return parse(s).body[0]
@@ -102,3 +105,6 @@ else:
 
     def get_assnames(node):
         return [n.id for n in filter_rec(node.targets, Name)]
+
+    def get_statements(node):
+        return node.body
