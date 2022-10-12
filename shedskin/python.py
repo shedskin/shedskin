@@ -17,7 +17,7 @@ try:
 except ModuleNotFoundError:
     from ast import parse, Name
 
-from .compat import get_docstring, get_formals
+from .compat import get_docstring, get_formals, get_id
 
 
 class Module(object):
@@ -304,12 +304,14 @@ def lookup_func(node, mv):  # XXX lookup_var first?
 
 def lookup_class(node, mv):  # XXX lookup_var first?
     if isinstance(node, Name):
-        if node.name in mv.classes:
-            return mv.classes[node.name]
-        elif node.name in mv.ext_classes:
-            return mv.ext_classes[node.name]
+        id_ = get_id(node)
+        if id_ in mv.classes:
+            return mv.classes[id_]
+        elif id_ in mv.ext_classes:
+            return mv.ext_classes[id_]
         else:
             return None
+
     elif isinstance(node, Getattr):
         module = lookup_module(node.expr, mv)
         if module and node.attrname in module.mv.classes:
