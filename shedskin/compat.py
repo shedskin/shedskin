@@ -8,7 +8,7 @@ compat.py: python2/3 related compatibility
 
 try:
     from compiler import parse
-    from compiler.ast import Stmt, Assign, AssName, Discard, Const
+    from compiler.ast import Stmt, Assign, AssName, Discard, Const, Return
 
     OLD = True
 
@@ -93,7 +93,10 @@ if OLD:
         return [n.expr if isinstance(n, Discard) else n for n in node.node.nodes]
 
     def get_statements2(node):
-        return [n.expr if isinstance(n, Discard) else n for n in node.code.nodes]
+        if isinstance(node.code, Return):
+            return [node.code]
+        else:
+            return [n.expr if isinstance(n, Discard) else n for n in node.code.nodes]
 
     def is_const(node):
         return isinstance(node, Const)
