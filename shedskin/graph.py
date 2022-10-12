@@ -1557,14 +1557,15 @@ class ModuleVisitor(NodeVisitor):
                 msgs += ['lshift', 'rshift', 'and', 'xor', 'or']
             for msg in msgs:
                 if not '__i' + msg + '__' in newclass.funcs:
-                    self.visit(FunctionDef(None, '__i' + msg + '__', ['self', 'other'], [], 0, None, Stmt([Return(CallFunc(Attribute(Name('self'), '__' + msg + '__'), [Name('other')], None, None))])), newclass)
+                    self.visit(parse_expr('def __i%s__(self, other): return self.__%s__(other)' % (msg, msg)), newclass)
 
         # --- __str__, __hash__ # XXX model in lib/builtin.py, other defaults?
         if not newclass.mv.module.builtin and not '__str__' in newclass.funcs:
-            self.visit(FunctionDef(None, '__str__', ['self'], [], 0, None, Return(CallFunc(Attribute(Name('self'), '__repr__'), []))), newclass)
+            self.visit(parse_expr('def __str__(self): return self.__repr__()'), newclass)
             newclass.funcs['__str__'].invisible = True
+
         if not newclass.mv.module.builtin and not '__hash__' in newclass.funcs:
-            self.visit(FunctionDef(None, '__hash__', ['self'], [], 0, None, Return(Const(0)), []), newclass)
+            self.visit(parse_expr('def __hash__(self): return 0'), newclass)
             newclass.funcs['__hash__'].invisible = True
 
     def visit_Getattr(self, node, func=None, callfunc=False):
