@@ -30,10 +30,13 @@ try:
 except ModuleNotFoundError:
     # python 3
     from ast import Attribute, ClassDef, FunctionDef, Global, ListComp, \
-        GeneratorExp, Assign, Try, With, Import, ImportFrom, And, Or, Not, Constant
+        GeneratorExp, Assign, Try, With, Import, ImportFrom, And, Or, Not, \
+        Constant, Return, Name
 
 from .compat import NodeVisitor, parse_expr, getChildNodes, \
-    filter_statements, filter_rec, get_assnames, get_statements, is_const, const_value
+    filter_statements, filter_rec, get_assnames, get_statements, is_const, \
+    const_value, get_id
+
 from .error import error
 from .infer import inode, in_out, CNode, default_var, register_temp_var
 from .python import StaticClass, lookup_func, Function, is_zip2, \
@@ -466,7 +469,7 @@ class ModuleVisitor(NodeVisitor):
                     inherit_rec(self.gx, func.node, func_copy, func.mv)
                     tempmv, mv = getmv(), func.mv
                     setmv(mv)
-                    self.visit_Function(func_copy, cl, inherited_from=ancestor)
+                    self.visit_FunctionDef(func_copy, cl, inherited_from=ancestor)
                     mv = tempmv
                     setmv(mv)
 
@@ -645,7 +648,7 @@ class ModuleVisitor(NodeVisitor):
             self.fake_imports[pseud] = module
         return module
 
-    def visit_Function(self, node, parent=None, is_lambda=False, inherited_from=None):
+    def visit_FunctionDef(self, node, parent=None, is_lambda=False, inherited_from=None):
         if not getmv().module.builtin and (node.varargs or node.kwargs):
             error('argument (un)packing is not supported', self.gx, node, mv=getmv())
 
@@ -1238,11 +1241,11 @@ class ModuleVisitor(NodeVisitor):
     def visit_Return(self, node, func):
         self.visit(node.value, func)
         func.returnexpr.append(node.value)
-        if not (isinstance(node.value, Const) and node.value.value is None):
+        if not (is_const(node.value) and const_value(node.value) is None):
             newnode = CNode(self.gx, node, parent=func, mv=getmv())
             self.gx.types[newnode] = set()
             if isinstance(node.value, Name):
-                func.retvars.append(node.value.name)
+                func.retvars.append(get_id(node.value))
         if func.retnode:
             self.add_constraint((inode(self.gx, node.value), func.retnode), func)
 
@@ -1461,7 +1464,7 @@ class ModuleVisitor(NodeVisitor):
 
         self.callfuncs.append((node, func))
 
-    def visit_Class(self, node, parent=None):
+    def visit_ClassDef(self, node, parent=None):
         if not getmv().module.builtin and not node in getmv().classnodes:
             error("non-global class '%s'" % node.name, self.gx, node, mv=getmv())
         if len(node.bases) > 1:
