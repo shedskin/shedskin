@@ -92,6 +92,9 @@ if OLD:
     def get_statements(node):
         return [n.expr if isinstance(n, Discard) else n for n in node.node.nodes]
 
+    def get_statements2(node):
+        return [n.expr if isinstance(n, Discard) else n for n in node.code.nodes]
+
     def is_const(node):
         return isinstance(node, Const)
 
@@ -121,6 +124,9 @@ else:
         return [n.id for n in filter_rec(node.targets, Name)]
 
     def get_statements(node):
+        return node.body
+
+    def get_statements2(node):
         return node.body
 
     def is_const(node):
