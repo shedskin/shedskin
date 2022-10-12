@@ -208,7 +208,7 @@ def error_tests(args, options):
             for line in file('%d.py' % test):
                 if line.startswith('#*'):
                     checks.append(line[1:].strip())
-            output = get_output(PYTHON + ' ../%s %d 2>&1' % (SS, test))
+            output = get_output(PYTHON + ' %s %d 2>&1' % (SS, test))
             assert not [l for l in output if 'Traceback' in l]
             for check in checks:
                 print(check)
