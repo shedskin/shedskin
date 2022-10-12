@@ -45,6 +45,9 @@ class NodeVisitor:
         def adapt_ImportFrom(self, node):
             node.module = node.modname
 
+        def adapt_Name(self, node):
+            node.id = node.name
+
 def filter_rec(node, cl):
     result = []
 

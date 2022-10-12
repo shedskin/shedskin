@@ -1610,29 +1610,29 @@ class ModuleVisitor(NodeVisitor):
         newnode = CNode(self.gx, node, parent=func, mv=getmv())
         self.gx.types[newnode] = set()
 
-        if node.name == '__doc__':
-            error("'%s' attribute is not supported" % node.name, self.gx, node, mv=getmv())
+        if node.id == '__doc__':
+            error("'%s' attribute is not supported" % node.id, self.gx, node, mv=getmv())
 
-        if node.name in ['None', 'True', 'False']:
-            if node.name == 'None':  # XXX also bools, remove def seed_nodes()
+        if node.id in ['None', 'True', 'False']:
+            if node.id == 'None':  # XXX also bools, remove def seed_nodes()
                 self.instance(node, def_class(self.gx, 'none'), func)
             else:
                 self.instance(node, def_class(self.gx, 'bool_'), func)
             return
 
-        if isinstance(func, Function) and node.name in func.globals:
-            var = default_var(self.gx, node.name, None, mv=getmv())
+        if isinstance(func, Function) and node.id in func.globals:
+            var = default_var(self.gx, node.id, None, mv=getmv())
         else:
-            var = lookup_var(node.name, func, mv=getmv())
+            var = lookup_var(node.id, func, mv=getmv())
             if not var:
                 if self.fncl_passing(node, newnode, func):
                     pass
-                elif node.name in ['int', 'float', 'str']:  # XXX
-                    cl = self.ext_classes[node.name + '_']
+                elif node.id in ['int', 'float', 'str']:  # XXX
+                    cl = self.ext_classes[node.id + '_']
                     self.gx.types[newnode] = set([(cl.parent, 0)])
                     newnode.copymetoo = True
                 else:
-                    var = default_var(self.gx, node.name, None, mv=getmv())
+                    var = default_var(self.gx, node.id, None, mv=getmv())
         if var:
             self.add_constraint((inode(self.gx, var), newnode), func)
             for a, b in self.gx.filterstack:
