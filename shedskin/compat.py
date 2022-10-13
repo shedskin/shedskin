@@ -86,6 +86,9 @@ if OLD:
     def get_formals(node):
         return node.argnames
 
+    def get_defaults(node):
+        return node.defaults
+
     def get_assnames(node):
         return [n.name for n in filter_rec(node.nodes, AssName)]
 
@@ -122,6 +125,9 @@ else:
 
     def get_formals(node):
         return [arg.arg for arg in node.args.args]
+
+    def get_defaults(node):
+        return [arg.arg for arg in node.args.defaults]
 
     def get_assnames(node):
         return [n.id for n in filter_rec(node.targets, Name)]
