@@ -35,7 +35,7 @@ except ModuleNotFoundError:
 
 from .compat import NodeVisitor, parse_expr, getChildNodes, \
     filter_statements, filter_rec, get_assnames, get_statements, is_const, \
-    const_value, get_id, get_defaults
+    const_value, get_id, get_defaults, get_body
 
 from .error import error
 from .infer import inode, in_out, CNode, default_var, register_temp_var
