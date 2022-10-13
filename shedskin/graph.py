@@ -35,7 +35,7 @@ except ModuleNotFoundError:
 
 from .compat import NodeVisitor, parse_expr, getChildNodes, \
     filter_statements, filter_rec, get_assnames, get_statements, is_const, \
-    const_value, get_id, get_statements2
+    const_value, get_id, get_statements2, get_defaults
 
 from .error import error
 from .infer import inode, in_out, CNode, default_var, register_temp_var
@@ -695,7 +695,7 @@ class ModuleVisitor(NodeVisitor):
                 func.expand_args[tmp.name] = fake_unpack
                 self.visit(fake_unpack, func)
 
-        func.defaults = node.defaults
+        func.defaults = get_defaults(node)
 
         for formal in func.formals:
             var = default_var(self.gx, formal, func)
