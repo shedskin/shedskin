@@ -35,7 +35,7 @@ except ModuleNotFoundError:
 
 from .compat import NodeVisitor, parse_expr, getChildNodes, \
     filter_statements, filter_rec, get_assnames, get_statements, is_const, \
-    const_value, get_id, get_defaults, get_body
+    const_value, get_id, get_defaults, get_body, get_func
 
 from .error import error
 from .infer import inode, in_out, CNode, default_var, register_temp_var
@@ -1359,7 +1359,7 @@ class ModuleVisitor(NodeVisitor):
                 error('unsupported type of assignment', self.gx, item, mv=getmv())
 
     def super_call(self, orig, parent):
-        node = orig.node
+        node = get_func(orig)
         while isinstance(parent, Function):
             parent = parent.parent
         if (isinstance(node.expr, Call) and
@@ -1376,7 +1376,9 @@ class ModuleVisitor(NodeVisitor):
     def visit_Call(self, node, func=None):  # XXX clean up!!
         newnode = CNode(self.gx, node, parent=func, mv=getmv())
 
-        if isinstance(node.node, Attribute):  # XXX import math; math.e
+        expr = get_func(node)
+
+        if isinstance(expr, Attribute):  # XXX import math; math.e
             # rewrite super(..) call
             base = self.super_call(node, func)
             if base:
@@ -1409,25 +1411,25 @@ class ModuleVisitor(NodeVisitor):
                 if node.args[0].value in getmv().imports[node.node.expr.name].mv.globals:  # XXX bleh
                     self.add_constraint((inode(self.gx, getmv().imports[node.node.expr.name].mv.globals[node.args[0].value]), newnode), func)
 
-        elif isinstance(node.node, Name):
+        elif isinstance(expr, Name):
             # direct call
-            ident = node.node.name
+            ident = expr.name
             if ident == 'print':
-                ident = node.node.name = '__print'  # XXX
+                ident = expr.name = '__print'  # XXX
 
             if ident in ['hasattr', 'getattr', 'setattr', 'slice', 'type', 'Ellipsis']:
-                error("'%s' function is not supported" % ident, self.gx, node.node, mv=getmv())
+                error("'%s' function is not supported" % ident, self.gx, expr, mv=getmv())
             if ident == 'dict' and [x for x in node.args if isinstance(x, Keyword)]:
                 error('unsupported method of initializing dictionaries', self.gx, node, mv=getmv())
             if ident == 'isinstance':
                 error("'isinstance' is not supported; always returns True", self.gx, node, mv=getmv(), warning=True)
 
             if lookup_var(ident, func, mv=getmv()):
-                self.visit(node.node, func)
-                inode(self.gx, node.node).callfuncs.append(node)  # XXX iterative dataflow analysis: move there
+                self.visit(expr, func)
+                inode(self.gx, expr).callfuncs.append(node)  # XXX iterative dataflow analysis: move there
         else:
-            self.visit(node.node, func)
-            inode(self.gx, node.node).callfuncs.append(node)  # XXX iterative dataflow analysis: move there
+            self.visit(expr, func)
+            inode(self.gx, expr).callfuncs.append(node)  # XXX iterative dataflow analysis: move there
 
         # --- arguments
         if not getmv().module.builtin and (node.star_args or node.dstar_args):
@@ -1444,8 +1446,8 @@ class ModuleVisitor(NodeVisitor):
             inode(self.gx, arg).callfuncs.append(node)  # this one too
 
         # --- handle instantiation or call
-        constructor = lookup_class(node.node, getmv())
-        if constructor and (not isinstance(node.node, Name) or not lookup_var(node.node.name, func, mv=getmv())):
+        constructor = lookup_class(expr, getmv())
+        if constructor and (not isinstance(expr, Name) or not lookup_var(expr.name, func, mv=getmv())):
             self.instance(node, constructor, func)
             inode(self.gx, node).callfuncs.append(node)  # XXX see above, investigate
         else:
