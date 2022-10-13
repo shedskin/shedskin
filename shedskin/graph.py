@@ -22,7 +22,7 @@ try:
     # python 2
     from compiler.ast import Const, AssTuple, AssList, From as ImportFrom, Add, ListCompFor, \
         UnaryAdd, Import, Bitand, Assign, FloorDiv, Not, Mod, AssAttr, \
-        Keyword, GenExpr as GeneratorExp, LeftShift, AssName, Div, Or, Lambda, And, CallFunc, \
+        Keyword, GenExpr as GeneratorExp, LeftShift, AssName, Div, Or, Lambda, And, CallFunc as Call, \
         Global, Slice, RightShift, Sub, Getattr as Attribute, Dict, Ellipsis, Mul, \
         Subscript, Function as FunctionDef, Return, Power, Bitxor, Class as ClassDef, Name, List, \
         Sliceobj, Tuple, Pass, UnarySub, Bitor, ListComp, TryExcept as Try, With
@@ -148,7 +148,7 @@ class ModuleVisitor(NodeVisitor):
             newnode = CNode(self.gx, node, parent=func, mv=getmv())
             self.gx.types[newnode] = set()
 
-        fakefunc = CallFunc(Attribute(objexpr, attrname), args)
+        fakefunc = Call(Attribute(objexpr, attrname), args)
         fakefunc.lineno = objexpr.lineno
         self.visit(fakefunc, func)
         self.add_constraint((inode(self.gx, fakefunc), newnode), func)
@@ -169,7 +169,7 @@ class ModuleVisitor(NodeVisitor):
         if isinstance(child, (UnarySub, UnaryAdd)):
             child = child.expr
 
-        if isinstance(child, CallFunc) and isinstance(child.node, Name):
+        if isinstance(child, Call) and isinstance(child.node, Name):
             map = {'int': int, 'str': str, 'float': float}
             if child.node.name in ('range'):  # ,'xrange'):
                 count, child = count + 1, int
@@ -300,7 +300,7 @@ class ModuleVisitor(NodeVisitor):
         self.gx.assign_target[child] = parent
         cu = Const(varname)
         self.visit(cu, func)
-        fakefunc = CallFunc(FakeAttribute2(parent, '__setattr__'), [cu, child])
+        fakefunc = Call(FakeAttribute2(parent, '__setattr__'), [cu, child])
         self.visit(fakefunc, func)
 
         fakechildnode = CNode(self.gx, (child, varname), parent=func, mv=getmv())  # create separate 'fake' CNode per child, so we can have multiple 'callfuncs'
@@ -319,7 +319,7 @@ class ModuleVisitor(NodeVisitor):
             func.constraints.add(constraint)
 
     def struct_unpack(self, rvalue, func):
-        if isinstance(rvalue, CallFunc):
+        if isinstance(rvalue, Call):
             if isinstance(rvalue.node, Attribute) and isinstance(rvalue.node.expr, Name) and rvalue.node.expr.name == 'struct' and rvalue.node.attrname == 'unpack' and lookup_var('struct', func, mv=self).imported:  # XXX imported from where?
                 return True
             elif isinstance(rvalue.node, Name) and rvalue.node.name == 'unpack' and 'unpack' in self.ext_funcs and not lookup_var('unpack', func, mv=self):  # XXX imported from where?
@@ -714,7 +714,7 @@ class ModuleVisitor(NodeVisitor):
             if func.ident not in parent.staticmethods:  # XXX use flag
                 default_var(self.gx, 'self', func)
                 if func.ident == '__init__' and '__del__' in parent.funcs:  # XXX what if no __init__
-                    self.visit(CallFunc(Attribute(Name('self'), '__del__'), []), func)
+                    self.visit(Call(Attribute(Name('self'), '__del__'), []), func)
                     self.gx.gc_cleanup = True
             parent.funcs[func.ident] = func
 
@@ -757,7 +757,7 @@ class ModuleVisitor(NodeVisitor):
             if is_isinstance(test):
                 self.gx.filterstack.append(test.args)
             self.bool_test_add(test)
-            faker = CallFunc(Name('bool'), [test])
+            faker = Call(Name('bool'), [test])
             self.visit(faker, func)
             self.visit_statements(get_statements(code), func)
             if is_isinstance(test):
@@ -853,7 +853,7 @@ class ModuleVisitor(NodeVisitor):
             if msg == 'contains':
                 self.fake_func(node, right, '__' + msg + '__', [left], func)
             elif msg in ('lt', 'gt', 'le', 'ge'):
-                fakefunc = CallFunc(Name('__%s' % msg), [left, right])
+                fakefunc = Call(Name('__%s' % msg), [left, right])
                 fakefunc.lineno = left.lineno
                 self.visit(fakefunc, func)
             elif msg:
@@ -1075,7 +1075,7 @@ class ModuleVisitor(NodeVisitor):
     def visit_Yield(self, node, func):
         func.isGenerator = True
         func.yieldNodes.append(node)
-        self.visit(Return(CallFunc(Name('__iter'), [node.value])), func)
+        self.visit(Return(Call(Name('__iter'), [node.value])), func)
         self.add_constraint((inode(self.gx, node.value), func.yieldnode), func)
 
     def visit_For(self, node, func=None):
@@ -1083,8 +1083,8 @@ class ModuleVisitor(NodeVisitor):
         assnode = CNode(self.gx, node.assign, parent=func, mv=getmv())
         self.gx.types[assnode] = set()
 
-        get_iter = CallFunc(Attribute(node.list, '__iter__'), [])
-        fakefunc = CallFunc(Attribute(get_iter, 'next'), [])
+        get_iter = Call(Attribute(node.list, '__iter__'), [])
+        fakefunc = Call(Attribute(get_iter, 'next'), [])
 
         self.visit(fakefunc, func)
         self.add_constraint((inode(self.gx, fakefunc), assnode), func)
@@ -1100,7 +1100,7 @@ class ModuleVisitor(NodeVisitor):
             CNode(self.gx, node.assign, parent=func, mv=getmv())
 
             self.gx.assign_target[node.assign.expr] = node.assign.expr  # XXX multiple targets possible please
-            fakefunc2 = CallFunc(Attribute(node.assign.expr, '__setattr__'), [Const(node.assign.attrname), fakefunc])
+            fakefunc2 = Call(Attribute(node.assign.expr, '__setattr__'), [Const(node.assign.attrname), fakefunc])
             self.visit(fakefunc2, func)
 
         elif isinstance(node.assign, (AssTuple, AssList)):
@@ -1146,7 +1146,7 @@ class ModuleVisitor(NodeVisitor):
                     self.temp_var_int((node, 4), func)
 
             self.temp_var((node, 5), func, looper=node.list)
-            if isinstance(node.list, CallFunc) and isinstance(node.list.node, Attribute):
+            if isinstance(node.list, Call) and isinstance(node.list.node, Attribute):
                 self.temp_var((node, 6), func, wopper=node.list.node.expr)
                 self.temp_var2((node, 7), inode(self.gx, node.list.node.expr), func)
 
@@ -1195,8 +1195,8 @@ class ModuleVisitor(NodeVisitor):
             self.gx.types[assnode] = set()
 
             # list.unit->iter
-            get_iter = CallFunc(Attribute(qual.list, '__iter__'), [])
-            fakefunc = CallFunc(Attribute(get_iter, 'next'), [])
+            get_iter = Call(Attribute(qual.list, '__iter__'), [])
+            fakefunc = Call(Attribute(get_iter, 'next'), [])
             self.visit(fakefunc, lcfunc)
             self.add_constraint((inode(self.gx, fakefunc), inode(self.gx, qual.assign)), lcfunc)
 
@@ -1310,7 +1310,7 @@ class ModuleVisitor(NodeVisitor):
             else:
                 subscript = lvalue.subs[0]
 
-            fakefunc = CallFunc(Attribute(lvalue.expr, '__setitem__'), [subscript, rvalue])
+            fakefunc = Call(Attribute(lvalue.expr, '__setitem__'), [subscript, rvalue])
             self.visit(fakefunc, func)
             inode(self.gx, lvalue.expr).fakefunc = fakefunc
             if len(lvalue.subs) > 1:
@@ -1323,7 +1323,7 @@ class ModuleVisitor(NodeVisitor):
         elif isinstance(lvalue, AssAttr):
             CNode(self.gx, lvalue, parent=func, mv=getmv())
             self.gx.assign_target[rvalue] = lvalue.expr
-            fakefunc = CallFunc(Attribute(lvalue.expr, '__setattr__'), [Const(lvalue.attrname), rvalue])
+            fakefunc = Call(Attribute(lvalue.expr, '__setattr__'), [Const(lvalue.attrname), rvalue])
             self.visit(fakefunc, func)
 
     def default_var(self, name, func, exc_name=False):
@@ -1342,7 +1342,7 @@ class ModuleVisitor(NodeVisitor):
             self.gx.types[fakenode] = set()
             self.add_constraint((inode(self.gx, rvalue), fakenode), func)
 
-            fakefunc = CallFunc(FakeAttribute3(rvalue, '__getitem__'), [Const(i)])
+            fakefunc = Call(FakeAttribute3(rvalue, '__getitem__'), [Const(i)])
 
             fakenode.callfuncs.append(fakefunc)
             self.visit(fakefunc, func)
@@ -1362,7 +1362,7 @@ class ModuleVisitor(NodeVisitor):
         node = orig.node
         while isinstance(parent, Function):
             parent = parent.parent
-        if (isinstance(node.expr, CallFunc) and
+        if (isinstance(node.expr, Call) and
             node.attrname not in ('__getattr__', '__setattr__') and
             isinstance(node.expr.node, Name) and
                 node.expr.node.name == 'super'):
@@ -1373,7 +1373,7 @@ class ModuleVisitor(NodeVisitor):
                     return cl.node.bases[0]
             error("unsupported usage of 'super'", self.gx, orig, mv=getmv())
 
-    def visit_CallFunc(self, node, func=None):  # XXX clean up!!
+    def visit_Call(self, node, func=None):  # XXX clean up!!
         newnode = CNode(self.gx, node, parent=func, mv=getmv())
 
         if isinstance(node.node, Attribute):  # XXX import math; math.e
@@ -1515,7 +1515,7 @@ class ModuleVisitor(NodeVisitor):
         for child in get_statements(get_body(node)):
             if isinstance(child, Assign) and len(child.nodes) == 1:
                 lvalue, rvalue = child.nodes[0], child.expr
-                if isinstance(lvalue, AssName) and isinstance(rvalue, CallFunc) and isinstance(rvalue.node, Name) and rvalue.node.name in ['staticmethod', 'property']:
+                if isinstance(lvalue, AssName) and isinstance(rvalue, Call) and isinstance(rvalue.node, Name) and rvalue.node.name in ['staticmethod', 'property']:
                     if rvalue.node.name == 'property':
                         if len(rvalue.args) == 1 and isinstance(rvalue.args[0], Name):
                             newclass.properties[lvalue.name] = rvalue.args[0].name, None
@@ -1564,7 +1564,7 @@ class ModuleVisitor(NodeVisitor):
         newnode = CNode(self.gx, node, parent=func, mv=getmv())
         self.gx.types[newnode] = set()
 
-        fakefunc = CallFunc(FakeAttribute(node.expr, '__getattr__'), [Const(node.attrname)])
+        fakefunc = Call(FakeAttribute(node.expr, '__getattr__'), [Const(node.attrname)])
         self.visit(fakefunc, func)
         self.add_constraint((self.gx.cnode[fakefunc, 0, 0], newnode), func)
 
@@ -1633,7 +1633,7 @@ class ModuleVisitor(NodeVisitor):
                     self.gx.filters[node] = lookup_class(b, getmv())
 
     def builtin_wrapper(self, node, func):
-        node2 = CallFunc(copy.deepcopy(node), [Name(x) for x in 'abcde'])
+        node2 = Call(copy.deepcopy(node), [Name(x) for x in 'abcde'])
         l = Lambda(list('abcde'), [], 0, node2)
         self.visit(l, func)
         self.lwrapper[node] = self.lambdaname[l]
