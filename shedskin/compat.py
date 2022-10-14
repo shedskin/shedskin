@@ -9,13 +9,13 @@ compat.py: python2/3 related compatibility
 try:
     from compiler import parse
     from compiler.ast import Stmt, Assign, AssName, Discard, Const, Return, \
-        Function as FunctionDef, Class as ClassDef, Keyword
+        Function as FunctionDef, Class as ClassDef, Keyword, UnarySub, UnaryAdd
 
     OLD = True
 
 except ModuleNotFoundError:
     import ast
-    from ast import parse, Assign, Name, Expr, Constant, Starred
+    from ast import parse, Assign, Name, Expr, Constant, Starred, UnaryOp
 
     OLD = False
 
@@ -144,6 +144,9 @@ if OLD:
     def get_elts(node):
         return node.nodes
 
+    def is_unary(node):
+        return isinstance(node, (UnarySub, UnaryAdd))
+
 else:
     def parse_expr(s):
         return parse(s).body[0]
@@ -161,7 +164,7 @@ else:
         return [arg.arg for arg in node.args.args]
 
     def get_defaults(node):
-        return [arg.arg for arg in node.args.defaults]
+        return node.args.defaults
 
     def get_assnames(node):
         return [n.id for n in filter_rec(node.targets, Name)]
@@ -204,3 +207,6 @@ else:
 
     def get_elts(node):
         return node.elts
+
+    def is_unary(node):
+        return isinstance(node, UnaryOp)
