@@ -37,7 +37,7 @@ except ModuleNotFoundError:
 from .compat import NodeVisitor, parse_expr, getChildNodes, \
     filter_statements, filter_rec, get_assnames, get_statements, is_const, \
     const_value, get_id, get_defaults, get_body, get_func, attr_value, \
-    attr_attr, get_args
+    attr_attr, get_args, get_elts
 
 from .error import error
 from .infer import inode, in_out, CNode, default_var, register_temp_var
@@ -222,14 +222,14 @@ class ModuleVisitor(NodeVisitor):
         self.instance(node, cl, func)
         default_var(self.gx, 'unit', cl)
 
-        if classname in ['list', 'tuple'] and not node.nodes:
+        if classname in ['list', 'tuple'] and not get_elts(node):
             self.gx.empty_constructors.add(node)  # ifa disables those that flow to instance variable assignments
 
         # --- internally flow binary tuples
         if cl.ident == 'tuple2':
             default_var(self.gx, 'first', cl)
             default_var(self.gx, 'second', cl)
-            elem0, elem1 = node.nodes
+            elem0, elem1 = get_elts(node)
 
             self.visit(elem0, func)
             self.visit(elem1, func)
@@ -254,7 +254,7 @@ class ModuleVisitor(NodeVisitor):
                 self.add_dynamic_constraint(node, key, 'unit', func)
                 self.add_dynamic_constraint(node, value, 'value', func)
         else:
-            for child in node.nodes:
+            for child in get_elts(node):
                 self.visit(child, func)
 
             for child in self.filter_redundant_children(node):
@@ -264,7 +264,7 @@ class ModuleVisitor(NodeVisitor):
     def filter_redundant_children(self, node):
         done = set()
         nonred = []
-        for child in node.nodes:
+        for child in get_elts(node):
             type = self.child_type_rec(child)
             if not type or not type in done:
                 done.add(type)
@@ -799,7 +799,7 @@ class ModuleVisitor(NodeVisitor):
         self.fake_func(node, node.expr, '__repr__', [], func)
 
     def visit_Tuple(self, node, func=None):
-        if len(node.nodes) == 2:
+        if len(get_elts(node)) == 2:
             self.constructor(node, 'tuple2', func)
         else:
             self.constructor(node, 'tuple', func)

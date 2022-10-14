@@ -141,6 +141,9 @@ if OLD:
 
         return args
 
+    def get_elts(node):
+        return node.nodes
+
 else:
     def parse_expr(s):
         return parse(s).body[0]
@@ -198,3 +201,6 @@ else:
                 args.append(arg.expr)
 
         return args
+
+    def get_elts(node):
+        return node.elts
