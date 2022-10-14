@@ -115,6 +115,9 @@ if OLD:
     def get_id(node):
         return node.name
 
+    def get_func(node):
+        return node.node
+
 else:
     def parse_expr(s):
         return parse(s).body[0]
@@ -151,3 +154,6 @@ else:
 
     def get_id(node):
         return node.id
+
+    def get_func(node):
+        return node.func
