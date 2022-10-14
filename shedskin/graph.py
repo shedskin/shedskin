@@ -21,23 +21,23 @@ import sys
 try:
     # python 2
     from compiler.ast import Const as Constant, AssTuple, AssList, From as ImportFrom, Add, ListCompFor, \
-        UnaryAdd, Import, Bitand, Assign, FloorDiv, Not, Mod, AssAttr, \
+        Import, Bitand, Assign, FloorDiv, Not, Mod, AssAttr, \
         GenExpr as GeneratorExp, LeftShift, AssName, Div, Or, Lambda, And, CallFunc as Call, \
         Global, Slice, RightShift, Sub, Getattr as Attribute, Dict, Ellipsis, Mul, \
         Subscript, Function as FunctionDef, Return, Power, Bitxor, Class as ClassDef, Name, List, \
-        Sliceobj, Tuple, Pass, UnarySub, Bitor, ListComp, TryExcept as Try, With, \
+        Sliceobj, Tuple, Pass, Bitor, ListComp, TryExcept as Try, With, \
         Keyword as keyword
 
 except ModuleNotFoundError:
     # python 3
     from ast import Attribute, ClassDef, FunctionDef, Global, ListComp, \
         GeneratorExp, Assign, Try, With, Import, ImportFrom, And, Or, Not, \
-        Constant, Return, Name, Call, Starred, keyword
+        Constant, Return, Name, Call, Starred, keyword, UnaryOp, List, Tuple
 
 from .compat import NodeVisitor, parse_expr, getChildNodes, \
     filter_statements, filter_rec, get_assnames, get_statements, is_const, \
     const_value, get_id, get_defaults, get_body, get_func, attr_value, \
-    attr_attr, get_args, get_elts
+    attr_attr, get_args, get_elts, is_unary
 
 from .error import error
 from .infer import inode, in_out, CNode, default_var, register_temp_var
@@ -168,7 +168,7 @@ class ModuleVisitor(NodeVisitor):
             child = getChildNodes(child)[0]
             count += 1
 
-        if isinstance(child, (UnarySub, UnaryAdd)):
+        if is_unary(child):
             child = child.expr
 
         if isinstance(child, Call) and isinstance(child.node, Name):
@@ -274,7 +274,7 @@ class ModuleVisitor(NodeVisitor):
 
     # --- determine single constructor child node type, used by the above
     def child_type_rec(self, node):
-        if isinstance(node, (UnarySub, UnaryAdd)):
+        if is_unary(node):
             node = node.expr
 
         if isinstance(node, (List, Tuple)):
@@ -836,10 +836,13 @@ class ModuleVisitor(NodeVisitor):
         else:
             self.fake_func(node, expr, '__slice__', nodes2, func)
 
-    def visit_UnarySub(self, node, func=None):
+    def visit_UnaryOp(self, node, func=None):
+        pass
+
+    def visit_UnarySub(self, node, func=None): # py2
         self.fake_func(node, node.expr, '__neg__', [], func)
 
-    def visit_UnaryAdd(self, node, func=None):
+    def visit_UnaryAdd(self, node, func=None): # py2
         self.fake_func(node, node.expr, '__pos__', [], func)
 
     def visit_Compare(self, node, func=None):
