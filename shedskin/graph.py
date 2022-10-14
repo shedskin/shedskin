@@ -1402,7 +1402,7 @@ class ModuleVisitor(NodeVisitor):
             elif isinstance(expr, FakeAttribute3):
                 pass
             else:
-                self.visit_Getattr(expr, func, callfunc=True)
+                self.visit_Attribute(expr, func, callfunc=True)
                 inode(self.gx, expr).callfuncs.append(node)  # XXX iterative dataflow analysis: move there?
                 inode(self.gx, expr).fakert = True
 
@@ -1561,14 +1561,17 @@ class ModuleVisitor(NodeVisitor):
             self.visit(parse_expr('def __hash__(self): return 0'), newclass)
             newclass.funcs['__hash__'].invisible = True
 
-    def visit_Getattr(self, node, func=None, callfunc=False):
-        if node.attrname in ['__doc__']:
-            error('%s attribute is not supported' % node.attrname, self.gx, node, mv=getmv())
+    def visit_Attribute(self, node, func=None, callfunc=False):
+        value = attr_value(node)
+        attr = attr_attr(node)
+
+        if attr in ['__doc__']:
+            error('%s attribute is not supported' % attr, self.gx, node, mv=getmv())
 
         newnode = CNode(self.gx, node, parent=func, mv=getmv())
         self.gx.types[newnode] = set()
 
-        fakefunc = Call(FakeAttribute(node.expr, '__getattr__'), [Const(node.attrname)])
+        fakefunc = Call(FakeAttribute(value, '__getattr__'), [Const(attr)])
         self.visit(fakefunc, func)
         self.add_constraint((self.gx.cnode[fakefunc, 0, 0], newnode), func)
 
