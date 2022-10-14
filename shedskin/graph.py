@@ -35,7 +35,8 @@ except ModuleNotFoundError:
 
 from .compat import NodeVisitor, parse_expr, getChildNodes, \
     filter_statements, filter_rec, get_assnames, get_statements, is_const, \
-    const_value, get_id, get_defaults, get_body, get_func
+    const_value, get_id, get_defaults, get_body, get_func, attr_value, \
+    attr_attr
 
 from .error import error
 from .infer import inode, in_out, CNode, default_var, register_temp_var
@@ -1358,17 +1359,17 @@ class ModuleVisitor(NodeVisitor):
             else:
                 error('unsupported type of assignment', self.gx, item, mv=getmv())
 
-    def super_call(self, orig, parent):
-        node = get_func(orig)
-        while isinstance(parent, Function):
-            parent = parent.parent
-        if (isinstance(node.expr, Call) and
-            node.attrname not in ('__getattr__', '__setattr__') and
-            isinstance(node.expr.node, Name) and
-                node.expr.node.name == 'super'):
-            if (len(node.expr.args) >= 2 and
-                    isinstance(node.expr.args[1], Name) and node.expr.args[1].name == 'self'):
-                cl = lookup_class(node.expr.args[0], getmv())
+    def super_call(self, expr, orig):
+        value = attr_value(expr)
+        attr = attr_attr(expr)
+
+        if (isinstance(value, Call) and
+            attr not in ('__getattr__', '__setattr__') and
+            isinstance(get_func(value), Name) and
+                get_id(get_func(value)) == 'super'):
+            if (len(value.args) >= 2 and
+                    isinstance(value.args[1], Name) and value.args[1].name == 'self'):
+                cl = lookup_class(value.args[0], getmv())
                 if cl.node.bases:
                     return cl.node.bases[0]
             error("unsupported usage of 'super'", self.gx, orig, mv=getmv())
@@ -1380,7 +1381,7 @@ class ModuleVisitor(NodeVisitor):
 
         if isinstance(expr, Attribute):  # XXX import math; math.e
             # rewrite super(..) call
-            base = self.super_call(node, func)
+            base = self.super_call(expr, node)
             if base:
                 node.node = Attribute(copy.deepcopy(base), node.node.attrname)
                 node.args = [Name('self')] + node.args
