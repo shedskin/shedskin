@@ -12,12 +12,12 @@ import sys
 try:
     from compiler import parse
     from compiler.ast import AssTuple, AssList, List, Tuple, CallFunc, Name, \
-        Const, UnaryAdd, UnarySub, Getattr
+        Const, UnaryAdd, UnarySub, Getattr as Attribute
 
 except ModuleNotFoundError:
-    from ast import parse, Name
+    from ast import parse, Name, Attribute
 
-from .compat import get_docstring, get_formals, get_id
+from .compat import get_docstring, get_formals, get_id, attr_value, attr_attr
 
 
 class Module(object):
@@ -296,10 +296,10 @@ def lookup_func(node, mv):  # XXX lookup_var first?
             return mv.ext_funcs[node.id]
         else:
             return None
-    elif isinstance(node, Getattr):
-        module = lookup_module(node.expr, mv)
-        if module and node.attrname in module.mv.funcs:
-            return module.mv.funcs[node.attrname]
+    elif isinstance(node, Attribute):
+        module = lookup_module(attr_value(node), mv)
+        if module and attr_attr(node) in module.mv.funcs:
+            return module.mv.funcs[attr_attr(node)]
 
 
 def lookup_class(node, mv):  # XXX lookup_var first?
@@ -312,22 +312,22 @@ def lookup_class(node, mv):  # XXX lookup_var first?
         else:
             return None
 
-    elif isinstance(node, Getattr):
-        module = lookup_module(node.expr, mv)
-        if module and node.attrname in module.mv.classes:
-            return module.mv.classes[node.attrname]
+    elif isinstance(node, Attribute):
+        module = lookup_module(attr_value(node), mv)
+        if module and attr_attr(node) in module.mv.classes:
+            return module.mv.classes[attr_attr(node)]
 
 
 def lookup_module(node, mv):
     path = []
     imports = mv.imports
 
-    while isinstance(node, Getattr):
-        path = [node.attrname] + path
-        node = node.expr
+    while isinstance(node, Attribute):
+        path = [attr_attr(node)] + path
+        node = attr_value(node)
 
     if isinstance(node, Name):
-        path = [node.name] + path
+        path = [get_id(node)] + path
 
         # --- search import chain
         for ident in path:
@@ -391,7 +391,7 @@ def subclass(a, b):
 
 
 def is_property_setter(dec):
-    return isinstance(dec, Getattr) and isinstance(dec.expr, Name) and dec.attrname == 'setter'
+    return isinstance(dec, Attribute) and isinstance(attr_value(dec), Name) and attr_attr(dec) == 'setter'
 
 
 def is_literal(node):
