@@ -20,7 +20,7 @@ import sys
 
 try:
     # python 2
-    from compiler.ast import Const, AssTuple, AssList, From as ImportFrom, Add, ListCompFor, \
+    from compiler.ast import Const as Constant, AssTuple, AssList, From as ImportFrom, Add, ListCompFor, \
         UnaryAdd, Import, Bitand, Assign, FloorDiv, Not, Mod, AssAttr, \
         Keyword, GenExpr as GeneratorExp, LeftShift, AssName, Div, Or, Lambda, And, CallFunc as Call, \
         Global, Slice, RightShift, Sub, Getattr as Attribute, Dict, Ellipsis, Mul, \
@@ -105,12 +105,12 @@ def slice_nums(nodes):
     nodes2 = []
     x = 0
     for i, n in enumerate(nodes):
-        if not n or (isinstance(n, Const) and n.value is None):
-            nodes2.append(Const(0))
+        if not n or (isinstance(n, Constant) and n.value is None):
+            nodes2.append(Constant(0))
         else:
             nodes2.append(n)
             x |= (1 << i)
-    return [Const(x)] + nodes2
+    return [Constant(x)] + nodes2
 
 
 # --- module visitor; analyze program, build constraint graph
@@ -182,7 +182,7 @@ class ModuleVisitor(NodeVisitor):
                 if count == 1:
                     return None
                 child = None
-        elif isinstance(child, Const):
+        elif isinstance(child, Constant):
             child = type(child.value)
         elif isinstance(child, Name) and child.name in ('True', 'False'):
             child = bool
@@ -291,7 +291,7 @@ class ModuleVisitor(NodeVisitor):
             if len(merged) == 1:
                 return (cl, merged.pop())
 
-        elif isinstance(node, Const):
+        elif isinstance(node, Constant):
             return (list(inode(self.gx, node).types())[0][0],)
 
     # --- add dynamic constraint for constructor argument, e.g. '[expr]' becomes [].__setattr__('unit', expr)
@@ -299,7 +299,7 @@ class ModuleVisitor(NodeVisitor):
         # print 'dynamic constr', child, parent
 
         self.gx.assign_target[child] = parent
-        cu = Const(varname)
+        cu = Constant(varname)
         self.visit(cu, func)
         fakefunc = Call(FakeAttribute2(parent, '__setattr__'), [cu, child])
         self.visit(fakefunc, func)
@@ -333,7 +333,7 @@ class ModuleVisitor(NodeVisitor):
                 error('non-constant format string', self.gx, node, mv=self)
             error('assuming constant format string', self.gx, node, mv=self, warning=True)
             fmt = var.const_assign[0].value
-        elif isinstance(node, Const):
+        elif isinstance(node, Constant):
             fmt = node.value
         else:
             error('non-constant format string', self.gx, node, mv=self)
@@ -365,11 +365,11 @@ class ModuleVisitor(NodeVisitor):
         for o, c, t, d in info:
             if d != 0 or c == 's':
                 if t == 'int':
-                    result.append(Const(1))
+                    result.append(Constant(1))
                 elif t == 'str':
-                    result.append(Const(''))
+                    result.append(Constant(''))
                 elif t == 'float':
-                    result.append(Const(1.0))
+                    result.append(Constant(1.0))
                 elif t == 'bool':
                     result.append(Name('True'))
         return Tuple(result)
@@ -863,7 +863,7 @@ class ModuleVisitor(NodeVisitor):
 
         # tempvars, e.g. (t1=fun())
         for term in node.ops[:-1]:
-            if not isinstance(term[1], (Name, Const)):
+            if not isinstance(term[1], (Name, Constant)):
                 self.temp_var2(term[1], inode(self.gx, term[1]), func)
 
     def visit_Bitand(self, node, func=None):
@@ -1101,7 +1101,7 @@ class ModuleVisitor(NodeVisitor):
             CNode(self.gx, node.assign, parent=func, mv=getmv())
 
             self.gx.assign_target[node.assign.expr] = node.assign.expr  # XXX multiple targets possible please
-            fakefunc2 = Call(Attribute(node.assign.expr, '__setattr__'), [Const(node.assign.attrname), fakefunc])
+            fakefunc2 = Call(Attribute(node.assign.expr, '__setattr__'), [Constant(node.assign.attrname), fakefunc])
             self.visit(fakefunc2, func)
 
         elif isinstance(node.assign, (AssTuple, AssList)):
@@ -1274,7 +1274,7 @@ class ModuleVisitor(NodeVisitor):
                         self.visit(rvalue, func)
                     self.visit(lvalue, func)
                     lvar = self.default_var(lvalue.name, func)
-                    if isinstance(rvalue, Const):
+                    if isinstance(rvalue, Constant):
                         lvar.const_assign.append(rvalue)
                     self.add_constraint((inode(self.gx, rvalue), inode(self.gx, lvar)), func)
 
@@ -1298,9 +1298,9 @@ class ModuleVisitor(NodeVisitor):
                     for child in node.expr.nodes:
                         if (child, 0, 0) not in self.gx.cnode:  # (a,b) = (1,2): (1,2) never visited
                             continue
-                        if not isinstance(child, Const) and not (isinstance(child, Name) and child.name == 'None'):
+                        if not isinstance(child, Constant) and not (isinstance(child, Name) and child.name == 'None'):
                             self.temp_var2(child, inode(self.gx, child), func)
-            elif not isinstance(node.expr, Const) and not (isinstance(node.expr, Name) and node.expr.name == 'None'):
+            elif not isinstance(node.expr, Constant) and not (isinstance(node.expr, Name) and node.expr.name == 'None'):
                 self.temp_var2(node.expr, inode(self.gx, node.expr), func)
 
     def assign_pair(self, lvalue, rvalue, func):
@@ -1324,7 +1324,7 @@ class ModuleVisitor(NodeVisitor):
         elif isinstance(lvalue, AssAttr):
             CNode(self.gx, lvalue, parent=func, mv=getmv())
             self.gx.assign_target[rvalue] = lvalue.expr
-            fakefunc = Call(Attribute(lvalue.expr, '__setattr__'), [Const(lvalue.attrname), rvalue])
+            fakefunc = Call(Attribute(lvalue.expr, '__setattr__'), [Constant(lvalue.attrname), rvalue])
             self.visit(fakefunc, func)
 
     def default_var(self, name, func, exc_name=False):
@@ -1343,7 +1343,7 @@ class ModuleVisitor(NodeVisitor):
             self.gx.types[fakenode] = set()
             self.add_constraint((inode(self.gx, rvalue), fakenode), func)
 
-            fakefunc = Call(FakeAttribute3(rvalue, '__getitem__'), [Const(i)])
+            fakefunc = Call(FakeAttribute3(rvalue, '__getitem__'), [Constant(i)])
 
             fakenode.callfuncs.append(fakefunc)
             self.visit(fakefunc, func)
@@ -1406,10 +1406,10 @@ class ModuleVisitor(NodeVisitor):
                 inode(self.gx, expr).callfuncs.append(node)  # XXX iterative dataflow analysis: move there?
                 inode(self.gx, expr).fakert = True
 
-            ident = node.node.attrname
+            ident = attr_attr(expr)
             inode(self.gx, expr.expr).callfuncs.append(node)  # XXX iterative dataflow analysis: move there?
 
-            if isinstance(expr.expr, Name) and get_id(expr.expr) in getmv().imports and attr_attr(expr) == '__getattr__':  # XXX analyze_callfunc
+            if isinstance(expr.expr, Name) and get_id(expr.expr) in getmv().imports and ident == '__getattr__':  # XXX analyze_callfunc
                 if node.args[0].value in getmv().imports[expr.expr.name].mv.globals:  # XXX bleh
                     self.add_constraint((inode(self.gx, getmv().imports[expr.expr.name].mv.globals[node.args[0].value]), newnode), func)
 
@@ -1571,7 +1571,7 @@ class ModuleVisitor(NodeVisitor):
         newnode = CNode(self.gx, node, parent=func, mv=getmv())
         self.gx.types[newnode] = set()
 
-        fakefunc = Call(FakeAttribute(value, '__getattr__'), [Const(attr)])
+        fakefunc = Call(FakeAttribute(value, '__getattr__'), [Constant(attr)])
         self.visit(fakefunc, func)
         self.add_constraint((self.gx.cnode[fakefunc, 0, 0], newnode), func)
 
@@ -1580,10 +1580,10 @@ class ModuleVisitor(NodeVisitor):
         if not callfunc:
             self.fncl_passing(node, newnode, func)
 
-    def visit_Const(self, node, func=None):
+    def visit_Constant(self, node, func=None):
         if type(node.value) == unicode:
             error('unicode is not supported', self.gx, node, mv=getmv())
-        map = {int: 'int_', str: 'str_', float: 'float_', type(None): 'none', long: 'int_', complex: 'complex'}  # XXX 'return' -> Return(Const(None))?
+        map = {int: 'int_', str: 'str_', float: 'float_', type(None): 'none', long: 'int_', complex: 'complex'}  # XXX 'return' -> Return(Constant(None))?
         self.instance(node, def_class(self.gx, map[type(node.value)]), func)
 
     def fncl_passing(self, node, newnode, func):

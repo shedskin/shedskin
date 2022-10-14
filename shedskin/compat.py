@@ -25,6 +25,7 @@ NODE_MAP = {
     'Class': 'ClassDef',
     'CallFunc': 'Call',
     'Getattr': 'Attribute',
+    'Const': 'Constant',
 }
 
 # sub-class NodeVisitor to pass *args
