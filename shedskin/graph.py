@@ -22,21 +22,22 @@ try:
     # python 2
     from compiler.ast import Const as Constant, AssTuple, AssList, From as ImportFrom, Add, ListCompFor, \
         UnaryAdd, Import, Bitand, Assign, FloorDiv, Not, Mod, AssAttr, \
-        Keyword, GenExpr as GeneratorExp, LeftShift, AssName, Div, Or, Lambda, And, CallFunc as Call, \
+        GenExpr as GeneratorExp, LeftShift, AssName, Div, Or, Lambda, And, CallFunc as Call, \
         Global, Slice, RightShift, Sub, Getattr as Attribute, Dict, Ellipsis, Mul, \
         Subscript, Function as FunctionDef, Return, Power, Bitxor, Class as ClassDef, Name, List, \
-        Sliceobj, Tuple, Pass, UnarySub, Bitor, ListComp, TryExcept as Try, With
+        Sliceobj, Tuple, Pass, UnarySub, Bitor, ListComp, TryExcept as Try, With, \
+        Keyword as keyword
 
 except ModuleNotFoundError:
     # python 3
     from ast import Attribute, ClassDef, FunctionDef, Global, ListComp, \
         GeneratorExp, Assign, Try, With, Import, ImportFrom, And, Or, Not, \
-        Constant, Return, Name, Call
+        Constant, Return, Name, Call, Starred, keyword
 
 from .compat import NodeVisitor, parse_expr, getChildNodes, \
     filter_statements, filter_rec, get_assnames, get_statements, is_const, \
     const_value, get_id, get_defaults, get_body, get_func, attr_value, \
-    attr_attr
+    attr_attr, get_args
 
 from .error import error
 from .infer import inode, in_out, CNode, default_var, register_temp_var
@@ -1422,7 +1423,7 @@ class ModuleVisitor(NodeVisitor):
 
             if ident in ['hasattr', 'getattr', 'setattr', 'slice', 'type', 'Ellipsis']:
                 error("'%s' function is not supported" % ident, self.gx, expr, mv=getmv())
-            if ident == 'dict' and [x for x in node.args if isinstance(x, Keyword)]:
+            if ident == 'dict' and [x for x in node.args if isinstance(x, keyword)]:
                 error('unsupported method of initializing dictionaries', self.gx, node, mv=getmv())
             if ident == 'isinstance':
                 error("'isinstance' is not supported; always returns True", self.gx, node, mv=getmv(), warning=True)
@@ -1437,14 +1438,8 @@ class ModuleVisitor(NodeVisitor):
         # --- arguments
         if not getmv().module.builtin and (node.star_args or node.dstar_args):
             error('argument (un)packing is not supported', self.gx, node, mv=getmv())
-        args = node.args[:]
-        if node.star_args:
-            args.append(node.star_args)  # partially allowed in builtins
-        if node.dstar_args:
-            args.append(node.dstar_args)
-        for arg in args:
-            if isinstance(arg, Keyword):
-                arg = arg.expr
+
+        for arg in get_args(node):
             self.visit(arg, func)
             inode(self.gx, arg).callfuncs.append(node)  # this one too
 
