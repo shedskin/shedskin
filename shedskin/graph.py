@@ -1406,12 +1406,13 @@ class ModuleVisitor(NodeVisitor):
                 inode(self.gx, expr).callfuncs.append(node)  # XXX iterative dataflow analysis: move there?
                 inode(self.gx, expr).fakert = True
 
-            ident = attr_attr(expr)
-            inode(self.gx, expr.expr).callfuncs.append(node)  # XXX iterative dataflow analysis: move there?
+            value = attr_value(expr)
+            attr = attr_attr(expr)
+            inode(self.gx, value).callfuncs.append(node)  # XXX iterative dataflow analysis: move there?
 
-            if isinstance(expr.expr, Name) and get_id(expr.expr) in getmv().imports and ident == '__getattr__':  # XXX analyze_callfunc
-                if node.args[0].value in getmv().imports[expr.expr.name].mv.globals:  # XXX bleh
-                    self.add_constraint((inode(self.gx, getmv().imports[expr.expr.name].mv.globals[node.args[0].value]), newnode), func)
+            if isinstance(value, Name) and get_id(value) in getmv().imports and attr == '__getattr__':  # XXX analyze_callfunc
+                if node.args[0].value in getmv().imports[get_id(value)].mv.globals:  # XXX bleh
+                    self.add_constraint((inode(self.gx, getmv().imports[get_id(value)].mv.globals[node.args[0].value]), newnode), func)
 
         elif isinstance(expr, Name):
             # direct call
