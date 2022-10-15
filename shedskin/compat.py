@@ -239,5 +239,14 @@ else:
     def get_value(node):
         return node.value
 
+    def is_index(node):
+        print('ehh', node)
+
+    def is_slice(node):
+        print('ehhsl', node)
+
+    def slice_args(node):
+        pass
+
     long_ = int
     unicode_ = str
