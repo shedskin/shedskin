@@ -37,7 +37,8 @@ except ModuleNotFoundError:
 from .compat import NodeVisitor, parse_expr, getChildNodes, \
     filter_statements, filter_rec, get_assnames, get_statements, is_const, \
     const_value, get_id, get_defaults, get_body, get_func, attr_value, \
-    attr_attr, get_args, get_elts, is_unary
+    attr_attr, get_args, get_elts, is_unary, long_, unicode_, get_targets, \
+    get_value
 
 from .error import error
 from .infer import inode, in_out, CNode, default_var, register_temp_var
@@ -1244,14 +1245,17 @@ class ModuleVisitor(NodeVisitor):
             self.add_constraint((inode(self.gx, node.value), func.retnode), func)
 
     def visit_Assign(self, node, func=None):
+        targets = get_targets(node)
+        value = get_value(node)
+
         # --- rewrite for struct.unpack XXX rewrite callfunc as tuple
-        if len(node.nodes) == 1:
-            lvalue, rvalue = node.nodes[0], node.expr
+        if len(targets) == 1:
+            lvalue, rvalue = targets[0], value
             if self.struct_unpack(rvalue, func) and isinstance(lvalue, (AssList, AssTuple)) and not [n for n in lvalue.nodes if isinstance(n, (AssList, AssTuple))]:
-                self.visit(node.expr, func)
+                self.visit(value, func)
                 sinfo = self.struct_info(rvalue.args[0], func)
                 faketuple = self.struct_faketuple(sinfo)
-                self.visit(Assign(node.nodes, faketuple), func)
+                self.visit(Assign(targets, faketuple), func)
                 tvar = self.temp_var2(rvalue.args[1], inode(self.gx, rvalue.args[1]), func)
                 tvar_pos = self.temp_var_int(rvalue.args[0], func)
                 self.gx.struct_unpack[node] = (sinfo, tvar.name, tvar_pos.name)
@@ -1261,8 +1265,8 @@ class ModuleVisitor(NodeVisitor):
         self.gx.types[newnode] = set()
 
         # --- a,b,.. = c,(d,e),.. = .. = expr
-        for target_expr in node.nodes:
-            pairs = assign_rec(target_expr, node.expr)
+        for target in targets:
+            pairs = assign_rec(target, value)
             for (lvalue, rvalue) in pairs:
                 # expr[expr] = expr
                 if isinstance(lvalue, Subscript) and not isinstance(lvalue.subs[0], Sliceobj):
@@ -1296,16 +1300,16 @@ class ModuleVisitor(NodeVisitor):
                     self.slice(lvalue, lvalue.expr, lvalue.subs[0].nodes, func, rvalue)
 
         # temp vars
-        if len(node.nodes) > 1 or isinstance(node.expr, Tuple):
-            if isinstance(node.expr, Tuple):
-                if [n for n in node.nodes if isinstance(n, AssTuple)]:
-                    for child in node.expr.nodes:
+        if len(targets) > 1 or isinstance(value, Tuple):
+            if isinstance(value, Tuple):
+                if [n for n in targets if isinstance(n, AssTuple)]:
+                    for child in value.nodes:
                         if (child, 0, 0) not in self.gx.cnode:  # (a,b) = (1,2): (1,2) never visited
                             continue
-                        if not isinstance(child, Constant) and not (isinstance(child, Name) and child.name == 'None'):
+                        if not isinstance(child, Constant) and not (isinstance(child, Name) and get_id(child) == 'None'):
                             self.temp_var2(child, inode(self.gx, child), func)
-            elif not isinstance(node.expr, Constant) and not (isinstance(node.expr, Name) and node.expr.name == 'None'):
-                self.temp_var2(node.expr, inode(self.gx, node.expr), func)
+            elif not isinstance(value, Constant) and not (isinstance(value, Name) and get_id(value) == 'None'):
+                self.temp_var2(value, inode(self.gx, value), func)
 
     def assign_pair(self, lvalue, rvalue, func):
         # expr[expr] = expr
@@ -1580,9 +1584,7 @@ class ModuleVisitor(NodeVisitor):
             self.fncl_passing(node, newnode, func)
 
     def visit_Constant(self, node, func=None):
-        if type(node.value) == unicode:
-            error('unicode is not supported', self.gx, node, mv=getmv())
-        map = {int: 'int_', str: 'str_', float: 'float_', type(None): 'none', long: 'int_', complex: 'complex'}  # XXX 'return' -> Return(Constant(None))?
+        map = {int: 'int_', str: 'str_', float: 'float_', type(None): 'none', long_: 'int_', complex: 'complex', bool: 'bool_'}  # XXX 'return' -> Return(Constant(None))?
         self.instance(node, def_class(self.gx, map[type(node.value)]), func)
 
     def fncl_passing(self, node, newnode, func):
