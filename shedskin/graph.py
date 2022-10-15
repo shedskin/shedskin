@@ -1314,7 +1314,7 @@ class ModuleVisitor(NodeVisitor):
 
     def assign_pair(self, lvalue, rvalue, func):
         # expr[expr] = expr
-        if isinstance(lvalue, Subscript) and not isinstance(lvalue.subs[0], Sliceobj):
+        if is_index(lvalue):
             if len(lvalue.subs) > 1:
                 subscript = Tuple(lvalue.subs)
             else:
@@ -1332,8 +1332,8 @@ class ModuleVisitor(NodeVisitor):
         # expr.attr = expr
         elif isinstance(lvalue, AssAttr):
             CNode(self.gx, lvalue, parent=func, mv=getmv())
-            self.gx.assign_target[rvalue] = lvalue.expr
-            fakefunc = Call(Attribute(lvalue.expr, '__setattr__'), [Constant(lvalue.attrname), rvalue])
+            self.gx.assign_target[rvalue] = attr_value(lvalue)
+            fakefunc = Call(Attribute(attr_value(lvalue), '__setattr__'), [Constant(attr_attr(lvalue)), rvalue])
             self.visit(fakefunc, func)
 
     def default_var(self, name, func, exc_name=False):
@@ -1425,7 +1425,7 @@ class ModuleVisitor(NodeVisitor):
 
         elif isinstance(expr, Name):
             # direct call
-            ident = expr.name
+            ident = get_id(expr)
             if ident == 'print':
                 ident = expr.name = '__print'  # XXX
 
@@ -1453,7 +1453,7 @@ class ModuleVisitor(NodeVisitor):
 
         # --- handle instantiation or call
         constructor = lookup_class(expr, getmv())
-        if constructor and (not isinstance(expr, Name) or not lookup_var(expr.name, func, mv=getmv())):
+        if constructor and (not isinstance(expr, Name) or not lookup_var(get_id(expr), func, mv=getmv())):
             self.instance(node, constructor, func)
             inode(self.gx, node).callfuncs.append(node)  # XXX see above, investigate
         else:
