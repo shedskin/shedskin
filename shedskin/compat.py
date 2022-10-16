@@ -118,12 +118,6 @@ if OLD:
     def get_func(node):
         return node.node
 
-    def attr_value(node):
-        return node.expr
-
-    def attr_attr(node):
-        return node.attrname
-
 else:
     def parse_expr(s):
         return parse(s).body[0]
@@ -163,9 +157,3 @@ else:
 
     def get_func(node):
         return node.func
-
-    def attr_value(node):
-        return node.value
-
-    def attr_value(node):
-        return node.attr
