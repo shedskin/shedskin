@@ -127,7 +127,7 @@ def parse_command_line_options():
     logging.getLogger('infer.ifa').setLevel(ifa_logging_level)
 
     logging.info('*** SHED SKIN Python-to-C++ Compiler 0.9.5 *** - ')
-    logging.info('Copyright 2005-2022 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)')
+    logging.info('Copyright 2005-2019 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)')
     logging.info('')
 
     # --- some checks
