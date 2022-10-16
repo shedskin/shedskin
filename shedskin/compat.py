@@ -9,8 +9,7 @@ compat.py: python2/3 related compatibility
 try:
     from compiler import parse
     from compiler.ast import Stmt, Assign, AssName, Discard, Const, Return, \
-        Function as FunctionDef, Class as ClassDef, Keyword, UnarySub, \
-        UnaryAdd, Subscript, Slice, Sliceobj
+        Function as FunctionDef, Class as ClassDef, Keyword, UnarySub, UnaryAdd
 
     OLD = True
 
@@ -153,18 +152,6 @@ if OLD:
 
     def get_value(node):
         return node.expr
-
-    def is_index(node):
-        return isinstance(node, Subscript) and not isinstance(node.subs[0], Sliceobj)
-
-    def is_slice(node):
-        return isinstance(node, Slice) or (isinstance(node, Subscript) and isinstance(node.subs[0], Sliceobj))
-
-    def slice_args(node):
-        if isinstance(node, Slice):
-            return [node.lower, node.upper, None]
-        else:
-            return node.subs[0].nodes
 
     long_ = long
     unicode_ = unicode

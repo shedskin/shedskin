@@ -23,7 +23,7 @@ try:
     from compiler.ast import Const as Constant, AssTuple, AssList, From as ImportFrom, \
         Add, ListCompFor, Import, Bitand, Assign, FloorDiv, Not, Mod, AssAttr, \
         GenExpr as GeneratorExp, LeftShift, AssName, Div, Or, Lambda, And, CallFunc as Call, \
-        Global, RightShift, Sub, Getattr as Attribute, Dict, Ellipsis, Mul, \
+        Global, Slice, RightShift, Sub, Getattr as Attribute, Dict, Ellipsis, Mul, \
         Subscript, Function as FunctionDef, Return, Power, Bitxor, Class as ClassDef, Name, \
         List, Sliceobj, Tuple, Pass, Bitor, ListComp, TryExcept as Try, With, \
         Keyword as keyword
@@ -33,14 +33,13 @@ except ModuleNotFoundError:
     from ast import Attribute, ClassDef, FunctionDef, Global, ListComp, \
         GeneratorExp, Assign, Try, With, Import, ImportFrom, And, Or, Not, \
         Constant, Return, Name, Call, Starred, keyword, UnaryOp, List, Tuple, \
-        Tuple as AssTuple, List as AssList, Name as AssName, \
-        Attribute as AssAttr
+        Tuple as AssTuple, List as AssList, Name as AssName
 
 from .compat import NodeVisitor, parse_expr, getChildNodes, \
     filter_statements, filter_rec, get_assnames, get_statements, is_const, \
     const_value, get_id, get_defaults, get_body, get_func, attr_value, \
     attr_attr, get_args, get_elts, is_unary, long_, unicode_, get_targets, \
-    get_value, is_index, is_slice, slice_args
+    get_value
 
 from .error import error
 from .infer import inode, in_out, CNode, default_var, register_temp_var
@@ -1272,12 +1271,8 @@ class ModuleVisitor(NodeVisitor):
             pairs = assign_rec(target, value)
             for (lvalue, rvalue) in pairs:
                 # expr[expr] = expr
-                if is_index(lvalue):
+                if isinstance(lvalue, Subscript) and not isinstance(lvalue.subs[0], Sliceobj):
                     self.assign_pair(lvalue, rvalue, func)  # XXX use here generally, and in tuple_flow
-
-                # expr[a:b:c] = expr
-                elif is_slice(lvalue):
-                    self.slice(lvalue, lvalue.expr, slice_args(lvalue), func, rvalue)
 
                 # expr.attr = expr
                 elif isinstance(lvalue, AssAttr):
@@ -1298,7 +1293,13 @@ class ModuleVisitor(NodeVisitor):
                     self.visit(rvalue, func)
                     self.tuple_flow(lvalue, rvalue, func)
 
-                # XXX expr[a:b,c] = .. (ExtSlice)
+                # expr[a:b] = expr # XXX bla()[1:3] = [1]
+                elif isinstance(lvalue, Slice):
+                    self.slice(lvalue, lvalue.expr, [lvalue.lower, lvalue.upper, None], func, rvalue)
+
+                # expr[a:b:c] = expr
+                elif isinstance(lvalue, Subscript) and isinstance(lvalue.subs[0], Sliceobj):
+                    self.slice(lvalue, lvalue.expr, lvalue.subs[0].nodes, func, rvalue)
 
         # temp vars
         if len(targets) > 1 or isinstance(value, Tuple):
