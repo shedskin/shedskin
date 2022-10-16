@@ -17,8 +17,6 @@ try:
 except ModuleNotFoundError:
     from ast import parse
 
-from .compat import get_docstring
-
 
 class Module(object):
     def __init__(self, name, filename, relative_filename, builtin, node):
@@ -155,7 +153,8 @@ class Function(object):
                 ident += inherited_from.ident + '__'  # XXX ugly
             self.ident = ident
             self.formals = node.argnames
-            self.doc = get_docstring(node)
+            self.flags = node.flags
+            self.doc = node.doc
         self.returnexpr = []
         self.retnode = None
         self.lambdanr = None
