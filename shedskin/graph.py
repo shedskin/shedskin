@@ -707,9 +707,7 @@ class ModuleVisitor(NodeVisitor):
         func.yieldnode = yieldnode = CNode(self.gx, (node, 'yield'), parent=func, mv=getmv())
         self.gx.types[yieldnode] = set()
 
-        # --- statements
-        for child in get_statements2(node):
-            self.visit(child, func)
+        self.visit(node.code, func)
 
         for i, default in enumerate(func.defaults):
             if not is_literal(default):
@@ -1540,7 +1538,7 @@ class ModuleVisitor(NodeVisitor):
                         newclass.staticmethods.append(lvalue.name)
                     skip.append(child)
 
-        # --- statements
+        # --- children
         for child in get_statements2(node):
             if child not in skip:
                 cl = self.classes[node.name]
