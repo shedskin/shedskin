@@ -8,8 +8,7 @@ compat.py: python2/3 related compatibility
 
 try:
     from compiler import parse
-    from compiler.ast import Stmt, Assign, AssName, Discard, Const, Return, \
-        Function as FunctionDef, Class as ClassDef
+    from compiler.ast import Stmt, Assign, AssName, Discard, Const, Return
 
     OLD = True
 
@@ -93,17 +92,14 @@ if OLD:
     def get_assnames(node):
         return [n.name for n in filter_rec(node.nodes, AssName)]
 
-    def get_body(node):
-        if isinstance(node, (FunctionDef, ClassDef)):
-            return node.code
-        else:
-            return node.node
-
     def get_statements(node):
-        if isinstance(node, Stmt):
-            return [n.expr if isinstance(n, Discard) else n for n in node.nodes]
+        return [n.expr if isinstance(n, Discard) else n for n in node.node.nodes]
+
+    def get_statements2(node):
+        if isinstance(node.code, Return):
+            return [node.code]
         else:
-            return [node]
+            return [n.expr if isinstance(n, Discard) else n for n in node.code.nodes]
 
     def is_const(node):
         return isinstance(node, Const)
@@ -136,11 +132,11 @@ else:
     def get_assnames(node):
         return [n.id for n in filter_rec(node.targets, Name)]
 
-    def get_body(node):
+    def get_statements(node):
         return node.body
 
-    def get_statements(node):
-        return node
+    def get_statements2(node):
+        return node.body
 
     def is_const(node):
         return isinstance(node, Expr) and isinstance(node.value, Constant)
