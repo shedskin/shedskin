@@ -20,7 +20,7 @@ import sys
 
 try:
     # python 2
-    from compiler.ast import Const, AssTuple, AssList, From as ImportFrom, Add, ListCompFor, \
+    from compiler.ast import Const, AssTuple, AssList, From, Add, ListCompFor, \
         UnaryAdd, Import, Bitand, Stmt, Assign, FloorDiv, Not, Mod, AssAttr, \
         Keyword, GenExpr as GeneratorExp, LeftShift, AssName, Div, Or, Lambda, And, CallFunc, \
         Global, Slice, RightShift, Sub, Getattr as Attribute, Dict, Ellipsis, Mul, \
@@ -30,10 +30,10 @@ try:
 except ModuleNotFoundError:
     # python 3
     from ast import Attribute, ClassDef, FunctionDef, Global, ListComp, \
-        GeneratorExp, Assign, Try, With, Import, ImportFrom, And, Or, Not
+        GeneratorExp, Assign, Try, With
 
 from .compat import NodeVisitor, parse_expr, getChildNodes, \
-    filter_statements, filter_rec, get_assnames, get_statements
+    filter_statements, filter_rec, get_assnames
 from .error import error
 from .infer import inode, in_out, CNode, default_var, register_temp_var
 from .python import StaticClass, lookup_func, Function, is_zip2, \
@@ -394,19 +394,6 @@ class ModuleVisitor(NodeVisitor):
                 comments = []
             self.visit(b, func)
 
-    def visit_statements(self, statements, func=None):
-        comments = []
-        for stmt in statements:
-            self.bool_test_add(stmt)
-
-            if isinstance(stmt, Const) and type(stmt.value) == str:
-                comments.append(stmt.value)
-            elif comments:
-                self.gx.comments[stmt] = comments
-                comments = []
-
-            self.visit(stmt, func)
-
     def visit_Module(self, node):
         # --- bootstrap built-in classes
         if self.module.ident == 'builtin':
@@ -425,12 +412,11 @@ class ModuleVisitor(NodeVisitor):
 
         self.forward_references(node)
 
-        # --- visit statements
-        statements = get_statements(node)
-        for stmt in statements:
-            if isinstance(stmt, (Import, ImportFrom)):
-                getmv().importnodes.append(stmt)
-        self.visit_statements(statements, None)
+        # --- visit children
+        for child in getChildNodes(node):
+            if isinstance(child, Stmt):
+                getmv().importnodes.extend(n for n in child.nodes if isinstance(n, (Import, From)))
+            self.visit(child, None)
 
         # --- register classes
         for cl in getmv().classes.values():
