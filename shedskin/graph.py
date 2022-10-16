@@ -30,10 +30,10 @@ try:
 except ModuleNotFoundError:
     # python 3
     from ast import Attribute, ClassDef, FunctionDef, Global, ListComp, \
-        GeneratorExp, Assign, Try, With, Import, ImportFrom, And, Or, Not, Constant
+        GeneratorExp, Assign, Try, With, Import, ImportFrom, And, Or, Not
 
 from .compat import NodeVisitor, parse_expr, getChildNodes, \
-    filter_statements, filter_rec, get_assnames, get_statements, is_const, const_value
+    filter_statements, filter_rec, get_assnames, get_statements
 from .error import error
 from .infer import inode, in_out, CNode, default_var, register_temp_var
 from .python import StaticClass, lookup_func, Function, is_zip2, \
@@ -399,8 +399,8 @@ class ModuleVisitor(NodeVisitor):
         for stmt in statements:
             self.bool_test_add(stmt)
 
-            if is_const(stmt) and type(const_value(stmt)) == str:
-                comments.append(const_value(stmt))
+            if isinstance(stmt, Const) and type(stmt.value) == str:
+                comments.append(stmt.value)
             elif comments:
                 self.gx.comments[stmt] = comments
                 comments = []
