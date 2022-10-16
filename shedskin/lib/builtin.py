@@ -406,6 +406,9 @@ class str_(pyseq):
     def __hash__(self):
         return 1
 
+class unicode_(pyseq):
+    pass
+
 class dict(pyiter):
     def __initdict__(self, other):
         self.__setunit__(other.unit, other.value)

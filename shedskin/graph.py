@@ -1587,9 +1587,7 @@ class ModuleVisitor(BaseNodeVisitor):
         self.instance(node, def_class(self.gx, map[type(node.n)]), func)
 
     def visit_Str(self, node, func=None):
-        if type(node.s) == unicode:
-            error('unicode is not supported', self.gx, node, mv=getmv())
-        map = {str: 'str_'}
+        map = {str: 'str_', unicode: 'unicode_'}
         self.instance(node, def_class(self.gx, map[type(node.s)]), func)
 
     def fncl_passing(self, node, newnode, func):
