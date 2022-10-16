@@ -10,9 +10,9 @@ from ast import Num, Str, Assign, AugAssign, \
     Attribute, Dict, Print, Return, Name, List, Tuple, ListComp
 from ast_utils import is_assign_list_or_tuple
 
-from infer import inode
-from python import assign_rec
-from typestr import nodetypestr
+from .infer import inode
+from .python import assign_rec
+from .typestr import nodetypestr
 
 RE_COMMENT = re.compile(r'#[^\"\']*$')
 

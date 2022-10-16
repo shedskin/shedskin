@@ -6,13 +6,13 @@ Copyright 2005-2013 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 import logging
 import sys
 
-import infer
-
 
 ERRORS = set()
 
 
 def error(msg, gx, node=None, warning=False, mv=None):
+    from . import infer
+
     if warning:
         kind = logging.WARNING
     else:

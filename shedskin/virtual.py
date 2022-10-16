@@ -7,9 +7,9 @@ virtual.py: virtual methods and variables
 '''
 from ast import Call, Name
 
-import infer
-from python import subclass, Class
-from typestr import lowest_common_parents, typestr, polymorphic_t
+from . import infer
+from .python import subclass, Class
+from .typestr import lowest_common_parents, typestr, polymorphic_t
 
 
 def virtuals(self, cl, declare):
