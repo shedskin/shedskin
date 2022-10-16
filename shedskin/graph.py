@@ -22,14 +22,14 @@ try:
     # python 2
     from compiler.ast import Const, AssTuple, AssList, From, Add, ListCompFor, \
         UnaryAdd, Import, Bitand, Stmt, Assign, FloorDiv, Not, Mod, AssAttr, \
-        Keyword, GenExpr as GeneratorExp, LeftShift, AssName, Div, Or, Lambda, And, CallFunc, \
+        Keyword, GenExpr, LeftShift, AssName, Div, Or, Lambda, And, CallFunc, \
         Global, Slice, RightShift, Sub, Getattr as Attribute, Dict, Ellipsis, Mul, \
         Subscript, Function as FunctionDef, Return, Power, Bitxor, Class as ClassDef, Name, List, \
         Discard, Sliceobj, Tuple, Pass, UnarySub, Bitor, ListComp, TryExcept, With
 
 except ModuleNotFoundError:
     # python 3
-    from ast import Attribute, ClassDef, FunctionDef, Global, ListComp, GeneratorExp
+    from ast import Attribute, ClassDef, FunctionDef, Global, ListComp
 
 from .compat import NodeVisitor, parse_expr, getChildNodes, filter_statements
 from .error import error
@@ -517,7 +517,7 @@ class ModuleVisitor(NodeVisitor):
     def local_assignments(self, node, global_=False):
         if global_ and isinstance(node, (ClassDef, FunctionDef)):
             return []
-        elif isinstance(node, (ListComp, GeneratorExp)):
+        elif isinstance(node, (ListComp, GenExpr)):
             return []
         elif isinstance(node, AssName):
             result = [node]
