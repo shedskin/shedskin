@@ -29,7 +29,7 @@ try:
 
 except ModuleNotFoundError:
     # python 3
-    from ast import Attribute, ClassDef, FunctionDef, Global, ListComp
+    from ast import Attribute, ClassDef, FunctionDef
 
 from .compat import NodeVisitor, parse_expr, getChildNodes, filter_statements
 from .error import error
@@ -86,7 +86,7 @@ def inherit_rec(gx, original, copy, mv):
     gx.inherited.add(copy)
     gx.parent_nodes[copy] = original
 
-    for (a, b) in zip(getChildNodes(original), getChildNodes(copy)):
+    for (a, b) in zip(original.getChildNodes(), copy.getChildNodes()):
         inherit_rec(gx, a, b, mv)
 
 
@@ -157,9 +157,9 @@ class ModuleVisitor(NodeVisitor):
         count = 0
         child = node
         while isinstance(child, (List, ListComp)):
-            if not getChildNodes(child):
+            if not child.getChildNodes():
                 return None
-            child = getChildNodes(child)[0]
+            child = child.getChildNodes()[0]
             count += 1
 
         if isinstance(child, (UnarySub, UnaryAdd)):
@@ -241,7 +241,7 @@ class ModuleVisitor(NodeVisitor):
             default_var(self.gx, 'unit', cl)
             default_var(self.gx, 'value', cl)
 
-            for child in getChildNodes(node):
+            for child in node.getChildNodes():
                 self.visit(child, func)
 
             for (key, value) in node.items:  # XXX filter
@@ -412,7 +412,7 @@ class ModuleVisitor(NodeVisitor):
         self.forward_references(node)
 
         # --- visit children
-        for child in getChildNodes(node):
+        for child in node.getChildNodes():
             if isinstance(child, Stmt):
                 getmv().importnodes.extend(n for n in child.nodes if isinstance(n, (Import, From)))
             self.visit(child, None)
@@ -510,7 +510,7 @@ class ModuleVisitor(NodeVisitor):
             result = node.names
         else:
             result = []
-            for child in getChildNodes(node):
+            for child in node.getChildNodes():
                 result.extend(self.get_globals(child))
         return result
 
@@ -525,15 +525,15 @@ class ModuleVisitor(NodeVisitor):
             # Try-Excepts introduce a new small scope with the exception name,
             # so we skip it here.
             if isinstance(node, TryExcept):
-                children = list(getChildNodes(node.body))
+                children = list(node.body.getChildNodes())
                 for handler in node.handlers:
-                    children.extend(getChildNodes(handler[2]))
+                    children.extend(handler[2].getChildNodes())
                 if node.else_:
-                    children.extend(getChildNodes(node.else_))
+                    children.extend(node.else_.getChildNodes())
             elif isinstance(node, With):
-                children = getChildNodes(node.body)
+                children = node.body.getChildNodes()
             else:
-                children = getChildNodes(node)
+                children = node.getChildNodes()
 
             result = []
             for child in children:
@@ -736,7 +736,7 @@ class ModuleVisitor(NodeVisitor):
     def visit_and_or(self, node, func):
         newnode = CNode(self.gx, node, parent=func, mv=getmv())
         self.gx.types[newnode] = set()
-        for child in getChildNodes(node):
+        for child in node.getChildNodes():
             if node in self.gx.bool_test_only:
                 self.bool_test_add(child)
             self.visit(child, func)
@@ -760,7 +760,7 @@ class ModuleVisitor(NodeVisitor):
         newnode = CNode(self.gx, node, parent=func, mv=getmv())
         self.gx.types[newnode] = set()
 
-        for child in getChildNodes(node):
+        for child in node.getChildNodes():
             self.visit(child, func)
 
         self.add_constraint((inode(self.gx, node.then), newnode), func)
@@ -973,7 +973,7 @@ class ModuleVisitor(NodeVisitor):
     def visit_Mod(self, node, func=None):
         if isinstance(node.right, (Tuple, Dict)):
             self.fake_func(node, node.left, '__mod__', [], func)
-            for child in getChildNodes(node.right):
+            for child in node.right.getChildNodes():
                 self.visit(child, func)
                 if isinstance(node.right, Tuple):
                     self.fake_func(inode(self.gx, child), child, '__str__', [], func)
@@ -987,7 +987,7 @@ class ModuleVisitor(NodeVisitor):
         pnode = CNode(self.gx, node, parent=func, mv=getmv())
         self.gx.types[pnode] = set()
 
-        for child in getChildNodes(node):
+        for child in node.getChildNodes():
             self.visit(child, func)
             self.fake_func(inode(self.gx, child), child, '__str__', [], func)
 
@@ -1021,7 +1021,7 @@ class ModuleVisitor(NodeVisitor):
     def visit_Raise(self, node, func=None):
         if node.expr1 is None or node.expr2 is not None or node.expr3 is not None:
             error('unsupported raise syntax', self.gx, node, mv=getmv())
-        for child in getChildNodes(node):
+        for child in node.getChildNodes():
             self.visit(child, func)
 
     def visit_TryExcept(self, node, func=None):
@@ -1148,7 +1148,7 @@ class ModuleVisitor(NodeVisitor):
     def visit_While(self, node, func=None):
         self.gx.loopstack.append(node)
         self.bool_test_add(node.test)
-        for child in getChildNodes(node):
+        for child in node.getChildNodes():
             self.visit(child, func)
         self.gx.loopstack.pop()
 
@@ -1166,12 +1166,12 @@ class ModuleVisitor(NodeVisitor):
             self.add_constraint((varnode, inode(self.gx, lvar)), func)
         else:
             self.visit(node.expr, func)
-        for child in getChildNodes(node):
+        for child in node.getChildNodes():
             self.visit(child, func)
 
     def visit_ListCompIf(self, node, func=None):
         self.bool_test_add(node.test)
-        for child in getChildNodes(node):
+        for child in node.getChildNodes():
             self.visit(child, func)
 
     def visit_ListComp(self, node, func=None):
@@ -1504,7 +1504,7 @@ class ModuleVisitor(NodeVisitor):
 
         # --- staticmethod, property
         skip = []
-        for child in getChildNodes(node.code):
+        for child in node.code.getChildNodes():
             if isinstance(child, Assign) and len(child.nodes) == 1:
                 lvalue, rvalue = child.nodes[0], child.expr
                 if isinstance(lvalue, AssName) and isinstance(rvalue, CallFunc) and isinstance(rvalue.node, Name) and rvalue.node.name in ['staticmethod', 'property']:
@@ -1520,7 +1520,7 @@ class ModuleVisitor(NodeVisitor):
                     skip.append(child)
 
         # --- children
-        for child in getChildNodes(node.code):
+        for child in node.code.getChildNodes():
             if child not in skip:
                 cl = self.classes[node.name]
                 if isinstance(child, FunctionDef):
