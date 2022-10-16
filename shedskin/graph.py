@@ -35,7 +35,7 @@ except ModuleNotFoundError:
 
 from .compat import NodeVisitor, parse_expr, getChildNodes, \
     filter_statements, filter_rec, get_assnames, get_statements, is_const, \
-    const_value, get_id, get_defaults
+    const_value, get_id, get_statements2, get_defaults
 
 from .error import error
 from .infer import inode, in_out, CNode, default_var, register_temp_var
@@ -429,7 +429,7 @@ class ModuleVisitor(NodeVisitor):
         self.forward_references(node)
 
         # --- visit statements
-        statements = get_statements(get_body(node))
+        statements = get_statements(node)
         for stmt in statements:
             if isinstance(stmt, (Import, ImportFrom)):
                 getmv().importnodes.append(stmt)
@@ -708,7 +708,7 @@ class ModuleVisitor(NodeVisitor):
         self.gx.types[yieldnode] = set()
 
         # --- statements
-        for child in get_statements(get_body(node)):
+        for child in get_statements2(node):
             self.visit(child, func)
 
         for i, default in enumerate(func.defaults):
@@ -771,7 +771,7 @@ class ModuleVisitor(NodeVisitor):
             self.bool_test_add(test)
             faker = CallFunc(Name('bool'), [test])
             self.visit(faker, func)
-            self.visit_statements(get_statements(code), func)
+            self.visit(code, func)
             if is_isinstance(test):
                 self.gx.filterstack.pop()
         if node.else_:
@@ -1169,8 +1169,8 @@ class ModuleVisitor(NodeVisitor):
     def visit_While(self, node, func=None):
         self.gx.loopstack.append(node)
         self.bool_test_add(node.test)
-        self.visit(node.test, func)
-        self.visit_statements(get_statements(node.body), func)
+        for child in getChildNodes(node):
+            self.visit(child, func)
         self.gx.loopstack.pop()
 
         if node.else_:
@@ -1525,7 +1525,7 @@ class ModuleVisitor(NodeVisitor):
 
         # --- staticmethod, property
         skip = []
-        for child in get_statements(get_body(node)):
+        for child in get_statements2(node):
             if isinstance(child, Assign) and len(child.nodes) == 1:
                 lvalue, rvalue = child.nodes[0], child.expr
                 if isinstance(lvalue, AssName) and isinstance(rvalue, CallFunc) and isinstance(rvalue.node, Name) and rvalue.node.name in ['staticmethod', 'property']:
@@ -1541,7 +1541,7 @@ class ModuleVisitor(NodeVisitor):
                     skip.append(child)
 
         # --- statements
-        for child in get_statements(get_body(node)):
+        for child in get_statements2(node):
             if child not in skip:
                 cl = self.classes[node.name]
                 if isinstance(child, FunctionDef):
