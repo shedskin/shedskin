@@ -15,8 +15,7 @@ try:
         Const as Constant, Getattr as Attribute
 
 except ModuleNotFoundError:
-    from ast import parse, Name, Attribute, Constant, Tuple, List, \
-        Tuple as AssTuple, List as AssList
+    from ast import parse, Name, Attribute, Constant
 
 from .compat import get_docstring, get_formals, get_id, attr_value, attr_attr, \
      is_unary
