@@ -38,9 +38,12 @@ import random
 import sys
 from compiler.ast import Const, Node, AssAttr, Keyword, CallFunc, Getattr, Dict, List, Tuple, ListComp, Not, Compare, Name
 
-from . import error
-from .python import StaticClass, lookup_class_module, Function, \
+import error
+import graph
+from python import StaticClass, lookup_class_module, Function, \
     Variable, lookup_var, Class, lookup_implementor, def_class
+from typestr import nodetypestr
+from virtual import analyze_virtuals
 
 logger = logging.getLogger('infer')
 ifa_logger = logging.getLogger('infer.ifa')
@@ -1379,10 +1382,6 @@ def determine_classes(gx):  # XXX modeling..?
 
 
 def analyze(gx, module_name):
-    from . import graph  # TODO improve separation to avoid circular imports..
-    from .typestr import nodetypestr
-    from .virtual import analyze_virtuals
-
     # --- build dataflow graph from source code
     gx.main_module = graph.parse_module(module_name, gx)
 

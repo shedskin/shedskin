@@ -7,9 +7,9 @@ extmod.py: extension module support
 '''
 import logging
 
-from .infer import called
-from .python import Class, def_class, Module
-from .typestr import ExtmodError, nodetypestr, singletype2
+from infer import called
+from python import Class, def_class, Module
+from typestr import ExtmodError, nodetypestr, singletype2
 
 
 logger = logging.getLogger('extmod')

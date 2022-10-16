@@ -9,9 +9,9 @@ import re
 from compiler.ast import Const, AssTuple, AssList, Assign, AugAssign, \
     Getattr, Dict, Print, Return, Printnl, Name, List, Tuple, ListComp
 
-from .infer import inode
-from .python import assign_rec
-from .typestr import nodetypestr
+from infer import inode
+from python import assign_rec
+from typestr import nodetypestr
 
 RE_COMMENT = re.compile(r'#[^\"\']*$')
 
