@@ -7,9 +7,9 @@ typestr.py: generate type declarations
 '''
 import logging
 
-from . import error
-from . import python
-from . import infer
+import error
+import python
+import infer
 
 logger = logging.getLogger('typestr')
 

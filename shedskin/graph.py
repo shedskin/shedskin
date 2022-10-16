@@ -25,9 +25,9 @@ from compiler.ast import Const, AssTuple, AssList, From, Add, ListCompFor, \
     Discard, Sliceobj, Tuple, Pass, UnarySub, Bitor, ListComp, TryExcept, With
 from compiler.visitor import ASTVisitor
 
-from .error import error
-from .infer import inode, in_out, CNode, default_var, register_temp_var
-from .python import StaticClass, lookup_func, Function, is_zip2, \
+from error import error
+from infer import inode, in_out, CNode, default_var, register_temp_var
+from python import StaticClass, lookup_func, Function, is_zip2, \
     lookup_class, is_method, is_literal, is_enum, lookup_var, assign_rec, \
     Class, is_property_setter, is_fastfor, aug_msg, is_isinstance, \
     Module, def_class, parse_file, find_module

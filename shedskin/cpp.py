@@ -22,18 +22,18 @@ from compiler.ast import Const, AssTuple, AssList, From, Add, Stmt, AssAttr, \
     Function as FunctionNode, Return, Class as ClassNode, Name, List, Discard, Sliceobj, Tuple
 from compiler.visitor import ASTVisitor
 
-from .error import error
-from .extmod import convert_methods, convert_methods2, do_extmod, pyinit_func
-from .infer import analyze_callfunc, callfunc_targets, connect_actual_formal, \
+from error import error
+from extmod import convert_methods, convert_methods2, do_extmod, pyinit_func
+from infer import analyze_callfunc, callfunc_targets, connect_actual_formal, \
     called, inode, var_types
-from .makefile import generate_makefile
-from .python import assign_rec, aug_msg, Class, def_class, \
+from makefile import generate_makefile
+from python import assign_rec, aug_msg, Class, def_class, \
     is_enum, is_fastfor, is_literal, is_zip2, \
     lookup_class, lookup_class_module, lookup_var, lookup_module, \
     Function, Module, Variable, StaticClass, smart_lookup_var
-from .typestr import incompatible_assignment_rec, lowest_common_parents, \
+from typestr import incompatible_assignment_rec, lowest_common_parents, \
     nodetypestr, polymorphic_t, singletype, unboxable, typestr
-from .virtual import virtuals
+from virtual import virtuals
 
 
 class CPPNamer(object):
