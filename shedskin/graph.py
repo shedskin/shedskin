@@ -20,20 +20,19 @@ import sys
 
 try:
     # python 2
-    from compiler.ast import Const as Constant, AssTuple, AssList, From as ImportFrom, \
-        Add, ListCompFor, Import, Bitand, Assign, FloorDiv, Not, Mod, AssAttr, \
+    from compiler.ast import Const as Constant, AssTuple, AssList, From as ImportFrom, Add, ListCompFor, \
+        Import, Bitand, Assign, FloorDiv, Not, Mod, AssAttr, \
         GenExpr as GeneratorExp, LeftShift, AssName, Div, Or, Lambda, And, CallFunc as Call, \
         Global, Slice, RightShift, Sub, Getattr as Attribute, Dict, Ellipsis, Mul, \
-        Subscript, Function as FunctionDef, Return, Power, Bitxor, Class as ClassDef, Name, \
-        List, Sliceobj, Tuple, Pass, Bitor, ListComp, TryExcept as Try, With, \
+        Subscript, Function as FunctionDef, Return, Power, Bitxor, Class as ClassDef, Name, List, \
+        Sliceobj, Tuple, Pass, Bitor, ListComp, TryExcept as Try, With, \
         Keyword as keyword
 
 except ModuleNotFoundError:
     # python 3
     from ast import Attribute, ClassDef, FunctionDef, Global, ListComp, \
         GeneratorExp, Assign, Try, With, Import, ImportFrom, And, Or, Not, \
-        Constant, Return, Name, Call, Starred, keyword, UnaryOp, List, Tuple, \
-        Tuple as AssTuple, List as AssList, Name as AssName
+        Constant, Return, Name, Call, Starred, keyword, UnaryOp, List, Tuple
 
 from .compat import NodeVisitor, parse_expr, getChildNodes, \
     filter_statements, filter_rec, get_assnames, get_statements, is_const, \
@@ -324,15 +323,14 @@ class ModuleVisitor(NodeVisitor):
 
     def struct_unpack(self, rvalue, func):
         if isinstance(rvalue, Call):
-            expr = get_func(rvalue)
-            if isinstance(expr, Attribute) and isinstance(attr_value(expr), Name) and get_id(attr_value(expr)) == 'struct' and attr_attr(expr) == 'unpack' and lookup_var('struct', func, mv=self).imported:  # XXX imported from where?
+            if isinstance(rvalue.node, Attribute) and isinstance(rvalue.node.expr, Name) and rvalue.node.expr.name == 'struct' and rvalue.node.attrname == 'unpack' and lookup_var('struct', func, mv=self).imported:  # XXX imported from where?
                 return True
-            elif isinstance(expr, Name) and get_id(expr) == 'unpack' and 'unpack' in self.ext_funcs and not lookup_var('unpack', func, mv=self):  # XXX imported from where?
+            elif isinstance(rvalue.node, Name) and rvalue.node.name == 'unpack' and 'unpack' in self.ext_funcs and not lookup_var('unpack', func, mv=self):  # XXX imported from where?
                 return True
 
     def struct_info(self, node, func):
         if isinstance(node, Name):
-            var = lookup_var(get_id(node), func, mv=self)  # XXX fwd ref?
+            var = lookup_var(node.name, func, mv=self)  # XXX fwd ref?
             if not var or len(var.const_assign) != 1:
                 error('non-constant format string', self.gx, node, mv=self)
             error('assuming constant format string', self.gx, node, mv=self, warning=True)
