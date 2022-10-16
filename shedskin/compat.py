@@ -14,15 +14,11 @@ try:
     def parse_expr(s):
         return parse(s).node.nodes[0]
 
-    OLD = True
-
 except ModuleNotFoundError:
     from ast import parse
 
     def parse_expr(s):
         return parse(s).body[0]
-
-    OLD = False
 
 NODE_MAP = {
     'From': 'ImportFrom',
@@ -57,6 +53,5 @@ class NodeVisitor(ast.NodeVisitor):
             for child in node.getChildNodes():
                 self.visit(child, *args)
 
-    if OLD:
-        def adapt_ImportFrom(self, node):
-            node.module = node.modname
+    def adapt_ImportFrom(self, node):
+        node.module = node.modname
