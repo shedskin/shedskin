@@ -23,7 +23,6 @@ NODE_MAP = {
     'From': 'ImportFrom',
     'Function': 'FunctionDef',
     'Class': 'ClassDef',
-    'CallFunc': 'Call',
 }
 
 # sub-class NodeVisitor to pass *args
