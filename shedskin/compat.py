@@ -20,8 +20,6 @@ except ModuleNotFoundError:
 
 NODE_MAP = {
     'From': 'ImportFrom',
-    'Function': 'FunctionDef',
-    'Class': 'ClassDef',
 }
 
 # sub-class NodeVisitor to pass *args
@@ -98,9 +96,6 @@ if OLD:
     def const_value(node):
         return node.value
 
-    def get_id(node):
-        return node.name
-
 else:
     def parse_expr(s):
         return parse(s).body[0]
@@ -128,6 +123,3 @@ else:
 
     def const_value(node):
         return node.value.value
-
-    def get_id(node):
-        return node.id
