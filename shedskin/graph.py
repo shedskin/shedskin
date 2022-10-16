@@ -581,19 +581,19 @@ class ModuleVisitor(NodeVisitor):
             self.gx.types[inode(self.gx, var)] = set([(module, 0)])
         return module
 
-    def visit_ImportFrom(self, node, parent=None):
+    def visit_From(self, node, parent=None):
         if not node in getmv().importnodes:  # XXX use (func, node) as parent..
             error("please place all imports (no 'try:' etc) at the top of the file", self.gx, node, mv=getmv())
         if hasattr(node, 'level') and node.level:
             error("relative imports are not supported", self.gx, node, mv=getmv())
 
-        if node.module == '__future__':
+        if node.modname == '__future__':
             for name, _ in node.names:
                 if name not in ['with_statement', 'print_function']:
                     error("future '%s' is not yet supported" % name, self.gx, node, mv=getmv())
             return
 
-        module = self.import_modules(node.module, node, True)
+        module = self.import_modules(node.modname, node, True)
         self.gx.from_module[node] = module
 
         for name, pseudonym in node.names:
@@ -628,7 +628,7 @@ class ModuleVisitor(NodeVisitor):
                 modname = '.'.join(module.name_list + [name])
                 self.import_module(modname, name, node, False)
             else:
-                error("no identifier '%s' in module '%s'" % (name, node.module), self.gx, node, mv=getmv())
+                error("no identifier '%s' in module '%s'" % (name, node.modname), self.gx, node, mv=getmv())
 
     def analyze_module(self, name, pseud, node, fake):
         module = parse_module(name, self.gx, getmv().module, node)
