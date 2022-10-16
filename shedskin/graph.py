@@ -25,7 +25,7 @@ from ast import Num, Str, ImportFrom, alias as ast_alias, Add, comprehension, \
     Expr, Tuple, Pass, USub, BitOr, ListComp, TryExcept, With, iter_child_nodes, \
     Load, Store, UnaryOp, BinOp, BoolOp, Del, ExtSlice, Index, Invert, dump as ast_dump, \
     Eq, NotEq, Lt, LtE, Gt, GtE, In, NotIn
-from ast_utils import BaseNodeVisitor, make_arg_list, make_call, is_assign_list_or_tuple, is_assign_attribute, \
+from .ast_utils import BaseNodeVisitor, make_arg_list, make_call, is_assign_list_or_tuple, is_assign_attribute, \
     is_assign_tuple, is_constant, orelse_to_node
 
 from .error import error
