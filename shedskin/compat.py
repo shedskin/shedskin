@@ -8,13 +8,13 @@ compat.py: python2/3 related compatibility
 
 try:
     from compiler import parse
-    from compiler.ast import Stmt, Assign, AssName, Discard, Const
+    from compiler.ast import Stmt, Assign, AssName, Discard
 
     OLD = True
 
 except ModuleNotFoundError:
     import ast
-    from ast import parse, Assign, Name, Expr, Constant
+    from ast import parse, Assign, Name
 
     OLD = False
 
@@ -87,12 +87,6 @@ if OLD:
     def get_statements(node):
         return [n.expr if isinstance(n, Discard) else n for n in node.node.nodes]
 
-    def is_const(node):
-        return isinstance(node, Const)
-
-    def const_value(node):
-        return node.value
-
 else:
     def parse_expr(s):
         return parse(s).body[0]
@@ -114,9 +108,3 @@ else:
 
     def get_statements(node):
         return node.body
-
-    def is_const(node):
-        return isinstance(node, Expr) and isinstance(node.value, Constant)
-
-    def const_value(node):
-        return node.value.value
