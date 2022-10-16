@@ -24,7 +24,7 @@ else:
 set_timeout_decorator = lambda func: lambda self: func(self, timeout=1e100)
 IMapIterator.next = set_timeout_decorator(IMapIterator.next)
 
-os.environ['PYTHONPATH'] = os.path.realpath('..')
+os.environ['PYTHONPATH'] = '..'
 SS = '-m shedskin'
 
 
@@ -176,7 +176,7 @@ def extmod_tests(args, options):
         os.chdir('e%d' % test)
         try:
             extmod = file('main.py').next()[1:].strip()
-            assert os.system(PYTHON + ' %s -e %s' % (SS, extmod)) == 0
+            assert os.system(PYTHON + ' ../%s -e %s' % (SS, extmod)) == 0
             assert os.system('make') == 0
             native_output = get_output(PYTHON + ' main.py')
             if sys.platform == 'win32':
