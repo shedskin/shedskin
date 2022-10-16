@@ -23,15 +23,13 @@ try:
     from compiler.ast import Const, AssTuple, AssList, From, Add, ListCompFor, \
         UnaryAdd, Import, Bitand, Stmt, Assign, FloorDiv, Not, Mod, AssAttr, \
         Keyword, GenExpr, LeftShift, AssName, Div, Or, Lambda, And, CallFunc, \
-        Global, Slice, RightShift, Sub, Getattr as Attribute, Dict, Ellipsis, Mul, \
+        Global, Slice, RightShift, Sub, Getattr, Dict, Ellipsis, Mul, \
         Subscript, Function as FunctionNode, Return, Power, Bitxor, Class as ClassNode, Name, List, \
         Discard, Sliceobj, Tuple, Pass, UnarySub, Bitor, ListComp, TryExcept, With
     from compiler.visitor import ASTVisitor
 
 except ModuleNotFoundError:
     # python 3
-    from ast import Attribute
-
     from ast import NodeVisitor as ASTVisitor
 
 from .error import error
@@ -56,15 +54,15 @@ def getmv():
     return _mv
 
 
-class FakeAttribute3(Attribute):
+class FakeGetattr3(Getattr):
     pass
 
 
-class FakeAttribute2(Attribute):
+class FakeGetattr2(Getattr):
     pass
 
 
-class FakeAttribute(Attribute):
+class FakeGetattr(Getattr):
     pass  # XXX ugly
 
 
@@ -146,7 +144,7 @@ class ModuleVisitor(ASTVisitor):
             newnode = CNode(self.gx, node, parent=func, mv=getmv())
             self.gx.types[newnode] = set()
 
-        fakefunc = CallFunc(Attribute(objexpr, attrname), args)
+        fakefunc = CallFunc(Getattr(objexpr, attrname), args)
         fakefunc.lineno = objexpr.lineno
         self.visit(fakefunc, func)
         self.add_constraint((inode(self.gx, fakefunc), newnode), func)
@@ -298,7 +296,7 @@ class ModuleVisitor(ASTVisitor):
         self.gx.assign_target[child] = parent
         cu = Const(varname)
         self.visit(cu, func)
-        fakefunc = CallFunc(FakeAttribute2(parent, '__setattr__'), [cu, child])
+        fakefunc = CallFunc(FakeGetattr2(parent, '__setattr__'), [cu, child])
         self.visit(fakefunc, func)
 
         fakechildnode = CNode(self.gx, (child, varname), parent=func, mv=getmv())  # create separate 'fake' CNode per child, so we can have multiple 'callfuncs'
@@ -318,7 +316,7 @@ class ModuleVisitor(ASTVisitor):
 
     def struct_unpack(self, rvalue, func):
         if isinstance(rvalue, CallFunc):
-            if isinstance(rvalue.node, Attribute) and isinstance(rvalue.node.expr, Name) and rvalue.node.expr.name == 'struct' and rvalue.node.attrname == 'unpack' and lookup_var('struct', func, mv=self).imported:  # XXX imported from where?
+            if isinstance(rvalue.node, Getattr) and isinstance(rvalue.node.expr, Name) and rvalue.node.expr.name == 'struct' and rvalue.node.attrname == 'unpack' and lookup_var('struct', func, mv=self).imported:  # XXX imported from where?
                 return True
             elif isinstance(rvalue.node, Name) and rvalue.node.name == 'unpack' and 'unpack' in self.ext_funcs and not lookup_var('unpack', func, mv=self):  # XXX imported from where?
                 return True
@@ -716,7 +714,7 @@ class ModuleVisitor(ASTVisitor):
             if func.ident not in parent.staticmethods:  # XXX use flag
                 default_var(self.gx, 'self', func)
                 if func.ident == '__init__' and '__del__' in parent.funcs:  # XXX what if no __init__
-                    self.visit(CallFunc(Attribute(Name('self'), '__del__'), []), func)
+                    self.visit(CallFunc(Getattr(Name('self'), '__del__'), []), func)
                     self.gx.gc_cleanup = True
             parent.funcs[func.ident] = func
 
@@ -906,7 +904,7 @@ class ModuleVisitor(ASTVisitor):
 
         if isinstance(node.node, Name):
             blah = AssName(clone.node.name, 'OP_ASSIGN')
-        elif isinstance(node.node, Attribute):
+        elif isinstance(node.node, Getattr):
             blah = AssAttr(clone.node.expr, clone.node.attrname, 'OP_ASSIGN')
         elif isinstance(node.node, Subscript):
             t1 = self.temp_var(node.node.expr, func)
@@ -1085,8 +1083,8 @@ class ModuleVisitor(ASTVisitor):
         assnode = CNode(self.gx, node.assign, parent=func, mv=getmv())
         self.gx.types[assnode] = set()
 
-        get_iter = CallFunc(Attribute(node.list, '__iter__'), [])
-        fakefunc = CallFunc(Attribute(get_iter, 'next'), [])
+        get_iter = CallFunc(Getattr(node.list, '__iter__'), [])
+        fakefunc = CallFunc(Getattr(get_iter, 'next'), [])
 
         self.visit(fakefunc, func)
         self.add_constraint((inode(self.gx, fakefunc), assnode), func)
@@ -1102,7 +1100,7 @@ class ModuleVisitor(ASTVisitor):
             CNode(self.gx, node.assign, parent=func, mv=getmv())
 
             self.gx.assign_target[node.assign.expr] = node.assign.expr  # XXX multiple targets possible please
-            fakefunc2 = CallFunc(Attribute(node.assign.expr, '__setattr__'), [Const(node.assign.attrname), fakefunc])
+            fakefunc2 = CallFunc(Getattr(node.assign.expr, '__setattr__'), [Const(node.assign.attrname), fakefunc])
             self.visit(fakefunc2, func)
 
         elif isinstance(node.assign, (AssTuple, AssList)):
@@ -1148,7 +1146,7 @@ class ModuleVisitor(ASTVisitor):
                     self.temp_var_int((node, 4), func)
 
             self.temp_var((node, 5), func, looper=node.list)
-            if isinstance(node.list, CallFunc) and isinstance(node.list.node, Attribute):
+            if isinstance(node.list, CallFunc) and isinstance(node.list.node, Getattr):
                 self.temp_var((node, 6), func, wopper=node.list.node.expr)
                 self.temp_var2((node, 7), inode(self.gx, node.list.node.expr), func)
 
@@ -1198,8 +1196,8 @@ class ModuleVisitor(ASTVisitor):
             self.gx.types[assnode] = set()
 
             # list.unit->iter
-            get_iter = CallFunc(Attribute(qual.list, '__iter__'), [])
-            fakefunc = CallFunc(Attribute(get_iter, 'next'), [])
+            get_iter = CallFunc(Getattr(qual.list, '__iter__'), [])
+            fakefunc = CallFunc(Getattr(get_iter, 'next'), [])
             self.visit(fakefunc, lcfunc)
             self.add_constraint((inode(self.gx, fakefunc), inode(self.gx, qual.assign)), lcfunc)
 
@@ -1313,7 +1311,7 @@ class ModuleVisitor(ASTVisitor):
             else:
                 subscript = lvalue.subs[0]
 
-            fakefunc = CallFunc(Attribute(lvalue.expr, '__setitem__'), [subscript, rvalue])
+            fakefunc = CallFunc(Getattr(lvalue.expr, '__setitem__'), [subscript, rvalue])
             self.visit(fakefunc, func)
             inode(self.gx, lvalue.expr).fakefunc = fakefunc
             if len(lvalue.subs) > 1:
@@ -1326,7 +1324,7 @@ class ModuleVisitor(ASTVisitor):
         elif isinstance(lvalue, AssAttr):
             CNode(self.gx, lvalue, parent=func, mv=getmv())
             self.gx.assign_target[rvalue] = lvalue.expr
-            fakefunc = CallFunc(Attribute(lvalue.expr, '__setattr__'), [Const(lvalue.attrname), rvalue])
+            fakefunc = CallFunc(Getattr(lvalue.expr, '__setattr__'), [Const(lvalue.attrname), rvalue])
             self.visit(fakefunc, func)
 
     def default_var(self, name, func, exc_name=False):
@@ -1345,7 +1343,7 @@ class ModuleVisitor(ASTVisitor):
             self.gx.types[fakenode] = set()
             self.add_constraint((inode(self.gx, rvalue), fakenode), func)
 
-            fakefunc = CallFunc(FakeAttribute3(rvalue, '__getitem__'), [Const(i)])
+            fakefunc = CallFunc(FakeGetattr3(rvalue, '__getitem__'), [Const(i)])
 
             fakenode.callfuncs.append(fakefunc)
             self.visit(fakefunc, func)
@@ -1379,17 +1377,17 @@ class ModuleVisitor(ASTVisitor):
     def visitCallFunc(self, node, func=None):  # XXX clean up!!
         newnode = CNode(self.gx, node, parent=func, mv=getmv())
 
-        if isinstance(node.node, Attribute):  # XXX import math; math.e
+        if isinstance(node.node, Getattr):  # XXX import math; math.e
             # rewrite super(..) call
             base = self.super_call(node, func)
             if base:
-                node.node = Attribute(copy.deepcopy(base), node.node.attrname)
+                node.node = Getattr(copy.deepcopy(base), node.node.attrname)
                 node.args = [Name('self')] + node.args
 
             # method call
-            if isinstance(node.node, FakeAttribute):  # XXX butt ugly
+            if isinstance(node.node, FakeGetattr):  # XXX butt ugly
                 self.visit(node.node, func)
-            elif isinstance(node.node, FakeAttribute2):
+            elif isinstance(node.node, FakeGetattr2):
                 self.gx.types[newnode] = set()  # XXX move above
 
                 self.callfuncs.append((node, func))
@@ -1398,7 +1396,7 @@ class ModuleVisitor(ASTVisitor):
                     inode(self.gx, arg).callfuncs.append(node)  # this one too
 
                 return
-            elif isinstance(node.node, FakeAttribute3):
+            elif isinstance(node.node, FakeGetattr3):
                 pass
             else:
                 self.visitGetattr(node.node, func, callfunc=True)
@@ -1464,7 +1462,7 @@ class ModuleVisitor(ASTVisitor):
 
         if not getmv().module.builtin:
             for base in node.bases:
-                if not isinstance(base, (Name, Attribute)):
+                if not isinstance(base, (Name, Getattr)):
                     error("invalid expression for base class", self.gx, node, mv=getmv())
 
                 if isinstance(base, Name):
@@ -1549,11 +1547,11 @@ class ModuleVisitor(ASTVisitor):
                 msgs += ['lshift', 'rshift', 'and', 'xor', 'or']
             for msg in msgs:
                 if not '__i' + msg + '__' in newclass.funcs:
-                    self.visit(FunctionNode(None, '__i' + msg + '__', ['self', 'other'], [], 0, None, Stmt([Return(CallFunc(Attribute(Name('self'), '__' + msg + '__'), [Name('other')], None, None))])), newclass)
+                    self.visit(FunctionNode(None, '__i' + msg + '__', ['self', 'other'], [], 0, None, Stmt([Return(CallFunc(Getattr(Name('self'), '__' + msg + '__'), [Name('other')], None, None))])), newclass)
 
         # --- __str__, __hash__ # XXX model in lib/builtin.py, other defaults?
         if not newclass.mv.module.builtin and not '__str__' in newclass.funcs:
-            self.visit(FunctionNode(None, '__str__', ['self'], [], 0, None, Return(CallFunc(Attribute(Name('self'), '__repr__'), []))), newclass)
+            self.visit(FunctionNode(None, '__str__', ['self'], [], 0, None, Return(CallFunc(Getattr(Name('self'), '__repr__'), []))), newclass)
             newclass.funcs['__str__'].invisible = True
         if not newclass.mv.module.builtin and not '__hash__' in newclass.funcs:
             self.visit(FunctionNode(None, '__hash__', ['self'], [], 0, None, Return(Const(0)), []), newclass)
@@ -1566,7 +1564,7 @@ class ModuleVisitor(ASTVisitor):
         newnode = CNode(self.gx, node, parent=func, mv=getmv())
         self.gx.types[newnode] = set()
 
-        fakefunc = CallFunc(FakeAttribute(node.expr, '__getattr__'), [Const(node.attrname)])
+        fakefunc = CallFunc(FakeGetattr(node.expr, '__getattr__'), [Const(node.attrname)])
         self.visit(fakefunc, func)
         self.add_constraint((self.gx.cnode[fakefunc, 0, 0], newnode), func)
 
