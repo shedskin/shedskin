@@ -36,11 +36,7 @@ import itertools
 import logging
 import random
 import sys
-
-try:
-    from compiler.ast import Const, Node, AssAttr, Keyword, CallFunc, Getattr, Dict, List, Tuple, ListComp, Not, Compare, Name
-except ModuleNotFoundError:
-    pass
+from compiler.ast import Const, Node, AssAttr, Keyword, CallFunc, Getattr, Dict, List, Tuple, ListComp, Not, Compare, Name
 
 from . import error
 from .python import StaticClass, lookup_class_module, Function, \

@@ -5,10 +5,7 @@ Copyright 2005-2013 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 virtual.py: virtual methods and variables
 
 '''
-try:
-    from compiler.ast import CallFunc, Name
-except ModuleNotFoundError:
-    pass
+from compiler.ast import CallFunc, Name
 
 from . import infer
 from .python import subclass, Class

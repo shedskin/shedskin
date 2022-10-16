@@ -17,20 +17,13 @@ import copy
 import os
 import re
 import sys
-
-try:
-    # python 2
-    from compiler.ast import Const, AssTuple, AssList, From, Add, ListCompFor, \
-        UnaryAdd, Import, Bitand, Stmt, Assign, FloorDiv, Not, Mod, AssAttr, \
-        Keyword, GenExpr, LeftShift, AssName, Div, Or, Lambda, And, CallFunc, \
-        Global, Slice, RightShift, Sub, Getattr, Dict, Ellipsis, Mul, \
-        Subscript, Function as FunctionNode, Return, Power, Bitxor, Class as ClassNode, Name, List, \
-        Discard, Sliceobj, Tuple, Pass, UnarySub, Bitor, ListComp, TryExcept, With
-    from compiler.visitor import ASTVisitor
-
-except ModuleNotFoundError:
-    # python 3
-    from ast import NodeVisitor as ASTVisitor
+from compiler.ast import Const, AssTuple, AssList, From, Add, ListCompFor, \
+    UnaryAdd, Import, Bitand, Stmt, Assign, FloorDiv, Not, Mod, AssAttr, \
+    Keyword, GenExpr, LeftShift, AssName, Div, Or, Lambda, And, CallFunc, \
+    Global, Slice, RightShift, Sub, Getattr, Dict, Ellipsis, Mul, \
+    Subscript, Function as FunctionNode, Return, Power, Bitxor, Class as ClassNode, Name, List, \
+    Discard, Sliceobj, Tuple, Pass, UnarySub, Bitor, ListComp, TryExcept, With
+from compiler.visitor import ASTVisitor
 
 from .error import error
 from .infer import inode, in_out, CNode, default_var, register_temp_var
