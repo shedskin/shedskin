@@ -43,5 +43,5 @@ class NodeVisitor(ast.NodeVisitor):
             self.visit(child, *args)
 
     def adapt_ImportFrom(self, node):
-#        node.names = [(alias.name, alias.asname) for alias in node.names]
+#        node.names = [(alias.name, alias.asname) for alias in node.alias]
         node.module = node.modname

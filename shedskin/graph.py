@@ -397,7 +397,7 @@ class ModuleVisitor(NodeVisitor):
         # --- bootstrap built-in classes
         if self.module.ident == 'builtin':
             for dummy in self.gx.builtins:
-                self.visit(parse_expr('class %s: pass' % dummy))
+                self.visit(ClassNode(dummy, [], None, Pass()))
 
         if self.module.ident != 'builtin':
             n = parse_expr('from builtin import *')
