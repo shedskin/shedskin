@@ -1886,7 +1886,7 @@ class GenerateVisitor(BaseNodeVisitor):
         elif method_call:
             for cl, _ in self.mergeinh[objexpr]:
                 if isinstance(cl, Class) and cl.ident != 'none' and ident not in cl.funcs:
-                    conv = {'int_': 'int', 'float_': 'float', 'str_': 'str', 'class_': 'class', 'none': 'none'}
+                    conv = {'int_': 'int', 'float_': 'float', 'str_': 'str', 'class_': 'class', 'none': 'none', 'unicode_': 'unicode'}
                     clname = conv.get(cl.ident, cl.ident)
                     error("class '%s' has no method '%s'" % (clname, ident), self.gx, node, warning=True, mv=self.mv)
                 if isinstance(cl, Class) and ident in cl.staticmethods:
@@ -2735,14 +2735,13 @@ class GenerateVisitor(BaseNodeVisitor):
         if not self.filling_consts and isinstance(node.s, str):
             self.append(self.get_constant(node))
             return
-        t = list(inode(self.gx, node).types())[0]
-        if t[0].ident == 'str_':
+        if type(node.s) is str:
             self.append('new str("%s"' % self.expand_special_chars(node.s))
             if '\0' in node.s:  # '\0' delimiter in C
                 self.append(', %d' % len(node.s))
             self.append(')')
-        else:
-            self.append('new %s(%s)' % (t[0].ident, node.value))
+        elif type(node.s) is unicode:
+            self.append('new unicode("%s")' % (node.s.encode()))
 
 def generate_code(gx):
     for module in gx.modules.values():
