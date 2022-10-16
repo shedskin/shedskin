@@ -12,13 +12,12 @@ import sys
 try:
     from compiler import parse
     from compiler.ast import AssTuple, AssList, List, Tuple, CallFunc, Name, \
-        Const as Constant, Getattr as Attribute
+        Const, UnaryAdd, UnarySub, Getattr as Attribute
 
 except ModuleNotFoundError:
-    from ast import parse, Name, Attribute, Constant
+    from ast import parse, Name, Attribute
 
-from .compat import get_docstring, get_formals, get_id, attr_value, attr_attr, \
-     is_unary
+from .compat import get_docstring, get_formals, get_id, attr_value, attr_attr
 
 
 class Module(object):
@@ -396,9 +395,9 @@ def is_property_setter(dec):
 
 
 def is_literal(node):
-    if is_unary(node):
+    if isinstance(node, (UnarySub, UnaryAdd)):
         node = node.expr
-    return isinstance(node, Constant) and isinstance(node.value, (int, float))
+    return isinstance(node, Const) and isinstance(node.value, (int, float))
 
 
 def is_fastfor(node):
