@@ -15,7 +15,7 @@ try:
         Const, UnaryAdd, UnarySub, Getattr
 
 except ModuleNotFoundError:
-    from ast import parse, Name
+    from ast import parse
 
 from .compat import get_docstring, get_formals
 
@@ -290,10 +290,10 @@ def lookup_class_module(objexpr, mv, parent):
 
 def lookup_func(node, mv):  # XXX lookup_var first?
     if isinstance(node, Name):
-        if node.id in mv.funcs:
-            return mv.funcs[node.id]
-        elif node.id in mv.ext_funcs:
-            return mv.ext_funcs[node.id]
+        if node.name in mv.funcs:
+            return mv.funcs[node.name]
+        elif node.name in mv.ext_funcs:
+            return mv.ext_funcs[node.name]
         else:
             return None
     elif isinstance(node, Getattr):
