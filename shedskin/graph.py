@@ -21,11 +21,11 @@ import sys
 try:
     # python 2
     from compiler.ast import Const, AssTuple, AssList, From as ImportFrom, Add, ListCompFor, \
-        UnaryAdd, Import, Bitand, Assign, FloorDiv, Not, Mod, AssAttr, \
+        UnaryAdd, Import, Bitand, Stmt, Assign, FloorDiv, Not, Mod, AssAttr, \
         Keyword, GenExpr as GeneratorExp, LeftShift, AssName, Div, Or, Lambda, And, CallFunc, \
         Global, Slice, RightShift, Sub, Getattr as Attribute, Dict, Ellipsis, Mul, \
         Subscript, Function as FunctionDef, Return, Power, Bitxor, Class as ClassDef, Name, List, \
-        Sliceobj, Tuple, Pass, UnarySub, Bitor, ListComp, TryExcept as Try, With
+        Discard, Sliceobj, Tuple, Pass, UnarySub, Bitor, ListComp, TryExcept as Try, With
 
 except ModuleNotFoundError:
     # python 3
@@ -384,6 +384,18 @@ class ModuleVisitor(NodeVisitor):
         self.gx.genexp_to_lc[node] = lc
         self.visit(lc, func)
         self.add_constraint((inode(self.gx, lc), newnode), func)
+
+    def visit_Stmt(self, node, func=None):
+        comments = []
+        for b in node.nodes:
+            if isinstance(b, Discard):
+                self.bool_test_add(b.expr)
+            if isinstance(b, Discard) and isinstance(b.expr, Const) and type(b.expr.value) == str:
+                comments.append(b.expr.value)
+            elif comments:
+                self.gx.comments[b] = comments
+                comments = []
+            self.visit(b, func)
 
     def visit_statements(self, statements, func=None):
         comments = []
@@ -763,7 +775,7 @@ class ModuleVisitor(NodeVisitor):
             if is_isinstance(test):
                 self.gx.filterstack.pop()
         if node.else_:
-            self.visit_statements(get_statements(node.else_), func)
+            self.visit(node.else_, func)
 
     def visit_IfExp(self, node, func=None):
         newnode = CNode(self.gx, node, parent=func, mv=getmv())
@@ -1034,7 +1046,7 @@ class ModuleVisitor(NodeVisitor):
             self.visit(child, func)
 
     def visit_TryExcept(self, node, func=None):
-        self.visit_statements(get_statements(node.body), func)
+        self.visit(node.body, func)
 
         for handler in node.handlers:
             if not handler[0]:
@@ -1062,11 +1074,11 @@ class ModuleVisitor(NodeVisitor):
                 self.gx.types[inode(self.gx, var)] = set([(cl, 1)])
 
         for handler in node.handlers:
-            self.visit_statements(get_statements(handler[2]), func)
+            self.visit(handler[2], func)
 
         # else
         if node.else_:
-            self.visit_statements(get_statements(node.else_), func)
+            self.visit(node.else_, func)
             self.temp_var_int(node.else_, func)
 
     def visit_TryFinally(self, node, func=None):
@@ -1114,11 +1126,11 @@ class ModuleVisitor(NodeVisitor):
         # --- for-else
         if node.else_:
             self.temp_var_int(node.else_, func)
-            self.visit_statements(get_statements(node.else_), func)
+            self.visit(node.else_, func)
 
         # --- loop body
         self.gx.loopstack.append(node)
-        self.visit_statements(get_statements(node.body), func)
+        self.visit(node.body, func)
         self.gx.loopstack.pop()
         self.for_in_iters.append(node.list)
 
@@ -1163,7 +1175,7 @@ class ModuleVisitor(NodeVisitor):
 
         if node.else_:
             self.temp_var_int(node.else_, func)
-            self.visit_statements(get_statements(node.else_), func)
+            self.visit(node.else_, func)
 
     def visit_With(self, node, func=None):
         if node.vars:
@@ -1175,7 +1187,8 @@ class ModuleVisitor(NodeVisitor):
             self.add_constraint((varnode, inode(self.gx, lvar)), func)
         else:
             self.visit(node.expr, func)
-        self.visit_statements(get_statements(node.body), func)
+        for child in getChildNodes(node):
+            self.visit(child, func)
 
     def visit_ListCompIf(self, node, func=None):
         self.bool_test_add(node.test)
