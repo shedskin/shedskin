@@ -154,9 +154,6 @@ if OLD:
     def get_value(node):
         return node.expr
 
-    def get_left(node):
-        return node.expr
-
     def is_index(node):
         return isinstance(node, Subscript) and not isinstance(node.subs[0], Sliceobj)
 
@@ -168,10 +165,6 @@ if OLD:
             return [node.lower, node.upper, None]
         else:
             return node.subs[0].nodes
-
-    def get_ops(node):
-        msgs = {'<': 'lt', '>': 'gt', 'in': 'contains', 'not in': 'contains', '!=': 'ne', '==': 'eq', '<=': 'le', '>=': 'ge'}
-        return [(msgs.get(op), right) for op, right in node.ops]
 
     long_ = long
     unicode_ = unicode
@@ -254,13 +247,6 @@ else:
 
     def slice_args(node):
         pass
-
-    def get_left(node):
-        return node.left
-
-    def get_ops(node):
-        msgs = {'Lt': 'lt', 'Gt': 'gt', 'In': 'contains', 'NotIn': 'contains', 'NotEq': 'ne', 'Eq': 'eq', 'LtE': 'le', 'GtE': 'ge'}
-        return [(msgs[op.__class__.__name__], right) for op, right in zip(node.ops, node.comparators)]
 
     long_ = int
     unicode_ = str

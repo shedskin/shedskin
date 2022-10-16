@@ -40,7 +40,7 @@ from .compat import NodeVisitor, parse_expr, getChildNodes, \
     filter_statements, filter_rec, get_assnames, get_statements, is_const, \
     const_value, get_id, get_defaults, get_body, get_func, attr_value, \
     attr_attr, get_args, get_elts, is_unary, long_, unicode_, get_targets, \
-    get_value, is_index, is_slice, slice_args, get_left, get_ops
+    get_value, is_index, is_slice, slice_args
 
 from .error import error
 from .infer import inode, in_out, CNode, default_var, register_temp_var
@@ -853,13 +853,12 @@ class ModuleVisitor(NodeVisitor):
         newnode = CNode(self.gx, node, parent=func, mv=getmv())
         newnode.copymetoo = True
         self.gx.types[newnode] = set([(def_class(self.gx, 'bool_'), 0)])  # XXX new type?
-
-        left = get_left(node)
-        self.visit(left, func)
-
-        for msg, right in get_ops(node):
+        self.visit(node.expr, func)
+        msgs = {'<': 'lt', '>': 'gt', 'in': 'contains', 'not in': 'contains', '!=': 'ne', '==': 'eq', '<=': 'le', '>=': 'ge'}
+        left = node.expr
+        for op, right in node.ops:
             self.visit(right, func)
-
+            msg = msgs.get(op)
             if msg == 'contains':
                 self.fake_func(node, right, '__' + msg + '__', [left], func)
             elif msg in ('lt', 'gt', 'le', 'ge'):
@@ -868,7 +867,6 @@ class ModuleVisitor(NodeVisitor):
                 self.visit(fakefunc, func)
             elif msg:
                 self.fake_func(node, left, '__' + msg + '__', [right], func)
-
             left = right
 
         # tempvars, e.g. (t1=fun())
@@ -1290,7 +1288,7 @@ class ModuleVisitor(NodeVisitor):
                     if (rvalue, 0, 0) not in self.gx.cnode:  # XXX generalize
                         self.visit(rvalue, func)
                     self.visit(lvalue, func)
-                    lvar = self.default_var(get_id(lvalue), func)
+                    lvar = self.default_var(lvalue.name, func)
                     if isinstance(rvalue, Constant):
                         lvar.const_assign.append(rvalue)
                     self.add_constraint((inode(self.gx, rvalue), inode(self.gx, lvar)), func)
