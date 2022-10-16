@@ -9,13 +9,13 @@ compat.py: python2/3 related compatibility
 try:
     from compiler import parse
     from compiler.ast import Stmt, Assign, AssName, Discard, Const, Return, \
-        Function as FunctionDef, Class as ClassDef, Keyword
+        Function as FunctionDef, Class as ClassDef
 
     OLD = True
 
 except ModuleNotFoundError:
     import ast
-    from ast import parse, Assign, Name, Expr, Constant, Starred
+    from ast import parse, Assign, Name, Expr, Constant
 
     OLD = False
 
@@ -126,21 +126,6 @@ if OLD:
     def attr_attr(node):
         return node.attrname
 
-    def get_args(node):
-        args = []
-        for arg in node.args:
-            if isinstance(arg, Keyword):
-                arg = arg.expr
-            args.append(arg)
-
-        if node.star_args:
-            args.append(node.star_args)
-
-        if node.dstar_args:
-            args.append(node.dstar_args)
-
-        return args
-
 else:
     def parse_expr(s):
         return parse(s).body[0]
@@ -186,15 +171,3 @@ else:
 
     def attr_attr(node):
         return node.attr
-
-    def get_args(node):
-        args = []
-        for arg in node.args:
-            if isinstance(arg, Starred):
-                args.append(arg.value)
-
-        if hasattr(node, 'keywords'):
-            for arg in node.keywords:
-                args.append(arg.expr)
-
-        return args
