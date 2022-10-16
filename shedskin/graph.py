@@ -31,7 +31,7 @@ except ModuleNotFoundError:
     # python 3
     from ast import Attribute, ClassDef, FunctionDef, Global, ListComp, \
         GeneratorExp, Assign, Try, With, Import, ImportFrom, And, Or, Not, \
-        Constant, Return, Name, Call
+        Constant, Return, Name
 
 from .compat import NodeVisitor, parse_expr, getChildNodes, \
     filter_statements, filter_rec, get_assnames, get_statements, is_const, \
@@ -1383,14 +1383,13 @@ class ModuleVisitor(NodeVisitor):
             # rewrite super(..) call
             base = self.super_call(expr, node)
             if base:
-                node.node = Attribute(copy.deepcopy(base), node.node.attrname)  # TODO py3
-                expr = get_func(node)
+                node.node = Attribute(copy.deepcopy(base), node.node.attrname)
                 node.args = [Name('self')] + node.args
 
             # method call
-            if isinstance(expr, FakeAttribute):  # XXX butt ugly
-                self.visit(expr, func)
-            elif isinstance(expr, FakeAttribute2):
+            if isinstance(node.node, FakeAttribute):  # XXX butt ugly
+                self.visit(node.node, func)
+            elif isinstance(node.node, FakeAttribute2):
                 self.gx.types[newnode] = set()  # XXX move above
 
                 self.callfuncs.append((node, func))
@@ -1399,19 +1398,19 @@ class ModuleVisitor(NodeVisitor):
                     inode(self.gx, arg).callfuncs.append(node)  # this one too
 
                 return
-            elif isinstance(expr, FakeAttribute3):
+            elif isinstance(node.node, FakeAttribute3):
                 pass
             else:
-                self.visit_Getattr(expr, func, callfunc=True)
-                inode(self.gx, expr).callfuncs.append(node)  # XXX iterative dataflow analysis: move there?
-                inode(self.gx, expr).fakert = True
+                self.visit_Getattr(node.node, func, callfunc=True)
+                inode(self.gx, node.node).callfuncs.append(node)  # XXX iterative dataflow analysis: move there?
+                inode(self.gx, node.node).fakert = True
 
             ident = node.node.attrname
-            inode(self.gx, expr.expr).callfuncs.append(node)  # XXX iterative dataflow analysis: move there?
+            inode(self.gx, node.node.expr).callfuncs.append(node)  # XXX iterative dataflow analysis: move there?
 
-            if isinstance(expr.expr, Name) and get_id(expr.expr) in getmv().imports and attr_attr(expr) == '__getattr__':  # XXX analyze_callfunc
-                if node.args[0].value in getmv().imports[expr.expr.name].mv.globals:  # XXX bleh
-                    self.add_constraint((inode(self.gx, getmv().imports[expr.expr.name].mv.globals[node.args[0].value]), newnode), func)
+            if isinstance(node.node.expr, Name) and node.node.expr.name in getmv().imports and node.node.attrname == '__getattr__':  # XXX analyze_callfunc
+                if node.args[0].value in getmv().imports[node.node.expr.name].mv.globals:  # XXX bleh
+                    self.add_constraint((inode(self.gx, getmv().imports[node.node.expr.name].mv.globals[node.args[0].value]), newnode), func)
 
         elif isinstance(expr, Name):
             # direct call

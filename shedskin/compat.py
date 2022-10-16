@@ -167,5 +167,5 @@ else:
     def attr_value(node):
         return node.value
 
-    def attr_attr(node):
+    def attr_value(node):
         return node.attr
