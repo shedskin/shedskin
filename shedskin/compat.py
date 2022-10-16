@@ -147,15 +147,6 @@ if OLD:
     def is_unary(node):
         return isinstance(node, (UnarySub, UnaryAdd))
 
-    def get_targets(node):
-        return node.nodes
-
-    def get_value(node):
-        return node.expr
-
-    long_ = long
-    unicode_ = unicode
-
 else:
     def parse_expr(s):
         return parse(s).body[0]
@@ -219,12 +210,3 @@ else:
 
     def is_unary(node):
         return isinstance(node, UnaryOp)
-
-    def get_targets(node):
-        return node.targets
-
-    def get_value(node):
-        return node.value
-
-    long_ = int
-    unicode_ = str
