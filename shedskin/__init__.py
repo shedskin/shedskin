@@ -11,7 +11,11 @@ import sys
 import time
 import traceback
 
-import blessings
+import platform
+if platform.system() == 'Windows':
+    import blessed as blessings
+else:
+    import blessings
 
 import graph
 from annotate import annotate
