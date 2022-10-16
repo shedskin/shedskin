@@ -6,12 +6,6 @@ compat.py: python2/3 related compatibility
 
 '''
 
-try:
-    from compiler.ast import Stmt
-
-except ModuleNotFoundError:
-    pass
-
 import ast
 
 try:
@@ -51,28 +45,18 @@ class NodeVisitor(ast.NodeVisitor):
         return visitor(node, *args)
 
     def generic_visit(self, node, *args):
-        for child in getChildNodes(node):
-            self.visit(child, *args)
+        if hasattr(node, '_fields'):
+            for field, value in ast.iter_fields(node):
+                if isinstance(value, list):
+                    for item in value:
+                        if isinstance(item, ast.AST):
+                            self.visit(item, *args)
+                elif isinstance(value, ast.AST):
+                    self.visit(value, *args)
+        else:
+            for child in node.getChildNodes():
+                self.visit(child, *args)
 
     if OLD:
         def adapt_ImportFrom(self, node):
             node.module = node.modname
-
-
-if OLD:
-    def getChildNodes(node):
-        return node.getChildNodes()
-
-    def filter_statements(node, cl):
-        result = []
-        for child in node.getChildNodes():
-            if isinstance(child, Stmt):
-                result.extend([n for n in child.nodes if isinstance(n, cl)])
-        return result
-
-else:
-    def getChildNodes(node):
-        return tuple(ast.iter_child_nodes(node))
-
-    def filter_statements(node, cl):
-        return [n for n in ast.iter_child_nodes(node) if isinstance(n, cl)]
