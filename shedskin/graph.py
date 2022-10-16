@@ -24,14 +24,14 @@ try:
         UnaryAdd, Import, Bitand, Stmt, Assign, FloorDiv, Not, Mod, AssAttr, \
         Keyword, GenExpr, LeftShift, AssName, Div, Or, Lambda, And, CallFunc, \
         Global, Slice, RightShift, Sub, Getattr as Attribute, Dict, Ellipsis, Mul, \
-        Subscript, Function as FunctionDef, Return, Power, Bitxor, Class as ClassDef, Name, List, \
+        Subscript, Function as FunctionNode, Return, Power, Bitxor, Class as ClassNode, Name, List, \
         Discard, Sliceobj, Tuple, Pass, UnarySub, Bitor, ListComp, TryExcept, With
 
 except ModuleNotFoundError:
     # python 3
-    from ast import Attribute, ClassDef, FunctionDef
+    from ast import Attribute
 
-from .compat import NodeVisitor, parse_expr, getChildNodes, filter_statements
+from .compat import NodeVisitor, parse_expr
 from .error import error
 from .infer import inode, in_out, CNode, default_var, register_temp_var
 from .python import StaticClass, lookup_func, Function, is_zip2, \
@@ -464,11 +464,20 @@ class ModuleVisitor(NodeVisitor):
                     if ident == func.ident:
                         cl.funcs[ident + ancestor.ident + '__'] = cl.funcs[ident]
 
+    def stmt_nodes(self, node, cl):
+        result = []
+        for child in node.getChildNodes():
+            if isinstance(child, Stmt):
+                for n in child.nodes:
+                    if isinstance(n, cl):
+                        result.append(n)
+        return result
+
     def forward_references(self, node):
         getmv().classnodes = []
 
         # classes
-        for n in filter_statements(node, ClassDef):
+        for n in self.stmt_nodes(node, ClassNode):
             check_redef(self.gx, n)
             getmv().classnodes.append(n)
             newclass = Class(self.gx, n, getmv())
@@ -478,7 +487,7 @@ class ModuleVisitor(NodeVisitor):
             newclass.parent = StaticClass(newclass, getmv())
 
             # methods
-            for m in filter_statements(n, FunctionDef):
+            for m in self.stmt_nodes(n, FunctionNode):
                 if hasattr(m, 'decorators') and m.decorators and [dec for dec in m.decorators if is_property_setter(dec)]:
                     m.name = m.name + '__setter__'
                 if m.name in newclass.funcs:  # and func.ident not in ['__getattr__', '__setattr__']: # XXX
@@ -489,7 +498,7 @@ class ModuleVisitor(NodeVisitor):
 
         # functions
         getmv().funcnodes = []
-        for n in filter_statements(node, FunctionDef):
+        for n in self.stmt_nodes(node, FunctionNode):
             check_redef(self.gx, n)
             getmv().funcnodes.append(n)
             func = getmv().funcs[n.name] = Function(self.gx, n, mv=getmv())
@@ -515,7 +524,7 @@ class ModuleVisitor(NodeVisitor):
         return result
 
     def local_assignments(self, node, global_=False):
-        if global_ and isinstance(node, (ClassDef, FunctionDef)):
+        if global_ and isinstance(node, (ClassNode, FunctionNode)):
             return []
         elif isinstance(node, (ListComp, GenExpr)):
             return []
@@ -718,7 +727,7 @@ class ModuleVisitor(NodeVisitor):
     def visit_Lambda(self, node, func=None):
         lambdanr = len(self.lambdas)
         name = '__lambda%d__' % lambdanr
-        fakenode = FunctionDef(None, name, node.argnames, node.defaults, node.flags, None, Return(node.code))
+        fakenode = FunctionNode(None, name, node.argnames, node.defaults, node.flags, None, Return(node.code))
         self.visit(fakenode, None, True)
         f = self.lambdas[name]
         f.lambdanr = lambdanr
@@ -1523,7 +1532,7 @@ class ModuleVisitor(NodeVisitor):
         for child in node.code.getChildNodes():
             if child not in skip:
                 cl = self.classes[node.name]
-                if isinstance(child, FunctionDef):
+                if isinstance(child, FunctionNode):
                     self.visit(child, cl)
                 else:
                     cl.parent.static_nodes.append(child)
@@ -1538,14 +1547,14 @@ class ModuleVisitor(NodeVisitor):
                 msgs += ['lshift', 'rshift', 'and', 'xor', 'or']
             for msg in msgs:
                 if not '__i' + msg + '__' in newclass.funcs:
-                    self.visit(FunctionDef(None, '__i' + msg + '__', ['self', 'other'], [], 0, None, Stmt([Return(CallFunc(Attribute(Name('self'), '__' + msg + '__'), [Name('other')], None, None))])), newclass)
+                    self.visit(FunctionNode(None, '__i' + msg + '__', ['self', 'other'], [], 0, None, Stmt([Return(CallFunc(Attribute(Name('self'), '__' + msg + '__'), [Name('other')], None, None))])), newclass)
 
         # --- __str__, __hash__ # XXX model in lib/builtin.py, other defaults?
         if not newclass.mv.module.builtin and not '__str__' in newclass.funcs:
-            self.visit(FunctionDef(None, '__str__', ['self'], [], 0, None, Return(CallFunc(Attribute(Name('self'), '__repr__'), []))), newclass)
+            self.visit(FunctionNode(None, '__str__', ['self'], [], 0, None, Return(CallFunc(Attribute(Name('self'), '__repr__'), []))), newclass)
             newclass.funcs['__str__'].invisible = True
         if not newclass.mv.module.builtin and not '__hash__' in newclass.funcs:
-            self.visit(FunctionDef(None, '__hash__', ['self'], [], 0, None, Return(Const(0)), []), newclass)
+            self.visit(FunctionNode(None, '__hash__', ['self'], [], 0, None, Return(Const(0)), []), newclass)
             newclass.funcs['__hash__'].invisible = True
 
     def visit_Getattr(self, node, func=None, callfunc=False):
