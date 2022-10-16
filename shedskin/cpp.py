@@ -22,7 +22,7 @@ from ast import Num, Str, Assign, ImportFrom, keyword, \
     Store, Load, Param, Del, iter_child_nodes, get_docstring, \
     Eq, NotEq, Lt, LtE, Gt, GtE, Is, IsNot, In, NotIn, BoolOp, And, Or, AST, \
     UAdd, USub, Not, Invert, BinOp, Add, Sub, Mult, Div, FloorDiv, Pow, Mod, LShift, RShift, BitOr, BitXor, BitAnd
-from ast_utils import BaseNodeVisitor, is_assign_attribute, is_assign_tuple, is_assign_list_or_tuple, is_constant, \
+from .ast_utils import BaseNodeVisitor, is_assign_attribute, is_assign_tuple, is_assign_list_or_tuple, is_constant, \
     orelse_to_node, handle_with_vars
 
 from .error import error

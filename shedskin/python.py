@@ -9,7 +9,7 @@ import os
 import re
 import sys
 from ast import parse, List, Tuple, Call, Name, Load, Num, UnaryOp, UAdd, USub, Attribute, get_docstring
-from ast_utils import extract_argnames, is_assign_list_or_tuple
+from .ast_utils import extract_argnames, is_assign_list_or_tuple
 
 
 class Module(object):
