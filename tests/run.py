@@ -21,10 +21,8 @@ set_timeout_decorator = lambda func: lambda self: func(self, timeout=1e100)
 IMapIterator.next = set_timeout_decorator(IMapIterator.next)
 
 
-if os.path.exists('../shedskin/__init__.py'):
-    SS = '../shedskin/__init__.py'
-else:
-    SS = '../../shedskin/__init__.py'
+SS = ' -m shedskin'
+os.environ['PYTHONPATH'] = os.path.realpath('..')
 
 
 def usage():

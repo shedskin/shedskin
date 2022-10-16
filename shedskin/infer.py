@@ -39,12 +39,9 @@ import sys
 from ast import Num, Str, Call, Attribute, Dict, List, Tuple, ListComp, Not, Compare, Name, keyword, AST, dump as ast_dump
 from ast_utils import is_assign_attribute
 
-import error
-import graph
-from python import StaticClass, lookup_class_module, Function, \
-    Variable, lookup_var, Class, lookup_implementor, def_class
-from typestr import nodetypestr
-from virtual import analyze_virtuals
+from . import error
+from .python import StaticClass, lookup_class_module, Function, \
+     Variable, lookup_var, Class, lookup_implementor, def_class
 
 logger = logging.getLogger('infer')
 ifa_logger = logging.getLogger('infer.ifa')
@@ -1382,6 +1379,10 @@ def determine_classes(gx):  # XXX modeling..?
 
 
 def analyze(gx, module_name):
+    from . import graph  # TODO improve separation to avoid circular imports..
+    from .typestr import nodetypestr
+    from .virtual import analyze_virtuals
+
     # --- build dataflow graph from source code
     gx.main_module = graph.parse_module(module_name, gx)
 

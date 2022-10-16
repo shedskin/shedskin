@@ -28,9 +28,9 @@ from ast import Num, Str, ImportFrom, alias as ast_alias, Add, comprehension, \
 from ast_utils import BaseNodeVisitor, make_arg_list, make_call, is_assign_list_or_tuple, is_assign_attribute, \
     is_assign_tuple, is_constant, orelse_to_node
 
-from error import error
-from infer import inode, in_out, CNode, default_var, register_temp_var
-from python import StaticClass, lookup_func, Function, is_zip2, \
+from .error import error
+from .infer import inode, in_out, CNode, default_var, register_temp_var
+from .python import StaticClass, lookup_func, Function, is_zip2, \
     lookup_class, is_method, is_literal, is_enum, lookup_var, assign_rec, \
     Class, is_property_setter, is_fastfor, aug_msg, is_isinstance, \
     Module, def_class, parse_file, find_module

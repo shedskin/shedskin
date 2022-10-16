@@ -17,12 +17,12 @@ if platform.system() == 'Windows':
 else:
     import blessings
 
-import graph
-from annotate import annotate
-from config import GlobalInfo
-from cpp import generate_code
-from error import print_errors
-from infer import analyze
+from . import graph
+from .annotate import annotate
+from .config import GlobalInfo
+from .cpp import generate_code
+from .error import print_errors
+from .infer import analyze
 
 
 class ShedskinFormatter(logging.Formatter):
@@ -136,7 +136,7 @@ def parse_command_line_options():
 
     # --- some checks
     major, minor = sys.version_info[:2]
-    if (major, minor) not in [(2, 4), (2, 5), (2, 6), (2, 7)]:
+    if (major, minor) not in [(2, 7), (3, 8), (3, 9), (3, 10)]:
         logging.error('Shed Skin is not compatible with this version of Python')
         sys.exit(1)
     if sys.platform == 'win32' and os.path.isdir('c:/mingw'):
