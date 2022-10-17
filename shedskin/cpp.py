@@ -2741,7 +2741,7 @@ class GenerateVisitor(BaseNodeVisitor):
                 self.append(', %d' % len(node.s))
             self.append(')')
         elif type(node.s) is unicode:
-            self.append('new unicode("%s")' % (node.s.encode()))
+            self.append('new unicode("%s")' % (node.s.encode('utf-8')))
 
 def generate_code(gx):
     for module in gx.modules.values():

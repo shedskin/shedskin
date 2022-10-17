@@ -13,7 +13,7 @@
 namespace __shedskin__ {
 
 
-class_ *cl_class_, *cl_none, *cl_str_, *cl_int_, *cl_bool, *cl_float_, *cl_complex, *cl_list, *cl_tuple, *cl_dict, *cl_set, *cl_object, *cl_rangeiter, *cl_xrange;
+class_ *cl_class_, *cl_none, *cl_str_, *cl_int_, *cl_bool, *cl_float_, *cl_complex, *cl_list, *cl_tuple, *cl_dict, *cl_set, *cl_object, *cl_rangeiter, *cl_xrange, *cl_unicode_;
 
 class_ *cl_stopiteration, *cl_assertionerror, *cl_eoferror, *cl_floatingpointerror, *cl_keyerror, *cl_indexerror, *cl_typeerror, *cl_ioerror, *cl_valueerror, *cl_zerodivisionerror, *cl_keyboardinterrupt, *cl_memoryerror, *cl_nameerror, *cl_notimplementederror, *cl_oserror, *cl_overflowerror, *cl_runtimeerror, *cl_syntaxerror, *cl_systemerror, *cl_systemexit;
 
@@ -56,6 +56,7 @@ void __init() {
     cl_class_ = new class_ ("class");
     cl_none = new class_("None");
     cl_str_ = new class_("str");
+    cl_unicode_ = new class_("unicode");
     cl_int_ = new class_("int");
     cl_float_ = new class_("float");
     cl_list = new class_("list");
@@ -142,6 +143,7 @@ __ss_bool class_::__eq__(pyobj *c) {
 #include "builtin/bool.cpp"
 #include "builtin/complex.cpp"
 #include "builtin/str.cpp"
+#include "builtin/unicode.cpp"
 #include "builtin/exception.cpp"
 #include "builtin/function.cpp"
 #include "builtin/format.cpp"

@@ -406,8 +406,12 @@ class str_(pyseq):
     def __hash__(self):
         return 1
 
+    def decode(self, encoding=''):
+        return u''
+
 class unicode_(pyseq):
-    pass
+    def encode(self, encoding=''):
+        return b''
 
 class dict(pyiter):
     def __initdict__(self, other):
