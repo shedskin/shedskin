@@ -1,9 +1,10 @@
 '''
 *** SHED SKIN Python-to-C++ Compiler ***
-Copyright 2005-2013 Mark Dufour; License GNU GPL version 3 (See LICENSE)
+Copyright 2005-2022 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)
 
 '''
-from ast import Tuple, List, Attribute, Store, arguments, Name, Param, iter_fields, AST, Call, Str, Num
+from ast import Tuple, List, Attribute, Store, arguments, Name, Param, \
+    parse, iter_fields, AST, Call, Str, Num
 
 
 def is_assign_list_or_tuple(node):
@@ -70,6 +71,10 @@ def make_arg_list(argnames, vararg=None, kwonlyargs=[], kwarg=None, defaults=[],
 def make_call(func, args=[], keywords=[], starargs=None, kwargs=None):
     # PY3: Incorporate starargs and kwargs into args and keywords respectively
     return Call(func, args, keywords, starargs, kwargs)
+
+
+def parse_expr(s):
+    return parse(s).body[0]
 
 
 class BaseNodeVisitor(object):

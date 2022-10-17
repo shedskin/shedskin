@@ -7,7 +7,13 @@ annotate.py: annotate source code with inferred types, as *.ss.py (shedskin -a)
 '''
 import re
 from ast import Num, Str, Assign, AugAssign, \
-    Attribute, Dict, Print, Return, Name, List, Tuple, ListComp
+    Attribute, Dict, Return, Name, List, Tuple, ListComp
+
+try:
+    from ast import Print
+except:
+    pass
+
 from .ast_utils import is_assign_list_or_tuple
 
 from .infer import inode
