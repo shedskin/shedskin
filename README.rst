@@ -12,21 +12,80 @@ Besides the typing restriction, programs cannot freely use the Python standard l
 
 For a set of `75 non-trivial programs <https://github.com/shedskin/shedskin/releases/download/v0.9.4/shedskin-examples-0.9.4.tgz>`_ (at over 25,000 lines in total (sloccount)), measurements show a typical speedup of 2-200 times over CPython.
 
-The following people have contributed to Shed Skin development so far:
-
-  Hakan Ardo, Brian Blais, Paul Boddie, François Boutines, Djamel Cherif, James Coughlan, Mark Dewing, Mark Dufour, Artem Egorkine, Michael Elkins, Moataz Elmasry, Enzo Erbano, Ernesto Ferro, Salvatore Ferro, FFAO, Victor Garcia, Luis M. Gonzales, Fahrzin Hemmati, Karel Heyse, Johan Kristensen, Kousuke, Denis de Leeuw Duarte, Van Lindberg, David Marek, Douglas McNeil, Andy Miller, Jeff Miller, Danny Milosavljevic, Joaquin Abian Monux, John Nagle, Harri Pasanen, Brent Pedersen, Joris van Rantwijk, Retsyo, Pierre-Marie de Rodat, Jérémie Roquet, Mike Schrick, SirNotAppearingInThisTutorial, Thomas Spura, Joerg Stippa, Dan Stromberg, Dave Tweed, Jaroslaw Tworek, Tony Veijalainen, Pavel Vinogradov, Jason Ye, Liu Zhenhai, Joris van Zwieten
-
-Installation
-------------
+Usage
+-----
 
 ::
 
-  sudo python setup.py install
   shedskin test.py
   make
   ./test
 
+Restrictions
+------------
+
+Shed Skin only supports a restricted subset of Python, so one should expect a given program to compile without any changes, if possible at all. See the `documentation <https://shedskin.readthedocs.io/>`_ for an overview of the limitations.
+
+Installation
+------------
+
+Shed Skin depends on some others projects, such as the Boehm garbage collector for C++. Please see the `documentation <https://shedskin.readthedocs.io/>`_ on how to install these.
+
 Documentation
 -------------
 
-See: https://shedskin.readthedocs.io/
+Please see the `documentation <https://shedskin.readthedocs.io/>`_ for an overview of the restrictions.
+
+Contributors
+------------
+
+The following people have contributed to Shed Skin development so far:
+
+  Hakan Ardo
+  Brian Blais
+  Paul Boddie
+  François Boutines
+  Djamel Cherif
+  James Coughlan
+  Mark Dewing
+  Mark Dufour
+  Artem Egorkine
+  Michael Elkins
+  Moataz Elmasry
+  Enzo Erbano
+  Ernesto Ferro
+  Salvatore Ferro
+  FFAO
+  Victor Garcia
+  Luis M. Gonzales
+  Fahrzin Hemmati
+  Karel Heyse
+  Johan Kristensen
+  Kousuke
+  Denis de Leeuw Duarte
+  Van Lindberg
+  David Marek
+  Douglas McNeil
+  Andy Miller
+  Jeff Miller
+  Danny Milosavljevic
+  Joaquin Abian Monux
+  John Nagle
+  Harri Pasanen
+  Brent Pedersen
+  Joris van Rantwijk
+  Retsyo
+  Pierre-Marie de Rodat
+  Jérémie Roquet
+  Mike Schrick
+  SirNotAppearingInThisTutorial
+  Thomas Spura
+  Joerg Stippa
+  Dan Stromberg
+  Dave Tweed
+  Jaroslaw Tworek
+  Tony Veijalainen
+  Pavel Vinogradov
+  Jason Ye
+  Liu Zhenhai
+  Joris van Zwieten
