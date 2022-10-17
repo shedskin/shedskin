@@ -1,14 +1,14 @@
 
 # --- import problem
-from testdata.bert import *
+from testdata.bert177 import *
 z = zeug()
 
 # --- '_' renaming mangle
-import testdata.bert
+import testdata.bert177
 
 class hello:
     def hello(self):
-        testdata.bert.hello(1)
+        testdata.bert177.hello(1)
 
 s=hello().hello()
 

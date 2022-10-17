@@ -105,7 +105,7 @@ Error('3')
 MissingSectionHeaderError()
 
 #base class not identifier
-import testdata.bert as b
+import testdata.bert182 as b
 
 class A(b.zeug):
     def hup(self):

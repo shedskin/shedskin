@@ -1,12 +1,12 @@
 
-import testdata.bert
-from testdata.bert import hello, zeug
+import testdata.bert39
+from testdata.bert39 import hello, zeug
 #from sets import Set
 
 class jurk:
     pass
 
-testdata.bert.hello(4)                            # []
+testdata.bert39.hello(4)                            # []
 hello(4)                                 # [str]
 
 s2 = jurk()                              # [jurk()]
@@ -15,7 +15,7 @@ s4 = set()                               # [Set(float)]
 s4.add(1.0)                              # []
 s3 = set([1,2,3])                        # [Set(int)]
 
-kn = testdata.bert.zeug()                         # [zeug()]
+kn = testdata.bert39.zeug()                         # [zeug()]
 kn.hallo(4)                              # []
 
 l1 = lambda x,y: x+y                     # [lambda0]

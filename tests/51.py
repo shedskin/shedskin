@@ -1,5 +1,5 @@
 
-import testdata.bert
+import testdata.bert51
 
 class zeug:
     def meuk(self):                      # self: [zeug()]
@@ -11,8 +11,8 @@ def hoi(): return 1                    # [float]
 print hoi()                              # [float]
 a = zeug()                               # [zeug()]
 
-print testdata.bert.hello(1)                      # [str]
-z = testdata.bert.zeug()                          # [bert::zeug()]
+print testdata.bert51.hello(1)                      # [str]
+z = testdata.bert51.zeug()                          # [bert::zeug()]
 z.hallo(1)                               # [int]
 
 print a.meuk()                           # [str]
