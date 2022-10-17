@@ -10,7 +10,7 @@ Shed Skin is an experimental compiler, that can translate pure, but implicitly s
 
 Besides the typing restriction, programs cannot freely use the Python standard library (although about 25 common modules, such as random and re, are currently supported). Also, not all Python features, such as nested functions and variable numbers of arguments, are supported (see the `documentation <https://shedskin.readthedocs.io/>`_ for details).
 
-For a set of `75 non-trivial programs <https://github.com/shedskin/shedskin/releases/download/v0.9.4/shedskin-examples-0.9.4.tgz>`_ (at over 25,000 lines in total (sloccount)), measurements show a typical speedup of 2-200 times over CPython.
+For a set of `75 non-trivial programs <https://github.com/shedskin/shedskin/tree/master/examples>`_ (at over 25,000 lines in total (sloccount)), measurements show a typical speedup of 2-200 times over CPython.
 
 Usage
 -----
@@ -29,7 +29,7 @@ Shed Skin only supports a restricted subset of Python, so one should expect a gi
 Installation
 ------------
 
-Shed Skin depends on some others projects, such as the Boehm garbage collector for C++. Please see the `documentation <https://shedskin.readthedocs.io/en/latest/documentation.html#installation>`_ on how to install these.
+Shed Skin depends on some others projects, such as the `Boehm garbage collector <https://www.hboehm.info/gc/>`_. Please see the `documentation <https://shedskin.readthedocs.io/en/latest/documentation.html#installation>`_ on how to install these.
 
 Documentation
 -------------
@@ -41,51 +41,53 @@ Contributors
 
 The following people have contributed to Shed Skin development so far:
 
-  - Hakan Ardo
-  - Brian Blais
-  - Paul Boddie
-  - François Boutines
-  - Djamel Cherif
-  - James Coughlan
-  - Mark Dewing
-  - Mark Dufour
-  - Artem Egorkine
-  - Michael Elkins
-  - Moataz Elmasry
-  - Enzo Erbano
-  - Ernesto Ferro
-  - Salvatore Ferro
-  - FFAO
-  - Victor Garcia
-  - Luis M. Gonzales
-  - Fahrzin Hemmati
-  - Karel Heyse
-  - Johan Kristensen
-  - Kousuke
-  - Denis de Leeuw Duarte
-  - Van Lindberg
-  - David Marek
-  - Douglas McNeil
-  - Andy Miller
-  - Jeff Miller
-  - Danny Milosavljevic
-  - Joaquin Abian Monux
-  - John Nagle
-  - Harri Pasanen
-  - Brent Pedersen
-  - Joris van Rantwijk
-  - Retsyo
-  - Pierre-Marie de Rodat
-  - Jérémie Roquet
-  - Mike Schrick
-  - SirNotAppearingInThisTutorial
-  - Thomas Spura
-  - Joerg Stippa
-  - Dan Stromberg
-  - Dave Tweed
-  - Jaroslaw Tworek
-  - Tony Veijalainen
-  - Pavel Vinogradov
-  - Jason Ye
-  - Liu Zhenhai
-  - Joris van Zwieten
+::
+
+  Hakan Ardo
+  Brian Blais
+  Paul Boddie
+  François Boutines
+  Djamel Cherif
+  James Coughlan
+  Mark Dewing
+  Mark Dufour
+  Artem Egorkine
+  Michael Elkins
+  Moataz Elmasry
+  Enzo Erbano
+  Ernesto Ferro
+  Salvatore Ferro
+  FFAO
+  Victor Garcia
+  Luis M. Gonzales
+  Fahrzin Hemmati
+  Karel Heyse
+  Johan Kristensen
+  Kousuke
+  Denis de Leeuw Duarte
+  Van Lindberg
+  David Marek
+  Douglas McNeil
+  Andy Miller
+  Jeff Miller
+  Danny Milosavljevic
+  Joaquin Abian Monux
+  John Nagle
+  Harri Pasanen
+  Brent Pedersen
+  Joris van Rantwijk
+  Retsyo
+  Pierre-Marie de Rodat
+  Jérémie Roquet
+  Mike Schrick
+  SirNotAppearingInThisTutorial
+  Thomas Spura
+  Joerg Stippa
+  Dan Stromberg
+  Dave Tweed
+  Jaroslaw Tworek
+  Tony Veijalainen
+  Pavel Vinogradov
+  Jason Ye
+  Liu Zhenhai
+  Joris van Zwieten
