@@ -3,11 +3,11 @@
 from testdata import Material
 
 # ugly imports
-from testdata.bert import *
+from testdata.bert193 import *
 print os.getcwd(), len(sys.argv)
 
 # isinstance problem
-from testdata.bert import zeug
+from testdata.bert193 import zeug
 print isinstance(zeug(), zeug)
 
 # dict corruption

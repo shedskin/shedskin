@@ -23,11 +23,11 @@ for ll in l:
         print '%.2f' % lll
 
 #circular includes
-from testdata import bert
+from testdata import bert194
 class Here:
     def __str__(self):
         return 'here'
-bert.hello(Here())
+bert194.hello(Here())
 
 #partial support for 'super'
 class A(object):

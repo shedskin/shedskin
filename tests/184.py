@@ -1,6 +1,6 @@
 
 # locally override module name
-import testdata.bert as game
+import testdata.bert184 as game
 
 class Game:
     def __init__(self):
@@ -15,10 +15,10 @@ def hup(game):
 hup(Game())
 
 # class attribute access across module
-from testdata import bert
+from testdata import bert184
 
-bert.zeug.purple += 1
-blah = bert.zeug.purple
+bert184.zeug.purple += 1
+blah = bert184.zeug.purple
 print blah
 
 # template conflict

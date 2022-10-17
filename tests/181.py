@@ -5,7 +5,7 @@ print time.strftime("%d %b %Y %H:%M:%S", time.strptime("2001-11-12 18:31:01", "%
 print time.strftime("%Y", time.strptime("2001", "%Y"))
 
 #improve default arguments
-import testdata.bert2 as bert
+import testdata.bert181 as bert
 print bert.def1()
 
 print bert.def2()
