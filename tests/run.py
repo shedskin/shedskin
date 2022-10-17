@@ -174,7 +174,7 @@ def extmod_tests(args, options):
         os.chdir('e%d' % test)
         try:
             extmod = file('main.py').next()[1:].strip()
-            assert os.system('%s ../%s -e %s' % (sys.executable, SS, extmod)) == 0
+            assert os.system('%s %s -e %s' % (sys.executable, SS, extmod)) == 0
             assert os.system('make') == 0
             native_output = get_output('%s main.py' % (sys.executable, ))
             if sys.platform == 'win32':
@@ -206,7 +206,7 @@ def error_tests(args, options):
             for line in file('%d.py' % test):
                 if line.startswith('#*'):
                     checks.append(line[1:].strip())
-            output = get_output('%s ../%s %d 2>&1' % (sys.executable, SS, test))
+            output = get_output('%s %s %d 2>&1' % (sys.executable, SS, test))
             assert not [l for l in output if 'Traceback' in l]
             for check in checks:
                 print(check)
