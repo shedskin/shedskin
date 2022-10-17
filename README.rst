@@ -24,7 +24,7 @@ Usage
 Restrictions
 ------------
 
-Shed Skin only supports a restricted subset of Python, so one should expect a given program to compile without any changes, if possible at all. See the `documentation <https://shedskin.readthedocs.io/>`_ for an overview of the limitations.
+Shed Skin only supports a restricted subset of Python, so one should not expect a given program to compile without any changes, if possible at all. See the `documentation <https://shedskin.readthedocs.io/>`_ for an overview of the limitations.
 
 Installation
 ------------
