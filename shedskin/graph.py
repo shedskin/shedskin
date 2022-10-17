@@ -1,6 +1,6 @@
 '''
 *** SHED SKIN Python-to-C++ Compiler ***
-Copyright 2005-2013 Mark Dufour; License GNU GPL version 3 (See LICENSE)
+Copyright 2005-2022 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)
 
 graph.py: build constraint graph used in dataflow analysis
 
@@ -17,16 +17,23 @@ import copy
 import os
 import re
 import sys
+
 from ast import Num, Str, ImportFrom, alias as ast_alias, Add, comprehension, \
     UAdd, Import, BitAnd, Assign, FloorDiv, Not, Mod, \
     keyword, LShift, Name, Div, Or, Lambda, And, Call, \
     Global, Slice, RShift, Sub, Attribute, Dict, Ellipsis, Mult, \
     Subscript, FunctionDef as FunctionNode, Return, Pow, BitXor, ClassDef as ClassNode, List, \
-    Expr, Tuple, Pass, USub, BitOr, ListComp, TryExcept, With, iter_child_nodes, \
+    Expr, Tuple, Pass, USub, BitOr, ListComp, With, iter_child_nodes, \
     Load, Store, UnaryOp, BinOp, BoolOp, Del, ExtSlice, Index, Invert, dump as ast_dump, \
     Eq, NotEq, Lt, LtE, Gt, GtE, In, NotIn
+
+try:
+    from ast import TryExcept
+except ImportError:
+    from ast import Try
+
 from .ast_utils import BaseNodeVisitor, make_arg_list, make_call, is_assign_list_or_tuple, is_assign_attribute, \
-    is_assign_tuple, is_constant, orelse_to_node
+    is_assign_tuple, is_constant, orelse_to_node, parse_expr
 
 from .error import error
 from .infer import inode, in_out, CNode, default_var, register_temp_var
@@ -1547,7 +1554,7 @@ class ModuleVisitor(BaseNodeVisitor):
                 msgs += ['lshift', 'rshift', 'and', 'xor', 'or']
             for msg in msgs:
                 if not '__i' + msg + '__' in newclass.funcs:
-                    self.visit(FunctionNode('__i' + msg + '__', make_arg_list(['self', 'other']), [Return(make_call(Attribute(Name('self', Load()), '__' + msg + '__', Load()), [Name('other', Load())]))], []), newclass)
+                    self.visit(parse_expr('def __i%s__(self, other): return self.__%s__(other)' % (msg, msg)), newclass)
 
         # --- __str__, __hash__ # XXX model in lib/builtin.py, other defaults?
         if not newclass.mv.module.builtin and not '__str__' in newclass.funcs:
