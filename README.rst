@@ -29,12 +29,12 @@ Shed Skin only supports a restricted subset of Python, so one should expect a gi
 Installation
 ------------
 
-Shed Skin depends on some others projects, such as the Boehm garbage collector for C++. Please see the `documentation <https://shedskin.readthedocs.io/>`_ on how to install these.
+Shed Skin depends on some others projects, such as the Boehm garbage collector for C++. Please see the `documentation <https://shedskin.readthedocs.io/en/latest/documentation.html#installation>`_ on how to install these.
 
 Documentation
 -------------
 
-Please see the `documentation <https://shedskin.readthedocs.io/>`_ for an overview of the restrictions.
+Please see the `documentation <https://shedskin.readthedocs.io/en/latest/documentation.html#typing-restrictions>`_ for an overview of the restrictions.
 
 Contributors
 ------------
