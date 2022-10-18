@@ -134,8 +134,8 @@ struct_time *tm2tuple(tm* tm_time) {
 double time() {
     timespec ts { 0 };
     if (clock_gettime(CLOCK_REALTIME, &ts) == -1)
-	    throw new error(make_errstring("clock_gettime"));
-    return ts.tv_sec + tim.tv_nsec/1000000000.0;
+	    throw new Exception(new str("clock_gettime"));
+    return ts.tv_sec + ts.tv_nsec/1000000000.0;
 }
 
 #ifndef WIN32
