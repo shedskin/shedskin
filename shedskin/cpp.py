@@ -1971,7 +1971,7 @@ class GenerateVisitor(ASTVisitor):
 
             if double and self.mergeinh[arg] == set([(def_class(self.gx, 'int_'), 0)]):
                 cast = True
-                self.append('((double)(')
+                self.append('(double(')
             elif castnull and isinstance(arg, Name) and arg.name == 'None':
                 cast = True
                 self.append('((void *)(')
