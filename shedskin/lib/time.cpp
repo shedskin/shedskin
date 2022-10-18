@@ -132,9 +132,10 @@ struct_time *tm2tuple(tm* tm_time) {
 }
 
 double time() {
-    timeval tim;
-    gettimeofday(&tim, 0);
-    return tim.tv_sec+tim.tv_usec/1000000.0;
+    timespec ts { 0 };
+    if (clock_gettime(CLOCK_REALTIME, &ts) == -1)
+	    throw new error(make_errstring("clock_gettime"));
+    return ts.tv_sec + tim.tv_nsec/1000000000.0;
 }
 
 #ifndef WIN32
