@@ -4,10 +4,17 @@
 
 inline unicode *unicode::__getitem__(__ss_int i) {
     i = __wrap(this, i);
-    return this; // XXX
+
+    unicode *u = new unicode();
+    u->unit.resize(2);
+
+    u->unit[0] = unit[2*i];
+    u->unit[1] = unit[2*i+1];
+
+    return u;
 }
 
 inline __ss_int unicode::__len__() {
-    return size();
+    return size()/2;
 }
 
