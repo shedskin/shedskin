@@ -29,3 +29,7 @@ print len(s)
 # some datetime tests
 import datetime
 print datetime.datetime.today().date()
+
+# float(str) inf
+bignumstr = '1' + 500 * '0'
+print float(bignumstr)
