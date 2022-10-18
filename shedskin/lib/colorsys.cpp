@@ -27,38 +27,18 @@ namespace __colorsys__ {
 double ONE_SIXTH, ONE_THIRD, TWO_THIRD;
 
 tuple2<double, double> *rgb_to_yiq(double r, double g, double b) {
-    double i, q, y;
+    double y = (((0.3*r)+(0.59*g))+(0.11*b));
+    double i = (((0.6*r)-(0.28*g))-(0.32*b));
+    double q = (((0.21*r)-(0.52*g))+(0.31*b));
 
-    y = (((0.3*r)+(0.59*g))+(0.11*b));
-    i = (((0.6*r)-(0.28*g))-(0.32*b));
-    q = (((0.21*r)-(0.52*g))+(0.31*b));
     return (new tuple2<double, double>(3,y,i,q));
 }
 
 tuple2<double, double> *yiq_to_rgb(double y, double i, double q) {
-    double b, g, r;
+    double r = std::clamp((y+(0.948262*i))+(0.624013*q), 0., 1.);
+    double g = std::clamp((y-(0.276066*i))-(0.63981*q), 0., 1.);
+    double b = std::clamp((y-(1.10545*i))+(1.72986*q), 0., 1.);
 
-    r = ((y+(0.948262*i))+(0.624013*q));
-    g = ((y-(0.276066*i))-(0.63981*q));
-    b = ((y-(1.10545*i))+(1.72986*q));
-    if ((r<0.0)) {
-        r = 0.0;
-    }
-    if ((g<0.0)) {
-        g = 0.0;
-    }
-    if ((b<0.0)) {
-        b = 0.0;
-    }
-    if ((r>1.0)) {
-        r = 1.0;
-    }
-    if ((g>1.0)) {
-        g = 1.0;
-    }
-    if ((b>1.0)) {
-        b = 1.0;
-    }
     return (new tuple2<double, double>(3,r,g,b));
 }
 
