@@ -56,6 +56,7 @@ The following people have contributed to Shed Skin development so far:
   Victor Garcia
   Luis M. Gonzales
   Fahrzin Hemmati
+  Folkert van Heusden
   Karel Heyse
   Johan Kristensen
   Kousuke
