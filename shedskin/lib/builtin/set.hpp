@@ -243,8 +243,8 @@ template <class T> void *set<T>::discard(T key) {
 
 template <class T> int set<T>::do_discard(T key) {
     int orig_frozen = freeze(key);
-	register long hash = hasher<T>(key);
-	register setentry<T> *entry;
+	long hash = hasher<T>(key);
+	setentry<T> *entry;
 
 	entry = lookup(key, hash);
     unfreeze(key, orig_frozen);
@@ -258,8 +258,8 @@ template <class T> int set<T>::do_discard(T key) {
 }
 
 template<class T> T set<T>::pop() {
-    register int i = 0;
-	register setentry<T> *entry;
+    int i = 0;
+	setentry<T> *entry;
 
 	if (used == 0)
 		throw new KeyError(new str("pop from an empty set"));
@@ -316,7 +316,7 @@ template <class T> void set<T>::insert_clean(T key, long hash)
 {
 	int i;
 	unsigned int perturb;
-	register setentry<T> *entry;
+	setentry<T> *entry;
 
 	i = hash & mask;
 
@@ -489,8 +489,8 @@ template<class T> template<class U> void *set<T>::update(int, U *iter) {
 
 template <class T> void *set<T>::update(int, set<T>* other)
 {
-	register int i;
-	register setentry<T> *entry;
+	int i;
+	setentry<T> *entry;
 
 	/* if (other == this || other->used == 0)
 		// a.update(a) or a.update({}); nothing to do
