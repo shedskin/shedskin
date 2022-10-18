@@ -929,5 +929,5 @@ template<> str *__str(double t) {
 }
 
 unicode *str::decode(str *encoding) {
-    return new unicode("utest");
+    return new unicode(unit.c_str());
 }

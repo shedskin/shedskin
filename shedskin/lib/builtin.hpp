@@ -467,6 +467,9 @@ public:
     str *encode(str *encoding=0);
 
     const int size() const;
+
+    str *__str__();
+    str *__repr__();
 };
 
 void __throw_index_out_of_range();

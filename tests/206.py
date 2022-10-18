@@ -14,14 +14,14 @@ except IndexError:
 px = 0xff << 24
 print (px == 0xff000000)
 
-# unicode encode, decode
+# unicode basics  # TODO non-ascii so run.py doesn't work
 s = u'\u91cf\u5b50\u529b\u5b66'
-print repr(s), s
+print repr(s) #, s
 t = s.encode('utf-8')
-print repr(t), t
+print repr(t) #, t
 u = t.decode('utf-8')
-print repr(u), u
-
-# unicode containment
+print repr(u) #, u
 l = [s, u]
 print(l)
+print repr(s[1]) #, s[1]
+print len(s)
