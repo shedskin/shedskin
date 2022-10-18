@@ -120,7 +120,7 @@ template<class K, class V> __ss_bool dict<K,V>::__eq__(pyobj *p) { /* XXX check 
     __ss_int pos = 0;
     dictentry<K,V> *entry;
     while (next(&pos, &entry)) {
-        register dictentry<K, V> *entryb;
+        dictentry<K, V> *entryb;
         entryb = b->lookup(entry->key, entry->hash);
         if (entryb->use != active)
             return False;
@@ -276,8 +276,8 @@ template<> int __none();
 template<> double __none();
 
 template <class K, class V> V dict<K,V>::__getitem__(K key) {
-	register long hash = hasher<K>(key);
-	register dictentry<K, V> *entry;
+	long hash = hasher<K>(key);
+	dictentry<K, V> *entry;
 
 	entry = lookup(key, hash);
 
@@ -288,8 +288,8 @@ template <class K, class V> V dict<K,V>::__getitem__(K key) {
 }
 
 template<class K, class V> void *dict<K,V>::__addtoitem__(K key, V value) {
-	register long hash = hasher<K>(key);
-	register dictentry<K, V> *entry;
+	long hash = hasher<K>(key);
+	dictentry<K, V> *entry;
 
 	entry = lookup(key, hash);
 	if (entry->use != active)
@@ -300,8 +300,8 @@ template<class K, class V> void *dict<K,V>::__addtoitem__(K key, V value) {
 }
 
 template <class K, class V> V dict<K,V>::get(K key) {
-    register long hash = hasher<K>(key);
-	register dictentry<K, V> *entry;
+    long hash = hasher<K>(key);
+	dictentry<K, V> *entry;
 
 	entry = lookup(key, hash);
 	if (entry->use != active)
@@ -311,8 +311,8 @@ template <class K, class V> V dict<K,V>::get(K key) {
 }
 
 template <class K, class V> V dict<K,V>::get(K key, V d) {
-    register long hash = hasher<K>(key);
-	register dictentry<K, V> *entry;
+    long hash = hasher<K>(key);
+	dictentry<K, V> *entry;
 
 	entry = lookup(key, hash);
 	if (entry->use != active)
@@ -323,8 +323,8 @@ template <class K, class V> V dict<K,V>::get(K key, V d) {
 
 template <class K, class V> V dict<K,V>::setdefault(K key, V value)
 {
-    register long hash = hasher<K>(key);
-	register dictentry<K, V> *entry;
+    long hash = hasher<K>(key);
+	dictentry<K, V> *entry;
 
 	entry = lookup(key, hash);
 
@@ -341,8 +341,8 @@ template <class K, class V> void *dict<K,V>::__delitem__(K key) {
 }
 
 template <class K, class V> int dict<K,V>::do_discard(K key) {
-	register long hash = hasher<K>(key);
-	register dictentry<K,V> *entry;
+	long hash = hasher<K>(key);
+	dictentry<K,V> *entry;
 
 	entry = lookup(key, hash);
 
@@ -388,8 +388,8 @@ template <class K, class V> list<tuple2<K, V> *> *dict<K,V>::items() {
 }
 
 template<class K, class V> V dict<K,V>::pop(K key) {
-	register long hash = hasher<K>(key);
-    register dictentry<K,V> *entry;
+	long hash = hasher<K>(key);
+    dictentry<K,V> *entry;
 
     entry = lookup(key, hash);
 
@@ -402,8 +402,8 @@ template<class K, class V> V dict<K,V>::pop(K key) {
 }
 
 template<class K, class V> tuple2<K,V> *dict<K,V>::popitem() {
-    register int i = 0;
-	register dictentry<K,V> *entry;
+    int i = 0;
+	dictentry<K,V> *entry;
 
 	if (used == 0)
 		throw new KeyError(new str("popitem(): dictionary is empty"));
@@ -460,7 +460,7 @@ template <class K, class V> void dict<K,V>::insert_clean(K key, V value, long ha
 {
 	int i;
 	unsigned int perturb;
-	register dictentry<K,V> *entry;
+	dictentry<K,V> *entry;
 
 	i = hash & mask;
 
@@ -625,8 +625,8 @@ template <class K, class V> void *dict<K,V>::clear()
 
 template <class K, class V> void *dict<K,V>::update(dict<K,V>* other)
 {
-	register int i;
-	register dictentry<K,V> *entry;
+	int i;
+	dictentry<K,V> *entry;
 
 	/* Do one big resize at the start, rather than
 	 * incrementally resizing as we insert new keys.  Expect
