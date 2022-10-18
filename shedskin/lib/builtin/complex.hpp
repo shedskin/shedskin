@@ -104,11 +104,11 @@ inline str *repr(complex c) { return c.__repr__(); }
 template<> inline __ss_bool __eq(complex a, complex b) { return a == b; }
 template<> inline __ss_bool __ne(complex a, complex b) { return a != b; }
 
-template<> inline __ss_int __cmp(complex a, complex b) {} /* unused, satisfy templates */
-template<> inline __ss_bool __gt(complex a, complex b) {}
-template<> inline __ss_bool __ge(complex a, complex b) {}
-template<> inline __ss_bool __lt(complex a, complex b) {}
-template<> inline __ss_bool __le(complex a, complex b) {}
+template<> inline __ss_int __cmp(complex a, complex b) { return 0; } /* unused, satisfy templates */
+template<> inline __ss_bool __gt(complex a, complex b) { return False; }
+template<> inline __ss_bool __ge(complex a, complex b) { return False; }
+template<> inline __ss_bool __lt(complex a, complex b) { return False; }
+template<> inline __ss_bool __le(complex a, complex b) { return False; }
 
 /* copy, deepcopy */
 
