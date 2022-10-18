@@ -1997,7 +1997,7 @@ class GenerateVisitor(BaseNodeVisitor):
 
             if double and self.mergeinh[arg] == set([(def_class(self.gx, 'int_'), 0)]):
                 cast = True
-                self.append('((double)(')
+                self.append('(double(')
             elif castnull and isinstance(arg, Name) and arg.id == 'None':
                 cast = True
                 self.append('((void *)(')
