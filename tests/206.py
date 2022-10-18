@@ -25,3 +25,7 @@ l = [s, u]
 print(l)
 print repr(s[1]) #, s[1]
 print len(s)
+
+# some datetime tests
+import datetime
+print datetime.datetime.today().date()
