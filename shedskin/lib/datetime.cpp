@@ -4,6 +4,7 @@
 #include "time.hpp"
 #include "string.hpp"
 #include <iostream>
+#include <time.h>
 
 namespace __datetime__ {
 
@@ -71,24 +72,19 @@ date::date(__ss_int year, __ss_int month, __ss_int day){
 
 date *date::today() {
 	//today's date using localtime
-    time_t rawtime;
-    struct tm * t;
-    std::time( &rawtime );
-    t = localtime( &rawtime );
+    time_t rawtime = ::time(nullptr);
+    tm * t = localtime( &rawtime );
     return new date(t->tm_year+1900,t->tm_mon+1,t->tm_mday);
 }
 
 date* date::fromtimestamp(__ss_int timestamp) {
 	//date from timestamp using localtime
-	struct tm *tm;
-	time_t t = (time_t)timestamp;
-	tm = localtime(&t);
-	if (tm)
-		return new date(tm->tm_year + 1900,
-						tm->tm_mon + 1,
-						tm->tm_mday);
-	else
+	time_t t = time_t(timestamp);
+	tm *tm = localtime(&t);
+	if (!tm)
 		throw new ValueError(new str("timestamp out of range for platform localtime() function"));
+
+	return new date(tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday);
 }
 
 date* date::fromordinal(__ss_int o) {
@@ -284,19 +280,14 @@ datetime::datetime(__ss_int year, __ss_int month, __ss_int day, __ss_int hour, _
 }
 
 datetime *datetime::today() {
-    time_t rawtime;
-    struct tm * t;
-    std::time( &rawtime );
-    t = localtime( &rawtime );
+    timespec ts { 0, 0 };
 
-    struct timeval tv;
-#ifdef WIN32
-    __time__::gettimeofday(&tv, NULL);
-#else
-    gettimeofday(&tv, NULL);
-#endif
+    if (clock_gettime(CLOCK_REALTIME, &ts) == -1)
+	    throw new OSError(new str("clock_gettime"));
 
-    return new datetime(t->tm_year+1900,t->tm_mon+1,t->tm_mday,t->tm_hour,t->tm_min,t->tm_sec,tv.tv_usec);
+    tm *t = localtime(&ts.tv_sec);
+
+    return new datetime(t->tm_year+1900,t->tm_mon+1,t->tm_mday,t->tm_hour,t->tm_min,t->tm_sec,ts.tv_nsec / 1000);
 }
 
 datetime *datetime::now(tzinfo *tzinfo) {
@@ -314,19 +305,14 @@ datetime *datetime::now(tzinfo *tzinfo) {
 }
 
 datetime *datetime::utcnow() {
-    time_t rawtime;
-    struct tm * t;
-    std::time( &rawtime );
-    t = gmtime( &rawtime );
+    timespec ts { 0, 0 };
 
-    struct timeval tv;
-#ifdef WIN32
-    __time__::gettimeofday(&tv, NULL);
-#else
-    gettimeofday(&tv, NULL);
-#endif
+    if (clock_gettime(CLOCK_REALTIME, &ts) == -1)
+	    throw new OSError(new str("clock_gettime"));
 
-    return new datetime(t->tm_year+1900,t->tm_mon+1,t->tm_mday,t->tm_hour,t->tm_min,t->tm_sec,tv.tv_usec);
+    tm *t = gmtime(&ts.tv_sec);
+
+    return new datetime(t->tm_year+1900,t->tm_mon+1,t->tm_mday,t->tm_hour,t->tm_min,t->tm_sec,ts.tv_nsec / 1000);
 }
 
 datetime *datetime::from_timestamp(double timestamp, tzinfo *tzinfo, bool timefn) {
@@ -600,10 +586,7 @@ datetime *datetime::astimezone(tzinfo *tzinfo) {
 
 
 timedelta *datetime::utcoffset() {
-    if(_tzinfo==NULL)
-        return (timedelta *)NULL;
-    else
-		return _tzinfo->utcoffset(this);
+    return _tzinfo ? _tzinfo->utcoffset(this) : nullptr;
 }
 
 timedelta *datetime::dst() {
