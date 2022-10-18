@@ -154,6 +154,8 @@ def generate_makefile(gx):
             if 'hashlib' in (m.ident for m in modules):
                 line += ' -lcrypto'
 
+            line += ' -lgccpp'
+
         print >>makefile, line
     print >>makefile
 
