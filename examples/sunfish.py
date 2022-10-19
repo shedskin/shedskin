@@ -148,6 +148,12 @@ class Position: #(namedtuple('Position', 'board score wc bc ep kp')):
         self.ep = ep
         self.kp = kp
 
+    def __eq__(self, other): # XXX needed if no longer inheriting from namedtuple
+        return self.board == other.board and self.score == other.score and self.wc == other.wc and self.bc == other.bc and self.ep == other.ep and self.kp == other.kp
+
+    def __hash__(self):
+        return hash(self.board+str(self.score)+str(self.wc)+str(self.bc)+str(self.ep)+str(self.kp))
+
     def gen_moves(self):
         # For each of our pieces, iterate through each possible 'ray' of moves,
         # as defined in the 'directions' map. The rays are broken e.g. by
