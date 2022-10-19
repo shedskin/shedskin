@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 # check bounds after wrapping..
 alist = range(5)
 for i in range(-10,10):
