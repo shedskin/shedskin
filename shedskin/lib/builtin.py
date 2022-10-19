@@ -413,6 +413,15 @@ class unicode_(pyseq):
     def encode(self, encoding=''):
         return b''
 
+    def __len__(self):
+        return 1
+
+    def __getitem__(self, i):
+        return u''
+
+    def __repr__(self):
+        return ''
+
 class dict(pyiter):
     def __initdict__(self, other):
         self.__setunit__(other.unit, other.value)

@@ -1827,6 +1827,9 @@ class GenerateVisitor(BaseNodeVisitor):
             nrargs = func.largs
 
         # --- target expression
+        if isinstance(node.func, Attribute):
+            node.func.called = True
+
         if node.func in self.mergeinh and [t for t in self.mergeinh[node.func] if isinstance(t[0], Function)]:  # anonymous function
             self.visitm(node.func, '(', func)
 
@@ -1997,7 +2000,7 @@ class GenerateVisitor(BaseNodeVisitor):
 
             if double and self.mergeinh[arg] == set([(def_class(self.gx, 'int_'), 0)]):
                 cast = True
-                self.append('((double)(')
+                self.append('(double(')
             elif castnull and isinstance(arg, Name) and arg.id == 'None':
                 cast = True
                 self.append('((void *)(')
@@ -2583,6 +2586,10 @@ class GenerateVisitor(BaseNodeVisitor):
                     if not node.attr in t[0].funcs and node.attr in cl.parent.vars:  # XXX
                         error("class attribute '" + node.attr + "' accessed without using class name", self.gx, node, warning=True, mv=self.mv)
                         break
+
+                    if not hasattr(node, 'called') and [cl for cl in checkcls if node.attr in cl.funcs]:
+                        error('method passing is not supported', self.gx, node, warning=True, mv=self.mv)
+
                 else:
                     if not self.mergeinh[node.value] and not node.attr.startswith('__'):  # XXX
                         error('expression has no type', self.gx, node, warning=True, mv=self.mv)
