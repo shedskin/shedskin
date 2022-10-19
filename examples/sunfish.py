@@ -152,7 +152,7 @@ class Position: #(namedtuple('Position', 'board score wc bc ep kp')):
         return self.board == other.board and self.score == other.score and self.wc == other.wc and self.bc == other.bc and self.ep == other.ep and self.kp == other.kp
 
     def __hash__(self):
-        return hash(self.board+str(self.score)+str(self.wc)+str(self.bc)+str(self.ep)+str(self.kp))
+        return hash(self.board)+hash(self.score)+hash(self.wc)+hash(self.bc)+hash(self.ep)+hash(self.kp)
 
     def gen_moves(self):
         # For each of our pieces, iterate through each possible 'ray' of moves,
