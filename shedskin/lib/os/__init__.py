@@ -155,10 +155,10 @@ def rmdir(a):
 def removedirs(name):
     pass
 
-def mkdir(a, mode=0777):
+def mkdir(a, mode=0o0777):
     pass
 
-def makedirs(name, mode=0777):
+def makedirs(name, mode=0o0777):
     pass
 
 def fork():
