@@ -15,6 +15,7 @@
 #include <string>
 #include <set>
 #include <iostream>
+#include <functional>
 #include <fstream>
 #include <sstream>
 #include <cstdarg>
