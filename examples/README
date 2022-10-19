@@ -1,4 +1,4 @@
-76 programs that work with Shed Skin 0.9.5.
+77 programs that work with Shed Skin 0.9.5.
 
 shedskin -b (disable index-out-of-bounds checking) often improves performance. see the documentation for more performance tips:
 
@@ -92,6 +92,7 @@ lines  name                 description                     notes
    155 sudoku3.py           sudoku solver
     68 sudoku4.py           norvig's sudoku solver
     74 sudoku5.py           dancing links sudoku solver
+   280 sunfish.py           chess engine
    113 tictactoe.py         tictactoe on large boards
    651 timsort.py           advanced sorting algorithm
    883 TarsaLZP.py          data compression algorithm
