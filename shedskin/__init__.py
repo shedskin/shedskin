@@ -55,7 +55,6 @@ def usage():
  -n --silent            Silent mode, only show warnings
  -o --noassert          Disable assert statements
  -r --random            Use fast random number generator (rand())
- -s --strhash           Use fast string hashing algorithm (murmur)
  -w --nowrap            Disable wrap-around checking
  -x --traceback         Print traceback for uncaught exceptions
  -L --lib               Add a library directory
@@ -71,7 +70,7 @@ def parse_command_line_options():
 
     # --- command-line options
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'vbchef:wad:m:rolspxngL:', ['help', 'extmod', 'nobounds', 'nowrap', 'flags=', 'debug=', 'makefile=', 'random', 'noassert', 'long', 'msvc', 'ann', 'strhash', 'pypy', 'traceback', 'silent', 'nogcwarns', 'lib'])
+        opts, args = getopt.getopt(sys.argv[1:], 'vbchef:wad:m:rolpxngL:', ['help', 'extmod', 'nobounds', 'nowrap', 'flags=', 'debug=', 'makefile=', 'random', 'noassert', 'long', 'msvc', 'ann', 'pypy', 'traceback', 'silent', 'nogcwarns', 'lib'])
     except getopt.GetoptError:
         usage()
 
@@ -107,8 +106,6 @@ def parse_command_line_options():
             gx.makefile_name = value
         if opt in ['-n', '--silent']:
             logging_level = logging.WARNING
-        if opt in ['-s', '--strhash']:
-            gx.fast_hash = True
         if opt in ['-v', '--msvc']:
             gx.msvc = True
         if opt in ['-x', '--traceback']:
