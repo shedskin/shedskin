@@ -237,7 +237,8 @@ class Position: #(namedtuple('Position', 'board score wc bc ep kp')):
         i, j = move
         p, q = self.board[i], self.board[j]
         # Actual move
-        score = pst[p][j] - pst[p][i]
+        pstp = pst[p]
+        score = pstp[j] - pstp[i]
         # Capture
         if q.islower():
             score += pst[q.upper()][119-j]
