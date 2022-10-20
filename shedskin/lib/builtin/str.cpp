@@ -82,6 +82,8 @@ __ss_int str::__int__() {
 }
 
 __ss_bool str::__contains__(str *s) {
+    if(s->charcache)
+        return __mbool(unit.find(s->unit[0]) != std::string::npos);
     return __mbool(find(s) != std::string::npos);
 }
 
