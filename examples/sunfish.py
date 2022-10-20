@@ -76,6 +76,8 @@ for k, table in pst.items():
     pst[k] = sum((padrow(table[i*8:i*8+8]) for i in range(8)), ())
     pst[k] = (0,)*20 + pst[k] + (0,)*20
 
+movecache = [[(i, j) for j in range(120)] for i in range(120)]
+
 ###############################################################################
 # Global constants
 ###############################################################################
@@ -177,12 +179,12 @@ class Position: #(namedtuple('Position', 'board score wc bc ep kp')):
                     if p == 'P' and (d == N+W or d == N+E) and q == '.' \
                             and (j != self.ep and j != self.kp and j != self.kp-1 and j != self.kp+1): break
                     # Move it
-                    yield (i, j)
+                    yield movecache[i][j]
                     # Stop crawlers from sliding, and sliding after captures
                     if p in 'PNK' or q.islower(): break
                     # Castling, by sliding the rook next to the king
-                    if i == A1 and self.board[j+E] == 'K' and self.wc[0]: yield (j+E, j+W)
-                    if i == H1 and self.board[j+W] == 'K' and self.wc[1]: yield (j+W, j+E)
+                    if i == A1 and self.board[j+E] == 'K' and self.wc[0]: yield movecache[j+E][j+W]
+                    if i == H1 and self.board[j+W] == 'K' and self.wc[1]: yield movecache[j+W][j+E]
 
     def rotate(self):
         ''' Rotates the board, preserving enpassant '''
