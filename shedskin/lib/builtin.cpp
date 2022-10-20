@@ -46,6 +46,9 @@ void gc_warning_handler(char *msg, GC_word arg) {
 void __init() {
     GC_INIT();
     GC_set_warn_proc(gc_warning_handler);
+#ifdef __SS_NOGC
+    GC_disable();
+#endif
 
 #ifdef __SS_BIND
 #ifndef __SS_PYPY

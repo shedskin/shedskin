@@ -58,6 +58,7 @@ class GlobalInfo:  # XXX add comments, split up
         self.flags = None
         self.annotation = False
         self.msvc = False
+        self.nogc = False
         self.gcwarns = True
         self.pypy = False
         self.backtrace = False

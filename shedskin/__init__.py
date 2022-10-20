@@ -47,6 +47,7 @@ def usage():
 
  -a --ann               Output annotated source code (.ss.py)
  -b --nobounds          Disable bounds checking
+ -c --nogc              Disable garbage collection
  -e --extmod            Generate extension module
  -f --flags             Provide alternate Makefile flags
  -g --nogcwarns         Disable runtime GC warnings
@@ -70,7 +71,7 @@ def parse_command_line_options():
 
     # --- command-line options
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'vbchef:wad:m:rolpxngL:', ['help', 'extmod', 'nobounds', 'nowrap', 'flags=', 'debug=', 'makefile=', 'random', 'noassert', 'long', 'msvc', 'ann', 'pypy', 'traceback', 'silent', 'nogcwarns', 'lib'])
+        opts, args = getopt.getopt(sys.argv[1:], 'vbchef:wad:m:rolpxngL:', ['help', 'extmod', 'nobounds', 'nogc', 'nowrap', 'flags=', 'debug=', 'makefile=', 'random', 'noassert', 'long', 'ann', 'traceback', 'silent', 'nogcwarns', 'lib'])
     except getopt.GetoptError:
         usage()
 
@@ -92,6 +93,8 @@ def parse_command_line_options():
                 ifa_logging_level = logging.DEBUG
         if opt in ['-l', '--long']:
             gx.longlong = True
+        if opt in ['-c', '--nogc']:
+            gx.nogc = True
         if opt in ['-g', '--nogcwarns']:
             gx.gcwarns = False
         if opt in ['-w', '--nowrap']:
