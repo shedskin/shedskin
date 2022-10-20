@@ -111,8 +111,6 @@ def generate_makefile(gx):
                 line += ' -D__SS_GC_CLEANUP'
             if not gx.assertions:
                 line += ' -D__SS_NOASSERT'
-            if gx.fast_hash:
-                line += ' -D__SS_FASTHASH'
             if gx.longlong:
                 line += ' -D__SS_LONG'
             if gx.backtrace:

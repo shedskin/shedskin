@@ -62,7 +62,6 @@ class GlobalInfo:  # XXX add comments, split up
         self.pypy = False
         self.backtrace = False
         self.makefile_name = 'Makefile'
-        self.fast_hash = False
         self.debug_level = 0
 
         # Others
