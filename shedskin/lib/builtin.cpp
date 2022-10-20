@@ -25,6 +25,7 @@ __ss_bool True;
 __ss_bool False;
 
 list<str *> *__join_cache, *__mod5_cache;
+str *__case_swap_cache;
 list<pyobj *> *__print_cache;
 
 char __str_cache[4000];
@@ -94,6 +95,15 @@ void __init() {
         __str_cache[4*i] = '0' + (i % 10);
         __str_cache[4*i+1] = '0' + ((i/10) % 10);
         __str_cache[4*i+2] = '0' + ((i/100) % 10);
+    }
+
+    __case_swap_cache = new str();
+    for(int i=0; i<256; i++) {
+        char c = (char)i;
+        if(::islower(c))
+            __case_swap_cache->unit += ::toupper(c);
+        else
+            __case_swap_cache->unit += ::tolower(c);
     }
 
     __ss_stdin = new file(stdin);
