@@ -33,7 +33,7 @@ except ImportError:
     from ast import Try
 
 from .ast_utils import BaseNodeVisitor, make_arg_list, make_call, is_assign_list_or_tuple, is_assign_attribute, \
-    is_assign_tuple, is_constant, orelse_to_node, parse_expr
+    is_assign_tuple, is_constant, orelse_to_node, parse_expr, get_arg_nodes
 
 from .error import error
 from .infer import inode, in_out, CNode, default_var, register_temp_var
@@ -1438,16 +1438,8 @@ class ModuleVisitor(BaseNodeVisitor):
         # --- arguments
         if not getmv().module.builtin and (node.starargs or node.kwargs):
             error('argument (un)packing is not supported', self.gx, node, mv=getmv())
-        args = node.args[:]
-        if node.starargs:
-            args.append(node.starargs)  # partially allowed in builtins
-        if node.keywords:
-            args.extend(node.keywords)
-        if node.kwargs:
-            args.append(node.kwargs)
-        for arg in args:
-            if isinstance(arg, keyword):
-                arg = arg.value
+
+        for arg in get_arg_nodes(node):
             self.visit(arg, func)
             inode(self.gx, arg).callfuncs.append(node)  # this one too
 
