@@ -404,15 +404,8 @@ str *str::translate(str *table, str *delchars) {
 str *str::swapcase() {
     str *r = new str(unit);
     int len = __len__();
-
-    for(int i = 0; i < len; i++) {
-        char c = unit[i];
-        if( c >= 'a' && c <= 'z' )
-            r->unit[i] = ::toupper(c);
-        else if( c >= 'A' && c <= 'Z' )
-            r->unit[i] = ::tolower(c);
-    }
-
+    for(int i = 0; i < len; i++)
+        r->unit[i] = __case_swap_cache->unit[(unsigned char)unit[i]];
     return r;
 }
 
