@@ -33,6 +33,11 @@
     for(__ ## n = 0; (unsigned int)__ ## n < (__ ## temp)->units.size(); __ ## n ++) { \
         i = (__ ## temp)->units[__ ## n]; \
 
+#define FOR_IN_ENUM_STR(i, m, temp, n) \
+    __ ## temp = m; \
+    for(__ ## n = 0; (unsigned int)__ ## n < (__ ## temp)->unit.size(); __ ## n ++) { \
+        i = (__ ## temp)->__getfast__(__ ## n); \
+
 #define FOR_IN_DICT(m, temp, entry, pos) \
     __ ## temp = m; \
     __ ## pos = 0; \

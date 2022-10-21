@@ -1062,7 +1062,7 @@ class GenerateVisitor(BaseNodeVisitor):
         print >>self.out, self.line
 
     def fastenum(self, node):
-        return is_enum(node) and self.only_classes(node.iter.args[0], ('tuple', 'list'))
+        return is_enum(node) and self.only_classes(node.iter.args[0], ('tuple', 'list', 'str_'))
 
     def fastzip2(self, node):
         names = ('tuple', 'list')
@@ -1132,7 +1132,10 @@ class GenerateVisitor(BaseNodeVisitor):
         self.append(',')
 
     def do_fastenum(self, node, func, genexpr):
-        self.start('FOR_IN_ENUM(')
+        if self.only_classes(node.iter.args[0], ('tuple', 'list')):
+            self.start('FOR_IN_ENUM(')
+        else:
+            self.start('FOR_IN_ENUM_STR(')
         left, right = node.target.elts
         self.do_fastzip2_one(right, func)
         self.visit(node.iter.args[0], func)
