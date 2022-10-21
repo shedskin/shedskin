@@ -933,9 +933,6 @@ def ifa_split_no_confusion(gx, cl, dcpa, varnum, classes_nr, nr_classes, csites,
                 subtype_csites[subtype].append(node)
             except KeyError:
                 subtype_csites[subtype] = [node]
-    items = subtype_csites.items()
-    if not others:
-        items = items[1:]
     for subtype, csites in subtype_csites.items():
         if subtype in classes_nr:  # reuse contour
             nr = classes_nr[subtype]
