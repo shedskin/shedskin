@@ -33,7 +33,7 @@ except ImportError:
     from ast import Try
 
 from .ast_utils import BaseNodeVisitor, make_arg_list, make_call, is_assign_list_or_tuple, is_assign_attribute, \
-    is_assign_tuple, is_constant, orelse_to_node, parse_expr, get_arg_nodes
+    is_assign_tuple, is_constant, orelse_to_node, parse_expr, get_arg_nodes, has_star_kwarg
 
 from .error import error
 from .infer import inode, in_out, CNode, default_var, register_temp_var
@@ -1436,7 +1436,7 @@ class ModuleVisitor(BaseNodeVisitor):
             inode(self.gx, node.func).callfuncs.append(node)  # XXX iterative dataflow analysis: move there
 
         # --- arguments
-        if not getmv().module.builtin and (node.starargs or node.kwargs):
+        if not getmv().module.builtin and has_star_kwarg(node):
             error('argument (un)packing is not supported', self.gx, node, mv=getmv())
 
         for arg in get_arg_nodes(node):

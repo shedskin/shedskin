@@ -842,7 +842,7 @@ def ifa(gx):
     split = []  # [(set of creation nodes, new type number), ..]
 
     allcsites = {}
-    for n, types in gx.types.iteritems():
+    for n, types in gx.types.items():
         if not n.in_:
             for (cl, dcpa) in types:
                 allcsites.setdefault((cl, dcpa), set()).add(n)
@@ -934,7 +934,7 @@ def ifa_split_no_confusion(gx, cl, dcpa, varnum, classes_nr, nr_classes, csites,
     items = subtype_csites.items()
     if not others:
         items = items[1:]
-    for subtype, csites in subtype_csites.iteritems():  # XXX items?
+    for subtype, csites in subtype_csites.items():
         if subtype in classes_nr:  # reuse contour
             nr = classes_nr[subtype]
             split.append((cl, dcpa, csites, nr))
@@ -1018,7 +1018,7 @@ def ifa_flow_graph(gx, cl, dcpa, node, allcsites):
                 assignsets.setdefault(merge_simple_types(gx, types), []).append(target)
 
     # --- determine backflow paths and creation points per assignment set
-    for assign_set, targets in assignsets.iteritems():
+    for assign_set, targets in assignsets.items():
         path = backflow_path(gx, targets, (cl, dcpa))
         paths[assign_set] = path
         allnodes.update(path)
@@ -1028,7 +1028,7 @@ def ifa_flow_graph(gx, cl, dcpa, node, allcsites):
     # --- per node, determine paths it is located on
     for n in allnodes:
         n.paths = []
-    for assign_set, path in paths.iteritems():
+    for assign_set, path in paths.items():
         for n in path:
             n.paths.append(assign_set)
 
@@ -1082,7 +1082,7 @@ def iterative_dataflow_analysis(gx):
     backup = backup_network(gx)
 
     gx.orig_types = {}
-    for n, t in gx.types.iteritems():
+    for n, t in gx.types.items():
         gx.orig_types[n] = t
 
     if INCREMENTAL:
