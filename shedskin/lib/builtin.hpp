@@ -1181,11 +1181,11 @@ private:
 };
 
 #define WITH(e, n) {           \
-    __With<typeof(e)> __with##n(e); // TODO unique id
+    __With<decltype(e)> __with##n(e); // TODO unique id
 
 #define WITH_VAR(e, v, n) {    \
-    __With<typeof(e)> __with##n(e);      \
-    typeof(e) v = __with##n;
+    __With<decltype(e)> __with##n(e);      \
+    decltype(e) v = __with##n;
 
 #define END_WITH }
 
