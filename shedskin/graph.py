@@ -1486,6 +1486,7 @@ class ModuleVisitor(BaseNodeVisitor):
             getmv().classes[node.name] = newclass
             newclass.module = self.module
             newclass.parent = StaticClass(newclass, getmv())
+            return
 
         # --- built-in functions
         for cl in [newclass, newclass.parent]:
