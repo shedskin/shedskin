@@ -92,6 +92,14 @@ def has_star_kwarg(node):
 
     return False
 
+def get_starargs(node):
+    if hasattr(node, 'starargs'):
+       return node.starargs
+
+    for arg in node.args:
+        if arg.__class__.__name__ == 'Starred':
+            return arg.value
+
 def get_arg_nodes(node):
     args = []
 
