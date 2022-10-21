@@ -28,7 +28,7 @@ from ast import Num, Str, ImportFrom, alias as ast_alias, Add, comprehension, \
     Eq, NotEq, Lt, LtE, Gt, GtE, In, NotIn
 
 try:
-    from ast import TryExcept
+    from ast import TryExcept as Try
 except ImportError:
     from ast import Try
 
@@ -547,7 +547,7 @@ class ModuleVisitor(BaseNodeVisitor):
         else:
             # Try-Excepts introduce a new small scope with the exception name,
             # so we skip it here.
-            if isinstance(node, TryExcept):
+            if isinstance(node, Try):
                 children = list(node.body)
                 for handler in node.handlers:
                     children.extend(handler.body)
@@ -1581,11 +1581,16 @@ class ModuleVisitor(BaseNodeVisitor):
             raise NotImplementedError
             error('unknown ctx type for Attribute, %s' % node.ctx, self.gx, node, mv=getmv())
 
+    def visit_Constant(self, node, func=None):
+        map = {int: 'int_', float: 'float_', complex: 'complex', str: 'str_', bool: 'bool_', type(None): 'none'}
+        self.instance(node, def_class(self.gx, map[type(node.value)]), func)
 
+    # py2 ast
     def visit_Num(self, node, func=None):
         map = {int: 'int_', float: 'float_', long: 'int_', complex: 'complex'}  # XXX 'return' -> Return(Constant(None))?
         self.instance(node, def_class(self.gx, map[type(node.n)]), func)
 
+    # py2 ast
     def visit_Str(self, node, func=None):
         map = {str: 'str_', unicode: 'unicode_'}
         self.instance(node, def_class(self.gx, map[type(node.s)]), func)

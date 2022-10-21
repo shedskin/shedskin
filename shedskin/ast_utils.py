@@ -72,8 +72,11 @@ def make_arg_list(argnames, vararg=None, kwonlyargs=[], kwarg=None, defaults=[],
 
 
 def make_call(func, args=[], keywords=[], starargs=None, kwargs=None):
-    # PY3: Incorporate starargs and kwargs into args and keywords respectively
-    return Call(func, args, keywords, starargs, kwargs)
+    try:
+        return Call(func, args, keywords, starargs, kwargs)
+    except TypeError:
+        # PY3: Incorporate starargs and kwargs into args and keywords respectively
+        return Call(func, args, keywords)
 
 
 def get_arg_nodes(node):
