@@ -160,9 +160,7 @@ class Position: #(namedtuple('Position', 'board score wc bc ep kp')):
         # For each of our pieces, iterate through each possible 'ray' of moves,
         # as defined in the 'directions' map. The rays are broken e.g. by
         # captures or immediately in case of pieces such as knights.
-        for i in range(len(self.board)): # XXX shedskin needs to optimize this!!
-            p = self.board[i]
-#        for i, p in enumerate(self.board):
+        for i, p in enumerate(self.board):
             if not p.isupper(): continue
             for d in directions[p]:
                 for j in count(i+d, d):
