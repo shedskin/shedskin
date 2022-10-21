@@ -78,13 +78,27 @@ def make_call(func, args=[], keywords=[], starargs=None, kwargs=None):
         # PY3: Incorporate starargs and kwargs into args and keywords respectively
         return Call(func, args, keywords)
 
+def has_star_kwarg(node):
+    if hasattr(node, 'starargs'):
+       return bool(node.starargs or node.kwargs)
+
+    for arg in node.args:
+        if arg.__class__.__name__ == 'Starred':
+            return True
+
+    for kw in node.keywords:
+        if kw.arg is None:
+            return True
+
+    return False
 
 def get_arg_nodes(node):
     args = []
 
     for arg in node.args:
+        if arg.__class__.__name__ == 'Starred':
+            arg = arg.value
         args.append(arg)
-        # TODO Starred.value?
 
     if node.keywords:
         args.extend([kw.value for kw in node.keywords])
