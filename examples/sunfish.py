@@ -168,13 +168,10 @@ class Position: #(namedtuple('Position', 'board score wc bc ep kp')):
                     # Stay inside the board, and off friendly pieces
                     if q.isspace() or q.isupper(): break
                     # Pawn move, double move and capture
-#                    if p == 'P' and d in (N, N+N) and q != '.': break
-#                    if p == 'P' and d == N+N and (i < A1+N or self.board[i+N] != '.'): break
-#                    if p == 'P' and d in (N+W, N+E) and q == '.' \
-#                            and j not in (self.ep, self.kp, self.kp-1, self.kp+1): break
-                    if p == 'P' and (d == N or d == N+N) and q != '.': break
-                    if p == 'P' and d == N+N and (i < A1+N or self.board[i+N] != '.'): break
-                    if p == 'P' and (d == N+W or d == N+E) and q == '.' \
+                    if p == 'P':
+                        if (d == N or d == N+N) and q != '.': break
+                        if d == N+N and (i < A1+N or self.board[i+N] != '.'): break
+                        if (d == N+W or d == N+E) and q == '.' \
                             and (j != self.ep and j != self.kp and j != self.kp-1 and j != self.kp+1): break
                     # Move it
                     yield movecache[i][j]
