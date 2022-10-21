@@ -235,8 +235,8 @@ public:
     }
 
     V __getitem__(K key) {
-        register long hash = hasher<K>(key);
-        register dictentry<K, V> *entry;
+        long hash = hasher<K>(key);
+        dictentry<K, V> *entry;
         entry = this->lookup(key, hash);
         if (entry->use != active)
             return __missing__(key);
@@ -253,8 +253,8 @@ public:
     }
 
     void *__addtoitem__(K key, V value) { /* XXX */
-        register long hash = hasher<K>(key);
-        register dictentry<K, V> *entry;
+        long hash = hasher<K>(key);
+        dictentry<K, V> *entry;
         entry = this->lookup(key, hash);
         if (entry->use != active) {
             if(func)
