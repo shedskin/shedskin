@@ -1,6 +1,7 @@
+from __future__ import print_function
 
 def qbert(a):                            # a: [int]
-    print a                              # [int]
+    print(a)                              # [int]
 
 a=1                                      # [int]
 b=2                                      # [int]

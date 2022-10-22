@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 # (c) Mark Dufour
 # --- mark.dufour@gmail.com
@@ -5,7 +6,7 @@
 def _reduce(f, l, i=-1):                  # f: [lambda0], i: [int], l: [list(int)], r: [int]
     if not l:                            # [list(int)]
         if i != -1: return i             # [int]
-        print '*** ERROR! *** reduce() called with empty sequence and no initial value' # [str]
+        print('*** ERROR! *** reduce() called with empty sequence and no initial value') # [str]
 
     if i != -1:                          # [int]
         r = f(i, l[0])                   # [int]
@@ -21,11 +22,11 @@ def _reduce(f, l, i=-1):                  # f: [lambda0], i: [int], l: [list(int
 
 argv = ['','testdata/uuf250-010.cnf']             # [list(str)]
 
-cnf = [l.strip().split() for l in file(argv[1]) if l[0] not in 'c%0\n'] # [list(list(str))]
+cnf = [l.strip().split() for l in open(argv[1]) if l[0] not in 'c%0\n'] # [list(list(str))]
 clauses = [[int(x) for x in m[:-1]] for m in cnf if m[0] != 'p'] # [list(list(int))]
 nrofvars = [int(n[2]) for n in cnf if n[0] == 'p'][0] # [int]
-vars = range(nrofvars+1)                 # [list(int)]
-occurrence = [[] for l in vars+range(-nrofvars,0)] # [list(list(list(int)))]
+vars = list(range(nrofvars+1))                 # [list(int)]
+occurrence = [[] for l in vars+list(range(-nrofvars,0))] # [list(list(list(int)))]
 for clause in clauses:                   # [list(int)]
     for lit in clause: occurrence[lit].append(clause) # [int]
 fixedt = [-1 for var in vars]            # [list(int)]
@@ -36,7 +37,7 @@ def solve_rec():                         # la_mods: [list(int)], var: [int], pro
     if nodecount == 100:
         return 1
     if not -1 in fixedt[1:]:             # [int]
-        print 'v', ' '.join([str((2*fixedt[i]-1)*i) for i in vars[1:]]) # [str], [str]
+        print('v', ' '.join([str((2*fixedt[i]-1)*i) for i in vars[1:]])) # [str], [str]
         return 1                         # [int]
 
     la_mods = []                         # [list(int)]
@@ -109,5 +110,6 @@ def unfixed_vars(): return [var for var in vars[1:] if fixedt[var] == -1] # [lis
 
 nodecount = 0                            # [int]
 if not solve_rec():                      # [int]
-    print 'unsatisfiable', nodecount     # [str], [int]
-
+    print('unsatisfiable', nodecount)     # [str], [int]
+else:
+    print('satisfiable', nodecount)     # [str], [int]
