@@ -37,7 +37,7 @@ import logging
 import random
 import sys
 from ast import Num, Str, Call, Attribute, Dict, List, Tuple, ListComp, Not, Compare, Name, keyword, AST, dump as ast_dump
-from .ast_utils import is_assign_attribute
+from .ast_utils import is_assign_attribute, get_starargs
 
 from . import error
 from .python import StaticClass, lookup_class_module, Function, \
@@ -56,7 +56,7 @@ CPA_LIMIT = 10
 
 
 class CNode:
-    __slots__ = ['gx', 'thing', 'dcpa', 'cpa', 'fakefunc', 'parent', 'defnodes', 'mv', 'constructor', 'copymetoo', 'fakert', 'lambdawrapper', 'in_', 'out', 'fout', 'in_list', 'callfuncs', 'nodecp']
+    __slots__ = ['gx', 'thing', 'dcpa', 'cpa', 'fakefunc', 'parent', 'defnodes', 'mv', 'constructor', 'copymetoo', 'fakert', 'lambdawrapper', 'in_', 'out', 'fout', 'in_list', 'callfuncs', 'nodecp', 'paths', 'csites']
 
     def __init__(self, gx, thing, dcpa=0, cpa=0, parent=None, mv=None):
         self.gx = gx
@@ -219,7 +219,7 @@ def analyze_args(gx, expr, func, node=None, skip_defaults=False, merge=None):
             missing = True
     extra = args[argnr:]
 
-    _error = (missing or extra) and not func.node.args.vararg and not func.node.args.kwarg and not expr.starargs and func.lambdanr is None and expr not in gx.lambdawrapper  # XXX
+    _error = (missing or extra) and not func.node.args.vararg and not func.node.args.kwarg and not get_starargs(expr) and func.lambdanr is None and expr not in gx.lambdawrapper  # XXX
 
     if func.node.args.vararg:
         for arg in extra:
@@ -582,8 +582,9 @@ def possible_argtypes(gx, node, funcs, analysis, worklist):
         func = funcs[0][0]  # XXX
 
     args = []
-    if expr.starargs:  # XXX
-        args = [expr.starargs]
+    starargs = get_starargs(expr)
+    if starargs:  # XXX
+        args = [starargs]
     elif funcs and not func.node:  # XXX getattr, setattr
         args = expr.args
     elif funcs:
@@ -613,7 +614,7 @@ def possible_argtypes(gx, node, funcs, analysis, worklist):
         while argtypes and not argtypes[-1]:
             argtypes = argtypes[:-1]
         if func.lambdawrapper:
-            if expr.starargs and node.parent and node.parent.node.args.vararg:
+            if starargs and node.parent and node.parent.node.args.vararg:
                 func.largs = node.parent.xargs[node.dcpa, node.cpa] - len(node.parent.formals) + 1
             else:
                 func.largs = len(argtypes)
@@ -806,9 +807,10 @@ def create_template(gx, func, dcpa, c, worklist):
 def actuals_formals(gx, expr, func, node, dcpa, cpa, types, analysis, worklist):
     objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func = analysis
 
-    if expr.starargs:  # XXX only in lib/
+    starargs = get_starargs(expr)
+    if starargs:  # XXX only in lib/
         formals = func.formals
-        actuals = len(formals) * [expr.starargs]
+        actuals = len(formals) * [starargs]
         types = len(formals) * types
     else:
         actuals, formals, _, varargs, _error = analyze_args(gx, expr, func, node)
@@ -842,7 +844,7 @@ def ifa(gx):
     split = []  # [(set of creation nodes, new type number), ..]
 
     allcsites = {}
-    for n, types in gx.types.iteritems():
+    for n, types in gx.types.items():
         if not n.in_:
             for (cl, dcpa) in types:
                 allcsites.setdefault((cl, dcpa), set()).add(n)
@@ -931,10 +933,7 @@ def ifa_split_no_confusion(gx, cl, dcpa, varnum, classes_nr, nr_classes, csites,
                 subtype_csites[subtype].append(node)
             except KeyError:
                 subtype_csites[subtype] = [node]
-    items = subtype_csites.items()
-    if not others:
-        items = items[1:]
-    for subtype, csites in subtype_csites.iteritems():  # XXX items?
+    for subtype, csites in subtype_csites.items():
         if subtype in classes_nr:  # reuse contour
             nr = classes_nr[subtype]
             split.append((cl, dcpa, csites, nr))
@@ -1018,7 +1017,7 @@ def ifa_flow_graph(gx, cl, dcpa, node, allcsites):
                 assignsets.setdefault(merge_simple_types(gx, types), []).append(target)
 
     # --- determine backflow paths and creation points per assignment set
-    for assign_set, targets in assignsets.iteritems():
+    for assign_set, targets in assignsets.items():
         path = backflow_path(gx, targets, (cl, dcpa))
         paths[assign_set] = path
         allnodes.update(path)
@@ -1028,7 +1027,7 @@ def ifa_flow_graph(gx, cl, dcpa, node, allcsites):
     # --- per node, determine paths it is located on
     for n in allnodes:
         n.paths = []
-    for assign_set, path in paths.iteritems():
+    for assign_set, path in paths.items():
         for n in path:
             n.paths.append(assign_set)
 
@@ -1082,7 +1081,7 @@ def iterative_dataflow_analysis(gx):
     backup = backup_network(gx)
 
     gx.orig_types = {}
-    for n, t in gx.types.iteritems():
+    for n, t in gx.types.items():
         gx.orig_types[n] = t
 
     if INCREMENTAL:

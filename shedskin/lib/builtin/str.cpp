@@ -82,6 +82,8 @@ __ss_int str::__int__() {
 }
 
 __ss_bool str::__contains__(str *s) {
+    if(s->charcache)
+        return __mbool(unit.find(s->unit[0]) != std::string::npos);
     return __mbool(find(s) != std::string::npos);
 }
 
@@ -402,15 +404,8 @@ str *str::translate(str *table, str *delchars) {
 str *str::swapcase() {
     str *r = new str(unit);
     int len = __len__();
-
-    for(int i = 0; i < len; i++) {
-        char c = unit[i];
-        if( c >= 'a' && c <= 'z' )
-            r->unit[i] = ::toupper(c);
-        else if( c >= 'A' && c <= 'Z' )
-            r->unit[i] = ::tolower(c);
-    }
-
+    for(int i = 0; i < len; i++)
+        r->unit[i] = __case_swap_cache->unit[(unsigned char)unit[i]];
     return r;
 }
 
@@ -468,84 +463,12 @@ str *str::__imul__(__ss_int n) {
 }
 
 long str::__hash__() {
-    if(hash != -1)
+    if (hash != -1)
         return hash;
-    long x;
-    const unsigned char *data = (unsigned char *)unit.data();
-    int len = __len__();
-#ifdef __SS_FASTHASH
-//-----------------------------------------------------------------------------
-// MurmurHash2, by Austin Appleby
-// http://sites.google.com/site/murmurhash/
 
-// All code is released to the public domain. 
-// For business purposes, Murmurhash is under the MIT license. 
+    hash = std::hash<std::string>{}(unit.c_str());
 
-// Note - This code makes a few assumptions about how your machine behaves -
-
-// 1. We can read a 4-byte value from any address without crashing
-// 2. sizeof(int) == 4
-
-// And it has a few limitations -
-
-// 1. It will not work incrementally.
-// 2. It will not produce the same results on little-endian and big-endian
-//    machines.
-
-// 'm' and 'r' are mixing constants generated offline.
-// They're not really 'magic', they just happen to work well.
-    unsigned int seed = 12345678; /* XXX */
-	const unsigned int m = 0x5bd1e995;
-	const int r = 24;
-
-	// Initialize the hash to a 'random' value
-
-	x = seed ^ len;
-
-	// Mix 4 bytes at a time into the hash
-
-	while(len >= 4)
-	{
-		unsigned int k = *(unsigned int *)data;
-
-		k *= m; 
-		k ^= k >> r; 
-		k *= m; 
-		
-		x *= m; 
-		x ^= k;
-
-		data += 4;
-		len -= 4;
-	}
-	
-	// Handle the last few bytes of the input array
-
-	switch(len)
-	{
-        case 3: x ^= data[2] << 16;
-        case 2: x ^= data[1] << 8;
-        case 1: x ^= data[0];
-                x *= m;
-	};
-
-	// Do a few final mixes of the hash to ensure the last few
-	// bytes are well-incorporated.
-
-	x ^= x >> 13;
-	x *= m;
-	x ^= x >> 15;
-#else
-    /* modified from CPython */
-    x = *data << 7;
-    while (--len >= 0)
-        x = (1000003*x) ^ *data++;
-    x ^= __len__();
-    if (x == -1)
-        x = -2;
-#endif
-    hash = x;
-    return x; 
+    return hash; 
 }
 
 str *str::__add__(str *b) {
