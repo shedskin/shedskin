@@ -163,7 +163,7 @@ class GenerateVisitor(BaseNodeVisitor):
                 for (node, name) in self.consts.items():
                     if not name in todo:
                         todo[int(name[6:])] = node
-                todolist = todo.keys()
+                todolist = list(todo)
                 todolist.sort()
                 for number in todolist:
                     if self.mergeinh[todo[number]]:  # XXX
@@ -2705,7 +2705,7 @@ class GenerateVisitor(BaseNodeVisitor):
                     self.append('this')
             elif node.id in map:
                 self.append(map[node.id])
-    
+
             else:  # XXX clean up
                 if not self.mergeinh[node] and not inode(self.gx, node).parent in self.gx.inheritance_relations:
                     error("variable '" + node.id + "' has no type", self.gx, node, warning=True, mv=self.mv)
@@ -2749,37 +2749,50 @@ class GenerateVisitor(BaseNodeVisitor):
 
         return ''.join(value)
 
-    def visit_Num(self, node, func=None):
-        t = list(inode(self.gx, node).types())[0]
-        if t[0].ident == 'int_':
+    def visit_const(self, node, value):
+        if isinstance(value, int):
             self.append('__ss_int(')
-            self.append(str(node.n))
+            self.append(str(value))
             if self.gx.longlong:
                 self.append('LL')
             self.append(')')
-        elif t[0].ident == 'float_':
-            if str(node.n) in ['inf', '1.#INF', 'Infinity']:
+
+        elif isinstance(value, float):
+            if str(value) in ['inf', '1.#INF', 'Infinity']:
                 self.append('INFINITY')
-            elif str(node.n) in ['-inf', '-1.#INF', '-Infinity']:
+            elif str(value) in ['-inf', '-1.#INF', '-Infinity']:
                 self.append('-INFINITY')
             else:
-                self.append(str(node.n))
-        elif t[0].ident == 'complex':
-            self.append('mcomplex(%s, %s)' % (node.n.real, node.n.imag))
+                self.append(str(value))
+
+        elif isinstance(value, complex):
+            self.append('mcomplex(%s, %s)' % (value.real, value.imag))
+
+        elif isinstance(value, str):
+            if not self.filling_consts:
+                self.append(self.get_constant(node))
+            else:
+                self.append('new str("%s"' % self.expand_special_chars(value))
+                if '\0' in value:
+                    self.append(', %d' % len(value))
+                self.append(')')
+
+        elif isinstance(value, unicode):  # XXX filling_consts
+            self.append('new unicode("%s")' % (value.encode('utf-8')))
+
         else:
-            self.append('new %s(%s)' % (t[0].ident, node.n))
+            #self.append('new %s(%s)' % (t[0].ident, node.n))
+            assert False, 'huh %s' % repr(value)
+
+    def visit_Constant(self, node, func=None):
+        self.visit_const(node, node.value)
+
+    def visit_Num(self, node, func=None):
+        self.visit_const(node, node.n)
 
     def visit_Str(self, node, func=None):
-        if not self.filling_consts and isinstance(node.s, str):
-            self.append(self.get_constant(node))
-            return
-        if type(node.s) is str:
-            self.append('new str("%s"' % self.expand_special_chars(node.s))
-            if '\0' in node.s:  # '\0' delimiter in C
-                self.append(', %d' % len(node.s))
-            self.append(')')
-        elif type(node.s) is unicode:
-            self.append('new unicode("%s")' % (node.s.encode('utf-8')))
+        self.visit_const(node, node.s)
+
 
 def generate_code(gx):
     for module in gx.modules.values():
