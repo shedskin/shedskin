@@ -2750,7 +2750,10 @@ class GenerateVisitor(BaseNodeVisitor):
         return ''.join(value)
 
     def visit_const(self, node, value):
-        if isinstance(value, int):
+        if isinstance(value, bool):
+            self.append(str(value))
+
+        elif isinstance(value, int):
             self.append('__ss_int(')
             self.append(str(value))
             if self.gx.longlong:
