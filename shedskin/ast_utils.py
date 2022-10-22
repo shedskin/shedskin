@@ -3,6 +3,7 @@
 Copyright 2005-2022 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)
 
 '''
+import ast
 from ast import Tuple, List, Attribute, Store, arguments, Name, Param, \
     parse, iter_fields, AST, Call, Str, Num, keyword
 
@@ -68,9 +69,19 @@ def extract_argnames(arg_struct):
 
 
 def make_arg_list(argnames, vararg=None, kwonlyargs=[], kwarg=None, defaults=[], kw_defaults=[]):
-    args = [Name(argname, Param()) for argname in argnames]
-    # PY3: Use kwonlyargs and kw_defaults
-    return arguments(args, vararg, kwarg, defaults)
+    try:
+        ast.arg
+
+        args = [ast.arg(a) for a in argnames]
+        vararg = ast.arg(vararg) if vararg else None
+        kwarg = ast.arg(kwarg) if kwarg else None
+
+        # PY3: what about kwonlyargs, kw_defaults, posonlyargs?
+        return arguments([], args, vararg, [], [], kwarg, defaults)
+
+    except AttributeError:
+        args = [Name(argname, Param()) for argname in argnames]
+        return arguments(args, vararg, kwarg, defaults)
 
 
 def make_call(func, args=[], keywords=[], starargs=None, kwargs=None):
