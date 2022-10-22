@@ -1705,6 +1705,24 @@ class GenerateVisitor(BaseNodeVisitor):
         argtypes = ltypes | rtypes
         ul, ur = unboxable(self.gx, ltypes), unboxable(self.gx, rtypes)
 
+        # name (not) in (expr, expr, ..)
+        if middle == '__contains__' and isinstance(left, Tuple) and isinstance(right, Name):
+            for i, elem in enumerate(left.elts):
+                if prefix == '!':
+                    self.append('!__eq(')  # XXX why does using __ne( fail test 199!?
+                else:
+                    self.append('__eq(')
+                self.visit(right, func)
+                self.append(',')
+                self.visit(elem, func)
+                self.append(')')
+                if i != len(left.elts)-1:
+                    if prefix == '!':
+                        self.append(' && ')
+                    else:
+                        self.append(' | ')
+            return
+
         # --- inline other
         if inline and ((ul and ur) or not middle or (isinstance(left, Name) and left.id == 'None') or (isinstance(right, Name) and right.id == 'None')):  # XXX not middle, cleanup?
             self.append('(')

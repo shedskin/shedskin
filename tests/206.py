@@ -37,6 +37,14 @@ print(datetime.datetime.utcnow().date())
 bignumstr = '1' + 500 * '0'
 print(float(bignumstr))
 
-# for .. in enumerate(str)
+# optimize: for .. in enumerate(str)
 for i, e in enumerate('poehee'):
     print(i, e)
+
+# optimize: name in (expr, expr, ..)
+z = 12
+print(z in (10,12,14))
+print(z not in (7,8,9))
+z = 8
+print(z in (10,12,14))
+print(z not in (7,8,9))
