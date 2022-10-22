@@ -28,12 +28,12 @@ from ast import Num, Str, ImportFrom, alias as ast_alias, Add, comprehension, \
     Eq, NotEq, Lt, LtE, Gt, GtE, In, NotIn
 
 try:
-    from ast import TryExcept
+    from ast import TryExcept as Try
 except ImportError:
     from ast import Try
 
 from .ast_utils import BaseNodeVisitor, make_arg_list, make_call, is_assign_list_or_tuple, is_assign_attribute, \
-    is_assign_tuple, is_constant, orelse_to_node, parse_expr
+    is_assign_tuple, is_constant, orelse_to_node, parse_expr, get_arg_nodes, has_star_kwarg
 
 from .error import error
 from .infer import inode, in_out, CNode, default_var, register_temp_var
@@ -547,7 +547,7 @@ class ModuleVisitor(BaseNodeVisitor):
         else:
             # Try-Excepts introduce a new small scope with the exception name,
             # so we skip it here.
-            if isinstance(node, TryExcept):
+            if isinstance(node, Try):
                 children = list(node.body)
                 for handler in node.handlers:
                     children.extend(handler.body)
@@ -1436,18 +1436,10 @@ class ModuleVisitor(BaseNodeVisitor):
             inode(self.gx, node.func).callfuncs.append(node)  # XXX iterative dataflow analysis: move there
 
         # --- arguments
-        if not getmv().module.builtin and (node.starargs or node.kwargs):
+        if not getmv().module.builtin and has_star_kwarg(node):
             error('argument (un)packing is not supported', self.gx, node, mv=getmv())
-        args = node.args[:]
-        if node.starargs:
-            args.append(node.starargs)  # partially allowed in builtins
-        if node.keywords:
-            args.extend(node.keywords)
-        if node.kwargs:
-            args.append(node.kwargs)
-        for arg in args:
-            if isinstance(arg, keyword):
-                arg = arg.value
+
+        for arg in get_arg_nodes(node):
             self.visit(arg, func)
             inode(self.gx, arg).callfuncs.append(node)  # this one too
 
@@ -1494,6 +1486,7 @@ class ModuleVisitor(BaseNodeVisitor):
             getmv().classes[node.name] = newclass
             newclass.module = self.module
             newclass.parent = StaticClass(newclass, getmv())
+            return
 
         # --- built-in functions
         for cl in [newclass, newclass.parent]:
@@ -1588,11 +1581,16 @@ class ModuleVisitor(BaseNodeVisitor):
             raise NotImplementedError
             error('unknown ctx type for Attribute, %s' % node.ctx, self.gx, node, mv=getmv())
 
+    def visit_Constant(self, node, func=None):
+        map = {int: 'int_', float: 'float_', complex: 'complex', str: 'str_', bool: 'bool_', type(None): 'none'}
+        self.instance(node, def_class(self.gx, map[type(node.value)]), func)
 
+    # py2 ast
     def visit_Num(self, node, func=None):
         map = {int: 'int_', float: 'float_', long: 'int_', complex: 'complex'}  # XXX 'return' -> Return(Constant(None))?
         self.instance(node, def_class(self.gx, map[type(node.n)]), func)
 
+    # py2 ast
     def visit_Str(self, node, func=None):
         map = {str: 'str_', unicode: 'unicode_'}
         self.instance(node, def_class(self.gx, map[type(node.s)]), func)

@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 '''
 *** SHED SKIN Python-to-C++ Compiler ***
 Copyright 2005-2013 Mark Dufour; License GNU GPL version 3 (See LICENSE)
@@ -94,7 +96,7 @@ class GenerateVisitor(BaseNodeVisitor):
     def __init__(self, gx, module):
         self.gx = gx
         self.output_base = module.filename[:-3]
-        self.out = file(self.output_base + '.cpp', 'w')
+        self.out = open(self.output_base + '.cpp', 'w')
         self.indentation = ''
         self.consts = {}
         self.mergeinh = self.gx.merged_inh
@@ -127,7 +129,7 @@ class GenerateVisitor(BaseNodeVisitor):
         else:
             suffix = '.cpp'
 
-        lines = file(self.output_base + suffix, 'r').readlines()
+        lines = open(self.output_base + suffix, 'r').readlines()
         newlines = []
         j = -1
         for (i, line) in enumerate(lines):
@@ -175,11 +177,11 @@ class GenerateVisitor(BaseNodeVisitor):
 
                 newlines2.append('\n')
 
-        file(self.output_base + suffix, 'w').writelines(newlines2)
+        open(self.output_base + suffix, 'w').writelines(newlines2)
         self.filling_consts = False
 
     def insert_extras(self, suffix):
-        lines = file(self.output_base + suffix, 'r').readlines()
+        lines = open(self.output_base + suffix, 'r').readlines()
         newlines = []
         for line in lines:
             newlines.append(line)
@@ -187,7 +189,7 @@ class GenerateVisitor(BaseNodeVisitor):
                 newlines.extend(self.include_files())
             elif suffix == '.hpp' and line.startswith('using namespace'):
                 newlines.extend(self.fwd_class_refs())
-        file(self.output_base + suffix, 'w').writelines(newlines)
+        open(self.output_base + suffix, 'w').writelines(newlines)
 
     def fwd_class_refs(self):
         lines = []
@@ -259,12 +261,18 @@ class GenerateVisitor(BaseNodeVisitor):
         return result
 
     def header_file(self):
-        self.out = file(self.output_base + '.hpp', 'w')
+        self.out = open(self.output_base + '.hpp', 'w')
         self.visit(self.module.ast, True)
         self.out.close()
 
+    def print(self, text=None):
+        if text is not None:
+            print(text, file=self.out)
+        else:
+            print(file=self.out)
+
     def output(self, text):
-        print >>self.out, self.indentation + text
+        self.print(self.indentation + text)
 
     def start(self, text=None):
         self.line = self.indentation
@@ -278,7 +286,7 @@ class GenerateVisitor(BaseNodeVisitor):
         if text:
             self.append(text)
         if self.line.strip():
-            print >>self.out, self.line + ';'
+            self.print(self.line + ';')
 
     def indent(self):
         self.indentation += 4 * ' '
@@ -336,21 +344,21 @@ class GenerateVisitor(BaseNodeVisitor):
 
     def module_hpp(self, node):
         define = '_'.join(self.module.name_list).upper() + '_HPP'
-        print >>self.out, '#ifndef __' + define
-        print >>self.out, '#define __' + define + '\n'
+        self.print('#ifndef __' + define)
+        self.print('#define __' + define + '\n')
 
         # --- namespaces
-        print >>self.out, 'using namespace __shedskin__;'
+        self.print('using namespace __shedskin__;')
         for n in self.module.name_list:
-            print >>self.out, 'namespace __' + n + '__ {'
-        print >>self.out
+            self.print('namespace __' + n + '__ {')
+        self.print()
 
         # class declarations
         for child in node.body:
             if isinstance(child, ClassNode):
                 cl = def_class(self.gx, child.name, mv=self.mv)
-                print >>self.out, 'class ' + self.cpp_name(cl) + ';'
-        print >>self.out
+                self.print('class ' + self.cpp_name(cl) + ';')
+        self.print()
 
         # --- lambda typedefs
         self.func_pointers()
@@ -359,7 +367,7 @@ class GenerateVisitor(BaseNodeVisitor):
         defs = self.declare_defs(list(self.mv.globals.items()), declare=True)
         if defs:
             self.output(defs)
-            print >>self.out
+            self.print()
 
         # --- class definitions
         for child in node.body:
@@ -368,32 +376,32 @@ class GenerateVisitor(BaseNodeVisitor):
 
         # --- defaults
         for type, number in self.gen_defaults():
-            print >>self.out, 'extern %s default_%d;' % (type, number)
+            self.print('extern %s default_%d;' % (type, number))
 
         # function declarations
         if self.module != self.gx.main_module:
-            print >>self.out, 'void __init();'
+            self.print('void __init();')
         for child in node.body:
             if isinstance(child, FunctionNode):
                 func = self.mv.funcs[child.name]
                 if self.inhcpa(func):
                     self.visit_FunctionDef(func.node, declare=True)
-        print >>self.out
+        self.print()
 
         if self.gx.extension_module:
-            print >>self.out, 'extern "C" {'
+            self.print('extern "C" {')
             pyinit_func(self)
-            print >>self.out, '}'
+            self.print('}')
 
         for n in self.module.name_list:
-            print >>self.out, '} // module namespace'
+            self.print('} // module namespace')
 
         self.rich_comparison()
 
         if self.gx.extension_module:
             convert_methods2(self.gx, self)
 
-        print >>self.out, '#endif'
+        self.print('#endif')
 
     def gen_defaults(self):
         for default, (nr, func, func_def_nr) in self.module.mv.defaults.items():
@@ -428,33 +436,33 @@ class GenerateVisitor(BaseNodeVisitor):
             if not '__ge__' in cl.funcs and '__le__' in cl.funcs:
                 ge_cls.append(cl)
         if cmp_cls or lt_cls or gt_cls or le_cls or ge_cls:
-            print >>self.out, 'namespace __shedskin__ { /* XXX */'
+            self.print('namespace __shedskin__ { /* XXX */')
             for cl in cmp_cls:
                 t = '__%s__::%s *' % (self.mv.module.ident, self.cpp_name(cl))
-                print >>self.out, 'template<> inline __ss_int __cmp(%sa, %sb) {' % (t, t)
-                print >>self.out, '    if (!a) return -1;'
+                self.print('template<> inline __ss_int __cmp(%sa, %sb) {' % (t, t))
+                self.print('    if (!a) return -1;')
                 if '__eq__' in cl.funcs:
-                    print >>self.out, '    if(a->__eq__(b)) return 0;'
+                    self.print('    if(a->__eq__(b)) return 0;')
                 if '__lt__' in cl.funcs:
-                    print >>self.out, '    return (a->__lt__(b))?-1:1;'
+                    self.print('    return (a->__lt__(b))?-1:1;')
                 elif '__gt__' in cl.funcs:
-                    print >>self.out, '    return (a->__gt__(b))?1:-1;'
+                    self.print('    return (a->__gt__(b))?1:-1;')
                 else:
-                    print >>self.out, '    return __cmp<void *>(a, b);'
-                print >>self.out, '}'
+                    self.print('    return __cmp<void *>(a, b);')
+                self.print('}')
             self.rich_compare(lt_cls, 'lt', 'gt')
             self.rich_compare(gt_cls, 'gt', 'lt')
             self.rich_compare(le_cls, 'le', 'ge')
             self.rich_compare(ge_cls, 'ge', 'le')
-            print >>self.out, '}'
+            self.print('}')
 
     def rich_compare(self, cls, msg, fallback_msg):
         for cl in cls:
             t = '__%s__::%s *' % (self.mv.module.ident, self.cpp_name(cl))
-            print >>self.out, 'template<> inline __ss_bool __%s(%sa, %sb) {' % (msg, t, t)
+            self.print('template<> inline __ss_bool __%s(%sa, %sb) {' % (msg, t, t))
             # print >>self.out, '    if (!a) return -1;' # XXX check
-            print >>self.out, '    return b->__%s__(a);' % fallback_msg
-            print >>self.out, '}'
+            self.print('    return b->__%s__(a);' % fallback_msg)
+            self.print('}')
 
     def module_cpp(self, node):
         file_top = self.jinja_env.get_template('module.cpp.tpl').render(
@@ -472,7 +480,7 @@ class GenerateVisitor(BaseNodeVisitor):
             namer=self.namer,
             dedent=textwrap.dedent
         )
-        print >>self.out, file_top
+        self.print(file_top)
 
         # --- declarations
         self.listcomps = {}
@@ -480,7 +488,7 @@ class GenerateVisitor(BaseNodeVisitor):
             self.listcomps[listcomp] = (lcfunc, func)
         self.do_listcomps(True)
         self.do_lambdas(True)
-        print >>self.out
+        self.print()
 
         # --- definitions
         self.do_listcomps(False)
@@ -538,8 +546,8 @@ class GenerateVisitor(BaseNodeVisitor):
 
         # --- close namespace
         for n in self.module.name_list:
-            print >>self.out, '} // module namespace'
-        print >>self.out
+            self.print('} // module namespace')
+        self.print()
 
         # --- c++ main/extension module setup
         if self.gx.extension_module:
@@ -576,24 +584,24 @@ class GenerateVisitor(BaseNodeVisitor):
     def do_main(self):
         modules = self.gx.modules.values()
         if any(module.builtin and module.ident == 'sys' for module in modules):
-            print >>self.out, 'int main(int __ss_argc, char **__ss_argv) {'
+            self.print('int main(int __ss_argc, char **__ss_argv) {')
         else:
-            print >>self.out, 'int main(int, char **) {'
+            self.print('int main(int, char **) {')
         self.do_init_modules()
-        print >>self.out, '    __shedskin__::__start(__%s__::__init);' % self.module.ident
-        print >>self.out, '}'
+        self.print('    __shedskin__::__start(__%s__::__init);' % self.module.ident)
+        self.print('}')
 
     def do_init_modules(self):
-        print >>self.out, '    __shedskin__::__init();'
+        self.print('    __shedskin__::__init();')
         for module in sorted(self.gx.modules.values(), key=lambda x: x.import_order):
             if module != self.gx.main_module and module.ident != 'builtin':
                 if module.ident == 'sys':
                     if self.gx.extension_module:
-                        print >>self.out, '    __sys__::__init(0, 0);'
+                        self.print('    __sys__::__init(0, 0);')
                     else:
-                        print >>self.out, '    __sys__::__init(__ss_argc, __ss_argv);'
+                        self.print('    __sys__::__init(__ss_argc, __ss_argv);')
                 else:
-                    print >>self.out, '    ' + module.full_path() + '::__init();'
+                    self.print('    ' + module.full_path() + '::__init();')
 
     def do_comment(self, s):
         if not s:
@@ -623,7 +631,7 @@ class GenerateVisitor(BaseNodeVisitor):
             self.visitm('WITH(', node.context_expr, func)
         self.append(',%d)' % self.with_count)
         self.with_count += 1
-        print >>self.out, self.line
+        self.print(self.line)
         self.indent()
         self.mv.current_with_vars.append(handle_with_vars(node.optional_vars))
         for child in node.body:
@@ -633,14 +641,14 @@ class GenerateVisitor(BaseNodeVisitor):
         self.output('END_WITH')
 
     def visit_While(self, node, func=None):
-        print >>self.out
+        self.print()
         if node.orelse:
             self.output('%s = 0;' % self.mv.tempcount[orelse_to_node(node)])
 
         self.start('while (')
         self.bool_test(node.test, func)
         self.append(') {')
-        print >>self.out, self.line
+        self.print(self.line)
         self.indent()
         self.gx.loopstack.append(node)
         for child in node.body:
@@ -668,7 +676,7 @@ class GenerateVisitor(BaseNodeVisitor):
             self.append('dict<void *, pyobj *> *memo')
         self.append(')')
         if not declare:
-            print >>self.out, self.line + ' {'
+            self.print(self.line + ' {')
             self.indent()
             self.output(class_name + ' *c = new ' + class_name + '();')
             if name == '__deepcopy__':
@@ -780,7 +788,7 @@ class GenerateVisitor(BaseNodeVisitor):
                 if var in self.gx.merged_inh and self.gx.merged_inh[var]:
                     self.start(nodetypestr(self.gx, var, cl.parent, mv=self.mv) + cl.ident + '::' + self.cpp_name(var))
                     self.eol()
-            print >>self.out
+            self.print()
 
         # --- static init
         if cl.parent.static_nodes:
@@ -790,7 +798,7 @@ class GenerateVisitor(BaseNodeVisitor):
                 self.visit(node, cl.parent)
             self.deindent()
             self.output('}')
-            print >>self.out
+            self.print()
 
     def class_variables(self, cl):
         # --- class variables
@@ -798,7 +806,7 @@ class GenerateVisitor(BaseNodeVisitor):
             for var in cl.parent.vars.values():
                 if var in self.gx.merged_inh and self.gx.merged_inh[var]:
                     self.output('static ' + nodetypestr(self.gx, var, cl.parent, mv=self.mv) + self.cpp_name(var) + ';')
-            print >>self.out
+            self.print()
 
         # --- instance variables
         for var in cl.vars.values():
@@ -814,7 +822,7 @@ class GenerateVisitor(BaseNodeVisitor):
                 self.output(nodetypestr(self.gx, var, cl, mv=self.mv) + self.cpp_name(var) + ';')
 
         if [v for v in cl.vars if not v.startswith('__')]:
-            print >>self.out
+            self.print()
 
     def nothing(self, types):
         if def_class(self.gx, 'complex') in (t[0] for t in types):
@@ -973,7 +981,7 @@ class GenerateVisitor(BaseNodeVisitor):
     def visit_TryExcept(self, node, func=None):
         # try
         self.start('try {')
-        print >>self.out, self.line
+        self.print(self.line)
         self.indent()
         if node.orelse:
             self.output('%s = 0;' % self.mv.tempcount[orelse_to_node(node)])
@@ -1006,13 +1014,13 @@ class GenerateVisitor(BaseNodeVisitor):
                     arg += h1.id
 
                 self.append(' catch (%s) {' % arg)
-                print >>self.out, self.line
+                self.print(self.line)
                 self.indent()
                 for child in h2:
                     self.visit(child, func)
                 self.deindent()
                 self.start('}')
-        print >>self.out, self.line
+        self.print(self.line)
 
         # else
         if node.orelse:
@@ -1059,10 +1067,10 @@ class GenerateVisitor(BaseNodeVisitor):
         else:
             self.impl_visit_temp(node.iter.args[2], func)
         self.append(',%s,%s)' % (ivar[2:], evar[2:]))
-        print >>self.out, self.line
+        self.print(self.line)
 
     def fastenum(self, node):
-        return is_enum(node) and self.only_classes(node.iter.args[0], ('tuple', 'list'))
+        return is_enum(node) and self.only_classes(node.iter.args[0], ('tuple', 'list', 'str_'))
 
     def fastzip2(self, node):
         names = ('tuple', 'list')
@@ -1087,7 +1095,7 @@ class GenerateVisitor(BaseNodeVisitor):
         else:
             assname = self.mv.tempcount[node.target]
         assname = self.cpp_name(assname)
-        print >>self.out
+        self.print()
         if node.orelse:
             self.output('%s = 0;' % self.mv.tempcount[orelse_to_node(node)])
         if is_fastfor(node):
@@ -1105,9 +1113,9 @@ class GenerateVisitor(BaseNodeVisitor):
             pref, tail = self.forin_preftail(node)
             self.start('FOR_IN%s(%s,' % (pref, assname))
             self.visit(node.iter, func)
-            print >>self.out, self.line + ',' + tail + ')'
+            self.print(self.line + ',' + tail + ')')
             self.forbody(node, None, assname, func, False, False)
-        print >>self.out
+        self.print()
 
     def do_fastzip2(self, node, func, genexpr):
         self.start('FOR_IN_ZIP(')
@@ -1117,7 +1125,7 @@ class GenerateVisitor(BaseNodeVisitor):
         self.visitm(node.iter.args[0], ',', node.iter.args[1], ',', func)
         tail1 = self.mv.tempcount[(node, 2)][2:] + ',' + self.mv.tempcount[(node, 3)][2:] + ','
         tail2 = self.mv.tempcount[(node.iter)][2:] + ',' + self.mv.tempcount[(node, 4)][2:]
-        print >>self.out, self.line + tail1 + tail2 + ')'
+        self.print(self.line + tail1 + tail2 + ')')
         self.indent()
         if is_assign_list_or_tuple(left):
             self.tuple_assign(left, self.mv.tempcount[left], func)
@@ -1132,12 +1140,15 @@ class GenerateVisitor(BaseNodeVisitor):
         self.append(',')
 
     def do_fastenum(self, node, func, genexpr):
-        self.start('FOR_IN_ENUM(')
+        if self.only_classes(node.iter.args[0], ('tuple', 'list')):
+            self.start('FOR_IN_ENUM(')
+        else:
+            self.start('FOR_IN_ENUM_STR(')
         left, right = node.target.elts
         self.do_fastzip2_one(right, func)
         self.visit(node.iter.args[0], func)
         tail = self.mv.tempcount[(node, 2)][2:] + ',' + self.mv.tempcount[node.iter][2:]
-        print >>self.out, self.line + ',' + tail + ')'
+        self.print(self.line + ',' + tail + ')')
         self.indent()
         self.start()
         self.visitm(left, ' = ' + self.mv.tempcount[node.iter], func)
@@ -1150,7 +1161,7 @@ class GenerateVisitor(BaseNodeVisitor):
         left, right = node.target.elts
         tail = self.mv.tempcount[node, 7][2:] + ',' + self.mv.tempcount[node, 6][2:] + ',' + self.mv.tempcount[node.iter][2:]
         self.visit(node.iter.func.value, func)
-        print >>self.out, self.line + ',' + tail + ')'
+        self.print(self.line + ',' + tail + ')')
         self.indent()
         self.start()
         if left in self.mv.tempcount:  # XXX not for zip, enum..?
@@ -1202,8 +1213,8 @@ class GenerateVisitor(BaseNodeVisitor):
             if func.largs is not None:
                 argtypes = argtypes[:func.largs]
             rettype = nodetypestr(self.gx, func.retnode.thing, func, mv=self.mv)
-            print >>self.out, 'typedef %s(*lambda%d)(' % (rettype, func.lambdanr) + ', '.join(argtypes) + ');'
-        print >>self.out
+            self.print('typedef %s(*lambda%d)(' % (rettype, func.lambdanr) + ', '.join(argtypes) + ');')
+        self.print()
 
     # --- function/method header
     def func_header(self, func, declare, is_init=False):
@@ -1271,11 +1282,11 @@ class GenerateVisitor(BaseNodeVisitor):
         # --- output
         self.append(header + '(' + ', '.join(formaldecs) + ')')
         if is_init:
-            print >>self.out, self.line + ' {'
+            self.print(self.line + ' {')
         elif declare:
             self.eol()
         else:
-            print >>self.out, self.line + ' {'
+            self.print(self.line + ' {')
             self.indent()
             if not declare and func.doc:
                 self.do_comment(func.doc)
@@ -1415,7 +1426,7 @@ class GenerateVisitor(BaseNodeVisitor):
         self.start()
         self.append('if (')
         self.bool_test(node.test, func)
-        print >>self.out, self.line + ') {'
+        self.print(self.line + ') {')
         self.indent()
         for child in node.body:
             self.visit(child, func)
@@ -2417,7 +2428,7 @@ class GenerateVisitor(BaseNodeVisitor):
                     self.output('__ss_result->resize(len(' + itervar + '));')
 
             self.start('FOR_IN' + pref + '(' + iter + ',' + itervar + ',' + tail)
-            print >>self.out, self.line + ')'
+            self.print(self.line + ')')
             self.listcompfor_body(node, quals, iter, lcfunc, False, genexpr)
 
     def listcompfor_body(self, node, quals, iter, lcfunc, skip, genexpr):
@@ -2437,7 +2448,7 @@ class GenerateVisitor(BaseNodeVisitor):
                 if cond != qual.ifs[-1]:
                     self.append(' && ')
             self.append(') {')
-            print >>self.out, self.line
+            self.print(self.line)
 
         # recurse
         self.listcomp_rec(node, quals[1:], lcfunc, genexpr)

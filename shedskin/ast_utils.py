@@ -4,7 +4,7 @@ Copyright 2005-2022 Mark Dufour and contributors; License GNU GPL version 3 (See
 
 '''
 from ast import Tuple, List, Attribute, Store, arguments, Name, Param, \
-    parse, iter_fields, AST, Call, Str, Num
+    parse, iter_fields, AST, Call, Str, Num, keyword
 
 
 def is_assign_list_or_tuple(node):
@@ -42,14 +42,17 @@ def orelse_to_node(node):
 
 
 def get_arg_name(node, is_tuple_expansion=False):
-    # PY3: replace Name with arg
+    if hasattr(node, 'arg'):
+        assert isinstance(node.arg, str), 'non-arg string %s' % type(node.arg)
+        return node.arg
+
     if isinstance(node, Tuple):
         return tuple(get_arg_name(child, is_tuple_expansion=True) for child in node.elts)
     elif isinstance(node, Name):
         assert is_tuple_expansion and type(node.ctx) == Store or type(node.ctx) == Param
         return node.id
     else:
-        assert isinstance(node, Name), "Expected Name got %s" % type(node)
+        assert False, "Unexpected argument type got %s" % type(node)
 
 
 def extract_argnames(arg_struct):
@@ -69,8 +72,53 @@ def make_arg_list(argnames, vararg=None, kwonlyargs=[], kwarg=None, defaults=[],
 
 
 def make_call(func, args=[], keywords=[], starargs=None, kwargs=None):
-    # PY3: Incorporate starargs and kwargs into args and keywords respectively
-    return Call(func, args, keywords, starargs, kwargs)
+    try:
+        return Call(func, args, keywords, starargs, kwargs)
+    except TypeError:
+        # PY3: Incorporate starargs and kwargs into args and keywords respectively
+        return Call(func, args, keywords)
+
+def has_star_kwarg(node):
+    if hasattr(node, 'starargs'):
+       return bool(node.starargs or node.kwargs)
+
+    for arg in node.args:
+        if arg.__class__.__name__ == 'Starred':
+            return True
+
+    for kw in node.keywords:
+        if kw.arg is None:
+            return True
+
+    return False
+
+def get_starargs(node):
+    if hasattr(node, 'starargs'):
+       return node.starargs
+
+    for arg in node.args:
+        if arg.__class__.__name__ == 'Starred':
+            return arg.value
+
+def get_arg_nodes(node):
+    args = []
+
+    for arg in node.args:
+        if arg.__class__.__name__ == 'Starred':
+            arg = arg.value
+        args.append(arg)
+
+    if node.keywords:
+        args.extend([kw.value for kw in node.keywords])
+
+    if hasattr(node, 'starargs') and node.starargs:
+        if node.starargs:
+            args.append(node.starargs)  # partially allowed in builtins
+
+    if hasattr(node, 'kwargs') and node.kwargs:
+        args.append(node.kwargs)
+
+    return args
 
 
 def parse_expr(s):
@@ -80,7 +128,7 @@ def parse_expr(s):
 class BaseNodeVisitor(object):
     """
     Copy of ast.NodeVisitor with added *args argument to visit functions
-    
+
     A node visitor base class that walks the abstract syntax tree and calls a
     visitor function for every node found.  This function may return a value
     which is forwarded by the `visit` method.
@@ -101,8 +149,9 @@ class BaseNodeVisitor(object):
         method = 'visit_' + node.__class__.__name__
         visitor = getattr(self, method, None)
         if visitor:
-            return visitor(node, *args)
-        raise NotImplementedError("%s" % method)
+            visitor(node, *args)
+        else:
+            self.generic_visit(node, *args)
 
     def generic_visit(self, node, *args):
         """Called if no explicit visitor function exists for a node."""

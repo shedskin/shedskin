@@ -36,3 +36,7 @@ print(datetime.datetime.utcnow().date())
 # float(str) inf
 bignumstr = '1' + 500 * '0'
 print(float(bignumstr))
+
+# for .. in enumerate(str)
+for i, e in enumerate('poehee'):
+    print(i, e)

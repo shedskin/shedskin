@@ -411,7 +411,7 @@ class str_(pyseq):
 
 class unicode_(pyseq):
     def encode(self, encoding=''):
-        return b''
+        return ''
 
     def __len__(self):
         return 1

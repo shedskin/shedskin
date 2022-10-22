@@ -111,14 +111,14 @@ def generate_makefile(gx):
                 line += ' -D__SS_GC_CLEANUP'
             if not gx.assertions:
                 line += ' -D__SS_NOASSERT'
-            if gx.fast_hash:
-                line += ' -D__SS_FASTHASH'
             if gx.longlong:
                 line += ' -D__SS_LONG'
             if gx.backtrace:
                 line += ' -D__SS_BACKTRACE -rdynamic -fno-inline'
             if gx.pypy:
                 line += ' -D__SS_PYPY'
+            if gx.nogc:
+                line += ' -D__SS_NOGC'
             if not gx.gcwarns:
                 line += ' -D__SS_NOGCWARNS'
             if gx.extension_module:
