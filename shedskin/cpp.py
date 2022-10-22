@@ -1707,6 +1707,7 @@ class GenerateVisitor(BaseNodeVisitor):
 
         # name (not) in (expr, expr, ..)
         if middle == '__contains__' and isinstance(left, Tuple) and isinstance(right, Name):
+            self.append('(')
             for i, elem in enumerate(left.elts):
                 if prefix == '!':
                     self.append('!__eq(')  # XXX why does using __ne( fail test 199!?
@@ -1721,6 +1722,7 @@ class GenerateVisitor(BaseNodeVisitor):
                         self.append(' && ')
                     else:
                         self.append(' | ')
+            self.append(')')
             return
 
         # --- inline other
