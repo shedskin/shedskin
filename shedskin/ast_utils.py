@@ -51,6 +51,8 @@ def get_arg_name(node, is_tuple_expansion=False):
     elif isinstance(node, Name):
         assert is_tuple_expansion and type(node.ctx) == Store or type(node.ctx) == Param
         return node.id
+    elif isinstance(node, str):
+        return node
     else:
         assert False, "Unexpected argument type got %s" % type(node)
 
@@ -58,7 +60,7 @@ def get_arg_name(node, is_tuple_expansion=False):
 def extract_argnames(arg_struct):
     argnames = [get_arg_name(arg) for arg in arg_struct.args]
     if arg_struct.vararg:
-        argnames.append(arg_struct.vararg)
+        argnames.append(get_arg_name(arg_struct.vararg))
     # PY3: kwonlyargs
     if arg_struct.kwarg:
         argnames.append(arg_struct.kwarg)
