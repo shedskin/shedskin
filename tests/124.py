@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 # A simple program to find the prime factors of a given number.
 # (c) Rohit Krishna Kumar
@@ -25,14 +26,14 @@ def factorize(n,l):                      # n: [int], l: [list(int)]
             else:
                 factorize(i,l)           # []
             if(prime(n/i)):              # [int]
-                l.append(n/i)            # []
+                l.append(n//i)            # []
             else:
-                factorize(n/i,l)         # []
+                factorize(n//i,l)         # []
             break
 
 factors=[]                               # [list(int)]
 n='2079283419'                             # [int]
 #raw_input("Number to factorize:")      # [str]
 factorize(int(n),factors)                # []
-print factors                            # [list(int)]
+print(factors)                           # [list(int)]
 
