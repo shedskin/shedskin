@@ -53,3 +53,13 @@ print(z not in (7,8,9))
 a = set([1,2])                           # [Set(int)]
 a.add(3)                                 # []
 print(a)                                  # [Set(int)]
+
+def mapp():
+    allchr = [chr(c) for c in range(256)]
+    return allchr
+print(mapp()[-10:])
+
+ar = list(range(10))
+ar.__delslice__(1,4)
+print(ar)
+
