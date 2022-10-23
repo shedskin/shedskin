@@ -1,10 +1,11 @@
+from __future__ import print_function
 
 class renderobject: pass
 class plane(renderobject): pass
 class sphere(renderobject): pass
 
 class light:
-    def hoei(self): print 'hoei!'
+    def hoei(self): print('hoei!')
 
 class parallellight(light): pass
 class pointlight(light): pass

@@ -34,10 +34,10 @@ t2 = (1.0,2)
 """ "\n\t" """
 print(""" "\n\t" """)
 
-print(set({1:2}))
+print(sorted(set({1:2})))
 aa = set()
 aa.add(1); aa.add(2)
-print(aa.union(set([1,3])))
+print(sorted(aa.union(set([1,3]))))
 
 l = [1,2,3]
 if l: print(l)
@@ -56,20 +56,20 @@ print(max({1:2, 3:4}))
 
 s1 = set([1,2,3])
 s2 = set([3,4,5])
-print(str(s1.copy())+' - '+str(s2.copy())+' =', s1.difference(s2), '=', s1 - s2)
+print(str(sorted(s1.copy()))+' - '+str(sorted(s2.copy()))+' =', sorted(s1.difference(s2)), '=', sorted(s1 - s2))
 s1.difference_update(s2)
 s2.clear()
-print(s1, s2)
+print(sorted(s1), sorted(s2))
 s1.remove(1)
 s1.discard(2)
-print(s1, s1.issubset(s2), set([2,1]).issubset(set([3,1,2,4])))
+print(sorted(s1), s1.issubset(s2), set([2,1]).issubset(set([3,1,2,4])))
 s1.update(set([1,2]))
 print(s1.issuperset(set([1])))
 
 af = set([1,2,3])
-print(af.intersection(s1))
+print(sorted(af.intersection(s1)))
 af.intersection_update(s1)
-print(af)
+print(sorted(af))
 
 s3 = set([3,2,1])
 while s3: print(s3.pop())
@@ -91,7 +91,7 @@ union()
 for (i,ee) in reversed(list(enumerate(reversed([1,2,3])))):
     print(i, ee)
 
-print(set([1,2,3]).symmetric_difference(set([2,3,4])))
+print(sorted(set([1,2,3]).symmetric_difference(set([2,3,4]))))
 
 ###################################################################
 sa1 = set([1,2,3])
@@ -144,11 +144,6 @@ Tester().isempty()
 class void:
     def bla(self): pass
 vv = void(); vv.bla()
-
-def mapp():
-    allchr = [chr(c) for c in range(256)]
-    return allchr
-print(mapp()[-10:])
 
 ap = set([1])
 bp = set([2])

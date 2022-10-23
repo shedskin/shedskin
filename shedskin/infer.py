@@ -901,8 +901,8 @@ def ifa_split_vars(gx, cl, dcpa, vars, nr_classes, classes_nr, split, allcsites)
                 prt[ts] = []
             prt[ts].append(c)
         if len(prt) > 1:
-            ifa_logger.debug('IFA partition csites: %s', prt.values()[0])
-            ifa_split_class(cl, dcpa, prt.values()[0], split)
+            ifa_logger.debug('IFA partition csites: %s', list(prt.values())[0])
+            ifa_split_class(cl, dcpa, list(prt.values())[0], split)
 
         # --- if all else fails, perform wholesale splitting
         elif len(paths) > 1 and 1 < len(csites) < 10:

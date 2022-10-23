@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 class father(object):
     def __init__(self,a):
@@ -11,9 +12,9 @@ class son(father):
         return x*self.a*self.a
 
 myfather=father(3)
-print myfather.f(4)
+print(myfather.f(4))
 myson=son(4)
-print myson.g(5)
+print(myson.g(5))
 
 class mother(object):
     def __init__(self,a):
@@ -27,6 +28,6 @@ class daughter(mother):
         return x*self.a*self.a
 
 mydaughter = daughter(4)
-print mydaughter.g(5)
+print(mydaughter.g(5))
 
 
