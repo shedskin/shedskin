@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 def gen():
     m = []
@@ -27,7 +28,7 @@ print c, b
 AH = [1,2]
 print [[1 for x in AH] for y in AH]
 
-for x in xrange(2,1,-1):
+for x in range(2,1,-1):
     print x
 
 print []*10
@@ -68,9 +69,9 @@ def true(): return True
 print true() == true() in [True]
 print 1 < 2 < 3 < 4
 
-print 'hash(l)', [hash(i) for i in xrange(3)]
-#print 'hash(float(l))', [hash(float(i)) for i in xrange(3)] XXX difference
-[hash(float(i)) for i in xrange(3)]
+print 'hash(l)', [hash(i) for i in range(3)]
+#print 'hash(float(l))', [hash(float(i)) for i in range(3)] XXX difference
+[hash(float(i)) for i in range(3)]
 
 class Toggle:
     def __init__(self, start_state):
@@ -85,7 +86,7 @@ print t.value()
 t.activate()
 print t.value()
 
-print [None for i in xrange(3)]
+print [None for i in range(3)]
 
 maxint = 2147483647
 minint = -maxint-1
@@ -143,7 +144,7 @@ class Printer3:
 def test(): pass
 print test()
 
-l = []; print [l.append(i%2) for i in xrange(5)]
+l = []; print [l.append(i%2) for i in range(5)]
 
 def test2(x):
     if x:
@@ -159,8 +160,8 @@ def fun3(): a = 1
 result = fun3()
 print result
 
-s = dict.fromkeys(xrange(2))
-for i in xrange(2):
+s = dict.fromkeys(range(2))
+for i in range(2):
     if i in s: print "*"
 
 b2 = 3; b2 *= 1.5; print '%.1f' % b2
