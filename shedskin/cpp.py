@@ -1464,7 +1464,7 @@ class GenerateVisitor(BaseNodeVisitor):
             self.visit_List(node, func, argtypes=argtypes)
         elif isinstance(node, Call) and isinstance(node.func, Name) and node.func.id in ('list', 'tuple', 'dict', 'set'):
             self.visit_Call(node, func, argtypes=argtypes)
-        elif isinstance(node, Name) and node.id == 'None':
+        elif isinstance(node, Name) and node.id == 'None': # py2
             self.visit(node, func)
         else:  # XXX messy
             cast = ''

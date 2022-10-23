@@ -21,7 +21,7 @@ def is_assign_attribute(node):
 
 
 def is_constant(node):
-    return isinstance(node, (Str, Num))
+    return isinstance(node, (Str, Num)) or node.__class__.__name__ == 'Constant'
 
 
 def handle_with_vars(var):
