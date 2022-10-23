@@ -2748,7 +2748,7 @@ class GenerateVisitor(BaseNodeVisitor):
                 octval = oct(ord(value[i]))
                 if octval.startswith('0o'): # py3
                     octval = octval[2:]
-                value[i] = '\\' + octval.zfill(3)
+                value[i] = '\\' + octval.zfill(4)[1:]
 
         return ''.join(value)
 
