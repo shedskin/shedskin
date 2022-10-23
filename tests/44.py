@@ -4,5 +4,5 @@ from __future__ import print_function
 
 a = set([1,2])                           # [Set(int)]
 a.add(3)                                 # []
-print(a)                                  # [Set(int)]
+print(sorted(a))                                  # [Set(int)]
 
