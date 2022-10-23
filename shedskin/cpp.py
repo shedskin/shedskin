@@ -2745,13 +2745,19 @@ class GenerateVisitor(BaseNodeVisitor):
             if value[i] in replace:
                 value[i] = '\\' + replace[value[i]]
             elif value[i] not in string.printable:
-                value[i] = '\\' + oct(ord(value[i])).zfill(4)[1:]
+                octval = oct(ord(value[i]))
+                if octval.startswith('0o'): # py3
+                    octval = octval[2:]
+                value[i] = '\\' + octval.zfill(3)
 
         return ''.join(value)
 
     def visit_const(self, node, value):
         if isinstance(value, bool):
             self.append(str(value))
+
+        elif value is None:
+            self.append('NULL')
 
         elif isinstance(value, int):
             self.append('__ss_int(')
@@ -2784,8 +2790,7 @@ class GenerateVisitor(BaseNodeVisitor):
             self.append('new unicode("%s")' % (value.encode('utf-8')))
 
         else:
-            #self.append('new %s(%s)' % (t[0].ident, node.n))
-            assert False, 'huh %s' % repr(value)
+            assert False
 
     def visit_Constant(self, node, func=None):
         self.visit_const(node, node.value)

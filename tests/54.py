@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 import copy
 
@@ -9,5 +10,5 @@ b = copy.deepcopy(a)                     # [list(int)]
 
 a[0] = 3
 
-print a, b
+print(a, b)
 
