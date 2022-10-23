@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 import testdata.bert51
 
@@ -8,15 +9,15 @@ class zeug:
 def hoi(): return 1                    # [float]
 
 
-print hoi()                              # [float]
+print(hoi())                              # [float]
 a = zeug()                               # [zeug()]
 
-print testdata.bert51.hello(1)                      # [str]
+print(testdata.bert51.hello(1))                    # [str]
 z = testdata.bert51.zeug()                          # [bert::zeug()]
 z.hallo(1)                               # [int]
 
-print a.meuk()                           # [str]
+print(a.meuk())                           # [str]
 
 l1 = lambda x,y: x+y                     # [lambda0]
-print l1(1,2)                            # [int]
+print(l1(1,2))                            # [int]
 
