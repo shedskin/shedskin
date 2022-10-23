@@ -48,3 +48,8 @@ print(z not in (7,8,9))
 z = 8
 print(z in (10,12,14))
 print(z not in (7,8,9))
+
+# different output in python3
+a = set([1,2])                           # [Set(int)]
+a.add(3)                                 # []
+print(a)                                  # [Set(int)]
