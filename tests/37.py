@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 # (c) Mark Dufour
 # --- mark.dufour@gmail.com
@@ -5,7 +6,7 @@
 def _reduce(f, l, i=-1):                  # f: [lambda0], i: [int], l: [list(int)], r: [int]
     if not l:                            # [list(int)]
         if i != -1: return i             # [int]
-        print '*** ERROR! *** reduce() called with empty sequence and no initial value' # [str]
+        print('*** ERROR! *** reduce() called with empty sequence and no initial value') # [str]
 
     if i != -1:                          # [int]
         r = f(i, l[0])                   # [int]
@@ -21,10 +22,10 @@ argv = ['','testdata/uuf250-010.cnf']             # [list(str)]
 
 # solver
 
-cnf = [l.strip().split() for l in file(argv[1]) if l[0] not in 'c0%\n'] # [list(list(str))]
+cnf = [l.strip().split() for l in open(argv[1]) if l[0] not in 'c0%\n'] # [list(list(str))]
 clauses = [[int(x) for x in l[:-1] if x != ''] for l in cnf if l[0] != 'p'] # [list(list(int))]
 nrofvars = [int(l[2]) for l in cnf if l[0] == 'p'][0] # [int]
-vars = range(nrofvars+1)                 # [list(int)]
+vars = list(range(nrofvars+1))                 # [list(int)]
 occurrence = [[] for l in 2*vars]
 for clause in clauses:                   # [list(int)]
     for lit in clause: occurrence[lit].append(clause) # [int]
@@ -39,7 +40,7 @@ def solve_rec():                         # la_mods: [list(int)], var: [int], pro
         return 1
 
     if not -1 in fixedt[1:]:             # [int]
-        print 'v', ' '.join([str((2*fixedt[i]-1)*i) for i in range(1,nrofvars+1)]) # [list(str)]
+        print('v', ' '.join([str((2*fixedt[i]-1)*i) for i in range(1,nrofvars+1)])) # [list(str)]
         return 1                         # [int]
 
     la_mods = []                         # [list(int)]
@@ -129,7 +130,7 @@ def lookahead(mods):                     # mods: [list(int)], i: [int], u: [list
         dif = [-1 for var in range(nrofvars+1)] # [list(int)]
         for var in unfixed_vars():       # [int]
             if not lookahead_variable(var, mods, dif): # [int]
-                 print 'error'           # [str]
+                 print('error')           # [str]
     return dif.index(max(dif))           # [int]
 
 def lookahead_variable(var, mods, dif):  # mods: [list(int)], dif: [list(int)], choice: [int]*, var: [int], prop: [int]
@@ -172,6 +173,6 @@ def unfixed_lits(clause):                # lit: [int]*, clause: [list(int)], res
     return result                        # [list(int)]
 
 if not solve_rec():                      # [int]
-    print 'unsatisfiable'                # [str]
-print 'nodes', nodecount, 'propagations', propcount # [str], [int], [str], [int]
+    print('unsatisfiable')                # [str]
+print('nodes', nodecount, 'propagations', propcount) # [str], [int], [str], [int]
 

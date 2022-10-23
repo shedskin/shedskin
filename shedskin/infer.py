@@ -56,7 +56,7 @@ CPA_LIMIT = 10
 
 
 class CNode:
-    __slots__ = ['gx', 'thing', 'dcpa', 'cpa', 'fakefunc', 'parent', 'defnodes', 'mv', 'constructor', 'copymetoo', 'fakert', 'lambdawrapper', 'in_', 'out', 'fout', 'in_list', 'callfuncs', 'nodecp', 'paths', 'csites']
+    __slots__ = ['gx', 'thing', 'dcpa', 'cpa', 'fakefunc', 'parent', 'defnodes', 'mv', 'constructor', 'copymetoo', 'fakert', 'lambdawrapper', 'in_', 'out', 'fout', 'in_list', 'callfuncs', 'nodecp', 'paths', 'csites', 'assignhop', 'temp1', 'temp2', 'subs']
 
     def __init__(self, gx, thing, dcpa=0, cpa=0, parent=None, mv=None):
         self.gx = gx
