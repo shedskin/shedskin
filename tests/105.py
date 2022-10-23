@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 def bla():
     return x, y                          # [tuple2(int, int)]
@@ -8,5 +9,5 @@ def blu():
 
 y = 2                                    # [int]
 blu()                                    # []
-print bla()                              # [tuple2(int, int)]
+print(bla())                             # [tuple2(int, int)]
 
