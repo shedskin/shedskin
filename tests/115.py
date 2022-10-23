@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 d = (1, (1.1, 'u'))
 
@@ -11,6 +12,6 @@ for x,(y,z) in [d]:
     z
 
 l = [((v,u),w) for u,(v,w) in [d]]
-print 'uh', '%.2f %d' % l[0][0], l[0][1], len(l)
+print('uh', '%.2f %d' % l[0][0], l[0][1], len(l))
 
 
