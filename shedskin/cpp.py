@@ -966,7 +966,7 @@ class GenerateVisitor(BaseNodeVisitor):
         # --- raise class [, constructor args]
         if isinstance(exc, Name) and not lookup_var(exc.id, func, mv=self.mv):  # XXX lookup_class
             self.append('new %s(' % exc.id)
-            if node.inst:
+            if hasattr(node, 'inst') and node.inst: # XXX what was this for, seems untested also
                 if isinstance(node.inst, Tuple) and node.inst.elts:
                     for n in node.inst.elts:
                         self.visit(n, func)

@@ -17,16 +17,16 @@ px = 0xff << 24
 print (px == 0xff000000)
 
 # unicode basics  # TODO non-ascii so run.py doesn't work
-s = u'\u91cf\u5b50\u529b\u5b66'
-print(repr(s))  #, s
-t = s.encode('utf-8')
+ss = u'\u91cf\u5b50\u529b\u5b66'
+print(repr(ss))  #, s
+t = ss.encode('utf-8')
 print(repr(t))  #, t
 u = t.decode('utf-8')
 print(repr(u))  #, u
-l = [s, u]
+l = [ss, u]
 print(l)
-print(repr(s[1]))  #, s[1]
-print(len(s))
+print(repr(ss[1]))  #, s[1]
+print(len(ss))
 
 # some datetime tests
 import datetime
@@ -54,6 +54,11 @@ a = set([1,2])                           # [Set(int)]
 a.add(3)                                 # []
 print(a)                                  # [Set(int)]
 
+g = frozenset([1])
+h = {}
+h[g] = 4
+print(h)
+
 def mapp():
     allchr = [chr(c) for c in range(256)]
     return allchr
@@ -78,3 +83,33 @@ except ueuk as x:
 
 # TODO
 # __div__ -> __truediv__, __floordiv__
+
+import string
+print(string.join(['hello', 'world!']), string.join(['hello', 'world!'], '_'))
+
+# cStringIO.StringIO, file.seek
+import cStringIO, sys
+
+s = cStringIO.StringIO(open('testdata/hopsakee').read())
+print(s.readlines())
+
+s = cStringIO.StringIO('blaat')
+s.seek(-3, 2)
+print(s.read())
+
+s = cStringIO.StringIO()
+print(s.tell())
+s.write('hallo\njoh')
+print(s.tell())
+s.seek(0, 0)
+print(s.tell())
+print(s.readlines())
+print(s.tell())
+s.seek(0, 0)
+print(s.tell())
+s.write('hoi')
+print(s.tell())
+print(s.readlines())
+print(s.tell())
+blah = set([])
+

@@ -1,13 +1,10 @@
-
-# basic string module support
-import string
-print string.join(['hello', 'world!']), string.join(['hello', 'world!'], '_')
+from __future__ import print_function
 
 # add random.shuffle
 import random
 l = [1,2,3,4,5]
 random.shuffle(l)
-print set(l)
+print(sorted(set(l)))
 
 # add __or__ to builtin.int..
 class c: # grr
@@ -21,7 +18,7 @@ class c: # grr
        return ~1
 
 a_c = c()
-print a_c.a(), a_c.b(), a_c.c(), a_c.d()
+print(a_c.a(), a_c.b(), a_c.c(), a_c.d())
 
 # fake child nodes conflicting for binary tuples (e.g. one for unit and one for first)
 class LowLevel:
@@ -61,17 +58,17 @@ while bla:
         for b in range(10):
             pass
         else:
-            print 'bah1'
+            print('bah1')
         while bla:
             bla = False
             break
         else:
-            print 'bah4'
+            print('bah4')
         break
     else:
-        print 'bah2'
+        print('bah2')
 else:
-    print 'bah3'
+    print('bah3')
 
 # user-defined exception class problems
 class MyException(Exception):
@@ -79,8 +76,8 @@ class MyException(Exception):
 
 try:
     raise MyException('hoepa')
-except MyException, m:
-    print m
+except MyException as m:
+    print(m)
 
 # parent constructor call and default arguments
 class LowLevel3:
