@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-class meuk: pass
+class meuk(Exception): pass
 
 try:
     raise meuk()
@@ -23,9 +23,11 @@ try:
 except AssertionError as msg:
     print('more crap!', msg)
 
-class ueuk:
+class ueuk(Exception):
     def __init__(self, msg):
         self.msg = msg
+    def __str__(self):
+        return 'x'
     def __repr__(self):
         return 'ueukrepr!'
 

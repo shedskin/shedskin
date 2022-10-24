@@ -63,3 +63,18 @@ ar = list(range(10))
 ar.__delslice__(1,4)
 print(ar)
 
+class ueuk(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+    def __str__(self):
+        return 'x'
+    def __repr__(self):
+        return 'ueukrepr!'
+
+try:
+    raise ueuk('aha! error.')
+except ueuk as x:
+    print(x)
+
+# TODO
+# __div__ -> __truediv__, __floordiv__

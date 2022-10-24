@@ -1,5 +1,6 @@
+from __future__ import print_function
 
-print 'he\\"'
+print('he\\"')
 
 class A:
     def __init__(self):
@@ -10,7 +11,7 @@ a.__init__()
 
 class B:
     def __init__(self, n):
-        print 'b init with', n
+        print('b init with', n)
 
     def huhu(self):
         self.__init__(4)
@@ -43,41 +44,41 @@ clearCastlingOpportunities[0] = (10,)
 board = [1,2,3]
 board[0] = 0
 
-print clearCastlingOpportunities, board
+print(clearCastlingOpportunities, board)
 
-print range(-17, -120, -17)
+print(list(range(-17, -120, -17)))
 
 v = -1
 w = 4
 
 for x in range(w,-2,v):
-    print x
+    print(x)
 
 for x in range(w+1,-2,2*v):
-    print x
+    print(x)
 
 for x in range(0,w+1,1):
-    print x
+    print(x)
 
-d = [i for i in xrange(10)]
-print d
+d = [i for i in range(10)]
+print(d)
 d[::2] = [1,2,3,4,5]
-print d
+print(d)
 d[::-2] = range(5)
-print d
+print(d)
 
-e = ["X" for i in xrange(10)]
+e = ["X" for i in range(10)]
 e[::2] = "abcde"
-print e
+print(e)
 
-f = ["Y" for i in xrange(10)]
+f = ["Y" for i in range(10)]
 f[1::2] = tuple("abcde")
-print f
+print(f)
 
 def sgn(x):
     if x < 0: return -1
     else: return 1
 for j in [-2, -1]:
-    print [i for i in xrange(-10*sgn(j), -1*sgn(j), j) if True for k in range(2) if k]
+    print([i for i in range(-10*sgn(j), -1*sgn(j), j) if True for k in range(2) if k])
 
 
