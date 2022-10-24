@@ -114,3 +114,12 @@ print(s.tell())
 blah = set([])
 
 print(repr(''.join([chr(i) for i in range(256)])))
+
+b = [1,2,3]
+g = iter(b)
+for x in range(5):
+    print(next(g),)  # TODO fillvalue modeling
+print()
+
+# --- end-of-file problem
+print([l for l in open('testdata/scene.txt') if l.startswith('material')])
