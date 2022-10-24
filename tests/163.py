@@ -17,7 +17,6 @@ print(repr('hello\0, world2')) # XXX no repr!
 print(repr(a), len(a))
 print(repr(chr(0)), len(chr(0)+chr(0)))
 print(repr('\0'))
-print(repr(''.join([chr(i) for i in range(256)])))
 
 class behh:
     def __init__(self, a, b, c):
