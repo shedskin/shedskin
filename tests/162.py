@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 class City(object):
     def __init__(self):
@@ -15,10 +16,10 @@ class Map(object):
 c = City()
 m = Map()
 
-print "1, 3, 5".replace(",", "")
-print "1, 3, 5".replace(",", "", -1)
-print "1, 3, 5".replace(",", "", 0)
-print "1, 3, 5".replace(",", "", 1)
+print("1, 3, 5".replace(",", ""))
+print("1, 3, 5".replace(",", "", -1))
+print("1, 3, 5".replace(",", "", 0))
+print("1, 3, 5".replace(",", "", 1))
 
 a = []
 a = [[]]
@@ -30,10 +31,10 @@ b = [1]
 d = ()
 d = (5,)
 
-print a, b, d
+print(a, b, d)
 
 def bla(t):
-    print t
+    print(t)
 
 bla(())
 bla((1,))
@@ -46,7 +47,7 @@ oink()
 
 def test(t=()):
   if t:
-      print t
+      print(t)
   else:
       test(t + (5,))
 
@@ -58,7 +59,7 @@ e[2,3] = 4
 f = {}
 f[5] = 6
 
-print e, f
+print(e, f)
 
 import os
 x = os.listdir('.')
