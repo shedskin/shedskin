@@ -119,27 +119,27 @@ del yx[1]
 print yx
 
 # --- some string tests
-import string
-print string.join(['a','b'])
-print string.join(['a','b'], '_')
-print string.find('abc', 'b')
-print string.find('abc', 'b', 0)
-print string.find('abc', 'b', 0, 3)
-print string.split('a b c')
-print string.split('a b c', ' ')
-print string.split('a b c', ' ', 1)
-print string.replace('abc', 'c', 'd')
-print string.replace('abc', 'c', 'd', 1)
-print string.count('abc', 'b')
-print string.count('abc', 'b', 0)
-print string.count('abc', 'b', 0, 3)
-print string.expandtabs('abc')
-print string.expandtabs('abc', 4)
-print string.strip(' abc ')
-print string.strip('xabcx', 'x')
-print string.ljust('abc', 8)
-print string.ljust('abc', 8, '_')
-print string.rsplit('a b c', ' ', 1)
+#import string
+#print string.join(['a','b'])
+#print string.join(['a','b'], '_')
+#print string.find('abc', 'b')
+#print string.find('abc', 'b', 0)
+#print string.find('abc', 'b', 0, 3)
+#print string.split('a b c')
+#print string.split('a b c', ' ')
+#print string.split('a b c', ' ', 1)
+#print string.replace('abc', 'c', 'd')
+#print string.replace('abc', 'c', 'd', 1)
+#print string.count('abc', 'b')
+#print string.count('abc', 'b', 0)
+#print string.count('abc', 'b', 0, 3)
+#print string.expandtabs('abc')
+#print string.expandtabs('abc', 4)
+#print string.strip(' abc ')
+#print string.strip('xabcx', 'x')
+#print string.ljust('abc', 8)
+#print string.ljust('abc', 8, '_')
+#print string.rsplit('a b c', ' ', 1)
 
 # --- recursive generator test
 def A003714():
