@@ -983,7 +983,7 @@ class GenerateVisitor(BaseNodeVisitor):
             self.visit(exc, func)
         self.eol(')')
 
-    def visit_Try(self, node, func=None):
+    def visit_Try(self, node, func=None): # py3
         self.visit_TryExcept(node, func)
 
     def visit_TryExcept(self, node, func=None):
@@ -1018,7 +1018,9 @@ class GenerateVisitor(BaseNodeVisitor):
                 else:
                     arg = 'Exception *'
 
-                if h1:
+                if isinstance(h1, str):
+                    arg += h1
+                elif isinstance(h1, Name): # py2
                     arg += h1.id
 
                 self.append(' catch (%s) {' % arg)

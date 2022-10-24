@@ -1024,7 +1024,7 @@ class ModuleVisitor(BaseNodeVisitor):
         if node.msg:
             self.visit(node.msg, func)
 
-    def visit_Try(self, node, func=None):
+    def visit_Try(self, node, func=None): # py3
         self.visit_TryExcept(node, func)
 
     def visit_TryExcept(self, node, func=None):
@@ -1047,7 +1047,9 @@ class ModuleVisitor(BaseNodeVisitor):
                 if not cl:
                     error("unknown or unsupported exception type", self.gx, h0, mv=getmv())
 
-                if isinstance(h1, Name):
+                if isinstance(h1, str):
+                    var = self.default_var(h1, func, exc_name=True)
+                elif isinstance(h1, Name): # py2
                     var = self.default_var(h1.id, func, exc_name=True)
                 else:
                     var = self.temp_var(h0, func, exc_name=True)
