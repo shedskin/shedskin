@@ -113,3 +113,4 @@ print(s.readlines())
 print(s.tell())
 blah = set([])
 
+print(repr(''.join([chr(i) for i in range(256)])))
