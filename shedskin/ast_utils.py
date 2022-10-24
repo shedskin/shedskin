@@ -23,6 +23,10 @@ def is_assign_attribute(node):
 def is_constant(node):
     return isinstance(node, (Str, Num)) or node.__class__.__name__ == 'Constant'
 
+def is_none(node):
+    return (isinstance(node, Name) and node.id == 'None' or
+            node.__class__.__name__ == 'Constant' and node.value is None)
+
 
 def handle_with_vars(var):
     if isinstance(var, Name):

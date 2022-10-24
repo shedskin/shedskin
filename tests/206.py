@@ -123,3 +123,5 @@ print()
 
 # --- end-of-file problem
 print([l for l in open('testdata/scene.txt') if l.startswith('material')])
+
+# TODO str.join etc?

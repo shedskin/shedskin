@@ -25,7 +25,7 @@ from ast import Num, Str, Assign, ImportFrom, keyword, \
     Eq, NotEq, Lt, LtE, Gt, GtE, Is, IsNot, In, NotIn, BoolOp, And, Or, AST, \
     UAdd, USub, Not, Invert, BinOp, Add, Sub, Mult, Div, FloorDiv, Pow, Mod, LShift, RShift, BitOr, BitXor, BitAnd
 from .ast_utils import BaseNodeVisitor, is_assign_attribute, is_assign_tuple, is_assign_list_or_tuple, is_constant, \
-    orelse_to_node, handle_with_vars
+    orelse_to_node, handle_with_vars, is_none
 
 from .error import error
 from .extmod import convert_methods, convert_methods2, do_extmod, pyinit_func
@@ -1474,7 +1474,7 @@ class GenerateVisitor(BaseNodeVisitor):
             self.visit_List(node, func, argtypes=argtypes)
         elif isinstance(node, Call) and isinstance(node.func, Name) and node.func.id in ('list', 'tuple', 'dict', 'set'):
             self.visit_Call(node, func, argtypes=argtypes)
-        elif isinstance(node, Name) and node.id == 'None': # py2
+        elif is_none(node):
             self.visit(node, func)
         else:  # XXX messy
             cast = ''
@@ -1677,7 +1677,7 @@ class GenerateVisitor(BaseNodeVisitor):
                 return
 
         # --- inline other
-        if inline and ((ul and ur) or not middle or (isinstance(left, Name) and left.id == 'None') or (isinstance(right, Name) and right.id == 'None')):  # XXX not middle, cleanup?
+        if inline and ((ul and ur) or not middle or is_none(left) or is_none(right)):  # XXX not middle, cleanup?
             self.append('(')
             self.visit(left, func)
             self.append(inline)
@@ -1736,7 +1736,7 @@ class GenerateVisitor(BaseNodeVisitor):
             return
 
         # --- inline other
-        if inline and ((ul and ur) or not middle or (isinstance(left, Name) and left.id == 'None') or (isinstance(right, Name) and right.id == 'None')):  # XXX not middle, cleanup?
+        if inline and ((ul and ur) or not middle or is_none(left) or is_none(right)):  # XXX not middle, cleanup?
             self.append('(')
             self.visit2(left, argtypes, middle, func)
             self.append(inline)
@@ -2042,7 +2042,7 @@ class GenerateVisitor(BaseNodeVisitor):
             if double and self.mergeinh[arg] == set([(def_class(self.gx, 'int_'), 0)]):
                 cast = True
                 self.append('(double(')
-            elif castnull and isinstance(arg, Name) and arg.id == 'None':
+            elif castnull and is_none(arg):
                 cast = True
                 self.append('((void *)(')
 
@@ -2216,11 +2216,11 @@ class GenerateVisitor(BaseNodeVisitor):
                     for child in node.value.elts:
                         if not (child, 0, 0) in self.gx.cnode:  # (a,b) = (1,2): (1,2) never visited
                             continue
-                        if not is_constant(child) and not (isinstance(child, Name) and child.id == 'None'):
+                        if not is_constant(child) and not is_none(child):
                             self.start(self.mv.tempcount[child] + ' = ')
                             self.visit(child, func)
                             self.eol()
-            elif not is_constant(node.value) and not (isinstance(node.value, Name) and node.value.id == 'None'):
+            elif not is_constant(node.value) and not is_none(node.value):
                 self.start(self.mv.tempcount[node.value] + ' = ')
                 self.visit(node.value, func)
                 self.eol()
@@ -2701,7 +2701,7 @@ class GenerateVisitor(BaseNodeVisitor):
             map = {'True': 'True', 'False': 'False'}
             if node in self.mv.lwrapper:
                 self.append(self.mv.lwrapper[node])
-            elif node.id == 'None':
+            elif node.id == 'None': # py2
                 self.append('NULL')
             elif node.id == 'self':
                 lcp = lowest_common_parents(polymorphic_t(self.gx, self.mergeinh[node]))
