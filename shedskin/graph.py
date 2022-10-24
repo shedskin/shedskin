@@ -1010,9 +1010,12 @@ class ModuleVisitor(BaseNodeVisitor):
         return var
 
     def visit_Raise(self, node, func=None):
-        # PY3: replace 'type', 'inst', 'tback' by 'exc', 'cause'
-        if node.type is None or node.inst is not None or node.tback is not None:
-            error('unsupported raise syntax', self.gx, node, mv=getmv())
+        if hasattr(node, 'exc'):
+            if node.exc is None or node.cause is not None:
+                error('unsupported raise syntax', self.gx, node, mv=getmv())
+        else: # py2
+            if node.type is None or node.inst is not None or node.tback is not None:
+                error('unsupported raise syntax', self.gx, node, mv=getmv())
         for child in iter_child_nodes(node):
             self.visit(child, func)
 
@@ -1020,6 +1023,9 @@ class ModuleVisitor(BaseNodeVisitor):
         self.visit(node.test, func)
         if node.msg:
             self.visit(node.msg, func)
+
+    def visit_Try(self, node, func=None):
+        self.visit_TryExcept(node, func)
 
     def visit_TryExcept(self, node, func=None):
         for child in node.body:

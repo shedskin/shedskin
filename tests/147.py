@@ -43,10 +43,10 @@ try:
     hum = [1,2,3]
     print(hum.index(4))
 except ValueError:
-    print('exceptions are stupid :D')
+    print('exceptions are nice :D')
 
 try:
-    raise ValueError('exceptions are stupid :D')
+    raise ValueError('exceptions are nice :D')
 except ValueError as y:
     print(y)
 
