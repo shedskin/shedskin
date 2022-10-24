@@ -952,15 +952,20 @@ class GenerateVisitor(BaseNodeVisitor):
         self.eol(')')
 
     def visit_Raise(self, node, func=None):
+        if hasattr(node, 'exc'):
+            exc = node.exc
+        else: # py2
+            exc = node.type
+
         cl = None  # XXX sep func
-        t = [t[0] for t in self.mergeinh[node.type]]
+        t = [t[0] for t in self.mergeinh[exc]]
         if len(t) == 1:
             cl = t[0]
         self.start('throw (')
 
         # --- raise class [, constructor args]
-        if isinstance(node.type, Name) and not lookup_var(node.type.id, func, mv=self.mv):  # XXX lookup_class
-            self.append('new %s(' % node.type.id)
+        if isinstance(exc, Name) and not lookup_var(exc.id, func, mv=self.mv):  # XXX lookup_class
+            self.append('new %s(' % exc.id)
             if node.inst:
                 if isinstance(node.inst, Tuple) and node.inst.elts:
                     for n in node.inst.elts:
@@ -975,8 +980,11 @@ class GenerateVisitor(BaseNodeVisitor):
         elif isinstance(cl, Class) and cl.mv.module.ident == 'builtin' and not [a for a in cl.ancestors_upto(None) if a.ident == 'BaseException']:
             self.append('new Exception()')
         else:
-            self.visit(node.type, func)
+            self.visit(exc, func)
         self.eol(')')
+
+    def visit_Try(self, node, func=None):
+        self.visit_TryExcept(node, func)
 
     def visit_TryExcept(self, node, func=None):
         # try
