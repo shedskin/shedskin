@@ -125,3 +125,70 @@ print()
 print([l for l in open('testdata/scene.txt') if l.startswith('material')])
 
 # TODO str.join etc?
+
+# --- slice assignment (random test)
+#import random
+#random.seed(10)
+#
+#for x in range(1000):
+#    l,u,s = random.randrange(-5,5), random.randrange(-5,5), random.randrange(-5,5)
+#    a = list(range(5))
+#    print(a, 'lower', l, 'upper', u, 'step', s)
+#    try:
+#        z = list(range(random.randrange(0,5)))
+#        print('xrange', z)
+#        a[l:u:s] = z
+#        print('done', a)
+#    except ValueError as v:
+#        print(v)
+
+# --- use %.12g to print floats
+print(1/3.0, 1.1234123412341234, 1.1, 8.0)
+#print 9.12341234e20 # XXX difference on win, e020?
+
+# string.maketrans
+import string
+si = 'abcde'
+t1 = string.maketrans('abc', 'xyz')
+print(si.translate(t1))
+
+# reversed(range)
+import random
+random.seed(1)
+
+for z in range(1000):
+    l,u,s = random.randrange(-5,5), random.randrange(-5,5), random.randrange(-5,5)
+    print(l, u, s)
+
+    try:
+        x = range(l,u,s)
+        y = reversed(range(l,u,s))
+
+        xl = [e for e in x]
+        yl = [e for e in y]
+
+        print(xl, yl, [0, 1][xl == list(reversed(yl))])
+
+    except ValueError as v:
+        print(v)
+
+# --- str.translate problem
+import string
+atable = string.maketrans("bc", "ef")
+print('abcdeg'.translate(atable, "cde"))
+gtable = string.maketrans("", "")
+word = 'aachen\n'
+key = word.translate(gtable, "a\n")
+print('word', repr(word))
+
+# --- string.{capitalize, capwords, swapcase, center, atoi, atol, atof}
+print(string.capitalize('hoi'), ' hoi'.capitalize())
+print(string.capwords('yo   momma')+'!'+string.capwords(' yo momma ')+'!'+string.capwords(' yo momma ', 'mm')+'!')
+allchars = ''.join([chr(x) for x in range(256)])
+print(repr(allchars.swapcase()), repr(string.swapcase(allchars)))
+print(string.center('hoi', 10), string.center('hoi', 10, 'u'))
+print('hoi'.center(10, 'u'))
+for i in range(10):
+    print('!'+'hoi'.center(i)+'!')
+print(string.atoi('+0x10', 0), string.atol('-100l', 0), string.atof('-1.234'))
+
