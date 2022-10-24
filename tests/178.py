@@ -1,13 +1,14 @@
+from __future__ import print_function
 
 # --- more aug assignment
 f = -112
-print f
-f /= -3
-print f, f / -3
+print(f)
+f //= -3
+print(f, f // -3)
 f %= -3
-print f
+print(f)
 f //= -1
-print f
+print(f)
 
 d={}
 
@@ -20,31 +21,31 @@ d[i,j] += somme
 d[i,j] *= somme
 d[i,j] /= somme
 
-print d
+print(d)
 
 e = {}
 e[i,j] = -7
-e[i,j] /= -2
+e[i,j] //= -2
 e[i,j] *= -2
 e[i,j] %= -2
 e[i,j] //= -2
 
-print e
+print(e)
 
 # --- tests these for once
-print max([1])
-print max(1, 2)
-print max(7.7, 7)
-print max(7, 7.7)
-print max(1, 2, 3)
-print max(1, 2, 3, 4, 5)
+print(max([1]))
+print(max(1, 2))
+print(max(7.7, 7))
+print(max(7, 7.7))
+print(max(1, 2, 3))
+print(max(1, 2, 3, 4, 5))
 
-print min([1])
-print min(1, 2)
-print min(6.7, 7)
-print min(7, 6.7)
-print min(1, 2, 3)
-print min(1, 2, 3, 4, 5)
+print(min([1]))
+print(min(1, 2))
+print(min(6.7, 7))
+print(min(7, 6.7))
+print(min(1, 2, 3))
+print(min(1, 2, 3, 4, 5))
 
 # --- virtual test case 1
 class Z:
@@ -52,7 +53,7 @@ class Z:
         pass
 
     def beh(self):
-        print self.boink(9)
+        print(self.boink(9))
 
 class Y(Z):
     def boink(self, a):
@@ -64,14 +65,14 @@ y.beh()
 # --- virtual test case 2
 class C:
     def boink(self):
-        print 'C'
+        print('C')
 
 class D(C):
     pass
 
 class A(C):
     def boink(self):
-        print 'A'
+        print('A')
 
 class B(C):
     pass
@@ -97,9 +98,7 @@ class BB(CC):
 
 cc = AA()
 cc = BB()
-print cc.a
+print(cc.a)
 
 # --- just in case
 this = 1
-
-
