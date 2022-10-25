@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import os, sys
 
 class zeug:
@@ -10,5 +12,5 @@ class zeug:
 
 def hello(x):                            # x: []
     a = x                                # []
-    print a                              # []
+    print(a)                              # []
     return 'hello'                       # []

@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 import testdata.bert39
 from testdata.bert39 import hello, zeug
@@ -27,10 +28,10 @@ def l4(x, y): return x*y                 # [int]
 def toepas(l):                           # l: [lambda0]
     return l(1,2)                        # [int]
 
-print toepas(l1)                         # [int]
-print toepas(l5)                         # [int]
-print l3(1.0, 'hoi')                     # [float]
+print(toepas(l1))                         # [int]
+print(toepas(l5))                         # [int]
+print(l3(1.0, 'hoi'))                     # [float]
 a = l4                                   # [lambda0]
 a(3,3)                                   # [int]
-print toepas(a)                          # [int]
+print(toepas(a))                         # [int]
 

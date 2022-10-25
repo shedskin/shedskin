@@ -1,33 +1,34 @@
+from __future__ import print_function
 
 class huhuhu:
     pass
 
 obj = huhuhu()
 if obj is obj:
-    print 'ok1'
+    print('ok1')
 if obj is not None:
-    print 'ok2'
+    print('ok2')
 
 obj = None
 if obj is None:
-    print 'ok3'
+    print('ok3')
 if obj == None:
-    print 'ok4'
+    print('ok4')
 if obj is not None:
-    print 'bad'
+    print('bad')
 if obj != None:
-    print 'bad'
+    print('bad')
 
 if not obj:
-    print 'ok5'
+    print('ok5')
 
 bla = "hoei"
 if bla == 'hoei':
-    print 'ok6'
+    print('ok6')
 if bla is 'hoei':
-    print 'ok7'
+    print('ok7')
 if bla != 'meuk':
-    print 'ok8'
+    print('ok8')
 if bla is not 'meuk':
-    print 'ok9'
+    print('ok9')
 

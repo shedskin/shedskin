@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 # Textual Voronoi code modified from: <abhishek@ocf.berkeley.edu>
 # http://www.ocf.berkeley.edu/~Eabhishek/
@@ -8,11 +9,11 @@ from math import sqrt
 
 def generateRandomPoints(npoints=6):
     """Generate a few random points v1...vn"""
-    print npoints, "points x,y:"
+    print(npoints, "points x,y:")
     points = []
-    for i in xrange(npoints):
+    for i in range(npoints):
         xrand, yrand = random.random(), random.random()
-        print '%.2f' % xrand, '%.2f' % yrand
+        print('%.2f' % xrand, '%.2f' % yrand)
         for xoff in range(-1, 2):
             for yoff in range(-1, 2):
                 points.append( (xrand + xoff, yrand + yoff) )
@@ -36,18 +37,18 @@ def generateScreen(points, rows=40, cols=80):
     xfact = 1.0 / rows
     screen = []
     chars = " -.,+*$&#~~"
-    for i in xrange(rows):
+    for i in range(rows):
         x = i*xfact
-        line = [ chars[int(10*closest(x, j*yfact, points))] for j in xrange(cols) ]
+        line = [ chars[int(10*closest(x, j*yfact, points))] for j in range(cols) ]
         screen.extend( line )
         screen.append("\n")
     return "".join(screen)
 
 
-from time import clock
+from time import time
 points = generateRandomPoints(10)
-print
-t1 = clock()
-print generateScreen(points, 40, 80)
-t2 = clock()
+print()
+t1 = time()
+print(generateScreen(points, 40, 80))
+t2 = time()
 round(t2-t1, 3)

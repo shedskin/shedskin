@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 class renderobject:
         def intersect(self,l):
@@ -14,10 +15,10 @@ class sphere(renderobject):
 p = plane()
 s = sphere()
 
-print p.intersect(1)
-print s.intersect(2)
+print(p.intersect(1))
+print(s.intersect(2))
 
 meuk = [p, s]
 for obj in meuk:
-    print obj.intersect(1)
+    print(obj.intersect(1))
 

@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 class node:
     def __init__(self):
@@ -6,5 +7,5 @@ class node:
 def incoming(node):
     return [link for link in node.input]
 
-print incoming(node())
+print(incoming(node()))
 

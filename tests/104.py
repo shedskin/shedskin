@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 class fred:                              # y: [int]*
     def __eq__(self, x):                 # self: [fred], x: [fred]
@@ -8,7 +9,7 @@ a.y = 1                                  # [int]
 b = fred()                               # [fred]
 b.y = 2                                  # [int]
 
-print a == b                             # [int]
-print a == a                             # [int]
-print b == b                             # [int]
+print(a == b)                            # [int]
+print(a == a)                            # [int]
+print(b == b)                            # [int]
 
