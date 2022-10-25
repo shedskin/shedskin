@@ -61,5 +61,5 @@ def BF_interpreter(prog):
                 ip -= 1
 
 if __name__ == '__main__':
-    program = file('testdata/99bottles.bf').read()
+    program = open('testdata/99bottles.bf', 'r').read()
     BF_interpreter(program)
