@@ -192,3 +192,60 @@ for i in range(10):
     print('!'+'hoi'.center(i)+'!')
 print(string.atoi('+0x10', 0), string.atol('-100l', 0), string.atof('-1.234'))
 
+#multidir fixes
+from testdata import crap
+print(crap.incrap())
+import testdata.bert180 as bert
+print(bert.hello(1))
+from testdata import crap2
+crap2.incrap2()
+import testdata.crap2
+tc2c2 = testdata.crap2.crap2()
+
+# sorted, list.sort: cmp and reverse args
+def mut(a,b):
+    return -cmp(a,b)
+
+def cmut(a,b):
+    return -cmp(a,b)
+
+print(sorted([5,1,3,2,4]))
+print(sorted([5,1,3,2,4], reverse=True))
+print(sorted([5,1,3,2,4], cmp=mut))
+print(sorted([5,1,3,2,4], cmp=mut, reverse=True))
+
+print(sorted(set([5,1,3,2,4])))
+print(sorted(set([5,1,3,2,4]), reverse=True))
+print(sorted(set([5,1,3,2,4]), cmp=mut))
+print(sorted(set([5,1,3,2,4]), cmp=mut, reverse=True))
+
+print(sorted('abcde'))
+print(sorted('abcde', reverse=True))
+print(sorted('abcde', cmp=cmut))
+print(sorted('abcde', cmp=cmut, reverse=True))
+
+l = [1,4,5,2,3]
+l.sort(); print(l)
+l.sort(cmp=mut); print(l)
+l.sort(reverse=True); print(l)
+l.sort(cmp=mut, reverse=True); print(l)
+
+
+print(oct(1==2), oct(1!=2))
+
+walk('testdata', bleh, 77)
+walk('testdata', bleh2, 'hoei')
+
+print(repr('\377ai\37aoi\001123\00hoi\01hoi\0hoi'))
+print(repr(string.whitespace))
+
+#int(), float(), str(); test all
+print(int(), float(), list(), dict(), set(), tuple(), frozenset(),) # XXX repr(str())
+
+from collections import defaultdict
+s3 = [('red', 1), ('blue', 2), ('red', 3), ('blue', 4), ('red', 1), ('blue', 4)]
+d3 = defaultdict(set)
+for k3, v3 in s3:
+    d3[k3].add(v3)
+
+print(sorted(d3.items()))
