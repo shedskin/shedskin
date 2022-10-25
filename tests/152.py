@@ -1,21 +1,22 @@
+from __future__ import print_function
 
 x = '0,0'
 b = str(x)
-print b
+print(b)
 
 a = [[1]]
 c = [None, [2]]
 
-print a == c
+print(a == c)
 
 d = [3]; d = None
 e = [4]; e = None
 
-print d == e, None == d, e == None, a == None, c[0] == None, c[1] == None
+print(d == e, None == d, e == None, a == None, c[0] == None, c[1] == None)
 
 class board(object):
     def mergemask(self):
-        print 'mergemask'
+        print('mergemask')
 
     def solve(self, board):
         global bekos
@@ -34,7 +35,7 @@ class heuk:
     def bla(self):
         heuk.aha += 1
         self.ahah = 2
-        print self.ahah, heuk.aha
+        print(self.ahah, heuk.aha)
 
 h = heuk()
 h.lala = 1
@@ -42,10 +43,10 @@ h.bla()
 
 heuk.aha
 heuk.aha += 1
-print heuk.aha
+print(heuk.aha)
 
 heuk.noinit = 3
-print heuk.noinit, h.ahah
+print(heuk.noinit, h.ahah)
 
 class myiter:
     def __init__(self, container):
@@ -74,6 +75,6 @@ i = iter_(container())
 try:
     while 1:
         y = i.next()
-        print y
+        print(y)
 except StopIteration: pass
 

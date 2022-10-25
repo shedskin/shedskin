@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 #class list:                              # unit: [int]*
 #    def maonetuhcount(self):             # self: []
@@ -11,5 +12,5 @@
 #        return ''                        # [str]
 
 puzzlecolumns = [1]
-print puzzlecolumns.__len__()
+print(puzzlecolumns.__len__())
 

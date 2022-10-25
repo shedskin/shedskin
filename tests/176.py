@@ -1,11 +1,12 @@
+from __future__ import print_function
 
 # --- string formatting problem
-print '%i%%-%i%%' % (1,2)
+print('%i%%-%i%%' % (1,2))
 numbers = (1,2)
-print '%i%%-%i%%' % numbers
-print '%i%%-%s%%' % (12, '21')
+print('%i%%-%i%%' % numbers)
+print('%i%%-%s%%' % (12, '21'))
 t2 = (12, '21')
-print '%i%%-%s%%' % t2
+print('%i%%-%s%%' % t2)
 
 # --- aug assign problem (or: the value of testing)
 a = [1,2,3,4,5]
@@ -13,13 +14,13 @@ c = a
 b = [6,7,8,9,10]
 
 a += b
-print a, c
+print(a, c)
 
 ah = '12345'
 ch = ah
 bh = '67890'
 ah += bh
-print ah, ch
+print(ah, ch)
 
 # --- __iadd__ etc.
 class C:
@@ -43,26 +44,26 @@ class C:
 x = C(4)
 x += x
 x.__iadd__(x)
-print x
+print(x)
 
-print [1,2].__iadd__([2,3])
+print([1,2].__iadd__([2,3]))
 
 y = [1,2,3]
 y += set([4,5])
-print y
+print(y)
 
 v = 3
 v += 1.5
-print v
+print(v)
 
 hm = []
 hm += set([1])
-print hm
+print(hm)
 
 d = C(8)
-print d // C(3)
+print(d // C(3))
 d //= C(3)
-print d
+print(d)
 
 # --- inheritance problem
 class Maze(object):
@@ -74,5 +75,3 @@ class ASCIIMaze(Maze):
     pass
 
 maze = ASCIIMaze()
-
-

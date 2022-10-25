@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 '''
 *** SHED SKIN Python-to-C++ Compiler ***
 Copyright 2005-2013 Mark Dufour; License GNU GPL version 3 (See LICENSE)
@@ -37,7 +39,7 @@ def generate_makefile(gx):
         else:
             ident += '.so'
 
-    makefile = file(gx.makefile_name, 'w')
+    makefile = open(gx.makefile_name, 'w')
 
     if gx.msvc:
         esc_space = '/ '
@@ -51,7 +53,7 @@ def generate_makefile(gx):
             return '${%s}' % name
 
     libdirs = [d.replace(' ', esc_space) for d in gx.libdirs]
-    print >>makefile, 'SHEDSKIN_LIBDIR=%s' % (libdirs[-1])
+    print('SHEDSKIN_LIBDIR=%s' % (libdirs[-1]), file=makefile)
     filenames = []
     modules = gx.modules.values()
     for module in modules:
@@ -90,7 +92,7 @@ def generate_makefile(gx):
     else:
         flags = os.path.join(gx.sysdir, 'FLAGS')
 
-    for line in file(flags):
+    for line in open(flags):
         line = line[:-1]
 
         variable = line[:line.find('=')].strip()
@@ -157,13 +159,13 @@ def generate_makefile(gx):
             if 'hashlib' in (m.ident for m in modules):
                 line += ' -lcrypto'
 
-        print >>makefile, line
-    print >>makefile
+        print(line, file=makefile)
+    print(file=makefile)
 
-    print >>makefile, 'CPPFILES=%s\n' % cppfiles
-    print >>makefile, 'HPPFILES=%s\n' % hppfiles
+    print('CPPFILES=%s\n' % cppfiles, file=makefile)
+    print('HPPFILES=%s\n' % hppfiles, file=makefile)
 
-    print >>makefile, 'all:\t' + ident + '\n'
+    print('all:\t' + ident + '\n', file=makefile)
 
     # executable (normal, debug, profile) or extension module
     _out = '-o '
@@ -178,20 +180,20 @@ def generate_makefile(gx):
         if not gx.extension_module:
             _ext = '.exe'
     for suffix, options in targets:
-        print >>makefile, ident + suffix + ':\t$(CPPFILES) $(HPPFILES)'
-        print >>makefile, '\t$(CC) ' + options + ' $(CCFLAGS) $(CPPFILES) $(LFLAGS) ' + _out + ident + suffix + _ext + '\n'
+        print(ident + suffix + ':\t$(CPPFILES) $(HPPFILES)', file=makefile)
+        print('\t$(CC) ' + options + ' $(CCFLAGS) $(CPPFILES) $(LFLAGS) ' + _out + ident + suffix + _ext + '\n', file=makefile)
 
     # clean
     ext = ''
     if sys.platform == 'win32' and not gx.extension_module:
         ext = '.exe'
-    print >>makefile, 'clean:'
+    print('clean:', file=makefile)
     targets = [ident + ext]
     if not gx.extension_module:
         if not gx.msvc:
             targets += [ident + '_prof' + ext, ident + '_debug' + ext]
-    print >>makefile, '\trm -f %s\n' % ' '.join(targets)
+    print('\trm -f %s\n' % ' '.join(targets), file=makefile)
 
     # phony
-    print >>makefile, '.PHONY: all clean\n'
+    print('.PHONY: all clean\n', file=makefile)
     makefile.close()

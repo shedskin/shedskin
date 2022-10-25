@@ -11,12 +11,12 @@ infiniteNeg = -1e302
 class Individual:
     def __init__(self, ngenes):
         self.ngenes = ngenes
-        self.genome = [random()<0.5 for i in xrange(ngenes)]
+        self.genome = [random()<0.5 for i in range(ngenes)]
         self.fitness = infiniteNeg
     def bin2dec(self, inf=0, sup=0): # Sup has to be None, SS workaround *************
         if sup == 0: sup = self.ngenes - 1 # if sup is None: ...
         result = 0
-        for i in xrange(inf, sup+1):
+        for i in range(inf, sup+1):
             if self.genome[i]:
                 result += 1 << (i-inf)
         return result
@@ -42,7 +42,7 @@ class SGA:
         self.geneMutationProb = 0.005  # Ex. 0.005
 
     def generateRandomPop(self):
-        self.population = [Individual(self.genomeSize) for i in xrange(self.popSize)]
+        self.population = [Individual(self.genomeSize) for i in range(self.popSize)]
 
     def computeFitnessPop(self):
         for individual in self.population:
@@ -50,14 +50,14 @@ class SGA:
 
     def mutatePop(self):
         nmutations = int(round(self.popSize * self.genomeSize * self.geneMutationProb))
-        for i in xrange(nmutations):
+        for i in range(nmutations):
             individual = choice(self.population) # don't forget to import choice too :D
             gene = randint(0, self.genomeSize-1)
             individual.genome[gene] = not individual.genome[gene] # this was a type inference problem.. thanks for detecting it! :) the aux variable you used, btw.. was polymorphic, both boolean and Individual
 
     def tounamentSelectionPop(self):
         pop2 = []
-        for i in xrange(self.popSize):
+        for i in range(self.popSize):
             individual1 = choice(self.population)
             individual2 = choice(self.population)
             if random() < self.selectivePressure:
@@ -74,11 +74,11 @@ class SGA:
 
     def crossingOverPop(self):
         nCrossingOver = int(round(self.popSize * self.crossingOverProb))
-        for i in xrange(nCrossingOver):
+        for i in range(nCrossingOver):
             ind1 = choice(self.population)
             ind2 = choice(self.population)
             crossPosition = randint(0, self.genomeSize-1)
-            for j in xrange(crossPosition+1):
+            for j in range(crossPosition+1):
                 ind1.genome[j], ind2.genome[j] = ind2.genome[j], ind1.genome[j]
 
     def showGeneration_bestIndFind(self):
@@ -95,7 +95,7 @@ class SGA:
     def run(self):
         self.generateRandomPop()
         self.bestIndividual = Individual(self.genomeSize)
-        for self.generation in xrange(1, self.generationsMax+1): # works now
+        for self.generation in range(1, self.generationsMax+1): # works now
             self.computeFitnessPop()
             self.showGeneration_bestIndFind()
             self.population = self.tounamentSelectionPop()

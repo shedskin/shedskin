@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 # (c) Wensheng Wang
 
@@ -10,7 +11,7 @@ def primes(n):                           # n: [int]
        return [2]                        # [list(int)]
    elif n<2:                             # [int]
        return []                         # [list(int)]
-   s = range(3, n+2, 2)                  # [list(int)]
+   s = list(range(3, n+2, 2))                  # [list(int)]
    mroot = n ** 0.5                      # [float]
    #mroot = sqrt(n)
    half = len(s)                         # [int]
@@ -18,7 +19,7 @@ def primes(n):                           # n: [int]
    m = 3                                 # [int]
    while m <= mroot:                     # [int]
        if s[i]:                          # [int]
-           j = (m*m - 3) / 2             # [int]
+           j = (m*m - 3) // 2             # [int]
            s[j] = 0                      # [int]
            while j < half:               # [int]
                s[j] = 0                  # [int]
@@ -30,5 +31,5 @@ def primes(n):                           # n: [int]
    #return [2] + filter(None, s)
    return [2] + [x for x in s if x]      # [list(int)]
 
-print primes(100)                        # [list(int)]
+print(primes(100))                        # [list(int)]
 
