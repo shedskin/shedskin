@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 class integer:
     def __gt__(self, b):
@@ -14,5 +15,5 @@ a = integer()                            # [integer]
 b = integer()                            # [integer]
 c = maxi(a, b)                            # [integer]
 d = a > b                                # [bool]
-print a, b, c, d
 
+print(a, b, c, d)

@@ -33,7 +33,7 @@ except ImportError:
     from ast import Try
 
 from .ast_utils import BaseNodeVisitor, make_arg_list, make_call, is_assign_list_or_tuple, is_assign_attribute, \
-    is_assign_tuple, is_constant, orelse_to_node, parse_expr, get_arg_nodes, has_star_kwarg
+    is_assign_tuple, is_constant, orelse_to_node, parse_expr, get_arg_nodes, has_star_kwarg, is_none
 
 from .error import error
 from .infer import inode, in_out, CNode, default_var, register_temp_var
@@ -102,7 +102,7 @@ def slice_nums(nodes):
     nodes2 = []
     x = 0
     for i, n in enumerate(nodes):
-        if not n or (isinstance(n, Name) and n.id == 'None'):
+        if not n or is_none(n):
             nodes2.append(Num(0))
         else:
             nodes2.append(n)
@@ -1010,9 +1010,12 @@ class ModuleVisitor(BaseNodeVisitor):
         return var
 
     def visit_Raise(self, node, func=None):
-        # PY3: replace 'type', 'inst', 'tback' by 'exc', 'cause'
-        if node.type is None or node.inst is not None or node.tback is not None:
-            error('unsupported raise syntax', self.gx, node, mv=getmv())
+        if hasattr(node, 'exc'):
+            if node.exc is None or node.cause is not None:
+                error('unsupported raise syntax', self.gx, node, mv=getmv())
+        else: # py2
+            if node.type is None or node.inst is not None or node.tback is not None:
+                error('unsupported raise syntax', self.gx, node, mv=getmv())
         for child in iter_child_nodes(node):
             self.visit(child, func)
 
@@ -1020,6 +1023,9 @@ class ModuleVisitor(BaseNodeVisitor):
         self.visit(node.test, func)
         if node.msg:
             self.visit(node.msg, func)
+
+    def visit_Try(self, node, func=None): # py3
+        self.visit_TryExcept(node, func)
 
     def visit_TryExcept(self, node, func=None):
         for child in node.body:
@@ -1041,7 +1047,9 @@ class ModuleVisitor(BaseNodeVisitor):
                 if not cl:
                     error("unknown or unsupported exception type", self.gx, h0, mv=getmv())
 
-                if isinstance(h1, Name):
+                if isinstance(h1, str):
+                    var = self.default_var(h1, func, exc_name=True)
+                elif isinstance(h1, Name): # py2
                     var = self.default_var(h1.id, func, exc_name=True)
                 else:
                     var = self.temp_var(h0, func, exc_name=True)
@@ -1305,9 +1313,9 @@ class ModuleVisitor(BaseNodeVisitor):
                     for child in node.value.elts:
                         if (child, 0, 0) not in self.gx.cnode:  # (a,b) = (1,2): (1,2) never visited
                             continue
-                        if not is_constant(child) and not (isinstance(child, Name) and child.id == 'None'):
+                        if not is_constant(child) and not is_none(child):
                             self.temp_var2(child, inode(self.gx, child), func)
-            elif not is_constant(node.value) and not (isinstance(node.value, Name) and node.value.id == 'None'):
+            elif not is_constant(node.value) and not is_none(node.value):
                 self.temp_var2(node.value, inode(self.gx, node.value), func)
 
     def assign_pair(self, lvalue, rvalue, func):

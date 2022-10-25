@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 n = 8                                    # [int]
 count = 0                                # [int]
@@ -12,5 +13,5 @@ while n > 0:                             # [int]
    f = s                                 # [int]
    s = temp + s                          # [int]
    n -= 1                                # [int]
-print nums                               # [list(tuple2(int, int))]
+print(nums)                              # [list(tuple2(int, int))]
 

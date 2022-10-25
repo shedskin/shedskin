@@ -3,6 +3,7 @@
 Copyright 2005-2022 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)
 
 '''
+import ast
 from ast import Tuple, List, Attribute, Store, arguments, Name, Param, \
     parse, iter_fields, AST, Call, Str, Num, keyword
 
@@ -20,7 +21,11 @@ def is_assign_attribute(node):
 
 
 def is_constant(node):
-    return isinstance(node, (Str, Num))
+    return isinstance(node, (Str, Num)) or node.__class__.__name__ == 'Constant'
+
+def is_none(node):
+    return (isinstance(node, Name) and node.id == 'None' or
+            node.__class__.__name__ == 'Constant' and node.value is None)
 
 
 def handle_with_vars(var):
@@ -51,6 +56,8 @@ def get_arg_name(node, is_tuple_expansion=False):
     elif isinstance(node, Name):
         assert is_tuple_expansion and type(node.ctx) == Store or type(node.ctx) == Param
         return node.id
+    elif isinstance(node, str):
+        return node
     else:
         assert False, "Unexpected argument type got %s" % type(node)
 
@@ -58,7 +65,7 @@ def get_arg_name(node, is_tuple_expansion=False):
 def extract_argnames(arg_struct):
     argnames = [get_arg_name(arg) for arg in arg_struct.args]
     if arg_struct.vararg:
-        argnames.append(arg_struct.vararg)
+        argnames.append(get_arg_name(arg_struct.vararg))
     # PY3: kwonlyargs
     if arg_struct.kwarg:
         argnames.append(arg_struct.kwarg)
@@ -66,9 +73,19 @@ def extract_argnames(arg_struct):
 
 
 def make_arg_list(argnames, vararg=None, kwonlyargs=[], kwarg=None, defaults=[], kw_defaults=[]):
-    args = [Name(argname, Param()) for argname in argnames]
-    # PY3: Use kwonlyargs and kw_defaults
-    return arguments(args, vararg, kwarg, defaults)
+    try:
+        ast.arg
+
+        args = [ast.arg(a) for a in argnames]
+        vararg = ast.arg(vararg) if vararg else None
+        kwarg = ast.arg(kwarg) if kwarg else None
+
+        # PY3: what about kwonlyargs, kw_defaults, posonlyargs?
+        return arguments([], args, vararg, [], [], kwarg, defaults)
+
+    except AttributeError:
+        args = [Name(argname, Param()) for argname in argnames]
+        return arguments(args, vararg, kwarg, defaults)
 
 
 def make_call(func, args=[], keywords=[], starargs=None, kwargs=None):

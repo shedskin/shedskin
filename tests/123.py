@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 # (c) Jack Ha
 # --- jack.ha@gmail.com
@@ -5,8 +6,8 @@
 def validMove(puzzle, x, y, number):     # puzzle: [list(list(int))], x: [int], y: [int], number: [int]
         #see if the number is in any row, column or his own 3x3 square
         blnOK = True                     # [int]
-        px = x / 3                       # [int]
-        py = y / 3                       # [int]
+        px = x // 3                       # [int]
+        py = y // 3                       # [int]
         if puzzle[x][y] != 0:            # [int]
                 blnOK = False            # [int]
         if blnOK:                        # []
@@ -60,7 +61,7 @@ def hash_add(puzzle):                    # puzzle: [list(list(int))]
         hashtable[calc_hash(puzzle)] = 1 # [int]
 
 def hash_lookup(puzzle):                 # puzzle: [list(list(int))]
-        return hashtable.has_key(calc_hash(puzzle)) # [int]
+        return calc_hash(puzzle) in hashtable # [int]
 
 #solve with lookahead
 #unit is 3x3, (i,j) is coords of unit. l is the list of all todo's
@@ -68,9 +69,9 @@ def perm(puzzle, i, j, l, u):            # puzzle: [list(list(int))], i: [int], 
         global iterations
         iterations += 1                  # [int]
         if (u == []) and (l == []):      # [int]
-                print "Solved!"          # [str]
+                print("Solved!")         # [str]
                 #printpuzzle(puzzle)      # []
-                print "iterations: ", iterations # [str], [int]
+                print("iterations: ", iterations) # [str], [int]
                 return True              # [int]
         else:
                 if l == []:              # [int]
@@ -124,7 +125,7 @@ def perm(puzzle, i, j, l, u):            # puzzle: [list(list(int))], i: [int], 
 
 #gen move list for unit (i,j)
 def genMoveList(puzzle, i, j):           # puzzle: [list(list(int))], i: [int], j: [int]
-        l = range(1,10)                  # [list(int)]
+        l = list(range(1,10))                  # [list(int)]
         for y in range(3):               # [list(int)]
                 for x in range(3):       # [list(int)]
                         p = puzzle[i*3+x][j*3+y] # [int]
@@ -142,7 +143,7 @@ def printpuzzle(puzzle):                 # puzzle: [list(list(int))]
                         else:
                                 s += str(puzzle[x][y]) # [str]
                         s += ' '         # [str]
-                print s                  # [str]
+                print(s)                 # [str]
 
 def main():
         puzzle = [[0, 9, 3, 0, 8, 0, 4, 0, 0], # [list(list(int))]

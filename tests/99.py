@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 # (c) Mark Dufour, Haifang Ni
 # --- mark.dufour@gmail.com
@@ -104,18 +105,18 @@ while possible_moves(board, black) or possible_moves(board, white): # [list(tupl
         #else:
         #    move = coordinates(raw_input()) # [tuple2(int, int)]
         if not possible_move(board, move[0], move[1], turn): # [int]
-            print 'impossible!'          # [str]
+            print('impossible!')          # [str]
             turn = -turn                 # [int]
         else:
             flip_stones(board, move, turn) # []
     turn = -turn                         # [int]
 
 #print_board(board, turn)
-print 'flips', flips                     # [str], [int]
+print('flips', flips)                    # [str], [int]
 
 if stone_count(board, black) == stone_count(board, white): # [int]
-    print 'draw!'                        # [str]
+    print('draw!')                       # [str]
 else:
-    if stone_count(board, black) > stone_count(board, white): print player[black], 'wins!' # [str], [str]
-    else: print player[white], 'wins!'   # [str], [str]
+    if stone_count(board, black) > stone_count(board, white): print(player[black], 'wins!') # [str], [str]
+    else: print(player[white], 'wins!')  # [str], [str]
 

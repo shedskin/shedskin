@@ -77,6 +77,7 @@ The following people have contributed to Shed Skin development so far:
   Jérémie Roquet
   Mike Schrick
   SirNotAppearingInThisTutorial
+  Paul Sokolevsky
   Thomas Spura
   Joerg Stippa
   Dan Stromberg

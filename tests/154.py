@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 # (c) Peter Goodspeed
 # --- coriolinus@gmail.com
@@ -11,7 +12,7 @@ class bmp(object):
                 self.v = vals[0:9]
                 if n>=0: self.v[n] = not self.v[n]
         def __and__(self, other):
-                return bmp([self.v[i] and other.v[i] for i in xrange(9)])
+                return bmp([self.v[i] and other.v[i] for i in range(9)])
         def cnt(self):
                 return len([i for i in self.v if i])
 
@@ -26,8 +27,8 @@ class boardRep(object):
                 return self.__fields!=other.fields()
         def __hash__(self):
                 rep=""
-                for i in xrange(9):
-                        for j in xrange(9):
+                for i in range(9):
+                        for j in range(9):
                                 rep += str(self.__fields[i][j])
                 return hash(rep)
 
@@ -37,10 +38,10 @@ class board(object):
 
         def __init__(self):
                 #final numbers: a 9 by 9 grid
-                self.final = [9 * [0] for i in xrange(9)]
+                self.final = [9 * [0] for i in range(9)]
                 self.rows = 9 * [bmp()]
                 self.cols = 9 * [bmp()]
-                self.cels = [3 * [bmp()] for i in xrange(3)]
+                self.cels = [3 * [bmp()] for i in range(3)]
 
                 #statistics
                 self.__turns = 0
@@ -60,10 +61,10 @@ class board(object):
                 #self.__init__()
                 if fn=='':
                         fn = raw_input("filename: ")
-                f = file(fn, 'r')
+                f = open(fn, 'r')
                 lines = f.readlines()
-                for row in xrange(9):
-                        for digit in xrange(1,10):
+                for row in range(9):
+                        for digit in range(1,10):
                                 try:
                                         self.setval(row,lines[row].index(str(digit)),digit)
                                 except ValueError:
@@ -90,9 +91,9 @@ class board(object):
 
         def __str__(self):
                 ret = ""
-                for row in xrange(9):
+                for row in range(9):
                         if row == 3 or row == 6: ret += (((3 * "---") + "+") * 3)[:-1] + "\n"
-                        for col in xrange(9):
+                        for col in range(9):
                                 if col == 3 or col == 6: ret += "|"
                                 if self.final[row][col]: c = str(self.final[row][col])
                                 else: c = " "
@@ -124,7 +125,7 @@ class board(object):
                         #check for solution condition:
                         if _board.openspaces() <= 0:
                                 self.solutions.add(boardRep(_board))
-                                print 'sol', _board
+                                print('sol', _board)
                                 if depth == 0: self.onexit()
                                 if not board.completeSearch:
                                         self.onexit()
@@ -145,7 +146,7 @@ class board(object):
                                         for row, col in coords:
                                                 #now we iterate through possible values to put in there
                                                 broken = False
-                                                for val in [i for i in xrange(9) if _board.mergemask(row, col).v[i] == True]:
+                                                for val in [i for i in range(9) if _board.mergemask(row, col).v[i] == True]:
                                                         if not board.completeSearch and self.__status == 2:
                                                             broken = True
                                                             break
@@ -161,8 +162,8 @@ class board(object):
 
         def clone(self):
                 ret = board()
-                for row in xrange(9):
-                        for col in xrange(9):
+                for row in range(9):
+                        for col in range(9):
                                 if self.final[row][col]:
                                         ret.setval(row, col, self.final[row][col])
                 return ret
@@ -173,8 +174,8 @@ class board(object):
         def findmincounts(self):
                 #compute the list of lenghths of merged masks
                 masks = []
-                for row in xrange(9):
-                        for col in xrange(9):
+                for row in range(9):
+                        for col in range(9):
                                 if self.final[row][col] == 0:
                                         numallowed = self.mergemask(row, col).cnt()
                                         masks.append((numallowed, row, col))
@@ -186,7 +187,7 @@ class board(object):
                 self.__endtime = time()
                 self.__status = 2
 
-                if board.notifyOnCompletion: print self.stats()['turns']
+                if board.notifyOnCompletion: print(self.stats()['turns'])
 
         def stats(self):
                 if self.__status == 1: t = time() - self.__starttime
