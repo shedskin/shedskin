@@ -10,5 +10,5 @@ class zeug:
 
 def hello(x):                            # x: []
     a = x                                # []
-    print a                              # []
+    print(a)                             # []
     return 'hello'                       # []
