@@ -290,3 +290,34 @@ rcp.read(["testdata/test.conf"])
 
 print(rcp.get('ematter', 'pages')) #, vars={'var': 'blah'})
 print(sorted(rcp.items('ematter')))
+
+# file.next
+print(next(open('run.py')).strip())
+
+#backticks, scalar
+ahh = 19
+hoi = 'hoi'
+print(`18`, `ahh+1`, `hoi`)
+
+from sys import maxint as MAXINT
+from sys import maxsize as MAXSIZE
+a = MAXINT
+bb = MAXSIZE
+print(a == bb)
+
+#bisect should model __cmp__, fix sorting problem
+from bisect import insort
+class A(object):
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+    def __repr__(self):
+        return "A(%s, %s)" % (self.x, self.y)
+    def __cmp__(self, other):
+        return cmp(self.x + self.y, other.x + other.y)
+
+pairs = [[18, 6], [28, 5], [35, 26], [31, 28], [3, 3], [32, 37], [11, 17], [28, 29]]
+items = []
+for pair in pairs:
+    insort(items, A(pair[0], pair[1]))
+print(items)
