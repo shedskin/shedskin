@@ -99,7 +99,7 @@ def train_adatron(kernel_table, label_table, h, c):
     labelalphas = [0.0] * len(kernel_table)
     max_differences = [(0.0, 0)] * len(label_table[0])
     for iteration in range(10*len(kernel_table)):
-        print "Starting iteration %s..." % iteration
+        print("Starting iteration %s..." % iteration)
         if iteration == 20: # XXX shedskin test
             return alphas, bias
         for klass in range(len(label_table[0])):
@@ -153,18 +153,18 @@ def calculate_error(alphas, bias, kernel_table, label_table):
 def main():
     for filename, type in [("testdata/c.txt", CYTOSOLIC), ("testdata/e.txt", EXTRACELLULAR), ("testdata/n.txt", NUCLEAR), ("testdata/m.txt", MITOCHONDRIAL)]:#, ("b.txt", BLIND)]:
         load_file(filename, type)
-    print "Creating feature tables..."
+    print("Creating feature tables...")
     feature_table, label_table = create_tables()
     #import pickle
     #print "Loading kernel table..."
     #kernel_file = file("kernel_table.txt")
     #kernel_table = pickle.load(kernel_file)
     #kernel_file.close()
-    print "Creating kernel table..."
+    print("Creating kernel table...")
     kernel_table = create_kernel_table(feature_table)
-    print "Training SVM..."
+    print("Training SVM...")
     alphas, bias = train_adatron(kernel_table, label_table, 1.0, 3.0)
-    print calculate_error(alphas, bias, kernel_table, label_table)
+    print(calculate_error(alphas, bias, kernel_table, label_table))
 
 
 if __name__ == "__main__":
