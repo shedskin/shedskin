@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 def escapement():
     a = vars1()                          # [list(int)]
@@ -9,7 +10,7 @@ def vars1():
 x = escapement()                         # [list(int)]
 y = escapement()                         # [list(int)]
 y.append(3)                              # []
-print x                                  # [list(int)]
+print(x)                                 # [list(int)]
 
 
 def escapement2():
@@ -28,13 +29,13 @@ def joink():
 escapement2()                            # []
 bye.append(2)                            # []
 joink()                                  # []
-print bye                                # [list(int)]
+print(bye)                               # [list(int)]
 
 
 def transitive():
     a = vars2()                          # [list(int)]
     hoi()                                # []
-    print a                              # [list(int)]
+    print(a)                             # [list(int)]
 
 def vars2():
     return [1,2]                         # [list(int)]

@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 # (c) Dave Griffiths
 # --- http://www.pawfal.org/index.php?page=PyGmy
@@ -38,6 +39,9 @@ class vec:
         return vec(self.x*amount, self.y*amount, self.z*amount)
 
     def __div__(self,amount):
+        return vec(self.x/amount, self.y/amount, self.z/amount)
+
+    def __truediv__(self,amount):
         return vec(self.x/amount, self.y/amount, self.z/amount)
 
     def __neg__(self):
@@ -234,7 +238,7 @@ class shader:
     def doocclusion(self, samples, shaderinfo):
         # not really very scientific, or good in any way...
         oc = 0.0
-        for i in xrange(samples):
+        for i in range(samples):
             ray = vec(float(random.randrange(-100,100)),float(random.randrange(-100,100)),float(random.randrange(-100,100)))
             ray.norm()
             ray = ray * 2.5
@@ -262,17 +266,17 @@ class world:
         self.aspect = self.width/float(self.height)
 
     def render(self, filename):
-        out_file = file(filename, 'w')
+        out_file = open(filename, 'w')
         # PPM header
-        print >>out_file, "P3"
-        print >>out_file, self.width, self.height
-        print >>out_file, "256"
+        print("P3", file=out_file)
+        print(self.width, self.height, file=out_file)
+        print("256", file=out_file)
         total = self.width * self.height
         count = 0
 
-        for sy in xrange(self.height):
+        for sy in range(self.height):
             pixel_line = []
-            for sx in xrange(self.width):
+            for sx in range(self.width):
                 x = 2 * (0.5-sx/float(self.width)) * self.aspect
                 y = 2 * (0.5-sy/float(self.height))
                 if self.cameratype=="ortho":
@@ -304,9 +308,9 @@ class world:
                 pixel_line.append( conv_value(col.z) )
                 count = count + 1
 
-            print >>out_file, " ".join(pixel_line)
+            print(" ".join(pixel_line), file=out_file)
             percentstr = str(int((count/float(total))*100))+"%"
-            print "" + percentstr
+            print("" + percentstr)
         out_file.close()
 
 
@@ -341,7 +345,7 @@ offset = vec(0.0,-5.0,55.0)
 rad = 12.0
 radperball = (2 * 3.141592) / numballs
 
-for i in xrange(int(numballs)):
+for i in range(int(numballs)):
     x = sin(0.3+radperball*float(i))*rad
     y = cos(0.3+radperball*float(i))*rad
     w.objects.append(sphere(vec(x,0.0,y)+offset,2.0,everythingshader()))

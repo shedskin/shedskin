@@ -1,5 +1,9 @@
 77 programs that work with Shed Skin 0.9.5.
 
+HELP WANTED with porting these example programs to python3!
+
+(currently working with python3: pystone, sunfish, voronoi).
+
 shedskin -b (disable index-out-of-bounds checking) often improves performance. see the documentation for more performance tips:
 
 https://shedskin.readthedocs.io/

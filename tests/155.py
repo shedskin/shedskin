@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 # (c) Peter Cock
 # --- http://www2.warwick.ac.uk/fac/sci/moac/currentstudents/peter_cock/python/sudoku/
@@ -10,7 +11,7 @@ TxT_ITER = [[(row,col) for row in rows for col in cols] for rows in TRIPLETS for
 
 class soduko:
     def __init__(self, start_grid=None) :
-        self.squares =[ [range(1,10)  for col in range(0,9)] for row in range(0,9)]
+        self.squares =[ [list(range(1,10))  for col in range(0,9)] for row in range(0,9)]
 
         if start_grid is not None:
             assert len(start_grid)==9, "Bad input!"
@@ -62,10 +63,10 @@ class soduko:
 
     def update_neighbours(self,set_row,set_col,x) :
         for row in range(0,9) :
-            if row <> set_row :
+            if row != set_row :
                 self.cell_exclude(row,set_col,x)
         for col in range(0,9) :
-            if col <> set_col :
+            if col != set_col :
                 self.cell_exclude(set_row,col,x)
         for triplet in TRIPLETS :
             if set_row in triplet : rows = triplet[:]
@@ -74,7 +75,7 @@ class soduko:
         cols.remove(set_col)
         for row in rows :
             for col in cols :
-                assert row <> set_row or col <> set_col , 'meuh'
+                assert row != set_row or col != set_col , 'meuh'
                 self.cell_exclude(row,col,x)
 
     def get_cell_digit_str(self,row,col) :
@@ -116,7 +117,7 @@ class soduko:
         for (type_name, check_type) in [("Row",ROW_ITER),("Col",COL_ITER),("3x3",TxT_ITER)]:
             for check_list in check_type :
                 unknown_entries = []
-                unassigned_values = range(1,9+1) #1-9 inclusive
+                unassigned_values = list(range(1,9+1)) #1-9 inclusive
                 known_values = []
                 for (row,col) in check_list :
                     if len(self.squares[row][col]) == 1 :
@@ -150,7 +151,7 @@ class soduko:
                             try:
                                 soduko_copy.set_cell(row,col,x)
                                 soduko_copy.check()
-                            except AssertionError, e :
+                            except AssertionError as e :
                                 bad_x.append(x)
                             del soduko_copy
                         if len(bad_x) == 0 :
@@ -178,5 +179,5 @@ for x in range(50):
     t.check()
     t.one_level_supposition()
     t.check()
-    print t
+    print(t)
 

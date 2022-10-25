@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 # From: http://en.wikipedia.org/wiki/Eight_queens_puzzle
 
@@ -25,6 +26,6 @@ def safe_queen(new_row, new_col, sol):
 
 n = 12
 solutions = n_queens(n, n)
-print len(solutions), "solutions."
+print(len(solutions), "solutions.")
 
 

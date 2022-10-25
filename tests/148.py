@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 # (c) Peter Goodspeed
 # --- coriolinus@gmail.com
@@ -26,7 +27,7 @@ class MultiVictory(Exception):
 class rectBoard(object):
         def __init__(self, edge=3):
                 self.edge = edge
-                self.__board = [edge * [0] for i in xrange(edge)]
+                self.__board = [edge * [0] for i in range(edge)]
                 self.__empty = edge**2
 
         def assign(self, row, col, value):
@@ -50,7 +51,7 @@ class rectBoard(object):
                                 if row[0] != 0: victors.append(row[0])
 
                 #examine cols
-                for i in xrange(self.edge):
+                for i in range(self.edge):
                         col = [row[i] for row in self.__board]
                         if len(set(col)) == 1:
                                 if col[0] != 0: victors.append(col[0])
@@ -58,13 +59,13 @@ class rectBoard(object):
                 #examine diagonals
                 #left diagonal
                 ld = []
-                for i in xrange(self.edge): ld.append(self.__board[i][i])
+                for i in range(self.edge): ld.append(self.__board[i][i])
                 if len(set(ld)) == 1:
                         if ld[0] != 0: victors.append(ld[0])
 
                 #right diagonal
                 rd = []
-                for i in xrange(self.edge): rd.append(self.__board[i][self.edge-(1+i)])
+                for i in range(self.edge): rd.append(self.__board[i][self.edge-(1+i)])
                 if len(set(rd)) == 1:
                         if rd[0] != 0: victors.append(rd[0])
 
@@ -77,15 +78,15 @@ class rectBoard(object):
 
         def __str__(self):
                 ret = ""
-                for row in xrange(self.edge):
+                for row in range(self.edge):
                         if row != 0:
                                 ret += "\n"
-                                for i in xrange(self.edge):
+                                for i in range(self.edge):
                                         if i != 0: ret += '+'
                                         ret += "---"
                                 ret += "\n"
                         ret += " "
-                        for col in xrange(self.edge):
+                        for col in range(self.edge):
                                 if col != 0: ret += " | "
                                 if self.__board[row][col] == 0: ret += ' '
                                 else: ret += str(self.__board[row][col])
@@ -103,34 +104,34 @@ class rectBoard(object):
                                         scores[rown][coln] += 15 * fields.count(list(players)[0]) / float(self.edge)
 
         def makeAImove(self, player):
-                scores = [self.edge * [0] for i in xrange(self.edge)]
+                scores = [self.edge * [0] for i in range(self.edge)]
 
-                for rown in xrange(self.edge):
+                for rown in range(self.edge):
                         row = self.__board[rown]
-                        self.doRow(row, [(rown, i) for i in xrange(self.edge)], player, scores)
+                        self.doRow(row, [(rown, i) for i in range(self.edge)], player, scores)
 
-                for coln in xrange(self.edge):
+                for coln in range(self.edge):
                         col = [row[coln] for row in self.__board]
-                        self.doRow(col, [(i, coln) for i in xrange(self.edge)], player, scores)
+                        self.doRow(col, [(i, coln) for i in range(self.edge)], player, scores)
 
-                indices = [(i, i) for i in xrange(self.edge)]
-                ld = [self.__board[i][i] for i in xrange(self.edge)]
+                indices = [(i, i) for i in range(self.edge)]
+                ld = [self.__board[i][i] for i in range(self.edge)]
                 self.doRow(ld, indices, player, scores)
                 #also, because diagonals are just more useful
                 for rown, coln in indices:
                         scores[rown][coln] += 1
 
                 #now, we do the same for right diagonals
-                indices = [(i, (self.edge - 1) - i) for i in xrange(self.edge)]
-                rd = [self.__board[i][(self.edge - 1) - i] for i in xrange(self.edge)]
+                indices = [(i, (self.edge - 1) - i) for i in range(self.edge)]
+                rd = [self.__board[i][(self.edge - 1) - i] for i in range(self.edge)]
                 self.doRow(rd, indices, player, scores)
                 #also, because diagonals are just more useful
                 for rown, coln in indices:
                         scores[rown][coln] += 1
 
                 scorelist = []
-                for rown in xrange(self.edge):
-                        for coln in xrange(self.edge):
+                for rown in range(self.edge):
+                        for coln in range(self.edge):
                                 if(self.__board[rown][coln] == 0):
                                         scorelist.append((scores[rown][coln],(rown,coln)))
                 scorelist.sort()
@@ -167,9 +168,9 @@ def aigame(size=30, turn=1, players=2):
         #print b.__str__()
         #print
         if(b.isvictory() == 0):
-                print "Board is full! Draw!"
+                print("Board is full! Draw!")
         else:
-                print "Victory for player "+str(b.isvictory())+"!"
+                print("Victory for player "+str(b.isvictory())+"!")
 
 aigame()
 

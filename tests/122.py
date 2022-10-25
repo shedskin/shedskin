@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 # (c) Mark Dufour
 # --- mark.dufour@gmail.com
@@ -97,5 +98,5 @@ examples = [ ([1,0,0,1,1,2,0,1,0,0], [1]), # [list(tuple(list(int)))]
 epochs = 1000                            # [int]
 train_network(network, examples, epochs) # []
 for hup in [neural_network_output(network, example) for example, answer in examples]:
-    print [('%.2f'%hap) for hap in hup]
+    print([('%.2f'%hap) for hap in hup])
 

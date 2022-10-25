@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 #  Based on original version written in BCPL by Dr Martin Richards
 #  in 1981 at Cambridge University Computer Laboratory, England
@@ -134,10 +135,10 @@ def trace(a):
     global layout
     layout -= 1
     if layout <= 0:
-        print
+        print()
         layout = 50
-    print a
-    print a,
+    print(a)
+    print(a,)
 
 
 TASKTABSIZE = 10
@@ -303,10 +304,10 @@ class IdleTask(Task):
         if i.count == 0:
             return self.hold()
         elif i.control & 1 == 0:
-            i.control /= 2
+            i.control //= 2
             return self.release(I_DEVA)
         else:
-            i.control = i.control/2 ^ 0xd008
+            i.control = i.control//2 ^ 0xd008
             return self.release(I_DEVB)
 
 
@@ -352,7 +353,7 @@ def schedule():
         pkt = None
 
         if tracing:
-            print "tcb =",t.ident
+            print("tcb =",t.ident)
 
         #print '*', t.__class__
 
@@ -365,7 +366,7 @@ def schedule():
 class Richards(object):
 
     def run(self, iterations):
-        for i in xrange(iterations):
+        for i in range(iterations):
             taskWorkArea.holdCount = 0
             taskWorkArea.qpktCount = 0
 
@@ -401,5 +402,5 @@ class Richards(object):
 r = Richards()
 iterations = 10
 result = r.run(iterations)
-print result
+print(result)
 

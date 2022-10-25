@@ -3,7 +3,7 @@
 # --- Translated from ADA to C by Rick Richardson.
 # --- Translated from C to Python by Guido van Rossum.
 
-from time import clock
+from time import time
 
 LOOPS = 50000
 Ident1, Ident2, Ident3, Ident4, Ident5 = range(1,6)
@@ -49,10 +49,10 @@ def Proc0(loops=LOOPS):
     global PtrGlb
     global PtrGlbNext
 
-    starttime = clock()
+    starttime = time()
     for i in range(loops):
         pass
-    nulltime = clock() - starttime
+    nulltime = time() - starttime
 
     PtrGlbNext = Record()
     PtrGlb = Record()
@@ -64,7 +64,7 @@ def Proc0(loops=LOOPS):
     String1Loc = "DHRYSTONE PROGRAM, 1'ST STRING"
     Array2Glob[8][7] = 10
 
-    starttime = clock()
+    starttime = time()
 
     for i in range(loops):
         Proc5()
@@ -90,7 +90,7 @@ def Proc0(loops=LOOPS):
         IntLoc2 = 7 * (IntLoc3 - IntLoc2) - IntLoc1
         IntLoc1 = Proc2(IntLoc1)
 
-    benchtime = clock() - starttime - nulltime
+    benchtime = time() - starttime - nulltime
     return benchtime, (loops / benchtime)
 
 def Proc1(PtrParIn):

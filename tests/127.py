@@ -1,12 +1,13 @@
+from __future__ import print_function
 
-print 'hello, world!'                    # [str]
+print('hello, world!')                   # [str]
 
 l = 'luis gonzales'                      # [str]
-print l[3:7]                             # [str]
-print l[1::2]                            # [str]
+print(l[3:7])                            # [str]
+print(l[1::2])                           # [str]
 
 t = (1,2,3,4,5)                          # [tuple(int)]
-print t[1:4]                             # [tuple(int)]
+print(t[1:4])                            # [tuple(int)]
 
 s = 'we are testing shedskin on windows' # [str]
 
@@ -20,7 +21,7 @@ for i in s:                              # [str]
 
 for k,v in d.items():                    # [tuple(str, int)]
     if k == ' ':
-        print k, ':', v                      # [str], [str], [int]
+        print(k, ':', v)                     # [str], [str], [int]
 
 x=[]                                     # [list(dude)]
 
@@ -34,5 +35,5 @@ class dude:                              # age: [int], last: [str], name: [str]
         return '%s %s is %s years old' %(self.name, self.last, str(self.age)) # [str]
 
 dude('luis','gonzalez',35)               # [dude]
-print x[0]                               # [dude]
+print(x[0])                              # [dude]
 

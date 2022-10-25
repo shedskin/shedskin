@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 # (c) (the sister of) Peter Goodspeed
 # --- coriolinus@gmail.com
@@ -7,7 +8,7 @@
 
 #functions
 def rawBoard():
-        return [200 * [False] for i in xrange(200)]
+        return [200 * [False] for i in range(200)]
 
 #def fromKb():
 #        eventLoop(lambda arg: raw_input(arg))
@@ -27,14 +28,14 @@ def nextI(qstr):
 
 def pb(board):
         #print board
-        print "-" * 20
+        print("-" * 20)
         for row in board:
                 ro = ''
-                for i in xrange(len(row)):
+                for i in range(len(row)):
                         if row[i]: ro += "X"
                         else: ro += " "
-                print ro
-        print "-" * 20
+                print(ro)
+        print("-" * 20)
 
 def eventLoop(nextInput):
        cont = 'p'
@@ -45,7 +46,7 @@ def eventLoop(nextInput):
                 numcells = int(nextInput("how many cells? "))
 
                 #get that many cells
-                for i in xrange(numcells):
+                for i in range(numcells):
                         xy = str(nextInput("x,y: ")).split(',')
                         x,y = int(xy[0]),int(xy[1])
                         #set those cells
@@ -67,15 +68,15 @@ def runSim(board):
                 board = nextgen(board)
                 #pb(board)
                 #print
-        if turns >= 10000: print "10 turns exhausted"
-        else: print "stabilized on turn %s" % str(turns + 1)
+        if turns >= 10000: print("10 turns exhausted")
+        else: print("stabilized on turn %s" % str(turns + 1))
 
 def nextgen(board):
         #transform the old board into a new one
         nb = rawBoard()
 
-        for rown in xrange(len(board)):
-                for coln in xrange(len(board[rown])):
+        for rown in range(len(board)):
+                for coln in range(len(board[rown])):
                         nn = 0
                         for r,c in neighbors(rown, coln):
                                 if board[r][c]: nn += 1
