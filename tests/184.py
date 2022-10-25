@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 # locally override module name
 import testdata.bert184 as game
@@ -8,9 +9,9 @@ class Game:
 
 def hup(game):
     game.__init__()
-    print game.x
+    print(game.x)
     if game:
-        print 'game'
+        print('game')
 
 hup(Game())
 
@@ -19,7 +20,7 @@ from testdata import bert184
 
 bert184.zeug.purple += 1
 blah = bert184.zeug.purple
-print blah
+print(blah)
 
 # template conflict
 def opterr(x):
@@ -41,29 +42,29 @@ for x in ''.split():
     ParseRuleLine(x)
 
 # working outside of list
-a = range(5)
+a = list(range(5))
 a[7:80] = range(5)
-print a
+print(a)
 a[10:15] = range(10)
-print a
+print(a)
 a[12:20] = range(10)
-print a
-a=range(5)
+print(a)
+a=list(range(5))
 a[-8:-5] = [9,9]
 a[1:1] = [8,8]
 del a[-7:2]
-print a
-a=range(5)
+print(a)
+a=list(range(5))
 a[4:1] = [7,12]
-print a
+print(a)
 
 lll = [1,2]
 del lll[18:]
-print lll
+print(lll)
 
 # split nothing
-print ''.split()
-print '  '.split()
+print(''.split())
+print('  '.split())
 
 # casting problem
 def hoppa():
@@ -80,7 +81,7 @@ hoezee()
 
 # list comp scoping
 def knuts(j, var):
-    print 'knuts!', j, var
+    print('knuts!', j, var)
     return [7]
 
 itjes = [1]
@@ -89,22 +90,22 @@ globaltje = 'global'
 def ahoi():
     localtje = 'localtje'
     twitjes = [2]
-    print [1 for i in 3*twitjes for b2 in knuts(i, globaltje)]
-    print [2 for i in 4*itjes if knuts(2*i, localtje)]
+    print([1 for i in 3*twitjes for b2 in knuts(i, globaltje)])
+    print([2 for i in 4*itjes if knuts(2*i, localtje)])
 
 ahoi()
 
 # overloading problem
 file = open('run.py')
-print file.read(10)
+print(file.read(10))
 file.close()
 
 # xrange reset
-xrr = xrange(2)
-print xrr, list(xrr), list(reversed(xrr))
+xrr = list(range(2))
+print(xrr, list(xrr), list(reversed(xrr)))
 for xr in xrr:
     for yr in xrr:
-        print xr, yr
+        print(xr, yr)
 
 # tutorial example should work at least..
 #class matrix:

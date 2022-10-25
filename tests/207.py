@@ -91,5 +91,3 @@ for i in range(25): runrng(mt)
 #wh.setstate(whstate)
 #wh.jumpahead(1000000)
 #for i in range(25): runrng(wh)
-
-
