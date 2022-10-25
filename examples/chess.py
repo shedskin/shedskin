@@ -45,8 +45,8 @@ def printBoard(board):
   for i in range(7,-1,-1):
     for j in range(8):
       ix = i * 16 + j
-      print pieces[board[ix]],
-    print
+      print(pieces[board[ix]], end='')
+    print()
 
 def move(board, mv):
   ix = (mv >> 8) & 0xff
@@ -113,7 +113,7 @@ def moveStr(board, strMove):
       move(board, m)
       return
   for m in moves:
-    print toString(m)
+    print(toString(m))
   raise "no move found" #, strMove
 
 def rowAttack(board, attackers, ix, dir):
@@ -362,10 +362,10 @@ def speedTest():
   moveStr(board, "d2-d4")
 
   res = alphaBeta(board, -99999999, 99999999, 4)
-  print res
+  print(res)
   moveStr(board, "d7-d6")
   res = alphaBeta(board, -99999999, 99999999, 4)
-  print res
+  print(res)
 
 if __name__ == '__main__':
     speedTest()

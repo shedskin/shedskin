@@ -22,7 +22,7 @@ class kohn_bmp:
             self.width_bytes = self.width_bytes + (4 - (self.width_bytes % 4))
 
         self.out=open(filename,"wb")
-        self.out.write("BM")                    # magic number
+        self.out.write("BM".encode('ascii'))                    # magic number
         
         self.write_int(self.width_bytes * height + 54 + (1024 if depth==1 else 0))
 
@@ -48,10 +48,10 @@ class kohn_bmp:
             self.write_int(0)                            # colors important - 0 since 24 bit
 
     def write_int(self, n):
-        self.out.write('%c%c%c%c' % ((n&255),(n>>8)&255,(n>>16)&255,(n>>24)&255))
+        self.out.write(b'%c%c%c%c' % ((n&255),(n>>8)&255,(n>>16)&255,(n>>24)&255))
 
     def write_word(self, n):
-        self.out.write('%c%c' % ((n&255),(n>>8)&255))
+        self.out.write(b'%c%c' % ((n&255),(n>>8)&255))
 
     def write_pixel_bw(self, y):
         self.out.write(chr(y))
@@ -63,9 +63,7 @@ class kohn_bmp:
             self.xpos = 0
 
     def write_pixel(self, red, green, blue):
-        self.out.write(chr((blue&255)))
-        self.out.write(chr((green&255)))
-        self.out.write(chr((red&255)))
+        self.out.write(b'%c%c%c' % (int(blue&255), int(green&255), int(red&255)))
         self.xpos = self.xpos+1
         if self.xpos == self.width:
             self.xpos = self.xpos * 3
@@ -100,7 +98,7 @@ colors = make_colors(1024)
 
 # Changing the values below will change the resulting image
 def mandel_file(cx=-0.7, cy=0.0, size=3.2, max_iterations=512, width = 640, height = 480):
-    t0 = time.clock()
+    t0 = time.time()
     increment = min(size / width, size / height)
     proportion = 1.0 * width / height
     start_real, start_imag = cx - increment * width/2, cy - increment * height/2
@@ -123,7 +121,7 @@ def mandel_file(cx=-0.7, cy=0.0, size=3.2, max_iterations=512, width = 640, heig
             my_bmp.write_pixel(colors[c][0], colors[c][1], colors[c][2])
         current_y += increment
 
-    print("\r%.3f s             " % (time.clock() - t0))
+    print("\r%.3f s             " % (time.time() - t0))
     my_bmp.close()
     return fname
         

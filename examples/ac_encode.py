@@ -29,8 +29,8 @@ def encode (string, c0=BETA0, c1=BETA1, adaptive=1,verbose=0):
             p0 = c0*1.0/cT
             pass
         boundary = a + int(p0*w)
-        if (boundary == a): boundary += 1; print "warningA"; pass # these warnings mean that some of the probabilities
-        if (boundary == b): boundary -= 1; print "warningB"; pass # requested by the probabilistic model
+        if (boundary == a): boundary += 1; print("warningA"); pass # these warnings mean that some of the probabilities
+        if (boundary == b): boundary -= 1; print("warningB"); pass # requested by the probabilistic model
         ## are so small (compared to our integers) that we had to round them up to bigger values
         if (c=='1') :
             a = boundary
@@ -119,8 +119,8 @@ def decode (string, N=10000, c0=BETA0, c1=BETA1, adaptive=1,verbose=0):
                     cT = c0 + c1 ;   p0 = c0 *1.0/cT
                     pass
                 boundary = a + int(p0*w)
-                if (boundary == a): boundary += 1; print "warningA"; pass
-                if (boundary == b): boundary -= 1; print "warningB"; pass
+                if (boundary == a): boundary += 1; print("warningA"); pass
+                if (boundary == b): boundary -= 1; print("warningB"); pass
                 model_needs_updating = 0
                 pass
             if  ( boundary <= u ) :
@@ -161,27 +161,27 @@ def decode (string, N=10000, c0=BETA0, c1=BETA1, adaptive=1,verbose=0):
     pass
 
 def hardertest():
-    print "Reading the BentCoinFile"
+    print("Reading the BentCoinFile")
     inputfile = open( "testdata/BentCoinFile" , "r" )
     outputfile = open( "tmp.zip" , "w" )
-    print  "Compressing to tmp.zip"
+    print("Compressing to tmp.zip")
 
     s = inputfile.read()
     N = len(s)
     zip = encode(s, 10, 1)
     outputfile.write(zip)
     outputfile.close();     inputfile.close()
-    print "DONE compressing"
+    print("DONE compressing")
 
     inputfile = open( "tmp.zip" , "r" )
     outputfile = open( "tmp2" , "w" )
-    print  "Uncompressing to tmp2"
+    print( "Uncompressing to tmp2")
     unc = decode(list(inputfile.read()), N, 10, 1)
     outputfile.write(unc)
     outputfile.close();     inputfile.close()
-    print "DONE uncompressing"
+    print("DONE uncompressing")
 
-    print "Checking for differences..."
+    print("Checking for differences...")
     os.system( "diff testdata/BentCoinFile tmp2" )
     os.system( "wc tmp.zip testdata/BentCoinFile tmp2" )
 
@@ -190,18 +190,18 @@ def test():
         "1", "10" , "01" , "0" ,"0000000", \
         "000000000000000100000000000000000000000000000000100000000000000000011000000" ]
     for s in sl:
-        print "encoding", s
+        print("encoding", s)
         N=len(s)
         e = encode(s,10,1)
-        print "decoding", e
+        print("decoding", e)
         ds = decode(e,N,10,1)
-        print ds
+        print(ds)
         if  (ds != s) :
-            print s
-            print "ERR@"
+            print(s)
+            print("ERR@")
             pass
         else:
-            print "ok ---------- "
+            print("ok ---------- ")
         pass
     pass
 
