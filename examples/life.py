@@ -81,7 +81,7 @@ def bruteforce(rows, columns):
 if __name__ == "__main__":
     rows, columns = 4, 3
     bruteforce(rows, columns)
-    print count
+    print(count)
 #    try:
 #        rows, columns = int(argv[1]), int(argv[2])
 #    except IndexError:
