@@ -1,106 +1,107 @@
+from __future__ import print_function
 
 import heapq
 
 heap = [21]
-print heap
+print(heap)
 
 heapq.heappush(heap, 42)
-print heap
+print(heap)
 
 heapq.heappush(heap, 12)
-print heap
+print(heap)
 
-print heapq.heappop(heap)
-print heap
-print heapq.heappushpop(heap, 63)
-print heap
-print heapq.heappop(heap)
-print heap
-print heapq.heappop(heap)
-print heap
+print(heapq.heappop(heap))
+print(heap)
+print(heapq.heappushpop(heap, 63))
+print(heap)
+print(heapq.heappop(heap))
+print(heap)
+print(heapq.heappop(heap))
+print(heap)
 
 heapq.heappush(heap, 12)
-print heap
+print(heap)
 
 heapq.heappush(heap, 52)
-print heap
+print(heap)
 
 heapq.heappush(heap, 112)
-print heap
+print(heap)
 
 heapq.heappush(heap, 1)
-print heap
+print(heap)
 
 heapq.heappush(heap, 12)
-print heap
+print(heap)
 
-print heapq.heappop(heap)
-print heap
-print heapq.heappushpop(heap, 63)
-print heap
-print heapq.heappop(heap)
-print heap
-print heapq.heappop(heap)
-print heap
+print(heapq.heappop(heap))
+print(heap)
+print(heapq.heappushpop(heap, 63))
+print(heap)
+print(heapq.heappop(heap))
+print(heap)
+print(heapq.heappop(heap))
+print(heap)
 
-print '--------------'
+print('--------------')
 
 l = [42, 45, 35, 3]
-print l
+print(l)
 
 heapq.heapify(l)
-print l
+print(l)
 
-print heapq.heapreplace(l, 36)
-print l
+print(heapq.heapreplace(l, 36))
+print(l)
 
-print heapq.heappop(l)
-print l
-print heapq.heappop(l)
-print l
-print heapq.heappop(l)
-print l
-print heapq.heappop(l)
-print l
+print(heapq.heappop(l))
+print(l)
+print(heapq.heappop(l))
+print(l)
+print(heapq.heappop(l))
+print(l)
+print(heapq.heappop(l))
+print(l)
 
-print '--------------'
+print('--------------')
 
 
 for i in heapq.merge():
-   print i
+   print(i)
 
-print list(heapq.merge())
+print(list(heapq.merge()))
 
-print '-'
+print('-')
 
 for j in heapq.merge([3, 7, 18]):
-    print j
+    print(j)
 
-print '-'
+print('-')
 
 for k in heapq.merge([3, 7, 18], [5, 21, 44]):
-    print k
+    print(k)
 
-print '-'
+print('-')
 
 for m in heapq.merge([3, 7, 18], [5, 21, 44], [2, 33]):
-    print m
+    print(m)
 
-print '------'
+print('------')
 
 for n in heapq.nlargest(5, [3, 15, 56, 38, 49, 12, 41]):
-    print n
-print '-'
+    print(n)
+print('-')
 for np in heapq.nlargest(5, [3, 15]):
-    print np
+    print(np)
 
-print '---'
+print('---')
 
 for o in heapq.nsmallest(5, [3, 15, 56, 38, 49, 12, 41]):
-    print o
-print '-'
+    print(o)
+print('-')
 for op in heapq.nsmallest(5, [3, 15]):
-    print op
+    print(op)
 
 
 
