@@ -323,3 +323,7 @@ for pair in pairs:
 print(items)
 
 # TODO with expr1 as bla, expr2..
+
+print(sorted(csv.list_dialects()))
+
+#csv default writer lineterminator?
