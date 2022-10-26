@@ -1176,6 +1176,9 @@ class ModuleVisitor(BaseNodeVisitor):
         pass
 
     def visit_With(self, node, func=None):
+        if hasattr(node, 'items'):
+            node = node.items[0] # TODO py3: multiple items
+
         if node.optional_vars:
             varnode = CNode(self.gx, node.optional_vars, parent=func, mv=getmv())
             self.gx.types[varnode] = set()

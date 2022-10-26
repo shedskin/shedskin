@@ -624,6 +624,10 @@ class GenerateVisitor(BaseNodeVisitor):
         self.output('continue;')
 
     def visit_With(self, node, func=None):
+        orig = node
+        if hasattr(node, 'items'):
+            node = node.items[0]
+
         self.start()
         if node.optional_vars:
             self.visitm('WITH_VAR(', node.context_expr, ',', node.optional_vars, func)
@@ -634,7 +638,7 @@ class GenerateVisitor(BaseNodeVisitor):
         self.print(self.line)
         self.indent()
         self.mv.current_with_vars.append(handle_with_vars(node.optional_vars))
-        for child in node.body:
+        for child in orig.body:
             self.visit(child, func)
         self.mv.current_with_vars.pop()
         self.deindent()
