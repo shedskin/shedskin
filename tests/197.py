@@ -23,10 +23,10 @@ def test_anonymous():
     '''
     Test mmap module on anonymous files.
     '''
-    print '## test_anonymous:'
+    print('## test_anonymous:')
     map = mmap.mmap(-1, PAGESIZE)
     assert len(map) == PAGESIZE
-    print '# write:'    
+    print('# write:')    
     ## print map.size() ## TODO: throw mmap.error: [Errno 9] Bad file descriptor?
     assert map.tell() == 0
     map.write_byte('f')
@@ -34,18 +34,18 @@ def test_anonymous():
     map.write('oo bar\tbaz\nqux')
     assert map.tell() == 15
     
-    print '# get/set:'
+    print('# get/set:')
     assert map[:15] == 'foo bar\tbaz\nqux'
-    print map[0]    
+    print(map[0])    
     map[-1]='Z'
-    print map[-1]    
-    print map[4:-PAGESIZE+7]
-    print '%r' %map[:15] 
+    print(map[-1])    
+    print(map[4:-PAGESIZE+7])
+    print('%r' %map[:15]) 
     map[4:7] = "foo"
     map[PAGESIZE-3:] = "xyz"
-    print map[PAGESIZE-3:]
+    print(map[PAGESIZE-3:])
     
-    print '# find/seek:'
+    print('# find/seek:')
     assert map.find("foo") == -1
     map.seek(0)
     assert map.tell() == 0
@@ -58,23 +58,23 @@ def test_anonymous():
     map.seek(-PAGESIZE, 1)
     assert map.tell() == 0
     
-    print '# read:'
-    print map.read(3)
-    print '%r' % map.read_byte()
-    print '%r' % map.readline()
-    print '%r' % map.read(3)
+    print('# read:')
+    print(map.read(3))
+    print('%r' % map.read_byte())
+    print('%r' % map.readline())
+    print('%r' % map.read(3))
     
-    print '# move:'
+    print('# move:')
     map.move(8, 4, 3)
 
-    print '# iter:'
+    print('# iter:')
     assert "f" in map
     assert "a" not in map
 
     map.flush()
     
-    print '# Result:'
-    print '%r' % map[:15]
+    print('# Result:')
+    print('%r' % map[:15])
 
 ## re not supported (yet)
 ##     m = re.search('z',map)
@@ -83,7 +83,7 @@ def test_anonymous():
     h = 0
     for c in map:
         h += ord(c) * 31
-    print h
+    print(h)
     
     try:
         map.resize(0x2000)
@@ -97,7 +97,7 @@ def test_basic():
     '''
     Taken from python 2.7
     '''
-    print '## test_basic:'
+    print('## test_basic:')
     setUp()
     # Test mmap module on Unix systems and Windows
     # Create a file to be mmap'ed.
@@ -117,40 +117,40 @@ def test_basic():
 
     assert len(m) == 2*PAGESIZE
 
-    print repr(m[0])
-    print repr(m[0:3])
+    print(repr(m[0]))
+    print(repr(m[0:3]))
     
     try:
         m[len(m)]
     except IndexError:
-        print "ok"
+        print("ok")
 
     # Modify the file's content
     m[0] = '3'
     m[PAGESIZE +3: PAGESIZE +3+3] = 'bar'
 
     # Check that the modification worked
-    print repr(m[0])
-    print repr(m[0:3])
-    print repr(m[PAGESIZE-1 : PAGESIZE + 7])
+    print(repr(m[0]))
+    print(repr(m[0:3]))
+    print(repr(m[PAGESIZE-1 : PAGESIZE + 7]))
 
     m.flush()
     # Try to seek to negative position...
     try:
         m.seek(-1)
     except ValueError:
-        print "ok"
+        print("ok")
 
     # Try to seek beyond end of mmap...
     try:
         m.seek(1, 2)
     except ValueError:
-        print "ok"
+        print("ok")
 
     try:
         m.seek(-len(m)-1, 2)
     except ValueError:
-        print "ok"
+        print("ok")
 
     tearDown(m)
 
@@ -158,17 +158,17 @@ def test_readonly():
     '''
     Reads a file.
     '''
-    print '## test_readonly:'
+    print('## test_readonly:')
     f = open(TESTFILE_IN, 'r+')
     mapsize = os.path.getsize(TESTFILE_IN)
     map = mmap.mmap(f.fileno(), 0)
     assert map.size() == mapsize
-    print repr(map.read(mapsize))
+    print(repr(map.read(mapsize)))
     map.close()
 
 def test_rfind():
     # test the new 'end' parameter works as expected
-    print '## test_rfind:'
+    print('## test_rfind:')
     setUp()
     f = open(TESTFILE_OUT, 'w+')
     data = 'one two ones'
@@ -191,7 +191,7 @@ def test_tougher_find():
     '''
     Taken from python 2.7
     '''
-    print '## test_tougher_find:'
+    print('## test_tougher_find:')
     setUp()
     # Do a tougher .find() test.  SF bug 515943 pointed out that, in 2.2,
     # searching for data with embedded \0 bytes didn't work.
@@ -207,8 +207,8 @@ def test_tougher_find():
     for start in range(n+1):
         for finish in range(start, n+1):
             slice = data[start : finish]
-            print m.find(slice) , data.find(slice)
-            print m.find(slice + 'x') == -1
+            print(m.find(slice) , data.find(slice))
+            print(m.find(slice + 'x') == -1)
 
     tearDown(m)
 
@@ -221,25 +221,25 @@ test_tougher_find()
 # re search empty string, match_object.span
 import re
 r = re.compile('^a?$')
-print r.search('').start()
-print r.search('').end()
-print r.search('').span()
-print r.search('a').start()
-print r.search('a').end()
-print r.search('a').span()
+print(r.search('').start())
+print(r.search('').end())
+print(r.search('').span())
+print(r.search('a').start())
+print(r.search('a').end())
+print(r.search('a').span())
 
 # id
 foo_a="foo";foo_b="foo";foo_c="foo";
-print id(foo_a)==id(foo_b)==id(foo_c)
+print(id(foo_a)==id(foo_b)==id(foo_c))
 
 # reduce fixes, more tests
 from math import fabs
-print reduce(lambda x,y: x + fabs(y), xrange(10))
-print reduce(lambda x,y: x + fabs(y), xrange(10), 1)
-print reduce(lambda x,y: x + fabs(y), xrange(10), 1.0)
-print reduce(lambda x,y: x + fabs(y), map(float, xrange(10)))
-print reduce(lambda x,y: x + fabs(y), map(float, xrange(10)), 2)
-print reduce(lambda x,y: x + fabs(y), map(float, xrange(10)), 2.0)
+print(reduce(lambda x,y: x + fabs(y), range(10)))
+print(reduce(lambda x,y: x + fabs(y), range(10), 1))
+print(reduce(lambda x,y: x + fabs(y), range(10), 1.0))
+print(reduce(lambda x,y: x + fabs(y), map(float, range(10))))
+print(reduce(lambda x,y: x + fabs(y), map(float, range(10)), 2))
+print(reduce(lambda x,y: x + fabs(y), map(float, range(10)), 2.0))
 class Aap:
     def __init__(self, value):
         self.value = value
@@ -248,46 +248,46 @@ class Aap:
     def __str__(self):
         return 'Aap(%s)' % self.value
 aaplist = [Aap(3), Aap(4), Aap(5)]
-print sum(aaplist, Aap(6))
-print reduce(lambda a,b:a+b, aaplist), reduce(lambda a,b:a+b, aaplist, Aap(6))
+print(sum(aaplist, Aap(6)))
+print(reduce(lambda a,b:a+b, aaplist), reduce(lambda a,b:a+b, aaplist, Aap(6)))
 
 # set methods now often take multiple args
 sett = set(range(3))
-sett.update(range(2,5), range(12,14))
-print sorted(sett)
-sett.update(range(2,5), range(12,14), range(18, 20))
-print sorted(sett)
+sett.update(list(range(2,5)), list(range(12,14)))
+print(sorted(sett))
+sett.update(list(range(2,5)), list(range(12,14)), list(range(18, 20)))
+print(sorted(sett))
 
 sett = set(range(4))
-print sorted(sett.union(set(range(6)), (6,7)))
-print sorted(sett.union([5], [3, 4], range(3)))
-print sorted(sett.intersection(range(1, 4), range(2, 5)))
-print sorted(sett.intersection(range(3), [2], range(4)))
-print sorted(sett.difference(range(2), range(3)))
-print sorted(sett.difference(range(2), range(3), [3, 6]))
+print(sorted(sett.union(set(range(6)), (6,7))))
+print(sorted(sett.union([5], [3, 4], list(range(3)))))
+print(sorted(sett.intersection(list(range(1, 4)), list(range(2, 5)))))
+print(sorted(sett.intersection(list(range(3)), [2], list(range(4)))))
+print(sorted(sett.difference(list(range(2)), list(range(3)))))
+print(sorted(sett.difference(list(range(2)), list(range(3)), [3, 6])))
 
 sett = set(range(4))
-sett.intersection_update(range(2), range(3))
-print sorted(sett)
+sett.intersection_update(list(range(2)), list(range(3)))
+print(sorted(sett))
 sett = set(range(3))
-sett.intersection_update(range(2), range(3), range(4))
-print sorted(sett)
+sett.intersection_update(list(range(2)), list(range(3)), list(range(4)))
+print(sorted(sett))
 
 sett = set(range(4))
-sett.difference_update(range(2), range(3))
-print sorted(sett)
+sett.difference_update(list(range(2)), list(range(3)))
+print(sorted(sett))
 sett = set(range(5))
-sett.difference_update(range(2), range(3), [3, 6])
-print sorted(sett)
+sett.difference_update(list(range(2)), list(range(3)), [3, 6])
+print(sorted(sett))
 
 #cannot hurt to test this
-print [].__class__.__name__
-print 'hoi'.__class__.__name__
+print([].__class__.__name__)
+print('hoi'.__class__.__name__)
 
 #string formatting asterisk
-print "%d * %d" % (1,2)
-print "%d* %% %d" % (1,2)
-print "%d%% *%d" % (1,2)
+print("%d * %d" % (1,2))
+print("%d* %% %d" % (1,2))
+print("%d%% *%d" % (1,2))
 
 #rich comparison fallbacks
 class inst(object):
@@ -303,46 +303,46 @@ class inst(object):
         return "%d" % self.num
         
 Seq = [inst(3),inst(1),inst(4),inst(2)]
-print Seq
-print sorted(Seq)
+print(Seq)
+print(sorted(Seq))
 
 class LT:
     def __gt__(self, o):
-        print 'gt!'
+        print('gt!')
         return False
     def __le__(self, o):
-        print 'le!'
+        print('le!')
         return True
-print LT() < LT()
-print LT() >= LT()
+print(LT() < LT())
+print(LT() >= LT())
 
 class LT2:
     def __lt__(self, o):
-        print 'lt!'
+        print('lt!')
         return False
     def __ge__(self, o):
-        print 'ge!'
+        print('ge!')
         return True
-print LT2() > LT2()
-print LT2() <= LT2()
+print(LT2() > LT2())
+print(LT2() <= LT2())
 
 #complex
 a = 4j + 3j
-print a
+print(a)
 b = a.real
-print sum([1j, 2j, 3j])
-print '%s' % (1+3j)
-print 1==0j, 0.0==0j, 1.0==0j, 0j==0.0
+print(sum([1j, 2j, 3j]))
+print('%s' % (1+3j))
+print(1==0j, 0.0==0j, 1.0==0j, 0j==0.0)
 
 #colorsys
 import colorsys
 
-print '%.2f' % colorsys.ONE_THIRD
-print '%.2f' % colorsys.ONE_SIXTH
-print '%.2f' % colorsys.TWO_THIRD
+print('%.2f' % colorsys.ONE_THIRD)
+print('%.2f' % colorsys.ONE_SIXTH)
+print('%.2f' % colorsys.TWO_THIRD)
 
 def pr(t):
-    print [('%.2f'%x) for x in t]
+    print([('%.2f'%x) for x in t])
 
 pr(colorsys.hls_to_rgb(1.0, 0.5, 0.7))
 pr(colorsys.rgb_to_hls(1.0, 0.5, 0.7))
@@ -354,9 +354,9 @@ pr(colorsys.rgb_to_hsv(1.0, 0.5, 0.7))
 #equality
 t1 = ('rc', (0, 0)) 
 t2 =('rc', (0, 0) )
-print t1!=t2
-print t1==t2
-print {(3,2): 0} == {(3,2): 1}
+print(t1!=t2)
+print(t1==t2)
+print({(3,2): 0} == {(3,2): 1})
 
 #generator and arg unpacking
 def genpack((i,j),a,b):
@@ -366,7 +366,7 @@ def genpack((i,j),a,b):
     yield b
 ttt = (1,2)
 for aaa in genpack(ttt,3,4):
-    print aaa
+    print(aaa)
 
 #fill in virtual variable types
 class CCache:
@@ -394,7 +394,7 @@ class TraceParser:
                 self.basicBlockList.append(basicblock)
             else:
                 basicblock = 2
-        print self.basicBlockList
+        print(self.basicBlockList)
 
 class CUnifiedTraceParser(TraceParser):
     pass
@@ -405,58 +405,58 @@ CUnifiedTraceParser().parseProgramCode()
 C1 = {1: 'een'}
 C2 = (1.0, 'woef')
 D = (C1, C2) if True else ({}, None)
-print D
-print [1] if True else None
-print [] if True else [1]
-print [[]] == [[1]], [[1]] == [[]]
-print dict([(1,2.0)]) == dict()
-print dict([(1,2.0)]) == {}
-print set() == set([1,2])
-print (set(['a']), set([1.0])) == (set(), set())
-print (set(['a']), set([1.0])) == (set(), None)
+print(D)
+print([1] if True else None)
+print([] if True else [1])
+print([[]] == [[1]], [[1]] == [[]])
+print(dict([(1,2.0)]) == dict())
+print(dict([(1,2.0)]) == {})
+print(set() == set([1,2]))
+print((set(['a']), set([1.0])) == (set(), set()))
+print((set(['a']), set([1.0])) == (set(), None))
 def slicing():
-    a = range(10)
-    a[2:] = range(4)
+    a = list(range(10))
+    a[2:] = list(range(4))
     a[2:] = []
-    print a
+    print(a)
     b = map(str, a)
     b[2:] = []
     b[2:] = ['woef']
     b[2:] = [None]
-    print b
+    print(b)
 slicing()
-print [1] or []
-print [] or ['uhm']
-print None or 'waf'
-print [1]+[]
-print [[]]+[[1]]
-print [None]+[['uh']]
-print set([]) == set([1])
-print set([1]) == set([1.0])
-print 1==0j
-print [1j]==[1.0]
-print 0 == True, 1 == True, 2 == True
-print 0 == False, 1 == False, 2 == False
-print [x == True for x in range(3)]
-print [1] == [True]
+print([1] or [])
+print([] or ['uhm'])
+print(None or 'waf')
+print([1]+[])
+print([[]]+[[1]])
+print([None]+[['uh']])
+print(set([]) == set([1]))
+print(set([1]) == set([1.0]))
+print(1==0j)
+print([1j]==[1.0])
+print(0 == True, 1 == True, 2 == True)
+print(0 == False, 1 == False, 2 == False)
+print([x == True for x in range(3)])
+print([1] == [True])
 
 # for .., .. in somedict.iteritems()
 def fastdictiteritems():
     d = {3: 4}
     for a,b in d.iteritems():
-        print a, b
+        print(a, b)
     for c in d.iteritems():
-        print c
+        print(c)
 
-    print [(a, b) for a,b in d.iteritems()]
-    print [c for c in d.iteritems()]
+    print([(a, b) for a,b in d.iteritems()])
+    print([c for c in d.iteritems()])
 
     d2 = {(3,4): (4,5)}
     for (e,f), (g,h) in d2.iteritems():
-        print e,f,g,h
+        print(e,f,g,h)
 
     d3 = {1.0: 'hallo'}
-    print [(x, y) for x,y in d3.iteritems()]
+    print([(x, y) for x,y in d3.iteritems()])
 fastdictiteritems()
 
 # deepcopy improvement
@@ -471,17 +471,17 @@ def copytest():
     c = copy.deepcopy(a)
     a.b.x = 18
     c.b.x = 19
-    print a.b.x, c.b.x
+    print(a.b.x, c.b.x)
 copytest()
 
 # return 'nothing' in generator
 def hoppagen():
     yield True
     yield False
-    print 'hoppa'
+    print('hoppa')
     return
 for hoppax in hoppagen():
-    print hoppax
+    print(hoppax)
 
 # sys.exit case
 import sys

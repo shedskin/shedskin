@@ -1,9 +1,11 @@
+from __future__ import print_function
+
 import board
 
 def latebinding():
     a = board.WHITE
-    print a
+    print(a)
     b = board.white()
-    print b
+    print(b)
     c = board.Board()
-    print c
+    print(c)

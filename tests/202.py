@@ -4,6 +4,6 @@ debug = True
 class Debug:
     def debug(self, msg):
         if debug:
-            print msg
+            print(msg)
 
 Debug().debug('debug')

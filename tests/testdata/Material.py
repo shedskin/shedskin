@@ -1,5 +1,7 @@
+from __future__ import print_function
+
 class Material: 
   def __init__(self, name):
-    print 'hoi'
+    print('hoi')
 
 EMPTY=Material("Empty")

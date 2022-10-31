@@ -2,16 +2,16 @@
 import struct
 s = struct.pack('h', -12)
 xx, = struct.unpack('h', s)
-print xx
+print(xx)
 s = struct.pack('i', -13)
 xx, = struct.unpack('i', s)
-print xx
+print(xx)
 s = struct.pack('l', -14)
 xx, = struct.unpack('l', s)
 
 # block comment fix
-print xx
-print "hi there"
+print(xx)
+print("hi there")
 
 #{ comment here ok
 
@@ -19,7 +19,7 @@ print "hi there"
 
 #} not ok
 
-print "hi there 3"
+print("hi there 3")
 
 # virtual function: merge parent as well
 
@@ -33,11 +33,11 @@ class Y(X):
 
 class A:
     def woef(self, l):
-        print l
+        print(l)
 
 class B(A):
     def woef(self, l):
-        print l
+        print(l)
 
 x = A()
 x.woef(X())
@@ -59,7 +59,7 @@ mmm = meuh()
 mmm.set(8)
 mmm.filter(8)
 mmm.array(8)
-print mmm.x
+print(mmm.x)
 
 # class passing is not supported, but at least we shouldn't crash on this
 class wowf:
@@ -98,7 +98,7 @@ wop(bla, bla)
 # default args and inheritance
 class Alpha:
     def func(self, value=True):
-        print("value is:" + str(value))
+        print(("value is:" + str(value)))
 
 class Beta(Alpha):
     pass
@@ -114,7 +114,7 @@ testdellastelem.append("test3")
 for v in testdellastelem:
   if (v == "test3"):
     testdellastelem.remove("test3")
-print testdellastelem
+print(testdellastelem)
 testdellastelem = []
 testdellastelem.append("test1")
 testdellastelem.append("test2")
@@ -122,7 +122,7 @@ testdellastelem.append("test3")
 for v in testdellastelem:
   if (v == "test2"):
     testdellastelem.remove("test3")
-print testdellastelem
+print(testdellastelem)
 testdellastelem = []
 testdellastelem.append("test1")
 testdellastelem.append("test2")
@@ -130,14 +130,14 @@ testdellastelem.append("test3")
 for v in testdellastelem:
   if (v == "test2"):
     testdellastelem.remove("test1")
-print testdellastelem
+print(testdellastelem)
 
 # global declaration ignored
 day = 0
 def wopp():
     global day
     for day in range(3):
-        print day
+        print(day)
 wopp()
-print day
+print(day)
 

@@ -2,4 +2,4 @@
 
 import os
 
-print os.popen("echo Hello World").read()
+print(os.popen("echo Hello World").read())
