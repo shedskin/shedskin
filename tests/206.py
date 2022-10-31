@@ -388,7 +388,7 @@ print_pos(initial)
 
 print('hello\0world')
 
-# filter, map -> no lists anymore!!!
+# filter, map, zip -> no lists anymore!!! (see removed itertools.ifilter/imap/izip?)
 
 collector = set()
 collector.add(frozenset([1,2]))
