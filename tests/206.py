@@ -388,4 +388,9 @@ print_pos(initial)
 
 print('hello\0world')
 
-# filter, map -> no lists anymore
+# filter, map -> no lists anymore!!!
+
+collector = set()
+collector.add(frozenset([1,2]))
+collector.add(frozenset([1,2,3]))
+print(sorted(collector))
