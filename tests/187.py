@@ -78,14 +78,7 @@ amap = map(hoppa, [1,2,3], [3,4,5], [5,6,7])
 print(list(amap))
 bmap = map(uhppa, [1,2,3], ['3','4','5'])
 print(list(bmap))
-def hoppa2(a, b):
-    if b: return a+b
-    return a+'X'
-print(list(map(hoppa2, 'banaan', 'aap')))
-def hoppa3(a, b):
-    if b: return a+b
-    return a
-print(list(map(hoppa3, range(8), range(4))))
+
 print(sorted(map(lambda u: len(u), ['aaaaa', 'aaa', 'a'])))
 
 #print(reduce(lambda a,b: a+b, [3,5,7]))
@@ -195,12 +188,10 @@ wa().wh()
 # passing builtins around
 print(sorted([[2,3,4], [5,6], [7]], key=len))
 print(list(map(len, ['a','bc'])))
-print(list(map(max, ['a','bc'], ['d'], ['e'])))
 print(list(map(max, ['a'], ['d'], ['e'])))
 print(list(map(str, range(12))))
 print(list(map(list, 'abc')))
 print(list(map(int, ['18', '19'])))
-print(list(map(set, [[1]])))
 def two(f, a, b):
     return f(a, b)
 def three(f, a, b, c):

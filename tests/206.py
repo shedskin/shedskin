@@ -418,3 +418,18 @@ except IOError as e:
 # char_cache out of bounds
 for nnn in '"\xd8\xc3A~s':
     print(repr(nnn))
+
+# different length args to map
+def hoppa2(a, b):
+    if b: return a+b
+    return a+'X'
+print(list(map(hoppa2, 'banaan', 'aap')))
+
+def hoppa3(a, b):
+    if b: return a+b
+    return a
+print(list(map(hoppa3, range(8), range(4))))
+
+print(list(map(max, ['a','bc'], ['d'], ['e'])))
+
+print(list(map(set, [[1]])))
