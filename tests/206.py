@@ -387,3 +387,5 @@ def print_pos(board):
 print_pos(initial)
 
 print('hello\0world')
+
+# filter, map -> no lists anymore

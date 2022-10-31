@@ -75,29 +75,29 @@ print(a)
 def hoppa(x, y, z): return str(x+y+z)
 def uhppa(a, b): return a+int(b)
 amap = map(hoppa, [1,2,3], [3,4,5], [5,6,7])
-print(amap)
+print(list(amap))
 bmap = map(uhppa, [1,2,3], ['3','4','5'])
-print(bmap)
+print(list(bmap))
 def hoppa2(a, b):
     if b: return a+b
     return a+'X'
-print(map(hoppa2, 'banaan', 'aap'))
+print(list(map(hoppa2, 'banaan', 'aap')))
 def hoppa3(a, b):
     if b: return a+b
     return a
-print(map(hoppa3, range(8), range(4)))
+print(list(map(hoppa3, range(8), range(4))))
 print(sorted(map(lambda u: len(u), ['aaaaa', 'aaa', 'a'])))
 
 #print(reduce(lambda a,b: a+b, [3,5,7]))
 #print(reduce(lambda a,b: a-b, set([3,5,7]), 1))
 
-print(filter(lambda a: 2<=a<5, range(10)))
-print(filter(lambda c: c>'a', 'abaaac'))
-print(filter(lambda c: c>'a', tuple('abaaac')))
-print(filter(None, range(3)), filter(None, 'abc'), filter(None, tuple(range(3))))
+print(list(filter(lambda a: 2<=a<5, range(10))))
+print(list(filter(lambda c: c>'a', 'abaaac')))
+print(list(filter(lambda c: c>'a', tuple('abaaac'))))
+print(list(filter(None, range(3))), list(filter(None, 'abc')), list(filter(None, tuple(range(3)))))
 
 options = filter(lambda option: option != 'fake', ['duh'])
-print(options)
+print(list(options))
 
 # next
 it1 = iter(range(4))
