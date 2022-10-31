@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 # template not removed after iteration
 class BadError(Exception):
     pass

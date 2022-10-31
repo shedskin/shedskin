@@ -385,3 +385,5 @@ def print_pos(board):
         print(k, uni_pieces[k])
 
 print_pos(initial)
+
+print('hello\0world')
