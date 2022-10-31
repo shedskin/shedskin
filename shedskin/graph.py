@@ -1176,20 +1176,18 @@ class ModuleVisitor(BaseNodeVisitor):
         pass
 
     def visit_With(self, node, func=None):
+        for child in iter_child_nodes(node):
+            self.visit(child, func)
+
         if hasattr(node, 'items'):
             node = node.items[0] # TODO py3: multiple items
 
         if node.optional_vars:
             varnode = CNode(self.gx, node.optional_vars, parent=func, mv=getmv())
             self.gx.types[varnode] = set()
-            self.visit(node.context_expr, func)
             self.add_constraint((inode(self.gx, node.context_expr), varnode), func)
             lvar = self.default_var(node.optional_vars.id, func)
             self.add_constraint((varnode, inode(self.gx, lvar)), func)
-        else:
-            self.visit(node.context_expr, func)
-        for child in iter_child_nodes(node):
-            self.visit(child, func)
 
     def visit_ListComp(self, node, func=None):
         # --- [expr for iter in list for .. if cond ..]
