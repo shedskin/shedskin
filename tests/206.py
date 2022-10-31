@@ -349,3 +349,12 @@ class Oink:
 oink = Oink()
 oink[4,5] = oink[2,3]
 oink[t2] = oink[t2]
+
+arr2 = array.array('c')
+arr2.extend('hoei')
+print(arr2.count('h'), arr2.index('h'))
+arr2[-1] = 'X'
+arr2.insert(0, '-')
+arr2.fromlist(['a', 'b'])
+print(arr2, arr2.tolist(), arr2.tostring())
+print(arr2[0])
