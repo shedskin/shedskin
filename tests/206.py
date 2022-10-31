@@ -394,3 +394,27 @@ collector = set()
 collector.add(frozenset([1,2]))
 collector.add(frozenset([1,2,3]))
 print(sorted(collector))
+
+# late binding
+from testdata import board
+from testdata import piece
+piece.latebinding()
+
+# {IOError, OSError}.{errno, strerror}
+try :
+    print("Try block")
+    fd = open("nosuchfile") # open will fail
+    print("File opened")
+except IOError as e:
+    print(e, repr(e))
+    print(e.errno, e.strerror, e.filename)
+#import os XXX fix under windows
+#try:
+#    os.chdir('meuheuheu')
+#except OSError as e2:
+#    print e2, repr(e2)
+#    print e2.errno, e2.strerror, e2.filename
+
+# char_cache out of bounds
+for nnn in '"\xd8\xc3A~s':
+    print(repr(nnn))

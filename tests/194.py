@@ -19,7 +19,7 @@ for d in sorted(digit_dict):
         print(d, g, d2[g])
 
 l = [[7,8,9], [7.7,8.8,9.9]]
-    
+
 for ll in l:
     for lll in ll:
         print('%.2f' % lll)
@@ -68,20 +68,6 @@ f = Test1(100)
 n = f.getlen()
 print(n)
 
-# {IOError, OSError}.{errno, strerror}
-try :
-    print("Try block")
-    fd = open("nosuchfile") # open will fail
-    print("File opened")
-except IOError as e:
-    print(e, repr(e))
-    print(e.errno, e.strerror, e.filename)
-#import os XXX fix under windows
-#try:
-#    os.chdir('meuheuheu')
-#except OSError as e2:
-#    print e2, repr(e2)
-#    print e2.errno, e2.strerror, e2.filename
 
 # del crash
 class AA:
@@ -97,10 +83,6 @@ del aa.a, aa.b, gg[1], gg[5]
 print(gg)
 lx = [1,2]
 del aa, gg, lx
-
-# char_cache out of bounds
-for nnn in '"\xd8\xc3A~s':
-    print(repr(nnn))
 
 # partition model
 (ar,br,cr) = 'allo ballo'.partition(' ')
@@ -133,10 +115,6 @@ print(sorted(dikkie2.keys()), sorted(dikkie2.values()))
 from testdata.bert2 import hello
 from testdata.bert2 import *
 
-# late binding 
-from testdata import board
-from testdata import piece
-piece.latebinding()
 
 # missing forward class declaration
 from testdata.Shape import Shape
