@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 #select.select
 import os
 import select
@@ -12,7 +14,6 @@ print(time.asctime()[:10])
 print(str(time.localtime())[:50])
 
 #null char
-print('hello\0world')
 print(repr('hello\0world'))
 print(repr('woef%swaf' % 'waaa\0wa'))
 print(repr('woef%swaf%s!' % ('waaa\0wa\0wa', '\0haaap')))
@@ -65,6 +66,8 @@ class MyClass(object):
 print(MyClass.A, MyClass.B, MyClass.C, MyClass.x, MyClass.y, MyClass.z, MyClass.zz, MyClass.t, MyClass.t2, MyClass.v, MyClass.v2)
 
 #unused default func
-def bla(hop=cmp):
+def mycmp(a, b):
+    return 0
+def bla(hop=mycmp):
     print('ole', hop(9,10))
 bla(lambda a,b:a+b)
