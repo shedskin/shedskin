@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 #new casting/conversion approach
 digit_dict = {
               "1":{1:(1,2,3,4,5),2:(1,3,5)  ,3:()}
@@ -14,13 +16,13 @@ digit_dict = {
 for d in sorted(digit_dict):
     d2 = digit_dict[d]
     for g in sorted(d2):
-        print d, g, d2[g]
+        print(d, g, d2[g])
 
 l = [[7,8,9], [7.7,8.8,9.9]]
     
 for ll in l:
     for lll in ll:
-        print '%.2f' % lll
+        print('%.2f' % lll)
 
 #circular includes
 from testdata import bert194
@@ -32,23 +34,23 @@ bert194.hello(Here())
 #partial support for 'super'
 class A(object):
     def __init__(self, x):
-        print 'a', x
+        print('a', x)
 class C(A):
     def __init__(self, x):
-        print 'c', x
+        print('c', x)
 class B(C):
     def __init__(self, x):
         super(B, self).__init__(x)
         super(C, self).__init__(3*x)
         A.__init__(self, 2*x)
         C.__init__(self, 3*x)
-        print 'b', x
+        print('b', x)
 B(7)
 
 #update with genexpr
 _hextochr = dict(('%02x' % i, chr(i)) for i in range(256))
 _hextochr.update(('%02X' % i, chr(i)) for i in range(256))
-print(sorted(_hextochr))
+print((sorted(_hextochr)))
 
 #C++ looks in class namespace first
 kwek = 18
@@ -59,7 +61,7 @@ class Test1(object) :
         self.kwek = 17
        
     def getlen(self) :
-        print kwek
+        print(kwek)
         return(len(self.buf))
        
 f = Test1(100)
@@ -72,8 +74,8 @@ try :
     fd = open("nosuchfile") # open will fail
     print("File opened")
 except IOError as e:
-    print e, repr(e)
-    print e.errno, e.strerror, e.filename
+    print(e, repr(e))
+    print(e.errno, e.strerror, e.filename)
 #import os XXX fix under windows
 #try:
 #    os.chdir('meuheuheu')
@@ -92,25 +94,25 @@ class AA:
 aa = AA(1)
 gg = {1:2,3:4,5:7}
 del aa.a, aa.b, gg[1], gg[5]
-print gg
+print(gg)
 lx = [1,2]
 del aa, gg, lx
 
 # char_cache out of bounds
 for nnn in '"\xd8\xc3A~s':
-    print repr(nnn)
+    print(repr(nnn))
 
 # partition model
 (ar,br,cr) = 'allo ballo'.partition(' ')
-print ar
-print br
-print cr
+print(ar)
+print(br)
+print(cr)
 
 # tuple_flow and globals 
 def bwa():
    return (11,12)
 def bwb():
-   print bwg
+   print(bwg)
 def bwmain():
    global bwg
    bwg=30
@@ -121,11 +123,11 @@ bwmain()
 # dict.update model
 dikkie = {}
 dikkie.update((a,-a) for a in range(-5,5,2))
-print sorted(dikkie.keys()), sorted(dikkie.values())
+print(sorted(dikkie.keys()), sorted(dikkie.values()))
 import collections
 dikkie2 = collections.defaultdict(int)
 dikkie2.update((a,-a) for a in range(-5,5,2))
-print sorted(dikkie2.keys()), sorted(dikkie2.values())
+print(sorted(dikkie2.keys()), sorted(dikkie2.values()))
 
 # unused import
 from testdata.bert2 import hello
@@ -140,7 +142,7 @@ piece.latebinding()
 from testdata.Shape import Shape
 class HitResult(object):
   def update(self, s):
-      print 'update'
+      print('update')
       self.s = s
 hitresult = HitResult()
 shape = Shape()
@@ -149,7 +151,7 @@ shape.woef(hitresult)
 # almost closure
 d3 = {1: 3, 2: 2, 3: 1}
 l3 = [1,2,3]
-print sorted(l3, key = lambda x: d3[x])
+print(sorted(l3, key = lambda x: d3[x]))
 
 # float(..)
-print float(' \n iNf'), float('INF'), float(' -inf'), float('NaN'), float('-nan'), float('infinity'), float('-infinITY')
+print(float(' \n iNf'), float('INF'), float(' -inf'), float('NaN'), float('-nan'), float('infinity'), float('-infinITY'))

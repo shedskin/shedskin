@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 def fact(n):
     """Return n factorial"""
@@ -15,8 +16,8 @@ def blah(x):
     yield x+1
 c = list(blah(4))
 
-print 'subsub:'
-print l(3)
+print('subsub:')
+print(l(3))
 
 GLOBAL = 'global'
 
@@ -25,16 +26,16 @@ class helper():
   @staticmethod
   def enable(flag):
     helper.flag=flag
-    print 'enabled'
+    print('enabled')
 
 class aa(object):
   def __init__(self):
-    print "init a"
+    print("init a")
     aa=[1,2]
     for i in aa:
-      print i
+      print(i)
 
   def hoppa(self):
     x = GLOBAL
-    print x
+    print(x)
     helper.enable(1)

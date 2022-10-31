@@ -5,11 +5,11 @@ class C:
 
 class A(C):
     def woof(self):
-       print 'woof!'
+       print('woof!')
 
 class B(C):
     def meow(self):
-       print 'meow!'
+       print('meow!')
 
 def somefunc(x):
     if isinstance(x, A):

@@ -1,4 +1,3 @@
-
 from __future__ import print_function
 
 # unbound ident
@@ -9,7 +8,7 @@ print(list(testdata.subsub.blah(4)))
 try:
     try:
         raise SystemExit('hoei')
-    except Exception, msg:
+    except Exception as msg:
         print('foute boel')
 except BaseException as ork:
     print('base exc', ork)
@@ -129,5 +128,3 @@ print(aazz.kwad)
 print(aazz.wof)
 print(aazz.s, aazz.t, aazz.z)
 print(aazz.wa)
-
-
