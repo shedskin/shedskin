@@ -29,11 +29,6 @@ lexists('testdata')
 isdir('testdata')
 isfile('testdata')
 
-def bleh(arg, top, names):
-    pass
-def bleh2(arg, top, names):
-    pass
-
 getsize('run.py')
 getatime('run.py')
 getctime('run.py')
