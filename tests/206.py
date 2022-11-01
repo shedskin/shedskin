@@ -233,6 +233,7 @@ l.sort(cmp=mut, reverse=True); print(l)
 
 
 print(oct(1==2), oct(1!=2))
+print(oct(200), oct(-200), oct(0))
 
 walk('testdata', bleh, 77)
 walk('testdata', bleh2, 'hoei')
@@ -433,3 +434,62 @@ print(list(map(hoppa3, range(8), range(4))))
 print(list(map(max, ['a','bc'], ['d'], ['e'])))
 
 print(list(map(set, [[1]])))
+
+# hashing
+print(hash(-1))
+print(hash(True))
+print(hash(12.345))
+
+# open('U')
+# MAC
+with open('cr.txt', 'w') as f1:
+    f1.write('hello world\r')
+    f1.write('bye\r')
+with open('cr.txt', 'r') as f1:
+    for line in f1:
+        print(line,)
+print('---')
+with open('cr.txt', 'rU') as f1:
+    for line in f1:
+        print(line,)
+print('===')
+
+# UNIX
+with open('lf.txt', 'w') as f1:
+    f1.write('hello world\n')
+    f1.write('bye\n')
+with open('lf.txt', 'r') as f1:
+    for line in f1:
+        print(line,)
+print('---')
+with open('lf.txt', 'rU') as f1:
+    for line in f1:
+        print(line,)
+print('===')
+
+##  DOS
+with open('crlf.txt', 'w') as f1:
+    f1.write('hello world\r\n')
+    f1.write('bye\r\n')
+    f1.write('foo\r')
+    f1.write('bar\n')
+    f1.write('baz\r\n')
+    f1.write('qux')
+with open('crlf.txt', 'r') as f1:
+    for line in f1:
+        print('%r' % line,)
+print('---')
+with open('crlf.txt', 'rU') as f1:
+    for line in f1:
+        print('%r' % line,)
+print('===')
+
+#generator and arg unpacking
+def genpack((i,j),a,b):
+    yield i
+    yield j
+    yield a
+    yield b
+ttt = (1,2)
+for aaa in genpack(ttt,3,4):
+    print(aaa)

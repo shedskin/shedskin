@@ -21,7 +21,6 @@ print(self)
 
 # bin, oct, hex
 print(hex(200), hex(-200), hex(0))
-print(oct(200), oct(-200), oct(0))
 print(bin(200), bin(-200), bin(0))
 
 class A(object):
@@ -37,7 +36,7 @@ argv=[0,3,3]
 r,c=map(int,argv[1:])
 p,g=r*c,range
 z=g(p)
-w=lambda x:sum((abs(x%r-v%r)<2)&(abs(x/r-v/r)<2)&d[v]for v in z)
+w=lambda x:sum((abs(x%r-v%r)<2)&(abs(x//r-v//r)<2)&d[v]for v in z)
 for m in g(2**p):
  d=[m>>x&1 for x in z]
  if all(d[x]&(2<w(x)<5)|~d[x]&(w(x)!=3)for x in z):
@@ -67,7 +66,7 @@ print(min(1,2,3, key=int), max(1,2,3, key=str))
 
 # zip()
 zip0 = zip()
-print(zip0)
+print(list(zip0))
 
 # math.factorial
 import math
@@ -81,51 +80,8 @@ def foo3(a, b, c):
 def flats():
     for x in range(3):
         yield chr(ord('A')+x)
-print(map(foo3, range(3), map(float, list(range(1, 4))), flats()))
+print(list(map(foo3, range(3), map(float, list(range(1, 4))), flats())))
 
-# open('U')
-# MAC
-with open('cr.txt', 'w') as f1:
-    f1.write('hello world\r')
-    f1.write('bye\r')
-with open('cr.txt', 'r') as f1:
-    for line in f1:
-        print(line,)
-print('---')
-with open('cr.txt', 'rU') as f1:
-    for line in f1:
-        print(line,)
-print('===')
-
-# UNIX
-with open('lf.txt', 'w') as f1:
-    f1.write('hello world\n')
-    f1.write('bye\n')
-with open('lf.txt', 'r') as f1:
-    for line in f1:
-        print(line,)
-print('---')
-with open('lf.txt', 'rU') as f1:
-    for line in f1:
-        print(line,)
-print('===')
-
-##  DOS
-with open('crlf.txt', 'w') as f1:
-    f1.write('hello world\r\n')
-    f1.write('bye\r\n')
-    f1.write('foo\r')
-    f1.write('bar\n')
-    f1.write('baz\r\n')
-    f1.write('qux')
-with open('crlf.txt', 'r') as f1:
-    for line in f1:
-        print('%r' % line,)
-print('---')
-with open('crlf.txt', 'rU') as f1:
-    for line in f1:
-        print('%r' % line,)
-print('===')
 
 # dict(iter({str,pyseq}))
 print(sorted(dict(['ab', 'cd']).items()))
@@ -189,23 +145,6 @@ class meuk:
 waf = meuk().layout()
 print(list(waf))
 
-# random module improvements
-import random
-random.seed(1)
-print(random.triangular())
-print(random.triangular(high=1.1, low=0.0))
-print(random.triangular(0.1))
-print(random.triangular(-2, 2))
-print(random.triangular(-2.0, 2.1, 1.5))
-print(random.triangular(mode=1.5))
-print(random.triangular(0, 5, 0))
-random.seed()
-random.seed('seed')
-random.seed(8.0)
-random.seed(None)
-random.seed(4)
-print(random.random())
-
 # itertools.product fix
 import itertools
 print(list(itertools.product([0,1,2], [0,1,2])))
@@ -213,10 +152,6 @@ print(list(itertools.product([-1, 0, 1], repeat=2)))
 print(list(itertools.product(iter([1, 2, 3]), iter([4, 5]), repeat = 2)))
 print(list(itertools.product(iter([1, 2, 3]), iter([4, 5]), iter([6, 7, 8]), repeat = 2)))
 
-# hashing
-print(hash(-1))
-print(hash(True))
-print(hash(12.345))
 
 #and,or mixing
 1 or 'hoppa' or [1,2]

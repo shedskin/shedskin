@@ -360,16 +360,6 @@ print(t1!=t2)
 print(t1==t2)
 print({(3,2): 0} == {(3,2): 1})
 
-#generator and arg unpacking
-def genpack((i,j),a,b):
-    yield i
-    yield j
-    yield a
-    yield b
-ttt = (1,2)
-for aaa in genpack(ttt,3,4):
-    print(aaa)
-
 #fill in virtual variable types
 class CCache:
     def Probe(self):
