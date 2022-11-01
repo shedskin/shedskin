@@ -17,18 +17,6 @@ except IndexError:
 px = 0xff << 24
 print (px == 0xff000000)
 
-# unicode basics  # TODO non-ascii so run.py doesn't work
-ss = u'\u91cf\u5b50\u529b\u5b66'
-print(repr(ss))  #, s
-t = ss.encode('utf-8')
-print(repr(t))  #, t
-u = t.decode('utf-8')
-print(repr(u))  #, u
-l = [ss, u]
-print(l)
-print(repr(ss[1]))  #, s[1]
-print(len(ss))
-
 # some datetime tests
 import datetime
 print(datetime.datetime.today().date())
@@ -39,8 +27,8 @@ bignumstr = '1' + 500 * '0'
 print(float(bignumstr))
 
 # optimize: for .. in enumerate(str)
-for i, e in enumerate('poehee'):
-    print(i, e)
+for ix, ex in enumerate('poehee'):
+    print(ix, ex)
 
 # optimize: name in (expr, expr, ..)
 z = 12
@@ -55,9 +43,9 @@ a = set([1,2])                           # [Set(int)]
 a.add(3)                                 # []
 print(a)                                  # [Set(int)]
 
-g = frozenset([1])
+gs = frozenset([1])
 h = {}
-h[g] = 4
+h[gs] = 4
 print(h)
 
 def mapp():
@@ -79,8 +67,8 @@ class ueuk(Exception):
 
 try:
     raise ueuk('aha! error.')
-except ueuk as x:
-    print(x)
+except ueuk as errx:
+    print(errx)
 
 # TODO
 # __div__ -> __truediv__, __floordiv__
@@ -91,35 +79,36 @@ print(string.join(['hello', 'world!']), string.join(['hello', 'world!'], '_'))
 # cStringIO.StringIO, file.seek
 import cStringIO, sys
 
-s = cStringIO.StringIO(open('testdata/hopsakee').read())
-print(s.readlines())
+sio = cStringIO.StringIO(open('testdata/hopsakee').read())
+print(sio.readlines())
 
-s = cStringIO.StringIO('blaat')
-s.seek(-3, 2)
-print(s.read())
+sio = cStringIO.StringIO('blaat')
+sio.seek(-3, 2)
+print(sio.read())
 
-s = cStringIO.StringIO()
-print(s.tell())
-s.write('hallo\njoh')
-print(s.tell())
-s.seek(0, 0)
-print(s.tell())
-print(s.readlines())
-print(s.tell())
-s.seek(0, 0)
-print(s.tell())
-s.write('hoi')
-print(s.tell())
-print(s.readlines())
-print(s.tell())
-blah = set([])
+sio = cStringIO.StringIO()
+print(sio.tell())
+sio.write('hallo\njoh')
+print(sio.tell())
+sio.seek(0, 0)
+print(sio.tell())
+print(sio.readlines())
+print(sio.tell())
+sio.seek(0, 0)
+print(sio.tell())
+sio.write('hoi')
+print(sio.tell())
+print(sio.readlines())
+print(sio.tell())
+
+blah2 = set([])
 
 print(repr(''.join([chr(i) for i in range(256)])))
 
 b = [1,2,3]
 g = iter(b)
-for x in range(5):
-    print(next(g),)  # TODO fillvalue modeling
+for _ in range(5):
+    print(next(g, -1))
 print()
 
 # --- end-of-file problem
@@ -150,8 +139,8 @@ print(1/3.0, 1.1234123412341234, 1.1, 8.0)
 # string.maketrans
 import string
 si = 'abcde'
-t1 = string.maketrans('abc', 'xyz')
-print(si.translate(t1))
+trans = string.maketrans('abc', 'xyz')
+print(si.translate(trans))
 
 # reversed(range)
 import random
@@ -185,7 +174,7 @@ print('word', repr(word))
 # --- string.{capitalize, capwords, swapcase, center, atoi, atol, atof}
 print(string.capitalize('hoi'), ' hoi'.capitalize())
 print(string.capwords('yo   momma')+'!'+string.capwords(' yo momma ')+'!'+string.capwords(' yo momma ', 'mm')+'!')
-allchars = ''.join([chr(x) for x in range(256)])
+allchars = ''.join([chr(cx) for cx in range(256)])
 print(repr(allchars.swapcase()), repr(string.swapcase(allchars)))
 print(string.center('hoi', 10), string.center('hoi', 10, 'u'))
 print('hoi'.center(10, 'u'))
@@ -225,16 +214,22 @@ print(sorted('abcde', reverse=True))
 print(sorted('abcde', cmp=cmut))
 print(sorted('abcde', cmp=cmut, reverse=True))
 
-l = [1,4,5,2,3]
-l.sort(); print(l)
-l.sort(cmp=mut); print(l)
-l.sort(reverse=True); print(l)
-l.sort(cmp=mut, reverse=True); print(l)
+ls = [1,4,5,2,3]
+ls.sort(); print(ls)
+ls.sort(cmp=mut); print(ls)
+ls.sort(reverse=True); print(ls)
+ls.sort(cmp=mut, reverse=True); print(ls)
 
-
+# oct
 print(oct(1==2), oct(1!=2))
 print(oct(200), oct(-200), oct(0))
 
+# os.path.walk
+from os.path import walk
+def bleh(arg, top, names):
+    pass
+def bleh2(arg, top, names):
+    pass
 walk('testdata', bleh, 77)
 walk('testdata', bleh2, 'hoei')
 
@@ -294,7 +289,7 @@ print(rcp.get('ematter', 'pages')) #, vars={'var': 'blah'})
 print(sorted(rcp.items('ematter')))
 
 # file.next
-print(next(open('run.py')).strip())
+print(open('run.py').next().strip())
 
 #backticks, scalar
 ahh = 19
@@ -303,9 +298,9 @@ print(`18`, `ahh+1`, `hoi`)
 
 from sys import maxint as MAXINT
 from sys import maxsize as MAXSIZE
-a = MAXINT
-bb = MAXSIZE
-print(a == bb)
+maxint = MAXINT
+maxsize = MAXSIZE
+print(maxint == maxsize)
 
 #bisect should model __cmp__, fix sorting problem
 from bisect import insort
@@ -326,6 +321,7 @@ print(items)
 
 # TODO with expr1 as bla, expr2..
 
+import csv
 print(sorted(csv.list_dialects()))
 
 #csv default writer lineterminator?
@@ -352,40 +348,6 @@ oink = Oink()
 oink[4,5] = oink[2,3]
 oink[t2] = oink[t2]
 
-arr2 = array.array('c')
-arr2.extend('hoei')
-print(arr2.count('h'), arr2.index('h'))
-arr2[-1] = 'X'
-arr2.insert(0, '-')
-arr2.fromlist(['a', 'b'])
-print(arr2, arr2.tolist(), arr2.tostring())
-print(arr2[0])
-
-
-initial = (
-    '         \n'  #   0 -  9
-    '         \n'  #  10 - 19
-    ' rnbqkbnr\n'  #  20 - 29
-    ' pppppppp\n'  #  30 - 39
-    ' ........\n'  #  40 - 49
-    ' ........\n'  #  50 - 59
-    ' ........\n'  #  60 - 69
-    ' ........\n'  #  70 - 79
-    ' PPPPPPPP\n'  #  80 - 89
-    ' RNBQKBNR\n'  #  90 - 99
-    '         \n'  # 100 -109
-    '         \n'  # 110 -119
-)
-
-def print_pos(board):
-    print()
-    uni_pieces = {'R':u'♜', 'N':u'♞', 'B':u'♝', 'Q':u'♛', 'K':u'♚', 'P':u'♟',
-                  'r':u'♖', 'n':u'♘', 'b':u'♗', 'q':u'♕', 'k':u'♔', 'p':u'♙', '.':u'·'}
-
-    for k in sorted(uni_pieces):
-        print(k, uni_pieces[k])
-
-print_pos(initial)
 
 print('hello\0world')
 
@@ -406,9 +368,9 @@ try :
     print("Try block")
     fd = open("nosuchfile") # open will fail
     print("File opened")
-except IOError as e:
-    print(e, repr(e))
-    print(e.errno, e.strerror, e.filename)
+except IOError as errr:
+    print(errr, repr(errr))
+    print(errr.errno, errr.strerror, errr.filename)
 #import os XXX fix under windows
 #try:
 #    os.chdir('meuheuheu')
@@ -507,8 +469,8 @@ p = ConfigParser.ConfigParser()
 p.read("testdata/symbols.INI")
 for entry in p.items("symbols"):
     print(entry)
-items = p.defaults().items()
-print(items)
+itemz = p.defaults().items()
+print(itemz)
 sections = p.sections()
 print(sections)
 
@@ -531,4 +493,5 @@ child_stdin, child_stdout = os.popen2("echo a  text", "r")
 print(repr(child_stdout.read()))
 
 # default print precision?
+import math
 print(math.cosh(2))
