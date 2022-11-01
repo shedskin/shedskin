@@ -493,3 +493,42 @@ def genpack((i,j),a,b):
 ttt = (1,2)
 for aaa in genpack(ttt,3,4):
     print(aaa)
+
+# exception printing
+valeur = ValueError('valeur')
+print(valeur)
+print(repr(valeur))
+#print(valeur.message)
+print(valeur.__class__.__name__)
+
+# ConfigParser.items model
+import ConfigParser
+p = ConfigParser.ConfigParser()
+p.read("testdata/symbols.INI")
+for entry in p.items("symbols"):
+    print(entry)
+items = p.defaults().items()
+print(items)
+sections = p.sections()
+print(sections)
+
+# qualify & add include for class name
+from testdata import iec2
+from testdata import d1541
+IEC = iec2.IECBus()
+hop = d1541.D1541(IEC, 8)
+print(hop.get_data())
+
+#os.popen2 improvement
+import os
+child_stdin, child_stdout = os.popen2(["echo", "a  text"], "r")
+print(repr(child_stdout.read()))
+child_stdin, child_stdout = os.popen2(iter(["echo", "a  text"]), "r")
+print(repr(child_stdout.read()))
+child_stdin, child_stdout = os.popen2(("echo", "a  text"), "r")
+print(repr(child_stdout.read()))
+child_stdin, child_stdout = os.popen2("echo a  text", "r")
+print(repr(child_stdout.read()))
+
+# default print precision?
+print(math.cosh(2))

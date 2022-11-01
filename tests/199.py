@@ -29,19 +29,19 @@ print(wa.value)
 
 set1 = set()
 set1 |= set([2,3])
-print(set1)
+print(sorted(set1))
 
 set2 = set()
 set2 &= set([2,3])
-print(set2)
+print(sorted(set2))
 
 set3 = set()
 set3 ^= set([2,3])
-print(set3)
+print(sorted(set3))
 
 set4 = set()
 set4 -= set([2,3])
-print(set4)
+print(sorted(set4))
 
 # overflow in pow, use long long internally
 print(pow(290797,2,50515093))
@@ -88,14 +88,3 @@ print(arr[-7:])
 print(arr[-7::2])
 print(arr[:8:3])
 print(arr[15:1:-2])
-
-#os.popen2 improvement
-import os
-child_stdin, child_stdout = os.popen2(["echo", "a  text"], "r")
-print(repr(child_stdout.read()))
-child_stdin, child_stdout = os.popen2(iter(["echo", "a  text"]), "r")
-print(repr(child_stdout.read()))
-child_stdin, child_stdout = os.popen2(("echo", "a  text"), "r")
-print(repr(child_stdout.read()))
-child_stdin, child_stdout = os.popen2("echo a  text", "r")
-print(repr(child_stdout.read()))
