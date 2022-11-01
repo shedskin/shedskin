@@ -112,7 +112,7 @@ for _ in range(5):
 print()
 
 # --- end-of-file problem
-print([l for l in open('testdata/scene.txt') if l.startswith('mterial')])
+print([line for line in open('testdata/scene.txt') if line.startswith('material')])
 
 # TODO str.join etc?
 
@@ -141,26 +141,6 @@ import string
 si = 'abcde'
 trans = string.maketrans('abc', 'xyz')
 print(si.translate(trans))
-
-# reversed(range)
-import random
-random.seed(1)
-
-for z in range(1000):
-    l,u,s = random.randrange(-5,5), random.randrange(-5,5), random.randrange(-5,5)
-    print(l, u, s)
-
-    try:
-        x = range(l,u,s)
-        y = reversed(range(l,u,s))
-
-        xl = [e for e in x]
-        yl = [e for e in y]
-
-        print(xl, yl, [0, 1][xl == list(reversed(yl))])
-
-    except ValueError as v:
-        print(v)
 
 # --- str.translate problem
 import string
@@ -239,3 +219,6 @@ print(repr(string.whitespace))
 #int(), float(), str(); test all
 print(int(), float(), list(), dict(), set(), tuple(), frozenset(),) # XXX repr(str())
 
+# range segfault
+broken_range = range(3,0,1)
+print(list(broken_range))
