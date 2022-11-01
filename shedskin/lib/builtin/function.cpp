@@ -80,9 +80,11 @@ list<__ss_int> *range(__ss_int a, __ss_int b, __ss_int s) {
         __throw_range_step_zero();
 
     if(s==1) {
-        r->units.resize(b-a);
-        for(; i<b;i++)
-            r->units[pos++] = i;
+        if(b-a > 0) {
+            r->units.resize(b-a);
+            for(; i<b;i++)
+                r->units[pos++] = i;
+        }
 
         return r;
     }
