@@ -247,6 +247,8 @@ class Aap:
         return Aap(self.value+other.value)
     def __str__(self):
         return 'Aap(%s)' % self.value
+    def __repr__(self):
+        return str(self)
 aaplist = [Aap(3), Aap(4), Aap(5)]
 print(sum(aaplist, Aap(6)))
 print(reduce(lambda a,b:a+b, aaplist), reduce(lambda a,b:a+b, aaplist, Aap(6)))
