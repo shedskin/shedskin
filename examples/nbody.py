@@ -5,6 +5,7 @@
 # contributed by Kevin Carson
 
 # add '-ffast-math' to the shedskin FLAGS for a huge speedup
+from __future__ import print_function
 
 import sys
 
@@ -21,10 +22,10 @@ def advance(bodies, dt) :
         b.y += dt/2 * b.vy
         b.z += dt/2 * b.vz
 
-    for i in xrange(len(bodies)) :
+    for i in range(len(bodies)) :
         b = bodies[i]
 
-        for j in xrange(i + 1, len(bodies)) :
+        for j in range(i + 1, len(bodies)) :
             b2 = bodies[j]
 
             dx = b.x - b2.x
@@ -49,11 +50,11 @@ def advance(bodies, dt) :
 
 def energy(bodies) :
     e = 0.0
-    for i in xrange(len(bodies)) :
+    for i in range(len(bodies)) :
         b = bodies[i]
         e += 0.5 * b.mass * (b.vx**2 + b.vy**2 + b.vz**2)
 
-        for j in xrange(i + 1, len(bodies)) :
+        for j in range(i + 1, len(bodies)) :
             b2 = bodies[j]
 
             dx = b.x - b2.x
@@ -123,18 +124,18 @@ def main() :
         #n = int(sys.argv[1])
         n = 600000
     except :
-        print "Usage: %s <N>" % sys.argv[0]
+        print("Usage: %s <N>" % sys.argv[0])
 
     bodies = [sun, jupiter, saturn, uranus, neptune]
 
     offset_momentum(bodies)
 
-    print "%.9f" % energy(bodies)
+    print("%.9f" % energy(bodies))
 
-    for i in xrange(n) :
+    for i in range(n) :
         advance(bodies, 0.01)
 
-    print "%.9f" % energy(bodies)
+    print("%.9f" % energy(bodies))
 
 if __name__ == '__main__':
     main()

@@ -111,7 +111,7 @@ oink[t2] = oink[t2]
 
 #print('hello\0world') # TODO ???
 
-# filter, map, zip -> no lists anymore!!! (see removed itertools.ifilter/imap/izip?)
+# filter, map, zip, range -> no more lists!!! (see also removed itertools.ifilter/imap/izip)
 
 collector = set()
 collector.add(frozenset([1,2]))
