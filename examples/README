@@ -2,7 +2,8 @@
 
 HELP WANTED with porting these example programs to python3!
 
-(currently working with python3: pystone, sunfish, voronoi, ac_encode, adatron, brainfuck, chaos, chess, life, mandelbrot, mandelbrot2)
+(currently working with python3: pystone, sunfish, voronoi, ac_encode, adatron, brainfuck, chaos, chess, life,
+    mandelbrot, mandelbrot2, sieve)
 
 shedskin -b (disable index-out-of-bounds checking) often improves performance. see the documentation for more performance tips:
 
