@@ -138,7 +138,7 @@ class sphere(renderobject):
                 norm = pos - self.pos
                 norm.norm()
             else:
-                intersectiontype="none"
+                intersectiontype = "none"
 
         return intersectiontype, (pos, norm)
 
@@ -148,7 +148,7 @@ class light:
         for ob in objects:
             if ob is not obj:
                 intersects,(pos, norm) = ob.intersect(l)
-                if intersects is not "none":
+                if intersects != "none":
                     return 1
         return 0
 
@@ -215,7 +215,7 @@ class shader:
             for ob in objects:
                 if ob is not obj:
                     intersects,(position,normal) = ob.intersect(reflected)
-                    if intersects is not "none":
+                    if intersects != "none":
                         newshaderinfo.thisobj = ob
                         newshaderinfo.position = position
                         newshaderinfo.normal = normal
@@ -231,7 +231,7 @@ class shader:
         for ob in objects:
             if ob is not obj:
                 intersects,(position,normal) = ob.intersect(test)
-                if intersects is not "none":
+                if intersects != "none":
                     return 1
         return 0
 
@@ -295,7 +295,7 @@ class world:
 
                 for obj in self.objects:
                     intersects,(position,normal) = obj.intersect(ray)
-                    if intersects is not "none":
+                    if intersects != "none":
                         if position.z<depth and position.z>0:
                             depth = position.z
                             shaderinfo.thisobj = obj

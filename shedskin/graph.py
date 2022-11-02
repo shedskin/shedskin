@@ -1325,7 +1325,10 @@ class ModuleVisitor(BaseNodeVisitor):
     def assign_pair(self, lvalue, rvalue, func):
         # expr[expr] = expr
         if isinstance(lvalue, Subscript) and not isinstance(lvalue.slice, (Slice, ExtSlice)):
-            subscript = lvalue.slice.value
+            if isinstance(lvalue.slice, Index):
+                subscript = lvalue.slice.value
+            else:
+                subscript = lvalue.slice
 
             fakefunc = make_call(Attribute(lvalue.value, '__setitem__', Load()), [subscript, rvalue])
             self.visit(fakefunc, func)
