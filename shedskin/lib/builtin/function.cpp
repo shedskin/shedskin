@@ -199,7 +199,7 @@ template<> str *hex(int i) {
     else
         return (new str("0x"))->__add__(__str(i, 16));
 }
-template<> str *hex(__ss_bool b) { return hex(b.value); }
+template<> str *hex(__ss_bool b) { return hex((int)b.value); }
 
 template<> str *oct(int i) {
     if(i<0)
@@ -209,7 +209,7 @@ template<> str *oct(int i) {
     else
       return new str("0");
 }
-template<> str *oct(__ss_bool b) { return oct(b.value); }
+template<> str *oct(__ss_bool b) { return oct((int)b.value); }
 
 template<> str *bin(int i) {
     if(i<0)
@@ -217,4 +217,4 @@ template<> str *bin(int i) {
     else
         return (new str("0b"))->__add__(__str(i, 2));
 }
-template<> str *bin(__ss_bool b) { return bin(b.value); }
+template<> str *bin(__ss_bool b) { return bin((int)b.value); }

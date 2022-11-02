@@ -103,7 +103,9 @@ template<> inline __ss_int __cmp(int a, int b) {
 }
 
 template<> inline __ss_int __cmp(__ss_bool a, __ss_bool b) {
-    return __cmp(a.value, b.value); /* XXX */
+    if(a.value < b.value) return -1;
+    else if(a.value > b.value) return 1;
+    return 0;
 }
 
 template<> inline __ss_int __cmp(double a, double b) {
