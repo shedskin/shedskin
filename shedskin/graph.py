@@ -816,22 +816,25 @@ class ModuleVisitor(BaseNodeVisitor):
         if isinstance(node.slice, Slice):
             nslice = node.slice
             self.slice(node, node.value, [nslice.lower, nslice.upper, nslice.step], func)
+
         elif isinstance(node.slice, ExtSlice):
             if any(isinstance(dim, Ellipsis) for dim in node.slice.dims):  # XXX also check at setitem
                 error('ellipsis is not supported', self.gx, node, mv=getmv())
             raise NotImplementedError
-        elif isinstance(node.slice, Index):
-            subscript = node.slice.value
+
+        else:
+            if isinstance(node.slice, Index):
+                subscript = node.slice.value
+            else:
+                subscript = node.slice
 
             if isinstance(node.ctx, Del):
                 self.fake_func(node, node.value, '__delitem__', [subscript], func)
-            elif isinstance(node.slice.value, (List, Tuple)):
+            elif isinstance(subscript, (List, Tuple)):
                 self.fake_func(node, node.value, '__getitem__', [subscript], func)
             else:
                 ident = '__getitem__'
                 self.fake_func(node, node.value, ident, [subscript], func)
-        else:
-            error('Unknown type of Subscript slice', self.gx, node, mv=getmv())
 
     def visit_Slice(self, node, func=None):
         self.slice(node, node.expr, [node.lower, node.upper, None], func)
