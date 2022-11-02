@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 
-# unicode # TODO non-ascii so run.py doesn't work
+# unicode
 
 # encode/decode
 ss = u'\u91cf\u5b50\u529b\u5b66'
-print(repr(ss))  #, s
+print(repr(ss), ss)
 t = ss.encode('utf-8')
-print(repr(t))  #, t
+print(repr(t), t)
 u = t.decode('utf-8')
-print(repr(u))  #, u
+print(repr(u), u)
 l = [ss, u]
 print(l)
 print(repr(ss[1]))  #, s[1]
