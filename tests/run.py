@@ -76,11 +76,16 @@ def tests(args, options):
     tests = [test for test in test_numbers(args, options)
              if os.path.exists('%d.py' % test)]
     failures = []
+
+    try:
+        default_imap = itertools.imap
+    except AttributeError:
+        default_imap = map
+
     if "OMP_NUM_THREADS" in os.environ:
-        imap = Pool(int(os.environ["OMP_NUM_THREADS"])).imap if parallel else itertools.imap
+        imap = Pool(int(os.environ["OMP_NUM_THREADS"])).imap if parallel else default_imap
     else:
-        # This is slow-ish on 2.x, but fine on 3.x
-        imap = Pool().imap if parallel else map
+        imap = Pool().imap if parallel else default_imap
 
     for result in imap(partial_run_test, tests):
         if result is not None:
