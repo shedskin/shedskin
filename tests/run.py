@@ -225,7 +225,9 @@ def error_tests(args, options):
 
 
 def get_output(command):
-    com = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE).stdout
+    myenv = os.environ
+    myenv['PYTHONIOENCODING'] = 'utf-8'
+    com = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, env=myenv).stdout
     output = com.readlines()
     com.close()
     return output
