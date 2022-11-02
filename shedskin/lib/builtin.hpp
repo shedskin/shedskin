@@ -715,7 +715,7 @@ public:
 
 class __ss_bool {
 public:
-    int value;
+    uint8_t value;
     inline __ss_int operator+(__ss_bool b);
     inline __ss_bool operator==(__ss_bool b);
     inline __ss_bool operator&(__ss_bool b);
@@ -932,7 +932,7 @@ template<> inline __ss_int __abs(__ss_int a) { return a<0?-a:a; }
 #endif
 template<> inline int __abs(int a) { return a<0?-a:a; }
 template<> inline double __abs(double a) { return a<0?-a:a; }
-inline int __abs(__ss_bool b) { return __abs(b.value); }
+inline int __abs(__ss_bool b) { return b.value; }
 
 template<class T> str *hex(T t) {
     return t->__hex__();
@@ -1055,7 +1055,7 @@ template<class T> inline double __float(T t) { return t->__float__(); }
 template<> inline double __float(__ss_int p) { return p; }
 #endif
 template<> inline double __float(int p) { return p; }
-template<> inline double __float(__ss_bool b) { return __float(b.value); }
+template<> inline double __float(__ss_bool b) { return b.value; }
 template<> inline double __float(double d) { return d; }
 template<> double __float(str *s);
 
