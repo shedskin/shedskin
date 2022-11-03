@@ -57,7 +57,7 @@ lines  name                 description                     notes
                                                             cd ..; python mastermind_main.py
    117 mastermind2.py       mastermind strategies
     49 minpng.py            uncompressed PNG encoder
- 1,201 msp_ss.py            serial bootstrap loader         see comments in top
+ 1,201 msp_ss.py            serial bootstrap loader         shedskin -Llib msp_ss.py
    482 mwmatching.py        maximum weighted matching algorithm
    101 nbody.py             planet body physics
    154 neural1.py           back-prop neural network        python neural1.py --test
