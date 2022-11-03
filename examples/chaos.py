@@ -5,7 +5,6 @@
 """create chaosgame-like fractals
 """
 
-import functools
 import random
 import math
 random.seed(1234)
@@ -125,7 +124,7 @@ def save_im(im, fn):
     maxval = 255
     w = len(im)
     h = len(im[0])
-    f.write('P6\n'.encode('ascii'))
+    f.write(b'P6\n') #.encode('ascii'))
     f.write(b'%i %i\n%i\n' % (w, h, maxval))
     for j in range(h):
         for i in range(w):
@@ -155,7 +154,7 @@ class Chaosgame(object):
                 curr = spl.call(t)
                 length += curr.dist(last)
             self.num_trafos.append(max(1, int(length / maxlength * 1.5)))
-        self.num_total = functools.reduce(lambda a,b: a+b, self.num_trafos, 0)
+        self.num_total = reduce(lambda a,b: a+b, self.num_trafos, 0)
 
 
     def get_random_trafo(self):
@@ -189,7 +188,7 @@ class Chaosgame(object):
             basepoint.y += -derivative.x / derivative.Mag() * (y - 0.5) * \
                            self.thickness
         else:
-            print("r", end='')
+            print("r")
         self.truncate(basepoint)
         return basepoint
 
