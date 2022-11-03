@@ -19,8 +19,8 @@ print(csv.field_size_limit())
 print(csv.field_size_limit(1000))
 print(csv.field_size_limit())
 
-csv.reader(open('testdata/woef.csv'), dialect = 'excel', delimiter = ',', quotechar = '"', lineterminator = '\r\n', escapechar = '')
-csv.writer(open('testdata/bla.csv', 'w'), dialect = 'excel', delimiter = ',', quotechar = '"', lineterminator = '\r\n', escapechar = '')
+csv.reader(open('testdata/woef.csv'), dialect = 'excel', delimiter = ',', quotechar = '"', lineterminator = '\r\n', escapechar = '\\')
+csv.writer(open('testdata/bla.csv', 'w'), dialect = 'excel', delimiter = ',', quotechar = '"', lineterminator = '\r\n', escapechar = '\\')
 
 bla = open('testdata/bla.csv', 'w')
 fieldnames = ['hop', 'hap', 'ole', 'aap']
@@ -35,5 +35,5 @@ rd.fieldnames = fieldnames
 print(rd.fieldnames)
 print(open('testdata/bla.csv').read())
 
-csv.DictReader(open('testdata/woef.csv'), None, dialect = 'excel', delimiter = ',', quotechar = '"', lineterminator = '', escapechar = '')
-csv.DictWriter(open('testdata/woef.csv'), None, dialect = 'excel', delimiter = ',', quotechar = '"', lineterminator = '', escapechar = '')
+csv.DictReader(open('testdata/woef.csv'), None, dialect = 'excel', delimiter = ',', quotechar = '"', lineterminator = '', escapechar = '\\')
+csv.DictWriter(open('testdata/woef.csv'), None, dialect = 'excel', delimiter = ',', quotechar = '"', lineterminator = '', escapechar = '\\')

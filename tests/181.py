@@ -39,7 +39,7 @@ print(ord(chr(1==2)), ord(chr(1!=2)))
 #random.sample/choice
 import random
 print(random.sample(range(1), 1))
-print(random.sample(set([1]), 1))
+print(random.sample(sorted(set([1])), 1))
 
 #fast_for_neg in listcomp_for
 print([(i, i) for i in range(29, -1, -1)])
