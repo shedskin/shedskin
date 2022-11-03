@@ -2773,7 +2773,7 @@ class GenerateVisitor(BaseNodeVisitor):
         elif value is None:
             self.append('NULL')
 
-        elif isinstance(value, int):
+        elif value.__class__.__name__ in ('int', 'long'): #isinstance(value, int):
             self.append('__ss_int(')
             self.append(str(value))
             if self.gx.longlong:
