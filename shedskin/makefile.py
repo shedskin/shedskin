@@ -144,7 +144,7 @@ def generate_makefile(gx):
                 elif sys.platform == 'sunos5':
                     line += ' -shared -Xlinker ' + ldflags
                 else:
-                    line += ' -shared -Xlinker -export-dynamic ' + ldflags
+                    line += ' -Wno-register -shared -Xlinker -export-dynamic ' + ldflags
 
             if 're' in [m.ident for m in modules]:
                 line += ' -lpcre'
