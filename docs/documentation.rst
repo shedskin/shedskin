@@ -486,6 +486,7 @@ The shedskin command can be given the following options:
 
 * :code:`-a` :code:`--ann`               Output annotated source code (``.ss.py``)
 * :code:`-b` :code:`--nobounds`          Disable bounds checking
+* :code:`-c` :code:`--nogc`              Disable garbage collection
 * :code:`-e` :code:`--extmod`            Generate extension module
 * :code:`-f` :code:`--flags`             Provide alternate Makefile flags
 * :code:`-g` :code:`--nogcwarns`         Disable runtime GC warnings
@@ -494,7 +495,6 @@ The shedskin command can be given the following options:
 * :code:`-n` :code:`--silent`            Silent mode, only show warnings
 * :code:`-o` :code:`--noassert`          Disable assert statements
 * :code:`-r` :code:`--random`            Use fast random number generator (:code:`rand()`)
-* :code:`-s` :code:`--strhash`           Use fast string hashing algorithm (murmur)
 * :code:`-w` :code:`--nowrap`            Disable wrap-around checking
 * :code:`-x` :code:`--traceback`         Print traceback for uncaught exceptions
 * :code:`-L` :code:`--lib`               Add a library directory
