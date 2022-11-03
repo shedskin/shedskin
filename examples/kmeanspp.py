@@ -150,8 +150,8 @@ def print_eps(points, cluster_centers, W=400, H=400):
         for p in points:
             if p.group != i:
                 continue
-            print ("%.3f %.3f c" % ((p.x - cx) * scale + W / 2,
-                                    (p.y - cy) * scale + H / 2))
+#            print ("%.3f %.3f c" % ((p.x - cx) * scale + W / 2,
+#                                    (p.y - cy) * scale + H / 2))
  
         print ("\n0 setgray %g %g s" % ((cc.x - cx) * scale + W / 2,
                                         (cc.y - cy) * scale + H / 2))
