@@ -222,7 +222,10 @@ def clear_block(m):
 def parse_file(name):
     # Convert block comments into strings which will be duely ignored.
     pat = re.compile(r"#{.*?#}[^\r\n]*$", re.MULTILINE | re.DOTALL)
-    filebuf = re.sub(pat, clear_block, ''.join(open(name, 'U').readlines()))
+    try:
+        filebuf = re.sub(pat, clear_block, ''.join(open(name, 'U').readlines()))
+    except ValueError:
+        filebuf = re.sub(pat, clear_block, ''.join(open(name).readlines()))
     try:
         return parse(filebuf)
     except SyntaxError as s:
