@@ -136,3 +136,35 @@ export PYTHONPATH=..:../..
 #python2 -m shedskin minpng && make
 #time ./minpng
 #echo CHECK: out.png, out.ppm!
+#
+#python2 -m shedskin -Llib msp_ss && make
+#time ./msp_ss
+#
+#time python2 mwmatching.py
+#python2 -m shedskin mwmatching && make
+#time ./mwmatching
+#
+#time python2 nbody.py
+#python2 -m shedskin nbody && make
+#time ./nbody
+#
+#time python2 neural1.py --test
+#python2 -m shedskin neural1 && make
+#time ./neural1 --test
+#
+#time python2 neural2.py
+#python2 -m shedskin neural2 && make
+#time ./neural2
+#
+#time python2 oliva2.py
+#python2 -m shedskin oliva2 && make
+#time ./oliva2
+#echo CHECK: oliva.pgm
+#
+#time python2 othello.py
+#python2 -m shedskin othello && make
+#time ./othello
+#
+#time python2 pisang.py
+#python2 -m shedskin pisang && make
+#time ./pisang
