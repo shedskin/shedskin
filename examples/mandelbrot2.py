@@ -22,7 +22,7 @@ class kohn_bmp:
             self.width_bytes = self.width_bytes + (4 - (self.width_bytes % 4))
 
         self.out=open(filename,"wb")
-        self.out.write("BM".encode('ascii'))                    # magic number
+        self.out.write("BM") #.encode('ascii'))                    # magic number
         
         self.write_int(self.width_bytes * height + 54 + (1024 if depth==1 else 0))
 
