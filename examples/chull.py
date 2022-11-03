@@ -210,7 +210,7 @@ class Hull:
 							(f.edge[i],f.edge[j]) = (f.edge[j],f.edge[i])
 	def Print(self):
 		print("solid points")
-		for f in self.faces:
+		for f in self.faces[:10]:
 			print(f)
 		print("endsolid points")
 

@@ -45,7 +45,7 @@ def printBoard(board):
   for i in range(7,-1,-1):
     for j in range(8):
       ix = i * 16 + j
-      print(pieces[board[ix]], end='')
+      print(pieces[board[ix]])
     print()
 
 def move(board, mv):

@@ -442,12 +442,12 @@ def versus_cpu():
         else:
             print 'I move here:', to_xy(pos)
         board.move(pos)
-        #break
         #board.check()
         if board.finished:
             break
         if board.lastmove != PASS:
             print board
+        break # XXX remove this break for interactive play!!
         pos = user_move(board)
         board.move(pos)
         #board.check()
