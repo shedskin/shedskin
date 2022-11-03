@@ -24,7 +24,6 @@ IMapIterator.next = set_timeout_decorator(IMapIterator.next)
 SS = ' -m shedskin'
 os.environ['PYTHONPATH'] = os.path.realpath('..')
 
-
 def usage():
     print("'-l': give individual test numbers")
     print("'-r': reverse test order")
