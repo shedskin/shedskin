@@ -120,7 +120,7 @@ Some other features are currently only partially supported:
 Library limitations
 -------------------
 
-At the moment, the following 25 modules are largely supported. Several of these, such as :code:`os.path`, were compiled to C++ using Shed Skin.
+At the moment, the following 27 modules are largely supported. Several of these, such as :code:`os.path`, were compiled to C++ using Shed Skin.
 
 * :code:`array`
 * :code:`binascii`
@@ -132,6 +132,7 @@ At the moment, the following 25 modules are largely supported. Several of these,
 * :code:`csv` (no Dialect, Sniffer)
 * :code:`datetime`
 * :code:`fnmatch`
+* :code:`gc` (enable, disable, collect)
 * :code:`getopt`
 * :code:`glob`
 * :code:`heapq`
