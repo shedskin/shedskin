@@ -322,7 +322,7 @@ def main():
     if len(sys.argv) == 3:
         nx, ny = int(sys.argv[1]), int(sys.argv[2])
     else:
-        nx, ny = 160, 120
+        nx, ny = 320, 240
     w = world(nx, ny)
     numballs = 10.0
     offset = vec(0.0,-5.0,55.0)
