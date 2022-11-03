@@ -47,7 +47,7 @@ if __name__ == '__main__':
     print(math.factorial(1))
     print(math.factorial(2))
     print(math.factorial(5))
-    print(math.factorial(5.))
+#    print(math.factorial(5.))
 
     print(math.log1p(1 / math.e - 1) + 0.5)
     print(math.log1p(0))
