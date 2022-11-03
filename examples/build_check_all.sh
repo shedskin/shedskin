@@ -159,7 +159,7 @@ export PYTHONPATH=..:../..
 #time python2 oliva2.py
 #python2 -m shedskin oliva2 && make
 #time ./oliva2
-#echo CHECK: oliva.pgm
+#echo CHECK: oliva.pgm!
 #
 #time python2 othello.py
 #python2 -m shedskin othello && make
@@ -168,3 +168,68 @@ export PYTHONPATH=..:../..
 #time python2 pisang.py
 #python2 -m shedskin pisang && make
 #time ./pisang
+#
+#time python2 pygmy.py
+#python2 -m shedskin pygmy && make
+#time ./pygmy
+#echo CHECK: test.ppm!
+#
+#time python2 yopyra.py
+#python2 -m shedskin yopyra && make
+#time ./yopyra
+#echo CHECK: scene.txt.ppm!
+#
+#time python2 mao.py
+#python2 -m shedskin -r mao && make
+#time ./mao
+#echo CHECK: ao_py.ppm!
+#
+#time python2 minilight.py
+#python2 -m shedskin -r minilight && make
+#time ./minilight
+#echo CHECK: ml/cornellbox.txt.ppm!
+#
+#time python2 path_tracing.py
+#python2 -m shedskin -r path_tracing && make
+#time ./path_tracing
+#echo CHECK: pt.ppm!
+#
+#time python2 plcfrs.py
+#python2 -m shedskin plcfrs && make
+#time ./plcfrs
+#
+#python2 -m shedskin -be pygasus && make && python2 -c "import pygasus; assert pygasus.__file__.endswith('.so')"
+#
+#cd pylot
+#python2 -m shedskin -be SimpleGeometry && make && python2 -c "import SimpleGeometry; assert SimpleGeometry.__file__.endswith('.so')"
+#cd ..
+#
+#time python2 pystone.py
+#python2 -m shedskin pystone && make
+#time ./pystone
+#
+#cd quameon
+#time python2 sto_atom.py
+#python2 -m shedskin sto_atom && make
+#time ./sto_atom
+#cd ..
+#
+#time python2 richards.py
+#python2 -m shedskin richards && make
+#time ./richards
+#
+#time python2 rdb.py -h
+#python2 -m shedskin rdb && make
+#time ./rdb -h
+#
+#time python2 rsync.py
+#python2 -m shedskin -Llib rsync && make
+#time ./rsync
+#
+#time python2 rubik.py
+#python2 -m shedskin rubik && make
+#time ./rubik
+#
+#time python2 rubik2.py
+#python2 -m shedskin rubik2 && make
+#time ./rubik2
