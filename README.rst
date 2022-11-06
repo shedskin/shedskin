@@ -38,6 +38,7 @@ The following people have contributed to Shed Skin development so far:
 
 ::
 
+  Shakeeb Alireza
   Hakan Ardo
   Brian Blais
   Paul Boddie
