@@ -1,9 +1,6 @@
-75 programs that work with Shed Skin 0.9.5.
+75 programs that work with Shed Skin 0.9.5 (python 2.x).
 
-HELP WANTED with porting these example programs to python3!
-
-(currently working with python3: pystone, sunfish, voronoi, ac_encode, adatron, brainfuck, chaos, chess, life,
-    mandelbrot, mandelbrot2, sieve, nbody, richards)
+HELP WANTED with porting these example programs to python3! (see github issue 277 and examples3/ dir!)
 
 shedskin -b (disable index-out-of-bounds checking) often improves performance. see the documentation for more performance tips:
 
