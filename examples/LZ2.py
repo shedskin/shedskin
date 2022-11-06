@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+from __future__ import print_function
+
 """
 Lempel-Ziv code (2) for compression
 
@@ -77,26 +79,26 @@ def status(fr,to,oldpointer,digits,digits2,length,c,maxlength):
     Also report the range of conceivable values for the pointer and
     length quantities.
     """
-    print "fr,to = %d,%d; oldpointer=%d; d=%d, d2=%d, l=%d" % \
-          (fr,to,oldpointer, digits,digits2, length)
-    print "|%s\n|%s%s\t(pointer at %d/0..%d)\n|%s%s\t(maximal match of length %d/0..%d)\n|%s%s\n|%s%s" %\
+    print("fr,to = %d,%d; oldpointer=%d; d=%d, d2=%d, l=%d" % \
+          (fr,to,oldpointer, digits,digits2, length))
+    print("|%s\n|%s%s\t(pointer at %d/0..%d)\n|%s%s\t(maximal match of length %d/0..%d)\n|%s%s\n|%s%s" %\
           (c,\
            '.'*oldpointer,'p', oldpointer, fr-1, \
            ' '*oldpointer, '-'*length, length, maxlength,\
            ' '*fr, 'f',\
-           ' '*to, 't')
+           ' '*to, 't'))
 
 def searchstatus(fr,to,L,c):
     """
     Show the current string (fr,to) that is being searched for.
     """
-    print "L=%d, fr=%d, to=%d" % (L,fr, to)
-    print "|%s\n|%s%s\n|%s%s" %\
+    print("L=%d, fr=%d, to=%d" % (L,fr, to))
+    print("|%s\n|%s%s\n|%s%s" %\
           (c,\
            ' '*fr, 'f',\
-           ' '*to, 't')
+           ' '*to, 't'))
     # find where this substring occurs
-    print "looking for '%s' inside '%s'. " % (c[fr:to],c[0:fr]) ,
+    print("looking for '%s' inside '%s'. " % (c[fr:to],c[0:fr]))  # PY3: , end=' ')
 
 def encode ( c, pretty=1 , verbose=0 ): ## c is STRING of characters (0/1) ; p is whether to print out prettily
     """
@@ -142,7 +144,7 @@ def encode ( c, pretty=1 , verbose=0 ): ## c is STRING of characters (0/1) ; p i
         while  (eof_sent == 0 ) and (to<=L) :   # extend the search
             if verbose > 2:  searchstatus(fr,to,L,c);  pass
             pointer = c[0:fr].find( c[fr:to] )
-            if verbose > 2: print "result:",pointer , to ; pass
+            if verbose > 2: print("result:",pointer , to) ; pass
             if ( pointer == -1) or (to>=L ) :
                 if (pointer!=-1): oldpointer = pointer ;  pass
                 digits  = ceillog ( fr+1 )  # digits=ceillog ( fr ) would be enough space for oldpointer, which is in range (0,fr-1).
@@ -165,7 +167,7 @@ def encode ( c, pretty=1 , verbose=0 ): ## c is STRING of characters (0/1) ; p i
                                         dec_to_bin( length , digits2 ) ,   pretty ) )
                 if verbose:
                     status(fr,to,oldpointer,digits,digits2,length,c,maxlength)
-                    print "".join(output)
+                    print("".join(output))
                     pass
                 oldpointer = -2
                 fr = to
@@ -174,7 +176,7 @@ def encode ( c, pretty=1 , verbose=0 ): ## c is STRING of characters (0/1) ; p i
                 to += 1 ;                 oldpointer = pointer ; pass
             pass
         pass
-    if verbose: print "DONE Encoding"
+    if verbose: print("DONE Encoding")
     return "".join(output)
 
 def printout( pointerstring, lengthstring,  pretty=1):
@@ -220,7 +222,7 @@ def decode( li , verbose=0 ):
     return c
 
 def test():
-    print "pretty encoding examples:"
+    print("pretty encoding examples:")
     examples = [  "0010000000001000000000001" ,  "00000000000010000000000"  ]
     examples2= [ "1010101010101010101010101010101010101010",\
                      "011",\
@@ -235,59 +237,59 @@ def test():
                  "00000000000010000000000" , "1100100" ,  "100100" ]
     pretty = 1 ; verbose = 1
     for ex in examples :
-        print
-        print "Encoding", ex
+        print()
+        print("Encoding", ex)
         zip =  encode( ex , pretty , verbose )
-        if verbose>2: print zip
+        if verbose>2: print(zip)
         zip2 =  encode( ex , 0 , 0 )
-        print "Decoding", zip2
+        print("Decoding", zip2)
         unc = decode( list(zip2) , verbose )
-        print "-> ", unc
+        print("-> ", unc)
         if unc==ex:
-            print "OK!"
+            print("OK!")
         else:
-            print "ERROR!!!!!!!!!!!!!!!!!!!!!!!!!"
+            print("ERROR!!!!!!!!!!!!!!!!!!!!!!!!!")
             assert False
 
     if(0):
         pretty = 1 ; verbose = 1
         for ex in examples2 :
             zip =  encode( ex , pretty , verbose )
-            print zip
+            print(zip)
             zip2 =  encode( ex , 0 , 0 )
-            print "Decoding", zip2
+            print("Decoding", zip2)
             unc = decode( list(zip2) , verbose )
-            print "-> ", unc
+            print("-> ", unc)
             if unc==ex:
-                print "OK!"
+                print("OK!")
             else:
-                print "ERROR!!!!!!!!!!!!!!!!!!!!!!!!!"
+                print("ERROR!!!!!!!!!!!!!!!!!!!!!!!!!")
                 assert False
-        print "decoding examples:"
+        print("decoding examples:")
         examples = [ "0010010000100000001001101000001001"]
         for ex in examples :
-            print ex, decode( list(ex) , verbose )
+            print(ex, decode( list(ex) , verbose ))
 
 def hardertest():
-    print "Reading the BentCoinFile"
+    print("Reading the BentCoinFile")
     inputfile = open( "testdata/BentCoinFile" , "r" )
     outputfile = open( "tmp.zip" , "w" )
-    print  "Compressing to tmp.zip"
+    print("Compressing to tmp.zip")
 
     zip = encode(inputfile.read(), 0, 0)
     outputfile.write(zip)
     outputfile.close();     inputfile.close()
-    print "DONE compressing"
+    print("DONE compressing")
 
     inputfile = open( "tmp.zip" , "r" )
     outputfile = open( "tmp2" , "w" )
-    print  "Uncompressing to tmp2"
+    print("Uncompressing to tmp2")
     unc = decode(list(inputfile.read()), 0)
     outputfile.write(unc)
     outputfile.close();     inputfile.close()
-    print "DONE uncompressing"
+    print("DONE uncompressing")
 
-    print "Checking for differences..."
+    print("Checking for differences...")
     os.system( "diff testdata/BentCoinFile tmp2" )
     os.system( "wc tmp.zip testdata/BentCoinFile tmp2" )
 
