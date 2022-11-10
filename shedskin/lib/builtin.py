@@ -12,7 +12,7 @@ class int_:
     def __mul__(self, b):
         return b.__with_int__()
     def __div__(self, b):
-        return b.__with_int__()
+        return b.__div_int__()
     def __floordiv__(self, b):
         return b.__with_int__()
     def __mod__(self, b):
@@ -50,6 +50,8 @@ class int_:
     def __deepcopy__(self):
         return self
 
+    def __div_int__(self):
+        return 1.0
     def __with_int__(self):
         return 1
     def __with_float__(self):
@@ -106,6 +108,8 @@ class bool_:
     def __deepcopy__(self):
         return self
 
+    def __div_int__(self):
+        return 1.0
     def __with_int__(self):
         return 1
     def __with_float__(self):
@@ -153,6 +157,8 @@ class float_:
     def __deepcopy__(self):
         return self
 
+    def __div_int__(self):
+        return 1.0
     def __with_int__(self):
         return 1.0
     def __with_float__(self):
@@ -627,6 +633,8 @@ class complex:
     def __hash__(self):
         return 1
 
+    def __div_int__(self):
+        return self
     def __with_int__(self):
         return self
     def __with_float__(self):
