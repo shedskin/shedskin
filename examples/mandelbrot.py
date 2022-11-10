@@ -8,10 +8,10 @@ def mandelbrot(max_iterations=1000):
     for y in range(-39, 39):
         line = []
         for x in range(-39, 39):
-            cr = y/40 - 0.5
-            ci = x/40
-            zi = 0
-            zr = 0
+            cr = y/40.0 - 0.5
+            ci = x/40.0
+            zi = 0.0
+            zr = 0.0
             i = 0
             while True:
                 i += 1
