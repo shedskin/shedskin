@@ -514,7 +514,7 @@ def propagate(gx):
                 if isinstance(b.thing, Variable) and isinstance(b.thing.parent, Class):
                     parent_ident = b.thing.parent.ident
                     if parent_ident in builtins:
-                        if parent_ident in ['int_', 'float_', 'str_', 'none', 'bool_']:
+                        if parent_ident in ['int_', 'float_', 'str_', 'none', 'bool_', 'bytes']:
                             continue
                         elif parent_ident in ['list', 'tuple', 'frozenset', 'set', 'file', '__iter', 'deque', 'array'] and b.thing.name != 'unit':
                             continue
@@ -1393,7 +1393,7 @@ def analyze(gx, module_name):
 
     # --- non-ifa: copy classes for each allocation site
     for cl in gx.allclasses:
-        if cl.ident in ['int_', 'float_', 'none', 'class_', 'str_', 'bool_']:
+        if cl.ident in ['int_', 'float_', 'none', 'class_', 'str_', 'bool_', 'bytes']:
             continue
         if cl.ident == 'list':
             cl.dcpa = len(gx.list_types) + 2
@@ -1403,8 +1403,14 @@ def analyze(gx, module_name):
         for dcpa in range(1, cl.dcpa):
             class_copy(gx, cl, dcpa)
 
-    var = default_var(gx, 'unit', def_class(gx, 'str_'))
-    gx.types[inode(gx, var)] = set([(def_class(gx, 'str_'), 0)])
+    # --- seed str/bytes unit
+    cl = def_class(gx, 'str_')
+    var = default_var(gx, 'unit', cl)
+    gx.types[inode(gx, var)] = set([(cl, 0)])
+
+    cl = def_class(gx, 'bytes')
+    var = default_var(gx, 'unit', cl)
+    gx.types[inode(gx, var)] = set([(def_class(gx, 'int_'), 0)])
 
     # --- cartesian product algorithm & iterative flow analysis
     iterative_dataflow_analysis(gx)

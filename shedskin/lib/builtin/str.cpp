@@ -850,7 +850,3 @@ template<> str *__str(double t) {
     }
     return new str(s);
 }
-
-unicode *str::decode(str *encoding) {
-    return new unicode(unit.c_str());
-}

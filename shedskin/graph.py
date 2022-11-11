@@ -213,7 +213,7 @@ class ModuleVisitor(BaseNodeVisitor):
 
         newnode.constructor = True
 
-        if cl.ident in ['int_', 'float_', 'str_', 'none', 'class_', 'bool_']:
+        if cl.ident in ['int_', 'float_', 'str_', 'bytes', 'none', 'class_', 'bool_']:
             self.gx.types[newnode] = set([(cl, cl.dcpa - 1)])
         else:
             if cl.ident == 'list' and self.list_type(node):
@@ -1597,7 +1597,7 @@ class ModuleVisitor(BaseNodeVisitor):
             error('unknown ctx type for Attribute, %s' % node.ctx, self.gx, node, mv=getmv())
 
     def visit_Constant(self, node, func=None):
-        map = {int: 'int_', float: 'float_', complex: 'complex', str: 'str_', bool: 'bool_', type(None): 'none'}
+        map = {int: 'int_', float: 'float_', complex: 'complex', str: 'str_', bool: 'bool_', type(None): 'none', bytes: 'bytes'}
         self.instance(node, def_class(self.gx, map[type(node.value)]), func)
 
     # py2 ast
@@ -1607,7 +1607,7 @@ class ModuleVisitor(BaseNodeVisitor):
 
     # py2 ast
     def visit_Str(self, node, func=None):
-        map = {str: 'str_', unicode: 'unicode_'}
+        map = {str: 'str_'}
         self.instance(node, def_class(self.gx, map[type(node.s)]), func)
 
     def fncl_passing(self, node, newnode, func):
