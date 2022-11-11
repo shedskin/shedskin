@@ -57,7 +57,7 @@ class complex;
 class pyobj;
 class class_;
 class str;
-class unicode;
+class bytes;
 class file;
 
 class int_;
@@ -336,6 +336,34 @@ public:
 #endif
 };
 
+class bytes : public pyseq<__ss_int> {
+protected:
+public:
+    __GC_STRING unit;
+    long hash;
+
+    bytes();
+    bytes(const char *s);
+    bytes(__GC_STRING s);
+    bytes(const char *s, int size); /* '\0' delimiter in C */
+
+    inline __ss_int __getitem__(__ss_int i);
+    inline __ss_int __getfast__(__ss_int i);
+
+    inline __ss_int __len__();
+
+    /* functions pointing to the underlying C++ implementation */
+
+    const char *c_str() const;
+    const int size() const;
+    /* iteration */
+
+    inline bool for_in_has_next(size_t i);
+    inline __ss_int for_in_next(size_t &i);
+
+
+};
+
 class str : public pyseq<str *> {
 protected:
 public:
@@ -440,8 +468,6 @@ public:
     str *__iadd__(str *b);
     str *__imul__(__ss_int n);
 
-    unicode *decode(str *encoding=0);
-
     /* iteration */
 
     inline bool for_in_has_next(size_t i);
@@ -451,26 +477,6 @@ public:
     str(PyObject *p);
     PyObject *__to_py__();
 #endif
-};
-
-class unicode : public pyseq<unicode *> {
-protected:
-public:
-    __GC_STRING unit;
-
-    unicode();
-    unicode(const char *s);
-
-    inline __ss_int __len__();
-
-    inline unicode *__getitem__(__ss_int n);
-
-    str *encode(str *encoding=0);
-
-    const int size() const;
-
-    str *__str__();
-    str *__repr__();
 };
 
 void __throw_index_out_of_range();
@@ -1001,7 +1007,7 @@ template<class T> inline int __is_none(T) { return 0; }
 
 /* externs */
 
-extern class_ *cl_str_, *cl_int_, *cl_bool, *cl_float_, *cl_complex, *cl_list, *cl_tuple, *cl_dict, *cl_set, *cl_object, *cl_xrange, *cl_rangeiter, *cl_unicode;
+extern class_ *cl_str_, *cl_int_, *cl_bool, *cl_float_, *cl_complex, *cl_list, *cl_tuple, *cl_dict, *cl_set, *cl_object, *cl_xrange, *cl_rangeiter, *cl_bytes;
 
 extern __GC_VECTOR(str *) __char_cache;
 
@@ -1254,7 +1260,7 @@ template<> inline complex __zero<complex>() { return mcomplex(0,0); }
 #include "builtin/list.hpp"
 #include "builtin/tuple.hpp"
 #include "builtin/str.hpp"
-#include "builtin/unicode.hpp"
+#include "builtin/bytes.hpp"
 #include "builtin/math.hpp"
 #include "builtin/dict.hpp"
 #include "builtin/set.hpp"

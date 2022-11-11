@@ -415,18 +415,107 @@ class str_(pyseq):
     def decode(self, encoding=''):
         return u''
 
-class unicode_(pyseq):
-    def encode(self, encoding=''):
-        return ''
+class bytes(pyseq):
+    def strip(self, chars=''):
+        return b''
+    def lstrip(self, chars=''):
+        return b''
+    def rstrip(self, chars=''):
+        return b''
 
+    def istitle(self):
+        return True
+    def splitlines(self, c=0):
+        return [b'']
+    def partition(self, sep):
+        return (b'',)
+    def rpartition(self, sep):
+        return (b'',)
+    def rsplit(self, sep='', c=-1):
+        return [b'']
+    def split(self, sep='',c=-1):
+        return [b'']
+    def join(self, l):
+        return self
+    def __getitem__(self, i):
+        return 1
+    def __mul__(self, n):
+        return b''
+    def __repr__(self):
+        return ''
+    def __mod__(self, a=None):
+        a = a.unit
+        a.__str__()
+        a.__repr__()
+        return ''
+    def __add__(self,be):
+        return b''
     def __len__(self):
         return 1
 
-    def __getitem__(self, i):
-        return u''
+    def upper(self):
+        return b''
+    def lower(self):
+        return b''
+    def title(self):
+        return b''
+    def capitalize(self):
+        return b''
 
-    def __repr__(self):
-        return ''
+    def find(self, sub, s=0, e=0):
+        return 1
+    def rfind(self, sub, s=0, e=0):
+        return 1
+    def index(self, sub, s=0, e=0):
+        return 1
+    def rindex(self, sub, s=0, e=0):
+        return 1
+
+    def isdigit(self):
+        return True
+    def islower(self):
+        return True
+    def isupper(self):
+        return True
+    def isalpha(self):
+        return True
+    def isspace(self):
+        return True
+    def isalnum(self):
+        return True
+
+    def zfill(self, width):
+        return b''
+    def ljust(self, width, chars=''):
+        return b''
+    def rjust(self, width, chars=''):
+        return b''
+    def expandtabs(self, width=8):
+        return b''
+
+    def count(self, e, start=0, end=0):
+        return 1
+
+    def startswith(self, e, start=0, end=0):
+        return True
+    def endswith(self, e, start=0, end=0):
+        return True
+
+    def replace(self, a, b, c=0):
+        return b''
+
+    def translate(self, table, delchars=''):
+        return b''
+
+    def swapcase(self):
+        return b''
+    def center(self, w, fill=''):
+        return b''
+
+    def __slice__(self, x, l, u, s):
+        return self
+    def __hash__(self):
+        return 1
 
 class dict(pyiter):
     def __initdict__(self, other):

@@ -1936,7 +1936,7 @@ class GenerateVisitor(BaseNodeVisitor):
         elif method_call:
             for cl, _ in self.mergeinh[objexpr]:
                 if isinstance(cl, Class) and cl.ident != 'none' and ident not in cl.funcs:
-                    conv = {'int_': 'int', 'float_': 'float', 'str_': 'str', 'class_': 'class', 'none': 'none', 'unicode_': 'unicode'}
+                    conv = {'int_': 'int', 'float_': 'float', 'str_': 'str', 'class_': 'class', 'none': 'none'}
                     clname = conv.get(cl.ident, cl.ident)
                     error("class '%s' has no method '%s'" % (clname, ident), self.gx, node, warning=True, mv=self.mv)
                 if isinstance(cl, Class) and ident in cl.staticmethods:
@@ -2802,8 +2802,11 @@ class GenerateVisitor(BaseNodeVisitor):
                     self.append(', %d' % len(value))
                 self.append(')')
 
-        elif isinstance(value, unicode):  # XXX filling_consts
-            self.append('new unicode("%s")' % (value.encode('utf-8')))
+        elif isinstance(value, bytes):  # TODO merge with str above
+            self.append('new bytes("%s"' % value.decode())
+            if b'\0' in value:
+                self.append(', %d' % len(value))
+            self.append(')')
 
         else:
             assert False

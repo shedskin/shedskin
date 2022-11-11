@@ -160,8 +160,8 @@ def typestrnew(gx, types, cplusplus=True, node=None, check_extmod=False, depth=0
         raise RuntimeError()
 
     # --- annotation or c++ code
-    conv1 = {'int_': '__ss_int', 'float_': 'double', 'str_': 'str', 'none': 'int', 'bool_': '__ss_bool', 'complex': 'complex', 'unicode_': 'unicode'}
-    conv2 = {'int_': 'int', 'float_': 'float', 'str_': 'str', 'class_': 'class', 'none': 'None', 'bool_': 'bool', 'complex': 'complex', 'unicode_': 'unicode'}
+    conv1 = {'int_': '__ss_int', 'float_': 'double', 'str_': 'str', 'none': 'int', 'bool_': '__ss_bool', 'complex': 'complex'}
+    conv2 = {'int_': 'int', 'float_': 'float', 'str_': 'str', 'class_': 'class', 'none': 'None', 'bool_': 'bool', 'complex': 'complex'}
     if cplusplus:
         sep, ptr, conv = '<>', ' *', conv1
     else:
@@ -226,7 +226,7 @@ def typestrnew(gx, types, cplusplus=True, node=None, check_extmod=False, depth=0
     # --- simple built-in types
     if cl.ident in ['int_', 'float_', 'bool_', 'complex']:
         return conv[cl.ident]
-    elif cl.ident in ('str_', 'unicode_'):
+    elif cl.ident == 'str_':
         return cl.ident[:-1] + ptr
     elif cl.ident == 'none':
         if cplusplus:
