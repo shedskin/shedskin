@@ -1,18 +1,17 @@
 from __future__ import print_function
 
-'''
+"""
 *** SHED SKIN Python-to-C++ Compiler ***
 Copyright 2005-2013 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 
 extmod.py: extension module support
 
-'''
+"""
 import logging
 
 from .infer import called
-from .python import Class, def_class, Module
+from .python import Class, Module, def_class
 from .typestr import ExtmodError, nodetypestr, singletype2
-
 
 logger = logging.getLogger('extmod')
 OVERLOAD_SINGLE = ['__neg__', '__pos__', '__abs__', '__nonzero__']
@@ -99,104 +98,108 @@ def do_add_globals(gx, gv, classes, __ss_mod):
 
 
 def do_reduce_setstate(gx, gv, cl, vars):
+    write = lambda s: print(s, file=gv.out)
     if def_class(gx, 'Exception') in cl.ancestors():  # XXX
         return
-    print('PyObject *%s__reduce__(PyObject *self, PyObject *args, PyObject *kwargs) {' % clname(cl), file=gv.out)
-    print('    PyObject *t = PyTuple_New(3);', file=gv.out)
-    print('    PyTuple_SetItem(t, 0, PyObject_GetAttrString(__ss_mod_%s, "__newobj__"));' % '_'.join(gv.module.name_list), file=gv.out)
-    print('    PyObject *a = PyTuple_New(1);', file=gv.out)
-    print('    Py_INCREF((PyObject *)&%sObjectType);' % clname(cl), file=gv.out)
-    print('    PyTuple_SetItem(a, 0, (PyObject *)&%sObjectType);' % clname(cl), file=gv.out)
-    print('    PyTuple_SetItem(t, 1, a);', file=gv.out)
-    print('    PyObject *b = PyTuple_New(%d);' % len(vars), file=gv.out)
+    write('PyObject *%s__reduce__(PyObject *self, PyObject *args, PyObject *kwargs) {' % clname(cl))
+    write('    PyObject *t = PyTuple_New(3);')
+    write('    PyTuple_SetItem(t, 0, PyObject_GetAttrString(__ss_mod_%s, "__newobj__"));' % '_'.join(gv.module.name_list))
+    write('    PyObject *a = PyTuple_New(1);')
+    write('    Py_INCREF((PyObject *)&%sObjectType);' % clname(cl))
+    write('    PyTuple_SetItem(a, 0, (PyObject *)&%sObjectType);' % clname(cl))
+    write('    PyTuple_SetItem(t, 1, a);')
+    write('    PyObject *b = PyTuple_New(%d);' % len(vars))
     for i, var in enumerate(vars):
-        print('    PyTuple_SetItem(b, %d, __to_py(((%sObject *)self)->__ss_object->%s));' % (i, clname(cl), gv.cpp_name(var)), file=gv.out)
-    print('    PyTuple_SetItem(t, 2, b);', file=gv.out)
-    print('    return t;', file=gv.out)
-    print('}\n', file=gv.out)
-    print('PyObject *%s__setstate__(PyObject *self, PyObject *args, PyObject *kwargs) {' % clname(cl), file=gv.out)
-    print('    int l = PyTuple_Size(args);', file=gv.out)
-    print('    PyObject *state = PyTuple_GetItem(args, 0);', file=gv.out)
+        write('    PyTuple_SetItem(b, %d, __to_py(((%sObject *)self)->__ss_object->%s));' % (i, clname(cl), gv.cpp_name(var)))
+    write('    PyTuple_SetItem(t, 2, b);')
+    write('    return t;')
+    write('}\n')
+    write('PyObject *%s__setstate__(PyObject *self, PyObject *args, PyObject *kwargs) {' % clname(cl))
+    write('    int l = PyTuple_Size(args);')
+    write('    PyObject *state = PyTuple_GetItem(args, 0);')
     for i, var in enumerate(vars):
         vartype = nodetypestr(gx, var, var.parent, mv=gv.mv)
-        print('    ((%sObject *)self)->__ss_object->%s = __to_ss<%s>(PyTuple_GetItem(state, %d));' % (clname(cl), gv.cpp_name(var), vartype, i), file=gv.out)
-    print('    Py_INCREF(Py_None);', file=gv.out)
-    print('    return Py_None;', file=gv.out)
-    print('}\n', file=gv.out)
+        write('    ((%sObject *)self)->__ss_object->%s = __to_ss<%s>(PyTuple_GetItem(state, %d));' % (clname(cl), gv.cpp_name(var), vartype, i))
+    write('    Py_INCREF(Py_None);')
+    write('    return Py_None;')
+    write('}\n')
 
 
 def convert_methods(gx, gv, cl, declare):
+    write = lambda s: print(s, file=gv.out)
     if def_class(gx, 'Exception') in cl.ancestors():
         return
     if declare:
-        print('    virtual PyObject *__to_py__();', file=gv.out)
+        write('    virtual PyObject *__to_py__();')
     else:
         for n in cl.module.name_list:
-            print('namespace __%s__ { /* XXX */' % n, file=gv.out)
-        print()
+            write('namespace __%s__ { /* XXX */' % n)
+        write('')
 
-        print('PyObject *%s::__to_py__() {' % gv.cpp_name(cl), file=gv.out)
-        print('    PyObject *p;', file=gv.out)
-        print('    if(__ss_proxy->has_key(this))', file=gv.out)
-        print('        p = (PyObject *)(__ss_proxy->__getitem__(this));', file=gv.out)
-        print('    else {', file=gv.out)
-        print('        %sObject *self = (%sObject *)(%sObjectType.tp_alloc(&%sObjectType, 0));' % (4 * (clname(cl),)), file=gv.out)
-        print('        self->__ss_object = this;', file=gv.out)
-        print('        __ss_proxy->__setitem__(self->__ss_object, self);', file=gv.out)
-        print('        p = (PyObject *)self;', file=gv.out)
-        print('    }', file=gv.out)
-        print('    Py_INCREF(p);', file=gv.out)
-        print('    return p;', file=gv.out)
-        print('}\n', file=gv.out)
+        write('PyObject *%s::__to_py__() {' % gv.cpp_name(cl))
+        write('    PyObject *p;')
+        write('    if(__ss_proxy->has_key(this))')
+        write('        p = (PyObject *)(__ss_proxy->__getitem__(this));')
+        write('    else {')
+        write('        %sObject *self = (%sObject *)(%sObjectType.tp_alloc(&%sObjectType, 0));' % (4 * (clname(cl),)))
+        write('        self->__ss_object = this;')
+        write('        __ss_proxy->__setitem__(self->__ss_object, self);')
+        write('        p = (PyObject *)self;')
+        write('    }')
+        write('    Py_INCREF(p);')
+        write('    return p;')
+        write('}\n')
 
         for n in cl.module.name_list:
-            print('} // module namespace', file=gv.out)
-        print()
+            write('} // module namespace')
+        write('')
 
-        print('namespace __shedskin__ { /* XXX */\n', file=gv.out)
+        write('namespace __shedskin__ { /* XXX */\n')
 
-        print('template<> %s::%s *__to_ss(PyObject *p) {' % (cl.module.full_path(), gv.cpp_name(cl)), file=gv.out)
-        print('    if(p == Py_None) return NULL;', file=gv.out)
-        print('    if(PyObject_IsInstance(p, (PyObject *)&%s::%sObjectType)!=1)' % (cl.module.full_path(), clname(cl)), file=gv.out)
-        print('        throw new TypeError(new str("error in conversion to Shed Skin (%s expected)"));' % cl.ident, file=gv.out)
-        print('    return ((%s::%sObject *)p)->__ss_object;' % (cl.module.full_path(), clname(cl)), file=gv.out)
-        print('}\n}', file=gv.out)
+        write('template<> %s::%s *__to_ss(PyObject *p) {' % (cl.module.full_path(), gv.cpp_name(cl)))
+        write('    if(p == Py_None) return NULL;')
+        write('    if(PyObject_IsInstance(p, (PyObject *)&%s::%sObjectType)!=1)' % (cl.module.full_path(), clname(cl)))
+        write('        throw new TypeError(new str("error in conversion to Shed Skin (%s expected)"));' % cl.ident)
+        write('    return ((%s::%sObject *)p)->__ss_object;' % (cl.module.full_path(), clname(cl)))
+        write('}\n}')
 
 
 def do_extmod_methoddef(gx, gv, ident, funcs, cl):
+    write = lambda s: print(s, file=gv.out)
     if cl:
         ident = clname(cl)
-    print('static PyNumberMethods %s_as_number = {' % ident, file=gv.out)
+    write('static PyNumberMethods %s_as_number = {' % ident)
     for overload in OVERLOAD:
         if [f for f in funcs if f.ident == overload]:
             if overload == '__nonzero__':  # XXX
-                print('    (int (*)(PyObject *))%s_%s,' % (clname(f.parent), overload), file=gv.out)
+                write('    (int (*)(PyObject *))%s_%s,' % (clname(f.parent), overload))
             elif overload in OVERLOAD_SINGLE:
-                print('    (PyObject *(*)(PyObject *))%s_%s,' % (clname(f.parent), overload), file=gv.out)
+                write('    (PyObject *(*)(PyObject *))%s_%s,' % (clname(f.parent), overload))
             else:
-                print('    (PyCFunction)%s_%s,' % (clname(f.parent), overload), file=gv.out)
+                write('    (PyCFunction)%s_%s,' % (clname(f.parent), overload))
         else:
-            print('    0,', file=gv.out)
-    print('};\n', file=gv.out)
+            write('    0,')
+    write('};\n')
     if cl and not def_class(gx, 'Exception') in cl.ancestors():
-        print('PyObject *%s__reduce__(PyObject *self, PyObject *args, PyObject *kwargs);' % ident, file=gv.out)
-        print('PyObject *%s__setstate__(PyObject *self, PyObject *args, PyObject *kwargs);\n' % ident, file=gv.out)
-    print('static PyMethodDef %sMethods[] = {' % ident, file=gv.out)
+        write('PyObject *%s__reduce__(PyObject *self, PyObject *args, PyObject *kwargs);' % ident)
+        write('PyObject *%s__setstate__(PyObject *self, PyObject *args, PyObject *kwargs);\n' % ident)
+    write('static PyMethodDef %sMethods[] = {' % ident)
     if not cl:
-        print('    {(char *)"__newobj__", (PyCFunction)__ss__newobj__, METH_VARARGS | METH_KEYWORDS, (char *)""},', file=gv.out)
+        write('    {(char *)"__newobj__", (PyCFunction)__ss__newobj__, METH_VARARGS | METH_KEYWORDS, (char *)""},')
     elif cl and not def_class(gx, 'Exception') in cl.ancestors():
-        print('    {(char *)"__reduce__", (PyCFunction)%s__reduce__, METH_VARARGS | METH_KEYWORDS, (char *)""},' % ident, file=gv.out)
-        print('    {(char *)"__setstate__", (PyCFunction)%s__setstate__, METH_VARARGS | METH_KEYWORDS, (char *)""},' % ident, file=gv.out)
+        write('    {(char *)"__reduce__", (PyCFunction)%s__reduce__, METH_VARARGS | METH_KEYWORDS, (char *)""},' % ident)
+        write('    {(char *)"__setstate__", (PyCFunction)%s__setstate__, METH_VARARGS | METH_KEYWORDS, (char *)""},' % ident)
     for func in funcs:
         if isinstance(func.parent, Class):
             id = clname(func.parent) + '_' + func.ident
         else:
             id = 'Global_' + '_'.join(gv.module.name_list) + '_' + func.ident
-        print('    {(char *)"%(id)s", (PyCFunction)%(id2)s, METH_VARARGS | METH_KEYWORDS, (char *)""},' % {'id': func.ident, 'id2': id}, file=gv.out)
-    print('    {NULL}\n};\n', file=gv.out)
+        write('    {(char *)"%(id)s", (PyCFunction)%(id2)s, METH_VARARGS | METH_KEYWORDS, (char *)""},' % {'id': func.ident, 'id2': id})
+    write('    {NULL}\n};\n')
 
 
 def do_extmod_method(gx, gv, func):
+    write = lambda s: print(s, file=gv.out)
     is_method = isinstance(func.parent, Class)
     if is_method:
         formals = func.formals[1:]
@@ -207,14 +210,14 @@ def do_extmod_method(gx, gv, func):
         id = clname(func.parent) + '_' + func.ident
     else:
         id = 'Global_' + '_'.join(gv.module.name_list) + '_' + func.ident
-    print('PyObject *%s(PyObject *self, PyObject *args, PyObject *kwargs) {' % id, file=gv.out)
-    print('    try {', file=gv.out)
+    write('PyObject *%s(PyObject *self, PyObject *args, PyObject *kwargs) {' % id)
+    write('    try {')
 
     for i, formal in enumerate(formals):
         gv.start('')
         typ = nodetypestr(gx, func.vars[formal], func, mv=gv.mv)
         if func.ident in OVERLOAD:
-            print('        %(type)sarg_%(num)d = __to_ss<%(type)s>(args);' % {'type': typ, 'num': i}, file=gv.out)
+            write('        %(type)sarg_%(num)d = __to_ss<%(type)s>(args);' % {'type': typ, 'num': i})
             continue
         gv.append('        %(type)sarg_%(num)d = __ss_arg<%(type)s>("%(name)s", %(num)d, ' % {'type': typ, 'num': i, 'name': formal})
         if i >= len(formals) - len(func.defaults):
@@ -233,30 +236,31 @@ def do_extmod_method(gx, gv, func):
             gv.append('0, 0')
         gv.append(', args, kwargs)')
         gv.eol()
-    print()
+    write('')
 
     # call
     if is_method:
         where = '((%sObject *)self)->__ss_object->' % clname(func.parent)
     else:
         where = '__' + gv.module.ident + '__::'
-    print('        return __to_py(' + where + gv.cpp_name(func.ident) + '(' + ', '.join('arg_%d' % i for i in range(len(formals))) + '));\n', file=gv.out)
+    write('        return __to_py(' + where + gv.cpp_name(func.ident) + '(' + ', '.join('arg_%d' % i for i in range(len(formals))) + '));\n')
 
     # convert exceptions
-    print('    } catch (Exception *e) {', file=gv.out)
-    print('        PyErr_SetString(__to_py(e), ((e->message)?(e->message->c_str()):""));', file=gv.out)
-    print('        return 0;', file=gv.out)
-    print('    }', file=gv.out)
-    print('}\n', file=gv.out)
+    write('    } catch (Exception *e) {')
+    write('        PyErr_SetString(__to_py(e), ((e->message)?(e->message->c_str()):""));')
+    write('        return 0;')
+    write('    }')
+    write('}\n')
 
 
 def do_extmod(gx, gv):
-    print('/* extension module glue */\n', file=gv.out)
-    print('extern "C" {', file=gv.out)
-    print('#include <Python.h>', file=gv.out)
-    print('#include <structmember.h>\n', file=gv.out)
+    write = lambda s: print(s, file=gv.out)
+    write('/* extension module glue */\n')
+    write('extern "C" {')
+    write('#include <Python.h>')
+    write('#include <structmember.h>\n')
 
-    print('PyObject *__ss_mod_%s;\n' % '_'.join(gv.module.name_list), file=gv.out)
+    write('PyObject *__ss_mod_%s;\n' % '_'.join(gv.module.name_list))
 
     # classes
     classes = exported_classes(gx, gv, warns=True)
@@ -264,7 +268,7 @@ def do_extmod(gx, gv):
         do_extmod_class(gx, gv, cl)
 
     for n in gv.module.name_list:
-        print('namespace __%s__ { /* XXX */' % n, file=gv.out)
+        write('namespace __%s__ { /* XXX */' % n)
 
     # global functions
     funcs = supported_funcs(gx, gv, gv.module.mv.funcs.values())
@@ -273,37 +277,37 @@ def do_extmod(gx, gv):
     do_extmod_methoddef(gx, gv, 'Global_' + '_'.join(gv.module.name_list), funcs, None)
 
     # module init function
-    print('PyMODINIT_FUNC init%s(void) {' % '_'.join(gv.module.name_list), file=gv.out)
+    write('PyMODINIT_FUNC init%s(void) {' % '_'.join(gv.module.name_list))
 
     # initialize modules
     __ss_mod = '__ss_mod_%s' % '_'.join(gv.module.name_list)
     if gv.module == gx.main_module:
         gv.do_init_modules()
-        print('    __' + gv.module.ident + '__::__init();', file=gv.out)
-    print('\n    %s = Py_InitModule((char *)"%s", Global_%sMethods);' % (__ss_mod, gv.module.ident, '_'.join(gv.module.name_list)), file=gv.out)
-    print('    if(!%s)' % __ss_mod, file=gv.out)
-    print('        return;\n', file=gv.out)
+        write('    __' + gv.module.ident + '__::__init();')
+    write('\n    %s = Py_InitModule((char *)"%s", Global_%sMethods);' % (__ss_mod, gv.module.ident, '_'.join(gv.module.name_list)))
+    write('    if(!%s)' % __ss_mod)
+    write('        return;\n')
 
     # add types to module
     for cl in classes:
-        print('    if (PyType_Ready(&%sObjectType) < 0)' % clname(cl), file=gv.out)
-        print('        return;\n', file=gv.out)
-        print('    PyModule_AddObject(%s, "%s", (PyObject *)&%sObjectType);' % (__ss_mod, cl.ident, clname(cl)), file=gv.out)
-    print()
+        write('    if (PyType_Ready(&%sObjectType) < 0)' % clname(cl))
+        write('        return;\n')
+        write('    PyModule_AddObject(%s, "%s", (PyObject *)&%sObjectType);' % (__ss_mod, cl.ident, clname(cl)))
+    write('')
 
     if gv.module == gx.main_module:
         do_init_mods(gx, gv, 'init')
         do_init_mods(gx, gv, 'add')
-        print('    add%s();' % gv.module.ident, file=gv.out)
-    print('\n}\n', file=gv.out)
+        write('    add%s();' % gv.module.ident)
+    write('\n}\n')
 
-    print('PyMODINIT_FUNC add%s(void) {' % '_'.join(gv.module.name_list), file=gv.out)
+    write('PyMODINIT_FUNC add%s(void) {' % '_'.join(gv.module.name_list))
     do_add_globals(gx, gv, classes, __ss_mod)
-    print('\n}', file=gv.out)
+    write('\n}')
 
     for n in gv.module.name_list:
-        print('\n} // namespace __%s__' % n, file=gv.out)
-    print('\n} // extern "C"', file=gv.out)
+        write('\n} // namespace __%s__' % n)
+    write('\n} // extern "C"')
 
     # conversion methods to/from CPython/Shedskin
     for cl in classes:
@@ -311,22 +315,23 @@ def do_extmod(gx, gv):
 
 
 def do_extmod_class(gx, gv, cl):
+    write = lambda s: print(s, file=gv.out)
     for n in cl.module.name_list:
-        print('namespace __%s__ { /* XXX */' % n, file=gv.out)
-    print()
+        write('namespace __%s__ { /* XXX */' % n)
+    write('')
 
     # determine methods, vars to expose
     funcs = supported_funcs(gx, gv, cl.funcs.values())
     vars = supported_vars(gx, gv, cl.vars.values())
 
     # python object
-    print('/* class %s */\n' % cl.ident, file=gv.out)
-    print('typedef struct {', file=gv.out)
-    print('    PyObject_HEAD', file=gv.out)
-    print('    %s::%s *__ss_object;' % (cl.module.full_path(), gv.cpp_name(cl)), file=gv.out)
-    print('} %sObject;\n' % clname(cl), file=gv.out)
-    print('static PyMemberDef %sMembers[] = {' % clname(cl), file=gv.out)
-    print('    {NULL}\n};\n', file=gv.out)
+    write('/* class %s */\n' % cl.ident)
+    write('typedef struct {')
+    write('    PyObject_HEAD')
+    write('    %s::%s *__ss_object;' % (cl.module.full_path(), gv.cpp_name(cl)))
+    write('} %sObject;\n' % clname(cl))
+    write('static PyMemberDef %sMembers[] = {' % clname(cl))
+    write('    {NULL}\n};\n')
 
     # methods
     for func in funcs:
@@ -335,111 +340,111 @@ def do_extmod_class(gx, gv, cl):
 
     # tp_init
     if has_method(cl, '__init__') and cl.funcs['__init__'] in funcs:
-        print('int %s___tpinit__(PyObject *self, PyObject *args, PyObject *kwargs) {' % clname(cl), file=gv.out)
-        print('    if(!%s___init__(self, args, kwargs))' % clname(cl), file=gv.out)
-        print('        return -1;', file=gv.out)
-        print('    return 0;', file=gv.out)
-        print('}\n', file=gv.out)
+        write('int %s___tpinit__(PyObject *self, PyObject *args, PyObject *kwargs) {' % clname(cl))
+        write('    if(!%s___init__(self, args, kwargs))' % clname(cl))
+        write('        return -1;')
+        write('    return 0;')
+        write('}\n')
 
     # tp_new
-    print('PyObject *%sNew(PyTypeObject *type, PyObject *args, PyObject *kwargs) {' % clname(cl), file=gv.out)
-    print('    %sObject *self = (%sObject *)type->tp_alloc(type, 0);' % (clname(cl), clname(cl)), file=gv.out)
-    print('    self->__ss_object = new %s::%s();' % (cl.module.full_path(), gv.cpp_name(cl)), file=gv.out)
-    print('    self->__ss_object->__class__ = %s::cl_%s;' % (cl.module.full_path(), cl.ident), file=gv.out)
-    print('    __ss_proxy->__setitem__(self->__ss_object, self);', file=gv.out)
-    print('    return (PyObject *)self;', file=gv.out)
-    print('}\n', file=gv.out)
+    write('PyObject *%sNew(PyTypeObject *type, PyObject *args, PyObject *kwargs) {' % clname(cl))
+    write('    %sObject *self = (%sObject *)type->tp_alloc(type, 0);' % (clname(cl), clname(cl)))
+    write('    self->__ss_object = new %s::%s();' % (cl.module.full_path(), gv.cpp_name(cl)))
+    write('    self->__ss_object->__class__ = %s::cl_%s;' % (cl.module.full_path(), cl.ident))
+    write('    __ss_proxy->__setitem__(self->__ss_object, self);')
+    write('    return (PyObject *)self;')
+    write('}\n')
 
     # tp_dealloc
-    print('void %sDealloc(%sObject *self) {' % (clname(cl), clname(cl)), file=gv.out)
-    print('    self->ob_type->tp_free((PyObject *)self);', file=gv.out)
-    print('    __ss_proxy->__delitem__(self->__ss_object);', file=gv.out)
-    print('}\n', file=gv.out)
+    write('void %sDealloc(%sObject *self) {' % (clname(cl), clname(cl)))
+    write('    self->ob_type->tp_free((PyObject *)self);')
+    write('    __ss_proxy->__delitem__(self->__ss_object);')
+    write('}\n')
 
     # getset
     for var in vars:
-        print('PyObject *__ss_get_%s_%s(%sObject *self, void *closure) {' % (clname(cl), var.name, clname(cl)), file=gv.out)
-        print('    return __to_py(self->__ss_object->%s);' % gv.cpp_name(var), file=gv.out)
-        print('}\n', file=gv.out)
+        write('PyObject *__ss_get_%s_%s(%sObject *self, void *closure) {' % (clname(cl), var.name, clname(cl)))
+        write('    return __to_py(self->__ss_object->%s);' % gv.cpp_name(var))
+        write('}\n')
 
-        print('int __ss_set_%s_%s(%sObject *self, PyObject *value, void *closure) {' % (clname(cl), var.name, clname(cl)), file=gv.out)
-        print('    try {', file=gv.out)
+        write('int __ss_set_%s_%s(%sObject *self, PyObject *value, void *closure) {' % (clname(cl), var.name, clname(cl)))
+        write('    try {')
         typ = nodetypestr(gx, var, var.parent, mv=gv.mv)
         if typ == 'void *':  # XXX investigate
-            print('        self->__ss_object->%s = NULL;' % gv.cpp_name(var), file=gv.out)
+            write('        self->__ss_object->%s = NULL;' % gv.cpp_name(var))
         else:
-            print('        self->__ss_object->%s = __to_ss<%s>(value);' % (gv.cpp_name(var), typ), file=gv.out)
-        print('    } catch (Exception *e) {', file=gv.out)
-        print('        PyErr_SetString(__to_py(e), ((e->message)?(e->message->c_str()):""));', file=gv.out)
-        print('        return -1;', file=gv.out)
-        print('    }', file=gv.out)
+            write('        self->__ss_object->%s = __to_ss<%s>(value);' % (gv.cpp_name(var), typ))
+        write('    } catch (Exception *e) {')
+        write('        PyErr_SetString(__to_py(e), ((e->message)?(e->message->c_str()):""));')
+        write('        return -1;')
+        write('    }')
 
-        print('    return 0;', file=gv.out)
-        print('}\n', file=gv.out)
+        write('    return 0;')
+        write('}\n')
 
-    print('PyGetSetDef %sGetSet[] = {' % clname(cl), file=gv.out)
+    write('PyGetSetDef %sGetSet[] = {' % clname(cl))
     for var in vars:
-        print('    {(char *)"%s", (getter)__ss_get_%s_%s, (setter)__ss_set_%s_%s, (char *)"", NULL},' % (var.name, clname(cl), var.name, clname(cl), var.name), file=gv.out)
-    print('    {NULL}\n};\n', file=gv.out)
+        write('    {(char *)"%s", (getter)__ss_get_%s_%s, (setter)__ss_set_%s_%s, (char *)"", NULL},' % (var.name, clname(cl), var.name, clname(cl), var.name))
+    write('    {NULL}\n};\n')
 
     # python type
-    print('PyTypeObject %sObjectType = {' % clname(cl), file=gv.out)
-    print('    PyObject_HEAD_INIT(NULL)', file=gv.out)
-    print('    0,              /* ob_size           */', file=gv.out)
-    print('    "%s.%s",        /* tp_name           */' % (cl.module.ident, cl.ident), file=gv.out)
-    print('    sizeof(%sObject), /* tp_basicsize      */' % clname(cl), file=gv.out)
-    print('    0,              /* tp_itemsize       */', file=gv.out)
-    print('    (destructor)%sDealloc, /* tp_dealloc        */' % clname(cl), file=gv.out)
-    print('    0,              /* tp_print          */', file=gv.out)
-    print('    0,              /* tp_getattr        */', file=gv.out)
-    print('    0,              /* tp_setattr        */', file=gv.out)
-    print('    0,              /* tp_compare        */', file=gv.out)
+    write('PyTypeObject %sObjectType = {' % clname(cl))
+    write('    PyObject_HEAD_INIT(NULL)')
+    write('    0,              /* ob_size           */')
+    write('    "%s.%s",        /* tp_name           */' % (cl.module.ident, cl.ident))
+    write('    sizeof(%sObject), /* tp_basicsize      */' % clname(cl))
+    write('    0,              /* tp_itemsize       */')
+    write('    (destructor)%sDealloc, /* tp_dealloc        */' % clname(cl))
+    write('    0,              /* tp_print          */')
+    write('    0,              /* tp_getattr        */')
+    write('    0,              /* tp_setattr        */')
+    write('    0,              /* tp_compare        */')
     if has_method(cl, '__repr__'):
-        print('    (PyObject *(*)(PyObject *))%s___repr__, /* tp_repr           */' % clname(cl), file=gv.out)
+        write('    (PyObject *(*)(PyObject *))%s___repr__, /* tp_repr           */' % clname(cl))
     else:
-        print('    0,              /* tp_repr           */', file=gv.out)
-    print('    &%s_as_number,  /* tp_as_number      */' % clname(cl), file=gv.out)
-    print('    0,              /* tp_as_sequence    */', file=gv.out)
-    print('    0,              /* tp_as_mapping     */', file=gv.out)
-    print('    0,              /* tp_hash           */', file=gv.out)
-    print('    0,              /* tp_call           */', file=gv.out)
+        write('    0,              /* tp_repr           */')
+    write('    &%s_as_number,  /* tp_as_number      */' % clname(cl))
+    write('    0,              /* tp_as_sequence    */')
+    write('    0,              /* tp_as_mapping     */')
+    write('    0,              /* tp_hash           */')
+    write('    0,              /* tp_call           */')
     if has_method(cl, '__str__'):
-        print('    (PyObject *(*)(PyObject *))%s___str__, /* tp_str           */' % clname(cl), file=gv.out)
+        write('    (PyObject *(*)(PyObject *))%s___str__, /* tp_str           */' % clname(cl))
     else:
-        print('    0,              /* tp_str            */', file=gv.out)
-    print('    0,              /* tp_getattro       */', file=gv.out)
-    print('    0,              /* tp_setattro       */', file=gv.out)
-    print('    0,              /* tp_as_buffer      */', file=gv.out)
-    print('    Py_TPFLAGS_DEFAULT, /* tp_flags          */', file=gv.out)
-    print('    0,              /* tp_doc            */', file=gv.out)
-    print('    0,              /* tp_traverse       */', file=gv.out)
-    print('    0,              /* tp_clear          */', file=gv.out)
-    print('    0,              /* tp_richcompare    */', file=gv.out)
-    print('    0,              /* tp_weaklistoffset */', file=gv.out)
-    print('    0,              /* tp_iter           */', file=gv.out)
-    print('    0,              /* tp_iternext       */', file=gv.out)
-    print('    %sMethods,      /* tp_methods        */' % clname(cl), file=gv.out)
-    print('    %sMembers,      /* tp_members        */' % clname(cl), file=gv.out)
-    print('    %sGetSet,       /* tp_getset         */' % clname(cl), file=gv.out)
+        write('    0,              /* tp_str            */')
+    write('    0,              /* tp_getattro       */')
+    write('    0,              /* tp_setattro       */')
+    write('    0,              /* tp_as_buffer      */')
+    write('    Py_TPFLAGS_DEFAULT, /* tp_flags          */')
+    write('    0,              /* tp_doc            */')
+    write('    0,              /* tp_traverse       */')
+    write('    0,              /* tp_clear          */')
+    write('    0,              /* tp_richcompare    */')
+    write('    0,              /* tp_weaklistoffset */')
+    write('    0,              /* tp_iter           */')
+    write('    0,              /* tp_iternext       */')
+    write('    %sMethods,      /* tp_methods        */' % clname(cl))
+    write('    %sMembers,      /* tp_members        */' % clname(cl))
+    write('    %sGetSet,       /* tp_getset         */' % clname(cl))
     if cl.bases and not cl.bases[0].mv.module.builtin:
-            print('    &%sObjectType,              /* tp_base           */' % clname(cl.bases[0]), file=gv.out)
+        write('    &%sObjectType,              /* tp_base           */' % clname(cl.bases[0]))
     else:
-        print('    0,              /* tp_base           */', file=gv.out)
-    print('    0,              /* tp_dict           */', file=gv.out)
-    print('    0,              /* tp_descr_get      */', file=gv.out)
-    print('    0,              /* tp_descr_set      */', file=gv.out)
-    print('    0,              /* tp_dictoffset     */', file=gv.out)
+        write('    0,              /* tp_base           */')
+    write('    0,              /* tp_dict           */')
+    write('    0,              /* tp_descr_get      */')
+    write('    0,              /* tp_descr_set      */')
+    write('    0,              /* tp_dictoffset     */')
     if has_method(cl, '__init__') and cl.funcs['__init__'] in funcs:
-        print('    %s___tpinit__, /* tp_init           */' % clname(cl), file=gv.out)
+        write('    %s___tpinit__, /* tp_init           */' % clname(cl))
     else:
-        print('    0,              /* tp_init           */', file=gv.out)
-    print('    0,              /* tp_alloc          */', file=gv.out)
-    print('    %sNew,          /* tp_new            */' % clname(cl), file=gv.out)
-    print('};\n', file=gv.out)
+        write('    0,              /* tp_init           */')
+    write('    0,              /* tp_alloc          */')
+    write('    %sNew,          /* tp_new            */' % clname(cl))
+    write('};\n')
     do_reduce_setstate(gx, gv, cl, vars)
     for n in cl.module.name_list:
-        print('} // namespace __%s__' % n, file=gv.out)
-    print()
+        write('} // namespace __%s__' % n)
+    write('')
 
 
 def pyinit_func(gv):
@@ -459,9 +464,10 @@ def exported_classes(gx, gv, warns=False):
 
 
 def convert_methods2(gx, gv):
+    write = lambda s: print(s, file=gv.out)
     for cl in exported_classes(gx, gv):
-        print('extern PyTypeObject %sObjectType;' % clname(cl), file=gv.out)
-    print('namespace __shedskin__ { /* XXX */\n', file=gv.out)
+        write('extern PyTypeObject %sObjectType;' % clname(cl))
+    write('namespace __shedskin__ { /* XXX */\n')
     for cl in exported_classes(gx, gv):
-        print('template<> %s::%s *__to_ss(PyObject *p);' % (cl.module.full_path(), gv.cpp_name(cl)), file=gv.out)
-    print('}', file=gv.out)
+        write('template<> %s::%s *__to_ss(PyObject *p);' % (cl.module.full_path(), gv.cpp_name(cl)))
+    write('}')
