@@ -23,8 +23,8 @@ class kohn_bmp:
 
         self.out=open(filename,"wb")
         # self.out.write("BM") #.encode('ascii'))                    # magic number
-        self.out.write("BM".encode('utf8'))                    # magic number
-        
+        self.out.write(b"BM")                    # magic number
+
         self.write_int(self.width_bytes * height + 54 + (1024 if depth==1 else 0))
 
         self.write_word(0)

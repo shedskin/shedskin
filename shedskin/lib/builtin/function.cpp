@@ -2,7 +2,7 @@
 
 /* builtin functions */
 
-str *raw_input(str *msg) {
+str *input(str *msg) {
     if(msg and len(msg)) {
         __ss_stdout->write(msg);
         __ss_stdout->options.lastchar = msg->unit[len(msg)-1];

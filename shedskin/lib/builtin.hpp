@@ -910,7 +910,7 @@ template <class T> __iter<T> *___iter(pyiter<T> *p) {
 }
 
 file *open(str *name, str *flags = 0);
-str *raw_input(str *msg = 0);
+str *input(str *msg = 0);
 
 void print(int n, file *f, str *end, str *sep, ...);
 void print2(file *f, int comma, int n, ...);
