@@ -17,6 +17,10 @@ n = 66
 bla = b'%c%c' % (n, n+1)
 print(bla)
 
+bs = set()
+bs.add(b'wop')
+print(b'wo'+b'p' in bs)
+
 # bytearray
 ba = bytearray(c)
 ba[2] = ord('a')

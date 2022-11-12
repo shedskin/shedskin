@@ -1,6 +1,6 @@
-/* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2022 Mark Dufour and contributors; License Expat (See LICENSE) */
 
-/* str methods */
+/* bytes methods TODO share code with str */
 
 bytes::bytes() : hash(-1) {
     __class__ = cl_bytes;
@@ -37,4 +37,35 @@ str *bytes::__str__() {
 
 str *bytes::__repr__() {
     return this->__str__();
+}
+
+long bytes::__hash__() {
+    if (hash != -1)
+        return hash;
+
+    hash = std::hash<std::string>{}(unit.c_str());
+
+    return hash;
+}
+
+__ss_bool bytes::__eq__(pyobj *p) {
+    bytes *q = (bytes *)p;
+    size_t len = size();
+    if(len != q->size() or (hash != -1 and q->hash != -1 and hash != q->hash))
+        return False;
+    return __mbool(memcmp(unit.data(), q->unit.data(), len) == 0);
+}
+
+bytes *bytes::__add__(bytes *b) {
+    bytes *s = new bytes();
+
+    s->unit.reserve(size()+b->size());
+    s->unit.append(unit);
+    s->unit.append(b->unit);
+
+    return s;
+}
+
+bytes *bytes::__iadd__(bytes *b) {
+    return __add__(b);
 }

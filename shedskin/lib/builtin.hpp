@@ -363,11 +363,16 @@ public:
     str *__str__();
     str *__repr__();
 
+    __ss_bool __eq__(pyobj *s);
+    long __hash__();
+
     /* iteration */
 
     inline bool for_in_has_next(size_t i);
     inline __ss_int for_in_next(size_t &i);
 
+    bytes *__iadd__(bytes *b);
+    bytes *__add__(bytes *b);
 
 };
 
