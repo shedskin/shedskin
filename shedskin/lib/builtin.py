@@ -1012,12 +1012,6 @@ def __filter(func, iter1):
     func(iter(iter1).next())
     return iter1
 
-def reduce(func, iter1, init=None):
-    elem = iter(iter1).next()
-#    elem = init
-    elem = func(elem, elem)
-    return elem
-
 def next(iter1, fillvalue=None):
     return iter1.next()
     return fillvalue
