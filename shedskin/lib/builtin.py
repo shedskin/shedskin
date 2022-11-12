@@ -447,7 +447,7 @@ class bytes(pyseq):
         a = a.unit
         a.__str__()
         a.__repr__()
-        return ''
+        return b''
     def __add__(self,be):
         return b''
     def __len__(self):
@@ -806,7 +806,7 @@ def isinstance(a, b):
 def range(a, b=1, s=1):
     return [1]
 
-def raw_input(msg=''):
+def input(msg=''):
     return ''
 
 class file(pyiter):

@@ -12,3 +12,7 @@ d = c[1]
 print(d)
 for x in c:
     print(x)
+
+n = 66
+bla = b'%c%c' % (n, n+1)
+print(bla)
