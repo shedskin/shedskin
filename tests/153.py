@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 # (c) (the sister of) Peter Goodspeed
 # --- coriolinus@gmail.com
 
@@ -11,12 +9,12 @@ def rawBoard():
         return [200 * [False] for i in range(200)]
 
 #def fromKb():
-#        eventLoop(lambda arg: raw_input(arg))
+#        eventLoop(lambda arg: input(arg))
 
 def nextI(qstr):
         global source
         if source == 1: #from keyboard
-                return raw_input(qstr)
+                return input(qstr)
         elif source == 2: #from file
                 global flines
                 global fcur
@@ -99,7 +97,7 @@ def neighbors(x,y):
 #main
 source = 0
 while source not in [1,2]:
-        source = 2 #int(raw_input("1 for input from keyboard; 2 for input from file: "))
+        source = 2 #int(input("1 for input from keyboard; 2 for input from file: "))
 
 if source==2:
         fp = open('testdata/life.txt')

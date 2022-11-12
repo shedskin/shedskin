@@ -103,7 +103,7 @@ while possible_moves(board, black) or possible_moves(board, white): # [list(tupl
         #if turn == black:                # [int]
         move, mobility = best_move(board, turn, turn) # [tuple2(tuple2(int, int), int)]
         #else:
-        #    move = coordinates(raw_input()) # [tuple2(int, int)]
+        #    move = coordinates(input()) # [tuple2(int, int)]
         if not possible_move(board, move[0], move[1], turn): # [int]
             print('impossible!')          # [str]
             turn = -turn                 # [int]
