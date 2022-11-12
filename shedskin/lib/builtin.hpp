@@ -356,6 +356,10 @@ public:
 
     const char *c_str() const;
     const int size() const;
+
+    str *__str__();
+    str *__repr__();
+
     /* iteration */
 
     inline bool for_in_has_next(size_t i);
@@ -969,6 +973,7 @@ template<> str *bin(__ss_bool b);
 
 str *__mod4(str *fmt, list<pyobj *> *vals);
 str *__modct(str *fmt, int n, ...);
+bytes *__modct(bytes *fmt, int n, ...);
 str *__modcd(str *fmt, list<str *> *l, ...);
 
 template<class T> str *__modtuple(str *fmt, tuple2<T,T> *t);
@@ -1146,6 +1151,7 @@ public:
     virtual __ss_int tell();
     virtual void * truncate(int size);
     virtual void * write(str *s);
+    virtual void * write(bytes *b);
     template<class U> void *writelines(U *iter);
     __iter<str *> *xreadlines();
     virtual void __enter__();

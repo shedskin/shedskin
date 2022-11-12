@@ -25,3 +25,11 @@ const char *bytes::c_str() const {
 const int bytes::size() const {
     return this->unit.size();
 }
+
+str *bytes::__str__() {
+    return __add_strs(3, new str("b'"), new str(this->unit), new str("'"));
+}
+
+str *bytes::__repr__() {
+    return this->__str__();
+}

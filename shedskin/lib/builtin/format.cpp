@@ -307,6 +307,18 @@ str *__modct(str *fmt, int n, ...) {
      return s;
 }
 
+/* TODO optimize later */
+bytes *__modct(bytes *fmt, int n, ...) {
+     list<pyobj *> *vals = new list<pyobj *>();
+     va_list args;
+     va_start(args, n);
+     for(int i=0; i<n; i++)
+         vals->append(va_arg(args, pyobj *));
+     va_end(args);
+     str *s = __mod4(new str(fmt->unit), vals);
+     return new bytes(s->unit);
+}
+
 /* print .., */
 
 void print(int n, file *f, str *end, str *sep, ...) {
