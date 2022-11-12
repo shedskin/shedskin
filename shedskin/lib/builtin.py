@@ -517,6 +517,9 @@ class bytes(pyseq):
     def __hash__(self):
         return 1
 
+class bytearray(bytes):
+    pass
+
 class dict(pyiter):
     def __initdict__(self, other):
         self.__setunit__(other.unit, other.value)
