@@ -18,7 +18,7 @@ str::str(const char *s, int size) : unit(s, size), hash(-1), charcache(0) { /* '
     __class__ = cl_str_;
 }
 
-str *str::__str__() { // weg?
+str *str::__str__() {
     return this;
 }
 

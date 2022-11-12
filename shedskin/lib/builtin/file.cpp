@@ -56,6 +56,11 @@ void *file::write(str *s) {
     return NULL;
 }
 
+void *file::write(bytes *b) { /* TODO lower-level helper funcs */
+    write(new str(b->unit));
+    return NULL;
+}
+
 void *file::seek(__ss_int i, __ss_int w) {
     __check_closed();
     if(f) {
