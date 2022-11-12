@@ -228,6 +228,8 @@ def typestrnew(gx, types, cplusplus=True, node=None, check_extmod=False, depth=0
         return conv[cl.ident]
     elif cl.ident == 'str_':
         return cl.ident[:-1] + ptr
+    elif cl.ident in ('bytes', 'bytearray'):
+        return 'bytes' + ptr
     elif cl.ident == 'none':
         if cplusplus:
             return 'void *'

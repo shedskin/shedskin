@@ -6,7 +6,7 @@ print(a)
 b = 9//2
 print(b)
 
-# bytes/bytearray
+# bytes
 c = b'blup'
 d = c[1]
 print(d)
@@ -16,6 +16,11 @@ for x in c:
 n = 66
 bla = b'%c%c' % (n, n+1)
 print(bla)
+
+# bytearray
+ba = bytearray(c)
+ba[2] = ord('a')
+print(ba)
 
 # reduce
 from functools import reduce

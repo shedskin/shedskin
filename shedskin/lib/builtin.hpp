@@ -344,11 +344,14 @@ public:
 
     bytes();
     bytes(const char *s);
+    bytes(bytes *b);
     bytes(__GC_STRING s);
     bytes(const char *s, int size); /* '\0' delimiter in C */
 
     inline __ss_int __getitem__(__ss_int i);
     inline __ss_int __getfast__(__ss_int i);
+
+    void *__setitem__(__ss_int i, __ss_int e);
 
     inline __ss_int __len__();
 

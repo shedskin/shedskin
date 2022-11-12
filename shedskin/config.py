@@ -27,8 +27,9 @@ class GlobalInfo:  # XXX add comments, split up
         self.sig_nr = {}
         self.nameclasses = {}
         self.module = None
-        self.builtins = ['none', 'str_', 'bytes', 'float_', 'int_', 'class_', 'list',
-                         'tuple', 'tuple2', 'dict', 'set', 'frozenset', 'bool_']
+        self.builtins = ['none', 'str_', 'bytes', 'bytearray', 'float_',
+                         'int_', 'class_', 'list', 'tuple', 'tuple2', 'dict',
+                         'set', 'frozenset', 'bool_']
         # instance node for instance Variable assignment
         self.assign_target = {}
         # allocation site type information across iterations
