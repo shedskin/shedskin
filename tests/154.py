@@ -60,7 +60,7 @@ class board(object):
         def fread(self,fn=''):
                 #self.__init__()
                 if fn=='':
-                        fn = raw_input("filename: ")
+                        fn = input("filename: ")
                 f = open(fn, 'r')
                 lines = f.readlines()
                 for row in range(9):
