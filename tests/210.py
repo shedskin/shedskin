@@ -1,19 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 
-# unicode
-
-# encode/decode
+# fake unicode (becomes utf-8 encoded bytes)
 ss = u'\u91cf\u5b50\u529b\u5b66'
-print(repr(ss), ss)
-t = ss.encode('utf-8')
-print(repr(t), t)
-u = t.decode('utf-8')
-print(repr(u), u)
-l = [ss, u]
-print(l)
-print(repr(ss[1]))  #, s[1]
-print(len(ss))
+print(ss)
 
 # char cache
 initial = (
