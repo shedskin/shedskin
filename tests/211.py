@@ -1,6 +1,5 @@
-from __future__ import print_function
-
 # binascii
+
 import binascii
 str = b'my guitar wants to strum all night long'
 
