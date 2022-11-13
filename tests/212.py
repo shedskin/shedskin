@@ -1,6 +1,5 @@
-from __future__ import print_function
-
 # array
+
 import array
 arr = array.array('i', [3,2,1])
 print(arr)

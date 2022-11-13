@@ -1,3 +1,3 @@
 
 def hello(x):
-    print 'andere bert'
+    print('andere bert')
