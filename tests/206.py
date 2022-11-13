@@ -222,3 +222,6 @@ print(int(), float(), list(), dict(), set(), tuple(), frozenset(),) # XXX repr(s
 # range segfault
 broken_range = range(3,0,1)
 print(list(broken_range))
+
+# now iterators: dict_items, dict_keys, dict_values..
+print({1:2}.items())

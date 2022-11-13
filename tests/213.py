@@ -182,17 +182,6 @@ print(repr(valeur))
 #print(valeur.message)
 print(valeur.__class__.__name__)
 
-# ConfigParser.items model
-import ConfigParser
-p = ConfigParser.ConfigParser()
-p.read("testdata/symbols.INI")
-for entry in p.items("symbols"):
-    print(entry)
-itemz = p.defaults().items()
-print(itemz)
-sections = p.sections()
-print(sections)
-
 # qualify & add include for class name
 from testdata import iec2
 from testdata import d1541
