@@ -31,7 +31,7 @@ config.write(fl)
 fl.close()
 print(sorted(open('testdata/test.ini').readlines()))
 
-print(config.defaults().items())
+print(list(config.defaults().items()))
 print(sorted(config.items('ematter', vars={'var': 'blah'})))
 
 rcp = configparser.RawConfigParser()
@@ -39,3 +39,13 @@ rcp.read(["testdata/test.conf"])
 
 print(rcp.get('ematter', 'pages')) #, vars={'var': 'blah'})
 print(sorted(rcp.items('ematter')))
+
+# ConfigParser.items model
+p = configparser.ConfigParser()
+p.read("testdata/symbols.INI")
+for entry in p.items("symbols"):
+    print(entry)
+itemz = p.defaults().items()
+print(list(itemz))
+sections = p.sections()
+print(sections)
