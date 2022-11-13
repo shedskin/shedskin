@@ -1,3 +1,4 @@
+.DS_Store
 *.pyc
 *.pyo
 *.ppm
@@ -316,3 +317,5 @@ examples/timsort
 examples/sat
 examples/pygasus
 examples/tiger1.bmp
+examples2to3
+
