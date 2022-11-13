@@ -93,12 +93,3 @@ arghy = array.array('h', list(range(5)))
 print(arghx == arghy)
 arghy.append(7)
 print(arghx == arghy)
-
-arr2 = array.array('c')
-arr2.extend('hoei')
-print(arr2.count('h'), arr2.index('h'))
-arr2[-1] = 'X'
-arr2.insert(0, '-')
-arr2.fromlist(['a', 'b'])
-print(arr2, arr2.tolist(), arr2.tostring())
-print(arr2[0])
