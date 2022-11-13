@@ -171,8 +171,8 @@ class GenerateVisitor(BaseNodeVisitor):
                     if self.mergeinh[todo[number]]:  # XXX
                         name = 'const_' + str(number)
                         self.start('    ' + name + ' = ')
-                        if isinstance(todo[number], Str) and len(todo[number].s) == 1:
-                            self.append("__char_cache[%d];" % ord(todo[number].s))
+                        if isinstance(todo[number], Str) and len(todo[number].s.encode('utf-8')) == 1:
+                            self.append("__char_cache[%d]" % ord(todo[number].s))
                         else:
                             self.visit(todo[number], inode(self.gx, todo[number]).parent)
                         newlines2.append(self.line + ';\n')
@@ -2754,7 +2754,10 @@ class GenerateVisitor(BaseNodeVisitor):
             error("unknown ctx type for Name, " + type(node.ctx), self.gx, node, mv=self.mv)
 
     def expand_special_chars(self, value):
-        value = list(value)
+        if isinstance(value, str):
+            value = value.encode('utf-8') # restriction
+
+        value = [chr(c) for c in value]
         replace = dict(['\\\\', '\nn', '\tt', '\rr', '\ff', '\bb', '\vv', '""'])
 
         for i in range(len(value)):
