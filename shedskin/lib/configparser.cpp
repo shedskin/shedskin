@@ -853,7 +853,7 @@ list<tuple2<str *, str *> *> *ConfigParser::items(str *section, __ss_int raw, di
             __52 = __52;
             key = __52->__getfirst__();
             value = __52->__getsecond__();
-            d->__setitem__(this->optionxform(key), value);
+//            d->__setitem__(this->optionxform(key), value);
         END_FOR
 
     }
