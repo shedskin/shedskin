@@ -365,8 +365,8 @@ template<class T> void *array<T>::fromfile(file *f, __ss_int n) {
     size_t bytes = (len/itemsize)*itemsize;
     for(size_t i=0; i<bytes; i++)
         units.push_back(s->unit[i]);
-    if (len < n*itemsize) 
-        throw new EOFError(new str("not enough items in file"));
+    if (len < n*itemsize)
+        throw new EOFError(new str("read() didn't return enough bytes"));
     return NULL;
 }
 
