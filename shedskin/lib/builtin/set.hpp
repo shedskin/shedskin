@@ -402,8 +402,10 @@ template <class T> void set<T>::resize(int minused)
 
 template<class T> str *set<T>::__repr__() {
     str *r;
-    if(this->frozen) r = new str("frozenset([");
-    else r = new str("set([");
+    if(this->frozen)
+        r = new str("frozenset({");
+    else
+        r = new str("{");
 
     int rest = used-1;
 
@@ -416,7 +418,10 @@ template<class T> str *set<T>::__repr__() {
            r->unit += ", ";
         --rest;
     }
-    r->unit += "])";
+    if(this->frozen)
+        r->unit += "})";
+    else
+        r->unit += "}";
     return r;
 }
 
