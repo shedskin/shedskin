@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import random
 
 # --- module-level functions
@@ -7,67 +5,68 @@ random.seed(37)
 rstate = random.getstate()   # (state is not cross-compatible with CPython)
 random.setstate(rstate)
 for i in range(25):
-    print("%.8f" % random.random())
-    print(random.randrange(-30,15))
-    print(random.randrange(-15,15,3))
-    print(random.randint(50,100))
+    s = "%.8f" % random.random()
+    f = random.randrange(-30,15)
+    f = random.randrange(-15,15,3)
+    f = random.randint(50,100)
     fibs = [0,1,1,2,3,5,8,13,21]
     print(fibs)
-    print(random.choice(fibs))
-    print(random.sample(fibs,3))
+    i = random.choice(fibs)
+    l = random.sample(fibs,3)
     random.shuffle(fibs)
-    print(fibs)
+    print(len(fibs))
     nums = [3.141, 2.71828, 1.41421, 1.0]
     print(nums)
-    print(random.choice(nums))
-    print(random.sample(nums,3))
+    f = random.choice(nums)
+    lf = random.sample(nums,3)
     random.shuffle(nums)
-    print(nums)
-    print("%.8f" % random.uniform(-0.5,0.5))
-    print("%.8f" % random.normalvariate(0.0, 1.0))
-    print("%.8f" % random.lognormvariate(0.0, 1.0))
-    print("%.8f" % random.expovariate(1.0))
-    print("%.8f" % random.vonmisesvariate(0.0, 1.0))
-    print("%.8f" % random.gammavariate(20.0, 1.0))
-    print("%.8f" % random.gauss(0.0, 1.0))
-    print("%.8f" % random.betavariate(3.0, 3.0))
-    print("%.8f" % random.paretovariate(1.0))
-    print("%.8f" % random.weibullvariate(1.0, 1.0))
+    print(len(nums))
+    s = "%.8f" % random.uniform(-0.5,0.5)
+    s = "%.8f" % random.normalvariate(0.0, 1.0)
+    s = "%.8f" % random.lognormvariate(0.0, 1.0)
+    s = "%.8f" % random.expovariate(1.0)
+    s = "%.8f" % random.vonmisesvariate(0.0, 1.0)
+    s = "%.8f" % random.gammavariate(20.0, 1.0)
+    s = "%.8f" % random.gauss(0.0, 1.0)
+    s = "%.8f" % random.betavariate(3.0, 3.0)
+    s = "%.8f" % random.paretovariate(1.0)
+    s = "%.8f" % random.weibullvariate(1.0, 1.0)
     #print "%.8f" % random.stdgamma(1.0,1.0,1.0,1.0) # deprecated in CPython
     #print "%.8f" % random.cunifvariate(0.0,1.0)     # deprecated in CPython
-    print(random.getrandbits(8))
-    print(random.getrandbits(16))
-    print(random.getrandbits(30))
+    b = random.getrandbits(8)
+    b = random.getrandbits(16)
+    b = random.getrandbits(30)
     print('')
 
 # --- (test set for RNGs)
 def runrng(r):
-    print("%.8f" % r.random())
-    print(r.randrange(0,10))
-    print(r.randrange(-10,10,2))
-    print(r.randint(-5,5))
+    s = "%.8f" % r.random()
+    f = r.randrange(0,10)
+    f = r.randrange(-10,10,2)
+    i = r.randint(-5,5)
     fibs = [0,1,1,2,3,5,8,13,21]
     print(fibs)
-    print(r.choice(fibs))
-    print(r.sample(fibs,4))
+    i = r.choice(fibs)
+    l = r.sample(fibs,4)
+    print(len(l))
     r.shuffle(fibs)
-    print(fibs)
+    print(len(fibs))
     nums = [3.141, 2.71828, 1.41421, 1.0]
     print(nums)
-    print(random.choice(nums))
-    print(random.sample(nums,1))
+    f = random.choice(nums)
+    lf = random.sample(nums,1)
     random.shuffle(nums)
-    print(nums)
-    print("%.8f" % r.uniform(-0.5,0.5))
-    print("%.8f" % r.normalvariate(0.0, 1.0))
-    print("%.8f" % r.lognormvariate(0.0, 1.0))
-    print("%.8f" % r.expovariate(1.0))
-    print("%.8f" % r.vonmisesvariate(0.0, 1.0))
-    print("%.8f" % r.gammavariate(20.0, 1.0))
-    print("%.8f" % r.gauss(0.0, 1.0))
-    print("%.8f" % r.betavariate(3.0, 3.0))
-    print("%.8f" % r.paretovariate(1.0))
-    print("%.8f" % r.weibullvariate(1.0, 1.0))
+    print(len(nums))
+    s = "%.8f" % r.uniform(-0.5,0.5)
+    s = "%.8f" % r.normalvariate(0.0, 1.0)
+    s = "%.8f" % r.lognormvariate(0.0, 1.0)
+    s = "%.8f" % r.expovariate(1.0)
+    s = "%.8f" % r.vonmisesvariate(0.0, 1.0)
+    s = "%.8f" % r.gammavariate(20.0, 1.0)
+    s = "%.8f" % r.gauss(0.0, 1.0)
+    s = "%.8f" % r.betavariate(3.0, 3.0)
+    s = "%.8f" % r.paretovariate(1.0)
+    s = "%.8f" % r.weibullvariate(1.0, 1.0)
     #print "%.8f" % r.stdgamma(1.0, 1.0, 1.0, 1.0) # deprecated in CPython
     #print "%.8f" % r.cunifvariate(0.0, 1.0)       # deprecated in CPython
     print('')
@@ -79,7 +78,8 @@ mt.seed(79)
 mtstate = mt.getstate()   # (state is not cross-compatible with CPython)
 mt.setstate(mtstate)
 #mt.jumpahead(1000000)    # (not yet supported)
-for i in range(25): runrng(mt)
+for i in range(25):
+    runrng(mt)
 
 # --- random.WichmannHill
 #wh = random.WichmannHill()
@@ -95,36 +95,16 @@ for i in range(25): runrng(mt)
 # random module improvements
 import random
 random.seed(1)
-print(random.triangular())
-print(random.triangular(high=1.1, low=0.0))
-print(random.triangular(0.1))
-print(random.triangular(-2, 2))
-print(random.triangular(-2.0, 2.1, 1.5))
-print(random.triangular(mode=1.5))
-print(random.triangular(0, 5, 0))
+f = random.triangular()
+f = random.triangular(high=1.1, low=0.0)
+f = random.triangular(0.1)
+f = random.triangular(-2, 2)
+f = random.triangular(-2.0, 2.1, 1.5)
+f = random.triangular(mode=1.5)
+f = random.triangular(0, 5, 0)
 random.seed()
 random.seed('seed')
 random.seed(8.0)
 random.seed(None)
 random.seed(4)
-print(random.random())
-
-# reversed(range)
-import random
-random.seed(1)
-
-for z in range(1000):
-    l,u,s = random.randrange(-5,5), random.randrange(-5,5), random.randrange(-5,5)
-    print(l, u, s)
-
-    try:
-        x = range(l,u,s)
-        y = reversed(range(l,u,s))
-
-        xl = [e for e in x]
-        yl = [e for e in y]
-
-        print(xl, yl, [0, 1][xl == list(reversed(yl))])
-
-    except ValueError as v:
-        print(v)
+f = random.random()

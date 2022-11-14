@@ -32,6 +32,9 @@ from functools import reduce
 print(reduce(lambda a,b: a+b, [3,5,7]))
 print(reduce(lambda a,b: a-b, set([3,5,7]), 1))
 
+# reversed(range)
+print(reversed(range(10,20,2)))
+
 # TODO
 # __div__ -> __truediv__, __floordiv__
 
@@ -40,7 +43,8 @@ print(reduce(lambda a,b: a-b, set([3,5,7]), 1))
 #ar.__delitem__(slice(1,4))
 #print(ar)
 
-# now iterators: dict_items, dict_keys, dict_values..
+# now iterators: dict_items, dict_keys, dict_values, like reversed, enumerate, itertools.imap?
 #print({1:2}.items())
 
 # print(.. end=..)
+
