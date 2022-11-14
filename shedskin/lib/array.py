@@ -19,11 +19,15 @@ class array:
     def tolist(self):
         return [self.unit]
     def tostring(self):
-        return ''
+        return b''
+    def tobytes(self):
+        return b''
 
     def fromlist(self, l):
         pass
     def fromstring(self, s):
+        pass
+    def frombytes(self, s):
         pass
 
     def extend(self, it):
