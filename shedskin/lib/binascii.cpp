@@ -29,13 +29,13 @@ class Incomplete
 
 class_ *cl_Incomplete;
 
-str *hexlify(str *data) {
+bytes *hexlify(bytes *data) {
     // output will be twice as long
     __ss_int len = data->__len__();
     __GC_STRING hexstr = __GC_STRING(data->unit);
     hexstr.reserve(len<<1);
     hexstr.resize(len<<1);
-    str * hex = new str(hexstr);
+    bytes *hex = new bytes(hexstr);
 
     char * curdata = &data->unit[0];
     char * curhex = &hex->unit[0];
@@ -100,11 +100,11 @@ static char table_a2b_hex[] = {
 };
 
 
-str *unhexlify(str *hex) {
+bytes *unhexlify(bytes *hex) {
     // output will be half as long
     __ss_int len = hex->__len__();
     if ( len&1 ) throw new Error(0); //new str("Odd-length string"));
-    str * data = new str("",len>>1);
+    bytes *data = new bytes("",len>>1);
 
     char * curdata = &data->unit[0];
     char * curhex = &hex->unit[0];
@@ -125,12 +125,12 @@ str *unhexlify(str *hex) {
 
 
 // from python 2.7.1
-str *a2b_uu(str *string) {
+bytes *a2b_uu(bytes *string) {
     __ss_int ascii_len = string->__len__();
     char * ascii_data = &string->unit[0];
 
     __ss_int bin_len = (*ascii_data++ - ' ') & 077;
-    str * binary = new str("",bin_len);
+    bytes *binary = new bytes("",bin_len);
     char * bin_data = &binary->unit[0];
     unsigned char this_ch;
     __ss_int leftchar=0, leftbits=0;
@@ -187,7 +187,7 @@ str *a2b_uu(str *string) {
     return binary;
 }
 
-str *b2a_uu(str *binary) {
+bytes *b2a_uu(bytes *binary) {
     __ss_int bin_len = binary->__len__();
     if ( bin_len > 45 ) {
         /* The 45 is a limit that appears in all uuencode's */
@@ -198,7 +198,7 @@ str *b2a_uu(str *binary) {
 
     /* We're lazy and allocate too much (fixed up later) */
     __ss_int ascii_len = 2 + (bin_len+2)/3*4;
-    str * ascii = new str("",ascii_len);
+    bytes * ascii = new bytes("",ascii_len);
     char * ascii_data = &ascii->unit[0];
     char * ascii_start = ascii_data;
     unsigned char this_ch;
@@ -275,7 +275,7 @@ int find_valid(char *s, __ss_int slen, int num)
 }
 
 // from python 2.7.1
-str *a2b_base64(str *pascii) {
+bytes *a2b_base64(bytes *pascii) {
     char * ascii_data = &pascii->unit[0];
     __ss_int ascii_len = pascii->__len__();
     if (ascii_len > PY_SSIZE_T_MAX-3) {
@@ -288,7 +288,7 @@ str *a2b_base64(str *pascii) {
     unsigned int leftchar = 0;
 
     __ss_int bin_len = ((ascii_len+3)/4)*3; /* Upper bound, corrected later */
-    str * binary = new str("",bin_len);
+    bytes *binary = new bytes("",bin_len);
     char * bin_data = &binary->unit[0];
     bin_len = 0;
 
@@ -352,12 +352,12 @@ str *a2b_base64(str *pascii) {
         binary->unit.resize(bin_len);
     } else {
         // reset binary to ""
-        binary = new str("");
+        binary = new bytes("");
     }
     return binary;
 }
 
-str *b2a_base64(str *binary) {
+bytes *b2a_base64(bytes *binary) {
 
     __ss_int bin_len = binary->__len__();
 /*    if (bin_len > BASE64_MAXBIN) {
@@ -368,7 +368,7 @@ str *b2a_base64(str *binary) {
     __ss_int leftbits = 0,leftchar = 0;
     char this_ch;
 
-    str * ascii = new str("",bin_len*2 + 3);
+    bytes *ascii = new bytes("",bin_len*2 + 3);
     char * ascii_data = &ascii->unit[0];
     char * ascii_start = ascii_data;
     
@@ -399,7 +399,7 @@ str *b2a_base64(str *binary) {
     return ascii;
 }
 
-str *a2b_qp(str *pdata, __ss_bool header) {
+bytes *a2b_qp(bytes *pdata, __ss_bool header) {
     // from python 2.7.1
     __ss_int datalen = pdata->__len__();
     char * data = &pdata->unit[0];
@@ -408,7 +408,7 @@ str *a2b_qp(str *pdata, __ss_bool header) {
      * The previous implementation used calloc() so we'll zero out the
      * memory here too, since PyMem_Malloc() does not guarantee that.
      */
-    str * outdata = new str("",datalen);
+    bytes *outdata = new bytes("",datalen);
     char * odata = &outdata->unit[0];
     memset(odata,0,datalen);
 
@@ -475,7 +475,7 @@ void to_hex (unsigned char ch, unsigned char *s)
 /* XXX: This is ridiculously complicated to be backward compatible
  * (mostly) with the quopri module.  It doesn't re-create the quopri
  * module bug where text ending in CRLF has the CR encoded */
-str *b2a_qp(str *pdata, __ss_bool quotetabs, __ss_bool istext, __ss_bool header) {
+bytes *b2a_qp(bytes *pdata, __ss_bool quotetabs, __ss_bool istext, __ss_bool header) {
     __ss_int datalen = pdata->__len__();
     char * data = &pdata->unit[0];
     char * p = (char *) memchr(data, '\n', datalen);
@@ -559,7 +559,7 @@ str *b2a_qp(str *pdata, __ss_bool quotetabs, __ss_bool istext, __ss_bool header)
      * The previous implementation used calloc() so we'll zero out the
      * memory here too, since PyMem_Malloc() does not guarantee that.
      */
-    str * outdata = new str("",odatalen);
+    bytes *outdata = new bytes("",odatalen);
     unsigned char * odata = (unsigned char *)&outdata->unit[0];
     memset(odata, 0, odatalen);
 
@@ -696,7 +696,7 @@ static unsigned char table_a2b_hqx[256] = {
 };
 
 
-tuple2<str*, __ss_int> *a2b_hqx(str *pascii) {
+tuple2<bytes *, __ss_int> *a2b_hqx(bytes *pascii) {
     __ss_int len = pascii->__len__();
     if (len > PY_SSIZE_T_MAX - 2){
         throw new Error(0); //No memory
@@ -709,7 +709,7 @@ tuple2<str*, __ss_int> *a2b_hqx(str *pascii) {
     /* Allocate a string that is too big (fixed later)
        Add two to the initial length to prevent interning which
        would preclude subsequent resizing.  */
-    str * outdata = new str("",len+2);
+    bytes *outdata = new bytes("",len+2);
     unsigned char * bin_data = (unsigned char *)&outdata->unit[0];
     unsigned char * bin_start = bin_data;
 
@@ -742,13 +742,13 @@ tuple2<str*, __ss_int> *a2b_hqx(str *pascii) {
         throw new Error(0); //(Incomplete) String has incomplete number of bytes 
 
     outdata->unit.resize(bin_data-bin_start);
-    return new tuple2<str*, __ss_int>(2,outdata,done);
+    return new tuple2<bytes *, __ss_int>(2,outdata,done);
 }
 
 static unsigned char table_b2a_hqx[] =
 "!\"#$%&'()*+,-012345689@ABCDEFGHIJKLMNPQRSTUVXYZ[`abcdefhijklmpqr";
 
-str *b2a_hqx(str *binary) {
+bytes *b2a_hqx(bytes *binary) {
     __ss_int bin_len = binary->__len__();
     if (bin_len > PY_SSIZE_T_MAX / 2 - 2) {
         throw new Error(0); // out of memory
@@ -756,13 +756,13 @@ str *b2a_hqx(str *binary) {
 
     char * bin_data = &binary->unit[0];
 
-    str * ascii = new str("",(bin_len<<1)+2);
+    bytes *ascii = new bytes("",(bin_len<<1)+2);
     char * ascii_data = &ascii->unit[0];
     char * ascii_start = ascii_data;
 
     int leftbits = 0, leftchar = 0;
     char this_ch;
-    
+
     for( ; bin_len > 0 ; bin_len--, bin_data++ ) {
         /* Shift into our buffer, and output any 6bits ready */
         leftchar = (leftchar << 8) | *bin_data;
@@ -785,10 +785,10 @@ str *b2a_hqx(str *binary) {
 
 #define RUNCHAR 0x90
 
-str *rledecode_hqx(str * in_data_str) {
+bytes *rledecode_hqx(bytes *in_data_str) {
     __ss_int in_len = in_data_str->__len__();
     if ( in_len == 0 ) {
-        return new str("",0);
+        return new bytes("",0);
     } else if (in_len > PY_SSIZE_T_MAX / 2) {
         throw new Error(0); // no memory
     }
@@ -798,7 +798,7 @@ str *rledecode_hqx(str * in_data_str) {
 
     /* Allocate a buffer of reasonable size. Resized when needed */
     __ss_int out_len = in_len<<1;
-    str * out_data_str = new str("",out_len);
+    bytes *out_data_str = new bytes("",out_len);
     __ss_int out_len_left = out_len;
     char * out_data = &out_data_str->unit[0];
     char * out_data_start = out_data;
@@ -869,14 +869,14 @@ str *rledecode_hqx(str * in_data_str) {
     return out_data_str;
 }
 
-str *rlecode_hqx(str *data) {
+bytes *rlecode_hqx(bytes *data) {
     __ss_int len = data->__len__();
     if (len >  PY_SSIZE_T_MAX / 2 - 2) {
         throw new Error(0); // no memory
     }
 
     char * in_data = &data->unit[0];
-    str * rv = new str("", len*2+2);
+    bytes *rv = new bytes("", len*2+2);
     char * out_data = &rv->unit[0];
     char * out_start = out_data;
     char ch;
@@ -945,7 +945,7 @@ static unsigned short crctab_hqx[256] = {
     0x6e17, 0x7e36, 0x4e55, 0x5e74, 0x2e93, 0x3eb2, 0x0ed1, 0x1ef0,
 };
 
-__ss_int crc_hqx(str *data, __ss_int crc) {
+__ss_int crc_hqx(bytes *data, __ss_int crc) {
     __ss_int len = data->__len__();
     char * bin_data = &data->unit[0];
     while (len-- > 0) {
@@ -1072,7 +1072,7 @@ static unsigned int crc_32_tab[256] = {
 0x2d02ef8dU
 };
 
-__ss_int crc32(str *data, __ss_int signed_crc) {
+__ss_int crc32(bytes *data, __ss_int signed_crc) {
     __ss_int len = data->__len__();
     unsigned int crc = signed_crc;
     crc = ~crc;
@@ -1083,12 +1083,12 @@ __ss_int crc32(str *data, __ss_int signed_crc) {
     return (__ss_int)(crc ^ 0xFFFFFFFFU);
 }
 
-str *b2a_hex(str *data) {
+bytes *b2a_hex(bytes *data) {
     
     return hexlify(data);
 }
 
-str *a2b_hex(str *data) {
+bytes *a2b_hex(bytes *data) {
     
     return unhexlify(data);
 }

@@ -38,8 +38,52 @@ str *bytes::__str__() {
         return __add_strs(3, new str("b'"), new str(this->unit), new str("'"));
 }
 
+const int bytes::find(const char c, int a) const {
+    return this->unit.find(c, a);
+}
+
+const int bytes::find(const char *c, int a) const {
+    return this->unit.find(c, a);
+}
+
 str *bytes::__repr__() {
-    return this->__str__();
+    std::stringstream ss;
+    __GC_STRING sep = "\\\n\r\t";
+    __GC_STRING let = "\\nrt";
+
+    const char *quote = "'";
+    int hasq = find('\'');
+    int hasd = find('\"');
+
+    if (hasq != -1 && hasd != -1) {
+        sep += "'"; let += "'";
+    }
+    if (hasq != -1 && hasd == -1)
+        quote = "\"";
+
+    ss << 'b';
+    ss << quote;
+    for(unsigned int i=0; i<size(); i++)
+    {
+        char c = unit[i];
+        int k;
+
+        if((k = sep.find_first_of(c)) != -1)
+            ss << "\\" << let[k];
+        else {
+            int j = (int)((unsigned char)c);
+
+            if(j<16)
+                ss << "\\x0" << std::hex << j;
+            else if(j>=' ' && j<='~')
+                ss << (char)j;
+            else
+                ss << "\\x" << std::hex << j;
+        }
+    }
+    ss << quote;
+
+    return new str(ss.str().c_str());
 }
 
 long bytes::__hash__() {
