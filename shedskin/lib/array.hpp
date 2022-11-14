@@ -38,6 +38,7 @@ public:
 
     template<class U> void *extend(U *iter);
     template<class U> void *fromlist(U *iter);
+    void *fromstring(str *s);
     void *fromstring(bytes *s);
     void *frombytes(bytes *b);
 
@@ -122,6 +123,10 @@ template<class T> template<class U> void *array<T>::fromlist(U *iter) {
 }
 
 template<class T> bytes *array<T>::tostring() {
+    return tobytes();
+}
+
+template<class T> bytes *array<T>::tobytes() {
     bytes *s = new bytes();
     size_t s1 = this->units.size();
     s->unit.resize(s1);
@@ -130,6 +135,11 @@ template<class T> bytes *array<T>::tostring() {
 }
 
 template<class T> void *array<T>::fromstring(bytes *s) {
+    frombytes(s);
+    return NULL;
+}
+
+template<class T> void *array<T>::frombytes(bytes *s) {
     size_t len = s->size();
     if(len == 1)
         this->units.push_back(s->unit[0]);
