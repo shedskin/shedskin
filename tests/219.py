@@ -27,3 +27,5 @@ print('hoi'.center(10, 'u'))
 for i in range(10):
     print('!'+'hoi'.center(i)+'!')
 print(string.atoi('+0x10', 0), string.atol('-100l', 0), string.atof('-1.234'))
+
+print(repr(string.whitespace))

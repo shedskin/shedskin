@@ -48,11 +48,7 @@ print(h)
 def mapp():
     allchr = [chr(c) for c in range(256)]
     return allchr
-print(mapp()[-10:])
-
-ar = list(range(10))
-ar.__delslice__(1,4)
-print(ar)
+print(mapp()[66:86])
 
 class ueuk(Exception):
     def __init__(self, msg):
@@ -132,17 +128,9 @@ ls.sort(reverse=True); print(ls)
 print(oct(1==2), oct(1!=2))
 print(oct(200), oct(-200), oct(0))
 
-print(repr('\377ai\37aoi\001123\00hoi\01hoi\0hoi'))
-print(repr(string.whitespace))
-
 #int(), float(), str(); test all
 print(int(), float(), list(), dict(), set(), tuple(), frozenset(),) # XXX repr(str())
 
 # range segfault
 broken_range = range(3,0,1)
 print(list(broken_range))
-
-# now iterators: dict_items, dict_keys, dict_values..
-print({1:2}.items())
-
-# print(.. end=..)
