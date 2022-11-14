@@ -1,4 +1,4 @@
-import piece
+from . import piece
 
 WHITE = 4
 

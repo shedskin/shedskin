@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-import board
+from . import board
 
 def latebinding():
     a = board.WHITE
