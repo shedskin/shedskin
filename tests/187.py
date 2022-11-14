@@ -106,23 +106,14 @@ for i in range(10):
 # sort(ed) key argument
 a = range(4)
 print(sorted(a))
-#print(sorted(a, cmp=lambda a,b:cmp(a,b)))
-#print(sorted(a, cmp=lambda a,b:cmp(b,a)))
 print(sorted(a, key=lambda a:a))
 print(sorted(a, key=lambda a:-a))
-#print(sorted(a, cmp=lambda a,b:cmp(a,b), key=lambda a:-a))
 
 l = list(range(4))
-print(l)
-#l.sort(cmp=lambda a,b:cmp(a,b))
-print(l)
-#l.sort(cmp=lambda a,b:cmp(b,a))
 print(l)
 l.sort(key=lambda a:a)
 print(l)
 l.sort(key=lambda a:-a)
-print(l)
-#l.sort(cmp=lambda a,b:cmp(a,b), key=lambda a:-a)
 print(l)
 
 print(sorted('dcba', key=lambda c: c))
@@ -195,11 +186,6 @@ def three(f, a, b, c):
     return f(a, b, c)
 print(two(max, 'a', 'b'))
 print(three(max, 'a', 'b', 'c'))
-
-# __cmp and None
-lamp = ['a', 'b'] #, None]
-lamp.sort()
-print(lamp)
 
 # bool and func pointers, misc fixes
 def wopper(x):

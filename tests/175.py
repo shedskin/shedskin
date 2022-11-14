@@ -22,7 +22,6 @@ class D:
     def __float__(self): return 7.0
     def __str__(self): return '__str__'
     def __repr__(self): return '__repr__'
-    def __cmp__(self, b): return 1
     def __nonzero__(self): return True
     def __len__(self): return 1
 
