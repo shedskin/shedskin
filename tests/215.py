@@ -34,3 +34,13 @@ print(reduce(lambda a,b: a-b, set([3,5,7]), 1))
 
 # TODO
 # __div__ -> __truediv__, __floordiv__
+
+# TODO support slice objects??
+#ar = list(range(10))
+#ar.__delitem__(slice(1,4))
+#print(ar)
+
+# now iterators: dict_items, dict_keys, dict_values..
+#print({1:2}.items())
+
+# print(.. end=..)
