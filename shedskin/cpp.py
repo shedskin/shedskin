@@ -28,7 +28,8 @@ from .ast_utils import BaseNodeVisitor, is_assign_attribute, is_assign_tuple, is
     orelse_to_node, handle_with_vars, is_none
 
 from .error import error
-from .extmod import convert_methods, convert_methods2, do_extmod, pyinit_func
+# from .extmod import convert_methods, convert_methods2, do_extmod, pyinit_func
+from .extmod import ExtensionModule
 from .infer import analyze_callfunc, callfunc_targets, connect_actual_formal, \
     called, inode, var_types
 from .makefile import generate_makefile
@@ -115,6 +116,7 @@ class GenerateVisitor(BaseNodeVisitor):
         )
         self.jinja_env.filters['depointer'] = (
             lambda ts: ts[:-1] if ts.endswith('*') else ts)
+        self.extmod = ExtensionModule(self.gx, self)
 
     def cpp_name(self, obj):
         return self.namer.name(obj)
@@ -390,7 +392,7 @@ class GenerateVisitor(BaseNodeVisitor):
 
         if self.gx.extension_module:
             self.print('extern "C" {')
-            pyinit_func(self)
+            self.extmod.pyinit_func()
             self.print('}')
 
         for n in self.module.name_list:
@@ -399,7 +401,7 @@ class GenerateVisitor(BaseNodeVisitor):
         self.rich_comparison()
 
         if self.gx.extension_module:
-            convert_methods2(self.gx, self)
+            self.extmod.convert_methods2()
 
         self.print('#endif')
 
@@ -551,7 +553,7 @@ class GenerateVisitor(BaseNodeVisitor):
 
         # --- c++ main/extension module setup
         if self.gx.extension_module:
-            do_extmod(self.gx, self)
+            self.extmod.do_extmod()
         if self.module == self.gx.main_module:
             self.do_main()
 
@@ -766,7 +768,7 @@ class GenerateVisitor(BaseNodeVisitor):
                 self.visit_FunctionDef(func.node, cl, True)
         self.copy_methods(cl, True)
         if self.gx.extension_module:
-            convert_methods(self.gx, self, cl, True)
+            self.extmod.convert_methods(cl, True)
 
         self.deindent()
         self.output('};\n')
