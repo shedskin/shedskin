@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import print_function
-
 # check bounds after wrapping..
 alist = range(5)
 for i in range(-10,10):
@@ -70,12 +67,6 @@ try:
 except ueuk as errx:
     print(errx)
 
-# TODO
-# __div__ -> __truediv__, __floordiv__
-
-import string
-print(string.join(['hello', 'world!']), string.join(['hello', 'world!'], '_'))
-
 # empty set?
 blah2 = set([])
 print(blah2)
@@ -113,32 +104,6 @@ print([line for line in open('testdata/scene.txt') if line.startswith('material'
 print(1/3.0, 1.1234123412341234, 1.1, 8.0)
 #print 9.12341234e20 # XXX difference on win, e020?
 
-# string.maketrans
-import string
-si = 'abcde'
-trans = string.maketrans('abc', 'xyz')
-print(si.translate(trans))
-
-# --- str.translate problem
-import string
-atable = string.maketrans("bc", "ef")
-print('abcdeg'.translate(atable, "cde"))
-gtable = string.maketrans("", "")
-word = 'aachen\n'
-key = word.translate(gtable, "a\n")
-print('word', repr(word))
-
-# --- string.{capitalize, capwords, swapcase, center, atoi, atol, atof}
-print(string.capitalize('hoi'), ' hoi'.capitalize())
-print(string.capwords('yo   momma')+'!'+string.capwords(' yo momma ')+'!'+string.capwords(' yo momma ', 'mm')+'!')
-allchars = ''.join([chr(cx) for cx in range(256)])
-print(repr(allchars.swapcase()), repr(string.swapcase(allchars)))
-print(string.center('hoi', 10), string.center('hoi', 10, 'u'))
-print('hoi'.center(10, 'u'))
-for i in range(10):
-    print('!'+'hoi'.center(i)+'!')
-print(string.atoi('+0x10', 0), string.atol('-100l', 0), string.atof('-1.234'))
-
 #multidir fixes
 from testdata import crap
 print(crap.incrap())
@@ -149,33 +114,19 @@ crap2.incrap2()
 import testdata.crap2
 tc2c2 = testdata.crap2.crap2()
 
-# sorted, list.sort: cmp and reverse args
-def mut(a,b):
-    return -cmp(a,b)
-
-def cmut(a,b):
-    return -cmp(a,b)
-
+# sorted, list.sort: reverse
 print(sorted([5,1,3,2,4]))
 print(sorted([5,1,3,2,4], reverse=True))
-print(sorted([5,1,3,2,4], cmp=mut))
-print(sorted([5,1,3,2,4], cmp=mut, reverse=True))
 
 print(sorted(set([5,1,3,2,4])))
 print(sorted(set([5,1,3,2,4]), reverse=True))
-print(sorted(set([5,1,3,2,4]), cmp=mut))
-print(sorted(set([5,1,3,2,4]), cmp=mut, reverse=True))
 
 print(sorted('abcde'))
 print(sorted('abcde', reverse=True))
-print(sorted('abcde', cmp=cmut))
-print(sorted('abcde', cmp=cmut, reverse=True))
 
 ls = [1,4,5,2,3]
 ls.sort(); print(ls)
-ls.sort(cmp=mut); print(ls)
 ls.sort(reverse=True); print(ls)
-ls.sort(cmp=mut, reverse=True); print(ls)
 
 # oct
 print(oct(1==2), oct(1!=2))
