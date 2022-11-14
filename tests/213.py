@@ -10,6 +10,10 @@ class A(object):
         self.y = y
     def __repr__(self):
         return "A(%s, %s)" % (self.x, self.y)
+
+    def __lt__(self, other):
+        return self.x < other.x
+
 #    def __cmp__(self, other):
 #        return cmp(self.x + self.y, other.x + other.y) TODO implement __eq__ etc?
 
@@ -30,13 +34,16 @@ print('excel-tab' in dialects)
 #csv default writer lineterminator?
 
 class Oink:
-    def __getitem__(self, (x,y)):
-        print('get', x, y)
+    def __getitem__(self, xy):
+        x, y = xy
+        print('get', xy)
         return x*y
-    def __setitem__(self, (x,y), z):
+    def __setitem__(self, xy, z):
+        x, y = xy
         print('set', x, y, z)
 oink = Oink()
-oink[4,5] = oink[2,3]
+oink[4, 5] = oink[2, 3]
+t2 = (6, 7)
 oink[t2] = oink[t2]
 
 #print('hello\0world') # TODO ???
@@ -92,9 +99,9 @@ print(hash(-1))
 print(hash(True))
 print(hash(12.345))
 
-
 #generator and arg unpacking
-def genpack((i,j),a,b):
+def genpack(ij,a,b):
+    i,j = ij
     yield i
     yield j
     yield a
@@ -118,18 +125,20 @@ hop = d1541.D1541(IEC, 8)
 print(hop.get_data())
 
 #os.popen2 improvement
-import os
-child_stdin, child_stdout = os.popen2(["echo", "a  text"], "r")
-print(repr(child_stdout.read()))
-child_stdin, child_stdout = os.popen2(iter(["echo", "a  text"]), "r")
-print(repr(child_stdout.read()))
-child_stdin, child_stdout = os.popen2(("echo", "a  text"), "r")
-print(repr(child_stdout.read()))
-child_stdin, child_stdout = os.popen2("echo a  text", "r")
-print(repr(child_stdout.read()))
+#import os
+#child_stdin, child_stdout = os.popen2(["echo", "a  text"], "r")
+#print(repr(child_stdout.read()))
+#child_stdin, child_stdout = os.popen2(iter(["echo", "a  text"]), "r")
+#print(repr(child_stdout.read()))
+#child_stdin, child_stdout = os.popen2(("echo", "a  text"), "r")
+#print(repr(child_stdout.read()))
+#child_stdin, child_stdout = os.popen2("echo a  text", "r")
+#print(repr(child_stdout.read()))
 
 # default print precision?
 import math
 print(math.cosh(2))
 
-#    print(math.factorial(hm), end=' ')
+# print(end)
+print(18, end=' ')
+print(19)
