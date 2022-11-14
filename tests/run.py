@@ -227,7 +227,7 @@ def get_output(command):
     myenv = os.environ
     myenv['PYTHONIOENCODING'] = 'utf-8'
     com = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, env=myenv).stdout
-    output = com.readlines()
+    output = [line.decode() for line in com.readlines()]
     com.close()
     return output
 
