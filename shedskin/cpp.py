@@ -2081,7 +2081,7 @@ class GenerateVisitor(BaseNodeVisitor):
             if (arg, formal) != pairs[-1]:
                 self.append(', ')
 
-        if constructor and ident == 'frozenset':
+        if constructor and ident in ('frozenset', 'bytearray'):
             if pairs:
                 self.append(',')
             self.append('1')

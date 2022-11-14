@@ -33,7 +33,7 @@ print(reduce(lambda a,b: a+b, [3,5,7]))
 print(reduce(lambda a,b: a-b, set([3,5,7]), 1))
 
 # reversed(range)
-print(reversed(range(10,20,2)))
+#print(reversed(range(10,20,2)))
 
 # TODO
 # __div__ -> __truediv__, __floordiv__
