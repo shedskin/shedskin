@@ -11,7 +11,7 @@ str *version;
 
 tuple2<__ss_int, __ss_int> *version_info;
 str *__name__, *copyright, *platform, *byteorder;
-__ss_int hexversion, maxint, maxsize;
+__ss_int hexversion, maxsize;
 file *__ss_stdin, *__ss_stdout, *__ss_stderr;
 
 void __init(int c, char **v) {
@@ -40,7 +40,6 @@ void __init(int c, char **v) {
     platform = new str("win32");
 #endif
 
-    maxint = INT_MAX;
     maxsize = INT_MAX;
 
     for(int i=0; i<c; i++)
