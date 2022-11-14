@@ -48,22 +48,22 @@ extern __ss_bool  default_3;
 extern __ss_bool  default_2;
 extern void * default_5;
 
-str *a2b_uu(str *string);
-str *b2a_uu(str *data);
-str *a2b_base64(str *string);
-str *b2a_base64(str *data);
-str *a2b_qp(str *string, __ss_bool header);
-str *b2a_qp(str *data, __ss_bool quotetabs, __ss_bool istext, __ss_bool header);
-tuple2<str*, __ss_int> *a2b_hqx(str *string);
-str *b2a_hqx(str *data);
-str *rledecode_hqx(str *data);
-str *rlecode_hqx(str *data);
-__ss_int crc_hqx(str *data, __ss_int crc);
-__ss_int crc32(str *data, __ss_int crc=0);
-str *b2a_hex(str *data);
-str *a2b_hex(str *data);
-str *hexlify(str *data);
-str *unhexlify(str *data);
+bytes *a2b_uu(bytes *string);
+bytes *b2a_uu(bytes *data);
+bytes *a2b_base64(bytes *string);
+bytes *b2a_base64(bytes *data);
+bytes *a2b_qp(bytes *string, __ss_bool header);
+bytes *b2a_qp(bytes *data, __ss_bool quotetabs, __ss_bool istext, __ss_bool header);
+tuple2<bytes *, __ss_int> *a2b_hqx(bytes *string);
+bytes *b2a_hqx(bytes *data);
+bytes *rledecode_hqx(bytes *data);
+bytes *rlecode_hqx(bytes *data);
+__ss_int crc_hqx(bytes *data, __ss_int crc);
+__ss_int crc32(bytes *data, __ss_int crc=0);
+bytes *b2a_hex(bytes *data);
+bytes *a2b_hex(bytes *data);
+bytes *hexlify(bytes *data);
+bytes *unhexlify(bytes *data);
 
 void __init();
 
