@@ -341,10 +341,11 @@ protected:
 public:
     __GC_STRING unit;
     long hash;
+    int frozen;
 
-    bytes();
+    bytes(int frozen=1);
     bytes(const char *s);
-    bytes(bytes *b);
+    bytes(bytes *b, int frozen=1);
     bytes(__GC_STRING s);
     bytes(const char *s, int size); /* '\0' delimiter in C */
 

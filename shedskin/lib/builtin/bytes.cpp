@@ -2,7 +2,7 @@
 
 /* bytes methods TODO share code with str */
 
-bytes::bytes() : hash(-1) {
+bytes::bytes(int frozen) : hash(-1), frozen(frozen) {
     __class__ = cl_bytes;
 }
 
@@ -14,7 +14,7 @@ bytes::bytes(__GC_STRING s) : unit(s), hash(-1) {
     __class__ = cl_bytes;
 }
 
-bytes::bytes(bytes *b) : hash(-1) {
+bytes::bytes(bytes *b, int frozen) : hash(-1), frozen(frozen) {
     __class__ = cl_bytes;
     unit = b->unit;
 }
@@ -32,7 +32,10 @@ const int bytes::size() const {
 }
 
 str *bytes::__str__() {
-    return __add_strs(3, new str("b'"), new str(this->unit), new str("'"));
+    if(frozen)
+        return __add_strs(3, new str("bytearray(b'"), new str(this->unit), new str("')"));
+    else
+        return __add_strs(3, new str("b'"), new str(this->unit), new str("'"));
 }
 
 str *bytes::__repr__() {
