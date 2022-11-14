@@ -76,32 +76,9 @@ except ueuk as errx:
 import string
 print(string.join(['hello', 'world!']), string.join(['hello', 'world!'], '_'))
 
-# cStringIO.StringIO, file.seek
-import cStringIO, sys
-
-sio = cStringIO.StringIO(open('testdata/hopsakee').read())
-print(sio.readlines())
-
-sio = cStringIO.StringIO('blaat')
-sio.seek(-3, 2)
-print(sio.read())
-
-sio = cStringIO.StringIO()
-print(sio.tell())
-sio.write('hallo\njoh')
-print(sio.tell())
-sio.seek(0, 0)
-print(sio.tell())
-print(sio.readlines())
-print(sio.tell())
-sio.seek(0, 0)
-print(sio.tell())
-sio.write('hoi')
-print(sio.tell())
-print(sio.readlines())
-print(sio.tell())
-
+# empty set?
 blah2 = set([])
+print(blah2)
 
 print(repr(''.join([chr(i) for i in range(256)])))
 
