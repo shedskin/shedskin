@@ -22,21 +22,12 @@ print(items)
 # TODO with expr1 as bla, expr2..
 
 import csv
-print(sorted(csv.list_dialects()))
+dialects = csv.list_dialects()
+print('excel' in dialects)
+print('excel-tab' in dialects)
+# TODO 'unix' not supported atm
 
 #csv default writer lineterminator?
-
-#    print(math.factorial(hm), end=' ')
-
-# argument unpacking
-def blah((a,(b,c)), d):
-    print(a, b, c, d)
-t1 = (4, (3,2))
-t2 = (7,8)
-blah(t1, 1)
-blah((1, (2,3)), 4)
-blah((6,t2), 9)
-
 
 class Oink:
     def __getitem__(self, (x,y)):
@@ -140,3 +131,5 @@ print(repr(child_stdout.read()))
 # default print precision?
 import math
 print(math.cosh(2))
+
+#    print(math.factorial(hm), end=' ')
