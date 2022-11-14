@@ -1,8 +1,3 @@
-#backticks, scalar
-ahh = 19
-hoi = 'hoi'
-print(`18`, `ahh+1`, `hoi`)
-
 # next(file)
 print(next(open('run.py')).strip())
 
