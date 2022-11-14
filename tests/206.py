@@ -204,15 +204,6 @@ ls.sort(cmp=mut, reverse=True); print(ls)
 print(oct(1==2), oct(1!=2))
 print(oct(200), oct(-200), oct(0))
 
-# os.path.walk
-from os.path import walk
-def bleh(arg, top, names):
-    pass
-def bleh2(arg, top, names):
-    pass
-walk('testdata', bleh, 77)
-walk('testdata', bleh2, 'hoei')
-
 print(repr('\377ai\37aoi\001123\00hoi\01hoi\0hoi'))
 print(repr(string.whitespace))
 
@@ -225,3 +216,5 @@ print(list(broken_range))
 
 # now iterators: dict_items, dict_keys, dict_values..
 print({1:2}.items())
+
+# print(.. end=..)
