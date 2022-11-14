@@ -1,4 +1,4 @@
-import bert
+from . import bert
 
 class crap2:
     pass

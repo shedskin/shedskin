@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import iec2
+from . import iec2
 
 class D1541(iec2.IECMember):
     pass
