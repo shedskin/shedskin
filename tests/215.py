@@ -32,3 +32,5 @@ from functools import reduce
 print(reduce(lambda a,b: a+b, [3,5,7]))
 print(reduce(lambda a,b: a-b, set([3,5,7]), 1))
 
+# TODO
+# __div__ -> __truediv__, __floordiv__
