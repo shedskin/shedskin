@@ -86,7 +86,7 @@ template<> template<> void *array<int>::extend(list<__ss_int> *l) {
     return NULL;
 }
 
-template<> template<> void *array<str *>::extend(str *s) {
+template<> template<> void *array<str *>::extend(bytes *s) {
     fromstring(s);
     return NULL;
 }

@@ -38,10 +38,12 @@ public:
 
     template<class U> void *extend(U *iter);
     template<class U> void *fromlist(U *iter);
-    void *fromstring(str *s);
+    void *fromstring(bytes *s);
+    void *frombytes(bytes *b);
 
     list<T> *tolist();
-    str *tostring();
+    bytes *tostring();
+    bytes *tobytes();
 
     T __getitem__(__ss_int i);
     T __getfast__(__ss_int i);
@@ -112,22 +114,22 @@ template<class T> template<class U> void *array<T>::extend(U *iter) {
     return NULL;
 }
 template<> template<> void *array<int>::extend(list<__ss_int> *l);
-template<> template<> void *array<str *>::extend(str *s);
+template<> template<> void *array<str *>::extend(bytes *s);
 
 template<class T> template<class U> void *array<T>::fromlist(U *iter) {
     extend(iter);
     return NULL;
 }
 
-template<class T> str *array<T>::tostring() {
-    str *s = new str();
+template<class T> bytes *array<T>::tostring() {
+    bytes *s = new bytes();
     size_t s1 = this->units.size();
     s->unit.resize(s1);
     memcpy(&(s->unit[0]), &(this->units[0]), s1);
     return s;
 }
 
-template<class T> void *array<T>::fromstring(str *s) {
+template<class T> void *array<T>::fromstring(bytes *s) {
     size_t len = s->size();
     if(len == 1)
         this->units.push_back(s->unit[0]);
