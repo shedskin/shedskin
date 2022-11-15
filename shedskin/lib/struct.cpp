@@ -235,17 +235,17 @@ void fillbuf2(char c, double t, char, unsigned int) {
     }
 }
 
-str *pack(int, str *fmt, ...) {
+bytes *pack(int, str *fmt, ...) {
     pyobj *arg;
     va_list args;
     va_start(args, fmt);
-    str *result = new str();
+    bytes *result = new bytes();
     char order = '@';
     str *digits = new str();
     int pos=0;
     unsigned int itemsize, pad;
     unsigned int fmtlen = fmt->__len__();
-    str *strarg;
+    bytes *strarg;
     int pascal_ff = 0;
     for(unsigned int j=0; j<fmtlen; j++) {
         char c = fmt->unit[j];
@@ -341,12 +341,12 @@ str *pack(int, str *fmt, ...) {
             case 'c': 
                 for(unsigned int j=0; j<ndigits; j++) {
                     arg = va_arg(args, pyobj *);
-                    if(arg->__class__ != cl_str_)
-                        throw new error(new str("char format require string of length 1"));
-                    strarg = ((str *)(arg));
+                    if(arg->__class__ != cl_bytes)
+                        throw new error(new str("char format require bytes object of length 1"));
+                    strarg = ((bytes *)(arg));
                     unsigned int len = strarg->__len__();
                     if(len != 1)
-                        throw new error(new str("char format require string of length 1"));
+                        throw new error(new str("char format require bytes object of length 1"));
                     result->unit += strarg->unit[0];
                     pos += 1;
                 }
@@ -355,10 +355,10 @@ str *pack(int, str *fmt, ...) {
                 break;
             case 'p': 
                 arg = va_arg(args, pyobj *);
-                if(arg->__class__ != cl_str_)
-                    throw new error(new str("argument for 'p' must be a string"));
+                if(arg->__class__ != cl_bytes)
+                    throw new error(new str("argument for 'p' must be a bytes object"));
                 if(ndigits) {
-                    strarg = ((str *)(arg));
+                    strarg = ((bytes *)(arg));
                     unsigned int len = strarg->__len__();
                     if(len+1 > ndigits)
                         len = ndigits-1;
@@ -375,10 +375,10 @@ str *pack(int, str *fmt, ...) {
                 break;
             case 's':
                 arg = va_arg(args, pyobj *);
-                if(arg->__class__ != cl_str_)
-                    throw new error(new str("argument for 's' must be a string"));
+                if(arg->__class__ != cl_bytes)
+                    throw new error(new str("argument for 's' must be a bytes object"));
                 if(ndigits) {
-                    strarg = ((str *)(arg));
+                    strarg = ((bytes *)(arg));
                     unsigned int len = strarg->__len__();
                     if(len > ndigits)
                         len = ndigits;
