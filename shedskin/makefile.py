@@ -107,8 +107,6 @@ def generate_makefile(gx):
                 line += ' -D__SS_NOWRAP'
             if not gx.bounds_checking:
                 line += ' -D__SS_NOBOUNDS'
-            if gx.fast_random:
-                line += ' -D__SS_FASTRANDOM'
             if gx.gc_cleanup:
                 line += ' -D__SS_GC_CLEANUP'
             if not gx.assertions:
