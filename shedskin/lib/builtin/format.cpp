@@ -130,7 +130,7 @@ void __modfill(str **fmt, pyobj *t, str **s, pyobj *a1, pyobj *a2) {
 #endif
     } else { /* cl_float_ */
         if(c == 'H') {
-            (*fmt)->unit.replace(j, 1, ".15g");
+            (*fmt)->unit.replace(j, 1, ".12g");
             j += 3;
         }
         add = do_asprintf((*fmt)->unit.substr(i, j+1-i).c_str(), ((float_ *)t)->unit, a1, a2);
