@@ -49,6 +49,7 @@ def mapp():
     allchr = [chr(c) for c in range(256)]
     return allchr
 print(mapp()[66:86])
+print(repr(''.join([chr(i) for i in range(66,87)])))
 
 class ueuk(Exception):
     def __init__(self, msg):
@@ -67,18 +68,11 @@ except ueuk as errx:
 blah2 = set([])
 print(blah2)
 
-print(repr(''.join([chr(i) for i in range(256)])))
-
 b = [1,2,3]
 g = iter(b)
 for _ in range(5):
     print(next(g, -1))
 print()
-
-# --- end-of-file problem
-print([line for line in open('testdata/scene.txt') if line.startswith('material')])
-
-# TODO str.join etc?
 
 # --- slice assignment (random test)
 #import random
