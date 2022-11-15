@@ -24,15 +24,18 @@ IMapIterator.next = set_timeout_decorator(IMapIterator.next)
 SS = ' -m shedskin'
 os.environ['PYTHONPATH'] = os.path.realpath('..')
 
-def usage():
-    print("'-l': give individual test numbers")
-    print("'-r': reverse test order")
-    print("'-f': break after first failure")
-    print("'-e': run extension module tests")
-    print("'-n': normal tests as extension modules")
-    print("'-x': run error/warning message tests")
-    print("'-p': run the tests in parallel")
-    print("'--output': show output even when run in parallel")
+def usage():  # TODO ugh, use arg parser
+    print("args:")
+    print("  test number, two test numbers (range), or nothing (all tests)")
+    print("options:")
+    print("  '-l': give individual test numbers")
+    print("  '-r': reverse test order")
+    print("  '-f': break after first failure")
+    print("  '-e': run extension module tests")
+    print("  '-n': normal tests as extension modules")
+    print("  '-x': run error/warning message tests")
+    print("  '-p': run the tests in parallel")
+    print("'  --output': show output even when run in parallel")
     sys.exit()
 
 
