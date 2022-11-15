@@ -55,13 +55,10 @@ def usage():
  -m --makefile          Specify alternate Makefile name
  -n --silent            Silent mode, only show warnings
  -o --noassert          Disable assert statements
- -r --random            Use fast random number generator (rand())
  -w --nowrap            Disable wrap-around checking
  -x --traceback         Print traceback for uncaught exceptions
  -L --lib               Add a library directory
 """)
-# -p --pypy              Make extension module PyPy-compatible
-# -v --msvc              Output MSVC-style Makefile
     sys.exit(1)
 
 
@@ -71,7 +68,7 @@ def parse_command_line_options():
 
     # --- command-line options
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'vbchef:wad:m:rolpxngL:', ['help', 'extmod', 'nobounds', 'nogc', 'nowrap', 'flags=', 'debug=', 'makefile=', 'random', 'noassert', 'long', 'ann', 'traceback', 'silent', 'nogcwarns', 'lib'])
+        opts, args = getopt.getopt(sys.argv[1:], 'vbchef:wad:m:rolpxngL:', ['help', 'extmod', 'nobounds', 'nogc', 'nowrap', 'flags=', 'debug=', 'makefile=', 'noassert', 'long', 'ann', 'traceback', 'silent', 'nogcwarns', 'lib'])
     except getopt.GetoptError:
         usage()
 
@@ -99,8 +96,6 @@ def parse_command_line_options():
             gx.gcwarns = False
         if opt in ['-w', '--nowrap']:
             gx.wrap_around_check = False
-        if opt in ['-r', '--random']:
-            gx.fast_random = True
         if opt in ['-o', '--noassert']:
             gx.assertions = False
         if opt in ['-p', '--pypy']:

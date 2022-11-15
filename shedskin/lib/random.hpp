@@ -274,13 +274,7 @@ template <class A> void *Random::seed(A a) {
     else
         h = hasher(a);
 
-#ifdef __SS_FASTRANDOM
     srand(h);
-#else
-    this->_init_by_array((new list<int>(1, h)));
-    this->gauss_next = 0.0;
-    this->gauss_switch = 0;
-#endif
 
     return NULL;
 }
