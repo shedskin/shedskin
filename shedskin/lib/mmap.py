@@ -28,13 +28,13 @@ class mmap:
         pass
 
     def read(self, size):
-        return ''
+        return b''
 
     def read_byte(self):
-        return ''
+        return 1
 
     def readline(self):
-        return ''
+        return b''
 
     def resize(self, newsize):
         pass
@@ -67,17 +67,17 @@ class mmap:
         return 0
 
     def __getitem__(self, index):
-        return ''
+        return 1
 
     def __setitem__(self, index, value):
         pass
 
     def __slice__(self, kind, lower, upper, step=1):
-        return ''
+        return b''
 
     def __setslice__(self, kind, lower, upper, step, sequence):
         pass
 
 class __mmapiter:
     def next(self):
-        return ''
+        return b''
