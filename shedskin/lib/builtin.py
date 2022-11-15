@@ -951,10 +951,12 @@ def __sum1(l):
     return elem
 
 def cmp(a, b):
-    a.__cmp__(b)
     a.__eq__(b)
+    a.__ne__(b)
     a.__lt__(b)
+    a.__le__(b)
     a.__gt__(b)
+    a.__ge__(b)
     return 1
 
 def cmp2(a, b):

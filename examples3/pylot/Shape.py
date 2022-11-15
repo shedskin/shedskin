@@ -35,16 +35,11 @@ class HitResult(object):
       self.distance = distance
       self.inverted = inverted
 
-  def __cmp__(self, other):
-#{
-    assert type(other) == HitResult
-#}
-    val = self.distance - other.distance
-    if val > 0.0:
-      return 1.0
-    elif val < 0.0:
-      return -1.0
-    return 0.0
+  def __lt__(self, other):
+      return self.distance < other.distance
+
+  def __eq__(self, other):
+      return self.distance == other.distance
 
   def __repr__(self):
     return "[HitResult: " + repr(self.distance) + ":" + repr(self.shape) + \
