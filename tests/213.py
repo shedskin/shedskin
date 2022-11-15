@@ -2,7 +2,7 @@
 from sys import maxsize as MAXSIZE
 print(MAXSIZE > 0)
 
-#bisect should model __cmp__, fix sorting problem
+#bisect comparison overloading
 from bisect import insort
 class A(object):
     def __init__(self, x, y):
@@ -12,10 +12,10 @@ class A(object):
         return "A(%s, %s)" % (self.x, self.y)
 
     def __lt__(self, other):
-        return self.x < other.x
+        return self.x+self.y < other.x+other.y
 
-#    def __cmp__(self, other):
-#        return cmp(self.x + self.y, other.x + other.y) TODO implement __eq__ etc?
+    def __eq__(self, other):
+        return self.x+self.y == other.x+other.y
 
 pairs = [[18, 6], [28, 5], [35, 26], [31, 28], [3, 3], [32, 37], [11, 17], [28, 29]]
 items = []
