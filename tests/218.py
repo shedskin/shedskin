@@ -71,3 +71,6 @@ sio.write('hoi')
 print(sio.tell())
 print(sio.readlines())
 print(sio.tell())
+
+# --- end-of-file problem
+print([line for line in open('testdata/scene.txt') if line.startswith('material')])

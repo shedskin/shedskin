@@ -203,11 +203,11 @@ template<> str *hex(__ss_bool b) { return hex((int)b.value); }
 
 template<> str *oct(int i) {
     if(i<0)
-        return (new str("-0"))->__add__(__str(-i, 8));
+        return (new str("-0o"))->__add__(__str(-i, 8));
     else if(i>0)
-        return (new str("0"))->__add__(__str(i, 8));
+        return (new str("0o"))->__add__(__str(i, 8));
     else
-      return new str("0");
+      return new str("0o0");
 }
 template<> str *oct(__ss_bool b) { return oct((int)b.value); }
 
