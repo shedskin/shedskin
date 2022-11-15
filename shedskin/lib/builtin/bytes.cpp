@@ -6,11 +6,11 @@ bytes::bytes(int frozen) : hash(-1), frozen(frozen) {
     __class__ = cl_bytes;
 }
 
-bytes::bytes(const char *s) : unit(s), hash(-1) {
+bytes::bytes(const char *s) : unit(s), hash(-1), frozen(1) {
     __class__ = cl_bytes;
 }
 
-bytes::bytes(__GC_STRING s) : unit(s), hash(-1) {
+bytes::bytes(__GC_STRING s) : unit(s), hash(-1), frozen(1) {
     __class__ = cl_bytes;
 }
 
@@ -133,4 +133,26 @@ bytes *bytes::__mul__(__ss_int n) { /* optimize */
     }
 
     return r;
+}
+
+bytes *bytes::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
+    int len = size();
+    slicenr(x, l, u, s, len);
+    if(s == 1)
+        return new bytes(unit.data()+l, u-l);
+    else {
+        __GC_STRING r;
+        if(!(x&1) && !(x&2) && s==-1) {
+            r.resize(len);
+            for(int i=0; i<len; i++)
+                r[i] = unit[len-i-1];
+        }
+        else if(s > 0)
+            for(int i=l; i<u; i += s)
+                r += unit[i];
+        else
+            for(int i=l; i>u; i += s)
+                r += unit[i];
+        return new bytes(r);
+    }
 }

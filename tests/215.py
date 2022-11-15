@@ -21,6 +21,10 @@ bs = set()
 bs.add(b'wop')
 print(b'wo'+b'p' in bs)
 
+hup = b'huphup'
+hup2 = hup[2:-1]
+print(hup2)
+
 # bytearray
 ba = bytearray(c)
 ba[2] = ord('a')

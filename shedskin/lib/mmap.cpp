@@ -438,7 +438,7 @@ void *mmap::resize(__ss_int new_size)
     return NULL;
 }
 #endif /* WIN32 */
-__ss_int mmap::find(str *needle, __ss_int start, __ss_int end)
+__ss_int mmap::find(bytes *needle, __ss_int start, __ss_int end)
 {
     __raise_if_closed_or_not_readable();
     if (start == -1)
@@ -470,7 +470,7 @@ void *mmap::move(__ss_int destination, __ss_int source, __ss_int count)
     return NULL;
 }
 
-str *mmap::read(__ss_int size)
+bytes *mmap::read(__ss_int size)
 {
     __raise_if_closed_or_not_readable();
     const iterator at = m_position;
@@ -490,24 +490,24 @@ str *mmap::read(__ss_int size)
             m_position = m_end;
         }
     }
-    return new str(at, m_position - at);
+    return new bytes(at, m_position - at);
 }
 
-str *mmap::read_byte()
+bytes *mmap::read_byte()
 {
     __raise_if_closed_or_not_readable();
     if(m_position < m_end)
     {
-        return __char_cache[(unsigned char)(*m_position++)];
+        return new bytes(__char_cache[(unsigned char)(*m_position++)]->unit);
     }
     else
     {
         m_position = m_end;
-        return new str("");
+        return new bytes("");
     }
 }
 
-str *mmap::readline(__ss_int size, const char eol)
+bytes *mmap::readline(__ss_int size, const char eol)
 {
     __raise_if_closed_or_not_readable();
     const iterator at = m_position;
@@ -525,10 +525,10 @@ str *mmap::readline(__ss_int size, const char eol)
     {
         m_position = at + size;
     }
-    return new str(at, m_position - at);
+    return new bytes(at, m_position - at);
 }
 
-__ss_int mmap::rfind(str *needle, __ss_int start, __ss_int end)
+__ss_int mmap::rfind(bytes *needle, __ss_int start, __ss_int end)
 {
     __raise_if_closed_or_not_readable();
     if (start == -1)
@@ -624,7 +624,7 @@ __ss_int mmap::tell()
     return __tell();
 }
 
-void *mmap::write(str *string)
+void *mmap::write(bytes *string)
 {
     __raise_if_closed_or_not_writable();
     size_t length = string->size();
@@ -638,22 +638,18 @@ void *mmap::write(str *string)
     return NULL;
 }
 
-void *mmap::write_byte(str *string)
+void *mmap::write_byte(__ss_int value)
 {
     __raise_if_closed_or_not_writable();
-    if (string == 0 or string->size() != 1)
-    {
-        throw new ValueError(const_8);
-    }
     if (m_position + 1 > m_end)
     {
         throw new ValueError(const_14);
     }
-    *m_position++ = string->unit[0];
+    *m_position++ = value;
     return NULL;
 }
 
-__ss_bool mmap::__contains__(str *string)
+__ss_bool mmap::__contains__(bytes *string)
 {
     __raise_if_closed_or_not_readable();
     if (string == 0 or string->size() != 1)
@@ -663,7 +659,7 @@ __ss_bool mmap::__contains__(str *string)
     return __mbool(find(string, 0) != -1);
 }
 
-__iter<str *> *mmap::__iter__()
+__iter<bytes *> *mmap::__iter__()
 {
     __raise_if_closed();	
     return new __mmapiter(this);
@@ -674,26 +670,22 @@ __ss_int mmap::__len__()
     return size();
 }
 
-str *mmap::__getitem__(__ss_int index)
+bytes *mmap::__getitem__(__ss_int index)
 {
     __raise_if_closed_or_not_readable();
     iterator position = m_begin + __subscript(index);
-    return new str(position, 1);
+    return new bytes(position, 1);
 }
 
-void *mmap::__setitem__(__ss_int index, str *character)
+void *mmap::__setitem__(__ss_int index, __ss_int character)
 {
     __raise_if_closed_or_not_writable();
     size_t id = __subscript(index);
-    if (character->size() != 1)
-    {
-        throw new IndexError(const_8);
-    }
-    m_begin[id] = character->unit[0];
+    m_begin[id] = character;
     return NULL;
 }
 
-str *mmap::__slice__(__ss_int kind, __ss_int lower, __ss_int upper, __ss_int)
+bytes *mmap::__slice__(__ss_int kind, __ss_int lower, __ss_int upper, __ss_int)
 {
     __raise_if_closed_or_not_readable();
 
@@ -719,10 +711,10 @@ str *mmap::__slice__(__ss_int kind, __ss_int lower, __ss_int upper, __ss_int)
     default:
         assert(false);
     }
-    return new str(start, size);
+    return new bytes(start, size);
 }
 
-void *mmap::__setslice__(__ss_int kind, __ss_int lower, __ss_int upper, __ss_int, str *sequence)
+void *mmap::__setslice__(__ss_int kind, __ss_int lower, __ss_int upper, __ss_int, bytes *sequence)
 {
     __raise_if_closed_or_not_writable();
     iterator start = m_end;
@@ -865,11 +857,11 @@ __ss_int mmap::__find(const __GC_STRING& needle, __ss_int start, __ss_int end, b
     return -1;
 }
 
-str *__mmapiter::next()
+bytes *__mmapiter::next()
 {
     if (map->__eof())
         throw new StopIteration();
-    str* byte = map->read_byte();
+    bytes* byte = map->read_byte();
     if (map->__eof())
         throw new StopIteration();
     return byte;

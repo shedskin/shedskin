@@ -355,6 +355,7 @@ public:
     void *__setitem__(__ss_int i, __ss_int e);
 
     inline __ss_int __len__();
+    bytes *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
 
     /* functions pointing to the underlying C++ implementation */
     const char *c_str() const;
