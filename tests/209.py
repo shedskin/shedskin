@@ -20,7 +20,7 @@ def tearDown(map):
         os.remove(TESTFILE_OUT)
     except OSError:
         pass
-            
+
 def test_anonymous():
     '''
     Test mmap module on anonymous files.
@@ -31,50 +31,50 @@ def test_anonymous():
     print('# write:')    
     ## print map.size() ## TODO: throw mmap.error: [Errno 9] Bad file descriptor?
     assert map.tell() == 0
-    map.write_byte('f')
+    map.write_byte(ord('f'))
     assert map.tell() == 1
-    map.write('oo bar\tbaz\nqux')
+    map.write(b'oo bar\tbaz\nqux')
     assert map.tell() == 15
-    
+
     print('# get/set:')
-    assert map[:15] == 'foo bar\tbaz\nqux'
-    print(map[0])    
-    map[-1]='Z'
-    print(map[-1])    
+    assert map[:15] == b'foo bar\tbaz\nqux'
+    print(map[0])
+    map[-1] = ord('Z')
+    print(map[-1])
     print(map[4:-PAGESIZE+7])
     print('%r' %map[:15]) 
-    map[4:7] = "foo"
-    map[PAGESIZE-3:] = "xyz"
+    map[4:7] = b"foo"
+    map[PAGESIZE-3:] = b"xyz"
     print(map[PAGESIZE-3:])
-    
+
     print('# find/seek:')
-    assert map.find("foo") == -1
+    assert map.find(b"foo") == -1
     map.seek(0)
     assert map.tell() == 0
-    assert map.find("foo") == 0
-    assert map.rfind("foo") == 4
+    assert map.find(b"foo") == 0
+    assert map.rfind(b"foo") == 4
     map.seek(-1, 2)
-    assert map.tell() == PAGESIZE-1    
+    assert map.tell() == PAGESIZE-1
     map.seek(0, 2)
     assert map.tell() == PAGESIZE
     map.seek(-PAGESIZE, 1)
     assert map.tell() == 0
-    
+
     print('# read:')
     print(map.read(3))
     print('%r' % map.read_byte())
     print('%r' % map.readline())
     print('%r' % map.read(3))
-    
+
     print('# move:')
     map.move(8, 4, 3)
 
     print('# iter:')
-    assert "f" in map
-    assert "a" not in map
+    assert b"f" in map
+    assert b"a" not in map
 
     map.flush()
-    
+
     print('# Result:')
     print('%r' % map[:15])
 
@@ -115,21 +115,21 @@ def test_basic():
 
     # Simple sanity checks
 
-    assert m.find('foo') == PAGESIZE
+    assert m.find(b'foo') == PAGESIZE
 
     assert len(m) == 2*PAGESIZE
 
     print(repr(m[0]))
     print(repr(m[0:3]))
-    
+
     try:
         m[len(m)]
     except IndexError:
         print("ok")
 
     # Modify the file's content
-    m[0] = '3'
-    m[PAGESIZE +3: PAGESIZE +3+3] = 'bar'
+    m[0] = ord('3')
+    m[PAGESIZE +3: PAGESIZE +3+3] = b'bar'
 
     # Check that the modification worked
     print(repr(m[0]))
@@ -172,23 +172,23 @@ def test_rfind():
     # test the new 'end' parameter works as expected
     print('## test_rfind:')
     setUp()
-    f = open(TESTFILE_OUT, 'w+')
-    data = 'one two ones'
+    f = open(TESTFILE_OUT, 'wb+')
+    data = b'one two ones'
     n = len(data)
     f.write(data)
     f.flush()
     m = mmap.mmap(f.fileno(), n)
     f.close()
 
-    assert m.rfind('one') == 8
-    assert m.rfind('one ') == 0
-    assert m.rfind('one', 0, -1) == 8
-    assert m.rfind('one', 0, -2) == 0
-    assert m.rfind('one', 1, -1) == 8
-    assert m.rfind('one', 1, -2) ==-1
-    
+    assert m.rfind(b'one') == 8
+    assert m.rfind(b'one ') == 0
+    assert m.rfind(b'one', 0, -1) == 8
+    assert m.rfind(b'one', 0, -2) == 0
+    assert m.rfind(b'one', 1, -1) == 8
+    assert m.rfind(b'one', 1, -2) ==-1
+
     tearDown(m)
-    
+
 def test_tougher_find():
     '''
     Taken from python 2.7
@@ -197,9 +197,9 @@ def test_tougher_find():
     setUp()
     # Do a tougher .find() test.  SF bug 515943 pointed out that, in 2.2,
     # searching for data with embedded \0 bytes didn't work.
-    f = open(TESTFILE_OUT, 'w+')
+    f = open(TESTFILE_OUT, 'wb+')
 
-    data = 'aabaac\x00deef\x00\x00aa\x00'
+    data = b'aabaac\x00deef\x00\x00aa\x00'
     n = len(data)
     f.write(data)
     f.flush()
@@ -210,7 +210,7 @@ def test_tougher_find():
         for finish in range(start, n+1):
             slice = data[start : finish]
             print(m.find(slice) , data.find(slice))
-            print(m.find(slice + 'x') == -1)
+            print(m.find(slice + b'x') == -1)
 
     tearDown(m)
 
