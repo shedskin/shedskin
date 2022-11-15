@@ -1,4 +1,4 @@
-/* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2022 Mark Dufour and contributors; License Expat (See LICENSE) */
 
 #include "struct.hpp"
 #include <stdio.h>
@@ -69,7 +69,7 @@ int padding(char o, int pos, unsigned int itemsize) {
     return 0;
 }
 
-__ss_int unpack_int(char o, char c, unsigned int d, str *data, __ss_int *pos) {
+__ss_int unpack_int(char o, char c, unsigned int d, bytes *data, __ss_int *pos) {
     unsigned long long result;
     unsigned int itemsize = get_itemsize(o, c);
     *pos += padding(o, *pos, itemsize);
@@ -89,30 +89,31 @@ __ss_int unpack_int(char o, char c, unsigned int d, str *data, __ss_int *pos) {
     return result;
 }
 
-str * unpack_str(char, char c, unsigned int d, str *data, __ss_int *pos) {
-    str *result = 0;
+bytes *unpack_bytes(char, char c, unsigned int d, bytes *data, __ss_int *pos) {
+    bytes *result = 0;
     unsigned int len;
     switch(c) {
         case 'c':
-             result = __char_cache[(unsigned char)(data->unit[*pos])];
+             result = new bytes(__char_cache[(unsigned char)(data->unit[*pos])]->unit);
              break;
         case 's':
-             result = new str();
+             result = new bytes();
              for(unsigned int i=0; i<d; i++)
                  result->unit += data->unit[*pos+i];
              break;
         case 'p':
-             result = new str();
+             result = new bytes();
              len = data->unit[*pos];
              for(unsigned int i=0; i<len; i++)
                  result->unit += data->unit[*pos+i+1];
              break;
     }
     *pos += d;
+    result->frozen = 1;
     return result;
 }
 
-__ss_bool unpack_bool(char, char, unsigned int d, str *data, __ss_int *pos) {
+__ss_bool unpack_bool(char, char, unsigned int d, bytes *data, __ss_int *pos) {
     __ss_bool result;
     if(data->unit[*pos] == '\x00')
         result = False;
@@ -123,7 +124,7 @@ __ss_bool unpack_bool(char, char, unsigned int d, str *data, __ss_int *pos) {
     return result;
 }
 
-double unpack_float(char o, char c, unsigned int d, str *data, __ss_int *pos) {
+double unpack_float(char o, char c, unsigned int d, bytes *data, __ss_int *pos) {
     double result;
     unsigned int itemsize = get_itemsize(o, c);
     *pos += padding(o, *pos, itemsize);
@@ -143,7 +144,7 @@ double unpack_float(char o, char c, unsigned int d, str *data, __ss_int *pos) {
     return result;
 }
 
-void unpack_pad(char, char, unsigned int d, str *, __ss_int *pos) {
+void unpack_pad(char, char, unsigned int d, bytes *, __ss_int *pos) {
     *pos += d;
 }
 

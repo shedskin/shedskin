@@ -355,9 +355,9 @@ class ModuleVisitor(BaseNodeVisitor):
             if c.isdigit():
                 digits += c
             elif c in char_type:
-                rtype = {'i': 'int', 's': 'str', 'b': 'bool', 'f': 'float', 'x': 'pad'}[char_type[c]]
-                if rtype == 'str' and c != 'c':
-                    result.append((ordering, c, 'str', int(digits or '1')))
+                rtype = {'i': 'int', 's': 'bytes', 'b': 'bool', 'f': 'float', 'x': 'pad'}[char_type[c]]
+                if rtype == 'bytes' and c != 'c':
+                    result.append((ordering, c, 'bytes', int(digits or '1')))
                 elif digits == '0':
                     result.append((ordering, c, rtype, 0))
                 else:
@@ -374,8 +374,8 @@ class ModuleVisitor(BaseNodeVisitor):
             if d != 0 or c == 's':
                 if t == 'int':
                     result.append(Num(1))
-                elif t == 'str':
-                    result.append(Str(''))
+                elif t == 'bytes':
+                    result.append(Str(b''))
                 elif t == 'float':
                     result.append(Num(1.0))
                 elif t == 'bool':

@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 # struct
 import struct
 from struct import unpack
@@ -178,3 +176,14 @@ except struct.error as e:
 booll, = struct.unpack('?', b'\x02')
 print(booll)
 print(repr(struct.pack('p', 300*b'x')))
+
+# unpacking negative integers
+s = struct.pack('h', -12)
+xx, = struct.unpack('h', s)
+print(xx)
+s = struct.pack('i', -13)
+xx, = struct.unpack('i', s)
+print(xx)
+s = struct.pack('l', -14)
+xx, = struct.unpack('l', s)
+print(xx)
