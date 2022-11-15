@@ -402,10 +402,17 @@ template <class T> void set<T>::resize(int minused)
 
 template<class T> str *set<T>::__repr__() {
     str *r;
-    if(this->frozen)
+
+    if(this->frozen) {
+        if(used == 0)
+            return new str("frozenset()");
         r = new str("frozenset({");
-    else
+    }
+    else {
+        if(used == 0)
+            return new str("set()");
         r = new str("{");
+    }
 
     int rest = used-1;
 
