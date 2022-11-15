@@ -51,7 +51,7 @@ class __mmapiter;
  * mmap class.
  * ref: http://docs.python.org/library/mmap.html
  */
-class mmap : public pyseq<str *>
+class mmap : public pyseq<bytes *>
 {
   public:
     typedef char* iterator;
@@ -93,38 +93,38 @@ class mmap : public pyseq<str *>
     // mmap
     void *   close();
     __ss_int flush(__ss_int offset=0, __ss_int size=-1);
-    __ss_int find(str *s, __ss_int start=-1, __ss_int end=-1);
+    __ss_int find(bytes *s, __ss_int start=-1, __ss_int end=-1);
     void *   move(__ss_int destination, __ss_int source, __ss_int count);
-    str *    read(__ss_int size=all);
-    str *    read_byte();
-    str *    readline(__ss_int size=all, const char eol='\n');
+    bytes *    read(__ss_int size=all);
+    bytes *    read_byte();
+    bytes *    readline(__ss_int size=all, const char eol='\n');
     void *   resize(__ss_int newsize);
-    __ss_int rfind(str *string, __ss_int start=-1, __ss_int end=-1);
+    __ss_int rfind(bytes *string, __ss_int start=-1, __ss_int end=-1);
     void *   seek(__ss_int offset, __ss_int whence=0);
     __ss_int size();
     __ss_int tell();
-    void *   write(str *string);
-    void *   write_byte(str *string);
+    void *   write(bytes *string);
+    void *   write_byte(__ss_int vale);
 
     // pyraw
     __ss_int __len__();
     char * data() { return m_begin; }
 
     // pyiter
-    __ss_bool __contains__(str *s);
-    __iter<str *> *__iter__();
+    __ss_bool __contains__(bytes *s);
+    __iter<bytes *> *__iter__();
 
     // pyseq
-    str *__getitem__(__ss_int index);
-    void *__setitem__(__ss_int index, str *value);
-    str *__slice__(__ss_int kind, __ss_int lower, __ss_int upper, __ss_int step);
-    void *__setslice__(__ss_int kind, __ss_int lower, __ss_int upper, __ss_int step, str *sequence);
+    bytes *__getitem__(__ss_int index);
+    void *__setitem__(__ss_int index, __ss_int value);
+    bytes *__slice__(__ss_int kind, __ss_int lower, __ss_int upper, __ss_int step);
+    void *__setslice__(__ss_int kind, __ss_int lower, __ss_int upper, __ss_int step, bytes *sequence);
 
     // impl
     inline size_t __size()  const { return (m_end - m_begin); }
     inline bool   __eof()   const { return (m_position >= m_end); }
     inline bool for_in_has_next(size_t i) const { return i < __size(); }
-    inline str *for_in_next(size_t &i) const { return __char_cache[(unsigned char)(m_begin[i++])]; }
+    inline bytes *for_in_next(size_t &i) const { return new bytes(__char_cache[(unsigned char)(m_begin[i++])]->unit); }
 
   private:
     iterator m_begin;
@@ -159,12 +159,12 @@ class mmap : public pyseq<str *>
 /**
  * mmap byte iterator.
  */
-class __mmapiter : public __iter<str *>
+class __mmapiter : public __iter<bytes *>
 {
   public:
     mmap *map;
     __mmapiter(mmap *map) : map(map) {}
-    str *next();
+    bytes *next();
 };
 
 void __init();
