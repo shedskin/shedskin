@@ -364,6 +364,7 @@ public:
 
     str *__str__();
     str *__repr__();
+    bytes *__mul__(__ss_int n);
 
     __ss_bool __eq__(pyobj *s);
     long __hash__();

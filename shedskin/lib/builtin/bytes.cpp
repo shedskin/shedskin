@@ -33,9 +33,9 @@ const int bytes::size() const {
 
 str *bytes::__str__() {
     if(frozen)
-        return __add_strs(3, new str("bytearray(b'"), new str(this->unit), new str("')"));
-    else
         return __add_strs(3, new str("b'"), new str(this->unit), new str("'"));
+    else
+        return __add_strs(3, new str("bytearray(b'"), new str(this->unit), new str("')"));
 }
 
 const int bytes::find(const char c, int a) const {
@@ -115,4 +115,22 @@ bytes *bytes::__add__(bytes *b) {
 
 bytes *bytes::__iadd__(bytes *b) {
     return __add__(b);
+}
+
+bytes *bytes::__mul__(__ss_int n) { /* optimize */
+    bytes *r = new bytes();
+    if(n<=0) return r;
+    __GC_STRING &s = r->unit;
+    __ss_int ulen = size();
+
+    if(ulen == 1)
+       r->unit = __GC_STRING(n, unit[0]);
+    else {
+        s.resize(ulen*n);
+
+        for(__ss_int i=0; i<ulen*n; i+=ulen)
+            s.replace(i, ulen, unit);
+    }
+
+    return r;
 }

@@ -2806,7 +2806,7 @@ class GenerateVisitor(BaseNodeVisitor):
                 self.append(')')
 
         elif isinstance(value, bytes):  # TODO merge with str above
-            self.append('new bytes("%s"' % value.decode())
+            self.append('new bytes("%s"' % self.expand_special_chars(value))
             if b'\0' in value:
                 self.append(', %d' % len(value))
             self.append(')')
