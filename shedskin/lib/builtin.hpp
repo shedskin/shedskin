@@ -363,6 +363,10 @@ public:
     const int find(const char c, int a=0) const;
     const int find(const char *c, int a=0) const;
 
+    int __fixstart(int a, int b);
+    int find(bytes *s, int a=0);
+    int find(bytes *s, int a, int b);
+
     str *__str__();
     str *__repr__();
     bytes *__mul__(__ss_int n);

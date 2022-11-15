@@ -46,6 +46,14 @@ const int bytes::find(const char *c, int a) const {
     return this->unit.find(c, a);
 }
 
+int bytes::__fixstart(int a, int b) {
+    if(a == -1) return a;
+    return a+b;
+}
+
+int bytes::find(bytes *s, int a) { return __fixstart(unit.substr(a, size()-a).find(s->unit), a); }
+int bytes::find(bytes *s, int a, int b) { return __fixstart(unit.substr(a, b-a).find(s->unit), a); }
+
 str *bytes::__repr__() {
     std::stringstream ss;
     __GC_STRING sep = "\\\n\r\t";
@@ -124,7 +132,7 @@ bytes *bytes::__mul__(__ss_int n) { /* optimize */
     __ss_int ulen = size();
 
     if(ulen == 1)
-       r->unit = __GC_STRING(n, unit[0]);
+        r->unit = __GC_STRING(n, unit[0]);
     else {
         s.resize(ulen*n);
 
