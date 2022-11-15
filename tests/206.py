@@ -90,9 +90,13 @@ print()
 #    except ValueError as v:
 #        print(v)
 
-# --- use %.12g to print floats
-print(1/3.0, 1.1234123412341234, 1.1, 8.0)
-#print 9.12341234e20 # XXX difference on win, e020?
+# --- float repr
+#print(1/3.0)
+#print(1.1234123412341234) TODO duplicate python's float repr..
+print(1.1)
+print(8.0)
+print(9.12341234e20)
+print(1.202)
 
 #multidir fixes
 from testdata import crap
