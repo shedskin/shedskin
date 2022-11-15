@@ -263,15 +263,15 @@ bytes *pack(int, str *fmt, ...) {
             digits = new str();
         }
         switch(c) {
-            case 'b': 
-            case 'B': 
-            case 'h': 
-            case 'H': 
+            case 'b':
+            case 'B':
+            case 'h':
+            case 'H':
             case 'i':
-            case 'I': 
+            case 'I':
             case 'l':
             case 'L':
-            case 'q': 
+            case 'q':
             case 'Q':
                 itemsize = get_itemsize(order, c);
                 pad = padding(order, pos, itemsize);
@@ -286,6 +286,9 @@ bytes *pack(int, str *fmt, ...) {
                 for(unsigned int j=0; j<ndigits; j++) {
                     arg = va_arg(args, pyobj *);
                     __ss_int value;
+                    if(arg->__class__ != cl_int_)
+                        throw new error(new str("required argument is not an integer"));
+
                     if(arg->__class__ == cl_int_)
                         value = ((int_ *)arg)->unit;
                     else if(arg->__class__ == cl_float_)
