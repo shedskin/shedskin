@@ -13,7 +13,7 @@ def generateRandomPoints(npoints=6):
     points = []
     for i in range(npoints):
         xrand, yrand = random.random(), random.random()
-        print('%.2f' % xrand, '%.2f' % yrand)
+#        print('%.2f' % xrand, '%.2f' % yrand)
         for xoff in range(-1, 2):
             for yoff in range(-1, 2):
                 points.append( (xrand + xoff, yrand + yoff) )
@@ -47,8 +47,8 @@ def generateScreen(points, rows=40, cols=80):
 
 from time import time
 points = generateRandomPoints(10)
-print()
+#print()
 t1 = time()
-print(generateScreen(points, 40, 80))
+screen = generateScreen(points, 40, 80)
 t2 = time()
 round(t2-t1, 3)
