@@ -1,6 +1,3 @@
-from __future__ import print_function
-from __future__ import division
-
 """
 Based on C++ code by Dr. Tony Lin:
 
