@@ -1484,7 +1484,7 @@ class GenerateVisitor(BaseNodeVisitor):
             self.visit(node, func)
         else:  # XXX messy
             cast = ''
-            if actualtypes and argtypes and typestr(self.gx, actualtypes, mv=self.mv) != typestr(self.gx, argtypes, mv=self.mv) and typestr(self.gx, actualtypes, mv=self.mv) != 'str *':  # XXX
+            if actualtypes and argtypes and typestr(self.gx, actualtypes, mv=self.mv) != typestr(self.gx, argtypes, mv=self.mv) and typestr(self.gx, actualtypes, mv=self.mv) not in ('str *', 'bytes *'):  # XXX
                 if incompatible_assignment_rec(self.gx, actualtypes, argtypes):
                     error("incompatible types", self.gx, node, warning=True, mv=self.mv)
                 else:
