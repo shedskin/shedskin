@@ -51,10 +51,11 @@ class __mmapiter;
  * mmap class.
  * ref: http://docs.python.org/library/mmap.html
  */
-class mmap : public pyseq<bytes *>
+class mmap: public pyobj
 {
   public:
     typedef char* iterator;
+
 
     static const __ss_int all = -1;
     /**
@@ -96,7 +97,7 @@ class mmap : public pyseq<bytes *>
     __ss_int find(bytes *s, __ss_int start=-1, __ss_int end=-1);
     void *   move(__ss_int destination, __ss_int source, __ss_int count);
     bytes *    read(__ss_int size=all);
-    bytes *    read_byte();
+    __ss_int   read_byte();
     bytes *    readline(__ss_int size=all, const char eol='\n');
     void *   resize(__ss_int newsize);
     __ss_int rfind(bytes *string, __ss_int start=-1, __ss_int end=-1);
@@ -115,7 +116,7 @@ class mmap : public pyseq<bytes *>
     __iter<bytes *> *__iter__();
 
     // pyseq
-    bytes *__getitem__(__ss_int index);
+    __ss_int __getitem__(__ss_int index);
     void *__setitem__(__ss_int index, __ss_int value);
     bytes *__slice__(__ss_int kind, __ss_int lower, __ss_int upper, __ss_int step);
     void *__setslice__(__ss_int kind, __ss_int lower, __ss_int upper, __ss_int step, bytes *sequence);
@@ -123,6 +124,11 @@ class mmap : public pyseq<bytes *>
     // impl
     inline size_t __size()  const { return (m_end - m_begin); }
     inline bool   __eof()   const { return (m_position >= m_end); }
+
+    typedef bytes * for_in_unit;
+    typedef size_t for_in_loop;
+
+    inline size_t for_in_init() { return 0; }
     inline bool for_in_has_next(size_t i) const { return i < __size(); }
     inline bytes *for_in_next(size_t &i) const { return new bytes(__char_cache[(unsigned char)(m_begin[i++])]->unit); }
 

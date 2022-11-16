@@ -490,20 +490,22 @@ bytes *mmap::read(__ss_int size)
             m_position = m_end;
         }
     }
-    return new bytes(at, m_position - at);
+    bytes *b = new bytes(at, m_position - at);
+    b->frozen = 1;
+    return b;
 }
 
-bytes *mmap::read_byte()
+__ss_int mmap::read_byte()
 {
     __raise_if_closed_or_not_readable();
     if(m_position < m_end)
     {
-        return new bytes(__char_cache[(unsigned char)(*m_position++)]->unit);
+        return *m_position++;
     }
     else
     {
         m_position = m_end;
-        return new bytes("");
+        return 0; // XXX ???
     }
 }
 
@@ -670,11 +672,10 @@ __ss_int mmap::__len__()
     return size();
 }
 
-bytes *mmap::__getitem__(__ss_int index)
+__ss_int mmap::__getitem__(__ss_int index)
 {
     __raise_if_closed_or_not_readable();
-    iterator position = m_begin + __subscript(index);
-    return new bytes(position, 1);
+    return m_begin[__subscript(index)];
 }
 
 void *mmap::__setitem__(__ss_int index, __ss_int character)
@@ -711,7 +712,9 @@ bytes *mmap::__slice__(__ss_int kind, __ss_int lower, __ss_int upper, __ss_int)
     default:
         assert(false);
     }
-    return new bytes(start, size);
+    bytes *b = new bytes(start, size);
+    b->frozen = 1;
+    return b;
 }
 
 void *mmap::__setslice__(__ss_int kind, __ss_int lower, __ss_int upper, __ss_int, bytes *sequence)
@@ -861,7 +864,7 @@ bytes *__mmapiter::next()
 {
     if (map->__eof())
         throw new StopIteration();
-    bytes* byte = map->read_byte();
+    bytes* byte = new bytes(__char_cache[(unsigned char)(map->read_byte())]->unit);
     if (map->__eof())
         throw new StopIteration();
     return byte;
