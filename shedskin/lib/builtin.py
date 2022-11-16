@@ -751,6 +751,7 @@ class EOFError(StandardError): pass
 class FloatingPointError(StandardError): pass
 class IndexError(StandardError): pass
 class IOError(StandardError): pass
+class FileNotFoundError(StandardError): pass
 class KeyError(StandardError): pass
 class MemoryError(StandardError): pass
 class NameError(StandardError): pass

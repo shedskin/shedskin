@@ -92,6 +92,7 @@ class ValueError;
 class IndexError;
 class NotImplementedError;
 class IOError;
+class FileNotFoundError;
 class OSError;
 class SyntaxError;
 class StopIteration;
