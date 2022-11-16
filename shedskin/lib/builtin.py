@@ -746,6 +746,7 @@ class BaseException:
 class Exception(BaseException): pass
 class StandardError(Exception): pass
 
+# TODO check latest hierarchy!
 class AssertionError(StandardError): pass
 class EOFError(StandardError): pass
 class FloatingPointError(StandardError): pass
@@ -772,6 +773,7 @@ class SystemExit(BaseException): pass
 
 __exception = OSError('') # XXX remove
 __exception = IOError('')
+__exception = FileNotFoundError('')
 __exception.errno = 0
 __exception.filename = ''
 __exception.strerror = ''
