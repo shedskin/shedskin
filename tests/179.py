@@ -66,17 +66,6 @@ def msplit(sep=0, spl=-1):
 
 cnf = msplit()
 
-#ctype
-import string
-print(repr(string.ascii_lowercase))
-print(repr(string.ascii_uppercase))
-print(repr(string.ascii_letters))
-print(repr(string.printable))
-print(repr(string.punctuation))
-print(repr(string.digits))
-print(repr(string.hexdigits))
-print(repr(string.octdigits))
-
 #dict.get problem
 print({'wah': 2}.get('aap', 3))
 
