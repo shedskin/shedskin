@@ -2084,7 +2084,10 @@ class GenerateVisitor(BaseNodeVisitor):
         if constructor and ident in ('frozenset', 'bytearray'):
             if pairs:
                 self.append(',')
-            self.append('1')
+            if ident == 'frozenset':
+                self.append('1')
+            else:
+                self.append('0')
 
     def cast_to_builtin(self, arg, func, formal, target, method_call, objexpr):
         # type inference cannot deduce all necessary casts to builtin formals

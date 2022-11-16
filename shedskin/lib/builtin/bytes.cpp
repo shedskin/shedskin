@@ -146,8 +146,9 @@ bytes *bytes::__mul__(__ss_int n) { /* optimize */
 bytes *bytes::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
     int len = size();
     slicenr(x, l, u, s, len);
+    bytes *b;
     if(s == 1)
-        return new bytes(unit.data()+l, u-l);
+        b = new bytes(unit.data()+l, u-l);
     else {
         __GC_STRING r;
         if(!(x&1) && !(x&2) && s==-1) {
@@ -161,6 +162,8 @@ bytes *bytes::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
         else
             for(int i=l; i>u; i += s)
                 r += unit[i];
-        return new bytes(r);
+        b = new bytes(r);
     }
+    b->frozen = 1;
+    return b;
 }
