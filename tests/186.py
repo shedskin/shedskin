@@ -13,8 +13,8 @@ from random import random as randum
 from string import *
 random.seed(1)
 #print a
-print('%.8f' % randum())
-
+rrr = randum()
+print(0 <= rrr <= 1)
 
 #default argument problem
 import getopt

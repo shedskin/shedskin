@@ -26,5 +26,6 @@ points = sorted(set(points))
 upper = half(points)
 points.reverse()
 lower = half(points)
-print([('%.2f' % x, '%.2f' % y) for x, y in upper + lower[1:-1]])
+#print([('%.2f' % x, '%.2f' % y) for x, y in upper + lower[1:-1]])
+print('done')
 
