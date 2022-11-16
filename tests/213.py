@@ -137,8 +137,8 @@ print(hop.get_data())
 
 # default print precision?
 import math
-print(math.cosh(2))
+print('%.8f' % math.cosh(2))
 
 # print(end)
-print(18, end=' ')
+print(18, end='---')
 print(19)
