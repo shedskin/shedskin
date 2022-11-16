@@ -65,7 +65,7 @@ try :
     print("Try block")
     fd = open("nosuchfile") # open will fail
     print("File opened")
-except IOError as errr:
+except FileNotFoundError as errr:  # TODO except IOError
     print(errr, repr(errr))
     print(errr.errno, errr.strerror, errr.filename)
 #import os XXX fix under windows

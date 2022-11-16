@@ -37,7 +37,7 @@ file::file(str *file_name, str *flags) {
         flags = __char_cache['r'];
     f = fopen(file_name->c_str(), flags->c_str());
     if(f == 0)
-        throw new IOError(file_name);
+        throw new FileNotFoundError(file_name);
     name = file_name;
     mode = flags;
 }

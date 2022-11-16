@@ -199,6 +199,22 @@ public:
 #endif
 };
 
+class FileNotFoundError : public StandardError {
+public:
+    int __ss_errno;
+    str *filename;
+    str *message;
+    str *strerror;
+
+    FileNotFoundError(str *message=0);
+    str *__str__();
+    str *__repr__();
+
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_FileNotFoundError; }
+#endif
+};
+
 class KeyboardInterrupt : public BaseException {
 public:
     KeyboardInterrupt(str *message=0) : BaseException(message) { this->__class__ = cl_keyboardinterrupt; }
