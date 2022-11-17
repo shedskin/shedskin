@@ -73,8 +73,8 @@ public:
     void *reverse();
     void *byteswap();
 
-    void *tofile(file *f);
-    void *fromfile(file *f, __ss_int n);
+    void *tofile(file_binary *f);
+    void *fromfile(file_binary *f, __ss_int n);
 
     void fillbuf(T t);
 
@@ -366,13 +366,13 @@ template<class T> void *array<T>::byteswap() { /* standard C function? */
     return NULL;
 }
 
-template<class T> void *array<T>::tofile(file *f) {
+template<class T> void *array<T>::tofile(file_binary *f) {
     f->write(this->tostring());
     return NULL;
 }
 
-template<class T> void *array<T>::fromfile(file *f, __ss_int n) {
-    str *s = f->read(n*itemsize);
+template<class T> void *array<T>::fromfile(file_binary *f, __ss_int n) {
+    bytes *s = f->read(n*itemsize);
     size_t len = s->__len__();
     size_t bytes = (len/itemsize)*itemsize;
     for(size_t i=0; i<bytes; i++)
