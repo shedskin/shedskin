@@ -4,12 +4,12 @@
 
 inline __ss_int bytes::__getitem__(__ss_int i) {
     i = __wrap(this, i);
-    return unit[i];
+    return (unsigned char)(unit[i]);
 }
 
 inline __ss_int bytes::__getfast__(__ss_int i) {
     i = __wrap(this, i);
-    return unit[i];
+    return (unsigned char)(unit[i]);
 }
 
 inline void *bytes::__setitem__(__ss_int i, __ss_int e) {
@@ -28,5 +28,5 @@ inline bool bytes::for_in_has_next(size_t i) {
 }
 
 inline __ss_int bytes::for_in_next(size_t &i) {
-    return unit[i++];
+    return (unsigned char)(unit[i++]);
 }

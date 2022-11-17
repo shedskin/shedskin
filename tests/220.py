@@ -33,3 +33,19 @@ print(list(map(max, ['a','bc'], ['d'], ['e'])))
 
 print(list(map(set, [[1]])))
 
+# TODO check exception hierarchy
+
+# TODO bytes: support all methods
+
+# TODO os.popen2 disappeared? check
+#os.popen2 improvement
+#import os
+#child_stdin, child_stdout = os.popen2(["echo", "a  text"], "r")
+#print(repr(child_stdout.read()))
+#child_stdin, child_stdout = os.popen2(iter(["echo", "a  text"]), "r")
+#print(repr(child_stdout.read()))
+#child_stdin, child_stdout = os.popen2(("echo", "a  text"), "r")
+#print(repr(child_stdout.read()))
+#child_stdin, child_stdout = os.popen2("echo a  text", "r")
+#print(repr(child_stdout.read()))
+

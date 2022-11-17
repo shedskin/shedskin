@@ -109,7 +109,7 @@ public:
         this->message = new str("");
     }
     str *__repr__() {
-        return __add_strs(4, this->__class__->__name__, new str("('"), message, new str("',)"));
+        return __add_strs(4, this->__class__->__name__, new str("('"), message, new str("')"));
     }
     str *__str__() {
         return message;
