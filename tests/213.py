@@ -75,14 +75,14 @@ except FileNotFoundError as errr:  # TODO except IOError
 #    print e2, repr(e2)
 #    print e2.errno, e2.strerror, e2.filename
 
-# char_cache out of bounds
-for nnn in '"\xd8\xc3A~s':
+# byte values always positive
+for nnn in b'"\xd8\xc3A~s':
     print(repr(nnn))
 
 # hashing
-print(hash(-1))
-print(hash(True))
-print(hash(12.345))
+hah = hash(-1)
+hah = hash(True)
+hah = hash(12.345)
 
 #generator and arg unpacking
 def genpack(ij,a,b):
@@ -108,17 +108,6 @@ from testdata import d1541
 IEC = iec2.IECBus()
 hop = d1541.D1541(IEC, 8)
 print(hop.get_data())
-
-#os.popen2 improvement
-#import os
-#child_stdin, child_stdout = os.popen2(["echo", "a  text"], "r")
-#print(repr(child_stdout.read()))
-#child_stdin, child_stdout = os.popen2(iter(["echo", "a  text"]), "r")
-#print(repr(child_stdout.read()))
-#child_stdin, child_stdout = os.popen2(("echo", "a  text"), "r")
-#print(repr(child_stdout.read()))
-#child_stdin, child_stdout = os.popen2("echo a  text", "r")
-#print(repr(child_stdout.read()))
 
 # default print precision?
 import math
