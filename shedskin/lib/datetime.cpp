@@ -2,7 +2,6 @@
 
 #include "datetime.hpp"
 #include "time.hpp"
-#include "string.hpp"
 #include <iostream>
 #include <time.h>
 
@@ -42,8 +41,8 @@ void __init() {
     MINYEAR = 1;
     MAXYEAR = 9999;
 
-    DayNames = __string__::split(new str("Mon Tue Wed Thu Fri Sat Sun"));
-    MonthNames = __string__::split(new str("Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec"));
+    DayNames = (new str("Mon Tue Wed Thu Fri Sat Sun"))->split();
+    MonthNames = (new str("Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec"))->split();
 }
 
 /* helper functions */
