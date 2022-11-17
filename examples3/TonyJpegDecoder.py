@@ -217,7 +217,7 @@ class TonyJpegDecoder:
     self.GetBits = 0
     self.GetBuff = 0
     self.DataBytesLeft = 0
-    self.Data = ""
+    self.Data = b""
     self.DataPos = 0
     self.Precision = 0
     self.Component = 0
