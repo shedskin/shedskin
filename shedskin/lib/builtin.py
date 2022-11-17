@@ -823,11 +823,11 @@ class file(pyiter):
         self.mode = ''
 
     def read(self, size=0):
-        return ''
+        return self.unit
     def readline(self, n=-1):
-        return ''
+        return self.unit
     def readlines(self, sizehint=-1):
-        return ['']
+        return [self.unit]
     def xreadlines(self):
         return iter(self)
 
@@ -859,7 +859,7 @@ class file(pyiter):
         pass
 
     def next(self):
-        return ''
+        return self.unit
 
 def open(name, flags=None):
     return file(name, flags)
