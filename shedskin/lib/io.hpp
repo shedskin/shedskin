@@ -1,35 +1,37 @@
 /* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
 
-#ifndef __CSTRINGIO_HPP
-#define __CSTRINGIO_HPP
+#ifndef __IO_HPP
+#define __IO_HPP
 
 #include "builtin.hpp"
 
 using namespace __shedskin__;
-namespace __cStringIO__ {
+namespace __io__ {
 
-class StringI : public file {
+class BytesI : public file_binary {
 public:
     __ss_int pos;
-    str *s;
+    bytes *s;
 
-    StringI(str *s=NULL) : file(), pos(0), s(s ? s : new str()) {}
+    BytesI(bytes *s=NULL) : file_binary(), pos(0), s(s ? s : new bytes()) {}
 
-    str * read(int n=-1);
-    str * readline(int n=-1);
+    bytes * read(int n=-1);
+    bytes * readline(int n=-1);
     void *seek(__ss_int i, __ss_int w=0);
     __ss_int tell() { return pos; }
     void *truncate(int size=-1) { 
         s->unit.resize(size == -1 ? pos : size); 
         return NULL;
     }
-    void *write(str* data);
+    void *write(bytes* data);
 
     bool __error() { return false; }
     bool __eof() { return (pos >= len(s)); }
 };
 
-StringI *StringIO(str *s=0);
+BytesI *BytesIO(bytes *s=0);
+
+extern bytes *default_0;
 
 void __init();
 
