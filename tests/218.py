@@ -1,6 +1,5 @@
 # files
 
-# open('U')
 # MAC
 with open('cr.txt', 'w') as f1:
     f1.write('hello world\r')
@@ -9,7 +8,7 @@ with open('cr.txt', 'r') as f1:
     for line in f1:
         print(line,)
 print('---')
-with open('cr.txt', 'rU') as f1:
+with open('cr.txt', 'r') as f1:
     for line in f1:
         print(line,)
 print('===')
@@ -22,7 +21,7 @@ with open('lf.txt', 'r') as f1:
     for line in f1:
         print(line,)
 print('---')
-with open('lf.txt', 'rU') as f1:
+with open('lf.txt', 'r') as f1:
     for line in f1:
         print(line,)
 print('===')
@@ -39,7 +38,7 @@ with open('crlf.txt', 'r') as f1:
     for line in f1:
         print('%r' % line,)
 print('---')
-with open('crlf.txt', 'rU') as f1:
+with open('crlf.txt', 'r') as f1:
     for line in f1:
         print('%r' % line,)
 print('===')
@@ -47,19 +46,19 @@ print('===')
 # next
 print(next(open('run.py')).strip())
 
-# cStringIO.StringIO, file.seek
-import cStringIO, sys
+# io.BytesIO, file.seek
+import io, sys
 
-sio = cStringIO.StringIO(open('testdata/hopsakee').read())
+sio = io.BytesIO(open('testdata/hopsakee', 'rb').read())
 print(sio.readlines())
 
-sio = cStringIO.StringIO('blaat')
+sio = io.BytesIO(b'blaat')
 sio.seek(-3, 2)
 print(sio.read())
 
-sio = cStringIO.StringIO()
+sio = io.BytesIO()
 print(sio.tell())
-sio.write('hallo\njoh')
+sio.write(b'hallo\njoh')
 print(sio.tell())
 sio.seek(0, 0)
 print(sio.tell())
@@ -67,7 +66,7 @@ print(sio.readlines())
 print(sio.tell())
 sio.seek(0, 0)
 print(sio.tell())
-sio.write('hoi')
+sio.write(b'hoi')
 print(sio.tell())
 print(sio.readlines())
 print(sio.tell())
