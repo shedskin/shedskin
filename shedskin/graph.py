@@ -1444,6 +1444,9 @@ class ModuleVisitor(BaseNodeVisitor):
             if ident == 'print':
                 ident = node.func.id = '__print'  # XXX
 
+            if ident == 'open' and len(node.args) > 1 and 'b' in node.args[1].s:
+                ident = node.func.id = 'open_binary'
+
             if ident in ['hasattr', 'getattr', 'setattr', 'slice', 'type', 'Ellipsis']:
                 error("'%s' function is not supported" % ident, self.gx, node.func, mv=getmv())
             if ident == 'dict' and node.keywords:
