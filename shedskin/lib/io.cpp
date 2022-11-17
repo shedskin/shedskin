@@ -1,14 +1,16 @@
 /* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
 
-#include "cStringIO.hpp"
+#include "io.hpp"
 
 #include <algorithm>
 
-namespace __cStringIO__ {
+namespace __io__ {
 
-str* StringI::read(int n) {
+bytes *default_0;
+
+bytes* BytesI::read(int n) {
     __check_closed();
-    str *result;
+    bytes *result;
     if(n < 0) {
         result = s->__slice__(1, pos, 0, 0);
         pos = len(s);
@@ -19,10 +21,10 @@ str* StringI::read(int n) {
     return result;
 }
 
-str * StringI::readline(int n) {
+bytes * BytesI::readline(int n) {
     __check_closed();
     if(__eof())
-        return new str("");
+        return new bytes("");
     size_t nl = s->unit.find('\n', pos);
     if(nl != std::string::npos) {
         int tbr = nl - pos + 1;
@@ -32,7 +34,7 @@ str * StringI::readline(int n) {
     }
 }
 
-void *StringI::seek(__ss_int i, __ss_int w) {
+void *BytesI::seek(__ss_int i, __ss_int w) {
     __check_closed();
     if(w==0) pos = i;
     else if(w==1) pos += i;
@@ -40,7 +42,7 @@ void *StringI::seek(__ss_int i, __ss_int w) {
     return NULL;
 }
 
-void *StringI::write(str *data) {
+void *BytesI::write(bytes *data) {
     __check_closed();
     if(data) {
         const size_t size = data->size();
@@ -51,11 +53,12 @@ void *StringI::write(str *data) {
     return 0; 
 }
 
-StringI *StringIO(str *s) {
-    return (new StringI(s));
+BytesI *BytesIO(bytes *s) {
+    return (new BytesI(s));
 }
 
 void __init() {
+    default_0 = new bytes();
 
 }
 
