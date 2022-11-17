@@ -3,6 +3,7 @@
 # TODO
 # __div__ -> __truediv__, __floordiv__
 # __bytes__
+# __next__?
 
 # generators
 
