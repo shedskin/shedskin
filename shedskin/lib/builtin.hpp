@@ -357,6 +357,8 @@ public:
 
     void *__setitem__(__ss_int i, __ss_int e);
 
+    template<class U> bytes *join(U *);
+
     inline __ss_int __len__();
     bytes *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
 
@@ -1037,6 +1039,7 @@ extern class_ *cl_str_, *cl_int_, *cl_bool, *cl_float_, *cl_complex, *cl_list, *
 extern __GC_VECTOR(str *) __char_cache;
 
 extern list<str *> *__join_cache;
+extern list<bytes *> *__join_cache_bin;
 
 extern file *__ss_stdin, *__ss_stdout, *__ss_stderr;
 

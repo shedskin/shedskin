@@ -1231,7 +1231,7 @@ def main():
     bmp = BMPFile(decoder.Width, decoder.Height, bmpstr)
 #    bmpfile = sys.argv[2]
     bmpfile = 'tiger1.bmp'
-    open(bmpfile, "wb").write(bytes(bmp))
+    open(bmpfile, "wb").write(bmp.__bytes__()) #bytes(bmp))
     print('converted %s to %s' % (inputfile, bmpfile))
 
 if __name__ == '__main__':

@@ -25,6 +25,7 @@ __ss_bool True;
 __ss_bool False;
 
 list<str *> *__join_cache, *__mod5_cache;
+list<bytes *> *__join_cache_bin;
 str *__case_swap_cache;
 list<pyobj *> *__print_cache;
 
@@ -91,6 +92,7 @@ void __init() {
     }
 
     __join_cache = new list<str *>();
+    __join_cache_bin = new list<bytes *>();
     __print_cache = new list<pyobj *>();
     __mod5_cache = new list<str *>();
 
