@@ -1,9 +1,57 @@
 # overloading
 
-# TODO
-# __div__ -> __truediv__, __floordiv__
-# __bytes__
-# __next__?
+class huppa:
+    def __init__(self):
+        self.count = 0
+
+    def __str__(self):
+        return 'huppa'
+
+    def __bytes__(self):
+        return b'huppa'
+
+    def __next__(self):
+        self.count +=1
+        if self.count < 5:
+            return self.count
+        else:
+            raise StopIteration
+
+    def __truediv__(self, other):
+        print('truediv')
+        return self
+
+    def __itruediv__(self, other):
+        print('itruediv')
+        return self
+
+    def __floordiv__(self, other):
+        print('floordiv')
+        return self
+
+    def __ifloordiv(self, other):
+        print('ifloordiv')
+        return self
+
+h = huppa()
+print(str(h))
+print(bytes(h))
+print(h/h)
+print(h//h)
+while True:
+    try:
+        print(next(h))
+    except StopIteration:
+        print('klaar')
+        break
+
+h = huppa()
+for x in range(8):
+    print(next(h, -1))
+
+f = open('220.py')
+for x in range(8):
+    print(next(f))
 
 # generators
 
@@ -48,4 +96,3 @@ print(list(map(set, [[1]])))
 #print(repr(child_stdout.read()))
 #child_stdin, child_stdout = os.popen2("echo a  text", "r")
 #print(repr(child_stdout.read()))
-
