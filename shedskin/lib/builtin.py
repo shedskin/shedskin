@@ -861,8 +861,58 @@ class file(pyiter):
     def next(self):
         return self.unit
 
+# TODO share base class with file
+class file_binary(pyiter):
+    def __init__(self, name, flags=None):
+        self.unit = b''
+        self.closed = 0
+        self.name = ''
+        self.mode = ''
+
+    def read(self, size=0):
+        return self.unit
+    def readline(self, n=-1):
+        return self.unit
+    def readlines(self, sizehint=-1):
+        return [self.unit]
+    def xreadlines(self):
+        return iter(self)
+
+    def write(self, s):
+        pass
+    def writelines(self, it):
+        pass
+
+    def seek(self, i, w=0):
+        pass
+    def tell(self):
+        return 1
+
+    def flush(self):
+        pass
+    def close(self):
+        pass
+
+    def fileno(self):
+        return 1
+
+    def __repr__(self):
+        return ''
+
+    def isatty(self):
+        return False
+
+    def truncate(self, size=-1):
+        pass
+
+    def next(self):
+        return self.unit
+
 def open(name, flags=None):
     return file(name, flags)
+
+def open_binary(name, flags=None):
+    return file_binary(name, flags)
 
 def ord(c):
     return 1

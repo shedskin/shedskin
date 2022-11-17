@@ -59,6 +59,7 @@ class class_;
 class str;
 class bytes;
 class file;
+class file_binary;
 
 class int_;
 class bool_;
@@ -80,6 +81,7 @@ template <class T, class U> class __dictiterkeys;
 template <class T, class U> class __dictitervalues;
 template <class T, class U> class __dictiteritems;
 class __fileiter;
+class __filebiniter;
 class __xrange;
 class __rangeiter;
 
@@ -931,6 +933,7 @@ template <class T> __iter<T> *___iter(pyiter<T> *p) {
 }
 
 file *open(str *name, str *flags = 0);
+file_binary *open_binary(str *name, str *flags = 0);
 str *input(str *msg = 0);
 
 void print(int n, file *f, str *end, str *sep, ...);
@@ -1168,8 +1171,7 @@ public:
     virtual __ss_int tell();
     virtual void * truncate(int size);
     virtual void * write(str *s);
-    virtual void * write(bytes *b);
-    template<class U> void *writelines(U *iter);
+    virtual void * writelines(pyiter<str *> *iter);
     __iter<str *> *xreadlines();
     virtual void __enter__();
     virtual void __exit__();
@@ -1190,6 +1192,56 @@ public:
     file *p;
     __fileiter(file *p);
     str *next();
+};
+
+/* TODO file<bytes *> template? */
+
+class file_binary : public pyiter<bytes *> {
+public:
+    str *name;
+    str *mode;
+
+    FILE *f;
+    __ss_int closed;
+    __file_options options;
+    __GC_VECTOR(char) __read_cache;
+
+    file_binary(FILE *g=0) : f(g) {}
+    file_binary(str *name, str *mode=0);
+
+    virtual void * close();
+    virtual void * flush();
+    virtual int  __ss_fileno();
+    virtual __ss_bool isatty();
+    virtual bytes *  next();
+    virtual bytes *  read(int n=-1);
+    virtual bytes *  readline(int n=-1);
+    list<bytes *> *  readlines(__ss_int size_hint=-1);
+    virtual void * seek(__ss_int i, __ss_int w=0);
+    virtual __ss_int tell();
+    virtual void * truncate(int size);
+    virtual void * write(bytes *b);
+    virtual void *writelines(pyiter<bytes *> *iter);
+    __iter<bytes *> *xreadlines();
+    virtual void __enter__();
+    virtual void __exit__();
+    virtual __iter<bytes *> *__iter__();
+    virtual str *__repr__();
+
+    virtual bool __eof();
+    virtual bool __error();
+
+    inline void __check_closed() {
+        if(closed)
+            throw new ValueError(new str("I/O operation on closed file"));
+    }
+};
+
+class __filebiniter : public __iter<bytes *> {
+public:
+    file_binary *p;
+    __filebiniter(file_binary *p);
+    bytes *next();
 };
 
 /* with statement */
