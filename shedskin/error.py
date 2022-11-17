@@ -44,5 +44,5 @@ def print_error(error):
 
 
 def print_errors():
-    for error in sorted(ERRORS, key=lambda x: (x[1] or 0, x[2] or 0)):
+    for error in sorted(ERRORS, key=lambda x: (x[1] or '', x[2] if x[2] is not None else -1)):
         print_error(error)
