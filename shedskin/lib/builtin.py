@@ -415,7 +415,7 @@ class str_(pyseq):
     def decode(self, encoding=''):
         return u''
 
-class bytes(pyseq):
+class bytes_(pyseq):
     def strip(self, chars=''):
         return b''
     def lstrip(self, chars=''):
@@ -517,7 +517,7 @@ class bytes(pyseq):
     def __hash__(self):
         return 1
 
-class bytearray(bytes):
+class bytearray(bytes_):
     pass
 
 class dict(pyiter):
@@ -785,6 +785,10 @@ def str(x=None):
     x.__str__()
     x.__repr__()
     return ''
+
+def bytes(x=None):
+    x.__bytes__()
+    return b''
 
 def int(x=None, base=1):
     x.__int__()
