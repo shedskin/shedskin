@@ -254,8 +254,8 @@ public:
         i = start;
     }
 
-    tuple2<__ss_int, A> *next() {
-        return new tuple2<__ss_int, A>(2, i++, p->next());
+    tuple2<__ss_int, A> *__next__() {
+        return new tuple2<__ss_int, A>(2, i++, p->__next__());
     }
 };
 
@@ -348,13 +348,13 @@ template <class A, class B, class C> list<tuple2<typename A::for_in_unit, typena
 
 template <class A> A next(__iter<A> *iter1, A fillvalue) {
     try {
-        return iter1->next();
+        return iter1->__next__();
     } catch(StopIteration *) {
         return fillvalue;
     }
 }
 template <class A> A next(__iter<A> *iter1, void *) { return next(iter1, __zero<A>()); }
-template <class A> A next(__iter<A> *iter1) { return iter1->next(); }
+template <class A> A next(__iter<A> *iter1) { return iter1->__next__(); }
 
 /* map */
 

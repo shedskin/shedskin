@@ -199,7 +199,7 @@ public:
 
     void push_iter(pyiter<T> *iterable);
 
-    T next();
+    T __next__();
 
     friend mergeiter<T> *merge<T>(__ss_int iterable_count, pyiter<T> *iterable, ...);
 };
@@ -216,7 +216,7 @@ template<class T> void mergeiter<T>::push_iter(pyiter<T> *iterable) {
     this->iters.push_back(iterable->__iter__());
 }
 
-template<class T> T mergeiter<T>::next() {
+template<class T> T mergeiter<T>::__next__() {
     if (this->exhausted) {
         throw new StopIteration();
     }
@@ -224,7 +224,7 @@ template<class T> T mergeiter<T>::next() {
     if (!this->heap.size()) {
         for (size_t i = 0; i < this->iters.size(); ++i) {
 	  try  {
-	      heappush<iter_heap, iter_heapallocator, std::vector, CmpSecond>(this->heap, iter_heap(i, this->iters[i]->next()));
+	      heappush<iter_heap, iter_heapallocator, std::vector, CmpSecond>(this->heap, iter_heap(i, this->iters[i]->__next__()));
 	  } catch (StopIteration *) {
 	  }
 	}
@@ -237,7 +237,7 @@ template<class T> T mergeiter<T>::next() {
     iter_heap it = heappop<iter_heap, iter_heapallocator, std::vector, CmpSecond>(this->heap);
 
     try  {
-        heappush<iter_heap, iter_heapallocator, std::vector, CmpSecond>(this->heap, iter_heap(it.first, this->iters[it.first]->next()));
+        heappush<iter_heap, iter_heapallocator, std::vector, CmpSecond>(this->heap, iter_heap(it.first, this->iters[it.first]->__next__()));
     } catch (StopIteration *) {
         if (!this->heap.size()) {
 	    this->exhausted = true;
@@ -273,7 +273,7 @@ public:
     nheapiter();
     nheapiter(__ss_int n, pyiter<T> *iterable);
 
-    T next();
+    T __next__();
 };
 
 template<class T, template <class Y> class Cmp> inline nheapiter<T, Cmp>::nheapiter() {
@@ -285,9 +285,9 @@ template<class T, template <class Y> class Cmp> inline nheapiter<T, Cmp>::nheapi
 
     try {
       for (__ss_int i = 0; i < n; ++i)
-        heappush<T, std::allocator<T>, std::vector, Cmp>(heap, iter->next());
+        heappush<T, std::allocator<T>, std::vector, Cmp>(heap, iter->__next__());
       for (; ; ) {
-        heappushpop<T, std::allocator<T>, std::vector, Cmp>(heap, iter->next());
+        heappushpop<T, std::allocator<T>, std::vector, Cmp>(heap, iter->__next__());
       }
     } catch (StopIteration *) {
         while (!heap.empty())
@@ -297,7 +297,7 @@ template<class T, template <class Y> class Cmp> inline nheapiter<T, Cmp>::nheapi
     this->index = values.size();
 }
 
-template<class T, template <class Y> class Cmp> T nheapiter<T, Cmp>::next() {
+template<class T, template <class Y> class Cmp> T nheapiter<T, Cmp>::__next__() {
     if (!this->index) {
         throw new StopIteration();
     }

@@ -175,7 +175,7 @@ class pyiter:
     def __init__(self, i=None):
         pass
     def __inititer__(self, i):
-        self.unit = iter(i).next()
+        self.unit = iter(i).__next__()
 
     def __iter__(self):
         return __iter(self.unit)
@@ -525,7 +525,7 @@ class dict(pyiter):
         self.__setunit__(other.unit, other.value)
 
     def __inititer__(self, other):
-        item = iter(other).next()
+        item = iter(other).__next__()
         self.__setunit__(item[0], item[1])
 
     def __repr__(self):
@@ -587,7 +587,7 @@ class dict(pyiter):
     def update(self, d):
         self.__setunit__(d.unit, d.value)
     def updateiter(self, other):
-        item = iter(other).next()
+        item = iter(other).__next__()
         self.__setunit__(item[0], item[1])
 
     def __delete__(self, k):
@@ -606,7 +606,7 @@ class dict(pyiter):
 
 class pyset(pyiter):
     def __inititer__(self, i):
-        self.__setunit__(iter(i).next())
+        self.__setunit__(iter(i).__next__())
 
     def __setunit__(self, unit):
         self.unit = unit
@@ -639,16 +639,16 @@ class pyset(pyiter):
         return self
 
     def __ior__(self, b):
-        self.__setunit__(iter(b).next())
+        self.__setunit__(iter(b).__next__())
         return self
     def __iand__(self, b):
-        self.__setunit__(iter(b).next())
+        self.__setunit__(iter(b).__next__())
         return self
     def __ixor__(self, b):
-        self.__setunit__(iter(b).next())
+        self.__setunit__(iter(b).__next__())
         return self
     def __isub__(self, b):
-        self.__setunit__(iter(b).next())
+        self.__setunit__(iter(b).__next__())
         return self
 
     def union(self, *b):
@@ -682,13 +682,13 @@ class set(pyset):
     def clear(self):
         pass
     def update(self, *b):
-        self.__setunit__(iter(b).next())
+        self.__setunit__(iter(b).__next__())
     def difference_update(self, *b):
-        self.__setunit__(iter(b).next())
+        self.__setunit__(iter(b).__next__())
     def symmetric_difference_update(self, b):
-        self.__setunit__(iter(b).next())
+        self.__setunit__(iter(b).__next__())
     def intersection_update(self, *b):
-        self.__setunit__(iter(b).next())
+        self.__setunit__(iter(b).__next__())
 
 class complex:
     def __init__(self, real=None, imag=None):
@@ -858,7 +858,7 @@ class file(pyiter):
     def truncate(self, size=-1):
         pass
 
-    def next(self):
+    def __next__(self):
         return self.unit
 
 # TODO share base class with file
@@ -905,7 +905,7 @@ class file_binary(pyiter):
     def truncate(self, size=-1):
         pass
 
-    def next(self):
+    def __next__(self):
         return self.unit
 
 def open(name, flags=None):
@@ -947,7 +947,7 @@ def abs(x):
     return x.__abs__()
 
 def sorted(it, cmp=0, key=0, reverse=0):
-    elem = iter(it).next()
+    elem = iter(it).__next__()
     cmp(elem, elem)
     cmp2(elem, elem)
     key(elem)
@@ -957,7 +957,7 @@ def reversed(l):
     return iter(l)
 
 def enumerate(x, start=0):
-    return __iter((1, iter(x).next()))
+    return __iter((1, iter(x).__next__()))
 
 class __xrange:
     def __init__(self):
@@ -971,16 +971,16 @@ def xrange(a, b=1, s=1):
     return __xrange()
 
 def zip(*args):
-    return [(iter(args).next(),)]
+    return [(iter(args).__next__(),)]
 def __zip2(arg1, arg2):
-    return [(iter(arg1).next(), iter(arg2).next())]
+    return [(iter(arg1).__next__(), iter(arg2).__next__())]
 
 def max(__kw_key=0, *arg): # XXX 0
     cmp(arg, arg)
     __kw_key(arg)
     return arg
 def __max1(arg, __kw_key=0):
-    elem = iter(arg).next()
+    elem = iter(arg).__next__()
     cmp(elem, elem)
     __kw_key(elem)
     return elem
@@ -990,7 +990,7 @@ def min(__kw_key=0, *arg): # XXX 0
     __kw_key(arg)
     return arg
 def __min1(arg, __kw_key=0):
-    elem = iter(arg).next()
+    elem = iter(arg).__next__()
     cmp(elem, elem)
     __kw_key(elem)
     return elem
@@ -999,7 +999,7 @@ def sum(l, b):
     return sum(l)
     return b
 def __sum1(l):
-    elem = iter(l).next()
+    elem = iter(l).__next__()
     elem.__add__(elem)
     return elem
 
@@ -1037,7 +1037,7 @@ def all(a):
 class __iter(pyiter):
     def __init__(self, a):
         self.unit = a
-    def next(self):
+    def __next__(self):
         return self.unit
     def __iter__(self):
         return self
@@ -1056,22 +1056,22 @@ def quit(code=0):
     pass
 
 def map(func, *iter1):
-    return [func(*iter(iter1).next())]
+    return [func(*iter(iter1).__next__())]
 def __map3(func, iter1, iter2):
-    return [func(iter(iter1).next(), iter(iter2).next())]
+    return [func(iter(iter1).__next__(), iter(iter2).__next__())]
 def __map4(func, iter1, iter2, iter3): # XXX
-    return [func(iter(iter1).next(), iter(iter2).next(), iter(iter3).next())]
+    return [func(iter(iter1).__next__(), iter(iter2).__next__(), iter(iter3).__next__())]
 
 def filter(func, iter1):
-    elem = iter(iter1).next()
+    elem = iter(iter1).__next__()
     func(elem)
     return [elem]
 def __filter(func, iter1):
-    func(iter(iter1).next())
+    func(iter(iter1).__next__())
     return iter1
 
 def next(iter1, fillvalue=None):
-    return iter1.next()
+    return iter1.__next__()
     return fillvalue
 
 def id(x):

@@ -141,7 +141,7 @@ public:
     __ss_int pos, endpos, flags;
 
     match_iter(re_object *ro, str *subj, __ss_int pos, __ss_int endpos, __ss_int flags);
-    match_object *next();
+    match_object *__next__();
 };
 
 re_object *compile(str *pat, __ss_int flags = 0);

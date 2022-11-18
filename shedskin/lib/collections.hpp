@@ -183,7 +183,7 @@ public:
         i = 0;
     }
 
-    T next() {
+    T __next__() {
         if(i == size)
             throw new StopIteration();
         return p->units[i++];
@@ -200,7 +200,7 @@ public:
         i = p->units.size()-1;
     }
 
-    T next() {
+    T __next__() {
         if(i >= 0)
             return p->units[i--];
         throw new StopIteration();

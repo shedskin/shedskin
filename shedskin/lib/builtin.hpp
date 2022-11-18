@@ -854,7 +854,7 @@ public:
     bool __stop_iteration;
 
     __iter<T> *__iter__();
-    virtual T next(); /* __get_next can be overloaded to avoid (slow) exception handling */
+    virtual T __next__(); /* __get_next can be overloaded to avoid (slow) exception handling */
     virtual T __get_next();
 
     str *__repr__();
@@ -869,7 +869,7 @@ public:
     setentry<T>* entry;
 
     __setiter<T>(set<T> *p);
-    T next();
+    T __next__();
 };
 
 class __xrange : public pyiter<__ss_int> {
@@ -888,7 +888,7 @@ public:
     pyseq<T> *p;
     __seqiter<T>();
     __seqiter<T>(pyseq<T> *p);
-    T next();
+    T __next__();
 };
 
 template <class K, class V> class __dictiterkeys : public __iter<K> {
@@ -900,7 +900,7 @@ public:
     dictentry<K,V>* entry;
 
     __dictiterkeys<K, V>(dict<K, V> *p);
-    K next();
+    K __next__();
 };
 
 template <class K, class V> class __dictitervalues : public __iter<V> {
@@ -912,7 +912,7 @@ public:
     dictentry<K,V>* entry;
 
     __dictitervalues<K, V>(dict<K, V> *p);
-    V next();
+    V __next__();
 };
 
 template <class K, class V> class __dictiteritems : public __iter<tuple2<K, V> *> {
@@ -924,7 +924,7 @@ public:
     dictentry<K,V>* entry;
 
     __dictiteritems<K, V>(dict<K, V> *p);
-    tuple2<K, V> *next();
+    tuple2<K, V> *__next__();
 };
 static inline __ss_bool __mbool(bool c) { __ss_bool b; b.value=(int)c; return b; }
 
@@ -1166,7 +1166,7 @@ public:
     virtual void * flush();
     virtual int  __ss_fileno();
     virtual __ss_bool isatty();
-    virtual str *  next();
+    virtual str *  __next__();
     virtual str *  read(int n=-1);
     virtual str *  readline(int n=-1);
     list<str *> *  readlines(__ss_int size_hint=-1);
@@ -1194,7 +1194,7 @@ class __fileiter : public __iter<str *> {
 public:
     file *p;
     __fileiter(file *p);
-    str *next();
+    str *__next__();
 };
 
 /* TODO file<bytes *> template? */
@@ -1216,7 +1216,7 @@ public:
     virtual void * flush();
     virtual int  __ss_fileno();
     virtual __ss_bool isatty();
-    virtual bytes *  next();
+    virtual bytes *  __next__();
     virtual bytes *  read(int n=-1);
     virtual bytes *  readline(int n=-1);
     list<bytes *> *  readlines(__ss_int size_hint=-1);
@@ -1244,7 +1244,7 @@ class __filebiniter : public __iter<bytes *> {
 public:
     file_binary *p;
     __filebiniter(file_binary *p);
-    bytes *next();
+    bytes *__next__();
 };
 
 /* with statement */
@@ -1412,7 +1412,7 @@ template<class T> __iter<T> *__iter<T>::__iter__() {
     return this;
 }
 
-template<class T> T __iter<T>::next() { /* __get_next can be overloaded instead to avoid (slow) exception handling */
+template<class T> T __iter<T>::__next__() { /* __get_next can be overloaded instead to avoid (slow) exception handling */
     __result = this->__get_next();
     if(__stop_iteration)
         throw new StopIteration();
@@ -1421,7 +1421,7 @@ template<class T> T __iter<T>::next() { /* __get_next can be overloaded instead 
 
 template<class T> T __iter<T>::__get_next() {
     try {
-        __result = this->next();
+        __result = this->__next__();
     } catch (StopIteration *) {
         __stop_iteration = true;
     }
@@ -1440,7 +1440,7 @@ template<class T> __seqiter<T>::__seqiter(pyseq<T> *p) {
     counter = 0;
 }
 
-template<class T> T __seqiter<T>::next() {
+template<class T> T __seqiter<T>::__next__() {
     if(counter==size)
         __throw_stop_iteration();
     return p->__getitem__(counter++);

@@ -57,7 +57,7 @@ class defaultdict:
 
     def __inititer__(self, func, i):
         value = func()
-        item = iter(i).next()
+        item = iter(i).__next__()
         value = item[1]
         self.__setunit__(item[0], value)
 
@@ -129,7 +129,7 @@ class defaultdict:
     def update(self, d):
         self.__setunit__(d.unit, d.value)
     def updateiter(self, other):
-        item = iter(other).next()
+        item = iter(other).__next__()
         self.__setunit__(item[0], item[1])
 
     def __delete__(self, k):
@@ -137,7 +137,7 @@ class defaultdict:
 
     def fromkeys(l, b=None):
         d = defaultdict()
-        d.__setunit__(iter(l).next(), b)
+        d.__setunit__(iter(l).__next__(), b)
         return d
     fromkeys = staticmethod(fromkeys) # XXX classmethod
 

@@ -126,7 +126,7 @@ public:
             throw new ValueError(new str("xrange() arg 3 must not be zero"));
     }
 
-    __ss_int next() {
+    __ss_int __next__() {
         if(s>0) {
             if(i<b) {
                 i += s;

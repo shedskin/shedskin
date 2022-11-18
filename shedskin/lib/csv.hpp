@@ -59,7 +59,7 @@ class __csviter : public __iter<list<str *> *> {
 public:
     reader *r;
     __csviter(reader *reader);
-    list<str *> *next();
+    list<str *> *__next__();
 };
 
 extern class_ *cl_reader;
@@ -80,7 +80,7 @@ public:
     }
     void *parse_process_char(str *c);
     void *parse_reset();
-    list<str *> *next();
+    list<str *> *__next__();
     __csviter *__iter__();
     void *__init__(file *input_iter, str *dialect, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict);
     void *parse_save_field();
@@ -112,7 +112,7 @@ class __driter : public __iter<dict<str *, str *> *> {
 public:
     DictReader *r;
     __driter(DictReader *reader);
-    dict<str *, str *> *next();
+    dict<str *, str *> *__next__();
 };
 
 extern class_ *cl_DictReader;
@@ -131,7 +131,7 @@ public:
         __init__(f, fieldnames, restkey, restval, dialect, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
     }
     void *setfieldnames(list<str *> *value);
-    dict<str *, str *> *next();
+    dict<str *, str *> *__next__();
     __driter *__iter__();
     list<str *> *getfieldnames();
     void *__init__(file *f, list<str *> *fieldnames, str *restkey, str *restval, str *dialect, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict);

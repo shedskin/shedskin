@@ -860,7 +860,7 @@ __ss_int mmap::__find(const __GC_STRING& needle, __ss_int start, __ss_int end, b
     return -1;
 }
 
-bytes *__mmapiter::next()
+bytes *__mmapiter::__next__()
 {
     if (map->__eof())
         throw new StopIteration();

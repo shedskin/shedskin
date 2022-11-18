@@ -66,7 +66,7 @@ public:
         __last_yield = -1;
     }
 
-    str * next() {
+    str * __next__() {
         switch(__last_yield) {
             case 0: goto __after_yield_0;
             case 1: goto __after_yield_1;

@@ -170,7 +170,7 @@ class __mmapiter : public __iter<bytes *>
   public:
     mmap *map;
     __mmapiter(mmap *map) : map(map) {}
-    bytes *next();
+    bytes *__next__();
 };
 
 void __init();

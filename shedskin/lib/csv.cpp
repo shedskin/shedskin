@@ -45,8 +45,8 @@ __csviter::__csviter(reader *r) {
     this->r = r;
 }
 
-list<str *> *__csviter::next() {
-    return r->next();
+list<str *> *__csviter::__next__() {
+    return r->__next__();
 }
 
 __csviter *reader::__iter__() {
@@ -57,8 +57,8 @@ __driter::__driter(DictReader *r) {
     this->r = r;
 }
 
-dict<str *, str *> *__driter::next() {
-    return r->next();
+dict<str *, str *> *__driter::__next__() {
+    return r->__next__();
 }
 
 __driter *DictReader::__iter__() {
@@ -270,14 +270,14 @@ void *reader::parse_reset() {
     return NULL;
 }
 
-list<str *> *reader::next() {
+list<str *> *reader::__next__() {
     list<str *> *fields;
     str *line;
 
     this->parse_reset();
 
     while (1) {
-        line = (this->input_iter)->next();
+        line = (this->input_iter)->__next__();
         this->line_num = (this->line_num+1);
         str *c;
         str::for_in_loop __3;
@@ -480,7 +480,7 @@ void *DictReader::setfieldnames(list<str *> *value) {
     return NULL;
 }
 
-dict<str *, str *> *DictReader::next() {
+dict<str *, str *> *DictReader::__next__() {
     str *key;
     list<str *> *__31, *row;
     list<str *>::for_in_loop __123;
@@ -490,11 +490,11 @@ dict<str *, str *> *DictReader::next() {
     if ((this->line_num==0)) {
         this->getfieldnames();
     }
-    row = (this->_reader)->next();
+    row = (this->_reader)->__next__();
     this->line_num = (this->_reader)->line_num;
 
     while (row->empty()) {
-        row = (this->_reader)->next();
+        row = (this->_reader)->__next__();
     }
     d = new dict<str *, str *>(__zip(2, this->getfieldnames(), row));
     lf = len(this->getfieldnames());
@@ -516,7 +516,7 @@ list<str *> *DictReader::getfieldnames() {
     
     if ((this->_fieldnames==NULL)) {
         try {
-            this->_fieldnames = (this->_reader)->next();
+            this->_fieldnames = (this->_reader)->__next__();
         } catch (StopIteration *) {
         }
     }

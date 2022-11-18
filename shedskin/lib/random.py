@@ -31,7 +31,7 @@ class Random:
     def randint(self, a, b): return 1
     def choice(self, seq): return seq[seq.__len__()]
     def shuffle(self, x): pass
-    def sample(self, population, k): return [iter(population).next()]
+    def sample(self, population, k): return [iter(population).__next__()]
     def uniform(self, a, b): return 1.0
     def triangular(self, low=0.0, high=1.0, mode=None): return 1.0
     def normalvariate(self, mu, sigma): return 1.0
@@ -67,7 +67,7 @@ def randrange(start, stop=1, step=1): return 1
 def randint(a, b): return 1
 def choice(seq): return seq[seq.__len__()]
 def shuffle(x): pass
-def sample(population, k): return [iter(population).next()]
+def sample(population, k): return [iter(population).__next__()]
 def uniform(a, b): return 1.0
 def triangular(low=0.0, high=1.0, mode=None): return 1.0
 def normalvariate(mu, sigma): return 1.0
