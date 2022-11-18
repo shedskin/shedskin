@@ -1113,6 +1113,8 @@ str *__add_strs(int n, ...);
 /* bytes */
 
 template<class T> bytes *__bytes(T t) { if (!t) return new bytes("None"); return t->__bytes__(); }
+template<> bytes *__bytes(__ss_int t);
+bytes *__bytes();
 
 /* repr */
 
