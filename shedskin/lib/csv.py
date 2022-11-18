@@ -19,7 +19,7 @@ class reader:
     def __iter__(self):
         return __iter([''])
 
-    def next(self):
+    def __next__(self):
         return ['']
 
 class writer:
@@ -50,7 +50,7 @@ class DictReader:
         pass
     fieldnames = property(getfieldnames, setfieldnames)
 
-    def next(self):
+    def __next__(self):
         return {'': ''}
 
 class DictWriter:

@@ -23,18 +23,18 @@ def heapreplace(heap, item):
     return heap[0]
 
 def merge(*iterables):
-    item = iter(iterables).next()
+    item = iter(iterables).__next__()
     cmp(item, item)
     yield item
 
 def nlargest(n, iterable): # TODO , key = None
-    item = iter(iterable).next()
+    item = iter(iterable).__next__()
     cmp(item, item)
     #key(elem)
     yield item
 
 def nsmallest(n, iterable): # TODO , key = None
-    item = iter(iterable).next()
+    item = iter(iterable).__next__()
     cmp(item, item)
     #key(elem)
     yield item

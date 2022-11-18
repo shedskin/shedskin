@@ -444,7 +444,7 @@ match_iter::match_iter(re_object *ro, str *subj, __ss_int pos, __ss_int endpos, 
     this->ro = ro;
 }
 
-match_object *match_iter::next(void)
+match_object *match_iter::__next__(void)
 {
     match_object *mobj;
 

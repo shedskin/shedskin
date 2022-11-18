@@ -829,7 +829,7 @@ template<class T> __setiter<T>::__setiter(set<T> *p) {
     this->si_used = p->used;
 }
 
-template<class T> T __setiter<T>::next() {
+template<class T> T __setiter<T>::__next__() {
     if (si_used != p->used) {
         si_used = -1;
         __throw_set_changed();

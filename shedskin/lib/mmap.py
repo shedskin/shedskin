@@ -79,5 +79,5 @@ class mmap:
         pass
 
 class __mmapiter:
-    def next(self):
+    def __next__(self):
         return b''

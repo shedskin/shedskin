@@ -30,7 +30,7 @@ public:
     countiter();
     countiter(T start, T step);
 
-    T next();
+    T __next__();
 };
 
 template<class T> inline countiter<T>::countiter() {}
@@ -39,7 +39,7 @@ template<class T> inline countiter<T>::countiter(T start, T step) {
     this->step = step;
 }
 
-template<class T> inline T countiter<T>::next() {
+template<class T> inline T countiter<T>::__next__() {
     return this->counter += this->step;
 }
 
@@ -65,7 +65,7 @@ public:
     cycleiter();
     cycleiter(pyiter<T> *iterable);
 
-    T next();
+    T __next__();
 };
 
 template<class T> inline cycleiter<T>::cycleiter() {}
@@ -75,10 +75,10 @@ template<class T> inline cycleiter<T>::cycleiter(pyiter<T> *iterable) {
     this->iter = iterable->__iter__();
 }
 
-template<class T> T cycleiter<T>::next() {
+template<class T> T cycleiter<T>::__next__() {
     if (!this->exhausted) {
         try  {
-            this->cache.push_back(this->iter->next());
+            this->cache.push_back(this->iter->__next__());
             return this->cache.back();
         } catch (StopIteration *) {
             if (this->cache.empty())
@@ -106,7 +106,7 @@ public:
     repeatiter();
     repeatiter(T object, int times);
 
-    T next();
+    T __next__();
 };
 
 template<class T> inline repeatiter<T>::repeatiter() {}
@@ -115,7 +115,7 @@ template<class T> inline repeatiter<T>::repeatiter(T object, int times) {
     this->times = times ? times : -1;
 }
 
-template<class T> T repeatiter<T>::next() {
+template<class T> T repeatiter<T>::__next__() {
   if (!times)
     throw new StopIteration();
 
@@ -143,7 +143,7 @@ public:
 
     void push_iter(pyiter<T> *iterable);
 
-    T next();
+    T __next__();
 };
 
 template<class T> inline chainiter<T>::chainiter() {}
@@ -155,10 +155,10 @@ template<class T> void chainiter<T>::push_iter(pyiter<T> *iterable) {
     this->iters.push_back(iterable->__iter__());
 }
 
-template<class T> T chainiter<T>::next() {
+template<class T> T chainiter<T>::__next__() {
     for (; ; ) {
         try  {
-            return this->iters[iterable]->next();
+            return this->iters[iterable]->__next__();
         } catch (StopIteration *) {
             if (this->iterable == this->iters.size() - 1)
                 throw new StopIteration();
@@ -192,7 +192,7 @@ public:
     compressiter();
     compressiter(pyiter<T> *data, pyiter<B> *selectors);
 
-    T next();
+    T __next__();
 };
 
 template<class T, class B> inline compressiter<T, B>::compressiter() {}
@@ -201,11 +201,11 @@ template<class T, class B> inline compressiter<T, B>::compressiter(pyiter<T> *da
     this->selectors_iter = selectors->__iter__();
 }
 
-template<class T, class B> T compressiter<T, B>::next() {
-    while (!this->selectors_iter->next()) {
-        this->data_iter->next();
+template<class T, class B> T compressiter<T, B>::__next__() {
+    while (!this->selectors_iter->__next__()) {
+        this->data_iter->__next__();
     }
-    return this->data_iter->next();
+    return this->data_iter->__next__();
 }
 
 template<class T, class B> inline compressiter<T, B> *compress(pyiter<T> *data, pyiter<B> *selectors) {
@@ -223,7 +223,7 @@ public:
     dropwhileiter();
     dropwhileiter(B (*predicate)(T), pyiter<T> *iterable);
 
-    T next();
+    T __next__();
 };
 
 template<class T, class B> inline dropwhileiter<T, B>::dropwhileiter() {}
@@ -233,17 +233,17 @@ template<class T, class B> inline dropwhileiter<T, B>::dropwhileiter(B (*predica
     this->iter = iterable->__iter__();
 }
 
-template<class T, class B> T dropwhileiter<T, B>::next() {
+template<class T, class B> T dropwhileiter<T, B>::__next__() {
     if (drop) {
         for (; ; ) {
-            const T& value = this->iter->next();
+            const T& value = this->iter->__next__();
             if (!this->predicate(value)) {
                 this->drop = false;
                 return value;
             }
         }
     }
-    return this->iter->next();
+    return this->iter->__next__();
 }
 
 template<class T, class B> inline dropwhileiter<T, B> *dropwhile(B (*predicate)(T), pyiter<T> *iterable) {
@@ -266,7 +266,7 @@ public:
     groupbyiter();
     groupbyiter(pyiter<T> *iterable, K (*key)(T));
 
-    tuple2<K, __iter<T> *> *next();
+    tuple2<K, __iter<T> *> *__next__();
 
     friend class groupiter<T, K>;
 };
@@ -279,7 +279,7 @@ public:
     groupiter();
     groupiter(groupbyiter<T, K>* iter);
 
-    T next();
+    T __next__();
 };
 
 template<class T, class K> inline groupiter<T, K>::groupiter() {}
@@ -288,13 +288,13 @@ template<class T, class K> inline groupiter<T, K>::groupiter(groupbyiter<T, K>* 
     this->iter = iter;
 }
 
-template<class T, class K> T groupiter<T, K>::next() {
+template<class T, class K> T groupiter<T, K>::__next__() {
     if (this->first) {
         this->first = false;
         return this->iter->current_value;
     }
 
-    this->iter->current_value = this->iter->iter->next();;
+    this->iter->current_value = this->iter->iter->__next__();;
     const K& new_key = this->iter->key(this->iter->current_value);
 
     if (new_key != this->iter->current_key) {
@@ -314,10 +314,10 @@ template<class T, class K> inline groupbyiter<T, K>::groupbyiter(pyiter<T> *iter
     this->iter = iterable->__iter__();
 }
 
-template<class T, class K> tuple2<K, __iter<T> *> *groupbyiter<T, K>::next() {
+template<class T, class K> tuple2<K, __iter<T> *> *groupbyiter<T, K>::__next__() {
     if (!this->skip) {
         if (this->first) {
-            this->current_value = this->iter->next();;
+            this->current_value = this->iter->__next__();;
             this->current_key = this->key(this->current_value);
             this->first = false;
         }
@@ -327,7 +327,7 @@ template<class T, class K> tuple2<K, __iter<T> *> *groupbyiter<T, K>::next() {
     }
 
     for (; ; ) {
-        this->current_value = this->iter->next();
+        this->current_value = this->iter->__next__();
         const K& new_key = this->key(this->current_value);
         if (new_key != this->current_key) {
             this->current_key = new_key;
@@ -350,7 +350,7 @@ public:
     ifilteriter();
     ifilteriter(B (*predicate)(T), pyiter<T> *iterable);
 
-    T next();
+    T __next__();
 };
 
 template<class T, class B> inline ifilteriter<T, B>::ifilteriter() {}
@@ -359,9 +359,9 @@ template<class T, class B> inline ifilteriter<T, B>::ifilteriter(B (*predicate)(
     this->iter = iterable->__iter__();
 }
 
-template<class T, class B> T ifilteriter<T, B>::next() {
+template<class T, class B> T ifilteriter<T, B>::__next__() {
     for (; ; ) {
-        const T& value = this->iter->next();
+        const T& value = this->iter->__next__();
         if (this->predicate(value)) {
             return value;
         }
@@ -387,7 +387,7 @@ public:
     ifilterfalseiter();
     ifilterfalseiter(B (*predicate)(T), pyiter<T> *iterable);
 
-    T next();
+    T __next__();
 };
 
 template<class T, class B> inline ifilterfalseiter<T, B>::ifilterfalseiter() {}
@@ -396,9 +396,9 @@ template<class T, class B> inline ifilterfalseiter<T, B>::ifilterfalseiter(B (*p
     this->iter = iterable->__iter__();
 }
 
-template<class T, class B> T ifilterfalseiter<T, B>::next() {
+template<class T, class B> T ifilterfalseiter<T, B>::__next__() {
     for (; ; ) {
-        const T& value = this->iter->next();
+        const T& value = this->iter->__next__();
         if (!this->predicate(value)) {
             return value;
         }
@@ -427,7 +427,7 @@ public:
     isliceiter();
     isliceiter(pyiter<T> *iterable, int start, int stop, int step);
 
-    T next();
+    T __next__();
 };
 
 template<class T> inline isliceiter<T>::isliceiter() {}
@@ -439,18 +439,18 @@ template<class T> inline isliceiter<T>::isliceiter(pyiter<T> *iterable, int star
     this->iter = iterable->__iter__();
 }
 
-template<class T> T isliceiter<T>::next() {
+template<class T> T isliceiter<T>::__next__() {
     if (this->next_position >= this->stop && this->stop != -1)
         throw new StopIteration();
 
     for (; this->current_position < this->next_position; ++this->current_position) {
-        this->iter->next();
+        this->iter->__next__();
     }
 
     ++this->current_position;
     this->next_position += this->step;
 
-    return this->iter->next();
+    return this->iter->__next__();
 }
 
 inline int _start(int start) {
@@ -502,7 +502,7 @@ public:                                                                         
     imapiter##N();                                                                                       \
     imapiter##N(R (*function)(FP), DP);                                                                  \
                                                                                                          \
-    R next();                                                                                            \
+    R __next__();                                                                                            \
 };                                                                                                       \
                                                                                                          \
 template<class R, TP> inline imapiter##N<R, FP>::imapiter##N() {                                         \
@@ -514,7 +514,7 @@ template<class R, TP> inline imapiter##N<R, FP>::imapiter##N(R (*function)(FP), 
     AP                                                                                                   \
 }                                                                                                        \
                                                                                                          \
-template<class R, TP> R imapiter##N<R, FP>::next() {                                                     \
+template<class R, TP> R imapiter##N<R, FP>::__next__() {                                                     \
     if (this->exhausted) {                                                                               \
         throw new StopIteration();                                                                       \
     }                                                                                                    \
@@ -537,7 +537,7 @@ template<class R, TP> inline imapiter##N<R, FP> *imap(int /* iterable_count */, 
 #define E(P) __iter<T##P> *iter##P;
 #define A(P) this->iter##P = iterable##P->__iter__();
 #define D(P) pyiter<T##P> *iterable##P
-#define C(P) this->iter##P->next()
+#define C(P) this->iter##P->__next__()
 #define V(P) iterable##P
 
 I(1, L(1), F(1), E(1), A(1), D(1), C(1), V(1))
@@ -609,7 +609,7 @@ public:
     teeiter();
     teeiter(pyiter<T> *iterable, teecache<T> *cache);
 
-    T next();
+    T __next__();
 };
 
 template<class T> inline teeiter<T>::teeiter() {}
@@ -619,9 +619,9 @@ template<class T> inline teeiter<T>::teeiter(pyiter<T> *iterable, teecache<T> *c
     this->cache = cache;
 }
 
-template<class T> T teeiter<T>::next() {
+template<class T> T teeiter<T>::__next__() {
     if (this->position == this->cache->end) {
-        this->cache->add(this->iter->next());
+        this->cache->add(this->iter->__next__());
     }
 
     return this->cache->get(position++);
@@ -654,7 +654,7 @@ public:
     takewhileiter();
     takewhileiter(B (*predicate)(T), pyiter<T> *iterable);
 
-    T next();
+    T __next__();
 };
 
 template<class T, class B> inline takewhileiter<T, B>::takewhileiter() {}
@@ -664,9 +664,9 @@ template<class T, class B> inline takewhileiter<T, B>::takewhileiter(B (*predica
     this->iter = iterable->__iter__();
 }
 
-template<class T, class B> T takewhileiter<T, B>::next() {
+template<class T, class B> T takewhileiter<T, B>::__next__() {
     if (take) {
-        const T& value = this->iter->next();
+        const T& value = this->iter->__next__();
         if (this->predicate(value)) {
             return value;
         }
@@ -694,7 +694,7 @@ public:
     izipiter();
     izipiter(pyiter<T> *iterable1, pyiter<U> *iterable2);
 
-    tuple2<T, U> *next();
+    tuple2<T, U> *__next__();
 };
 
 template<class T, class U> inline izipiter<T, U>::izipiter() {
@@ -706,15 +706,15 @@ template<class T, class U> inline izipiter<T, U>::izipiter(pyiter<T> *iterable1,
     this->second = iterable2->__iter__();
 }
 
-template<class T, class U> tuple2<T, U> *izipiter<T, U>::next() {
+template<class T, class U> tuple2<T, U> *izipiter<T, U>::__next__() {
     if (this->exhausted) {
         throw new StopIteration();
     }
 
     tuple2<T, U> *tuple = new tuple2<T, U>;
     try  {
-        tuple->first = this->first->next();
-        tuple->second = this->second->next();
+        tuple->first = this->first->__next__();
+        tuple->second = this->second->__next__();
     } catch (StopIteration *) {
         this->exhausted = true;
         throw;
@@ -734,7 +734,7 @@ public:
 
     void push_iter(pyiter<T> *iterable);
 
-    tuple2<T, T> *next();
+    tuple2<T, T> *__next__();
 
     friend izipiter<T, T> *izip<T>(int iterable_count, pyiter<T> *iterable, ...);
 };
@@ -755,7 +755,7 @@ template<class T> void izipiter<T, T>::push_iter(pyiter<T> *iterable) {
     this->iters.push_back(iterable->__iter__());
 }
 
-template<class T> tuple2<T, T> *izipiter<T, T>::next() {
+template<class T> tuple2<T, T> *izipiter<T, T>::__next__() {
     if (this->exhausted) {
         throw new StopIteration();
     }
@@ -763,7 +763,7 @@ template<class T> tuple2<T, T> *izipiter<T, T>::next() {
     tuple2<T, T> *tuple = new tuple2<T, T>;
     for (unsigned int i = 0; i < this->iters.size(); ++i) {
         try  {
-            tuple->units.push_back(this->iters[i]->next());
+            tuple->units.push_back(this->iters[i]->__next__());
         } catch (StopIteration *) {
             this->exhausted = true;
             throw;
@@ -811,7 +811,7 @@ public:
     izip_longestiter();
     izip_longestiter(T fillvalue, pyiter<T> *iterable1, pyiter<U>* iterable2);
 
-    tuple2<T, U> *next();
+    tuple2<T, U> *__next__();
 };
 
 template<class T, class U> inline izip_longestiter<T, U>::izip_longestiter() {
@@ -826,7 +826,7 @@ template<class T, class U> inline izip_longestiter<T, U>::izip_longestiter(T fil
     this->fillvalue = fillvalue;
 }
 
-template<class T, class U> tuple2<T, U> *izip_longestiter<T, U>::next() {
+template<class T, class U> tuple2<T, U> *izip_longestiter<T, U>::__next__() {
     if (this->exhausted) {
         throw new StopIteration();
     }
@@ -837,7 +837,7 @@ template<class T, class U> tuple2<T, U> *izip_longestiter<T, U>::next() {
         tuple->first = this->fillvalue;
     } else {
         try {
-            tuple->first = this->first->next();
+            tuple->first = this->first->__next__();
         } catch (StopIteration *) {
             if (this->second_exhausted) {
                 this->exhausted = true;
@@ -854,7 +854,7 @@ template<class T, class U> tuple2<T, U> *izip_longestiter<T, U>::next() {
     }
 
     try {
-        tuple->second = this->second->next();
+        tuple->second = this->second->__next__();
     } catch (StopIteration *) {
         if (this->first_exhausted) {
             this->exhausted = true;
@@ -879,7 +879,7 @@ public:
 
     void push_iter(pyiter<T> *iterable);
 
-    tuple2<T, T> *next();
+    tuple2<T, T> *__next__();
 
     friend izip_longestiter<T, T> *izip_longest<T, T>(int iterable_count, T fillvalue, pyiter<T> *iterable, ...);
 };
@@ -898,7 +898,7 @@ template<class T> void izip_longestiter<T, T>::push_iter(pyiter<T> *iterable) {
     this->exhausted_iter.push_back(0);
 }
 
-template<class T> tuple2<T, T> *izip_longestiter<T, T>::next() {
+template<class T> tuple2<T, T> *izip_longestiter<T, T>::__next__() {
     if (this->exhausted == this->iters.size()) {
         throw new StopIteration();
     }
@@ -907,7 +907,7 @@ template<class T> tuple2<T, T> *izip_longestiter<T, T>::next() {
     for (unsigned int i = 0; i < this->iters.size(); ++i) {
         if (!this->exhausted_iter[i]) {
             try  {
-                tuple->units.push_back(this->iters[i]->next());
+                tuple->units.push_back(this->iters[i]->__next__());
                 continue;
             } catch (StopIteration *) {
                 ++this->exhausted;
@@ -965,7 +965,7 @@ public:
     productiter();
     productiter(pyiter<T> *iterable1, pyiter<U> *iterable2);
 
-    tuple2<T, U> *next();
+    tuple2<T, U> *__next__();
 };
 
 template<class T, class U> inline productiter<T, U>::productiter() {
@@ -984,7 +984,7 @@ template<class T, class U> inline productiter<T, U>::productiter(pyiter<T> *iter
         __iter<TYPE> *iter##ID = iterable##ID->__iter__();    \
         for (; ; ) {                                          \
             try {                                             \
-                this->values##ID.push_back(iter##ID->next()); \
+                this->values##ID.push_back(iter##ID->__next__()); \
             } catch (StopIteration *) {                       \
                 break;                                        \
             }                                                 \
@@ -1003,7 +1003,7 @@ template<class T, class U> inline productiter<T, U>::productiter(pyiter<T> *iter
     this->__tuple_count = 0; 
 }
 
-template<class T, class U> tuple2<T, U> *productiter<T, U>::next() {
+template<class T, class U> tuple2<T, U> *productiter<T, U>::__next__() {
     if (this->exhausted) {
         throw new StopIteration();
     }
@@ -1046,7 +1046,7 @@ public:
     void push_iter(pyiter<T> *iterable);
     void repeat(int times);
 
-    tuple2<T, T> *next();
+    tuple2<T, T> *__next__();
 
     friend productiter<T, T> *product<T>(int iterable_count, int repeat, pyiter<T> *iterable, ...);
 };
@@ -1068,7 +1068,7 @@ template<class T> void productiter<T, T>::push_iter(pyiter<T> *iterable) {
     __iter<T> *iter = iterable->__iter__();
     for (; ; ) {
         try {
-            this->values.back().push_back(iter->next());
+            this->values.back().push_back(iter->__next__());
         } catch (StopIteration *) {
             break;
         }
@@ -1094,7 +1094,7 @@ template<class T> inline void productiter<T, T>::repeat(int times) {
     }
 }
 
-template<class T> tuple2<T, T> *productiter<T, T>::next() {
+template<class T> tuple2<T, T> *productiter<T, T>::__next__() {
     if (this->exhausted) {
         throw new StopIteration();
     }
@@ -1190,7 +1190,7 @@ public:
 
     ~permutationsiter();
 
-    tuple2<T, T> *next();
+    tuple2<T, T> *__next__();
 
 private: // We might want to implement this, but we certainly don't want the default ones
     permutationsiter(const permutationsiter& other);
@@ -1210,7 +1210,7 @@ template<class T> inline permutationsiter<T>::permutationsiter(pyiter<T> *iterab
     __iter<T> *iter = iterable->__iter__();
     for (; ; ) {
         try  {
-            this->cache.push_back(iter->next());
+            this->cache.push_back(iter->__next__());
         } catch (StopIteration *) {
             break;
         }
@@ -1240,7 +1240,7 @@ template<class T> inline permutationsiter<T>::~permutationsiter() {
     delete[] this->cycles;
 }
 
-template<class T> tuple2<T, T> *permutationsiter<T>::next() {
+template<class T> tuple2<T, T> *permutationsiter<T>::__next__() {
     if (this->current == this->r) {
         tuple2<T, T> *tuple = new tuple2<T, T>;
         for (int i = 0; i < this->r; ++i) {
@@ -1299,7 +1299,7 @@ public:
 
     ~combinationsiter();
 
-    tuple2<T, T> *next();
+    tuple2<T, T> *__next__();
 
 private: // We might want to implement this, but we certainly don't want the default ones
     combinationsiter(const combinationsiter& other);
@@ -1318,7 +1318,7 @@ template<class T> inline combinationsiter<T>::combinationsiter(pyiter<T> *iterab
     __iter<T> *iter = iterable->__iter__();
     for (; ; ) {
         try  {
-            this->cache.push_back(iter->next());
+            this->cache.push_back(iter->__next__());
         } catch (StopIteration *) {
             break;
         }
@@ -1342,7 +1342,7 @@ template<class T> inline combinationsiter<T>::~combinationsiter() {
     delete[] this->indices;
 }
 
-template<class T> tuple2<T, T> *combinationsiter<T>::next() {
+template<class T> tuple2<T, T> *combinationsiter<T>::__next__() {
     if (this->current == this->r) {
         tuple2<T, T> *tuple = new tuple2<T, T>;
         for (int i = 0; i < this->r; ++i) {
@@ -1401,7 +1401,7 @@ public:
 
     ~combinations_with_replacementiter();
 
-    tuple2<T, T> *next();
+    tuple2<T, T> *__next__();
 
 private: // We might want to implement this, but we certainly don't want the default ones
     combinations_with_replacementiter(const combinations_with_replacementiter& other);
@@ -1420,7 +1420,7 @@ template<class T> inline combinations_with_replacementiter<T>::combinations_with
     __iter<T> *iter = iterable->__iter__();
     for (; ; ) {
         try  {
-            this->cache.push_back(iter->next());
+            this->cache.push_back(iter->__next__());
         } catch (StopIteration *) {
             break;
         }
@@ -1444,7 +1444,7 @@ template<class T> inline combinations_with_replacementiter<T>::~combinations_wit
     delete[] this->indices;
 }
 
-template<class T> tuple2<T, T> *combinations_with_replacementiter<T>::next() {
+template<class T> tuple2<T, T> *combinations_with_replacementiter<T>::__next__() {
     if (this->current == this->r) {
         tuple2<T, T> *tuple = new tuple2<T, T>;
         for (int i = 0; i < this->r; ++i) {

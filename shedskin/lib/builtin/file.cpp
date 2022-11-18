@@ -235,7 +235,7 @@ bool file::__eof() {
     return (FEOF(f) != 0);
 }
 
-str *file::next() {
+str *file::__next__() {
     if(__eof())
         throw new StopIteration();
     str *line = readline();
@@ -254,8 +254,8 @@ __fileiter::__fileiter(file *p) {
     this->p = p;
 }
 
-str *__fileiter::next() {
-    return p->next();
+str *__fileiter::__next__() {
+    return p->__next__();
 }
 
 /* file_binary TODO merge with file */
@@ -471,7 +471,7 @@ bool file_binary::__eof() {
     return (FEOF(f) != 0);
 }
 
-bytes *file_binary::next() {
+bytes *file_binary::__next__() {
     if(__eof())
         throw new StopIteration();
     bytes *line = readline();
@@ -490,6 +490,6 @@ __filebiniter::__filebiniter(file_binary *p) {
     this->p = p;
 }
 
-bytes *__filebiniter::next() {
-    return p->next();
+bytes *__filebiniter::__next__() {
+    return p->__next__();
 }

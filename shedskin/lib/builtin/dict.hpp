@@ -44,8 +44,8 @@ template<class K, class V> dict<K, V>::dict(int count, ...)  {
 template<class K, class V, class U> static inline void __add_to_dict(dict<K, V> *d, U *iter) {
     __iter<typename U::for_in_unit> *it = ___iter(iter);
     typename U::for_in_unit a, b;
-    a = it->next();
-    b = it->next();
+    a = it->__next__();
+    b = it->__next__();
     d->__setitem__(a, b);
 }
 
@@ -689,7 +689,7 @@ template<class K, class V> __dictiterkeys<K, V>::__dictiterkeys(dict<K,V> *p) {
     this->si_used = p->used;
 }
 
-template<class K, class V> K __dictiterkeys<K, V>::next() {
+template<class K, class V> K __dictiterkeys<K, V>::__next__() {
     if (si_used != p->used) {
         si_used = -1;
         __throw_dict_changed();
@@ -705,7 +705,7 @@ template<class K, class V> __dictitervalues<K, V>::__dictitervalues(dict<K,V> *p
     this->si_used = p->used;
 }
 
-template<class K, class V> V __dictitervalues<K, V>::next() {
+template<class K, class V> V __dictitervalues<K, V>::__next__() {
     if (si_used != p->used) {
         si_used = -1;
         __throw_dict_changed();
@@ -721,7 +721,7 @@ template<class K, class V> __dictiteritems<K, V>::__dictiteritems(dict<K,V> *p) 
     this->si_used = p->used;
 }
 
-template<class K, class V> tuple2<K, V> *__dictiteritems<K, V>::next() {
+template<class K, class V> tuple2<K, V> *__dictiteritems<K, V>::__next__() {
     if (si_used != p->used) {
         si_used = -1;
         __throw_dict_changed();

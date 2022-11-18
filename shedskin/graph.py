@@ -1096,7 +1096,7 @@ class ModuleVisitor(BaseNodeVisitor):
         self.gx.types[assnode] = set()
 
         get_iter = make_call(Attribute(node.iter, '__iter__', Load()), [])
-        fakefunc = make_call(Attribute(get_iter, 'next', Load()), [])
+        fakefunc = make_call(Attribute(get_iter, '__next__', Load()), [])
 
         self.visit(fakefunc, func)
         self.add_constraint((inode(self.gx, fakefunc), assnode), func)
@@ -1214,7 +1214,7 @@ class ModuleVisitor(BaseNodeVisitor):
 
             # list.unit->iter
             get_iter = make_call(Attribute(qual.iter, '__iter__', Load()), [])
-            fakefunc = make_call(Attribute(get_iter, 'next', Load()), [])
+            fakefunc = make_call(Attribute(get_iter, '__next__', Load()), [])
             self.visit(fakefunc, lcfunc)
             self.add_constraint((inode(self.gx, fakefunc), inode(self.gx, qual.target)), lcfunc)
 

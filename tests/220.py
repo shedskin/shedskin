@@ -1,4 +1,4 @@
-# overloading
+# overloading TODO support __iter__, __next__ combo?
 
 class huppa:
     def __init__(self):
@@ -9,13 +9,6 @@ class huppa:
 
     def __bytes__(self):
         return b'huppa'
-
-    def __next__(self):
-        self.count +=1
-        if self.count < 5:
-            return self.count
-        else:
-            raise StopIteration
 
     def __truediv__(self, other):
         print('truediv')
@@ -38,20 +31,17 @@ print(str(h))
 print(bytes(h))
 print(h/h)
 print(h//h)
-while True:
-    try:
-        print(next(h))
-    except StopIteration:
-        print('klaar')
-        break
 
-h = huppa()
-for x in range(8):
-    print(next(h, -1))
-
+# next
 f = open('220.py')
-for x in range(8):
+for x in range(5):
     print(next(f))
+print('extra', f.__next__())
+
+file_iter = iter(f)
+print('iter', next(file_iter))
+
+# TODO next second arg
 
 # generators
 
