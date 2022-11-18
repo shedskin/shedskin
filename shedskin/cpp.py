@@ -1903,7 +1903,7 @@ class GenerateVisitor(BaseNodeVisitor):
             if ident == 'float' and node.args and self.mergeinh[node.args[0]] == set([(def_class(self.gx, 'float_'), 0)]):
                 self.visit(node.args[0], func)
                 return
-            if ident in ['abs', 'int', 'float', 'str', 'dict', 'tuple', 'list', 'type', 'cmp', 'sum', 'zip']:
+            if ident in ['abs', 'int', 'float', 'str', 'bytes', 'dict', 'tuple', 'list', 'type', 'cmp', 'sum', 'zip']:
                 self.append('__' + ident + '(')
             elif ident in ['min', 'max', 'iter', 'round']:
                 self.append('___' + ident + '(')
