@@ -884,7 +884,7 @@ timedelta *timedelta::__mul__(__ss_int n) {
     return new timedelta(days*n, seconds*n, microseconds*n,0,0,0,0);
 }
 
-timedelta *timedelta::__div__(__ss_int n) {
+timedelta *timedelta::__truediv__(__ss_int n) {
     if(n==0) {
         throw new ZeroDivisionError(new str("integer division or modulo by zero"));
     }

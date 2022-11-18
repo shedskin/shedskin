@@ -228,10 +228,10 @@ class timedelta:
     def __mul__(self, n):
         return self
 
-    def __div__(self, n):
+    def __neg__(self):
         return self
 
-    def __neg__(self):
+    def __truediv__(self, n):
         return self
 
     def __floordiv__(self, n):
