@@ -25,6 +25,8 @@
 #endif // HAVE_STDIO_UNLOCKED
 
 file::file(str *file_name, str *flags) {
+    options.universal_mode = true;
+
     if (flags) {
         size_t universal = flags->unit.find_first_of("Uu");
         if(universal != std::string::npos) {
