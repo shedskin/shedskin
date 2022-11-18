@@ -1110,6 +1110,10 @@ str *__add_strs(int n, str *a, str *b, str *c, str *d);
 str *__add_strs(int n, str *a, str *b, str *c, str *d, str *e);
 str *__add_strs(int n, ...);
 
+/* bytes */
+
+template<class T> bytes *__bytes(T t) { if (!t) return new bytes("None"); return t->__bytes__(); }
+
 /* repr */
 
 template<class T> str *repr(T t) { if (!t) return new str("None"); return t->__repr__(); }

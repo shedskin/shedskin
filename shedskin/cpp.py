@@ -2535,7 +2535,7 @@ class GenerateVisitor(BaseNodeVisitor):
 
     def impl_visit_Mod(self, node, func=None):
         # --- non-str % ..
-        if [t for t in self.gx.merged_inh[node.left] if t[0].ident not in ('str_', 'bytes')]:
+        if [t for t in self.gx.merged_inh[node.left] if t[0].ident not in ('str_', 'bytes_')]:
             self.impl_visit_binary(node.left, node.right, '__mod__', '%', func)
             return
 

@@ -514,7 +514,7 @@ def propagate(gx):
                 if isinstance(b.thing, Variable) and isinstance(b.thing.parent, Class):
                     parent_ident = b.thing.parent.ident
                     if parent_ident in builtins:
-                        if parent_ident in ['int_', 'float_', 'str_', 'none', 'bool_', 'bytes']:
+                        if parent_ident in ['int_', 'float_', 'str_', 'none', 'bool_', 'bytes_']:
                             continue
                         elif parent_ident in ['list', 'tuple', 'frozenset', 'set', 'file', '__iter', 'deque', 'array'] and b.thing.name != 'unit':
                             continue
@@ -1393,7 +1393,7 @@ def analyze(gx, module_name):
 
     # --- non-ifa: copy classes for each allocation site
     for cl in gx.allclasses:
-        if cl.ident in ['int_', 'float_', 'none', 'class_', 'str_', 'bool_', 'bytes']:
+        if cl.ident in ['int_', 'float_', 'none', 'class_', 'str_', 'bool_', 'bytes_']:
             continue
         if cl.ident == 'list':
             cl.dcpa = len(gx.list_types) + 2
@@ -1408,7 +1408,7 @@ def analyze(gx, module_name):
     var = default_var(gx, 'unit', cl)
     gx.types[inode(gx, var)] = set([(cl, 0)])
 
-    cl = def_class(gx, 'bytes')
+    cl = def_class(gx, 'bytes_')
     var = default_var(gx, 'unit', cl)
     gx.types[inode(gx, var)] = set([(def_class(gx, 'int_'), 0)])
 
