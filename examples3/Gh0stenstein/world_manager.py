@@ -110,7 +110,7 @@ class Camera(object):
 def main():
     # modeling for shedskin extension module
     wm = WorldManager(1, 1, [[8]], [(1.0,)], 1.1, 2.2, 3.1, 4.2, 5.1, 6.2)
-    wm.load_image(0, [[1]], 1, 1)
+    wm.load_image(0, [1], 1, 1)
     wm.draw()
     wm.dump()
     wm.move('back', 0.0, 0.0)
