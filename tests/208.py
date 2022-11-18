@@ -187,3 +187,7 @@ print(xx)
 s = struct.pack('l', -14)
 xx, = struct.unpack('l', s)
 print(xx)
+
+# B <- bool
+s = struct.pack('B', True)
+print(s)
