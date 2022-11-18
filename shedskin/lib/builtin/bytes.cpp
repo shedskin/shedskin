@@ -167,3 +167,14 @@ bytes *bytes::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
     b->frozen = 1;
     return b;
 }
+
+bytes *__bytes() {
+    return new bytes();
+}
+
+template<> bytes *__bytes(__ss_int t) {
+    bytes *b = new bytes();
+    for(int i=0; i<t; i++)
+        b->unit += 'a';
+    return b;
+}
