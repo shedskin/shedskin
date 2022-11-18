@@ -11,7 +11,7 @@ class int_:
         return b.__with_int__()
     def __mul__(self, b):
         return b.__with_int__()
-    def __div__(self, b):
+    def __truediv__(self, b):
         return b.__div_int__()
     def __floordiv__(self, b):
         return b.__with_int__()
@@ -69,7 +69,7 @@ class bool_:
         return b.__with_int__()
     def __mul__(self, b):
         return b.__with_int__()
-    def __div__(self, b):
+    def __truediv__(self, b):
         return b.__with_int__()
     def __floordiv__(self, b):
         return b.__with_int__()
@@ -127,7 +127,7 @@ class float_:
         return b.__with_float__()
     def __mul__(self, b):
         return b.__with_float__()
-    def __div__(self, b):
+    def __truediv__(self, b):
         return b.__with_float__()
     def __floordiv__(self, b):
         return b.__with_float__()
@@ -701,7 +701,7 @@ class complex:
         return self
     def __mul__(self, c):
         return self
-    def __div__(self, c):
+    def __truediv__(self, c):
         return self
     def __floordiv__(self, b):
         return self

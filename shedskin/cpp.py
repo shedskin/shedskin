@@ -1590,7 +1590,7 @@ class GenerateVisitor(BaseNodeVisitor):
         elif type(node.op) == Mult:
             self.impl_visit_binary(node.left, node.right, aug_msg(node, 'mul'), '*', func)
         elif type(node.op) == Div:
-            self.impl_visit_binary(node.left, node.right, aug_msg(node, 'div'), '/', func)
+            self.impl_visit_binary(node.left, node.right, aug_msg(node, 'truediv'), '/', func)
         elif type(node.op) == FloorDiv:
             self.impl_visit_binary(node.left, node.right, aug_msg(node, 'floordiv'), '//', func)
         elif type(node.op) == Pow:

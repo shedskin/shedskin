@@ -901,7 +901,7 @@ class ModuleVisitor(BaseNodeVisitor):
         elif type(node.op) == Mult:
             self.fake_func(node, node.left, aug_msg(node, 'mul'), [node.right], func)
         elif type(node.op) == Div:
-            self.fake_func(node, node.left, aug_msg(node, 'div'), [node.right], func)
+            self.fake_func(node, node.left, aug_msg(node, 'truediv'), [node.right], func)
         elif type(node.op) == FloorDiv:
             self.fake_func(node, node.left, aug_msg(node, 'floordiv'), [node.right], func)
         elif type(node.op) == Pow:
@@ -1568,7 +1568,7 @@ class ModuleVisitor(BaseNodeVisitor):
         if not newclass.mv.module.builtin or newclass.ident in ['int_', 'float_', 'str_', 'tuple', 'complex']:
             msgs = ['add', 'mul']  # XXX mod, pow
             if newclass.ident in ['int_', 'float_']:
-                msgs += ['sub', 'div', 'floordiv']
+                msgs += ['sub', 'truediv', 'floordiv']
             if newclass.ident in ['int_']:
                 msgs += ['lshift', 'rshift', 'and', 'xor', 'or']
             for msg in msgs:
