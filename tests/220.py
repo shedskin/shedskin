@@ -87,6 +87,10 @@ print(list(map(set, [[1]])))
 #child_stdin, child_stdout = os.popen2("echo a  text", "r")
 #print(repr(child_stdout.read()))
 
+xx = b'\x00hoi\x00'
+print(xx)
+print(repr(xx))
+
 print(bytes())
 print(bytes([1,2,3]))
 print(bytes(0))
