@@ -168,7 +168,7 @@ list<str *> *file::readlines(__ss_int /*size_hint*/) {
 }
 
 __iter<str *> *file::xreadlines() {
-    return this->__iter__();
+    return this;
 }
 
 void *file::close() {
@@ -235,6 +235,10 @@ bool file::__eof() {
     return (FEOF(f) != 0);
 }
 
+__iter<str *> *file::__iter__() {
+    return this;
+}
+
 str *file::__next__() {
     if(__eof())
         throw new StopIteration();
@@ -242,20 +246,6 @@ str *file::__next__() {
     if(__eof() and !len(line))
         throw new StopIteration();
     return line;
-}
-
-/* file iteration */
-
-__iter<str *> *file::__iter__() {
-    return new __fileiter(this);
-}
-
-__fileiter::__fileiter(file *p) {
-    this->p = p;
-}
-
-str *__fileiter::__next__() {
-    return p->__next__();
 }
 
 /* file_binary TODO merge with file */
@@ -471,6 +461,10 @@ bool file_binary::__eof() {
     return (FEOF(f) != 0);
 }
 
+__iter<bytes *> *file_binary::__iter__() {
+    return this;
+}
+
 bytes *file_binary::__next__() {
     if(__eof())
         throw new StopIteration();
@@ -480,16 +474,3 @@ bytes *file_binary::__next__() {
     return line;
 }
 
-/* file_binary iteration */
-
-__iter<bytes *> *file_binary::__iter__() {
-    return new __filebiniter(this);
-}
-
-__filebiniter::__filebiniter(file_binary *p) {
-    this->p = p;
-}
-
-bytes *__filebiniter::__next__() {
-    return p->__next__();
-}

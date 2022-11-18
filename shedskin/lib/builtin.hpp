@@ -1153,7 +1153,7 @@ struct __file_options {
     __file_options() : lastchar('\n'), space(0), universal_mode(false), cr(false) {}
 };
 
-class file : public pyiter<str *> {
+class file : public __iter<str *> {
 public:
     str *name;
     str *mode;
@@ -1170,7 +1170,6 @@ public:
     virtual void * flush();
     virtual int  __ss_fileno();
     virtual __ss_bool isatty();
-    virtual str *  __next__();
     virtual str *  read(int n=-1);
     virtual str *  readline(int n=-1);
     list<str *> *  readlines(__ss_int size_hint=-1);
@@ -1182,7 +1181,10 @@ public:
     __iter<str *> *xreadlines();
     virtual void __enter__();
     virtual void __exit__();
+
     virtual __iter<str *> *__iter__();
+    virtual str *  __next__();
+
     virtual str *__repr__();
 
     virtual bool __eof();
@@ -1194,16 +1196,9 @@ public:
     }
 };
 
-class __fileiter : public __iter<str *> {
-public:
-    file *p;
-    __fileiter(file *p);
-    str *__next__();
-};
-
 /* TODO file<bytes *> template? */
 
-class file_binary : public pyiter<bytes *> {
+class file_binary : public __iter<bytes *> {
 public:
     str *name;
     str *mode;
@@ -1220,7 +1215,6 @@ public:
     virtual void * flush();
     virtual int  __ss_fileno();
     virtual __ss_bool isatty();
-    virtual bytes *  __next__();
     virtual bytes *  read(int n=-1);
     virtual bytes *  readline(int n=-1);
     list<bytes *> *  readlines(__ss_int size_hint=-1);
@@ -1232,8 +1226,10 @@ public:
     __iter<bytes *> *xreadlines();
     virtual void __enter__();
     virtual void __exit__();
-    virtual __iter<bytes *> *__iter__();
     virtual str *__repr__();
+
+    virtual __iter<bytes *> *__iter__();
+    virtual bytes *  __next__();
 
     virtual bool __eof();
     virtual bool __error();
@@ -1242,13 +1238,6 @@ public:
         if(closed)
             throw new ValueError(new str("I/O operation on closed file"));
     }
-};
-
-class __filebiniter : public __iter<bytes *> {
-public:
-    file_binary *p;
-    __filebiniter(file_binary *p);
-    bytes *__next__();
 };
 
 /* with statement */
