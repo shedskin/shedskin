@@ -396,11 +396,12 @@ class MazeSolver(object):
                 break
 
         if not unsolvable:
-            pass #print 'Solution path is',self._path
+            pass
+            #print('Solution path is', self._path)
+            #self.printResult()
         else:
-            print('Path till deadlock is',self._path)
+            print('Path till deadlock is', self._path)
 
-        self.printResult()
 
     def printResult(self):
         """ Print the maze showing the path """
@@ -411,8 +412,8 @@ class MazeSolver(object):
         self.maze.setItem(self._start[0], self._start[1], START)
         self.maze.setItem(self._end[0], self._end[1], EXIT)
 
-        #print 'Maze with solution path'
-        #print self.maze
+        print('Maze with solution path')
+        print(self.maze)
 
 
 class MazeGame(object):
@@ -442,6 +443,8 @@ class MazeGame(object):
         solver.setStartPoint(self._start)
         solver.setEndPoint(self._end)
         solver.solve()
+
+        return solver
 
 class FilebasedMazeGame(MazeGame):
 
@@ -477,4 +480,5 @@ class FilebasedMazeGame(MazeGame):
 if __name__ == '__main__':
     game = FilebasedMazeGame()
     for x in range(10000):
-        game.runGame()
+        solver = game.runGame()
+    solver.printResult()
