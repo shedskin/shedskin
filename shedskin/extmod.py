@@ -417,7 +417,9 @@ class ExtensionModule:
                 '    {(char *)"%(id)s", (PyCFunction)%(id2)s, METH_VARARGS | METH_KEYWORDS, (char *)""},'
                 % {"id": func.ident, "id2": id}
             )
-        write("    {NULL}\n};\n")
+        # write("    {NULL}\n};\n")
+        write("    {NULL, NULL, 0, NULL}\n};\n")
+
 
     def do_extmod_method(self, func):
         """
@@ -531,39 +533,75 @@ class ExtensionModule:
         )
 
         # module init function
-        write("PyMODINIT_FUNC init%s(void) {" % "_".join(self.gv.module.name_list))
+        # write("PyMODINIT_FUNC init%s(void) {" % "_".join(self.gv.module.name_list))
 
-        # initialize modules
-        __ss_mod = "__ss_mod_%s" % "_".join(self.gv.module.name_list)
+        # # initialize modules
+        # __ss_mod = "__ss_mod_%s" % "_".join(self.gv.module.name_list)
+        # if self.gv.module == self.gx.main_module:
+        #     self.gv.do_init_modules()
+        #     write("    __" + self.gv.module.ident + "__::__init();")
+        # write(
+        #     '\n    %s = Py_InitModule((char *)"%s", Global_%sMethods);'
+        #     % (__ss_mod, self.gv.module.ident, "_".join(self.gv.module.name_list))
+        # )
+        # write("    if(!%s)" % __ss_mod)
+        # write("        return;\n")
+
+        # module init function
+        write("static struct PyModuleDef %smodule = {" % "_".join(self.gv.module.name_list))
+        write("    PyModuleDef_HEAD_INIT,")
+        write('    "%s",   /* name of module */' % "_".join(self.gv.module.name_list))
+        write("    NULL,   /* module documentation, may be NULL */") # FIXME
+        write("    -1,     /* size of per-interpreter state of the module or -1 if the module keeps state in global variables. */")
+        write("    %s" % "Global_" + "_".join(self.gv.module.name_list) + "Methods")
+        write("};")
+
+        # # add types to module
+        # for cl in classes:
+        #     write("    if (PyType_Ready(&%sObjectType) < 0)" % clname(cl))
+        #     write("        return;\n")
+        #     write(
+        #         '    PyModule_AddObject(%s, "%s", (PyObject *)&%sObjectType);'
+        #         % (__ss_mod, cl.ident, clname(cl))
+        #     )
+        # write("")
+
+        # if self.gv.module == self.gx.main_module:
+        #     self.do_init_mods("init")
+        #     self.do_init_mods("add")
+        #     write("    add%s();" % self.gv.module.ident)
+        # write("\n}\n")
+
+        # write("PyMODINIT_FUNC add%s(void) {" % "_".join(self.gv.module.name_list))
+        # self.do_add_globals(classes, __ss_mod)
+        # write("\n}")
+        
+        write("")
+        write("PyMODINIT_FUNC PyInit_%s(void) {" % "_".join(self.gv.module.name_list))
         if self.gv.module == self.gx.main_module:
             self.gv.do_init_modules()
             write("    __" + self.gv.module.ident + "__::__init();")
-        write(
-            '\n    %s = Py_InitModule((char *)"%s", Global_%sMethods);'
-            % (__ss_mod, self.gv.module.ident, "_".join(self.gv.module.name_list))
-        )
-        write("    if(!%s)" % __ss_mod)
-        write("        return;\n")
+        write("    PyObject *m;")
+        write("    m = PyModule_Create(&%smodule);" % "_".join(self.gv.module.name_list))
+        write("    if (m == NULL)")
+        write("        return NULL;")
+        write("    return m;")
+        write("}\n")
 
-        # add types to module
-        for cl in classes:
-            write("    if (PyType_Ready(&%sObjectType) < 0)" % clname(cl))
-            write("        return;\n")
-            write(
-                '    PyModule_AddObject(%s, "%s", (PyObject *)&%sObjectType);'
-                % (__ss_mod, cl.ident, clname(cl))
-            )
-        write("")
+        # PyMODINIT_FUNC
+        # PyInit_calc(void)
+        # {
+        #     __shedskin__::__init();
+        #     __calc__::__init();
 
-        if self.gv.module == self.gx.main_module:
-            self.do_init_mods("init")
-            self.do_init_mods("add")
-            write("    add%s();" % self.gv.module.ident)
-        write("\n}\n")
+        #     PyObject *m;
 
-        write("PyMODINIT_FUNC add%s(void) {" % "_".join(self.gv.module.name_list))
-        self.do_add_globals(classes, __ss_mod)
-        write("\n}")
+        #     m = PyModule_Create(&calcmodule);
+        #     if (m == NULL)
+        #         return NULL;
+
+        #     return m;
+        # }
 
         for n in self.gv.module.name_list:
             write("\n} // namespace __%s__" % n)
@@ -760,10 +798,11 @@ class ExtensionModule:
         """
         { function_description }
         """
-        for what in ("init", "add"):
-            self.write(
-                "PyMODINIT_FUNC %s%s(void);\n" % (what, "_".join(self.gv.module.name_list))
-            )
+        self.write("PyMODINIT_FUNC PyInit_%s(void);\n" % "_".join(self.gv.module.name_list))
+        # for what in ("init", "add"):
+        #     self.write(
+        #         "PyMODINIT_FUNC %s%s(void);\n" % (what, "_".join(self.gv.module.name_list))
+        #     )
 
     def exported_classes(self, warns=False):
         """
