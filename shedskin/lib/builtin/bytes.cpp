@@ -32,10 +32,7 @@ const int bytes::size() const {
 }
 
 str *bytes::__str__() {
-    if(frozen)
-        return __add_strs(3, new str("b'"), new str(this->unit), new str("'"));
-    else
-        return __add_strs(3, new str("bytearray(b'"), new str(this->unit), new str("')"));
+    return __repr__();
 }
 
 const int bytes::find(const char c, int a) const {
@@ -69,6 +66,9 @@ str *bytes::__repr__() {
     if (hasq != -1 && hasd == -1)
         quote = "\"";
 
+    if(frozen == 0)
+        ss << "bytearray(";
+
     ss << 'b';
     ss << quote;
     for(unsigned int i=0; i<size(); i++)
@@ -90,6 +90,8 @@ str *bytes::__repr__() {
         }
     }
     ss << quote;
+    if(frozen == 0)
+        ss << ')';
 
     return new str(ss.str().c_str());
 }
