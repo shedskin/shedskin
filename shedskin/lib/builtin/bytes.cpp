@@ -19,7 +19,7 @@ bytes::bytes(bytes *b, int frozen) : hash(-1), frozen(frozen) {
     unit = b->unit;
 }
 
-bytes::bytes(const char *s, int size) : unit(s, size), hash(-1) { /* '\0' delimiter in C */
+bytes::bytes(const char *s, int size) : unit(s, size), hash(-1), frozen(1) { /* '\0' delimiter in C */
     __class__ = cl_bytes;
 }
 
@@ -181,7 +181,7 @@ template<> bytes *__bytes(bytes *b) {
 template<> bytes *__bytes(__ss_int t) {
     bytes *b = new bytes();
     for(int i=0; i<t; i++)
-        b->unit += 'a';
+        b->unit += '\x00';
     return b;
 }
 
