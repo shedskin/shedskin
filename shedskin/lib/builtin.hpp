@@ -1110,21 +1110,56 @@ str *__add_strs(int n, str *a, str *b, str *c, str *d);
 str *__add_strs(int n, str *a, str *b, str *c, str *d, str *e);
 str *__add_strs(int n, ...);
 
+#include "builtin/iter.hpp"
+
 /* bytes */
 
-template<class T> bytes *__bytes(T t) { if (!t) return new bytes("None"); return t->__bytes__(); }
-template<> bytes *__bytes(bytes *b);
-template<> bytes *__bytes(__ss_int t);
+template<class T> bytes *__bytes(T *t) {
+    if constexpr (std::is_base_of_v<pyiter<__ss_int>, T>) {
+        bytes *b = new bytes();
+        __ss_int e;
+        typename pyiter<__ss_int>::for_in_loop __3;
+        int __2;
+        pyiter<__ss_int> *__1;
+        FOR_IN(e,t,1,2,3)
+            b->unit += (unsigned char)e;
+        END_FOR
+        return b;
+    } else {
+        if (!t)
+            return new bytes("None");
+        else
+            return t->__bytes__();
+    }
+}
+
+bytes *__bytes(bytes *b);
+ bytes *__bytes(__ss_int t);
 bytes *__bytes();
 
-bytes *__bytes(list<__ss_int> *l); /* TODO pyiter<__ss_int> * doesn't work */
+template<class T> bytes *__bytearray(T *t) {
+    if constexpr (std::is_base_of_v<pyiter<__ss_int>, T>) {
+        bytes *b = new bytes();
+        b->frozen = 0;
+        __ss_int e;
+        typename pyiter<__ss_int>::for_in_loop __3;
+        int __2;
+        pyiter<__ss_int> *__1;
+        FOR_IN(e,t,1,2,3)
+            b->unit += (unsigned char)e;
+        END_FOR
+        return b;
+    } else {
+        if (!t)
+            return new bytes("None");
+        else
+            return t->__bytes__();
+    }
+}
 
-template<class T> bytes *__bytearray(T t) { if (!t) return new bytes("None"); return t->__bytes__(); }
-template<> bytes *__bytearray(bytes *b);
-template<> bytes *__bytearray(__ss_int t);
+bytes *__bytearray(bytes *b);
+bytes *__bytearray(__ss_int t);
 bytes *__bytearray();
-
-bytes *__bytearray(list<__ss_int> *l); /* TODO pyiter<__ss_int> * doesn't work */
 
 /* repr */
 
@@ -1143,7 +1178,6 @@ template<> str *repr(void *t);
 #define ASSERT(x, y)
 #endif
 
-#include "builtin/iter.hpp"
 
 /* len */
 
