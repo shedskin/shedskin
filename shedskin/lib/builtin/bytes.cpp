@@ -174,23 +174,14 @@ bytes *__bytes() {
     return new bytes();
 }
 
-template<> bytes *__bytes(bytes *b) {
+bytes *__bytes(bytes *b) {
     return new bytes(b->unit);
 }
 
-template<> bytes *__bytes(__ss_int t) {
+bytes *__bytes(__ss_int t) {
     bytes *b = new bytes();
     for(int i=0; i<t; i++)
         b->unit += '\x00';
-    return b;
-}
-
-bytes *__bytes(list<__ss_int> *l) {
-    bytes *b = new bytes();
-    int length = len(l);
-    b->unit.resize(length);
-    for(int i=0; i<length; i++)
-        b->unit[i] = l->units[i];
     return b;
 }
 
@@ -198,20 +189,14 @@ bytes *__bytearray() {
     return new bytes(0);
 }
 
-template<> bytes *__bytearray(bytes * b) {
+bytes *__bytearray(bytes * b) {
     bytes *c = __bytes(b);
     c->frozen = 0;
     return c;
 }
 
-template<> bytes *__bytearray(__ss_int t) {
+bytes *__bytearray(__ss_int t) {
     bytes *c = __bytes(t);
     c->frozen = 0;
     return c;
-}
-
-bytes *__bytearray(list<__ss_int> *l) {
-    bytes *b = __bytes(l);
-    b->frozen = 0;
-    return b;
 }
