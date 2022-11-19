@@ -11,6 +11,7 @@
 *.?pp
 *.so
 *.vim
+*.egg-info
 FLAGS
 shedskin/FLAGS
 Makefile*
@@ -318,4 +319,5 @@ examples/sat
 examples/pygasus
 examples/tiger1.bmp
 examples2to3
+venv
 

@@ -735,15 +735,19 @@ str *str::capitalize() {
 
 #ifdef __SS_BIND
 str::str(PyObject *p) : hash(-1) {
-    if(!PyString_Check(p))
+    if(!PyBytes_Check(p))
+    // if(!PyUnicode_Check(p))
+    // if(!PyString_Check(p))
         throw new TypeError(new str("error in conversion to Shed Skin (string expected)"));
 
     __class__ = cl_str_;
-    unit = __GC_STRING(PyString_AsString(p), PyString_Size(p));
+    // unit = __GC_STRING(PyString_AsString(p), PyString_Size(p));
+    unit = __GC_STRING(PyBytes_AS_STRING(p), PyBytes_Size(p));
 }
 
 PyObject *str::__to_py__() {
-    return PyString_FromStringAndSize(c_str(), size());
+    // return PyString_FromStringAndSize(c_str(), size());
+    return PyBytes_FromStringAndSize(c_str(), size());
 }
 #endif
 
