@@ -57,23 +57,23 @@ print('iter', next(file_iter))
 #print({1:2}.items())
 
 # different length args to map
-def hoppa2(a, b):
-    if b: return a+b
-    return a+'X'
-print(list(map(hoppa2, 'banaan', 'aap')))
-
-def hoppa3(a, b):
-    if b: return a+b
-    return a
-print(list(map(hoppa3, range(8), range(4))))
-
-print(list(map(max, ['a','bc'], ['d'], ['e'])))
-
-print(list(map(set, [[1]])))
+#def hoppa2(a, b):
+#    if b: return a+b
+#    return a+'X'
+#print(list(map(hoppa2, 'banaan', 'aap')))
+#
+#def hoppa3(a, b):
+#    if b: return a+b
+#    return a
+#print(list(map(hoppa3, range(8), range(4))))
+#
+#print(list(map(max, ['a','bc'], ['d'], ['e'])))
+#
+#print(list(map(set, [[1]])))
 
 # TODO check exception hierarchy
 
-# TODO bytes: support all methods
+# TODO bytes: test all methods, also for str (sep test)
 
 # TODO os.popen2 disappeared? check
 #os.popen2 improvement
