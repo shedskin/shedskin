@@ -517,8 +517,6 @@ class bytes_(pyseq):
     def __hash__(self):
         return 1
 
-class bytearray(bytes_):
-    pass
 
 class dict(pyiter):
     def __initdict__(self, other):
@@ -788,6 +786,10 @@ def str(x=None):
 
 def bytes(x=None):
     x.__bytes__()
+    return b''
+
+def bytearray(x=None):
+#x.__bytes__()
     return b''
 
 def int(x=None, base=1):

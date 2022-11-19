@@ -1113,8 +1113,18 @@ str *__add_strs(int n, ...);
 /* bytes */
 
 template<class T> bytes *__bytes(T t) { if (!t) return new bytes("None"); return t->__bytes__(); }
+template<> bytes *__bytes(bytes *b);
 template<> bytes *__bytes(__ss_int t);
 bytes *__bytes();
+
+bytes *__bytes(list<__ss_int> *l); /* TODO pyiter<__ss_int> * doesn't work */
+
+template<class T> bytes *__bytearray(T t) { if (!t) return new bytes("None"); return t->__bytes__(); }
+template<> bytes *__bytearray(bytes *b);
+template<> bytes *__bytearray(__ss_int t);
+bytes *__bytearray();
+
+bytes *__bytearray(list<__ss_int> *l); /* TODO pyiter<__ss_int> * doesn't work */
 
 /* repr */
 

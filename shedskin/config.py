@@ -27,7 +27,7 @@ class GlobalInfo:  # XXX add comments, split up
         self.sig_nr = {}
         self.nameclasses = {}
         self.module = None
-        self.builtins = ['none', 'str_', 'bytes_', 'bytearray', 'float_',
+        self.builtins = ['none', 'str_', 'bytes_', 'float_',
                          'int_', 'class_', 'list', 'tuple', 'tuple2', 'dict',
                          'set', 'frozenset', 'bool_']
         # instance node for instance Variable assignment
