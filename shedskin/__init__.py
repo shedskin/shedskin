@@ -3,15 +3,16 @@
 Copyright 2005-2022 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)
 
 '''
-import getopt
+
+import argparse
 import logging
 import os.path
+import platform
 import struct
 import sys
 import time
 import traceback
 
-import platform
 if platform.system() == 'Windows':
     import blessed as blessings
 else:
@@ -42,84 +43,101 @@ class ShedskinFormatter(logging.Formatter):
         return self._other_formatter.format(record)
 
 
-def usage():
-    print("""Usage: shedskin [OPTION]... FILE
-
- -a --ann               Output annotated source code (.ss.py)
- -b --nobounds          Disable bounds checking
- -c --nogc              Disable garbage collection
- -e --extmod            Generate extension module
- -f --flags             Provide alternate Makefile flags
- -g --nogcwarns         Disable runtime GC warnings
- -l --long              Use long long ("64-bit") integers
- -m --makefile          Specify alternate Makefile name
- -n --silent            Silent mode, only show warnings
- -o --noassert          Disable assert statements
- -r --random            Use fast random number generator (rand())
- -w --nowrap            Disable wrap-around checking
- -x --traceback         Print traceback for uncaught exceptions
- -L --lib               Add a library directory
-""")
-# -p --pypy              Make extension module PyPy-compatible
-# -v --msvc              Output MSVC-style Makefile
-    sys.exit(1)
-
-
 def parse_command_line_options():
     gx = GlobalInfo()
     gx.terminal = blessings.Terminal()
 
     # --- command-line options
-    try:
-        opts, args = getopt.getopt(sys.argv[1:], 'vbchef:wad:m:rolpxngL:', ['help', 'extmod', 'nobounds', 'nogc', 'nowrap', 'flags=', 'debug=', 'makefile=', 'random', 'noassert', 'long', 'ann', 'traceback', 'silent', 'nogcwarns', 'lib'])
-    except getopt.GetoptError:
-        usage()
+    parser = argparse.ArgumentParser(
+        prog = 'shedskin',
+        usage='%(prog)s [options] <name>',
+        description = 'Python-to-C++ Compiler',
+        epilog = 'Text at the bottom of help')
+
+    arg = opt = parser.add_argument
+
+    arg("name", help="Python file or module to compile")
+
+    opt("-a", "--ann",       help="Output annotated source code (.ss.py)", action="store_true")
+    opt("-b", "--nobounds",  help="Disable bounds checking", action="store_true")
+    opt("-c", "--nogc",      help="Disable garbage collection", action="store_true")
+    opt("-d", "--debug",     help="Set debug level", type=int)
+    opt("-e", "--extmod",    help="Generate extension module", action="store_true")
+    opt("-f", "--flags",     help="Provide alternate Makefile flags")
+    opt("-g", "--nogcwarns", help="Disable runtime GC warnings", action="store_true")
+    opt("-l", "--long",      help="Use long long '64-bit' integers", action="store_true")
+    opt("-m", "--makefile",  help="Specify alternate Makefile name")
+    opt("-n", "--silent",    help="Silent mode, only show warnings", action="store_true")
+    opt("-o", "--noassert",  help="Disable assert statements", action="store_true")
+    opt("-r", "--random",    help="Use fast random number generator (rand())", action="store_true")
+    opt("-w", "--nowrap",    help="Disable wrap-around checking", action="store_true")
+    opt("-x", "--traceback", help="Print traceback for uncaught exceptions", action="store_true")
+    opt("-L", "--lib",       help="Add a library directory", nargs='*')
+
+    # opt("--pypy",        "-p", help="Make extension module PyPy-compatible")
+    # opt("--msvc",        "-v", help="Output MSVC-style Makefile")
+
+    args = parser.parse_args()
 
     logging_level = logging.INFO
     ifa_logging_level = logging.INFO
 
-    for opt, value in opts:
-        if opt in ['-h', '--help']:
-            usage()
-        if opt in ['-b', '--nobounds']:
-            gx.bounds_checking = False
-        if opt in ['-e', '--extmod']:
-            gx.extension_module = True
-        if opt in ['-a', '--ann']:
-            gx.annotation = True
-        if opt in ['-d', '--debug']:
-            logging_level = logging.DEBUG
-            if int(value) == 3:
-                ifa_logging_level = logging.DEBUG
-        if opt in ['-l', '--long']:
-            gx.longlong = True
-        if opt in ['-c', '--nogc']:
-            gx.nogc = True
-        if opt in ['-g', '--nogcwarns']:
-            gx.gcwarns = False
-        if opt in ['-w', '--nowrap']:
-            gx.wrap_around_check = False
-        if opt in ['-r', '--random']:
-            gx.fast_random = True
-        if opt in ['-o', '--noassert']:
-            gx.assertions = False
-        if opt in ['-p', '--pypy']:
-            gx.pypy = True
-        if opt in ['-m', '--makefile']:
-            gx.makefile_name = value
-        if opt in ['-n', '--silent']:
-            logging_level = logging.WARNING
-        if opt in ['-v', '--msvc']:
-            gx.msvc = True
-        if opt in ['-x', '--traceback']:
-            gx.backtrace = True
-        if opt in ['-L', '--lib']:
-            gx.libdirs = [value] + gx.libdirs
-        if opt in ['-f', '--flags']:
-            if not os.path.isfile(value):
-                logging.error("no such file: '%s'", value)
-                sys.exit(1)
-            gx.flags = value
+    if args.nobounds:
+        gx.bounds_checking = False
+
+    if args.extmod:
+        gx.extension_module = True
+
+    if args.ann:
+        gx.annotation = True
+
+    if args.debug:
+        logging_level = logging.DEBUG
+        if args.debug == 3:
+            ifa_logging_level = logging.DEBUG
+        
+    if args.long:
+        gx.longlong = True
+        
+    if args.nogc:
+        gx.nogc = True
+        
+    if args.nogcwarns:
+        gx.gcwarns = False
+        
+    if args.nowrap:
+        gx.wrap_around_check = False
+
+    if args.random:
+        gx.fast_random = True
+                
+    if args.noassert:
+        gx.assertions = False
+        
+    # if args.pypy:
+    #     gx.pypy = True
+        
+    if args.makefile:
+        gx.makefile_name = args.makefile
+        
+    if args.silent:
+        logging_level = logging.WARNING
+
+    # if args.msvc:
+    #     gx.msvc = True
+        
+    if args.traceback:
+        gx.traceback = True
+        
+    # [str]
+    if args.lib:
+        gx.libdirs = args.lib + gx.libdirs
+        
+    if args.flags:
+        if not os.path.isfile(args.flags):
+            logging.error("no such file: '%s'", args.flags)
+            sys.exit(1)
+        gx.flags = args.flags
 
     # silent -> WARNING only, debug -> DEBUG, default -> INFO
     console = logging.StreamHandler(stream=sys.stdout)
@@ -146,15 +164,14 @@ def parse_command_line_options():
         logging.warning('64-bit python may not come with necessary file to build extension module')
 
     # --- argument
-    if len(args) != 1:
-        usage()
-    name = args[0]
+    name = args.name[:]
     if not name.endswith('.py'):
         name += '.py'
     if not os.path.isfile(name):
         logging.error("no such file: '%s'", name)
         sys.exit(1)
     main_module_name = os.path.splitext(name)[0]
+
 
     return gx, main_module_name
 
