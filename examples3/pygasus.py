@@ -5,6 +5,8 @@ NES emulator by Maciek "Mistrall" Żuk
 modified by mark.dufour@gmail.com to work with shedskin
 '''
 
+from __future__ import print_function
+
 import array
 import struct
 
@@ -101,12 +103,12 @@ class mmc0Load(MMCload):
         PRGlower=PRGbks[0][:]
         PRGupper=PRGbks[1][:]
     if len(CHRbks)>0:
-        for i in xrange(0x2000):
+        for i in range(0x2000):
             ppuRAM[i]=CHRbks[0][i]
 
 class mmc0Write(MMCwrite):
   def _exec(self, adr, byte):
-    print "wtf? writing to rom?"
+    print("wtf? writing to rom?")
     pass
 
 class mmc0Read(MMCread):
@@ -160,7 +162,7 @@ class mmc1Write(MMCwrite):
             if byte!=0: ppuSingleScreen=0
             else:  ppuSingleScreen=1
         elif mmcBitp==5 and len(CHRbks)>0:
-            print "bllaat"
+            print("bllaat")
             if mmcRegs[0]&0x10==0:
                 num1=mmcRegs[1]&0xf
                 if num1&1: part1=0x0
@@ -171,17 +173,17 @@ class mmc1Write(MMCwrite):
                 else: part2=0x1000
 #                num2>>=1
                 ppuAdr=0
-                for i in xrange(0x1000):
+                for i in range(0x1000):
                     ppuRAM[ppuAdr]=CHRbks[num1][part1]
                     part1+=1
                     ppuAdr+=1
-                for i in xrange(0x1000):
+                for i in range(0x1000):
                     ppuRAM[ppuAdr]=CHRbks[num2][part2]
                     part2+=1
                     ppuAdr+=1
             else:
                 num=mmcRegs[1]&0xf
-                for i in xrange(0x2000):
+                for i in range(0x2000):
                     ppuRAM[i]=CHRbks[num][i]
     elif regnum==1:
         if mmcBitp==5:
@@ -218,10 +220,10 @@ mmcWrite[2]=mmc2Write()
 
 tilesModified=1
 tilePrefetch=[] #[None]*30*2
-for i in xrange(30*2):
+for i in range(30*2):
         tilePrefetch.append([])
 #        tilePrefetch[i]=[None]*32*2
-        for j in xrange(32*2):
+        for j in range(32*2):
                 tilePrefetch[-1].append([[[0,0,0] for y in range(8)] for x in range(8)])
 #                tilePrefetch[i][j]=[[0 for y in range(8)] for x in range(8)]
 PS=0xff
@@ -239,12 +241,12 @@ def tpFone2(x,y):
     y0=(((y>>1)&0x1)<<2)
     x0=(((x>>1)&0x1)<<1)
     sqcolor=ord(ppuRAM[addr1])
-    colUpper=((((sqcolor>>(y0+x0)))&03)<<2)
+    colUpper=((((sqcolor>>(y0+x0)))&0x3)<<2)
     patadr=(ord(ppuRAM[addr0])<<4)
-    for yo in xrange(8):
+    for yo in range(8):
         b1=ord(ppuRAM[ppuBgrPatTabAdr+patadr+yo])
         b2=ord(ppuRAM[ppuBgrPatTabAdr+patadr+yo+8])
-        for xo in xrange(8):
+        for xo in range(8):
             colLower=(b1>>(7-xo))&0x1
             colLower|=((b2>>(7-xo))&0x1)<<1
             cpos=0x3f00+(colUpper+colLower)
@@ -266,12 +268,12 @@ def tpFone(x,y):
     y0=(((y>>1)&0x1)<<2)
     x0=(((x>>1)&0x1)<<1)
     sqcolor=ord(ppuRAM[addr1])
-    colUpper=((((sqcolor>>(y0+x0)))&03)<<2)
+    colUpper=((((sqcolor>>(y0+x0)))&0x3)<<2)
     patadr=(ord(ppuRAM[addr0])<<4)
-    for yo in xrange(8):
+    for yo in range(8):
         b1=ord(ppuRAM[ppuBgrPatTabAdr+patadr+yo])
         b2=ord(ppuRAM[ppuBgrPatTabAdr+patadr+yo+8])
-        for xo in xrange(8):
+        for xo in range(8):
             colLower=(b1>>(7-xo))&0x1
             colLower|=((b2>>(7-xo))&0x1)<<1
             cpos=0x3f00+(colUpper+colLower)
@@ -288,22 +290,22 @@ def tpF():
         else:
             nta=0x2400
             nta2=0x2000
-        for y in xrange(240):
+        for y in range(240):
                 addr0=nta+((y>>3)<<5)
                 addr1=nta+0x3c0+((y>>5)<<3)
                 y0=(((y>>4)&0x1)<<2)
                 x0=0
                 ydiv=y>>3
                 y7=y&7
-                for x in xrange(64):
+                for x in range(64):
                         sqcolor=ord(ppuRAM[addr1])
-                        colUpper=((((sqcolor>>(y0+x0)))&03)<<2)
+                        colUpper=((((sqcolor>>(y0+x0)))&0x3)<<2)
                         if x%4==3: addr1+=1
                         if x%2==1: x0^=2
                         patadr=(ord(ppuRAM[addr0+x])<<4)+y7
                         b1=ord(ppuRAM[ppuBgrPatTabAdr+patadr])
                         b2=ord(ppuRAM[ppuBgrPatTabAdr+patadr+8])
-                        for x2 in xrange(8):
+                        for x2 in range(8):
                                 colLower=(b1>>(7-x2))&0x1
                                 colLower|=((b2>>(7-x2))&0x1)<<1
                                 cpos=0x3f00+(colUpper+colLower)
@@ -311,22 +313,22 @@ def tpF():
                                 color=ord(ppuRAM[cpos])&0x3f
                                 finalColor=pallete[color]
                                 tilePrefetch[ydiv][x][x2][y7] = finalColor
-        for y in xrange(240):
+        for y in range(240):
                 addr0=nta2+((y>>3)<<5)
                 addr1=nta2+0x3c0+((y>>5)<<3)
                 y0=(((y>>4)&0x1)<<2)
                 x0=0
                 ydiv=y>>3
                 y7=y&7
-                for x in xrange(32):
+                for x in range(32):
                         sqcolor=ord(ppuRAM[addr1])
-                        colUpper=((((sqcolor>>(y0+x0)))&03)<<2)
+                        colUpper=((((sqcolor>>(y0+x0)))&0x3)<<2)
                         if x%4==3: addr1+=1
                         if x%2==1: x0^=2
                         patadr=(ord(ppuRAM[addr0+x])<<4)+y7
                         b1=ord(ppuRAM[ppuBgrPatTabAdr+patadr])
                         b2=ord(ppuRAM[ppuBgrPatTabAdr+patadr+8])
-                        for x2 in xrange(8):
+                        for x2 in range(8):
                                 colLower=(b1>>(7-x2))&0x1
                                 colLower|=((b2>>(7-x2))&0x1)<<1
                                 cpos=0x3f00+(colUpper+colLower)
@@ -344,7 +346,7 @@ def ppuDoScanline(n):
                 sx=(ppuHoristScroll>>3)%64
                 sy=((n+ppuVerticScroll)>>3)%30
                 if n%8==0:
-                        for x in xrange(32):
+                        for x in range(32):
                             for wa in range(8):
                                 for ha in range(8):
                                     screen[(x<<3)-hor0+wa][n-ver0+ha] = tilePrefetch[sy][sx][wa][ha]
@@ -352,7 +354,7 @@ def ppuDoScanline(n):
         if ppuShowSprites_:
                 sprPerScln=0
                 ppuStatusRegstr^=ppuStatusRegstr&0x20
-                for j in xrange(64):
+                for j in range(64):
                         i=63-j
                         i2=i<<2
                         if ppuSprSizeValue:
@@ -375,7 +377,7 @@ def ppuDoScanline(n):
                                 indx<<=4
                                 b1=ord(ppuRAM[spt+indx+(ypos)])
                                 b2=ord(ppuRAM[spt+indx+(ypos)+8])
-                                for x in xrange(8):
+                                for x in range(8):
                                         if atrb&0x40:
                                                 col=(b1>>(x))&0x1
                                                 col|=((b2>>(x))&0x1)<<1
@@ -408,7 +410,7 @@ def ppuDoScanline(n):
                                 colUpper=(atrb&0x3)<<2
                                 b1=ord(ppuRAM[ppuSprPatTabAdr+(indx)+(ypos)])
                                 b2=ord(ppuRAM[ppuSprPatTabAdr+(indx)+(ypos)+8])
-                                for x in xrange(8):
+                                for x in range(8):
                                         if atrb&0x40:
                                                 col=(b1>>(x))&0x1
                                                 col|=((b2>>(x))&0x1)<<1
@@ -514,10 +516,10 @@ def ppuProcessRegs(adr, val):
                     ppuHoristScroll=val&0xff
                     if ppuHoristScroll%8==0:
                         if val>tmpH:
-                            for i in xrange(30):
+                            for i in range(30):
                                 tpFone2((ppuHoristScroll>>3),i)
                         else:
-                            for i in xrange(30):
+                            for i in range(30):
                                 tpFone2((ppuHoristScroll>>3)-31,i)
                 else:
                     ppuVerticScroll=val&0xff
@@ -566,25 +568,25 @@ def ppuProcessRegs(adr, val):
                 ppuVRAMAdrValue+=ppuAdrIncrement
 
 def dump_and_die():
-        print "A: ",hex(A)
-        print "X: ",hex(X)
-        print "Y: ",hex(Y)
-        print "PC: ",hex(PC)
-        print "P: ",hex(P)
-        print "S: ",hex(S)
-        print "savepc: ",hex(savepc)
-        print "saveflags: ",hex(saveflags)
-        print "sum: ",hex(sum)
-        print "value: ",hex(value)
+        print("A: ",hex(A))
+        print("X: ",hex(X))
+        print("Y: ",hex(Y))
+        print("PC: ",hex(PC))
+        print("P: ",hex(P))
+        print("S: ",hex(S))
+        print("savepc: ",hex(savepc))
+        print("saveflags: ",hex(saveflags))
+        print("sum: ",hex(sum))
+        print("value: ",hex(value))
         exit(1)
 
 def dump_and_dont_die():
-        print "A: ",hex(A)+"\t\t"+"X: ",hex(X)+"\t\t"+ "Y: ",hex(Y)+"\t\t"+ "PC: ",hex(PC)+"\t\t"+ "P: ",hex(P)+"\t\t"+ "S: ",hex(S)+"\t\t"+ "savepc: ",hex(savepc)+"\t\t"+ "saveflags: ",hex(saveflags)+"\t\t"+ "sum: ",hex(sum)+"\t\t"+"value: ",hex(value)        
+        print("A: ",hex(A)+"\t\t"+"X: ",hex(X)+"\t\t"+ "Y: ",hex(Y)+"\t\t"+ "PC: ",hex(PC)+"\t\t"+ "P: ",hex(P)+"\t\t"+ "S: ",hex(S)+"\t\t"+ "savepc: ",hex(savepc)+"\t\t"+ "saveflags: ",hex(saveflags)+"\t\t"+ "sum: ",hex(sum)+"\t\t"+"value: ",hex(value))
 
 
 def verbose(s):
 #        return
-        print "%.2x %.2x %.2x %.4x %.2x %.2x %.2x (%1.4x) %s %s"%(A,X,Y,PC,P,S,opcode,savepc, str(instruction[opcode]).split()[1][1:],s) 
+        print("%.2x %.2x %.2x %.4x %.2x %.2x %.2x (%1.4x) %s %s"%(A,X,Y,PC,P,S,opcode,savepc, str(instruction[opcode]).split()[1][1:],s))
 
 def pGetMem(adr):
         global ppuStatusRegstr, ppuAdr2007Ofset, ppuVRAMAdrValue,ppuVRAMBuffer__
@@ -1664,37 +1666,37 @@ def read_ines(name):
         nRAMbks=0
         rCTRLbyte1=0
         rCTRLbyte1=0
-        f=file(name)
+        f=open(name)
         if f.read(3)!= "NES": 
-                print "Not ines"
+                print("Not ines")
                 return
         if f.read(1)!= chr(0x1A): 
-                print "Not ines"
+                print("Not ines")
                 return
-        print "Reading ines file"
+        print("Reading ines file")
         nPRGbks=ord(f.read(1))
-        print nPRGbks, "PRG-rom banks"
+        print(nPRGbks, "PRG-rom banks")
         nCHRbks=ord(f.read(1))
-        print nCHRbks, "CHR-rom banks"
+        print(nCHRbks, "CHR-rom banks")
         rCTRLbyte1=ord(f.read(1))
         rCTRLbyte2=ord(f.read(1))
         ppuVerticalMirr=(rCTRLbyte1&1)
-        print "Vertical mirroring?", (ppuVerticalMirr!=0)
+        print("Vertical mirroring?", (ppuVerticalMirr!=0))
         mMapper=(rCTRLbyte1>>4)+((rCTRLbyte2>>4)<<4)
-        print "Memory mapper no:", mMapper
+        print("Memory mapper no:", mMapper)
         if mmcLoad[mMapper] is None:
-            print "I don't have this mapper :("
+            print("I don't have this mapper :(")
             exit(0)
         ppu4ScreensMode=rCTRLbyte1&8
-        print "4 screens mirroring?", (ppu4ScreensMode!=0)
+        print("4 screens mirroring?", (ppu4ScreensMode!=0))
         nRAMbks=ord(f.read(1))
         if nRAMbks==0: nRAMbks=1
-        print nRAMbks, "RAM banks"
+        print(nRAMbks, "RAM banks")
         f.read(7)
         if rCTRLbyte1&4: f.read(512)
-        for i in xrange(nPRGbks):
+        for i in range(nPRGbks):
                 PRGbks+=[list(f.read(0x4000))]
-        for i in xrange(nCHRbks):
+        for i in range(nCHRbks):
                 CHRbks+=[list(f.read(0x2000))]
         mmcLoad[mMapper]._exec()
 
@@ -1706,6 +1708,6 @@ if __name__ == '__main__':
     pReset()
     x = 0
     while True:
-        print x
+        print(x)
         x += 1
         pExec()
