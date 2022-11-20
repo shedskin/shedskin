@@ -279,7 +279,7 @@ template<> __ss_bool __to_ss(PyObject *p) {
 
 template<> double __to_ss(PyObject *p) {
     // if(!PyInt_Check(p) and !PyFloat_Check(p))
-    if(!PyLong_AsLong(p) and !PyFloat_Check(p))
+    if(!PyLong_Check(p) and !PyFloat_Check(p))
         throw new TypeError(new str("error in conversion to Shed Skin (float or int expected)"));
     return PyFloat_AsDouble(p);
 }
