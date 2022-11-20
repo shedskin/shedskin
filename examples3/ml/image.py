@@ -7,8 +7,8 @@
 from math import log10
 from .vector3f import Vector3f, Vector3f_seq
 
-PPM_ID = 'P6'
-MINILIGHT_URI = 'http://www.hxa7241.org/minilight/'
+PPM_ID = b'P6'
+MINILIGHT_URI = b'http://www.hxa7241.org/minilight/'
 DISPLAY_LUMINANCE_MAX = 200.0
 RGB_LUMINANCE = Vector3f(0.2126, 0.7152, 0.0722)
 GAMMA_ENCODE = 0.45
@@ -36,13 +36,13 @@ class Image(object):
     def get_formatted(self, out, iteration):
         divider = 1.0 / ((iteration if iteration > 0 else 0) + 1) ## truediv
         tonemap_scaling = self.calculate_tone_mapping(self.pixels, divider)
-        header = '%s\n# %s\n\n%u %u\n255\n' % (PPM_ID, MINILIGHT_URI, self.width, self.height)
-        out.write(header.encode('latin-1'))
+        header = b'%s\n# %s\n\n%u %u\n255\n' % (PPM_ID, MINILIGHT_URI, self.width, self.height)
+        out.write(header)
         for channel in self.pixels:
             mapped = channel * divider * tonemap_scaling
             gammaed = (mapped if mapped > 0.0 else 0.0) ** GAMMA_ENCODE
-            output = chr(min(int((gammaed * 255.0) + 0.5), 255))
-            out.write(output.encode('latin-1'))
+            output = b'%c' % min(int((gammaed * 255.0) + 0.5), 255)
+            out.write(output)
 
     def calculate_tone_mapping(self, pixels, divider):
         sum_of_logs = 0.0
