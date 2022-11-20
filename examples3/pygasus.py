@@ -33,14 +33,15 @@ opcode=0
 nticks=[0]*256
 adrmode=[None]*256
 instruction=[None]*256
-nesRAM=['\0']*0x800
-ioMEM=['\0']*0x8
-io2MEM=['\xff']*0x20
-wRAM=['\0']*0x2000
-mMapper=0
 
-ppuRAM=['\0']*0x4000
-SPRRAM=['\0']*0x100
+nesRAM=[0]*0x800
+ioMEM=[0]*0x8
+io2MEM=[0xff]*0x20
+wRAM=[0]*0x2000
+ppuRAM=[0]*0x4000
+SPRRAM=[0]*0x100
+
+mMapper=0
 ppuNameTableAdr=0
 ppuAdrIncrement=1
 ppuSprPatTabAdr=0
@@ -240,9 +241,9 @@ def tpFone2(x,y):
     addr1=nta2+0x3c0+((y>>2)<<3)+(x>>2)
     y0=(((y>>1)&0x1)<<2)
     x0=(((x>>1)&0x1)<<1)
-    sqcolor=ord(ppuRAM[addr1])
+    sqcolor=ppuRAM[addr1]
     colUpper=((((sqcolor>>(y0+x0)))&0x3)<<2)
-    patadr=(ord(ppuRAM[addr0])<<4)
+    patadr=(ppuRAM[addr0]<<4)
     for yo in range(8):
         b1=ppuRAM[ppuBgrPatTabAdr+patadr+yo]
         b2=ppuRAM[ppuBgrPatTabAdr+patadr+yo+8]
@@ -251,7 +252,7 @@ def tpFone2(x,y):
             colLower|=((b2>>(7-xo))&0x1)<<1
             cpos=0x3f00+(colUpper+colLower)
             if cpos%4==0: cpos=0x3f00
-            color=ord(ppuRAM[cpos])&0x3f
+            color=ppuRAM[cpos]&0x3f
             finalColor=pallete[color]
             tilePrefetch[y][x][xo][yo] = finalColor
 def tpFone(x,y):
@@ -267,9 +268,9 @@ def tpFone(x,y):
     addr1=nta+0x3c0+((y>>2)<<3)+(x>>2)
     y0=(((y>>1)&0x1)<<2)
     x0=(((x>>1)&0x1)<<1)
-    sqcolor=ord(ppuRAM[addr1])
+    sqcolor=ppuRAM[addr1]
     colUpper=((((sqcolor>>(y0+x0)))&0x3)<<2)
-    patadr=(ord(ppuRAM[addr0])<<4)
+    patadr=(ppuRAM[addr0]<<4)
     for yo in range(8):
         b1=ppuRAM[ppuBgrPatTabAdr+patadr+yo]
         b2=ppuRAM[ppuBgrPatTabAdr+patadr+yo+8]
@@ -278,7 +279,7 @@ def tpFone(x,y):
             colLower|=((b2>>(7-xo))&0x1)<<1
             cpos=0x3f00+(colUpper+colLower)
             if cpos%4==0: cpos=0x3f00
-            color=ord(ppuRAM[cpos])&0x3f
+            color=ppuRAM[cpos]&0x3f
             finalColor=pallete[color]
             tilePrefetch[y][x][xo][yo] = finalColor
 
@@ -298,11 +299,11 @@ def tpF():
                 ydiv=y>>3
                 y7=y&7
                 for x in range(64):
-                        sqcolor=ord(ppuRAM[addr1])
+                        sqcolor=ppuRAM[addr1]
                         colUpper=((((sqcolor>>(y0+x0)))&0x3)<<2)
                         if x%4==3: addr1+=1
                         if x%2==1: x0^=2
-                        patadr=(ord(ppuRAM[addr0+x])<<4)+y7
+                        patadr=(ppuRAM[addr0+x]<<4)+y7
                         b1=ppuRAM[ppuBgrPatTabAdr+patadr]
                         b2=ppuRAM[ppuBgrPatTabAdr+patadr+8]
                         for x2 in range(8):
@@ -310,7 +311,7 @@ def tpF():
                                 colLower|=((b2>>(7-x2))&0x1)<<1
                                 cpos=0x3f00+(colUpper+colLower)
                                 if cpos%4==0: cpos=0x3f00
-                                color=ord(ppuRAM[cpos])&0x3f
+                                color=ppuRAM[cpos]&0x3f
                                 finalColor=pallete[color]
                                 tilePrefetch[ydiv][x][x2][y7] = finalColor
         for y in range(240):
@@ -321,11 +322,11 @@ def tpF():
                 ydiv=y>>3
                 y7=y&7
                 for x in range(32):
-                        sqcolor=ord(ppuRAM[addr1])
+                        sqcolor=ppuRAM[addr1]
                         colUpper=((((sqcolor>>(y0+x0)))&0x3)<<2)
                         if x%4==3: addr1+=1
                         if x%2==1: x0^=2
-                        patadr=(ord(ppuRAM[addr0+x])<<4)+y7
+                        patadr=(ppuRAM[addr0+x]<<4)+y7
                         b1=ppuRAM[ppuBgrPatTabAdr+patadr]
                         b2=ppuRAM[ppuBgrPatTabAdr+patadr+8]
                         for x2 in range(8):
@@ -333,13 +334,13 @@ def tpF():
                                 colLower|=((b2>>(7-x2))&0x1)<<1
                                 cpos=0x3f00+(colUpper+colLower)
                                 if cpos%4==0: cpos=0x3f00
-                                color=ord(ppuRAM[cpos])&0x3f
+                                color=ppuRAM[cpos]&0x3f
                                 finalColor=pallete[color]
                                 tilePrefetch[ydiv][x+32][x2][y7] = finalColor
 
 def ppuDoScanline(n):
         global ppuStatusRegstr,ppuVRAMAdrValue,addr0
-        bgcolor=pallete[ord(ppuRAM[0x3f00])&0x3f]
+        bgcolor=pallete[ppuRAM[0x3f00]&0x3f]
         if ppuShowBackgrnd:
                 hor0=ppuHoristScroll&7
                 ver0=ppuVerticScroll&7
@@ -358,25 +359,25 @@ def ppuDoScanline(n):
                         i=63-j
                         i2=i<<2
                         if ppuSprSizeValue:
-                                ypos=ord(SPRRAM[(i2)])
+                                ypos=SPRRAM[(i2)]
                                 if ypos>(n-1) or ypos<(n-14): 
                                         ppuStatusRegstr|=0x20
                                         continue
                                 sprPerScln+=1
                                 if sprPerScln>8: break
-                                atrb=ord(SPRRAM[(i2)+2])
+                                atrb=SPRRAM[(i2)+2]
                                 if atrb&0x80:
                                         ypos=(-n+ypos)
                                 else:
                                         ypos=(n-ypos)
-                                indx=ord(SPRRAM[(i2)+1])
-                                xpos=ord(SPRRAM[(i2)+3])
+                                indx=SPRRAM[(i2)+1]
+                                xpos=SPRRAM[(i2)+3]
                                 colUpper=(atrb&0x3)<<2
                                 if indx&1: spt=0x1000
                                 else : spt=0x0
                                 indx<<=4
-                                b1=ord(ppuRAM[spt+indx+(ypos)])
-                                b2=ord(ppuRAM[spt+indx+(ypos)+8])
+                                b1=ppuRAM[spt+indx+(ypos)]
+                                b2=ppuRAM[spt+indx+(ypos)+8]
                                 for x in range(8):
                                         if atrb&0x40:
                                                 col=(b1>>(x))&0x1
@@ -386,7 +387,7 @@ def ppuDoScanline(n):
                                                 col|=((b2>>(7-x))&0x1)<<1
                                         col+=colUpper+0x3f10
                                         if col%4==0: col=0x3f00
-                                        color=ord(ppuRAM[col])&0x3f
+                                        color=ppuRAM[col]&0x3f
                                         finalColor=pallete[color]
                                         if indx==0 and screen[xpos+x][n]==bgcolor:
                                                 ppuStatusRegstr|=0x40
@@ -394,19 +395,19 @@ def ppuDoScanline(n):
                                                 if (xpos+x) < 255 and n < 240:
                                                         screen[xpos+x][n] = finalColor
                         else:
-                                ypos=ord(SPRRAM[(i2)])
+                                ypos=SPRRAM[(i2)]
                                 if ypos>n or ypos<=(n-8): 
                                         ppuStatusRegstr|=0x20
                                         continue
                                 sprPerScln+=1
                                 if sprPerScln>8: break
-                                atrb=ord(SPRRAM[(i2)+2])
+                                atrb=SPRRAM[(i2)+2]
                                 if atrb&0x80:
                                         ypos=(-n+ypos)&0xf
                                 else:
                                         ypos=((n-ypos))&0xf
-                                indx=ord(SPRRAM[(i2)+1])<<4
-                                xpos=ord(SPRRAM[(i2)+3])
+                                indx=SPRRAM[(i2)+1]<<4
+                                xpos=SPRRAM[(i2)+3]
                                 colUpper=(atrb&0x3)<<2
                                 b1=ppuRAM[ppuSprPatTabAdr+(indx)+(ypos)]
                                 b2=ppuRAM[ppuSprPatTabAdr+(indx)+(ypos)+8]
@@ -419,7 +420,7 @@ def ppuDoScanline(n):
                                                 col|=((b2>>(7-x))&0x1)<<1
                                         col+=colUpper+0x3f00
                                         if col%4==0: col=0x3f00
-                                        color=ord(ppuRAM[col])&0x3f
+                                        color=ppuRAM[col]&0x3f
                                         finalColor=pallete[color]
                                         if (xpos+x) < 256 and n < 240:
                                                 if indx==0 and screen[xpos+x][n]==bgcolor:
@@ -477,7 +478,7 @@ def ppuProcessRegs2(adr, val):
                 i=0x100*(val&0xff)
                 j=0
                 while j<256:
-                        SPRRAM[j]=chr(pGetMem(i))
+                        SPRRAM[j]=pGetMem(i)
                         i+=1
                         j+=1
 
@@ -508,7 +509,7 @@ def ppuProcessRegs(adr, val):
         elif adr==0x2003:
                 ppuSPRRAMaddres=val&0xff
         elif adr==0x2004:
-                SPRRAM[ppuSPRRAMaddres]=chr(val&0xff)
+                SPRRAM[ppuSPRRAMaddres]=val&0xff
                 ppuSPRRAMaddres=(ppuSPRRAMaddres+1)&0xff
         elif adr==0x2005:
                 if ppuVertOrHorVal==0:
@@ -553,7 +554,7 @@ def ppuProcessRegs(adr, val):
 
         #        if adr>0 and adr<0x4000:
 #                        tilesModified=1
-                ppuRAM[adr]=chr(val&0xff)
+                ppuRAM[adr]=val&0xff
 #                print hex(adr)
                 if adr>=ppuNameTableAdr and adr<ppuNameTableAdr+0x400:
                     adr%=0x400
@@ -596,7 +597,7 @@ def pGetMem(adr):
                 return mmcRead[mMapper]._exec(adr-0x8000)
         elif adr<0x2000:
                 #verbose("got ram: "+hex(ord(nesRAM[adr&0x7ff])))
-                return ord(nesRAM[adr&0x7ff])
+                return nesRAM[adr&0x7ff]
         elif adr>=0x2000 and adr<0x4000:
                 #verbose("get io:  "+hex(ord(ioMEM[adr&0x7])))
                 if adr==0x2002:
@@ -609,7 +610,7 @@ def pGetMem(adr):
                         if adr>=0x3f00 and adr<0x4000:
                                 adr=0x3f00+(adr&0xf)
 #                                if (adr-0x3f00)%4==0: adr=0x3f00
-                                ppuVRAMBuffer__        = ord(ppuRAM[adr])
+                                ppuVRAMBuffer__        = ppuRAM[adr]
                                 ppuVRAMAdrValue+=ppuAdrIncrement
                                 return ppuVRAMBuffer__
                         if adr>=0x3000 and adr<0x3f00:
@@ -623,7 +624,7 @@ def pGetMem(adr):
                         ppuVRAMAdrValue+=1
                         #verbose("vram: "+hex(out))
                         return out
-                return ord(ioMEM[adr&0x7])
+                return ioMEM[adr&0x7]
         elif adr>=0x4000 and adr<0x4020:
                 #verbose("get io 2:  "+hex(ord(io2MEM[adr-0x4000])))
                 if adr==0x4015 and ticks&2:
@@ -631,10 +632,10 @@ def pGetMem(adr):
                 if adr==0x4016:
                         joyStrobe()
                         return jpdKeysBuffer__
-                return ord(io2MEM[adr-0x4000])
+                return io2MEM[adr-0x4000]
         elif adr>=0x6000:
                 #verbose("get wram: "+hex(ord(wRAM[adr-0x6000])))
-                return ord(wRAM[adr-0x6000])
+                return wRAM[adr-0x6000]
         else:
                 #verbose("!other get "  + hex(adr))
                 return 0
@@ -646,15 +647,15 @@ def pPutMem(adr, val):
                 #verbose("put PRG: "+hex(adr-0x8000))
                 mmcWrite[mMapper]._exec(adr,val)
         elif adr<0x2000:
-                nesRAM[adr&0x7ff]=chr(val&0xff)
+                nesRAM[adr&0x7ff]=val&0xff
         elif adr>=0x2000 and adr<0x4000:
-                ioMEM[adr&0x7]=chr(val&0xff)
+                ioMEM[adr&0x7]=val&0xff
                 ppuProcessRegs(adr,val)
         elif adr>=0x4000 and adr<0x4020:
-                io2MEM[adr-0x4000]=chr(val&0xff)
+                io2MEM[adr-0x4000]=val&0xff
                 ppuProcessRegs2(adr,val)
         elif adr>=0x6000:
-                wRAM[adr-0x6000]=chr(val&0xff)
+                wRAM[adr-0x6000]=val&0xff
         else:
                 #verbose("!other put "  + hex(adr)+" "+hex(val))
                 return 0
