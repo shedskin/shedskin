@@ -84,7 +84,7 @@ def getscreen():
             l.append(r)
             l.append(g)
             l.append(b)
-    return array.array('B', l).tostring()
+    return array.array('B', l).tobytes()
 
 class MMCload:
     pass
@@ -244,8 +244,8 @@ def tpFone2(x,y):
     colUpper=((((sqcolor>>(y0+x0)))&0x3)<<2)
     patadr=(ord(ppuRAM[addr0])<<4)
     for yo in range(8):
-        b1=ord(ppuRAM[ppuBgrPatTabAdr+patadr+yo])
-        b2=ord(ppuRAM[ppuBgrPatTabAdr+patadr+yo+8])
+        b1=ppuRAM[ppuBgrPatTabAdr+patadr+yo]
+        b2=ppuRAM[ppuBgrPatTabAdr+patadr+yo+8]
         for xo in range(8):
             colLower=(b1>>(7-xo))&0x1
             colLower|=((b2>>(7-xo))&0x1)<<1
@@ -271,8 +271,8 @@ def tpFone(x,y):
     colUpper=((((sqcolor>>(y0+x0)))&0x3)<<2)
     patadr=(ord(ppuRAM[addr0])<<4)
     for yo in range(8):
-        b1=ord(ppuRAM[ppuBgrPatTabAdr+patadr+yo])
-        b2=ord(ppuRAM[ppuBgrPatTabAdr+patadr+yo+8])
+        b1=ppuRAM[ppuBgrPatTabAdr+patadr+yo]
+        b2=ppuRAM[ppuBgrPatTabAdr+patadr+yo+8]
         for xo in range(8):
             colLower=(b1>>(7-xo))&0x1
             colLower|=((b2>>(7-xo))&0x1)<<1
@@ -303,8 +303,8 @@ def tpF():
                         if x%4==3: addr1+=1
                         if x%2==1: x0^=2
                         patadr=(ord(ppuRAM[addr0+x])<<4)+y7
-                        b1=ord(ppuRAM[ppuBgrPatTabAdr+patadr])
-                        b2=ord(ppuRAM[ppuBgrPatTabAdr+patadr+8])
+                        b1=ppuRAM[ppuBgrPatTabAdr+patadr]
+                        b2=ppuRAM[ppuBgrPatTabAdr+patadr+8]
                         for x2 in range(8):
                                 colLower=(b1>>(7-x2))&0x1
                                 colLower|=((b2>>(7-x2))&0x1)<<1
@@ -326,8 +326,8 @@ def tpF():
                         if x%4==3: addr1+=1
                         if x%2==1: x0^=2
                         patadr=(ord(ppuRAM[addr0+x])<<4)+y7
-                        b1=ord(ppuRAM[ppuBgrPatTabAdr+patadr])
-                        b2=ord(ppuRAM[ppuBgrPatTabAdr+patadr+8])
+                        b1=ppuRAM[ppuBgrPatTabAdr+patadr]
+                        b2=ppuRAM[ppuBgrPatTabAdr+patadr+8]
                         for x2 in range(8):
                                 colLower=(b1>>(7-x2))&0x1
                                 colLower|=((b2>>(7-x2))&0x1)<<1
@@ -408,8 +408,8 @@ def ppuDoScanline(n):
                                 indx=ord(SPRRAM[(i2)+1])<<4
                                 xpos=ord(SPRRAM[(i2)+3])
                                 colUpper=(atrb&0x3)<<2
-                                b1=ord(ppuRAM[ppuSprPatTabAdr+(indx)+(ypos)])
-                                b2=ord(ppuRAM[ppuSprPatTabAdr+(indx)+(ypos)+8])
+                                b1=ppuRAM[ppuSprPatTabAdr+(indx)+(ypos)]
+                                b2=ppuRAM[ppuSprPatTabAdr+(indx)+(ypos)+8]
                                 for x in range(8):
                                         if atrb&0x40:
                                                 col=(b1>>(x))&0x1
@@ -593,7 +593,7 @@ def pGetMem(adr):
         #verbose("get "+hex(adr))
         adr&=0xffff
         if adr>=0x8000:
-                return ord(mmcRead[mMapper]._exec(adr-0x8000))
+                return mmcRead[mMapper]._exec(adr-0x8000)
         elif adr<0x2000:
                 #verbose("got ram: "+hex(ord(nesRAM[adr&0x7ff])))
                 return ord(nesRAM[adr&0x7ff])
@@ -618,7 +618,7 @@ def pGetMem(adr):
                                 if adr>=0x2800:
                                         adr-=0x800
                         out=ppuVRAMBuffer__
-                        ppuVRAMBuffer__        = ord(ppuRAM[adr])
+                        ppuVRAMBuffer__        = ppuRAM[adr]
                         #ppuVRAMAdrValue+=ppuAdrIncrement
                         ppuVRAMAdrValue+=1
                         #verbose("vram: "+hex(out))
@@ -1666,11 +1666,11 @@ def read_ines(name):
         nRAMbks=0
         rCTRLbyte1=0
         rCTRLbyte1=0
-        f=open(name)
-        if f.read(3)!= "NES": 
+        f=open(name, 'rb')
+        if f.read(3)!= b"NES":
                 print("Not ines")
                 return
-        if f.read(1)!= chr(0x1A): 
+        if f.read(1)!= b'\x1a':
                 print("Not ines")
                 return
         print("Reading ines file")
