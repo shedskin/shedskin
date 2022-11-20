@@ -599,17 +599,20 @@ class ModuleVisitor(BaseNodeVisitor):
     def visit_ImportFrom(self, node, parent=None):
         if not node in getmv().importnodes:  # XXX use (func, node) as parent..
             error("please place all imports (no 'try:' etc) at the top of the file", self.gx, node, mv=getmv())
-        if hasattr(node, 'level') and node.level not in (0, None):
-            if node.level > 1 or len(node.names) > 1:
-                error("relative imports are not supported", self.gx, node, mv=getmv())
-            else:
-                alias = node.names[0]  # TODO we only support 'from . import a (as b)' for now
+
+        if hasattr(node, 'level') and (node.level or 0) > 1:
+            error("unsupported relative import", self.gx, node, mv=getmv())
+
+        # from . import
+        if node.module is None and hasattr(node, 'level') and node.level == 1:
+            for alias in node.names:
                 submod = self.import_module(alias.name, alias.asname, node, False)
                 parent = getmv().module
                 parent.mv.imports[submod.ident] = submod
                 self.gx.from_module[node] = submod
                 return
 
+        # from __future__ import
         if node.module == '__future__':
             for node_name in node.names:
                 name = node_name.name
@@ -617,6 +620,7 @@ class ModuleVisitor(BaseNodeVisitor):
                     error("future '%s' is not yet supported" % name, self.gx, node, mv=getmv())
             return
 
+        # from [.]a.b.c import  TODO
         module = self.import_modules(node.module, node, True)
         self.gx.from_module[node] = module
 
