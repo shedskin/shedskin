@@ -412,9 +412,6 @@ class str_(pyseq):
     def __hash__(self):
         return 1
 
-    def decode(self, encoding=''):
-        return u''
-
 class bytes_(pyseq):
     def strip(self, chars=''):
         return b''
