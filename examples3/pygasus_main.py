@@ -20,13 +20,13 @@ def main():
         counter += 1
         pygame.event.poll()
         keys=pygame.key.get_pressed()
-	pygasus.setkeys2(keys)
+        pygasus.setkeys2(keys)
         if keys[pygame.K_ESCAPE]: break
         if keys[pygame.K_F11]: pygame.display.toggle_fullscreen()
         if keys[pygame.K_SPACE]: 
             pygame.time.delay(100)
             continue
-	if keys[pygame.K_RETURN]:
+        if keys[pygame.K_RETURN]:
             pygasus.tpF()
         t0 = time.time()
         pygasus.pExec()
@@ -37,7 +37,7 @@ def main():
         hScreen.fill([0,0,0])
         total += (time.time()-t0)
         if counter % 60 == 0:
-            print 'FPS:', 60/total
+            print('FPS:', 60/total)
             total = 0
 
 if __name__ == '__main__':
