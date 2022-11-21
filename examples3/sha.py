@@ -49,18 +49,18 @@ def _long2bytesBigEndian(n, blocksize=0):
     """
 
     # After much testing, this algorithm was deemed to be the fastest.
-    s = ""
+    s = b""
     while n > 0:
-        s = struct.pack(">I", n & 0xFFFFFFFF) + s.encode()  # fmt: big endian, uint
+        s = struct.pack(">I", n & 0xFFFFFFFF) + s  # fmt: big endian, uint
         n = n >> 32
 
     # Strip off leading zeros.
     for i in range(len(s)):
-        if s[i] != "\000":
+        if s[i] != 0:
             break
     else:
         # Only happens when n == 0.
-        s = "\000"
+        s = b"\x00"
         i = 0
 
     s = s[i:]
@@ -68,7 +68,7 @@ def _long2bytesBigEndian(n, blocksize=0):
     # Add back some pad bytes. This could be done more efficiently
     # w.r.t. the de-padding being done above, but sigh...
     if blocksize > 0 and len(s) % blocksize:
-        s = (blocksize - len(s) % blocksize) * "\000" + s
+        s = (blocksize - len(s) % blocksize) * b"\x00" + s
 
     return s
 
@@ -82,10 +82,10 @@ def _bytelist2longBigEndian(list):
     j = 0
     i = 0
     while i < imax:
-        b0 = ord(list[j]) << 24
-        b1 = ord(list[j + 1]) << 16
-        b2 = ord(list[j + 2]) << 8
-        b3 = ord(list[j + 3])
+        b0 = list[j] << 24
+        b1 = list[j + 1] << 16
+        b2 = list[j + 2] << 8
+        b3 = list[j + 3]
         hl[i] = b0 | b1 | b2 | b3
         i = i + 1
         j = j + 4
@@ -306,7 +306,7 @@ class sha:
         else:
             padLen = 120 - index
 
-        padding = ["\200"] + ["\000"] * 63
+        padding = [0x80] + [0] * 63
         self.update(padding[:padLen])
 
         # Append length (before padding).
@@ -341,7 +341,7 @@ class sha:
         used to exchange the value safely in email or other non-
         binary environments.
         """
-        return "".join(["%02x" % ord(c) for c in self.digest().decode('latin-1')])
+        return "".join(["%02x" % c for c in self.digest()])
 
     def copy(self):
         """Return a clone object.
@@ -389,15 +389,11 @@ if __name__ == "__main__":
     if len(sys.argv) <= 1:
         print("")
         print("No string found. Add commandline argument. ")
-        assert (
-            hashlib.sha1(b"Nobody expects the Spanish Inquisition!").hexdigest()
-            == 
-            new("Nobody expects the Spanish Inquisition!").hexdigest()
-        )
         sys.exit(0)
 
     text = sys.argv[1]
-    shah = new(text)
+    textbin = bytes([ord(c) for c in text])
+    shah = new(textbin)
 
     print("")
     print(text, shah.hexdigest())
