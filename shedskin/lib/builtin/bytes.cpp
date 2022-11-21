@@ -200,3 +200,13 @@ bytes *__bytearray(__ss_int t) {
     c->frozen = 0;
     return c;
 }
+
+bytes *bytes::rstrip(bytes *chars) {
+    __GC_STRING remove;
+    if(chars) remove = chars->unit;
+    else remove = ws;
+    int last = unit.find_last_not_of(remove);
+    if( last == -1 )
+        return new bytes("");
+    return new bytes(unit.substr(0,last+1));
+}
