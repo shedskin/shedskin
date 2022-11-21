@@ -29,7 +29,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-from prelude.Long import Long
+from .prelude.Long import Long
 
 __author__ = 'Piotr Tarsa'
 

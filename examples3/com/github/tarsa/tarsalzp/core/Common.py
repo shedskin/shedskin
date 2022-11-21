@@ -30,8 +30,9 @@
 #
 
 import array
-from FsmGenerator import FsmGenerator
-from Lg2 import Lg2
+
+from .FsmGenerator import FsmGenerator
+from .Lg2 import Lg2
 
 __author__ = 'Piotr Tarsa'
 
@@ -56,7 +57,7 @@ class Common(object):
         lzpHighCount = 1 << self.lzpHighMaskSize
         self.lzpLowMask = lzpLowCount - 1
         self.lzpHighMask = lzpHighCount - 1
-        self.lzpLow = array.array("H", (0xffb5 for _ in xrange(lzpLowCount)))
+        self.lzpLow = array.array("H", (0xffb5 for _ in range(lzpLowCount)))
         self.onlyLowLzp =\
         (self.lzpLowContextLength == self.lzpHighContextLength)\
         & (self.lzpLowMaskSize == self.lzpHighMaskSize)
@@ -64,39 +65,39 @@ class Common(object):
             self.lzpHigh = None
         else:
             self.lzpHigh = array.array("H",
-                (0xffb5 for _ in xrange(lzpHighCount)))
+                (0xffb5 for _ in range(lzpHighCount)))
             # Literal coder init
         literalCoderContextMaskSize = 8 * self.literalCoderOrder
         self.rangesSingle = array.array("H",
-            (self.literalCoderInit for _ in xrange(1
+            (self.literalCoderInit for _ in range(1
             << (literalCoderContextMaskSize + 8))))
         self.rangesGrouped = array.array("H",
-            (self.literalCoderInit * 16 for _ in xrange(1
+            (self.literalCoderInit * 16 for _ in range(1
             << (literalCoderContextMaskSize + 4))))
         self.rangesTotal = array.array("H",
-            (self.literalCoderInit * 256 for _ in xrange(1
+            (self.literalCoderInit * 256 for _ in range(1
             << literalCoderContextMaskSize)))
         self.recentCost = 8 << Common.CostScale + 14
         # Adaptive probability map init
-        self.apmLow = array.array("H", (0x4000 for _ in xrange(16 * 256)))
+        self.apmLow = array.array("H", (0x4000 for _ in range(16 * 256)))
         if self.onlyLowLzp:
             self.apmHigh = None
         else:
             self.apmHigh = array.array("H",
-                (0x4000 for _ in xrange(16 * 256)))
+                (0x4000 for _ in range(16 * 256)))
         self.historyLow = 0
         self.historyHigh = 0
         self.historyLowMask = 15
         self.historyHighMask = 15
         # Contexts and hashes
         self.lastLiteralCoderContext = 0
-        self.context = array.array("B", (0 for _ in xrange(8)))
+        self.context = array.array("B", (0 for _ in range(8)))
         self.contextIndex = 0
         self.hashLow = 0
         self.hashHigh = 0
         self.precomputedHashes = array.array("l",
             ((((2166136261 * 16777619) ^ i) * 16777619) & 0x7fffffff
-                for i in xrange(256)))
+                for i in range(256)))
 
     # Contexts and hashes
     def updateContext(self, input):
@@ -202,15 +203,15 @@ class Common(object):
 
     # Literal coder stuff
     def rescaleLiteralCoder(self):
-        for indexCurrent in xrange(self.lastLiteralCoderContext << 8,
+        for indexCurrent in range(self.lastLiteralCoderContext << 8,
             (self.lastLiteralCoderContext + 1) << 8):
             self.rangesSingle[indexCurrent] -=\
             self.rangesSingle[indexCurrent] >> 1
         totalFrequency = 0
-        for groupCurrent in xrange(self.lastLiteralCoderContext << 4,
+        for groupCurrent in range(self.lastLiteralCoderContext << 4,
             (self.lastLiteralCoderContext + 1) << 4):
             groupFrequency = 0
-            for indexCurrent in xrange(groupCurrent << 4,
+            for indexCurrent in range(groupCurrent << 4,
                 (groupCurrent + 1) << 4):
                 groupFrequency += self.rangesSingle[indexCurrent]
             self.rangesGrouped[groupCurrent] = groupFrequency
