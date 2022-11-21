@@ -637,11 +637,11 @@ class LowLevel:
                addr = addr - 1                     #Decrement address and
                # shed skin : bug detected
                #blkout = chr(0xFF) + blkOut         #fill first byte of blkout with 0xFF
-               blkout = chr(0xFF) + blkout         #fill first byte of blkout with 0xFF
+               blkout = b'\xff' + blkout         #fill first byte of blkout with 0xFF
                length = length + 1
            #Make sure that len is even
            if (length % 2) != 0:
-               blkout = blkout + chr(0xFF)         #Inc. len and fill last byte of blkout with 0xFF
+               blkout = blkout + b'\xff'         #Inc. len and fill last byte of blkout with 0xFF
                length = length + 1
 
        elif cmd == BSL_RXBLK:
