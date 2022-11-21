@@ -362,6 +362,8 @@ public:
     inline __ss_int __len__();
     bytes *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
 
+    bytes *rstrip(bytes *chars=0);
+
     /* functions pointing to the underlying C++ implementation */
     const char *c_str() const;
     const int size() const;
@@ -1070,7 +1072,8 @@ template<class K, class V> struct dictentry {
 /* int */
 
 inline __ss_int __int() { return 0; }
-__ss_int __int(str *s, __ss_int base);
+__ss_int __int(str *s, __ss_int base=10);
+__ss_int __int(bytes *s, __ss_int base=10);
 
 template<class T> inline __ss_int __int(T t) { return t->__int__(); }
 #ifdef __SS_LONG
