@@ -207,6 +207,95 @@ bytes *bytes::rstrip(bytes *chars) {
     else remove = ws;
     int last = unit.find_last_not_of(remove);
     if( last == -1 )
-        return new bytes("");
+        return new bytes();
     return new bytes(unit.substr(0,last+1));
+}
+
+bytes *bytes::lstrip(bytes *chars) {
+    __GC_STRING remove;
+    if(chars) remove = chars->unit;
+    else remove = ws;
+    int first = unit.find_first_not_of(remove);
+    if( first == -1 )
+        return new bytes();
+    return new bytes(unit.substr(first,size()-first));
+}
+
+bytes *bytes::strip(bytes *chars) {
+    return lstrip(chars)->rstrip(chars);
+}
+
+list<bytes *> *bytes::split(bytes *sp, int max_splits) {
+    __GC_STRING s = unit;
+    int num_splits = 0;
+    int sep_iter = 0, tmp, chunk_iter = 0;
+    list<bytes *> *result = new list<bytes *>();
+    if (sp == NULL)
+    {
+#define next_separator(iter) (s.find_first_of(ws, (iter)))
+#define skip_separator(iter) (s.find_first_not_of(ws, (iter)))
+
+        if(skip_separator(chunk_iter) == -1) /* XXX */
+            return result;
+        if(next_separator(chunk_iter) == 0)
+            chunk_iter = skip_separator(chunk_iter);
+        while((max_splits < 0 or num_splits < max_splits)
+              and ((sep_iter = next_separator(chunk_iter)) != -1))
+        {
+            result->append(new bytes(s.substr(chunk_iter, sep_iter - chunk_iter)));
+            if((tmp = skip_separator(sep_iter)) == -1) {
+                chunk_iter = sep_iter;
+                break;
+            } else
+                chunk_iter = tmp;
+            ++num_splits;
+        }
+        if(not (max_splits < 0 or num_splits < max_splits))
+            result->append(new bytes(s.substr(chunk_iter, s.size()-chunk_iter)));
+        else if(sep_iter == -1)
+            result->append(new bytes(s.substr(chunk_iter, s.size()-chunk_iter)));
+
+#undef next_separator
+#undef skip_separator
+
+    } else { /* given separator (slightly different algorithm required)
+              * (python is very inconsistent in this respect) */
+        const char *sep = sp->c_str();
+        int sep_size = sp->size();
+
+#define next_separator(iter) s.find(sep, (iter))
+#define skip_separator(iter) ((iter + sep_size) > s.size()? -1 : (iter + sep_size))
+
+        if (max_splits == 0) {
+            result->append(this);
+            return result;
+        }
+        if(next_separator(chunk_iter) == 0) {
+            chunk_iter = skip_separator(chunk_iter);
+            result->append(new bytes());
+            ++num_splits;
+        }
+        while((max_splits < 0 or num_splits < max_splits)
+              and (sep_iter = next_separator(chunk_iter)) != -1)
+        {
+            result->append(new bytes(s.substr(chunk_iter, sep_iter - chunk_iter)));
+            if((tmp = skip_separator(sep_iter)) == -1) {
+                chunk_iter = sep_iter;
+                break;
+            } else
+                chunk_iter = tmp;
+            ++num_splits;
+        }
+        if(not (max_splits < 0 or num_splits < max_splits))
+            result->append(new bytes(s.substr(chunk_iter, s.size()-chunk_iter)));
+        else if(sep_iter == -1)
+            result->append(new bytes(s.substr(chunk_iter, s.size()-chunk_iter)));
+
+
+#undef next_separator
+#undef skip_separator
+
+    }
+
+    return result;
 }

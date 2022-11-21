@@ -363,6 +363,10 @@ public:
     bytes *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
 
     bytes *rstrip(bytes *chars=0);
+    bytes *strip(bytes *chars=0);
+    bytes *lstrip(bytes *chars=0);
+
+    list<bytes *> *split(bytes *sep=0, int maxsplit=-1);
 
     /* functions pointing to the underlying C++ implementation */
     const char *c_str() const;
