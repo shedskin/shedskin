@@ -105,7 +105,44 @@ str *do_asprintf_str(const char *fmt, str *s, pyobj *a1, pyobj *a2) {
     return r;
 }
 
-void __modfill(str **fmt, pyobj *t, str **s, pyobj *a1, pyobj *a2) {
+/* TODO use in str/bytes __repr__ */
+str *__escape_bytes(pyobj *p) {
+    bytes *t = (bytes *)p;
+
+    std::stringstream ss;
+    __GC_STRING sep = "\\\n\r\t";
+    __GC_STRING let = "\\nrt";
+
+    int hasq = t->unit.find('\'');
+    int hasd = t->unit.find('\"');
+
+    if (hasq != -1 && hasd != -1) {
+        sep += "'"; let += "'";
+    }
+
+    for(unsigned int i=0; i<t->unit.size(); i++)
+    {
+        char c = t->unit[i];
+        int k;
+
+        if((k = sep.find_first_of(c)) != -1)
+            ss << "\\" << let[k];
+        else {
+            int j = (int)((unsigned char)c);
+
+            if(j<16)
+                ss << "\\x0" << std::hex << j;
+            else if(j>=' ' && j<='~')
+                ss << (char)j;
+            else
+                ss << "\\x" << std::hex << j;
+        }
+    }
+
+    return new str(ss.str().c_str());
+}
+
+void __modfill(str **fmt, pyobj *t, str **s, pyobj *a1, pyobj *a2, bool bytes) {
     char c;
     int i = (*fmt)->find('%');
     int j = __fmtpos(*fmt);
@@ -114,8 +151,13 @@ void __modfill(str **fmt, pyobj *t, str **s, pyobj *a1, pyobj *a2) {
 
     c = (*fmt)->unit[j];
     if(c == 's' or c == 'r') {
-        if(c == 's') add = __str(t);
-        else add = repr(t);
+        if(c == 's') {
+            if(bytes and t->__class__ == cl_bytes)
+                add = __escape_bytes(t);
+            else
+                add = __str(t);
+        } else
+            add = repr(t);
         (*fmt)->unit[j] = 's';
         add = do_asprintf_str((*fmt)->unit.substr(i, j+1-i).c_str(), add, a1, a2);
     } else if(c  == 'c')
@@ -147,7 +189,7 @@ pyobj *modgetitem(list<pyobj *> *vals, int i) {
     return vals->__getitem__(i);
 }
 
-str *__mod4(str *fmts, list<pyobj *> *vals) {
+str *__mod4(str *fmts, list<pyobj *> *vals, bool bytes) {
     int i, j;
     str *r = new str();
     str *fmt = new str(fmts->c_str());
@@ -175,7 +217,7 @@ str *__mod4(str *fmts, list<pyobj *> *vals) {
                 break;
             case 's':
             case 'r':
-                __modfill(&fmt, p, &r, a1, a2);
+                __modfill(&fmt, p, &r, a1, a2, bytes);
                 break;
             case 'd':
             case 'i':
@@ -315,7 +357,7 @@ bytes *__modct(bytes *fmt, int n, ...) {
      for(int i=0; i<n; i++)
          vals->append(va_arg(args, pyobj *));
      va_end(args);
-     str *s = __mod4(new str(fmt->unit), vals);
+     str *s = __mod4(new str(fmt->unit), vals, true);
      return new bytes(s->unit);
 }
 

@@ -19,10 +19,12 @@ complex_ *___box(complex);
 
 int __fmtpos(str *fmt);
 int __fmtpos2(str *fmt);
-void __modfill(str **fmt, pyobj *t, str **s);
+void __modfill(str **fmt, pyobj *t, str **s, pyobj *a1, pyobj *a2, bool bytes=false);
 str *mod_to_c2(pyobj *t);
 int_ *mod_to_int(pyobj *t);
 float_ *mod_to_float(pyobj *t);
+
+str *__escape_bytes(bytes *t);
 
 template<class T> str *__modtuple(str *fmt, tuple2<T,T> *t) {
     list<pyobj *> *vals = new list<pyobj *>();
