@@ -163,8 +163,6 @@ str *str::lstrip(str *chars) {
     return new str(unit.substr(first,size()-first));
 }
 
-
-
 tuple2<str *, str *> *str::partition(str *sep)
 {
     int i;

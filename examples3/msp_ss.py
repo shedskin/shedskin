@@ -24,7 +24,7 @@ DEBUG = 0                                       #disable debug messages by defau
 
 #copy of the patch file provided by TI
 #this part is (C) by Texas Instruments
-PATCH = """@0220
+PATCH = b"""@0220
 31 40 1A 02 09 43 B0 12 2A 0E B0 12 BA 0D 55 42
 0B 02 75 90 12 00 1F 24 B0 12 BA 02 55 42 0B 02
 75 90 16 00 16 24 75 90 14 00 11 24 B0 12 84 0E
@@ -42,7 +42,7 @@ q
 """
 
 #These BSL's are (C) by TI. They come with the application note slaa089a
-F1X_BSL = """@0220
+F1X_BSL = b"""@0220
 24 02 2E 02 31 40 20 02 2B D2 C0 43 EA FF 32 C2
 F2 C0 32 00 00 00 B2 40 80 5A 20 01 F2 40 85 00
 57 00 F2 40 80 00 56 00 E2 D3 21 00 E2 D3 22 00
@@ -113,7 +113,7 @@ C0 3F 82 43 62 01 92 B3 62 01 FD 27 E2 B2 28 00
 q
 """
 
-F4X_BSL = """@0220
+F4X_BSL = b"""@0220
 24 02 2E 02 31 40 20 02 2B D2 C0 43 EA FF 32 C2
 F2 C0 32 00 00 00 B2 40 80 5A 20 01 32 D0 40 00
 C2 43 50 00 F2 40 98 00 51 00 F2 C0 80 00 52 00
@@ -418,7 +418,7 @@ class LowLevel:
        #TODO: Check after each transmitted character,
        #TODO: if microcontroller did send a character (probably a NAK!).
        for c in txFrame:
-           self.serialport.write(c)
+           self.serialport.write(b'%c' % c)
            if DEBUG > 3: sys.stderr.write("\ttx %02x" % c)
            #if self.serialport.inWaiting(): break  #abort when BSL replies, probably NAK
        else:
@@ -658,7 +658,7 @@ class LowLevel:
 
        #Add necessary information data to frame
        # shed skin : use shed skin struct module
-       dataOut =  struct.pack("<HH", addr, length)
+       dataOut = struct.pack("<HH", addr, length)
 
        if blkout: #Copy data out of blkout into frame
            dataOut = dataOut + blkout
@@ -712,7 +712,7 @@ class Memory:
        startAddr   = 0
        lines = file.readlines()
        for l in lines:
-           if l[0] != ':': raise BSLException("File Format Error\n")
+           if l[0] != ord(':'): raise BSLException("File Format Error\n")
            l = l.strip()       #fix CR-LF issues...
            length  = int(l[1:3],16)
            address = int(l[3:7],16)
@@ -721,7 +721,7 @@ class Memory:
            if type == 0x00:
                if currentAddr != address:
                    if segmentdata:
-                       self.segments.append( Segment(startAddr, b''.join(segmentdata)) )
+                       self.segments.append( Segment(startAddr, bytes(segmentdata) ) )
                    startAddr = currentAddr = address
                    segmentdata = []
                for i in range(length):
@@ -732,7 +732,7 @@ class Memory:
            else:
                sys.stderr.write("Ignored unknown field (type 0x%02x) in ihex file.\n" % type)
        if segmentdata:
-           self.segments.append( Segment(startAddr, b''.join(segmentdata)) )
+           self.segments.append( Segment(startAddr, bytes(segmentdata) ) )
 
    def loadTIText(self, file):
        """load data from a (opened) file in TI-Text format"""
@@ -745,18 +745,18 @@ class Memory:
            l = file.readline()
            if not l: break #EOF
            l = l.strip()
-           if l[0] == 'q': break
-           elif l[0] == '@':        #if @ => new address => send frame and set new addr.
+           if l[0] == ord('q'): break
+           elif l[0] == ord('@'):        #if @ => new address => send frame and set new addr.
                #create a new segment
                if segmentdata:
-                   self.segments.append( Segment(startAddr, b''.join(segmentdata)) )
+                   self.segments.append( Segment(startAddr, bytes(segmentdata)) )
                startAddr = int(l[1:],16)
                segmentdata = []
            else:
                for i in l.split():
                    segmentdata.append(int(i,16))
        if segmentdata:
-           self.segments.append( Segment(startAddr, b''.join(segmentdata)) )
+           self.segments.append( Segment(startAddr, bytes(segmentdata)) )
 
    def loadELF(self, file):
        """load data from a (opened) file in ELF object format.
@@ -944,7 +944,7 @@ class BootStrapLoader(LowLevel):
    def uploadData(self, startaddress, size, wait=0):
        """upload a datablock"""
        if DEBUG > 1: sys.stderr.write("* uploadData()\n")
-       data = ''
+       data = b''
        pstart = 0
        while pstart<size:
            length = self.maxData
@@ -1669,7 +1669,7 @@ def main():
                print(hexify(startaddr+m, data[m:m+16]))
                m = m + 16
        else:
-           sys.stdout.write(data)                  #binary output w/o newline!
+           sys.stdout.write(str(data))                  #binary output w/o newline!
        wait = 0    #wait makes no sense as after the upload the device is still in BSL
 
    if wait:                                        #wait at the end if desired
