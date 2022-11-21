@@ -3,7 +3,7 @@ class Serial:
     def __init__(self, port, baudrate, bytesize, parity, stopbits, timeout, xonxoff, rtscts):
         pass #self.portstr = ''
     def read(self, n):
-        return ''
+        return b''
     def write(self, s):
         pass
     def close(self):
