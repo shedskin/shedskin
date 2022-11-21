@@ -33,7 +33,7 @@ __author__ = 'Piotr Tarsa'
 
 class Lg2(object):
     lgLut = [-1]
-    for i in xrange(1, 256):
+    for i in range(1, 256):
         lgLut.append(1 + lgLut[i // 2])
 
     @staticmethod

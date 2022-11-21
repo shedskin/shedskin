@@ -30,13 +30,13 @@
 #
 
 import array
-from Lg2 import Lg2
+from .Lg2 import Lg2
 
 __author__ = 'Piotr Tarsa'
 
 class FsmGenerator(object):
     def __init__(self):
-        self.stateTable = array.array("B", (0 for _ in xrange(512)))
+        self.stateTable = array.array("B", (0 for _ in range(512)))
         self.LimitX = 20
         self.LimitY = 20
         self.p = 0

@@ -31,8 +31,8 @@
 
 from com.github.tarsa.tarsalzp.prelude.Long import Long
 from com.github.tarsa.tarsalzp.Options import Options
-from Decoder import Decoder
-from Encoder import Encoder
+from .Decoder import Decoder
+from .Encoder import Encoder
 
 __author__ = 'Piotr Tarsa'
 
@@ -42,7 +42,7 @@ class Coder(object):
     @staticmethod
     def getOptions(inputStream):
         header = Long(0, 0, 0, 0)
-        for i in xrange(8):
+        for i in range(8):
             header.shl8()
             inputByte = inputStream.readByte()
             if inputByte == -1:
@@ -57,7 +57,7 @@ class Coder(object):
     @staticmethod
     def getOptionsHeaderless(inputStream):
         packedOptions = Long(0, 0, 0, 0)
-        for i in xrange(8):
+        for i in range(8):
             packedOptions.shl8()
             inputByte = inputStream.readByte()
             if inputByte == -1:
@@ -95,11 +95,11 @@ class Coder(object):
         encoder = Encoder(inputStream, outputStream, options)
         header = Long(Coder.HeaderValue.a, Coder.HeaderValue.b,
             Coder.HeaderValue.c, Coder.HeaderValue.d)
-        for i in xrange(8):
+        for i in range(8):
             outputStream.writeByte(header.a >> 8)
             header.shl8()
         packedOptions = options.toPacked()
-        for i in xrange(8):
+        for i in range(8):
             outputStream.writeByte(packedOptions.a >> 8)
             packedOptions.shl8()
         Coder.doEncode(encoder, intervalLength)

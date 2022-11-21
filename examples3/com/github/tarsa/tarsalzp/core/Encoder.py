@@ -137,10 +137,10 @@ class Encoder(Common):
         if not self.useFixedProbabilities():
             cumulativeExclusiveFrequency = 0
             symbolGroup = index >> 4
-            for indexPartial in xrange(self.lastLiteralCoderContext << 4,
+            for indexPartial in range(self.lastLiteralCoderContext << 4,
                 symbolGroup):
                 cumulativeExclusiveFrequency += self.rangesGrouped[indexPartial]
-            for indexPartial in xrange(symbolGroup << 4, index):
+            for indexPartial in range(symbolGroup << 4, index):
                 cumulativeExclusiveFrequency += self.rangesSingle[indexPartial]
             mispredictedSymbolFrequency = \
             self.rangesSingle[(self.lastLiteralCoderContext << 8)
@@ -161,13 +161,13 @@ class Encoder(Common):
 
     def flush(self):
         self.encodeSkewed(False)
-        for i in xrange(5):
+        for i in range(5):
             self.outputByte((self.rcBuffer >> 23) & 0xff)
             self.rcBuffer = (self.rcBuffer & 0x007fffff) << 8
 
     def encode(self, limit):
         endReached = False
-        for i in xrange(limit):
+        for i in range(limit):
             symbol = self.inputStream.readByte()
             if symbol == -1:
                 endReached = True
