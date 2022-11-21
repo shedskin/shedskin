@@ -123,7 +123,7 @@ if __name__ == '__main__':
         print()
         sys.exit()
     elif '--test' in sys.argv:
-        SampleFile = """
+        SampleFile = b"""
 Art         Jets        40      jh      sing    pusher
 Al          Jets        30      jh      mar     burglar
 Sam         Jets        20      col     sing    bookie
@@ -154,8 +154,8 @@ Neal        Sharks      30      hs      sing    bookie
 Dave        Sharks      30      hs      div     pusher
 """
         with open('jets.txt','wb') as fh:
-            fh.write(SampleFile.encode('utf8'))
-    
+            fh.write(SampleFile)
+
         load('jets.txt')
         print('Touching neuron: Ken, weight=0.8')
         touch('Ken', weight=0.8)
@@ -167,7 +167,7 @@ Dave        Sharks      30      hs      div     pusher
         run()
 
         reset()
-        
+
         print('Touching neuron: Lance')
         touch('Lance')
         print('Deparing Lance burglar')
