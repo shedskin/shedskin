@@ -30,6 +30,7 @@ __modified__.append(
 import copy
 import struct
 import sys
+import hashlib
 
 # ======================================================================
 # Bit-Manipulation helpers
@@ -388,7 +389,6 @@ if __name__ == "__main__":
     if len(sys.argv) <= 1:
         print("")
         print("No string found. Add commandline argument. ")
-        import hashlib
         assert (
             hashlib.sha1(b"Nobody expects the Spanish Inquisition!").hexdigest()
             == 
