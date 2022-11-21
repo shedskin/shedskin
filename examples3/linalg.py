@@ -90,7 +90,7 @@ def iterate_sort(list1,A,B,C,D,E,F):
             list1[lasti] = last = list1[i]
             lasti += 1
         i += 1
-    list1.__delitem__(slice(lasti,n))
+    del list1[lasti:n]
 
 def gen(n,list1,A,B,C,D,E,F):
     for i in range(n): iterate_sort(list1,A,B,C,D,E,F)
