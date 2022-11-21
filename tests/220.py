@@ -113,3 +113,5 @@ print(bytearray(bytes(7)))
 
 print(b'hop %s' % b'hup')
 print(b'hop %s' % bytearray(b'hup'))
+
+print(int(b'123'))
