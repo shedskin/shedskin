@@ -993,7 +993,7 @@ template<> str *bin(__ss_int a);
 template<> str *bin(int a);
 template<> str *bin(__ss_bool b);
 
-str *__mod4(str *fmt, list<pyobj *> *vals);
+str *__mod4(str *fmt, list<pyobj *> *vals, bool bytes=false);
 str *__modct(str *fmt, int n, ...);
 bytes *__modct(bytes *fmt, int n, ...);
 str *__modcd(str *fmt, list<str *> *l, ...);
