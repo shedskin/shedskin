@@ -31,7 +31,7 @@
 
 from com.github.tarsa.tarsalzp.prelude.Streams import *
 from com.github.tarsa.tarsalzp.core.Coder import Coder
-from Options import Options
+from .Options import Options
 from sys import stderr
 import sys
 from time import time
@@ -77,7 +77,7 @@ class Main(object):
             splitPoint = arg.find("=")
             if splitPoint == -1:
                 return None
-            if optionsMap.has_key(arg[:splitPoint]):
+            if arg[:splitPoint] in optionsMap:
                 return None
             optionsMap[arg[:splitPoint]] = arg[splitPoint + 1:]
         return optionsMap
