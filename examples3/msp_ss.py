@@ -258,7 +258,7 @@ class LowLevel:
        checksum = 0
 
        for i in range(length/2):
-           checksum = checksum ^ (ord(data[i*2]) | (ord(data[i*2+1]) << 8))    #xor-ing
+           checksum = checksum ^ (data[i*2] | (data[i*2+1] << 8))    #xor-ing
        return 0xffff & (checksum ^ 0xffff)         #inverting
 
    def __init__(self, aTimeout=-1, aProlongFactor=-1): # shed skin : change default None arguments
@@ -331,8 +331,8 @@ class LowLevel:
 
        hdr = self.serialport.read(1)
        if not hdr: raise BSLException("Timeout")
-       rxHeader = ord(hdr) & 0xf0;
-       rxNum    = ord(hdr) & 0x0f;
+       rxHeader = hdr[0] & 0xf0;
+       rxNum    = hdr[0] & 0x0f;
 
        if self.protocolMode == MODE_BSL:
            self.reqNo = 0
@@ -343,7 +343,7 @@ class LowLevel:
 
    def comRxFrame(self, rxNum):
        if DEBUG > 1: sys.stderr.write("* comRxFrame()\n")
-       rxFrame = chr(DATA_FRAME | rxNum)
+       rxFrame = b'%c' % (DATA_FRAME | rxNum)
 
        if DEBUG > 2: sys.stderr.write("  comRxFrame() header...\n")
        rxFramedata = self.serialport.read(3)
@@ -351,8 +351,8 @@ class LowLevel:
        rxFrame = rxFrame + rxFramedata
 
        if DEBUG > 3: sys.stderr.write("  comRxFrame() check header...\n")
-       if rxFrame[1] == chr(0) and rxFrame[2] == rxFrame[3]:   #Add. header info. correct?
-           rxLengthCRC = ord(rxFrame[2]) + 2       #Add CRC-Bytes to length
+       if rxFrame[1] == 0 and rxFrame[2] == rxFrame[3]:   #Add. header info. correct?
+           rxLengthCRC = rxFrame[2] + 2       #Add CRC-Bytes to length
            if DEBUG > 2: sys.stderr.write("  comRxFrame() receiving data, size: %s\n" % rxLengthCRC)
 
            rxFramedata = self.serialport.read(rxLengthCRC)
@@ -361,9 +361,9 @@ class LowLevel:
            #Check received frame:
            if DEBUG > 3: sys.stderr.write("  comRxFrame() crc check\n")
            #rxLength+4: Length with header but w/o CRC:
-           checksum = self.calcChecksum(rxFrame, ord(rxFrame[2]) + 4)
-           if rxFrame[ord(rxFrame[2])+4] == chr(0xff & checksum) and \
-              rxFrame[ord(rxFrame[2])+5] == chr(0xff & (checksum >> 8)): #Checksum correct?
+           checksum = self.calcChecksum(rxFrame, rxFrame[2] + 4)
+           if rxFrame[rxFrame[2]+4] == (0xff & checksum) and \
+              rxFrame[rxFrame[2]+5] == (0xff & (checksum >> 8)): #Checksum correct?
                #Frame received correctly (=> send next frame)
                if DEBUG > 2: sys.stderr.write("* comRxFrame() OK\n")
                return rxFrame
@@ -401,7 +401,7 @@ class LowLevel:
            else:
                dataOut.append(0)     #fill with zero
 
-       txFrame = "%c%c%c%c" % (DATA_FRAME | self.seqNo, cmd, len(dataOut), len(dataOut))
+       txFrame = b"%c%c%c%c" % (DATA_FRAME | self.seqNo, cmd, len(dataOut), len(dataOut))
 
        self.reqNo = (self.seqNo + 1) % MAX_FRAME_COUNT
 
@@ -419,7 +419,7 @@ class LowLevel:
        #TODO: if microcontroller did send a character (probably a NAK!).
        for c in txFrame:
            self.serialport.write(c)
-           if DEBUG > 3: sys.stderr.write("\ttx %02x" % ord(c))
+           if DEBUG > 3: sys.stderr.write("\ttx %02x" % c)
            #if self.serialport.inWaiting(): break  #abort when BSL replies, probably NAK
        else:
            if DEBUG > 1: sys.stderr.write( "  comTxRx() transmit OK\n")
@@ -597,9 +597,9 @@ class LowLevel:
            loopcnt = loopcnt - 1                   #count down tries
            self.serialport.flushInput()            #clear input, in case a prog is running
 
-           self.serialport.write(chr(BSL_SYNC))   #Send synchronization byte
+           self.serialport.write(b'%c' % BSL_SYNC)   #Send synchronization byte
            c = self.serialport.read(1)             #read answer
-           if c == chr(DATA_ACK):             #ACk
+           if c == (b'%c' % DATA_ACK):             #ACk
                if DEBUG > 1: sys.stderr.write("  bslSync() OK\n")
                return                              #Sync. successful
            elif not c:                             #timeout
@@ -617,7 +617,7 @@ class LowLevel:
                        if DEBUG > 1:
                            sys.stderr.write("  bslSync() timeout\n")
            else:                                   #garbage
-               if DEBUG > 1: sys.stderr.write("  bslSync() failed (0x%02x), retry ...\n" % ord(c))
+               if DEBUG > 1: sys.stderr.write("  bslSync() failed (0x%02x), retry ...\n" % c)
 
                raise BSLException(ERR_BSL_SYNC)       #Sync. failed
 
@@ -725,7 +725,7 @@ class Memory:
                    startAddr = currentAddr = address
                    segmentdata = []
                for i in range(length):
-                   segmentdata.append( chr(int(l[9+2*i:11+2*i],16)) )
+                   segmentdata.append( int(l[9+2*i:11+2*i],16) )
                currentAddr = length + currentAddr
            elif type in (0x01, 0x02, 0x03, 0x04, 0x05):
                pass
@@ -754,7 +754,7 @@ class Memory:
                segmentdata = []
            else:
                for i in l.split():
-                   segmentdata.append(chr(int(i,16)))
+                   segmentdata.append(int(i,16))
        if segmentdata:
            self.segments.append( Segment(startAddr, b''.join(segmentdata)) )
 
@@ -893,14 +893,14 @@ class BootStrapLoader(LowLevel):
                if action & ACTION_VERIFY:
                    #Compare data in blkout and blkin
                    if blkin[i] != blkout[i]:
-                       sys.stderr.write("Verification failed at 0x%04x (0x%02x, 0x%02x)\n" % (addr+i, ord(blkin[i]), ord(blkout[i])))
+                       sys.stderr.write("Verification failed at 0x%04x (0x%02x, 0x%02x)\n" % (addr+i, blkin[i], blkout[i]))
                        sys.stderr.flush()
                        raise BSLException(ERR_VERIFY_FAILED)      #Verify failed!
                    continue
                elif action & ACTION_ERASE_CHECK:
                    #Compare data in blkin with erase pattern
-                   if blkin[i] != chr(0xff):
-                       sys.stderr.write("Erase Check failed at 0x%04x (0x%02x)\n" % (addr+i, ord(blkin[i])))
+                   if blkin[i] != 0xff:
+                       sys.stderr.write("Erase Check failed at 0x%04x (0x%02x)\n" % (addr+i, blkin[i]))
                        sys.stderr.flush()
                        raise BSLException(ERR_ERASE_CHECK_FAILED) #Erase Check failed!
                    continue
@@ -1666,7 +1666,7 @@ def main():
        if hexoutput:                               #depending on output format
            m = 0
            while m < len(data):                    #print a hex display
-               print(hexify(startaddr+m, [ord(x) for x in data[m:m+16]]))
+               print(hexify(startaddr+m, data[m:m+16]))
                m = m + 16
        else:
            sys.stdout.write(data)                  #binary output w/o newline!
