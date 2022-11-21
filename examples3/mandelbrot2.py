@@ -43,7 +43,7 @@ class kohn_bmp:
         if depth == 1:
             self.write_int(256)                          # colors used
             self.write_int(256)                          # colors important
-            self.out.write(''.join(chr(c) * 3 + chr(0) for c in range(256)))
+            self.out.write(b''.join((b'%c' % c) * 3 + b'\x00' for c in range(256)))
         else:
             self.write_int(0)                            # colors used - 0 since 24 bit
             self.write_int(0)                            # colors important - 0 since 24 bit
@@ -55,11 +55,11 @@ class kohn_bmp:
         self.out.write(b'%c%c' % ((n&255),(n>>8)&255))
 
     def write_pixel_bw(self, y):
-        self.out.write(chr(y))
+        self.out.write(b'%c' % y)
         self.xpos = self.xpos + 1
         if self.xpos == self.width:
             while self.xpos < self.width_bytes:
-                self.out.write(chr(0))
+                self.out.write(b'\x00')
                 self.xpos = self.xpos + 1
             self.xpos = 0
 
@@ -69,7 +69,7 @@ class kohn_bmp:
         if self.xpos == self.width:
             self.xpos = self.xpos * 3
             while self.xpos < self.width_bytes:
-                self.out.write(chr(0))
+                self.out.write(b'\x00')
                 self.xpos = self.xpos + 1
             self.xpos = 0
 
