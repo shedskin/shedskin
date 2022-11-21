@@ -110,3 +110,6 @@ print(bytearray(7))
 print(bytearray(b'hop'))
 print(bytearray(bytearray(7)))
 print(bytearray(bytes(7)))
+
+print(b'hop %s' % b'hup')
+print(b'hop %s' % bytearray(b'hup'))
