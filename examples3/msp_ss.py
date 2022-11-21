@@ -397,18 +397,18 @@ class LowLevel:
        if (length % 2) != 0:
            #/* Fill with one byte to have even number of bytes to send */
            if self.protocolMode == MODE_BSL:
-               dataOut.append(chr(0xFF))  #fill with 0xFF
+               dataOut.append(0xFF)  #fill with 0xFF
            else:
-               dataOut.append(chr(0))     #fill with zero
+               dataOut.append(0)     #fill with zero
 
        txFrame = "%c%c%c%c" % (DATA_FRAME | self.seqNo, cmd, len(dataOut), len(dataOut))
 
        self.reqNo = (self.seqNo + 1) % MAX_FRAME_COUNT
 
-       txFrame = txFrame + b''.join(dataOut)
+       txFrame = txFrame + bytes(dataOut)
        checksum = self.calcChecksum(txFrame, length + 4)
-       txFrame = txFrame + chr(checksum & 0xff)
-       txFrame = txFrame + chr((checksum >> 8) & 0xff)
+       txFrame = txFrame + b'%c' % (checksum & 0xff)
+       txFrame = txFrame + b'%c' % ((checksum >> 8) & 0xff)
 
        accessAddr = (0x0212 + (checksum^0xffff)) & 0xfffe  #0x0212: Address of wCHKSUM
        if self.BSLMemAccessWarning and accessAddr < BSL_CRITICAL_ADDR:
@@ -674,7 +674,7 @@ class Segment:
    """store a string with memory contents along with its startaddress"""
    def __init__(self, startaddress = 0, data=None):
        if data is None:
-           self.data = ''
+           self.data = b''
        else:
            self.data = data
        self.startaddress = startaddress
@@ -786,7 +786,7 @@ class Memory:
 
    def getMemrange(self, fromadr, toadr):
        """get a range of bytes from the memory. unavailable values are filled with 0xff."""
-       res = ''
+       res = b''
        toadr = toadr + 1   #python indxes are excluding end, so include it
        while fromadr < toadr:
            #print "fromto: %04x %04x" % (fromadr, toadr)
@@ -808,7 +808,7 @@ class Memory:
                    if len(res) >= toadr-fromadr:
                        break#return res
            else:
-                   res = res + chr(255)
+                   res = res + b'\xff'
                    fromadr = fromadr + 1 #adjust start
                    #print "fill FF"
        #print "res: %r" % res
@@ -965,7 +965,7 @@ class BootStrapLoader(LowLevel):
            sys.stderr.write("Transmit default password ...\n")
            sys.stderr.flush()
            #Flash is completely erased, the contents of all Flash cells is 0xff
-           passwd = chr(0xff)*32
+           passwd = b'\xff'*32
        else:
            #sanity check of password
            if len(passwd) != 32:
@@ -1591,7 +1591,7 @@ def main():
        if filename is None:
            raise ValueError("no filename but filetype specified")
        if filename == '-':                         #get data from stdin
-           file = sys.stdin
+           pass #file = sys.stdin
        else:
            file = open(filename, "rb")             #or from a file
        if filetype == 0:                           #select load function
@@ -1602,7 +1602,7 @@ def main():
            raise ValueError("illegal filetype specified")
    else:                                           #no filetype given...
        if filename == '-':                         #for stdin:
-           bsl.data.loadIHex(sys.stdin)            #assume intel hex
+           pass #bsl.data.loadIHex(sys.stdin)            #assume intel hex
        elif filename:
            bsl.data.loadFile(filename)             #autodetect otherwise
 
@@ -1675,7 +1675,7 @@ def main():
    if wait:                                        #wait at the end if desired
        sys.stderr.write("Press <ENTER> ...\n")     #display a prompt
        sys.stderr.flush()
-       raw_input()                                 #wait for newline
+       input()                                 #wait for newline
 
 
    bsl.comDone()           #Release serial communication port
