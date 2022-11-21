@@ -29,7 +29,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 
-from Common import Common
+from .Common import Common
 
 __author__ = 'Piotr Tarsa'
 
