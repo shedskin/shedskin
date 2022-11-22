@@ -2,7 +2,7 @@
 # I, Danny Milosavljevic, hereby place this file into the public domain.
 import gi
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk, Gdk, GLib, GdkPixbuf, GLib, GObject
+from gi.repository import Gtk, Gdk, GLib, GdkPixbuf, GLib
 
 import sys
 import time
@@ -74,36 +74,40 @@ class Controls(Gtk.VBox):
         self.hardware_keycodes["/"] = 20 # FIXME remove this.
         self.keycode_names[20] = "/" # FIXME remove this.
 
-        status_button = Gtk.Button("_Status")
+        status_button = Gtk.Button(label="_Status")
         status_button.connect("clicked", self.show_status)
-        pause_button = Gtk.Button("_Pause")
+        pause_button = Gtk.Button(label="_Pause")
         pause_button.connect("clicked", self.pause_CPU)
-        read_memory_button = Gtk.Button("_Read Memory...")
+        read_memory_button = Gtk.Button(label="_Read Memory...")
         read_memory_button.connect("clicked", self.dump_memory)
-        toggle_disassembly_button = Gtk.Button("_Toggle Disassembly")
+        toggle_disassembly_button = Gtk.Button(label="_Toggle Disassembly")
         toggle_disassembly_button.connect("clicked", self.toggle_disassembly)
         self.pack_start(status_button, False, False ,0)
         self.pack_start(pause_button, False, False ,0)
         self.pack_start(read_memory_button, False, False ,0)
         self.pack_start(toggle_disassembly_button, False, False ,0)
         self.show_all()
-    def set_timer(self):
-        self.timer = GObject.timeout_add(16, self.fire_timer)
-        #self.timer = GObject.timeout_add(90, self.fire_timer)
-    def unset_timer(self):
-        GObject.source_remove(self.timer)
-        self.timer = 0
-    def is_timer_running(self):
-        return(self.timer != 0)
-    def fire_timer(self):
-        # FIXME self.C64.CIA1.pressed_keys = self.graphics_view.event_box.pressed_keys
-        t0 = time.time()
-        self.C64.fire_timer()
-        #self.graphics_view.repaint()
-        self.screen_count += 1
-        if self.screen_count % 10 == 0:
-            print('drawing speed: %.2f fps' % (1 / (time.time()-t0)))
-        return True
+
+#    def set_timer(self):
+#        self.timer = GLib.timeout_add(16, self.fire_timer)
+
+#    def unset_timer(self):
+#        GObject.source_remove(self.timer)
+#        self.timer = 0
+#
+#    def is_timer_running(self):
+#        return(self.timer != 0)
+
+#    def fire_timer(self):
+##        # FIXME self.C64.CIA1.pressed_keys = self.graphics_view.event_box.pressed_keys
+#        print('FIRE')
+#        t0 = time.time()
+#        self.C64.fire_timer()
+##        self.graphics_view.repaint()
+#        self.screen_count += 1
+#        if self.screen_count % 10 == 0:
+#            print('drawing speed: %.2f fps' % (1 / (time.time()-t0)))
+#        return True
 
     def show_status(self, *args, **kwargs):
         toplevel_widget = self.get_toplevel()
@@ -114,39 +118,21 @@ class Controls(Gtk.VBox):
             self.status_dialog.set_transient_for(toplevel_widget)
             self.status_dialog.connect("delete-event", unset_status_dialog)
             self.status_dialog.show_all()
-            GObject.timeout_add(50, self.update_status) # FIXME don't do that too often.
+            GLib.timeout_add(50, self.update_status) # FIXME don't do that too often.
 
         self.update_status()
 
     def pause_CPU(self, widget, *args, **kwargs):
-        # FIXME abstract that properly.
-        C64 = self.C64
-        if self.is_timer_running():
-            self.unset_timer()
-            widget.set_label("_Continue")
-        else:
-            self.set_timer()
-            widget.set_label("_Pause")
+        pass
 
     def toggle_disassembly(self, *args, **kwargs):
-        self.C64.CPU.B_disasm = not self.C64.CPU.B_disasm
+        pass
 
     def dump_memory(self, *args, **kwargs):
-        MMU = self.C64.CPU.MMU
-        address = 0xF3 # 300
-        sys.stdout.write("(%04X) " % address)
-        for i in range(16):
-            v = MMU.read_memory(address + i, 1)
-            sys.stdout.write("%02X " % v)
-        sys.stdout.write("\n")
+        pass
 
     def update_status(self):
-        if self.status_dialog is None:
-            return False
-        C64 = self.C64
-        for register in [S_A, S_X, S_Y, S_SP, S_PC]:
-            self.status_dialog.set_value(register, C64.CPU.read_register(register))
-        return True
+        pass
 
     def handle_key_press(self, keycode):
         n = self.keycode_names.get(keycode)
@@ -182,6 +168,7 @@ class EventBox(Gtk.EventBox):
 
 class View(object): # graphical part.
     def __init__(self, c64, controls):
+        self.C64 = c64
         self.screen = c64.VIC.screen
         native_pixbuf = self.screen.get_rendered_pixbuf()
         if native_pixbuf != 0:
@@ -195,12 +182,10 @@ class View(object): # graphical part.
         self.window = Gtk.Window()
         self.event_box = EventBox(controls)
         self.drawing_area = Gtk.DrawingArea()
-        self.drawing_area.connect("realize", self.allocate_GC)
-#        self.drawing_area.connect("expose-event", self.repaint_X)
+        self.drawing_area.connect("draw", self.repaint)
         self.drawing_area.set_size_request(screens.WIDTH*2, screens.HEIGHT*2) # FIXME make configurable.
         self.drawing_area.show()
         self.event_box.show()
-        GObject.timeout_add(16, self.repaint_T)
         box = Gtk.HBox()
         self.event_box.add(self.drawing_area)
         box.pack_start(self.event_box, False, False, 0)
@@ -208,26 +193,18 @@ class View(object): # graphical part.
         box.show()
         self.window.add(box)
         self.window.show_all()
-    def allocate_GC(self, widget, *args, **kwargs):
-        self.GC = widget.window.new_gc()
-    def repaint_X(self, widget, event):
-        self.repaint()
-    def repaint_T(self):
-        self.repaint()
-        return(True)
-    def repaint(self):
-        if self.B_create_flip_pixbuf:
-            s = self.screen.pixbuf_obj.get_rendered_image()
-            assert(len(s) == 439200)
-            print('got screen', type(s), len(s))
-            print(s)
-#            self.pixbuf = Gdk.pixbuf_new_from_data(s, Gdk.COLORSPACE_RGB, True, 8, screens.WIDTH, screens.HEIGHT, screens.WIDTH * 4) # TODO optimize!!
-#        widget = self.drawing_area
-#        self.pixbuf = self.pixbuf.scale_simple(screens.WIDTH*2, screens.HEIGHT*2, Gdk.INTERP_NEAREST)
-#        if widget.window: # window already realized
-#            #print("YEP", data)
-#            widget.window.draw_pixbuf(self.GC, self.pixbuf, 0, 0, 0, 0, screens.WIDTH*2, screens.HEIGHT*2, Gdk.RGB_DITHER_NONE, 0, 0)
-#            #drawable(self.pixmap_GC, self.pixmap, 0, 0, 0, 0, -1, -1)
+
+    def repaint(self, drawarea, pCr):
+        self.C64.fire_timer()
+
+        s = self.screen.pixbuf_obj.get_rendered_image()
+        self.pixbuf = GdkPixbuf.Pixbuf.new_from_data(s, GdkPixbuf.Colorspace.RGB, True, 8, screens.WIDTH, screens.HEIGHT, screens.WIDTH * 4)  # TODO optimize!!
+        self.pixbuf = self.pixbuf.scale_simple(2*screens.WIDTH, 2*screens.HEIGHT, GdkPixbuf.InterpType.NEAREST)
+
+        Gdk.cairo_set_source_pixbuf(pCr, self.pixbuf, 5, 5)
+        pCr.paint()
+
+        self.drawing_area.queue_draw()
 
 def main():
     parser = OptionParser()
@@ -247,7 +224,7 @@ def main():
     assert(isinstance(controls, Gtk.VBox))
     graphics_view = View(c_64, controls)
     controls.graphics_view = graphics_view
-    controls.set_timer()
+#    controls.set_timer()
     Gtk.main()
 
 if __name__ == '__main__':

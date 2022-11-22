@@ -18,7 +18,7 @@ class Pixbuf(object):
     def get_rendered_image(self):
         #data = [(2**32+item) if item < 0 else item for item in self.data] if palette contains full alpha.
         #data = [item for item in self.data]
-        return array.array('I', self.data).tostring()
+        return array.array('I', self.data).tobytes()
 
 if __name__ == "__main__":
     p = Pixbuf()
