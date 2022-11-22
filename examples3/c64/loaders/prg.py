@@ -28,7 +28,7 @@ class Loader(entries.Loader):
         data = stream.read(header_size)
         assert(len(data) == header_size)
         # FIXME start_addr, = struct.unpack(header_format, data)
-        start_addr = ord(data[0]) | (ord(data[1]) << 8)
+        start_addr = data[0] | (data[1] << 8)
         self.start_addr = start_addr
         self.end_addr = self.start_addr + end_pos - 1
         self.stream = stream
