@@ -100,6 +100,3 @@ class Loader(entries.Loader):
         data = self.stream.read(entry.end_addr - entry.start_addr)
         #data = tape_loader.load_data(file_name)
         return(data)
-
-if __name__ == "__main__":
-    print(Loader().parse(open(sys.argv[1], "rb"), "F").entries)
