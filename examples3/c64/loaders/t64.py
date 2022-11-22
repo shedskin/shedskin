@@ -84,19 +84,17 @@ class Loader(entries.Loader):
         file_name = file_name.rstrip(b"\xA0")
         while self.current_entry_index < len(self.entries):
             entry = self.entries[self.current_entry_index]
-            if file_name == "" or entry.file_name == file_name:
+            if file_name == b"" or entry.file_name == file_name:
                 return(entry)
             self.current_entry_index += 1
         return(None)
     def load_header(self, file_name):
         #type_, file_name, start_addr, stop_addr, data = tape_loader.load_header(file_name)
         self.current_entry_index += 1
-        print("loading header", file_name)
         entry = self.find_next_entry(file_name)
         return(entry)
         #return(entry.file_type, entry.file_name, entry.start_addr, entry.end_addr)
     def load_data(self, file_name):
-        print("loading data")
         entry = self.find_next_entry(file_name)
         self.stream.seek(entry.tape_pos)
         data = self.stream.read(entry.end_addr - entry.start_addr)

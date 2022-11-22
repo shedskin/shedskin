@@ -45,7 +45,7 @@ def setup_tape_header(type, file_name, start_addr, stop_addr, memory):
     buffer_addr = get_tape_buffer(memory)
     file_name = (file_name + (b" "*16))[:16]
     for i in range(16):
-        memory.write_memory(buffer_addr + OFFSET_NAME + i, ord(file_name[i]), 1)
+        memory.write_memory(buffer_addr + OFFSET_NAME + i, file_name[i], 1)
     memory.write_memory(buffer_addr + OFFSET_TYPE, type, 1)
     memory.write_memory(buffer_addr + OFFSET_START_ADDR, start_addr, 2)
     memory.write_memory(buffer_addr + OFFSET_STOP_ADDR, stop_addr, 2)
@@ -55,14 +55,14 @@ def get_file_name(memory):
     file_name_addr = get_file_name_address(memory)
     file_name_length = get_file_name_length(memory)
     # TODO replace invalid (not in "0-9A-Za-z._") by "."
-    return b"".join([chr(memory.read_memory(file_name_addr + i, 1)) for i in range(min(16, file_name_length))])
+    return b"".join([memory.read_memory(file_name_addr + i, 1) for i in range(min(16, file_name_length))])
 def find_header(CPU, memory): # read a block from tape
     """ trap 0xF72F, originally was [0x20, 0x41, 0xF8]. """
     file_name = get_file_name(memory)
     start_addr = 0 # ShedSkin
     stop_addr = 0 # ShedSkin
     type_ = 3 # 1 relocatable program; 2 SEQ data block; 3 non-relocatable program; 4 SEQ file header; 5 End-of-tape
-    file_name = "" # ShedSkin
+    file_name = b"" # ShedSkin
     #type_, file_name, start_addr, stop_addr
     header = tape_loader.load_header(file_name)
     if header is None:
@@ -99,10 +99,10 @@ def transfer(CPU, memory):
         end = get_stop_location(memory)
         size = end - start # !!!!!
         file_name = get_file_name(memory)
-        data = "" # ShedSkin
+        data = b"" # ShedSkin
         data = tape_loader.load_data(file_name)
         for i in range(size):
-            memory.write_memory(start + i, ord(data[i]), 1)
+            memory.write_memory(start + i, data[i], 1)
         st |= T_EOF
     else:
         err = -1
@@ -130,7 +130,7 @@ def call_hook(CPU, memory, PC):
         pass
 def set_image_name(name, format):
     global tape_loader
-    if format == "PRG":
+    if format == b"PRG":
         tape_loader = loaders.prg.Loader().parse(open(name, "rb"), name)
     else:
         tape_loader = loaders.t64.Loader().parse(open(name, "rb"), name)

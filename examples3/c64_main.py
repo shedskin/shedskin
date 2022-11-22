@@ -182,10 +182,10 @@ def main():
     (options, args) = parser.parse_args()
     c_64 = c64.C64()
     if options.tape:
-        c_64.set_tape_image_name(options.tape, "T64")
+        c_64.set_tape_image_name(options.tape.encode(), b"T64")
         #c_64.set_tape_loader(loaders.t64.Loader.parse(open(options.tape, "rb"), options.tape))
     elif options.prg:
-        c_64.set_tape_image_name(options.prg, "PRG")
+        c_64.set_tape_image_name(options.prg.encode(), b"PRG")
         #c_64.set_tape_loader(loaders.t64.Loader.parse(open(options.prg, "rb"), options.prg))
     for i in range(50000): # boot a little first
         c_64.iterate()
