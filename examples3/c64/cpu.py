@@ -4,10 +4,11 @@
 
 # TODO wrap into zero page with IND addressing mode
 
-import mmu
 import sys
-import tape
-from symbols import *
+
+from . import mmu
+from . import tape
+from .symbols import *
 
 def err(message):
     print >>sys.stderr, "error: %s" % message

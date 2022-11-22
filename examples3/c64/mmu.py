@@ -2,7 +2,8 @@
 # I, Danny Milosavljevic, hereby place this file into the public domain.
 
 import sys
-import memory
+
+from . import memory
 
 # TODO actually the memory is separated into pages of 256 bytes each on a real C64.
 

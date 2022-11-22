@@ -4,8 +4,9 @@
 # http://www.waitingforfriday.com/index.php/Commodore_SID_6581_Datasheet
 
 import sys
-import memory
 import math
+
+from . import memory
 
 # write-only
 A_VOICE_1_FREQUENCY_LOW=0x00 # write-only

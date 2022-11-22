@@ -1,25 +1,20 @@
 #!/usr/bin/env python2
 # I, Danny Milosavljevic, hereby place this file into the public domain.
 
-import sys
 import os
-import cpu
-import vic_ii
-import sid
-import cia
+import sys
 import time
-import tape
-#import gmonitor
-import memory
-#import gdisplay
-from symbols import *
 
-#sys.path = [os.path.realpath("pygtk_s")] + sys.path
+from . import cpu
+from . import vic_ii
+from . import sid
+from . import cia
+from . import tape
+
+from . import memory
+from .symbols import *
 
 SPRITE_COUNT = 8
-
-#import psyco
-#psyco.full()
 
 
 class CPUPort(memory.Memory): # $0..$1

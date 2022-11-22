@@ -2,11 +2,12 @@
 
 # tape emulation
 
-from symbols import *
+from .symbols import *
 
-import loaders
-import loaders.t64
-import loaders.prg
+from . import loaders
+from .loaders import t64
+from .loaders import prg
+
 tape_loader = loaders.t64.Loader() # public. set this from the main emu GUI.
 
 T_EOF = 0x40

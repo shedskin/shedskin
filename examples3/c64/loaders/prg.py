@@ -1,11 +1,12 @@
 #!/usr/bin/env python2
 # I, Danny Milosavljevic, hereby place this file into the public domain.
 
+import os
 import sys
 import struct
-import entries
-from entries import Entry
-import os
+
+from . import entries
+from .entries import Entry
 
 class Loader(entries.Loader):
     def __init__(self):

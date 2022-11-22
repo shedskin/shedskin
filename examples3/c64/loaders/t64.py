@@ -9,9 +9,9 @@ TODO: seek to the end of the filename entry, and replace all consecutive $20 wit
 
 import sys
 import struct
-#import petascii
-import entries
-from entries import Entry
+
+from . import entries
+from .entries import Entry
 
 def find_distances(items):
     h, t = items[0], items[1:]
