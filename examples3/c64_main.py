@@ -2,7 +2,7 @@
 # I, Danny Milosavljevic, hereby place this file into the public domain.
 import gi
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk, Gdk, GLib, GdkPixbuf, GLib
+from gi.repository import Gtk, Gdk, GLib, GdkPixbuf, GLib, GObject
 
 import sys
 import time
@@ -30,9 +30,9 @@ class StatusDialog(Gtk.Dialog):
         label = Gtk.Label(chr(ID))
         self.size_group.add_widget(label)
         control = Gtk.Label()
-        box.pack_start(label, False, False)
-        box.pack_start(control, True, True)
-        self.vbox.pack_start(box, False, False)
+        box.pack_start(label, False, False, 0)
+        box.pack_start(control, True, True, 0)
+        self.vbox.pack_start(box, False, False, 0)
         self.controls[ID] = control
         return control
 
@@ -49,7 +49,7 @@ class Controls(Gtk.VBox):
         keyboard_matrix = self.C64.CIA1.get_keyboard_matrix()
         self.hardware_keycodes = {} # keyval_name -> keycode
         self.keycode_names = {}
-        self.keymap = Gtk.gdk.keymap_get_default()
+        self.keymap = Gdk.Keymap.get_default()
         self.screen_count = 0
         alternatives = { # C64_name: GDK_name
             "grave": "numbersign", # German
@@ -62,14 +62,15 @@ class Controls(Gtk.VBox):
         for row in keyboard_matrix:
             for cell in row:
                 #print(cell)
-                entries = self.keymap.get_entries_for_keyval(Gtk.gdk.keyval_from_name(alternatives.get(cell) or cell) or ord(cell))
+                entries = self.keymap.get_entries_for_keyval(Gdk.keyval_from_name(alternatives.get(cell) or cell) or ord(cell))
                 if entries is None:
-                    entries = self.keymap.get_entries_for_keyval(Gtk.gdk.keyval_from_name(alternatives[cell]))
+                    entries = self.keymap.get_entries_for_keyval(Gdk.keyval_from_name(alternatives[cell]))
                     #print(cell)
                 assert(entries)
-                hardware_keycode = entries[0][0]
-                self.hardware_keycodes[cell] = hardware_keycode
-                self.keycode_names[hardware_keycode] = cell # for the C64, that is.
+                if entries[1]:
+                    hardware_keycode = entries[1][0]
+                    self.hardware_keycodes[cell] = hardware_keycode
+                    self.keycode_names[hardware_keycode] = cell # for the C64, that is.
         self.hardware_keycodes["/"] = 20 # FIXME remove this.
         self.keycode_names[20] = "/" # FIXME remove this.
 
@@ -81,16 +82,16 @@ class Controls(Gtk.VBox):
         read_memory_button.connect("clicked", self.dump_memory)
         toggle_disassembly_button = Gtk.Button("_Toggle Disassembly")
         toggle_disassembly_button.connect("clicked", self.toggle_disassembly)
-        self.pack_start(status_button, False)
-        self.pack_start(pause_button, False)
-        self.pack_start(read_memory_button, False)
-        self.pack_start(toggle_disassembly_button, False)
+        self.pack_start(status_button, False, False ,0)
+        self.pack_start(pause_button, False, False ,0)
+        self.pack_start(read_memory_button, False, False ,0)
+        self.pack_start(toggle_disassembly_button, False, False ,0)
         self.show_all()
     def set_timer(self):
-        self.timer = gobject.timeout_add(16, self.fire_timer)
-        #self.timer = gobject.timeout_add(90, self.fire_timer)
+        self.timer = GObject.timeout_add(16, self.fire_timer)
+        #self.timer = GObject.timeout_add(90, self.fire_timer)
     def unset_timer(self):
-        gobject.source_remove(self.timer)
+        GObject.source_remove(self.timer)
         self.timer = 0
     def is_timer_running(self):
         return(self.timer != 0)
@@ -113,7 +114,7 @@ class Controls(Gtk.VBox):
             self.status_dialog.set_transient_for(toplevel_widget)
             self.status_dialog.connect("delete-event", unset_status_dialog)
             self.status_dialog.show_all()
-            gobject.timeout_add(50, self.update_status) # FIXME don't do that too often.
+            GObject.timeout_add(50, self.update_status) # FIXME don't do that too often.
 
         self.update_status()
 
@@ -129,7 +130,7 @@ class Controls(Gtk.VBox):
 
     def toggle_disassembly(self, *args, **kwargs):
         self.C64.CPU.B_disasm = not self.C64.CPU.B_disasm
-        
+
     def dump_memory(self, *args, **kwargs):
         MMU = self.C64.CPU.MMU
         address = 0xF3 # 300
@@ -165,7 +166,7 @@ class EventBox(Gtk.EventBox):
         self.controls = controls
         self.props.can_focus = True
         #self.pressed_keys = set()
-        #self.keymap = Gtk.gdk.keymap_get_default()
+        #self.keymap = Gdk.keymap_get_default()
         self.connect("key-press-event", self.handle_key_press)
         self.connect("key-release-event", self.handle_key_release)
         self.connect("button-press-event", self.handle_button_press)
@@ -184,26 +185,26 @@ class View(object): # graphical part.
         self.screen = c64.VIC.screen
         native_pixbuf = self.screen.get_rendered_pixbuf()
         if native_pixbuf != 0:
-            self.pixbuf = gobjectc.PyGObjectCPAI().pygobject_new(native_pixbuf)
+            self.pixbuf = GObject.PyGObjectCPAI().pygobject_new(native_pixbuf)
             self.B_create_flip_pixbuf = False
         else:
             self.pixbuf = None
             self.B_create_flip_pixbuf = True
-        #self.pixbuf = Gtk.gdk.Pixbuf(Gtk.gdk.COLORSPACE_RGB, True, 8, screens.WIDTH, screens.HEIGHT)
+        #self.pixbuf = Gdk.Pixbuf(Gdk.COLORSPACE_RGB, True, 8, screens.WIDTH, screens.HEIGHT)
         #self.pixbuf.fill(0x000000FF)
         self.window = Gtk.Window()
         self.event_box = EventBox(controls)
         self.drawing_area = Gtk.DrawingArea()
         self.drawing_area.connect("realize", self.allocate_GC)
-        self.drawing_area.connect("expose-event", self.repaint_X)
+#        self.drawing_area.connect("expose-event", self.repaint_X)
         self.drawing_area.set_size_request(screens.WIDTH*2, screens.HEIGHT*2) # FIXME make configurable.
         self.drawing_area.show()
         self.event_box.show()
-        gobject.timeout_add(16, self.repaint_T)
+        GObject.timeout_add(16, self.repaint_T)
         box = Gtk.HBox()
         self.event_box.add(self.drawing_area)
-        box.pack_start(self.event_box, False, False)
-        box.pack_start(controls, False, False)
+        box.pack_start(self.event_box, False, False, 0)
+        box.pack_start(controls, False, False, 0)
         box.show()
         self.window.add(box)
         self.window.show_all()
@@ -218,13 +219,15 @@ class View(object): # graphical part.
         if self.B_create_flip_pixbuf:
             s = self.screen.pixbuf_obj.get_rendered_image()
             assert(len(s) == 439200)
-            self.pixbuf = Gtk.gdk.pixbuf_new_from_data(s, Gtk.gdk.COLORSPACE_RGB, True, 8, screens.WIDTH, screens.HEIGHT, screens.WIDTH * 4) # TODO optimize!!
-        widget = self.drawing_area
-        self.pixbuf = self.pixbuf.scale_simple(screens.WIDTH*2, screens.HEIGHT*2, Gtk.gdk.INTERP_NEAREST)
-        if widget.window: # window already realized
-            #print("YEP", data)
-            widget.window.draw_pixbuf(self.GC, self.pixbuf, 0, 0, 0, 0, screens.WIDTH*2, screens.HEIGHT*2, Gtk.gdk.RGB_DITHER_NONE, 0, 0)
-            #drawable(self.pixmap_GC, self.pixmap, 0, 0, 0, 0, -1, -1)
+            print('got screen', type(s), len(s))
+            print(s)
+#            self.pixbuf = Gdk.pixbuf_new_from_data(s, Gdk.COLORSPACE_RGB, True, 8, screens.WIDTH, screens.HEIGHT, screens.WIDTH * 4) # TODO optimize!!
+#        widget = self.drawing_area
+#        self.pixbuf = self.pixbuf.scale_simple(screens.WIDTH*2, screens.HEIGHT*2, Gdk.INTERP_NEAREST)
+#        if widget.window: # window already realized
+#            #print("YEP", data)
+#            widget.window.draw_pixbuf(self.GC, self.pixbuf, 0, 0, 0, 0, screens.WIDTH*2, screens.HEIGHT*2, Gdk.RGB_DITHER_NONE, 0, 0)
+#            #drawable(self.pixmap_GC, self.pixmap, 0, 0, 0, 0, -1, -1)
 
 def main():
     parser = OptionParser()
