@@ -68,7 +68,7 @@ class Controls(Gtk.VBox):
                     #print(cell)
                 assert(entries)
                 if entries[1]:
-                    hardware_keycode = entries[1][0]
+                    hardware_keycode = entries[1][0].keycode
                     self.hardware_keycodes[cell] = hardware_keycode
                     self.keycode_names[hardware_keycode] = cell # for the C64, that is.
         self.hardware_keycodes["/"] = 20 # FIXME remove this.
@@ -88,39 +88,8 @@ class Controls(Gtk.VBox):
         self.pack_start(toggle_disassembly_button, False, False ,0)
         self.show_all()
 
-#    def set_timer(self):
-#        self.timer = GLib.timeout_add(16, self.fire_timer)
-
-#    def unset_timer(self):
-#        GObject.source_remove(self.timer)
-#        self.timer = 0
-#
-#    def is_timer_running(self):
-#        return(self.timer != 0)
-
-#    def fire_timer(self):
-##        # FIXME self.C64.CIA1.pressed_keys = self.graphics_view.event_box.pressed_keys
-#        print('FIRE')
-#        t0 = time.time()
-#        self.C64.fire_timer()
-##        self.graphics_view.repaint()
-#        self.screen_count += 1
-#        if self.screen_count % 10 == 0:
-#            print('drawing speed: %.2f fps' % (1 / (time.time()-t0)))
-#        return True
-
     def show_status(self, *args, **kwargs):
-        toplevel_widget = self.get_toplevel()
-        if self.status_dialog is None:
-            self.status_dialog = StatusDialog(parent = toplevel_widget)
-            def unset_status_dialog(*args, **kwargs):
-                self.status_dialog = None
-            self.status_dialog.set_transient_for(toplevel_widget)
-            self.status_dialog.connect("delete-event", unset_status_dialog)
-            self.status_dialog.show_all()
-            GLib.timeout_add(50, self.update_status) # FIXME don't do that too often.
-
-        self.update_status()
+        pass
 
     def pause_CPU(self, widget, *args, **kwargs):
         pass
@@ -224,7 +193,6 @@ def main():
     assert(isinstance(controls, Gtk.VBox))
     graphics_view = View(c_64, controls)
     controls.graphics_view = graphics_view
-#    controls.set_timer()
     Gtk.main()
 
 if __name__ == '__main__':
