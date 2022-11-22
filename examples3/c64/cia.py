@@ -1,9 +1,10 @@
 #!/usr/bin/env python2
 # I, Danny Milosavljevic, hereby place this file into the public domain.
 
-import memory
 import time
-import joysticks
+
+from . import memory
+from . import joysticks
 
 A_KEYBOARD_MATRIX_JOYSTICK_2 = 0x00
 A_KEYBOARD_KEY_JOYSTICK_1 = 0x01

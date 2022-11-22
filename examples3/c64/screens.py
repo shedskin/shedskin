@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
-import sprite as sprites
-import palette as palette
 import struct
-import pixbufs
+
+from . import sprite as sprites
+from . import palette
+from . import pixbufs
+
 """
 depending on row:
 mode 0
