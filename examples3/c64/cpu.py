@@ -11,7 +11,7 @@ from . import tape
 from .symbols import *
 
 def err(message):
-    print >>sys.stderr, "error: %s" % message
+    print("error: %s" % message, file=sys.stderr)
     sys.exit(1)
     return 42
 
@@ -410,7 +410,7 @@ class CPU(object):
         elif addressing_mode == S_A:
             args = "A"
         elif addressing_mode != S_NONE:
-            print >>sys.stderr, "error: unknown addressing mode %r." % addressing_mode
+            print("error: unknown addressing mode %r." % addressing_mode, file=sys.stderr)
             assert False, "CPU.disasm: addressing mode is known"
         else:
             if mnem in ["BNE", "BEQ", "BVS", "BVC", "BCC", "BCS", "BPL", "BMI"]:
@@ -2173,7 +2173,7 @@ if __name__ == "__main__":
     #print(CPU_1.read_register(S_PC))
     value = open(sys.argv[1], "rb").read()
     for i in range(len(value)):
-        CPU_1.MMU.write_memory(i, ord(value[i]), 1)
+        CPU_1.MMU.write_memory(i, value[i], 1)
     PC = 0
     CPU_1.B_disasm = True
     for i in range(100):
