@@ -45,7 +45,7 @@ class ShedskinFormatter(logging.Formatter):
 
 
 class Shedskin:
-    """Main shedksin frontend class
+    """Main shedskin frontend class
     """
     def __init__(self, module_name):
         self.module_name = self.get_name(module_name)
@@ -78,7 +78,7 @@ class Shedskin:
         return os.path.splitext(name)[0]
 
     def start(self):
-        """start and sequence main shedksin processes
+        """start and sequence main shedskin processes
         """
         # --- analyze & annotate
         t0 = time.time()
