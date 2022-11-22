@@ -10,7 +10,7 @@ import time
 import gi
 gi.require_version("Gtk", "3.0")
 
-from gi.repository import Gtk, Gdk, GLib, GdkPixbuf, GLib
+from gi.repository import Gtk, Gdk, GLib, GdkPixbuf
 
 from Gh0stenstein import world_manager
 
@@ -114,7 +114,6 @@ class View(object):
         self.event_box = EventBox(self)
         self.drawing_area = Gtk.DrawingArea()
         self.drawing_area.connect("draw", self.repaint)
-
         self.drawing_area.set_size_request(WIDTH, HEIGHT)
         self.drawing_area.show()
         self.event_box.show()
@@ -124,6 +123,7 @@ class View(object):
         box.show()
         self.window.add(box)
         self.window.show_all()
+
         self.times = 0
         self.t0 = 0
 
