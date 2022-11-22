@@ -41,9 +41,9 @@ class Loader(entries.Loader):
         # assert(version[0] == 0) # whatever
         assert(version[1] == 1)
         # first string = "C64 tape image file", padded with $00.
-        magic = magic.rstrip("\0")
-        assert(magic == "C64 tape image file" or magic.startswith("C64S tape file") or magic.find("TAPE") > -1 or magic.find("tape") > -1)
-        user_description = user_description.rstrip("\0") #.decode("petascii") # they can't decide.
+        magic = magic.rstrip(b"\0")
+        assert(magic == b"C64 tape image file" or magic.startswith(b"C64S tape file") or magic.find(b"TAPE") > -1 or magic.find(b"tape") > -1)
+        user_description = user_description.rstrip(b"\0") #.decode("petascii") # they can't decide.
         self.entries = []
         # usually 30 entries.
         self.entries = [self.parse_entry(stream) for i in range(cur_files)]
