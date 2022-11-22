@@ -27,6 +27,7 @@ tuple2<str *, str *> *split(str *p);
 tuple2<str *, str *> *splitext(str *p);
 tuple2<str *, str *> *splitdrive(str *p);
 str *basename(str *p);
+bytes *basename(bytes *p); /* TODO ugh, support bytes everywhere..? */
 str *dirname(str *p);
 str *commonprefix(list<str *> *m);
 __ss_int getsize(str *filename);

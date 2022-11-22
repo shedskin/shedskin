@@ -48,6 +48,10 @@ file *open(str *name, str *flags) {
     return new file(name, flags);
 }
 
+file *open(bytes *name, str *flags) {
+    return new file(new str(name->unit), flags);
+}
+
 void *file::write(str *s) {
     __check_closed();
     if(f) {
@@ -272,6 +276,10 @@ file_binary::file_binary(str *file_name, str *flags) {
 
 file_binary *open_binary(str *name, str *flags) {
     return new file_binary(name, flags);
+}
+
+file_binary *open_binary(bytes *name, str *flags) {
+    return new file_binary(new str(name->unit), flags);
 }
 
 void *file_binary::write(bytes *s) {
