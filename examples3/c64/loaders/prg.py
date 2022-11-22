@@ -12,7 +12,7 @@ class Loader(entries.Loader):
     def __init__(self):
         self.start_addr = 0
         self.end_addr = 0
-        self.file_name = ""
+        self.file_name = b""
         self.size = 0
         self.stream = None
         pass
@@ -46,6 +46,3 @@ class Loader(entries.Loader):
         self.stream.seek(0)
         data = self.stream.read(self.end_addr - self.start_addr + 1)
         return(data)
-
-if __name__ == "__main__":
-    print(Loader().parse(open(sys.argv[1], "rb"), sys.argv[1]).start_addr, sys.argv[1])

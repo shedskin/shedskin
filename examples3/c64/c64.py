@@ -99,7 +99,7 @@ class C64(object):
             for b in range(64):
                 MMU.write_memory(address, 0xFF, 1)
                 address += 1
-            
+
         self.ROMs = [
             ("basic",   (0xA000, 0xC000)),
             ("chargen", (0xD000, 0xE000)),
@@ -220,19 +220,5 @@ I/O Area (memory mapped chip registers), Character ROM or RAM area (4096 bytes);
 
 if __name__ == "__main__":
     c64 = C64()
-    c64.CIA1.handle_key_press("X")
-    c64.CIA1.handle_key_release("X")
-    c64.CIA1.read_memory(0, 1)
-    # clear_Z, set_Z, clear_N, set_N, set_V
-    # timeout_remove
-    for i in range(800000):
-        c64.iterate()
-    #c64.CPU_clock = timer.timeout_add(5, c64)
-    #c64.cause_interrupt() # ShedSkin
-    #{
-    import gtk
-    gtk.main()
-    #}
-    #c64.run()
-    c64.run()
-    c64.set_tape_image_name("stuff", "T64") # ShedSkin
+    c64.set_tape_image_name(b'', b'')
+    c64.iterate()
