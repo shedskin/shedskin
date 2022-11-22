@@ -378,6 +378,11 @@ public:
     int find(bytes *s, int a=0);
     int find(bytes *s, int a, int b);
 
+    __ss_bool startswith(bytes *s, __ss_int start=0);
+    __ss_bool startswith(bytes *s, __ss_int start, __ss_int end);
+    __ss_bool endswith(bytes *s, __ss_int start=0);
+    __ss_bool endswith(bytes *s, __ss_int start, __ss_int end);
+
     str *__str__();
     str *__repr__();
     bytes *__mul__(__ss_int n);
@@ -941,7 +946,9 @@ template <class T> __iter<T> *___iter(pyiter<T> *p) {
 }
 
 file *open(str *name, str *flags = 0);
+file *open(bytes *name, str *flags = 0);
 file_binary *open_binary(str *name, str *flags = 0);
+file_binary *open_binary(bytes *name, str *flags = 0); /* ugly duplication.. use str/byte template? */
 str *input(str *msg = 0);
 
 void print(int n, file *f, str *end, str *sep, ...);

@@ -163,6 +163,14 @@ str *basename(str *p) {
     return (split(p))->__getsecond__();
 }
 
+bytes *basename(bytes *p) {
+    /**
+    Returns the final component of a pathname
+    */
+
+    return new bytes(basename(new str(p->unit))->unit);
+}
+
 str *dirname(str *p) {
     /**
     Returns the directory component of a pathname

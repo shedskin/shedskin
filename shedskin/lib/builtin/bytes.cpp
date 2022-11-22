@@ -299,3 +299,27 @@ list<bytes *> *bytes::split(bytes *sp, int max_splits) {
 
     return result;
 }
+
+__ss_bool bytes::startswith(bytes *s, __ss_int start) { return startswith(s, start, __len__()); }
+__ss_bool bytes::startswith(bytes *s, __ss_int start, __ss_int end) {
+    __ss_int i, j, one = 1;
+    slicenr(7, start, end, one, __len__());
+
+    for(i = start, j = 0; i < end && j < len(s); )
+        if (unit[i++] != s->unit[j++])
+            return False;
+
+    return __mbool(j == len(s));
+}
+
+__ss_bool bytes::endswith(bytes *s, __ss_int start) { return endswith(s, start, __len__()); }
+__ss_bool bytes::endswith(bytes *s, __ss_int start, __ss_int end) {
+    __ss_int i, j, one = 1;
+    slicenr(7, start, end, one, __len__());
+
+    for(i = end, j = len(s); i > start && j > 0; )
+        if (unit[--i] != s->unit[--j])
+            return False;
+
+    return __mbool(j == 0);
+}
