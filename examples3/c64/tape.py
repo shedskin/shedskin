@@ -4,11 +4,9 @@
 
 from .symbols import *
 
-from . import loaders
-from .loaders import t64
-from .loaders import prg
+from .loaders import t64, prg
 
-tape_loader = loaders.t64.Loader() # public. set this from the main emu GUI.
+tape_loader = t64.Loader() # public. set this from the main emu GUI.
 
 T_EOF = 0x40
 WRITE_LEADER = 0x0A
@@ -131,6 +129,6 @@ def call_hook(CPU, memory, PC):
 def set_image_name(name, format):
     global tape_loader
     if format == b"PRG":
-        tape_loader = loaders.prg.Loader().parse(open(name, "rb"), name)
+        tape_loader = prg.Loader().parse(open(name, "rb"), name)
     else:
-        tape_loader = loaders.t64.Loader().parse(open(name, "rb"), name)
+        tape_loader = t64.Loader().parse(open(name, "rb"), name)
