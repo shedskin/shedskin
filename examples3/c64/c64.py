@@ -118,14 +118,14 @@ class C64(object):
                 hardware_vectors = value[-6:]
                 value = value[:-6]
                 for i in range(6):
-                    self.CPU.MMU.write_memory(0xFFFA + i, ord(hardware_vectors[i]), 1)
+                    self.CPU.MMU.write_memory(0xFFFA + i, hardware_vectors[i], 1)
                 # patch ROM so BRK instructions are at strategic places.
                 xvalue = [c for c in value]
                 for address in tape.get_hooks():
                     assert address >= 0xE000, "hooks are actually within the KERNAL"
-                    xvalue[address - 0xE000] = chr(0) # BRK
-                xvalue[0xE4E2 - 0xE000] = chr(0x60) # get rid of tape delay
-                value = b"".join(xvalue)
+                    xvalue[address - 0xE000] = 0 # BRK
+                xvalue[0xE4E2 - 0xE000] = 0x60 # get rid of tape delay
+                value = bytes(xvalue)
             ROM_obj = self.CPU.MMU.map_ROM(ROM, range_1[0], value, ROM != "chargen")
             if ROM == "chargen":
                 char_ROM = ROM_obj

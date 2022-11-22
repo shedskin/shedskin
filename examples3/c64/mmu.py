@@ -33,8 +33,7 @@ class ROM(memory.Memory):
         self.memory = []
         for i in range(len(value)): # for some reason, in ShedSkin "for c in value: self.memory.append(ord(c))" doesn't work.
             c = value[i]
-            v = ord(c)
-            self.memory.append(v)
+            self.memory.append(c)
 
         #self.memory = [ord(c) for c in value]
         self.B_can_write = False # in the instance because of ShedSkin
