@@ -6,6 +6,12 @@ Copyright 2005-2013 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 import logging
 import sys
 
+logger = logging.getLogger('shedskin')
+ch = logging.StreamHandler()
+ch.setLevel(logging.WARNING)
+formatter = logging.Formatter('*%(levelname)s* %(message)s')
+ch.setFormatter(formatter)
+logger.addHandler(ch)
 
 ERRORS = set()
 
@@ -40,7 +46,7 @@ def print_error(error):
         if lineno is not None:
             result += str(lineno) + ':'
         result += ' '
-    logging.log(kind, result + msg)
+    logger.log(kind, result + msg)
 
 
 def print_errors():

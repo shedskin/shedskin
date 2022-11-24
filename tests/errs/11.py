@@ -1,7 +1,7 @@
 
 P = []
 [1] if True else P
-print [1] == P
+print([1] == P)
 
 P2 = [[1],P]
 
@@ -25,7 +25,7 @@ c = [[1]]
 c = r
 
 bp = [True]
-print [1] == bp
+print([1] == bp)
 
 #*WARNING* 11.py:3: incompatible types
 #*WARNING* 11.py:4: incompatible types

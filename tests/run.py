@@ -180,7 +180,7 @@ def extmod_tests(args, options):
         print('*** test:', test)
         os.chdir('e%d' % test)
         try:
-            extmod = file('main.py').next()[1:].strip()
+            extmod = next(open('main.py'))[1:].strip()
             assert os.system('%s %s -e %s' % (sys.executable, SS, extmod)) == 0
             assert os.system('make') == 0
             native_output = get_output('%s main.py' % (sys.executable, ))
@@ -210,7 +210,7 @@ def error_tests(args, options):
         print('*** test:', test)
         try:
             checks = []
-            for line in file('%d.py' % test):
+            for line in open('%d.py' % test):
                 if line.startswith('#*'):
                     checks.append(line[1:].strip())
             output = get_output('%s %s %d 2>&1' % (sys.executable, SS, test))

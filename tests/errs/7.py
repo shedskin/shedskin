@@ -11,7 +11,7 @@ class muf:
         l = [a]
         l[0]()
     def hoppa(self):
-        print 'hoppa'
+        print('hoppa')
 
 muf()
 
@@ -36,8 +36,8 @@ meuh()
 
 a = []
 while a:
-    print a.pop().frut
-    print a.pop().fledder()
+    print(a.pop().frut)
+    print(a.pop().fledder())
 
 class woef:
     hoep = 1
@@ -50,7 +50,7 @@ class woef:
         we = self.MMU3
 
     def roep(self):
-        print 'roep'
+        print('roep')
 
     @property
     def roep2(self):

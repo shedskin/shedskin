@@ -382,9 +382,6 @@ class ModuleVisitor(BaseNodeVisitor):
                     result.append(Name('True', Load()))
         return Tuple(result, Load())
 
-    def visit_Exec(self, node, func=None):
-        error("'exec' is not supported", self.gx, node, mv=getmv())
-
     def visit_GeneratorExp(self, node, func=None):
         newnode = CNode(self.gx, node, parent=func, mv=getmv())
         self.gx.types[newnode] = set()
@@ -1063,7 +1060,11 @@ class ModuleVisitor(BaseNodeVisitor):
                     continue  # handle in lookup_class
                 cl = lookup_class(h0, getmv())
                 if not cl:
-                    error("unknown or unsupported exception type", self.gx, h0, mv=getmv())
+                    if isinstance(h0, Name):
+                        name = "('" + h0.id + "')"
+                    else:
+                        name = ''
+                    error("unknown/unsupported exception type %s" % name, self.gx, h0, mv=getmv())
 
                 if isinstance(h1, str):
                     var = self.default_var(h1, func, exc_name=True)
