@@ -1055,8 +1055,8 @@ def ifa_split_class(cl, dcpa, things, split):
 
 
 def update_progressbar(gx, perc):
-    if not logger.isEnabledFor(logging.INFO):
-        return
+#    if not logger.isEnabledFor(logging.INFO):
+#        return
     if gx.progressbar is None:
         import progressbar
         widgets = progressbar.widgets
