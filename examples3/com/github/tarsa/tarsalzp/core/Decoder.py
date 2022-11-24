@@ -44,7 +44,7 @@ class Decoder(Common):
     def inputByte(self):
         inputByte = self.inputStream.readByte()
         if inputByte == -1:
-            raise IOError("Unexpected end of file.")
+            raise OSError("Unexpected end of file.")
         currentByte = (inputByte >> 1) + (self.nextHighBit << 7)
         self.nextHighBit = inputByte & 1
         return currentByte

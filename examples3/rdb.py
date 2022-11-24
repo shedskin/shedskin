@@ -88,7 +88,7 @@ def open_log():
   if options.logging:
     try:
       logfile=open(options.logfile,"w")
-    except IOError:
+    except OSError:
       logfile=None
   else:
    logfile=None
@@ -104,7 +104,7 @@ def log(line="",newline=True):
   if logfile:
     try:
       logfile.write(line)
-    except IOError:
+    except OSError:
       pass
 
 def close_log():
@@ -375,7 +375,7 @@ def make_playback_state(volume=-1):
     a.fromstring(f.read())
     PState=a.tolist()
     f.close()
-  except IOError as EOFError:
+  except (OSError, EOFError):
     del PState[:]
   if len(PState)!=21:
     PState=listval(29)+[0]*15+listval(1)  # volume 29, FW ver 1.0
@@ -386,7 +386,7 @@ def make_playback_state(volume=-1):
     f=file("iPod_Control/iTunes/iTunesPState","wb")
     array.array('B',PState).tofile(f)
     f.close()
-  except IOError:
+  except OSError:
     log("FAILED.")
     return 0
   log("OK.")
@@ -397,7 +397,7 @@ def make_stats(count):
   try:
     file("iPod_Control/iTunes/iTunesStats","wb").write(\
          stringval(count)+"\0"*3+(stringval(18)+"\xff"*3+"\0"*12)*count)
-  except IOError:
+  except OSError:
     log("FAILED.")
     return 0
   log("OK.")
@@ -451,7 +451,7 @@ def make_shuffle(count):
     random.shuffle(seq)
   try:
     file("iPod_Control/iTunes/iTunesShuffle","wb").write("".join([stringval(x) for x in seq]))
-  except IOError:
+  except OSError:
     log("FAILED.")
     return 0
   log("OK.")
@@ -471,7 +471,7 @@ def main(dirs):
             Rules.append(p)
 #    Rules+=filter(None,map(ParseRuleLine,f.read().split("\n")))
     f.close()
-  except IOError:
+  except OSError:
     pass
 
   if not os.path.isdir("iPod_Control/iTunes"):
@@ -493,7 +493,7 @@ Please make sure that:
         filename=entry[33::2].split("\0",1)[0]
         KnownEntries[filename]=entry
         entry=iTunesSD.read(558)
-  except (IOError,EOFError):
+  except (OSError, EOFError):
     pass
   if iTunesSD: iTunesSD.close()
 
@@ -516,7 +516,7 @@ Please make sure that:
   try:
     iTunesSD=file("iPod_Control/iTunes/iTunesSD","wb")
     header[:18].tofile(iTunesSD)
-  except IOError:
+  except OSError:
     log("""ERROR: Cannot write to the iPod database file (iTunesSD)!
 Please make sure that:
  (*) you have sufficient permissions to write to the iPod volume
@@ -537,7 +537,7 @@ Please make sure that:
     iTunesSD.seek(0)
     iTunesSD.write("\0%c%c"%(total_count>>8,total_count&0xFF))
     iTunesSD.close()
-  except IOError:
+  except OSError:
     log("ERROR: Some strange errors occured while writing iTunesSD.")
     log("       You may have to re-initialize the iPod using iTunes.")
     sys.exit(1)

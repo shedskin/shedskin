@@ -46,12 +46,12 @@ class Coder(object):
             header.shl8()
             inputByte = inputStream.readByte()
             if inputByte == -1:
-                raise IOError("Unexpected end of file.")
+                raise OSError("Unexpected end of file.")
             header.d |= inputByte
         if (header.a != Coder.HeaderValue.a) | (header.b
         != Coder.HeaderValue.b) | (header.c != Coder.HeaderValue.c) | (header.d
         != Coder.HeaderValue.d):
-            raise IOError("Wrong file header. Probably not a compressed file.")
+            raise OSError("Wrong file header. Probably not a compressed file.")
         return Coder.getOptionsHeaderless(inputStream)
 
     @staticmethod
@@ -61,7 +61,7 @@ class Coder(object):
             packedOptions.shl8()
             inputByte = inputStream.readByte()
             if inputByte == -1:
-                raise IOError("Unexpected end of file.")
+                raise OSError("Unexpected end of file.")
             packedOptions.d |= inputByte
         result = Options.fromPacked(packedOptions)
         if result is None:

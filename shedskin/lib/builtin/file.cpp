@@ -57,7 +57,7 @@ void *file::write(str *s) {
     if(f) {
         size_t size = s->size();
         if(FWRITE(s->unit.data(), 1, size, f) != size and __error())
-            throw new IOError();
+            throw new OSError();
     }
     return NULL;
 }
@@ -78,7 +78,7 @@ void *file::seek(__ss_int i, __ss_int w) {
     __check_closed();
     if(f) {
         if(fseek(f, i, w) == -1)
-            throw new IOError();
+            throw new OSError();
     }
     return NULL;
 }
@@ -88,7 +88,7 @@ __ss_int file::tell() {
     if(f) {
         long status = ftell(f);
         if(status == -1)
-            throw new IOError();
+            throw new OSError();
         return __ss_int(status);
     }
     return -1;
@@ -129,13 +129,13 @@ str *file::readline(int n) {
         }
     }
     if(__error())
-        throw new IOError();
+        throw new OSError();
 
     return new str(&__read_cache[0], __read_cache.size());
 }
 
 static void __throw_io_error() {
-    throw new IOError();
+    throw new OSError();
 }
 
 str *file::read(int n) {
@@ -181,7 +181,7 @@ void *file::close() {
     if(f and not closed) {
         flush();
         if(fclose(f))
-            throw new IOError();
+            throw new OSError();
         closed = 1;
     }
     return NULL;
@@ -191,7 +191,7 @@ void *file::flush() {
     __check_closed();
     if(f)
         if(FFLUSH(f))
-            throw new IOError();
+            throw new OSError();
     return NULL;
 }
 
@@ -218,7 +218,7 @@ void *file::truncate(int size) {
         size = tell();  
 #if(_BSD_SOURCE || _XOPEN_SOURCE >= 500 || _POSIX_C_SOURCE >= 200112L)
     if(ftruncate(__ss_fileno(), size) == -1)
-        throw new IOError();
+        throw new OSError();
 #endif
     return NULL;
 }
@@ -287,7 +287,7 @@ void *file_binary::write(bytes *s) {
     if(f) {
         size_t size = s->size();
         if(FWRITE(s->unit.data(), 1, size, f) != size and __error())
-            throw new IOError();
+            throw new OSError();
     }
     return NULL;
 }
@@ -308,7 +308,7 @@ void *file_binary::seek(__ss_int i, __ss_int w) {
     __check_closed();
     if(f) {
         if(fseek(f, i, w) == -1)
-            throw new IOError();
+            throw new OSError();
     }
     return NULL;
 }
@@ -318,7 +318,7 @@ __ss_int file_binary::tell() {
     if(f) {
         long status = ftell(f);
         if(status == -1)
-            throw new IOError();
+            throw new OSError();
         return __ss_int(status);
     }
     return -1;
@@ -359,7 +359,7 @@ bytes *file_binary::readline(int n) {
         }
     }
     if(__error())
-        throw new IOError();
+        throw new OSError();
 
     bytes *b = new bytes(&__read_cache[0], __read_cache.size());
     b->frozen = 1;
@@ -411,7 +411,7 @@ void *file_binary::close() {
     if(f and not closed) {
         flush();
         if(fclose(f))
-            throw new IOError();
+            throw new OSError();
         closed = 1;
     }
     return NULL;
@@ -421,7 +421,7 @@ void *file_binary::flush() {
     __check_closed();
     if(f)
         if(FFLUSH(f))
-            throw new IOError();
+            throw new OSError();
     return NULL;
 }
 
@@ -448,7 +448,7 @@ void *file_binary::truncate(int size) {
         size = tell();  
 #if(_BSD_SOURCE || _XOPEN_SOURCE >= 500 || _POSIX_C_SOURCE >= 200112L)
     if(ftruncate(__ss_fileno(), size) == -1)
-        throw new IOError();
+        throw new OSError();
 #endif
     return NULL;
 }

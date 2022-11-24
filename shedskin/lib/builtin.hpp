@@ -87,13 +87,11 @@ class __rangeiter;
 
 class BaseException;
 class Exception;
-class StandardError;
 class AssertionError;
 class KeyError;
 class ValueError;
 class IndexError;
 class NotImplementedError;
-class IOError;
 class FileNotFoundError;
 class OSError;
 class SyntaxError;

@@ -565,7 +565,7 @@ list<str *> *RawConfigParser::read(list<str *> *filenames) {
     FOR_IN(filename,filenames,7,9,123)
         try {
             fp = open(filename);
-        } catch (IOError *) {
+        } catch (OSError *) {
             continue;
         }
         this->_read(fp, filename);
