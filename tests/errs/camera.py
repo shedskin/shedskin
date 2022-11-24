@@ -1,6 +1,6 @@
 
 #{
-print 'crap'
+print('crap')
 #}
 
 def runpix():

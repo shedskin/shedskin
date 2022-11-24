@@ -1,5 +1,5 @@
 #{
-print 'move along' 
+print('move along')
 #}
 
 class X:

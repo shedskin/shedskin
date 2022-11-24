@@ -1,7 +1,7 @@
 import camera
 
 def hap(x):
-    print x
+    print(x)
 
 def hap2():
     pass
@@ -17,7 +17,7 @@ class B(object):
 
 s = A()
 s = B()
-print s
+print(s)
 
 #*WARNING* camera.py:6: Function runpix not called!
 #*WARNING* 3.py:3: Function hap not called!

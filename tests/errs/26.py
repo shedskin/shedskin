@@ -1,4 +1,4 @@
-print pow(9,-2)
+print(pow(9,-2))
 a = 1
 a = lambda x: x
 

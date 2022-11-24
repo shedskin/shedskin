@@ -1,10 +1,10 @@
 try:
     pass
 except KeyboardInterrupt:
-    print 'uhw'
+    print('uhw')
 
 l = [lambda x,y: (y,x)]
-print l.pop()(1,2)
+print(l.pop()(1,2))
 
 kwa = (1, None, [1])
 stack = ('hoi', frozenset([(0,0)]), 'ah')
