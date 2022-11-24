@@ -48,7 +48,6 @@ class Shedskin:
     """Main shedskin frontend class
     """
     def __init__(self, module_name):
-        self.module_name = self.get_name(module_name)
         self.gx = GlobalInfo()
         self.gx.terminal = blessings.Terminal()
 
@@ -62,6 +61,8 @@ class Shedskin:
         self.ifa_log = logging.getLogger('infer.ifa')
         self.ifa_log.addHandler(console)
         self.ifa_log.setLevel(logging.INFO)
+
+        self.module_name = self.get_name(module_name)
 
     def get_name(self, module_name):
         """Normalizes the module_name to be parsed
