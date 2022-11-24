@@ -394,6 +394,9 @@ class ModuleVisitor(BaseNodeVisitor):
         self.visit(lc, func)
         self.add_constraint((inode(self.gx, lc), newnode), func)
 
+    def visit_JoinedStr(self, node, func=None):
+        error("f-strings are not supported", self.gx, node, mv=getmv())
+
 #    def visit_Stmt(self, node, func=None):
 #        comments = []
 #        for b in node.nodes:
