@@ -48,8 +48,8 @@ int __fmtpos(str *fmt) {
 }
 
 int __fmtpos2(str *fmt) {
-    unsigned int i = 0;
-    while((i = fmt->find('%', i)) != -1) {
+    size_t i = 0;
+    while((i = fmt->find('%', i)) != std::string::npos) {
         if(i != fmt->size()-1) {
             char nextchar = fmt->unit[i+1];
             if(nextchar == '%')

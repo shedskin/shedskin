@@ -57,13 +57,13 @@ str *bytes::__repr__() {
     __GC_STRING let = "\\nrt";
 
     const char *quote = "'";
-    int hasq = find('\'');
-    int hasd = find('\"');
+    size_t hasq = find('\'');
+    size_t hasd = find('\"');
 
-    if (hasq != -1 && hasd != -1) {
+    if (hasq != std::string::npos && hasd != std::string::npos) {
         sep += "'"; let += "'";
     }
-    if (hasq != -1 && hasd == -1)
+    if (hasq != std::string::npos && hasd == std::string::npos)
         quote = "\"";
 
     if(frozen == 0)
@@ -74,9 +74,9 @@ str *bytes::__repr__() {
     for(unsigned int i=0; i<size(); i++)
     {
         char c = unit[i];
-        int k;
+        size_t k;
 
-        if((k = sep.find_first_of(c)) != -1)
+        if((k = sep.find_first_of(c)) != std::string::npos)
             ss << "\\" << let[k];
         else {
             int j = (int)((unsigned char)c);
@@ -205,8 +205,8 @@ bytes *bytes::rstrip(bytes *chars) {
     __GC_STRING remove;
     if(chars) remove = chars->unit;
     else remove = ws;
-    int last = unit.find_last_not_of(remove);
-    if( last == -1 )
+    size_t last = unit.find_last_not_of(remove);
+    if( last == std::string::npos )
         return new bytes();
     return new bytes(unit.substr(0,last+1));
 }
@@ -215,8 +215,8 @@ bytes *bytes::lstrip(bytes *chars) {
     __GC_STRING remove;
     if(chars) remove = chars->unit;
     else remove = ws;
-    int first = unit.find_first_not_of(remove);
-    if( first == -1 )
+    size_t first = unit.find_first_not_of(remove);
+    if( first == std::string::npos )
         return new bytes();
     return new bytes(unit.substr(first,size()-first));
 }
@@ -228,22 +228,22 @@ bytes *bytes::strip(bytes *chars) {
 list<bytes *> *bytes::split(bytes *sp, int max_splits) {
     __GC_STRING s = unit;
     int num_splits = 0;
-    int sep_iter = 0, tmp, chunk_iter = 0;
+    size_t sep_iter = 0, tmp, chunk_iter = 0;
     list<bytes *> *result = new list<bytes *>();
     if (sp == NULL)
     {
 #define next_separator(iter) (s.find_first_of(ws, (iter)))
 #define skip_separator(iter) (s.find_first_not_of(ws, (iter)))
 
-        if(skip_separator(chunk_iter) == -1) /* XXX */
+        if(skip_separator(chunk_iter) == std::string::npos) /* XXX */
             return result;
         if(next_separator(chunk_iter) == 0)
             chunk_iter = skip_separator(chunk_iter);
         while((max_splits < 0 or num_splits < max_splits)
-              and ((sep_iter = next_separator(chunk_iter)) != -1))
+              and ((sep_iter = next_separator(chunk_iter)) != std::string::npos))
         {
             result->append(new bytes(s.substr(chunk_iter, sep_iter - chunk_iter)));
-            if((tmp = skip_separator(sep_iter)) == -1) {
+            if((tmp = skip_separator(sep_iter)) == std::string::npos) {
                 chunk_iter = sep_iter;
                 break;
             } else
@@ -252,7 +252,7 @@ list<bytes *> *bytes::split(bytes *sp, int max_splits) {
         }
         if(not (max_splits < 0 or num_splits < max_splits))
             result->append(new bytes(s.substr(chunk_iter, s.size()-chunk_iter)));
-        else if(sep_iter == -1)
+        else if(sep_iter == std::string::npos)
             result->append(new bytes(s.substr(chunk_iter, s.size()-chunk_iter)));
 
 #undef next_separator
@@ -261,7 +261,7 @@ list<bytes *> *bytes::split(bytes *sp, int max_splits) {
     } else { /* given separator (slightly different algorithm required)
               * (python is very inconsistent in this respect) */
         const char *sep = sp->c_str();
-        int sep_size = sp->size();
+        size_t sep_size = sp->size();
 
 #define next_separator(iter) s.find(sep, (iter))
 #define skip_separator(iter) ((iter + sep_size) > s.size()? -1 : (iter + sep_size))
@@ -276,10 +276,10 @@ list<bytes *> *bytes::split(bytes *sp, int max_splits) {
             ++num_splits;
         }
         while((max_splits < 0 or num_splits < max_splits)
-              and (sep_iter = next_separator(chunk_iter)) != -1)
+              and (sep_iter = next_separator(chunk_iter)) != std::string::npos)
         {
             result->append(new bytes(s.substr(chunk_iter, sep_iter - chunk_iter)));
-            if((tmp = skip_separator(sep_iter)) == -1) {
+            if((tmp = skip_separator(sep_iter)) == std::string::npos) {
                 chunk_iter = sep_iter;
                 break;
             } else
@@ -288,7 +288,7 @@ list<bytes *> *bytes::split(bytes *sp, int max_splits) {
         }
         if(not (max_splits < 0 or num_splits < max_splits))
             result->append(new bytes(s.substr(chunk_iter, s.size()-chunk_iter)));
-        else if(sep_iter == -1)
+        else if(sep_iter == std::string::npos)
             result->append(new bytes(s.substr(chunk_iter, s.size()-chunk_iter)));
 
 
