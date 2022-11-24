@@ -41,8 +41,8 @@ template<class T> list<T>::list(tuple2<T, T> *p) {
 template<class T> list<T>::list(str *s) {
     this->__class__ = cl_list;
     this->units.resize(len(s));
-    int sz = s->size();
-    for(int i=0; i<sz; i++)
+    size_t sz = s->size();
+    for(size_t i=0; i<sz; i++)
         this->units[i] = __char_cache[((unsigned char)(s->unit[i]))];
 }
 
@@ -52,8 +52,8 @@ template<class T> list<T>::list(PyObject *p) {
         throw new TypeError(new str("error in conversion to Shed Skin (list expected)"));
 
     this->__class__ = cl_list;
-    int size = PyList_Size(p);
-    for(int i=0; i<size; i++)
+    size_t size = PyList_Size(p);
+    for(size_t i=0; i<size; i++)
         append(__to_ss<T>(PyList_GetItem(p, i)));
 }
 
@@ -125,8 +125,8 @@ template<class T> void *list<T>::extend(tuple2<T,T> *p) {
 }
 
 template<class T> void *list<T>::extend(str *s) {
-    int sz = s->size();
-    for(int i=0; i<sz; i++)
+    size_t sz = s->size();
+    for(size_t i=0; i<sz; i++)
         this->units.push_back(__char_cache[((unsigned char)(s->unit[i]))]);
     return NULL;
 }
@@ -232,7 +232,7 @@ template<class T> void *list<T>::__delete__(__ss_int x, __ss_int l, __ss_int u, 
         __delslice__(l, u);
     else {
         __GC_VECTOR(T) v;
-        for(int i=0; i<this->__len__();i++)
+        for(__ss_int i=0; i<this->__len__();i++)
             if(i < l or i >= u or (i-l)%s)
                 v.push_back(this->units[i]);
         units = v;
@@ -248,8 +248,8 @@ template<class T> void *list<T>::__delslice__(__ss_int a, __ss_int b) {
 }
 
 template<class T> __ss_bool list<T>::__contains__(T a) {
-    int size = this->units.size();
-    for(int i=0; i<size; i++)
+    size_t size = this->units.size();
+    for(size_t i=0; i<size; i++)
         if(__eq(this->units[i], a))
             return True;
     return False;
@@ -294,7 +294,7 @@ template<class T> list<T> *list<T>::__deepcopy__(dict<void *, pyobj *> *memo) {
     list<T> *c = new list<T>();
     memo->__setitem__(this, c);
     c->units.resize(this->__len__());
-    for(int i=0; i<this->__len__(); i++)
+    for(__ss_int i=0; i<this->__len__(); i++)
         c->units[i] = __deepcopy(this->units[i], memo);
     return c;
 }
@@ -335,7 +335,7 @@ template<class T> __ss_int list<T>::count(T a) {
 template<class T> str *list<T>::__repr__() {
     str *r = new str("[");
     int len = this->__len__();
-    for(int i = 0; i<len;i++) {
+    for(__ss_int i = 0; i<len;i++) {
         *r += repr(units[i])->c_str();
         if (i<len-1)
             *r += ", ";

@@ -368,7 +368,7 @@ public:
 
     /* functions pointing to the underlying C++ implementation */
     const char *c_str() const;
-    const int size() const;
+    const size_t size() const;
     const int find(const char c, int a=0) const;
     const int find(const char *c, int a=0) const;
 
@@ -432,7 +432,7 @@ public:
 
     /* functions pointing to the underlying C++ implementation */
     const char *c_str() const;
-    const int size() const;
+    const size_t size() const;
     const int find(const char c, int a=0) const;
     const int find(const char *c, int a=0) const;
 
@@ -1324,8 +1324,8 @@ private:
 
 #define END_WITH }
 
-template<class T> static inline int __wrap(T a, int i) {
-    size_t l = len(a);
+template<class T> static inline int __wrap(T a, __ss_int i) {
+    __ss_int l = len(a);
 #ifndef __SS_NOWRAP
     if(i<0) i += l;
 #endif
