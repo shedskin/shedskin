@@ -747,22 +747,28 @@ class Exception(BaseException): pass
 
 class AssertionError(Exception): pass
 class EOFError(Exception): pass
-class FloatingPointError(Exception): pass
-class IndexError(Exception): pass
-class FileNotFoundError(Exception): pass
-class KeyError(Exception): pass
 class MemoryError(Exception): pass
 class NameError(Exception): pass
-class NotImplementedError(Exception): pass
-class OSError(Exception): pass
-class OverflowError(Exception): pass
-class RuntimeError(Exception): pass
 class SyntaxError(Exception): pass
 class SystemError(Exception): pass
 class StopIteration(Exception): pass
 class TypeError(Exception): pass
 class ValueError(Exception): pass
-class ZeroDivisionError(Exception): pass
+
+class ArithmeticError(Exception): pass
+class FloatingPointError(ArithmeticError): pass
+class OverflowError(ArithmeticError): pass
+class ZeroDivisionError(ArithmeticError): pass
+
+class OSError(Exception): pass
+class FileNotFoundError(OSError): pass
+
+class LookupError(Exception): pass
+class IndexError(LookupError): pass
+class KeyError(LookupError): pass
+
+class RuntimeError(Exception): pass
+class NotImplementedError(RuntimeError): pass
 
 __exception = OSError('') # XXX remove
 __exception = FileNotFoundError('')

@@ -91,7 +91,7 @@ static void print_traceback(FILE *out)
 }
 #endif
 
-extern class_ *cl_stopiteration, *cl_assertionerror, *cl_eoferror, *cl_floatingpointerror, *cl_keyerror, *cl_indexerror, *cl_typeerror, *cl_valueerror, *cl_zerodivisionerror, *cl_keyboardinterrupt, *cl_memoryerror, *cl_nameerror, *cl_notimplementederror, *cl_oserror, *cl_overflowerror, *cl_runtimeerror, *cl_syntaxerror, *cl_systemerror, *cl_systemexit;
+extern class_ *cl_stopiteration, *cl_assertionerror, *cl_eoferror, *cl_floatingpointerror, *cl_keyerror, *cl_indexerror, *cl_typeerror, *cl_valueerror, *cl_zerodivisionerror, *cl_keyboardinterrupt, *cl_memoryerror, *cl_nameerror, *cl_notimplementederror, *cl_oserror, *cl_overflowerror, *cl_runtimeerror, *cl_syntaxerror, *cl_systemerror, *cl_systemexit, *cl_arithmeticerror, *cl_lookuperror;
 
 class BaseException : public pyobj {
 public:
@@ -146,25 +146,41 @@ public:
 #endif
 };
 
-class FloatingPointError : public Exception {
+class ArithmeticError : public Exception {
 public:
-    FloatingPointError(str *message=0) : Exception(message) { this->__class__ = cl_floatingpointerror; }
+    ArithmeticError(str *message=0) : Exception(message) { this->__class__ = cl_arithmeticerror; }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_ArithmeticError; }
+#endif
+};
+
+class FloatingPointError : public ArithmeticError {
+public:
+    FloatingPointError(str *message=0) : ArithmeticError(message) { this->__class__ = cl_floatingpointerror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_FloatingPointError; }
 #endif
 };
 
-class KeyError : public Exception {
+class LookupError : public Exception {
 public:
-    KeyError(str *message=0) : Exception(message) { this->__class__ = cl_keyerror; }
+    LookupError(str *message=0) : Exception(message) { this->__class__ = cl_lookuperror; }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_LookupError; }
+#endif
+};
+
+class KeyError : public LookupError {
+public:
+    KeyError(str *message=0) : LookupError(message) { this->__class__ = cl_keyerror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_KeyError; }
 #endif
 };
 
-class IndexError : public Exception {
+class IndexError : public LookupError {
 public:
-    IndexError(str *message=0) : Exception(message) { this->__class__ = cl_indexerror; }
+    IndexError(str *message=0) : LookupError(message) { this->__class__ = cl_indexerror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_IndexError; }
 #endif
@@ -202,9 +218,17 @@ public:
 #endif
 };
 
-class NotImplementedError : public Exception {
+class RuntimeError : public Exception {
 public:
-    NotImplementedError(str *message=0) : Exception(message) { this->__class__ = cl_notimplementederror; }
+    RuntimeError(str *message=0) : Exception(message) { this->__class__ = cl_runtimeerror; }
+#ifdef __SS_BIND
+    PyObject *__to_py__() { return PyExc_RuntimeError; }
+#endif
+};
+
+class NotImplementedError : public RuntimeError {
+public:
+    NotImplementedError(str *message=0) : RuntimeError(message) { this->__class__ = cl_notimplementederror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_NotImplementedError; }
 #endif
@@ -242,19 +266,11 @@ public:
 #endif
 };
 
-class OverflowError : public Exception {
+class OverflowError : public ArithmeticError {
 public:
-    OverflowError(str *message=0) : Exception(message) { this->__class__ = cl_overflowerror; }
+    OverflowError(str *message=0) : ArithmeticError(message) { this->__class__ = cl_overflowerror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_OverflowError; }
-#endif
-};
-
-class RuntimeError : public Exception {
-public:
-    RuntimeError(str *message=0) : Exception(message) { this->__class__ = cl_runtimeerror; }
-#ifdef __SS_BIND
-    PyObject *__to_py__() { return PyExc_RuntimeError; }
 #endif
 };
 
@@ -308,9 +324,9 @@ public:
 #endif
 };
 
-class ZeroDivisionError : public Exception {
+class ZeroDivisionError : public ArithmeticError {
 public:
-    ZeroDivisionError(str *message=0) : Exception(message) { this->__class__ = cl_zerodivisionerror; }
+    ZeroDivisionError(str *message=0) : ArithmeticError(message) { this->__class__ = cl_zerodivisionerror; }
 #ifdef __SS_BIND
     PyObject *__to_py__() { return PyExc_ZeroDivisionError; }
 #endif
