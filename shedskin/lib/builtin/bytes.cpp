@@ -27,7 +27,7 @@ const char *bytes::c_str() const {
     return this->unit.c_str();
 }
 
-const int bytes::size() const {
+const size_t bytes::size() const {
     return this->unit.size();
 }
 

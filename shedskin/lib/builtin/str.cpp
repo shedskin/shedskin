@@ -26,7 +26,7 @@ const char *str::c_str() const {
     return this->unit.c_str();
 }
 
-const int str::size() const {
+const size_t str::size() const {
     return this->unit.size();
 }
 
@@ -389,8 +389,8 @@ str *str::translate(str *table, str *delchars) {
 
     str *newstr = new str();
 
-    int self_size = size();
-    for(int i = 0; i < self_size; i++) {
+    size_t self_size = size();
+    for(size_t i = 0; i < self_size; i++) {
         char c = unit[i];
         if(!delchars || delchars->find(c) == std::string::npos)
             *newstr += table->unit[(unsigned char)c];
