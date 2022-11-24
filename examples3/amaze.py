@@ -67,7 +67,7 @@ class MazeReader(object):
                     raise MazeReaderException('Invalid maze file - error in maze dimensions')
                 else:
                     self.maze_rows.append(row)
-        except (IOError, OSError) as e:
+        except OSError as e:
             raise MazeReaderException(str(e))
 
     def getData(self):

@@ -424,7 +424,7 @@ popen_pipe::popen_pipe(str *cmd, str *flags) {
         flags = new str("r");
     f = ::popen(cmd->c_str(), flags->c_str());
     if(f == 0)
-        throw new IOError(cmd);
+        throw new OSError(cmd);
     name = cmd;
     mode = flags;
 }

@@ -115,5 +115,5 @@ def annotate(gx):
             out = open(module.filename[:-3] + '.ss.py', 'w')
             out.write(''.join(source))
             out.close()
-        except IOError:
+        except OSError:
             pass

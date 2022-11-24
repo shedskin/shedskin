@@ -155,7 +155,7 @@ class Main(object):
         if not standardOutput:
             outputStream.close()
         if not allDecoded:
-            raise IOError("Not entire input was decoded.")
+            raise OSError("Not entire input was decoded.")
 
     def showOptions(self, optionsMap):
         inputStream = BufferedInputStream(sys.stdin)

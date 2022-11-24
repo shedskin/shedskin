@@ -59,7 +59,7 @@ template<class A, class B, class C> tuple2<list<__ss_int> *, list<__ss_int> *> *
     ltimeout.tv_sec = timeout;
     ltimeout.tv_usec = (timeout - floor(timeout))*1E6;
     if(::select(maxFD + 1, &lrFDs, &lwFDs, &lxFDs, (timeout < 0) ? NULL : &ltimeout) == -1) {
-        throw new IOError();
+        throw new OSError();
     }
     rrFDs = (new list<__ss_int>());
     FOR_IN(FDa,rFDs,0,2,3)

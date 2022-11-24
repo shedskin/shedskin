@@ -141,14 +141,14 @@ void *mmap::__init__(int __ss_fileno_, __ss_int length_, __ss_int flags_, __ss_i
         fd = dup(__ss_fileno_);
         if (fd == -1)
         {
-            throw new IOError();
+            throw new OSError();
         }
         if(length_ == 0)
         {
             struct stat buf;
             if (fstat(fd, &buf) == -1)
             {
-                throw new IOError();
+                throw new OSError();
             }
             length_ = buf.st_size;
         }
@@ -160,7 +160,7 @@ void *mmap::__init__(int __ss_fileno_, __ss_int length_, __ss_int flags_, __ss_i
 
     if (m_begin == iterator(-1))
     {
-        throw IOError();
+        throw OSError();
     }
 
     m_position = m_begin;
@@ -192,7 +192,7 @@ __ss_int mmap::flush(__ss_int offset, __ss_int size)
     __raise_if_closed();
     if (::msync(m_begin + offset, __subscript(size), MS_SYNC) == -1)
     {
-        throw new IOError();
+        throw new OSError();
     }
     return 0;
 }
@@ -210,7 +210,7 @@ void *mmap::resize(__ss_int new_size)
 #endif // __NetBSD__
     if (m_begin == iterator(-1))
     {
-        throw new IOError();
+        throw new OSError();
     }
     m_end = m_begin + size_t(new_size);
     m_position = std::min(m_position, m_end);
@@ -287,7 +287,7 @@ void *mmap::__init__(int __ss_fileno_, __ss_int length_, str *tagname_, __ss_int
                     FALSE, /* inherited by child processes? */
                     DUPLICATE_SAME_ACCESS))   /* options */
         {
-            throw new IOError();
+            throw new OSError();
         }
         if (length_)
         {
@@ -343,7 +343,7 @@ void *mmap::__init__(int __ss_fileno_, __ss_int length_, str *tagname_, __ss_int
                                    tagname);
     if (map_handle == NULL)
     {
-        throw new IOError();
+        throw new OSError();
     }
 
     m_begin = static_cast<iterator>(MapViewOfFile(map_handle,
@@ -353,7 +353,7 @@ void *mmap::__init__(int __ss_fileno_, __ss_int length_, str *tagname_, __ss_int
                                     size));
     if (m_begin == NULL)
     {
-        throw new IOError();
+        throw new OSError();
     }
     /* set the initial position */
     m_position = m_begin;
@@ -420,7 +420,7 @@ void *mmap::resize(__ss_int new_size)
                      tagname);
     if (map_handle != NULL)
     {
-        throw new IOError();
+        throw new OSError();
     }
 
     m_begin = static_cast<iterator>(MapViewOfFile(map_handle,
@@ -431,7 +431,7 @@ void *mmap::resize(__ss_int new_size)
     if (m_begin == NULL)
     {
         CloseHandle(map_handle);
-        throw new IOError();
+        throw new OSError();
     }
     m_end = m_begin + size_t(new_size);
     m_position = std::min(m_position, m_end);
@@ -594,7 +594,7 @@ __ss_int mmap::size()
                when indeed its size equals INVALID_FILE_SIZE */
             DWORD error = GetLastError();
             if (error != NO_ERROR)
-                throw IOError();
+                throw OSError();
         }
         size = (((uint64_t)high)<<32) + low;
         return __ss_int(size);
@@ -613,7 +613,7 @@ __ss_int mmap::size()
         struct stat buf;
         if (fstat(fd, &buf) == -1)
         {
-            throw new IOError();
+            throw new OSError();
         }
         return buf.st_size;
     }

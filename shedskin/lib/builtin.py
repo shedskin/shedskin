@@ -738,36 +738,33 @@ class BaseException:
     def __init__(self, msg=None):
         self.msg = msg # XXX needed?
         self.message = msg
-class Exception(BaseException): pass
-class StandardError(Exception): pass
 
-# TODO check latest hierarchy!
-class AssertionError(StandardError): pass
-class EOFError(StandardError): pass
-class FloatingPointError(StandardError): pass
-class IndexError(StandardError): pass
-class IOError(StandardError): pass
-class FileNotFoundError(StandardError): pass
-class KeyError(StandardError): pass
-class MemoryError(StandardError): pass
-class NameError(StandardError): pass
-class NotImplementedError(StandardError): pass
-class OSError(StandardError): pass
-class OverflowError(StandardError): pass
-class RuntimeError(StandardError): pass
-class SyntaxError(StandardError): pass
-class SystemError(StandardError): pass
-class TypeError(StandardError): pass
-class ValueError(StandardError): pass
-class ZeroDivisionError(StandardError): pass
-
-class StopIteration(Exception): pass
 class GeneratorExit(BaseException): pass
 class KeyboardInterrupt(BaseException): pass
 class SystemExit(BaseException): pass
 
+class Exception(BaseException): pass
+
+class AssertionError(Exception): pass
+class EOFError(Exception): pass
+class FloatingPointError(Exception): pass
+class IndexError(Exception): pass
+class FileNotFoundError(Exception): pass
+class KeyError(Exception): pass
+class MemoryError(Exception): pass
+class NameError(Exception): pass
+class NotImplementedError(Exception): pass
+class OSError(Exception): pass
+class OverflowError(Exception): pass
+class RuntimeError(Exception): pass
+class SyntaxError(Exception): pass
+class SystemError(Exception): pass
+class StopIteration(Exception): pass
+class TypeError(Exception): pass
+class ValueError(Exception): pass
+class ZeroDivisionError(Exception): pass
+
 __exception = OSError('') # XXX remove
-__exception = IOError('')
 __exception = FileNotFoundError('')
 __exception.errno = 0
 __exception.filename = ''
