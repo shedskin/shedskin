@@ -6,7 +6,7 @@
 
 print('bla'.endswith('la'), 'bla'.endswith('xx'))
 print('-'.join(['a', 'b', 'c']))
-#print('bla'.isprintable(), chr(200).isprintable())
+print('bla'.isprintable(), chr(200).isprintable())
 
 # bytes
 
@@ -16,7 +16,7 @@ print(b'bla'.endswith(b'la'), b'bla'.endswith(b'xx'))
 print(b'-'.join([b'a', b'b', b'c']))
 #print(b'bla'.hex())
 
-# bytearray: {'__delitem__', 'pop', 'reverse', '__imul__', 'remove', '__iadd__', 'copy', 'insert', 'extend'}
+# bytearray: {'__delitem__', 'pop', 'reverse', '__imul__', 'remove', '__iadd__', 'copy', 'insert', 'extend'} hashing
 
 ba = bytearray(b'bla')
 ba.clear()
