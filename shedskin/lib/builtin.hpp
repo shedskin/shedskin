@@ -396,6 +396,10 @@ public:
     bytes *__iadd__(bytes *b);
     bytes *__add__(bytes *b);
 
+    /* bytearray */
+
+    void *clear();
+
 };
 
 class str : public pyseq<str *> {

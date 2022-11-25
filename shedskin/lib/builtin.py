@@ -514,6 +514,9 @@ class bytes_(pyseq):
     def __hash__(self):
         return 1
 
+    def clear(self):
+        pass
+
 
 class dict(pyiter):
     def __initdict__(self, other):
