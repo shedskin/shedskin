@@ -518,6 +518,8 @@ class bytes_(pyseq):
 
     def clear(self):
         pass
+    def append(self, x):
+        pass
 
 
 class dict(pyiter):

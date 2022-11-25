@@ -26,6 +26,7 @@ ba = bytearray(b'bla')
 ba[1] = 80
 print(ba)
 
-#ba = bytearray(b'bla')
-#ba.append(81)
-#print(ba)
+ba = bytearray(b'bla')
+ba.append(81)
+ba.append(187)
+print(ba)
