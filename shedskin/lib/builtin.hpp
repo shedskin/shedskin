@@ -353,8 +353,6 @@ public:
     inline __ss_int __getitem__(__ss_int i);
     inline __ss_int __getfast__(__ss_int i);
 
-    void *__setitem__(__ss_int i, __ss_int e);
-
     template<class U> bytes *join(U *);
 
     inline __ss_int __len__();
@@ -398,7 +396,9 @@ public:
 
     /* bytearray */
 
+    void *__setitem__(__ss_int i, __ss_int e);
     void *clear();
+    void *append(__ss_int i);
 
 };
 

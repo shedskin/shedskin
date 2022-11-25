@@ -328,3 +328,8 @@ void *bytes::clear() {
     unit.clear();
     return NULL;
 }
+
+void *bytes::append(__ss_int i) {
+    unit += (unsigned char)i;
+    return NULL;
+}
