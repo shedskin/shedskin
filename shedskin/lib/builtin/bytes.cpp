@@ -323,3 +323,8 @@ __ss_bool bytes::endswith(bytes *s, __ss_int start, __ss_int end) {
 
     return __mbool(j == 0);
 }
+
+void *bytes::clear() {
+    unit.clear();
+    return NULL;
+}
