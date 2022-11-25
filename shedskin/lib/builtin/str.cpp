@@ -108,6 +108,7 @@ void str::operator+= (const char &rhs) {
 __ss_bool str::__ctype_function(int (*cfunc)(int))
 {
   int i, l = size();
+
   if(!l)
       return False;
 
@@ -123,6 +124,19 @@ __ss_bool str::isalpha() { return __ctype_function(&::isalpha); }
 __ss_bool str::isalnum() { return __ctype_function(&::isalnum); }
 __ss_bool str::islower() { return __ctype_function(&::islower); }
 __ss_bool str::isupper() { return __ctype_function(&::isupper); }
+
+__ss_bool str::isprintable() {
+  int i, l = size();
+
+  for(i = 0; i < l; i++) {
+      unsigned char elem = unit[i];
+
+      if((0 <= elem and elem <= 31) or (127 <= elem and elem <= 160) or elem == 173)
+          return False;
+  }
+
+  return True;
+}
 
 str *str::ljust(int width, str *s) {
     if(width<=__len__()) return this;
