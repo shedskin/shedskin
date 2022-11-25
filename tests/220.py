@@ -48,11 +48,6 @@ print('iter', next(file_iter))
 # reversed(range)
 #print(reversed(range(10,20,2)))
 
-# TODO support slice objects??
-#ar = list(range(10))
-#ar.__delitem__(slice(1,4))
-#print(ar)
-
 # now iterators: dict_items, dict_keys, dict_values, like reversed, enumerate, itertools.imap?
 #print({1:2}.items())
 
@@ -70,10 +65,6 @@ print('iter', next(file_iter))
 #print(list(map(max, ['a','bc'], ['d'], ['e'])))
 #
 #print(list(map(set, [[1]])))
-
-# TODO check exception hierarchy
-
-# TODO bytes: test all methods, also for str (sep test)
 
 # TODO os.popen2 disappeared? check
 #os.popen2 improvement
