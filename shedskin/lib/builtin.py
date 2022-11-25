@@ -378,6 +378,8 @@ class str_(pyseq):
         return True
     def isalnum(self):
         return True
+    def isprintable(self):
+        return True
 
     def zfill(self, width):
         return ''
