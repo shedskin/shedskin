@@ -429,6 +429,31 @@ bytes *bytes::lower() {
     return toReturn;
 }
 
+bytes *bytes::title() {
+    bytes *r = new bytes(unit);
+    bool up = true;
+    size_t len = this->size();
+    for(size_t i=0; i<len; i++) {
+        char c = this->unit[i];
+        if(!::isalpha(c))
+            up = true;
+        else if (up) {
+            c = ::toupper(c);
+            up = false;
+        }
+        else
+            c = ::tolower(c);
+        r->unit[i] = c;
+    }
+    return r;
+}
+
+bytes *bytes::capitalize() {
+    bytes *r = new bytes(unit);
+    r->unit[0] = ::toupper(r->unit[0]);
+    return r;
+}
+
 bytes *bytes::replace(bytes *a, bytes *b, __ss_int c) {
     __GC_STRING s = unit;
     size_t i, j, p;

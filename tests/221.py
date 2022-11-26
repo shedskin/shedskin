@@ -2,7 +2,7 @@
 
 # str
 
-# 'capitalize', 'casefold', 'index', 'isascii', 'isdecimal', 'isidentifier', 'isnumeric', 'maketrans', 'partition', 'rfind', 'rindex', 'rpartition', 'rsplit', 'splitlines', 'title', 'translate'
+# 'casefold', 'index', 'isascii', 'isdecimal', 'isidentifier', 'isnumeric', 'maketrans', 'partition', 'rfind', 'rindex', 'rpartition', 'rsplit', 'splitlines', 'translate'
 
 print('bla'.endswith('la'), 'bla'.endswith('xx'))
 print('bla'.startswith('bla'), 'bla'.startswith('xx'))
@@ -29,8 +29,11 @@ print('bla'.split('l'), 'b l a'.split(), 'haajaaja'.split('aa'))
 print('bla'.zfill(10))
 print('bla'.ljust(8), 'bla'.ljust(6, '+'))
 print('bla'.rjust(8), 'bla'.rjust(6, '-'))
+print('bla bla'.title())
+print('bla bla'.capitalize())
+print('bla'[1], 'bla'[1:], 'bla'[::-1])
 
-# bytes TODO slicing?
+# bytes
 
 print(b'bla'.endswith(b'la'), b'bla'.endswith(b'xx'))
 print(b'bla'.startswith(b'bla'), b'bla'.startswith(b'xx'))
@@ -56,8 +59,10 @@ print(b'bla'.split(b'l'), b'b l a'.split(), b'haajaaja'.split(b'aa'))
 print(b'bla'.zfill(10))
 print(b'bla'.ljust(8), b'bla'.ljust(6, b'+'))
 print(b'bla'.rjust(8), b'bla'.rjust(6, b'-'))
-
 print(b'blabla'.hex(), b'blabla'.hex(':')) # TODO bytes_per_sep, bytes.fromhex
+print(b'bla bla'.title())
+print(b'bla bla'.capitalize())
+print(b'bla'[1], b'bla'[1:], b'bla'[::-1])
 
 # bytearray: {'reverse', '__imul__', 'remove', '__iadd__', 'insert', 'extend'} hashing .. check frozen in above tests? del/assign slice?
 

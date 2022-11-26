@@ -377,6 +377,9 @@ public:
 
     bytes *upper();
     bytes *lower();
+    bytes *title();
+    bytes *capitalize();
+
     __ss_bool istitle();
     __ss_bool isspace();
     __ss_bool isalpha();
