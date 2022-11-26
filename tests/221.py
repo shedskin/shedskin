@@ -2,9 +2,10 @@
 
 # str
 
-# 'capitalize', 'casefold', 'index', 'isascii', 'isdecimal', 'isidentifier', 'isnumeric', 'ljust', 'maketrans', 'partition', 'rfind', 'rindex', 'rjust', 'rpartition', 'rsplit', 'split', 'splitlines', 'startswith', 'title', 'translate', 'zfill'
+# 'capitalize', 'casefold', 'index', 'isascii', 'isdecimal', 'isidentifier', 'isnumeric', 'ljust', 'maketrans', 'partition', 'rfind', 'rindex', 'rjust', 'rpartition', 'rsplit', 'split', 'splitlines', 'title', 'translate', 'zfill'
 
 print('bla'.endswith('la'), 'bla'.endswith('xx'))
+print('bla'.startswith('bla'), 'bla'.startswith('xx'))
 print('-'.join(['a', 'b', 'c']))
 print('bla'.isprintable(), chr(200).isprintable())
 print('blaa'.count('a'), 'blaabla'.count('aa'))
@@ -24,10 +25,12 @@ print('bla'.isdigit(), '123'.isdigit())
 print('bla'.isalnum(), '123'.isalnum(), '12a'.isalnum())
 print('bla'.find('la'), 'bla'.find('ba'))
 print('bla'.center(10), 'bla'.center(10, '-'))
+print('bla'.split('l'), 'b l a'.split(), 'haajaaja'.split('aa'))
 
 # bytes TODO slicing?
 
 print(b'bla'.endswith(b'la'), b'bla'.endswith(b'xx'))
+print(b'bla'.startswith(b'bla'), b'bla'.startswith(b'xx'))
 print(b'-'.join([b'a', b'b', b'c']))
 print(b'blaa'.count(ord('a')), b'blaa'.count(b'aa'))
 print(b'bla\tbla'.expandtabs())
@@ -46,6 +49,7 @@ print(b'bla'.isdigit(), b'123'.isdigit())
 print(b'bla'.isalnum(), b'123'.isalnum(), b'12a'.isalnum())
 print(b'bla'.find(b'la'), b'bla'.find(b'ba'))
 print(b'bla'.center(10), b'bla'.center(10, b'-'))
+print(b'bla'.split(b'l'), b'b l a'.split(), b'haajaaja'.split(b'aa'))
 
 print(b'blabla'.hex(), b'blabla'.hex(':')) # TODO bytes_per_sep, bytes.fromhex
 
