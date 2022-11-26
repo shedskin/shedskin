@@ -324,6 +324,40 @@ __ss_bool bytes::endswith(bytes *s, __ss_int start, __ss_int end) {
     return __mbool(j == 0);
 }
 
+
+__ss_int bytes::count(bytes *s, __ss_int start) { return count(s, start, __len__()); }
+__ss_int bytes::count(bytes *s, __ss_int start, __ss_int end) {
+    __ss_int count, one = 1;
+    size_t i;
+    slicenr(7, start, end, one, __len__());
+
+    i = start; count = 0;
+    while( ((i = find(s->c_str(), i)) != std::string::npos) && (i <= end-(size_t)len(s)) )
+    {
+        i += len(s);
+        count++;
+    }
+
+    return count;
+}
+
+__ss_int bytes::count(__ss_int b, __ss_int start) { return count(b, start, __len__()); }
+__ss_int bytes::count(__ss_int b, __ss_int start, __ss_int end) {
+    __ss_int count, one = 1;
+    size_t i;
+    slicenr(7, start, end, one, __len__());
+
+    count = 0;
+    for(i = start; i < end; i++) {
+        if((unsigned char)b == unit[i])
+            count++;
+    }
+
+    return count;
+}
+
+/* bytearray */
+
 void *bytes::clear() {
     unit.clear();
     return NULL;
