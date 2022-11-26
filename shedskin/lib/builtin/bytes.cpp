@@ -468,6 +468,21 @@ str *bytes::hex(str *sep) {
     return result;
 }
 
+bytes *bytes::center(int width, bytes *fillchar) {
+    int len = __len__();
+    if(width<=len)
+        return this;
+
+    if(!fillchar) fillchar = bsp;
+    bytes *r = fillchar->__mul__(width);
+
+    int j = (width-len)/2;
+    for(int i=0; i<len; i++)
+        r->unit[j+i] = unit[i];
+
+    return r;
+}
+
 /* bytearray */
 
 void *bytes::clear() {
