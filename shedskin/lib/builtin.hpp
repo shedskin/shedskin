@@ -372,8 +372,8 @@ public:
 
     int __fixstart(int a, int b);
 
-    int find(bytes *s, __ss_int a=0);
-    int find(bytes *s, __ss_int a, __ss_int b);
+    __ss_int find(bytes *s, __ss_int a=0);
+    __ss_int find(bytes *s, __ss_int a, __ss_int b);
 
     bytes *upper();
     bytes *lower();
@@ -400,6 +400,8 @@ public:
     bytes *swapcase();
 
     bytes *replace(bytes *a, bytes *b, __ss_int c=-1);
+
+    bytes *center(__ss_int width, bytes *fillchar=0);
 
     str *hex(str *sep=0);
 
@@ -483,10 +485,11 @@ public:
     int __fixstart(int a, int b);
     int __checkneg(int i);
 
-    int find(str *s, int a=0);
-    int find(str *s, int a, int b);
-    int rfind(str *s, int a=0);
-    int rfind(str *s, int a, int b);
+    __ss_int find(str *s, int a=0);
+    __ss_int find(str *s, int a, int b);
+    __ss_int rfind(str *s, int a=0);
+    __ss_int rfind(str *s, int a, int b);
+
     int index(str *s, int a=0);
     int index(str *s, int a, int b);
     int rindex(str *s, int a=0);
@@ -502,7 +505,7 @@ public:
     str *replace(str *a, str *b, __ss_int c=-1);
     str *translate(str *table, str *delchars=0);
     str *swapcase();
-    str *center(int w, str *fill=0);
+    str *center(__ss_int width, str *fillchar=0);
 
     __ss_bool __ctype_function(int (*cfunc)(int));
 

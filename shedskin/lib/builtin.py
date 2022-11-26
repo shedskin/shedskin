@@ -406,7 +406,7 @@ class str_(pyseq):
 
     def swapcase(self):
         return ''
-    def center(self, w, fill=''):
+    def center(self, width, fillchar=''):
         return ''
 
     def __slice__(self, x, l, u, s):
@@ -500,6 +500,9 @@ class bytes_(pyseq):
     def endswith(self, e, start=0, end=0):
         return True
 
+    def center(self, width, fillchar=b''):
+        return b''
+
     def replace(self, a, b, c=0):
         return b''
 
@@ -507,8 +510,6 @@ class bytes_(pyseq):
         return b''
 
     def swapcase(self):
-        return b''
-    def center(self, w, fill=''):
         return b''
 
     def hex(self, sep=''): # TODO bytes_per_sep

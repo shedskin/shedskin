@@ -18,6 +18,8 @@ class_ *cl_class_, *cl_none, *cl_str_, *cl_int_, *cl_bool, *cl_float_, *cl_compl
 class_ *cl_stopiteration, *cl_assertionerror, *cl_eoferror, *cl_floatingpointerror, *cl_keyerror, *cl_indexerror, *cl_typeerror, *cl_valueerror, *cl_zerodivisionerror, *cl_keyboardinterrupt, *cl_memoryerror, *cl_nameerror, *cl_notimplementederror, *cl_oserror, *cl_overflowerror, *cl_runtimeerror, *cl_syntaxerror, *cl_systemerror, *cl_systemexit, *cl_filenotfounderror, *cl_arithmeticerror, *cl_lookuperror;
 
 str *sp, *nl, *__fmt_s, *__fmt_H, *__fmt_d;
+bytes *bsp;
+
 __GC_STRING ws, __fmtchars;
 __GC_VECTOR(str *) __char_cache;
 
@@ -79,6 +81,7 @@ void __init() {
     ws = " \n\r\t\f\v";
     __fmtchars = "#*-+ .0123456789hlL";
     sp = new str(" ");
+    bsp = new bytes(" ");
     nl = new str("\n");
     __fmt_s = new str("%s");
     __fmt_H = new str("%H");

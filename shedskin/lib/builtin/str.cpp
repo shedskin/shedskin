@@ -421,15 +421,15 @@ str *str::swapcase() {
     return r;
 }
 
-str *str::center(int w, str *fill) {
+str *str::center(__ss_int width, str *fillchar) {
     int len = __len__();
-    if(w<=len)
+    if(width<=len)
         return this;
 
-    if(!fill) fill = sp;
-    str *r = fill->__mul__(w);
+    if(!fillchar) fillchar = sp;
+    str *r = fillchar->__mul__(width);
 
-    int j = (w-len)/2;
+    int j = (width-len)/2;
     for(int i=0; i<len; i++)
         r->unit[j+i] = unit[i];
 
@@ -630,11 +630,11 @@ int str::__fixstart(int a, int b) {
     return a+b;
 }
 
-int str::find(str *s, int a) { return __fixstart(unit.substr(a, size()-a).find(s->unit), a); }
-int str::find(str *s, int a, int b) { return __fixstart(unit.substr(a, b-a).find(s->unit), a); }
+__ss_int str::find(str *s, int a) { return __fixstart(unit.substr(a, size()-a).find(s->unit), a); }
+__ss_int str::find(str *s, int a, int b) { return __fixstart(unit.substr(a, b-a).find(s->unit), a); }
 
-int str::rfind(str *s, int a) { return __fixstart(unit.substr(a, size()-a).rfind(s->unit), a); }
-int str::rfind(str *s, int a, int b) { return __fixstart(unit.substr(a, b-a).rfind(s->unit), a); }
+__ss_int str::rfind(str *s, int a) { return __fixstart(unit.substr(a, size()-a).rfind(s->unit), a); }
+__ss_int str::rfind(str *s, int a, int b) { return __fixstart(unit.substr(a, b-a).rfind(s->unit), a); }
 
 int str::__checkneg(int i) {
     if(i == -1)
