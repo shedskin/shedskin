@@ -375,6 +375,11 @@ public:
     int find(bytes *s, __ss_int a=0);
     int find(bytes *s, __ss_int a, __ss_int b);
 
+    bytes *upper();
+    bytes *lower();
+    __ss_bool islower();
+    __ss_bool isupper();
+
     __ss_bool startswith(bytes *s, __ss_int start=0);
     __ss_bool startswith(bytes *s, __ss_int start, __ss_int end);
     __ss_bool endswith(bytes *s, __ss_int start=0);
@@ -393,6 +398,8 @@ public:
 
     __ss_bool __eq__(pyobj *s);
     long __hash__();
+
+    __ss_bool __ctype_function(int (*cfunc)(int));
 
     /* iteration */
 

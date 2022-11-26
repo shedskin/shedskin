@@ -364,6 +364,41 @@ bytes *bytes::expandtabs(int tabsize) {
     return new bytes(r);
 }
 
+__ss_bool bytes::__ctype_function(int (*cfunc)(int))
+{
+  int i, l = size();
+
+  if(!l)
+      return False;
+
+  for(i = 0; i < l; i++)
+      if(!cfunc((int)unit[i])) return False;
+
+  return True;
+}
+
+__ss_bool bytes::islower() { return __ctype_function(&::islower); }
+__ss_bool bytes::isupper() { return __ctype_function(&::isupper); }
+
+bytes *bytes::upper() {
+    if(size() == 1)
+        return new bytes(__char_cache[((unsigned char)(::toupper(unit[0])))]->unit);
+
+    bytes *toReturn = new bytes(*this);
+    std::transform(toReturn->unit.begin(), toReturn->unit.end(), toReturn->unit.begin(), toupper);
+
+    return toReturn;
+}
+
+bytes *bytes::lower() {
+    if(size() == 1)
+        return new bytes(__char_cache[((unsigned char)(::tolower(unit[0])))]->unit);
+
+    bytes *toReturn = new bytes(*this);
+    std::transform(toReturn->unit.begin(), toReturn->unit.end(), toReturn->unit.begin(), tolower);
+
+    return toReturn;
+}
 
 /* bytearray */
 
