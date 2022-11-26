@@ -2,7 +2,7 @@
 
 # str
 
-# 'capitalize', 'casefold', 'center', 'find', 'index', 'isalnum', 'isalpha', 'isascii', 'isdecimal', 'isdigit', 'isidentifier', 'isnumeric', 'isspace', 'istitle', 'ljust', 'lstrip', 'maketrans', 'partition', 'rfind', 'rindex', 'rjust', 'rpartition', 'rsplit', 'rstrip', 'split', 'splitlines', 'startswith', 'strip', 'title', 'translate', 'zfill'
+# 'capitalize', 'casefold', 'center', 'find', 'index', 'isalnum', 'isalpha', 'isascii', 'isdecimal', 'isdigit', 'isidentifier', 'isnumeric', 'isspace', 'istitle', 'ljust', 'maketrans', 'partition', 'rfind', 'rindex', 'rjust', 'rpartition', 'rsplit', 'split', 'splitlines', 'startswith', 'title', 'translate', 'zfill'
 
 print('bla'.endswith('la'), 'bla'.endswith('xx'))
 print('-'.join(['a', 'b', 'c']))
@@ -16,6 +16,7 @@ print('BLA'.islower(), 'bla'.islower())
 print('bla'*2, 2*'bla', 'bla'+'bla')
 print('bla'.replace('la', 'bla'))
 print('bLa'.swapcase())
+print('bla  '.strip(), '**bla**'.strip('*'), ' bla'.lstrip(), 'bla'.rstrip('a'))
 
 # bytes
 
@@ -32,6 +33,7 @@ print(b'BLA'.islower(), b'bla'.islower())
 print(b'bla'*2, 2*b'bla', b'bla'+b'bla')
 print(b'bla'.replace(b'la', b'bla'))
 print(b'bLa'.swapcase())
+print(b'bla  '.strip(), b'**bla**'.strip(b'*'), b' bla'.lstrip(), b'bla'.rstrip(b'a'))
 
 # bytearray: {'__delitem__', 'pop', 'reverse', '__imul__', 'remove', '__iadd__', 'copy', 'insert', 'extend'} hashing .. __add__, __mul__.. check frozen in above tests?
 
