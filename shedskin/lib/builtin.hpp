@@ -432,6 +432,7 @@ public:
     void *__delitem__(__ss_int i);
     void *clear();
     void *append(__ss_int i);
+    __ss_int pop(__ss_int i=-1);
     bytes *copy();
 
 };
