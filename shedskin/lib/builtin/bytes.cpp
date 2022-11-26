@@ -114,7 +114,7 @@ __ss_bool bytes::__eq__(pyobj *p) {
 }
 
 bytes *bytes::__add__(bytes *b) {
-    bytes *s = new bytes();
+    bytes *s = new bytes(frozen);
 
     s->unit.reserve(size()+b->size());
     s->unit.append(unit);
@@ -128,7 +128,7 @@ bytes *bytes::__iadd__(bytes *b) {
 }
 
 bytes *bytes::__mul__(__ss_int n) { /* optimize */
-    bytes *r = new bytes();
+    bytes *r = new bytes(frozen);
     if(n<=0) return r;
     __GC_STRING &s = r->unit;
     __ss_int ulen = size();
@@ -481,6 +481,10 @@ bytes *bytes::center(int width, bytes *fillchar) {
         r->unit[j+i] = unit[i];
 
     return r;
+}
+
+bytes *bytes::copy() {
+    return new bytes(this, frozen);
 }
 
 /* bytearray */

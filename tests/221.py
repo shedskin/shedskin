@@ -49,7 +49,7 @@ print(b'bla'.center(10), b'bla'.center(10, b'-'))
 
 print(b'blabla'.hex(), b'blabla'.hex(':')) # TODO bytes_per_sep, bytes.fromhex
 
-# bytearray: {'pop', 'reverse', '__imul__', 'remove', '__iadd__', 'copy', 'insert', 'extend'} hashing .. __add__, __mul__.. check frozen in above tests? del/assign slice?
+# bytearray: {'pop', 'reverse', '__imul__', 'remove', '__iadd__', 'insert', 'extend'} hashing .. check frozen in above tests? del/assign slice?
 
 ba = bytearray(b'bla')
 ba.clear()
@@ -69,3 +69,8 @@ del ba[1]
 print(ba)
 del ba[-2]
 print(ba)
+
+ba = bytearray(b'bla')
+print(ba.copy())
+
+print(2*ba, ba*2, ba+ba)
