@@ -529,3 +529,10 @@ void *bytes::__delitem__(__ss_int i) {
     unit.erase(i, 1);
     return NULL;
 }
+
+__ss_int bytes::pop(__ss_int i) {
+    i = __wrap(this, i);
+    __ss_int result = (unsigned char)unit[i];
+    unit.erase(i, 1);
+    return result;
+}

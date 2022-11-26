@@ -531,6 +531,9 @@ class bytes_(pyseq):
     def copy(self):
         return self
 
+    def pop(self, index=-1):
+        return 1
+
     def __delitem__(self, i):
         pass
 
