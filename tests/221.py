@@ -23,7 +23,7 @@ print('bla'.isalpha(), '123'.isalpha())
 print('bla'.isdigit(), '123'.isdigit())
 print('bla'.isalnum(), '123'.isalnum(), '12a'.isalnum())
 
-# bytes
+# bytes TODO slicing?
 
 print(b'bla'.endswith(b'la'), b'bla'.endswith(b'xx'))
 print(b'-'.join([b'a', b'b', b'c']))
@@ -45,7 +45,7 @@ print(b'bla'.isalnum(), b'123'.isalnum(), b'12a'.isalnum())
 
 print(b'blabla'.hex(), b'blabla'.hex(':')) # TODO bytes_per_sep, bytes.fromhex
 
-# bytearray: {'__delitem__', 'pop', 'reverse', '__imul__', 'remove', '__iadd__', 'copy', 'insert', 'extend'} hashing .. __add__, __mul__.. check frozen in above tests?
+# bytearray: {'pop', 'reverse', '__imul__', 'remove', '__iadd__', 'copy', 'insert', 'extend'} hashing .. __add__, __mul__.. check frozen in above tests? del/assign slice?
 
 ba = bytearray(b'bla')
 ba.clear()
@@ -58,4 +58,10 @@ print(ba)
 ba = bytearray(b'bla')
 ba.append(81)
 ba.append(187)
+print(ba)
+
+ba = bytearray(b'bla')
+del ba[1]
+print(ba)
+del ba[-2]
 print(ba)

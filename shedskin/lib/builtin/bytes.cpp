@@ -487,3 +487,9 @@ bytes *bytes::swapcase() {
         r->unit[i] = __case_swap_cache->unit[(unsigned char)unit[i]];
     return r;
 }
+
+void *bytes::__delitem__(__ss_int i) {
+    i = __wrap(this, i);
+    unit.erase(i, 1);
+    return NULL;
+}
