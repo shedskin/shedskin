@@ -400,6 +400,20 @@ bytes *bytes::lower() {
     return toReturn;
 }
 
+bytes *bytes::replace(bytes *a, bytes *b, __ss_int c) {
+    __GC_STRING s = unit;
+    size_t i, j, p;
+    size_t asize = a->size();
+    size_t bsize = b->size();
+    size_t c2 = (size_t)c;
+    j = p = 0;
+    while( ((c2==std::string::npos) || (j++ != c2)) && (i = s.find(a->unit, p)) != std::string::npos ) {
+      s.replace(i, asize, b->unit);
+      p = i + bsize + (asize?0:1);
+    }
+    return new bytes(s);
+}
+
 /* bytearray */
 
 void *bytes::clear() {
@@ -410,4 +424,12 @@ void *bytes::clear() {
 void *bytes::append(__ss_int i) {
     unit += (unsigned char)i;
     return NULL;
+}
+
+bytes *bytes::swapcase() {
+    bytes *r = new bytes(unit);
+    int len = __len__();
+    for(int i = 0; i < len; i++)
+        r->unit[i] = __case_swap_cache->unit[(unsigned char)unit[i]];
+    return r;
 }
