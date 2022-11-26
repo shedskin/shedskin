@@ -377,8 +377,13 @@ public:
 
     bytes *upper();
     bytes *lower();
+    __ss_bool istitle();
+    __ss_bool isspace();
+    __ss_bool isalpha();
+    __ss_bool isdigit();
     __ss_bool islower();
     __ss_bool isupper();
+    __ss_bool isalnum();
 
     __ss_bool startswith(bytes *s, __ss_int start=0);
     __ss_bool startswith(bytes *s, __ss_int start, __ss_int end);

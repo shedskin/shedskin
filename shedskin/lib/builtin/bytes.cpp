@@ -379,6 +379,35 @@ __ss_bool bytes::__ctype_function(int (*cfunc)(int))
 
 __ss_bool bytes::islower() { return __ctype_function(&::islower); }
 __ss_bool bytes::isupper() { return __ctype_function(&::isupper); }
+__ss_bool bytes::isspace() { return __mbool(size() && (unit.find_first_not_of(ws) == std::string::npos)); }
+__ss_bool bytes::isdigit() { return __ctype_function(&::isdigit); }
+__ss_bool bytes::isalpha() { return __ctype_function(&::isalpha); }
+__ss_bool bytes::isalnum() { return __ctype_function(&::isalnum); }
+
+__ss_bool bytes::istitle()
+{
+    int i, len;
+
+    len = size();
+    if(!len)
+        return False;
+
+    for(i = 0; i < len; )
+    {
+        for( ; !::isalpha((int)unit[i]) && i < len; i++) ;
+        if(i == len) break;
+
+        if(!::isupper((int)unit[i])) return False;
+        i++;
+
+        for( ; ::islower((int)unit[i]) && i < len; i++) ;
+        if(i == len) break;
+
+        if(::isalpha((int)unit[i])) return False;
+    }
+
+    return True;
+}
 
 bytes *bytes::upper() {
     if(size() == 1)
