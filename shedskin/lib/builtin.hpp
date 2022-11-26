@@ -396,6 +396,8 @@ public:
 
     bytes *replace(bytes *a, bytes *b, __ss_int c=-1);
 
+    str *hex(str *sep=0);
+
     str *__str__();
     str *__repr__();
     bytes *__mul__(__ss_int n);

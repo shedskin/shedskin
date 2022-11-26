@@ -511,6 +511,9 @@ class bytes_(pyseq):
     def center(self, w, fill=''):
         return b''
 
+    def hex(self, sep=''): # TODO bytes_per_sep
+        return ''
+
     def __slice__(self, x, l, u, s):
         return self
     def __hash__(self):
