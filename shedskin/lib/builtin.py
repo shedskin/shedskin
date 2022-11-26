@@ -387,7 +387,7 @@ class str_(pyseq):
         return ''
     def rjust(self, width, chars=''):
         return ''
-    def expandtabs(self, width=8):
+    def expandtabs(self, tabsize=8):
         return ''
 
     def count(self, e, start=0, end=0):
@@ -489,7 +489,7 @@ class bytes_(pyseq):
         return b''
     def rjust(self, width, chars=''):
         return b''
-    def expandtabs(self, width=8):
+    def expandtabs(self, tabsize=8):
         return b''
 
     def count(self, e, start=0, end=0):

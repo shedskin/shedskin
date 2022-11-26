@@ -356,6 +356,15 @@ __ss_int bytes::count(__ss_int b, __ss_int start, __ss_int end) {
     return count;
 }
 
+bytes *bytes::expandtabs(int tabsize) {
+    size_t i;
+    __GC_STRING r = unit;
+    while((i = r.find("\t")) != std::string::npos)
+        r.replace(i, 1, (new bytes(" "))->__mul__(tabsize-i%tabsize)->unit);
+    return new bytes(r);
+}
+
+
 /* bytearray */
 
 void *bytes::clear() {
