@@ -371,13 +371,19 @@ public:
     const int find(const char *c, int a=0) const;
 
     int __fixstart(int a, int b);
-    int find(bytes *s, int a=0);
-    int find(bytes *s, int a, int b);
+
+    int find(bytes *s, __ss_int a=0);
+    int find(bytes *s, __ss_int a, __ss_int b);
 
     __ss_bool startswith(bytes *s, __ss_int start=0);
     __ss_bool startswith(bytes *s, __ss_int start, __ss_int end);
     __ss_bool endswith(bytes *s, __ss_int start=0);
     __ss_bool endswith(bytes *s, __ss_int start, __ss_int end);
+
+    __ss_int count(bytes *b, __ss_int start=0);
+    __ss_int count(__ss_int b, __ss_int start=0);
+    __ss_int count(bytes *b, __ss_int start, __ss_int end);
+    __ss_int count(__ss_int b, __ss_int start, __ss_int end);
 
     str *__str__();
     str *__repr__();
