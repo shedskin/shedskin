@@ -392,6 +392,10 @@ public:
 
     bytes *expandtabs(int tabsize=8);
 
+    bytes *swapcase();
+
+    bytes *replace(bytes *a, bytes *b, __ss_int c=-1);
+
     str *__str__();
     str *__repr__();
     bytes *__mul__(__ss_int n);
@@ -487,7 +491,7 @@ public:
     str *lower();
     str *title();
     str *capitalize();
-    str *replace(str *a, str *b, int c=-1);
+    str *replace(str *a, str *b, __ss_int c=-1);
     str *translate(str *table, str *delchars=0);
     str *swapcase();
     str *center(int w, str *fill=0);
