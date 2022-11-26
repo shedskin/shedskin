@@ -395,13 +395,17 @@ public:
     __ss_int count(bytes *b, __ss_int start, __ss_int end);
     __ss_int count(__ss_int b, __ss_int start, __ss_int end);
 
-    bytes *expandtabs(int tabsize=8);
+    bytes *expandtabs(__ss_int tabsize=8);
 
     bytes *swapcase();
 
     bytes *replace(bytes *a, bytes *b, __ss_int c=-1);
 
     bytes *center(__ss_int width, bytes *fillchar=0);
+
+    bytes *zfill(__ss_int width);
+    bytes *ljust(__ss_int width, bytes *fillchar=0);
+    bytes *rjust(__ss_int width, bytes *fillchar=0);
 
     str *hex(str *sep=0);
 
@@ -486,15 +490,15 @@ public:
     int __fixstart(int a, int b);
     int __checkneg(int i);
 
-    __ss_int find(str *s, int a=0);
-    __ss_int find(str *s, int a, int b);
-    __ss_int rfind(str *s, int a=0);
-    __ss_int rfind(str *s, int a, int b);
+    __ss_int find(str *s, __ss_int a=0);
+    __ss_int find(str *s, __ss_int a, __ss_int b);
+    __ss_int rfind(str *s, __ss_int a=0);
+    __ss_int rfind(str *s, __ss_int a, __ss_int b);
 
-    int index(str *s, int a=0);
-    int index(str *s, int a, int b);
-    int rindex(str *s, int a=0);
-    int rindex(str *s, int a, int b);
+    __ss_int index(str *s, __ss_int a=0);
+    __ss_int index(str *s, __ss_int a, __ss_int b);
+    __ss_int rindex(str *s, __ss_int a=0);
+    __ss_int rindex(str *s, __ss_int a, __ss_int b);
 
     __ss_int count(str *s, __ss_int start=0);
     __ss_int count(str *s, __ss_int start, __ss_int end);
@@ -524,11 +528,11 @@ public:
     __ss_bool endswith(str *s, __ss_int start=0);
     __ss_bool endswith(str *s, __ss_int start, __ss_int end);
 
-    str *zfill(int width);
-    str *expandtabs(int tabsize=8);
+    str *zfill(__ss_int width);
+    str *expandtabs(__ss_int tabsize=8);
 
-    str *ljust(int width, str *fchar=0);
-    str *rjust(int width, str *fchar=0);
+    str *ljust(__ss_int width, str *fillchar=0);
+    str *rjust(__ss_int width, str *fillchar=0);
 
     __ss_int __cmp__(pyobj *p);
     long __hash__();
