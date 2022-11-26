@@ -414,6 +414,31 @@ bytes *bytes::replace(bytes *a, bytes *b, __ss_int c) {
     return new bytes(s);
 }
 
+str *bytes::hex(str *sep) {
+    str *result = new str();
+    size_t l = size();
+
+    for(size_t i=0; i<l; i++) {
+        unsigned char low = unit[i] & 0xf;
+        unsigned char high = (unit[i] >> 4) & 0xf;
+
+        if(high < 10)
+            result->unit += '0' + high;
+        else
+            result->unit += 'a' - 10 + high;
+
+        if(low < 10)
+            result->unit += '0' + low;
+        else
+            result->unit += 'a' - 10 + low;
+
+        if(sep and i != l-1)
+            result->unit += sep->unit;
+    }
+
+    return result;
+}
+
 /* bytearray */
 
 void *bytes::clear() {
