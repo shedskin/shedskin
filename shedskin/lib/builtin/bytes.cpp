@@ -487,6 +487,23 @@ bytes *bytes::copy() {
     return new bytes(this, frozen);
 }
 
+bytes *bytes::zfill(__ss_int width) {
+    if(width<=__len__()) return this;
+    return (new bytes("0"))->__mul__(width-__len__())->__add__(this);
+}
+
+bytes *bytes::ljust(int width, bytes *s) {
+    if(width<=__len__()) return this;
+    if(!s) s = bsp;
+    return __add__(s->__mul__(width-__len__()));
+}
+
+bytes *bytes::rjust(int width, bytes *s) {
+    if(width<=__len__()) return this;
+    if(!s) s = bsp;
+    return s->__mul__(width-__len__())->__add__(this);
+}
+
 /* bytearray */
 
 void *bytes::clear() {

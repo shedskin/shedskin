@@ -2,7 +2,7 @@
 
 # str
 
-# 'capitalize', 'casefold', 'index', 'isascii', 'isdecimal', 'isidentifier', 'isnumeric', 'ljust', 'maketrans', 'partition', 'rfind', 'rindex', 'rjust', 'rpartition', 'rsplit', 'split', 'splitlines', 'title', 'translate', 'zfill'
+# 'capitalize', 'casefold', 'index', 'isascii', 'isdecimal', 'isidentifier', 'isnumeric', 'maketrans', 'partition', 'rfind', 'rindex', 'rpartition', 'rsplit', 'splitlines', 'title', 'translate'
 
 print('bla'.endswith('la'), 'bla'.endswith('xx'))
 print('bla'.startswith('bla'), 'bla'.startswith('xx'))
@@ -26,6 +26,9 @@ print('bla'.isalnum(), '123'.isalnum(), '12a'.isalnum())
 print('bla'.find('la'), 'bla'.find('ba'))
 print('bla'.center(10), 'bla'.center(10, '-'))
 print('bla'.split('l'), 'b l a'.split(), 'haajaaja'.split('aa'))
+print('bla'.zfill(10))
+print('bla'.ljust(8), 'bla'.ljust(6, '+'))
+print('bla'.rjust(8), 'bla'.rjust(6, '-'))
 
 # bytes TODO slicing?
 
@@ -50,6 +53,9 @@ print(b'bla'.isalnum(), b'123'.isalnum(), b'12a'.isalnum())
 print(b'bla'.find(b'la'), b'bla'.find(b'ba'))
 print(b'bla'.center(10), b'bla'.center(10, b'-'))
 print(b'bla'.split(b'l'), b'b l a'.split(), b'haajaaja'.split(b'aa'))
+print(b'bla'.zfill(10))
+print(b'bla'.ljust(8), b'bla'.ljust(6, b'+'))
+print(b'bla'.rjust(8), b'bla'.rjust(6, b'-'))
 
 print(b'blabla'.hex(), b'blabla'.hex(':')) # TODO bytes_per_sep, bytes.fromhex
 
