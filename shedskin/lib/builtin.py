@@ -524,11 +524,15 @@ class bytes_(pyseq):
 
     def clear(self):
         pass
+
     def append(self, x):
         pass
+
+    def copy(self):
+        return self
+
     def __delitem__(self, i):
         pass
-
 
 class dict(pyiter):
     def __initdict__(self, other):
