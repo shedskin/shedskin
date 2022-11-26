@@ -155,11 +155,11 @@ str *str::zfill(int width) {
     return (new str("0"))->__mul__(width-__len__())->__add__(this);
 }
 
-str *str::expandtabs(int width) {
+str *str::expandtabs(int tabsize) {
     size_t i;
     __GC_STRING r = unit;
     while((i = r.find("\t")) != std::string::npos)
-        r.replace(i, 1, (new str(" "))->__mul__(width-i%width)->unit);
+        r.replace(i, 1, (new str(" "))->__mul__(tabsize-i%tabsize)->unit);
     return new str(r);
 }
 

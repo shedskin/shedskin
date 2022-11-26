@@ -385,6 +385,8 @@ public:
     __ss_int count(bytes *b, __ss_int start, __ss_int end);
     __ss_int count(__ss_int b, __ss_int start, __ss_int end);
 
+    bytes *expandtabs(int tabsize=8);
+
     str *__str__();
     str *__repr__();
     bytes *__mul__(__ss_int n);
@@ -500,7 +502,7 @@ public:
     __ss_bool endswith(str *s, __ss_int start, __ss_int end);
 
     str *zfill(int width);
-    str *expandtabs(int width=8);
+    str *expandtabs(int tabsize=8);
 
     str *ljust(int width, str *fchar=0);
     str *rjust(int width, str *fchar=0);
