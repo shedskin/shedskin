@@ -519,9 +519,13 @@ class bytes_(pyseq):
     def __hash__(self):
         return 1
 
+    # bytearray
+
     def clear(self):
         pass
     def append(self, x):
+        pass
+    def __delitem__(self, i):
         pass
 
 

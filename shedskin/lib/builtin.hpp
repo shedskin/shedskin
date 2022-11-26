@@ -423,6 +423,7 @@ public:
     /* bytearray */
 
     void *__setitem__(__ss_int i, __ss_int e);
+    void *__delitem__(__ss_int i);
     void *clear();
     void *append(__ss_int i);
 
