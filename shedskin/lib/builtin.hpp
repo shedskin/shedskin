@@ -387,6 +387,7 @@ public:
     __ss_bool islower();
     __ss_bool isupper();
     __ss_bool isalnum();
+    __ss_bool isascii();
 
     __ss_bool startswith(bytes *s, __ss_int start=0);
     __ss_bool startswith(bytes *s, __ss_int start, __ss_int end);
@@ -526,6 +527,9 @@ public:
     __ss_bool isupper();
     __ss_bool isalnum();
     __ss_bool isprintable();
+    __ss_bool isnumeric();
+    __ss_bool isascii();
+    __ss_bool isdecimal();
 
     __ss_bool startswith(str *s, __ss_int start=0);
     __ss_bool startswith(str *s, __ss_int start, __ss_int end);

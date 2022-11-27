@@ -380,6 +380,12 @@ class str_(pyseq):
         return True
     def isprintable(self):
         return True
+    def isascii(self):
+        return True
+    def isdecimal(self):
+        return True
+    def isnumeric(self):
+        return True
 
     def zfill(self, width):
         return ''
@@ -481,6 +487,8 @@ class bytes_(pyseq):
     def isspace(self):
         return True
     def isalnum(self):
+        return True
+    def isascii(self):
         return True
 
     def zfill(self, width):
