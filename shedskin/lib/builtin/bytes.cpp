@@ -10,7 +10,7 @@ bytes::bytes(const char *s) : unit(s), hash(-1), frozen(1) {
     __class__ = cl_bytes;
 }
 
-bytes::bytes(__GC_STRING s) : unit(s), hash(-1), frozen(1) {
+bytes::bytes(__GC_STRING s, int frozen) : unit(s), hash(-1), frozen(frozen) {
     __class__ = cl_bytes;
 }
 
@@ -361,7 +361,7 @@ bytes *bytes::expandtabs(int tabsize) {
     __GC_STRING r = unit;
     while((i = r.find("\t")) != std::string::npos)
         r.replace(i, 1, (new bytes(" "))->__mul__(tabsize-i%tabsize)->unit);
-    return new bytes(r);
+    return new bytes(r, frozen);
 }
 
 __ss_bool bytes::__ctype_function(int (*cfunc)(int))
@@ -424,9 +424,9 @@ __ss_bool bytes::isascii() {
 
 bytes *bytes::upper() {
     if(size() == 1)
-        return new bytes(__char_cache[((unsigned char)(::toupper(unit[0])))]->unit);
+        return new bytes(__char_cache[((unsigned char)(::toupper(unit[0])))]->unit, frozen);
 
-    bytes *toReturn = new bytes(*this);
+    bytes *toReturn = new bytes(this->unit, frozen);
     std::transform(toReturn->unit.begin(), toReturn->unit.end(), toReturn->unit.begin(), toupper);
 
     return toReturn;
@@ -434,9 +434,9 @@ bytes *bytes::upper() {
 
 bytes *bytes::lower() {
     if(size() == 1)
-        return new bytes(__char_cache[((unsigned char)(::tolower(unit[0])))]->unit);
+        return new bytes(__char_cache[((unsigned char)(::tolower(unit[0])))]->unit, frozen);
 
-    bytes *toReturn = new bytes(*this);
+    bytes *toReturn = new bytes(this->unit, frozen);
     std::transform(toReturn->unit.begin(), toReturn->unit.end(), toReturn->unit.begin(), tolower);
 
     return toReturn;
@@ -478,7 +478,7 @@ bytes *bytes::replace(bytes *a, bytes *b, __ss_int c) {
       s.replace(i, asize, b->unit);
       p = i + bsize + (asize?0:1);
     }
-    return new bytes(s);
+    return new bytes(s, frozen);
 }
 
 str *bytes::hex(str *sep) {
@@ -555,7 +555,7 @@ void *bytes::append(__ss_int i) {
 }
 
 bytes *bytes::swapcase() {
-    bytes *r = new bytes(unit);
+    bytes *r = new bytes(unit, frozen);
     int len = __len__();
     for(int i = 0; i < len; i++)
         r->unit[i] = __case_swap_cache->unit[(unsigned char)unit[i]];

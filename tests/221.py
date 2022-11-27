@@ -70,6 +70,18 @@ print(b'bla'.isascii(), b'\xf0'.isascii())
 
 # bytearray: {'reverse', '__imul__', 'remove', '__iadd__', 'insert', 'extend'} hashing .. check frozen in above tests? del/assign slice?
 
+BA = bytearray(b'-')
+A = bytearray(b'a')
+B = bytearray(b'b')
+C = bytearray(b'c')
+
+print(BA.join([A, B, C]))
+print(BA.expandtabs())
+print(BA.upper())
+print(BA.lower())
+print(BA.replace(A, B))
+print(BA.swapcase())
+
 ba = bytearray(b'bla')
 ba.clear()
 print(ba)

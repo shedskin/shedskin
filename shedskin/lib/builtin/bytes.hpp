@@ -50,7 +50,7 @@ template <class U> bytes *bytes::join(U *iter) {
     int elems = len(__join_cache_bin);
     if(elems==1)
         return __join_cache_bin->units[0];
-    bytes *s = new bytes();
+    bytes *s = new bytes(frozen);
     if(unitsize == 0 and only_ones) {
         s->unit.resize(total);
         for(int j=0; j<elems; j++)
