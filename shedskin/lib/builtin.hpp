@@ -347,7 +347,7 @@ public:
     bytes(int frozen=1);
     bytes(const char *s);
     bytes(bytes *b, int frozen=1);
-    bytes(__GC_STRING s);
+    bytes(__GC_STRING s, int frozen=1);
     bytes(const char *s, int size); /* '\0' delimiter in C */
 
     inline __ss_int __getitem__(__ss_int i);
