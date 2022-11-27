@@ -409,6 +409,19 @@ __ss_bool bytes::istitle()
     return True;
 }
 
+__ss_bool bytes::isascii() {
+  int i, l = size();
+
+  for(i = 0; i < l; i++) {
+      unsigned char elem = unit[i];
+
+      if(elem > 127)
+          return False;
+  }
+
+  return True;
+}
+
 bytes *bytes::upper() {
     if(size() == 1)
         return new bytes(__char_cache[((unsigned char)(::toupper(unit[0])))]->unit);

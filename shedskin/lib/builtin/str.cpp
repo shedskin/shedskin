@@ -138,6 +138,45 @@ __ss_bool str::isprintable() {
   return True;
 }
 
+__ss_bool str::isascii() {
+  int i, l = size();
+
+  for(i = 0; i < l; i++) {
+      unsigned char elem = unit[i];
+
+      if(elem > 127)
+          return False;
+  }
+
+  return True;
+}
+
+__ss_bool str::isdecimal() {
+  int i, l = size();
+
+  for(i = 0; i < l; i++) {
+      unsigned char elem = unit[i];
+
+      if(elem < 48 or elem > 57)
+          return False;
+  }
+
+  return True;
+}
+
+__ss_bool str::isnumeric() {
+  int i, l = size();
+
+  for(i = 0; i < l; i++) {
+      unsigned char elem = unit[i];
+
+      if(elem < 48 or (elem > 57 and elem < 178) or (elem > 179 and elem < 185) or (elem > 185 and elem < 188) or elem > 190)
+          return False;
+  }
+
+  return True;
+}
+
 str *str::ljust(int width, str *s) {
     if(width<=__len__()) return this;
     if(!s) s = sp;
