@@ -331,6 +331,22 @@ __ss_bool str::istitle()
     return True;
 }
 
+__ss_bool str::isidentifier() {
+    int i, len;
+
+    len = size();
+    if(!len)
+        return False;
+    if('0' <= unit[0] and unit[0] <= '9')
+        return False;
+
+    for(i = 0; i < len; i++)
+        if(not (('a' <= unit[i] and unit[i] <= 'z') or ('A' <= unit[i] and unit[i] <= 'Z') or (unit[i] == '_')))
+            return False;
+
+    return True;
+}
+
 list<str *> *str::splitlines(int keepends)
 {
     list<str *> *r = new list<str *>();

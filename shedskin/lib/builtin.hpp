@@ -348,7 +348,7 @@ public:
     bytes(const char *s);
     bytes(bytes *b, int frozen=1);
     bytes(__GC_STRING s, int frozen=1);
-    bytes(const char *s, int size); /* '\0' delimiter in C */
+    bytes(const char *s, int size, int frozen=1); /* '\0' delimiter in C */
 
     inline __ss_int __getitem__(__ss_int i);
     inline __ss_int __getfast__(__ss_int i);
@@ -363,6 +363,10 @@ public:
     bytes *lstrip(bytes *chars=0);
 
     list<bytes *> *split(bytes *sep=0, int maxsplit=-1);
+    list<bytes *> *rsplit(bytes *sep = 0, int maxsplit = -1);
+    tuple2<bytes *, bytes *> *rpartition(bytes *sep);
+    tuple2<bytes *, bytes *> *partition(bytes *sep);
+    list<bytes *> *splitlines(int keepends = 0);
 
     /* functions pointing to the underlying C++ implementation */
     const char *c_str() const;
@@ -440,12 +444,15 @@ public:
 
     /* bytearray */
 
-    void *__setitem__(__ss_int i, __ss_int e);
-    void *__delitem__(__ss_int i);
     void *clear();
     void *append(__ss_int i);
     __ss_int pop(__ss_int i=-1);
     bytes *copy();
+    void *extend(pyiter<__ss_int> *p);
+    void *reverse();
+
+    void *__setitem__(__ss_int i, __ss_int e);
+    void *__delitem__(__ss_int i);
 
 };
 
@@ -465,7 +472,6 @@ public:
     str *strip(str *chars=0);
     str *lstrip(str *chars=0);
     str *rstrip(str *chars=0);
-    list<str *> *split(str *sep=0, int maxsplit=-1);
     __ss_bool __eq__(pyobj *s);
     str *__add__(str *b);
 
@@ -495,6 +501,7 @@ public:
     inline __ss_int __len__();
     str *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
 
+    list<str *> *split(str *sep=0, int maxsplit=-1);
     list<str *> *rsplit(str *sep = 0, int maxsplit = -1);
     tuple2<str *, str *> *rpartition(str *sep);
     tuple2<str *, str *> *partition(str *sep);
@@ -538,6 +545,7 @@ public:
     __ss_bool isnumeric();
     __ss_bool isascii();
     __ss_bool isdecimal();
+    __ss_bool isidentifier();
 
     __ss_bool startswith(str *s, __ss_int start=0);
     __ss_bool startswith(str *s, __ss_int start, __ss_int end);

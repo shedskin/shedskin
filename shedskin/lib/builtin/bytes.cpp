@@ -19,7 +19,7 @@ bytes::bytes(bytes *b, int frozen) : hash(-1), frozen(frozen) {
     unit = b->unit;
 }
 
-bytes::bytes(const char *s, int size) : unit(s, size), hash(-1), frozen(1) { /* '\0' delimiter in C */
+bytes::bytes(const char *s, int size, int frozen) : unit(s, size), hash(-1), frozen(frozen) { /* '\0' delimiter in C */
     __class__ = cl_bytes;
 }
 
@@ -165,7 +165,7 @@ bytes *bytes::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
     slicenr(x, l, u, s, len);
     bytes *b;
     if(s == 1)
-        b = new bytes(unit.data()+l, u-l);
+        b = new bytes(unit.data()+l, u-l, frozen);
     else {
         __GC_STRING r;
         if(!(x&1) && !(x&2) && s==-1) {
@@ -179,9 +179,8 @@ bytes *bytes::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
         else
             for(int i=l; i>u; i += s)
                 r += unit[i];
-        b = new bytes(r);
+        b = new bytes(r, frozen);
     }
-    b->frozen = 1;
     return b;
 }
 
@@ -222,8 +221,8 @@ bytes *bytes::rstrip(bytes *chars) {
     else remove = ws;
     size_t last = unit.find_last_not_of(remove);
     if( last == std::string::npos )
-        return new bytes();
-    return new bytes(unit.substr(0,last+1));
+        return new bytes(frozen);
+    return new bytes(unit.substr(0,last+1), frozen);
 }
 
 bytes *bytes::lstrip(bytes *chars) {
@@ -232,8 +231,8 @@ bytes *bytes::lstrip(bytes *chars) {
     else remove = ws;
     size_t first = unit.find_first_not_of(remove);
     if( first == std::string::npos )
-        return new bytes();
-    return new bytes(unit.substr(first,size()-first));
+        return new bytes(frozen);
+    return new bytes(unit.substr(first,size()-first), frozen);
 }
 
 bytes *bytes::strip(bytes *chars) {
@@ -257,7 +256,7 @@ list<bytes *> *bytes::split(bytes *sp, int max_splits) {
         while((max_splits < 0 or num_splits < max_splits)
               and ((sep_iter = next_separator(chunk_iter)) != std::string::npos))
         {
-            result->append(new bytes(s.substr(chunk_iter, sep_iter - chunk_iter)));
+            result->append(new bytes(s.substr(chunk_iter, sep_iter - chunk_iter), frozen));
             if((tmp = skip_separator(sep_iter)) == std::string::npos) {
                 chunk_iter = sep_iter;
                 break;
@@ -266,9 +265,9 @@ list<bytes *> *bytes::split(bytes *sp, int max_splits) {
             ++num_splits;
         }
         if(not (max_splits < 0 or num_splits < max_splits))
-            result->append(new bytes(s.substr(chunk_iter, s.size()-chunk_iter)));
+            result->append(new bytes(s.substr(chunk_iter, s.size()-chunk_iter), frozen));
         else if(sep_iter == std::string::npos)
-            result->append(new bytes(s.substr(chunk_iter, s.size()-chunk_iter)));
+            result->append(new bytes(s.substr(chunk_iter, s.size()-chunk_iter), frozen));
 
 #undef next_separator
 #undef skip_separator
@@ -287,13 +286,13 @@ list<bytes *> *bytes::split(bytes *sp, int max_splits) {
         }
         if(next_separator(chunk_iter) == 0) {
             chunk_iter = skip_separator(chunk_iter);
-            result->append(new bytes());
+            result->append(new bytes(frozen));
             ++num_splits;
         }
         while((max_splits < 0 or num_splits < max_splits)
               and (sep_iter = next_separator(chunk_iter)) != std::string::npos)
         {
-            result->append(new bytes(s.substr(chunk_iter, sep_iter - chunk_iter)));
+            result->append(new bytes(s.substr(chunk_iter, sep_iter - chunk_iter), frozen));
             if((tmp = skip_separator(sep_iter)) == std::string::npos) {
                 chunk_iter = sep_iter;
                 break;
@@ -302,9 +301,9 @@ list<bytes *> *bytes::split(bytes *sp, int max_splits) {
             ++num_splits;
         }
         if(not (max_splits < 0 or num_splits < max_splits))
-            result->append(new bytes(s.substr(chunk_iter, s.size()-chunk_iter)));
+            result->append(new bytes(s.substr(chunk_iter, s.size()-chunk_iter), frozen));
         else if(sep_iter == std::string::npos)
-            result->append(new bytes(s.substr(chunk_iter, s.size()-chunk_iter)));
+            result->append(new bytes(s.substr(chunk_iter, s.size()-chunk_iter), frozen));
 
 
 #undef next_separator
@@ -313,6 +312,116 @@ list<bytes *> *bytes::split(bytes *sp, int max_splits) {
     }
 
     return result;
+}
+
+list<bytes *> *bytes::rsplit(bytes *sep, __ss_int maxsep)
+{
+    __GC_STRING ts;
+    list<bytes *> *r = new list<bytes *>();
+    size_t i, j, curi, tslen;
+    size_t maxsep2 = (size_t)maxsep;
+
+    curi = 0;
+    i = j = size() - 1;
+
+    //split by whitespace
+    if(!sep)
+    {
+        while(i > 0 && j > 0 && (curi < maxsep2 || maxsep2 < 0))
+        {
+            j = unit.find_last_not_of(ws, i);
+            if(j == std::string::npos) break;
+
+            i = unit.find_last_of(ws, j);
+
+            //this works out pretty nicely; i will be -1 if no more is found, and thus i + 1 will be 0th index
+            r->append(new bytes(unit.substr(i + 1, j - i)));
+            curi++;
+        }
+
+        //thus we only bother about extra stuff here if we *have* found more whitespace
+        if(i > 0 && j >= 0 && (j = unit.find_last_not_of(ws, i)) >= 0) r->append(new bytes(unit.substr(0, j)));
+    }
+
+    //split by seperator
+    else
+    {
+        ts = sep->unit;
+        tslen = ts.length();
+
+        i++;
+        while(i > 0 && j > 0 && (curi < maxsep2 || maxsep2 < 0))
+        {
+            j = i;
+            i--;
+
+            i = unit.rfind(ts, i);
+            if(i == std::string::npos)
+            {
+                i = j;
+                break;
+            }
+
+            r->append(new bytes(unit.substr(i + tslen, j - i - tslen)));
+
+            curi++;
+        }
+
+        //either left over (beyond max) or very last match (see loop break)
+        if(i >= 0) r->append(new bytes(unit.substr(0, i)));
+    }
+
+    r->reverse();
+
+    return r;
+}
+
+tuple2<bytes *, bytes *> *bytes::partition(bytes *sep)
+{
+    size_t i;
+
+    i = find(sep->c_str());
+    if(i != std::string::npos)
+        return new tuple2<bytes *, bytes *>(3, new bytes(unit.substr(0, i), frozen), new bytes(sep->unit, frozen), new bytes(unit.substr(i + sep->unit.length()), frozen));
+    else
+        return new tuple2<bytes *, bytes *>(3, new bytes(unit, frozen), new bytes(frozen), new bytes(frozen));
+}
+
+tuple2<bytes *, bytes *> *bytes::rpartition(bytes *sep)
+{
+    size_t i;
+
+    i = unit.rfind(sep->unit);
+    if(i != std::string::npos)
+        return new tuple2<bytes *, bytes *>(3, new bytes(unit.substr(0, i), frozen), new bytes(sep->unit, frozen), new bytes(unit.substr(i + sep->unit.length()), frozen));
+    else
+        return new tuple2<bytes *, bytes *>(3, new bytes(unit, frozen), new bytes(frozen), new bytes(frozen));
+}
+
+list<bytes *> *bytes::splitlines(int keepends)
+{
+    list<bytes *> *r = new list<bytes *>();
+    size_t i, j, endlen;
+    const char *ends = "\r\n";
+
+    endlen = i = 0;
+    do
+    {
+        j = i + endlen;
+        i = unit.find_first_of(ends, j);
+        if(i == std::string::npos) break;
+
+        //for all we know the character sequence could change mid-way...
+        if(unit[i] == '\r' && unit[i + 1] == '\n') endlen = 2;
+        else endlen = 1;
+
+        r->append(new bytes(unit.substr(j, i - j + (keepends ? endlen : 0)), frozen));
+    }
+    while(i >= 0);
+
+    if(j != size()) r->append(new bytes(unit.substr(j), frozen));
+
+    return r;
 }
 
 __ss_bool bytes::startswith(bytes *s, __ss_int start) { return startswith(s, start, __len__()); }
@@ -458,7 +567,7 @@ bytes *bytes::lower() {
 }
 
 bytes *bytes::title() {
-    bytes *r = new bytes(unit);
+    bytes *r = new bytes(unit, frozen);
     bool up = true;
     size_t len = this->size();
     for(size_t i=0; i<len; i++) {
@@ -477,7 +586,7 @@ bytes *bytes::title() {
 }
 
 bytes *bytes::capitalize() {
-    bytes *r = new bytes(unit);
+    bytes *r = new bytes(unit, frozen);
     r->unit[0] = ::toupper(r->unit[0]);
     return r;
 }
@@ -533,6 +642,7 @@ bytes *bytes::center(int width, bytes *fillchar) {
     for(int i=0; i<len; i++)
         r->unit[j+i] = unit[i];
 
+    r->frozen = frozen;
     return r;
 }
 
@@ -542,19 +652,25 @@ bytes *bytes::copy() {
 
 bytes *bytes::zfill(__ss_int width) {
     if(width<=__len__()) return this;
-    return (new bytes("0"))->__mul__(width-__len__())->__add__(this);
+    bytes *r = (new bytes("0"))->__mul__(width-__len__())->__add__(this);
+    r->frozen = frozen;
+    return r;
 }
 
 bytes *bytes::ljust(int width, bytes *s) {
     if(width<=__len__()) return this;
     if(!s) s = bsp;
-    return __add__(s->__mul__(width-__len__()));
+    bytes *r = __add__(s->__mul__(width-__len__()));
+    r->frozen = frozen;
+    return r;
 }
 
 bytes *bytes::rjust(int width, bytes *s) {
     if(width<=__len__()) return this;
     if(!s) s = bsp;
-    return s->__mul__(width-__len__())->__add__(this);
+    bytes *r = s->__mul__(width-__len__())->__add__(this);
+    r->frozen = frozen;
+    return r;
 }
 
 /* bytearray */
@@ -588,4 +704,21 @@ __ss_int bytes::pop(__ss_int i) {
     __ss_int result = (unsigned char)unit[i];
     unit.erase(i, 1);
     return result;
+}
+
+void *bytes::extend(pyiter<__ss_int> *t) {
+    __ss_int e;
+    typename pyiter<__ss_int>::for_in_loop __3;
+    int __2;
+    pyiter<__ss_int> *__1;
+    FOR_IN(e,t,1,2,3)
+        unit += (unsigned char)e;
+    END_FOR
+    return NULL;
+}
+
+void *bytes::reverse() {
+    __GC_STRING s(unit.rbegin(), unit.rend());
+    unit = s;
+    return NULL;
 }
