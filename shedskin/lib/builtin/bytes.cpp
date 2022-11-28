@@ -359,7 +359,7 @@ list<bytes *> *bytes::rsplit(bytes *sep, __ss_int maxsep)
         tslen = ts.length();
 
         i++;
-        while(i > 0 && j > 0 && (curi < maxsep2 || maxsep2 < 0))
+        while(i != std::string::npos && j != std::string::npos && (curi < maxsep2 || maxsep2 < 0))
         {
             j = i;
             i--;
@@ -377,7 +377,8 @@ list<bytes *> *bytes::rsplit(bytes *sep, __ss_int maxsep)
         }
 
         //either left over (beyond max) or very last match (see loop break)
-        if(i >= 0) r->append(new bytes(unit.substr(0, i), frozen));
+        if(i != std::string::npos)
+            r->append(new bytes(unit.substr(0, i), frozen));
     }
 
     r->reverse();
