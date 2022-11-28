@@ -3,7 +3,7 @@
 # TODO maketrans, translate
 # TODO fix rsplit?
 
-# {'__imul__', 'remove', '__iadd__', 'insert'} hashing .. del/assign slice?
+# {'remove', 'insert'} hashing .. del/assign slice?
 
 # str
 
@@ -47,6 +47,7 @@ print('bla\r\nblup'.splitlines(), 'bla\r\nblup'.splitlines(keepends=True))
 print('aa-bb-cc'.partition('-'), 'aa-bb-cc'.rpartition('-'))
 print('bla'[1], 'bla'[1:], 'bla'[::-1])
 print('BLA'.casefold())
+print('bla'+'bla', 'bla'*3, 3*'bla')
 
 # bytes
 
@@ -85,6 +86,7 @@ print(b'bla'.isascii(), b'\xf0'.isascii(), b''.isascii())
 print(b'bla\r\nblup'.splitlines(), b'bla\r\nblup'.splitlines(keepends=True))
 print(b'aa-bb-cc'.partition(b'-'), b'aa-bb-cc'.rpartition(b'-'))
 print(b'bla'[1], b'bla'[1:], b'bla'[::-1])
+print(b'bla'+b'bla', b'bla'*3, 3*b'bla')
 
 # bytearray
 
@@ -111,6 +113,7 @@ print(BA.capitalize())
 print(BA.splitlines())
 print(BLA.partition(A), BLA.rpartition(B))
 print(BLA[1], BLA[1:], BLA[::-1])
+print(BLA+BLA, 3*BLA, BLA*3)
 
 ba = bytearray(b'bla')
 ba.clear()
@@ -149,4 +152,10 @@ print(ba)
 
 ba = bytearray(b'bla')
 ba.reverse()
+print(ba)
+
+ba = bytearray(b'bla')
+ba += A + B
+print(ba)
+ba *= 2
 print(ba)
