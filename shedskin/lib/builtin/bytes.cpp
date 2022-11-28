@@ -734,3 +734,11 @@ void *bytes::reverse() {
     unit = s;
     return NULL;
 }
+
+void *bytes::remove(__ss_int i) {
+    __ss_int pos = find(i);
+    if(pos == -1)
+        throw new ValueError(new str("value not found in bytearray"));
+    __delitem__(pos);
+    return NULL;
+}
