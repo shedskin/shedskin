@@ -550,6 +550,9 @@ class bytes_(pyseq):
     def remove(self, value):
         pass
 
+    def insert(self, index, item):
+        pass
+
     def extend(self, i):
         pass
 
