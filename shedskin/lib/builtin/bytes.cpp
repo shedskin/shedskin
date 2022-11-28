@@ -652,7 +652,11 @@ bytes *bytes::copy() {
 
 bytes *bytes::zfill(__ss_int width) {
     if(width<=__len__()) return this;
-    bytes *r = (new bytes("0"))->__mul__(width-__len__())->__add__(this);
+    bytes *r;
+    if(__len__() > 0 and (unit[0] == '-' or unit[0] == '+'))
+        r = __add__((new bytes("0"))->__mul__(width-__len__()));
+    else
+        r = (new bytes("0"))->__mul__(width-__len__())->__add__(this);
     r->frozen = frozen;
     return r;
 }

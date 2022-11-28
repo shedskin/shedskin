@@ -197,7 +197,10 @@ str *str::rjust(int width, str *s) {
 
 str *str::zfill(int width) {
     if(width<=__len__()) return this;
-    return (new str("0"))->__mul__(width-__len__())->__add__(this);
+    if(__len__() > 0 and (unit[0] == '-' or unit[0] == '+'))
+        return __add__((new str("0"))->__mul__(width-__len__()));
+    else
+        return (new str("0"))->__mul__(width-__len__())->__add__(this);
 }
 
 str *str::expandtabs(int tabsize) {

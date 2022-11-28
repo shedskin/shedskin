@@ -2,7 +2,6 @@
 # TODO hex(bytes_per_sep), bytes.fromhex
 # TODO maketrans, translate
 # TODO fix rsplit?
-# TODO zfill: filling on right for '-'!?!?!?
 
 # {'__imul__', 'remove', '__iadd__', 'insert'} hashing .. del/assign slice?
 
@@ -105,7 +104,7 @@ print(BA.split())
 #print(BA.rsplit())
 print(BA.strip(), BA.lstrip(), BA.rstrip())
 print(BA.center(10))
-#print(BA.zfill(10))
+print(bytearray(b'-').zfill(10))
 print(BA.ljust(10), BA.rjust(10))
 print(BA.title())
 print(BA.capitalize())
