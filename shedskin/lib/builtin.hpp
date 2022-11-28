@@ -453,6 +453,8 @@ public:
     void *__setitem__(__ss_int i, __ss_int e);
     void *__delitem__(__ss_int i);
 
+    void *remove(__ss_int i);
+
     bytes *__iadd__(bytes *b);
     bytes *__imul__(__ss_int n);
 

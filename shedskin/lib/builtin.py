@@ -547,6 +547,9 @@ class bytes_(pyseq):
     def pop(self, index=-1):
         return 1
 
+    def remove(self, value):
+        pass
+
     def extend(self, i):
         pass
 

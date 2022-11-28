@@ -155,6 +155,10 @@ ba.reverse()
 print(ba)
 
 ba = bytearray(b'bla')
+ba.remove(ord('l'))
+print(ba)
+
+ba = bytearray(b'bla')
 ba += A + B
 print(ba)
 ba *= 2
