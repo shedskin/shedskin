@@ -449,6 +449,7 @@ public:
     bytes *copy();
     void *extend(pyiter<__ss_int> *p);
     void *reverse();
+    void *insert(__ss_int index, __ss_int item);
 
     void *__setitem__(__ss_int i, __ss_int e);
     void *__delitem__(__ss_int i);

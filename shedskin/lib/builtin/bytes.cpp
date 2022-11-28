@@ -742,3 +742,9 @@ void *bytes::remove(__ss_int i) {
     __delitem__(pos);
     return NULL;
 }
+
+void *bytes::insert(__ss_int index, __ss_int item) {
+    index = __wrap(this, index);
+    unit.insert(unit.begin()+index, item);
+    return NULL;
+}

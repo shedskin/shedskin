@@ -2,8 +2,7 @@
 # TODO hex(bytes_per_sep), bytes.fromhex
 # TODO maketrans, translate
 # TODO fix rsplit?
-
-# {'remove', 'insert'} hashing .. del/assign slice?
+# TODO hashing .. del/assign slice?
 
 # str
 
@@ -162,4 +161,9 @@ ba = bytearray(b'bla')
 ba += A + B
 print(ba)
 ba *= 2
+print(ba)
+
+ba = bytearray(b'bla')
+ba.insert(1, ord('u'))
+ba.insert(-2, ord('w'))
 print(ba)
