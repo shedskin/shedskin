@@ -371,9 +371,12 @@ public:
     const int find(const char *c, int a=0) const;
 
     int __fixstart(int a, int b);
+    int __checkneg(int i);
 
     __ss_int find(bytes *s, __ss_int a=0);
     __ss_int find(bytes *s, __ss_int a, __ss_int b);
+    __ss_int rfind(bytes *s, __ss_int a=0);
+    __ss_int rfind(bytes *s, __ss_int a, __ss_int b);
 
     bytes *upper();
     bytes *lower();
@@ -398,6 +401,11 @@ public:
     __ss_int count(__ss_int b, __ss_int start=0);
     __ss_int count(bytes *b, __ss_int start, __ss_int end);
     __ss_int count(__ss_int b, __ss_int start, __ss_int end);
+
+    __ss_int index(bytes *s, __ss_int a=0);
+    __ss_int index(bytes *s, __ss_int a, __ss_int b);
+    __ss_int rindex(bytes *s, __ss_int a=0);
+    __ss_int rindex(bytes *s, __ss_int a, __ss_int b);
 
     bytes *expandtabs(__ss_int tabsize=8);
 

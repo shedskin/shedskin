@@ -51,6 +51,21 @@ int bytes::__fixstart(int a, int b) {
 int bytes::find(bytes *s, int a) { return __fixstart(unit.substr(a, size()-a).find(s->unit), a); }
 int bytes::find(bytes *s, int a, int b) { return __fixstart(unit.substr(a, b-a).find(s->unit), a); }
 
+__ss_int bytes::rfind(bytes *s, int a) { return __fixstart(unit.substr(a, size()-a).rfind(s->unit), a); }
+__ss_int bytes::rfind(bytes *s, int a, int b) { return __fixstart(unit.substr(a, b-a).rfind(s->unit), a); }
+
+int bytes::__checkneg(int i) {
+    if(i == -1)
+        throw new ValueError(new str("substring not found"));
+    return i;
+}
+
+int bytes::index(bytes *s, int a) { return __checkneg(find(s, a)); }
+int bytes::index(bytes *s, int a, int b) { return __checkneg(find(s, a, b)); }
+
+int bytes::rindex(bytes *s, int a) { return __checkneg(find(s, a)); }
+int bytes::rindex(bytes *s, int a, int b) { return __checkneg(find(s, a, b)); }
+
 str *bytes::__repr__() {
     std::stringstream ss;
     __GC_STRING sep = "\\\n\r\t";

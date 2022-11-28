@@ -2,7 +2,7 @@
 
 # str
 
-# 'casefold', 'index', 'isidentifier', 'maketrans', 'partition', 'rfind', 'rindex', 'rpartition', 'rsplit', 'splitlines', 'translate'
+# 'casefold', 'isidentifier', 'maketrans', 'partition', 'rpartition', 'rsplit', 'splitlines', 'translate'
 
 print('bla'.endswith('la'), 'bla'.endswith('xx'))
 print('bla'.startswith('bla'), 'bla'.startswith('xx'))
@@ -18,6 +18,9 @@ print('bla'.replace('la', 'bla'))
 print('bLa'.swapcase())
 print('bla  '.strip(), '**bla**'.strip('*'), ' bla'.lstrip(), 'bla'.rstrip('a'))
 print('bla'.find('la'), 'bla'.find('ba'))
+print('bla'.rfind('la'), 'bla'.rfind('ba'))
+print('bla'.index('la'), 'bla'.index('bl'))
+print('bla'.rindex('la'), 'bla'.rindex('bl'))
 print('bla'.center(10), 'bla'.center(10, '-'))
 print('bla'.split('l'), 'b l a'.split(), 'haajaaja'.split('aa'))
 print('bla'.zfill(10))
@@ -52,6 +55,9 @@ print(b'bla'.replace(b'la', b'bla'))
 print(b'bLa'.swapcase())
 print(b'bla  '.strip(), b'**bla**'.strip(b'*'), b' bla'.lstrip(), b'bla'.rstrip(b'a'))
 print(b'bla'.find(b'la'), b'bla'.find(b'ba'))
+print(b'bla'.rfind(b'la'), b'bla'.rfind(b'ba'))
+print(b'bla'.index(b'la'), b'bla'.index(b'bl'))
+print(b'bla'.rindex(b'la'), b'bla'.rindex(b'bl'))
 print(b'bla'.center(10), b'bla'.center(10, b'-'))
 print(b'bla'.split(b'l'), b'b l a'.split(), b'haajaaja'.split(b'aa'))
 print(b'bla'.zfill(10))
