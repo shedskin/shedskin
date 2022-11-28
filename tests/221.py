@@ -1,7 +1,6 @@
 # TODO why no error for b''.hex(':', 2)?
 # TODO hex(bytes_per_sep), bytes.fromhex
 # TODO maketrans, translate
-# TODO fix rsplit?
 # TODO hashing .. del/assign slice?
 
 # str
@@ -25,7 +24,7 @@ print('bla'.index('la'), 'bla'.index('bl'))
 print('bla'.rindex('la'), 'bla'.rindex('bl'))
 print('bla'.center(10), 'bla'.center(10, '-'))
 print('bla'.split('l'), 'b l a'.split(), 'haajaaja'.split('aa'))
-#print('bla'.rsplit('l'), 'b l a'.rsplit(), 'haajaaja'.rsplit('aa'))
+print('bla'.rsplit('l'), 'b l a'.rsplit(), 'haajaaja'.rsplit('aa'))
 print('bla'.zfill(10))
 print('bla'.ljust(8), 'bla'.ljust(6, '+'))
 print('bla'.rjust(8), 'bla'.rjust(6, '-'))
@@ -69,7 +68,7 @@ print(b'bla'.index(b'la'), b'bla'.index(b'bl'))
 print(b'bla'.rindex(b'la'), b'bla'.rindex(b'bl'))
 print(b'bla'.center(10), b'bla'.center(10, b'-'))
 print(b'bla'.split(b'l'), b'b l a'.split(), b'haajaaja'.split(b'aa'))
-#print(b'bla'.rsplit(b'l'), b'b l a'.split(), b'haajaaja'.split(b'aa'))
+print(b'bla'.rsplit(b'l'), b'b l a'.rsplit(), b'haajaaja'.rsplit(b'aa'))
 print(b'bla'.zfill(10))
 print(b'bla'.ljust(8), b'bla'.ljust(6, b'+'))
 print(b'bla'.rjust(8), b'bla'.rjust(6, b'-'))
@@ -102,7 +101,7 @@ print(BA.lower())
 print(BA.replace(A, B))
 print(BA.swapcase())
 print(BA.split())
-#print(BA.rsplit())
+print(BA.rsplit())
 print(BA.strip(), BA.lstrip(), BA.rstrip())
 print(BA.center(10))
 print(bytearray(b'-').zfill(10))
