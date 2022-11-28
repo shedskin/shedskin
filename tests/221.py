@@ -1,8 +1,13 @@
 # TODO why no error for b''.hex(':', 2)?
+# TODO hex(bytes_per_sep), bytes.fromhex
+# TODO maketrans, translate
+# TODO fix rsplit?
+# TODO zfill: filling on right for '-'!?!?!?
+
+# 'casefold'
+# {'__imul__', 'remove', '__iadd__', 'insert'} hashing .. del/assign slice?
 
 # str
-
-# 'casefold', 'isidentifier', 'maketrans', 'partition', 'rpartition', 'rsplit', 'splitlines', 'translate'
 
 print('bla'.endswith('la'), 'bla'.endswith('xx'))
 print('bla'.startswith('bla'), 'bla'.startswith('xx'))
@@ -23,6 +28,7 @@ print('bla'.index('la'), 'bla'.index('bl'))
 print('bla'.rindex('la'), 'bla'.rindex('bl'))
 print('bla'.center(10), 'bla'.center(10, '-'))
 print('bla'.split('l'), 'b l a'.split(), 'haajaaja'.split('aa'))
+#print('bla'.rsplit('l'), 'b l a'.rsplit(), 'haajaaja'.rsplit('aa'))
 print('bla'.zfill(10))
 print('bla'.ljust(8), 'bla'.ljust(6, '+'))
 print('bla'.rjust(8), 'bla'.rjust(6, '-'))
@@ -38,6 +44,10 @@ print('bla'.isprintable(), chr(200).isprintable(), ''.isprintable())
 print('bla'.isnumeric(), '123'.isnumeric(), ''.isnumeric())
 print('bla'.isdecimal(), '123'.isdecimal(), ''.isdecimal())
 print('bla'.isascii(), '\xf0'.isascii(), ''.isascii())
+print('Bla_'.isidentifier(), '9bla'.isidentifier(), ''.isidentifier())
+print('bla\r\nblup'.splitlines(), 'bla\r\nblup'.splitlines(keepends=True))
+print('aa-bb-cc'.partition('-'), 'aa-bb-cc'.rpartition('-'))
+print('bla'[1], 'bla'[1:], 'bla'[::-1])
 
 # bytes
 
@@ -60,22 +70,26 @@ print(b'bla'.index(b'la'), b'bla'.index(b'bl'))
 print(b'bla'.rindex(b'la'), b'bla'.rindex(b'bl'))
 print(b'bla'.center(10), b'bla'.center(10, b'-'))
 print(b'bla'.split(b'l'), b'b l a'.split(), b'haajaaja'.split(b'aa'))
+#print(b'bla'.rsplit(b'l'), b'b l a'.split(), b'haajaaja'.split(b'aa'))
 print(b'bla'.zfill(10))
 print(b'bla'.ljust(8), b'bla'.ljust(6, b'+'))
 print(b'bla'.rjust(8), b'bla'.rjust(6, b'-'))
-print(b'blabla'.hex(), b'blabla'.hex(':')) # TODO bytes_per_sep, bytes.fromhex
+print(b'blabla'.hex(), b'blabla'.hex(':'))
 print(b'bla bla'.title())
 print(b'bla bla'.capitalize())
-print(b'bla'[1], b'bla'[1:], b'bla'[::-1])
 print(b'bla'.istitle(), b'Bla'.istitle(), b''.istitle())
 print(b'bla'.isspace(), b'   '.isspace(), b''.isspace())
 print(b'bla'.isalpha(), b'123'.isalpha(), b''.isalpha())
 print(b'bla'.isdigit(), b'123'.isdigit(), b''.isdigit())
 print(b'bla'.isalnum(), b'123'.isalnum(), b'12a'.isalnum(), b''.isalnum())
 print(b'bla'.isascii(), b'\xf0'.isascii(), b''.isascii())
+print(b'bla\r\nblup'.splitlines(), b'bla\r\nblup'.splitlines(keepends=True))
+print(b'aa-bb-cc'.partition(b'-'), b'aa-bb-cc'.rpartition(b'-'))
+print(b'bla'[1], b'bla'[1:], b'bla'[::-1])
 
-# bytearray: {'reverse', '__imul__', 'remove', '__iadd__', 'insert', 'extend'} hashing .. check frozen in above tests? del/assign slice?
+# bytearray
 
+BLA = bytearray(b'bla')
 BA = bytearray(b'-')
 A = bytearray(b'a')
 B = bytearray(b'b')
@@ -87,6 +101,17 @@ print(BA.upper())
 print(BA.lower())
 print(BA.replace(A, B))
 print(BA.swapcase())
+print(BA.split())
+#print(BA.rsplit())
+print(BA.strip(), BA.lstrip(), BA.rstrip())
+print(BA.center(10))
+#print(BA.zfill(10))
+print(BA.ljust(10), BA.rjust(10))
+print(BA.title())
+print(BA.capitalize())
+print(BA.splitlines())
+print(BLA.partition(A), BLA.rpartition(B))
+print(BLA[1], BLA[1:], BLA[::-1])
 
 ba = bytearray(b'bla')
 ba.clear()
@@ -115,4 +140,14 @@ print(2*ba, ba*2, ba+ba)
 ba = bytearray(b'bla')
 print(ba.pop(0))
 print(ba.pop())
+print(ba)
+
+ba = bytearray(b'bla')
+ba.extend([1,2])
+ba.extend(b'ab')
+ba.extend(BA)
+print(ba)
+
+ba = bytearray(b'bla')
+ba.reverse()
 print(ba)

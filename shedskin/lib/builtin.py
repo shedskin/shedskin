@@ -320,7 +320,7 @@ class str_(pyseq):
 
     def istitle(self):
         return True
-    def splitlines(self, c=0):
+    def splitlines(self, keepends=False):
         return ['']
     def partition(self, sep):
         return ('',)
@@ -386,6 +386,8 @@ class str_(pyseq):
         return True
     def isnumeric(self):
         return True
+    def isidentifier(self):
+        return True
 
     def zfill(self, width):
         return ''
@@ -430,7 +432,7 @@ class bytes_(pyseq):
 
     def istitle(self):
         return True
-    def splitlines(self, c=0):
+    def splitlines(self, keepends=False):
         return [b'']
     def partition(self, sep):
         return (b'',)
@@ -525,6 +527,7 @@ class bytes_(pyseq):
 
     def __slice__(self, x, l, u, s):
         return self
+
     def __hash__(self):
         return 1
 
@@ -541,6 +544,12 @@ class bytes_(pyseq):
 
     def pop(self, index=-1):
         return 1
+
+    def extend(self, i):
+        pass
+
+    def reverse(self):
+        pass
 
     def __delitem__(self, i):
         pass
