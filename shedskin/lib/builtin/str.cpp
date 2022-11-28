@@ -154,6 +154,9 @@ __ss_bool str::isascii() {
 __ss_bool str::isdecimal() {
   int i, l = size();
 
+  if(!l)
+      return False;
+
   for(i = 0; i < l; i++) {
       unsigned char elem = unit[i];
 
@@ -166,6 +169,9 @@ __ss_bool str::isdecimal() {
 
 __ss_bool str::isnumeric() {
   int i, l = size();
+
+  if(!l)
+      return False;
 
   for(i = 0; i < l; i++) {
       unsigned char elem = unit[i];
