@@ -260,20 +260,20 @@ list<str *> *str::rsplit(str *sep, __ss_int maxsep)
     //split by whitespace
     if(!sep)
     {
-        while(i > 0 && j > 0 && (curi < maxsep2 || maxsep2 < 0))
+        while(i != std::string::npos && j != std::string::npos && (curi < maxsep2 || maxsep2 < 0))
         {
             j = unit.find_last_not_of(ws, i);
             if(j == std::string::npos) break;
 
             i = unit.find_last_of(ws, j);
 
-            //this works out pretty nicely; i will be -1 if no more is found, and thus i + 1 will be 0th index
             r->append(new str(unit.substr(i + 1, j - i)));
             curi++;
         }
 
         //thus we only bother about extra stuff here if we *have* found more whitespace
-        if(i > 0 && j >= 0 && (j = unit.find_last_not_of(ws, i)) >= 0) r->append(new str(unit.substr(0, j)));
+        if(i != std::string::npos && j != std::string::npos && (j = unit.find_last_not_of(ws, i)) != std::string::npos)
+            r->append(new str(unit.substr(0, j)));
     }
 
     //split by seperator
