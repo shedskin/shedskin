@@ -556,6 +556,12 @@ class bytes_(pyseq):
     def __delitem__(self, i):
         pass
 
+    def __iadd__(self, b):
+        return self
+
+    def __imul__(self, n):
+        return self
+
 class dict(pyiter):
     def __initdict__(self, other):
         self.__setunit__(other.unit, other.value)

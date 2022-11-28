@@ -427,20 +427,19 @@ public:
 
     str *__str__();
     str *__repr__();
-    bytes *__mul__(__ss_int n);
 
     __ss_bool __eq__(pyobj *s);
     long __hash__();
 
     __ss_bool __ctype_function(int (*cfunc)(int));
 
+    bytes *__add__(bytes *b);
+    bytes *__mul__(__ss_int n);
+
     /* iteration */
 
     inline bool for_in_has_next(size_t i);
     inline __ss_int for_in_next(size_t &i);
-
-    bytes *__iadd__(bytes *b);
-    bytes *__add__(bytes *b);
 
     /* bytearray */
 
@@ -453,6 +452,9 @@ public:
 
     void *__setitem__(__ss_int i, __ss_int e);
     void *__delitem__(__ss_int i);
+
+    bytes *__iadd__(bytes *b);
+    bytes *__imul__(__ss_int n);
 
 };
 
