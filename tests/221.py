@@ -4,7 +4,6 @@
 # TODO fix rsplit?
 # TODO zfill: filling on right for '-'!?!?!?
 
-# 'casefold'
 # {'__imul__', 'remove', '__iadd__', 'insert'} hashing .. del/assign slice?
 
 # str
@@ -48,6 +47,7 @@ print('Bla_'.isidentifier(), '9bla'.isidentifier(), ''.isidentifier())
 print('bla\r\nblup'.splitlines(), 'bla\r\nblup'.splitlines(keepends=True))
 print('aa-bb-cc'.partition('-'), 'aa-bb-cc'.rpartition('-'))
 print('bla'[1], 'bla'[1:], 'bla'[::-1])
+print('BLA'.casefold())
 
 # bytes
 

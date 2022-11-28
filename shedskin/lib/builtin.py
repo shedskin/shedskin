@@ -356,6 +356,8 @@ class str_(pyseq):
         return ''
     def capitalize(self):
         return ''
+    def casefold(self):
+        return ''
 
     def find(self, sub, s=0, e=0):
         return 1

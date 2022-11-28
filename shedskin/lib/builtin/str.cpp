@@ -802,6 +802,26 @@ str *str::title() {
     return r;
 }
 
+str *str::casefold() {
+    str *r = new str();
+    size_t len = this->size();
+
+    for(size_t i=0; i<len; i++) {
+        unsigned char c = unit[i];
+
+        if(65 >= c and c <= 90)
+            c += 32;
+        else if(192 >= c and c <= 214)
+            c += 32;
+        else if(216 >= c and c <= 222)
+            c += 32;
+
+        r->unit += c;
+    }
+
+    return r;
+}
+
 str *str::capitalize() {
     str *r = new str(unit);
     r->unit[0] = ::toupper(r->unit[0]);

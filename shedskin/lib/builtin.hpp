@@ -527,6 +527,8 @@ public:
     str *lower();
     str *title();
     str *capitalize();
+    str *casefold();
+
     str *replace(str *a, str *b, __ss_int c=-1);
     str *translate(str *table, str *delchars=0);
     str *swapcase();
