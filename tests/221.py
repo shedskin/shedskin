@@ -47,6 +47,8 @@ print('bla'[1], 'bla'[1:], 'bla'[::-1])
 print('BLA'.casefold())
 print('bla'+'bla', 'bla'*3, 3*'bla')
 print('bla' == 'bla', 'bla' == 'blup', 'bla' != 'bla', 'bla' != 'blup')
+print('aap' > 'blup', 'blup' >= 'aap', 'aap' < 'blup', 'aap' <= 'blup')
+print(sorted(['blup', 'aap']))
 
 # bytes
 
@@ -87,6 +89,8 @@ print(b'aa-bb-cc'.partition(b'-'), b'aa-bb-cc'.rpartition(b'-'))
 print(b'bla'[1], b'bla'[1:], b'bla'[::-1])
 print(b'bla'+b'bla', b'bla'*3, 3*b'bla')
 print(b'bla' == b'bla', b'bla' == b'blup', b'bla' != b'bla', b'bla' != b'blup')
+print(b'aap' > b'blup', b'blup' >= b'aap', b'aap' < b'blup', b'aap' <= b'blup')
+print(sorted([b'blup', b'aap']))
 
 h = hash(b'bla')
 
