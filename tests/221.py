@@ -1,7 +1,7 @@
 # TODO why no error for b''.hex(':', 2)?
 # TODO hex(bytes_per_sep), bytes.fromhex
 # TODO maketrans, translate
-# TODO hashing .. del/assign slice?
+# TODO del/assign slice?
 
 # str
 
@@ -46,6 +46,7 @@ print('aa-bb-cc'.partition('-'), 'aa-bb-cc'.rpartition('-'))
 print('bla'[1], 'bla'[1:], 'bla'[::-1])
 print('BLA'.casefold())
 print('bla'+'bla', 'bla'*3, 3*'bla')
+print('bla' == 'bla', 'bla' == 'blup', 'bla' != 'bla', 'bla' != 'blup')
 
 # bytes
 
@@ -85,6 +86,18 @@ print(b'bla\r\nblup'.splitlines(), b'bla\r\nblup'.splitlines(keepends=True))
 print(b'aa-bb-cc'.partition(b'-'), b'aa-bb-cc'.rpartition(b'-'))
 print(b'bla'[1], b'bla'[1:], b'bla'[::-1])
 print(b'bla'+b'bla', b'bla'*3, 3*b'bla')
+print(b'bla' == b'bla', b'bla' == b'blup', b'bla' != b'bla', b'bla' != b'blup')
+
+h = hash(b'bla')
+
+bdict = {
+    b'bla': 18,
+    b'blup': 19,
+}
+for key in sorted(bdict):
+    print(key, bdict[key])
+
+print(set([b'blup']))
 
 # bytearray
 
@@ -166,3 +179,8 @@ ba = bytearray(b'bla')
 ba.insert(1, ord('u'))
 ba.insert(-2, ord('w'))
 print(ba)
+
+try:
+    h = hash(bytearray(b'bla'))
+except TypeError:
+    print('bytearray unhashable')
