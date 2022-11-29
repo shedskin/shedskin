@@ -112,6 +112,9 @@ str *bytes::__repr__() {
 }
 
 long bytes::__hash__() {
+    if(!frozen)
+        throw new TypeError(new str("unhashable type: 'bytearray'"));
+
     if (hash != -1)
         return hash;
 
