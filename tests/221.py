@@ -1,4 +1,3 @@
-# TODO why no error for b''.hex(':', 2)?
 # TODO del/assign slice
 # TODO hex(bytes_per_sep), bytes.fromhex
 # TODO maketrans, translate
