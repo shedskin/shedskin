@@ -568,6 +568,12 @@ class bytes_(pyseq):
     def __imul__(self, n):
         return self
 
+    def __delete__(self, x, a=1, b=1, s=1):
+        pass
+
+    def __setslice__(self, x, lower, upper, step, r):
+        pass
+
 class dict(pyiter):
     def __initdict__(self, other):
         self.__setunit__(other.unit, other.value)

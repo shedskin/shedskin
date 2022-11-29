@@ -753,3 +753,25 @@ void *bytes::insert(__ss_int index, __ss_int item) {
     unit.insert(unit.begin()+index, item);
     return NULL;
 }
+
+void *bytes::__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, pyiter<__ss_int> *b) {
+    list<__ss_int> *ll = new list<__ss_int>(this);
+    ll->__setslice__(x, l, u, s, b);
+    __GC_STRING r;
+    __ss_int len = ll->__len__();
+    for(__ss_int i=0; i<len; i++)
+        r += ll->units[i];
+    unit = r;
+    return NULL;
+}
+
+void *bytes::__delete__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
+    list<__ss_int> *ll = new list<__ss_int>(this);
+    ll->__delete__(x, l, u, s);
+    __GC_STRING r;
+    __ss_int len = ll->__len__();
+    for(__ss_int i=0; i<len; i++)
+        r += ll->units[i];
+    unit = r;
+    return NULL;
+}
