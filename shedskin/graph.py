@@ -1077,6 +1077,9 @@ class ModuleVisitor(BaseNodeVisitor):
                 inode(self.gx, var).copymetoo = True
                 self.gx.types[inode(self.gx, var)] = set([(cl, 1)])
 
+        if node.finalbody:
+            error("'try..finally' is not supported", self.gx, node, mv=getmv())
+
         for handler in node.handlers:
             for child in handler.body:
                 self.visit(child, func)
@@ -1086,9 +1089,6 @@ class ModuleVisitor(BaseNodeVisitor):
             for child in node.orelse:
                 self.visit(child, func)
             self.temp_var_int(orelse_to_node(node), func)
-
-    def visit_TryFinally(self, node, func=None):
-        error("'try..finally' is not supported", self.gx, node, mv=getmv())
 
     def visit_Yield(self, node, func):
         func.isGenerator = True
@@ -1616,8 +1616,11 @@ class ModuleVisitor(BaseNodeVisitor):
             error('unknown ctx type for Attribute, %s' % node.ctx, self.gx, node, mv=getmv())
 
     def visit_Constant(self, node, func=None):
-        map = {int: 'int_', float: 'float_', complex: 'complex', str: 'str_', bool: 'bool_', type(None): 'none', bytes: 'bytes_'}
-        self.instance(node, def_class(self.gx, map[type(node.value)]), func)
+        if node.value.__class__.__name__ == 'ellipsis':
+            error('ellipsis is not supported', self.gx, node, mv=getmv())
+        else:
+            map = {int: 'int_', float: 'float_', complex: 'complex', str: 'str_', bool: 'bool_', type(None): 'none', bytes: 'bytes_'}
+            self.instance(node, def_class(self.gx, map[type(node.value)]), func)
 
     # py2 ast
     def visit_Num(self, node, func=None):
