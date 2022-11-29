@@ -4,7 +4,7 @@ class Blah:
         self.a, self.b = a, b
 
 def woef(x):
-    print x
+    print(x)
 
 class do:
     def __init__(self, public, do):
