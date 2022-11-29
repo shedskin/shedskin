@@ -48,6 +48,7 @@ print('bla'+'bla', 'bla'*3, 3*'bla')
 print('bla' == 'bla', 'bla' == 'blup', 'bla' != 'bla', 'bla' != 'blup')
 print('aap' > 'blup', 'blup' >= 'aap', 'aap' < 'blup', 'aap' <= 'blup')
 print(sorted(['blup', 'aap']))
+print(list('aap'))
 
 # bytes
 
@@ -90,6 +91,7 @@ print(b'bla'+b'bla', b'bla'*3, 3*b'bla')
 print(b'bla' == b'bla', b'bla' == b'blup', b'bla' != b'bla', b'bla' != b'blup')
 print(b'aap' > b'blup', b'blup' >= b'aap', b'aap' < b'blup', b'aap' <= b'blup')
 print(sorted([b'blup', b'aap']))
+print(list(b'aap'))
 
 h = hash(b'bla')
 
@@ -187,3 +189,12 @@ try:
     h = hash(bytearray(b'bla'))
 except TypeError:
     print('bytearray unhashable')
+
+ba = bytearray(b'blablabla')
+ba[1:4] = [ord('c'), ord('d')]
+print(ba)
+ba[1:4] = BLA
+print(ba)
+
+del ba[::2]
+print(ba)
