@@ -1135,9 +1135,11 @@ def __filter(func, iter1):
     func(iter(iter1).__next__())
     return iter1
 
-def next(iter1, fillvalue=None):
+def next(iter1, fillvalue):
     return iter1.__next__()
     return fillvalue
+def __next1(iter1):
+    return iter1.__next__()
 
 def id(x):
     return 1

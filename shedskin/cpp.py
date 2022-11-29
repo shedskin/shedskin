@@ -2016,7 +2016,8 @@ class GenerateVisitor(BaseNodeVisitor):
             target = target.inherited_from
 
         pairs, rest, err = connect_actual_formal(self.gx, node, target, parent_constr, merge=self.mergeinh)
-        if err and not self.library_func(funcs, 'builtin', None, 'sum'):
+        if (err and not self.library_func(funcs, 'builtin', None, 'sum')
+                and not self.library_func(funcs, 'builtin', None, 'next')):
             error('call with incorrect number of arguments', self.gx, node, warning=True, mv=self.mv)
 
         if isinstance(func, Function) and func.lambdawrapper:
