@@ -7,7 +7,7 @@ import logging
 import sys
 
 logger = logging.getLogger('shedskin')
-ch = logging.StreamHandler()
+ch = logging.StreamHandler(sys.stdout)
 ch.setLevel(logging.WARNING)
 formatter = logging.Formatter('*%(levelname)s* %(message)s')
 ch.setFormatter(formatter)
