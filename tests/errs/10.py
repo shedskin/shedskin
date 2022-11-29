@@ -4,4 +4,4 @@ try:
 except a:
     pass
 
-#*ERROR* 10.py:4: unknown or unsupported exception type ('a')
+#*ERROR* 10.py:4: unknown/unsupported exception type ('a')
