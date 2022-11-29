@@ -25,12 +25,12 @@ if __name__ == '__main__':
     c.AND()
     press(set('a'))
     press2(set('a'))
-    print meuk().memory
+    print(meuk().memory)
     hoppa({'acht': 8.8})
     NotExported()
 
     initblah = 4
-    print initblah
+    print(initblah)
     addblah = 5
-    print addblah
+    print(addblah)
 
