@@ -7,7 +7,15 @@ print('extra', f.__next__())
 file_iter = iter(f)
 print('iter', next(file_iter))
 
-# TODO next second arg
+# next fillvalue
+
+aiter = iter(list(range(3)))
+for i in range(5):
+    print(next(aiter, -1))
+
+aiter = iter(list(range(3)))
+for i in range(2):
+    print(next(aiter))
 
 # generators
 
