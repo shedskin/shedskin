@@ -467,6 +467,8 @@ class GenerateVisitor(BaseNodeVisitor):
             self.print('}')
 
     def module_cpp(self, node):
+        if get_docstring(node):
+            node.doc = get_docstring(node) # necessary for the module-level comments
         file_top = self.jinja_env.get_template('module.cpp.tpl').render(
             node=node,
             module=self.module,
@@ -480,7 +482,7 @@ class GenerateVisitor(BaseNodeVisitor):
             listcomps=self.mv.listcomps,
             cpp_name=self.cpp_name,
             namer=self.namer,
-            dedent=textwrap.dedent
+            dedent=textwrap.dedent,
         )
         self.print(file_top)
 
@@ -562,7 +564,8 @@ class GenerateVisitor(BaseNodeVisitor):
         # if isinstance(node.value, Constant) and node.value.value is None:  # XXX merge with visit_Stmt
         #     pass
         if isinstance(node.value, Str):
-            self.do_comment(node.value.s)
+            # self.do_comment(node.value.s) # XXX disabled as it was double printing comments
+            pass
         else:
             self.start('')
             self.visit(node.value, func)
