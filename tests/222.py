@@ -1,4 +1,7 @@
+# iteration
+
 # next
+
 f = open('220.py')
 for x in range(5):
     print(next(f))
@@ -6,8 +9,6 @@ print('extra', f.__next__())
 
 file_iter = iter(f)
 print('iter', next(file_iter))
-
-# next fillvalue
 
 aiter = iter(list(range(3)))
 for i in range(5):
@@ -21,17 +22,23 @@ biter = iter('bla')
 for i in range(5):
     print(next(biter, None))
 
-# generators
+# builtin funcs, now iterators in python3
 
 filt = filter(lambda c: c>'a', 'abaaac')
 print(str(filt).startswith('<filter object'), list(filt))
 
-# reversed(range)
-#print(reversed(range(10,20,2)))
+rev = reversed(range(10,20,2))
+print('iterator' in str(rev), list(rev))
 
-# now iterators: dict_items, dict_keys, dict_values, like reversed, enumerate, itertools.imap?
+enum = enumerate('bananen')
+print(str(enum).startswith('<enumerate object'), list(enum))
+
+# dict_items, dict_keys, dict_values
 #print({1:2}.items())
 
+# zip, any, all, range
+
+# map
 # different length args to map
 #def hoppa2(a, b):
 #    if b: return a+b

@@ -257,6 +257,10 @@ public:
     tuple2<__ss_int, A> *__next__() {
         return new tuple2<__ss_int, A>(2, i++, p->__next__());
     }
+
+    inline str *__str__() {
+        return new str("<enumerate object>");
+    }
 };
 
 template <class A> __iter<tuple2<__ss_int, A> *> *enumerate(pyiter<A> *x) {
