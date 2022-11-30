@@ -286,6 +286,8 @@ public:
     izipiter(pyiter<T> *iterable1, pyiter<U> *iterable2);
 
     tuple2<T, U> *__next__();
+
+    inline str *__str__() { return new str("<zip object>"); }
 };
 
 template<class T, class U> inline izipiter<T, U>::izipiter() {
@@ -326,6 +328,8 @@ public:
     void push_iter(pyiter<T> *iterable);
 
     tuple2<T, T> *__next__();
+
+    inline str *__str__() { return new str("<zip object>"); }
 
     friend izipiter<T, T> *__zip<T>(int iterable_count, pyiter<T> *iterable, ...);
 };
