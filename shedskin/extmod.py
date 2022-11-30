@@ -20,8 +20,7 @@ OVERLOAD = ["__add__", "__sub__", "__mul__", "__div__",
 
 
 def clname(cl):
-    """
-    { function_description }
+    """{ function_description }
 
     :param      cl:   { parameter_description }
     :type       cl:   { type_description }
@@ -506,8 +505,7 @@ class ExtensionModule:
         write("}\n")
 
     def do_extmod(self):
-        """
-        Does an extmod.
+        """Generate an python c-api extension module
         """
         write = self.write
         write("/* extension module glue */\n")
@@ -524,6 +522,7 @@ class ExtensionModule:
 
         for n in self.gv.module.name_list:
             write("namespace __%s__ { /* XXX */" % n)
+
         # global functions
         funcs = self.supported_funcs(self.gv.module.mv.funcs.values())
         for func in funcs:
@@ -548,12 +547,19 @@ class ExtensionModule:
         # write("        return;\n")
 
         # module init function
+        # write("static struct PyModuleDef %smodule = {" % "_".join(self.gv.module.name_list))
+        # write("    PyModuleDef_HEAD_INIT,")
+        # write('    "%s",   /* name of module */' % "_".join(self.gv.module.name_list))
+        # write("    NULL,   /* module documentation, may be NULL */") # FIXME
+        # write("    -1,     /* size of per-interpreter state of the module or -1 if the module keeps state in global variables. */")
+        # write("    %s" % "Global_" + "_".join(self.gv.module.name_list) + "Methods")
+        # write("};")
+
         write("static struct PyModuleDef %smodule = {" % "_".join(self.gv.module.name_list))
         write("    PyModuleDef_HEAD_INIT,")
-        write('    "%s",   /* name of module */' % "_".join(self.gv.module.name_list))
-        write("    NULL,   /* module documentation, may be NULL */") # FIXME
-        write("    -1,     /* size of per-interpreter state of the module or -1 if the module keeps state in global variables. */")
-        write("    %s" % "Global_" + "_".join(self.gv.module.name_list) + "Methods")
+        write('    .m_name = "%s",   /* name of module */' % "_".join(self.gv.module.name_list))
+        write('    .m_doc = "module docstring",   /* module documentation, may be NULL */') # FIXME
+        write("    .m_size = -1,     /* size of per-interpreter state of the module or -1 if the module keeps state in global variables. */")
         write("};")
 
         # # add types to module
@@ -575,33 +581,33 @@ class ExtensionModule:
         # write("PyMODINIT_FUNC add%s(void) {" % "_".join(self.gv.module.name_list))
         # self.do_add_globals(classes, __ss_mod)
         # write("\n}")
-        
+
         write("")
-        write("PyMODINIT_FUNC PyInit_%s(void) {" % "_".join(self.gv.module.name_list))
+        write("PyMODINIT_FUNC PyInit_%s(void) {\n" % "_".join(self.gv.module.name_list))
         if self.gv.module == self.gx.main_module:
             self.gv.do_init_modules()
             write("    __" + self.gv.module.ident + "__::__init();")
-        write("    PyObject *m;")
+
+        write("")
+        write("    PyObject *m;\n")
+
+        for cl in classes:
+            write("    if (PyType_Ready(&%sObjectType) < 0)" % clname(cl))
+            write("        return NULL;\n")
+
         write("    m = PyModule_Create(&%smodule);" % "_".join(self.gv.module.name_list))
         write("    if (m == NULL)")
-        write("        return NULL;")
-        write("    return m;")
+        write("        return NULL;\n")
+
+        for cl in classes:
+            write("    Py_INCREF(&%sObjectType);" % clname(cl))
+            write('    if (PyModule_AddObject(m, "%s", (PyObject *) &%sObjectType) < 0) {' % (cl.ident, clname(cl)))
+            write("        Py_DECREF(&%sObjectType);" % clname(cl))
+            write("        Py_DECREF(m);")
+            write("        return NULL;")
+            write("    }\n")
+            write("    return m;")
         write("}\n")
-
-        # PyMODINIT_FUNC
-        # PyInit_calc(void)
-        # {
-        #     __shedskin__::__init();
-        #     __calc__::__init();
-
-        #     PyObject *m;
-
-        #     m = PyModule_Create(&calcmodule);
-        #     if (m == NULL)
-        #         return NULL;
-
-        #     return m;
-        # }
 
         for n in self.gv.module.name_list:
             write("\n} // namespace __%s__" % n)
@@ -612,14 +618,10 @@ class ExtensionModule:
             self.convert_methods(cl, False)
 
     def do_extmod_class(self, cl):
-        """
-        Does an extmod class.
+        """Generates a python c-api extension type.
 
-        :param      cl:   { parameter_description }
-        :type       cl:   { type_description }
-
-        :returns:   { description_of_the_return_value }
-        :rtype:     { return_type_description }
+        :param      cl:   class object
+        :type       cl:   shedskin.python.Class
         """
         write = self.write
         for n in cl.module.name_list:
@@ -630,6 +632,9 @@ class ExtensionModule:
         funcs = self.supported_funcs(cl.funcs.values())
         vars = self.supported_vars(cl.vars.values())
 
+        # if True:
+        #     from IPython import embed; embed(header='IPYTHON DEUBUG')
+
         # python object
         write("/* class %s */\n" % cl.ident)
         write("typedef struct {")
@@ -638,6 +643,7 @@ class ExtensionModule:
             "    %s::%s *__ss_object;" % (cl.module.full_path(), self.gv.cpp_name(cl))
         )
         write("} %sObject;\n" % clname(cl))
+
         write("static PyMemberDef %sMembers[] = {" % clname(cl))
         write("    {NULL}\n};\n")
 
@@ -680,7 +686,7 @@ class ExtensionModule:
 
         # tp_dealloc
         write("void %sDealloc(%sObject *self) {" % (clname(cl), clname(cl)))
-        write("    self->ob_type->tp_free((PyObject *)self);")
+        write("    Py_TYPE(self)->tp_free((PyObject *)self);")        
         write("    __ss_proxy->__delitem__(self->__ss_object);")
         write("}\n")
 
@@ -724,71 +730,40 @@ class ExtensionModule:
             )
         write("    {NULL}\n};\n")
 
-        # python type
-        write("PyTypeObject %sObjectType = {" % clname(cl))
-        write("    PyObject_HEAD_INIT(NULL)")
-        write("    0,              /* ob_size           */")
-        write(
-            '    "%s.%s",        /* tp_name           */' % (cl.module.ident, cl.ident)
-        )
-        write("    sizeof(%sObject), /* tp_basicsize      */" % clname(cl))
-        write("    0,              /* tp_itemsize       */")
-        write("    (destructor)%sDealloc, /* tp_dealloc        */" % clname(cl))
-        write("    0,              /* tp_print          */")
-        write("    0,              /* tp_getattr        */")
-        write("    0,              /* tp_setattr        */")
-        write("    0,              /* tp_compare        */")
+        # python type (new)
+        write('PyTypeObject %sObjectType = {' % clname(cl))
+        write('    PyVarObject_HEAD_INIT(NULL, 0)')
+        write('    .tp_name = "%s.%s",' % (cl.module.ident, cl.ident))
+        write('    .tp_basicsize = sizeof( %sObject),' % clname(cl))
+        write('    .tp_itemsize = 0,')
+        write('    .tp_dealloc = (destructor) %sDealloc,' % clname(cl))
         if self.has_method(cl, "__repr__"):
-            write(
-                "    (PyObject *(*)(PyObject *))%s___repr__, /* tp_repr           */"
-                % clname(cl)
-            )
+            write('    .tp_repr = (PyObject *(*)(PyObject *))%s___repr__, ' % clname(cl))
         else:
-            write("    0,              /* tp_repr           */")
-        write("    &%s_as_number,  /* tp_as_number      */" % clname(cl))
-        write("    0,              /* tp_as_sequence    */")
-        write("    0,              /* tp_as_mapping     */")
-        write("    0,              /* tp_hash           */")
-        write("    0,              /* tp_call           */")
+            write('    .tp_repr = 0,')
+        write('    .tp_as_number = &%s_as_number,' % clname(cl))
         if self.has_method(cl, "__str__"):
-            write(
-                "    (PyObject *(*)(PyObject *))%s___str__, /* tp_str           */"
-                % clname(cl)
-            )
+            write('    .tp_str = (PyObject *(*)(PyObject *))%s___repr__, ' % clname(cl))
         else:
-            write("    0,              /* tp_str            */")
-        write("    0,              /* tp_getattro       */")
-        write("    0,              /* tp_setattro       */")
-        write("    0,              /* tp_as_buffer      */")
-        write("    Py_TPFLAGS_DEFAULT, /* tp_flags          */")
-        write("    0,              /* tp_doc            */")
-        write("    0,              /* tp_traverse       */")
-        write("    0,              /* tp_clear          */")
-        write("    0,              /* tp_richcompare    */")
-        write("    0,              /* tp_weaklistoffset */")
-        write("    0,              /* tp_iter           */")
-        write("    0,              /* tp_iternext       */")
-        write("    %sMethods,      /* tp_methods        */" % clname(cl))
-        write("    %sMembers,      /* tp_members        */" % clname(cl))
-        write("    %sGetSet,       /* tp_getset         */" % clname(cl))
+            write('    .tp_str = 0,')
+        write('    .tp_flags = Py_TPFLAGS_DEFAULT,')
+        write('    .tp_doc = PyDoc_STR("Custom objects"),') # XXX needs class docstring
+        write('    .tp_methods = %sMethods,' % clname(cl))
+        write('    .tp_members = %sMembers,' % clname(cl))
+        write('    .tp_getset = %sGetSet,' % clname(cl))
+
         if cl.bases and not cl.bases[0].mv.module.builtin:
-            write(
-                "    &%sObjectType,              /* tp_base           */"
-                % clname(cl.bases[0])
-            )
+            write('    .tp_base = &%sObjectType,' % clname(cl.bases[0]))
         else:
-            write("    0,              /* tp_base           */")
-        write("    0,              /* tp_dict           */")
-        write("    0,              /* tp_descr_get      */")
-        write("    0,              /* tp_descr_set      */")
-        write("    0,              /* tp_dictoffset     */")
+            write('    .tp_base = 0, ')
+
         if self.has_method(cl, "__init__") and cl.funcs["__init__"] in funcs:
-            write("    %s___tpinit__, /* tp_init           */" % clname(cl))
+            write('    .tp_init = (initproc) %s___tpinit__,' % clname(cl))
         else:
-            write("    0,              /* tp_init           */")
-        write("    0,              /* tp_alloc          */")
-        write("    %sNew,          /* tp_new            */" % clname(cl))
-        write("};\n")
+            write('    .tp_init = 0,')
+        write('    .tp_new = %sNew,' % clname(cl))
+        write('};\n')
+
         self.do_reduce_setstate(cl, vars)
         for n in cl.module.name_list:
             write("} // namespace __%s__" % n)
@@ -827,8 +802,8 @@ class ExtensionModule:
         { function_description }
         """
         write = lambda s: print(s, file=self.gv.out)
-        for cl in self.exported_classes():
-            write("extern PyTypeObject %sObjectType;" % clname(cl))
+        # for cl in self.exported_classes():
+        #     write("extern PyTypeObject %sObjectType;" % clname(cl))
         write("namespace __shedskin__ { /* XXX */\n")
         for cl in self.exported_classes():
             write(
