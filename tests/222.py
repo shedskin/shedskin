@@ -17,6 +17,10 @@ aiter = iter(list(range(3)))
 for i in range(2):
     print(next(aiter))
 
+biter = iter('bla')
+for i in range(5):
+    print(next(biter, None))
+
 # generators
 
 # reversed(range)
