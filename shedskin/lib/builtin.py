@@ -874,9 +874,6 @@ def bin(x):
 def isinstance(a, b):
     return True
 
-def range(a, b=1, s=1):
-    return [1]
-
 def input(msg=''):
     return ''
 
@@ -1024,7 +1021,7 @@ def reversed(l):
 def enumerate(x, start=0):
     return __iter((1, iter(x).__next__()))
 
-class __xrange:
+class __xrange:  # TODO add __getitem__!
     def __init__(self):
         self.unit = 1
     def __iter__(self):
@@ -1032,7 +1029,7 @@ class __xrange:
     def __len__(self):
         return 1
 
-def xrange(a, b=1, s=1):
+def range(a, b=1, s=1):
     return __xrange()
 
 def zip(*args):
@@ -1130,14 +1127,14 @@ def __map4(func, iter1, iter2, iter3): # XXX
 def filter(func, iter1):
     elem = iter(iter1).__next__()
     func(elem)
-    return [elem]
-def __filter(func, iter1):
-    func(iter(iter1).__next__())
-    return iter1
+    bool(elem)
+    yield elem
 
-def next(iter1, fillvalue=None):
+def next(iter1, fillvalue):
     return iter1.__next__()
     return fillvalue
+def __next1(iter1):
+    return iter1.__next__()
 
 def id(x):
     return 1
