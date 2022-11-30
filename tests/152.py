@@ -60,7 +60,7 @@ class myiter:
 
 class container:
     def __init__(self):
-        self.unit = range(3)
+        self.unit = list(range(3))
     def __getitem__(self, i):
         return self.unit[i]
     def __iter__(self):

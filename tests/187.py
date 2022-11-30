@@ -104,10 +104,10 @@ for i in range(10):
     print(next(it3, None))
 
 # sort(ed) key argument
-a = range(4)
-print(sorted(a))
-print(sorted(a, key=lambda a:a))
-print(sorted(a, key=lambda a:-a))
+ax = range(4)
+print(sorted(ax))
+print(sorted(ax, key=lambda a:a))
+print(sorted(ax, key=lambda a:-a))
 
 l = list(range(4))
 print(l)

@@ -33,12 +33,20 @@ print('iterator' in str(rev), list(rev))
 enum = enumerate('bananen')
 print(str(enum).startswith('<enumerate object'), list(enum))
 
+rrr = range(11,4,-2)
+print(rrr)
+print(list(rrr))
+
+# TODO a, b = range(2)
+# TODO x = range(8,20)[5]
+
 # dict_items, dict_keys, dict_values
 #print({1:2}.items())
 
-# zip, any, all, range
+# zip
 
 # map
+
 # different length args to map
 #def hoppa2(a, b):
 #    if b: return a+b

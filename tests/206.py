@@ -1,5 +1,5 @@
 # check bounds after wrapping..
-alist = range(5)
+alist = list(range(5))  # TODO __getitem__ without list! :P
 for i in range(-10,10):
     try:
         print(alist[i], i)

@@ -6,7 +6,7 @@
 from time import time
 
 LOOPS = 50000
-Ident1, Ident2, Ident3, Ident4, Ident5 = range(1,6)
+Ident1, Ident2, Ident3, Ident4, Ident5 = list(range(1,6))  # TODO assign from iterator
 
 class Record:
     def __init__(self, PtrComp = None, Discr = 0, EnumComp = 0,

@@ -626,7 +626,7 @@ void __init() {
     cl_Error = new class_("Error");
     cl_DictWriter = new class_("DictWriter");
 
-    __0 = range(8);
+    __0 = new list<__ss_int>(range(8));
     START_RECORD = __0->__getfast__(0);
     START_FIELD = __0->__getfast__(1);
     ESCAPED_CHAR = __0->__getfast__(2);
@@ -635,7 +635,7 @@ void __init() {
     ESCAPE_IN_QUOTED_FIELD = __0->__getfast__(5);
     QUOTE_IN_QUOTED_FIELD = __0->__getfast__(6);
     EAT_CRNL = __0->__getfast__(7);
-    __1 = range(4);
+    __1 = new list<__ss_int>(range(4));
     QUOTE_MINIMAL = __1->__getfast__(0);
     QUOTE_ALL = __1->__getfast__(1);
     QUOTE_NONNUMERIC = __1->__getfast__(2);
