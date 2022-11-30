@@ -42,7 +42,17 @@ print(list(rrr))
 
 # zip
 
+z1 = zip()
+print(str(z1).startswith('<zip object'), list(z1))
 
+z2 = zip([1,2])
+print(str(z2).startswith('<zip object'), list(z2))
+
+z3 = zip([1,2], [3,4])
+print(str(z3).startswith('<zip object'), list(z3))
+
+z4 = zip([1,2], [3,4], [5,6])
+print(str(z4).startswith('<zip object'), list(z4))
 
 # dict_items, dict_keys, dict_values
 #print({1:2}.items())
