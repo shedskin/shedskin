@@ -1,5 +1,8 @@
 # iteration
 
+# TODO a, b = range(2)
+# TODO x = range(8,20)[5]
+
 # next
 
 f = open('220.py')
@@ -37,13 +40,12 @@ rrr = range(11,4,-2)
 print(rrr)
 print(list(rrr))
 
-# TODO a, b = range(2)
-# TODO x = range(8,20)[5]
+# zip
+
+
 
 # dict_items, dict_keys, dict_values
 #print({1:2}.items())
-
-# zip
 
 # map
 
