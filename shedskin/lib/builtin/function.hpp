@@ -273,79 +273,116 @@ template <class A> __iter<tuple2<__ss_int, A> *> *enumerate(pyiter<A> *x, __ss_i
 
 /* zip */
 
-list<tuple2<void *, void *> *> *__zip(int nn);
+template<class T, class U> class izipiter;
+template<class T> inline izipiter<T, T> *__zip(int iterable_count, pyiter<T> *iterable, ...);
 
-template <class A> list<tuple2<typename A::for_in_unit, typename A::for_in_unit> *> *__zip(int nn, A *iter) {
-    list<tuple2<typename A::for_in_unit, typename A::for_in_unit> *> *result = (new list<tuple2<typename A::for_in_unit, typename A::for_in_unit> *>());
-    typename A::for_in_unit e;
-    typename A::for_in_loop __3;
-    int __2;
-    A *__1;
-    FOR_IN(e,iter,1,2,3)
-        result->append((new tuple2<typename A::for_in_unit, typename A::for_in_unit>(1, e)));
-    END_FOR
-    return result;
+template<class T, class U> class izipiter : public __iter<tuple2<T, U> *> {
+public:
+    bool exhausted;
+    __iter<T> *first;
+    __iter<U> *second;
+
+    izipiter();
+    izipiter(pyiter<T> *iterable1, pyiter<U> *iterable2);
+
+    tuple2<T, U> *__next__();
+};
+
+template<class T, class U> inline izipiter<T, U>::izipiter() {
+    this->exhausted = true;
+}
+template<class T, class U> inline izipiter<T, U>::izipiter(pyiter<T> *iterable1, pyiter<U> *iterable2) {
+    this->exhausted = false;
+    this->first = iterable1->__iter__();
+    this->second = iterable2->__iter__();
 }
 
-template <class A, class B> list<tuple2<typename A::for_in_unit, typename B::for_in_unit> *> *__zip(int, A *itera, B *iterb) {
-    list<tuple2<typename A::for_in_unit, typename B::for_in_unit> *> *result = (new list<tuple2<typename A::for_in_unit, typename B::for_in_unit> *>());
-    tuple2<typename A::for_in_unit, typename B::for_in_unit> *tuples;
-    int count = -1;
-    if(A::is_pyseq && B::is_pyseq) {
-        count = __SS_MIN(len(itera), len(iterb));
-        tuples = new tuple2<typename A::for_in_unit, typename B::for_in_unit>[count];
-        result->units.resize(count);
+template<class T, class U> tuple2<T, U> *izipiter<T, U>::__next__() {
+    if (this->exhausted) {
+        throw new StopIteration();
     }
-    typename A::for_in_unit e;
-    typename A::for_in_loop __3 = itera->for_in_init();
-    typename B::for_in_unit f;
-    typename B::for_in_loop __6 = iterb->for_in_init();
-    int i = 0;
-    while(itera->for_in_has_next(__3) and iterb->for_in_has_next(__6)) {
-        e = itera->for_in_next(__3);
-        f = iterb->for_in_next(__6);
-        if(count == -1)
-            result->append((new tuple2<typename A::for_in_unit, typename B::for_in_unit>(2, e, f)));
-        else {
-            tuples[i].__init2__(e, f);
-            result->units[i] = &tuples[i];
-            i++;
-        }
+
+    tuple2<T, U> *tuple = new tuple2<T, U>;
+    try  {
+        tuple->first = this->first->__next__();
+        tuple->second = this->second->__next__();
+    } catch (StopIteration *) {
+        this->exhausted = true;
+        throw;
     }
-    return result;
+
+    return tuple;
 }
 
-template <class A, class B, class C> list<tuple2<typename A::for_in_unit, typename A::for_in_unit> *> *__zip(int, A *itera, B *iterb, C *iterc) {
-    list<tuple2<typename A::for_in_unit, typename A::for_in_unit> *> *result = (new list<tuple2<typename A::for_in_unit, typename A::for_in_unit> *>());
-    tuple2<typename A::for_in_unit, typename A::for_in_unit> *tuples;
-    int count = -1;
-    if(A::is_pyseq && B::is_pyseq && C::is_pyseq) {
-        count = __SS_MIN3(len(itera), len(iterb), len(iterc));
-        tuples = new tuple2<typename A::for_in_unit, typename A::for_in_unit>[count];
-        result->units.resize(count);
+template<class T> class izipiter<T, T> : public __iter<tuple2<T, T> *> {
+public:
+    bool exhausted;
+    __GC_VECTOR(__iter<T> *) iters;
+
+    izipiter();
+    izipiter(pyiter<T> *iterable);
+    izipiter(pyiter<T> *iterable1, pyiter<T> *iterable2);
+
+    void push_iter(pyiter<T> *iterable);
+
+    tuple2<T, T> *__next__();
+
+    friend izipiter<T, T> *__zip<T>(int iterable_count, pyiter<T> *iterable, ...);
+};
+
+template<class T> inline izipiter<T, T>::izipiter() {
+    this->exhausted = true;
+}
+template<class T> inline izipiter<T, T>::izipiter(pyiter<T> *iterable) {
+    this->exhausted = false;
+    this->push_iter(iterable);
+}
+template<class T> inline izipiter<T, T>::izipiter(pyiter<T> *iterable1, pyiter<T> *iterable2) {
+    this->exhausted = false;
+    this->push_iter(iterable1);
+    this->push_iter(iterable2);
+}
+template<class T> void izipiter<T, T>::push_iter(pyiter<T> *iterable) {
+    this->iters.push_back(iterable->__iter__());
+}
+
+template<class T> tuple2<T, T> *izipiter<T, T>::__next__() {
+    if (this->exhausted) {
+        throw new StopIteration();
     }
-    typename A::for_in_unit e;
-    typename A::for_in_loop __3 = itera->for_in_init();
-    typename B::for_in_unit f;
-    typename B::for_in_loop __6 = iterb->for_in_init();
-    typename C::for_in_unit g;
-    typename C::for_in_loop __7 = iterc->for_in_init();
-    int i = 0;
-    while(itera->for_in_has_next(__3) and iterb->for_in_has_next(__6) and iterc->for_in_has_next(__7)) {
-        e = itera->for_in_next(__3);
-        f = iterb->for_in_next(__6);
-        g = iterc->for_in_next(__7);
-        if(count == -1)
-            result->append((new tuple2<typename A::for_in_unit, typename A::for_in_unit>(3, e, f, g)));
-        else {
-            tuples[i].units.push_back(e);
-            tuples[i].units.push_back(f);
-            tuples[i].units.push_back(g);
-            result->units[i] = &tuples[i];
-            i++;
+
+    tuple2<T, T> *tuple = new tuple2<T, T>;
+    for (unsigned int i = 0; i < this->iters.size(); ++i) {
+        try  {
+            tuple->units.push_back(this->iters[i]->__next__());
+        } catch (StopIteration *) {
+            this->exhausted = true;
+            throw;
         }
     }
-    return result;
+
+    return tuple;
+}
+
+inline izipiter<void*, void*> *__zip(int /* iterable_count */) {
+    return new izipiter<void*, void*>();
+}
+template<class T, class U> inline izipiter<T, U> *__zip(int /* iterable_count */, pyiter<T> *iterable1, pyiter<U> *iterable2) {
+    return new izipiter<T, U>(iterable1, iterable2);
+}
+template<class T> inline izipiter<T, T> *__zip(int iterable_count, pyiter<T> *iterable, ...) {
+    izipiter<T, T> *iter = new izipiter<T, T>(iterable);
+
+    va_list ap;
+    va_start(ap, iterable);
+
+    while (--iterable_count) {
+        iter->push_iter(va_arg(ap, pyiter<T> *));
+    }
+
+    va_end(ap);
+
+    return iter;
 }
 
 /* next */

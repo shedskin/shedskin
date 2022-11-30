@@ -1033,9 +1033,12 @@ def range(a, b=1, s=1):
     return __xrange()
 
 def zip(*args):
-    return [(iter(args).__next__(),)]
+    elem = iter(args).__next__()
+    yield (elem,)
 def __zip2(arg1, arg2):
-    return [(iter(arg1).__next__(), iter(arg2).__next__())]
+    elem1 = iter(arg1).__next__()
+    elem2 = iter(arg2).__next__()
+    yield (elem1, elem2)
 
 def max(__kw_key=0, *arg): # XXX 0
     cmp(arg, arg)

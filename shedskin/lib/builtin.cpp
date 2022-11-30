@@ -303,10 +303,6 @@ template <> void *myallocate<__ss_int, __ss_int>(int n) { return GC_MALLOC_ATOMI
 template<> int __none() { throw new TypeError(new str("mixing None with int")); }
 template<> double __none() { throw new TypeError(new str("mixing None with float")); }
 
-list<tuple2<void *, void *> *> *__zip(int) {
-    return new list<tuple2<void *, void *> *>();
-}
-
 /* pyobj */
 
 str *pyobj::__str__() { return __repr__(); }
