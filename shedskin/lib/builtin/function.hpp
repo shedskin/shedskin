@@ -257,6 +257,10 @@ public:
     tuple2<__ss_int, A> *__next__() {
         return new tuple2<__ss_int, A>(2, i++, p->__next__());
     }
+
+    inline str *__str__() {
+        return new str("<enumerate object>");
+    }
 };
 
 template <class A> __iter<tuple2<__ss_int, A> *> *enumerate(pyiter<A> *x) {
@@ -426,56 +430,50 @@ template <class A, class B, class C, class D> list<A> *map(int, A (*func)(B, C, 
 
 /* filter */
 
-template <class A, class B> list<typename A::for_in_unit> *filter(B (*func)(typename A::for_in_unit), A *iter) {
-    list<typename A::for_in_unit> *result = new list<typename A::for_in_unit>();
-    typename A::for_in_unit e;
-    typename A::for_in_loop __3 = iter->for_in_init();
-    while(iter->for_in_has_next(__3)) {
-        e = iter->for_in_next(__3);
-        if(func) {
-            if(___bool((*func)(e)))
-                result->append(e);
-        } else if(___bool(e))
-            result->append(e);
-    }
-    return result;
+template<class T> static bool _identity(T value) {
+    return value;
 }
 
-template <class A, class B> tuple2<A,A> *filter(B (*func)(A), tuple2<A,A> *a) {
-    tuple2<A,A> *result = new tuple2<A,A>();
-    int size = len(a);
-    A e;
-    for(int i=0; i<size; i++) {
-        e = a->units[i];
-        if(func) {
-            if(___bool((*func)(e)))
-                result->units.push_back(e);
-        } else if(___bool(e))
-            result->units.push_back(e);
+template<class T, class B> class ifilteriter : public __iter<T> {
+public:
+    B (*predicate)(T);
+    __iter<T> *iter;
+
+    ifilteriter();
+    ifilteriter(B (*predicate)(T), pyiter<T> *iterable);
+
+    T __next__();
+
+    inline str *__str__() {
+        return new str("<filter object>");
     }
-    return result;
+
+};
+
+template<class T, class B> inline ifilteriter<T, B>::ifilteriter() {}
+template<class T, class B> inline ifilteriter<T, B>::ifilteriter(B (*predicate)(T), pyiter<T> *iterable) {
+    this->predicate = predicate;
+    this->iter = iterable->__iter__();
 }
 
-template <class B> str *filter(B (*func)(str *), str *a) {
-    str *result = new str();
-    int size = len(a);
-    char e;
-    str *c;
-    for(int i=0; i<size; i++) {
-        e = a->c_str()[i];
-        if(func) {
-            c = __char_cache[((unsigned char)e)];
-            if(___bool((*func)(c)))
-                *result += e;
-        } else
-            *result += e;
+template<class T, class B> T ifilteriter<T, B>::__next__() {
+    for (; ; ) {
+        const T& value = this->iter->__next__();
+        if (this->predicate(value)) {
+            return value;
+        }
     }
-    return result;
+
+ //   assert(false && "unreachable");
 }
 
-template <class A> list<A> *filter(void *func, pyiter<A> *a) { return filter(((int(*)(A))(func)), a); }
-inline str *filter(void *, str *a) { return filter(((int(*)(str *))(0)), a); }
-template <class A> tuple2<A,A> *filter(void *func, tuple2<A,A> *a) { return filter(((int(*)(A))(func)), a); }
+template<class T, class B> inline ifilteriter<T, B> *filter(B (*predicate)(T), pyiter<T> *iterable) {
+    return new ifilteriter<T, B>(predicate, iterable);
+}
+template<class T> inline ifilteriter<T, bool> *filter(void * /* null */, pyiter<T> *iterable) {
+    return new ifilteriter<T, bool>(_identity, iterable);
+}
+
 
 /* any */
 

@@ -1026,11 +1026,8 @@ str *input(str *msg = 0);
 void print(int n, file *f, str *end, str *sep, ...);
 void print2(file *f, int comma, int n, ...);
 
-list<__ss_int> *range(__ss_int b);
-list<__ss_int> *range(__ss_int a, __ss_int b, __ss_int s=1);
-
-__xrange *xrange(__ss_int b);
-__xrange *xrange(__ss_int a, __ss_int b, __ss_int s=1);
+__xrange *range(__ss_int b);
+__xrange *range(__ss_int a, __ss_int b, __ss_int s=1);
 
 static inline double __portableround(double x) {
     if(x<0) return ceil(x-0.5);
