@@ -23,6 +23,9 @@ for i in range(5):
 
 # generators
 
+filt = filter(lambda c: c>'a', 'abaaac')
+print(str(filt).startswith('<filter object'), list(filt))
+
 # reversed(range)
 #print(reversed(range(10,20,2)))
 

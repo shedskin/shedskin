@@ -641,12 +641,6 @@ def redirect(gx, c, dcpa, func, callfunc, ident, callnode, direct_call, construc
         redir = '__%s%d' % (func.ident, len([kwarg for kwarg in callfunc.args if not isinstance(kwarg, keyword)]))
         func = funcs.get(redir, func)
 
-    # filter
-    if direct_call and ident == 'filter':
-        clnames = [x[0].ident for x in c if isinstance(x[0], Class)]
-        if 'str_' in clnames or 'tuple' in clnames or 'tuple2' in clnames:
-            func = func.mv.funcs['__' + ident]
-
     # staticmethod
     if isinstance(func.parent, Class) and func.ident in func.parent.staticmethods:
         dcpa = 1

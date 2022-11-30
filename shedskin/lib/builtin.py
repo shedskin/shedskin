@@ -1130,10 +1130,8 @@ def __map4(func, iter1, iter2, iter3): # XXX
 def filter(func, iter1):
     elem = iter(iter1).__next__()
     func(elem)
-    return [elem]
-def __filter(func, iter1):
-    func(iter(iter1).__next__())
-    return iter1
+    bool(elem)
+    yield elem
 
 def next(iter1, fillvalue):
     return iter1.__next__()
