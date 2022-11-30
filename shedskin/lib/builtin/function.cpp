@@ -88,50 +88,6 @@ static int range_len(int lo, int hi, int step) {
     return n;
 }
 
-list<__ss_int> *range(__ss_int a, __ss_int b, __ss_int s) {
-    list<__ss_int> *r;
-    __ss_int i;
-    int pos;
-
-    r = new list<__ss_int>();
-    pos = 0;
-    i = a;
-
-    if(s==0)
-        __throw_range_step_zero();
-
-    if(s==1) {
-        if(b-a > 0) {
-            r->units.resize(b-a);
-            for(; i<b;i++)
-                r->units[pos++] = i;
-        }
-
-        return r;
-    }
-
-    r->units.resize(range_len(a,b,s));
-
-    if(s>0) {
-        while((i<b)) {
-            r->units[pos++] = i;
-            i += s;
-        }
-    }
-    else {
-        while((i>b)) {
-            r->units[pos++] = i;
-            i += s;
-        }
-    }
-
-    return r;
-}
-
-list<__ss_int> *range(__ss_int n) {
-    return range(0, n);
-}
-
 class __rangeiter : public __iter<__ss_int> {
 public:
     __ss_int i, a, b, s;
@@ -181,15 +137,15 @@ __ss_int __xrange::__len__() {
 str *__xrange::__repr__() {
     if(s==1) {
         if(a==0)
-            return __modct(new str("xrange(%d)"), 1, ___box(b));
+            return __modct(new str("range(%d)"), 1, ___box(b));
         else
-            return __modct(new str("xrange(%d, %d)"), 2, ___box(a), ___box(b));
+            return __modct(new str("range(%d, %d)"), 2, ___box(a), ___box(b));
     }
-    return __modct(new str("xrange(%d, %d, %d)"), 3, ___box(a), ___box(b), ___box(s)); /* XXX */
+    return __modct(new str("range(%d, %d, %d)"), 3, ___box(a), ___box(b), ___box(s)); /* XXX */
 }
 
-__xrange *xrange(__ss_int a, __ss_int b, __ss_int s) { return new __xrange(a,b,s); }
-__xrange *xrange(__ss_int n) { return new __xrange(0, n, 1); }
+__xrange *range(__ss_int a, __ss_int b, __ss_int s) { return new __xrange(a,b,s); }
+__xrange *range(__ss_int n) { return new __xrange(0, n, 1); }
 
 __iter<__ss_int> *reversed(__xrange *x) {
    return new __rangeiter(x->a+(range_len(x->a,x->b,x->s)-1)*x->s, x->a-x->s, -x->s);

@@ -2287,7 +2287,9 @@ class GenerateVisitor(BaseNodeVisitor):
                     else:  # XXX let visit_Call(fakefunc) use cast_to_builtin
                         fakefunc = inode(self.gx, lvalue.value).fakefunc
                         self.visitm('(', fakefunc.func.value, ')->__setslice__(', fakefunc.args[0], ',', fakefunc.args[1], ',', fakefunc.args[2], ',', fakefunc.args[3], ',', func)
-                        if [t for t in self.mergeinh[lvalue.value] if t[0].ident == 'bytes_']:
+                        if [t for t in self.mergeinh[lvalue.value] if t[0].ident == 'bytes_']:  # TODO more general fix
+                            self.visit(fakefunc.args[4], func)
+                        elif [t for t in self.mergeinh[fakefunc.args[4]] if t[0].ident == '__xrange']:
                             self.visit(fakefunc.args[4], func)
                         else:
                             self.impl_visit_conv(fakefunc.args[4], self.mergeinh[lvalue.value], func)

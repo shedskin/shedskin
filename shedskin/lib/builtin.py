@@ -874,9 +874,6 @@ def bin(x):
 def isinstance(a, b):
     return True
 
-def range(a, b=1, s=1):
-    return [1]
-
 def input(msg=''):
     return ''
 
@@ -1024,7 +1021,7 @@ def reversed(l):
 def enumerate(x, start=0):
     return __iter((1, iter(x).__next__()))
 
-class __xrange:
+class __xrange:  # TODO add __getitem__!
     def __init__(self):
         self.unit = 1
     def __iter__(self):
@@ -1032,7 +1029,7 @@ class __xrange:
     def __len__(self):
         return 1
 
-def xrange(a, b=1, s=1):
+def range(a, b=1, s=1):
     return __xrange()
 
 def zip(*args):
