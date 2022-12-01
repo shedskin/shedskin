@@ -1,4 +1,4 @@
-/* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2022 Mark Dufour and contributors; License Expat (See LICENSE) */
 
 /*
 set implementation, partially derived from CPython,
@@ -12,8 +12,6 @@ template <class T> set<T>::set(int frozen) : frozen(frozen) {
 }
 
 #ifdef __SS_BIND
-#if (PY_MAJOR_VERSION == 2)
-#if (PY_MINOR_VERSION > 4)
 
 template<class T> set<T>::set(PyObject *p) {
     this->__class__ = cl_set;
@@ -46,8 +44,6 @@ template<class T> PyObject *set<T>::__to_py__() {
     return s;
 }
 
-#endif
-#endif
 #endif
 
 template<class T> template<class U> set<T>::set(U *other, int frozen) {
