@@ -20,13 +20,13 @@ OVERLOAD = ["__add__", "__sub__", "__mul__", "__div__",
 
 
 def clname(cl):
-    """{ function_description }
+    """class name normalizer
 
-    :param      cl:   { parameter_description }
-    :type       cl:   { type_description }
+    :param      cl:   class object
+    :type       cl:   shedskin.python.Class
 
-    :returns:   { description_of_the_return_value }
-    :rtype:     { return_type_description }
+    :returns:   class name with shedksin prefix and module qualifier
+    :rtype:     str
     """
     return "__ss_%s_%s" % ("_".join(cl.mv.module.name_list), cl.ident)
 
@@ -560,6 +560,7 @@ class ExtensionModule:
         write('    .m_name = "%s",   /* name of module */' % "_".join(self.gv.module.name_list))
         write('    .m_doc = "module docstring",   /* module documentation, may be NULL */') # FIXME
         write("    .m_size = -1,     /* size of per-interpreter state of the module or -1 if the module keeps state in global variables. */")
+        write("    .m_methods = %sMethods," % ("Global_" + "_".join(self.gv.module.name_list)))
         write("};")
 
         # # add types to module
@@ -606,7 +607,7 @@ class ExtensionModule:
             write("        Py_DECREF(m);")
             write("        return NULL;")
             write("    }\n")
-            write("    return m;")
+        write("    return m;")
         write("}\n")
 
         for n in self.gv.module.name_list:
@@ -632,18 +633,17 @@ class ExtensionModule:
         funcs = self.supported_funcs(cl.funcs.values())
         vars = self.supported_vars(cl.vars.values())
 
-        # if True:
-        #     from IPython import embed; embed(header='IPYTHON DEUBUG')
-
         # python object
         write("/* class %s */\n" % cl.ident)
         write("typedef struct {")
         write("    PyObject_HEAD")
-        write(
-            "    %s::%s *__ss_object;" % (cl.module.full_path(), self.gv.cpp_name(cl))
-        )
+        write("    %s::%s *__ss_object;" % (
+            cl.module.full_path(), self.gv.cpp_name(cl)))
         write("} %sObject;\n" % clname(cl))
 
+        ## FIXME: temporarly hardcoded
+        ## this should include type struct members
+        ## https://docs.python.org/3/c-api/structures.html
         write("static PyMemberDef %sMembers[] = {" % clname(cl))
         write("    {NULL}\n};\n")
 
