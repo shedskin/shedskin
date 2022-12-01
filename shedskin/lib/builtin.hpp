@@ -962,6 +962,7 @@ public:
     __xrange(__ss_int a, __ss_int b, __ss_int s);
     __iter<__ss_int> *__iter__();
     __ss_int __len__();
+    __ss_int __getitem__(__ss_int i);
     str *__repr__();
 };
 

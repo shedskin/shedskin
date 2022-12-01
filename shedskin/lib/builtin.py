@@ -1026,6 +1026,8 @@ class __xrange:  # TODO add __getitem__!
         self.unit = 1
     def __iter__(self):
         return __iter(1)
+    def __getitem__(self, i):
+        return 1
     def __len__(self):
         return 1
 
