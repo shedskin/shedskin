@@ -33,7 +33,7 @@ print(bin(1==2), bin(1!=2))
 
 # game of life
 argv=[0,3,3]
-r,c=map(int,argv[1:])
+r,c=list(map(int,argv[1:]))
 p,g=r*c,range
 z=g(p)
 w=lambda x:sum((abs(x%r-v%r)<2)&(abs(x//r-v//r)<2)&d[v]for v in z)

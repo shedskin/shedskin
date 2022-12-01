@@ -1859,8 +1859,6 @@ class GenerateVisitor(BaseNodeVisitor):
         if self.library_func(funcs, 'socket', 'socket', 'settimeout') or \
                 self.library_func(funcs, 'socket', 'socket', 'gettimeout'):
             error("socket.set/gettimeout do not accept/return None", self.gx, node, warning=True, mv=self.mv)
-        if self.library_func(funcs, 'builtin', None, 'map') and len(node.args) > 2:
-            error("default fillvalue for 'map' becomes 0 for integers", self.gx, node, warning=True, mv=self.mv)
         if self.library_func(funcs, 'itertools', None, 'izip_longest'):
             error("default fillvalue for 'izip_longest' becomes 0 for integers", self.gx, node, warning=True, mv=self.mv)
         if self.library_func(funcs, 'struct', None, 'unpack'):

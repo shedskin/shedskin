@@ -403,71 +403,68 @@ template <class A> A next(__iter<A> *iter1) { return iter1->__next__(); }
 
 /* map */
 
-template <class A, class B> list<B> *map(int, B (*func)(typename A::for_in_unit), A *iter) {
-    if(!func)
-        throw new ValueError(new str("'map' function argument cannot be None"));
-    list<B> *result = new list<B>();
-    int count = -1;
-    if(A::is_pyseq) {
-        count = len(iter);
-        result->units.resize(count);
-    }
-    typename A::for_in_unit e;
-    typename A::for_in_loop __3 = iter->for_in_init();
-    int i = 0;
-    while(iter->for_in_has_next(__3)) {
-        e = iter->for_in_next(__3);
-        if(count == -1)
-            result->append((*func)(e));
-        else
-            result->units[i++] = (*func)(e);
-    }
-    return result;
+#define I(N, TP, FP, RP, AP, DP, CP, VP)                                                                 \
+template<class R, TP> class imapiter##N : public __iter<R> {                                             \
+public:                                                                                                  \
+    bool exhausted;                                                                                      \
+    R (*function)(FP);                                                                                   \
+    RP                                                                                                   \
+                                                                                                         \
+    imapiter##N();                                                                                       \
+    imapiter##N(R (*function)(FP), DP);                                                                  \
+                                                                                                         \
+    R __next__();                                                                                        \
+    inline str * __str__() { return new str("<map object>"); }                                           \
+};                                                                                                       \
+                                                                                                         \
+template<class R, TP> inline imapiter##N<R, FP>::imapiter##N() {                                         \
+    this->exhausted = true;                                                                              \
+}                                                                                                        \
+template<class R, TP> inline imapiter##N<R, FP>::imapiter##N(R (*function)(FP), DP) {                    \
+    this->exhausted = false;                                                                             \
+    this->function = function;                                                                           \
+    AP                                                                                                   \
+}                                                                                                        \
+                                                                                                         \
+template<class R, TP> R imapiter##N<R, FP>::__next__() {                                                 \
+    if (this->exhausted) {                                                                               \
+        throw new StopIteration();                                                                       \
+    }                                                                                                    \
+                                                                                                         \
+    try  {                                                                                               \
+        return this->function(CP);                                                                       \
+    } catch (StopIteration *) {                                                                          \
+        this->exhausted = true;                                                                          \
+        throw;                                                                                           \
+    }                                                                                                    \
+}                                                                                                        \
+                                                                                                         \
+template<class R, TP> inline imapiter##N<R, FP> *map(int /* iterable_count */, R (*function)(FP), DP) {  \
+    return new imapiter##N<R, FP>(function, VP);                                                         \
 }
 
-template <class A, class B, class C> list<A> *map(int n, A (*func)(B, C), pyiter<B> *b, pyiter<C> *c) {
-    if(!func)
-        throw new ValueError(new str("'map' function argument cannot be None"));
-    list<A> *result = new list<A>();
-    __iter<B> *itb = b->__iter__();
-    __iter<C> *itc = c->__iter__();
-    B nextb;
-    C nextc;
-    int total;
-    while(1) {
-        total = 0;
-        try { nextb = next(itb); total += 1; } catch (StopIteration *) { nextb = __zero<B>(); }
-        try { nextc = next(itc); total += 1; } catch (StopIteration *) { nextc = __zero<C>(); }
-        if(total == 0)
-            break;
-        result->append((*func)(nextb, nextc));
-    }
-    return result;
-}
+#define S ,
+#define L(P) class T##P
+#define F(P) T##P
+#define E(P) __iter<T##P> *iter##P;
+#define A(P) this->iter##P = iterable##P->__iter__();
+#define D(P) pyiter<T##P> *iterable##P
+#define C(P) this->iter##P->__next__()
+#define V(P) iterable##P
 
-template <class A, class B, class C, class D> list<A> *map(int, A (*func)(B, C, D), pyiter<B> *b1, pyiter<C> *b2, pyiter<D> *b3) {
-    if(!func)
-        throw new ValueError(new str("'map' function argument cannot be None"));
-    list<A> *result = new list<A>();
-    __iter<B> *itb1 = b1->__iter__();
-    __iter<C> *itb2 = b2->__iter__();
-    __iter<D> *itb3 = b3->__iter__();
-    B nextb1;
-    C nextb2;
-    D nextb3;
-    int total;
-    while(1)  {
-        total = 0;
-        try { nextb1 = next(itb1); total += 1; } catch (StopIteration *) { nextb1 = __zero<B>(); }
-        try { nextb2 = next(itb2); total += 1; } catch (StopIteration *) { nextb2 = __zero<C>(); }
-        try { nextb3 = next(itb3); total += 1; } catch (StopIteration *) { nextb3 = __zero<D>(); }
-        if(total == 0)
-            break;
-        result->append((*func)(nextb1, nextb2, nextb3));
-    }
-    return result;
-}
+I(1, L(1), F(1), E(1), A(1), D(1), C(1), V(1))
+I(2, L(1) S L(2), F(1) S F(2), E(1) E(2), A(1) A(2), D(1) S D(2), C(1) S C(2), V(1) S V(2))
+I(3, L(1) S L(2) S L(3), F(1) S F(2) S F(3), E(1) E(2) E(3), A(1) A(2) A(3), D(1) S D(2) S D(3), C(1) S C(2) S C(3), V(1) S V(2) S V(3))
 
+#undef S
+#undef L
+#undef F
+#undef E
+#undef A
+#undef D
+#undef C
+#undef V
+#undef I
 
 /* filter */
 
