@@ -59,17 +59,25 @@ print(str(z4).startswith('<zip object'), list(z4))
 
 # map
 
-# different length args to map
-#def hoppa2(a, b):
-#    if b: return a+b
-#    return a+'X'
-#print(list(map(hoppa2, 'banaan', 'aap')))
-#
-#def hoppa3(a, b):
-#    if b: return a+b
-#    return a
-#print(list(map(hoppa3, range(8), range(4))))
-#
-#print(list(map(max, ['a','bc'], ['d'], ['e'])))
-#
-#print(list(map(set, [[1]])))
+mp = map(lambda a: 2*a, [1,2,3])
+print(str(mp).startswith('<map object'), list(mp))
+
+mp = map(lambda a, b: a*b, [1,2,3], [4,5])
+print(str(mp).startswith('<map object'), list(mp))
+
+mp = map(lambda a, b, c: a+b+c, [1,2,3], [3,4,5], [5,4,3])
+print(str(mp).startswith('<map object'), list(mp))
+
+def hoppa2(a, b):
+    if b: return a+b
+    return a+'X'
+print(list(map(hoppa2, 'banaan', 'aap')))
+
+def hoppa3(a, b):
+    if b: return a+b
+    return a
+print(list(map(hoppa3, range(8), range(4))))
+
+print(list(map(max, ['a','bc'], ['d'], ['e'])))
+
+print(list(map(set, [[1]])))

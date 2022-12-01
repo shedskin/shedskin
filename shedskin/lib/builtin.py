@@ -1121,11 +1121,11 @@ def quit(code=0):
     pass
 
 def map(func, *iter1):
-    return [func(*iter(iter1).__next__())]
+    yield func(*iter(iter1).__next__())
 def __map3(func, iter1, iter2):
-    return [func(iter(iter1).__next__(), iter(iter2).__next__())]
+    yield func(iter(iter1).__next__(), iter(iter2).__next__())
 def __map4(func, iter1, iter2, iter3): # XXX
-    return [func(iter(iter1).__next__(), iter(iter2).__next__(), iter(iter3).__next__())]
+    yield func(iter(iter1).__next__(), iter(iter2).__next__(), iter(iter3).__next__())
 
 def filter(func, iter1):
     elem = iter(iter1).__next__()
