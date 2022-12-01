@@ -596,7 +596,8 @@ class ExtensionModule:
             write("    if (PyType_Ready(&%sObjectType) < 0)" % clname(cl))
             write("        return NULL;\n")
 
-        write("    m = PyModule_Create(&%smodule);" % "_".join(self.gv.module.name_list))
+        __ss_mod = "_".join(self.gv.module.name_list)
+        write("    __ss_mod_%s = m = PyModule_Create(&%smodule);" % (__ss_mod, __ss_mod))
         write("    if (m == NULL)")
         write("        return NULL;\n")
 
