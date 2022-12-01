@@ -1,6 +1,5 @@
 # iteration
 
-# TODO a, b = range(2)
 # TODO range.{count, index}?
 # TODO range(..)[-i]
 
@@ -42,6 +41,9 @@ print(rrr)
 print(list(rrr))
 
 print(range(8,20)[5])
+
+raa, rab = range(7,9)
+print(raa, rab)
 
 # zip
 
