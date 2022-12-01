@@ -1,7 +1,8 @@
 # iteration
 
 # TODO a, b = range(2)
-# TODO x = range(8,20)[5]
+# TODO range.{count, index}?
+# TODO range(..)[-i]
 
 # next
 
@@ -39,6 +40,8 @@ print(str(enum).startswith('<enumerate object'), list(enum))
 rrr = range(11,4,-2)
 print(rrr)
 print(list(rrr))
+
+print(range(8,20)[5])
 
 # zip
 

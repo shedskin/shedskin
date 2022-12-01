@@ -134,6 +134,13 @@ __ss_int __xrange::__len__() {
    return range_len(a, b, s);
 }
 
+__ss_int __xrange::__getitem__(__ss_int i) {
+   __ss_int val = a + i*s;
+   if(val >= b)
+       throw new IndexError(new str("range object index out of range"));
+   return val;
+}
+
 str *__xrange::__repr__() {
     if(s==1) {
         if(a==0)
