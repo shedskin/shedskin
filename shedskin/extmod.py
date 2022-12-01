@@ -633,18 +633,17 @@ class ExtensionModule:
         funcs = self.supported_funcs(cl.funcs.values())
         vars = self.supported_vars(cl.vars.values())
 
-        # if True:
-        #     from IPython import embed; embed(header='IPYTHON DEUBUG')
-
         # python object
         write("/* class %s */\n" % cl.ident)
         write("typedef struct {")
         write("    PyObject_HEAD")
-        write(
-            "    %s::%s *__ss_object;" % (cl.module.full_path(), self.gv.cpp_name(cl))
-        )
+        write("    %s::%s *__ss_object;" % (
+            cl.module.full_path(), self.gv.cpp_name(cl)))
         write("} %sObject;\n" % clname(cl))
 
+        ## FIXME: temporarly hardcoded
+        ## this should include type struct members
+        ## https://docs.python.org/3/c-api/structures.html
         write("static PyMemberDef %sMembers[] = {" % clname(cl))
         write("    {NULL}\n};\n")
 
