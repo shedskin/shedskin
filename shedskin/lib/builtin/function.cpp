@@ -135,10 +135,7 @@ __ss_int __xrange::__len__() {
 }
 
 __ss_int __xrange::__getitem__(__ss_int i) {
-   __ss_int val = a + i*s;
-   if(val >= b)
-       throw new IndexError(new str("range object index out of range"));
-   return val;
+   return a + (__wrap(this, i)) * s;
 }
 
 str *__xrange::__repr__() {
