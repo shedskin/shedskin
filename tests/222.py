@@ -1,7 +1,7 @@
 # iteration
 
 # TODO range.{count, index}?
-# TODO range(..)[-i]
+# TODO c,d = map(lambda a,b:a+b, [1,2],[3,4])
 
 # next
 
@@ -40,7 +40,9 @@ rrr = range(11,4,-2)
 print(rrr)
 print(list(rrr))
 
+print(len(range(8,20)))
 print(range(8,20)[5])
+print(range(8,20)[-2])
 
 raa, rab = range(7,9)
 print(raa, rab)
