@@ -43,7 +43,6 @@ m.woeh(1,2)
 #*WARNING* 26.py:1: pow(int, int) returns int after compilation
 #*WARNING* 26.py:6: 'findall' does not work with groups (use 'finditer' instead)
 #*WARNING* 26.py:9: socket.set/gettimeout do not accept/return None
-#*WARNING* 26.py:11: default fillvalue for 'map' becomes 0 for integers
 #*WARNING* 26.py:14: default fillvalue for 'izip_longest' becomes 0 for integers
 #*WARNING* 26.py:18: non-constant or unsupported type code
 #*WARNING* 26.py:19: non-constant or unsupported type code
