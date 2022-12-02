@@ -1091,7 +1091,7 @@ char **__exec_argvlist(list<str *> *args) {
 
 char **__exec_envplist(dict<str *, str *> *env) {
     char** envplist = (char**)GC_malloc(sizeof(char*)*(env->__len__()+1));
-    list<tuple2<str *, str *> *> *items = env->items();
+    list<tuple2<str *, str *> *> *items = new list<tuple2<str *, str *> *>(env->items());
     for(__ss_int i=0; i < items->__len__(); i++) {
         envplist[i] = (char *)(__add_strs(3, items->__getitem__(i)->__getfirst__(), new str("="), items->__getitem__(i)->__getsecond__())->c_str());
     }

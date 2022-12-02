@@ -62,7 +62,15 @@ z4 = zip([1,2], [3,4], [5,6])
 print(str(z4).startswith('<zip object'), list(z4))
 
 # dict_items, dict_keys, dict_values
-#print({1:2}.items())
+nicedict = {1: 2, 2: 3}
+di = nicedict.items()
+print(str(di).startswith('dict_items'), list(di))
+
+dk = nicedict.keys()
+print(str(dk).startswith('dict_keys'), list(dk))
+
+dv = nicedict.values()
+print(str(dv).startswith('dict_values'), list(dv))
 
 # map
 

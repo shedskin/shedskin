@@ -610,13 +610,6 @@ class dict(pyiter):
         self.__setunit__(u, v)
         return v
 
-    def keys(self):
-        return [self.unit]
-    def values(self):
-        return [self.value]
-    def items(self):
-        return [(self.unit, self.value)]
-
     def has_key(self, u):
         self.__key__(u)
         return True
@@ -651,12 +644,12 @@ class dict(pyiter):
         return {l.unit: b}
     fromkeys = staticmethod(fromkeys) # XXX classmethod
 
-    def iterkeys(self):
-        return __iter(self.unit)
-    def itervalues(self):
-        return __iter(self.value)
-    def iteritems(self):
-        return __iter((self.unit, self.value))
+    def keys(self):
+        yield self.unit
+    def values(self):
+        yield self.value
+    def items(self):
+        yield (self.unit, self.value)
 
 class pyset(pyiter):
     def __inititer__(self, i):
