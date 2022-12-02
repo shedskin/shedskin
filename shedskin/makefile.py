@@ -9,8 +9,16 @@ makefile.py: generate makefile
 '''
 import os
 import sys
-from distutils import sysconfig
+import subprocess
+# from distutils import sysconfig # XXX distutils is deprecated
+import sysconfig
+import re
 
+def check_output(cmd):
+    try:
+        return subprocess.check_output(cmd.split(), encoding='utf8').strip()
+    except FileNotFoundError:
+        return None
 
 def generate_makefile(gx):
     if sys.platform == 'win32':
@@ -18,9 +26,11 @@ def generate_makefile(gx):
         prefix = sysconfig.get_config_var('prefix')
     else:
         pyver = sysconfig.get_config_var('VERSION') or sysconfig.get_python_version()
-        includes = '-I' + sysconfig.get_python_inc() + ' '
+        includes = '-I' + sysconfig.get_config_var('INCLUDEPY') + ' '
+        # includes = '-I' + sysconfig.get_python_inc() + ' '
         if not gx.pypy:
-            includes += '-I' + sysconfig.get_python_inc(plat_specific=True)
+            includes += '-I' + os.path.dirname(sysconfig.get_config_h_filename())
+            # includes += '-I' + sysconfig.get_python_inc(plat_specific=True)
 
         if sys.platform == 'darwin':
             ldflags = sysconfig.get_config_var('BASECFLAGS')
@@ -41,6 +51,8 @@ def generate_makefile(gx):
 
     makefile = open(gx.makefile_name, 'w')
 
+    write = lambda line='': print(line, file=makefile)
+
     if gx.msvc:
         esc_space = '/ '
 
@@ -53,7 +65,7 @@ def generate_makefile(gx):
             return '${%s}' % name
 
     libdirs = [d.replace(' ', esc_space) for d in gx.libdirs]
-    print('SHEDSKIN_LIBDIR=%s' % (libdirs[-1]), file=makefile)
+    write('SHEDSKIN_LIBDIR=%s' % (libdirs[-1]))
     filenames = []
     modules = gx.modules.values()
     for module in modules:
@@ -157,13 +169,33 @@ def generate_makefile(gx):
             if 'hashlib' in (m.ident for m in modules):
                 line += ' -lcrypto'
 
-        print(line, file=makefile)
-    print(file=makefile)
+        write(line)
+    write()
 
-    print('CPPFILES=%s\n' % cppfiles, file=makefile)
-    print('HPPFILES=%s\n' % hppfiles, file=makefile)
+    write('CPPFILES=%s\n' % cppfiles)
+    write('HPPFILES=%s\n' % hppfiles)
 
-    print('all:\t' + ident + '\n', file=makefile)
+    # tests for static
+    MATCH = re.match(r"^LFLAGS=(.+)(\$\(LDFLAGS\).+)", line)
+    HOMEBREW=check_output('brew --prefix')
+    if sys.platform == 'darwin' and HOMEBREW and MATCH:
+        write('STATIC_PREFIX=$(shell brew --prefix)')
+        write('STATIC_LIBDIR=$(STATIC_PREFIX)/lib')
+        write('STATIC_INCLUDE=$(STATIC_PREFIX)/include')
+        write()
+        write('GC_STATIC=$(STATIC_LIBDIR)/libgc.a')
+        write('GCCPP_STATIC=$(STATIC_LIBDIR)/libgccpp.a')
+        write('GC_INCLUDE=$(STATIC_INCLUDE)/include')
+        write('PCRE_STATIC=$(STATIC_LIBDIR)/libpcre.a')
+        write('PCRE_INCLUDE=$(STATIC_INCLUDE)/include')
+        write()
+        write('STATIC_LIBS=$(GC_STATIC) $(GCCPP_STATIC) $(PCRE_STATIC)')
+        write('STATIC_CCFLAGS=$(CCFLAGS) -I$(GC_INCLUDE) -I$(PCRE_INCLUDE)')
+        # write('STATIC_LFLAGS=$(LDFLAGS) -L/usr/local/lib -bundle -undefined dynamic_lookup -Wno-unused-result -Wsign-compare -Wunreachable-code -fno-common -dynamic')
+        write('STATIC_LFLAGS=' + MATCH.group(2))
+        write()
+
+    write('all:\t' + ident + '\n')
 
     # executable (normal, debug, profile) or extension module
     _out = '-o '
@@ -178,20 +210,29 @@ def generate_makefile(gx):
         if not gx.extension_module:
             _ext = '.exe'
     for suffix, options in targets:
-        print(ident + suffix + ':\t$(CPPFILES) $(HPPFILES)', file=makefile)
-        print('\t$(CC) ' + options + ' $(CCFLAGS) $(CPPFILES) $(LFLAGS) ' + _out + ident + suffix + _ext + '\n', file=makefile)
+        write(ident + suffix + ':\t$(CPPFILES) $(HPPFILES)')
+        write('\t$(CC) ' + options + ' $(CCFLAGS) $(CPPFILES) $(LFLAGS) ' + _out + ident + suffix + _ext + '\n')
+
+        if sys.platform == 'darwin' and HOMEBREW and MATCH:
+            # static option
+            write('static: $(CPPFILES) $(HPPFILES)')
+            write(f'\t$(CC) {options} $(STATIC_CCFLAGS) $(CPPFILES) $(STATIC_LIBS) $(STATIC_LFLAGS) -o {ident}\n')
 
     # clean
     ext = ''
     if sys.platform == 'win32' and not gx.extension_module:
         ext = '.exe'
-    print('clean:', file=makefile)
+    write('clean:')
     targets = [ident + ext]
     if not gx.extension_module:
         if not gx.msvc:
             targets += [ident + '_prof' + ext, ident + '_debug' + ext]
-    print('\trm -f %s\n' % ' '.join(targets), file=makefile)
+    write('\trm -f %s\n' % ' '.join(targets))
 
     # phony
-    print('.PHONY: all clean\n', file=makefile)
+    phony = '.PHONY: all clean'
+    if sys.platform == 'darwin' and HOMEBREW and MATCH:
+        phony += ' static'
+    phony += '\n'
+    write(phony)
     makefile.close()
