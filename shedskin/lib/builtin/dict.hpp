@@ -1,4 +1,4 @@
-/* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2022 Mark Dufour and contributors; License Expat (See LICENSE) */
 
 /* 
 dict implementation, partially derived from CPython,
@@ -352,39 +352,6 @@ template <class K, class V> int dict<K,V>::do_discard(K key) {
 	entry->use = dummy;
 	used--;
 	return DISCARD_FOUND;
-}
-
-template <class K, class V> list<K> *dict<K,V>::keys() {
-	__ss_int pos, i;
-	dictentry<K,V> *entry;
-	list<K> *ret = new list<K>;
-    ret->units.resize(used);
-	pos = i = 0;
-	while (next(&pos, &entry))
-        ret->units[i++] = entry->key;
-    return ret;
-}
-
-template <class K, class V> list<V> *dict<K,V>::values() {
-	__ss_int pos, i;
-	dictentry<K,V> *entry;
-	list<V> *ret = new list<V>;
-    ret->units.resize(used);
-	pos = i = 0;
-	while (next(&pos, &entry))
-        ret->units[i++] = entry->value;
-	return ret;
-}
-
-template <class K, class V> list<tuple2<K, V> *> *dict<K,V>::items() {
-	__ss_int pos, i;
-	dictentry<K,V> *entry;
-	list<tuple2<K, V> *> *ret = new list<tuple2<K, V> *>;
-    ret->units.resize(used);
-	pos = i = 0;
-	while (next(&pos, &entry))
-        ret->units[i++] = new tuple2<K, V>(2, entry->key, entry->value);
-    return ret;
 }
 
 template<class K, class V> V dict<K,V>::pop(K key) {

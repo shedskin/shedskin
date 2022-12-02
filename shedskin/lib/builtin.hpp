@@ -623,9 +623,6 @@ public:
     V __getitem__(K k);
     void *__delitem__(K k);
     int do_discard(K key);
-    list<K> *keys();
-    list<V> *values();
-    list<tuple2<K, V> *> *items();
     __ss_int __len__();
     str *__repr__();
     __ss_bool has_key(K k);
@@ -650,9 +647,9 @@ public:
     V setdefault(K k, V v=0);
 
     __dictiterkeys<K, V> *__iter__() { return new __dictiterkeys<K,V>(this);}
-    __dictiterkeys<K, V> *iterkeys() { return new __dictiterkeys<K,V>(this);}
-    __dictitervalues<K, V> *itervalues() { return new __dictitervalues<K,V>(this);}
-    __dictiteritems<K, V> *iteritems() { return new __dictiteritems<K,V>(this);}
+    __dictiterkeys<K, V> *keys() { return new __dictiterkeys<K,V>(this);}
+    __dictitervalues<K, V> *values() { return new __dictitervalues<K,V>(this);}
+    __dictiteritems<K, V> *items() { return new __dictiteritems<K,V>(this);}
 
     dict<K, V> *__deepcopy__(dict<void *, pyobj *> *memo);
     dict<K, V> *__copy__();
@@ -985,6 +982,8 @@ public:
 
     __dictiterkeys<K, V>(dict<K, V> *p);
     K __next__();
+
+    inline str *__str__() { return new str("dict_keys"); }
 };
 
 template <class K, class V> class __dictitervalues : public __iter<V> {
@@ -997,6 +996,8 @@ public:
 
     __dictitervalues<K, V>(dict<K, V> *p);
     V __next__();
+
+    inline str *__str__() { return new str("dict_values"); }
 };
 
 template <class K, class V> class __dictiteritems : public __iter<tuple2<K, V> *> {
@@ -1009,7 +1010,10 @@ public:
 
     __dictiteritems<K, V>(dict<K, V> *p);
     tuple2<K, V> *__next__();
+
+    inline str *__str__() { return new str("dict_items"); }
 };
+
 static inline __ss_bool __mbool(bool c) { __ss_bool b; b.value=(int)c; return b; }
 
 /* builtin function declarations */
