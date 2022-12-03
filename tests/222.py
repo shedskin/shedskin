@@ -72,6 +72,19 @@ print(str(dk).startswith('dict_keys'), list(dk))
 dv = nicedict.values()
 print(str(dv).startswith('dict_values'), list(dv))
 
+from collections import defaultdict
+defd = defaultdict(int)
+defd [4] = 5
+
+ddi = defd.items()
+print(str(ddi).startswith('dict_items'), list(ddi))
+
+ddk = defd.keys()
+print(str(ddk).startswith('dict_keys'), list(ddk))
+
+ddv = defd.values()
+print(str(ddv).startswith('dict_values'), list(ddv))
+
 # map
 
 mp = map(lambda a: 2*a, [1,2,3])
