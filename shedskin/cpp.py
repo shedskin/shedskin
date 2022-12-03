@@ -8,7 +8,11 @@ cpp.py: output C++ code
 
 output equivalent C++ code, using templates and virtuals to support data and OO polymorphism.
 
-class GenerateVisitor: inherits visitor pattern from ast_utils.BaseNodeVisitor, to recursively generate C++ code for each syntactical Python construct. the constraint graph, with inferred types, is first 'merged' back to program dimensions (gx.merged_inh).
+class GenerateVisitor: inherits visitor pattern from ast_utils.BaseNodeVisitor,
+to recursively generate C++ code for each syntactical Python construct.
+
+The constraint graph, with inferred types, is first 'merged' back to program
+dimensions (gx.merged_inh).
 
 '''
 import os
@@ -17,6 +21,9 @@ import struct
 import textwrap
 
 import jinja2
+import mako
+from mako.lookup import TemplateLookup
+from mako import exceptions
 
 from ast import Num, Str, Assign, ImportFrom, keyword, \
     Name, Call, Slice, ExtSlice, Index, Attribute, Dict, Subscript, \
@@ -93,6 +100,17 @@ class CPPNamer(object):
 
 
 # --- code generation visitor; use type information
+
+def escape_extra_newlines(text):
+    patterns = ['<%block', '<%include']
+    results = []
+    for line in text.splitlines():
+        if any(line.startswith(p) for p in patterns):
+            line += '\\'
+        results.append(line)
+    return '\n'.join(results)
+
+
 class GenerateVisitor(BaseNodeVisitor):
     def __init__(self, gx, module):
         self.gx = gx
@@ -108,6 +126,11 @@ class GenerateVisitor(BaseNodeVisitor):
         self.with_count = 0
         self.bool_wrapper = {}
         self.namer = CPPNamer(self.gx, self)
+        self.mako_env = TemplateLookup(
+            directories=[self.gx.sysdir + '/templates/cpp-mako/'],
+            preprocessor=escape_extra_newlines,
+            default_filters=['str', 'trim'],
+        )
         self.jinja_env = jinja2.Environment(
             loader=jinja2.FileSystemLoader(
                 self.gx.sysdir + '/templates/cpp/'),
@@ -121,6 +144,7 @@ class GenerateVisitor(BaseNodeVisitor):
     def cpp_name(self, obj):
         return self.namer.name(obj)
 
+    # XXX this is too magical 
     def insert_consts(self, declare):  # XXX ugly
         if not self.consts:
             return
@@ -469,21 +493,46 @@ class GenerateVisitor(BaseNodeVisitor):
     def module_cpp(self, node):
         if get_docstring(node):
             node.doc = get_docstring(node) # necessary for the module-level comments
-        file_top = self.jinja_env.get_template('module.cpp.tpl').render(
-            node=node,
-            module=self.module,
-            imports=[
-                (child, self.gx.from_module[child])
-                for child in node.body
-                if isinstance(child, ImportFrom) and child.module != '__future__'],
-            globals=self.gen_declare_defs(self.mv.globals.items()),
-            nodetypestr=lambda var: nodetypestr(self.gx, var, var.parent, mv=self.mv),
-            defaults=self.gen_defaults(),
-            listcomps=self.mv.listcomps,
-            cpp_name=self.cpp_name,
-            namer=self.namer,
-            dedent=textwrap.dedent,
-        )
+
+        if 1:
+            try:
+                file_top = self.mako_env.get_template('module.cpp').render(
+                    node=node,
+                    module=self.module,
+                    imports=[
+                        (child, self.gx.from_module[child])
+                        for child in node.body
+                        if isinstance(child, ImportFrom) and child.module != '__future__'],
+                    globals=self.gen_declare_defs(self.mv.globals.items()),
+                    nodetypestr=lambda var: nodetypestr(self.gx, var, var.parent, mv=self.mv),
+                    defaults=self.gen_defaults(),
+                    listcomps=self.mv.listcomps,
+                    cpp_name=self.cpp_name,
+                    namer=self.namer,
+                )
+            except:
+                traceback = exceptions.RichTraceback()
+                for (filename, lineno, function, line) in traceback.traceback:
+                    print("File %s, line %s, in %s" % (filename, lineno, function))
+                    print(line, "\n")
+                print("%s: %s" % (str(traceback.error.__class__.__name__), traceback.error))                
+        else:
+            file_top = self.jinja_env.get_template('module.cpp.tpl').render(
+                node=node,
+                module=self.module,
+                imports=[
+                    (child, self.gx.from_module[child])
+                    for child in node.body
+                    if isinstance(child, ImportFrom) and child.module != '__future__'],
+                globals=self.gen_declare_defs(self.mv.globals.items()),
+                nodetypestr=lambda var: nodetypestr(self.gx, var, var.parent, mv=self.mv),
+                defaults=self.gen_defaults(),
+                listcomps=self.mv.listcomps,
+                cpp_name=self.cpp_name,
+                namer=self.namer,
+                dedent=textwrap.dedent,
+            )
+        
         self.print(file_top)
 
         # --- declarations
@@ -1859,6 +1908,8 @@ class GenerateVisitor(BaseNodeVisitor):
         if self.library_func(funcs, 'socket', 'socket', 'settimeout') or \
                 self.library_func(funcs, 'socket', 'socket', 'gettimeout'):
             error("socket.set/gettimeout do not accept/return None", self.gx, node, warning=True, mv=self.mv)
+        if self.library_func(funcs, 'builtin', None, 'map') and len(node.args) > 2:
+            error("default fillvalue for 'map' becomes 0 for integers", self.gx, node, warning=True, mv=self.mv)
         if self.library_func(funcs, 'itertools', None, 'izip_longest'):
             error("default fillvalue for 'izip_longest' becomes 0 for integers", self.gx, node, warning=True, mv=self.mv)
         if self.library_func(funcs, 'struct', None, 'unpack'):
