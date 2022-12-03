@@ -44,7 +44,7 @@ class RawConfigParser:
     def get(self, section, option, raw=False, vars=None): # XXX
         return ''
     def items(self, section):
-        return [('',)]
+        yield ('', '')
     def getint(self, section, option):
         return 1
     def getfloat(self, section, option):
@@ -70,6 +70,6 @@ class ConfigParser(RawConfigParser):
     def get(self, section, option, raw=False, vars=None):
         return ''
     def items(self, section, raw=False, vars=None):
-        return [('',)]
+        yield ('', '')
     def _interpolate(self, section, option, rawval, vars):
         return ''

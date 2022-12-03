@@ -220,7 +220,7 @@ public:
     list<str *> *read(str *filename);
     list<str *> *read(list<str *> *filenames);
     __ss_bool getboolean(str *section, str *option);
-    list<tuple2<str *, str *> *> *items(str *section);
+    __iter<tuple2<str *, str *> *> *items(str *section);
     void *_read(file *fp, str *fpname);
     __ss_int getint(str *section, str *option);
     dict<str *, str *> *defaults();
@@ -240,7 +240,7 @@ public:
     }
     str *_interpolate(str *section, str *option, str *rawval, dict<str *, str *> *vars);
     str *get(str *section, str *option, __ss_int raw, dict<str *, str *> *vars);
-    list<tuple2<str *, str *> *> *items(str *section, __ss_int raw, dict<str *, str *> *vars);
+    __iter<tuple2<str *, str *> *> *items(str *section, __ss_int raw, dict<str *, str *> *vars);
 };
 
 str *_interpolation_replace(__re__::match_object *match);
