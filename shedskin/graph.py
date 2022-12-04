@@ -19,13 +19,10 @@ import os
 import re
 import sys
 
+from . import ast_utils
+from . import error
 from . import infer
 from . import python
-from .ast_utils import (BaseNodeVisitor, get_arg_nodes, has_star_kwarg,
-                        is_assign_attribute, is_assign_list_or_tuple,
-                        is_assign_tuple, is_constant, is_none, make_arg_list,
-                        make_call, orelse_to_node, parse_expr)
-from .error import error
 
 # --- global variable mv
 _mv = None
@@ -64,7 +61,7 @@ def check_redef(gx, node, s=None, onlybuiltins=False):  # XXX to modvisitor, rew
             else:
                 name = node.name
             if name in whatsit:
-                error("function/class redefinition is not supported", gx, node, mv=getmv())
+                error.error("function/class redefinition is not supported", gx, node, mv=getmv())
 
 
 # --- maintain inheritance relations between copied AST nodes
@@ -86,7 +83,7 @@ def slice_nums(nodes):
     nodes2 = []
     x = 0
     for i, n in enumerate(nodes):
-        if not n or is_none(n):
+        if not n or ast_utils.is_none(n):
             nodes2.append(ast.Num(0))
         else:
             nodes2.append(n)
@@ -95,9 +92,9 @@ def slice_nums(nodes):
 
 
 # --- module visitor; analyze program, build constraint graph
-class ModuleVisitor(BaseNodeVisitor):
+class ModuleVisitor(ast_utils.BaseNodeVisitor):
     def __init__(self, module, gx):
-        BaseNodeVisitor.__init__(self)
+        ast_utils.BaseNodeVisitor.__init__(self)
         self.module = module
         self.gx = gx
         self.classes = {}
@@ -122,7 +119,7 @@ class ModuleVisitor(BaseNodeVisitor):
 
     def visit(self, node, *args):
         if (node, 0, 0) not in self.gx.cnode:
-            BaseNodeVisitor.visit(self, node, *args)
+            ast_utils.BaseNodeVisitor.visit(self, node, *args)
 
     def fake_func(self, node, objexpr, attrname, args, func):
         if (node, 0, 0) in self.gx.cnode:  # XXX
@@ -131,7 +128,7 @@ class ModuleVisitor(BaseNodeVisitor):
             newnode = infer.CNode(self.gx, node, parent=func, mv=getmv())
             self.gx.types[newnode] = set()
 
-        fakefunc = make_call(ast.Attribute(objexpr, attrname, ast.Load()), args)
+        fakefunc = ast_utils.make_call(ast.Attribute(objexpr, attrname, ast.Load()), args)
         fakefunc.lineno = objexpr.lineno
         self.visit(fakefunc, func)
         self.add_constraint((infer.inode(self.gx, fakefunc), newnode), func)
@@ -291,7 +288,7 @@ class ModuleVisitor(BaseNodeVisitor):
         self.gx.assign_target[child] = parent
         cu = ast.Str(varname)
         self.visit(cu, func)
-        fakefunc = make_call(FakeGetattr2(parent, '__setattr__', ast.Load()), [cu, child])
+        fakefunc = ast_utils.make_call(FakeGetattr2(parent, '__setattr__', ast.Load()), [cu, child])
         self.visit(fakefunc, func)
 
         fakechildnode = infer.CNode(self.gx, (child, varname), parent=func, mv=getmv())  # create separate 'fake' infer.CNode per child, so we can have multiple 'callfuncs'
@@ -320,15 +317,15 @@ class ModuleVisitor(BaseNodeVisitor):
         if isinstance(node, ast.Name):
             var = python.lookup_var(node.id, func, mv=self)  # XXX fwd ref?
             if not var or len(var.const_assign) != 1:
-                error('non-constant format string', self.gx, node, mv=self)
-            error('assuming constant format string', self.gx, node, mv=self, warning=True)
+                error.error('non-constant format string', self.gx, node, mv=self)
+            error.error('assuming constant format string', self.gx, node, mv=self, warning=True)
             fmt = var.const_assign[0].s
         elif isinstance(node, ast.Num):
             fmt = node.n
         elif isinstance(node, ast.Str):
             fmt = node.s
         else:
-            error('non-constant format string', self.gx, node, mv=self)
+            error.error('non-constant format string', self.gx, node, mv=self)
         char_type = dict(['xx', 'cs', 'bi', 'Bi', '?b', 'hi', 'Hi', 'ii', 'Ii', 'li', 'Li', 'qi', 'Qi', 'ff', 'df', 'ss', 'ps'])
         ordering = '@'
         if fmt and fmt[0] in '@<>!=':
@@ -348,7 +345,7 @@ class ModuleVisitor(BaseNodeVisitor):
                     result.extend(int(digits or '1') * [(ordering, c, rtype, 1)])
                 digits = ''
             else:
-                error('bad or unsupported char in struct format: ' + repr(c), self.gx, node, mv=self)
+                error.error('bad or unsupported char in struct format: ' + repr(c), self.gx, node, mv=self)
                 digits = ''
         return result
 
@@ -376,7 +373,7 @@ class ModuleVisitor(BaseNodeVisitor):
         self.add_constraint((infer.inode(self.gx, lc), newnode), func)
 
     def visit_JoinedStr(self, node, func=None):
-        error("f-strings are not supported", self.gx, node, mv=getmv())
+        error.error("f-strings are not supported", self.gx, node, mv=getmv())
 
 #    def visit_Stmt(self, node, func=None):
 #        comments = []
@@ -489,7 +486,7 @@ class ModuleVisitor(BaseNodeVisitor):
                 if m.decorator_list and [dec for dec in m.decorator_list if python.is_property_setter(dec)]:
                     m.name = m.name + '__setter__'
                 if m.name in newclass.funcs:  # and func.ident not in ['__getattr__', '__setattr__']: # XXX
-                    error("function/class redefinition is not allowed", self.gx, m, mv=getmv())
+                    error.error("function/class redefinition is not allowed", self.gx, m, mv=getmv())
                 func = python.Function(self.gx, m, newclass, mv=getmv())
                 newclass.funcs[func.ident] = func
                 self.set_default_vars(m, func)
@@ -549,7 +546,7 @@ class ModuleVisitor(BaseNodeVisitor):
 
     def visit_Import(self, node, func=None):
         if not node in getmv().importnodes:
-            error("please place all imports (no 'try:' etc) at the top of the file", self.gx, node, mv=getmv())
+            error.error("please place all imports (no 'try:' etc) at the top of the file", self.gx, node, mv=getmv())
 
         for name_alias in node.names:
             (name, pseudonym) = (name_alias.name, name_alias.asname)
@@ -582,10 +579,10 @@ class ModuleVisitor(BaseNodeVisitor):
 
     def visit_ImportFrom(self, node, parent=None):
         if not node in getmv().importnodes:  # XXX use (func, node) as parent..
-            error("please place all imports (no 'try:' etc) at the top of the file", self.gx, node, mv=getmv())
+            error.error("please place all imports (no 'try:' etc) at the top of the file", self.gx, node, mv=getmv())
 
         if hasattr(node, 'level') and (node.level or 0) > 1:
-            error("unsupported relative import", self.gx, node, mv=getmv())
+            error.error("unsupported relative import", self.gx, node, mv=getmv())
 
         # from . import
         if node.module is None and hasattr(node, 'level') and node.level == 1:
@@ -601,7 +598,7 @@ class ModuleVisitor(BaseNodeVisitor):
             for node_name in node.names:
                 name = node_name.name
                 if name not in ['with_statement', 'print_function']:
-                    error("future '%s' is not yet supported" % name, self.gx, node, mv=getmv())
+                    error.error("future '%s' is not yet supported" % name, self.gx, node, mv=getmv())
             return
 
         # from [.]a.b.c import  TODO
@@ -641,7 +638,7 @@ class ModuleVisitor(BaseNodeVisitor):
                 modname = '.'.join(module.name_list + [name])
                 self.import_module(modname, name, node, False)
             else:
-                error("no identifier '%s' in module '%s'" % (name, node.module), self.gx, node, mv=getmv())
+                error.error("no identifier '%s' in module '%s'" % (name, node.module), self.gx, node, mv=getmv())
 
     def analyze_module(self, name, pseud, node, fake):
         module = parse_module(name, self.gx, getmv().module, node)
@@ -653,7 +650,7 @@ class ModuleVisitor(BaseNodeVisitor):
 
     def visit_FunctionDef(self, node, parent=None, is_lambda=False, inherited_from=None):
         if not getmv().module.builtin and (node.args.vararg or node.args.kwarg):
-            error('argument (un)packing is not supported', self.gx, node, mv=getmv())
+            error.error('argument (un)packing is not supported', self.gx, node, mv=getmv())
 
         if not parent and not is_lambda and node.name in getmv().funcs:
             func = getmv().funcs[node.name]
@@ -666,7 +663,7 @@ class ModuleVisitor(BaseNodeVisitor):
 
         if not python.is_method(func):
             if not getmv().module.builtin and not node in getmv().funcnodes and not is_lambda:
-                error("non-global function '%s'" % node.name, self.gx, node, mv=getmv())
+                error.error("non-global function '%s'" % node.name, self.gx, node, mv=getmv())
 
         if node.decorator_list:
             for dec in node.decorator_list:
@@ -677,13 +674,13 @@ class ModuleVisitor(BaseNodeVisitor):
                 elif python.is_property_setter(dec):
                     parent.properties[dec.value.id][1] = node.name
                 else:
-                    error("unsupported type of decorator", self.gx, dec, mv=getmv())
+                    error.error("unsupported type of decorator", self.gx, dec, mv=getmv())
 
         if parent:
             if not inherited_from and not func.ident in parent.staticmethods and (not func.formals or func.formals[0] != 'self'):
-                error("formal arguments of method must start with 'self'", self.gx, node, mv=getmv())
+                error.error("formal arguments of method must start with 'self'", self.gx, node, mv=getmv())
             if not func.mv.module.builtin and func.ident in ['__new__', '__getattr__', '__setattr__', '__radd__', '__rsub__', '__rmul__', '__rdiv__', '__rtruediv__', '__rfloordiv__', '__rmod__', '__rdivmod__', '__rpow__', '__rlshift__', '__rrshift__', '__rand__', '__rxor__', '__ror__', '__iter__', '__call__', '__enter__', '__exit__', '__del__', '__copy__', '__deepcopy__']:
-                error("'%s' is not supported" % func.ident, self.gx, node, warning=True, mv=getmv())
+                error.error("'%s' is not supported" % func.ident, self.gx, node, warning=True, mv=getmv())
 
         if is_lambda:
             self.lambdas[node.name] = func
@@ -728,7 +725,7 @@ class ModuleVisitor(BaseNodeVisitor):
             if func.ident not in parent.staticmethods:  # XXX use flag
                 infer.default_var(self.gx, 'self', func)
                 if func.ident == '__init__' and '__del__' in parent.funcs:  # XXX what if no __init__
-                    self.visit(make_call(ast.Attribute(ast.Name('self', ast.Load()), '__del__', ast.Load())), func)
+                    self.visit(ast_utils.make_call(ast.Attribute(ast.Name('self', ast.Load()), '__del__', ast.Load())), func)
                     self.gx.gc_cleanup = True
             parent.funcs[func.ident] = func
 
@@ -764,7 +761,7 @@ class ModuleVisitor(BaseNodeVisitor):
         if python.is_isinstance(node.test):
             self.gx.filterstack.append(node.test.args)
         self.bool_test_add(node.test)
-        faker = make_call(ast.Name('bool', ast.Load()), [node.test])
+        faker = ast_utils.make_call(ast.Name('bool', ast.Load()), [node.test])
         self.visit(faker, func)
         for child in node.body:
             self.visit(child, func)
@@ -806,7 +803,7 @@ class ModuleVisitor(BaseNodeVisitor):
         elif isinstance(node.ctx, ast.Store):
             raise NotImplementedError
         else:
-            error('Unknown value of ast.Tuple ctx', self.gx, node, mv=getmv())
+            error.error('Unknown value of ast.Tuple ctx', self.gx, node, mv=getmv())
 
     def visit_Subscript(self, node, func=None):  # XXX merge __setitem__, __getitem__
         if isinstance(node.slice, ast.Slice):
@@ -815,7 +812,7 @@ class ModuleVisitor(BaseNodeVisitor):
 
         elif isinstance(node.slice, ast.Del):
             if any(isinstance(dim, ast.Ellipsis) for dim in node.slice.dims):  # XXX also check at setitem
-                error('ellipsis is not supported', self.gx, node, mv=getmv())
+                error.error('ellipsis is not supported', self.gx, node, mv=getmv())
             raise NotImplementedError
 
         else:
@@ -869,7 +866,7 @@ class ModuleVisitor(BaseNodeVisitor):
             if msg == 'contains':
                 self.fake_func(node, right, '__' + msg + '__', [left], func)
             elif msg in ('lt', 'gt', 'le', 'ge'):
-                fakefunc = make_call(ast.Name('__%s' % msg, ast.Load()), [left, right])
+                fakefunc = ast_utils.make_call(ast.Name('__%s' % msg, ast.Load()), [left, right])
                 fakefunc.lineno = left.lineno
                 self.visit(fakefunc, func)
             elif msg:
@@ -878,7 +875,7 @@ class ModuleVisitor(BaseNodeVisitor):
 
         # tempvars, e.g. (t1=fun())
         for term in node.comparators[:-1]:
-            if not (isinstance(term, ast.Name) or is_constant(term)):
+            if not (isinstance(term, ast.Name) or ast_utils.is_constant(term)):
                 self.temp_var2(term, infer.inode(self.gx, term), func)
 
     def visit_BinOp(self, node, func=None):
@@ -918,7 +915,7 @@ class ModuleVisitor(BaseNodeVisitor):
             self.visit_impl_bitpair(node, python.aug_msg(node, 'and'), func)
         # PY3: elif type(node.op) == MatMult:
         else:
-            error("Unknown op type for ast.BinOp: %s" % type(node.op), self.gx, node, mv=getmv())
+            error.error("Unknown op type for ast.BinOp: %s" % type(node.op), self.gx, node, mv=getmv())
 
     def visit_impl_bitpair(self, node, msg, func=None):
         infer.CNode(self.gx, node, parent=func, mv=getmv())
@@ -963,7 +960,7 @@ class ModuleVisitor(BaseNodeVisitor):
             blah = ast.Subscript(ast.Name(t1.name, ast.Load(), lineno=node.lineno), ast.Index(ast.Name(t2.name, ast.Load())), ast.Store(), lineno=node.lineno)
             lnode = ast.Subscript(ast.Name(t1.name, ast.Load(), lineno=node.lineno), ast.Index(ast.Name(t2.name, ast.Load())), ast.Load(), lineno=node.lineno)
         else:
-            error('unsupported type of assignment', self.gx, node, mv=getmv())
+            error.error('unsupported type of assignment', self.gx, node, mv=getmv())
 
         blah2 = ast.BinOp(lnode, node.op, node.value)
         blah2.augment = True
@@ -1011,10 +1008,10 @@ class ModuleVisitor(BaseNodeVisitor):
     def visit_Raise(self, node, func=None):
         if hasattr(node, 'exc'):
             if node.exc is None or node.cause is not None:
-                error('unsupported raise syntax', self.gx, node, mv=getmv())
+                error.error('unsupported raise syntax', self.gx, node, mv=getmv())
         else: # py2
             if node.type is None or node.inst is not None or node.tback is not None:
-                error('unsupported raise syntax', self.gx, node, mv=getmv())
+                error.error('unsupported raise syntax', self.gx, node, mv=getmv())
         for child in ast.iter_child_nodes(node):
             self.visit(child, func)
 
@@ -1048,7 +1045,7 @@ class ModuleVisitor(BaseNodeVisitor):
                         name = "('" + h0.id + "')"
                     else:
                         name = ''
-                    error("unknown/unsupported exception type %s" % name, self.gx, h0, mv=getmv())
+                    error.error("unknown/unsupported exception type %s" % name, self.gx, h0, mv=getmv())
 
                 if isinstance(h1, str):
                     var = self.default_var(h1, func, exc_name=True)
@@ -1062,7 +1059,7 @@ class ModuleVisitor(BaseNodeVisitor):
                 self.gx.types[infer.inode(self.gx, var)] = set([(cl, 1)])
 
         if node.finalbody:
-            error("'try..finally' is not supported", self.gx, node, mv=getmv())
+            error.error("'try..finally' is not supported", self.gx, node, mv=getmv())
 
         for handler in node.handlers:
             for child in handler.body:
@@ -1072,14 +1069,14 @@ class ModuleVisitor(BaseNodeVisitor):
         if node.orelse:
             for child in node.orelse:
                 self.visit(child, func)
-            self.temp_var_int(orelse_to_node(node), func)
+            self.temp_var_int(ast_utils.orelse_to_node(node), func)
 
     def visit_Yield(self, node, func):
         func.isGenerator = True
         func.yieldNodes.append(node)
         if not node.value:
             node.value = ast.Name('None', ast.Load())
-        self.visit(ast.Return(make_call(ast.Name('__iter', ast.Load()), [node.value])), func)
+        self.visit(ast.Return(ast_utils.make_call(ast.Name('__iter', ast.Load()), [node.value])), func)
         self.add_constraint((infer.inode(self.gx, node.value), func.yieldnode), func)
 
     def visit_For(self, node, func=None):
@@ -1087,8 +1084,8 @@ class ModuleVisitor(BaseNodeVisitor):
         assnode = infer.CNode(self.gx, node.target, parent=func, mv=getmv())
         self.gx.types[assnode] = set()
 
-        get_iter = make_call(ast.Attribute(node.iter, '__iter__', ast.Load()), [])
-        fakefunc = make_call(ast.Attribute(get_iter, '__next__', ast.Load()), [])
+        get_iter = ast_utils.make_call(ast.Attribute(node.iter, '__iter__', ast.Load()), [])
+        fakefunc = ast_utils.make_call(ast.Attribute(get_iter, '__next__', ast.Load()), [])
 
         self.visit(fakefunc, func)
         self.add_constraint((infer.inode(self.gx, fakefunc), assnode), func)
@@ -1099,25 +1096,25 @@ class ModuleVisitor(BaseNodeVisitor):
             lvar = self.default_var(node.target.id, func)
             self.add_constraint((assnode, infer.inode(self.gx, lvar)), func)
 
-        elif is_assign_attribute(node.target):  # XXX experimental :)
+        elif ast_utils.is_assign_attribute(node.target):  # XXX experimental :)
             # for expr.x in..
             infer.CNode(self.gx, node.target, parent=func, mv=getmv())
 
             self.gx.assign_target[node.target.value] = node.target.value  # XXX multiple targets possible please
-            fakefunc2 = make_call(ast.Attribute(node.target.value, '__setattr__', ast.Load()), [ast.Str(node.target.attr), fakefunc])
+            fakefunc2 = ast_utils.make_call(ast.Attribute(node.target.value, '__setattr__', ast.Load()), [ast.Str(node.target.attr), fakefunc])
             self.visit(fakefunc2, func)
 
-        elif is_assign_list_or_tuple(node.target):
+        elif ast_utils.is_assign_list_or_tuple(node.target):
             # for (a,b, ..) in..
             self.tuple_flow(node.target, node.target, func)
         else:
-            error('unsupported type of assignment', self.gx, node, mv=getmv())
+            error.error('unsupported type of assignment', self.gx, node, mv=getmv())
 
         self.do_for(node, assnode, get_iter, func)
 
         # --- for-else
         if node.orelse:
-            self.temp_var_int(orelse_to_node(node), func)
+            self.temp_var_int(ast_utils.orelse_to_node(node), func)
             for child in node.orelse:
                 self.visit(child, func)
 
@@ -1168,7 +1165,7 @@ class ModuleVisitor(BaseNodeVisitor):
         self.gx.loopstack.pop()
 
         if node.orelse:
-            self.temp_var_int(orelse_to_node(node), func)
+            self.temp_var_int(ast_utils.orelse_to_node(node), func)
             for child in node.orelse:
                 self.visit(child, func)
 
@@ -1205,8 +1202,8 @@ class ModuleVisitor(BaseNodeVisitor):
             self.gx.types[assnode] = set()
 
             # list.unit->iter
-            get_iter = make_call(ast.Attribute(qual.iter, '__iter__', ast.Load()), [])
-            fakefunc = make_call(ast.Attribute(get_iter, '__next__', ast.Load()), [])
+            get_iter = ast_utils.make_call(ast.Attribute(qual.iter, '__iter__', ast.Load()), [])
+            fakefunc = ast_utils.make_call(ast.Attribute(get_iter, '__next__', ast.Load()), [])
             self.visit(fakefunc, lcfunc)
             self.add_constraint((infer.inode(self.gx, fakefunc), infer.inode(self.gx, qual.target)), lcfunc)
 
@@ -1260,7 +1257,7 @@ class ModuleVisitor(BaseNodeVisitor):
         # --- rewrite for struct.unpack XXX rewrite callfunc as tuple
         if len(node.targets) == 1:
             lvalue, rvalue = node.targets[0], node.value
-            if self.struct_unpack(rvalue, func) and is_assign_list_or_tuple(lvalue) and not [n for n in lvalue.elts if is_assign_list_or_tuple(n)]:
+            if self.struct_unpack(rvalue, func) and ast_utils.is_assign_list_or_tuple(lvalue) and not [n for n in lvalue.elts if ast_utils.is_assign_list_or_tuple(n)]:
                 self.visit(node.value, func)
                 sinfo = self.struct_info(rvalue.args[0], func)
                 faketuple = self.struct_faketuple(sinfo)
@@ -1282,7 +1279,7 @@ class ModuleVisitor(BaseNodeVisitor):
                     self.assign_pair(lvalue, rvalue, func)  # XXX use here generally, and in tuple_flow
 
                 # expr.attr = expr
-                elif is_assign_attribute(lvalue):
+                elif ast_utils.is_assign_attribute(lvalue):
                     self.assign_pair(lvalue, rvalue, func)
 
                 # name = expr
@@ -1291,12 +1288,12 @@ class ModuleVisitor(BaseNodeVisitor):
                         self.visit(rvalue, func)
                     self.visit(lvalue, func)
                     lvar = self.default_var(lvalue.id, func)
-                    if is_constant(rvalue):
+                    if ast_utils.is_constant(rvalue):
                         lvar.const_assign.append(rvalue)
                     self.add_constraint((infer.inode(self.gx, rvalue), infer.inode(self.gx, lvar)), func)
 
                 # (a,(b,c), ..) = expr
-                elif is_assign_list_or_tuple(lvalue):
+                elif ast_utils.is_assign_list_or_tuple(lvalue):
                     self.visit(rvalue, func)
                     self.tuple_flow(lvalue, rvalue, func)
 
@@ -1313,13 +1310,13 @@ class ModuleVisitor(BaseNodeVisitor):
         # temp vars
         if len(node.targets) > 1 or isinstance(node.value, ast.Tuple):
             if isinstance(node.value, ast.Tuple):
-                if [n for n in node.targets if is_assign_tuple(n)]:
+                if [n for n in node.targets if ast_utils.is_assign_tuple(n)]:
                     for child in node.value.elts:
                         if (child, 0, 0) not in self.gx.cnode:  # (a,b) = (1,2): (1,2) never visited
                             continue
-                        if not is_constant(child) and not is_none(child):
+                        if not ast_utils.is_constant(child) and not ast_utils.is_none(child):
                             self.temp_var2(child, infer.inode(self.gx, child), func)
-            elif not is_constant(node.value) and not is_none(node.value):
+            elif not ast_utils.is_constant(node.value) and not ast_utils.is_none(node.value):
                 self.temp_var2(node.value, infer.inode(self.gx, node.value), func)
 
     def assign_pair(self, lvalue, rvalue, func):
@@ -1330,7 +1327,7 @@ class ModuleVisitor(BaseNodeVisitor):
             else:
                 subscript = lvalue.slice
 
-            fakefunc = make_call(ast.Attribute(lvalue.value, '__setitem__', ast.Load()), [subscript, rvalue])
+            fakefunc = ast_utils.make_call(ast.Attribute(lvalue.value, '__setitem__', ast.Load()), [subscript, rvalue])
             self.visit(fakefunc, func)
             infer.inode(self.gx, lvalue.value).fakefunc = fakefunc
 
@@ -1338,10 +1335,10 @@ class ModuleVisitor(BaseNodeVisitor):
                 self.temp_var2(lvalue.value, infer.inode(self.gx, lvalue.value), func)
 
         # expr.attr = expr
-        elif is_assign_attribute(lvalue):
+        elif ast_utils.is_assign_attribute(lvalue):
             infer.CNode(self.gx, lvalue, parent=func, mv=getmv())
             self.gx.assign_target[rvalue] = lvalue.value
-            fakefunc = make_call(ast.Attribute(lvalue.value, '__setattr__', ast.Load()), [ast.Str(lvalue.attr), rvalue])
+            fakefunc = ast_utils.make_call(ast.Attribute(lvalue.value, '__setattr__', ast.Load()), [ast.Str(lvalue.attr), rvalue])
             self.visit(fakefunc, func)
 
     def default_var(self, name, func, exc_name=False):
@@ -1353,14 +1350,14 @@ class ModuleVisitor(BaseNodeVisitor):
     def tuple_flow(self, lvalue, rvalue, func=None):
         self.temp_var2(lvalue, infer.inode(self.gx, rvalue), func)
 
-        if is_assign_list_or_tuple(lvalue):
+        if ast_utils.is_assign_list_or_tuple(lvalue):
             lvalue = lvalue.elts
         for (i, item) in enumerate(lvalue):
             fakenode = infer.CNode(self.gx, (item,), parent=func, mv=getmv())  # fake node per item, for multiple callfunc triggers
             self.gx.types[fakenode] = set()
             self.add_constraint((infer.inode(self.gx, rvalue), fakenode), func)
 
-            fakefunc = make_call(FakeGetattr3(rvalue, '__getitem__', ast.Load()), [ast.Num(i)])
+            fakefunc = ast_utils.make_call(FakeGetattr3(rvalue, '__getitem__', ast.Load()), [ast.Num(i)])
 
             fakenode.callfuncs.append(fakefunc)
             self.visit(fakefunc, func)
@@ -1369,12 +1366,12 @@ class ModuleVisitor(BaseNodeVisitor):
             if isinstance(item, ast.Name):
                 lvar = self.default_var(item.id, func)
                 self.add_constraint((infer.inode(self.gx, fakefunc), infer.inode(self.gx, lvar)), func)
-            elif isinstance(item, ast.Subscript) or is_assign_attribute(item):
+            elif isinstance(item, ast.Subscript) or ast_utils.is_assign_attribute(item):
                 self.assign_pair(item, fakefunc, func)
-            elif is_assign_list_or_tuple(item):  # recursion
+            elif ast_utils.is_assign_list_or_tuple(item):  # recursion
                 self.tuple_flow(item, fakefunc, func)
             else:
-                error('unsupported type of assignment', self.gx, item, mv=getmv())
+                error.error('unsupported type of assignment', self.gx, item, mv=getmv())
 
     def super_call(self, orig, parent):
         node = orig.func
@@ -1389,7 +1386,7 @@ class ModuleVisitor(BaseNodeVisitor):
                 cl = python.lookup_class(node.value.args[0], getmv())
                 if cl.node.bases:
                     return cl.node.bases[0]
-            error("unsupported usage of 'super'", self.gx, orig, mv=getmv())
+            error.error("unsupported usage of 'super'", self.gx, orig, mv=getmv())
 
     def visit_Pass(self, node, func=None):
         pass
@@ -1440,11 +1437,11 @@ class ModuleVisitor(BaseNodeVisitor):
                 ident = node.func.id = 'open_binary'
 
             if ident in ['hasattr', 'getattr', 'setattr', 'slice', 'type', 'Ellipsis']:
-                error("'%s' function is not supported" % ident, self.gx, node.func, mv=getmv())
+                error.error("'%s' function is not supported" % ident, self.gx, node.func, mv=getmv())
             if ident == 'dict' and node.keywords:
-                error('unsupported method of initializing dictionaries', self.gx, node, mv=getmv())
+                error.error('unsupported method of initializing dictionaries', self.gx, node, mv=getmv())
             if ident == 'isinstance':
-                error("'isinstance' is not supported; always returns True", self.gx, node, mv=getmv(), warning=True)
+                error.error("'isinstance' is not supported; always returns True", self.gx, node, mv=getmv(), warning=True)
 
             if python.lookup_var(ident, func, mv=getmv()):
                 self.visit(node.func, func)
@@ -1454,10 +1451,10 @@ class ModuleVisitor(BaseNodeVisitor):
             infer.inode(self.gx, node.func).callfuncs.append(node)  # XXX iterative dataflow analysis: move there
 
         # --- arguments
-        if not getmv().module.builtin and has_star_kwarg(node):
-            error('argument (un)packing is not supported', self.gx, node, mv=getmv())
+        if not getmv().module.builtin and ast_utils.has_star_kwarg(node):
+            error.error('argument (un)packing is not supported', self.gx, node, mv=getmv())
 
-        for arg in get_arg_nodes(node):
+        for arg in ast_utils.get_arg_nodes(node):
             self.visit(arg, func)
             infer.inode(self.gx, arg).callfuncs.append(node)  # this one too
 
@@ -1473,14 +1470,14 @@ class ModuleVisitor(BaseNodeVisitor):
 
     def visit_ClassDef(self, node, parent=None):
         if not getmv().module.builtin and not node in getmv().classnodes:
-            error("non-global class '%s'" % node.name, self.gx, node, mv=getmv())
+            error.error("non-global class '%s'" % node.name, self.gx, node, mv=getmv())
         if len(node.bases) > 1:
-            error('multiple inheritance is not supported', self.gx, node, mv=getmv())
+            error.error('multiple inheritance is not supported', self.gx, node, mv=getmv())
 
         if not getmv().module.builtin:
             for base in node.bases:
                 if not isinstance(base, (ast.Name, ast.Attribute)):
-                    error("invalid expression for base class", self.gx, node, mv=getmv())
+                    error.error("invalid expression for base class", self.gx, node, mv=getmv())
 
                 if isinstance(base, ast.Name):
                     name = base.id
@@ -1489,11 +1486,11 @@ class ModuleVisitor(BaseNodeVisitor):
 
                 cl = python.lookup_class(base, getmv())
                 if not cl:
-                    error("no such class: '%s'" % name, self.gx, node, mv=getmv())
+                    error.error("no such class: '%s'" % name, self.gx, node, mv=getmv())
 
                 elif cl.mv.module.builtin and name not in ['object', 'Exception', 'tzinfo']:
                     if python.def_class(self.gx, 'Exception') not in cl.ancestors():
-                        error("inheritance from builtin class '%s' is not supported" % name, self.gx, node, mv=getmv())
+                        error.error("inheritance from builtin class '%s' is not supported" % name, self.gx, node, mv=getmv())
 
         if node.name in getmv().classes:
             newclass = getmv().classes[node.name]  # set in visit_Module, for forward references
@@ -1541,7 +1538,7 @@ class ModuleVisitor(BaseNodeVisitor):
                         elif len(rvalue.args) == 2 and isinstance(rvalue.args[0], ast.Name) and isinstance(rvalue.args[1], ast.Name):
                             newclass.properties[lvalue.id] = rvalue.args[0].id, rvalue.args[1].id
                         else:
-                            error("complex properties are not supported", self.gx, rvalue, mv=getmv())
+                            error.error("complex properties are not supported", self.gx, rvalue, mv=getmv())
                     else:
                         newclass.staticmethods.append(lvalue.id)
                     skip.append(child)
@@ -1565,25 +1562,25 @@ class ModuleVisitor(BaseNodeVisitor):
                 msgs += ['lshift', 'rshift', 'and', 'xor', 'or']
             for msg in msgs:
                 if not '__i' + msg + '__' in newclass.funcs:
-                    self.visit(parse_expr('def __i%s__(self, other): return self.__%s__(other)' % (msg, msg)), newclass)
+                    self.visit(ast_utils.parse_expr('def __i%s__(self, other): return self.__%s__(other)' % (msg, msg)), newclass)
 
         # --- __str__, __hash__ # XXX model in lib/builtin.py, other defaults?
         if not newclass.mv.module.builtin and not '__str__' in newclass.funcs:
-            self.visit(ast.FunctionDef('__str__', make_arg_list(['self']), [ast.Return(make_call(ast.Attribute(ast.Name('self', ast.Load()), '__repr__', ast.Load())))], []), newclass)
+            self.visit(ast.FunctionDef('__str__', ast_utils.make_arg_list(['self']), [ast.Return(ast_utils.make_call(ast.Attribute(ast.Name('self', ast.Load()), '__repr__', ast.Load())))], []), newclass)
             newclass.funcs['__str__'].invisible = True
         if not newclass.mv.module.builtin and not '__hash__' in newclass.funcs:
-            self.visit(ast.FunctionDef('__hash__', make_arg_list(['self']), [ast.Return(ast.Num(0))], []), newclass)
+            self.visit(ast.FunctionDef('__hash__', ast_utils.make_arg_list(['self']), [ast.Return(ast.Num(0))], []), newclass)
             newclass.funcs['__hash__'].invisible = True
 
     def visit_Attribute(self, node, func=None, callfunc=False):
         if type(node.ctx) == ast.Load:
             if node.attr in ['__doc__']:
-                error('%s attribute is not supported' % node.attr, self.gx, node, mv=getmv())
+                error.error('%s attribute is not supported' % node.attr, self.gx, node, mv=getmv())
 
             newnode = infer.CNode(self.gx, node, parent=func, mv=getmv())
             self.gx.types[newnode] = set()
 
-            fakefunc = make_call(FakeGetattr(node.value, '__getattr__', ast.Load()), [ast.Str(node.attr)])
+            fakefunc = ast_utils.make_call(FakeGetattr(node.value, '__getattr__', ast.Load()), [ast.Str(node.attr)])
             self.visit(fakefunc, func)
             self.add_constraint((self.gx.cnode[fakefunc, 0, 0], newnode), func)
 
@@ -1597,11 +1594,11 @@ class ModuleVisitor(BaseNodeVisitor):
             self.visit(node.value, func)
         else:
             raise NotImplementedError
-            error('unknown ctx type for ast.Attribute, %s' % node.ctx, self.gx, node, mv=getmv())
+            error.error('unknown ctx type for ast.Attribute, %s' % node.ctx, self.gx, node, mv=getmv())
 
     def visit_Constant(self, node, func=None):
         if node.value.__class__.__name__ == 'ellipsis':
-            error('ellipsis is not supported', self.gx, node, mv=getmv())
+            error.error('ellipsis is not supported', self.gx, node, mv=getmv())
         else:
             map = {int: 'int_', float: 'float_', complex: 'complex', str: 'str_', bool: 'bool_', type(None): 'none', bytes: 'bytes_'}
             self.instance(node, python.def_class(self.gx, map[type(node.value)]), func)
@@ -1642,7 +1639,7 @@ class ModuleVisitor(BaseNodeVisitor):
             self.gx.types[newnode] = set()
 
             if node.id == '__doc__':
-                error("'%s' attribute is not supported" % node.id, self.gx, node, mv=getmv())
+                error.error("'%s' attribute is not supported" % node.id, self.gx, node, mv=getmv())
 
             if node.id in ['None', 'True', 'False']:
                 if node.id == 'None':  # XXX also bools, remove def seed_nodes()
@@ -1676,11 +1673,11 @@ class ModuleVisitor(BaseNodeVisitor):
             # Do nothing
             pass
         else:
-            error('unknown ctx type for ast.Name, %s' % node.ctx, self.gx, node, mv=getmv())
+            error.error('unknown ctx type for ast.Name, %s' % node.ctx, self.gx, node, mv=getmv())
 
     def builtin_wrapper(self, node, func):
-        node2 = make_call(copy.deepcopy(node), [ast.Name(x, ast.Load()) for x in 'abcde'])
-        l = ast.Lambda(make_arg_list(list('abcde')), node2)
+        node2 = ast_utils.make_call(copy.deepcopy(node), [ast.Name(x, ast.Load()) for x in 'abcde'])
+        l = ast.Lambda(ast_utils.make_arg_list(list('abcde')), node2)
         self.visit(l, func)
         self.lwrapper[node] = self.lambdaname[l]
         self.gx.lambdawrapper[node2] = self.lambdaname[l]
@@ -1706,7 +1703,7 @@ def parse_module(name, gx, parent=None, node=None):
         absolute_name, filename, relative_filename, builtin = python.find_module(gx, name, module_paths)
         module = python.Module(absolute_name, filename, relative_filename, builtin, node)
     except ImportError:
-        error('cannot locate module: ' + name, gx, node, mv=getmv())
+        error.error('cannot locate module: ' + name, gx, node, mv=getmv())
 
     # --- check cache
     if module.name in gx.modules:  # cached?

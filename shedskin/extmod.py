@@ -11,7 +11,7 @@ import logging
 
 from . import infer
 from . import python
-from .typestr import ExtmodError, nodetypestr, singletype2
+from . import typestr
 
 logger = logging.getLogger("extmod")
 OVERLOAD_SINGLE = ["__neg__", "__pos__", "__abs__", "__nonzero__"]
@@ -76,11 +76,11 @@ class ExtensionModule:
                 continue
             if var.name.startswith("__"):  # XXX
                 continue
-            if var.invisible or singletype2(self.gx.merged_inh[var], python.Module):
+            if var.invisible or typestr.singletype2(self.gx.merged_inh[var], python.Module):
                 continue
             try:
-                nodetypestr(self.gx, var, var.parent, check_extmod=True, mv=self.gv.mv)
-            except ExtmodError:
+                typestr.nodetypestr(self.gx, var, var.parent, check_extmod=True, mv=self.gv.mv)
+            except typestr.ExtmodError:
                 if isinstance(var.parent, python.Class):
                     logger.warning(
                         "'%s.%s' variable not exported (cannot convert)",
@@ -134,14 +134,14 @@ class ExtensionModule:
             reason = ''
             for formal in func.formals:
                 try:
-                    nodetypestr(
+                    typestr.nodetypestr(
                         self.gx, func.vars[formal], func, check_extmod=True, mv=self.gv.mv
                     )
-                except ExtmodError:
+                except typestr.ExtmodError:
                     builtins = False
                     reason = "cannot convert argument '%s'" % formal
             try:
-                nodetypestr(
+                typestr.nodetypestr(
                     self.gx,
                     func.retnode.thing,
                     func,
@@ -149,7 +149,7 @@ class ExtensionModule:
                     check_ret=True,
                     mv=self.gv.mv,
                 )
-            except ExtmodError:
+            except typestr.ExtmodError:
                 builtins = False
                 reason = "cannot convert return value"
             if builtins:
@@ -274,7 +274,7 @@ class ExtensionModule:
         write("    int l = PyTuple_Size(args);")
         write("    PyObject *state = PyTuple_GetItem(args, 0);")
         for i, var in enumerate(vars):
-            vartype = nodetypestr(self.gx, var, var.parent, mv=self.gv.mv)
+            vartype = typestr.nodetypestr(self.gx, var, var.parent, mv=self.gv.mv)
             write(
                 "    ((%sObject *)self)->__ss_object->%s = __to_ss<%s>(PyTuple_GetItem(state, %d));"
                 % (clname(cl), self.gv.cpp_name(var), vartype, i)
@@ -446,7 +446,7 @@ class ExtensionModule:
 
         for i, formal in enumerate(formals):
             self.gv.start("")
-            typ = nodetypestr(self.gx, func.vars[formal], func, mv=self.gv.mv)
+            typ = typestr.nodetypestr(self.gx, func.vars[formal], func, mv=self.gv.mv)
             if func.ident in OVERLOAD:
                 write(
                     "        %(type)sarg_%(num)d = __to_ss<%(type)s>(args);"
@@ -705,7 +705,7 @@ class ExtensionModule:
                 % (clname(cl), var.name, clname(cl))
             )
             write("    try {")
-            typ = nodetypestr(self.gx, var, var.parent, mv=self.gv.mv)
+            typ = typestr.nodetypestr(self.gx, var, var.parent, mv=self.gv.mv)
             if typ == "void *":  # XXX investigate
                 write("        self->__ss_object->%s = NULL;" % self.gv.cpp_name(var))
             else:
