@@ -8,7 +8,7 @@
 *.txt
 *.ini
 *.csv
-*.?pp
+tests/*.?pp
 *.so
 *.vim
 *.egg-info
@@ -320,4 +320,5 @@ examples/pygasus
 examples/tiger1.bmp
 examples2to3
 venv
+
 
