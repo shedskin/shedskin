@@ -26,6 +26,7 @@ class Module(object):
         self.relative_path = os.path.dirname(relative_filename)
 
         #set the rest
+        self.ast = None # to be provided later after analysis
         self.builtin = builtin
         self.node = node
         self.prop_includes = set()
@@ -50,6 +51,11 @@ class Module(object):
 
     def __repr__(self):
         return 'Module ' + self.ident
+
+    @property
+    def doc(self):
+        """returns module docstring."""
+        return get_docstring(self.ast)
 
 
 class Class(object):
