@@ -4,42 +4,40 @@ Copyright 2005-2022 Mark Dufour and contributors; License GNU GPL version 3 (See
 
 '''
 import ast
-from ast import Tuple, List, Attribute, Store, arguments, Name, Param, \
-    parse, iter_fields, AST, Call, Str, Num, keyword
 
 
 def is_assign_list_or_tuple(node):
-    return isinstance(node, (Tuple, List)) and isinstance(node.ctx, Store)
+    return isinstance(node, (ast.Tuple, ast.List)) and isinstance(node.ctx, ast.Store)
 
 
 def is_assign_tuple(node):
-    return isinstance(node, Tuple) and isinstance(node.ctx, Store)
+    return isinstance(node, ast.Tuple) and isinstance(node.ctx, ast.Store)
 
 
 def is_assign_attribute(node):
-    return isinstance(node, Attribute) and isinstance(node.ctx, Store)
+    return isinstance(node, ast.Attribute) and isinstance(node.ctx, ast.Store)
 
 
 def is_constant(node):
-    return isinstance(node, (Str, Num)) or node.__class__.__name__ == 'Constant'
+    return isinstance(node, (ast.Str, ast.Num)) or node.__class__.__name__ == 'Constant'
 
 def is_none(node):
-    return (isinstance(node, Name) and node.id == 'None' or
+    return (isinstance(node, ast.Name) and node.id == 'None' or
             node.__class__.__name__ == 'Constant' and node.value is None)
 
 
 def handle_with_vars(var):
-    if isinstance(var, Name):
+    if isinstance(var, ast.Name):
         return [var.id]
-    elif isinstance(var, (List, Tuple)):
+    elif isinstance(var, (ast.List, ast.Tuple)):
         result = []
         for elt in var.elts:
             result.extend(handle_with_vars(elt))
 
 
 def orelse_to_node(node):
-    if isinstance(node.orelse, AST):
-        return AST
+    if isinstance(node.orelse, ast.AST):
+        return ast.AST
     elif isinstance(node.orelse, list) and len(node.orelse) > 0:
         return node.orelse[0]
     else:
@@ -51,10 +49,10 @@ def get_arg_name(node, is_tuple_expansion=False):
         assert isinstance(node.arg, str), 'non-arg string %s' % type(node.arg)
         return node.arg
 
-    if isinstance(node, Tuple):
+    if isinstance(node, ast.Tuple):
         return tuple(get_arg_name(child, is_tuple_expansion=True) for child in node.elts)
-    elif isinstance(node, Name):
-        assert is_tuple_expansion and type(node.ctx) == Store or type(node.ctx) == Param
+    elif isinstance(node, ast.Name):
+        assert is_tuple_expansion and type(node.ctx) == ast.Store or type(node.ctx) == ast.Param
         return node.id
     elif isinstance(node, str):
         return node
@@ -81,19 +79,19 @@ def make_arg_list(argnames, vararg=None, kwonlyargs=[], kwarg=None, defaults=[],
         kwarg = ast.arg(kwarg) if kwarg else None
 
         # PY3: what about kwonlyargs, kw_defaults, posonlyargs?
-        return arguments([], args, vararg, [], [], kwarg, defaults)
+        return ast.arguments([], args, vararg, [], [], kwarg, defaults)
 
     except AttributeError:
-        args = [Name(argname, Param()) for argname in argnames]
-        return arguments(args, vararg, kwarg, defaults)
+        args = [ast.Name(argname, ast.Param()) for argname in argnames]
+        return ast.arguments(args, vararg, kwarg, defaults)
 
 
 def make_call(func, args=[], keywords=[], starargs=None, kwargs=None):
     try:
-        return Call(func, args, keywords, starargs, kwargs)
+        return ast.Call(func, args, keywords, starargs, kwargs)
     except TypeError:
         # PY3: Incorporate starargs and kwargs into args and keywords respectively
-        return Call(func, args, keywords)
+        return ast.Call(func, args, keywords)
 
 def has_star_kwarg(node):
     if hasattr(node, 'starargs'):
@@ -139,7 +137,7 @@ def get_arg_nodes(node):
 
 
 def parse_expr(s):
-    return parse(s).body[0]
+    return ast.parse(s).body[0]
 
 
 class BaseNodeVisitor(object):
@@ -162,7 +160,7 @@ class BaseNodeVisitor(object):
 
     def visit(self, node, *args):
         """Visit a node."""
-        assert isinstance(node, AST), "Expected node of type AST, got node of type %s" % type(node)
+        assert isinstance(node, ast.AST), "Expected node of type ast.AST, got node of type %s" % type(node)
         method = 'visit_' + node.__class__.__name__
         visitor = getattr(self, method, None)
         if visitor:
@@ -172,10 +170,10 @@ class BaseNodeVisitor(object):
 
     def generic_visit(self, node, *args):
         """Called if no explicit visitor function exists for a node."""
-        for field, value in iter_fields(node):
+        for field, value in ast.iter_fields(node):
             if isinstance(value, list):
                 for item in value:
-                    if isinstance(item, AST):
+                    if isinstance(item, ast.AST):
                         self.visit(item, *args)
-            elif isinstance(value, AST):
+            elif isinstance(value, ast.AST):
                 self.visit(value, *args)

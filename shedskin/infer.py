@@ -32,16 +32,15 @@ iterative_dataflow_analysis():
 update: we now analyze programs incrementally, adding several functions and redoing the full analysis each time. this seems to greatly help the CPA from exploding early on.
 
 '''
+import ast
 import itertools
 import logging
 import random
 import sys
-from ast import Num, Str, Call, Attribute, Dict, List, Tuple, ListComp, Not, Compare, Name, keyword, AST, dump as ast_dump
-from .ast_utils import is_assign_attribute, get_starargs
 
 from . import error
-from .python import StaticClass, lookup_class_module, Function, \
-     Variable, lookup_var, Class, lookup_implementor, def_class
+from . import python
+from .ast_utils import get_starargs, is_assign_attribute
 
 logger = logging.getLogger('infer')
 ifa_logger = logging.getLogger('infer.ifa')
@@ -64,7 +63,7 @@ class CNode:
         self.dcpa = dcpa
         self.cpa = cpa
         self.fakefunc = None
-        if isinstance(parent, Class):  # XXX
+        if isinstance(parent, python.Class):  # XXX
             parent = None
         self.parent = parent
         self.defnodes = False  # if callnode, notification nodes were made for default arguments
@@ -91,9 +90,9 @@ class CNode:
 
         # --- add node to surrounding non-listcomp function
         if parent:  # do this only once! (not when copying)
-            while parent and isinstance(parent, Function) and parent.listcomp:
+            while parent and isinstance(parent, python.Function) and parent.listcomp:
                 parent = parent.parent
-            if isinstance(parent, Function):
+            if isinstance(parent, python.Function):
                 if self not in parent.nodes:
                     parent.nodes.add(self)
                     parent.nodes_ordered.append(self)
@@ -113,7 +112,7 @@ class CNode:
 
         add_to_worklist(worklist, newnode)
 
-        if self.constructor or self.copymetoo or isinstance(self.thing, (Not, Compare)):  # XXX XXX
+        if self.constructor or self.copymetoo or isinstance(self.thing, (ast.Not, ast.Compare)):  # XXX XXX
             self.gx.types[newnode] = self.gx.types[self].copy()
         else:
             self.gx.types[newnode] = set()
@@ -157,7 +156,7 @@ def get_types(gx, expr, node, merge):
 
 def is_anon_callable(gx, expr, node, merge=None):
     types = get_types(gx, expr, node, merge)
-    anon = bool([t for t in types if isinstance(t[0], Function)])
+    anon = bool([t for t in types if isinstance(t[0], python.Function)])
     call = bool([t for t in types if isinstance(t[0], Class) and '__call__' in t[0].funcs])
     return anon, call
 
@@ -165,8 +164,8 @@ def is_anon_callable(gx, expr, node, merge=None):
 def parent_func(gx, thing):
     parent = inode(gx, thing).parent
     while parent:
-        if not isinstance(parent, Function) or not parent.listcomp:
-            if not isinstance(parent, StaticClass):
+        if not isinstance(parent, python.Function) or not parent.listcomp:
+            if not isinstance(parent, python.StaticClass):
                 return parent
         parent = parent.parent
 
@@ -232,8 +231,8 @@ def analyze_args(gx, expr, func, node=None, skip_defaults=False, merge=None):
 def connect_actual_formal(gx, expr, func, parent_constr=False, merge=None):
     pairs = []
 
-    actuals = [a for a in expr.args if not isinstance(a, keyword)]
-    if isinstance(func.parent, Class):
+    actuals = [a for a in expr.args if not isinstance(a, ast.keyword)]
+    if isinstance(func.parent, python.Class):
         formals = [f for f in func.formals if f != 'self']
     else:
         formals = [f for f in func.formals]
@@ -250,7 +249,7 @@ def connect_actual_formal(gx, expr, func, parent_constr=False, merge=None):
     actuals, formals, _, extra, _error = analyze_args(gx, expr, func, skip_defaults=skip_defaults, merge=merge)
 
     for (actual, formal) in zip(actuals, formals):
-        if not (isinstance(func.parent, Class) and formal == 'self'):
+        if not (isinstance(func.parent, python.Class) and formal == 'self'):
             pairs.append((actual, func.vars[formal]))
     return pairs, len(extra), _error
 
@@ -260,8 +259,8 @@ def callfunc_targets(gx, node, merge):
     objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func = analyze_callfunc(gx, node, merge=merge)
     funcs = []
 
-    if node.func in merge and [t for t in merge[node.func] if isinstance(t[0], Function)]:  # anonymous function call
-        funcs = [t[0] for t in merge[node.func] if isinstance(t[0], Function)]
+    if node.func in merge and [t for t in merge[node.func] if isinstance(t[0], python.Function)]:  # anonymous function call
+        funcs = [t[0] for t in merge[node.func] if isinstance(t[0], python.Function)]
 
     elif constructor:
         if ident in ('list', 'tuple', 'set', 'frozenset') and nrargs(gx, node) == 1:
@@ -282,15 +281,15 @@ def callfunc_targets(gx, node, merge):
         funcs = [direct_call]
 
     elif method_call:
-        classes = set(t[0] for t in merge[objexpr] if isinstance(t[0], Class))
+        classes = set(t[0] for t in merge[objexpr] if isinstance(t[0], python.Class))
         funcs = [cl.funcs[ident] for cl in classes if ident in cl.funcs]
 
     return funcs
 
 
 # --- analyze call expression: namespace, method call, direct call/constructor..
-def analyze_callfunc(gx, node, node2=None, merge=None):  # XXX generate target list XXX uniform Variable system! XXX node2, merge?
-    # print 'analyze callnode', ast_dump(node), inode(gx, node).parent
+def analyze_callfunc(gx, node, node2=None, merge=None):  # XXX generate target list XXX uniform python.Variable system! XXX node2, merge?
+    # print 'analyze callnode', ast.dump(node), inode(gx, node).parent
     cnode = inode(gx, node)
     mv = cnode.mv
     namespace, objexpr, method_call, parent_constr = mv.module, None, False, False
@@ -303,9 +302,9 @@ def analyze_callfunc(gx, node, node2=None, merge=None):  # XXX generate target l
         return objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func
 
     # method call
-    if isinstance(node.func, Attribute):
+    if isinstance(node.func, ast.Attribute):
         objexpr, ident = node.func.value, node.func.attr
-        cl, module = lookup_class_module(objexpr, mv, cnode.parent)
+        cl, module = python.lookup_class_module(objexpr, mv, cnode.parent)
 
         if cl:
             # staticmethod call
@@ -316,10 +315,10 @@ def analyze_callfunc(gx, node, node2=None, merge=None):  # XXX generate target l
             # ancestor call
             elif ident not in ['__setattr__', '__getattr__'] and cnode.parent:
                 thiscl = cnode.parent.parent
-                if isinstance(thiscl, Class) and cl.ident in (x.ident for x in thiscl.ancestors_upto(None)):  # XXX
-                    if lookup_implementor(cl, ident):
+                if isinstance(thiscl, python.Class) and cl.ident in (x.ident for x in thiscl.ancestors_upto(None)):  # XXX
+                    if python.lookup_implementor(cl, ident):
                         parent_constr = True
-                        ident = ident + lookup_implementor(cl, ident) + '__'  # XXX change data structure
+                        ident = ident + python.lookup_implementor(cl, ident) + '__'  # XXX change data structure
                         return objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func
 
         if module:  # XXX elif?
@@ -327,13 +326,13 @@ def analyze_callfunc(gx, node, node2=None, merge=None):  # XXX generate target l
         else:
             method_call = True
 
-    elif isinstance(node.func, Name):
+    elif isinstance(node.func, ast.Name):
         ident = node.func.id
 
     # direct [constructor] call
-    if isinstance(node.func, Name) or namespace != mv.module:
-        if isinstance(node.func, Name):
-            if lookup_var(ident, cnode.parent, mv=mv):
+    if isinstance(node.func, ast.Name) or namespace != mv.module:
+        if isinstance(node.func, ast.Name):
+            if python.lookup_var(ident, cnode.parent, mv=mv):
                 return objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func
         if ident in namespace.mv.classes:
             constructor = namespace.mv.classes[ident]
@@ -368,7 +367,7 @@ def merged(gx, nodes, inheritance=False):
             inh = gx.inheritance_relations.get(node.thing, [])
 
             # merge function variables with their inherited versions (we don't customize!)
-            if isinstance(node.thing, Variable) and isinstance(node.thing.parent, Function):
+            if isinstance(node.thing, python.Variable) and isinstance(node.thing.parent, python.Function):
                 var = node.thing
                 for inhfunc in gx.inheritance_relations.get(var.parent, []):
                     if var.name in inhfunc.vars:
@@ -416,12 +415,12 @@ def class_copy(gx, cl, dcpa):
         gx.types[gx.cnode[var, dcpa, 0]] = inode(gx, var).types().copy()
 
         for n in inode(gx, var).in_:  # XXX
-            if isinstance(n.thing, (Num, Str)):
+            if isinstance(n.thing, (ast.Num, ast.Str)):
                 add_constraint(gx, n, gx.cnode[var, dcpa, 0])
 
     for func in cl.funcs.values():
         if cl.mv.module.ident == 'builtin' and cl.ident != '__iter' and func.ident == '__iter__':  # XXX hack for __iter__:__iter()
-            itercl = def_class(gx, '__iter')
+            itercl = python.def_class(gx, '__iter')
             gx.alloc_info[func.ident, ((cl, dcpa),), func.returnexpr[0]] = (itercl, itercl.dcpa)
             class_copy(gx, itercl, dcpa)
             itercl.dcpa += 1
@@ -436,9 +435,9 @@ def func_copy(gx, func, dcpa, cpa, worklist=None, cart=None):
 
     # --- copy local end points of each constraint
     for (a, b) in func.constraints:
-        if not (isinstance(a.thing, Variable) and parent_func(gx, a.thing) != func) and a.dcpa == 0:
+        if not (isinstance(a.thing, python.Variable) and parent_func(gx, a.thing) != func) and a.dcpa == 0:
             a = a.copy(dcpa, cpa, worklist)
-        if not (isinstance(b.thing, Variable) and parent_func(gx, b.thing) != func) and b.dcpa == 0:
+        if not (isinstance(b.thing, python.Variable) and parent_func(gx, b.thing) != func) and b.dcpa == 0:
             b = b.copy(dcpa, cpa, worklist)
 
         add_constraint(gx, a, b, worklist)
@@ -488,7 +487,7 @@ def propagate(gx):
         if gx.types[node]:
             add_to_worklist(worklist, node)
         expr = node.thing
-        if (isinstance(expr, Call) and not expr.args) or expr in gx.lambdawrapper:  # XXX
+        if (isinstance(expr, ast.Call) and not expr.args) or expr in gx.lambdawrapper:  # XXX
             changed.add(node)
 
     for node in changed:
@@ -511,7 +510,7 @@ def propagate(gx):
 
             for b in a.out.copy():  # XXX can change...?
                 # for builtin types, the set of instance variables is known, so do not flow into non-existent ones # XXX ifa
-                if isinstance(b.thing, Variable) and isinstance(b.thing.parent, Class):
+                if isinstance(b.thing, python.Variable) and isinstance(b.thing.parent, python.Class):
                     parent_ident = b.thing.parent.ident
                     if parent_ident in builtins:
                         if parent_ident in ['int_', 'float_', 'str_', 'none', 'bool_', 'bytes_']:
@@ -549,7 +548,7 @@ def possible_functions(gx, node, analysis):
     if anon_func:
         # anonymous call
         types = gx.cnode[expr.func, node.dcpa, node.cpa].types()
-        types = [t for t in types if isinstance(t[0], Function)]  # XXX XXX analyse per t, sometimes class, sometimes function..
+        types = [t for t in types if isinstance(t[0], python.Function)]  # XXX XXX analyse per t, sometimes class, sometimes function..
 
         if list(types)[0][0].parent:  # method reference XXX merge below?
             funcs = [(f[0], f[1], (f[0].parent, f[1])) for f in types]  # node.dcpa: connect to right dcpa duplicate version
@@ -560,7 +559,7 @@ def possible_functions(gx, node, analysis):
         funcs = [(t[0].funcs['__init__'], t[1], t) for t in node.types() if '__init__' in t[0].funcs]
 
     elif parent_constr:
-        objtypes = gx.cnode[lookup_var('self', node.parent, mv=node.mv), node.dcpa, node.cpa].types()
+        objtypes = gx.cnode[python.lookup_var('self', node.parent, mv=node.mv), node.dcpa, node.cpa].types()
         funcs = [(t[0].funcs[ident], t[1], None) for t in objtypes if ident in t[0].funcs]
 
     elif direct_call:
@@ -568,9 +567,9 @@ def possible_functions(gx, node, analysis):
 
     elif method_call:
         objtypes = gx.cnode[objexpr, node.dcpa, node.cpa].types()
-        objtypes = [t for t in objtypes if not isinstance(t[0], Function)]  # XXX
+        objtypes = [t for t in objtypes if not isinstance(t[0], python.Function)]  # XXX
 
-        funcs = [(t[0].funcs[ident], t[1], t) for t in objtypes if ident in t[0].funcs and not (isinstance(t[0], Class) and ident in t[0].staticmethods)]
+        funcs = [(t[0].funcs[ident], t[1], t) for t in objtypes if ident in t[0].funcs and not (isinstance(t[0], python.Class) and ident in t[0].staticmethods)]
 
     return funcs
 
@@ -599,7 +598,7 @@ def possible_argtypes(gx, node, funcs, analysis, worklist):
         node.defnodes = True
 
         for act, form in zip(actuals, formals):
-            if parent_constr or not (isinstance(func.parent, Class) and form == 'self'):  # XXX merge
+            if parent_constr or not (isinstance(func.parent, python.Class) and form == 'self'):  # XXX merge
                 args.append(act)
 
     argtypes = []
@@ -634,28 +633,28 @@ def cartesian_product(gx, node, analysis, worklist):
 def redirect(gx, c, dcpa, func, callfunc, ident, callnode, direct_call, constructor):
     # redirect based on number of arguments (__%s%d syntax in builtins)
     if func.mv.module.builtin:
-        if isinstance(func.parent, Class):
+        if isinstance(func.parent, python.Class):
             funcs = func.parent.funcs
         else:
             funcs = func.mv.funcs
-        redir = '__%s%d' % (func.ident, len([kwarg for kwarg in callfunc.args if not isinstance(kwarg, keyword)]))
+        redir = '__%s%d' % (func.ident, len([kwarg for kwarg in callfunc.args if not isinstance(kwarg, ast.keyword)]))
         func = funcs.get(redir, func)
 
     # staticmethod
-    if isinstance(func.parent, Class) and func.ident in func.parent.staticmethods:
+    if isinstance(func.parent, python.Class) and func.ident in func.parent.staticmethods:
         dcpa = 1
 
     # dict.__init__
     if constructor and (ident, nrargs(gx, callfunc)) in (('dict', 1), ('defaultdict', 2)):
-        clnames = [x[0].ident for x in c if isinstance(x[0], Class)]
+        clnames = [x[0].ident for x in c if isinstance(x[0], python.Class)]
         if 'dict' in clnames or 'defaultdict' in clnames:
             func = list(callnode.types())[0][0].funcs['__initdict__']
         else:
             func = list(callnode.types())[0][0].funcs['__inititer__']
 
     # dict.update
-    if func.ident == 'update' and isinstance(func.parent, Class) and func.parent.ident in ('dict', 'defaultdict'):
-        clnames = [x[0].ident for x in c if isinstance(x[0], Class)]
+    if func.ident == 'update' and isinstance(func.parent, python.Class) and func.parent.ident in ('dict', 'defaultdict'):
+        clnames = [x[0].ident for x in c if isinstance(x[0], python.Class)]
         if not ('dict' in clnames or 'defaultdict' in clnames):
             func = func.parent.funcs['updateiter']
 
@@ -664,7 +663,7 @@ def redirect(gx, c, dcpa, func, callfunc, ident, callnode, direct_call, construc
         func = list(callnode.types())[0][0].funcs['__inititer__']  # XXX use __init__?
 
     # array
-    if constructor and ident == 'array' and isinstance(callfunc.args[0], Str):
+    if constructor and ident == 'array' and isinstance(callfunc.args[0], ast.Str):
         typecode = callfunc.args[0].s
         array_type = None
         if typecode in 'bBhHiIlL':
@@ -677,8 +676,8 @@ def redirect(gx, c, dcpa, func, callfunc, ident, callnode, direct_call, construc
             func = list(callnode.types())[0][0].funcs['__init_%s__' % array_type]
 
     # tuple2.__getitem__(0/1) -> __getfirst__/__getsecond__
-    if (isinstance(callfunc.func, Attribute) and callfunc.func.attr == '__getitem__' and
-        isinstance(callfunc.args[0], Num) and callfunc.args[0].n in (0, 1) and
+    if (isinstance(callfunc.func, ast.Attribute) and callfunc.func.attr == '__getitem__' and
+        isinstance(callfunc.args[0], ast.Num) and callfunc.args[0].n in (0, 1) and
             func.parent.mv.module.builtin and func.parent.ident == 'tuple2'):
         if callfunc.args[0].n == 0:
             func = func.parent.funcs['__getfirst__']
@@ -686,8 +685,8 @@ def redirect(gx, c, dcpa, func, callfunc, ident, callnode, direct_call, construc
             func = func.parent.funcs['__getsecond__']
 
     # property
-    if isinstance(callfunc.func, Attribute) and callfunc.func.attr in ['__setattr__', '__getattr__']:
-        if isinstance(func.parent, Class) and callfunc.args and callfunc.args[0].s in func.parent.properties:
+    if isinstance(callfunc.func, ast.Attribute) and callfunc.func.attr in ['__setattr__', '__getattr__']:
+        if isinstance(func.parent, python.Class) and callfunc.args and callfunc.args[0].s in func.parent.properties:
             arg = callfunc.args[0].s
             if callfunc.func.attr == '__setattr__':
                 func = func.parent.funcs[func.parent.properties[arg][1]]
@@ -696,7 +695,7 @@ def redirect(gx, c, dcpa, func, callfunc, ident, callnode, direct_call, construc
             c = c[1:]
 
     # win32
-    if sys.platform == 'win32' and func.mv.module.builtin and isinstance(func.parent, Class) and '__win32' + func.ident in func.parent.funcs:
+    if sys.platform == 'win32' and func.mv.module.builtin and isinstance(func.parent, python.Class) and '__win32' + func.ident in func.parent.funcs:
         func = func.parent.funcs['__win32' + func.ident]
 
     return c, dcpa, func
@@ -764,8 +763,8 @@ def cpa(gx, callnode, worklist):
 
 
 def connect_getsetattr(gx, func, callnode, callfunc, dcpa, worklist):
-    if (isinstance(callfunc.func, Attribute) and callfunc.func.attr in ['__setattr__', '__getattr__'] and
-            not (isinstance(func.parent, Class) and callfunc.args and callfunc.args[0].s in func.parent.properties)):
+    if (isinstance(callfunc.func, ast.Attribute) and callfunc.func.attr in ['__setattr__', '__getattr__'] and
+            not (isinstance(func.parent, python.Class) and callfunc.args and callfunc.args[0].s in func.parent.properties)):
         varname = callfunc.args[0].s
         parent = func.parent
 
@@ -873,7 +872,7 @@ def ifa_split_vars(gx, cl, dcpa, vars, nr_classes, classes_nr, split, allcsites)
         for node in allnodes:
             if not ifa_confluence_point(node, creation_points):
                 continue
-            if not node.thing.formal_arg and not isinstance(node.thing.parent, Class):
+            if not node.thing.formal_arg and not isinstance(node.thing.parent, python.Class):
                 continue
             remaining = ifa_determine_split(node, allnodes)
             if len(remaining) < 2 or len(remaining) >= 10:
@@ -988,7 +987,7 @@ def ifa_classes_to_split(gx):
 
 def ifa_confluence_point(node, creation_points):
     ''' determine if node is confluence point '''
-    if len(node.in_) > 1 and isinstance(node.thing, Variable):
+    if len(node.in_) > 1 and isinstance(node.thing, python.Variable):
         for csite in node.csites:
             occ = [csite in crpoints for crpoints in creation_points.values()].count(True)
             if occ > 1:
@@ -1155,7 +1154,7 @@ def iterative_dataflow_analysis(gx):
                     if n.dcpa in parent.cp:
                         for cart, cpa in parent.cp[n.dcpa].items():  # XXX not very fast
                             if cpa == n.cpa:
-                                if parent.parent and isinstance(parent.parent, Class):  # self
+                                if parent.parent and isinstance(parent.parent, python.Class):  # self
                                     cart = ((parent.parent, n.dcpa),) + cart
 
                                 gx.alloc_info[parent.ident, cart, n.thing] = (cl, newnr)
@@ -1166,8 +1165,8 @@ def iterative_dataflow_analysis(gx):
         # --- clean out constructor node types in functions, possibly to be seeded again
         for node in beforetypes:
             func = parent_func(gx, node.thing)
-            if isinstance(func, Function):
-                if node.constructor and isinstance(node.thing, (List, Dict, Tuple, ListComp, Call)):
+            if isinstance(func, python.Function):
+                if node.constructor and isinstance(node.thing, (ast.List, ast.Dict, ast.Tuple, ast.ListComp, ast.Call)):
                     beforetypes[node] = set()
 
         # --- create new class types, and seed global nodes
@@ -1190,14 +1189,14 @@ def iterative_dataflow_analysis(gx):
 def ifa_seed_template(gx, func, cart, dcpa, cpa, worklist):
     if cart is not None:  # (None means we are not in the process of propagation)
         # print 'funccopy', func.ident #, func.nodes
-        if isinstance(func.parent, Class):  # self
+        if isinstance(func.parent, python.Class):  # self
             cart = ((func.parent, dcpa),) + cart
 
         added = gx.added_allocs_set
         added_new = 0
 
         for node in func.nodes_ordered:
-            if node.constructor and isinstance(node.thing, (List, Dict, Tuple, ListComp, Call)):
+            if node.constructor and isinstance(node.thing, (ast.List, ast.Dict, ast.Tuple, ast.ListComp, ast.Call)):
                 if node.thing not in added:
                     if INCREMENTAL_DATA and not func.mv.module.builtin:
                         if gx.added_allocs >= INCREMENTAL_ALLOCS:
@@ -1208,7 +1207,7 @@ def ifa_seed_template(gx, func, cart, dcpa, cpa, worklist):
 
                 # --- contour is specified in alloc_info
                 parent = node.parent
-                while isinstance(parent.parent, Function):
+                while isinstance(parent.parent, python.Function):
                     parent = parent.parent
 
                 alloc_id = (parent.ident, cart, node.thing)  # XXX ident?
@@ -1224,7 +1223,7 @@ def ifa_seed_template(gx, func, cart, dcpa, cpa, worklist):
                     for (id, c, thing) in gx.alloc_info:
                         if id == parent.ident and thing is node.thing:
                             for a, b in zip(cart, c):
-                                if a != b and not (isinstance(a[0], Class) and a[0] is b[0] and a[1] in a[0].splits and a[0].splits[a[1]] == b[1]):
+                                if a != b and not (isinstance(a[0], python.Class) and a[0] is b[0] and a[1] in a[0].splits and a[0].splits[a[1]] == b[1]):
                                     break
                             else:
                                 mother_alloc_id = (id, c, thing)
@@ -1331,16 +1330,16 @@ def restore_network(gx, backup):
 
 def merge_simple_types(gx, types):
     merge = types.copy()
-    if len(types) > 1 and (def_class(gx, 'none'), 0) in types:
-        if not (def_class(gx, 'int_'), 0) in types and not (def_class(gx, 'float_'), 0) in types and not (def_class(gx, 'bool_'), 0) in types:
-            merge.remove((def_class(gx, 'none'), 0))
+    if len(types) > 1 and (python.def_class(gx, 'none'), 0) in types:
+        if not (python.def_class(gx, 'int_'), 0) in types and not (python.def_class(gx, 'float_'), 0) in types and not (python.def_class(gx, 'bool_'), 0) in types:
+            merge.remove((python.def_class(gx, 'none'), 0))
 
     return frozenset(merge)
 
 
 def get_classes(gx, var):
     return set(t[0] for t in gx.merged_inh[var]
-               if isinstance(t[0], Class) and not t[0].mv.module.builtin)
+               if isinstance(t[0], python.Class) and not t[0].mv.module.builtin)
 
 
 def deepcopy_classes(gx, classes):
@@ -1383,7 +1382,7 @@ def analyze(gx, module_name):
     for cl in gx.allclasses:
         if cl.ident == 'class_':
             var = default_var(gx, '__name__', cl)
-            gx.types[inode(gx, var)] = set([(def_class(gx, 'str_'), 0)])
+            gx.types[inode(gx, var)] = set([(python.def_class(gx, 'str_'), 0)])
 
     # --- non-ifa: copy classes for each allocation site
     for cl in gx.allclasses:
@@ -1398,13 +1397,13 @@ def analyze(gx, module_name):
             class_copy(gx, cl, dcpa)
 
     # --- seed str/bytes unit
-    cl = def_class(gx, 'str_')
+    cl = python.def_class(gx, 'str_')
     var = default_var(gx, 'unit', cl)
     gx.types[inode(gx, var)] = set([(cl, 0)])
 
-    cl = def_class(gx, 'bytes_')
+    cl = python.def_class(gx, 'bytes_')
     var = default_var(gx, 'unit', cl)
-    gx.types[inode(gx, var)] = set([(def_class(gx, 'int_'), 0)])
+    gx.types[inode(gx, var)] = set([(python.def_class(gx, 'int_'), 0)])
 
     # --- cartesian product algorithm & iterative flow analysis
     iterative_dataflow_analysis(gx)
@@ -1434,24 +1433,24 @@ def analyze(gx, module_name):
 
     # error for dynamic expression without explicit type declaration
     for node in gx.merged_inh:
-        if isinstance(node, AST) and not is_assign_attribute(node) and not inode(gx, node).mv.module.builtin:
+        if isinstance(node, ast.AST) and not is_assign_attribute(node) and not inode(gx, node).mv.module.builtin:
             nodetypestr(gx, node, inode(gx, node).parent, mv=inode(gx, node).mv)
 
     return gx
 
 
 def register_temp_var(var, parent):
-    if isinstance(parent, Function):
+    if isinstance(parent, python.Function):
         parent.registered_temp_vars.append(var)
 
 
 def default_var(gx, name, parent, worklist=None, mv=None, exc_name=False):
     if parent:
         mv = parent.mv
-    var = lookup_var(name, parent, local=True, mv=mv)
+    var = python.lookup_var(name, parent, local=True, mv=mv)
     if not var:
-        var = Variable(name, parent)
-        if parent:  # XXX move to Variable?
+        var = python.Variable(name, parent)
+        if parent:  # XXX move to python.Variable?
             parent.vars[name] = var
         elif exc_name:
             mv.exc_names[name] = var
@@ -1468,8 +1467,8 @@ def default_var(gx, name, parent, worklist=None, mv=None, exc_name=False):
         add_to_worklist(worklist, newnode)
         gx.types[newnode] = set()
 
-    if isinstance(parent, Function) and parent.listcomp and not var.registered:
-        while isinstance(parent, Function) and parent.listcomp:  # XXX
+    if isinstance(parent, python.Function) and parent.listcomp and not var.registered:
+        while isinstance(parent, python.Function) and parent.listcomp:  # XXX
             parent = parent.parent
         register_temp_var(var, parent)
 
