@@ -1,4 +1,3 @@
-from __future__ import print_function
 
 '''
 *** SHED SKIN Python-to-C++ Compiler ***
@@ -15,6 +14,7 @@ The constraint graph, with inferred types, is first 'merged' back to program
 dimensions (gx.merged_inh).
 
 '''
+import ast
 import os
 import string
 import struct
@@ -23,24 +23,21 @@ import types
 
 import jinja2
 import mako
-from mako.lookup import TemplateLookup
 from mako import exceptions
+from mako.lookup import TemplateLookup
 
-import ast
-from .ast_utils import BaseNodeVisitor, is_assign_attribute, is_assign_tuple, is_assign_list_or_tuple, is_constant, \
-    orelse_to_node, handle_with_vars, is_none
-
+from . import python
+from .ast_utils import (BaseNodeVisitor, handle_with_vars, is_assign_attribute,
+                        is_assign_list_or_tuple, is_assign_tuple, is_constant,
+                        is_none, orelse_to_node)
 from .error import error
 from .extmod import ExtensionModule
-from .infer import analyze_callfunc, callfunc_targets, connect_actual_formal, \
-    called, inode, var_types
+from .infer import (analyze_callfunc, called, callfunc_targets,
+                    connect_actual_formal, inode, var_types)
 from .makefile import generate_makefile
-from .python import assign_rec, aug_msg, Class, def_class, \
-    is_enum, is_fastfor, is_literal, is_zip2, \
-    lookup_class, lookup_class_module, lookup_var, lookup_module, \
-    Function, Module, Variable, StaticClass, smart_lookup_var
-from .typestr import incompatible_assignment_rec, lowest_common_parents, \
-    nodetypestr, polymorphic_t, singletype, unboxable, typestr
+from .typestr import (incompatible_assignment_rec, lowest_common_parents,
+                      nodetypestr, polymorphic_t, singletype, typestr,
+                      unboxable)
 from .virtual import virtuals
 
 
@@ -56,9 +53,9 @@ class CPPNamer(object):
         self.ss_prefix = self.gx.ss_prefix
         self.name_by_type = {
             str: self.name_str,
-            Class: self.name_class,
-            Function: self.name_function,
-            Variable: self.name_variable,
+            python.Class: self.name_class,
+            python.Function: self.name_function,
+            python.Variable: self.name_variable,
         }
         self.mv = mv
 
@@ -323,7 +320,7 @@ class GenerateVisitor(BaseNodeVisitor):
 
     def visitm(self, *args):
         func = None
-        if args and isinstance(args[-1], (Function, Class)):
+        if args and isinstance(args[-1], (python.Function, python.Class)):
             func = args[-1]
         for arg in args[:-1]:
             if isinstance(arg, str):
@@ -332,7 +329,7 @@ class GenerateVisitor(BaseNodeVisitor):
                 self.visit(arg, func)
 
     def connector(self, node, func):
-        if singletype(self.gx, node, Module):
+        if singletype(self.gx, node, python.Module):
             return '::'
         elif unboxable(self.gx, self.mergeinh[node]):
             return '.'
@@ -341,7 +338,7 @@ class GenerateVisitor(BaseNodeVisitor):
 
     def gen_declare_defs(self, vars):
         for name, var in vars:
-            if (singletype(self.gx, var, Module) or var.invisible
+            if (singletype(self.gx, var, python.Module) or var.invisible
                     or var.name in {'__exception', '__exception2'}):
                 continue
             ts = nodetypestr(self.gx, var, var.parent, mv=self.mv)
@@ -359,9 +356,9 @@ class GenerateVisitor(BaseNodeVisitor):
 
     def get_constant(self, node):
         parent = inode(self.gx, node).parent
-        while isinstance(parent, Function) and parent.listcomp:  # XXX
+        while isinstance(parent, python.Function) and parent.listcomp:  # XXX
             parent = parent.parent
-        if isinstance(parent, Function) and (parent.inherited or not self.inhcpa(parent)):  # XXX
+        if isinstance(parent, python.Function) and (parent.inherited or not self.inhcpa(parent)):  # XXX
             return
         for other in self.consts:  # XXX use mapping
             if node.s == other.s:
@@ -383,7 +380,7 @@ class GenerateVisitor(BaseNodeVisitor):
         # class declarations
         for child in node.body:
             if isinstance(child, ast.ClassDef):
-                cl = def_class(self.gx, child.name, mv=self.mv)
+                cl = python.def_class(self.gx, child.name, mv=self.mv)
                 self.print('class ' + self.cpp_name(cl) + ';')
         self.print()
 
@@ -443,7 +440,7 @@ class GenerateVisitor(BaseNodeVisitor):
                 formal = func.formals[len(func.formals) - len(func.defaults) + func_def_nr]
                 var = func.vars[formal]
                 if self.mergeinh[var]:
-                    ts = [t for t in self.mergeinh[default] if isinstance(t[0], Function)]
+                    ts = [t for t in self.mergeinh[default] if isinstance(t[0], python.Function)]
                     if not ts or [t for t in ts if called(t[0])]:
                         self.start('default_%d = ' % nr)
                         self.impl_visit_conv(default, self.mergeinh[var], None)
@@ -587,7 +584,7 @@ class GenerateVisitor(BaseNodeVisitor):
                             if not var.invisible and not var.imported and not var.name.startswith('__') and var_types(self.gx, var):
                                 self.start(self.namer.nokeywords(var.name) + ' = ' + module.full_path() + '::' + self.namer.nokeywords(var.name))
                                 self.eol()
-                    elif pseudonym in self.module.mv.globals and not [t for t in var_types(self.gx, self.module.mv.globals[pseudonym]) if isinstance(t[0], Module)]:
+                    elif pseudonym in self.module.mv.globals and not [t for t in var_types(self.gx, self.module.mv.globals[pseudonym]) if isinstance(t[0], python.Module)]:
                         self.start(self.namer.nokeywords(pseudonym) + ' = ' + module.full_path() + '::' + self.namer.nokeywords(name))
                         self.eol()
 
@@ -884,9 +881,9 @@ class GenerateVisitor(BaseNodeVisitor):
             self.print()
 
     def nothing(self, types):
-        if def_class(self.gx, 'complex') in (t[0] for t in types):
+        if python.def_class(self.gx, 'complex') in (t[0] for t in types):
             return 'mcomplex(0.0, 0.0)'
-        elif def_class(self.gx, 'bool_') in (t[0] for t in types):
+        elif python.def_class(self.gx, 'bool_') in (t[0] for t in types):
             return 'False'
         else:
             return '0'
@@ -909,7 +906,7 @@ class GenerateVisitor(BaseNodeVisitor):
     def subtypes(self, types, varname):
         subtypes = set()
         for t in types:
-            if isinstance(t[0], Class):
+            if isinstance(t[0], python.Class):
                 var = t[0].vars.get(varname)
                 if var and (var, t[1], 0) in self.gx.cnode:  # XXX yeah?
                     subtypes.update(self.gx.cnode[var, t[1], 0].types())
@@ -917,7 +914,7 @@ class GenerateVisitor(BaseNodeVisitor):
 
     def bin_tuple(self, types):
         for t in types:
-            if isinstance(t[0], Class) and t[0].ident == 'tuple2':
+            if isinstance(t[0], python.Class) and t[0].ident == 'tuple2':
                 var1 = t[0].vars.get('first')
                 var2 = t[0].vars.get('second')
                 if var1 and var2:
@@ -956,7 +953,7 @@ class GenerateVisitor(BaseNodeVisitor):
         self.append('))')
 
     def visit_tuple_list(self, node, func=None, argtypes=None):
-        if isinstance(func, Class):  # XXX
+        if isinstance(func, python.Class):  # XXX
             func = None
         argtypes = self.instance_new(node, argtypes)
         children = list(node.elts)
@@ -1023,7 +1020,7 @@ class GenerateVisitor(BaseNodeVisitor):
         self.start('throw (')
 
         # --- raise class [, constructor args]
-        if isinstance(exc, ast.Name) and not lookup_var(exc.id, func, mv=self.mv):  # XXX lookup_class
+        if isinstance(exc, ast.Name) and not python.lookup_var(exc.id, func, mv=self.mv):  # XXX python.lookup_class
             self.append('new %s(' % exc.id)
             if hasattr(node, 'inst') and node.inst: # XXX what was this for, seems untested also
                 if isinstance(node.inst, ast.Tuple) and node.inst.elts:
@@ -1036,7 +1033,7 @@ class GenerateVisitor(BaseNodeVisitor):
             self.append(')')
 
         # --- raise instance
-        elif isinstance(cl, Class) and cl.mv.module.ident == 'builtin' and not [a for a in cl.ancestors_upto(None) if a.ident == 'BaseException']:
+        elif isinstance(cl, python.Class) and cl.mv.module.ident == 'builtin' and not [a for a in cl.ancestors_upto(None) if a.ident == 'BaseException']:
             self.append('new Exception()')
         else:
             self.visit(exc, func)
@@ -1068,9 +1065,9 @@ class GenerateVisitor(BaseNodeVisitor):
 
             for (h0, h1, h2) in pairs:
                 if isinstance(h0, ast.Name) and h0.id in ['int', 'float', 'str', 'class']:
-                    continue  # XXX lookup_class
+                    continue  # XXX python.lookup_class
                 elif h0:
-                    cl = lookup_class(h0, self.mv)
+                    cl = python.lookup_class(h0, self.mv)
                     if cl.mv.module.builtin and cl.ident in ['KeyboardInterrupt', 'FloatingPointError', 'OverflowError', 'ZeroDivisionError', 'SystemExit']:
                         error("system '%s' is not caught" % cl.ident, self.gx, h0, warning=True, mv=self.mv)
                     arg = self.namer.namespace_class(cl) + ' *'
@@ -1101,7 +1098,7 @@ class GenerateVisitor(BaseNodeVisitor):
             self.output('}')
 
     def do_fastfor(self, node, qual, quals, iter, func, genexpr):
-        if len(qual.iter.args) == 3 and not is_literal(qual.iter.args[2]):
+        if len(qual.iter.args) == 3 and not python.is_literal(qual.iter.args[2]):
             for arg in qual.iter.args:  # XXX simplify
                 if arg in self.mv.tempcount:
                     self.start()
@@ -1139,11 +1136,11 @@ class GenerateVisitor(BaseNodeVisitor):
         self.print(self.line)
 
     def fastenum(self, node):
-        return is_enum(node) and self.only_classes(node.iter.args[0], ('tuple', 'list', 'str_'))
+        return python.is_enum(node) and self.only_classes(node.iter.args[0], ('tuple', 'list', 'str_'))
 
     def fastzip2(self, node):
         names = ('tuple', 'list')
-        return is_zip2(node) and self.only_classes(node.iter.args[0], names) and self.only_classes(node.iter.args[1], names)
+        return python.is_zip2(node) and self.only_classes(node.iter.args[0], names) and self.only_classes(node.iter.args[1], names)
 
     def fastdictiter(self, node):
         return isinstance(node.iter, ast.Call) and is_assign_list_or_tuple(node.target) and self.only_classes(node.iter.func, ('dict',)) and isinstance(node.iter.func, ast.Attribute) and node.iter.func.attr == 'iteritems'
@@ -1151,7 +1148,7 @@ class GenerateVisitor(BaseNodeVisitor):
     def only_classes(self, node, names):
         if node not in self.mergeinh:
             return False
-        classes = [def_class(self.gx, name, mv=self.mv) for name in names] + [def_class(self.gx, 'none')]
+        classes = [python.def_class(self.gx, name, mv=self.mv) for name in names] + [python.def_class(self.gx, 'none')]
         return not [t for t in self.mergeinh[node] if t[0] not in classes]
 
     def visit_For(self, node, func=None):
@@ -1167,7 +1164,7 @@ class GenerateVisitor(BaseNodeVisitor):
         self.print()
         if node.orelse:
             self.output('%s = 0;' % self.mv.tempcount[orelse_to_node(node)])
-        if is_fastfor(node):
+        if python.is_fastfor(node):
             self.do_fastfor(node, node, None, assname, func, False)
         elif self.fastenum(node):
             self.do_fastenum(node, func, False)
@@ -1287,7 +1284,7 @@ class GenerateVisitor(BaseNodeVisitor):
 
     # --- function/method header
     def func_header(self, func, declare, is_init=False):
-        method = isinstance(func.parent, Class)
+        method = isinstance(func.parent, python.Class)
         if method:
             formals = [f for f in func.formals if f != 'self']
         else:
@@ -1341,7 +1338,7 @@ class GenerateVisitor(BaseNodeVisitor):
             if i in casters:
                 formals2[i] = '__' + formals2[i]
         formaldecs = [o + f for (o, f) in zip(ftypes, formals2)]
-        if declare and isinstance(func.parent, Class) and func.ident in func.parent.staticmethods:
+        if declare and isinstance(func.parent, python.Class) and func.ident in func.parent.staticmethods:
             header = 'static ' + header
         if is_init and not formaldecs:
             formaldecs = ['int __ss_init']
@@ -1365,7 +1362,7 @@ class GenerateVisitor(BaseNodeVisitor):
 
     def visit_FunctionDef(self, node, parent=None, declare=False):
         # locate right func instance
-        if parent and isinstance(parent, Class):
+        if parent and isinstance(parent, python.Class):
             func = parent.funcs[node.name]
         elif node.name in self.mv.funcs:
             func = self.mv.funcs[node.name]
@@ -1613,7 +1610,7 @@ class GenerateVisitor(BaseNodeVisitor):
     def visit_AugAssign(self, node, func=None):
         if isinstance(node.target, ast.Subscript):
             self.start()
-            if set([t[0].ident for t in self.mergeinh[node.target.value] if isinstance(t[0], Class)]) in [set(['dict']), set(['defaultdict'])] and type(node.op) == ast.Add:
+            if set([t[0].ident for t in self.mergeinh[node.target.value] if isinstance(t[0], python.Class)]) in [set(['dict']), set(['defaultdict'])] and type(node.op) == ast.Add:
                 self.visitm(node.target.value, '->__addtoitem__(', inode(self.gx, node).subs, ', ', node.value, ')', func)
                 self.eol()
                 return
@@ -1636,29 +1633,29 @@ class GenerateVisitor(BaseNodeVisitor):
                         self.append(', ')
                 self.append(')')
             else:
-                self.impl_visit_binary(node.left, node.right, aug_msg(node, 'add'), '+', func)
+                self.impl_visit_binary(node.left, node.right, python.aug_msg(node, 'add'), '+', func)
         elif type(node.op) == ast.Sub:
-            self.impl_visit_binary(node.left, node.right, aug_msg(node, 'sub'), '-', func)
+            self.impl_visit_binary(node.left, node.right, python.aug_msg(node, 'sub'), '-', func)
         elif type(node.op) == ast.Mult:
-            self.impl_visit_binary(node.left, node.right, aug_msg(node, 'mul'), '*', func)
+            self.impl_visit_binary(node.left, node.right, python.aug_msg(node, 'mul'), '*', func)
         elif type(node.op) == ast.Div:
-            self.impl_visit_binary(node.left, node.right, aug_msg(node, 'truediv'), '/', func)
+            self.impl_visit_binary(node.left, node.right, python.aug_msg(node, 'truediv'), '/', func)
         elif type(node.op) == ast.FloorDiv:
-            self.impl_visit_binary(node.left, node.right, aug_msg(node, 'floordiv'), '//', func)
+            self.impl_visit_binary(node.left, node.right, python.aug_msg(node, 'floordiv'), '//', func)
         elif type(node.op) == ast.Pow:
             self.power(node.left, node.right, None, func)
         elif type(node.op) == ast.Mod:
             self.impl_visit_Mod(node, func)
         elif type(node.op) == ast.LShift:
-            self.impl_visit_binary(node.left, node.right, aug_msg(node, 'lshift'), '<<', func)
+            self.impl_visit_binary(node.left, node.right, python.aug_msg(node, 'lshift'), '<<', func)
         elif type(node.op) == ast.RShift:
-            self.impl_visit_binary(node.left, node.right, aug_msg(node, 'rshift'), '>>', func)
+            self.impl_visit_binary(node.left, node.right, python.aug_msg(node, 'rshift'), '>>', func)
         elif type(node.op) == ast.BitOr:
-            self.impl_visit_bitop(node, aug_msg(node, 'or'), '|', func)
+            self.impl_visit_bitop(node, python.aug_msg(node, 'or'), '|', func)
         elif type(node.op) == ast.BitXor:
-            self.impl_visit_bitop(node, aug_msg(node, 'xor'), '^', func)
+            self.impl_visit_bitop(node, python.aug_msg(node, 'xor'), '^', func)
         elif type(node.op) == ast.BitAnd:
-            self.impl_visit_bitop(node, aug_msg(node, 'and'), '&', func)
+            self.impl_visit_bitop(node, python.aug_msg(node, 'and'), '&', func)
         # PY3: elif type(node.op) == MatMult:
         else:
             error("Unknown op type for ast.BinOp: %s" % type(node.op), self.gx, node, mv=getmv())
@@ -1668,7 +1665,7 @@ class GenerateVisitor(BaseNodeVisitor):
             l, r = self.rec_string_addition(node.left), self.rec_string_addition(node.right)
             if l and r:
                 return l + r
-        elif self.mergeinh[node] == set([(def_class(self.gx, 'str_'), 0)]):
+        elif self.mergeinh[node] == set([(python.def_class(self.gx, 'str_'), 0)]):
             return [node]
 
     def impl_visit_bitop(self, node, msg, inline, func=None):
@@ -1688,7 +1685,7 @@ class GenerateVisitor(BaseNodeVisitor):
         self.append(')')
 
     def power(self, left, right, mod, func=None):
-        inttype = set([(def_class(self.gx, 'int_'), 0)])  # XXX merge
+        inttype = set([(python.def_class(self.gx, 'int_'), 0)])  # XXX merge
         if self.mergeinh[left] == inttype and self.mergeinh[right] == inttype:
             if not isinstance(right, ast.Num) or right.n < 0:
                 error("pow(int, int) returns int after compilation", self.gx, left, warning=True, mv=self.mv)
@@ -1702,14 +1699,14 @@ class GenerateVisitor(BaseNodeVisitor):
         rtypes = self.mergeinh[right]
         ul, ur = unboxable(self.gx, ltypes), unboxable(self.gx, rtypes)
 
-        inttype = set([(def_class(self.gx, 'int_'), 0)])  # XXX new type?
-        floattype = set([(def_class(self.gx, 'float_'), 0)])  # XXX new type?
+        inttype = set([(python.def_class(self.gx, 'int_'), 0)])  # XXX new type?
+        floattype = set([(python.def_class(self.gx, 'float_'), 0)])  # XXX new type?
 
         # --- inline mod/div
         # XXX C++ knows %, /, so we can overload?
         if (floattype.intersection(ltypes) or inttype.intersection(ltypes)):
             if inline in ['%'] or (inline in ['/'] and not (floattype.intersection(ltypes) or floattype.intersection(rtypes))):
-                if not def_class(self.gx, 'complex') in (t[0] for t in rtypes):  # XXX
+                if not python.def_class(self.gx, 'complex') in (t[0] for t in rtypes):  # XXX
                     self.append({'%': '__mods', '/': '__divs'}[inline] + '(')
                     self.visit(left, func)
                     self.append(', ')
@@ -1922,14 +1919,14 @@ class GenerateVisitor(BaseNodeVisitor):
                 error("return value of 'id' does not fit in 32-bit integer (try shedskin -l)", self.gx, node, warning=True, mv=self.mv)
 
         nrargs = len(node.args)
-        if isinstance(func, Function) and func.largs:
+        if isinstance(func, python.Function) and func.largs:
             nrargs = func.largs
 
         # --- target expression
         if isinstance(node.func, ast.Attribute):
             node.func.called = True
 
-        if node.func in self.mergeinh and [t for t in self.mergeinh[node.func] if isinstance(t[0], Function)]:  # anonymous function
+        if node.func in self.mergeinh and [t for t in self.mergeinh[node.func] if isinstance(t[0], python.Function)]:  # anonymous function
             self.visitm(node.func, '(', func)
 
         elif constructor:
@@ -1948,11 +1945,11 @@ class GenerateVisitor(BaseNodeVisitor):
                 self.append('1')  # don't call default constructor
 
         elif parent_constr:
-            cl = lookup_class(node.func.value, self.mv)
+            cl = python.lookup_class(node.func.value, self.mv)
             self.append(self.namer.namespace_class(cl) + '::' + node.func.attr + '(')
 
         elif direct_call:  # XXX no namespace (e.g., math.pow), check nr of args
-            if ident == 'float' and node.args and self.mergeinh[node.args[0]] == set([(def_class(self.gx, 'float_'), 0)]):
+            if ident == 'float' and node.args and self.mergeinh[node.args[0]] == set([(python.def_class(self.gx, 'float_'), 0)]):
                 self.visit(node.args[0], func)
                 return
             if ident in ['abs', 'int', 'float', 'str', 'bytes', 'bytearray', 'dict', 'tuple', 'list', 'type', 'cmp', 'sum', 'zip']:
@@ -1978,7 +1975,7 @@ class GenerateVisitor(BaseNodeVisitor):
                 return
             else:
                 if isinstance(node.func, ast.Name):
-                    if isinstance(func, Function) and isinstance(func.parent, Class) and ident in func.parent.funcs:  # masked by method
+                    if isinstance(func, python.Function) and isinstance(func.parent, python.Class) and ident in func.parent.funcs:  # masked by method
                         self.append(funcs[0].mv.module.full_path() + '::')
                     self.append(self.cpp_name(funcs[0]))
                 else:
@@ -1987,11 +1984,11 @@ class GenerateVisitor(BaseNodeVisitor):
 
         elif method_call:
             for cl, _ in self.mergeinh[objexpr]:
-                if isinstance(cl, Class) and cl.ident != 'none' and ident not in cl.funcs:
+                if isinstance(cl, python.Class) and cl.ident != 'none' and ident not in cl.funcs:
                     conv = {'int_': 'int', 'float_': 'float', 'str_': 'str', 'class_': 'class', 'none': 'none'}
                     clname = conv.get(cl.ident, cl.ident)
                     error("class '%s' has no method '%s'" % (clname, ident), self.gx, node, warning=True, mv=self.mv)
-                if isinstance(cl, Class) and ident in cl.staticmethods:
+                if isinstance(cl, python.Class) and ident in cl.staticmethods:
                     error("staticmethod '%s' called without using class name" % ident, self.gx, node, warning=True, mv=self.mv)
                     return
 
@@ -2003,7 +2000,7 @@ class GenerateVisitor(BaseNodeVisitor):
 
             if ident == '__call__':
                 self.visitm(node.func, '->__call__(', func)
-            elif ident == 'is_integer' and (def_class(self.gx, 'float_'), 0) in self.mergeinh[node.func.value]:
+            elif ident == 'is_integer' and (python.def_class(self.gx, 'float_'), 0) in self.mergeinh[node.func.value]:
                 self.visitm('__ss_is_integer(', node.func.value, ')', func)
                 return
             else:
@@ -2035,7 +2032,7 @@ class GenerateVisitor(BaseNodeVisitor):
         elif wrapper:
             self.append('___bool(')
             self.visit(node, func)
-            is_func = bool([1 for t in self.mergeinh[node] if isinstance(t[0], Function)])
+            is_func = bool([1 for t in self.mergeinh[node] if isinstance(t[0], python.Function)])
             self.append(('', '!=NULL')[is_func] + ')')  # XXX
         else:
             self.bool_wrapper[node] = True
@@ -2072,7 +2069,7 @@ class GenerateVisitor(BaseNodeVisitor):
                 and not self.library_func(funcs, 'builtin', None, 'next')):
             error('call with incorrect number of arguments', self.gx, node, warning=True, mv=self.mv)
 
-        if isinstance(func, Function) and func.lambdawrapper:
+        if isinstance(func, python.Function) and func.lambdawrapper:
             rest = func.largs
 
         if target.node.args.vararg:
@@ -2083,12 +2080,12 @@ class GenerateVisitor(BaseNodeVisitor):
         double = False
         if ident in ['min', 'max']:
             for arg in node.args:
-                if arg in self.mergeinh and (def_class(self.gx, 'float_'), 0) in self.mergeinh[arg]:
+                if arg in self.mergeinh and (python.def_class(self.gx, 'float_'), 0) in self.mergeinh[arg]:
                     double = True
 
         self.add_args_arg(node, funcs)
 
-        if isinstance(func, Function) and func.largs is not None:
+        if isinstance(func, python.Function) and func.largs is not None:
             kw = [p for p in pairs if p[1].name.startswith('__kw_')]
             nonkw = [p for p in pairs if not p[1].name.startswith('__kw_')]
             pairs = kw + nonkw[:func.largs]
@@ -2098,7 +2095,7 @@ class GenerateVisitor(BaseNodeVisitor):
             builtin_types = self.cast_to_builtin(arg, func, formal, target, method_call, objexpr)
             formal_types = builtin_types or self.mergeinh[formal]
 
-            if double and self.mergeinh[arg] == set([(def_class(self.gx, 'int_'), 0)]):
+            if double and self.mergeinh[arg] == set([(python.def_class(self.gx, 'int_'), 0)]):
                 cast = True
                 self.append('(double(')
             elif castnull and is_none(arg):
@@ -2112,7 +2109,7 @@ class GenerateVisitor(BaseNodeVisitor):
                     self.append('___box((')
 
             if arg in target.mv.defaults:
-                if self.mergeinh[arg] == set([(def_class(self.gx, 'none'), 0)]):
+                if self.mergeinh[arg] == set([(python.def_class(self.gx, 'none'), 0)]):
                     self.append('NULL')
                 elif target.mv.module == self.mv.module:
                     self.append('default_%d' % (target.mv.defaults[arg][0]))
@@ -2152,7 +2149,7 @@ class GenerateVisitor(BaseNodeVisitor):
 
     def cast_to_builtin2(self, arg, func, objexpr, msg, formal_nr):
         # shortcut for outside of visit_Call XXX merge with visit_Call?
-        cls = [t[0] for t in self.mergeinh[objexpr] if isinstance(t[0], Class)]
+        cls = [t[0] for t in self.mergeinh[objexpr] if isinstance(t[0], python.Class)]
         if cls:
             cl = cls.pop()
             if msg in cl.funcs:
@@ -2289,7 +2286,7 @@ class GenerateVisitor(BaseNodeVisitor):
 
         # a = (b,c) = .. = expr
         for left in node.targets:
-            pairs = assign_rec(left, node.value)
+            pairs = python.assign_rec(left, node.value)
 
             for (lvalue, rvalue) in pairs:
                 self.start('')  # XXX remove?
@@ -2302,10 +2299,10 @@ class GenerateVisitor(BaseNodeVisitor):
                 elif is_assign_attribute(lvalue):
                     lcp = lowest_common_parents(polymorphic_t(self.gx, self.mergeinh[lvalue.value]))
                     # property
-                    if len(lcp) == 1 and isinstance(lcp[0], Class) and lvalue.attr in lcp[0].properties:
+                    if len(lcp) == 1 and isinstance(lcp[0], python.Class) and lvalue.attr in lcp[0].properties:
                         self.visitm(lvalue.value, '->' + self.cpp_name(lcp[0].properties[lvalue.attr][1]) + '(', rvalue, ')', func)
-                    elif lcp and isinstance(lcp[0], Class):
-                        var = lookup_var(lvalue.attr, lcp[0], mv=self.mv)
+                    elif lcp and isinstance(lcp[0], python.Class):
+                        var = python.lookup_var(lvalue.attr, lcp[0], mv=self.mv)
                         vartypes = set()
                         if var:
                             vartypes = self.mergeinh[var]
@@ -2318,7 +2315,7 @@ class GenerateVisitor(BaseNodeVisitor):
 
                 # name = expr
                 elif isinstance(lvalue, ast.Name):
-                    vartypes = self.mergeinh[lookup_var(lvalue.id, func, mv=self.mv)]
+                    vartypes = self.mergeinh[python.lookup_var(lvalue.id, func, mv=self.mv)]
                     self.visit(lvalue, func)
                     self.append(' = ')
                     self.impl_visit_conv(rvalue, vartypes, func)
@@ -2383,10 +2380,10 @@ class GenerateVisitor(BaseNodeVisitor):
                 continue
 
             parent = func
-            while isinstance(parent, Function) and parent.listcomp:
+            while isinstance(parent, python.Function) and parent.listcomp:
                 parent = parent.parent
 
-            if isinstance(parent, Function):
+            if isinstance(parent, python.Function):
                 if not self.inhcpa(parent) or parent.inherited:
                     continue
 
@@ -2412,8 +2409,8 @@ class GenerateVisitor(BaseNodeVisitor):
     def lc_args(self, lcfunc, func):
         args = []
         for name in lcfunc.misses:
-            if lookup_var(name, func, mv=self.mv).parent:
-                args.append((nodetypestr(self.gx, lookup_var(name, lcfunc, mv=self.mv), lcfunc, mv=self.mv), self.cpp_name(name)))
+            if python.lookup_var(name, func, mv=self.mv).parent:
+                args.append((nodetypestr(self.gx, python.lookup_var(name, lcfunc, mv=self.mv), lcfunc, mv=self.mv), self.cpp_name(name)))
         return args
 
     def listcomp_func(self, node):
@@ -2479,7 +2476,7 @@ class GenerateVisitor(BaseNodeVisitor):
                 self.eol()
                 self.output('return __result;')
                 self.start('__after_yield_0:')
-            elif len(node.generators) == 1 and not is_fastfor(node.generators[0]) and not self.fastenum(node.generators[0]) and not self.fastzip2(node.generators[0]) and not node.generators[0].ifs and self.one_class(node.generators[0].iter, ('tuple', 'list', 'str_', 'dict', 'set')):
+            elif len(node.generators) == 1 and not python.is_fastfor(node.generators[0]) and not self.fastenum(node.generators[0]) and not self.fastzip2(node.generators[0]) and not node.generators[0].ifs and self.one_class(node.generators[0].iter, ('tuple', 'list', 'str_', 'dict', 'set')):
                 self.start('__ss_result->units[' + self.mv.tempcount[node.generators[0].iter] + '] = ')
                 self.visit(node.elt, lcfunc)
             else:
@@ -2493,12 +2490,12 @@ class GenerateVisitor(BaseNodeVisitor):
 
         # iter var
         if isinstance(qual.target, ast.Name):
-            var = lookup_var(qual.target.id, lcfunc, mv=self.mv)
+            var = python.lookup_var(qual.target.id, lcfunc, mv=self.mv)
         else:
-            var = lookup_var(self.mv.tempcount[qual.target], lcfunc, mv=self.mv)
+            var = python.lookup_var(self.mv.tempcount[qual.target], lcfunc, mv=self.mv)
         iter = self.cpp_name(var)
 
-        if is_fastfor(qual):
+        if python.is_fastfor(qual):
             self.do_fastfor(node, qual, quals, iter, lcfunc, genexpr)
         elif self.fastenum(qual):
             self.do_fastenum(qual, lcfunc, genexpr)
@@ -2566,7 +2563,7 @@ class GenerateVisitor(BaseNodeVisitor):
         temp = self.line
 
         for name in lcfunc.misses:
-            var = lookup_var(name, func, mv=self.mv)
+            var = python.lookup_var(name, func, mv=self.mv)
             if var.parent:
                 if name == 'self' and not func.listcomp:  # XXX parent?
                     args.append('this')
@@ -2625,7 +2622,7 @@ class GenerateVisitor(BaseNodeVisitor):
 
         # --- visit nodes, boxing scalars
         for n in nodes:
-            if [clname for clname in ('float_', 'int_', 'bool_', 'complex') if def_class(self.gx, clname) in [t[0] for t in self.mergeinh[n]]]:
+            if [clname for clname in ('float_', 'int_', 'bool_', 'complex') if python.def_class(self.gx, clname) in [t[0] for t in self.mergeinh[n]]]:
                 self.visitm(', ___box(', n, ')', func)
             else:
                 self.visitm(', ', n, func)
@@ -2652,13 +2649,13 @@ class GenerateVisitor(BaseNodeVisitor):
 
     def attr_var_ref(self, node, ident):  # XXX blegh
         lcp = lowest_common_parents(polymorphic_t(self.gx, self.mergeinh[node.value]))
-        if len(lcp) == 1 and isinstance(lcp[0], Class) and node.attr in lcp[0].vars and not node.attr in lcp[0].funcs:
+        if len(lcp) == 1 and isinstance(lcp[0], python.Class) and node.attr in lcp[0].vars and not node.attr in lcp[0].funcs:
             return self.cpp_name(lcp[0].vars[node.attr])
         return self.cpp_name(ident)
 
     def visit_Attribute(self, node, func=None):  # XXX merge with visitGetattr
         if type(node.ctx) == ast.Load:
-            cl, module = lookup_class_module(node.value, inode(self.gx, node).mv, func)
+            cl, module = python.lookup_class_module(node.value, inode(self.gx, node).mv, func)
 
             # module.attr
             if module:
@@ -2670,7 +2667,7 @@ class GenerateVisitor(BaseNodeVisitor):
                 if cl.ident in ['dict', 'defaultdict']:  # own namespace because of template vars
                     self.append('__' + cl.ident + '__::')
                 elif isinstance(node.value, ast.Attribute):
-                    submodule = lookup_module(node.value.value, inode(self.gx, node).mv)
+                    submodule = python.lookup_module(node.value.value, inode(self.gx, node).mv)
                     self.append(submodule.full_path() + '::' + ident + '::')
                 else:
                     self.append(ident + '::')
@@ -2679,7 +2676,7 @@ class GenerateVisitor(BaseNodeVisitor):
             elif cl:  # XXX merge above?
                 ident = cl.ident
                 if isinstance(node.value, ast.Attribute):
-                    submodule = lookup_module(node.value.value, inode(self.gx, node).mv)
+                    submodule = python.lookup_module(node.value.value, inode(self.gx, node).mv)
                     self.append(submodule.full_path() + '::' + cl.ident + '::')
                 else:
                     self.append(ident + '::')
@@ -2688,7 +2685,7 @@ class GenerateVisitor(BaseNodeVisitor):
             else:
                 checkcls = []  # XXX better to just inherit vars?
                 for t in self.mergeinh[node.value]:
-                    if isinstance(t[0], Class):
+                    if isinstance(t[0], python.Class):
                         checkcls.extend(t[0].ancestors(True))
                 for cl in checkcls:
                     if not node.attr in t[0].funcs and node.attr in cl.parent.vars:  # XXX
@@ -2706,7 +2703,7 @@ class GenerateVisitor(BaseNodeVisitor):
 
                 if not isinstance(node.value, ast.Name):
                     self.append('(')
-                if isinstance(node.value, ast.Name) and not lookup_var(node.value.id, func, mv=self.mv):  # XXX XXX
+                if isinstance(node.value, ast.Name) and not python.lookup_var(node.value.id, func, mv=self.mv):  # XXX XXX
                     self.append(node.value.id)
                 else:
                     self.visit(node.value, func)
@@ -2733,7 +2730,7 @@ class GenerateVisitor(BaseNodeVisitor):
         elif type(node.ctx) == ast.Del:
             error("'del' has no effect without refcounting", self.gx, node, warning=True, mv=self.mv)
         elif type(node.ctx) == ast.Store:
-            cl, module = lookup_class_module(node.value, inode(self.gx, node).mv, func)
+            cl, module = python.lookup_class_module(node.value, inode(self.gx, node).mv, func)
 
             # module.attr
             if module:
@@ -2742,14 +2739,14 @@ class GenerateVisitor(BaseNodeVisitor):
             # class.attr
             elif cl:
                 if isinstance(node.value, ast.Attribute):
-                    submodule = lookup_module(node.value.value, inode(self.gx, node).mv)
+                    submodule = python.lookup_module(node.value.value, inode(self.gx, node).mv)
                     self.append(submodule.full_path() + '::' + cl.ident + '::')
                 else:
                     self.append(cl.ident + '::')
 
             # obj.attr
             else:
-                if isinstance(node.value, ast.Name) and not lookup_var(node.value.id, func, mv=self.mv):  # XXX
+                if isinstance(node.value, ast.Name) and not python.lookup_var(node.value.id, func, mv=self.mv):  # XXX
                     self.append(node.value.id)
                 else:
                     self.visit(node.value, func)
@@ -2772,8 +2769,8 @@ class GenerateVisitor(BaseNodeVisitor):
                 self.append('NULL')
             elif node.id == 'self':
                 lcp = lowest_common_parents(polymorphic_t(self.gx, self.mergeinh[node]))
-                if ((not func or func.listcomp or not isinstance(func.parent, Class)) or
-                   (func and func.parent and func.isGenerator)):  # XXX lookup_var?
+                if ((not func or func.listcomp or not isinstance(func.parent, python.Class)) or
+                   (func and func.parent and func.isGenerator)):  # XXX python.lookup_var?
                     self.append('self')
                 elif len(lcp) == 1 and not (lcp[0] is func.parent or lcp[0] in func.parent.ancestors()):  # see test 160
                     self.mv.module.prop_includes.add(lcp[0].module)  # XXX generalize
@@ -2787,20 +2784,20 @@ class GenerateVisitor(BaseNodeVisitor):
                 if not self.mergeinh[node] and not inode(self.gx, node).parent in self.gx.inheritance_relations:
                     error("variable '" + node.id + "' has no type", self.gx, node, warning=True, mv=self.mv)
                     self.append(node.id)
-                elif singletype(self.gx, node, Module):
-                    self.append('__' + singletype(self.gx, node, Module).ident + '__')
+                elif singletype(self.gx, node, python.Module):
+                    self.append('__' + singletype(self.gx, node, python.Module).ident + '__')
                 else:
-                    if ((def_class(self.gx, 'class_'), 0) in self.mergeinh[node] or
-                       (add_cl and [t for t in self.mergeinh[node] if isinstance(t[0], StaticClass)])):
-                        cl = lookup_class(node, self.mv)
+                    if ((python.def_class(self.gx, 'class_'), 0) in self.mergeinh[node] or
+                       (add_cl and [t for t in self.mergeinh[node] if isinstance(t[0], python.StaticClass)])):
+                        cl = python.lookup_class(node, self.mv)
                         if cl:
                             self.append(self.namer.namespace_class(cl, add_cl='cl_'))
                         else:
                             self.append(self.cpp_name(node.id))
                     else:
-                        if isinstance(func, Class) and node.id in func.parent.vars:  # XXX
+                        if isinstance(func, python.Class) and node.id in func.parent.vars:  # XXX
                             self.append(func.ident + '::')
-                        var = smart_lookup_var(node.id, func, mv=self.mv)
+                        var = python.smart_lookup_var(node.id, func, mv=self.mv)
                         if var:
                             if node in self.gx.filters:
                                 self.append('((%s *)' % self.gx.filters[node].ident)

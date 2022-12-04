@@ -8,11 +8,11 @@ makefile.py: generate makefile
 
 '''
 import os
-import sys
-import subprocess
-# from distutils import sysconfig # XXX distutils is deprecated
-import sysconfig
 import re
+import subprocess
+import sys
+import sysconfig
+
 
 def check_output(cmd):
     try:
@@ -27,10 +27,9 @@ def generate_makefile(gx):
     else:
         pyver = sysconfig.get_config_var('VERSION') or sysconfig.get_python_version()
         includes = '-I' + sysconfig.get_config_var('INCLUDEPY') + ' '
-        # includes = '-I' + sysconfig.get_python_inc() + ' '
+
         if not gx.pypy:
             includes += '-I' + os.path.dirname(sysconfig.get_config_h_filename())
-            # includes += '-I' + sysconfig.get_python_inc(plat_specific=True)
 
         if sys.platform == 'darwin':
             ldflags = sysconfig.get_config_var('BASECFLAGS')

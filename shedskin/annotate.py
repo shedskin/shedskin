@@ -5,19 +5,12 @@ Copyright 2005-2013 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 annotate.py: annotate source code with inferred types, as *.ss.py (shedskin -a)
 
 '''
+import ast
 import re
-from ast import Num, Str, Assign, AugAssign, \
-    Attribute, Dict, Return, Name, List, Tuple, ListComp
 
-try:
-    from ast import Print
-except:
-    pass
-
+from . import python
 from .ast_utils import is_assign_list_or_tuple
-
 from .infer import inode
-from .python import assign_rec
 from .typestr import nodetypestr
 
 RE_COMMENT = re.compile(r'#[^\"\']*$')
@@ -56,15 +49,15 @@ def annotate(gx):
 
         # --- constants/names/attributes
         for expr in merge:
-            if isinstance(expr, (Num, Str, Name)):
+            if isinstance(expr, (ast.Num, ast.Str, ast.Name)):
                 paste(gx, source, expr, nodetypestr(gx, expr, inode(gx, expr).parent, False, mv=mv), mv)
 
         for expr in merge:
-            if isinstance(expr, Attribute):
+            if isinstance(expr, ast.Attribute):
                 paste(gx, source, expr, nodetypestr(gx, expr, inode(gx, expr).parent, False, mv=mv), mv)
 
         for expr in merge:
-            if isinstance(expr, (Tuple, List, Dict)):
+            if isinstance(expr, (ast.Tuple, ast.List, ast.Dict)):
                 paste(gx, source, expr, nodetypestr(gx, expr, inode(gx, expr).parent, False, mv=mv), mv)
 
         # --- instance variables
@@ -85,7 +78,7 @@ def annotate(gx):
 
         # --- callfuncs
         for callfunc, _ in mv.callfuncs:
-            if isinstance(callfunc.node, Attribute):
+            if isinstance(callfunc.node, ast.Attribute):
                 if not callfunc.node.__class__.__name__.startswith('FakeGetattr'):  # XXX
                     paste(gx, source, callfunc.node.expr, nodetypestr(gx, callfunc, inode(gx, callfunc).parent, False, mv=mv), mv)
             else:
@@ -93,21 +86,21 @@ def annotate(gx):
 
         # --- higher-level crap (listcomps, returns, assignments, prints)
         for expr in merge:
-            if isinstance(expr, ListComp):
+            if isinstance(expr, ast.ListComp):
                 paste(gx, source, expr, nodetypestr(gx, expr, inode(gx, expr).parent, False, mv=mv), mv)
-            elif isinstance(expr, Return):
+            elif isinstance(expr, ast.Return):
                 paste(gx, source, expr, nodetypestr(gx, expr.value, inode(gx, expr).parent, False, mv=mv), mv)
             elif is_assign_list_or_tuple(expr):
                 paste(gx, source, expr, nodetypestr(gx, expr, inode(gx, expr).parent, False, mv=mv), mv)
-            elif isinstance(expr, Print):
+            elif isinstance(expr, ast.Print):
                 paste(gx, source, expr, ', '.join(nodetypestr(gx, child, inode(gx, child).parent, False, mv=mv) for child in expr.nodes), mv)
 
         # --- assignments
         for expr in merge:
-            if isinstance(expr, Assign):
-                pairs = assign_rec(expr.nodes[0], expr.expr)
+            if isinstance(expr, ast.Assign):
+                pairs = python.assign_rec(expr.nodes[0], expr.expr)
                 paste(gx, source, expr, ', '.join(nodetypestr(gx, r, inode(gx, r).parent, False, mv=mv) for (l, r) in pairs), mv)
-            elif isinstance(expr, AugAssign):
+            elif isinstance(expr, ast.AugAssign):
                 paste(gx, source, expr, nodetypestr(gx, expr.expr, inode(gx, expr).parent, False, mv=mv), mv)
 
         # --- output annotated file (skip if no write permission)

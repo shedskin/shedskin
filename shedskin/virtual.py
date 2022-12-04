@@ -5,11 +5,12 @@ Copyright 2005-2013 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 virtual.py: virtual methods and variables
 
 '''
-from ast import Call, Name
+
+import ast
 
 from . import infer
-from .python import subclass, Class
-from .typestr import lowest_common_parents, typestr, polymorphic_t
+from . import python
+from . import typestr
 
 
 def virtuals(self, cl, declare):
@@ -59,7 +60,7 @@ def virtuals(self, cl, declare):
 
         ftypes = []
         for m in merged:
-            ts = typestr(self.gx, m, mv=self.mv)
+            ts = typestr.typestr(self.gx, m, mv=self.mv)
             if not ts.endswith('*'):
                 ftypes.append(ts + ' ')
             else:
@@ -98,30 +99,30 @@ def virtuals(self, cl, declare):
 def analyze_virtuals(gx):
     for node in gx.merged_inh:
         # --- for every message
-        if isinstance(node, Call) and not infer.inode(gx, node).mv.module.builtin:  # ident == 'builtin':
+        if isinstance(node, ast.Call) and not infer.inode(gx, node).mv.module.builtin:  # ident == 'builtin':
             objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func = infer.analyze_callfunc(gx, node, merge=gx.merged_inh)
             if not method_call or objexpr not in gx.merged_inh:
                 continue  # XXX
 
             # --- determine abstract receiver class
-            classes = polymorphic_t(gx, gx.merged_inh[objexpr])
-            classes = [cl for cl in classes if isinstance(cl, Class)]
+            classes = typestr.polymorphic_t(gx, gx.merged_inh[objexpr])
+            classes = [cl for cl in classes if isinstance(cl, python.Class)]
             if not classes:
                 continue
 
-            if isinstance(objexpr, Name) and objexpr.id == 'self' and infer.inode(gx, objexpr).parent:
+            if isinstance(objexpr, ast.Name) and objexpr.id == 'self' and infer.inode(gx, objexpr).parent:
                 abstract_cl = infer.inode(gx, objexpr).parent.parent
                 upgrade_cl(gx, abstract_cl, node, ident, classes)
 
-            lcp = lowest_common_parents(classes)
+            lcp = typestr.lowest_common_parents(classes)
             if lcp:
                 upgrade_cl(gx, lcp[0], node, ident, classes)
 
 
 def upgrade_cl(gx, abstract_cl, node, ident, classes):
-    if not abstract_cl or not isinstance(abstract_cl, Class):
+    if not abstract_cl or not isinstance(abstract_cl, python.Class):
         return
-    subclasses = [cl for cl in classes if subclass(cl, abstract_cl)]
+    subclasses = [cl for cl in classes if python.subclass(cl, abstract_cl)]
 
     # --- register virtual method
     if not ident.startswith('__'):

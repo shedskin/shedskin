@@ -9,8 +9,8 @@ extmod.py: extension module support
 """
 import logging
 
+from . import python
 from .infer import called
-from .python import Class, Module, def_class
 from .typestr import ExtmodError, nodetypestr, singletype2
 
 logger = logging.getLogger("extmod")
@@ -76,12 +76,12 @@ class ExtensionModule:
                 continue
             if var.name.startswith("__"):  # XXX
                 continue
-            if var.invisible or singletype2(self.gx.merged_inh[var], Module):
+            if var.invisible or singletype2(self.gx.merged_inh[var], python.Module):
                 continue
             try:
                 nodetypestr(self.gx, var, var.parent, check_extmod=True, mv=self.gv.mv)
             except ExtmodError:
-                if isinstance(var.parent, Class):
+                if isinstance(var.parent, python.Class):
                     logger.warning(
                         "'%s.%s' variable not exported (cannot convert)",
                         var.parent.ident,
@@ -117,11 +117,11 @@ class ExtensionModule:
                 "__imul__",
             ]:  # XXX
                 continue
-            if isinstance(func.parent, Class):
+            if isinstance(func.parent, python.Class):
                 if func.invisible or func.inherited or not self.gv.inhcpa(func):
                     continue
             if (
-                isinstance(func.parent, Class)
+                isinstance(func.parent, python.Class)
                 and func.ident in func.parent.staticmethods
             ):
                 logger.warning(
@@ -155,7 +155,7 @@ class ExtensionModule:
             if builtins:
                 supported.append(func)
             else:
-                if isinstance(func.parent, Class):
+                if isinstance(func.parent, python.Class):
                     logger.warning(
                         "'%s.%s' method not exported (%s)",
                         func.parent.ident,
@@ -243,7 +243,7 @@ class ExtensionModule:
         :rtype:     { return_type_description }
         """
         write = self.write
-        if def_class(self.gx, "Exception") in cl.ancestors():  # XXX
+        if python.def_class(self.gx, "Exception") in cl.ancestors():  # XXX
             return
         write(
             "PyObject *%s__reduce__(PyObject *self, PyObject *args, PyObject *kwargs) {"
@@ -297,7 +297,7 @@ class ExtensionModule:
         :rtype:     { return_type_description }
         """
         write = self.write
-        if def_class(self.gx, "Exception") in cl.ancestors():
+        if python.def_class(self.gx, "Exception") in cl.ancestors():
             return
         if declare:
             write("    virtual PyObject *__to_py__();")
@@ -384,7 +384,7 @@ class ExtensionModule:
             else:
                 write("    0,")
         write("};\n")
-        if cl and not def_class(self.gx, "Exception") in cl.ancestors():
+        if cl and not python.def_class(self.gx, "Exception") in cl.ancestors():
             write(
                 "PyObject *%s__reduce__(PyObject *self, PyObject *args, PyObject *kwargs);"
                 % ident
@@ -398,7 +398,7 @@ class ExtensionModule:
             write(
                 '    {(char *)"__newobj__", (PyCFunction)__ss__newobj__, METH_VARARGS | METH_KEYWORDS, (char *)""},'
             )
-        elif cl and not def_class(self.gx, "Exception") in cl.ancestors():
+        elif cl and not python.def_class(self.gx, "Exception") in cl.ancestors():
             write(
                 '    {(char *)"__reduce__", (PyCFunction)%s__reduce__, METH_VARARGS | METH_KEYWORDS, (char *)""},'
                 % ident
@@ -408,7 +408,7 @@ class ExtensionModule:
                 % ident
             )
         for func in funcs:
-            if isinstance(func.parent, Class):
+            if isinstance(func.parent, python.Class):
                 id = clname(func.parent) + "_" + func.ident
             else:
                 id = "Global_" + "_".join(self.gv.module.name_list) + "_" + func.ident
@@ -431,13 +431,13 @@ class ExtensionModule:
         :rtype:     { return_type_description }
         """
         write = self.write
-        is_method = isinstance(func.parent, Class)
+        is_method = isinstance(func.parent, python.Class)
         if is_method:
             formals = func.formals[1:]
         else:
             formals = func.formals
 
-        if isinstance(func.parent, Class):
+        if isinstance(func.parent, python.Class):
             id = clname(func.parent) + "_" + func.ident
         else:
             id = "Global_" + "_".join(self.gv.module.name_list) + "_" + func.ident
@@ -461,7 +461,7 @@ class ExtensionModule:
                 self.gv.append("1, ")
                 defau = func.defaults[i - (len(formals) - len(func.defaults))]
                 if defau in func.mv.defaults:
-                    if self.gv.mergeinh[defau] == set([(def_class(self.gx, "none"), 0)]):
+                    if self.gv.mergeinh[defau] == set([(python.def_class(self.gx, "none"), 0)]):
                         self.gv.append("0")
                     else:
                         self.gv.append(
@@ -623,7 +623,7 @@ class ExtensionModule:
         """Generates a python c-api extension type.
 
         :param      cl:   class object
-        :type       cl:   shedskin.python.Class
+        :type       cl:   python.Class
         """
         write = self.write
         for n in cl.module.name_list:
@@ -789,7 +789,7 @@ class ExtensionModule:
         """
         classes = []
         for cl in self.gv.module.mv.classes.values():
-            if def_class(self.gx, "Exception") in cl.ancestors():
+            if python.def_class(self.gx, "Exception") in cl.ancestors():
                 if warns:
                     logger.warning(
                         "'%s' class not exported (inherits from Exception)", cl.ident

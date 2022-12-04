@@ -19,16 +19,13 @@ import os
 import re
 import sys
 
-from .ast_utils import BaseNodeVisitor, make_arg_list, make_call, is_assign_list_or_tuple, is_assign_attribute, \
-    is_assign_tuple, is_constant, orelse_to_node, parse_expr, get_arg_nodes, has_star_kwarg, is_none
-
+from . import python
+from .ast_utils import (BaseNodeVisitor, get_arg_nodes, has_star_kwarg,
+                        is_assign_attribute, is_assign_list_or_tuple,
+                        is_assign_tuple, is_constant, is_none, make_arg_list,
+                        make_call, orelse_to_node, parse_expr)
 from .error import error
-from .infer import inode, in_out, CNode, default_var, register_temp_var
-from .python import StaticClass, lookup_func, Function, is_zip2, \
-    lookup_class, is_method, is_literal, is_enum, lookup_var, assign_rec, \
-    Class, is_property_setter, is_fastfor, aug_msg, is_isinstance, \
-    Module, def_class, parse_file, find_module
-
+from .infer import CNode, default_var, in_out, inode, register_temp_var
 
 # --- global variable mv
 _mv = None
@@ -209,7 +206,7 @@ class ModuleVisitor(BaseNodeVisitor):
                 self.gx.types[newnode] = set([(cl, cl.dcpa)])
 
     def constructor(self, node, classname, func):
-        cl = def_class(self.gx, classname)
+        cl = python.def_class(self.gx, classname)
 
         self.instance(node, cl, func)
         default_var(self.gx, 'unit', cl)
@@ -271,11 +268,11 @@ class ModuleVisitor(BaseNodeVisitor):
 
         if isinstance(node, (ast.List, ast.Tuple)):
             if isinstance(node, ast.List):
-                cl = def_class(self.gx, 'list')
+                cl = python.def_class(self.gx, 'list')
             elif len(node.elts) == 2:
-                cl = def_class(self.gx, 'tuple2')
+                cl = python.def_class(self.gx, 'tuple2')
             else:
-                cl = def_class(self.gx, 'tuple')
+                cl = python.def_class(self.gx, 'tuple')
 
             merged = set()
             for child in node.elts:
@@ -307,21 +304,21 @@ class ModuleVisitor(BaseNodeVisitor):
     def add_constraint(self, constraint, func):
         in_out(constraint[0], constraint[1])
         self.gx.constraints.add(constraint)
-        while isinstance(func, Function) and func.listcomp:
+        while isinstance(func, python.Function) and func.listcomp:
             func = func.parent  # XXX
-        if isinstance(func, Function):
+        if isinstance(func, python.Function):
             func.constraints.add(constraint)
 
     def struct_unpack(self, rvalue, func):
         if isinstance(rvalue, ast.Call):
-            if isinstance(rvalue.func, ast.Attribute) and isinstance(rvalue.func.value, ast.Name) and rvalue.func.value.id == 'struct' and rvalue.func.attr == 'unpack' and lookup_var('struct', func, mv=self).imported:  # XXX imported from where?
+            if isinstance(rvalue.func, ast.Attribute) and isinstance(rvalue.func.value, ast.Name) and rvalue.func.value.id == 'struct' and rvalue.func.attr == 'unpack' and python.lookup_var('struct', func, mv=self).imported:  # XXX imported from where?
                 return True
-            elif isinstance(rvalue.func, ast.Name) and rvalue.func.id == 'unpack' and 'unpack' in self.ext_funcs and not lookup_var('unpack', func, mv=self):  # XXX imported from where?
+            elif isinstance(rvalue.func, ast.Name) and rvalue.func.id == 'unpack' and 'unpack' in self.ext_funcs and not python.lookup_var('unpack', func, mv=self):  # XXX imported from where?
                 return True
 
     def struct_info(self, node, func):
         if isinstance(node, ast.Name):
-            var = lookup_var(node.id, func, mv=self)  # XXX fwd ref?
+            var = python.lookup_var(node.id, func, mv=self)  # XXX fwd ref?
             if not var or len(var.const_assign) != 1:
                 error('non-constant format string', self.gx, node, mv=self)
             error('assuming constant format string', self.gx, node, mv=self, warning=True)
@@ -411,7 +408,7 @@ class ModuleVisitor(BaseNodeVisitor):
         # --- __name__
         if self.module.ident != 'builtin':
             namevar = default_var(self.gx, '__name__', None, mv=getmv())
-            self.gx.types[inode(self.gx, namevar)] = set([(def_class(self.gx, 'str_'), 0)])
+            self.gx.types[inode(self.gx, namevar)] = set([(python.def_class(self.gx, 'str_'), 0)])
 
         self.forward_references(node)
 
@@ -430,7 +427,7 @@ class ModuleVisitor(BaseNodeVisitor):
         for cl in self.classes.values():
             for base in cl.node.bases:
                 if not (isinstance(base, ast.Name) and base.id == 'object'):
-                    ancestor = lookup_class(base, getmv())
+                    ancestor = python.lookup_class(base, getmv())
                     cl.bases.append(ancestor)
                     ancestor.children.append(cl)
 
@@ -481,19 +478,19 @@ class ModuleVisitor(BaseNodeVisitor):
         for n in self.stmt_nodes(node, ast.ClassDef):
             check_redef(self.gx, n)
             getmv().classnodes.append(n)
-            newclass = Class(self.gx, n, getmv())
+            newclass = python.Class(self.gx, n, getmv())
             self.classes[n.name] = newclass
             getmv().classes[n.name] = newclass
             newclass.module = self.module
-            newclass.parent = StaticClass(newclass, getmv())
+            newclass.parent = python.StaticClass(newclass, getmv())
 
             # methods
             for m in self.stmt_nodes(n, ast.FunctionDef):
-                if m.decorator_list and [dec for dec in m.decorator_list if is_property_setter(dec)]:
+                if m.decorator_list and [dec for dec in m.decorator_list if python.is_property_setter(dec)]:
                     m.name = m.name + '__setter__'
                 if m.name in newclass.funcs:  # and func.ident not in ['__getattr__', '__setattr__']: # XXX
                     error("function/class redefinition is not allowed", self.gx, m, mv=getmv())
-                func = Function(self.gx, m, newclass, mv=getmv())
+                func = python.Function(self.gx, m, newclass, mv=getmv())
                 newclass.funcs[func.ident] = func
                 self.set_default_vars(m, func)
 
@@ -502,7 +499,7 @@ class ModuleVisitor(BaseNodeVisitor):
         for n in self.stmt_nodes(node, ast.FunctionDef):
             check_redef(self.gx, n)
             getmv().funcnodes.append(n)
-            func = getmv().funcs[n.name] = Function(self.gx, n, mv=getmv())
+            func = getmv().funcs[n.name] = python.Function(self.gx, n, mv=getmv())
             self.set_default_vars(n, func)
 
         # global variables XXX visit_Global
@@ -660,14 +657,14 @@ class ModuleVisitor(BaseNodeVisitor):
 
         if not parent and not is_lambda and node.name in getmv().funcs:
             func = getmv().funcs[node.name]
-        elif isinstance(parent, Class) and not inherited_from and node.name in parent.funcs:
+        elif isinstance(parent, python.Class) and not inherited_from and node.name in parent.funcs:
             func = parent.funcs[node.name]
         else:
-            func = Function(self.gx, node, parent, inherited_from, mv=getmv())
+            func = python.Function(self.gx, node, parent, inherited_from, mv=getmv())
             if inherited_from:
                 self.set_default_vars(node, func)
 
-        if not is_method(func):
+        if not python.is_method(func):
             if not getmv().module.builtin and not node in getmv().funcnodes and not is_lambda:
                 error("non-global function '%s'" % node.name, self.gx, node, mv=getmv())
 
@@ -677,7 +674,7 @@ class ModuleVisitor(BaseNodeVisitor):
                     parent.staticmethods.append(node.name)
                 elif isinstance(dec, ast.Name) and dec.id == 'property':
                     parent.properties[node.name] = [node.name, None]
-                elif is_property_setter(dec):
+                elif python.is_property_setter(dec):
                     parent.properties[dec.value.id][1] = node.name
                 else:
                     error("unsupported type of decorator", self.gx, dec, mv=getmv())
@@ -717,7 +714,7 @@ class ModuleVisitor(BaseNodeVisitor):
             self.visit(body_node, func)
 
         for i, default in enumerate(func.defaults):
-            if not is_literal(default):
+            if not python.is_literal(default):
                 self.defaults[default] = (len(self.defaults), func, i)
             self.visit(default, None)  # defaults are global
 
@@ -727,7 +724,7 @@ class ModuleVisitor(BaseNodeVisitor):
             self.visit(func.fakeret, func)
 
         # --- register function
-        if isinstance(parent, Class):
+        if isinstance(parent, python.Class):
             if func.ident not in parent.staticmethods:  # XXX use flag
                 default_var(self.gx, 'self', func)
                 if func.ident == '__init__' and '__del__' in parent.funcs:  # XXX what if no __init__
@@ -764,14 +761,14 @@ class ModuleVisitor(BaseNodeVisitor):
             self.temp_var2(child, newnode, func)
 
     def visit_If(self, node, func=None):
-        if is_isinstance(node.test):
+        if python.is_isinstance(node.test):
             self.gx.filterstack.append(node.test.args)
         self.bool_test_add(node.test)
         faker = make_call(ast.Name('bool', ast.Load()), [node.test])
         self.visit(faker, func)
         for child in node.body:
             self.visit(child, func)
-        if is_isinstance(node.test):
+        if python.is_isinstance(node.test):
             self.gx.filterstack.pop()
         for child in node.orelse:
             self.visit(child, func)
@@ -853,7 +850,7 @@ class ModuleVisitor(BaseNodeVisitor):
             self.bool_test_add(node.operand)
             newnode = CNode(self.gx, node, parent=func, mv=getmv())
             newnode.copymetoo = True
-            self.gx.types[newnode] = set([(def_class(self.gx, 'bool_'), 0)])  # XXX new type?
+            self.gx.types[newnode] = set([(python.def_class(self.gx, 'bool_'), 0)])  # XXX new type?
             self.visit(node.operand, func)
         else:
             op_map = {ast.USub: '__neg__', ast.UAdd: '__pos__', ast.Invert: '__invert__'}
@@ -862,7 +859,7 @@ class ModuleVisitor(BaseNodeVisitor):
     def visit_Compare(self, node, func=None):
         newnode = CNode(self.gx, node, parent=func, mv=getmv())
         newnode.copymetoo = True
-        self.gx.types[newnode] = set([(def_class(self.gx, 'bool_'), 0)])  # XXX new type?
+        self.gx.types[newnode] = set([(python.def_class(self.gx, 'bool_'), 0)])  # XXX new type?
         self.visit(node.left, func)
         msgs = {ast.Eq: 'eq', ast.NotEq: 'ne', ast.Lt: 'lt', ast.LtE: 'le', ast.Gt: 'gt', ast.GtE: 'ge', ast.In: 'contains', ast.NotIn: 'contains'} # 'Is' and IsNot only in cpp
         left = node.left
@@ -886,15 +883,15 @@ class ModuleVisitor(BaseNodeVisitor):
 
     def visit_BinOp(self, node, func=None):
         if type(node.op) == ast.Add:
-            self.fake_func(node, node.left, aug_msg(node, 'add'), [node.right], func)
+            self.fake_func(node, node.left, python.aug_msg(node, 'add'), [node.right], func)
         elif type(node.op) == ast.Sub:
-            self.fake_func(node, node.left, aug_msg(node, 'sub'), [node.right], func)
+            self.fake_func(node, node.left, python.aug_msg(node, 'sub'), [node.right], func)
         elif type(node.op) == ast.Mult:
-            self.fake_func(node, node.left, aug_msg(node, 'mul'), [node.right], func)
+            self.fake_func(node, node.left, python.aug_msg(node, 'mul'), [node.right], func)
         elif type(node.op) == ast.Div:
-            self.fake_func(node, node.left, aug_msg(node, 'truediv'), [node.right], func)
+            self.fake_func(node, node.left, python.aug_msg(node, 'truediv'), [node.right], func)
         elif type(node.op) == ast.FloorDiv:
-            self.fake_func(node, node.left, aug_msg(node, 'floordiv'), [node.right], func)
+            self.fake_func(node, node.left, python.aug_msg(node, 'floordiv'), [node.right], func)
         elif type(node.op) == ast.Pow:
             self.fake_func(node, node.left, '__pow__', [node.right], func)
         elif type(node.op) == ast.Mod:
@@ -910,15 +907,15 @@ class ModuleVisitor(BaseNodeVisitor):
             else:
                 self.fake_func(node, node.left, '__mod__', [node.right], func)
         elif type(node.op) == ast.LShift:
-            self.fake_func(node, node.left, aug_msg(node, 'lshift'), [node.right], func)
+            self.fake_func(node, node.left, python.aug_msg(node, 'lshift'), [node.right], func)
         elif type(node.op) == ast.RShift:
-            self.fake_func(node, node.left, aug_msg(node, 'rshift'), [node.right], func)
+            self.fake_func(node, node.left, python.aug_msg(node, 'rshift'), [node.right], func)
         elif type(node.op) == ast.BitOr:
-            self.visit_impl_bitpair(node, aug_msg(node, 'or'), func)
+            self.visit_impl_bitpair(node, python.aug_msg(node, 'or'), func)
         elif type(node.op) == ast.BitXor:
-            self.visit_impl_bitpair(node, aug_msg(node, 'xor'), func)
+            self.visit_impl_bitpair(node, python.aug_msg(node, 'xor'), func)
         elif type(node.op) == ast.BitAnd:
-            self.visit_impl_bitpair(node, aug_msg(node, 'and'), func)
+            self.visit_impl_bitpair(node, python.aug_msg(node, 'and'), func)
         # PY3: elif type(node.op) == MatMult:
         else:
             error("Unknown op type for ast.BinOp: %s" % type(node.op), self.gx, node, mv=getmv())
@@ -1007,7 +1004,7 @@ class ModuleVisitor(BaseNodeVisitor):
 
     def temp_var_int(self, node, func):
         var = self.temp_var(node, func)
-        self.gx.types[inode(self.gx, var)] = set([(def_class(self.gx, 'int_'), 0)])
+        self.gx.types[inode(self.gx, var)] = set([(python.def_class(self.gx, 'int_'), 0)])
         inode(self.gx, var).copymetoo = True
         return var
 
@@ -1044,8 +1041,8 @@ class ModuleVisitor(BaseNodeVisitor):
 
             for (h0, h1) in pairs:
                 if isinstance(h0, ast.Name) and h0.id in ['int', 'float', 'str', 'class']:
-                    continue  # handle in lookup_class
-                cl = lookup_class(h0, getmv())
+                    continue  # handle in python.lookup_class
+                cl = python.lookup_class(h0, getmv())
                 if not cl:
                     if isinstance(h0, ast.Name):
                         name = "('" + h0.id + "')"
@@ -1133,13 +1130,13 @@ class ModuleVisitor(BaseNodeVisitor):
 
     def do_for(self, node, assnode, get_iter, func):
         # --- for i in range(..) XXX i should not be modified.. use tempcounter; two bounds
-        if is_fastfor(node):
+        if python.is_fastfor(node):
             self.temp_var2(node.target, assnode, func)
             self.temp_var2(node.iter, inode(self.gx, node.iter.args[0]), func)
 
-            if len(node.iter.args) == 3 and not isinstance(node.iter.args[2], ast.Name) and not is_literal(node.iter.args[2]):  # XXX merge with ast.ListComp
+            if len(node.iter.args) == 3 and not isinstance(node.iter.args[2], ast.Name) and not python.is_literal(node.iter.args[2]):  # XXX merge with ast.ListComp
                 for arg in node.iter.args:
-                    if not isinstance(arg, ast.Name) and not is_literal(arg):  # XXX create func for better check
+                    if not isinstance(arg, ast.Name) and not python.is_literal(arg):  # XXX create func for better check
                         self.temp_var2(arg, inode(self.gx, arg), func)
 
         # --- temp vars for list, iter etc.
@@ -1148,9 +1145,9 @@ class ModuleVisitor(BaseNodeVisitor):
             self.temp_var2((node, 1), inode(self.gx, get_iter), func)
             self.temp_var_int(node.iter, func)
 
-            if is_enum(node) or is_zip2(node):
+            if python.is_enum(node) or python.is_zip2(node):
                 self.temp_var2((node, 2), inode(self.gx, node.iter.args[0]), func)
-                if is_zip2(node):
+                if python.is_zip2(node):
                     self.temp_var2((node, 3), inode(self.gx, node.iter.args[1]), func)
                     self.temp_var_int((node, 4), func)
 
@@ -1197,7 +1194,7 @@ class ModuleVisitor(BaseNodeVisitor):
 
     def visit_ListComp(self, node, func=None):
         # --- [expr for iter in list for .. if cond ..]
-        lcfunc = Function(self.gx, mv=getmv())
+        lcfunc = python.Function(self.gx, mv=getmv())
         lcfunc.listcomp = True
         lcfunc.ident = 'l.c.'  # XXX
         lcfunc.parent = func
@@ -1230,9 +1227,9 @@ class ModuleVisitor(BaseNodeVisitor):
 
         # node type
         if node in self.gx.genexp_to_lc.values():  # converted generator expression
-            self.instance(node, def_class(self.gx, '__iter'), func)
+            self.instance(node, python.def_class(self.gx, '__iter'), func)
         else:
-            self.instance(node, def_class(self.gx, 'list'), func)
+            self.instance(node, python.def_class(self.gx, 'list'), func)
 
         # expr->instance.unit
         self.visit(node.elt, lcfunc)
@@ -1278,7 +1275,7 @@ class ModuleVisitor(BaseNodeVisitor):
 
         # --- a,b,.. = c,(d,e),.. = .. = expr
         for target_expr in node.targets:
-            pairs = assign_rec(target_expr, node.value)
+            pairs = python.assign_rec(target_expr, node.value)
             for (lvalue, rvalue) in pairs:
                 # expr[expr] = expr
                 if isinstance(lvalue, ast.Subscript) and not isinstance(lvalue.slice, (ast.Slice, ast.Del)):
@@ -1348,7 +1345,7 @@ class ModuleVisitor(BaseNodeVisitor):
             self.visit(fakefunc, func)
 
     def default_var(self, name, func, exc_name=False):
-        if isinstance(func, Function) and name in func.globals:
+        if isinstance(func, python.Function) and name in func.globals:
             return default_var(self.gx, name, None, mv=getmv(), exc_name=exc_name)
         else:
             return default_var(self.gx, name, func, mv=getmv(), exc_name=exc_name)
@@ -1381,7 +1378,7 @@ class ModuleVisitor(BaseNodeVisitor):
 
     def super_call(self, orig, parent):
         node = orig.func
-        while isinstance(parent, Function):
+        while isinstance(parent, python.Function):
             parent = parent.parent
         if (isinstance(node.value, ast.Call) and
             node.attr not in ('__getattr__', '__setattr__') and
@@ -1389,7 +1386,7 @@ class ModuleVisitor(BaseNodeVisitor):
                 node.value.func.id == 'super'):
             if (len(node.value.args) >= 2 and
                     isinstance(node.value.args[1], ast.Name) and node.value.args[1].id == 'self'):
-                cl = lookup_class(node.value.args[0], getmv())
+                cl = python.lookup_class(node.value.args[0], getmv())
                 if cl.node.bases:
                     return cl.node.bases[0]
             error("unsupported usage of 'super'", self.gx, orig, mv=getmv())
@@ -1449,7 +1446,7 @@ class ModuleVisitor(BaseNodeVisitor):
             if ident == 'isinstance':
                 error("'isinstance' is not supported; always returns True", self.gx, node, mv=getmv(), warning=True)
 
-            if lookup_var(ident, func, mv=getmv()):
+            if python.lookup_var(ident, func, mv=getmv()):
                 self.visit(node.func, func)
                 inode(self.gx, node.func).callfuncs.append(node)  # XXX iterative dataflow analysis: move there
         else:
@@ -1465,8 +1462,8 @@ class ModuleVisitor(BaseNodeVisitor):
             inode(self.gx, arg).callfuncs.append(node)  # this one too
 
         # --- handle instantiation or call
-        constructor = lookup_class(node.func, getmv())
-        if constructor and (not isinstance(node.func, ast.Name) or not lookup_var(node.func.id, func, mv=getmv())):
+        constructor = python.lookup_class(node.func, getmv())
+        if constructor and (not isinstance(node.func, ast.Name) or not python.lookup_var(node.func.id, func, mv=getmv())):
             self.instance(node, constructor, func)
             inode(self.gx, node).callfuncs.append(node)  # XXX see above, investigate
         else:
@@ -1490,29 +1487,29 @@ class ModuleVisitor(BaseNodeVisitor):
                 else:
                     name = base.attr
 
-                cl = lookup_class(base, getmv())
+                cl = python.lookup_class(base, getmv())
                 if not cl:
                     error("no such class: '%s'" % name, self.gx, node, mv=getmv())
 
                 elif cl.mv.module.builtin and name not in ['object', 'Exception', 'tzinfo']:
-                    if def_class(self.gx, 'Exception') not in cl.ancestors():
+                    if python.def_class(self.gx, 'Exception') not in cl.ancestors():
                         error("inheritance from builtin class '%s' is not supported" % name, self.gx, node, mv=getmv())
 
         if node.name in getmv().classes:
             newclass = getmv().classes[node.name]  # set in visit_Module, for forward references
         else:
             check_redef(self.gx, node)  # XXX merge with visit_Module
-            newclass = Class(self.gx, node, getmv())
+            newclass = python.Class(self.gx, node, getmv())
             self.classes[node.name] = newclass
             getmv().classes[node.name] = newclass
             newclass.module = self.module
-            newclass.parent = StaticClass(newclass, getmv())
+            newclass.parent = python.StaticClass(newclass, getmv())
             return
 
         # --- built-in functions
         for cl in [newclass, newclass.parent]:
             for ident in ['__setattr__', '__getattr__']:
-                func = Function(self.gx, mv=getmv())
+                func = python.Function(self.gx, mv=getmv())
                 func.ident = ident
                 func.parent = cl
 
@@ -1529,8 +1526,8 @@ class ModuleVisitor(BaseNodeVisitor):
         if 'class_' in getmv().classes or 'class_' in getmv().ext_classes:
             var = default_var(self.gx, '__class__', newclass)
             var.invisible = True
-            self.gx.types[inode(self.gx, var)] = set([(def_class(self.gx, 'class_'), def_class(self.gx, 'class_').dcpa)])
-            def_class(self.gx, 'class_').dcpa += 1
+            self.gx.types[inode(self.gx, var)] = set([(python.def_class(self.gx, 'class_'), python.def_class(self.gx, 'class_').dcpa)])
+            python.def_class(self.gx, 'class_').dcpa += 1
 
         # --- staticmethod, property
         skip = []
@@ -1607,20 +1604,20 @@ class ModuleVisitor(BaseNodeVisitor):
             error('ellipsis is not supported', self.gx, node, mv=getmv())
         else:
             map = {int: 'int_', float: 'float_', complex: 'complex', str: 'str_', bool: 'bool_', type(None): 'none', bytes: 'bytes_'}
-            self.instance(node, def_class(self.gx, map[type(node.value)]), func)
+            self.instance(node, python.def_class(self.gx, map[type(node.value)]), func)
 
     # py2 ast
     def visit_Num(self, node, func=None):
         map = {int: 'int_', float: 'float_', long: 'int_', complex: 'complex'}  # XXX 'return' -> ast.Return(Constant(None))?
-        self.instance(node, def_class(self.gx, map[type(node.n)]), func)
+        self.instance(node, python.def_class(self.gx, map[type(node.n)]), func)
 
     # py2 ast
     def visit_Str(self, node, func=None):
         map = {str: 'str_'}
-        self.instance(node, def_class(self.gx, map[type(node.s)]), func)
+        self.instance(node, python.def_class(self.gx, map[type(node.s)]), func)
 
     def fncl_passing(self, node, newnode, func):
-        lfunc, lclass = lookup_func(node, getmv()), lookup_class(node, getmv())
+        lfunc, lclass = python.lookup_func(node, getmv()), python.lookup_class(node, getmv())
         if lfunc:
             if lfunc.mv.module.builtin:
                 lfunc = self.builtin_wrapper(node, func)
@@ -1649,15 +1646,15 @@ class ModuleVisitor(BaseNodeVisitor):
 
             if node.id in ['None', 'True', 'False']:
                 if node.id == 'None':  # XXX also bools, remove def seed_nodes()
-                    self.instance(node, def_class(self.gx, 'none'), func)
+                    self.instance(node, python.def_class(self.gx, 'none'), func)
                 else:
-                    self.instance(node, def_class(self.gx, 'bool_'), func)
+                    self.instance(node, python.def_class(self.gx, 'bool_'), func)
                 return
 
-            if isinstance(func, Function) and node.id in func.globals:
+            if isinstance(func, python.Function) and node.id in func.globals:
                 var = default_var(self.gx, node.id, None, mv=getmv())
             else:
-                var = lookup_var(node.id, func, mv=getmv())
+                var = python.lookup_var(node.id, func, mv=getmv())
                 if not var:
                     if self.fncl_passing(node, newnode, func):
                         pass
@@ -1671,7 +1668,7 @@ class ModuleVisitor(BaseNodeVisitor):
                 self.add_constraint((inode(self.gx, var), newnode), func)
                 for a, b in self.gx.filterstack:
                     if var.name == a.id:
-                        self.gx.filters[node] = lookup_class(b, getmv())
+                        self.gx.filters[node] = python.lookup_class(b, getmv())
         elif type(node.ctx) == ast.Store:
             # Adding vars for ast.Name store are handled elsewhere
             pass
@@ -1706,8 +1703,8 @@ def parse_module(name, gx, parent=None, node=None):
         else:
             basepaths = [os.getcwd()]
         module_paths = basepaths + gx.libdirs
-        absolute_name, filename, relative_filename, builtin = find_module(gx, name, module_paths)
-        module = Module(absolute_name, filename, relative_filename, builtin, node)
+        absolute_name, filename, relative_filename, builtin = python.find_module(gx, name, module_paths)
+        module = python.Module(absolute_name, filename, relative_filename, builtin, node)
     except ImportError:
         error('cannot locate module: ' + name, gx, node, mv=getmv())
 
@@ -1717,7 +1714,7 @@ def parse_module(name, gx, parent=None, node=None):
     gx.modules[module.name] = module
 
     # --- not cached, so parse
-    module.ast = parse_file(module.filename)
+    module.ast = python.parse_file(module.filename)
 
     old_mv = getmv()
     module.mv = mv = ModuleVisitor(module, gx)

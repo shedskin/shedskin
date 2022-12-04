@@ -18,12 +18,7 @@ if platform.system() == 'Windows':
 else:
     import blessings
 
-from . import graph
-from .annotate import annotate
-from .config import GlobalInfo
-from .cpp import generate_code
-from .error import print_errors
-from .infer import analyze
+from . import annotate, config, cpp, error, graph, infer
 
 
 class ShedskinFormatter(logging.Formatter):
@@ -48,7 +43,7 @@ class Shedskin:
     """Main shedskin frontend class
     """
     def __init__(self, module_name):
-        self.gx = GlobalInfo()
+        self.gx = config.GlobalInfo()
         self.gx.terminal = blessings.Terminal()
 
         # silent -> WARNING only, debug -> DEBUG, default -> INFO
@@ -83,10 +78,10 @@ class Shedskin:
         """
         # --- analyze & annotate
         t0 = time.time()
-        analyze(self.gx, self.module_name)
-        annotate(self.gx)
-        generate_code(self.gx)
-        print_errors()
+        infer.analyze(self.gx, self.module_name)
+        annotate.annotate(self.gx)
+        cpp.generate_code(self.gx)
+        error.print_errors()
         self.log.info('[elapsed time: %.2f seconds]', (time.time() - t0))
 
 
