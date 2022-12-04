@@ -396,10 +396,10 @@ void *RawConfigParser::__init__(dict<str *, str *> *defaults) {
     __ss_int __3;
     tuple2<str *, str *> *__0;
     str *key, *value;
-    list<tuple2<str *, str *> *> *__1;
+    __iter<tuple2<str *, str *> *> *__1;
 
 
-    list<tuple2<str *, str *> *>::for_in_loop __123;
+    __iter<tuple2<str *, str *> *>::for_in_loop __123;
 
     this->_sections = (new dict<str *, dict<str *, str *> *>());
     this->_defaults = (new dict<str *, str *>());
@@ -446,9 +446,9 @@ void *RawConfigParser::write(file *fp) {
     str *key, *section, *value;
     tuple2<str *, str *> *__19, *__26;
 
-    list<tuple2<str *, str *> *> *__20, *__27;
+    __iter<tuple2<str *, str *> *> *__20, *__27;
 
-    list<tuple2<str *, str *> *>::for_in_loop __123;
+    __iter<tuple2<str *, str *> *>::for_in_loop __123;
 
     if (___bool(this->_defaults)) {
         fp->write(__modct(const_11, 1, DEFAULTSECT));
@@ -506,7 +506,7 @@ list<str *> *RawConfigParser::sections() {
     Return a list of section names, excluding [DEFAULT]
     */
 
-    return (this->_sections)->keys();
+    return new list<str *>((this->_sections)->keys());
 }
 
 str *RawConfigParser::get(str *section, str *option, __ss_int, dict<str *, str *> *) {
@@ -586,7 +586,7 @@ __ss_bool RawConfigParser::getboolean(str *section, str *option) {
     return __mbool((RawConfigParser::_boolean_states)->__getitem__(v->lower()));
 }
 
-list<tuple2<str *, str *> *> *RawConfigParser::items(str *section) {
+__iter<tuple2<str *, str *> *> *RawConfigParser::items(str *section) {
     dict<str *, str *> *d, *d2;
 
     try {
@@ -724,7 +724,7 @@ list<str *> *RawConfigParser::options(str *section) {
     if (opts->__contains__(const_15)) {
         opts->__delitem__(const_15);
     }
-    return opts->keys();
+    return new list<str *>(opts->keys());
 }
 
 dict<str *, __ss_int> *RawConfigParser::_boolean_states;
@@ -779,10 +779,10 @@ str *ConfigParser::get(str *section, str *option, __ss_int raw, dict<str *, str 
     __ss_int __49;
     tuple2<str *, str *> *__46;
     str *key, *value;
-    list<tuple2<str *, str *> *> *__47;
+    __iter<tuple2<str *, str *> *> *__47;
     dict<str *, str *> *d;
 
-    list<tuple2<str *, str *> *>::for_in_loop __123;
+    __iter<tuple2<str *, str *> *>::for_in_loop __123;
 
     d = (this->_defaults)->copy();
     try {
@@ -817,7 +817,7 @@ str *ConfigParser::get(str *section, str *option, __ss_int raw, dict<str *, str 
     return (str *)NULL;
 }
 
-list<tuple2<str *, str *> *> *ConfigParser::items(str *section, __ss_int raw, dict<str *, str *> *vars) {
+__iter<tuple2<str *, str *> *> *ConfigParser::items(str *section, __ss_int raw, dict<str *, str *> *vars) {
     /**
     Return a list of tuples with (name, value) for each option
     in the section.
@@ -834,10 +834,10 @@ list<tuple2<str *, str *> *> *ConfigParser::items(str *section, __ss_int raw, di
     __ss_int __55;
     tuple2<str *, str *> *__52;
     str *key, *value;
-    list<tuple2<str *, str *> *> *__53;
+    __iter<tuple2<str *, str *> *> *__53;
     dict<str *, str *> *d;
 
-    list<tuple2<str *, str *> *>::for_in_loop __123;
+    __iter<tuple2<str *, str *> *>::for_in_loop __123;
 
     d = (this->_defaults)->copy();
     try {
@@ -857,17 +857,17 @@ list<tuple2<str *, str *> *> *ConfigParser::items(str *section, __ss_int raw, di
         END_FOR
 
     }
-    options = d->keys();
+    options = new list<str *>(d->keys());
     if (options->__contains__(const_15)) {
         options->remove(const_15);
     }
     if (raw) {
-        return list_comp_0(options, d);
+        return list_comp_0(options, d)->__iter__();
     }
     else {
-        return list_comp_1(d, this, options, section);
+        return list_comp_1(d, this, options, section)->__iter__();
     }
-    return (list<tuple2<str *, str *> *> *)NULL;
+    return (__iter<tuple2<str *, str *> *> *)NULL;
 }
 
 str *_interpolation_replace(__re__::match_object *match) {
