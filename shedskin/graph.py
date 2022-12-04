@@ -632,7 +632,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 extvar = module.mv.globals[name]
                 var = infer.default_var(self.gx, pseudonym, None, mv=getmv())
                 var.imported = True
-                self.add_constraint((inode(self.gx, extvar), infer.inode(self.gx, var)), None)
+                self.add_constraint((infer.inode(self.gx, extvar), infer.inode(self.gx, var)), None)
             elif os.path.isfile(os.path.join(path, name + '.py')) or \
                     os.path.isfile(os.path.join(path, name, '__init__.py')):
                 modname = '.'.join(module.name_list + [name])
@@ -843,7 +843,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
     def visit_UnaryOp(self, node, func=None):
         op_type = type(node.op)
-        if op_type == ast.FloorDiv:
+        if op_type == ast.Not:
             self.bool_test_add(node.operand)
             newnode = infer.CNode(self.gx, node, parent=func, mv=getmv())
             newnode.copymetoo = True
@@ -1208,7 +1208,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.add_constraint((infer.inode(self.gx, fakefunc), infer.inode(self.gx, qual.target)), lcfunc)
 
             if isinstance(qual.target, ast.Name):  # XXX merge with visit_For
-                lvar = default_var(self.gx, qual.target.id, lcfunc)  # XXX str or ast.Name?
+                lvar = infer.default_var(self.gx, qual.target.id, lcfunc)  # XXX str or ast.Name?
                 self.add_constraint((infer.inode(self.gx, qual.target), infer.inode(self.gx, lvar)), lcfunc)
             else:  # AssTuple, AssList
                 self.tuple_flow(qual.target, qual.target, lcfunc)
