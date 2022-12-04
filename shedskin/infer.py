@@ -157,7 +157,7 @@ def get_types(gx, expr, node, merge):
 def is_anon_callable(gx, expr, node, merge=None):
     types = get_types(gx, expr, node, merge)
     anon = bool([t for t in types if isinstance(t[0], python.Function)])
-    call = bool([t for t in types if isinstance(t[0], Class) and '__call__' in t[0].funcs])
+    call = bool([t for t in types if isinstance(t[0], python.Class) and '__call__' in t[0].funcs])
     return anon, call
 
 
