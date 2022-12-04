@@ -10,8 +10,7 @@ import os
 import re
 import sys
 
-from .ast_utils import extract_argnames, is_assign_list_or_tuple
-
+from . import ast_utils
 
 class Module(object):
     def __init__(self, name, filename, relative_filename, builtin, node):
@@ -153,7 +152,7 @@ class Function(object):
             if inherited_from and ident in parent.funcs:
                 ident += inherited_from.ident + '__'  # XXX ugly
             self.ident = ident
-            self.formals = extract_argnames(node.args)
+            self.formals = ast_utils.extract_argnames(node.args)
             self.flags = None
             self.doc = ast.get_docstring(node)
         self.returnexpr = []
@@ -412,18 +411,18 @@ def is_method(parent):
 
 
 def is_enum(node):
-    return isinstance(node.iter, ast.Call) and isinstance(node.iter.func, ast.Name) and node.iter.func.id == 'enumerate' and len(node.iter.args) == 1 and is_assign_list_or_tuple(node.target)
+    return isinstance(node.iter, ast.Call) and isinstance(node.iter.func, ast.Name) and node.iter.func.id == 'enumerate' and len(node.iter.args) == 1 and ast_utils.is_assign_list_or_tuple(node.target)
 
 
 def is_zip2(node):
-    return isinstance(node.iter, ast.Call) and isinstance(node.iter.func, ast.Name) and node.iter.func.id == 'zip' and len(node.iter.args) == 2 and is_assign_list_or_tuple(node.target)
+    return isinstance(node.iter, ast.Call) and isinstance(node.iter.func, ast.Name) and node.iter.func.id == 'zip' and len(node.iter.args) == 2 and ast_utils.is_assign_list_or_tuple(node.target)
 
 def is_isinstance(node):
     return isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == 'isinstance'
 
 # --- recursively determine (lvalue, rvalue) pairs in assignment expressions
 def assign_rec(left, right):
-    if is_assign_list_or_tuple(left) and isinstance(right, (ast.Tuple, ast.List)):
+    if ast_utils.is_assign_list_or_tuple(left) and isinstance(right, (ast.Tuple, ast.List)):
         pairs = []
         for (lvalue, rvalue) in zip(left.elts, right.elts):
             pairs += assign_rec(lvalue, rvalue)

@@ -38,9 +38,9 @@ import logging
 import random
 import sys
 
+from . import ast_utils 
 from . import error
 from . import python
-from .ast_utils import get_starargs, is_assign_attribute
 
 logger = logging.getLogger('infer')
 ifa_logger = logging.getLogger('infer.ifa')
@@ -218,7 +218,7 @@ def analyze_args(gx, expr, func, node=None, skip_defaults=False, merge=None):
             missing = True
     extra = args[argnr:]
 
-    _error = (missing or extra) and not func.node.args.vararg and not func.node.args.kwarg and not get_starargs(expr) and func.lambdanr is None and expr not in gx.lambdawrapper  # XXX
+    _error = (missing or extra) and not func.node.args.vararg and not func.node.args.kwarg and not ast_utils.get_starargs(expr) and func.lambdanr is None and expr not in gx.lambdawrapper  # XXX
 
     if func.node.args.vararg:
         for arg in extra:
@@ -581,7 +581,7 @@ def possible_argtypes(gx, node, funcs, analysis, worklist):
         func = funcs[0][0]  # XXX
 
     args = []
-    starargs = get_starargs(expr)
+    starargs = ast_utils.get_starargs(expr)
     if starargs:  # XXX
         args = [starargs]
     elif funcs and not func.node:  # XXX getattr, setattr
@@ -800,7 +800,7 @@ def create_template(gx, func, dcpa, c, worklist):
 def actuals_formals(gx, expr, func, node, dcpa, cpa, types, analysis, worklist):
     objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func = analysis
 
-    starargs = get_starargs(expr)
+    starargs = ast_utils.get_starargs(expr)
     if starargs:  # XXX only in lib/
         formals = func.formals
         actuals = len(formals) * [starargs]
@@ -1433,7 +1433,7 @@ def analyze(gx, module_name):
 
     # error for dynamic expression without explicit type declaration
     for node in gx.merged_inh:
-        if isinstance(node, ast.AST) and not is_assign_attribute(node) and not inode(gx, node).mv.module.builtin:
+        if isinstance(node, ast.AST) and not ast_utils.is_assign_attribute(node) and not inode(gx, node).mv.module.builtin:
             nodetypestr(gx, node, inode(gx, node).parent, mv=inode(gx, node).mv)
 
     return gx
