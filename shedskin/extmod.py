@@ -23,7 +23,7 @@ def clname(cl):
     """class name normalizer
 
     :param      cl:   class object
-    :type       cl:   shedskin.python.Class
+    :type       cl:   python.Class
 
     :returns:   class name with shedksin prefix and module qualifier
     :rtype:     str
@@ -67,8 +67,7 @@ class ExtensionModule:
                 )
 
     def supported_vars(self, variables):  # XXX virtuals?
-        """
-        { item_description }
+        """XXX currently only classs / instance variables
         """
         supported = []
         for var in variables:
@@ -199,6 +198,7 @@ class ExtensionModule:
         :returns:   { description_of_the_return_value }
         :rtype:     { return_type_description }
         """
+
         # global variables
         for var in self.supported_vars(self.gv.mv.globals.values()):
             if [
@@ -596,11 +596,17 @@ class ExtensionModule:
             write("    if (PyType_Ready(&%sObjectType) < 0)" % clname(cl))
             write("        return NULL;\n")
 
+        write("    // create extension module")
         __ss_mod = "_".join(self.gv.module.name_list)
         write("    __ss_mod_%s = m = PyModule_Create(&%smodule);" % (__ss_mod, __ss_mod))
         write("    if (m == NULL)")
         write("        return NULL;\n")
 
+        write("    // add global variables")
+        self.do_add_globals(classes, 'm')
+        write("")
+
+        write("    // add type objects")
         for cl in classes:
             write("    Py_INCREF(&%sObjectType);" % clname(cl))
             write('    if (PyModule_AddObject(m, "%s", (PyObject *) &%sObjectType) < 0) {' % (cl.ident, clname(cl)))
