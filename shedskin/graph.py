@@ -19,13 +19,13 @@ import os
 import re
 import sys
 
+from . import infer
 from . import python
 from .ast_utils import (BaseNodeVisitor, get_arg_nodes, has_star_kwarg,
                         is_assign_attribute, is_assign_list_or_tuple,
                         is_assign_tuple, is_constant, is_none, make_arg_list,
                         make_call, orelse_to_node, parse_expr)
 from .error import error
-from .infer import CNode, default_var, in_out, inode, register_temp_var
 
 # --- global variable mv
 _mv = None
@@ -128,15 +128,15 @@ class ModuleVisitor(BaseNodeVisitor):
         if (node, 0, 0) in self.gx.cnode:  # XXX
             newnode = self.gx.cnode[node, 0, 0]
         else:
-            newnode = CNode(self.gx, node, parent=func, mv=getmv())
+            newnode = infer.CNode(self.gx, node, parent=func, mv=getmv())
             self.gx.types[newnode] = set()
 
         fakefunc = make_call(ast.Attribute(objexpr, attrname, ast.Load()), args)
         fakefunc.lineno = objexpr.lineno
         self.visit(fakefunc, func)
-        self.add_constraint((inode(self.gx, fakefunc), newnode), func)
+        self.add_constraint((infer.inode(self.gx, fakefunc), newnode), func)
 
-        inode(self.gx, objexpr).fakefunc = fakefunc
+        infer.inode(self.gx, objexpr).fakefunc = fakefunc
         return fakefunc
 
     # simple heuristic for initial list split: count nesting depth, first constant child type
@@ -193,7 +193,7 @@ class ModuleVisitor(BaseNodeVisitor):
         if (node, 0, 0) in self.gx.cnode:  # XXX to create_node() func
             newnode = self.gx.cnode[node, 0, 0]
         else:
-            newnode = CNode(self.gx, node, parent=func, mv=getmv())
+            newnode = infer.CNode(self.gx, node, parent=func, mv=getmv())
 
         newnode.constructor = True
 
@@ -209,15 +209,15 @@ class ModuleVisitor(BaseNodeVisitor):
         cl = python.def_class(self.gx, classname)
 
         self.instance(node, cl, func)
-        default_var(self.gx, 'unit', cl)
+        infer.default_var(self.gx, 'unit', cl)
 
         if classname in ['list', 'tuple'] and not node.elts:
             self.gx.empty_constructors.add(node)  # ifa disables those that flow to instance variable assignments
 
         # --- internally flow binary tuples
         if cl.ident == 'tuple2':
-            default_var(self.gx, 'first', cl)
-            default_var(self.gx, 'second', cl)
+            infer.default_var(self.gx, 'first', cl)
+            infer.default_var(self.gx, 'second', cl)
             elem0, elem1 = node.elts
 
             self.visit(elem0, func)
@@ -233,8 +233,8 @@ class ModuleVisitor(BaseNodeVisitor):
 
         # --- add dynamic children constraints for other types
         if classname == 'dict':  # XXX filter children
-            default_var(self.gx, 'unit', cl)
-            default_var(self.gx, 'value', cl)
+            infer.default_var(self.gx, 'unit', cl)
+            infer.default_var(self.gx, 'value', cl)
 
             for child in ast.iter_child_nodes(node):
                 self.visit(child, func)
@@ -282,7 +282,7 @@ class ModuleVisitor(BaseNodeVisitor):
                 return (cl, merged.pop())
 
         elif isinstance(node, (ast.Num, ast.Str)):
-            return (list(inode(self.gx, node).types())[0][0],)
+            return (list(infer.inode(self.gx, node).types())[0][0],)
 
     # --- add dynamic constraint for constructor argument, e.g. '[expr]' becomes [].__setattr__('unit', expr)
     def add_dynamic_constraint(self, parent, child, varname, func):
@@ -294,15 +294,15 @@ class ModuleVisitor(BaseNodeVisitor):
         fakefunc = make_call(FakeGetattr2(parent, '__setattr__', ast.Load()), [cu, child])
         self.visit(fakefunc, func)
 
-        fakechildnode = CNode(self.gx, (child, varname), parent=func, mv=getmv())  # create separate 'fake' CNode per child, so we can have multiple 'callfuncs'
+        fakechildnode = infer.CNode(self.gx, (child, varname), parent=func, mv=getmv())  # create separate 'fake' infer.CNode per child, so we can have multiple 'callfuncs'
         self.gx.types[fakechildnode] = set()
 
-        self.add_constraint((inode(self.gx, parent), fakechildnode), func)  # add constraint from parent to fake child node. if parent changes, all fake child nodes change, and the callfunc for each child node is triggered
+        self.add_constraint((infer.inode(self.gx, parent), fakechildnode), func)  # add constraint from parent to fake child node. if parent changes, all fake child nodes change, and the callfunc for each child node is triggered
         fakechildnode.callfuncs.append(fakefunc)
 
     # --- add regular constraint to function
     def add_constraint(self, constraint, func):
-        in_out(constraint[0], constraint[1])
+        infer.in_out(constraint[0], constraint[1])
         self.gx.constraints.add(constraint)
         while isinstance(func, python.Function) and func.listcomp:
             func = func.parent  # XXX
@@ -367,13 +367,13 @@ class ModuleVisitor(BaseNodeVisitor):
         return ast.Tuple(result, ast.Load())
 
     def visit_GeneratorExp(self, node, func=None):
-        newnode = CNode(self.gx, node, parent=func, mv=getmv())
+        newnode = infer.CNode(self.gx, node, parent=func, mv=getmv())
         self.gx.types[newnode] = set()
         lc = ast.ListComp(node.elt, [ast.comprehension(qual.target, qual.iter, qual.ifs) for qual in node.generators], lineno=node.lineno)
         register_node(lc, func)
         self.gx.genexp_to_lc[node] = lc
         self.visit(lc, func)
-        self.add_constraint((inode(self.gx, lc), newnode), func)
+        self.add_constraint((infer.inode(self.gx, lc), newnode), func)
 
     def visit_JoinedStr(self, node, func=None):
         error("f-strings are not supported", self.gx, node, mv=getmv())
@@ -407,8 +407,8 @@ class ModuleVisitor(BaseNodeVisitor):
 
         # --- __name__
         if self.module.ident != 'builtin':
-            namevar = default_var(self.gx, '__name__', None, mv=getmv())
-            self.gx.types[inode(self.gx, namevar)] = set([(python.def_class(self.gx, 'str_'), 0)])
+            namevar = infer.default_var(self.gx, '__name__', None, mv=getmv())
+            self.gx.types[infer.inode(self.gx, namevar)] = set([(python.def_class(self.gx, 'str_'), 0)])
 
         self.forward_references(node)
 
@@ -504,13 +504,13 @@ class ModuleVisitor(BaseNodeVisitor):
 
         # global variables XXX visit_Global
         for assname in self.local_assignments(node, global_=True):
-            default_var(self.gx, assname.id, None, mv=getmv())
+            infer.default_var(self.gx, assname.id, None, mv=getmv())
 
     def set_default_vars(self, node, func):
         globals = set(self.get_globals(node))
         for assname in self.local_assignments(node):
             if assname.id not in globals:
-                default_var(self.gx, assname.id, func)
+                infer.default_var(self.gx, assname.id, func)
 
     def get_globals(self, node):
         if isinstance(node, ast.Global):
@@ -575,9 +575,9 @@ class ModuleVisitor(BaseNodeVisitor):
     def import_module(self, name, pseudonym, node, fake):
         module = self.analyze_module(name, pseudonym, node, fake)
         if not fake:
-            var = default_var(self.gx, pseudonym or name, None, mv=getmv())
+            var = infer.default_var(self.gx, pseudonym or name, None, mv=getmv())
             var.imported = True
-            self.gx.types[inode(self.gx, var)] = set([(module, 0)])
+            self.gx.types[infer.inode(self.gx, var)] = set([(module, 0)])
         return module
 
     def visit_ImportFrom(self, node, parent=None):
@@ -614,15 +614,15 @@ class ModuleVisitor(BaseNodeVisitor):
                 self.ext_funcs.update(module.mv.funcs)
                 self.ext_classes.update(module.mv.classes)
                 for import_name, import_module in module.mv.imports.items():
-                    var = default_var(self.gx, import_name, None, mv=getmv())  # XXX merge
+                    var = infer.default_var(self.gx, import_name, None, mv=getmv())  # XXX merge
                     var.imported = True
-                    self.gx.types[inode(self.gx, var)] = set([(import_module, 0)])
+                    self.gx.types[infer.inode(self.gx, var)] = set([(import_module, 0)])
                     self.imports[import_name] = import_module
                 for name, extvar in module.mv.globals.items():
                     if not extvar.imported and not name in ['__name__']:
-                        var = default_var(self.gx, name, None, mv=getmv())  # XXX merge
+                        var = infer.default_var(self.gx, name, None, mv=getmv())  # XXX merge
                         var.imported = True
-                        self.add_constraint((inode(self.gx, extvar), inode(self.gx, var)), None)
+                        self.add_constraint((infer.inode(self.gx, extvar), infer.inode(self.gx, var)), None)
                 continue
 
             path = module.path
@@ -633,9 +633,9 @@ class ModuleVisitor(BaseNodeVisitor):
                 self.ext_classes[pseudonym] = module.mv.classes[name]
             elif name in module.mv.globals and not module.mv.globals[name].imported:  # XXX
                 extvar = module.mv.globals[name]
-                var = default_var(self.gx, pseudonym, None, mv=getmv())
+                var = infer.default_var(self.gx, pseudonym, None, mv=getmv())
                 var.imported = True
-                self.add_constraint((inode(self.gx, extvar), inode(self.gx, var)), None)
+                self.add_constraint((inode(self.gx, extvar), infer.inode(self.gx, var)), None)
             elif os.path.isfile(os.path.join(path, name + '.py')) or \
                     os.path.isfile(os.path.join(path, name, '__init__.py')):
                 modname = '.'.join(module.name_list + [name])
@@ -701,13 +701,13 @@ class ModuleVisitor(BaseNodeVisitor):
         func.defaults = node.args.defaults
 
         for formal in func.formals:
-            var = default_var(self.gx, formal, func)
+            var = infer.default_var(self.gx, formal, func)
             var.formal_arg = True
 
         # --- flow return expressions together into single node
-        func.retnode = retnode = CNode(self.gx, node, parent=func, mv=getmv())
+        func.retnode = retnode = infer.CNode(self.gx, node, parent=func, mv=getmv())
         self.gx.types[retnode] = set()
-        func.yieldnode = yieldnode = CNode(self.gx, (node, 'yield'), parent=func, mv=getmv())
+        func.yieldnode = yieldnode = infer.CNode(self.gx, (node, 'yield'), parent=func, mv=getmv())
         self.gx.types[yieldnode] = set()
 
         for body_node in node.body:
@@ -726,7 +726,7 @@ class ModuleVisitor(BaseNodeVisitor):
         # --- register function
         if isinstance(parent, python.Class):
             if func.ident not in parent.staticmethods:  # XXX use flag
-                default_var(self.gx, 'self', func)
+                infer.default_var(self.gx, 'self', func)
                 if func.ident == '__init__' and '__del__' in parent.funcs:  # XXX what if no __init__
                     self.visit(make_call(ast.Attribute(ast.Name('self', ast.Load()), '__del__', ast.Load())), func)
                     self.gx.gc_cleanup = True
@@ -746,18 +746,18 @@ class ModuleVisitor(BaseNodeVisitor):
         f = self.lambdas[name]
         f.lambdanr = lambdanr
         self.lambdaname[node] = name
-        newnode = CNode(self.gx, node, parent=func, mv=getmv())
+        newnode = infer.CNode(self.gx, node, parent=func, mv=getmv())
         self.gx.types[newnode] = set([(f, 0)])
         newnode.copymetoo = True
 
     def visit_BoolOp(self, node, func):
-        newnode = CNode(self.gx, node, parent=func, mv=getmv())
+        newnode = infer.CNode(self.gx, node, parent=func, mv=getmv())
         self.gx.types[newnode] = set()
         for child in node.values:
             if node in self.gx.bool_test_only:
                 self.bool_test_add(child)
             self.visit(child, func)
-            self.add_constraint((inode(self.gx, child), newnode), func)
+            self.add_constraint((infer.inode(self.gx, child), newnode), func)
             self.temp_var2(child, newnode, func)
 
     def visit_If(self, node, func=None):
@@ -774,14 +774,14 @@ class ModuleVisitor(BaseNodeVisitor):
             self.visit(child, func)
 
     def visit_IfExp(self, node, func=None):
-        newnode = CNode(self.gx, node, parent=func, mv=getmv())
+        newnode = infer.CNode(self.gx, node, parent=func, mv=getmv())
         self.gx.types[newnode] = set()
 
         for child in ast.iter_child_nodes(node):
             self.visit(child, func)
 
-        self.add_constraint((inode(self.gx, node.body), newnode), func)
-        self.add_constraint((inode(self.gx, node.orelse), newnode), func)
+        self.add_constraint((infer.inode(self.gx, node.body), newnode), func)
+        self.add_constraint((infer.inode(self.gx, node.orelse), newnode), func)
 
     def visit_Global(self, node, func=None):
         func.globals += node.names
@@ -848,7 +848,7 @@ class ModuleVisitor(BaseNodeVisitor):
         op_type = type(node.op)
         if op_type == ast.FloorDiv:
             self.bool_test_add(node.operand)
-            newnode = CNode(self.gx, node, parent=func, mv=getmv())
+            newnode = infer.CNode(self.gx, node, parent=func, mv=getmv())
             newnode.copymetoo = True
             self.gx.types[newnode] = set([(python.def_class(self.gx, 'bool_'), 0)])  # XXX new type?
             self.visit(node.operand, func)
@@ -857,7 +857,7 @@ class ModuleVisitor(BaseNodeVisitor):
             self.fake_func(node, node.operand, op_map[op_type], [], func)
 
     def visit_Compare(self, node, func=None):
-        newnode = CNode(self.gx, node, parent=func, mv=getmv())
+        newnode = infer.CNode(self.gx, node, parent=func, mv=getmv())
         newnode.copymetoo = True
         self.gx.types[newnode] = set([(python.def_class(self.gx, 'bool_'), 0)])  # XXX new type?
         self.visit(node.left, func)
@@ -879,7 +879,7 @@ class ModuleVisitor(BaseNodeVisitor):
         # tempvars, e.g. (t1=fun())
         for term in node.comparators[:-1]:
             if not (isinstance(term, ast.Name) or is_constant(term)):
-                self.temp_var2(term, inode(self.gx, term), func)
+                self.temp_var2(term, infer.inode(self.gx, term), func)
 
     def visit_BinOp(self, node, func=None):
         if type(node.op) == ast.Add:
@@ -900,7 +900,7 @@ class ModuleVisitor(BaseNodeVisitor):
                 if isinstance(node.right, ast.Tuple):
                     for child in node.right.elts:
                         self.visit(child, func)
-                        self.fake_func(inode(self.gx, child), child, '__str__', [], func)
+                        self.fake_func(infer.inode(self.gx, child), child, '__str__', [], func)
                 else:
                     for child in ast.iter_child_nodes(node.right):
                         self.visit(child, func)
@@ -921,13 +921,13 @@ class ModuleVisitor(BaseNodeVisitor):
             error("Unknown op type for ast.BinOp: %s" % type(node.op), self.gx, node, mv=getmv())
 
     def visit_impl_bitpair(self, node, msg, func=None):
-        CNode(self.gx, node, parent=func, mv=getmv())
-        self.gx.types[inode(self.gx, node)] = set()
+        infer.CNode(self.gx, node, parent=func, mv=getmv())
+        self.gx.types[infer.inode(self.gx, node)] = set()
         faker = self.fake_func((node.left, 0), node.left, msg, [node.right], func)
-        self.add_constraint((inode(self.gx, faker), inode(self.gx, node)), func)
+        self.add_constraint((infer.inode(self.gx, faker), infer.inode(self.gx, node)), func)
 
     def visit_AugAssign(self, node, func=None):  # a[b] += c -> a[b] = a[b]+c, using tempvars to handle sidefx
-        newnode = CNode(self.gx, node, parent=func, mv=getmv())
+        newnode = infer.CNode(self.gx, node, parent=func, mv=getmv())
         self.gx.types[newnode] = set()
 
         clone = copy.deepcopy(node)
@@ -943,7 +943,7 @@ class ModuleVisitor(BaseNodeVisitor):
             t1 = self.temp_var(node.target.value, func)
             a1 = ast.Assign([ast.Name(t1.name, ast.Store())], node.target.value)
             self.visit(a1, func)
-            self.add_constraint((inode(self.gx, node.target.value), inode(self.gx, t1)), func)
+            self.add_constraint((infer.inode(self.gx, node.target.value), infer.inode(self.gx, t1)), func)
 
             if isinstance(node.target.slice, ast.Index):
                 subs = node.target.slice.value
@@ -954,11 +954,11 @@ class ModuleVisitor(BaseNodeVisitor):
 
             self.visit(a1, func)
             self.visit(a2, func)
-            self.add_constraint((inode(self.gx, subs), inode(self.gx, t2)), func)
+            self.add_constraint((infer.inode(self.gx, subs), infer.inode(self.gx, t2)), func)
 
-            inode(self.gx, node).temp1 = t1.name
-            inode(self.gx, node).temp2 = t2.name
-            inode(self.gx, node).subs = subs
+            infer.inode(self.gx, node).temp1 = t1.name
+            infer.inode(self.gx, node).temp2 = t2.name
+            infer.inode(self.gx, node).subs = subs
 
             blah = ast.Subscript(ast.Name(t1.name, ast.Load(), lineno=node.lineno), ast.Index(ast.Name(t2.name, ast.Load())), ast.Store(), lineno=node.lineno)
             lnode = ast.Subscript(ast.Name(t1.name, ast.Load(), lineno=node.lineno), ast.Index(ast.Name(t2.name, ast.Load())), ast.Load(), lineno=node.lineno)
@@ -970,16 +970,16 @@ class ModuleVisitor(BaseNodeVisitor):
 
         assign = ast.Assign([blah], blah2)
         register_node(assign, func)
-        inode(self.gx, node).assignhop = assign
+        infer.inode(self.gx, node).assignhop = assign
         self.visit(assign, func)
 
     def visit_Print(self, node, func=None):
-        pnode = CNode(self.gx, node, parent=func, mv=getmv())
+        pnode = infer.CNode(self.gx, node, parent=func, mv=getmv())
         self.gx.types[pnode] = set()
 
         for child in ast.iter_child_nodes(node):
             self.visit(child, func)
-            self.fake_func(inode(self.gx, child), child, '__str__', [], func)
+            self.fake_func(infer.inode(self.gx, child), child, '__str__', [], func)
 
     def temp_var(self, node, func=None, looper=None, wopper=None, exc_name=False):
         if node in self.gx.parent_nodes:
@@ -989,23 +989,23 @@ class ModuleVisitor(BaseNodeVisitor):
         else:
             varname = '__' + str(len(self.tempcount))
 
-        var = default_var(self.gx, varname, func, mv=getmv(), exc_name=exc_name)
+        var = infer.default_var(self.gx, varname, func, mv=getmv(), exc_name=exc_name)
         var.looper = looper
         var.wopper = wopper
         self.tempcount[node] = varname
 
-        register_temp_var(var, func)
+        infer.register_temp_var(var, func)
         return var
 
     def temp_var2(self, node, source, func):
         tvar = self.temp_var(node, func)
-        self.add_constraint((source, inode(self.gx, tvar)), func)
+        self.add_constraint((source, infer.inode(self.gx, tvar)), func)
         return tvar
 
     def temp_var_int(self, node, func):
         var = self.temp_var(node, func)
-        self.gx.types[inode(self.gx, var)] = set([(python.def_class(self.gx, 'int_'), 0)])
-        inode(self.gx, var).copymetoo = True
+        self.gx.types[infer.inode(self.gx, var)] = set([(python.def_class(self.gx, 'int_'), 0)])
+        infer.inode(self.gx, var).copymetoo = True
         return var
 
     def visit_Raise(self, node, func=None):
@@ -1058,8 +1058,8 @@ class ModuleVisitor(BaseNodeVisitor):
                     var = self.temp_var(h0, func, exc_name=True)
 
                 var.invisible = True
-                inode(self.gx, var).copymetoo = True
-                self.gx.types[inode(self.gx, var)] = set([(cl, 1)])
+                infer.inode(self.gx, var).copymetoo = True
+                self.gx.types[infer.inode(self.gx, var)] = set([(cl, 1)])
 
         if node.finalbody:
             error("'try..finally' is not supported", self.gx, node, mv=getmv())
@@ -1080,28 +1080,28 @@ class ModuleVisitor(BaseNodeVisitor):
         if not node.value:
             node.value = ast.Name('None', ast.Load())
         self.visit(ast.Return(make_call(ast.Name('__iter', ast.Load()), [node.value])), func)
-        self.add_constraint((inode(self.gx, node.value), func.yieldnode), func)
+        self.add_constraint((infer.inode(self.gx, node.value), func.yieldnode), func)
 
     def visit_For(self, node, func=None):
         # --- iterable contents -> assign node
-        assnode = CNode(self.gx, node.target, parent=func, mv=getmv())
+        assnode = infer.CNode(self.gx, node.target, parent=func, mv=getmv())
         self.gx.types[assnode] = set()
 
         get_iter = make_call(ast.Attribute(node.iter, '__iter__', ast.Load()), [])
         fakefunc = make_call(ast.Attribute(get_iter, '__next__', ast.Load()), [])
 
         self.visit(fakefunc, func)
-        self.add_constraint((inode(self.gx, fakefunc), assnode), func)
+        self.add_constraint((infer.inode(self.gx, fakefunc), assnode), func)
 
         # --- assign node -> variables  XXX merge into assign_pair
         if isinstance(node.target, ast.Name):
             # for x in..
             lvar = self.default_var(node.target.id, func)
-            self.add_constraint((assnode, inode(self.gx, lvar)), func)
+            self.add_constraint((assnode, infer.inode(self.gx, lvar)), func)
 
         elif is_assign_attribute(node.target):  # XXX experimental :)
             # for expr.x in..
-            CNode(self.gx, node.target, parent=func, mv=getmv())
+            infer.CNode(self.gx, node.target, parent=func, mv=getmv())
 
             self.gx.assign_target[node.target.value] = node.target.value  # XXX multiple targets possible please
             fakefunc2 = make_call(ast.Attribute(node.target.value, '__setattr__', ast.Load()), [ast.Str(node.target.attr), fakefunc])
@@ -1132,29 +1132,29 @@ class ModuleVisitor(BaseNodeVisitor):
         # --- for i in range(..) XXX i should not be modified.. use tempcounter; two bounds
         if python.is_fastfor(node):
             self.temp_var2(node.target, assnode, func)
-            self.temp_var2(node.iter, inode(self.gx, node.iter.args[0]), func)
+            self.temp_var2(node.iter, infer.inode(self.gx, node.iter.args[0]), func)
 
             if len(node.iter.args) == 3 and not isinstance(node.iter.args[2], ast.Name) and not python.is_literal(node.iter.args[2]):  # XXX merge with ast.ListComp
                 for arg in node.iter.args:
                     if not isinstance(arg, ast.Name) and not python.is_literal(arg):  # XXX create func for better check
-                        self.temp_var2(arg, inode(self.gx, arg), func)
+                        self.temp_var2(arg, infer.inode(self.gx, arg), func)
 
         # --- temp vars for list, iter etc.
         else:
-            self.temp_var2(node, inode(self.gx, node.iter), func)
-            self.temp_var2((node, 1), inode(self.gx, get_iter), func)
+            self.temp_var2(node, infer.inode(self.gx, node.iter), func)
+            self.temp_var2((node, 1), infer.inode(self.gx, get_iter), func)
             self.temp_var_int(node.iter, func)
 
             if python.is_enum(node) or python.is_zip2(node):
-                self.temp_var2((node, 2), inode(self.gx, node.iter.args[0]), func)
+                self.temp_var2((node, 2), infer.inode(self.gx, node.iter.args[0]), func)
                 if python.is_zip2(node):
-                    self.temp_var2((node, 3), inode(self.gx, node.iter.args[1]), func)
+                    self.temp_var2((node, 3), infer.inode(self.gx, node.iter.args[1]), func)
                     self.temp_var_int((node, 4), func)
 
             self.temp_var((node, 5), func, looper=node.iter)
             if isinstance(node.iter, ast.Call) and isinstance(node.iter.func, ast.Attribute):
                 self.temp_var((node, 6), func, wopper=node.iter.func.value)
-                self.temp_var2((node, 7), inode(self.gx, node.iter.func.value), func)
+                self.temp_var2((node, 7), infer.inode(self.gx, node.iter.func.value), func)
 
     def bool_test_add(self, node):
         if isinstance(node, ast.BoolOp) or isinstance(node, ast.UnaryOp) and type(node.op) == ast.FloorDiv:
@@ -1186,11 +1186,11 @@ class ModuleVisitor(BaseNodeVisitor):
             node = node.items[0] # TODO py3: multiple items
 
         if node.optional_vars:
-            varnode = CNode(self.gx, node.optional_vars, parent=func, mv=getmv())
+            varnode = infer.CNode(self.gx, node.optional_vars, parent=func, mv=getmv())
             self.gx.types[varnode] = set()
-            self.add_constraint((inode(self.gx, node.context_expr), varnode), func)
+            self.add_constraint((infer.inode(self.gx, node.context_expr), varnode), func)
             lvar = self.default_var(node.optional_vars.id, func)
-            self.add_constraint((varnode, inode(self.gx, lvar)), func)
+            self.add_constraint((varnode, infer.inode(self.gx, lvar)), func)
 
     def visit_ListComp(self, node, func=None):
         # --- [expr for iter in list for .. if cond ..]
@@ -1201,18 +1201,18 @@ class ModuleVisitor(BaseNodeVisitor):
 
         for qual in node.generators:
             # iter
-            assnode = CNode(self.gx, qual.target, parent=func, mv=getmv())
+            assnode = infer.CNode(self.gx, qual.target, parent=func, mv=getmv())
             self.gx.types[assnode] = set()
 
             # list.unit->iter
             get_iter = make_call(ast.Attribute(qual.iter, '__iter__', ast.Load()), [])
             fakefunc = make_call(ast.Attribute(get_iter, '__next__', ast.Load()), [])
             self.visit(fakefunc, lcfunc)
-            self.add_constraint((inode(self.gx, fakefunc), inode(self.gx, qual.target)), lcfunc)
+            self.add_constraint((infer.inode(self.gx, fakefunc), infer.inode(self.gx, qual.target)), lcfunc)
 
             if isinstance(qual.target, ast.Name):  # XXX merge with visit_For
                 lvar = default_var(self.gx, qual.target.id, lcfunc)  # XXX str or ast.Name?
-                self.add_constraint((inode(self.gx, qual.target), inode(self.gx, lvar)), lcfunc)
+                self.add_constraint((infer.inode(self.gx, qual.target), infer.inode(self.gx, lvar)), lcfunc)
             else:  # AssTuple, AssList
                 self.tuple_flow(qual.target, qual.target, lcfunc)
 
@@ -1244,12 +1244,12 @@ class ModuleVisitor(BaseNodeVisitor):
         self.visit(node.value, func)
         func.returnexpr.append(node.value)
         if node.value is not None:  # Not naked return
-            newnode = CNode(self.gx, node, parent=func, mv=getmv())
+            newnode = infer.CNode(self.gx, node, parent=func, mv=getmv())
             self.gx.types[newnode] = set()
             if isinstance(node.value, ast.Name):
                 func.retvars.append(node.value.id)
         if func.retnode:
-            self.add_constraint((inode(self.gx, node.value), func.retnode), func)
+            self.add_constraint((infer.inode(self.gx, node.value), func.retnode), func)
 
     def visit_Delete(self, node, func=None):
         for child in node.targets:
@@ -1265,12 +1265,12 @@ class ModuleVisitor(BaseNodeVisitor):
                 sinfo = self.struct_info(rvalue.args[0], func)
                 faketuple = self.struct_faketuple(sinfo)
                 self.visit(ast.Assign(node.targets, faketuple), func)
-                tvar = self.temp_var2(rvalue.args[1], inode(self.gx, rvalue.args[1]), func)
+                tvar = self.temp_var2(rvalue.args[1], infer.inode(self.gx, rvalue.args[1]), func)
                 tvar_pos = self.temp_var_int(rvalue.args[0], func)
                 self.gx.struct_unpack[node] = (sinfo, tvar.name, tvar_pos.name)
                 return
 
-        newnode = CNode(self.gx, node, parent=func, mv=getmv())
+        newnode = infer.CNode(self.gx, node, parent=func, mv=getmv())
         self.gx.types[newnode] = set()
 
         # --- a,b,.. = c,(d,e),.. = .. = expr
@@ -1293,7 +1293,7 @@ class ModuleVisitor(BaseNodeVisitor):
                     lvar = self.default_var(lvalue.id, func)
                     if is_constant(rvalue):
                         lvar.const_assign.append(rvalue)
-                    self.add_constraint((inode(self.gx, rvalue), inode(self.gx, lvar)), func)
+                    self.add_constraint((infer.inode(self.gx, rvalue), infer.inode(self.gx, lvar)), func)
 
                 # (a,(b,c), ..) = expr
                 elif is_assign_list_or_tuple(lvalue):
@@ -1318,9 +1318,9 @@ class ModuleVisitor(BaseNodeVisitor):
                         if (child, 0, 0) not in self.gx.cnode:  # (a,b) = (1,2): (1,2) never visited
                             continue
                         if not is_constant(child) and not is_none(child):
-                            self.temp_var2(child, inode(self.gx, child), func)
+                            self.temp_var2(child, infer.inode(self.gx, child), func)
             elif not is_constant(node.value) and not is_none(node.value):
-                self.temp_var2(node.value, inode(self.gx, node.value), func)
+                self.temp_var2(node.value, infer.inode(self.gx, node.value), func)
 
     def assign_pair(self, lvalue, rvalue, func):
         # expr[expr] = expr
@@ -1332,33 +1332,33 @@ class ModuleVisitor(BaseNodeVisitor):
 
             fakefunc = make_call(ast.Attribute(lvalue.value, '__setitem__', ast.Load()), [subscript, rvalue])
             self.visit(fakefunc, func)
-            inode(self.gx, lvalue.value).fakefunc = fakefunc
+            infer.inode(self.gx, lvalue.value).fakefunc = fakefunc
 
             if not isinstance(lvalue.value, ast.Name):
-                self.temp_var2(lvalue.value, inode(self.gx, lvalue.value), func)
+                self.temp_var2(lvalue.value, infer.inode(self.gx, lvalue.value), func)
 
         # expr.attr = expr
         elif is_assign_attribute(lvalue):
-            CNode(self.gx, lvalue, parent=func, mv=getmv())
+            infer.CNode(self.gx, lvalue, parent=func, mv=getmv())
             self.gx.assign_target[rvalue] = lvalue.value
             fakefunc = make_call(ast.Attribute(lvalue.value, '__setattr__', ast.Load()), [ast.Str(lvalue.attr), rvalue])
             self.visit(fakefunc, func)
 
     def default_var(self, name, func, exc_name=False):
         if isinstance(func, python.Function) and name in func.globals:
-            return default_var(self.gx, name, None, mv=getmv(), exc_name=exc_name)
+            return infer.default_var(self.gx, name, None, mv=getmv(), exc_name=exc_name)
         else:
-            return default_var(self.gx, name, func, mv=getmv(), exc_name=exc_name)
+            return infer.default_var(self.gx, name, func, mv=getmv(), exc_name=exc_name)
 
     def tuple_flow(self, lvalue, rvalue, func=None):
-        self.temp_var2(lvalue, inode(self.gx, rvalue), func)
+        self.temp_var2(lvalue, infer.inode(self.gx, rvalue), func)
 
         if is_assign_list_or_tuple(lvalue):
             lvalue = lvalue.elts
         for (i, item) in enumerate(lvalue):
-            fakenode = CNode(self.gx, (item,), parent=func, mv=getmv())  # fake node per item, for multiple callfunc triggers
+            fakenode = infer.CNode(self.gx, (item,), parent=func, mv=getmv())  # fake node per item, for multiple callfunc triggers
             self.gx.types[fakenode] = set()
-            self.add_constraint((inode(self.gx, rvalue), fakenode), func)
+            self.add_constraint((infer.inode(self.gx, rvalue), fakenode), func)
 
             fakefunc = make_call(FakeGetattr3(rvalue, '__getitem__', ast.Load()), [ast.Num(i)])
 
@@ -1368,7 +1368,7 @@ class ModuleVisitor(BaseNodeVisitor):
             self.gx.item_rvalue[item] = rvalue
             if isinstance(item, ast.Name):
                 lvar = self.default_var(item.id, func)
-                self.add_constraint((inode(self.gx, fakefunc), inode(self.gx, lvar)), func)
+                self.add_constraint((infer.inode(self.gx, fakefunc), infer.inode(self.gx, lvar)), func)
             elif isinstance(item, ast.Subscript) or is_assign_attribute(item):
                 self.assign_pair(item, fakefunc, func)
             elif is_assign_list_or_tuple(item):  # recursion
@@ -1395,7 +1395,7 @@ class ModuleVisitor(BaseNodeVisitor):
         pass
 
     def visit_Call(self, node, func=None):  # XXX clean up!!
-        newnode = CNode(self.gx, node, parent=func, mv=getmv())
+        newnode = infer.CNode(self.gx, node, parent=func, mv=getmv())
 
         if isinstance(node.func, ast.Attribute) and type(node.func.ctx) == ast.Load:  # XXX import math; math.e
             # rewrite super(..) call
@@ -1413,22 +1413,22 @@ class ModuleVisitor(BaseNodeVisitor):
                 self.callfuncs.append((node, func))
 
                 for arg in node.args:
-                    inode(self.gx, arg).callfuncs.append(node)  # this one too
+                    infer.inode(self.gx, arg).callfuncs.append(node)  # this one too
 
                 return
             elif isinstance(node.func, FakeGetattr3):
                 pass
             else:
                 self.visit_Attribute(node.func, func, callfunc=True)
-                inode(self.gx, node.func).callfuncs.append(node)  # XXX iterative dataflow analysis: move there?
-                inode(self.gx, node.func).fakert = True
+                infer.inode(self.gx, node.func).callfuncs.append(node)  # XXX iterative dataflow analysis: move there?
+                infer.inode(self.gx, node.func).fakert = True
 
             ident = node.func.attr
-            inode(self.gx, node.func.value).callfuncs.append(node)  # XXX iterative dataflow analysis: move there?
+            infer.inode(self.gx, node.func.value).callfuncs.append(node)  # XXX iterative dataflow analysis: move there?
 
             if isinstance(node.func.value, ast.Name) and node.func.value.id in getmv().imports and node.func.attr == '__getattr__':  # XXX analyze_callfunc
                 if node.args[0].s in getmv().imports[node.func.value.id].mv.globals:  # XXX bleh
-                    self.add_constraint((inode(self.gx, getmv().imports[node.func.value.id].mv.globals[node.args[0].s]), newnode), func)
+                    self.add_constraint((infer.inode(self.gx, getmv().imports[node.func.value.id].mv.globals[node.args[0].s]), newnode), func)
 
         elif isinstance(node.func, ast.Name):
             # direct call
@@ -1448,10 +1448,10 @@ class ModuleVisitor(BaseNodeVisitor):
 
             if python.lookup_var(ident, func, mv=getmv()):
                 self.visit(node.func, func)
-                inode(self.gx, node.func).callfuncs.append(node)  # XXX iterative dataflow analysis: move there
+                infer.inode(self.gx, node.func).callfuncs.append(node)  # XXX iterative dataflow analysis: move there
         else:
             self.visit(node.func, func)
-            inode(self.gx, node.func).callfuncs.append(node)  # XXX iterative dataflow analysis: move there
+            infer.inode(self.gx, node.func).callfuncs.append(node)  # XXX iterative dataflow analysis: move there
 
         # --- arguments
         if not getmv().module.builtin and has_star_kwarg(node):
@@ -1459,13 +1459,13 @@ class ModuleVisitor(BaseNodeVisitor):
 
         for arg in get_arg_nodes(node):
             self.visit(arg, func)
-            inode(self.gx, arg).callfuncs.append(node)  # this one too
+            infer.inode(self.gx, arg).callfuncs.append(node)  # this one too
 
         # --- handle instantiation or call
         constructor = python.lookup_class(node.func, getmv())
         if constructor and (not isinstance(node.func, ast.Name) or not python.lookup_var(node.func.id, func, mv=getmv())):
             self.instance(node, constructor, func)
-            inode(self.gx, node).callfuncs.append(node)  # XXX see above, investigate
+            infer.inode(self.gx, node).callfuncs.append(node)  # XXX see above, investigate
         else:
             self.gx.types[newnode] = set()
 
@@ -1524,9 +1524,9 @@ class ModuleVisitor(BaseNodeVisitor):
 
         # --- built-in attributes
         if 'class_' in getmv().classes or 'class_' in getmv().ext_classes:
-            var = default_var(self.gx, '__class__', newclass)
+            var = infer.default_var(self.gx, '__class__', newclass)
             var.invisible = True
-            self.gx.types[inode(self.gx, var)] = set([(python.def_class(self.gx, 'class_'), python.def_class(self.gx, 'class_').dcpa)])
+            self.gx.types[infer.inode(self.gx, var)] = set([(python.def_class(self.gx, 'class_'), python.def_class(self.gx, 'class_').dcpa)])
             python.def_class(self.gx, 'class_').dcpa += 1
 
         # --- staticmethod, property
@@ -1580,7 +1580,7 @@ class ModuleVisitor(BaseNodeVisitor):
             if node.attr in ['__doc__']:
                 error('%s attribute is not supported' % node.attr, self.gx, node, mv=getmv())
 
-            newnode = CNode(self.gx, node, parent=func, mv=getmv())
+            newnode = infer.CNode(self.gx, node, parent=func, mv=getmv())
             self.gx.types[newnode] = set()
 
             fakefunc = make_call(FakeGetattr(node.value, '__getattr__', ast.Load()), [ast.Str(node.attr)])
@@ -1638,7 +1638,7 @@ class ModuleVisitor(BaseNodeVisitor):
 
     def visit_Name(self, node, func=None):
         if type(node.ctx) == ast.Load:
-            newnode = CNode(self.gx, node, parent=func, mv=getmv())
+            newnode = infer.CNode(self.gx, node, parent=func, mv=getmv())
             self.gx.types[newnode] = set()
 
             if node.id == '__doc__':
@@ -1652,7 +1652,7 @@ class ModuleVisitor(BaseNodeVisitor):
                 return
 
             if isinstance(func, python.Function) and node.id in func.globals:
-                var = default_var(self.gx, node.id, None, mv=getmv())
+                var = infer.default_var(self.gx, node.id, None, mv=getmv())
             else:
                 var = python.lookup_var(node.id, func, mv=getmv())
                 if not var:
@@ -1663,9 +1663,9 @@ class ModuleVisitor(BaseNodeVisitor):
                         self.gx.types[newnode] = set([(cl.parent, 0)])
                         newnode.copymetoo = True
                     else:
-                        var = default_var(self.gx, node.id, None, mv=getmv())
+                        var = infer.default_var(self.gx, node.id, None, mv=getmv())
             if var:
-                self.add_constraint((inode(self.gx, var), newnode), func)
+                self.add_constraint((infer.inode(self.gx, var), newnode), func)
                 for a, b in self.gx.filterstack:
                     if var.name == a.id:
                         self.gx.filters[node] = python.lookup_class(b, getmv())
@@ -1686,7 +1686,7 @@ class ModuleVisitor(BaseNodeVisitor):
         self.gx.lambdawrapper[node2] = self.lambdaname[l]
         f = self.lambdas[self.lambdaname[l]]
         f.lambdawrapper = True
-        inode(self.gx, node2).lambdawrapper = f
+        infer.inode(self.gx, node2).lambdawrapper = f
         return f
 
 

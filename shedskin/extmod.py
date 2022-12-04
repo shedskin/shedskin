@@ -9,8 +9,8 @@ extmod.py: extension module support
 """
 import logging
 
+from . import infer
 from . import python
-from .infer import called
 from .typestr import ExtmodError, nodetypestr, singletype2
 
 logger = logging.getLogger("extmod")
@@ -107,7 +107,7 @@ class ExtensionModule:
         """
         supported = []
         for func in funcs:
-            if func.isGenerator or not called(func):
+            if func.isGenerator or not infer.called(func):
                 continue
             if func.ident in [
                 "__setattr__",
@@ -184,7 +184,7 @@ class ExtensionModule:
             name in cl.funcs
             and not cl.funcs[name].invisible
             and not cl.funcs[name].inherited
-            and called(cl.funcs[name])
+            and infer.called(cl.funcs[name])
         )
 
     def do_add_globals(self, classes, __ss_mod):

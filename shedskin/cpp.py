@@ -19,12 +19,8 @@ import os
 import string
 import struct
 import textwrap
-import types
 
 import jinja2
-import mako
-from mako import exceptions
-from mako.lookup import TemplateLookup
 
 from . import python
 from .ast_utils import (BaseNodeVisitor, handle_with_vars, is_assign_attribute,
@@ -41,7 +37,7 @@ from .typestr import (incompatible_assignment_rec, lowest_common_parents,
 from .virtual import virtuals
 
 
-class ModuleViewModule(types.SimpleNamespace): pass
+
 
 
 
@@ -110,7 +106,6 @@ def escape_extra_newlines(text):
 class GenerateVisitor(BaseNodeVisitor):
     def __init__(self, gx, module):
         self.gx = gx
-        self.mvm = ModuleViewModule()
         self.output_base = module.filename[:-3]
         self.out = open(self.output_base + '.cpp', 'w')
         self.indentation = ''
@@ -123,11 +118,6 @@ class GenerateVisitor(BaseNodeVisitor):
         self.with_count = 0
         self.bool_wrapper = {}
         self.namer = CPPNamer(self.gx, self)
-        self.mako_env = TemplateLookup(
-            directories=[self.gx.sysdir + '/templates/cpp-mako/'],
-            preprocessor=escape_extra_newlines,
-            default_filters=['str', 'trim'],
-        )
         self.jinja_env = jinja2.Environment(
             loader=jinja2.FileSystemLoader(
                 self.gx.sysdir + '/templates/cpp/'),
@@ -137,7 +127,6 @@ class GenerateVisitor(BaseNodeVisitor):
         self.jinja_env.filters['depointer'] = (
             lambda ts: ts[:-1] if ts.endswith('*') else ts)
         self.extmod = ExtensionModule(self.gx, self)
-
 
     def cpp_name(self, obj):
         return self.namer.name(obj)
@@ -492,44 +481,21 @@ class GenerateVisitor(BaseNodeVisitor):
         if ast.get_docstring(node):
             node.doc = ast.get_docstring(node) # necessary for the module-level comments
 
-        if 0:
-            try:
-                file_top = self.mako_env.get_template('module.cpp').render(
-                    node=node,
-                    module=self.module,
-                    imports=[
-                        (child, self.gx.from_module[child])
-                        for child in node.body
-                        if isinstance(child, ast.ImportFrom) and child.module != '__future__'],
-                    globals=self.gen_declare_defs(self.mv.globals.items()),
-                    nodetypestr=lambda var: nodetypestr(self.gx, var, var.parent, mv=self.mv),
-                    defaults=self.gen_defaults(),
-                    listcomps=self.mv.listcomps,
-                    cpp_name=self.cpp_name,
-                    namer=self.namer,
-                )
-            except:
-                traceback = exceptions.RichTraceback()
-                for (filename, lineno, function, line) in traceback.traceback:
-                    print("File %s, line %s, in %s" % (filename, lineno, function))
-                    print(line, "\n")
-                print("%s: %s" % (str(traceback.error.__class__.__name__), traceback.error))                
-        else:
-            file_top = self.jinja_env.get_template('module.cpp.tpl').render(
-                node=node,
-                module=self.module,
-                imports=[
-                    (child, self.gx.from_module[child])
-                    for child in node.body
-                    if isinstance(child, ast.ImportFrom) and child.module != '__future__'],
-                globals=self.gen_declare_defs(self.mv.globals.items()),
-                nodetypestr=lambda var: nodetypestr(self.gx, var, var.parent, mv=self.mv),
-                defaults=self.gen_defaults(),
-                listcomps=self.mv.listcomps,
-                cpp_name=self.cpp_name,
-                namer=self.namer,
-                dedent=textwrap.dedent,
-            )
+        file_top = self.jinja_env.get_template('module.cpp.tpl').render(
+            node=node,
+            module=self.module,
+            imports=[
+                (child, self.gx.from_module[child])
+                for child in node.body
+                if isinstance(child, ast.ImportFrom) and child.module != '__future__'],
+            globals=self.gen_declare_defs(self.mv.globals.items()),
+            nodetypestr=lambda var: nodetypestr(self.gx, var, var.parent, mv=self.mv),
+            defaults=self.gen_defaults(),
+            listcomps=self.mv.listcomps,
+            cpp_name=self.cpp_name,
+            namer=self.namer,
+            dedent=textwrap.dedent,
+        )
         
         self.print(file_top)
 
