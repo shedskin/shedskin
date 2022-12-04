@@ -74,11 +74,11 @@ class defaultdict:
         return self.value
 
     def keys(self):
-        return [self.unit]
+        yield self.unit
     def values(self):
-        return [self.value]
+        yield self.value
     def items(self):
-        return [(self.unit, self.value)]
+        yield (self.unit, self.value)
 
     def __repr__(self):
         self.unit.__repr__()
@@ -140,13 +140,6 @@ class defaultdict:
         d.__setunit__(iter(l).__next__(), b)
         return d
     fromkeys = staticmethod(fromkeys) # XXX classmethod
-
-    def iterkeys(self):
-        return __iter(self.unit)
-    def itervalues(self):
-        return __iter(self.value)
-    def iteritems(self):
-        return __iter((self.unit, self.value))
 
     def __iter__(self):
         return __iter(self.unit)

@@ -65,7 +65,7 @@ class MMU(memory.Memory):
 
     def set_overlay(self, name, overlay):
         self.overlays[name] = overlay
-        self.overlay_values = self.overlays.values()
+        self.overlay_values = list(self.overlays.values())
 
     def read_memory(self, address, size = 1):
         value = self.xread_memory(address, size)

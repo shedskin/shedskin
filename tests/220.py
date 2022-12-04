@@ -22,16 +22,19 @@ class huppa:
         print('floordiv')
         return self
 
-    def __ifloordiv(self, other):
+    def __ifloordiv__(self, other):
         print('ifloordiv')
         return self
 
 h = huppa()
+
 print(str(h))
 print(bytes(h))
+
 print(h/h)
 print(h//h)
-
+h /= h
+h //= h
 
 # TODO os.popen2 disappeared? check
 #os.popen2 improvement
