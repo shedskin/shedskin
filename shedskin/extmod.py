@@ -9,9 +9,9 @@ extmod.py: extension module support
 """
 import logging
 
-from .infer import called
-from .python import Class, Module, def_class
-from .typestr import ExtmodError, nodetypestr, singletype2
+from . import infer
+from . import python
+from . import typestr
 
 logger = logging.getLogger("extmod")
 OVERLOAD_SINGLE = ["__neg__", "__pos__", "__abs__", "__nonzero__"]
@@ -76,12 +76,12 @@ class ExtensionModule:
                 continue
             if var.name.startswith("__"):  # XXX
                 continue
-            if var.invisible or singletype2(self.gx.merged_inh[var], Module):
+            if var.invisible or typestr.singletype2(self.gx.merged_inh[var], python.Module):
                 continue
             try:
-                nodetypestr(self.gx, var, var.parent, check_extmod=True, mv=self.gv.mv)
-            except ExtmodError:
-                if isinstance(var.parent, Class):
+                typestr.nodetypestr(self.gx, var, var.parent, check_extmod=True, mv=self.gv.mv)
+            except typestr.ExtmodError:
+                if isinstance(var.parent, python.Class):
                     logger.warning(
                         "'%s.%s' variable not exported (cannot convert)",
                         var.parent.ident,
@@ -107,7 +107,7 @@ class ExtensionModule:
         """
         supported = []
         for func in funcs:
-            if func.isGenerator or not called(func):
+            if func.isGenerator or not infer.called(func):
                 continue
             if func.ident in [
                 "__setattr__",
@@ -117,11 +117,11 @@ class ExtensionModule:
                 "__imul__",
             ]:  # XXX
                 continue
-            if isinstance(func.parent, Class):
+            if isinstance(func.parent, python.Class):
                 if func.invisible or func.inherited or not self.gv.inhcpa(func):
                     continue
             if (
-                isinstance(func.parent, Class)
+                isinstance(func.parent, python.Class)
                 and func.ident in func.parent.staticmethods
             ):
                 logger.warning(
@@ -134,14 +134,14 @@ class ExtensionModule:
             reason = ''
             for formal in func.formals:
                 try:
-                    nodetypestr(
+                    typestr.nodetypestr(
                         self.gx, func.vars[formal], func, check_extmod=True, mv=self.gv.mv
                     )
-                except ExtmodError:
+                except typestr.ExtmodError:
                     builtins = False
                     reason = "cannot convert argument '%s'" % formal
             try:
-                nodetypestr(
+                typestr.nodetypestr(
                     self.gx,
                     func.retnode.thing,
                     func,
@@ -149,13 +149,13 @@ class ExtensionModule:
                     check_ret=True,
                     mv=self.gv.mv,
                 )
-            except ExtmodError:
+            except typestr.ExtmodError:
                 builtins = False
                 reason = "cannot convert return value"
             if builtins:
                 supported.append(func)
             else:
-                if isinstance(func.parent, Class):
+                if isinstance(func.parent, python.Class):
                     logger.warning(
                         "'%s.%s' method not exported (%s)",
                         func.parent.ident,
@@ -184,7 +184,7 @@ class ExtensionModule:
             name in cl.funcs
             and not cl.funcs[name].invisible
             and not cl.funcs[name].inherited
-            and called(cl.funcs[name])
+            and infer.called(cl.funcs[name])
         )
 
     def do_add_globals(self, classes, __ss_mod):
@@ -243,7 +243,7 @@ class ExtensionModule:
         :rtype:     { return_type_description }
         """
         write = self.write
-        if def_class(self.gx, "Exception") in cl.ancestors():  # XXX
+        if python.def_class(self.gx, "Exception") in cl.ancestors():  # XXX
             return
         write(
             "PyObject *%s__reduce__(PyObject *self, PyObject *args, PyObject *kwargs) {"
@@ -274,7 +274,7 @@ class ExtensionModule:
         write("    int l = PyTuple_Size(args);")
         write("    PyObject *state = PyTuple_GetItem(args, 0);")
         for i, var in enumerate(vars):
-            vartype = nodetypestr(self.gx, var, var.parent, mv=self.gv.mv)
+            vartype = typestr.nodetypestr(self.gx, var, var.parent, mv=self.gv.mv)
             write(
                 "    ((%sObject *)self)->__ss_object->%s = __to_ss<%s>(PyTuple_GetItem(state, %d));"
                 % (clname(cl), self.gv.cpp_name(var), vartype, i)
@@ -297,7 +297,7 @@ class ExtensionModule:
         :rtype:     { return_type_description }
         """
         write = self.write
-        if def_class(self.gx, "Exception") in cl.ancestors():
+        if python.def_class(self.gx, "Exception") in cl.ancestors():
             return
         if declare:
             write("    virtual PyObject *__to_py__();")
@@ -384,7 +384,7 @@ class ExtensionModule:
             else:
                 write("    0,")
         write("};\n")
-        if cl and not def_class(self.gx, "Exception") in cl.ancestors():
+        if cl and not python.def_class(self.gx, "Exception") in cl.ancestors():
             write(
                 "PyObject *%s__reduce__(PyObject *self, PyObject *args, PyObject *kwargs);"
                 % ident
@@ -398,7 +398,7 @@ class ExtensionModule:
             write(
                 '    {(char *)"__newobj__", (PyCFunction)__ss__newobj__, METH_VARARGS | METH_KEYWORDS, (char *)""},'
             )
-        elif cl and not def_class(self.gx, "Exception") in cl.ancestors():
+        elif cl and not python.def_class(self.gx, "Exception") in cl.ancestors():
             write(
                 '    {(char *)"__reduce__", (PyCFunction)%s__reduce__, METH_VARARGS | METH_KEYWORDS, (char *)""},'
                 % ident
@@ -408,7 +408,7 @@ class ExtensionModule:
                 % ident
             )
         for func in funcs:
-            if isinstance(func.parent, Class):
+            if isinstance(func.parent, python.Class):
                 id = clname(func.parent) + "_" + func.ident
             else:
                 id = "Global_" + "_".join(self.gv.module.name_list) + "_" + func.ident
@@ -431,13 +431,13 @@ class ExtensionModule:
         :rtype:     { return_type_description }
         """
         write = self.write
-        is_method = isinstance(func.parent, Class)
+        is_method = isinstance(func.parent, python.Class)
         if is_method:
             formals = func.formals[1:]
         else:
             formals = func.formals
 
-        if isinstance(func.parent, Class):
+        if isinstance(func.parent, python.Class):
             id = clname(func.parent) + "_" + func.ident
         else:
             id = "Global_" + "_".join(self.gv.module.name_list) + "_" + func.ident
@@ -446,7 +446,7 @@ class ExtensionModule:
 
         for i, formal in enumerate(formals):
             self.gv.start("")
-            typ = nodetypestr(self.gx, func.vars[formal], func, mv=self.gv.mv)
+            typ = typestr.nodetypestr(self.gx, func.vars[formal], func, mv=self.gv.mv)
             if func.ident in OVERLOAD:
                 write(
                     "        %(type)sarg_%(num)d = __to_ss<%(type)s>(args);"
@@ -461,7 +461,7 @@ class ExtensionModule:
                 self.gv.append("1, ")
                 defau = func.defaults[i - (len(formals) - len(func.defaults))]
                 if defau in func.mv.defaults:
-                    if self.gv.mergeinh[defau] == set([(def_class(self.gx, "none"), 0)]):
+                    if self.gv.mergeinh[defau] == set([(python.def_class(self.gx, "none"), 0)]):
                         self.gv.append("0")
                     else:
                         self.gv.append(
@@ -623,7 +623,7 @@ class ExtensionModule:
         """Generates a python c-api extension type.
 
         :param      cl:   class object
-        :type       cl:   shedskin.python.Class
+        :type       cl:   python.Class
         """
         write = self.write
         for n in cl.module.name_list:
@@ -705,7 +705,7 @@ class ExtensionModule:
                 % (clname(cl), var.name, clname(cl))
             )
             write("    try {")
-            typ = nodetypestr(self.gx, var, var.parent, mv=self.gv.mv)
+            typ = typestr.nodetypestr(self.gx, var, var.parent, mv=self.gv.mv)
             if typ == "void *":  # XXX investigate
                 write("        self->__ss_object->%s = NULL;" % self.gv.cpp_name(var))
             else:
@@ -789,7 +789,7 @@ class ExtensionModule:
         """
         classes = []
         for cl in self.gv.module.mv.classes.values():
-            if def_class(self.gx, "Exception") in cl.ancestors():
+            if python.def_class(self.gx, "Exception") in cl.ancestors():
                 if warns:
                     logger.warning(
                         "'%s' class not exported (inherits from Exception)", cl.ident

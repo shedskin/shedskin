@@ -3,14 +3,14 @@
 Copyright 2005-2013 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 
 '''
+import ast
 import collections
 import imp
 import os
 import re
 import sys
-from ast import parse, List, Tuple, Call, Name, Load, Num, UnaryOp, UAdd, USub, Attribute, get_docstring
-from .ast_utils import extract_argnames, is_assign_list_or_tuple
 
+from . import ast_utils
 
 class Module(object):
     def __init__(self, name, filename, relative_filename, builtin, node):
@@ -26,6 +26,7 @@ class Module(object):
         self.relative_path = os.path.dirname(relative_filename)
 
         #set the rest
+        self.ast = None # to be provided later after analysis
         self.builtin = builtin
         self.node = node
         self.prop_includes = set()
@@ -50,6 +51,11 @@ class Module(object):
 
     def __repr__(self):
         return 'Module ' + self.ident
+
+    @property
+    def doc(self):
+        """returns module docstring."""
+        return ast.get_docstring(self.ast)
 
 
 class Class(object):
@@ -146,9 +152,9 @@ class Function(object):
             if inherited_from and ident in parent.funcs:
                 ident += inherited_from.ident + '__'  # XXX ugly
             self.ident = ident
-            self.formals = extract_argnames(node.args)
+            self.formals = ast_utils.extract_argnames(node.args)
             self.flags = None
-            self.doc = get_docstring(node)
+            self.doc = ast.get_docstring(node)
         self.returnexpr = []
         self.retnode = None
         self.lambdanr = None
@@ -227,7 +233,7 @@ def parse_file(name):
     except ValueError:
         filebuf = re.sub(pat, clear_block, ''.join(open(name).readlines()))
     try:
-        return parse(filebuf)
+        return ast.parse(filebuf)
     except SyntaxError as s:
         print('*ERROR* %s:%d: %s' % (name, s.lineno, s.msg))
         sys.exit(1)
@@ -277,7 +283,7 @@ def lookup_implementor(cl, ident):
 
 
 def lookup_class_module(objexpr, mv, parent):
-    if isinstance(objexpr, Name):  # XXX Attribute?
+    if isinstance(objexpr, ast.Name):  # XXX ast.Attribute?
         var = lookup_var(objexpr.id, parent, mv=mv)
         if var and not var.imported:  # XXX cl?
             return None, None
@@ -285,28 +291,28 @@ def lookup_class_module(objexpr, mv, parent):
 
 
 def lookup_func(node, mv):  # XXX lookup_var first?
-    if isinstance(node, Name):
+    if isinstance(node, ast.Name):
         if node.id in mv.funcs:
             return mv.funcs[node.id]
         elif node.id in mv.ext_funcs:
             return mv.ext_funcs[node.id]
         else:
             return None
-    elif isinstance(node, Attribute):
+    elif isinstance(node, ast.Attribute):
         module = lookup_module(node.value, mv)
         if module and node.attr in module.mv.funcs:
             return module.mv.funcs[node.attr]
 
 
 def lookup_class(node, mv):  # XXX lookup_var first?
-    if isinstance(node, Name):
+    if isinstance(node, ast.Name):
         if node.id in mv.classes:
             return mv.classes[node.id]
         elif node.id in mv.ext_classes:
             return mv.ext_classes[node.id]
         else:
             return None
-    elif isinstance(node, Attribute):
+    elif isinstance(node, ast.Attribute):
         module = lookup_module(node.value, mv)
         if module and node.attr in module.mv.classes:
             return module.mv.classes[node.attr]
@@ -316,11 +322,11 @@ def lookup_module(node, mv):
     path = []
     imports = mv.imports
 
-    while isinstance(node, Attribute) and type(node.ctx) == Load:
+    while isinstance(node, ast.Attribute) and type(node.ctx) == ast.Load:
         path = [node.attr] + path
         node = node.value
 
-    if isinstance(node, Name):
+    if isinstance(node, ast.Name):
         path = [node.id] + path
 
         # --- search import chain
@@ -385,19 +391,19 @@ def subclass(a, b):
 
 
 def is_property_setter(dec):
-    return isinstance(dec, Attribute) and isinstance(dec.value, Name) and dec.attr == 'setter'
+    return isinstance(dec, ast.Attribute) and isinstance(dec.value, ast.Name) and dec.attr == 'setter'
 
 
 def is_literal(node):
     # RESOLVE: Can all UnaryOps be literals, Not?, Invert?
-    if isinstance(node, UnaryOp) and isinstance(node.op, (USub, UAdd)):
+    if isinstance(node, ast.UnaryOp) and isinstance(node.op, (ast.USub, ast.UAdd)):
         node = node.operand
     # RESOLVE: Isn't Str node also literal
-    return isinstance(node, Num) and isinstance(node.n, (int, float))
+    return isinstance(node, ast.Num) and isinstance(node.n, (int, float))
 
 
 def is_fastfor(node):
-    return isinstance(node.iter, Call) and isinstance(node.iter.func, Name) and node.iter.func.id in ['range', 'xrange']
+    return isinstance(node.iter, ast.Call) and isinstance(node.iter.func, ast.Name) and node.iter.func.id in ['range', 'xrange']
 
 
 def is_method(parent):
@@ -405,18 +411,18 @@ def is_method(parent):
 
 
 def is_enum(node):
-    return isinstance(node.iter, Call) and isinstance(node.iter.func, Name) and node.iter.func.id == 'enumerate' and len(node.iter.args) == 1 and is_assign_list_or_tuple(node.target)
+    return isinstance(node.iter, ast.Call) and isinstance(node.iter.func, ast.Name) and node.iter.func.id == 'enumerate' and len(node.iter.args) == 1 and ast_utils.is_assign_list_or_tuple(node.target)
 
 
 def is_zip2(node):
-    return isinstance(node.iter, Call) and isinstance(node.iter.func, Name) and node.iter.func.id == 'zip' and len(node.iter.args) == 2 and is_assign_list_or_tuple(node.target)
+    return isinstance(node.iter, ast.Call) and isinstance(node.iter.func, ast.Name) and node.iter.func.id == 'zip' and len(node.iter.args) == 2 and ast_utils.is_assign_list_or_tuple(node.target)
 
 def is_isinstance(node):
-    return isinstance(node, Call) and isinstance(node.func, Name) and node.func.id == 'isinstance'
+    return isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == 'isinstance'
 
 # --- recursively determine (lvalue, rvalue) pairs in assignment expressions
 def assign_rec(left, right):
-    if is_assign_list_or_tuple(left) and isinstance(right, (Tuple, List)):
+    if ast_utils.is_assign_list_or_tuple(left) and isinstance(right, (ast.Tuple, ast.List)):
         pairs = []
         for (lvalue, rvalue) in zip(left.elts, right.elts):
             pairs += assign_rec(lvalue, rvalue)
