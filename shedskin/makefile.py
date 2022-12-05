@@ -225,7 +225,10 @@ def generate_makefile(gx):
     if not gx.extension_module:
         if not gx.msvc:
             targets += [ident + '_prof' + ext, ident + '_debug' + ext]
-    write('\trm -f %s\n' % ' '.join(targets))
+    write('\trm -f %s' % ' '.join(targets))
+    if sys.platform == 'darwin':
+        write('\trm -rf %s.dSYM\n' % ' '.join(targets))
+    write()
 
     # phony
     phony = '.PHONY: all clean'
