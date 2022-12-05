@@ -190,7 +190,6 @@ def generate_makefile(gx):
         write()
         write('STATIC_LIBS=$(GC_STATIC) $(GCCPP_STATIC) $(PCRE_STATIC)')
         write('STATIC_CCFLAGS=$(CCFLAGS) -I$(GC_INCLUDE) -I$(PCRE_INCLUDE)')
-        # write('STATIC_LFLAGS=$(LDFLAGS) -L/usr/local/lib -bundle -undefined dynamic_lookup -Wno-unused-result -Wsign-compare -Wunreachable-code -fno-common -dynamic')
         write('STATIC_LFLAGS=' + MATCH.group(2))
         write()
 
@@ -212,10 +211,10 @@ def generate_makefile(gx):
         write(ident + suffix + ':\t$(CPPFILES) $(HPPFILES)')
         write('\t$(CC) ' + options + ' $(CCFLAGS) $(CPPFILES) $(LFLAGS) ' + _out + ident + suffix + _ext + '\n')
 
-        if sys.platform == 'darwin' and HOMEBREW and MATCH:
-            # static option
-            write('static: $(CPPFILES) $(HPPFILES)')
-            write(f'\t$(CC) {options} $(STATIC_CCFLAGS) $(CPPFILES) $(STATIC_LIBS) $(STATIC_LFLAGS) -o {ident}\n')
+    if sys.platform == 'darwin' and HOMEBREW and MATCH:
+        # static option
+        write('static: $(CPPFILES) $(HPPFILES)')
+        write(f'\t$(CC) $(STATIC_CCFLAGS) $(CPPFILES) $(STATIC_LIBS) $(STATIC_LFLAGS) -o {ident}\n')
 
     # clean
     ext = ''
@@ -226,7 +225,10 @@ def generate_makefile(gx):
     if not gx.extension_module:
         if not gx.msvc:
             targets += [ident + '_prof' + ext, ident + '_debug' + ext]
-    write('\trm -f %s\n' % ' '.join(targets))
+    write('\trm -f %s' % ' '.join(targets))
+    if sys.platform == 'darwin':
+        write('\trm -rf %s.dSYM\n' % ' '.join(targets))
+    write()
 
     # phony
     phony = '.PHONY: all clean'

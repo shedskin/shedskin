@@ -8,8 +8,9 @@
 *.txt
 *.ini
 *.csv
-tests/*.?pp
+tests/**/*.?pp
 *.so
+*.so.dSYM
 *.vim
 *.egg-info
 FLAGS
