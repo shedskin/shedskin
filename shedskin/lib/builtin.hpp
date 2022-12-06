@@ -462,6 +462,10 @@ public:
     void *__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, pyiter<__ss_int> *b);
     void *__delete__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
 
+#ifdef __SS_BIND
+    bytes(PyObject *p);
+    PyObject *__to_py__();
+#endif
 };
 
 class str : public pyseq<str *> {

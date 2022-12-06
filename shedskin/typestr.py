@@ -220,7 +220,7 @@ def typestrnew(gx, types, cplusplus=True, node=None, check_extmod=False, depth=0
 
     if check_ret and cl.mv.module.ident == 'collections' and cl.ident == 'defaultdict':
         logger.warn('defaultdicts are returned as dicts')
-    elif check_extmod and cl.mv.module.builtin and not (cl.mv.module.ident == 'builtin' and cl.ident in ['int_', 'float_', 'complex', 'str_', 'list', 'tuple', 'tuple2', 'dict', 'set', 'frozenset', 'none', 'bool_']) and not (cl.mv.module.ident == 'collections' and cl.ident == 'defaultdict'):
+    elif check_extmod and cl.mv.module.builtin and not (cl.mv.module.ident == 'builtin' and cl.ident in ['int_', 'float_', 'complex', 'str_', 'bytes_', 'list', 'tuple', 'tuple2', 'dict', 'set', 'frozenset', 'none', 'bool_']) and not (cl.mv.module.ident == 'collections' and cl.ident == 'defaultdict'):
         raise ExtmodError()
 
     # --- simple built-in types
