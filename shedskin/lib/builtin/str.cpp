@@ -840,7 +840,11 @@ str::str(PyObject *p) : hash(-1) {
         throw new TypeError(new str("error in conversion to Shed Skin (string expected)"));
 
     __class__ = cl_str_;
-    unit = __GC_STRING(PyUnicode_AsUTF8(p), PyUnicode_GET_SIZE(p));
+    Py_ssize_t sz;
+    const char *data = PyUnicode_AsUTF8AndSize(p, &sz);
+    unit = __GC_STRING(data, sz);
+
+    // unit = __GC_STRING(PyUnicode_AsUTF8(p), PyUnicode_GET_SIZE(p));
     // unit = __GC_STRING(PyString_AsString(p), PyString_Size(p));
     // unit = __GC_STRING(PyBytes_AS_STRING(p), PyBytes_Size(p));
 }
