@@ -555,7 +555,7 @@ class ExtensionModule:
         # write("    %s" % "Global_" + "_".join(self.gv.module.name_list) + "Methods")
         # write("};")
 
-        write("static struct PyModuleDef %smodule = {" % "_".join(self.gv.module.name_list))
+        write("static struct PyModuleDef Module_%s = {" % "_".join(self.gv.module.name_list))
         write("    PyModuleDef_HEAD_INIT,")
         write('    .m_name = "%s",   /* name of module */' % "_".join(self.gv.module.name_list))
         write('    .m_doc = "module docstring",   /* module documentation, may be NULL */') # FIXME
@@ -598,7 +598,7 @@ class ExtensionModule:
 
         write("    // create extension module")
         __ss_mod = "_".join(self.gv.module.name_list)
-        write("    __ss_mod_%s = m = PyModule_Create(&%smodule);" % (__ss_mod, __ss_mod))
+        write("    __ss_mod_%s = m = PyModule_Create(&Module_%s);" % (__ss_mod, __ss_mod))
         write("    if (m == NULL)")
         write("        return NULL;\n")
 
