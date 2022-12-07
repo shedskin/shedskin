@@ -586,7 +586,7 @@ class ExtensionModule:
         write("")
         write("PyMODINIT_FUNC PyInit_%s(void) {\n" % "_".join(self.gv.module.name_list))
         if self.gv.module == self.gx.main_module:
-            self.gv.do_init_modules()
+            self.gv.do_init_modules(extmod=True)
             write("    __" + self.gv.module.ident + "__::__init();")
 
         write("")
