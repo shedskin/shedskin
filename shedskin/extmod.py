@@ -809,8 +809,10 @@ class ExtensionModule:
         { function_description }
         """
         write = lambda s: print(s, file=self.gv.out)
-        # for cl in self.exported_classes():
-        #     write("extern PyTypeObject %sObjectType;" % clname(cl))
+
+        for cl in self.exported_classes():
+            write("extern PyTypeObject %sObjectType;" % clname(cl))
+
         write("namespace __shedskin__ { /* XXX */\n")
         for cl in self.exported_classes():
             write(
