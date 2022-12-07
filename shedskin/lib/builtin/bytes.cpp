@@ -693,16 +693,24 @@ bytes *bytes::rjust(int width, bytes *s) {
 /* extmod glue */
 
 #ifdef __SS_BIND
-bytes::bytes(PyObject *p) : hash(-1), frozen(1) { /* TODO bytearray -> !frozen */
-    if(!PyBytes_Check(p))
-        throw new TypeError(new str("error in conversion to Shed Skin (bytes expected)"));
-
+bytes::bytes(PyObject *p) : hash(-1) {
     __class__ = cl_bytes;
-    unit = __GC_STRING(PyBytes_AS_STRING(p), PyBytes_Size(p));
+
+    if(PyBytes_Check(p)) {
+        unit = __GC_STRING(PyBytes_AS_STRING(p), PyBytes_Size(p));
+	frozen = 1;
+    } else if (PyByteArray_Check(p)) {
+        unit = __GC_STRING(PyByteArray_AS_STRING(p), PyByteArray_Size(p));
+	frozen = 0;
+    } else
+        throw new TypeError(new str("error in conversion to Shed Skin (bytes/bytearray expected)"));
 }
 
 PyObject *bytes::__to_py__() {
-    return PyBytes_FromStringAndSize(unit.data(), unit.size());
+    if(frozen)
+        return PyBytes_FromStringAndSize(unit.data(), unit.size());
+    else
+        return PyByteArray_FromStringAndSize(unit.data(), unit.size());
 }
 #endif
 
