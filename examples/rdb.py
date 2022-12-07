@@ -159,7 +159,7 @@ def ParseRule(rule):
 def ParseAction(action):
   #prop,value=[string.strip(x) for x in action.split('=',1)] # XXX
   l3 = action.split('=',1)
-  prop, value = string.strip(l3[0]), string.strip(l3[1])
+  prop, value = l3[0].strip(), l3[1].strip()
   if not prop in KnownProps:
     log("WARNING: unknown property `%s'"%prop)
   return (prop,ParseValue(value))
@@ -171,7 +171,7 @@ def ParseRuleLine(line):
   try:
     # split line into "ruleset: action"
     tmp=line.split(":")
-    ruleset=[string.strip(x) for x in ":".join(tmp[:-1]).split(",")]
+    ruleset=[x.strip() for x in ":".join(tmp[:-1]).split(",")]
     actions=dict([ParseAction(y) for y in tmp[-1].split(",")])
     if len(ruleset)==1 and not(ruleset[0]):
       return ([],actions)
@@ -580,7 +580,7 @@ def parse_options():
     opts,args=getopt.getopt(sys.argv[1:],"hiv:snlfL:r",\
               ["help","interactive","volume=","nosmart","nochdir","nolog","force","logfile=","rename"])
   except getopt.GetoptError as g:
-    opterr(g.msg)
+    opterr(str(g))
   for opt,arg in opts:
     if opt in ("-h","--help"):
       help()

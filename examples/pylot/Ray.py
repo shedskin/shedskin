@@ -15,8 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with Foobar.  If not, see <http://www.gnu.org/licenses/>.import math
 
-import string
-
 from .Vector4 import Vector4
 from .Color import Color
 
@@ -32,4 +30,4 @@ class Ray(object):
     self.offset = offset
 
   def __repr__(self):
-    return "[" + string.join([repr(self.origin), repr(self.offset), ], ", ") + "]"
+    return "[" + ', '.join([repr(self.origin), repr(self.offset)]) + "]"
