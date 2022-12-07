@@ -247,7 +247,7 @@ python3 -m shedskin sieve && make
 time ./sieve
 
 time python3 sha.py hoempadoempa
-python3 -m shedskin -l sha && make
+python3 -m shedskin -Llib -l sha && make
 time ./sha hoempadoempa
 
 time python3 sokoban.py
