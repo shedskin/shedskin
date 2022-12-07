@@ -600,7 +600,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.print('    __shedskin__::__start(__%s__::__init);' % self.module.ident)
         self.print('}')
 
-    def do_init_modules(self):
+    def do_init_modules(self, extmod=False):
         self.print('    __shedskin__::__init();')
         for module in sorted(self.gx.modules.values(), key=lambda x: x.import_order):
             if module != self.gx.main_module and module.ident != 'builtin':
@@ -610,6 +610,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     else:
                         self.print('    __sys__::__init(__ss_argc, __ss_argv);')
                 else:
+                    if extmod and not module.builtin:
+                        self.print('    ' + module.full_path() + '::PyInit_%s();' % '_'.join(module.name_list))
                     self.print('    ' + module.full_path() + '::__init();')
 
     def do_comment(self, s):
