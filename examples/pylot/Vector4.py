@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with Foobar.  If not, see <http://www.gnu.org/licenses/>.import math
 
-import string
 import math
 
 from .Utils import Roughly
@@ -52,7 +51,7 @@ class Vector4(object):
     return [self.x, self.y, self.z, self.w]
 
   def __repr__(self):
-    return "(" + string.join([str(i) for i in self.toList()], ", ") + ")"
+    return "(" + ", ".join([str(i) for i in self.toList()]) + ")"
 
 # Consider __eq__
 
