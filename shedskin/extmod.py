@@ -750,7 +750,7 @@ class ExtensionModule:
             write('    .tp_repr = 0,')
         write('    .tp_as_number = &%s_as_number,' % clname(cl))
         if self.has_method(cl, "__str__"):
-            write('    .tp_str = (PyObject *(*)(PyObject *))%s___repr__, ' % clname(cl))
+            write('    .tp_str = (PyObject *(*)(PyObject *))%s___str__, ' % clname(cl))
         else:
             write('    .tp_str = 0,')
         write('    .tp_flags = Py_TPFLAGS_DEFAULT,')
