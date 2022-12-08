@@ -30,11 +30,11 @@ const size_t str::size() const {
     return this->unit.size();
 }
 
-const int str::find(const char c, int a) const {
+const __ss_int str::find(const char c, __ss_int a) const {
     return this->unit.find(c, a);
 }
 
-const int str::find(const char *c, int a) const {
+const __ss_int str::find(const char *c, __ss_int a) const {
     return this->unit.find(c, a);
 }
 
@@ -183,19 +183,19 @@ __ss_bool str::isnumeric() {
   return True;
 }
 
-str *str::ljust(int width, str *s) {
+str *str::ljust(__ss_int width, str *s) {
     if(width<=__len__()) return this;
     if(!s) s = sp;
     return __add__(s->__mul__(width-__len__()));
 }
 
-str *str::rjust(int width, str *s) {
+str *str::rjust(__ss_int width, str *s) {
     if(width<=__len__()) return this;
     if(!s) s = sp;
     return s->__mul__(width-__len__())->__add__(this);
 }
 
-str *str::zfill(int width) {
+str *str::zfill(__ss_int width) {
     if(width<=__len__()) return this;
     if(__len__() > 0 and (unit[0] == '-' or unit[0] == '+'))
         return __add__((new str("0"))->__mul__(width-__len__()));
@@ -203,7 +203,7 @@ str *str::zfill(int width) {
         return (new str("0"))->__mul__(width-__len__())->__add__(this);
 }
 
-str *str::expandtabs(int tabsize) {
+str *str::expandtabs(__ss_int tabsize) {
     size_t i;
     __GC_STRING r = unit;
     while((i = r.find("\t")) != std::string::npos)
@@ -351,7 +351,7 @@ __ss_bool str::isidentifier() {
     return True;
 }
 
-list<str *> *str::splitlines(int keepends)
+list<str *> *str::splitlines(__ss_int keepends)
 {
     list<str *> *r = new list<str *>();
     size_t i, j, endlen;
@@ -387,7 +387,7 @@ str *str::rstrip(str *chars) {
     return new str(unit.substr(0,last+1));
 }
 
-list<str *> *str::split(str *sp, int max_splits) {
+list<str *> *str::split(str *sp, __ss_int max_splits) {
     __GC_STRING s = unit;
     int num_splits = 0;
     size_t sep_iter = 0, tmp, chunk_iter = 0;
@@ -690,28 +690,28 @@ str *str::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
     }
 }
 
-int str::__fixstart(int a, int b) {
+__ss_int str::__fixstart(__ss_int a, __ss_int b) {
     if(a == -1) return a;
     return a+b;
 }
 
-__ss_int str::find(str *s, int a) { return __fixstart(unit.substr(a, size()-a).find(s->unit), a); }
-__ss_int str::find(str *s, int a, int b) { return __fixstart(unit.substr(a, b-a).find(s->unit), a); }
+__ss_int str::find(str *s, __ss_int a) { return __fixstart(unit.substr(a, size()-a).find(s->unit), a); }
+__ss_int str::find(str *s, __ss_int a, __ss_int b) { return __fixstart(unit.substr(a, b-a).find(s->unit), a); }
 
-__ss_int str::rfind(str *s, int a) { return __fixstart(unit.substr(a, size()-a).rfind(s->unit), a); }
-__ss_int str::rfind(str *s, int a, int b) { return __fixstart(unit.substr(a, b-a).rfind(s->unit), a); }
+__ss_int str::rfind(str *s, __ss_int a) { return __fixstart(unit.substr(a, size()-a).rfind(s->unit), a); }
+__ss_int str::rfind(str *s, __ss_int a, __ss_int b) { return __fixstart(unit.substr(a, b-a).rfind(s->unit), a); }
 
-int str::__checkneg(int i) {
+__ss_int str::__checkneg(__ss_int i) {
     if(i == -1)
         throw new ValueError(new str("substring not found"));
     return i;
 }
 
-int str::index(str *s, int a) { return __checkneg(find(s, a)); }
-int str::index(str *s, int a, int b) { return __checkneg(find(s, a, b)); }
+__ss_int str::index(str *s, __ss_int a) { return __checkneg(find(s, a)); }
+__ss_int str::index(str *s, __ss_int a, __ss_int b) { return __checkneg(find(s, a, b)); }
 
-int str::rindex(str *s, int a) { return __checkneg(find(s, a)); }
-int str::rindex(str *s, int a, int b) { return __checkneg(find(s, a, b)); }
+__ss_int str::rindex(str *s, __ss_int a) { return __checkneg(find(s, a)); }
+__ss_int str::rindex(str *s, __ss_int a, __ss_int b) { return __checkneg(find(s, a, b)); }
 
 __ss_int str::count(str *s, __ss_int start) { return count(s, start, __len__()); }
 __ss_int str::count(str *s, __ss_int start, __ss_int end) {
