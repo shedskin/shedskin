@@ -6,9 +6,8 @@ from gi.repository import Gtk, Gdk, GLib, GdkPixbuf, GLib
 
 import sys
 import time
-import c64
-print(c64)
 from c64 import c64, screens
+print(c64)
 from c64.symbols import S_A, S_X, S_Y, S_SP, S_PC
 from optparse import OptionParser
 
