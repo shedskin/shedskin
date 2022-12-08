@@ -73,7 +73,7 @@ class ExtensionModule:
         for var in variables:
             if not var in self.gx.merged_inh or not self.gx.merged_inh[var]:
                 continue
-            if var.name.startswith("__"):  # XXX
+            if var.name is None or var.name.startswith("__"):  # XXX
                 continue
             if var.invisible or typestr.singletype2(self.gx.merged_inh[var], python.Module):
                 continue

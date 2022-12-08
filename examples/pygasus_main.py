@@ -4,6 +4,7 @@ import pygame
 import pygame.image
 
 import pygasus
+print(pygasus)
 
 def main():
     pygame.init()

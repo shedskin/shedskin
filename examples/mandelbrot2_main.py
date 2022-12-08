@@ -9,6 +9,8 @@ except ImportError:
 import os
 from PIL import Image, ImageTk
 
+import mandelbrot2
+print(mandelbrot2)
 from mandelbrot2 import mandel_file
 
 main_file = 'm-1 0i_3.5_240.bmp'
