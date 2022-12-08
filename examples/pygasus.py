@@ -450,18 +450,18 @@ def joyStrobe():
         elif jpdReadNumber__==3:
                 if keys[pygamekeys['s']]:
                         jpdKeysBuffer__=1
-        elif jpdReadNumber__==4:
-                if keys[pygamekeys['UP']]:
-                        jpdKeysBuffer__=1
-        elif jpdReadNumber__==5:
-                if keys[pygamekeys['DOWN']]:
-                        jpdKeysBuffer__=1
-        elif jpdReadNumber__==6:
-                if keys[pygamekeys['LEFT']]:
-                        jpdKeysBuffer__=1
-        elif jpdReadNumber__==7:
-                if keys[pygamekeys['RIGHT']]:
-                        jpdKeysBuffer__=1
+#        elif jpdReadNumber__==4:
+#                if keys[pygamekeys['UP']]:
+#                        jpdKeysBuffer__=1
+#        elif jpdReadNumber__==5:
+#                if keys[pygamekeys['DOWN']]:
+#                        jpdKeysBuffer__=1
+#        elif jpdReadNumber__==6:
+#                if keys[pygamekeys['LEFT']]:
+#                        jpdKeysBuffer__=1
+##        elif jpdReadNumber__==7:
+#                if keys[pygamekeys['RIGHT']]:
+#                        jpdKeysBuffer__=1
         elif jpdReadNumber__==16:
                 jpdKeysBuffer__=1
         jpdReadNumber__+=1
