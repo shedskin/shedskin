@@ -35,36 +35,36 @@ str *bytes::__str__() {
     return __repr__();
 }
 
-const int bytes::find(const char c, int a) const {
+const __ss_int bytes::find(const char c, __ss_int a) const {
     return this->unit.find(c, a);
 }
 
-const int bytes::find(const char *c, int a) const {
+const __ss_int bytes::find(const char *c, __ss_int a) const {
     return this->unit.find(c, a);
 }
 
-int bytes::__fixstart(int a, int b) {
+__ss_int bytes::__fixstart(__ss_int a, __ss_int b) {
     if(a == -1) return a;
     return a+b;
 }
 
-int bytes::find(bytes *s, int a) { return __fixstart(unit.substr(a, size()-a).find(s->unit), a); }
-int bytes::find(bytes *s, int a, int b) { return __fixstart(unit.substr(a, b-a).find(s->unit), a); }
+__ss_int bytes::find(bytes *s, __ss_int a) { return __fixstart(unit.substr(a, size()-a).find(s->unit), a); }
+__ss_int bytes::find(bytes *s, __ss_int a, __ss_int b) { return __fixstart(unit.substr(a, b-a).find(s->unit), a); }
 
-__ss_int bytes::rfind(bytes *s, int a) { return __fixstart(unit.substr(a, size()-a).rfind(s->unit), a); }
-__ss_int bytes::rfind(bytes *s, int a, int b) { return __fixstart(unit.substr(a, b-a).rfind(s->unit), a); }
+__ss_int bytes::rfind(bytes *s, __ss_int a) { return __fixstart(unit.substr(a, size()-a).rfind(s->unit), a); }
+__ss_int bytes::rfind(bytes *s, __ss_int a, __ss_int b) { return __fixstart(unit.substr(a, b-a).rfind(s->unit), a); }
 
-int bytes::__checkneg(int i) {
+__ss_int bytes::__checkneg(__ss_int i) {
     if(i == -1)
         throw new ValueError(new str("substring not found"));
     return i;
 }
 
-int bytes::index(bytes *s, int a) { return __checkneg(find(s, a)); }
-int bytes::index(bytes *s, int a, int b) { return __checkneg(find(s, a, b)); }
+__ss_int bytes::index(bytes *s, __ss_int a) { return __checkneg(find(s, a)); }
+__ss_int bytes::index(bytes *s, __ss_int a, __ss_int b) { return __checkneg(find(s, a, b)); }
 
-int bytes::rindex(bytes *s, int a) { return __checkneg(find(s, a)); }
-int bytes::rindex(bytes *s, int a, int b) { return __checkneg(find(s, a, b)); }
+__ss_int bytes::rindex(bytes *s, __ss_int a) { return __checkneg(find(s, a)); }
+__ss_int bytes::rindex(bytes *s, __ss_int a, __ss_int b) { return __checkneg(find(s, a, b)); }
 
 str *bytes::__repr__() {
     std::stringstream ss;
@@ -250,7 +250,7 @@ bytes *bytes::strip(bytes *chars) {
     return lstrip(chars)->rstrip(chars);
 }
 
-list<bytes *> *bytes::split(bytes *sp, int max_splits) {
+list<bytes *> *bytes::split(bytes *sp, __ss_int max_splits) {
     __GC_STRING s = unit;
     int num_splits = 0;
     size_t sep_iter = 0, tmp, chunk_iter = 0;
@@ -411,7 +411,7 @@ tuple2<bytes *, bytes *> *bytes::rpartition(bytes *sep)
         return new tuple2<bytes *, bytes *>(3, new bytes(unit, frozen), new bytes(frozen), new bytes(frozen));
 }
 
-list<bytes *> *bytes::splitlines(int keepends)
+list<bytes *> *bytes::splitlines(__ss_int keepends)
 {
     list<bytes *> *r = new list<bytes *>();
     size_t i, j, endlen;
@@ -493,7 +493,7 @@ __ss_int bytes::count(__ss_int b, __ss_int start, __ss_int end) {
     return count;
 }
 
-bytes *bytes::expandtabs(int tabsize) {
+bytes *bytes::expandtabs(__ss_int tabsize) {
     size_t i;
     __GC_STRING r = unit;
     while((i = r.find("\t")) != std::string::npos)
@@ -643,7 +643,7 @@ str *bytes::hex(str *sep) {
     return result;
 }
 
-bytes *bytes::center(int width, bytes *fillchar) {
+bytes *bytes::center(__ss_int width, bytes *fillchar) {
     int len = __len__();
     if(width<=len)
         return this;
@@ -674,7 +674,7 @@ bytes *bytes::zfill(__ss_int width) {
     return r;
 }
 
-bytes *bytes::ljust(int width, bytes *s) {
+bytes *bytes::ljust(__ss_int width, bytes *s) {
     if(width<=__len__()) return this;
     if(!s) s = bsp;
     bytes *r = __add__(s->__mul__(width-__len__()));
@@ -682,7 +682,7 @@ bytes *bytes::ljust(int width, bytes *s) {
     return r;
 }
 
-bytes *bytes::rjust(int width, bytes *s) {
+bytes *bytes::rjust(__ss_int width, bytes *s) {
     if(width<=__len__()) return this;
     if(!s) s = bsp;
     bytes *r = s->__mul__(width-__len__())->__add__(this);

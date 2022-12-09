@@ -1,5 +1,6 @@
 import curses
 import pylife
+print(pylife)
 
 
 class LifeScreen:

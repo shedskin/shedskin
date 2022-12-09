@@ -362,20 +362,20 @@ public:
     bytes *strip(bytes *chars=0);
     bytes *lstrip(bytes *chars=0);
 
-    list<bytes *> *split(bytes *sep=0, int maxsplit=-1);
-    list<bytes *> *rsplit(bytes *sep = 0, int maxsplit = -1);
+    list<bytes *> *split(bytes *sep=0, __ss_int maxsplit=-1);
+    list<bytes *> *rsplit(bytes *sep = 0, __ss_int maxsplit = -1);
     tuple2<bytes *, bytes *> *rpartition(bytes *sep);
     tuple2<bytes *, bytes *> *partition(bytes *sep);
-    list<bytes *> *splitlines(int keepends = 0);
+    list<bytes *> *splitlines(__ss_int keepends = 0);
 
     /* functions pointing to the underlying C++ implementation */
     const char *c_str() const;
     const size_t size() const;
-    const int find(const char c, int a=0) const;
-    const int find(const char *c, int a=0) const;
+    const __ss_int find(const char c, __ss_int a=0) const;
+    const __ss_int find(const char *c, __ss_int a=0) const;
 
-    int __fixstart(int a, int b);
-    int __checkneg(int i);
+    __ss_int __fixstart(__ss_int a, __ss_int b);
+    __ss_int __checkneg(__ss_int i);
 
     __ss_int find(bytes *s, __ss_int a=0);
     __ss_int find(bytes *s, __ss_int a, __ss_int b);
@@ -502,8 +502,8 @@ public:
     /* functions pointing to the underlying C++ implementation */
     const char *c_str() const;
     const size_t size() const;
-    const int find(const char c, int a=0) const;
-    const int find(const char *c, int a=0) const;
+    const __ss_int find(const char c, __ss_int a=0) const;
+    const __ss_int find(const char *c, __ss_int a=0) const;
 
     str *__str__();
     str *__repr__();
@@ -513,14 +513,14 @@ public:
     inline __ss_int __len__();
     str *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
 
-    list<str *> *split(str *sep=0, int maxsplit=-1);
-    list<str *> *rsplit(str *sep = 0, int maxsplit = -1);
+    list<str *> *split(str *sep=0, __ss_int maxsplit=-1);
+    list<str *> *rsplit(str *sep = 0, __ss_int maxsplit = -1);
     tuple2<str *, str *> *rpartition(str *sep);
     tuple2<str *, str *> *partition(str *sep);
-    list<str *> *splitlines(int keepends = 0);
+    list<str *> *splitlines(__ss_int keepends = 0);
 
-    int __fixstart(int a, int b);
-    int __checkneg(int i);
+    __ss_int __fixstart(__ss_int a, __ss_int b);
+    __ss_int __checkneg(__ss_int i);
 
     __ss_int find(str *s, __ss_int a=0);
     __ss_int find(str *s, __ss_int a, __ss_int b);

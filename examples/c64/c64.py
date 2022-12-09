@@ -221,4 +221,6 @@ I/O Area (memory mapped chip registers), Character ROM or RAM area (4096 bytes);
 if __name__ == "__main__":
     c64 = C64()
     c64.set_tape_image_name(b'', b'')
+    c64.CIA1.handle_key_press('')
+    c64.CIA1.handle_key_release('')
     c64.iterate()
