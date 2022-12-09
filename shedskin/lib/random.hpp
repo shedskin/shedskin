@@ -207,7 +207,7 @@ template <class A> list<A> *Random::sample(pyseq<A> *population, int k) {
     if ((!((0<=k)&&(k<=n)))) {
         throw (new ValueError(const_5));
     }
-    if ((n==0)) {
+    if (n==0) {
         throw (new ValueError(const_6));
     }
     result = ((new list<A>(1, population->__getitem__(0))))->__mul__(k);

@@ -19,7 +19,11 @@
 #include <sys/wait.h>
 #include <sys/utsname.h>
 #include <sys/statvfs.h>
+
+#ifndef __APPLE__
 #include <sys/sysmacros.h>
+#endif
+
 #include <grp.h>
 #include <sysexits.h>
 #endif

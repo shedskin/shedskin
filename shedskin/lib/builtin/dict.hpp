@@ -82,7 +82,7 @@ template<class K, class V> dict<K, V>::dict(PyObject *p) {
     PyObject *key, *value;
 
     PyObject *iter = PyObject_GetIter(p);
-    while(key = PyIter_Next(iter)) {
+    while ((key = PyIter_Next(iter))) {
         value = PyDict_GetItem(p, key);
         __setitem__(__to_ss<K>(key), __to_ss<V>(value));
         Py_DECREF(key);
@@ -106,7 +106,7 @@ template<class K, class V> PyObject *dict<K, V>::__to_py__() {
 #endif
 
 template <class K, class V> dict<K,V>& dict<K,V>::operator=(const dict<K,V>& other) {
-    memcpy(this, &other, sizeof(dict<K,V>));
+    memcpy((void*)this, (void*)&other, sizeof(dict<K,V>));
     int table_size = sizeof(dictentry<K,V>) * (other.mask+1);
     table = (dictentry<K,V>*)myallocate<K,V>(table_size);
     memcpy(table, other.table, table_size);

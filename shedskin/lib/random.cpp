@@ -115,34 +115,34 @@ int Random::randrange(int start, int stop, int step) {
     int istart, istep, istop, n, width;
 
     istart = __int(start);
-    if ((istart!=start)) {
+    if (istart != start) {
         throw (new ValueError(const_0));
     }
     istop = __int(stop);
-    if ((istop!=stop)) {
+    if ((istop != stop)) {
         throw (new ValueError(const_1));
     }
     width = (istop-istart);
-    if (((step==1) && (width>0))) {
+    if ((step == 1) && (width > 0)) {
         return __int((istart+__int((this->random()*width))));
     }
-    if ((step==1)) {
+    if (step==1) {
         throw (new ValueError(const_2));
     }
     istep = __int(step);
-    if ((istep!=step)) {
+    if (istep != step) {
         throw (new ValueError(const_3));
     }
-    if ((istep>0)) {
+    if (istep > 0) {
         n = (((width+istep)-1)/istep);
     }
-    else if ((istep<0)) {
+    else if (istep < 0) {
         n = (((width+istep)+1)/istep);
     }
     else {
         throw (new ValueError(const_4));
     }
-    if ((n<=0)) {
+    if (n<=0) {
         throw (new ValueError(const_2));
     }
     return (istart+(istep*__int((this->random()*n))));
@@ -159,7 +159,7 @@ double Random::betavariate(double alpha, double beta) {
     double y;
 
     y = this->gammavariate(alpha, 1.0);
-    if ((y==0)) {
+    if (y==0) {
         return 0.0;
     }
     else {
@@ -273,12 +273,12 @@ int Random::_init_by_array(list<int> *init_key) {
         __15->__setitem__(i, __15->__getfast__(i) & 4294967295u);
         i += 1;
         j += 1;
-        if ((i>=N)) {
+        if (i >= N) {
             __16 = this->mt;
             __16->__setitem__(0, (this->mt)->__getfast__((N-1)));
             i = 1;
         }
-        if ((j>=key_length)) {
+        if (j >= key_length) {
             j = 0;
         }
     END_FOR
@@ -290,7 +290,7 @@ int Random::_init_by_array(list<int> *init_key) {
         __20 = this->mt;
         __20->__setitem__(i, __20->__getfast__(i) & 4294967295u);
         i += 1;
-        if ((i>=N)) {
+        if (i >= N) {
             __21 = this->mt;
             __21->__setitem__(0, (this->mt)->__getfast__((N-1)));
             i = 1;
@@ -324,7 +324,7 @@ double Random::vonmisesvariate(double mu, double kappa) {
     __ss_bool __0, __1;
     TWOPI = 2*__math__::pi;
 
-    if ((kappa<=1e-06)) {
+    if (kappa <= 1e-06) {
         return (TWOPI*this->random());
     }
     s = (0.5/kappa);
@@ -360,10 +360,10 @@ double Random::gammavariate(double alpha, double beta) {
     */
     double ainv, b, bbb, ccc, p, r, u, u1, u2, v, x, z;
 
-    if (((alpha<=0.0) || (beta<=0.0))) {
+    if ((alpha <= 0.0) || (beta<=0.0)) {
         throw (new ValueError(const_7));
     }
-    if ((alpha>1.0)) {
+    if (alpha > 1.0) {
         ainv = __math__::sqrt(((2.0*alpha)-1.0));
         bbb = (alpha-LOG4);
         ccc = (alpha+ainv);
@@ -383,10 +383,10 @@ double Random::gammavariate(double alpha, double beta) {
             }
         }
     }
-    else if ((alpha==1.0)) {
+    else if ( alpha == 1.0) {
         u = this->random();
 
-        while((u<=1e-07)) {
+        while(u <= 1e-07) {
             u = this->random();
         }
         return (-__math__::log(u)*beta);
@@ -564,7 +564,7 @@ double Random::gauss(double mu, double sigma) {
     */
     double g2rad, x2pi, z;
 
-    if ((this->gauss_switch==1)) {
+    if (this->gauss_switch == 1) {
         z = this->gauss_next;
         this->gauss_switch = 0;
     }
@@ -586,8 +586,8 @@ int Random::_genrand_int32() {
     int __0, __1, __3, __4, kk, y;
     kk = 0;
 
-    if ((this->mti>=N)) {
-        if ((this->mti==(N+1))) {
+    if (this->mti >= N) {
+        if (this->mti==(N+1)) {
             this->_init_genrand(5489);
         }
 
@@ -652,7 +652,7 @@ void *WichmannHill::__whseed(int x, int y, int z) {
     if ((!(((0<=x)&&(x<256)) && ((0<=y)&&(y<256)) && ((0<=z)&&(z<256))))) {
         throw ((new ValueError(const_11)));
     }
-    if (((0==x)&&(x==y)&&(y==z))) {
+    if ((0==x) && (x==y) && (y==z)) {
         hophop = __time__::time();
         secs = __int(hophop);
         usec = __int((1000000*(hophop-__int(hophop))));
@@ -667,13 +667,13 @@ void *WichmannHill::__whseed(int x, int y, int z) {
         t = __61->__getfirst__();
         z = __61->__getsecond__();
     }
-    if ((x==0)) {
+    if (x==0) {
         x = 1;
     }
-    if ((y==0)) {
+    if (y==0) {
         y = 1;
     }
-    if ((z==0)) {
+    if (z==0) {
         z = 1;
     }
     __62 = x;
@@ -724,7 +724,7 @@ void *WichmannHill::seed(int a) {
     int __43, __44, __45, secs, usec, x, y, z;
     double hophop;
 
-    if ((a==-1)) {
+    if (a==-1) {
         hophop = __time__::time();
         secs = __int(hophop);
         usec = __int((1000000*(hophop-__int(hophop))));
@@ -781,7 +781,7 @@ void *WichmannHill::whseed(int a) {
     tuple2<int, int> *__65, *__66, *__67;
     int x, y, z;
 
-    if ((a==-1)) {
+    if (a==-1) {
         this->__whseed(((int )(0)), ((int )(0)), ((int )(0)));
         return NULL;
     }
@@ -797,13 +797,13 @@ void *WichmannHill::whseed(int a) {
     x = __mods((x+a), 256);
     y = __mods((y+a), 256);
     z = __mods((z+a), 256);
-    if ((x==0)) {
+    if (x==0) {
         x = 1;
     }
-    if ((y==0)) {
+    if (y==0) {
         y = 1;
     }
-    if ((z==0)) {
+    if (z==0) {
         z = 1;
     }
     this->__whseed(x, y, z);
@@ -819,7 +819,7 @@ void *WichmannHill::setstate(list<double> *state) {
     int __52, __53, __54, version;
 
     version = __int(state->__getfast__(0));
-    if ((version==1)) {
+    if (version==1) {
         __51 = state->__slice__(3, 1, 4, 0);
         xf = __51->__getfast__(0);
         yf = __51->__getfast__(1);
@@ -854,7 +854,7 @@ int WichmannHill::jumpahead(int n) {
     tuple2<int, int> *__55;
     int __56, __57, __58, x, y, z;
 
-    if ((!(n>=0))) {
+    if (!(n>=0)) {
         throw ((new ValueError(const_12)));
     }
     __55 = this->_seed;
