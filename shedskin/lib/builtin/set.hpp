@@ -25,7 +25,7 @@ template<class T> set<T>::set(PyObject *p) {
         throw new TypeError(new str("error in conversion to Shed Skin (set expected)"));
 
     PyObject *iter = PyObject_GetIter(p), *item;
-    while(item = PyIter_Next(iter)) {
+    while ((item = PyIter_Next(iter))) {
         add(__to_ss<T>(item));
         Py_DECREF(item);
     }
@@ -76,7 +76,7 @@ template <class T> set<T>& set<T>::operator=(const set<T>& other) {
 
     update(other);*/
 
-    memcpy(this, &other, sizeof(set<T>));
+    memcpy((void*)this, (void*)&other, sizeof(set<T>));
     int table_size = sizeof(setentry<T>) * (other.mask+1);
     table = (setentry<T>*)myallocate<T>(table_size);
     memcpy(table, other.table, table_size);
