@@ -197,6 +197,11 @@ __ss_int mmap::flush(__ss_int offset, __ss_int size)
     return 0;
 }
 
+// since darwin doesn't have mremap
+#ifdef __APPLE__
+#undef HAVE_MREMAP
+#endif
+
 void *mmap::resize(__ss_int new_size)
 {
     __raise_if_closed();

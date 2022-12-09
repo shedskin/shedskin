@@ -393,7 +393,7 @@ str *realpath(str *filename) {
         component = joinl(bits->__slice__(3, 0, i, 0));
         if (islink(component)) {
             resolved = _resolve_link(component);
-            if ((resolved==0)) {
+            if (resolved==0) {
                 return abspath(joinl(((new list<str *>(1, component)))->__add__(bits->__slice__(1, i, 0, 0))));
             }
             else {
