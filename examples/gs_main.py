@@ -13,6 +13,7 @@ gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk, GLib, GdkPixbuf
 
 from Gh0stenstein import world_manager
+print(world_manager)
 
 WIDTH, HEIGHT = 1024, 768
 

@@ -4,6 +4,7 @@ import pygame
 import pygame.image
 
 import pygasus
+print(pygasus)
 
 def main():
     pygame.init()
@@ -12,7 +13,7 @@ def main():
     pygasus.pReset()
     pygasus.setkeys({
         'q': pygame.K_q, 'w': pygame.K_w, 'a': pygame.K_a, 's': pygame.K_s,
-        'UP': pygame.K_UP, 'DOWN': pygame.K_DOWN, 'LEFT': pygame.K_LEFT, 'RIGHT': pygame.K_RIGHT, 
+#        'UP': pygame.K_UP, 'DOWN': pygame.K_DOWN, 'LEFT': pygame.K_LEFT, 'RIGHT': pygame.K_RIGHT, 
     })
     counter = 0
     total = 0

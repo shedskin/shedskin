@@ -30,6 +30,8 @@ from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageTk
 import random
+import pylot
+print(pylot)
 from pylot.Pool import ThreadedQueueProcessor
 #from pylot.Camera import Camera
 from pylot.Utils import *

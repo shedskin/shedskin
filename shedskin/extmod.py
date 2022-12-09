@@ -73,7 +73,7 @@ class ExtensionModule:
         for var in variables:
             if not var in self.gx.merged_inh or not self.gx.merged_inh[var]:
                 continue
-            if var.name.startswith("__"):  # XXX
+            if var.name is None or var.name.startswith("__"):  # XXX
                 continue
             if var.invisible or typestr.singletype2(self.gx.merged_inh[var], python.Module):
                 continue
@@ -370,7 +370,7 @@ class ExtensionModule:
             fs = [f for f in funcs if f.ident == overload]
             if fs:
                 f = fs[0]
-                if overload == "__nonzero__":  # XXX
+                if overload == "__abs__":  # XXX
                     write(
                         "    (int (*)(PyObject *))%s_%s," % (clname(f.parent), overload)
                     )
@@ -586,7 +586,7 @@ class ExtensionModule:
         write("")
         write("PyMODINIT_FUNC PyInit_%s(void) {\n" % "_".join(self.gv.module.name_list))
         if self.gv.module == self.gx.main_module:
-            self.gv.do_init_modules()
+            self.gv.do_init_modules(extmod=True)
             write("    __" + self.gv.module.ident + "__::__init();")
 
         write("")
