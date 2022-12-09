@@ -4,37 +4,37 @@
 
 def heappush(heap, item):
     heap[0] = item
-    cmp(item, item)
+    __cmp(item, item)
 
 def heappop(heap):
     return heap[0]
 
 def heappushpop(heap, item):
     heap[0] = item
-    cmp(item, item)
+    __cmp(item, item)
     return heap[0]
 
 def heapify(x):
-    cmp(x[0], x[0])
+    __cmp(x[0], x[0])
 
 def heapreplace(heap, item):
     heap[0] = item
-    cmp(item, item)
+    __cmp(item, item)
     return heap[0]
 
 def merge(*iterables):
     item = iter(iterables).__next__()
-    cmp(item, item)
+    __cmp(item, item)
     yield item
 
 def nlargest(n, iterable): # TODO , key = None
     item = iter(iterable).__next__()
-    cmp(item, item)
+    __cmp(item, item)
     #key(elem)
     yield item
 
 def nsmallest(n, iterable): # TODO , key = None
     item = iter(iterable).__next__()
-    cmp(item, item)
+    __cmp(item, item)
     #key(elem)
     yield item
