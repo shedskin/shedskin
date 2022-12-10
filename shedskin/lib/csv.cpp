@@ -130,7 +130,7 @@ void *reader::parse_process_char(str *c) {
     __ss_int __11, __13, __7, __9;
 
     dialect = this->dialect;
-    if ((this->state==START_RECORD)) {
+    if (this->state == START_RECORD) {
         if (__eq(c, const_7)) {
             return NULL;
         }
@@ -140,7 +140,7 @@ void *reader::parse_process_char(str *c) {
         }
         this->state = START_FIELD;
     }
-    if ((this->state==START_FIELD)) {
+    if (this->state == START_FIELD) {
         if ((const_9)->__contains__(c)) {
             this->parse_save_field();
             if (__eq(c, const_7)) {
@@ -162,21 +162,21 @@ void *reader::parse_process_char(str *c) {
             this->parse_save_field();
         }
         else {
-            if ((dialect->quoting==QUOTE_NONNUMERIC)) {
+            if (dialect->quoting == QUOTE_NONNUMERIC) {
                 this->numeric_field = 1;
             }
             this->parse_add_char(c);
             this->state = IN_FIELD;
         }
     }
-    else if ((this->state==ESCAPED_CHAR)) {
+    else if (this->state == ESCAPED_CHAR) {
         if (__eq(c, const_7)) {
             c = const_11;
         }
         this->parse_add_char(c);
         this->state = IN_FIELD;
     }
-    else if ((this->state==IN_FIELD)) {
+    else if (this->state == IN_FIELD) {
         if ((const_12)->__contains__(c)) {
             this->parse_save_field();
             if (__eq(c, const_7)) {
@@ -197,7 +197,7 @@ void *reader::parse_process_char(str *c) {
             this->parse_add_char(c);
         }
     }
-    else if ((this->state==IN_QUOTED_FIELD)) {
+    else if (this->state == IN_QUOTED_FIELD) {
         if (__eq(c, const_7)) {
         }
         else if (__eq(c, dialect->escapechar)) {
@@ -215,14 +215,14 @@ void *reader::parse_process_char(str *c) {
             this->parse_add_char(c);
         }
     }
-    else if ((this->state==ESCAPE_IN_QUOTED_FIELD)) {
+    else if (this->state == ESCAPE_IN_QUOTED_FIELD) {
         if (__eq(c, const_7)) {
             c = const_11;
         }
         this->parse_add_char(c);
         this->state = IN_QUOTED_FIELD;
     }
-    else if ((this->state==QUOTE_IN_QUOTED_FIELD)) {
+    else if (this->state == QUOTE_IN_QUOTED_FIELD) {
         if (__AND((dialect->quoting!=QUOTE_NONE), __eq(c, dialect->quotechar), 13)) {
             this->parse_add_char(c);
             this->state = IN_QUOTED_FIELD;
@@ -248,7 +248,7 @@ void *reader::parse_process_char(str *c) {
             throw ((new Error(__modct(const_13, 2, dialect->delimiter, dialect->quotechar))));
         }
     }
-    else if ((this->state==EAT_CRNL)) {
+    else if (this->state==EAT_CRNL) {
         if ((const_8)->__contains__(c)) {
         }
         else if (__eq(c, const_7)) {
@@ -291,7 +291,7 @@ list<str *> *reader::__next__() {
         END_FOR
 
         this->parse_process_char(const_7);
-        if ((this->state==START_RECORD)) {
+        if (this->state == START_RECORD) {
             break;
         }
     }
@@ -301,7 +301,7 @@ list<str *> *reader::__next__() {
 }
 
 void *reader::__init__(file *input_iter, str *dialect, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
-    if ((quoting==QUOTE_NONNUMERIC)) {
+    if (quoting == QUOTE_NONNUMERIC) {
         throw ((new ValueError(const_88)));
     }
     this->input_iter = input_iter;
@@ -361,7 +361,7 @@ __ss_int writer::join_append_data(str *field, __ss_int quote_empty, __ss_int quo
             break;
         }
         if (__OR(__eq(c, dialect->delimiter), __OR(__eq(c, dialect->escapechar), __OR(__eq(c, dialect->quotechar), lineterm->__contains__(c), 20), 19), 18)) {
-            if ((dialect->quoting==QUOTE_NONE)) {
+            if (dialect->quoting == QUOTE_NONE) {
                 want_escape = 1;
             }
             else {
@@ -388,7 +388,7 @@ __ss_int writer::join_append_data(str *field, __ss_int quote_empty, __ss_int quo
     END_FOR
 
     if (__AND((!___bool(field)), quote_empty, 22)) {
-        if ((dialect->quoting==QUOTE_NONE)) {
+        if (dialect->quoting == QUOTE_NONE) {
             throw ((new Error(const_19)));
         }
         else {
@@ -413,13 +413,13 @@ void *writer::writerow(list<str *> *seq) {
 
     FOR_IN(field,seq,24,26,123)
         quoted = 0;
-        if ((dialect->quoting==QUOTE_NONNUMERIC)) {
+        if (dialect->quoting == QUOTE_NONNUMERIC) {
             quoted = 1;
         }
-        else if ((dialect->quoting==QUOTE_ALL)) {
+        else if (dialect->quoting == QUOTE_ALL) {
             quoted = 1;
         }
-        if ((field==NULL)) {
+        if (field == NULL) {
             quoted = this->join_append(const_16, quoted, (len(seq)==1));
         }
         else {
@@ -460,7 +460,7 @@ __ss_int writer::join_append(str *field, __ss_int quoted, __ss_int quote_empty) 
 }
 
 void *writer::__init__(file *output_file, str *dialect, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
-    if ((quoting==QUOTE_NONNUMERIC)) {
+    if (quoting == QUOTE_NONNUMERIC) {
         throw ((new ValueError(const_88)));
     }
     this->output_file = output_file;
@@ -487,7 +487,7 @@ dict<str *, str *> *DictReader::__next__() {
     __ss_int __33, lf, lr;
     dict<str *, str *> *d;
 
-    if ((this->line_num==0)) {
+    if (this->line_num == 0) {
         this->getfieldnames();
     }
     row = (this->_reader)->__next__();
@@ -514,7 +514,7 @@ dict<str *, str *> *DictReader::__next__() {
 
 list<str *> *DictReader::getfieldnames() {
     
-    if ((this->_fieldnames==NULL)) {
+    if (this->_fieldnames == NULL) {
         try {
             this->_fieldnames = (this->_reader)->__next__();
         } catch (StopIteration *) {

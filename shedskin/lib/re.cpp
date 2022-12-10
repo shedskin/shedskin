@@ -332,9 +332,9 @@ str *re_object::sub(replfunc func, str *string, __ss_int maxn) {
         l->append(string->__slice__(3, at, match->start(), 0));
         l->append(func(match));
         at = match->end();
-        if ((maxn>0)) {
+        if (maxn > 0) {
             maxn = (maxn-1);
-            if ((maxn==0)) {
+            if (maxn == 0) {
                 break;
             }
         }
