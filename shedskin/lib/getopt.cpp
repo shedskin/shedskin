@@ -229,7 +229,7 @@ tuple2<list<tuple2<str *, str *> *> *, list<str *> *> *do_longs(list<tuple2<str 
     has_arg = __11->__getfirst__();
     opt = __11->__getsecond__();
     if (has_arg) {
-        if ((optarg==0)) {
+        if (optarg == 0) {
             if ((!___bool(args))) {
                 throw ((new GetoptError(__modct(const_6, 1, opt),opt)));
             }
