@@ -229,18 +229,19 @@ def write_to_db(filename):
   if int(props['ignore']): return 0
 
   # retrieve entry from known entries or rebuild it
-  if int(props['reuse']) and filename in KnownEntries:
-    entry = KnownEntries[filename] 
+  filename_bytes = bytes([ord(c) for c in filename])
+  if int(props['reuse']) and filename_bytes in KnownEntries:
+    entry = KnownEntries[filename_bytes]
   else:
 #  entry=int(props['reuse']) and (filename in KnownEntries) and KnownEntries[filename]
 #  if not entry:
     header[29]=int(props['type'])
     entry=header.tobytes()+ \
-      "".join([c+"\0" for c in filename[:261]])+ \
-      "\0"*(525-2*len(filename))
+      b"".join([bytes([c, 0]) for c in filename_bytes[:261]])+ \
+      b"\0"*(525-2*len(filename_bytes))
 
   # write entry, modifying shuffleflag and bookmarkflag at least
-  iTunesSD.write(entry[:555]+chr(int(props['shuffle']))+chr(int(props['bookmark']))+entry[557])
+  iTunesSD.write(entry[:555]+bytes([int(props['shuffle']),int(props['bookmark']),entry[557]]))
   if int(props['shuffle']): domains[-1].append(total_count)
   total_count+=1
   return 1
