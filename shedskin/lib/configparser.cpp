@@ -662,7 +662,7 @@ void *RawConfigParser::_read(file *fp, str *fpname) {
                 }
                 optname = 0;
             }
-            else if ((cursect==0)) {
+            else if (cursect==0) {
                 throw ((new MissingSectionHeaderError(fpname,lineno,line)));
             }
             else {
@@ -874,7 +874,7 @@ str *_interpolation_replace(__re__::match_object *match) {
     str *s;
 
     s = match->group(1, 1);
-    if ((s==0)) {
+    if (s == 0) {
         return match->group(1);
     }
     else {
