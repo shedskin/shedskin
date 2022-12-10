@@ -356,13 +356,13 @@ def browse(path, interactive):
   else:
     log("%s: %d files (out of %d)"%(displaypath,real_count,count))
 
-def stringval(i):
+def bytesval(i):
   if i<0: i+=0x1000000
-  return "%c%c%c"%(i&0xFF,(i>>8)&0xFF,(i>>16)&0xFF)
+  return bytes([i&0xFF, (i>>8)&0xFF, (i>>16)&0xFF])
 
 def listval(i):
   if i<0: i+=0x1000000
-  return [i&0xFF,(i>>8)&0xFF,(i>>16)&0xFF]
+  return [i&0xFF, (i>>8)&0xFF, (i>>16)&0xFF]
 
 def make_playback_state(volume=-1):
   # I'm not at all proud of this function. Why can't stupid Python make strings
@@ -396,7 +396,7 @@ def make_stats(count):
   log("Creating statistics file ...",False)
   try:
     open("iPod_Control/iTunes/iTunesStats","wb").write(\
-         stringval(count)+"\0"*3+(stringval(18)+"\xff"*3+"\0"*12)*count)
+         bytesval(count)+b"\0"*3+(bytesval(18)+b"\xff"*3+b"\0"*12)*count)
   except OSError:
     log("FAILED.")
     return 0
@@ -450,7 +450,7 @@ def make_shuffle(count):
     seq=list(range(count))
     random.shuffle(seq)
   try:
-    open("iPod_Control/iTunes/iTunesShuffle","wb").write("".join([stringval(x) for x in seq]))
+    open("iPod_Control/iTunes/iTunesShuffle","wb").write(b"".join([bytesval(x) for x in seq]))
   except OSError:
     log("FAILED.")
     return 0
@@ -490,7 +490,7 @@ Please make sure that:
       iTunesSD.seek(18)
       entry=iTunesSD.read(558)
       while len(entry)==558:
-        filename=entry[33::2].split("\0",1)[0]
+        filename=entry[33::2].split(b"\0",1)[0]
         KnownEntries[filename]=entry
         entry=iTunesSD.read(558)
   except (OSError, EOFError):
@@ -535,7 +535,7 @@ Please make sure that:
     log()
     log("Fixing iTunesSD header.")
     iTunesSD.seek(0)
-    iTunesSD.write("\0%c%c"%(total_count>>8,total_count&0xFF))
+    iTunesSD.write(bytes([0, total_count>>8, total_count&0xFF]))
     iTunesSD.close()
   except OSError:
     log("ERROR: Some strange errors occured while writing iTunesSD.")
