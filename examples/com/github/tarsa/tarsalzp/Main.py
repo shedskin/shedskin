@@ -83,8 +83,8 @@ class Main(object):
         return optionsMap
 
     def encode(self, optionsMap):
-        inputStream = BufferedInputStream(sys.stdin)
-        outputStream = BufferedOutputStreamWrapper(FileOutputStream(sys.stdout))
+        inputStream = BufferedInputStream(sys.stdin.buffer)
+        outputStream = BufferedOutputStreamWrapper(FileOutputStream(sys.stdout.buffer))
         standardInput = True
         standardOutput = True
         options = Options.getDefault()
@@ -129,8 +129,8 @@ class Main(object):
             outputStream.close()
 
     def decode(self, optionsMap):
-        inputStream = BufferedInputStream(sys.stdin)
-        outputStream = BufferedOutputStreamWrapper(FileOutputStream(sys.stdout))
+        inputStream = BufferedInputStream(sys.stdin.buffer)
+        outputStream = BufferedOutputStreamWrapper(FileOutputStream(sys.stdout.buffer))
         standardInput = True
         standardOutput = True
         for keyOriginal in optionsMap:
@@ -158,7 +158,7 @@ class Main(object):
             raise OSError("Not entire input was decoded.")
 
     def showOptions(self, optionsMap):
-        inputStream = BufferedInputStream(sys.stdin)
+        inputStream = BufferedInputStream(sys.stdin.buffer)
         standardInput = True
         for keyOriginal in optionsMap:
             key = keyOriginal.lower()
