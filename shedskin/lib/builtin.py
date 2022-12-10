@@ -875,6 +875,7 @@ class file(pyiter):
         self.closed = 0
         self.name = ''
         self.mode = ''
+        self.buffer = file_binary('')
 
     def read(self, size=0):
         return self.unit
