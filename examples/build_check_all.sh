@@ -199,10 +199,12 @@ python3 -m shedskin plcfrs && make
 time ./plcfrs
 
 python3 -m shedskin -be pygasus && make && python3 -c "import pygasus; assert pygasus.__file__.endswith('.so')"
+echo CHECK: pygasus_main!
 
 cd pylot
 python3 -m shedskin -be SimpleGeometry && make && python3 -c "import SimpleGeometry; assert SimpleGeometry.__file__.endswith('.so')"
 cd ..
+echo CHECK: pylot_main!
 
 time python3 pystone.py
 python3 -m shedskin pystone && make
@@ -259,6 +261,7 @@ python3 -m shedskin solitaire && make
 time ./solitaire -test
 
 python3 -m shedskin -web stereo && make && python3 -c "import stereo; assert stereo.__file__.endswith('.so')"
+echo CHECK: stereo_main!
 
 time python3 sudoku1.py
 python3 -m shedskin sudoku1 && make
