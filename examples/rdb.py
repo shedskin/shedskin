@@ -340,7 +340,7 @@ def browse(path, interactive):
       except OSError:
         pass
 
-  files.sort(cmp=lambda a,b:cmp(a.name, b.name)) #cmp_key)
+  files.sort(key=lambda a:a.name)
   count=len([None for f in files if not f.dir])
   if count: domains.append([])
 
