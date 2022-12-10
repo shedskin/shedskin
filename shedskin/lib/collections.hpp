@@ -279,7 +279,7 @@ public:
         PyObject *key, *value;
 
         PyObject *iter = PyObject_GetIter(p);
-        while(key = PyIter_Next(iter)) {
+        while ((key = PyIter_Next(iter))) {
             value = PyDict_GetItem(p, key);
             this->__setitem__(__to_ss<K>(key), __to_ss<V>(value));
             Py_DECREF(key);
