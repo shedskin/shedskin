@@ -133,11 +133,11 @@ def MatchRule(props,rule):
   if rule[1]=='~':
     return fnmatch.fnmatchcase(prop.lower(),ref.lower())
   elif rule[1]=='=':
-    return cmp(prop,ref)==0
+    return prop == ref
   elif rule[1]=='>':
-    return cmp(prop,ref)>0
+    return prop > ref
   elif rule[1]=='<':
-    return cmp(prop,ref)<0
+    return prop < ref
   else:
     return False
 
@@ -229,18 +229,19 @@ def write_to_db(filename):
   if int(props['ignore']): return 0
 
   # retrieve entry from known entries or rebuild it
-  if int(props['reuse']) and filename in KnownEntries:
-    entry = KnownEntries[filename] 
+  filename_bytes = bytes([ord(c) for c in filename])
+  if int(props['reuse']) and filename_bytes in KnownEntries:
+    entry = KnownEntries[filename_bytes]
   else:
 #  entry=int(props['reuse']) and (filename in KnownEntries) and KnownEntries[filename]
 #  if not entry:
     header[29]=int(props['type'])
-    entry=header.tostring()+ \
-      "".join([c+"\0" for c in filename[:261]])+ \
-      "\0"*(525-2*len(filename))
+    entry=header.tobytes()+ \
+      b"".join([bytes([c, 0]) for c in filename_bytes[:261]])+ \
+      b"\0"*(525-2*len(filename_bytes))
 
   # write entry, modifying shuffleflag and bookmarkflag at least
-  iTunesSD.write(entry[:555]+chr(int(props['shuffle']))+chr(int(props['bookmark']))+entry[557])
+  iTunesSD.write(entry[:555]+bytes([int(props['shuffle']),int(props['bookmark']),entry[557]]))
   if int(props['shuffle']): domains[-1].append(total_count)
   total_count+=1
   return 1
@@ -339,7 +340,7 @@ def browse(path, interactive):
       except OSError:
         pass
 
-  files.sort(cmp=lambda a,b:cmp(a.name, b.name)) #cmp_key)
+  files.sort(key=lambda a:a.name)
   count=len([None for f in files if not f.dir])
   if count: domains.append([])
 
@@ -356,13 +357,13 @@ def browse(path, interactive):
   else:
     log("%s: %d files (out of %d)"%(displaypath,real_count,count))
 
-def stringval(i):
+def bytesval(i):
   if i<0: i+=0x1000000
-  return "%c%c%c"%(i&0xFF,(i>>8)&0xFF,(i>>16)&0xFF)
+  return bytes([i&0xFF, (i>>8)&0xFF, (i>>16)&0xFF])
 
 def listval(i):
   if i<0: i+=0x1000000
-  return [i&0xFF,(i>>8)&0xFF,(i>>16)&0xFF]
+  return [i&0xFF, (i>>8)&0xFF, (i>>16)&0xFF]
 
 def make_playback_state(volume=-1):
   # I'm not at all proud of this function. Why can't stupid Python make strings
@@ -370,7 +371,7 @@ def make_playback_state(volume=-1):
   log("Setting playback state ...",False)
   PState=[]
   try:
-    f=file("iPod_Control/iTunes/iTunesPState","rb")
+    f=open("iPod_Control/iTunes/iTunesPState","rb")
     a=array.array('B')
     a.fromstring(f.read())
     PState=a.tolist()
@@ -383,7 +384,7 @@ def make_playback_state(volume=-1):
   if volume != -1:
     PState[:3]=listval(volume)
   try:
-    f=file("iPod_Control/iTunes/iTunesPState","wb")
+    f=open("iPod_Control/iTunes/iTunesPState","wb")
     array.array('B',PState).tofile(f)
     f.close()
   except OSError:
@@ -395,8 +396,8 @@ def make_playback_state(volume=-1):
 def make_stats(count):
   log("Creating statistics file ...",False)
   try:
-    file("iPod_Control/iTunes/iTunesStats","wb").write(\
-         stringval(count)+"\0"*3+(stringval(18)+"\xff"*3+"\0"*12)*count)
+    open("iPod_Control/iTunes/iTunesStats","wb").write(\
+         bytesval(count)+b"\0"*3+(bytesval(18)+b"\xff"*3+b"\0"*12)*count)
   except OSError:
     log("FAILED.")
     return 0
@@ -450,7 +451,7 @@ def make_shuffle(count):
     seq=list(range(count))
     random.shuffle(seq)
   try:
-    file("iPod_Control/iTunes/iTunesShuffle","wb").write("".join([stringval(x) for x in seq]))
+    open("iPod_Control/iTunes/iTunesShuffle","wb").write(b"".join([bytesval(x) for x in seq]))
   except OSError:
     log("FAILED.")
     return 0
@@ -484,13 +485,13 @@ Please make sure that:
   header=array.array('B')
   iTunesSD=None
   try:
-    iTunesSD=file("iPod_Control/iTunes/iTunesSD","rb")
+    iTunesSD=open("iPod_Control/iTunes/iTunesSD","rb")
     header.fromfile(iTunesSD,51)
     if options.reuse:
       iTunesSD.seek(18)
       entry=iTunesSD.read(558)
       while len(entry)==558:
-        filename=entry[33::2].split("\0",1)[0]
+        filename=entry[33::2].split(b"\0",1)[0]
         KnownEntries[filename]=entry
         entry=iTunesSD.read(558)
   except (OSError, EOFError):
@@ -514,7 +515,7 @@ Please make sure that:
 
   log()
   try:
-    iTunesSD=file("iPod_Control/iTunes/iTunesSD","wb")
+    iTunesSD=open("iPod_Control/iTunes/iTunesSD","wb")
     header[:18].tofile(iTunesSD)
   except OSError:
     log("""ERROR: Cannot write to the iPod database file (iTunesSD)!
@@ -535,7 +536,7 @@ Please make sure that:
     log()
     log("Fixing iTunesSD header.")
     iTunesSD.seek(0)
-    iTunesSD.write("\0%c%c"%(total_count>>8,total_count&0xFF))
+    iTunesSD.write(bytes([0, total_count>>8, total_count&0xFF]))
     iTunesSD.close()
   except OSError:
     log("ERROR: Some strange errors occured while writing iTunesSD.")
