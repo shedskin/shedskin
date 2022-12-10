@@ -133,11 +133,11 @@ def MatchRule(props,rule):
   if rule[1]=='~':
     return fnmatch.fnmatchcase(prop.lower(),ref.lower())
   elif rule[1]=='=':
-    return cmp(prop,ref)==0
+    return prop == ref
   elif rule[1]=='>':
-    return cmp(prop,ref)>0
+    return prop > ref
   elif rule[1]=='<':
-    return cmp(prop,ref)<0
+    return prop < ref
   else:
     return False
 
@@ -235,7 +235,7 @@ def write_to_db(filename):
 #  entry=int(props['reuse']) and (filename in KnownEntries) and KnownEntries[filename]
 #  if not entry:
     header[29]=int(props['type'])
-    entry=header.tostring()+ \
+    entry=header.tobytes()+ \
       "".join([c+"\0" for c in filename[:261]])+ \
       "\0"*(525-2*len(filename))
 
@@ -370,7 +370,7 @@ def make_playback_state(volume=-1):
   log("Setting playback state ...",False)
   PState=[]
   try:
-    f=file("iPod_Control/iTunes/iTunesPState","rb")
+    f=open("iPod_Control/iTunes/iTunesPState","rb")
     a=array.array('B')
     a.fromstring(f.read())
     PState=a.tolist()
@@ -383,7 +383,7 @@ def make_playback_state(volume=-1):
   if volume != -1:
     PState[:3]=listval(volume)
   try:
-    f=file("iPod_Control/iTunes/iTunesPState","wb")
+    f=open("iPod_Control/iTunes/iTunesPState","wb")
     array.array('B',PState).tofile(f)
     f.close()
   except OSError:
@@ -395,7 +395,7 @@ def make_playback_state(volume=-1):
 def make_stats(count):
   log("Creating statistics file ...",False)
   try:
-    file("iPod_Control/iTunes/iTunesStats","wb").write(\
+    open("iPod_Control/iTunes/iTunesStats","wb").write(\
          stringval(count)+"\0"*3+(stringval(18)+"\xff"*3+"\0"*12)*count)
   except OSError:
     log("FAILED.")
@@ -450,7 +450,7 @@ def make_shuffle(count):
     seq=list(range(count))
     random.shuffle(seq)
   try:
-    file("iPod_Control/iTunes/iTunesShuffle","wb").write("".join([stringval(x) for x in seq]))
+    open("iPod_Control/iTunes/iTunesShuffle","wb").write("".join([stringval(x) for x in seq]))
   except OSError:
     log("FAILED.")
     return 0
@@ -484,7 +484,7 @@ Please make sure that:
   header=array.array('B')
   iTunesSD=None
   try:
-    iTunesSD=file("iPod_Control/iTunes/iTunesSD","rb")
+    iTunesSD=open("iPod_Control/iTunes/iTunesSD","rb")
     header.fromfile(iTunesSD,51)
     if options.reuse:
       iTunesSD.seek(18)
@@ -514,7 +514,7 @@ Please make sure that:
 
   log()
   try:
-    iTunesSD=file("iPod_Control/iTunes/iTunesSD","wb")
+    iTunesSD=open("iPod_Control/iTunes/iTunesSD","wb")
     header[:18].tofile(iTunesSD)
   except OSError:
     log("""ERROR: Cannot write to the iPod database file (iTunesSD)!
