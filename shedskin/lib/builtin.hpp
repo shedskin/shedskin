@@ -1297,6 +1297,8 @@ public:
     str *mode;
 
     FILE *f;
+    file_binary *buffer;
+
     __ss_int closed;
     __file_options options;
     __GC_VECTOR(char) __read_cache;
