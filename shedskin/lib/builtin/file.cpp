@@ -42,6 +42,8 @@ file::file(str *file_name, str *flags) {
         throw new FileNotFoundError(file_name);
     name = file_name;
     mode = flags;
+
+    buffer = new file_binary(f);
 }
 
 file *open(str *name, str *flags) {
