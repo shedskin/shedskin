@@ -25,6 +25,11 @@ class xevious:
 def pacman(a):
     return 1
 
+# def inner(x): # not yet supported
+#     def _f(y):
+#         return y+x
+#     return _f
+
 def qbert():
     c = 1
     a = 1
@@ -66,7 +71,6 @@ def test_return_float():
 
 
 
-
 if __name__ == '__main__':
     test_basic()
     test_nested()
@@ -75,5 +79,6 @@ if __name__ == '__main__':
     test_return_int_param()
     test_return_str()
     test_return_float()
+    # test_inner()
 
 

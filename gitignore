@@ -6,7 +6,7 @@ __pycache__
 *.pgm
 *.png
 *.tga
-#*.txt
+*.txt
 *.ini
 *.csv
 tests/**/*.?pp

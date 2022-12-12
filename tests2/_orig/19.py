@@ -1,3 +1,4 @@
+
 #class list:                              # unit: [float]*
 #    def append(self, x):                 # x: [float], self: [list_float]
 #        self.unit = x                    # [float]
@@ -6,29 +7,8 @@
 #        a = self.unit                    # [float]
 #        return a                         # [float]
 
-list1 = []
-list1.append(1.0)
+cube = []                                # [list_float]
+cube.append(1.0)                         # []
 
-list2 = []
-list2.append(1)
+y = cube[0]                                  # [float]
 
-list3 = []
-list3.append("astring")
-
-list4 = [(1,2),(3,4)]
-
-
-def test_list_append():
-    assert list1[0] == 1.0
-    assert list2[0] == 1
-    assert list3[0] == "astring"
-
-
-def test_tuple_in_list():
-    assert (1,2) in list4
-
-
-
-if __name__ == '__main__':
-    test_list_append()
-    test_tuple_in_list()

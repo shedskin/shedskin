@@ -40,7 +40,7 @@ class TestRunner:
         except subprocess.CalledProcessError as e:
             print(f"\n{RED}ERROR{RESET}: '{cmd}' returns {e.returncode}")
             print(e.output.decode('utf8'))
-            return
+            raise
 
     def validate(self, path):
         with open(path) as f:
@@ -54,18 +54,25 @@ class TestRunner:
 
         if self.options.validate:
             self.validate(path) # check python syntax
-        self.run_step(f'shedskin {path}')
-        self.run_step('make')
-        self.run_step(f'./{name}')
+
+        try:
+            self.run_step(f'shedskin {path}')
+            self.run_step('make')
+            self.run_step(f'./{name}')
+        except:
+            print(f"test: '{path}' terminated early")
+            return
 
         print(f'{GREEN}OK{RESET}')
 
         files_to_clean = [f'{name}.cpp', f'{name}.hpp', f'{name}', 'Makefile']
+        if self.options.exec:
+            files_to_clean.remove(f'{name}')
         for f in files_to_clean:
             os.remove(f)
 
     def run_tests(self):
-        if HAVE_PYTEST:
+        if HAVE_PYTEST and self.options.pytest:
             os.system('pytest')
             print()
         print(f'Running {CYAN}shedskin{RESET} tests:')
@@ -94,6 +101,9 @@ class TestRunner:
         arg = opt = parser.add_argument
         opt('-r', '--recent', help='run only most recently modified test', action='store_true')
         opt('-v', '--validate', help='validate each testfile before running', action='store_true')
+        opt('-p', '--pytest', help='run pytest before each test run',  action='store_true')
+        opt('-e', '--exec', help='retain test executable',  action='store_true')
+
         args = parser.parse_args()
         runner = cls(args)
         runner.run_tests()
