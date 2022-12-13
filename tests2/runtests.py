@@ -8,11 +8,6 @@ import time
 import shutil
 from pathlib import Path
 
-try:
-    import pytest
-    HAVE_PYTEST = True
-except ImportError:
-    HAVE_PYTEST = False
 
 white = "\x1b[97;20m"
 GREY = "\x1b[38;20m"
@@ -71,27 +66,49 @@ class TestRunner:
         for f in files_to_clean:
             os.remove(f)
 
+    def sequence(self, *cmds):
+        cmd = " && ".join(cmds)
+        os.system(cmd)
+
     def run_tests(self):
-        if HAVE_PYTEST and self.options.pytest:
-            os.system('pytest')
-            print()
-        print(f'Running {CYAN}shedskin{RESET} tests:')
         st = time.time()
-        if self.options.recent: # run only most recently modified test
-            max_mtime = 0
-            most_recent_test = None
-            for test in self.tests:
-                mtime = os.stat(os.path.abspath(test)).st_mtime
-                if mtime > max_mtime:
-                    max_mtime = mtime
-                    most_recent_test = test
-            self.run_test(most_recent_test)
+
+        if self.options.pytest:
+            try:
+                import pytest
+                os.system('pytest')
+            except ImportError:
+                print('pytest not found')
+                pass            
+            print()
+
+        if self.options.cmake:
+            self.sequence(
+                "rm -rf ./build",
+                "mkdir -p build",
+                "cd build",
+                "cmake ..",
+                "make",
+                "make test"
+            )
+            os.system('rm -f Makefile')
         else:
-            for test in self.tests:
-                self.run_test(test)
+            print(f'Running {CYAN}shedskin{RESET} tests:')
+            if self.options.recent: # run only most recently modified test
+                max_mtime = 0
+                most_recent_test = None
+                for test in self.tests:
+                    mtime = os.stat(os.path.abspath(test)).st_mtime
+                    if mtime > max_mtime:
+                        max_mtime = mtime
+                        most_recent_test = test
+                self.run_test(most_recent_test)
+            else:
+                for test in self.tests:
+                    self.run_test(test)
         et = time.time()
         elapsed_time = round(et - st, 1)
-        print(f'Total test time: {YELLOW}{elapsed_time}{RESET} seconds\n')
+        print(f'Total time: {YELLOW}{elapsed_time}{RESET} seconds\n')
 
     @classmethod
     def commandline(cls):
@@ -103,6 +120,7 @@ class TestRunner:
         opt('-v', '--validate', help='validate each testfile before running', action='store_true')
         opt('-p', '--pytest', help='run pytest before each test run',  action='store_true')
         opt('-e', '--exec', help='retain test executable',  action='store_true')
+        opt('-c', '--cmake', help='run tests using cmake',  action='store_true')
 
         args = parser.parse_args()
         runner = cls(args)

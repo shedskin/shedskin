@@ -45,12 +45,8 @@ add_executable(${APP}
     ${PROJECT_BINARY_DIR}/${APP_NAME}.hpp
     ${SHEDSKIN_LIB}/builtin.cpp
     ${SHEDSKIN_LIB}/builtin.hpp
-    ${SHEDSKIN_LIB}/math.cpp
-    ${SHEDSKIN_LIB}/math.hpp
-    ${SHEDSKIN_LIB}/time.cpp
-    ${SHEDSKIN_LIB}/time.hpp
-    ${SHEDSKIN_LIB}/random.cpp
-    ${SHEDSKIN_LIB}/random.hpp
+    ${SHEDSKIN_LIB}/string.cpp
+    ${SHEDSKIN_LIB}/string.hpp
 )
 
 target_include_directories(${APP} PRIVATE

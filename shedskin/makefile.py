@@ -21,6 +21,8 @@ def check_output(cmd):
         return None
 
 def generate_makefile(gx):
+    if gx.nomakefile:
+        return
     if sys.platform == 'win32':
         pyver = '%d%d' % sys.version_info[:2]
         prefix = sysconfig.get_config_var('prefix')
@@ -48,7 +50,12 @@ def generate_makefile(gx):
         else:
             ident += '.so'
 
-    makefile = open(gx.makefile_name, 'w')
+    if gx.outputdir:
+        makefile_path = os.path.join(gx.outputdir, gx.makefile_name)
+    else:
+        makefile_path = gx.makefile_name
+
+    makefile = open(makefile_path, 'w')
 
     write = lambda line='': print(line, file=makefile)
 
@@ -70,7 +77,10 @@ def generate_makefile(gx):
     for module in modules:
         filename = os.path.splitext(module.filename)[0]  # strip .py
         filename = filename.replace(' ', esc_space)  # make paths valid
-        filename = filename.replace(libdirs[-1], env_var('SHEDSKIN_LIBDIR'))
+        if gx.outputdir and not module.builtin:
+            filename = os.path.abspath(os.path.join(gx.outputdir, os.path.basename(filename)))
+        else:
+            filename = filename.replace(libdirs[-1], env_var('SHEDSKIN_LIBDIR'))
         filenames.append(filename)
 
     cppfiles = [fn + '.cpp' for fn in filenames]
