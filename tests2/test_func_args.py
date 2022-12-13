@@ -24,9 +24,9 @@ def test_boo():
     assert boo(y = 'y', x = 'x') == ('x', 'y', 'g')
     assert boo('x', y = 'y') == ('x', 'y', 'g')
 
-def test_foo():
-    assert foo(1,2,3) == (1,2,3)
-    assert moo(a=1) == {'a':1}
+# def test_foo():
+#     assert foo(1,2,3) == (1,2,3)
+#     assert moo(a=1) == {'a':1}
 
 def test_klass():
     assert Klass().foo(y = 'world', x = 42) == (42, 'world')

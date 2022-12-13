@@ -22,25 +22,28 @@ link_directories(
 
 foreach(test_py ${test_sources})
 
+    message("python_test (full path): " ${test_py})
+
     get_filename_component(name ${test_py} NAME_WLE)
     get_filename_component(basename_py ${test_py} NAME)
 
     set(APP_NAME ${name})
     set(APP ${APP_NAME})
 
-    execute_process(
-        COMMAND shedskin ${basename_py}
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        OUTPUT_QUIET
+    set(translated_files
+        ${PROJECT_BINARY_DIR}/${APP_NAME}.cpp
+        ${PROJECT_BINARY_DIR}/${APP_NAME}.hpp
     )
 
-    file(RENAME
-        ${CMAKE_SOURCE_DIR}/${APP_NAME}.cpp 
-        ${PROJECT_BINARY_DIR}/${APP_NAME}.cpp)
+    add_custom_command(OUTPUT ${translated_files}
+        COMMAND shedskin --nomakefile -o build "${basename_py}"
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        DEPENDS "${basename_py}"
+        COMMENT "translating ${basename_py}"
+        VERBATIM
+    )
 
-    file(RENAME
-        ${CMAKE_SOURCE_DIR}/${APP_NAME}.hpp 
-        ${PROJECT_BINARY_DIR}/${APP_NAME}.hpp)
+    add_custom_target(shedskin_${APP} DEPENDS ${translated_files})
 
     message("test:" ${APP})
 
@@ -77,5 +80,6 @@ endforeach()
 add_subdirectory(test_prog_nnetwork)
 add_subdirectory(test_prog_primes1)
 add_subdirectory(test_prog_primes2)
+add_subdirectory(test_mod_string)
 
 

@@ -1,16 +1,11 @@
-# cmake_minimum_required(VERSION 3.19)
-
-# project(shedskin_tests LANGUAGES CXX)
-
-# set(CMAKE_CXX_STANDARD 17)
 
 include(CTest)
 
-message("CMAKE_SOURCE_DIR: " ${CMAKE_SOURCE_DIR})
-message("CMAKE_CURRENT_SOURCE_DIR: " ${CMAKE_CURRENT_SOURCE_DIR})
+include(CTest)
 
 set(SHEDSKIN ${CMAKE_SOURCE_DIR}/../../shedskin)
 set(SHEDSKIN_LIB ${SHEDSKIN}/shedskin/lib)
+
 
 include_directories(
     ${SHEDSKIN_LIB}
@@ -21,30 +16,29 @@ link_directories(
 )
 
 get_filename_component(name ${CMAKE_CURRENT_SOURCE_DIR} NAME_WLE)
-get_filename_component(basename_py ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 
-message("name: " ${name})
-message("basename_py:" ${basename_py})
+# message("name: " ${name})
+set(basename_py "${name}.py")
 
 set(APP_NAME ${name})
 set(APP ${APP_NAME})
 
-execute_process(
-    COMMAND shedskin ${basename_py}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    OUTPUT_QUIET
+set(translated_files
+    ${PROJECT_BINARY_DIR}/${APP_NAME}.cpp
+    ${PROJECT_BINARY_DIR}/${APP_NAME}.hpp
 )
 
+add_custom_command(OUTPUT ${translated_files}
+    COMMAND shedskin --nomakefile -o ../build "${basename_py}"
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    DEPENDS "${basename_py}"
+    COMMENT "translating ${basename_py}"
+    VERBATIM
+)
 
-file(RENAME
-    ${CMAKE_CURRENT_SOURCE_DIR}/${APP_NAME}.cpp 
-    ${PROJECT_BINARY_DIR}/${APP_NAME}.cpp)
+add_custom_target(shedskin_${APP} DEPENDS ${translated_files})
 
-file(RENAME
-    ${CMAKE_CURRENT_SOURCE_DIR}/${APP_NAME}.hpp 
-    ${PROJECT_BINARY_DIR}/${APP_NAME}.hpp)
-
-message("APP:" ${APP})
+message("test:" ${APP})
 
 add_executable(${APP}
     ${PROJECT_BINARY_DIR}/${APP_NAME}.cpp
@@ -74,4 +68,5 @@ target_link_libraries(${APP} PRIVATE
 )
 
 add_test(NAME ${APP} COMMAND ${APP})
+
 

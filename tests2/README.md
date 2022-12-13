@@ -1,8 +1,10 @@
 # tests2: Alternative testing folder for named tests
 
-This is an altnernative testing folder `tests2` for named tests. It was created to improve on the numbered tests in the current `tests` folder which are a bit difficult to follow and classify. 
+`tests2` is an alternative testing folder for named tests. It was created to improve on the numbered tests in the current `tests` folder which are a bit difficult to follow and classify.
 
-The idea here is to keep two folders and eventually migrate the first to `tests2` style and finally end up with one `tests` folder.
+It also contains two alternative ways to build and run the tests: (1) via shedskin's builtin generated `Makefile` and (2) via `cmake`, which has advantages for rapid test development.
+
+The idea here is to keep two test folders until the `tests` is eventually migrated to `tests2`.
 
 ## Usage
 
@@ -10,7 +12,7 @@ There's a `runtests.py` test runner to help run the tests. It has the following 
 
 ```bash
 $ ./runtests.py --help
-usage: runtests [-h] [-r] [-v] [-p] [-e]
+usage: runtests [-h] [-r] [-v] [-p] [-e] [-c]
 
 runs shedskin tests
 
@@ -20,23 +22,42 @@ options:
   -v, --validate  validate each testfile before running
   -p, --pytest    run pytest before each test run
   -e, --exec      retain test executable
+  -c, --cmake     run tests using cmake
 ```
 
-To run all tests:
+To build and run all tests using the default testrunner:
 
 ```bash
 ./runtests.py
 ```
 
-To run the most recently modified test (useful during test dev):
+To build and run the most recently modified test (useful during test dev) using the default testrunner:
 
 ```bash
 ./runtests.py -r
 ```
 
+To build and run all tests using cmake:
+
+```bash
+./runtests.py -c
+```
+
+The above command will automatically create a `build` folder, and then `cd build`, `cmake ..`, `make`, and finally `make test`.
+
+In development, make changes to the python tests as required and then:
+
+```bash
+cd build
+make && make test
+```
+
+This will have the benefit of only picking up changes to modified tests and will not re-translate and re-compile unchanged tests.
+
+
 ## Standards
 
-- Each test should be a python file named `test_<name>.py` and should include at least one test function with the typical `test_<name>()` naming convention.
+- With the exception of `test_hello.py`, each test should be a python file named `test_<name>.py` and should include at least one test function with the typical `test_<name>()` naming convention.
 
 - Group related tests together by subject and by file name using names which allow for similar things to be naturally grouped together. For example:
 
@@ -71,8 +92,7 @@ To run the most recently modified test (useful during test dev):
 
 ## Todo:
 
-- [ ] investigate [ccache](https://ccache.dev) to speed up compilations
-
+- [x] include cmake (ctest) testing
 - [ ] convert more tests
 
 

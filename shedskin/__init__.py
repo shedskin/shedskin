@@ -103,21 +103,23 @@ class Shedskin:
 
         arg("name", help="Python file or module to compile")
 
-        opt("-a", "--ann",       help="Output annotated source code (.ss.py)", action="store_true")
-        opt("-b", "--nobounds",  help="Disable bounds checking", action="store_true")
-        opt("-c", "--nogc",      help="Disable garbage collection", action="store_true")
-        opt("-d", "--debug",     help="Set debug level", type=int)
-        opt("-e", "--extmod",    help="Generate extension module", action="store_true")
-        opt("-f", "--flags",     help="Provide alternate Makefile flags")
-        opt("-g", "--nogcwarns", help="Disable runtime GC warnings", action="store_true")
-        opt("-l", "--long",      help="Use long long '64-bit' integers", action="store_true")
-        opt("-m", "--makefile",  help="Specify alternate Makefile name")
-        opt("-n", "--silent",    help="Silent mode, only show warnings", action="store_true")
-        opt("-o", "--noassert",  help="Disable assert statements", action="store_true")
-        opt("-r", "--random",    help="Use fast random number generator (rand())", action="store_true")
-        opt("-w", "--nowrap",    help="Disable wrap-around checking", action="store_true")
-        opt("-x", "--traceback", help="Print traceback for uncaught exceptions", action="store_true")
-        opt("-L", "--lib",       help="Add a library directory", nargs='*')
+        opt("-a", "--ann",        help="Output annotated source code (.ss.py)", action="store_true")
+        opt("-b", "--nobounds",   help="Disable bounds checking", action="store_true")
+        opt("-c", "--nogc",       help="Disable garbage collection", action="store_true")
+        opt("-d", "--debug",      help="Set debug level", type=int)
+        opt("-e", "--extmod",     help="Generate extension module", action="store_true")
+        opt("-f", "--flags",      help="Provide alternate Makefile flags")
+        opt("-g", "--nogcwarns",  help="Disable runtime GC warnings", action="store_true")
+        opt("-l", "--long",       help="Use long long '64-bit' integers", action="store_true")
+        opt("-m", "--makefile",   help="Specify alternate Makefile name")
+        opt("-n", "--noassert",   help="Disable assert statements", action="store_true")
+        opt("-o", "--outputdir",  help="Specify output directory for generated files")
+        opt("-r", "--random",     help="Use fast random number generator (rand())", action="store_true")
+        opt("-s", "--silent",     help="Silent mode, only show warnings", action="store_true")
+        opt("-w", "--nowrap",     help="Disable wrap-around checking", action="store_true")
+        opt("-x", "--traceback",  help="Print traceback for uncaught exceptions", action="store_true")
+        opt("-N", "--nomakefile", help="Disable makefile generation", action="store_true")        
+        opt("-L", "--lib",        help="Add a library directory", nargs='*')
 
         args = parser.parse_args()
 
@@ -159,11 +161,19 @@ class Shedskin:
         if args.noassert:
             ss.gx.assertions = False
 
+        if args.nomakefile:
+            ss.gx.nomakefile = True            
+
         # if args.pypy:
         #     ss.gx.pypy = True
 
         if args.makefile:
             ss.gx.makefile_name = args.makefile
+
+        if args.outputdir:
+            if not os.path.exists(args.outputdir):
+                os.mkdir(args.outputdir)
+            ss.gx.outputdir = args.outputdir
 
         if args.silent:
             ss.log.setLevel(logging.WARNING)

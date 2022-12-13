@@ -63,6 +63,8 @@ class GlobalInfo:  # XXX add comments, split up
         self.backtrace = False
         self.makefile_name = 'Makefile'
         self.debug_level = 0
+        self.outputdir = None
+        self.nomakefile = False
 
         # Others
         self.item_rvalue = {}
