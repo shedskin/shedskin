@@ -22,16 +22,26 @@ class TestRunner:
 
     def __init__(self, options):
         self.options = options
-        self.tests = sorted(glob.glob("test_*.py"))
+        # self.tests = sorted(glob.glob("test_*.py"))
+        self.tests = self.get_tests()
 
-    def check_output(self, args):
+    def check_output(self, args, cwd='.'):
         return subprocess.check_output(args.split(), 
-            stderr=subprocess.STDOUT
+            stderr=subprocess.STDOUT,
+            cwd=cwd,
         )
 
-    def run_step(self, cmd):
+    def get_tests(self):
+        results = []
+        for root, _, files in os.walk('.'):
+            for fname in files:
+                if fname.startswith('test_') and fname.endswith('.py'):
+                    results.append(os.path.join(root, fname))
+        return sorted(results)
+
+    def run_step(self, cmd, cwd='.'):
         try:
-            self.check_output(cmd)
+            self.check_output(cmd, cwd)
         except subprocess.CalledProcessError as e:
             print(f"\n{RED}ERROR{RESET}: '{cmd}' returns {e.returncode}")
             print(e.output.decode('utf8'))
@@ -43,31 +53,43 @@ class TestRunner:
         compile(src, path, 'exec')
 
     def run_test(self, path):
-        print(f'testing {path:30s}', end='')
         path = Path(path)
         name = path.stem
+        is_nested = path.parent.stem
+
+        print(f'testing {name:30s}', end='')
 
         if self.options.validate:
             self.validate(path) # check python syntax
 
         try:
-            self.run_step(f'shedskin {path}')
-            self.run_step('make')
-            self.run_step(f'./{name}')
+            if is_nested:
+                self.run_step(f'shedskin {path.name}', cwd=path.parent)
+                self.run_step('make', cwd=path.parent)
+                self.run_step(f'./{name}', cwd=path.parent)
+            else:
+                self.run_step(f'shedskin {path}')
+                self.run_step('make')
+                self.run_step(f'./{name}')
         except:
-            print(f"test: '{path}' terminated early")
+            print(f"{RED}ERROR{RESET}: '{path}' terminated early")
             return
 
         print(f'{GREEN}OK{RESET}')
 
         files_to_clean = [f'{name}.cpp', f'{name}.hpp', f'{name}', 'Makefile']
+
         if self.options.exec:
             files_to_clean.remove(f'{name}')
         for f in files_to_clean:
-            os.remove(f)
+            if not is_nested:
+                os.remove(f)
+            else:
+                os.remove(path.parent / f)
 
     def sequence(self, *cmds):
         cmd = " && ".join(cmds)
+        print(cmd)
         os.system(cmd)
 
     def run_tests(self):
