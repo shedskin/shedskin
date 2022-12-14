@@ -17,6 +17,11 @@ list3.append("astring")
 
 list4 = [(1,2),(3,4)]
 
+# list5 = list4.copy() # NotImplemented
+
+list5 = [(1,2),(3,4)]
+
+
 
 def test_list_append():
     assert list1[0] == 1.0
@@ -26,6 +31,12 @@ def test_list_append():
 
 def test_tuple_in_list():
     assert (1,2) in list4
+
+
+def test_list_assign():
+    list5[0] = (2,2)
+    assert list5 == [(2,2),(3,4)]
+
 
 
 
