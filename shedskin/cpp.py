@@ -98,7 +98,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def __init__(self, gx, module):
         self.gx = gx
         self.output_base = module.filename[:-3]
-        self.out = open(self.output_base + '.cpp', 'w')
+        # self.out = open(self.output_base + '.cpp', 'w')
+        self.out = self.get_output_file(ext='.cpp')
         self.indentation = ''
         self.consts = {}
         self.mergeinh = self.gx.merged_inh
@@ -122,6 +123,13 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def cpp_name(self, obj):
         return self.namer.name(obj)
 
+    def get_output_file(self, ext='.cpp', mode='w'):
+        output_file = self.output_base + ext
+        if self.gx.outputdir:
+            output_file = os.path.abspath(os.path.join(
+                self.gx.outputdir, os.path.basename(output_file)))
+        return open(output_file, mode)
+
     # XXX this is too magical 
     def insert_consts(self, declare):  # XXX ugly
         if not self.consts:
@@ -133,7 +141,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         else:
             suffix = '.cpp'
 
-        lines = open(self.output_base + suffix, 'r').readlines()
+        with self.get_output_file(ext=suffix, mode='r') as f:
+            lines = f.readlines()
+        # lines = open(self.output_base + suffix, 'r').readlines()
         newlines = []
         j = -1
         for (i, line) in enumerate(lines):
@@ -181,11 +191,15 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
                 newlines2.append('\n')
 
-        open(self.output_base + suffix, 'w').writelines(newlines2)
+        with self.get_output_file(ext=suffix, mode='w') as f:
+            f.writelines(newlines2)
+        # open(self.output_base + suffix, 'w').writelines(newlines2)
         self.filling_consts = False
 
     def insert_extras(self, suffix):
-        lines = open(self.output_base + suffix, 'r').readlines()
+        with self.get_output_file(ext=suffix, mode='r') as f:
+            lines = f.readlines()
+        # lines = open(self.output_base + suffix, 'r').readlines()
         newlines = []
         for line in lines:
             newlines.append(line)
@@ -193,7 +207,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 newlines.extend(self.include_files())
             elif suffix == '.hpp' and line.startswith('using namespace'):
                 newlines.extend(self.fwd_class_refs())
-        open(self.output_base + suffix, 'w').writelines(newlines)
+        with self.get_output_file(ext=suffix, mode='w') as f:
+            f.writelines(newlines)
+        # open(self.output_base + suffix, 'w').writelines(newlines)
 
     def fwd_class_refs(self):
         lines = []
@@ -265,7 +281,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         return result
 
     def header_file(self):
-        self.out = open(self.output_base + '.hpp', 'w')
+        # self.out = open(self.output_base + '.hpp', 'w')
+        self.out = self.get_output_file(ext='.hpp')
         self.visit(self.module.ast, True)
         self.out.close()
 

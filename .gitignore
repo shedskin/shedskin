@@ -1,12 +1,14 @@
 __pycache__
 .DS_Store
+.pytest_cache
+build/
 *.pyc
 *.pyo
 *.ppm
 *.pgm
 *.png
 *.tga
-*.txt
+#*.txt
 *.ini
 *.csv
 tests/**/*.?pp
