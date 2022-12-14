@@ -22,22 +22,13 @@ class TestRunner:
 
     def __init__(self, options):
         self.options = options
-        # self.tests = sorted(glob.glob("test_*.py"))
-        self.tests = self.get_tests()
+        self.tests = sorted(glob.glob("./**/test_*.py", recursive=True))
 
     def check_output(self, args, cwd='.'):
         return subprocess.check_output(args.split(), 
             stderr=subprocess.STDOUT,
             cwd=cwd,
         )
-
-    def get_tests(self):
-        results = []
-        for root, _, files in os.walk('.'):
-            for fname in files:
-                if fname.startswith('test_') and fname.endswith('.py'):
-                    results.append(os.path.join(root, fname))
-        return sorted(results)
 
     def run_step(self, cmd, cwd='.'):
         try:

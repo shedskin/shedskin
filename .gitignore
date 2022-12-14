@@ -1,5 +1,6 @@
 __pycache__
 .DS_Store
+.pytest_cache
 build/
 *.pyc
 *.pyo
