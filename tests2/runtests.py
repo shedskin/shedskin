@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import ast
 import argparse
 import glob
 import os
@@ -123,6 +124,39 @@ class TestRunner:
         elapsed_time = round(et - st, 1)
         print(f'Total time: {YELLOW}{elapsed_time}{RESET} seconds\n')
 
+    def get_imports(self, path):
+        modules = set()
+        with open(path) as fh:        
+            root = ast.parse(fh.read(), path)
+            for node in ast.iter_child_nodes(root):
+                if isinstance(node, ast.Import):
+                    mods = []
+                elif isinstance(node, ast.ImportFrom):  
+                    mods = node.module.split('.')
+                else:
+                    continue
+                for n in node.names:
+                    names = n.name.split('.')
+                    if not mods:
+                        modules.add(names[0])
+                    else:
+                        modules.add(mods[0])
+        return sorted(list(modules))
+
+    def fix(self, testfile):
+        modules = self.get_imports(testfile)
+        path = Path(testfile)
+        if path.exists():
+            os.makedirs(path.stem, exist_ok=True)
+            testdir = Path(path.stem)
+            with open(testdir / 'CMakeLists.txt', 'w') as f:
+                f.write('set(modules\n')
+                for module in modules:
+                    f.write(f'    {module}\n')
+                f.write(')\n')
+                f.write('add_shedskin_test("${modules}")')
+            path.rename(testdir / path.name)
+
     @classmethod
     def commandline(cls):
         parser = argparse.ArgumentParser(
@@ -134,10 +168,14 @@ class TestRunner:
         opt('-p', '--pytest', help='run pytest before each test run',  action='store_true')
         opt('-e', '--exec', help='retain test executable',  action='store_true')
         opt('-c', '--cmake', help='run tests using cmake',  action='store_true')
+        opt('-f', '--fix', help='fix test with imports')
 
         args = parser.parse_args()
         runner = cls(args)
-        runner.run_tests()
+        if args.fix:
+            runner.fix(args.fix)
+        else:
+            runner.run_tests()
 
 if __name__ == '__main__': TestRunner.commandline()
 
