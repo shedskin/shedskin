@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.19)
 project(shedskin_tests LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
+set(DEBUG off)
+
 
 include(CTest)
 
@@ -21,8 +23,6 @@ link_directories(
 )
 
 foreach(test_py ${test_sources})
-
-    # message("python_test (full path): " ${test_py})
 
     get_filename_component(name ${test_py} NAME_WLE)
     get_filename_component(basename_py ${test_py} NAME)
@@ -45,7 +45,9 @@ foreach(test_py ${test_sources})
 
     add_custom_target(shedskin_${APP} DEPENDS ${translated_files})
 
-    # message("test:" ${APP})
+    if(DEBUG)
+        message("test:" ${APP})
+    endif()
 
     add_executable(${APP}
         ${PROJECT_BINARY_DIR}/${APP_NAME}.cpp
@@ -123,13 +125,14 @@ function(add_shedskin_test modules)
     list(APPEND module_list "${SHEDSKIN_LIB}/${mod}.hpp")
     endforeach()
 
-    message("-------------------------------------------------------------")
-    message("name:" ${name})
-    foreach(mod ${module_list})
-        get_filename_component(mod_name ${mod} NAME)
-        message("module: ${mod_name}") 
-    endforeach()
-
+    if(DEBUG)
+        message("-------------------------------------------------------------")
+        message("name:" ${name})
+        foreach(mod ${module_list})
+            get_filename_component(mod_name ${mod} NAME)
+            message("module: ${mod_name}") 
+        endforeach()
+    endif()
 
     add_executable(${APP}
         ${PROJECT_BINARY_DIR}/${APP_NAME}.cpp

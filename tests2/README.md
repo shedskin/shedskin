@@ -1,14 +1,19 @@
-# tests2: Alternative testing folder for named tests
+# tests2: alternative tests folder for named tests
 
-`tests2` is an alternative testing folder for named tests. It was created to improve on the numbered tests in the current `tests` folder which are a bit difficult to follow and classify.
+`tests2` is an alternative tests folder for shedskin which explicitly requires named tests. It was created to improve on the numbered tests in the current `tests` folder which are a bit difficult to follow and classify.
 
-It also contains two alternative ways to build and run the tests: (1) via shedskin's builtin generated `Makefile` and (2) via `cmake`, which has advantages for rapid test development.
+It contains two alternative ways to build and run the tests:
 
-The idea here is to keep two test folders until the `tests` is eventually migrated to `tests2`.
+1. Builtin-method: using shedskin's builtin generated `Makefile`
+2. CMake-method: using `cmake`, which has advantages for rapid test development.
+
+The idea here is to keep two test folders until all tests in the `tests` folder are eventually migrated to `tests2`. At that point `tests2` will become `tests`
 
 ## Usage
 
-There's a `runtests.py` test runner to help run the tests. It has the following commmand line options
+This folder includes a commandline tool, `runtests.py`, to help setup, build and run the tests.
+
+It has the following commmand line options
 
 ```bash
 $ ./runtests.py --help
@@ -52,14 +57,16 @@ cd build
 make && make test
 ```
 
-This will have the benefit of only picking up changes to modified tests and will not re-translate and re-compile unchanged tests.
+This has the benefit of only picking up changes to modified tests and will not re-translate or re-compile unchanged tests.
 
 
 ## Standards
 
-- With the exception of `test_hello.py`, each test should be a python file named `test_<name>.py` and should include at least one test function with the typical `test_<name>()` naming convention.
+- With the exception of `test_hello.py`, each test should be a python file named `test_<name>.py` and should include at least one test function with the cannonical `test_<name>()` naming convention.
 
-- Group related tests together by subject and by file name using names which allow for similar things to be naturally grouped together. For example:
+- Related tests should be grouped together by subject and should use file names which allow for tests to be naturally grouped together.
+
+For example:
 
 	```text
 	test_type_float.py
@@ -72,13 +79,17 @@ This will have the benefit of only picking up changes to modified tests and will
 
 - Each test function should include at least one `assert` to test a specific case.
 
-- Call all relevant test functions in the `__name__ == '__main__'` section:
+- All relevant test functions should be called in the `__name__ == '__main__'` section:
 
 	```python
+
+	def test_addition():
+		assert 1+1 == 2
+
 	if __name__ == '__main__':
-		test_list_append()
-		test_list_assign()
+		test_addition()
 		# ...
+
 	```
 
 
