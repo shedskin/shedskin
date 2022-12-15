@@ -11,6 +11,17 @@ def test_all():
 def test_any():
     assert any([True, False, False]) == True
 
+def test_and():
+    assert 1 and 1
+    assert 1 and 1 and 1 and 1
+
+# def test_or():
+#     assert 0 or 1
+#     assert not 0 or 0
+
+# def test_and_or():
+#     assert (0 or 0 or 1) and 1
+
 # def test_ascii():
 #     assert ascii(1) == '1'
 
@@ -53,6 +64,8 @@ if __name__ == '__main__':
     test_abs()
     test_all()
     test_any()
+    # test_or()
+    # test_and_or()
     # test_ascii()
     test_bin()
     test_chr()

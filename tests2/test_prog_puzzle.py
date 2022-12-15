@@ -1,5 +1,3 @@
-
-
 # (c) Jack Ha
 # --- jack.ha@gmail.com
 
@@ -193,19 +191,17 @@ def main():
     l = genMoveList(puzzle, 0, 0)  # [list(int)]
     perm(puzzle, 0, 0, l, u)  # [int]
 
+
 iterations = 0
 
+
 def test_puzzle():
-      # [int]
+    # [int]
     # for x in range(30):
     #     main()  # []
     main()
     assert iterations == 184
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     test_puzzle()
-    
-
-
-
-
