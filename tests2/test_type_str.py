@@ -1,5 +1,3 @@
-# 221.py
-# TODO hex(bytes_per_sep), bytes.fromhex
 # TODO maketrans, translate
 
 # str
@@ -170,6 +168,7 @@ def test_startswith():
 def test_strip():
     assert 'bla  '.strip() == 'bla'
     assert '**bla**'.strip('*') == 'bla'
+
 
 def test_swapcase():
     assert 'bLa'.swapcase() == 'BlA'
