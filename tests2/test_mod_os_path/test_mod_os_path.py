@@ -16,15 +16,25 @@ def test_os_path():
     assert basename("hoei/woei") == 'woei'
     assert dirname("hoei/woei") == 'hoei'
 
-    assert exists("../testdata")
-    assert lexists("../testdata")
-    assert isdir("../testdata")
-    assert not isfile("../testdata")
+    if not exists("testdata"):
+        testdata = "../testdata"
+    else:
+        testdata = "testdata"
 
-    assert getsize("../test_hello.py") == 23
-    assert getatime("../test_hello.py") > 1 # dummy: cannot test for time
-    assert getctime("../test_hello.py") > 1 # dummy: cannot test for time
-    assert getmtime("../test_hello.py") > 1 # dummy: cannot test for time
+    assert exists(testdata)
+    assert lexists(testdata)
+    assert isdir(testdata)
+    assert not isfile(testdata)
+
+    if not exists("test_hello.py"):
+        test_hello = "../test_hello.py"
+    else:
+        test_hello = "test_hello.py"
+
+    assert getsize(test_hello) == 23
+    assert getatime(test_hello) > 1 # dummy: cannot test for time
+    assert getctime(test_hello) > 1 # dummy: cannot test for time
+    assert getmtime(test_hello) > 1 # dummy: cannot test for time
 
 
 

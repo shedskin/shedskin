@@ -1,6 +1,5 @@
 include(CTest)
 
-include(CTest)
 
 set(SHEDSKIN ${CMAKE_SOURCE_DIR}/../../shedskin)
 set(SHEDSKIN_LIB ${SHEDSKIN}/shedskin/lib)
