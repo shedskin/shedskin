@@ -172,9 +172,9 @@ function(add_shedskin_test modules)
 endfunction()
 
 # -----------------------------------------------------------------------
-# build/test function to handle tests with imports
+# build/test function to handle pyxt tests with imports
 
-function(add_shedskin_pyxt_test)
+function(add_shedskin_pyxt_test modules)
     include(CTest)
 
     find_package(Python COMPONENTS Interpreter Development)
