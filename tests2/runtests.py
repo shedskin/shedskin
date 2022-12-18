@@ -82,7 +82,7 @@ class TestRunner:
 
     def sequence(self, *cmds):
         cmd = " && ".join(cmds)
-        print(cmd)
+        print(f'{CYAN}cmd{RESET}: {cmd}')
         os.system(cmd)
 
     def run_tests(self):
@@ -161,7 +161,10 @@ class TestRunner:
                 for module in modules:
                     f.write(f'    {module}\n')
                 f.write(')\n')
-                f.write('add_shedskin_test("${modules}")')
+                if path.stem.startswith('test_pyxt'):
+                    f.write('add_shedskin_pyxt_test("${modules}")\n')
+                else:
+                    f.write('add_shedskin_test("${modules}")\n')
             path.rename(testdir / path.name)
 
     @classmethod
