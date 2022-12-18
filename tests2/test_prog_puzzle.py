@@ -203,5 +203,10 @@ def test_puzzle():
     assert iterations == 184
 
 
-if __name__ == "__main__":
+def test_all():
     test_puzzle()
+    
+
+if __name__ == '__main__':
+    test_all() 
+

@@ -38,8 +38,10 @@ def test_os_path():
 
 
 
-if __name__ == '__main__':
+def test_all():
     test_os_path_join()
     test_os_path()
 
+if __name__ == '__main__':
+    test_all()
 

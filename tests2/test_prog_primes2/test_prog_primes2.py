@@ -37,5 +37,10 @@ def primes(n):                           # n: [int]
 def test_primes():
     assert primes(100) == [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97]
 
-if __name__ == '__main__':
+def test_all():
     test_primes()
+
+if __name__ == '__main__':
+    test_all()
+
+

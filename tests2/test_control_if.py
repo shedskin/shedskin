@@ -25,8 +25,9 @@ def test_if_else_expr():
     assert 8 + (2 if 1 else 3) == 10
     assert 8 + (2 if 0 else 3) == 11
 
-
-if __name__ == '__main__':
+def test_all():
     test_if_else_expr()
     test_if_elif_else()
 
+if __name__ == '__main__':
+    test_all() 

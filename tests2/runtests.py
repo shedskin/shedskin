@@ -23,6 +23,7 @@ class TestRunner:
 
     def __init__(self, options):
         self.options = options
+        self.build_dir = Path('build')
         self.tests = sorted(glob.glob("./**/test_*.py", recursive=True))
 
     def check_output(self, args, cwd='.'):
@@ -97,18 +98,24 @@ class TestRunner:
             print()
 
         if self.options.cmake:
-            self.sequence(
-                "rm -rf ./build",
-                "mkdir -p build",
+            actions = [
                 "cd build",
                 "cmake ..",
                 "make",
                 "make test"
-            )
-            os.system('rm -f Makefile')
+            ]
+            if self.build_dir.exists() and self.options.reset:
+                actions.insert(0, "rm -rf ./build")
+            else:
+                if not self.build_dir.exists():
+                    actions.insert(0, "mkdir -p build")
+
+            self.sequence(*actions)
+            if os.path.exists('Makefile'):
+                os.remove('Makefile')
         else:
             print(f'Running {CYAN}shedskin{RESET} tests:')
-            if self.options.recent: # run only most recently modified test
+            if self.options.modified: # run only most recently modified test
                 max_mtime = 0
                 most_recent_test = None
                 for test in self.tests:
@@ -163,12 +170,13 @@ class TestRunner:
             prog = 'runtests',
             description = 'runs shedskin tests')
         arg = opt = parser.add_argument
-        opt('-r', '--recent', help='run only most recently modified test', action='store_true')
-        opt('-v', '--validate', help='validate each testfile before running', action='store_true')
-        opt('-p', '--pytest', help='run pytest before each test run',  action='store_true')
-        opt('-e', '--exec', help='retain test executable',  action='store_true')
         opt('-c', '--cmake', help='run tests using cmake',  action='store_true')
-        opt('-f', '--fix', help='fix test with imports')
+        opt('-e', '--exec', help='retain test executable',  action='store_true')
+        opt('-f', '--fix', help='fix test with imports', metavar="TEST")
+        opt('-m', '--modified', help='run only most recently modified test', action='store_true')
+        opt('-p', '--pytest', help='run pytest before each test run',  action='store_true')
+        opt('-r', '--reset', help='reset cmake build',  action='store_true')
+        opt('-v', '--validate', help='validate each testfile before running', action='store_true')
 
         args = parser.parse_args()
         runner = cls(args)

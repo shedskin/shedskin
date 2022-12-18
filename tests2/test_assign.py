@@ -8,7 +8,10 @@ def test_assign_list():
     assert a == [1]
 
 
-if __name__ == '__main__':
+def test_all():
     test_assign_int()
     test_assign_list()
 
+
+if __name__ == '__main__':
+    test_all()

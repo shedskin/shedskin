@@ -3,12 +3,12 @@ def test_abs():
     assert abs(-10) == 10
 
 
-def test_all():
+def test_all_logic():
     assert all([1, 1, 0 , 1, 0]) == False
     assert all([True, True]) == True
 
 
-def test_any():
+def test_any_logic():
     assert any([True, False, False]) == True
 
 def test_and():
@@ -60,10 +60,10 @@ def test_misc(): pass
 
 
 
-if __name__ == '__main__':
+def test_all():
     test_abs()
-    test_all()
-    test_any()
+    test_all_logic()
+    test_any_logic()
     # test_or()
     # test_and_or()
     # test_ascii()
@@ -74,7 +74,10 @@ if __name__ == '__main__':
     test_filter()
     # test_hasattr()
     # test_getattr()
-    
+
+if __name__ == '__main__':
+    test_all()
+
 
 
 

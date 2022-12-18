@@ -1,5 +1,16 @@
 # TODO maketrans, translate
 
+
+# print('hoi %d %s' % (2, '3'))
+# print('foo\0bar' != 'foo\0baz')
+
+# u = [' p  o', 'c o ']                    # [list(str)]
+# cnf = [x.strip().split() for x in u if not x.startswith('x')] # [list(list(str))]
+# cnf2 = [[3] for x in u]                  # [list(list(int))]
+
+
+
+
 # str
 
 def test_capitalize():
@@ -223,11 +234,10 @@ def test_str_overload():
     assert not heuk("aha")
 
 
-if __name__ == '__main__':
+def test_all():
     test_str_cmp()
     test_str_concat()
     test_str_overload()
-
     test_capitalize()
     test_casefold()
     test_center()
@@ -275,3 +285,8 @@ if __name__ == '__main__':
     test_translate()
     test_upper()
     test_zfill()
+
+
+if __name__ == "__main__":
+    test_all()
+    

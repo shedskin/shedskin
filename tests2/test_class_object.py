@@ -32,6 +32,10 @@
 def test_object():
     assert 1+1 == 2
 
-if __name__ == '__main__':
+def test_all():
     test_basic()
+
+
+if __name__ == '__main__':
+    test_all()
 

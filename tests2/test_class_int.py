@@ -30,5 +30,9 @@ def test_int_class():
     assert maxi(a, b) == b
 
 
-if __name__ == '__main__':
+def test_all():
     test_int_class()
+
+
+if __name__ == '__main__':
+    test_all()

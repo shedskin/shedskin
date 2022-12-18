@@ -121,6 +121,8 @@ def test_mandelbrot():
     assert mandelbrot(1000) == result_1000
 
 
-if __name__ == '__main__':
+def test_all():
     test_mandelbrot()
 
+if __name__ == '__main__':
+    test_all() 
