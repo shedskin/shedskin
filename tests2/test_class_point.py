@@ -75,5 +75,8 @@ def test_point():
     # assert int(p7.x) == 14 and int(p7.y) == 14
 
 
-if __name__ == '__main__':
+def test_all():
     test_point()
+
+if __name__ == '__main__':
+    test_all() 

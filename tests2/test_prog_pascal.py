@@ -7,7 +7,7 @@ def pascal(n):
         r += [[1] + [sum(r[-1][j:j+2]) for j in range(i)]]
     return r
 
-print(pascal(9))
+# print(pascal(9))
 
 def test_pascal():
     assert pascal(9) == [
@@ -23,5 +23,9 @@ def test_pascal():
     ]
 
 
-if __name__ == '__main__':
+def test_all():
     test_pascal()
+    
+
+if __name__ == '__main__':
+    test_all() 

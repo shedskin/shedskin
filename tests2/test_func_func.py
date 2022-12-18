@@ -13,5 +13,8 @@ def test_reduce():
     assert reduce(add, [1,2,3], 5) == 11
 
 
-if __name__ == '__main__':
+def test_all():
     test_reduce()
+
+if __name__ == '__main__':
+    test_all() 

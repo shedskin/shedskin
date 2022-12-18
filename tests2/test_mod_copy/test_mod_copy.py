@@ -25,7 +25,10 @@ def test_copy():
     y = copy.copy(x)
     assert y == 'loki'
 
-if __name__ == '__main__':
+def test_all():
     test_copy()
     # test_deepcopy_nested()
     test_deepcopy_obj()
+
+if __name__ == '__main__':
+    test_all()

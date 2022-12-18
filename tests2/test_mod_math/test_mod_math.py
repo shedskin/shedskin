@@ -72,7 +72,10 @@ def test_math():
     assert math.copysign(1.0, -2.0) == -1.0
 
 
-if __name__ == '__main__':
+def test_all():
     test_fsum()
     test_math()
+
+if __name__ == '__main__':
+    test_all()
 

@@ -53,9 +53,10 @@ def test_sorted3():
 
 
 
-if __name__ == '__main__':
-    test_sorted1()
+def test_all():
     test_sorted2()
     test_sorted3()
 
+if __name__ == '__main__':
+    test_all()
 

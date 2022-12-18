@@ -1,0 +1,31 @@
+set(modules
+    array
+    binascii
+    bisect
+    collections
+    colorsys
+    configparser
+    copy
+    csv
+    datetime
+    fnmatch
+    getopt
+    glob
+    heapq
+    itertools
+    math
+    mmap
+    os
+    os.path
+    random
+    re
+    select
+    socket
+    string
+    struct
+    sys
+    stat
+    time
+)
+
+add_shedskin_pyxt_test("${modules}")

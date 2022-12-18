@@ -15,5 +15,8 @@ def test_string_module():
     assert string.punctuation == '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'
     assert repr(string.whitespace) == "' \\t\\n\\r\\x0b\\x0c'"
 
-if __name__ == '__main__':
+def test_all():
     test_string_module()
+
+if __name__ == '__main__':
+    test_all()

@@ -5,5 +5,10 @@ def test_sys():
     # assert sys.argv[0] == 'test_mod_sys.py'
     # assert sys.argv[1:] == []
 
-if __name__ == '__main__':
+
+def test_all():
     test_sys()
+
+if __name__ == '__main__':
+    test_all()
+

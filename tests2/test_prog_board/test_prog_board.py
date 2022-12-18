@@ -193,3 +193,10 @@ def aigame(size=30, turn=1, players=2):
 def test_game():
     # This is a strange example: (it always returns a Draw!)
     assert aigame() == "Board is full! Draw!"
+
+def test_all():
+    test_game()
+
+if __name__ == '__main__':
+    test_all()
+

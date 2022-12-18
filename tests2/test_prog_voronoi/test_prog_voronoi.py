@@ -50,7 +50,10 @@ def test_voronoi():
     screen = generateScreen(points, 40, 80)
     assert len(screen) == 3240
 
-if __name__ == '__main__':
+def test_all():
     test_voronoi()
-    
+
+if __name__ == '__main__':
+    test_all()
+
 
