@@ -1,9 +1,13 @@
-function(add_shedskin_pyxt_test)
+
+function(add_shedskin_pyxt_test modules)
     include(CTest)
 
     find_package(Python COMPONENTS Interpreter Development)
-    message("python:" ${Python_EXECUTABLE})
-    message("python_include" ${Python_INCLUDE_DIRS})
+
+    if(DEBUG)
+        message("python:" ${Python_EXECUTABLE})
+        message("python_include" ${Python_INCLUDE_DIRS})
+    endif()
 
     get_filename_component(name ${CMAKE_CURRENT_SOURCE_DIR} NAME_WLE)
 
@@ -30,7 +34,7 @@ function(add_shedskin_pyxt_test)
         VERBATIM
     )
 
-    add_custom_target(shedskin_${PYEXT} DEPENDS ${translated_files})
+    add_custom_target(shedskin_pyxt_${PYEXT} DEPENDS ${translated_files})
 
     list(PREPEND modules builtin)
 
@@ -109,3 +113,4 @@ function(add_shedskin_pyxt_test)
              COMMAND ${Python_EXECUTABLE} -c "import ${PYEXT}; ${PYEXT}.test_all()")
 
 endfunction()
+

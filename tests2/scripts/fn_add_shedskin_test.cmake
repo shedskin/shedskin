@@ -88,3 +88,4 @@ function(add_shedskin_test modules)
     add_test(NAME ${APP} COMMAND ${APP})
 
 endfunction()
+
