@@ -1,4 +1,4 @@
-# tests2: alternative tests folder for named tests
+# tests2: alternative shedskin tests folder for named tests
 
 `tests2` is an alternative tests folder for shedskin which explicitly requires named tests.
 
@@ -10,20 +10,20 @@ It contains two alternative ways to build and run the tests:
 
 2. CMake-method: using `cmake`, which has advantages for rapid test development.
 
-The idea here is to keep two test folders until all tests in the `tests` folder are eventually migrated to `tests2`. At that point `tests2` will become `tests`
+The plan is to keep two test folders until all tests in the `tests` folder are eventually migrated to `tests2`. At that point `tests2` will become `tests`.
 
 
 ## Objectives
 
-- Introduce standardized test formats to enable testing in python and in compiled form.
-
-- Enable testing for both shedskin translation modes: translation to c++ executables and to python extension modules.
+-  Introduce standardized test formats to enable testing for both shedskin translation modes: translation to c++ executables and to python extension modules.
 
 - Make test names more meaningful for easier classification and grouping of similar or related tests.
 
 - Reducing time to develop tests.
 
 - Reduce redundant tests.
+
+- Isolate non-implemented cases.
 
 
 ## Usage
@@ -50,6 +50,10 @@ options:
   -x, --exec           retain test executable
 ```
 
+There are currently two ways to run tests: (1) the builtin way and (2) the cmake way. The latter is recommended if your platform is supported (linux, osx). Windows support is on the todo list.
+
+### Builtin Method
+
 To build and run all tests using the default testrunner:
 
 ```bash
@@ -61,6 +65,8 @@ To build and run the most recently modified test (useful during test dev) using 
 ```bash
 ./runtests.py -m
 ```
+
+### Cmake Method
 
 To build and run all tests as executables using cmake:
 
@@ -123,7 +129,7 @@ if __name__ == '__main__':
 
 - Each `test_<name>()` function should include at least one `assert` to test a specific case and should not have any parameters.
 
-- Related tests should be grouped together by subject and should use file names which allow for tests to be naturally grouped together.
+- Related tests should be grouped together by subject and should use file names which allow for tests to be naturally sorted and grouped together.
 
 For example:
 
@@ -140,15 +146,16 @@ For example:
 
 - Use grouped naming for selective testing based on name patterns. For example test all types: `test_type_*.py`
 
-- Avoid turning a test in this folder into a benchmark test for speed. Adjust the scaling parameters to speed up a slow test since its purpose and inclusion in this folder is to check for correctness of implementation not speed.
+- Avoid turning a test in this folder into a benchmark test for speed. Adjust the scaling parameters to speed up a slow test since its purpose and inclusion in this folder is to check for correctness of implementation not to test for speed.
 
-- Avoid using the `global` qualifier for access to globals from functions. `pytest` does not work well with such constructs and will show errors.
+- Avoid using the `global` keyword for access to globals from functions: `pytest` does not work well with such constructs and will show errors. Several historical tests had to be rewritten to address this problem.
 
 
 ## Todo:
 
 - [x] include cmake (ctest) testing
 - [x] run all tests as either executables or python extensions
+- [ ] enabled windows platform support for cmake-based method
 - [ ] unify both shedskin compilation modes for tests such that both executables and python extensions are generated, built and run for reach test run.
 - [ ] convert more tests
 
