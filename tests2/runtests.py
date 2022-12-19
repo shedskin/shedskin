@@ -23,6 +23,7 @@ class TestRunner:
 
     def __init__(self, options):
         self.options = options
+        self.build_dir = Path('build')
         self.tests = sorted(glob.glob("./**/test_*.py", recursive=True))
 
     def check_output(self, args, cwd='.'):
@@ -81,7 +82,7 @@ class TestRunner:
 
     def sequence(self, *cmds):
         cmd = " && ".join(cmds)
-        print(cmd)
+        print(f'{CYAN}cmd{RESET}: {cmd}')
         os.system(cmd)
 
     def run_tests(self):
@@ -97,18 +98,29 @@ class TestRunner:
             print()
 
         if self.options.cmake:
-            self.sequence(
-                "rm -rf ./build",
-                "mkdir -p build",
+            if self.options.extensions:
+                cmake_cmd = "cmake .. -DONLY_EXTS=ON"
+            else:
+                cmake_cmd = "cmake .."
+            actions = [
                 "cd build",
-                "cmake ..",
+                cmake_cmd,
                 "make",
                 "make test"
-            )
-            os.system('rm -f Makefile')
+            ]
+            if self.build_dir.exists() and self.options.reset:
+                actions = ["rm -rf ./build", "mkdir -p build"] + actions
+
+            else:
+                if not self.build_dir.exists():
+                    actions.insert(0, "mkdir -p build")
+
+            self.sequence(*actions)
+            if os.path.exists('Makefile'):
+                os.remove('Makefile')
         else:
             print(f'Running {CYAN}shedskin{RESET} tests:')
-            if self.options.recent: # run only most recently modified test
+            if self.options.modified: # run only most recently modified test
                 max_mtime = 0
                 most_recent_test = None
                 for test in self.tests:
@@ -154,7 +166,10 @@ class TestRunner:
                 for module in modules:
                     f.write(f'    {module}\n')
                 f.write(')\n')
-                f.write('add_shedskin_test("${modules}")')
+                if path.stem.startswith('test_pyxt'):
+                    f.write('add_shedskin_pyxt_test("${modules}")\n')
+                else:
+                    f.write('add_shedskin_test("${modules}")\n')
             path.rename(testdir / path.name)
 
     @classmethod
@@ -163,12 +178,14 @@ class TestRunner:
             prog = 'runtests',
             description = 'runs shedskin tests')
         arg = opt = parser.add_argument
-        opt('-r', '--recent', help='run only most recently modified test', action='store_true')
-        opt('-v', '--validate', help='validate each testfile before running', action='store_true')
-        opt('-p', '--pytest', help='run pytest before each test run',  action='store_true')
-        opt('-e', '--exec', help='retain test executable',  action='store_true')
         opt('-c', '--cmake', help='run tests using cmake',  action='store_true')
-        opt('-f', '--fix', help='fix test with imports')
+        opt('-f', '--fix', help='fix test with imports', metavar="TEST")
+        opt('-m', '--modified', help='run only most recently modified test', action='store_true')
+        opt('-p', '--pytest', help='run pytest before each test run',  action='store_true')
+        opt('-r', '--reset', help='reset cmake build',  action='store_true')
+        opt('-v', '--validate', help='validate each testfile before running', action='store_true')
+        opt('-e', '--extensions', help='run only extension tests', action='store_true')
+        opt('-x', '--exec', help='retain test executable',  action='store_true')
 
         args = parser.parse_args()
         runner = cls(args)

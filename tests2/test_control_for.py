@@ -38,10 +38,13 @@ def test_for_enumerate():
     assert result_o == cube
 
 
-if __name__ == '__main__':
+def test_all():
     test_for_range()
     test_for_tuple()
     test_for_fn()
     test_for_enumerate()
+
+if __name__ == '__main__':
+    test_all() 
 
 

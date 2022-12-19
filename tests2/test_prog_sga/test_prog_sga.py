@@ -114,9 +114,11 @@ def test_sga():
     sga.run()
     assert sga.bestIndividual.ngenes == 20
 
-if __name__ == '__main__':
+def test_all():
     test_sga()
 
+if __name__ == '__main__':
+    test_all()
 
 
 

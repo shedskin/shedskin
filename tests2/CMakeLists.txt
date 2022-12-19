@@ -5,14 +5,13 @@ project(shedskin_tests LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(DEBUG off)
 
-
-include(CTest)
-
 set(SHEDSKIN ${CMAKE_SOURCE_DIR}/../../shedskin)
 set(SHEDSKIN_LIB ${SHEDSKIN}/shedskin/lib)
+set(SCRIPTS ${CMAKE_SOURCE_DIR}/scripts)
 
-file(GLOB test_sources "test_*.py")
+option(ONLY_EXTS "build/run only python extension tests")
 
+include(CTest)
 
 include_directories(
     ${SHEDSKIN_LIB}
@@ -22,158 +21,26 @@ link_directories(
     /usr/local/lib
 )
 
-foreach(test_py ${test_sources})
-
-    get_filename_component(name ${test_py} NAME_WLE)
-    get_filename_component(basename_py ${test_py} NAME)
-
-    set(APP_NAME ${name})
-    set(APP ${APP_NAME})
-
-    set(translated_files
-        ${PROJECT_BINARY_DIR}/${APP_NAME}.cpp
-        ${PROJECT_BINARY_DIR}/${APP_NAME}.hpp
-    )
-
-    add_custom_command(OUTPUT ${translated_files}
-        COMMAND shedskin --nomakefile -o build "${basename_py}"
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        DEPENDS "${basename_py}"
-        COMMENT "translating ${basename_py}"
-        VERBATIM
-    )
-
-    add_custom_target(shedskin_${APP} DEPENDS ${translated_files})
-
+if(ONLY_EXTS)
+    # build/test python extension tests
+    find_package(Python COMPONENTS Interpreter Development)
     if(DEBUG)
-        message("test:" ${APP})
+        message("python:" ${Python_EXECUTABLE})
+        message("python_include" ${Python_INCLUDE_DIRS})
     endif()
-
-    add_executable(${APP}
-        ${PROJECT_BINARY_DIR}/${APP_NAME}.cpp
-        ${PROJECT_BINARY_DIR}/${APP_NAME}.hpp
-        ${SHEDSKIN_LIB}/builtin.cpp
-        ${SHEDSKIN_LIB}/builtin.hpp
-    )
-
-    target_include_directories(${APP} PRIVATE
-        /usr/local/include
-        ${SHEDSKIN_LIB}
-        ${CMAKE_SOURCE_DIR}
-    )
-
-    target_compile_options(${APP} PRIVATE
-        "-O2"
-        "-Wall"
-        "-Wno-deprecated"
-    )
-
-    target_link_libraries(${APP} PRIVATE
-        "-lgc"
-        "-lgccpp"
-        "-lpcre"
-    )
-
-    add_test(NAME ${APP} COMMAND ${APP})
-
-endforeach()
-
-# -----------------------------------------------------------------------
-# build/test function to handle tests with imports
-
-function(add_shedskin_test modules)
-
-    include(CTest)
-
-    set(SHEDSKIN ${CMAKE_SOURCE_DIR}/../../shedskin)
-    set(SHEDSKIN_LIB ${SHEDSKIN}/shedskin/lib)
-
-    include_directories(
-        ${SHEDSKIN_LIB}
-    )
-
-    link_directories(
-        /usr/local/lib
-    )
-
-    get_filename_component(name ${CMAKE_CURRENT_SOURCE_DIR} NAME_WLE)
-
-    set(basename_py "${name}.py")
-
-    set(APP_NAME ${name})
-    set(APP ${APP_NAME})
-
-    set(translated_files
-        ${PROJECT_BINARY_DIR}/${APP_NAME}.cpp
-        ${PROJECT_BINARY_DIR}/${APP_NAME}.hpp
-    )
-
-    add_custom_command(OUTPUT ${translated_files}
-        COMMAND shedskin --nomakefile -o ../build "${basename_py}"
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        DEPENDS "${basename_py}"
-        COMMENT "translating ${basename_py}"
-        VERBATIM
-    )
-
-    add_custom_target(shedskin_${APP} DEPENDS ${translated_files})
-
-    list(PREPEND modules builtin)
-
-    foreach(mod ${modules})
-        # special case os and os.path
-        if(mod STREQUAL "os")
-            list(APPEND module_list "${SHEDSKIN_LIB}/os/__init__.cpp")
-            list(APPEND module_list "${SHEDSKIN_LIB}/os/__init__.hpp")            
-        elseif(mod STREQUAL "os.path")
-            list(APPEND module_list "${SHEDSKIN_LIB}/os/path.cpp")
-            list(APPEND module_list "${SHEDSKIN_LIB}/os/path.hpp")
-        else()
-            list(APPEND module_list "${SHEDSKIN_LIB}/${mod}.cpp")
-            list(APPEND module_list "${SHEDSKIN_LIB}/${mod}.hpp")
-        endif()
-    endforeach()
-
-    if(DEBUG)
-        message("-------------------------------------------------------------")
-        message("name:" ${name})
-        foreach(mod ${module_list})
-            get_filename_component(mod_name ${mod} NAME)
-            message("module: ${mod_name}") 
-        endforeach()
-    endif()
-
-    add_executable(${APP}
-        ${PROJECT_BINARY_DIR}/${APP_NAME}.cpp
-        ${PROJECT_BINARY_DIR}/${APP_NAME}.hpp
-        ${module_list}
-    )
-
-    target_include_directories(${APP} PRIVATE
-        /usr/local/include
-        ${SHEDSKIN_LIB}
-        ${CMAKE_SOURCE_DIR}
-    )
-
-    target_compile_options(${APP} PRIVATE
-        "-O2"
-        "-Wall"
-        "-Wno-deprecated"
-    )
-
-    target_link_libraries(${APP} PRIVATE
-        "-lgc"
-        "-lgccpp"
-        "-lpcre"
-    )
-
-    add_test(NAME ${APP} COMMAND ${APP})
-
-endfunction()
-
+    include(${SCRIPTS}/fn_add_shedskin_ext_tests.cmake)
+    add_shedskin_ext_tests()
+    include(${SCRIPTS}/fn_add_shedskin_ext_import_test.cmake)
+else()
+    # build/test compiled executable tests
+    include(${SCRIPTS}/fn_add_shedskin_exe_tests.cmake)
+    add_shedskin_exe_tests()
+    include(${SCRIPTS}/fn_add_shedskin_exe_import_test.cmake)
+endif()
 
 # -----------------------------------------------------------------------
 # copy test data to cmake 'build' folder
+
 file(COPY ${CMAKE_SOURCE_DIR}/testdata DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY ${CMAKE_SOURCE_DIR}/test_hello.py DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
@@ -188,7 +55,9 @@ file(GLOB test_dirs "test_*"
 foreach(testdir ${test_dirs})
     if(IS_DIRECTORY ${testdir})
         get_filename_component(testdir_name ${testdir} NAME_WLE)
-        # message("testdir_name:" ${testdir_name})
+        if (DEBUG)
+            message("testdir_name:" ${testdir_name})
+        endif()
         add_subdirectory(${testdir_name})
     endif()
 endforeach()

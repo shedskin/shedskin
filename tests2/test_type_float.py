@@ -14,5 +14,9 @@ def test_float():
     assert float(1) == 1.0
 
 
-if __name__ == '__main__':
+def test_all():
     test_float()
+
+
+if __name__ == "__main__":
+    test_all()

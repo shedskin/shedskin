@@ -1,3 +1,45 @@
+# def hoi(a, b, e):
+#     c = a
+#     d = b
+#     f = 1
+#     g = 1
+#     h = f+g
+#     s = 'ho'+'i'                         # [str]
+#     return c+d                           # [int, float]
+
+
+# hoi(1, 2, 3)                             # [int]
+# hoi(1.0, 2.0, 4)                         # [float]
+
+# #def hoi(a, b, c=1, d=1):                 # a: [int], b: [int], c: [int, float]r, d: [int]
+# #    print a, b, c, d                     # [int], [int], [int, float], [int]
+# #    return c                             # [int, float]
+# #
+# #
+# #hoi(1,2) 
+# #hoi(1,2,3) 
+# #hoi(1,2,3,4)                             # [int]
+# #
+# #hoi(1,2,3.1)                             # [int, float]
+
+# def hoi(a, b, c=1, d=1):                 # a: [int], b: [int], c: [int, float]r, d: [int]
+#     print(a, b, c, d)                     # [int], [int], [int, float], [int]
+#     return c                             # [int, float]
+
+# hoi(1,2) 
+# hoi(1,2,3)
+# hoi(1,2,3,4)                             # [int]
+
+
+# def hoi(a, b):                           # a: [int, str], b: [int]
+#     a                                    # [int, str]
+#     a = 'hoi'                            # [str]
+#     print(a)                              # [int, str]
+# hoi('1', 1)                                # []
+
+
+
+
 def baz(x, y, z = 3):
     return x, y, z
 
@@ -38,10 +80,14 @@ def test_msplit():
     assert msplit() == [""]
 
 
-if __name__ == '__main__':
+def test_all():
     test_baz()
     test_boo()
     # test_foo()
     test_klass()
     test_msplit()
+
+
+if __name__ == '__main__':
+    test_all() 
 

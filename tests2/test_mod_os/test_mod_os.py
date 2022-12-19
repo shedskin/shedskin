@@ -18,8 +18,10 @@ def test_os_exception():
         assert e.filename == "ontehunoe"
 
 
-if __name__ == '__main__':
+def test_all():
     test_os()
     test_popen()
     # test_os_exception()
-    
+
+if __name__ == '__main__':
+    test_all()

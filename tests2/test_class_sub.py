@@ -37,5 +37,10 @@ def test_family():
     assert daughter.g(5) == 1280
 
 
-if __name__ == "__main__":
+
+def test_all():
     test_family()
+
+if __name__ == '__main__':
+    test_all() 
+

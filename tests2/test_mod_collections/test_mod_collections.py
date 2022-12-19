@@ -13,7 +13,9 @@ def test_collections_defaultdict():
         d2[k2].append(v2)
     assert list(sorted(d2.items())) == [('blue', [2, 4]), ('red', [1]), ('yellow', [1, 3])]
 
-if __name__ == '__main__':
+
+def test_all():
     test_collections_defaultdict()
 
-
+if __name__ == '__main__':
+    test_all()
