@@ -26,15 +26,12 @@ def test_os_path():
     assert isdir(testdata)
     assert not isfile(testdata)
 
-    if not exists("test_hello.py"):
-        test_hello = "../test_hello.py"
-    else:
-        test_hello = "test_hello.py"
+    abc = join(testdata, "abc.txt")
 
-    assert getsize(test_hello) == 23
-    assert getatime(test_hello) > 1 # dummy: cannot test for time
-    assert getctime(test_hello) > 1 # dummy: cannot test for time
-    assert getmtime(test_hello) > 1 # dummy: cannot test for time
+    assert getsize(abc) == 5
+    assert getatime(abc) > 1 # dummy: cannot test for time
+    assert getctime(abc) > 1 # dummy: cannot test for time
+    assert getmtime(abc) > 1 # dummy: cannot test for time
 
 
 

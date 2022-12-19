@@ -20,135 +20,127 @@ def _reduce(f, l, i=-1):
 
     return r
 
+class Satisfier:
+    def __init__(self, argv=None):
+        self.argv = argv or ["", "testdata/uuf250-010.cnf"]
+        cnf = [
+            l.strip().split() for l in open(self.argv[1]) if l[0] not in "c%0\n"
+        ]
+        clauses = [[int(x) for x in m[:-1]] for m in cnf if m[0] != "p"]
+        nrofvars = [int(n[2]) for n in cnf if n[0] == "p"][0]
+        self.vars = list(range(nrofvars + 1))
+        self.occurrence = [[] for l in self.vars + list(range(-nrofvars, 0))]
+        for clause in clauses:
+            for lit in clause:
+                self.occurrence[lit].append(clause)
+        self.fixedt = [-1 for var in self.vars]
+        self.nodecount = 0
+        self.bincount = 0
 
-# prelims
 
-argv = ["", "testdata/uuf250-010.cnf"]  # [list(str)]
+    def solve_rec(self):
+        self.nodecount += 1  # []
+        if self.nodecount == 100:
+            return 1
+        if not -1 in self.fixedt[1:]:  # [int]
+            print(
+                "v", " ".join([str((2 * self.fixedt[i] - 1) * i) for i in self.vars[1:]])
+            )
+            return 1
 
-cnf = [
-    l.strip().split() for l in open(argv[1]) if l[0] not in "c%0\n"
-]  # [list(list(str))]
-clauses = [[int(x) for x in m[:-1]] for m in cnf if m[0] != "p"]  # [list(list(int))]
-nrofvars = [int(n[2]) for n in cnf if n[0] == "p"][0]  # [int]
-vars = list(range(nrofvars + 1))  # [list(int)]
-occurrence = [[] for l in vars + list(range(-nrofvars, 0))]  # [list(list(list(int)))]
-for clause in clauses:  # [list(int)]
-    for lit in clause:
-        occurrence[lit].append(clause)  # [int]
-fixedt = [-1 for var in vars]  # [list(int)]
+        la_mods = []
+        var = self.lookahead(la_mods)
+        # print 'select', var
+        if not var:
+            return self.backtrack(la_mods)
+
+        for choice in [var, -var]:
+            prop_mods = []
+            if self.propagate(choice, prop_mods) and self.solve_rec():
+                return 1
+            self.backtrack(prop_mods)  # [int]
+
+        return self.backtrack(la_mods)  # [int]
 
 
-def solve_rec():  # la_mods: [list(int)], var: [int], prop_mods: [list(int)], choice: [int]
-    global nodecount
-    nodecount += 1  # []
-    if nodecount == 100:
-        return 1
-    if not -1 in fixedt[1:]:  # [int]
-        print(
-            "v", " ".join([str((2 * fixedt[i] - 1) * i) for i in vars[1:]])
-        )  # [str], [str]
+    def propagate(self, lit, mods):
+        current = len(mods)  # [int]
+        mods.append(lit)  # []
+
+        while 1:  # [int]
+            if self.fixedt[abs(lit)] == -1:  # [int]
+                self.fixedt[abs(lit)] = int(lit > 0)  # [int]
+                for clause in self.occurrence[-lit]:  # [list(int)]
+                    length, unfixed = self.info(clause)  # [tuple(int)]
+
+                    if length == 0:
+                        return 0  # [int]
+                    elif length == 1:
+                        mods.append(unfixed)  # []
+                    elif length == 2:
+                        self.bincount += 1  # []
+
+            elif self.fixedt[abs(lit)] != int(lit > 0):
+                return 0  # [int]
+
+            current += 1  # []
+            if current == len(mods):
+                break  # [int]
+            lit = mods[current]  # [int]
+
         return 1  # [int]
 
-    la_mods = []  # [list(int)]
-    var = lookahead(la_mods)  # [int]
-    # print 'select', var                  # [str], [int]
-    if not var:
-        return backtrack(la_mods)  # [int]
 
-    for choice in [var, -var]:  # [int]
-        prop_mods = []  # [list(int)]
-        if propagate(choice, prop_mods) and solve_rec():
-            return 1  # [int]
-        backtrack(prop_mods)  # [int]
+    def lookahead(self, mods):
 
-    return backtrack(la_mods)  # [int]
+        dif = [-1 for var in self.vars]
+        for var in self.unfixed_vars():
+            score = []
+            for choice in [var, -var]:
+                prop_mods = []
+                self.bincount = 0
+                prop = self.propagate(choice, prop_mods)
+                self.backtrack(prop_mods)
+                if not prop:
+                    if not self.propagate(-choice, mods):
+                        return 0
+                    break
+                score.append(self.bincount)
+            dif[var] = _reduce(lambda x, y: 1024 * x * y + x + y, score, 0)
 
-
-def propagate(
-    lit, mods
-):  # current: [int], unfixed: [int], mods: [list(int)], clause: [list(int)], lit: [int], length: [int]
-    global bincount
-
-    current = len(mods)  # [int]
-    mods.append(lit)  # []
-
-    while 1:  # [int]
-        if fixedt[abs(lit)] == -1:  # [int]
-            fixedt[abs(lit)] = int(lit > 0)  # [int]
-            for clause in occurrence[-lit]:  # [list(int)]
-                length, unfixed = info(clause)  # [tuple(int)]
-
-                if length == 0:
-                    return 0  # [int]
-                elif length == 1:
-                    mods.append(unfixed)  # []
-                elif length == 2:
-                    bincount += 1  # []
-
-        elif fixedt[abs(lit)] != int(lit > 0):
-            return 0  # [int]
-
-        current += 1  # []
-        if current == len(mods):
-            break  # [int]
-        lit = mods[current]  # [int]
-
-    return 1  # [int]
+        return dif.index(max(dif))
 
 
-def lookahead(
-    mods,
-):  # mods: [list(int)], dif: [list(int)], choice: [int], score: [list(int)], prop_mods: [list(int)], var: [int], prop: [int]
-    global bincount
-
-    dif = [-1 for var in vars]  # [list(int)]
-    for var in unfixed_vars():  # [int]
-        score = []  # [list(int)]
-        for choice in [var, -var]:  # [int]
-            prop_mods = []  # [list(int)]
-            bincount = 0  # [int]
-            prop = propagate(choice, prop_mods)  # [int]
-            backtrack(prop_mods)  # [int]
-            if not prop:  # [int]
-                if not propagate(-choice, mods):
-                    return 0  # [int]
-                break
-            score.append(bincount)  # []
-        dif[var] = _reduce(lambda x, y: 1024 * x * y + x + y, score, 0)  # [int]
-
-    return dif.index(max(dif))  # [int]
+    def backtrack(self, mods):
+        for lit in mods:
+            self.fixedt[abs(lit)] = -1
+        return 0
 
 
-def backtrack(mods):  # lit: [int], mods: [list(int)]
-    for lit in mods:
-        fixedt[abs(lit)] = -1  # [int]
-    return 0  # [int]
+    def info(self, clause):
+        len, unfixed = 0, 0
+        for lit in clause:
+            if self.fixedt[abs(lit)] == -1:
+                unfixed, len = lit, len + 1
+            elif self.fixedt[abs(lit)] == int(lit > 0):
+                return -1, 0
+        return len, unfixed
 
 
-def info(clause):  # lit: [int], clause: [list(int)], unfixed: [int], len: [int]
-    len, unfixed = 0, 0  # [int], [int]
-    for lit in clause:  # [int]
-        if fixedt[abs(lit)] == -1:
-            unfixed, len = lit, len + 1  # [int], [int]
-        elif fixedt[abs(lit)] == int(lit > 0):
-            return -1, 0  # [tuple(int)]
-    return len, unfixed  # [tuple(int)]
+    def unfixed_vars(self):
+        return [var for var in self.vars[1:] if self.fixedt[var] == -1]
 
-
-def unfixed_vars():
-    return [var for var in vars[1:] if fixedt[var] == -1]  # [list(int)]
-
-def run():
-    global nodecount
-    nodecount = 0
-    if not solve_rec():
-        return "unsatisfiable", nodecount
-    else:
-        return "satisfiable", nodecount
+    def run(self):
+        self.nodecount = 0
+        if not self.solve_rec():
+            return "unsatisfiable", self.nodecount
+        else:
+            return "satisfiable", self.nodecount
 
 
 def test_satisfy():
-    assert run() == ("satisfiable", 100)
+    game = Satisfier()
+    assert game.run() == ("satisfiable", 100)
 
 
 def test_all():

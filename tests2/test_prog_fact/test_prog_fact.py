@@ -24,5 +24,8 @@ def test_factorial():
     assert math.factorial(5) == 120
 
 
-if __name__ == '__main__':
+def test_all():
     test_factorial()
+
+if __name__ == '__main__':
+    test_all()

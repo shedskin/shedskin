@@ -33,20 +33,21 @@ This folder includes a commandline tool, `runtests.py`, to help setup, build and
 It has the following commmand line options
 
 ```bash
-$ ./runtests.py --hep
-usage: runtests [-h] [-c] [-e] [-f TEST] [-m] [-p] [-r] [-v]
+$ ./runtests.py --help
+usage: runtests [-h] [-c] [-f TEST] [-m] [-p] [-r] [-v] [-e] [-x]
 
 runs shedskin tests
 
 options:
   -h, --help           show this help message and exit
   -c, --cmake          run tests using cmake
-  -e, --exec           retain test executable
   -f TEST, --fix TEST  fix test with imports
   -m, --modified       run only most recently modified test
   -p, --pytest         run pytest before each test run
   -r, --reset          reset cmake build
   -v, --validate       validate each testfile before running
+  -e, --extensions     run only extension tests
+  -x, --exec           retain test executable
 ```
 
 To build and run all tests using the default testrunner:
@@ -61,7 +62,7 @@ To build and run the most recently modified test (useful during test dev) using 
 ./runtests.py -m
 ```
 
-To build and run all tests using cmake:
+To build and run all tests as executables using cmake:
 
 ```bash
 ./runtests.py -c
@@ -86,6 +87,15 @@ To reset (i.e. remove) the cmake `build` directory and run cmake:
 ```bash
 ./runtests.py -c -r
 ```
+
+
+To build and run all tests as python extensions using cmake:
+
+```bash
+./runtests.py -ce
+```
+
+You should reset the build directory before running either mode (executable or extension)
 
 
 ## Standards
@@ -132,11 +142,14 @@ For example:
 
 - Avoid turning a test in this folder into a benchmark test for speed. Adjust the scaling parameters to speed up a slow test since its purpose and inclusion in this folder is to check for correctness of implementation not speed.
 
+- Avoid using the `global` qualifier for access to globals from functions. `pytest` does not work well with such constructs and will show errors.
+
 
 ## Todo:
 
 - [x] include cmake (ctest) testing
-- [ ] unify both shedskin compilation modes for tests.
+- [x] run all tests as either executables or python extensions
+- [ ] unify both shedskin compilation modes for tests such that both executables and python extensions are generated, built and run for reach test run.
 - [ ] convert more tests
 
 

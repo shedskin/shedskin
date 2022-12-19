@@ -29,7 +29,7 @@
 #             return False
     
 
-def test_object():
+def test_basic():
     assert 1+1 == 2
 
 def test_all():
