@@ -68,5 +68,9 @@ def test_demo():
     assert foo_results == 3
     assert bar_results == 'hello world!'
 
+def test_all():
+    test_demo()
+
+
 if __name__ == '__main__':
-   test_demo() 
+   test_all() 
