@@ -32,9 +32,11 @@ def test_lst():
     assert lst[0] == 1.0
 
 
-
-if __name__ == '__main__':
+def test_all():
     test_seq()
     test_lst()
+
+if __name__ == '__main__':
+    test_all() 
 
 

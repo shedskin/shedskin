@@ -1,4 +1,8 @@
 
+
+def propagate(la):
+    return la, la
+
 def ident(x):
     return x
 
@@ -62,23 +66,40 @@ def test_return_int():
 def test_return_int_param():
     assert aap(100) == 100
 
+## does not work!
+# 
+# def test_return_float_param():
+#     assert aap(1.0) == 1.0
+
+# def test_return_str_param():
+#     assert aap("hh") == "hh"
+
 def test_return_str():
     assert bwa() == 'hoi'
 
 def test_return_float():
     assert hap(1.0) == 1.0
 
+def test_return_tuple_of_lists():
+    assert propagate([1]) == ([1],[1])
+    assert propagate([2]) == ([2],[2])
 
 
-
-if __name__ == '__main__':
+def test_all():
     test_basic()
     test_nested()
     test_local()
     test_return_int()
     test_return_int_param()
+    # test_return_float_param()
+    # test_return_str_param()
     test_return_str()
     test_return_float()
+    test_return_tuple_of_lists()
     # test_inner()
+
+if __name__ == '__main__':
+    test_all() 
+
 
 

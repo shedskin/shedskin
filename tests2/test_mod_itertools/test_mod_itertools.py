@@ -1,6 +1,101 @@
 import itertools
 
 
+#print('### Ifilter ###')
+#
+#pred1 = lambda x: x % 2
+#
+#for h in itertools.ifilter(pred1, range(10)):
+#   print(h)
+#for i in itertools.ifilter(None, range(10)):
+#   print(i)
+#
+#print('### Ifilterfalse ###')
+#
+#pred1 = lambda x: x % 2
+#
+#for j in itertools.ifilterfalse(pred1, range(10)):
+#  print(j)
+#for j in itertools.ifilterfalse(None, range(10)):
+#  print(j)
+
+
+
+
+
+#print('### Imap ###')
+#
+#def foo(a):
+#   return '{%i}' % a
+#def foo2(a, b):
+#   return '{%i//%f}' % (a, b)
+#def foo3(a, b, c):
+#   return '{%i//%f//%s}' % (a, b, c)
+#def foo4(a, b, c, d):
+#   return '{%i//%f//%s//%i}' % (a, b, c, d)
+#def foo5(a, b, c, d, e):
+#   return '{%i//%f//%s//%i//%s}' % (a, b, c, d, str(e))
+#
+#for iia in itertools.imap(foo, (21, 12, 42)):
+#   print(iia)
+#print('-')
+#for iib in itertools.imap(foo2, (21, 12, 42), (.21, .12)):
+#   print(iib)
+#print('-')
+#for iic in itertools.imap(foo3, (21, 12, 42), (.21, .12), ('a', 'b', 'c')):
+#   print(iic)
+#print('-')
+#for iid in itertools.imap(foo4, (21, 12, 42), (.21, .12), ('a', 'b', 'c'), (42, 12, 14, 6)):
+#   print(iid)
+#print('-')
+#for iie in itertools.imap(foo5, (21, 12, 42), (.21, .12), ('a', 'b', 'c'), (42, 12, 14, 6), ([5, 4], [8, 9])):
+#   print(iie)
+
+
+
+# TODO
+
+
+#print('### Izip ###')
+#
+#for ar in itertools.izip():
+#    print(ar)
+#print('-')
+#for at in itertools.izip([1, 3, 4]):
+#    print(at)
+#print('-')
+#for au in itertools.izip([1, 3, 4], [42, 21], [12, 21, 33, 55]):
+#    print(au)
+#print('-')
+#for au2 in itertools.izip([1, 3, 4], ['a', 'b']):
+#   print(au2)
+
+#print('### Izip_longest ###')
+#
+#for av1 in itertools.izip_longest():
+#   print(av1)
+#print('-')
+#for av in itertools.izip_longest(fillvalue = 42):
+#   print(av)
+#print('-')
+#for aw1 in itertools.izip_longest(['a', 'b', 'c']):
+#   print(aw1)
+#print('-')
+#for aw2 in itertools.izip_longest([1, 3, 4], fillvalue = 42):
+#    print(aw2)
+#print('-')
+#for ax in itertools.izip_longest([1, 3, 4], [42, 21], [12, 21, 33, 55], fillvalue = 42):
+#    print(ax)
+#print('-')
+#for aw3 in itertools.izip_longest([[1, 2], [3, 4], [5, 6]], ['a', 'b']):
+#    print(aw3)
+
+
+
+#for d in itertools.compress([42, 32, 21, 55, 303], [True, False, True, False, True]):
+#   print c
+
+
 def get_count(threshold=16, n=0, step=1):
     res=[]
     for i in itertools.count(n, step):
@@ -146,7 +241,7 @@ def test_tee():
     assert list(it5) == [1, 2, 3, 4, 5]
 
 
-if __name__ == '__main__':
+def test_all():
     test_count()
     test_cycle()
     test_repeat()
@@ -159,97 +254,6 @@ if __name__ == '__main__':
     test_combinations()
     test_product()
 
+if __name__ == '__main__':
+    test_all()
 
-#print('### Ifilter ###')
-#
-#pred1 = lambda x: x % 2
-#
-#for h in itertools.ifilter(pred1, range(10)):
-#   print(h)
-#for i in itertools.ifilter(None, range(10)):
-#   print(i)
-#
-#print('### Ifilterfalse ###')
-#
-#pred1 = lambda x: x % 2
-#
-#for j in itertools.ifilterfalse(pred1, range(10)):
-#  print(j)
-#for j in itertools.ifilterfalse(None, range(10)):
-#  print(j)
-
-
-
-
-
-#print('### Imap ###')
-#
-#def foo(a):
-#   return '{%i}' % a
-#def foo2(a, b):
-#   return '{%i//%f}' % (a, b)
-#def foo3(a, b, c):
-#   return '{%i//%f//%s}' % (a, b, c)
-#def foo4(a, b, c, d):
-#   return '{%i//%f//%s//%i}' % (a, b, c, d)
-#def foo5(a, b, c, d, e):
-#   return '{%i//%f//%s//%i//%s}' % (a, b, c, d, str(e))
-#
-#for iia in itertools.imap(foo, (21, 12, 42)):
-#   print(iia)
-#print('-')
-#for iib in itertools.imap(foo2, (21, 12, 42), (.21, .12)):
-#   print(iib)
-#print('-')
-#for iic in itertools.imap(foo3, (21, 12, 42), (.21, .12), ('a', 'b', 'c')):
-#   print(iic)
-#print('-')
-#for iid in itertools.imap(foo4, (21, 12, 42), (.21, .12), ('a', 'b', 'c'), (42, 12, 14, 6)):
-#   print(iid)
-#print('-')
-#for iie in itertools.imap(foo5, (21, 12, 42), (.21, .12), ('a', 'b', 'c'), (42, 12, 14, 6), ([5, 4], [8, 9])):
-#   print(iie)
-
-
-
-# TODO
-
-
-#print('### Izip ###')
-#
-#for ar in itertools.izip():
-#    print(ar)
-#print('-')
-#for at in itertools.izip([1, 3, 4]):
-#    print(at)
-#print('-')
-#for au in itertools.izip([1, 3, 4], [42, 21], [12, 21, 33, 55]):
-#    print(au)
-#print('-')
-#for au2 in itertools.izip([1, 3, 4], ['a', 'b']):
-#   print(au2)
-
-#print('### Izip_longest ###')
-#
-#for av1 in itertools.izip_longest():
-#   print(av1)
-#print('-')
-#for av in itertools.izip_longest(fillvalue = 42):
-#   print(av)
-#print('-')
-#for aw1 in itertools.izip_longest(['a', 'b', 'c']):
-#   print(aw1)
-#print('-')
-#for aw2 in itertools.izip_longest([1, 3, 4], fillvalue = 42):
-#    print(aw2)
-#print('-')
-#for ax in itertools.izip_longest([1, 3, 4], [42, 21], [12, 21, 33, 55], fillvalue = 42):
-#    print(ax)
-#print('-')
-#for aw3 in itertools.izip_longest([[1, 2], [3, 4], [5, 6]], ['a', 'b']):
-#    print(aw3)
-
-
-
-#for d in itertools.compress([42, 32, 21, 55, 303], [True, False, True, False, True]):
-#   print c

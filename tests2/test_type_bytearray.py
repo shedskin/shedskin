@@ -126,7 +126,8 @@ def test_bytearray_slice():
     del ba[::2]
     assert ba == bytearray(b'baba')
 
-if __name__ == '__main__':
+
+def test_all():
     test_bytearray()
     test_bytearray_clear()
     test_bytearray_append()
@@ -143,4 +144,6 @@ if __name__ == '__main__':
     # test_bytearray_hash()
     test_bytearray_slice()
 
+if __name__ == "__main__":
+    test_all()
 

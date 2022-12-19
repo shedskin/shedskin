@@ -41,6 +41,10 @@ def test_prime_factors():
     assert factors == [3, 3, 3, 1097, 70201]
 
 
-if __name__ == '__main__':
+def test_all():
     test_prime_factors()
+
+if __name__ == '__main__':
+    test_all()
+
 

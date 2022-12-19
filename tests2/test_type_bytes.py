@@ -198,7 +198,7 @@ def test_bytes_hash():
     assert list(sorted(bdict.items())) == [(b'bla', 18), (b'blup', 19)]
     assert set([b'blup'])
 
-if __name__ == '__main__':
+def test_all():
     test_bytes_cmp()
     test_bytes_concat()
     test_capitalize()
@@ -244,5 +244,10 @@ if __name__ == '__main__':
     test_upper()
     test_zfill()
     test_bytes_hash()
+    # test_problem_cases()
+
+
+if __name__ == "__main__":
+    test_all()
 
 

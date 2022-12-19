@@ -94,7 +94,7 @@ examples = [ ([1,0,0,1,1,2,0,1,0,0], [1]), # [list(tuple(list(int)))]
              ([1,1,1,1,2,0,0,0,3,2], [1]) ]     # [list(int)]
 
 
-def test_nnetwork():
+def test_nnet():
     epochs = 1000
     train_network(network, examples, epochs)
     result = []
@@ -105,5 +105,9 @@ def test_nnetwork():
     assert result == [1]*12
 
 
+def test_all():
+    test_nnet()
+
 if __name__ == '__main__':
-    test_nnetwork()
+    test_all()
+
