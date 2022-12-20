@@ -14,8 +14,6 @@ Additionally, the type inference techniques employed by Shed Skin currently do n
 
 Because Shed Skin is still in an early stage of development, it can also improve a lot. At the moment, you will probably run into some bugs when using it. Please report these, so they can be fixed!
 
-At the moment, Shed Skin is compatible with Python versions 2.4 to 2.7, behaves like 2.6, and should work on Windows and most UNIX platforms, such as GNU/Linux and OSX.
-
 Typing restrictions
 -------------------
 
@@ -92,7 +90,8 @@ Shed Skin will only ever support a subset of all Python features. The following 
 * argument (un)packing (:code:`*args` and :code:`**kwargs`)
 * multiple inheritance
 * nested functions and classes
-* unicode
+* unicode (restricted to 1-byte characters)
+* f-strings
 * inheritance from builtins (excluding :code:`Exception` and :code:`object`)
 * overloading :code:`__iter__`, :code:`__call__`, :code:`__del__`
 * closures
