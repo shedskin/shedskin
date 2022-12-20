@@ -98,7 +98,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def __init__(self, gx, module):
         self.gx = gx
         self.output_base = module.filename[:-3]
-        # self.out = open(self.output_base + '.cpp', 'w')
         self.out = self.get_output_file(ext='.cpp')
         self.indentation = ''
         self.consts = {}
@@ -143,7 +142,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         with self.get_output_file(ext=suffix, mode='r') as f:
             lines = f.readlines()
-        # lines = open(self.output_base + suffix, 'r').readlines()
         newlines = []
         j = -1
         for (i, line) in enumerate(lines):
@@ -193,7 +191,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         with self.get_output_file(ext=suffix, mode='w') as f:
             f.writelines(newlines2)
-        # open(self.output_base + suffix, 'w').writelines(newlines2)
         self.filling_consts = False
 
     def insert_extras(self, suffix):
@@ -209,7 +206,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 newlines.extend(self.fwd_class_refs())
         with self.get_output_file(ext=suffix, mode='w') as f:
             f.writelines(newlines)
-        # open(self.output_base + suffix, 'w').writelines(newlines)
 
     def fwd_class_refs(self):
         lines = []
@@ -281,7 +277,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         return result
 
     def header_file(self):
-        # self.out = open(self.output_base + '.hpp', 'w')
         self.out = self.get_output_file(ext='.hpp')
         self.visit(self.module.ast, True)
         self.out.close()
