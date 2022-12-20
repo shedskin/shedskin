@@ -1,5 +1,5 @@
 
-function(add_shedskin_test modules)
+function(add_shedskin_test sys_modules)
 
     get_filename_component(name ${CMAKE_CURRENT_SOURCE_DIR} NAME_WLE)
 
@@ -21,9 +21,9 @@ function(add_shedskin_test modules)
 
     add_custom_target(shedskin_ext_import_${PYEXT} DEPENDS ${translated_files})
 
-    list(PREPEND modules builtin)
+    list(PREPEND sys_modules builtin)
 
-    foreach(mod ${modules})
+    foreach(mod ${sys_modules})
         # special case os and os.path
         if(mod STREQUAL "os")
             list(APPEND module_list "${SHEDSKIN_LIB}/os/__init__.cpp")
@@ -37,19 +37,34 @@ function(add_shedskin_test modules)
         endif()
     endforeach()
 
+    if(ARGV1)
+        set(app_modules ${ARGV0})
+    else()
+        set(app_modules)
+    endif()
+    foreach(mod ${app_modules})
+        list(APPEND app_module_list "${PROJECT_BINARY_DIR}/${mod}.cpp")
+        list(APPEND app_module_list "${PROJECT_BINARY_DIR}/${mod}.hpp")            
+    endforeach()
+
     if(DEBUG)
         message("-------------------------------------------------------------")
         message("name:" ${name})
-        foreach(mod ${module_list})
+        foreach(mod ${app_module_list})
             get_filename_component(mod_name ${mod} NAME)
-            message("module: ${mod_name}") 
+            message("app_module: ${mod_name}") 
+        endforeach()
+        foreach(mod ${sys_module_list})
+            get_filename_component(mod_name ${mod} NAME)
+            message("sys_module: ${mod_name}") 
         endforeach()
     endif()
 
     add_library(${PYEXT} MODULE
         ${PROJECT_BINARY_DIR}/${PYEXT}.cpp
         ${PROJECT_BINARY_DIR}/${PYEXT}.hpp
-        ${module_list}
+        ${app_module_list}        
+        ${sys_module_list}
     )
 
     set_target_properties(${PYEXT} PROPERTIES
