@@ -156,18 +156,11 @@ See `How to help out in development`_ on how to help improve or add to the set o
 Installation
 ------------
 
-There are two types of downloads available: a self-extracting **Windows** installer and a **UNIX** tarball. But preferrably of course, Shed Skin is installed via your **GNU/Linux** package manager (Shed Skin is available in at least **Debian**, **Ubuntu**, **Fedora** and **Arch**).
+GNU/Linux
+~~~~~~~~~
 
-Windows
-~~~~~~~
-
-To install the **Windows** version, simply download and start it. If you use **ActivePython** or some other non-standard Python distribution, or **MingW**, please deinstall this first. Note also that the 64-bit version of Python seems to be lacking a file, so it's not possible to build extension modules. Please use the 32-bit version instead.
-
-UNIX
-~~~~
-
-Using a package manager
-```````````````````````
+From Distribution
+``````````````````
 
 Example command for when using Ubuntu:
 
@@ -264,8 +257,6 @@ If the PCRE library is not available via your package manager, the following is 
 
 Compiling a standalone program
 ------------------------------
-
-Under Windows, first execute (double-click) the ``init.bat`` file in the directory where you installed Shed Skin.
 
 To compile the following simple test program, called ``test.py``:
 
@@ -372,19 +363,6 @@ After compiling this module as an extension module with Shed Skin, we can pass i
 
 Distributing binaries
 ---------------------
-
-Windows
-~~~~~~~
-
-To use a generated Windows binary on another system, or to start it without having to double-click ``init.bat``, place the following files into the same directory as the binary:
-
-* ``shedskin-0.9\shedskin\gc.dll``
-* ``shedskin-0.9\shedskin-libpcre-0.dll``
-* ``shedskin-0.9\bin\libgcc_s_dw-1.dll``
-* ``shedskin-0.9\bin\libstdc++.dll``
-
-UNIX
-~~~~
 
 To use a generated binary on another system, make sure ``libgc`` and ``libpcre3`` are installed there. If they are not, and you cannot install them globally, you can place copies of these libraries into the same directory as the binary, using the following approach:
 
