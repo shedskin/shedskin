@@ -138,7 +138,7 @@ At the moment, the following 27 modules are largely supported. Several of these,
 * :code:`itertools` (no starmap)
 * :code:`math`
 * :code:`mmap`
-* :code:`os` (some functionality missing on Windows)
+* :code:`os`
 * :code:`os.path`
 * :code:`random`
 * :code:`re`
@@ -305,7 +305,7 @@ Type:
   shedskin -e simple_module
   make
 
-For 'make' to succeed on a non-Windows system, make sure to have the Python development files installed (under **Debian**, install ``python-dev``; under **Fedora**, install ``python-devel``).
+For 'make' to succeed, make sure to have the Python development files installed (under **Debian**, install ``python-dev``; under **Fedora**, install ``python-devel``).
 
 Note that for type inference to be possible, the module must (indirectly) call its own functions. This is accomplished in the example by putting the function calls under the :code:`if __name__=='__main__'` statement, so that they are not executed when the module is imported. Functions only have to be called indirectly, so if func2 calls func1, the call to func1 can be omitted.
 
