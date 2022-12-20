@@ -1,5 +1,5 @@
 
-function(add_shedskin_test modules)
+function(add_shedskin_test sys_modules)
 
     get_filename_component(name ${CMAKE_CURRENT_SOURCE_DIR} NAME_WLE)
 
@@ -23,35 +23,50 @@ function(add_shedskin_test modules)
 
     add_custom_target(shedskin_${APP} DEPENDS ${translated_files})
 
-    list(PREPEND modules builtin)
+    list(PREPEND sys_modules builtin)
 
-    foreach(mod ${modules})
+    foreach(mod ${sys_modules})
         # special case os and os.path
         if(mod STREQUAL "os")
-            list(APPEND module_list "${SHEDSKIN_LIB}/os/__init__.cpp")
-            list(APPEND module_list "${SHEDSKIN_LIB}/os/__init__.hpp")            
+            list(APPEND sys_module_list "${SHEDSKIN_LIB}/os/__init__.cpp")
+            list(APPEND sys_module_list "${SHEDSKIN_LIB}/os/__init__.hpp")            
         elseif(mod STREQUAL "os.path")
-            list(APPEND module_list "${SHEDSKIN_LIB}/os/path.cpp")
-            list(APPEND module_list "${SHEDSKIN_LIB}/os/path.hpp")
+            list(APPEND sys_module_list "${SHEDSKIN_LIB}/os/path.cpp")
+            list(APPEND sys_module_list "${SHEDSKIN_LIB}/os/path.hpp")
         else()
-            list(APPEND module_list "${SHEDSKIN_LIB}/${mod}.cpp")
-            list(APPEND module_list "${SHEDSKIN_LIB}/${mod}.hpp")
+            list(APPEND sys_module_list "${SHEDSKIN_LIB}/${mod}.cpp")
+            list(APPEND sys_module_list "${SHEDSKIN_LIB}/${mod}.hpp")
         endif()
+    endforeach()
+
+    if(ARGV1)
+        set(app_modules ${ARGV1})
+    else()
+        set(app_modules)
+    endif()
+    foreach(mod ${app_modules})
+        list(APPEND app_module_list "${PROJECT_BINARY_DIR}/${mod}.cpp")
+        list(APPEND app_module_list "${PROJECT_BINARY_DIR}/${mod}.hpp")            
     endforeach()
 
     if(DEBUG)
         message("-------------------------------------------------------------")
         message("name:" ${name})
-        foreach(mod ${module_list})
+        foreach(mod ${app_module_list})
             get_filename_component(mod_name ${mod} NAME)
-            message("module: ${mod_name}") 
+            message("app_module: ${mod_name}") 
+        endforeach()
+        foreach(mod ${sys_module_list})
+            get_filename_component(mod_name ${mod} NAME)
+            message("sys_module: ${mod_name}") 
         endforeach()
     endif()
 
     add_executable(${APP}
         ${PROJECT_BINARY_DIR}/${APP_NAME}.cpp
         ${PROJECT_BINARY_DIR}/${APP_NAME}.hpp
-        ${module_list}
+        ${app_module_list}        
+        ${sys_module_list}
     )
 
     target_include_directories(${APP} PRIVATE
