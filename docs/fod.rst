@@ -27,9 +27,9 @@ Static compilation has other advantages. If you know what you are doing, for exa
 No sir, I don't like it. Restricted python is not python!
 ---------------------------------------------------------
 
-Code accepted by shedskin is still pure python code. You can still debug it with CPython, use most of the python builtins, list comprehensions, and more than 20 common standard library modules. The `shedskin example test set <https://github.com/shedskin/shedskin/tree/master/examples>`_ shows that a statically restricted subset of python can still be quite useful.
+Code accepted by shedskin is still pure python code. You can still develop/debug it with CPython, and use more than 20 common standard library modules. The `shedskin example test set <https://github.com/shedskin/shedskin/tree/master/examples>`_ shows that a statically restricted subset of python can still be quite useful.
 
-shedskin can also generate extension modules for you, that can be incorporated into larger python programs. So you can use unrestricted python code and arbitrary libraries in your main program, but still get a speedup in some critical piece of code, while keeping everything in pure python.
+Shedskin can also generate extension modules for you, that can be incorporated into larger python programs. So you can use unrestricted python code and arbitrary libraries in your main program, but still get a speedup in some critical piece of code, while keeping everything in pure python.
 
 For example, the `pylot raytracer example <https://github.com/shedskin/shedskin/tree/master/examples/pylot>`_ uses Tk and multiprocessing in combination with a shedskin-compiled extension module, and the `c64 emulator example <https://github.com/shedskin/shedskin/tree/master/examples/c64>`_ uses pygtk for its interface.
 
