@@ -142,7 +142,7 @@ At the moment, the following 27 modules are largely supported. Several of these,
 * :code:`os.path`
 * :code:`random`
 * :code:`re`
-* :code:`select` (only select function, on UNIX)
+* :code:`select` (only select function)
 * :code:`socket`
 * :code:`string`
 * :code:`struct` (no Struct, pack_into, unpack_from)
