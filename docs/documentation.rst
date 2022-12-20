@@ -90,7 +90,7 @@ Shed Skin will only ever support a subset of all Python features. The following 
 * argument (un)packing (:code:`*args` and :code:`**kwargs`)
 * multiple inheritance
 * nested functions and classes
-* unicode (restricted to 1-byte characters)
+* full unicode support (currently restricted to 1-byte characters)
 * f-strings
 * inheritance from builtins (excluding :code:`Exception` and :code:`object`)
 * overloading :code:`__iter__`, :code:`__call__`, :code:`__del__`
