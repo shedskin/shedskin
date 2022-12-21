@@ -20,24 +20,23 @@ function(add_shedskin_tests)
             message("EXT: " ${EXT})
         endif()
 
-        set(translated_files_exe
+        set(translated_files
             ${PROJECT_EXE_DIR}/${name}.cpp
             ${PROJECT_EXE_DIR}/${name}.hpp
         )
 
-        add_custom_command(OUTPUT ${translated_files_exe}
-            COMMAND shedskin --nomakefile -o build/exe "${basename_py}"
+        add_custom_command(OUTPUT ${translated_files}
+            COMMAND shedskin --nomakefile -o ${PROJECT_EXE_DIR} "${basename_py}"
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
             DEPENDS "${basename_py}"
             COMMENT "translating ${basename_py} to exe"
             VERBATIM
         )
 
-        add_custom_target(shedskin_${EXE} DEPENDS ${translated_files_exe})
+        add_custom_target(shedskin_${EXE} DEPENDS ${translated_files})
 
         add_executable(${EXE}
-            ${PROJECT_EXE_DIR}/${name}.cpp
-            ${PROJECT_EXE_DIR}/${name}.hpp
+            ${translated_files}
             ${SHEDSKIN_LIB}/builtin.cpp
             ${SHEDSKIN_LIB}/builtin.hpp
         )
@@ -68,25 +67,24 @@ function(add_shedskin_tests)
 
 
         if(TEST_EXT)
-            set(translated_files_ext
+            set(translated_files
                 ${PROJECT_EXT_DIR}/${name}.cpp
                 ${PROJECT_EXT_DIR}/${name}.hpp
             )
             
-            add_custom_command(OUTPUT ${translated_files_ext}
-                COMMAND shedskin --nomakefile -o build/ext -e "${basename_py}"
+            add_custom_command(OUTPUT ${translated_files}
+                COMMAND shedskin --nomakefile -o ${PROJECT_EXT_DIR} -e "${basename_py}"
                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
                 DEPENDS "${basename_py}"
                 COMMENT "translating ${basename_py} to ext"
                 VERBATIM
             )
 
-            add_custom_target(shedskin_${EXT} DEPENDS ${translated_files_ext})
+            add_custom_target(shedskin_${EXT} DEPENDS ${translated_files})
 
 
             add_library(${EXT} MODULE
-                ${PROJECT_EXT_DIR}/${name}.cpp
-                ${PROJECT_EXT_DIR}/${name}.hpp
+                ${translated_files}
                 ${SHEDSKIN_LIB}/builtin.cpp
                 ${SHEDSKIN_LIB}/builtin.hpp
             )

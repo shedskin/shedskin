@@ -133,8 +133,8 @@ class TestRunner:
                 for test in self.tests:
                     self.run_test(test)
         et = time.time()
-        elapsed_time = round(et - st, 1)
-        print(f'Total time: {YELLOW}{elapsed_time}{RESET} seconds\n')
+        elapsed_time = time.strftime("%H:%M:%S", time.gmtime(et - st))
+        print(f'Total time: {YELLOW}{elapsed_time}{RESET}\n')
 
     def get_imports(self, path):
         modules = set()
