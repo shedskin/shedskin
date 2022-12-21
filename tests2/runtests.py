@@ -99,7 +99,7 @@ class TestRunner:
 
         if self.options.cmake:
             if self.options.extensions:
-                cmake_cmd = "cmake .. -DONLY_EXTS=ON"
+                cmake_cmd = "cmake .. -DTEST_EXT=ON"
             else:
                 cmake_cmd = "cmake .."
             actions = [
@@ -184,7 +184,7 @@ class TestRunner:
         opt('-p', '--pytest', help='run pytest before each test run',  action='store_true')
         opt('-r', '--reset', help='reset cmake build',  action='store_true')
         opt('-v', '--validate', help='validate each testfile before running', action='store_true')
-        opt('-e', '--extensions', help='run only extension tests', action='store_true')
+        opt('-e', '--extensions', help='include extension tests', action='store_true')
         opt('-x', '--exec', help='retain test executable',  action='store_true')
 
         args = parser.parse_args()

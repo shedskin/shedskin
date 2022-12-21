@@ -1,5 +1,5 @@
 """
-Eggs <- Foo <- Bar <- Spam
+import chain: Eggs <- Foo <- Bar <- Spam
 
 """
 
@@ -17,7 +17,7 @@ class Eggs:
 
 def test_imports():
     eggs = Eggs()
-    print(eggs.name())
+    # print(eggs.name())
     assert eggs.name() == "hello"
 
 
