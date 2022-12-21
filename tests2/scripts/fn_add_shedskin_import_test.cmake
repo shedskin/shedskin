@@ -7,20 +7,31 @@ function(add_shedskin_test sys_modules)
 
     set(EXE ${name}-exe)
 
-    set(translated_files_exe
+    if(ARGV1)
+        set(app_modules ${ARGV1})
+    else()
+        set(app_modules)
+    endif()
+    
+    set(translated_files
         ${PROJECT_EXE_DIR}/${name}.cpp
         ${PROJECT_EXE_DIR}/${name}.hpp
     )
 
-    add_custom_command(OUTPUT ${translated_files_exe}
-        COMMAND shedskin --nomakefile -o ../build/exe "${basename_py}"
+    foreach(mod ${app_modules})
+        list(APPEND translated_files "${PROJECT_EXE_DIR}/${mod}.cpp")
+        list(APPEND translated_files "${PROJECT_EXE_DIR}/${mod}.hpp")            
+    endforeach()
+
+    add_custom_command(OUTPUT ${translated_files}
+        COMMAND shedskin --nomakefile -o ${PROJECT_EXE_DIR} "${basename_py}"
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         DEPENDS "${basename_py}"
         COMMENT "translating ${basename_py} to exe"
         VERBATIM
     )
 
-    add_custom_target(shedskin_${EXE} DEPENDS ${translated_files_exe})
+    add_custom_target(shedskin_${EXE} DEPENDS ${translated_files})
 
     list(PREPEND sys_modules builtin)
 
@@ -38,20 +49,8 @@ function(add_shedskin_test sys_modules)
         endif()
     endforeach()
 
-    if(ARGV1)
-        set(app_modules ${ARGV1})
-    else()
-        set(app_modules)
-    endif()
-    foreach(mod ${app_modules})
-        list(APPEND app_module_list "${PROJECT_EXE_DIR}/${mod}.cpp")
-        list(APPEND app_module_list "${PROJECT_EXE_DIR}/${mod}.hpp")            
-    endforeach()
-
     add_executable(${EXE}
-        ${PROJECT_EXE_DIR}/${name}.cpp
-        ${PROJECT_EXE_DIR}/${name}.hpp
-        ${app_module_list}        
+        ${translated_files}
         ${sys_module_list}
     )
 
@@ -84,36 +83,34 @@ function(add_shedskin_test sys_modules)
 
         set(EXT ${name}-ext)
 
-        set(translated_files_ext
+        if(ARGV1)
+            set(app_modules ${ARGV1})
+        else()
+            set(app_modules)
+        endif()
+   
+        set(translated_files
             ${PROJECT_EXT_DIR}/${name}.cpp
             ${PROJECT_EXT_DIR}/${name}.hpp
         )
-        
-        add_custom_command(OUTPUT ${translated_files_ext}
-            COMMAND shedskin --nomakefile -o ../build/ext -e "${basename_py}"
+
+        foreach(mod ${app_modules})
+            list(APPEND translated_files "${PROJECT_EXT_DIR}/${mod}.cpp")
+            list(APPEND translated_files "${PROJECT_EXT_DIR}/${mod}.hpp")            
+        endforeach()
+
+        add_custom_command(OUTPUT ${translated_files}
+            COMMAND shedskin --nomakefile -o ${PROJECT_EXT_DIR} -e "${basename_py}"
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
             DEPENDS "${basename_py}"
             COMMENT "translating ${basename_py} to ext"
             VERBATIM
         )
 
-        add_custom_target(shedskin_${EXT} DEPENDS ${translated_files_ext})
-
-        # if there are local imports
-        if(ARGV1)
-            set(app_modules ${ARGV1})
-        else()
-            set(app_modules)
-        endif()
-        foreach(mod ${app_modules})
-            list(APPEND app_module_list "${PROJECT_EXT_DIR}/${mod}.cpp")
-            list(APPEND app_module_list "${PROJECT_EXT_DIR}/${mod}.hpp")            
-        endforeach()
+        add_custom_target(shedskin_${EXT} DEPENDS ${translated_files})
 
         add_library(${EXT} MODULE
-            ${PROJECT_EXT_DIR}/${name}.cpp
-            ${PROJECT_EXT_DIR}/${name}.hpp
-            ${app_module_list}        
+            ${translated_files}
             ${sys_module_list}
         )
 
