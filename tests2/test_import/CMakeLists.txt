@@ -1,5 +1,4 @@
-set(sys_modules
-)
+set(sys_modules)
 
 set(app_modules
 	foo
