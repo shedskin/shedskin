@@ -21,20 +21,22 @@ RESET = "\x1b[0m"
 
 class TestRunner:
 
-    def __init__(self, options):
+    def __init__(self, options=None):
         self.options = options
         self.build_dir = Path('build')
         self.tests = sorted(glob.glob("./**/test_*.py", recursive=True))
 
-    def check_output(self, args, cwd='.'):
-        return subprocess.check_output(args.split(), 
+    def check_output(self, args, cwd='.', nosplit=False):
+        if not nosplit:
+            args = args.split()
+        return subprocess.check_output(args,
             stderr=subprocess.STDOUT,
             cwd=cwd,
         )
 
-    def run_step(self, cmd, cwd='.'):
+    def run_step(self, cmd, cwd='.', nosplit=False):
         try:
-            self.check_output(cmd, cwd)
+            self.check_output(cmd, cwd, nosplit)
         except subprocess.CalledProcessError as e:
             print(f"\n{RED}ERROR{RESET}: '{cmd}' returns {e.returncode}")
             print(e.output.decode('utf8'))
@@ -55,30 +57,57 @@ class TestRunner:
         if self.options.validate:
             self.validate(path) # check python syntax
 
+        if self.options.extension:
+            translation_step = f'shedskin -e {path.name}'
+            compiled_product = f'{name}.so'
+        else:
+            translation_step = f'shedskin {path.name}'
+            compiled_product = name
+
         try:
             if is_nested:
-                self.run_step(f'shedskin {path.name}', cwd=path.parent)
+                self.run_step(translation_step, cwd=path.parent)
                 self.run_step('make', cwd=path.parent)
-                self.run_step(f'./{name}', cwd=path.parent)
+                if self.options.extension:
+                    self.run_step(["python3", "-c", 
+                        repr(f'from {name} import test_all; test_all()')],
+                        cwd=path.parent, nosplit=True)
+                else:
+                    self.run_step(f'./{name}', cwd=path.parent)
             else:
-                self.run_step(f'shedskin {path}')
+                self.run_step(translation_step)
                 self.run_step('make')
-                self.run_step(f'./{name}')
+                if self.options.extension:
+                    self.run_step(["python3", "-c", 
+                        repr(f'from {name} import test_all; test_all()')],
+                        nosplit=True)
+                else:
+                    self.run_step(f'./{name}')
         except:
             print(f"{RED}ERROR{RESET}: '{path}' terminated early")
             return
 
         print(f'{GREEN}OK{RESET}')
 
-        files_to_clean = [f'{name}.cpp', f'{name}.hpp', f'{name}', 'Makefile']
+        files_to_clean = [f'{name}.cpp', f'{name}.hpp', compiled_product, 'Makefile']
+        folders_to_clean = [f'{name}.so.dSYM']
 
         if self.options.exec:
-            files_to_clean.remove(f'{name}')
+            files_to_clean.remove(compiled_product)
         for f in files_to_clean:
             if not is_nested:
                 os.remove(f)
             else:
                 os.remove(path.parent / f)
+
+        for f in folders_to_clean:
+            if not is_nested:
+                if os.path.exists(f):
+                    shutil.rmtree(f)
+            else:
+                if os.path.exists(path.parent / f):
+                    shutil.rmtree(path.parent / f)
+
 
     def sequence(self, *cmds):
         cmd = " && ".join(cmds)
@@ -98,7 +127,7 @@ class TestRunner:
             print()
 
         if self.options.cmake:
-            if self.options.extensions:
+            if self.options.extension:
                 cmake_cmd = "cmake .. -DTEST_EXT=ON"
             else:
                 cmake_cmd = "cmake .."
@@ -184,7 +213,7 @@ class TestRunner:
         opt('-p', '--pytest', help='run pytest before each test run',  action='store_true')
         opt('-r', '--reset', help='reset cmake build',  action='store_true')
         opt('-v', '--validate', help='validate each testfile before running', action='store_true')
-        opt('-e', '--extensions', help='include extension tests', action='store_true')
+        opt('-e', '--extension', help='include extension tests', action='store_true')
         opt('-x', '--exec', help='retain test executable',  action='store_true')
 
         args = parser.parse_args()
@@ -194,5 +223,5 @@ class TestRunner:
         else:
             runner.run_tests()
 
-if __name__ == '__main__': TestRunner.commandline()
-
+if __name__ == '__main__': 
+    TestRunner.commandline()

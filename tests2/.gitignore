@@ -1,3 +1,7 @@
 _orig
 include
+build
+*.cpp
+*.hpp
+*.dSYM
 
