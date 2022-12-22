@@ -1,27 +1,37 @@
 
-function(add_shedskin_test sys_modules)
+function(add_shedskin_exe_import_test sys_modules)
 
     get_filename_component(name ${CMAKE_CURRENT_SOURCE_DIR} NAME_WLE)
 
     set(basename_py "${name}.py")
 
-    set(APP_NAME ${name})
-    set(APP ${APP_NAME})
+    set(EXE ${name}-exe)
 
+    if(ARGV1)
+        set(app_modules ${ARGV1})
+    else()
+        set(app_modules)
+    endif()
+    
     set(translated_files
-        ${PROJECT_BINARY_DIR}/${APP_NAME}.cpp
-        ${PROJECT_BINARY_DIR}/${APP_NAME}.hpp
+        ${PROJECT_EXE_DIR}/${name}.cpp
+        ${PROJECT_EXE_DIR}/${name}.hpp
     )
 
+    foreach(mod ${app_modules})
+        list(APPEND translated_files "${PROJECT_EXE_DIR}/${mod}.cpp")
+        list(APPEND translated_files "${PROJECT_EXE_DIR}/${mod}.hpp")            
+    endforeach()
+
     add_custom_command(OUTPUT ${translated_files}
-        COMMAND shedskin --nomakefile -o ../build "${basename_py}"
+        COMMAND shedskin --nomakefile -o ${PROJECT_EXE_DIR} "${basename_py}"
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         DEPENDS "${basename_py}"
-        COMMENT "translating ${basename_py}"
+        COMMENT "translating ${basename_py} to exe"
         VERBATIM
     )
 
-    add_custom_target(shedskin_${APP} DEPENDS ${translated_files})
+    add_custom_target(shedskin_${EXE} DEPENDS ${translated_files})
 
     list(PREPEND sys_modules builtin)
 
@@ -39,54 +49,33 @@ function(add_shedskin_test sys_modules)
         endif()
     endforeach()
 
-    if(ARGV1)
-        set(app_modules ${ARGV1})
-    else()
-        set(app_modules)
-    endif()
-    foreach(mod ${app_modules})
-        list(APPEND app_module_list "${PROJECT_BINARY_DIR}/${mod}.cpp")
-        list(APPEND app_module_list "${PROJECT_BINARY_DIR}/${mod}.hpp")            
-    endforeach()
-
-    if(DEBUG)
-        message("-------------------------------------------------------------")
-        message("name:" ${name})
-        foreach(mod ${app_module_list})
-            get_filename_component(mod_name ${mod} NAME)
-            message("app_module: ${mod_name}") 
-        endforeach()
-        foreach(mod ${sys_module_list})
-            get_filename_component(mod_name ${mod} NAME)
-            message("sys_module: ${mod_name}") 
-        endforeach()
-    endif()
-
-    add_executable(${APP}
-        ${PROJECT_BINARY_DIR}/${APP_NAME}.cpp
-        ${PROJECT_BINARY_DIR}/${APP_NAME}.hpp
-        ${app_module_list}        
+    add_executable(${EXE}
+        ${translated_files}
         ${sys_module_list}
     )
 
-    target_include_directories(${APP} PRIVATE
+    set_target_properties(${EXE} PROPERTIES
+        OUTPUT_NAME ${name}
+    )
+
+    target_include_directories(${EXE} PRIVATE
         /usr/local/include
         ${SHEDSKIN_LIB}
         ${CMAKE_SOURCE_DIR}
     )
 
-    target_compile_options(${APP} PRIVATE
+    target_compile_options(${EXE} PRIVATE
         "-O2"
         "-Wall"
         "-Wno-deprecated"
     )
 
-    target_link_libraries(${APP} PRIVATE
+    target_link_libraries(${EXE} PRIVATE
         "-lgc"
         "-lgccpp"
         "-lpcre"
     )
 
-    add_test(NAME ${APP} COMMAND ${APP})
+    add_test(NAME ${EXE} COMMAND ${EXE})
 
 endfunction()
