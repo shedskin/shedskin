@@ -8,54 +8,60 @@ function(add_shedskin_exe_tests)
         get_filename_component(name ${test_py} NAME_WLE)
         get_filename_component(basename_py ${test_py} NAME)
 
-        set(APP_NAME ${name})
-        set(APP ${APP_NAME})
+        set(EXE ${name}-exe)
+        set(basename_py "${name}.py")
+
+        if(DEBUG)
+            message("test_py: " ${test_py})
+            message("name: " ${name})
+            message("basename_py: " ${basename_py})
+            message("EXE: " ${EXE})
+        endif()
 
         set(translated_files
-            ${PROJECT_BINARY_DIR}/${APP_NAME}.cpp
-            ${PROJECT_BINARY_DIR}/${APP_NAME}.hpp
+            ${PROJECT_EXE_DIR}/${name}.cpp
+            ${PROJECT_EXE_DIR}/${name}.hpp
         )
 
         add_custom_command(OUTPUT ${translated_files}
-            COMMAND shedskin --nomakefile -o build "${basename_py}"
+            COMMAND shedskin --nomakefile -o ${PROJECT_EXE_DIR} "${basename_py}"
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
             DEPENDS "${basename_py}"
-            COMMENT "translating ${basename_py}"
+            COMMENT "translating ${basename_py} to exe"
             VERBATIM
         )
 
-        add_custom_target(shedskin_${APP} DEPENDS ${translated_files})
+        add_custom_target(shedskin_${EXE} DEPENDS ${translated_files})
 
-        if(DEBUG)
-            message("test:" ${APP})
-        endif()
-
-        add_executable(${APP}
-            ${PROJECT_BINARY_DIR}/${APP_NAME}.cpp
-            ${PROJECT_BINARY_DIR}/${APP_NAME}.hpp
+        add_executable(${EXE}
+            ${translated_files}
             ${SHEDSKIN_LIB}/builtin.cpp
             ${SHEDSKIN_LIB}/builtin.hpp
         )
 
-        target_include_directories(${APP} PRIVATE
+        set_target_properties(${EXE} PROPERTIES
+            OUTPUT_NAME ${name}
+        )
+
+        target_include_directories(${EXE} PUBLIC
             /usr/local/include
             ${SHEDSKIN_LIB}
             ${CMAKE_SOURCE_DIR}
         )
 
-        target_compile_options(${APP} PRIVATE
+        target_compile_options(${EXE} PUBLIC
             "-O2"
             "-Wall"
             "-Wno-deprecated"
         )
 
-        target_link_libraries(${APP} PRIVATE
+        target_link_libraries(${EXE} PUBLIC
             "-lgc"
             "-lgccpp"
             "-lpcre"
         )
 
-        add_test(NAME ${APP} COMMAND ${APP})
+        add_test(NAME ${EXE} COMMAND ${EXE})
 
     endforeach()
 

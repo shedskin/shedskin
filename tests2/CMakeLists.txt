@@ -8,9 +8,11 @@ set(DEBUG off)
 
 set(SHEDSKIN ${CMAKE_SOURCE_DIR}/../../shedskin)
 set(SHEDSKIN_LIB ${SHEDSKIN}/shedskin/lib)
+
 set(PROJECT_EXE_DIR ${PROJECT_BINARY_DIR}/exe)
 set(PROJECT_EXT_DIR ${PROJECT_BINARY_DIR}/ext)
-set(SCRIPTS ${CMAKE_SOURCE_DIR}/scripts)
+
+set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/scripts)
 
 option(TEST_EXT "build/run python extension tests")
 
@@ -32,10 +34,10 @@ if(TEST_EXT)
     endif()
 endif()
 
-include(${SCRIPTS}/fn_add_shedskin_tests.cmake)
+include(fn_add_shedskin_tests)
 add_shedskin_tests()
 
-include(${SCRIPTS}/fn_add_shedskin_import_test.cmake)
+include(fn_add_shedskin_import_test)
 
 
 # -----------------------------------------------------------------------
