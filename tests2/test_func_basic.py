@@ -1,5 +1,4 @@
 
-
 def propagate(la):
     return la, la
 
@@ -49,6 +48,11 @@ def qbert():
 
     return b
 
+def best_move(board):
+    max_move = (1, 2)
+    max_mobility = 1
+    return max_move, max_mobility
+
 def test_basic():
     assert boing(1, 1.0) == 1
 
@@ -84,6 +88,20 @@ def test_return_tuple_of_lists():
     assert propagate([1]) == ([1],[1])
     assert propagate([2]) == ([2],[2])
 
+def test_return_tuple():
+    board = 1
+    move, mob = best_move(board)
+    assert move == (1,2)
+    assert mob == 1
+
+def row_perm_rec(numbers):
+    return numbers[0]
+
+def test_return_indexed_value():
+    puzzlerows = [[8]]
+    assert row_perm_rec(puzzlerows[0]) == 8
+
+
 
 def test_all():
     test_basic()
@@ -95,7 +113,9 @@ def test_all():
     # test_return_str_param()
     test_return_str()
     test_return_float()
+    test_return_tuple()
     test_return_tuple_of_lists()
+    test_return_indexed_value()
     # test_inner()
 
 if __name__ == '__main__':
