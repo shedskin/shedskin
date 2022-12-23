@@ -115,8 +115,7 @@ function(add_shedskin_tests)
             )
 
             target_link_options(${EXT} PUBLIC
-                "-undefined"
-                "dynamic_lookup"
+                $<$<BOOL:${APPLE}>:-undefined dynamic_lookup>
                 "-Wno-unused-result"
                 "-Wsign-compare"
                 "-Wunreachable-code"

@@ -6,13 +6,13 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(DEBUG off)
 
-set(SHEDSKIN ${CMAKE_SOURCE_DIR}/../../shedskin)
+set(SHEDSKIN ${PROJECT_SOURCE_DIR}/../../shedskin)
 set(SHEDSKIN_LIB ${SHEDSKIN}/shedskin/lib)
 
 set(PROJECT_EXE_DIR ${PROJECT_BINARY_DIR}/exe)
 set(PROJECT_EXT_DIR ${PROJECT_BINARY_DIR}/ext)
 
-set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/scripts)
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/scripts)
 
 option(TEST_EXT "build/run python extension tests")
 
@@ -43,7 +43,7 @@ include(fn_add_shedskin_import_test)
 # -----------------------------------------------------------------------
 # copy test data to cmake 'build' folder
 
-file(COPY ${CMAKE_SOURCE_DIR}/testdata DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY ${PROJECT_SOURCE_DIR}/testdata DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 
 # -----------------------------------------------------------------------
