@@ -12,7 +12,7 @@ set(SHEDSKIN_LIB ${SHEDSKIN}/shedskin/lib)
 set(PROJECT_EXE_DIR ${PROJECT_BINARY_DIR}/exe)
 set(PROJECT_EXT_DIR ${PROJECT_BINARY_DIR}/ext)
 
-set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/scripts)
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 option(TEST_EXT "build/run python extension tests")
 

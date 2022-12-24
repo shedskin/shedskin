@@ -102,7 +102,6 @@ def test_return_indexed_value():
     assert row_perm_rec(puzzlerows[0]) == 8
 
 
-
 def test_all():
     test_basic()
     test_nested()

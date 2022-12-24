@@ -42,6 +42,13 @@ def test_list_nested():
     assert q[1][1][0] == 4
 
 
+def test_list_index():
+    a = [1, 2, 3]
+    assert a[0] == 1
+    assert a[1] == 2
+    assert a[-2] == 2 
+    assert a[-1] == 3
+
 def test_list_slice():
     a = [1,2,3,4,5]
     assert a[:-1] == [1, 2, 3, 4]
@@ -90,10 +97,13 @@ def test_list_length():
 #     b = list4.copy() # NotImplemented
 #     assert b[0] == [1,2]
 
+
+
 def test_all():
     test_list_assign()
     test_list_append()
     test_tuple_in_list()
+    test_list_index()
     test_list_slice()
     test_list_length()
     test_list_comp()
