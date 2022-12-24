@@ -54,6 +54,7 @@ def test_sorted3():
 
 
 def test_all():
+    test_sorted1()
     test_sorted2()
     test_sorted3()
 
