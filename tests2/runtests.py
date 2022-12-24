@@ -128,14 +128,13 @@ class TestRunner:
 
         if self.options.cmake:
             if self.options.extension:
-                cmake_cmd = "cmake .. -DTEST_EXT=ON"
+                cmake_cmd = "cmake --build . --config TEST_EXT=ON"
             else:
-                cmake_cmd = "cmake .."
+                cmake_cmd = "cmake --build ."
             actions = [
                 "cd build",
                 cmake_cmd,
-                "make",
-                "make test"
+                "ctest"
             ]
             if self.build_dir.exists() and self.options.reset:
                 actions = ["rm -rf ./build", "mkdir -p build"] + actions
