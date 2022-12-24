@@ -19,9 +19,9 @@ The plan is to keep two test folders until all tests in the `tests` folder are e
 
 - Make test names more meaningful for easier classification and grouping of similar or related tests.
 
-- Reducing time to develop tests.
+- Reduce time to develop tests.
 
-- Reduce redundant tests.
+- Reduce test redundancy.
 
 - Isolate non-implemented cases.
 
@@ -46,7 +46,7 @@ options:
   -p, --pytest         run pytest before each test run
   -r, --reset          reset cmake build
   -v, --validate       validate each testfile before running
-  -e, --extensions     run only extension tests
+  -e, --extension      include extension tests
   -x, --exec           retain test executable
 ```
 
@@ -54,11 +54,18 @@ There are currently two ways to run tests: (1) the builtin way and (2) the cmake
 
 ### Builtin Method
 
-To build and run all tests using the default testrunner:
+To build and run all tests in cpp-executable mode using the default testrunner:
 
 ```bash
 ./runtests.py
 ```
+
+To build and run all tests in python-extension mode using the default testrunner:
+
+```bash
+./runtests.py -e
+```
+
 
 To build and run the most recently modified test (useful during test dev) using the default testrunner:
 
@@ -66,7 +73,13 @@ To build and run the most recently modified test (useful during test dev) using 
 ./runtests.py -m
 ```
 
-### Cmake Method
+or
+
+```bash
+./runtests.py -me
+```
+
+### CMake Method
 
 To build and run all tests as executables using cmake:
 
@@ -88,20 +101,19 @@ cd build && cmake .. && make && make test
 
 This is useful during test development and has the benefit of only picking up changes to modified tests and will not re-translate or re-compile unchanged tests.
 
-To reset (i.e. remove) the cmake `build` directory and run cmake:
+To reset or remove the cmake `build` directory and run cmake:
 
 ```bash
-./runtests.py -c -r
+./runtests.py -cr
 ```
 
-
-To build and run all tests as python extensions using cmake:
+To build and run all cmake tests as executables **and** python extensions using cmake:
 
 ```bash
 ./runtests.py -ce
 ```
 
-You should reset the build directory before running either mode (executable or extension)
+This will build/run an executable and python extension test for each test in the directory.
 
 
 ## Standards
@@ -155,8 +167,9 @@ For example:
 
 - [x] include cmake (ctest) testing
 - [x] run all tests as either executables or python extensions
+- [x] unify both shedskin compilation modes for tests such that both executables and python extensions are generated, built and run for reach test run.
+- [ ] improved cleanup for default method in cases of multiple local imports
 - [ ] enabled windows platform support for cmake-based method
-- [ ] unify both shedskin compilation modes for tests such that both executables and python extensions are generated, built and run for reach test run.
 - [ ] convert more tests
 
 

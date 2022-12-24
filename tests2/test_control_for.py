@@ -12,7 +12,6 @@ def hoei(cube):
     return x
 
 
-
 def test_for_range():
     result = []
     for i in xs:
