@@ -133,6 +133,7 @@ class TestRunner:
                 cmake_cmd = "cmake --build ."
             actions = [
                 "cd build",
+                "cmake ..",
                 cmake_cmd,
                 "ctest"
             ]
