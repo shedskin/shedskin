@@ -45,19 +45,27 @@ def test_complex_keys():
 
     assert e == {(1, 2, 3): 3, (1,): 2}
 
+def test_negative_keys():
+    d = {-1: 2}
+    assert d[-1] == 2
 
 
-# def test_problem_cases():
-#     "these two cases don't work!"
-#     e = {}
-#     e[4] = 1.0
-#     assert e.items() == [(4, 1.0)] ## FIXME doesn't work
+def test_items():
+    e = {}
+    e[4] = 1.0
+    assert list(e.items()) == [(4, 1.0)]
 
-#     g = {}
-#     g['f1'] = add1
-#     g['f2'] = add2
-#     assert g['f1'](10) == 11
-#     assert g['f2'](10) == 12
+# def test_func_as_value(): ## FIXME: does not work
+    # g = {}
+    # g['f1'] = add1
+    # g['f2'] = add2
+    # assert g['f1'](10) == 11
+    # assert g['f2'](10) == 12
+
+    # g[1] = add1
+    # g[2] = add2
+    # assert g[1](10) == 11
+    # assert g[2](10) == 12
 
 
 def test_all():
@@ -65,7 +73,9 @@ def test_all():
     test_setdefault()
     test_misc()
     test_complex_keys()
-    # test_problem_cases()
+    test_negative_keys()
+    test_items()
+    # test_func_as_value()
 
 
 if __name__ == "__main__":

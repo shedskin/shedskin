@@ -1,44 +1,5 @@
-# def hoi(a, b, e):
-#     c = a
-#     d = b
-#     f = 1
-#     g = 1
-#     h = f+g
-#     s = 'ho'+'i'                         # [str]
-#     return c+d                           # [int, float]
-
-
-# hoi(1, 2, 3)                             # [int]
-# hoi(1.0, 2.0, 4)                         # [float]
-
-# #def hoi(a, b, c=1, d=1):                 # a: [int], b: [int], c: [int, float]r, d: [int]
-# #    print a, b, c, d                     # [int], [int], [int, float], [int]
-# #    return c                             # [int, float]
-# #
-# #
-# #hoi(1,2) 
-# #hoi(1,2,3) 
-# #hoi(1,2,3,4)                             # [int]
-# #
-# #hoi(1,2,3.1)                             # [int, float]
-
-# def hoi(a, b, c=1, d=1):                 # a: [int], b: [int], c: [int, float]r, d: [int]
-#     print(a, b, c, d)                     # [int], [int], [int, float], [int]
-#     return c                             # [int, float]
-
-# hoi(1,2) 
-# hoi(1,2,3)
-# hoi(1,2,3,4)                             # [int]
-
-
-# def hoi(a, b):                           # a: [int, str], b: [int]
-#     a                                    # [int, str]
-#     a = 'hoi'                            # [str]
-#     print(a)                              # [int, str]
-# hoi('1', 1)                                # []
-
-
-
+def hoi(a, b, c=1, d=1):
+   return a, b, c, d
 
 def baz(x, y, z = 3):
     return x, y, z
@@ -64,6 +25,21 @@ class Klass:
     def foo(self, x = 3, y = 'hello'):
         return x, y
 
+
+class Node:
+    def __init__(self):
+        self.input = [8]
+
+def test_hoi():
+    assert hoi(1,2) == (1,2,1,1)
+    assert hoi(1,2,3) == (1,2,3,1)
+    assert hoi(1,2,3,4) == (1,2,3,4)
+    # assert hoi(1,2,3.1) == (1,2,3.1,1) ## Not supported
+
+def test_node():
+    node = Node()
+    assert [link for link in node.input] == [8]
+
 def test_baz():
     assert baz(1, 2, 3) == (1, 2, 3)
     assert baz(1, 3) == (1, 3, 3)
@@ -83,6 +59,7 @@ def test_msplit():
 def test_all():
     test_baz()
     test_boo()
+    test_hoi()
     # test_foo()
     test_klass()
     test_msplit()

@@ -28,6 +28,16 @@ def test_fsum():
         assert math.fsum(vals) == expected
         # print(math.fsum(vals), expected)
 
+
+def test_pow():
+    assert int(math.pow(2, 3)) == 8
+    assert math.pow(2.0, 3.0) == 8.0
+    assert math.pow(2, 3.0) == 8.0
+    assert math.pow(2.0, 3) == 8.0
+    assert math.pow(2, 3) == 8.0
+    assert math.pow(1, 1000) == 1.0
+
+
 def test_math():
 
     assert math.isinf(float("inf")) 
@@ -48,6 +58,19 @@ def test_math():
     assert math.factorial(5) == 120
 #    assert math.factorial(5.))
 
+    assert -2 % 3 == 1
+    assert -2.0 % 3 == 1.0
+    assert 2 % 3 == 2
+    assert math.fmod(-2.0, 3) == -2.0
+    assert 4 % 3 == 1
+    assert 4 % 3.0 == 1.0
+    assert math.fmod(2.0, -3) == 2.0
+    assert -2.0 % -3 == -2.0
+    assert -2.0 % -3.0 == -2.0
+    assert 2.0 % -3.0 == -1.0
+    assert "%g" % 3.0 == '3'
+
+    assert "%g" % math.log(10) == '2.30259'
     assert '%.8f' % (math.log1p(1 / math.e - 1) + 0.5) == '-0.50000000'
     assert math.log1p(0) == 0.0
     assert '%.8f' % (math.log1p(math.e - 1) + 0.5) == '1.50000000'
@@ -74,6 +97,7 @@ def test_math():
 
 def test_all():
     test_fsum()
+    test_pow()
     test_math()
 
 if __name__ == '__main__':
