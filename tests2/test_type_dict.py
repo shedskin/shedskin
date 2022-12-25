@@ -3,7 +3,18 @@ def add1(x): return x+1
 
 def add2(x): return x+2
 
+class Klass:
+    def __init__(self, name):
+        self.name = name
+
+
 def test_dict():
+    d = {1: "2", 2: "4"}
+    assert list(d.keys()) == [1, 2]
+    assert list(d.values()) == ['2', '4']
+    assert list(d.items()) == [(1, '2'), (2, '4')]
+
+def test_dict_get():
     assert {"wah": 2}.get("aap", 3) == 3 # dict.get problem
 
 def test_setdefault():
@@ -45,6 +56,13 @@ def test_complex_keys():
 
     assert e == {(1, 2, 3): 3, (1,): 2}
 
+def test_instance_value():
+    d = {}
+    key = 'cicero'
+    d[key] = Klass(key)
+    assert d[key].name == 'cicero'
+
+
 def test_negative_keys():
     d = {-1: 2}
     assert d[-1] == 2
@@ -67,14 +85,15 @@ def test_items():
     # assert g[1](10) == 11
     # assert g[2](10) == 12
 
-
 def test_all():
     test_dict()
+    test_dict_get()
     test_setdefault()
     test_misc()
     test_complex_keys()
     test_negative_keys()
     test_items()
+    test_instance_value()
     # test_func_as_value()
 
 

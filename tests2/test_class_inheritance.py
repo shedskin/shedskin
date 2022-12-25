@@ -43,7 +43,40 @@ class C3(C2):
         self.a2 = 4
 
 
+class RenderObject:
+    def __init__(self, shader):
+        self.shader = shader
+
+
+class Plane(RenderObject):
+    def __init__(self, plane, dist, shader):
+        RenderObject.__init__(self, shader)
+        self.plane = plane
+        self.dist = dist
+
+
+class Sphere(RenderObject):
+    def __init__(self, pos, radius, shader):
+        RenderObject.__init__(self, shader)
+        self.pos = pos
+        self.radius = radius
+
+
+class World:
+    def __init__(self):
+        self.objects = []
+
+
 def test_inheritence1():
+    w = World()
+    w.objects.append(Plane(6, 7, 8))
+    w.objects.append(Sphere(6, 7, 9))
+    assert len(w.objects) == 2
+    assert w.objects[0].shader == 8
+    assert w.objects[1].shader == 9
+
+
+def test_inheritence2():
     father = Father(3)
     assert father.f(4) == 12
 
@@ -54,7 +87,7 @@ def test_inheritence1():
     assert daughter.g(5) == 1280
 
 
-def test_inheritence2():
+def test_inheritence3():
     c3 = C3()
     c3.m1()
     c3.m2()
@@ -65,6 +98,7 @@ def test_inheritence2():
 def test_all():
     test_inheritence1()
     test_inheritence2()
+    test_inheritence3()
 
 if __name__ == '__main__':
     test_all() 

@@ -24,7 +24,7 @@ function(add_shedskin_ext_tests)
         )
         
         add_custom_command(OUTPUT ${translated_files}
-            COMMAND shedskin --nomakefile -o ${PROJECT_EXT_DIR} -e "${basename_py}"
+            COMMAND ${Python_EXECUTABLE} -m shedskin --nomakefile -o ${PROJECT_EXT_DIR} -e "${basename_py}"
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
             DEPENDS "${basename_py}"
             COMMENT "translating ${basename_py} to ext"
