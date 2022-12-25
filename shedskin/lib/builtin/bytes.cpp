@@ -485,7 +485,7 @@ __ss_int bytes::count(__ss_int b, __ss_int start, __ss_int end) {
     slicenr(7, start, end, one, __len__());
 
     count = 0;
-    for(i = start; i < end; i++) {
+    for(i = start; i < (size_t)end; i++) {
         if((unsigned char)b == unit[i])
             count++;
     }

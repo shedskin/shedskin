@@ -9,6 +9,7 @@
 
 /** Print a demangled stack backtrace of the caller function to FILE* out. */
 
+#ifdef __SS_BACKTRACE
 static void print_traceback(FILE *out)
 {
     fprintf(out, "\nTraceback (most recent call last):\n");
@@ -89,6 +90,7 @@ static void print_traceback(FILE *out)
     free(funcname);
     free(symbollist);
 }
+#endif
 #endif
 
 extern class_ *cl_stopiteration, *cl_assertionerror, *cl_eoferror, *cl_floatingpointerror, *cl_keyerror, *cl_indexerror, *cl_typeerror, *cl_valueerror, *cl_zerodivisionerror, *cl_keyboardinterrupt, *cl_memoryerror, *cl_nameerror, *cl_notimplementederror, *cl_oserror, *cl_overflowerror, *cl_runtimeerror, *cl_syntaxerror, *cl_systemerror, *cl_systemexit, *cl_arithmeticerror, *cl_lookuperror;
