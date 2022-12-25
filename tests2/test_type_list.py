@@ -1,4 +1,6 @@
 
+
+
 def ident(x):
     return x
 
@@ -42,12 +44,22 @@ def test_list_nested():
     assert q[1][1][0] == 4
 
 
-def test_list_index():
+def test_list_index1():
     a = [1, 2, 3]
     assert a[0] == 1
     assert a[1] == 2
     assert a[-2] == 2 
     assert a[-1] == 3
+
+
+def test_list_index2():
+    xs = [1, 2, 3, 1]
+    assert xs.index(1) == 0
+    assert xs.index(1, 1) == 3
+    assert xs.index(1, -1) == 3
+    assert xs.index(1, -4) == 0
+    assert xs.index(1, -3, 4) == 3
+
 
 def test_list_slice():
     a = [1,2,3,4,5]
@@ -56,6 +68,16 @@ def test_list_slice():
     assert a[::]  == [1, 2, 3, 4, 5]
     assert a[:3:] == [1, 2, 3]
     assert a[::-1] == [5, 4, 3, 2, 1]
+    assert a[1::3] == [2, 5]
+
+def test_list_del():
+    a = list(range(10))
+    del a[9]
+    assert a == [0, 1, 2, 3, 4, 5, 6, 7, 8]
+    del a[1:3]
+    assert a == [0, 3, 4, 5, 6, 7, 8]
+    del a[::2]
+    assert a == [3, 5, 7]
 
 def test_list_append():
     a = []
@@ -103,11 +125,13 @@ def test_all():
     test_list_assign()
     test_list_append()
     test_tuple_in_list()
-    test_list_index()
+    test_list_index1()
+    test_list_index2()
     test_list_slice()
     test_list_length()
     test_list_comp()
     test_list_misc()
+    test_list_del()
 
 
 if __name__ == "__main__":

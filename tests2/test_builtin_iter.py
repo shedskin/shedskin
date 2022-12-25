@@ -1,4 +1,37 @@
 
+
+
+class MyIter:
+    def __init__(self, container):
+        self.container = container
+        self.count = -1
+
+    def next(self):
+        self.count += 1
+        if self.count < len(self.container):
+            return self.container[self.count]
+        raise StopIteration
+
+
+class Container:
+    def __init__(self):
+        self.unit = list(range(3))
+
+    def __getitem__(self, i):
+        return self.unit[i]
+
+    def __iter__(self):
+        return MyIter(self)
+
+    def __len__(self):
+        return len(self.unit)
+
+
+def iter_(x):
+    return x.__iter__()
+
+
+
 b = [1, 2, 3]
 
 def ranged_iter(n):
@@ -42,7 +75,14 @@ def test_stop_iter():
     assert stop_iter(4, mode=1) == 'not-stopped'
     assert stop_iter(4, mode=2) == 'not-stopped'
 
-
+def test_class_iter():
+    i = iter_(Container())
+    try:
+        while 1:
+            y = i.next()
+    except StopIteration:
+        pass
+    assert y == 2
 
 def test_all():
     test_iter1()
