@@ -72,6 +72,8 @@ template<class T> str *do_asprintf(const char *fmt, T t, pyobj *a1, pyobj *a2) {
         x = asprintf(&d, fmt, ((int)(((int_ *)a1)->unit)), t);
     else
         x = asprintf(&d, fmt, t);
+    if(x == -1)
+        throw new ValueError(new str("error in string formatting"));
     r = new str(d);
     free(d);
     return r;
