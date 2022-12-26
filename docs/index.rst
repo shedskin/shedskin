@@ -18,10 +18,11 @@ Documentation
 
    documentation
 
-Frequently occurring discussions
---------------------------------
+Frequently Asked Questions
+--------------------------
 
 .. toctree::
    :maxdepth: 5
 
-   fod
+   faq
+
