@@ -22,6 +22,8 @@ def test_list_comp():
     bla = [1,2]
     dinges = [1,2]
     jada = [1,2]
+    d = (1, (1.1, "u"))
+
     assert [x for x in bla] == bla
     assert [[a for a in bla] for c in dinges] == [[1, 2], [1, 2]]
     assert [[[a for a in jada] for c in bla] for d in dinges] == [[[1, 2], [1, 2]], [[1, 2], [1, 2]]]
@@ -29,6 +31,7 @@ def test_list_comp():
     assert [bah.upper() for bah in ("hah", "bah")] == ['HAH', 'BAH']
     assert [0 for (str, bah) in [("hah", "bah")]] == [0]
     assert [i for i in hu(10)] == [1]
+    assert [((v, u), w) for u, (v, w) in [d]] == [((1.1, 1), 'u')]
 
 def test_list_nested():
     c = [[1,2],(3,4)]
