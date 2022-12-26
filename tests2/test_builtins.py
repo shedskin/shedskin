@@ -21,13 +21,8 @@ builtins = [
     ##'hasattr',
     # 'help',
     #'id',
-    'input',
-    'isinstance',
+    #'input',
     'issubclass',
-    'iter',
-    'len',
-    'license',
-    'list',
     'locals',
     'map',
     'max',
@@ -62,6 +57,8 @@ builtins = [
 class Klass:
     def __init__(self, name):
         self.name = name
+
+class SubKlass(Klass): pass
 
 def test_abs():
     assert abs(-10) == 10
@@ -124,7 +121,11 @@ def test_isinstance():
     obj = Klass('foo')
     assert isinstance(obj, Klass)
 
+def test_issubclass():
+    assert issubclass(SubKlass, Klass)
 
+def test_len():
+    assert len([1,2,3]) == 3
 
 
 
@@ -152,6 +153,9 @@ def test_all():
     test_hash()
     test_hex()
     test_isinstance()
+    # test_issubclass()
+    test_len()
+
 
 if __name__ == '__main__':
     test_all()

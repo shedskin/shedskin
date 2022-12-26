@@ -1,0 +1,10 @@
+set(modules
+    math
+    os
+    os.path
+    random
+    sys
+    stat
+    time
+)
+add_shedskin_test("${modules}")

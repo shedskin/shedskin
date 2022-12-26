@@ -17,6 +17,11 @@ def test_dict():
 def test_dict_get():
     assert {"wah": 2}.get("aap", 3) == 3 # dict.get problem
 
+def test_dict_del():
+    d = {1: 4, 2: 5}
+    del d[1]
+    assert d == {2 : 5}
+
 def test_setdefault():
     a={}
     a.setdefault(1,[]).append(1.0)
@@ -88,6 +93,7 @@ def test_items():
 def test_all():
     test_dict()
     test_dict_get()
+    test_dict_del()
     test_setdefault()
     test_misc()
     test_complex_keys()
