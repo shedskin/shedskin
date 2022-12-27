@@ -4,11 +4,11 @@ Shed Skin documentation
 Introduction
 ------------
 
-Shed Skin is an experimental Python-to-C++ compiler designed to speed up the execution of computation-intensive Python programs. It converts programs written in a restricted subset of Python to C++. The C++ code can be compiled to executable code, which can be run either as a standalone program or as an extension module easily imported and used in a regular Python program.
+Shed Skin is an experimental Python-to-C++ compiler designed to speed up the execution of computation-intensive Python programs. It converts programs written in a restricted subset of Python to C++. The C++ code can be compiled to executable code, which can be run either as a standalone program or as an extension module that is imported from a regular Python program.
 
 Shed Skin uses type inference techniques to determine the implicit types used in a Python program, in order to generate the explicit type declarations needed in a C++ version. Because C++ is statically typed, Shed Skin requires Python code to be written such that all variables are (implicitly!) statically typed.
 
-Besides the typing and subset restrictions, supported programs cannot freely use the Python standard library, although about 25 common modules are supported, such as :code:`random` and :code:`re` (see `Library limitations`_).
+Besides the typing and subset restrictions, supported programs cannot freely use the Python standard library, although about 30 common modules are (partially) supported, such as :code:`random` and :code:`re` (see `Library limitations`_).
 
 Additionally, the type inference techniques employed by Shed Skin currently do not scale very well beyond several thousand lines of code (the largest compiled program is about 6,000 lines (sloccount)). In all, this means that Shed Skin is currently mostly useful to compile smallish programs and extension modules, that do not make extensive use of dynamic Python features or the standard or external libraries. See here for a collection of 75 non-trivial example programs.
 
@@ -119,7 +119,7 @@ Some other features are currently only partially supported:
 Library limitations
 -------------------
 
-At the moment, the following 30 modules are more or less supported. Several of these, such as :code:`os.path`, were compiled to C++ using Shed Skin.
+At the moment, the following 30 modules are (fully or partially) supported. Several of these, such as :code:`os.path`, were compiled to C++ using Shed Skin.
 
 * :code:`array`
 * :code:`binascii`
@@ -151,7 +151,7 @@ At the moment, the following 30 modules are more or less supported. Several of t
 * :code:`sys`
 * :code:`time`
 
-Note that any other module, such as :code:`pygame`, :code:`pyqt` or :code:`pickle`, may be used in combination with a Shed Skin generated extension module. For examples of this, see the `Shed Skin examples <https://github.com/shedskin/shedskin/releases/download/v0.9.4/shedskin-examples-0.9.4.tgz>`_.
+Note that any other module, such as :code:`pygame`, :code:`pyqt` or :code:`pickle`, may be used in combination with a Shed Skin generated extension module. For examples of this, see the `Shed Skin examples <https://github.com/shedskin/shedskin/tree/master/examples>`_.
 
 See `How to help out in development`_ on how to help improve or add to the set of supported modules.
 
@@ -264,7 +264,7 @@ To compile the following simple test program, called ``test.py``:
 
 ::
 
-  print 'hello, world!'
+  print('hello, world!')
 
 Type:
 
@@ -297,8 +297,8 @@ To compile the following program, called ``simple_module.py``, as an extension m
       return d
 
   if __name__ == '__main__':
-      print func1(5)
-      print func2(10)
+      print(func1(5))
+      print(func2(10))
 
 Type:
 
@@ -326,7 +326,7 @@ Limitations
 
 There are some important differences between using the compiled extension module and the original.
 
-#. Only builtin scalar and container types (:code:`int`, :code:`float`, :code:`complex`, :code:`bool`, :code:`str`, :code:`list`, :code:`tuple`, :code:`dict`, :code:`set`) as well as :code:`None` and instances of user-defined classes can be passed/returned. So for instance, anonymous functions and iterators are currently not supported.
+#. Only builtin scalar and container types (:code:`int`, :code:`float`, :code:`complex`, :code:`bool`, :code:`str`, :code:`bytes`, :code:`bytearray`, :code:`list`, :code:`tuple`, :code:`dict`, :code:`set`) as well as :code:`None` and instances of user-defined classes can be passed/returned. So for instance, anonymous functions and iterators are currently not supported.
 #. Builtin objects are completely converted for each call/return from Shed Skin to CPython types and back, including their contents. This means you cannot change CPython builtin objects from the Shed Skin side and vice versa, and conversion may be slow. Instances of user-defined classes can be passed/returned without any conversion, and changed from either side.
 #. Global variables are converted once, at initialization time, from Shed Skin to CPython. This means that the value of the CPython version and Shed Skin version can change independently. This problem can be avoided by only using constant globals, or by adding getter/setter functions.
 #. Multiple (interacting) extension modules are not supported at the moment. Also, importing and using the Python version of a module and the compiled version at the same time may not work.
@@ -351,7 +351,7 @@ Shed Skin does not currently come with direct support for Numpy. It is possible 
       return s
 
   if __name__ == '__main__':
-      print my_sum([[1.0, 2.0], [3.0, 4.0]])
+      print(my_sum([[1.0, 2.0], [3.0, 4.0]]))
 
 After compiling this module as an extension module with Shed Skin, we can pass in a Numpy array as follows:
 
@@ -389,7 +389,7 @@ Suppose we have defined the following function in a file, called ``meuk.py``:
   def part_sum(start, end):
       """ calculate partial sum """
       sum = 0
-      for x in xrange(start, end):
+      for x in range(start, end):
           if x % 2 == 0:
               sum -= 1.0 / x
           else:
@@ -417,7 +417,7 @@ To use the generated extension module with the :code:`multiprocessing` standard 
       return meuk.part_sum(start, end)
 
   pool = Pool(processes=2)
-  print sum(pool.map(part_sum, [(1,10000000), (10000001, 20000000)]))
+  print(sum(pool.map(part_sum, [(1,10000000), (10000001, 20000000)])))
 
 Calling C/C++ code
 ------------------
@@ -440,7 +440,7 @@ To call manually written C/C++ code, follow these steps:
   #test.py
 
   import stuff
-  print stuff.more_primes(100)
+  print(stuff.more_primes(100))
 
 ::
 
@@ -488,14 +488,14 @@ or
 
 ::
 
-  shedskin ––extmod test.
+  shedskin ––extmod test
 
 Using :code:`-b` or :code:`--nobounds` is also very common, as it disables out-of-bounds exceptions (:code:`IndexError`), which can have a large impact on performance.
 
 ::
 
   a = [1, 2, 3]
-  print a[5] # invalid index: out of bounds
+  print(a[5]) # invalid index: out of bounds
 
 .. _performance-tips:
 
@@ -551,7 +551,7 @@ Tricks
 
 ::
 
-  print 'hoei', raw_input() # raw_input is called before printing 'hoei'!
+  print('hoei', raw_input()) # raw_input is called before printing 'hoei'!
 
 * Tuples with different types of elements and length > 2 are currently not supported. It can however be useful to 'simulate' them:
 
@@ -565,8 +565,8 @@ Tricks
 
 ::
 
-  print "x =", x
-  print "y =", y
+  print("x =", x)
+  print("y =", y)
   #{
   import pylab as pl
   pl.plot(x, y)
