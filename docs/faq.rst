@@ -1,4 +1,0 @@
-Frequently Asked Questions
-==========================
-
-
