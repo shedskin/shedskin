@@ -1,18 +1,4 @@
 
-# for x in range(10,14):                   # [list(int)]
-#     print(x**3)                           # [int]
-
-# y = 'luis'                               # [str]
-# for i in y:                              # [str]
-#     print(i)                              # [str]
-
-# print([i*2 for i in 'luis'])             # [list(str)]
-
-
-# conv = {"A": 0, "B": 1}                  # [dict(str, int)]
-# print(conv["A"], conv["B"])               # [int], [int]
-
-# print([{"A": 0, "B": 1}[c] for c in "ABABABA"]) # [list(int)]
 
 def test_open_for():
     f = open('testdata/hoppa')
@@ -33,6 +19,20 @@ def test_with_open_read():
     with open('testdata/hoppa') as f:
         assert f.read() == 'hop\nhop\nhoppa!\n'
 
+# def test_open_read2():
+#     with open("testdata/hoppa") as f:
+#         words = f.read().split()
+#         d = {}
+#         res = []
+#         for i, word in enumerate(words):
+#             s = "".join(sorted(list(word.lower())))
+#             d.setdefault(s, []).append(i)
+#         for val in d.values():
+#             if len(val) > 1:
+#                 res.append([words[i] for i in val])
+#     assert res == [['hop', 'hop']]
+
+
 def test_open_write():
     f = open('testdata/hoppa_write', 'w')
     f.write('hop\nhop\nhoppa!\n')
@@ -50,6 +50,7 @@ def test_open_write():
 def test_all():
     test_open_for()
     test_open_read()
+    # test_open_read2() # FIXME: fails
     test_open_readlines()
     test_with_open_read()
     test_open_write()
