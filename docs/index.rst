@@ -18,11 +18,3 @@ Documentation
 
    documentation
 
-Frequently Asked Questions
---------------------------
-
-.. toctree::
-   :maxdepth: 5
-
-   faq
-
