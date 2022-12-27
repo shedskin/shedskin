@@ -119,22 +119,24 @@ Some other features are currently only partially supported:
 Library limitations
 -------------------
 
-At the moment, the following 27 modules are largely supported. Several of these, such as :code:`os.path`, were compiled to C++ using Shed Skin.
+At the moment, the following 30 modules are more or less supported. Several of these, such as :code:`os.path`, were compiled to C++ using Shed Skin.
 
 * :code:`array`
 * :code:`binascii`
 * :code:`bisect`
 * :code:`collections` (defaultdict, deque)
 * :code:`colorsys`
-* :code:`ConfigParser` (no SafeConfigParser)
+* :code:`configparser` (no SafeConfigParser)
 * :code:`copy`
 * :code:`csv` (no Dialect, Sniffer)
 * :code:`datetime`
 * :code:`fnmatch`
+* :code:`functools` (reduce)
 * :code:`gc` (enable, disable, collect)
 * :code:`getopt`
 * :code:`glob`
 * :code:`heapq`
+* :code:`io` (BytesIO, StringIO)
 * :code:`itertools` (no starmap)
 * :code:`math`
 * :code:`mmap`
