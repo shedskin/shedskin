@@ -10,7 +10,7 @@ build/
 *.tga
 #*.txt
 *.ini
-*.csv
+tests/**/*.csv
 tests/**/*.?pp
 *.so
 *.so.dSYM
