@@ -123,6 +123,23 @@ def test_list_length():
 #     assert b[0] == [1,2]
 
 
+def subsets(sequence):
+    result = [[]] * (2 ** len(sequence))
+    for i, e in enumerate(sequence):
+        i2, el = 2**i, [e]
+        for j in range(i2):
+            result[j + i2] = result[j] + el
+    return result
+
+def test_list_subsets():
+    assert subsets(range(4)) == [[], [0], [1], [0, 1], [2], [0, 2], [1, 2], [0, 1, 2], [3], [0, 3], [1, 3], [0, 1, 3], [2, 3], [0, 2, 3], [1, 2, 3], [0, 1, 2, 3]]
+
+
+def test_list_cmp():
+    assert [2, 3] > [1, 2, 3]
+
+
+
 
 def test_all():
     test_list_assign()
@@ -135,6 +152,8 @@ def test_all():
     test_list_comp()
     test_list_misc()
     test_list_del()
+    test_list_subsets()
+    test_list_cmp()
 
 
 if __name__ == "__main__":
