@@ -82,6 +82,10 @@ def test_set3():
 
     assert sa4.intersection(sa5) == sa4.intersection(["d", "e", "f"])
 
+    low = set([1,2,3,4])
+    high = set([4,5,6,9])
+    assert list(sorted(low.symmetric_difference(high))) == [1, 2, 3, 5, 6, 9]
+
 
 def test_frozenset():
     a = frozenset([1,2,3,4,5])

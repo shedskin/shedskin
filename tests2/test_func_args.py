@@ -30,6 +30,16 @@ class Node:
     def __init__(self):
         self.input = [8]
 
+def take_tuple1(arg):
+    return arg[1]
+
+def take_tuple2(arg):
+    return arg[2]
+
+def test_tuple_arg():
+    assert take_tuple1((1,2,3)) == 2
+    assert take_tuple2(('a','b','c')) == 'c'
+
 def test_hoi():
     assert hoi(1,2) == (1,2,1,1)
     assert hoi(1,2,3) == (1,2,3,1)
@@ -57,6 +67,7 @@ def test_msplit():
 
 
 def test_all():
+    test_tuple_arg()
     test_baz()
     test_boo()
     test_hoi()
