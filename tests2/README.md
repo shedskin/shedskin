@@ -90,13 +90,13 @@ To build and run all tests as executables using cmake:
 If the above command is run for the first time, it will run the equivalent of the following:
 
 ```bash
-mkdir build && cd build && cmake .. && make && make test
+mkdir build && cd build && cmake .. && cmake --build . && ctest
 ```
 
 If it is run subsequently, it will run the equivalent of the following:
 
 ```bash
-cd build && cmake .. && make && make test
+cd build && cmake .. && cmake --build . && ctest
 ```
 
 This is useful during test development and has the benefit of only picking up changes to modified tests and will not re-translate or re-compile unchanged tests.
@@ -113,7 +113,23 @@ To build and run all cmake tests as executables **and** python extensions using 
 ./runtests.py -ce
 ```
 
-This will build/run an executable and python extension test for each test in the directory.
+This will build/run an executable and python extension test for each test in the directory, basically the equivalent of the following (if it is run the first time):
+
+```bash
+mkdir build && cd build && cmake .. -DTEST_EXT=ON && cmake --build . && ctest
+```
+
+If it is run subsequently, it will run the equivalent of the following:
+
+```bash
+cd build && cmake .. -DTEST_EXT=ON && cmake --build . && ctest
+```
+
+### Skipping Tests
+
+- To skip a test just change the `test_` prefix of the file or folder to `skip_`
+
+- Note that skipped tests may be picked up by `pytest`, this is not a bad thing as every test in this folder active or otherwise should pass under pytest.
 
 
 ## Standards
@@ -137,9 +153,9 @@ if __name__ == '__main__':
     test_all()
 ````
 
-- With the exception of `test_hello.py`, each test in the `tests2` folder should be a python file named `test_<name>.py` and should include at least one test function with the usual `test_<name>()` naming convention as a well as a `test_all()` function which only calls other `test_<name>()` functions and which itself should only be called in the `__name__ == '__main__'` section. 
+- Each test in the `tests2` folder should be a python file named `test_<name>.py` and should include at least one test function with the usual `test_<name>()` naming convention as a well as a `test_all()` function which only calls other `test_<name>()` functions and which itself should only be called in the `__name__ == '__main__'` section. 
 
-- Each `test_<name>()` function should include at least one `assert` to test a specific case and should not have any parameters.
+- Each `test_<name>()` function should include at least one `assert` to test a specific case and should not take arguments or keyword parameters.
 
 - Related tests should be grouped together by subject and should use file names which allow for tests to be naturally sorted and grouped together.
 
@@ -151,7 +167,6 @@ For example:
 	test_type_str.py
 	...
 	```
-
 
 
 - Tests should be testable in python for correctness (e.g. by using `pytest` for example).
@@ -169,7 +184,8 @@ For example:
 - [x] run all tests as either executables or python extensions
 - [x] unify both shedskin compilation modes for tests such that both executables and python extensions are generated, built and run for reach test run.
 - [ ] improved cleanup for default method in cases of multiple local imports
-- [ ] enabled windows platform support for cmake-based method
+- [ ] enabled windows platform support for cmake-based method and [conan](https://conan.io)
 - [ ] convert more tests
+- [ ] create TODO.md (perhaps auto-generated) to collect all non-working tests
 
 
