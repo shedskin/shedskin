@@ -19,6 +19,13 @@ def test_reference():
 
     assert b == [1]
 
+def test_slice_assign():
+    d = list(range(10))
+    d[::2] = [1, 2, 3, 4, 5]
+    assert d == [1, 1, 2, 3, 3, 5, 4, 7, 5, 9]
+    d[1:2] = [1,2,2,3,3]
+    assert d == [1, 1, 2, 2, 3, 3, 2, 3, 3, 5, 4, 7, 5, 9]
+
 def test_destructure():
     a, b = "ab"
     assert a == "a"
@@ -48,6 +55,7 @@ def test_all():
     test_assign_list()
     test_reference()
     test_destructure()
+    test_slice_assign()
 
 
 

@@ -1,16 +1,4 @@
 # TODO maketrans, translate
-
-
-# print('hoi %d %s' % (2, '3'))
-# print('foo\0bar' != 'foo\0baz')
-
-# u = [' p  o', 'c o ']                    # [list(str)]
-# cnf = [x.strip().split() for x in u if not x.startswith('x')] # [list(list(str))]
-# cnf2 = [[3] for x in u]                  # [list(list(int))]
-
-
-
-
 # str
 
 def test_capitalize():
@@ -26,6 +14,11 @@ def test_center():
 def test_count():
     assert 'blaa'.count('a') == 2
     assert 'blaabla'.count('aa') == 1
+
+    assert "hoooi".count("o") == 3
+    assert "hoooi".count("o", 2) == 2
+    assert "hoooi".count("o", 0, -2) == 2
+
 
 def test_encode(): pass
 
@@ -136,6 +129,13 @@ def test_removesuffix(): pass
 
 def test_replace():
     assert 'bla'.replace('la', 'bla') == 'bbla'
+    assert "aaaa".replace("a", "b", 2) == 'bbaa'
+    assert "aaaa".replace("a", "b", -1) == 'bbbb'
+
+    assert "1, 3, 5".replace(",", "") == '1 3 5'
+    assert "1, 3, 5".replace(",", "", -1) == '1 3 5'
+    assert "1, 3, 5".replace(",", "", 0) == '1, 3, 5'
+    assert "1, 3, 5".replace(",", "", 1) == '1 3, 5'
 
 def test_rfind():
     assert 'bla'.rfind('la') == 1
@@ -167,6 +167,8 @@ def test_split():
     assert 'haajaaja'.split('aa') == ['h', 'j', 'ja']
     assert "hoei hoei".split() == ['hoei', 'hoei']
     assert "hoei hoei\\n".split() == ['hoei', 'hoei\\n']
+    assert "aaaa".split("a", 2) == ['', '', 'aa']
+    assert "aaaa".split("a", -1) == ['', '', '', '', '']
 
 def test_splitlines():
     assert "ab\ncd\r\nef\rghi\n".splitlines() == ['ab', 'cd', 'ef', 'ghi']
@@ -176,10 +178,19 @@ def test_startswith():
     assert 'bla'.startswith('bla')
     assert not 'bla'.startswith('xx')
 
+    assert "hoi".startswith("ho", 0)
+    assert "hoi".startswith("ho", 0, 3)
+    assert "hoi".startswith("ho", 0, -1)
+    assert "hoi".endswith("oi")
+    assert "hoi".endswith("oi", 0, 3)
+    assert "hoi".endswith("ho", 0, -1)
+    assert "hoi".endswith("ho", -3, 2)
+    assert not "hoi".startswith(":", 3)
+    assert "hoi:".startswith(":", 3)
+
 def test_strip():
     assert 'bla  '.strip() == 'bla'
     assert '**bla**'.strip('*') == 'bla'
-
 
 def test_swapcase():
     assert 'bLa'.swapcase() == 'BlA'

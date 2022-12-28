@@ -24,7 +24,6 @@ not implemented:
     #' input',
     #' locals',
     #' memoryview',
-    # 'property',
     # 'setattr',
     # 'staticmethod',
     # 'super',
@@ -137,6 +136,26 @@ def test_ord():
     assert ord('1') == 49
     assert ord('9') == 57
 
+
+class Account:
+    def __init__(self):
+        self._cash = 0
+
+    @property
+    def cash(self):
+        return self._cash
+
+    @cash.setter
+    def cash(self, amount):
+        self._cash = amount
+
+def test_property():
+    a = Account()
+    assert a.cash == 0
+    a.cash = 10
+    assert a.cash == 10
+
+
 def test_print():
     print('')
     print('\n')
@@ -148,6 +167,8 @@ def test_range():
     assert min(range(10)) == 0
     assert list(range(3)) == [0, 1, 2]
     assert sum(range(20)) == 190
+    assert list(range(1, 10, 2)) == [1, 3, 5, 7, 9]
+    assert list(range(-17, -120, -17)) == [-17, -34, -51, -68, -85, -102, -119]
 
 def test_repr():
     assert repr(1) == '1'
@@ -175,7 +196,6 @@ def test_sum():
     assert sum([1, 2, 3], 4) == 10
     assert sum([[1], [2], [3, 4]], [0]) == [0, 1, 2, 3, 4]
     assert sum([[1], [2], [3, 4]], []) == [1, 2, 3, 4]
-
 
 def test_tuple():
     assert tuple([1,2]) == (1,2)
@@ -210,6 +230,7 @@ def test_all():
     test_min()
     test_oct()
     test_ord()
+    test_property()
     test_print()
     test_range()
     test_repr()
