@@ -234,6 +234,45 @@ def test_str_overload():
     assert not heuk("aha")
 
 
+def test_special_characters():
+    ss = "\u91cf\u5b50\u529b\u5b66"
+
+    initial = (
+        "         \n"
+        "         \n"
+        " rnbqkbnr\n"
+        " pppppppp\n"
+        " ........\n"
+        " ........\n"
+        " ........\n"
+        " ........\n"
+        " PPPPPPPP\n"
+        " RNBQKBNR\n"
+        "         \n"
+        "         \n"
+    )
+
+
+    uni_pieces = {
+        "R": "♜",
+        "N": "♞",
+        "B": "♝",
+        "Q": "♛",
+        "K": "♚",
+        "P": "♟",
+        "r": "♖",
+        "n": "♘",
+        "b": "♗",
+        "q": "♕",
+        "k": "♔",
+        "p": "♙",
+        ".": "·",
+    }
+
+    assert initial.strip() == 'rnbqkbnr\n pppppppp\n ........\n ........\n ........\n ........\n PPPPPPPP\n RNBQKBNR'
+    assert uni_pieces['k'] == "♔"
+    assert ss == '量子力学'
+
 def test_all():
     test_str_cmp()
     test_str_concat()
@@ -285,6 +324,7 @@ def test_all():
     test_translate()
     test_upper()
     test_zfill()
+    test_special_characters()
 
 
 if __name__ == "__main__":

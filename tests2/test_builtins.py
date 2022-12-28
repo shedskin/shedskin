@@ -72,6 +72,11 @@ def test_complex():
 
 def test_divmod():
     assert divmod(10, 2) == (5, 0)
+    assert divmod(-496, 3) == (-166, 2)
+    assert divmod(-496.0, 3) == (-166.0, 2.0)
+    assert divmod(-496, 3.0) == (-166.0, 2.0)
+    assert divmod(-496, -3) == (165, -1)
+    assert divmod(-496.0, -3.0) == (165.0, -1.0)
 
 def test_enumerate():
     assert [(i, obj) for i, obj in enumerate(['a', 'b', 'c'])] == [(0, 'a'), (1, 'b'), (2, 'c')]
