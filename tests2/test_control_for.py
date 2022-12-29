@@ -36,12 +36,31 @@ def test_for_enumerate():
     assert result_i == [0,1,2]
     assert result_o == cube
 
+def test_for_break():
+    xs = range(10)
+    x = 0
+    for i in xs:
+        if i > 5:
+            x = i
+            break
+    assert x == 6
+
+def test_for_continue():
+    xs = []
+    for i in range(10):
+        if i == 5:
+            continue
+        xs.append(i)
+    assert xs == [0, 1, 2, 3, 4, 6, 7, 8, 9]
+
 
 def test_all():
     test_for_range()
     test_for_tuple()
     test_for_fn()
     test_for_enumerate()
+    test_for_break()
+    test_for_continue()
 
 if __name__ == '__main__':
     test_all() 
