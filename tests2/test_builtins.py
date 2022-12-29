@@ -50,7 +50,16 @@ def test_bin():
 def test_bool():
     assert bool(2 > 1) == True
 
+
+class MyString:
+    def __init__(self, s):
+        self.s = s
+    def __bytes__(self):
+        return self.s.encode('utf8')
+
 def test_bytes():
+    s = MyString('sam')
+    assert bytes(s) == b'sam'
     assert bytes('a', encoding='utf8') == b'a'
 
 def test_callable():
