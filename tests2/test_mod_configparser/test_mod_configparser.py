@@ -4,13 +4,13 @@ import configparser
 
 def test_minimal():
     config = configparser.ConfigParser(defaults={'aha': 'hah'})
-    config.read("testdata/test.conf")
+    config.read("testdata/configparser_test.conf")
     assert config
     # assert config.getint('ematter', 'pages') == 250 ## FIXME this fails
 
 def test_configparser():
     config = configparser.ConfigParser()
-    config.read("testdata/test.conf")
+    config.read("testdata/configparser_test.conf")
 
     assert config.getint('ematter', 'pages') == 250
     assert config.getfloat('ematter', 'pages') == 250.0
@@ -38,16 +38,16 @@ def test_configparser():
 
     # assert config.get('ematter', 'pages', vars={'var': 'blah'}) == '250'
 
-    # fl = open('testdata/test.ini', 'w')
+    # fl = open('testdata/configparser_test.ini', 'w')
     # config.write(fl)
     # fl.close()
-    # print(sorted(open('testdata/test.ini').readlines()))
+    # print(sorted(open('testdata/configparser_test.ini').readlines()))
 
     # print(list(config.defaults().items()))
     # print(sorted(config.items('ematter', vars={'var': 'blah'})))
 
     # rcp = configparser.RawConfigParser()
-    # rcp.read(["testdata/test.conf"])
+    # rcp.read(["testdata/configparser_test.conf"])
 
     # print(rcp.get('ematter', 'pages')) #, vars={'var': 'blah'})
     # print(sorted(rcp.items('ematter')))
