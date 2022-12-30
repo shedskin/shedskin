@@ -1,0 +1,9 @@
+set(modules
+    glob
+    os
+    os.path
+    stat
+    fnmatch
+    re
+)
+add_shedskin_test("${modules}")
