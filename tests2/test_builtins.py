@@ -58,9 +58,17 @@ class MyString:
         return self.s.encode('utf8')
 
 def test_bytes():
-    s = MyString('sam')
-    assert bytes(s) == b'sam'
-    assert bytes('a', encoding='utf8') == b'a'
+    # s = MyString('sam')
+    # assert bytes(s) == b'sam'
+    # assert bytes('a', encoding='utf8') == b'a'
+    assert bytes() == b''
+    assert bytes([1, 2, 3]) == b'\x01\x02\x03'
+    assert bytes(set([1])) == b'\x01'
+    assert bytes(0) == b''
+    assert bytes(4) == b'\x00\x00\x00\x00'
+    assert bytes(7) == b'\x00\x00\x00\x00\x00\x00\x00'
+    assert bytes(b"hop") ==  b'hop'
+    assert bytes(bytes(7)) == b'\x00\x00\x00\x00\x00\x00\x00'
 
 def test_callable():
     assert callable(abs)
@@ -209,6 +217,11 @@ def test_sum():
 def test_tuple():
     assert tuple([1,2]) == (1,2)
 
+# def test_type():
+#     assert type(1) == type(2)
+#     assert type(1.0) == type(2.0)
+#     assert type("2") == type("3")
+
 def test_zip():
     assert list(zip([1,2,3], ['a','b', 'c'])) == [(1, 'a'), (2, 'b'), (3, 'c')]
 
@@ -218,7 +231,7 @@ def test_all():
     # test_ascii()
     test_bin()
     test_bool()
-    # test_bytes()
+    test_bytes()
     # test_callable()
     test_chr()
     test_complex()
@@ -249,6 +262,7 @@ def test_all():
     test_str()
     test_sum()
     test_tuple()
+    # test_type()
     test_zip()
 
 
