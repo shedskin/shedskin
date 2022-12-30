@@ -54,6 +54,16 @@ def test_for_continue():
     assert xs == [0, 1, 2, 3, 4, 6, 7, 8, 9]
 
 
+def test_for_else():
+    xs = []
+    for i in range(6):
+        xs.append(1)
+    else:
+        xs.append(2)
+    assert xs == [1, 1, 1, 1, 1, 1, 2]
+
+
+
 def test_all():
     test_for_range()
     test_for_tuple()
@@ -61,6 +71,7 @@ def test_all():
     test_for_enumerate()
     test_for_break()
     test_for_continue()
+    test_for_else()
 
 if __name__ == '__main__':
     test_all() 
