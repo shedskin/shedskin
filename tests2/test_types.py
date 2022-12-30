@@ -1,26 +1,3 @@
-# class evert:
-#     pass
-
-
-# bla = evert()
-
-# cl = bla.__class__
-
-# print(cl)
-# print(cl.__name__)
-
-# print(type(bla))
-# print(type(bla).__name__)
-
-# if cl == type(evert()):
-#     print("equal!")
-
-# if type("2") == type("3"):
-#     print("equal str!")
-
-# if type(1) == type("1"):
-#     print("equal non-equal!")
-
 
 
 def test_equality():

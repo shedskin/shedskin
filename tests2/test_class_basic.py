@@ -18,7 +18,7 @@ class Person:
         return b
 
 
-def test_person():
+def test_class_person():
     f = Person("fred")
     assert f.a == 1
 
@@ -61,7 +61,7 @@ class Edge:
 
 
 
-def test_edge():
+def test_class_edge():
     a = Edge()
     a.x = 1
     assert a.bla() == 1
@@ -81,10 +81,47 @@ def test_edge():
     print(d == d)
 
 
+class Foo:
+    class_dict_var = {}
+    class_dict_var2 = {}
+    class_dict_var3 = {(1, 2): 7}
+    kwad = (1, 2)
+    wof = "wof"
+    s = set()
+    t = s
+    z = t | s
+    wa = [2 * x for x in range(10)]
+
+    def __init__(self):
+        self.y = 10
+        Foo.class_dict_var[4] = 5
+        Foo.class_dict_var2["4"] = 5
+        Foo.s.update(Foo.kwad)
+
+def test_class_foo():
+    foo = Foo()
+
+    assert foo.y == 10
+    assert foo.kwad == (1, 2)
+
+    assert Foo.class_dict_var == {4: 5}
+    assert Foo.class_dict_var2 == {'4': 5}
+    assert Foo.class_dict_var3 == {(1, 2): 7}
+    assert Foo.kwad == (1,2)
+    assert Foo.wof == "wof"
+    assert sorted(Foo.s) == [1, 2]
+    assert sorted(Foo.t) == [1, 2]
+    assert sorted(Foo.z) == []
+    assert Foo.wa == [0, 2, 4, 6, 8, 10, 12, 14, 16, 18]
+
+
+
+
 
 def test_all():
-    test_person()
-    test_edge()
+    test_class_person()
+    test_class_edge()
+    test_class_foo()
 
 
 if __name__ == "__main__":
