@@ -198,6 +198,22 @@ def test_bytes_hash():
     assert list(sorted(bdict.items())) == [(b'bla', 18), (b'blup', 19)]
     assert set([b'blup'])
 
+
+def test_bytes_builtin():
+    assert bytes() == b''
+    assert bytes([1, 2, 3]) == b'\x01\x02\x03'
+    assert bytes(set([1])) == b'\x01'
+    assert bytes(0) == b''
+    assert bytes(4) == b'\x00\x00\x00\x00'
+    assert bytes(7) == b'\x00\x00\x00\x00\x00\x00\x00'
+    assert bytes(b"hop") == b'hop'
+    assert bytes(bytes(7)) == b'\x00\x00\x00\x00\x00\x00\x00'
+    assert bytes(bytearray(7)) == b'\x00\x00\x00\x00\x00\x00\x00'
+
+    assert b"hop %s" % b"hup" == b'hop hup'
+    assert int(b"123") == 123
+
+
 def test_all():
     test_bytes_cmp()
     test_bytes_concat()
@@ -244,6 +260,7 @@ def test_all():
     test_upper()
     test_zfill()
     test_bytes_hash()
+    test_bytes_builtin()
     # test_problem_cases()
 
 

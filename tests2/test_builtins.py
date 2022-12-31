@@ -25,7 +25,6 @@ not implemented:
     #' locals',
     #' memoryview',
     # 'setattr',
-    # 'staticmethod',
     # 'super',
     # 'type',
     # 'vars',
@@ -139,7 +138,21 @@ def test_max():
     assert max(['a', 'b', 'c']) == 'c'
     assert max({1: 2, 3: 4}) == 3
 
+    assert max([1]) == 1
+    assert max(1, 2) == 2
+    assert max(7.7, 7) == 7.7
+    assert max(7, 7.7) == 7.7
+    assert max(1, 2, 3) == 3
+    assert max(1, 2, 3, 4, 5) == 5
+
 def test_min():
+    assert min([1]) == 1
+    assert min(1, 2) == 1
+    assert min(6.7, 7) == 6.7
+    assert min(7, 6.7) == 6.7
+    assert min(1, 2, 3) == 1
+    assert min(1, 2, 3, 4, 5) == 1
+
     assert min([4, 5, 9, 12]) == 4
     assert min([1.2, 3.14, 5.56, 9.31]) == 1.2
     assert min(['a', 'b', 'c']) == 'a'
@@ -179,6 +192,28 @@ def test_print():
     assert True
 
 def test_range():
+    a = 1
+
+    assert list(range(1, 10, 1)) == [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    assert list(range(10, 1, -1)) == [10, 9, 8, 7, 6, 5, 4, 3, 2]
+    assert list(range(1, 10, +1)) == [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    assert list(range(1, 10, a)) == [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    assert list(range(10, 1, -a)) == [10, 9, 8, 7, 6, 5, 4, 3, 2]
+    assert list(range(1, 10, +a)) == [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    assert list(range(1, 10, a * 1)) == [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    assert list(range(1, 10, -(-1))) == [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    assert list(range(1, 10, +(+a))) == [1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+    assert list(range(1, 10, 1)) == [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    assert list(range(1, 10, +1)) == [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    assert list(range(1, 10, a)) == [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    assert list(range(1, 10, +a)) == [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    assert list(range(1, 10, -(-1))) == [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    assert list(range(1, 10, +(+1))) == [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    assert list(range(1, 10, +(+a))) == [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    assert list(range(10, 1, -1)) == [10, 9, 8, 7, 6, 5, 4, 3, 2]
+    assert list(range(10, 1, -a)) == [10, 9, 8, 7, 6, 5, 4, 3, 2]
+
     assert len(range(5)) == 5
     assert max(range(10)) == 9
     assert min(range(10)) == 0
