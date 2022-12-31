@@ -139,14 +139,44 @@ def test_numlike3():
     assert str(e) == '2'
 
 
+class Num:
+    def __init__(self, v):
+        self.value = v
 
+    def __str__(self):
+        return str(self.value)
 
+    def __bytes__(self):
+        return bytes(self.value)
+
+    def __truediv__(self, other):
+        return Num(self.value / other.value)
+
+    def __floordiv__(self, other):
+        return Num(self.value // other.value)
+
+def test_numlike4():
+    a = Num(10)
+    b = Num(2)
+
+    assert str(a) == '10'
+    assert bytes(a) == b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+
+    # assert str(a / b) == '5.0'
+    # assert str(a // b) == '5'
+    
+    # a /= b
+    # assert str(a) == '5.0'
+
+    # a //= b
+    # assert str(a) == '2.0'
 
 def test_all():
     test_dictlike()
     test_numlike1()
     test_numlike2()
     test_numlike3()
+    test_numlike4()
 
 if __name__ == '__main__':
     test_all()

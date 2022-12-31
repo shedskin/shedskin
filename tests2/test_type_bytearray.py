@@ -126,6 +126,17 @@ def test_bytearray_slice():
     del ba[::2]
     assert ba == bytearray(b'baba')
 
+def test_bytearray_misc():
+    assert bytearray() == bytearray(b'')
+    assert bytearray([1, 2, 3]) == bytearray(b'\x01\x02\x03')
+    assert bytearray(0) == bytearray(b'')
+    assert bytearray(4) == bytearray(b'\x00\x00\x00\x00')
+    assert bytearray(7) == bytearray(b'\x00\x00\x00\x00\x00\x00\x00')
+    assert bytearray(b"hop") == bytearray(b'hop')
+    assert bytearray(bytearray(7)) == bytearray(b'\x00\x00\x00\x00\x00\x00\x00')
+    assert bytearray(bytes(7)) == bytearray(b'\x00\x00\x00\x00\x00\x00\x00')
+    assert b"hop %s" % bytearray(b"hup") == b'hop hup'
+    assert list(bytearray(4)) == [0,0,0,0]
 
 def test_all():
     test_bytearray()
@@ -143,6 +154,7 @@ def test_all():
     test_bytearray_insert()
     # test_bytearray_hash()
     test_bytearray_slice()
+    test_bytearray_misc()
 
 if __name__ == "__main__":
     test_all()
