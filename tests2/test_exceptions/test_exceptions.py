@@ -3,6 +3,21 @@ import os
 class CustomError(Exception):
     pass
 
+class Error(Exception):
+    def __init__(self, x):
+        print("error.__init__", x)
+
+
+class ParsingError(Error):
+    pass
+
+
+class MissingSectionHeaderError(ParsingError):
+    def __init__(self):
+        print("missingsectionheadererror.__init__")
+        Error.__init__(self, "4")
+
+
 def test_key_error():
     error = False
     try:
@@ -32,6 +47,13 @@ def test_custom_error():
         error = True
     assert error
 
+def test_custom_error2():
+    error = False
+    try:
+        raise MissingSectionHeaderError()
+    except MissingSectionHeaderError:
+        error = True
+    assert error
 
 def test_value_error():
     error = False
@@ -50,6 +72,8 @@ def test_os_error():
     except OSError:
         error = True
     assert error
+
+
 
 
 # def test_type_error():
@@ -97,6 +121,7 @@ def test_all():
     test_value_error()
     test_os_error()
     test_custom_error()
+    test_custom_error2()
     # test_custom_salary_error() # FIXME: super not supported
 
 
