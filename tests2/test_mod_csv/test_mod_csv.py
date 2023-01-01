@@ -84,7 +84,7 @@ def test_program():
 
 
 def test_all():
-    test_csv()
+    test_program()
 
 
 if __name__ == "__main__":
