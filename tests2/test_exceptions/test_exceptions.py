@@ -17,6 +17,12 @@ class MissingSectionHeaderError(ParsingError):
         print("missingsectionheadererror.__init__")
         Error.__init__(self, "4")
 
+class CustomExceptionA(Exception): pass
+class CustomExceptionB(CustomExceptionA): pass
+class CustomExceptionC(CustomExceptionB): pass
+class CustomExceptionD(CustomExceptionC): pass
+class CustomExceptionF(CustomExceptionD): pass
+
 
 def test_key_error():
     error = False
@@ -55,6 +61,16 @@ def test_custom_error2():
         error = True
     assert error
 
+
+def test_custom_error3():
+    error = False
+    try:
+        raise CustomExceptionF()
+    except CustomExceptionF:
+        error = True
+    assert error
+
+
 def test_value_error():
     error = False
     try:
@@ -74,6 +90,14 @@ def test_os_error():
     assert error
 
 
+def test_index_error():
+    xs = [1, 2, 3]
+    error = False
+    try:
+        xs[4]
+    except IndexError:
+        error = True
+    assert error
 
 
 # def test_type_error():
@@ -122,6 +146,7 @@ def test_all():
     test_os_error()
     test_custom_error()
     test_custom_error2()
+    test_custom_error3()
     # test_custom_salary_error() # FIXME: super not supported
 
 

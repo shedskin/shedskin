@@ -76,8 +76,9 @@ def test_chr():
     assert chr(97) == 'a'
 
 def test_complex():
-    c = complex(1,2)
-    assert c.imag == 2.0
+    a = complex(1, 2)
+    assert a.imag == 2.0
+    assert a.real == 1.0
 
 # def test_delattr():
 #     obj = Klass('sam')
