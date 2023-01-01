@@ -40,6 +40,12 @@ def test_membership():
 
     assert 1.0 in (1.0,2.0,3.0)
 
+    assert 12 in (10, 12, 14)
+    assert 12 not in (7, 8, 9)
+    assert 12 in (10, 12, 14)
+    assert 12 not in (7, 8, 9)
+
+
 def test_variable():
     a = (1,2)
     assert (1,2) == a

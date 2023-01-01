@@ -1,6 +1,7 @@
 import re
 
 
+
 def test_re_search():
     assert re.search('x*', 'axx').span(0) == (0, 0)
     assert re.search('x*', 'axx').span() == (0, 0)
@@ -25,6 +26,9 @@ def test_re_match():
     assert re.match('(ab|ba)', 'ab').span() == (0, 2)
     assert re.match('(ab|ba)', 'ba').span() == (0, 2)
 
+    assert re.match(r"(\d+)\.?(\d+)?", "24").groups() == ('24', None)
+
+
 def test_re_sub():
     assert re.sub('y', 'a', 'xyz') == 'xaz'
     assert re.sub("(?i)b+", "x", "bbbb BBBB") == 'x x'
@@ -44,6 +48,10 @@ def test_re_subn():
     assert re.subn("(?i)b+", "x", "bbbb BBBB") == ('x x', 2)
     assert re.subn("b+", "x", "bbbb BBBB") == ('x BBBB', 1)
     assert re.subn("b+", "x", "xyz") == ('xyz', 0)
+
+    assert re.subn('a', 'ama', 'amadeus') == ('amamamadeus', 2)
+    assert re.compile('a').subn('ama', 'amadeus') == ('amamamadeus', 2)
+
     # assert re.subn("b*", "x", "xyz") == ('xxxyxzx', 4) ## causes crash!
     # assert re.subn("b*", "x", "xyz", 2) == ('xxxyz', 2) ## case not equal
 
@@ -66,7 +74,7 @@ def test_re_example1():
     b = "bob (BoB@gmaiL.com) said to sally (sally123_43.d@hOtmail.co.uk) that no-name (not_a-real@em_ail.dres) was annoying..."
     assert a.search(b, 20).group(0) == 'sally123_43.d@hOtmail.co.uk'
 
-def test_example2():
+def test_re_example2():
     imag = re.compile("(a)(b)")
     m = imag.match("ab")
     assert m.group() == "ab"
@@ -76,7 +84,7 @@ def test_example2():
     assert m.group(0, 2) == ('ab', 'b')
     assert m.group(2, 1, 1, 2) == ('b', 'a', 'a', 'b')
 
-def test_example3():
+def test_re_example3():
     imag = re.compile("(?P<one>a)(?P<two>b)")
     m = imag.match("ab")
     assert m.group() == 'ab'

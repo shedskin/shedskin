@@ -9,24 +9,25 @@ def test_program():
         csvfile_out = os.path.join('testdata', 'bla.csv')
     else:
         csvfile_in = os.path.join('../testdata', 'woef.csv')
-        csvfile_out = os.path.join('../testdata', 'bla.csv')        
+        csvfile_out = os.path.join('../testdata', 'bla.csv')
+
+    dialects = csv.list_dialects()
+    assert 'excel' in dialects
+    assert 'excel-tab' in dialects
+
     d = collections.defaultdict(list)
     for (a, b, n, l) in csv.reader(open(csvfile_in), delimiter="|"):
         d[a, b].append((int(n), l))
     for a, b in sorted(d, key=lambda t: t[1]):
         hoppa = " ".join([l for (n, l) in sorted(d[a, b], key=lambda t: t[0])])
         hoppa = hoppa.replace("&nbsp;", " ")
-        # print("<H1>%s</H1><H2>%s</H2>" % (b, a), hoppa)
     output = open(csvfile_out, "w")
     wr = csv.writer(output, delimiter="|", lineterminator="\n")
     wr.writerow(["aa", "bb", "cc"])
     wr.writerows(2 * [["a", "c", "b"]])
     output.close()
-    # print(open(csvfile_out).read())
 
     assert csv.field_size_limit() == 131072
-    # assert csv.field_size_limit(1000) == 131072
-    # assert csv.field_size_limit() == 1000
 
     csv.reader(
         open(csvfile_in),
@@ -83,7 +84,7 @@ def test_program():
 
 
 def test_all():
-    test_program()
+    test_csv()
 
 
 if __name__ == "__main__":
