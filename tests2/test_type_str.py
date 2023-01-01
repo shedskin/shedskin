@@ -284,6 +284,13 @@ def test_special_characters():
     assert uni_pieces['k'] == "♔"
     assert ss == '量子力学'
 
+def test_str_id():
+    foo_a = "foo"
+    foo_b = "foo"
+    foo_c = "foo"
+    assert id(foo_a) == id(foo_b) == id(foo_c)
+
+
 def test_all():
     test_str_cmp()
     test_str_concat()
@@ -336,6 +343,7 @@ def test_all():
     test_upper()
     test_zfill()
     test_special_characters()
+    test_str_id()
 
 
 if __name__ == "__main__":

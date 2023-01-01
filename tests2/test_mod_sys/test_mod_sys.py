@@ -1,11 +1,14 @@
 import sys
 
+
 def test_sys():
     assert sys.version
-    # assert len(sys.argv) > 0
-    # assert sys.argv[0] == 'test_mod_sys.py'
-    # assert sys.argv[1:] == []
-
+    assert sys.platform
+    assert sys.copyright
+    assert sys.byteorder in ['little', 'big']
+    assert (sys.version_info[0], sys.version_info[1]) >= (2, 4)
+    sys.stdout.write(' ')
+    sys.stderr.write(' ')
 
 def test_all():
     test_sys()

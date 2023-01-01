@@ -76,6 +76,8 @@ def test_math():
     assert '%.8f' % (math.log1p(math.e - 1) + 0.5) == '1.50000000'
     assert '%.8f' % math.log1p(1) == '0.69314718'
 
+    assert "%.8f" % math.cosh(2) == '3.76219569'
+
     assert '%.8f' % math.acosh(1) == '0.00000000'
     assert '%.8f' % math.acosh(2) == '1.31695790'
     assert math.isinf(math.asinh(float("inf")))
