@@ -171,12 +171,41 @@ def test_numlike4():
     # a //= b
     # assert str(a) == '2.0'
 
+
+
+class Function:
+    def __call__(self, x, y):
+        return x+y
+
+def test_funclike():
+    f = Function()
+    assert f(1,2) == 3
+
+
+class Range:
+    def __init__(self, start, stop):
+        self.start = start
+        self.stop = stop
+
+    def __iter__(self):
+         current = self.start
+         while current < self.stop:
+             yield current
+             current += 1
+
+
+def test_iterable():
+    assert list(Range(0, 10)) == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+
 def test_all():
     test_dictlike()
     test_numlike1()
     test_numlike2()
     test_numlike3()
     test_numlike4()
+    test_funclike()
+    test_iterable()
 
 if __name__ == '__main__':
     test_all()

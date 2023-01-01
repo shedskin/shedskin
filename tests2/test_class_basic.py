@@ -98,7 +98,7 @@ class Foo:
         Foo.class_dict_var2["4"] = 5
         Foo.s.update(Foo.kwad)
 
-def test_class_foo():
+def test_class_attrs():
     foo = Foo()
 
     assert foo.y == 10
@@ -114,14 +114,40 @@ def test_class_foo():
     assert sorted(Foo.z) == []
     assert Foo.wa == [0, 2, 4, 6, 8, 10, 12, 14, 16, 18]
 
+class Baz:
+    def __init__(self):
+        a = None
+        self.v = [1]
+        self.v = a
+        assert self.v == None
 
+        w = self.v
+        w = a
+        assert w == None
+
+        x = [1, 2, 3]
+        x[1:2] = []
+        x[1:2] = [4, 5]
+        assert x == [1, 4, 5]
+
+        self.x = [1, 2, 3]
+        self.x[1:2] = []
+        assert self.x == [1,3]
+
+
+def test_class_instance_attrs():
+    b = Baz()
+    assert b.x == [1,3]
+    assert not b.v
 
 
 
 def test_all():
     test_class_person()
     test_class_edge()
-    test_class_foo()
+    test_class_attrs()
+    test_class_instance_attrs()
+
 
 
 if __name__ == "__main__":

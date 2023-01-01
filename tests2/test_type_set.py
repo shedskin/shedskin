@@ -1,6 +1,5 @@
 
 
-
 def test_set1():
     s1 = set([1,2])
     s1.add(3)
@@ -86,6 +85,38 @@ def test_set3():
     high = set([4,5,6,9])
     assert list(sorted(low.symmetric_difference(high))) == [1, 2, 3, 5, 6, 9]
 
+def test_set4():
+
+    s1 = set(range(3))
+    s1.update(list(range(2, 5)), list(range(12, 14)))
+    assert sorted(s1) == [0, 1, 2, 3, 4, 12, 13]
+    s1.update(list(range(2, 5)), list(range(12, 14)), list(range(18, 20)))
+    assert sorted(s1) == [0, 1, 2, 3, 4, 12, 13, 18, 19]
+
+    s2 = set(range(4))
+    assert sorted(s2.union(set(range(6)), (6, 7))) == [0, 1, 2, 3, 4, 5, 6, 7]
+    assert sorted(s2.union([5], [3, 4], list(range(3)))) == [0, 1, 2, 3, 4, 5]
+    assert sorted(s2.intersection(list(range(1, 4)), list(range(2, 5)))) == [2, 3]
+    assert sorted(s2.intersection(list(range(3)), [2], list(range(4)))) == [2]
+    assert sorted(s2.difference(list(range(2)), list(range(3)))) == [3]
+    assert sorted(s2.difference(list(range(2)), list(range(3)), [3, 6])) == []
+
+    s3 = set(range(4))
+    s3.intersection_update(list(range(2)), list(range(3)))
+    assert sorted(s3) == [0, 1]
+
+    s4 = set(range(3))
+    s4.intersection_update(list(range(2)), list(range(3)), list(range(4)))
+    assert sorted(s4) == [0, 1]
+
+    s5 = set(range(4))
+    s5.difference_update(list(range(2)), list(range(3)))
+    assert sorted(s5) == [3]
+
+    s6 = set(range(5))
+    s6.difference_update(list(range(2)), list(range(3)), [3, 6])
+    assert sorted(s6) == [4]
+
 
 def test_frozenset():
     a = frozenset([1,2,3,4,5])
@@ -127,13 +158,11 @@ def test_set_binary_elem():
 
 
 
-
-
-
 def test_all():
     test_set1()
     test_set2()
     test_set3()
+    test_set4()
     test_set_cmp()
     test_frozenset()
     test_frozenset_hash()
