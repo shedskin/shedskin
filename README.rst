@@ -36,6 +36,8 @@ Comparison
 
 Some timings for the shedskin 'sieve' example (n=100000000) and several Python optimizers:
 
+::
+
     python 3.10.6:   13.4 seconds
     python 3.11.0:   11.4
     nuitka 0.6.16:   11.4
