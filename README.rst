@@ -38,8 +38,8 @@ Some timings for the shedskin 'sieve' example (n=100000000) and several Python i
 
 ::
 
-    python 3.10.6:   13.4 seconds
-    python 3.11.0:   11.4
+    cpython 3.10.6:   13.4 seconds
+    cpython 3.11.0:   11.4
     nuitka 0.6.16:   11.4
     pypy 3.9.12:     5.8
     shedskin 0.9.6:  1.9
