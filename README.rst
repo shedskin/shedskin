@@ -51,19 +51,19 @@ Some screenshots of the `example programs <https://github.com/shedskin/shedskin/
 
 .. raw:: html
 
-    <img src="https://raw.githubusercontent.com/shedskin/shedskin/master/examples/screenshots/harm1.png" width="640px">
+    <img src="https://raw.githubusercontent.com/shedskin/shedskin/master/examples/screenshots/harm4.png" width="400px">
 
 .. raw:: html
 
-    <img src="https://raw.githubusercontent.com/shedskin/shedskin/master/examples/screenshots/harm2.png" width="640px">
+    <img src="https://raw.githubusercontent.com/shedskin/shedskin/master/examples/screenshots/harm3.png" width="400px">
 
 .. raw:: html
 
-    <img src="https://raw.githubusercontent.com/shedskin/shedskin/master/examples/screenshots/harm3.png" width="640px">
+    <img src="https://raw.githubusercontent.com/shedskin/shedskin/master/examples/screenshots/harm2.png" width="400px">
 
 .. raw:: html
 
-    <img src="https://raw.githubusercontent.com/shedskin/shedskin/master/examples/screenshots/harm4.png" width="640px">
+    <img src="https://raw.githubusercontent.com/shedskin/shedskin/master/examples/screenshots/harm1.png" width="400px">
 
 
 Contributors
