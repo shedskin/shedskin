@@ -69,7 +69,7 @@ Some screenshots of the `example programs <https://github.com/shedskin/shedskin/
 Contributors
 ------------
 
-The following people have contributed to Shed Skin development so far:
+The following people have contributed to Shed Skin development:
 
 ::
 
