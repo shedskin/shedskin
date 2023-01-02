@@ -49,6 +49,8 @@ Screenhots
 
 Some screenshots of the examples in action:
 
+.. image:: examples/screenshots/harm1.png
+
 ![Screenshot](examples/screenshots/harm1.png)
 
 ![Screenshot](examples/screenshots/harm2.png)
