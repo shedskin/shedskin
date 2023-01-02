@@ -34,7 +34,7 @@ Shed Skin depends on some others projects, such as the `Boehm garbage collector 
 Comparison
 ----------
 
-Some timings for the shedskin 'sieve' example (n=100000000) and several Python optimizers:
+Some timings for the shedskin 'sieve' example (n=100000000) and several Python implementations/optimizers:
 
 ::
 
