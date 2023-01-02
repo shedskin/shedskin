@@ -44,6 +44,19 @@ Some timings for the shedskin 'sieve' example (n=100000000) and several Python o
     pypy 3.9.12:     5.8
     shedskin 0.9.6:  1.9
 
+Screenhots
+----------
+
+Some screenshots of the examples in action:
+
+![Screenshot](examples/screenshots/harm1.png)
+
+![Screenshot](examples/screenshots/harm2.png)
+
+![Screenshot](examples/screenshots/harm3.png)
+
+![Screenshot](examples/screenshots/harm4.png)
+
 Contributors
 ------------
 
