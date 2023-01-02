@@ -49,6 +49,10 @@ Screenhots
 
 Some screenshots of the `example programs <https://github.com/shedskin/shedskin/tree/master/examples>`_ in action:
 
+.. raw:: html
+
+    <img src="https://raw.githubusercontent.com/shedskin/shedskin/master/examples/screenshots/harm1.png" width="640px">
+
 .. image:: examples/screenshots/harm1.png
 .. image:: examples/screenshots/harm2.png
 .. image:: examples/screenshots/harm3.png
