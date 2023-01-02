@@ -47,17 +47,12 @@ Some timings for the shedskin 'sieve' example (n=100000000) and several Python o
 Screenhots
 ----------
 
-Some screenshots of the examples in action:
+Some screenshots of the `example programs <https://github.com/shedskin/shedskin/tree/master/examples>`_ in action:
 
 .. image:: examples/screenshots/harm1.png
-
-![Screenshot](examples/screenshots/harm1.png)
-
-![Screenshot](examples/screenshots/harm2.png)
-
-![Screenshot](examples/screenshots/harm3.png)
-
-![Screenshot](examples/screenshots/harm4.png)
+.. image:: examples/screenshots/harm2.png
+.. image:: examples/screenshots/harm3.png
+.. image:: examples/screenshots/harm4.png
 
 Contributors
 ------------
