@@ -14,6 +14,8 @@ def test_dict():
     assert list(d.values()) == ['2', '4']
     assert list(d.items()) == [(1, '2'), (2, '4')]
 
+
+
 def test_dict_get():
     assert {"wah": 2}.get("aap", 3) == 3 # dict.get problem
 
@@ -77,6 +79,10 @@ def test_items():
     e = {}
     e[4] = 1.0
     assert list(e.items()) == [(4, 1.0)]
+
+    assert sorted(dict([[1, 2], (3, 4)]).items()) == [(1, 2), (3, 4)]
+    assert sorted(dict(["ab", "cd"]).items()) ==  [('a', 'b'), ('c', 'd')]
+    assert sorted(dict(set([(1, 2.0), (3, 4.0)])).items()) == [(1, 2.0), (3, 4.0)]
 
 # def test_func_as_value(): ## FIXME: does not work
     # g = {}

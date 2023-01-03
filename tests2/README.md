@@ -34,40 +34,51 @@ It has the following commmand line options
 
 ```bash
 $ ./runtests.py --help
-usage: runtests [-h] [-c] [-f TEST] [-m] [-p] [-r] [-v] [-e] [-x]
+usage: runtests [-h] [-c] [-e] [-m] [-n] [-p] [-r TEST] [-s] [-v]
 
 runs shedskin tests
 
 options:
   -h, --help           show this help message and exit
   -c, --cmake          run tests using cmake
-  -f TEST, --fix TEST  fix test with imports
-  -m, --modified       run only most recently modified test
+  -e, --extension      include python extension tests
+  -m, --modified       run only recently modified test
+  -n, --nocleanup      do not cleanup built test
   -p, --pytest         run pytest before each test run
-  -r, --reset          reset cmake build
+  -r TEST, --run TEST  run single test
+  -s, --reset          reset cmake build
   -v, --validate       validate each testfile before running
-  -e, --extension      include extension tests
-  -x, --exec           retain test executable
 ```
 
 There are currently two ways to run tests: (1) the builtin way and (2) the cmake way. The latter is recommended if your platform is supported (linux, osx). Windows support is on the todo list.
 
 ### Builtin Method
 
-To build and run all tests in cpp-executable mode using the default testrunner:
+To build and run a single test in cpp-executable mode:
+
+```bash
+./runtests -r test_<name>.py
+```
+
+To build and run a single test in python-extension mode:
+
+```bash
+./runtests -er test_<name>.py
+```
+
+To build and run all tests in cpp-executable mode:
 
 ```bash
 ./runtests.py
 ```
 
-To build and run all tests in python-extension mode using the default testrunner:
+To build and run all tests in python-extension mode:
 
 ```bash
 ./runtests.py -e
 ```
 
-
-To build and run the most recently modified test (useful during test dev) using the default testrunner:
+To build and run the most recently modified test (useful during test dev):
 
 ```bash
 ./runtests.py -m
@@ -104,7 +115,7 @@ This is useful during test development and has the benefit of only picking up ch
 To reset or remove the cmake `build` directory and run cmake:
 
 ```bash
-./runtests.py -cr
+./runtests.py --reset -c
 ```
 
 To build and run all cmake tests as executables **and** python extensions using cmake:

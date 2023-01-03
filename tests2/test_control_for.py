@@ -18,6 +18,11 @@ def test_for_range():
         result.append(i)
     assert result == [0,1,2,3,4,5,6,7,8,9]
 
+def test_for_chain():
+    assert [x + y for x in range(2) for y in range(3)] == [0, 1, 2, 1, 2, 3]
+    assert list(x + y for x in range(3) for y in range(4)) == [0, 1, 2, 3, 1, 2, 3, 4, 2, 3, 4, 5] 
+    assert [x+y+z  for x in range(2) for y in range(2) for z in range(2)] == [0, 1, 1, 2, 1, 2, 2, 3]
+
 def test_for_tuple():
     result = []
     for i in seq:
@@ -66,6 +71,7 @@ def test_for_else():
 
 def test_all():
     test_for_range()
+    test_for_chain()
     test_for_tuple()
     test_for_fn()
     test_for_enumerate()

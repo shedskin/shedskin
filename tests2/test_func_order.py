@@ -1,53 +1,53 @@
-def escapement():
-    a = vars1()
+def f1():
+    a = g1()
     return a
 
-def vars1():
+def g1():
     return [1, 2]
 
-def escapement2():
-    bla(vars3())
+def f2():
+    f3(v3())
 
-def bla(x):
+def f3(x):
     global bye
     bye = x
 
-def vars3():
+def v3():
     return [1]
 
-def joink():
-    x = vars3()
+def j1():
+    x = v3()
 
-def transitive():
-    a = vars2()
-    hoi()
+def t1():
+    a = v2()
+    h1()
     return a
 
-def vars2():
+def v2():
     return [1, 2]
 
-def hoi():
-    a = vars2()
+def h1():
+    a = v2()
     a.append(3)
 
 
 def test_order():
-    x = escapement()
+    x = f1()
     assert x == [1,2]
 
-    y = escapement()
+    y = f1()
     assert y == [1,2]
 
     y.append(3)
     assert y == [1,2,3]
 
-    escapement2()
+    f2()
 
     bye.append(2)
     assert bye == [1,2]
 
-    joink()
-    assert transitive() == [1,2]
+    j1()
+    assert t1() == [1,2]
 
 
 def test_all():
