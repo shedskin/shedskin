@@ -1,4 +1,5 @@
 import os
+import sys
 
 class CustomError(Exception):
     pass
@@ -99,6 +100,14 @@ def test_index_error():
         error = True
     assert error
 
+def test_system_exit_error():
+    error = False
+    try:
+        sys.exit(0)
+    except SystemExit:
+        error = True
+    assert error
+
 
 # def test_type_error():
 #     error = False
@@ -147,6 +156,7 @@ def test_all():
     test_custom_error()
     test_custom_error2()
     test_custom_error3()
+    test_system_exit_error()
     # test_custom_salary_error() # FIXME: super not supported
 
 
