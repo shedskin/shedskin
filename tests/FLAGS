@@ -1,3 +1,0 @@
-CC=g++
-CCFLAGS=-O2 -std=c++17 -Wno-deprecated $(CPPFLAGS) -pipe
-LFLAGS=-lgc -lgccpp -lpcre $(LDFLAGS)

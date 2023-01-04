@@ -98,8 +98,8 @@ class TestRunner:
             files_to_clean = [f'{name}.cpp', f'{name}.hpp', compiled_product, 'Makefile']
             folders_to_clean = [f'{name}.so.dSYM']
 
-            if self.options.exec:
-                files_to_clean.remove(compiled_product)
+#            if self.options.exec:
+#                files_to_clean.remove(compiled_product)
             for f in files_to_clean:
                 if not is_nested:
                     os.remove(f)
