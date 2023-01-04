@@ -1,8 +1,5 @@
 
 
-
-
-
 def test_operators():
     a = 5
     b = 10
@@ -11,13 +8,23 @@ def test_operators():
     assert not a == b
     assert a != b
 
-def test_all_logic():
-    assert all([1, 1, 0 , 1, 0]) == False
-    assert all([True, True]) == True
+def test_logic_all():
+    assert not all([1, 1, 0 , 1, 0])
+    assert all([True, True])
+    assert all("   ")
+    assert all("")
+    assert not all([0, 1])
+    assert all([])
+    assert not all(set([0, 1]))
+    assert all({})
 
-
-def test_any_logic():
-    assert any([True, False, False]) == True
+def test_logic_any():
+    assert any([True, False, False])
+    assert any("  ")
+    assert not any("")
+    assert any([1, 2])
+    assert not any([])
+    assert any(set([1, 2]))
 
 def test_and():
     assert 1 and 1
@@ -50,8 +57,8 @@ def test_misc():
 
 def test_all():
     test_operators()
-    test_all_logic()
-    test_any_logic()
+    test_logic_all()
+    test_logic_any()
     test_or()
     # test_not_or() ## FIXME: not working
     test_and_or()

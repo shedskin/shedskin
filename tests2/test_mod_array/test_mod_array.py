@@ -17,6 +17,18 @@ def test_array2():
     assert f1.typecode == "f"
     assert f2.typecode == "d"
 
+def test_array3():
+    arr = array.array("B")
+    arr.extend(list(range(20)))
+    assert arr == array.array('B', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19])
+    assert arr[:] == array.array('B', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19])
+    assert arr[-7:] == array.array('B', [13, 14, 15, 16, 17, 18, 19])
+    assert arr[-7::2] == array.array('B', [13, 15, 17, 19])
+    assert arr[:8:3] == array.array('B', [0, 3, 6])
+    assert arr[15:1:-2] == array.array('B', [15, 13, 11, 9, 7, 5, 3])
+
+
+# def test_array4():
     # fla.fromlist(
     #     [
     #         1234,

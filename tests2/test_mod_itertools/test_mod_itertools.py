@@ -16,7 +16,6 @@ def get_count(threshold=16, n=0, step=1):
 
 def test_count():
     assert get_count(threshold=16, n=3) == [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
-
     assert get_count(threshold=-16, n=4, step=-3) == [4, 1, -2, -5, -8, -11, -14]
 
 
@@ -131,6 +130,20 @@ def test_product():
     assert list(itertools.product([.4, .42], [1, 2, 3])) == [(0.4, 1), (0.4, 2), (0.4, 3), (0.42, 1), (0.42, 2), (0.42, 3)]
     assert list(itertools.product('AB', [1, 2, 3])) == [('A', 1), ('A', 2), ('A', 3), ('B', 1), ('B', 2), ('B', 3)]
 
+def test_product_repeat():
+    assert list(itertools.product([0, 1, 2], [0, 1, 2])) == [(0, 0), (0, 1), (0, 2), (1, 0), (1, 1), (1, 2), (2, 0), (2, 1), (2, 2)]
+    assert list(itertools.product([-1, 0, 1], repeat=2)) == [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 0), (0, 1), (1, -1), (1, 0), (1, 1)]
+
+    ys = list(itertools.product(iter([1, 2, 3]), iter([4, 5]), repeat=2))
+    assert len(ys) == 36
+    assert ys[0] == (1, 4, 1, 4)
+    assert ys[35] == (3, 5, 3, 5)
+
+    xs = list(itertools.product(iter([1, 2, 3]), iter([4, 5]), iter([6, 7, 8]), repeat=2))
+    assert len(xs) == 324
+    assert xs[0] == (1, 4, 6, 1, 4, 6)
+    assert xs[323] == (3, 5, 8, 3, 5, 8)
+
 def gen():
     for ae in [1, 2, 3, 4, 5]:
         yield ae
@@ -167,6 +180,7 @@ def test_compress():
     assert list(itertools.compress([42, 32, 21, 55, 303], [True, False, True, False, True])) == [42, 21, 303]
 
 
+
 def test_all():
     test_count()
     test_cycle()
@@ -179,10 +193,10 @@ def test_all():
     test_permutations()
     test_combinations()
     test_product()
+    test_product_repeat()
     test_compress()
     # test_filterfalse() ## FIXME: this fails
     # test_zip_longest() ## FIXME: this fails
-
 
 if __name__ == '__main__':
     test_all()

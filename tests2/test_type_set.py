@@ -157,6 +157,25 @@ def test_set_binary_elem():
     assert len(a) == 1
 
 
+def test_set_augmented_assign():
+    set1 = set()
+    set1 |= set([2, 3])
+    assert sorted(set1) == [2,3]
+
+    set2 = set()
+    set2 &= set([2, 3])
+    assert sorted(set2) == []
+
+    set3 = set()
+    set3 ^= set([2, 3])
+    assert sorted(set3) == [2,3]
+
+    set4 = set()
+    set4 -= set([2, 3])
+    assert sorted(set4) == []
+
+
+
 
 def test_all():
     test_set1()
@@ -168,6 +187,7 @@ def test_all():
     test_frozenset_hash()
     test_frozenset_cmp()
     test_set_binary_elem()
+    test_set_augmented_assign()
 
 if __name__ == "__main__":
     test_all()

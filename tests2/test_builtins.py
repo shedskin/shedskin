@@ -1,33 +1,33 @@
 """
 not implemented:
 
-    # 'aiter',
-    # 'anext',
-    # 'ascii',
-    # 'breakpoint',
-    # 'callable',
-    # 'classmethod',
-    # 'compile',
-    # 'copyright',
-    # 'credits',
-    # 'delattr',
-    # 'dir',
-    # 'display',
-    # 'eval',
-    # 'exec',
-    # 'format',
-    # 'getattr',
-    # 'globals',
-    # 'hasattr',
-    # 'help',
-    #' id',
-    #' input',
-    #' locals',
-    #' memoryview',
-    # 'setattr',
-    # 'super',
-    # 'type',
-    # 'vars',
+    aiter
+    anext
+    ascii
+    breakpoint
+    callable
+    classmethod
+    compile
+    copyright
+    credits
+    delattr
+    dir
+    display
+    eval
+    exec
+    format
+    getattr
+    globals
+    hasattr
+    help
+    id
+    input
+    locals
+    memoryview
+    setattr
+    super
+    type
+    vars
 
  """
 
@@ -146,6 +146,16 @@ def test_max():
     assert max(1, 2, 3) == 3
     assert max(1, 2, 3, 4, 5) == 5
 
+    xs = [1, 2, 3]
+    neg = lambda x: -x
+    assert max(1, 2) == 2
+    assert max(1, 2, 3) == 3
+    assert max(1, 2, 3, key=neg) == 1
+    assert max(1, 2, 3, key=str) == 3
+    assert max(1, 2, key=neg) == 1
+    assert max(xs) == 3
+    assert max(xs, key=neg) == 1
+
 def test_min():
     assert min([1]) == 1
     assert min(1, 2) == 1
@@ -157,6 +167,16 @@ def test_min():
     assert min([4, 5, 9, 12]) == 4
     assert min([1.2, 3.14, 5.56, 9.31]) == 1.2
     assert min(['a', 'b', 'c']) == 'a'
+
+    xs = [1, 2, 3]
+    neg = lambda x: -x
+    assert min(1, 2) == 1
+    assert min(1, 2, 3) == 1
+    assert min(1, 2, 3, key=int) == 1
+    assert min(1, 2, 3, key=neg) == 3
+    assert min(1, 2, key=neg) == 2
+    assert min(xs) == 1
+    assert min(xs, key=neg) == 3
 
 def test_oct():
     assert oct(10) == '0o12'
