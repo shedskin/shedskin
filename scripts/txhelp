@@ -1,3 +1,0 @@
-#!/bin/bash
-python -u scripts/tx.py $* | tee tx$2.log
-read
