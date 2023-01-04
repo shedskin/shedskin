@@ -125,7 +125,7 @@ class Shedskin:
 
         ss = shedskin = cls(args.name)
 
-        ss.log.info('*** SHED SKIN Python-to-C++ Compiler 0.9.6 *** - ')
+        ss.log.info('*** SHED SKIN Python-to-C++ Compiler 0.9.7 *** - ')
         ss.log.info('Copyright 2005-2022 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)')
         ss.log.info('')
 

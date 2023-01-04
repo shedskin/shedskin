@@ -27,7 +27,7 @@ class run_tests(Command):
 
 setup(
     name='shedskin',
-    version='0.9.5',
+    version='0.9.7',
     description=description,
     url='https://shedskin.github.io/',
     scripts=['scripts/shedskin'],
