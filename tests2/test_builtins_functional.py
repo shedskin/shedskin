@@ -26,6 +26,12 @@ def test_map():
     assert list(map(lambda a, b: a * b, [1, 2, 3], [4, 5])) == [4, 10]
     assert list(map(lambda a, b, c: a + b + c, [1, 2, 3], [3, 4, 5], [5, 4, 3])) == [9, 10, 11]
 
+def test_map_nested():
+    foo3 = lambda a, b, c: "%d %.2f %s" % (a, b, c)
+    flats = (chr(ord("A") + x) for x in range(3))
+    assert list(map(foo3, range(3), map(float, list(range(1, 4))), flats)) == ['0 1.00 A', '1 2.00 B', '2 3.00 C']
+
+
 def test_all():
     test_filter()
     test_reversed()
@@ -33,6 +39,7 @@ def test_all():
     test_range()
     test_zip()
     test_map()
+    test_map_nested()
 
 if __name__ == '__main__':
     test_all()
