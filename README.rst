@@ -31,10 +31,45 @@ Installation
 
 Shed Skin depends on some others projects, such as the `Boehm garbage collector <https://www.hboehm.info/gc/>`_. Please see the `documentation <https://shedskin.readthedocs.io/en/latest/documentation.html#installation>`_ on how to install these.
 
+Comparison
+----------
+
+Some timings for the shedskin 'sieve' example (n=100000000) and several Python implementations/optimizers:
+
+::
+
+    cpython 3.10.6:   13.4 seconds
+    cpython 3.11.0:   11.4
+    nuitka 0.6.16:   11.4
+    pypy 3.9.12:     5.8
+    shedskin 0.9.6:  1.9
+
+Screenhots
+----------
+
+Some screenshots of the `example programs <https://github.com/shedskin/shedskin/tree/master/examples>`_ in action:
+
+.. raw:: html
+
+    <img src="https://raw.githubusercontent.com/shedskin/shedskin/master/examples/screenshots/harm3.png" width="400px">
+
+.. raw:: html
+
+    <img src="https://raw.githubusercontent.com/shedskin/shedskin/master/examples/screenshots/harm4.png" width="400px">
+
+.. raw:: html
+
+    <img src="https://raw.githubusercontent.com/shedskin/shedskin/master/examples/screenshots/harm2.png" width="400px">
+
+.. raw:: html
+
+    <img src="https://raw.githubusercontent.com/shedskin/shedskin/master/examples/screenshots/harm1.png" width="400px">
+
+
 Contributors
 ------------
 
-The following people have contributed to Shed Skin development so far:
+The following people have contributed to Shed Skin development:
 
 ::
 
