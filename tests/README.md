@@ -34,7 +34,7 @@ It has the following commmand line options
 
 ```bash
 $ ./runtests.py --help
-usage: runtests [-h] [-c] [-e] [-m] [-n] [-p] [-r TEST] [-s] [-v]
+usage: runtests [-h] [-c] [-e] [-k] [-m] [-n] [-p] [-r TEST] [-s] [-x]
 
 runs shedskin tests
 
@@ -42,12 +42,13 @@ options:
   -h, --help           show this help message and exit
   -c, --cmake          run tests using cmake
   -e, --extension      include python extension tests
+  -k, --check          check testfile py syntax before running
   -m, --modified       run only recently modified test
   -n, --nocleanup      do not cleanup built test
   -p, --pytest         run pytest before each test run
   -r TEST, --run TEST  run single test
   -s, --reset          reset cmake build
-  -v, --validate       validate each testfile before running
+  -x, --run-errs       run error/warning message tests
 ```
 
 There are currently two ways to run tests: (1) the builtin way and (2) the cmake way. The latter is recommended if your platform is supported (linux, osx). Windows support is on the todo list.
@@ -88,6 +89,12 @@ or
 
 ```bash
 ./runtests.py -me
+```
+
+To build and run tests for error/warning messages:
+
+```bash
+./runtests.py -x
 ```
 
 ### CMake Method
