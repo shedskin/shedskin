@@ -546,7 +546,7 @@ __ss_bool bytes::istitle()
     return True;
 }
 
-__ss_bool bytes::isascii() {
+__ss_bool bytes::__ss_isascii() {
   int i, l = size();
 
   for(i = 0; i < l; i++) {
