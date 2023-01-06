@@ -1,0 +1,57 @@
+[tool.poetry]
+name = "shedskin"
+version = "0.9.6"
+description = "Shed Skin is a restricted-Python-to-C++ compiler."
+authors = [
+	"Mark Dufour and contributors",
+]
+license = "GNU GPL version 3"
+readme = "README.rst"
+
+homepage = "https://shedskin.github.io"
+repository = "https://github.com/shedskin/shedskin"
+documentation = "https://shedskin.readthedocs.io"
+
+classifiers = [
+    "Topic :: Software Development :: Compilers",
+    "Topic :: Software Development :: Libraries :: Python Modules"
+]
+
+packages = [
+    { include = "shedskin" },
+]
+
+include = [
+	'shedskin/lib/*.cpp', 
+	'shedskin/lib/*.hpp',
+	'shedskin/lib/builtin/*.cpp', 
+	'shedskin/lib/builtin/*.hpp',
+	'shedskin/lib/*.py', 
+	'shedskin/lib/os/*.cpp', 
+	'shedskin/lib/os/*.hpp', 
+	'shedskin/lib/os/*.py',
+	'shedskin/FLAGS*', 
+	'shedskin/illegal', 
+	'shedskin/templates/cpp/*.cpp.tpl',
+]
+
+exclude = ["tests", "examples", "docs", "scripts"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+Jinja2 = "^3.1.2"
+blessings = "^1.7"
+progressbar2 = "^4.2.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.2.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+shedskin = 'shedskin.__main__:run'
+
+[tool.poetry.urls]
+"Bug Tracker" = "https://github.com/shedskin/shedskin/issues"
