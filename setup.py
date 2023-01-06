@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from distutils.core import setup, Command
 import os
@@ -22,7 +22,7 @@ class run_tests(Command):
         self.tests_dir = os.path.sep.join(ss_dir)
     def run(self):
         os.chdir(self.tests_dir)
-        os.system('%s ./run.py' % (sys.executable, ))
+        os.system('%s ./runtests.py' % sys.executable)
         os.chdir(self.cwd)
 
 setup(
