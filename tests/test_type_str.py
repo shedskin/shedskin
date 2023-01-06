@@ -20,7 +20,8 @@ def test_count():
     assert "hoooi".count("o", 0, -2) == 2
 
 
-def test_encode(): pass
+# def test_encode():
+#     assert 'astring'.encode('utf-8') == b'astring'
 
 def test_endswith():
     assert 'bla'.endswith('la')
@@ -299,7 +300,7 @@ def test_all():
     test_casefold()
     test_center()
     test_count()
-    test_encode()
+    # test_encode()
     test_endswith()
     test_expandtabs()
     test_find()
