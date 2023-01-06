@@ -138,7 +138,7 @@ __ss_bool str::isprintable() {
   return True;
 }
 
-__ss_bool str::isascii() {
+__ss_bool str::__ss_isascii() {
   int i, l = size();
 
   for(i = 0; i < l; i++) {

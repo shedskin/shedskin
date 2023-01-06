@@ -32,6 +32,7 @@ CPU_XOR
 CPU_XOR_S
 CPU_ZERO
 CPU_ZERO_S
+constexpr
 default
 delete
 do
@@ -81,6 +82,7 @@ INADDR_LOOPBACK
 INADDR_NONE
 inline
 int
+isascii
 IP_TOS
 IP_TTL
 long

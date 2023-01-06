@@ -2,7 +2,7 @@
 
 /* mod helpers */
 
-#if defined(WIN32) || defined(__sun)
+#if defined(_WIN32) || defined(WIN32) || defined(__sun)
 #   if defined (_MSC_VER)
 #       define va_copy(dest, src) ((void)((dest) = (src)))
 #   endif
