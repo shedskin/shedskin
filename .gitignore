@@ -3,6 +3,7 @@ __pycache__
 .pytest_cache
 dist/
 build/
+.tox
 *.pyc
 *.pyo
 *.ppm
