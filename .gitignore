@@ -1,6 +1,7 @@
 __pycache__
 .DS_Store
 .pytest_cache
+dist/
 build/
 *.pyc
 *.pyo
@@ -9,7 +10,7 @@ build/
 *.png
 *.tga
 #*.txt
-*.ini
+tests/**/*.ini
 tests/**/*.csv
 tests/**/*.?pp
 *.so
