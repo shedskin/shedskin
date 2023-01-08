@@ -22,20 +22,28 @@ packages = [
 ]
 
 include = [
-	'shedskin/lib/*.cpp', 
-	'shedskin/lib/*.hpp',
-	'shedskin/lib/builtin/*.cpp', 
-	'shedskin/lib/builtin/*.hpp',
-	'shedskin/lib/*.py', 
-	'shedskin/lib/os/*.cpp', 
-	'shedskin/lib/os/*.hpp', 
-	'shedskin/lib/os/*.py',
-	'shedskin/FLAGS*', 
-	'shedskin/illegal', 
-	'shedskin/templates/cpp/*.cpp.tpl',
-]
+    { path = "shedskin/lib/*.cpp", format = ["sdist", "wheel"] },
+    { path = "shedskin/lib/*.hpp", format = ["sdist", "wheel"] },
+    { path = "shedskin/lib/builtin/*.cpp", format = ["sdist", "wheel"] },
+    { path = "shedskin/lib/builtin/*.hpp", format = ["sdist", "wheel"] },
+    { path = "shedskin/lib/*.py", format = ["sdist", "wheel"] },
+    { path = "shedskin/lib/os/*.cpp", format = ["sdist", "wheel"] },
+    { path = "shedskin/lib/os/*.hpp", format = ["sdist", "wheel"] },
+    { path = "shedskin/lib/os/*.py", format = ["sdist", "wheel"] },
+    { path = "shedskin/FLAGS*", format = ["sdist", "wheel"] },
+    { path = "shedskin/illegal", format = ["sdist", "wheel"] },
+    { path = "shedskin/templates/cpp/*.cpp.tpl", format = ["sdist", "wheel"] },
 
-exclude = ["tests", "examples", "docs", "scripts"]
+	{ path = "LICENSE", format = ["sdist"] },
+    { path = "pyproject.toml", format = ["sdist"] },
+    { path = "requirements.txt", format = ["sdist"] },
+    { path = "setup.py", format = ["sdist"] },
+    { path = "tox.ini", format = ["sdist"] },
+
+    { path = "doc", format = ["sdist"] },
+    { path = "examples", format = ["sdist"] },
+    { path = "tests", format = ["sdist"] },
+]
 
 [tool.poetry.dependencies]
 python = "^3.8"
