@@ -1,5 +1,6 @@
 .. image:: https://img.shields.io/travis/shedskin/shedskin.svg
     :target: https://travis-ci.org/shedskin/shedskin
+
 .. image:: http://img.shields.io/badge/benchmarked%20by-asv-green.svg?style=flat
     :target: http://shedskin.github.io/benchmarks
 
@@ -12,24 +13,29 @@ Besides the typing restriction, programs cannot freely use the Python standard l
 
 For a set of `75 non-trivial programs <https://github.com/shedskin/shedskin/tree/master/examples>`_ (at over 25,000 lines in total (sloccount)), measurements show a typical speedup of 2-200 times over CPython.
 
+
 Usage
 -----
 
 ::
+    shedskin test.py
+    make
+    ./test
 
-  shedskin test.py
-  make
-  ./test
 
 Restrictions
 ------------
 
 Shed Skin only supports a restricted subset of Python, so one should not expect a given program to compile without any changes, if possible at all. See the `documentation <https://shedskin.readthedocs.io/>`_ for an overview of the limitations.
 
+
+
 Installation
 ------------
 
-Shed Skin depends on some others projects, such as the `Boehm garbage collector <https://www.hboehm.info/gc/>`_. Please see the `documentation <https://shedskin.readthedocs.io/en/latest/documentation.html#installation>`_ on how to install these.
+Shed Skin depends on some others projects, such as the `Boehm garbage collector <https://www.hboehm.info/gc/>`_. Please see the `documentation`_ on how to install these.
+
+
 
 Comparison
 ----------
@@ -49,21 +55,17 @@ Screenhots
 
 Some screenshots of the `example programs <https://github.com/shedskin/shedskin/tree/master/examples>`_ in action:
 
-.. raw:: html
+.. image:: https://raw.githubusercontent.com/shedskin/shedskin/master/examples/screenshots/harm3.png
+  :width: 400
 
-    <img src="https://raw.githubusercontent.com/shedskin/shedskin/master/examples/screenshots/harm3.png" width="400px">
+.. image:: https://raw.githubusercontent.com/shedskin/shedskin/master/examples/screenshots/harm4.png
+  :width: 400
 
-.. raw:: html
+.. image:: https://raw.githubusercontent.com/shedskin/shedskin/master/examples/screenshots/harm2.png
+  :width: 400
 
-    <img src="https://raw.githubusercontent.com/shedskin/shedskin/master/examples/screenshots/harm4.png" width="400px">
-
-.. raw:: html
-
-    <img src="https://raw.githubusercontent.com/shedskin/shedskin/master/examples/screenshots/harm2.png" width="400px">
-
-.. raw:: html
-
-    <img src="https://raw.githubusercontent.com/shedskin/shedskin/master/examples/screenshots/harm1.png" width="400px">
+.. image:: https://raw.githubusercontent.com/shedskin/shedskin/master/examples/screenshots/harm1.png
+  :width: 400
 
 
 Contributors
@@ -124,3 +126,6 @@ The following people have contributed to Shed Skin development:
   Jason Ye
   Liu Zhenhai
   Joris van Zwieten
+
+
+
