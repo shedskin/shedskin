@@ -264,7 +264,7 @@ Shedskin 0.9.4 is the latest version to support Windows out-of-the-box. With 0.9
 
 It is possible to use Shedskin master under Windows, but it requires some manual steps.
 
-First, install msys64 and mingw64. Then start an msys shell, and install the shedskin dependencies:
+First, install msys64 and mingw64. Then start a mingw32, mingw64 or ucrt64 shell, and install the shedskin dependencies:
 
 ::
 
