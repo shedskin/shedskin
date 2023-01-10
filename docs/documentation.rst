@@ -278,7 +278,7 @@ First, install msys64 and mingw64. Then start a mingw32, mingw64 or ucrt64 shell
   pip install blessings
   pip install jinja2
 
-It should now be possible to use Shedskin from the msys shell.
+It should now be possible to use Shedskin from the shell.
 
 Compiling a standalone program
 ------------------------------
