@@ -230,29 +230,6 @@ To install the UNIX tarball on an **OSX** system, take the following steps:
 
   sudo python setup.py install
 
-Windows
-~~~~~~~
-
-Shedskin 0.9.4 is the latest version to support Windows out-of-the-box. With 0.9.7, we hope to add easy Windows support again.
-
-It is possible to use Shedskin master under Windows, but it requires some manual steps.
-
-First, install msys64 and mingw64. Then start an msys shell, and install the shedskin dependencies:
-
-::
-
-  pacman -S libgc
-  pacman -S libgc-devel
-  pacman -S libpcre
-  pacman -S pcre-devel
-  pacman -S python-devel
-  pacman -S python-pip
-  pip install progressbar
-  pip install blessings
-  pip install jinja2
-
-It should now be possible to use Shedskin from the msys shell.
-
 Dependencies
 ............
 
@@ -279,6 +256,29 @@ If the PCRE library is not available via your package manager, the following is 
   ./configure --prefix=/usr/local
   make
   sudo make install
+
+Windows
+~~~~~~~
+
+Shedskin 0.9.4 is the latest version to support Windows out-of-the-box. With 0.9.7, we hope to add easy Windows support again.
+
+It is possible to use Shedskin master under Windows, but it requires some manual steps.
+
+First, install msys64 and mingw64. Then start an msys shell, and install the shedskin dependencies:
+
+::
+
+  pacman -S libgc
+  pacman -S libgc-devel
+  pacman -S libpcre
+  pacman -S pcre-devel
+  pacman -S python-devel
+  pacman -S python-pip
+  pip install progressbar
+  pip install blessings
+  pip install jinja2
+
+It should now be possible to use Shedskin from the msys shell.
 
 Compiling a standalone program
 ------------------------------
