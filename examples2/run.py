@@ -1,72 +1,5 @@
 #!/usr/bin/env python3
-
 """shedskin example runner
-
-There are currently two ways to run tests:
-
-(1) the builtin way and
-(2) the cmake way.
-
-## Builtin Method
-
-To build and run a single example in cpp-executable mode:
-
-    ./run -r <name>.py
-
-To build and run a single example in python-extension mode:
-
-    ./run -er <name>.py
-
-To build and run all examples in cpp-executable mode:
-
-    ./run.py
-
-To build and run all examples in python-extension mode:
-
-    ./run.py -e
-
-To build and run the most recently modified example (useful during example dev):
-
-    ./run.py -m
-
-    or
-
-    ./run.py -me
-
-
-## CMake Method
-
-To build and run all examples as executables using cmake:
-
-    ./run.py -c
-
-If the above command is run for the first time, it will run the equivalent of the following:
-
-    mkdir build && cd build && cmake .. && cmake --build .
-
-If it is run subsequently, it will run the equivalent of the following:
-
-    cd build && cmake .. && cmake --build .
-
-This is useful during example development and has the benefit of only picking up
-changes to modified examples and will not re-translate or re-compile unchanged examples.
-
-To reset or remove the cmake `build` directory and run cmake:
-
-    ./run.py --reset -c
-
-To build and run all cmake examples as executables **and** python extensions using cmake:
-
-    ./run.py -ce
-
-This will build/run an executable and python extension example for each example in the directory,
-basically the equivalent of the following (if it is run the first time):
-
-    mkdir build && cd build && cmake .. -DTEST_EXT=ON && cmake --build .
-
-If it is run subsequently, it will run the equivalent of the following:
-
-    cd build && cmake .. && cmake --build .
 """
 
 import argparse
@@ -89,13 +22,38 @@ RED_BOLD = "\x1b[31;1m"
 RESET = "\x1b[0m"
 
 
+skiplist = [
+    'c64',
+    'gs',
+    'mastermind',
+    'minilight',
+    'msp_ss',
+    'pylot',
+    'rsync',
+    'sha',
+    'tarsalzp',
+    'tonyjpegdecoder',
+    'webserver',
+
+    'testdata',
+]
+
+
+
 class ExampleRunner:
     """shedskin example runner"""
 
     def __init__(self, options=None):
         self.options = options
         self.build_dir = Path('build')
-        self.tests = sorted(glob.glob("./test_*/test_*.py", recursive=True))
+        self.examples = self.get_examples()
+
+    def get_examples(self):
+        return [d for d in Path.cwd().iterdir() if all([
+            d.is_dir(), 
+            d.stem not in skiplist, 
+            not d.stem.startswith('_')
+        ])]
 
     def check_output(self, args, cwd='.', nosplit=False):
         """run command and return output"""
@@ -105,8 +63,6 @@ class ExampleRunner:
             stderr=subprocess.STDOUT,
             cwd=cwd,
         )
-
-
 
     def run_step(self, cmd, cwd='.', nosplit=False, run=False):
         """run command step in specified directory"""
@@ -124,7 +80,6 @@ class ExampleRunner:
                 print(f"\n{RED}ERROR{RESET}: '{cmd}' returns {e.returncode}")
                 print(e.output.decode('utf8'))
                 raise
-
 
     def check(self, path):
         """check file for syntax errors"""
@@ -227,19 +182,9 @@ class ExampleRunner:
             if os.path.exists('Makefile'):
                 os.remove('Makefile')
         else:
-            print(f'Running {CYAN}shedskin{RESET} tests:')
-            if self.options.modified: # run only most recently modified test
-                max_mtime = 0
-                most_recent_test = None
-                for test in self.tests:
-                    mtime = os.stat(os.path.abspath(test)).st_mtime
-                    if mtime > max_mtime:
-                        max_mtime = mtime
-                        most_recent_test = test
-                self.run_example(most_recent_test)
-            else:
-                for test in self.tests:
-                    self.run_example(test)
+            print(f'Running {CYAN}shedskin{RESET} examples:')
+            for example in self.examples:
+                self.run_example(example)
         et = time.time()
         elapsed_time = time.strftime("%H:%M:%S", time.gmtime(et - st))
         print(f'Total time: {YELLOW}{elapsed_time}{RESET}\n')
@@ -254,7 +199,6 @@ class ExampleRunner:
         opt('-c', '--cmake',     help='run examples using cmake', action='store_true')
         opt('-e', '--extension', help='include python extensions', action='store_true')
         opt('-k', '--check',     help='check file.py syntax before running', action='store_true')
-        opt('-m', '--modified',  help='run only recently modified example', action='store_true')
         opt('-n', '--nocleanup', help='do not cleanup built example', action='store_true')
         opt('-r', '--run',       help='run single example', metavar="EXAMPLE")
         opt('-s', '--reset',     help='reset cmake build', action='store_true')
