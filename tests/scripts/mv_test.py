@@ -26,7 +26,7 @@ def get_imports(path):
     return sorted(list(modules))
 
 def move_to_dir(testfile):
-    modules = self.get_imports(testfile)
+    modules = get_imports(testfile)
     path = Path(testfile)
     if path.exists() and path.is_file():
         os.makedirs(path.stem, exist_ok=True)

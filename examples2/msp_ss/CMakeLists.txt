@@ -1,0 +1,9 @@
+set(modules
+    getopt
+    io
+    serial
+    struct
+    sys
+    time
+)
+add_shedskin_example("${modules}")

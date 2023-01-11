@@ -1,0 +1,15 @@
+set(modules
+    array
+    fnmatch
+    getopt
+    math
+    os
+    os.path
+    random
+    re
+    stat
+    string
+    sys
+    time
+)
+add_shedskin_example("${modules}")
