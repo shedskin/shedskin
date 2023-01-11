@@ -55,16 +55,16 @@ Screenhots
 
 Some screenshots of the `example programs <https://github.com/shedskin/shedskin/tree/master/examples>`_ in action:
 
-.. image:: https://raw.githubusercontent.com/shedskin/shedskin/master/examples/screenshots/harm3.png
+.. image:: https://raw.githubusercontent.com/shedskin/shedskin/master/docs/assets/screenshots/harm3.png
   :width: 400
 
-.. image:: https://raw.githubusercontent.com/shedskin/shedskin/master/examples/screenshots/harm4.png
+.. image:: https://raw.githubusercontent.com/shedskin/shedskin/master/docs/assets/screenshots/harm4.png
   :width: 400
 
-.. image:: https://raw.githubusercontent.com/shedskin/shedskin/master/examples/screenshots/harm2.png
+.. image:: https://raw.githubusercontent.com/shedskin/shedskin/master/docs/assets/screenshots/harm2.png
   :width: 400
 
-.. image:: https://raw.githubusercontent.com/shedskin/shedskin/master/examples/screenshots/harm1.png
+.. image:: https://raw.githubusercontent.com/shedskin/shedskin/master/docs/assets/screenshots/harm1.png
   :width: 400
 
 

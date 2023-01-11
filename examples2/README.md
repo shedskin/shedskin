@@ -1,11 +1,86 @@
+# Shedskin Examples
+
 75 programs that work with Shed Skin 0.9.6 (python 3.8+).
 
+## Performance Tips
 shedskin -b (disable index-out-of-bounds checking) often improves performance. see the documentation for more performance tips:
 
 https://shedskin.readthedocs.io/
 
+
+## Test Runner
+
+There are currently two ways to run tests:
+
+(1) the builtin way and
+(2) the cmake way.
+
+## Builtin Method
+
+To build and run a single example in cpp-executable mode:
+
+    ./run -r <name>.py
+
+To build and run a single example in python-extension mode:
+
+    ./run -er <name>.py
+
+To build and run all examples in cpp-executable mode:
+
+    ./run.py
+
+To build and run all examples in python-extension mode:
+
+    ./run.py -e
+
+To build and run the most recently modified example (useful during example dev):
+
+    ./run.py -m
+    or
+    ./run.py -me
+
+
+## CMake Method
+
+To build and run all examples as executables using cmake:
+
+    ./run.py -c
+
+If the above command is run for the first time, it will run the equivalent of the following:
+
+    mkdir build && cd build && cmake .. && cmake --build .
+
+If it is run subsequently, it will run the equivalent of the following:
+
+    cd build && cmake .. && cmake --build .
+
+This is useful during example development and has the benefit of only picking up
+changes to modified examples and will not re-translate or re-compile unchanged examples.
+
+To reset or remove the cmake `build` directory and run cmake:
+
+    ./run.py --reset -c
+
+To build and run all cmake examples as executables **and** python extensions using cmake:
+
+    ./run.py -ce
+
+This will build/run an executable and python extension example for each example in the directory,
+basically the equivalent of the following (if it is run the first time):
+
+    mkdir build && cd build && cmake .. -DTEST_EXT=ON && cmake --build .
+
+If it is run subsequently, it will run the equivalent of the following:
+
+    cd build && cmake .. && cmake --build .
+
+
+
+## Overview
+
 if you know of another interesting test case, please mention it in the shedskin discussion group or to: mark.dufour@gmail.com.
 
+```
 lines  name                 description                     notes
 (sloccount)
 
@@ -99,3 +174,5 @@ lines  name                 description                     notes
     39 voronoi.py           textual voronoi
    526 voronoi2.py          voronoi algoritm
    112 WebServer.py         simple web server
+```
+
