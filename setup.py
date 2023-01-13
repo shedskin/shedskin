@@ -1,42 +1,52 @@
-#!/usr/bin/env python3
+from setuptools import setup, Command
+import pathlib
 
-from distutils.core import setup, Command
-import os
-import sys
+root = pathlib.Path(__file__).parent.resolve()
 
-with open('README.rst') as readme:
-    description = [
-        line.strip() for line in readme.readlines()
-        if line.startswith('Shed Skin is an')][0]
-
-
-class run_tests(Command):
-    description = "run testsuite"
-    user_options = []
-    def initialize_options(self):
-        pass
-    def finalize_options(self):
-        self.cwd = os.getcwd()
-        ss_dir = os.path.abspath(__file__).split(os.path.sep)[:-1]
-        ss_dir.append('tests')
-        self.tests_dir = os.path.sep.join(ss_dir)
-    def run(self):
-        os.chdir(self.tests_dir)
-        os.system('%s ./runtests.py' % sys.executable)
-        os.chdir(self.cwd)
+LONG_DESCRIPTION = (root / "README.rst").read_text(
+    encoding="utf-8")
 
 setup(
-    name='shedskin',
-    version='0.9.7',
-    description=description,
-    url='https://shedskin.github.io/',
-    scripts=['scripts/shedskin'],
-    cmdclass={'test': run_tests},
-    install_requires=['blessings', 'progressbar2', 'jinja2'],
+    name="shedskin",
+    version="0.9.6",
+    description="Shed Skin is a restricted-Python-to-C++ compiler.",
+    long_description=LONG_DESCRIPTION,
+    long_description_content_type="text/x-rst",
+    url="https://shedskin.github.io/",
+    author="Mark Dufour and contributors",
+    classifiers=[
+        "Development Status :: 4 - Beta",
+        "Intended Audience :: Developers",
+        "Topic :: Software Development :: Compilers",
+        "Topic :: Software Development :: Build Tools",
+        "Topic :: Software Development :: Libraries :: Python Modules",
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+        "Programming Language :: Python :: 3",
+    ],
+    keywords="compiler, translator, cpp, extension",
     packages=['shedskin'],
+    python_requires=">=3.8, <4",
+    install_requires=["jinja2", "progressbar2", "blessings"],
+    extras_require={
+        # "dev": ["check-manifest"],
+        "test": ["pytest", "tox"],
+    },
     package_data={
         'shedskin': [
             'lib/*.cpp', 'lib/*.hpp', 'lib/builtin/*.cpp', 'lib/builtin/*.hpp',
             'lib/*.py', 'lib/os/*.cpp', 'lib/os/*.hpp', 'lib/os/*.py',
-            'FLAGS*', 'illegal', 'templates/cpp/*.cpp.tpl']},
+            'FLAGS*', 'illegal', 'templates/cpp/*.cpp.tpl'
+        ]
+    },
+    entry_points={
+        "console_scripts": [
+            "shedskin=shedskin.__main__:run",
+        ],
+    },
+    project_urls={
+        "Homepage": "https://shedskin.github.io",
+        "Bug Reports": "https://github.com/shedskin/shedskin/issues",
+        "Source": "https://github.com/shedskin/shedskin",
+        "Documentation": "https://shedskin.readthedocs.io",
+    },
 )

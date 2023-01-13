@@ -1,2 +1,9 @@
-recursive-include tests *.py *.csv
-recursive-include tests hoppa hopsakee humba life.txt lop uuf250-010.cnf words
+include *.in
+include *.py
+include *.txt
+include *.toml
+include tox.ini
+graft docs
+graft examples
+graft scripts
+graft tests
