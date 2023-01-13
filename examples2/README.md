@@ -2,83 +2,12 @@
 
 75 programs that work with Shed Skin 0.9.6 (python 3.8+).
 
-## Performance Tips
-shedskin -b (disable index-out-of-bounds checking) often improves performance. see the documentation for more performance tips:
 
-https://shedskin.readthedocs.io/
+## Example Overview
 
+if you know of another interesting test case, please mention it in the shedskin discussion group or post an [issue](https://github.com/shedskin/shedskin/issues/new/choose) on the [Shedskin repo](https://github.com/shedskin/shedskin).
 
-## Test Runner
-
-There are currently two ways to run tests:
-
-(1) the builtin way and
-(2) the cmake way.
-
-## Builtin Method
-
-To build and run a single example in cpp-executable mode:
-
-    ./run -r <name>.py
-
-To build and run a single example in python-extension mode:
-
-    ./run -er <name>.py
-
-To build and run all examples in cpp-executable mode:
-
-    ./run.py
-
-To build and run all examples in python-extension mode:
-
-    ./run.py -e
-
-To build and run the most recently modified example (useful during example dev):
-
-    ./run.py -m
-    or
-    ./run.py -me
-
-
-## CMake Method
-
-To build and run all examples as executables using cmake:
-
-    ./run.py -c
-
-If the above command is run for the first time, it will run the equivalent of the following:
-
-    mkdir build && cd build && cmake .. && cmake --build .
-
-If it is run subsequently, it will run the equivalent of the following:
-
-    cd build && cmake .. && cmake --build .
-
-This is useful during example development and has the benefit of only picking up
-changes to modified examples and will not re-translate or re-compile unchanged examples.
-
-To reset or remove the cmake `build` directory and run cmake:
-
-    ./run.py --reset -c
-
-To build and run all cmake examples as executables **and** python extensions using cmake:
-
-    ./run.py -ce
-
-This will build/run an executable and python extension example for each example in the directory,
-basically the equivalent of the following (if it is run the first time):
-
-    mkdir build && cd build && cmake .. -DTEST_EXT=ON && cmake --build .
-
-If it is run subsequently, it will run the equivalent of the following:
-
-    cd build && cmake .. && cmake --build .
-
-
-
-## Overview
-
-if you know of another interesting test case, please mention it in the shedskin discussion group or to: mark.dufour@gmail.com.
+The examples below assume you are inside the respective example folder.
 
 ```
 lines  name                 description                     notes
@@ -175,4 +104,89 @@ lines  name                 description                     notes
    526 voronoi2.py          voronoi algoritm
    112 WebServer.py         simple web server
 ```
+
+
+## Running the Examples
+
+
+### A. Build/Run Examples Manually
+
+There are currently manual two ways to run examples:
+
+1. **The Builtin way**
+
+   This uses shedskin builtin `Makefile` generation capability. 
+
+   For individual examples, basically `cd` into the example's directory,
+   then use the typical `shedskin` workflow as below:
+
+   ```
+   shedskin [options] <module> -> translated .cpp and .hpp files
+                               -> Makefile
+
+   make                        -> executable or python extension
+   ```
+
+   See the [Example Overview](#example-overview) section below for guidance
+
+2. **The Cmake way**
+
+   It is also possible to build all of the examples using `cmake`. 
+   Type the following while you are in the examples directory:
+
+   ```bash
+   mkdir build && cd build && cmake .. && cmake --build .
+   ```
+
+### B. Example Runner
+
+An example `./run.py` script in the `examples` directory is also provided 
+to automate the manual build/run processes given above.
+
+#### 1. Example Runner Builtin Method
+
+To build and run a single example in cpp-executable mode:
+
+    ./run -r <name>.py
+
+To build and run a single example in python-extension mode:
+
+    ./run -er <name>.py
+
+To build and run all examples in cpp-executable mode:
+
+    ./run.py
+
+To build and run all examples in python-extension mode:
+
+    ./run.py -e
+
+### 2. Example Runner CMake Method
+
+To build and run all examples using cmake:
+
+    ./run.py -c
+
+If the above command is run for the first time, it will run the equivalent of the following:
+
+    mkdir build && cd build && cmake .. && cmake --build .
+
+If it is run subsequently, it will run the equivalent of the following:
+
+    cd build && cmake .. && cmake --build .
+
+This is useful during example development and has the benefit of only picking up
+changes to modified examples and will not re-translate or re-compile unchanged examples.
+
+To reset or remove the cmake `build` directory and run cmake:
+
+    ./run.py --reset -c
+
+
+## Performance Tips
+
+`shedskin -b` (disable index-out-of-bounds checking) often improves performance. see the documentation for more performance tips:
+
+https://shedskin.readthedocs.io/
+
 
