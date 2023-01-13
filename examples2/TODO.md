@@ -5,7 +5,7 @@
 Is a special case where the package is translated
 
 
-### add_subdirectory(c64)
+### c64
 
 ```bash
 cd c64
@@ -23,7 +23,7 @@ Compiles successfully with above changes but cannot run `c64_main.py` because ca
 conclusion: this is LINUX only.
 
 
-### add_subdirectory(gs)
+### gs
 
 ```bash
 cd Gh0stenstein
@@ -37,7 +37,7 @@ Compiles successfully with above changes but cannot run `gs_main.py` because can
 conclusion: this is LINUX only.
 
 
-### add_subdirectory(mastermind) # nested ext
+### mastermind
 
 ```bash
 cd mm
@@ -47,7 +47,7 @@ python3 -m shedskin -e mastermind && make && python3 -c "import mastermind; asse
 compilation and running works
 
 
-### add_subdirectory(pylot) # nested unbounded ext
+### pylot
 
 ```bash
 cd pylot
