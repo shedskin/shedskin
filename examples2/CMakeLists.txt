@@ -82,7 +82,7 @@ add_subdirectory(mao)
 add_subdirectory(mastermind2)
 add_subdirectory(minilight) # nested exe
 add_subdirectory(minpng)
-# add_subdirectory(msp_ss) # requires serial
+add_subdirectory(msp_ss) # requires serial
 add_subdirectory(mwmatching)
 add_subdirectory(nbody)
 add_subdirectory(neural1)
@@ -100,12 +100,12 @@ add_subdirectory(pystone)
 add_subdirectory(quameon) # deep exe
 add_subdirectory(rdb)
 add_subdirectory(richards)
-# add_subdirectory(rsync) # requires hashlib
+add_subdirectory(rsync) # requires hashlib
 add_subdirectory(rubik)
 add_subdirectory(rubik2)
 add_subdirectory(sat)
 add_subdirectory(score4)
-# add_subdirectory(sha) # requires hashlib
+add_subdirectory(sha) # requires hashlib
 add_subdirectory(sieve)
 add_subdirectory(sokoban)
 add_subdirectory(solitaire)
@@ -116,10 +116,10 @@ add_subdirectory(sudoku3)
 add_subdirectory(sudoku4)
 add_subdirectory(sudoku5)
 add_subdirectory(sunfish)
-# add_subdirectory(tarsalzp)
+add_subdirectory(tarsalzp)
 add_subdirectory(tictactoe)
 add_subdirectory(timsort)
-# add_subdirectory(tonyjpeqdecoder)
+add_subdirectory(tonyjpegdecoder)
 add_subdirectory(voronoi)
 add_subdirectory(voronoi2)
 if(LINUX)

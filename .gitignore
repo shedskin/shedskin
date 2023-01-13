@@ -3,18 +3,21 @@
 
 # python related
 __pycache__
-*.pyc
-*.pyo
+*.py[co]
 
-*.egg-info
 
 # build related
 *.so
 *.so.dSYM
+*.[hc]pp
 
-# exclude setup.py build or poetry build detritus
+# exception for lib/ folders
+!lib/
+
+# exclude build related files and folders
 build/
 dist/
+*.egg-info/
 
 Makefile*
 poetry.lock
@@ -24,9 +27,8 @@ test
 test.*
 
 # exclude tests detritus
-.tox
-.pytest_cache
-
+.tox/
+.pytest_cache/
 
 # shedsksin specific
 *.ss.py
@@ -35,4 +37,3 @@ shedskin/FLAGS
 shedskin/lib/array.py
 shedskin/lib/hashlib.py
 shedskin/lib/serial.py
-
