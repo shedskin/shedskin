@@ -2,6 +2,15 @@
 
 75 programs that work with Shed Skin 0.9.6 (python 3.8+).
 
+## examples2 folder
+
+This is an alternative re-organization of the `examples` folder to provide automated builds
+via an example runner using both the builtin method and cmake. Also each example has it's own folder and dependent files.
+
+It is currently a work-in-progress with only a few remaining examples which are not yet converted.
+See the `TODO.md` file in this folder for remaining examples to be converted (4 as of this writing).
+
+The idea is for `examples2` to potentially replace the current `examples` folder once all examples are converted to the new formats and build infrastructure.
 
 ## Example Overview
 
