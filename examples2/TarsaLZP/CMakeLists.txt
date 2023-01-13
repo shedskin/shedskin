@@ -1,0 +1,27 @@
+set(modules
+    array
+    sys
+    time
+)
+
+set(app_modules
+    com/__init__
+    com/github/__init__
+    com/github/tarsa/__init__
+    com/github/tarsa/tarsalzp/Main
+    com/github/tarsa/tarsalzp/Options
+    com/github/tarsa/tarsalzp/__init__
+    com/github/tarsa/tarsalzp/core/Coder
+    com/github/tarsa/tarsalzp/core/Common
+    com/github/tarsa/tarsalzp/core/Decoder
+    com/github/tarsa/tarsalzp/core/Encoder
+    com/github/tarsa/tarsalzp/core/FsmGenerator
+    com/github/tarsa/tarsalzp/core/Lg2
+    com/github/tarsa/tarsalzp/core/__init__
+    com/github/tarsa/tarsalzp/prelude/Long
+    com/github/tarsa/tarsalzp/prelude/Streams
+    com/github/tarsa/tarsalzp/prelude/__init__
+)
+
+
+add_shedskin_example("${modules}" "${app_modules}")

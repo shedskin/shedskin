@@ -124,9 +124,14 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
     def get_output_file(self, ext='.cpp', mode='w'):
         output_file = self.output_base + ext
+        parentdir = os.path.dirname(self.gx.module_path)
         if self.gx.outputdir:
-            output_file = os.path.abspath(os.path.join(
-                self.gx.outputdir, os.path.basename(output_file)))
+            output_file = os.path.join(
+                self.gx.outputdir,
+                os.path.relpath(output_file, parentdir),
+            )
+            outputdir = os.path.dirname(output_file)
+            os.makedirs(outputdir, exist_ok=True)
         return open(output_file, mode)
 
     # XXX this is too magical 

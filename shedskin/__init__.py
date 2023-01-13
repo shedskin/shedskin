@@ -71,6 +71,7 @@ class Shedskin:
         if not os.path.isfile(name):
             self.log.error("no such file: '%s'", name)
             sys.exit(1)
+        self.gx.module_path = os.path.abspath(name)
         return os.path.splitext(name)[0]
 
     def start(self):
