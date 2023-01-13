@@ -6,13 +6,10 @@ __pycache__
 *.py[co]
 
 
-# build related
+# build related (exception for lib/ folders)
 *.so
 *.so.dSYM
-*.[hc]pp
-
-# exception for lib/ folders
-!lib/
+*.[hc]pp !lib/*.[hc]pp
 
 # exclude build related files and folders
 build/
