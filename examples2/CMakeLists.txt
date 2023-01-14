@@ -9,7 +9,7 @@ set(DEBUG off)
 set(SHEDSKIN ${PROJECT_SOURCE_DIR}/../../shedskin)
 set(SHEDSKIN_LIB ${SHEDSKIN}/shedskin/lib)
 
-set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/_cmake)
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 option(AS_EXT "build/run python extension examples")
 option(NO_BOUNDS "enable no bounds checking")
@@ -57,7 +57,7 @@ add_subdirectory(astar) # ext
 add_subdirectory(bh)
 add_subdirectory(block)
 add_subdirectory(brainfuck)
-# add_subdirectory(c64)
+add_subdirectory(c64)
 add_subdirectory(chaos)
 add_subdirectory(chess)
 add_subdirectory(chull)
@@ -68,7 +68,7 @@ add_subdirectory(fysphun) # ext
 add_subdirectory(genetic)
 add_subdirectory(genetic2)
 add_subdirectory(go)
-# add_subdirectory(gs)
+add_subdirectory(gs)
 add_subdirectory(hq2x)
 add_subdirectory(kanoodle)
 add_subdirectory(kmeanspp)
@@ -78,7 +78,7 @@ add_subdirectory(loop)
 add_subdirectory(mandelbrot)
 add_subdirectory(mandelbrot2) # ext
 add_subdirectory(mao)
-# add_subdirectory(mastermind) # nested ext
+add_subdirectory(mastermind) # nested ext
 add_subdirectory(mastermind2)
 add_subdirectory(minilight) # nested exe
 add_subdirectory(minpng)
@@ -95,7 +95,7 @@ add_subdirectory(plcfrs)
 add_subdirectory(pygasus) # ext no-bounds
 add_subdirectory(pygmy)
 add_subdirectory(pylife) # ext
-# add_subdirectory(pylot) # nested exe
+add_subdirectory(pylot) # nested exe
 add_subdirectory(pystone)
 add_subdirectory(quameon) # deep exe
 add_subdirectory(rdb)
