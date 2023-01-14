@@ -122,8 +122,10 @@ add_subdirectory(timsort)
 add_subdirectory(tonyjpegdecoder)
 add_subdirectory(voronoi)
 add_subdirectory(voronoi2)
-if(LINUX)
-    add_subdirectory(webserver) ## select not working on macOS
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+    ## select not working on macOS (win?)
+    ## windows not yet tested.
+    add_subdirectory(webserver)
 endif()
 add_subdirectory(yopyra)
 
