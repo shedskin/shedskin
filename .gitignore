@@ -10,13 +10,16 @@ __pycache__
 *.so
 *.so.dSYM
 *.[hc]pp !lib/*.[hc]pp
+Makefile*
 
 # exclude build related files and folders
 build/
 dist/
+
+# setup.py related
 *.egg-info/
 
-Makefile*
+# poetry related
 poetry.lock
 
 # exclude test.py detritus
@@ -27,6 +30,9 @@ test.*
 .tox/
 .pytest_cache/
 
+# virtualenv named 'venv' in case it is in-source
+venv
+
 # shedsksin specific
 *.ss.py
 FLAGS
@@ -34,3 +40,4 @@ shedskin/FLAGS
 shedskin/lib/array.py
 shedskin/lib/hashlib.py
 shedskin/lib/serial.py
+
