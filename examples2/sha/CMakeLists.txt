@@ -76,7 +76,7 @@ target_include_directories(${EXE} PRIVATE
     ${SHEDSKIN_LIB}
     ${CMAKE_SOURCE_DIR}
     ${PROJECT_EXE_DIR}
-    $<${APPLE}:/usr/local/opt/openssl@1.1/include>
+    $<$<BOOL:${APPLE}>:/usr/local/opt/openssl@1.1/include>
     lib
 )
 
@@ -88,7 +88,7 @@ target_compile_options(${EXE} PRIVATE
 
 
 target_link_directories(${EXE} PRIVATE
-    $<${APPLE}:/usr/local/opt/openssl@1.1/lib>
+    $<$<BOOL:${APPLE}>:/usr/local/opt/openssl@1.1/lib>
 )
 
 target_link_libraries(${EXE} PRIVATE
