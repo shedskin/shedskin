@@ -13,24 +13,17 @@ import sys
 import time
 import traceback
 
-if platform.system() == 'Windows':
-    import blessed as blessings
-else:
-    import blessings
-
-from . import annotate, config, cpp, error, graph, infer
-
+from . import annotate, config, cpp, error, graph, infer, utils
 
 class ShedskinFormatter(logging.Formatter):
 
     def __init__(self, gx, datefmt=None):
         self.gx = gx
-        move = self.gx.terminal.move_x(0)
         self._info_formatter = logging.Formatter(
-            move + '%(message)s', datefmt=datefmt)
+            utils.MOVE + '%(message)s', datefmt=datefmt)
         self._other_formatter = logging.Formatter(
-            move + self.gx.terminal.bold(
-                '*%(levelname)s*') + ' %(message)s', datefmt=datefmt
+            (utils.MOVE + utils.bold('*%(levelname)s*') + ' %(message)s'),
+            datefmt=datefmt
         )
 
     def format(self, record):
@@ -44,7 +37,8 @@ class Shedskin:
     """
     def __init__(self, module_name):
         self.gx = config.GlobalInfo()
-        self.gx.terminal = blessings.Terminal()
+        self.module_name = self.get_name(module_name)
+        # self.gx.terminal = blessings.Terminal()
 
         # silent -> WARNING only, debug -> DEBUG, default -> INFO
         console = logging.StreamHandler(stream=sys.stdout)
@@ -57,7 +51,7 @@ class Shedskin:
         self.ifa_log.addHandler(console)
         self.ifa_log.setLevel(logging.INFO)
 
-        self.module_name = self.get_name(module_name)
+        
 
     def get_name(self, module_name):
         """Normalizes the module_name to be parsed
