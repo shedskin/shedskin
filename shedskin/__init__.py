@@ -64,10 +64,13 @@ class Shedskin:
         path = pathlib.Path(module_path)
 
         if path.is_dir():
+            # TODO: add python package compilation
+            #   check for __main__ for exe
+            #   check for __init__ for ext
             self.log.error("module_path is a directory: '%s'", module_path)
             sys.exit(1)
 
-        if not path.parent == pathlib.Path('.'): # path is to item in current dir
+        if not path.parent == pathlib.Path('.'): # path is to an item in current dir
             os.chdir(path.parent)
             path = pathlib.Path(path.name)
 
