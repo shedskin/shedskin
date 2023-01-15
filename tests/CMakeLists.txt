@@ -26,12 +26,10 @@ link_directories(
     /usr/local/lib
 )
 
-if(TEST_EXT)
-    find_package(Python COMPONENTS Interpreter Development)
-    if(DEBUG)
-        message("python:" ${Python_EXECUTABLE})
-        message("python_include" ${Python_INCLUDE_DIRS})
-    endif()
+find_package(Python COMPONENTS Interpreter Development)
+if(DEBUG)
+    message("python:" ${Python_EXECUTABLE})
+    message("python_include" ${Python_INCLUDE_DIRS})
 endif()
 
 include(fn_add_shedskin_tests)

@@ -1,11 +1,12 @@
+# Shedskin Examples
+
 75 programs that work with Shed Skin 0.9.6 (python 3.8+).
 
-shedskin -b (disable index-out-of-bounds checking) often improves performance. see the documentation for more performance tips:
+This `examples` folder includes an example runner script which provides automated builds of examples using both shedskin's builtin methods and CMake.
 
-https://shedskin.readthedocs.io/
+## Example Overview
 
-if you know of another interesting test case, please mention it in the shedskin discussion group or to: mark.dufour@gmail.com.
-
+```
 lines  name                 description                     notes
 (sloccount)
 
@@ -99,3 +100,123 @@ lines  name                 description                     notes
     39 voronoi.py           textual voronoi
    526 voronoi2.py          voronoi algoritm
    112 WebServer.py         simple web server
+```
+
+If you know of any other interesting examples, please do suggest them in the shedskin discussion group or post an [issue](https://github.com/shedskin/shedskin/issues/new/choose) on the [Shedskin repo](https://github.com/shedskin/shedskin).
+
+
+## Building and Running the Examples
+
+### A. Build/Run Examples Manually
+
+1. **The Builtin way**
+
+   This uses shedskin builtin `Makefile` generation capability. 
+
+   For individual examples, basically `cd` into the example's directory,
+   then use the typical `shedskin` workflow as below:
+
+   ```
+   shedskin [options] <module> -> translated .cpp and .hpp files
+                               -> Makefile
+
+   make                        -> executable or python extension
+   ```
+
+   See the [Example Overview](#example-overview) section for guidance on exceptional cases.
+
+2. **The Cmake way**
+
+   It is also possible to build all of the examples using `cmake`:
+
+   ```bash
+   mkdir build && cd build && cmake .. && cmake --build .
+   ```
+
+### B. Example Runner
+
+The `./run.py` script in the `examples` directory is also provided 
+to automate the manual build/run processes given above.
+
+It has the following commandline interface:
+
+```bash
+$ ./run.py --help
+usage: run [-h] [-c] [-e] [-k] [-n] [-r EXAMPLE] [-s]
+
+runs shedskin examples
+
+options:
+  -h, --help            show this help message and exit
+  -c, --cmake           run examples using cmake
+  -e, --extension       include python extensions
+  -k, --check           check file.py syntax before running
+  -n, --nocleanup       do not cleanup built example
+  -r EXAMPLE, --run EXAMPLE
+                        run single example
+  -s, --reset           reset cmake build
+```
+
+#### 1. Builtin Method
+
+To build and run a single example in cpp-executable mode:
+
+```bash
+    ./run -r <name>.py
+```
+
+To build and run a single example in python-extension mode:
+
+```bash
+    ./run -er <name>.py
+```
+
+To build and run all examples in cpp-executable mode:
+
+```bash
+    ./run.py
+```
+
+To build and run all examples in python-extension mode:
+
+```bash
+    ./run.py -e
+```
+
+### 2. CMake Method
+
+To build and run all examples using cmake:
+
+```bash
+    ./run.py -c
+```
+
+If the above command is run for the first time, it will run the equivalent of the following:
+
+```bash
+    mkdir build && cd build && cmake .. && cmake --build .
+```
+
+If it is run subsequently, it will run the equivalent of the following:
+
+```bash
+    cd build && cmake .. && cmake --build .
+```
+
+This is useful during example development and has the benefit of only picking up
+changes to modified examples and will not re-translate or re-compile unchanged examples.
+
+To reset or remove the cmake `build` directory and run cmake:
+
+```bash
+    ./run.py --reset -c
+```
+
+
+## Performance Tips
+
+`shedskin -b` (disable index-out-of-bounds checking) often improves performance. see the documentation for more performance tips:
+
+https://shedskin.readthedocs.io/
+
+

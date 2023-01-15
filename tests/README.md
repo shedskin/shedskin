@@ -1,23 +1,18 @@
-# tests2: alternative shedskin tests folder for named tests
+# tests: shedskin testing folder
 
-`tests2` is an alternative tests folder for shedskin which explicitly requires named tests.
+`tests` is a tests folder for shedskin which explicitly requires named tests.
 
-It was created to improve on the current numbered tests in the `tests` folder (see objectives below).
-
-It contains two alternative ways to build and run the tests:
+It contains two alternative ways to build and run its tests:
 
 1. Builtin-method: using shedskin's generated `Makefile` per test.
 
 2. CMake-method: using `cmake`, which has advantages for rapid test development.
 
-The plan is to keep two test folders until all tests in the `tests` folder are eventually migrated to `tests2`. At that point `tests2` will become `tests`.
-
-
 ## Objectives
 
--  Introduce standardized test formats to enable testing for both shedskin translation modes: translation to c++ executables and to python extension modules.
+- Collect standardized tests according to a consistent format to enable testing for both shedskin translation modes: translation to c++ executables and to python extension modules.
 
-- Make test names more meaningful for easier classification and grouping of similar or related tests.
+- Ensure that test names are meaningful for easier classification and grouping of similar or related tests.
 
 - Reduce time to develop tests.
 
@@ -25,33 +20,46 @@ The plan is to keep two test folders until all tests in the `tests` folder are e
 
 - Isolate non-implemented cases.
 
-
 ## Usage
 
-This folder includes a commandline tool, `runtests.py`, to help setup, build and run the tests.
-
-It has the following commmand line options
+This folder includes a commandline tool, `runtests.py`, with extensive options to help setup, build and run its tests:
 
 ```bash
 $ ./runtests.py --help
-usage: runtests [-h] [-c] [-e] [-k] [-m] [-n] [-p] [-r TEST] [-s] [-x]
+usage: runtests [-h] [-c] [-e] [-g GENERATOR] [-i PATTERN] [-j N] [-k] [-m]
+                [-n] [-p] [-r TEST] [-s] [-t TARGET [TARGET ...]] [-x]
+                [--progress] [--reset]
 
 runs shedskin tests
 
 options:
-  -h, --help           show this help message and exit
-  -c, --cmake          run tests using cmake
-  -e, --extension      include python extension tests
-  -k, --check          check testfile py syntax before running
-  -m, --modified       run only recently modified test
-  -n, --nocleanup      do not cleanup built test
-  -p, --pytest         run pytest before each test run
-  -r TEST, --run TEST  run single test
-  -s, --reset          reset cmake build
-  -x, --run-errs       run error/warning message tests
+  -h, --help            show this help message and exit
+  -c, --cmake           run tests using cmake
+  -e, --extension       include python extension tests
+  -g GENERATOR, --generator GENERATOR
+                        specify a cmake build system generator
+  -i PATTERN, --include PATTERN
+                        provide regex of tests to include with cmake
+  -j N, --parallel N    build and run tests in parallel using N jobs
+  -k, --check           check testfile py syntax before running
+  -m, --modified        run only recently modified test
+  -n, --nocleanup       do not cleanup built test
+  -p, --pytest          run pytest before each test run
+  -r TEST, --run TEST   run single test
+  -s, --stoponfail      stop when first failure happens in ctest
+  -t TARGET [TARGET ...], --target TARGET [TARGET ...]
+                        build only specified targets
+  -x, --run-errs        run error/warning message tests
+  --progress            enable short progress output from ctest
+  --reset               reset cmake build
 ```
 
-There are currently two ways to run tests: (1) the builtin way and (2) the cmake way. The latter is recommended if your platform is supported (linux, osx). Windows support is on the todo list.
+There are currently two methods to run tests:
+
+1. Builtin method: the translate-build-run cycle is all managed by `shedskin`.
+2. CMake method: `shedskin` is only responsible for translation and `CMake` for everything else.
+
+The second method is recommended if your platform is supported (linux, osx). Windows support is on the todo list.
 
 ### Builtin Method
 
@@ -99,7 +107,9 @@ To build and run tests for error/warning messages:
 
 ### CMake Method
 
-To build and run all tests as executables using cmake:
+In `cmake` mode, the `runtests.py` script acts as a frontend to `cmake` tools:
+
+To build and run **all** tests as executables using cmake:
 
 ```bash
 ./runtests.py -c
@@ -119,13 +129,7 @@ cd build && cmake .. && cmake --build . && ctest
 
 This is useful during test development and has the benefit of only picking up changes to modified tests and will not re-translate or re-compile unchanged tests.
 
-To reset or remove the cmake `build` directory and run cmake:
-
-```bash
-./runtests.py --reset -c
-```
-
-To build and run all cmake tests as executables **and** python extensions using cmake:
+To build and run **all** cmake tests as executables **and** python extensions using cmake:
 
 ```bash
 ./runtests.py -ce
@@ -143,11 +147,54 @@ If it is run subsequently, it will run the equivalent of the following:
 cd build && cmake .. -DTEST_EXT=ON && cmake --build . && ctest
 ```
 
+To stop on the first failure:
+
+```bash
+./runtests.py -ce -s
+```
+
+You can build / run a **single** test using cmake (here as both exec and ext):
+
+```bash
+./runtests.py -ce -r test_builtin_iter
+```
+
+Or build / run the most recently modified test (here as exec only):
+
+```bash
+./runtests.py -c -m
+```
+
+To reset or remove the cmake `build` directory and run cmake:
+
+```bash
+./runtests.py --reset -c
+```
+
+### Optimizing Test Runs with Cmake
+
+The cmake method has an option to build and run tests as parallel jobs. This can greatly speed up test runs.
+
+You can specify the number of jobs to build and run tests in parallel:
+
+```bash
+./runtests.py -ce --j 4
+```
+
+Another option is to use a different build system with system that is designed for speed like [Ninje](https://ninja-build.org) which automatically maximizes its use of available cores on your system.
+
+If you have `Ninja` installed, you can have cmake use it your underlying build system and automatically get improved performance vs the default Make-based system:
+
+```bash
+./runtests.py -ce -gNinja
+```
+
+
 ### Skipping Tests
 
 - To skip a test just change the `test_` prefix of the file or folder to `skip_`
 
-- Note that skipped tests may be picked up by `pytest`, this is not a bad thing as every test in this folder active or otherwise should pass under pytest.
+- Note that skipped tests may still be picked up by `pytest`, this is not a bad thing as every test in this folder active or otherwise should pass under `pytest`.
 
 
 ## Standards
@@ -196,14 +243,11 @@ For example:
 - Avoid using the `global` keyword for access to globals from functions: `pytest` does not work well with such constructs and will show errors. Several historical tests had to be rewritten to address this problem.
 
 
-## Todo:
+## TODO:
 
-- [x] include cmake (ctest) testing
-- [x] run all tests as either executables or python extensions
-- [x] unify both shedskin compilation modes for tests such that both executables and python extensions are generated, built and run for reach test run.
+- [ ] update `.travis.yml` file to reflect recent changes in testing mechanism
 - [ ] improved cleanup for default method in cases of multiple local imports
 - [ ] enabled windows platform support for cmake-based method and [conan](https://conan.io)
-- [ ] convert more tests
-- [ ] create TODO.md (perhaps auto-generated) to collect all non-working tests
+- [ ] auto-collect all non-working tests into a written log
 
 
