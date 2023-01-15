@@ -119,7 +119,7 @@ target_compile_options(${EXT} PUBLIC
     "-fwrapv"
     "-O3"
     "-Wall"
-    "-fbracket-depth=500"
+    $<$<BOOL:${APPLE}>:-fbracket-depth=500>
 )
 
 target_link_options(${EXT} PUBLIC
