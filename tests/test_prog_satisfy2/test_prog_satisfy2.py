@@ -1,6 +1,15 @@
 # (c) Mark Dufour
 # --- mark.dufour@gmail.com
 
+import os
+
+if os.path.exists("testdata"):
+    testdata = "testdata"
+else:
+    testdata = "../testdata"
+datafile = os.path.join(testdata, 'uuf250-010.cnf')
+
+
 hoppa = 0xFFFFFFFF
 
 
@@ -24,7 +33,7 @@ def _reduce(f, l, i=-1):
 
 class Satisfier:
     def __init__(self, argv=None):
-        self.argv = argv or ["", "testdata/uuf250-010.cnf"]
+        self.argv = argv or ["", datafile]
         cnf = [
             l.strip().split() for l in open(self.argv[1]) if l[0] not in "c0%\n"
         ]

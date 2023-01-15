@@ -1,16 +1,23 @@
 # configparser # XXX readfp
 
+import os
 import configparser
+
+if os.path.exists("testdata"):
+    testdata = "testdata"
+else:
+    testdata = "../testdata"
+datafile = os.path.join(testdata, 'configparser_test.conf')
 
 def test_minimal():
     config = configparser.ConfigParser(defaults={'aha': 'hah'})
-    config.read("testdata/configparser_test.conf")
+    config.read(datafile)
     assert config
     # assert config.getint('ematter', 'pages') == 250 ## FIXME this fails
 
 def test_configparser():
     config = configparser.ConfigParser()
-    config.read("testdata/configparser_test.conf")
+    config.read(datafile)
 
     assert config.getint('ematter', 'pages') == 250
     assert config.getfloat('ematter', 'pages') == 250.0
@@ -47,7 +54,7 @@ def test_configparser():
     # print(sorted(config.items('ematter', vars={'var': 'blah'})))
 
     # rcp = configparser.RawConfigParser()
-    # rcp.read(["testdata/configparser_test.conf"])
+    # rcp.read([datafile])
 
     # print(rcp.get('ematter', 'pages')) #, vars={'var': 'blah'})
     # print(sorted(rcp.items('ematter')))
