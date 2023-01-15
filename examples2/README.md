@@ -14,7 +14,7 @@ The idea is for `examples2` to potentially replace the current `examples` folder
 
 ## Example Overview
 
-if you know of another interesting test case, please mention it in the shedskin discussion group or post an [issue](https://github.com/shedskin/shedskin/issues/new/choose) on the [Shedskin repo](https://github.com/shedskin/shedskin).
+if you know of other interesting test cases, please mention it in the shedskin discussion group or post an [issue](https://github.com/shedskin/shedskin/issues/new/choose) on the [Shedskin repo](https://github.com/shedskin/shedskin).
 
 The examples below assume you are inside the respective example folder.
 
@@ -152,7 +152,26 @@ There are currently manual two ways to run examples:
 An example `./run.py` script in the `examples` directory is also provided 
 to automate the manual build/run processes given above.
 
-#### 1. Example Runner Builtin Method
+It has the following commandline interface:
+
+```bash
+$ ./run.py --help
+usage: run [-h] [-c] [-e] [-k] [-n] [-r EXAMPLE] [-s]
+
+runs shedskin examples
+
+options:
+  -h, --help            show this help message and exit
+  -c, --cmake           run examples using cmake
+  -e, --extension       include python extensions
+  -k, --check           check file.py syntax before running
+  -n, --nocleanup       do not cleanup built example
+  -r EXAMPLE, --run EXAMPLE
+                        run single example
+  -s, --reset           reset cmake build
+```
+
+#### 1. Builtin Method
 
 To build and run a single example in cpp-executable mode:
 
@@ -170,7 +189,7 @@ To build and run all examples in python-extension mode:
 
     ./run.py -e
 
-### 2. Example Runner CMake Method
+### 2. CMake Method
 
 To build and run all examples using cmake:
 
