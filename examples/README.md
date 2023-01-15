@@ -2,21 +2,9 @@
 
 75 programs that work with Shed Skin 0.9.6 (python 3.8+).
 
-## examples2 folder
-
-This is an alternative re-organization of the `examples` folder to provide automated builds
-via an example runner using both the builtin method and cmake. Also each example has it's own folder and dependent files.
-
-It is currently a work-in-progress with only a few remaining examples which are not yet converted.
-See the `TODO.md` file in this folder for remaining examples to be converted (4 as of this writing).
-
-The idea is for `examples2` to potentially replace the current `examples` folder once all examples are converted to the new formats and build infrastructure.
+This `examples` folder includes an example runner script which provides automated builds of examples using both shedskin's builtin methods and CMake.
 
 ## Example Overview
-
-if you know of other interesting test cases, please mention it in the shedskin discussion group or post an [issue](https://github.com/shedskin/shedskin/issues/new/choose) on the [Shedskin repo](https://github.com/shedskin/shedskin).
-
-The examples below assume you are inside the respective example folder.
 
 ```
 lines  name                 description                     notes
@@ -114,13 +102,12 @@ lines  name                 description                     notes
    112 WebServer.py         simple web server
 ```
 
+If you know of any other interesting examples, please do suggest them in the shedskin discussion group or post an [issue](https://github.com/shedskin/shedskin/issues/new/choose) on the [Shedskin repo](https://github.com/shedskin/shedskin).
 
-## Running the Examples
 
+## Building and Running the Examples
 
 ### A. Build/Run Examples Manually
-
-There are currently manual two ways to run examples:
 
 1. **The Builtin way**
 
@@ -136,12 +123,11 @@ There are currently manual two ways to run examples:
    make                        -> executable or python extension
    ```
 
-   See the [Example Overview](#example-overview) section below for guidance
+   See the [Example Overview](#example-overview) section for guidance on exceptional cases.
 
 2. **The Cmake way**
 
-   It is also possible to build all of the examples using `cmake`. 
-   Type the following while you are in the examples directory:
+   It is also possible to build all of the examples using `cmake`:
 
    ```bash
    mkdir build && cd build && cmake .. && cmake --build .
@@ -149,7 +135,7 @@ There are currently manual two ways to run examples:
 
 ### B. Example Runner
 
-An example `./run.py` script in the `examples` directory is also provided 
+The `./run.py` script in the `examples` directory is also provided 
 to automate the manual build/run processes given above.
 
 It has the following commandline interface:
@@ -175,40 +161,56 @@ options:
 
 To build and run a single example in cpp-executable mode:
 
+```bash
     ./run -r <name>.py
+```
 
 To build and run a single example in python-extension mode:
 
+```bash
     ./run -er <name>.py
+```
 
 To build and run all examples in cpp-executable mode:
 
+```bash
     ./run.py
+```
 
 To build and run all examples in python-extension mode:
 
+```bash
     ./run.py -e
+```
 
 ### 2. CMake Method
 
 To build and run all examples using cmake:
 
+```bash
     ./run.py -c
+```
 
 If the above command is run for the first time, it will run the equivalent of the following:
 
+```bash
     mkdir build && cd build && cmake .. && cmake --build .
+```
 
 If it is run subsequently, it will run the equivalent of the following:
 
+```bash
     cd build && cmake .. && cmake --build .
+```
 
 This is useful during example development and has the benefit of only picking up
 changes to modified examples and will not re-translate or re-compile unchanged examples.
 
 To reset or remove the cmake `build` directory and run cmake:
 
+```bash
     ./run.py --reset -c
+```
 
 
 ## Performance Tips
