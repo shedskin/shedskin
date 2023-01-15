@@ -1,6 +1,12 @@
+import os
 
 def test_horn():
-    argv = ["", "testdata/uuf250-010.cnf"]  # [list(str)]
+    if os.path.exists("testdata"):
+        testdata = "testdata"
+    else:
+        testdata = "../testdata"
+    datafile = os.path.join(testdata, 'uuf250-010.cnf')
+    argv = ["", datafile]  # [list(str)]
 
     cnf = [l.strip().split() for l in open(argv[1]) if l[0] not in "c%0\n"]
     clauses = [[int(x) for x in m[:-1]] for m in cnf if m[0] != "p"]
