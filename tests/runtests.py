@@ -1,93 +1,7 @@
 #!/usr/bin/env python3
-
 """shedskin testrunner
 
-usage: runtests [-h] [-c] [-e] [-k] [-m] [-n] [-p] [-r TEST] [-s] [-x]
-
-runs shedskin tests
-
-options:
-  -h, --help           show this help message and exit
-  -c, --cmake          run tests using cmake
-  -e, --extension      include python extension tests
-  -k, --check          check testfile py syntax before running
-  -m, --modified       run only recently modified test
-  -n, --nocleanup      do not cleanup built test
-  -p, --pytest         run pytest before each test run
-  -r TEST, --run TEST  run single test
-  -s, --reset          reset cmake build
-  -x, --run-errs       run error/warning message tests
-
-There are currently two ways to run tests:
-
-(1) the builtin way and
-(2) the cmake way.
-
-## Builtin Method
-
-To build and run a single test in cpp-executable mode:
-
-    ./runtests -r test_<name>.py
-
-To build and run a single test in python-extension mode:
-
-    ./runtests -er test_<name>.py
-
-To build and run all tests in cpp-executable mode:
-
-    ./runtests.py
-
-To build and run all tests in python-extension mode:
-
-    ./runtests.py -e
-
-To build and run the most recently modified test (useful during test dev):
-
-    ./runtests.py -m
-
-    or
-
-    ./runtests.py -me
-
-To build and run tests for error/warning messages:
-
-    ./runtests.py -x
-
-## CMake Method
-
-To build and run all tests as executables using cmake:
-
-    ./runtests.py -c
-
-If the above command is run for the first time, it will run the equivalent of the following:
-
-    mkdir build && cd build && cmake .. && cmake --build . && ctest
-
-If it is run subsequently, it will run the equivalent of the following:
-
-    cd build && cmake .. && cmake --build . && ctest
-
-This is useful during test development and has the benefit of only picking up
-changes to modified tests and will not re-translate or re-compile unchanged tests.
-
-To reset or remove the cmake `build` directory and run cmake:
-
-    ./runtests.py --reset -c
-
-To build and run all cmake tests as executables **and** python extensions using cmake:
-
-    ./runtests.py -ce
-
-This will build/run an executable and python extension test for each test in the directory,
-basically the equivalent of the following (if it is run the first time):
-
-    mkdir build && cd build && cmake .. -DTEST_EXT=ON && cmake --build . && ctest
-
-If it is run subsequently, it will run the equivalent of the following:
-
-    cd build && cmake .. -DTEST_EXT=ON && cmake --build . && ctest
 """
-
 import argparse
 import glob
 import os
@@ -139,6 +53,17 @@ class TestRunner:
         with open(path) as f:
             src = f.read()
         compile(src, path, 'exec')
+
+    def get_most_recent_test(self):
+        """returns name of recently modified test"""
+        max_mtime = 0
+        most_recent_test = None
+        for test in self.tests:
+            mtime = os.stat(os.path.abspath(test)).st_mtime
+            if mtime > max_mtime:
+                max_mtime = mtime
+                most_recent_test = test
+        return most_recent_test
 
     def run_test(self, path):
         """run test in path"""
@@ -227,15 +152,47 @@ class TestRunner:
             print()
 
         if self.options.cmake:
+            cmake_config = "cmake .."
+            cmake_build = "cmake --build ."
+            cmake_test = "ctest --output-on-failure"
+
             if self.options.extension:
-                cmake_cmd = "cmake .. -DTEST_EXT=ON"
-            else:
-                cmake_cmd = "cmake .."
+                cmake_config += " -DTEST_EXT=ON"
+
+            if self.options.generator:
+                cmake_config += f" -G{self.options.generator}"
+
+            if self.options.include:
+                cmake_test += f" --tests-regex {self.options.include}"
+
+            if self.options.modified:
+                most_recent_test = Path(self.get_most_recent_test()).stem
+                cmake_build += f" --target {most_recent_test}"
+                cmake_test += f" --tests-regex {most_recent_test}"                
+
+            if self.options.parallel:
+                cmake_build += f" --parallel {self.options.parallel}"
+                cmake_test  += f" --parallel {self.options.parallel}"
+
+            if self.options.progress:
+                cmake_test += " --progress"
+
+            if self.options.run:
+                cmake_build += f" --target {self.options.run}"
+                cmake_test += f" --tests-regex {self.options.run}"
+
+            if self.options.stoponfail:
+                cmake_test += " --stop-on-failure"
+
+            if self.options.target:
+                for target in self.options.target:
+                    cmake_build += f" --target {target}"
+
             actions = [
                 "cd build",
-                cmake_cmd,
-                "cmake --build .",
-                "ctest"
+                cmake_config,
+                cmake_build,
+                cmake_test,
             ]
             if self.build_dir.exists() and self.options.reset:
                 actions = ["rm -rf ./build", "mkdir -p build"] + actions
@@ -250,13 +207,7 @@ class TestRunner:
         else:
             print(f'Running {CYAN}shedskin{RESET} tests:')
             if self.options.modified: # run only most recently modified test
-                max_mtime = 0
-                most_recent_test = None
-                for test in self.tests:
-                    mtime = os.stat(os.path.abspath(test)).st_mtime
-                    if mtime > max_mtime:
-                        max_mtime = mtime
-                        most_recent_test = test
+                most_recent_test = self.get_most_recent_test()
                 self.run_test(most_recent_test)
             else:
                 for test in self.tests:
@@ -298,30 +249,38 @@ class TestRunner:
             prog = 'runtests',
             description = 'runs shedskin tests')
         arg = opt = parser.add_argument
-        opt('-c', '--cmake',     help='run tests using cmake', action='store_true')
-        opt('-e', '--extension', help='include python extension tests', action='store_true')
-        opt('-k', '--check',     help='check testfile py syntax before running', action='store_true')
-        opt('-m', '--modified',  help='run only recently modified test', action='store_true')
-        opt('-n', '--nocleanup', help='do not cleanup built test', action='store_true')
-        opt('-p', '--pytest',    help='run pytest before each test run', action='store_true')
-        opt('-r', '--run',       help='run single test', metavar="TEST")
-        opt('-s', '--reset',     help='reset cmake build', action='store_true')
-        opt('-x', '--run-errs',  help='run error/warning message tests', action='store_true')
+        opt('-c', '--cmake',      help='run tests using cmake', action='store_true')
+        opt('-e', '--extension',  help='include python extension tests', action='store_true')
+        opt('-g', '--generator',  help='specify a cmake build system generator')
+        opt('-i', '--include',    help='provide regex of tests to include with cmake', metavar="PATTERN")        
+        opt('-j', '--parallel',   help='build and run tests in parallel using N jobs', metavar="N", type=int)
+        opt('-k', '--check',      help='check testfile py syntax before running', action='store_true')
+        opt('-m', '--modified',   help='run only recently modified test', action='store_true')
+        opt('-n', '--nocleanup',  help='do not cleanup built test', action='store_true')
+        opt('-p', '--pytest',     help='run pytest before each test run', action='store_true')
+        opt('-r', '--run',        help='run single test', metavar="TEST")
+        opt('-s', '--stoponfail', help='stop when first failure happens in ctest', action='store_true')
+        opt('-t', '--target',     help='build only specified targets', nargs="+")
+        opt('-x', '--run-errs',   help='run error/warning message tests', action='store_true')
+        opt('--progress',         help='enable short progress output from ctest', action='store_true')
+        opt('--reset',            help='reset cmake build', action='store_true')
+
 
         args = parser.parse_args()
         runner = cls(args)
-        if args.run:
-            runner.run_test(args.run)
-        elif args.run_errs:
-            failures = runner.error_tests()
-            if not failures:
-                print(f'==> {GREEN}NO FAILURES, yay!{RESET}')
-            else:
-                print(f'==> {RED}TESTS FAILED:{RESET}', len(failures))
-                print(failures)
-                sys.exit()
-        else:
+        if args.cmake:
             runner.run_tests()
+        else:
+            if args.run:
+                runner.run_test(args.run)
+            elif args.run_errs:
+                failures = runner.error_tests()
+                if not failures:
+                    print(f'==> {GREEN}NO FAILURES, yay!{RESET}')
+                else:
+                    print(f'==> {RED}TESTS FAILED:{RESET}', len(failures))
+                    print(failures)
+                    sys.exit()
 
 if __name__ == '__main__':
     TestRunner.commandline()
