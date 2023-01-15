@@ -12,25 +12,19 @@ import struct
 import sys
 import time
 import traceback
+import pathlib
 
-if platform.system() == 'Windows':
-    import blessed as blessings
-else:
-    import blessings
-
-from . import annotate, config, cpp, error, graph, infer
-
+from . import annotate, config, cpp, error, graph, infer, utils
 
 class ShedskinFormatter(logging.Formatter):
 
     def __init__(self, gx, datefmt=None):
         self.gx = gx
-        move = self.gx.terminal.move_x(0)
         self._info_formatter = logging.Formatter(
-            move + '%(message)s', datefmt=datefmt)
+            utils.MOVE + '%(message)s', datefmt=datefmt)
         self._other_formatter = logging.Formatter(
-            move + self.gx.terminal.bold(
-                '*%(levelname)s*') + ' %(message)s', datefmt=datefmt
+            (utils.MOVE + utils.bold('*%(levelname)s*') + ' %(message)s'),
+            datefmt=datefmt
         )
 
     def format(self, record):
@@ -42,10 +36,8 @@ class ShedskinFormatter(logging.Formatter):
 class Shedskin:
     """Main shedskin frontend class
     """
-    def __init__(self, module_name):
+    def __init__(self, module_path):
         self.gx = config.GlobalInfo()
-        self.gx.terminal = blessings.Terminal()
-
         # silent -> WARNING only, debug -> DEBUG, default -> INFO
         console = logging.StreamHandler(stream=sys.stdout)
         console.setFormatter(ShedskinFormatter(self.gx))
@@ -56,23 +48,39 @@ class Shedskin:
         self.ifa_log = logging.getLogger('infer.ifa')
         self.ifa_log.addHandler(console)
         self.ifa_log.setLevel(logging.INFO)
+        # need to be here because of log dependency
+        self.module_name = self.get_name(module_path)
 
-        self.module_name = self.get_name(module_name)
+    def get_name(self, module_path):
+        """Returns name of module to be translated.
 
-    def get_name(self, module_name):
-        """Normalizes the module_name to be parsed
+        Also sets current working dir for nested targets
+        and sets module_path configuration.
 
-        :param      module_name:     The module name
+        :param      module_path:     The module path
         :type       module_name:     str
         """
-        name = module_name[:]
-        if not name.endswith('.py'):
-            name += '.py'
-        if not os.path.isfile(name):
-            self.log.error("no such file: '%s'", name)
+
+        path = pathlib.Path(module_path)
+
+        if path.is_dir():
+            # TODO: add python package compilation
+            #   check for __main__ for exe
+            #   check for __init__ for ext
+            self.log.error("module_path is a directory: '%s'", module_path)
             sys.exit(1)
-        self.gx.module_path = os.path.abspath(name)
-        return os.path.splitext(name)[0]
+
+        if not path.parent == pathlib.Path('.'): # path is to an item in current dir
+            os.chdir(path.parent)
+            path = pathlib.Path(path.name)
+
+        if not path.name.endswith('.py'):
+            path = path.with_suffix('.py')
+        if not path.is_file():
+            self.log.error("no such file: '%s'", path)
+            sys.exit(1)
+        self.gx.module_path = path.absolute()
+        return path.stem
 
     def start(self):
         """start and sequence main shedskin processes
@@ -173,7 +181,7 @@ class Shedskin:
 
         if args.outputdir:
             if not os.path.exists(args.outputdir):
-                os.mkdir(args.outputdir)
+                os.makedirs(args.outputdir, exist_ok=True)
             ss.gx.outputdir = args.outputdir
 
         if args.silent:

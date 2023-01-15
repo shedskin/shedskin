@@ -1,25 +1,27 @@
 set(sys_modules
+    array
+    math
     os
     os.path
     stat
+    struct
     sys
     time
 )
 
 set(app_modules
-    c64/__init__
-    c64/c64
+    # c64/__init__
     c64/cia
     c64/cpu
     c64/joysticks
     c64/loaders/__init__
-    c64/loaders/d64
+    # c64/loaders/d64
     c64/loaders/entries
     c64/loaders/prg
     c64/loaders/t64
     c64/memory
     c64/mmu
-    c64/origscreens
+    # c64/origscreens
     c64/palette
     c64/pixbufs
     c64/screens
@@ -30,17 +32,23 @@ set(app_modules
     c64/vic_ii
 )
 
+
 copy_to_build_dir(
     "ROM"
     intkarat.t64
 )
 
+set(subdir "c64")
+
+copy_to_build_dir(c64_main.py)
 
 get_filename_component(name ${CMAKE_CURRENT_SOURCE_DIR} NAME_WLE)
 
 set(PROJECT_EXT_DIR ${PROJECT_BINARY_DIR}/${name}/ext)
 
-set(basename_py "${name}.py")
+set(basename "c64")
+
+set(basename_py "${basename}.py")
 
 set(EXT ${name}-ext)
 
@@ -60,10 +68,9 @@ foreach(mod ${sys_modules})
     endif()
 endforeach()
 
-
 set(translated_files
-    ${PROJECT_EXT_DIR}/${name}.cpp
-    ${PROJECT_EXT_DIR}/${name}.hpp
+    ${PROJECT_EXT_DIR}/${subdir}/${basename}.cpp
+    ${PROJECT_EXT_DIR}/${subdir}/${basename}.hpp
 )
 
 foreach(mod ${app_modules})
@@ -72,9 +79,10 @@ foreach(mod ${app_modules})
 endforeach()
 
 add_custom_command(OUTPUT ${translated_files}
-    COMMAND "${Python_EXECUTABLE} -m shedskin --nomakefile -o ${PROJECT_EXT_DIR} -be c64/c64.py"
-    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/c64"
-    DEPENDS "c64/${basename_py}"
+    COMMAND ${Python_EXECUTABLE} -m shedskin --nomakefile -o ${PROJECT_EXT_DIR}/${subdir} -be
+     "${subdir}/${basename_py}"
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    DEPENDS "${subdir}/${basename_py}"
     COMMENT "translating ${basename_py} to ext"
     VERBATIM
 )
@@ -87,15 +95,17 @@ add_library(${EXT} MODULE
 )
 
 set_target_properties(${EXT} PROPERTIES
-    OUTPUT_NAME ${name}
+    OUTPUT_NAME ${basename}
     PREFIX ""
 )
 
 target_include_directories(${EXT} PUBLIC
-    ${Python_INCLUDE_DIRS}
+    ${Python_INCLUDE_DIRS}    
     /usr/local/include
     ${SHEDSKIN_LIB}
     ${CMAKE_SOURCE_DIR}
+    ${PROJECT_EXT_DIR}
+    ${PROJECT_EXT_DIR}/${subdir}
 )
 
 target_compile_options(${EXT} PUBLIC
@@ -109,6 +119,7 @@ target_compile_options(${EXT} PUBLIC
     "-fwrapv"
     "-O3"
     "-Wall"
+    "-fbracket-depth=500"
 )
 
 target_link_options(${EXT} PUBLIC
@@ -125,3 +136,4 @@ target_link_libraries(${EXT} PUBLIC
     "-lgccpp"
     "-lpcre"
 )
+

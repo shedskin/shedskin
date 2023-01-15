@@ -950,7 +950,7 @@ def ifa_class_types(gx, cl, vars):
                 attr_types.append(frozenset())
         attr_types = tuple(attr_types)
         if all(attr_types):
-            ifa_logger.debug('IFA %s: %s %s', dcpa, zip([var.name for var in vars], map(list, attr_types)))
+            ifa_logger.debug('IFA %s: %s', dcpa, list(zip([var.name for var in vars], map(list, attr_types))))
         nr_classes[dcpa] = attr_types
         classes_nr[attr_types] = dcpa
     return classes_nr, nr_classes
@@ -1060,8 +1060,8 @@ def update_progressbar(gx, perc):
         )
         gx.progressbar.start()
 
-    with gx.terminal.location(x=0):
-        gx.progressbar.update(perc)
+    gx.progressbar.update(perc)
+        
     if perc == 1:
         # Finished, so add a new line.
         sys.stdout.write('\n')
