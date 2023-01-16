@@ -41,6 +41,8 @@ import sys
 from . import ast_utils 
 from . import error
 from . import python
+from . import utils
+
 
 logger = logging.getLogger('infer')
 ifa_logger = logging.getLogger('infer.ifa')
@@ -1051,20 +1053,13 @@ def update_progressbar(gx, perc):
 #    if not logger.isEnabledFor(logging.INFO):
 #        return
     if gx.progressbar is None:
-        import progressbar
-        widgets = progressbar.widgets
-        gx.progressbar = progressbar.ProgressBar(
-            widgets=[widgets.Bar(marker='*'), widgets.Percentage()],
-            maxval=1,
-            term_width=33
-        )
-        gx.progressbar.start()
+        gx.progressbar = utils.ProgressBar(total=1.0)
 
     gx.progressbar.update(perc)
         
-    if perc == 1:
+    # if perc == 1:
         # Finished, so add a new line.
-        sys.stdout.write('\n')
+        # sys.stdout.write('\n')
 
 # --- cartesian product algorithm (cpa) & iterative flow analysis (ifa)
 

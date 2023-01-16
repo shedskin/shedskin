@@ -156,6 +156,12 @@ class TestRunner:
             cmake_build = "cmake --build ."
             cmake_test = "ctest --output-on-failure"
 
+            if self.options.ccache:
+                if shutil.which('ccache'):
+                    cmake_config += " -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
+                else:
+                    print(f"\n{YELLOW}WARNING{RESET}: 'ccache' not found")
+
             if self.options.extension:
                 cmake_config += " -DTEST_EXT=ON"
 
@@ -262,9 +268,9 @@ class TestRunner:
         opt('-s', '--stoponfail', help='stop when first failure happens in ctest', action='store_true')
         opt('-t', '--target',     help='build only specified targets', nargs="+")
         opt('-x', '--run-errs',   help='run error/warning message tests', action='store_true')
+        opt('--ccache',           help='enable ccache with cmake', action='store_true')
         opt('--progress',         help='enable short progress output from ctest', action='store_true')
         opt('--reset',            help='reset cmake build', action='store_true')
-
 
         args = parser.parse_args()
         runner = cls(args)
