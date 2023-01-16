@@ -1,5 +1,4 @@
-
-
+import os
 
 class MyIter:
     def __init__(self, container):
@@ -53,7 +52,12 @@ def test_iter2():
 
 
 def test_file_iter():
-    assert [l for l in open("testdata/hoppa")] == ['hop\n', 'hop\n', 'hoppa!\n']
+    if os.path.exists("testdata"):
+        testdata = "testdata"
+    else:
+        testdata = "../testdata"
+    datafile = os.path.join(testdata, 'hoppa')
+    assert [l for l in open(datafile)] == ['hop\n', 'hop\n', 'hoppa!\n']
 
 def stop_iter(n, mode):
     if mode == 1:

@@ -1,22 +1,31 @@
+import os
+
+if os.path.exists("testdata"):
+    testdata = "testdata"
+else:
+    testdata = "../testdata"
+
+datafile = os.path.join(testdata, 'hoppa')
+outputfile = os.path.join(testdata, 'hoppa_write')
 
 
 def test_open_for():
-    f = open('testdata/hoppa')
+    f = open(datafile)
     assert [l for l in f] == ['hop\n', 'hop\n', 'hoppa!\n']
     f.close()
 
 def test_open_read():
-    f = open('testdata/hoppa')
+    f = open(datafile)
     assert f.read() == 'hop\nhop\nhoppa!\n'
     f.close()
 
 def test_open_readlines():
-    f = open('testdata/hoppa')
+    f = open(datafile)
     assert f.readlines() == ['hop\n', 'hop\n', 'hoppa!\n']
     f.close()
 
 def test_with_open_read():
-    with open('testdata/hoppa') as f:
+    with open(datafile) as f:
         assert f.read() == 'hop\nhop\nhoppa!\n'
 
 # def test_open_read2():
@@ -34,16 +43,16 @@ def test_with_open_read():
 
 
 def test_open_write():
-    f = open('testdata/hoppa_write', 'w')
+    f = open(outputfile, 'w')
     f.write('hop\nhop\nhoppa!\n')
     f.close()
-    with open('testdata/hoppa_write') as g:
+    with open(outputfile) as g:
         assert g.read() == 'hop\nhop\nhoppa!\n'
 
 # def test_with_open_write():
-#     with open('testdata/hoppa_write', 'w') as f: # FIXME doesn't work
+#     with open(outputfile, 'w') as f: # FIXME doesn't work
 #         f.write('hop\nhop\nhoppa!\n')
-#     with open('testdata/hoppa_write') as f:
+#     with open(outputfile) as f:
 #         assert f.read() == 'hop\nhop\nhoppa!\n'
 
 
