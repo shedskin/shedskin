@@ -91,14 +91,13 @@ class Shedskin:
         annotate.annotate(self.gx)
         cpp.generate_code(self.gx)
         error.print_errors()
-        self.log.info('[elapsed time: %.2f seconds]', (time.time() - t0))
+        self.log.info('\n[elapsed time: %.2f seconds]', (time.time() - t0))
 
 
     @classmethod
     def commandline(cls):
         """command line api
         """
-
         sys.setrecursionlimit(100000)
 
         # --- command-line options

@@ -48,7 +48,6 @@ include = [
 [tool.poetry.dependencies]
 python = "^3.8"
 Jinja2 = "^3.1.2"
-progressbar2 = "^4.2.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.2.0"
