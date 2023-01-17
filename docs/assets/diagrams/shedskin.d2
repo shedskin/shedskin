@@ -1,0 +1,47 @@
+# d2 syntax: https://github.com/terrastruct/d2
+
+# actors
+shedskin: Shedskin
+
+inputs: {
+  module: module.py
+  pkg: python package
+}
+
+translated: {
+  cpp: 'module.[ch]pp' 
+}
+
+builders: {
+  cmake: CMake
+  make: Make
+}
+
+products: {
+  exe: 'module.exe'
+  ext: 'module.so'
+}
+
+
+# process
+inputs.module -> shedskin: basic case
+inputs.pkg -> shedskin: future case
+
+# translation
+shedskin -> translated.cpp: translating to cpp
+
+# generation
+shedskin -> builders.make: generates
+builders.cmake -> builders.make: generates
+
+# building
+translated.cpp -> builders.make: builtin method
+translated.cpp -> builders.cmake: cmake method
+
+builders.make -> products.exe: executable
+builders.make -> products.ext: python extension
+builders.cmake -> products.exe: executable
+builders.cmake -> products.ext: python extension
+
+
+
