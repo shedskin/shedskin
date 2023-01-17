@@ -6,6 +6,8 @@ This `examples` folder includes an example runner script which provides automate
 
 ## Example Overview
 
+In the following overview, each example is in its own folder of the same name
+
 ```
 lines  name                 description                     notes
 (sloccount)
@@ -102,10 +104,14 @@ lines  name                 description                     notes
    112 WebServer.py         simple web server
 ```
 
-If you know of any other interesting examples, please do suggest them in the shedskin discussion group or post an [issue](https://github.com/shedskin/shedskin/issues/new/choose) on the [Shedskin repo](https://github.com/shedskin/shedskin).
+If you know of any other interesting examples, please do suggest them in the shedskin discussion group or post an [issue](https://github.com/shedskin/shedskin/issues/new/choose) in the [Shedskin repo](https://github.com/shedskin/shedskin).
 
 
 ## Building and Running the Examples
+
+Each example has its own directory which should contain the python code to be translated as well as related data files.
+
+Shedskin has the option to build and run 'restricted' python as an executable or as an extension, you can do this manually or automatically via the example runner.
 
 ### A. Build/Run Examples Manually
 
@@ -133,7 +139,7 @@ If you know of any other interesting examples, please do suggest them in the she
    mkdir build && cd build && cmake .. && cmake --build .
    ```
 
-### B. Example Runner
+### B. Build/Run Examples Automatically
 
 The `./run.py` script in the `examples` directory is also provided 
 to automate the manual build/run processes given above.
@@ -190,7 +196,7 @@ To build and run all examples in python-extension mode:
     ./run.py -e
 ```
 
-### 2. CMake Method
+#### 2. CMake Method
 
 To build and run an example using cmake:
 
@@ -226,7 +232,9 @@ To reset or remove the cmake `build` directory and run cmake:
     ./run.py --reset -c
 ```
 
-### Optimizing Building and Running Examples with Cmake
+## Optimization and Performance Tips
+
+### Running Build Jobs in Parallel
 
 The cmake method has an option to build and run tests as parallel jobs. This can greatly speed up test runs.
 
@@ -236,18 +244,19 @@ You can specify the number of jobs to build and run tests in parallel:
 ./run.py -c -j 4
 ```
 
-Another option is to use a different build system with system that is designed for speed like [Ninja](https://ninja-build.org) which automatically maximizes its use of available cores on your system.
+### Using a Different Build System with CMake
 
-If you have `Ninja` installed, you can have cmake use it your underlying build system and automatically get improved performance vs the default Make-based system:
+Another option is to use a different build system designed for speed like [Ninja](https://ninja-build.org) which automatically maximizes its use of available cores on your system.
+
+If you have `Ninja` installed, you can have cmake use it as your underlying build system and automatically get improved performance vs the default Make-based system:
 
 ```bash
-./runt.py -c -gNinja
+./run.py -c -gNinja
 ```
 
+### Optimizing Running Examples with Cmake
 
-## Performance Tips
-
-`shedskin -b` (disable index-out-of-bounds checking) often improves performance. see the documentation for more performance tips:
+`shedskin -b` disables index-out-of-bounds checking which often improves performance. See the documentation for more performance tips:
 
 https://shedskin.readthedocs.io/
 
