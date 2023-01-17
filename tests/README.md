@@ -177,7 +177,7 @@ To reset or remove the cmake `build` directory and run cmake:
 ./run.py --reset -c
 ```
 
-### Optimizing Test Runs with Cmake
+### Optimizing Building and Running Tests with Cmake
 
 The cmake method has an option to build and run tests as parallel jobs. This can greatly speed up test runs.
 
@@ -187,9 +187,9 @@ You can specify the number of jobs to build and run tests in parallel:
 ./run.py -ce -j 4
 ```
 
-Another option is to use a different build system with system that is designed for speed like [Ninja](https://ninja-build.org) which automatically maximizes its use of available cores on your system.
+Another option is to use a different build system designed for speed like [Ninja](https://ninja-build.org) which automatically maximizes its use of available cores on your system.
 
-If you have `Ninja` installed, you can have cmake use it your underlying build system and automatically get improved performance vs the default Make-based system:
+If you have `Ninja` installed, you can have cmake use it as your underlying build system and automatically get improved performance vs the default Make-based system:
 
 ```bash
 ./run.py -ce -gNinja
