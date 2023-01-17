@@ -184,7 +184,10 @@ class TestRunner:
                 cmake_test += " --progress"
 
             if self.options.run:
-                cmake_build += f" --target {self.options.run}"
+                target_suffix = '-exe'
+                if self.options.extension:
+                    target_suffix = '-ext'
+                cmake_build += f" --target {self.options.run}{target_suffix}"
                 cmake_test += f" --tests-regex {self.options.run}"
 
             if self.options.stoponfail:

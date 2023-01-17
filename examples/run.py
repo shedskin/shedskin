@@ -162,14 +162,36 @@ class ExampleRunner:
         st = time.time()
 
         if self.options.cmake:
+            cmake_config = "cmake .."
+            cmake_build  = "cmake --build ."
+
             if self.options.extension:
-                cmake_cmd = "cmake .. -DAS_EXT=ON"
-            else:
-                cmake_cmd = "cmake .."
+                cmake_config += " -DAS_EXT=ON"
+
+            if self.options.ccache:
+                if shutil.which('ccache'):
+                    cmake_config += " -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
+                else:
+                    print(f"\n{YELLOW}WARNING{RESET}: 'ccache' not found")
+
+            if self.options.generator:
+                cmake_config += f" -G{self.options.generator}"
+
+            if self.options.parallel:
+                cmake_build += f" --parallel {self.options.parallel}"
+
+            if self.options.run:
+                cmake_build += f" --target {self.options.run}-exe"
+                # os.system(f'./build/{self.options.run}/{self.options.run}')
+
+            if self.options.target:
+                for target in self.options.target:
+                    cmake_build += f" --target {target}-exe"
+
             actions = [
                 "cd build",
-                cmake_cmd,
-                "cmake --build .",
+                cmake_config,
+                cmake_build,
             ]
             if self.build_dir.exists() and self.options.reset:
                 actions = ["rm -rf ./build", "mkdir -p build"] + actions
@@ -198,17 +220,24 @@ class ExampleRunner:
         arg = opt = parser.add_argument
         opt('-c', '--cmake',     help='run examples using cmake', action='store_true')
         opt('-e', '--extension', help='include python extensions', action='store_true')
+        opt('-g', '--generator', help='specify a cmake build system generator')
+        opt('-j', '--parallel',  help='build and run examples in parallel using N jobs', metavar="N", type=int)
         opt('-k', '--check',     help='check file.py syntax before running', action='store_true')
         opt('-n', '--nocleanup', help='do not cleanup built example', action='store_true')
         opt('-r', '--run',       help='run single example', metavar="EXAMPLE")
         opt('-s', '--reset',     help='reset cmake build', action='store_true')
+        opt('-t', '--target',    help='build only specified targets', nargs="+")
+        opt('--ccache',          help='enable ccache with cmake', action='store_true')
 
         args = parser.parse_args()
         runner = cls(args)
-        if args.run:
-            runner.run_example(args.run)
-        else:
+        if args.cmake:
             runner.run_examples()
+        else:
+            if args.run:
+                runner.run_example(args.run)
+            else:
+                runner.run_examples()
 
 if __name__ == '__main__':
     ExampleRunner.commandline()
