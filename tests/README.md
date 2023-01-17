@@ -22,11 +22,11 @@ It contains two alternative ways to build and run its tests:
 
 ## Usage
 
-This folder includes a commandline tool, `runtests.py`, with extensive options to help setup, build and run its tests:
+This folder includes a commandline tool, `run.py`, with extensive options to help setup, build and run its tests:
 
 ```bash
-$ ./runtests.py --help
-usage: runtests [-h] [-c] [-e] [-g GENERATOR] [-i PATTERN] [-j N] [-k] [-m]
+$ ./run.py --help
+usage: run [-h] [-c] [-e] [-g GENERATOR] [-i PATTERN] [-j N] [-k] [-m]
                 [-n] [-p] [-r TEST] [-s] [-t TARGET [TARGET ...]] [-x]
                 [--progress] [--reset]
 
@@ -66,53 +66,65 @@ The second method is recommended if your platform is supported (linux, osx). Win
 To build and run a single test in cpp-executable mode:
 
 ```bash
-./runtests -r test_<name>.py
+./run -r test_<name>.py
 ```
 
 To build and run a single test in python-extension mode:
 
 ```bash
-./runtests -er test_<name>.py
+./run -er test_<name>.py
 ```
 
 To build and run all tests in cpp-executable mode:
 
 ```bash
-./runtests.py
+./run.py
 ```
 
 To build and run all tests in python-extension mode:
 
 ```bash
-./runtests.py -e
+./run.py -e
 ```
 
 To build and run the most recently modified test (useful during test dev):
 
 ```bash
-./runtests.py -m
+./run.py -m
 ```
 
 or
 
 ```bash
-./runtests.py -me
+./run.py -me
 ```
 
 To build and run tests for error/warning messages:
 
 ```bash
-./runtests.py -x
+./run.py -x
 ```
 
 ### CMake Method
 
-In `cmake` mode, the `runtests.py` script acts as a frontend to `cmake` tools:
+In `cmake` mode, the `run.py` script acts as a frontend to `cmake` tools:
+
+To build / run a **single** test using cmake as an executable:
+
+```bash
+./run.py -c -r test_builtin_iter
+```
+
+To build / run a **single** test using cmake as a python extension:
+
+```bash
+./run.py -ce -r test_builtin_iter
+```
 
 To build and run **all** tests as executables using cmake:
 
 ```bash
-./runtests.py -c
+./run.py -c
 ```
 
 If the above command is run for the first time, it will run the equivalent of the following:
@@ -132,7 +144,7 @@ This is useful during test development and has the benefit of only picking up ch
 To build and run **all** cmake tests as executables **and** python extensions using cmake:
 
 ```bash
-./runtests.py -ce
+./run.py -ce
 ```
 
 This will build/run an executable and python extension test for each test in the directory, basically the equivalent of the following (if it is run the first time):
@@ -150,25 +162,19 @@ cd build && cmake .. -DTEST_EXT=ON && cmake --build . && ctest
 To stop on the first failure:
 
 ```bash
-./runtests.py -ce -s
+./run.py -ce -s
 ```
 
-You can build / run a **single** test using cmake (here as both exec and ext):
+To build / run the most recently modified test (here as exec only):
 
 ```bash
-./runtests.py -ce -r test_builtin_iter
-```
-
-Or build / run the most recently modified test (here as exec only):
-
-```bash
-./runtests.py -c -m
+./run.py -c -m
 ```
 
 To reset or remove the cmake `build` directory and run cmake:
 
 ```bash
-./runtests.py --reset -c
+./run.py --reset -c
 ```
 
 ### Optimizing Test Runs with Cmake
@@ -178,7 +184,7 @@ The cmake method has an option to build and run tests as parallel jobs. This can
 You can specify the number of jobs to build and run tests in parallel:
 
 ```bash
-./runtests.py -ce --j 4
+./run.py -ce --j 4
 ```
 
 Another option is to use a different build system with system that is designed for speed like [Ninje](https://ninja-build.org) which automatically maximizes its use of available cores on your system.
@@ -186,7 +192,7 @@ Another option is to use a different build system with system that is designed f
 If you have `Ninja` installed, you can have cmake use it your underlying build system and automatically get improved performance vs the default Make-based system:
 
 ```bash
-./runtests.py -ce -gNinja
+./run.py -ce -gNinja
 ```
 
 
