@@ -142,7 +142,8 @@ It has the following commandline interface:
 
 ```bash
 $ ./run.py --help
-usage: run [-h] [-c] [-e] [-k] [-n] [-r EXAMPLE] [-s]
+usage: run [-h] [-c] [-e] [-g GENERATOR] [-j N] [-k] [-n] [-r EXAMPLE] [-s]
+           [-t TARGET [TARGET ...]] [--ccache]
 
 runs shedskin examples
 
@@ -150,11 +151,17 @@ options:
   -h, --help            show this help message and exit
   -c, --cmake           run examples using cmake
   -e, --extension       include python extensions
+  -g GENERATOR, --generator GENERATOR
+                        specify a cmake build system generator
+  -j N, --parallel N    build and run examples in parallel using N jobs
   -k, --check           check file.py syntax before running
   -n, --nocleanup       do not cleanup built example
   -r EXAMPLE, --run EXAMPLE
                         run single example
   -s, --reset           reset cmake build
+  -t TARGET [TARGET ...], --target TARGET [TARGET ...]
+                        build only specified targets
+  --ccache              enable ccache with cmake
 ```
 
 #### 1. Builtin Method
@@ -185,6 +192,13 @@ To build and run all examples in python-extension mode:
 
 ### 2. CMake Method
 
+To build and run an example using cmake:
+
+```bash
+    ./run.py -c -r pystone
+```
+
+
 To build and run all examples using cmake:
 
 ```bash
@@ -210,6 +224,24 @@ To reset or remove the cmake `build` directory and run cmake:
 
 ```bash
     ./run.py --reset -c
+```
+
+### Optimizing Building and Running Examples with Cmake
+
+The cmake method has an option to build and run tests as parallel jobs. This can greatly speed up test runs.
+
+You can specify the number of jobs to build and run tests in parallel:
+
+```bash
+./run.py -c --j 4
+```
+
+Another option is to use a different build system with system that is designed for speed like [Ninje](https://ninja-build.org) which automatically maximizes its use of available cores on your system.
+
+If you have `Ninja` installed, you can have cmake use it your underlying build system and automatically get improved performance vs the default Make-based system:
+
+```bash
+./runtests.py -c -gNinja
 ```
 
 
