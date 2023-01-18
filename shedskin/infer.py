@@ -3,33 +3,67 @@
 Copyright 2005-2013 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 
 infer.py: perform iterative type analysis
+-----------------------------------------
 
-we combine two techniques from the literature, to analyze both parametric polymorphism and data polymorphism adaptively. these techniques are agesen's cartesian product algorithm and plevyak's iterative flow analysis (the data polymorphic part). for details about these algorithms, see ole agesen's excellent Phd thesis. for details about the Shed Skin implementation, see mark dufour's MsC thesis.
+We combine two techniques from the literature, to analyze both parametric
+polymorphism and data polymorphism adaptively.
 
-the cartesian product algorithm duplicates functions (or their graph counterpart), based on the cartesian product of possible argument types, whereas iterative flow analysis duplicates classes based on observed imprecisions at assignment points. the two integers mentioned in the graph.py description are used to keep track of duplicates along these dimensions (first class duplicate nr, then function duplicate nr).
+These techniques are Agesen's cartesian product algorithm and Plevyak's
+iterative flow analysis (the data polymorphic part).
 
-the combined technique scales reasonably well, but can explode in many cases. there are many ways to improve this. some ideas:
+For details about these algorithms, see Ole  Agesen's excellent Phd thesis.
+For details about the Shed Skin implementation, see Mark Dufour's MsC thesis.
 
--an iterative deepening approach, merging redundant duplicates after each deepening
--add and propagate filters across variables. e.g. 'a+1; a=b' implies that a and b must be of a type that implements '__add__'.
+The cartesian product algorithm duplicates functions (or their graph
+counterpart), based on the cartesian product of possible argument
+types, whereas iterative flow analysis duplicates classes based on
+observed imprecisions at assignment points.
 
-a complementary but very practical approach to (greatly) improve scalability would be to profile programs before compiling them, resulting in quite precise (lower bound) type information. type inference can then be used to 'fill in the gaps'.
+The two integers mentioned in the graph.py description are used to keep track
+of duplicates along these dimensions (first class duplicate nr, then function
+duplicate nr).
+
+The combined technique scales reasonably well, but can explode
+in many cases. there are many ways to improve this. some ideas:
+
+- An iterative deepening approach, merging redundant duplicates after each
+deepening
+
+- Add and propagate filters across variables. e.g. `a+1;
+a=b` implies that `a` and `b` must be of a type that implements
+`__add__`.
+
+A complementary but very practical approach to (greatly)
+improve scalability would be to profile programs before compiling
+them, resulting in quite precise (lower bound) type information. type
+inference can then be used to 'fill in the gaps'.
+
 
 iterative_dataflow_analysis():
-    (FORWARD PHASE)
-    -propagate types along constraint graph (propagate())
-    -all the while creating function duplicates using the cartesian product algorithm(cpa())
-    -when creating a function duplicate, fill in allocation points with correct type (ifa_seed_template())
-    (BACKWARD PHASE)
-    -determine classes to be duplicated, according to found imprecision points (ifa())
-    -from imprecision points, follow the constraint graph (backwards) to find involved allocation points
-    -duplicate classes, and spread them over these allocation points
-    (CLEANUP)
-    -quit if no further imprecision points (ifa() did not find anything)
-    -otherwise, restore the constraint graph to its original state and restart
-    -all the while maintaining types for each allocation point in gx.alloc_info
 
-update: we now analyze programs incrementally, adding several functions and redoing the full analysis each time. this seems to greatly help the CPA from exploding early on.
+    FORWARD PHASE
+        - propagate types along constraint graph (propagate())
+        - all the while creating function duplicates using the cartesian 
+          product algorithm(cpa())
+        - when creating a function duplicate, fill in allocation points 
+          with correct type (ifa_seed_template())
+
+    BACKWARD PHASE
+        - determine classes to be duplicated, according to found imprecision
+          points (ifa())
+        - from imprecision points, follow the constraint graph (backwards)
+          to find involved allocation points
+        - duplicate classes, and spread them over these allocation points
+
+    CLEANUP
+        - quit if no further imprecision points (ifa() did not find anything)
+        - otherwise, restore the constraint graph to its original state and restart
+        - all the while maintaining types for each allocation point in gx.alloc_info
+
+Update: we now analyze programs incrementally, adding several functions and redoing
+the full analysis each time. This seems to greatly help the CPA from exploding
+early on.
+
 
 '''
 import ast
