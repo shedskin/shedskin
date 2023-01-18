@@ -198,7 +198,7 @@ inline double fsum(pyiter<double> *iterable) {
 
     FOR_IN(x,iterable,1,2,3)
         i = 0;
-        for(size_t j=0; j<partials->__len__(); j++) {
+        for(__ss_int j=0; j<partials->__len__(); j++) {
             y = partials->__getitem__(i);
             if ((__abs(x)<__abs(y))) {
                 double swap = y;
