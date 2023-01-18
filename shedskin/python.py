@@ -1,18 +1,80 @@
-'''
+"""
 *** SHED SKIN Python-to-C++ Compiler ***
 Copyright 2005-2013 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 
-'''
+Classes:
+    Module
+    Class
+    StaticClass
+    Function
+    Variable
+
+Functions:
+    clear_block(m) -> str
+    parse_file(name) -> ast.Module
+    find_module(gx, name, paths) -> (str, str, str, bool)
+
+    # lookup funcs
+    lookup_implementor(cl, ident) -> str
+    lookup_class_module(objexpr, mv, parent) -> (Class, Module)
+    lookup_func(node, mv) -> Function
+    lookup_class(node, mv) -> Class
+    lookup_module(node, mv) -> Module
+    def_class(gx, name, mv=None) -> Class
+    lookup_var(name, parent, local=False, mv=None) -> Variable
+    smart_lookup_var(name, parent, local=False, mv=None) -> Variable
+
+    # bool funcs
+    subclass(a, b) -> bool # should be called is_subclass
+    is_property_setter(dec) -> bool
+    is_literal(node) -> bool
+    is_fastfor(node) -> bool
+    is_method(parent) -> bool
+    is_enumerate(node) -> bool
+    is_zip2(node) -> bool
+    is_isinstance(node) -> bool
+
+    assign_rec(left, right) -> [(ast.node, ast.node)]
+    aug_msg(node, msg) -> str
+
+"""
+
 import ast
 import collections
 import imp
 import os
 import re
 import sys
+import pathlib
 
 from . import ast_utils
 
-class Module(object):
+class PyObject:
+    """Mixin for py objects"""
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__} '{self.ident}'>"
+
+
+class Module(PyObject):
+    """python module class
+
+        name: str               module name
+        name_list: [str]        list of names
+        ident: str              module name
+
+        filename: str           module path
+        path: str               module parentdir
+        relative_filename: str  ?
+        relative_path: str      relative_filename parentdir
+
+        ast: ast.Module         ast module or None
+        builtin: bool           is_builtin ?
+        node: ast.node          ast Node
+        prop_includes: set      ?
+        import_order: int       order of imports or number of imports?
+
+    """
     def __init__(self, name, filename, relative_filename, builtin, node):
         #set name and its dependent fields
         self.name = name
@@ -49,16 +111,13 @@ class Module(object):
             or ident in self.mv.classes \
             or ident in self.mv.ext_classes
 
-    def __repr__(self):
-        return 'Module ' + self.ident
-
     @property
     def doc(self):
         """returns module docstring."""
         return ast.get_docstring(self.ast)
 
 
-class Class(object):
+class Class(PyObject):
     def __init__(self, gx, node, mv):
         self.gx = gx
         self.node = node
@@ -124,11 +183,8 @@ class Class(object):
                 return ['first', 'second']
         return []
 
-    def __repr__(self):
-        return 'class ' + self.ident
 
-
-class StaticClass(object):
+class StaticClass(PyObject):
     def __init__(self, cl, mv):
         self.vars = {}
         self.static_nodes = []
@@ -138,11 +194,7 @@ class StaticClass(object):
         self.mv = mv
         self.module = cl.module
 
-    def __repr__(self):
-        return 'static class ' + self.ident
-
-
-class Function(object):
+class Function:
     def __init__(self, gx, node=None, parent=None, inherited_from=None, mv=None):
         self.gx = gx
         self.node = node
@@ -192,11 +244,11 @@ class Function(object):
 
     def __repr__(self):
         if self.parent:
-            return 'Function ' + repr((self.parent, self.ident))
-        return 'Function ' + self.ident
+            return f"<Function '{self.parent.ident}.{self.ident}'>"
+        return f"<Function '{self.ident}'>"
 
 
-class Variable(object):
+class Variable:
     def __init__(self, name, parent):
         self.name = name
         self.parent = parent
@@ -217,8 +269,8 @@ class Variable(object):
 
     def __repr__(self):
         if self.parent:
-            return repr((self.parent, self.name))
-        return self.name
+            return f"<Variable '{self.parent}.{self.name}'"
+        return f"<Variable '{self.name}'"
 
 
 def clear_block(m):
@@ -410,7 +462,7 @@ def is_method(parent):
     return isinstance(parent, Function) and isinstance(parent.parent, Class)
 
 
-def is_enum(node):
+def is_enumerate(node):
     return isinstance(node.iter, ast.Call) and isinstance(node.iter.func, ast.Name) and node.iter.func.id == 'enumerate' and len(node.iter.args) == 1 and ast_utils.is_assign_list_or_tuple(node.target)
 
 

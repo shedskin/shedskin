@@ -70,7 +70,7 @@ fileno
 float
 F_OK
 FOR_IN
-FOR_IN_ENUM
+FOR_IN_ENUMERATE
 FOR_IN_ZIP
 friend
 goto
