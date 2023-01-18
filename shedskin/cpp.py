@@ -1111,8 +1111,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.append(',%s,%s)' % (ivar[2:], evar[2:]))
         self.print(self.line)
 
-    def fastenum(self, node):
-        return python.is_enum(node) and self.only_classes(node.iter.args[0], ('tuple', 'list', 'str_'))
+    def fastenumerate(self, node):
+        return python.is_enumerate(node) and self.only_classes(node.iter.args[0], ('tuple', 'list', 'str_'))
 
     def fastzip2(self, node):
         names = ('tuple', 'list')
@@ -1142,8 +1142,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.output('%s = 0;' % self.mv.tempcount[ast_utils.orelse_to_node(node)])
         if python.is_fastfor(node):
             self.do_fastfor(node, node, None, assname, func, False)
-        elif self.fastenum(node):
-            self.do_fastenum(node, func, False)
+        elif self.fastenumerate(node):
+            self.do_fastenumerate(node, func, False)
             self.forbody(node, None, assname, func, True, False)
         elif self.fastzip2(node):
             self.do_fastzip2(node, func, False)
@@ -1181,11 +1181,11 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.visit(node, func)
         self.append(',')
 
-    def do_fastenum(self, node, func, genexpr):
+    def do_fastenumerate(self, node, func, genexpr):
         if self.only_classes(node.iter.args[0], ('tuple', 'list')):
-            self.start('FOR_IN_ENUM(')
+            self.start('FOR_IN_ENUMERATE(')
         else:
-            self.start('FOR_IN_ENUM_STR(')
+            self.start('FOR_IN_ENUMERATE_STR(')
         left, right = node.target.elts
         self.do_fastzip2_one(right, func)
         self.visit(node.iter.args[0], func)
@@ -2452,7 +2452,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.eol()
                 self.output('return __result;')
                 self.start('__after_yield_0:')
-            elif len(node.generators) == 1 and not python.is_fastfor(node.generators[0]) and not self.fastenum(node.generators[0]) and not self.fastzip2(node.generators[0]) and not node.generators[0].ifs and self.one_class(node.generators[0].iter, ('tuple', 'list', 'str_', 'dict', 'set')):
+            elif len(node.generators) == 1 and not python.is_fastfor(node.generators[0]) and not self.fastenumerate(node.generators[0]) and not self.fastzip2(node.generators[0]) and not node.generators[0].ifs and self.one_class(node.generators[0].iter, ('tuple', 'list', 'str_', 'dict', 'set')):
                 self.start('__ss_result->units[' + self.mv.tempcount[node.generators[0].iter] + '] = ')
                 self.visit(node.elt, lcfunc)
             else:
@@ -2473,8 +2473,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         if python.is_fastfor(qual):
             self.do_fastfor(node, qual, quals, iter, lcfunc, genexpr)
-        elif self.fastenum(qual):
-            self.do_fastenum(qual, lcfunc, genexpr)
+        elif self.fastenumerate(qual):
+            self.do_fastenumerate(qual, lcfunc, genexpr)
             self.listcompfor_body(node, quals, iter, lcfunc, True, genexpr)
         elif self.fastzip2(qual):
             self.do_fastzip2(qual, lcfunc, genexpr)
@@ -2863,7 +2863,6 @@ def generate_code(gx):
         if not module.builtin:
             gv = GenerateVisitor(gx, module)
             gv.visit(module.ast)
-            # from IPython import embed; embed()
             gv.out.close()
             gv.header_file()
             gv.out.close()

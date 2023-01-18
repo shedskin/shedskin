@@ -1142,7 +1142,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.temp_var2((node, 1), infer.inode(self.gx, get_iter), func)
             self.temp_var_int(node.iter, func)
 
-            if python.is_enum(node) or python.is_zip2(node):
+            if python.is_enumerate(node) or python.is_zip2(node):
                 self.temp_var2((node, 2), infer.inode(self.gx, node.iter.args[0]), func)
                 if python.is_zip2(node):
                     self.temp_var2((node, 3), infer.inode(self.gx, node.iter.args[1]), func)
