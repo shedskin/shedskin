@@ -52,8 +52,11 @@ from . import ast_utils
 class PyObject:
     """Mixin for py objects"""
 
+    # def __repr__(self):
+    #     return f"<{self.__class__.__name__} '{self.ident}'>"
+
     def __repr__(self):
-        return f"<{self.__class__.__name__} '{self.ident}'>"
+        return f"{self.__class__.__name__} {self.ident}"
 
 
 class Module(PyObject):
@@ -244,8 +247,10 @@ class Function:
 
     def __repr__(self):
         if self.parent:
-            return f"<Function '{self.parent.ident}.{self.ident}'>"
-        return f"<Function '{self.ident}'>"
+           return 'Function ' + repr((self.parent, self.ident))
+        return 'Function ' + self.ident
+        #     return f"<Function '{self.parent.ident}.{self.ident}'>"
+        # return f"<Function '{self.ident}'>"
 
 
 class Variable:
@@ -269,8 +274,10 @@ class Variable:
 
     def __repr__(self):
         if self.parent:
-            return f"<Variable '{self.parent}.{self.name}'"
-        return f"<Variable '{self.name}'"
+            return repr((self.parent, self.name))
+        return self.name
+        #     return f"<Variable '{self.parent.name}.{self.name}'>"
+        # return f"<Variable '{self.name}'>"
 
 
 def clear_block(m):
