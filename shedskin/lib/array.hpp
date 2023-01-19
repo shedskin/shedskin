@@ -168,12 +168,12 @@ template<class T> __ss_bool array<T>::__eq__(pyobj *p) {
    if(p->__class__ != cl_array)
        return False;
    array<T> *b = (array<T> *)p;
-   size_t len = this->__len__();
+   __ss_int len = this->__len__();
    if(b->__len__() != len)
        return False;
    if(this->typechar == b->typechar)
        return __mbool(memcmp(&(this->units[0]), &(b->units[0]), this->units.size()) == 0);
-   for(size_t i=0; i<len; i++)
+   for(__ss_int i=0; i<len; i++)
        if(!__eq(this->__getitem__(i), b->__getitem__(i)))
            return False;
    return True;
