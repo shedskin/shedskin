@@ -144,7 +144,11 @@ def typestr(gx, types, parent=None, cplusplus=True, node=None, check_extmod=Fals
 def dynamic_variable_error(gx, node, types, conv2):
     if not node.name.startswith('__'):  # XXX startswith
         classes = polymorphic_cl(gx, types_classes(types))
-        lcp = lowest_common_parents(classes)
+        if python.def_class(gx, 'bytes_') in classes and python.def_class(gx, 'str_') in classes:
+            lcp = classes
+        else:
+            lcp = lowest_common_parents(classes)
+
         if node.parent:
             varname = "%s" % node
         else:
@@ -160,8 +164,8 @@ def typestrnew(gx, types, cplusplus=True, node=None, check_extmod=False, depth=0
         raise RuntimeError()
 
     # --- annotation or c++ code
-    conv1 = {'int_': '__ss_int', 'float_': 'double', 'str_': 'str', 'none': 'int', 'bool_': '__ss_bool', 'complex': 'complex'}
-    conv2 = {'int_': 'int', 'float_': 'float', 'str_': 'str', 'class_': 'class', 'none': 'None', 'bool_': 'bool', 'complex': 'complex'}
+    conv1 = {'int_': '__ss_int', 'float_': 'double', 'str_': 'str', 'none': 'int', 'bool_': '__ss_bool', 'complex': 'complex', 'bytes_': 'bytes'}
+    conv2 = {'int_': 'int', 'float_': 'float', 'str_': 'str', 'class_': 'class', 'none': 'None', 'bool_': 'bool', 'complex': 'complex', 'bytes_': 'bytes'}
     if cplusplus:
         sep, ptr, conv = '<>', ' *', conv1
     else:
@@ -188,7 +192,10 @@ def typestrnew(gx, types, cplusplus=True, node=None, check_extmod=False, depth=0
         return 'lambda%d' % f.lambdanr
 
     classes = polymorphic_cl(gx, types_classes(types))
-    lcp = lowest_common_parents(classes)
+    if python.def_class(gx, 'bytes_') in classes and python.def_class(gx, 'str_') in classes:
+        lcp = classes
+    else:
+        lcp = lowest_common_parents(classes)
 
     # --- multiple parent classes
     if len(lcp) > 1:
