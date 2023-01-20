@@ -7,8 +7,10 @@
 {% set pseudo = n.asname or n.name -%}
 {% if name == '*' -%}
 
-  {% for func in child_module.mv.funcs.values()|selectattr("cp") -%}
-    using {{ mod_name }}::{{cpp_name(func)}};
+  {% for func in child_module.mv.funcs.values() -%}
+    {% if func.cp or child_module.builtin -%}
+      using {{ mod_name }}::{{cpp_name(func)}};
+    {% endif %}
   {% endfor %}
 
   {% for cl in child_module.mv.classes.values() -%}
@@ -18,7 +20,7 @@
 {% elif pseudo not in module.mv.globals -%}
   {% if name in child_module.mv.funcs -%}
     {% set func = child_module.mv.funcs[name] %}
-    {% if func.cp -%}
+    {% if func.cp or child_module.builtin -%}
       using {{ mod_name }}::{{cpp_name(func)}};
     {% endif %}
   {% else -%}

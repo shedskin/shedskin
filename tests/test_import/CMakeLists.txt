@@ -1,4 +1,6 @@
-set(sys_modules)
+set(sys_modules
+        itertools
+)
 
 set(app_modules
 	foo
