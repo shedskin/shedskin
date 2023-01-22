@@ -26,7 +26,7 @@ setup(
     keywords="compiler, translator, cpp, extension",
     packages=['shedskin'],
     python_requires=">=3.8, <4",
-    install_requires=["jinja2"],
+    install_requires=[],
     extras_require={
         # "dev": ["check-manifest"],
         "test": ["pytest", "tox"],

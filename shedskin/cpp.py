@@ -20,8 +20,6 @@ import string
 import struct
 import textwrap
 
-import jinja2
-
 from . import ast_utils
 from . import error
 from . import extmod
@@ -109,14 +107,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.with_count = 0
         self.bool_wrapper = {}
         self.namer = CPPNamer(self.gx, self)
-        self.jinja_env = jinja2.Environment(
-            loader=jinja2.FileSystemLoader(
-                self.gx.sysdir + '/templates/cpp/'),
-            trim_blocks=True,
-            lstrip_blocks=True,
-        )
-        self.jinja_env.filters['depointer'] = (
-            lambda ts: ts[:-1] if ts.endswith('*') else ts)
         self.extmod = extmod.ExtensionModule(self.gx, self)
 
     def cpp_name(self, obj):
@@ -486,26 +476,49 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.print('}')
 
     def module_cpp(self, node):
-        if ast.get_docstring(node):
-            node.doc = ast.get_docstring(node) # necessary for the module-level comments
+        self.print('#include "builtin.hpp"\n')
 
-        file_top = self.jinja_env.get_template('module.cpp.tpl').render(
-            node=node,
-            module=self.module,
-            imports=[
-                (child, self.gx.from_module[child])
-                for child in node.body
-                if isinstance(child, ast.ImportFrom) and child.module != '__future__'],
-            globals=self.gen_declare_defs(self.mv.globals.items()),
-            nodetypestr=lambda var: typestr.nodetypestr(self.gx, var, var.parent, mv=self.mv),
-            defaults=self.gen_defaults(),
-            listcomps=self.mv.listcomps,
-            cpp_name=self.cpp_name,
-            namer=self.namer,
-            dedent=textwrap.dedent,
-        )
-        
-        self.print(file_top)
+        # --- comments
+        doc = ast.get_docstring(node)
+        if doc:
+            self.do_comment(doc)
+            self.print()
+
+        # --- namespace fun
+        for n in self.module.name_list:
+            self.print('namespace __' + n + '__ {')
+        self.print()
+
+        for child in node.body:
+            if isinstance(child, ast.ImportFrom) and child.module != '__future__':
+                module = self.gx.from_module[child]
+                using = 'using ' + module.full_path() + '::'
+                for (name, pseudonym) in [(n.name, n.asname) for n in child.names]:
+                    pseudonym = pseudonym or name
+                    if name == '*':
+                        for func in module.mv.funcs.values():
+                            if func.cp or module.builtin:
+                                self.print(using + self.cpp_name(func) + ';')
+                        for cl in module.mv.classes.values():
+                            self.print(using + self.cpp_name(cl) + ';')
+                    elif pseudonym not in self.module.mv.globals:
+                        if name in module.mv.funcs:
+                            func = module.mv.funcs[name]
+                            if func.cp or module.builtin:
+                                self.print(using + self.cpp_name(func) + ';')
+                        else:
+                            self.print(using + self.namer.nokeywords(name) + ';')
+        self.print()
+
+        # --- globals
+        defs = self.declare_defs(list(self.mv.globals.items()), declare=False)
+        if defs:
+            self.output(defs)
+            self.print()
+
+        # --- defaults
+        for type_, number in self.gen_defaults():
+            self.print(f'{type_} default_{number};')
 
         # --- declarations
         self.listcomps = {}
