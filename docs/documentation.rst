@@ -273,9 +273,6 @@ First, install msys64 and mingw64. Then start a mingw32, mingw64 or ucrt64 shell
   pacman -S libpcre
   pacman -S pcre-devel
   pacman -S python-devel
-  pacman -S python-pip
-  pip install progressbar
-  pip install jinja2
 
 It should now be possible to use Shedskin from the shell.
 
