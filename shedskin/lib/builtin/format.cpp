@@ -432,7 +432,7 @@ int_ *___box(unsigned long long i) {
 bool_ *___box(__ss_bool b) {
     return new bool_(b);
 }
-float_ *___box(double d) {
+float_ *___box(__ss_float d) {
     return new float_(d);
 }
 complex_ *___box(complex c) {
