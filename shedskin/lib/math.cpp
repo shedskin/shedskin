@@ -1,10 +1,10 @@
-/* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2023 Mark Dufour and contributors; License Expat (See LICENSE) */
 
 #include "math.hpp"
 
 namespace __math__ {
 
-double e, pi;
+__ss_float e, pi;
 
 void __init() {
     e = 2.71828182846;

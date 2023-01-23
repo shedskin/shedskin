@@ -21,7 +21,7 @@ template<> inline __ss_bool ___bool(str *s) { return __mbool(s && s->size() > 0)
 template<> inline __ss_bool ___bool(int x) { return __mbool(x!=0); }
 template<> inline __ss_bool ___bool(bool x) { return __mbool(x); }
 template<> inline __ss_bool ___bool(__ss_bool x) { return x; }
-template<> inline __ss_bool ___bool(double x) { return __mbool(x!=0); }
+template<> inline __ss_bool ___bool(__ss_float x) { return __mbool(x!=0); }
 template<> inline __ss_bool ___bool(void *) { return False; }
 template<> inline __ss_bool ___bool(long int) { return False; } /* XXX bool(None) 64-bit */
 

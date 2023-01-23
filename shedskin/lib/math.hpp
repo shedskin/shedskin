@@ -1,4 +1,4 @@
-/* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2023 Mark Dufour and contributors; License Expat (See LICENSE) */
 
 #ifndef __MATH_HPP
 #define __MATH_HPP
@@ -9,16 +9,16 @@
 using namespace __shedskin__;
 namespace __math__ {
 
-extern double pi;
-extern double e;
+extern __ss_float pi;
+extern __ss_float e;
 
 void __init();
 
-inline double ceil(double x) {
+inline __ss_float ceil(__ss_float x) {
     return std::ceil(x);
 }
 
-inline double fabs(double x) {
+inline __ss_float fabs(__ss_float x) {
     return std::fabs(x);
 }
 
@@ -34,174 +34,174 @@ inline __ss_int factorial(__ss_int x) {
     return result;
 }
 
-inline double floor(double x) {
+inline __ss_float floor(__ss_float x) {
     return std::floor(x);
 }
 
-inline double fmod(double x, double y) {
+inline __ss_float fmod(__ss_float x, __ss_float y) {
     return std::fmod(x, y);
 }
 
-inline tuple2<double, double> *modf(double x) {
-    return (new tuple2<double, double>(2, x-(__ss_int)x, (double)(__ss_int)x));
+inline tuple2<__ss_float, __ss_float> *modf(__ss_float x) {
+    return (new tuple2<__ss_float, __ss_float>(2, x-(__ss_int)x, (__ss_float)(__ss_int)x));
 }
 
-inline double ldexp(double x, __ss_int i) {
+inline __ss_float ldexp(__ss_float x, __ss_int i) {
     return std::ldexp(x, i);
 }
 
-inline double exp(double x) {
+inline __ss_float exp(__ss_float x) {
     return std::exp(x);
 }
 
-inline double log(double x) {
+inline __ss_float log(__ss_float x) {
     return std::log(x);
 }
 
-inline double log(double x, double base) {
+inline __ss_float log(__ss_float x, __ss_float base) {
     return std::log(x) / std::log(base);
 }
 
-inline double log10(double x) {
+inline __ss_float log10(__ss_float x) {
     return std::log10(x);
 }
 
-inline double sqrt(double x) {
+inline __ss_float sqrt(__ss_float x) {
     return std::sqrt(x);
 }
 
-inline double acos(double x) {
+inline __ss_float acos(__ss_float x) {
     return std::acos(x);
 }
 
-inline double asin(double x) {
+inline __ss_float asin(__ss_float x) {
     return std::asin(x);
 }
 
-inline double atan(double x) {
+inline __ss_float atan(__ss_float x) {
     return std::atan(x);
 }
 
-inline double atan2(double x, double y) {
+inline __ss_float atan2(__ss_float x, __ss_float y) {
     return std::atan2(x, y);
 }
 
-inline double cos(double x) {
+inline __ss_float cos(__ss_float x) {
     return std::cos(x);
 }
 
-inline double hypot(double x, double y) {
+inline __ss_float hypot(__ss_float x, __ss_float y) {
     return sqrt(x*x+y*y);
 }
 
-inline double sin(double x) {
+inline __ss_float sin(__ss_float x) {
     return std::sin(x);
 }
 
-inline double tan(double x) {
+inline __ss_float tan(__ss_float x) {
     return std::tan(x);
 }
 
-inline double degrees(double x) {
+inline __ss_float degrees(__ss_float x) {
     return x*(180.0/pi);
 }
 
-inline double radians(double x) {
+inline __ss_float radians(__ss_float x) {
     return x/(180.0/pi);
 }
 
-inline double cosh(double x) {
+inline __ss_float cosh(__ss_float x) {
     return std::cosh(x);
 }
 
-inline double sinh(double x) {
+inline __ss_float sinh(__ss_float x) {
     return std::sinh(x);
 }
 
-inline double tanh(double x) {
+inline __ss_float tanh(__ss_float x) {
     return std::tanh(x);
 }
 
-inline double pow(double x, double y) {
+inline __ss_float pow(__ss_float x, __ss_float y) {
     return std::pow(x,y);
 }
 
-inline __ss_bool isinf(double x) {
+inline __ss_bool isinf(__ss_float x) {
     return __mbool(std::isinf(x));
 }
 
-inline __ss_bool isnan(double x) {
+inline __ss_bool isnan(__ss_float x) {
     return __mbool(std::isnan(x));
 }
 
-inline double acosh(double x) {
+inline __ss_float acosh(__ss_float x) {
     return ::acosh(x);
 }
 
-inline double asinh(double x) {
+inline __ss_float asinh(__ss_float x) {
     return ::asinh(x);
 }
 
-inline double atanh(double x) {
+inline __ss_float atanh(__ss_float x) {
     return ::atanh(x);
 }
 
-inline double copysign(double x, double y) {
+inline __ss_float copysign(__ss_float x, __ss_float y) {
     return ::copysign(x, y);
 }
 
-inline double erf(double x) {
+inline __ss_float erf(__ss_float x) {
     return ::erf(x);
 }
 
-inline double erfc(double x) {
+inline __ss_float erfc(__ss_float x) {
     return ::erfc(x);
 }
 
-inline double expm1(double x) {
+inline __ss_float expm1(__ss_float x) {
     return ::expm1(x);
 }
 
-inline tuple2<double, __ss_int> *frexp(double x) {
+inline tuple2<__ss_float, __ss_int> *frexp(__ss_float x) {
     __ss_int n;
-    double mantisa = std::frexp(x, &n);
+    __ss_float mantisa = std::frexp(x, &n);
 
-    return (new tuple2<double, __ss_int>(2, mantisa, n));
+    return (new tuple2<__ss_float, __ss_int>(2, mantisa, n));
 }
 
-inline double gamma(double x) {
+inline __ss_float gamma(__ss_float x) {
     return ::tgamma(x);
 }
 
-inline double lgamma(double x) {
+inline __ss_float lgamma(__ss_float x) {
     return ::lgamma(x);
 }
 
-inline double log1p(double x) {
+inline __ss_float log1p(__ss_float x) {
     return ::log1p(x);
 }
 
-inline __ss_int trunc(double x) {
+inline __ss_int trunc(__ss_float x) {
     return ::trunc(x);
 }
 
-inline double fsum(pyiter<double> *iterable) {
-    list<double> *partials;
-    double hi, lo, x, y;
+inline __ss_float fsum(pyiter<__ss_float> *iterable) {
+    list<__ss_float> *partials;
+    __ss_float hi, lo, x, y;
     __ss_int i;
 
     __ss_int __2;
-    pyiter<double> *__1;
-    pyiter<double>::for_in_loop __3;
+    pyiter<__ss_float> *__1;
+    pyiter<__ss_float>::for_in_loop __3;
 
-    partials = (new list<double>());
+    partials = (new list<__ss_float>());
 
     FOR_IN(x,iterable,1,2,3)
         i = 0;
         for(__ss_int j=0; j<partials->__len__(); j++) {
             y = partials->__getitem__(i);
             if ((__abs(x)<__abs(y))) {
-                double swap = y;
+                __ss_float swap = y;
                 y = x;
                 x = swap;
             }
@@ -214,7 +214,7 @@ inline double fsum(pyiter<double> *iterable) {
             x = hi;
         }
 
-        (partials)->__setslice__(1,i,0,0,(new list<double>(1,x)));
+        (partials)->__setslice__(1,i,0,0,(new list<__ss_float>(1,x)));
     END_FOR
 
     return __sum(partials);
