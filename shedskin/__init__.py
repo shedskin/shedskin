@@ -122,6 +122,7 @@ class Shedskin:
         opt("-m", "--makefile",   help="Specify alternate Makefile name")
         opt("-n", "--noassert",   help="Disable assert statements", action="store_true")
         opt("-o", "--outputdir",  help="Specify output directory for generated files")
+        opt("-p", "--float",      help="Use 32-bit floating point numbers", action="store_true")
         opt("-r", "--random",     help="Use fast random number generator (rand())", action="store_true")
         opt("-s", "--silent",     help="Silent mode, only show warnings", action="store_true")
         opt("-w", "--nowrap",     help="Disable wrap-around checking", action="store_true")
@@ -153,6 +154,9 @@ class Shedskin:
 
         if args.long:
             ss.gx.longlong = True
+
+        if args.float:
+            ss.gx.float = True
 
         if args.nogc:
             ss.gx.nogc = True

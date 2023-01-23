@@ -55,6 +55,7 @@ class GlobalInfo:  # XXX add comments, split up
         self.assertions = True
         self.extension_module = False
         self.longlong = False
+        self.float = False
         self.flags = None
         self.annotation = False
         self.msvc = False

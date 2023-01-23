@@ -134,6 +134,8 @@ def generate_makefile(gx):
                 line += ' -D__SS_NOASSERT'
             if gx.longlong:
                 line += ' -D__SS_LONG'
+            if gx.float:
+                line += ' -D__SS_FLOAT'
             if gx.backtrace:
                 line += ' -D__SS_BACKTRACE -rdynamic -fno-inline'
             if gx.pypy:

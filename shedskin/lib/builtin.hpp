@@ -49,6 +49,12 @@ namespace __shedskin__ {
     typedef int __ss_int;
 #endif
 
+#ifdef __SS_FLOAT
+    typedef float __ss_float;
+#else
+    typedef double __ss_float;
+#endif
+
 /* forward class declarations */
 
 class __ss_bool;
