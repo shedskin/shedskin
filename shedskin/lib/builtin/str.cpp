@@ -947,7 +947,7 @@ str *__str(__ss_bool b) {
 
 str *__str() { return new str(""); } /* XXX optimize */
 
-template<> str *__str(double t) {
+template<> str *__str(__ss_float t) {
     std::stringstream ss;
     ss.precision(12);
     ss << std::showpoint << t;

@@ -57,15 +57,15 @@ __ss_int __int(bytes *s, __ss_int base) {
     return i;
 }
 
-template<> double __float(str *s) {
-    double d = strtod(s->c_str(), NULL);
+template<> __ss_float __float(str *s) {
+    __ss_float d = strtod(s->c_str(), NULL);
     if(std::isnan(d))
         d = NAN; // avoid "-nan" (test 194)
     return d;
 }
 
 template<> __ss_int id(__ss_int) { throw new TypeError(new str("'id' called with integer")); }
-template<> __ss_int id(double) { throw new TypeError(new str("'id' called with float")); }
+template<> __ss_int id(__ss_float) { throw new TypeError(new str("'id' called with float")); }
 template<> __ss_int id(__ss_bool) { throw new TypeError(new str("'id' called with bool")); }
 
 static int range_len(int lo, int hi, int step) {
@@ -157,7 +157,7 @@ __iter<__ss_int> *reversed(__xrange *x) {
 
 /* representation */
 
-template<> str *repr(double d) { return __str(d); }
+template<> str *repr(__ss_float d) { return __str(d); }
 #ifdef __SS_LONG
 template<> str *repr(__ss_int i) { return __str(i); }
 #endif
@@ -170,7 +170,7 @@ str *__str(void *) { return new str("void"); }
 /* get class pointer */
 
 template<> class_ *__type(int) { return cl_int_; }
-template<> class_ *__type(double) { return cl_float_; }
+template<> class_ *__type(__ss_float) { return cl_float_; }
 
 /* hex, oct, bin */
 

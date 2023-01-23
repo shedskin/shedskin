@@ -16,13 +16,13 @@ template<> inline long hasher(__ss_int a) { return (a==-1)?-2:a; }
 template<> inline long hasher(int a) { return (a==-1)?-2:a; }
 template<> inline long hasher(__ss_bool a) { return a.value; }
 template<> inline long hasher(void *a) { return (intptr_t)a; }
-template<> inline long hasher(double v) {
+template<> inline long hasher(__ss_float v) {
     long hipart, x; /* modified from CPython */
     int expo;
     v = frexp(v, &expo);
     v *= 2147483648.0; /* 2**31 */
     hipart = (long)v;   /* take the top 32 bits */
-    v = (v - (double)hipart) * 2147483648.0; /* get the next 32 bits */
+    v = (v - (__ss_float)hipart) * 2147483648.0; /* get the next 32 bits */
     x = hipart + (long)v + (expo << 15);
     if (x== -1)
         x = -2;

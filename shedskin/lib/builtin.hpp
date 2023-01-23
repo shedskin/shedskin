@@ -849,25 +849,25 @@ public:
 
 class complex {
 public:
-    double real, imag;
+    __ss_float real, imag;
 
     inline complex operator+(complex b);
-    inline complex operator+(double b);
+    inline complex operator+(__ss_float b);
     inline complex operator-(complex b);
-    inline complex operator-(double b);
+    inline complex operator-(__ss_float b);
     inline complex operator*(complex b);
-    inline complex operator*(double b);
+    inline complex operator*(__ss_float b);
     inline complex operator/(complex b);
-    inline complex operator/(double b);
+    inline complex operator/(__ss_float b);
     inline complex operator%(complex b);
-    inline complex operator%(double b);
+    inline complex operator%(__ss_float b);
     inline complex operator+();
     inline complex operator-();
     inline __ss_bool operator==(complex b);
-    inline __ss_bool operator==(double b);
+    inline __ss_bool operator==(__ss_float b);
     inline __ss_bool operator!=(complex b);
-    inline __ss_bool operator!=(double b);
-    inline complex& operator=(double a);
+    inline __ss_bool operator!=(__ss_float b);
+    inline complex& operator=(__ss_float a);
 
     inline complex conjugate();
     complex parsevalue(str *s);
@@ -876,18 +876,18 @@ public:
     str *__repr__();
 };
 
-complex mcomplex(double real=0.0, double imag=0.0);
+complex mcomplex(__ss_float real=0.0, __ss_float imag=0.0);
 template<class T> complex mcomplex(T t);
 complex mcomplex(str *s);
 
-inline complex operator+(double a, complex b) { return mcomplex(a)+b; }
-inline complex operator-(double a, complex b) { return mcomplex(a)-b; }
-inline complex operator*(double a, complex b) { return mcomplex(a)*b; }
-inline complex operator/(double a, complex b) { return mcomplex(a)/b; }
-inline complex operator%(double a, complex b) { return mcomplex(a)%b; }
+inline complex operator+(__ss_float a, complex b) { return mcomplex(a)+b; }
+inline complex operator-(__ss_float a, complex b) { return mcomplex(a)-b; }
+inline complex operator*(__ss_float a, complex b) { return mcomplex(a)*b; }
+inline complex operator/(__ss_float a, complex b) { return mcomplex(a)/b; }
+inline complex operator%(__ss_float a, complex b) { return mcomplex(a)%b; }
 
-inline __ss_bool operator==(double a, complex b) { return mcomplex(a)==b; }
-inline __ss_bool operator!=(double a, complex b) { return mcomplex(a)!=b; }
+inline __ss_bool operator==(__ss_float a, complex b) { return mcomplex(a)==b; }
+inline __ss_bool operator!=(__ss_float a, complex b) { return mcomplex(a)!=b; }
 
 class class_: public pyobj {
 public:
@@ -909,8 +909,8 @@ public:
 
 class float_ : public pyobj {
 public:
-    double unit;
-    float_(double f);
+    __ss_float unit;
+    float_(__ss_float f);
     str *__repr__();
     __ss_bool __nonzero__();
 };
@@ -1044,15 +1044,15 @@ void print2(file *f, int comma, int n, ...);
 __xrange *range(__ss_int b);
 __xrange *range(__ss_int a, __ss_int b, __ss_int s=1);
 
-static inline double __portableround(double x) {
+static inline __ss_float __portableround(__ss_float x) {
     if(x<0) return ceil(x-0.5);
     return floor(x+0.5);
 }
-inline double ___round(double a) {
+inline __ss_float ___round(__ss_float a) {
     return __portableround(a);
 }
-inline double ___round(double a, int n) {
-    return __portableround(pow((double)10,n)*a)/pow((double)10,n);
+inline __ss_float ___round(__ss_float a, int n) {
+    return __portableround(pow((__ss_float)10,n)*a)/pow((__ss_float)10,n);
 }
 
 template<class T> inline T __abs(T t) { return t->__abs__(); }
@@ -1060,7 +1060,7 @@ template<class T> inline T __abs(T t) { return t->__abs__(); }
 template<> inline __ss_int __abs(__ss_int a) { return a<0?-a:a; }
 #endif
 template<> inline int __abs(int a) { return a<0?-a:a; }
-template<> inline double __abs(double a) { return a<0?-a:a; }
+template<> inline __ss_float __abs(__ss_float a) { return a<0?-a:a; }
 inline int __abs(__ss_bool b) { return b.value; }
 
 template<class T> str *hex(T t) {
@@ -1106,7 +1106,7 @@ __ss_bool isinstance(pyobj *p, class_ *cl);
 #define INFINITY __builtin_inff()
 #endif
 #if defined( _MSC_VER )
-#define INFINITY std::numeric_limits<double>::infinity()
+#define INFINITY std::numeric_limits<__ss_float>::infinity()
 #endif
 
 #define __SS_MIN(a,b) ((a) < (b) ? (a) : (b))
@@ -1177,24 +1177,24 @@ template<> inline __ss_int __int(__ss_int i) { return i; }
 template<> inline __ss_int __int(int i) { return i; }
 template<> inline __ss_int __int(str *s) { return __int(s, 10); }
 template<> inline __ss_int __int(__ss_bool b) { return b.value; }
-template<> inline __ss_int __int(double d) { return (__ss_int)d; }
+template<> inline __ss_int __int(__ss_float d) { return (__ss_int)d; }
 
 /* float */
 
-inline double __float() { return 0; }
-template<class T> inline double __float(T t) { return t->__float__(); }
+inline __ss_float __float() { return 0; }
+template<class T> inline __ss_float __float(T t) { return t->__float__(); }
 #ifdef __SS_LONG
-template<> inline double __float(__ss_int p) { return p; }
+template<> inline __ss_float __float(__ss_int p) { return p; }
 #endif
-template<> inline double __float(int p) { return p; }
-template<> inline double __float(__ss_bool b) { return b.value; }
-template<> inline double __float(double d) { return d; }
-template<> double __float(str *s);
+template<> inline __ss_float __float(int p) { return p; }
+template<> inline __ss_float __float(__ss_bool b) { return b.value; }
+template<> inline __ss_float __float(__ss_float d) { return d; }
+template<> __ss_float __float(str *s);
 
 /* str */
 
 template<class T> str *__str(T t) { if (!t) return new str("None"); return t->__str__(); }
-template<> str *__str(double t);
+template<> str *__str(__ss_float t);
 #ifdef __SS_LONG
 str *__str(__ss_int t, __ss_int base=10);
 #endif
@@ -1262,7 +1262,7 @@ bytes *__bytearray();
 /* repr */
 
 template<class T> str *repr(T t) { if (!t) return new str("None"); return t->__repr__(); }
-template<> str *repr(double t);
+template<> str *repr(__ss_float t);
 #ifdef __SS_LONG
 template<> str *repr(__ss_int t);
 #endif
@@ -1438,7 +1438,7 @@ template<> inline __ss_int __copy(__ss_int i) { return i; }
 #endif
 template<> inline int __copy(int i) { return i; }
 template<> inline __ss_bool __copy(__ss_bool b) { return b; }
-template<> inline double __copy(double d) { return d; }
+template<> inline __ss_float __copy(__ss_float d) { return d; }
 template<> inline void *__copy(void *p) { return p; }
 
 template<class T> T __deepcopy(T t, dict<void *, pyobj *> *memo=0) {
@@ -1459,7 +1459,7 @@ template<> inline __ss_int __deepcopy(__ss_int i, dict<void *, pyobj *> *) { ret
 #endif
 template<> inline int __deepcopy(int i, dict<void *, pyobj *> *) { return i; }
 template<> inline __ss_bool __deepcopy(__ss_bool b, dict<void *, pyobj *> *) { return b; }
-template<> inline double __deepcopy(double d, dict<void *, pyobj *> *) { return d; }
+template<> inline __ss_float __deepcopy(__ss_float d, dict<void *, pyobj *> *) { return d; }
 template<> inline void *__deepcopy(void *p, dict<void *, pyobj *> *) { return p; }
 
 /* and, or, not */
