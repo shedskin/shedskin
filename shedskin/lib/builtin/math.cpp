@@ -18,7 +18,7 @@ __ss_bool int_::__nonzero__() {
 
 /* float methods */
 
-float_::float_(double f) {
+float_::float_(__ss_float f) {
     unit = f;
     __class__ = cl_float_;
 }

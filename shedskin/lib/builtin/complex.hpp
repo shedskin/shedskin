@@ -4,7 +4,7 @@
 
 /* constructors */
 
-inline complex mcomplex(double real, double imag) {
+inline complex mcomplex(__ss_float real, __ss_float imag) {
     complex c;
     c.real = real; c.imag = imag;
     return c;
@@ -21,32 +21,32 @@ template<class T> inline complex mcomplex(T t) {
 inline complex complex::operator+(complex b) {
     return mcomplex(real+b.real, imag+b.imag);
 }
-inline complex complex::operator+(double b) { return (*this) + mcomplex(b); }
+inline complex complex::operator+(__ss_float b) { return (*this) + mcomplex(b); }
 
 inline complex complex::operator-(complex b) {
     return mcomplex(real-b.real, imag-b.imag);
 }
-inline complex complex::operator-(double b) { return (*this) - mcomplex(b); }
+inline complex complex::operator-(__ss_float b) { return (*this) - mcomplex(b); }
 
 inline complex complex::operator/(complex b) {
     complex c;
-    double norm = b.real*b.real+b.imag*b.imag;
+    __ss_float norm = b.real*b.real+b.imag*b.imag;
     c.real = (real*b.real+imag*b.imag)/norm;
     c.imag = (imag*b.real-b.imag*real)/norm;
     return c;
 }
-inline complex complex::operator/(double b) { return (*this) / mcomplex(b); }
+inline complex complex::operator/(__ss_float b) { return (*this) / mcomplex(b); }
 
 inline complex complex::operator*(complex b) {
     return mcomplex(real*b.real-imag*b.imag, real*b.imag+imag*b.real); 
 }
-inline complex complex::operator*(double b) { return (*this) * mcomplex(b); }
+inline complex complex::operator*(__ss_float b) { return (*this) * mcomplex(b); }
 
 inline complex complex::operator%(complex b) {
     complex c = (*this) / b;
     return (*this) - (b * (((__ss_int)c.real)));
 }
-inline complex complex::operator%(double b) { return (*this) % mcomplex(b); }
+inline complex complex::operator%(__ss_float b) { return (*this) % mcomplex(b); }
 
 inline complex complex::operator-() {
     return mcomplex(-real, -imag);
@@ -59,14 +59,14 @@ inline complex complex::operator+() {
 inline __ss_bool complex::operator==(complex b) {
     return __mbool(real==b.real and imag==b.imag);
 }
-inline __ss_bool complex::operator==(double b) { return (*this) == mcomplex(b); }
+inline __ss_bool complex::operator==(__ss_float b) { return (*this) == mcomplex(b); }
 
 inline __ss_bool complex::operator!=(complex b) {
     return __mbool(real!=b.real or imag!=b.imag);
 }
-inline __ss_bool complex::operator!=(double b) { return (*this) != mcomplex(b); }
+inline __ss_bool complex::operator!=(__ss_float b) { return (*this) != mcomplex(b); }
 
-inline complex& complex::operator=(double a) {
+inline complex& complex::operator=(__ss_float a) {
     real = a;
     imag = 0.0;
     return *this;
@@ -82,8 +82,8 @@ static inline complex __complexfloordiv(complex a, complex b) {
 }
 
 template<> inline complex __floordiv(complex a, complex b) { return __complexfloordiv(a, b); }
-inline complex __floordiv(complex a, double b) { return __complexfloordiv(a, mcomplex(b)); }
-inline complex __floordiv(double a, complex b) { return __complexfloordiv(mcomplex(a), b); }
+inline complex __floordiv(complex a, __ss_float b) { return __complexfloordiv(a, mcomplex(b)); }
+inline complex __floordiv(__ss_float a, complex b) { return __complexfloordiv(mcomplex(a), b); }
 
 /* divmod */
 
@@ -92,8 +92,8 @@ static tuple2<complex, complex> *__complexdivmod(complex a, complex b) {
 }
 
 template<> inline tuple2<complex, complex> *divmod(complex a, complex b) { return __complexdivmod(a, b); }
-inline tuple2<complex, complex> *divmod(complex a, double b) { return __complexdivmod(a, mcomplex(b)); }
-inline tuple2<complex, complex> *divmod(double a, complex b) { return __complexdivmod(mcomplex(a), b); }
+inline tuple2<complex, complex> *divmod(complex a, __ss_float b) { return __complexdivmod(a, mcomplex(b)); }
+inline tuple2<complex, complex> *divmod(__ss_float a, complex b) { return __complexdivmod(mcomplex(a), b); }
 
 /* str, repr */
 
@@ -122,7 +122,7 @@ template<> inline complex __add(complex a, complex b) { return a + b; }
 
 /* abs */
 
-inline double __abs(complex c) { return std::sqrt(c.real*c.real+c.imag*c.imag); }
+inline __ss_float __abs(complex c) { return std::sqrt(c.real*c.real+c.imag*c.imag); }
 
 /* bool */
 
@@ -131,8 +131,8 @@ template<> inline __ss_bool ___bool(complex c) { return __mbool(c.real != 0.0 or
 /* power */
 
 template<> complex __power(complex a, complex b);
-inline complex __power(complex a, double b) { return __power(a, mcomplex(b)); }
-inline complex __power(double a, complex b) { return __power(mcomplex(a), b); }
+inline complex __power(complex a, __ss_float b) { return __power(a, mcomplex(b)); }
+inline complex __power(__ss_float a, complex b) { return __power(mcomplex(a), b); }
 
 /* hashing */
 

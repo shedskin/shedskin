@@ -5,7 +5,7 @@
 complex mcomplex(str *s) {
     const char *ptr = s->strip()->c_str();
     char *ptr2;
-    double real, imag = 0;
+    __ss_float real, imag = 0;
 
     if (*ptr == 0) {
         goto error;
@@ -75,7 +75,7 @@ str *complex::__repr__() {
 
 template<> complex __power(complex a, complex b) {
     complex r;
-    double vabs, len, at, phase;
+    __ss_float vabs, len, at, phase;
     if(b.real == 0 and b.imag == 0) {
         r.real = 1;
         r.imag = 0;

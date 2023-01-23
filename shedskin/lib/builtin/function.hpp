@@ -8,8 +8,8 @@ template<> struct __sumtype1<__ss_bool> { typedef int type; };
 template<class A, class B> struct __sumtype2 { typedef A type; };
 template<> struct __sumtype2<__ss_bool, __ss_bool> { typedef __ss_int type; };
 template<> struct __sumtype2<__ss_bool, __ss_int> { typedef __ss_int type; };
-template<> struct __sumtype2<__ss_bool, double> { typedef double type; };
-template<> struct __sumtype2<__ss_int, double> { typedef double type; };
+template<> struct __sumtype2<__ss_bool, __ss_float> { typedef __ss_float type; };
+template<> struct __sumtype2<__ss_int, __ss_float> { typedef __ss_float type; };
 
 template <class U> typename __sumtype1<typename U::for_in_unit>::type __sum(U *iter) {
     typename __sumtype1<typename U::for_in_unit>::type result;
@@ -597,12 +597,12 @@ template <class T> __ss_int id(T t) {
     return (intptr_t)t;
 }
 template <> __ss_int id(__ss_int);
-template <> __ss_int id(double);
+template <> __ss_int id(__ss_float);
 template <> __ss_int id(__ss_bool);
 
 /* type */
 
 template<class T> class_ *__type(T t) { return t->__class__; }
 template<> class_ *__type(int i);
-template<> class_ *__type(double d);
+template<> class_ *__type(__ss_float d);
 
