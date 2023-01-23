@@ -2086,7 +2086,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
             if double and self.mergeinh[arg] == set([(python.def_class(self.gx, 'int_'), 0)]):
                 cast = True
-                self.append('(double(')
+                self.append('(__ss_float(')
             elif castnull and ast_utils.is_none(arg):
                 cast = True
                 self.append('((void *)(')
@@ -2833,12 +2833,14 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.append(')')
 
         elif isinstance(value, float):
+            self.append('__ss_float(')
             if str(value) in ['inf', '1.#INF', 'Infinity']:
                 self.append('INFINITY')
             elif str(value) in ['-inf', '-1.#INF', '-Infinity']:
                 self.append('-INFINITY')
             else:
                 self.append(str(value))
+            self.append(')')
 
         elif isinstance(value, complex):
             self.append('mcomplex(%s, %s)' % (value.real, value.imag))

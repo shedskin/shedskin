@@ -164,7 +164,7 @@ def typestrnew(gx, types, cplusplus=True, node=None, check_extmod=False, depth=0
         raise RuntimeError()
 
     # --- annotation or c++ code
-    conv1 = {'int_': '__ss_int', 'float_': 'double', 'str_': 'str', 'none': 'int', 'bool_': '__ss_bool', 'complex': 'complex', 'bytes_': 'bytes'}
+    conv1 = {'int_': '__ss_int', 'float_': '__ss_float', 'str_': 'str', 'none': 'int', 'bool_': '__ss_bool', 'complex': 'complex', 'bytes_': 'bytes'}
     conv2 = {'int_': 'int', 'float_': 'float', 'str_': 'str', 'class_': 'class', 'none': 'None', 'bool_': 'bool', 'complex': 'complex', 'bytes_': 'bytes'}
     if cplusplus:
         sep, ptr, conv = '<>', ' *', conv1
