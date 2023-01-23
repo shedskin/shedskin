@@ -50,14 +50,14 @@ str *const_0, *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *
 
 list<str *> *__all__;
 list<int> *mag01;
-double LOG4, NV_MAGICCONST, SG_MAGICCONST;
+__ss_float LOG4, NV_MAGICCONST, SG_MAGICCONST;
 int BPF, LOWER, M, MATRIX_A, MAXBITS, __ss_MAXINT, MAXWIDTH, N, UPPER;
 str *__name__;
 Random *_inst;
 
-static inline list<double> *list_comp_0(list<int> *__108) {
+static inline list<__ss_float> *list_comp_0(list<int> *__108) {
     int s, __25;
-    list<double> *result = new list<double>();
+    list<__ss_float> *result = new list<__ss_float>();
     list<int>::for_in_loop __123;
 
     result->resize(len(__108));
@@ -68,8 +68,8 @@ static inline list<double> *list_comp_0(list<int> *__108) {
     return result;
 }
 
-static inline list<int> *list_comp_1(list<double> *__108) {
-    double s;
+static inline list<int> *list_comp_1(list<__ss_float> *__108) {
+    __ss_float s;
     list<int> *result = new list<int>();
     list<int>::for_in_loop __123;
     int __28;
@@ -88,11 +88,11 @@ class Random
 
 class_ *cl_Random;
 
-double Random::paretovariate(double alpha) {
+__ss_float Random::paretovariate(__ss_float alpha) {
     /**
     Pareto distribution.  alpha is the shape parameter.
     */
-    double u;
+    __ss_float u;
 
     u = (1.0-this->random());
     return (1.0/__power(u, (1.0/alpha)));
@@ -148,7 +148,7 @@ int Random::randrange(int start, int stop, int step) {
     return (istart+(istep*__int((this->random()*n))));
 }
 
-double Random::betavariate(double alpha, double beta) {
+__ss_float Random::betavariate(__ss_float alpha, __ss_float beta) {
     /**
     Beta distribution.
 
@@ -156,7 +156,7 @@ double Random::betavariate(double alpha, double beta) {
             Returned values range between 0 and 1.
 
     */
-    double y;
+    __ss_float y;
 
     y = this->gammavariate(alpha, 1.0);
     if (y==0) {
@@ -168,22 +168,22 @@ double Random::betavariate(double alpha, double beta) {
     return 0;
 }
 
-double Random::random() {
+__ss_float Random::random() {
     /**
     Generate a random number on [0,1)-real-interval.
     */
 
-    return rand() / ((double)RAND_MAX+1);
+    return rand() / ((__ss_float)RAND_MAX+1);
 }
 
-double Random::normalvariate(double mu, double sigma) {
+__ss_float Random::normalvariate(__ss_float mu, __ss_float sigma) {
     /**
     Normal distribution.
 
             mu is the mean, and sigma is the standard deviation.
 
     */
-    double u1, u2, z, zz;
+    __ss_float u1, u2, z, zz;
 
 
     while(1) {
@@ -198,7 +198,7 @@ double Random::normalvariate(double mu, double sigma) {
     return (mu+(z*sigma));
 }
 
-double Random::_genrand_res53() {
+__ss_float Random::_genrand_res53() {
     /**
     Generate a random number on [0,1) with 53-bit resolution.
     */
@@ -212,14 +212,14 @@ double Random::_genrand_res53() {
     return 0;
 }
 
-double Random::weibullvariate(double alpha, double beta) {
+__ss_float Random::weibullvariate(__ss_float alpha, __ss_float beta) {
     /**
     Weibull distribution.
 
             alpha is the scale parameter and beta is the shape parameter.
 
     */
-    double u;
+    __ss_float u;
 
     u = (1.0-this->random());
     return (alpha*__power(-__math__::log(u), (1.0/beta)));
@@ -310,7 +310,7 @@ int Random::randint(int a, int b) {
     return this->randrange(a, (b+1), 1);
 }
 
-double Random::vonmisesvariate(double mu, double kappa) {
+__ss_float Random::vonmisesvariate(__ss_float mu, __ss_float kappa) {
     /**
     Circular data distribution.
 
@@ -320,7 +320,7 @@ double Random::vonmisesvariate(double mu, double kappa) {
             to a uniform random angle over the range 0 to 2*pi.
 
     */
-    double d, f, q, r, s, theta, u1, u2, u3, z, TWOPI;
+    __ss_float d, f, q, r, s, theta, u1, u2, u3, z, TWOPI;
     __ss_bool __0, __1;
     TWOPI = 2*__math__::pi;
 
@@ -351,14 +351,14 @@ double Random::vonmisesvariate(double mu, double kappa) {
     return theta;
 }
 
-double Random::gammavariate(double alpha, double beta) {
+__ss_float Random::gammavariate(__ss_float alpha, __ss_float beta) {
     /**
     Gamma distribution.  Not the gamma function!
 
             Conditions on the parameters are alpha > 0 and beta > 0.
 
     */
-    double ainv, b, bbb, ccc, p, r, u, u1, u2, v, x, z;
+    __ss_float ainv, b, bbb, ccc, p, r, u, u1, u2, v, x, z;
 
     if ((alpha <= 0.0) || (beta<=0.0)) {
         throw (new ValueError(const_7));
@@ -413,7 +413,7 @@ double Random::gammavariate(double alpha, double beta) {
     return 0;
 }
 
-double Random::uniform(double a, double b) {
+__ss_float Random::uniform(__ss_float a, __ss_float b) {
     /**
     Get a random number in the range [a, b).
     */
@@ -421,8 +421,8 @@ double Random::uniform(double a, double b) {
     return (a+((b-a)*this->random()));
 }
 
-static inline double __triangular(double low, double high, double u, double c) {
-    double __0, __1;
+static inline __ss_float __triangular(__ss_float low, __ss_float high, __ss_float u, __ss_float c) {
+    __ss_float __0, __1;
     if ((u>c)) {
         u = (1.0-u);
         c = (1.0-c);
@@ -434,7 +434,7 @@ static inline double __triangular(double low, double high, double u, double c) {
     return (low+((high-low)*__power((u*c), 0.5)));
 }
 
-double Random::triangular(double low, double high, double mode) {
+__ss_float Random::triangular(__ss_float low, __ss_float high, __ss_float mode) {
     /**
     Triangular distribution.
 
@@ -447,20 +447,20 @@ double Random::triangular(double low, double high, double mode) {
     return __triangular(low, high, this->random(), ((mode-low)/(high-low)));
 }
 
-double Random::triangular(double low, double high, __ss_int mode) {
-    return __triangular(low, high, this->random(), (double)mode);
+__ss_float Random::triangular(__ss_float low, __ss_float high, __ss_int mode) {
+    return __triangular(low, high, this->random(), (__ss_float)mode);
 }
 
-double Random::triangular(double low, double high, void *) {
+__ss_float Random::triangular(__ss_float low, __ss_float high, void *) {
     return __triangular(low, high, this->random(), 0.5);
 }
 
-double Random::stdgamma(double alpha, double, double, double) {
+__ss_float Random::stdgamma(__ss_float alpha, __ss_float, __ss_float, __ss_float) {
 
     return this->gammavariate(alpha, 1.0);
 }
 
-double Random::expovariate(double lambd) {
+__ss_float Random::expovariate(__ss_float lambd) {
     /**
     Exponential distribution.
 
@@ -473,7 +473,7 @@ double Random::expovariate(double lambd) {
     /*
     python 2.6 behaviour, changed in 2.7:
 
-    double u;
+    __ss_float u;
 
     u = this->random();
 
@@ -500,7 +500,7 @@ int Random::getrandbits(int k) {
     return ((this->_genrand_int32()>>(32-k))&~(-1<<k));
 }
 
-void *Random::setstate(list<double> *state) {
+void *Random::setstate(list<__ss_float> *state) {
     /**
     Restore internal state from object returned by getstate().
     */
@@ -518,7 +518,7 @@ void *Random::setstate(list<double> *state) {
     return NULL;
 }
 
-double Random::lognormvariate(double mu, double sigma) {
+__ss_float Random::lognormvariate(__ss_float mu, __ss_float sigma) {
     /**
     Log normal distribution.
 
@@ -552,7 +552,7 @@ int Random::_init_genrand(int s) {
     return 0;
 }
 
-double Random::gauss(double mu, double sigma) {
+__ss_float Random::gauss(__ss_float mu, __ss_float sigma) {
     /**
     Gaussian distribution.
 
@@ -562,7 +562,7 @@ double Random::gauss(double mu, double sigma) {
             Not thread-safe without a lock around calls.
 
     */
-    double g2rad, x2pi, z;
+    __ss_float g2rad, x2pi, z;
 
     if (this->gauss_switch == 1) {
         z = this->gauss_next;
@@ -618,17 +618,17 @@ int Random::_genrand_int32() {
     return y;
 }
 
-list<double> *Random::getstate() {
+list<__ss_float> *Random::getstate() {
     /**
     Return internal state; can be passed to setstate() later.
     */
-    list<double> *x;
+    list<__ss_float> *x;
 
     x = list_comp_0(__add((new list<int>(3, this->VERSION, this->mti, this->gauss_switch)), this->mt));
-    return __add(x, (new list<double>(1, this->gauss_next)));
+    return __add(x, (new list<__ss_float>(1, this->gauss_next)));
 }
 
-double Random::cunifvariate(double mean, double arc) {
+__ss_float Random::cunifvariate(__ss_float mean, __ss_float arc) {
 
     return __math__::fmod((mean+(arc*(this->random()-0.5))), __math__::pi);
 }
@@ -647,7 +647,7 @@ void *WichmannHill::__whseed(int x, int y, int z) {
     */
     tuple2<int, int> *__59, *__60, *__61;
     int __62, __63, __64, secs, t, usec;
-    double hophop;
+    __ss_float hophop;
 
     if ((!(((0<=x)&&(x<256)) && ((0<=y)&&(y<256)) && ((0<=z)&&(z<256))))) {
         throw ((new ValueError(const_11)));
@@ -685,7 +685,7 @@ void *WichmannHill::__whseed(int x, int y, int z) {
     return NULL;
 }
 
-double WichmannHill::random() {
+__ss_float WichmannHill::random() {
     /**
     Get the next random number in the range [0.0, 1.0).
     */
@@ -722,7 +722,7 @@ void *WichmannHill::seed(int a) {
     */
     tuple2<int, int> *__40, *__41, *__42;
     int __43, __44, __45, secs, usec, x, y, z;
-    double hophop;
+    __ss_float hophop;
 
     if (a==-1) {
         hophop = __time__::time();
@@ -810,12 +810,12 @@ void *WichmannHill::whseed(int a) {
     return NULL;
 }
 
-void *WichmannHill::setstate(list<double> *state) {
+void *WichmannHill::setstate(list<__ss_float> *state) {
     /**
     Restore internal state from object returned by getstate().
     */
-    double xf, yf, zf;
-    list<double> *__51;
+    __ss_float xf, yf, zf;
+    list<__ss_float> *__51;
     int __52, __53, __54, version;
 
     version = __int(state->__getfast__(0));
@@ -871,7 +871,7 @@ int WichmannHill::jumpahead(int n) {
     return 0;
 }
 
-list<double> *WichmannHill::getstate() {
+list<__ss_float> *WichmannHill::getstate() {
     /**
     Return internal state; can be passed to setstate() later.
     */
@@ -882,7 +882,7 @@ list<double> *WichmannHill::getstate() {
     x = __50->__getfast__(0);
     y = __50->__getfast__(1);
     z = __50->__getfast__(2);
-    return (new list<double>(6, __float(this->VERSION), __float(x), __float(y), __float(z), __float(this->gauss_switch), this->gauss_next));
+    return (new list<__ss_float>(6, __float(this->VERSION), __float(x), __float(y), __float(z), __float(this->gauss_switch), this->gauss_next));
 }
 
 void __init() {
@@ -1000,17 +1000,17 @@ void __init() {
     _inst = (new Random());
 }
 
-double random() {
+__ss_float random() {
 
     return _inst->random();
 }
 
-list<double> *getstate() {
+list<__ss_float> *getstate() {
 
     return _inst->getstate();
 }
 
-void *setstate(list<double> *state) {
+void *setstate(list<__ss_float> *state) {
 
     return _inst->setstate(state);
 }
@@ -1035,62 +1035,62 @@ int randint(int a, int b) {
     return _inst->randint(a, b);
 }
 
-double uniform(double a, double b) {
+__ss_float uniform(__ss_float a, __ss_float b) {
 
     return _inst->uniform(a, b);
 }
 
-double normalvariate(double mu, double sigma) {
+__ss_float normalvariate(__ss_float mu, __ss_float sigma) {
 
     return _inst->normalvariate(mu, sigma);
 }
 
-double lognormvariate(double mu, double sigma) {
+__ss_float lognormvariate(__ss_float mu, __ss_float sigma) {
 
     return _inst->lognormvariate(mu, sigma);
 }
 
-double cunifvariate(double mean, double arc) {
+__ss_float cunifvariate(__ss_float mean, __ss_float arc) {
 
     return _inst->cunifvariate(mean, arc);
 }
 
-double expovariate(double lambd) {
+__ss_float expovariate(__ss_float lambd) {
 
     return _inst->expovariate(lambd);
 }
 
-double vonmisesvariate(double mu, double kappa) {
+__ss_float vonmisesvariate(__ss_float mu, __ss_float kappa) {
 
     return _inst->vonmisesvariate(mu, kappa);
 }
 
-double gammavariate(double alpha, double beta) {
+__ss_float gammavariate(__ss_float alpha, __ss_float beta) {
 
     return _inst->gammavariate(alpha, beta);
 }
 
-double stdgamma(double alpha, double ainv, double bbb, double ccc) {
+__ss_float stdgamma(__ss_float alpha, __ss_float ainv, __ss_float bbb, __ss_float ccc) {
 
     return _inst->stdgamma(alpha, ainv, bbb, ccc);
 }
 
-double gauss(double mu, double sigma) {
+__ss_float gauss(__ss_float mu, __ss_float sigma) {
 
     return _inst->gauss(mu, sigma);
 }
 
-double betavariate(double alpha, double beta) {
+__ss_float betavariate(__ss_float alpha, __ss_float beta) {
 
     return _inst->betavariate(alpha, beta);
 }
 
-double paretovariate(double alpha) {
+__ss_float paretovariate(__ss_float alpha) {
 
     return _inst->paretovariate(alpha);
 }
 
-double weibullvariate(double alpha, double beta) {
+__ss_float weibullvariate(__ss_float alpha, __ss_float beta) {
 
     return _inst->weibullvariate(alpha, beta);
 }
@@ -1100,13 +1100,13 @@ int getrandbits(int k) {
     return _inst->getrandbits(k);
 }
 
-double triangular(double low, double high, double mode) {
+__ss_float triangular(__ss_float low, __ss_float high, __ss_float mode) {
     return _inst->triangular(low, high, mode);
 }
-double triangular(double low, double high, __ss_int mode) {
+__ss_float triangular(__ss_float low, __ss_float high, __ss_int mode) {
     return _inst->triangular(low, high, mode);
 }
-double triangular(double low, double high, void *mode) {
+__ss_float triangular(__ss_float low, __ss_float high, void *mode) {
     return _inst->triangular(low, high, mode);
 }
 
