@@ -31,44 +31,44 @@ Random number generator base class used by bound module functions.
 public:
     int gauss_switch;
     int VERSION;
-    double gauss_next;
+    __ss_float gauss_next;
     list<int> *mt;
     int mti;
 
     Random();
     Random(int a);
-    virtual double random();
-    double paretovariate(double alpha);
+    virtual __ss_float random();
+    __ss_float paretovariate(__ss_float alpha);
     int randrange(int stop);
     int randrange(int start, int stop);
     int randrange(int start, int stop, int step);
-    double betavariate(double alpha, double beta);
-    double normalvariate(double mu, double sigma);
-    double _genrand_res53();
+    __ss_float betavariate(__ss_float alpha, __ss_float beta);
+    __ss_float normalvariate(__ss_float mu, __ss_float sigma);
+    __ss_float _genrand_res53();
     template <class A> void *seed(A a);
-    double weibullvariate(double alpha, double beta);
+    __ss_float weibullvariate(__ss_float alpha, __ss_float beta);
     int _init_by_array(list<int> *init_key);
     int randint(int a, int b);
-    double vonmisesvariate(double mu, double kappa);
-    double gammavariate(double alpha, double beta);
-    double uniform(double a, double b);
-    double triangular(double low, double high, double mode); /* XXX template */
-    double triangular(double low, double high, __ss_int mode);
-    double triangular(double low, double high, void *mode);
-    double stdgamma(double alpha, double ainv, double bbb, double ccc);
-    double expovariate(double lambd);
+    __ss_float vonmisesvariate(__ss_float mu, __ss_float kappa);
+    __ss_float gammavariate(__ss_float alpha, __ss_float beta);
+    __ss_float uniform(__ss_float a, __ss_float b);
+    __ss_float triangular(__ss_float low, __ss_float high, __ss_float mode); /* XXX template */
+    __ss_float triangular(__ss_float low, __ss_float high, __ss_int mode);
+    __ss_float triangular(__ss_float low, __ss_float high, void *mode);
+    __ss_float stdgamma(__ss_float alpha, __ss_float ainv, __ss_float bbb, __ss_float ccc);
+    __ss_float expovariate(__ss_float lambd);
     int getrandbits(int k);
-    virtual void *setstate(list<double> *state);
-    double lognormvariate(double mu, double sigma);
+    virtual void *setstate(list<__ss_float> *state);
+    __ss_float lognormvariate(__ss_float mu, __ss_float sigma);
     int _init_genrand(int s);
-    double gauss(double mu, double sigma);
+    __ss_float gauss(__ss_float mu, __ss_float sigma);
     template <class A> A choice(pyseq<A> *seq);
     template <class A> void *shuffle(list<A> *x);
     template <class A> list<A> *sample(pyiter<A> *population, int k);
     template <class A> list<A> *sample(pyseq<A> *population, int k);
     int _genrand_int32();
-    virtual list<double> *getstate();
-    double cunifvariate(double mean, double arc);
+    virtual list<__ss_float> *getstate();
+    __ss_float cunifvariate(__ss_float mean, __ss_float arc);
 };
 
 extern class_ *cl_WichmannHill;
@@ -77,22 +77,22 @@ public:
     tuple2<int, int> *_seed;
 
     void *__whseed(int x, int y, int z);
-    double random();
+    __ss_float random();
     void *seed();
     void *seed(int a);
     WichmannHill();
     WichmannHill(int a);
     void *whseed();
     void *whseed(int a);
-    void *setstate(list<double> *state);
+    void *setstate(list<__ss_float> *state);
     int jumpahead(int n);
-    list<double> *getstate();
+    list<__ss_float> *getstate();
 };
 
 
 extern int  UPPER;
-extern double  LOG4;
-extern double  SG_MAGICCONST;
+extern __ss_float  LOG4;
+extern __ss_float  SG_MAGICCONST;
 extern list<str *> * __all__;
 extern int  BPF;
 extern Random * _inst;
@@ -103,12 +103,12 @@ extern int  N;
 extern int  MAXWIDTH;
 extern int  __ss_MAXINT;
 extern str * __name__;
-extern double  NV_MAGICCONST;
+extern __ss_float  NV_MAGICCONST;
 extern int  MAXBITS;
 void __init();
-double random();
-list<double> *getstate();
-void *setstate(list<double> *state);
+__ss_float random();
+list<__ss_float> *getstate();
+void *setstate(list<__ss_float> *state);
 int randrange(int stop);
 int randrange(int start, int stop);
 int randrange(int start, int stop, int step);
@@ -117,21 +117,21 @@ template <class A> A choice(pyseq<A> *seq);
 template <class A> void *shuffle(list<A> *x);
 template <class A> list<A> *sample(pyiter<A> *population, int k);
 template <class A> list<A> *sample(pyseq<A> *population, int k);
-double uniform(double a, double b);
-double triangular(double low, double high, double mode);
-double triangular(double low, double high, __ss_int mode);
-double triangular(double low, double high, void *mode);
-double normalvariate(double mu, double sigma);
-double lognormvariate(double mu, double sigma);
-double cunifvariate(double mean, double arc);
-double expovariate(double lambd);
-double vonmisesvariate(double mu, double kappa);
-double gammavariate(double alpha, double beta);
-double stdgamma(double alpha, double ainv, double bbb, double ccc);
-double gauss(double mu, double sigma);
-double betavariate(double alpha, double beta);
-double paretovariate(double alpha);
-double weibullvariate(double alpha, double beta);
+__ss_float uniform(__ss_float a, __ss_float b);
+__ss_float triangular(__ss_float low, __ss_float high, __ss_float mode);
+__ss_float triangular(__ss_float low, __ss_float high, __ss_int mode);
+__ss_float triangular(__ss_float low, __ss_float high, void *mode);
+__ss_float normalvariate(__ss_float mu, __ss_float sigma);
+__ss_float lognormvariate(__ss_float mu, __ss_float sigma);
+__ss_float cunifvariate(__ss_float mean, __ss_float arc);
+__ss_float expovariate(__ss_float lambd);
+__ss_float vonmisesvariate(__ss_float mu, __ss_float kappa);
+__ss_float gammavariate(__ss_float alpha, __ss_float beta);
+__ss_float stdgamma(__ss_float alpha, __ss_float ainv, __ss_float bbb, __ss_float ccc);
+__ss_float gauss(__ss_float mu, __ss_float sigma);
+__ss_float betavariate(__ss_float alpha, __ss_float beta);
+__ss_float paretovariate(__ss_float alpha);
+__ss_float weibullvariate(__ss_float alpha, __ss_float beta);
 int getrandbits(int k);
 
 template <class A> A choice(pyseq<A> *seq) {
@@ -266,7 +266,7 @@ template <class A> void *Random::seed(A a) {
 
     if(__is_none(a)) {
         int secs, usec;
-        double hophop = __time__::time();
+        __ss_float hophop = __time__::time();
         secs = __int(hophop);
         usec = __int((1000000*(hophop-__int(hophop))));
         h = ((__mods(secs, (__ss_MAXINT/1000000))*1000000)|usec);
