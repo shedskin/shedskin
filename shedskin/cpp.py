@@ -1132,7 +1132,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         return python.is_zip2(node) and self.only_classes(node.iter.args[0], names) and self.only_classes(node.iter.args[1], names)
 
     def fastdictiter(self, node):
-        return isinstance(node.iter, ast.Call) and ast_utils.is_assign_list_or_tuple(node.target) and self.only_classes(node.iter.func, ('dict',)) and isinstance(node.iter.func, ast.Attribute) and node.iter.func.attr == 'iteritems'
+        return isinstance(node.iter, ast.Call) and ast_utils.is_assign_list_or_tuple(node.target) and self.only_classes(node.iter.func, ('dict',)) and isinstance(node.iter.func, ast.Attribute) and node.iter.func.attr == 'items'
 
     def only_classes(self, node, names):
         if node not in self.mergeinh:
