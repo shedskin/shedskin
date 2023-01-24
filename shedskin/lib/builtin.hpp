@@ -106,6 +106,9 @@ class TypeError;
 class RuntimeError;
 class OverflowError;
 
+template<class T>
+using tuple = tuple2<T, T>;
+
 /* STL types */
 
 #define __GC_VECTOR(T) std::vector< T, gc_allocator< T > >
