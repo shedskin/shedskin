@@ -280,7 +280,7 @@ def typestrnew(gx, types, cplusplus=True, node=None, check_extmod=False, depth=0
     if ident == 'tuple2' and not cplusplus:
         ident = 'tuple'
     elif ident == 'tuple' and cplusplus:
-        return namespace + 'tuple2' + sep[0] + subtypes[0] + ', ' + subtypes[0] + sep[1] + ptr
+        return namespace + 'tuple' + sep[0] + subtypes[0] + sep[1] + ptr
 
     if ident in ['frozenset', 'pyset'] and cplusplus:
         ident = 'set'
