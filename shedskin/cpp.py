@@ -930,7 +930,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         ts_value = typestr.typestr(self.gx, self.subtypes(argtypes, 'value'), mv=self.mv)
         items = list(zip(node.keys, node.values))
         for (key, value) in items:
-            self.visitm('(new tuple2<%s, %s>(2,' % (ts_key, ts_value), func)
+            if ts_key == ts_value:
+                self.visitm('(new tuple<%s>(2,' % ts_key, func)
+            else:
+                self.visitm('(new tuple2<%s, %s>(2,' % (ts_key, ts_value), func)
             type_child = self.subtypes(argtypes, 'unit')
             self.impl_visit_conv(key, type_child, func)
             self.append(',')
