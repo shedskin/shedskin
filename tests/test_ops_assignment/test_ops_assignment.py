@@ -111,6 +111,36 @@ def test_destructure12():
     assert (a, b, c, d, e, f) == (1, 2, 3, 4, 5, 6)
 
 
+def test_destructure13():
+    t = (1, 'aap')
+    tx, ty = t
+    assert tx == 1
+    assert ty == 'aap'
+
+
+def test_destructure14():
+    s1, s2 = set([7, 8])
+    assert sorted([s1, s2]) == [7, 8]
+
+    m1, m2, m3 = map(lambda x: 2*x, [9,10,11])
+    assert (m1, m2, m3) == (18, 20, 22)
+
+
+def test_destructure15():
+    val_error = False
+    try:
+        c1, c2 = b'hoi'
+    except ValueError as e:
+        val_error = True
+    assert val_error
+
+    val_error = False
+    try:
+        m1, m2, m3, m4 = map(lambda x: 2*x, [9,10,11])
+    except ValueError as e:
+        val_error = True
+    assert val_error
+
 
 def test_all():
     test_assign_int()
@@ -129,7 +159,9 @@ def test_all():
     test_destructure10()
     # test_destructure11()
     test_destructure12()
-
+    test_destructure13()
+    test_destructure14()
+    test_destructure15()
 
 
 if __name__ == '__main__':

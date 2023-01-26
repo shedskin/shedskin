@@ -1627,6 +1627,12 @@ static void inline slicenr(__ss_int x, __ss_int &l, __ss_int &u, __ss_int &s, __
     }
 }
 
+template<class T> void __unpack_check(T t, int expected) {
+    if(len(t) > (__ss_int)expected)
+	 throw new ValueError(new str("too many values to unpack"));
+    else if(len(t) < (__ss_int)expected)
+	 throw new ValueError(new str("not enough values to unpack"));
+}
 
 } // namespace __shedskin__
 #endif

@@ -2195,7 +2195,19 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.start()
             self.visitm(temp, ' = ', rvalue, func)
             self.eol()
+
             for i, item in enumerate(lvalue.elts):
+                rvalue_node = self.gx.item_rvalue[item]
+                if(i == 0):
+                    if self.one_class(rvalue_node, ('list', 'str_', 'bytes_', 'tuple', 'tuple2')):
+                        self.output('__unpack_check(%s, %d);' % (temp, len(lvalue.elts)))
+                    else:
+                        rtypes = self.mergeinh[rvalue_node]
+                        ts = typestr.typestr(self.gx, self.subtypes(rtypes, 'unit'), mv=self.mv)
+                        self.output('list<%s> *%s_list = new list<%s>(%s);' % (ts, temp, ts, temp))
+                        temp = temp + '_list'
+                        self.output('__unpack_check(%s, %d);' % (temp, len(lvalue.elts)))
+
                 self.start()
                 self.visitm(item, ' = ', self.get_selector(temp, item, i), func)
                 self.eol()
