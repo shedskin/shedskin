@@ -191,6 +191,9 @@ class pyiter:
         x == self.unit
         return True
 
+    def __getunit__(self, i): # unpacking
+        return self.unit
+
 class pyseq(pyiter):
     pass
 
@@ -1019,6 +1022,8 @@ class __xrange:  # TODO add __getitem__!
     def __iter__(self):
         return __iter(1)
     def __getitem__(self, i):
+        return 1
+    def __getunit__(self, i):  # unpacking
         return 1
     def __len__(self):
         return 1

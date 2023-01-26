@@ -712,7 +712,7 @@ def redirect(gx, c, dcpa, func, callfunc, ident, callnode, direct_call, construc
             func = list(callnode.types())[0][0].funcs['__init_%s__' % array_type]
 
     # tuple2.__getitem__(0/1) -> __getfirst__/__getsecond__
-    if (isinstance(callfunc.func, ast.Attribute) and callfunc.func.attr == '__getitem__' and
+    if (isinstance(callfunc.func, ast.Attribute) and callfunc.func.attr in ('__getitem__', '__getunit__') and
         isinstance(callfunc.args[0], ast.Num) and callfunc.args[0].n in (0, 1) and
             func.parent.mv.module.builtin and func.parent.ident == 'tuple2'):
         if callfunc.args[0].n == 0:
