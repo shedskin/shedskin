@@ -1357,7 +1357,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.gx.types[fakenode] = set()
             self.add_constraint((infer.inode(self.gx, rvalue), fakenode), func)
 
-            fakefunc = ast_utils.make_call(FakeGetattr3(rvalue, '__getitem__', ast.Load()), [ast.Num(i)])
+            fakefunc = ast_utils.make_call(FakeGetattr3(rvalue, '__getunit__', ast.Load()), [ast.Num(i)])
 
             fakenode.callfuncs.append(fakefunc)
             self.visit(fakefunc, func)
