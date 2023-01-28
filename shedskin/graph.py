@@ -581,11 +581,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         if not node in getmv().importnodes:  # XXX use (func, node) as parent..
             error.error("please place all imports (no 'try:' etc) at the top of the file", self.gx, node, mv=getmv())
 
-        if hasattr(node, 'level') and (node.level or 0) > 1:
-            error.error("unsupported relative import", self.gx, node, mv=getmv())
-
-        # from . import
-        if node.module is None and hasattr(node, 'level') and node.level == 1:
+        # from [.]+ import
+        if node.module is None and hasattr(node, 'level') and (node.level or 0) > 0:
             for alias in node.names:
                 submod = self.import_module(alias.name, alias.asname, node, False)
                 parent = getmv().module
@@ -1695,11 +1692,15 @@ def parse_module(name, gx, parent=None, node=None):
 
     # --- create module
     try:
+        search_paths = []
         if parent and parent.path != os.getcwd():
-            basepaths = [parent.path, os.getcwd()]
-        else:
-            basepaths = [os.getcwd()]
-        module_paths = basepaths + gx.libdirs
+            parent_path = parent.path
+            if hasattr(node, 'level') and (node.level or 0) > 1:
+                for x in range(node.level-1):
+                    parent_path = os.path.dirname(parent_path)  # TODO stop if too far
+            search_paths.append(parent_path)
+        search_paths.append(os.getcwd())
+        module_paths = search_paths + gx.libdirs
         absolute_name, filename, relative_filename, builtin = python.find_module(gx, name, module_paths)
         module = python.Module(absolute_name, filename, relative_filename, builtin, node)
     except ImportError:
