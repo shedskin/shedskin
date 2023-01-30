@@ -63,10 +63,12 @@ target_compile_options(${APP} PRIVATE
     "-O2"
     "-Wall"
     "-Wno-deprecated"
+    "-Wno-unused-variable"
 )
 
 target_link_libraries(${APP} PRIVATE
     "-lgc"
+    "-lutil"
     "-lgccpp"
     "-lpcre"
 )

@@ -53,10 +53,12 @@ function(add_shedskin_exe_tests)
             "-O2"
             "-Wall"
             "-Wno-deprecated"
+            "-Wno-unused-variable"
         )
 
         target_link_libraries(${EXE} PUBLIC
             "-lgc"
+            "-lutil"
             "-lgccpp"
             "-lpcre"
         )
