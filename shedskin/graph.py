@@ -1,6 +1,6 @@
 '''
 *** SHED SKIN Python-to-C++ Compiler ***
-Copyright 2005-2022 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)
+Copyright 2005-2023 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)
 
 graph.py: build constraint graph used in dataflow analysis
 
@@ -183,7 +183,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             child = None
 
         self.gx.list_types.setdefault((count, child), len(self.gx.list_types) + 2)
-        # print 'listtype', node, self.gx.list_types[count, child]
+        # nrint 'listtype', node, self.gx.list_types[count, child]
         return self.gx.list_types[count, child]
 
     def instance(self, node, cl, func=None):
@@ -283,8 +283,6 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
     # --- add dynamic constraint for constructor argument, e.g. '[expr]' becomes [].__setattr__('unit', expr)
     def add_dynamic_constraint(self, parent, child, varname, func):
-        # print 'dynamic constr', child, parent
-
         self.gx.assign_target[child] = parent
         cu = ast.Str(varname)
         self.visit(cu, func)
@@ -557,6 +555,16 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 self.import_modules(name, node, False)
 
     def import_modules(self, name, node, fake):
+        # in case of relative import, make name absolute
+        level = getattr(node, 'level', None) or 0
+        if level > 0:
+            newname = '.'.join(getmv().module.name.split('.')[:-level+1])
+            if name:
+                if newname:
+                    name = newname + '.' + name
+            else:
+                name = newname
+
         # --- import a.b.c: import a, then a.b, then a.b.c
         split = name.split('.')
         module = getmv().module
@@ -581,15 +589,6 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         if not node in getmv().importnodes:  # XXX use (func, node) as parent..
             error.error("please place all imports (no 'try:' etc) at the top of the file", self.gx, node, mv=getmv())
 
-        # from [.]+ import
-        if node.module is None and hasattr(node, 'level') and (node.level or 0) > 0:
-            for alias in node.names:
-                submod = self.import_module(alias.name, alias.asname, node, False)
-                parent = getmv().module
-                parent.mv.imports[submod.ident] = submod
-                self.gx.from_module[node] = submod
-                return
-
         # from __future__ import
         if node.module == '__future__':
             for node_name in node.names:
@@ -598,7 +597,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     error.error("future '%s' is not yet supported" % name, self.gx, node, mv=getmv())
             return
 
-        # from [.]a.b.c import  TODO
+        # from [..]a.b.c import
         module = self.import_modules(node.module, node, True)
         self.gx.from_module[node] = module
 
@@ -1687,20 +1686,16 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 def parse_module(name, gx, parent=None, node=None):
     # --- valid name?
     if not re.match("^[a-zA-Z0-9_.]+$", name):
-        print ("*ERROR*:%s.py: module names should consist of letters, digits and underscores" % name)
+        print("*ERROR*:%s.py: module names should consist of letters, digits and underscores" % name)
         sys.exit(1)
 
     # --- create module
     try:
-        search_paths = []
         if parent and parent.path != os.getcwd():
-            parent_path = parent.path
-            if hasattr(node, 'level') and (node.level or 0) > 1:
-                for x in range(node.level-1):
-                    parent_path = os.path.dirname(parent_path)  # TODO stop if too far
-            search_paths.append(parent_path)
-        search_paths.append(os.getcwd())
-        module_paths = search_paths + gx.libdirs
+            basepaths = [parent.path, os.getcwd()]
+        else:
+            basepaths = [os.getcwd()]
+        module_paths = basepaths + gx.libdirs
         absolute_name, filename, relative_filename, builtin = python.find_module(gx, name, module_paths)
         module = python.Module(absolute_name, filename, relative_filename, builtin, node)
     except ImportError:
