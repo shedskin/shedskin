@@ -77,6 +77,7 @@ function(add_shedskin_ext_import_test sys_modules)
         "-fwrapv"
         "-O3"
         "-Wall"
+        "-Wno-unused-variable"
     )
 
     target_link_options(${EXT} PUBLIC
@@ -90,6 +91,7 @@ function(add_shedskin_ext_import_test sys_modules)
 
     target_link_libraries(${EXT} PUBLIC
         "-lgc"
+        "-lutil"
         "-lgccpp"
         "-lpcre"
     )

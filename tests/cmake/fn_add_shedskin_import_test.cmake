@@ -68,10 +68,12 @@ function(add_shedskin_test sys_modules)
         "-O2"
         "-Wall"
         "-Wno-deprecated"
+        "-Wno-unused-variable"
     )
 
     target_link_libraries(${EXE} PRIVATE
         "-lgc"
+        "-lutil"
         "-lgccpp"
         "-lpcre"
     )
