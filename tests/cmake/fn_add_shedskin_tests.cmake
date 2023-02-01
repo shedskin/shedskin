@@ -114,6 +114,8 @@ function(add_shedskin_tests)
                 "-fwrapv"
                 "-O3"
                 "-Wall"
+                "-Wno-unused-but-set-variable"
+                "-Wno-unused-variable"
             )
 
             target_link_options(${EXT} PUBLIC

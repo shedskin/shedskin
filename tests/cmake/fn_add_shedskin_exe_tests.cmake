@@ -54,6 +54,7 @@ function(add_shedskin_exe_tests)
             "-Wall"
             "-Wno-deprecated"
             "-Wno-unused-variable"
+            "-Wno-unused-but-set-variable"
         )
 
         target_link_libraries(${EXE} PUBLIC
