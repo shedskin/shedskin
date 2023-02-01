@@ -1,4 +1,4 @@
-set(modules
-    heapq
+add_shedskin_product(
+    SYS_MODULES
+        heapq
 )
-add_shedskin_test("${modules}")

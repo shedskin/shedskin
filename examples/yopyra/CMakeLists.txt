@@ -1,10 +1,7 @@
-set(modules
-    math
-    sys
+add_shedskin_product(
+    SYS_MODULES
+        math
+        sys
+    DATA
+        scene.txt
 )
-
-copy_to_build_dir(
-    scene.txt
-)
-
-add_shedskin_example("${modules}")

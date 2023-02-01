@@ -1,5 +1,4 @@
-set(modules
-    pickle
+add_shedskin_product(
+    SYS_MODULES
+        pickle
 )
-
-add_shedskin_test("${modules}")

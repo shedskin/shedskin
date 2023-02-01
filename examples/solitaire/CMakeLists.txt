@@ -1,5 +1,5 @@
-set(modules
-    string
-    sys
+add_shedskin_product(
+    SYS_MODULES
+        string
+        sys
 )
-add_shedskin_example("${modules}")

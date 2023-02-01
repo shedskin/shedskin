@@ -1,4 +1,4 @@
-set(modules
-    gc
+add_shedskin_product(
+    SYS_MODULES
+        gc
 )
-add_shedskin_test("${modules}")

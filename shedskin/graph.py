@@ -1,18 +1,34 @@
-'''
+"""
 *** SHED SKIN Python-to-C++ Compiler ***
-Copyright 2005-2023 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)
+Copyright 2005-2022 Mark Dufour and contributors; License GNU GPL version 3
+(See LICENSE)
 
 graph.py: build constraint graph used in dataflow analysis
 
-constraint graph: graph along which possible types 'flow' during an 'abstract execution' of a program (a dataflow analysis). consider the assignment statement 'a = b'. it follows that the set of possible types of b is smaller than or equal to that of a (a constraint). we can determine possible types of a, by 'flowing' the types from b to a, in other words, along the constraint.
+constraint graph: graph along which possible types 'flow' during an 'abstract
+execution' of a program (a dataflow analysis). Consider the assignment
+statement `a = b`. It follows that the set of possible types of `b` is smaller
+than or equal to that of `a` (a constraint). we can  determine possible types
+of `a`, by 'flowing' the types from `b` to `a`, in other words, along
+the constraint.
 
-constraint graph nodes are stored in gx.cnode, and the set of types of for each node in gx.types. nodes are identified by an AST Node, and two integers. the integers are used in py to duplicate parts of the constraint graph along two dimensions. in the initial constraint graph, these integers are always 0.
+constraint graph nodes are stored in `gx.cnode`, the set of types for each
+node in `gx.types`.
 
-class ModuleVisitor: inherits visitor pattern from ast_utils.BaseNodeVisitor, to recursively generate constraints for each syntactical Python construct. for example, the visitFor method is called in case of a for-loop. temporary variables are introduced in many places, to enable translation to a lower-level language.
+Nodes are identified by an AST Node, and two integers. The integers are
+used in py to duplicate parts of the constraint graph along two dimensions.
+In the initial constraint graph, these integers are always 0.
 
-parse_module(): locate module by name (e.g. 'os.path'), and use ModuleVisitor if not cached
+`class ModuleVisitor`: inherits visitor pattern from `ast_utils.BaseNodeVisitor`,
+to recursively generate constraints for each syntactical Python construct. for
+example, the visitFor method is called in case of a for-loop. temporary
+variables are introduced in many places, to enable translation to a lower-level
+language.
 
-'''
+`parse_module()`: locate module by name (e.g. `os.path`), and use
+`ModuleVisitor` if not cached
+"""
+
 import ast
 import copy
 import os

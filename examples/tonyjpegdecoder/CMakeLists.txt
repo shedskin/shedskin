@@ -1,9 +1,6 @@
-set(modules
-    sys
+add_shedskin_product(
+    SYS_MODULES
+        sys
+    DATA
+        tiger1.jpg
 )
-
-copy_to_build_dir(
-    tiger1.jpg
-)
-
-add_shedskin_example("${modules}")

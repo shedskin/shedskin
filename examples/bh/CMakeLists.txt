@@ -1,7 +1,7 @@
-set(modules
-    copy
-    math
-    sys
-    time
+add_shedskin_product(
+    SYS_MODULES
+        copy
+        math
+        sys
+        time
 )
-add_shedskin_example("${modules}")

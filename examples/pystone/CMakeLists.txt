@@ -1,4 +1,4 @@
-set(modules
-    time
+add_shedskin_product(
+    SYS_MODULES
+        time
 )
-add_shedskin_example("${modules}")

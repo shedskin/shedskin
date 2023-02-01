@@ -1,6 +1,6 @@
-set(modules
-    math
-    time
-    random
+add_shedskin_product(
+    SYS_MODULES
+        math
+        random
+        time
 )
-add_shedskin_test("${modules}")
