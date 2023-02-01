@@ -1,4 +1,4 @@
-set(modules
-    functools
+add_shedskin_product(
+    SYS_MODULES
+        functools
 )
-add_shedskin_example("${modules}")

@@ -1,8 +1,8 @@
-set(modules
-    heapq
-    random
-    sys
-    time
-    math
+add_shedskin_product(
+    SYS_MODULES
+        heapq
+        math
+        random
+        sys
+        time
 )
-add_shedskin_example("${modules}")

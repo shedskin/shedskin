@@ -1,7 +1,7 @@
-set(modules
-    array
-    heapq
-    math
-    sys
+add_shedskin_product(
+    SYS_MODULES
+        array
+        heapq
+        math
+        sys
 )
-add_shedskin_example("${modules}")

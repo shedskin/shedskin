@@ -1,5 +1,4 @@
-set(modules
-    math
+add_shedskin_product(
+    SYS_MODULES
+        math
 )
-
-add_shedskin_test("${modules}")

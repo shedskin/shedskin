@@ -1,11 +1,8 @@
-set(modules
-    colorsys
-    sys
-    time
+add_shedskin_product(
+    SYS_MODULES
+        colorsys
+        sys
+        time
+    DATA
+        mandelbrot2_main.py
 )
-
-copy_to_build_dir(
-    mandelbrot2_main.py
-)
-
-add_shedskin_ext_example("${modules}")

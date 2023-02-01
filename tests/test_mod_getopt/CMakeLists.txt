@@ -64,7 +64,6 @@ target_compile_options(${APP} PRIVATE
     "-Wall"
     "-Wno-deprecated"
     "-Wno-unused-variable"
-    "-Wno-unused-but-set-variable"
 )
 
 target_link_libraries(${APP} PRIVATE

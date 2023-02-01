@@ -1,10 +1,9 @@
-set(modules
-    math
-    time
-    sys
-    os
-    os.path
-    stat
+add_shedskin_product(
+    SYS_MODULES
+        math
+        os
+        os.path
+        stat
+        sys
+        time
 )
-
-add_shedskin_test("${modules}")

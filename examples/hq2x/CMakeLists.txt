@@ -1,9 +1,6 @@
-set(modules
-    sys
+add_shedskin_product(
+    SYS_MODULES
+        sys
+    DATA
+        randam.ppm
 )
-
-copy_to_build_dir(
-    randam.ppm
-)
-
-add_shedskin_example("${modules}")

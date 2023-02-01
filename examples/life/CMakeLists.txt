@@ -1,6 +1,6 @@
-set(modules
-    collections
-    itertools
-    sys
+add_shedskin_product(
+    SYS_MODULES
+        collections
+        itertools
+        sys
 )
-add_shedskin_example("${modules}")

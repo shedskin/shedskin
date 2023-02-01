@@ -1,11 +1,8 @@
-set(modules
-    math
-    random
-    time
+add_shedskin_product(
+    SYS_MODULES
+        math
+        random
+        time
+    DATA
+        fysphun_main.py
 )
-
-copy_to_build_dir(
-    fysphun_main.py
-)
-
-add_shedskin_ext_example("${modules}")
