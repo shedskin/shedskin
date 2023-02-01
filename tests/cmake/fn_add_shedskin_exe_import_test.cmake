@@ -69,6 +69,7 @@ function(add_shedskin_exe_import_test sys_modules)
         "-Wall"
         "-Wno-deprecated"
         "-Wno-unused-variable"
+        "-Wno-unused-but-set-variable"
     )
 
     target_link_libraries(${EXE} PRIVATE

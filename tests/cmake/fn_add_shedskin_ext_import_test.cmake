@@ -78,6 +78,7 @@ function(add_shedskin_ext_import_test sys_modules)
         "-O3"
         "-Wall"
         "-Wno-unused-variable"
+        "-Wno-unused-but-set-variable"
     )
 
     target_link_options(${EXT} PUBLIC
