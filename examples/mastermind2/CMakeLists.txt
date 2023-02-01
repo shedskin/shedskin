@@ -1,7 +1,7 @@
-set(modules
-    collections
-    math
-    random
-    time
+add_shedskin_product(
+    SYS_MODULES
+        collections
+        math
+        random
+        time
 )
-add_shedskin_example("${modules}")

@@ -1,3 +1,1 @@
-set(modules
-)
-add_shedskin_example("${modules}")
+add_shedskin_product()

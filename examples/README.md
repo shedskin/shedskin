@@ -147,27 +147,42 @@ to automate the manual build/run processes given above.
 It has the following commandline interface:
 
 ```bash
-$ ./run.py --help
-usage: run [-h] [-c] [-e] [-g GENERATOR] [-j N] [-k] [-n] [-r EXAMPLE] [-s]
-           [-t TARGET [TARGET ...]] [--ccache]
+% ./run.py --help
+usage: run [-h] [-b BUILD_TYPE] [-c] [-d] [-e] [-g GENERATOR] [-i PATTERN]
+           [-j N] [-k] [-m] [-n] [-p] [-r TEST] [-s] [-t TARGET [TARGET ...]]
+           [-x] [--ccache] [--progress] [--reset] [--conan] [--spm] [--cpm]
+           [--external-project] [--debug]
 
-runs shedskin examples
+runs shedskin tests and examples
 
 options:
   -h, --help            show this help message and exit
-  -c, --cmake           run examples using cmake
-  -e, --extension       include python extensions
+  -b BUILD_TYPE, --build-type BUILD_TYPE
+                        set cmake build type
+  -c, --cmake           run tests using cmake
+  -d, --dryrun          dryrun without any changes
+  -e, --extension       include python extension tests
   -g GENERATOR, --generator GENERATOR
                         specify a cmake build system generator
-  -j N, --parallel N    build and run examples in parallel using N jobs
-  -k, --check           check file.py syntax before running
-  -n, --nocleanup       do not cleanup built example
-  -r EXAMPLE, --run EXAMPLE
-                        run single example
-  -s, --reset           reset cmake build
+  -i PATTERN, --include PATTERN
+                        provide regex of tests to include with cmake
+  -j N, --parallel N    build and run tests in parallel using N jobs
+  -k, --check           check testfile py syntax before running
+  -m, --modified        run only recently modified test
+  -n, --nocleanup       do not cleanup built test
+  -p, --pytest          run pytest before each test run
+  -r TEST, --run TEST   run single test
+  -s, --stoponfail      stop when first failure happens in ctest
   -t TARGET [TARGET ...], --target TARGET [TARGET ...]
                         build only specified targets
+  -x, --run-errs        run error/warning message tests
   --ccache              enable ccache with cmake
+  --progress            enable short progress output from ctest
+  --reset               reset cmake build
+  --conan               install dependencies with conan
+  --spm                 install dependencies with spm
+  --external-project    install dependencies with externalproject
+  --debug               set cmake debug on
 ```
 
 #### 1. Builtin Method

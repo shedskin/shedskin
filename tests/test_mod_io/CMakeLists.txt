@@ -1,7 +1,7 @@
-set(modules
-    io
-    os
-    os.path
-    stat
+add_shedskin_product(
+    SYS_MODULES
+        io
+        os
+        os.path
+        stat
 )
-add_shedskin_test("${modules}")

@@ -1,11 +1,10 @@
-set(sys_modules
+add_shedskin_product(
+    SYS_MODULES
         itertools
+    APP_MODULES
+        bar
+        boo/__init__
+        boo/quotes
+        foo
+        spam
 )
-
-set(app_modules
-	foo
-	bar
-	spam
-)
-
-add_shedskin_test("${sys_modules}" "${app_modules}")

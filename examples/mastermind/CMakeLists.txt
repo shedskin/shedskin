@@ -1,3 +1,51 @@
+
+
+if(ENABLE_EXTERNAL_PROJECT)
+    set(LIB_DEPS
+        ${install_dir}/lib/libgc.a
+        ${install_dir}/lib/libgccpp.a
+        $<$<BOOL:${IMPORTS_RE_MODULE}>:${install_dir}/lib/libpcre.a>
+    )
+    set(LIB_DIRS ${install_dir}/lib)
+    set(LIB_INCLUDES ${install_dir}/include)
+elseif(ENABLE_SPM)
+    set(LIB_DEPS
+        ${SPM_LIB_DIRS}/libgc.a
+        ${SPM_LIB_DIRS}/libgccpp.a
+        $<$<BOOL:${IMPORTS_RE_MODULE}>:${SPM_LIB_DIRS}/libpcre.a>            
+    )
+    set(LIB_DIRS ${SPM_LIB_DIRS})
+    set(LIB_INCLUDES ${SPM_INCLUDE_DIRS})
+elseif(ENABLE_CONAN)
+    set(LIB_DEPS
+        BDWgc::gc
+        BDWgc::gccpp
+        $<$<BOOL:${IMPORTS_RE_MODULE}>:PCRE::PCRE>
+    )
+    set(LIB_DIRS
+        ${BDWgc_LIB_DIRS}
+        $<$<BOOL:${IMPORTS_RE_MODULE}>:${PCRE_LIB_DIRS}>
+    )
+    # include PCRE headers irrespective (even if not used) to prevent header not found error
+    set(LIB_INCLUDES
+        ${BDWgc_INCLUDE_DIRS}
+        ${PCRE_INCLUDE_DIRS}
+    )
+else()
+    set(LIB_DEPS 
+        "-lgc"
+        "-lgccpp"
+        "$<$<BOOL:${IMPORTS_RE_MODULE}>:-lpcre>"
+    )
+    set(LIB_DIRS
+        /usr/local/lib
+    )
+    set(LIB_INCLUDES 
+        /usr/local/include
+    )
+endif()
+
+
 set(sys_modules
     random
     math
@@ -15,9 +63,12 @@ set(app_modules
     mm/row
 )
 
-copy_to_build_dir(mastermind_main.py)
 
 get_filename_component(name ${CMAKE_CURRENT_SOURCE_DIR} NAME_WLE)
+
+
+file(COPY mastermind_main.py DESTINATION ${PROJECT_BINARY_DIR}/${name})
+
 
 set(PROJECT_EXT_DIR ${PROJECT_BINARY_DIR}/${name}/ext)
 
@@ -71,14 +122,15 @@ set_target_properties(${EXT} PROPERTIES
     PREFIX ""
 )
 
-target_include_directories(${EXT} PUBLIC
-    ${Python_INCLUDE_DIRS}    
-    /usr/local/include
+target_include_directories(${EXT} PRIVATE
+    ${Python_INCLUDE_DIRS}
     ${SHEDSKIN_LIB}
     ${CMAKE_SOURCE_DIR}
+    ${PROJECT_EXT_DIR}
+    ${LIB_INCLUDES}
 )
 
-target_compile_options(${EXT} PUBLIC
+target_compile_options(${EXT} PRIVATE
     "-fPIC"
     "-D__SS_BIND"
     "-Wno-unused-result"
@@ -89,9 +141,10 @@ target_compile_options(${EXT} PUBLIC
     "-fwrapv"
     "-O3"
     "-Wall"
+    "-Wno-unused-variable"
 )
 
-target_link_options(${EXT} PUBLIC
+target_link_options(${EXT} PRIVATE
     $<$<BOOL:${APPLE}>:-undefined dynamic_lookup>
     "-Wno-unused-result"
     "-Wsign-compare"
@@ -100,11 +153,14 @@ target_link_options(${EXT} PUBLIC
     "-dynamic"
 )
 
-target_link_libraries(${EXT} PUBLIC
-    "-lgc"
-    "-lgccpp"
-    "-lpcre"
+target_link_libraries(${EXT} PRIVATE
+    ${LIB_DEPS}
 )
+
+target_link_directories(${EXT} PRIVATE
+    ${LIB_DIRS}
+)
+
 
 
 

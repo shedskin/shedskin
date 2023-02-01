@@ -1,4 +1,4 @@
-set(modules
-    itertools
+add_shedskin_product(
+    SYS_MODULES
+        itertools
 )
-add_shedskin_test("${modules}")

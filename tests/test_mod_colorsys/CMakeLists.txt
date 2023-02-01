@@ -1,4 +1,4 @@
-set(modules
-    colorsys
+add_shedskin_product(
+    SYS_MODULES
+        colorsys
 )
-add_shedskin_test("${modules}")

@@ -1,11 +1,8 @@
-set(modules
-    time
+add_shedskin_product(
+    SYS_MODULES
+        time
+    DATA
+        stereo_main.py
+        "L.bmp"
+        "R.bmp"
 )
-
-copy_to_build_dir(
-    stereo_main.py
-    "L.bmp"
-    "R.bmp"
-)
-
-add_shedskin_ext_example("${modules}")

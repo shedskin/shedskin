@@ -1,11 +1,8 @@
-set(modules
-    random
-    math
-    time
+add_shedskin_product(
+    SYS_MODULES
+        math
+        random
+        time
+    DATA
+        pylife_main.py
 )
-
-copy_to_build_dir(
-    pylife_main.py
-)
-
-add_shedskin_example("${modules}")

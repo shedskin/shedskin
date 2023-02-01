@@ -16,6 +16,18 @@ import pathlib
 
 from . import annotate, config, cpp, error, graph, infer, utils
 
+
+def get_pkg_path():
+    """return shedskin package path"""
+    pkg_path = pathlib.Path(__file__).parent
+    assert pkg_path.name == 'shedskin'
+    return pkg_path
+
+def pkg_path():
+    """used by cmake to get package path automatically"""
+    sys.stdout.write(str(get_pkg_path()))
+
+
 class ShedskinFormatter(logging.Formatter):
 
     def __init__(self, gx, datefmt=None):

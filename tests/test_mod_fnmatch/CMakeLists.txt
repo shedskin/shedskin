@@ -1,8 +1,8 @@
-set(modules
-    fnmatch
-    os
-    os.path
-    stat
-    re
+add_shedskin_product(
+    SYS_MODULES
+        fnmatch
+        os
+        os.path
+        re
+        stat
 )
-add_shedskin_test("${modules}")

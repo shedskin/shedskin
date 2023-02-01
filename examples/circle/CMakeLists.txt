@@ -1,9 +1,8 @@
-set(modules
-    sys
-)
+add_shedskin_product(
+    SYS_MODULES
+        math
+        sys
 
-copy_to_build_dir(
-    circle_main.py
+    DATA
+        circle_main.py
 )
-
-add_shedskin_ext_example("${modules}")
