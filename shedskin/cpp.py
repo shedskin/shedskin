@@ -1884,6 +1884,16 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             else:
                 self.append('0, ')
 
+    def visit_JoinedStr(self, node, func=None):
+        self.append('__add_strs(%d, ' % len(node.values))
+        for i, value in enumerate(node.values):
+            if isinstance(value, ast.FormattedValue):
+                value = value.value
+            self.visitm('__str(', value, ')', func)
+            if i != len(node.values)-1:
+                self.append(', ')
+        self.append(')')
+
     def visit_Pass(self, node, func=None):
         pass
 

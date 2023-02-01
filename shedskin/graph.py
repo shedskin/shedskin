@@ -371,7 +371,14 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.add_constraint((infer.inode(self.gx, lc), newnode), func)
 
     def visit_JoinedStr(self, node, func=None):
-        error.error("f-strings are not supported", self.gx, node, mv=getmv())
+        for value in node.values:
+            if isinstance(value, ast.FormattedValue):
+                if value.format_spec:
+                    error.error("f-string format spec is not supported", self.gx, node, warning=True, mv=getmv())
+                value = value.value
+            self.visit(value, func)
+            self.fake_func(infer.inode(self.gx, value), value, '__str__', [], func)
+        self.instance(node, python.def_class(self.gx, 'str_'), func)
 
 #    def visit_Stmt(self, node, func=None):
 #        comments = []
