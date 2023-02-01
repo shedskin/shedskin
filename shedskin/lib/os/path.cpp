@@ -252,10 +252,8 @@ __ss_bool exists(str *path) {
     /**
     Test whether a path exists.  Returns False for broken symbolic links
     */
-    __os__::__cstat *st;
-
     try {
-        st = __os__::stat(path);
+        __os__::stat(path);
     } catch (__os__::error *) {
         return False;
     }
@@ -266,10 +264,9 @@ __ss_bool lexists(str *path) {
     /**
     Test whether a path exists.  Returns True for broken symbolic links
     */
-    __os__::__cstat *st;
 
     try {
-        st = __os__::lstat(path);
+        __os__::lstat(path);
     } catch (__os__::error *) {
         return False;
     }
