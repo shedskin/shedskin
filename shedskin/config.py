@@ -78,6 +78,7 @@ class GlobalInfo:  # XXX add comments, split up
         self.gc_cleanup = False
         self.terminal = None
         self.progressbar = None
+        self.generate_cmakefile = False
 
     def init_directories(self):
         shedskin_directory = os.sep.join(__file__.split(os.sep)[:-1])

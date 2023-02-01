@@ -1,10 +1,10 @@
-set(modules
-    math
-    os
-    os.path
-    random
-    sys
-    stat
-    time
+add_shedskin_product(
+    SYS_MODULES
+        math
+        os
+        os.path
+        random
+        stat
+        sys
+        time
 )
-add_shedskin_test("${modules}")

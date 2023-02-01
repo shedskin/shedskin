@@ -2,41 +2,6 @@
 *** SHED SKIN Python-to-C++ Compiler ***
 Copyright 2005-2013 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 
-Classes:
-    Module
-    Class
-    StaticClass
-    Function
-    Variable
-
-Functions:
-    clear_block(m) -> str
-    parse_file(name) -> ast.Module
-    find_module(gx, name, paths) -> (str, str, str, bool)
-
-    # lookup funcs
-    lookup_implementor(cl, ident) -> str
-    lookup_class_module(objexpr, mv, parent) -> (Class, Module)
-    lookup_func(node, mv) -> Function
-    lookup_class(node, mv) -> Class
-    lookup_module(node, mv) -> Module
-    def_class(gx, name, mv=None) -> Class
-    lookup_var(name, parent, local=False, mv=None) -> Variable
-    smart_lookup_var(name, parent, local=False, mv=None) -> Variable
-
-    # bool funcs
-    subclass(a, b) -> bool # should be called is_subclass
-    is_property_setter(dec) -> bool
-    is_literal(node) -> bool
-    is_fastfor(node) -> bool
-    is_method(parent) -> bool
-    is_enumerate(node) -> bool
-    is_zip2(node) -> bool
-    is_isinstance(node) -> bool
-
-    assign_rec(left, right) -> [(ast.node, ast.node)]
-    aug_msg(node, msg) -> str
-
 """
 
 import ast
@@ -83,7 +48,6 @@ class Module(PyObject):
         self.name = name
         self.name_list = name.split('.')
         self.ident = self.name_list[-1]
-
         #set filename and its dependent fields
         self.filename = filename
         self.path = os.path.dirname(filename)

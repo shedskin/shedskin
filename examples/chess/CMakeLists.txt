@@ -1,4 +1,4 @@
-set(modules
-    copy
+add_shedskin_product(
+    SYS_MODULES
+        copy
 )
-add_shedskin_example("${modules}")

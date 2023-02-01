@@ -1,26 +1,19 @@
-set(modules
-    random
-    math
-    time
-    sys
-    re
+add_shedskin_product(
+    SYS_MODULES
+        math
+        random
+        re
+        sys
+        time
+    APP_MODULES
+        ml/__init__
+        ml/camera
+        ml/image
+        ml/minilight
+        ml/raytracer
+        ml/scene
+        ml/spatialindex
+        ml/surfacepoint
+        ml/triangle
+        ml/vector3f
 )
-
-copy_to_build_dir(
-    cornellbox.txt
-)
-
-set(app_modules
-    ml/__init__
-    ml/camera
-    ml/image
-    ml/minilight
-    ml/raytracer
-    ml/scene
-    ml/spatialindex
-    ml/surfacepoint
-    ml/triangle
-    ml/vector3f
-)
-
-add_shedskin_example("${modules}" "${app_modules}")

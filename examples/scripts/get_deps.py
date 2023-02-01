@@ -20,7 +20,7 @@ def get_tree(path, options=None):
 def commandline():
     parser = argparse.ArgumentParser(
         prog = 'get_tree',
-        description = 'get tree of translated depedencies (.hpp, .cpp)')
+        description = 'get tree of translated dependencies (.hpp, .cpp)')
     arg = opt = parser.add_argument
     arg('path', help='path to root')
 

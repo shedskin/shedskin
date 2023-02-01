@@ -1,14 +1,11 @@
-set(modules
-    getopt
-    math
-    sys
-    os
-    os.path
-    stat
+add_shedskin_product(
+    SYS_MODULES
+        getopt
+        math
+        os
+        os.path
+        stat
+        sys
+    DATA
+        voronoi2.txt
 )
-
-copy_to_build_dir(
-    voronoi2.txt
-)
-
-add_shedskin_example("${modules}")

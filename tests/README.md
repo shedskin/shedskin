@@ -25,16 +25,20 @@ It contains two alternative ways to build and run its tests:
 This folder includes a commandline tool, `run.py`, with extensive options to help setup, build and run its tests:
 
 ```bash
-$ ./run.py --help
-usage: run [-h] [-c] [-e] [-g GENERATOR] [-i PATTERN] [-j N] [-k] [-m]
-                [-n] [-p] [-r TEST] [-s] [-t TARGET [TARGET ...]] [-x]
-                [--progress] [--reset]
+% ./run.py --help
+usage: run [-h] [-b BUILD_TYPE] [-c] [-d] [-e] [-g GENERATOR] [-i PATTERN]
+           [-j N] [-k] [-m] [-n] [-p] [-r TEST] [-s] [-t TARGET [TARGET ...]]
+           [-x] [--ccache] [--progress] [--reset] [--conan] [--spm] [--cpm]
+           [--external-project] [--debug]
 
-runs shedskin tests
+runs shedskin tests and examples
 
 options:
   -h, --help            show this help message and exit
+  -b BUILD_TYPE, --build-type BUILD_TYPE
+                        set cmake build type
   -c, --cmake           run tests using cmake
+  -d, --dryrun          dryrun without any changes
   -e, --extension       include python extension tests
   -g GENERATOR, --generator GENERATOR
                         specify a cmake build system generator
@@ -50,8 +54,13 @@ options:
   -t TARGET [TARGET ...], --target TARGET [TARGET ...]
                         build only specified targets
   -x, --run-errs        run error/warning message tests
+  --ccache              enable ccache with cmake
   --progress            enable short progress output from ctest
   --reset               reset cmake build
+  --conan               install dependencies with conan
+  --spm                 install dependencies with spm
+  --external-project    install dependencies with externalproject
+  --debug               set cmake debug on
 ```
 
 There are currently two methods to run tests:
@@ -150,13 +159,13 @@ To build and run **all** cmake tests as executables **and** python extensions us
 This will build/run an executable and python extension test for each test in the directory, basically the equivalent of the following (if it is run the first time):
 
 ```bash
-mkdir build && cd build && cmake .. -DTEST_EXT=ON && cmake --build . && ctest
+mkdir build && cd build && cmake .. -DBUILD_EXTENSION=ON && cmake --build . && ctest
 ```
 
 If it is run subsequently, it will run the equivalent of the following:
 
 ```bash
-cd build && cmake .. -DTEST_EXT=ON && cmake --build . && ctest
+cd build && cmake .. -DBUILD_EXTENSION=ON && cmake --build . && ctest
 ```
 
 To stop on the first failure:

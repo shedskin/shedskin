@@ -1,4 +1,4 @@
-set(modules
-    socket
+add_shedskin_product(
+    SYS_MODULES
+        socket
 )
-add_shedskin_test("${modules}")

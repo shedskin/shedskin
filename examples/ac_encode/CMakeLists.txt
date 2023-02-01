@@ -1,6 +1,6 @@
-set(modules
-    os
-    os.path
-    stat
+add_shedskin_product(
+    SYS_MODULES
+        os
+        os.path
+        stat
 )
-add_shedskin_example("${modules}")

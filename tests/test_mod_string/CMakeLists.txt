@@ -1,7 +1,4 @@
-set(modules
-    string
+add_shedskin_product(
+    SYS_MODULES
+        string
 )
-
-add_shedskin_test("${modules}")
-
-

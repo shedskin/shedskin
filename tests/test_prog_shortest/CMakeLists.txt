@@ -1,5 +1,4 @@
-set(modules
-    collections
+add_shedskin_product(
+    SYS_MODULES
+        collections
 )
-
-add_shedskin_test("${modules}")

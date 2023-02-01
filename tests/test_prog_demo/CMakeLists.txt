@@ -1,29 +1,29 @@
-set(modules
-    array
-    binascii
-    bisect
-    collections
-    colorsys
-    configparser
-    copy
-    csv
-    datetime
-    fnmatch
-    getopt
-    glob
-    heapq
-    itertools
-    math
-    mmap
-    os
-    os.path
-    random
-    re
-    socket
-    stat
-    string
-    struct
-    sys
-    time
+add_shedskin_product(
+    SYS_MODULES
+        array
+        binascii
+        bisect
+        collections
+        colorsys
+        configparser
+        copy
+        csv
+        datetime
+        fnmatch
+        getopt
+        glob
+        heapq
+        itertools
+        math
+        mmap
+        os
+        os.path
+        random
+        re
+        socket
+        stat
+        string
+        struct
+        sys
+        time
 )
-add_shedskin_test("${modules}")

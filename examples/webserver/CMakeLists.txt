@@ -1,6 +1,6 @@
-set(modules
-    select
-    socket
-    sys
+add_shedskin_product(
+    SYS_MODULES
+        select
+        socket
+        sys
 )
-add_shedskin_example("${modules}")

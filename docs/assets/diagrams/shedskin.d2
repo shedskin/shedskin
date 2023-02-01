@@ -3,45 +3,47 @@
 # actors
 shedskin: Shedskin
 
+compiler: Compiler
+
 inputs: {
   module: module.py
-  pkg: python package
+  dependent: dependent.py
 }
 
-translated: {
-  cpp: 'module.[ch]pp' 
-}
-
-builders: {
-  cmake: CMake
-  make: Make
-}
-
-products: {
+executable {
+  exe_cpp: 'exe.[ch]pp'
+  make_exe: exec Makefile
   exe: 'module.exe'
+}
+
+extension {
+  ext_cpp: 'ext.[ch]pp'
+  make_ext: ext Makefile
   ext: 'module.so'
 }
 
-
 # process
 inputs.module -> shedskin: basic case
-inputs.pkg -> shedskin: future case
+inputs.dependent -> inputs.module: depends on
 
 # translation
-shedskin -> translated.cpp: translating to cpp
+shedskin -> executable.exe_cpp: translates
+shedskin -> extension.ext_cpp: translates
 
 # generation
-shedskin -> builders.make: generates
-builders.cmake -> builders.make: generates
+shedskin -> executable.make_exe: generates
+shedskin -> extension.make_ext: generates
+
+# configuration
+executable.make_exe -> compiler: config executable
+extension.make_ext -> compiler: config extension
 
 # building
-translated.cpp -> builders.make: builtin method
-translated.cpp -> builders.cmake: cmake method
+executable.exe_cpp -> compiler: src
+compiler -> executable.exe: compile executable
 
-builders.make -> products.exe: executable
-builders.make -> products.ext: python extension
-builders.cmake -> products.exe: executable
-builders.cmake -> products.ext: python extension
+extension.ext_cpp -> compiler: src
+compiler -> extension.ext: compile extension
 
 
 
