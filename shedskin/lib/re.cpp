@@ -658,7 +658,7 @@ match_object *__exec_once(str *pat, str *subj, __ss_int flags)
     r = compile(pat, flags);
     mo = r->__exec(subj, 0, -1, 0);
 
-    if(!mo) delete r;
+    if(!mo) GC_FREE(r);
 
     return mo;
 }
