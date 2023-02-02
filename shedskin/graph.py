@@ -1195,18 +1195,21 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         pass
 
     def visit_With(self, node, func=None):
-        for child in ast.iter_child_nodes(node):
-            self.visit(child, func)
+        if len(node.items) > 1:
+            error.error("with-construct with multiple 'as' terms", self.gx, node, mv=getmv())
+        item = node.items[0]
 
-        if hasattr(node, 'items'):
-            node = node.items[0] # TODO py3: multiple items
+        self.visit(item.context_expr, func)
 
-        if node.optional_vars:
-            varnode = infer.CNode(self.gx, node.optional_vars, parent=func, mv=getmv())
+        if item.optional_vars:
+            varnode = infer.CNode(self.gx, item.optional_vars, parent=func, mv=getmv())
             self.gx.types[varnode] = set()
-            self.add_constraint((infer.inode(self.gx, node.context_expr), varnode), func)
-            lvar = self.default_var(node.optional_vars.id, func)
+            self.add_constraint((infer.inode(self.gx, item.context_expr), varnode), func)
+            lvar = self.default_var(item.optional_vars.id, func)
             self.add_constraint((varnode, infer.inode(self.gx, lvar)), func)
+
+        for child in node.body:
+            self.visit(child, func)
 
     def visit_ListComp(self, node, func=None):
         # --- [expr for iter in list for .. if cond ..]
