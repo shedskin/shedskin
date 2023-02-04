@@ -620,6 +620,15 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     error.error("future '%s' is not yet supported" % name, self.gx, node, mv=getmv())
             return
 
+        # from . import (needed for 'illegal' import eg 'cd examples/c64; shedskin c64' as no root module)
+        if node.module is None and hasattr(node, 'level') and node.level == 1:
+            for alias in node.names:
+                submod = self.import_module(alias.name, alias.asname, node, False)
+                parent = getmv().module
+                parent.mv.imports[submod.ident] = submod
+                self.gx.from_module[node] = submod
+                return
+
         # from [..]a.b.c import
         module = self.import_modules(node.module, node, True)
         self.gx.from_module[node] = module
