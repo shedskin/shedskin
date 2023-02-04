@@ -20,7 +20,6 @@ add_shedskin_product(
 
     INCLUDE_DIRS
         lib
-
 )
 
 
