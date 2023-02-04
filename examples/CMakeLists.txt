@@ -114,7 +114,7 @@ function(add_shedskin_product)
             DISABLE_EXECUTABLE DISABLE_EXTENSION DISABLE_TEST
             HAS_LIB
             ENABLE_CONAN ENABLE_SPM DEBUG)
-    set(oneValueArgs NAME INCLUDE LIBDIR)
+    set(oneValueArgs NAME)
     set(multiValueArgs 
             SYS_MODULES APP_MODULES DATA
             COMPILE_OPTS INCLUDE_DIRS LINK_LIBS LINK_DIRS
@@ -253,7 +253,6 @@ function(add_shedskin_product)
         endif()
     endforeach()
 
-
     if(ENABLE_EXTERNAL_PROJECT)
         set(LIB_DEPS
             ${install_dir}/lib/libgc.a
@@ -285,20 +284,38 @@ function(add_shedskin_product)
             ${BDWgc_INCLUDE_DIRS}
             ${PCRE_INCLUDE_DIRS}
         )
-    else()
+    else() 
+        # adding -lutil for every use of os is not a good idea should only be temporary
+        # better to just add it on demand if the two relevant pty functions are used
+        set(local_prefix "/usr/local")
+        if(CMAKE_HOST_APPLE) # i.e if is_macos check if homebrew is used aand if so get prefix
+            execute_process(
+                COMMAND brew --prefix
+                OUTPUT_VARIABLE homebrew_prefix
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+            )
+            If(DEFINED homebrew_prefix)
+                set(local_prefix ${homebrew_prefix})
+            endif()
+        endif()
+
+        set(local_include "${local_prefix}/include")
+        set(local_libdir "${local_prefix}/lib")
+
         set(LIB_DEPS 
             "-lgc"
             "-lgccpp"
             "$<$<BOOL:${IMPORTS_RE_MODULE}>:-lpcre>"
+            # "$<$<BOOL:${IMPORTS_OS_MODULE}>:-lutil>"
             ${SHEDSKIN_LINK_LIBS}
         )
         set(LIB_DIRS
-            /usr/local/lib
+            ${local_libdir}
             ${SHEDSKIN_LINK_DIRS}
         )
         set(LIB_INCLUDES 
-            /usr/local/include
-             ${SHEDSKIN_INCLUDE_DIRS}
+            ${local_include}            
+            ${SHEDSKIN_INCLUDE_DIRS}
         )
     endif()
 
@@ -353,6 +370,7 @@ function(add_shedskin_product)
             "-Wno-deprecated"
             "-Wno-unused-variable"
             "-Wno-unused-but-set-variable"
+
         )
 
         target_include_directories(${EXE} PRIVATE
@@ -465,6 +483,266 @@ function(add_shedskin_product)
 
 endfunction()
 
+function(add_shedskin_nested_extension)
+
+    # -------------------------------------------------------------------------
+    # function api and default configuration
+
+    set(options
+            BUILD_TEST
+            HAS_LIB
+            ENABLE_CONAN
+            ENABLE_SPM 
+            DEBUG)
+    set(oneValueArgs NAME MAIN SUBDIR)
+    set(multiValueArgs 
+            SYS_MODULES
+            APP_MODULES
+            DATA
+            INCLUDE_DIRS
+            LINK_LIBS
+            LINK_DIRS
+            COMPILE_OPTIONS
+            LINK_OPTIONS
+            OPTIONS)
+    cmake_parse_arguments(SHEDSKIN "${options}" "${oneValueArgs}"
+                          "${multiValueArgs}" ${ARGN})
+
+    if(SHEDSKIN_BUILD_TEST)
+        set(BUILD_TEST ON)
+    endif()
+
+    if(DEFINED SHEDSKIN_NAME)
+        set(name "${SHEDSKIN_NAME}")
+    else()
+        get_filename_component(name ${CMAKE_CURRENT_SOURCE_DIR} NAME_WLE)
+    endif()
+
+    if(DEFINED SHEDSKIN_SUBDIR)
+        set(subdir "${SHEDSKIN_SUBDIR}")
+    endif()
+
+    if(DEFINED SHEDSKIN_MAIN)
+        set(basename "${SHEDSKIN_MAIN}")
+    endif()
+
+    if(SHEDSKIN_SYS_MODULES)
+        set(sys_modules "${SHEDSKIN_SYS_MODULES}")
+    else()
+        set(sys_modules)
+    endif()
+
+    if(SHEDSKIN_APP_MODULES)
+        set(app_modules "${SHEDSKIN_APP_MODULES}")
+    else()
+        set(app_modules)
+    endif()
+
+    if(SHEDSKIN_DATA)
+        foreach(fname ${SHEDSKIN_DATA})
+            file(COPY ${fname} DESTINATION ${PROJECT_BINARY_DIR}/${name})
+        endforeach()
+    endif()
+
+    if(SHEDSKIN_OPTIONS)
+        join(${SHEDSKIN_OPTIONS} " " opts)
+    else()
+        set(opts)
+    endif()
+
+    set(PROJECT_EXT_DIR ${PROJECT_BINARY_DIR}/${name}/ext)
+    set(IMPORTS_OS_MODULE FALSE)
+    set(IMPORTS_RE_MODULE FALSE)
+
+    if(DEFINED SHEDSKIN_MAIN)
+        set(basename "${SHEDSKIN_MAIN}")
+        set(basename_py "${SHEDSKIN_MAIN}.py")
+    else()
+        set(basename_py "${name}.py")
+    endif()
+ 
+    # if ${name} starts_with test_ then set IS_TEST to TRUE
+    string(FIND "${name}" "test_" index)
+    if("${index}" EQUAL 0)
+        set(IS_TEST TRUE)
+    else()
+        set(IS_TEST FALSE)
+    endif()
+
+    # -------------------------------------------------------------------------
+    # common section
+
+    list(PREPEND sys_modules builtin)
+
+    foreach(mod ${sys_modules})
+        # special case os, os.path
+        if(mod STREQUAL "os")
+            set(IMPORTS_OS_MODULE TRUE)
+            list(APPEND sys_module_list "${SHEDSKIN_LIB}/os/__init__.cpp")
+            list(APPEND sys_module_list "${SHEDSKIN_LIB}/os/__init__.hpp")            
+        elseif(mod STREQUAL "os.path")
+            list(APPEND sys_module_list "${SHEDSKIN_LIB}/os/path.cpp")
+            list(APPEND sys_module_list "${SHEDSKIN_LIB}/os/path.hpp")
+        else()
+            if(mod STREQUAL "re")
+                set(IMPORTS_RE_MODULE TRUE)
+            endif()
+            list(APPEND sys_module_list "${SHEDSKIN_LIB}/${mod}.cpp")
+            list(APPEND sys_module_list "${SHEDSKIN_LIB}/${mod}.hpp")
+        endif()
+    endforeach()
+
+    if(ENABLE_EXTERNAL_PROJECT)
+        set(LIB_DEPS
+            ${install_dir}/lib/libgc.a
+            ${install_dir}/lib/libgccpp.a
+            $<$<BOOL:${IMPORTS_RE_MODULE}>:${install_dir}/lib/libpcre.a>
+        )
+        set(LIB_DIRS ${install_dir}/lib)
+        set(LIB_INCLUDES ${install_dir}/include)
+    elseif(ENABLE_SPM)
+        set(LIB_DEPS
+            ${SPM_LIB_DIRS}/libgc.a
+            ${SPM_LIB_DIRS}/libgccpp.a
+            $<$<BOOL:${IMPORTS_RE_MODULE}>:${SPM_LIB_DIRS}/libpcre.a>            
+        )
+        set(LIB_DIRS ${SPM_LIB_DIRS})
+        set(LIB_INCLUDES ${SPM_INCLUDE_DIRS})
+    elseif(ENABLE_CONAN)
+        set(LIB_DEPS
+            BDWgc::gc
+            BDWgc::gccpp
+            $<$<BOOL:${IMPORTS_RE_MODULE}>:PCRE::PCRE>
+        )
+        set(LIB_DIRS
+            ${BDWgc_LIB_DIRS}
+            $<$<BOOL:${IMPORTS_RE_MODULE}>:${PCRE_LIB_DIRS}>
+        )
+        # include PCRE headers irrespective (even if not used) to prevent header not found error
+        set(LIB_INCLUDES
+            ${BDWgc_INCLUDE_DIRS}
+            ${PCRE_INCLUDE_DIRS}
+        )
+    else() 
+        # adding -lutil for every use of os is not a good idea should only be temporary
+        # better to just add it on demand if the two relevant pty functions are used
+        set(local_prefix "/usr/local")
+        if(CMAKE_HOST_APPLE) # i.e if is_macos check if homebrew is used aand if so get prefix
+            execute_process(
+                COMMAND brew --prefix
+                OUTPUT_VARIABLE homebrew_prefix
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+            )
+            If(DEFINED homebrew_prefix)
+                set(local_prefix ${homebrew_prefix})
+            endif()
+        endif()
+
+        set(local_include "${local_prefix}/include")
+        set(local_libdir "${local_prefix}/lib")
+
+        set(LIB_DEPS 
+            "-lgc"
+            "-lgccpp"
+            "$<$<BOOL:${IMPORTS_RE_MODULE}>:-lpcre>"
+            # "$<$<BOOL:${IMPORTS_OS_MODULE}>:-lutil>"
+            ${SHEDSKIN_LINK_LIBS}
+        )
+        set(LIB_DIRS
+            ${local_libdir}
+            ${SHEDSKIN_LINK_DIRS}
+        )
+        set(LIB_INCLUDES 
+            ${local_include}            
+            ${SHEDSKIN_INCLUDE_DIRS}
+        )
+    endif()
+
+    set(EXT ${name}-ext)
+
+    set(translated_files
+        ${PROJECT_EXT_DIR}/${subdir}/${basename}.cpp
+        ${PROJECT_EXT_DIR}/${subdir}/${basename}.hpp
+    )
+
+
+    foreach(mod ${app_modules})
+        list(APPEND translated_files "${PROJECT_EXT_DIR}/${mod}.cpp")
+        list(APPEND translated_files "${PROJECT_EXT_DIR}/${mod}.hpp")            
+    endforeach()
+
+    add_custom_command(OUTPUT ${translated_files}
+        COMMAND shedskin --nomakefile -o ${PROJECT_EXT_DIR}/${subdir} -e ${opts} "${subdir}/${basename_py}"
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        DEPENDS "${subdir}/${basename_py}"
+        COMMENT "translating ${basename_py} to ext"
+        VERBATIM
+    )
+
+    add_custom_target(shedskin_${EXT} DEPENDS ${translated_files})
+
+    if(SHEDSKIN_HAS_LIB)
+        file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/lib DESTINATION ${PROJECT_EXT_DIR})
+    endif()
+
+    add_library(${EXT} MODULE
+        ${translated_files}
+        ${sys_module_list}
+    )
+
+    set_target_properties(${EXT} PROPERTIES
+        OUTPUT_NAME ${name}
+        PREFIX ""
+    )
+
+    target_include_directories(${EXT} PRIVATE
+        ${Python_INCLUDE_DIRS}
+        ${SHEDSKIN_LIB}
+        ${CMAKE_SOURCE_DIR}
+        ${PROJECT_EXT_DIR}
+        ${LIB_INCLUDES}
+    )
+
+    target_compile_options(${EXT} PRIVATE
+        "-fPIC"
+        "-D__SS_BIND"
+        "-Wno-unused-result"
+        "-Wsign-compare"
+        "-Wunreachable-code"
+        "-DNDEBUG"
+        "-g"
+        "-fwrapv"
+        "-O3"
+        "-Wall"
+        "-Wno-unused-variable"
+        "-Wno-unused-but-set-variable"
+        ${SHEDSKIN_COMPILE_OPTIONS}
+    )
+
+    target_link_options(${EXT} PRIVATE
+        $<$<BOOL:${APPLE}>:-undefined dynamic_lookup>
+        "-Wno-unused-result"
+        "-Wsign-compare"
+        "-Wunreachable-code"
+        "-fno-common"
+        "-dynamic"
+        ${SHEDSKIN_LINK_OPTIONS}
+    )
+
+    target_link_libraries(${EXT} PRIVATE
+        ${LIB_DEPS}
+    )
+
+    target_link_directories(${EXT} PRIVATE
+        ${LIB_DIRS}
+    )
+
+    if(BUILD_TEST AND IS_TEST)
+        add_test(NAME ${EXT} 
+             COMMAND ${Python_EXECUTABLE} -c "from ${name} import test_all; test_all()")
+    endif()
+endfunction()
+
 # -----------------------------------------------------------------------
 # any 'test_*' folders are automatically treated as tests
 
@@ -546,12 +824,12 @@ add_subdirectory(pystone)
 add_subdirectory(quameon) # deep exe
 add_subdirectory(rdb)
 add_subdirectory(richards)
-add_subdirectory(rsync) # requires hashlib
+add_subdirectory(rsync) # requires hashlib (openssl)
 add_subdirectory(rubik)
 add_subdirectory(rubik2)
 add_subdirectory(sat)
 add_subdirectory(score4)
-add_subdirectory(sha) # requires hashlib
+add_subdirectory(sha) # requires hashlib (openssl)
 add_subdirectory(sieve)
 add_subdirectory(sokoban)
 add_subdirectory(solitaire)
@@ -574,8 +852,4 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     add_subdirectory(webserver)
 endif()
 add_subdirectory(yopyra)
-
-
-
-
 

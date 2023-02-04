@@ -114,7 +114,7 @@ function(add_shedskin_product)
             DISABLE_EXECUTABLE DISABLE_EXTENSION DISABLE_TEST
             HAS_LIB
             ENABLE_CONAN ENABLE_SPM DEBUG)
-    set(oneValueArgs NAME INCLUDE LIBDIR)
+    set(oneValueArgs NAME)
     set(multiValueArgs 
             SYS_MODULES APP_MODULES DATA
             COMPILE_OPTS INCLUDE_DIRS LINK_LIBS LINK_DIRS
@@ -288,6 +288,21 @@ function(add_shedskin_product)
     else() 
         # adding -lutil for every use of os is not a good idea should only be temporary
         # better to just add it on demand if the two relevant pty functions are used
+        set(local_prefix "/usr/local")
+        if(CMAKE_HOST_APPLE) # i.e if is_macos check if homebrew is used aand if so get prefix
+            execute_process(
+                COMMAND brew --prefix
+                OUTPUT_VARIABLE homebrew_prefix
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+            )
+            If(DEFINED homebrew_prefix)
+                set(local_prefix ${homebrew_prefix})
+            endif()
+        endif()
+
+        set(local_include "${local_prefix}/include")
+        set(local_libdir "${local_prefix}/lib")
+
         set(LIB_DEPS 
             "-lgc"
             "-lgccpp"
@@ -296,12 +311,12 @@ function(add_shedskin_product)
             ${SHEDSKIN_LINK_LIBS}
         )
         set(LIB_DIRS
-            /usr/local/lib
+            ${local_libdir}
             ${SHEDSKIN_LINK_DIRS}
         )
         set(LIB_INCLUDES 
-            /usr/local/include
-             ${SHEDSKIN_INCLUDE_DIRS}
+            ${local_include}            
+            ${SHEDSKIN_INCLUDE_DIRS}
         )
     endif()
 

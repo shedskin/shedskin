@@ -1,18 +1,34 @@
-'''
+"""
 *** SHED SKIN Python-to-C++ Compiler ***
-Copyright 2005-2022 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)
+Copyright 2005-2022 Mark Dufour and contributors; License GNU GPL version 3
+(See LICENSE)
 
 graph.py: build constraint graph used in dataflow analysis
 
-constraint graph: graph along which possible types 'flow' during an 'abstract execution' of a program (a dataflow analysis). consider the assignment statement 'a = b'. it follows that the set of possible types of b is smaller than or equal to that of a (a constraint). we can determine possible types of a, by 'flowing' the types from b to a, in other words, along the constraint.
+constraint graph: graph along which possible types 'flow' during an 'abstract
+execution' of a program (a dataflow analysis). Consider the assignment
+statement `a = b`. It follows that the set of possible types of `b` is smaller
+than or equal to that of `a` (a constraint). we can  determine possible types
+of `a`, by 'flowing' the types from `b` to `a`, in other words, along
+the constraint.
 
-constraint graph nodes are stored in gx.cnode, and the set of types of for each node in gx.types. nodes are identified by an AST Node, and two integers. the integers are used in py to duplicate parts of the constraint graph along two dimensions. in the initial constraint graph, these integers are always 0.
+constraint graph nodes are stored in `gx.cnode`, the set of types for each
+node in `gx.types`.
 
-class ModuleVisitor: inherits visitor pattern from ast_utils.BaseNodeVisitor, to recursively generate constraints for each syntactical Python construct. for example, the visitFor method is called in case of a for-loop. temporary variables are introduced in many places, to enable translation to a lower-level language.
+Nodes are identified by an AST Node, and two integers. The integers are
+used in py to duplicate parts of the constraint graph along two dimensions.
+In the initial constraint graph, these integers are always 0.
 
-parse_module(): locate module by name (e.g. 'os.path'), and use ModuleVisitor if not cached
+`class ModuleVisitor`: inherits visitor pattern from `ast_utils.BaseNodeVisitor`,
+to recursively generate constraints for each syntactical Python construct. for
+example, the visitFor method is called in case of a for-loop. temporary
+variables are introduced in many places, to enable translation to a lower-level
+language.
 
-'''
+`parse_module()`: locate module by name (e.g. `os.path`), and use
+`ModuleVisitor` if not cached
+"""
+
 import ast
 import copy
 import os
@@ -183,7 +199,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             child = None
 
         self.gx.list_types.setdefault((count, child), len(self.gx.list_types) + 2)
-        # print 'listtype', node, self.gx.list_types[count, child]
+        # nrint 'listtype', node, self.gx.list_types[count, child]
         return self.gx.list_types[count, child]
 
     def instance(self, node, cl, func=None):
@@ -283,8 +299,6 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
     # --- add dynamic constraint for constructor argument, e.g. '[expr]' becomes [].__setattr__('unit', expr)
     def add_dynamic_constraint(self, parent, child, varname, func):
-        # print 'dynamic constr', child, parent
-
         self.gx.assign_target[child] = parent
         cu = ast.Str(varname)
         self.visit(cu, func)
@@ -373,7 +387,14 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.add_constraint((infer.inode(self.gx, lc), newnode), func)
 
     def visit_JoinedStr(self, node, func=None):
-        error.error("f-strings are not supported", self.gx, node, mv=getmv())
+        for value in node.values:
+            if isinstance(value, ast.FormattedValue):
+                if value.format_spec:
+                    error.error("f-string format spec is not supported", self.gx, node, warning=True, mv=getmv())
+                value = value.value
+            self.visit(value, func)
+            self.fake_func(infer.inode(self.gx, value), value, '__str__', [], func)
+        self.instance(node, python.def_class(self.gx, 'str_'), func)
 
 #    def visit_Stmt(self, node, func=None):
 #        comments = []
@@ -557,6 +578,16 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 self.import_modules(name, node, False)
 
     def import_modules(self, name, node, fake):
+        # in case of relative import, make name absolute
+        level = getattr(node, 'level', None) or 0
+        if level > 0:
+            newname = '.'.join(getmv().module.name.split('.')[:-level+1])
+            if name:
+                if newname:
+                    name = newname + '.' + name
+            else:
+                name = newname
+
         # --- import a.b.c: import a, then a.b, then a.b.c
         split = name.split('.')
         module = getmv().module
@@ -581,18 +612,6 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         if not node in getmv().importnodes:  # XXX use (func, node) as parent..
             error.error("please place all imports (no 'try:' etc) at the top of the file", self.gx, node, mv=getmv())
 
-        if hasattr(node, 'level') and (node.level or 0) > 1:
-            error.error("unsupported relative import", self.gx, node, mv=getmv())
-
-        # from . import
-        if node.module is None and hasattr(node, 'level') and node.level == 1:
-            for alias in node.names:
-                submod = self.import_module(alias.name, alias.asname, node, False)
-                parent = getmv().module
-                parent.mv.imports[submod.ident] = submod
-                self.gx.from_module[node] = submod
-                return
-
         # from __future__ import
         if node.module == '__future__':
             for node_name in node.names:
@@ -601,7 +620,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     error.error("future '%s' is not yet supported" % name, self.gx, node, mv=getmv())
             return
 
-        # from [.]a.b.c import  TODO
+        # from [..]a.b.c import
         module = self.import_modules(node.module, node, True)
         self.gx.from_module[node] = module
 
@@ -1690,7 +1709,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 def parse_module(name, gx, parent=None, node=None):
     # --- valid name?
     if not re.match("^[a-zA-Z0-9_.]+$", name):
-        print ("*ERROR*:%s.py: module names should consist of letters, digits and underscores" % name)
+        print("*ERROR*:%s.py: module names should consist of letters, digits and underscores" % name)
         sys.exit(1)
 
     # --- create module
