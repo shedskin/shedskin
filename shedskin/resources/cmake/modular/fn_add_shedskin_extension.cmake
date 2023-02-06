@@ -1,3 +1,17 @@
+set(__doc__ [[
+
+    containing folder_name:
+        default: cmake_path(GET CMAKE_CURRENT_SOURCE_DIR STEM name)
+        else: can be overriden by setting SHEDSKIN_NAME 
+
+    <main>.py: can be one of two cases:
+        - <containing_folder>/<main>.py
+        - <containing_folder>/<parentpath>/<main>.py
+            where
+                subpath is one or more directories
+]])
+
+
 
 function(add_shedskin_extension)
 
@@ -5,60 +19,49 @@ function(add_shedskin_extension)
     # function api and default configuration
 
     set(options
-            DISABLE_EXTENSION
-            BUILD_TEST DISABLE_TEST         
-            HAS_LIB
-            ENABLE_CONAN ENABLE_SPM DEBUG)
-    set(oneValueArgs NAME)
+        BUILD_TEST
+        HAS_LIB
+        ENABLE_CONAN
+        ENABLE_SPM
+        ENABLE_EXTERNAL_PROJECT
+        DEBUG
+    )
+    set(oneValueArgs
+        NAME
+        MAIN_MODULE
+    )
     set(multiValueArgs 
-            SYS_MODULES APP_MODULES DATA
-            COMPILE_OPTS INCLUDE_DIRS LINK_LIBS LINK_DIRS
-            OPTIONS)
+        SYS_MODULES
+        APP_MODULES
+        DATA
+        INCLUDE_DIRS
+        LINK_LIBS
+        LINK_DIRS
+        COMPILE_OPTIONS
+        LINK_OPTIONS
+        CMDLINE_OPTIONS
+    )
     cmake_parse_arguments(SHEDSKIN "${options}" "${oneValueArgs}"
                           "${multiValueArgs}" ${ARGN})
-
-    if(DEBUG)
-        message("ENABLE_CONAN: " "${ENABLE_CONAN}")
-
-        message("DEBUG: " "${DEBUG}")
-
-        message("SHEDSKIN_NAME: " "${SHEDSKIN_NAME}")
-
-        message("SHEDSKIN_COMPILE_OPTS: " "${SHEDSKIN_COMPILE_OPTS}")
-        message("SHEDSKIN_INCLUDE_DIRS: " "${SHEDSKIN_INCLUDE_DIRS}")
-        message("SHEDSKIN_LINK_LIBS: " "${SHEDSKIN_LINK_LIBS}")
-        message("SHEDSKIN_LINK_DIRS: " "${SHEDSKIN_LINK_DIRS}")
-
-        message("SHEDSKIN_DISABLE_EXTENSION: " "${SHEDSKIN_DISABLE_EXTENSION}")
-
-        message("SHEDSKIN_BUILD_TEST: " "${SHEDSKIN_BUILD_TEST}")
-        message("SHEDSKIN_DISABLE_TEST: " "${SHEDSKIN_DISABLE_TEST}")
-
-        message("SHEDSKIN_HAS_LIB: " "${SHEDSKIN_HAS_LIB}")
-
-        message("SHEDSKIN_SYS_MODULES: " "${SHEDSKIN_SYS_MODULES}")
-        message("SHEDSKIN_APP_MODULES: " "${SHEDSKIN_APP_MODULES}")
-
-        message("SHEDSKIN_DATA: " "${SHEDSKIN_DATA}")
-        message("SHEDSKIN_OPTIONS: " "${SHEDSKIN_OPTIONS}")
-    endif()
-
-    if(SHEDSKIN_DISABLE_EXTENSION)
-        set(BUILD_EXTENSION OFF)
-    endif()
 
     if(SHEDSKIN_BUILD_TEST)
         set(BUILD_TEST ON)
     endif()
 
-    if(SHEDSKIN_DISABLE_TEST)
-        set(BUILD_TEST OFF)
-    endif()
-
     if(DEFINED SHEDSKIN_NAME)
         set(name "${SHEDSKIN_NAME}")
     else()
-        get_filename_component(name ${CMAKE_CURRENT_SOURCE_DIR} NAME_WLE)
+        cmake_path(GET CMAKE_CURRENT_SOURCE_DIR STEM name)
+    endif()
+
+    if(DEFINED SHEDSKIN_MAIN_MODULE)
+        cmake_path(GET SHEDSKIN_MAIN_MODULE STEM main)
+        cmake_path(GET SHEDSKIN_MAIN_MODULE FILENAME main_py)
+        cmake_path(GET SHEDSKIN_MAIN_MODULE PARENT_PATH parentpath)
+        set(IS_NESTED TRUE)
+    else()
+        set(main "${name}")
+        set(main_py "${main}.py")
     endif()
 
     if(SHEDSKIN_SYS_MODULES)
@@ -79,8 +82,8 @@ function(add_shedskin_extension)
         endforeach()
     endif()
 
-    if(SHEDSKIN_OPTIONS)
-        join(${SHEDSKIN_OPTIONS} " " opts)
+    if(SHEDSKIN_CMDLINE_OPTIONS)
+        join(${SHEDSKIN_CMDLINE_OPTIONS} " " opts)
     else()
         set(opts)
     endif()
@@ -88,9 +91,7 @@ function(add_shedskin_extension)
     set(PROJECT_EXT_DIR ${PROJECT_BINARY_DIR}/${name}/ext)
     set(IMPORTS_OS_MODULE FALSE)
     set(IMPORTS_RE_MODULE FALSE)
-
-    set(basename_py "${name}.py")
-
+ 
     # if ${name} starts_with test_ then set IS_TEST to TRUE
     string(FIND "${name}" "test_" index)
     if("${index}" EQUAL 0)
@@ -100,10 +101,44 @@ function(add_shedskin_extension)
     endif()
 
     if(DEBUG)
-        message("name: " "${name}")
-        message("sys_modules: " "${sys_modules}")
-        message("app_modules: " "${app_modules}")
-        message("opts: " "${opts}")
+        include(CMakePrintHelpers)
+        cmake_print_variables(
+            # boolean options
+            SHEDSKIN_BUILD_TEST
+            SHEDSKIN_HAS_LIB
+
+            SHEDSKIN_ENABLE_CONAN
+            SHEDSKIN_ENABLE_SPM
+            SHEDSKIN_ENABLE_EXTERNAL_PROJECT
+            SHEDSKIN_DEBUG
+
+            # one value args
+            SHEDSKIN_NAME
+            SHEDSKIN_MAIN_MODULE
+            
+            # multi value args
+            SHEDSKIN_SYS_MODULES
+            SHEDSKIN_APP_MODULES
+            SHEDSKIN_DATA
+
+            SHEDSKIN_COMPILE_OPTIONS
+            SHEDSKIN_INCLUDE_DIRS
+            SHEDSKIN_LINK_OPTIONS
+            SHEDSKIN_LINK_DIRS
+            SHEDSKIN_LINK_LIBS
+
+            SHEDSKIN_CMDLINE_OPTIONS
+            
+            # intermediate variables
+            name
+            main
+            main_py
+            parentpath
+            opts
+            IS_NESTED
+            PROJECT_EXT_DIR
+            __doc__
+        )
     endif()
 
     # -------------------------------------------------------------------------
@@ -128,7 +163,6 @@ function(add_shedskin_extension)
             list(APPEND sys_module_list "${SHEDSKIN_LIB}/${mod}.hpp")
         endif()
     endforeach()
-
 
     if(ENABLE_EXTERNAL_PROJECT)
         set(LIB_DEPS
@@ -161,55 +195,82 @@ function(add_shedskin_extension)
             ${BDWgc_INCLUDE_DIRS}
             ${PCRE_INCLUDE_DIRS}
         )
-    else()
+    else() 
+        # adding -lutil for every use of os is not a good idea should only be temporary
+        # better to just add it on demand if the two relevant pty functions are used
+        set(local_prefix "/usr/local")
+        if(CMAKE_HOST_APPLE) # i.e if is_macos check if homebrew is used aand if so get prefix
+            execute_process(
+                COMMAND brew --prefix
+                OUTPUT_VARIABLE homebrew_prefix
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+            )
+            If(DEFINED homebrew_prefix)
+                set(local_prefix ${homebrew_prefix})
+            endif()
+        endif()
+
+        set(local_include "${local_prefix}/include")
+        set(local_libdir "${local_prefix}/lib")
+
         set(LIB_DEPS 
             "-lgc"
             "-lgccpp"
             "$<$<BOOL:${IMPORTS_RE_MODULE}>:-lpcre>"
+            # "$<$<BOOL:${IMPORTS_OS_MODULE}>:-lutil>"
             ${SHEDSKIN_LINK_LIBS}
         )
         set(LIB_DIRS
-            /usr/local/lib
+            ${local_libdir}
             ${SHEDSKIN_LINK_DIRS}
         )
         set(LIB_INCLUDES 
-            /usr/local/include
-             ${SHEDSKIN_INCLUDE_DIRS}
+            ${local_include}            
+            ${SHEDSKIN_INCLUDE_DIRS}
         )
     endif()
 
-    if(DEBUG)
-        message("LIB_DEPS: " ${LIB_DEPS})
-        message("LIB_DIRS: " ${LIB_DIRS})
-        message("LIB_INCLUDES: " ${LIB_INCLUDES})
-    endif()
-
-    # -------------------------------------------------------------------------
-    # build extension section
-
     set(EXT ${name}-ext)
 
-    set(translated_files
-        ${PROJECT_EXT_DIR}/${name}.cpp
-        ${PROJECT_EXT_DIR}/${name}.hpp
-    )
+    if(IS_NESTED)
+        set(translated_files
+            ${PROJECT_EXT_DIR}/${parentpath}/${main}.cpp
+            ${PROJECT_EXT_DIR}/${parentpath}/${main}.hpp
+        )
+    else()
+        set(translated_files
+            ${PROJECT_EXT_DIR}/${main}.cpp
+            ${PROJECT_EXT_DIR}/${main}.hpp
+        )
+    endif()
 
     foreach(mod ${app_modules})
         list(APPEND translated_files "${PROJECT_EXT_DIR}/${mod}.cpp")
         list(APPEND translated_files "${PROJECT_EXT_DIR}/${mod}.hpp")            
     endforeach()
 
-    add_custom_command(OUTPUT ${translated_files}
-        COMMAND shedskin --nomakefile -o ${PROJECT_EXT_DIR} -e ${opts} "${basename_py}"
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        DEPENDS "${basename_py}"
-        COMMENT "translating ${basename_py} to ext"
-        VERBATIM
-    )
+
+    if(IS_NESTED)
+        add_custom_command(OUTPUT ${translated_files}
+            COMMAND shedskin --nomakefile -o ${PROJECT_EXT_DIR}/${parentpath} -e ${opts} "${SHEDSKIN_MAIN_MODULE}"
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            DEPENDS "${SHEDSKIN_MAIN_MODULE}"
+            COMMENT "translating ${main_py} to ext"
+            VERBATIM
+        )        
+    else()
+        add_custom_command(OUTPUT ${translated_files}
+            COMMAND shedskin --nomakefile -o ${PROJECT_EXT_DIR} -e ${opts} "${main_py}"
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            DEPENDS "${main_py}"
+            COMMENT "translating ${main_py} to ext"
+            VERBATIM
+        )
+    endif()
 
     add_custom_target(shedskin_${EXT} DEPENDS ${translated_files})
 
-    if(SHEDSKIN_HAS_LIB)
+    if(SHEDSKIN_HAS_LIB AND NOT EXISTS ${PROJECT_EXT_DIR}/lib)
         file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/lib DESTINATION ${PROJECT_EXT_DIR})
     endif()
 
@@ -232,26 +293,25 @@ function(add_shedskin_extension)
     )
 
     target_compile_options(${EXT} PRIVATE
-        "-fPIC"
         "-D__SS_BIND"
-        "-Wno-unused-result"
-        "-Wsign-compare"
-        "-Wunreachable-code"
         "-DNDEBUG"
-        "-g"
+        "-fPIC"
         "-fwrapv"
+        "-g"
         "-O3"
         "-Wall"
+        "-Wunreachable-code"
+        "-Wno-unused-but-set-variable"
+        "-Wno-unused-result"
         "-Wno-unused-variable"
+        ${SHEDSKIN_COMPILE_OPTIONS}
     )
 
     target_link_options(${EXT} PRIVATE
         $<$<BOOL:${APPLE}>:-undefined dynamic_lookup>
-        "-Wno-unused-result"
-        "-Wsign-compare"
-        "-Wunreachable-code"
-        "-fno-common"
-        "-dynamic"
+        # "-fno-common" # can be excluded because it is already the default
+        "-dynamic" # can be excluded because it is already the default
+        ${SHEDSKIN_LINK_OPTIONS}
     )
 
     target_link_libraries(${EXT} PRIVATE
@@ -266,5 +326,4 @@ function(add_shedskin_extension)
         add_test(NAME ${EXT} 
              COMMAND ${Python_EXECUTABLE} -c "from ${name} import test_all; test_all()")
     endif()
-
 endfunction()
