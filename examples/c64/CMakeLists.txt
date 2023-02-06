@@ -1,6 +1,5 @@
-add_shedskin_nested_extension(
-    MAIN c64
-    SUBDIR c64
+add_shedskin_extension(
+    MAIN_MODULE c64/c64.py
     SYS_MODULES
         array
         math
@@ -35,7 +34,7 @@ add_shedskin_nested_extension(
         "ROM"
         intkarat.t64
         c64_main.py
-    OPTIONS
+    CMDLINE_OPTIONS
         "-b"
     INCLUDE_DIRS
         ${PROJECT_BINARY_DIR}/c64/ext/c64

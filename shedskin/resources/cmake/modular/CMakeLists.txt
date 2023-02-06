@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.19)
+cmake_minimum_required(VERSION 3.18.4)
 
 project(shedskin_products LANGUAGES CXX)
 
@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 17)
 # -----------------------------------------------------------------------------
 # options
 
-option(DEBUG "Enable debug output" ON)
+option(DEBUG "Enable debug output" OFF)
 
 option(BUILD_EXECUTABLE "Build executable" ON)
 option(BUILD_EXTENSION "Build python extension" OFF)
@@ -16,9 +16,6 @@ option(BUILD_TEST "Build test" ON)
 option(ENABLE_SPM "Enable shedskin dependency management" OFF)
 option(ENABLE_CONAN "Enable conan for dependency management" OFF)
 option(ENABLE_EXTERNAL_PROJECT "Enable ExternalProject for dependency mgmt" OFF)
-
-set(PROJECT_EXE_DIR ${PROJECT_BINARY_DIR}/exe)
-set(PROJECT_EXT_DIR ${PROJECT_BINARY_DIR}/ext)
 
 # -----------------------------------------------------------------------------
 # find python executable and shedskin package path
@@ -47,7 +44,6 @@ include_directories(
     ${SHEDSKIN_LIB}
 )
 
-
 # -----------------------------------------------------------------------------
 # dependency mgmt solutions
 
@@ -55,9 +51,8 @@ if(ENABLE_SPM)
     set(SPM_DEPS ${CMAKE_BINARY_DIR}/deps)
     set(SPM_LIB_DIRS ${SPM_DEPS}/lib)
     set(SPM_INCLUDE_DIRS ${SPM_DEPS}/include)
-endif()
 
-if(ENABLE_CONAN)
+elseif(ENABLE_CONAN)
     find_program(CONAN conan)
     if(NOT CONAN)
         message(FATAL_ERROR "conan not found, install with `pip install conan`")
@@ -65,14 +60,10 @@ if(ENABLE_CONAN)
     include(${CMAKE_BINARY_DIR}/conan_paths.cmake)
     find_package(BDWgc)
     find_package(PCRE)
-endif()
 
-
-if(ENABLE_EXTERNAL_PROJECT)
-    set(install_dir ${CMAKE_CURRENT_BINARY_DIR}/install) # just creates a dir
-
+elseif(ENABLE_EXTERNAL_PROJECT)
+    set(install_dir ${CMAKE_CURRENT_BINARY_DIR}/install)
     include(ExternalProject)
-
     ExternalProject_Add(
         bdwgc
         INSTALL_DIR    ${install_dir}
@@ -82,7 +73,6 @@ if(ENABLE_EXTERNAL_PROJECT)
                        -DBUILD_SHARED_LIBS=OFF
                        -Denable_cplusplus=ON
     )
-
     ExternalProject_Add(
         pcre
         INSTALL_DIR    ${install_dir}
@@ -97,10 +87,9 @@ endif()
 # includes
 list(APPEND CMAKE_MODULE_PATH "${SHEDSKIN}/resources/cmake/modular")
 include(utils)
+include(fn_add_shedskin_extension)
+include(fn_add_shedskin_executable)
 include(fn_add_shedskin_product)
-# include(fn_add_shedskin_target)
-# include(fn_add_shedskin_executable)
-# include(fn_add_shedskin_extension)
 
 # -----------------------------------------------------------------------
 # any 'test_*' folders are automatically treated as tests
@@ -132,3 +121,4 @@ endif()
 # -----------------------------------------------------------------------
 # add subdirectories here
 
+# add_subdirectory(<subdirectory>)
