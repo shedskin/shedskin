@@ -1,15 +1,22 @@
 # more complex case
 
 if(CMAKE_HOST_APPLE) # i.e if is_macos check if homebrew is used then get ssl prefix
-    execute_process(
-        COMMAND brew --prefix openssl
-        OUTPUT_VARIABLE homebrew_ssl_prefix
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-    If(DEFINED homebrew_ssl_prefix)
-        set(ssl_prefix ${homebrew_ssl_prefix})
+    if(NOT DEFINED ssl_prefix AND NOT DEFINED CACHE{ssl_prefix})
+        execute_process(
+            COMMAND brew --prefix --installed openssl
+            OUTPUT_VARIABLE homebrew_ssl_prefix
+            ERROR_VARIABLE homebrew_ssl_error
+            ECHO_ERROR_VARIABLE
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+        set(ssl_prefix ${homebrew_ssl_prefix} CACHE STRING "prefix of installed openssl library")
+    elseif(NOT DEFINED ssl_prefix AND DEFINED CACHE{ssl_prefix})
+        set(ssl_prefix $CACHE{ssl_prefix})
+    else()
+        message("using provided ssl_prefix")
     endif()
 endif()
+
 
 add_shedskin_product(
     HAS_LIB
@@ -20,7 +27,7 @@ add_shedskin_product(
     APP_MODULES
         lib/hashlib
 
-    OPTIONS
+    CMDLINE_OPTIONS
         "-Llib"
 
     INCLUDE_DIRS

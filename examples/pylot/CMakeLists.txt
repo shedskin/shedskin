@@ -1,6 +1,5 @@
-add_shedskin_nested_extension(
-    MAIN SimpleGeometry
-    SUBDIR pylot
+add_shedskin_extension(
+    MAIN_MODULE pylot/SimpleGeometry.py
     SYS_MODULES
         copy
         math

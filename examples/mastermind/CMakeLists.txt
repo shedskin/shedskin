@@ -1,6 +1,5 @@
-add_shedskin_nested_extension(
-    MAIN mastermind
-    SUBDIR mm
+add_shedskin_extension(
+    MAIN_MODULE mm/mastermind.py
     SYS_MODULES
         random
         math

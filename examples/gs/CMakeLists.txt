@@ -1,6 +1,5 @@
-add_shedskin_nested_extension(
-    MAIN world_manager
-    SUBDIR Gh0stenstein
+add_shedskin_extension(
+    MAIN_MODULE  Gh0stenstein/world_manager.py
     SYS_MODULES
         array
         math
@@ -8,6 +7,6 @@ add_shedskin_nested_extension(
         Gh0stenstein/world_draw
     DATA
         gs_main.py
-    OPTIONS
+    CMDLINE_OPTIONS
         "-b"
 )
