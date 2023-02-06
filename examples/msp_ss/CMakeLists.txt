@@ -15,12 +15,11 @@ add_shedskin_product(
     APP_MODULES
         lib/serial
 
-    OPTIONS
+    CMDLINE_OPTIONS
         "-Llib"
 
     INCLUDE_DIRS
         lib
-
 )
 
 
