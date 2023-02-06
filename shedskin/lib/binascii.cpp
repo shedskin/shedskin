@@ -320,7 +320,7 @@ bytes *a2b_base64(bytes *pascii) {
             }
         }
 
-        this_ch = table_a2b_base64[*ascii_data];
+        this_ch = table_a2b_base64[(unsigned char)*ascii_data];
         if ( this_ch == (unsigned char) -1 )
             continue;
 
@@ -381,7 +381,7 @@ bytes *b2a_base64(bytes *binary) {
         while ( leftbits >= 6 ) {
             this_ch = (leftchar >> (leftbits-6)) & 0x3f;
             leftbits -= 6;
-            *ascii_data++ = table_b2a_base64[this_ch];
+            *ascii_data++ = table_b2a_base64[(unsigned char)this_ch];
         }
     }
     if ( leftbits == 2 ) {
@@ -433,8 +433,8 @@ bytes *a2b_qp(bytes *pdata, __ss_bool header) {
             }
             // [fahhem] replacing hexval with table_a2b_hex
             else {
-                top = table_a2b_hex[data[in]];
-                bot = table_a2b_hex[data[in+1]];
+                top = table_a2b_hex[(unsigned char)data[in]];
+                bot = table_a2b_hex[(unsigned char)data[in+1]];
                 if (top==-1 || bot==-1)
                     odata[out++] = '=';
                 else
@@ -770,7 +770,7 @@ bytes *b2a_hqx(bytes *binary) {
         while ( leftbits >= 6 ) {
             this_ch = (leftchar >> (leftbits-6)) & 0x3f;
             leftbits -= 6;
-            *ascii_data++ = table_b2a_hqx[this_ch];
+            *ascii_data++ = table_b2a_hqx[(unsigned char)this_ch];
         }
     }
     /* Output a possible runt byte */
