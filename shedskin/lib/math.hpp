@@ -163,7 +163,7 @@ inline __ss_float expm1(__ss_float x) {
 }
 
 inline tuple2<__ss_float, __ss_int> *frexp(__ss_float x) {
-    __ss_int n;
+    int n;
     __ss_float mantisa = std::frexp(x, &n);
 
     return (new tuple2<__ss_float, __ss_int>(2, mantisa, n));
