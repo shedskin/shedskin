@@ -41,7 +41,7 @@ Shed Skin depends on some others projects, such as the `Boehm garbage collector 
 Comparison
 ----------
 
-Some timings for the Shedskin 'sieve' example (n=100000000) and several Python implementations/optimizers:
+Some timings for the Shed Skin 'sieve' example (n=100000000) and several Python implementations/optimizers:
 
 ::
 
@@ -52,7 +52,7 @@ Some timings for the Shedskin 'sieve' example (n=100000000) and several Python i
     numba 0.56.4:       2.5
     shedskin (master):  1.9
 
-Note that Numba defaults to int64 as integer type, while Shedskin defaults to int32. Performance is practically equal when using Shedskin -l.
+Note that Numba defaults to int64 as integer type, while Shed Skin defaults to int32. Performance is practically equal when using shedskin -l.
 
 Screenhots
 ----------
