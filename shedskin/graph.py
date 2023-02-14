@@ -1266,6 +1266,12 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         lcfunc.ident = 'list_comp_' + str(len(self.listcomps))
         self.listcomps.append((node, lcfunc, func))
 
+    def visit_DictComp(self, node, func=None):
+        error.error('dict comprehensions are not supported', self.gx, node, mv=getmv())
+
+    def visit_SetComp(self, node, func=None):
+        error.error('set comprehensions are not supported', self.gx, node, mv=getmv())
+
     def visit_Return(self, node, func):
         if node.value is None:
             node.value = ast.Name('None', ast.Load())
