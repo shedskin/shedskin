@@ -412,6 +412,16 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.bool_test_add(node.value)
         self.visit(node.value, func)
 
+    def visit_NamedExpr(self, node, func=None):
+        self.visit(node.value, func)
+
+        newnode = infer.CNode(self.gx, node, parent=func, mv=getmv())
+        self.gx.types[newnode] = set()
+        self.add_constraint((infer.inode(self.gx, node.value), newnode), func)
+
+        lvar = self.default_var(node.target.id, func)
+        self.add_constraint((newnode, infer.inode(self.gx, lvar)), func)
+
     def visit_Module(self, node):
         # --- bootstrap built-in classes
         if self.module.ident == 'builtin':
