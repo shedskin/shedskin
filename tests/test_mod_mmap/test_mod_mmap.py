@@ -157,6 +157,7 @@ def test_readonly():
     assert map.size() == mapsize
     # print(repr(map.read(mapsize)))
     map.close()
+    f.close()
 
 
 def test_rfind():
@@ -204,6 +205,10 @@ def test_tougher_find():
     tearDown(m)
 
 
+def test_ctx_mgr():
+    with open(TESTFILE_IN, "rb") as f:
+        with mmap.mmap(f.fileno(), 0, prot=mmap.PROT_READ) as mm:
+            assert f.read(8) == mm.read(8)
 
 
 
@@ -214,6 +219,7 @@ def test_all():
     test_readonly()
     test_rfind()
     test_tougher_find()
+    test_ctx_mgr()
 
 if __name__ == '__main__':
     test_all()
