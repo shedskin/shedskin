@@ -93,6 +93,8 @@ class mmap: public pyobj
 #endif /* WIN32 */
     // mmap
     void *   close();
+    void     __enter__();
+    void     __exit__();
     __ss_int flush(__ss_int offset=0, __ss_int size=-1);
     __ss_int find(bytes *s, __ss_int start=-1, __ss_int end=-1);
     void *   move(__ss_int destination, __ss_int source, __ss_int count);
