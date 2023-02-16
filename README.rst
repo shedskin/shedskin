@@ -100,6 +100,7 @@ The following people have contributed to Shed Skin development:
   Fahrzin Hemmati
   Folkert van Heusden
   Karel Heyse
+  Humhue
   Johan Kristensen
   Kousuke
   Denis de Leeuw Duarte
