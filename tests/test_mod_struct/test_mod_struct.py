@@ -40,8 +40,8 @@ def test_unpack_issue():
     n, = struct.unpack('>I', s)
     assert n == 12000
 
-    s = struct.pack('>I', -12000)
-    n, = struct.unpack('>I', s)
+    s = struct.pack('>i', -12000)
+    n, = struct.unpack('>i', s)
     assert n == -12000
 
 def test_all():
