@@ -49,6 +49,14 @@ def test_open_write():
     with open(outputfile) as g:
         assert g.read() == 'hop\nhop\nhoppa!\n'
 
+def test_open_enter_exit():
+    f = open(outputfile, 'w+')
+    f.__enter__()
+    f.write('hop\nhop\nhoppa!\n')
+    f.seek(0)
+    assert f.read() == 'hop\nhop\nhoppa!\n'
+    f.__exit__()
+
 # def test_with_open_write():
 #     with open(outputfile, 'w') as f: # FIXME doesn't work
 #         f.write('hop\nhop\nhoppa!\n')
@@ -90,6 +98,7 @@ def test_all():
     test_open_readlines()
     test_with_open_read()
     test_open_write()
+    test_open_enter_exit()
     # test_lineendings()
 
 if __name__ == '__main__':
