@@ -443,6 +443,14 @@ void *mmap::resize(__ss_int new_size)
     return NULL;
 }
 #endif /* WIN32 */
+
+void mmap::__enter__() { }
+
+void mmap::__exit__()
+{
+    close();
+}
+
 __ss_int mmap::find(bytes *needle, __ss_int start, __ss_int end)
 {
     __raise_if_closed_or_not_readable();

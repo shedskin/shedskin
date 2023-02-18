@@ -904,6 +904,12 @@ class file(pyiter):
     def close(self):
         pass
 
+    def __enter__(self):
+        pass
+    
+    def __exit__(self):
+        pass
+
     def fileno(self):
         return 1
 
@@ -949,6 +955,12 @@ class file_binary(pyiter):
     def flush(self):
         pass
     def close(self):
+        pass
+
+    def __enter__(self):
+        pass
+    
+    def __exit__(self):
         pass
 
     def fileno(self):

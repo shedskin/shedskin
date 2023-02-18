@@ -26,7 +26,7 @@ def test_slice_assign():
     d[1:2] = [1,2,2,3,3]
     assert d == [1, 1, 2, 2, 3, 3, 2, 3, 3, 5, 4, 7, 5, 9]
 
-def test_destructure1():
+def test_unpack1():
     a, b = "ab"
     assert a == "a"
     assert b == "b"
@@ -49,53 +49,53 @@ def test_destructure1():
     assert d == "d"
     assert e == "e"
 
-def test_destructure2():
+def test_unpack2():
 
     foo = (2, [4, 6])
     [a, (b, c)] = foo
     assert (a, b, c) == (2, 4, 6)
 
-def test_destructure3():
+def test_unpack3():
 
     (a, b), (c, d) = (6, 9), (8, 7)
     assert (a, b, c, d) == (6, 9, 8, 7)
 
-def test_destructure4():
+def test_unpack4():
 
     [(a, b), (c, d)] = (9, 8), (7, 6)
     assert (a, b, c, d) == (9, 8, 7, 6)
 
-def test_destructure5():
+def test_unpack5():
 
     [(a, b), (c, d)] = [(1, 8), (7, 2)]
     assert (a, b, c, d) == (1, 8, 7, 2)
 
-def test_destructure6():
+def test_unpack6():
 
     [[a, b], c] = (5, 6), 3
     assert (a, b, c) == (5, 6, 3)
 
-def test_destructure7():
+def test_unpack7():
 
     [[a, b], c] = [[4, 5], 6]
     assert (a, b, c) ==  (4, 5, 6)
 
-def test_destructure8():
+def test_unpack8():
 
     a, [b, c] = [1, (2, 3)]
     assert (a, b, c) == (1, 2, 3)
 
-def test_destructure9():
+def test_unpack9():
 
     a, (b, c, d) = 1, (1, 2, 3)
     assert (a, b, c, d) == (1, 1, 2, 3)
 
-def test_destructure10():
+def test_unpack10():
 
     [(a, b), [c, d]] = [[1, 2], (3, 4)]
     assert (a, b, c, d) ==  (1, 2, 3, 4)
 
-def test_destructure11():
+def test_unpack11():
 
     njeh = [[8, 7, 6], [5, 4, 3], [2, 1, 0]]
     [[a, b, c], [d, e, f], [g, h, i]] = njeh
@@ -104,21 +104,21 @@ def test_destructure11():
     [dx, [a, b, c], ex] = njeh
     assert (dx, a, b, c, ex) == ([8, 7, 6], 5, 4, 3, [2, 1, 0])
 
-def test_destructure12():
+def test_unpack12():
 
     blah = (1, 2, 3, 4, 5, 6)
     a, b, c, d, e, f = blah
     assert (a, b, c, d, e, f) == (1, 2, 3, 4, 5, 6)
 
 
-def test_destructure13():
+def test_unpack13():
     t = (1, 'aap')
     tx, ty = t
     assert tx == 1
     assert ty == 'aap'
 
 
-def test_destructure14():
+def test_unpack14():
     s1, s2 = set([7, 8])
     assert sorted([s1, s2]) == [7, 8]
 
@@ -126,7 +126,7 @@ def test_destructure14():
     assert (m1, m2, m3) == (18, 20, 22)
 
 
-def test_destructure15():
+def test_unpack15():
     val_error = False
     try:
         c1, c2 = b'hoi'
@@ -142,26 +142,81 @@ def test_destructure15():
     assert val_error
 
 
+def test_walrus():
+    walrus = False
+    assert str(walrus := True) == 'True'
+    assert str(walrus) == 'True'
+
+
+def test_walrus2():
+    users = [
+        {'name': 'John Doe', 'occupation': 'gardener'},
+        {'name': None, 'occupation': 'teacher'}, 
+    ]
+
+    result = None
+    for user in users:
+        if ((name := user.get('name')) is not None):
+            result = f'{name} is a {user.get("occupation")}'
+
+    assert result == 'John Doe is a gardener'
+
+
+import re
+
+def test_walrus3():
+    data = 'There is a book on the table.'
+
+    pattern = re.compile(r'book')
+
+    if match := pattern.search(data):
+        print(f'The word {pattern.pattern} is at {match.start(), match.end()}') 
+    else:
+        print(f'No {pattern.pattern} found')
+
+
+def cube(num):
+    return num ** 3
+
+
+def test_walrus4():
+    l = [y for x in range(10) if (y := cube(x)) < 20]
+
+    assert l == [0, 1, 8]
+
+
+def test_walrus5():
+    total = 0
+    partial_sums = [total := total + v for v in range(5)]
+    print(total)  # Prints: 50
+
+
+
 def test_all():
     test_assign_int()
     test_assign_list()
     test_reference()
     test_slice_assign()
-    test_destructure1()
-    test_destructure2()
-    test_destructure3()
-    test_destructure4()
-    test_destructure5()
-    test_destructure6()
-    test_destructure7()
-    test_destructure8()
-    test_destructure9()
-    test_destructure10()
-    # test_destructure11()
-    test_destructure12()
-    test_destructure13()
-    test_destructure14()
-    test_destructure15()
+    test_unpack1()
+    test_unpack2()
+    test_unpack3()
+    test_unpack4()
+    test_unpack5()
+    test_unpack6()
+    test_unpack7()
+    test_unpack8()
+    test_unpack9()
+    test_unpack10()
+    # test_unpack11()
+    test_unpack12()
+    test_unpack13()
+    test_unpack14()
+    test_unpack15()
+    test_walrus()
+    test_walrus2()
+    test_walrus3()
+    test_walrus4()
+    # test_walrus5() scoping issue. were list comprehensions fixed to not have their own scope?
 
 
 if __name__ == '__main__':

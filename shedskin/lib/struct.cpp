@@ -77,7 +77,7 @@ __ss_int unpack_int(char o, char c, unsigned int d, bytes *data, __ss_int *pos) 
         return 0;
     result = 0;
     for(unsigned int i=0; i<itemsize; i++) {
-        unsigned long long c = data->unit[*pos+i];
+        unsigned long long c = (unsigned char)(data->unit[*pos+i]);
         if(swap_endian(o))
             result |= (c << 8*(itemsize-i-1));
         else
