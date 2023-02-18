@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.18.4)
 
-project(shedskin_products LANGUAGES CXX)
+project(%(project_name)s LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -16,6 +16,13 @@ option(BUILD_TEST "Build test" ON)
 option(ENABLE_SPM "Enable shedskin dependency management" OFF)
 option(ENABLE_CONAN "Enable conan for dependency management" OFF)
 option(ENABLE_EXTERNAL_PROJECT "Enable ExternalProject for dependency mgmt" OFF)
+
+# -----------------------------------------------------------------------------
+# warnings
+
+if("${PROJECT_SOURCE_DIR}" STREQUAL "${PROJECT_BINARY_DIR}")
+   message(FATAL_ERROR "In-source builds are not allowed.")
+endif()
 
 # -----------------------------------------------------------------------------
 # find python executable and shedskin package path
@@ -87,9 +94,9 @@ endif()
 # includes
 list(APPEND CMAKE_MODULE_PATH "${SHEDSKIN}/resources/cmake/modular")
 include(utils)
-include(fn_add_shedskin_extension)
-include(fn_add_shedskin_executable)
-include(fn_add_shedskin_product)
+include(fn_add_shedskin_executable) # can build only an executable
+include(fn_add_shedskin_extension)  # can build only an extension
+include(fn_add_shedskin_product)    # can build both executable and extension
 
 # -----------------------------------------------------------------------
 # any 'test_*' folders are automatically treated as tests
@@ -120,5 +127,5 @@ endif()
 
 # -----------------------------------------------------------------------
 # add subdirectories here
+add_subdirectory(%(subdir)s)
 
-# add_subdirectory(<subdirectory>)

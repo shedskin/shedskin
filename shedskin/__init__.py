@@ -7,25 +7,19 @@ Copyright 2005-2023 Mark Dufour and contributors; License GNU GPL version 3 (See
 import argparse
 import logging
 import os.path
+import pathlib
 import platform
 import struct
 import sys
 import time
 import traceback
-import pathlib
 
-from . import annotate, config, cpp, error, graph, infer, utils
+from . import annotate, cmakefile, config, cpp, error, graph, infer, utils
 
-
-def get_pkg_path():
-    """return shedskin package path"""
-    pkg_path = pathlib.Path(__file__).parent
-    assert pkg_path.name == 'shedskin'
-    return pkg_path
 
 def pkg_path():
     """used by cmake to get package path automatically"""
-    sys.stdout.write(str(get_pkg_path()))
+    cmakefile.pkg_path()
 
 
 class ShedskinFormatter(logging.Formatter):
@@ -48,8 +42,9 @@ class ShedskinFormatter(logging.Formatter):
 class Shedskin:
     """Main shedskin frontend class
     """
-    def __init__(self, module_path):
+    def __init__(self, module_path, options=None):
         self.gx = config.GlobalInfo()
+        self.options = options
         # silent -> WARNING only, debug -> DEBUG, default -> INFO
         console = logging.StreamHandler(stream=sys.stdout)
         console.setFormatter(ShedskinFormatter(self.gx))
@@ -105,6 +100,15 @@ class Shedskin:
         error.print_errors()
         self.log.info('\n[elapsed time: %.2f seconds]', (time.time() - t0))
 
+    def build(self, options):
+        """let cmake start and sequence main shedskin processes
+        """
+        t0 = time.time()
+        infer.analyze(self.gx, self.module_name)
+        cmakefile.generate_cmakefile(self.gx)
+        builder = cmakefile.CMakeBuilder(options)
+        builder.build()
+        self.log.info('\n[elapsed time: %.2f seconds]', (time.time() - t0))
 
     @classmethod
     def commandline(cls):
@@ -134,13 +138,27 @@ class Shedskin:
         opt("-m", "--makefile",   help="Specify alternate Makefile name")
         opt("-n", "--noassert",   help="Disable assert statements", action="store_true")
         opt("-o", "--outputdir",  help="Specify output directory for generated files")
-#        opt("-p", "--float",      help="Use 32-bit floating point numbers", action="store_true")
+        # opt("-p", "--float",      help="Use 32-bit floating point numbers", action="store_true")
         opt("-r", "--random",     help="Use fast random number generator (rand())", action="store_true")
         opt("-s", "--silent",     help="Silent mode, only show warnings", action="store_true")
         opt("-w", "--nowrap",     help="Disable wrap-around checking", action="store_true")
         opt("-x", "--traceback",  help="Print traceback for uncaught exceptions", action="store_true")
         opt("-N", "--nomakefile", help="Disable makefile generation", action="store_true")        
         opt("-L", "--lib",        help="Add a library directory", nargs='*')
+
+        # opt("-d", "--debug", help="set cmake debug on", action="store_true")
+        opt("-k", "--cmake",      help="Generate cmake build file", action="store_true")
+        opt("-z", "--executable", help="build executable", action="store_true")
+        opt("-p", "--pyextension", help="build python extension", action="store_true")
+        opt("-G", "--generator", help="specify a cmake build system generator")
+        opt("-j", "--parallel", help="build and run tests in parallel using N jobs", metavar="N", type=int)
+        opt("-B", "--build-type", help="set cmake build type", default="Debug")
+        opt("-t", "--runtests", help="run ctest", action="store_true")
+        opt("--reset", help="reset cmake build", action="store_true")
+        opt("--conan", help="install dependencies with conan", action="store_true")
+        opt("--spm", help="install dependencies with spm", action="store_true")
+        opt("--external-project", help="install dependencies with externalproject", action="store_true")
+        opt('--ccache',           help='enable ccache with cmake', action='store_true')
 
         args = parser.parse_args()
 
@@ -186,7 +204,7 @@ class Shedskin:
             ss.gx.assertions = False
 
         if args.nomakefile:
-            ss.gx.nomakefile = True            
+            ss.gx.nomakefile = True        
 
         # if args.pypy:
         #     ss.gx.pypy = True
@@ -230,11 +248,20 @@ class Shedskin:
         if sys.platform == 'win32' and struct.calcsize('P') == 8 and ss.gx.extension_module:
             ss.log.warning('64-bit python may not come with necessary file to build extension module')
 
-        try:
-            ss.start()
-        except KeyboardInterrupt as e:
-            ss.log.debug('KeyboardInterrupt', exc_info=True)
-            sys.exit(1)
+        if args.cmake:
+            try:
+                ss.gx.nomakefile = True
+                ss.gx.generate_cmakefile = True
+                ss.build(args)
+            except KeyboardInterrupt as e:
+                ss.log.debug('KeyboardInterrupt', exc_info=True)
+                sys.exit(1)
+        else:
+            try:
+                ss.start()
+            except KeyboardInterrupt as e:
+                ss.log.debug('KeyboardInterrupt', exc_info=True)
+                sys.exit(1)
 
 
 if __name__ == '__main__':
