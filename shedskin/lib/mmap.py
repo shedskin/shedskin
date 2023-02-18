@@ -17,6 +17,12 @@ class mmap:
 
     def close(self):
         pass
+    
+    def __enter__(self):
+        pass
+    
+    def __exit__(self):
+        pass
 
     def flush(self, offset=0, size=-1):
         return 0

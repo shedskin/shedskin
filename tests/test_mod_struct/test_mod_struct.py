@@ -35,8 +35,18 @@ def test_pack():
     assert p1 == 2
 
 
+def test_unpack_issue():
+    s = struct.pack('>I', 12000)
+    n, = struct.unpack('>I', s)
+    assert n == 12000
+
+    s = struct.pack('>i', -12000)
+    n, = struct.unpack('>i', s)
+    assert n == -12000
+
 def test_all():
     test_unpack()
+    test_unpack_issue()
     test_pack()
 
 if __name__ == '__main__':

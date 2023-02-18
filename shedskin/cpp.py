@@ -608,6 +608,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def visit_Expr(self, node, func=None):
         self.impl_visit_expr(node, func)
 
+    def visit_NamedExpr(self, node, func=None):
+        self.visitm('(', node.target.id, '=', node.value, ')', func)
+
     def visit_Import(self, node, func=None):
         pass
 

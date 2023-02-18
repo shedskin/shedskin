@@ -41,15 +41,18 @@ Shed Skin depends on some others projects, such as the `Boehm garbage collector 
 Comparison
 ----------
 
-Some timings for the shedskin 'sieve' example (n=100000000) and several Python implementations/optimizers:
+Some timings for the Shed Skin 'sieve' example (n=100000000) and several Python implementations/optimizers:
 
 ::
 
-    cpython 3.10.6:   13.4 seconds
-    cpython 3.11.0:   11.4
-    nuitka 0.6.16:   11.4
-    pypy 3.9.12:     5.8
-    shedskin 0.9.6:  1.9
+    cpython 3.10.6:     13.4 seconds
+    cpython 3.11.0:     11.4
+    nuitka 0.6.16:      11.4
+    pypy 3.9.12:        5.8
+    numba 0.56.4:       2.5
+    shedskin (master):  1.9
+
+Note that Numba defaults to int64 as integer type, while Shed Skin defaults to int32. Performance is practically equal when using shedskin -l.
 
 Screenhots
 ----------
@@ -97,6 +100,7 @@ The following people have contributed to Shed Skin development:
   Fahrzin Hemmati
   Folkert van Heusden
   Karel Heyse
+  Humhue
   Johan Kristensen
   Kousuke
   Denis de Leeuw Duarte

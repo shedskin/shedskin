@@ -412,6 +412,16 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.bool_test_add(node.value)
         self.visit(node.value, func)
 
+    def visit_NamedExpr(self, node, func=None):
+        self.visit(node.value, func)
+
+        newnode = infer.CNode(self.gx, node, parent=func, mv=getmv())
+        self.gx.types[newnode] = set()
+        self.add_constraint((infer.inode(self.gx, node.value), newnode), func)
+
+        lvar = self.default_var(node.target.id, func)
+        self.add_constraint((newnode, infer.inode(self.gx, lvar)), func)
+
     def visit_Module(self, node):
         # --- bootstrap built-in classes
         if self.module.ident == 'builtin':
@@ -1265,6 +1275,12 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
         lcfunc.ident = 'list_comp_' + str(len(self.listcomps))
         self.listcomps.append((node, lcfunc, func))
+
+    def visit_DictComp(self, node, func=None):
+        error.error('dict comprehensions are not supported', self.gx, node, mv=getmv())
+
+    def visit_SetComp(self, node, func=None):
+        error.error('set comprehensions are not supported', self.gx, node, mv=getmv())
 
     def visit_Return(self, node, func):
         if node.value is None:
