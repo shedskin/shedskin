@@ -29,9 +29,10 @@ poetry.lock
 test
 test.*
 
-# exclude tests detritus
+# exclude tests and static analysis detritus
 .tox/
 .pytest_cache/
+.ruff_cache/
 
 # virtualenv named 'venv' in case it is in-source
 venv
