@@ -19,6 +19,7 @@ import subprocess
 import sys
 import textwrap
 import time
+import glob
 
 WHITE = "\x1b[97;20m"
 GREY = "\x1b[38;20m"
@@ -209,8 +210,9 @@ def get_cmakefile_template(name, subdir, section='modular'):
         return tmpl % dict(project_name=name, subdir=subdir)
 
 
-def generate_cmakefile(gx):
-    p = pathlib.Path(gx.main_module.filename)
+def generate_cmakefile(main_module, gx):
+    # p = pathlib.Path(gx.main_module.filename)
+    p = main_module
 
     src_clfile = p.parent / "CMakeLists.txt"
 
@@ -254,8 +256,8 @@ def generate_cmakefile(gx):
 
     master_clfile = src_clfile.parent.parent / 'CMakeLists.txt'
     master_clfile_content = get_cmakefile_template(
-        # name=f'{main_module}_project',
-        name=f'{gx.main_module.ident}_project',
+        name=f'{main_module}_project',
+        # name=f'{gx.main_module.ident}_project',
         subdir=p.parent.name)
     master_clfile.write_text(master_clfile_content)
 
@@ -536,13 +538,55 @@ class CmakeOptions:
 class CMakeBuilder:
     """shedskin cmake builder"""
 
-    def __init__(self, options):
+    def __init__(self, main_module, options):
+        self.main_module = main_module
         self.options = options
         self.source_dir = pathlib.Path.cwd().parent
-        self.build_dir = self.source_dir / 'build'        
-        # print()
-        # print('build_dir:', self.build_dir)
-        # print('source_dir:', self.source_dir)
+        self.build_dir = self.source_dir / 'build'
+        self.tests = sorted(glob.glob("./test_*/test_*.py", recursive=True))
+
+    def check(self, path):
+        """check file for syntax errors"""
+        with open(path) as f:
+            src = f.read()
+        compile(src, path, 'exec')
+
+    def get_most_recent_test(self):
+        """returns name of recently modified test"""
+        max_mtime = 0
+        most_recent_test = None
+        for test in self.tests:
+            mtime = os.stat(os.path.abspath(test)).st_mtime
+            if mtime > max_mtime:
+                max_mtime = mtime
+                most_recent_test = test
+        return most_recent_test
+
+    def error_tests(self):
+        """test error messages from tests in errs directory""" 
+        failures = []
+        os.chdir('errs')
+        tests = sorted(os.path.basename(t) for t in glob.glob('[0-9][0-9].py'))
+        for test in tests:
+            print('*** test:', test)
+            try:
+                checks = []
+                for line in open(test):                  
+                    if line.startswith('#*'):
+                        checks.append(line[1:].strip())
+                cmd=f'{sys.executable} -m shedskin {test}'.split()
+                output = subprocess.run(cmd, encoding='utf-8', 
+                    capture_output=True, text=True).stdout
+                assert not [l for l in output if 'Traceback' in l]
+                for check in checks:
+                    print(check)
+                    assert [l for l in output.splitlines() if l.startswith(check)]
+                print(f'*** {GREEN}SUCCESS{RESET}:', test)
+            except AssertionError:
+                print(f'*** {RED}FAILURE{RESET}:', test)
+                failures.append(test)
+        os.chdir('..')
+        return failures
 
     def sequence(self, *cmds):
         """run build steps in sequence"""
@@ -578,66 +622,126 @@ class CMakeBuilder:
         bld_options = []
         tst_options = []
 
-        if self.options.executable:
-            cfg_options.append("-DBUILD_EXECUTABLE=ON")
-        if self.options.pyextension:
+        # if self.options.executable:
+        #     cfg_options.append("-DBUILD_EXECUTABLE=ON")
+        # if self.options.pyextension:
+        #     cfg_options.append("-DBUILD_EXTENSION=ON")
+
+        # -------------------------------------------------------------------------
+        # cfg and bld options
+
+        cfg_options.append("-DBUILD_EXECUTABLE=ON")
+        if self.options.extmod:
             cfg_options.append("-DBUILD_EXTENSION=ON")
 
-        if self.options.debug:
+        if self.options.c_debug:
             cfg_options.append("-DDEBUG=ON")
 
-        if self.options.generator:
-            cfg_options.append(f"-G{self.options.generator}")
+        if self.options.c_generator:
+            cfg_options.append(f"-G{self.options.c_generator}")
 
-        if self.options.build_type:
-            cfg_options.append(f" -DCMAKE_BUILD_TYPE={self.options.build_type}")
+        if self.options.c_build_type:
+            cfg_options.append(f" -DCMAKE_BUILD_TYPE={self.options.c_build_type}")
 
-        if self.options.parallel:
-            bld_options.append(f"--parallel {self.options.parallel}")
-            tst_options.append(f"--parallel {self.options.parallel}")
+        if self.options.c_jobs:
+            bld_options.append(f"--parallel {self.options.c_jobs}")
+            tst_options.append(f"--parallel {self.options.c_jobs}")
 
-        if self.options.ccache:
+        if self.options.c_ccache:
             if shutil.which('ccache'):
                 cfg_options.append("-DCMAKE_CXX_COMPILER_LAUNCHER=ccache")
             else:
                 print(f"\n{YELLOW}WARNING{RESET}: 'ccache' not found")
 
-        if self.options.conan:
+        if self.options.c_conan:
             cfg_options.append("-DENABLE_CONAN=ON")
 
-        elif self.options.spm:
+        elif self.options.c_spm:
             cfg_options.append("-DENABLE_SPM=ON")
 
-        elif self.options.external_project:
+        elif self.options.c_extproject:
             cfg_options.append("-DENABLE_EXTERNAL_PROJECT=ON")
 
         if not cfg_options:
             print(f"{YELLOW}no configuration options selected{RESET}")
             return
 
-        if self.build_dir.exists() and self.options.reset:
+        if self.build_dir.exists() and self.options.c_reset:
             self.rm_build()
 
         if not self.build_dir.exists():
             self.mkdir_build()
 
-        if self.options.conan:
+        if self.options.c_conan:
             dpm = ConanDependencyManager(self.source_dir)
             dpm.generate_conanfile()
             dpm.install()
 
-        elif self.options.spm:
+        elif self.options.c_spm:
             dpm = ShedskinDependencyManager(self.source_dir)
             dpm.install_all()
+
+        if self.options.c_target:
+            target_suffix = '-exe'
+            for target in self.options.c_target:
+                bld_options.append(f"--target {target}{target_suffix}")
+                txt_options.append(f" --tests-regex {target}{target_suffix}")
+
+        # -------------------------------------------------------------------------
+        # test options
+
+        if self.options.t_include:
+            self.tst_options.append(f"--tests-regex {self.options.t_include}")
+
+        if self.options.t_check:
+            self.check(self.options.name) # check python syntax
+
+        if self.options.t_modified:
+            most_recent_test = Path(self.get_most_recent_test()).stem
+            bld_options.append(f"--target {most_recent_test}")
+            tst_options.append(f"--tests-regex {most_recent_test}")
+
+        # t_nocleanup
+
+        if self.options.t_pytest:
+            try:
+                import pytest
+                os.system('pytest')
+            except ImportError:
+                print('pytest not found')
+            print()
+
+        if self.options.t_run:
+            target_suffix = '-exe'
+            if self.options.extmod:
+                target_suffix = '-ext'
+            bld_options.append(f"--target {self.options.t_run}{target_suffix}")
+            txt_options.append(f"--tests-regex {self.options.t_run}")
+
+        if self.options.t_stoponfail:
+            self.tst_options.append("--stop-on-failure")
+
+        if self.options.t_progress:
+            self.tst_options.append("--progress")
 
         self.cmake_config(cfg_options)
 
         self.cmake_build(bld_options)
 
-        if self.options.runtests:
-            self.cmake_test()
+        if self.options.c_test:
+            self.cmake_test(tst_options)
 
         et = time.time()
         elapsed_time = time.strftime("%H:%M:%S", time.gmtime(et - st))
         print(f"Total time: {YELLOW}{elapsed_time}{RESET}\n")
+
+        if self.options.run_errs:
+            failures = self.error_tests()
+            if not failures:
+                print(f'==> {GREEN}NO FAILURES, yay!{RESET}')
+            else:
+                print(f'==> {RED}TESTS FAILED:{RESET}', len(failures))
+                print(failures)
+                sys.exit()
+
 
