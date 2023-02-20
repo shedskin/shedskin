@@ -1,5 +1,5 @@
 """
-*** SHED SKIN Python-to-C++ Compiler ***
+# *** SHED SKIN Python-to-C++ Compiler ***
 Copyright 2005-2013 Mark Dufour and constributors
 License GNU GPL version 3 (See LICENSE)
 
@@ -210,9 +210,9 @@ def get_cmakefile_template(name, subdir, section='modular'):
         return tmpl % dict(project_name=name, subdir=subdir)
 
 
-def generate_cmakefile(main_module, gx):
-    # p = pathlib.Path(gx.main_module.filename)
-    p = main_module
+def generate_cmakefile(gx):
+    p = pathlib.Path(gx.main_module.filename)
+    # p = main_module
 
     src_clfile = p.parent / "CMakeLists.txt"
 
@@ -256,8 +256,8 @@ def generate_cmakefile(main_module, gx):
 
     master_clfile = src_clfile.parent.parent / 'CMakeLists.txt'
     master_clfile_content = get_cmakefile_template(
-        name=f'{main_module}_project',
-        # name=f'{gx.main_module.ident}_project',
+        # name=f'{main_module}_project',
+        name=f'{gx.main_module.ident}_project',
         subdir=p.parent.name)
     master_clfile.write_text(master_clfile_content)
 
@@ -538,8 +538,7 @@ class CmakeOptions:
 class CMakeBuilder:
     """shedskin cmake builder"""
 
-    def __init__(self, main_module, options):
-        self.main_module = main_module
+    def __init__(self, options):
         self.options = options
         self.source_dir = pathlib.Path.cwd().parent
         self.build_dir = self.source_dir / 'build'
@@ -634,114 +633,114 @@ class CMakeBuilder:
         if self.options.extmod:
             cfg_options.append("-DBUILD_EXTENSION=ON")
 
-        if self.options.c_debug:
+        if self.options.debug:
             cfg_options.append("-DDEBUG=ON")
 
-        if self.options.c_generator:
-            cfg_options.append(f"-G{self.options.c_generator}")
+        if self.options.generator:
+            cfg_options.append(f"-G{self.options.generator}")
 
-        if self.options.c_build_type:
-            cfg_options.append(f" -DCMAKE_BUILD_TYPE={self.options.c_build_type}")
+        if self.options.build_type:
+            cfg_options.append(f" -DCMAKE_BUILD_TYPE={self.options.build_type}")
 
-        if self.options.c_jobs:
-            bld_options.append(f"--parallel {self.options.c_jobs}")
-            tst_options.append(f"--parallel {self.options.c_jobs}")
+        if self.options.jobs:
+            bld_options.append(f"--parallel {self.options.jobs}")
+            tst_options.append(f"--parallel {self.options.jobs}")
 
-        if self.options.c_ccache:
+        if self.options.ccache:
             if shutil.which('ccache'):
                 cfg_options.append("-DCMAKE_CXX_COMPILER_LAUNCHER=ccache")
             else:
                 print(f"\n{YELLOW}WARNING{RESET}: 'ccache' not found")
 
-        if self.options.c_conan:
+        if self.options.conan:
             cfg_options.append("-DENABLE_CONAN=ON")
 
-        elif self.options.c_spm:
+        elif self.options.spm:
             cfg_options.append("-DENABLE_SPM=ON")
 
-        elif self.options.c_extproject:
+        elif self.options.extproject:
             cfg_options.append("-DENABLE_EXTERNAL_PROJECT=ON")
 
         if not cfg_options:
             print(f"{YELLOW}no configuration options selected{RESET}")
             return
 
-        if self.build_dir.exists() and self.options.c_reset:
+        if self.build_dir.exists() and self.options.reset:
             self.rm_build()
 
         if not self.build_dir.exists():
             self.mkdir_build()
 
-        if self.options.c_conan:
+        if self.options.conan:
             dpm = ConanDependencyManager(self.source_dir)
             dpm.generate_conanfile()
             dpm.install()
 
-        elif self.options.c_spm:
+        elif self.options.spm:
             dpm = ShedskinDependencyManager(self.source_dir)
             dpm.install_all()
 
-        if self.options.c_target:
+        if self.options.target:
             target_suffix = '-exe'
-            for target in self.options.c_target:
+            for target in self.options.target:
                 bld_options.append(f"--target {target}{target_suffix}")
                 txt_options.append(f" --tests-regex {target}{target_suffix}")
 
         # -------------------------------------------------------------------------
         # test options
 
-        if self.options.t_include:
-            self.tst_options.append(f"--tests-regex {self.options.t_include}")
+        # if self.options.t_include:
+        #     self.tst_options.append(f"--tests-regex {self.options.t_include}")
 
-        if self.options.t_check:
-            self.check(self.options.name) # check python syntax
+        # if self.options.t_check:
+        #     self.check(self.options.name) # check python syntax
 
-        if self.options.t_modified:
-            most_recent_test = Path(self.get_most_recent_test()).stem
-            bld_options.append(f"--target {most_recent_test}")
-            tst_options.append(f"--tests-regex {most_recent_test}")
+        # if self.options.t_modified:
+        #     most_recent_test = Path(self.get_most_recent_test()).stem
+        #     bld_options.append(f"--target {most_recent_test}")
+        #     tst_options.append(f"--tests-regex {most_recent_test}")
 
-        # t_nocleanup
+        # # t_nocleanup
 
-        if self.options.t_pytest:
-            try:
-                import pytest
-                os.system('pytest')
-            except ImportError:
-                print('pytest not found')
-            print()
+        # if self.options.t_pytest:
+        #     try:
+        #         import pytest
+        #         os.system('pytest')
+        #     except ImportError:
+        #         print('pytest not found')
+        #     print()
 
-        if self.options.t_run:
-            target_suffix = '-exe'
-            if self.options.extmod:
-                target_suffix = '-ext'
-            bld_options.append(f"--target {self.options.t_run}{target_suffix}")
-            txt_options.append(f"--tests-regex {self.options.t_run}")
+        # if self.options.t_run:
+        #     target_suffix = '-exe'
+        #     if self.options.extmod:
+        #         target_suffix = '-ext'
+        #     bld_options.append(f"--target {self.options.t_run}{target_suffix}")
+        #     txt_options.append(f"--tests-regex {self.options.t_run}")
 
-        if self.options.t_stoponfail:
-            self.tst_options.append("--stop-on-failure")
+        # if self.options.t_stoponfail:
+        #     self.tst_options.append("--stop-on-failure")
 
-        if self.options.t_progress:
-            self.tst_options.append("--progress")
+        # if self.options.t_progress:
+        #     self.tst_options.append("--progress")
 
         self.cmake_config(cfg_options)
 
         self.cmake_build(bld_options)
 
-        if self.options.c_test:
+        if self.options.test:
             self.cmake_test(tst_options)
 
         et = time.time()
         elapsed_time = time.strftime("%H:%M:%S", time.gmtime(et - st))
         print(f"Total time: {YELLOW}{elapsed_time}{RESET}\n")
 
-        if self.options.run_errs:
-            failures = self.error_tests()
-            if not failures:
-                print(f'==> {GREEN}NO FAILURES, yay!{RESET}')
-            else:
-                print(f'==> {RED}TESTS FAILED:{RESET}', len(failures))
-                print(failures)
-                sys.exit()
+        # if self.options.run_errs:
+        #     failures = self.error_tests()
+        #     if not failures:
+        #         print(f'==> {GREEN}NO FAILURES, yay!{RESET}')
+        #     else:
+        #         print(f'==> {RED}TESTS FAILED:{RESET}', len(failures))
+        #         print(failures)
+        #         sys.exit()
 
 

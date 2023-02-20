@@ -1399,13 +1399,14 @@ def determine_classes(gx):  # XXX modeling..?
         cl.has_deepcopy = True
 
 
-def analyze(gx, module_name):
-    from . import graph  # TODO improve separation to avoid circular imports..
+# def analyze(gx, module_name):
+def analyze(gx):
+    # from . import graph  # TODO improve separation to avoid circular imports..
     from .typestr import nodetypestr
     from .virtual import analyze_virtuals
 
     # --- build dataflow graph from source code
-    gx.main_module = graph.parse_module(module_name, gx)
+    # gx.main_module = graph.parse_module(module_name, gx)
 
     # --- seed class_.__name__ attributes..
     for cl in gx.allclasses:
