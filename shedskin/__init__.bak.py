@@ -272,16 +272,17 @@ class Shedskin:
         parser_test = subparsers.add_parser('test', help="test help")
         arg = opt = parser_test.add_argument
 
-        opt('-d', '--dryrun',     help='dryrun without any changes ', action='store_true')
-        opt('-i', '--include',    help='provide regex of tests to include with cmake', metavar="PATTERN")        
-        opt('-k', '--check',      help='check testfile py syntax before running', action='store_true')
-        opt('-m', '--modified',   help='run only recently modified test', action='store_true')
-        opt('-n', '--nocleanup',  help='do not cleanup built test', action='store_true')
-        opt('-p', '--pytest',     help='run pytest before each test run', action='store_true')
-        opt('-r', '--run',        help='run single test', metavar="TEST")
-        opt('-s', '--stoponfail', help='stop when first failure happens in ctest', action='store_true')
-        opt('-x', '--run-errs',   help='run error/warning message tests', action='store_true')
-        opt('--progress',         help='enable short progress output from ctest', action='store_true')
+        opt('--check',          help='check testfile py syntax before running', action='store_true')
+        opt('--cmake',          help='enable cmake', action='store_true')
+        opt('--modified',       help='run only recently modified test', action='store_true')
+        opt('--nocleanup',      help='do not cleanup built test', action='store_true')
+        opt('--pytest',         help='run pytest before each test run', action='store_true')
+        opt('--run',            help='run single test', metavar="TEST")
+        opt('--stoponfail',     help='stop when first failure happens in ctest', action='store_true')
+        opt('--target',         help='build only specified targets', nargs="+")
+        opt('--run-errs',       help='run error/warning message tests', action='store_true')
+        opt('--ccache',         help='enable ccache with cmake', action='store_true')
+        opt('--progress',       help='enable short progress output from ctest', action='store_true')
 
         parser_run = subparsers.add_parser('run', help="run help")
         arg = opt = parser_run.add_argument
