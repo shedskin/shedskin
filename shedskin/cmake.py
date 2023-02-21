@@ -7,8 +7,7 @@ shedskin cmake builder
 
 api:
 
-    shedskin -k app.py
-    shedskin -k pkg/app.py
+    shedskin build pkg/app.py
 
 """
 import modulefinder
@@ -208,7 +207,7 @@ def get_cmakefile_template(name, subdir, section="modular"):
     return tmpl % dict(project_name=name, subdir=subdir)
 
 
-def generate_cmakefile(gx):
+def generate_cmakefile_0(gx):
     p = pathlib.Path(gx.main_module.filename)
 
     src_clfile = p.parent / "CMakeLists.txt"
@@ -260,7 +259,8 @@ def generate_cmakefile(gx):
     master_clfile.write_text(master_clfile_content)
 
 
-def generate_cmakefile_2(gx):
+def generate_cmakefile(gx):
+    """improved generator using built-in machinery"""
     
     p = pathlib.Path(gx.main_module.filename)
     src_clfile = p.parent / "CMakeLists.txt"
@@ -268,23 +268,21 @@ def generate_cmakefile_2(gx):
     modules = gx.modules.values()
     filenames = [f'{m.filename.parent / m.filename.stem}' for m in modules]
 
-    # if gx.outputdir:
-    #     cmakefile_path = os.path.join(gx.outputdir, 'CMakeLists.txt')
-    # else:
-    #     cmakefile_path = 'CMakeLists.txt'
-
     sys_mods = set()
     app_mods = set()
-    app_mods_paths = set()
 
     for module in modules:
         if module.builtin:
             entry = module.filename.relative_to(gx.shedskin_lib)
             entry = entry.parent / entry.stem
+            if entry.name == 'builtin': # don't include 'builtin' module
+                continue
             sys_mods.add(entry)
         else:
             entry = module.filename.relative_to(gx.main_module.filename.parent)
             entry = entry.parent / entry.stem
+            if entry.name == p.stem: # don't include main_module
+                continue
             app_mods.add(entry)
 
     src_clfile.write_text(add_shedskin_product(p.name, sys_mods, app_mods))
