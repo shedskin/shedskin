@@ -252,7 +252,7 @@ function(add_shedskin_extension)
 
     if(IS_NESTED)
         add_custom_command(OUTPUT ${translated_files}
-            COMMAND shedskin --nomakefile -o ${PROJECT_EXT_DIR}/${parentpath} -e ${opts} "${SHEDSKIN_MAIN_MODULE}"
+            COMMAND shedskin translate --nomakefile -o ${PROJECT_EXT_DIR}/${parentpath} -e ${opts} "${SHEDSKIN_MAIN_MODULE}"
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
             DEPENDS "${SHEDSKIN_MAIN_MODULE}"
             COMMENT "translating ${main_py} to ext"
@@ -260,7 +260,7 @@ function(add_shedskin_extension)
         )        
     else()
         add_custom_command(OUTPUT ${translated_files}
-            COMMAND shedskin --nomakefile -o ${PROJECT_EXT_DIR} -e ${opts} "${main_py}"
+            COMMAND shedskin translate --nomakefile -o ${PROJECT_EXT_DIR} -e ${opts} "${main_py}"
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
             DEPENDS "${main_py}"
             COMMENT "translating ${main_py} to ext"

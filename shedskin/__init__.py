@@ -182,7 +182,7 @@ class Shedskin:
 
     def translate(self):
         t0 = time.time()
-        infer.analyze(self.gx)
+        infer.analyze(self.gx, self.module_name)
         annotate.annotate(self.gx)
         cpp.generate_code(self.gx)
         error.print_errors()
@@ -246,7 +246,7 @@ class Shedskin:
         opt("-x", "--traceback",  help="Print traceback for uncaught exceptions", action="store_true")
 
         opt("--noassert",         help="Disable assert statements", action="store_true")
-        opt("--nobounds",         help="Disable bounds checking", action="store_true")
+        opt("-b", "--nobounds",   help="Disable bounds checking", action="store_true")
         opt("--nogc",             help="Disable garbage collection", action="store_true")
         opt("--nogcwarns",        help="Disable runtime GC warnings", action="store_true")
         opt("--nomakefile",       help="Disable makefile generation", action="store_true")
