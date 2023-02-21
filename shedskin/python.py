@@ -31,10 +31,10 @@ class Module(PyObject):
         name_list: [str]        list of names
         ident: str              module name
 
-        filename: str           module path
-        path: str               module parentdir
-        relative_filename: str  ?
-        relative_path: str      relative_filename parentdir
+        filename: Path          module path
+        path: Path              module parentdir
+        relative_filename: Path ?
+        relative_path: Path     relative_filename parentdir
 
         ast: ast.Module         ast module or None
         builtin: bool           is_builtin ?
@@ -49,10 +49,10 @@ class Module(PyObject):
         self.name_list = name.split('.')
         self.ident = self.name_list[-1]
         #set filename and its dependent fields
-        self.filename = filename
-        self.path = os.path.dirname(filename)
-        self.relative_filename = relative_filename
-        self.relative_path = os.path.dirname(relative_filename)
+        self.filename = pathlib.Path(filename)
+        self.path = self.filename.parent
+        self.relative_filename = pathlib.Path(relative_filename)
+        self.relative_path = self.relative_filename.parent
 
         #set the rest
         self.ast = None # to be provided later after analysis
@@ -65,7 +65,7 @@ class Module(PyObject):
         return '__' + '__::__'.join(self.name_list) + '__'
 
     def include_path(self):
-        if self.relative_filename.endswith('__init__.py'):
+        if self.relative_filename.name.endswith('__init__.py'):
             return os.path.join(self.relative_path, '__init__.hpp')
         else:
             filename_without_ext = os.path.splitext(self.relative_filename)[0]
