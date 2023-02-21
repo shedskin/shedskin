@@ -268,7 +268,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         nonred = []
         for child in node.elts:
             type = self.child_type_rec(child)
-            if not type or not type in done:
+            if not type or type not in done:
                 done.add(type)
                 nonred.append(child)
 
@@ -576,7 +576,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         return result
 
     def visit_Import(self, node, func=None):
-        if not node in getmv().importnodes:
+        if node not in getmv().importnodes:
             error.error("please place all imports (no 'try:' etc) at the top of the file", self.gx, node, mv=getmv())
 
         for name_alias in node.names:
@@ -619,7 +619,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         return module
 
     def visit_ImportFrom(self, node, parent=None):
-        if not node in getmv().importnodes:  # XXX use (func, node) as parent..
+        if node not in getmv().importnodes:  # XXX use (func, node) as parent..
             error.error("please place all imports (no 'try:' etc) at the top of the file", self.gx, node, mv=getmv())
 
         # from __future__ import
@@ -654,7 +654,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     self.gx.types[infer.inode(self.gx, var)] = set([(import_module, 0)])
                     self.imports[import_name] = import_module
                 for name, extvar in module.mv.globals.items():
-                    if not extvar.imported and not name in ['__name__']:
+                    if not extvar.imported and name not in ["__name__"]:
                         var = infer.default_var(self.gx, name, None, mv=getmv())  # XXX merge
                         var.imported = True
                         self.add_constraint((infer.inode(self.gx, extvar), infer.inode(self.gx, var)), None)
@@ -700,7 +700,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 self.set_default_vars(node, func)
 
         if not python.is_method(func):
-            if not getmv().module.builtin and not node in getmv().funcnodes and not is_lambda:
+            if not getmv().module.builtin and node not in getmv().funcnodes and not is_lambda:
                 error.error("non-global function '%s'" % node.name, self.gx, node, mv=getmv())
 
         if node.decorator_list:
@@ -715,7 +715,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     error.error("unsupported type of decorator", self.gx, dec, mv=getmv())
 
         if parent:
-            if not inherited_from and not func.ident in parent.staticmethods and (not func.formals or func.formals[0] != 'self'):
+            if not inherited_from and func.ident not in parent.staticmethods and (not func.formals or func.formals[0] != 'self'):
                 error.error("formal arguments of method must start with 'self'", self.gx, node, mv=getmv())
             if not func.mv.module.builtin and func.ident in ['__new__', '__getattr__', '__setattr__', '__radd__', '__rsub__', '__rmul__', '__rdiv__', '__rtruediv__', '__rfloordiv__', '__rmod__', '__rdivmod__', '__rpow__', '__rlshift__', '__rrshift__', '__rand__', '__rxor__', '__ror__', '__iter__', '__call__', '__enter__', '__exit__', '__del__', '__copy__', '__deepcopy__']:
                 error.error("'%s' is not supported" % func.ident, self.gx, node, warning=True, mv=getmv())
@@ -729,7 +729,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             if isinstance(formal, tuple):
                 tmp = self.temp_var((node, i), func)
                 func.formals[i] = tmp.name
-                fake_unpack = Assign([self.unpack_rec(formal)], ast.Name(tmp.name, ast.Load()))
+                fake_unpack = ast.Assign([self.unpack_rec(formal)], ast.Name(tmp.name, ast.Load()))
                 func.expand_args[tmp.name] = fake_unpack
                 self.visit(fake_unpack, func)
 
@@ -1516,7 +1516,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.callfuncs.append((node, func))
 
     def visit_ClassDef(self, node, parent=None):
-        if not getmv().module.builtin and not node in getmv().classnodes:
+        if not getmv().module.builtin and node not in getmv().classnodes:
             error.error("non-global class '%s'" % node.name, self.gx, node, mv=getmv())
         if len(node.bases) > 1:
             error.error('multiple inheritance is not supported', self.gx, node, mv=getmv())
@@ -1608,14 +1608,14 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             if newclass.ident in ['int_']:
                 msgs += ['lshift', 'rshift', 'and', 'xor', 'or']
             for msg in msgs:
-                if not '__i' + msg + '__' in newclass.funcs:
+                if '__i' + msg + '__' not in newclass.funcs:
                     self.visit(ast_utils.parse_expr('def __i%s__(self, other): return self.__%s__(other)' % (msg, msg)), newclass)
 
         # --- __str__, __hash__ # XXX model in lib/builtin.py, other defaults?
-        if not newclass.mv.module.builtin and not '__str__' in newclass.funcs:
+        if not newclass.mv.module.builtin and "__str__" not in newclass.funcs:
             self.visit(ast.FunctionDef('__str__', ast_utils.make_arg_list(['self']), [ast.Return(ast_utils.make_call(ast.Attribute(ast.Name('self', ast.Load()), '__repr__', ast.Load())))], []), newclass)
             newclass.funcs['__str__'].invisible = True
-        if not newclass.mv.module.builtin and not '__hash__' in newclass.funcs:
+        if not newclass.mv.module.builtin and "__hash__" not in newclass.funcs:
             self.visit(ast.FunctionDef('__hash__', ast_utils.make_arg_list(['self']), [ast.Return(ast.Num(0))], []), newclass)
             newclass.funcs['__hash__'].invisible = True
 
@@ -1652,7 +1652,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
     # py2 ast
     def visit_Num(self, node, func=None):
-        map = {int: 'int_', float: 'float_', long: 'int_', complex: 'complex'}  # XXX 'return' -> ast.Return(Constant(None))?
+        # removed 'long' (doesn't exist in py3)
+        map = {int: 'int_', float: 'float_', complex: 'complex'}  # XXX 'return' -> ast.Return(Constant(None))?
         self.instance(node, python.def_class(self.gx, map[type(node.n)]), func)
 
     # py2 ast
@@ -1724,11 +1725,11 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
     def builtin_wrapper(self, node, func):
         node2 = ast_utils.make_call(copy.deepcopy(node), [ast.Name(x, ast.Load()) for x in 'abcde'])
-        l = ast.Lambda(ast_utils.make_arg_list(list('abcde')), node2)
-        self.visit(l, func)
-        self.lwrapper[node] = self.lambdaname[l]
-        self.gx.lambdawrapper[node2] = self.lambdaname[l]
-        f = self.lambdas[self.lambdaname[l]]
+        lam = ast.Lambda(ast_utils.make_arg_list(list('abcde')), node2)
+        self.visit(lam, func)
+        self.lwrapper[node] = self.lambdaname[lam]
+        self.gx.lambdawrapper[node2] = self.lambdaname[lam]
+        f = self.lambdas[self.lambdaname[lam]]
         f.lambdawrapper = True
         infer.inode(self.gx, node2).lambdawrapper = f
         return f

@@ -17,9 +17,6 @@ from . import ast_utils
 class PyObject:
     """Mixin for py objects"""
 
-    # def __repr__(self):
-    #     return f"<{self.__class__.__name__} '{self.ident}'>"
-
     def __repr__(self):
         return f"{self.__class__.__name__} {self.ident}"
 
@@ -33,7 +30,7 @@ class Module(PyObject):
 
         filename: Path          module path
         path: Path              module parentdir
-        relative_filename: Path ?
+        relative_filename: Path module relative_filenmae
         relative_path: Path     relative_filename parentdir
 
         ast: ast.Module         ast module or None

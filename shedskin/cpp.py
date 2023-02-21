@@ -143,7 +143,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         newlines = []
         j = -1
         for (i, line) in enumerate(lines):
-            if line.startswith('namespace ') and not 'XXX' in line:  # XXX
+            if line.startswith('namespace ') and 'XXX' not in line:  # XXX
                 j = i + 1
             newlines.append(line)
 
@@ -151,7 +151,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 pairs = []
                 done = set()
                 for (node, name) in self.consts.items():
-                    if not name in done and node in self.mergeinh and self.mergeinh[node]:  # XXX
+                    if name not in done and node in self.mergeinh and self.mergeinh[node]:  # XXX
                         ts = typestr.nodetypestr(self.gx, node, infer.inode(self.gx, node).parent, mv=self.mv)
                         if declare:
                             ts = 'extern ' + ts
@@ -171,7 +171,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             if i == j:
                 todo = {}
                 for (node, name) in self.consts.items():
-                    if not name in todo:
+                    if name not in todo:
                         todo[int(name[6:])] = node
                 todolist = list(todo)
                 todolist.sort()
@@ -439,15 +439,15 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def rich_comparison(self):
         cmp_cls, lt_cls, gt_cls, le_cls, ge_cls = [], [], [], [], []
         for cl in self.mv.classes.values():
-            if not '__cmp__' in cl.funcs and [f for f in ('__eq__', '__lt__', '__gt__') if f in cl.funcs]:
+            if '__cmp__' not in cl.funcs and [f for f in ('__eq__', '__lt__', '__gt__') if f in cl.funcs]:
                 cmp_cls.append(cl)
-            if not '__lt__' in cl.funcs and '__gt__' in cl.funcs:
+            if '__lt__' not in cl.funcs and '__gt__' in cl.funcs:
                 lt_cls.append(cl)
-            if not '__gt__' in cl.funcs and '__lt__' in cl.funcs:
+            if '__gt__' not in cl.funcs and '__lt__' in cl.funcs:
                 gt_cls.append(cl)
-            if not '__le__' in cl.funcs and '__ge__' in cl.funcs:
+            if '__le__' not in cl.funcs and '__ge__' in cl.funcs:
                 le_cls.append(cl)
-            if not '__ge__' in cl.funcs and '__le__' in cl.funcs:
+            if '__ge__' not in cl.funcs and '__le__' in cl.funcs:
                 ge_cls.append(cl)
         if cmp_cls or lt_cls or gt_cls or le_cls or ge_cls:
             self.print('namespace __shedskin__ { /* XXX */')
@@ -1577,7 +1577,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.append(', ' + self.mv.tempcount[child][2:] + ')')
 
     def visit_Compare(self, node, func=None, wrapper=True):
-        if not node in self.bool_wrapper:
+        if node not in self.bool_wrapper:
             self.append('___bool(')
         self.done = set()
         mapping = {
@@ -1602,7 +1602,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             if right != node.comparators[-1]:
                 self.append('&&')
             left = right
-        if not node in self.bool_wrapper:
+        if node not in self.bool_wrapper:
             self.append(')')
 
     def visit_AugAssign(self, node, func=None):
@@ -1704,7 +1704,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         # XXX C++ knows %, /, so we can overload?
         if (floattype.intersection(ltypes) or inttype.intersection(ltypes)):
             if inline in ['%'] or (inline in ['/'] and not (floattype.intersection(ltypes) or floattype.intersection(rtypes))):
-                if not python.def_class(self.gx, 'complex') in (t[0] for t in rtypes):  # XXX
+                if python.def_class(self.gx, 'complex') not in (t[0] for t in rtypes):  # XXX
                     self.append({'%': '__mods', '/': '__divs'}[inline] + '(')
                     self.visit(left, func)
                     self.append(', ')
@@ -2293,7 +2293,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             if isinstance(node.value, ast.Tuple):
                 if [n for n in node.targets if ast_utils.is_assign_tuple(n)]:  # XXX a,b=d[i,j]=..?
                     for child in node.value.elts:
-                        if not (child, 0, 0) in self.gx.cnode:  # (a,b) = (1,2): (1,2) never visited
+                        if (child, 0, 0) not in self.gx.cnode:  # (a,b) = (1,2): (1,2) never visited
                             continue
                         if not ast_utils.is_constant(child) and not ast_utils.is_none(child):
                             self.start(self.mv.tempcount[child] + ' = ')
@@ -2351,7 +2351,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 # expr[a:b] = expr
                 # expr[a:b:c] = expr
                 elif isinstance(lvalue, ast.Subscript) and isinstance(lvalue.slice, ast.Slice):  # XXX see comment above
-                    if isinstance(rvalue, ast.Slice) and lvalue.upper == rvalue.upper == None and lvalue.lower == rvalue.lower == None:
+                    if isinstance(rvalue, ast.Slice) and lvalue.upper == rvalue.upper is None and lvalue.lower == rvalue.lower is None:
                         self.visitm(lvalue.expr, self.connector(lvalue.expr, func), 'units = ', rvalue.expr, self.connector(rvalue.expr, func), 'units', func)
                     else:  # XXX let visit_Call(fakefunc) use cast_to_builtin
                         fakefunc = infer.inode(self.gx, lvalue.value).fakefunc
@@ -2669,7 +2669,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
     def attr_var_ref(self, node, ident):  # XXX blegh
         lcp = typestr.lowest_common_parents(typestr.polymorphic_t(self.gx, self.mergeinh[node.value]))
-        if len(lcp) == 1 and isinstance(lcp[0], python.Class) and node.attr in lcp[0].vars and not node.attr in lcp[0].funcs:
+        if len(lcp) == 1 and isinstance(lcp[0], python.Class) and node.attr in lcp[0].vars and node.attr not in lcp[0].funcs:
             return self.cpp_name(lcp[0].vars[node.attr])
         return self.cpp_name(ident)
 
@@ -2708,7 +2708,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     if isinstance(t[0], python.Class):
                         checkcls.extend(t[0].ancestors(True))
                 for cl in checkcls:
-                    if not node.attr in t[0].funcs and node.attr in cl.parent.vars:  # XXX
+                    if node.attr not in t[0].funcs and node.attr in cl.parent.vars:  # XXX
                         error.error("class attribute '" + node.attr + "' accessed without using class name", self.gx, node, warning=True, mv=self.mv)
                         break
 
@@ -2801,7 +2801,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.append(map[node.id])
 
             else:  # XXX clean up
-                if not self.mergeinh[node] and not infer.inode(self.gx, node).parent in self.gx.inheritance_relations:
+                if not self.mergeinh[node] and infer.inode(self.gx, node).parent not in self.gx.inheritance_relations:
                     error.error("variable '" + node.id + "' has no type", self.gx, node, warning=True, mv=self.mv)
                     self.append(node.id)
                 elif typestr.singletype(self.gx, node, python.Module):
