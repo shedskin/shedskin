@@ -391,7 +391,7 @@ def merged(gx, nodes, inheritance=False):
     merge = {}
     if inheritance:  # XXX do we really need this crap
         mergeinh = merged(gx, [n for n in nodes if n.thing in gx.inherited])
-        mergenoinh = merged(gx, [n for n in nodes if not n.thing in gx.inherited])
+        mergenoinh = merged(gx, [n for n in nodes if n.thing not in gx.inherited])
 
     for node in nodes:
         # --- merge node types
@@ -444,7 +444,7 @@ def add_to_worklist(worklist, node):  # XXX to infer.py
 
 def class_copy(gx, cl, dcpa):
     for var in cl.vars.values():  # XXX
-        if not inode(gx, var) in gx.types:
+        if inode(gx, var) not in gx.types:
             continue  # XXX research later
 
         inode(gx, var).copy(dcpa, 0)
@@ -507,7 +507,7 @@ def print_constraints(gx):
     for (a, b) in l:
         if not (a.mv.module.builtin and b.mv.module.builtin):
             logger.info('%s -> %s', a, b)
-            if not a in gx.types or not b in gx.types:
+            if a not in gx.types or b not in gx.types:
                 logger.info('NOTYPE %s %s', a in gx.types, b in gx.types)
     logger.info('')
 
@@ -754,7 +754,7 @@ def cpa(gx, callnode, worklist):
         (func, dcpa, objtype), c = c[0], c[1:]
 
         if INCREMENTAL:
-            if not func.mv.module.builtin and func not in gx.added_funcs_set and not func.ident in ['__getattr__', '__setattr__']:
+            if not func.mv.module.builtin and func not in gx.added_funcs_set and func.ident not in ['__getattr__', '__setattr__']:
                 if INCREMENTAL_DATA:
                     if gx.added_allocs >= INCREMENTAL_ALLOCS:
                         continue
@@ -780,7 +780,7 @@ def cpa(gx, callnode, worklist):
         callnode.nodecp.add((func,) + objtype + c)
 
         # create new template
-        if not dcpa in func.cp or not c in func.cp[dcpa]:
+        if dcpa not in func.cp or c not in func.cp[dcpa]:
             create_template(gx, func, dcpa, c, worklist)
         cpa = func.cp[dcpa][c]
         func.xargs[dcpa, cpa] = len(c)
@@ -807,7 +807,7 @@ def connect_getsetattr(gx, func, callnode, callfunc, dcpa, worklist):
         var = default_var(gx, varname, parent, worklist, mv=parent.module.mv)  # XXX always make new var??
         inode(gx, var).copy(dcpa, 0, worklist)
 
-        if not gx.cnode[var, dcpa, 0] in gx.types:
+        if gx.cnode[var, dcpa, 0] not in gx.types:
             gx.types[gx.cnode[var, dcpa, 0]] = set()
 
         gx.cnode[var, dcpa, 0].mv = parent.module.mv  # XXX move into default_var
@@ -822,11 +822,11 @@ def connect_getsetattr(gx, func, callnode, callfunc, dcpa, worklist):
 
 def create_template(gx, func, dcpa, c, worklist):
     # --- unseen cartesian product: create new template
-    if not dcpa in func.cp:
+    if dcpa not in func.cp:
         func.cp[dcpa] = {}
     func.cp[dcpa][c] = cpa = len(func.cp[dcpa])  # XXX +1
 
-    if not func.mv.module.builtin and not func.ident in ['__getattr__', '__setattr__']:
+    if not func.mv.module.builtin and func.ident not in ['__getattr__', '__setattr__']:
         logger.debug('template (%s, %s) %s', func, dcpa, c)
 
     gx.templates += 1
@@ -893,7 +893,7 @@ def ifa(gx):
 
 def ifa_split_vars(gx, cl, dcpa, vars, nr_classes, classes_nr, split, allcsites):
     for (varnum, var) in enumerate(vars):
-        if not (var, dcpa, 0) in gx.cnode:
+        if (var, dcpa, 0) not in gx.cnode:
             continue
         node = gx.cnode[var, dcpa, 0]
         creation_points, paths, assignsets, allnodes, csites, emptycsites = ifa_flow_graph(gx, cl, dcpa, node, allcsites)
@@ -1294,7 +1294,7 @@ def backflow_path(gx, worklist, t):
             for incoming in node.in_:
                 if t in gx.types[incoming]:
                     incoming.fout.add(node)
-                    if not incoming in path:
+                    if incoming not in path:
                         path.add(incoming)
                         new.add(incoming)
         worklist = new
@@ -1350,7 +1350,7 @@ def restore_network(gx, backup):
         node.fout = set()  # XXX ?
 
     for var in gx.allvars:  # XXX we have to restore some variable constraint nodes.. remove vars?
-        if not (var, 0, 0) in gx.cnode:
+        if (var, 0, 0) not in gx.cnode:
             CNode(gx, var, parent=var.parent)
 
     for func in gx.allfuncs:
@@ -1360,7 +1360,7 @@ def restore_network(gx, backup):
 def merge_simple_types(gx, types):
     merge = types.copy()
     if len(types) > 1 and (python.def_class(gx, 'none'), 0) in types:
-        if not (python.def_class(gx, 'int_'), 0) in types and not (python.def_class(gx, 'float_'), 0) in types and not (python.def_class(gx, 'bool_'), 0) in types:
+        if (python.def_class(gx, 'int_'), 0) not in types and (python.def_class(gx, 'float_'), 0) not in types and (python.def_class(gx, 'bool_'), 0) not in types:
             merge.remove((python.def_class(gx, 'none'), 0))
 
     return frozenset(merge)
