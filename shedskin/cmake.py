@@ -210,7 +210,6 @@ def get_cmakefile_template(name, subdir, section="modular"):
 
 def generate_cmakefile(gx):
     p = pathlib.Path(gx.main_module.filename)
-    # p = main_module
 
     src_clfile = p.parent / "CMakeLists.txt"
 
@@ -261,46 +260,42 @@ def generate_cmakefile(gx):
     master_clfile.write_text(master_clfile_content)
 
 
-# def generate_cmakefile_2(gx):
-#     template = get_cmakefile_template(name=f'{gx.main_module.ident}_project')
-#     modules = gx.modules.values()
-#     filenames = [f'{m.filepath.parent / m.filepath.stem}' for m in modules]
+def generate_cmakefile_2(gx):
+    
+    p = pathlib.Path(gx.main_module.filename)
+    src_clfile = p.parent / "CMakeLists.txt"
 
-#     if gx.outputdir:
-#         cmakefile_path = os.path.join(gx.outputdir, 'CMakeLists.txt')
-#     else:
-#         cmakefile_path = 'CMakeLists.txt'
+    modules = gx.modules.values()
+    filenames = [f'{m.filename.parent / m.filename.stem}' for m in modules]
 
-#     with open(cmakefile_path, 'w') as cmakefile:
-#         def write(line=""):
-#             return print(line, file=cmakefile)
+    # if gx.outputdir:
+    #     cmakefile_path = os.path.join(gx.outputdir, 'CMakeLists.txt')
+    # else:
+    #     cmakefile_path = 'CMakeLists.txt'
 
-#         cmakefile.write(basecontent)
+    sys_mods = set()
+    app_mods = set()
+    app_mods_paths = set()
 
-#         sys_mods = set()
-#         app_mods = set()
-#         app_mods_paths = set()
+    for module in modules:
+        if module.builtin:
+            entry = module.filename.relative_to(gx.shedskin_lib)
+            entry = entry.parent / entry.stem
+            sys_mods.add(entry)
+        else:
+            entry = module.filename.relative_to(gx.main_module.filename.parent)
+            entry = entry.parent / entry.stem
+            app_mods.add(entry)
 
-#         for module in modules:
-#             if module.builtin:
-#                 entry = module.filepath.relative_to(shedskin_lib)
-#                 entry = entry.parent / entry.stem
-#                 sys_mods.add(entry)
-#             else:
-#                 # filename = os.path.abspath(os.path.join(gx.outputdir, os.path.basename(module.filename)))
-#                 entry = module.filepath.relative_to(gx.main_module.filepath.parent)
-#                 entry = entry.parent / entry.stem
-#                 app_mods.add(entry)
+    src_clfile.write_text(add_shedskin_product(p.name, sys_mods, app_mods))
 
-#         # print("sys_mods:")
-#         # for f in sys_mods:
-#         #     print(f)
+    master_clfile = src_clfile.parent.parent / "CMakeLists.txt"
+    master_clfile_content = get_cmakefile_template(
+        name=f"{gx.main_module.ident}_project",
+        subdir=p.parent.name,
+    )
+    master_clfile.write_text(master_clfile_content)
 
-#         # print("app_mods:")
-#         # for f in app_mods:
-#         #     print(f)
-
-#         cmakefile.write(add_shedskin_product(sys_mods, app_mods))
 
 
 class ConanDependency:
