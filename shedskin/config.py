@@ -100,6 +100,7 @@ class GlobalInfo:  # XXX add comments, split up
                 shedskin_directory = os.path.join(dirname, shedskin_directory)
                 break
         shedskin_libdir = os.path.join(shedskin_directory, "lib")
+        self.shedskin_lib = pathlib.Path(shedskin_libdir)
         system_libdir = "/usr/share/shedskin/lib"
         self.sysdir = shedskin_directory
         # set resources subdirectors
