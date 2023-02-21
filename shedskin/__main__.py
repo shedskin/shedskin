@@ -5,9 +5,10 @@ Copyright 2005-2013 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 """
 from . import Shedskin
 
+
 def run():
-	Shedskin.commandline()
+    Shedskin.commandline()
 
 
-if __name__ == '__main__':
-	run()
+if __name__ == "__main__":
+    run()

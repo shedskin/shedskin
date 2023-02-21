@@ -70,8 +70,9 @@ DEPENDENCY_GRAPH = {
 def get_pkg_path():
     """return shedskin package path"""
     pkg_path = pathlib.Path(__file__).parent
-    assert pkg_path.name == 'shedskin'
+    assert pkg_path.name == "shedskin"
     return pkg_path
+
 
 def pkg_path():
     """used by cmake to get package path automatically"""
@@ -80,14 +81,13 @@ def pkg_path():
 
 def check_output(cmd):
     try:
-        return subprocess.check_output(cmd.split(), encoding='utf8').strip()
+        return subprocess.check_output(cmd.split(), encoding="utf8").strip()
     except FileNotFoundError:
         return None
 
 
 def add_shedskin_product(
     main_module=None,
-
     sys_modules=None,
     app_modules=None,
     data=None,
@@ -97,7 +97,6 @@ def add_shedskin_product(
     compile_options=None,
     link_options=None,
     cmdline_options=None,
-
     build_executable=False,
     build_extension=False,
     build_test=False,
@@ -109,7 +108,6 @@ def add_shedskin_product(
     enable_externalproject=False,
     enable_spm=False,
     debug=False,
-
     name=None,
 ):
     """populates a cmake function with the same name
@@ -129,8 +127,8 @@ def add_shedskin_product(
         NAME MAIN_MODULE
 
     multiple value options:
-        SYS_MODULES APP_MODULES DATA 
-        INCLUDE_DIRS LINK_LIBS LINK_DIRS 
+        SYS_MODULES APP_MODULES DATA
+        INCLUDE_DIRS LINK_LIBS LINK_DIRS
         COMPILE_OPTIONS LINK_OPTIONS CMDLINE_OPTIONS
     """
 
@@ -202,12 +200,12 @@ def add_shedskin_product(
     return "\n".join(f)
 
 
-def get_cmakefile_template(name, subdir, section='modular'):
-        pkg_path =  get_pkg_path()
-        # shedskin_lib =  pkg_path / 'lib'
-        cmakelists_tmpl = pkg_path / 'resources' / 'cmake' / section / 'CMakeLists.txt'
-        tmpl = cmakelists_tmpl.read_text()
-        return tmpl % dict(project_name=name, subdir=subdir)
+def get_cmakefile_template(name, subdir, section="modular"):
+    pkg_path = get_pkg_path()
+    # shedskin_lib =  pkg_path / 'lib'
+    cmakelists_tmpl = pkg_path / "resources" / "cmake" / section / "CMakeLists.txt"
+    tmpl = cmakelists_tmpl.read_text()
+    return tmpl % dict(project_name=name, subdir=subdir)
 
 
 def generate_cmakefile(gx):
@@ -232,7 +230,7 @@ def generate_cmakefile(gx):
     finder.run_script(str(p))
     modules = {}
     modules.update(finder.modules)  # imported and used
-    # modules.update(finder.badmodules)  # imported but not used 
+    # modules.update(finder.badmodules)  # imported but not used
     if len(modules) > 1:  # i.e. there are imports
         sys_mods = set()
         app_mods = set()
@@ -254,13 +252,13 @@ def generate_cmakefile(gx):
 
     src_clfile.write_text(content)
 
-    master_clfile = src_clfile.parent.parent / 'CMakeLists.txt'
+    master_clfile = src_clfile.parent.parent / "CMakeLists.txt"
     master_clfile_content = get_cmakefile_template(
         # name=f'{main_module}_project',
-        name=f'{gx.main_module.ident}_project',
-        subdir=p.parent.name)
+        name=f"{gx.main_module.ident}_project",
+        subdir=p.parent.name,
+    )
     master_clfile.write_text(master_clfile_content)
-
 
 
 # def generate_cmakefile_2(gx):
@@ -303,8 +301,6 @@ def generate_cmakefile(gx):
 #         #     print(f)
 
 #         cmakefile.write(add_shedskin_product(sys_mods, app_mods))
-
-
 
 
 class ConanDependency:
@@ -359,7 +355,7 @@ class ConanPCRE(ConanDependency):
 class ConanDependencyManager:
     def __init__(self, source_dir):
         self.source_dir = source_dir
-        self.build_dir = self.source_dir / 'build'
+        self.build_dir = self.source_dir / "build"
         self.bdwgc = ConanBDWGC()
         self.pcre = ConanPCRE()
 
@@ -541,14 +537,14 @@ class CMakeBuilder:
     def __init__(self, options):
         self.options = options
         self.source_dir = pathlib.Path.cwd().parent
-        self.build_dir = self.source_dir / 'build'
+        self.build_dir = self.source_dir / "build"
         self.tests = sorted(glob.glob("./test_*/test_*.py", recursive=True))
 
     def check(self, path):
         """check file for syntax errors"""
         with open(path) as f:
             src = f.read()
-        compile(src, path, 'exec')
+        compile(src, path, "exec")
 
     def get_most_recent_test(self):
         """returns name of recently modified test"""
@@ -562,29 +558,30 @@ class CMakeBuilder:
         return most_recent_test
 
     def error_tests(self):
-        """test error messages from tests in errs directory""" 
+        """test error messages from tests in errs directory"""
         failures = []
-        os.chdir('errs')
-        tests = sorted(os.path.basename(t) for t in glob.glob('[0-9][0-9].py'))
+        os.chdir("errs")
+        tests = sorted(os.path.basename(t) for t in glob.glob("[0-9][0-9].py"))
         for test in tests:
-            print('*** test:', test)
+            print("*** test:", test)
             try:
                 checks = []
-                for line in open(test):                  
-                    if line.startswith('#*'):
+                for line in open(test):
+                    if line.startswith("#*"):
                         checks.append(line[1:].strip())
-                cmd=f'{sys.executable} -m shedskin {test}'.split()
-                output = subprocess.run(cmd, encoding='utf-8', 
-                    capture_output=True, text=True).stdout
-                assert not [l for l in output if 'Traceback' in l]
+                cmd = f"{sys.executable} -m shedskin {test}".split()
+                output = subprocess.run(
+                    cmd, encoding="utf-8", capture_output=True, text=True
+                ).stdout
+                assert not [l for l in output if "Traceback" in l]
                 for check in checks:
                     print(check)
                     assert [l for l in output.splitlines() if l.startswith(check)]
-                print(f'*** {GREEN}SUCCESS{RESET}:', test)
+                print(f"*** {GREEN}SUCCESS{RESET}:", test)
             except AssertionError:
-                print(f'*** {RED}FAILURE{RESET}:', test)
+                print(f"*** {RED}FAILURE{RESET}:", test)
                 failures.append(test)
-        os.chdir('..')
+        os.chdir("..")
         return failures
 
     def sequence(self, *cmds):
@@ -647,7 +644,7 @@ class CMakeBuilder:
             tst_options.append(f"--parallel {self.options.jobs}")
 
         if self.options.ccache:
-            if shutil.which('ccache'):
+            if shutil.which("ccache"):
                 cfg_options.append("-DCMAKE_CXX_COMPILER_LAUNCHER=ccache")
             else:
                 print(f"\n{YELLOW}WARNING{RESET}: 'ccache' not found")
@@ -681,7 +678,7 @@ class CMakeBuilder:
             dpm.install_all()
 
         if self.options.target:
-            target_suffix = '-exe'
+            target_suffix = "-exe"
             for target in self.options.target:
                 bld_options.append(f"--target {target}{target_suffix}")
                 txt_options.append(f" --tests-regex {target}{target_suffix}")
@@ -742,5 +739,3 @@ class CMakeBuilder:
         #         print(f'==> {RED}TESTS FAILED:{RESET}', len(failures))
         #         print(failures)
         #         sys.exit()
-
-

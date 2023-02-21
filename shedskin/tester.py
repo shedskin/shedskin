@@ -26,32 +26,33 @@ class TestRunner:
 
     def __init__(self, options=None):
         self.options = options
-        self.build_dir = Path('build')
+        self.build_dir = Path("build")
         self.tests = sorted(glob.glob("./test_*/test_*.py", recursive=True))
 
-    def check_output(self, args, cwd='.', nosplit=False):
+    def check_output(self, args, cwd=".", nosplit=False):
         """run command and return output"""
         if not nosplit:
             args = args.split()
-        return subprocess.check_output(args,
+        return subprocess.check_output(
+            args,
             stderr=subprocess.STDOUT,
             cwd=cwd,
         )
 
-    def run_step(self, cmd, cwd='.', nosplit=False):
+    def run_step(self, cmd, cwd=".", nosplit=False):
         """run command step in specified directory"""
         try:
             self.check_output(cmd, cwd, nosplit)
         except subprocess.CalledProcessError as e:
             print(f"\n{RED}ERROR{RESET}: '{cmd}' returns {e.returncode}")
-            print(e.output.decode('utf8'))
+            print(e.output.decode("utf8"))
             raise
 
     def check(self, path):
         """check file for syntax errors"""
         with open(path) as f:
             src = f.read()
-        compile(src, path, 'exec')
+        compile(src, path, "exec")
 
     def get_most_recent_test(self):
         """returns name of recently modified test"""
@@ -67,7 +68,7 @@ class TestRunner:
     def sequence(self, *cmds):
         """run test steps in sequence"""
         cmd = " && ".join(cmds)
-        print(f'{CYAN}cmd{RESET}: {cmd}')
+        print(f"{CYAN}cmd{RESET}: {cmd}")
         if not self.options.dryrun:
             os.system(cmd)
 
@@ -78,9 +79,10 @@ class TestRunner:
         if self.options.pytest:
             try:
                 import pytest
-                os.system('pytest')
+
+                os.system("pytest")
             except ImportError:
-                print('pytest not found')
+                print("pytest not found")
             print()
 
         rm_build = "rm -rf ./build"
@@ -95,9 +97,8 @@ class TestRunner:
         # defaults
         cmake_config += " -DBUILD_EXECUTABLE=ON"
 
-
         if self.options.ccache:
-            if shutil.which('ccache'):
+            if shutil.which("ccache"):
                 cmake_config += " -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
             else:
                 print(f"\n{YELLOW}WARNING{RESET}: 'ccache' not found")
@@ -132,19 +133,19 @@ class TestRunner:
         if self.options.modified:
             most_recent_test = Path(self.get_most_recent_test()).stem
             cmake_build += f" --target {most_recent_test}"
-            cmake_test += f" --tests-regex {most_recent_test}"                
+            cmake_test += f" --tests-regex {most_recent_test}"
 
         if self.options.jobs:
             cmake_build += f" --parallel {self.options.jobs}"
-            cmake_test  += f" --parallel {self.options.jobs}"
+            cmake_test += f" --parallel {self.options.jobs}"
 
         if self.options.progress:
             cmake_test += " --progress"
 
         if self.options.run:
-            target_suffix = '-exe'
+            target_suffix = "-exe"
             if self.options.extension:
-                target_suffix = '-ext'
+                target_suffix = "-ext"
             cmake_build += f" --target {self.options.run}{target_suffix}"
             cmake_test += f" --tests-regex {self.options.run}"
 
@@ -152,11 +153,11 @@ class TestRunner:
             cmake_test += " --stop-on-failure"
 
         if self.options.target:
-            target_suffix = '-exe'
+            target_suffix = "-exe"
             for target in self.options.target:
                 cmake_build += f" --target {target}{target_suffix}"
                 cmake_test += f" --tests-regex {target}{target_suffix}"
-        
+
         actions = [
             cmake_config,
             cmake_build,
@@ -181,36 +182,36 @@ class TestRunner:
         actions = pre_actions + actions
 
         self.sequence(*actions)
-        if os.path.exists('Makefile'):
-            os.remove('Makefile')
+        if os.path.exists("Makefile"):
+            os.remove("Makefile")
 
         et = time.time()
         elapsed_time = time.strftime("%H:%M:%S", time.gmtime(et - st))
-        print(f'Total time: {YELLOW}{elapsed_time}{RESET}\n')
+        print(f"Total time: {YELLOW}{elapsed_time}{RESET}\n")
 
     def error_tests(self):
-        """test error messages from tests in errs directory""" 
+        """test error messages from tests in errs directory"""
         failures = []
-        os.chdir('errs')
-        tests = sorted(os.path.basename(t) for t in glob.glob('[0-9][0-9].py'))
+        os.chdir("errs")
+        tests = sorted(os.path.basename(t) for t in glob.glob("[0-9][0-9].py"))
         for test in tests:
-            print('*** test:', test)
+            print("*** test:", test)
             try:
                 checks = []
-                for line in open(test):                  
-                    if line.startswith('#*'):
+                for line in open(test):
+                    if line.startswith("#*"):
                         checks.append(line[1:].strip())
-                cmd=f'{sys.executable} -m shedskin {test}'.split()
-                output = subprocess.run(cmd, encoding='utf-8', 
-                    capture_output=True, text=True).stdout
-                assert not [l for l in output if 'Traceback' in l]
+                cmd = f"{sys.executable} -m shedskin {test}".split()
+                output = subprocess.run(
+                    cmd, encoding="utf-8", capture_output=True, text=True
+                ).stdout
+                assert not [l for l in output if "Traceback" in l]
                 for check in checks:
                     print(check)
                     assert [l for l in output.splitlines() if l.startswith(check)]
-                print(f'*** {GREEN}SUCCESS{RESET}:', test)
+                print(f"*** {GREEN}SUCCESS{RESET}:", test)
             except AssertionError:
-                print(f'*** {RED}FAILURE{RESET}:', test)
+                print(f"*** {RED}FAILURE{RESET}:", test)
                 failures.append(test)
-        os.chdir('..')
+        os.chdir("..")
         return failures
-

@@ -39,8 +39,6 @@ venv
 
 # shedsksin specific
 *.ss.py
-FLAGS
-shedskin/FLAGS
 shedskin/lib/array.py
 shedskin/lib/hashlib.py
 shedskin/lib/serial.py
