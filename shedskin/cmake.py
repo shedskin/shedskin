@@ -674,7 +674,7 @@ class CMakeBuilder:
             target_suffix = "-exe"
             for target in self.options.target:
                 bld_options.append(f"--target {target}{target_suffix}")
-                txt_options.append(f" --tests-regex {target}{target_suffix}")
+                tst_options.append(f" --tests-regex {target}{target_suffix}")
 
         # -------------------------------------------------------------------------
         # test options
