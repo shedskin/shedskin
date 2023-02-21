@@ -30,7 +30,7 @@ def error(msg, gx, node=None, warning=False, mv=None):
         filename = mv.module.relative_filename
         if node and hasattr(node, 'lineno'):
             lineno = node.lineno
-    result = (kind, filename, lineno, msg)
+    result = (kind, str(filename), lineno, msg)
     if result not in ERRORS:
         ERRORS.add(result)
     if not warning:
@@ -42,7 +42,7 @@ def print_error(error):
     (kind, filename, lineno, msg) = error
     result = ''
     if filename:
-        result += filename + ':'
+        result += str(filename) + ':'
         if lineno is not None:
             result += str(lineno) + ':'
         result += ' '

@@ -95,7 +95,8 @@ def escape_extra_newlines(text):
 class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def __init__(self, gx, module):
         self.gx = gx
-        self.output_base = module.filename[:-3]
+#        self.output_base = module.filename[:-3]
+        self.output_base = module.filename.with_suffix("")
         self.out = self.get_output_file(ext='.cpp')
         self.indentation = ''
         self.consts = {}
@@ -113,7 +114,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         return self.namer.name(obj)
 
     def get_output_file(self, ext='.cpp', mode='w'):
-        output_file = self.output_base + ext
+#        output_file = self.output_base + ext
+        output_file = self.output_base.with_suffix(ext)
+
         parentdir = os.path.dirname(self.gx.module_path)
         if self.gx.outputdir:
             output_file = os.path.join(
