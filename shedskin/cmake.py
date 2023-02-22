@@ -674,25 +674,25 @@ class CMakeBuilder:
             target_suffix = "-exe"
             for target in self.options.target:
                 bld_options.append(f"--target {target}{target_suffix}")
-                tst_options.append(f" --tests-regex {target}{target_suffix}")
+                tst_options.append(f"--tests-regex {target}{target_suffix}")
 
         # -------------------------------------------------------------------------
         # test options
 
-        # if self.options.t_include:
-        #     self.tst_options.append(f"--tests-regex {self.options.t_include}")
+        # if self.options.include:
+        #     self.tst_options.append(f"--tests-regex {self.options.include}")
 
-        # if self.options.t_check:
+        # if self.options.check:
         #     self.check(self.options.name) # check python syntax
 
-        # if self.options.t_modified:
+        # if self.options.modified:
         #     most_recent_test = Path(self.get_most_recent_test()).stem
         #     bld_options.append(f"--target {most_recent_test}")
         #     tst_options.append(f"--tests-regex {most_recent_test}")
 
-        # # t_nocleanup
+        # nocleanup
 
-        # if self.options.t_pytest:
+        # if self.options.pytest:
         #     try:
         #         import pytest
         #         os.system('pytest')
@@ -700,17 +700,17 @@ class CMakeBuilder:
         #         print('pytest not found')
         #     print()
 
-        # if self.options.t_run:
+        # if self.options.run:
         #     target_suffix = '-exe'
         #     if self.options.extmod:
         #         target_suffix = '-ext'
-        #     bld_options.append(f"--target {self.options.t_run}{target_suffix}")
-        #     txt_options.append(f"--tests-regex {self.options.t_run}")
+        #     bld_options.append(f"--target {self.options.run}{target_suffix}")
+        #     tst_options.append(f"--tests-regex {self.options.run}")
 
-        # if self.options.t_stoponfail:
+        # if self.options.stoponfail:
         #     self.tst_options.append("--stop-on-failure")
 
-        # if self.options.t_progress:
+        # if self.options.progress:
         #     self.tst_options.append("--progress")
 
         self.cmake_config(cfg_options)

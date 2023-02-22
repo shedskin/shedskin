@@ -43,7 +43,7 @@ class ProgressBar:
             status = "\r"
 
         block = int(round(self.bar_length * self.progress))
-        text = "\r> {} [{}] {:.0f}% ".format(
+        text = "\r>> {} [{}] {:.0f}% ".format(
             self.prefix,
             self.done_sym * block + self.left_sym * (self.bar_length - block),
             round(self.progress * 100, 0),
