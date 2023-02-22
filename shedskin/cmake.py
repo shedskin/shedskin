@@ -19,8 +19,8 @@ import subprocess
 import sys
 import textwrap
 import time
+import logging
 
-from .utils import WHITE, CYAN, YELLOW, RESET
 
 DEPENDENCY_GRAPH = {
     "array": [],
@@ -398,8 +398,6 @@ class ConanDependencyManager:
 
 def shellcmd(cmd, *args, **kwds):
     """generic shellcmd"""
-    print("-" * 80)
-    print(f"{WHITE}cmd{RESET}: {CYAN}{cmd}{RESET}")
     os.system(cmd.format(*args, **kwds))
 
 
@@ -449,6 +447,7 @@ class ShedskinDependencyManager:
         self.src_dir.mkdir(parents=True, exist_ok=True)
         self.downloads_dir.mkdir(parents=True, exist_ok=True)
         self.lib_suffix = ".lib" if sys.platform == "win32" else ".a"
+        self.log = logging.getLogger(self.__class__.__name__)
 
         if self.reset_on_run:
             shutil.rmtree(self.deps_dir)
@@ -470,7 +469,7 @@ class ShedskinDependencyManager:
             self.install_bdwgc()
             self.install_pcre()
         else:
-            print(f"{WHITE}SPM:{RESET} targets exist, no need to run.")
+            self.log.warn(f"SPM: targets exist, no need to run.")
 
     def install_bdwgc(self):
         """download / build / install bdwgc"""
@@ -478,7 +477,7 @@ class ShedskinDependencyManager:
         bdwgc_src = self.src_dir / "bdwgc"
         bdwgc_build = bdwgc_src / "build"
 
-        print("download / build / install bdwgc")
+        self.log.info("download / build / install bdwgc")
         git_clone(bdwgc_repo, bdwgc_src)
         bdwgc_build.mkdir(exist_ok=True)
         cmake_generate(
@@ -504,7 +503,7 @@ class ShedskinDependencyManager:
         pcre_src = self.src_dir / "pcre-8.45"
         pcre_build = pcre_src / "build"
 
-        print("download / build / install pcre")
+        self.log.info("download / build / install pcre")
         wget(pcre_url, self.downloads_dir)
         tar(pcre_archive, self.src_dir)
         # pcre_archive.unlink()
@@ -551,6 +550,7 @@ class CMakeBuilder:
         self.options = options
         self.source_dir = pathlib.Path.cwd().parent
         self.build_dir = self.source_dir / "build"
+        self.log = logging.getLogger(self.__class__.__name__)
 
     def check(self, path):
         """check file for syntax errors"""
@@ -570,13 +570,15 @@ class CMakeBuilder:
         """cmake configuration phase"""
         options = " ".join(options)
         cfg_cmd = f"cmake {options} -S {self.source_dir} -B {self.build_dir}"
-        print(cfg_cmd)
+        self.log.info(cfg_cmd)
         os.system(cfg_cmd)
 
     def cmake_build(self, options):
-        """activte cmake build"""
+        """activate cmake build"""
         options = " ".join(options)
-        os.system(f"cmake {options} --build {self.build_dir}")
+        bld_cmd = f"cmake {options} --build {self.build_dir}"
+        self.log.info(bld_cmd)
+        os.system(bld_cmd)
 
     def build(self):
         """build shedskin program"""
@@ -608,7 +610,7 @@ class CMakeBuilder:
             if shutil.which("ccache"):
                 cfg_options.append("-DCMAKE_CXX_COMPILER_LAUNCHER=ccache")
             else:
-                print(f"\n{YELLOW}WARNING{RESET}: 'ccache' not found")
+                self.log.warn("'ccache' not found")
 
         if self.options.conan:
             cfg_options.append("-DENABLE_CONAN=ON")
@@ -620,7 +622,7 @@ class CMakeBuilder:
             cfg_options.append("-DENABLE_EXTERNAL_PROJECT=ON")
 
         if not cfg_options:
-            print(f"{YELLOW}no configuration options selected{RESET}")
+            self.log.warn("no configuration options selected")
             return
 
         if self.build_dir.exists() and self.options.reset:
@@ -649,4 +651,4 @@ class CMakeBuilder:
 
         end_time = time.time()
         elapsed_time = time.strftime("%H:%M:%S", time.gmtime(end_time - start_time))
-        print(f"Total time: {YELLOW}{elapsed_time}{RESET}\n")
+        print(f"Total time: {elapsed_time}\n")
