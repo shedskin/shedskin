@@ -180,6 +180,7 @@ class Shedskin:
 
     def analyze(self):
         self.gx.main_module = graph.parse_module(self.module_name, self.gx)
+        # from IPython import embed; embed()
 
     def translate(self):
         t0 = time.time()

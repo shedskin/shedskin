@@ -43,3 +43,5 @@ shedskin/lib/array.py
 shedskin/lib/hashlib.py
 shedskin/lib/serial.py
 
+# editor or ide
+.vscode
