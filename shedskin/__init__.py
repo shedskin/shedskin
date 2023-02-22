@@ -95,74 +95,75 @@ class Shedskin:
         # print(args)
         gx = config.GlobalInfo()
 
-        if args.nobounds:
-            gx.bounds_checking = False
+        if args.subcmd in ['translate', 'build', 'run']:
+            if args.nobounds:
+                gx.bounds_checking = False
 
-        if args.extmod:
-            gx.extension_module = True
+            if args.extmod:
+                gx.extension_module = True
 
-        if args.ann:
-            gx.annotation = True
+            if args.ann:
+                gx.annotation = True
 
-        if args.debug:
-            self.log.setLevel(logging.DEBUG)
-            if args.debug == 3:
-                self.ifa_log.setLevel(logging.DEBUG)
+            if args.debug:
+                self.log.setLevel(logging.DEBUG)
+                if args.debug == 3:
+                    self.ifa_log.setLevel(logging.DEBUG)
 
-        if args.long:
-            gx.longlong = True
+            if args.long:
+                gx.longlong = True
 
-#        if args.float:
-#            ss.gx.float = True
+    #        if args.float:
+    #            ss.gx.float = True
 
-        if args.nogc:
-            gx.nogc = True
+            if args.nogc:
+                gx.nogc = True
 
-        if args.nogcwarns:
-            gx.gcwarns = False
+            if args.nogcwarns:
+                gx.gcwarns = False
 
-        if args.nowrap:
-            gx.wrap_around_check = False
+            if args.nowrap:
+                gx.wrap_around_check = False
 
-        if args.random:
-            gx.fast_random = True
+            if args.random:
+                gx.fast_random = True
 
-        if args.noassert:
-            gx.assertions = False
+            if args.noassert:
+                gx.assertions = False
 
-        if args.nomakefile:
-            gx.nomakefile = True        
+            if args.nomakefile:
+                gx.nomakefile = True        
 
-        # if args.pypy:
-        #     gx.pypy = True
+            # if args.pypy:
+            #     gx.pypy = True
 
-        if args.makefile:
-            gx.makefile_name = args.makefile
+            if args.makefile:
+                gx.makefile_name = args.makefile
 
-        if args.outputdir:
-            if not os.path.exists(args.outputdir):
-                os.makedirs(args.outputdir, exist_ok=True)
-            gx.outputdir = args.outputdir
+            if args.outputdir:
+                if not os.path.exists(args.outputdir):
+                    os.makedirs(args.outputdir, exist_ok=True)
+                gx.outputdir = args.outputdir
 
-        if args.silent:
-            self.log.setLevel(logging.WARNING)
+            if args.silent:
+                self.log.setLevel(logging.WARNING)
 
-        # if args.msvc:
-        #     gx.msvc = True
+            # if args.msvc:
+            #     gx.msvc = True
 
-        if args.traceback:
-            gx.traceback = True
+            if args.traceback:
+                gx.traceback = True
 
-        # [str]
-        if args.lib:
-            gx.libdirs = args.lib + gx.libdirs
+            # [str]
+            if args.lib:
+                gx.libdirs = args.lib + gx.libdirs
 
-        # str
-        if args.flags:
-            if not os.path.isfile(args.flags):
-                self.log.error("no such file: '%s'", args.flags)
-                sys.exit(1)
-            gx.flags = args.flags
+            # str
+            if args.flags:
+                if not os.path.isfile(args.flags):
+                    self.log.error("no such file: '%s'", args.flags)
+                    sys.exit(1)
+                gx.flags = args.flags
 
         # --- some checks
         major, minor = sys.version_info[:2]
@@ -292,18 +293,20 @@ class Shedskin:
         parser_test = subparsers.add_parser('test', help="test help")
         arg = opt = parser_test.add_argument
 
-        opt('--dryrun',     help='dryrun without any changes ', action='store_true')
-        opt('--include',    help='provide regex of tests to include with cmake', metavar="PATTERN")        
-        opt('--check',      help='check testfile py syntax before running', action='store_true')
-        opt('--modified',   help='run only recently modified test', action='store_true')
-        opt('--nocleanup',  help='do not cleanup built test', action='store_true')
-        opt('--pytest',     help='run pytest before each test run', action='store_true')
-        opt('--run',        help='run single test', metavar="TEST")
-        opt('--stoponfail', help='stop when first failure happens in ctest', action='store_true')
-        opt('--run-errs',   help='run error/warning message tests', action='store_true')
+        opt("-e", "--extmod",     help="Generate extension module", action="store_true")
+        
+        opt('--dryrun',           help='dryrun without any changes ', action='store_true')
+        opt('--include',          help='provide regex of tests to include with cmake', metavar="PATTERN")        
+        opt('--check',            help='check testfile py syntax before running', action='store_true')
+        opt('--modified',         help='run only recently modified test', action='store_true')
+        opt('--nocleanup',        help='do not cleanup built test', action='store_true')
+        opt('--pytest',           help='run pytest before each test run', action='store_true')
+        opt('--run',              help='run single test', metavar="TEST")
+        opt('--stoponfail',       help='stop when first failure happens in ctest', action='store_true')
+        opt('--run-errs',         help='run error/warning message tests', action='store_true')
         opt('--progress',         help='enable short progress output from ctest', action='store_true')
 
-        # opt("--debug",          help="set cmake debug on", action="store_true")
+        opt("--debug",            help="set cmake debug on", action="store_true")
         opt("--generator",        help="specify a cmake build system generator", metavar="G")
         opt("--jobs",             help="build and run in parallel using N jobs", metavar="N", type=int)
         opt("--build-type",       help="set cmake build type (default: '%(default)s')", metavar="T", default="Debug")
@@ -313,26 +316,6 @@ class Shedskin:
         opt("--extproject",       help="install cmake dependencies with externalproject", action="store_true")
         opt('--ccache',           help='enable ccache with cmake', action='store_true')
         opt('--target',           help='build only specified cmake targets', nargs="+", metavar="TARGET")
-
-        opt("-a", "--ann",        help="Output annotated source code (.ss.py)", action="store_true")
-        opt("-d", "--debug",      help="Set debug level", type=int)
-        opt("-e", "--extmod",     help="Generate extension module", action="store_true")
-        opt("-f", "--float",      help="Use 32-bit floating point numbers", action="store_true")
-        opt("-F", "--flags",      help="Provide alternate Makefile flags")
-        opt("-L", "--lib",        help="Add a library directory", nargs='*')
-        opt("-l", "--long",       help="Use long long '64-bit' integers", action="store_true")
-        opt("-m", "--makefile",   help="Specify alternate Makefile name")
-        opt("-o", "--outputdir",  help="Specify output directory for generated files")
-        opt("-r", "--random",     help="Use fast random number generator (rand())", action="store_true")
-        opt("-s", "--silent",     help="Silent mode, only show warnings", action="store_true")
-        opt("-x", "--traceback",  help="Print traceback for uncaught exceptions", action="store_true")
-
-        opt("--noassert",         help="Disable assert statements", action="store_true")
-        opt("--nobounds",         help="Disable bounds checking", action="store_true")
-        opt("--nogc",             help="Disable garbage collection", action="store_true")
-        opt("--nogcwarns",        help="Disable runtime GC warnings", action="store_true")
-        opt("--nomakefile",       help="Disable makefile generation", action="store_true")
-        opt("--nowrap",           help="Disable wrap-around checking", action="store_true")
 
         parser_run = subparsers.add_parser('run', help="run help")
         arg = opt = parser_run.add_argument
