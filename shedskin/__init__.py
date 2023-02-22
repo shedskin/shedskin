@@ -307,7 +307,6 @@ class Shedskin:
         opt("--generator",        help="specify a cmake build system generator", metavar="G")
         opt("--jobs",             help="build and run in parallel using N jobs", metavar="N", type=int)
         opt("--build-type",       help="set cmake build type (default: '%(default)s')", metavar="T", default="Debug")
-        opt("--test",             help="run ctest", action="store_true")
         opt("--reset",            help="reset cmake build", action="store_true")
         opt("--conan",            help="install cmake dependencies with conan", action="store_true")
         opt("--spm",              help="install cmake dependencies with spm", action="store_true")
