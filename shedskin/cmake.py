@@ -386,91 +386,19 @@ class CMakeBuilder:
         print('tst_cmd:', tst_cmd)
         os.system(tst_cmd)
 
+    def run_tests(self):
+        self.process(run_tests=True)
+
     def build(self):
+        self.process(run_tests=False)
+
+    def process(self, run_tests=False):
         """build shedskin program"""
         start_time = time.time()
 
         cfg_options = []
         bld_options = []
-
-        # -------------------------------------------------------------------------
-        # cfg and bld options
-
-        cfg_options.append("-DBUILD_EXECUTABLE=ON")
-        if self.options.extmod:
-            cfg_options.append("-DBUILD_EXTENSION=ON")
-
-        if self.options.debug:
-            cfg_options.append("-DDEBUG=ON")
-
-        if self.options.generator:
-            cfg_options.append(f"-G{self.options.generator}")
-
-        if self.options.build_type:
-            cfg_options.append(f" -DCMAKE_BUILD_TYPE={self.options.build_type}")
-
-        if self.options.jobs:
-            bld_options.append(f"--parallel {self.options.jobs}")
-
-        if self.options.ccache:
-            if shutil.which("ccache"):
-                cfg_options.append("-DCMAKE_CXX_COMPILER_LAUNCHER=ccache")
-            else:
-                self.log.warn("'ccache' not found")
-
-        if self.options.conan:
-            cfg_options.append("-DENABLE_CONAN=ON")
-
-        elif self.options.spm:
-            cfg_options.append("-DENABLE_SPM=ON")
-
-        elif self.options.extproject:
-            cfg_options.append("-DENABLE_EXTERNAL_PROJECT=ON")
-
-        if not cfg_options:
-            self.log.warn("no configuration options selected")
-            return
-
-        if self.build_dir.exists() and self.options.reset:
-            self.rm_build()
-
-        if not self.build_dir.exists():
-            self.mkdir_build()
-
-        if self.options.conan:
-            dpm = ConanDependencyManager(self.source_dir)
-            dpm.generate_conanfile()
-            dpm.install()
-
-        elif self.options.spm:
-            dpm = ShedskinDependencyManager(self.source_dir)
-            dpm.install_all()
-
-        if self.options.target:
-            target_suffix = "-exe"
-            for target in self.options.target:
-                bld_options.append(f"--target {target}{target_suffix}")
-
-        self.cmake_config(cfg_options)
-
-        self.cmake_build(bld_options)
-
-        end_time = time.time()
-        elapsed_time = time.strftime("%H:%M:%S", time.gmtime(end_time - start_time))
-        print(f"Total time: {elapsed_time}\n")
-
-    def run_tests(self):
-        """tests shedskin program"""
-        st = time.time()
-
-        cfg_options = []
-        bld_options = []
         tst_options = []
-
-        # if self.options.executable:
-        #     cfg_options.append("-DBUILD_EXECUTABLE=ON")
-        # if self.options.pyextension:
-        #     cfg_options.append("-DBUILD_EXTENSION=ON")
 
         # -------------------------------------------------------------------------
         # cfg and bld options
@@ -535,55 +463,60 @@ class CMakeBuilder:
         # -------------------------------------------------------------------------
         # test options
 
-        if self.options.include:
-            self.tst_options.append(f"--tests-regex {self.options.include}")
+        if run_tests:
 
-        if self.options.check:
-            self.check(self.options.name) # check python syntax
+            if self.options.include:
+                self.tst_options.append(f"--tests-regex {self.options.include}")
 
-        if self.options.modified:
-            most_recent_test = pathlib.Path(self.get_most_recent_test()).stem
-            bld_options.append(f"--target {most_recent_test}")
-            tst_options.append(f"--tests-regex {most_recent_test}")
+            if self.options.check:
+                self.check(self.options.name) # check python syntax
 
-        #nocleanup
+            if self.options.modified:
+                most_recent_test = pathlib.Path(self.get_most_recent_test()).stem
+                bld_options.append(f"--target {most_recent_test}")
+                tst_options.append(f"--tests-regex {most_recent_test}")
 
-        if self.options.pytest:
-            try:
-                import pytest
-                os.system('pytest')
-            except ImportError:
-                print('pytest not found')
-            print()
+            #nocleanup
 
-        if self.options.run:
-            target_suffix = '-exe'
-            if self.options.extmod:
-                target_suffix = '-ext'
-            bld_options.append(f"--target {self.options.run}{target_suffix}")
-            tst_options.append(f"--tests-regex {self.options.run}")
+            if self.options.pytest:
+                try:
+                    import pytest
+                    os.system('pytest')
+                except ImportError:
+                    print('pytest not found')
+                print()
 
-        if self.options.stoponfail:
-            self.tst_options.append("--stop-on-failure")
+            if self.options.run:
+                target_suffix = '-exe'
+                if self.options.extmod:
+                    target_suffix = '-ext'
+                bld_options.append(f"--target {self.options.run}{target_suffix}")
+                tst_options.append(f"--tests-regex {self.options.run}")
 
-        if self.options.progress:
-            self.tst_options.append("--progress")
+            if self.options.stoponfail:
+                self.tst_options.append("--stop-on-failure")
+
+            if self.options.progress:
+                self.tst_options.append("--progress")
 
         self.cmake_config(cfg_options)
 
         self.cmake_build(bld_options)
 
-        self.cmake_test(tst_options)
+        if run_tests:
+            self.cmake_test(tst_options)
 
-        et = time.time()
-        elapsed_time = time.strftime("%H:%M:%S", time.gmtime(et - st))
-        print(f"Total time: {YELLOW}{elapsed_time}{RESET}\n")
+        if run_tests:
+            if self.options.run_errs:
+                failures = self.error_tests()
+                if not failures:
+                    print(f'==> {GREEN}NO FAILURES, yay!{RESET}')
+                else:
+                    print(f'==> {RED}TESTS FAILED:{RESET}', len(failures))
+                    print(failures)
+                    sys.exit()
 
-        if self.options.run_errs:
-            failures = self.error_tests()
-            if not failures:
-                print(f'==> {GREEN}NO FAILURES, yay!{RESET}')
-            else:
-                print(f'==> {RED}TESTS FAILED:{RESET}', len(failures))
-                print(failures)
-                sys.exit()
+        end_time = time.time()
+        elapsed_time = time.strftime("%H:%M:%S", time.gmtime(end_time - start_time))
+        print(f"Total time: {elapsed_time}\n")
+
