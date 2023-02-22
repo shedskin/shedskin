@@ -289,7 +289,7 @@ Type:
 
 ::
 
-  shedskin test
+  shedskin translate test
 
 This will create two C++ files, called ``test.cpp`` and ``test.hpp``, as well as a ``Makefile``.
 
@@ -323,7 +323,7 @@ Type:
 
 ::
 
-  shedskin -e simple_module
+  shedskin translate -e simple_module
   make
 
 For 'make' to succeed, make sure to have the Python development files installed (under **Debian**, install ``python-dev``; under **Fedora**, install ``python-devel``).
@@ -422,7 +422,7 @@ To compile this into an extension module, type:
 
 ::
 
-  shedskin -e meuk
+  shedskin translate -e meuk
   make
 
 To use the generated extension module with the :code:`multiprocessing` standard library module, simply add a pure-Python wrapper:
@@ -463,7 +463,7 @@ To call manually written C/C++ code, follow these steps:
 
 ::
 
-  shedskin test
+  shedskin translate test
 
 * Besides ``test.py``, this also compiles ``stuff.py`` to C++. Now you can fill in manual C/C++ code in ``stuff.cpp``. To avoid that it is overwritten the next time ``test.py`` is compiled, move ``stuff.*`` to the Shed Skin ``lib/`` dir.
 
@@ -480,34 +480,57 @@ Shed Skin reimplements the Python builtins with its own set of C++ classes. Thes
 Command-line options
 --------------------
 
-The shedskin command can be given the following options:
+The shedskin translate command can be given the following options:
 
-* :code:`-a` :code:`--ann`               Output annotated source code (``.ss.py``)
-* :code:`-b` :code:`--nobounds`          Disable bounds checking
-* :code:`-c` :code:`--nogc`              Disable garbage collection
-* :code:`-e` :code:`--extmod`            Generate extension module
-* :code:`-f` :code:`--flags`             Provide alternate Makefile flags
-* :code:`-g` :code:`--nogcwarns`         Disable runtime GC warnings
-* :code:`-l` :code:`--long`              Use long long ("64-bit") integers
-* :code:`-m` :code:`--makefile`          Specify alternate Makefile name
-* :code:`-n` :code:`--silent`            Silent mode, only show warnings
-* :code:`-o` :code:`--noassert`          Disable assert statements
-* :code:`-r` :code:`--random`            Use fast random number generator (:code:`rand()`)
-* :code:`-w` :code:`--nowrap`            Disable wrap-around checking
-* :code:`-x` :code:`--traceback`         Print traceback for uncaught exceptions
-* :code:`-L` :code:`--lib`               Add a library directory
+::
+
+  usage: shedskin translate [-h] [-a] [-d DEBUG] [-e] [-f] [-F FLAGS]
+                            [-L [LIB ...]] [-l] [-m MAKEFILE] [-o OUTPUTDIR]
+                            [-r] [-s] [-x] [--noassert] [-b] [--nogc]
+                            [--nogcwarns] [--nomakefile] [--nowrap]
+                            name
+
+  positional arguments:
+    name                  Python file or module to compile
+
+  options:
+    -h, --help            show this help message and exit
+    -a, --ann             Output annotated source code (.ss.py)
+    -d DEBUG, --debug DEBUG
+                          Set debug level
+    -e, --extmod          Generate extension module
+    -f, --float           Use 32-bit floating point numbers
+    -F FLAGS, --flags FLAGS
+                          Provide alternate Makefile flags
+    -L [LIB ...], --lib [LIB ...]
+                          Add a library directory
+    -l, --long            Use long long '64-bit' integers
+    -m MAKEFILE, --makefile MAKEFILE
+                          Specify alternate Makefile name
+    -o OUTPUTDIR, --outputdir OUTPUTDIR
+                          Specify output directory for generated files
+    -r, --random          Use fast random number generator (rand())
+    -s, --silent          Silent mode, only show warnings
+    -x, --traceback       Print traceback for uncaught exceptions
+    --noassert            Disable assert statements
+    -b, --nobounds        Disable bounds checking
+    --nogc                Disable garbage collection
+    --nogcwarns           Disable runtime GC warnings
+    --nomakefile          Disable makefile generation
+    --nowrap              Disable wrap-around checking
+
 
 For example, to compile the file ``test.py`` as an extension module, type
 
 ::
 
-  shedskin –e test
+  shedskin translate –e test
 
 or
 
 ::
 
-  shedskin ––extmod test
+  shedskin translate ––extmod test
 
 Using :code:`-b` or :code:`--nobounds` is also very common, as it disables out-of-bounds exceptions (:code:`IndexError`), which can have a large impact on performance.
 
@@ -538,7 +561,7 @@ To use Gprof2dot, download ``gprof2dot.py`` from the website, and install Graphv
 
 ::
 
-  shedskin program
+  shedskin translate program
   make program_prof
   ./program_prof
   gprof program_prof | gprof2dot.py | dot -Tpng -ooutput.png
@@ -547,7 +570,7 @@ To use OProfile, install it and use it as follows.
 
 ::
 
-  shedskin -e extmod
+  shedskin translate -e extmod
   make
   sudo opcontrol --start
   python main_program_that_imports_extmod

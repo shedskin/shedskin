@@ -224,12 +224,12 @@ class Shedskin:
         # common options
         arg = opt = parser.add_argument
 
-        parser_analyze = subparsers.add_parser('analyze', help="analyze help")
+        parser_analyze = subparsers.add_parser('analyze', help="analyze and validate python module")
         arg = opt = parser_analyze.add_argument
 
         arg("name", help="Python file or module to analyze")
 
-        parser_translate = subparsers.add_parser('translate', help="translate help")
+        parser_translate = subparsers.add_parser('translate', help="translate python module to cpp")
         arg = opt = parser_translate.add_argument
 
         arg("name", help="Python file or module to compile")
@@ -254,7 +254,7 @@ class Shedskin:
         opt("--nomakefile",       help="Disable makefile generation", action="store_true")
         opt("--nowrap",           help="Disable wrap-around checking", action="store_true")
 
-        parser_build = subparsers.add_parser('build', help="build help")
+        parser_build = subparsers.add_parser('build', help="build translated module")
         arg = opt = parser_build.add_argument
 
         arg("name", help="Python file or module to compile")
@@ -291,34 +291,7 @@ class Shedskin:
         opt("--nomakefile",       help="Disable makefile generation", action="store_true")
         opt("--nowrap",           help="Disable wrap-around checking", action="store_true")
 
-        parser_test = subparsers.add_parser('test', help="test help")
-        arg = opt = parser_test.add_argument
-
-        opt("-e", "--extmod",     help="Generate extension module", action="store_true")
-        
-        opt('--dryrun',           help='dryrun without any changes ', action='store_true')
-        opt('--include',          help='provide regex of tests to include with cmake', metavar="PATTERN")        
-        opt('--check',            help='check testfile py syntax before running', action='store_true')
-        opt('--modified',         help='run only recently modified test', action='store_true')
-        opt('--nocleanup',        help='do not cleanup built test', action='store_true')
-        opt('--pytest',           help='run pytest before each test run', action='store_true')
-        opt('--run',              help='run single test', metavar="TEST")
-        opt('--stoponfail',       help='stop when first failure happens in ctest', action='store_true')
-        opt('--run-errs',         help='run error/warning message tests', action='store_true')
-        opt('--progress',         help='enable short progress output from ctest', action='store_true')
-
-        opt("--debug",            help="set cmake debug on", action="store_true")
-        opt("--generator",        help="specify a cmake build system generator", metavar="G")
-        opt("--jobs",             help="build and run in parallel using N jobs", metavar="N", type=int)
-        opt("--build-type",       help="set cmake build type (default: '%(default)s')", metavar="T", default="Debug")
-        opt("--reset",            help="reset cmake build", action="store_true")
-        opt("--conan",            help="install cmake dependencies with conan", action="store_true")
-        opt("--spm",              help="install cmake dependencies with spm", action="store_true")
-        opt("--extproject",       help="install cmake dependencies with externalproject", action="store_true")
-        opt('--ccache',           help='enable ccache with cmake', action='store_true')
-        opt('--target',           help='build only specified cmake targets', nargs="+", metavar="TARGET")
-
-        parser_run = subparsers.add_parser('run', help="run help")
+        parser_run = subparsers.add_parser('run', help="run built and translated module")
         arg = opt = parser_run.add_argument
 
         arg("name", help="Python file or module to run")
@@ -354,6 +327,33 @@ class Shedskin:
         opt("--nogcwarns",        help="Disable runtime GC warnings", action="store_true")
         opt("--nomakefile",       help="Disable makefile generation", action="store_true")
         opt("--nowrap",           help="Disable wrap-around checking", action="store_true")
+
+        parser_test = subparsers.add_parser('test', help="run tests")
+        arg = opt = parser_test.add_argument
+
+        opt("-e", "--extmod",     help="Generate extension module", action="store_true")
+        
+        opt('--dryrun',           help='dryrun without any changes ', action='store_true')
+        opt('--include',          help='provide regex of tests to include with cmake', metavar="PATTERN")        
+        opt('--check',            help='check testfile py syntax before running', action='store_true')
+        opt('--modified',         help='run only recently modified test', action='store_true')
+        opt('--nocleanup',        help='do not cleanup built test', action='store_true')
+        opt('--pytest',           help='run pytest before each test run', action='store_true')
+        opt('--run',              help='run single test', metavar="TEST")
+        opt('--stoponfail',       help='stop when first failure happens in ctest', action='store_true')
+        opt('--run-errs',         help='run error/warning message tests', action='store_true')
+        opt('--progress',         help='enable short progress output from ctest', action='store_true')
+
+        opt("--debug",            help="set cmake debug on", action="store_true")
+        opt("--generator",        help="specify a cmake build system generator", metavar="G")
+        opt("--jobs",             help="build and run in parallel using N jobs", metavar="N", type=int)
+        opt("--build-type",       help="set cmake build type (default: '%(default)s')", metavar="T", default="Debug")
+        opt("--reset",            help="reset cmake build", action="store_true")
+        opt("--conan",            help="install cmake dependencies with conan", action="store_true")
+        opt("--spm",              help="install cmake dependencies with spm", action="store_true")
+        opt("--extproject",       help="install cmake dependencies with externalproject", action="store_true")
+        opt('--ccache',           help='enable ccache with cmake', action='store_true')
+        opt('--target',           help='build only specified cmake targets', nargs="+", metavar="TARGET")
 
         args = parser.parse_args()
         # print(args)
