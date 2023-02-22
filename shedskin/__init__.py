@@ -13,7 +13,7 @@ import struct
 import sys
 import time
 
-from . import annotate, cmake, config, cpp, error, graph, infer, tester, utils
+from . import annotate, cmake, config, cpp, error, graph, infer, utils
 
 
 def pkg_path():
@@ -196,7 +196,7 @@ class Shedskin:
         builder.build()
 
     def test(self):
-        testrunner = tester.TestRunner(self.gx.options)
+        testrunner = cmake.TestRunner(self.gx.options)
         testrunner.run_tests()
 
     def run(self):
