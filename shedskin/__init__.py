@@ -359,9 +359,9 @@ class Shedskin:
 
         ss = cls(args)
 
-        ss.log.info('*** SHED SKIN Python-to-C++ Compiler 0.9.7 *** - ')
-        ss.log.info('Copyright 2005-2023 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)')
-        ss.log.info('')
+        print('*** SHED SKIN Python-to-C++ Compiler 0.9.7 ***')
+        print('Copyright 2005-2023 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)')
+        print()
 
         if args.subcmd == 'analyze':
             ss.analyze()
