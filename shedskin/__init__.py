@@ -95,7 +95,7 @@ class Shedskin:
         # print(args)
         gx = config.GlobalInfo()
 
-        if args.subcmd in ['translate', 'build', 'run']:
+        if args.subcmd in ['translate', 'build', 'run']: # i.e. not relevant for 'test'
             if args.nobounds:
                 gx.bounds_checking = False
 
