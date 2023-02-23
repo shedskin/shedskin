@@ -217,7 +217,7 @@ class Shedskin:
         # --- command-line options
         parser = argparse.ArgumentParser(
             prog = 'shedskin',
-            description = 'Python-to-C++ Compiler',
+            description = 'Restricted-Python-to-C++ Compiler',
         )
 
         subparsers = parser.add_subparsers(
@@ -357,6 +357,14 @@ class Shedskin:
         opt("--extproject",       help="install cmake dependencies with externalproject", action="store_true")
         opt('--ccache',           help='enable ccache with cmake', action='store_true')
         opt('--target',           help='build only specified cmake targets', nargs="+", metavar="TARGET")
+
+        # make 'translate' the default subparser
+        for arg in sys.argv[1:]:
+            if arg in ('-h', '--help'):
+                break
+        else:
+             if len(sys.argv) > 1 and sys.argv[1] not in ('analyze', 'translate', 'build', 'run', 'test'):
+                 sys.argv.insert(1, 'translate')
 
         args = parser.parse_args()
         # print(args)
