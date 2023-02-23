@@ -19,7 +19,7 @@ Usage
 
 ::
 
-    shedskin translate test.py
+    shedskin test.py
     make
     ./test
 
