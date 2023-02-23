@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import argparse
-import ast
 import glob
 import os
 import re
@@ -10,6 +9,7 @@ import sys
 from collections import defaultdict
 from modulefinder import ModuleFinder
 from pathlib import Path
+
 # from pprint import pprint
 
 dep_graph = {
@@ -142,9 +142,11 @@ def update_folders(write_cmakefile=False):
         if p.is_dir():
             update_folder(p, write_cmakefile)
 
+
 def generate_cmakefile(pyfile, write_cmakefile=False):
     p = Path(pyfile)
     clfile = p.parent / "CMakeLists.txt"
+
     def add_sys_deps(sys_mods):
         count = 0
         for m in sys_mods.copy():
@@ -154,11 +156,12 @@ def generate_cmakefile(pyfile, write_cmakefile=False):
                     sys_mods.add(dep)
         if count > 0:
             add_sys_deps(sys_mods)
+
     finder = ModuleFinder(path=[p.name])
     finder.run_script(str(p))
     modules = {}
-    modules.update(finder.modules)    # imported and used
-    modules.update(finder.badmodules) # imported but not used
+    modules.update(finder.modules)  # imported and used
+    modules.update(finder.badmodules)  # imported but not used
     if len(modules) > 1:  # i.e. there are imports
         sys_mods = set()
         app_mods = set()
@@ -168,9 +171,9 @@ def generate_cmakefile(pyfile, write_cmakefile=False):
                 sys_mods.add(m)
             else:
                 app_mods.add(m)
-                relpath = os.path.relpath(modules[m].__file__, folder)
+                relpath = os.path.relpath(modules[m].__file__, str(p.parent()))
                 add_mod_path = relpath[:-3]
-                if add_mod_path == testfile.stem:
+                if add_mod_path == p.stem:
                     continue
                 app_mods_paths.add(add_mod_path)
         add_sys_deps(sys_mods)
@@ -191,6 +194,7 @@ def update_folder(folder, write_cmakefile=False):
                     sys_mods.add(dep)
         if count > 0:
             add_sys_deps(sys_mods)
+
     p = Path(folder)
     name = p.stem
     assert p.name.startswith("test_"), f"{folder} is not a test folder"
@@ -203,8 +207,8 @@ def update_folder(folder, write_cmakefile=False):
     finder = ModuleFinder(path=[p.name])
     finder.run_script(str(testfile))
     modules = {}
-    modules.update(finder.modules)    # imported and used
-    modules.update(finder.badmodules) # imported but not used
+    modules.update(finder.modules)  # imported and used
+    modules.update(finder.badmodules)  # imported but not used
     if len(modules) > 1:  # i.e. there are imports
         sys_mods = set()
         app_mods = set()
@@ -276,7 +280,7 @@ def get_deps_from_glob_patten(glob_pattern, deps=None, no_builtin=False):
     files = sorted(glob.glob(str(glob_pattern)))
     for fpath in files:
         p = Path(fpath)
-        if p.stem == 'builtin':
+        if p.stem == "builtin":
             continue
         with open(fpath) as f:
             lines = f.readlines()
@@ -285,58 +289,67 @@ def get_deps_from_glob_patten(glob_pattern, deps=None, no_builtin=False):
                 match = pattern.match(line)
                 if match:
                     matched = match.group(1)
-                    if matched in ['__init__']:
+                    if matched in ["__init__"]:
                         continue
-                    if matched == 'os/__init__':
-                        matched = 'os'
-                    if matched in ['os/path', 'path']:
-                        matched = 'os.path'
-                    if p.parent.name == 'lib':
+                    if matched == "os/__init__":
+                        matched = "os"
+                    if matched in ["os/path", "path"]:
+                        matched = "os.path"
+                    if p.parent.name == "lib":
                         name = p.stem
                     else:
-                        if p.stem == '__init__':
+                        if p.stem == "__init__":
                             name = p.parent.name
                         else:
-                            name = f'{p.parent.name}.{p.stem}'
+                            name = f"{p.parent.name}.{p.stem}"
                     if name in [matched]:
                         continue
                     deps[name].add(matched)
-                    if matched == 'builtin' and no_builtin:
+                    if matched == "builtin" and no_builtin:
                         deps[name].remove(matched)
     return deps
 
 
 def get_shedskin_deps(dump=False, no_builtin=False):
     from shedskin import get_pkg_path
+
     pkg = get_pkg_path()
-    deps = get_deps_from_glob_patten(pkg / 'lib/*.[ch]pp', no_builtin=no_builtin)
-    deps = get_deps_from_glob_patten(pkg / 'lib/**/*.[ch]pp', deps, no_builtin=no_builtin)
+    deps = get_deps_from_glob_patten(pkg / "lib/*.[ch]pp", no_builtin=no_builtin)
+    deps = get_deps_from_glob_patten(
+        pkg / "lib/**/*.[ch]pp", deps, no_builtin=no_builtin
+    )
     d = dict(deps)
     # adjustments
-    d['datetime'].add('string')
+    d["datetime"].add("string")
     if dump:
         from pprint import pprint
+
         pprint(d)
     return d
 
 
-def gen_graph(deps, title='graph', view=False):
+def gen_graph(deps, title="graph", view=False):
     import graphviz
+
     # g = graphviz.Digraph(comment='Shedskin Dependencies', engine='sfdp', node_attr={'shape': 'plaintext'})
-    g = graphviz.Digraph(comment='Shedskin Dependencies', engine='dot', node_attr={'shape': 'record', 'height': '.1'})
+    g = graphviz.Digraph(
+        comment="Shedskin Dependencies",
+        engine="dot",
+        node_attr={"shape": "record", "height": ".1"},
+    )
     # g = graphviz.Digraph(comment='Shedskin Dependencies', engine='sfdp')
-    g.attr(rankdir='LR', size='8,5')
+    g.attr(rankdir="LR", size="8,5")
     # g.attr(fontsize='10')
-    for k,v in deps.items():
+    for k, v in deps.items():
         g.node(k)
         for t in v:
             g.edge(k, t)
     # g.unflatten(stagger=3)
-    g.render(f'{title}', view=view)
-    print(f'{title}.pdf generated')
+    g.render(f"{title}", view=view)
+    print(f"{title}.pdf generated")
 
 
-def gen_shedskin_graph(title='graph'):
+def gen_shedskin_graph(title="graph"):
     d = get_shedskin_deps()
     gen_graph(d, title, view=True)
 
@@ -347,10 +360,9 @@ def commandline():
     opt("-ua", "--update-all", help="update all test directories", action="store_true")
     opt("-u", "--update", help="update specified test directory")
     opt("-w", "--write", help="write cmakefile during update", action="store_true")
-    opt('-m', '--move',  help='move pyfile to its own cmake subdirectory')
-    opt('-d', '--deps',  help='print shedskin dependencies', action="store_true")   
-    opt('-g', '--graph',  help='generate graph of shedskin local dependencies', action="store_true")
-
+    opt("-m", "--move", help="move pyfile to its own cmake subdirectory")
+    opt("-d", "--deps", help="print shedskin dependencies", action="store_true")
+    opt("-g", "--graph", help="generate graph of shedskin local dependencies", action="store_true")
 
     args = parser.parse_args()
     if args.update:
@@ -362,7 +374,7 @@ def commandline():
     elif args.deps:
         get_shedskin_deps(dump=True, no_builtin=True)
     elif args.graph:
-        gen_shedskin_graph(title='graph')
+        gen_shedskin_graph(title="graph")
     else:
         parser.print_help(sys.stderr)
         sys.exit()
@@ -370,4 +382,3 @@ def commandline():
 
 if __name__ == "__main__":
     commandline()
-

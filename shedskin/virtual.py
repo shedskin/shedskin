@@ -1,10 +1,10 @@
-'''
+"""
 *** SHED SKIN Python-to-C++ Compiler ***
 Copyright 2005-2013 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 
 virtual.py: virtual methods and variables
 
-'''
+"""
 
 import ast
 
@@ -37,7 +37,9 @@ def virtuals(self, cl, declare):
             if func.returnexpr:
                 retexpr = True
                 if func.retnode.thing in self.mergeinh:
-                    sig_types.append(self.mergeinh[func.retnode.thing])  # XXX mult returns; some targets with return some without..
+                    sig_types.append(
+                        self.mergeinh[func.retnode.thing]
+                    )  # XXX mult returns; some targets with return some without..
                 else:
                     sig_types.append(set())  # XXX
 
@@ -61,8 +63,8 @@ def virtuals(self, cl, declare):
         ftypes = []
         for m in merged:
             ts = typestr.typestr(self.gx, m, mv=self.mv)
-            if not ts.endswith('*'):
-                ftypes.append(ts + ' ')
+            if not ts.endswith("*"):
+                ftypes.append(ts + " ")
             else:
                 ftypes.append(ts)
 
@@ -73,23 +75,27 @@ def virtuals(self, cl, declare):
 
         # --- virtual function declaration
         if declare:
-            self.start('virtual ')
+            self.start("virtual ")
             if retexpr and ftypes:
                 self.append(ftypes[0])
                 ftypes = ftypes[1:]
             else:
-                self.append('void ')
-            self.append(self.cpp_name(ident) + '(')
+                self.append("void ")
+            self.append(self.cpp_name(ident) + "(")
 
-            self.append(', '.join(t + f for (t, f) in zip(ftypes, formals)))
+            self.append(", ".join(t + f for (t, f) in zip(ftypes, formals)))
 
             if ident in cl.funcs and self.inhcpa(cl.funcs[ident]):
-                self.eol(')')
+                self.eol(")")
             else:
                 if merged:
-                    self.eol(') { return %s; }' % self.nothing(merged[0]))  # XXX msvc needs return statement
+                    self.eol(
+                        ") { return %s; }" % self.nothing(merged[0])
+                    )  # XXX msvc needs return statement
                 else:
-                    self.eol(') { }')  # XXX merged may be empty because of dynamic typing
+                    self.eol(
+                        ") { }"
+                    )  # XXX merged may be empty because of dynamic typing
 
             if ident in cl.funcs:
                 cl.funcs[ident].declared = True
@@ -99,8 +105,18 @@ def virtuals(self, cl, declare):
 def analyze_virtuals(gx):
     for node in gx.merged_inh:
         # --- for every message
-        if isinstance(node, ast.Call) and not infer.inode(gx, node).mv.module.builtin:  # ident == 'builtin':
-            objexpr, ident, direct_call, method_call, constructor, parent_constr, anon_func = infer.analyze_callfunc(gx, node, merge=gx.merged_inh)
+        if (
+            isinstance(node, ast.Call) and not infer.inode(gx, node).mv.module.builtin
+        ):  # ident == 'builtin':
+            (
+                objexpr,
+                ident,
+                direct_call,
+                method_call,
+                constructor,
+                parent_constr,
+                anon_func,
+            ) = infer.analyze_callfunc(gx, node, merge=gx.merged_inh)
             if not method_call or objexpr not in gx.merged_inh:
                 continue  # XXX
 
@@ -110,7 +126,11 @@ def analyze_virtuals(gx):
             if not classes:
                 continue
 
-            if isinstance(objexpr, ast.Name) and objexpr.id == 'self' and infer.inode(gx, objexpr).parent:
+            if (
+                isinstance(objexpr, ast.Name)
+                and objexpr.id == "self"
+                and infer.inode(gx, objexpr).parent
+            ):
                 abstract_cl = infer.inode(gx, objexpr).parent.parent
                 upgrade_cl(gx, abstract_cl, node, ident, classes)
 
@@ -125,18 +145,24 @@ def upgrade_cl(gx, abstract_cl, node, ident, classes):
     subclasses = [cl for cl in classes if python.subclass(cl, abstract_cl)]
 
     # --- register virtual method
-    if not ident.startswith('__'):
+    if not ident.startswith("__"):
         redefined = False
         for concrete_cl in classes:
-            if [cl for cl in concrete_cl.ancestors_upto(abstract_cl) if ident in cl.funcs and not cl.funcs[ident].inherited]:
+            if [
+                cl
+                for cl in concrete_cl.ancestors_upto(abstract_cl)
+                if ident in cl.funcs and not cl.funcs[ident].inherited
+            ]:
                 redefined = True
         if redefined:
             abstract_cl.virtuals.setdefault(ident, set()).update(subclasses)
 
     # --- register virtual var
-    elif ident in ['__getattr__', '__setattr__'] and subclasses:
+    elif ident in ["__getattr__", "__setattr__"] and subclasses:
         var = infer.default_var(gx, node.args[0].s, abstract_cl)
         for subcl in subclasses:
             if var.name in subcl.vars and subcl.vars[var.name] in gx.merged_inh:
-                gx.types.setdefault(gx.cnode[var, 0, 0], set()).update(gx.merged_inh[subcl.vars[var.name]])  # XXX shouldn't this be merged automatically already?
+                gx.types.setdefault(gx.cnode[var, 0, 0], set()).update(
+                    gx.merged_inh[subcl.vars[var.name]]
+                )  # XXX shouldn't this be merged automatically already?
         abstract_cl.virtualvars.setdefault(node.args[0].s, set()).update(subclasses)

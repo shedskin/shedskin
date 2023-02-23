@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 """
 *** SHED SKIN Python-to-C++ Compiler ***
 Copyright 2005-2013 Mark Dufour; License GNU GPL version 3 (See LICENSE)
@@ -15,8 +13,15 @@ from . import typestr
 
 logger = logging.getLogger("extmod")
 OVERLOAD_SINGLE = ["__neg__", "__pos__", "__abs__", "__nonzero__"]
-OVERLOAD = ["__add__", "__sub__", "__mul__", "__div__", 
-            "__mod__", "__divmod__", "__pow__"] + OVERLOAD_SINGLE
+OVERLOAD = [
+    "__add__",
+    "__sub__",
+    "__mul__",
+    "__div__",
+    "__mod__",
+    "__divmod__",
+    "__pow__",
+] + OVERLOAD_SINGLE
 
 
 def clname(cl):
@@ -67,18 +72,21 @@ class ExtensionModule:
                 )
 
     def supported_vars(self, variables):  # XXX virtuals?
-        """XXX currently only classs / instance variables
-        """
+        """XXX currently only classs / instance variables"""
         supported = []
         for var in variables:
             if not var in self.gx.merged_inh or not self.gx.merged_inh[var]:
                 continue
             if var.name is None or var.name.startswith("__"):  # XXX
                 continue
-            if var.invisible or typestr.singletype2(self.gx.merged_inh[var], python.Module):
+            if var.invisible or typestr.singletype2(
+                self.gx.merged_inh[var], python.Module
+            ):
                 continue
             try:
-                typestr.nodetypestr(self.gx, var, var.parent, check_extmod=True, mv=self.gv.mv)
+                typestr.nodetypestr(
+                    self.gx, var, var.parent, check_extmod=True, mv=self.gv.mv
+                )
             except typestr.ExtmodError:
                 if isinstance(var.parent, python.Class):
                     logger.warning(
@@ -130,11 +138,15 @@ class ExtensionModule:
                 )
                 continue
             builtins = True
-            reason = ''
+            reason = ""
             for formal in func.formals:
                 try:
                     typestr.nodetypestr(
-                        self.gx, func.vars[formal], func, check_extmod=True, mv=self.gv.mv
+                        self.gx,
+                        func.vars[formal],
+                        func,
+                        check_extmod=True,
+                        mv=self.gv.mv,
                     )
                 except typestr.ExtmodError:
                     builtins = False
@@ -283,7 +295,6 @@ class ExtensionModule:
         write("    return Py_None;")
         write("}\n")
 
-
     def convert_methods(self, cl, declare):
         """
         { function_description }
@@ -419,7 +430,6 @@ class ExtensionModule:
         # write("    {NULL}\n};\n")
         write("    {NULL, NULL, 0, NULL}\n};\n")
 
-
     def do_extmod_method(self, func):
         """
         Does an extmod method.
@@ -461,7 +471,9 @@ class ExtensionModule:
                 self.gv.append("1, ")
                 defau = func.defaults[i - (len(formals) - len(func.defaults))]
                 if defau in func.mv.defaults:
-                    if self.gv.mergeinh[defau] == set([(python.def_class(self.gx, "none"), 0)]):
+                    if self.gv.mergeinh[defau] == set(
+                        [(python.def_class(self.gx, "none"), 0)]
+                    ):
                         self.gv.append("0")
                     else:
                         self.gv.append(
@@ -505,8 +517,7 @@ class ExtensionModule:
         write("}\n")
 
     def do_extmod(self):
-        """Generate an python c-api extension module
-        """
+        """Generate an python c-api extension module"""
         write = self.write
         write("/* extension module glue */\n")
         write('extern "C" {')
@@ -555,12 +566,25 @@ class ExtensionModule:
         # write("    %s" % "Global_" + "_".join(self.gv.module.name_list) + "Methods")
         # write("};")
 
-        write("static struct PyModuleDef Module_%s = {" % "_".join(self.gv.module.name_list))
+        write(
+            "static struct PyModuleDef Module_%s = {"
+            % "_".join(self.gv.module.name_list)
+        )
         write("    PyModuleDef_HEAD_INIT,")
-        write('    .m_name = "%s",   /* name of module */' % "_".join(self.gv.module.name_list))
-        write('    .m_doc = "module docstring",   /* module documentation, may be NULL */') # FIXME
-        write("    .m_size = -1,     /* size of per-interpreter state of the module or -1 if the module keeps state in global variables. */")
-        write("    .m_methods = %sMethods," % ("Global_" + "_".join(self.gv.module.name_list)))
+        write(
+            '    .m_name = "%s",   /* name of module */'
+            % "_".join(self.gv.module.name_list)
+        )
+        write(
+            '    .m_doc = "module docstring",   /* module documentation, may be NULL */'
+        )  # FIXME
+        write(
+            "    .m_size = -1,     /* size of per-interpreter state of the module or -1 if the module keeps state in global variables. */"
+        )
+        write(
+            "    .m_methods = %sMethods,"
+            % ("Global_" + "_".join(self.gv.module.name_list))
+        )
         write("};")
 
         # # add types to module
@@ -598,18 +622,23 @@ class ExtensionModule:
 
         write("    // create extension module")
         __ss_mod = "_".join(self.gv.module.name_list)
-        write("    __ss_mod_%s = m = PyModule_Create(&Module_%s);" % (__ss_mod, __ss_mod))
+        write(
+            "    __ss_mod_%s = m = PyModule_Create(&Module_%s);" % (__ss_mod, __ss_mod)
+        )
         write("    if (m == NULL)")
         write("        return NULL;\n")
 
         write("    // add global variables")
-        self.do_add_globals(classes, 'm')
+        self.do_add_globals(classes, "m")
         write("")
 
         write("    // add type objects")
         for cl in classes:
             write("    Py_INCREF(&%sObjectType);" % clname(cl))
-            write('    if (PyModule_AddObject(m, "%s", (PyObject *) &%sObjectType) < 0) {' % (cl.ident, clname(cl)))
+            write(
+                '    if (PyModule_AddObject(m, "%s", (PyObject *) &%sObjectType) < 0) {'
+                % (cl.ident, clname(cl))
+            )
             write("        Py_DECREF(&%sObjectType);" % clname(cl))
             write("        Py_DECREF(m);")
             write("        return NULL;")
@@ -644,8 +673,9 @@ class ExtensionModule:
         write("/* class %s */\n" % cl.ident)
         write("typedef struct {")
         write("    PyObject_HEAD")
-        write("    %s::%s *__ss_object;" % (
-            cl.module.full_path(), self.gv.cpp_name(cl)))
+        write(
+            "    %s::%s *__ss_object;" % (cl.module.full_path(), self.gv.cpp_name(cl))
+        )
         write("} %sObject;\n" % clname(cl))
 
         ## FIXME: temporarly hardcoded
@@ -693,7 +723,7 @@ class ExtensionModule:
 
         # tp_dealloc
         write("void %sDealloc(%sObject *self) {" % (clname(cl), clname(cl)))
-        write("    Py_TYPE(self)->tp_free((PyObject *)self);")        
+        write("    Py_TYPE(self)->tp_free((PyObject *)self);")
         write("    __ss_proxy->__delitem__(self->__ss_object);")
         write("}\n")
 
@@ -738,38 +768,40 @@ class ExtensionModule:
         write("    {NULL}\n};\n")
 
         # python type (new)
-        write('PyTypeObject %sObjectType = {' % clname(cl))
-        write('    PyVarObject_HEAD_INIT(NULL, 0)')
+        write("PyTypeObject %sObjectType = {" % clname(cl))
+        write("    PyVarObject_HEAD_INIT(NULL, 0)")
         write('    .tp_name = "%s.%s",' % (cl.module.ident, cl.ident))
-        write('    .tp_basicsize = sizeof( %sObject),' % clname(cl))
-        write('    .tp_itemsize = 0,')
-        write('    .tp_dealloc = (destructor) %sDealloc,' % clname(cl))
+        write("    .tp_basicsize = sizeof( %sObject)," % clname(cl))
+        write("    .tp_itemsize = 0,")
+        write("    .tp_dealloc = (destructor) %sDealloc," % clname(cl))
         if self.has_method(cl, "__repr__"):
-            write('    .tp_repr = (PyObject *(*)(PyObject *))%s___repr__, ' % clname(cl))
+            write(
+                "    .tp_repr = (PyObject *(*)(PyObject *))%s___repr__, " % clname(cl)
+            )
         else:
-            write('    .tp_repr = 0,')
-        write('    .tp_as_number = &%s_as_number,' % clname(cl))
+            write("    .tp_repr = 0,")
+        write("    .tp_as_number = &%s_as_number," % clname(cl))
         if self.has_method(cl, "__str__"):
-            write('    .tp_str = (PyObject *(*)(PyObject *))%s___str__, ' % clname(cl))
+            write("    .tp_str = (PyObject *(*)(PyObject *))%s___str__, " % clname(cl))
         else:
-            write('    .tp_str = 0,')
-        write('    .tp_flags = Py_TPFLAGS_DEFAULT,')
-        write('    .tp_doc = PyDoc_STR("Custom objects"),') # XXX needs class docstring
-        write('    .tp_methods = %sMethods,' % clname(cl))
-        write('    .tp_members = %sMembers,' % clname(cl))
-        write('    .tp_getset = %sGetSet,' % clname(cl))
+            write("    .tp_str = 0,")
+        write("    .tp_flags = Py_TPFLAGS_DEFAULT,")
+        write('    .tp_doc = PyDoc_STR("Custom objects"),')  # XXX needs class docstring
+        write("    .tp_methods = %sMethods," % clname(cl))
+        write("    .tp_members = %sMembers," % clname(cl))
+        write("    .tp_getset = %sGetSet," % clname(cl))
 
         if cl.bases and not cl.bases[0].mv.module.builtin:
-            write('    .tp_base = &%sObjectType,' % clname(cl.bases[0]))
+            write("    .tp_base = &%sObjectType," % clname(cl.bases[0]))
         else:
-            write('    .tp_base = 0, ')
+            write("    .tp_base = 0, ")
 
         if self.has_method(cl, "__init__") and cl.funcs["__init__"] in funcs:
-            write('    .tp_init = (initproc) %s___tpinit__,' % clname(cl))
+            write("    .tp_init = (initproc) %s___tpinit__," % clname(cl))
         else:
-            write('    .tp_init = 0,')
-        write('    .tp_new = %sNew,' % clname(cl))
-        write('};\n')
+            write("    .tp_init = 0,")
+        write("    .tp_new = %sNew," % clname(cl))
+        write("};\n")
 
         self.do_reduce_setstate(cl, vars)
         for n in cl.module.name_list:
@@ -780,7 +812,9 @@ class ExtensionModule:
         """
         { function_description }
         """
-        self.write("PyMODINIT_FUNC PyInit_%s(void);\n" % "_".join(self.gv.module.name_list))
+        self.write(
+            "PyMODINIT_FUNC PyInit_%s(void);\n" % "_".join(self.gv.module.name_list)
+        )
         # for what in ("init", "add"):
         #     self.write(
         #         "PyMODINIT_FUNC %s%s(void);\n" % (what, "_".join(self.gv.module.name_list))

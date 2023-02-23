@@ -111,8 +111,8 @@ function(add_shedskin_product)
         set(opts)
     endif()
 
-    set(PROJECT_EXE_DIR ${PROJECT_BINARY_DIR}/${name}/exe)
-    set(PROJECT_EXT_DIR ${PROJECT_BINARY_DIR}/${name}/ext)
+    set(PROJECT_EXE_DIR ${PROJECT_BINARY_DIR}/exe)
+    set(PROJECT_EXT_DIR ${PROJECT_BINARY_DIR}/ext)
     set(IMPORTS_OS_MODULE FALSE)
     set(IMPORTS_RE_MODULE FALSE)
  

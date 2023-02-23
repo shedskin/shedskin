@@ -1,7 +1,6 @@
-
 # terminal codes
-MOVE = '\x1b[1G'
-BOLD = '\x1b[1m'
+MOVE = "\x1b[1G"
+BOLD = "\x1b[1m"
 WHITE = "\x1b[97;20m"
 GREY = "\x1b[38;20m"
 GREEN = "\x1b[32;20m"
@@ -13,7 +12,7 @@ RESET = "\x1b[0m"
 
 
 def bold(txt):
-    return f'{BOLD}{txt}{RESET}'
+    return f"{BOLD}{txt}{RESET}"
 
 
 class ProgressBar:
@@ -25,7 +24,10 @@ class ProgressBar:
     >>> for i in range(101):
     >>>     pbar.update(i)
     """
-    def __init__(self, total=100, prefix='processing', bar_length=33, done_sym='#', left_sym='-'):
+
+    def __init__(
+        self, total=100, prefix="processing", bar_length=33, done_sym="#", left_sym="-"
+    ):
         self.total = total
         self.prefix = prefix
         self.bar_length = bar_length
@@ -36,15 +38,14 @@ class ProgressBar:
     def update(self, n):
         status = ""
         self.progress = float(n) / float(self.total)
-        if self.progress >= 1.:
+        if self.progress >= 1.0:
             self.progress = 1
             status = "\r"
 
         block = int(round(self.bar_length * self.progress))
-        text = "\rᐅ {} [{}] {:.0f}% ".format(
+        text = "\r>> {} [{}] {:.0f}% ".format(
             self.prefix,
-            self.done_sym * block + self.left_sym * (self.bar_length - block), 
-            round(self.progress * 100, 0)
+            self.done_sym * block + self.left_sym * (self.bar_length - block),
+            round(self.progress * 100, 0),
         )
-        print(text, end='\r', flush=True)
-
+        print(text, end="\r", flush=True)
