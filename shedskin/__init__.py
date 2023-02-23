@@ -60,7 +60,6 @@ class Shedskin:
         self.ifa_log.addHandler(console)
         self.ifa_log.setLevel(logging.INFO)
 
-
     def get_name(self, module_path):
         """Returns name of module to be translated.
 
