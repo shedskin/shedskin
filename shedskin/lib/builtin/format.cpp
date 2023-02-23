@@ -1,5 +1,12 @@
 /* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
 
+
+#if defined(WIN32)
+#include <BaseTsd.h>
+#include <stdlib.h>
+typedef SSIZE_T ssize_t
+#endif
+
 /* mod helpers */
 
 #if defined(_WIN32) || defined(WIN32) || defined(__sun)
