@@ -480,6 +480,206 @@ Shed Skin reimplements the Python builtins with its own set of C++ classes. Thes
 Command-line options
 --------------------
 
+shedskin has recently adopted a command-line api with subcommands:
+
+::
+
+  $ shedskin --help
+  usage: shedskin [-h] {analyze,translate,build,run,test} ...
+
+  Restricted-Python-to-C++ Compiler
+
+  options:
+    -h, --help            show this help message and exit
+
+  subcommands:
+      analyze             analyze and validate python module
+      translate           translate python module to cpp
+      build               build translated module
+      run                 run built and translated module
+      test                run tests
+
+
+The historical behaviour is provided by the `translate` subcommand,
+with the other commands except `analyze` requiring `cmake <https://cmake.org/>`_ to work.
+
+analyze
+~~~~~~~
+
+The `analyze` command is intended to provided analysis and validation of a shedskin target without code-generation.
+
+::
+
+  $ shedskin analyze --help
+  usage: shedskin analyze [-h] name
+
+  positional arguments:
+    name        Python file or module to analyze
+
+  options:
+    -h, --help  show this help message and exit
+
+build
+~~~~~
+
+The `build` command calls `shedskin translate` on a target via cmake, generates a suitable `CMakeLists.txt` file
+and then builds it, placing build artefacts in a `build` directory.
+
+::
+
+  $ shedskin build --help
+  usage: shedskin build [-h] [--generator G] [--jobs N] [--build-type T] [--test] [--reset] [--conan]
+                        [--spm] [--extproject] [--ccache] [--target TARGET [TARGET ...]] [-a]
+                        [-d DEBUG] [-e] [-f] [-F FLAGS] [-L [LIB ...]] [-l] [-m MAKEFILE]
+                        [-o OUTPUTDIR] [-r] [-s] [-x] [--noassert] [--nobounds] [--nogc] [--nogcwarns]
+                        [--nomakefile] [--nowrap]
+                        name
+
+  positional arguments:
+    name                  Python file or module to compile
+
+  options:
+    -h, --help            show this help message and exit
+    --generator G         specify a cmake build system generator
+    --jobs N              build and run in parallel using N jobs
+    --build-type T        set cmake build type (default: 'Debug')
+    --test                run ctest
+    --reset               reset cmake build
+    --conan               install cmake dependencies with conan
+    --spm                 install cmake dependencies with spm
+    --extproject          install cmake dependencies with externalproject
+    --ccache              enable ccache with cmake
+    --target TARGET [TARGET ...]
+                          build only specified cmake targets
+    -a, --ann             Output annotated source code (.ss.py)
+    -d DEBUG, --debug DEBUG
+                          Set debug level
+    -e, --extmod          Generate extension module
+    -f, --float           Use 32-bit floating point numbers
+    -F FLAGS, --flags FLAGS
+                          Provide alternate Makefile flags
+    -L [LIB ...], --lib [LIB ...]
+                          Add a library directory
+    -l, --long            Use long long '64-bit' integers
+    -m MAKEFILE, --makefile MAKEFILE
+                          Specify alternate Makefile name
+    -o OUTPUTDIR, --outputdir OUTPUTDIR
+                          Specify output directory for generated files
+    -r, --random          Use fast random number generator (rand())
+    -s, --silent          Silent mode, only show warnings
+    -x, --traceback       Print traceback for uncaught exceptions
+    --noassert            Disable assert statements
+    --nobounds            Disable bounds checking
+    --nogc                Disable garbage collection
+    --nogcwarns           Disable runtime GC warnings
+    --nomakefile          Disable makefile generation
+    --nowrap              Disable wrap-around checking
+
+
+run
+~~~
+
+The `run` command does everything the `build` command does and then runs the resultant executable.
+
+::
+
+  $ shedskin run --help
+  usage: shedskin run [-h] [--generator G] [--jobs N] [--build-type T] [--test] [--reset] [--conan]
+                      [--spm] [--extproject] [--ccache] [--target TARGET [TARGET ...]] [-a] [-d DEBUG]
+                      [-e] [-f] [-F FLAGS] [-L [LIB ...]] [-l] [-m MAKEFILE] [-o OUTPUTDIR] [-r] [-s]
+                      [-x] [--noassert] [--nobounds] [--nogc] [--nogcwarns] [--nomakefile] [--nowrap]
+                      name
+
+  positional arguments:
+    name                  Python file or module to run
+
+  options:
+    -h, --help            show this help message and exit
+    --generator G         specify a cmake build system generator
+    --jobs N              build and run in parallel using N jobs
+    --build-type T        set cmake build type (default: 'Debug')
+    --test                run ctest
+    --reset               reset cmake build
+    --conan               install cmake dependencies with conan
+    --spm                 install cmake dependencies with spm
+    --extproject          install cmake dependencies with externalproject
+    --ccache              enable ccache with cmake
+    --target TARGET [TARGET ...]
+                          build only specified cmake targets
+    -a, --ann             Output annotated source code (.ss.py)
+    -d DEBUG, --debug DEBUG
+                          Set debug level
+    -e, --extmod          Generate extension module
+    -f, --float           Use 32-bit floating point numbers
+    -F FLAGS, --flags FLAGS
+                          Provide alternate Makefile flags
+    -L [LIB ...], --lib [LIB ...]
+                          Add a library directory
+    -l, --long            Use long long '64-bit' integers
+    -m MAKEFILE, --makefile MAKEFILE
+                          Specify alternate Makefile name
+    -o OUTPUTDIR, --outputdir OUTPUTDIR
+                          Specify output directory for generated files
+    -r, --random          Use fast random number generator (rand())
+    -s, --silent          Silent mode, only show warnings
+    -x, --traceback       Print traceback for uncaught exceptions
+    --noassert            Disable assert statements
+    --nobounds            Disable bounds checking
+    --nogc                Disable garbage collection
+    --nogcwarns           Disable runtime GC warnings
+    --nomakefile          Disable makefile generation
+    --nowrap              Disable wrap-around checking
+
+test
+~~~~
+
+The `test`` command provides builtin test discovery and running.
+
+Basically `cd shedskin/tests` or `cd shedskin/examples` and then type the following:
+
+::
+
+  shedskin test
+
+command-line options are extensive:
+
+::
+
+  $ shedskin test --help
+  usage: shedskin test [-h] [-e] [--dryrun] [--include PATTERN] [--check] [--modified] [--nocleanup]
+                      [--pytest] [--run TEST] [--stoponfail] [--run-errs] [--progress] [--debug]
+                      [--generator G] [--jobs N] [--build-type T] [--reset] [--conan] [--spm]
+                      [--extproject] [--ccache] [--target TARGET [TARGET ...]]
+
+  options:
+    -h, --help            show this help message and exit
+    -e, --extmod          Generate extension module
+    --dryrun              dryrun without any changes
+    --include PATTERN     provide regex of tests to include with cmake
+    --check               check testfile py syntax before running
+    --modified            run only recently modified test
+    --nocleanup           do not cleanup built test
+    --pytest              run pytest before each test run
+    --run TEST            run single test
+    --stoponfail          stop when first failure happens in ctest
+    --run-errs            run error/warning message tests
+    --progress            enable short progress output from ctest
+    --debug               set cmake debug on
+    --generator G         specify a cmake build system generator
+    --jobs N              build and run in parallel using N jobs
+    --build-type T        set cmake build type (default: 'Debug')
+    --reset               reset cmake build
+    --conan               install cmake dependencies with conan
+    --spm                 install cmake dependencies with spm
+    --extproject          install cmake dependencies with externalproject
+    --ccache              enable ccache with cmake
+    --target TARGET [TARGET ...]
+                          build only specified cmake targets
+
+
+translate
+~~~~~~~~~
+
 The shedskin translate command can be given the following options:
 
 ::
