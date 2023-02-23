@@ -8,6 +8,7 @@ shedskin cmake builder
 
 api:
 
+    shedskin build app.py
     shedskin build pkg/app.py
 
 """
@@ -424,12 +425,20 @@ def add_shedskin_product(
     return "\n".join(flist)
 
 
-def get_cmakefile_template(name, subdir, section="modular"):
+def get_cmakefile_template(section, **kwds):
     """returns a cmake template"""
     pkg_path = get_pkg_path()
     cmakelists_tmpl = pkg_path / "resources" / "cmake" / section / "CMakeLists.txt"
     tmpl = cmakelists_tmpl.read_text()
-    return tmpl % {"project_name": name, "subdir": subdir}
+    return tmpl % kwds
+
+
+# def get_cmakefile_template(name, subdir, section="modular"):
+#     """returns a cmake template"""
+#     pkg_path = get_pkg_path()
+#     cmakelists_tmpl = pkg_path / "resources" / "cmake" / section / "CMakeLists.txt"
+#     tmpl = cmakelists_tmpl.read_text()
+#     return tmpl % {"project_name": name, "subdir": subdir}
 
 
 def generate_cmakefile_0(gx):
@@ -478,7 +487,8 @@ def generate_cmakefile_0(gx):
 
     master_clfile = src_clfile.parent.parent / "CMakeLists.txt"
     master_clfile_content = get_cmakefile_template(
-        name=f"{gx.main_module.ident}_project",
+        section="modular",
+        project_name=f"{gx.main_module.ident}_project",
         subdir=p.parent.name,
     )
     master_clfile.write_text(master_clfile_content)
@@ -486,8 +496,12 @@ def generate_cmakefile_0(gx):
 
 def generate_cmakefile(gx):
     """improved generator using built-in machinery"""
-    p = pathlib.Path(gx.main_module.filename)
-    src_clfile = p.parent / "CMakeLists.txt"
+    p = gx.main_module.filename
+
+    if len(gx.main_module.filename.relative_to(gx.cwd).parts) == 1:
+        in_source_build = True
+    else:
+        in_source_build = False
 
     modules = gx.modules.values()
     # filenames = [f'{m.filename.parent / m.filename.stem}' for m in modules]
@@ -509,14 +523,27 @@ def generate_cmakefile(gx):
                 continue
             app_mods.add(entry)
 
-    src_clfile.write_text(add_shedskin_product(p.name, sys_mods, app_mods))
+    if in_source_build:
+        master_clfile = p.parent / "CMakeLists.txt"
+        master_clfile_content = get_cmakefile_template(
+            section='single',
+            project_name=f"{gx.main_module.ident}_project",
+            entry=add_shedskin_product(p.name, sys_mods, app_mods, name=p.stem),
+        )
+        master_clfile.write_text(master_clfile_content)
 
-    master_clfile = src_clfile.parent.parent / "CMakeLists.txt"
-    master_clfile_content = get_cmakefile_template(
-        name=f"{gx.main_module.ident}_project",
-        subdir=p.parent.name,
-    )
-    master_clfile.write_text(master_clfile_content)
+    else:
+        src_clfile = p.parent / "CMakeLists.txt"
+
+        src_clfile.write_text(add_shedskin_product(p.name, sys_mods, app_mods))
+
+        master_clfile = src_clfile.parent.parent / "CMakeLists.txt"
+        master_clfile_content = get_cmakefile_template(
+            section='modular',
+            project_name=f"{gx.main_module.ident}_project",
+            subdir=p.parent.name,
+        )
+        master_clfile.write_text(master_clfile_content)
 
 
 class CMakeBuilder:
@@ -524,8 +551,12 @@ class CMakeBuilder:
 
     def __init__(self, options):
         self.options = options
-        self.source_dir = pathlib.Path.cwd().parent
-        self.build_dir = self.source_dir / "build"
+        if len(pathlib.Path(options.name).parts) == 1:
+            self.source_dir = pathlib.Path.cwd()
+            self.build_dir = self.source_dir / "build"
+        else:
+            self.source_dir = pathlib.Path.cwd().parent
+            self.build_dir = self.source_dir / "build"
         self.tests = sorted(glob.glob("./test_*/test_*.py", recursive=True))
         self.log = logging.getLogger(self.__class__.__name__)
 
@@ -745,7 +776,7 @@ class TestRunner(CMakeBuilder):
 
     def __init__(self, options):
         self.options = options
-        self.build_dir = pathlib.Path("build")
         self.source_dir = pathlib.Path.cwd()
+        self.build_dir = pathlib.Path("build")
         self.tests = sorted(glob.glob("./test_*/test_*.py", recursive=True))
         self.log = logging.getLogger(self.__class__.__name__)

@@ -28,6 +28,7 @@ class GlobalInfo:  # XXX add comments, split up
         self.nameclasses = {}
         self.module = None
         self.module_path = None
+        self.cwd = pathlib.Path.cwd()
         self.builtins = [
             "none",
             "str_",
