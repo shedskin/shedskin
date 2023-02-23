@@ -14,11 +14,9 @@ import pathlib
 
 from . import ast_utils
 
+
 class PyObject:
     """Mixin for py objects"""
-
-    # def __repr__(self):
-    #     return f"<{self.__class__.__name__} '{self.ident}'>"
 
     def __repr__(self):
         return f"{self.__class__.__name__} {self.ident}"
@@ -27,56 +25,59 @@ class PyObject:
 class Module(PyObject):
     """python module class
 
-        name: str               module name
-        name_list: [str]        list of names
-        ident: str              module name
+    name: str               module name
+    name_list: [str]        list of names
+    ident: str              module name
 
-        filename: str           module path
-        path: str               module parentdir
-        relative_filename: str  ?
-        relative_path: str      relative_filename parentdir
+    filename: Path          module path
+    path: Path              module parentdir
+    relative_filename: Path module relative_filenmae
+    relative_path: Path     relative_filename parentdir
 
-        ast: ast.Module         ast module or None
-        builtin: bool           is_builtin ?
-        node: ast.node          ast Node
-        prop_includes: set      ?
-        import_order: int       order of imports or number of imports?
+    ast: ast.Module         ast module or None
+    builtin: bool           is_builtin ?
+    node: ast.node          ast Node
+    prop_includes: set      ?
+    import_order: int       order of imports or number of imports?
 
     """
-    def __init__(self, name, filename, relative_filename, builtin, node):
-        #set name and its dependent fields
-        self.name = name
-        self.name_list = name.split('.')
-        self.ident = self.name_list[-1]
-        #set filename and its dependent fields
-        self.filename = filename
-        self.path = os.path.dirname(filename)
-        self.relative_filename = relative_filename
-        self.relative_path = os.path.dirname(relative_filename)
 
-        #set the rest
-        self.ast = None # to be provided later after analysis
+    def __init__(self, name, filename, relative_filename, builtin, node):
+        # set name and its dependent fields
+        self.name = name
+        self.name_list = name.split(".")
+        self.ident = self.name_list[-1]
+        # set filename and its dependent fields
+        self.filename = pathlib.Path(filename)
+        self.path = self.filename.parent
+        self.relative_filename = pathlib.Path(relative_filename)
+        self.relative_path = self.relative_filename.parent
+
+        # set the rest
+        self.ast = None  # to be provided later after analysis
         self.builtin = builtin
         self.node = node
         self.prop_includes = set()
         self.import_order = 0
 
     def full_path(self):
-        return '__' + '__::__'.join(self.name_list) + '__'
+        return "__" + "__::__".join(self.name_list) + "__"
 
     def include_path(self):
-        if self.relative_filename.endswith('__init__.py'):
-            return os.path.join(self.relative_path, '__init__.hpp')
+        if self.relative_filename.name.endswith("__init__.py"):
+            return os.path.join(self.relative_path, "__init__.hpp")
         else:
             filename_without_ext = os.path.splitext(self.relative_filename)[0]
-            return filename_without_ext + '.hpp'
+            return filename_without_ext + ".hpp"
 
     def in_globals(self, ident):
-        return ident in self.mv.globals \
-            or ident in self.mv.funcs \
-            or ident in self.mv.ext_funcs \
-            or ident in self.mv.classes \
+        return (
+            ident in self.mv.globals
+            or ident in self.mv.funcs
+            or ident in self.mv.ext_funcs
+            or ident in self.mv.classes
             or ident in self.mv.ext_classes
+        )
 
     @property
     def doc(self):
@@ -95,13 +96,13 @@ class Class(PyObject):
         self.dcpa = 1
         self.vars = {}
         self.funcs = {}
-        self.virtuals = {}              # 'virtually' called methods
-        self.virtualvars = {}           # 'virtual' variables
+        self.virtuals = {}  # 'virtually' called methods
+        self.virtualvars = {}  # 'virtual' variables
         self.properties = {}
         self.staticmethods = []
         self.typenr = self.gx.nrcltypes
         self.gx.nrcltypes += 1
-        self.splits = {}                # contour: old contour (used between iterations)
+        self.splits = {}  # contour: old contour (used between iterations)
         self.has_copy = self.has_deepcopy = False
         self.def_order = self.gx.class_def_order
         self.gx.class_def_order += 1
@@ -126,7 +127,7 @@ class Class(PyObject):
             result.append(a)
             if not a.bases:
                 break
-            if len(a.bases) > 1: # XXX multiple inheritance quick hack
+            if len(a.bases) > 1:  # XXX multiple inheritance quick hack
                 result = list(set(result) | set(a.bases))
             a = a.bases[0]
         return result
@@ -142,12 +143,23 @@ class Class(PyObject):
 
     def tvar_names(self):
         if self.mv.module.builtin:
-            if self.ident in ['list', 'tuple', 'set', 'frozenset', 'deque', '__iter', 'pyseq', 'pyiter', 'pyset', 'array']:
-                return ['unit']
-            elif self.ident in ['dict', 'defaultdict']:
-                return ['unit', 'value']
-            elif self.ident == 'tuple2':
-                return ['first', 'second']
+            if self.ident in [
+                "list",
+                "tuple",
+                "set",
+                "frozenset",
+                "deque",
+                "__iter",
+                "pyseq",
+                "pyiter",
+                "pyset",
+                "array",
+            ]:
+                return ["unit"]
+            elif self.ident in ["dict", "defaultdict"]:
+                return ["unit", "value"]
+            elif self.ident == "tuple2":
+                return ["first", "second"]
         return []
 
 
@@ -161,6 +173,7 @@ class StaticClass(PyObject):
         self.mv = mv
         self.module = cl.module
 
+
 class Function:
     def __init__(self, gx, node=None, parent=None, inherited_from=None, mv=None):
         self.gx = gx
@@ -169,7 +182,7 @@ class Function:
         if node:
             ident = node.name
             if inherited_from and ident in parent.funcs:
-                ident += inherited_from.ident + '__'  # XXX ugly
+                ident += inherited_from.ident + "__"  # XXX ugly
             self.ident = ident
             self.formals = ast_utils.extract_argnames(node.args)
             self.flags = None
@@ -195,7 +208,9 @@ class Function:
         self.isGenerator = False
         self.yieldNodes = []
         self.tvars = set()
-        self.ftypes = []                # function is called via a virtual call: arguments may have to be cast
+        self.ftypes = (
+            []
+        )  # function is called via a virtual call: arguments may have to be cast
         self.inherited = None
 
         if node:
@@ -211,8 +226,8 @@ class Function:
 
     def __repr__(self):
         if self.parent:
-           return 'Function ' + repr((self.parent, self.ident))
-        return 'Function ' + self.ident
+            return "Function " + repr((self.parent, self.ident))
+        return "Function " + self.ident
         #     return f"<Function '{self.parent.ident}.{self.ident}'>"
         # return f"<Function '{self.ident}'>"
 
@@ -221,7 +236,7 @@ class Variable:
     def __init__(self, name, parent):
         self.name = name
         self.parent = parent
-        self.invisible = False            # not in C++ output
+        self.invisible = False  # not in C++ output
         self.formal_arg = False
         self.imported = False
         self.registered = False
@@ -245,27 +260,27 @@ class Variable:
 
 
 def clear_block(m):
-    return m.string.count('\n', m.start(), m.end()) * '\n'
+    return m.string.count("\n", m.start(), m.end()) * "\n"
 
 
 def parse_file(name):
     # Convert block comments into strings which will be duely ignored.
     pat = re.compile(r"#{.*?#}[^\r\n]*$", re.MULTILINE | re.DOTALL)
     try:
-        filebuf = re.sub(pat, clear_block, ''.join(open(name, 'U').readlines()))
+        filebuf = re.sub(pat, clear_block, "".join(open(name, "U").readlines()))
     except ValueError:
-        filebuf = re.sub(pat, clear_block, ''.join(open(name).readlines()))
+        filebuf = re.sub(pat, clear_block, "".join(open(name).readlines()))
     try:
         return ast.parse(filebuf)
     except SyntaxError as s:
-        print('*ERROR* %s:%d: %s' % (name, s.lineno, s.msg))
+        print("*ERROR* %s:%d: %s" % (name, s.lineno, s.msg))
         sys.exit(1)
 
 
 def find_module(gx, name, paths):
-    if '.' in name:
-        name, module_name = name.rsplit('.', 1)
-        name_as_path = name.replace('.', os.path.sep)
+    if "." in name:
+        name, module_name = name.rsplit(".", 1)
+        name_as_path = name.replace(".", os.path.sep)
         import_paths = [os.path.join(path, name_as_path) for path in paths]
     else:
         module_name = name
@@ -275,20 +290,19 @@ def find_module(gx, name, paths):
 
     absolute_import_paths = gx.libdirs + [os.getcwd()]
     absolute_import_path = next(
-        path for path in absolute_import_paths
-        if filename.startswith(path)
+        path for path in absolute_import_paths if filename.startswith(path)
     )
     relative_filename = os.path.relpath(filename, absolute_import_path)
-    absolute_name = relative_filename.replace(os.path.sep, '.')
+    absolute_name = relative_filename.replace(os.path.sep, ".")
     builtin = absolute_import_path in gx.libdirs
 
     is_a_package = description[2] == imp.PKG_DIRECTORY
     if is_a_package:
-        filename = os.path.join(filename, '__init__.py')
-        relative_filename = os.path.join(relative_filename, '__init__.py')
+        filename = os.path.join(filename, "__init__.py")
+        relative_filename = os.path.join(relative_filename, "__init__.py")
     else:
-        filename = filename + '.py'
-        relative_filename = relative_filename + '.py'
+        filename = filename + ".py"
+        relative_filename = relative_filename + ".py"
 
     return absolute_name, filename, relative_filename, builtin
 
@@ -365,7 +379,7 @@ def lookup_module(node, mv):
 
 def def_class(gx, name, mv=None):
     if mv is None:
-        mv = gx.modules['builtin'].mv
+        mv = gx.modules["builtin"].mv
     if name in mv.classes:
         return mv.classes[name]
     elif name in mv.ext_classes:
@@ -377,7 +391,8 @@ def lookup_var(name, parent, local=False, mv=None):
     if var:
         return var.var
 
-VarLookup = collections.namedtuple('VarLookup', ['var', 'is_global'])
+
+VarLookup = collections.namedtuple("VarLookup", ["var", "is_global"])
 
 
 def smart_lookup_var(name, parent, local=False, mv=None):
@@ -414,7 +429,11 @@ def subclass(a, b):
 
 
 def is_property_setter(dec):
-    return isinstance(dec, ast.Attribute) and isinstance(dec.value, ast.Name) and dec.attr == 'setter'
+    return (
+        isinstance(dec, ast.Attribute)
+        and isinstance(dec.value, ast.Name)
+        and dec.attr == "setter"
+    )
 
 
 def is_literal(node):
@@ -426,7 +445,11 @@ def is_literal(node):
 
 
 def is_fastfor(node):
-    return isinstance(node.iter, ast.Call) and isinstance(node.iter.func, ast.Name) and node.iter.func.id in ['range', 'xrange']
+    return (
+        isinstance(node.iter, ast.Call)
+        and isinstance(node.iter.func, ast.Name)
+        and node.iter.func.id in ["range", "xrange"]
+    )
 
 
 def is_method(parent):
@@ -434,20 +457,40 @@ def is_method(parent):
 
 
 def is_enumerate(node):
-    return isinstance(node.iter, ast.Call) and isinstance(node.iter.func, ast.Name) and node.iter.func.id == 'enumerate' and len(node.iter.args) == 1 and ast_utils.is_assign_list_or_tuple(node.target)
+    return (
+        isinstance(node.iter, ast.Call)
+        and isinstance(node.iter.func, ast.Name)
+        and node.iter.func.id == "enumerate"
+        and len(node.iter.args) == 1
+        and ast_utils.is_assign_list_or_tuple(node.target)
+    )
 
 
 def is_zip2(node):
-    return isinstance(node.iter, ast.Call) and isinstance(node.iter.func, ast.Name) and node.iter.func.id == 'zip' and len(node.iter.args) == 2 and ast_utils.is_assign_list_or_tuple(node.target)
+    return (
+        isinstance(node.iter, ast.Call)
+        and isinstance(node.iter.func, ast.Name)
+        and node.iter.func.id == "zip"
+        and len(node.iter.args) == 2
+        and ast_utils.is_assign_list_or_tuple(node.target)
+    )
+
 
 def is_isinstance(node):
-    return isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == 'isinstance'
+    return (
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "isinstance"
+    )
+
 
 # --- recursively determine (lvalue, rvalue) pairs in assignment expressions
 def assign_rec(left, right):
-    if ast_utils.is_assign_list_or_tuple(left) and isinstance(right, (ast.Tuple, ast.List)):
+    if ast_utils.is_assign_list_or_tuple(left) and isinstance(
+        right, (ast.Tuple, ast.List)
+    ):
         pairs = []
-        for (lvalue, rvalue) in zip(left.elts, right.elts):
+        for lvalue, rvalue in zip(left.elts, right.elts):
             pairs += assign_rec(lvalue, rvalue)
         return pairs
     else:
@@ -455,6 +498,6 @@ def assign_rec(left, right):
 
 
 def aug_msg(node, msg):
-    if hasattr(node, 'augment'):
-        return '__i' + msg + '__'
-    return '__' + msg + '__'
+    if hasattr(node, "augment"):
+        return "__i" + msg + "__"
+    return "__" + msg + "__"

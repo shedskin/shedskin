@@ -29,18 +29,19 @@ poetry.lock
 test
 test.*
 
-# exclude tests detritus
+# exclude tests and static analysis detritus
 .tox/
 .pytest_cache/
+.ruff_cache/
 
 # virtualenv named 'venv' in case it is in-source
 venv
 
 # shedsksin specific
 *.ss.py
-FLAGS
-shedskin/FLAGS
 shedskin/lib/array.py
 shedskin/lib/hashlib.py
 shedskin/lib/serial.py
 
+# editor or ide
+.vscode

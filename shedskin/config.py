@@ -1,10 +1,11 @@
-'''
+"""
 *** SHED SKIN Python-to-C++ Compiler ***
 Copyright 2005-2013 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 
-'''
+"""
 import os
 import sys
+import pathlib
 
 
 class GlobalInfo:  # XXX add comments, split up
@@ -27,9 +28,22 @@ class GlobalInfo:  # XXX add comments, split up
         self.nameclasses = {}
         self.module = None
         self.module_path = None
-        self.builtins = ['none', 'str_', 'bytes_', 'float_',
-                         'int_', 'class_', 'list', 'tuple', 'tuple2', 'dict',
-                         'set', 'frozenset', 'bool_']
+        self.cwd = pathlib.Path.cwd()
+        self.builtins = [
+            "none",
+            "str_",
+            "bytes_",
+            "float_",
+            "int_",
+            "class_",
+            "list",
+            "tuple",
+            "tuple2",
+            "dict",
+            "set",
+            "frozenset",
+            "bool_",
+        ]
         # instance node for instance Variable assignment
         self.assign_target = {}
         # allocation site type information across iterations
@@ -38,9 +52,9 @@ class GlobalInfo:  # XXX add comments, split up
         self.total_iterations = 0
         self.lambdawrapper = {}
         self.init_directories()
-        illegal_file = open(os.path.join(self.sysdir, 'illegal'))
+        illegal_file = open(self.shedskin_illegal /  "illegal.txt")
         self.cpp_keywords = set(line.strip() for line in illegal_file)
-        self.ss_prefix = '__ss_'
+        self.ss_prefix = "__ss_"
         self.list_types = {}
         self.loopstack = []  # track nested loops
         self.filterstack = []  # track 'if isinstance(..)'
@@ -63,7 +77,7 @@ class GlobalInfo:  # XXX add comments, split up
         self.gcwarns = True
         self.pypy = False
         self.backtrace = False
-        self.makefile_name = 'Makefile'
+        self.makefile_name = "Makefile"
         self.debug_level = 0
         self.outputdir = None
         self.nomakefile = False
@@ -83,17 +97,27 @@ class GlobalInfo:  # XXX add comments, split up
     def init_directories(self):
         shedskin_directory = os.sep.join(__file__.split(os.sep)[:-1])
         for dirname in sys.path:
-               if os.path.exists(os.path.join(dirname, shedskin_directory)):
-                   shedskin_directory = os.path.join(dirname, shedskin_directory)
-                   break
-        shedskin_libdir = os.path.join(shedskin_directory, 'lib')
-        system_libdir = '/usr/share/shedskin/lib'
-
+            if os.path.exists(os.path.join(dirname, shedskin_directory)):
+                shedskin_directory = os.path.join(dirname, shedskin_directory)
+                break
+        shedskin_libdir = os.path.join(shedskin_directory, "lib")
+        self.shedskin_lib = pathlib.Path(shedskin_libdir)
+        system_libdir = "/usr/share/shedskin/lib"
         self.sysdir = shedskin_directory
+        # set resources subdirectors
+        self.shedskin_resources = pathlib.Path(shedskin_directory) / "resources"
+        self.shedskin_cmake = self.shedskin_resources / "cmake" / "modular"
+        self.shedskin_conan = self.shedskin_resources / "conan"
+        self.shedskin_flags = self.shedskin_resources / "flags"
+        self.shedskin_illegal = self.shedskin_resources / "illegal"
+
         if os.path.isdir(shedskin_libdir):
             self.libdirs = [shedskin_libdir]
         elif os.path.isdir(system_libdir):
             self.libdirs = [system_libdir]
         else:
-            print('*ERROR* Could not find lib directory in %s or %s.\n'%(shedskin_libdir, system_libdir))
+            print(
+                "*ERROR* Could not find lib directory in %s or %s.\n"
+                % (shedskin_libdir, system_libdir)
+            )
             sys.exit(1)

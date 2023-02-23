@@ -1,8 +1,8 @@
-'''
+"""
 *** SHED SKIN Python-to-C++ Compiler ***
 Copyright 2005-2022 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)
 
-'''
+"""
 import ast
 
 
@@ -19,11 +19,16 @@ def is_assign_attribute(node):
 
 
 def is_constant(node):
-    return isinstance(node, (ast.Str, ast.Num)) or node.__class__.__name__ == 'Constant'
+    return isinstance(node, (ast.Str, ast.Num)) or node.__class__.__name__ == "Constant"
+
 
 def is_none(node):
-    return (isinstance(node, ast.Name) and node.id == 'None' or
-            node.__class__.__name__ == 'Constant' and node.value is None)
+    return (
+        isinstance(node, ast.Name)
+        and node.id == "None"
+        or node.__class__.__name__ == "Constant"
+        and node.value is None
+    )
 
 
 def handle_with_vars(var):
@@ -45,14 +50,20 @@ def orelse_to_node(node):
 
 
 def get_arg_name(node, is_tuple_expansion=False):
-    if hasattr(node, 'arg'):
-        assert isinstance(node.arg, str), 'non-arg string %s' % type(node.arg)
+    if hasattr(node, "arg"):
+        assert isinstance(node.arg, str), "non-arg string %s" % type(node.arg)
         return node.arg
 
     if isinstance(node, ast.Tuple):
-        return tuple(get_arg_name(child, is_tuple_expansion=True) for child in node.elts)
+        return tuple(
+            get_arg_name(child, is_tuple_expansion=True) for child in node.elts
+        )
     elif isinstance(node, ast.Name):
-        assert is_tuple_expansion and type(node.ctx) == ast.Store or type(node.ctx) == ast.Param
+        assert (
+            is_tuple_expansion
+            and type(node.ctx) == ast.Store
+            or type(node.ctx) == ast.Param
+        )
         return node.id
     elif isinstance(node, str):
         return node
@@ -70,7 +81,9 @@ def extract_argnames(arg_struct):
     return argnames
 
 
-def make_arg_list(argnames, vararg=None, kwonlyargs=[], kwarg=None, defaults=[], kw_defaults=[]):
+def make_arg_list(
+    argnames, vararg=None, kwonlyargs=[], kwarg=None, defaults=[], kw_defaults=[]
+):
     try:
         ast.arg
 
@@ -93,12 +106,13 @@ def make_call(func, args=[], keywords=[], starargs=None, kwargs=None):
         # PY3: Incorporate starargs and kwargs into args and keywords respectively
         return ast.Call(func, args, keywords)
 
+
 def has_star_kwarg(node):
-    if hasattr(node, 'starargs'):
-       return bool(node.starargs or node.kwargs)
+    if hasattr(node, "starargs"):
+        return bool(node.starargs or node.kwargs)
 
     for arg in node.args:
-        if arg.__class__.__name__ == 'Starred':
+        if arg.__class__.__name__ == "Starred":
             return True
 
     for kw in node.keywords:
@@ -107,30 +121,32 @@ def has_star_kwarg(node):
 
     return False
 
+
 def get_starargs(node):
-    if hasattr(node, 'starargs'):
-       return node.starargs
+    if hasattr(node, "starargs"):
+        return node.starargs
 
     for arg in node.args:
-        if arg.__class__.__name__ == 'Starred':
+        if arg.__class__.__name__ == "Starred":
             return arg.value
+
 
 def get_arg_nodes(node):
     args = []
 
     for arg in node.args:
-        if arg.__class__.__name__ == 'Starred':
+        if arg.__class__.__name__ == "Starred":
             arg = arg.value
         args.append(arg)
 
     if node.keywords:
         args.extend([kw.value for kw in node.keywords])
 
-    if hasattr(node, 'starargs') and node.starargs:
+    if hasattr(node, "starargs") and node.starargs:
         if node.starargs:
             args.append(node.starargs)  # partially allowed in builtins
 
-    if hasattr(node, 'kwargs') and node.kwargs:
+    if hasattr(node, "kwargs") and node.kwargs:
         args.append(node.kwargs)
 
     return args
@@ -160,8 +176,10 @@ class BaseNodeVisitor(object):
 
     def visit(self, node, *args):
         """Visit a node."""
-        assert isinstance(node, ast.AST), "Expected node of type ast.AST, got node of type %s" % type(node)
-        method = 'visit_' + node.__class__.__name__
+        assert isinstance(
+            node, ast.AST
+        ), "Expected node of type ast.AST, got node of type %s" % type(node)
+        method = "visit_" + node.__class__.__name__
         visitor = getattr(self, method, None)
         if visitor:
             visitor(node, *args)

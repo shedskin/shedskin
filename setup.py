@@ -33,9 +33,20 @@ setup(
     },
     package_data={
         'shedskin': [
-            'lib/*.cpp', 'lib/*.hpp', 'lib/builtin/*.cpp', 'lib/builtin/*.hpp',
-            'lib/*.py', 'lib/os/*.cpp', 'lib/os/*.hpp', 'lib/os/*.py',
-            'FLAGS*', 'illegal', 'templates/cpp/*.cpp.tpl'
+            'lib/*.cpp', 
+            'lib/*.hpp',
+            'lib/builtin/*.cpp',
+            'lib/builtin/*.hpp',
+            'lib/*.py',
+            'lib/os/*.cpp',
+            'lib/os/*.hpp',
+            'lib/os/*.py',
+            'FLAGS*',
+            'illegal',
+            'templates/cpp/*.cpp.tpl',
+            'resources/cmake/modular/*.cmake',
+            'resources/cmake/modular/*.txt',
+            'resources/conan/*.txt',
         ]
     },
     entry_points={

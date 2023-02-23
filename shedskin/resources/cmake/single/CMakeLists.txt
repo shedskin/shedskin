@@ -92,7 +92,7 @@ endif()
 
 # -----------------------------------------------------------------------------
 # includes
-list(APPEND CMAKE_MODULE_PATH "${SHEDSKIN}/resources/cmake/modular")
+list(APPEND CMAKE_MODULE_PATH "${SHEDSKIN}/resources/cmake/single")
 include(utils)
 include(fn_add_shedskin_executable) # can build only an executable
 include(fn_add_shedskin_extension)  # can build only an extension
@@ -127,5 +127,5 @@ endif()
 
 # -----------------------------------------------------------------------
 # add subdirectories here
-add_subdirectory(%(subdir)s)
+%(entry)s
 
