@@ -284,11 +284,11 @@ function(add_shedskin_executable)
     )
 
     target_compile_options(${EXE} PRIVATE
-        "-O2"
         "-Wall"
-        "-Wno-deprecated"
-        "-Wno-unused-variable"
-        "-Wno-unused-but-set-variable"
+        $<$<BOOL:${UNIX}>:-O2>
+        $<$<BOOL:${UNIX}>:-Wno-deprecated>
+        $<$<BOOL:${UNIX}>:-Wno-unused-variable>
+        $<$<BOOL:${UNIX}>:-Wno-unused-but-set-variable>
         ${SHEDSKIN_COMPILE_OPTIONS}
     )
 
