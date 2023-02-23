@@ -4,7 +4,9 @@
 #include <io.h> // for _isatty
 #endif // WIN32
 
+#ifndef WIN32
 #include <unistd.h>
+#endif
 
 #if (_POSIX_C_SOURCE >= 1 or _XOPEN_SOURCE or _POSIX_SOURCE or _BSD_SOURCE or _SVID_SOURCE) and (_BSD_SOURCE or _SVID_SOURCE)
 #define HAVE_STDIO_UNLOCKED
