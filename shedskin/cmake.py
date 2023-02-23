@@ -14,7 +14,6 @@ api:
 """
 import glob
 import logging
-import modulefinder
 import os
 import pathlib
 import shutil
@@ -24,42 +23,6 @@ import textwrap
 import time
 
 from .utils import CYAN, GREEN, RED, RESET, WHITE, YELLOW
-
-DEPENDENCY_GRAPH = {
-    "array": [],
-    "binascii": [],
-    "bisect": [],
-    "collections": [],
-    "colorsys": [],
-    "configparser": ["re"],
-    "copy": [],
-    "csv": [],
-    "datetime": ["time", "string"],
-    "deque": [],
-    "fnmatch": ["os", "re", "os.path"],
-    "functools": [],
-    "gc": [],
-    "getopt": ["os", "sys"],
-    "glob": ["os", "os.path", "re", "fnmatch"],
-    "heapq": [],
-    "io": [],
-    "itertools": [],
-    "math": [],
-    "mmap": [],
-    "os": ["os.path"],
-    "os.path": ["os", "stat"],
-    "random": ["math", "time"],
-    "re": [],
-    "select": [],
-    "signal": [],
-    "socket": [],
-    "stat": [],
-    "string": [],
-    "struct": [],
-    "sys": [],
-    "time": [],
-}
-
 
 def get_pkg_path():
     """return shedskin package path"""
@@ -73,18 +36,7 @@ def pkg_path():
     sys.stdout.write(str(get_pkg_path()))
 
 
-class ConanDependency:
-    """ "conan dependency mixin"""
-
-    def __init__(self, name, version):
-        self.name = name
-        self.version = version
-
-    def __str__(self):
-        return f"{self.name}/{self.version}"
-
-
-class ConanBDWGC(ConanDependency):
+class ConanBDWGC:
     """conan gc dependency"""
 
     def __init__(
@@ -105,8 +57,11 @@ class ConanBDWGC(ConanDependency):
         self.java_finalization = java_finalization
         self.shared = shared
 
+    def __str__(self):
+        return f"{self.name}/{self.version}"
 
-class ConanPCRE(ConanDependency):
+
+class ConanPCRE:
     """conan pcre dependency"""
 
     def __init__(
@@ -127,6 +82,8 @@ class ConanPCRE(ConanDependency):
         self.with_bzip2 = with_bzip2
         self.with_zlib = with_zlib
 
+    def __str__(self):
+        return f"{self.name}/{self.version}"
 
 class ConanDependencyManager:
     """dep manager which manages and install all conan dependencies"""
@@ -427,81 +384,21 @@ def add_shedskin_product(
 
 def get_cmakefile_template(section, **kwds):
     """returns a cmake template"""
-    pkg_path = get_pkg_path()
-    cmakelists_tmpl = pkg_path / "resources" / "cmake" / section / "CMakeLists.txt"
+    _pkg_path = get_pkg_path()
+    cmakelists_tmpl = _pkg_path / "resources" / "cmake" / section / "CMakeLists.txt"
     tmpl = cmakelists_tmpl.read_text()
     return tmpl % kwds
 
-
-# def get_cmakefile_template(name, subdir, section="modular"):
-#     """returns a cmake template"""
-#     pkg_path = get_pkg_path()
-#     cmakelists_tmpl = pkg_path / "resources" / "cmake" / section / "CMakeLists.txt"
-#     tmpl = cmakelists_tmpl.read_text()
-#     return tmpl % {"project_name": name, "subdir": subdir}
-
-
-def generate_cmakefile_0(gx):
-    """iniitial generation algorithm (not used)"""
-    p = pathlib.Path(gx.main_module.filename)
-
-    src_clfile = p.parent / "CMakeLists.txt"
-
-    def add_sys_deps(sys_mods):
-        count = 0
-        for m in sys_mods.copy():
-            for dep in DEPENDENCY_GRAPH[m]:
-                if dep not in sys_mods:
-                    count += 1
-                    sys_mods.add(dep)
-        if count > 0:
-            add_sys_deps(sys_mods)
-
-    sys_path = sys.path[:]
-    sys_path[0] = str(p.parent)
-    finder = modulefinder.ModuleFinder(path=sys_path)
-    finder.run_script(str(p))
-    modules = {}
-    modules.update(finder.modules)  # imported and used
-    # modules.update(finder.badmodules)  # imported but not used
-    if len(modules) > 1:  # i.e. there are imports
-        sys_mods = set()
-        app_mods = set()
-        app_mods_paths = set()
-        for m in modules:
-            if m in DEPENDENCY_GRAPH:
-                sys_mods.add(m)
-            else:
-                app_mods.add(m)
-                relpath = os.path.relpath(modules[m].__file__, str(p.parent))
-                add_mod_path = relpath[:-3]
-                if add_mod_path == p.stem:
-                    continue
-                app_mods_paths.add(add_mod_path)
-        add_sys_deps(sys_mods)
-        content = add_shedskin_product(p.name, sys_mods, app_mods_paths)
-    else:
-        content = "add_shedskin_product()\n"
-
-    src_clfile.write_text(content)
-
-    master_clfile = src_clfile.parent.parent / "CMakeLists.txt"
-    master_clfile_content = get_cmakefile_template(
-        section="modular",
-        project_name=f"{gx.main_module.ident}_project",
-        subdir=p.parent.name,
-    )
-    master_clfile.write_text(master_clfile_content)
-
+def check_cmake_availability():
+    """check if cmake executable is available in path"""
+    if not bool(shutil.which('cmake')):
+        raise Exception("cmake not available in path")
 
 def generate_cmakefile(gx):
     """improved generator using built-in machinery"""
-    p = gx.main_module.filename
+    path = gx.main_module.filename
 
-    if len(gx.main_module.filename.relative_to(gx.cwd).parts) == 1:
-        in_source_build = True
-    else:
-        in_source_build = False
+    in_source_build = bool(len(path.relative_to(gx.cwd).parts) == 1)
 
     modules = gx.modules.values()
     # filenames = [f'{m.filename.parent / m.filename.stem}' for m in modules]
@@ -519,29 +416,29 @@ def generate_cmakefile(gx):
         else:
             entry = module.filename.relative_to(gx.main_module.filename.parent)
             entry = entry.parent / entry.stem
-            if entry.name == p.stem:  # don't include main_module
+            if entry.name == path.stem:  # don't include main_module
                 continue
             app_mods.add(entry)
 
     if in_source_build:
-        master_clfile = p.parent / "CMakeLists.txt"
+        master_clfile = path.parent / "CMakeLists.txt"
         master_clfile_content = get_cmakefile_template(
             section='single',
             project_name=f"{gx.main_module.ident}_project",
-            entry=add_shedskin_product(p.name, sys_mods, app_mods, name=p.stem),
+            entry=add_shedskin_product(path.name, sys_mods, app_mods, name=path.stem),
         )
         master_clfile.write_text(master_clfile_content)
 
     else:
-        src_clfile = p.parent / "CMakeLists.txt"
+        src_clfile = path.parent / "CMakeLists.txt"
 
-        src_clfile.write_text(add_shedskin_product(p.name, sys_mods, app_mods))
+        src_clfile.write_text(add_shedskin_product(path.name, sys_mods, app_mods))
 
         master_clfile = src_clfile.parent.parent / "CMakeLists.txt"
         master_clfile_content = get_cmakefile_template(
             section='modular',
             project_name=f"{gx.main_module.ident}_project",
-            subdir=p.parent.name,
+            subdir=path.parent.name,
         )
         master_clfile.write_text(master_clfile_content)
 
@@ -586,9 +483,10 @@ class CMakeBuilder:
             print("*** test:", test)
             try:
                 checks = []
-                for line in open(test):
-                    if line.startswith("#*"):
-                        checks.append(line[1:].strip())
+                with open(test, encoding='utf8') as fopen:
+                    for line in fopen:
+                        if line.startswith("#*"):
+                            checks.append(line[1:].strip())
                 cmd = f"{sys.executable} -m shedskin {test}".split()
                 output = subprocess.run(
                     cmd, encoding="utf-8", capture_output=True, text=True
@@ -629,6 +527,7 @@ class CMakeBuilder:
         os.system(bld_cmd)
 
     def cmake_test(self, options):
+        """activate ctest"""
         options = " ".join(options)
         tst_cmd = f"ctest --output-on-failure {options} --test-dir {self.build_dir}"
         print("tst_cmd:", tst_cmd)
@@ -715,7 +614,7 @@ class CMakeBuilder:
 
         if run_tests:
             if self.options.include:
-                self.tst_options.append(f"--tests-regex {self.options.include}")
+                tst_options.append(f"--tests-regex {self.options.include}")
 
             if self.options.check:
                 self.check(self.options.name)  # check python syntax
@@ -744,10 +643,10 @@ class CMakeBuilder:
                 tst_options.append(f"--tests-regex {self.options.run}")
 
             if self.options.stoponfail:
-                self.tst_options.append("--stop-on-failure")
+                tst_options.append("--stop-on-failure")
 
             if self.options.progress:
-                self.tst_options.append("--progress")
+                tst_options.append("--progress")
 
         self.cmake_config(cfg_options)
 
