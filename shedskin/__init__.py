@@ -94,7 +94,12 @@ class Shedskin:
         # print(args)
         gx = config.GlobalInfo()
 
+        if args.subcmd in ['build', 'run', 'test']:
+            # ensure cmake is available and installed.
+            cmake.check_cmake_availability()
+
         if args.subcmd in ['translate', 'build', 'run']: # i.e. not relevant for 'test'
+
             if args.nobounds:
                 gx.bounds_checking = False
 
