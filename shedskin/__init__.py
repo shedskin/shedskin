@@ -364,7 +364,7 @@ class Shedskin:
                 break
         else:
              if len(sys.argv) > 1 and sys.argv[1] not in ('analyze', 'translate', 'build', 'run', 'test'):
-                 sys.argv.insert(1, 'translate')
+                sys.argv.insert(1, 'translate')
 
         args = parser.parse_args()
         # print(args)
