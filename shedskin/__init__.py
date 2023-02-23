@@ -201,7 +201,11 @@ class Shedskin:
     def run(self):
         cwd = pathlib.Path.cwd()
         p = pathlib.Path(self.gx.options.name)
-        executable = cwd.parent / 'build' / p.parent.name / p.parent.name
+        if len(p.parts) == 1:
+            executable = cwd / 'build' / p.stem
+        else:
+            executable = cwd.parent / 'build' / p.parent.name / p.parent.name
+        # print("executable:", executable)
         os.system(executable)
 
     @classmethod
