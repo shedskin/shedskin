@@ -519,6 +519,70 @@ The `analyze` command is intended to provided analysis and validation of a sheds
   options:
     -h, --help  show this help message and exit
 
+
+translate
+~~~~~~~~~
+
+The shedskin translate command can be given the following options:
+
+::
+
+  usage: shedskin translate [-h] [-a] [-d DEBUG] [-e] [-f] [-F FLAGS]
+                            [-L [LIB ...]] [-l] [-m MAKEFILE] [-o OUTPUTDIR]
+                            [-r] [-s] [-x] [--noassert] [-b] [--nogc]
+                            [--nogcwarns] [--nomakefile] [--nowrap]
+                            name
+
+  positional arguments:
+    name                  Python file or module to compile
+
+  options:
+    -h, --help            show this help message and exit
+    -a, --ann             Output annotated source code (.ss.py)
+    -d DEBUG, --debug DEBUG
+                          Set debug level
+    -e, --extmod          Generate extension module
+    -f, --float           Use 32-bit floating point numbers
+    -F FLAGS, --flags FLAGS
+                          Provide alternate Makefile flags
+    -L [LIB ...], --lib [LIB ...]
+                          Add a library directory
+    -l, --long            Use long long '64-bit' integers
+    -m MAKEFILE, --makefile MAKEFILE
+                          Specify alternate Makefile name
+    -o OUTPUTDIR, --outputdir OUTPUTDIR
+                          Specify output directory for generated files
+    -r, --random          Use fast random number generator (rand())
+    -s, --silent          Silent mode, only show warnings
+    -x, --traceback       Print traceback for uncaught exceptions
+    --noassert            Disable assert statements
+    -b, --nobounds        Disable bounds checking
+    --nogc                Disable garbage collection
+    --nogcwarns           Disable runtime GC warnings
+    --nomakefile          Disable makefile generation
+    --nowrap              Disable wrap-around checking
+
+
+For example, to compile the file ``test.py`` as an extension module, type
+
+::
+
+  shedskin translate –e test
+
+or
+
+::
+
+  shedskin translate ––extmod test
+
+Using :code:`-b` or :code:`--nobounds` is also very common, as it disables out-of-bounds exceptions (:code:`IndexError`), which can have a large impact on performance.
+
+::
+
+  a = [1, 2, 3]
+  print(a[5]) # invalid index: out of bounds
+
+
 build
 ~~~~~
 
@@ -677,67 +741,6 @@ command-line options are extensive:
                           build only specified cmake targets
 
 
-translate
-~~~~~~~~~
-
-The shedskin translate command can be given the following options:
-
-::
-
-  usage: shedskin translate [-h] [-a] [-d DEBUG] [-e] [-f] [-F FLAGS]
-                            [-L [LIB ...]] [-l] [-m MAKEFILE] [-o OUTPUTDIR]
-                            [-r] [-s] [-x] [--noassert] [-b] [--nogc]
-                            [--nogcwarns] [--nomakefile] [--nowrap]
-                            name
-
-  positional arguments:
-    name                  Python file or module to compile
-
-  options:
-    -h, --help            show this help message and exit
-    -a, --ann             Output annotated source code (.ss.py)
-    -d DEBUG, --debug DEBUG
-                          Set debug level
-    -e, --extmod          Generate extension module
-    -f, --float           Use 32-bit floating point numbers
-    -F FLAGS, --flags FLAGS
-                          Provide alternate Makefile flags
-    -L [LIB ...], --lib [LIB ...]
-                          Add a library directory
-    -l, --long            Use long long '64-bit' integers
-    -m MAKEFILE, --makefile MAKEFILE
-                          Specify alternate Makefile name
-    -o OUTPUTDIR, --outputdir OUTPUTDIR
-                          Specify output directory for generated files
-    -r, --random          Use fast random number generator (rand())
-    -s, --silent          Silent mode, only show warnings
-    -x, --traceback       Print traceback for uncaught exceptions
-    --noassert            Disable assert statements
-    -b, --nobounds        Disable bounds checking
-    --nogc                Disable garbage collection
-    --nogcwarns           Disable runtime GC warnings
-    --nomakefile          Disable makefile generation
-    --nowrap              Disable wrap-around checking
-
-
-For example, to compile the file ``test.py`` as an extension module, type
-
-::
-
-  shedskin translate –e test
-
-or
-
-::
-
-  shedskin translate ––extmod test
-
-Using :code:`-b` or :code:`--nobounds` is also very common, as it disables out-of-bounds exceptions (:code:`IndexError`), which can have a large impact on performance.
-
-::
-
-  a = [1, 2, 3]
-  print(a[5]) # invalid index: out of bounds
 
 .. _performance-tips:
 
