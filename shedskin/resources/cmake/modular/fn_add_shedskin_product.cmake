@@ -426,19 +426,23 @@ function(add_shedskin_product)
         )
 
         target_compile_options(${EXT} PRIVATE
-            "-D__SS_BIND"
-            "-DNDEBUG"
-            "-fPIC"
-            "-fwrapv"
-            "-g"
-            "-Wall"
+            ${SHEDSKIN_COMPILE_OPTIONS}
+            # unix
+            $<$<BOOL:${UNIX}>:-D__SS_BIND>
+            $<$<BOOL:${UNIX}>:-DNDEBUG>
+            $<$<BOOL:${UNIX}>:-fPIC>
+            $<$<BOOL:${UNIX}>:-fwrapv>
+            $<$<BOOL:${UNIX}>:-g>
+            $<$<BOOL:${UNIX}>:-Wall>
             $<$<BOOL:${UNIX}>:-O3>
             $<$<BOOL:${UNIX}>:-Wunreachable-code>
             $<$<BOOL:${UNIX}>:-Wno-unused-result>
             $<$<BOOL:${UNIX}>:-Wno-unused-variable>
             $<$<BOOL:${UNIX}>:-Wno-unused-but-set-variable>
-            ${SHEDSKIN_COMPILE_OPTIONS}
+            # windows
+            # $<$<BOOL:${WIN32}>:/LD>
             $<$<BOOL:${WIN32}>:/MD>
+            $<$<BOOL:${WIN32}>:/Wall>
         )
 
         target_link_options(${EXT} PRIVATE
