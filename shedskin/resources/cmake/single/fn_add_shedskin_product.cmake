@@ -331,6 +331,8 @@ function(add_shedskin_product)
             $<$<BOOL:${UNIX}>:-Wno-unused-variable>
             $<$<BOOL:${UNIX}>:-Wno-unused-but-set-variable>
             ${SHEDSKIN_COMPILE_OPTIONS}
+            $<$<BOOL:${WIN32}>:/MD>
+            $<$<BOOL:${WIN32}>:/NODEFAULTLIB:library>
         )
 
         target_include_directories(${EXE} PRIVATE
