@@ -65,7 +65,7 @@ class ExtensionModule:
         :rtype:     { return_type_description }
         """
         for module in self.gx.modules.values():
-            if not module.builtin and not module is self.gv.module:
+            if not module.builtin and module is not self.gv.module:
                 self.write(
                     "    %s::%s%s();"
                     % (module.full_path(), what, "_".join(module.name_list))
@@ -75,7 +75,7 @@ class ExtensionModule:
         """XXX currently only classs / instance variables"""
         supported = []
         for var in variables:
-            if not var in self.gx.merged_inh or not self.gx.merged_inh[var]:
+            if var not in self.gx.merged_inh or not self.gx.merged_inh[var]:
                 continue
             if var.name is None or var.name.startswith("__"):  # XXX
                 continue
@@ -395,7 +395,7 @@ class ExtensionModule:
             else:
                 write("    0,")
         write("};\n")
-        if cl and not python.def_class(self.gx, "Exception") in cl.ancestors():
+        if cl and python.def_class(self.gx, "Exception") not in cl.ancestors():
             write(
                 "PyObject *%s__reduce__(PyObject *self, PyObject *args, PyObject *kwargs);"
                 % ident
@@ -409,7 +409,7 @@ class ExtensionModule:
             write(
                 '    {(char *)"__newobj__", (PyCFunction)__ss__newobj__, METH_VARARGS | METH_KEYWORDS, (char *)""},'
             )
-        elif cl and not python.def_class(self.gx, "Exception") in cl.ancestors():
+        elif cl and python.def_class(self.gx, "Exception") not in cl.ancestors():
             write(
                 '    {(char *)"__reduce__", (PyCFunction)%s__reduce__, METH_VARARGS | METH_KEYWORDS, (char *)""},'
                 % ident
@@ -842,7 +842,8 @@ class ExtensionModule:
         """
         { function_description }
         """
-        write = lambda s: print(s, file=self.gv.out)
+        def write(s):
+            return print(s, file=self.gv.out)
 
         for cl in self.exported_classes():
             write('extern "C" PyTypeObject %sObjectType;' % clname(cl))
