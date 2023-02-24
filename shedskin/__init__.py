@@ -13,45 +13,23 @@ import struct
 import sys
 import time
 
-from . import annotate, cmake, config, cpp, error, graph, infer, utils
-
-
-def pkg_path():
-    """used by cmake to get package path automatically"""
-    cmake.pkg_path()
-
-
-class ShedskinFormatter(logging.Formatter):
-
-    def __init__(self, gx, datefmt=None):
-        self.gx = gx
-        self._info_formatter = logging.Formatter(
-            utils.MOVE + '%(message)s', datefmt=datefmt)
-        self._other_formatter = logging.Formatter(
-            (utils.MOVE + utils.bold('*%(levelname)s*') + ' %(message)s'),
-            datefmt=datefmt
-        )
-
-    def format(self, record):
-        if record.levelname == 'INFO':
-            return self._info_formatter.format(record)
-        return self._other_formatter.format(record)
+from . import annotate, cmake, config, cpp, error, graph, infer, log
 
 
 class Shedskin:
     """Main shedskin frontend class
     """
     def __init__(self, options):
+        self.configure_log()
         self.gx = self.configure(options)
         self.gx.options = options
-        self.configure_log()
         if 'name' in options:
             self.module_name = self.get_name(options.name)
 
     def configure_log(self):
         # silent -> WARNING only, debug -> DEBUG, default -> INFO
         console = logging.StreamHandler(stream=sys.stdout)
-        console.setFormatter(ShedskinFormatter(self.gx))
+        console.setFormatter(log.ShedskinFormatter())
         self.log = logging.getLogger(self.__class__.__name__)
         self.log.addHandler(console)
         self.log.setLevel(logging.INFO)
@@ -398,6 +376,12 @@ class Shedskin:
             ss.analyze()
             ss.build()
             ss.run()
+
+
+def pkg_path():
+    """used by cmake to get package path automatically"""
+    cmake.pkg_path()
+
 
 if __name__ == '__main__':
     Shedskin.commandline()
