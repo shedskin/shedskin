@@ -1,5 +1,23 @@
 import logging
 
+from . import utils
+
+
+class ShedskinFormatter(logging.Formatter):
+    def __init__(self, datefmt=None):
+        self._info_formatter = logging.Formatter(
+            utils.MOVE + "%(message)s", datefmt=datefmt
+        )
+        self._other_formatter = logging.Formatter(
+            (utils.MOVE + utils.bold("*%(levelname)s*") + " %(message)s"),
+            datefmt=datefmt,
+        )
+
+    def format(self, record):
+        if record.levelname == "INFO":
+            return self._info_formatter.format(record)
+        return self._other_formatter.format(record)
+
 
 class CustomFormatter(logging.Formatter):
     """custom formatter class to add colors to logging"""
@@ -35,6 +53,5 @@ def config_log(debug=True):
     __handler = logging.StreamHandler()
     __handler.setFormatter(CustomFormatter())
     logging.basicConfig(
-        level=logging.DEBUG if debug else logging.INFO,
-        handlers=[__handler]
+        level=logging.DEBUG if debug else logging.INFO, handlers=[__handler]
     )

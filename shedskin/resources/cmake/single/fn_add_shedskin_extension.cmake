@@ -298,13 +298,14 @@ function(add_shedskin_extension)
         "-fPIC"
         "-fwrapv"
         "-g"
-        "-O3"
         "-Wall"
-        "-Wunreachable-code"
-        "-Wno-unused-but-set-variable"
-        "-Wno-unused-result"
-        "-Wno-unused-variable"
+        $<$<BOOL:${UNIX}>:-O3>
+        $<$<BOOL:${UNIX}>:-Wunreachable-code>
+        $<$<BOOL:${UNIX}>:-Wno-unused-result>
+        $<$<BOOL:${UNIX}>:-Wno-unused-variable>
+        $<$<BOOL:${UNIX}>:-Wno-unused-but-set-variable>
         ${SHEDSKIN_COMPILE_OPTIONS}
+        $<$<BOOL:${WIN32}>:/MD>
     )
 
     target_link_options(${EXT} PRIVATE
