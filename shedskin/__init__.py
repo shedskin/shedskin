@@ -195,7 +195,7 @@ class Shedskin:
         os.system(executable)
 
     @classmethod
-    def commandline(cls):
+    def commandline(cls, bypassargs=None):
         """command line api
         """
         sys.setrecursionlimit(100000)
@@ -358,7 +358,7 @@ class Shedskin:
             if len(sys.argv) > 1 and sys.argv[1] not in ('analyze', 'translate', 'build', 'run', 'test'):
                 sys.argv.insert(1, 'translate')
 
-        args = parser.parse_args()
+        args = parser.parse_args(args=bypassargs)
         # print(args)
 
         ss = cls(args)
