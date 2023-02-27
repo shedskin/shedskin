@@ -2,8 +2,8 @@ import math
 from struct import unpack_from
 import random
 
-WIDTH = 1200
-HEIGHT = 800
+WIDTH = 800
+HEIGHT = 600
 
 WIDTH_2 = WIDTH//2
 HEIGHT_2 = HEIGHT//2
