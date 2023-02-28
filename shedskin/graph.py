@@ -343,15 +343,15 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 isinstance(rvalue.func, ast.Attribute)
                 and isinstance(rvalue.func.value, ast.Name)
                 and rvalue.func.value.id == "struct"
-                and rvalue.func.attr == "unpack"
+                and rvalue.func.attr in ("unpack", "unpack_from")
                 and python.lookup_var("struct", func, mv=self).imported
             ):  # XXX imported from where?
                 return True
             elif (
                 isinstance(rvalue.func, ast.Name)
-                and rvalue.func.id == "unpack"
-                and "unpack" in self.ext_funcs
-                and not python.lookup_var("unpack", func, mv=self)
+                and rvalue.func.id in ("unpack", "unpack_from")
+                and rvalue.func.id in self.ext_funcs
+                and not python.lookup_var(rvalue.func.id, func, mv=self)
             ):  # XXX imported from where?
                 return True
 

@@ -3,11 +3,14 @@
 class error(Exception):
     pass
 
-def pack(fmt, *vals):
+def pack(format, *vals):
     return b''
 
-def unpack(fmt, s):
+def unpack(format, s):
     pass
 
-def calcsize(fmt):
+def unpack_from(format, buffer, offset=0):
+    pass
+
+def calcsize(format):
     return 1
