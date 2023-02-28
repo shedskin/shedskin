@@ -2831,7 +2831,13 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.start()
             self.visitm(tvar, " = ", node.value.args[1], func)
             self.eol()
-            self.output("%s = 0;" % tvar_pos)
+            if len(node.value.args) > 2: # TODO unpack_from: nicer check
+                self.start()
+                self.visitm(tvar_pos, " = ", node.value.args[2], func)
+                self.eol()
+            else:
+                self.output("%s = 0;" % tvar_pos)
+
             hop = 0
             for o, c, t, d in sinfo:
                 self.start()

@@ -437,6 +437,8 @@ public:
     str *__str__();
     str *__repr__();
 
+    __ss_bool __contains__(bytes *);
+
     __ss_bool __eq__(pyobj *s);
     long __hash__();
 
