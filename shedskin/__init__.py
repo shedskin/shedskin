@@ -23,8 +23,7 @@ def pkg_path():
 
 class ShedskinFormatter(logging.Formatter):
 
-    def __init__(self, gx, datefmt=None):
-        self.gx = gx
+    def __init__(self, datefmt=None):
         self._info_formatter = logging.Formatter(
             utils.MOVE + '%(message)s', datefmt=datefmt)
         self._other_formatter = logging.Formatter(
@@ -42,16 +41,16 @@ class Shedskin:
     """Main shedskin frontend class
     """
     def __init__(self, options):
+        self.configure_log()
         self.gx = self.configure(options)
         self.gx.options = options
-        self.configure_log()
         if 'name' in options:
             self.module_name = self.get_name(options.name)
 
     def configure_log(self):
         # silent -> WARNING only, debug -> DEBUG, default -> INFO
         console = logging.StreamHandler(stream=sys.stdout)
-        console.setFormatter(ShedskinFormatter(self.gx))
+        console.setFormatter(ShedskinFormatter())
         self.log = logging.getLogger(self.__class__.__name__)
         self.log.addHandler(console)
         self.log.setLevel(logging.INFO)
