@@ -28,6 +28,8 @@ lines  name                 description                     notes
    290 chull.py             3D convex hull
     65 circle.py            circle packing animation        shedskin -e circle && make
                                                             python circle_main.py (drag circles with mouse)
+   665 doom.py              WAD rendering engine            shedskin -e render && make
+                                                            python doom.py
    147 fysphun.py           physics animation               shedskin -e fysphun && make
                                                             python fysphun_main.py (drag points with mouse)
     92 genetic.py           genetic algorithm
