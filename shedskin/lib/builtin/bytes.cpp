@@ -799,3 +799,7 @@ void *bytes::__delete__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
     unit = r;
     return NULL;
 }
+
+__ss_bool bytes::__contains__(bytes *b) {
+    return __mbool(unit.find(b->unit) != std::string::npos);
+}
