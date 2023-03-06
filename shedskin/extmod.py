@@ -749,37 +749,55 @@ class ExtensionModule:
         # python type (new)
         write("PyTypeObject %sObjectType = {" % clname(cl))
         write("    PyVarObject_HEAD_INIT(NULL, 0)")
-        write('    .tp_name = "%s.%s",' % (cl.module.ident, cl.ident))
-        write("    .tp_basicsize = sizeof( %sObject)," % clname(cl))
-        write("    .tp_itemsize = 0,")
-        write("    .tp_dealloc = (destructor) %sDealloc," % clname(cl))
+        write('    "%s.%s",' % (cl.module.ident, cl.ident))
+        write("    sizeof( %sObject)," % clname(cl))
+        write("    0,")
+        write("    (destructor) %sDealloc," % clname(cl))
+        write("    0,")
+        write("    0,")
+        write("    0,")
+        write("    0,")
         if self.has_method(cl, "__repr__"):
-            write(
-                "    .tp_repr = (PyObject *(*)(PyObject *))%s___repr__, " % clname(cl)
-            )
+            write("    (PyObject *(*)(PyObject *))%s___repr__, " % clname(cl))
         else:
-            write("    .tp_repr = 0,")
-        write("    .tp_as_number = &%s_as_number," % clname(cl))
+            write("    0,")
+        write("    &%s_as_number," % clname(cl))
+        write("    0,")
+        write("    0,")
+        write("    0,")
+        write("    0,")
         if self.has_method(cl, "__str__"):
-            write("    .tp_str = (PyObject *(*)(PyObject *))%s___str__, " % clname(cl))
+            write("    (PyObject *(*)(PyObject *))%s___str__, " % clname(cl))
         else:
-            write("    .tp_str = 0,")
-        write("    .tp_flags = Py_TPFLAGS_DEFAULT,")
-        write('    .tp_doc = PyDoc_STR("Custom objects"),')  # XXX needs class docstring
-        write("    .tp_methods = %sMethods," % clname(cl))
-        write("    .tp_members = %sMembers," % clname(cl))
-        write("    .tp_getset = %sGetSet," % clname(cl))
-
+            write("    0,")
+        write("    0,")
+        write("    0,")
+        write("    0,")
+        write("    Py_TPFLAGS_DEFAULT,")
+        write('    PyDoc_STR("Custom objects"),')  # XXX needs class docstring
+        write("    0,")
+        write("    0,")
+        write("    0,")
+        write("    0,")
+        write("    0,")
+        write("    0,")
+        write("    %sMethods," % clname(cl))
+        write("    %sMembers," % clname(cl))
+        write("    %sGetSet," % clname(cl))
         if cl.bases and not cl.bases[0].mv.module.builtin:
-            write("    .tp_base = &%sObjectType," % clname(cl.bases[0]))
+            write("    &%sObjectType," % clname(cl.bases[0]))
         else:
-            write("    .tp_base = 0, ")
-
+            write("    0, ")
+        write("    0, ")
+        write("    0, ")
+        write("    0, ")
+        write("    0, ")
         if self.has_method(cl, "__init__") and cl.funcs["__init__"] in funcs:
-            write("    .tp_init = (initproc) %s___tpinit__," % clname(cl))
+            write("    (initproc) %s___tpinit__," % clname(cl))
         else:
-            write("    .tp_init = 0,")
-        write("    .tp_new = %sNew," % clname(cl))
+            write("    0,")
+        write("    0,")
+        write("    %sNew," % clname(cl))
         write("};\n")
 
         self.do_reduce_setstate(cl, vars)
