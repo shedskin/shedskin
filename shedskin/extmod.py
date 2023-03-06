@@ -558,33 +558,12 @@ class ExtensionModule:
         # write("        return;\n")
 
         # module init function
-        # write("static struct PyModuleDef %smodule = {" % "_".join(self.gv.module.name_list))
-        # write("    PyModuleDef_HEAD_INIT,")
-        # write('    "%s",   /* name of module */' % "_".join(self.gv.module.name_list))
-        # write("    NULL,   /* module documentation, may be NULL */") # FIXME
-        # write("    -1,     /* size of per-interpreter state of the module or -1 if the module keeps state in global variables. */")
-        # write("    %s" % "Global_" + "_".join(self.gv.module.name_list) + "Methods")
-        # write("};")
-
-        write(
-            "static struct PyModuleDef Module_%s = {"
-            % "_".join(self.gv.module.name_list)
-        )
+        write("static struct PyModuleDef Module_%s = {" % "_".join(self.gv.module.name_list))
         write("    PyModuleDef_HEAD_INIT,")
-        write(
-            '    .m_name = "%s",   /* name of module */'
-            % "_".join(self.gv.module.name_list)
-        )
-        write(
-            '    .m_doc = "module docstring",   /* module documentation, may be NULL */'
-        )  # FIXME
-        write(
-            "    .m_size = -1,     /* size of per-interpreter state of the module or -1 if the module keeps state in global variables. */"
-        )
-        write(
-            "    .m_methods = %sMethods,"
-            % ("Global_" + "_".join(self.gv.module.name_list))
-        )
+        write('    "%s",   /* name of module */' % "_".join(self.gv.module.name_list))
+        write("    NULL,   /* module documentation, may be NULL */") # FIXME
+        write("    -1,     /* size of per-interpreter state of the module or -1 if the module keeps state in global variables. */")
+        write("    %s" % "Global_" + "_".join(self.gv.module.name_list) + "Methods")
         write("};")
 
         # # add types to module
