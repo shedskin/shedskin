@@ -19,6 +19,7 @@ class ShedskinFormatter(logging.Formatter):
         return self._other_formatter.format(record)
 
 
+
 class CustomFormatter(logging.Formatter):
     """custom formatter class to add colors to logging"""
 
