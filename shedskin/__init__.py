@@ -56,7 +56,7 @@ class Shedskin:
             self.log.error("module_path is a directory: '%s'", module_path)
             sys.exit(1)
 
-        if not path.parent == pathlib.Path('.'): # path is to an item in current dir
+        if path.parent != pathlib.Path('.'): # path is in current dir
             os.chdir(path.parent)
             path = pathlib.Path(path.name)
 
@@ -318,9 +318,9 @@ class Shedskin:
         arg = opt = parser_test.add_argument
 
         opt("-e", "--extmod",     help="Generate extension module", action="store_true")
-        
+
         opt('--dryrun',           help='dryrun without any changes ', action='store_true')
-        opt('--include',          help='provide regex of tests to include with cmake', metavar="PATTERN")        
+        opt('--include',          help='provide regex of tests to include with cmake', metavar="PATTERN")
         opt('--check',            help='check testfile py syntax before running', action='store_true')
         opt('--modified',         help='run only recently modified test', action='store_true')
         opt('--nocleanup',        help='do not cleanup built test', action='store_true')
@@ -346,7 +346,7 @@ class Shedskin:
             if arg in ('-h', '--help'):
                 break
         else:
-             if len(sys.argv) > 1 and sys.argv[1] not in ('analyze', 'translate', 'build', 'run', 'test'):
+            if len(sys.argv) > 1 and sys.argv[1] not in ('analyze', 'translate', 'build', 'run', 'test'):
                 sys.argv.insert(1, 'translate')
 
         args = parser.parse_args()
