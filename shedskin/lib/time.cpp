@@ -12,56 +12,29 @@ tuple2<str *, str *> *tzname;
 
 #ifdef WIN32
 
-//#include <windows.h>
+#define DELTA_EPOCH_IN_100NS    INT64_C(116444736000000000)
+#define POW10_7 10000000
 
-double clock()
-{
-    return ((double) (std::clock()-start)) / CLOCKS_PER_SEC;
+int clock_gettime(int, struct timespec *tp)
+{  
+    unsigned __int64 t;
+    LARGE_INTEGER pf, pc;
+    union {
+        unsigned __int64 u64;
+        FILETIME ft;
+    } ct;
 
-/*       static LARGE_INTEGER ctrStart;
-       static double divisor = 0.0;
-       LARGE_INTEGER now;
-       double diff;
+    GetSystemTimeAsFileTime(&ct.ft);
 
-       if (divisor == 0.0) {
-               LARGE_INTEGER freq;
-               QueryPerformanceCounter(&ctrStart);
-               if (!QueryPerformanceFrequency(&freq) || freq.QuadPart == 0) {
-                       // Unlikely to happen - this works on all intel
-                       //     machines at least!  Revert to clock()
-                       return ((double) (std::clock()-start)) / CLOCKS_PER_SEC;
-               }
-               divisor = (double)freq.QuadPart;
-       }
-       QueryPerformanceCounter(&now);
-       diff = (double)(now.QuadPart - ctrStart.QuadPart);
-       return diff / divisor; */
+    t = ct.u64 - DELTA_EPOCH_IN_100NS;
+    tp->tv_sec = t / POW10_7;
+    tp->tv_nsec = ((int) (t % POW10_7)) * 100;
+
+    return 0;
 }
-#ifdef WIN32
-__ss_int gettimeofday (struct timeval *tv, struct __ss_timezone *tz)
-{
-   struct _timeb tb;
 
-   if (!tv)
-      return -1;
-
-  _ftime (&tb);
-  tv->tv_sec  = (long) tb.time;
-  tv->tv_usec = tb.millitm * 1000 + 500;
-  if (tz)
-  {
-    tz->tz_minuteswest = -60 * _timezone;
-    tz->tz_dsttime = _daylight;
-  }
-  return 0;
-}
-#endif
-
-#else
-
-double clock() {
-    return ((double) (std::clock()-start)) / CLOCKS_PER_SEC;
-}
+#undef DELTA_EPOCH_IN_100NS
+#undef POW10_7
 
 #endif
 
@@ -133,7 +106,11 @@ struct_time *tm2tuple(tm* tm_time) {
 
 double time() {
     timespec ts { 0 };
+#ifdef WIN32
+    if (clock_gettime(0, &ts) == -1)
+#else
     if (clock_gettime(CLOCK_REALTIME, &ts) == -1)
+#endif
 	    throw new Exception(new str("clock_gettime"));
     return ts.tv_sec + ts.tv_nsec/1000000000.0;
 }
@@ -909,7 +886,7 @@ void __init() {
         localt_hour += 24;
     }
     timezone = (gmt_hour - localt_hour) * 3600;
-    tzname = new tuple2<str *, str *>(2, new str(::tzname[0]), new str(::tzname[1]));
+    tzname = new tuple2<str *, str *>(2, new str(_tzname[0]), new str(_tzname[1]));
 }
 
 

@@ -26,7 +26,6 @@ namespace __time__ {
 extern __ss_int timezone;
 extern tuple2<str *, str *> *tzname;
 
-double clock();
 double time();
 void *sleep(double s);
 
