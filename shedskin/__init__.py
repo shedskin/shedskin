@@ -13,28 +13,7 @@ import struct
 import sys
 import time
 
-from . import annotate, cmake, config, cpp, error, graph, infer, utils
-
-
-def pkg_path():
-    """used by cmake to get package path automatically"""
-    cmake.pkg_path()
-
-
-class ShedskinFormatter(logging.Formatter):
-
-    def __init__(self, datefmt=None):
-        self._info_formatter = logging.Formatter(
-            utils.MOVE + '%(message)s', datefmt=datefmt)
-        self._other_formatter = logging.Formatter(
-            (utils.MOVE + utils.bold('*%(levelname)s*') + ' %(message)s'),
-            datefmt=datefmt
-        )
-
-    def format(self, record):
-        if record.levelname == 'INFO':
-            return self._info_formatter.format(record)
-        return self._other_formatter.format(record)
+from . import annotate, cmake, config, cpp, error, graph, infer, log
 
 
 class Shedskin:
@@ -50,7 +29,7 @@ class Shedskin:
     def configure_log(self):
         # silent -> WARNING only, debug -> DEBUG, default -> INFO
         console = logging.StreamHandler(stream=sys.stdout)
-        console.setFormatter(ShedskinFormatter())
+        console.setFormatter(log.ShedskinFormatter())
         self.log = logging.getLogger(self.__class__.__name__)
         self.log.addHandler(console)
         self.log.setLevel(logging.INFO)
@@ -77,7 +56,7 @@ class Shedskin:
             self.log.error("module_path is a directory: '%s'", module_path)
             sys.exit(1)
 
-        if not path.parent == pathlib.Path('.'): # path is to an item in current dir
+        if path.parent != pathlib.Path('.'): # path is in current dir
             os.chdir(path.parent)
             path = pathlib.Path(path.name)
 
@@ -339,9 +318,9 @@ class Shedskin:
         arg = opt = parser_test.add_argument
 
         opt("-e", "--extmod",     help="Generate extension module", action="store_true")
-        
+
         opt('--dryrun',           help='dryrun without any changes ', action='store_true')
-        opt('--include',          help='provide regex of tests to include with cmake', metavar="PATTERN")        
+        opt('--include',          help='provide regex of tests to include with cmake', metavar="PATTERN")
         opt('--check',            help='check testfile py syntax before running', action='store_true')
         opt('--modified',         help='run only recently modified test', action='store_true')
         opt('--nocleanup',        help='do not cleanup built test', action='store_true')
@@ -367,7 +346,7 @@ class Shedskin:
             if arg in ('-h', '--help'):
                 break
         else:
-             if len(sys.argv) > 1 and sys.argv[1] not in ('analyze', 'translate', 'build', 'run', 'test'):
+            if len(sys.argv) > 1 and sys.argv[1] not in ('analyze', 'translate', 'build', 'run', 'test'):
                 sys.argv.insert(1, 'translate')
 
         args = parser.parse_args()
@@ -397,6 +376,12 @@ class Shedskin:
             ss.analyze()
             ss.build()
             ss.run()
+
+
+def pkg_path():
+    """used by cmake to get package path automatically"""
+    cmake.pkg_path()
+
 
 if __name__ == '__main__':
     Shedskin.commandline()

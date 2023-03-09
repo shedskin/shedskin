@@ -325,14 +325,14 @@ function(add_shedskin_product)
         )
 
         target_compile_options(${EXE} PRIVATE
-            "-Wall"
+            ${SHEDSKIN_COMPILE_OPTIONS}
+            $<$<BOOL:${UNIX}>:-Wall>
             $<$<BOOL:${UNIX}>:-O2>
             $<$<BOOL:${UNIX}>:-Wno-deprecated>
             $<$<BOOL:${UNIX}>:-Wno-unused-variable>
             $<$<BOOL:${UNIX}>:-Wno-unused-but-set-variable>
-            ${SHEDSKIN_COMPILE_OPTIONS}
+            $<$<BOOL:${WIN32}>:/Wall>
             $<$<BOOL:${WIN32}>:/MD>
-            $<$<BOOL:${WIN32}>:/NODEFAULTLIB:library>
         )
 
         target_include_directories(${EXE} PRIVATE
@@ -427,18 +427,23 @@ function(add_shedskin_product)
         )
 
         target_compile_options(${EXT} PRIVATE
-            "-D__SS_BIND"
-            "-DNDEBUG"
-            "-fPIC"
-            "-fwrapv"
-            "-g"
-            "-O3"
-            "-Wall"
-            "-Wunreachable-code"
-            "-Wno-unused-but-set-variable"
-            "-Wno-unused-result"
-            "-Wno-unused-variable"
             ${SHEDSKIN_COMPILE_OPTIONS}
+            # unix
+            $<$<BOOL:${UNIX}>:-D__SS_BIND>
+            $<$<BOOL:${UNIX}>:-DNDEBUG>
+            $<$<BOOL:${UNIX}>:-fPIC>
+            $<$<BOOL:${UNIX}>:-fwrapv>
+            $<$<BOOL:${UNIX}>:-g>
+            $<$<BOOL:${UNIX}>:-Wall>
+            $<$<BOOL:${UNIX}>:-O3>
+            $<$<BOOL:${UNIX}>:-Wunreachable-code>
+            $<$<BOOL:${UNIX}>:-Wno-unused-result>
+            $<$<BOOL:${UNIX}>:-Wno-unused-variable>
+            $<$<BOOL:${UNIX}>:-Wno-unused-but-set-variable>
+            # windows
+            # $<$<BOOL:${WIN32}>:/LD>
+            $<$<BOOL:${WIN32}>:/MD>
+            $<$<BOOL:${WIN32}>:/Wall>
         )
 
         target_link_options(${EXT} PRIVATE
