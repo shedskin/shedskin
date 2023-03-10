@@ -1221,9 +1221,9 @@ template<class T> bytes *__bytes(T *t) {
     if constexpr (std::is_base_of_v<pyiter<__ss_int>, T>) {
         bytes *b = new bytes();
         __ss_int e;
-        typename pyiter<__ss_int>::for_in_loop __3;
-        int __2;
-        pyiter<__ss_int> *__1;
+        typename T::for_in_loop __3;
+        __ss_int __2;
+        T *__1;
         FOR_IN(e,t,1,2,3)
             b->unit += (unsigned char)e;
         END_FOR
