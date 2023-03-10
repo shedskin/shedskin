@@ -128,8 +128,8 @@ void *sleep(double s) {
     return NULL;
 }
 #else
-// TOFIX
 void *sleep(double s) {
+    Sleep(s*1000); // TODO ms resolution..
     return NULL;
     }
 #endif
