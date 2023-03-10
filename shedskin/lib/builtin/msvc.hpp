@@ -6,7 +6,7 @@
 
 #define and &&
 #define or ||
-#define not ~
+#define not !
 
 /* typeof */
 
