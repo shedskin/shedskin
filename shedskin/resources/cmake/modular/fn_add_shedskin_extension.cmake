@@ -138,7 +138,7 @@ function(add_shedskin_extension)
             IS_NESTED
             PROJECT_EXT_DIR
             __doc__
-        )
+    )
     endif()
 
     # -------------------------------------------------------------------------
@@ -230,6 +230,15 @@ function(add_shedskin_extension)
         )
     endif()
 
+    if(DEBUG)
+        message("LIB_DEPS: " ${LIB_DEPS})
+        message("LIB_DIRS: " ${LIB_DIRS})
+        message("LIB_INCLUDES: " ${LIB_INCLUDES})
+    endif()
+
+    # -------------------------------------------------------------------------
+    # build extension section
+
     set(EXT ${name}-ext)
 
     if(IS_NESTED)
@@ -284,6 +293,12 @@ function(add_shedskin_extension)
         PREFIX ""
     )
 
+    if(${WIN32})
+        set_target_properties(${EXT} PROPERTIES
+            SUFFIX ".pyd"
+        )
+    endif()
+
     target_include_directories(${EXT} PRIVATE
         ${Python_INCLUDE_DIRS}
         ${SHEDSKIN_LIB}
@@ -294,8 +309,9 @@ function(add_shedskin_extension)
 
     target_compile_options(${EXT} PRIVATE
         ${SHEDSKIN_COMPILE_OPTIONS}
+        # common
+        "-D__SS_BIND"
         # unix
-        $<$<BOOL:${UNIX}>:-D__SS_BIND>
         $<$<BOOL:${UNIX}>:-DNDEBUG>
         $<$<BOOL:${UNIX}>:-fPIC>
         $<$<BOOL:${UNIX}>:-fwrapv>
@@ -321,6 +337,7 @@ function(add_shedskin_extension)
 
     target_link_libraries(${EXT} PRIVATE
         ${LIB_DEPS}
+        $<$<BOOL:${WIN32}>:${Python_LIBRARIES}>
     )
 
     target_link_directories(${EXT} PRIVATE
@@ -331,4 +348,5 @@ function(add_shedskin_extension)
         add_test(NAME ${EXT} 
              COMMAND ${Python_EXECUTABLE} -c "from ${name} import test_all; test_all()")
     endif()
+
 endfunction()

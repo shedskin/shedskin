@@ -325,12 +325,13 @@ function(add_shedskin_product)
         )
 
         target_compile_options(${EXE} PRIVATE
-            "-Wall"
+            ${SHEDSKIN_COMPILE_OPTIONS}
+            $<$<BOOL:${UNIX}>:-Wall>
             $<$<BOOL:${UNIX}>:-O2>
             $<$<BOOL:${UNIX}>:-Wno-deprecated>
             $<$<BOOL:${UNIX}>:-Wno-unused-variable>
             $<$<BOOL:${UNIX}>:-Wno-unused-but-set-variable>
-            ${SHEDSKIN_COMPILE_OPTIONS}
+            $<$<BOOL:${WIN32}>:/Wall>
             $<$<BOOL:${WIN32}>:/MD>
         )
 
@@ -417,6 +418,12 @@ function(add_shedskin_product)
             PREFIX ""
         )
 
+        if(${WIN32})
+            set_target_properties(${EXT} PROPERTIES
+                SUFFIX ".pyd"
+            )
+        endif()
+
         target_include_directories(${EXT} PRIVATE
             ${Python_INCLUDE_DIRS}
             ${SHEDSKIN_LIB}
@@ -427,8 +434,9 @@ function(add_shedskin_product)
 
         target_compile_options(${EXT} PRIVATE
             ${SHEDSKIN_COMPILE_OPTIONS}
+            # common
+            "-D__SS_BIND"
             # unix
-            $<$<BOOL:${UNIX}>:-D__SS_BIND>
             $<$<BOOL:${UNIX}>:-DNDEBUG>
             $<$<BOOL:${UNIX}>:-fPIC>
             $<$<BOOL:${UNIX}>:-fwrapv>
@@ -454,6 +462,7 @@ function(add_shedskin_product)
 
         target_link_libraries(${EXT} PRIVATE
             ${LIB_DEPS}
+            $<$<BOOL:${WIN32}>:${Python_LIBRARIES}>
         )
 
         target_link_directories(${EXT} PRIVATE

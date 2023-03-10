@@ -437,7 +437,6 @@ function(add_shedskin_product)
             # common
             "-D__SS_BIND"
             # unix
-            #$<$<BOOL:${UNIX}>:-D__SS_BIND>
             $<$<BOOL:${UNIX}>:-DNDEBUG>
             $<$<BOOL:${UNIX}>:-fPIC>
             $<$<BOOL:${UNIX}>:-fwrapv>
