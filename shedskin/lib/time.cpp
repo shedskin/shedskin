@@ -886,7 +886,11 @@ void __init() {
         localt_hour += 24;
     }
     timezone = (gmt_hour - localt_hour) * 3600;
+#ifdef WIN32
     tzname = new tuple2<str *, str *>(2, new str(_tzname[0]), new str(_tzname[1]));
+#else
+    tzname = new tuple2<str *, str *>(2, new str(::tzname[0]), new str(::tzname[1]));
+#endif
 }
 
 
