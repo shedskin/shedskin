@@ -341,6 +341,7 @@ function(add_shedskin_extension)
 
     target_link_directories(${EXT} PRIVATE
         ${LIB_DIRS}
+        $<$<BOOL:${WIN32}>:${Python_LIBRARY_DIRS}>
     )
 
     if(BUILD_TEST AND IS_TEST)
