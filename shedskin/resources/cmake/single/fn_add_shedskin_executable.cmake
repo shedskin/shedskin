@@ -88,7 +88,7 @@ function(add_shedskin_executable)
         set(opts)
     endif()
 
-    set(PROJECT_EXE_DIR ${PROJECT_BINARY_DIR}/${name}/exe)
+    set(PROJECT_EXE_DIR ${PROJECT_BINARY_DIR}/exe)
     set(IMPORTS_OS_MODULE FALSE)
     set(IMPORTS_RE_MODULE FALSE)
  
@@ -164,7 +164,7 @@ function(add_shedskin_executable)
         endif()
     endforeach()
 
-    if(ENABLE_EXEERNAL_PROJECT)
+    if(ENABLE_EXTERNAL_PROJECT)
         set(LIB_DEPS
             ${install_dir}/lib/libgc.a
             ${install_dir}/lib/libgccpp.a
@@ -230,6 +230,15 @@ function(add_shedskin_executable)
         )
     endif()
 
+    if(DEBUG)
+        message("LIB_DEPS: " ${LIB_DEPS})
+        message("LIB_DIRS: " ${LIB_DIRS})
+        message("LIB_INCLUDES: " ${LIB_INCLUDES})
+    endif()
+
+    # -------------------------------------------------------------------------
+    # build executable section
+
     set(EXE ${name}-exe)
 
     if(IS_NESTED)
@@ -284,12 +293,13 @@ function(add_shedskin_executable)
     )
 
     target_compile_options(${EXE} PRIVATE
-        "-Wall"
+        ${SHEDSKIN_COMPILE_OPTIONS}
+        $<$<BOOL:${UNIX}>:-Wall>
         $<$<BOOL:${UNIX}>:-O2>
         $<$<BOOL:${UNIX}>:-Wno-deprecated>
         $<$<BOOL:${UNIX}>:-Wno-unused-variable>
         $<$<BOOL:${UNIX}>:-Wno-unused-but-set-variable>
-        ${SHEDSKIN_COMPILE_OPTIONS}
+        $<$<BOOL:${WIN32}>:/Wall>
         $<$<BOOL:${WIN32}>:/MD>
     )
 
@@ -315,4 +325,5 @@ function(add_shedskin_executable)
     if(BUILD_TEST AND IS_TEST)
         add_test(NAME ${EXE} COMMAND ${EXE})
     endif()
+
 endfunction()
