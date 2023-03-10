@@ -12,7 +12,7 @@ class_ *cl_error;
 bool little_endian;
 
 static inline bool swap_endian(char o) {
-    return (little_endian and (o=='>' or o=='!')) or (!little_endian and o=='<');
+    return (little_endian and (o=='>' or o=='!')) or (not little_endian and o=='<');
 }
 
 int get_itemsize(char order, char c) {
