@@ -412,13 +412,13 @@ def generate_cmakefile(gx):
             entry = entry.parent / entry.stem
             if entry.name == "builtin":  # don't include 'builtin' module
                 continue
-            sys_mods.add(entry)
+            sys_mods.add(entry.as_posix())
         else:
             entry = module.filename.relative_to(gx.main_module.filename.parent)
             entry = entry.parent / entry.stem
             if entry.name == path.stem:  # don't include main_module
                 continue
-            app_mods.add(entry)
+            app_mods.add(entry.as_posix())
 
     if in_source_build:
         master_clfile = path.parent / "CMakeLists.txt"
