@@ -493,6 +493,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.gx.types[newnode] = set()
         self.add_constraint((infer.inode(self.gx, node.value), newnode), func)
 
+        while func and isinstance(func, python.Function) and func.listcomp:
+            func = func.parent
+
         lvar = self.default_var(node.target.id, func)
         self.add_constraint((newnode, infer.inode(self.gx, lvar)), func)
 
