@@ -201,6 +201,7 @@ class Function:
         self.nodes_ordered = []
         self.defaults = []
         self.misses = set()
+        self.misses_by_ref = set()
         self.cp = {}
         self.xargs = {}
         self.largs = None
