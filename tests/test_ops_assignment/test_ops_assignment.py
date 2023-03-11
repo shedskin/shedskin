@@ -188,7 +188,7 @@ def test_walrus4():
 def test_walrus5():
     total = 0
     partial_sums = [total := total + v for v in range(5)]
-    print(total)  # Prints: 50
+    assert total == 10
 
 
 
@@ -216,7 +216,7 @@ def test_all():
     test_walrus2()
     test_walrus3()
     test_walrus4()
-    # test_walrus5() scoping issue. were list comprehensions fixed to not have their own scope?
+    test_walrus5()
 
 
 if __name__ == '__main__':
