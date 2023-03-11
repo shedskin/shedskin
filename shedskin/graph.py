@@ -494,6 +494,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.add_constraint((infer.inode(self.gx, node.value), newnode), func)
 
         while func and isinstance(func, python.Function) and func.listcomp:
+            func.misses_by_ref.add(node.target.id)
             func = func.parent
 
         lvar = self.default_var(node.target.id, func)
