@@ -44,8 +44,16 @@ def test_unpack_issue():
     n, = struct.unpack('>i', s)
     assert n == -12000
 
+
+def test_unpack_from():
+    data = b'\xf0\x04\x00\x00\x01\x02'
+    n, = struct.unpack_from('<I', data)
+    assert n == 1264
+
+
 def test_all():
     test_unpack()
+    test_unpack_from()
     test_unpack_issue()
     test_pack()
 
