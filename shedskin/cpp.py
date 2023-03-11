@@ -3096,6 +3096,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         args = []
         for name in lcfunc.misses:
             if python.lookup_var(name, func, mv=self.mv).parent:
+                arg = self.cpp_name(name)
+                if name in lcfunc.misses_by_ref:
+                    arg = '&' + arg
                 args.append(
                     (
                         typestr.nodetypestr(
@@ -3104,7 +3107,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                             lcfunc,
                             mv=self.mv,
                         ),
-                        self.cpp_name(name),
+                        arg,
                     )
                 )
         return args
