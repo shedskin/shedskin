@@ -9,6 +9,8 @@ set(CMAKE_CXX_STANDARD 17)
 
 option(DEBUG "Enable debug output" OFF)
 
+option(SIMPLE_PROJECT "Project has a single target and no subprojects" %(is_simple_project)s)
+
 option(BUILD_EXECUTABLE "Build executable" ON)
 option(BUILD_EXTENSION "Build python extension" OFF)
 option(BUILD_TEST "Build test" ON)
@@ -92,7 +94,7 @@ endif()
 
 # -----------------------------------------------------------------------------
 # includes
-list(APPEND CMAKE_MODULE_PATH "${SHEDSKIN}/resources/cmake/single")
+list(APPEND CMAKE_MODULE_PATH "${SHEDSKIN}/resources/cmake")
 include(utils)
 include(fn_add_shedskin_product)    # can build both executable and extension
 
@@ -126,4 +128,3 @@ endif()
 # -----------------------------------------------------------------------
 # add subdirectories here
 %(entry)s
-

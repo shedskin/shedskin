@@ -33,8 +33,8 @@ include = [
     { path = "shedskin/FLAGS*", format = ["sdist", "wheel"] },
     { path = "shedskin/illegal", format = ["sdist", "wheel"] },
     { path = "shedskin/templates/cpp/*.cpp.tpl", format = ["sdist", "wheel"] },
-    { path = "shedskin/resources/cmake/modular/*.cmake", format = ["sdist", "wheel"] },
-    { path = "shedskin/resources/cmake/modular/*.txt", format = ["sdist", "wheel"] },    
+    { path = "shedskin/resources/cmake/*.cmake", format = ["sdist", "wheel"] },
+    { path = "shedskin/resources/cmake/*.txt", format = ["sdist", "wheel"] },    
     { path = "shedskin/resources/conan/*.txt", format = ["sdist", "wheel"] },
 
 
