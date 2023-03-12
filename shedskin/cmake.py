@@ -16,6 +16,7 @@ import glob
 import logging
 import os
 import pathlib
+import platform
 import shutil
 import subprocess
 import sys
@@ -550,8 +551,13 @@ class CMakeBuilder:
 
     def cmake_test(self, options):
         """activate ctest"""
-        options = " ".join(options)
-        tst_cmd = f"ctest --output-on-failure {options} --test-dir {self.build_dir}"
+        opts = " ".join(options)
+        if platform.system() == 'Windows':
+            cfg = f"-C {self.options.build_type}"
+        else:
+            cfg = ""
+
+        tst_cmd = f"ctest {cfg} --output-on-failure {opts} --test-dir {self.build_dir}"
         print("tst_cmd:", tst_cmd)
         os.system(tst_cmd)
 
