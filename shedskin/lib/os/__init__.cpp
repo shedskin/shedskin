@@ -92,7 +92,7 @@ list<str *> *listdir(str *path) {
     list<str *> *r = new list<str *>();
 
     for (const auto & entry : std::filesystem::directory_iterator(path->unit))
-        r->append(new str(entry.path().filename().c_str()));
+        r->append(new str(entry.path().filename().string().c_str()));
 
     return r;
 }
