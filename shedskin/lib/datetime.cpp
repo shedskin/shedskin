@@ -5,6 +5,34 @@
 #include <iostream>
 #include <time.h>
 
+#ifdef _MSC_VER
+
+#define DELTA_EPOCH_IN_100NS    INT64_C(116444736000000000)
+#define POW10_7 10000000
+
+int clock_gettime(int, struct timespec *tp)
+{
+    unsigned __int64 t;
+    LARGE_INTEGER pf, pc;
+    union {
+        unsigned __int64 u64;
+        FILETIME ft;
+    } ct;
+
+    GetSystemTimeAsFileTime(&ct.ft);
+
+    t = ct.u64 - DELTA_EPOCH_IN_100NS;
+    tp->tv_sec = t / POW10_7;
+    tp->tv_nsec = ((int) (t % POW10_7)) * 100;
+
+    return 0;
+}
+
+#undef DELTA_EPOCH_IN_100NS
+#undef POW10_7
+
+#endif
+
 namespace __datetime__ {
 
 str *date_format,*hour_format1,*hour_format2,*ctime_format;
@@ -281,8 +309,12 @@ datetime::datetime(__ss_int year, __ss_int month, __ss_int day, __ss_int hour, _
 datetime *datetime::today() {
     timespec ts { 0, 0 };
 
+#ifdef _MSC_VER
+    if (clock_gettime(0, &ts) == -1)
+#else
     if (clock_gettime(CLOCK_REALTIME, &ts) == -1)
-	    throw new OSError(new str("clock_gettime"));
+#endif
+        throw new OSError(new str("clock_gettime"));
 
     tm *t = localtime(&ts.tv_sec);
 
@@ -306,8 +338,12 @@ datetime *datetime::now(tzinfo *tzinfo) {
 datetime *datetime::utcnow() {
     timespec ts { 0, 0 };
 
+#ifdef _MSC_VER
+    if (clock_gettime(0, &ts) == -1)
+#else
     if (clock_gettime(CLOCK_REALTIME, &ts) == -1)
-	    throw new OSError(new str("clock_gettime"));
+#endif
+        throw new OSError(new str("clock_gettime"));
 
     tm *t = gmtime(&ts.tv_sec);
 

@@ -10,13 +10,13 @@ clock_t start;
 __ss_int timezone;
 tuple2<str *, str *> *tzname;
 
-#ifdef WIN32
+#ifdef _MSC_VER
 
 #define DELTA_EPOCH_IN_100NS    INT64_C(116444736000000000)
 #define POW10_7 10000000
 
 int clock_gettime(int, struct timespec *tp)
-{  
+{
     unsigned __int64 t;
     LARGE_INTEGER pf, pc;
     union {
@@ -106,7 +106,7 @@ struct_time *tm2tuple(tm* tm_time) {
 
 double time() {
     timespec ts { 0 };
-#ifdef WIN32
+#ifdef _MSC_VER
     if (clock_gettime(0, &ts) == -1)
 #else
     if (clock_gettime(CLOCK_REALTIME, &ts) == -1)
