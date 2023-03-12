@@ -7,12 +7,17 @@
 #include <sstream>
 #include <sys/stat.h>
 #include <stdio.h>
-#include <dirent.h>
 #include <errno.h>
-#include <sys/time.h>
 #include <sys/types.h>
 #include <fcntl.h>
+
+#ifdef _MSC_VER
+#include <direct.h>
+#else
+#include <dirent.h>
+#include <sys/time.h>
 #include <utime.h>
+#endif
 
 #ifndef WIN32
 #include <sys/times.h>
@@ -234,11 +239,11 @@ __cstat::__cstat(str *path, __ss_int t) {
     this->__class__ = cl___cstat;
 
     if(t==1) {
-        if(stat(path->c_str(), &sbuf) == -1)
+        if(::stat(path->c_str(), &sbuf) == -1)
             throw new OSError(path);
     } else if (t==2) {
 #ifndef WIN32
-        if(lstat(path->c_str(), &sbuf) == -1)
+        if(::lstat(path->c_str(), &sbuf) == -1)
 #endif
             throw new OSError(path);
     }
@@ -249,7 +254,7 @@ __cstat::__cstat(str *path, __ss_int t) {
 __cstat::__cstat(__ss_int fd) {
     this->__class__ = cl___cstat;
 
-    if(fstat(fd, &sbuf) == -1)
+    if(::fstat(fd, &sbuf) == -1)
         throw new OSError();
 
     fill_er_up();
