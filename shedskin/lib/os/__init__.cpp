@@ -13,10 +13,12 @@
 
 #ifdef _MSC_VER
 #include <direct.h>
+#include <io.h>
 #else
 #include <dirent.h>
 #include <sys/time.h>
 #include <utime.h>
+#include <unistd.h>
 #endif
 
 #ifndef WIN32
@@ -32,8 +34,6 @@
 #include <grp.h>
 #include <sysexits.h>
 #endif
-
-#include <unistd.h>
 
 #ifdef WIN32
 #include <windows.h>
@@ -428,6 +428,7 @@ void *renames(str* old, str* _new) {
     return NULL;
 }
 
+#ifndef _MSC_VER
 popen_pipe::popen_pipe(str *cmd, str *flags) {
     if(flags == 0)
         flags = new str("r");
@@ -458,6 +459,7 @@ popen_pipe* popen(str* cmd, str* mode, __ss_int) {
     if(!fp) throw new OSError(cmd);
     return new popen_pipe(fp);
 }
+#endif
 
 __ss_int dup(__ss_int f1) {
     __ss_int f2 = ::dup(f1);
