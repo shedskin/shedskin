@@ -19,10 +19,7 @@ function(add_shedskin_product)
     set(options
         BUILD_EXECUTABLE
         BUILD_EXTENSION
-        BUILD_TEST 
-        DISABLE_EXECUTABLE
-        DISABLE_EXTENSION
-        DISABLE_TEST
+        BUILD_TEST
         HAS_LIB
         ENABLE_CONAN
         ENABLE_SPM
@@ -47,28 +44,26 @@ function(add_shedskin_product)
     cmake_parse_arguments(SHEDSKIN "${options}" "${oneValueArgs}"
                           "${multiValueArgs}" ${ARGN})
 
-    if(SHEDSKIN_BUILD_EXECUTABLE)
-        set(BUILD_EXECUTABLE ON)
+    # if both are not defined i.e. add_shedskin_product() then assume both should be built
+    if(NOT SHEDSKIN_BUILD_EXECUTABLE AND NOT SHEDSKIN_BUILD_EXTENSION)
+        set(SHEDSKIN_BUILD_EXECUTABLE ON)
+        set(SHEDSKIN_BUILD_EXTENSION  ON)
     endif()
 
-    if(SHEDSKIN_DISABLE_EXECUTABLE)
+    if(SHEDSKIN_BUILD_EXECUTABLE)
+        set(BUILD_EXECUTABLE ON)
+    else()
         set(BUILD_EXECUTABLE OFF)
     endif()
 
     if(SHEDSKIN_BUILD_EXTENSION)
         set(BUILD_EXTENSION ON)
-    endif()
-
-    if(SHEDSKIN_DISABLE_EXTENSION)
+    else()
         set(BUILD_EXTENSION OFF)
     endif()
 
     if(SHEDSKIN_BUILD_TEST)
         set(BUILD_TEST ON)
-    endif()
-
-    if(SHEDSKIN_DISABLE_TEST)
-        set(BUILD_TEST OFF)
     endif()
 
     if(DEFINED SHEDSKIN_NAME)
@@ -130,10 +125,7 @@ function(add_shedskin_product)
             # boolean options
             SHEDSKIN_BUILD_EXECUTABLE
             SHEDSKIN_BUILD_EXTENSION
-            SHEDSKIN_BUILD_TEST 
-            SHEDSKIN_DISABLE_EXECUTABLE
-            SHEDSKIN_DISABLE_EXTENSION
-            SHEDSKIN_DISABLE_TEST
+            SHEDSKIN_BUILD_TEST
 
             SHEDSKIN_HAS_LIB
 

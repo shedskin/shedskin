@@ -43,7 +43,7 @@ def generate_makefile(gx):
                     ldflags += " -L" + sysconfig.get_config_var("LIBPL")
 
     ident = gx.main_module.ident
-    if gx.extension_module:
+    if gx.pyextension_product:
         if sys.platform == "win32":
             ident += ".pyd"
         else:
@@ -146,7 +146,7 @@ def generate_makefile(gx):
                 line += " -D__SS_NOGC"
             if not gx.gcwarns:
                 line += " -D__SS_NOGCWARNS"
-            if gx.extension_module:
+            if gx.pyextension_product:
                 if sys.platform == "win32":
                     line += " -I%s\\include -D__SS_BIND" % prefix
                 else:
@@ -157,7 +157,7 @@ def generate_makefile(gx):
                 line += " -L/opt/local/lib"
             if sys.platform == "darwin" and os.path.isdir("/usr/local/lib"):  # XXX
                 line += " -L/usr/local/lib"
-            if gx.extension_module:
+            if gx.pyextension_product:
                 if gx.msvc:
                     line += " /dll /libpath:%s\\libs " % prefix
                 elif sys.platform == "win32":
@@ -213,13 +213,13 @@ def generate_makefile(gx):
     _out = "-o "
     _ext = ""
     targets = [("", "")]
-    if not gx.extension_module:
+    if not gx.pyextension_product:
         targets += [("_prof", "-pg -ggdb"), ("_debug", "-g -ggdb")]
     if gx.msvc:
         _out = "/out:"
         _ext = ""
         targets = [("", "")]
-        if not gx.extension_module:
+        if not gx.pyextension_product:
             _ext = ".exe"
     for suffix, options in targets:
         write(ident + suffix + ":\t$(CPPFILES) $(HPPFILES)")
@@ -243,11 +243,11 @@ def generate_makefile(gx):
 
     # clean
     ext = ""
-    if sys.platform == "win32" and not gx.extension_module:
+    if sys.platform == "win32" and not gx.pyextension_product:
         ext = ".exe"
     write("clean:")
     targets = [ident + ext]
-    if not gx.extension_module:
+    if not gx.pyextension_product:
         if not gx.msvc:
             targets += [ident + "_prof" + ext, ident + "_debug" + ext]
     write("\trm -f %s" % " ".join(targets))

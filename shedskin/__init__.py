@@ -23,6 +23,7 @@ class Shedskin:
         self.configure_log()
         self.gx = self.configure(options)
         self.gx.options = options
+        print('self.gx.executable_product:', self.gx.executable_product)
         if 'name' in options:
             self.module_name = self.get_name(options.name)
 
@@ -82,7 +83,8 @@ class Shedskin:
                 gx.bounds_checking = False
 
             if args.extmod:
-                gx.extension_module = True
+                gx.executable_product = False
+                gx.pyextension_product = True
 
             if args.ann:
                 gx.annotation = True
@@ -136,6 +138,9 @@ class Shedskin:
             if args.traceback:
                 gx.traceback = True
 
+            if args.executable:
+                gx.executable_product = True
+
             # [str]
             if args.lib:
                 gx.libdirs = args.lib + gx.libdirs
@@ -155,14 +160,13 @@ class Shedskin:
         if sys.platform == 'win32' and os.path.isdir('c:/mingw'):
             self.log.error('please rename or remove c:/mingw, as it conflicts with Shed Skin')
             sys.exit()
-        if sys.platform == 'win32' and struct.calcsize('P') == 8 and gx.extension_module:
+        if sys.platform == 'win32' and struct.calcsize('P') == 8 and gx.pyextension_product:
             self.log.warning('64-bit python may not come with necessary file to build extension module')
 
         return gx
 
     def analyze(self):
         self.gx.main_module = graph.parse_module(self.module_name, self.gx)
-        # from IPython import embed; embed()
 
     def translate(self):
         t0 = time.time()
@@ -188,7 +192,6 @@ class Shedskin:
             executable = cwd / 'build' / p.stem
         else:
             executable = cwd.parent / 'build' / p.parent.name / p.parent.name
-        # print("executable:", executable)
         os.system(executable)
 
     @classmethod
@@ -231,7 +234,8 @@ class Shedskin:
         opt("-o", "--outputdir",  help="Specify output directory for generated files")
         opt("-r", "--random",     help="Use fast random number generator (rand())", action="store_true")
         opt("-s", "--silent",     help="Silent mode, only show warnings", action="store_true")
-        opt("-x", "--traceback",  help="Print traceback for uncaught exceptions", action="store_true")
+        opt("-t", "--traceback",  help="Print traceback for uncaught exceptions", action="store_true")
+        opt("-x", "--executable", help="Generate executable", action="store_true")
 
         opt("--noassert",         help="Disable assert statements", action="store_true")
         opt("-b", "--nobounds",   help="Disable bounds checking", action="store_true")
@@ -268,7 +272,8 @@ class Shedskin:
         opt("-o", "--outputdir",  help="Specify output directory for generated files")
         opt("-r", "--random",     help="Use fast random number generator (rand())", action="store_true")
         opt("-s", "--silent",     help="Silent mode, only show warnings", action="store_true")
-        opt("-x", "--traceback",  help="Print traceback for uncaught exceptions", action="store_true")
+        opt("-t", "--traceback",  help="Print traceback for uncaught exceptions", action="store_true")
+        opt("-x", "--executable", help="Generate executable", action="store_true")
 
         opt("--noassert",         help="Disable assert statements", action="store_true")
         opt("--nobounds",         help="Disable bounds checking", action="store_true")
@@ -305,7 +310,8 @@ class Shedskin:
         opt("-o", "--outputdir",  help="Specify output directory for generated files")
         opt("-r", "--random",     help="Use fast random number generator (rand())", action="store_true")
         opt("-s", "--silent",     help="Silent mode, only show warnings", action="store_true")
-        opt("-x", "--traceback",  help="Print traceback for uncaught exceptions", action="store_true")
+        opt("-t", "--traceback",  help="Print traceback for uncaught exceptions", action="store_true")
+        opt("-x", "--executable", help="Generate executable", action="store_true")
 
         opt("--noassert",         help="Disable assert statements", action="store_true")
         opt("--nobounds",         help="Disable bounds checking", action="store_true")
@@ -318,6 +324,7 @@ class Shedskin:
         arg = opt = parser_test.add_argument
 
         opt("-e", "--extmod",     help="Generate extension module", action="store_true")
+        opt("-x", "--executable", help="Generate executable", action="store_true")
 
         opt('--dryrun',           help='dryrun without any changes ', action='store_true')
         opt('--include',          help='provide regex of tests to include with cmake', metavar="PATTERN")

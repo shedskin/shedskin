@@ -94,8 +94,6 @@ endif()
 # includes
 list(APPEND CMAKE_MODULE_PATH "${SHEDSKIN}/resources/cmake/modular")
 include(utils)
-include(fn_add_shedskin_executable) # can build only an executable
-include(fn_add_shedskin_extension)  # can build only an extension
 include(fn_add_shedskin_product)    # can build both executable and extension
 
 # -----------------------------------------------------------------------

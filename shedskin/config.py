@@ -67,7 +67,8 @@ class GlobalInfo:  # XXX add comments, split up
         self.wrap_around_check = True
         self.bounds_checking = True
         self.assertions = True
-        self.extension_module = False
+        self.executable_product = True
+        self.pyextension_product = False
         self.longlong = False
         self.float = False
         self.flags = None
