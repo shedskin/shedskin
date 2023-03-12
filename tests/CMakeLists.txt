@@ -85,7 +85,7 @@ endif()
 
 # -----------------------------------------------------------------------------
 # includes
-list(APPEND CMAKE_MODULE_PATH "${SHEDSKIN}/resources/cmake/modular")
+list(APPEND CMAKE_MODULE_PATH "${SHEDSKIN}/resources/cmake")
 include(utils)
 include(fn_add_shedskin_product)
 

@@ -382,10 +382,17 @@ def add_shedskin_product(
     return "\n".join(flist)
 
 
-def get_cmakefile_template(section, **kwds):
+# def get_cmakefile_template(section, **kwds):
+#     """returns a cmake template"""
+#     _pkg_path = get_pkg_path()
+#     cmakelists_tmpl = _pkg_path / "resources" / "cmake" / section / "CMakeLists.txt"
+#     tmpl = cmakelists_tmpl.read_text()
+#     return tmpl % kwds
+
+def get_cmakefile_template(**kwds):
     """returns a cmake template"""
     _pkg_path = get_pkg_path()
-    cmakelists_tmpl = _pkg_path / "resources" / "cmake" / section / "CMakeLists.txt"
+    cmakelists_tmpl = _pkg_path / "resources" / "cmake" / "CMakeLists.txt"
     tmpl = cmakelists_tmpl.read_text()
     return tmpl % kwds
 
@@ -423,8 +430,8 @@ def generate_cmakefile(gx):
     if in_source_build:
         master_clfile = path.parent / "CMakeLists.txt"
         master_clfile_content = get_cmakefile_template(
-            section='single',
             project_name=f"{gx.main_module.ident}_project",
+            is_simple_project="ON",
             entry=add_shedskin_product(
                 path.name,
                 sys_mods,
@@ -451,9 +458,9 @@ def generate_cmakefile(gx):
 
         master_clfile = src_clfile.parent.parent / "CMakeLists.txt"
         master_clfile_content = get_cmakefile_template(
-            section='modular',
             project_name=f"{gx.main_module.ident}_project",
-            subdir=path.parent.name,
+            is_simple_project="OFF",
+            entry=f"add_subdirectory({path.parent.name})",
         )
         master_clfile.write_text(master_clfile_content)
 
