@@ -425,14 +425,29 @@ def generate_cmakefile(gx):
         master_clfile_content = get_cmakefile_template(
             section='single',
             project_name=f"{gx.main_module.ident}_project",
-            entry=add_shedskin_product(path.name, sys_mods, app_mods, name=path.stem),
+            entry=add_shedskin_product(
+                path.name,
+                sys_mods,
+                app_mods,
+                name=path.stem,
+                build_executable=gx.executable_product,
+                build_extension=gx.pyextension_product,
+            ),
         )
         master_clfile.write_text(master_clfile_content)
 
     else:
         src_clfile = path.parent / "CMakeLists.txt"
 
-        src_clfile.write_text(add_shedskin_product(path.name, sys_mods, app_mods))
+        src_clfile.write_text(
+            add_shedskin_product(
+                path.name,
+                sys_mods,
+                app_mods,
+                build_executable=gx.executable_product,
+                build_extension=gx.pyextension_product,
+            )
+        )
 
         master_clfile = src_clfile.parent.parent / "CMakeLists.txt"
         master_clfile_content = get_cmakefile_template(

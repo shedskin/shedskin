@@ -282,13 +282,13 @@ class generateVisitor(ASTVisitor):
                     self.visitFunction(func.node, declare=True)
         print >>self.out
 
-        if getgx().extension_module:
+        if getgx().pyextension_product:
             extmod.pyinit_func(self)
 
         for n in self.module.name_list:
             print >>self.out, '} // module namespace'
 
-        if getgx().extension_module:
+        if getgx().pyextension_product:
             extmod.convert_methods2(self)
 
         print >>self.out, '#endif'
@@ -343,7 +343,7 @@ class generateVisitor(ASTVisitor):
         # --- __init
         self.output('void __init() {')
         self.indent()
-        if self.module == getgx().main_module and not getgx().extension_module: self.output('__name__ = new str("__main__");\n')
+        if self.module == getgx().main_module and not getgx().pyextension_product: self.output('__name__ = new str("__main__");\n')
         else: self.output('__name__ = new str("%s");\n' % self.module.ident)
 
         for child in node.node.getChildNodes():
@@ -408,7 +408,7 @@ class generateVisitor(ASTVisitor):
         print >>self.out
 
         # --- c++ main/extension module setup
-        if getgx().extension_module:
+        if getgx().pyextension_product:
             extmod.do_extmod(self)
         if self.module == getgx().main_module:
             self.do_main()
@@ -421,7 +421,7 @@ class generateVisitor(ASTVisitor):
 
     def do_main(self):
         mods = getgx().modules.values()
-        if [mod for mod in mods if mod.builtin and mod.ident == 'sys'] and not getgx().extension_module:
+        if [mod for mod in mods if mod.builtin and mod.ident == 'sys'] and not getgx().pyextension_product:
             print >>self.out, 'int main(int argc, char **argv) {'
         else:
             print >>self.out, 'int main(int, char **) {'
@@ -436,7 +436,7 @@ class generateVisitor(ASTVisitor):
         for mod in mods:
             if mod != getgx().main_module and mod.ident != 'builtin':
                 if mod.ident == 'sys':
-                    if getgx().extension_module:
+                    if getgx().pyextension_product:
                         print >>self.out, '    __sys__::__init(0, 0);'
                     else:
                         print >>self.out, '    __sys__::__init(argc, argv);'
@@ -566,7 +566,7 @@ class generateVisitor(ASTVisitor):
         if cl.has_deepcopy and not 'deepcopy' in cl.funcs:
             self.copy_method(cl, '__deepcopy__', declare)
 
-        if getgx().extension_module:
+        if getgx().pyextension_product:
             extmod.convert_methods(self, cl, declare)
 
         self.deindent()
@@ -2886,7 +2886,7 @@ def generate_code():
             if not sysconfig.get_config_var('Py_ENABLE_SHARED'):
                 ldflags += ' -L' + sysconfig.get_config_var('LIBPL')
 
-    if getgx().extension_module:
+    if getgx().pyextension_product:
         if sys.platform == 'win32': ident += '.pyd'
         else: ident += '.so'
 
@@ -2959,7 +2959,7 @@ def generate_code():
             if not getgx().assertions: line += ' -D__SS_NOASSERT'
             if getgx().fast_hash: line += ' -D__SS_FASTHASH'
             if getgx().longlong: line += ' -D__SS_LONG'
-            if getgx().extension_module:
+            if getgx().pyextension_product:
                 if getgx().msvc: line += ' /DLL /LIBPATH:%s/libs /LIBPATH:python%s' % (prefix, pyver)
                 elif sys.platform == 'win32': line += ' -I%s/include -D__SS_BIND' % prefix
                 else: line += ' -g -fPIC -D__SS_BIND ' + includes
@@ -2969,7 +2969,7 @@ def generate_code():
                 line += ' -L/opt/local/lib'
             if sys.platform == 'darwin' and os.path.isdir('/usr/local/lib'): # XXX
                 line += ' -L/usr/local/lib'
-            if getgx().extension_module:
+            if getgx().pyextension_product:
                 if sys.platform == 'win32': line += ' -shared -L%s/libs -lpython%s' % (prefix, pyver)
                 elif sys.platform == 'darwin': line += ' -bundle -undefined dynamic_lookup ' + ldflags
                 elif sys.platform == 'sunos5': line += ' -shared -Xlinker ' + ldflags
@@ -2998,10 +2998,10 @@ def generate_code():
     if getgx().msvc:
         _out = '/out:'
         _ext = ''
-        if not getgx().extension_module:
+        if not getgx().pyextension_product:
             _ext = '.exe'
     targets = [('', '')]
-    if not getgx().extension_module:
+    if not getgx().pyextension_product:
         targets += [('_prof', '-pg -ggdb'), ('_debug', '-g -ggdb')]
     for suffix, options in targets:
         print >>makefile, ident+suffix+':\t$(CPPFILES) $(HPPFILES)'
@@ -3009,11 +3009,11 @@ def generate_code():
 
     # clean
     ext = ''
-    if sys.platform == 'win32' and not getgx().extension_module:
+    if sys.platform == 'win32' and not getgx().pyextension_product:
         ext = '.exe'
     print >>makefile, 'clean:'
     targets = [ident+ext]
-    if not getgx().extension_module:
+    if not getgx().pyextension_product:
         targets += [ident+'_prof'+ext, ident+'_debug'+ext]
     print >>makefile, '\trm -f %s\n' % ' '.join(targets)
 
