@@ -10,12 +10,12 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <fcntl.h>
+#include <filesystem>
 
 #ifdef _MSC_VER
 #include <direct.h>
 #include <io.h>
 #else
-#include <dirent.h>
 #include <sys/time.h>
 #include <utime.h>
 #include <unistd.h>
@@ -90,18 +90,10 @@ __ss_int __ss_F_OK, __ss_R_OK, __ss_W_OK, __ss_X_OK, __ss_NGROUPS_MAX, __ss_TMP_
 
 list<str *> *listdir(str *path) {
     list<str *> *r = new list<str *>();
-    DIR *dp;
-    struct dirent *ep;
 
-    dp = opendir(path->c_str());
-    if (dp == 0)
-        throw new OSError(path);
+    for (const auto & entry : std::filesystem::directory_iterator(path->unit))
+        r->append(new str(entry.path().filename().c_str()));
 
-    while ((ep = readdir(dp)))
-        if(strcmp(ep->d_name, ".") && strcmp(ep->d_name, ".."))
-            r->append(new str(ep->d_name));
-
-    closedir (dp);
     return r;
 }
 
