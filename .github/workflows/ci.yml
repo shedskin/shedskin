@@ -23,4 +23,4 @@ jobs:
       run: python setup.py install --user
       
     - name: test
-      run: cd tests; shedskin test
+      run: cd tests; shedskin test --conan
