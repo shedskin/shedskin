@@ -19,8 +19,11 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: install
+    - name: install_shedskin
       run: python setup.py install --user
+      
+    - name: install_conan
+      run: pip install conan==1.59.0
       
     - name: test
       run: cd tests; shedskin test --conan
