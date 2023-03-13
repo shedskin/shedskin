@@ -16,15 +16,15 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
-        python: ["3.10", "3.11"]
+ #       python: ["3.10", "3.11"]
 
     steps:
     - uses: actions/checkout@v3
 
-    - name: python ${{ matrix.python }}
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python }}
+#    - name: python ${{ matrix.python }}
+#      uses: actions/setup-python@v2
+#      with:
+#        python-version: ${{ matrix.python }}
           
     - name: install_shedskin
       run: python setup.py install --user
