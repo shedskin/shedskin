@@ -91,8 +91,12 @@ __ss_int __ss_F_OK, __ss_R_OK, __ss_W_OK, __ss_X_OK, __ss_NGROUPS_MAX, __ss_TMP_
 list<str *> *listdir(str *path) {
     list<str *> *r = new list<str *>();
 
-    for (const auto & entry : std::filesystem::directory_iterator(path->unit))
-        r->append(new str(entry.path().filename().string().c_str()));
+    try {
+        for (const auto & entry : std::filesystem::directory_iterator(path->unit))
+            r->append(new str(entry.path().filename().string().c_str()));
+    } catch (std::filesystem::filesystem_error) {
+        throw new OSError(path);
+    }
 
     return r;
 }
