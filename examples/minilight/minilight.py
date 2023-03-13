@@ -1,4 +1,4 @@
-from ml import minilight
+from ml import entry
 
 '''
   Copyright (c) 2008, Harrison Ainsworth / HXA7241 and Juraj Sukop.
@@ -6,7 +6,7 @@ from ml import minilight
 '''
 
 def main():
-    minilight.main('cornellbox.txt')
+    entry.main('cornellbox.txt')
 
 if __name__=='__main__':
     main()
