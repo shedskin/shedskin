@@ -709,6 +709,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def do_comment(self, s):
         if not s:
             return
+        s = s.encode('ascii', 'ignore').decode('ascii') # TODO
         doc = s.replace("/*", "//").replace("*/", "//").split("\n")
         self.output("/**")
         if doc[0].strip():
