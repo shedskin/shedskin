@@ -7,6 +7,7 @@ Copyright 2005-2013 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 import ast
 import collections
 import imp
+import importlib
 import os
 import re
 import sys
@@ -265,12 +266,12 @@ def clear_block(m):
 
 
 def parse_file(name):
+    data = importlib.util.decode_source(open(name, 'rb').read())
+
     # Convert block comments into strings which will be duely ignored.
     pat = re.compile(r"#{.*?#}[^\r\n]*$", re.MULTILINE | re.DOTALL)
-    try:
-        filebuf = re.sub(pat, clear_block, "".join(open(name, "U").readlines()))
-    except ValueError:
-        filebuf = re.sub(pat, clear_block, "".join(open(name).readlines()))
+    filebuf = re.sub(pat, clear_block, data)
+
     try:
         return ast.parse(filebuf)
     except SyntaxError as s:
