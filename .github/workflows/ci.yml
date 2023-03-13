@@ -1,4 +1,4 @@
-name: CMake
+name: tests
 
 on:
   push:
@@ -14,7 +14,7 @@ jobs:
     runs-on: ${{matrix.os}}
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, macOS-latest, windows-latest]
 
     steps:
     - uses: actions/checkout@v3
