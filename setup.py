@@ -48,6 +48,7 @@ setup(
             'templates/cpp/*.cpp.tpl',
             'resources/cmake/modular/*.cmake',
             'resources/cmake/modular/*.txt',
+            'resources/cmake/single/*.cmake',
             'resources/cmake/single/*.txt',
             'resources/illegal/illegal.txt',
             'resources/conan/*.txt',
