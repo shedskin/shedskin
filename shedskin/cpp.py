@@ -421,7 +421,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     self.visit_FunctionDef(func.node, declare=True)
         self.print()
 
-        if self.gx.extension_module:
+        if self.gx.pyextension_product:
             self.print('extern "C" {')
             self.extmod.pyinit_func()
             self.print("}")
@@ -431,7 +431,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         self.rich_comparison()
 
-        if self.gx.extension_module:
+        if self.gx.pyextension_product:
             self.extmod.convert_methods2()
 
         self.print("#endif")
@@ -573,7 +573,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         # --- __init
         self.output("void __init() {")
         self.indent()
-        if self.module == self.gx.main_module and not self.gx.extension_module:
+        if self.module == self.gx.main_module and not self.gx.pyextension_product:
             self.output('__name__ = new str("__main__");\n')
         else:
             self.output('__name__ = new str("%s");\n' % self.module.ident)
@@ -643,7 +643,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.print()
 
         # --- c++ main/extension module setup
-        if self.gx.extension_module:
+        if self.gx.pyextension_product:
             self.extmod.do_extmod()
         if self.module == self.gx.main_module:
             self.do_main()
@@ -693,7 +693,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         for module in sorted(self.gx.modules.values(), key=lambda x: x.import_order):
             if module != self.gx.main_module and module.ident != "builtin":
                 if module.ident == "sys":
-                    if self.gx.extension_module:
+                    if self.gx.pyextension_product:
                         self.print("    __sys__::__init(0, 0);")
                     else:
                         self.print("    __sys__::__init(__ss_argc, __ss_argv);")
@@ -898,7 +898,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             if func.node and not (func.ident == "__init__" and func.inherited):
                 self.visit_FunctionDef(func.node, cl, True)
         self.copy_methods(cl, True)
-        if self.gx.extension_module:
+        if self.gx.pyextension_product:
             self.extmod.convert_methods(cl, True)
 
         self.deindent()

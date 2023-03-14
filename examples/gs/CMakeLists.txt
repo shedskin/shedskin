@@ -1,4 +1,5 @@
-add_shedskin_extension(
+add_shedskin_product(
+    BUILD_EXTENSION
     MAIN_MODULE  Gh0stenstein/world_manager.py
     SYS_MODULES
         array

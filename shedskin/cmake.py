@@ -16,6 +16,7 @@ import glob
 import logging
 import os
 import pathlib
+import platform
 import shutil
 import subprocess
 import sys
@@ -382,10 +383,17 @@ def add_shedskin_product(
     return "\n".join(flist)
 
 
-def get_cmakefile_template(section, **kwds):
+# def get_cmakefile_template(section, **kwds):
+#     """returns a cmake template"""
+#     _pkg_path = get_pkg_path()
+#     cmakelists_tmpl = _pkg_path / "resources" / "cmake" / section / "CMakeLists.txt"
+#     tmpl = cmakelists_tmpl.read_text()
+#     return tmpl % kwds
+
+def get_cmakefile_template(**kwds):
     """returns a cmake template"""
     _pkg_path = get_pkg_path()
-    cmakelists_tmpl = _pkg_path / "resources" / "cmake" / section / "CMakeLists.txt"
+    cmakelists_tmpl = _pkg_path / "resources" / "cmake" / "CMakeLists.txt"
     tmpl = cmakelists_tmpl.read_text()
     return tmpl % kwds
 
@@ -423,22 +431,37 @@ def generate_cmakefile(gx):
     if in_source_build:
         master_clfile = path.parent / "CMakeLists.txt"
         master_clfile_content = get_cmakefile_template(
-            section='single',
             project_name=f"{gx.main_module.ident}_project",
-            entry=add_shedskin_product(path.name, sys_mods, app_mods, name=path.stem),
+            is_simple_project="ON",
+            entry=add_shedskin_product(
+                path.name,
+                sys_mods,
+                app_mods,
+                name=path.stem,
+                build_executable=gx.executable_product,
+                build_extension=gx.pyextension_product,
+            ),
         )
         master_clfile.write_text(master_clfile_content)
 
     else:
         src_clfile = path.parent / "CMakeLists.txt"
 
-        src_clfile.write_text(add_shedskin_product(path.name, sys_mods, app_mods))
+        src_clfile.write_text(
+            add_shedskin_product(
+                path.name,
+                sys_mods,
+                app_mods,
+                build_executable=gx.executable_product,
+                build_extension=gx.pyextension_product,
+            )
+        )
 
         master_clfile = src_clfile.parent.parent / "CMakeLists.txt"
         master_clfile_content = get_cmakefile_template(
-            section='modular',
             project_name=f"{gx.main_module.ident}_project",
-            subdir=path.parent.name,
+            is_simple_project="OFF",
+            entry=f"add_subdirectory({path.parent.name})",
         )
         master_clfile.write_text(master_clfile_content)
 
@@ -528,8 +551,13 @@ class CMakeBuilder:
 
     def cmake_test(self, options):
         """activate ctest"""
-        options = " ".join(options)
-        tst_cmd = f"ctest --output-on-failure {options} --test-dir {self.build_dir}"
+        opts = " ".join(options)
+        if platform.system() == 'Windows':
+            cfg = f"-C {self.options.build_type}"
+        else:
+            cfg = ""
+
+        tst_cmd = f"ctest {cfg} --output-on-failure {opts} --test-dir {self.build_dir}"
         print("tst_cmd:", tst_cmd)
         os.system(tst_cmd)
 
