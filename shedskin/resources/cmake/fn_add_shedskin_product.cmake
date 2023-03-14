@@ -352,7 +352,15 @@ function(add_shedskin_product)
         )
 
         if(BUILD_TEST AND IS_TEST)
-            add_test(NAME ${EXE} COMMAND ${EXE})
+            if(WIN32)
+                cmake_path(
+                    APPEND ${CMAKE_BUILD_TYPE} ${EXE}
+                    OUTPUT_VARIABLE  test_path
+                )
+                add_test(NAME ${EXE} COMMAND ${test_path})
+            else()
+                add_test(NAME ${EXE} COMMAND ${EXE})
+            endif()
         endif()
     endif()
 

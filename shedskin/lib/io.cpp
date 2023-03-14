@@ -1,5 +1,9 @@
 /* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
 
+#ifdef _MSC_VER
+#define NOMINMAX
+#endif
+
 #include "io.hpp"
 
 #include <algorithm>

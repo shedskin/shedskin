@@ -20,6 +20,13 @@ option(ENABLE_CONAN "Enable conan for dependency management" OFF)
 option(ENABLE_EXTERNAL_PROJECT "Enable ExternalProject for dependency mgmt" OFF)
 
 # -----------------------------------------------------------------------------
+# reporting
+
+message("Project: " ${PROJECT_NAME})
+message("Build type: " ${CMAKE_BUILD_TYPE})
+message("")
+
+# -----------------------------------------------------------------------------
 # warnings
 
 if("${PROJECT_SOURCE_DIR}" STREQUAL "${PROJECT_BINARY_DIR}")
