@@ -1,4 +1,5 @@
 add_shedskin_product(
+    IS_NESTED
     SYS_MODULES
         math
         random

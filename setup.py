@@ -27,7 +27,7 @@ setup(
     packages=['shedskin'],
     python_requires=">=3.8, <4",
     install_requires=[
-        #'conan==1.59.0',
+        'conan==1.59.0',
     ],
     extras_require={
         # "dev": ["check-manifest"],
@@ -46,10 +46,8 @@ setup(
             'FLAGS*',
             'illegal',
             'templates/cpp/*.cpp.tpl',
-            'resources/cmake/modular/*.cmake',
-            'resources/cmake/modular/*.txt',
-            'resources/cmake/single/*.cmake',
-            'resources/cmake/single/*.txt',
+            'resources/cmake/*.cmake',
+            'resources/cmake/*.txt',
             'resources/illegal/illegal.txt',
             'resources/conan/*.txt',
         ]
