@@ -4,7 +4,15 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+
 #if defined( _MSC_VER )
+    #if !defined(S_ISREG) && defined(S_IFMT) && defined(S_IFREG)
+      #define S_ISREG(m) (((m) & S_IFMT) == S_IFREG)
+    #endif
+    #if !defined(S_ISDIR) && defined(S_IFMT) && defined(S_IFDIR)
+      #define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
+    #endif
+
     #include <stdlib.h>
     #include <io.h>
 #else
@@ -60,6 +68,16 @@ void __init() {
 #endif
 }
 
+__ss_int __ss_S_ISDIR(__ss_int mode) {
+
+    return S_ISDIR(mode);
+}
+
+__ss_int __ss_S_ISREG(__ss_int mode) {
+
+    return S_ISREG(mode);
+}
+
 #if !defined( _MSC_VER )
 __ss_int __ss_S_IMODE(__ss_int mode) {
     return (mode&4095); /* XXX */
@@ -67,11 +85,6 @@ __ss_int __ss_S_IMODE(__ss_int mode) {
 
 __ss_int __ss_S_IFMT(__ss_int mode) {
     return (mode&61440); /* XXX */
-}
-
-__ss_int __ss_S_ISDIR(__ss_int mode) {
-
-    return S_ISDIR(mode);
 }
 
 __ss_int __ss_S_ISCHR(__ss_int mode) {
@@ -82,11 +95,6 @@ __ss_int __ss_S_ISCHR(__ss_int mode) {
 __ss_int __ss_S_ISBLK(__ss_int mode) {
 
     return S_ISBLK(mode);
-}
-
-__ss_int __ss_S_ISREG(__ss_int mode) {
-
-    return S_ISREG(mode);
 }
 
 __ss_int __ss_S_ISFIFO(__ss_int mode) {

@@ -7,12 +7,19 @@
 #include <sstream>
 #include <sys/stat.h>
 #include <stdio.h>
-#include <dirent.h>
 #include <errno.h>
-#include <sys/time.h>
 #include <sys/types.h>
 #include <fcntl.h>
+#include <filesystem>
+
+#ifdef _MSC_VER
+#include <direct.h>
+#include <io.h>
+#else
+#include <sys/time.h>
 #include <utime.h>
+#include <unistd.h>
+#endif
 
 #ifndef WIN32
 #include <sys/times.h>
@@ -27,8 +34,6 @@
 #include <grp.h>
 #include <sysexits.h>
 #endif
-
-#include <unistd.h>
 
 #ifdef WIN32
 #include <windows.h>
@@ -85,18 +90,14 @@ __ss_int __ss_F_OK, __ss_R_OK, __ss_W_OK, __ss_X_OK, __ss_NGROUPS_MAX, __ss_TMP_
 
 list<str *> *listdir(str *path) {
     list<str *> *r = new list<str *>();
-    DIR *dp;
-    struct dirent *ep;
 
-    dp = opendir(path->c_str());
-    if (dp == 0)
+    try {
+        for (const auto & entry : std::filesystem::directory_iterator(path->unit))
+            r->append(new str(entry.path().filename().string().c_str()));
+    } catch (std::filesystem::filesystem_error) {
         throw new OSError(path);
+    }
 
-    while ((ep = readdir(dp)))
-        if(strcmp(ep->d_name, ".") && strcmp(ep->d_name, ".."))
-            r->append(new str(ep->d_name));
-
-    closedir (dp);
     return r;
 }
 
@@ -234,11 +235,11 @@ __cstat::__cstat(str *path, __ss_int t) {
     this->__class__ = cl___cstat;
 
     if(t==1) {
-        if(stat(path->c_str(), &sbuf) == -1)
+        if(::stat(path->c_str(), &sbuf) == -1)
             throw new OSError(path);
     } else if (t==2) {
 #ifndef WIN32
-        if(lstat(path->c_str(), &sbuf) == -1)
+        if(::lstat(path->c_str(), &sbuf) == -1)
 #endif
             throw new OSError(path);
     }
@@ -249,7 +250,7 @@ __cstat::__cstat(str *path, __ss_int t) {
 __cstat::__cstat(__ss_int fd) {
     this->__class__ = cl___cstat;
 
-    if(fstat(fd, &sbuf) == -1)
+    if(::fstat(fd, &sbuf) == -1)
         throw new OSError();
 
     fill_er_up();
@@ -423,6 +424,7 @@ void *renames(str* old, str* _new) {
     return NULL;
 }
 
+#ifndef _MSC_VER
 popen_pipe::popen_pipe(str *cmd, str *flags) {
     if(flags == 0)
         flags = new str("r");
@@ -453,6 +455,7 @@ popen_pipe* popen(str* cmd, str* mode, __ss_int) {
     if(!fp) throw new OSError(cmd);
     return new popen_pipe(fp);
 }
+#endif
 
 __ss_int dup(__ss_int f1) {
     __ss_int f2 = ::dup(f1);
