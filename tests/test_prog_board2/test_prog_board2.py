@@ -221,10 +221,12 @@ class board:
 
 def test_game():
     puzzle = board()
-    if not os.path.exists('testdata'):
+    if os.path.exists('testdata'):
+        testdata = "testdata"
+    elif os.path.exists('../testdata'):
         testdata = "../testdata"
     else:
-        testdata = "testdata"
+        testdata = "../../testdata"
     puzzlefile = os.path.join(testdata, "b6.pz")
     puzzle.fread(puzzlefile)
     assert puzzle.solve()

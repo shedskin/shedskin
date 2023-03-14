@@ -7,9 +7,12 @@ def test_program():
     if os.path.exists('testdata'):
         csvfile_in = os.path.join('testdata', 'woef.csv')
         csvfile_out = os.path.join('testdata', 'bla.csv')
-    else:
+    elif os.path.exists('../testdata'):
         csvfile_in = os.path.join('../testdata', 'woef.csv')
         csvfile_out = os.path.join('../testdata', 'bla.csv')
+    else:
+        csvfile_in = os.path.join('../../testdata', 'woef.csv')
+        csvfile_out = os.path.join('../../testdata', 'bla.csv')
 
     dialects = csv.list_dialects()
     assert 'excel' in dialects

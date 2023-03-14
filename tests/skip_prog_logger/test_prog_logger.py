@@ -13,10 +13,12 @@ class LogFile:
 
 
 def test_logger():
-    if not os.path.exists("testdata"):
+    if os.path.exists("testdata"):
+        testdata = "testdata"
+    elif os.path.exists("../testdata"):
         testdata = "../testdata"
     else:
-        testdata = "testdata"
+        testdata = "../../testdata"
 
     # List of log files
     logFiles = []
