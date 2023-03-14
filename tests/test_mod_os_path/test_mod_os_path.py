@@ -16,10 +16,12 @@ def test_os_path():
     assert basename("hoei/woei") == 'woei'
     assert dirname("hoei/woei") == 'hoei'
 
-    if not exists("testdata"):
+    if exists("testdata"):
+        testdata = "testdata"
+    elif exists("../testdata"):
         testdata = "../testdata"
     else:
-        testdata = "testdata"
+        testdata = "../../testdata"
 
     assert exists(testdata)
     assert lexists(testdata)

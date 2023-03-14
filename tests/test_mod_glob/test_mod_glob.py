@@ -4,8 +4,10 @@ import glob
 
 if os.path.exists("testdata"):
     testdata = "testdata"
-else:
+elif os.path.exists("testdata"):
     testdata = "../testdata"
+else:
+    testdata = "../../testdata"
 
 def test_glob():
     txts = os.path.join(testdata, 'globdir', '*.txt')
