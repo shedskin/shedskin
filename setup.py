@@ -27,7 +27,7 @@ setup(
     packages=['shedskin'],
     python_requires=">=3.8, <4",
     install_requires=[
-        #'conan==1.59.0',
+        'conan==1.59.0',
     ],
     extras_require={
         # "dev": ["check-manifest"],

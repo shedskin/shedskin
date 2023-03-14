@@ -150,7 +150,7 @@ add_subdirectory(mandelbrot2) # ext
 add_subdirectory(mao)
 add_subdirectory(mastermind) # nested ext
 add_subdirectory(mastermind2)
-add_subdirectory(minilight) # nested exe
+# add_subdirectory(minilight) # nested exe
 add_subdirectory(minpng)
 add_subdirectory(msp_ss) # requires serial
 add_subdirectory(mwmatching)
