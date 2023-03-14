@@ -276,10 +276,6 @@ function(add_shedskin_product)
                 ${PROJECT_EXE_DIR}/${parentpath}/${main}.hpp
             )
         else()
-            message("-----------------------------------------------------------------")
-            message("${name} IS NOT NESTED")
-            message("${PROJECT_EXE_DIR}/${main}.cpp")
-            message("-----------------------------------------------------------------")
             set(translated_files
                 ${PROJECT_EXE_DIR}/${main}.cpp
                 ${PROJECT_EXE_DIR}/${main}.hpp
@@ -311,11 +307,6 @@ function(add_shedskin_product)
         endif()
 
         add_custom_target(shedskin_${EXE} DEPENDS ${translated_files})
-        message("-----------------------------------------------------------------")
-        message("name: ${name}")
-        foreach(file ${translated_files})
-        message("${file}")
-        endforeach()
 
         if(SHEDSKIN_HAS_LIB AND NOT EXISTS ${PROJECT_EXE_DIR}/lib)
             file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/lib DESTINATION ${PROJECT_EXE_DIR})
