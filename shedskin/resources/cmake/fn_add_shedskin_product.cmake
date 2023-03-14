@@ -476,10 +476,16 @@ function(add_shedskin_product)
         )
 
         if(BUILD_TEST AND IS_TEST)
-            add_test(NAME ${EXT} 
-                 COMMAND ${Python_EXECUTABLE} -c "from ${name} import test_all; test_all()"
-                 $<$<BOOL:${WIN32}>:WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE}>
-            )
+            if(${WIN32})
+		    add_test(NAME ${EXT}
+			 COMMAND ${Python_EXECUTABLE} -c "from ${name} import test_all; test_all()"
+			 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE}
+		    )
+	    else()
+		    add_test(NAME ${EXT}
+			 COMMAND ${Python_EXECUTABLE} -c "from ${name} import test_all; test_all()"
+		    )
+	    endif()
         endif()
 
     endif()
