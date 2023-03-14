@@ -477,7 +477,8 @@ function(add_shedskin_product)
 
         if(BUILD_TEST AND IS_TEST)
             add_test(NAME ${EXT} 
-                 COMMAND ${Python_EXECUTABLE} -c "from ${name} import test_all; test_all()")
+                 COMMAND ${Python_EXECUTABLE} -c "from ${name} import test_all; test_all()"
+                 WORKING_DIRECTORY ${UNIT_TEST_BIN_OUTPUT_DIR})
         endif()
 
     endif()
