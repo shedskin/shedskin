@@ -37,8 +37,8 @@ jobs:
         python -m pip install --upgrade pip setuptools wheel
         pip install -r requirements.txt
 
-    # - name: Install shedskin
-    #   run: pip install .
+    - name: Install shedskin
+      run: pip install .
       
     - name: Test shedskin
       run: |
