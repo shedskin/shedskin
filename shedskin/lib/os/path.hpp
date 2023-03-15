@@ -43,11 +43,9 @@ str *normpath(str *path);
 str *abspath(str *path);
 str *realpath(str *filename);
 
-#ifndef WIN32
 __ss_bool samefile(str *f1, str *f2);
 __ss_bool samestat(__os__::__cstat *s1, __os__::__cstat *s2);
 str *_resolve_link(str *path);
-#endif
 
 #ifndef WIN32
 template <class A> void *walk(str *top, void *(*func)(A, str *, list<str *> *), A arg) {
