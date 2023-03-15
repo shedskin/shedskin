@@ -15,6 +15,12 @@
 
 #include "builtin.hpp"
 
+#if defined(WIN32)
+#include <BaseTsd.h>
+#include <stdlib.h>
+typedef SSIZE_T ssize_t;
+#endif
+
 #ifdef WIN32
 
 #include <io.h>
