@@ -22,7 +22,7 @@ import os
 import os.path
 import random
 import re
-import socket
+#import socket
 import string
 import struct
 import sys
