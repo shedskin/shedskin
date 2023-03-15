@@ -150,7 +150,7 @@ add_subdirectory(mandelbrot2) # ext
 add_subdirectory(mao)
 add_subdirectory(mastermind) # nested ext
 add_subdirectory(mastermind2)
-# add_subdirectory(minilight) # nested exe
+add_subdirectory(minilight)
 add_subdirectory(minpng)
 add_subdirectory(msp_ss) # requires serial
 add_subdirectory(mwmatching)
@@ -165,7 +165,7 @@ add_subdirectory(plcfrs)
 add_subdirectory(pygasus) # ext no-bounds
 add_subdirectory(pygmy)
 add_subdirectory(pylife) # ext
-add_subdirectory(pylot) # nested exe
+add_subdirectory(pylot) # nested ext
 add_subdirectory(pystone)
 add_subdirectory(quameon) # deep exe
 add_subdirectory(rdb)
