@@ -43,12 +43,11 @@ setup(
             'lib/os/*.cpp',
             'lib/os/*.hpp',
             'lib/os/*.py',
-            'FLAGS*',
-            'illegal',
             'templates/cpp/*.cpp.tpl',
             'resources/cmake/*.cmake',
             'resources/cmake/*.txt',
             'resources/illegal/illegal.txt',
+            'resources/flags/FLAGS*',
             'resources/conan/*.txt',
         ]
     },
