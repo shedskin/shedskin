@@ -20,7 +20,6 @@ add_shedskin_product(
         os.path
         random
         re
-        socket
         stat
         string
         struct
