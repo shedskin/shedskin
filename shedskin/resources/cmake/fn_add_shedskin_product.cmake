@@ -328,7 +328,7 @@ function(add_shedskin_product)
             $<$<BOOL:${UNIX}>:-Wno-deprecated>
             $<$<BOOL:${UNIX}>:-Wno-unused-variable>
             $<$<BOOL:${UNIX}>:-Wno-unused-but-set-variable>
-            $<$<BOOL:${WIN32}>:/Wall>
+#            $<$<BOOL:${WIN32}>:/Wall>
             $<$<BOOL:${WIN32}>:/MD>
         )
 
@@ -455,7 +455,7 @@ function(add_shedskin_product)
             # windows
             # $<$<BOOL:${WIN32}>:/LD>
             $<$<BOOL:${WIN32}>:/MD>
-            $<$<BOOL:${WIN32}>:/Wall>
+#            $<$<BOOL:${WIN32}>:/Wall>
         )
 
         target_link_options(${EXT} PRIVATE
