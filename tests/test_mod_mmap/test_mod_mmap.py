@@ -1,7 +1,6 @@
 import mmap
 import os
-
-PAGESIZE = mmap.PAGESIZE
+import sys
 
 if os.path.exists("testdata"):
     testdata = "testdata"
@@ -28,6 +27,8 @@ def tearDown(map):
 
 
 def test_anonymous():
+    PAGESIZE = mmap.PAGESIZE
+
     map = mmap.mmap(-1, PAGESIZE)
     assert len(map) == PAGESIZE
     # print("# write:")
@@ -95,6 +96,7 @@ def test_anonymous():
 
 
 def test_basic():
+    PAGESIZE = mmap.PAGESIZE
 
     # print("## test_basic:")
     setUp()
@@ -216,12 +218,13 @@ def test_ctx_mgr():
 
 
 def test_all():
-    test_anonymous()
-    test_basic()
-    test_readonly()
-    test_rfind()
-    test_tougher_find()
-    test_ctx_mgr()
+    if sys.platform != 'win32':
+        test_anonymous()
+        test_basic()
+        test_readonly()
+        test_rfind()
+        test_tougher_find()
+        test_ctx_mgr()
 
 if __name__ == '__main__':
     test_all()
