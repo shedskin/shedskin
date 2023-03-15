@@ -6,8 +6,10 @@ import fnmatch
 def test_fnmatch():
     if os.path.exists("testdata"):
         testdata = "testdata"
-    else:
+    elif os.path.exists("../testdata"):
         testdata = "../testdata"
+    else:
+        testdata = "../../testdata"
     fs = os.listdir(os.path.join(testdata, 'globdir'))
 
     assert fnmatch.fnmatch("run.py", "run.[py]y")

@@ -328,7 +328,7 @@ function(add_shedskin_product)
             $<$<BOOL:${UNIX}>:-Wno-deprecated>
             $<$<BOOL:${UNIX}>:-Wno-unused-variable>
             $<$<BOOL:${UNIX}>:-Wno-unused-but-set-variable>
-            $<$<BOOL:${WIN32}>:/Wall>
+#            $<$<BOOL:${WIN32}>:/Wall>
             $<$<BOOL:${WIN32}>:/MD>
         )
 
@@ -455,7 +455,7 @@ function(add_shedskin_product)
             # windows
             # $<$<BOOL:${WIN32}>:/LD>
             $<$<BOOL:${WIN32}>:/MD>
-            $<$<BOOL:${WIN32}>:/Wall>
+#            $<$<BOOL:${WIN32}>:/Wall>
         )
 
         target_link_options(${EXT} PRIVATE
@@ -476,8 +476,16 @@ function(add_shedskin_product)
         )
 
         if(BUILD_TEST AND IS_TEST)
-            add_test(NAME ${EXT} 
-                 COMMAND ${Python_EXECUTABLE} -c "from ${name} import test_all; test_all()")
+            if(${WIN32})
+		    add_test(NAME ${EXT}
+			 COMMAND ${Python_EXECUTABLE} -c "from ${name} import test_all; test_all()"
+			 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE}
+		    )
+	    else()
+		    add_test(NAME ${EXT}
+			 COMMAND ${Python_EXECUTABLE} -c "from ${name} import test_all; test_all()"
+		    )
+	    endif()
         endif()
 
     endif()

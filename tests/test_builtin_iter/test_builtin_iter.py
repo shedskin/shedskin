@@ -54,8 +54,10 @@ def test_iter2():
 def test_file_iter():
     if os.path.exists("testdata"):
         testdata = "testdata"
-    else:
+    elif os.path.exists("../testdata"):
         testdata = "../testdata"
+    else:
+        testdata = "../../testdata"
     datafile = os.path.join(testdata, 'hoppa')
     assert [l for l in open(datafile)] == ['hop\n', 'hop\n', 'hoppa!\n']
 
