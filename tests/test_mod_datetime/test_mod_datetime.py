@@ -11,7 +11,7 @@ def test_datetime_basic():
 
     a = datetime.datetime.now()
     b = datetime.datetime.now()
-    assert a < b
+    assert a <= b
 
     assert datetime.datetime.utcnow().date().year > 2020
 
