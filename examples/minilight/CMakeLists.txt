@@ -1,5 +1,4 @@
 add_shedskin_product(
-    IS_NESTED
     SYS_MODULES
         math
         random
@@ -9,12 +8,14 @@ add_shedskin_product(
     APP_MODULES
         ml/__init__
         ml/camera
+        ml/entry
         ml/image
-        ml/minilight
         ml/raytracer
         ml/scene
         ml/spatialindex
         ml/surfacepoint
         ml/triangle
         ml/vector3f
+    DATA
+        cornellbox.txt
 )
