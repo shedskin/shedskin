@@ -5,8 +5,10 @@ import configparser
 
 if os.path.exists("testdata"):
     testdata = "testdata"
-else:
+elif os.path.exists("../testdata"):
     testdata = "../testdata"
+else:
+    testdata = "../../testdata"
 datafile = os.path.join(testdata, 'configparser_test.conf')
 
 def test_minimal():

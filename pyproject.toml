@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "shedskin"
-version = "0.9.6"
+version = "0.9.7"
 description = "Shed Skin is a restricted-Python-to-C++ compiler."
 authors = [
 	"Mark Dufour and contributors",
@@ -30,11 +30,10 @@ include = [
     { path = "shedskin/lib/os/*.cpp", format = ["sdist", "wheel"] },
     { path = "shedskin/lib/os/*.hpp", format = ["sdist", "wheel"] },
     { path = "shedskin/lib/os/*.py", format = ["sdist", "wheel"] },
-    { path = "shedskin/FLAGS*", format = ["sdist", "wheel"] },
-    { path = "shedskin/illegal", format = ["sdist", "wheel"] },
-    { path = "shedskin/templates/cpp/*.cpp.tpl", format = ["sdist", "wheel"] },
+    { path = "shedskin/resources/flags/FLAGS*", format = ["sdist", "wheel"] },
+    { path = "shedskin/resources/illegal/illegal.txt", format = ["sdist", "wheel"] },
     { path = "shedskin/resources/cmake/*.cmake", format = ["sdist", "wheel"] },
-    { path = "shedskin/resources/cmake/*.txt", format = ["sdist", "wheel"] },    
+    { path = "shedskin/resources/cmake/*.txt", format = ["sdist", "wheel"] },
     { path = "shedskin/resources/conan/*.txt", format = ["sdist", "wheel"] },
 
 

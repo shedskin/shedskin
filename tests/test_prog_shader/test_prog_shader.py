@@ -370,8 +370,10 @@ def test_program():
     output = "shader-test.ppm"
     if os.path.exists('testdata'):
         rendered = os.path.join('testdata', output)
-    else:
+    elif os.path.exists('../testdata'):
         rendered = os.path.join('../testdata', output)
+    else:
+        rendered = os.path.join('../../testdata', output)
     if os.path.exists(rendered):
         os.remove(rendered)
     w.render(rendered)

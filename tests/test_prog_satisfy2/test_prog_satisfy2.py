@@ -5,8 +5,10 @@ import os
 
 if os.path.exists("testdata"):
     testdata = "testdata"
-else:
+elif os.path.exists("../testdata"):
     testdata = "../testdata"
+else:
+    testdata = "../../testdata"
 datafile = os.path.join(testdata, 'uuf250-010.cnf')
 
 

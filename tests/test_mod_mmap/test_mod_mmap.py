@@ -5,8 +5,10 @@ PAGESIZE = mmap.PAGESIZE
 
 if os.path.exists("testdata"):
     testdata = "testdata"
-else:
+elif os.path.exists("../testdata"):
     testdata = "../testdata"
+else:
+    testdata = "../../testdata"
 
 TESTFILE_IN = os.path.join(testdata, "board.py")
 TESTFILE_OUT = os.path.join(testdata, "mmap.out")

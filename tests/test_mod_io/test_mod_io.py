@@ -3,10 +3,12 @@ import os
 
 
 def test_io_from_file():
-    if not os.path.exists("testdata"):
+    if os.path.exists("testdata"):
+        testdata = "testdata"
+    elif os.path.exists("../testdata"):
         testdata = "../testdata"
     else:
-        testdata = "testdata"
+        testdata = "../../testdata"
 
     datafile = os.path.join(testdata, "test_io.txt")
 
