@@ -31,7 +31,7 @@ void __init(int c, char **v) {
 
     platform = new str("unknown");
 #ifdef __linux__
-    platform = new str("linux2");
+    platform = new str("linux");
 #endif
 #ifdef __APPLE__
     platform = new str("darwin");
