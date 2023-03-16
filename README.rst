@@ -74,7 +74,7 @@ Some screenshots of the `example programs <https://github.com/shedskin/shedskin/
 .. image:: https://raw.githubusercontent.com/shedskin/shedskin/master/docs/assets/screenshots/harm5.png
   :width: 400
 
-This `video <https://www.youtube.com/watch?v=171AQx7l43s>`_ shows the difference for the DOOM example before and after compilation.
+This `video <https://www.youtube.com/watch?v=171AQx7l43s>`_ shows the dramatic difference in performance for the DOOM example before and after compilation
 
 Contributors
 ------------
