@@ -93,13 +93,15 @@ static void print_traceback(FILE *out)
 #endif
 #endif
 
-extern class_ *cl_stopiteration, *cl_assertionerror, *cl_eoferror, *cl_floatingpointerror, *cl_keyerror, *cl_indexerror, *cl_typeerror, *cl_valueerror, *cl_zerodivisionerror, *cl_keyboardinterrupt, *cl_memoryerror, *cl_nameerror, *cl_notimplementederror, *cl_oserror, *cl_overflowerror, *cl_runtimeerror, *cl_syntaxerror, *cl_systemerror, *cl_systemexit, *cl_arithmeticerror, *cl_lookuperror;
+extern class_ *cl_stopiteration, *cl_assertionerror, *cl_eoferror, *cl_floatingpointerror, *cl_keyerror, *cl_indexerror, *cl_typeerror, *cl_valueerror, *cl_zerodivisionerror, *cl_keyboardinterrupt, *cl_memoryerror, *cl_nameerror, *cl_notimplementederror, *cl_oserror, *cl_overflowerror, *cl_runtimeerror, *cl_syntaxerror, *cl_systemerror, *cl_systemexit, *cl_arithmeticerror, *cl_lookuperror, *cl_exception, *cl_baseexception;
 
 class BaseException : public pyobj {
 public:
     str *message;
     BaseException(str *message=0) {
         __init__(message);
+
+        this->__class__ = cl_baseexception;
     }
     void __init__(str *message) {
         if(message)
@@ -120,7 +122,7 @@ public:
 
 class Exception: public BaseException {
 public:
-    Exception(str *message=0) : BaseException(message) {}
+    Exception(str *message=0) : BaseException(message) { this->__class__ = cl_exception; }
 
 #ifdef __SS_BIND
    virtual PyObject *__to_py__() { return PyExc_Exception; }
