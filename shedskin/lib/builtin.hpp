@@ -31,7 +31,9 @@
 #include <cxxabi.h>
 #include <exception>
 #ifndef __APPLE__
+#ifdef __SS_BACKTRACE
 #include <execinfo.h>
+#endif
 #endif
 #endif
 
