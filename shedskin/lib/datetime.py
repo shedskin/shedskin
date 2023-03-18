@@ -1,7 +1,6 @@
 # Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE)
 
 from time import struct_time
-import string
 
 MINYEAR = 1
 MAXYEAR = 9999
