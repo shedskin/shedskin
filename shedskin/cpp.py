@@ -3408,7 +3408,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.visitm(", ", n, func)
         self.eol(")")
 
-    def attr_var_ref(self, node, ident):  # XXX blegh
+    def attr_var_ref(self, node, ident, module=None):  # XXX blegh
         lcp = typestr.lowest_common_parents(
             typestr.polymorphic_t(self.gx, self.mergeinh[node.value])
         )
@@ -3418,8 +3418,13 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             and node.attr in lcp[0].vars
             and node.attr not in lcp[0].funcs
         ):
-            return self.cpp_name(lcp[0].vars[node.attr])
-        return self.cpp_name(ident)
+            name = lcp[0].vars[node.attr]
+        else:
+            name = ident
+        if module and module.builtin:
+            return self.namer.nokeywords(name)
+        else:
+            return self.cpp_name(name)
 
     def visit_Attribute(self, node, func=None):  # XXX merge with visitGetattr
         if type(node.ctx) == ast.Load:
@@ -3547,7 +3552,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             ):  # XXX merge into above
                 ident = "__getfast__"
 
-            self.append(self.attr_var_ref(node, ident))
+            self.append(self.attr_var_ref(node, ident, module))
+
         elif type(node.ctx) == ast.Del:
             error.error(
                 "'del' has no effect without refcounting",
