@@ -1,4 +1,5 @@
 import time
+import datetime # test potential conflict with datetime.time
 
 #def test_mktime():
     #assert time.mktime(time.struct_time((1970, 2, 17, 23, 33, 34, 1, 48, -1))) == 4131214.0
@@ -52,6 +53,7 @@ def test_all():
     test_asctime()
     test_strftime()
     test_conversions()
+    test_sleep()
     # test_epoch()
     test_tzname()
 
