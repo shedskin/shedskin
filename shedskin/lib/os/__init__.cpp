@@ -94,7 +94,7 @@ list<str *> *listdir(str *path) {
     try {
         for (const auto & entry : std::filesystem::directory_iterator(path->unit))
             r->append(new str(entry.path().filename().string().c_str()));
-    } catch (std::filesystem::filesystem_error) {
+    } catch (std::filesystem::filesystem_error const&) {
         throw new OSError(path);
     }
 
