@@ -96,7 +96,8 @@ class GlobalInfo:  # XXX add comments, split up
         self.generate_cmakefile = False
 
     def init_directories(self):
-        shedskin_directory = os.sep.join(__file__.split(os.sep)[:-1])
+        abspath = os.path.abspath(__file__) # sanitize mixed fwd/bwd slashes (mingw)
+        shedskin_directory = os.sep.join(abspath.split(os.sep)[:-1])
         for dirname in sys.path:
             if os.path.exists(os.path.join(dirname, shedskin_directory)):
                 shedskin_directory = os.path.join(dirname, shedskin_directory)
