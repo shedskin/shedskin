@@ -4,12 +4,8 @@
 #include <io.h> // for _isatty
 #endif // WIN32
 
-#if !defined(WIN32) || defined(__CYGWIN__)
+#ifndef WIN32
 #include <unistd.h>
-#endif
-
-#ifdef __CYGWIN__
-#define fileno(__F) ((__F)->_file)
 #endif
 
 #if (_POSIX_C_SOURCE >= 1 or _XOPEN_SOURCE or _POSIX_SOURCE or _BSD_SOURCE or _SVID_SOURCE) and (_BSD_SOURCE or _SVID_SOURCE)
@@ -212,11 +208,11 @@ int file::__ss_fileno() {
 __ss_bool file::isatty()
 {
     __check_closed();
-#if defined(WIN32) && !defined(__CYGWIN__)
+#ifdef WIN32
     return ___bool(_isatty(__ss_fileno()));
-#else
+#else // WIN32
     return ___bool(::isatty(__ss_fileno()));
-#endif
+#endif // WIN32
 }
 
 void *file::truncate(int size) {
@@ -442,11 +438,11 @@ int file_binary::__ss_fileno() {
 __ss_bool file_binary::isatty()
 {
     __check_closed();
-#if defined(WIN32) && !defined(__CYGWIN__)
+#ifdef WIN32
     return ___bool(_isatty(__ss_fileno()));
-#else
+#else // WIN32
     return ___bool(::isatty(__ss_fileno()));
-#endif
+#endif // WIN32
 }
 
 void *file_binary::truncate(int size) {
