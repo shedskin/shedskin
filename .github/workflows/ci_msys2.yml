@@ -35,13 +35,13 @@ jobs:
             mingw-w64-ucrt-x86_64-pkgconf
             mingw-w64-ucrt-x86_64-cmake
 
-    - name: Display Python version
-      run: python -c "import sysconfig, platform; print(platform.system(), sysconfig.get_python_version())"
+      - name: Display Python version
+        run: python -c "import sysconfig, platform; print(platform.system(), sysconfig.get_python_version())"
 
-    - name: Install shedskin
-      run: pip install .
+      - name: Install shedskin
+        run: pip install .
 
-    - name: Test shedskin
-      run: |
-        cd tests
-        shedskin test
+      - name: Test shedskin
+        run: |
+          cd tests
+          shedskin test
