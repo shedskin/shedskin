@@ -1,0 +1,39 @@
+name: msys2 tests
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    env:
+      MSYSTEM: UCRT64
+    defaults:
+      run:
+        shell: msys2 {0}
+
+    strategy:
+      fail-fast: false
+
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v2
+
+      - name: Setup msys2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            mingw-w64-ucrt-x86_64-toolchain
+            mingw-w64-ucrt-x86_64-pkgconf
+            mingw-w64-ucrt-x86_64-cmake
+
+    - name: Display Python version
+      run: python -c "import sysconfig, platform; print(platform.system(), sysconfig.get_python_version())"
+
+    - name: Install shedskin
+      run: pip install .
+
+    - name: Test shedskin
+      run: |
+        cd tests
+        shedskin test

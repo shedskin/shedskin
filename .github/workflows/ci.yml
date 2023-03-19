@@ -12,7 +12,7 @@ env:
 jobs:
   test:
     runs-on: ${{matrix.os}}
-    
+
     strategy:
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
@@ -39,7 +39,7 @@ jobs:
 
     - name: Install shedskin
       run: pip install .
-      
+
     - name: Test shedskin
       run: |
         cd tests
