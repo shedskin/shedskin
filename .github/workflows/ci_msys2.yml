@@ -1,8 +1,16 @@
 name: msys2 tests
-on: [push, pull_request]
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+env:
+  BUILD_TYPE: Debug
 
 jobs:
-  build:
+  test:
     runs-on: windows-latest
     env:
       MSYSTEM: UCRT64
