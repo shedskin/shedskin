@@ -45,4 +45,4 @@ jobs:
       - name: Test shedskin
         run: |
           cd tests
-          shedskin test
+          shedskin test --conan
