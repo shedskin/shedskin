@@ -43,7 +43,9 @@ jobs:
         run: pip install .
 
       - name: check installed
-        run: python -c "import shedskin; print(shedskin)"
+        run: |
+          cd tests
+          python -c "import shedskin; print(shedskin)"
         
       - name: Test shedskin
         run: |
