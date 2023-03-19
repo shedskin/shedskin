@@ -108,7 +108,7 @@ def generate_makefile(gx):
         flags = "/etc/shedskin/FLAGS"
     elif gx.msvc:
         flags = gx.shedskin_flags / "FLAGS.msvc"
-    elif sys.platform == "win32":
+    elif sys.platform == "cygwin":
         flags = gx.shedskin_flags / "FLAGS.mingw"
     elif sys.platform == "darwin":
         flags = gx.shedskin_flags / "FLAGS.osx"
