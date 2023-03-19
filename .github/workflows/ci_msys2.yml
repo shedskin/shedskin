@@ -34,6 +34,7 @@ jobs:
             mingw-w64-ucrt-x86_64-toolchain
             mingw-w64-ucrt-x86_64-pkgconf
             mingw-w64-ucrt-x86_64-cmake
+            mingw-w64-ucrt-x86_64-python-pip
 
       - name: Display Python version
         run: python -c "import sysconfig, platform; print(platform.system(), sysconfig.get_python_version())"
