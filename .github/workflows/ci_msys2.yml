@@ -50,4 +50,4 @@ jobs:
       - name: Test shedskin
         run: |
           cd tests
-          shedskin test --conan -c'Python_ROOT_DIR="D:/a/_temp/msys64/ucrt/bin"'
+          shedskin test --conan -c'Python_ROOT_DIR="D:/a/_temp/msys64/ucrt"'
