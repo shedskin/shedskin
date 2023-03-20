@@ -37,7 +37,6 @@ jobs:
           python -c "import sysconfig, platform; print(platform.system(), sysconfig.get_python_version())"
           python -c "import sysconfig; print(sysconfig.get_paths())"
           python -c "import sys; print(sys.executable)"
-          echo "pythonLocation: $pythonLocation"
         
       - name: Install dependencies
         run: |
