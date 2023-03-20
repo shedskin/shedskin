@@ -41,8 +41,7 @@ jobs:
         run: |
           python -c "import sysconfig, platform; print(platform.system(), sysconfig.get_python_version())"
           python -c "import sys; print(sys.executable)"
-          echo $pythonLocation
-          
+        
       - name: Install shedskin
         run: pip install .
 
@@ -54,4 +53,4 @@ jobs:
       - name: Test shedskin
         run: |
           cd tests
-          shedskin test --conan
+          shedskin test --conan -c 'Python3_EXECUTABLE="D:/a/_temp/msys64/ucrt64/bin/python.exe"'
