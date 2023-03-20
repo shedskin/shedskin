@@ -26,6 +26,12 @@ jobs:
       - name: Checkout the code
         uses: actions/checkout@v2
 
+      - name: Setup python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.10
+          cache: 'pip'
+        
       - name: Setup msys2
         uses: msys2/setup-msys2@v2
         with:
@@ -36,7 +42,6 @@ jobs:
             mingw-w64-ucrt-x86_64-pkgconf
             mingw-w64-ucrt-x86_64-cmake
             mingw-w64-ucrt-x86_64-ninja
-            mingw-w64-ucrt-x86_64-python-pip
 
       - name: Display Python version
         run: |
@@ -50,4 +55,4 @@ jobs:
       - name: Test shedskin
         run: |
           cd tests
-          shedskin test --conan -c'Python_EXECUTABLE="D:/a/_temp/msys64/ucrt/bin/python.exe"' -c'Python_INCLUDE_DIRS="D:/a/_temp/msys64/ucrt/include/python3.10"' -c'Python_LIBRARIES="D:/a/_temp/msys64/ucrt/lib/python3.10"'
+          shedskin test --conan -c'Python_ROOT_DIR="$pythonLocation"'
