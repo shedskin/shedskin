@@ -50,4 +50,4 @@ jobs:
       - name: Test shedskin
         run: |
           cd tests
-          shedskin test --conan -c'Python_EXECUTABLE="D:/a/_temp/msys64/ucrt/bin/python.exe"'
+          shedskin test --conan -c'Python_EXECUTABLE="D:/a/_temp/msys64/ucrt/bin/python.exe"' -c'Python_INCLUDE_DIRS="D:/a/_temp/msys64/ucrt/include/python3.10"' -c'Python_LIBRARIES="D:/a/_temp/msys64/ucrt/lib/python3.10"'
