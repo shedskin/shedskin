@@ -35,11 +35,13 @@ jobs:
             mingw-w64-ucrt-x86_64-toolchain
             mingw-w64-ucrt-x86_64-pkgconf
             mingw-w64-ucrt-x86_64-cmake
+            mingw-w64-ucrt-x86_64-ninja
             mingw-w64-ucrt-x86_64-python-pip
 
       - name: Display Python version
         run: |
           python -c "import sysconfig, platform; print(platform.system(), sysconfig.get_python_version())"
+          python -c "import sysconfig; print(sysconfig.get_paths())"
           python -c "import sys; print(sys.executable)"
         
       - name: Install shedskin
@@ -48,4 +50,4 @@ jobs:
       - name: Test shedskin
         run: |
           cd tests
-          shedskin test --conan -c'Python_EXECUTABLE="D:/a/_temp/msys64/ucrt/bin/python.exe"'
+          shedskin test --conan -c'Python_ROOT_DIR="D:/a/_temp/msys64/ucrt/bin"'
