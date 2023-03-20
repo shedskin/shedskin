@@ -14,7 +14,7 @@ jobs:
     name: Msys2 tests
     runs-on: windows-latest
     env:
-      MSYSTEM: MINGW64
+      MSYSTEM: UCRT64
     defaults:
       run:
         shell: msys2 {0}
@@ -29,13 +29,13 @@ jobs:
       - name: Setup msys2
         uses: msys2/setup-msys2@v2
         with:
-          msystem: MINGW64
+          msystem: UCRT64
           update: true
           install: >-
-            mingw-w64-mingw64-x86_64-toolchain
-            mingw-w64-mingw64-x86_64-pkgconf
-            mingw-w64-mingw64-x86_64-cmake
-            mingw-w64-mingw64-x86_64-python-pip
+            mingw-w64-ucrt-x86_64-toolchain
+            mingw-w64-ucrt-x86_64-pkgconf
+            mingw-w64-ucrt-x86_64-cmake
+            mingw-w64-ucrt-x86_64-python-pip
 
       - name: Display Python version
         run: |
@@ -48,4 +48,4 @@ jobs:
       - name: Test shedskin
         run: |
           cd tests
-          shedskin test --conan -c'Python_EXECUTABLE="D:/a/_temp/msys64/mingw64/bin/python.exe"'
+          shedskin test --conan -c'Python_EXECUTABLE="D:/a/_temp/msys64/ucrt/bin/python.exe"'
