@@ -348,6 +348,8 @@ class Shedskin:
         opt('--ccache',           help='enable ccache with cmake', action='store_true')
         opt('--target',           help='build only specified cmake targets', nargs="+", metavar="TARGET")
 
+        opt("-c", "--cfg",        help="Add a cmake option '-D' prefix not needed", nargs='*', metavar="CMAKE_OPT")
+
         # make 'translate' the default subparser
         for arg in sys.argv[1:]:
             if arg in ('-h', '--help'):
