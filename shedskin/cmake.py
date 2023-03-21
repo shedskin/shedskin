@@ -573,7 +573,7 @@ class CMakeBuilder:
         """process shedskin program with cmake"""
         start_time = time.time()
 
-        cfg_options = [] if not self.options.cfg else [f'-D{opt}' for opt in self.options.cfg]
+        cfg_options = [] if not getattr(self.options, 'cfg', None) else [f'-D{opt}' for opt in self.options.cfg]
         bld_options = []
         tst_options = []
 
