@@ -274,13 +274,18 @@ To compile the following simple test program, called ``test.py``:
 
   print('hello, world!')
 
-Type:
+Under Linux/macOS, type:
 
 ::
 
   shedskin build test
 
 This will create a ``build`` directory, containing the generated C++ code and binary.
+
+Under Windows, type:
+::
+
+  shedskin build --conan test
 
 Under Linux/macOS, the binary is named ``build/test``. Under Windows, it is named
 ``build/Debug/test``.
