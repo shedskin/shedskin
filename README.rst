@@ -17,11 +17,12 @@ For a set of `75 non-trivial programs <https://github.com/shedskin/shedskin/tree
 Usage
 -----
 
+Compile and run the 'hello, world!' example under Linux:
+
 ::
 
-    shedskin test.py
-    make
-    ./test
+    shedskin build test.py 
+    build/test
 
 
 Restrictions
