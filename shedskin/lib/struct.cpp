@@ -235,10 +235,8 @@ void fillbuf2(char c, double t, char, unsigned int) {
     }
 }
 
-bytes *pack(int, str *fmt, ...) {
+bytes *pack(str *fmt, va_list args) {
     pyobj *arg;
-    va_list args;
-    va_start(args, fmt);
     bytes *result = new bytes();
     char order = '@';
     str *digits = new str();
@@ -422,8 +420,24 @@ bytes *pack(int, str *fmt, ...) {
                  throw new error(new str("bad char in struct format"));
         }
     }
+    return result;
+}
+
+bytes *pack(int, str *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    bytes *result = pack(fmt, args);
     va_end(args);
     return result;
+}
+
+void pack_into(int n, str *fmt, bytes *buffer, __ss_int offset, ...) {
+    va_list args;
+    va_start(args, offset);
+    bytes *result = pack(fmt, args); // TODO avoid intermediate object
+    va_end(args);
+
+    buffer->unit.replace(offset, result->unit.size(), result->unit);
 }
 
 void __init() {

@@ -51,11 +51,19 @@ def test_unpack_from():
     assert n == 1264
 
 
+def test_pack_into():
+    bla = bytearray(10)
+    struct.pack_into('<hh', bla, 4, 17, 18)
+    a, b = struct.unpack_from('<hh', bla, 4)
+    assert a == 17 and b == 18
+
+
 def test_all():
     test_unpack()
     test_unpack_from()
     test_unpack_issue()
     test_pack()
+    test_pack_into()
 
 if __name__ == '__main__':
     test_all()
