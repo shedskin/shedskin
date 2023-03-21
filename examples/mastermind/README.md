@@ -2,6 +2,7 @@
 
 ```bash
 cd mm
-python3 -m shedskin -e mastermind && make && python3 -c "import mastermind; assert mastermind.__file__.endswith('.so')"
+shedskin build -e mastermind
+cd ..
+python mastermind_main.py
 ```
-
