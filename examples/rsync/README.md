@@ -1,6 +1,6 @@
 # rsync
 
-This example requires the `openssl` library and headers to be installed. 
+This example requires the `openssl` library and headers to be installed.
 
 
 ## for Linux
