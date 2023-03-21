@@ -43,3 +43,8 @@ jobs:
       run: |
         cd tests
         shedskin test --conan
+
+    - name: Test shedskin examples
+      run: |
+        cd ../examples
+        shedskin test --conan
