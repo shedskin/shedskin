@@ -1109,13 +1109,6 @@ __ss_bool isinstance(pyobj *p, class_ *cl);
 
 /* internal use */
 
-#ifdef __sun
-#define INFINITY __builtin_inff()
-#endif
-#if defined( _MSC_VER )
-#define INFINITY std::numeric_limits<__ss_float>::infinity()
-#endif
-
 #define __SS_MIN(a,b) ((a) < (b) ? (a) : (b))
 #define __SS_MIN3(a,b,c) (__SS_MIN((a), __SS_MIN((b), (c))))
 #define __SS_MAX(a,b) ((a) > (b) ? (a) : (b))
