@@ -91,7 +91,6 @@ Shed Skin will only ever support a subset of all Python features. The following 
 * multiple inheritance
 * nested functions and classes
 * full unicode support (currently restricted to 1-byte characters)
-* f-strings
 * inheritance from builtins (excluding :code:`Exception` and :code:`object`)
 * overloading :code:`__iter__`, :code:`__call__`, :code:`__del__`
 * closures
@@ -147,7 +146,7 @@ At the moment, the following 30 modules are (fully or partially) supported. Seve
 * :code:`select` (only select function)
 * :code:`socket`
 * :code:`string`
-* :code:`struct` (no Struct, pack_into, unpack_from)
+* :code:`struct` (no Struct, iter_unpack)
 * :code:`sys`
 * :code:`time`
 
@@ -260,21 +259,11 @@ If the PCRE library is not available via your package manager, the following is 
 Windows
 ~~~~~~~
 
-Shedskin 0.9.4 is the latest version to support Windows out-of-the-box. With 0.9.7, we hope to add easy Windows support again.
+Install the following dependencies:
 
-It is possible to use Shedskin master under Windows, but it requires some manual steps.
-
-First, install msys64 and mingw64. Then start a mingw32, mingw64 or ucrt64 shell, and install the shedskin dependencies:
-
-::
-
-  pacman -S libgc
-  pacman -S libgc-devel
-  pacman -S libpcre
-  pacman -S pcre-devel
-  pacman -S python-devel
-
-It should now be possible to use Shedskin from the shell.
+* Microsoft Visual Studio Build Tools (enable CMake in installation process)
+* CMake
+* Conan 1.59.0 (pip install 'conan==1.59.0')
 
 Compiling a standalone program
 ------------------------------
@@ -289,15 +278,12 @@ Type:
 
 ::
 
-  shedskin translate test
+  shedskin build test
 
-This will create two C++ files, called ``test.cpp`` and ``test.hpp``, as well as a ``Makefile``.
+This will create a ``build`` directory, containing the generated C++ code and binary.
 
-To create an executable file, called ``test`` (or ``test.exe``), type:
-
-::
-
-  make
+Under Linux/macOS, the binary is named ``build/test``. Under Windows, it is named
+``build/Debug/test``.
 
 Generating an extension module
 ------------------------------
@@ -323,14 +309,13 @@ Type:
 
 ::
 
-  shedskin translate -e simple_module
-  make
+  shedskin build -e simple_module
 
-For 'make' to succeed, make sure to have the Python development files installed (under **Debian**, install ``python-dev``; under **Fedora**, install ``python-devel``).
+For this to succeed, make sure to have the Python development files installed (under **Debian**, install ``python-dev``; under **Fedora**, install ``python-devel``).
 
 Note that for type inference to be possible, the module must (indirectly) call its own functions. This is accomplished in the example by putting the function calls under the :code:`if __name__=='__main__'` statement, so that they are not executed when the module is imported. Functions only have to be called indirectly, so if func2 calls func1, the call to func1 can be omitted.
 
-The extension module can now be simply imported and used as usual:
+The extension module can now be simply imported and used as usual (first change to ``build/`` under Linux/macOS, or ``build/Debug`` under Windows):
 
 ::
 
