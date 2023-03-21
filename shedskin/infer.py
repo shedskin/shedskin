@@ -1457,10 +1457,6 @@ def update_progressbar(gx, perc):
 
     gx.progressbar.update(perc)
 
-    # if perc == 1:
-    # Finished, so add a new line.
-    # sys.stdout.write('\n')
-
 
 # --- cartesian product algorithm (cpa) & iterative flow analysis (ifa)
 
@@ -1550,10 +1546,6 @@ def iterative_dataflow_analysis(gx):
                     "iterations: %s templates: %s", gx.total_iterations, gx.templates
                 )
                 return
-
-        if not INCREMENTAL and not logger.isEnabledFor(logging.DEBUG):
-            sys.stdout.write("*")
-            sys.stdout.flush()
 
         # --- update alloc info table for split contours
         for cl, dcpa, nodes, newnr in split:

@@ -34,13 +34,16 @@ class ProgressBar:
         self.done_sym = done_sym
         self.left_sym = left_sym
         self.progress = 0.0
+        self.done = False
 
     def update(self, n):
-        status = ""
+        if self.done:
+            return
+
         self.progress = float(n) / float(self.total)
         if self.progress >= 1.0:
             self.progress = 1
-            status = "\r"
+            self.done = True
 
         block = int(round(self.bar_length * self.progress))
         text = "\r>> {} [{}] {:.0f}% ".format(
@@ -49,3 +52,5 @@ class ProgressBar:
             round(self.progress * 100, 0),
         )
         print(text, end="\r", flush=True)
+        if self.done:
+            print(flush=True)
