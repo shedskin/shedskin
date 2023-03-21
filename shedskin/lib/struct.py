@@ -6,6 +6,9 @@ class error(Exception):
 def pack(format, *vals):
     return b''
 
+def pack_into(format, buffer, offset, *vals):
+    pass
+
 def unpack(format, s):
     pass
 

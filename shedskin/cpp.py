@@ -2636,8 +2636,14 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.append("((void *)(")
 
             if (
-                print_function or self.library_func(funcs, "struct", None, "pack")
-            ) and not formal.name.startswith("__kw_"):
+                (
+                    print_function
+                    or self.library_func(funcs, "struct", None, "pack")
+                    or self.library_func(funcs, "struct", None, "pack_into")
+                )
+                and not formal.name.startswith("__kw_")
+                and not formal.name == 'offset'
+            ):
                 types = [t[0].ident for t in self.mergeinh[arg]]
                 if (
                     "float_" in types

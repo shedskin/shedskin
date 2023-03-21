@@ -24,6 +24,7 @@ __ss_bool unpack_bool(char o, char c, unsigned int d, bytes *data, __ss_int *pos
 double unpack_float(char o, char c, unsigned int d, bytes *data, __ss_int *pos);
 void unpack_pad(char o, char c, unsigned int d, bytes *data, __ss_int *pos);
 bytes *pack(int n, str *fmt, ...);
+void pack_into(int n, str *fmt, bytes *buffer, __ss_int offset, ...);
 str *unpack(); /* using __struct__::unpack */
 str *unpack_from(); /* using __struct__::unpack */
 
