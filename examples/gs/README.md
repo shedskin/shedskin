@@ -2,10 +2,10 @@
 
 ```bash
 cd Gh0stenstein
-python3 -m shedskin -bwe world_manager && make && python3 -c "import world_manager; assert world_manager.__file__.endswith('.so')"
+shedskin build -e world_manager.py
+cp build/world_manager.so .
+cd ..
+python gs_main.py
 ```
 
-requires `pyobject` see: https://pygobject.readthedocs.io
-
-compiles and working on Linux (untested on macOS)
-
+requires `pygobject` see: https://pygobject.readthedocs.io
