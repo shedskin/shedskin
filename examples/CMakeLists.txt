@@ -134,6 +134,7 @@ add_subdirectory(chull)
 add_subdirectory(circle) # ext
 add_subdirectory(dijkstra)
 add_subdirectory(dijkstra2)
+add_subdirectory(doom)
 add_subdirectory(fysphun) # ext
 add_subdirectory(genetic)
 add_subdirectory(genetic2)
