@@ -2,7 +2,10 @@
 
 ```bash
 cd pylot
-python3 -m shedskin -be SimpleGeometry && make && python3 -c "import SimpleGeometry; assert SimpleGeometry.__file__.endswith('.so')"
+shedskin build -e SimpleGeometry
+cp build/SimpleGeometry.so .
+cd ..
+python pylot_main.py
 ```
 
 ## Linux
