@@ -15,28 +15,24 @@ lines  name                 description
    327 amaze.py             maze generator/solver
     84 ant.py               TSP approximation
    125 astar.py             a-star algorithm                (extmod, GUI)
-
-
-
    415 bh.py                barnes-hut force calculation
    222 block.py             Huffman block compressor
     54 brainfuck.py         brainfuck interpreter
   3600 c64_main.py          commodore 64 emulator           (extmod, GUI)
    220 chaos.py             chaosgame-like fractals
-
-
-
    321 chess.py             chess engine
+   290 chull.py             3D convex hull
+    65 circle.py            circle packing animation        (extmod, GUI)
    105 dijkstra.py          dijkstra's algorithm
     80 dijkstra2.py         bidirectional dijkstra search
-   290 chull.py             3D convex hull
-    65 circle.py            circle packing animation        shedskin -e circle && make
-                                                            python circle_main.py (drag circles with mouse)
-   665 doom.py              WAD rendering engine            shedskin -e render && make
-                                                            python doom.py
-   147 fysphun.py           physics animation               shedskin -e fysphun && make
-                                                            python fysphun_main.py (drag points with mouse)
+   665 doom.py              WAD rendering engine            (extmod, GUI)
+   147 fysphun.py           physics animation               (extmod, GUI)
     92 genetic.py           genetic algorithm
+
+
+
+
+
    168 genetic2.py          another genetic algorithm
    300 go.py                go player (monte carlo/UCT)     shedskin -b go && make
                                                             ./go
