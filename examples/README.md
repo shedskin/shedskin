@@ -1,10 +1,8 @@
 # Shedskin Examples
 
-75 programs that work with Shed Skin 0.9.7
+77 programs that work with Shed Skin 0.9.7
 
 ## Example Overview
-
-In the following overview, each example is in its own folder of the same name.
 
 ```
 lines  name                 description
@@ -73,9 +71,6 @@ lines  name                 description
     92 sokoban.py           sokoban solver
    102 solitaire.py         solitaire encryption algorithm
    200 stereo.py            stereo computer vision          (extmod, GUI)
-
-
-
    139 sudoku1.py           sudoku solver
    148 sudoku2.py           sudoku solver
    155 sudoku3.py           sudoku solver
@@ -95,7 +90,7 @@ lines  name                 description
 If you know of any other interesting examples, please do suggest them in the shedskin discussion group or post an [issue](https://github.com/shedskin/shedskin/issues/new/choose) in the [Shedskin repo](https://github.com/shedskin/shedskin).
 
 
-## Building and Running the Examples
+## Building and Running individual Examples
 
 Each example has its own directory which should contain the python code to be translated as well as related data files. Also a README.md if there are any special notes. In some cases, you may need to make a link to '../testdata'.
 

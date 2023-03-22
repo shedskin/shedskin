@@ -2,6 +2,11 @@
 
 This example requires the `openssl` library and headers to be installed.
 
+```
+shedskin build -l -Llib sha
+build/sha
+```
+
 
 ## for Linux
 
