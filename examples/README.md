@@ -45,25 +45,27 @@ lines  name                 description
     49 minpng.py            uncompressed PNG encoder
 
 
-
-   218 pylife.py            hashlife-based game of life
- 1,201 msp_ss.py            serial bootstrap loader         shedskin -Llib msp_ss.py
+ 1,201 msp_ss.py            serial bootstrap loader
    482 mwmatching.py        maximum weighted matching algorithm
    101 nbody.py             planet body physics
-   154 neural1.py           back-prop neural network        python neural1.py --test
+   154 neural1.py           back-prop neural network
    109 neural2.py           back-prop neural network
     78 oliva2.py            sea shell patterns
     95 othello.py           othello player
+   208 path_tracing.py      path tracing raytracer
     80 pisang.py            satisfiability solver
+   392 plcfrs.py            natural language parser
+  1543 pygasus_main.py      NES emulator                    (extmod, GUI)
    272 pygmy.py             raytracer
+   218 pylife.py            hashlife-based game of life     (extmod, curses)
+
+
+
    276 yopyra.py            raytracer
    195 mao.py               raytracer (ao benchmark)        see comments in top
                                                             shedskin -r mao (fast random number generator)
    462 minilight.py         advanced raytracer              shedskin -r minilight (fast random number generator)
                             (triangle primitives, octree spatial index)
-   208 path_tracing.py      path tracing raytracer          shedskin -r path_tracing
-   392 plcfrs.py            natural language parser
-  1543 pygasus_main.py      NES emulator                    shedskin -be pygasus && make
                                                             python pygasus_main.py mario_bros.nes
   1050 pylot_main.py        multiprocessing raytracer       cd pylot; shedskin -boe SimpleGeometry && make; cd ..
                                                             python pylot_main.py
