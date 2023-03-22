@@ -1,6 +1,6 @@
 # Shedskin Examples
 
-75 programs that work with Shed Skin 0.9.7.
+75 programs that work with Shed Skin 0.9.7
 
 ## Example Overview
 
@@ -43,8 +43,6 @@ lines  name                 description
    223 mastermind_main.py   mastermind against comp         (extmod)
    117 mastermind2.py       mastermind strategies
     49 minpng.py            uncompressed PNG encoder
-
-
  1,201 msp_ss.py            serial bootstrap loader
    482 mwmatching.py        maximum weighted matching algorithm
    101 nbody.py             planet body physics
@@ -58,6 +56,7 @@ lines  name                 description
   1543 pygasus_main.py      NES emulator                    (extmod, GUI)
    272 pygmy.py             raytracer
    218 pylife.py            hashlife-based game of life     (extmod, curses)
+
 
 
 
