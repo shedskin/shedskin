@@ -1,20 +1,23 @@
 # Shedskin Examples
 
-75 programs that work with Shed Skin 0.9.6 (python 3.8+).
-
-This `examples` folder includes an example runner script which provides automated builds of examples using both shedskin's builtin methods and CMake.
+75 programs that work with Shed Skin 0.9.7.
 
 ## Example Overview
 
-In the following overview, each example is in its own folder of the same name
+In the following overview, each example is in its own folder of the same name.
 
 ```
-lines  name                 description                     notes
+lines  name                 description
 (sloccount)
 
-    84 ant.py               TSP approximation
+   174 ac_encode.py         Arithmetic coding compressor
+   130 adatron.py           Adatron SVM with polynomial kernel
    327 amaze.py             maze generator/solver
-   125 astar.py             a-star algorithm                shedskin -e astar && make && python astar_main.py
+    84 ant.py               TSP approximation
+   125 astar.py             a-star algorithm                (extmod, GUI)
+
+
+
    415 bh.py                barnes-hut force calculation
     54 brainfuck.py         brainfuck interpreter
   3600 c64_main.py          commodore 64 emulator           cd c64; shedskin -boe c64 && make; cd ..
@@ -45,8 +48,6 @@ lines  name                 description                     notes
                                                             python pylife_main.py
    186 linalg.py            linear algebra
    190 LZ2.py               Lempel-Ziv compressor
-   174 ac_encode.py         Arithmetic coding compressor
-   130 adatron.py           Adatron SVM with polynomial kernel
    222 block.py             Huffman block compressor
    329 kanoodle.py          Knuth's dancing links
    118 kmeanspp.py          K-means++ Clustering
