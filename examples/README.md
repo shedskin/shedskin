@@ -19,15 +19,16 @@ lines  name                 description
 
 
    415 bh.py                barnes-hut force calculation
+   222 block.py             Huffman block compressor
     54 brainfuck.py         brainfuck interpreter
-  3600 c64_main.py          commodore 64 emulator           cd c64; shedskin -boe c64 && make; cd ..
-                                                            python c64_main.py --tape=intkarat.t64
-                                                            load
-                                                            run
+  3600 c64_main.py          commodore 64 emulator           (extmod, GUI)
+   220 chaos.py             chaosgame-like fractals
+
+
+
    321 chess.py             chess engine
    105 dijkstra.py          dijkstra's algorithm
     80 dijkstra2.py         bidirectional dijkstra search
-   220 chaos.py             chaosgame-like fractals
    290 chull.py             3D convex hull
     65 circle.py            circle packing animation        shedskin -e circle && make
                                                             python circle_main.py (drag circles with mouse)
@@ -48,7 +49,6 @@ lines  name                 description
                                                             python pylife_main.py
    186 linalg.py            linear algebra
    190 LZ2.py               Lempel-Ziv compressor
-   222 block.py             Huffman block compressor
    329 kanoodle.py          Knuth's dancing links
    118 kmeanspp.py          K-means++ Clustering
    270 loop.py              Havlak loop recognition algorithm
@@ -112,170 +112,10 @@ If you know of any other interesting examples, please do suggest them in the she
 
 ## Building and Running the Examples
 
-Each example has its own directory which should contain the python code to be translated as well as related data files.
+Each example has its own directory which should contain the python code to be translated as well as related data files. Also a README.md if there are any special notes. In some cases, you may need to make a link to '../testdata'.
 
-Shedskin has the option to build and run 'restricted' python as an executable or as an extension, you can do this manually or automatically via the example runner.
-
-### A. Build/Run Examples Manually
-
-1. **The Builtin way**
-
-   This uses shedskin builtin `Makefile` generation capability. 
-
-   For individual examples, basically `cd` into the example's directory,
-   then use the typical `shedskin` workflow as below:
-
-   ```
-   shedskin [options] <module> -> translated .cpp and .hpp files
-                               -> Makefile
-
-   make                        -> executable or python extension
-   ```
-
-   See the [Example Overview](#example-overview) section for guidance on exceptional cases.
-
-2. **The Cmake way**
-
-   It is also possible to build all of the examples using `cmake`:
-
-   ```bash
-   mkdir build && cd build && cmake .. && cmake --build .
-   ```
-
-### B. Build/Run Examples Automatically
-
-The `./run.py` script in the `examples` directory is also provided 
-to automate the manual build/run processes given above.
-
-It has the following commandline interface:
+## Building all Examples
 
 ```bash
-% ./run.py --help
-usage: run [-h] [-b BUILD_TYPE] [-c] [-d] [-e] [-g GENERATOR] [-i PATTERN]
-           [-j N] [-k] [-m] [-n] [-p] [-r TEST] [-s] [-t TARGET [TARGET ...]]
-           [-x] [--ccache] [--progress] [--reset] [--conan] [--spm] [--cpm]
-           [--external-project] [--debug]
-
-runs shedskin tests and examples
-
-options:
-  -h, --help            show this help message and exit
-  -b BUILD_TYPE, --build-type BUILD_TYPE
-                        set cmake build type
-  -c, --cmake           run tests using cmake
-  -d, --dryrun          dryrun without any changes
-  -e, --extension       include python extension tests
-  -g GENERATOR, --generator GENERATOR
-                        specify a cmake build system generator
-  -i PATTERN, --include PATTERN
-                        provide regex of tests to include with cmake
-  -j N, --parallel N    build and run tests in parallel using N jobs
-  -k, --check           check testfile py syntax before running
-  -m, --modified        run only recently modified test
-  -n, --nocleanup       do not cleanup built test
-  -p, --pytest          run pytest before each test run
-  -r TEST, --run TEST   run single test
-  -s, --stoponfail      stop when first failure happens in ctest
-  -t TARGET [TARGET ...], --target TARGET [TARGET ...]
-                        build only specified targets
-  -x, --run-errs        run error/warning message tests
-  --ccache              enable ccache with cmake
-  --progress            enable short progress output from ctest
-  --reset               reset cmake build
-  --conan               install dependencies with conan
-  --spm                 install dependencies with spm
-  --external-project    install dependencies with externalproject
-  --debug               set cmake debug on
+shedskin test --reset
 ```
-
-#### 1. Builtin Method
-
-To build and run a single example in cpp-executable mode:
-
-```bash
-    ./run -r <name>.py
-```
-
-To build and run a single example in python-extension mode:
-
-```bash
-    ./run -er <name>.py
-```
-
-To build and run all examples in cpp-executable mode:
-
-```bash
-    ./run.py
-```
-
-To build and run all examples in python-extension mode:
-
-```bash
-    ./run.py -e
-```
-
-#### 2. CMake Method
-
-To build and run an example using cmake:
-
-```bash
-    ./run.py -c -r pystone
-```
-
-
-To build and run all examples using cmake:
-
-```bash
-    ./run.py -c
-```
-
-If the above command is run for the first time, it will run the equivalent of the following:
-
-```bash
-    mkdir build && cd build && cmake .. && cmake --build .
-```
-
-If it is run subsequently, it will run the equivalent of the following:
-
-```bash
-    cd build && cmake .. && cmake --build .
-```
-
-This is useful during example development and has the benefit of only picking up
-changes to modified examples and will not re-translate or re-compile unchanged examples.
-
-To reset or remove the cmake `build` directory and run cmake:
-
-```bash
-    ./run.py --reset -c
-```
-
-## Optimization and Performance Tips
-
-### Running Build Jobs in Parallel
-
-The cmake method has an option to build and run tests as parallel jobs. This can greatly speed up test runs.
-
-You can specify the number of jobs to build and run tests in parallel:
-
-```bash
-./run.py -c -j 4
-```
-
-### Using a Different Build System with CMake
-
-Another option is to use a different build system designed for speed like [Ninja](https://ninja-build.org) which automatically maximizes its use of available cores on your system.
-
-If you have `Ninja` installed, you can have cmake use it as your underlying build system and automatically get improved performance vs the default Make-based system:
-
-```bash
-./run.py -c -gNinja
-```
-
-### Optimizing Running Examples with Cmake
-
-`shedskin -b` disables index-out-of-bounds checking which often improves performance. See the documentation for more performance tips:
-
-https://shedskin.readthedocs.io/
-
-
