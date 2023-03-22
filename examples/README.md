@@ -64,18 +64,18 @@ lines  name                 description
    469 rdb.py               iPod shuffle programmer
    286 richards.py          standard benchmark
     82 rsync.py             rsync algorithm
-
-
-
    846 rubik.py             rubik solver
     78 rubik2.py            thistlethwaite rubik solver
    259 sat.py               conflict-driven satisfiability solver
    129 score4.py            connect four/four-in-a-row
+   192 sha.py               SHA-1 algorithm
     80 sieve.py             prime number sieves
-   192 sha.py               SHA-1 algorithm                 shedskin -l sha
     92 sokoban.py           sokoban solver
    102 solitaire.py         solitaire encryption algorithm
-   200 stereo.py            stereo computer vision          shedskin -web stereo && make; python stereo_main.py
+   200 stereo.py            stereo computer vision          (extmod, GUI)
+
+
+
    139 sudoku1.py           sudoku solver
    148 sudoku2.py           sudoku solver
    155 sudoku3.py           sudoku solver
