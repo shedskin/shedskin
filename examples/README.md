@@ -40,8 +40,10 @@ lines  name                 description
    190 LZ2.py               Lempel-Ziv compressor
     26 mandelbrot.py        mandelbrot fractal
    108 mandelbrot2_main.py  interactive mandelbrot fractal  (extmod, GUI)
+   195 mao.py               raytracer (ao benchmark)
    223 mastermind_main.py   mastermind against comp         (extmod)
    117 mastermind2.py       mastermind strategies
+   462 minilight.py         advanced raytracer
     49 minpng.py            uncompressed PNG encoder
  1,201 msp_ss.py            serial bootstrap loader
    482 mwmatching.py        maximum weighted matching algorithm
@@ -56,23 +58,15 @@ lines  name                 description
   1543 pygasus_main.py      NES emulator                    (extmod, GUI)
    272 pygmy.py             raytracer
    218 pylife.py            hashlife-based game of life     (extmod, curses)
-
-
-
-
-   276 yopyra.py            raytracer
-   195 mao.py               raytracer (ao benchmark)        see comments in top
-                                                            shedskin -r mao (fast random number generator)
-   462 minilight.py         advanced raytracer              shedskin -r minilight (fast random number generator)
-                            (triangle primitives, octree spatial index)
-                                                            python pygasus_main.py mario_bros.nes
-  1050 pylot_main.py        multiprocessing raytracer       cd pylot; shedskin -boe SimpleGeometry && make; cd ..
-                                                            python pylot_main.py
+  1050 pylot_main.py        raytracer                       (extmod, GUI, multiprocessing)
    181 pystone.py           standard benchmark
-  1181 quameon              quantum monte carlo algorithms  cd quameon; shedskin sto_atom
+  1181 quameon              quantum monte carlo algorithms
+   469 rdb.py               iPod shuffle programmer
    286 richards.py          standard benchmark
-   469 rdb.py               iPod shuffle programmer         see comments in top
-    82 rsync.py             rsync algorithm                 see comments in top
+    82 rsync.py             rsync algorithm
+
+
+
    846 rubik.py             rubik solver
     78 rubik2.py            thistlethwaite rubik solver
    259 sat.py               conflict-driven satisfiability solver
@@ -95,6 +89,7 @@ lines  name                 description
     39 voronoi.py           textual voronoi
    526 voronoi2.py          voronoi algoritm
    112 WebServer.py         simple web server
+   276 yopyra.py            raytracer
 ```
 
 If you know of any other interesting examples, please do suggest them in the shedskin discussion group or post an [issue](https://github.com/shedskin/shedskin/issues/new/choose) in the [Shedskin repo](https://github.com/shedskin/shedskin).
