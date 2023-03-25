@@ -23,7 +23,6 @@ class Shedskin:
         self.configure_log()
         self.gx = self.configure(options)
         self.gx.options = options
-        print('self.gx.executable_product:', self.gx.executable_product)
         if 'name' in options:
             self.module_name = self.get_name(options.name)
 
@@ -157,11 +156,6 @@ class Shedskin:
         if (major, minor) not in [(3, 8), (3, 9), (3, 10), (3, 11)]:
             self.log.error('Shed Skin is not compatible with this version of Python')
             sys.exit(1)
-        if sys.platform == 'win32' and os.path.isdir('c:/mingw'):
-            self.log.error('please rename or remove c:/mingw, as it conflicts with Shed Skin')
-            sys.exit()
-        if sys.platform == 'win32' and struct.calcsize('P') == 8 and gx.pyextension_product:
-            self.log.warning('64-bit python may not come with necessary file to build extension module')
 
         return gx
 
@@ -169,6 +163,8 @@ class Shedskin:
         self.gx.main_module = graph.parse_module(self.module_name, self.gx)
 
     def translate(self):
+        self.log.warning('translate option (using make) is deprecated. please use build option.')
+
         t0 = time.time()
         infer.analyze(self.gx, self.module_name)
         annotate.annotate(self.gx)
