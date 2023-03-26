@@ -1,6 +1,6 @@
 """
 *** SHED SKIN Python-to-C++ Compiler ***
-Copyright 2005-2013 Mark Dufour; License GNU GPL version 3 (See LICENSE)
+Copyright 2005-2023 Mark Dufour; License GNU GPL version 3 (See LICENSE)
 
 """
 import logging
@@ -30,7 +30,7 @@ def error(msg, gx, node=None, warning=False, mv=None):
         filename = mv.module.relative_filename
         if node and hasattr(node, "lineno"):
             lineno = node.lineno
-    result = (kind, str(filename), lineno, msg)
+    result = (kind, str(filename or ''), lineno, msg)
     if result not in ERRORS:
         ERRORS.add(result)
     if not warning:
