@@ -76,7 +76,7 @@ function(add_shedskin_product)
         cmake_path(GET SHEDSKIN_MAIN_MODULE STEM main)
         cmake_path(GET SHEDSKIN_MAIN_MODULE FILENAME main_py)
         cmake_path(GET SHEDSKIN_MAIN_MODULE PARENT_PATH parentpath)
-        set(IS_NESTED TRUE)
+        set(IS_NESTED ON)
     else()
         set(main "${name}")
         set(main_py "${main}.py")
@@ -113,15 +113,17 @@ function(add_shedskin_product)
         set(PROJECT_EXE_DIR ${PROJECT_BINARY_DIR}/${name}/exe)
         set(PROJECT_EXT_DIR ${PROJECT_BINARY_DIR}/${name}/ext)
     endif()
-    set(IMPORTS_OS_MODULE FALSE)
-    set(IMPORTS_RE_MODULE FALSE)
+
+    # module-specific cases
+    set(IMPORTS_OS_MODULE OFF)
+    set(IMPORTS_RE_MODULE OFF)
  
-    # if ${name} starts_with test_ then set IS_TEST to TRUE
+    # if ${name} starts_with test_ then set IS_TEST to ON
     string(FIND "${name}" "test_" index)
     if("${index}" EQUAL 0)
-        set(IS_TEST TRUE)
+        set(IS_TEST ON)
     else()
-        set(IS_TEST FALSE)
+        set(IS_TEST OFF)
     endif()
 
     if(DEBUG)
@@ -176,7 +178,7 @@ function(add_shedskin_product)
     foreach(mod ${sys_modules})
         # special case os, os.path
         if(mod STREQUAL "os")
-            set(IMPORTS_OS_MODULE TRUE)
+            set(IMPORTS_OS_MODULE ON)
             list(APPEND sys_module_list "${SHEDSKIN_LIB}/os/__init__.cpp")
             list(APPEND sys_module_list "${SHEDSKIN_LIB}/os/__init__.hpp")            
         elseif(mod STREQUAL "os.path")
@@ -184,12 +186,17 @@ function(add_shedskin_product)
             list(APPEND sys_module_list "${SHEDSKIN_LIB}/os/path.hpp")
         else()
             if(mod STREQUAL "re")
-                set(IMPORTS_RE_MODULE TRUE)
+                set(IMPORTS_RE_MODULE ON)
             endif()
             list(APPEND sys_module_list "${SHEDSKIN_LIB}/${mod}.cpp")
             list(APPEND sys_module_list "${SHEDSKIN_LIB}/${mod}.hpp")
         endif()
     endforeach()
+
+    # special case win32: if none of the dep mgrs is enabled then default to conan
+    # if(WIN32 AND NOT ENABLE_EXTERNAL_PROJECT AND NOT ENABLE_SPM AND NOT ENABLE_CONAN)
+    #     set(ENABLE_CONAN ON)
+    # endif()
 
     if(ENABLE_EXTERNAL_PROJECT)
         set(LIB_DEPS
@@ -261,6 +268,7 @@ function(add_shedskin_product)
         message("LIB_DEPS: " ${LIB_DEPS})
         message("LIB_DIRS: " ${LIB_DIRS})
         message("LIB_INCLUDES: " ${LIB_INCLUDES})
+        message("ENABLE_WARNINGS: " ${ENABLE_WARNINGS})
     endif()
 
     # -------------------------------------------------------------------------
@@ -316,18 +324,25 @@ function(add_shedskin_product)
             ${sys_module_list}
         )
 
+        # genexpr testing for complex cases
+        # add_custom_command(TARGET ${EXE} POST_BUILD
+        #     COMMAND ${CMAKE_COMMAND} -E echo 
+        #     "enable-warnings = $<$<AND:${UNIX},$<BOOL:${ENABLE_WARNINGS}>>:-Wall>"
+        # )
+
         set_target_properties(${EXE} PROPERTIES
             OUTPUT_NAME ${name}
         )
 
         target_compile_options(${EXE} PRIVATE
             ${SHEDSKIN_COMPILE_OPTIONS}
-            $<$<BOOL:${UNIX}>:-Wall>
             $<$<BOOL:${UNIX}>:-O2>
             $<$<BOOL:${UNIX}>:-Wno-deprecated>
             $<$<BOOL:${UNIX}>:-Wno-unused-variable>
             $<$<BOOL:${UNIX}>:-Wno-unused-but-set-variable>
-#            $<$<BOOL:${WIN32}>:/Wall>
+            $<$<AND:${UNIX},$<BOOL:${ENABLE_WARNINGS}>>:-Wall>
+            $<$<AND:${WIN32},$<BOOL:${ENABLE_WARNINGS}>>:/Wall>
+            # windows
             $<$<BOOL:${WIN32}>:/MD>
         )
 
@@ -444,16 +459,16 @@ function(add_shedskin_product)
             $<$<BOOL:${UNIX}>:-fPIC>
             $<$<BOOL:${UNIX}>:-fwrapv>
             $<$<BOOL:${UNIX}>:-g>
-            $<$<BOOL:${UNIX}>:-Wall>
             $<$<BOOL:${UNIX}>:-O3>
             $<$<BOOL:${UNIX}>:-Wunreachable-code>
             $<$<BOOL:${UNIX}>:-Wno-unused-result>
             $<$<BOOL:${UNIX}>:-Wno-unused-variable>
             $<$<BOOL:${UNIX}>:-Wno-unused-but-set-variable>
+            $<$<AND:${UNIX},$<BOOL:${ENABLE_WARNINGS}>>:-Wall>
             # windows
-            # $<$<BOOL:${WIN32}>:/LD>
+            $<$<AND:${WIN32},$<BOOL:${ENABLE_WARNINGS}>>:/Wall>
             $<$<BOOL:${WIN32}>:/MD>
-#            $<$<BOOL:${WIN32}>:/Wall>
+            # $<$<BOOL:${WIN32}>:/LD>
         )
 
         target_link_options(${EXT} PRIVATE
