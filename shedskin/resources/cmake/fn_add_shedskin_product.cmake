@@ -307,10 +307,6 @@ function(add_shedskin_product)
 
         add_custom_target(shedskin_${EXE} DEPENDS ${translated_files})
 
-        # if(SHEDSKIN_HAS_LIB AND NOT EXISTS ${PROJECT_EXE_DIR}/lib)
-        #     file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/lib DESTINATION ${PROJECT_EXE_DIR})
-        # endif()
-
         if(SHEDSKIN_EXTRA_LIB_DIR AND NOT EXISTS ${PROJECT_EXE_DIR}/${SHEDSKIN_EXTRA_LIB_DIR})
             file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/${SHEDSKIN_EXTRA_LIB_DIR} DESTINATION ${PROJECT_EXE_DIR})
         endif()
@@ -356,11 +352,10 @@ function(add_shedskin_product)
 
         if(BUILD_TEST AND IS_TEST)
             if(WIN32)
-                cmake_path(
-                    APPEND ${CMAKE_BUILD_TYPE} ${EXE}
-                    OUTPUT_VARIABLE  test_path
+                add_test(NAME ${EXE}
+                    COMMAND ${EXE}
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE}
                 )
-                add_test(NAME ${EXE} COMMAND ${test_path})
             else()
                 add_test(NAME ${EXE} COMMAND ${EXE})
             endif()
@@ -411,10 +406,6 @@ function(add_shedskin_product)
         endif()
 
         add_custom_target(shedskin_${EXT} DEPENDS ${translated_files})
-
-        # if(SHEDSKIN_HAS_LIB AND NOT EXISTS ${PROJECT_EXT_DIR}/lib)
-        #     file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/lib DESTINATION ${PROJECT_EXT_DIR})
-        # endif()
 
         if(SHEDSKIN_EXTRA_LIB_DIR AND NOT EXISTS ${PROJECT_EXT_DIR}/${SHEDSKIN_EXTRA_LIB_DIR})
             file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/${SHEDSKIN_EXTRA_LIB_DIR} DESTINATION ${PROJECT_EXT_DIR})
@@ -484,13 +475,13 @@ function(add_shedskin_product)
 
         if(BUILD_TEST AND IS_TEST)
             if(${WIN32})
-		    add_test(NAME ${EXT}
-			 COMMAND ${Python_EXECUTABLE} -c "from ${name} import test_all; test_all()"
-			 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE}
-		    )
+                add_test(NAME ${EXT}
+                    COMMAND ${Python_EXECUTABLE} -c "from ${name} import test_all; test_all()"
+			        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE}
+                )
 	    else()
 		    add_test(NAME ${EXT}
-			 COMMAND ${Python_EXECUTABLE} -c "from ${name} import test_all; test_all()"
+                COMMAND ${Python_EXECUTABLE} -c "from ${name} import test_all; test_all()"
 		    )
 	    endif()
         endif()
