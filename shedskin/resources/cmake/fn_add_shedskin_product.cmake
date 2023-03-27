@@ -194,9 +194,9 @@ function(add_shedskin_product)
     endforeach()
 
     # special case win32: if none of the dep mgrs is enabled then default to conan
-    if(WIN32 AND NOT ENABLE_EXTERNAL_PROJECT AND NOT ENABLE_SPM AND NOT ENABLE_CONAN)
-        set(ENABLE_CONAN ON)
-    endif()
+    # if(WIN32 AND NOT ENABLE_EXTERNAL_PROJECT AND NOT ENABLE_SPM AND NOT ENABLE_CONAN)
+    #     set(ENABLE_CONAN ON)
+    # endif()
 
     if(ENABLE_EXTERNAL_PROJECT)
         set(LIB_DEPS
@@ -268,6 +268,7 @@ function(add_shedskin_product)
         message("LIB_DEPS: " ${LIB_DEPS})
         message("LIB_DIRS: " ${LIB_DIRS})
         message("LIB_INCLUDES: " ${LIB_INCLUDES})
+        message("ENABLE_WARNINGS: " ${ENABLE_WARNINGS})
     endif()
 
     # -------------------------------------------------------------------------
@@ -323,18 +324,25 @@ function(add_shedskin_product)
             ${sys_module_list}
         )
 
+        # genexpr testing for complex cases
+        # add_custom_command(TARGET ${EXE} POST_BUILD
+        #     COMMAND ${CMAKE_COMMAND} -E echo 
+        #     "enable-warnings = $<$<AND:${UNIX},$<BOOL:${ENABLE_WARNINGS}>>:-Wall>"
+        # )
+
         set_target_properties(${EXE} PROPERTIES
             OUTPUT_NAME ${name}
         )
 
         target_compile_options(${EXE} PRIVATE
             ${SHEDSKIN_COMPILE_OPTIONS}
-            $<$<BOOL:${UNIX}>:-Wall>
             $<$<BOOL:${UNIX}>:-O2>
             $<$<BOOL:${UNIX}>:-Wno-deprecated>
             $<$<BOOL:${UNIX}>:-Wno-unused-variable>
             $<$<BOOL:${UNIX}>:-Wno-unused-but-set-variable>
-#            $<$<BOOL:${WIN32}>:/Wall>
+            $<$<AND:${UNIX},$<BOOL:${ENABLE_WARNINGS}>>:-Wall>
+            $<$<AND:${WIN32},$<BOOL:${ENABLE_WARNINGS}>>:/Wall>
+            # windows
             $<$<BOOL:${WIN32}>:/MD>
         )
 
@@ -451,16 +459,16 @@ function(add_shedskin_product)
             $<$<BOOL:${UNIX}>:-fPIC>
             $<$<BOOL:${UNIX}>:-fwrapv>
             $<$<BOOL:${UNIX}>:-g>
-            $<$<BOOL:${UNIX}>:-Wall>
             $<$<BOOL:${UNIX}>:-O3>
             $<$<BOOL:${UNIX}>:-Wunreachable-code>
             $<$<BOOL:${UNIX}>:-Wno-unused-result>
             $<$<BOOL:${UNIX}>:-Wno-unused-variable>
             $<$<BOOL:${UNIX}>:-Wno-unused-but-set-variable>
+            $<$<AND:${UNIX},$<BOOL:${ENABLE_WARNINGS}>>:-Wall>
             # windows
-            # $<$<BOOL:${WIN32}>:/LD>
+            $<$<AND:${WIN32},$<BOOL:${ENABLE_WARNINGS}>>:/Wall>
             $<$<BOOL:${WIN32}>:/MD>
-#            $<$<BOOL:${WIN32}>:/Wall>
+            # $<$<BOOL:${WIN32}>:/LD>
         )
 
         target_link_options(${EXT} PRIVATE

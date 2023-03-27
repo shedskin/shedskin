@@ -272,6 +272,7 @@ class Shedskin:
 
         opt("--noassert",         help="Disable assert statements", action="store_true")
         opt("--nobounds",         help="Disable bounds checking", action="store_true")
+        opt("--nowarnings",       help="Disable '-Wall' compilation warnings", action="store_true")
         opt("--nogc",             help="Disable garbage collection", action="store_true")
         opt("--nogcwarns",        help="Disable runtime GC warnings", action="store_true")
         opt("--nomakefile",       help="Disable makefile generation", action="store_true")
@@ -311,6 +312,7 @@ class Shedskin:
         opt("--noassert",         help="Disable assert statements", action="store_true")
         opt("--nobounds",         help="Disable bounds checking", action="store_true")
         opt("--nogc",             help="Disable garbage collection", action="store_true")
+        opt("--nowarnings",       help="Disable '-Wall' compilation warnings", action="store_true")        
         opt("--nogcwarns",        help="Disable runtime GC warnings", action="store_true")
         opt("--nomakefile",       help="Disable makefile generation", action="store_true")
         opt("--nowrap",           help="Disable wrap-around checking", action="store_true")
@@ -344,6 +346,7 @@ class Shedskin:
         opt('--target',           help='build only specified cmake targets', nargs="+", metavar="TARGET")
 
         opt("-c", "--cfg",        help="Add a cmake option '-D' prefix not needed", nargs='*', metavar="CMAKE_OPT")
+        opt("--nowarnings",       help="Disable '-Wall' compilation warnings", action="store_true")        
 
         # make 'translate' the default subparser
         for arg in sys.argv[1:]:

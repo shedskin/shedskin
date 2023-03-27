@@ -19,6 +19,8 @@ option(ENABLE_SPM "Enable shedskin dependency management" OFF)
 option(ENABLE_CONAN "Enable conan for dependency management" OFF)
 option(ENABLE_EXTERNAL_PROJECT "Enable ExternalProject for dependency mgmt" OFF)
 
+option(ENABLE_WARNINGS "Enable -Wall type of warnings" ON)
+
 # -----------------------------------------------------------------------------
 # reporting
 
