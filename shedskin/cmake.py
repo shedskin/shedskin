@@ -274,12 +274,13 @@ def add_shedskin_product(
     disable_executable=False,
     disable_extension=False,
     disable_test=False,
-    has_lib=False,
+    # has_lib=False,
     enble_conan=False,
     enable_externalproject=False,
     enable_spm=False,
     debug=False,
     name=None,
+    extra_lib_dir=None,
 ):
     """populates a cmake function with the same name
 
@@ -301,6 +302,7 @@ def add_shedskin_product(
         SYS_MODULES APP_MODULES DATA
         INCLUDE_DIRS LINK_LIBS LINK_DIRS
         COMPILE_OPTIONS LINK_OPTIONS CMDLINE_OPTIONS
+        EXTRA_LIB_DIRS
     """
 
     def mk_add(lines, spaces=4):
@@ -335,9 +337,6 @@ def add_shedskin_product(
     elif enable_spm:
         add(1, "ENABLE_SPM")
 
-    if has_lib:
-        add(1, "HAS_LIB")
-
     if debug:
         add(1, "DEBUG")
 
@@ -346,6 +345,9 @@ def add_shedskin_product(
 
     if main_module:
         add(1, f"MAIN_MODULE {main_module}")
+
+    if extra_lib_dir:
+        add(1, f"EXTRA_LIB_DIR {extra_lib_dir}")
 
     if include_dirs:
         add(1, f"INCLUDE_DIRS {include_dirs}")
@@ -382,13 +384,6 @@ def add_shedskin_product(
     add(0, ")")
     return "\n".join(flist)
 
-
-# def get_cmakefile_template(section, **kwds):
-#     """returns a cmake template"""
-#     _pkg_path = get_pkg_path()
-#     cmakelists_tmpl = _pkg_path / "resources" / "cmake" / section / "CMakeLists.txt"
-#     tmpl = cmakelists_tmpl.read_text()
-#     return tmpl % kwds
 
 def get_cmakefile_template(**kwds):
     """returns a cmake template"""
@@ -440,6 +435,8 @@ def generate_cmakefile(gx):
                 name=path.stem,
                 build_executable=gx.executable_product,
                 build_extension=gx.pyextension_product,
+                extra_lib_dir=gx.options.lib,
+                # has_lib=gx.options.lib,
             ),
         )
         master_clfile.write_text(master_clfile_content)
@@ -454,6 +451,7 @@ def generate_cmakefile(gx):
                 app_mods,
                 build_executable=gx.executable_product,
                 build_extension=gx.pyextension_product,
+                extra_lib_dir=gx.options.lib,
             )
         )
 
