@@ -1,6 +1,7 @@
 # more complex case
 add_shedskin_product(
-    HAS_LIB
+    EXTRA_LIB_DIR
+        lib
 
     SYS_MODULES
         getopt
