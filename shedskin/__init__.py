@@ -162,7 +162,7 @@ class Shedskin:
         self.gx.main_module = graph.parse_module(self.module_name, self.gx)
 
     def translate(self):
-        self.log.warning('translate option (using make) is deprecated. please use build option.')
+#        self.log.warning('translate option (using make) is deprecated. please use build option.')
 
         t0 = time.time()
         infer.analyze(self.gx, self.module_name)
