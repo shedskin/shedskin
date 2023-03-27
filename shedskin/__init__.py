@@ -140,9 +140,8 @@ class Shedskin:
             if args.executable:
                 gx.executable_product = True
 
-            # [str]
             if args.lib:
-                gx.libdirs = args.lib + gx.libdirs
+                gx.libdirs = [args.lib] + gx.libdirs
 
             # str
             if args.flags:
@@ -224,7 +223,7 @@ class Shedskin:
         opt("-e", "--extmod",     help="Generate extension module", action="store_true")
         opt("-f", "--float",      help="Use 32-bit floating point numbers", action="store_true")
         opt("-F", "--flags",      help="Provide alternate Makefile flags")
-        opt("-L", "--lib",        help="Add a library directory", nargs='*')
+        opt("-L", "--lib",        help="Add an extra library directory")
         opt("-l", "--long",       help="Use long long '64-bit' integers", action="store_true")
         opt("-m", "--makefile",   help="Specify alternate Makefile name")
         opt("-o", "--outputdir",  help="Specify output directory for generated files")
@@ -262,7 +261,7 @@ class Shedskin:
         opt("-e", "--extmod",     help="Generate extension module", action="store_true")
         opt("-f", "--float",      help="Use 32-bit floating point numbers", action="store_true")
         opt("-F", "--flags",      help="Provide alternate Makefile flags")
-        opt("-L", "--lib",        help="Add a library directory", nargs='*')
+        opt("-L", "--lib",        help="Add an extra library directory")
         opt("-l", "--long",       help="Use long long '64-bit' integers", action="store_true")
         opt("-m", "--makefile",   help="Specify alternate Makefile name")
         opt("-o", "--outputdir",  help="Specify output directory for generated files")
@@ -300,7 +299,7 @@ class Shedskin:
         opt("-e", "--extmod",     help="Generate extension module", action="store_true")
         opt("-f", "--float",      help="Use 32-bit floating point numbers", action="store_true")
         opt("-F", "--flags",      help="Provide alternate Makefile flags")
-        opt("-L", "--lib",        help="Add a library directory", nargs='*')
+        opt("-L", "--lib",        help="Add an extra library directory")
         opt("-l", "--long",       help="Use long long '64-bit' integers", action="store_true")
         opt("-m", "--makefile",   help="Specify alternate Makefile name")
         opt("-o", "--outputdir",  help="Specify output directory for generated files")
