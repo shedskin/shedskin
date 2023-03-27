@@ -610,6 +610,9 @@ class CMakeBuilder:
         elif self.options.extproject:
             cfg_options.append("-DENABLE_EXTERNAL_PROJECT=ON")
 
+        elif self.options.nowarnings:
+            cfg_options.append("-DENABLE_WARNINGS=OFF")            
+
         if not cfg_options:
             print(f"{YELLOW}no configuration options selected{RESET}")
             return
