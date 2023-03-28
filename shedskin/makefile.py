@@ -29,18 +29,16 @@ def generate_makefile(gx):
         pyver = sysconfig.get_config_var("VERSION") or sysconfig.get_python_version()
         includes = "-I" + sysconfig.get_config_var("INCLUDEPY") + " "
 
-        if not gx.pypy:
-            includes += "-I" + os.path.dirname(sysconfig.get_config_h_filename())
+        includes += "-I" + os.path.dirname(sysconfig.get_config_h_filename())
 
         if sys.platform == "darwin":
             ldflags = sysconfig.get_config_var("BASECFLAGS")
         else:
             ldflags = (sysconfig.get_config_var("LIBS") or "") + " "
             ldflags += (sysconfig.get_config_var("SYSLIBS") or "") + " "
-            if not gx.pypy:
-                ldflags += "-lpython" + pyver
-                if not sysconfig.get_config_var("Py_ENABLE_SHARED"):
-                    ldflags += " -L" + sysconfig.get_config_var("LIBPL")
+            ldflags += "-lpython" + pyver
+            if not sysconfig.get_config_var("Py_ENABLE_SHARED"):
+                ldflags += " -L" + sysconfig.get_config_var("LIBPL")
 
     ident = gx.main_module.ident
     if gx.pyextension_product:
@@ -58,17 +56,10 @@ def generate_makefile(gx):
 
     write = lambda line="": print(line, file=makefile)
 
-    if gx.msvc:
-        esc_space = "/ "
+    esc_space = "\ "
 
-        def env_var(name):
-            return "$(%s)" % name
-
-    else:
-        esc_space = "\ "
-
-        def env_var(name):
-            return "${%s}" % name
+    def env_var(name):
+        return "${%s}" % name
 
     libdirs = [d.replace(" ", esc_space) for d in gx.libdirs]
     write("SHEDSKIN_LIBDIR=%s" % (libdirs[-1]))
@@ -106,8 +97,6 @@ def generate_makefile(gx):
         flags = "FLAGS"
     elif os.path.isfile("/etc/shedskin/FLAGS"):
         flags = "/etc/shedskin/FLAGS"
-    elif gx.msvc:
-        flags = gx.shedskin_flags / "FLAGS.msvc"
     elif sys.platform == "win32":
         flags = gx.shedskin_flags / "FLAGS.mingw"
     elif sys.platform == "darwin":
@@ -140,8 +129,6 @@ def generate_makefile(gx):
                 line += " -D__SS_FLOAT"
             if gx.backtrace:
                 line += " -D__SS_BACKTRACE -rdynamic -fno-inline"
-            if gx.pypy:
-                line += " -D__SS_PYPY"
             if gx.nogc:
                 line += " -D__SS_NOGC"
             if not gx.gcwarns:
@@ -158,9 +145,7 @@ def generate_makefile(gx):
             if sys.platform == "darwin" and os.path.isdir("/usr/local/lib"):  # XXX
                 line += " -L/usr/local/lib"
             if gx.pyextension_product:
-                if gx.msvc:
-                    line += " /dll /libpath:%s\\libs " % prefix
-                elif sys.platform == "win32":
+                if sys.platform == "win32":
                     line += " -shared -L%s\\libs -lpython%s" % (prefix, pyver)
                 elif sys.platform == "darwin":
                     line += " -bundle -undefined dynamic_lookup " + ldflags
@@ -215,12 +200,7 @@ def generate_makefile(gx):
     targets = [("", "")]
     if not gx.pyextension_product:
         targets += [("_prof", "-pg -ggdb"), ("_debug", "-g -ggdb")]
-    if gx.msvc:
-        _out = "/out:"
-        _ext = ""
-        targets = [("", "")]
-        if not gx.pyextension_product:
-            _ext = ".exe"
+
     for suffix, options in targets:
         write(ident + suffix + ":\t$(CPPFILES) $(HPPFILES)")
         write(
@@ -248,8 +228,7 @@ def generate_makefile(gx):
     write("clean:")
     targets = [ident + ext]
     if not gx.pyextension_product:
-        if not gx.msvc:
-            targets += [ident + "_prof" + ext, ident + "_debug" + ext]
+        targets += [ident + "_prof" + ext, ident + "_debug" + ext]
     write("\trm -f %s" % " ".join(targets))
     if sys.platform == "darwin":
         write("\trm -rf %s.dSYM\n" % " ".join(targets))

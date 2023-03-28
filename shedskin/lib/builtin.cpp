@@ -54,9 +54,7 @@ void __init() {
 #endif
 
 #ifdef __SS_BIND
-#ifndef __SS_PYPY
     Py_Initialize();
-#endif
     __ss_proxy = new dict<void *, void *>();
 #endif
 

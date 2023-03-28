@@ -117,9 +117,6 @@ class Shedskin:
             if args.nomakefile:
                 gx.nomakefile = True        
 
-            # if args.pypy:
-            #     gx.pypy = True
-
             if args.makefile:
                 gx.makefile_name = args.makefile
 
@@ -130,9 +127,6 @@ class Shedskin:
 
             if args.silent:
                 self.log.setLevel(logging.WARNING)
-
-            # if args.msvc:
-            #     gx.msvc = True
 
             if args.traceback:
                 gx.traceback = True
@@ -221,7 +215,6 @@ class Shedskin:
         opt("-a", "--ann",        help="Output annotated source code (.ss.py)", action="store_true")
         opt("-d", "--debug",      help="Set debug level", type=int)
         opt("-e", "--extmod",     help="Generate extension module", action="store_true")
-        opt("-f", "--float",      help="Use 32-bit floating point numbers", action="store_true")
         opt("-F", "--flags",      help="Provide alternate Makefile flags")
         opt("-L", "--lib",        help="Add an extra library directory")
         opt("-l", "--long",       help="Use long long '64-bit' integers", action="store_true")
@@ -259,7 +252,6 @@ class Shedskin:
         opt("-a", "--ann",        help="Output annotated source code (.ss.py)", action="store_true")
         opt("-d", "--debug",      help="Set debug level", type=int)
         opt("-e", "--extmod",     help="Generate extension module", action="store_true")
-        opt("-f", "--float",      help="Use 32-bit floating point numbers", action="store_true")
         opt("-F", "--flags",      help="Provide alternate Makefile flags")
         opt("-L", "--lib",        help="Add an extra library directory")
         opt("-l", "--long",       help="Use long long '64-bit' integers", action="store_true")
@@ -298,7 +290,6 @@ class Shedskin:
         opt("-a", "--ann",        help="Output annotated source code (.ss.py)", action="store_true")
         opt("-d", "--debug",      help="Set debug level", type=int)
         opt("-e", "--extmod",     help="Generate extension module", action="store_true")
-        opt("-f", "--float",      help="Use 32-bit floating point numbers", action="store_true")
         opt("-F", "--flags",      help="Provide alternate Makefile flags")
         opt("-L", "--lib",        help="Add an extra library directory")
         opt("-l", "--long",       help="Use long long '64-bit' integers", action="store_true")

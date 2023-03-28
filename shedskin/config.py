@@ -73,10 +73,8 @@ class GlobalInfo:  # XXX add comments, split up
         self.float = False
         self.flags = None
         self.annotation = False
-        self.msvc = False
         self.nogc = False
         self.gcwarns = True
-        self.pypy = False
         self.backtrace = False
         self.makefile_name = "Makefile"
         self.debug_level = 0
