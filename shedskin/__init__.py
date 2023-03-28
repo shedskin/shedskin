@@ -13,7 +13,7 @@ import struct
 import sys
 import time
 
-from . import annotate, cmake, config, cpp, error, graph, infer, log
+from . import cmake, config, cpp, error, graph, infer, log
 
 
 class Shedskin:
@@ -84,9 +84,6 @@ class Shedskin:
             if args.extmod:
                 gx.executable_product = False
                 gx.pyextension_product = True
-
-            if args.ann:
-                gx.annotation = True
 
             if args.debug:
                 self.log.setLevel(logging.DEBUG)
@@ -160,7 +157,6 @@ class Shedskin:
 
         t0 = time.time()
         infer.analyze(self.gx, self.module_name)
-        annotate.annotate(self.gx)
         cpp.generate_code(self.gx)
         error.print_errors()
         self.log.info('\n[elapsed time: %.2f seconds]', (time.time() - t0))
@@ -212,7 +208,6 @@ class Shedskin:
 
         arg("name", help="Python file or module to compile")
 
-        opt("-a", "--ann",        help="Output annotated source code (.ss.py)", action="store_true")
         opt("-d", "--debug",      help="Set debug level", type=int)
         opt("-e", "--extmod",     help="Generate extension module", action="store_true")
         opt("-F", "--flags",      help="Provide alternate Makefile flags")
@@ -249,7 +244,6 @@ class Shedskin:
         opt('--ccache',           help='enable ccache with cmake', action='store_true')
         opt('--target',           help='build only specified cmake targets', nargs="+", metavar="TARGET")
 
-        opt("-a", "--ann",        help="Output annotated source code (.ss.py)", action="store_true")
         opt("-d", "--debug",      help="Set debug level", type=int)
         opt("-e", "--extmod",     help="Generate extension module", action="store_true")
         opt("-F", "--flags",      help="Provide alternate Makefile flags")
@@ -287,7 +281,6 @@ class Shedskin:
         opt('--ccache',           help='enable ccache with cmake', action='store_true')
         opt('--target',           help='build only specified cmake targets', nargs="+", metavar="TARGET")
 
-        opt("-a", "--ann",        help="Output annotated source code (.ss.py)", action="store_true")
         opt("-d", "--debug",      help="Set debug level", type=int)
         opt("-e", "--extmod",     help="Generate extension module", action="store_true")
         opt("-F", "--flags",      help="Provide alternate Makefile flags")
