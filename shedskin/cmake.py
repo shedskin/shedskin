@@ -350,13 +350,19 @@ def add_shedskin_product(
         add(1, f"EXTRA_LIB_DIR {extra_lib_dir}")
 
     if include_dirs:
-        add(1, f"INCLUDE_DIRS {include_dirs}")
+        add(1, "INCLUDE_DIRS")
+        for include_dir in sorted(include_dirs):
+            add(2, include_dir)
 
     if link_libs:
-        add(1, f"LINK_LIBS {link_libs}")
+        add(1, "LINK_LIBS")
+        for link_lib in sorted(link_libs):
+            add(2, link_lib)
 
     if link_dirs:
-        add(1, f"LINK_DIRS {link_dirs}")
+        add(1, "LINK_DIRS")
+        for link_dir in sorted(link_dirs):
+            add(2, link_dir)
 
     if compile_options:
         add(1, f"COMPILE_OPTIONS {compile_options}")
@@ -435,8 +441,10 @@ def generate_cmakefile(gx):
                 name=path.stem,
                 build_executable=gx.executable_product,
                 build_extension=gx.pyextension_product,
-                extra_lib_dir=gx.options.lib,
-                # has_lib=gx.options.lib,
+                include_dirs=gx.options.include_dirs,
+                link_dirs=gx.options.link_dirs,
+                link_libs=gx.options.link_libs,
+                extra_lib_dir=gx.options.extra_lib,
             ),
         )
         master_clfile.write_text(master_clfile_content)
@@ -451,7 +459,10 @@ def generate_cmakefile(gx):
                 app_mods,
                 build_executable=gx.executable_product,
                 build_extension=gx.pyextension_product,
-                extra_lib_dir=gx.options.lib,
+                include_dirs=gx.options.include_dirs,                
+                link_dirs=gx.options.link_dirs,
+                link_libs=gx.options.link_libs,
+                extra_lib_dir=gx.options.extra_lib,
             )
         )
 
