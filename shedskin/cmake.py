@@ -305,6 +305,10 @@ def add_shedskin_product(
         EXTRA_LIB_DIRS
     """
 
+    if extra_lib_dir:
+        cmdline_options = '-X' + extra_lib_dir
+        include_dirs = [extra_lib_dir]
+
     def mk_add(lines, spaces=4):
         def _append(level, txt):
             indentation = " " * spaces * level
@@ -415,15 +419,27 @@ def generate_cmakefile(gx):
     sys_mods = set()
     app_mods = set()
 
+    compile_options = []
+    if gx.longlong:
+        compile_options.append('-D__SS_LONG')
+    if not gx.bounds_checking:
+        compile_options.append('-D__SS_NOBOUNDS')
+    if not gx.wrap_around_check:
+        compile_options.append('-D__SS_NOWRAP')
+    compile_options = ' '.join(compile_options)
+
     for module in modules:
-        if module.builtin:
+        if module.builtin and module.filename.is_relative_to(gx.shedskin_lib):
             entry = module.filename.relative_to(gx.shedskin_lib)
             entry = entry.parent / entry.stem
             if entry.name == "builtin":  # don't include 'builtin' module
                 continue
             sys_mods.add(entry.as_posix())
         else:
-            entry = module.filename.relative_to(gx.main_module.filename.parent)
+            if module.builtin and module.filename.is_relative_to(gx.main_module.filename.parent):
+                entry = module.filename.relative_to(gx.main_module.filename.parent)
+            else:
+                entry = module.filename
             entry = entry.parent / entry.stem
             if entry.name == path.stem:  # don't include main_module
                 continue
@@ -445,6 +461,7 @@ def generate_cmakefile(gx):
                 link_dirs=gx.options.link_dirs,
                 link_libs=gx.options.link_libs,
                 extra_lib_dir=gx.options.extra_lib,
+                compile_options=compile_options,
             ),
         )
         master_clfile.write_text(master_clfile_content)
@@ -459,10 +476,11 @@ def generate_cmakefile(gx):
                 app_mods,
                 build_executable=gx.executable_product,
                 build_extension=gx.pyextension_product,
-                include_dirs=gx.options.include_dirs,                
+                include_dirs=gx.options.include_dirs,
                 link_dirs=gx.options.link_dirs,
                 link_libs=gx.options.link_libs,
                 extra_lib_dir=gx.options.extra_lib,
+                compile_options=compile_options,
             )
         )
 
