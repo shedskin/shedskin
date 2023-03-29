@@ -2,11 +2,7 @@
 
 `tests` is a tests folder for shedskin which explicitly requires named tests.
 
-It contains two alternative ways to build and run its tests:
-
-1. Builtin-method: using shedskin's generated `Makefile` per test.
-
-2. CMake-method: using `cmake`, which has advantages for rapid test development.
+It uses `cmake` for building and running tests.
 
 ## Objectives
 
@@ -22,118 +18,67 @@ It contains two alternative ways to build and run its tests:
 
 ## Usage
 
-This folder includes a commandline tool, `run.py`, with extensive options to help setup, build and run its tests:
+This folder uses the shedskin `test` subcommand, which has extensive options to help setup, build and run its tests:
 
 ```bash
-% ./run.py --help
-usage: run [-h] [-b BUILD_TYPE] [-c] [-d] [-e] [-g GENERATOR] [-i PATTERN]
-           [-j N] [-k] [-m] [-n] [-p] [-r TEST] [-s] [-t TARGET [TARGET ...]]
-           [-x] [--ccache] [--progress] [--reset] [--conan] [--spm] [--cpm]
-           [--external-project] [--debug]
-
-runs shedskin tests and examples
+$ shedskin test --help
+usage: shedskin test [-h] [-e] [-x] [--dryrun] [--include PATTERN] [--check]
+                     [--modified] [--nocleanup] [--pytest] [--run TEST]
+                     [--stoponfail] [--run-errs] [--progress] [--debug]
+                     [--generator G] [--jobs N] [--build-type T] [--reset]
+                     [--conan] [--spm] [--extproject] [--ccache]
+                     [--target TARGET [TARGET ...]] [-c [CMAKE_OPT ...]]
+                     [--nowarnings]
 
 options:
   -h, --help            show this help message and exit
-  -b BUILD_TYPE, --build-type BUILD_TYPE
-                        set cmake build type
-  -c, --cmake           run tests using cmake
-  -d, --dryrun          dryrun without any changes
-  -e, --extension       include python extension tests
-  -g GENERATOR, --generator GENERATOR
-                        specify a cmake build system generator
-  -i PATTERN, --include PATTERN
-                        provide regex of tests to include with cmake
-  -j N, --parallel N    build and run tests in parallel using N jobs
-  -k, --check           check testfile py syntax before running
-  -m, --modified        run only recently modified test
-  -n, --nocleanup       do not cleanup built test
-  -p, --pytest          run pytest before each test run
-  -r TEST, --run TEST   run single test
-  -s, --stoponfail      stop when first failure happens in ctest
-  -t TARGET [TARGET ...], --target TARGET [TARGET ...]
-                        build only specified targets
-  -x, --run-errs        run error/warning message tests
-  --ccache              enable ccache with cmake
+  -e, --extmod          Generate extension module
+  -x, --executable      Generate executable
+  --dryrun              dryrun without any changes
+  --include PATTERN     provide regex of tests to include with cmake
+  --check               check testfile py syntax before running
+  --modified            run only recently modified test
+  --nocleanup           do not cleanup built test
+  --pytest              run pytest before each test run
+  --run TEST            run single test
+  --stoponfail          stop when first failure happens in ctest
+  --run-errs            run error/warning message tests
   --progress            enable short progress output from ctest
-  --reset               reset cmake build
-  --conan               install dependencies with conan
-  --spm                 install dependencies with spm
-  --external-project    install dependencies with externalproject
   --debug               set cmake debug on
+  --generator G         specify a cmake build system generator
+  --jobs N              build and run in parallel using N jobs
+  --build-type T        set cmake build type (default: 'Debug')
+  --reset               reset cmake build
+  --conan               install cmake dependencies with conan
+  --spm                 install cmake dependencies with spm
+  --extproject          install cmake dependencies with externalproject
+  --ccache              enable ccache with cmake
+  --target TARGET [TARGET ...]
+                        build only specified cmake targets
+  -c [CMAKE_OPT ...], --cfg [CMAKE_OPT ...]
+                        Add a cmake option '-D' prefix not needed
+  --nowarnings          Disable '-Wall' compilation warnings
 ```
 
-There are currently two methods to run tests:
+Shedskin uses CMake for testing: `shedskin` is only responsible for translation and `CMake` for everything else.
 
-1. Builtin method: the translate-build-run cycle is all managed by `shedskin`.
-2. CMake method: `shedskin` is only responsible for translation and `CMake` for everything else.
 
-The second method is recommended if your platform is supported (linux, osx). Windows support is on the todo list.
-
-### Builtin Method
-
-To build and run a single test in cpp-executable mode:
+To build / run a **single** test using cmake:
 
 ```bash
-./run -r test_<name>.py
+shedksin test -r test_builtin_iter
 ```
 
-To build and run a single test in python-extension mode:
+To build and run **all** tests as executables using cmake on Linux and macOS:
 
 ```bash
-./run -er test_<name>.py
+shedksin test -x
 ```
 
-To build and run all tests in cpp-executable mode:
+To build and run **all** tests as executables using cmake on Windows requires the conan dependency manager to download dpendencies:
 
 ```bash
-./run.py
-```
-
-To build and run all tests in python-extension mode:
-
-```bash
-./run.py -e
-```
-
-To build and run the most recently modified test (useful during test dev):
-
-```bash
-./run.py -m
-```
-
-or
-
-```bash
-./run.py -me
-```
-
-To build and run tests for error/warning messages:
-
-```bash
-./run.py -x
-```
-
-### CMake Method
-
-In `cmake` mode, the `run.py` script acts as a frontend to `cmake` tools:
-
-To build / run a **single** test using cmake as an executable:
-
-```bash
-./run.py -c -r test_builtin_iter
-```
-
-To build / run a **single** test using cmake as a python extension:
-
-```bash
-./run.py -ce -r test_builtin_iter
-```
-
-To build and run **all** tests as executables using cmake:
-
-```bash
-./run.py -c
+shedksin test --conan
 ```
 
 If the above command is run for the first time, it will run the equivalent of the following:
@@ -153,37 +98,44 @@ This is useful during test development and has the benefit of only picking up ch
 To build and run **all** cmake tests as executables **and** python extensions using cmake:
 
 ```bash
-./run.py -ce
+shedksin test -xe
 ```
 
 This will build/run an executable and python extension test for each test in the directory, basically the equivalent of the following (if it is run the first time):
 
 ```bash
-mkdir build && cd build && cmake .. -DBUILD_EXTENSION=ON && cmake --build . && ctest
+mkdir build && cd build && cmake .. -DBUILD_EXECUTABLE=ON -DBUILD_EXTENSION=ON && cmake --build . && ctest
 ```
 
 If it is run subsequently, it will run the equivalent of the following:
 
 ```bash
-cd build && cmake .. -DBUILD_EXTENSION=ON && cmake --build . && ctest
+cd build && cmake .. -DBUILD_EXECUTABLE=ON -DBUILD_EXTENSION=ON && cmake --build . && ctest
 ```
 
 To stop on the first failure:
 
 ```bash
-./run.py -ce -s
+shedksin test --stoponfail
 ```
 
 To build / run the most recently modified test (here as exec only):
 
 ```bash
-./run.py -c -m
+shedksin test -x --modified
 ```
 
 To reset or remove the cmake `build` directory and run cmake:
 
 ```bash
-./run.py --reset -c
+shedksin test --reset -x
+```
+
+
+To build and run tests for error/warning messages:
+
+```bash
+shedskin test --run-errs
 ```
 
 ### Optimizing Building and Running Tests with Cmake
@@ -193,7 +145,7 @@ The cmake method has an option to build and run tests as parallel jobs. This can
 You can specify the number of jobs to build and run tests in parallel:
 
 ```bash
-./run.py -ce -j 4
+shedksin test -xe -j 4
 ```
 
 Another option is to use a different build system designed for speed like [Ninja](https://ninja-build.org) which automatically maximizes its use of available cores on your system.
@@ -201,7 +153,7 @@ Another option is to use a different build system designed for speed like [Ninja
 If you have `Ninja` installed, you can have cmake use it as your underlying build system and automatically get improved performance vs the default Make-based system:
 
 ```bash
-./run.py -ce -gNinja
+shedksin test -xe -gNinja
 ```
 
 
@@ -241,7 +193,7 @@ if __name__ == '__main__':
 
 For example:
 
-	```text
+	```bash
 	test_type_float.py
 	test_type_int.py
 	test_type_str.py
@@ -256,13 +208,5 @@ For example:
 - Avoid turning a test in this folder into a benchmark test for speed. Adjust the scaling parameters to speed up a slow test since its purpose and inclusion in this folder is to check for correctness of implementation not to test for speed.
 
 - Avoid using the `global` keyword for access to globals from functions: `pytest` does not work well with such constructs and will show errors. Several historical tests had to be rewritten to address this problem.
-
-
-## TODO:
-
-- [ ] update `.travis.yml` file to reflect recent changes in testing mechanism
-- [ ] improved cleanup for default method in cases of multiple local imports
-- [ ] enabled windows platform support for cmake-based method and [conan](https://conan.io)
-- [ ] auto-collect all non-working tests into a written log
 
 
