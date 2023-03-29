@@ -5,7 +5,7 @@
 
 namespace __math__ {
 
-constexpr __ss_float e = M_E, pi = M_PI;
+__ss_float e = M_E, pi = M_PI;
 
 void __init() {
 }
