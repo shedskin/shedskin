@@ -158,7 +158,7 @@ void *mmap::__init__(int __ss_fileno_, __ss_int length_, __ss_int flags_, __ss_i
     }
 
     void *temp = ::mmap(0, length_, prot_, flags_,
-                                           fd, offset_)
+                                           fd, offset_);
       
     if (temp == MAP_FAILED)
     {
