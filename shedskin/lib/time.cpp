@@ -118,7 +118,7 @@ double time() {
 #ifndef WIN32
 void *sleep(double s) {
     time_t seconds = time_t(s);
-    long nanosecs = double(s - seconds) * 1000000000l;
+    long nanosecs = (s - seconds) * 1000000000l;
 
     struct timespec time1, time2;
     time1.tv_sec = seconds;
