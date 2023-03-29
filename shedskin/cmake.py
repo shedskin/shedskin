@@ -554,7 +554,7 @@ class CMakeBuilder:
     def cmake_build(self, options):
         """activate cmake build"""
         options = " ".join(options)
-        bld_cmd = f"cmake {options} --build {self.build_dir}"
+        bld_cmd = f"cmake --build {self.build_dir} {options}"
         self.log.info(bld_cmd)
         os.system(bld_cmd)
 
@@ -567,7 +567,7 @@ class CMakeBuilder:
             cfg = ""
 
         tst_cmd = f"ctest {cfg} --output-on-failure {opts} --test-dir {self.build_dir}"
-        print("tst_cmd:", tst_cmd)
+        self.log.info(tst_cmd)
         os.system(tst_cmd)
 
     def run_tests(self):
@@ -610,7 +610,7 @@ class CMakeBuilder:
             if shutil.which("ccache"):
                 cfg_options.append("-DCMAKE_CXX_COMPILER_LAUNCHER=ccache")
             else:
-                print(f"\n{YELLOW}WARNING{RESET}: 'ccache' not found")
+                self.log.warning("'ccache' not found")
 
         if self.options.conan:
             cfg_options.append("-DENABLE_CONAN=ON")
@@ -625,7 +625,7 @@ class CMakeBuilder:
             cfg_options.append("-DENABLE_WARNINGS=OFF")            
 
         if not cfg_options:
-            print(f"{YELLOW}no configuration options selected{RESET}")
+            self.log.warning("no configuration options selected")
             return
 
         if self.build_dir.exists() and self.options.reset:
@@ -672,8 +672,7 @@ class CMakeBuilder:
 
                     os.system("pytest")
                 except ImportError:
-                    print("pytest not found")
-                print()
+                    log.exception("pytest not found")
 
             if self.options.run:
                 target_suffix = "-exe"
@@ -695,15 +694,24 @@ class CMakeBuilder:
         if run_tests:
             self.cmake_test(tst_options)
 
-        if run_tests:
-            if self.options.run_errs:
-                failures = self.error_tests()
-                if not failures:
-                    print(f"==> {GREEN}NO FAILURES, yay!{RESET}")
-                else:
-                    print(f"==> {RED}TESTS FAILED:{RESET}", len(failures))
-                    print(failures)
-                    sys.exit()
+        end_time = time.time()
+        elapsed_time = time.strftime("%H:%M:%S", time.gmtime(end_time - start_time))
+        print(f"Total time: {elapsed_time}\n")
+
+    def run_error_tests(self):
+        """run error tests"""
+        start_time = time.time()
+
+        if self.options.run_errs:
+            failures = self.error_tests()
+            if not failures:
+                print(f"==> {GREEN}NO FAILURES, yay!{RESET}")
+            else:
+                print(f"==> {RED}TESTS FAILED:{RESET}", len(failures))
+                print(failures)
+        else:
+            raise ValueError("option.run_errs not set")
+            sys.exit()
 
         end_time = time.time()
         elapsed_time = time.strftime("%H:%M:%S", time.gmtime(end_time - start_time))

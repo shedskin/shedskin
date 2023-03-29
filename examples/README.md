@@ -90,12 +90,29 @@ lines  name                 description
 If you know of any other interesting examples, please do suggest them in the shedskin discussion group or post an [issue](https://github.com/shedskin/shedskin/issues/new/choose) in the [Shedskin repo](https://github.com/shedskin/shedskin).
 
 
-## Building and Running individual Examples
+## Building and Running Individual Examples
 
 Each example has its own directory which should contain the python code to be translated as well as related data files. Also a README.md if there are any special notes. In some cases, you may need to make a link to '../testdata'.
 
 ## Building all Examples
 
+To build all examples:
+
 ```bash
-shedskin test --reset
+shedskin test
 ```
+
+To build a single example:
+
+```bash
+shedskin test --target <foldername>
+```
+
+For example to build the `timsort` example
+
+```bash
+shedskin test --target timsort
+```
+
+
+
