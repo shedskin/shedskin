@@ -117,13 +117,20 @@ double time() {
 
 #ifndef WIN32
 void *sleep(double s) {
-    struct timespec time;
-    time_t seconds = (int) s;
-    long nanosecs = (double)(s - seconds)*1000000000;
-    time.tv_sec = seconds;
-    time.tv_nsec = nanosecs;
+    time_t seconds = time_t(s);
+    long nanosecs = double(s - seconds) * 1000000000l;
 
-    nanosleep(&time, NULL);
+    struct timespec time1, time2;
+    time1.tv_sec = seconds;
+    time1.tv_nsec = nanosecs;
+
+    int ret = -1;
+
+    while((ret = nanosleep(&time1, &time2)) && errno == EINTR)
+	    std::swap(time1, time2);
+
+    if (ret == -1)
+	    throw new Exception(new str("nanosleep"));
 
     return NULL;
 }
