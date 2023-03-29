@@ -167,8 +167,12 @@ class Shedskin:
         builder.build()
 
     def test(self):
-        testrunner = cmake.TestRunner(self.gx.options)
-        testrunner.run_tests()
+        if self.gx.options.run_errs:
+            testrunner = cmake.TestRunner(self.gx.options)
+            testrunner.run_error_tests()
+        else:
+            testrunner = cmake.TestRunner(self.gx.options)
+            testrunner.run_tests()
 
     def run(self):
         cwd = pathlib.Path.cwd()
