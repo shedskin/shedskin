@@ -324,7 +324,7 @@ function(add_shedskin_product)
             ${sys_module_list}
         )
 
-        # genexpr testing for complex cases
+        # for testing only genexpr complex cases
         # add_custom_command(TARGET ${EXE} POST_BUILD
         #     COMMAND ${CMAKE_COMMAND} -E echo 
         #     "enable-warnings = $<$<AND:${UNIX},$<BOOL:${ENABLE_WARNINGS}>>:-Wall>"
@@ -340,9 +340,9 @@ function(add_shedskin_product)
             $<$<BOOL:${UNIX}>:-Wno-deprecated>
             $<$<BOOL:${UNIX}>:-Wno-unused-variable>
             $<$<BOOL:${UNIX}>:-Wno-unused-but-set-variable>
-            $<$<AND:${UNIX},$<BOOL:${ENABLE_WARNINGS}>>:-Wall>
-            $<$<AND:${WIN32},$<BOOL:${ENABLE_WARNINGS}>>:/Wall>
+            $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wall>
             # windows
+            $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/Wall>
             $<$<BOOL:${WIN32}>:/MD>
         )
 
@@ -464,9 +464,9 @@ function(add_shedskin_product)
             $<$<BOOL:${UNIX}>:-Wno-unused-result>
             $<$<BOOL:${UNIX}>:-Wno-unused-variable>
             $<$<BOOL:${UNIX}>:-Wno-unused-but-set-variable>
-            $<$<AND:${UNIX},$<BOOL:${ENABLE_WARNINGS}>>:-Wall>
+            $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wall>
             # windows
-            $<$<AND:${WIN32},$<BOOL:${ENABLE_WARNINGS}>>:/Wall>
+            $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/Wall>
             $<$<BOOL:${WIN32}>:/MD>
             # $<$<BOOL:${WIN32}>:/LD>
         )
