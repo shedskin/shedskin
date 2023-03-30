@@ -139,12 +139,8 @@ double mktime(struct_time *tuple) {
 }
 
 double mktime(tuple2<__ss_int, __ss_int> *tuple) {
-    struct_time *st;
-    try {
-        st = new struct_time(tuple);
-    } catch(...) {
-        throw;
-    }
+    struct_time *st = new struct_time(tuple);
+
     return (double)::mktime(tuple2tm(st));
 }
 
@@ -207,12 +203,8 @@ str *strftime(str *format) {
 }
 
 str *strftime(str *format, tuple2<__ss_int, __ss_int> *tuple) {
-    struct_time *st;
-    try {
-        st = new struct_time(tuple);
-    } catch (...) {
-        throw;
-    }
+    struct_time *st = new struct_time(tuple);
+
     return strftime(format, st);
 }
 
