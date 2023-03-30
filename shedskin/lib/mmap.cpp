@@ -159,12 +159,12 @@ void *mmap::__init__(int __ss_fileno_, __ss_int length_, __ss_int flags_, __ss_i
 
     void *temp = ::mmap(0, length_, prot_, flags_,
                                            fd, offset_);
-      
+
     if (temp == MAP_FAILED)
     {
         throw OSError();
     }
-  
+
     m_begin = static_cast<iterator>(temp);
 
     m_position = m_begin;
@@ -212,16 +212,16 @@ void *mmap::resize(__ss_int new_size)
 #ifdef HAVE_MREMAP
 #if defined(__NetBSD__)
     void *temp = ::mremap(m_begin, __size(),
-                                    m_begin, size_t(new_size), 0));
+                                    m_begin, size_t(new_size), 0);
 #else // !__NetBSD__
     void *temp = ::mremap(m_begin, __size(),
-                                    size_t(new_size), 0));
+                                    size_t(new_size), 0);
 #endif // __NetBSD__
     if (temp == MAP_FAILED)
     {
         throw new OSError();
     }
-    m_begin = temp;
+    m_begin = static_cast<iterator>(temp);
     m_end = m_begin + size_t(new_size);
     m_position = std::min(m_position, m_end);
 #else // !HAVE_MREMAP
