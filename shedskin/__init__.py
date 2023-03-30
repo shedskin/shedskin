@@ -232,7 +232,7 @@ class Shedskin:
         opt("--nogc",               help="Disable garbage collection", action="store_true")
         opt("--nogcwarns",          help="Disable runtime GC warnings", action="store_true")
         opt("--nomakefile",         help="Disable makefile generation", action="store_true")
-        opt("--nowrap",             help="Disable wrap-around checking", action="store_true")
+        opt("-w", "--nowrap",             help="Disable wrap-around checking", action="store_true")
 
         parser_build = subparsers.add_parser('build', help="build translated module")
         arg = opt = parser_build.add_argument
@@ -253,7 +253,6 @@ class Shedskin:
     
         opt("-d", "--debug",        help="Set debug level", type=int)
         opt("-e", "--extmod",       help="Generate extension module", action="store_true")
-        opt("-F", "--flags",        help="Provide alternate Makefile flags")
         opt("-I", "--include-dirs", help="Add an include directory", action="append")        
         opt("-L", "--link-dirs",    help="Add a link library directory", action="append")
         opt("-l", "--link-libs",    help="Add a link library", action="append")
@@ -291,7 +290,6 @@ class Shedskin:
     
         opt("-d", "--debug",        help="Set debug level", type=int)
         opt("-e", "--extmod",       help="Generate extension module", action="store_true")
-        opt("-F", "--flags",        help="Provide alternate Makefile flags")
         opt("-I", "--include-dirs", help="Add an include directory", action="append")        
         opt("-L", "--link-dirs",    help="Add a link library directory", action="append")
         opt("-l", "--link-libs",    help="Add a link library", action="append")
