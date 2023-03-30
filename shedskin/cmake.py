@@ -421,14 +421,23 @@ def generate_cmakefile(gx):
 
     compile_options = []
     if gx.longlong:
-        compile_options.append('-D__SS_LONG')
+        compile_options.append("-D__SS_LONG")
     if not gx.bounds_checking:
-        compile_options.append('-D__SS_NOBOUNDS')
+        compile_options.append("-D__SS_NOBOUNDS")
     if not gx.wrap_around_check:
-        compile_options.append('-D__SS_NOWRAP')
+        compile_options.append("-D__SS_NOWRAP")
     if gx.backtrace:
-        compile_options.append('-D__SS_BACKTRACE -rdynamic -fno-inline')
-
+        compile_options.append("-D__SS_BACKTRACE -rdynamic -fno-inline")
+    if gx.gc_cleanup:
+        compile_options.append("-D__SS_GC_CLEANUP")
+    if not gx.assertions:
+        compile_options.append("-D__SS_NOASSERT")
+    if gx.backtrace:
+        compile_options.append("-D__SS_BACKTRACE -rdynamic -fno-inline")
+    if gx.nogc:
+        compile_options.append("-D__SS_NOGC")
+    if not gx.gcwarns:
+        compile_options.append("-D__SS_NOGCWARNS")
     compile_options = ' '.join(compile_options)
 
     for module in modules:
