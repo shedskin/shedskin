@@ -133,7 +133,7 @@ class Shedskin:
                 self.log.setLevel(logging.WARNING)
 
             if args.traceback:
-                gx.traceback = True
+                gx.backtrace = True
 
             if args.executable:
                 gx.executable_product = True

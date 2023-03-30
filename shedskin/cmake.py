@@ -426,6 +426,9 @@ def generate_cmakefile(gx):
         compile_options.append('-D__SS_NOBOUNDS')
     if not gx.wrap_around_check:
         compile_options.append('-D__SS_NOWRAP')
+    if gx.backtrace:
+        compile_options.append('-D__SS_BACKTRACE -rdynamic -fno-inline')
+
     compile_options = ' '.join(compile_options)
 
     for module in modules:
