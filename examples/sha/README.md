@@ -3,8 +3,8 @@
 This example requires the `openssl` library and headers to be installed.
 
 ```
-shedskin build -l -Llib sha
-build/sha
+shedskin build -Xlib --long -lcrypto sha
+build/sha some_text
 ```
 
 

@@ -2,6 +2,10 @@
 
 This example requires the `openssl` library and headers to be installed.
 
+```
+shedskin build -Xlib -lcrypto rsync
+build/rsync
+```
 
 ## for Linux
 
