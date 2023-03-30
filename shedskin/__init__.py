@@ -105,14 +105,14 @@ class Shedskin:
             if args.nowrap:
                 gx.wrap_around_check = False
 
-            if args.random:
-                gx.fast_random = True
+#            if args.random:
+#                gx.fast_random = True
 
             if args.noassert:
                 gx.assertions = False
 
             if args.nomakefile:
-                gx.nomakefile = True        
+                gx.nomakefile = True
 
             if args.makefile:
                 gx.makefile_name = args.makefile
@@ -221,7 +221,7 @@ class Shedskin:
         opt("-X", "--extra-lib",    help="Add an extra builtins library directory")
         opt("-m", "--makefile",     help="Specify alternate Makefile name")
         opt("-o", "--outputdir",    help="Specify output directory for generated files")
-        opt("-r", "--random",       help="Use fast random number generator (rand())", action="store_true")
+#        opt("-r", "--random",       help="Use fast random number generator (rand())", action="store_true")
         opt("-s", "--silent",       help="Silent mode, only show warnings", action="store_true")
         opt("-t", "--traceback",    help="Print traceback for uncaught exceptions", action="store_true")
         opt("-x", "--executable",   help="Generate executable", action="store_true")
@@ -258,9 +258,8 @@ class Shedskin:
         opt("-L", "--link-dirs",    help="Add a link library directory", action="append")
         opt("-l", "--link-libs",    help="Add a link library", action="append")
         opt("-X", "--extra-lib",    help="Add an extra builtins library directory")
-        opt("-m", "--makefile",     help="Specify alternate Makefile name")
         opt("-o", "--outputdir",    help="Specify output directory for generated files")
-        opt("-r", "--random",       help="Use fast random number generator (rand())", action="store_true")
+#        opt("-r", "--random",       help="Use fast random number generator (rand())", action="store_true")
         opt("-s", "--silent",       help="Silent mode, only show warnings", action="store_true")
         opt("-t", "--traceback",    help="Print traceback for uncaught exceptions", action="store_true")
         opt("-x", "--executable",   help="Generate executable", action="store_true")
@@ -271,7 +270,6 @@ class Shedskin:
         opt("--nowarnings",         help="Disable '-Wall' compilation warnings", action="store_true")
         opt("--nogc",               help="Disable garbage collection", action="store_true")
         opt("--nogcwarns",          help="Disable runtime GC warnings", action="store_true")
-        opt("--nomakefile",         help="Disable makefile generation", action="store_true")
         opt("--nowrap",             help="Disable wrap-around checking", action="store_true")
 
         parser_run = subparsers.add_parser('run', help="run built and translated module")
@@ -297,9 +295,8 @@ class Shedskin:
         opt("-I", "--include-dirs", help="Add an include directory", action="append")        
         opt("-L", "--link-dirs",    help="Add a link library directory", action="append")
         opt("-l", "--link-libs",    help="Add a link library", action="append")
-        opt("-m", "--makefile",     help="Specify alternate Makefile name")
         opt("-o", "--outputdir",    help="Specify output directory for generated files")
-        opt("-r", "--random",       help="Use fast random number generator (rand())", action="store_true")
+#        opt("-r", "--random",       help="Use fast random number generator (rand())", action="store_true")
         opt("-s", "--silent",       help="Silent mode, only show warnings", action="store_true")
         opt("-t", "--traceback",    help="Print traceback for uncaught exceptions", action="store_true")
         opt("-x", "--executable",   help="Generate executable", action="store_true")
@@ -310,7 +307,6 @@ class Shedskin:
         opt("--nogc",               help="Disable garbage collection", action="store_true")
         opt("--nowarnings",         help="Disable '-Wall' compilation warnings", action="store_true")        
         opt("--nogcwarns",          help="Disable runtime GC warnings", action="store_true")
-        opt("--nomakefile",         help="Disable makefile generation", action="store_true")
         opt("--nowrap",             help="Disable wrap-around checking", action="store_true")
 
         parser_test = subparsers.add_parser('test', help="run tests")
