@@ -1879,8 +1879,16 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             if ident == "print":
                 ident = node.func.id = "__print"  # XXX
 
-            if ident == "open" and len(node.args) > 1 and "b" in node.args[1].s:
-                ident = node.func.id = "open_binary"
+            if ident == "open" and len(node.args) > 1:
+                if not ast_utils.is_constant(node.args[1]):
+                    error.error(
+                        "non-constant mode passed to 'open'",
+                        self.gx,
+                        node.func,
+                        mv=getmv()
+                    )
+                elif "b" in node.args[1].s:
+                    ident = node.func.id = "open_binary"
 
             if ident in ["hasattr", "getattr", "setattr", "slice", "type", "Ellipsis"]:
                 error.error(
