@@ -111,11 +111,18 @@ class Shedskin:
             if args.noassert:
                 gx.assertions = False
 
-            if args.nomakefile:
-                gx.nomakefile = True
+            if args.subcmd == 'translate':
+                if args.nomakefile:
+                    gx.nomakefile = True
 
-            if args.makefile:
-                gx.makefile_name = args.makefile
+                if args.makefile:
+                    gx.makefile_name = args.makefile
+
+                if args.flags:
+                    if not os.path.isfile(args.flags):
+                        self.log.error("no such file: '%s'", args.flags)
+                        sys.exit(1)
+                    gx.flags = args.flags
 
             if args.outputdir:
                 if not os.path.exists(args.outputdir):
@@ -133,13 +140,6 @@ class Shedskin:
 
             if args.extra_lib:
                 gx.libdirs = [args.extra_lib] + gx.libdirs
-
-            # str
-            if args.flags:
-                if not os.path.isfile(args.flags):
-                    self.log.error("no such file: '%s'", args.flags)
-                    sys.exit(1)
-                gx.flags = args.flags
 
         # --- some checks
         major, minor = sys.version_info[:2]
