@@ -1031,10 +1031,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 self.constructor(node, "tuple2", func)
             else:
                 self.constructor(node, "tuple", func)
-        elif isinstance(node.ctx, ast.Store):
-            raise NotImplementedError
         else:
-            error.error("Unknown value of ast.Tuple ctx", self.gx, node, mv=getmv())
+            error.error("unsupported tuple ctx", self.gx, node, mv=getmv())
 
     def visit_Subscript(self, node, func=None):  # XXX merge __setitem__, __getitem__
         if isinstance(node.slice, ast.Slice):
@@ -1048,7 +1046,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 isinstance(dim, ast.Ellipsis) for dim in node.slice.dims
             ):  # XXX also check at setitem
                 error.error("ellipsis is not supported", self.gx, node, mv=getmv())
-            raise NotImplementedError
+            error.error("unsupported subscript method", self.gx, node, mv=getmv())
 
         else:
             if isinstance(node.slice, ast.Index):
@@ -2154,14 +2152,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
             if not callfunc:
                 self.fncl_passing(node, newnode, func)
-        elif type(node.ctx) == ast.Store:
-            raise NotImplementedError
-        elif type(node.ctx) == ast.Del:
-            self.visit(node.value, func)
         else:
-            raise NotImplementedError
             error.error(
-                "unknown ctx type for ast.Attribute, %s" % node.ctx,
+                "unsupported attribute ctx",
                 self.gx,
                 node,
                 mv=getmv(),
