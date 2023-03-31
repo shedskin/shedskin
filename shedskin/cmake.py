@@ -448,7 +448,7 @@ def generate_cmakefile(gx):
                 continue
             sys_mods.add(entry.as_posix())
         else:
-            if module.builtin and module.filename.is_relative_to(gx.main_module.filename.parent):
+            if module.filename.is_relative_to(gx.main_module.filename.parent):
                 entry = module.filename.relative_to(gx.main_module.filename.parent)
             else:
                 entry = module.filename
