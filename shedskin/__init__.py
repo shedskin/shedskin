@@ -293,6 +293,7 @@ class Shedskin:
         opt("-I", "--include-dirs", help="Add an include directory", action="append")        
         opt("-L", "--link-dirs",    help="Add a link library directory", action="append")
         opt("-l", "--link-libs",    help="Add a link library", action="append")
+        opt("-X", "--extra-lib",    help="Add an extra builtins library directory")
         opt("-o", "--outputdir",    help="Specify output directory for generated files")
 #        opt("-r", "--random",       help="Use fast random number generator (rand())", action="store_true")
         opt("-s", "--silent",       help="Silent mode, only show warnings", action="store_true")
