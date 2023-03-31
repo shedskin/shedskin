@@ -282,13 +282,13 @@ Under Linux/macOS, type:
 
 This will create a ``build`` directory, containing the generated C++ code and binary.
 
-Under Windows, type:
+Under Windows (note that this will download dependencies), type:
 ::
 
   shedskin build --conan test
 
 Under Linux/macOS, the binary is named ``build/test``. Under Windows, it is named
-``build/Debug/test``.
+``build/Debug/test.exe``.
 
 Generating an extension module
 ------------------------------
@@ -375,7 +375,7 @@ After compiling this module as an extension module with Shed Skin, we can pass i
 Distributing binaries
 ---------------------
 
-To use a generated binary on another system, make sure ``libgc`` and ``libpcre3`` are installed there. If they are not, and you cannot install them globally, you can place copies of these libraries into the same directory as the binary, using the following approach:
+To use a generated (linux/OSX) binary on another system, make sure ``libgc`` and ``libpcre3`` are installed there. If they are not, and you cannot install them globally, you can place copies of these libraries into the same directory as the binary, using the following approach:
 
 ::
 
@@ -412,8 +412,8 @@ To compile this into an extension module, type:
 
 ::
 
-  shedskin translate -e meuk
-  make
+  shedskin build -e meuk
+  cp build/meuk.so .
 
 To use the generated extension module with the :code:`multiprocessing` standard library module, simply add a pure-Python wrapper:
 
@@ -453,7 +453,7 @@ To call manually written C/C++ code, follow these steps:
 
 ::
 
-  shedskin translate test
+  shedskin build test
 
 * Besides ``test.py``, this also compiles ``stuff.py`` to C++. Now you can fill in manual C/C++ code in ``stuff.cpp``. To avoid that it is overwritten the next time ``test.py`` is compiled, move ``stuff.*`` to the Shed Skin ``lib/`` dir.
 
