@@ -2152,6 +2152,14 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
             if not callfunc:
                 self.fncl_passing(node, newnode, func)
+        elif type(node.ctx) == ast.Del:
+            error.error(
+                "unsupported attribute delete",
+                self.gx,
+                node,
+                mv=getmv(),
+                warning=True,
+            )
         else:
             error.error(
                 "unsupported attribute ctx",
