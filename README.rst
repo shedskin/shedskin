@@ -27,6 +27,7 @@ Compile and run the 'hello, world!' (test.py) example under Linux/OSX:
 Under Windows:
 
 ::
+
     shedskin build --conan test
     build/Debug/test.exe
 
