@@ -17,12 +17,18 @@ For a set of `77 non-trivial programs <https://github.com/shedskin/shedskin/tree
 Usage
 -----
 
-Compile and run the 'hello, world!' (test.py) example under Linux:
+Compile and run the 'hello, world!' (test.py) example under Linux/OSX:
 
 ::
 
     shedskin build test
     build/test
+    
+Under Windows:
+
+::
+    shedskin build --conan test
+    build/Debug/test.exe
 
 
 Restrictions
