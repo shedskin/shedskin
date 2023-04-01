@@ -352,7 +352,7 @@ class Shedskin:
 
         ss = cls(args)
 
-        print('*** SHED SKIN Python-to-C++ Compiler 0.9.7 ***')
+        print('*** SHED SKIN Python-to-C++ Compiler 0.9.8 ***')
         print('Copyright 2005-2023 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)')
         print()
 

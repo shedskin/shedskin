@@ -8,7 +8,7 @@ LONG_DESCRIPTION = (root / "README.rst").read_text(
 
 setup(
     name="shedskin",
-    version="0.9.7",
+    version="0.9.8",
     description="Shed Skin is a restricted-Python-to-C++ compiler.",
     long_description=LONG_DESCRIPTION,
     long_description_content_type="text/x-rst",
