@@ -1,5 +1,7 @@
-from setuptools import setup, Command
 import pathlib
+import sys
+
+from setuptools import setup, Command
 
 root = pathlib.Path(__file__).parent.resolve()
 
@@ -26,9 +28,7 @@ setup(
     keywords="compiler, translator, cpp, extension",
     packages=['shedskin'],
     python_requires=">=3.8, <4",
-    install_requires=[
-        'conan==1.59.0',
-    ],
+    install_requires=['conan==1.59.0'] if sys.platform.startswith('win') else [],
     extras_require={
         # "dev": ["check-manifest"],
         "test": ["pytest", "tox"],
