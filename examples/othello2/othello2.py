@@ -1,5 +1,20 @@
 import time
 
+'''
+othello bitboard implementation
+
+copyright 2023 mark dufour
+
+based on the following C implementation (with nice explanation):
+
+https://www.hanshq.net/othello.html
+
+speedup of using shedskin is about 100 times.
+
+(from ~100K to ~10M moves/second on my system)
+
+'''
+
 BLACK, WHITE = 0, 1
 
 MASKS = [
@@ -160,11 +175,9 @@ def search(state, color, depth, path, max_depth):
             if moves & mask:
                 move = index(row, col)
 
-#                print('do move', human_move(row, col), color)
 #                path.append(human_move(row, col))
                 do_move(state, color, move)
                 MOVES += 1
-
 #                print('path', ''.join(path))
 
                 search(state, color ^ 1, depth+1, path, max_depth)
