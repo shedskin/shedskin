@@ -1,6 +1,6 @@
 # Shedskin Examples
 
-77 programs that work with Shed Skin 0.9.7
+78 programs that work with Shed Skin 0.9.9
 
 ## Example Overview
 
@@ -50,6 +50,7 @@ lines  name                 description
    109 neural2.py           back-prop neural network
     78 oliva2.py            sea shell patterns
     95 othello.py           othello player
+   136 othello2.py          othello bitboard implementation
    208 path_tracing.py      path tracing raytracer
     80 pisang.py            satisfiability solver
    392 plcfrs.py            natural language parser
