@@ -28,12 +28,11 @@ MASKS = [
     0x7F7F7F7F7F7F7F00  # Up-right
 ]
 
-SHIFTS = [1, 9, 8, 7, 1, 9, 8, 7]
+SHIFTS = [1, 9, 8, 7, 1, 9, 8, 7] # 4 right- and 4 left-shifts
 
 
-def place_disc(state, row, col, color):
-    mask = 1 << index(row, col)
-    state[color] |= mask
+def index(row, col):
+    return 8 * row + col
 
 
 def shift(disks, direction):
@@ -41,10 +40,6 @@ def shift(disks, direction):
         return (disks >> SHIFTS[direction]) & MASKS[direction]
     else:
         return (disks << SHIFTS[direction]) & MASKS[direction]
-
-
-def index(row, col):
-    return 8 * row + col
 
 
 def possible_moves(state, color):
@@ -129,20 +124,8 @@ def parse_state(board):
     return state
 
 
-def print_mask(mask):
-    for row in range(8):
-        for col in range(8):
-            x = 1 << index(row, col)
-            if mask & x:
-                print('1', end='')
-            else:
-                print('.', end='')
-        print()
-    print()
-
-
-def human_move(row, col):
-    return 'abcdefgh'[col]+str(row+1)
+#def human_move(row, col):
+#    return 'abcdefgh'[col]+str(row+1)
 
 
 GAMES = 0
