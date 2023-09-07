@@ -20,7 +20,7 @@ BLACK, WHITE = 0, 1
 MASKS = [
     0x7F7F7F7F7F7F7F7F, # Right
     0x007F7F7F7F7F7F7F, # Down-right
-    0xFFFFFFFFFFFFFFFF, # Down
+    0x00FFFFFFFFFFFFFF, # Down
     0x00FEFEFEFEFEFEFE, # Down-left
     0xFEFEFEFEFEFEFEFE, # Left
     0xFEFEFEFEFEFEFE00, # Up-left
@@ -29,10 +29,6 @@ MASKS = [
 ]
 
 SHIFTS = [1, 9, 8, 7, 1, 9, 8, 7] # 4 right- and 4 left-shifts
-
-
-def index(row, col):
-    return 8 * row + col
 
 
 def shift(disks, direction):
@@ -66,8 +62,8 @@ def possible_moves(state, color):
     return moves
 
 
-def do_move(state, color, idx):
-    disk = 1 << idx
+def do_move(state, color, move):
+    disk = 1 << move
     state[color] |= disk
 
     my_disks = state[color]
@@ -96,30 +92,28 @@ def do_move(state, color, idx):
 
 
 def print_board(state):
-    for row in range(8):
-        for col in range(8):
-            mask = 1 << index(row, col)
-            if state[BLACK] & mask:
-                print('X', end='')
-            elif state[WHITE] & mask:
-                print('O', end='')
-            else:
-                print('.', end='')
-        print()
+    for move in range(64):
+        mask = 1 << move
+        if state[BLACK] & mask:
+            print('X', end='')
+        elif state[WHITE] & mask:
+            print('O', end='')
+        else:
+            print('.', end='')
+        if move % 8 == 7:
+            print()
     print()
 
 
 def parse_state(board):
     state = [0, 0]
 
-    for row in range(8):
-        for col in range(8):
-            idx = index(row, col)
-            mask = 1 << idx
-            if board[idx] == 'X':
-                state[0] |= mask
-            elif board[idx] == 'O':
-                state[1] |= mask
+    for move in range(64):
+        mask = 1 << move
+        if board[move] == 'X':
+            state[0] |= mask
+        elif board[move] == 'O':
+            state[1] |= mask
 
     return state
 
@@ -127,12 +121,10 @@ def parse_state(board):
 #def human_move(row, col):
 #    return 'abcdefgh'[col]+str(row+1)
 
-
-GAMES = 0
 MOVES = 0
 
 def search(state, color, depth, path, max_depth):
-    global GAMES, MOVES
+    global MOVES
 
     # end depth reached
     if depth == max_depth:
@@ -151,23 +143,19 @@ def search(state, color, depth, path, max_depth):
     orig_black = state[0]
     orig_white = state[1]
 
-    for row in range(8):
-        for col in range(8):
-            idx = index(row, col)
-            mask = 1 << idx
-            if moves & mask:
-                move = index(row, col)
+    for move in range(63):
+        if moves & (1 << move):
 
-#                path.append(human_move(row, col))
-                do_move(state, color, move)
-                MOVES += 1
-#                print('path', ''.join(path))
+#            path.append(human_move(row, col))
+            do_move(state, color, move)
+            MOVES += 1
+#            print('path', ''.join(path))
 
-                search(state, color ^ 1, depth+1, path, max_depth)
+            search(state, color ^ 1, depth+1, path, max_depth)
 
-#                path.pop()
-                state[0] = orig_black
-                state[1] = orig_white
+#            path.pop()
+            state[0] = orig_black
+            state[1] = orig_white
 
 
 def main():
