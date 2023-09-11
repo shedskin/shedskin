@@ -345,7 +345,9 @@ def lookup_func(node, mv):  # XXX lookup_var first?
 
 def lookup_class(node, mv):  # XXX lookup_var first?
     if isinstance(node, ast.Name):
-        if node.id in mv.classes:
+        if node.id == 'int': # TODO generalize
+            return mv.ext_classes['int_']
+        elif node.id in mv.classes:
             return mv.classes[node.id]
         elif node.id in mv.ext_classes:
             return mv.ext_classes[node.id]

@@ -102,7 +102,7 @@ def print_board(state):
             print('.', end='')
         if move % 8 == 7:
             print()
-    print()
+    print(f'black: {int.bit_count(state[0])}, white: {int.bit_count(state[1])}')
 
 
 def parse_state(board):

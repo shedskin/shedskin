@@ -3447,6 +3447,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 ident = cl.ident
                 if cl.ident in [
                     "dict",
+                    "int_",
                     "defaultdict",
                 ]:  # own namespace because of template vars
                     self.append("__" + cl.ident + "__::")
