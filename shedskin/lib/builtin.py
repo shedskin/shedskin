@@ -5,6 +5,10 @@ class class_:
         return self.__name__
 
 class int_:
+    @staticmethod
+    def bit_count(i):
+        return 1
+
     def __add__(self, b):
         return b.__with_int__()
     def __sub__(self, b):

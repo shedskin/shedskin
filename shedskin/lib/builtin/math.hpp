@@ -173,3 +173,7 @@ template<class T> T __div2(__ss_float n, T a) { return a->__rdiv__(n); }
 inline __ss_bool __ss_is_integer(__ss_float d) {
     return __mbool((long long)d == d);
 }
+
+namespace __int___ {
+    inline __ss_int bit_count(__ss_int i) { return __builtin_popcount(__abs(i)); } // TODO use std::popcount from C++20
+}
