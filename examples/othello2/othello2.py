@@ -9,9 +9,9 @@ based on the following C implementation (with nice explanation):
 
 https://www.hanshq.net/othello.html
 
-speedup of using shedskin is about 100 times.
+speedup of using shedskin is about 150 times.
 
-(from ~100K to ~10M moves/second on my system)
+(from ~200K to ~30M moves/second on my system)
 
 '''
 
@@ -31,11 +31,11 @@ MASKS = [
 SHIFTS = [1, 9, 8, 7, 1, 9, 8, 7] # 4 right- and 4 left-shifts
 
 
-def shift(disks, direction):
+def shift(disks, direction, S, M):
     if direction < 4:
-        return (disks >> SHIFTS[direction]) & MASKS[direction]
+        return (disks >> S) & M
     else:
-        return (disks << SHIFTS[direction]) & MASKS[direction]
+        return (disks << S) & M
 
 
 def possible_moves(state, color):
@@ -46,18 +46,21 @@ def possible_moves(state, color):
     empties = ~(my_disks | opp_disks)
 
     for direction in range(8):
+        S = SHIFTS[direction]
+        M = MASKS[direction]
+
         # Get opponent disks adjacent to my disks in direction dir.
-        x = shift(my_disks, direction) & opp_disks
+        x = shift(my_disks, direction, S, M) & opp_disks
 
         # Add opponent disks adjacent to those, and so on.
-        x |= shift(x, direction) & opp_disks
-        x |= shift(x, direction) & opp_disks
-        x |= shift(x, direction) & opp_disks
-        x |= shift(x, direction) & opp_disks
-        x |= shift(x, direction) & opp_disks
+        x |= shift(x, direction, S, M) & opp_disks
+        x |= shift(x, direction, S, M) & opp_disks
+        x |= shift(x, direction, S, M) & opp_disks
+        x |= shift(x, direction, S, M) & opp_disks
+        x |= shift(x, direction, S, M) & opp_disks
 
         # Empty cells adjacent to those are valid moves.
-        moves |= shift(x, direction) & empties
+        moves |= shift(x, direction, S, M) & empties
 
     return moves
 
@@ -72,18 +75,33 @@ def do_move(state, color, move):
     captured_disks = 0;
 
     for direction in range(8):
+        S = SHIFTS[direction]
+        M = MASKS[direction]
+
         # Find opponent disk adjacent to the new disk.
-        x = shift(disk, direction) & opp_disks
+        x = shift(disk, direction, S, M) & opp_disks
+        if x == 0:
+            continue
 
         # Add any adjacent opponent disk to that one, and so on.
-        x |= shift(x, direction) & opp_disks
-        x |= shift(x, direction) & opp_disks
-        x |= shift(x, direction) & opp_disks
-        x |= shift(x, direction) & opp_disks
-        x |= shift(x, direction) & opp_disks
+        x |= shift(x, direction, S, M) & opp_disks
+        if x == 0:
+            continue
+        x |= shift(x, direction, S, M) & opp_disks
+        if x == 0:
+            continue
+        x |= shift(x, direction, S, M) & opp_disks
+        if x == 0:
+            continue
+        x |= shift(x, direction, S, M) & opp_disks
+        if x == 0:
+            continue
+        x |= shift(x, direction, S, M) & opp_disks
+        if x == 0:
+            continue
 
         # Determine whether the disks were captured.
-        bounding_disk = shift(x, direction) & my_disks
+        bounding_disk = shift(x, direction, S, M) & my_disks
         if bounding_disk:
             captured_disks |= x
 
@@ -174,7 +192,7 @@ def main():
     state = parse_state(board)
     print_board(state)
 
-    max_depth = 12
+    max_depth = 13
 
     t0 = time.time()
     search(state, color, 4, [], max_depth)
