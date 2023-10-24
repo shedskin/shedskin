@@ -1,3 +1,5 @@
+#! /usr/bin/python3
+
 ''' 
 UCT go player in python, by mark.dufour@gmail.com.
 
@@ -8,9 +10,10 @@ techniques used:
 -http://en.wikipedia.org/wiki/Zobrist_hashing (incremental hash values)
 -timestamps, to be able to invalidate things with a single increment
 
+GTP code by Folkert van Heusden <mail@vanheusden.com>
 '''
 
-import random, math, sys
+import random, math, sys, time
 
 SIZE = 9
 GAMES = 15000
@@ -434,6 +437,20 @@ def computer_move(board):
 #    print 'moves', MOVES
     return tree.best_visited().pos
 
+def timed_computer_move(board, end_ts):
+    pos = board.random_move()
+    if pos == PASS:
+        return PASS
+    tree = UCTNode()
+    tree.unexplored = board.useful_moves()
+    nboard = Board()
+    while time.time() < end_ts:
+        node = tree
+        nboard.reset()
+        nboard.replay(board.history)
+        node.play(nboard)
+    return tree.best_visited().pos
+
 def versus_cpu():
     board = Board()
     while True:
@@ -460,9 +477,115 @@ def versus_cpu():
     print('WHITE:', board.score(WHITE))
     print('BLACK:', board.score(BLACK))
 
+def pos_to_gtp(pos):
+    x = pos % SIZE
+    y = 1 + pos // SIZE
+
+    if x >= 8:  # 'i'
+        x += 1
+
+    return '%c%d' % (ord('a') + x, y)
+
+def gtp_to_color(name):
+    if name in ('b', 'B', 'black', 'BLACK'):
+        return BLACK
+
+    return WHITE
+
+def gtp():
+    global KOMI
+    global SIZE
+
+    assert gtp_to_color('b') == BLACK
+    assert pos_to_gtp(0) == 'a1'
+    assert pos_to_gtp(9 * 9 - 1) == 'j9'
+
+    board = Board()
+
+    time_left_w = 30.
+    time_left_b = 30.
+
+    while True:
+        line = sys.stdin.readline().rstrip('\n').rstrip('\r')
+        # fh = open('trace.dat', 'a+')
+        # fh.write(line + '\n')
+        # fh.close()
+        parts = line.split()
+
+        if parts[0] == 'clear_board':
+            board = Board()
+            KOMI = 7.5
+            print('=')
+
+        elif parts[0] == 'protocol_version':
+            print('= 2')
+
+        elif parts[0] == 'name':
+            print('= Go by Mark Dufour')
+
+        elif parts[0] == 'komi':
+            KOMI = float(parts[1])
+            print('=')
+
+        elif parts[0] == 'boardsize':
+            SIZE = int(parts[1])
+            KOMI = 7.5
+            board = Board()
+            print('=')
+
+        elif parts[0] == 'play':
+            board.color = gtp_to_color(parts[1])
+            if parts[2] == 'pass':
+                board.move(PASS)
+            else:
+                vertex_str = parts[2]
+                x = ord(vertex_str[0]) - ord('i')
+                if vertex_str[0] >= 'i':
+                    x -= 1
+                y = int(vertex_str[1:]) - 1
+                board.move(y * SIZE + x)
+            print('=')
+
+        elif parts[0] == 'time_left':
+            board.color = gtp_to_color(parts[1])
+            if board.color == BLACK:
+                time_left_b = float(parts[2])
+            else:
+                time_left_w = float(parts[2])
+            print('=')
+
+        elif parts[0] == 'genmove':
+            board.color = gtp_to_color(parts[1])
+            n_useful_moves = 0 if board.finished else len(board.useful_moves())
+            if n_useful_moves == 0:
+                print('= pass')
+                board.move(PASS)
+            else:
+                time_to_use = (time_left_b if board.color == BLACK else time_left_w) / n_useful_moves
+                pos = timed_computer_move(board, time.time() + time_to_use)
+                if pos == PASS:
+                    print('= pass')
+                else:
+                    print('= %s' % pos_to_gtp(pos))
+                board.move(pos)
+
+        elif parts[0] == 'quit':
+            break
+
+        else:
+            print('?')
+
+        print('')
+
+        sys.stdout.flush()
+
 if __name__ == '__main__':
     random.seed(1)
+
     try:
-        versus_cpu()
+        if len(sys.argv) == 2 and sys.argv[1] == '--gtp':
+            gtp()
+        else:
+            versus_cpu()
     except EOFError:
         pass
