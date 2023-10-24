@@ -484,7 +484,7 @@ def pos_to_gtp(pos):
     if x >= 8:  # 'i'
         x += 1
 
-    return '%c%d' % (ord('a') + x, y)
+    return '%c%d' % (ord('A') + x, y)
 
 def gtp_to_color(name):
     if name in ('b', 'B', 'black', 'BLACK'):
@@ -497,8 +497,8 @@ def gtp():
     global SIZE
 
     assert gtp_to_color('b') == BLACK
-    assert pos_to_gtp(0) == 'a1'
-    assert pos_to_gtp(9 * 9 - 1) == 'j9'
+    assert pos_to_gtp(0) == 'A1'
+    assert pos_to_gtp(9 * 9 - 1) == 'J9'
 
     board = Board()
 
@@ -506,7 +506,7 @@ def gtp():
     time_left_b = 30.
 
     while True:
-        line = sys.stdin.readline().rstrip('\n').rstrip('\r')
+        line = sys.stdin.readline().rstrip('\n').rstrip('\r').lower()
         # fh = open('trace.dat', 'a+')
         # fh.write(line + '\n')
         # fh.close()
@@ -539,7 +539,7 @@ def gtp():
                 board.move(PASS)
             else:
                 vertex_str = parts[2]
-                x = ord(vertex_str[0]) - ord('i')
+                x = ord(vertex_str[0]) - ord('a')
                 if vertex_str[0] >= 'i':
                     x -= 1
                 y = int(vertex_str[1:]) - 1
