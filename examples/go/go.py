@@ -479,12 +479,12 @@ def versus_cpu():
 
 def pos_to_gtp(pos):
     x = pos % SIZE
-    y = 1 + pos // SIZE
+    y = pos // SIZE
 
     if x >= 8:  # 'i'
         x += 1
 
-    return '%c%d' % (ord('A') + x, y)
+    return '%c%d' % (ord('A') + x, y + 1)
 
 def gtp_to_color(name):
     if name in ('b', 'B', 'black', 'BLACK'):
@@ -568,6 +568,16 @@ def gtp():
                 else:
                     print('= %s' % pos_to_gtp(pos))
                 board.move(pos)
+
+        elif parts[0] == 'final_score':
+            s = board.score(BLACK)
+
+            if s == 0:
+                print('= 0')
+            elif s < 0:
+                print('= W+%f' % abs(s))
+            else:
+                print('= B+%f' % s)
 
         elif parts[0] == 'quit':
             break
