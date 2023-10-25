@@ -495,9 +495,6 @@ def gtp_to_color(name):
 
     return WHITE
 
-import io
-import traceback
-
 def gtp():
     global KOMI
     global SIZE
@@ -549,7 +546,10 @@ def gtp():
                 if vertex_str[0] >= 'i':
                     x -= 1
                 y = int(vertex_str[1:]) - 1
-                board.move(y * SIZE + x)
+                pos = y * SIZE + x
+                if not board.useful(pos):
+                    print('Invalid move?')
+                board.move(pos)
                 print(board)
             print('=')
 
