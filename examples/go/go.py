@@ -449,7 +449,10 @@ def timed_computer_move(board, end_ts):
         nboard.reset()
         nboard.replay(board.history)
         node.play(nboard)
-    return tree.best_visited().pos
+    best = tree.best_visited()
+    if best == None:
+        return PASS
+    return best.pos
 
 def versus_cpu():
     board = Board()
@@ -508,101 +511,110 @@ def gtp():
     time_left_w = 30.
     time_left_b = 30.
 
-    try:
-        while True:
-            line = sys.stdin.readline().rstrip('\n').rstrip('\r').lower()
-            parts = line.split()
+    while True:
+        line = sys.stdin.readline().rstrip('\n').rstrip('\r').lower()
+        parts = line.split()
 
-            if len(parts) == 0:
-                print('?')
+        if len(parts) == 0:
+            print('?')
 
-            elif parts[0] == 'clear_board':
-                board = Board()
-                KOMI = 7.5
-                print('=')
+        elif parts[0] == 'clear_board':
+            board = Board()
+            KOMI = 7.5
+            print('=')
 
-            elif parts[0] == 'protocol_version':
-                print('= 2')
+        elif parts[0] == 'protocol_version':
+            print('= 2')
 
-            elif parts[0] == 'name':
-                print('= Go by Mark Dufour')
+        elif parts[0] == 'name':
+            print('= Go by Mark Dufour')
 
-            elif parts[0] == 'komi':
-                KOMI = float(parts[1])
-                print('=')
+        elif parts[0] == 'komi':
+            KOMI = float(parts[1])
+            print('=')
 
-            elif parts[0] == 'boardsize':
-                SIZE = int(parts[1])
-                KOMI = 7.5
-                board = Board()
-                print('=')
+        elif parts[0] == 'boardsize':
+            SIZE = int(parts[1])
+            KOMI = 7.5
+            board = Board()
+            print('=')
 
-            elif parts[0] == 'play':
-                board.color = gtp_to_color(parts[1])
-                if parts[2] == 'pass':
-                    board.move(PASS)
-                else:
-                    vertex_str = parts[2]
-                    x = ord(vertex_str[0]) - ord('a')
-                    if vertex_str[0] >= 'i':
-                        x -= 1
-                    y = int(vertex_str[1:]) - 1
-                    board.move(y * SIZE + x)
-                print('=')
-
-            elif parts[0] == 'final_score':
-                s = board.score(BLACK)
-
-                if s == 0:
-                    print('= 0')
-                elif s < 0:
-                    print('= W+%f' % abs(s))
-                else:
-                    print('= B+%f' % s)
-
-            elif parts[0] == 'time_left':
-                board.color = gtp_to_color(parts[1])
-                if board.color == BLACK:
-                    time_left_b = float(parts[2])
-                else:
-                    time_left_w = float(parts[2])
-                print('=')
-
-            elif parts[0] == 'genmove':
-                board.color = gtp_to_color(parts[1])
-                n_useful_moves = 0 if board.finished else len(board.useful_moves())
-                if n_useful_moves == 0:
-                    print('= pass')
-                    board.move(PASS)
-                else:
-                    time_to_use = (time_left_b if board.color == BLACK else time_left_w) / n_useful_moves
-                    pos = timed_computer_move(board, time.time() + time_to_use)
-                    if pos == PASS:
-                        print('= pass')
-                    else:
-                        print('= %s' % pos_to_gtp(pos))
-                    board.move(pos)
-
-            elif parts[0] == 'quit':
-                break
-
+        elif parts[0] == 'play':
+            board.color = gtp_to_color(parts[1])
+            if parts[2] == 'pass':
+                board.move(PASS)
             else:
-                print('?')
+                vertex_str = parts[2]
+                x = ord(vertex_str[0]) - ord('a')
+                if vertex_str[0] >= 'i':
+                    x -= 1
+                y = int(vertex_str[1:]) - 1
+                board.move(y * SIZE + x)
+                print(board)
+            print('=')
 
-            print('')
+        elif parts[0] == 'final_score':
+            s = board.score(BLACK)
 
-            sys.stdout.flush()
+            if s == 0:
+                print('= 0')
+            elif s < 0:
+                print('= W+%f' % abs(s))
+            else:
+                print('= B+%f' % s)
 
-    except Exception as e:
-        #fh = open('trace.dat', 'a+')
-        #fh.write(str(e) + '\n')
-        #errors = io.StringIO()
-        #traceback.print_exc(file=errors)  # Instead of printing directly to stdout, the result can be further processed
-        #contents = str(errors.getvalue())
-        #fh.write(contents + '\n\n')
-        #errors.close()
-        #fh.close()
-        pass
+        elif parts[0] == 'time_settings':
+            # TODO
+            print('=')
+
+        elif parts[0] == 'time_left':
+            board.color = gtp_to_color(parts[1])
+            if board.color == BLACK:
+                time_left_b = float(parts[2])
+            else:
+                time_left_w = float(parts[2])
+            print('=')
+
+        elif parts[0] == 'genmove':
+            board.color = gtp_to_color(parts[1])
+            umoves = board.useful_moves()
+            n_useful_moves = 0 if board.finished else len(umoves)
+            if n_useful_moves == 0:
+                print('= pass')
+                board.move(PASS)
+            else:
+                print('moves: %s' % ', '.join([pos_to_gtp(x) for x in umoves]))
+                time_to_use = (time_left_b if board.color == BLACK else time_left_w) / n_useful_moves
+                pos = timed_computer_move(board, time.time() + time_to_use)
+                board.move(pos)
+                print(board)
+                if pos == PASS:
+                    print('= pass')
+                else:
+                    print('= %s' % pos_to_gtp(pos))
+
+        elif parts[0] == 'list_commands':
+            print('= clear_board')
+            print('protocol_version')
+            print('name')
+            print('komi')
+            print('boardsize')
+            print('play')
+            print('final_score')
+            print('time_settings')
+            print('time_left')
+            print('genmove')
+            print('quit')
+
+        elif parts[0] == 'quit':
+            break
+
+        else:
+            print('?')
+
+        print('')
+
+        sys.stdout.flush()
 
 if __name__ == '__main__':
     random.seed(1)
