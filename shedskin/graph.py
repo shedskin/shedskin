@@ -1322,8 +1322,11 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         if node.msg:
             self.visit(node.msg, func)
 
-    def visit_Try(self, node, func=None):  # py3
+    def visit_Try(self, node, func=None):
         self.visit_TryExcept(node, func)
+
+    def visit_TryStar(self, node, func=None):
+        error.error("unsupported try/except syntax", self.gx, node, mv=getmv())
 
     def visit_TryExcept(self, node, func=None):
         for child in node.body:
