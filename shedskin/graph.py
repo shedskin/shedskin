@@ -1011,6 +1011,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.add_constraint((infer.inode(self.gx, node.body), newnode), func)
         self.add_constraint((infer.inode(self.gx, node.orelse), newnode), func)
 
+    def visit_Match(self, node, func=None):
+        error.error("match case statement not supported", self.gx, node, mv=getmv())
+
     def visit_Global(self, node, func=None):
         func.globals += node.names
 
