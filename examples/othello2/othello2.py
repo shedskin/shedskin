@@ -233,12 +233,22 @@ def main():
         '........'
         '........'
     )
+#    board = (
+#        '..XXXXXO'
+#        'XOXXXXO.'
+#        'XOXOOOXO'
+#        'XOXOOOXO'
+#        'XOXOOOOO'
+#        'XXOOOOOO'
+#        'XOO..O.O'
+#        '.OX.....'
+#    )
     color = BLACK
 
     state = parse_state(board)
     print_board(state)
 
-    max_depth = 10
+    max_depth = 12
 
     while True:
         NODES = 0

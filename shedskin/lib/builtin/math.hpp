@@ -175,5 +175,11 @@ inline __ss_bool __ss_is_integer(__ss_float d) {
 }
 
 namespace __int___ {
-    inline __ss_int bit_count(__ss_int i) { return __builtin_popcount(__abs(i)); } // TODO use std::popcount from C++20
+    inline __ss_int bit_count(__ss_int i) {
+#ifdef __SS_LONG
+        return __builtin_popcountll(__abs(i)); // TODO use std::popcount from C++20?
+#else
+        return __builtin_popcount(__abs(i));
+#endif
+    }
 }

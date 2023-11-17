@@ -581,13 +581,24 @@ inline str *chr(__ss_int i) {
 }
 
 template<> inline str *hex(__ss_int i) {
-    return hex((int)i);
+    if(i<0)
+        return (new str("-0x"))->__add__(__str(-i, (__ss_int)16));
+    else
+        return (new str("0x"))->__add__(__str(i, (__ss_int)16));
 }
 template<> inline str *oct(__ss_int i) {
-    return oct((int)i);
+    if(i<0)
+        return (new str("-0o"))->__add__(__str(-i, (__ss_int)8));
+    else if(i>0)
+        return (new str("0o"))->__add__(__str(i, (__ss_int)8));
+    else
+        return new str("0o0");
 }
 template<> inline str *bin(__ss_int i) {
-    return bin((int)i);
+    if(i<0)
+        return (new str("-0b"))->__add__(__str(-i, (__ss_int)2));
+    else
+        return (new str("0b"))->__add__(__str(i, (__ss_int)2));
 }
 #endif
 
