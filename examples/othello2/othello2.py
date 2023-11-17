@@ -145,41 +145,8 @@ def human_move(move):
     return 'abcdefgh'[col]+str(row+1)
 
 
-NODES = 0
-
-def search(state, color, depth, path, max_depth):
-    global NODES
-
-    # end depth reached
-    if depth == max_depth:
-        return
-
-    moves = possible_moves(state, color)
-
-    # passing
-    if moves == 0:
-        color = color ^ 1
-        moves = possible_moves(state, color)
-        if moves == 0:
-            return
-
-    # try all possible moves and recurse
-    orig_black = state[0]
-    orig_white = state[1]
-
-    for move in range(64):
-        if moves & (1 << move):
-
-#            path.append(move)
-            do_move(state, color, move)
-            NODES += 1
-#            print('path', ''.join(path))
-
-            search(state, color ^ 1, depth+1, path, max_depth)
-
-#            path.pop()
-            state[0] = orig_black
-            state[1] = orig_white
+def parse_move(s):
+    return 'abcdefgh'.index(s[0]) + 8 * (int(s[1])-1)
 
 
 def evaluate(state, color, is_max_player):
@@ -193,16 +160,19 @@ def minimax_ab(state, color, depth, max_depth, is_max_player, alpha=-65, beta=65
     global NODES
     NODES += 1
 
-    # leaf node: max depth reached
+    # max depth reached
     if depth == max_depth:
         return evaluate(state, color, is_max_player)
 
-    # leaf node: game ends
+    # player has to pass
     moves = possible_moves(state, color)
     if moves == 0:
        opp_moves = possible_moves(state, color ^ 1)
        if opp_moves == 0:
            return evaluate(state, color, is_max_player)
+       color = color ^ 1
+       is_max_player = not is_max_player
+       moves = opp_moves
 
     # try all possible moves and recurse
     orig_black = state[0]
@@ -224,9 +194,9 @@ def minimax_ab(state, color, depth, max_depth, is_max_player, alpha=-65, beta=65
                     best_move = move
                     best = val
 
-#                alpha = max(alpha, best)
-#                if beta <= alpha:
-#                    break
+                alpha = max(alpha, best)
+                if beta <= alpha:
+                    break
     else:
         best = 65
 
@@ -243,14 +213,16 @@ def minimax_ab(state, color, depth, max_depth, is_max_player, alpha=-65, beta=65
                     best_move = move
                     best = val
 
-#                beta = min(beta, best)
-#                if beta <= alpha:
-#                    break
+                beta = min(beta, best)
+                if beta <= alpha:
+                    break
 
     return best_move
 
 
 def main():
+    global NODES
+
     board = (
         '........'
         '........'
@@ -261,30 +233,37 @@ def main():
         '........'
         '........'
     )
-#    board = (
-#        '..XXXXXO'
-#        'XOXXXXO.'
-#        'XOXOOOXO'
-#        'XOXOOOXO'
-#        'XOXOOOOO'
-#        'XXOOOOOO'
-#        'XOO..O.O'
-#        '.OX.....'
-#    )
     color = BLACK
 
     state = parse_state(board)
     print_board(state)
 
-    max_depth = 11
+    max_depth = 10
 
-    t0 = time.time()
-    search(state, color, 0, [], max_depth)
-#    move = minimax_ab(state, color, 0, max_depth, -65, 65)
-#    print(f'best move: {human_move(move)}')
-    t1 = (time.time()-t0)
+    while True:
+        NODES = 0
 
-    print('%d nodes in %.2fs seconds (%.2f/second)' % (NODES, t1, NODES/t1))
+        print('(thinking)')
+        t0 = time.time()
+        move = minimax_ab(state, color, 0, max_depth, True)
+        t1 = (time.time()-t0)
+        print('%d nodes in %.2fs seconds (%.2f/second)' % (NODES, t1, NODES/t1))
+
+        print(f'I move here: {human_move(move)}')
+        do_move(state, color, move)
+        print_board(state)
+
+        color = color^1
+        moves = possible_moves(state, color)
+        while True:
+            move = parse_move(input('your move? '))
+            if moves & (1 << move):
+                break
+        do_move(state, color, move)
+        print_board(state)
+
+        color = color^1
+
 
 if __name__ == '__main__':
     main()
