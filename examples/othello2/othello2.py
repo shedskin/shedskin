@@ -1,17 +1,20 @@
 import time
 
 '''
-othello bitboard implementation
+poppy - basic python othello player
+
+-bitboard implementation (~30M moves/second on my system)
+-alpha-beta pruning
+-greedy evaluation function (for now)
 
 copyright 2023 mark dufour
 
-based on the following C implementation (with nice explanation):
+based on the following implementations/tutorials:
 
-https://www.hanshq.net/othello.html
+-https://www.hanshq.net/othello.html
+-https://www.geeksforgeeks.org/minimax-algorithm-in-game-theory-set-4-alpha-beta-pruning
 
-speedup of using shedskin is about 150 times.
-
-(from ~200K to ~30M moves/second on my system)
+compiled with shedskin for a 150-times speedup.
 
 '''
 
@@ -136,8 +139,11 @@ def parse_state(board):
     return state
 
 
-#def human_move(row, col):
-#    return 'abcdefgh'[col]+str(row+1)
+def human_move(move):
+    col = move & 0b111
+    row = (move >>3) & 0b111
+    return 'abcdefgh'[col]+str(row+1)
+
 
 MOVES = 0
 
@@ -161,10 +167,10 @@ def search(state, color, depth, path, max_depth):
     orig_black = state[0]
     orig_white = state[1]
 
-    for move in range(63):
+    for move in range(64):
         if moves & (1 << move):
 
-#            path.append(human_move(row, col))
+#            path.append(move)
             do_move(state, color, move)
             MOVES += 1
 #            print('path', ''.join(path))
@@ -174,6 +180,60 @@ def search(state, color, depth, path, max_depth):
 #            path.pop()
             state[0] = orig_black
             state[1] = orig_white
+
+
+def evaluate(state, color):
+    return int.bit_count(state[color]) - int.bit_count(state[color ^ 1])
+
+
+def minimax_ab(state, color, depth, max_depth, is_max_player, alpha=-65, beta=65):
+    if depth == max_depth:
+        return evaluate(state, color)
+
+    moves = possible_moves(state, color)
+
+    # TODO passing?
+
+    # try all possible moves and recurse
+    orig_black = state[0]
+    orig_white = state[1]
+
+    if is_max_player: # TODO similar code for min player..
+        best = -65
+
+        for move in range(64):
+            if moves & (1 << move):
+                do_move(state, color, move)
+
+                val = minimax_ab(state, color ^ 1, depth+1, max_depth, False, alpha, beta)
+
+                state[0] = orig_black
+                state[1] = orig_white
+
+                best = max(best, val)
+                alpha = max(alpha, best)
+
+                if beta <= alpha:
+                    break
+    else:
+        best = 65
+
+        for move in range(64):
+            if moves & (1 << move):
+                do_move(state, color, move)
+
+                val = minimax_ab(state, color ^ 1, depth+1, max_depth, True, alpha, beta)
+
+                state[0] = orig_black
+                state[1] = orig_white
+
+                best = min(best, val)
+                beta = min(beta, best)
+
+                if beta <= alpha:
+                    break
+
+    return best
 
 
 def main():
@@ -187,18 +247,30 @@ def main():
         '........'
         '........'
     )
+#    board = (
+#        '..XXXXXO'
+#        'XOXXXXO.'
+#        'XOXOOOXO'
+#        'XOXOOOXO'
+#        'XOXOOOOO'
+#        'XXOOOOOO'
+#        'XOO..O.O'
+#        '.OX.....'
+#    )
     color = BLACK
 
     state = parse_state(board)
     print_board(state)
 
-    max_depth = 13
+    max_depth = 11
 
     t0 = time.time()
-    search(state, color, 4, [], max_depth)
+    search(state, color, 0, [], max_depth)
     t1 = (time.time()-t0)
-
     print('%d moves in %.2fs seconds (%.2f/second)' % (MOVES, t1, MOVES/t1))
+
+#    move = minimax_ab(state, color, 0, max_depth, -65, 65)
+#    print(f'best move: {human_move(move)}')
 
 
 if __name__ == '__main__':
