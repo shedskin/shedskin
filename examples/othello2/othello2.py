@@ -145,10 +145,10 @@ def human_move(move):
     return 'abcdefgh'[col]+str(row+1)
 
 
-MOVES = 0
+NODES = 0
 
 def search(state, color, depth, path, max_depth):
-    global MOVES
+    global NODES
 
     # end depth reached
     if depth == max_depth:
@@ -172,7 +172,7 @@ def search(state, color, depth, path, max_depth):
 
 #            path.append(move)
             do_move(state, color, move)
-            MOVES += 1
+            NODES += 1
 #            print('path', ''.join(path))
 
             search(state, color ^ 1, depth+1, path, max_depth)
@@ -182,17 +182,27 @@ def search(state, color, depth, path, max_depth):
             state[1] = orig_white
 
 
-def evaluate(state, color):
-    return int.bit_count(state[color]) - int.bit_count(state[color ^ 1])
+def evaluate(state, color, is_max_player):
+    value = int.bit_count(state[color]) - int.bit_count(state[color ^ 1])
+    if not is_max_player:
+        value = -value
+    return value
 
 
 def minimax_ab(state, color, depth, max_depth, is_max_player, alpha=-65, beta=65):
+    global NODES
+    NODES += 1
+
+    # leaf node: max depth reached
     if depth == max_depth:
-        return evaluate(state, color)
+        return evaluate(state, color, is_max_player)
 
+    # leaf node: game ends
     moves = possible_moves(state, color)
-
-    # TODO passing?
+    if moves == 0:
+       opp_moves = possible_moves(state, color ^ 1)
+       if opp_moves == 0:
+           return evaluate(state, color, is_max_player)
 
     # try all possible moves and recurse
     orig_black = state[0]
@@ -210,11 +220,13 @@ def minimax_ab(state, color, depth, max_depth, is_max_player, alpha=-65, beta=65
                 state[0] = orig_black
                 state[1] = orig_white
 
-                best = max(best, val)
-                alpha = max(alpha, best)
+                if val > best:
+                    best_move = move
+                    best = val
 
-                if beta <= alpha:
-                    break
+#                alpha = max(alpha, best)
+#                if beta <= alpha:
+#                    break
     else:
         best = 65
 
@@ -227,13 +239,15 @@ def minimax_ab(state, color, depth, max_depth, is_max_player, alpha=-65, beta=65
                 state[0] = orig_black
                 state[1] = orig_white
 
-                best = min(best, val)
-                beta = min(beta, best)
+                if val < best:
+                    best_move = move
+                    best = val
 
-                if beta <= alpha:
-                    break
+#                beta = min(beta, best)
+#                if beta <= alpha:
+#                    break
 
-    return best
+    return best_move
 
 
 def main():
@@ -266,12 +280,11 @@ def main():
 
     t0 = time.time()
     search(state, color, 0, [], max_depth)
-    t1 = (time.time()-t0)
-    print('%d moves in %.2fs seconds (%.2f/second)' % (MOVES, t1, MOVES/t1))
-
 #    move = minimax_ab(state, color, 0, max_depth, -65, 65)
 #    print(f'best move: {human_move(move)}')
+    t1 = (time.time()-t0)
 
+    print('%d nodes in %.2fs seconds (%.2f/second)' % (NODES, t1, NODES/t1))
 
 if __name__ == '__main__':
     main()
