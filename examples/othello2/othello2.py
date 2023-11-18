@@ -249,26 +249,6 @@ def main():
         '........'
         '........'
     )
-    board = (
-        '..XXXXXO'
-        'XOXXXXO.'
-        'XOXOOOXO'
-        'XOXOOOXO'
-        'XOXOOOOO'
-        'XXOOOOOO'
-        'XOO..O.O'
-        '.OX.....'
-    )
-#    board = (
-#        'XOOOOOOO'
-#        'XOOXXXXX'
-#        'XOOOOXXO'
-#        'XOXOOXXO'
-#        'XOXOOXXO'
-#        'XXOOOOXO'
-#        'XOO.OXOO'
-#        '.OOO.X.O'
-#    )
     color = BLACK
 
     state = parse_state(board)
@@ -278,25 +258,39 @@ def main():
 
     while True:
         NODES = 0
+        passing = 0
 
-        print('(thinking)')
-        t0 = time.time()
-        move = minimax_ab(state, color, 0, max_depth, True)
-        t1 = (time.time()-t0)
-        print('%d nodes in %.2fs seconds (%.2f/second)' % (NODES, t1, NODES/t1))
+        moves = possible_moves(state, color)
+        if moves == 0:
+            print('I pass')
+            passing += 1
+        else:
+            print('(thinking)')
+            t0 = time.time()
+            move = minimax_ab(state, color, 0, max_depth, True)
+            t1 = (time.time()-t0)
+            print('%d nodes in %.2fs seconds (%.2f/second)' % (NODES, t1, NODES/t1))
 
-        print(f'I move here: {human_move(move)}')
-        do_move(state, color, move)
-        print_board(state)
+            print(f'I move here: {human_move(move)}')
+            do_move(state, color, move)
+            print_board(state)
 
         color = color^1
+
         moves = possible_moves(state, color)
-        while True:
-            move = parse_move(input('your move? '))
-            if moves & (1 << move):
+        if moves == 0:
+            print('you pass')
+            passing += 1
+            if passing == 2:
+                print_board(state)
                 break
-        do_move(state, color, move)
-        print_board(state)
+        else:
+            while True:
+                move = parse_move(input('your move? '))
+                if moves & (1 << move):
+                    break
+            do_move(state, color, move)
+            print_board(state)
 
         color = color^1
 
