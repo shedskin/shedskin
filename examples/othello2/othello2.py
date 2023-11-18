@@ -1,3 +1,4 @@
+import sys
 import time
 
 '''
@@ -236,10 +237,8 @@ def minimax_ab(state, color, depth, max_depth, is_max_player, alpha=-65, beta=65
         return best_move
 
 
-def main():
-    global NODES
-
-    board = (
+def empty_board():
+    return (
         '........'
         '........'
         '........'
@@ -249,9 +248,15 @@ def main():
         '........'
         '........'
     )
+
+
+def vs_cpu_cli():
+    global NODES
+
+    board = empty_board()
+    state = parse_state(board)
     color = BLACK
 
-    state = parse_state(board)
     print_board(state)
 
     max_depth = 12
@@ -295,5 +300,49 @@ def main():
         color = color^1
 
 
+def vs_cpu_nboard():
+    board = empty_board()
+    state = parse_state(board)
+    color = BLACK
+
+    max_depth = 12
+
+    sys.stdout.write('set myname wawawa\n')
+
+    while True:
+        line = sys.stdin.readline().strip()
+        if line == 'go':
+            moves = possible_moves(state, color)
+            if moves == 0:
+                sys.stdout.write('=== PASS\n')
+                color = color^1
+            else:
+                move = minimax_ab(state, color, 0, max_depth, True)
+                sys.stdout.write('=== %s\n' % human_move(move).upper())
+
+        elif line.startswith('ping '):
+            sys.stdout.write('pong '+line[5:]+'\n')
+
+        elif line.startswith('set game '):
+            board = empty_board()
+            state = parse_state(board)
+            color = BLACK
+            for l in line.split(']'):
+                if '[' in l:
+                    a, b = l.split('[')
+                    b = b.lower()[:2]
+                    if a == 'B':
+                        if b != 'pa':
+                            do_move(state, BLACK, parse_move(b))
+                        color = WHITE
+                    elif a == 'W':
+                        if b != 'pa':
+                            do_move(state, WHITE, parse_move(b))
+                        color = BLACK
+
+        sys.stdout.flush()
+
+
 if __name__ == '__main__':
-    main()
+#    vs_cpu_cli()
+    vs_cpu_nboard()
