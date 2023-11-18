@@ -160,16 +160,23 @@ def minimax_ab(state, color, depth, max_depth, is_max_player, alpha=-65, beta=65
     global NODES
     NODES += 1
 
+#    print('  '*depth, 'minimax node', NODES)
+
     # max depth reached
     if depth == max_depth:
-        return evaluate(state, color, is_max_player)
+        evalz = evaluate(state, color, is_max_player)
+#        print('  '*depth, 'MAXED eval:', evalz)
+        return evalz
 
     # player has to pass
     moves = possible_moves(state, color)
     if moves == 0:
+#       print('  '*depth, 'PASS')
        opp_moves = possible_moves(state, color ^ 1)
        if opp_moves == 0:
-           return evaluate(state, color, is_max_player)
+           evalz = evaluate(state, color, is_max_player)
+#           print('  '*depth, 'BOTH PASS eval:', evalz)
+           return evalz
        color = color ^ 1
        is_max_player = not is_max_player
        moves = opp_moves
@@ -179,45 +186,54 @@ def minimax_ab(state, color, depth, max_depth, is_max_player, alpha=-65, beta=65
     orig_white = state[1]
 
     if is_max_player: # TODO similar code for min player..
-        best = -65
+        best_val = -65
 
         for move in range(64):
             if moves & (1 << move):
                 do_move(state, color, move)
 
+#                print('  '*depth, 'MAX move', human_move(move))
                 val = minimax_ab(state, color ^ 1, depth+1, max_depth, False, alpha, beta)
+#               print('  '*depth, '->value', val)
 
                 state[0] = orig_black
                 state[1] = orig_white
 
-                if val > best:
+                if val > best_val:
+#                    print('  '*depth, '==new maxbest!')
                     best_move = move
-                    best = val
+                    best_val = val
 
-                alpha = max(alpha, best)
+                alpha = max(alpha, best_val)
                 if beta <= alpha:
                     break
     else:
-        best = 65
+        best_val = 65
 
         for move in range(64):
             if moves & (1 << move):
                 do_move(state, color, move)
 
+#                print('  '*depth, 'MIN move', human_move(move))
                 val = minimax_ab(state, color ^ 1, depth+1, max_depth, True, alpha, beta)
+#                print('  '*depth, '->value', val)
 
                 state[0] = orig_black
                 state[1] = orig_white
 
-                if val < best:
+                if val < best_val:
+#                    print('  '*depth, '==new minbest!')
                     best_move = move
-                    best = val
+                    best_val = val
 
-                beta = min(beta, best)
+                beta = min(beta, best_val)
                 if beta <= alpha:
                     break
 
-    return best_move
+    if depth > 0:
+        return best_val
+    else:
+        return best_move
 
 
 def main():
@@ -233,15 +249,25 @@ def main():
         '........'
         '........'
     )
+    board = (
+        '..XXXXXO'
+        'XOXXXXO.'
+        'XOXOOOXO'
+        'XOXOOOXO'
+        'XOXOOOOO'
+        'XXOOOOOO'
+        'XOO..O.O'
+        '.OX.....'
+    )
 #    board = (
-#        '..XXXXXO'
-#        'XOXXXXO.'
-#        'XOXOOOXO'
-#        'XOXOOOXO'
-#        'XOXOOOOO'
-#        'XXOOOOOO'
-#        'XOO..O.O'
-#        '.OX.....'
+#        'XOOOOOOO'
+#        'XOOXXXXX'
+#        'XOOOOXXO'
+#        'XOXOOXXO'
+#        'XOXOOXXO'
+#        'XXOOOOXO'
+#        'XOO.OXOO'
+#        '.OOO.X.O'
 #    )
     color = BLACK
 
