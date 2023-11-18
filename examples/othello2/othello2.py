@@ -307,7 +307,7 @@ def vs_cpu_nboard():
 
     max_depth = 12
 
-    sys.stdout.write('set myname wawawa\n')
+    sys.stdout.write('set myname poppy\n')
 
     while True:
         line = sys.stdin.readline().strip()
