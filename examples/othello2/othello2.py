@@ -32,6 +32,10 @@ MASKS = [
     0x7F7F7F7F7F7F7F00  # Up-right
 ]
 
+CORNER_MASK = 0x8100000000000081
+
+WIN_BONUS = 1 << 20
+
 SHIFTS = [1, 9, 8, 7, 1, 9, 8, 7] # 4 right- and 4 left-shifts
 
 
@@ -150,8 +154,26 @@ def parse_move(s):
     return 'abcdefgh'.index(s[0]) + 8 * (int(s[1])-1)
 
 
-def evaluate(state, color, is_max_player):
-    value = int.bit_count(state[color]) - int.bit_count(state[color ^ 1])
+def evaluate_greedy(state, color, is_max_player):
+    value = int.bit_count(state[color]) - int.bit_count(state[color^1])
+    if not is_max_player:
+        value = -value
+    return value
+
+
+def evaluate(state, color, is_max_player, my_moves, opp_moves):
+    value = 0
+
+    my_disks = state[color]
+    opp_disks = state[color^1]
+
+    my_corners = my_disks & CORNER_MASK
+    opp_corners = opp_disks & CORNER_MASK
+
+    value += (int.bit_count(my_corners) - int.bit_count(opp_corners)) * 16
+    value += (int.bit_count(my_moves) - int.bit_count(opp_moves)) * 2;
+#    value -= (int.bit_count(my_frontier) - int.bit_count(opp_frontier))
+
     if not is_max_player:
         value = -value
     return value
@@ -163,19 +185,20 @@ def minimax_ab(state, color, depth, max_depth, is_max_player, alpha=-65, beta=65
 
 #    print('  '*depth, 'minimax node', NODES)
 
+    moves = possible_moves(state, color)
+    opp_moves = possible_moves(state, color^1)
+
     # max depth reached
     if depth == max_depth:
-        evalz = evaluate(state, color, is_max_player)
+        evalz = evaluate(state, color, is_max_player, moves, opp_moves)
 #        print('  '*depth, 'MAXED eval:', evalz)
         return evalz
 
     # player has to pass
-    moves = possible_moves(state, color)
     if moves == 0:
 #       print('  '*depth, 'PASS')
-       opp_moves = possible_moves(state, color ^ 1)
        if opp_moves == 0:
-           evalz = evaluate(state, color, is_max_player)
+           evalz = evaluate(state, color, is_max_player, moves, opp_moves)
 #           print('  '*depth, 'BOTH PASS eval:', evalz)
            return evalz
        color = color ^ 1
