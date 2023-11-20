@@ -316,7 +316,7 @@ def vs_cpu_nboard():
     state = parse_state(board)
     color = BLACK
 
-    max_depth = 10
+    max_depth = 12
 
     sys.stdout.write('set myname Poppy\n')
 
@@ -333,6 +333,12 @@ def vs_cpu_nboard():
 
         elif line.startswith('ping '):
             sys.stdout.write('pong '+line[5:]+'\n')
+
+        elif line.startswith('move '):
+            b = line[5:7].lower()
+            if b != 'pa':
+                do_move(state, color, parse_move(b))
+            color = color^1
 
         elif line.startswith('set game '):
             board = empty_board()
@@ -369,6 +375,6 @@ def speed_test():
 
 
 if __name__ == '__main__':
-    speed_test()
+    vs_cpu_nboard()
 #    vs_cpu_cli()
-#    vs_cpu_nboard()
+#    speed_test()
