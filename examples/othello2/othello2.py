@@ -4,9 +4,10 @@ import time
 '''
 poppy - basic python othello player
 
--bitboard implementation (~30M moves/second on my system)
+-bitboard implementation
 -alpha-beta pruning
--greedy evaluation function (for now)
+-mobility/corner evaluation function
+-nboard GUI support
 
 copyright 2023 mark dufour
 
@@ -15,7 +16,7 @@ based on the following implementations/tutorials:
 -https://www.hanshq.net/othello.html
 -https://www.geeksforgeeks.org/minimax-algorithm-in-game-theory-set-4-alpha-beta-pruning
 
-compiled with shedskin for a 150-times speedup.
+compiled with shedskin for a ~150-times speedup.
 
 '''
 
@@ -154,53 +155,46 @@ def parse_move(s):
     return 'abcdefgh'.index(s[0]) + 8 * (int(s[1])-1)
 
 
-def evaluate_greedy(state, color, is_max_player):
-    value = int.bit_count(state[color]) - int.bit_count(state[color^1])
-    if not is_max_player:
-        value = -value
-    return value
-
-
 def evaluate(state, color, is_max_player, my_moves, opp_moves):
     value = 0
 
-    my_disks = state[color]
-    opp_disks = state[color^1]
+    # no moves left: greedy
+    if my_moves | opp_moves == 0:
+        value = int.bit_count(state[color]) - int.bit_count(state[color^1])
+        value *= WIN_BONUS
 
-    my_corners = my_disks & CORNER_MASK
-    opp_corners = opp_disks & CORNER_MASK
+    # else: value mobility and corners (wzebra)
+    else:
+        my_disks = state[color]
+        opp_disks = state[color^1]
 
-    value += (int.bit_count(my_corners) - int.bit_count(opp_corners)) * 16
-    value += (int.bit_count(my_moves) - int.bit_count(opp_moves)) * 2;
-#    value -= (int.bit_count(my_frontier) - int.bit_count(opp_frontier))
+        my_corners = my_disks & CORNER_MASK
+        opp_corners = opp_disks & CORNER_MASK
 
-    if not is_max_player:
-        value = -value
-    return value
+        value += (int.bit_count(my_corners) - int.bit_count(opp_corners)) * 16
+        value += (int.bit_count(my_moves) - int.bit_count(opp_moves)) * 2
+
+    if is_max_player:
+        return value
+    else:
+        return -value
 
 
 def minimax_ab(state, color, depth, max_depth, is_max_player, alpha=-65, beta=65):
     global NODES
     NODES += 1
 
-#    print('  '*depth, 'minimax node', NODES)
-
     moves = possible_moves(state, color)
     opp_moves = possible_moves(state, color^1)
 
     # max depth reached
     if depth == max_depth:
-        evalz = evaluate(state, color, is_max_player, moves, opp_moves)
-#        print('  '*depth, 'MAXED eval:', evalz)
-        return evalz
+        return evaluate(state, color, is_max_player, moves, opp_moves)
 
     # player has to pass
     if moves == 0:
-#       print('  '*depth, 'PASS')
        if opp_moves == 0:
-           evalz = evaluate(state, color, is_max_player, moves, opp_moves)
-#           print('  '*depth, 'BOTH PASS eval:', evalz)
-           return evalz
+           return evaluate(state, color, is_max_player, moves, opp_moves)
        color = color ^ 1
        is_max_player = not is_max_player
        moves = opp_moves
@@ -216,15 +210,12 @@ def minimax_ab(state, color, depth, max_depth, is_max_player, alpha=-65, beta=65
             if moves & (1 << move):
                 do_move(state, color, move)
 
-#                print('  '*depth, 'MAX move', human_move(move))
                 val = minimax_ab(state, color ^ 1, depth+1, max_depth, False, alpha, beta)
-#               print('  '*depth, '->value', val)
 
                 state[0] = orig_black
                 state[1] = orig_white
 
                 if val > best_val:
-#                    print('  '*depth, '==new maxbest!')
                     best_move = move
                     best_val = val
 
@@ -238,15 +229,12 @@ def minimax_ab(state, color, depth, max_depth, is_max_player, alpha=-65, beta=65
             if moves & (1 << move):
                 do_move(state, color, move)
 
-#                print('  '*depth, 'MIN move', human_move(move))
                 val = minimax_ab(state, color ^ 1, depth+1, max_depth, True, alpha, beta)
-#                print('  '*depth, '->value', val)
 
                 state[0] = orig_black
                 state[1] = orig_white
 
                 if val < best_val:
-#                    print('  '*depth, '==new minbest!')
                     best_move = move
                     best_val = val
 
@@ -328,9 +316,9 @@ def vs_cpu_nboard():
     state = parse_state(board)
     color = BLACK
 
-    max_depth = 12
+    max_depth = 10
 
-    sys.stdout.write('set myname poppy\n')
+    sys.stdout.write('set myname Poppy\n')
 
     while True:
         line = sys.stdin.readline().strip()
@@ -366,6 +354,21 @@ def vs_cpu_nboard():
         sys.stdout.flush()
 
 
+def speed_test():
+    global NODES
+    NODES = 0
+
+    board = empty_board()
+    state = parse_state(board)
+    color = BLACK
+
+    t0 = time.time()
+    move = minimax_ab(state, color, 0, 14, True)
+    t1 = (time.time()-t0)
+    print('%d nodes in %.2fs seconds (%.2f/second)' % (NODES, t1, NODES/t1))
+
+
 if __name__ == '__main__':
+    speed_test()
 #    vs_cpu_cli()
-    vs_cpu_nboard()
+#    vs_cpu_nboard()
