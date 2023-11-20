@@ -79,6 +79,9 @@ Some screenshots of the `example programs <https://github.com/shedskin/shedskin/
 .. image:: https://raw.githubusercontent.com/shedskin/shedskin/master/docs/assets/screenshots/harm1.png
   :width: 400
 
+.. image:: https://raw.githubusercontent.com/shedskin/shedskin/master/docs/assets/screenshots/harm6.png
+  :width: 400
+
 .. image:: https://raw.githubusercontent.com/shedskin/shedskin/master/docs/assets/screenshots/harm5.png
   :width: 400
 
