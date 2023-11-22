@@ -389,6 +389,16 @@ def vs_cpu_ugi():
             else:
                 sys.stdout.write('response false\n')
 
+        elif line == 'query result':
+            blacks = int.bit_count(state[0])
+            whites = int.bit_count(state[1])
+            if blacks > whites:
+                sys.stdout.write('response p1win\n')
+            elif whites > blacks:
+                sys.stdout.write('response p2win\n')
+            else:
+                sys.stdout.write('response draw\n')
+
         elif line == 'query gameover':
             moves = possible_moves(state, color)
             opp_moves = possible_moves(state, color^1)
