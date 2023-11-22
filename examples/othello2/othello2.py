@@ -316,7 +316,7 @@ def vs_cpu_nboard():
     state = parse_state(board)
     color = BLACK
 
-    max_depth = 12
+    max_depth = 10
 
     sys.stdout.write('set myname Poppy\n')
 
@@ -361,6 +361,61 @@ def vs_cpu_nboard():
         sys.stdout.flush()
 
 
+def vs_cpu_ugi():
+    max_depth = 10
+
+    for line in sys.stdin:
+        line = line.strip()
+
+        if line == 'ugi':
+            sys.stdout.write('ugiok\n')
+
+        elif line == 'isready':
+            sys.stdout.write('readyok\n')
+
+        elif line == 'uginewgame':
+            board = empty_board()
+            state = parse_state(board)
+            color = BLACK
+
+        elif line == 'query p1turn':
+            if color == BLACK:
+                sys.stdout.write('response true\n')
+            else:
+                sys.stdout.write('response false\n')
+
+        elif line == 'query p2turn':
+            if color == BLACK:
+                sys.stdout.write('response false\n')
+            else:
+                sys.stdout.write('response true\n')
+
+        elif line == 'query gameover':
+            moves = possible_moves(state, color)
+            opp_moves = possible_moves(state, color^1)
+            if moves | opp_moves == 0:
+                sys.stdout.write('response true\n')
+            else:
+                sys.stdout.write('response false\n')
+
+        elif line.startswith('go '):
+            move = minimax_ab(state, color, 0, max_depth, True)
+            sys.stdout.write('bestmove %s\n' % human_move(move))
+
+        elif line.startswith('position fen '):
+            segs = line.split()
+
+            board = empty_board()
+            state = parse_state(board)
+            color = BLACK
+
+            for hmove in segs[5:]:
+                do_move(state, color, parse_move(hmove))
+                color = color^1
+
+        sys.stdout.flush()
+
+
 def speed_test():
     global NODES
     NODES = 0
@@ -376,6 +431,9 @@ def speed_test():
 
 
 if __name__ == '__main__':
-    vs_cpu_nboard()
-#    vs_cpu_cli()
-#    speed_test()
+    if len(sys.argv) == 2 and sys.argv[1] == '--nboard':
+        vs_cpu_nboard()
+    elif len(sys.argv) == 2 and sys.argv[1] == '--ugi':
+        vs_cpu_ugi()
+    else:
+        speed_test()
