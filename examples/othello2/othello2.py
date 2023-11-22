@@ -320,8 +320,9 @@ def vs_cpu_nboard():
 
     sys.stdout.write('set myname Poppy\n')
 
-    while True:
-        line = sys.stdin.readline().strip()
+    for line in sys.stdin:
+        line = line.strip()
+
         if line == 'go':
             moves = possible_moves(state, color)
             if moves == 0:
