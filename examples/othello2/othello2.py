@@ -405,7 +405,9 @@ def vs_cpu_ugi():
 
             for hmove in segs[5:]:
                 do_move(state, color, parse_move(hmove))
-                color = color^1
+
+                if possible_moves(state, color^1) != 0:
+                    color = color^1
 
         sys.stdout.flush()
 
