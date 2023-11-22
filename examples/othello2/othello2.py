@@ -36,6 +36,8 @@ MASKS = [
 CORNER_MASK = 0x8100000000000081
 
 WIN_BONUS = 1 << 20
+ALPHA_MIN = -65 * WIN_BONUS
+BETA_MAX = 65 * WIN_BONUS
 
 SHIFTS = [1, 9, 8, 7, 1, 9, 8, 7] # 4 right- and 4 left-shifts
 
@@ -180,7 +182,7 @@ def evaluate(state, color, is_max_player, my_moves, opp_moves):
         return -value
 
 
-def minimax_ab(state, color, depth, max_depth, is_max_player, alpha=-65, beta=65):
+def minimax_ab(state, color, depth, max_depth, is_max_player, alpha=ALPHA_MIN, beta=BETA_MAX):
     global NODES
     NODES += 1
 
@@ -204,7 +206,7 @@ def minimax_ab(state, color, depth, max_depth, is_max_player, alpha=-65, beta=65
     orig_white = state[1]
 
     if is_max_player: # TODO similar code for min player..
-        best_val = -65
+        best_val = ALPHA_MIN
 
         for move in range(64):
             if moves & (1 << move):
@@ -223,7 +225,7 @@ def minimax_ab(state, color, depth, max_depth, is_max_player, alpha=-65, beta=65
                 if beta <= alpha:
                     break
     else:
-        best_val = 65
+        best_val = BETA_MAX
 
         for move in range(64):
             if moves & (1 << move):
@@ -270,7 +272,7 @@ def vs_cpu_cli():
 
     print_board(state)
 
-    max_depth = 12
+    max_depth = 10
 
     while True:
         NODES = 0
@@ -362,6 +364,9 @@ def vs_cpu_nboard():
 
 
 def vs_cpu_ugi():
+    global NODES
+    NODES = 0
+
     max_depth = 10
 
     for line in sys.stdin:
