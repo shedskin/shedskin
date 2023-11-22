@@ -384,12 +384,6 @@ def vs_cpu_ugi():
             else:
                 sys.stdout.write('response false\n')
 
-        elif line == 'query p2turn':
-            if color == BLACK:
-                sys.stdout.write('response false\n')
-            else:
-                sys.stdout.write('response true\n')
-
         elif line == 'query gameover':
             moves = possible_moves(state, color)
             opp_moves = possible_moves(state, color^1)
