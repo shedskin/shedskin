@@ -416,7 +416,7 @@ def vs_cpu_ugi():
 
             board = empty_board()
             state = parse_state(board)
-            color = BLACK
+            color = BLACK if segs[4] == 'x' else WHITE
 
             for hmove in segs[5:]:
                 do_move(state, color, parse_move(hmove))
