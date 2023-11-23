@@ -263,7 +263,7 @@ def empty_board():
     )
 
 
-def vs_cpu_cli():
+def vs_cpu_cli(max_depth):
     global NODES
 
     board = empty_board()
@@ -271,8 +271,6 @@ def vs_cpu_cli():
     color = BLACK
 
     print_board(state)
-
-    max_depth = 10
 
     while True:
         NODES = 0
@@ -313,12 +311,10 @@ def vs_cpu_cli():
         color = color^1
 
 
-def vs_cpu_nboard():
+def vs_cpu_nboard(max_depth):
     board = empty_board()
     state = parse_state(board)
     color = BLACK
-
-    max_depth = 10
 
     sys.stdout.write('set myname Poppy\n')
 
@@ -363,11 +359,9 @@ def vs_cpu_nboard():
         sys.stdout.flush()
 
 
-def vs_cpu_ugi():
+def vs_cpu_ugi(max_depth):
     global NODES
     NODES = 0
-
-    max_depth = 10
 
     for line in sys.stdin:
         line = line.strip()
@@ -466,9 +460,24 @@ def speed_test():
 
 
 if __name__ == '__main__':
-    if len(sys.argv) == 2 and sys.argv[1] == '--nboard':
-        vs_cpu_nboard()
-    elif len(sys.argv) == 2 and sys.argv[1] == '--ugi':
-        vs_cpu_ugi()
+    max_depth = 10
+    mode = None
+
+    for i, arg in enumerate(sys.argv[1:]):
+        if arg == '--depth':
+            max_depth = int(sys.argv[i+2])
+        elif arg == '--nboard':
+            mode = 'nboard'
+        elif arg == '--ugi':
+            mode = 'ugi'
+        elif arg == '--cli':
+            mode = 'cli'
+
+    if mode == 'nboard':
+        vs_cpu_nboard(max_depth)
+    elif mode == 'ugi':
+        vs_cpu_ugi(max_depth)
+    elif mode == 'cli':
+        vs_cpu_cli(max_depth)
     else:
         speed_test()
