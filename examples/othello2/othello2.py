@@ -411,18 +411,54 @@ def vs_cpu_ugi():
             move = minimax_ab(state, color, 0, max_depth, True)
             sys.stdout.write('bestmove %s\n' % human_move(move))
 
-        elif line.startswith('position fen '):
+        elif line.startswith('position'):
             segs = line.split()
 
-            board = empty_board()
-            state = parse_state(board)
-            color = BLACK if segs[4] == 'x' else WHITE
+            s = 1
 
-            for hmove in segs[5:]:
-                do_move(state, color, parse_move(hmove))
+            while s < len(segs):
+                if segs[s] == 'fen':
+                    s += 1
 
-                if possible_moves(state, color^1) != 0:
-                    color = color^1
+                    board = '.' * 64
+                    y = x = 0
+                    for c in segs[s]:
+                        o = y * 8 + x
+                        if c == 'x' or c == 'X':
+                            board = board[0:o] + 'X' + board[o+1:]
+                            x += 1
+                        elif c == 'o' or c == 'O':
+                            board = board[0:o] + 'O' + board[o+1:]
+                            x += 1
+                        elif c == '/':
+                            pass
+                        else:
+                            x += int(c)
+
+                        if x == 8:
+                            y += 1
+                            x = 0
+
+                    assert len(board) == 64
+                    state = parse_state(board)
+
+                    s += 1
+                    color = BLACK if segs[s] == 'x' or segs[s] == 'X' else WHITE
+
+                elif segs[s] == 'startpos':
+                    board = empty_board()
+                    state = parse_state(board)
+                    color = BLACK
+
+                elif segs[s] == 'moves':
+                    for hmove in segs[s + 1:]:
+                        do_move(state, color, parse_move(hmove))
+
+                        if possible_moves(state, color^1) != 0:
+                            color = color^1
+                    break
+
+                s += 1
 
         sys.stdout.flush()
 
@@ -436,7 +472,7 @@ def speed_test():
     color = BLACK
 
     t0 = time.time()
-    move = minimax_ab(state, color, 0, 14, True)
+    move = minimax_ab(state, color, 0, 10, True)
     t1 = (time.time()-t0)
     print('%d nodes in %.2fs seconds (%.2f/second)' % (NODES, t1, NODES/t1))
 
