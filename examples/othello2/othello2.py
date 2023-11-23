@@ -420,30 +420,18 @@ def vs_cpu_ugi():
                 if segs[s] == 'fen':
                     s += 1
 
-                    board = '.' * 64
-                    y = x = 0
+                    board = ''
                     for c in segs[s]:
-                        o = y * 8 + x
-                        if c == 'x' or c == 'X':
-                            board = board[0:o] + 'X' + board[o+1:]
-                            x += 1
-                        elif c == 'o' or c == 'O':
-                            board = board[0:o] + 'O' + board[o+1:]
-                            x += 1
-                        elif c == '/':
-                            pass
-                        else:
-                            x += int(c)
-
-                        if x == 8:
-                            y += 1
-                            x = 0
+                        if c.isdigit():
+                           board += int(c) * '.'
+                        elif c.lower() in 'ox':
+                           board += c.upper()
 
                     assert len(board) == 64
                     state = parse_state(board)
 
                     s += 1
-                    color = BLACK if segs[s] == 'x' or segs[s] == 'X' else WHITE
+                    color = BLACK if segs[s].lower() == 'x' else WHITE
 
                 elif segs[s] == 'startpos':
                     board = empty_board()
