@@ -428,7 +428,31 @@ def vs_cpu_ugi():
                 sys.stdout.write('response false\n')
 
         elif line.startswith('go '):
-            end_time = time.time() + 1.
+            use_time = 1.
+
+            moves = possible_moves(state, color)
+            n_moves_possible = 0
+            for i in range(0, 64):
+                n_moves_possible += 1 if (moves & (1 << i)) else 0
+
+            segs = line.split()
+            s = 1
+            while s < len(segs):
+                if segs[s] == 'wtime':
+                    if color == WHITE:
+                        s += 1
+                        use_time = float(segs[s]) / 1000 / n_moves_possible
+                elif segs[s] == 'btime':
+                    if color == BLACK:
+                        s += 1
+                        use_time = float(segs[s]) / 1000 / n_moves_possible
+                elif segs[s] == 'movetime':
+                    s += 1
+                    use_time = float(segs[s]) / 1000
+
+                s += 1
+
+            end_time = time.time() + use_time
             max_depth = 1
             move = None
             while True:
@@ -438,7 +462,10 @@ def vs_cpu_ugi():
                 move = cur_move
                 max_depth += 1
 
-            sys.stdout.write('bestmove %s\n' % human_move(move))
+            if move == None:
+                sys.stdout.write('bestmove 0000\n')
+            else:
+                sys.stdout.write('bestmove %s\n' % human_move(move))
 
         elif line.startswith('position '):
             segs = line.split()
