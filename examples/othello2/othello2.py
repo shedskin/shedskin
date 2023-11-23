@@ -16,7 +16,7 @@ based on the following implementations/tutorials:
 -https://www.hanshq.net/othello.html
 -https://www.geeksforgeeks.org/minimax-algorithm-in-game-theory-set-4-alpha-beta-pruning
 
-compiled with shedskin for a ~150-times speedup.
+compiled with shedskin for a ~200-times speedup.
 
 '''
 
@@ -472,7 +472,7 @@ def speed_test():
     color = BLACK
 
     t0 = time.time()
-    move = minimax_ab(state, color, 0, 10, True)
+    move = minimax_ab(state, color, 0, 12, True)
     t1 = (time.time()-t0)
     print('%d nodes in %.2fs seconds (%.2f/second)' % (NODES, t1, NODES/t1))
 
