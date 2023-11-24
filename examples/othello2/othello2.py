@@ -437,10 +437,11 @@ def vs_cpu_ugi(max_depth):
 
                 elif segs[s] == 'moves':
                     for hmove in segs[s + 1:]:
-                        do_move(state, color, parse_move(hmove.lower()))
+                        if hmove != 'moves':
+                            do_move(state, color, parse_move(hmove.lower()))
 
-                        if possible_moves(state, color^1) != 0:
-                            color = color^1
+                            if possible_moves(state, color^1) != 0:
+                                color = color^1
                     break
 
                 s += 1
