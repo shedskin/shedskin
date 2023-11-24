@@ -356,6 +356,9 @@ def vs_cpu_nboard(max_depth):
                             do_move(state, WHITE, parse_move(b))
                         color = BLACK
 
+        elif line.startswith('set depth '):
+            max_depth = int(line.split()[2])
+
         sys.stdout.flush()
 
 
@@ -434,7 +437,7 @@ def vs_cpu_ugi(max_depth):
 
                 elif segs[s] == 'moves':
                     for hmove in segs[s + 1:]:
-                        do_move(state, color, parse_move(hmove))
+                        do_move(state, color, parse_move(hmove.lower()))
 
                         if possible_moves(state, color^1) != 0:
                             color = color^1
