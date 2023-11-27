@@ -461,7 +461,7 @@ def speed_test(max_depth):
     t0 = time.time()
     move = minimax_ab(state, color, 0, max_depth, True)
     t1 = (time.time()-t0)
-    print('%d nodes in %.2fs seconds (%.2f/second)' % (NODES, t1, NODES/t1))
+    print('%d nodes in %.2f seconds (%.2f/second)' % (NODES, t1, NODES/t1))
 
 
 if __name__ == '__main__':
