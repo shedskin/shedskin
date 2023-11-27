@@ -208,42 +208,34 @@ def minimax_ab(state, color, depth, max_depth, is_max_player, alpha=ALPHA_MIN, b
 
     if is_max_player: # TODO similar code for min player..
         best_val = ALPHA_MIN
+    else:
+        best_val = BETA_MAX
 
-        for move in range(64):
-            if moves & (1 << move):
-                do_move(state, color, move)
+    for move in range(64):
+        if moves & (1 << move):
+            do_move(state, color, move)
 
-                val = minimax_ab(state, color ^ 1, depth+1, max_depth, False, alpha, beta)
+            val = minimax_ab(state, color ^ 1, depth+1, max_depth, not is_max_player, alpha, beta)
 
-                state[0] = orig_black
-                state[1] = orig_white
+            state[0] = orig_black
+            state[1] = orig_white
 
+            if is_max_player:
                 if val > best_val:
                     best_move = move
                     best_val = val
 
                 alpha = max(alpha, best_val)
-                if beta <= alpha:
-                    break
-    else:
-        best_val = BETA_MAX
 
-        for move in range(64):
-            if moves & (1 << move):
-                do_move(state, color, move)
-
-                val = minimax_ab(state, color ^ 1, depth+1, max_depth, True, alpha, beta)
-
-                state[0] = orig_black
-                state[1] = orig_white
-
+            else:
                 if val < best_val:
                     best_move = move
                     best_val = val
 
                 beta = min(beta, best_val)
-                if beta <= alpha:
-                    break
+
+            if beta <= alpha:
+                break
 
     if depth > 0:
         return best_val
