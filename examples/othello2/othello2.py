@@ -8,6 +8,7 @@ poppy - basic python othello player
 -alpha-beta pruning
 -mobility/corner evaluation function
 -nboard GUI support
+-UGI support (cutegames engine tournament software)
 
 copyright 2023 mark dufour
 
@@ -449,7 +450,7 @@ def vs_cpu_ugi(max_depth):
         sys.stdout.flush()
 
 
-def speed_test():
+def speed_test(max_depth):
     global NODES
     NODES = 0
 
@@ -458,7 +459,7 @@ def speed_test():
     color = BLACK
 
     t0 = time.time()
-    move = minimax_ab(state, color, 0, 12, True)
+    move = minimax_ab(state, color, 0, max_depth, True)
     t1 = (time.time()-t0)
     print('%d nodes in %.2fs seconds (%.2f/second)' % (NODES, t1, NODES/t1))
 
@@ -484,4 +485,4 @@ if __name__ == '__main__':
     elif mode == 'cli':
         vs_cpu_cli(max_depth)
     else:
-        speed_test()
+        speed_test(max_depth)
