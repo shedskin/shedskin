@@ -206,7 +206,7 @@ def minimax_ab(state, color, depth, max_depth, is_max_player, alpha=ALPHA_MIN, b
     orig_black = state[0]
     orig_white = state[1]
 
-    if is_max_player: # TODO similar code for min player..
+    if is_max_player:
         best_val = ALPHA_MIN
     else:
         best_val = BETA_MAX
