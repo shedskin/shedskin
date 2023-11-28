@@ -8,6 +8,7 @@ poppy - basic python othello player
 -alpha-beta pruning
 -mobility/corner evaluation function
 -nboard GUI support
+-UGI support (cutegames engine tournament software)
 
 copyright 2023 mark dufour
 
@@ -16,7 +17,7 @@ based on the following implementations/tutorials:
 -https://www.hanshq.net/othello.html
 -https://www.geeksforgeeks.org/minimax-algorithm-in-game-theory-set-4-alpha-beta-pruning
 
-compiled with shedskin for a ~150-times speedup.
+compiled with shedskin for a ~200-times speedup.
 
 '''
 
@@ -208,50 +209,36 @@ def minimax_ab(state, color, depth, max_depth, is_max_player, end_time, alpha=AL
     orig_black = state[0]
     orig_white = state[1]
 
-    if is_max_player: # TODO similar code for min player..
+    if is_max_player:
         best_val = ALPHA_MIN
+    else:
+        best_val = BETA_MAX
 
-        for move in range(64):
-            if moves & (1 << move):
-                do_move(state, color, move)
+    for move in range(64):
+        if moves & (1 << move):
+            do_move(state, color, move)
 
-                val = minimax_ab(state, color ^ 1, depth+1, max_depth, False, end_time, alpha, beta)
+            val = minimax_ab(state, color ^ 1, depth+1, max_depth, not is_max_player, alpha, beta)
 
-                if val == None:
-                    return None
+            state[0] = orig_black
+            state[1] = orig_white
 
-                state[0] = orig_black
-                state[1] = orig_white
-
+            if is_max_player:
                 if val > best_val:
                     best_move = move
                     best_val = val
 
                 alpha = max(alpha, best_val)
-                if beta <= alpha:
-                    break
-    else:
-        best_val = BETA_MAX
 
-        for move in range(64):
-            if moves & (1 << move):
-                do_move(state, color, move)
-
-                val = minimax_ab(state, color ^ 1, depth+1, max_depth, True, end_time, alpha, beta)
-
-                if val == None:
-                    return None
-
-                state[0] = orig_black
-                state[1] = orig_white
-
+            else:
                 if val < best_val:
                     best_move = move
                     best_val = val
 
                 beta = min(beta, best_val)
-                if beta <= alpha:
-                    break
+
+            if beta <= alpha:
+                break
 
     if depth > 0:
         return best_val
@@ -272,7 +259,7 @@ def empty_board():
     )
 
 
-def vs_cpu_cli():
+def vs_cpu_cli(max_depth):
     global NODES
 
     board = empty_board()
@@ -280,8 +267,6 @@ def vs_cpu_cli():
     color = BLACK
 
     print_board(state)
-
-    max_depth = 10
 
     while True:
         NODES = 0
@@ -324,12 +309,10 @@ def vs_cpu_cli():
         color = color^1
 
 
-def vs_cpu_nboard():
+def vs_cpu_nboard(max_depth):
     board = empty_board()
     state = parse_state(board)
     color = BLACK
-
-    max_depth = 10
 
     sys.stdout.write('set myname Poppy\n')
 
@@ -373,16 +356,15 @@ def vs_cpu_nboard():
                             do_move(state, WHITE, parse_move(b))
                         color = BLACK
 
+        elif line.startswith('set depth '):
+            max_depth = int(line.split()[2])
+
         sys.stdout.flush()
 
 
-def vs_cpu_ugi():
+def vs_cpu_ugi(max_depth):
     global NODES
     NODES = 0
-
-    board = empty_board()
-    state = parse_state(board)
-    color = BLACK
 
     for line in sys.stdin:
         line = line.strip()
@@ -475,30 +457,18 @@ def vs_cpu_ugi():
                 if segs[s] == 'fen':
                     s += 1
 
-                    board = '.' * 64
-                    y = x = 0
+                    board = ''
                     for c in segs[s]:
-                        o = y * 8 + x
-                        if c == 'x' or c == 'X':
-                            board = board[0:o] + 'X' + board[o+1:]
-                            x += 1
-                        elif c == 'o' or c == 'O':
-                            board = board[0:o] + 'O' + board[o+1:]
-                            x += 1
-                        elif c == '/':
-                            pass
-                        else:
-                            x += int(c)
-
-                        if x == 8:
-                            y += 1
-                            x = 0
+                        if c.isdigit():
+                           board += int(c) * '.'
+                        elif c.lower() in 'ox':
+                           board += c.upper()
 
                     assert len(board) == 64
                     state = parse_state(board)
 
                     s += 1
-                    color = BLACK if segs[s] == 'x' or segs[s] == 'X' else WHITE
+                    color = BLACK if segs[s].lower() == 'x' else WHITE
 
                 elif segs[s] == 'startpos':
                     board = empty_board()
@@ -507,10 +477,11 @@ def vs_cpu_ugi():
 
                 elif segs[s] == 'moves':
                     for hmove in segs[s + 1:]:
-                        do_move(state, color, parse_move(hmove))
+                        if hmove != 'moves':
+                            do_move(state, color, parse_move(hmove.lower()))
 
-                        if possible_moves(state, color^1) != 0:
-                            color = color^1
+                            if possible_moves(state, color^1) != 0:
+                                color = color^1
                     break
 
                 s += 1
@@ -518,7 +489,7 @@ def vs_cpu_ugi():
         sys.stdout.flush()
 
 
-def speed_test():
+def speed_test(max_depth):
     global NODES
     NODES = 0
 
@@ -527,15 +498,30 @@ def speed_test():
     color = BLACK
 
     t0 = time.time()
-    move = minimax_ab(state, color, 0, 14, True, time.time() + 5.)
+    move = minimax_ab(state, color, 0, max_depth, True)
     t1 = (time.time()-t0)
-    print('%d nodes in %.2fs seconds (%.2f/second)' % (NODES, t1, NODES/t1))
+    print('%d nodes in %.2f seconds (%.2f/second)' % (NODES, t1, NODES/t1))
 
 
 if __name__ == '__main__':
-    if len(sys.argv) == 2 and sys.argv[1] == '--nboard':
-        vs_cpu_nboard()
-    elif len(sys.argv) == 2 and sys.argv[1] == '--ugi':
-        vs_cpu_ugi()
+    max_depth = 10
+    mode = None
+
+    for i, arg in enumerate(sys.argv[1:]):
+        if arg == '--depth':
+            max_depth = int(sys.argv[i+2])
+        elif arg == '--nboard':
+            mode = 'nboard'
+        elif arg == '--ugi':
+            mode = 'ugi'
+        elif arg == '--cli':
+            mode = 'cli'
+
+    if mode == 'nboard':
+        vs_cpu_nboard(max_depth)
+    elif mode == 'ugi':
+        vs_cpu_ugi(max_depth)
+    elif mode == 'cli':
+        vs_cpu_cli(max_depth)
     else:
-        speed_test()
+        speed_test(max_depth)
