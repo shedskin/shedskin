@@ -10,10 +10,9 @@ template<class T> list<T>::list(int count, ...) {
     this->__class__ = cl_list;
     va_list ap;
     va_start(ap, count);
-    for(int i=0; i<count; i++) {
-        T t = va_arg(ap, T);
-        this->units.push_back(t);
-    }
+    this->units.resize(count);
+    for(int i=0; i<count; i++)
+	this->units.at(i) = va_arg(ap, T);
     va_end(ap);
 }
 
@@ -43,7 +42,7 @@ template<class T> list<T>::list(str *s) {
     this->units.resize(len(s));
     size_t sz = s->size();
     for(size_t i=0; i<sz; i++)
-        this->units[i] = __char_cache[((unsigned char)(s->unit[i]))];
+        this->units[i] = __char_cache[(unsigned char)s->unit[i]];
 }
 
 #ifdef __SS_BIND
@@ -125,9 +124,10 @@ template<class T> void *list<T>::extend(tuple2<T,T> *p) {
 }
 
 template<class T> void *list<T>::extend(str *s) {
-    size_t sz = s->size();
+    const size_t sz = s->size();
+    const size_t org_size = this->units.size();
     for(size_t i=0; i<sz; i++)
-        this->units.push_back(__char_cache[((unsigned char)(s->unit[i]))]);
+	this->units.at(i + org_size) = __char_cache[((unsigned char)(s->unit[i]))];
     return NULL;
 }
 
@@ -144,7 +144,7 @@ template<class T> void *list<T>::__setitem__(__ss_int i, T e) {
 
 template<class T> void *list<T>::__delitem__(__ss_int i) {
     i = __wrap(this, i);
-    units.erase(units.begin()+i,units.begin()+i+1);
+    units.erase(units.begin()+i);
     return NULL;
 }
 
@@ -221,7 +221,7 @@ template<class T> void *list<T>::__setslice__(__ss_int x, __ss_int l, __ss_int u
 
 template<class T> void *list<T>::__delete__(__ss_int i) {
     i = __wrap(this, i);
-    units.erase(units.begin()+i,units.begin()+i+1);
+    units.erase(units.begin()+i);
     return NULL;
 }
 
