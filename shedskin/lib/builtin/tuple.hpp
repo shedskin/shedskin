@@ -15,9 +15,10 @@ template<class T> tuple2<T, T>::tuple2(int count, ...) {
     this->__class__ = cl_tuple;
     va_list ap;
     va_start(ap, count);
+    this->units.resize(count);
     for(int i=0; i<count; i++) {
         T t = va_arg(ap, T);
-        this->units.push_back(t);
+        this->units.at(i) = t;
     }
     va_end(ap);
 }
@@ -86,10 +87,12 @@ template<class T> str *tuple2<T, T>::__repr__() {
 
 template<class T> tuple2<T,T> *tuple2<T, T>::__add__(tuple2<T,T> *b) {
     tuple2<T,T> *c = new tuple2<T,T>();
-    for(int i = 0; i<this->__len__();i++)
-        c->units.push_back(this->units[i]);
+    int dst_len = this->__len__();
+    c->units.resize(dst_len + b->__len__());
+    for(int i = 0; i<dst_len;i++)
+        c->units.at(i) = this->units[i];
     for(int i = 0; i<b->__len__();i++)
-        c->units.push_back(b->units[i]);
+        c->units.at(i + dst_len) = b->units[i];
     return c;
 }
 template<class T> tuple2<T,T> *tuple2<T, T>::__iadd__(tuple2<T,T> *b) {
@@ -102,10 +105,12 @@ template<class T> tuple2<T,T> *tuple2<T, T>::__mul__(__ss_int b) {
     __ss_int hop = this->__len__(); /* XXX merge with list */
     if(hop==1)
         c->units.insert(c->units.begin(), b, this->units[0]);
-    else
+    else {
+	c->units.resize(b * hop);
         for(__ss_int i=0; i<b; i++)
             for(__ss_int j=0; j<hop; j++)
                 c->units.push_back(this->units[j]);
+    }
     return c;
 }
 template<class T> tuple2<T,T> *tuple2<T, T>::__imul__(__ss_int b) {
@@ -184,8 +189,9 @@ template<class T> tuple2<T, T>::tuple2(PyObject *p) {
 
     this->__class__ = cl_tuple;
     int size = PyTuple_Size(p);
+    this->units.resize(size);
     for(int i=0; i<size; i++)
-        this->units.push_back(__to_ss<T>(PyTuple_GetItem(p, i)));
+        this->units.at(i) = __to_ss<T>(PyTuple_GetItem(p, i));
 }
 
 template<class T> PyObject *tuple2<T, T>::__to_py__() {
