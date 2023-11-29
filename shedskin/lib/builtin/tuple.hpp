@@ -16,10 +16,8 @@ template<class T> tuple2<T, T>::tuple2(int count, ...) {
     va_list ap;
     va_start(ap, count);
     this->units.resize(count);
-    for(int i=0; i<count; i++) {
-        T t = va_arg(ap, T);
-        this->units.at(i) = t;
-    }
+    for(int i=0; i<count; i++)
+        this->units.at(i) = va_arg(ap, T);
     va_end(ap);
 }
 
@@ -106,7 +104,7 @@ template<class T> tuple2<T,T> *tuple2<T, T>::__mul__(__ss_int b) {
     if(hop==1)
         c->units.insert(c->units.begin(), b, this->units[0]);
     else {
-	c->units.resize(b * hop);
+        c->units.resize(b * hop);
         for(__ss_int i=0; i<b; i++)
             for(__ss_int j=0; j<hop; j++)
                 c->units.push_back(this->units[j]);

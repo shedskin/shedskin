@@ -12,7 +12,7 @@ template<class T> list<T>::list(int count, ...) {
     va_start(ap, count);
     this->units.resize(count);
     for(int i=0; i<count; i++)
-	this->units.at(i) = va_arg(ap, T);
+        this->units.at(i) = va_arg(ap, T);
     va_end(ap);
 }
 
@@ -127,8 +127,9 @@ template<class T> void *list<T>::extend(tuple2<T,T> *p) {
 template<class T> void *list<T>::extend(str *s) {
     const size_t sz = s->size();
     const size_t org_size = this->units.size();
+    this->units.resize(sz+org_size);
     for(size_t i=0; i<sz; i++)
-	this->units.at(i + org_size) = __char_cache[((unsigned char)(s->unit[i]))];
+        this->units.at(i + org_size) = __char_cache[((unsigned char)(s->unit[i]))];
     return NULL;
 }
 
