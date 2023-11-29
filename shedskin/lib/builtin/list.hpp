@@ -52,8 +52,9 @@ template<class T> list<T>::list(PyObject *p) {
 
     this->__class__ = cl_list;
     size_t size = PyList_Size(p);
+    this->units.resize(size);
     for(size_t i=0; i<size; i++)
-        append(__to_ss<T>(PyList_GetItem(p, i)));
+        this->units.at(i) = __to_ss<T>(PyList_GetItem(p, i));
 }
 
 template<class T> PyObject *list<T>::__to_py__() {
