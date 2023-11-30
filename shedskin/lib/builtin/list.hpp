@@ -6,9 +6,14 @@ template<class T> list<T>::list() {
     this->__class__ = cl_list;
 }
 
-template<class T> template<class ... Args> list<T>::list(int count, Args ... args) {
+template<class T> list<T>::list(int count, ...) {
     this->__class__ = cl_list;
-    this->units = {args...};
+    va_list ap;
+    va_start(ap, count);
+    this->units.resize(count);
+    for(int i=0; i<count; i++)
+        this->units.at(i) = va_arg(ap, T);
+    va_end(ap);
 }
 
 template<class T> template<class U> list<T>::list(U *iter) {
