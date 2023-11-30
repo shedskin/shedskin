@@ -61,13 +61,23 @@ def return_tuple(x):
 def test_return_tuple():
     assert return_tuple(5) == (5, 6)
 
-def test_concat():
+def test_add():
     a = (1, 2)
     b = (1, 2, 3)
     c = a
     c = b
     d = a + b
     assert d == (1, 2, 1, 2, 3)
+
+
+def test_mul():
+    a = (0,)
+    b = a * 4
+    assert b == (0, 0, 0, 0)
+
+    c = (1, 2)
+    d = 2 * c
+    assert d == (1, 2, 1, 2)
 
 
 def test_all():
@@ -77,7 +87,8 @@ def test_all():
     test_return_tuple()
     test_variable()
     test_iteration()
-    test_concat()
+    test_add()
+    test_mul()
 
 
 

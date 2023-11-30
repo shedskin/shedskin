@@ -107,7 +107,7 @@ template<class T> tuple2<T,T> *tuple2<T, T>::__mul__(__ss_int b) {
         c->units.resize(b * hop);
         for(__ss_int i=0; i<b; i++)
             for(__ss_int j=0; j<hop; j++)
-                c->units.push_back(this->units[j]);
+                c->units.at(i*hop+j) = this->units[j];
     }
     return c;
 }
