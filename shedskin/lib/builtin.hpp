@@ -200,7 +200,7 @@ public:
     __GC_VECTOR(T) units;
 
     list();
-    list(int count, ...);
+    template <class ... Args> list(int count, Args ... args);
     template <class U> list(U *iter);
     list(list<T> *p);
     list(tuple2<T, T> *p);
@@ -303,7 +303,7 @@ public:
     __GC_VECTOR(T) units;
 
     tuple2();
-    tuple2(int count, ...);
+    template <class ... Args> tuple2(int count, Args ... args);
     template <class U> tuple2(U *iter);
     tuple2(list<T> *p);
     tuple2(tuple2<T, T> *p);

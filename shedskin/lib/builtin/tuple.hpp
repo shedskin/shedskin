@@ -11,14 +11,9 @@ template<class T> tuple2<T, T>::tuple2() {
     this->__class__ = cl_tuple;
 }
 
-template<class T> tuple2<T, T>::tuple2(int count, ...) {
+template<class T> template<class ... Args> tuple2<T, T>::tuple2(int count, Args ... args) {
     this->__class__ = cl_tuple;
-    va_list ap;
-    va_start(ap, count);
-    this->units.resize(count);
-    for(int i=0; i<count; i++)
-        this->units.at(i) = va_arg(ap, T);
-    va_end(ap);
+    this->units = {args...};
 }
 
 template<class T> template<class U> tuple2<T, T>::tuple2(U *iter) {
