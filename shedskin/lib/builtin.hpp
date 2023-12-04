@@ -1412,17 +1412,25 @@ private:
 
 #define END_WITH }
 
+#ifdef __GNUC__
+#define unlikely(x)       __builtin_expect((x), 0)
+#else
+#define unlikely(x)    (x)
+#endif
+
 template<class T> static inline int __wrap(T a, __ss_int i) {
     __ss_int l = len(a);
 #ifndef __SS_NOWRAP
-    if(i<0) i += l;
+    if(unlikely(i<0)) i += l;
 #endif
 #ifndef __SS_NOBOUNDS
-        if(i<0 || i>= l)
+        if(unlikely(i<0 || i>= l))
             __throw_index_out_of_range();
 #endif
     return i;
 }
+
+#undef unlikely
 
 
 /* copy */
