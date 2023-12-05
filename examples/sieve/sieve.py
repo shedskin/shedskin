@@ -1,7 +1,6 @@
-
-
 from math import sqrt, ceil
 from sys import argv
+import time
 
 def sieveOfAtkin(end):
     """sieveOfAtkin(end): return a list of all the prime numbers <end
@@ -99,12 +98,16 @@ if __name__ == "__main__":
 
     #if argv[2] == "1":
     print("Sieve of Atkin")
+    t0 = time.time()
     r = sieveOfAtkin(n)
-    print(len(r))
+    print('nprimes:', len(r))
+    print('time: %.2f' % (time.time()-t0))
     #else:
     print("Sieve of Eratostenes")
+    t0 = time.time()
     r = sieveOfEratostenes(n)
-    print(len(r))
+    print('nprimes:', len(r))
+    print('time: %.2f' % (time.time()-t0))
 
     #if argv[3] == "1":
     #    print r
