@@ -630,7 +630,7 @@ public:
     dictentry<K,V> smalltable[MINSIZE];
 
     dict();
-    dict(int count, ...);
+    template<class ... Args> dict(int count, Args ... args);
     template<class U> dict(U *other);
     dict(dict<K, V> *p);
 
