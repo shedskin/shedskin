@@ -12,7 +12,6 @@
 import math
 import random
 from stats import average
-import wave_func
 #import scipy.optimize
 
 def construct_trial_move(box,p,delta):

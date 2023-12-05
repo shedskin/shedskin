@@ -9,7 +9,6 @@
 # file LICENSE that is part of this distribution.
 
 import box_bc
-import math
 from . import atomic_sto_primitive
 from .orbital_base import orbital_base
 

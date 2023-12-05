@@ -1,7 +1,7 @@
 import pathlib
 import sys
 
-from setuptools import setup, Command
+from setuptools import setup
 
 root = pathlib.Path(__file__).parent.resolve()
 

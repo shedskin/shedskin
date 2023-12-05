@@ -2,7 +2,6 @@
 
 # modified version that only works with 1x1 matrices
 
-import orbital
 import math
 #import scipy.linalg
 #import Numeric

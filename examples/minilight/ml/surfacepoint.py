@@ -6,7 +6,7 @@
 
 from math import cos, pi, sin, sqrt
 from random import random
-from .vector3f import Vector3f, ONE, ZERO
+from .vector3f import ONE, ZERO
 
 class SurfacePoint(object):
 

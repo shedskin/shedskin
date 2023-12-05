@@ -1,5 +1,5 @@
 from math import sin, cos, sqrt
-import random, sys
+import random
 import os
 import os.path
 

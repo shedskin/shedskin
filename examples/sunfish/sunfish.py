@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
-import re, sys, time
+import re, time
 from itertools import count
 
 '''

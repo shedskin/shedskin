@@ -2,7 +2,6 @@
 # I, Danny Milosavljevic, hereby place this file into the public domain.
 
 import os
-import sys
 import struct
 
 from . import entries

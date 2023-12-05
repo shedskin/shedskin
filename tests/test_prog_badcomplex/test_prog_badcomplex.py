@@ -25,7 +25,7 @@ def bad_complex(s):
     try:
         complex(s)
         return False
-    except ValueError as e:
+    except ValueError:
         # print(repr(s) + ": " + str(e))
         return True
 

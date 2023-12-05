@@ -244,7 +244,7 @@ def pseudoLegalMovesWhite(board):
         and board[1] == 0
         and board[2] == 0
         and board[3] == 0
-        and not -1 in board[17:22]
+        and -1 not in board[17:22]
         and not nonpawnBlackAttacks(board, 2)
         and not nonpawnBlackAttacks(board, 3)
         and not nonpawnBlackAttacks(board, 4)
@@ -254,7 +254,7 @@ def pseudoLegalMovesWhite(board):
         board[11]
         and board[5] == 0
         and board[6] == 0
-        and not -1 in board[19:24]
+        and -1 not in board[19:24]
         and not nonpawnBlackAttacks(board, 4)
         and not nonpawnBlackAttacks(board, 5)
         and not nonpawnBlackAttacks(board, 6)
@@ -298,7 +298,7 @@ def pseudoLegalMovesBlack(board):
         and board[0x71] == 0
         and board[0x72] == 0
         and board[0x73] == 0
-        and not 1 in board[0x61:0x65]
+        and 1 not in board[0x61:0x65]
         and not nonpawnWhiteAttacks(board, 0x72)
         and not nonpawnWhiteAttacks(board, 0x73)
         and not nonpawnWhiteAttacks(board, 0x74)
@@ -308,7 +308,7 @@ def pseudoLegalMovesBlack(board):
         board[11]
         and board[0x75] == 0
         and board[0x76] == 0
-        and not -1 in board[0x63:0x68]
+        and -1 not in board[0x63:0x68]
         and not nonpawnWhiteAttacks(board, 0x74)
         and not nonpawnWhiteAttacks(board, 0x75)
         and not nonpawnWhiteAttacks(board, 0x76)

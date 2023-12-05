@@ -3,7 +3,6 @@
 # Quameon is covered under the GNU General Public License.  Please see the
 # file LICENSE that is part of this distribution.
 
-import orbital
 from . import atomic_sto
 
 def create_sto_orbs(atomic_info):

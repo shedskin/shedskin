@@ -3,7 +3,6 @@
 
 # public: calculate_pixbuf_data
 
-import sys
 
 SPRITE_COUNT = 8
 

@@ -1,6 +1,5 @@
 #!/usr/bin/python
 
-import math
 import sys
 
 class histogram:

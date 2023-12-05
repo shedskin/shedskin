@@ -9,7 +9,6 @@ import logging
 import os
 import os.path
 import pathlib
-import struct
 import sys
 import time
 

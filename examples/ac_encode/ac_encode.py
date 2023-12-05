@@ -20,7 +20,7 @@ def encode (string, c0=BETA0, c1=BETA1, adaptive=1,verbose=0):
     if adaptive==0:
         p0 = c0*1.0/(c0+c1)
         pass
-    ans="";
+    ans=""
     charstack=[0] ## how many undecided characters remain to print
     for c in string:
         w=b-a
@@ -45,8 +45,8 @@ def encode (string, c0=BETA0, c1=BETA1, adaptive=1,verbose=0):
         while ( (a>=HALF) or (b<=HALF) ) :   ## output bits
             if (a>=HALF) :
                 ans = ans + clear(1,charstack)
-                a = a-HALF ;
-                b = b-HALF ;
+                a = a-HALF 
+                b = b-HALF 
             else :
                 ans = ans + clear(0,charstack)
                 pass
@@ -66,7 +66,7 @@ def encode (string, c0=BETA0, c1=BETA1, adaptive=1,verbose=0):
 
     # terminate
     if ( (HALF-a) > (b-HALF) ) :
-        w = (HALF-a) ;
+        w = (HALF-a) 
         ans = ans + clear(0,charstack)
         while ( w < HALF ) :
             ans = ans + clear(1,charstack)
@@ -74,7 +74,7 @@ def encode (string, c0=BETA0, c1=BETA1, adaptive=1,verbose=0):
             pass
         pass
     else :
-        w = (b-HALF) ;
+        w = (b-HALF) 
         ans = ans + clear(1,charstack)
         while ( w < HALF ) :
             ans = ans + clear(0,charstack)
@@ -144,7 +144,7 @@ def decode (string, N=10000, c0=BETA0, c1=BETA1, adaptive=1,verbose=0):
                     pass
                 else :
                     pass
-                a *= 2 ;      b *= 2 ;      u *= 2 ;      v *= 2 ;
+                a *= 2 ;      b *= 2 ;      u *= 2 ;      v *= 2 
                 model_needs_updating = 1
                 pass
 

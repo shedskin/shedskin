@@ -1,7 +1,5 @@
 # Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE)
 
-import math
-import time
 
 NV_MAGICCONST = 1.0
 LOG4 = 1.0

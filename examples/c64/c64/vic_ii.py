@@ -3,11 +3,8 @@
 
 # TODO The 47 registers of the VIC are mapped in at $d000. Due to the incomplete address decoding, they are repeated every 64 bytes in the area $d000-$d3ff.
 
-import sys
-import time
 
 from . import memory
-from . import sprite
 from .sprite import SPRITE_COUNT
 from . import palette
 from . import screens

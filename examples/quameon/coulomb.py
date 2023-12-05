@@ -10,7 +10,6 @@
 # file LICENSE that is part of this distribution.
 
 import box_bc
-import math
 
 class coulomb_pot:
   def __init__(self,npos=[],charges=None):

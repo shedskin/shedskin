@@ -7,7 +7,6 @@ TODO: The .t64 file demands that filenames be padded at the end with spaces.
 TODO: seek to the end of the filename entry, and replace all consecutive $20 with $A0 internally.
 """
 
-import sys
 import struct
 
 from . import entries

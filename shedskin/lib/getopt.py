@@ -1,6 +1,5 @@
 # Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE)
 
-import os
 
 class GetoptError(Exception):
     def __init__(self, msg, opt=''):

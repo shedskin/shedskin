@@ -9,9 +9,7 @@
 # Quameon is covered under the GNU General Public License.  Please see the
 # file LICENSE that is part of this distribution.
 
-import box_bc
 import math
-from jastrow import simple_pade, const_jastrow
 #from orbital import floating_gaussian
 from orbital import lcao
 from coulomb import coulomb_pot

@@ -2,7 +2,6 @@
 # license: http://creativecommons.org/licenses/by-nc-sa/2.5/
 
 from math import sin, cos, pi, hypot
-from random import random
 
 
 def setup(w, h):

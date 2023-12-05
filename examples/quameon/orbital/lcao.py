@@ -8,8 +8,6 @@
 # Quameon is covered under the GNU General Public License.  Please see the
 # file LICENSE that is part of this distribution.
 
-import box_bc
-import math
 from . import atomic_sto
 from .orbital_base import orbital_base
 

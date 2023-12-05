@@ -331,8 +331,8 @@ class LowLevel:
 
        hdr = self.serialport.read(1)
        if not hdr: raise BSLException("Timeout")
-       rxHeader = hdr[0] & 0xf0;
-       rxNum    = hdr[0] & 0x0f;
+       rxHeader = hdr[0] & 0xf0
+       rxNum    = hdr[0] & 0x0f
 
        if self.protocolMode == MODE_BSL:
            self.reqNo = 0
@@ -506,15 +506,15 @@ class LowLevel:
        self.telosSetSCL(0)
 
    def telosI2CWriteByte(self, byte):
-       self.telosI2CWriteBit( byte & 0x80 );
-       self.telosI2CWriteBit( byte & 0x40 );
-       self.telosI2CWriteBit( byte & 0x20 );
-       self.telosI2CWriteBit( byte & 0x10 );
-       self.telosI2CWriteBit( byte & 0x08 );
-       self.telosI2CWriteBit( byte & 0x04 );
-       self.telosI2CWriteBit( byte & 0x02 );
-       self.telosI2CWriteBit( byte & 0x01 );
-       self.telosI2CWriteBit( 0 );  # "acknowledge"
+       self.telosI2CWriteBit( byte & 0x80 )
+       self.telosI2CWriteBit( byte & 0x40 )
+       self.telosI2CWriteBit( byte & 0x20 )
+       self.telosI2CWriteBit( byte & 0x10 )
+       self.telosI2CWriteBit( byte & 0x08 )
+       self.telosI2CWriteBit( byte & 0x04 )
+       self.telosI2CWriteBit( byte & 0x02 )
+       self.telosI2CWriteBit( byte & 0x01 )
+       self.telosI2CWriteBit( 0 )  # "acknowledge"
 
    def telosI2CWriteCmd(self, addr, cmdbyte):
        self.telosI2CStart()

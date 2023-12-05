@@ -10,8 +10,6 @@
 # file LICENSE that is part of this distribution.
 
 import box_bc
-import math
-from jastrow import const_jastrow
 from jastrow.simple_pade import simple_jastrow
 
 class ee_jastrow:

@@ -16,9 +16,8 @@ import random
 
 import wave_func
 import qmc_loop
-from stats import average
-from orbital import atomic_sto,lcao,create_orbital
-from jastrow import const_jastrow, simple_pade
+from orbital import lcao,create_orbital
+from jastrow import const_jastrow
 from observables import en_dist,ee_dist
 from coulomb import coulomb_pot
 

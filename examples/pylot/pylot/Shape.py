@@ -20,7 +20,7 @@ import math
 
 from .Ray import Ray
 from .Utils import *
-from .Vector4 import Vector4, Mean, Point, Offset
+from .Vector4 import Vector4, Mean, Point
 from . import Material
 
 SHAPE_NAME_COUNTER = 0

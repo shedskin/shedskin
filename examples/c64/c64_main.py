@@ -2,10 +2,8 @@
 # I, Danny Milosavljevic, hereby place this file into the public domain.
 import gi
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk, Gdk, GLib, GdkPixbuf, GLib
+from gi.repository import Gtk, Gdk, GdkPixbuf
 
-import sys
-import time
 from c64 import c64, screens
 print(c64)
 from c64.symbols import S_A, S_X, S_Y, S_SP, S_PC

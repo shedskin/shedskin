@@ -35,7 +35,7 @@ class cube_state:
         elif phase == 1:
             result = self.state[31:40]
             for e in range(12):
-                result[0] |= (self.state[e] // 8) << e;
+                result[0] |= (self.state[e] // 8) << e
             return tuple(result)
         elif phase == 2:
             result = [0,0,0]

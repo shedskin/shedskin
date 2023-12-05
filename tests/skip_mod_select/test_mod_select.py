@@ -1,4 +1,3 @@
-import select # not working on macos
 
 
 def test_select():
