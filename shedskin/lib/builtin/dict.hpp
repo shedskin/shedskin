@@ -23,23 +23,6 @@ template <> void *myallocate<__ss_int>(int n);
 template <class K, class V> void *myallocate(int n) { return GC_MALLOC(n); }
 template <> void *myallocate<__ss_int, __ss_int>(int n);
 
-template<class K, class V> dict<K,V>::dict() {
-    this->__class__ = cl_dict;
-    EMPTY_TO_MINSIZE(this);
-}
-
-template<class K, class V> dict<K, V>::dict(int count, ...)  {
-    this->__class__ = cl_dict;
-    EMPTY_TO_MINSIZE(this);
-    va_list ap;
-    va_start(ap, count);
-    for(int i=0; i<count; i++) {
-        typedef tuple2<K, V> * bert;
-        bert t = va_arg(ap, bert);
-        __setitem__(t->__getfirst__(), t->__getsecond__());
-    }
-    va_end(ap);
-}
 
 template<class K, class V, class U> static inline void __add_to_dict(dict<K, V> *d, U *iter) {
     __iter<typename U::for_in_unit> *it = ___iter(iter);
@@ -51,6 +34,18 @@ template<class K, class V, class U> static inline void __add_to_dict(dict<K, V> 
 
 template<class K, class V> static inline void __add_to_dict(dict<K, V> *d, tuple2<K, V> *t) {
     d->__setitem__(t->__getfirst__(), t->__getsecond__());
+}
+
+template<class K, class V> dict<K,V>::dict() {
+    this->__class__ = cl_dict;
+    EMPTY_TO_MINSIZE(this);
+}
+
+template<class K, class V> template<class ... Args> dict<K, V>::dict(int count, Args ... args)  {
+    this->__class__ = cl_dict;
+    EMPTY_TO_MINSIZE(this);
+
+    (__add_to_dict(this, args), ...);
 }
 
 template<class K, class V> template<class U> dict<K, V>::dict(U *other) {
