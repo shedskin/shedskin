@@ -324,7 +324,6 @@ class WorkTask(Task):
         return self.qpkt(pkt)
 
 
-import time
 
 
 def schedule():

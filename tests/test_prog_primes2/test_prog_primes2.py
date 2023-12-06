@@ -2,7 +2,6 @@
 
 # (c) Wensheng Wang
 
-from math import sqrt
 
 def primes(n):                           # n: [int]
    "primes(n): return a list of prime numbers <=n."
