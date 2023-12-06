@@ -5,7 +5,6 @@
 
 from math import ceil
 from time import time
-import sys
 
 
 class bmp(object):

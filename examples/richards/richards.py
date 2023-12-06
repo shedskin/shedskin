@@ -343,7 +343,6 @@ class WorkTask(Task):
 
         return self.qpkt(pkt)
 
-import time
 
 
 
@@ -386,9 +385,9 @@ class Richards(object):
             wkq = Packet(wkq , I_DEVB, K_DEV)
             HandlerTask(I_HANDLERB, 3000, wkq, TaskState().waitingWithPacket(), HandlerTaskRec())
 
-            wkq = None;
-            DeviceTask(I_DEVA, 4000, wkq, TaskState().waiting(), DeviceTaskRec());
-            DeviceTask(I_DEVB, 5000, wkq, TaskState().waiting(), DeviceTaskRec());
+            wkq = None
+            DeviceTask(I_DEVA, 4000, wkq, TaskState().waiting(), DeviceTaskRec())
+            DeviceTask(I_DEVB, 5000, wkq, TaskState().waiting(), DeviceTaskRec())
             
             schedule()
 

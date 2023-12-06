@@ -141,7 +141,7 @@ class Viewport(object):
     set_debug(True)
     self.camera.runPixelRange( ((x, x+1), (y, y+1)) )
     print("Calling get_debug_rays")
-    debug_rays = get_debug_rays();
+    debug_rays = get_debug_rays()
     self.app.drawDebugRays(debug_rays)
     print("Calling clear_debug_rays")
     set_debug(False)

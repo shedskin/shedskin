@@ -84,7 +84,7 @@ def do_move(state, color, move):
     my_disks = state[color]
     opp_disks = state[color ^ 1]
 
-    captured_disks = 0;
+    captured_disks = 0
 
     for direction in range(8):
         S = SHIFTS[direction]

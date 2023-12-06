@@ -4,7 +4,6 @@
 # http://www.waitingforfriday.com/index.php/Commodore_SID_6581_Datasheet
 
 import sys
-import math
 
 from . import memory
 

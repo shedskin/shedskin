@@ -19,13 +19,12 @@ import math
 
 from .Utils import Roughly #, debug_print
 #{
-from .Utils import add_debug_ray
 #}
 from . import Color
 from .Ray import Ray
 from .Vector4 import Vector4, fresnel_reflectance_at_angle
 from .World import World
-from .Shape import Sphere, ParallelogramAt, rayHitsPlane
+from .Shape import rayHitsPlane
 from . import Material
 
 MAX_GENERATIONS = 10

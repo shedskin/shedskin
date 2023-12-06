@@ -17,7 +17,7 @@ def solve_rec():
     global nodecount
     nodecount += 1
 
-    if not -1 in fixedt[1:]:
+    if -1 not in fixedt[1:]:
         print('v', ' '.join([str((2*fixedt[i]-1)*i) for i in vars[1:]]))
         return 1
 

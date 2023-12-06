@@ -16,7 +16,6 @@
 # along with Foobar.  If not, see <http://www.gnu.org/licenses/>.import math
 
 from .Vector4 import Vector4
-from .Color import Color
 
 class Ray(object):
   def __init__(self, origin, offset):

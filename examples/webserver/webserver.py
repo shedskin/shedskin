@@ -2,7 +2,6 @@
 
 import select
 import socket
-import sys
 
 class WebServer:
 
@@ -47,17 +46,17 @@ class WebServer:
 
                     responseHTML = self.handleRequest(self.parseRequest(data), responseParams, headers)
 
-                    response = responseParams["status"] + "\r\n";
+                    response = responseParams["status"] + "\r\n"
 
                     for key in headers.keys():
                         response += key + ": " + headers[key] +"\r\n"
-                    response += "\r\n"+responseHTML;
+                    response += "\r\n"+responseHTML
                     print("sending response:*" + response+"*")
                     '''
                     #response = "HTTP/1.0 200 OK\nContent-Type: text/html\n\n"+responseHTML+"\n\n"
                     sock.send(response);
                     '''
-                    sock.send(response);
+                    sock.send(response)
                     sock.close() 
                     self.input.remove(s)
                     #sock.send(data)
@@ -69,7 +68,7 @@ class WebServer:
 
     def serve(self):
         while self.running:
-            self.poll();
+            self.poll()
         self.server.close()
 
     def fromHex(self, hexStr):
@@ -78,7 +77,7 @@ class WebServer:
 
     def ishex(self, chr):
         x = ord(chr)
-        return (x >= ord('0') and x <= ord('9')) or (x >= ord('a') and x <= ord('f')) or (x >= ord('A') and x <= ord('F'));
+        return (x >= ord('0') and x <= ord('9')) or (x >= ord('a') and x <= ord('f')) or (x >= ord('A') and x <= ord('F'))
 
 
     def urlDecode(self, s):
@@ -88,7 +87,7 @@ class WebServer:
         for i in range(max):
             if (skip > 0): skip=skip-1; continue
             cur = s[i]
-            if (cur == '+'): cur = ' ';
+            if (cur == '+'): cur = ' '
             elif (cur == '%' and i <(max-2) and self.ishex(s[i+1]) and self.ishex(s[i+2])):
                 cur=self.fromHex(s[i+1:i+3])
                 skip=2
@@ -114,7 +113,7 @@ class WebServer:
 
     def parseRequest(self, data):
         print("got data:" + data)
-        data = data.replace("\r", "");
+        data = data.replace("\r", "")
         #print "got some data:" + data
         lines = data.split("\n")
         requestData = lines[0].split(" ")

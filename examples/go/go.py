@@ -44,7 +44,7 @@ class Square:
         self.zobrist_strings = [random.randrange(sys.maxsize) for i in range(3)]
 
     def set_neighbours(self): 
-        x, y = self.pos % SIZE, self.pos / SIZE;
+        x, y = self.pos % SIZE, self.pos / SIZE
         self.neighbours = []
         for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
             newx, newy = x + dx, y + dy

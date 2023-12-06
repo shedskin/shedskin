@@ -39,7 +39,7 @@ def debug_print(string):
 # Warning: not thread-safe
 def add_debug_ray(ray, color=None):
   if not debug:
-    return;
+    return
   global debug_rays
   if not color:
     color = "white"
