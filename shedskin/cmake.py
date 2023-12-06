@@ -23,7 +23,7 @@ import sys
 import textwrap
 import time
 
-from .utils import CYAN, GREEN, RED, RESET, WHITE, YELLOW
+from .utils import CYAN, GREEN, RED, RESET, WHITE
 
 def get_pkg_path():
     """return shedskin package path"""
@@ -698,11 +698,11 @@ class CMakeBuilder:
 
             if self.options.pytest:
                 try:
-                    import pytest
+                    import pytest # noqa: F401
 
                     os.system("pytest")
                 except ImportError:
-                    log.exception("pytest not found")
+                    self.log.exception("pytest not found")
 
             if self.options.run:
                 target_suffix = "-exe"

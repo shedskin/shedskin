@@ -54,7 +54,8 @@ def generate_makefile(gx):
 
     makefile = open(makefile_path, "w")
 
-    write = lambda line="": print(line, file=makefile)
+    def write(line=""):
+        print(line, file=makefile)
 
     esc_space = "\ "
 
@@ -81,7 +82,7 @@ def generate_makefile(gx):
     # used to be 're', but currently unused, but kept around just in case
     for always in ():
         repath = os.path.join(env_var("SHEDSKIN_LIBDIR"), always)
-        if not repath in filenames:
+        if repath not in filenames:
             cppfiles.append(repath + ".cpp")
             hppfiles.append(repath + ".hpp")
 

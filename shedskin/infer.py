@@ -640,32 +640,6 @@ def func_copy(gx, func, dcpa, cpa, worklist=None, cart=None):
     ifa_seed_template(gx, func, cart, dcpa, cpa, worklist)
 
 
-def print_typeset(types):
-    l = list(types.items())
-    l.sort(lambda x, y: cmp(repr(x[0]), repr(y[0])))
-    for uh in l:
-        if not uh[0].mv.module.builtin:
-            logger.info("%r: %s", uh[0], uh[1])
-    logger.info("")
-
-
-def print_state(gx):
-    # print 'state:'
-    print_typeset(gx.types)
-
-
-def print_constraints(gx):
-    # print 'constraints:'
-    l = list(gx.constraints)
-    l.sort(lambda x, y: cmp(repr(x[0]), repr(y[0])))
-    for a, b in l:
-        if not (a.mv.module.builtin and b.mv.module.builtin):
-            logger.info("%s -> %s", a, b)
-            if a not in gx.types or b not in gx.types:
-                logger.info("NOTYPE %s %s", a in gx.types, b in gx.types)
-    logger.info("")
-
-
 # --- iterative dataflow analysis
 def propagate(gx):
     logger.debug("propagate")

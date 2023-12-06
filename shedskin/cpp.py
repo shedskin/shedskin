@@ -18,6 +18,7 @@ import os
 import string
 import struct
 import textwrap
+import functools
 
 from . import ast_utils
 from . import error
@@ -29,7 +30,7 @@ from . import typestr
 from . import virtual
 
 
-class CPPNamer(object):
+class CPPNamer:
     def __init__(self, gx, mv):
         self.gx = gx
         self.class_names = [cl.ident for cl in self.gx.allclasses]
@@ -715,8 +716,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if doc[0].strip():
             self.output(doc[0])
         rest = textwrap.dedent("\n".join(doc[1:])).splitlines()
-        for l in rest:
-            self.output(l)
+        for line in rest:
+            self.output(line)
         self.output("*/")
 
     def do_comments(self, child):
@@ -1962,16 +1963,16 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 "Unknown op type for ast.BinOp: %s" % type(node.op),
                 self.gx,
                 node,
-                mv=getmv(),
+                mv=self.mv,
             )
 
     def rec_string_addition(self, node):
         if isinstance(node, ast.BinOp) and type(node.op) == ast.Add:
-            l, r = self.rec_string_addition(node.left), self.rec_string_addition(
+            left, right = self.rec_string_addition(node.left), self.rec_string_addition(
                 node.right
             )
-            if l and r:
-                return l + r
+            if left and right:
+                return left + right
         elif self.mergeinh[node] == set([(python.def_class(self.gx, "str_"), 0)]):
             return [node]
 
@@ -2212,7 +2213,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 "Unknown op type for UnaryOp: %s" % type(node.op),
                 self.gx,
                 node,
-                mv=getmv(),
+                mv=self.mv,
             )
 
     def library_func(self, funcs, modname, clname, funcname):
@@ -2241,7 +2242,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
             if positions:
                 self.append(
-                    str(reduce(lambda a, b: a | b, ((1 << x) for x in positions)))
+                    str(functools.reduce(lambda a, b: a | b, ((1 << x) for x in positions)))
                     + ", "
                 )
             else:
@@ -3055,9 +3056,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.visit_Attribute(lvalue, func)
 
     def do_lambdas(self, declare):
-        for l in self.mv.lambdas.values():
-            if l.ident not in self.mv.funcs:
-                self.visit_FunctionDef(l.node, declare=declare)
+        for lam in self.mv.lambdas.values():
+            if lam.ident not in self.mv.funcs:
+                self.visit_FunctionDef(lam.node, declare=declare)
 
     def do_listcomps(self, declare):
         for listcomp, lcfunc, func in self.mv.listcomps:  # XXX cleanup
