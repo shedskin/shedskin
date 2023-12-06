@@ -130,14 +130,14 @@ def test_unpack15():
     val_error = False
     try:
         c1, c2 = b'hoi'
-    except ValueError as e:
+    except ValueError:
         val_error = True
     assert val_error
 
     val_error = False
     try:
         m1, m2, m3, m4 = map(lambda x: 2*x, [9,10,11])
-    except ValueError as e:
+    except ValueError:
         val_error = True
     assert val_error
 

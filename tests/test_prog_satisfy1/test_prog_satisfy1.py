@@ -52,7 +52,7 @@ class Satisfier:
         self.nodecount += 1  # []
         if self.nodecount == 100:
             return 1
-        if not -1 in self.fixedt[1:]:  # [int]
+        if -1 not in self.fixedt[1:]:  # [int]
             print(
                 "v", " ".join([str((2 * self.fixedt[i] - 1) * i) for i in self.vars[1:]])
             )

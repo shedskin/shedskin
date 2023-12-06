@@ -185,7 +185,7 @@ class Soduko:
                             try:
                                 soduko_copy.set_cell(row, col, x)
                                 soduko_copy.check()
-                            except AssertionError as e:
+                            except AssertionError:
                                 bad_x.append(x)
                             del soduko_copy
                         if len(bad_x) == 0:
