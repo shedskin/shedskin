@@ -53,7 +53,7 @@ __email__="martin.fiedler@gmx.net"
     * initial public release, Win32 only
 """
 
-import sys,os,os.path,array,getopt,random,fnmatch,string
+import sys,os,os.path,array,getopt,random,fnmatch
 
 KnownProps=('filename','size','ignore','type','shuffle','reuse','bookmark')
 Rules=[
@@ -152,7 +152,7 @@ def ParseValue(val):
 def ParseRule(rule):
   sep_pos=min([rule.find(sep) for sep in "~=<>" if rule.find(sep)>0])
   prop=rule[:sep_pos].strip()
-  if not prop in KnownProps:
+  if prop not in KnownProps:
     log("WARNING: unknown property `%s'"%prop)
   return (prop,rule[sep_pos],ParseValue(rule[sep_pos+1:].strip()))
 
@@ -160,7 +160,7 @@ def ParseAction(action):
   #prop,value=[string.strip(x) for x in action.split('=',1)] # XXX
   l3 = action.split('=',1)
   prop, value = l3[0].strip(), l3[1].strip()
-  if not prop in KnownProps:
+  if prop not in KnownProps:
     log("WARNING: unknown property `%s'"%prop)
   return (prop,ParseValue(value))
 

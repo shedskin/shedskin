@@ -15,7 +15,6 @@ The matrix is represented internally as a list of lists.
 Have fun :-)
 http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/496884
 """
-import sys
 import random
 
 class MazeReaderException(Exception):

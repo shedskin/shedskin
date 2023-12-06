@@ -9,7 +9,6 @@ import random
 import math
 from functools import reduce
 random.seed(1234)
-import sys
 import time
 
 class GVector(object):

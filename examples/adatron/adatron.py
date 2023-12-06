@@ -3,7 +3,6 @@
 # Adatron SVM with polynomial kernel
 # placed in the public domain by Stavros Korokithakis
 
-import sys
 from math import exp
 
 CYTOSOLIC = 0

@@ -162,11 +162,11 @@ def pseudoLegalMovesWhite(board):
           if not (k + sq & 0x88) and board[k + sq] == 0:
             retval.append(sq * 0x101 + k)
   if (board[10] and board[1] == 0 and board[2] == 0 and board[3] == 0 and
-      not -1 in board[17:22] and
+      -1 not in board[17:22] and
       not nonpawnBlackAttacks(board, 2) and not nonpawnBlackAttacks(board, 3) and not nonpawnBlackAttacks(board, 4)):
     retval.append(0x04000000 + 4 * 0x101 - 2)
   if (board[11] and board[5] == 0 and board[6] == 0 and
-      not -1 in board[19:24] and
+      -1 not in board[19:24] and
       not nonpawnBlackAttacks(board, 4) and not nonpawnBlackAttacks(board, 5) and not nonpawnBlackAttacks(board, 6)):
     retval.append(0x04000000 + 4 * 0x101 + 2)
   return retval
@@ -202,11 +202,11 @@ def pseudoLegalMovesBlack(board):
           if not (k + sq & 0x88) and board[k + sq] == 0:
             retval.append(sq * 0x101 + k)
   if (board[12] and board[0x71] == 0 and board[0x72] == 0 and board[0x73] == 0 and
-      not 1 in board[0x61:0x65] and
+      1 not in board[0x61:0x65] and
       not nonpawnWhiteAttacks(board, 0x72) and not nonpawnWhiteAttacks(board, 0x73) and not nonpawnWhiteAttacks(board, 0x74)):
     retval.append(0x04000000 + 0x74 * 0x101 - 2)
   if (board[11] and board[0x75] == 0 and board[0x76] == 0 and
-      not -1 in board[0x63:0x68] and
+      -1 not in board[0x63:0x68] and
       not nonpawnWhiteAttacks(board, 0x74) and not nonpawnWhiteAttacks(board, 0x75) and not nonpawnWhiteAttacks(board, 0x76)):
     retval.append(0x04000000 + 0x74 * 0x101 + 2)
   return retval

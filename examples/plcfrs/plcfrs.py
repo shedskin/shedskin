@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from sys import argv, stderr
 from math import exp, log
 from array import array
-from heapq import heappush, heappop, heapify
+from heapq import heappush, heappop
 
 
 def parse(sent, grammar, tags, start, exhaustive):

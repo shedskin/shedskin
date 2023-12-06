@@ -1,7 +1,7 @@
 # bfi - BrainFuck GNU interpreter, (C) 2002 Philippe Biondi, biondi@cartel-securite.fr
 # Modified for ShedSkin, but can be used with Python/Psyco too
 
-from sys import stdin, stdout, argv
+from sys import stdin, stdout
 
 def BF_interpreter(prog):
     CELL = 255 # Or 65535  default 255

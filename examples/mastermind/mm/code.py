@@ -31,7 +31,7 @@ class Code:
         return self.__pegList
 
     def equals(self,code):
-        c1 = code.getPegs();
+        c1 = code.getPegs()
         for i in range(4):
             if (not c1[i].equals(self.__pegList[i])):
                 return False

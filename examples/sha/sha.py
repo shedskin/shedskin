@@ -30,7 +30,6 @@ __modified__.append(
 import copy
 import struct
 import sys
-import hashlib
 
 # ======================================================================
 # Bit-Manipulation helpers

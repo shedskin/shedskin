@@ -190,7 +190,7 @@ class LifeBoard:
 
     def getnode(self, nw, ne, sw, se):
         tup = (nw.id, ne.id, sw.id, se.id)
-        if not (tup in self.memo):
+        if tup not in self.memo:
             result = LifeNode(self, self.nextid, [nw, ne, sw, se])
             self.nextid = self.nextid + 1
             self.memo[tup] = result

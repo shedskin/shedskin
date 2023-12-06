@@ -127,7 +127,7 @@ add_subdirectory(astar) # ext
 add_subdirectory(bh)
 add_subdirectory(block)
 add_subdirectory(brainfuck)
-add_subdirectory(c64)
+#add_subdirectory(c64) works locally, fix in CI!
 add_subdirectory(chaos)
 add_subdirectory(chess)
 add_subdirectory(chull)
@@ -146,6 +146,7 @@ add_subdirectory(kmeanspp)
 add_subdirectory(life)
 add_subdirectory(linalg)
 add_subdirectory(loop)
+add_subdirectory(lz2)
 add_subdirectory(mandelbrot)
 add_subdirectory(mandelbrot2) # ext
 add_subdirectory(mao)

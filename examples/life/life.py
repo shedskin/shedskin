@@ -21,7 +21,6 @@
 
 from collections import defaultdict
 from itertools import product
-from sys import argv
 
 def add(board, pos):
     """ Adds eight cells near current cell """

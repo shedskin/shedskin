@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import struct
 
 from . import sprite as sprites
 from . import palette

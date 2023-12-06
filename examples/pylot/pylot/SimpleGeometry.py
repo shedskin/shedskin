@@ -19,9 +19,8 @@ import math
 
 from .Camera import Camera
 from .Shape import *
-from .Vector4 import Vector4, Point, Offset
+from .Vector4 import Point, Offset
 from . import Material
-from . import Color
 from .World import World
 
 # Each of these values is overridden in many or all cases by getGeometry.

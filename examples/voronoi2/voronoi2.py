@@ -295,7 +295,7 @@ def voronoi(siteList,context):
             # the left HE, and reinsert it 
             p = llbnd.intersect(bisector)
             if p is not None:
-                priorityQ.delete(llbnd);
+                priorityQ.delete(llbnd)
                 priorityQ.insert(llbnd, p, bot.distance(p))
 
             # if right HE and the new bisector don't intersect, then reinsert it 
@@ -462,7 +462,7 @@ class Halfedge(object):
         if(e.a == 1.0):
             dyp = pt.y - topsite.y
             dxp = pt.x - topsite.x
-            fast = False;
+            fast = False
             if ((not right_of_site and e.b < 0.0) or (right_of_site and e.b >= 0.0)):
                 above = dyp >= e.b * dxp
                 fast = above
@@ -570,7 +570,7 @@ class EdgeList(object):
         bucket = int(((pt.x - self.xmin)/self.deltax * self.hashsize))
         
         if(bucket < 0): 
-            bucket =0;
+            bucket =0
         
         if(bucket >=self.hashsize): 
             bucket = self.hashsize-1
@@ -580,9 +580,9 @@ class EdgeList(object):
             i = 1
             while True:
                 he = self.gethash(bucket-i)
-                if (he is not None): break;
+                if (he is not None): break
                 he = self.gethash(bucket+i)
-                if (he is not None): break;
+                if (he is not None): break
                 i += 1
     
         # Now search linear list of halfedges for the corect one
@@ -590,7 +590,7 @@ class EdgeList(object):
             he = he.right
             while he is not self.rightend and he.isPointRightOf(pt):
                 he = he.right
-            he = he.left;
+            he = he.left
         else:
             he = he.left
             while (he is not self.leftend and not he.isPointRightOf(pt)):

@@ -4,7 +4,7 @@
 #  http://www.hxa7241.org/
 
 
-from .triangle import Triangle, TOLERANCE
+from .triangle import TOLERANCE
 from .vector3f import Vector3f_seq, Vector3f_scalar, MAX
 
 MAX_LEVELS = 44

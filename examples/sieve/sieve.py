@@ -1,5 +1,4 @@
 from math import sqrt, ceil
-from sys import argv
 import time
 
 def sieveOfAtkin(end):

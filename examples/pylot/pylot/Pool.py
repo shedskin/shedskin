@@ -19,9 +19,7 @@ from queue import Empty
 from threading import Thread
 import queue
 import multiprocessing
-from sys import stdout
 
-from .Camera import Camera
 
 class Quit(object):
   pass

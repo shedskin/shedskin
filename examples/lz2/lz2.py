@@ -134,7 +134,7 @@ def encode ( c, pretty=1 , verbose=0 ): ## c is STRING of characters (0/1) ; p i
     L = len(c)
     assert L>1 ## sorry, cannot compress the files "0" or "1" or ""
     output.append( c[0] )     # to get started we must send one bit
-    fr = 1 ;
+    fr = 1
     eof_sent = 0
     while (eof_sent == 0 ) : # start a new substring search
         to = fr              # Always Start by finding a match of the empty string

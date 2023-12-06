@@ -8,8 +8,8 @@
 
 class Path:
     def __init__(self,nodes, totalCost):
-        self.nodes = nodes;
-        self.totalCost = totalCost;
+        self.nodes = nodes
+        self.totalCost = totalCost
 
     def getNodes(self):
         return self.nodes
@@ -79,16 +79,16 @@ class AStar:
             elif n.lid in self.o:
                 # already in open, check if better score
                 i = self.o.index(n.lid)
-                on = self.on[i];
+                on = self.on[i]
                 if n.mCost<on.mCost:
-                    self.on.pop(i);
-                    self.o.pop(i);
-                    self.on.append(n);
-                    self.o.append(n.lid);
+                    self.on.pop(i)
+                    self.o.pop(i)
+                    self.on.append(n)
+                    self.o.append(n.lid)
             else:
                 # new node, append to open list
-                self.on.append(n);
-                self.o.append(n.lid);
+                self.on.append(n)
+                self.o.append(n.lid)
 
         return None
 

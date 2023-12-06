@@ -10,7 +10,7 @@ import time
 import gi
 gi.require_version("Gtk", "3.0")
 
-from gi.repository import Gtk, Gdk, GLib, GdkPixbuf
+from gi.repository import Gtk, Gdk, GdkPixbuf
 
 from Gh0stenstein import world_manager
 print(world_manager)

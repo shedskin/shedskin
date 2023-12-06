@@ -21,7 +21,6 @@
 # http://www.boxel.info/morcy/static.php?page=yopyra
 
 from math import *
-import sys
 
 MAX_DIST = 1999999999 # 9999999999
 PI_SOBRE_180 = 0.017453292

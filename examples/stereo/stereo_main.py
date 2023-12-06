@@ -10,9 +10,7 @@ from scipy import interpolate
 # above line must be imported *after* changing directory!
 interp1d=interpolate.interp1d
 
-from math import floor
-import scipy
-from matplotlib.pyplot import imread, imsave
+from matplotlib.pyplot import imread
 
 from stereo import do_sweepsSS2
 

@@ -2,7 +2,6 @@
 
 import sprite as sprites
 import palette as palette
-import struct
 import pixbufs
 """
 depending on row:

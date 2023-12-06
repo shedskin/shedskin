@@ -4,7 +4,7 @@
 
 import time
 import copy
-from random import randrange, randint, seed, random, choice, triangular
+from random import randrange, randint, seed, random, triangular
 seed(42)
 
 # The size of the data bus of the multiplexer.

@@ -1,9 +1,6 @@
 #!/usr/bin/env python2
 # I, Danny Milosavljevic, hereby place this file into the public domain.
 
-import os
-import sys
-import time
 
 from . import cpu
 from . import vic_ii

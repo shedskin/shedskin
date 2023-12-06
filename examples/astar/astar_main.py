@@ -26,7 +26,7 @@ class AStarExample:
         self.startpoint = [1,1]
         self.endpoint = [w-2,h-2]
 
-        size = w*h;
+        size = w*h
         for i in range(size):
             self.mapdata.append(1)
 

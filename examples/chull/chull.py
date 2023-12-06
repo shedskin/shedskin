@@ -69,8 +69,8 @@ class Edge:
 		Edge.enumm+=1
 		
 	def __str__(self):
-		af=[str(f.fnum) if not (f is None) else '.' for f in self.adjface]
-		return "edge(%d): %s %s del: %s newf: %d adjf:%s"%(self.enum,self.endpts[0],self.endpts[1],self.delete,self.newface.fnum if not (self.newface is None) else -1," ".join(af))
+		af=[str(f.fnum) if f is not None else '.' for f in self.adjface]
+		return "edge(%d): %s %s del: %s newf: %d adjf:%s"%(self.enum,self.endpts[0],self.endpts[1],self.delete,self.newface.fnum if self.newface is not None else -1," ".join(af))
 		
 class Face:
 	fnumm=0
@@ -314,8 +314,8 @@ class Hull:
 		ev = v
 		while(True):
 			if not self.vertices[v].mark:
-				self.vertices[v].mark = PROCESSED;
-			self.AddOne(self.vertices[v]);
+				self.vertices[v].mark = PROCESSED
+			self.AddOne(self.vertices[v])
 			ev,v=self.CleanUp(ev,v) # cleanup may delete vertices!
 			if v == ev : break
 			
@@ -328,26 +328,26 @@ class Hull:
 		adjacent faces is visible then a new face is constructed.
 		"""
 
-		vis = False;
+		vis = False
 
 		# Mark faces visible from p.
 		for f in self.faces:
 			vol = Hull.VolumeSign( f, p )
 			if vol < 0 : f.visible = VISIBLE
-			vis = True;                      
+			vis = True
 
 		# If no faces are visible from p, then p is inside the hull
 		if not vis:
-			p.onhull = not ONHULL  
-			return False 
+			p.onhull = not ONHULL
+			return False
 
 		# Mark edges in interior of visible region for deletion.
 		# Erect a newface based on each border edge
 		for e in self.edges:
 			if e.adjface[0].visible and	e.adjface[1].visible:
 				# e interior: mark for deletion
-				e.delete = REMOVED;
-			elif e.adjface[0].visible or e.adjface[1].visible: 
+				e.delete = REMOVED
+			elif e.adjface[0].visible or e.adjface[1].visible:
 				# e border: make a new face
 				e.newface = self.MakeConeFace( e, p )
 		
