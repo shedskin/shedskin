@@ -195,9 +195,9 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     ## select not working on macOS (win?)
     ## windows not yet tested.
     add_subdirectory(webserver)
-    add_subdirectory(msp_ss) # requires serial
-    add_subdirectory(rsync) # requires hashlib (openssl)
+#    add_subdirectory(msp_ss) # requires serial
+#    add_subdirectory(rsync) # requires hashlib (openssl)
     add_subdirectory(hq2x) # check windows issue
-    add_subdirectory(sha) # requires hashlib (openssl)
+#    add_subdirectory(sha) # requires hashlib (openssl)
 endif()
 add_subdirectory(yopyra)
