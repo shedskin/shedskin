@@ -21,7 +21,7 @@ class ExtmodError(Exception):
 def types_var_types(gx, types, varname):
     subtypes = set()
     for t in types:
-        if not varname in t[0].vars:
+        if varname not in t[0].vars:
             continue
         var = t[0].vars[varname]
         if (var, t[1], 0) in gx.cnode:
@@ -67,9 +67,9 @@ def polymorphic_cl(gx, classes):
     if (
         len(cls) > 1
         and python.def_class(gx, "none") in cls
-        and not python.def_class(gx, "int_") in cls
-        and not python.def_class(gx, "float_") in cls
-        and not python.def_class(gx, "bool_") in cls
+        and python.def_class(gx, "int_") not in cls
+        and python.def_class(gx, "float_") not in cls
+        and python.def_class(gx, "bool_") not in cls
     ):
         cls.remove(python.def_class(gx, "none"))
     if (
