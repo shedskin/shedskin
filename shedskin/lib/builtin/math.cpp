@@ -1,6 +1,5 @@
 /* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
 
-
 /* int_ methods */
 
 int_::int_(__ss_int i) {
