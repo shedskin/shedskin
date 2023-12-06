@@ -22,7 +22,13 @@ extern __ss_int supports_unicode_filenames;
 str *normcase(str *s);
 __ss_bool isabs(str *s);
 str *joinl(list<str *> *l);
-str *join(__ss_int n, ...);
+
+template <class ... Args> str *join(__ss_int n, Args ... args) {
+    list<str *> *p = new list<str *>();
+    (p->append(args), ...);
+    return joinl(p);
+}
+
 tuple2<str *, str *> *split(str *p);
 tuple2<str *, str *> *splitext(str *p);
 tuple2<str *, str *> *splitdrive(str *p);

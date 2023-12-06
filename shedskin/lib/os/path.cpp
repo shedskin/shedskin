@@ -27,19 +27,6 @@ str *__name__, *altsep, *curdir, *defpath, *devnull, *extsep, *pardir, *pathsep,
 __ss_int supports_unicode_filenames;
 #endif
 
-str *join(__ss_int n, ...) { /* varargs hack */
-    list<str *> *p = new list<str *>();
-    va_list ap;
-    va_start(ap, n);
-    for(__ss_int i=0; i<n; i++) {
-        str *t = va_arg(ap, str *);
-        p->append(t);
-    }
-    va_end(ap);
-
-    return joinl(p);
-}
-
 #ifndef WIN32
 void __init() {
     const_0 = new str("");
