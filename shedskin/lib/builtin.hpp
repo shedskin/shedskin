@@ -12,6 +12,7 @@
 
 #include <vector>
 #include <deque>
+#include <bitset>
 #include <string>
 #include <set>
 #include <iostream>

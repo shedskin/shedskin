@@ -176,10 +176,6 @@ inline __ss_bool __ss_is_integer(__ss_float d) {
 
 namespace __int___ {
     inline __ss_int bit_count(__ss_int i) {
-#ifdef __SS_LONG
-        return __builtin_popcountll(i); // TODO use std::popcount from C++20?
-#else
-        return __builtin_popcount(i);
-#endif
+        return std::bitset<std::numeric_limits<__ss_int>::digits>(i).count();
     }
 }
