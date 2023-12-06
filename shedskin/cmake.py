@@ -579,14 +579,14 @@ class CMakeBuilder:
         options = " ".join(options)
         cfg_cmd = f"cmake {options} -S {self.source_dir} -B {self.build_dir}"
         self.log.info(cfg_cmd)
-        os.system(cfg_cmd)
+        assert os.system(cfg_cmd) == 0
 
     def cmake_build(self, options):
         """activate cmake build"""
         options = " ".join(options)
         bld_cmd = f"cmake --build {self.build_dir} {options}"
         self.log.info(bld_cmd)
-        os.system(bld_cmd)
+        assert os.system(bld_cmd) == 0
 
     def cmake_test(self, options):
         """activate ctest"""
@@ -598,7 +598,7 @@ class CMakeBuilder:
 
         tst_cmd = f"ctest {cfg} --output-on-failure {opts} --test-dir {self.build_dir}"
         self.log.info(tst_cmd)
-        os.system(tst_cmd)
+        assert os.system(tst_cmd) == 0
 
     def run_tests(self):
         """run tests as a test runner"""
