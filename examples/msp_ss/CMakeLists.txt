@@ -17,7 +17,7 @@ add_shedskin_product(
         lib/serial
 
     CMDLINE_OPTIONS
-        "-Llib"
+        "-Xlib"
 
     INCLUDE_DIRS
         lib

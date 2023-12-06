@@ -29,7 +29,7 @@ add_shedskin_product(
         lib/hashlib
 
     CMDLINE_OPTIONS
-        "-Llib"
+        "-Xlib"
 
     INCLUDE_DIRS
         lib
