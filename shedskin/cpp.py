@@ -2583,6 +2583,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         pairs, rest, err = infer.connect_actual_formal(
             self.gx, node, target, parent_constr, merge=self.mergeinh
         )
+
         if (
             err
             and not self.library_func(funcs, "builtin", None, "sum")
@@ -2656,7 +2657,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     self.append("___box((")
 
             if arg in target.mv.defaults:
-                if self.mergeinh[arg] == set([(python.def_class(self.gx, "none"), 0)]):
+                if self.mergeinh[arg] == set([(python.def_class(self.gx, "bool_"), 0)]):
+                    self.append(str(arg.value))
+                elif self.mergeinh[arg] == set([(python.def_class(self.gx, "none"), 0)]):
                     self.append("NULL")
                 elif target.mv.module == self.mv.module:
                     self.append("default_%d" % (target.mv.defaults[arg][0]))

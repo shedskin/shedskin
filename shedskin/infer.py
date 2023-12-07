@@ -348,7 +348,7 @@ def connect_actual_formal(gx, expr, func, parent_constr=False, merge=None):
         or (func.mv.module.ident == "random" and func.ident == "randrange")
         or (
             func.mv.module.ident == "builtin"
-            and func.ident not in ("sort", "sorted", "min", "max", "__print")
+            and func.ident not in ("sort", "sorted", "min", "max", "__print", "zip")
         )
     ):
         skip_defaults = True

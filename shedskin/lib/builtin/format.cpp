@@ -287,7 +287,7 @@ str *__modcd(str *fmt, list<str *> *names, ...) {
 
     str *naam;
     int pos, pos2;
-    dict<str *, pyobj *> *d = new dict<str *, pyobj *>(__zip(2, names, vals));
+    dict<str *, pyobj *> *d = new dict<str *, pyobj *>(__zip(2, False, names, vals));
     str *const_6 = new str(")");
     list<pyobj *> *values = new list<pyobj *>();
 
