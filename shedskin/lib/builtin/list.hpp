@@ -429,7 +429,10 @@ template<class T> inline T list<T>::for_in_next(size_t &i) {
 }
 
 template<class T, class U> list<T> *__add_list_elt(list<T> *l, U u) {
-    list<T> *c = l->__copy__();
-    c->units.push_back((T)u);
+    list<T> *c = new list<T>();
+    int ll = l->units.size();
+    c->units.resize(ll+1);
+    memcpy(&(c->units[0]), &(l->units[0]), sizeof(T)*ll);
+    c->units[ll] = (T)u;
     return c;
 }
