@@ -279,22 +279,26 @@ template<class T> inline izipiter<T, T> *__zip(int iterable_count, __ss_bool str
 template<class T, class U> class izipiter : public __iter<tuple2<T, U> *> {
 public:
     bool exhausted;
+    __ss_bool strict;
+
     __iter<T> *first;
     __iter<U> *second;
 
-    izipiter();
-    izipiter(pyiter<T> *iterable1, pyiter<U> *iterable2);
+    izipiter(__ss_bool strict);
+    izipiter(__ss_bool strict, pyiter<T> *iterable1, pyiter<U> *iterable2);
 
     tuple2<T, U> *__next__();
 
     inline str *__str__() { return new str("<zip object>"); }
 };
 
-template<class T, class U> inline izipiter<T, U>::izipiter() {
+template<class T, class U> inline izipiter<T, U>::izipiter(__ss_bool strict) {
     this->exhausted = true;
+    this->strict = strict;
 }
-template<class T, class U> inline izipiter<T, U>::izipiter(pyiter<T> *iterable1, pyiter<U> *iterable2) {
+template<class T, class U> inline izipiter<T, U>::izipiter(__ss_bool strict, pyiter<T> *iterable1, pyiter<U> *iterable2) {
     this->exhausted = false;
+    this->strict = strict;
     this->first = iterable1->__iter__();
     this->second = iterable2->__iter__();
 }
@@ -305,12 +309,26 @@ template<class T, class U> tuple2<T, U> *izipiter<T, U>::__next__() {
     }
 
     tuple2<T, U> *tuple = new tuple2<T, U>;
+
+    int n_exhausted = 0;
+
     try  {
         tuple->first = this->first->__next__();
+    } catch (StopIteration *) {
+        n_exhausted += 1;
+    }
+    try  {
         tuple->second = this->second->__next__();
     } catch (StopIteration *) {
+        n_exhausted += 1;
+    }
+
+    if (n_exhausted) {
         this->exhausted = true;
-        throw;
+        if (this->strict and n_exhausted != 2)
+            throw new ValueError(new str("zip() arguments of different lengths"));
+        else
+            throw new StopIteration();
     }
 
     return tuple;
@@ -319,11 +337,13 @@ template<class T, class U> tuple2<T, U> *izipiter<T, U>::__next__() {
 template<class T> class izipiter<T, T> : public __iter<tuple2<T, T> *> {
 public:
     bool exhausted;
+    __ss_bool strict;
+
     __GC_VECTOR(__iter<T> *) iters;
 
-    izipiter();
-    izipiter(pyiter<T> *iterable);
-    izipiter(pyiter<T> *iterable1, pyiter<T> *iterable2);
+    izipiter(__ss_bool strict);
+    izipiter(__ss_bool strict, pyiter<T> *iterable);
+    izipiter(__ss_bool strict, pyiter<T> *iterable1, pyiter<T> *iterable2);
 
     void push_iter(pyiter<T> *iterable);
 
@@ -334,15 +354,18 @@ public:
     friend izipiter<T, T> *__zip<T>(int iterable_count, __ss_bool strict, pyiter<T> *iterable, ...);
 };
 
-template<class T> inline izipiter<T, T>::izipiter() {
+template<class T> inline izipiter<T, T>::izipiter(__ss_bool strict) {
     this->exhausted = true;
+    this->strict = strict;
 }
-template<class T> inline izipiter<T, T>::izipiter(pyiter<T> *iterable) {
+template<class T> inline izipiter<T, T>::izipiter(__ss_bool strict, pyiter<T> *iterable) {
     this->exhausted = false;
+    this->strict = strict;
     this->push_iter(iterable);
 }
-template<class T> inline izipiter<T, T>::izipiter(pyiter<T> *iterable1, pyiter<T> *iterable2) {
+template<class T> inline izipiter<T, T>::izipiter(__ss_bool strict, pyiter<T> *iterable1, pyiter<T> *iterable2) {
     this->exhausted = false;
+    this->strict = strict;
     this->push_iter(iterable1);
     this->push_iter(iterable2);
 }
@@ -356,26 +379,35 @@ template<class T> tuple2<T, T> *izipiter<T, T>::__next__() {
     }
 
     tuple2<T, T> *tuple = new tuple2<T, T>;
+    int n_exhausted = 0;
+
     for (unsigned int i = 0; i < this->iters.size(); ++i) {
         try  {
             tuple->units.push_back(this->iters[i]->__next__());
         } catch (StopIteration *) {
-            this->exhausted = true;
-            throw;
+            n_exhausted += 1;
         }
+    }
+
+    if (n_exhausted) {
+        this->exhausted = true;
+        if (this->strict and n_exhausted != this->iters.size())
+            throw new ValueError(new str("zip() arguments of different lengths"));
+        else
+            throw new StopIteration();
     }
 
     return tuple;
 }
 
 inline izipiter<void*, void*> *__zip(int iterable_count, __ss_bool strict) {
-    return new izipiter<void*, void*>();
+    return new izipiter<void*, void*>(strict);
 }
 template<class T, class U> inline izipiter<T, U> *__zip(int iterable_count, __ss_bool strict, pyiter<T> *iterable1, pyiter<U> *iterable2) {
-    return new izipiter<T, U>(iterable1, iterable2);
+    return new izipiter<T, U>(strict, iterable1, iterable2);
 }
 template<class T> inline izipiter<T, T> *__zip(int iterable_count, __ss_bool strict, pyiter<T> *iterable, ...) {
-    izipiter<T, T> *iter = new izipiter<T, T>(iterable);
+    izipiter<T, T> *iter = new izipiter<T, T>(strict, iterable);
 
     va_list ap;
     va_start(ap, iterable);
