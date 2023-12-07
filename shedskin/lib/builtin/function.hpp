@@ -274,7 +274,7 @@ template <class A> __iter<tuple2<__ss_int, A> *> *enumerate(pyiter<A> *x, __ss_i
 /* zip */
 
 template<class T, class U> class izipiter;
-template<class T> inline izipiter<T, T> *__zip(int iterable_count, pyiter<T> *iterable, ...);
+template<class T> inline izipiter<T, T> *__zip(int iterable_count, __ss_bool strict, pyiter<T> *iterable, ...);
 
 template<class T, class U> class izipiter : public __iter<tuple2<T, U> *> {
 public:
@@ -331,7 +331,7 @@ public:
 
     inline str *__str__() { return new str("<zip object>"); }
 
-    friend izipiter<T, T> *__zip<T>(int iterable_count, pyiter<T> *iterable, ...);
+    friend izipiter<T, T> *__zip<T>(int iterable_count, __ss_bool strict, pyiter<T> *iterable, ...);
 };
 
 template<class T> inline izipiter<T, T>::izipiter() {
@@ -368,13 +368,13 @@ template<class T> tuple2<T, T> *izipiter<T, T>::__next__() {
     return tuple;
 }
 
-inline izipiter<void*, void*> *__zip(int /* iterable_count */) {
+inline izipiter<void*, void*> *__zip(int iterable_count, __ss_bool strict) {
     return new izipiter<void*, void*>();
 }
-template<class T, class U> inline izipiter<T, U> *__zip(int /* iterable_count */, pyiter<T> *iterable1, pyiter<U> *iterable2) {
+template<class T, class U> inline izipiter<T, U> *__zip(int iterable_count, __ss_bool strict, pyiter<T> *iterable1, pyiter<U> *iterable2) {
     return new izipiter<T, U>(iterable1, iterable2);
 }
-template<class T> inline izipiter<T, T> *__zip(int iterable_count, pyiter<T> *iterable, ...) {
+template<class T> inline izipiter<T, T> *__zip(int iterable_count, __ss_bool strict, pyiter<T> *iterable, ...) {
     izipiter<T, T> *iter = new izipiter<T, T>(iterable);
 
     va_list ap;

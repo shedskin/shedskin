@@ -1047,10 +1047,10 @@ class __xrange:  # TODO add __getitem__!
 def range(a, b=1, s=1):
     return __xrange()
 
-def zip(*args):
+def zip(__kw_strict=False, *args):
     elem = iter(args).__next__()
     yield (elem,)
-def __zip2(arg1, arg2):
+def __zip2(arg1, arg2, __kw_strict=False):
     elem1 = iter(arg1).__next__()
     elem2 = iter(arg2).__next__()
     yield (elem1, elem2)
