@@ -427,3 +427,9 @@ template<class T> inline bool list<T>::for_in_has_next(size_t i) {
 template<class T> inline T list<T>::for_in_next(size_t &i) {
     return units[i++];
 }
+
+template<class T, class U> list<T> *__add_list_elt(list<T> *l, U u) {
+    list<T> *c = l->__copy__();
+    c->units.push_back((T)u);
+    return c;
+}

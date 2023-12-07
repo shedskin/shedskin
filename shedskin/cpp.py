@@ -2085,6 +2085,15 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.append(")")
             return
 
+        # --- optimize: list + [element]
+        if middle == "__add__" and self.one_class(left, ('list',)) and isinstance(right, ast.List) and len(right.elts) == 1:
+            self.append("__add_list_elt(")
+            self.visit(left, func)
+            self.append(", ")
+            self.visit(right.elts[0], func)
+            self.append(")")
+            return
+
         # --- default: left, connector, middle, right
         argtypes = ltypes | rtypes
         self.append("(")
