@@ -50,7 +50,7 @@ lines  name                 description
    109 neural2.py           back-prop neural network
     78 oliva2.py            sea shell patterns
     95 othello.py           othello player
-   136 othello2.py          othello bitboard implementation
+   136 othello2.py          strong othello player
    208 path_tracing.py      path tracing raytracer
     80 pisang.py            satisfiability solver
    392 plcfrs.py            natural language parser
