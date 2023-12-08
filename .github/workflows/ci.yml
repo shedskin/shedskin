@@ -46,9 +46,9 @@ jobs:
     - name: Test shedskin
       run: |
         cd tests
-        shedskin test --nowarnings --conan
+        shedskin test --conan
 
     - name: Test shedskin examples
       run: |
         cd examples
-        shedskin test --nowarnings --conan
+        shedskin test --conan
