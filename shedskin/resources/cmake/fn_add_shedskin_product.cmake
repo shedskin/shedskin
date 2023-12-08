@@ -470,6 +470,8 @@ function(add_shedskin_product)
             $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-pedantic>
             # windows
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/W4>
+            $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/wd4100> # unreferenced formal
+            $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/wd4101> # unreferenced local var
             $<$<BOOL:${WIN32}>:/MD>
             # $<$<BOOL:${WIN32}>:/LD>
         )
