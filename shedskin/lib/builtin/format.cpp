@@ -9,10 +9,6 @@ typedef SSIZE_T ssize_t;
 
 /* mod helpers */
 
-#if defined(_WIN32) || defined(WIN32) || defined(__sun)
-#if defined (_MSC_VER)
-#define va_copy(dest, src) ((void)((dest) = (src)));
-#endif
 int vasprintf(char **ret, const char *format, va_list ap)
 {
     va_list ap2;
