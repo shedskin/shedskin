@@ -337,12 +337,12 @@ function(add_shedskin_product)
         target_compile_options(${EXE} PRIVATE
             ${SHEDSKIN_COMPILE_OPTIONS}
             $<$<BOOL:${UNIX}>:-O2>
-            $<$<BOOL:${UNIX}>:-Wno-deprecated>
             $<$<BOOL:${UNIX}>:-Wno-unused-variable>
             $<$<BOOL:${UNIX}>:-Wno-unused-but-set-variable>
+            $<$<BOOL:${UNIX}>:-Wno-unused-result>
             $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wall>
             # windows
-            $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/Wall>
+            $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/W4>
             $<$<BOOL:${WIN32}>:/MD>
         )
 
@@ -459,14 +459,13 @@ function(add_shedskin_product)
             $<$<BOOL:${UNIX}>:-fPIC>
             $<$<BOOL:${UNIX}>:-fwrapv>
             $<$<BOOL:${UNIX}>:-g>
-            $<$<BOOL:${UNIX}>:-O3>
-            $<$<BOOL:${UNIX}>:-Wunreachable-code>
+            $<$<BOOL:${UNIX}>:-O2>
             $<$<BOOL:${UNIX}>:-Wno-unused-result>
             $<$<BOOL:${UNIX}>:-Wno-unused-variable>
             $<$<BOOL:${UNIX}>:-Wno-unused-but-set-variable>
             $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wall>
             # windows
-            $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/Wall>
+            $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/W4>
             $<$<BOOL:${WIN32}>:/MD>
             # $<$<BOOL:${WIN32}>:/LD>
         )
