@@ -310,7 +310,7 @@ template<class T, class U> tuple2<T, U> *izipiter<T, U>::__next__() {
 
     tuple2<T, U> *tuple = new tuple2<T, U>;
 
-    int n_exhausted = 0;
+    size_t n_exhausted = 0;
 
     try  {
         tuple->first = this->first->__next__();
@@ -379,7 +379,7 @@ template<class T> tuple2<T, T> *izipiter<T, T>::__next__() {
     }
 
     tuple2<T, T> *tuple = new tuple2<T, T>;
-    int n_exhausted = 0;
+    size_t n_exhausted = 0;
 
     for (unsigned int i = 0; i < this->iters.size(); ++i) {
         try  {
