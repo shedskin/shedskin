@@ -30,11 +30,11 @@ size_t str::size() const {
     return this->unit.size();
 }
 
-__ss_int str::find(const char c, __ss_int a) const {
+size_t str::find(const char c, __ss_int a) const {
     return this->unit.find(c, a);
 }
 
-__ss_int str::find(const char *c, __ss_int a) const {
+size_t str::find(const char *c, __ss_int a) const {
     return this->unit.find(c, a);
 }
 
@@ -107,7 +107,7 @@ void str::operator+= (const char &rhs) {
 
 __ss_bool str::__ctype_function(int (*cfunc)(int))
 {
-  int i, l = size();
+  size_t i, l = size();
 
   if(!l)
       return False;
@@ -126,7 +126,7 @@ __ss_bool str::islower() { return __ctype_function(&::islower); }
 __ss_bool str::isupper() { return __ctype_function(&::isupper); }
 
 __ss_bool str::isprintable() {
-  int i, l = size();
+  size_t i, l = size();
 
   for(i = 0; i < l; i++) {
       unsigned char elem = unit[i];
@@ -139,7 +139,7 @@ __ss_bool str::isprintable() {
 }
 
 __ss_bool str::__ss_isascii() {
-  int i, l = size();
+  size_t i, l = size();
 
   for(i = 0; i < l; i++) {
       unsigned char elem = unit[i];
@@ -152,7 +152,7 @@ __ss_bool str::__ss_isascii() {
 }
 
 __ss_bool str::isdecimal() {
-  int i, l = size();
+  size_t i, l = size();
 
   if(!l)
       return False;
@@ -168,7 +168,7 @@ __ss_bool str::isdecimal() {
 }
 
 __ss_bool str::isnumeric() {
-  int i, l = size();
+  size_t i, l = size();
 
   if(!l)
       return False;
@@ -207,7 +207,7 @@ str *str::expandtabs(__ss_int tabsize) {
     size_t i;
     __GC_STRING r = unit;
     while((i = r.find("\t")) != std::string::npos)
-        r.replace(i, 1, (new str(" "))->__mul__(tabsize-i%tabsize)->unit);
+        r.replace(i, 1, (new str(" "))->__mul__(tabsize-((__ss_int)i)%tabsize)->unit);
     return new str(r);
 }
 
@@ -312,7 +312,7 @@ list<str *> *str::rsplit(str *sep, __ss_int maxsep)
 
 __ss_bool str::istitle()
 {
-    int i, len;
+    size_t i, len;
 
     len = size();
     if(!len)
@@ -336,7 +336,7 @@ __ss_bool str::istitle()
 }
 
 __ss_bool str::isidentifier() {
-    int i, len;
+    size_t i, len;
 
     len = size();
     if(!len)
@@ -522,14 +522,14 @@ str *str::__mul__(__ss_int n) { /* optimize */
     str *r = new str();
     if(n<=0) return r;
     __GC_STRING &s = r->unit;
-    __ss_int ulen = size();
+    size_t ulen = size();
 
     if(ulen == 1)
        r->unit = __GC_STRING(n, unit[0]);
     else {
         s.resize(ulen*n);
 
-        for(__ss_int i=0; i<ulen*n; i+=ulen)
+        for(size_t i=0; i<ulen*n; i+=ulen)
             s.replace(i, ulen, unit);
     }
 
@@ -563,9 +563,9 @@ str *str::__iadd__(str *b) {
 
 str *__add_strs(int, str *a, str *b, str *c) {
     str *result = new str();
-    int asize = a->size();
-    int bsize = b->size();
-    int csize = c->size();
+    size_t asize = a->size();
+    size_t bsize = b->size();
+    size_t csize = c->size();
     if(asize == 1 && bsize == 1 && csize == 1) {
         result->unit.resize(3);
         result->unit[0] = a->unit[0];
@@ -575,7 +575,7 @@ str *__add_strs(int, str *a, str *b, str *c) {
     else {
         result->unit.resize(asize+bsize+csize);
         memcpy((void *)(result->unit.data()), a->unit.data(), asize);
-        int pos = asize;
+        size_t pos = asize;
         memcpy((void *)(result->unit.data()+pos), b->unit.data(), bsize);
         pos += bsize;
         memcpy((void *)(result->unit.data()+pos), c->unit.data(), csize);
