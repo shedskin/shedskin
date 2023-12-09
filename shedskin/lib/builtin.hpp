@@ -381,10 +381,10 @@ public:
     list<bytes *> *splitlines(__ss_int keepends = 0);
 
     /* functions pointing to the underlying C++ implementation */
-    const char *c_str() const;
-    const size_t size() const;
-    const __ss_int find(const char c, __ss_int a=0) const;
-    const __ss_int find(const char *c, __ss_int a=0) const;
+    char *c_str() const;
+    size_t size() const;
+    __ss_int find(const char c, __ss_int a=0) const;
+    __ss_int find(const char *c, __ss_int a=0) const;
 
     __ss_int __fixstart(__ss_int a, __ss_int b);
     __ss_int __checkneg(__ss_int i);
@@ -514,10 +514,10 @@ public:
     //str *operator+ (basic_string c);
 
     /* functions pointing to the underlying C++ implementation */
-    const char *c_str() const;
-    const size_t size() const;
-    const __ss_int find(const char c, __ss_int a=0) const;
-    const __ss_int find(const char *c, __ss_int a=0) const;
+    char *c_str() const;
+    size_t size() const;
+    __ss_int find(const char c, __ss_int a=0) const;
+    __ss_int find(const char *c, __ss_int a=0) const;
 
     str *__str__();
     str *__repr__();

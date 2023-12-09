@@ -22,19 +22,19 @@ str *str::__str__() {
     return this;
 }
 
-const char *str::c_str() const {
-    return this->unit.c_str();
+char *str::c_str() const {
+    return (char *)this->unit.c_str();
 }
 
-const size_t str::size() const {
+size_t str::size() const {
     return this->unit.size();
 }
 
-const __ss_int str::find(const char c, __ss_int a) const {
+__ss_int str::find(const char c, __ss_int a) const {
     return this->unit.find(c, a);
 }
 
-const __ss_int str::find(const char *c, __ss_int a) const {
+__ss_int str::find(const char *c, __ss_int a) const {
     return this->unit.find(c, a);
 }
 
@@ -131,7 +131,7 @@ __ss_bool str::isprintable() {
   for(i = 0; i < l; i++) {
       unsigned char elem = unit[i];
 
-      if((0 <= elem and elem <= 31) or (127 <= elem and elem <= 160) or elem == 173)
+      if(elem <= 31 or (127 <= elem and elem <= 160) or elem == 173)
           return False;
   }
 
@@ -260,7 +260,7 @@ list<str *> *str::rsplit(str *sep, __ss_int maxsep)
     //split by whitespace
     if(!sep)
     {
-        while(i != std::string::npos && j != std::string::npos && (curi < maxsep2 || maxsep2 < 0))
+        while(i != std::string::npos && j != std::string::npos && (curi < maxsep2 || maxsep2 == std::string::npos))
         {
             j = unit.find_last_not_of(ws, i);
             if(j == std::string::npos) break;
@@ -283,7 +283,7 @@ list<str *> *str::rsplit(str *sep, __ss_int maxsep)
         tslen = ts.length();
 
         i++;
-        while(i != std::string::npos && j != std::string::npos && (curi < maxsep2 || maxsep2 < 0))
+        while(i != std::string::npos && j != std::string::npos && (curi < maxsep2 || maxsep2 == std::string::npos))
         {
             j = i;
             i--;
@@ -370,7 +370,7 @@ list<str *> *str::splitlines(__ss_int keepends)
 
         r->append(new str(unit.substr(j, i - j + (keepends ? endlen : 0))));
     }
-    while(i >= 0);
+    while(i != std::string::npos);
 
     if(j != size()) r->append(new str(unit.substr(j)));
 

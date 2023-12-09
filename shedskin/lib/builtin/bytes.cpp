@@ -23,11 +23,11 @@ bytes::bytes(const char *s, int size, int frozen) : unit(s, size), hash(-1), fro
     __class__ = cl_bytes;
 }
 
-const char *bytes::c_str() const {
-    return this->unit.c_str();
+char *bytes::c_str() const {
+    return (char *)this->unit.c_str();
 }
 
-const size_t bytes::size() const {
+size_t bytes::size() const {
     return this->unit.size();
 }
 
@@ -35,11 +35,11 @@ str *bytes::__str__() {
     return __repr__();
 }
 
-const __ss_int bytes::find(const char c, __ss_int a) const {
+__ss_int bytes::find(const char c, __ss_int a) const {
     return this->unit.find(c, a);
 }
 
-const __ss_int bytes::find(const char *c, __ss_int a) const {
+__ss_int bytes::find(const char *c, __ss_int a) const {
     return this->unit.find(c, a);
 }
 
@@ -338,7 +338,7 @@ list<bytes *> *bytes::rsplit(bytes *sep, __ss_int maxsep)
     //split by whitespace
     if(!sep)
     {
-        while(i != std::string::npos && j != std::string::npos && (curi < maxsep2 || maxsep2 < 0))
+        while(i != std::string::npos && j != std::string::npos && (curi < maxsep2 || maxsep2 == std::string::npos))
         {
             j = unit.find_last_not_of(ws, i);
             if(j == std::string::npos) break;
@@ -362,7 +362,7 @@ list<bytes *> *bytes::rsplit(bytes *sep, __ss_int maxsep)
         tslen = ts.length();
 
         i++;
-        while(i != std::string::npos && j != std::string::npos && (curi < maxsep2 || maxsep2 < 0))
+        while(i != std::string::npos && j != std::string::npos && (curi < maxsep2 || maxsep2 == std::string::npos))
         {
             j = i;
             i--;
@@ -430,7 +430,7 @@ list<bytes *> *bytes::splitlines(__ss_int keepends)
 
         r->append(new bytes(unit.substr(j, i - j + (keepends ? endlen : 0)), frozen));
     }
-    while(i >= 0);
+    while(i != std::string::npos);
 
     if(j != size()) r->append(new bytes(unit.substr(j), frozen));
 
