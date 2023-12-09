@@ -177,9 +177,9 @@ inline __ss_bool __ss_is_integer(__ss_float d) {
 namespace __int___ {
     inline __ss_int bit_count(__ss_int i) {
 #ifdef __SS_LONG
-        return std::bitset<std::numeric_limits<unsigned long long>::digits>(i).count(); // TODO hard-coded types
+        return (__ss_int)std::bitset<std::numeric_limits<unsigned long long>::digits>(i).count(); // TODO hard-coded types
 #else
-        return std::bitset<std::numeric_limits<unsigned int>::digits>(i).count();
+        return (__ss_int)std::bitset<std::numeric_limits<unsigned int>::digits>(i).count();
 #endif
     }
 }

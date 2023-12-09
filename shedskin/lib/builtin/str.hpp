@@ -13,7 +13,7 @@ inline str *str::__getfast__(__ss_int i) {
 }
 
 inline __ss_int str::__len__() {
-    return size();
+    return (__ss_int)size();
 }
 
 inline bool str::for_in_has_next(size_t i) {

@@ -585,10 +585,10 @@ str *__add_strs(int, str *a, str *b, str *c) {
 
 str *__add_strs(int, str *a, str *b, str *c, str *d) {
     str *result = new str();
-    int asize = a->size();
-    int bsize = b->size();
-    int csize = c->size();
-    int dsize = d->size();
+    size_t asize = a->size();
+    size_t bsize = b->size();
+    size_t csize = c->size();
+    size_t dsize = d->size();
     if(asize == 1 && bsize == 1 && csize == 1 && dsize == 1) {
         result->unit.resize(4);
         result->unit[0] = a->unit[0];
@@ -599,7 +599,7 @@ str *__add_strs(int, str *a, str *b, str *c, str *d) {
     else {
         result->unit.resize(asize+bsize+csize+dsize);
         memcpy((void *)(result->unit.data()), a->unit.data(), asize);
-        int pos = asize;
+        size_t pos = asize;
         memcpy((void *)(result->unit.data()+pos), b->unit.data(), bsize);
         pos += bsize;
         memcpy((void *)(result->unit.data()+pos), c->unit.data(), csize);
@@ -611,11 +611,11 @@ str *__add_strs(int, str *a, str *b, str *c, str *d) {
 
 str *__add_strs(int, str *a, str *b, str *c, str *d, str *e) {
     str *result = new str();
-    int asize = a->size();
-    int bsize = b->size();
-    int csize = c->size();
-    int dsize = d->size();
-    int esize = e->size();
+    size_t asize = a->size();
+    size_t bsize = b->size();
+    size_t csize = c->size();
+    size_t dsize = d->size();
+    size_t esize = e->size();
     if(asize == 1 && bsize == 1 && csize == 1 && dsize == 1 && esize == 1) {
         result->unit.resize(5);
         result->unit[0] = a->unit[0];
@@ -627,7 +627,7 @@ str *__add_strs(int, str *a, str *b, str *c, str *d, str *e) {
     else {
         result->unit.resize(asize+bsize+csize+dsize+esize);
         memcpy((void *)(result->unit.data()), a->unit.data(), asize);
-        int pos = asize;
+        size_t pos = asize;
         memcpy((void *)(result->unit.data()+pos), b->unit.data(), bsize);
         pos += bsize;
         memcpy((void *)(result->unit.data()+pos), c->unit.data(), csize);
