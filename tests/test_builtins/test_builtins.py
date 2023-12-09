@@ -117,6 +117,7 @@ def test_int():
     assert int(100.2) == 100
 
     assert int.bit_count(12345) == 6
+    assert int.bit_count(0b11111111111111111111111111111111) == 32
 #    assert int.bit_count(-12345) == 6
 
 # def test_getattr():
