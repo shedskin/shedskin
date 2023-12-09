@@ -35,11 +35,11 @@ str *bytes::__str__() {
     return __repr__();
 }
 
-__ss_int bytes::find(const char c, __ss_int a) const {
+size_t bytes::find(const char c, __ss_int a) const {
     return this->unit.find(c, a);
 }
 
-__ss_int bytes::find(const char *c, __ss_int a) const {
+size_t bytes::find(const char *c, __ss_int a) const {
     return this->unit.find(c, a);
 }
 
@@ -503,7 +503,7 @@ bytes *bytes::expandtabs(__ss_int tabsize) {
 
 __ss_bool bytes::__ctype_function(int (*cfunc)(int))
 {
-  int i, l = size();
+  size_t i, l = size();
 
   if(!l)
       return False;
@@ -523,7 +523,7 @@ __ss_bool bytes::isalnum() { return __ctype_function(&::isalnum); }
 
 __ss_bool bytes::istitle()
 {
-    int i, len;
+    size_t i, len;
 
     len = size();
     if(!len)
@@ -547,7 +547,7 @@ __ss_bool bytes::istitle()
 }
 
 __ss_bool bytes::__ss_isascii() {
-  int i, l = size();
+  size_t i, l = size();
 
   for(i = 0; i < l; i++) {
       unsigned char elem = unit[i];

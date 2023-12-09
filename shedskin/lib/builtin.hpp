@@ -383,8 +383,8 @@ public:
     /* functions pointing to the underlying C++ implementation */
     char *c_str() const;
     size_t size() const;
-    __ss_int find(const char c, __ss_int a=0) const;
-    __ss_int find(const char *c, __ss_int a=0) const;
+    size_t find(const char c, __ss_int a=0) const;
+    size_t find(const char *c, __ss_int a=0) const;
 
     __ss_int __fixstart(__ss_int a, __ss_int b);
     __ss_int __checkneg(__ss_int i);
@@ -516,8 +516,8 @@ public:
     /* functions pointing to the underlying C++ implementation */
     char *c_str() const;
     size_t size() const;
-    __ss_int find(const char c, __ss_int a=0) const;
-    __ss_int find(const char *c, __ss_int a=0) const;
+    size_t find(const char c, __ss_int a=0) const;
+    size_t find(const char *c, __ss_int a=0) const;
 
     str *__str__();
     str *__repr__();
