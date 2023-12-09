@@ -338,6 +338,7 @@ function(add_shedskin_product)
             ${SHEDSKIN_COMPILE_OPTIONS}
             $<$<BOOL:${UNIX}>:-O2>
             $<$<BOOL:${UNIX}>:-Wno-unused-variable>
+            $<$<BOOL:${UNIX}>:-Wno-unused-parameter>
             $<$<BOOL:${UNIX}>:-Wno-unused-but-set-variable>
             $<$<BOOL:${UNIX}>:-Wno-unused-result>
             $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wall>
@@ -464,6 +465,7 @@ function(add_shedskin_product)
             $<$<BOOL:${UNIX}>:-O2>
             $<$<BOOL:${UNIX}>:-Wno-unused-result>
             $<$<BOOL:${UNIX}>:-Wno-unused-variable>
+            $<$<BOOL:${UNIX}>:-Wno-unused-parameter>
             $<$<BOOL:${UNIX}>:-Wno-unused-but-set-variable>
             $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wall>
             $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wextra>
