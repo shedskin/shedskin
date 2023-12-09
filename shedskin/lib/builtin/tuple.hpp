@@ -57,7 +57,7 @@ template<class T> inline T tuple2<T, T>::__getfast__(__ss_int i) {
 }
 
 template<class T> __ss_int tuple2<T, T>::__len__() {
-    return units.size();
+    return (__ss_int)units.size();
 }
 
 template<class T> T tuple2<T, T>::__getitem__(__ss_int i) {
@@ -120,10 +120,10 @@ template<class T> __ss_bool tuple2<T, T>::__contains__(T a) {
 template<class T> __ss_bool tuple2<T, T>::__eq__(pyobj *p) {
     tuple2<T,T> *b;
     b = (tuple2<T,T> *)p;
-    unsigned int sz = this->units.size();
+    size_t sz = this->units.size();
     if(b->units.size() != sz)
         return False;
-    for(unsigned int i=0; i<sz; i++)
+    for(size_t i=0; i<sz; i++)
         if(!__eq(this->units[i], b->units[i]))
             return False;
     return True;

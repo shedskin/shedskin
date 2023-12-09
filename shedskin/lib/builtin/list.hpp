@@ -70,7 +70,7 @@ template<class T> void list<T>::resize(__ss_int i) {
 }
 
 template<class T> __ss_int list<T>::__len__() {
-    return units.size();
+    return (__ss_int)units.size();
 }
 
 template<class T> T list<T>::__getitem__(__ss_int i) {
@@ -80,9 +80,9 @@ template<class T> T list<T>::__getitem__(__ss_int i) {
 
 template<class T> __ss_bool list<T>::__eq__(pyobj *p) {
    list<T> *b = (list<T> *)p;
-   unsigned int len = this->units.size();
+   size_t len = this->units.size();
    if(b->units.size() != len) return False;
-   for(unsigned int i = 0; i < len; i++)
+   for(size_t i = 0; i < len; i++)
        if(!__eq(this->units[i], b->units[i]))
            return False;
    return True;

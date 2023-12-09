@@ -14,13 +14,13 @@ inline __ss_int bytes::__getfast__(__ss_int i) {
 
 inline void *bytes::__setitem__(__ss_int i, __ss_int e) {
     i = __wrap(this, i);
-    unit[i] = e;
+    unit[i] = (unsigned char)e;
 
     return NULL;
 }
 
 inline __ss_int bytes::__len__() {
-    return size();
+    return (__ss_int)size();
 }
 
 inline bool bytes::for_in_has_next(size_t i) {
