@@ -796,11 +796,11 @@ str *str::title() {
         if(!::isalpha(c))
             up = true;
         else if (up) {
-            c = ::toupper(c);
+            c = (char)::toupper(c);
             up = false;
         }
         else
-            c = ::tolower(c);
+            c = (char)::tolower(c);
         r->unit[i] = c;
     }
     return r;

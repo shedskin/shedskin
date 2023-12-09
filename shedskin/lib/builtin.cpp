@@ -107,9 +107,9 @@ void __init() {
     for(int i=0; i<256; i++) {
         char c = (char)i;
         if(::islower(c))
-            __case_swap_cache->unit += ::toupper(c);
+            __case_swap_cache->unit += (char)::toupper(c);
         else
-            __case_swap_cache->unit += ::tolower(c);
+            __case_swap_cache->unit += (char)::tolower(c);
     }
 
     __ss_stdin = new file(stdin);
