@@ -1281,7 +1281,7 @@ template<> str *repr(void *t);
 /* len */
 
 template<class T> inline __ss_int len(T x) { return x->__len__(); }
-template<class T> inline __ss_int len(list<T> *x) { return x->units.size(); } /* XXX more general solution? */
+template<class T> inline __ss_int len(list<T> *x) { return (__ss_int)x->units.size(); } /* XXX more general solution? */
 
 #include "builtin/bool.hpp"
 #include "builtin/exception.hpp"
