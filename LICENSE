@@ -2,7 +2,9 @@
 This package is comprised of two parts:
 
     - the Shed Skin compiler (shedskin/*.py); License GNU GPL version 3
-    - a C++ implementation of the Python builtins and libraries (everything under shedskin/lib/); License Expat (with the exception of shedskin/lib/random.?pp, license BSD-3, see below)
+    - a C++ implementation of the Python builtins and libraries
+      (everything under shedskin/lib/); License Expat (with the exception of
+      shedskin/lib/random.?pp, license BSD-3, see below)
 
 Concerning the Shed Skin compiler (shedskin/*.py):
 
