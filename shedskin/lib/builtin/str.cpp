@@ -30,7 +30,7 @@ size_t str::size() const {
     return this->unit.size();
 }
 
-size_t str::find(const char c, __ss_int a) const {
+size_t str::find(const char c, __ss_int a) const { /* remove, one-liner? */
     return this->unit.find(c, a);
 }
 

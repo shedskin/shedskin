@@ -17,8 +17,8 @@ complex_ *___box(complex);
 
 /* string formatting */
 
-int __fmtpos(str *fmt);
-int __fmtpos2(str *fmt);
+size_t __fmtpos(str *fmt);
+size_t __fmtpos2(str *fmt);
 void __modfill(str **fmt, pyobj *t, str **s, pyobj *a1, pyobj *a2, bool bytes=false);
 str *mod_to_c2(pyobj *t);
 int_ *mod_to_int(pyobj *t);
