@@ -20,11 +20,11 @@ inline void *bytes::__setitem__(__ss_int i, __ss_int e) {
 }
 
 inline __ss_int bytes::__len__() {
-    return (__ss_int)size();
+    return (__ss_int)this->unit.size();
 }
 
 inline bool bytes::for_in_has_next(size_t i) {
-    return i < size(); /* XXX opt end cond */
+    return i < this->unit.size(); /* XXX opt end cond */
 }
 
 inline __ss_int bytes::for_in_next(size_t &i) {
@@ -46,7 +46,7 @@ template <class U> bytes *bytes::join(U *iter) {
             only_ones = false;
         total += sz;
     END_FOR
-    int unitsize = size();
+    int unitsize = this->unit.size();
     int elems = len(__join_cache_bin);
     if(elems==1)
         return __join_cache_bin->units[0];
@@ -63,7 +63,7 @@ template <class U> bytes *bytes::join(U *iter) {
         int k = 0;
         for(int m = 0; m<elems; m++) {
             bytes *t = __join_cache_bin->units[m];
-            tsz = t->size();
+            tsz = t->unit.size();
             if (tsz == 1)
                 s->unit[k] = t->unit[0];
             else
@@ -73,7 +73,7 @@ template <class U> bytes *bytes::join(U *iter) {
                 if (unitsize==1)
                     s->unit[k] = unit[0];
                 else
-                    memcpy((void *)(s->unit.data()+k), unit.data(), size());
+                    memcpy((void *)(s->unit.data()+k), unit.data(), this->unit.size());
                 k += unitsize;
             }
         }

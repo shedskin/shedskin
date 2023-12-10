@@ -289,7 +289,7 @@ file_binary *open_binary(bytes *name, str *flags) {
 void *file_binary::write(bytes *s) {
     __check_closed();
     if(f) {
-        size_t size = s->size();
+        size_t size = s->unit.size();
         if(FWRITE(s->unit.data(), 1, size, f) != size and __error())
             throw new OSError();
     }
