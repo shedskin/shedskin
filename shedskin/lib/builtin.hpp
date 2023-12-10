@@ -382,11 +382,8 @@ public:
 
     /* functions pointing to the underlying C++ implementation */
     char *c_str() const;
-    size_t size() const;
-    size_t find(const char c, __ss_int a=0) const;
-    size_t find(const char *c, __ss_int a=0) const;
 
-    __ss_int __fixstart(__ss_int a, __ss_int b);
+    __ss_int __fixstart(size_t a, __ss_int b);
     __ss_int __checkneg(__ss_int i);
 
     __ss_int find(bytes *s, __ss_int a=0);

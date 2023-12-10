@@ -27,31 +27,19 @@ char *bytes::c_str() const {
     return (char *)this->unit.c_str();
 }
 
-size_t bytes::size() const {
-    return this->unit.size();
-}
-
 str *bytes::__str__() {
     return __repr__();
 }
 
-size_t bytes::find(const char c, __ss_int a) const {
-    return this->unit.find(c, a);
+__ss_int bytes::__fixstart(size_t a, __ss_int b) {
+    if(a == std::string::npos) return (__ss_int)a;
+    return (__ss_int)(a+b);
 }
 
-size_t bytes::find(const char *c, __ss_int a) const {
-    return this->unit.find(c, a);
-}
-
-__ss_int bytes::__fixstart(__ss_int a, __ss_int b) {
-    if(a == -1) return a;
-    return a+b;
-}
-
-__ss_int bytes::find(bytes *s, __ss_int a) { return __fixstart(unit.substr(a, size()-a).find(s->unit), a); }
+__ss_int bytes::find(bytes *s, __ss_int a) { return __fixstart(unit.substr(a, this->unit.size()-a).find(s->unit), a); }
 __ss_int bytes::find(bytes *s, __ss_int a, __ss_int b) { return __fixstart(unit.substr(a, b-a).find(s->unit), a); }
 
-__ss_int bytes::rfind(bytes *s, __ss_int a) { return __fixstart(unit.substr(a, size()-a).rfind(s->unit), a); }
+__ss_int bytes::rfind(bytes *s, __ss_int a) { return __fixstart(unit.substr(a, this->unit.size()-a).rfind(s->unit), a); }
 __ss_int bytes::rfind(bytes *s, __ss_int a, __ss_int b) { return __fixstart(unit.substr(a, b-a).rfind(s->unit), a); }
 
 __ss_int bytes::__checkneg(__ss_int i) {
@@ -72,8 +60,8 @@ str *bytes::__repr__() {
     __GC_STRING let = "\\nrt";
 
     const char *quote = "'";
-    size_t hasq = find('\'');
-    size_t hasd = find('\"');
+    size_t hasq = this->unit.find('\'');
+    size_t hasd = this->unit.find('\"');
 
     if (hasq != std::string::npos && hasd != std::string::npos) {
         sep += "'"; let += "'";
@@ -86,7 +74,7 @@ str *bytes::__repr__() {
 
     ss << 'b';
     ss << quote;
-    for(unsigned int i=0; i<size(); i++)
+    for(unsigned int i=0; i<this->unit.size(); i++)
     {
         char c = unit[i];
         size_t k;
@@ -125,8 +113,8 @@ long bytes::__hash__() {
 
 __ss_bool bytes::__eq__(pyobj *p) {
     bytes *q = (bytes *)p;
-    size_t len = size();
-    if(len != q->size() or (hash != -1 and q->hash != -1 and hash != q->hash))
+    size_t len = this->unit.size();
+    if(len != q->unit.size() or (hash != -1 and q->hash != -1 and hash != q->hash))
         return False;
     return __mbool(memcmp(unit.data(), q->unit.data(), len) == 0);
 }
@@ -134,7 +122,7 @@ __ss_bool bytes::__eq__(pyobj *p) {
 bytes *bytes::__add__(bytes *b) {
     bytes *s = new bytes(frozen);
 
-    s->unit.reserve(size()+b->size());
+    s->unit.reserve(this->unit.size()+b->unit.size());
     s->unit.append(unit);
     s->unit.append(b->unit);
 
@@ -157,7 +145,7 @@ bytes *bytes::__mul__(__ss_int n) { /* optimize */
     bytes *r = new bytes(frozen);
     if(n<=0) return r;
     __GC_STRING &s = r->unit;
-    __ss_int ulen = size();
+    __ss_int ulen = this->unit.size();
 
     if(ulen == 1)
         r->unit = __GC_STRING(n, unit[0]);
@@ -172,8 +160,8 @@ bytes *bytes::__mul__(__ss_int n) { /* optimize */
 }
 
 bytes *bytes::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
-    int len = size();
-    slicenr(x, l, u, s, len);
+    size_t len = this->unit.size();
+    slicenr(x, l, u, s, (__ss_int)len);
     bytes *b;
     if(s == 1)
         b = new bytes(unit.data()+l, u-l, frozen);
@@ -181,7 +169,7 @@ bytes *bytes::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
         __GC_STRING r;
         if(!(x&1) && !(x&2) && s==-1) {
             r.resize(len);
-            for(int i=0; i<len; i++)
+            for(size_t i=0; i<len; i++)
                 r[i] = unit[len-i-1];
         }
         else if(s > 0)
@@ -243,7 +231,7 @@ bytes *bytes::lstrip(bytes *chars) {
     size_t first = unit.find_first_not_of(remove);
     if( first == std::string::npos )
         return new bytes(frozen);
-    return new bytes(unit.substr(first,size()-first), frozen);
+    return new bytes(unit.substr(first,this->unit.size()-first), frozen);
 }
 
 bytes *bytes::strip(bytes *chars) {
@@ -286,7 +274,7 @@ list<bytes *> *bytes::split(bytes *sp, __ss_int max_splits) {
     } else { /* given separator (slightly different algorithm required)
               * (python is very inconsistent in this respect) */
         const char *sep = sp->c_str();
-        size_t sep_size = sp->size();
+        size_t sep_size = sp->unit.size();
 
 #define next_separator(iter) s.find(sep, (iter))
 #define skip_separator(iter) ((iter + sep_size) > s.size()? -1 : (iter + sep_size))
@@ -333,7 +321,7 @@ list<bytes *> *bytes::rsplit(bytes *sep, __ss_int maxsep)
     size_t maxsep2 = (size_t)maxsep;
 
     curi = 0;
-    i = j = size() - 1;
+    i = j = this->unit.size() - 1;
 
     //split by whitespace
     if(!sep)
@@ -393,7 +381,7 @@ tuple2<bytes *, bytes *> *bytes::partition(bytes *sep)
 {
     size_t i;
 
-    i = find(sep->c_str());
+    i = this->unit.find(sep->c_str());
     if(i != std::string::npos)
         return new tuple2<bytes *, bytes *>(3, new bytes(unit.substr(0, i), frozen), new bytes(sep->unit, frozen), new bytes(unit.substr(i + sep->unit.length()), frozen));
     else
@@ -404,7 +392,7 @@ tuple2<bytes *, bytes *> *bytes::rpartition(bytes *sep)
 {
     size_t i;
 
-    i = unit.rfind(sep->unit);
+    i = this->unit.rfind(sep->unit);
     if(i != std::string::npos)
         return new tuple2<bytes *, bytes *>(3, new bytes(unit.substr(0, i), frozen), new bytes(sep->unit, frozen), new bytes(unit.substr(i + sep->unit.length()), frozen));
     else
@@ -432,7 +420,7 @@ list<bytes *> *bytes::splitlines(__ss_int keepends)
     }
     while(i != std::string::npos);
 
-    if(j != size()) r->append(new bytes(unit.substr(j), frozen));
+    if(j != this->unit.size()) r->append(new bytes(unit.substr(j), frozen));
 
     return r;
 }
@@ -469,7 +457,7 @@ __ss_int bytes::count(bytes *s, __ss_int start, __ss_int end) {
     slicenr(7, start, end, one, __len__());
 
     i = start; count = 0;
-    while( ((i = find(s->c_str(), i)) != std::string::npos) && (i <= end-(size_t)len(s)) )
+    while( ((i = this->unit.find(s->c_str(), i)) != std::string::npos) && (i <= end-(size_t)len(s)) )
     {
         i += len(s);
         count++;
@@ -503,7 +491,7 @@ bytes *bytes::expandtabs(__ss_int tabsize) {
 
 __ss_bool bytes::__ctype_function(int (*cfunc)(int))
 {
-  size_t i, l = size();
+  size_t i, l = this->unit.size();
 
   if(!l)
       return False;
@@ -516,7 +504,7 @@ __ss_bool bytes::__ctype_function(int (*cfunc)(int))
 
 __ss_bool bytes::islower() { return __ctype_function(&::islower); }
 __ss_bool bytes::isupper() { return __ctype_function(&::isupper); }
-__ss_bool bytes::isspace() { return __mbool(size() && (unit.find_first_not_of(ws) == std::string::npos)); }
+__ss_bool bytes::isspace() { return __mbool(this->unit.size() && (unit.find_first_not_of(ws) == std::string::npos)); }
 __ss_bool bytes::isdigit() { return __ctype_function(&::isdigit); }
 __ss_bool bytes::isalpha() { return __ctype_function(&::isalpha); }
 __ss_bool bytes::isalnum() { return __ctype_function(&::isalnum); }
@@ -525,7 +513,7 @@ __ss_bool bytes::istitle()
 {
     size_t i, len;
 
-    len = size();
+    len = this->unit.size();
     if(!len)
         return False;
 
@@ -547,7 +535,7 @@ __ss_bool bytes::istitle()
 }
 
 __ss_bool bytes::__ss_isascii() {
-  size_t i, l = size();
+  size_t i, l = this->unit.size();
 
   for(i = 0; i < l; i++) {
       unsigned char elem = unit[i];
@@ -560,7 +548,7 @@ __ss_bool bytes::__ss_isascii() {
 }
 
 bytes *bytes::upper() {
-    if(size() == 1)
+    if(this->unit.size() == 1)
         return new bytes(__char_cache[((unsigned char)(::toupper(unit[0])))]->unit, frozen);
 
     bytes *toReturn = new bytes(this->unit, frozen);
@@ -570,7 +558,7 @@ bytes *bytes::upper() {
 }
 
 bytes *bytes::lower() {
-    if(size() == 1)
+    if(this->unit.size() == 1)
         return new bytes(__char_cache[((unsigned char)(::tolower(unit[0])))]->unit, frozen);
 
     bytes *toReturn = new bytes(this->unit, frozen);
@@ -582,7 +570,7 @@ bytes *bytes::lower() {
 bytes *bytes::title() {
     bytes *r = new bytes(unit, frozen);
     bool up = true;
-    size_t len = this->size();
+    size_t len = this->unit.size();
     for(size_t i=0; i<len; i++) {
         char c = this->unit[i];
         if(!::isalpha(c))
@@ -600,15 +588,15 @@ bytes *bytes::title() {
 
 bytes *bytes::capitalize() {
     bytes *r = new bytes(unit, frozen);
-    r->unit[0] = ::toupper(r->unit[0]);
+    r->unit[0] = (char)::toupper(r->unit[0]);
     return r;
 }
 
 bytes *bytes::replace(bytes *a, bytes *b, __ss_int c) {
     __GC_STRING s = unit;
     size_t i, j, p;
-    size_t asize = a->size();
-    size_t bsize = b->size();
+    size_t asize = a->unit.size();
+    size_t bsize = b->unit.size();
     size_t c2 = (size_t)c;
     j = p = 0;
     while( ((c2==std::string::npos) || (j++ != c2)) && (i = s.find(a->unit, p)) != std::string::npos ) {
@@ -620,7 +608,7 @@ bytes *bytes::replace(bytes *a, bytes *b, __ss_int c) {
 
 str *bytes::hex(str *sep) {
     str *result = new str();
-    size_t l = size();
+    size_t l = this->unit.size();
 
     for(size_t i=0; i<l; i++) {
         unsigned char low = unit[i] & 0xf;
@@ -765,10 +753,10 @@ void *bytes::reverse() {
 }
 
 void *bytes::remove(__ss_int i) {
-    __ss_int pos = find(i);
-    if(pos == -1)
+    size_t pos = this->unit.find(i);
+    if(pos == std::string::npos)
         throw new ValueError(new str("value not found in bytearray"));
-    __delitem__(pos);
+    __delitem__((__ss_int)pos);
     return NULL;
 }
 
