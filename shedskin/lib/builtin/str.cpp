@@ -841,7 +841,7 @@ PyObject *str::__to_py__() {
 //    return PyBytes_FromStringAndSize("bla", 3);
     // return PyString_FromStringAndSize(c_str(), size());
     // return PyBytes_FromStringAndSize(c_str(), size());
-    return PyUnicode_DecodeLatin1(c_str(), size(), "");
+    return PyUnicode_DecodeLatin1(c_str(), this->unit.size(), "");
 }
 #endif
 
