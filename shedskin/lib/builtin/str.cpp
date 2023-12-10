@@ -480,22 +480,22 @@ str *str::translate(str *table, str *delchars) {
 
 str *str::swapcase() {
     str *r = new str(unit);
-    int len = __len__();
-    for(int i = 0; i < len; i++)
+    __ss_int len = __len__();
+    for(__ss_int i = 0; i < len; i++)
         r->unit[i] = __case_swap_cache->unit[(unsigned char)unit[i]];
     return r;
 }
 
 str *str::center(__ss_int width, str *fillchar) {
-    int len = __len__();
+    __ss_int len = __len__();
     if(width<=len)
         return this;
 
     if(!fillchar) fillchar = sp;
     str *r = fillchar->__mul__(width);
 
-    int j = (width-len)/2;
-    for(int i=0; i<len; i++)
+    __ss_int j = (width-len)/2;
+    for(__ss_int i=0; i<len; i++)
         r->unit[j+i] = unit[i];
 
     return r;
@@ -643,7 +643,7 @@ str *__add_strs(int n, ...) {
     va_list ap;
     va_start(ap, n);
 
-    int size;
+    __ss_int size;
     str *result = new str();
 
     size = 0;
@@ -677,14 +677,14 @@ str *str::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
         __GC_STRING r;
         if(!(x&1) && !(x&2) && s==-1) {
             r.resize(len);
-            for(int i=0; i<len; i++)
+            for(__ss_int i=0; i<len; i++)
                 r[i] = unit[len-i-1];
         }
         else if(s > 0)
-            for(int i=l; i<u; i += s)
+            for(__ss_int i=l; i<u; i += s)
                 r += unit[i];
         else
-            for(int i=l; i>u; i += s)
+            for(__ss_int i=l; i>u; i += s)
                 r += unit[i];
         return new str(r);
     }
@@ -869,7 +869,7 @@ str *__str(__ss_int i, __ss_int base) {
     *psz = 0;
     if(neg) i = -i;
     if(base == 10) {
-        int pos;
+        __ss_int pos;
         while(i > 999) {
             pos = 4*(i%1000);
             i = i/1000;
