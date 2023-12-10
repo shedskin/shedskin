@@ -40,7 +40,7 @@ template<class T> tuple2<T, T>::tuple2(tuple2<T, T> *p) {
 template<class T> tuple2<T, T>::tuple2(str *s) {
     this->__class__ = cl_tuple;
     this->units.resize(len(s));
-    int sz = s->size();
+    int sz = s->unit.size();
     for(int i=0; i<sz; i++)
         this->units[i] = __char_cache[((unsigned char)(s->unit[i]))];
 }
