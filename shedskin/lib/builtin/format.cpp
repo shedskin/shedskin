@@ -54,7 +54,7 @@ size_t __fmtpos(str *fmt) {
 size_t __fmtpos2(str *fmt) {
     size_t i = 0;
     while((i = fmt->unit.find('%', i)) != std::string::npos) {
-        if(i != fmt->size()-1) {
+        if(i != fmt->unit.size()-1) {
             char nextchar = fmt->unit[i+1];
             if(nextchar == '%')
                 i++;
@@ -88,8 +88,8 @@ str *do_asprintf_str(const char *fmt, str *s, pyobj *a1, pyobj *a2) {
     char *d;
     int x;
     str *r;
-    int nullchars = ((const str*)s)->find('\0') != -1; /* XXX %6.s */
-    ssize_t len = s->size();
+    int nullchars = ((const str*)s)->unit.find('\0') != std::string::npos; /* XXX %6.s */
+    ssize_t len = s->unit.size();
     str *old_s = s;
     if(nullchars) {
         s = new str(s->unit);
@@ -150,7 +150,7 @@ str *__escape_bytes(pyobj *p) {
 
 void __modfill(str **fmt, pyobj *t, str **s, pyobj *a1, pyobj *a2, bool bytes) {
     char c;
-    size_t i = (*fmt)->find('%');
+    size_t i = (*fmt)->unit.find('%');
     size_t j = __fmtpos(*fmt);
     *s = new str((*s)->unit + (*fmt)->unit.substr(0, i));
     str *add;
@@ -186,11 +186,11 @@ void __modfill(str **fmt, pyobj *t, str **s, pyobj *a1, pyobj *a2, bool bytes) {
             *add += ".0";
     }
     *s = (*s)->__add__(add);
-    *fmt = new str((*fmt)->unit.substr(j+1, (*fmt)->size()-j-1));
+    *fmt = new str((*fmt)->unit.substr(j+1, (*fmt)->unit.size()-j-1));
 }
 
 pyobj *modgetitem(list<pyobj *> *vals, size_t i) {
-    if(i==len(vals))
+    if((__ss_int)i==len(vals))
         throw new TypeError(new str("not enough arguments for format string"));
     return vals->__getitem__((__ss_int)i);
 }
@@ -200,10 +200,10 @@ str *__mod4(str *fmts, list<pyobj *> *vals, bool bytes) {
     str *r = new str();
     str *fmt = new str(fmts->c_str());
     i = 0;
-    while((j = __fmtpos(fmt)) != -1) {
+    while((j = __fmtpos(fmt)) != std::string::npos) {
         pyobj *p, *a1, *a2;
 
-        size_t perc_pos = fmt->find('%');
+        size_t perc_pos = fmt->unit.find('%');
         size_t asterisks = std::count(fmt->unit.begin()+perc_pos+1, fmt->unit.begin()+j, '*');
         a1 = a2 = NULL;
         if(asterisks==1) {
@@ -249,7 +249,7 @@ str *__mod4(str *fmts, list<pyobj *> *vals, bool bytes) {
                 throw new ValueError(new str("unsupported format character"));
         }
     }
-    if(i!=len(vals))
+    if((__ss_int)i!=len(vals))
         throw new TypeError(new str("not all arguments converted during string formatting"));
 
     *r += fmt->c_str();
