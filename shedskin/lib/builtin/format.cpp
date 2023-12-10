@@ -44,16 +44,16 @@ int asprintf(char **ret, const char *format, ...)
 }
 #endif
 
-int __fmtpos(str *fmt) {
-    int i = fmt->find('%');
-    if(i == -1)
-        return -1;
+size_t __fmtpos(str *fmt) {
+    size_t i = fmt->unit.find('%');
+    if(i == std::string::npos)
+        return std::string::npos;
     return fmt->unit.find_first_not_of(__fmtchars, i+1);
 }
 
-int __fmtpos2(str *fmt) {
+size_t __fmtpos2(str *fmt) {
     size_t i = 0;
-    while((i = fmt->find('%', i)) != std::string::npos) {
+    while((i = fmt->unit.find('%', i)) != std::string::npos) {
         if(i != fmt->size()-1) {
             char nextchar = fmt->unit[i+1];
             if(nextchar == '%')
@@ -119,19 +119,19 @@ str *__escape_bytes(pyobj *p) {
     __GC_STRING sep = "\\\n\r\t";
     __GC_STRING let = "\\nrt";
 
-    int hasq = t->unit.find('\'');
-    int hasd = t->unit.find('\"');
+    size_t hasq = t->unit.find('\'');
+    size_t hasd = t->unit.find('\"');
 
-    if (hasq != -1 && hasd != -1) {
+    if (hasq != std::string::npos && hasd != std::string::npos) {
         sep += "'"; let += "'";
     }
 
-    for(unsigned int i=0; i<t->unit.size(); i++)
+    for(size_t i=0; i<t->unit.size(); i++)
     {
         char c = t->unit[i];
-        int k;
+        size_t k;
 
-        if((k = sep.find_first_of(c)) != -1)
+        if((k = sep.find_first_of(c)) != std::string::npos)
             ss << "\\" << let[k];
         else {
             int j = (int)((unsigned char)c);
@@ -150,8 +150,8 @@ str *__escape_bytes(pyobj *p) {
 
 void __modfill(str **fmt, pyobj *t, str **s, pyobj *a1, pyobj *a2, bool bytes) {
     char c;
-    int i = (*fmt)->find('%');
-    int j = __fmtpos(*fmt);
+    size_t i = (*fmt)->find('%');
+    size_t j = __fmtpos(*fmt);
     *s = new str((*s)->unit + (*fmt)->unit.substr(0, i));
     str *add;
 
@@ -189,22 +189,22 @@ void __modfill(str **fmt, pyobj *t, str **s, pyobj *a1, pyobj *a2, bool bytes) {
     *fmt = new str((*fmt)->unit.substr(j+1, (*fmt)->size()-j-1));
 }
 
-pyobj *modgetitem(list<pyobj *> *vals, int i) {
+pyobj *modgetitem(list<pyobj *> *vals, size_t i) {
     if(i==len(vals))
         throw new TypeError(new str("not enough arguments for format string"));
-    return vals->__getitem__(i);
+    return vals->__getitem__((__ss_int)i);
 }
 
 str *__mod4(str *fmts, list<pyobj *> *vals, bool bytes) {
-    int i, j;
+    size_t i, j;
     str *r = new str();
     str *fmt = new str(fmts->c_str());
     i = 0;
     while((j = __fmtpos(fmt)) != -1) {
         pyobj *p, *a1, *a2;
 
-        int perc_pos = fmt->find('%');
-        int asterisks = std::count(fmt->unit.begin()+perc_pos+1, fmt->unit.begin()+j, '*');
+        size_t perc_pos = fmt->find('%');
+        size_t asterisks = std::count(fmt->unit.begin()+perc_pos+1, fmt->unit.begin()+j, '*');
         a1 = a2 = NULL;
         if(asterisks==1) {
             a1 = modgetitem(vals, i++);
@@ -283,16 +283,16 @@ str *__modcd(str *fmt, list<str *> *names, ...) {
     va_end(args);
 
     str *naam;
-    int pos, pos2;
+    size_t pos, pos2;
     dict<str *, pyobj *> *d = new dict<str *, pyobj *>(__zip(2, False, names, vals));
     str *const_6 = new str(")");
     list<pyobj *> *values = new list<pyobj *>();
 
-    while((pos = __fmtpos2(fmt)) != -1) {
-        pos2 = fmt->find(const_6, pos);
-        naam = fmt->__slice__(3, (pos+2), pos2, 0);
+    while((pos = __fmtpos2(fmt)) != std::string::npos) {
+        pos2 = fmt->find(const_6, (__ss_int)pos);
+        naam = fmt->__slice__(3, (__ss_int)(pos+2), (__ss_int)pos2, 0);
         values->append(d->__getitem__(naam));
-        fmt = (fmt->__slice__(2, 0, (pos+1), 0))->__add__(fmt->__slice__(1, (pos2+1), 0, 0));
+        fmt = (fmt->__slice__(2, 0, (__ss_int)(pos+1), 0))->__add__(fmt->__slice__(1, (__ss_int)(pos2+1), 0, 0));
     }
 
     return __mod4(fmt, values);
