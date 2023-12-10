@@ -140,7 +140,7 @@ template<class T> void *array<T>::fromstring(bytes *s) {
 }
 
 template<class T> void *array<T>::frombytes(bytes *s) {
-    size_t len = s->size();
+    size_t len = s->unit.size();
     if(len == 1)
         this->units.push_back(s->unit[0]);
     else {
