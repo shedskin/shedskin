@@ -656,7 +656,7 @@ str *__add_strs(int n, ...) {
 
     va_start(ap, n);
     size = 0;
-    int pos = 0;
+    size_t pos = 0;
     for(int i=0; i<n; i++) {
         str *s = va_arg(ap, str *);
 
@@ -669,8 +669,8 @@ str *__add_strs(int n, ...) {
 }
 
 str *str::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
-    int len = size();
-    slicenr(x, l, u, s, len);
+    size_t len = size();
+    slicenr(x, l, u, s, (__ss_int)len);
     if(s == 1)
         return new str(unit.data()+l, u-l);
     else {
@@ -690,9 +690,9 @@ str *str::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
     }
 }
 
-__ss_int str::__fixstart(__ss_int a, __ss_int b) {
-    if(a == -1) return a;
-    return a+b;
+__ss_int str::__fixstart(size_t a, __ss_int b) {
+    if(a == std::string::npos) return (__ss_int)a;
+    return (__ss_int)(a+b);
 }
 
 __ss_int str::find(str *s, __ss_int a) { return __fixstart(unit.substr(a, size()-a).find(s->unit), a); }
@@ -720,9 +720,9 @@ __ss_int str::count(str *s, __ss_int start, __ss_int end) {
     slicenr(7, start, end, one, __len__());
 
     i = start; count = 0;
-    while( ((i = find(s->c_str(), i)) != std::string::npos) && (i <= end-(size_t)len(s)) )
+    while( ((i = find(s->c_str(), i)) != std::string::npos) && (i <= (size_t)(end-len(s))) )
     {
-        i += len(s);
+        i += (size_t)len(s);
         count++;
     }
 
@@ -828,7 +828,7 @@ str *str::casefold() {
 
 str *str::capitalize() {
     str *r = new str(unit);
-    r->unit[0] = ::toupper(r->unit[0]);
+    r->unit[0] = (char)::toupper(r->unit[0]);
     return r;
 }
 
@@ -954,7 +954,7 @@ template<> str *__str(__ss_float t) {
     __GC_STRING s = ss.str().c_str();
     if(s.find('e') == std::string::npos)
     {
-        unsigned int j = s.find_last_not_of("0");
+        size_t j = s.find_last_not_of("0");
         if( s[j] == '.') j++;
         s = s.substr(0, j+1);
     }

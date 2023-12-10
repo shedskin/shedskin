@@ -533,7 +533,7 @@ public:
     tuple2<str *, str *> *partition(str *sep);
     list<str *> *splitlines(__ss_int keepends = 0);
 
-    __ss_int __fixstart(__ss_int a, __ss_int b);
+    __ss_int __fixstart(size_t a, __ss_int b);
     __ss_int __checkneg(__ss_int i);
 
     __ss_int find(str *s, __ss_int a=0);
