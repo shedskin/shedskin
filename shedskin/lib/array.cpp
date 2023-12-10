@@ -19,14 +19,14 @@ void __throw_no_char() {
 }
 
 template<> void *array<str *>::append(str *t) {
-    if(t->size() != 1)
+    if(t->unit.size() != 1)
         __throw_no_char();
     units.push_back(t->unit[0]);
     return NULL;
 }
 
 template<> void *array<str *>::__setitem__(__ss_int i, str *t) {
-    if(t->size() != 1)
+    if(t->unit.size() != 1)
         __throw_no_char();
     i = __wrap(this, i);
     units[i*itemsize] = t->unit[0];
