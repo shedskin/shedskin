@@ -41,7 +41,7 @@ template <class U> bytes *bytes::join(U *iter) {
     total = 0;
     FOR_IN(e,iter,1,2,3)
         __join_cache_bin->units.push_back(e);
-        sz = e->size();
+        sz = e->unit.size();
         if(sz != 1)
             only_ones = false;
         total += sz;

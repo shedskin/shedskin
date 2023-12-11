@@ -49,7 +49,7 @@ void *BytesI::seek(__ss_int i, __ss_int w) {
 void *BytesI::write(bytes *data) {
     __check_closed();
     if(data) {
-        const size_t size = data->size();
+        const size_t size = data->unit.size();
         s->unit.insert(pos, data->unit);
         pos += size;
         s->unit.erase(pos, size);
