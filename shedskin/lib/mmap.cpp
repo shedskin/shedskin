@@ -647,7 +647,7 @@ __ss_int mmap::tell()
 void *mmap::write(bytes *string)
 {
     __raise_if_closed_or_not_writable();
-    size_t length = string->size();
+    size_t length = string->unit.size();
     if (m_position + length > m_end)
     {
         throw new ValueError(const_14);
@@ -672,11 +672,11 @@ void *mmap::write_byte(__ss_int value)
 __ss_bool mmap::__contains__(bytes *string)
 {
     __raise_if_closed_or_not_readable();
-    if (string == 0 or string->size() != 1)
+    if (string == 0 or string->unit.size() != 1)
     {
         throw new ValueError(const_8);
     }
-    return __mbool(find(string, 0) != -1);
+    return __mbool(find(string, 0) != std::string::npos);
 }
 
 __iter<bytes *> *mmap::__iter__()
