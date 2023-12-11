@@ -199,9 +199,9 @@ template<class K, class V> __ss_int dict<K,V>::__cmp__(pyobj *p) {
 	return __cmp(aval, bval);
 }
 
-template <class K, class V> dictentry<K,V>* dict<K,V>::lookup(K key, long hash) const {
+template <class K, class V> dictentry<K,V>* dict<K,V>::lookup(K key, __ss_int hash) const {
 
-    int i = hash & mask;
+    __ss_int i = hash & mask;
     dictentry<K,V>* entry = &table[i];
     if (!(entry->use) || __eq(entry->key, key))
         return entry;
@@ -213,7 +213,7 @@ template <class K, class V> dictentry<K,V>* dict<K,V>::lookup(K key, long hash) 
     else
         freeslot = NULL;
 
-    unsigned int perturb;
+    __ss_int perturb;
     for (perturb = hash; ; perturb >>= PERTURB_SHIFT) {
         i = (i << 2) + i + perturb + 1;
         entry = &table[i & mask];
@@ -227,11 +227,11 @@ template <class K, class V> dictentry<K,V>* dict<K,V>::lookup(K key, long hash) 
 
         else if (entry->use == dummy && freeslot == NULL)
             freeslot = entry;
-	}
-	return entry;
+    }
+    return entry;
 }
 
-template <class K, class V> void dict<K,V>::insert_key(K key, V value, long hash) {
+template <class K, class V> void dict<K,V>::insert_key(K key, V value, __ss_int hash) {
     dictentry<K,V>* entry;
 
     entry = lookup(key, hash);
@@ -251,13 +251,13 @@ template <class K, class V> void dict<K,V>::insert_key(K key, V value, long hash
         used++;
     }
     else {
-		entry->value = value;
-	}
+        entry->value = value;
+    }
 }
 
 template <class K, class V> void *dict<K,V>::__setitem__(K key, V value)
 {
-    long hash = hasher<K>(key);
+    __ss_int hash = (__ss_int)hasher<K>(key);
     int n_used = used;
 
     insert_key(key, value, hash);
@@ -271,7 +271,7 @@ template<> int __none();
 template<> double __none();
 
 template <class K, class V> V dict<K,V>::__getitem__(K key) {
-	long hash = hasher<K>(key);
+	__ss_int hash = (__ss_int)hasher<K>(key);
 	dictentry<K, V> *entry;
 
 	entry = lookup(key, hash);
@@ -306,7 +306,7 @@ template <class K, class V> V dict<K,V>::get(K key) {
 }
 
 template <class K, class V> V dict<K,V>::get(K key, V d) {
-    long hash = hasher<K>(key);
+    __ss_int hash = (__ss_int)hasher<K>(key);
 	dictentry<K, V> *entry;
 
 	entry = lookup(key, hash);
@@ -418,10 +418,10 @@ known to be absent from the dict.  This routine also assumes that
 the dict contains no deleted entries.  Besides the performance benefit,
 using insert() in resize() is dangerous (SF bug #1456209).
 */
-template <class K, class V> void dict<K,V>::insert_clean(K key, V value, long hash)
+template <class K, class V> void dict<K,V>::insert_clean(K key, V value, __ss_int hash)
 {
-	int i;
-	unsigned int perturb;
+	__ss_int i;
+	__ss_int perturb;
 	dictentry<K,V> *entry;
 
 	i = hash & mask;
@@ -532,7 +532,7 @@ template<class K, class V> __ss_int dict<K,V>::__len__() {
 }
 
 template <class K, class V> __ss_bool dict<K,V>::__contains__(K key) {
-    long hash = hasher(key);
+    __ss_int hash = (__ss_int)hasher(key);
 	dictentry<K,V> *entry;
 
 	entry = lookup(key, hash);
