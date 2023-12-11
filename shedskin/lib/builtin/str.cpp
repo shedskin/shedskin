@@ -14,7 +14,7 @@ str::str(__GC_STRING s) : unit(s), hash(-1), charcache(0) {
     __class__ = cl_str_;
 }
 
-str::str(const char *s, int size) : unit(s, size), hash(-1), charcache(0) { /* '\0' delimiter in C */
+str::str(const char *s, size_t size) : unit(s, size), hash(-1), charcache(0) { /* '\0' delimiter in C */
     __class__ = cl_str_;
 }
 

@@ -360,7 +360,7 @@ public:
     bytes(const char *s);
     bytes(bytes *b, int frozen=1);
     bytes(__GC_STRING s, int frozen=1);
-    bytes(const char *s, int size, int frozen=1); /* '\0' delimiter in C */
+    bytes(const char *s, size_t size, int frozen=1); /* '\0' delimiter in C */
 
     inline __ss_int __getitem__(__ss_int i);
     inline __ss_int __getfast__(__ss_int i);
@@ -489,7 +489,7 @@ public:
     str();
     str(const char *s);
     str(__GC_STRING s);
-    str(const char *s, int size); /* '\0' delimiter in C */
+    str(const char *s, size_t size); /* '\0' delimiter in C */
 
     __ss_bool __contains__(str *s);
     str *strip(str *chars=0);

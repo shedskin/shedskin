@@ -118,7 +118,7 @@ str *file::readline(int n) {
                 options.cr = true;
                 c = '\n';
             }
-            __read_cache.push_back(c);
+            __read_cache.push_back((char)c);
             if(c == '\n')
                 break;
         }
@@ -127,7 +127,7 @@ str *file::readline(int n) {
             const int c = GETC(f);
             if(c == EOF)
                 break;
-            __read_cache.push_back(c);
+            __read_cache.push_back((char)c);
             if(c == '\n')
                 break;
         }
@@ -158,7 +158,7 @@ str *file::read(int n) {
         const int c = GETC(f);
         if(c == EOF)
             break;
-        __read_cache.push_back(c);
+        __read_cache.push_back((char)c);
     }
     if(__error())
         __throw_io_error();
@@ -348,7 +348,7 @@ bytes *file_binary::readline(int n) {
                 options.cr = true;
                 c = '\n';
             }
-            __read_cache.push_back(c);
+            __read_cache.push_back((char)c);
             if(c == '\n')
                 break;
         }
@@ -357,7 +357,7 @@ bytes *file_binary::readline(int n) {
             const int c = GETC(f);
             if(c == EOF)
                 break;
-            __read_cache.push_back(c);
+            __read_cache.push_back((char)c);
             if(c == '\n')
                 break;
         }
@@ -386,7 +386,7 @@ bytes *file_binary::read(int n) {
         const int c = GETC(f);
         if(c == EOF)
             break;
-        __read_cache.push_back(c);
+        __read_cache.push_back((char)c);
     }
     if(__error())
         __throw_io_error();
