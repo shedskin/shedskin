@@ -205,7 +205,7 @@ str *__mod4(str *fmts, list<pyobj *> *vals, bool bytes) {
 
         size_t perc_pos = fmt->unit.find('%');
         size_t asterisks = std::count(fmt->unit.begin()+perc_pos+1, fmt->unit.begin()+j, '*');
-        a1 = a2 = NULL;
+        p = a1 = a2 = NULL;
         if(asterisks==1) {
             a1 = modgetitem(vals, i++);
         } else if(asterisks==2) {
