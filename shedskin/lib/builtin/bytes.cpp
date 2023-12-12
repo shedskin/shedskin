@@ -145,14 +145,14 @@ bytes *bytes::__mul__(__ss_int n) { /* optimize */
     bytes *r = new bytes(frozen);
     if(n<=0) return r;
     __GC_STRING &s = r->unit;
-    __ss_int ulen = this->unit.size();
+    size_t ulen = this->unit.size();
 
     if(ulen == 1)
         r->unit = __GC_STRING(n, unit[0]);
     else {
         s.resize(ulen*n);
 
-        for(__ss_int i=0; i<ulen*n; i+=ulen)
+        for(size_t i=0; i<ulen*n; i+=ulen)
             s.replace(i, ulen, unit);
     }
 
@@ -770,8 +770,8 @@ void *bytes::__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, pyiter
     list<__ss_int> *ll = new list<__ss_int>(this);
     ll->__setslice__(x, l, u, s, b);
     __GC_STRING r;
-    __ss_int len = ll->__len__();
-    for(__ss_int i=0; i<len; i++)
+    size_t len = ll->units.size();
+    for(size_t i=0; i<len; i++)
         r += ll->units[i];
     unit = r;
     return NULL;
@@ -781,8 +781,8 @@ void *bytes::__delete__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
     list<__ss_int> *ll = new list<__ss_int>(this);
     ll->__delete__(x, l, u, s);
     __GC_STRING r;
-    __ss_int len = ll->__len__();
-    for(__ss_int i=0; i<len; i++)
+    size_t len = ll->units.size();
+    for(size_t i=0; i<len; i++)
         r += ll->units[i];
     unit = r;
     return NULL;
