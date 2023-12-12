@@ -86,7 +86,7 @@ void __init() {
     __fmt_d = new str("%d");
 
     for(int i=0;i<256;i++) {
-        char c = i;
+        char c = (char)i;
         str *charstr = new str(&c, 1);
         charstr->charcache = 1;
         __char_cache.push_back(charstr);
@@ -98,9 +98,9 @@ void __init() {
     __mod5_cache = new list<str *>();
 
     for(int i=0; i<1000; i++) {
-        __str_cache[4*i] = '0' + (i % 10);
-        __str_cache[4*i+1] = '0' + ((i/10) % 10);
-        __str_cache[4*i+2] = '0' + ((i/100) % 10);
+        __str_cache[4*i] = '0' + (char)(i % 10);
+        __str_cache[4*i+1] = '0' + (char)((i/10) % 10);
+        __str_cache[4*i+2] = '0' + (char)((i/100) % 10);
     }
 
     __case_swap_cache = new str();
