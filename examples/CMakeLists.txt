@@ -132,6 +132,7 @@ add_subdirectory(chaos)
 add_subdirectory(chess)
 add_subdirectory(chull)
 add_subdirectory(circle) # ext
+add_subdirectory(collatz)
 add_subdirectory(dijkstra)
 add_subdirectory(dijkstra2)
 add_subdirectory(doom)
