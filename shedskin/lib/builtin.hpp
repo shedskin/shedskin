@@ -848,7 +848,6 @@ public:
     inline __ss_bool operator^(__ss_bool b);
     inline bool operator!();
     inline operator bool();
-    inline __ss_bool& operator=(int a);
 };
 
 class complex {
