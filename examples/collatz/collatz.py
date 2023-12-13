@@ -53,19 +53,15 @@ print('1 2') # skipped record
 t0 = time.time()
 
 delay_record = 0
-rest9 = 2
+rest9 = 1
 for n in range(2, N):
     # skip 2, 4, 5, 8 mod 9 and 5 mod 8
     # as these cannot be records (see link in top)
-    if rest9 in (2, 4, 5, 8):
-        rest9 += 1
-        if rest9 == 9:
-            rest9 = 0
-        continue
     rest9 += 1
     if rest9 == 9:
         rest9 = 0
-
+    if rest9 in (2, 4, 5, 8):
+        continue
     if n & 7 == 5: # 5 mod 8
        continue
 
