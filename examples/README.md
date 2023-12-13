@@ -1,6 +1,6 @@
 # Shedskin Examples
 
-78 programs that work with Shed Skin 0.9.9
+79 programs that work with Shed Skin 0.9.9
 
 ## Example Overview
 
@@ -21,6 +21,7 @@ lines  name                 description
    321 chess.py             chess engine
    290 chull.py             3D convex hull
     65 circle.py            circle packing animation        (extmod, GUI)
+    50 collatz.py           collatz record sequences
    105 dijkstra.py          dijkstra's algorithm
     80 dijkstra2.py         bidirectional dijkstra search
    665 doom.py              WAD rendering engine            (extmod, GUI)
