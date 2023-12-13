@@ -720,6 +720,7 @@ public:
     template<class U> set(U *other, int frozen);
     template<class U> set(U *other);
     set(int frozen=0);
+    template<class ... Args> set(int count, Args ... args);
 
     set<T>& operator=(const set<T>& other);
 

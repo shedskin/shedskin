@@ -1063,6 +1063,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.append(",")
         self.append("))")
 
+    def visit_Set(self, node, func=None, argtypes=None):
+        self.visit_tuple_list(node, func, argtypes)
+
     def visit_tuple_list(self, node, func=None, argtypes=None):
         if isinstance(func, python.Class):  # XXX
             func = None

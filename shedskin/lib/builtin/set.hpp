@@ -62,6 +62,15 @@ template<class T> template<class U> set<T>::set(U *other) {
     update(1, other);
 }
 
+template<class T> template<class ... Args> set<T>::set(int count, Args ... args)  {
+    this->__class__ = cl_dict;
+    this->frozen = 0;
+    this->hash = -1;
+    EMPTY_TO_MINSIZE(this);
+
+    (this->add(args), ...);
+}
+
 template <class T> set<T>& set<T>::operator=(const set<T>& other) {
     // copy test
     /*int i;

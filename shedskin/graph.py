@@ -1022,8 +1022,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
     def visit_Dict(self, node, func=None):
         self.constructor(node, "dict", func)
-        # if node.items:  # XXX library bug
-        #    node.lineno = node.items[0][0].lineno
+
+    def visit_Set(self, node, func=None):
+        self.constructor(node, "set", func)
 
     def visit_Repr(self, node, func=None):
         self.fake_func(node, node.value, "__repr__", [], func)
