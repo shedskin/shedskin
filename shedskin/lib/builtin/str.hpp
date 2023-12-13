@@ -25,7 +25,8 @@ inline str *str::for_in_next(size_t &i) {
 }
 
 template <class U> str *str::join(U *iter) {
-    int sz, total, __2;
+    size_t sz, total;
+    int __2;
     bool only_ones = true;
     typename U::for_in_unit e;
     typename U::for_in_loop __3;
@@ -39,7 +40,7 @@ template <class U> str *str::join(U *iter) {
             only_ones = false;
         total += sz;
     END_FOR
-    int unitsize = this->unit.size();
+    size_t unitsize = this->unit.size();
     int elems = len(__join_cache);
     if(elems==1)
         return __join_cache->units[0];
@@ -52,8 +53,8 @@ template <class U> str *str::join(U *iter) {
     else if(elems) {
         total += (elems-1)*unitsize;
         s->unit.resize(total);
-        int tsz;
-        int k = 0;
+        size_t tsz;
+        size_t k = 0;
         for(int m = 0; m<elems; m++) {
             str *t = __join_cache->units[m];
             tsz = t->unit.size();

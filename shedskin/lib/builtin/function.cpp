@@ -19,16 +19,16 @@ __ss_int __int(str *s, __ss_int base) {
     char *cp;
     __ss_int i;
 #ifdef __SS_LONG
-    i = strtoll(s->c_str(), &cp, base);
+    i = (__ss_int)strtoll(s->c_str(), &cp, base);
 #else
-    i = strtol(s->c_str(), &cp, base);
+    i = (__ss_int)strtol(s->c_str(), &cp, base);
 #endif
     if(*cp != '\0') {
         s = s->rstrip();
         #ifdef __SS_LONG
-            i = strtoll(s->c_str(), &cp, base);
+            i = (__ss_int)strtoll(s->c_str(), &cp, base);
         #else
-            i = strtol(s->c_str(), &cp, base);
+            i = (__ss_int)strtol(s->c_str(), &cp, base);
         #endif
         if(*cp != '\0')
             throw new ValueError(new str("invalid literal for int()"));
@@ -40,16 +40,16 @@ __ss_int __int(bytes *s, __ss_int base) {
     char *cp;
     __ss_int i;
 #ifdef __SS_LONG
-    i = strtoll(s->c_str(), &cp, base);
+    i = (__ss_int)strtoll(s->c_str(), &cp, base);
 #else
-    i = strtol(s->c_str(), &cp, base);
+    i = (__ss_int)strtol(s->c_str(), &cp, base);
 #endif
     if(*cp != '\0') {
         s = s->rstrip();
         #ifdef __SS_LONG
-            i = strtoll(s->c_str(), &cp, base);
+            i = (__ss_int)strtoll(s->c_str(), &cp, base);
         #else
-            i = strtol(s->c_str(), &cp, base);
+            i = (__ss_int)strtol(s->c_str(), &cp, base);
         #endif
         if(*cp != '\0')
             throw new ValueError(new str("invalid literal for int()"));
