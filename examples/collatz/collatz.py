@@ -54,15 +54,14 @@ t0 = time.time()
 
 delay_record = 0
 for n in range(2, N):
-    orign = n
-
     rest = n % 9
-    if rest == 2 or rest == 4 or rest == 5 or rest == 8:
+    if rest in (2, 4, 5, 8):
         continue
     if n % 8 == 5:
         continue
 
-    totalsteps = 0
+    orign = n
+    steps = 0
 
     while n > bmask:
         a = n >> K
@@ -71,15 +70,14 @@ for n in range(2, N):
         c = lookup_c[b]
         d = lookup_multistep[b]
 
-        nsteps = 2*c + (K-c)
-        totalsteps += nsteps
+        steps += 2*c + (K-c)
 
         n = a*lookup_pow[c]+d
 
-    totalsteps += lookup_tail[n]
+    steps += lookup_tail[n]
 
-    if totalsteps > delay_record:
-        delay_record = totalsteps
+    if steps > delay_record:
+        delay_record = steps
         print(delay_record, orign)
 
 print('%.2f numbers/second' % (N/((time.time()-t0))))
