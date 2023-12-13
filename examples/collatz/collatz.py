@@ -8,7 +8,8 @@
 # (https://math.stackexchange.com/questions/60573/reducing-the-time-to-calculate-collatz-sequences)
 #
 # caveat:
-# - doesn't check for overflow (in generated C++)!
+# - requires shedskin --long (64-bit integers.. no 128-bit support yet)
+# - doesn't check for 64-bit overflow (in generated C++)!
 #
 # results (N=100000000) checked against:
 #
