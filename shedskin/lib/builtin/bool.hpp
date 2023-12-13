@@ -9,7 +9,6 @@ inline __ss_bool __ss_bool::operator|(__ss_bool b) { __ss_bool c; c.value=value|
 inline __ss_bool __ss_bool::operator^(__ss_bool b) { __ss_bool c; c.value=value^b.value; return c; }
 inline bool __ss_bool::operator!() { return !value; }
 inline __ss_bool::operator bool() { return bool(value); }
-inline __ss_bool& __ss_bool::operator=(int a) { value=a; return *this; }
 
 inline __ss_bool ___bool() { return __mbool(false); }
 
