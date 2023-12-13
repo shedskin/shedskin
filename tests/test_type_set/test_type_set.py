@@ -175,6 +175,12 @@ def test_set_augmented_assign():
     assert sorted(set4) == []
 
 
+def test_set_syntax():
+    s = {1, 2}
+    assert len(s) == 2
+    assert 1 in s
+    assert 2 in s
+    assert s == set([1,2])
 
 
 def test_all():
@@ -188,6 +194,7 @@ def test_all():
     test_frozenset_cmp()
     test_set_binary_elem()
     test_set_augmented_assign()
+    test_set_syntax()
 
 if __name__ == "__main__":
     test_all()
