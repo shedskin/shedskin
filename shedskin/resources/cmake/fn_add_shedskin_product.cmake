@@ -342,6 +342,7 @@ function(add_shedskin_product)
             $<$<BOOL:${UNIX}>:-Wno-unused-but-set-variable>
             $<$<BOOL:${UNIX}>:-Wno-unused-result>
             $<$<BOOL:${UNIX}>:-Wno-missing-field-initializers>
+            $<$<BOOL:${UNIX}>:-Wno-cast-function-type> # (PyCFunction) cast in extmods
             $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wall>
             $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wextra>
             $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wconversion>
@@ -473,6 +474,7 @@ function(add_shedskin_product)
             $<$<BOOL:${UNIX}>:-Wno-unused-parameter>
             $<$<BOOL:${UNIX}>:-Wno-unused-but-set-variable>
             $<$<BOOL:${UNIX}>:-Wno-missing-field-initializers>
+            $<$<BOOL:${UNIX}>:-Wno-cast-function-type> # (PyCFunction) cast in extmods
             $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wall>
             $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wextra>
             $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wconversion>
