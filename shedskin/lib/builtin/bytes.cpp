@@ -485,7 +485,7 @@ bytes *bytes::expandtabs(__ss_int tabsize) {
     size_t i;
     __GC_STRING r = unit;
     while((i = r.find("\t")) != std::string::npos)
-        r.replace(i, 1, (new bytes(" "))->__mul__(tabsize-i%tabsize)->unit);
+        r.replace(i, 1, (new bytes(" "))->__mul__(tabsize-(__ss_int)i%tabsize)->unit);
     return new bytes(r, frozen);
 }
 
@@ -615,14 +615,14 @@ str *bytes::hex(str *sep) {
         unsigned char high = (unit[i] >> 4) & 0xf;
 
         if(high < 10)
-            result->unit += '0' + high;
+            result->unit += '0' + (char)high;
         else
-            result->unit += 'a' - 10 + high;
+            result->unit += 'a' - 10 + (char)high;
 
         if(low < 10)
-            result->unit += '0' + low;
+            result->unit += '0' + (char)low;
         else
-            result->unit += 'a' - 10 + low;
+            result->unit += 'a' - 10 + (char)low;
 
         if(sep and i != l-1)
             result->unit += sep->unit;
@@ -753,7 +753,7 @@ void *bytes::reverse() {
 }
 
 void *bytes::remove(__ss_int i) {
-    size_t pos = this->unit.find(i);
+    size_t pos = this->unit.find((char)i);
     if(pos == std::string::npos)
         throw new ValueError(new str("value not found in bytearray"));
     __delitem__((__ss_int)pos);
@@ -762,7 +762,7 @@ void *bytes::remove(__ss_int i) {
 
 void *bytes::insert(__ss_int index, __ss_int item) {
     index = __wrap(this, index);
-    unit.insert(unit.begin()+index, item);
+    unit.insert(unit.begin()+index, (char)item);
     return NULL;
 }
 
@@ -772,7 +772,7 @@ void *bytes::__setslice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s, pyiter
     __GC_STRING r;
     size_t len = ll->units.size();
     for(size_t i=0; i<len; i++)
-        r += ll->units[i];
+        r += (char)ll->units[i];
     unit = r;
     return NULL;
 }
@@ -783,7 +783,7 @@ void *bytes::__delete__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
     __GC_STRING r;
     size_t len = ll->units.size();
     for(size_t i=0; i<len; i++)
-        r += ll->units[i];
+        r += (char)ll->units[i];
     unit = r;
     return NULL;
 }
