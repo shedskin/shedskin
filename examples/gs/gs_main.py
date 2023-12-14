@@ -104,15 +104,27 @@ def main():
 
     clock = pygame.time.Clock()
     frame_count = 0
+    delta = 0
 
     ingame = True
     while ingame:
+        # handle keys
         keys = pygame.key.get_pressed()
+
+        move_speed = delta * 6  # the constant value is in squares / second
+        rot_speed = delta * 2
+
+        if keys[pygame.K_LEFT]:
+            wm.move('Left', move_speed, rot_speed)
+        elif keys[pygame.K_RIGHT]:
+            wm.move('Right', move_speed, rot_speed)
+        elif keys[pygame.K_UP]:
+            wm.move('Up', move_speed, rot_speed)
+        elif keys[pygame.K_DOWN]:
+            wm.move('Down', move_speed, rot_speed)
 
         if keys[pygame.K_q]:
             ingame = False
-
-        # quit?
         for event in pygame.event.get():
             if event.type is pygame.QUIT:
                 ingame = False
