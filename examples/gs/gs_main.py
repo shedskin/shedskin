@@ -111,8 +111,8 @@ def main():
         # handle keys
         keys = pygame.key.get_pressed()
 
-        move_speed = delta * 6  # the constant value is in squares / second
-        rot_speed = delta * 2
+        move_speed = 0.06  # the constant value is in squares / second
+        rot_speed = 0.02
 
         if keys[pygame.K_LEFT]:
             wm.move('Left', move_speed, rot_speed)
