@@ -413,24 +413,7 @@ void print2(file *f, int comma, int n, ...) {
     p_opt->space = comma;
 }
 
-#ifdef __SS_LONG
 int_ *___box(__ss_int i) {
-    return new int_(i);
-}
-#endif
-int_ *___box(int i) {
-    return new int_(i);
-}
-int_ *___box(unsigned int i) {
-    return new int_(i);
-}
-int_ *___box(long i) {
-    return new int_(i);
-}
-int_ *___box(unsigned long i) {
-    return new int_(i);
-}
-int_ *___box(unsigned long long i) {
     return new int_(i);
 }
 bool_ *___box(__ss_bool b) {
