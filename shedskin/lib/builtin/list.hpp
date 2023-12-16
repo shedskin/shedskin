@@ -270,7 +270,7 @@ template<class T> list<T> *list<T>::__add__(list<T> *b) {
 template<class T> list<T> *list<T>::__mul__(__ss_int b) {
     list<T> *c = new list<T>();
     if(b<=0) return c;
-    __ss_int len = this->units.size();
+    __ss_int len = this->__len__();
     if(len==1)
         c->units.assign(b, this->units[0]);
     else {
