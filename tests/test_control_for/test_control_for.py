@@ -7,6 +7,7 @@ seq = [(1,2), (3,4)]
 cube = [(1,2),(3,4),(5,6)]
 
 def hoei(cube):
+    x = None
     for pos in cube:
         x = pos
     return x
