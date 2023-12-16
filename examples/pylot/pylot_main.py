@@ -31,18 +31,15 @@ from PIL import ImageDraw
 from PIL import ImageTk
 import random
 import pylot
-print(pylot)
 from pylot.Pool import ThreadedQueueProcessor
-#from pylot.Camera import Camera
 from pylot.Utils import *
 from pylot import SimpleGeometry
 print(SimpleGeometry.__file__)
 
 class CameraHandler(object):
   def __init__(self, camera):
-#    assert type(camera) == Camera
     self.camera = camera
-    
+
   def handle(self, job):
     realJob, debugFlag = job
     set_debug(debugFlag)
@@ -53,23 +50,23 @@ class App(object):
   def __init__(self, root, viewports):
     self.root = root
     self.viewports = viewports
-    self.topButtonFrame = Frame(root)
-    self.topButtonFrame.pack(side=TOP)
-    self.botButtonFrame = Frame(root)
-    self.botButtonFrame.pack(side=BOTTOM)
-    self.button = Button(self.topButtonFrame, text="Quit",
-                         command=self.shutdown)
-    self.button.pack(side=LEFT)
-
-    self.button = Button(self.topButtonFrame, text="Save", command=self.save)
-    self.button.pack(side=LEFT)
-
-    self.button = Button(self.botButtonFrame, text="Process",
-                         command=self.process)
-    self.button.pack(side=LEFT)
-
-    self.button = Button(self.botButtonFrame, text="Stop", command=self.stop)
-    self.button.pack(side=LEFT)
+#    self.topButtonFrame = Frame(root)
+#    self.topButtonFrame.pack(side=TOP)
+#    self.botButtonFrame = Frame(root)
+#    self.botButtonFrame.pack(side=BOTTOM)
+#    self.button = Button(self.topButtonFrame, text="Quit",
+#                         command=self.shutdown)
+#    self.button.pack(side=LEFT)
+#
+#    self.button = Button(self.topButtonFrame, text="Save")
+#    self.button.pack(side=LEFT)
+#
+#    self.button = Button(self.botButtonFrame, text="Process",
+#                         command=self.process)
+#    self.button.pack(side=LEFT)
+#
+#    self.button = Button(self.botButtonFrame, text="Stop")
+#    self.button.pack(side=LEFT)
     self.labels = []
     for v in viewports:
       label = Label(root)
@@ -83,13 +80,8 @@ class App(object):
     root.bind("<Destroy>", lambda x : self.shutdown())
 
   def process(self):
-    print("Called process on the app.")
     for v in self.viewports:
       v.process()
-
-  def processSingleThreaded(self):
-    for v in self.viewports:
-      v.processSingleThreaded()
 
   def stop(self):
     for v in self.viewports:
@@ -106,9 +98,6 @@ class App(object):
     for i in range(len(self.viewports)):
       self.viewports[i].save("test%d.png" % i)
 
-  def drawDebugRays(self, debug_rays):
-    for v in self.viewports:
-      v.drawDebugRays(debug_rays)
 
 class Viewport(object):
   def __init__(self, camera):
@@ -133,24 +122,9 @@ class Viewport(object):
       self.processor.terminate()
       self.processor = None
 
-  def debugPixel(self, x, y):
-    if not self.processor:
-      self.initProcessor()
-    print("Processing pixel: ", x, ", ", y)
-    d = get_debug()
-    set_debug(True)
-    self.camera.runPixelRange( ((x, x+1), (y, y+1)) )
-    print("Calling get_debug_rays")
-    debug_rays = get_debug_rays()
-    self.app.drawDebugRays(debug_rays)
-    print("Calling clear_debug_rays")
-    set_debug(False)
-    clear_debug_rays()
-
   def handleClick(self, event):
     if self.count and not self.jobs:
       self.stop()
-    self.debugPixel(event.x, event.y)
 
   def getBlock(self, i, j, BLOCKS_WIDE, BLOCKS_TALL):
     cols = self.camera.cols
@@ -203,18 +177,6 @@ class Viewport(object):
     h = yMax - y
     return Image.frombytes('RGB', (w, h), pixels)
 
-  def processSingleThreaded(self):
-    startTime = time.time()
-    self.image = Image.new("RGBA", (self.camera.cols, self.camera.rows))
-    self.draw = ImageDraw.Draw(self.image)
-    self.draw.rectangle(((0, 0), (self.camera.cols, self.camera.rows)),
-                        fill="grey")
-    r, pixels = self.camera.runImage()
-    image_temp = self.imageFromBlock(r, pixels)
-    self.image.paste(image_temp, (0, 0))
-    self.refreshImage()
-    print("That took %.3f seconds." % (time.time() - startTime))
-
   def stop(self):
     if not self.jobs:
       self.jobs = self.processor.clear()
@@ -241,37 +203,7 @@ class Viewport(object):
         if not self.count:
           print("That took %.3f seconds." % (time.time() - self.startTime))
       self.app.root.after(QUEUE_CHECK_TIME, self.checkQueue)
-#    else:
-#      self.debugPixel(208, 43)
-#      self.app.shutdown()
 
-  def drawDebugRays(self, debug_rays):
-    for ray, color in debug_rays:
-      origin = self.camera.mapPointToScreen(ray.origin)
-      if not origin:
-        print("Whoa!  Could not map origin!")
-        continue
-      offset = self.camera.mapPointToScreen(ray.origin + ray.offset)
-      if not offset:
-        print("Whoa!  Got a bad offset!")
-        continue
-      self.draw.line([origin, offset], color)
-    self.refreshImage()
-
-  def drawShapeCenters(self, color):
-    if not self.image:
-      self.image = Image.new("RGBA", (self.camera.cols, self.camera.rows))
-      self.draw = ImageDraw.Draw(self.image)
-      self.draw.rectangle(((0, 0), (self.camera.cols, self.camera.rows)),
-                          fill="black")
-    for shape in world.shapes:
-      pixel = self.camera.mapPointToScreen(shape.getLocation())
-      if pixel:
-        self.draw.point(pixel, color)
-    self.refreshImage()
-
-  def save(self, name):
-    self.image.save(name)
 
 root = Tk()
 root.title("Pylot")
@@ -279,23 +211,11 @@ root.title("Pylot")
 geometry = SimpleGeometry.getGeometry(size=512, which=2)
 world = SimpleGeometry.getWorld(geometry)
 cameras = [SimpleGeometry.getCamera(world)] #,
-#           SimpleGeometry.getCamera2(world, factor=2)]
-#cameras = [SimpleGeometry.getCamera(world)]
 viewports = [Viewport(c) for c in cameras]
 app = App(root, viewports)
 
-single_threaded = False
 try:
-  if single_threaded:
-    app.processSingleThreaded()
-  else:
-#    app.viewports[0].debugPixel(111, 113)
-#    app.shutdown()
     app.process()
-except (KeyboardInterrupt, TypeError):
-  app.shutdown()
-
-try:
-  root.mainloop()
-except KeyboardInterrupt:
-  app.shutdown()
+    root.mainloop()
+finally:
+    app.shutdown()
