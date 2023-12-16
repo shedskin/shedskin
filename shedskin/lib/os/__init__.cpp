@@ -257,20 +257,20 @@ __cstat::__cstat(__ss_int fd) {
 }
 
 void __cstat::fill_er_up() {
-    this->st_mode = sbuf.st_mode;
-    this->st_ino = sbuf.st_ino;
-    this->st_dev = sbuf.st_dev;
-    this->st_rdev = sbuf.st_rdev;
-    this->st_nlink = sbuf.st_nlink;
-    this->__ss_st_atime = sbuf.st_atime;
-    this->__ss_st_mtime = sbuf.st_mtime;
-    this->__ss_st_ctime = sbuf.st_ctime;
-    this->st_uid = sbuf.st_uid;
-    this->st_gid = sbuf.st_gid;
-    this->st_size = sbuf.st_size;
+    this->st_mode = (__ss_int)sbuf.st_mode;
+    this->st_ino = (__ss_int)sbuf.st_ino;
+    this->st_dev = (__ss_int)sbuf.st_dev;
+    this->st_rdev = (__ss_int)sbuf.st_rdev;
+    this->st_nlink = (__ss_int)sbuf.st_nlink;
+    this->__ss_st_atime = (__ss_int)sbuf.st_atime;
+    this->__ss_st_mtime = (__ss_int)sbuf.st_mtime;
+    this->__ss_st_ctime = (__ss_int)sbuf.st_ctime;
+    this->st_uid = (__ss_int)sbuf.st_uid;
+    this->st_gid = (__ss_int)sbuf.st_gid;
+    this->st_size = (__ss_int)sbuf.st_size;
 #ifndef WIN32
-    this->st_blksize = sbuf.st_blksize;
-    this->st_blocks = sbuf.st_blocks;
+    this->st_blksize = (__ss_int)sbuf.st_blksize;
+    this->st_blocks = (__ss_int)sbuf.st_blocks;
 #endif
 }
 
@@ -281,13 +281,13 @@ __ss_int __cstat::__len__() {
 __ss_int __cstat::__getitem__(__ss_int i) {
     i = __wrap(this, i);
     switch(i) {
-        case 0: return st_mode;
-        case 1: return st_ino;
-        case 2: return st_dev;
-        case 3: return st_nlink;
-        case 4: return st_uid;
-        case 5: return st_gid;
-        case 6: return st_size;
+        case 0: return (__ss_int)st_mode;
+        case 1: return (__ss_int)st_ino;
+        case 2: return (__ss_int)st_dev;
+        case 3: return (__ss_int)st_nlink;
+        case 4: return (__ss_int)st_uid;
+        case 5: return (__ss_int)st_gid;
+        case 6: return (__ss_int)st_size;
         case 7: return __ss_st_atime;
         case 8: return __ss_st_mtime;
         case 9: return __ss_st_ctime;
@@ -501,10 +501,10 @@ file* fdopen(__ss_int fd, str* mode, __ss_int) {
 str *read(__ss_int fd, __ss_int n) {  /* XXX slowness */
     char c;
     str *s = new str();
-    __ss_int nr;
+    size_t nr;
     for(__ss_int i=0; i<n; i++) {
         nr = ::read(fd, &c, 1);
-        if(nr == -1)
+        if(nr == std::string::npos)
             throw new OSError(new str("os.read"));
         if(nr == 0)
             break;
@@ -514,10 +514,10 @@ str *read(__ss_int fd, __ss_int n) {  /* XXX slowness */
 }
 
 __ss_int write(__ss_int fd, str *s) {
-    __ss_int r;
-    if((r=::write(fd, s->c_str(), len(s))) == -1)
+    size_t r;
+    if((r=::write(fd, s->c_str(), len(s))) == std::string::npos)
         throw new OSError(new str("os.write"));
-    return r;
+    return (__ss_int)r;
 }
 
 
@@ -641,16 +641,16 @@ void *fchdir(__ss_int f1) {
 }
 
 str *readlink(str *path) {
-    __ss_int size = 255;
+    size_t size = 255;
     str *r;
 
     while (1)
       {
         char *buffer = (char *) GC_malloc (size);
-	    __ss_int nchars = ::readlink(path->c_str(), buffer, size);
-    	if (nchars == -1) {
+        size_t nchars = ::readlink(path->c_str(), buffer, size);
+        if (nchars == std::string::npos) {
             throw new OSError(path);
-  	    }
+        }
         if (nchars < size) {
             buffer[nchars] = '\0';
             r = new str(buffer);
@@ -896,8 +896,8 @@ __ss_int pathconf(str *path, str *name) {
     return pathconf(path, pathconf_names->__getitem__(name)); /* XXX errors */
 }
 __ss_int pathconf(str *path, __ss_int name) {
-    __ss_int limit = ::pathconf(path->c_str(), name); /* XXX errors */
-    return limit;
+    size_t limit = ::pathconf(path->c_str(), name); /* XXX errors */
+    return (__ss_int)limit;
 }
 
 __ss_int fpathconf(__ss_int fd, str *name) {
@@ -906,8 +906,8 @@ __ss_int fpathconf(__ss_int fd, str *name) {
     return fpathconf(fd, pathconf_names->__getitem__(name)); /* XXX errors */
 }
 __ss_int fpathconf(__ss_int fd, __ss_int name) {
-    __ss_int limit = ::fpathconf(fd, name); /* XXX errors */
-    return limit;
+    size_t limit = ::fpathconf(fd, name); /* XXX errors */
+    return (__ss_int)limit;
 }
 
 str *confstr(str *name) {
@@ -917,8 +917,8 @@ str *confstr(str *name) {
 }
 str *confstr(__ss_int name) {
     char buf[MAXENTRIES];
-    __ss_int size = ::confstr(name, buf, MAXENTRIES); /* XXX errors */
-    if(size == -1)
+    size_t size = ::confstr(name, buf, MAXENTRIES); /* XXX errors */
+    if(size == std::string::npos)
         throw new OSError(new str("os.confstr"));
     return new str(buf);
 }
@@ -929,8 +929,8 @@ __ss_int sysconf(str *name) {
     return sysconf(sysconf_names->__getitem__(name)); /* XXX errors */
 }
 __ss_int sysconf(__ss_int name) {
-    __ss_int limit = ::sysconf(name); /* XXX errors */
-    return limit;
+    size_t limit = ::sysconf(name); /* XXX errors */
+    return (__ss_int)limit;
 }
 
 tuple2<double, double> *getloadavg() {
@@ -969,16 +969,16 @@ __vfsstat::__vfsstat(__ss_int fd) {
 }
 
 void __vfsstat::fill_er_up() {
-    this->f_bsize = vbuf.f_bsize;
-    this->f_frsize = vbuf.f_frsize;
-    this->f_blocks = vbuf.f_blocks;
-    this->f_bfree = vbuf.f_bfree;
-    this->f_bavail = vbuf.f_bavail;
-    this->f_files = vbuf.f_files;
-    this->f_ffree = vbuf.f_ffree;
-    this->f_favail = vbuf.f_favail;
-    this->f_flag = vbuf.f_flag;
-    this->f_namemax = vbuf.f_namemax;
+    this->f_bsize = (__ss_int)vbuf.f_bsize;
+    this->f_frsize = (__ss_int)vbuf.f_frsize;
+    this->f_blocks = (__ss_int)vbuf.f_blocks;
+    this->f_bfree = (__ss_int)vbuf.f_bfree;
+    this->f_bavail = (__ss_int)vbuf.f_bavail;
+    this->f_files = (__ss_int)vbuf.f_files;
+    this->f_ffree = (__ss_int)vbuf.f_ffree;
+    this->f_favail = (__ss_int)vbuf.f_favail;
+    this->f_flag = (__ss_int)vbuf.f_flag;
+    this->f_namemax = (__ss_int)vbuf.f_namemax;
 }
 
 __ss_int __vfsstat::__len__() {
@@ -988,16 +988,16 @@ __ss_int __vfsstat::__len__() {
 __ss_int __vfsstat::__getitem__(__ss_int i) {
     i = __wrap(this, i);
     switch(i) {
-        case 0: return vbuf.f_bsize;
-        case 1: return vbuf.f_frsize;
-        case 2: return vbuf.f_blocks;
-        case 3: return vbuf.f_bfree;
-        case 4: return vbuf.f_bavail;
-        case 5: return vbuf.f_files;
-        case 6: return vbuf.f_ffree;
-        case 7: return vbuf.f_favail;
-        case 8: return vbuf.f_flag;
-        case 9: return vbuf.f_namemax;
+        case 0: return (__ss_int)vbuf.f_bsize;
+        case 1: return (__ss_int)vbuf.f_frsize;
+        case 2: return (__ss_int)vbuf.f_blocks;
+        case 3: return (__ss_int)vbuf.f_bfree;
+        case 4: return (__ss_int)vbuf.f_bavail;
+        case 5: return (__ss_int)vbuf.f_files;
+        case 6: return (__ss_int)vbuf.f_ffree;
+        case 7: return (__ss_int)vbuf.f_favail;
+        case 8: return (__ss_int)vbuf.f_flag;
+        case 9: return (__ss_int)vbuf.f_namemax;
 
         default:
             throw new IndexError(new str("tuple index out of range"));
@@ -1039,7 +1039,7 @@ __ss_bool access(str *path, __ss_int mode) {
 tuple2<double, double> *times() {
     struct tms buf;
     clock_t c;
-    __ss_int ticks_per_second = ::sysconf(_SC_CLK_TCK);
+    double ticks_per_second = (double)::sysconf(_SC_CLK_TCK);
     if((c = ::times(&buf)) == -1)
         throw new OSError(new str("os.utime"));
     return new tuple2<double, double>(5, ((double)buf.tms_utime / ticks_per_second), ((double)buf.tms_stime / ticks_per_second), ((double)buf.tms_cutime / ticks_per_second), ((double)buf.tms_cstime / ticks_per_second), ((double)c / ticks_per_second));
@@ -1072,7 +1072,7 @@ file *tmpfile() {
 } */
 
 __ss_int __ss_makedev(__ss_int major, __ss_int minor) {
-    return makedev(major, minor);
+    return (__ss_int)makedev(major, minor);
 }
 __ss_int __ss_major(__ss_int dev) {
     return major(dev);
