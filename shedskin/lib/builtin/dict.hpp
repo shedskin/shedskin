@@ -283,7 +283,7 @@ template <class K, class V> V dict<K,V>::__getitem__(K key) {
 }
 
 template<class K, class V> void *dict<K,V>::__addtoitem__(K key, V value) {
-	long hash = hasher<K>(key);
+	__ss_int hash = (__ss_int)hasher<K>(key);
 	dictentry<K, V> *entry;
 
 	entry = lookup(key, hash);
@@ -295,7 +295,7 @@ template<class K, class V> void *dict<K,V>::__addtoitem__(K key, V value) {
 }
 
 template <class K, class V> V dict<K,V>::get(K key) {
-    long hash = hasher<K>(key);
+    __ss_int hash = (__ss_int)hasher<K>(key);
 	dictentry<K, V> *entry;
 
 	entry = lookup(key, hash);
@@ -318,7 +318,7 @@ template <class K, class V> V dict<K,V>::get(K key, V d) {
 
 template <class K, class V> V dict<K,V>::setdefault(K key, V value)
 {
-    long hash = hasher<K>(key);
+    __ss_int hash = (__ss_int)hasher<K>(key);
 	dictentry<K, V> *entry;
 
 	entry = lookup(key, hash);
@@ -336,7 +336,7 @@ template <class K, class V> void *dict<K,V>::__delitem__(K key) {
 }
 
 template <class K, class V> int dict<K,V>::do_discard(K key) {
-	long hash = hasher<K>(key);
+	__ss_int hash = (__ss_int)hasher<K>(key);
 	dictentry<K,V> *entry;
 
 	entry = lookup(key, hash);
@@ -350,7 +350,7 @@ template <class K, class V> int dict<K,V>::do_discard(K key) {
 }
 
 template<class K, class V> V dict<K,V>::pop(K key) {
-	long hash = hasher<K>(key);
+	__ss_int hash = (__ss_int)hasher<K>(key);
     dictentry<K,V> *entry;
 
     entry = lookup(key, hash);

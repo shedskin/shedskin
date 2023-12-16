@@ -283,7 +283,6 @@ class ExtensionModule:
             "PyObject *%s__setstate__(PyObject *self, PyObject *args, PyObject *kwargs) {"
             % clname(cl)
         )
-        write("    int l = PyTuple_Size(args);")
         write("    PyObject *state = PyTuple_GetItem(args, 0);")
         for i, var in enumerate(vars):
             vartype = typestr.nodetypestr(self.gx, var, var.parent, mv=self.gv.mv)
