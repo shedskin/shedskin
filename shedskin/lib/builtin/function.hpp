@@ -637,7 +637,7 @@ template<> inline str *bin(__ss_int i) {
 /* id */
 
 template <class T> __ss_int id(T t) { 
-    return (intptr_t)t;
+    return (__ss_int)(intptr_t)t;
 }
 template <> __ss_int id(__ss_int);
 template <> __ss_int id(__ss_float);

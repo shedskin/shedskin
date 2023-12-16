@@ -2349,7 +2349,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 and not self.gx.longlong
             ):
                 error.error(
-                    "return value of 'id' does not fit in 32-bit integer (try shedskin -l)",
+                    "return value of 'id' does not fit in 32-bit integer (try shedskin --long)",
                     self.gx,
                     node,
                     warning=True,
