@@ -251,25 +251,9 @@ void throw_exception() {
     throw new TypeError(new str(pStrErrorMessage));
 }
 
-#ifdef __SS_LONG
 template<> __ss_int __to_ss(PyObject *p) {
-    // if(PyLong_Check(p) || PyInt_Check(p)) {
     if(PyLong_Check(p)) {
-        __ss_int result = PyLong_AsLongLong(p);
-        if (result == -1 && PyErr_Occurred() != NULL) {
-            throw_exception();
-        }
-        return result;
-    }
-    throw new TypeError(new str("error in conversion to Shed Skin (integer expected)"));
-}
-#endif
-
-template<> int __to_ss(PyObject *p) {
-    // if(PyLong_Check(p) || PyInt_Check(p)) {
-    if(PyLong_Check(p)) {
-        // int result = PyInt_AsLong(p);
-        int result = PyLong_AsLong(p);
+        __ss_int result = (__ss_int)PyLong_AsLongLong(p);
         if (result == -1 && PyErr_Occurred() != NULL) {
             throw_exception();
         }

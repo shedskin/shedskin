@@ -8,10 +8,7 @@ template<class T> T __to_ss(PyObject *p) {
     return new (typename dereference<T>::type)(p); /* isn't C++ pretty :-) */
 }
 
-#ifdef __SS_LONG
 template<> __ss_int __to_ss(PyObject *p);
-#endif
-template<> int __to_ss(PyObject *p);
 template<> __ss_bool __to_ss(PyObject *p);
 template<> double __to_ss(PyObject *p);
 template<> void *__to_ss(PyObject *p);
