@@ -69,9 +69,28 @@ public:
     str *expand(str *tpl);
 
     str *group(__ss_int n, __ss_int m = 0);
-    tuple2<str *, str *> *group(__ss_int n, __ss_int m, __ss_int o, ...);
     str *group(__ss_int n, str *m);
-    tuple2<str *, str *> *group(__ss_int n, str *m, str *o, ...);
+
+    template <class ... Args> tuple<str *> *group(__ss_int n, __ss_int m, __ss_int o, Args ... args) {
+        tuple<str *> *t = new tuple<str *>();
+
+        t->units.push_back(group(1, m));
+        t->units.push_back(group(1, o));
+
+        (t->units.push_back(group(1, args)), ...);
+
+        return t;
+    }
+
+    template <class ... Args> tuple<str *> *group(__ss_int n, str *m, str *o, Args ... args) {
+        tuple<str *> *t = new tuple<str *>();
+        t->units.push_back(group(1, m));
+        t->units.push_back(group(1, o));
+
+        (t->units.push_back(group(1, args)), ...);
+
+        return t;
+    }
 
     dict<str *, str *> *groupdict(str *defval = 0);
     tuple2<str *, str *> *groups(str *defval = 0);
