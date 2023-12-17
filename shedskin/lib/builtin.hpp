@@ -1199,10 +1199,7 @@ str *__str(__ss_bool b);
 str *__str(void *);
 str *__str();
 
-str *__add_strs(int n, str *a, str *b, str *c);
-str *__add_strs(int n, str *a, str *b, str *c, str *d);
-str *__add_strs(int n, str *a, str *b, str *c, str *d, str *e);
-str *__add_strs(int n, ...);
+template<class ... Args> str *__add_strs(int n, Args ... args);
 
 #include "builtin/iter.hpp"
 

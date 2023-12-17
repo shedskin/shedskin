@@ -1,6 +1,8 @@
 """
 *** SHED SKIN Python-to-C++ Compiler ***
-Copyright 2005-2013 Mark Dufour and constributors
+
+Copyright 2005-2023 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)
+
 cmake support contributed by Shakeeb Alireza
 License GNU GPL version 3 (See LICENSE)
 

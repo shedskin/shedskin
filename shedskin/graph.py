@@ -1,6 +1,6 @@
 """
 *** SHED SKIN Python-to-C++ Compiler ***
-Copyright 2005-2022 Mark Dufour and contributors; License GNU GPL version 3
+Copyright 2005-2023 Mark Dufour and contributors; License GNU GPL version 3
 (See LICENSE)
 
 graph.py: build constraint graph used in dataflow analysis
