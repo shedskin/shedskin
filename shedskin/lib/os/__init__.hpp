@@ -113,7 +113,6 @@ __ss_int __ss_WIFSTOPPED(__ss_int status);
 __ss_int __ss_WSTOPSIG(__ss_int status);
 __ss_int __ss_WTERMSIG(__ss_int status);
 
-void *execl(__ss_int n, str *file, ...);
 void *execlp(__ss_int n, str *file, ...);
 void *execle(__ss_int n, str *file, ...);
 void *execlpe(__ss_int n, str *file, ...);
@@ -121,6 +120,13 @@ void *execv(str *file, list<str*> *args);
 void *execvp(str *file, list<str*> *args);
 void *execve(str *file, list<str*> *args, dict<str *, str *> *env);
 void *execvpe(str *file, list<str*> *args, dict<str *, str *> *env);
+
+template <class ... Args> void *execl(__ss_int n, str *file, Args ... args) {
+    list<str *> *vals = new list<str *>();
+    (vals->append(args), ...);
+    execv(file, vals);
+    return NULL;
+}
 
 __ss_int spawnl(__ss_int n, __ss_int mode, str *file, ...);
 __ss_int spawnlp(__ss_int n, __ss_int mode, str *file, ...);
