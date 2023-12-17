@@ -2563,6 +2563,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         target = funcs[0]  # XXX
 
         print_function = self.library_func(funcs, "builtin", None, "__print")
+        swap_env = self.library_func(funcs, "os", None, "execle")
 
         castnull = False  # XXX
         if (
@@ -2632,6 +2633,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             kw = [p for p in pairs if p[1].name.startswith("__kw_")]
             nonkw = [p for p in pairs if not p[1].name.startswith("__kw_")]
             pairs = kw + nonkw[: func.largs]
+
+        # os.exec*, os.spawn* (C++ does not yet support non-terminal variadic arguments)
+        if swap_env:
+            pairs.insert(1, pairs.pop())
 
         for arg, formal in pairs:
             cast = False
