@@ -1126,18 +1126,6 @@ void *execlp(__ss_int n, str *file, ...) {
      return NULL;
 }
 
-void *execle(__ss_int n, str *file, ...) {
-     list<str *> *vals = new list<str *>();
-     va_list args;
-     va_start(args, file);
-     for(__ss_int i=0; i<n-2; i++)
-         vals->append(va_arg(args, str *)); /* XXX check str */
-     va_end(args);
-     dict<str *, str *> *env = (dict<str *, str *> *)(va_arg(args, pyobj *)); /* XXX check */
-     execve(file, vals, env);
-     return NULL;
-}
-
 void *execlpe(__ss_int n, str *file, ...) {
      list<str *> *vals = new list<str *>();
      va_list args;
