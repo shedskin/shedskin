@@ -1115,17 +1115,6 @@ list<str *> *__exec_path() {
     return envpath->split(pathsep);
 }
 
-void *execl(__ss_int n, str *file, ...) {
-     list<str *> *vals = new list<str *>();
-     va_list args;
-     va_start(args, file);
-     for(__ss_int i=0; i<n-1; i++)
-         vals->append(va_arg(args, str *)); /* XXX check str */
-     va_end(args);
-     execv(file, vals);
-     return NULL;
-}
-
 void *execlp(__ss_int n, str *file, ...) {
      list<str *> *vals = new list<str *>();
      va_list args;
