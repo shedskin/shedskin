@@ -112,17 +112,17 @@ double time() {
     if (clock_gettime(CLOCK_REALTIME, &ts) == -1)
 #endif
 	    throw new Exception(new str("clock_gettime"));
-    return ts.tv_sec + ts.tv_nsec/1000000000.0;
+    return (double)ts.tv_sec + (double)ts.tv_nsec/1000000000.0;
 }
 
 #ifndef WIN32
 void *sleep(double s) {
     time_t seconds = time_t(s);
-    long nanosecs = (s - seconds) * 1000000000l;
+    double nanosecs = (s - (double)seconds) * 1000000000l;
 
     struct timespec time1, time2;
     time1.tv_sec = seconds;
-    time1.tv_nsec = nanosecs;
+    time1.tv_nsec = (long)nanosecs;
 
     int ret = -1;
 
@@ -192,11 +192,11 @@ str *ctime(const double seconds) {
 
 str *strftime(str *format, struct_time* tuple) {
     tm *time_tuple = tuple2tm(tuple);
-    unsigned int size = format->__len__();
-    unsigned int n;
+    __ss_int size = format->__len__();
+    size_t n;
     char *buf;
-	if(size==0)
-		return new str();
+    if(size==0)
+        return new str();
     do {
         size *= 2;
         buf = new char[size];

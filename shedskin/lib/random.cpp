@@ -204,8 +204,8 @@ __ss_float Random::_genrand_res53() {
     */
     int a, b;
 
-    a = ((this->_genrand_int32()>>5)&~(-1<<(32-5)));
-    b = ((this->_genrand_int32()>>6)&~(-1<<(32-6)));
+    a = ((this->_genrand_int32()>>5)&~((unsigned)-1<<(32-5)));
+    b = ((this->_genrand_int32()>>6)&~((unsigned)-1<<(32-6)));
 //    return (((a*67108864.0)+b)*(1.0/9.00719925474e+15));
 
     return (((a*67108864.0)+b)*(1.0/9007199254740992.0));
@@ -497,7 +497,7 @@ int Random::getrandbits(int k) {
     if ((k>MAXBITS)) {
         throw (new ValueError(const_9));
     }
-    return ((this->_genrand_int32()>>(32-k))&~(-1<<k));
+    return ((this->_genrand_int32()>>(32-k))&~((unsigned)-1<<k));
 }
 
 void *Random::setstate(list<__ss_float> *state) {
@@ -611,10 +611,10 @@ int Random::_genrand_int32() {
     }
     y = (this->mt)->__getfast__(this->mti);
     this->mti += 1;
-    y ^= ((y>>11)&~(-1<<(32-11)));
+    y ^= ((y>>11)&~((unsigned)-1<<(32-11)));
     y ^= ((y<<7)&2636928640u);
     y ^= ((y<<15)&4022730752u);
-    y ^= ((y>>18)&~(-1<<(32-18)));
+    y ^= ((y>>18)&~((unsigned)-1<<(32-18)));
     return y;
 }
 
