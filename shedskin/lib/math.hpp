@@ -182,7 +182,7 @@ inline __ss_float log1p(__ss_float x) {
 }
 
 inline __ss_int trunc(__ss_float x) {
-    return ::trunc(x);
+    return (__ss_int)::trunc(x);
 }
 
 inline __ss_float fsum(pyiter<__ss_float> *iterable) {

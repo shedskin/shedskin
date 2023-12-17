@@ -262,7 +262,7 @@ template <class A> void *Random::seed(A a) {
             If no argument is provided, current time is used for seeding.
     */
 
-    int h;
+    long h;
 
     if(__is_none(a)) {
         int secs, usec;
@@ -274,7 +274,7 @@ template <class A> void *Random::seed(A a) {
     else
         h = hasher(a);
 
-    srand(h);
+    srand((unsigned int)h);
 
     return NULL;
 }
