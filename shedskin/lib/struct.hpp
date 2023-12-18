@@ -27,14 +27,21 @@ __ss_bool unpack_bool(char o, char c, unsigned int d, bytes *data, __ss_int *pos
 double unpack_float(char o, char c, unsigned int d, bytes *data, __ss_int *pos);
 void unpack_pad(char o, char c, unsigned int d, bytes *data, __ss_int *pos);
 
+/*
 int get_itemsize(char order, char c);
 
 void fillbuf(char c, __ss_int t, char order, unsigned int itemsize);
 
-/*
 template<class T> void __pack_int(char c, T t, char order, unsigned int itemsize) {} // TODO raise error
 template<> inline void __pack_int(char c, __ss_int t, char order, unsigned int itemsize) {
     fillbuf(c, t, order, itemsize);
+}
+
+template<class T> void __pack_str(char c, T t, bytes *result, size_t &pos ) {} // TODO raise error
+template<> inline void __pack_str(char c, bytes *b, bytes *result, size_t &pos) {
+    __ss_int len = b->__len__();
+    for(__ss_int j=0; j<len; j++)
+        result->unit[pos++] = b->unit[j];
 }
 
 
@@ -42,7 +49,6 @@ template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j
     unsigned int itemsize;
 
     for(; j<fmtlen; j++) {
-        printf("j=%d\n", j);
         char c = fmt->unit[j];
         if(ordering.find(c) != std::string::npos) {
             order = c;
@@ -52,10 +58,9 @@ template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j
             digits->unit += c;
             continue;
         }
-        unsigned int ndigits = 1;
+        __ss_int ndigits = 1;
         if(len(digits)) {
             ndigits = __int(digits);
-            digits = new str();
         }
         switch(c) {
             case 'H':
@@ -63,10 +68,14 @@ template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j
                 __pack_int(c, arg, order, itemsize);
                 for(unsigned int k=0; k<itemsize; k++)
                     result->unit[pos++] = ((char *)buffy)[k];
-                break;
+                j++;
+                return;
+
             case 's':
-                printf("s\n");
-                break;
+                __pack_str(c, arg, result, pos);
+                j++;
+                return;
+
             default:
                 ;
         }
@@ -103,6 +112,7 @@ template<class ... Args> void *pack_into(int n, str *fmt, bytes *buffer, __ss_in
 
     return NULL;
 }
+
 */
 
 bytes *pack(int n, str *fmt, ...);
