@@ -183,7 +183,6 @@ template<class T> inline T heapreplace(list<T> *heap, T item) {
 /* Advanced operations */
 
 template<class T> class mergeiter;
-template<class T> inline mergeiter<T> *merge(__ss_int iterable_count, pyiter<T> *iterable, ...);
 
 template<class T> class mergeiter : public __iter<T> {
 public:
@@ -201,7 +200,6 @@ public:
 
     T __next__();
 
-    friend mergeiter<T> *merge<T>(__ss_int iterable_count, pyiter<T> *iterable, ...);
 };
 
 template<class T> inline mergeiter<T>::mergeiter() {
@@ -250,18 +248,9 @@ template<class T> T mergeiter<T>::__next__() {
 inline mergeiter<void *> *merge(__ss_int /* iterable_count */) {
     return new mergeiter<void *>();
 }
-template<class T> inline mergeiter<T> *merge(__ss_int iterable_count, pyiter<T> *iterable, ...) {
+template<class T, class ... Args> mergeiter<T> *merge(__ss_int iterable_count, pyiter<T> *iterable, Args ... args) {
     mergeiter<T> *iter = new mergeiter<T>(iterable);
-
-    va_list ap;
-    va_start(ap, iterable);
-
-    while (--iterable_count) {
-        iter->push_iter(va_arg(ap, pyiter<T> *));
-    }
-
-    va_end(ap);
-
+    (iter->push_iter((pyiter<T> *)args), ...);
     return iter;
 }
 
