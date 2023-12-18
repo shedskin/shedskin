@@ -72,6 +72,7 @@ class GlobalInfo:  # XXX add comments, split up
         self.longlong = False
         self.float = False
         self.flags = None
+        self.silent = False
         self.nogc = False
         self.gcwarns = True
         self.backtrace = False

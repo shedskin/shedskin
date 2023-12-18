@@ -129,6 +129,7 @@ class Shedskin:
                 gx.outputdir = args.outputdir
 
             if args.silent:
+                gx.silent = True
                 self.log.setLevel(logging.WARNING)
 
             if args.traceback:
@@ -351,9 +352,9 @@ class Shedskin:
 
         ss = cls(args)
 
-        print('*** SHED SKIN Python-to-C++ Compiler 0.9.8 ***')
-        print('Copyright 2005-2023 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)')
-        print()
+        ss.log.info('*** SHED SKIN Python-to-C++ Compiler 0.9.8 ***')
+        ss.log.info('Copyright 2005-2023 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)')
+        ss.log.info('')
 
         if args.subcmd == 'analyze':
             ss.analyze()
