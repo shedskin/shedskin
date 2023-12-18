@@ -1424,12 +1424,11 @@ def ifa_split_class(cl, dcpa, things, split):
 
 
 def update_progressbar(gx, perc):
-    #    if not logger.isEnabledFor(logging.INFO):
-    #        return
-    if gx.progressbar is None:
-        gx.progressbar = utils.ProgressBar(total=1.0)
+    if not gx.silent:
+        if gx.progressbar is None:
+            gx.progressbar = utils.ProgressBar(total=1.0)
 
-    gx.progressbar.update(perc)
+        gx.progressbar.update(perc)
 
 
 # --- cartesian product algorithm (cpa) & iterative flow analysis (ifa)
