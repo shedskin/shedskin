@@ -1115,29 +1115,6 @@ list<str *> *__exec_path() {
     return envpath->split(pathsep);
 }
 
-void *execlp(__ss_int n, str *file, ...) {
-     list<str *> *vals = new list<str *>();
-     va_list args;
-     va_start(args, file);
-     for(__ss_int i=0; i<n-1; i++)
-         vals->append(va_arg(args, str *)); /* XXX check str */
-     va_end(args);
-     execvp(file, vals);
-     return NULL;
-}
-
-void *execlpe(__ss_int n, str *file, ...) {
-     list<str *> *vals = new list<str *>();
-     va_list args;
-     va_start(args, file);
-     for(__ss_int i=0; i<n-2; i++)
-         vals->append(va_arg(args, str *)); /* XXX check str */
-     va_end(args);
-     dict<str *, str *> *env = (dict<str *, str *> *)(va_arg(args, pyobj *)); /* XXX check */
-     execvpe(file, vals, env);
-     return NULL;
-}
-
 void *execv(str* file, list<str*>* args) {
     ::execv(file->c_str(), __exec_argvlist(args));
     throw new OSError(new str("os.execv"));
@@ -1186,48 +1163,6 @@ void *execvpe(str* file, list<str*>* args, dict<str *, str *> *env) {
             execve(fullname, args, env);
     }
     throw new OSError(new str("os.execvpe"));
-}
-
-__ss_int spawnl(__ss_int n, __ss_int mode, str *file, ...) {
-     list<str *> *vals = new list<str *>();
-     va_list args;
-     va_start(args, file);
-     for(__ss_int i=0; i<n-2; i++)
-         vals->append(va_arg(args, str *)); /* XXX check str */
-     va_end(args);
-     return spawnv(mode, file, vals);
-}
-
-__ss_int spawnlp(__ss_int n, __ss_int mode, str *file, ...) {
-     list<str *> *vals = new list<str *>();
-     va_list args;
-     va_start(args, file);
-     for(__ss_int i=0; i<n-2; i++)
-         vals->append(va_arg(args, str *)); /* XXX check str */
-     va_end(args);
-     return spawnvp(mode, file, vals);
-}
-
-__ss_int spawnle(__ss_int n, __ss_int mode, str *file, ...) {
-     list<str *> *vals = new list<str *>();
-     va_list args;
-     va_start(args, file);
-     for(__ss_int i=0; i<n-3; i++)
-         vals->append(va_arg(args, str *)); /* XXX check str */
-     va_end(args);
-     dict<str *, str *> *env = (dict<str *, str *> *)(va_arg(args, pyobj *)); /* XXX check */
-     return spawnve(mode, file, vals, env);
-}
-
-__ss_int spawnlpe(__ss_int n, __ss_int mode, str *file, ...) {
-     list<str *> *vals = new list<str *>();
-     va_list args;
-     va_start(args, file);
-     for(__ss_int i=0; i<n-3; i++)
-         vals->append(va_arg(args, str *)); /* XXX check str */
-     va_end(args);
-     dict<str *, str *> *env = (dict<str *, str *> *)(va_arg(args, pyobj *)); /* XXX check */
-     return spawnvpe(mode, file, vals, env);
 }
 
 __ss_int spawnv(__ss_int mode, str *file, list<str *> *args) {
