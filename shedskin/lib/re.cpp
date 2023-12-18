@@ -145,11 +145,12 @@ __GC_STRING re_object::__group(__GC_STRING *subj, int *captured, str *mname)
 __GC_STRING re_object::__expand(__GC_STRING *subj, int *captured, __GC_STRING tpl)
 {
     __GC_STRING out;
-    int i, j, len, ref;
+    int i, j, len;
+    __ss_int ref;
     char c;
 
     out = "";
-    len = tpl.length();
+    len = (int)tpl.length();
 
     for(i = 0; i < len; i++)
     {
@@ -177,7 +178,7 @@ __GC_STRING re_object::__expand(__GC_STRING *subj, int *captured, __GC_STRING tp
                 j = i;
                 while(isdigit(tpl[i]) && i < len) i++;
 
-                ref = strtol(tpl.substr(j, i - j).c_str(), 0, 10);
+                ref = (__ss_int)strtol(tpl.substr(j, i - j).c_str(), 0, 10);
                 out += __group(subj, captured, ref);
 
                 i--;
@@ -196,7 +197,7 @@ __GC_STRING re_object::__expand(__GC_STRING *subj, int *captured, __GC_STRING tp
                 if(tpl[i] != '>') throw new error(new str("unterminated name group"));
                 if(::isdigit((int)tpl[j]) && !c) throw new error(new str("invalid first character in name group"));
 
-                if(c) out += __group(subj, captured, strtol(tpl.substr(j, i - j).c_str(), 0, 10));
+                if(c) out += __group(subj, captured, (__ss_int)strtol(tpl.substr(j, i - j).c_str(), 0, 10));
                 else out += __group(subj, captured, new str(tpl.substr(j, i - j)));
 
                 continue;
@@ -260,7 +261,7 @@ str *re_object::__subn(str *repl, str *subj, __ss_int maxn, int *howmany)
             compiled_pattern,
             study_info,
             c_subj,
-            s->size(),
+            (int)s->size(),
             i,
             0,
             captured,
@@ -354,7 +355,7 @@ list<str *> *re_object::__splitfind(str *subj, __ss_int maxn, char onlyfind, __s
             compiled_pattern,
             study_info,
             c_subj,
-            subjs->size(),
+            (int)subjs->size(),
             i,
             flags,
             captured,
@@ -456,7 +457,7 @@ match_object *re_object::__exec(str *subj, __ss_int pos, __ss_int endpos, __ss_i
     captured = (int *)GC_MALLOC(clen * sizeof(int));
 
     //sanity checking
-    if(endpos == -1) nendpos = subj->unit.size() - 1;
+    if(endpos == -1) nendpos = (__ss_int)subj->unit.size() - 1;
     else if(endpos < pos) throw new error(new str("end position less than initial"));
     else nendpos = endpos;
 
@@ -599,7 +600,7 @@ str *escape(str *s)
     int i, j, len;
 
     ps = &s->unit;
-    len = ps->size();
+    len = (int)ps->size();
     out = "";
     for(i = 0; i < len; i++)
     {

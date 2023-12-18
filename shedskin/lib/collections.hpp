@@ -235,7 +235,7 @@ public:
     }
 
     V __getitem__(K key) {
-        long hash = hasher<K>(key);
+        __ss_int hash = (__ss_int)hasher<K>(key);
         dictentry<K, V> *entry;
         entry = this->lookup(key, hash);
         if (entry->use != active)
