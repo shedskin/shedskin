@@ -27,7 +27,20 @@ __ss_bool unpack_bool(char o, char c, unsigned int d, bytes *data, __ss_int *pos
 double unpack_float(char o, char c, unsigned int d, bytes *data, __ss_int *pos);
 void unpack_pad(char o, char c, unsigned int d, bytes *data, __ss_int *pos);
 
-inline void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j, str *digits, char &order, bytes *result, pyobj *arg) {
+int get_itemsize(char order, char c);
+
+void fillbuf(char c, __ss_int t, char order, unsigned int itemsize);
+
+/*
+template<class T> void __pack_int(char c, T t, char order, unsigned int itemsize) {} // TODO raise error
+template<> inline void __pack_int(char c, __ss_int t, char order, unsigned int itemsize) {
+    fillbuf(c, t, order, itemsize);
+}
+
+
+template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j, str *digits, char &order, bytes *result, size_t &pos, T arg) {
+    unsigned int itemsize;
+
     for(; j<fmtlen; j++) {
         printf("j=%d\n", j);
         char c = fmt->unit[j];
@@ -46,7 +59,10 @@ inline void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j, str *digi
         }
         switch(c) {
             case 'H':
-                printf("H\n");
+                itemsize = get_itemsize(order, c);
+                __pack_int(c, arg, order, itemsize);
+                for(unsigned int k=0; k<itemsize; k++)
+                    result->unit[pos++] = ((char *)buffy)[k];
                 break;
             case 's':
                 printf("s\n");
@@ -59,7 +75,6 @@ inline void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j, str *digi
 
 }
 
-/*
 template<class ... Args> void __pack(bytes *result, size_t &pos, int n, str *fmt, Args ... args) {
     char order = '@';
     str *digits = new str();
@@ -67,7 +82,7 @@ template<class ... Args> void __pack(bytes *result, size_t &pos, int n, str *fmt
     unsigned int fmtlen = fmt->__len__();
     unsigned int j = 0;
 
-    (__pack_one(fmt, fmtlen, j, digits, order, result, args), ...);
+    (__pack_one(fmt, fmtlen, j, digits, order, result, pos, args), ...);
 }
 
 template<class ... Args> bytes *pack(int n, str *fmt, Args ... args) {
