@@ -19,13 +19,14 @@ public:
     }
 };
 
+__ss_int calcsize(str *fmt);
+
 __ss_int unpack_int(char o, char c, unsigned int d, bytes *data, __ss_int *pos);
 bytes * unpack_bytes(char o, char c, unsigned int d, bytes *data, __ss_int *pos);
 __ss_bool unpack_bool(char o, char c, unsigned int d, bytes *data, __ss_int *pos);
 double unpack_float(char o, char c, unsigned int d, bytes *data, __ss_int *pos);
 void unpack_pad(char o, char c, unsigned int d, bytes *data, __ss_int *pos);
 
-/*
 inline void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j, str *digits, char &order, bytes *result, pyobj *arg) {
     for(; j<fmtlen; j++) {
         printf("j=%d\n", j);
@@ -58,8 +59,8 @@ inline void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j, str *digi
 
 }
 
-template<class ... Args> bytes *pack(int n, str *fmt, Args ... args) {
-    bytes *result = new bytes();
+/*
+template<class ... Args> void __pack(bytes *result, size_t &pos, int n, str *fmt, Args ... args) {
     char order = '@';
     str *digits = new str();
 
@@ -67,13 +68,26 @@ template<class ... Args> bytes *pack(int n, str *fmt, Args ... args) {
     unsigned int j = 0;
 
     (__pack_one(fmt, fmtlen, j, digits, order, result, args), ...);
+}
 
+template<class ... Args> bytes *pack(int n, str *fmt, Args ... args) {
+    bytes *result = new bytes();
+    __ss_int result_size = calcsize(fmt);
+    result->unit.resize(result_size);
+    size_t pos = 0;
+
+    __pack(result, pos, n, fmt, args...);
 
     return result;
 }
-//avoid intermediate!
-//void pack_into(int n, str *fmt, bytes *buffer, __ss_int offset, ...) {
 
+template<class ... Args> void *pack_into(int n, str *fmt, bytes *buffer, __ss_int offset, Args ... args) {
+    size_t pos = (size_t)offset;
+
+    __pack(buffer, pos, n, fmt, args...);
+
+    return NULL;
+}
 */
 
 bytes *pack(int n, str *fmt, ...);
@@ -81,8 +95,6 @@ void pack_into(int n, str *fmt, bytes *buffer, __ss_int offset, ...);
 
 str *unpack(); /* using __struct__::unpack */
 str *unpack_from(); /* using __struct__::unpack */
-
-__ss_int calcsize(str *fmt);
 
 void __init();
 
