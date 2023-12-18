@@ -71,7 +71,7 @@ int padding(char o, int pos, unsigned int itemsize) {
 
 __ss_int unpack_int(char o, char c, unsigned int d, bytes *data, __ss_int *pos) {
     unsigned long long result;
-    unsigned int itemsize = get_itemsize(o, c);
+    unsigned int itemsize = (__ss_int)get_itemsize(o, c);
     *pos += padding(o, *pos, itemsize);
     if(d==0)
         return 0;
@@ -86,7 +86,7 @@ __ss_int unpack_int(char o, char c, unsigned int d, bytes *data, __ss_int *pos) 
     *pos += itemsize;
     if(c == 'h')
         return (short)result;
-    return result;
+    return (__ss_int)result;
 }
 
 bytes *unpack_bytes(char, char c, unsigned int d, bytes *data, __ss_int *pos) {
@@ -202,10 +202,10 @@ __ss_int calcsize(str *fmt) {
 void fillbuf(char c, __ss_int t, char order, unsigned int itemsize) {
     if(order == '@') {
         switch(c) {
-            case 'b': *((signed char *)buffy) = t; break;
-            case 'B': *((unsigned char *)buffy) = t; break;
-            case 'h': *((short *)buffy) = t; break;
-            case 'H': *((unsigned short *)buffy) = t; break;
+            case 'b': *((signed char *)buffy) = (signed char)t; break;
+            case 'B': *((unsigned char *)buffy) = (unsigned char)t; break;
+            case 'h': *((short *)buffy) = (short)t; break;
+            case 'H': *((unsigned short *)buffy) = (unsigned short)t; break;
             case 'i': *((int *)buffy) = t; break;
             case 'I': *((unsigned int *)buffy) = t; break;
             case 'l': *((long *)buffy) = t; break;
@@ -230,7 +230,7 @@ void fillbuf(char c, __ss_int t, char order, unsigned int itemsize) {
 
 void fillbuf2(char c, double t, char, unsigned int) {
     switch(c) {
-        case 'f': *((float *)buffy) = t; break;
+        case 'f': *((float *)buffy) = (float)t; break;
         case 'd': *((double *)buffy) = t; break;
     }
 }
