@@ -113,17 +113,20 @@ __ss_int __ss_WIFSTOPPED(__ss_int status);
 __ss_int __ss_WSTOPSIG(__ss_int status);
 __ss_int __ss_WTERMSIG(__ss_int status);
 
-void *execlp(__ss_int n, str *file, ...);
-void *execlpe(__ss_int n, str *file, ...);
 void *execv(str *file, list<str*> *args);
 void *execvp(str *file, list<str*> *args);
 void *execve(str *file, list<str*> *args, dict<str *, str *> *env);
 void *execvpe(str *file, list<str*> *args, dict<str *, str *> *env);
 
-template <class ... Args> void *execle(__ss_int n, str *file, dict<str *, str *> *env, Args ... args) {
+__ss_int spawnv(__ss_int mode, str *file, list<str *> *args);
+__ss_int spawnvp(__ss_int mode, str *file, list<str *> *args);
+__ss_int spawnve(__ss_int mode, str *file, list<str *> *args, dict<str *, str *> *env);
+__ss_int spawnvpe(__ss_int mode, str *file, list<str *> *args, dict<str *, str *> *env);
+
+template <class ... Args> void *execlp(__ss_int n, str *file, Args ... args) {
     list<str *> *vals = new list<str *>();
     (vals->append(args), ...);
-    execve(file, vals, env);
+    execvp(file, vals);
     return NULL;
 }
 
@@ -134,14 +137,45 @@ template <class ... Args> void *execl(__ss_int n, str *file, Args ... args) {
     return NULL;
 }
 
-__ss_int spawnl(__ss_int n, __ss_int mode, str *file, ...);
-__ss_int spawnlp(__ss_int n, __ss_int mode, str *file, ...);
-__ss_int spawnle(__ss_int n, __ss_int mode, str *file, ...);
-__ss_int spawnlpe(__ss_int n, __ss_int mode, str *file, ...);
-__ss_int spawnv(__ss_int mode, str *file, list<str *> *args);
-__ss_int spawnvp(__ss_int mode, str *file, list<str *> *args);
-__ss_int spawnve(__ss_int mode, str *file, list<str *> *args, dict<str *, str *> *env);
-__ss_int spawnvpe(__ss_int mode, str *file, list<str *> *args, dict<str *, str *> *env);
+
+template <class ... Args> void *execle(__ss_int n, str *file, dict<str *, str *> *env, Args ... args) {
+    list<str *> *vals = new list<str *>();
+    (vals->append(args), ...);
+    execve(file, vals, env);
+    return NULL;
+}
+
+template <class ... Args> void *execlpe(__ss_int n, str *file, dict<str *, str *> *env, Args ... args) {
+    list<str *> *vals = new list<str *>();
+    (vals->append(args), ...);
+    execvpe(file, vals, env);
+    return NULL;
+}
+
+
+template <class ... Args> __ss_int spawnl(__ss_int n, __ss_int mode, str *file, Args ... args) {
+    list<str *> *vals = new list<str *>();
+    (vals->append(args), ...);
+    return spawnv(mode, file, vals);
+}
+
+template <class ... Args> __ss_int spawnlp(__ss_int n, __ss_int mode, str *file, Args ... args) {
+    list<str *> *vals = new list<str *>();
+    (vals->append(args), ...);
+    return spawnvp(mode, file, vals);
+}
+
+template <class ... Args> __ss_int spawnle(__ss_int n, __ss_int mode, str *file, dict<str *, str *> *env, Args ... args) {
+    list<str *> *vals = new list<str *>();
+    (vals->append(args), ...);
+    return spawnve(mode, file, vals, env);
+}
+
+template <class ... Args> __ss_int spawnlpe(__ss_int n, __ss_int mode, str *file, dict<str *, str *> *env, Args ... args) {
+    list<str *> *vals = new list<str *>();
+    (vals->append(args), ...);
+    return spawnvpe(mode, file, vals, env);
+}
 
 void *unsetenv(str* var);
 __ss_int getpid();

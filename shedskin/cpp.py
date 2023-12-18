@@ -2563,7 +2563,16 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         target = funcs[0]  # XXX
 
         print_function = self.library_func(funcs, "builtin", None, "__print")
-        swap_env = self.library_func(funcs, "os", None, "execle")
+
+        swap_env = False
+        for name in (
+            "execle",
+            "execlpe",
+            "spawnle",
+            "spawnlpe",
+        ):
+            if self.library_func(funcs, "os", None, name):
+                swap_env = True
 
         castnull = False  # XXX
         if (
