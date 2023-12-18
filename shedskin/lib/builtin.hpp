@@ -1041,8 +1041,7 @@ file_binary *open_binary(str *name, str *flags = 0);
 file_binary *open_binary(bytes *name, str *flags = 0); /* ugly duplication.. use str/byte template? */
 str *input(str *msg = 0);
 
-void print(int n, file *f, str *end, str *sep, ...);
-void print2(file *f, int comma, int n, ...);
+template <class ... Args> void print(int n, file *f, str *end, str *sep, Args ... args);
 
 __xrange *range(__ss_int b);
 __xrange *range(__ss_int a, __ss_int b, __ss_int s=1);

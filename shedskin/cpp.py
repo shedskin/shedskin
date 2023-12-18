@@ -3411,30 +3411,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.visitm(", ", n, func)
         self.append(")")
 
-    def visit_Print(self, node, func=None):
-        self.start("print2(")
-        if node.dest:
-            self.visitm(node.dest, ", ", func)
-        else:
-            self.append("NULL,")
-        if node.nl is False:
-            self.append("1,")
-        else:
-            self.append("0,")
-        self.append(str(len(node.values)))
-        for n in node.values:
-            types = [t[0].ident for t in self.mergeinh[n]]
-            if (
-                "float_" in types
-                or "int_" in types
-                or "bool_" in types
-                or "complex" in types
-            ):
-                self.visitm(", ___box(", n, ")", func)
-            else:
-                self.visitm(", ", n, func)
-        self.eol(")")
-
     def attr_var_ref(self, node, ident, module=None):  # XXX blegh
         lcp = typestr.lowest_common_parents(
             typestr.polymorphic_t(self.gx, self.mergeinh[node.value])

@@ -367,52 +367,6 @@ bytes *__modct(bytes *fmt, int n, ...) {
      return new bytes(s->unit);
 }
 
-/* print .., */
-
-void print(int n, file *f, str *end, str *sep, ...) {
-    __print_cache->units.resize(0);
-    va_list args;
-    va_start(args, sep);
-    for(int i=0; i<n; i++)
-        __print_cache->append(va_arg(args, pyobj *));
-    va_end(args);
-    str *s = __mod5(__print_cache, sep?sep:sp);
-    if(!end)
-        end = nl;
-    if(f) {
-        f->write(s);
-        f->write(end);
-    }
-    else
-        printf("%s%s", s->c_str(), end->c_str());
-}
-
-void print2(file *f, int comma, int n, ...) {
-    __print_cache->units.resize(0);
-    va_list args;
-    va_start(args, n);
-    for(int i=0; i<n; i++)
-        __print_cache->append(va_arg(args, pyobj *));
-    va_end(args);
-    if (!f)
-        f = __ss_stdout;
-    __file_options *p_opt = &f->options;
-    str *s = __mod5(__print_cache, sp);
-    if(len(s)) {
-        if(p_opt->space && (!isspace(p_opt->lastchar) || p_opt->lastchar==' ') && s->c_str()[0] != '\n')
-            f->write(sp); /* space */
-        f->write(s);
-        p_opt->lastchar = s->c_str()[len(s)-1];
-    }
-    else if (comma)
-        p_opt->lastchar = ' ';
-    if(!comma) {
-        f->write(nl); /* newline */
-        p_opt->lastchar = '\n';
-    }
-    p_opt->space = comma;
-}
-
 int_ *___box(__ss_int i) {
     return new int_(i);
 }

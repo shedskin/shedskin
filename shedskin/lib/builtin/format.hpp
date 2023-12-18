@@ -13,11 +13,17 @@ complex_ *___box(complex);
 size_t __fmtpos(str *fmt);
 size_t __fmtpos2(str *fmt);
 void __modfill(str **fmt, pyobj *t, str **s, pyobj *a1, pyobj *a2, bool bytes=false);
+str *__mod5(list<pyobj *> *vals, str *sep);
 str *mod_to_c2(pyobj *t);
 int_ *mod_to_int(pyobj *t);
 float_ *mod_to_float(pyobj *t);
 
 str *__escape_bytes(bytes *t);
+
+extern list<pyobj *> *__print_cache;
+extern str *nl;
+extern str *sp;
+extern str *sep;
 
 template<class T> str *__modtuple(str *fmt, tuple2<T,T> *t) {
     list<pyobj *> *vals = new list<pyobj *>();
@@ -46,4 +52,21 @@ template<class T> str *__moddict(str *v, dict<str *, T> *d) {
     for(i=0;i<len(names);i++)
         vals->append(___box(d->__getitem__(names->__getitem__(i))));
     return __mod4(v, vals);
+}
+
+/* print .., */
+
+template<class ... Args> void print(int n, file *f, str *end, str *sep, Args ... args) {
+    __print_cache->units.resize(0);
+    (__print_cache->append(args), ...);
+
+    str *s = __mod5(__print_cache, sep?sep:sp);
+    if(!end)
+        end = nl;
+    if(f) {
+        f->write(s);
+        f->write(end);
+    }
+    else
+        printf("%s%s", s->c_str(), end->c_str());
 }

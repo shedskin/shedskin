@@ -194,7 +194,7 @@ void terminate_handler() {
     } catch (SystemExit *s) {
         __add_missing_newline(); /* XXX s->message -> stderr? */
         if(s->show_message)
-            print2(__ss_stderr, 0, 1, s->message);
+            print(1, __ss_stderr, NULL, NULL, s->message);
         code = s->code;
 
     } catch (BaseException *e) {
@@ -208,9 +208,9 @@ void terminate_handler() {
 
         str *s = __str(e);
         if(___bool(s))
-            print2(NULL, 0, 1, __add_strs(3, e->__class__->__name__, new str(": "), s));
+            print(1, NULL, NULL, NULL, __add_strs(3, e->__class__->__name__, new str(": "), s));
         else
-            print2(NULL, 0, 1, e->__class__->__name__);
+            print(1, NULL, NULL, NULL, e->__class__->__name__);
         code = 1;
     }
 
