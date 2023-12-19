@@ -51,6 +51,10 @@ def test_d():
     d, = struct.unpack("<d", packer)
     assert d == 949.1
 
+    packer = struct.pack("<d", 12)
+    d, = struct.unpack("<d", packer)
+    assert d == 12.0
+
 
 def test_c():
     packer = struct.pack(">c", b'a')
@@ -107,6 +111,13 @@ def test_errors():
     except struct.error as e:
         error = str(e)
     assert error == 'required argument is not an integer'
+
+    error = ''
+    try:
+        packer = struct.pack("d", b'hop')
+    except struct.error as e:
+        error = str(e)
+    assert error == 'required argument is not a float'
 
     error = ''
     try:
