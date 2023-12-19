@@ -1,32 +1,41 @@
 import struct
 
 
-def test_unpack(): # FIXME: unpack not working
-    # struct.pack(">h", 10) == b'\x00\n'
-    # struct.unpack("h", b'\x00\n') == (2560,)
-    # assert struct.unpack('>bhl', b'\x01\x00\x02\x00\x00\x00\x03') == (1, 2, 3)
-    assert struct.calcsize('>bhl') == 7
-#     assert struct.unpack("<BBHHHII16s", 32 * b"0") == (48, 48, 12336, 12336, 12336, 808464432, 808464432, b'0000000000000000')
-    # header_format = "<32s2BHHH24s"
-    # assert struct.unpack(header_format, 64 * b"0") == (b'00000000000000000000000000000000', 48, 48, 12336, 12336, 12336, b'000000000000000000000000')
-    # assert struct.calcsize(header_format) == 64
-    
-    # version = [0, 0]
-    # (   
-    #     magic,
-    #     version[0],
-    #     version[1],
-    #     max_files,
-    #     cur_files,
-    #     reserved,
-    #     user_description,
-    # ) = struct.unpack(header_format, 64 * b"0")
-    # assert magic == b'00000000000000000000000000000000'
-    # assert version == [48, 48]
-    # assert cur_files == 12336
+def test_unpack():
+    a, = struct.unpack("h", b'\x00\n')
+    assert a == 2560
+
+    a, b, c = struct.unpack('>bhl', b'\x01\x00\x02\x00\x00\x00\x03')
+    assert (a, b, c) == (1, 2, 3)
+
+    a, b, c, d, e, f, g, h = struct.unpack("<BBHHHII16s", 32 * b"0")
+    assert (a, b, c, d, e, f, g) == (48, 48, 12336, 12336, 12336, 808464432, 808464432)
+    assert h == b'0000000000000000'
+
+    header_format = "<32s2BHHH24s"
+    h, a, b, c, d, e, i = struct.unpack(header_format, 64 * b"0")
+    assert h == b'00000000000000000000000000000000'
+    assert (a, b, c, d, e) == (48, 48, 12336, 12336, 12336)
+    assert i == b'000000000000000000000000'
+
+    version = [0, 0]
+    (
+         magic,
+         version[0],
+         version[1],
+         max_files,
+         cur_files,
+         reserved,
+         user_description,
+    ) = struct.unpack(header_format, 64 * b"0")
+    assert magic == b'00000000000000000000000000000000'
+    assert version == [48, 48]
+    assert cur_files == 12336
 
 
 def test_pack():
+    assert struct.pack(">h", 10) == b'\x00\n'
+
     packer = struct.pack("HH", 1, 2)
     assert packer == b'\x01\x00\x02\x00'
     assert struct.calcsize("HH") == 4
@@ -58,12 +67,19 @@ def test_pack_into():
     assert a == 17 and b == 18
 
 
+def test_calcsize():
+    assert struct.calcsize('>bhl') == 7
+
+    header_format = "<32s2BHHH24s"
+    assert struct.calcsize(header_format) == 64
+
 def test_all():
     test_unpack()
     test_unpack_from()
     test_unpack_issue()
     test_pack()
     test_pack_into()
+    test_calcsize()
 
 if __name__ == '__main__':
     test_all()
