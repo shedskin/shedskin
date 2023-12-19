@@ -57,8 +57,12 @@ template<> inline void __pack_float(char c, __ss_int t, char order, unsigned int
     fillbuf_float(c, (__ss_float)t, order, itemsize);
 }
 
-template<class T> void __pack_char(char c, T t, bytes *result, size_t &pos) {} // TODO raise error
+template<class T> void __pack_char(char c, T t, bytes *result, size_t &pos) {
+    throw new error(new str("char format requires a bytes object of length 1"));
+}
 template<> inline void __pack_char(char c, bytes *b, bytes *result, size_t &pos) {
+    if(b->__len__() != 1)
+        throw new error(new str("char format requires a bytes object of length 1"));
     result->unit[pos++] = b->unit[0];
 }
 
