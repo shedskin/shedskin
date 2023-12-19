@@ -46,6 +46,9 @@ template<class T> void __pack_int(char c, T t, char order, unsigned int itemsize
 template<> inline void __pack_int(char c, __ss_int t, char order, unsigned int itemsize) {
     fillbuf_int(c, t, order, itemsize);
 }
+template<> inline void __pack_int(char c, __ss_bool t, char order, unsigned int itemsize) {
+    fillbuf_int(c, t, order, itemsize);
+}
 
 template<class T> void __pack_float(char c, T t, char order, unsigned int itemsize) {
     throw new error(new str("required argument is not a float"));
