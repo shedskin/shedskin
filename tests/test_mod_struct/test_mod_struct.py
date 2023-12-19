@@ -87,8 +87,8 @@ def test_pack_into():
 def test_calcsize():
     assert struct.calcsize('>bhl') == 7
     assert struct.calcsize("HH") == 4
-    header_format = "<32s2BHHH24s"
-    assert struct.calcsize(header_format) == 64
+    assert struct.calcsize("<32s2BHHH24s") == 64
+    assert struct.calcsize("!c3q2b3d") == 51
 
 
 def test_repeat():
