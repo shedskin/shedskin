@@ -286,12 +286,6 @@ void fillbuf_float(char c, double t, char order, unsigned int itemsize) {
 
 /*
 bytes *pack(str *fmt, va_list args) {
-    char order = '@';
-    str *digits = new str();
-    int pos=0;
-    unsigned int itemsize, pad;
-    unsigned int fmtlen = fmt->__len__();
-    bytes *strarg;
     int pascal_ff = 0;
 
     for(unsigned int j=0; j<fmtlen; j++) {
@@ -308,16 +302,6 @@ bytes *pack(str *fmt, va_list args) {
                 }
                 pos += pad;
                 for(unsigned int j=0; j<ndigits; j++) {
-                    arg = va_arg(args, pyobj *);
-
-                    __ss_int value;
-                    if(arg->__class__ == cl_int_)
-                        value = ((int_ *)arg)->unit;
-                    else if(arg->__class__ == cl_bool)
-                        value = ((bool_ *)arg)->unit;
-                    else
-                        throw new error(new str("required argument is not an integer"));
-
                     fillbuf(c, value, order, itemsize);
 
                     pos += itemsize;
@@ -347,17 +331,7 @@ bytes *pack(str *fmt, va_list args) {
                     pascal_ff = 0;
                 break;
             case 'c': 
-                for(unsigned int j=0; j<ndigits; j++) {
-                    arg = va_arg(args, pyobj *);
-                    if(arg->__class__ != cl_bytes)
-                        throw new error(new str("char format require bytes object of length 1"));
-                    strarg = ((bytes *)(arg));
-                    unsigned int len = strarg->__len__();
-                    if(len != 1)
-                        throw new error(new str("char format require bytes object of length 1"));
-                    result->unit += strarg->unit[0];
-                    pos += 1;
-                }
+                ..
                 if(ndigits)
                     pascal_ff = 0;
                 break;
