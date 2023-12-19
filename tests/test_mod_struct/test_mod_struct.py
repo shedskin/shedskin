@@ -33,7 +33,7 @@ def test_unpack():
     assert cur_files == 12336
 
 
-def test_H():
+def test_int():
     assert struct.pack(">h", 10) == b'\x00\n'
 
     packer = struct.pack(">HH", 1, 2)
@@ -44,6 +44,13 @@ def test_H():
     (p0, p1) = struct.unpack("<HH", packer)
     assert p0 == 1
     assert p1 == 2
+
+    packer = struct.pack('!I', True)
+    ii, = struct.unpack('!I', packer)
+    assert ii == 1
+    packer = struct.pack('!I', False)
+    ii, = struct.unpack('!I', packer)
+    assert ii == 0
 
 
 def test_d():
@@ -178,7 +185,7 @@ def test_all():
     test_unpack()
     test_unpack_from()
     test_unpack_issue()
-    test_H()
+    test_int()
     test_d()
     test_c()
     test_s()
