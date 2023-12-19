@@ -77,6 +77,9 @@ def test_s():
 
 def test_p():
     packer = struct.pack('10p', b'wop')
+    assert packer == b'\x03wop\x00\x00\x00\x00\x00\x00'
+    orig, = struct.unpack('10p', packer)
+    assert orig == b'wop'
 
 
 def test_unpack_issue():
@@ -129,6 +132,13 @@ def test_errors():
     except struct.error as e:
         error = str(e)
     assert error == 'required argument is not a float'
+
+    error = ''
+    try:
+        packer = struct.pack("p", 18.8)
+    except struct.error as e:
+        error = str(e)
+    assert error == "argument for 'p' must be a bytes object"
 
     error = ''
     try:
