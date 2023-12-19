@@ -20,6 +20,7 @@ public:
 };
 
 __ss_int calcsize(str *fmt);
+__ss_int calcitems(str *fmt);
 
 __ss_int unpack_int(char o, char c, unsigned int d, bytes *data, __ss_int *pos);
 bytes * unpack_bytes(char o, char c, unsigned int d, bytes *data, __ss_int *pos);
@@ -140,6 +141,11 @@ template<class ... Args> bytes *pack(int n, str *fmt, Args ... args) {
     result->unit.resize(result_size);
     size_t pos = 0;
     __ss_int ndigits = -1;
+
+    __ss_int expected_args = calcitems(fmt);
+    __ss_int received_args = (__ss_int) sizeof...(args);
+    if(expected_args != received_args)
+        throw new error(__modct(new str("pack expected %d items for packing (got %d)"), 2, ___box(expected_args), ___box(received_args)));
 
     __pack(result, pos, ndigits, n, fmt, args...);
 
