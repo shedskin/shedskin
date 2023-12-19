@@ -100,7 +100,7 @@ bytes *unpack_bytes(char, char c, unsigned int d, bytes *data, __ss_int *pos) {
              break;
         case 'p':
              result = new bytes();
-             len = data->unit[*pos];
+             len = (unsigned char)data->unit[*pos];
              for(unsigned int i=0; i<len; i++)
                  result->unit += data->unit[*pos+i+1];
              break;
