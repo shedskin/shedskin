@@ -42,6 +42,11 @@ template<> inline void __pack_float(char c, __ss_float t, char order, unsigned i
     fillbuf_float(c, t, order, itemsize);
 }
 
+template<class T> void __pack_char(char c, T t, bytes *result, size_t &pos) {} // TODO raise error
+template<> inline void __pack_char(char c, bytes *b, bytes *result, size_t &pos) {
+    result->unit[pos++] = b->unit[0];
+}
+
 template<class T> void __pack_str(char c, T t, bytes *result, size_t &pos ) {} // TODO raise error
 template<> inline void __pack_str(char c, bytes *b, bytes *result, size_t &pos) {
     __ss_int len = b->__len__();
@@ -95,6 +100,7 @@ template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j
                 return;
 
             case 'c':
+                __pack_char(c, arg, result, pos);
                 j++;
                 return;
 
