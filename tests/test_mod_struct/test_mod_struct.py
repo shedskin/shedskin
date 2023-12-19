@@ -55,6 +55,12 @@ def test_c():
     assert a == b'a'
 
 
+def test_s():
+    packer = struct.pack("12s", b'abcdefghijkl')
+    s, = struct.unpack("12s", packer)
+    assert s == b'abcdefghijkl'
+
+
 def test_unpack_issue():
     s = struct.pack('>I', 12000)
     n, = struct.unpack('>I', s)
@@ -85,7 +91,7 @@ def test_calcsize():
     assert struct.calcsize(header_format) == 64
 
 
-def test_digits():
+def test_repeat():
     packer = struct.pack("3c", b'a', b'a', b'p')
     d, e, f, = struct.unpack("3c", packer)
     assert b''.join([d, e, f]) == b'aap'
@@ -98,7 +104,8 @@ def test_all():
     test_H()
     test_d()
     test_c()
-    test_digits()
+    test_s()
+    test_repeat()
     test_pack_into()
     test_calcsize()
 
