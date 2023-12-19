@@ -2,7 +2,7 @@ import struct
 
 
 def test_unpack():
-    a, = struct.unpack("h", b'\x00\n')
+    a, = struct.unpack("<h", b'\x00\n')
     assert a == 2560
 
     a, b, c = struct.unpack('>bhl', b'\x01\x00\x02\x00\x00\x00\x03')
@@ -36,28 +36,31 @@ def test_unpack():
 def test_H():
     assert struct.pack(">h", 10) == b'\x00\n'
 
-    packer = struct.pack("HH", 1, 2)
+    packer = struct.pack(">HH", 1, 2)
+    assert packer == b'\x00\x01\x00\x02'
+
+    packer = struct.pack("<HH", 1, 2)
     assert packer == b'\x01\x00\x02\x00'
-    (p0, p1) = struct.unpack("HH", packer)
+    (p0, p1) = struct.unpack("<HH", packer)
     assert p0 == 1
     assert p1 == 2
 
 
 def test_d():
-    packer = struct.pack("d", 949.1)
-    d, = struct.unpack("d", packer)
+    packer = struct.pack("<d", 949.1)
+    d, = struct.unpack("<d", packer)
     assert d == 949.1
 
 
 def test_c():
-    packer = struct.pack("c", b'a')
-    a, = struct.unpack("c", packer)
+    packer = struct.pack(">c", b'a')
+    a, = struct.unpack(">c", packer)
     assert a == b'a'
 
 
 def test_s():
-    packer = struct.pack("12s", b'abcdefghijkl')
-    s, = struct.unpack("12s", packer)
+    packer = struct.pack("!12s", b'abcdefghijkl')
+    s, = struct.unpack("!12s", packer)
     assert s == b'abcdefghijkl'
 
 
@@ -86,21 +89,21 @@ def test_pack_into():
 
 def test_calcsize():
     assert struct.calcsize('>bhl') == 7
-    assert struct.calcsize("HH") == 4
+    assert struct.calcsize(">HH") == 4
     assert struct.calcsize("<32s2BHHH24s") == 64
     assert struct.calcsize("!c3q2b3d") == 51
 
 
 def test_repeat():
-    packer = struct.pack("3c", b'a', b'a', b'p')
-    d, e, f, = struct.unpack("3c", packer)
+    packer = struct.pack("<3c", b'a', b'a', b'p')
+    d, e, f, = struct.unpack("<3c", packer)
     assert b''.join([d, e, f]) == b'aap'
 
 
 def test_errors():
     error = ''
     try:
-        packer = struct.pack("H", b'hop')
+        packer = struct.pack("!H", b'hop')
     except struct.error as e:
         error = str(e)
     assert error == 'required argument is not an integer'
