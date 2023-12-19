@@ -84,6 +84,13 @@ def test_calcsize():
     header_format = "<32s2BHHH24s"
     assert struct.calcsize(header_format) == 64
 
+
+def test_digits():
+    packer = struct.pack("3c", b'a', b'a', b'p')
+    d, e, f, = struct.unpack("3c", packer)
+    assert b''.join([d, e, f]) == b'aap'
+
+
 def test_all():
     test_unpack()
     test_unpack_from()
@@ -91,6 +98,7 @@ def test_all():
     test_H()
     test_d()
     test_c()
+    test_digits()
     test_pack_into()
     test_calcsize()
 
