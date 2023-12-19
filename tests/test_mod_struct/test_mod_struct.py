@@ -170,7 +170,7 @@ def test_errors():
 
     error = ''
     try:
-        packer = struct.pack("d", b'hop')
+        packer = struct.pack("d", {1,2})
     except struct.error as e:
         error = str(e)
     assert error == 'required argument is not a float'
@@ -181,6 +181,13 @@ def test_errors():
     except struct.error as e:
         error = str(e)
     assert error == "argument for 'p' must be a bytes object"
+
+    error = ''
+    try:
+        packer = struct.pack("s", None)
+    except struct.error as e:
+        error = str(e)
+    assert error == "argument for 's' must be a bytes object"
 
     error = ''
     try:
@@ -209,6 +216,20 @@ def test_errors():
     except struct.error as e:
         error = str(e)
     assert error == 'char format requires a bytes object of length 1'
+
+    error = ''
+    try:
+        struct.pack('z', 1)
+    except struct.error as e:
+        error = str(e)
+    assert error == 'bad char in struct format'
+
+    b = b'0'*10
+    try:
+        struct.pack_into('H', b, 3, 12, 12)
+    except struct.error as e:
+        error = str(e)
+    assert error == 'pack_into expected 1 items for packing (got 2)'
 
 
 def test_multi_1():
