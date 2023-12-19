@@ -285,71 +285,17 @@ void fillbuf_float(char c, double t, char order, unsigned int itemsize) {
 }
 
 /*
-bytes *pack(str *fmt, va_list args) {
-    int pascal_ff = 0;
-
-    for(unsigned int j=0; j<fmtlen; j++) {
-        switch(c) {
             case 'H':
-                itemsize = get_itemsize(order, c);
                 pad = padding(order, pos, itemsize);
                 for(unsigned int j=0; j<pad; j++) {
-                    if(pascal_ff) {
-                        result->unit += '\xff';
-                        pascal_ff = 0;
-                    } else
-                        result->unit += '\x00';
-                }
+                    result->unit += '\x00';
                 pos += pad;
-                for(unsigned int j=0; j<ndigits; j++) {
-                    fillbuf(c, value, order, itemsize);
 
-                    pos += itemsize;
-                }
-                if(ndigits)
-                    pascal_ff = 0;
-                break;
             case 'd':
-            case 'f':
-                itemsize = get_itemsize(order, c);
                 pad = padding(order, pos, itemsize);
-                for(unsigned int j=0; j<pad; j++) {
-                    if(pascal_ff) {
-                        result->unit += '\xff';
-                        pascal_ff = 0;
-                    } else
                         result->unit += '\x00';
-                }
-                pos += pad;
-                for(unsigned int j=0; j<ndigits; j++) {
-                    arg = va_arg(args, pyobj *);
-                    double value;
-                    fillbuf2(c, value, order, itemsize);
-                    pos += itemsize;
-                }
-                if(ndigits)
-                    pascal_ff = 0;
-                break;
-            case 'c': 
-                ..
-                if(ndigits)
-                    pascal_ff = 0;
-                break;
-            case 'p': 
-                if(arg->__class__ != cl_bytes)
-                    throw new error(new str("argument for 'p' must be a bytes object"));
-                if(ndigits) {
-                    ..
-                    pos += ndigits;
-                    pascal_ff = 0;
-                }
-                else
-                    pascal_ff = 1;
-                break;
+
             case 's':
-                arg = va_arg(args, pyobj *);
-                if(arg->__class__ != cl_bytes)
-                    throw new error(new str("argument for 's' must be a bytes object"));
                 if(ndigits) {
                     strarg = ((bytes *)(arg));
                     unsigned int len = strarg->__len__();
@@ -357,48 +303,20 @@ bytes *pack(str *fmt, va_list args) {
                         len = ndigits;
                     for(unsigned int j=0; j<len; j++)
                         result->unit += strarg->unit[j];
-                    for(unsigned int j=0; j<ndigits-len; j++) {
-                        if(!len and pascal_ff) {
-                            result->unit += '\xff';
-                            pascal_ff = 0;
-                        } else 
+
+                    for(unsigned int j=0; j<ndigits-len; j++)
                             result->unit += '\x00';
-                    }
-                    pos += ndigits;
-                    pascal_ff = 0;
-                }
-                break;
+
             case '?':
                 for(unsigned int j=0; j<ndigits; j++) {
-                    arg = va_arg(args, pyobj *);
                     if(arg->__nonzero__())
                         result->unit += '\x01';
                     else
                         result->unit += '\x00';
-                    pos += 1;
-                }
-                if(ndigits)
-                    pascal_ff = 0;
-                break;
+
             case 'x':
-                for(unsigned int j=0; j<ndigits; j++) {
-                    if(pascal_ff) {
-                        result->unit += '\xff';
-                        pascal_ff = 0;
-                    }
-                    else
-                        result->unit += '\x00';
-                }
-                pos += ndigits;
-                break;
-            case 'P':
-                 throw new error(new str("unsupported 'P' char in struct format"));
-            default:
-                 throw new error(new str("bad char in struct format"));
-        }
-    }
-    return result;
-}
+                for(unsigned int j=0; j<ndigits; j++)
+                    result->unit += '\x00';
 */
 
 void __init() {
