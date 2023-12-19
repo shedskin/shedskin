@@ -49,6 +49,12 @@ def test_d():
     assert d == 949.1
 
 
+def test_c():
+    packer = struct.pack("c", b'a')
+    a, = struct.unpack("c", packer)
+    assert a == b'a'
+
+
 def test_unpack_issue():
     s = struct.pack('>I', 12000)
     n, = struct.unpack('>I', s)
@@ -84,6 +90,7 @@ def test_all():
     test_unpack_issue()
     test_H()
     test_d()
+    test_c()
     test_pack_into()
     test_calcsize()
 
