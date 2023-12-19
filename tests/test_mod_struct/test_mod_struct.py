@@ -108,6 +108,20 @@ def test_errors():
         error = str(e)
     assert error == 'required argument is not an integer'
 
+    error = ''
+    try:
+        struct.pack('hh', 1, 2, 3)
+    except struct.error as e:
+        error = str(e)
+    assert error == 'pack expected 2 items for packing (got 3)'
+
+    error = ''
+    try:
+        struct.pack('hh', 1)
+    except struct.error as e:
+        error = str(e)
+    assert error == 'pack expected 2 items for packing (got 1)'
+
 
 def test_multi_1():
     packer = struct.pack("<c3q2b3d", b"\xd5", 39, 77, 77, 55, 50, 949.0, 544.2, 444.3)

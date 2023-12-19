@@ -148,7 +148,7 @@ void unpack_pad(char, char, unsigned int d, bytes *, __ss_int *pos) {
     *pos += d;
 }
 
-__ss_int calcsize(str *fmt) {
+__ss_int calcsize(str *fmt) { // TODO optimize
     __ss_int result = 0;
     str *digits = new str();
     char order = '@';
@@ -195,6 +195,58 @@ __ss_int calcsize(str *fmt) {
                 throw new error(new str("bad char in struct format"));
         }
         result += ndigits * itemsize;
+    }
+    return result;
+}
+
+__ss_int calcitems(str *fmt) { // TODO optimize
+    __ss_int result = 0;
+    str *digits = new str();
+    char order = '@';
+    unsigned int itemsize;
+    for(unsigned int i=0; i<(unsigned int)len(fmt); i++) {
+        char c = fmt->unit[i];
+        if(ordering.find(c) != std::string::npos) {
+            order = c;
+            continue;
+        }
+        if(::isdigit(c)) {
+            digits->unit += c;
+            continue;
+        }
+        unsigned int ndigits = 1;
+        if(len(digits)) {
+            ndigits = __int(digits);
+            digits = new str();
+        }
+        itemsize = get_itemsize(order, c);
+        switch(c) {
+            case 'b': 
+            case 'B': 
+            case 'h': 
+            case 'H': 
+            case 'i':
+            case 'I': 
+            case 'l':
+            case 'L':
+            case 'q': 
+            case 'Q':
+            case 'd': 
+            case 'f':
+            case 'c':
+            case '?':
+            case 'x':
+                result += ndigits;
+                break;
+            case 's':
+            case 'p':
+                result += 1;
+                break;
+            case 'P':
+                throw new error(new str("unsupported 'P' char in struct format"));
+            default:
+                throw new error(new str("bad char in struct format"));
+        }
     }
     return result;
 }
