@@ -76,23 +76,36 @@ template<> inline void __pack_str(char c, bytes *b, bytes *result, size_t &pos) 
 
 template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j, char &order, bytes *result, size_t &pos, __ss_int &ndigits, T arg) {
     unsigned int itemsize;
+    __ss_int n;
 
     for(; j<fmtlen; j++) {
         char c = fmt->unit[j];
-        if(ordering.find(c) != std::string::npos) { // TODO optimize out
-            order = c;
-            continue;
-        }
-        if(::isdigit(c)) {
-            __ss_int n = c - '0';
-            if(ndigits == -1)
-                ndigits = n;
-            else
-                ndigits = 10*ndigits+n;
-            continue;
-        }
-
         switch(c) {
+            case '@':
+            case '=':
+            case '<':
+            case '>':
+            case '!':
+                order = c;
+                break;
+
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9':
+                n = c - '0';
+                if(ndigits == -1)
+                    ndigits = n;
+                else
+                    ndigits = 10*ndigits+n;
+                break;
+
             case 'b':
             case 'B':
             case 'h':
