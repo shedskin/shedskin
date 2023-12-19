@@ -62,16 +62,15 @@ template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j
 
     for(; j<fmtlen; j++) {
         char c = fmt->unit[j];
-        if(ndigits < 0) {
-            if(ordering.find(c) != std::string::npos) {
-                order = c;
-                continue;
-            }
-            if(::isdigit(c)) {
-                ndigits = c - '0';
-                continue;
-            }
+        if(ordering.find(c) != std::string::npos) {
+            order = c;
+            continue;
         }
+        if(::isdigit(c)) {
+            ndigits = c - '0';
+            continue;
+        }
+
         switch(c) {
             case 'b':
             case 'B':
@@ -87,7 +86,10 @@ template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j
                 __pack_int(c, arg, order, itemsize);
                 for(unsigned int k=0; k<itemsize; k++)
                     result->unit[pos++] = ((char *)buffy)[k];
-                j++;
+                if(ndigits == -1 or --ndigits == 0) {
+                    j++;
+                    ndigits = -1;
+                }
                 return;
 
             case 'd':
@@ -96,14 +98,18 @@ template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j
                 __pack_float(c, arg, order, itemsize);
                 for(unsigned int k=0; k<itemsize; k++)
                     result->unit[pos++] = ((char *)buffy)[k];
-                j++;
+                if(ndigits == -1 or --ndigits == 0) {
+                    j++;
+                    ndigits = -1;
+                }
                 return;
 
             case 'c':
                 __pack_char(c, arg, result, pos);
-                ndigits--;
-                if(ndigits < 0)
+                if(ndigits == -1 or --ndigits == 0) {
                     j++;
+                    ndigits = -1;
+                }
                 return;
 
             case 's':
