@@ -55,22 +55,20 @@ template<> inline void __pack_str(char c, bytes *b, bytes *result, size_t &pos) 
 }
 
 
-template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j, str *digits, char &order, bytes *result, size_t &pos, T arg) {
+template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j, char &order, bytes *result, size_t &pos, __ss_int &ndigits, T arg) {
     unsigned int itemsize;
 
     for(; j<fmtlen; j++) {
         char c = fmt->unit[j];
-        if(ordering.find(c) != std::string::npos) {
-            order = c;
-            continue;
-        }
-        if(::isdigit(c)) {
-            digits->unit += c; // TODO update ndigits incrementally, also in calcsize
-            continue;
-        }
-        __ss_int ndigits = 1;
-        if(len(digits)) {
-            ndigits = __int(digits);
+        if(ndigits < 0) {
+            if(ordering.find(c) != std::string::npos) {
+                order = c;
+                continue;
+            }
+            if(::isdigit(c)) {
+                ndigits = c - '0';
+                continue;
+            }
         }
         switch(c) {
             case 'b':
@@ -101,7 +99,9 @@ template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j
 
             case 'c':
                 __pack_char(c, arg, result, pos);
-                j++;
+                ndigits--;
+                if(ndigits < 0)
+                    j++;
                 return;
 
             case 's':
@@ -117,14 +117,13 @@ template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j
 
 }
 
-template<class ... Args> void __pack(bytes *result, size_t &pos, int n, str *fmt, Args ... args) {
+template<class ... Args> void __pack(bytes *result, size_t &pos, __ss_int &ndigits, int n, str *fmt, Args ... args) {
     char order = '@';
-    str *digits = new str();
 
     unsigned int fmtlen = fmt->__len__();
     unsigned int j = 0;
 
-    (__pack_one(fmt, fmtlen, j, digits, order, result, pos, args), ...);
+    (__pack_one(fmt, fmtlen, j, order, result, pos, ndigits, args), ...);
 }
 
 template<class ... Args> bytes *pack(int n, str *fmt, Args ... args) {
@@ -132,16 +131,18 @@ template<class ... Args> bytes *pack(int n, str *fmt, Args ... args) {
     __ss_int result_size = calcsize(fmt);
     result->unit.resize(result_size);
     size_t pos = 0;
+    __ss_int ndigits = -1;
 
-    __pack(result, pos, n, fmt, args...);
+    __pack(result, pos, ndigits, n, fmt, args...);
 
     return result;
 }
 
 template<class ... Args> void *pack_into(int n, str *fmt, bytes *buffer, __ss_int offset, Args ... args) {
     size_t pos = (size_t)offset;
+    __ss_int ndigits = -1;
 
-    __pack(buffer, pos, n, fmt, args...);
+    __pack(buffer, pos, ndigits, n, fmt, args...);
 
     return NULL;
 }
