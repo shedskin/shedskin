@@ -77,7 +77,9 @@ template<> inline void __pack_char(char c, bytes *b, bytes *result, size_t &pos)
 
 /* pack str */
 
-template<class T> void __pack_str(char c, T t, bytes *result, size_t &pos ) {} // TODO raise error
+template<class T> void __pack_str(char c, T t, bytes *result, size_t &pos ) {
+    throw new error(new str("argument for 's' must be a bytes object"));
+}
 template<> inline void __pack_str(char c, bytes *b, bytes *result, size_t &pos) {
     __ss_int len = b->__len__();
     for(__ss_int j=0; j<len; j++)
@@ -193,7 +195,7 @@ template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j
                 j++;
                 return;
 
-            default: // TODO raise error for unsupported/unknown flag
+            default:
                 ;
         }
 
@@ -234,6 +236,11 @@ template<class ... Args> bytes *pack(int n, str *fmt, Args ... args) {
 template<class ... Args> void *pack_into(int n, str *fmt, bytes *buffer, __ss_int offset, Args ... args) {
     size_t pos = (size_t)offset;
     __ss_int ndigits = -1;
+
+    __ss_int expected_args = calcitems(fmt);
+    __ss_int received_args = (__ss_int) sizeof...(args);
+    if(expected_args != received_args)
+        throw new error(__modct(new str("pack_into expected %d items for packing (got %d)"), 2, ___box(expected_args), ___box(received_args)));
 
     __pack(buffer, pos, ndigits, n, fmt, args...);
 
