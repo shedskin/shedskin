@@ -235,9 +235,8 @@ void fillbuf2(char c, double t, char, unsigned int) {
     }
 }
 
+/*
 bytes *pack(str *fmt, va_list args) {
-    pyobj *arg;
-    bytes *result = new bytes();
     char order = '@';
     str *digits = new str();
     int pos=0;
@@ -245,6 +244,7 @@ bytes *pack(str *fmt, va_list args) {
     unsigned int fmtlen = fmt->__len__();
     bytes *strarg;
     int pascal_ff = 0;
+
     for(unsigned int j=0; j<fmtlen; j++) {
         char c = fmt->unit[j];
         if(ordering.find(c) != std::string::npos) {
@@ -261,16 +261,7 @@ bytes *pack(str *fmt, va_list args) {
             digits = new str();
         }
         switch(c) {
-            case 'b':
-            case 'B':
-            case 'h':
             case 'H':
-            case 'i':
-            case 'I':
-            case 'l':
-            case 'L':
-            case 'q':
-            case 'Q':
                 itemsize = get_itemsize(order, c);
                 pad = padding(order, pos, itemsize);
                 for(unsigned int j=0; j<pad; j++) {
@@ -422,23 +413,7 @@ bytes *pack(str *fmt, va_list args) {
     }
     return result;
 }
-
-bytes *pack(int, str *fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    bytes *result = pack(fmt, args);
-    va_end(args);
-    return result;
-}
-
-void pack_into(int n, str *fmt, bytes *buffer, __ss_int offset, ...) {
-    va_list args;
-    va_start(args, offset);
-    bytes *result = pack(fmt, args); // TODO avoid intermediate object
-    va_end(args);
-
-    buffer->unit.replace(offset, result->unit.size(), result->unit);
-}
+*/
 
 void __init() {
     ordering = "@<>!=";
