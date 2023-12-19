@@ -90,6 +90,8 @@ template<class T> void __pack_pascal(char c, T t, bytes *result, size_t &pos, __
     throw new error(new str("argument for 'p' must be a bytes object"));
 }
 template<> inline void __pack_pascal(char c, bytes *t, bytes *result, size_t &pos, __ss_int ndigits) {
+    if(ndigits == -1)
+        ndigits = 1;
     __ss_int len = t->__len__();
     if(len+1 > ndigits)
         len = ndigits-1;
