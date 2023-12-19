@@ -195,6 +195,13 @@ template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j
                 j++;
                 return;
 
+            case 'x':
+                if(ndigits == -1)
+                    ndigits = 1;
+                for(unsigned int k=0; k<ndigits; k++)
+                    result->unit[pos++] = '\x00';
+                break;
+
             default:
                 ;
         }
