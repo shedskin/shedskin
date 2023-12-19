@@ -68,6 +68,10 @@ def test_s():
     assert s == b'abcdefghijkl'
 
 
+def test_p():
+    packer = struct.pack('10p', b'wop')
+
+
 def test_unpack_issue():
     s = struct.pack('>I', 12000)
     n, = struct.unpack('>I', s)
@@ -178,6 +182,7 @@ def test_all():
     test_d()
     test_c()
     test_s()
+    test_p()
     test_repeat()
     test_pack_into()
     test_calcsize()

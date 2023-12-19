@@ -79,12 +79,16 @@ template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j
 
     for(; j<fmtlen; j++) {
         char c = fmt->unit[j];
-        if(ordering.find(c) != std::string::npos) {
+        if(ordering.find(c) != std::string::npos) { // TODO optimize out
             order = c;
             continue;
         }
         if(::isdigit(c)) {
-            ndigits = c - '0';
+            __ss_int n = c - '0';
+            if(ndigits == -1)
+                ndigits = n;
+            else
+                ndigits = 10*ndigits+n;
             continue;
         }
 
@@ -138,7 +142,12 @@ template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j
                 j++;
                 return;
 
-            default:
+            case 'p':
+                // TODO
+                j++;
+                return;
+
+            default: // TODO raise error for unsupported/unknown flag
                 ;
         }
 
