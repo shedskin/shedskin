@@ -32,7 +32,9 @@ int get_itemsize(char order, char c);
 void fillbuf_int(char c, __ss_int t, char order, unsigned int itemsize);
 void fillbuf_float(char c, __ss_float t, char order, unsigned int itemsize);
 
-template<class T> void __pack_int(char c, T t, char order, unsigned int itemsize) {} // TODO raise error
+template<class T> void __pack_int(char c, T t, char order, unsigned int itemsize) {
+    throw new error(new str("required argument is not an integer"));
+}
 template<> inline void __pack_int(char c, __ss_int t, char order, unsigned int itemsize) {
     fillbuf_int(c, t, order, itemsize);
 }

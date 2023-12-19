@@ -97,6 +97,15 @@ def test_repeat():
     assert b''.join([d, e, f]) == b'aap'
 
 
+def test_errors():
+    error = ''
+    try:
+        packer = struct.pack("H", b'hop')
+    except struct.error as e:
+        error = str(e)
+    assert error == 'required argument is not an integer'
+
+
 def test_all():
     test_unpack()
     test_unpack_from()
@@ -108,6 +117,7 @@ def test_all():
     test_repeat()
     test_pack_into()
     test_calcsize()
+    test_errors()
 
 if __name__ == '__main__':
     test_all()
