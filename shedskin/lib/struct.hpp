@@ -27,7 +27,6 @@ __ss_bool unpack_bool(char o, char c, unsigned int d, bytes *data, __ss_int *pos
 double unpack_float(char o, char c, unsigned int d, bytes *data, __ss_int *pos);
 void unpack_pad(char o, char c, unsigned int d, bytes *data, __ss_int *pos);
 
-/*
 int get_itemsize(char order, char c);
 
 void fillbuf(char c, __ss_int t, char order, unsigned int itemsize);
@@ -63,7 +62,16 @@ template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j
             ndigits = __int(digits);
         }
         switch(c) {
+            case 'b':
+            case 'B':
+            case 'h':
             case 'H':
+            case 'i':
+            case 'I':
+            case 'l':
+            case 'L':
+            case 'q':
+            case 'Q':
                 itemsize = get_itemsize(order, c);
                 __pack_int(c, arg, order, itemsize);
                 for(unsigned int k=0; k<itemsize; k++)
@@ -112,11 +120,6 @@ template<class ... Args> void *pack_into(int n, str *fmt, bytes *buffer, __ss_in
 
     return NULL;
 }
-
-*/
-
-bytes *pack(int n, str *fmt, ...);
-void pack_into(int n, str *fmt, bytes *buffer, __ss_int offset, ...);
 
 str *unpack(); /* using __struct__::unpack */
 str *unpack_from(); /* using __struct__::unpack */

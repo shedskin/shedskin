@@ -2663,25 +2663,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 cast = True
                 self.append("((void *)(")
 
-            if (
-                (
-                    print_function
-                    or self.library_func(funcs, "struct", None, "pack")
-                    or self.library_func(funcs, "struct", None, "pack_into")
-                )
-                and not formal.name.startswith("__kw_")
-                and not formal.name == 'offset'
-            ):
-                types = [t[0].ident for t in self.mergeinh[arg]]
-                if (
-                    "float_" in types
-                    or "int_" in types
-                    or "bool_" in types
-                    or "complex" in types
-                ):
-                    cast = True
-                    self.append("___box((")
-
             if arg in target.mv.defaults:
                 if self.mergeinh[arg] == set([(python.def_class(self.gx, "bool_"), 0)]):
                     self.append(str(arg.value))
