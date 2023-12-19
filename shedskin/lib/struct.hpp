@@ -40,6 +40,8 @@ int get_itemsize(char order, char c);
 void fillbuf_int(char c, __ss_int t, char order, unsigned int itemsize);
 void fillbuf_float(char c, __ss_float t, char order, unsigned int itemsize);
 
+/* pack int */
+
 template<class T> void __pack_int(char c, T t, char order, unsigned int itemsize) {
     throw new error(new str("required argument is not an integer"));
 }
@@ -49,6 +51,8 @@ template<> inline void __pack_int(char c, __ss_int t, char order, unsigned int i
 template<> inline void __pack_int(char c, __ss_bool t, char order, unsigned int itemsize) {
     fillbuf_int(c, t, order, itemsize);
 }
+
+/* pack float */
 
 template<class T> void __pack_float(char c, T t, char order, unsigned int itemsize) {
     throw new error(new str("required argument is not a float"));
@@ -60,6 +64,8 @@ template<> inline void __pack_float(char c, __ss_int t, char order, unsigned int
     fillbuf_float(c, (__ss_float)t, order, itemsize);
 }
 
+/* pack char */
+
 template<class T> void __pack_char(char c, T t, bytes *result, size_t &pos) {
     throw new error(new str("char format requires a bytes object of length 1"));
 }
@@ -69,6 +75,8 @@ template<> inline void __pack_char(char c, bytes *b, bytes *result, size_t &pos)
     result->unit[pos++] = b->unit[0];
 }
 
+/* pack str */
+
 template<class T> void __pack_str(char c, T t, bytes *result, size_t &pos ) {} // TODO raise error
 template<> inline void __pack_str(char c, bytes *b, bytes *result, size_t &pos) {
     __ss_int len = b->__len__();
@@ -76,6 +84,23 @@ template<> inline void __pack_str(char c, bytes *b, bytes *result, size_t &pos) 
         result->unit[pos++] = b->unit[j];
 }
 
+/* pack pascal */
+
+template<class T> void __pack_pascal(char c, T t, bytes *result, size_t &pos, __ss_int ndigits) {
+    throw new error(new str("argument for 'p' must be a bytes object"));
+}
+template<> inline void __pack_pascal(char c, bytes *t, bytes *result, size_t &pos, __ss_int ndigits) {
+    __ss_int len = t->__len__();
+    if(len+1 > ndigits)
+        len = ndigits-1;
+    result->unit[pos++] = (unsigned char)(len);
+    for(__ss_int j=0; j<len; j++)
+        result->unit[pos++] = t->unit[j];
+    for(__ss_int j=0; j<ndigits-len-1; j++)
+        result->unit[pos++] = '\x00';
+}
+
+/* pack single arg */
 
 template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j, char &order, bytes *result, size_t &pos, __ss_int &ndigits, T arg) {
     unsigned int itemsize;
@@ -159,7 +184,7 @@ template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j
                 return;
 
             case 'p':
-                // TODO
+                __pack_pascal(c, arg, result, pos, ndigits);
                 j++;
                 return;
 
@@ -171,6 +196,8 @@ template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j
 
 }
 
+/* pack multiple args */
+
 template<class ... Args> void __pack(bytes *result, size_t &pos, __ss_int &ndigits, int n, str *fmt, Args ... args) {
     char order = '@';
 
@@ -179,6 +206,8 @@ template<class ... Args> void __pack(bytes *result, size_t &pos, __ss_int &ndigi
 
     (__pack_one(fmt, fmtlen, j, order, result, pos, ndigits, args), ...);
 }
+
+/* python API */
 
 template<class ... Args> bytes *pack(int n, str *fmt, Args ... args) {
     bytes *result = new bytes();
@@ -206,8 +235,10 @@ template<class ... Args> void *pack_into(int n, str *fmt, bytes *buffer, __ss_in
     return NULL;
 }
 
-str *unpack(); /* using __struct__::unpack */
-str *unpack_from(); /* using __struct__::unpack */
+str *unpack();
+str *unpack_from();
+
+/* internal */
 
 void __init();
 

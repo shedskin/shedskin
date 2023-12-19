@@ -336,19 +336,10 @@ bytes *pack(str *fmt, va_list args) {
                     pascal_ff = 0;
                 break;
             case 'p': 
-                arg = va_arg(args, pyobj *);
                 if(arg->__class__ != cl_bytes)
                     throw new error(new str("argument for 'p' must be a bytes object"));
                 if(ndigits) {
-                    strarg = ((bytes *)(arg));
-                    unsigned int len = strarg->__len__();
-                    if(len+1 > ndigits)
-                        len = ndigits-1;
-                    result->unit += (unsigned char)(len);
-                    for(unsigned int j=0; j<len; j++)
-                        result->unit += strarg->unit[j];
-                    for(unsigned int j=0; j<ndigits-len-1; j++)
-                        result->unit += '\x00';
+                    ..
                     pos += ndigits;
                     pascal_ff = 0;
                 }
