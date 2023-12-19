@@ -33,15 +33,20 @@ def test_unpack():
     assert cur_files == 12336
 
 
-def test_pack():
+def test_H():
     assert struct.pack(">h", 10) == b'\x00\n'
 
     packer = struct.pack("HH", 1, 2)
     assert packer == b'\x01\x00\x02\x00'
-    assert struct.calcsize("HH") == 4
     (p0, p1) = struct.unpack("HH", packer)
     assert p0 == 1
     assert p1 == 2
+
+
+def test_d():
+    packer = struct.pack("d", 949.1)
+    d, = struct.unpack("d", packer)
+    assert d == 949.1
 
 
 def test_unpack_issue():
@@ -69,7 +74,7 @@ def test_pack_into():
 
 def test_calcsize():
     assert struct.calcsize('>bhl') == 7
-
+    assert struct.calcsize("HH") == 4
     header_format = "<32s2BHHH24s"
     assert struct.calcsize(header_format) == 64
 
@@ -77,7 +82,8 @@ def test_all():
     test_unpack()
     test_unpack_from()
     test_unpack_issue()
-    test_pack()
+    test_H()
+    test_d()
     test_pack_into()
     test_calcsize()
 

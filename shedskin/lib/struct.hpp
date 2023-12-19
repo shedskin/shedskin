@@ -29,11 +29,17 @@ void unpack_pad(char o, char c, unsigned int d, bytes *data, __ss_int *pos);
 
 int get_itemsize(char order, char c);
 
-void fillbuf(char c, __ss_int t, char order, unsigned int itemsize);
+void fillbuf_int(char c, __ss_int t, char order, unsigned int itemsize);
+void fillbuf_float(char c, __ss_float t, char order, unsigned int itemsize);
 
 template<class T> void __pack_int(char c, T t, char order, unsigned int itemsize) {} // TODO raise error
 template<> inline void __pack_int(char c, __ss_int t, char order, unsigned int itemsize) {
-    fillbuf(c, t, order, itemsize);
+    fillbuf_int(c, t, order, itemsize);
+}
+
+template<class T> void __pack_float(char c, T t, char order, unsigned int itemsize) {} // TODO raise error
+template<> inline void __pack_float(char c, __ss_float t, char order, unsigned int itemsize) {
+    fillbuf_float(c, t, order, itemsize);
 }
 
 template<class T> void __pack_str(char c, T t, bytes *result, size_t &pos ) {} // TODO raise error
@@ -54,7 +60,7 @@ template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j
             continue;
         }
         if(::isdigit(c)) {
-            digits->unit += c;
+            digits->unit += c; // TODO update ndigits incrementally, also in calcsize
             continue;
         }
         __ss_int ndigits = 1;
@@ -76,6 +82,19 @@ template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j
                 __pack_int(c, arg, order, itemsize);
                 for(unsigned int k=0; k<itemsize; k++)
                     result->unit[pos++] = ((char *)buffy)[k];
+                j++;
+                return;
+
+            case 'd':
+            case 'f':
+                itemsize = get_itemsize(order, c);
+                __pack_float(c, arg, order, itemsize);
+                for(unsigned int k=0; k<itemsize; k++)
+                    result->unit[pos++] = ((char *)buffy)[k];
+                j++;
+                return;
+
+            case 'c':
                 j++;
                 return;
 

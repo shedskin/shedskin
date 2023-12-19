@@ -199,7 +199,7 @@ __ss_int calcsize(str *fmt) {
     return result;
 }
 
-void fillbuf(char c, __ss_int t, char order, unsigned int itemsize) {
+void fillbuf_int(char c, __ss_int t, char order, unsigned int itemsize) {
     if(order == '@') {
         switch(c) {
             case 'b': *((signed char *)buffy) = (signed char)t; break;
@@ -228,7 +228,7 @@ void fillbuf(char c, __ss_int t, char order, unsigned int itemsize) {
     }
 }
 
-void fillbuf2(char c, double t, char, unsigned int) {
+void fillbuf_float(char c, double t, char, unsigned int) {
     switch(c) {
         case 'f': *((float *)buffy) = (float)t; break;
         case 'd': *((double *)buffy) = t; break;
