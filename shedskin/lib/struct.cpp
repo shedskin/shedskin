@@ -228,10 +228,18 @@ void fillbuf_int(char c, __ss_int t, char order, unsigned int itemsize) {
     }
 }
 
-void fillbuf_float(char c, double t, char, unsigned int) {
+void fillbuf_float(char c, double t, char order, unsigned int itemsize) {
     switch(c) {
         case 'f': *((float *)buffy) = (float)t; break;
         case 'd': *((double *)buffy) = t; break;
+    }
+    if(swap_endian(order)) {
+        for(unsigned int i=0; i<itemsize>>1; i++) {
+            char *buf = (char *)buffy;
+            char c = buf[i];
+            buf[i] = buf[itemsize-1-i];
+            buf[itemsize-1-i] = c;
+        }
     }
 }
 
