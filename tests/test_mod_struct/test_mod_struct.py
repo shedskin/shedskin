@@ -117,6 +117,20 @@ def test_multi_1():
     assert (g, h, i) == (949.0, 544.2, 444.3)
 
 
+def test_order():
+    a = struct.pack('<H', 19)
+    assert a[0] == 19
+    assert a[1] == 0
+
+    b = struct.pack('>H', 19)
+    assert b[0] == 0
+    assert b[1] == 19
+
+    a = struct.pack('<d', 19.20)
+    b = struct.pack('>d', 19.20)
+    assert a == b[::-1]
+
+
 def test_all():
     test_unpack()
     test_unpack_from()
@@ -130,6 +144,7 @@ def test_all():
     test_calcsize()
     test_errors()
     test_multi_1()
+    test_order()
 
 
 if __name__ == '__main__':
