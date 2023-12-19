@@ -109,6 +109,14 @@ def test_errors():
     assert error == 'required argument is not an integer'
 
 
+def test_multi_1():
+    packer = struct.pack("<c3q2b3d", b"\xd5", 39, 77, 77, 55, 50, 949.0, 544.2, 444.3)
+    (a, b, c, d, e, f, g, h, i) = struct.unpack("<c3q2b3d", packer)
+    assert a == b"\xd5"
+    assert (b, c, d, e, f) == (39, 77, 77, 55, 50)
+    assert (g, h, i) == (949.0, 544.2, 444.3)
+
+
 def test_all():
     test_unpack()
     test_unpack_from()
@@ -121,6 +129,8 @@ def test_all():
     test_pack_into()
     test_calcsize()
     test_errors()
+    test_multi_1()
+
 
 if __name__ == '__main__':
     test_all()
