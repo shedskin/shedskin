@@ -76,44 +76,38 @@ def test_s():
 
 
 def test_p():
+    # combinations of digits, arg lengths..
     packer = struct.pack('0p', b'wop')
-    print(packer)
     assert packer == b''
 #x, = struct.unpack('0p', packer)
 #assert x == b''
 
     packer = struct.pack('1p', b'wop')
-    print(packer)
     assert packer == b'\x00'
     x, = struct.unpack('1p', packer)
     assert x == b''
 
     packer = struct.pack('p', b'wop')
-    print(packer)
     assert packer == b'\x00'
     x, = struct.unpack('p', packer)
     assert x == b''
 
     packer = struct.pack('2p', b'wop')
-    print(packer)
     assert packer == b'\x01w'
     x, = struct.unpack('2p', packer)
     assert x == b'w'
 
     packer = struct.pack('3p', b'wop')
-    print(packer)
     assert packer == b'\x02wo'
     x, = struct.unpack('3p', packer)
     assert x == b'wo'
 
     packer = struct.pack('4p', b'wop')
-    print(packer)
     assert packer == b'\x03wop'
     x, = struct.unpack('4p', packer)
     assert x == b'wop'
 
     packer = struct.pack('5p', b'wop')
-    print(packer)
     assert packer == b'\x03wop\x00'
     x, = struct.unpack('5p', packer)
     assert x == b'wop'
@@ -122,6 +116,12 @@ def test_p():
     assert packer == b'\x03wop\x00\x00\x00\x00\x00\x00'
     orig, = struct.unpack('10p', packer)
     assert orig == b'wop'
+
+    # 255 char limit
+    packer = struct.pack('300p', 290*b'w')
+    assert packer == b'\xff' + 290*b'w' + 9 * b'\x00'
+    p, = struct.unpack('300p', packer)
+    assert p == 255*b'w'
 
 
 def test_unpack_issue():
