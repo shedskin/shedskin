@@ -19,6 +19,13 @@ public:
     }
 };
 
+
+extern bool little_endian;
+
+static inline bool swap_endian(char o) {
+    return (little_endian and (o=='>' or o=='!')) or (not little_endian and o=='<');
+}
+
 __ss_int calcsize(str *fmt);
 __ss_int calcitems(str *fmt);
 
@@ -102,8 +109,12 @@ template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j
             case 'f':
                 itemsize = get_itemsize(order, c);
                 __pack_float(c, arg, order, itemsize);
-                for(unsigned int k=0; k<itemsize; k++)
-                    result->unit[pos++] = ((char *)buffy)[k];
+                if(swap_endian(order))
+                    for(int k=(int)itemsize-1; k>=0; k--)
+                        result->unit[pos++] = ((char *)buffy)[k];
+                else
+                    for(unsigned int k=0; k<itemsize; k++)
+                        result->unit[pos++] = ((char *)buffy)[k];
                 if(ndigits == -1 or --ndigits == 0) {
                     j++;
                     ndigits = -1;

@@ -11,9 +11,6 @@ void *buffy;
 class_ *cl_error;
 bool little_endian;
 
-static inline bool swap_endian(char o) {
-    return (little_endian and (o=='>' or o=='!')) or (not little_endian and o=='<');
-}
 
 int get_itemsize(char order, char c) {
     switch(c) {
@@ -285,14 +282,6 @@ void fillbuf_float(char c, double t, char order, unsigned int itemsize) {
         case 'f': *((float *)buffy) = (float)t; break;
         case 'd': *((double *)buffy) = t; break;
     }
-    if(swap_endian(order)) {
-        for(unsigned int i=0; i<itemsize>>1; i++) {
-            char *buf = (char *)buffy;
-            char c = buf[i];
-            buf[i] = buf[itemsize-1-i];
-            buf[itemsize-1-i] = c;
-        }
-    }
 }
 
 /*
@@ -306,20 +295,6 @@ bytes *pack(str *fmt, va_list args) {
     int pascal_ff = 0;
 
     for(unsigned int j=0; j<fmtlen; j++) {
-        char c = fmt->unit[j];
-        if(ordering.find(c) != std::string::npos) {
-            order = c;
-            continue;
-        }
-        if(::isdigit(c)) {
-            digits->unit += c;
-            continue;
-        }
-        unsigned int ndigits = 1;
-        if(len(digits)) {
-            ndigits = __int(digits);
-            digits = new str();
-        }
         switch(c) {
             case 'H':
                 itemsize = get_itemsize(order, c);
@@ -345,8 +320,6 @@ bytes *pack(str *fmt, va_list args) {
 
                     fillbuf(c, value, order, itemsize);
 
-                    for(unsigned int k=0; k<itemsize; k++)
-                        result->unit += ((char *)buffy)[k];
                     pos += itemsize;
                 }
                 if(ndigits)
@@ -367,19 +340,7 @@ bytes *pack(str *fmt, va_list args) {
                 for(unsigned int j=0; j<ndigits; j++) {
                     arg = va_arg(args, pyobj *);
                     double value;
-                    if(arg->__class__ == cl_float_)
-                        value = ((float_ *)arg)->unit;
-                    else if(arg->__class__ == cl_int_)
-                        value = ((int_ *)arg)->unit;
-                    else
-                        throw new error(new str("required argument is not a float"));
                     fillbuf2(c, value, order, itemsize);
-                    if(swap_endian(order))
-                        for(int i=itemsize-1; i>=0; i--) 
-                            result->unit += ((char *)buffy)[i];
-                    else 
-                        for(unsigned int i=0; i<itemsize; i++) 
-                            result->unit += ((char *)buffy)[i];
                     pos += itemsize;
                 }
                 if(ndigits)
