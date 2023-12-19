@@ -40,9 +40,14 @@ template<> inline void __pack_int(char c, __ss_int t, char order, unsigned int i
     fillbuf_int(c, t, order, itemsize);
 }
 
-template<class T> void __pack_float(char c, T t, char order, unsigned int itemsize) {} // TODO raise error
+template<class T> void __pack_float(char c, T t, char order, unsigned int itemsize) {
+    throw new error(new str("required argument is not a float"));
+}
 template<> inline void __pack_float(char c, __ss_float t, char order, unsigned int itemsize) {
     fillbuf_float(c, t, order, itemsize);
+}
+template<> inline void __pack_float(char c, __ss_int t, char order, unsigned int itemsize) {
+    fillbuf_float(c, (__ss_float)t, order, itemsize);
 }
 
 template<class T> void __pack_char(char c, T t, bytes *result, size_t &pos) {} // TODO raise error
