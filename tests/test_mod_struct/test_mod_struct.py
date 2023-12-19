@@ -124,6 +124,13 @@ def test_p():
     assert p == 255*b'w'
 
 
+def test_x():
+    packed = struct.pack('!3xH', 19)
+    assert packed == b'\x00\x00\x00\x00\x13'
+    h, = struct.unpack('!3xH', packed)
+    assert h == 19
+
+
 def test_unpack_issue():
     s = struct.pack('>I', 12000)
     n, = struct.unpack('>I', s)
@@ -263,6 +270,7 @@ def test_all():
     test_c()
     test_s()
     test_p()
+    test_x()
     test_repeat()
     test_pack_into()
     test_calcsize()

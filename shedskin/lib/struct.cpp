@@ -218,26 +218,27 @@ __ss_int calcitems(str *fmt) { // TODO optimize
         }
         itemsize = get_itemsize(order, c);
         switch(c) {
-            case 'b': 
-            case 'B': 
-            case 'h': 
-            case 'H': 
+            case 'b':
+            case 'B':
+            case 'h':
+            case 'H':
             case 'i':
-            case 'I': 
+            case 'I':
             case 'l':
             case 'L':
-            case 'q': 
+            case 'q':
             case 'Q':
-            case 'd': 
+            case 'd':
             case 'f':
             case 'c':
             case '?':
-            case 'x':
                 result += ndigits;
                 break;
             case 's':
             case 'p':
                 result += 1;
+                break;
+            case 'x':
                 break;
             case 'P':
                 throw new error(new str("unsupported 'P' char in struct format"));
@@ -314,9 +315,6 @@ void fillbuf_float(char c, double t, char order, unsigned int itemsize) {
                     else
                         result->unit += '\x00';
 
-            case 'x':
-                for(unsigned int j=0; j<ndigits; j++)
-                    result->unit += '\x00';
 */
 
 void __init() {
