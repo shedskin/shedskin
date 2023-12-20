@@ -53,7 +53,7 @@ unsigned int get_itemsize(char typechar) {
 template<> __ss_int array<str *>::count(str *t) { 
     if(len(t) != 1)
         return 0;
-    return std::count(this->units.begin(), this->units.end(), t->unit[0]);
+    return (__ss_int)std::count(this->units.begin(), this->units.end(), t->unit[0]);
 }
 
 template<> __ss_int array<str *>::index(str *t) {
@@ -62,7 +62,7 @@ template<> __ss_int array<str *>::index(str *t) {
         char c = t->unit[0];
         for(size_t i=0; i<len; i++)
             if(units[i] == c)
-                return i;
+                return (__ss_int)i;
     }
     throw new ValueError(new str("array.index(x): x not in list"));
 }

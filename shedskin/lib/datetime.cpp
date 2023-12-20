@@ -98,7 +98,7 @@ date::date(__ss_int year, __ss_int month, __ss_int day){
 }
 
 date *date::today() {
-	//today's date using localtime
+    //today's date using localtime
     time_t rawtime = ::time(nullptr);
     tm * t = localtime( &rawtime );
     return new date(t->tm_year+1900,t->tm_mon+1,t->tm_mday);
@@ -139,8 +139,8 @@ timedelta *date::__sub__(date *other) {
 }
 
 __ss_int date::__cmp__(date *other) {
-	if(year==other->year && month==other->month && day==other->day)
-		return 0;
+    if(year==other->year && month==other->month && day==other->day)
+        return 0;
     if (year*366+month*31+day > other->year*366+other->month*31+other->day)
         return 1;
     return -1;
@@ -318,7 +318,7 @@ datetime *datetime::today() {
 
     tm *t = localtime(&ts.tv_sec);
 
-    return new datetime(t->tm_year+1900,t->tm_mon+1,t->tm_mday,t->tm_hour,t->tm_min,t->tm_sec,ts.tv_nsec / 1000);
+    return new datetime(t->tm_year+1900, t->tm_mon+1, t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec, (__ss_int)ts.tv_nsec / 1000);
 }
 
 datetime *datetime::now(tzinfo *tzinfo) {
@@ -327,12 +327,12 @@ datetime *datetime::now(tzinfo *tzinfo) {
 
     datetime *r = utcnow();
     r->_tzinfo = tzinfo;
-	if(r->_tzinfo)
-		try {
-			return r->__add__(r->_tzinfo->utcoffset(r));
-		} catch (Exception *e) {return r;}
-	else
-		return r;
+    if(r->_tzinfo)
+        try {
+            return r->__add__(r->_tzinfo->utcoffset(r));
+       } catch (Exception *e) {return r;}
+    else
+        return r;
 }
 
 datetime *datetime::utcnow() {
@@ -347,7 +347,7 @@ datetime *datetime::utcnow() {
 
     tm *t = gmtime(&ts.tv_sec);
 
-    return new datetime(t->tm_year+1900,t->tm_mon+1,t->tm_mday,t->tm_hour,t->tm_min,t->tm_sec,ts.tv_nsec / 1000);
+    return new datetime(t->tm_year+1900, t->tm_mon+1, t->tm_mday, t->tm_hour, t->tm_min, t->tm_sec, (__ss_int)ts.tv_nsec / 1000);
 }
 
 datetime *datetime::from_timestamp(double timestamp, tzinfo *tzinfo, bool timefn) {
@@ -408,7 +408,7 @@ datetime *datetime::from_timestamp(double timestamp, tzinfo *tzinfo, bool timefn
 }
 
 datetime *datetime::utcfromtimestamp(double timestamp) {
-	return from_timestamp(timestamp,NULL,true);	//true=gmtime
+    return from_timestamp(timestamp,NULL,true);	//true=gmtime
 }
 
 datetime *datetime::fromtimestamp(double timestamp, tzinfo *tzinfo) {
@@ -421,10 +421,10 @@ datetime *datetime::fromtimestamp(double timestamp, tzinfo *tzinfo) {
 }
 
 datetime *datetime::fromordinal(__ss_int o) {
-	if(o<1)		//1 = date.min.toordinal()
-		throw new OverflowError(new str("ordinal must be >= 1"));
-	if(o>3652059)	//3652059 = date.max.toordinal()
-		throw new OverflowError(new str("year is out of range"));
+    if(o<1)  //1 = date.min.toordinal()
+        throw new OverflowError(new str("ordinal must be >= 1"));
+    if(o>3652059)  //3652059 = date.max.toordinal()
+        throw new OverflowError(new str("year is out of range"));
 
     datetime *r = new datetime(1,1,1);
     ord_to_ymd(o,&(r->year),&(r->month),&(r->day));
@@ -437,17 +437,17 @@ datetime *datetime::combine(date *d, time *t) {
 
 datetime *datetime::strptime(str *date_string, str *format) {
 #ifdef WIN32
-	struct tm t = {0, 0, 0, 1, 0, 0, 0, 1, -1};
+    struct tm t = {0, 0, 0, 1, 0, 0, 0, 1, -1};
     char *e = __time__::strptime(date_string->c_str(), format->c_str(), &t);
 #else
-	struct tm t = {0, 0, 0, 1, 0, 0, 0, 1, -1, 0, 0};
+    struct tm t = {0, 0, 0, 1, 0, 0, 0, 1, -1, 0, 0};
     char *e = ::strptime(date_string->c_str(), format->c_str(), &t);
 #endif
     if(!e)
         throw new ValueError(new str("time data did not match format:  data="+date_string->unit+" fmt="+format->unit));
- 	if((*e)!='\0')
+    if((*e)!='\0')
         throw new ValueError((new str("ValueError: unconverted data remains: "))->__add__(new str(e)));
-	return new datetime(t.tm_year + 1900,
+    return new datetime(t.tm_year + 1900,
         t.tm_mon + 1,
         t.tm_mday,
         t.tm_hour,
@@ -465,14 +465,14 @@ datetime *datetime::__add__(timedelta *other) {
     r->second = (sec + usec/1000000)%(60);
     r->minute = (this->minute + (sec + usec/1000000)/60)%60;
     r->hour = (this->hour + (this->minute + (sec + usec/1000000)/60)/60)%24;
-	r->_tzinfo = _tzinfo;
+    r->_tzinfo = _tzinfo;
     return r;
 }
 
 datetime *datetime::__sub__(timedelta *other) {
     __ss_int usec = this->microsecond - other->microseconds;
     __ss_int sec = this->second - other->seconds;
-	__ss_int days = this->toordinal()-other->days +
+    __ss_int days = this->toordinal()-other->days +
                                         (((usec/1000000 + sec)/60 +
                                         this->minute)/60 + this->hour)/24;
     datetime *r = datetime::fromordinal(days);
@@ -767,8 +767,8 @@ str *time::__str__() {
     else
         s = __modct(point_string,2,__modct(hour_format2, 3,___box(hour), ___box(minute), ___box(second)),___box(microsecond));
     if(_tzinfo!=NULL)
-		return s->__add__(_tzinfo->minutes_to_str(NULL));
-	return s;
+        return s->__add__(_tzinfo->minutes_to_str(NULL));
+    return s;
 }
 
 str *time::strftime(str* format) {
@@ -808,14 +808,14 @@ timedelta *time::dst() {
     if(_tzinfo==NULL)
         return (timedelta *)NULL;
     else
-		return _tzinfo->dst(NULL);
+        return _tzinfo->dst(NULL);
 }
 
 str *time::tzname() {
     if(_tzinfo==NULL)
         return none_string;
     else
-		return _tzinfo->tzname(NULL);
+        return _tzinfo->tzname(NULL);
 }
 
 void time_compare_check(time *&f, time *&s) {
@@ -839,11 +839,11 @@ void time_compare_check(time *&f, time *&s) {
 
 __ss_int time::__cmp__(time *other) {
     time *f = this;
-	time_compare_check(f, other);
+    time_compare_check(f, other);
 
-	if((f->hour*3600+f->minute*60+f->second)*1000000+f->microsecond == (other->hour*3600+other->minute*60+other->second)*1000000+other->microsecond)
+    if((f->hour*3600+f->minute*60+f->second)*1000000+f->microsecond == (other->hour*3600+other->minute*60+other->second)*1000000+other->microsecond)
         return 0;
-	if((f->hour*3600+f->minute*60+f->second)*1000000+f->microsecond > (other->hour*3600+other->minute*60+other->second)*1000000+other->microsecond)
+    if((f->hour*3600+f->minute*60+f->second)*1000000+f->microsecond > (other->hour*3600+other->minute*60+other->second)*1000000+other->microsecond)
         return 1;
     return -1;
 }
@@ -924,10 +924,10 @@ timedelta *timedelta::__truediv__(__ss_int n) {
     if(n==0) {
         throw new ZeroDivisionError(new str("integer division or modulo by zero"));
     }
-	double d,s,us;
-	d = double(days)/n;
-	s = double(seconds)/n;
-	us = double(microseconds)/n+(((long double)(days)/n-double(days)/n)*24*3600+(long double)(seconds)/n-s)*1000000;
+    double d,s,us;
+    d = double(days)/n;
+    s = double(seconds)/n;
+    us = double(microseconds)/n+(((long double)(days)/n-double(days)/n)*24*3600+(long double)(seconds)/n-s)*1000000;
     return new timedelta(0,d*24*3600+s,us,0,0,0,0);
 }
 

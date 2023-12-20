@@ -55,7 +55,7 @@ namespace __mmap__
 const __ss_int PAGESIZE = 0x10000;
 __ss_int ALLOCATIONGRANULARITY = PAGESIZE;
 #else // UNIX
-const __ss_int PAGESIZE = sysconf(_SC_PAGE_SIZE);
+const __ss_int PAGESIZE = (__ss_int)sysconf(_SC_PAGE_SIZE);
 __ss_int ALLOCATIONGRANULARITY = PAGESIZE;
 #endif
 const __ss_int
@@ -153,12 +153,11 @@ void *mmap::__init__(int __ss_fileno_, __ss_int length_, __ss_int flags_, __ss_i
             {
                 throw new OSError();
             }
-            length_ = buf.st_size;
+            length_ = (__ss_int)buf.st_size;
         }
     }
 
-    void *temp = ::mmap(0, length_, prot_, flags_,
-                                           fd, offset_);
+    void *temp = ::mmap(0, length_, prot_, flags_, fd, offset_);
 
     if (temp == MAP_FAILED)
     {
@@ -461,11 +460,11 @@ __ss_int mmap::find(bytes *needle, __ss_int start, __ss_int end)
     __raise_if_closed_or_not_readable();
     if (start == -1)
     {
-        start = __tell();
+        start = (__ss_int)__tell();
     }
     if( end == -1)
     {
-        end = __size();
+        end = (__ss_int)__size();
     }
     return __find(needle->unit, start, end);
 }
@@ -553,11 +552,11 @@ __ss_int mmap::rfind(bytes *needle, __ss_int start, __ss_int end)
     __raise_if_closed_or_not_readable();
     if (start == -1)
     {
-        start = __tell();
+        start = (__ss_int)__tell();
     }
     if( end == -1)
     {
-        end = __size();
+        end = (__ss_int)__size();
     }
     return __find(needle->unit, start, end, true);
 }
@@ -624,7 +623,7 @@ __ss_int mmap::size()
 #else /* UNIX */
     if(fd == -1 )
     {
-        return __size();
+        return (__ss_int)__size();
     }
     else
     {
@@ -633,7 +632,7 @@ __ss_int mmap::size()
         {
             throw new OSError();
         }
-        return buf.st_size;
+        return (__ss_int)buf.st_size;
     }
 #endif /* WIN32 */
 }
@@ -641,7 +640,7 @@ __ss_int mmap::size()
 __ss_int mmap::tell()
 {
     __raise_if_closed();
-    return __tell();
+    return (__ss_int)__tell();
 }
 
 void *mmap::write(bytes *string)
@@ -665,7 +664,7 @@ void *mmap::write_byte(__ss_int value)
     {
         throw new ValueError(const_14);
     }
-    *m_position++ = value;
+    *m_position++ = (char)value;
     return NULL;
 }
 
@@ -676,12 +675,12 @@ __ss_bool mmap::__contains__(bytes *string)
     {
         throw new ValueError(const_8);
     }
-    return __mbool(find(string, 0) != std::string::npos);
+    return __mbool(find(string, 0) != -1);
 }
 
 __iter<bytes *> *mmap::__iter__()
 {
-    __raise_if_closed();	
+    __raise_if_closed();
     return new __mmapiter(this);
 }
 
@@ -700,7 +699,7 @@ void *mmap::__setitem__(__ss_int index, __ss_int character)
 {
     __raise_if_closed_or_not_writable();
     size_t id = __subscript(index);
-    m_begin[id] = character;
+    m_begin[id] = (char)character;
     return NULL;
 }
 
@@ -730,7 +729,7 @@ bytes *mmap::__slice__(__ss_int kind, __ss_int lower, __ss_int upper, __ss_int)
     default:
         assert(false);
     }
-    bytes *b = new bytes(start, size);
+    bytes *b = new bytes(start, (__ss_int)size);
     b->frozen = 1;
     return b;
 }
@@ -809,7 +808,7 @@ size_t mmap::__subscript(__ss_int index, bool include_end) const
 {
     if (index < 0)
     {
-        index += __size();
+        index += (__ss_int)__size();
     }
     if (index < 0 or size_t(index) >= __size())
     {
@@ -823,7 +822,7 @@ size_t mmap::__subscript(__ss_int index, bool include_end) const
 
 __ss_int mmap::__clamp(__ss_int index) const
 {
-    __ss_int length = __size();
+    __ss_int length = (__ss_int)__size();
     return std::min(std::max(index, -length), length);
 }
 
@@ -837,7 +836,7 @@ __ss_int mmap::__find(const __GC_STRING& needle, __ss_int start, __ss_int end, b
 {
     if (end == 0)
     {
-        end = __size();
+        end = (__ss_int)__size();
     }
     size_t length = needle.size();
     // Taken from Python 3.2.
@@ -845,18 +844,18 @@ __ss_int mmap::__find(const __GC_STRING& needle, __ss_int start, __ss_int end, b
     int sign = reverse ? -1 : 1;
 
     if (start < 0)
-        start += __size();
+        start += (__ss_int)__size();
     if (start < 0)
         start = 0;
     else if (size_t(start) > __size())
-        start = __size();
+        start = (__ss_int)__size();
 
     if (end < 0)
-        end += __size();
+        end += (__ss_int)__size();
     if (end < 0)
         end = 0;
     else if (size_t(end) > __size())
-        end = __size();
+        end = (__ss_int)__size();
 
     start_p = m_begin + start;
     end_p = m_begin + end;
