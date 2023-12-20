@@ -156,7 +156,7 @@ template<class T> long set<T>::__hash__() {
     return hash;
 }
 
-template <class T> setentry<T>* set<T>::lookup(T key, long hash) const {
+template <class T> setentry<T>* set<T>::lookup(T key, __ss_int hash) const {
 
     int i = hash & mask;
     setentry<T>* entry = &table[i];
@@ -188,7 +188,7 @@ template <class T> setentry<T>* set<T>::lookup(T key, long hash) const {
 	return entry;
 }
 
-template <class T> void set<T>::insert_key(T key, long hash) {
+template <class T> void set<T>::insert_key(T key, __ss_int hash) {
     setentry<T>* entry;
 
     entry = lookup(key, hash);
@@ -209,7 +209,7 @@ template <class T> void set<T>::insert_key(T key, long hash) {
 
 template <class T> void *set<T>::add(T key)
 {
-    long hash = hasher<T>(key);
+    __ss_int hash = (__ss_int)hasher<T>(key);
     int n_used = used;
     insert_key(key, hash);
     if ((used > n_used && fill*3 >= (mask+1)*2))
@@ -248,7 +248,7 @@ template <class T> void *set<T>::discard(T key) {
 
 template <class T> int set<T>::do_discard(T key) {
     int orig_frozen = freeze(key);
-	long hash = hasher<T>(key);
+	__ss_int hash = (__ss_int)hasher<T>(key);
 	setentry<T> *entry;
 
 	entry = lookup(key, hash);
@@ -317,7 +317,7 @@ known to be absent from the set.  This routine also assumes that
 the set contains no deleted entries.  Besides the performance benefit,
 using insert() in resize() is dangerous (SF bug #1456209).
 */
-template <class T> void set<T>::insert_clean(T key, long hash)
+template <class T> void set<T>::insert_clean(T key, __ss_int hash)
 {
 	int i;
 	unsigned int perturb;
@@ -442,7 +442,7 @@ template<class T> __ss_int set<T>::__len__() {
 }
 
 template <class T> __ss_bool set<T>::__contains__(T key) {
-    long hash = hasher(key);
+    __ss_int hash = (__ss_int)hasher(key);
 	setentry<T> *entry;
 
 	entry = lookup(key, hash);
