@@ -191,6 +191,17 @@ template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j
                 }
                 return;
 
+            case '?':
+                if(___bool(arg))
+                    result->unit[pos++] = '\x01';
+                else
+                    result->unit[pos++] = '\x00';
+                if(ndigits == -1 or --ndigits == 0) {
+                    j++;
+                    ndigits = -1;
+                }
+                return;
+
             case 's':
                 __pack_str(c, arg, result, pos, ndigits);
                 j++;

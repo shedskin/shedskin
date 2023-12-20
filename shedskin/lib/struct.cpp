@@ -281,38 +281,6 @@ void fillbuf_float(char c, double t, char order, unsigned int itemsize) {
     }
 }
 
-/*
-            case 'H':
-                pad = padding(order, pos, itemsize);
-                for(unsigned int j=0; j<pad; j++) {
-                    result->unit += '\x00';
-                pos += pad;
-
-            case 'd':
-                pad = padding(order, pos, itemsize);
-                        result->unit += '\x00';
-
-            case 's':
-                if(ndigits) {
-                    strarg = ((bytes *)(arg));
-                    unsigned int len = strarg->__len__();
-                    if(len > ndigits)
-                        len = ndigits;
-                    for(unsigned int j=0; j<len; j++)
-                        result->unit += strarg->unit[j];
-
-                    for(unsigned int j=0; j<ndigits-len; j++)
-                            result->unit += '\x00';
-
-            case '?':
-                for(unsigned int j=0; j<ndigits; j++) {
-                    if(arg->__nonzero__())
-                        result->unit += '\x01';
-                    else
-                        result->unit += '\x00';
-
-*/
-
 void __init() {
     ordering = "@<>!=";
     cl_error = new class_("error");

@@ -176,6 +176,11 @@ def test_x():
     assert h == 19
 
 
+def test_nonzero():
+    packed = struct.pack('>???H', ['woef'], 0, True, 19)
+    assert packed == b'\x01\x00\x01\x00\x13'
+
+
 def test_unpack_issue():
     s = struct.pack('>I', 12000)
     n, = struct.unpack('>I', s)
@@ -316,6 +321,7 @@ def test_all():
     test_s()
     test_p()
     test_x()
+    test_nonzero()
     test_repeat()
     test_pack_into()
     test_calcsize()
