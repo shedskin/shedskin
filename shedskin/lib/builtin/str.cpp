@@ -1,5 +1,7 @@
 /* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
 
+#include <string_view>
+
 /* str methods */
 
 str::str() : hash(-1), charcache(0) {
@@ -531,7 +533,7 @@ long str::__hash__() {
     if (hash != -1)
         return hash;
 
-    hash = std::hash<std::string>{}(unit.c_str());
+    hash = std::hash<std::string_view>{}(std::string_view(unit.data(), unit.size()));
 
     return hash; 
 }
