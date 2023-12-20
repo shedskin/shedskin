@@ -618,10 +618,9 @@ template<class K, class V> struct dict_looper {
 
 template <class K, class V> class dict : public pyiter<K> {
 public:
-    __ss_int fill;
-    __ss_int used;
-    __ss_int mask;
-
+	int fill;
+    int used;
+    int mask;
     dictentry<K,V> *table;
     dictentry<K,V> smalltable[MINSIZE];
 
@@ -692,9 +691,9 @@ public:
 #endif
 
     // used internally
-    dictentry<K,V>* lookup(K key, __ss_int hash) const;
-    void insert_key(K key, V value, __ss_int hash);
-    void insert_clean(K key, V value, __ss_int hash);
+    dictentry<K,V>* lookup(K key, long hash) const;
+    void insert_key(K key, V value, long hash);
+    void insert_clean(K key, V value, long hash);
     int next(__ss_int *pos_ptr, dictentry<K,V> **entry_ptr);
     void resize(int minused);
 };
@@ -1153,7 +1152,7 @@ template<class T> struct setentry {
 };
 
 template<class K, class V> struct dictentry {
-    __ss_int hash;
+    long hash;
     K key;
     V value;
     int use;

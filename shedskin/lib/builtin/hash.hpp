@@ -24,7 +24,7 @@ template<> inline long hasher(__ss_float v) {
     hipart = (long)v;   /* take the top 32 bits */
     v = (v - (__ss_float)hipart) * 2147483648.0; /* get the next 32 bits */
     x = hipart + (long)v + (expo << 15);
-    if (x == -1)
+    if (x== -1)
         x = -2;
     return x;
 }
