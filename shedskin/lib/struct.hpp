@@ -77,13 +77,19 @@ template<> inline void __pack_char(char c, bytes *b, bytes *result, size_t &pos)
 
 /* pack str */
 
-template<class T> void __pack_str(char c, T t, bytes *result, size_t &pos ) {
+template<class T> void __pack_str(char c, T t, bytes *result, size_t &pos, __ss_int ndigits) {
     throw new error(new str("argument for 's' must be a bytes object"));
 }
-template<> inline void __pack_str(char c, bytes *b, bytes *result, size_t &pos) {
+template<> inline void __pack_str(char c, bytes *b, bytes *result, size_t &pos, __ss_int ndigits) {
     __ss_int len = b->__len__();
+    if(ndigits == -1)
+        ndigits = 1;
+    if(len > ndigits)
+        len = ndigits;
     for(__ss_int j=0; j<len; j++)
         result->unit[pos++] = b->unit[j];
+    for(__ss_int j=0; j<ndigits-len; j++)
+        result->unit[pos++] = '\x00';
 }
 
 /* pack pascal */
@@ -186,7 +192,7 @@ template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j
                 return;
 
             case 's':
-                __pack_str(c, arg, result, pos);
+                __pack_str(c, arg, result, pos, ndigits);
                 j++;
                 return;
 
