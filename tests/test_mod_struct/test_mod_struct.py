@@ -74,6 +74,51 @@ def test_s():
     s, = struct.unpack("!12s", packer)
     assert s == b'abcdefghijkl'
 
+    # pad/truncate
+    packer = struct.pack('0s', b'bla')
+    assert packer == b''
+    s, = struct.unpack('0s', packer)
+    assert s == b''
+
+    packer = struct.pack('1s', b'bla')
+    assert packer == b'b'
+    s, = struct.unpack('1s', packer)
+    assert s == b'b'
+
+    packer = struct.pack('s', b'bla')
+    assert packer == b'b'
+    s, = struct.unpack('s', packer)
+    assert s == b'b'
+
+    packer = struct.pack('2s', b'bla')
+    assert packer == b'bl'
+    s, = struct.unpack('2s', packer)
+    assert s == b'bl'
+
+    packer = struct.pack('3s', b'bla')
+    assert packer == b'bla'
+    s, = struct.unpack('3s', packer)
+    assert s == b'bla'
+
+    packer = struct.pack('5s', b'bla')
+    assert packer == b'bla\x00\x00'
+    s, = struct.unpack('5s', packer)
+    assert s == b'bla\x00\x00'
+
+    # follow trunc
+    packer = struct.pack('<2sH', b'bla', 15)
+    assert packer == b'bl\x0f\x00'
+    s, h = struct.unpack('<2sH', packer)
+    assert s == b'bl'
+    assert h == 15
+
+    # follow pad
+    packer = struct.pack('<5sH', b'bla', 14)
+    assert packer == b'bla\x00\x00\x0e\x00'
+    s, h = struct.unpack('<5sH', packer)
+    assert s == b'bla\x00\x00'
+    assert h == 14
+
 
 def test_p():
     # combinations of digits, arg lengths..
