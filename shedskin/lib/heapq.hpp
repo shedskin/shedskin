@@ -38,14 +38,14 @@ template<class T, class U, template <class V, class W> class X, template <class 
 
     while (pos > startpos) {
         __ss_int parentpos = (pos - 1) / 2;
-	T parent = heap[parentpos];
+        T parent = heap[parentpos];
 
-	if (cmp(item, parent) >= 0) {
-	    break;
-	}
+        if (cmp(item, parent) >= 0) {
+            break;
+        }
 
-	heap[pos] = parent;
-	pos = parentpos;
+        heap[pos] = parent;
+        pos = parentpos;
     }
 
     heap[pos] = item;
@@ -65,7 +65,7 @@ template<class T, class U, template <class V, class W> class X, template <class 
     Cmp<T> cmp;
 
     __ss_int startpos = pos;
-    __ss_int endpos = heap.size();
+    __ss_int endpos = (__ss_int)heap.size();
 
     T item = heap[pos];
 
@@ -73,16 +73,16 @@ template<class T, class U, template <class V, class W> class X, template <class 
         __ss_int leftsonpos = 2 * pos + 1;
         __ss_int rightsonpos = leftsonpos + 1;
 
-	if (leftsonpos >= endpos) {
-	    break;
-	} else if (rightsonpos < endpos) {
-	    if (cmp(heap[leftsonpos], heap[rightsonpos]) >= 0) {
-	        leftsonpos = rightsonpos;
-	    }
-	}
+        if (leftsonpos >= endpos) {
+            break;
+        } else if (rightsonpos < endpos) {
+            if (cmp(heap[leftsonpos], heap[rightsonpos]) >= 0) {
+                leftsonpos = rightsonpos;
+            }
+        }
 
-	heap[pos] = heap[leftsonpos];
-	pos = leftsonpos;
+        heap[pos] = heap[leftsonpos];
+        pos = leftsonpos;
     }
 
     heap[pos] = item;
@@ -102,7 +102,7 @@ template<class T> inline void _siftup(list<T> *heap, __ss_int pos) {
 
 template<class T, class U, template <class V, class W> class X, template <class Y> class Cmp> inline void heappush(X<T, U>& heap, T item) {
     heap.push_back(item);
-    _siftdown<T, U, X, Cmp>(heap, 0, heap.size() - 1);
+    _siftdown<T, U, X, Cmp>(heap, 0, (__ss_int)heap.size() - 1);
 }
 
 template<class T, class U, template <class V, class W> class X> inline void heappush(X<T, U>& heap, T item) {
@@ -133,7 +133,7 @@ template<class T, class U, template <class V, class W> class X, template <class 
     Cmp<T> cmp;
 
     if (!heap.size() ||
-	cmp(item, heap.front()) < 0) {
+    cmp(item, heap.front()) < 0) {
         return item;
     }
 

@@ -161,7 +161,7 @@ template<class T> list<T> *array<T>::tolist() {
 }
 
 template<class T> __ss_int array<T>::__len__() {
-    return units.size() / itemsize;
+    return (__ss_int)(units.size() / itemsize);
 }
 
 template<class T> __ss_bool array<T>::__eq__(pyobj *p) {
@@ -276,14 +276,14 @@ template<class T> T array<T>::__getitem__(__ss_int i) {
 template<> inline __ss_int array<__ss_int>::__getfast__(__ss_int i) {
     i = __wrap(this, i);
     switch(typechar) {
-        case 'b': return *((signed char *)(&units[i*itemsize]));
-        case 'B': return *((unsigned char *)(&units[i*itemsize]));
-        case 'h': return *((signed short *)(&units[i*itemsize]));
-        case 'H': return *((unsigned short *)(&units[i*itemsize]));
-        case 'i': return *((signed int *)(&units[i*itemsize]));
-        case 'I': return *((unsigned int *)(&units[i*itemsize]));
-        case 'l': return *((signed long *)(&units[i*itemsize]));
-        case 'L': return *((unsigned long *)(&units[i*itemsize]));
+        case 'b': return (__ss_int)(*((signed char *)(&units[i*itemsize])));
+        case 'B': return (__ss_int)(*((unsigned char *)(&units[i*itemsize])));
+        case 'h': return (__ss_int)(*((signed short *)(&units[i*itemsize])));
+        case 'H': return (__ss_int)(*((unsigned short *)(&units[i*itemsize])));
+        case 'i': return (__ss_int)(*((signed int *)(&units[i*itemsize])));
+        case 'I': return (__ss_int)(*((unsigned int *)(&units[i*itemsize])));
+        case 'l': return (__ss_int)(*((signed long *)(&units[i*itemsize])));
+        case 'L': return (__ss_int)(*((unsigned long *)(&units[i*itemsize])));
     }
     return 0;
 }

@@ -199,12 +199,9 @@ __ss_int calcsize(str *fmt) { // TODO optimize
 __ss_int calcitems(str *fmt) { // TODO optimize
     __ss_int result = 0;
     str *digits = new str();
-    char order = '@';
-    unsigned int itemsize;
     for(unsigned int i=0; i<(unsigned int)len(fmt); i++) {
         char c = fmt->unit[i];
         if(ordering.find(c) != std::string::npos) {
-            order = c;
             continue;
         }
         if(::isdigit(c)) {
@@ -216,7 +213,6 @@ __ss_int calcitems(str *fmt) { // TODO optimize
             ndigits = __int(digits);
             digits = new str();
         }
-        itemsize = get_itemsize(order, c);
         switch(c) {
             case 'b':
             case 'B':
