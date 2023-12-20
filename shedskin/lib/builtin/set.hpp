@@ -156,9 +156,9 @@ template<class T> long set<T>::__hash__() {
     return hash;
 }
 
-template <class T> setentry<T>* set<T>::lookup(T key, __ss_int hash) const {
+template <class T> setentry<T>* set<T>::lookup(T key, long hash) const {
 
-    __ss_int i = hash & mask;
+    int i = hash & mask;
     setentry<T>* entry = &table[i];
     if (!(entry->use) || __eq(entry->key, key))
         return entry;
@@ -170,7 +170,7 @@ template <class T> setentry<T>* set<T>::lookup(T key, __ss_int hash) const {
     else
         freeslot = NULL;
 
-    __ss_int perturb;
+    unsigned int perturb;
     for (perturb = hash; ; perturb >>= PERTURB_SHIFT) {
         i = (i << 2) + i + perturb + 1;
         entry = &table[i & mask];
@@ -188,7 +188,7 @@ template <class T> setentry<T>* set<T>::lookup(T key, __ss_int hash) const {
 	return entry;
 }
 
-template <class T> void set<T>::insert_key(T key, __ss_int hash) {
+template <class T> void set<T>::insert_key(T key, long hash) {
     setentry<T>* entry;
 
     entry = lookup(key, hash);
@@ -209,7 +209,7 @@ template <class T> void set<T>::insert_key(T key, __ss_int hash) {
 
 template <class T> void *set<T>::add(T key)
 {
-    __ss_int hash = (__ss_int)hasher<T>(key);
+    long hash = hasher<T>(key);
     int n_used = used;
     insert_key(key, hash);
     if ((used > n_used && fill*3 >= (mask+1)*2))
@@ -248,7 +248,7 @@ template <class T> void *set<T>::discard(T key) {
 
 template <class T> int set<T>::do_discard(T key) {
     int orig_frozen = freeze(key);
-	__ss_int hash = (__ss_int)hasher<T>(key);
+	long hash = hasher<T>(key);
 	setentry<T> *entry;
 
 	entry = lookup(key, hash);
@@ -317,9 +317,10 @@ known to be absent from the set.  This routine also assumes that
 the set contains no deleted entries.  Besides the performance benefit,
 using insert() in resize() is dangerous (SF bug #1456209).
 */
-template <class T> void set<T>::insert_clean(T key, __ss_int hash)
+template <class T> void set<T>::insert_clean(T key, long hash)
 {
-	__ss_int i, perturb;
+	int i;
+	unsigned int perturb;
 	setentry<T> *entry;
 
 	i = hash & mask;
@@ -441,7 +442,7 @@ template<class T> __ss_int set<T>::__len__() {
 }
 
 template <class T> __ss_bool set<T>::__contains__(T key) {
-    __ss_int hash = (__ss_int)hasher(key);
+    long hash = hasher(key);
 	setentry<T> *entry;
 
 	entry = lookup(key, hash);

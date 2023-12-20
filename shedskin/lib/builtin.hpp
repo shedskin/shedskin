@@ -710,9 +710,9 @@ template<class T> struct set_looper {
 template<class T> class set : public pyiter<T> {
 public:
     int frozen;
-    __ss_int fill;
-    __ss_int used;
-    __ss_int mask;
+    int fill;
+    int used;
+    int mask;
     setentry<T> *table;
     setentry<T> smalltable[MINSIZE];
     long hash;
@@ -831,9 +831,9 @@ public:
     long __hash__();
 
     // used internally
-    setentry<T>* lookup(T key, __ss_int hash) const;
-    void insert_key(T key, __ss_int hash);
-    void insert_clean(T key, __ss_int hash);
+    setentry<T>* lookup(T key, long hash) const;
+    void insert_key(T key, long hash);
+    void insert_clean(T key, long hash);
     int next(int *pos_ptr, setentry<T> **entry_ptr);
     void resize(int minused);
 };
@@ -1147,7 +1147,7 @@ const int dummy = 1;
 const int active = 2;
 
 template<class T> struct setentry {
-    __ss_int hash; // avoid rehashings...
+    long hash; // avoid rehashings...
     T key;
     int use;
 };
