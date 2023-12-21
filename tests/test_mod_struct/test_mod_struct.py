@@ -180,6 +180,10 @@ def test_nonzero():
     packed = struct.pack('>???H', ['woef'], 0, True, 19)
     assert packed == b'\x01\x00\x01\x00\x13'
 
+    packer = b'\xab'
+    a, = struct.unpack('<?', packer)
+    assert a is True
+
 
 def test_unpack_issue():
     s = struct.pack('>I', 12000)
@@ -194,6 +198,10 @@ def test_unpack_issue():
 def test_unpack_from():
     data = b'\xf0\x04\x00\x00\x01\x02'
     n, = struct.unpack_from('<I', data)
+    assert n == 1264
+
+    data = b'\x00\x00\xf0\x04\x00\x00\x01\x02'
+    n, = struct.unpack_from('<I', data, 2)
     assert n == 1264
 
 
@@ -289,6 +297,15 @@ def test_errors():
     assert error == 'pack_into expected 1 items for packing (got 2)'
 
 
+def test_ws():
+    pass
+#    packer = struct.pack('<H h \n', 28, -29)
+#    assert packer == b'\x1c\x00\xe3\xff'
+#    h, i = struct.unpack('< H \t  h  ', packer)
+#    assert h == 28
+#    assert i == -29
+
+
 def test_multi_1():
     packer = struct.pack("<c3q2b3d", b"\xd5", 39, 77, 77, 55, 50, 949.0, 544.2, 444.3)
     (a, b, c, d, e, f, g, h, i) = struct.unpack("<c3q2b3d", packer)
@@ -328,6 +345,7 @@ def test_all():
     test_errors()
     test_multi_1()
     test_order()
+    test_ws()
 
 
 if __name__ == '__main__':
