@@ -298,12 +298,11 @@ def test_errors():
 
 
 def test_ws():
-    pass
-#    packer = struct.pack('<H h \n', 28, -29)
-#    assert packer == b'\x1c\x00\xe3\xff'
-#    h, i = struct.unpack('< H \t  h  ', packer)
-#    assert h == 28
-#    assert i == -29
+    packer = struct.pack('<H h \n', 28, -29)
+    assert packer == b'\x1c\x00\xe3\xff'
+    h, i = struct.unpack('< H \t  h  ', packer)
+    assert h == 28
+    assert i == -29
 
 
 def test_multi_1():
