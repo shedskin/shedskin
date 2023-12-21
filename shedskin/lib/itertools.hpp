@@ -870,7 +870,7 @@ template<class T> inline void productiter<T, T>::repeat(int times) {
     }
 
     for (int time = 0; time < times; ++time) {
-        for (size_t iter = 0; iter < this->values.size(); ++iter) {
+        for (unsigned int iter = 0; iter < this->values.size(); ++iter) {
             this->iter.push_back(iter);
             this->indices.push_back(0);
         }

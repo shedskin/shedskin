@@ -12,7 +12,7 @@ namespace __io__ {
 
 bytes *default_0;
 
-bytes* BytesI::read(int n) {
+bytes *BytesI::read(int n) {
     __check_closed();
     bytes *result;
     if(n < 0) {
@@ -25,7 +25,7 @@ bytes* BytesI::read(int n) {
     return result;
 }
 
-bytes * BytesI::readline(int n) {
+bytes *BytesI::readline(int n) {
     __check_closed();
     if(__eof())
         return new bytes("");
