@@ -824,7 +824,7 @@ bytes *rledecode_hqx(bytes *in_data_str) {
                       out_len_left = out_len-1; \
                       out_len *= 2; \
              } \
-             *out_data++ = b; \
+             *out_data++ = (char)b; \
     } while(0)
 
     /*
@@ -886,7 +886,7 @@ bytes *rlecode_hqx(bytes *data) {
         ch = in_data[in];
         if ( ch == RUNCHAR ) {
             /* RUNCHAR. Escape it. */
-            *out_data++ = RUNCHAR;
+            *out_data++ = (char)RUNCHAR;
             *out_data++ = 0;
         } else {
             /* Check how many following are the same */
@@ -897,8 +897,8 @@ bytes *rlecode_hqx(bytes *data) {
             if ( inend - in > 3 ) {
                 /* More than 3 in a row. Output RLE. */
                 *out_data++ = ch;
-                *out_data++ = RUNCHAR;
-                *out_data++ = inend-in;
+                *out_data++ = (char)RUNCHAR;
+                *out_data++ = (char)(inend-in);
                 in = inend-1;
             } else {
                 /* Less than 3. Output the byte itself */
