@@ -167,23 +167,29 @@ __ss_int calcsize(str *fmt) { // TODO optimize
         }
         itemsize = get_itemsize(order, c);
         switch(c) {
-            case 'b': 
-            case 'B': 
-            case 'h': 
-            case 'H': 
+            case 'b':
+            case 'B':
+            case 'h':
+            case 'H':
             case 'i':
-            case 'I': 
+            case 'I':
             case 'l':
             case 'L':
-            case 'q': 
+            case 'q':
             case 'Q':
-            case 'd': 
+            case 'd':
             case 'f':
                 result += padding(order, result, itemsize);
             case 'c':
             case 's':
             case 'p':
             case '?':
+            case ' ':
+            case '\t':
+            case '\n':
+            case '\r':
+            case '\x0b':
+            case '\x0c':
             case 'x':
                 break;
             case 'P':
@@ -234,6 +240,12 @@ __ss_int calcitems(str *fmt) { // TODO optimize
             case 'p':
                 result += 1;
                 break;
+            case ' ':
+            case '\t':
+            case '\n':
+            case '\r':
+            case '\x0b':
+            case '\x0c':
             case 'x':
                 break;
             case 'P':

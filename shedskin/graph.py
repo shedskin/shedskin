@@ -31,6 +31,7 @@ language.
 
 import ast
 import copy
+import string
 import os
 import re
 import sys
@@ -414,6 +415,8 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 else:
                     result.extend(int(digits or "1") * [(ordering, c, rtype, 1)])
                 digits = ""
+            elif c in string.whitespace:
+                pass
             else:
                 error.error(
                     "bad or unsupported char in struct format: " + repr(c),
