@@ -152,7 +152,7 @@ template<class T> inline T heappushpop(list<T> *heap, T item) {
 }
 
 template<class T, class U, template <class V, class W> class X, template <class Y> class Cmp> inline void heapify(X<T, U>& heap) {
-    for (__ss_int i = heap.size() / 2 - 1; i > -1; --i) {
+    for (__ss_int i = (__ss_int)heap.size() / 2 - 1; i > -1; --i) {
         _siftup<T, U, X, Cmp>(heap, i);
     }
 }
@@ -283,7 +283,7 @@ template<class T, template <class Y> class Cmp> inline nheapiter<T, Cmp>::nheapi
             this->values.push_back(heappop<T, std::allocator<T>, std::vector, Cmp>(heap));
     }
 
-    this->index = values.size();
+    this->index = (__ss_int)values.size();
 }
 
 template<class T, template <class Y> class Cmp> T nheapiter<T, Cmp>::__next__() {

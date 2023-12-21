@@ -81,7 +81,7 @@ public:
     }
 
     __ss_int __len__() {
-        return units.size();
+        return (__ss_int)units.size();
     }
 
     __iter<A> *__iter__() {
@@ -175,7 +175,7 @@ public:
 template <class T> class __dequeiter : public __iter<T> {
 public:
     deque<T> *p;
-    __ss_int i, size;
+    size_t i, size;
 
     __dequeiter(deque<T> *p) {
         this->p = p;
@@ -253,7 +253,7 @@ public:
     }
 
     void *__addtoitem__(K key, V value) { /* XXX */
-        long hash = hasher<K>(key);
+        __ss_int hash = (__ss_int)hasher<K>(key);
         dictentry<K, V> *entry;
         entry = this->lookup(key, hash);
         if (entry->use != active) {

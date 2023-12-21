@@ -42,7 +42,7 @@ template<class T> str *__moddict(str *v, dict<str *, T> *d) {
     int i, pos, pos2;
     list<str *> *names = (new list<str *>());
 
-    while((pos = __fmtpos2(v)) != -1) {
+    while((pos = (__ss_int)__fmtpos2(v)) != -1) {
         pos2 = v->find(const_6, pos);
         names->append(v->__slice__(3, (pos+2), pos2, 0));
         v = (v->__slice__(2, 0, (pos+1), 0))->__add__(v->__slice__(1, (pos2+1), 0, 0));
