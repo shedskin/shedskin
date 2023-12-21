@@ -7,6 +7,7 @@ int_ *___box(__ss_int);
 bool_ *___box(__ss_bool);
 float_ *___box(__ss_float);
 complex_ *___box(complex);
+pyobj *___box(long int); // None
 
 /* string formatting */
 
@@ -54,19 +55,3 @@ template<class T> str *__moddict(str *v, dict<str *, T> *d) {
     return __mod4(v, vals);
 }
 
-/* print .., */
-
-template<class ... Args> void print(int n, file *f, str *end, str *sep, Args ... args) {
-    __print_cache->units.resize(0);
-    (__print_cache->append(args), ...);
-
-    str *s = __mod5(__print_cache, sep?sep:sp);
-    if(!end)
-        end = nl;
-    if(f) {
-        f->write(s);
-        f->write(end);
-    }
-    else
-        printf("%s%s", s->c_str(), end->c_str());
-}

@@ -649,3 +649,19 @@ template<class T> class_ *__type(T t) { return t->__class__; }
 template<> class_ *__type(int i);
 template<> class_ *__type(__ss_float d);
 
+/* print .., */
+
+template<class ... Args> void print(int n, file *f, str *end, str *sep, Args ... args) {
+    __print_cache->units.resize(0);
+    (__print_cache->append(___box(args)), ...);
+
+    str *s = __mod5(__print_cache, sep?sep:sp);
+    if(!end)
+        end = nl;
+    if(f) {
+        f->write(s);
+        f->write(end);
+    }
+    else
+        printf("%s%s", s->c_str(), end->c_str());
+}

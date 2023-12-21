@@ -2562,8 +2562,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         ) = infer.analyze_callfunc(self.gx, node, merge=self.gx.merged_inh)
         target = funcs[0]  # XXX
 
-        print_function = self.library_func(funcs, "builtin", None, "__print")
-
         swap_env = False
         for name in (
             "execle",
@@ -2662,21 +2660,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             elif castnull and ast_utils.is_none(arg):
                 cast = True
                 self.append("((void *)(")
-
-            if (
-                print_function
-                and not formal.name.startswith("__kw_")
-                and not formal.name == 'offset'
-            ):
-                types = [t[0].ident for t in self.mergeinh[arg]]
-                if (
-                    "float_" in types
-                    or "int_" in types
-                    or "bool_" in types
-                    or "complex" in types
-                ):
-                    cast = True
-                    self.append("___box((")
 
             if arg in target.mv.defaults:
                 if self.mergeinh[arg] == set([(python.def_class(self.gx, "bool_"), 0)]):
