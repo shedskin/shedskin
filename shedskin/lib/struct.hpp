@@ -28,6 +28,7 @@ static inline bool swap_endian(char o) {
 
 __ss_int calcsize(str *fmt);
 __ss_int calcitems(str *fmt);
+int padding(char o, int pos, unsigned int itemsize);
 
 __ss_int unpack_int(char o, char c, unsigned int d, bytes *data, __ss_int *pos);
 bytes * unpack_bytes(char o, char c, unsigned int d, bytes *data, __ss_int *pos);
@@ -117,6 +118,7 @@ template<> inline void __pack_pascal(char c, bytes *t, bytes *result, size_t &po
 
 template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j, char &order, bytes *result, size_t &pos, __ss_int &ndigits, T arg) {
     unsigned int itemsize;
+    int pad;
     __ss_int n;
 
     for(; j<fmtlen; j++) {
@@ -158,6 +160,9 @@ template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j
             case 'q':
             case 'Q':
                 itemsize = get_itemsize(order, c);
+                pad = padding(order, pos, itemsize);
+                for(unsigned int k=0; k<pad; k++)
+                    result->unit[pos++] = '\x00';
                 __pack_int(c, arg, order, itemsize);
                 for(unsigned int k=0; k<itemsize; k++)
                     result->unit[pos++] = ((char *)buffy)[k];
@@ -170,6 +175,9 @@ template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j
             case 'd':
             case 'f':
                 itemsize = get_itemsize(order, c);
+                pad = padding(order, pos, itemsize);
+                for(unsigned int k=0; k<pad; k++)
+                    result->unit[pos++] = '\x00';
                 __pack_float(c, arg, order, itemsize);
                 if(swap_endian(order))
                     for(int k=(int)itemsize-1; k>=0; k--)
