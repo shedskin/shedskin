@@ -379,3 +379,6 @@ float_ *___box(__ss_float d) {
 complex_ *___box(complex c) {
     return new complex_(c);
 }
+pyobj *___box(long int) { // e.g. for print(None).. will remove anyway
+    return NULL;
+}

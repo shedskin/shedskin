@@ -211,9 +211,13 @@ def test_property():
     assert a.cash == 10
 
 
-def test_print():
+def test_print():  # TODO print to StringIO and check?
     print('')
     print('\n')
+    print(None)
+    print({1, 2})
+    print([])
+    print(1, 2.2, end='hoep', sep='--')
     assert True
 
 def test_range():
