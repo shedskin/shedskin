@@ -70,6 +70,14 @@ template<> inline void __mod_oct(str *result, size_t &pos, __ss_int arg) {
     result->unit += __str(arg, 8)->unit;
 }
 
+template <class T> void __mod_hex(str *result, size_t &pos, char c, T arg) {}
+template<> inline void __mod_hex(str *result, size_t &pos, char c, __ss_int arg) {
+    str *hval = __str(arg, 16);
+    if(c == 'X')
+        hval = hval->upper();
+    result->unit += hval->unit;
+}
+
 template <class T> void __mod_float(str *result, size_t &pos, T arg) {}
 template<> inline void __mod_float(str *result, size_t &pos, __ss_float arg) {
     result->unit += __str(arg)->unit;
@@ -131,6 +139,27 @@ template<class T> void __mod_one(str *fmt, unsigned int fmtlen, unsigned int &j,
                     break;
                 }
 
+            case 'x':
+            case 'X':
+                if(skip) {
+                    skip = 0;
+                    if(name) {
+                        __mod_hex(result, pos, c, __mod_dict_arg(arg, name));
+                        name = NULL;
+                        break;
+
+                    } else {
+                        __mod_hex(result, pos, c, arg);
+                        j++;
+                        return;
+                    }
+                } else {
+                    result->unit += c;
+                    break;
+                }
+
+            case 'e':
+            case 'E':
             case 'f':
             case 'F':
             case 'g':
