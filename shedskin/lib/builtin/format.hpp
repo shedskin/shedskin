@@ -56,12 +56,34 @@ template<class T> str *__moddict(str *v, dict<str *, T> *d) {
 }
 
 template<class T> void __mod_one(str *fmt, unsigned int fmtlen, unsigned int &j, str *result, size_t &pos, T arg) {
+    int namepos;
+    str *name = NULL;
 
     for(; j<fmtlen; j++) {
         char c = fmt->unit[j];
         switch(c) {
             case '%':
-                result->unit += '?';
+                break; // TODO start/stop checking fmt flags
+
+            case 'f':
+            case 's':
+            case 'd':
+                if(name) {
+                    result->unit += 'D';
+                    break;
+
+                } else {
+                    result->unit += 'T';
+                    j++;
+                    return;
+                }
+
+            case '(':
+                namepos = j+1;
+                break;
+
+            case ')':
+                name = new str(fmt->unit.c_str()+namepos, j-namepos-1);
                 break;
 
             default:
