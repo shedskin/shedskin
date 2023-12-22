@@ -7,6 +7,9 @@
 #include <Python.h>
 #endif
 
+#ifdef WIN32
+#define GC_NO_INLINE_STD_NEW
+#endif
 #include <gc/gc_allocator.h>
 #include <gc/gc_cpp.h>
 
