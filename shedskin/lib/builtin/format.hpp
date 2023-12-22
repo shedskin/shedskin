@@ -60,18 +60,18 @@ template <class V> V __mod_dict_arg(dict<str *, V> *d, str *name) {
     return d->__getitem__(name);
 }
 
-template <class T> void __mod_int(str *result, size_t &pos, T arg) {
-    result->unit += '*';
-}
+template <class T> void __mod_int(str *result, size_t &pos, T arg) {}
 template<> inline void __mod_int(str *result, size_t &pos, __ss_int arg) {
     result->unit += __str(arg)->unit;
 }
 
-template <class T> void __mod_float(str *result, size_t &pos, T arg) {
-    result->unit += '?';
-}
+template <class T> void __mod_float(str *result, size_t &pos, T arg) {}
 template<> inline void __mod_float(str *result, size_t &pos, __ss_float arg) {
-    result->unit += "<F>";
+    result->unit += __str(arg)->unit;
+}
+
+template <class T> void __mod_str(str *result, size_t &pos, T arg) {
+    result->unit += __str(arg)->unit;
 }
 
 template<class T> void __mod_one(str *fmt, unsigned int fmtlen, unsigned int &j, str *result, size_t &pos, T arg) {
@@ -114,15 +114,20 @@ template<class T> void __mod_one(str *fmt, unsigned int fmtlen, unsigned int &j,
 
             case 's':
                 skip = 0;
-                result->unit += "<S>";
-                j++;
-                return;
+                if(name) {
+                    __mod_str(result, pos, __mod_dict_arg(arg, name));
+                    name = NULL;
+                    break;
+                } else {
+                    __mod_str(result, pos, arg);
+                    j++;
+                    return;
+                }
 
             case '(':
                 namepos = j+1;
-                break;
-
-            case ')':
+                while(fmt->unit[++j] != ')')  // TODO out of bounds
+                    ;
                 name = new str(fmt->unit.c_str()+namepos, j-namepos);
                 break;
 
