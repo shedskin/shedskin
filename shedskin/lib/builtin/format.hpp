@@ -58,22 +58,25 @@ template<class T> str *__moddict(str *v, dict<str *, T> *d) {
 template<class T> void __mod_one(str *fmt, unsigned int fmtlen, unsigned int &j, str *result, size_t &pos, T arg) {
     int namepos;
     str *name = NULL;
+    int skip = 0;
 
     for(; j<fmtlen; j++) {
         char c = fmt->unit[j];
         switch(c) {
             case '%':
-                break; // TODO start/stop checking fmt flags
+                skip = 1;
+                break;
 
             case 'f':
             case 's':
             case 'd':
+                skip = 0;
                 if(name) {
-                    result->unit += 'D';
+                    result->unit += "<D>";
                     break;
 
                 } else {
-                    result->unit += 'T';
+                    result->unit += "<T>";
                     j++;
                     return;
                 }
@@ -87,7 +90,8 @@ template<class T> void __mod_one(str *fmt, unsigned int fmtlen, unsigned int &j,
                 break;
 
             default:
-                ;
+                if(!skip)
+                    result->unit += c;
         }
 
     }
