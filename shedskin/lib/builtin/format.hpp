@@ -55,6 +55,25 @@ template<class T> str *__moddict(str *v, dict<str *, T> *d) {
     return __mod4(v, vals);
 }
 
+template <class T> void *__mod_dict_arg(T t, str *name) { return NULL; }
+template <class V> V __mod_dict_arg(dict<str *, V> *d, str *name) {
+    return d->__getitem__(name);
+}
+
+template <class T> void __mod_int(str *result, size_t &pos, T arg) {
+    result->unit += '*';
+}
+template<> inline void __mod_int(str *result, size_t &pos, __ss_int arg) {
+    result->unit += __str(arg)->unit;
+}
+
+template <class T> void __mod_float(str *result, size_t &pos, T arg) {
+    result->unit += '?';
+}
+template<> inline void __mod_float(str *result, size_t &pos, __ss_float arg) {
+    result->unit += "<F>";
+}
+
 template<class T> void __mod_one(str *fmt, unsigned int fmtlen, unsigned int &j, str *result, size_t &pos, T arg) {
     int namepos;
     str *name = NULL;
@@ -67,26 +86,44 @@ template<class T> void __mod_one(str *fmt, unsigned int fmtlen, unsigned int &j,
                 skip = 1;
                 break;
 
-            case 'f':
-            case 's':
             case 'd':
                 skip = 0;
                 if(name) {
-                    result->unit += "<D>";
+                    __mod_int(result, pos, __mod_dict_arg(arg, name));
+                    name = NULL;
                     break;
 
                 } else {
-                    result->unit += "<T>";
+                    __mod_int(result, pos, arg);
                     j++;
                     return;
                 }
+
+            case 'f':
+                skip = 0;
+                if(name) {
+                    __mod_float(result, pos, __mod_dict_arg(arg, name));
+                    name = NULL;
+                    break;
+
+                } else {
+                    __mod_float(result, pos, arg);
+                    j++;
+                    return;
+                }
+
+            case 's':
+                skip = 0;
+                result->unit += "<S>";
+                j++;
+                return;
 
             case '(':
                 namepos = j+1;
                 break;
 
             case ')':
-                name = new str(fmt->unit.c_str()+namepos, j-namepos-1);
+                name = new str(fmt->unit.c_str()+namepos, j-namepos);
                 break;
 
             default:
@@ -139,7 +176,7 @@ template<class T> void __mod_one(str *fmt, unsigned int fmtlen, unsigned int &j,
 
 }
 
-template<class ... Args> str *__mod6(str *fmt, Args ... args) {
+template<class ... Args> str *__mod6(str *fmt, int count, Args ... args) {
     str *result = new str();
     size_t pos = 0;
     unsigned int fmtlen = fmt->__len__();
