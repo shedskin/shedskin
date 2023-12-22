@@ -55,3 +55,71 @@ template<class T> str *__moddict(str *v, dict<str *, T> *d) {
     return __mod4(v, vals);
 }
 
+template<class T> void __mod_one(str *fmt, unsigned int fmtlen, unsigned int &j, str *result, size_t &pos, T arg) {
+
+    for(; j<fmtlen; j++) {
+        char c = fmt->unit[j];
+        switch(c) {
+            case '%':
+                result->unit += '?';
+                break;
+
+            default:
+                ;
+        }
+
+    }
+
+/*        p = a1 = a2 = NULL;
+        if(asterisks==1) {
+            a1 = modgetitem(vals, i++);
+        } else if(asterisks==2) {
+            a1 = modgetitem(vals, i++);
+            a2 = modgetitem(vals, i++);
+        }
+
+        char c = fmt->c_str()[j];
+        if(c != '%')
+            p = modgetitem(vals, i++);
+
+        switch(c) {
+            case 'c':
+                __modfill(&fmt, mod_to_c2(p), &r, a1, a2);
+                break;
+            case 's':
+            case 'r':
+                __modfill(&fmt, p, &r, a1, a2, bytes);
+                break;
+            case 'd':
+            case 'i':
+            case 'o':
+            case 'u':
+            case 'x':
+            case 'X':
+                __modfill(&fmt, mod_to_int(p), &r, a1, a2);
+                break;
+            case 'e':
+            case 'E':
+            case 'f':
+            case 'F':
+            case 'g':
+            case 'G':
+            case 'H':
+                __modfill(&fmt, mod_to_float(p), &r, a1, a2);
+                break;
+            case '%':
+                __modfill(&fmt, NULL, &r, a1, a2);
+                break; */
+
+}
+
+template<class ... Args> str *__mod6(str *fmt, Args ... args) {
+    str *result = new str();
+    size_t pos = 0;
+    unsigned int fmtlen = fmt->__len__();
+    unsigned int j = 0;
+
+    (__mod_one(fmt, fmtlen, j, result, pos, args), ...);
+
+    return result;
+}
