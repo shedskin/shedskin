@@ -65,6 +65,11 @@ template<> inline void __mod_int(str *result, size_t &pos, __ss_int arg) {
     result->unit += __str(arg)->unit;
 }
 
+template <class T> void __mod_oct(str *result, size_t &pos, T arg) {}
+template<> inline void __mod_oct(str *result, size_t &pos, __ss_int arg) {
+    result->unit += __str(arg, 8)->unit;
+}
+
 template <class T> void __mod_float(str *result, size_t &pos, T arg) {}
 template<> inline void __mod_float(str *result, size_t &pos, __ss_float arg) {
     result->unit += __str(arg)->unit;
@@ -83,53 +88,99 @@ template<class T> void __mod_one(str *fmt, unsigned int fmtlen, unsigned int &j,
         char c = fmt->unit[j];
         switch(c) {
             case '%':
-                skip = 1;
+                if(skip)
+                    result->unit += '%';
+                skip = 1-skip;
                 break;
 
             case 'd':
-                skip = 0;
-                if(name) {
-                    __mod_int(result, pos, __mod_dict_arg(arg, name));
-                    name = NULL;
-                    break;
+            case 'i':
+            case 'u':
+                if(skip) {
+                    skip = 0;
+                    if(name) {
+                        __mod_int(result, pos, __mod_dict_arg(arg, name));
+                        name = NULL;
+                        break;
 
+                    } else {
+                        __mod_int(result, pos, arg);
+                        j++;
+                        return;
+                    }
                 } else {
-                    __mod_int(result, pos, arg);
-                    j++;
-                    return;
+                    result->unit += c;
+                    break;
+                }
+
+            case 'o':
+                if(skip) {
+                    skip = 0;
+                    if(name) {
+                        __mod_oct(result, pos, __mod_dict_arg(arg, name));
+                        name = NULL;
+                        break;
+
+                    } else {
+                        __mod_oct(result, pos, arg);
+                        j++;
+                        return;
+                    }
+                } else {
+                    result->unit += c;
+                    break;
                 }
 
             case 'f':
-                skip = 0;
-                if(name) {
-                    __mod_float(result, pos, __mod_dict_arg(arg, name));
-                    name = NULL;
-                    break;
+            case 'F':
+            case 'g':
+            case 'G':
+                if(skip) {
+                    skip = 0;
+                    if(name) {
+                        __mod_float(result, pos, __mod_dict_arg(arg, name));
+                        name = NULL;
+                        break;
 
+                    } else {
+                        __mod_float(result, pos, arg);
+                        j++;
+                        return;
+                    }
                 } else {
-                    __mod_float(result, pos, arg);
-                    j++;
-                    return;
+                    result->unit += c;
+                    break;
                 }
 
             case 's':
-                skip = 0;
-                if(name) {
-                    __mod_str(result, pos, __mod_dict_arg(arg, name));
-                    name = NULL;
-                    break;
+                if(skip) {
+                    skip = 0;
+                    if(name) {
+                        __mod_str(result, pos, __mod_dict_arg(arg, name));
+                        name = NULL;
+                        break;
+                    } else {
+                        __mod_str(result, pos, arg);
+                        j++;
+                        return;
+                    }
                 } else {
-                    __mod_str(result, pos, arg);
-                    j++;
-                    return;
+                    result->unit += c;
+                    break;
                 }
 
             case '(':
-                namepos = j+1;
-                while(fmt->unit[++j] != ')')  // TODO out of bounds
-                    ;
-                name = new str(fmt->unit.c_str()+namepos, j-namepos);
-                break;
+                if(skip) {
+                    namepos = j+1;
+                    while(fmt->unit[++j] != ')')  // TODO out of bounds
+                        ;
+                    name = new str(fmt->unit.c_str()+namepos, j-namepos);
+                    break;
+                } else {
+                    result->unit += c;
+                    break;
+                }
+
 
             default:
                 if(!skip)
@@ -137,48 +188,6 @@ template<class T> void __mod_one(str *fmt, unsigned int fmtlen, unsigned int &j,
         }
 
     }
-
-/*        p = a1 = a2 = NULL;
-        if(asterisks==1) {
-            a1 = modgetitem(vals, i++);
-        } else if(asterisks==2) {
-            a1 = modgetitem(vals, i++);
-            a2 = modgetitem(vals, i++);
-        }
-
-        char c = fmt->c_str()[j];
-        if(c != '%')
-            p = modgetitem(vals, i++);
-
-        switch(c) {
-            case 'c':
-                __modfill(&fmt, mod_to_c2(p), &r, a1, a2);
-                break;
-            case 's':
-            case 'r':
-                __modfill(&fmt, p, &r, a1, a2, bytes);
-                break;
-            case 'd':
-            case 'i':
-            case 'o':
-            case 'u':
-            case 'x':
-            case 'X':
-                __modfill(&fmt, mod_to_int(p), &r, a1, a2);
-                break;
-            case 'e':
-            case 'E':
-            case 'f':
-            case 'F':
-            case 'g':
-            case 'G':
-            case 'H':
-                __modfill(&fmt, mod_to_float(p), &r, a1, a2);
-                break;
-            case '%':
-                __modfill(&fmt, NULL, &r, a1, a2);
-                break; */
-
 }
 
 template<class ... Args> str *__mod6(str *fmt, int count, Args ... args) {
