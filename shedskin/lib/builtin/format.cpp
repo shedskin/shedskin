@@ -44,28 +44,6 @@ int asprintf(char **ret, const char *format, ...)
 }
 #endif
 
-size_t __fmtpos(str *fmt) {
-    size_t i = fmt->unit.find('%');
-    if(i == std::string::npos)
-        return std::string::npos;
-    return fmt->unit.find_first_not_of(__fmtchars, i+1);
-}
-
-size_t __fmtpos2(str *fmt) {
-    size_t i = 0;
-    while((i = fmt->unit.find('%', i)) != std::string::npos) {
-        if(i != fmt->unit.size()-1) {
-            char nextchar = fmt->unit[i+1];
-            if(nextchar == '%')
-                i++;
-            else if(nextchar == '(')
-                return i;
-        }
-        i++;
-    }
-    return -1;
-}
-
 template<class T> str *do_asprintf(const char *fmt, T t, pyobj *a1, pyobj *a2) {
     char *d;
     int x;
