@@ -2,6 +2,10 @@
 
 /* printf-style string formatting */
 
+#if defined(_WIN32) || defined(WIN32) || defined(__sun)
+int asprintf(char **ret, const char *format, ...);
+#endif
+
 str *__escape_bytes(bytes *t);
 
 extern str *nl;
