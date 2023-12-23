@@ -673,5 +673,8 @@ template<class ... Args> void print(int n, file *f, str *end, str *sep, Args ...
         f->write(end);
     }
     else
-        printf("%s%s", s->c_str(), end->c_str());
+        for(unsigned int i=0; i<s->unit.size(); i++)
+            printf("%c", s->unit[i]);
+        for(unsigned int i=0; i<end->unit.size(); i++)
+            printf("%c", end->unit[i]);
 }
