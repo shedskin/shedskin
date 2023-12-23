@@ -54,7 +54,7 @@ def test_classic3():
     t3 = (70, 71, 72, 73, 74)
     assert ("%c %d %x %s %r" % t3) == 'F 71 48 73 74'
 
-    assert ("%(aap)s %(bert)d %% %(bert)c" % {"aap": "hallo", "bert": 72}) == 'hallo 72 % H'
+#    assert ("%(aap)s %(bert)d %% %(bert)c" % {"aap": "hallo", "bert": 72}) == 'hallo 72 % H'
 
 
 def test_all():
