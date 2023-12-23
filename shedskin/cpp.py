@@ -3343,60 +3343,29 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.impl_visit_binary(node.left, node.right, "__mod__", "%", func)
             return
 
-        # --- str % non-constant dict/tuple
+        # --- str % non-constant tuple
         if (
-            not isinstance(node.right, (ast.Tuple, ast.Dict))
+            not isinstance(node.right, ast.Tuple)
             and node.right in self.gx.merged_inh
-        ):  # XXX
-            if [t for t in self.gx.merged_inh[node.right] if t[0].ident == "dict"]:
-                self.visitm("__moddict(", node.left, ", ", node.right, ")", func)
-                return
-            elif [
-                t
-                for t in self.gx.merged_inh[node.right]
-                if t[0].ident in ["tuple", "tuple2"]
-            ]:
-                self.visitm("__modtuple(", node.left, ", ", node.right, ")", func)
-                return
+            and [
+                 t
+                 for t in self.gx.merged_inh[node.right]
+                 if t[0].ident in ["tuple", "tuple2"]
+                ]
+        ):
+            self.visitm("__modtuple(", node.left, ", ", node.right, ")", func)
+            return
 
-        # --- str % constant-dict:
-        if isinstance(node.right, ast.Dict):  # XXX geen str keys
-            self.visitm(
-                "__modcd(",
-                node.left,
-                ", ",
-                "new list<str *>(%d, " % len(node.right.keys),
-                func,
-            )
-            self.append(
-                ", ".join(
-                    ('new str("%s")' % key.s)
-                    for key, value in zip(node.right.keys, node.right.values)
-                )
-            )
-            self.append(")")
-            nodes = list(node.right.values)
+        # --- str % constant/non tuple
+        if isinstance(node.right, ast.Tuple):
+            nodes = node.right.elts
         else:
-            self.visitm("__modct(", node.left, func)
-            # --- str % constant-tuple
-            if isinstance(node.right, ast.Tuple):
-                nodes = node.right.elts
-
-            # --- str % non-tuple/non-dict
-            else:
-                nodes = [node.right]
-            self.append(", %d" % len(nodes))
+            nodes = [node.right]
 
         # --- visit nodes, boxing scalars
+        self.visitm("__mod6(", node.left, ', ', str(len(nodes)), func)
         for n in nodes:
-            if [
-                clname
-                for clname in ("float_", "int_", "bool_", "complex")
-                if python.def_class(self.gx, clname) in [t[0] for t in self.mergeinh[n]]
-            ]:
-                self.visitm(", ___box(", n, ")", func)
-            else:
-                self.visitm(", ", n, func)
+            self.visitm(", ", n, func)
         self.append(")")
 
     def attr_var_ref(self, node, ident, module=None):  # XXX blegh
