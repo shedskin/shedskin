@@ -167,7 +167,6 @@ template<> str *repr(void *) { return new str("None"); }
 template<> str *repr(long unsigned int) { return new str("?"); } /* ? */
 
 str *__str(void *) { return new str("None"); }
-str *__str(long unsigned int) { return new str("?"); }
 
 /* get class pointer */
 

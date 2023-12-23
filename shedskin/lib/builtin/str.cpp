@@ -843,3 +843,7 @@ template<> str *__str(__ss_float t) {
     }
     return new str(s);
 }
+
+template<> str *__str(long unsigned int) {
+    return new str("error");
+}
