@@ -845,5 +845,9 @@ template<> str *__str(__ss_float t) {
 }
 
 template<> str *__str(long unsigned int) {
-    return new str("error");
+    return new str("None");
+}
+
+template<> str *__str(long int) {
+    return new str("None");
 }
