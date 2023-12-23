@@ -13,9 +13,14 @@ template <class V> V __mod_dict_arg(dict<str *, V> *d, str *name) {
     return d->__getitem__(name);
 }
 
-template <class T> void __mod_int(str *result, size_t &pos, T arg) {}
-template<> inline void __mod_int(str *result, size_t &pos, __ss_int arg) {
-    result->unit += __str(arg)->unit;
+template <class T> void __mod_int(str *result, size_t &pos, const char *fstr, T arg) {}
+template<> inline void __mod_int(str *result, size_t &pos, const char *fstr, __ss_int arg) {
+    char *d;
+    int x;
+    // TODO SS_LONG
+    x = asprintf(&d, fstr, arg); // TODO modern C++ replacement for asprintf?
+    result->unit += d;
+    free(d);
 }
 
 template <class T> void __mod_oct(str *result, size_t &pos, T arg) {}
@@ -31,9 +36,14 @@ template<> inline void __mod_hex(str *result, size_t &pos, char c, __ss_int arg)
     result->unit += hval->unit;
 }
 
-template <class T> void __mod_float(str *result, size_t &pos, T arg) {}
-template<> inline void __mod_float(str *result, size_t &pos, __ss_float arg) {
-    result->unit += __str(arg)->unit;
+template <class T> void __mod_float(str *result, size_t &pos, const char *fstr, T arg) {}
+template<> inline void __mod_float(str *result, size_t &pos, const char *fstr, __ss_float arg) {
+    char *d;
+    int x;
+    // TODO SS_LONG
+    x = asprintf(&d, fstr, arg); // TODO modern C++ replacement for asprintf?
+    result->unit += d;
+    free(d);
 }
 
 template <class T> void __mod_str(str *result, size_t &pos, char c, T arg) {
@@ -93,18 +103,22 @@ template<class T> void __mod_one(str *fmt, unsigned int fmtlen, unsigned int &j,
         size_t pos = fmt->unit.find_first_not_of(fmtchars, j);
         j += (pos-startpos);
 
+        c = fmt->unit[j++];
+
+        std::string fstr = "%";
+        fstr += fmt->unit.substr(startpos, j-startpos-1);
+        fstr += c;
 
         /* check format flag */
-        c = fmt->unit[j++];
         switch(c) {
             case 'd':
             case 'i':
             case 'u':
                 if(name) {
-                    __mod_int(result, pos, __mod_dict_arg(arg, name));
+                    __mod_int(result, pos, fstr.c_str(), __mod_dict_arg(arg, name));
                     break;
                 } else {
-                    __mod_int(result, pos, arg);
+                    __mod_int(result, pos, fstr.c_str(), arg);
                     return;
                 }
 
@@ -134,10 +148,10 @@ template<class T> void __mod_one(str *fmt, unsigned int fmtlen, unsigned int &j,
             case 'g':
             case 'G':
                 if(name) {
-                    __mod_float(result, pos, __mod_dict_arg(arg, name));
+                    __mod_float(result, pos, fstr.c_str(), __mod_dict_arg(arg, name));
                     break;
                 } else {
-                    __mod_float(result, pos, arg);
+                    __mod_float(result, pos, fstr.c_str(), arg);
                     return;
                 }
                 break;

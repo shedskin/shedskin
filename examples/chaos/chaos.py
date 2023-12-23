@@ -35,7 +35,7 @@ class GVector(object):
     def __mul__(self, other):
         v = GVector(self.x * other, self.y * other, self.z * other)
         return v
-    
+
     def linear_combination(self, other, l1, l2):
         v = GVector(self.x * l1 + other.x * l2,
                     self.y * l1 + other.y * l2,
@@ -118,7 +118,7 @@ degree of the Spline."""
     def __repr__(self):
         return "Spline(%r, %r, %r)" % (self.points, self.degree, self.knots)
 
-        
+
 def save_im(im, fn):
     f = open(fn, "wb")
     maxval = 255
