@@ -70,7 +70,7 @@ struct_time::struct_time(tuple2<__ss_int, __ss_int> *_tuple) {
 
 str *struct_time::__repr__() {
 
-    return __modct(const_1, 9, ___box(this->tm_year), ___box(this->tm_mon), ___box(this->tm_mday), ___box(this->tm_hour), ___box(this->tm_min), ___box(this->tm_sec), ___box(this->tm_wday), ___box(this->tm_yday), ___box(this->tm_isdst));
+    return __mod6(const_1, 9, this->tm_year, this->tm_mon, this->tm_mday, this->tm_hour, this->tm_min, this->tm_sec, this->tm_wday, this->tm_yday, this->tm_isdst);
 }
 
 tm* tuple2tm(struct_time* tuple) {

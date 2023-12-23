@@ -1095,8 +1095,6 @@ template<> str *bin(int a);
 template<> str *bin(__ss_bool b);
 
 str *__mod4(str *fmt, list<pyobj *> *vals, bool bytes=false);
-str *__modct(str *fmt, int n, ...);
-bytes *__modct(bytes *fmt, int n, ...);
 
 template<class T> str *__modtuple(str *fmt, tuple2<T,T> *t);
 template<class A, class B> str *__modtuple(str *fmt, tuple2<A,B> *t);
@@ -1191,6 +1189,7 @@ template<> __ss_float __float(str *s);
 
 template<class T> str *__str(T t) { if (!t) return new str("None"); return t->__str__(); }
 template<> str *__str(__ss_float t);
+template<> str *__str(long unsigned int t); /* ? */
 #ifdef __SS_LONG
 str *__str(__ss_int t, __ss_int base=10);
 #endif
@@ -1262,6 +1261,7 @@ template<> str *repr(__ss_int t);
 template<> str *repr(int t);
 template<> str *repr(__ss_bool b);
 template<> str *repr(void *t);
+template<> str *repr(long unsigned int t);
 
 #ifndef __SS_NOASSERT
 #define ASSERT(x, y) if(!(x)) throw new AssertionError(y);

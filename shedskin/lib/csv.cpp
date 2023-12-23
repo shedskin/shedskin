@@ -245,7 +245,7 @@ void *reader::parse_process_char(str *c) {
             this->state = IN_FIELD;
         }
         else {
-            throw ((new Error(__modct(const_13, 2, dialect->delimiter, dialect->quotechar))));
+            throw ((new Error(__mod6(const_13, 2, dialect->delimiter, dialect->quotechar))));
         }
     }
     else if (this->state==EAT_CRNL) {
@@ -325,7 +325,7 @@ void *reader::parse_save_field() {
 void *reader::parse_add_char(str *c) {
     
     if ((len(this->field)>=_field_limit)) {
-        throw ((new Error(__modct(const_17, 1, ___box(_field_limit)))));
+        throw ((new Error(__mod6(const_17, 1, _field_limit))));
     }
     (this->field)->append(c);
     return NULL;
@@ -579,7 +579,7 @@ void *DictWriter::__init__(file *f, list<str *> *fieldnames, str *restval, str *
     this->fieldnames = fieldnames;
     this->restval = restval;
     if ((!(const_3)->__contains__(extrasaction->lower()))) {
-        throw ((new ValueError(__modct(const_23, 1, extrasaction))));
+        throw ((new ValueError(__mod6(const_23, 1, extrasaction))));
     }
     this->extrasaction = extrasaction;
     this->_writer = (new writer(f, dialect, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict));

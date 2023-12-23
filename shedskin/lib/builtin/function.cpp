@@ -141,11 +141,11 @@ __ss_int __xrange::__getitem__(__ss_int i) {
 str *__xrange::__repr__() {
     if(s==1) {
         if(a==0)
-            return __modct(new str("range(%d)"), 1, ___box(b));
+            return __mod6(new str("range(%d)"), 1, b);
         else
-            return __modct(new str("range(%d, %d)"), 2, ___box(a), ___box(b));
+            return __mod6(new str("range(%d, %d)"), 2, a, b);
     }
-    return __modct(new str("range(%d, %d, %d)"), 3, ___box(a), ___box(b), ___box(s)); /* XXX */
+    return __mod6(new str("range(%d, %d, %d)"), 3, a, b, s); /* XXX */
 }
 
 __xrange *range(__ss_int a, __ss_int b, __ss_int s) { return new __xrange(a,b,s); }
@@ -164,8 +164,10 @@ template<> str *repr(__ss_int i) { return __str(i); }
 template<> str *repr(int i) { return __str(i); }
 template<> str *repr(__ss_bool b) { return b.value?(new str("True")):(new str("False")); }
 template<> str *repr(void *) { return new str("None"); }
+template<> str *repr(long unsigned int) { return new str("?"); } /* ? */
 
-str *__str(void *) { return new str("void"); }
+str *__str(void *) { return new str("None"); }
+str *__str(long unsigned int) { return new str("?"); }
 
 /* get class pointer */
 
