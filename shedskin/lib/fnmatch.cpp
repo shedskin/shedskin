@@ -159,7 +159,7 @@ str *translate(str *pat) {
                 else if (__eq(stuff->__getitem__(0), const_16)) {
                     stuff = (const_14)->__add__(stuff);
                 }
-                res = __modct(const_17, 2, res, stuff);
+                res = __mod6(const_17, 2, res, stuff);
             }
         }
         else {

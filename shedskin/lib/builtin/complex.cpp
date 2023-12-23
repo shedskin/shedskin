@@ -61,13 +61,13 @@ complex complex::parsevalue(str *s) {
 str *complex::__repr__() {
     str *left, *middle, *right;
     if(real==0)
-        return __modct(new str("%gj"), 1, ___box(imag));
-    left = __modct(new str("(%g"), 1, ___box(real));
+        return __mod6(new str("%gj"), 1, imag);
+    left = __mod6(new str("(%g"), 1, real);
     if(imag<0)
         middle = new str("");
     else
         middle = new str("+");
-    right = __modct(new str("%gj)"), 1, ___box(imag));
+    right = __mod6(new str("%gj)"), 1, imag);
     return __add_strs(3, left, middle, right);
 }
 

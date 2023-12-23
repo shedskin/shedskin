@@ -319,29 +319,6 @@ float_ *mod_to_float(pyobj *t) {
     throw new TypeError(new str("float argument required"));
 }
 
-str *__modct(str *fmt, int n, ...) {
-     list<pyobj *> *vals = new list<pyobj *>();
-     va_list args;
-     va_start(args, n);
-     for(int i=0; i<n; i++)
-         vals->append(va_arg(args, pyobj *));
-     va_end(args);
-     str *s = __mod4(fmt, vals);
-     return s;
-}
-
-/* TODO optimize later */
-bytes *__modct(bytes *fmt, int n, ...) {
-     list<pyobj *> *vals = new list<pyobj *>();
-     va_list args;
-     va_start(args, n);
-     for(int i=0; i<n; i++)
-         vals->append(va_arg(args, pyobj *));
-     va_end(args);
-     str *s = __mod4(new str(fmt->unit), vals, true);
-     return new bytes(s->unit);
-}
-
 int_ *___box(__ss_int i) {
     return new int_(i);
 }
@@ -357,3 +334,4 @@ complex_ *___box(complex c) {
 pyobj *___box(long int) { // e.g. for print(None).. will remove anyway
     return NULL;
 }
+

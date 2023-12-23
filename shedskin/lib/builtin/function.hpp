@@ -576,7 +576,7 @@ template<class A> __ss_bool all(A *iter) {
 /* ord, chr, hex, oct, bin */
 
 static void __throw_ord_exc(size_t s) { /* improve inlining */
-    throw new TypeError(__modct(new str("ord() expected a character, but string of length %d found"), 1, ___box(s)));
+    throw new TypeError(__mod6(new str("ord() expected a character, but string of length %d found"), 1, s));
 }
 
 inline __ss_int ord(str *s) {

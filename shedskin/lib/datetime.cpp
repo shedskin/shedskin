@@ -214,14 +214,14 @@ str *date::isoformat() {
 }
 
 str *date::__str__() {
-    return __modct(date_format, 3, ___box(this->year), ___box(this->month), ___box(this->day));
+    return __mod6(date_format, 3, this->year, this->month, this->day);
 }
 
 str *date::ctime() {
     __ss_int wday = weekday();
 
-    return __modct(ctime_format, 7, DayNames->__getitem__(wday), MonthNames->__getitem__(month-1),
-                        ___box(day), ___box(0), ___box(0), ___box(0), ___box(year));
+    return __mod6(ctime_format, 7, DayNames->__getitem__(wday), MonthNames->__getitem__(month-1),
+                        day, 0, 0, 0, year);
 }
 
 str *date::strftime(str *format) {
@@ -286,7 +286,7 @@ str *tzinfo::minutes_to_str(datetime *dt) {
 	}
 	else
 		f = str("+%02d:%02d");
-	return __modct(&f,2,___box(offset->seconds/3600),___box((offset->seconds/60)%60));
+	return __mod6(&f,2,offset->seconds/3600,(offset->seconds/60)%60);
 }
 
 
@@ -686,9 +686,9 @@ str *datetime::isoformat(str *sep) {
         throw new TypeError(new str("isoformat() argument 1 must be char, not str"));
     }
 	str *r;
-	r=__add_strs(3,date::__str__(),sep,__modct(hour_format2, 3, ___box(hour), ___box(minute), ___box(second)));
+	r=__add_strs(3,date::__str__(),sep,__mod6(hour_format2, 3, hour, minute, second));
     if(microsecond!=0)
-        r=__modct(new str("%s.%06d"),2, r, ___box(microsecond));
+        r=__mod6(new str("%s.%06d"),2, r, microsecond);
     if(this->_tzinfo!=NULL)
 		return r->__add__(this->_tzinfo->minutes_to_str(this));
 	return r;
@@ -701,8 +701,8 @@ str *datetime::__str__() {
 str *datetime::ctime() {
     __ss_int wday = weekday();
 
-    return __modct(ctime_format, 7, DayNames->__getitem__(wday), MonthNames->__getitem__(month-1),
-                        ___box(day), ___box(hour), ___box(minute), ___box(second), ___box(year));
+    return __mod6(ctime_format, 7, DayNames->__getitem__(wday), MonthNames->__getitem__(month-1),
+                        day, hour, minute, second, year);
 }
 
 str *datetime::strftime(str *format) {
@@ -763,9 +763,9 @@ str *time::isoformat() {
 str *time::__str__() {
     str * s;
     if(microsecond==0)
-        s = __modct(hour_format2, 3, ___box(hour), ___box(minute), ___box(second));
+        s = __mod6(hour_format2, 3, hour, minute, second);
     else
-        s = __modct(point_string,2,__modct(hour_format2, 3,___box(hour), ___box(minute), ___box(second)),___box(microsecond));
+        s = __mod6(point_string,2,__mod6(hour_format2, 3,hour, minute, second),microsecond);
     if(_tzinfo!=NULL)
         return s->__add__(_tzinfo->minutes_to_str(NULL));
     return s;
@@ -895,17 +895,17 @@ timedelta::timedelta(double days, double seconds, double microseconds, double mi
 str *timedelta::__str__() {
     str *s;
     if(days==0)
-        s=__modct(hour_format1, 3, ___box(seconds/3600), ___box((seconds%3600)/60), ___box(seconds%60));
+        s=__mod6(hour_format1, 3, seconds/3600, (seconds%3600)/60, seconds%60);
     else if(days==1)
-        s=__modct(one_day_string,3,___box(seconds/3600), ___box((seconds%3600)/60), ___box(seconds%60));
+        s=__mod6(one_day_string,3,seconds/3600, (seconds%3600)/60, seconds%60);
     else if(days==-1)
-        s=__modct(minus_one_day_string,3,___box(seconds/3600), ___box((seconds%3600)/60), ___box(seconds%60));
+        s=__mod6(minus_one_day_string,3,seconds/3600, (seconds%3600)/60, seconds%60);
     else
-        s=__modct(multiple_days_string,4,___box(days),___box(seconds/3600), ___box((seconds%3600)/60), ___box(seconds%60));
+        s=__mod6(multiple_days_string,4,days,seconds/3600, (seconds%3600)/60, seconds%60);
     if(microseconds==0)
         return s;
     else
-        return __modct(point_string,2,s,___box(microseconds));
+        return __mod6(point_string,2,s,microseconds);
 }
 
 timedelta *timedelta::__add__(timedelta *other) {
