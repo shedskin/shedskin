@@ -651,11 +651,21 @@ template<> class_ *__type(__ss_float d);
 
 /* print .., */
 
-template<class ... Args> void print(int n, file *f, str *end, str *sep, Args ... args) {
-    __print_cache->units.resize(0);
-    (__print_cache->append(___box(args)), ...);
+template<class T> void __print_elem(str *result, T t, size_t &count, str *sep) {
+    result->unit += __str(t)->unit;
+    count--;
+    if(count != 0)
+        result->unit += sep->unit;
+}
 
-    str *s = __mod5(__print_cache, sep?sep:sp);
+template<class ... Args> void print(int n, file *f, str *end, str *sep, Args ... args) {
+    str *s = new str();
+    size_t count = sizeof...(args);
+    if(!sep)
+        sep = sp;
+
+    (__print_elem(s, args, count, sep), ...);
+
     if(!end)
         end = nl;
     if(f) {
