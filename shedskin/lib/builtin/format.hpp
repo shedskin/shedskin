@@ -26,18 +26,6 @@ extern str *nl;
 extern str *sp;
 extern str *sep;
 
-template<class T> str *__modtuple(str *fmt, tuple2<T,T> *t) {
-    list<pyobj *> *vals = new list<pyobj *>();
-    for(int i=0;i<len(t);i++)
-        vals->append(___box(t->__getitem__(i)));
-    return __mod4(fmt, vals);
-}
-
-template<class A, class B> str *__modtuple(str *fmt, tuple2<A,B> *t) {
-    list<pyobj *> *vals = new list<pyobj *>(2, ___box(t->__getfirst__()), ___box(t->__getsecond__()));
-    return __mod4(fmt, vals);
-}
-
 template <class T> void *__mod_dict_arg(T t, str *name) { return NULL; }
 template <class V> V __mod_dict_arg(dict<str *, V> *d, str *name) {
     return d->__getitem__(name);
@@ -213,6 +201,26 @@ template<class ... Args> str *__mod6(str *fmt, int count, Args ... args) {
     unsigned int j = 0;
 
     (__mod_one(fmt, fmtlen, j, result, pos, args), ...);
+
+    for(; j < fmtlen; j++)
+        result->unit += fmt->unit[j];
+
+    return result;
+}
+
+template<class A, class B> str *__modtuple(str *fmt, tuple2<A,B> *t) {
+    return __mod6(fmt, 2, t->__getfirst__(), t->__getsecond__());
+}
+
+template<class T> str *__modtuple(str *fmt, tuple2<T,T> *t) {
+    str *result = new str();
+    size_t pos = 0;
+    unsigned int fmtlen = fmt->__len__();
+    unsigned int j = 0;
+
+    __ss_int l = len(t);
+    for(__ss_int i=0;i<l; i++)
+        __mod_one(fmt, fmtlen, j, result, pos, t->units[i]);
 
     for(; j < fmtlen; j++)
         result->unit += fmt->unit[j];
