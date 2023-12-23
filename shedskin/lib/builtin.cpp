@@ -26,10 +26,9 @@ __GC_VECTOR(str *) __char_cache;
 __ss_bool True;
 __ss_bool False;
 
-list<str *> *__join_cache, *__mod5_cache;
+list<str *> *__join_cache;
 list<bytes *> *__join_cache_bin;
 str *__case_swap_cache;
-list<pyobj *> *__print_cache;
 
 char __str_cache[4000];
 
@@ -94,8 +93,6 @@ void __init() {
 
     __join_cache = new list<str *>();
     __join_cache_bin = new list<bytes *>();
-    __print_cache = new list<pyobj *>();
-    __mod5_cache = new list<str *>();
 
     for(int i=0; i<1000; i++) {
         __str_cache[4*i] = '0' + (char)(i % 10);

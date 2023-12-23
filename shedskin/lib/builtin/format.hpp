@@ -14,14 +14,12 @@ pyobj *___box(long int); // None
 size_t __fmtpos(str *fmt);
 size_t __fmtpos2(str *fmt);
 void __modfill(str **fmt, pyobj *t, str **s, pyobj *a1, pyobj *a2, bool bytes=false);
-str *__mod5(list<pyobj *> *vals, str *sep);
 str *mod_to_c2(pyobj *t);
 int_ *mod_to_int(pyobj *t);
 float_ *mod_to_float(pyobj *t);
 
 str *__escape_bytes(bytes *t);
 
-extern list<pyobj *> *__print_cache;
 extern str *nl;
 extern str *sp;
 extern str *sep;
