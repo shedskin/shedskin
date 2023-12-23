@@ -38,23 +38,6 @@ template<class A, class B> str *__modtuple(str *fmt, tuple2<A,B> *t) {
     return __mod4(fmt, vals);
 }
 
-template<class T> str *__moddict(str *v, dict<str *, T> *d) {
-    str *const_6 = new str(")");
-    int i, pos, pos2;
-    list<str *> *names = (new list<str *>());
-
-    while((pos = (__ss_int)__fmtpos2(v)) != -1) {
-        pos2 = v->find(const_6, pos);
-        names->append(v->__slice__(3, (pos+2), pos2, 0));
-        v = (v->__slice__(2, 0, (pos+1), 0))->__add__(v->__slice__(1, (pos2+1), 0, 0));
-    }
-
-    list<pyobj *> *vals = new list<pyobj *>();
-    for(i=0;i<len(names);i++)
-        vals->append(___box(d->__getitem__(names->__getitem__(i))));
-    return __mod4(v, vals);
-}
-
 template <class T> void *__mod_dict_arg(T t, str *name) { return NULL; }
 template <class V> V __mod_dict_arg(dict<str *, V> *d, str *name) {
     return d->__getitem__(name);
@@ -83,8 +66,11 @@ template<> inline void __mod_float(str *result, size_t &pos, __ss_float arg) {
     result->unit += __str(arg)->unit;
 }
 
-template <class T> void __mod_str(str *result, size_t &pos, T arg) {
-    result->unit += __str(arg)->unit;
+template <class T> void __mod_str(str *result, size_t &pos, char c, T arg) {
+    if(c=='s')
+        result->unit += __str(arg)->unit;
+    else
+        result->unit += repr(arg)->unit;
 }
 
 template<class T> void __mod_one(str *fmt, unsigned int fmtlen, unsigned int &j, str *result, size_t &pos, T arg) {
@@ -182,14 +168,15 @@ template<class T> void __mod_one(str *fmt, unsigned int fmtlen, unsigned int &j,
                 }
 
             case 's':
+            case 'r':
                 if(skip) {
                     skip = 0;
                     if(name) {
-                        __mod_str(result, pos, __mod_dict_arg(arg, name));
+                        __mod_str(result, pos, c, __mod_dict_arg(arg, name));
                         name = NULL;
                         break;
                     } else {
-                        __mod_str(result, pos, arg);
+                        __mod_str(result, pos, c, arg);
                         j++;
                         return;
                     }
