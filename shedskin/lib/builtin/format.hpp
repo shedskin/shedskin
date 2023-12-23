@@ -1,15 +1,6 @@
-/* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2023 Mark Dufour and contributors; License Expat (See LICENSE) */
 
-/* boxing */
-
-template<class T> T ___box(T t) { return t; } /* XXX */
-int_ *___box(__ss_int);
-bool_ *___box(__ss_bool);
-float_ *___box(__ss_float);
-complex_ *___box(complex);
-pyobj *___box(long int); // None
-
-/* string formatting */
+/* printf-style string formatting */
 
 size_t __fmtpos(str *fmt);
 size_t __fmtpos2(str *fmt);
