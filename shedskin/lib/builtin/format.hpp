@@ -42,6 +42,12 @@ template <class T> void __mod_str(str *result, size_t &pos, char c, T arg) {
     else
         result->unit += repr(arg)->unit;
 }
+template<> inline void __mod_str(str *result, size_t &pos, char c, bytes *arg) {
+    if(c=='s')
+        result->unit += arg->unit;
+    else
+        result->unit += repr(arg)->unit;
+}
 
 template <class T> void __mod_char(str *result, size_t &pos, char c, T arg) {} /* TODO error */
 template<> inline void __mod_char(str *result, size_t &pos, char c, __ss_int arg) {
