@@ -1161,17 +1161,13 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         elif type(node.op) == ast.Pow:
             self.fake_func(node, node.left, "__pow__", [node.right], func)
         elif type(node.op) == ast.Mod:
-            if isinstance(node.right, (ast.Tuple, ast.Dict)):
+            if isinstance(node.right, ast.Tuple):
                 self.fake_func(node, node.left, "__mod__", [], func)
-                if isinstance(node.right, ast.Tuple):
-                    for child in node.right.elts:
-                        self.visit(child, func)
-                        self.fake_func(
-                            infer.inode(self.gx, child), child, "__str__", [], func
-                        )
-                else:
-                    for child in ast.iter_child_nodes(node.right):
-                        self.visit(child, func)
+                for child in node.right.elts:
+                    self.visit(child, func)
+                    self.fake_func(
+                        infer.inode(self.gx, child), child, "__str__", [], func
+                    )
             else:
                 self.fake_func(node, node.left, "__mod__", [node.right], func)
         elif type(node.op) == ast.LShift:
