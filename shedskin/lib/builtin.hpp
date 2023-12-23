@@ -1097,7 +1097,6 @@ template<> str *bin(__ss_bool b);
 str *__mod4(str *fmt, list<pyobj *> *vals, bool bytes=false);
 str *__modct(str *fmt, int n, ...);
 bytes *__modct(bytes *fmt, int n, ...);
-str *__modcd(str *fmt, list<str *> *l, ...);
 
 template<class T> str *__modtuple(str *fmt, tuple2<T,T> *t);
 template<class A, class B> str *__modtuple(str *fmt, tuple2<A,B> *t);

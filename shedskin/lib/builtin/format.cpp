@@ -273,31 +273,6 @@ str *__mod5(list<pyobj *> *vals, str *sep) {
     return s;
 }
 
-str *__modcd(str *fmt, list<str *> *names, ...) {
-    int i;
-    list<pyobj *> *vals = new list<pyobj *>();
-    va_list args;
-    va_start(args, names);
-    for(i=0; i<len(names); i++)
-        vals->append(va_arg(args, pyobj *));
-    va_end(args);
-
-    str *naam;
-    size_t pos, pos2;
-    dict<str *, pyobj *> *d = new dict<str *, pyobj *>(__zip(2, False, names, vals));
-    str *const_6 = new str(")");
-    list<pyobj *> *values = new list<pyobj *>();
-
-    while((pos = __fmtpos2(fmt)) != std::string::npos) {
-        pos2 = fmt->find(const_6, (__ss_int)pos);
-        naam = fmt->__slice__(3, (__ss_int)(pos+2), (__ss_int)pos2, 0);
-        values->append(d->__getitem__(naam));
-        fmt = (fmt->__slice__(2, 0, (__ss_int)(pos+1), 0))->__add__(fmt->__slice__(1, (__ss_int)(pos2+1), 0, 0));
-    }
-
-    return __mod4(fmt, values);
-}
-
 /* mod */
 
 str *mod_to_c2(pyobj *t) {
