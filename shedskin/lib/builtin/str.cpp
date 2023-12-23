@@ -851,3 +851,9 @@ template<> str *__str(long unsigned int) {
 template<> str *__str(long int) {
     return new str("None");
 }
+
+#ifdef WIN32
+template<> str *__str(size_t) {
+    return new str("<error>");
+}
+#endif

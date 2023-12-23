@@ -1188,6 +1188,9 @@ template<> __ss_float __float(str *s);
 template<class T> str *__str(T t) { if (!t) return new str("None"); return t->__str__(); }
 template<> str *__str(__ss_float t);
 template<> str *__str(long unsigned int t); /* ? */
+#ifdef WIN32
+template<> str *__str(size_t t); /* ? */
+#endif
 template<> str *__str(long int t); /* pure None type */
 #ifdef __SS_LONG
 str *__str(__ss_int t, __ss_int base=10);
