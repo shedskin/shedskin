@@ -844,8 +844,8 @@ template<> str *__str(__ss_float t) {
     return new str(s);
 }
 
-template<> str *__str(long unsigned int) {
-    return new str("None");
+template<> str *__str(long unsigned int i) {
+    return __str((__ss_int)i);
 }
 
 template<> str *__str(long int) {
@@ -853,7 +853,7 @@ template<> str *__str(long int) {
 }
 
 #ifdef WIN32
-template<> str *__str(size_t) {
-    return new str("<error>");
+template<> str *__str(size_t i) {
+    return __str((__ss_int)i);
 }
 #endif
