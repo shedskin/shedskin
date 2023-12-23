@@ -1264,6 +1264,9 @@ template<> str *repr(int t);
 template<> str *repr(__ss_bool b);
 template<> str *repr(void *t);
 template<> str *repr(long unsigned int t);
+#ifdef WIN32
+template<> str *repr(size_t t);
+#endif
 
 #ifndef __SS_NOASSERT
 #define ASSERT(x, y) if(!(x)) throw new AssertionError(y);

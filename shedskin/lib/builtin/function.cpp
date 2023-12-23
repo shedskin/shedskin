@@ -164,7 +164,10 @@ template<> str *repr(__ss_int i) { return __str(i); }
 template<> str *repr(int i) { return __str(i); }
 template<> str *repr(__ss_bool b) { return b.value?(new str("True")):(new str("False")); }
 template<> str *repr(void *) { return new str("None"); }
-template<> str *repr(long unsigned int) { return new str("?"); } /* ? */
+template<> str *repr(size_t i) { return repr((__ss_int)i); }
+#ifdef WIN32
+template<> str *repr(size_t i) { return repr((__ss_int)i); }
+#endif
 
 str *__str(void *) { return new str("None"); }
 
