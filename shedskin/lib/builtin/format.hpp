@@ -19,6 +19,8 @@ template<> inline void __mod_int(str *result, size_t &pos, const char *fstr, __s
     int x;
     // TODO SS_LONG
     x = asprintf(&d, fstr, arg); // TODO modern C++ replacement for asprintf?
+    if(x == -1)
+        throw new ValueError(new str("error in string formatting"));
     result->unit += d;
     free(d);
 }
@@ -28,20 +30,25 @@ template<> inline void __mod_oct(str *result, size_t &pos, __ss_int arg) {
     result->unit += __str(arg, 8)->unit;
 }
 
-template <class T> void __mod_hex(str *result, size_t &pos, char c, T arg) {}
-template<> inline void __mod_hex(str *result, size_t &pos, char c, __ss_int arg) {
-    str *hval = __str(arg, 16);
-    if(c == 'X')
-        hval = hval->upper();
-    result->unit += hval->unit;
+template <class T> void __mod_hex(str *result, size_t &pos, char c, const char *fstr, T arg) {}
+template<> inline void __mod_hex(str *result, size_t &pos, char c, const char *fstr, __ss_int arg) {
+    char *d;
+    int x;
+    // TODO SS_LONG
+    x = asprintf(&d, fstr, arg); // TODO modern C++ replacement for asprintf?
+    if(x == -1)
+        throw new ValueError(new str("error in string formatting"));
+    result->unit += d;
+    free(d);
 }
 
 template <class T> void __mod_float(str *result, size_t &pos, const char *fstr, T arg) {}
 template<> inline void __mod_float(str *result, size_t &pos, const char *fstr, __ss_float arg) {
     char *d;
     int x;
-    // TODO SS_LONG
     x = asprintf(&d, fstr, arg); // TODO modern C++ replacement for asprintf?
+    if(x == -1)
+        throw new ValueError(new str("error in string formatting"));
     result->unit += d;
     free(d);
 }
@@ -71,7 +78,7 @@ template<class T> void __mod_one(str *fmt, unsigned int fmtlen, unsigned int &j,
     int namepos, startpos;
     str *name = NULL;
     int skip = 0;
-    std::string fmtchars = "0123456789 -+.*"; // TODO complete?
+    std::string fmtchars = "0123456789# -+.*"; // TODO error for asterisk
 
     for(; j<fmtlen;) {
         char c = fmt->unit[j++];
@@ -134,10 +141,10 @@ template<class T> void __mod_one(str *fmt, unsigned int fmtlen, unsigned int &j,
             case 'x':
             case 'X':
                 if(name) {
-                    __mod_hex(result, pos, c, __mod_dict_arg(arg, name));
+                    __mod_hex(result, pos, c, fstr.c_str(), __mod_dict_arg(arg, name));
                     break;
                 } else {
-                    __mod_hex(result, pos, c, arg);
+                    __mod_hex(result, pos, c, fstr.c_str(), arg);
                     return;
                 }
 
