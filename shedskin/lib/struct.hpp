@@ -1,4 +1,4 @@
-/* Copyright 2005-2022 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2023 Mark Dufour and contributors; License Expat (See LICENSE) */
 
 #ifndef __STRUCT_HPP
 #define __STRUCT_HPP
