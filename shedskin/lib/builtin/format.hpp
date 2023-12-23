@@ -24,6 +24,9 @@ template<> inline void __mod_int(str *result, size_t &pos, const char *fstr, __s
     result->unit += d;
     free(d);
 }
+template<> inline void __mod_int(str *result, size_t &pos, const char *fstr, __ss_float arg) {
+    __mod_int(result, pos, fstr, (__ss_int)arg);
+}
 
 template <class T> void __mod_oct(str *result, size_t &pos, T arg) {}
 template<> inline void __mod_oct(str *result, size_t &pos, __ss_int arg) {
@@ -51,6 +54,9 @@ template<> inline void __mod_float(str *result, size_t &pos, const char *fstr, _
         throw new ValueError(new str("error in string formatting"));
     result->unit += d;
     free(d);
+}
+template<> inline void __mod_float(str *result, size_t &pos, const char *fstr, __ss_int arg) {
+    __mod_float(result, pos, fstr, (__ss_float)arg);
 }
 
 template <class T> void __mod_str(str *result, size_t &pos, char c, T arg) {
