@@ -258,7 +258,7 @@ template<class ... Args> bytes *pack(int n, str *fmt, Args ... args) {
     __ss_int expected_args = calcitems(fmt);
     __ss_int received_args = (__ss_int) sizeof...(args);
     if(expected_args != received_args)
-        throw new error(__modct(new str("pack expected %d items for packing (got %d)"), 2, ___box(expected_args), ___box(received_args)));
+        throw new error(__mod6(new str("pack expected %d items for packing (got %d)"), 2, expected_args, received_args));
 
     __pack(result, pos, ndigits, n, fmt, args...);
 
@@ -272,7 +272,7 @@ template<class ... Args> void *pack_into(int n, str *fmt, bytes *buffer, __ss_in
     __ss_int expected_args = calcitems(fmt);
     __ss_int received_args = (__ss_int) sizeof...(args);
     if(expected_args != received_args)
-        throw new error(__modct(new str("pack_into expected %d items for packing (got %d)"), 2, ___box(expected_args), ___box(received_args)));
+        throw new error(__mod6(new str("pack_into expected %d items for packing (got %d)"), 2, expected_args, received_args));
 
     __pack(buffer, pos, ndigits, n, fmt, args...);
 

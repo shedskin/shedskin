@@ -214,5 +214,8 @@ template<class ... Args> str *__mod6(str *fmt, int count, Args ... args) {
 
     (__mod_one(fmt, fmtlen, j, result, pos, args), ...);
 
+    for(; j < fmtlen; j++)
+        result->unit += fmt->unit[j];
+
     return result;
 }
