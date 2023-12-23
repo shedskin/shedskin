@@ -749,7 +749,7 @@ str *ConfigParser::_interpolate(str *section, str *option, str *rawval, dict<str
         if (value->__contains__(const_28)) {
             value = (ConfigParser::_KEYCRE)->sub(_interpolation_replace, value);
             try {
-                value = __moddict(value, vars);
+                value = __mod6(value, 1, vars);
             } catch (KeyError *e) {
                 throw ((new InterpolationMissingOptionError(option,section,rawval,const_17)));
             }
