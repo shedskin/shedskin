@@ -196,8 +196,12 @@ template<class ... Args> str *__mod6(str *fmt, int count, Args ... args) {
 
     (__mod_one(fmt, fmtlen, j, result, pos, args), ...);
 
-    for(; j < fmtlen; j++)
-        result->unit += fmt->unit[j];
+    for(; j < fmtlen; j++) {
+        char c = fmt->unit[j];
+        result->unit += c;
+        if(c=='%' and fmt->unit[j+1] == '%') // TODO out of bounds
+            j++;
+    }
 
     return result;
 }
@@ -216,8 +220,12 @@ template<class T> str *__modtuple(str *fmt, tuple2<T,T> *t) {
     for(__ss_int i=0;i<l; i++)
         __mod_one(fmt, fmtlen, j, result, pos, t->units[i]);
 
-    for(; j < fmtlen; j++)
-        result->unit += fmt->unit[j];
+    for(; j < fmtlen; j++) {
+        char c = fmt->unit[j];
+        result->unit += c;
+        if(c=='%' and fmt->unit[j+1] == '%') // TODO out of bounds
+            j++;
+    }
 
     return result;
 }
@@ -235,8 +243,12 @@ template<class ... Args> bytes *__mod6(bytes *fmt, int count, Args ... args) {
 
     (__mod_one(sfmt, fmtlen, j, result, pos, args), ...);
 
-    for(; j < fmtlen; j++)
-        result->unit += fmt->unit[j];
+    for(; j < fmtlen; j++) {
+        char c = fmt->unit[j];
+        result->unit += c;
+        if(c=='%' and fmt->unit[j+1] == '%') // TODO out of bounds
+            j++;
+    }
 
     r->unit = result->unit;
     return r;
