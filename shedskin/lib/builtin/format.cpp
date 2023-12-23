@@ -256,23 +256,6 @@ str *__mod4(str *fmts, list<pyobj *> *vals, bool bytes) {
     return r;
 }
 
-str *__mod5(list<pyobj *> *vals, str *sep) {
-    __mod5_cache->units.resize(0);
-    for(int i=0;i<len(vals);i++) {
-        pyobj *p = vals->__getitem__(i);
-        if(p == NULL)
-            __mod5_cache->append(__fmt_s);
-        else if(p->__class__ == cl_float_)
-            __mod5_cache->append(__fmt_H);
-        else if(p->__class__== cl_int_)
-            __mod5_cache->append(__fmt_d);
-        else
-            __mod5_cache->append(__fmt_s);
-    }
-    str *s = __mod4(sep->join(__mod5_cache), vals);
-    return s;
-}
-
 /* mod */
 
 str *mod_to_c2(pyobj *t) {
