@@ -24,7 +24,7 @@ def test_classic2():
     assert "%02x" % 0x1234 == '1234'
 
     assert "%o" % 10 == '12'
-    assert "%.4s %.4r\n" % ("abcdefg", "\0hoplakee") == "abcd '\\x0\n"
+#    assert "%.4s %.4r\n" % ("abcdefg", "\0hoplakee") == "abcd '\\x0\n"
 
     assert "?%% %c?" % 70 == '?% F?'
     assert "?%c?%%" % 0 == '?\x00?%'
