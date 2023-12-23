@@ -43,6 +43,14 @@ template <class T> void __mod_str(str *result, size_t &pos, char c, T arg) {
         result->unit += repr(arg)->unit;
 }
 
+template <class T> void __mod_char(str *result, size_t &pos, char c, T arg) {} /* TODO error */
+template<> inline void __mod_char(str *result, size_t &pos, char c, __ss_int arg) {
+    result->unit += (char)arg;
+}
+template<> inline void __mod_char(str *result, size_t &pos, char c, str *arg) { /* TODO len error */
+    result->unit += arg->unit[0];
+}
+
 template<class T> void __mod_one(str *fmt, unsigned int fmtlen, unsigned int &j, str *result, size_t &pos, T arg) {
     int namepos;
     str *name = NULL;
@@ -155,6 +163,23 @@ template<class T> void __mod_one(str *fmt, unsigned int fmtlen, unsigned int &j,
                     break;
                 }
 
+            case 'c':
+                if(skip) {
+                    skip = 0;
+                    if(name) {
+                        __mod_char(result, pos, c, __mod_dict_arg(arg, name));
+                        name = NULL;
+                        break;
+                    } else {
+                        __mod_char(result, pos, c, arg);
+                        j++;
+                        return;
+                    }
+                } else {
+                    result->unit += c;
+                    break;
+                }
+
             case '(':
                 if(skip) {
                     namepos = j+1;
@@ -208,4 +233,24 @@ template<class T> str *__modtuple(str *fmt, tuple2<T,T> *t) {
         result->unit += fmt->unit[j];
 
     return result;
+}
+
+/* TODO bytes variants, optimize */
+
+template<class ... Args> bytes *__mod6(bytes *fmt, int count, Args ... args) {
+    str *result = new str();
+    bytes *r = new bytes();
+    size_t pos = 0;
+    unsigned int fmtlen = fmt->__len__();
+    unsigned int j = 0;
+    str *sfmt = new str();
+    sfmt->unit = fmt->unit;
+
+    (__mod_one(sfmt, fmtlen, j, result, pos, args), ...);
+
+    for(; j < fmtlen; j++)
+        result->unit += fmt->unit[j];
+
+    r->unit = result->unit;
+    return r;
 }
