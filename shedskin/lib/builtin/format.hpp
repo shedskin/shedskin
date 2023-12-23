@@ -58,74 +58,73 @@ template<> inline void __mod_char(str *result, size_t &pos, char c, str *arg) { 
 }
 
 template<class T> void __mod_one(str *fmt, unsigned int fmtlen, unsigned int &j, str *result, size_t &pos, T arg) {
-    int namepos;
+    int namepos, startpos;
     str *name = NULL;
     int skip = 0;
+    std::string fmtchars = "0123456789 -+.*"; // TODO complete?
 
-    for(; j<fmtlen; j++) {
-        char c = fmt->unit[j];
+    for(; j<fmtlen;) {
+        char c = fmt->unit[j++];
+        if(c != '%') {
+            result->unit += c;
+            continue;
+        }
+
+        /* %% */
+        if(fmt->unit[j] == '%') { // TODO various out of bounds checks
+            result->unit += '%';
+            j++;
+            continue;
+        }
+
+        /* %(name) */
+        if(fmt->unit[j] == '(') {
+            j++;
+            namepos = j;
+            while(fmt->unit[j++] != ')')
+                ;
+            name = new str(fmt->unit.c_str()+namepos, j-namepos-1);
+        }
+        else
+            name = NULL;
+
+        /* extract format string e.g. '%.2f' */
+        startpos = j;
+        size_t pos = fmt->unit.find_first_not_of(fmtchars, j);
+        j += (pos-startpos);
+
+
+        /* check format flag */
+        c = fmt->unit[j++];
         switch(c) {
-            case '%':
-                if(skip)
-                    result->unit += '%';
-                skip = 1-skip;
-                break;
-
             case 'd':
             case 'i':
             case 'u':
-                if(skip) {
-                    skip = 0;
-                    if(name) {
-                        __mod_int(result, pos, __mod_dict_arg(arg, name));
-                        name = NULL;
-                        break;
-
-                    } else {
-                        __mod_int(result, pos, arg);
-                        j++;
-                        return;
-                    }
-                } else {
-                    result->unit += c;
+                if(name) {
+                    __mod_int(result, pos, __mod_dict_arg(arg, name));
                     break;
+                } else {
+                    __mod_int(result, pos, arg);
+                    return;
                 }
 
             case 'o':
-                if(skip) {
-                    skip = 0;
-                    if(name) {
-                        __mod_oct(result, pos, __mod_dict_arg(arg, name));
-                        name = NULL;
-                        break;
-
-                    } else {
-                        __mod_oct(result, pos, arg);
-                        j++;
-                        return;
-                    }
-                } else {
-                    result->unit += c;
+                if(name) {
+                    __mod_oct(result, pos, __mod_dict_arg(arg, name));
                     break;
+                } else {
+                    __mod_oct(result, pos, arg);
+                    return;
                 }
 
             case 'x':
             case 'X':
-                if(skip) {
-                    skip = 0;
-                    if(name) {
-                        __mod_hex(result, pos, c, __mod_dict_arg(arg, name));
-                        name = NULL;
-                        break;
-
-                    } else {
-                        __mod_hex(result, pos, c, arg);
-                        j++;
-                        return;
-                    }
-                } else {
-                    result->unit += c;
+                if(name) {
+                    __mod_hex(result, pos, c, __mod_dict_arg(arg, name));
                     break;
+                } else {
+                    __mod_hex(result, pos, c, arg);
+                    return;
                 }
 
             case 'e':
@@ -134,76 +133,37 @@ template<class T> void __mod_one(str *fmt, unsigned int fmtlen, unsigned int &j,
             case 'F':
             case 'g':
             case 'G':
-                if(skip) {
-                    skip = 0;
-                    if(name) {
-                        __mod_float(result, pos, __mod_dict_arg(arg, name));
-                        name = NULL;
-                        break;
-
-                    } else {
-                        __mod_float(result, pos, arg);
-                        j++;
-                        return;
-                    }
-                } else {
-                    result->unit += c;
+                if(name) {
+                    __mod_float(result, pos, __mod_dict_arg(arg, name));
                     break;
+                } else {
+                    __mod_float(result, pos, arg);
+                    return;
                 }
+                break;
 
             case 's':
             case 'r':
-                if(skip) {
-                    skip = 0;
-                    if(name) {
-                        __mod_str(result, pos, c, __mod_dict_arg(arg, name));
-                        name = NULL;
-                        break;
-                    } else {
-                        __mod_str(result, pos, c, arg);
-                        j++;
-                        return;
-                    }
-                } else {
-                    result->unit += c;
+                if(name) {
+                    __mod_str(result, pos, c, __mod_dict_arg(arg, name));
                     break;
+                } else {
+                    __mod_str(result, pos, c, arg);
+                    return;
                 }
 
             case 'c':
-                if(skip) {
-                    skip = 0;
-                    if(name) {
-                        __mod_char(result, pos, c, __mod_dict_arg(arg, name));
-                        name = NULL;
-                        break;
-                    } else {
-                        __mod_char(result, pos, c, arg);
-                        j++;
-                        return;
-                    }
-                } else {
-                    result->unit += c;
-                    break;
-                }
-
-            case '(':
-                if(skip) {
-                    namepos = j+1;
-                    while(fmt->unit[++j] != ')')  // TODO out of bounds
-                        ;
-                    name = new str(fmt->unit.c_str()+namepos, j-namepos);
+                if(name) {
+                    __mod_char(result, pos, c, __mod_dict_arg(arg, name));
                     break;
                 } else {
-                    result->unit += c;
-                    break;
+                    __mod_char(result, pos, c, arg);
+                    return;
                 }
 
-
-            default:
-                if(!skip)
-                    result->unit += c;
+            default: // TODO raise error
+                ;
         }
-
     }
 }
 
