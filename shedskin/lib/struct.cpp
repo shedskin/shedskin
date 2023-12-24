@@ -13,13 +13,6 @@ bool little_endian;
 
 
 int get_itemsize(char order, char c) {
-    switch(c) {
-        case 'c': return 1;
-        case 's': return 1;
-        case 'p': return 1;
-        case '?': return 1;
-        case 'x': return 1;
-    }
     if(order == '@') {
         switch(c) {
             case 'b': return sizeof(signed char);
@@ -150,23 +143,34 @@ __ss_int calcsize(str *fmt) { // TODO optimize
     str *digits = new str();
     char order = '@';
     unsigned int itemsize;
+    __ss_int n = 0;
+    __ss_int ndigits = -1;
     for(unsigned int i=0; i<(unsigned int)len(fmt); i++) {
         char c = fmt->unit[i];
-        if(ordering.find(c) != std::string::npos) {
-            order = c;
-            continue;
-        }
-        if(::isdigit(c)) {
-            digits->unit += c;
-            continue;
-        }
-        unsigned int ndigits = 1;
-        if(len(digits)) {
-            ndigits = __int(digits);
-            digits = new str();
-        }
-        itemsize = get_itemsize(order, c);
         switch(c) {
+            case '@':
+            case '=':
+            case '<':
+            case '>':
+            case '!':
+                order = c;
+                break;
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9':
+                n = c - '0';
+                if(ndigits == -1)
+                    ndigits = n;
+                else
+                    ndigits = 10*ndigits+n;
+                break;
             case 'b':
             case 'B':
             case 'h':
@@ -179,25 +183,35 @@ __ss_int calcsize(str *fmt) { // TODO optimize
             case 'Q':
             case 'd':
             case 'f':
+                itemsize = get_itemsize(order, c);
+                if(ndigits == -1)
+                    ndigits = 1;
+                result += ndigits * itemsize;
+                ndigits = -1;
                 result += padding(order, result, itemsize);
+                break;
             case 'c':
             case 's':
             case 'p':
             case '?':
+            case 'x':
+                if(ndigits == -1)
+                    ndigits = 1;
+                result += ndigits;
+                ndigits = -1;
+                break;
             case ' ':
             case '\t':
             case '\n':
             case '\r':
             case '\x0b':
             case '\x0c':
-            case 'x':
                 break;
             case 'P':
                 throw new error(new str("unsupported 'P' char in struct format"));
             default:
                 throw new error(new str("bad char in struct format"));
         }
-        result += ndigits * itemsize;
     }
     return result;
 }
