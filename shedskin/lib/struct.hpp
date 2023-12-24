@@ -274,6 +274,10 @@ template<class ... Args> void *pack_into(int n, str *fmt, bytes *buffer, __ss_in
     if(expected_args != received_args)
         throw new error(__mod6(new str("pack_into expected %d items for packing (got %d)"), 2, expected_args, received_args));
 
+    __ss_int result_size = calcsize(fmt);
+    if(offset + result_size > len(buffer))
+        throw new error(new str("pack_into requires larger buffer"));
+
     __pack(buffer, pos, ndigits, n, fmt, args...);
 
     return NULL;
