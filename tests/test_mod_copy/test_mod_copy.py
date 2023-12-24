@@ -13,9 +13,10 @@ class Baz:
 
 
 def test_deepcopy_nested():
-    a = [1, (2, 3)]
+    a = [[1], [2, 3]]
     b = copy.deepcopy(a)
     assert b[1][0] == 2
+
 
 def test_copy_obj1():
     p = Person('loki')
@@ -94,7 +95,7 @@ def test_copy_deque():
 def test_all():
     test_copy1()
     test_copy2()
-    # test_deepcopy_nested()
+    test_deepcopy_nested()
     test_copy_deque()
     test_copy_obj1()
     test_copy_obj2()

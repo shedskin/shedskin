@@ -150,6 +150,7 @@ def test_all():
     test_key_error()
     # test_type_error() # cpp translated code will not compile :-)
     test_assert_error()
+    test_index_error()
     # test_my_error()
     test_value_error()
     test_os_error()

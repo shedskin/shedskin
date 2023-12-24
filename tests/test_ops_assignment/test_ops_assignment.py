@@ -1,12 +1,12 @@
-
-
 def test_assign_int():
     a = 1
     assert a == 1
 
+
 def test_assign_list():
     a = [1]
     assert a == [1]
+
 
 def test_reference():
     a = []
@@ -19,12 +19,14 @@ def test_reference():
 
     assert b == [1]
 
+
 def test_slice_assign():
     d = list(range(10))
     d[::2] = [1, 2, 3, 4, 5]
     assert d == [1, 1, 2, 3, 3, 5, 4, 7, 5, 9]
     d[1:2] = [1,2,2,3,3]
     assert d == [1, 1, 2, 2, 3, 3, 2, 3, 3, 5, 4, 7, 5, 9]
+
 
 def test_unpack1():
     a, b = "ab"
@@ -49,63 +51,64 @@ def test_unpack1():
     assert d == "d"
     assert e == "e"
 
-def test_unpack2():
 
+def test_unpack2():
     foo = (2, [4, 6])
     [a, (b, c)] = foo
     assert (a, b, c) == (2, 4, 6)
 
-def test_unpack3():
 
+def test_unpack3():
     (a, b), (c, d) = (6, 9), (8, 7)
     assert (a, b, c, d) == (6, 9, 8, 7)
 
-def test_unpack4():
 
+def test_unpack4():
     [(a, b), (c, d)] = (9, 8), (7, 6)
     assert (a, b, c, d) == (9, 8, 7, 6)
 
-def test_unpack5():
 
+def test_unpack5():
     [(a, b), (c, d)] = [(1, 8), (7, 2)]
     assert (a, b, c, d) == (1, 8, 7, 2)
 
-def test_unpack6():
 
+def test_unpack6():
     [[a, b], c] = (5, 6), 3
     assert (a, b, c) == (5, 6, 3)
 
-def test_unpack7():
 
+def test_unpack7():
     [[a, b], c] = [[4, 5], 6]
     assert (a, b, c) ==  (4, 5, 6)
 
-def test_unpack8():
 
+def test_unpack8():
     a, [b, c] = [1, (2, 3)]
     assert (a, b, c) == (1, 2, 3)
 
-def test_unpack9():
 
+def test_unpack9():
     a, (b, c, d) = 1, (1, 2, 3)
     assert (a, b, c, d) == (1, 1, 2, 3)
 
-def test_unpack10():
 
+def test_unpack10():
     [(a, b), [c, d]] = [[1, 2], (3, 4)]
     assert (a, b, c, d) ==  (1, 2, 3, 4)
 
-def test_unpack11():
 
+def test_unpack11():
     njeh = [[8, 7, 6], [5, 4, 3], [2, 1, 0]]
     [[a, b, c], [d, e, f], [g, h, i]] = njeh
     assert (a, b, c, d, e, f, g, h, i) == (8, 7, 6, 5, 4, 3, 2, 1, 0)
 
     [dx, [a, b, c], ex] = njeh
-    assert (dx, a, b, c, ex) == ([8, 7, 6], 5, 4, 3, [2, 1, 0])
+    assert (a, b, c) == (5, 4, 3)
+    assert (dx, ex) == ([8, 7, 6], [2, 1, 0])
+
 
 def test_unpack12():
-
     blah = (1, 2, 3, 4, 5, 6)
     a, b, c, d, e, f = blah
     assert (a, b, c, d, e, f) == (1, 2, 3, 4, 5, 6)
@@ -207,7 +210,7 @@ def test_all():
     test_unpack8()
     test_unpack9()
     test_unpack10()
-    # test_unpack11()
+    test_unpack11()
     test_unpack12()
     test_unpack13()
     test_unpack14()

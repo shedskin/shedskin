@@ -124,6 +124,7 @@ def test_array3():
 def test_all():
     test_array1()
     test_array2()
+    test_array3()
 
 if __name__ == '__main__':
     test_all() 
