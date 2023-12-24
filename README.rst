@@ -67,30 +67,25 @@ Screenhots
 
 Some screenshots of the `example programs <https://github.com/shedskin/shedskin/tree/master/examples>`_ in action:
 
+(pylot)
 .. image:: https://raw.githubusercontent.com/shedskin/shedskin/master/docs/assets/screenshots/harm3.png
   :width: 400
 
-(pylot)
-
+(mandelbrot2)
 .. image:: https://raw.githubusercontent.com/shedskin/shedskin/master/docs/assets/screenshots/harm4.png
   :width: 400
 
-(mandelbrot2)
-
+(c64)
 .. image:: https://raw.githubusercontent.com/shedskin/shedskin/master/docs/assets/screenshots/harm1.png
   :width: 400
 
-(c64)
-
+(othello2)
 .. image:: https://raw.githubusercontent.com/shedskin/shedskin/master/docs/assets/screenshots/harm6.png
   :width: 400
 
-(othello2)
-
+(doom)
 .. image:: https://raw.githubusercontent.com/shedskin/shedskin/master/docs/assets/screenshots/harm5.png
   :width: 400
-
-(doom)
 
 `This video <https://www.youtube.com/watch?v=171AQx7l43s>`_ shows the dramatic difference in performance for the DOOM example before and after compilation
 
