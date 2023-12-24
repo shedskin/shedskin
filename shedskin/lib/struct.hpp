@@ -28,7 +28,7 @@ static inline bool swap_endian(char o) {
 
 __ss_int calcsize(str *fmt);
 __ss_int calcitems(str *fmt);
-int padding(char o, int pos, unsigned int itemsize);
+int padding(char o, unsigned int pos, unsigned int itemsize);
 
 __ss_int unpack_int(char o, char c, unsigned int d, bytes *data, __ss_int *pos);
 bytes * unpack_bytes(char o, char c, unsigned int d, bytes *data, __ss_int *pos);
@@ -160,8 +160,8 @@ template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j
             case 'q':
             case 'Q':
                 itemsize = get_itemsize(order, c);
-                pad = padding(order, pos, itemsize);
-                for(unsigned int k=0; k<pad; k++)
+                pad = padding(order, (unsigned int)pos, itemsize);
+                for(int k=0; k<pad; k++)
                     result->unit[pos++] = '\x00';
                 __pack_int(c, arg, order, itemsize);
                 for(unsigned int k=0; k<itemsize; k++)
@@ -175,8 +175,8 @@ template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j
             case 'd':
             case 'f':
                 itemsize = get_itemsize(order, c);
-                pad = padding(order, pos, itemsize);
-                for(unsigned int k=0; k<pad; k++)
+                pad = padding(order, (unsigned int)pos, itemsize);
+                for(int k=0; k<pad; k++)
                     result->unit[pos++] = '\x00';
                 __pack_float(c, arg, order, itemsize);
                 if(swap_endian(order))
@@ -223,7 +223,7 @@ template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j
             case 'x':
                 if(ndigits == -1)
                     ndigits = 1;
-                for(unsigned int k=0; k<ndigits; k++)
+                for(__ss_int k=0; k<ndigits; k++)
                     result->unit[pos++] = '\x00';
                 break;
 
