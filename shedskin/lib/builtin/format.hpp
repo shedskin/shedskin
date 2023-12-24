@@ -240,7 +240,7 @@ template<class T> str *__modtuple(str *fmt, tuple2<T,T> *t) {
     return result;
 }
 
-/* TODO bytes variants, optimize */
+/* TODO optimize bytes variants */
 
 template<class ... Args> bytes *__mod6(bytes *fmt, int count, Args ... args) {
     str *result = new str();
@@ -262,4 +262,19 @@ template<class ... Args> bytes *__mod6(bytes *fmt, int count, Args ... args) {
 
     r->unit = result->unit;
     return r;
+}
+
+template<class T> bytes *__modtuple(bytes *bfmt, tuple2<T,T> *t) {
+    str *fmt = new str();
+    fmt->unit = bfmt->unit;
+
+    str *result = __modtuple(fmt, t);
+
+    bytes *r = new bytes();
+    r->unit = result->unit;
+    return r;
+}
+
+template<class A, class B> bytes *__modtuple(bytes *fmt, tuple2<A,B> *t) {
+    return __mod6(fmt, 2, t->__getfirst__(), t->__getsecond__());
 }
