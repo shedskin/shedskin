@@ -274,9 +274,6 @@ template <class A> __iter<tuple2<__ss_int, A> *> *enumerate(pyiter<A> *x, __ss_i
 
 /* zip */
 
-template<class T, class U> class izipiter;
-template<class T> inline izipiter<T, T> *__zip(int iterable_count, __ss_bool strict, pyiter<T> *iterable, ...);
-
 template<class T, class U> class izipiter : public __iter<tuple2<T, U> *> {
 public:
     bool exhausted;
@@ -352,7 +349,6 @@ public:
 
     inline str *__str__() { return new str("<zip object>"); }
 
-    friend izipiter<T, T> *__zip<T>(int iterable_count, __ss_bool strict, pyiter<T> *iterable, ...);
 };
 
 template<class T> inline izipiter<T, T>::izipiter(__ss_bool strict) {
@@ -404,12 +400,18 @@ template<class T> tuple2<T, T> *izipiter<T, T>::__next__() {
 inline izipiter<void*, void*> *__zip(int iterable_count, __ss_bool strict) {
     return new izipiter<void*, void*>(strict);
 }
+template<class T> inline izipiter<T, T> *__zip(int iterable_count, __ss_bool strict, pyiter<T> *iterable1) {
+    izipiter<T, T> *iter = new izipiter<T, T>(strict, iterable1);
+    return iter;
+}
 template<class T, class U> inline izipiter<T, U> *__zip(int iterable_count, __ss_bool strict, pyiter<T> *iterable1, pyiter<U> *iterable2) {
     return new izipiter<T, U>(strict, iterable1, iterable2);
 }
-template<class T, class ... Args> inline izipiter<T, T> *__zip(int iterable_count, __ss_bool strict, pyiter<T> *iterable, Args ... args) {
+template<class T, class ... Args> inline izipiter<T, T> *__zip(int iterable_count, __ss_bool strict, pyiter<T> *iterable, pyiter<T> *iterable2, pyiter<T> *iterable3, Args ... args) {
     izipiter<T, T> *iter = new izipiter<T, T>(strict, iterable);
 
+    iter->push_iter(iterable2);
+    iter->push_iter(iterable3);
     (iter->push_iter(reinterpret_cast<pyiter<T> *>(args)), ...);
 
     return iter;
