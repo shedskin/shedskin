@@ -407,17 +407,10 @@ inline izipiter<void*, void*> *__zip(int iterable_count, __ss_bool strict) {
 template<class T, class U> inline izipiter<T, U> *__zip(int iterable_count, __ss_bool strict, pyiter<T> *iterable1, pyiter<U> *iterable2) {
     return new izipiter<T, U>(strict, iterable1, iterable2);
 }
-template<class T> inline izipiter<T, T> *__zip(int iterable_count, __ss_bool strict, pyiter<T> *iterable, ...) {
+template<class T, class ... Args> inline izipiter<T, T> *__zip(int iterable_count, __ss_bool strict, pyiter<T> *iterable, Args ... args) {
     izipiter<T, T> *iter = new izipiter<T, T>(strict, iterable);
 
-    va_list ap;
-    va_start(ap, iterable);
-
-    while (--iterable_count) {
-        iter->push_iter(va_arg(ap, pyiter<T> *));
-    }
-
-    va_end(ap);
+    (iter->push_iter(reinterpret_cast<pyiter<T> *>(args)), ...);
 
     return iter;
 }
