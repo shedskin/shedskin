@@ -5,8 +5,6 @@
 
 namespace __struct__ {
 
-__GC_STRING ordering;
-
 void *buffy;
 class_ *cl_error;
 bool little_endian;
@@ -326,7 +324,6 @@ void fillbuf_float(char c, double t, char order, unsigned int itemsize) {
 }
 
 void __init() {
-    ordering = "@<>!=";
     cl_error = new class_("error");
     int num = 1;
     little_endian = (*(char *)&num == 1);
