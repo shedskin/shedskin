@@ -197,8 +197,8 @@ template<class T> void __mod_one(str *fmt, unsigned int fmtlen, unsigned int &j,
                     return;
                 }
 
-            default: // TODO raise error
-                ;
+            default:
+                throw new ValueError(new str("unsupported format character"));
         }
     }
 }
