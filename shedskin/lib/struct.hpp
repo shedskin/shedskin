@@ -9,7 +9,6 @@ using namespace __shedskin__;
 namespace __struct__ {
 
 extern void *buffy;
-extern __GC_STRING ordering;
 
 extern class_ *cl_error;
 class error : public Exception {
