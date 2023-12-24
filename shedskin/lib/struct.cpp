@@ -54,7 +54,7 @@ int get_itemsize(char order, char c) {
     return 0;
 }
 
-int padding(char o, int pos, unsigned int itemsize) {
+int padding(char o, unsigned int pos, unsigned int itemsize) {
     if(sizeof(void *) == 4) {
 #ifndef WIN32
         if(itemsize == 8)

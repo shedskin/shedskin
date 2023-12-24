@@ -123,7 +123,7 @@ template<class T> void __mod_one(str *fmt, unsigned int fmtlen, unsigned int &j,
         /* extract format string e.g. '%.2f' */
         startpos = j;
         size_t pos = fmt->unit.find_first_not_of(fmtchars, j);
-        j += (pos-startpos);
+        j += (unsigned int)(pos-startpos);
 
         c = fmt->unit[j++];
 
