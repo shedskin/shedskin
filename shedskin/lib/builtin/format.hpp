@@ -127,6 +127,9 @@ template<class T> void __mod_one(str *fmt, unsigned int fmtlen, unsigned int &j,
 
         std::string fstr = "%";
         fstr += fmt->unit.substr(startpos, j-startpos-1);
+        if(fstr.find('*') != std::string::npos)
+            throw new ValueError(new str("unsupported format character"));
+
 #ifdef __SS_LONG
         if(c == 'd' or c == 'i' or c == 'u' or c == 'x' or c == 'X')
             fstr += "l";
