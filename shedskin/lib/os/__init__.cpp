@@ -111,7 +111,7 @@ str *getcwd() {
 
 void *chdir(str *dir) {
     if(::chdir(dir->c_str()) == -1)
-        throw new OSError(dir);
+        throw new FileNotFoundError(dir);
     return NULL;
 }
 
