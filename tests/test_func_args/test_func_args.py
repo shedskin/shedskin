@@ -72,6 +72,7 @@ def test_all():
     test_boo()
     test_hoi()
     # test_foo()
+    test_node()
     test_klass()
     test_msplit()
 

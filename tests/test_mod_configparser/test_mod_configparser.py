@@ -76,7 +76,7 @@ def test_configparser():
 
 def test_all():
     test_minimal()
-    # test_configparser() ## FIXME: not working at all
+    test_configparser()
 
 
 if __name__ == '__main__':

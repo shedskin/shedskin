@@ -195,6 +195,7 @@ def test_all():
     test_product()
     test_product_repeat()
     test_compress()
+    test_tee()
     # test_filterfalse() ## FIXME: this fails
     # test_zip_longest() ## FIXME: this fails
 
