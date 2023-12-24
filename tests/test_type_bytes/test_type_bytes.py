@@ -26,8 +26,6 @@ def test_find():
     assert b'bla'.find(b'la') == 1
     assert b'bla'.find(b'ba') == -1
 
-def test_format(): pass
-
 def test_format_map(): pass
 
 def test_index():
@@ -214,6 +212,11 @@ def test_bytes_builtin():
     assert int(b"123") == 123
 
 
+def test_format():
+    t = (18, b'waf')
+    assert (b'%d hup %s!' % t) == b'18 hup waf!'
+
+
 def test_all():
     test_bytes_cmp()
     test_bytes_concat()
@@ -261,7 +264,6 @@ def test_all():
     test_zfill()
     test_bytes_hash()
     test_bytes_builtin()
-    # test_problem_cases()
 
 
 if __name__ == "__main__":
