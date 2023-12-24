@@ -96,7 +96,7 @@ template<class T, class B> inline T ___max(int, B (*key)(T), T a, T b) { return 
 template<class T> inline  T ___max(int, int, T a, T b) { return (__cmp(a, b)==1)?a:b; }
 
 template<class T, class B> inline void update_max(T &m, B (*key)(T), T a) {
-    if(__cmp(key(a),key(m))==1) // TODO store max key
+    if(__cmp(key(a),key(m))==1)
         m=a;
 }
 
@@ -156,7 +156,7 @@ template<class T, class B> inline T ___min(int, B (*key)(T), T a, T b) { return 
 template<class T> inline  T ___min(int, int, T a, T b) { return (__cmp(a, b)==-1)?a:b; }
 
 template<class T, class B> inline void update_min(T &m, B (*key)(T), T a) {
-    if(__cmp(key(a),key(m))==-1) // TODO store min key
+    if(__cmp(key(a),key(m))==-1)
         m=a;
 }
 
@@ -664,13 +664,15 @@ template<class ... Args> void print(int n, file *f, str *end, str *sep, Args ...
 
     if(!end)
         end = nl;
+
     if(f) {
         f->write(s);
         f->write(end);
     }
-    else
+    else {
         for(unsigned int i=0; i<s->unit.size(); i++)
             printf("%c", s->unit[i]);
         for(unsigned int i=0; i<end->unit.size(); i++)
             printf("%c", end->unit[i]);
+    }
 }
