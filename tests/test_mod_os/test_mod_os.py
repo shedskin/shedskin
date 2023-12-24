@@ -21,7 +21,7 @@ def test_os_exception():
 def test_all():
     test_os()
     # test_popen()  # TODO windows
-    # test_os_exception()
+    test_os_exception()
 
 
 if __name__ == '__main__':
