@@ -138,13 +138,13 @@ void unpack_pad(char, char, unsigned int d, bytes *, __ss_int *pos) {
     *pos += d;
 }
 
-__ss_int calcsize(str *fmt) { // TODO optimize
+__ss_int calcsize(str *fmt) {
     __ss_int result = 0;
-    str *digits = new str();
     char order = '@';
     unsigned int itemsize;
     __ss_int n = 0;
     __ss_int ndigits = -1;
+
     for(unsigned int i=0; i<(unsigned int)len(fmt); i++) {
         char c = fmt->unit[i];
         switch(c) {
@@ -216,24 +216,36 @@ __ss_int calcsize(str *fmt) { // TODO optimize
     return result;
 }
 
-__ss_int calcitems(str *fmt) { // TODO optimize
+__ss_int calcitems(str *fmt) {
     __ss_int result = 0;
-    str *digits = new str();
+    __ss_int n = 0;
+    __ss_int ndigits = -1;
+
     for(unsigned int i=0; i<(unsigned int)len(fmt); i++) {
         char c = fmt->unit[i];
-        if(ordering.find(c) != std::string::npos) {
-            continue;
-        }
-        if(::isdigit(c)) {
-            digits->unit += c;
-            continue;
-        }
-        unsigned int ndigits = 1;
-        if(len(digits)) {
-            ndigits = __int(digits);
-            digits = new str();
-        }
         switch(c) {
+            case '@':
+            case '=':
+            case '<':
+            case '>':
+            case '!':
+                break;
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9':
+                n = c - '0';
+                if(ndigits == -1)
+                    ndigits = n;
+                else
+                    ndigits = 10*ndigits+n;
+                break;
             case 'b':
             case 'B':
             case 'h':
@@ -248,11 +260,15 @@ __ss_int calcitems(str *fmt) { // TODO optimize
             case 'f':
             case 'c':
             case '?':
+                if(ndigits == -1)
+                    ndigits = 1;
                 result += ndigits;
+                ndigits = -1;
                 break;
             case 's':
             case 'p':
                 result += 1;
+                ndigits = -1;
                 break;
             case ' ':
             case '\t':
@@ -260,7 +276,9 @@ __ss_int calcitems(str *fmt) { // TODO optimize
             case '\r':
             case '\x0b':
             case '\x0c':
+                break;
             case 'x':
+                ndigits = -1;
                 break;
             case 'P':
                 throw new error(new str("unsupported 'P' char in struct format"));
