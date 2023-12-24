@@ -39,7 +39,7 @@ template<> inline void __mod_int(str *result, size_t &pos, const char *fstr, __s
 
 template <class T> void __mod_oct(str *result, size_t &pos, T arg) {}
 template<> inline void __mod_oct(str *result, size_t &pos, __ss_int arg) {
-    result->unit += __str(arg, 8)->unit;
+    result->unit += __str(arg, (__ss_int)8)->unit;
 }
 
 template <class T> void __mod_hex(str *result, size_t &pos, char c, const char *fstr, T arg) {}
