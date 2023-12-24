@@ -167,17 +167,10 @@ template<class T> T chainiter<T>::__next__() {
     }
 }
 
-template<class T> inline chainiter<T> *chain(int iterable_count, pyiter<T> *iterable, ...) {
+template<class T, class ... Args> inline chainiter<T> *chain(int iterable_count, pyiter<T> *iterable, Args ... args) {
     chainiter<T> *iter = new chainiter<T>(iterable);
 
-    va_list ap;
-    va_start(ap, iterable);
-
-    while (--iterable_count) {
-        iter->push_iter(va_arg(ap, pyiter<T> *));
-    }
-
-    va_end(ap);
+    (iter->push_iter(reinterpret_cast<pyiter<T> *>(args)), ...);
 
     return iter;
 }
@@ -712,17 +705,10 @@ template<class T> inline izip_longestiter<void*, void*> *izip_longest(int /* ite
 template<class T, class U, class F> inline izip_longestiter<T, U> *izip_longest(int iterable_count, F fillvalue, pyiter<T> *iterable1, pyiter<U> *iterable2) {
   return new izip_longestiter<T, U>((T)fillvalue, iterable1, iterable2);
 }
-template<class T, class F> inline izip_longestiter<T, T> *izip_longest(int iterable_count, F fillvalue, pyiter<T> *iterable, ...) {
+template<class T, class F, class ... Args> inline izip_longestiter<T, T> *izip_longest(int iterable_count, F fillvalue, pyiter<T> *iterable, Args ... args) {
     izip_longestiter<T, T> *iter = new izip_longestiter<T, T>((T)fillvalue, iterable);
 
-    va_list ap;
-    va_start(ap, iterable);
-
-    while (--iterable_count) {
-        iter->push_iter(va_arg(ap, pyiter<T> *));
-    }
-
-    va_end(ap);
+    (iter->push_iter(reinterpret_cast<pyiter<T> *>(args)), ...);
 
     return iter;
 }
