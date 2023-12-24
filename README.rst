@@ -93,8 +93,6 @@ Some screenshots of the `example programs <https://github.com/shedskin/shedskin/
   :width: 400
   :alt: Left floating image
 
-Testing
-
 `This video <https://www.youtube.com/watch?v=171AQx7l43s>`_ shows the dramatic difference in performance for the DOOM example before and after compilation
 
 Contributors
