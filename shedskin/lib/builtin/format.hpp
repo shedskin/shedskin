@@ -16,6 +16,11 @@ template <class T> void *__mod_dict_arg(T t, str *name) { return NULL; }
 template <class V> V __mod_dict_arg(dict<str *, V> *d, str *name) {
     return d->__getitem__(name);
 }
+template <class V> V __mod_dict_arg(dict<bytes *, V> *d, str *name) {
+    bytes *key = new bytes(); // optimize
+    key->unit = name->unit;
+    return d->__getitem__(key);
+}
 
 template <class T> void __mod_int(str *result, size_t &pos, const char *fstr, T arg) {}
 template<> inline void __mod_int(str *result, size_t &pos, const char *fstr, __ss_int arg) {

@@ -26,8 +26,6 @@ def test_find():
     assert b'bla'.find(b'la') == 1
     assert b'bla'.find(b'ba') == -1
 
-def test_format_map(): pass
-
 def test_index():
     assert b'bla'.index(b'la') == 1
     assert b'bla'.index(b'bl') == 0
@@ -216,6 +214,12 @@ def test_format():
     t = (18, b'waf')
     assert (b'%d hup %s!' % t) == b'18 hup waf!'
 
+    d = {b'aap': 8, b'bert': 9}
+    assert (b'hoho %(aap)d, %(bert)d' % d) == b'hoho 8, 9'
+
+    d2 = {b'aap': b'acht', b'bert': b'negen'}
+    assert (b'hoho %(aap)s, %(bert)s' % d2) == b'hoho acht, negen'
+
 
 def test_all():
     test_bytes_cmp()
@@ -228,7 +232,6 @@ def test_all():
     test_expandtabs()
     test_find()
     test_format()
-    test_format_map()
     test_index()
     test_isalnum()
     test_isalpha()
