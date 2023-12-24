@@ -26,7 +26,6 @@ template <class T> void __mod_int(str *result, size_t &pos, const char *fstr, T 
 template<> inline void __mod_int(str *result, size_t &pos, const char *fstr, __ss_int arg) {
     char *d;
     int x;
-    // TODO SS_LONG
     x = asprintf(&d, fstr, arg); // TODO modern C++ replacement for asprintf?
     if(x == -1)
         throw new ValueError(new str("error in string formatting"));
@@ -38,7 +37,7 @@ template<> inline void __mod_int(str *result, size_t &pos, const char *fstr, __s
 }
 
 template <class T> void __mod_oct(str *result, size_t &pos, T arg) {}
-template<> inline void __mod_oct(str *result, size_t &pos, __ss_int arg) {
+template<> inline void __mod_oct(str *result, size_t &pos, __ss_int arg) { // TODO asprintf?
     result->unit += __str(arg, (__ss_int)8)->unit;
 }
 
@@ -46,7 +45,6 @@ template <class T> void __mod_hex(str *result, size_t &pos, char c, const char *
 template<> inline void __mod_hex(str *result, size_t &pos, char c, const char *fstr, __ss_int arg) {
     char *d;
     int x;
-    // TODO SS_LONG
     x = asprintf(&d, fstr, arg); // TODO modern C++ replacement for asprintf?
     if(x == -1)
         throw new ValueError(new str("error in string formatting"));
@@ -129,6 +127,10 @@ template<class T> void __mod_one(str *fmt, unsigned int fmtlen, unsigned int &j,
 
         std::string fstr = "%";
         fstr += fmt->unit.substr(startpos, j-startpos-1);
+#ifdef __SS_LONG
+        if(c == 'd' or c == 'i' or c == 'u' or c == 'x' or c == 'X')
+            fstr += "l";
+#endif
         fstr += c;
 
         /* check format flag */
