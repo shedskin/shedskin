@@ -95,28 +95,29 @@ template<class A> typename A::for_in_unit ___max(int nn, int, A *iter) { return 
 template<class T, class B> inline T ___max(int, B (*key)(T), T a, T b) { return (__cmp(key(a), key(b))==1)?a:b; }
 template<class T> inline  T ___max(int, int, T a, T b) { return (__cmp(a, b)==1)?a:b; }
 
-template<class T, class B> T ___max(int n, B (*key)(T), T a, T b, T c, ...) {
-    T m = ___max(2, key, ___max(2, key, a, b), c);
-    B maxkey = key(m);
-    va_list ap;
-    va_start(ap, c);
-    for(int i=0; i<n-3; i++) {
-        T t = va_arg(ap, T);
-        if(__cmp(key(t),maxkey)==1)
-            m=t;
-    }
-    va_end(ap);
+template<class T, class B> inline void update_max(T &m, B (*key)(T), T a) {
+    if(__cmp(key(a),key(m))==1) // TODO store max key
+        m=a;
+}
+
+template<class T, class B, class ... Args> T ___max(int n, B (*key)(T), T a, T b, T c, Args ... args) {
+    T m = a;
+    update_max(m, key, b);
+    update_max(m, key, c);
+    (update_max(m, key, args), ...);
     return m;
 }
-template<class T> T ___max(int n, int key, T a, T b, T c, ...) {
-    T m = ___max(2, key, ___max(2, key, a, b), c);
-    va_list ap;
-    va_start(ap, c);
-    for(int i=0; i<n-3; i++) {
-        T t = va_arg(ap, T);
-        if(__cmp(t,m)==1) m=t;
-    }
-    va_end(ap);
+
+template<class T> inline void update_max(T &m, int key, T a) {
+    if(__cmp(a,m)==1)
+        m=a;
+}
+
+template<class T, class ... Args> T ___max(int n, int key, T a, T b, T c, Args ... args) {
+    T m = a;
+    update_max(m, key, b);
+    update_max(m, key, c);
+    (update_max(m, key, args), ...);
     return m;
 }
 
@@ -154,29 +155,29 @@ template<class A> typename A::for_in_unit ___min(int nn, int, A *iter) { return 
 template<class T, class B> inline T ___min(int, B (*key)(T), T a, T b) { return (__cmp(key(a), key(b))==-1)?a:b; }
 template<class T> inline  T ___min(int, int, T a, T b) { return (__cmp(a, b)==-1)?a:b; }
 
-template<class T, class B> T ___min(int n, B (*key)(T), T a, T b, T c, ...) {
-    T m = ___min(2, key, ___min(2, key, a, b), c);
-    B minkey = key(m);
-    va_list ap;
-    va_start(ap, c);
-    for(int i=0; i<n-3; i++) {
-        T t = va_arg(ap, T);
-        if(__cmp(key(t),minkey)==-1)
-            m=t;
-    }
-    va_end(ap);
+template<class T, class B> inline void update_min(T &m, B (*key)(T), T a) {
+    if(__cmp(key(a),key(m))==-1) // TODO store min key
+        m=a;
+}
+
+template<class T, class B, class ... Args> T ___min(int n, B (*key)(T), T a, T b, T c, Args ... args) {
+    T m = a;
+    update_min(m, key, b);
+    update_min(m, key, c);
+    (update_min(m, key, args), ...);
     return m;
 }
-template<class T> T ___min(int n, int key, T a, T b, T c, ...) { /* XXX */
-    T m = ___min(2, key, ___min(2, key, a, b), c);
-    va_list ap;
-    va_start(ap, c);
-    for(int i=0; i<n-3; i++) {
-        T t = va_arg(ap, T);
-        if(__cmp(t,m)==-1)
-            m=t;
-    }
-    va_end(ap);
+
+template<class T> inline void update_min(T &m, int key, T a) {
+    if(__cmp(a,m)==-1)
+        m=a;
+}
+
+template<class T, class ... Args> T ___min(int n, int key, T a, T b, T c, Args ... args) {
+    T m = a;
+    update_min(m, key, b);
+    update_min(m, key, c);
+    (update_min(m, key, args), ...);
     return m;
 }
 
