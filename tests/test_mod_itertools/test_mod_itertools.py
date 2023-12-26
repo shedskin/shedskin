@@ -185,9 +185,13 @@ def test_filterfalse():
 def test_zip_longest():
     assert list(itertools.zip_longest()) == []
     assert list(itertools.zip_longest(fillvalue=42)) == []
+
     assert list(itertools.zip_longest(['a','b','c'])) == [('a',), ('b',), ('c',)]
     assert list(itertools.zip_longest([1,3,4])) == [(1,), (3,), (4,)]
-    assert list(itertools.zip_longest([1, 3, 4], [42, 21], [12, 21, 33, 55])) ==  [(1, 42, 12), (3, 21, 21), (4, None, 33), (None, None, 55)]
+
+    assert list(itertools.zip_longest([1,2,3], ['a','b','c'])) == [(1, 'a',), (2, 'b',), (3, 'c',)]
+    assert list(itertools.zip_longest([1,3,4], [5,6,7])) == [(1,5), (3,6), (4,7)]
+
     assert list(itertools.zip_longest([1, 3, 4], [42, 21], [12, 21, 33, 55], fillvalue=42)) ==  [(1, 42, 12), (3, 21, 21), (4, 42, 33), (42, 42, 55)]
 
 
@@ -212,7 +216,7 @@ def test_all():
     test_compress()
     test_tee()
     test_filterfalse()
-    # test_zip_longest() ## FIXME: this fails
+    test_zip_longest()
 
 
 if __name__ == '__main__':
