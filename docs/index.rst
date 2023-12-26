@@ -4,11 +4,11 @@ Shed Skin
 An experimental (restricted-Python)-to-C++ compiler
 ---------------------------------------------------
 
-**Shed Skin** is an *experimental* compiler, that can translate pure, but *implicitly statically* typed Python (3.8+) programs into optimized C++. It can generate stand-alone programs or extension modules that can be imported and used in larger Python programs.
+**Shed Skin** is an *experimental* compiler, that can translate pure, but *implicitly statically* typed Python programs into optimized C++. It can generate stand-alone programs or extension modules that can be imported and used in larger Python programs.
 
 Besides the typing restriction, programs cannot freely use the Python standard library (although about 25 common modules, such as :code:`random` and :code:`re`, are currently supported). Also, not all Python features, such as nested functions and variable numbers of arguments, are supported.
 
-For a set of a `75 non-trivial programs <https://github.com/shedskin/shedskin/tree/master/examples>`_ (at over 25,000 lines in total (sloccount)), measurements show a typical speedup of 2-200 times over CPython.
+For a set of a `80 non-trivial programs <https://github.com/shedskin/shedskin/tree/master/examples>`_ (at over 25,000 lines in total (sloccount)), measurements show a typical speedup of 1-100 times over CPython.
 
 Documentation
 -------------
