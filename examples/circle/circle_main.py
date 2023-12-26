@@ -19,6 +19,7 @@ import pygame # if pygame is absent this program may just print coords
 from pygame.locals import QUIT, K_ESCAPE, MOUSEBUTTONDOWN, MOUSEBUTTONUP, MOUSEMOTION
 
 import circle
+print('using', circle)
 
 # to center the window in the screen
 if sys.platform == 'win32' or sys.platform == 'win64':
