@@ -37,7 +37,7 @@ template<> inline void __mod_int(str *result, size_t &pos, const char *fstr, __s
 }
 
 template <class T> void __mod_oct(str *result, size_t &pos, T arg) {}
-template<> inline void __mod_oct(str *result, size_t &pos, __ss_int arg) { // TODO asprintf?
+template<> inline void __mod_oct(str *result, size_t &pos, __ss_int arg) { // TODO asprintf for precision (has issues with 0-bytes?)
     result->unit += __str(arg, (__ss_int)8)->unit;
 }
 
@@ -83,7 +83,9 @@ template <class T> void __mod_char(str *result, size_t &pos, char c, T arg) {} /
 template<> inline void __mod_char(str *result, size_t &pos, char c, __ss_int arg) {
     result->unit += (char)arg;
 }
-template<> inline void __mod_char(str *result, size_t &pos, char c, str *arg) { /* TODO len error */
+template<> inline void __mod_char(str *result, size_t &pos, char c, str *arg) {
+    if(arg->unit.size() != 1)
+        throw new TypeError(new str("%c requires int or char"));
     result->unit += arg->unit[0];
 }
 
@@ -91,7 +93,7 @@ template<class T> void __mod_one(str *fmt, unsigned int fmtlen, unsigned int &j,
     int namepos, startpos;
     str *name = NULL;
     int skip = 0;
-    std::string fmtchars = "0123456789# -+.*"; // TODO error for asterisk
+    std::string fmtchars = "0123456789# -+.*";
 
     for(; j<fmtlen;) {
         char c = fmt->unit[j++];
@@ -100,8 +102,11 @@ template<class T> void __mod_one(str *fmt, unsigned int fmtlen, unsigned int &j,
             continue;
         }
 
+        if(j >= fmtlen)
+            throw new ValueError(new str("incomplete format"));
+
         /* %% */
-        if(fmt->unit[j] == '%') { // TODO various out of bounds checks
+        if(fmt->unit[j] == '%') {
             result->unit += '%';
             j++;
             continue;
@@ -121,6 +126,8 @@ template<class T> void __mod_one(str *fmt, unsigned int fmtlen, unsigned int &j,
         /* extract format string e.g. '%.2f' */
         startpos = j;
         size_t pos = fmt->unit.find_first_not_of(fmtchars, j);
+        if(pos == std::string::npos)
+            throw new ValueError(new str("incomplete format"));
         j += (unsigned int)(pos-startpos);
 
         c = fmt->unit[j++];
@@ -243,7 +250,7 @@ template<class T> str *__modtuple(str *fmt, tuple2<T,T> *t) {
     for(; j < fmtlen; j++) {
         char c = fmt->unit[j];
         result->unit += c;
-        if(c=='%' and fmt->unit[j+1] == '%') // TODO out of bounds
+        if(c=='%' and j+1<fmtlen and fmt->unit[j+1] == '%') // TODO incomplete format exception if % is last char
             j++;
     }
 
@@ -266,7 +273,7 @@ template<class ... Args> bytes *__mod6(bytes *fmt, int count, Args ... args) {
     for(; j < fmtlen; j++) {
         char c = fmt->unit[j];
         result->unit += c;
-        if(c=='%' and fmt->unit[j+1] == '%') // TODO out of bounds
+        if(c=='%' and j+1<fmtlen and fmt->unit[j+1] == '%')
             j++;
     }
 
