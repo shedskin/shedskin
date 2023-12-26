@@ -193,6 +193,7 @@ def test_zip_longest():
     assert list(itertools.zip_longest([1,3,4], [5,6,7])) == [(1,5), (3,6), (4,7)]
 
     assert list(itertools.zip_longest([1, 3, 4], [42, 21], [12, 21, 33, 55], fillvalue=42)) ==  [(1, 42, 12), (3, 21, 21), (4, 42, 33), (42, 42, 55)]
+    assert list(itertools.zip_longest(['a','b','c'], ['e'])) == [('a', 'e'), ('b', None), ('c', None)]
 
 
 def test_compress():
