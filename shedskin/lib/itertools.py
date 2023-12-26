@@ -49,10 +49,10 @@ def islice(iterable, start, stop = -1, step = -1):
 def tee(iterable, n = 2):
     return iter(iterable), iter(iterable)
 
-def izip_longest(__kw_fillvalue=None, *iterables):
+def zip_longest(__kw_fillvalue=None, *iterables):
     'Known limitations: iterables must all be of the same type, cannot distinguish between 0 and None for the return value'
     yield iter(iterables).__next__(),
-def __izip_longest2(iterable1, iterable2, __kw_fillvalue=None):
+def __zip_longest2(iterable1, iterable2, __kw_fillvalue=None):
     yield iter(iterable1).__next__(), iter(iterable2).__next__()
 
 # Combinatoric generators

@@ -2313,9 +2313,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 warning=True,
                 mv=self.mv,
             )
-        if self.library_func(funcs, "itertools", None, "izip_longest"):
+        if self.library_func(funcs, "itertools", None, "zip_longest"):
             error.error(
-                "default fillvalue for 'izip_longest' becomes 0 for integers",
+                "default fillvalue for 'zip_longest' becomes 0 for integers",
                 self.gx,
                 node,
                 warning=True,
@@ -2580,7 +2580,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             or self.library_func(funcs, "random", "Random", "triangular")
         ):
             castnull = True
-        for itertools_func in ["islice", "izip_longest", "permutations"]:
+        for itertools_func in ["islice", "zip_longest", "permutations"]:
             if self.library_func(funcs, "itertools", None, itertools_func):
                 castnull = True
                 break

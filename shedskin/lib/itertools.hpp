@@ -569,12 +569,9 @@ template<class T, class B> inline takewhileiter<T, B> *takewhile(B (*predicate)(
     return new takewhileiter<T, B>(predicate, iterable);
 }
 
-// izip_longest
+// zip_longest
 
-template<class T, class U> class izip_longestiter;
-template<class T, class F> inline izip_longestiter<T, T> *izip_longest(int iterable_count, F fillvalue, pyiter<T> *iterable, ...);
-
-template<class T, class U> class izip_longestiter : public __iter<tuple2<T, U> *> {
+template<class T, class U> class zip_longestiter : public __iter<tuple2<T, U> *> {
 public:
     bool exhausted;
     bool first_exhausted;
@@ -583,16 +580,16 @@ public:
     __iter<U> *second;
     T fillvalue;
 
-    izip_longestiter();
-    izip_longestiter(T fillvalue, pyiter<T> *iterable1, pyiter<U>* iterable2);
+    zip_longestiter();
+    zip_longestiter(T fillvalue, pyiter<T> *iterable1, pyiter<U>* iterable2);
 
     tuple2<T, U> *__next__();
 };
 
-template<class T, class U> inline izip_longestiter<T, U>::izip_longestiter() {
+template<class T, class U> inline zip_longestiter<T, U>::zip_longestiter() {
     this->exhausted = true;
 }
-template<class T, class U> inline izip_longestiter<T, U>::izip_longestiter(T fillvalue, pyiter<T> *iterable1, pyiter<U> *iterable2) {
+template<class T, class U> inline zip_longestiter<T, U>::zip_longestiter(T fillvalue, pyiter<T> *iterable1, pyiter<U> *iterable2) {
     this->exhausted = false;
     this->first_exhausted = false;
     this->second_exhausted = false;
@@ -601,7 +598,7 @@ template<class T, class U> inline izip_longestiter<T, U>::izip_longestiter(T fil
     this->fillvalue = fillvalue;
 }
 
-template<class T, class U> tuple2<T, U> *izip_longestiter<T, U>::__next__() {
+template<class T, class U> tuple2<T, U> *zip_longestiter<T, U>::__next__() {
     if (this->exhausted) {
         throw new StopIteration();
     }
@@ -642,15 +639,16 @@ template<class T, class U> tuple2<T, U> *izip_longestiter<T, U>::__next__() {
     return tuple;
 }
 
-template<class T> class izip_longestiter<T, T> : public __iter<tuple2<T, T> *> {
+template<class T> class zip_longestiter<T, T> : public __iter<tuple2<T, T> *> {
 public:
     unsigned int exhausted;
     std::vector<char> exhausted_iter; // never use std::vector<bool> because this is *slow*
     __GC_VECTOR(__iter<T> *) iters;
     T fillvalue;
 
-    izip_longestiter();
-    izip_longestiter(T fillvalue, pyiter<T> *iterable);
+    zip_longestiter();
+    zip_longestiter(T fillvalue, pyiter<T> *iterable);
+    zip_longestiter(T fillvalue, pyiter<T> *iterable, pyiter<T> *iterable2);
 
     void push_iter(pyiter<T> *iterable);
 
@@ -658,21 +656,27 @@ public:
 
 };
 
-template<class T> inline izip_longestiter<T, T>::izip_longestiter() {
+template<class T> inline zip_longestiter<T, T>::zip_longestiter() {
     this->exhausted = 0;
 }
-template<class T> inline izip_longestiter<T, T>::izip_longestiter(T fillvalue, pyiter<T> *iterable) {
+template<class T> inline zip_longestiter<T, T>::zip_longestiter(T fillvalue, pyiter<T> *iterable) {
     this->exhausted = 0;
     this->push_iter(iterable);
     this->fillvalue = fillvalue;
 }
+template<class T> inline zip_longestiter<T, T>::zip_longestiter(T fillvalue, pyiter<T> *iterable, pyiter<T> *iterable2) {
+    this->exhausted = 0;
+    this->push_iter(iterable);
+    this->push_iter(iterable2);
+    this->fillvalue = fillvalue;
+}
 
-template<class T> void izip_longestiter<T, T>::push_iter(pyiter<T> *iterable) {
+template<class T> void zip_longestiter<T, T>::push_iter(pyiter<T> *iterable) {
     this->iters.push_back(iterable->__iter__());
     this->exhausted_iter.push_back(0);
 }
 
-template<class T> tuple2<T, T> *izip_longestiter<T, T>::__next__() {
+template<class T> tuple2<T, T> *zip_longestiter<T, T>::__next__() {
     if (this->exhausted == this->iters.size()) {
         throw new StopIteration();
     }
@@ -697,15 +701,39 @@ template<class T> tuple2<T, T> *izip_longestiter<T, T>::__next__() {
     return tuple;
 }
 
-template<class T> inline izip_longestiter<void*, void*> *izip_longest(int /* iterable_count */, T /* fillvalue */) {
-    return new izip_longestiter<void*, void*>();
+template<class T> inline zip_longestiter<void*, void*> *zip_longest(int /* iterable_count */, T /* fillvalue */) {
+    return new zip_longestiter<void*, void*>();
 }
-template<class T, class U, class F> inline izip_longestiter<T, U> *izip_longest(int iterable_count, F fillvalue, pyiter<T> *iterable1, pyiter<U> *iterable2) {
-  return new izip_longestiter<T, U>((T)fillvalue, iterable1, iterable2);
-}
-template<class T, class F, class ... Args> inline izip_longestiter<T, T> *izip_longest(int iterable_count, F fillvalue, pyiter<T> *iterable, Args ... args) {
-    izip_longestiter<T, T> *iter = new izip_longestiter<T, T>((T)fillvalue, iterable);
 
+template<class T, class F> inline zip_longestiter<T, T> *zip_longest(int iterable_count, F fillvalue, pyiter<T> *iterable) {
+    T fv;
+    if constexpr (std::is_same_v<F, void *>)
+        fv = (T)0;
+    else
+        fv = (T)fillvalue;
+    zip_longestiter<T, T> *iter = new zip_longestiter<T, T>(fv, iterable);
+    return iter;
+}
+
+template<class T, class U, class F> inline zip_longestiter<T, U> *zip_longest(int iterable_count, F fillvalue, pyiter<T> *iterable1, pyiter<U> *iterable2) {
+    T fv;
+    if constexpr (std::is_same_v<F, void *>)
+        fv = (T)0;
+    else
+        fv = (T)fillvalue;
+  return new zip_longestiter<T, U>(fv, iterable1, iterable2);
+}
+
+template<class T, class F, class ... Args> inline zip_longestiter<T, T> *zip_longest(int iterable_count, F fillvalue, pyiter<T> *iterable, pyiter<T> *iterable2, pyiter<T> *iterable3, Args ... args) {
+    T fv;
+    if constexpr (std::is_same_v<F, void *>)
+        fv = (T)0;
+    else
+        fv = (T)fillvalue;
+    zip_longestiter<T, T> *iter = new zip_longestiter<T, T>(fv, iterable);
+
+    iter->push_iter(reinterpret_cast<pyiter<T> *>(iterable2));
+    iter->push_iter(reinterpret_cast<pyiter<T> *>(iterable3));
     (iter->push_iter(reinterpret_cast<pyiter<T> *>(args)), ...);
 
     return iter;
