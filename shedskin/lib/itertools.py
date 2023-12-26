@@ -33,7 +33,7 @@ def dropwhile(predicate, iterable):
 def groupby(iterable, key = lambda x: x):
     yield key(iter(iterable).__next__()), iter(iterable)
 
-def ifilterfalse(predicate, iterable):
+def filterfalse(predicate, iterable):
     yield __pred_elem(predicate, iterable)
 
 def takewhile(predicate, iterable):

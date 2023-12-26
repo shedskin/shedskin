@@ -332,26 +332,26 @@ template<class T, class K> inline groupbyiter<T, K> *groupby(pyiter<T> *iterable
     return new groupbyiter<T, K>(iterable, key);
 }
 
-// ifilterfalse
+// filterfalse
 
-template<class T, class B> class ifilterfalseiter : public __iter<T> {
+template<class T, class B> class filterfalseiter : public __iter<T> {
 public:
     B (*predicate)(T);
     __iter<T> *iter;
 
-    ifilterfalseiter();
-    ifilterfalseiter(B (*predicate)(T), pyiter<T> *iterable);
+    filterfalseiter();
+    filterfalseiter(B (*predicate)(T), pyiter<T> *iterable);
 
     T __next__();
 };
 
-template<class T, class B> inline ifilterfalseiter<T, B>::ifilterfalseiter() {}
-template<class T, class B> inline ifilterfalseiter<T, B>::ifilterfalseiter(B (*predicate)(T), pyiter<T> *iterable) {
+template<class T, class B> inline filterfalseiter<T, B>::filterfalseiter() {}
+template<class T, class B> inline filterfalseiter<T, B>::filterfalseiter(B (*predicate)(T), pyiter<T> *iterable) {
     this->predicate = predicate;
     this->iter = iterable->__iter__();
 }
 
-template<class T, class B> T ifilterfalseiter<T, B>::__next__() {
+template<class T, class B> T filterfalseiter<T, B>::__next__() {
     for (; ; ) {
         const T& value = this->iter->__next__();
         if (!this->predicate(value)) {
@@ -362,11 +362,11 @@ template<class T, class B> T ifilterfalseiter<T, B>::__next__() {
     assert(false && "unreachable");
 }
 
-template<class T, class B> inline ifilterfalseiter<T, B> *ifilterfalse(B (*predicate)(T), pyiter<T> *iterable) {
-    return new ifilterfalseiter<T, B>(predicate, iterable);
+template<class T, class B> inline filterfalseiter<T, B> *filterfalse(B (*predicate)(T), pyiter<T> *iterable) {
+    return new filterfalseiter<T, B>(predicate, iterable);
 }
-template<class T> inline ifilterfalseiter<T, bool> *ifilterfalse(void * /* null */, pyiter<T> *iterable) {
-    return new ifilterfalseiter<T, bool>(_identity, iterable);
+template<class T> inline filterfalseiter<T, bool> *filterfalse(void * /* null */, pyiter<T> *iterable) {
+    return new filterfalseiter<T, bool>(_identity, iterable);
 }
 
 // islice

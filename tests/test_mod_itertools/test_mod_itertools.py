@@ -1,7 +1,6 @@
 import itertools
 
 
-
 def get_count(threshold=16, n=0, step=1):
     res=[]
     for i in itertools.count(n, step):
@@ -13,6 +12,7 @@ def get_count(threshold=16, n=0, step=1):
                 break
         res.append(i)
     return res
+
 
 def test_count():
     assert get_count(threshold=16, n=3) == [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
@@ -41,6 +41,7 @@ def test_cycle():
     assert next(woo, -1) == 2
     assert next(woo, -1) == 3
 
+
 def test_repeat():
     r = itertools.repeat(10)
     assert next(r) == 10
@@ -49,25 +50,30 @@ def test_repeat():
 
     assert list(itertools.repeat(42, 3)) == [42, 42, 42]
 
+
 def test_chain():
     assert list(itertools.chain([1, 2, 3])) == [1, 2, 3]
     assert list(itertools.chain([1, 2, 3])) == [1, 2, 3]
     assert list(itertools.chain([1, 2], [3, 4])) == [1, 2, 3, 4]
     assert list(itertools.chain([1, 2], [3, 4], [5, 6])) == [1, 2, 3, 4, 5, 6]
 
+
 pred = lambda x: x < 5
 
 def test_dropwhile():
     assert list(itertools.dropwhile(pred, [1, 4, 6, 4, 1])) == [6, 4, 1]
 
+
 def test_takewhile():
     assert list(itertools.takewhile(pred, [1,4,6,4,1])) == [1, 4]
+
 
 def key(x):
    if x > 5:
       return 1
    else:
       return 0
+
 
 def test_groupby():
     res = []
@@ -76,6 +82,7 @@ def test_groupby():
             res.append(f)
         res.append(k)
     assert res == [1, 4, 0, 6, 1, 4, 1, 0]
+
 
 def test_islice():
     assert list(itertools.islice('ABCDEFG', 2)) == ['A', 'B']
@@ -96,6 +103,7 @@ def test_islice():
     assert list(itertools.islice('ABCDEFG', 2, 0, 2)) == []
     assert list(itertools.islice('ABCDEFG', 0, 0, 2)) == []
 
+
 def test_permutations():
     assert list(itertools.permutations('ABDC', 0)) == [()]
     assert list(itertools.permutations('ABDC', 1)) == [('A',), ('B',), ('D',), ('C',)]
@@ -104,6 +112,7 @@ def test_permutations():
         ('B', 'A'), ('B', 'D'), ('B', 'C'), 
         ('D', 'A'), ('D', 'B'), ('D', 'C'), 
         ('C', 'A'), ('C', 'B'), ('C', 'D')]
+
 
 def test_combinations():
     assert list(itertools.combinations('ABDC', 0)) == [()]
@@ -117,6 +126,7 @@ def test_combinations():
         ('D', 'C'),
     ]
 
+
 def test_product():
     assert list(itertools.product()) == [()]
     assert list(itertools.product('A')) ==  [('A',)]
@@ -129,6 +139,7 @@ def test_product():
     # assert list(itertools.product('AB', 'CD', repeat = 2)) ==  []
     assert list(itertools.product([.4, .42], [1, 2, 3])) == [(0.4, 1), (0.4, 2), (0.4, 3), (0.42, 1), (0.42, 2), (0.42, 3)]
     assert list(itertools.product('AB', [1, 2, 3])) == [('A', 1), ('A', 2), ('A', 3), ('B', 1), ('B', 2), ('B', 3)]
+
 
 def test_product_repeat():
     assert list(itertools.product([0, 1, 2], [0, 1, 2])) == [(0, 0), (0, 1), (0, 2), (1, 0), (1, 1), (1, 2), (2, 0), (2, 1), (2, 2)]
@@ -144,9 +155,11 @@ def test_product_repeat():
     assert xs[0] == (1, 4, 6, 1, 4, 6)
     assert xs[323] == (3, 5, 8, 3, 5, 8)
 
+
 def gen():
     for ae in [1, 2, 3, 4, 5]:
         yield ae
+
 
 def test_tee():
     it1, it2 = itertools.tee(gen())
@@ -163,6 +176,7 @@ def test_tee():
 def pred1(x):
     return x % 2
 
+
 def test_filterfalse():
     assert list(itertools.filterfalse(pred1, range(10))) == [0, 2, 4, 6, 8]
     assert list(itertools.filterfalse(None, range(10))) == [0]
@@ -175,6 +189,7 @@ def test_zip_longest():
     assert list(itertools.zip_longest([1,3,4])) == [(1,), (3,), (4,)]
     assert list(itertools.zip_longest([1, 3, 4], [42, 21], [12, 21, 33, 55])) ==  [(1, 42, 12), (3, 21, 21), (4, None, 33), (None, None, 55)]
     assert list(itertools.zip_longest([1, 3, 4], [42, 21], [12, 21, 33, 55], fillvalue=42)) ==  [(1, 42, 12), (3, 21, 21), (4, 42, 33), (42, 42, 55)]
+
 
 def test_compress():
     assert list(itertools.compress([42, 32, 21, 55, 303], [True, False, True, False, True])) == [42, 21, 303]
@@ -196,8 +211,9 @@ def test_all():
     test_product_repeat()
     test_compress()
     test_tee()
-    # test_filterfalse() ## FIXME: this fails
+    test_filterfalse()
     # test_zip_longest() ## FIXME: this fails
+
 
 if __name__ == '__main__':
     test_all()
