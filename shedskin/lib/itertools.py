@@ -2,6 +2,12 @@
 
 # http://docs.python.org/dev/_sources/library/itertools.txt
 
+#TODO not supported
+#def starmap(function, iterable):
+#    yield func(*iterable[0])
+#def accumulate
+#def pairwise
+
 # Infinite Iterators
 
 def count(start = 0, step = 1):
@@ -42,9 +48,6 @@ def takewhile(predicate, iterable):
 def islice(iterable, start, stop = -1, step = -1):
     'Known limitations: cannot distinguish between 0 and None for the stop argument'
     yield iter(iterable).__next__()
-
-#def starmap(function, iterable):
-#    yield func(*iterable[0])
 
 def tee(iterable, n = 2):
     return iter(iterable), iter(iterable)
