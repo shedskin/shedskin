@@ -28,7 +28,7 @@ setup(
     keywords="compiler, translator, cpp, extension",
     packages=['shedskin'],
     python_requires=">=3.8, <4",
-    install_requires=['conan==1.59.0', 'PyYAML==5.4'] if sys.platform.startswith('win') else [],  # NOTE pyyaml 6.x temp broken with py 3.12
+    install_requires=['conan==1.59.0', 'PyYAML==5.3.1'] if sys.platform.startswith('win') else [],  # NOTE pyyaml 6.x temp broken with py 3.12
     extras_require={
         # "dev": ["check-manifest"],
         "test": ["pytest", "tox"],
