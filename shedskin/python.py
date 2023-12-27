@@ -6,7 +6,7 @@ Copyright 2005-2023 Mark Dufour and contributors; License GNU GPL version 3 (See
 
 import ast
 import collections
-import importlib
+import importlib.util
 import os
 import re
 import sys
