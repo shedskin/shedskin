@@ -263,7 +263,7 @@ Install the following dependencies:
 
 * Microsoft Visual Studio Build Tools (enable CMake in installation process)
 * CMake
-* Conan 1.59.0 (pip install 'conan==1.59.0')
+* Conan 1.62.0 (pip install 'conan==1.62.0')
 
 Compiling a standalone program
 ------------------------------
