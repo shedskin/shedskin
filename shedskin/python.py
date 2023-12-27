@@ -6,7 +6,6 @@ Copyright 2005-2023 Mark Dufour and contributors; License GNU GPL version 3 (See
 
 import ast
 import collections
-import imp
 import importlib
 import os
 import re
@@ -287,8 +286,18 @@ def find_module(gx, name, paths):
     else:
         module_name = name
         import_paths = paths
-    _, filename, description = imp.find_module(module_name, import_paths)
-    filename = os.path.splitext(filename)[0]
+
+    filename = None
+    is_a_package = False
+    for path in import_paths:
+        if os.path.isfile(os.path.join(path, module_name)+'.py'):
+            filename = os.path.join(path, module_name)
+        elif os.path.isfile(os.path.join(path, module_name, '__init__.py')):
+            filename = os.path.join(path, module_name)
+            is_a_package = True
+
+    if filename is None:
+        raise ModuleNotFoundError("No module named '%s'" % module_name)
 
     absolute_import_paths = gx.libdirs + [os.getcwd()]
     absolute_import_path = next(
@@ -298,7 +307,6 @@ def find_module(gx, name, paths):
     absolute_name = relative_filename.replace(os.path.sep, ".")
     builtin = absolute_import_path in gx.libdirs
 
-    is_a_package = description[2] == imp.PKG_DIRECTORY
     if is_a_package:
         filename = os.path.join(filename, "__init__.py")
         relative_filename = os.path.join(relative_filename, "__init__.py")
