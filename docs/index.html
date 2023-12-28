@@ -1,0 +1,172 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Shed Skin &#8212; shedskin 0.9.8 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Shed Skin documentation" href="documentation.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="shed-skin">
+<h1>Shed Skin<a class="headerlink" href="#shed-skin" title="Permalink to this headline">¶</a></h1>
+<section id="an-experimental-restricted-python-to-c-compiler">
+<h2>An experimental (restricted-Python)-to-C++ compiler<a class="headerlink" href="#an-experimental-restricted-python-to-c-compiler" title="Permalink to this headline">¶</a></h2>
+<p><strong>Shed Skin</strong> is a transpiler, that can translate pure, but <em>implicitly statically</em> typed Python programs into optimized C++. It can generate stand-alone programs or extension modules that can be imported and used in larger Python programs.</p>
+<p>Besides the typing restriction, programs cannot freely use the Python standard library (although about 25 common modules, such as <code class="code docutils literal notranslate"><span class="pre">random</span></code> and <code class="code docutils literal notranslate"><span class="pre">re</span></code>, are currently supported). Also, not all Python features, such as nested functions and variable numbers of arguments, are supported.</p>
+<p>For a set of a <a class="reference external" href="https://github.com/shedskin/shedskin/tree/master/examples">80 non-trivial programs</a> (at over 25,000 lines in total (sloccount)), measurements show a typical speedup of 1-100 times over CPython.</p>
+</section>
+<section id="documentation">
+<h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="documentation.html">Shed Skin documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="documentation.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation.html#typing-restrictions">Typing restrictions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation.html#python-subset-restrictions">Python subset restrictions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation.html#library-limitations">Library limitations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation.html#installation">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="documentation.html#gnu-linux">GNU/Linux</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="documentation.html#from-distribution">From Distribution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="documentation.html#manual-installation">Manual installation</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="documentation.html#dependencies">Dependencies</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="documentation.html#osx">OSX</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="documentation.html#id1">Manual installation</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="documentation.html#id2">Dependencies</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="documentation.html#windows">Windows</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="documentation.html#compiling-a-standalone-program">Compiling a standalone program</a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation.html#generating-an-extension-module">Generating an extension module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="documentation.html#limitations">Limitations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="documentation.html#numpy-integration">Numpy integration</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="documentation.html#distributing-binaries">Distributing binaries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation.html#multiprocessing">Multiprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation.html#calling-c-c-code">Calling C/C++ code</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="documentation.html#standard-library">Standard library</a></li>
+<li class="toctree-l3"><a class="reference internal" href="documentation.html#shed-skin-types">Shed Skin types</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="documentation.html#command-line-options">Command-line options</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="documentation.html#analyze">analyze</a></li>
+<li class="toctree-l3"><a class="reference internal" href="documentation.html#translate">translate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="documentation.html#build">build</a></li>
+<li class="toctree-l3"><a class="reference internal" href="documentation.html#run">run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="documentation.html#test">test</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="documentation.html#performance-tips-and-tricks">Performance tips and tricks</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="documentation.html#id3">Performance tips</a></li>
+<li class="toctree-l3"><a class="reference internal" href="documentation.html#tricks">Tricks</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="documentation.html#how-to-help-out-in-development">How to help out in development</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="#">shedskin</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="documentation.html">Shed Skin documentation</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+      <li>Next: <a href="documentation.html" title="next chapter">Shed Skin documentation</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2006—2023, Mark Dufour & the Shed Skin contributors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.3.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
