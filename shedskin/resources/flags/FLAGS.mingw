@@ -1,0 +1,3 @@
+CC=g++
+CCFLAGS=-O2 -DWIN32 -std=c++17 -march=native -Wno-deprecated -Wl,--enable-auto-import $(CPPFLAGS)
+LFLAGS=-lgc -lpcre -lgccpp $(LDFLAGS)
