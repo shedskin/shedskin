@@ -7,9 +7,9 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'shedskin'
-copyright = '2006—2022, Mark Dufour & the Shed Skin contributors'
+copyright = '2006—2023, Mark Dufour & the Shed Skin contributors'
 author = 'Mark Dufour & the Shed Skin contributors'
-release = '0.9.4'
+release = '0.9.8'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
