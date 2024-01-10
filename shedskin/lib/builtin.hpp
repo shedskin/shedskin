@@ -1423,7 +1423,7 @@ template<class T> static inline int __wrap(T a, __ss_int i) {
 #endif
 #ifndef __SS_NOBOUNDS
         if(unlikely(i<0 || i>= l))
-            throw new IndexError(new str("index out of range")); // inlined for performance
+            __throw_index_out_of_range();
 #endif
     return i;
 }
