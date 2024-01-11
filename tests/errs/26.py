@@ -11,7 +11,7 @@ socket.socket().gettimeout()
 map(lambda a,b,c:a+b+c, range(2), range(3), range(4))
 
 import itertools
-itertools.izip_longest(range(2), range(3))
+itertools.zip_longest(range(2), range(3))
 
 c = 'huhp'
 import array
@@ -43,7 +43,7 @@ m.woeh(1,2)
 #*WARNING* 26.py:1: pow(int, int) returns int after compilation
 #*WARNING* 26.py:6: 'findall' does not work with groups (use 'finditer' instead)
 #*WARNING* 26.py:9: socket.set/gettimeout do not accept/return None
-#*WARNING* 26.py:14: default fillvalue for 'izip_longest' becomes 0 for integers
+#*WARNING* 26.py:14: default fillvalue for 'zip_longest' becomes 0 for integers
 #*WARNING* 26.py:18: non-constant or unsupported type code
 #*WARNING* 26.py:19: non-constant or unsupported type code
 #*WARNING* 26.py:23: calling functions with different numbers of arguments
