@@ -1,6 +1,6 @@
 """
 *** SHED SKIN Python-to-C++ Compiler ***
-Copyright 2005-2023 Mark Dufour and contributors; License GNU GPL version 3
+Copyright 2005-2024 Mark Dufour and contributors; License GNU GPL version 3
 (See LICENSE)
 
 graph.py: build constraint graph used in dataflow analysis
@@ -2188,21 +2188,6 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 bytes: "bytes_",
             }
             self.instance(node, python.def_class(self.gx, map[type(node.value)]), func)
-
-    # py2 ast
-    def visit_Num(self, node, func=None):
-        # removed 'long' (doesn't exist in py3)
-        map = {
-            int: "int_",
-            float: "float_",
-            complex: "complex",
-        }  # XXX 'return' -> ast.Return(Constant(None))?
-        self.instance(node, python.def_class(self.gx, map[type(node.n)]), func)
-
-    # py2 ast
-    def visit_Str(self, node, func=None):
-        map = {str: "str_"}
-        self.instance(node, python.def_class(self.gx, map[type(node.s)]), func)
 
     def fncl_passing(self, node, newnode, func):
         lfunc, lclass = python.lookup_func(node, getmv()), python.lookup_class(

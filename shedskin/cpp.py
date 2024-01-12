@@ -1,6 +1,6 @@
 """
 *** SHED SKIN Python-to-C++ Compiler ***
-Copyright 2005-2023 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)
+Copyright 2005-2024 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)
 
 cpp.py: output C++ code
 
@@ -86,16 +86,6 @@ class CPPNamer:
 # --- code generation visitor; use type information
 
 
-def escape_extra_newlines(text):
-    patterns = ["<%block", "<%include"]
-    results = []
-    for line in text.splitlines():
-        if any(line.startswith(p) for p in patterns):
-            line += "\\"
-        results.append(line)
-    return "\n".join(results)
-
-
 class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def __init__(self, gx, module):
         self.gx = gx
@@ -118,7 +108,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         return self.namer.name(obj)
 
     def get_output_file(self, ext=".cpp", mode="w"):
-        #        output_file = self.output_base + ext
         output_file = self.output_base.with_suffix(ext)
 
         parentdir = os.path.dirname(self.gx.module_path)
@@ -3726,12 +3715,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
     def visit_Constant(self, node, func=None):
         self.visit_const(node, node.value)
-
-    def visit_Num(self, node, func=None):
-        self.visit_const(node, node.n)
-
-    def visit_Str(self, node, func=None):
-        self.visit_const(node, node.s)
 
 
 def generate_code(gx):
