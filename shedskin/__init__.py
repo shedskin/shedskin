@@ -1,6 +1,6 @@
 """
 *** SHED SKIN Python-to-C++ Compiler ***
-Copyright 2005-2023 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)
+Copyright 2005-2024 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)
 
 """
 
@@ -352,8 +352,8 @@ class Shedskin:
 
         ss = cls(args)
 
-        ss.log.info('*** SHED SKIN Python-to-C++ Compiler 0.9.8 ***')
-        ss.log.info('Copyright 2005-2023 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)')
+        ss.log.info('*** SHED SKIN Python-to-C++ Compiler 0.9.9 ***')
+        ss.log.info('Copyright 2005-2024 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)')
         ss.log.info('')
 
         if args.subcmd == 'analyze':

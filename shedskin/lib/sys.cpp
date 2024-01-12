@@ -1,4 +1,4 @@
-/* Copyright 2005-2023 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2024 Mark Dufour and contributors; License Expat (See LICENSE) */
 
 #include "sys.hpp"
 #include <stdio.h>
@@ -18,16 +18,16 @@ void __init(int c, char **v) {
     argv = new list<str *>();
 
 #if defined( _MSC_VER )
-    version = new str("Shed Skin Python-to-C++ Compiler 0.9.8\n[MSVC ");
+    version = new str("Shed Skin Python-to-C++ Compiler 0.9.9\n[MSVC ");
     version = version->__add__(__str(_MSC_VER))->__add__(new str("]"));
 #else
-    version = new str("Shed Skin Python-to-C++ Compiler 0.9.8\n[GCC ");
+    version = new str("Shed Skin Python-to-C++ Compiler 0.9.9\n[GCC ");
     version = version->__add__(new str(__VERSION__))->__add__(new str("]"));
 #endif
-    version_info = new tuple2<__ss_int, __ss_int>(5, (__ss_int)3, (__ss_int)9, (__ss_int)0, (__ss_int)0, (__ss_int)0);
+    version_info = new tuple2<__ss_int, __ss_int>(5, (__ss_int)3, (__ss_int)12, (__ss_int)0, (__ss_int)0, (__ss_int)0);
     hexversion = 0x03090000;
 
-    copyright = new str("Copyright (c) Mark Dufour 2005-2023.\nAll Rights Reserved.");
+    copyright = new str("Copyright (c) Mark Dufour 2005-2024.\nAll Rights Reserved.");
 
     platform = new str("unknown");
 #ifdef __linux__
