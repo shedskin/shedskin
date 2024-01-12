@@ -1,6 +1,6 @@
-/* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2024 Mark Dufour and contributors; License Expat (See LICENSE) */
 
-/* builtin functions */
+/* input */
 
 str *input(str *msg) {
     if(msg and len(msg)) {
@@ -14,6 +14,8 @@ str *input(str *msg) {
         throw new EOFError();
     return s;
 }
+
+/* int */
 
 __ss_int __int(str *s, __ss_int base) {
     char *cp;
@@ -57,6 +59,8 @@ __ss_int __int(bytes *s, __ss_int base) {
     return i;
 }
 
+/* float */
+
 template<> __ss_float __float(str *s) {
     __ss_float d = strtod(s->c_str(), NULL);
     if(std::isnan(d))
@@ -64,9 +68,13 @@ template<> __ss_float __float(str *s) {
     return d;
 }
 
+/* id */
+
 template<> __ss_int id(__ss_int) { throw new TypeError(new str("'id' called with integer")); }
 template<> __ss_int id(__ss_float) { throw new TypeError(new str("'id' called with float")); }
 template<> __ss_int id(__ss_bool) { throw new TypeError(new str("'id' called with bool")); }
+
+/* range */
 
 static int range_len(int lo, int hi, int step) {
     /* modified from CPython */
@@ -155,7 +163,7 @@ __iter<__ss_int> *reversed(__xrange *x) {
    return new __rangeiter(x->a+(range_len(x->a,x->b,x->s)-1)*x->s, x->a-x->s, -x->s);
 }
 
-/* representation */
+/* repr */
 
 template<> str *repr(__ss_float d) { return __str(d); }
 #ifdef __SS_LONG
@@ -170,11 +178,6 @@ template<> str *repr(size_t i) { return repr((__ss_int)i); }
 #endif
 
 str *__str(void *) { return new str("None"); }
-
-/* get class pointer */
-
-template<> class_ *__type(int) { return cl_int_; }
-template<> class_ *__type(__ss_float) { return cl_float_; }
 
 /* hex, oct, bin */
 
@@ -203,3 +206,8 @@ template<> str *bin(int i) {
         return (new str("0b"))->__add__(__str(i, 2));
 }
 template<> str *bin(__ss_bool b) { return bin((int)b.value); }
+
+/* get class pointer */
+
+template<> class_ *__type(int) { return cl_int_; }
+template<> class_ *__type(__ss_float) { return cl_float_; }
