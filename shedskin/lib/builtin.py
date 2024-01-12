@@ -1,4 +1,4 @@
-# Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE)
+# Copyright 2005-2024 Mark Dufour and contributors; License Expat (See LICENSE)
 
 class class_:
     def __repr__(self):
@@ -910,7 +910,7 @@ class file(pyiter):
 
     def __enter__(self):
         pass
-    
+
     def __exit__(self):
         pass
 
@@ -963,7 +963,7 @@ class file_binary(pyiter):
 
     def __enter__(self):
         pass
-    
+
     def __exit__(self):
         pass
 
@@ -1032,7 +1032,7 @@ def reversed(l):
 def enumerate(x, start=0):
     return __iter((1, iter(x).__next__()))
 
-class __xrange:  # TODO add __getitem__!
+class __xrange:
     def __init__(self):
         self.unit = 1
     def __iter__(self):
