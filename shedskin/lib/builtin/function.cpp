@@ -107,8 +107,6 @@ public:
         this->b = b;
         this->s = s;
         i = a;
-        if(s==0)
-            throw new ValueError(new str("xrange() arg 3 must not be zero"));
     }
 
     __ss_int __next__() {
@@ -129,6 +127,9 @@ public:
 };
 
 __xrange::__xrange(__ss_int a, __ss_int b, __ss_int s) {
+    if(s==0)
+        throw new ValueError(new str("range() arg 3 must not be zero"));
+
     this->a = a;
     this->b = b;
     this->s = s;
