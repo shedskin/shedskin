@@ -191,10 +191,6 @@ class pyiter:
     def __with_int__(self):
         return self
 
-    def __contains__(self, x):
-        x == self.unit
-        return True
-
     def __getunit__(self, i): # unpacking
         return self.unit
 
@@ -1032,19 +1028,17 @@ def reversed(l):
 def enumerate(x, start=0):
     return __iter((1, iter(x).__next__()))
 
-class __xrange:
+class __xrange(pyseq):
     def __init__(self):
         self.unit = 1
-    def __iter__(self):
-        return __iter(1)
     def __getitem__(self, i):
         return 1
-    def __getunit__(self, i):  # unpacking
-        return 1
+    def __contains__(self, x):
+        return True
     def __len__(self):
         return 1
 
-def range(a, b=1, s=1):
+def range(a, b=1, s=1):  # TODO use class directly
     return __xrange()
 
 def zip(__kw_strict=False, *args):
