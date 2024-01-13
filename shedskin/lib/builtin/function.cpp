@@ -130,9 +130,9 @@ __xrange::__xrange(__ss_int a, __ss_int b, __ss_int s) {
     if(s==0)
         throw new ValueError(new str("range() arg 3 must not be zero"));
 
-    this->a = a;
-    this->b = b;
-    this->s = s;
+    this->a = this->start = a;
+    this->b = this->stop = b;
+    this->s = this->step = s;
 }
 
 __iter<__ss_int> *__xrange::__iter__() {
