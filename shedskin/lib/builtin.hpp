@@ -969,7 +969,8 @@ public:
 
 class __xrange : public pyseq<__ss_int> {
 public:
-    __ss_int a, b, s;
+    __ss_int a, b, s; // TODO remove
+    __ss_int start, stop, step;
 
     __xrange(__ss_int a, __ss_int b, __ss_int s);
     __iter<__ss_int> *__iter__();

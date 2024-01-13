@@ -1030,6 +1030,9 @@ def enumerate(x, start=0):
 
 class __xrange(pyseq):
     def __init__(self):
+        self.start = 1
+        self.stop = 1
+        self.step = 1
         self.unit = 1
     def __getitem__(self, i):
         return 1

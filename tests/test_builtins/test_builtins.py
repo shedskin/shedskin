@@ -251,6 +251,13 @@ def test_range():
     assert list(range(1, 10, 2)) == [1, 3, 5, 7, 9]
     assert list(range(-17, -120, -17)) == [-17, -34, -51, -68, -85, -102, -119]
 
+    r = range(4, 10, 2)
+    assert r.start == 4
+    assert r.stop == 10
+    assert r.step == 2
+    assert 8 in r
+    assert 9 not in r
+
 def test_repr():
     assert repr(1) == '1'
     assert repr(1.1) == '1.1'
