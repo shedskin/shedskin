@@ -967,7 +967,7 @@ public:
     T __next__();
 };
 
-class __xrange : public pyiter<__ss_int> {
+class __xrange : public pyseq<__ss_int> {
 public:
     __ss_int a, b, s;
 
