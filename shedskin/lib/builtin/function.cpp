@@ -140,11 +140,22 @@ __iter<__ss_int> *__xrange::__iter__() {
 }
 
 __ss_int __xrange::__len__() {
-   return range_len(a, b, s);
+    return range_len(a, b, s);
 }
 
 __ss_int __xrange::__getitem__(__ss_int i) {
-   return a + (__wrap(this, i)) * s;
+    return a + (__wrap(this, i)) * s;
+}
+
+__ss_bool __xrange::__contains__(__ss_int i) {
+    if(s > 0 and (i < a or i >= b))
+        return False;
+    else if(s < 0 and (i > a or i <= b))
+        return False;
+    else if((i-a)%s != 0)
+        return False;
+
+    return True;
 }
 
 str *__xrange::__repr__() {
