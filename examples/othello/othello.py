@@ -16,12 +16,12 @@ def possible_move(board, x, y, color):
         if flip_in_direction(board, x, y, direction, color):
             return True
     return False
-        
+
 def flip_in_direction(board, x, y, direction, color):
     other_color = False
     while True:
         x, y = x+direction[0], y+direction[1]
-        if x not in list(range(8)) or y not in list(range(8)):
+        if x not in range(8) or y not in range(8):
             return False
         square = board[x][y]
         if square == empty: return False
@@ -73,7 +73,7 @@ def best_move(board, color, first, step=1):
         if score >= max_score:
             max_move, max_mobility, max_score = move, mobility, score
     return max_move, max_mobility
-    
+
 if __name__ == '__main__':
     turn = black
     while possible_moves(board, black) or possible_moves(board, white):
