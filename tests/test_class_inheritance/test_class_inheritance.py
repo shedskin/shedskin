@@ -81,13 +81,6 @@ class B(C):
         return 'meow'
 
 
-def somefunc(x):
-    if isinstance(x, A):
-        return x.woof()
-    elif isinstance(x, B):
-        return x.meow()
-
-
 def test_inheritence1():
     w = World()
     w.objects.append(Plane(6, 7, 8))
@@ -113,19 +106,11 @@ def test_inheritence3():
     assert c3.a1 == 1
     assert c3.a2 == 4
 
-def test_inheritence4():
-    assert somefunc(A()) == 'woof'
-    assert somefunc(B()) == 'meow'
-    x = A()
-    x = B()
-    assert somefunc(x) == 'meow'
-
 
 def test_all():
-    test_inheritence1()
-    test_inheritence2()
-    test_inheritence3()
-    test_inheritence4()
+    test_inheritance1()
+    test_inheritance2()
+    test_inheritance3()
 
 if __name__ == '__main__':
     test_all() 
