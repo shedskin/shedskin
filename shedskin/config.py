@@ -57,6 +57,8 @@ class GlobalInfo:  # XXX add comments, split up
         self.ss_prefix = "__ss_"
         self.list_types = {}
         self.loopstack = []  # track nested loops
+        self.filterstack = []  # track 'if isinstance(..)'
+        self.filters = {}  # syntax node filter determined using filterstack
         self.comments = {}
         self.import_order = 0  # module import order
         self.from_module = {}

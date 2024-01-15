@@ -488,6 +488,14 @@ def is_zip2(node):
     )
 
 
+def is_isinstance(node):
+    return (
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "isinstance"
+    )
+
+
 # --- recursively determine (lvalue, rvalue) pairs in assignment expressions
 def assign_rec(left, right):
     if ast_utils.is_assign_list_or_tuple(left) and isinstance(

@@ -2420,7 +2420,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.append("hasher(")  # XXX cleanup
             elif ident == "__print":  # XXX
                 self.append("print(")
-            elif ident == "isinstance":
+            elif ident == "isinstance" and node.args[0] not in self.gx.filters:
                 self.append("True")
                 return
             else:
@@ -3633,9 +3633,13 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                             self.append(func.ident + "::")
                         var = python.smart_lookup_var(node.id, func, mv=self.mv)
                         if var:
+                            if node in self.gx.filters:
+                                self.append("((%s *)" % self.gx.filters[node].ident)
                             if var.is_global:
                                 self.append(self.module.full_path() + "::")
                             self.append(self.cpp_name(var.var))
+                            if node in self.gx.filters:
+                                self.append(")")
                         else:
                             self.append(node.id)  # XXX
         else:
