@@ -81,7 +81,7 @@ class B(C):
         return 'meow'
 
 
-def test_inheritence1():
+def test_inheritance1():
     w = World()
     w.objects.append(Plane(6, 7, 8))
     w.objects.append(Sphere(6, 7, 9))
@@ -89,7 +89,7 @@ def test_inheritence1():
     assert w.objects[0].shader == 8
     assert w.objects[1].shader == 9
 
-def test_inheritence2():
+def test_inheritance2():
     father = Father(3)
     assert father.f(4) == 12
 
@@ -99,7 +99,7 @@ def test_inheritence2():
     daughter = Daughter(4)
     assert daughter.g(5) == 1280
 
-def test_inheritence3():
+def test_inheritance3():
     c3 = C3()
     c3.m1()
     c3.m2()
