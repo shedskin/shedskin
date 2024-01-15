@@ -992,15 +992,11 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.temp_var2(child, newnode, func)
 
     def visit_If(self, node, func=None):
-        if python.is_isinstance(node.test):
-            self.gx.filterstack.append(node.test.args)
         self.bool_test_add(node.test)
         faker = ast_utils.make_call(ast.Name("bool", ast.Load()), [node.test])
         self.visit(faker, func)
         for child in node.body:
             self.visit(child, func)
-        if python.is_isinstance(node.test):
-            self.gx.filterstack.pop()
         for child in node.orelse:
             self.visit(child, func)
 
@@ -2246,9 +2242,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                         var = infer.default_var(self.gx, node.id, None, mv=getmv())
             if var:
                 self.add_constraint((infer.inode(self.gx, var), newnode), func)
-                for a, b in self.gx.filterstack:
-                    if var.name == a.id:
-                        self.gx.filters[node] = python.lookup_class(b, getmv())
+
         elif type(node.ctx) == ast.Store:
             # Adding vars for ast.Name store are handled elsewhere
             pass
