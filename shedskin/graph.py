@@ -234,11 +234,6 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.instance(node, cl, func)
         infer.default_var(self.gx, "unit", cl)
 
-        if classname in ["list", "tuple"] and not node.elts:
-            self.gx.empty_constructors.add(
-                node
-            )  # ifa disables those that flow to instance variable assignments
-
         # --- internally flow binary tuples
         if cl.ident == "tuple2":
             infer.default_var(self.gx, "first", cl)

@@ -1632,7 +1632,6 @@ def ifa_seed_template(gx, func, cart, dcpa, cpa, worklist):
                 if alloc_id in gx.alloc_info:
                     gx.new_alloc_info[alloc_id] = gx.alloc_info[alloc_id]
                     gx.types[alloc_node] = set()
-                    # print 'seeding..', alloc_node, gx.alloc_info[alloc_id], alloc_node.thing in gx.empty_constructors
                     gx.types[alloc_node].add(gx.alloc_info[alloc_id])
                     add_to_worklist(worklist, alloc_node)
 
