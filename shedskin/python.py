@@ -100,8 +100,6 @@ class Class(PyObject):
         self.virtualvars = {}  # 'virtual' variables
         self.properties = {}
         self.staticmethods = []
-        self.typenr = self.gx.nrcltypes
-        self.gx.nrcltypes += 1
         self.splits = {}  # contour: old contour (used between iterations)
         self.has_copy = self.has_deepcopy = False
         self.def_order = self.gx.class_def_order
