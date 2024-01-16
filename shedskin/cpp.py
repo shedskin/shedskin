@@ -581,9 +581,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     if cl.parent.static_nodes:
                         self.output("%s::__static__();" % self.cpp_name(cl))
 
-            elif isinstance(child, ast.Expr):
-                self.impl_visit_expr(child)
-
             elif isinstance(child, ast.ImportFrom) and child.module != "__future__":
                 module = self.gx.from_module[child]
                 for name, pseudonym in [(n.name, n.asname) for n in child.names]:
@@ -620,7 +617,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         )
                         self.eol()
 
-            elif not isinstance(child, (ast.ClassDef, ast.FunctionDef)):
+            else:
                 self.do_comments(child)
                 self.visit(child)
 
@@ -638,20 +635,11 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         if self.module == self.gx.main_module:
             self.do_main()
 
-    def impl_visit_expr(self, node, func=None):
-        # RESOLVE: When can this happen using compiler?
-        # if isinstance(node.value, Constant) and node.value.value is None:  # XXX merge with visit_Stmt
-        #     pass
-        if isinstance(node.value, ast.Str):
-            # self.do_comment(node.value.s) # XXX disabled as it was double printing comments
-            pass
-        else:
+    def visit_Expr(self, node, func=None):
+        if not isinstance(node.value, ast.Str):
             self.start("")
             self.visit(node.value, func)
             self.eol()
-
-    def visit_Expr(self, node, func=None):
-        self.impl_visit_expr(node, func)
 
     def visit_NamedExpr(self, node, func=None):
         self.visitm("(", node.target.id, "=", node.value, ")", func)
