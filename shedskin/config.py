@@ -22,7 +22,6 @@ class GlobalInfo:  # XXX add comments, split up
         self.inheritance_temp_vars = {}
         self.parent_nodes = {}
         self.inherited = set()
-        self.nrcltypes = 8
         self.empty_constructors = set()
         self.sig_nr = {}
         self.nameclasses = {}
