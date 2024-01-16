@@ -290,7 +290,8 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             print(file=self.out)
 
     def output(self, text):
-        self.print(self.indentation + text)
+        if text:
+            self.print(self.indentation + text)
 
     def start(self, text=None):
         self.line = self.indentation
