@@ -22,8 +22,6 @@ class GlobalInfo:  # XXX add comments, split up
         self.inheritance_temp_vars = {}
         self.parent_nodes = {}
         self.inherited = set()
-        self.sig_nr = {}
-        self.nameclasses = {}
         self.module = None
         self.module_path = None
         self.cwd = pathlib.Path.cwd()
