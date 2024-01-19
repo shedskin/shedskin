@@ -1710,11 +1710,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def visit_Global(self, node, func=None):
         pass
 
-    def visit_Repr(self, node, func=None):
-        self.visitm(
-            "repr(", infer.inode(self.gx, node.value).fakefunc.func.value, ")", func
-        )
-
     def visit_If(self, node, func=None):
         self.start()
         self.append("if (")

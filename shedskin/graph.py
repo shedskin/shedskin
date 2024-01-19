@@ -468,18 +468,6 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.fake_func(infer.inode(self.gx, value), value, "__str__", [], func)
         self.instance(node, python.def_class(self.gx, "str_"), func)
 
-    #    def visit_Stmt(self, node, func=None):
-    #        comments = []
-    #        for b in node.nodes:
-    #            if isinstance(b, ast.Expr):
-    #                self.bool_test_add(b.expr)
-    #            if isinstance(b, ast.Expr) and isinstance(b.expr, Constant) and type(b.expr.value) == str:
-    #                comments.append(b.expr.value)
-    #            elif comments:
-    #                self.gx.comments[b] = comments
-    #                comments = []
-    #            self.visit(b, func)
-
     def visit_Expr(self, node, func=None):
         self.bool_test_add(node.value)
         self.visit(node.value, func)
@@ -1020,9 +1008,6 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
     def visit_Set(self, node, func=None):
         self.constructor(node, "set", func)
 
-    def visit_Repr(self, node, func=None):
-        self.fake_func(node, node.value, "__repr__", [], func)
-
     def visit_Tuple(self, node, func=None):
         if isinstance(node.ctx, ast.Load):
             if len(node.elts) == 2:
@@ -1260,14 +1245,6 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         register_node(assign, func)
         infer.inode(self.gx, node).assignhop = assign
         self.visit(assign, func)
-
-    def visit_Print(self, node, func=None):
-        pnode = infer.CNode(self.gx, node, parent=func, mv=getmv())
-        self.gx.types[pnode] = set()
-
-        for child in ast.iter_child_nodes(node):
-            self.visit(child, func)
-            self.fake_func(infer.inode(self.gx, child), child, "__str__", [], func)
 
     def temp_var(self, node, func=None, looper=None, wopper=None, exc_name=False):
         if node in self.gx.parent_nodes:
