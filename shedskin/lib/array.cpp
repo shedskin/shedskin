@@ -7,6 +7,7 @@ namespace __array__ {
 str *__name__;
 void * default_0;
 class_ *cl_array;
+str *typecodes;
 
 void *buffy;
 
@@ -97,6 +98,7 @@ void __init() {
 
     buffy = malloc(8);
     default_0 = NULL;
+    typecodes = new str("bBuhHiIlLqQfd");
 }
 
 } // module namespace

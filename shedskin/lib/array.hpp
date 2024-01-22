@@ -11,6 +11,7 @@ namespace __array__ {
 extern str *const_0;
 extern str *__name__;
 extern void *buffy;
+extern str *typecodes;
 
 unsigned int get_itemsize(char typechar);
 
