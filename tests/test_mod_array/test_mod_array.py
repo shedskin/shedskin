@@ -2,13 +2,11 @@ import array
 
 
 def test_typecodes():
-    pass
+    assert array.typecodes == 'bBuhHiIlLqQfd'
 
-    # array.typecodes
-    # array.array('i') etc.
-
-    # arr.typecode
-    # arr.itemsize
+    arr = array.array('i')
+    assert arr.typecode == 'i'
+    assert arr.itemsize == 4
 
 
 def test_file():
