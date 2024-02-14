@@ -172,6 +172,14 @@ def make_arg_list(
         return ast.arguments(args, vararg, kwarg, defaults)
 
 
+def is_property_setter(dec):
+    return (
+        isinstance(dec, ast.Attribute)
+        and isinstance(dec.value, ast.Name)
+        and dec.attr == "setter"
+    )
+
+
 # --- module visitor; analyze program, build constraint graph
 class ModuleVisitor(ast_utils.BaseNodeVisitor):
     def __init__(self, module, gx):
@@ -646,7 +654,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             # methods
             for m in self.stmt_nodes(n, ast.FunctionDef):
                 if m.decorator_list and [
-                    dec for dec in m.decorator_list if python.is_property_setter(dec)
+                    dec for dec in m.decorator_list if is_property_setter(dec)
                 ]:
                     m.name = m.name + "__setter__"
                 if (
@@ -879,7 +887,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             if inherited_from:
                 self.set_default_vars(node, func)
 
-        if not python.is_method(func):
+        if not (isinstance(func, python.Function) and isinstance(func.parent, python.Class)):
             if (
                 not getmv().module.builtin
                 and node not in getmv().funcnodes
@@ -895,7 +903,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     parent.staticmethods.append(node.name)
                 elif isinstance(dec, ast.Name) and dec.id == "property":
                     parent.properties[node.name] = [node.name, None]
-                elif python.is_property_setter(dec):
+                elif is_property_setter(dec):
                     parent.properties[dec.value.id][1] = node.name
                 else:
                     error.error(
@@ -981,7 +989,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.visit(body_node, func)
 
         for i, default in enumerate(func.defaults):
-            if not python.is_literal(default):
+            if not ast_utils.is_literal(default):
                 self.defaults[default] = (len(self.defaults), func, i)
             self.visit(default, None)  # defaults are global
 
@@ -1178,23 +1186,23 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
     def visit_BinOp(self, node, func=None):
         if type(node.op) == ast.Add:
             self.fake_func(
-                node, node.left, python.aug_msg(node, "add"), [node.right], func
+                node, node.left, ast_utils.aug_msg(node, "add"), [node.right], func
             )
         elif type(node.op) == ast.Sub:
             self.fake_func(
-                node, node.left, python.aug_msg(node, "sub"), [node.right], func
+                node, node.left, ast_utils.aug_msg(node, "sub"), [node.right], func
             )
         elif type(node.op) == ast.Mult:
             self.fake_func(
-                node, node.left, python.aug_msg(node, "mul"), [node.right], func
+                node, node.left, ast_utils.aug_msg(node, "mul"), [node.right], func
             )
         elif type(node.op) == ast.Div:
             self.fake_func(
-                node, node.left, python.aug_msg(node, "truediv"), [node.right], func
+                node, node.left, ast_utils.aug_msg(node, "truediv"), [node.right], func
             )
         elif type(node.op) == ast.FloorDiv:
             self.fake_func(
-                node, node.left, python.aug_msg(node, "floordiv"), [node.right], func
+                node, node.left, ast_utils.aug_msg(node, "floordiv"), [node.right], func
             )
         elif type(node.op) == ast.Pow:
             self.fake_func(node, node.left, "__pow__", [node.right], func)
@@ -1210,18 +1218,18 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 self.fake_func(node, node.left, "__mod__", [node.right], func)
         elif type(node.op) == ast.LShift:
             self.fake_func(
-                node, node.left, python.aug_msg(node, "lshift"), [node.right], func
+                node, node.left, ast_utils.aug_msg(node, "lshift"), [node.right], func
             )
         elif type(node.op) == ast.RShift:
             self.fake_func(
-                node, node.left, python.aug_msg(node, "rshift"), [node.right], func
+                node, node.left, ast_utils.aug_msg(node, "rshift"), [node.right], func
             )
         elif type(node.op) == ast.BitOr:
-            self.visit_impl_bitpair(node, python.aug_msg(node, "or"), func)
+            self.visit_impl_bitpair(node, ast_utils.aug_msg(node, "or"), func)
         elif type(node.op) == ast.BitXor:
-            self.visit_impl_bitpair(node, python.aug_msg(node, "xor"), func)
+            self.visit_impl_bitpair(node, ast_utils.aug_msg(node, "xor"), func)
         elif type(node.op) == ast.BitAnd:
-            self.visit_impl_bitpair(node, python.aug_msg(node, "and"), func)
+            self.visit_impl_bitpair(node, ast_utils.aug_msg(node, "and"), func)
         # PY3: elif type(node.op) == MatMult:
         else:
             error.error(
@@ -1486,17 +1494,17 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
     def do_for(self, node, assnode, get_iter, func):
         # --- for i in range(..) XXX i should not be modified.. use tempcounter; two bounds
-        if python.is_fastfor(node):
+        if ast_utils.is_fastfor(node):
             self.temp_var2(node.target, assnode, func)
             self.temp_var2(node.iter, infer.inode(self.gx, node.iter.args[0]), func)
 
             if (
                 len(node.iter.args) == 3
                 and not isinstance(node.iter.args[2], ast.Name)
-                and not python.is_literal(node.iter.args[2])
+                and not ast_utils.is_literal(node.iter.args[2])
             ):  # XXX merge with ast.ListComp
                 for arg in node.iter.args:
-                    if not isinstance(arg, ast.Name) and not python.is_literal(
+                    if not isinstance(arg, ast.Name) and not ast_utils.is_literal(
                         arg
                     ):  # XXX create func for better check
                         self.temp_var2(arg, infer.inode(self.gx, arg), func)
@@ -1507,9 +1515,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.temp_var2((node, 1), infer.inode(self.gx, get_iter), func)
             self.temp_var_int(node.iter, func)
 
-            if python.is_enumerate(node) or python.is_zip2(node):
+            if ast_utils.is_enumerate(node) or ast_utils.is_zip2(node):
                 self.temp_var2((node, 2), infer.inode(self.gx, node.iter.args[0]), func)
-                if python.is_zip2(node):
+                if ast_utils.is_zip2(node):
                     self.temp_var2(
                         (node, 3), infer.inode(self.gx, node.iter.args[1]), func
                     )
@@ -1682,7 +1690,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
         # --- a,b,.. = c,(d,e),.. = .. = expr
         for target_expr in node.targets:
-            pairs = python.assign_rec(target_expr, node.value)
+            pairs = ast_utils.assign_rec(target_expr, node.value)
             for lvalue, rvalue in pairs:
                 # expr[expr] = expr
                 if isinstance(lvalue, ast.Subscript) and not isinstance(
