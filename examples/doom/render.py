@@ -727,7 +727,8 @@ def draw_seg(seg, map_, drawsurf, scrXA, scrXB, cbuffer, za, zb, textureX0,
                 if lower_texture is not None:
                     draw_wall_col(drawsurf, x, lowerMinY, lowerMaxY,
                                   lower_texture, currentTextureX, currentZ,
-                                  lowerTextureY, lowerTextureYStep, colormap)
+                                  lowerTextureY, lowerTextureYStep,
+                                  colormap)
 
                 if lowerMinY < upperOcclusion[x]:
                     upperOcclusion[x] = lowerMinY
