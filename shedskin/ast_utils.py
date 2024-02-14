@@ -31,15 +31,6 @@ def is_none(node):
     )
 
 
-def handle_with_vars(var):
-    if isinstance(var, ast.Name):
-        return [var.id]
-    elif isinstance(var, (ast.List, ast.Tuple)):
-        result = []
-        for elt in var.elts:
-            result.extend(handle_with_vars(elt))
-
-
 def orelse_to_node(node):
     if isinstance(node.orelse, ast.AST):
         return ast.AST
@@ -47,113 +38,6 @@ def orelse_to_node(node):
         return node.orelse[0]
     else:
         assert False
-
-
-def get_arg_name(node, is_tuple_expansion=False):
-    if hasattr(node, "arg"):
-        assert isinstance(node.arg, str), "non-arg string %s" % type(node.arg)
-        return node.arg
-
-    if isinstance(node, ast.Tuple):
-        return tuple(
-            get_arg_name(child, is_tuple_expansion=True) for child in node.elts
-        )
-    elif isinstance(node, ast.Name):
-        assert (
-            is_tuple_expansion
-            and type(node.ctx) == ast.Store
-            or type(node.ctx) == ast.Param
-        )
-        return node.id
-    elif isinstance(node, str):
-        return node
-    else:
-        assert False, "Unexpected argument type got %s" % type(node)
-
-
-def extract_argnames(arg_struct):
-    argnames = [get_arg_name(arg) for arg in arg_struct.args]
-    if arg_struct.vararg:
-        argnames.append(get_arg_name(arg_struct.vararg))
-    # PY3: kwonlyargs
-    if arg_struct.kwarg:
-        argnames.append(arg_struct.kwarg)
-    return argnames
-
-
-def make_arg_list(
-    argnames, vararg=None, kwonlyargs=[], kwarg=None, defaults=[], kw_defaults=[]
-):
-    try:
-        ast.arg
-
-        args = [ast.arg(a) for a in argnames]
-        vararg = ast.arg(vararg) if vararg else None
-        kwarg = ast.arg(kwarg) if kwarg else None
-
-        # PY3: what about kwonlyargs, kw_defaults, posonlyargs?
-        return ast.arguments([], args, vararg, [], [], kwarg, defaults)
-
-    except AttributeError:
-        args = [ast.Name(argname, ast.Param()) for argname in argnames]
-        return ast.arguments(args, vararg, kwarg, defaults)
-
-
-def make_call(func, args=[], keywords=[], starargs=None, kwargs=None):
-    try:
-        return ast.Call(func, args, keywords, starargs, kwargs)
-    except TypeError:
-        # PY3: Incorporate starargs and kwargs into args and keywords respectively
-        return ast.Call(func, args, keywords)
-
-
-def has_star_kwarg(node):
-    if hasattr(node, "starargs"):
-        return bool(node.starargs or node.kwargs)
-
-    for arg in node.args:
-        if arg.__class__.__name__ == "Starred":
-            return True
-
-    for kw in node.keywords:
-        if kw.arg is None:
-            return True
-
-    return False
-
-
-def get_starargs(node):
-    if hasattr(node, "starargs"):
-        return node.starargs
-
-    for arg in node.args:
-        if arg.__class__.__name__ == "Starred":
-            return arg.value
-
-
-def get_arg_nodes(node):
-    args = []
-
-    for arg in node.args:
-        if arg.__class__.__name__ == "Starred":
-            arg = arg.value
-        args.append(arg)
-
-    if node.keywords:
-        args.extend([kw.value for kw in node.keywords])
-
-    if hasattr(node, "starargs") and node.starargs:
-        if node.starargs:
-            args.append(node.starargs)  # partially allowed in builtins
-
-    if hasattr(node, "kwargs") and node.kwargs:
-        args.append(node.kwargs)
-
-    return args
-
-
-def parse_expr(s):
-    return ast.parse(s).body[0]
 
 
 class BaseNodeVisitor(object):

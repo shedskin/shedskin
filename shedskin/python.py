@@ -172,6 +172,38 @@ class StaticClass(PyObject):
         self.module = cl.module
 
 
+def get_arg_name(node, is_tuple_expansion=False):
+    if hasattr(node, "arg"):
+        assert isinstance(node.arg, str), "non-arg string %s" % type(node.arg)
+        return node.arg
+
+    if isinstance(node, ast.Tuple):
+        return tuple(
+            get_arg_name(child, is_tuple_expansion=True) for child in node.elts
+        )
+    elif isinstance(node, ast.Name):
+        assert (
+            is_tuple_expansion
+            and type(node.ctx) == ast.Store
+            or type(node.ctx) == ast.Param
+        )
+        return node.id
+    elif isinstance(node, str):
+        return node
+    else:
+        assert False, "Unexpected argument type got %s" % type(node)
+
+
+def extract_argnames(arg_struct):
+    argnames = [get_arg_name(arg) for arg in arg_struct.args]
+    if arg_struct.vararg:
+        argnames.append(get_arg_name(arg_struct.vararg))
+    # PY3: kwonlyargs
+    if arg_struct.kwarg:
+        argnames.append(arg_struct.kwarg)
+    return argnames
+
+
 class Function:
     def __init__(self, gx, node=None, parent=None, inherited_from=None, mv=None):
         self.gx = gx
@@ -182,7 +214,7 @@ class Function:
             if inherited_from and ident in parent.funcs:
                 ident += inherited_from.ident + "__"  # XXX ugly
             self.ident = ident
-            self.formals = ast_utils.extract_argnames(node.args)
+            self.formals = extract_argnames(node.args)
             self.flags = None
             self.doc = ast.get_docstring(node)
         self.returnexpr = []

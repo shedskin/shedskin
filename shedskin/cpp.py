@@ -707,6 +707,14 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.output("continue;")
 
     def visit_With(self, node, func=None):
+        def handle_with_vars(var):
+            if isinstance(var, ast.Name):
+                return [var.id]
+            elif isinstance(var, (ast.List, ast.Tuple)):
+                result = []
+                for elt in var.elts:
+                    result.extend(handle_with_vars(elt))
+
         orig = node
         if hasattr(node, "items"):
             node = node.items[0]
@@ -720,7 +728,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.with_count += 1
         self.print(self.line)
         self.indent()
-        self.mv.current_with_vars.append(ast_utils.handle_with_vars(node.optional_vars))
+        self.mv.current_with_vars.append(handle_with_vars(node.optional_vars))
         for child in orig.body:
             self.visit(child, func)
         self.mv.current_with_vars.pop()

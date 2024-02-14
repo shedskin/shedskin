@@ -110,6 +110,68 @@ def slice_nums(nodes):
     return [ast.Num(x)] + nodes2
 
 
+def get_arg_nodes(node):
+    args = []
+
+    for arg in node.args:
+        if arg.__class__.__name__ == "Starred":
+            arg = arg.value
+        args.append(arg)
+
+    if node.keywords:
+        args.extend([kw.value for kw in node.keywords])
+
+    if hasattr(node, "starargs") and node.starargs:
+        if node.starargs:
+            args.append(node.starargs)  # partially allowed in builtins
+
+    if hasattr(node, "kwargs") and node.kwargs:
+        args.append(node.kwargs)
+
+    return args
+
+
+def has_star_kwarg(node):
+    if hasattr(node, "starargs"):
+        return bool(node.starargs or node.kwargs)
+
+    for arg in node.args:
+        if arg.__class__.__name__ == "Starred":
+            return True
+
+    for kw in node.keywords:
+        if kw.arg is None:
+            return True
+
+    return False
+
+
+def make_call(func, args=[], keywords=[], starargs=None, kwargs=None):
+    try:
+        return ast.Call(func, args, keywords, starargs, kwargs)
+    except TypeError:
+        # PY3: Incorporate starargs and kwargs into args and keywords respectively
+        return ast.Call(func, args, keywords)
+
+
+def make_arg_list(
+    argnames, vararg=None, kwonlyargs=[], kwarg=None, defaults=[], kw_defaults=[]
+):
+    try:
+        ast.arg
+
+        args = [ast.arg(a) for a in argnames]
+        vararg = ast.arg(vararg) if vararg else None
+        kwarg = ast.arg(kwarg) if kwarg else None
+
+        # PY3: what about kwonlyargs, kw_defaults, posonlyargs?
+        return ast.arguments([], args, vararg, [], [], kwarg, defaults)
+
+    except AttributeError:
+        args = [ast.Name(argname, ast.Param()) for argname in argnames]
+        return ast.arguments(args, vararg, kwarg, defaults)
+
+
 # --- module visitor; analyze program, build constraint graph
 class ModuleVisitor(ast_utils.BaseNodeVisitor):
     def __init__(self, module, gx):
@@ -147,7 +209,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             newnode = infer.CNode(self.gx, node, parent=func, mv=getmv())
             self.gx.types[newnode] = set()
 
-        fakefunc = ast_utils.make_call(
+        fakefunc = make_call(
             ast.Attribute(objexpr, attrname, ast.Load()), args
         )
         fakefunc.lineno = objexpr.lineno
@@ -309,7 +371,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.gx.assign_target[child] = parent
         cu = ast.Str(varname)
         self.visit(cu, func)
-        fakefunc = ast_utils.make_call(
+        fakefunc = make_call(
             FakeGetattr2(parent, "__setattr__", ast.Load()), [cu, child]
         )
         self.visit(fakefunc, func)
@@ -936,7 +998,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     func.ident == "__init__" and "__del__" in parent.funcs
                 ):  # XXX what if no __init__
                     self.visit(
-                        ast_utils.make_call(
+                        make_call(
                             ast.Attribute(
                                 ast.Name("self", ast.Load()), "__del__", ast.Load()
                             )
@@ -976,7 +1038,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
     def visit_If(self, node, func=None):
         self.bool_test_add(node.test)
-        faker = ast_utils.make_call(ast.Name("bool", ast.Load()), [node.test])
+        faker = make_call(ast.Name("bool", ast.Load()), [node.test])
         self.visit(faker, func)
         for child in node.body:
             self.visit(child, func)
@@ -1099,7 +1161,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             if msg == "contains":
                 self.fake_func(node, right, "__" + msg + "__", [left], func)
             elif msg in ("lt", "gt", "le", "ge"):
-                fakefunc = ast_utils.make_call(
+                fakefunc = make_call(
                     ast.Name("__%s" % msg, ast.Load()), [left, right]
                 )
                 fakefunc.lineno = left.lineno
@@ -1361,7 +1423,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             node.value = ast.Name("None", ast.Load())
         self.visit(
             ast.Return(
-                ast_utils.make_call(ast.Name("__iter", ast.Load()), [node.value])
+                make_call(ast.Name("__iter", ast.Load()), [node.value])
             ),
             func,
         )
@@ -1372,10 +1434,10 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         assnode = infer.CNode(self.gx, node.target, parent=func, mv=getmv())
         self.gx.types[assnode] = set()
 
-        get_iter = ast_utils.make_call(
+        get_iter = make_call(
             ast.Attribute(node.iter, "__iter__", ast.Load()), []
         )
-        fakefunc = ast_utils.make_call(
+        fakefunc = make_call(
             ast.Attribute(get_iter, "__next__", ast.Load()), []
         )
 
@@ -1395,7 +1457,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.gx.assign_target[
                 node.target.value
             ] = node.target.value  # XXX multiple targets possible please
-            fakefunc2 = ast_utils.make_call(
+            fakefunc2 = make_call(
                 ast.Attribute(node.target.value, "__setattr__", ast.Load()),
                 [ast.Str(node.target.attr), fakefunc],
             )
@@ -1522,10 +1584,10 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.gx.types[assnode] = set()
 
             # list.unit->iter
-            get_iter = ast_utils.make_call(
+            get_iter = make_call(
                 ast.Attribute(qual.iter, "__iter__", ast.Load()), []
             )
-            fakefunc = ast_utils.make_call(
+            fakefunc = make_call(
                 ast.Attribute(get_iter, "__next__", ast.Load()), []
             )
             self.visit(fakefunc, lcfunc)
@@ -1707,7 +1769,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             else:
                 subscript = lvalue.slice
 
-            fakefunc = ast_utils.make_call(
+            fakefunc = make_call(
                 ast.Attribute(lvalue.value, "__setitem__", ast.Load()),
                 [subscript, rvalue],
             )
@@ -1721,7 +1783,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         elif ast_utils.is_assign_attribute(lvalue):
             infer.CNode(self.gx, lvalue, parent=func, mv=getmv())
             self.gx.assign_target[rvalue] = lvalue.value
-            fakefunc = ast_utils.make_call(
+            fakefunc = make_call(
                 ast.Attribute(lvalue.value, "__setattr__", ast.Load()),
                 [ast.Str(lvalue.attr), rvalue],
             )
@@ -1745,7 +1807,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.gx.types[fakenode] = set()
             self.add_constraint((infer.inode(self.gx, rvalue), fakenode), func)
 
-            fakefunc = ast_utils.make_call(
+            fakefunc = make_call(
                 FakeGetattr3(rvalue, "__getunit__", ast.Load()), [ast.Num(i)]
             )
 
@@ -1901,12 +1963,12 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             )  # XXX iterative dataflow analysis: move there
 
         # --- arguments
-        if not getmv().module.builtin and ast_utils.has_star_kwarg(node):
+        if not getmv().module.builtin and has_star_kwarg(node):
             error.error(
                 "argument (un)packing is not supported", self.gx, node, mv=getmv()
             )
 
-        for arg in ast_utils.get_arg_nodes(node):
+        for arg in get_arg_nodes(node):
             self.visit(arg, func)
             infer.inode(self.gx, arg).callfuncs.append(node)  # this one too
 
@@ -2068,10 +2130,10 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             for msg in msgs:
                 if "__i" + msg + "__" not in newclass.funcs:
                     self.visit(
-                        ast_utils.parse_expr(
+                        ast.parse(
                             "def __i%s__(self, other): return self.__%s__(other)"
                             % (msg, msg)
-                        ),
+                        ).body[0],
                         newclass,
                     )
 
@@ -2080,10 +2142,10 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.visit(
                 ast.FunctionDef(
                     "__str__",
-                    ast_utils.make_arg_list(["self"]),
+                    make_arg_list(["self"]),
                     [
                         ast.Return(
-                            ast_utils.make_call(
+                            make_call(
                                 ast.Attribute(
                                     ast.Name("self", ast.Load()), "__repr__", ast.Load()
                                 )
@@ -2099,7 +2161,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.visit(
                 ast.FunctionDef(
                     "__hash__",
-                    ast_utils.make_arg_list(["self"]),
+                    make_arg_list(["self"]),
                     [ast.Return(ast.Num(0))],
                     [],
                 ),
@@ -2120,7 +2182,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             newnode = infer.CNode(self.gx, node, parent=func, mv=getmv())
             self.gx.types[newnode] = set()
 
-            fakefunc = ast_utils.make_call(
+            fakefunc = make_call(
                 FakeGetattr(node.value, "__getattr__", ast.Load()), [ast.Str(node.attr)]
             )
             self.visit(fakefunc, func)
@@ -2234,10 +2296,10 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             )
 
     def builtin_wrapper(self, node, func):
-        node2 = ast_utils.make_call(
+        node2 = make_call(
             copy.deepcopy(node), [ast.Name(x, ast.Load()) for x in "abcde"]
         )
-        lam = ast.Lambda(ast_utils.make_arg_list(list("abcde")), node2)
+        lam = ast.Lambda(make_arg_list(list("abcde")), node2)
         self.visit(lam, func)
         self.lwrapper[node] = self.lambdaname[lam]
         self.gx.lambdawrapper[node2] = self.lambdaname[lam]
