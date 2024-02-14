@@ -221,6 +221,15 @@ def get_types(gx, expr, node, merge):
     return types
 
 
+def get_starargs(node):
+    if hasattr(node, "starargs"):
+        return node.starargs
+
+    for arg in node.args:
+        if arg.__class__.__name__ == "Starred":
+            return arg.value
+
+
 def is_anon_callable(gx, expr, node, merge=None):
     types = get_types(gx, expr, node, merge)
     anon = bool([t for t in types if isinstance(t[0], python.Function)])
@@ -303,7 +312,7 @@ def analyze_args(gx, expr, func, node=None, skip_defaults=False, merge=None):
         (missing or extra)
         and not func.node.args.vararg
         and not func.node.args.kwarg
-        and not ast_utils.get_starargs(expr)
+        and not get_starargs(expr)
         and func.lambdanr is None
         and expr not in gx.lambdawrapper
     )  # XXX
@@ -808,7 +817,7 @@ def possible_argtypes(gx, node, funcs, analysis, worklist):
         func = funcs[0][0]  # XXX
 
     args = []
-    starargs = ast_utils.get_starargs(expr)
+    starargs = get_starargs(expr)
     if starargs:  # XXX
         args = [starargs]
     elif funcs and not func.node:  # XXX getattr, setattr
@@ -1117,7 +1126,7 @@ def actuals_formals(gx, expr, func, node, dcpa, cpa, types, analysis, worklist):
         anon_func,
     ) = analysis
 
-    starargs = ast_utils.get_starargs(expr)
+    starargs = get_starargs(expr)
     if starargs:  # XXX only in lib/
         formals = func.formals
         actuals = len(formals) * [starargs]
