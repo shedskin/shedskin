@@ -1237,7 +1237,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.output("}")
 
     def do_fastfor(self, node, qual, quals, iter, func, genexpr):
-        if len(qual.iter.args) == 3 and not python.is_literal(qual.iter.args[2]):
+        if len(qual.iter.args) == 3 and not ast_utils.is_literal(qual.iter.args[2]):
             for arg in qual.iter.args:  # XXX simplify
                 if arg in self.mv.tempcount:
                     self.start()
@@ -1275,14 +1275,14 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.print(self.line)
 
     def fastenumerate(self, node):
-        return python.is_enumerate(node) and self.only_classes(
+        return ast_utils.is_enumerate(node) and self.only_classes(
             node.iter.args[0], ("tuple", "list", "str_")
         )
 
     def fastzip2(self, node):
         names = ("tuple", "list")
         return (
-            python.is_zip2(node)
+            ast_utils.is_zip2(node)
             and self.only_classes(node.iter.args[0], names)
             and self.only_classes(node.iter.args[1], names)
         )
@@ -1317,7 +1317,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.print()
         if node.orelse:
             self.output("%s = 0;" % self.mv.tempcount[ast_utils.orelse_to_node(node)])
-        if python.is_fastfor(node):
+        if ast_utils.is_fastfor(node):
             self.do_fastfor(node, node, None, assname, func, False)
         elif self.fastenumerate(node):
             self.do_fastenumerate(node, func, False)
@@ -1905,23 +1905,23 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.append(")")
             else:
                 self.impl_visit_binary(
-                    node.left, node.right, python.aug_msg(node, "add"), "+", func
+                    node.left, node.right, ast_utils.aug_msg(node, "add"), "+", func
                 )
         elif type(node.op) == ast.Sub:
             self.impl_visit_binary(
-                node.left, node.right, python.aug_msg(node, "sub"), "-", func
+                node.left, node.right, ast_utils.aug_msg(node, "sub"), "-", func
             )
         elif type(node.op) == ast.Mult:
             self.impl_visit_binary(
-                node.left, node.right, python.aug_msg(node, "mul"), "*", func
+                node.left, node.right, ast_utils.aug_msg(node, "mul"), "*", func
             )
         elif type(node.op) == ast.Div:
             self.impl_visit_binary(
-                node.left, node.right, python.aug_msg(node, "truediv"), "/", func
+                node.left, node.right, ast_utils.aug_msg(node, "truediv"), "/", func
             )
         elif type(node.op) == ast.FloorDiv:
             self.impl_visit_binary(
-                node.left, node.right, python.aug_msg(node, "floordiv"), "//", func
+                node.left, node.right, ast_utils.aug_msg(node, "floordiv"), "//", func
             )
         elif type(node.op) == ast.Pow:
             self.power(node.left, node.right, None, func)
@@ -1929,18 +1929,18 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.impl_visit_Mod(node, func)
         elif type(node.op) == ast.LShift:
             self.impl_visit_binary(
-                node.left, node.right, python.aug_msg(node, "lshift"), "<<", func
+                node.left, node.right, ast_utils.aug_msg(node, "lshift"), "<<", func
             )
         elif type(node.op) == ast.RShift:
             self.impl_visit_binary(
-                node.left, node.right, python.aug_msg(node, "rshift"), ">>", func
+                node.left, node.right, ast_utils.aug_msg(node, "rshift"), ">>", func
             )
         elif type(node.op) == ast.BitOr:
-            self.impl_visit_bitop(node, python.aug_msg(node, "or"), "|", func)
+            self.impl_visit_bitop(node, ast_utils.aug_msg(node, "or"), "|", func)
         elif type(node.op) == ast.BitXor:
-            self.impl_visit_bitop(node, python.aug_msg(node, "xor"), "^", func)
+            self.impl_visit_bitop(node, ast_utils.aug_msg(node, "xor"), "^", func)
         elif type(node.op) == ast.BitAnd:
-            self.impl_visit_bitop(node, python.aug_msg(node, "and"), "&", func)
+            self.impl_visit_bitop(node, ast_utils.aug_msg(node, "and"), "&", func)
         # PY3: elif type(node.op) == MatMult:
         else:
             error.error(
@@ -2903,7 +2903,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         # a = (b,c) = .. = expr
         for left in node.targets:
-            pairs = python.assign_rec(left, node.value)
+            pairs = ast_utils.assign_rec(left, node.value)
 
             for lvalue, rvalue in pairs:
                 self.start("")  # XXX remove?
@@ -3189,7 +3189,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 self.start("__after_yield_0:")
             elif (
                 len(node.generators) == 1
-                and not python.is_fastfor(node.generators[0])
+                and not ast_utils.is_fastfor(node.generators[0])
                 and not self.fastenumerate(node.generators[0])
                 and not self.fastzip2(node.generators[0])
                 and not node.generators[0].ifs
@@ -3219,7 +3219,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             var = python.lookup_var(self.mv.tempcount[qual.target], lcfunc, mv=self.mv)
         iter = self.cpp_name(var)
 
-        if python.is_fastfor(qual):
+        if ast_utils.is_fastfor(qual):
             self.do_fastfor(node, qual, quals, iter, lcfunc, genexpr)
         elif self.fastenumerate(qual):
             self.do_fastenumerate(qual, lcfunc, genexpr)

@@ -18,7 +18,7 @@ def is_assign_attribute(node):
     return isinstance(node, ast.Attribute) and isinstance(node.ctx, ast.Store)
 
 
-def is_constant(node):
+def is_constant(node):  # TODO simplify?
     return isinstance(node, (ast.Str, ast.Num)) or node.__class__.__name__ == "Constant"
 
 
@@ -31,7 +31,61 @@ def is_none(node):
     )
 
 
-def orelse_to_node(node):
+def is_literal(node):
+    # RESOLVE: Can all UnaryOps be literals, Not?, Invert?
+    if isinstance(node, ast.UnaryOp) and isinstance(node.op, (ast.USub, ast.UAdd)):
+        node = node.operand
+    # RESOLVE: Isn't Str node also literal
+    return isinstance(node, ast.Num) and isinstance(node.n, (int, float))
+
+
+def is_fastfor(node):
+    return (
+        isinstance(node.iter, ast.Call)
+        and isinstance(node.iter.func, ast.Name)
+        and node.iter.func.id in ["range", "xrange"]
+    )
+
+
+def is_enumerate(node):
+    return (
+        isinstance(node.iter, ast.Call)
+        and isinstance(node.iter.func, ast.Name)
+        and node.iter.func.id == "enumerate"
+        and len(node.iter.args) == 1
+        and is_assign_list_or_tuple(node.target)
+    )
+
+
+def is_zip2(node):
+    return (
+        isinstance(node.iter, ast.Call)
+        and isinstance(node.iter.func, ast.Name)
+        and node.iter.func.id == "zip"
+        and len(node.iter.args) == 2
+        and is_assign_list_or_tuple(node.target)
+    )
+
+# --- recursively determine (lvalue, rvalue) pairs in assignment expressions
+def assign_rec(left, right):
+    if is_assign_list_or_tuple(left) and isinstance(
+        right, (ast.Tuple, ast.List)
+    ):
+        pairs = []
+        for lvalue, rvalue in zip(left.elts, right.elts):
+            pairs += assign_rec(lvalue, rvalue)
+        return pairs
+    else:
+        return [(left, right)]
+
+
+def aug_msg(node, msg):
+    if hasattr(node, "augment"):
+        return "__i" + msg + "__"
+    return "__" + msg + "__"
+
+
+def orelse_to_node(node):  # TODO ugly
     if isinstance(node.orelse, ast.AST):
         return ast.AST
     elif isinstance(node.orelse, list) and len(node.orelse) > 0:
