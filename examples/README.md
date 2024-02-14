@@ -24,7 +24,7 @@ lines  name                 description
     50 collatz.py           collatz record sequences
    105 dijkstra.py          dijkstra's algorithm
     80 dijkstra2.py         bidirectional dijkstra search
-   665 doom.py              WAD rendering engine            (extmod, GUI)
+   666 doom.py              WAD rendering engine            (extmod, GUI)
    147 fysphun.py           physics animation               (extmod, GUI)
     92 genetic.py           genetic algorithm
    168 genetic2.py          another genetic algorithm
