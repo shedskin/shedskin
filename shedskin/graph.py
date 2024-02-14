@@ -1591,6 +1591,10 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             assert type(child.ctx) == ast.Del
             self.visit(child, func)
 
+    def visit_AnnAssign(self, node, func=None):
+        assign = ast.Assign([node.target], node.value)
+        self.visit(assign, func)
+
     def visit_Assign(self, node, func=None):
         # --- rewrite for struct.unpack XXX rewrite callfunc as tuple
         if len(node.targets) == 1:

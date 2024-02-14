@@ -2860,6 +2860,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             assert type(child.ctx) == ast.Del
             self.visit(child, func)
 
+    def visit_AnnAssign(self, node, func=None):
+        self.visit(ast.Assign([node.target], node.value), func)
+
     def visit_Assign(self, node, func=None):
         if self.struct_unpack_cpp(node, func):
             return
