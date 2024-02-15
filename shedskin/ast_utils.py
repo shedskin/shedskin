@@ -85,15 +85,6 @@ def aug_msg(node, msg):
     return "__" + msg + "__"
 
 
-def orelse_to_node(node):  # TODO ugly
-    if isinstance(node.orelse, ast.AST):
-        return ast.AST
-    elif isinstance(node.orelse, list) and len(node.orelse) > 0:
-        return node.orelse[0]
-    else:
-        assert False
-
-
 class BaseNodeVisitor(object):
     """
     Copy of ast.NodeVisitor with added *args argument to visit functions
