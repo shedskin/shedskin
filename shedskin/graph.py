@@ -1852,6 +1852,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
     def visit_Call(self, node, func=None):  # XXX clean up!!
         newnode = infer.CNode(self.gx, node, parent=func, mv=getmv())
+        self.gx.types[newnode] = set()
 
         if (
             isinstance(node.func, ast.Attribute) and type(node.func.ctx) == ast.Load
@@ -1868,12 +1869,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             if isinstance(node.func, FakeGetattr):  # XXX butt ugly
                 self.visit(node.func.value, func)
             elif isinstance(node.func, FakeGetattr2):
-                self.gx.types[newnode] = set()  # XXX move above
-
-                for arg in node.args:
-                    infer.inode(self.gx, arg).callfuncs.append(node)  # this one too
-
-                return
+                pass
             elif isinstance(node.func, FakeGetattr3):
                 pass
             else:
@@ -1979,8 +1975,6 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             infer.inode(self.gx, node).callfuncs.append(
                 node
             )  # XXX see above, investigate
-        else:
-            self.gx.types[newnode] = set()
 
     def visit_ClassDef(self, node, parent=None):
         if not getmv().module.builtin and node not in getmv().classnodes:
