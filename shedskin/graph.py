@@ -1891,7 +1891,6 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 infer.inode(self.gx, node.func).callfuncs.append(
                     node
                 )  # XXX iterative dataflow analysis: move there?
-                infer.inode(self.gx, node.func).fakert = True
 
             ident = node.func.attr
             infer.inode(self.gx, node.func.value).callfuncs.append(

@@ -102,7 +102,6 @@ class CNode:
         "mv",
         "constructor",
         "copymetoo",
-        "fakert",
         "lambdawrapper",
         "in_",
         "out",
@@ -133,7 +132,6 @@ class CNode:
         self.mv = mv
         self.constructor = False  # allocation site
         self.copymetoo = False
-        self.fakert = False
         self.lambdawrapper = None
 
         self.gx.cnode[self.thing, self.dcpa, self.cpa] = self
