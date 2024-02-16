@@ -55,18 +55,6 @@ def getmv():
     return _mv
 
 
-class FakeGetattr3(ast.Attribute):
-    pass
-
-
-class FakeGetattr2(ast.Attribute):
-    pass
-
-
-class FakeGetattr(ast.Attribute):
-    pass  # XXX ugly
-
-
 def check_redef(gx, node, s=None, onlybuiltins=False):  # XXX to modvisitor, rewrite
     if not getmv().module.builtin:
         existing = [getmv().ext_classes, getmv().ext_funcs]
@@ -370,9 +358,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         cu = ast.Str(varname)
         self.visit(cu, func)
         fakefunc = ast.Call(
-            FakeGetattr2(parent, "__setattr__", ast.Load()), [cu, child], []
+            ast.Attribute(parent, "__setattr__", ast.Load()), [cu, child], []
         )
-        self.visit(fakefunc, func)
+        self.visit_Call(fakefunc, func, fake_attr=True)
 
         fakechildnode = infer.CNode(
             self.gx, (child, varname), parent=func, mv=getmv()
@@ -1808,11 +1796,11 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.add_constraint((infer.inode(self.gx, rvalue), fakenode), func)
 
             fakefunc = ast.Call(
-                FakeGetattr3(rvalue, "__getunit__", ast.Load()), [ast.Num(i)], []
+                ast.Attribute(rvalue, "__getunit__", ast.Load()), [ast.Num(i)], []
             )
 
             fakenode.callfuncs.append(fakefunc)
-            self.visit(fakefunc, func)
+            self.visit_Call(fakefunc, func, fake_attr=True)
 
             self.gx.item_rvalue[item] = rvalue
             if isinstance(item, ast.Name):
@@ -1850,7 +1838,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
     def visit_Pass(self, node, func=None):
         pass
 
-    def visit_Call(self, node, func=None):  # XXX clean up!!
+    def visit_Call(self, node, func=None, fake_attr=False):  # XXX clean up!!
         newnode = infer.CNode(self.gx, node, parent=func, mv=getmv())
         self.gx.types[newnode] = set()
 
@@ -1866,13 +1854,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 node.args = [ast.Name("self", ast.Load())] + node.args
 
             # method call
-            if isinstance(node.func, FakeGetattr):  # XXX butt ugly
-                self.visit(node.func.value, func)
-            elif isinstance(node.func, FakeGetattr2):
-                pass
-            elif isinstance(node.func, FakeGetattr3):
-                pass
-            else:
+            if not fake_attr:
                 self.visit_Attribute(node.func, func, callfunc=True)
                 infer.inode(self.gx, node.func).callfuncs.append(
                     node
@@ -2174,9 +2156,10 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.gx.types[newnode] = set()
 
             fakefunc = ast.Call(
-                FakeGetattr(node.value, "__getattr__", ast.Load()), [ast.Str(node.attr)], []
+                ast.Attribute(node.value, "__getattr__", ast.Load()), [ast.Str(node.attr)], []
             )
-            self.visit(fakefunc, func)
+            self.visit(node.value, func)
+            self.visit_Call(fakefunc, func, fake_attr=True)
             self.add_constraint((self.gx.cnode[fakefunc, 0, 0], newnode), func)
 
             if not callfunc:
