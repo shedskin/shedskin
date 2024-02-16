@@ -200,8 +200,6 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.lambdaname = {}
         self.lwrapper = {}
         self.tempcount = self.gx.tempcount
-        self.callfuncs = []
-        self.for_in_iters = []
         self.listcomps = []
         self.defaults = {}
         self.importnodes = []
@@ -1490,7 +1488,6 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         for child in node.body:
             self.visit(child, func)
         self.gx.loopstack.pop()
-        self.for_in_iters.append(node.iter)
 
     def do_for(self, node, assnode, get_iter, func):
         # --- for i in range(..) XXX i should not be modified.. use tempcounter; two bounds
@@ -1621,8 +1618,6 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             for child in qual.ifs:
                 self.bool_test_add(child)
                 self.visit(child, lcfunc)
-
-            self.for_in_iters.append(qual.iter)
 
         # node type
         if node in self.gx.genexp_to_lc.values():  # converted generator expression
@@ -1878,8 +1873,6 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             elif isinstance(node.func, FakeGetattr2):
                 self.gx.types[newnode] = set()  # XXX move above
 
-                self.callfuncs.append((node, func))
-
                 for arg in node.args:
                     infer.inode(self.gx, arg).callfuncs.append(node)  # this one too
 
@@ -1991,8 +1984,6 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             )  # XXX see above, investigate
         else:
             self.gx.types[newnode] = set()
-
-        self.callfuncs.append((node, func))
 
     def visit_ClassDef(self, node, parent=None):
         if not getmv().module.builtin and node not in getmv().classnodes:
@@ -2194,8 +2185,6 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             )
             self.visit(fakefunc, func)
             self.add_constraint((self.gx.cnode[fakefunc, 0, 0], newnode), func)
-
-            self.callfuncs.append((fakefunc, func))
 
             if not callfunc:
                 self.fncl_passing(node, newnode, func)
