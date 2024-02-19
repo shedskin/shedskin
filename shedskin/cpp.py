@@ -1733,7 +1733,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.output("}")
 
         if node.orelse:
-            if isinstance(node.orelse[0], ast.If):
+            if len(node.orelse) == 1 and isinstance(node.orelse[0], ast.If):
                 self.visit_If(node.orelse[0], func, True)
             else:
                 self.output("else {")
