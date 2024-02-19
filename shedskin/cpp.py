@@ -1718,24 +1718,30 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def visit_Global(self, node, func=None):
         pass
 
-    def visit_If(self, node, func=None):
+    def visit_If(self, node, func=None, else_if=False):
         self.start()
-        self.append("if (")
+        if else_if:
+            self.append("else if (")
+        else:
+            self.append("if (")
         self.bool_test(node.test, func)
         self.print(self.line + ") {")
         self.indent()
-        for child in node.body:
+        for child in node.body:  # TODO used in many places.. can we just visit a list?
             self.visit(child, func)
         self.deindent()
         self.output("}")
 
         if node.orelse:
-            self.output("else {")
-            self.indent()
-            for child in node.orelse:
-                self.visit(child, func)
-            self.deindent()
-            self.output("}")
+            if isinstance(node.orelse[0], ast.If):
+                self.visit_If(node.orelse[0], func, True)
+            else:
+                self.output("else {")
+                self.indent()
+                for child in node.orelse:
+                    self.visit(child, func)
+                self.deindent()
+                self.output("}")
 
     def visit_IfExp(self, node, func=None):
         types = self.mergeinh[node]
