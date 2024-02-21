@@ -1151,5 +1151,5 @@ def __next1(iter1):
 def id(x):
     return 1
 
-def __print(__kw_sep=None, __kw_end=None, __kw_file=None, *value):
+def __print(__kw_sep=None, __kw_end=None, __kw_file=None, __kw_flush=False, *value):
     value.__str__()
