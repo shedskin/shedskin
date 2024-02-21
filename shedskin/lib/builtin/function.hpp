@@ -654,7 +654,7 @@ template<class T> void __print_elem(str *result, T t, size_t &count, str *sep) {
         result->unit += sep->unit;
 }
 
-template<class ... Args> void print(int n, file *f, str *end, str *sep, Args ... args) {
+template<class ... Args> void print(int n, __ss_bool flush, file *f, str *end, str *sep, Args ... args) {
     str *s = new str();
     size_t count = sizeof...(args);
     if(!sep)
@@ -668,11 +668,15 @@ template<class ... Args> void print(int n, file *f, str *end, str *sep, Args ...
     if(f) {
         f->write(s);
         f->write(end);
+        if(flush)
+            f->flush();
     }
     else {
         for(unsigned int i=0; i<s->unit.size(); i++)
             printf("%c", s->unit[i]);
         for(unsigned int i=0; i<end->unit.size(); i++)
             printf("%c", end->unit[i]);
+        if(f)
+            fflush(stdout);
     }
 }
