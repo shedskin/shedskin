@@ -140,7 +140,8 @@ class ShedskinDependencyManager:
         self.reset_on_run = reset_on_run
         self.source_dir = source_dir
         self.build_dir = self.source_dir / "build"
-        self.deps_dir = self.build_dir / "deps"
+        # self.deps_dir = self.build_dir / "deps"
+        self.deps_dir = pathlib.Path.home() / ".cache" / "shedskin"
         self.include_dir = self.deps_dir / "include"
         self.lib_dir = self.deps_dir / "lib"
         self.downloads_dir = self.deps_dir / "downloads"
@@ -229,17 +230,11 @@ class ShedskinDependencyManager:
 
     def install_pcre(self):
         """download / build / install pcre"""
-        pcre_url = (
-            "https://sourceforge.net/projects/pcre/files/pcre/8.45/pcre-8.45.tar.gz"
-        )
-        pcre_archive = self.downloads_dir / "pcre-8.45.tar.gz"
-        pcre_src = self.src_dir / "pcre-8.45"
-        pcre_build = pcre_src / "build"
-
-        print("download / build / install pcre")
-        self.wget(pcre_url, self.downloads_dir)
-        self.tar(pcre_archive, self.src_dir)
-        # pcre_archive.unlink()
+        pcre_repo = "https://github.com/luvit/pcre.git"
+        pcre_src = self.src_dir / 'pcre'
+        pcre_build =  pcre_src / "build"
+        print("download / build / install bdwgc")
+        self.git_clone(pcre_repo, pcre_src)
         pcre_build.mkdir(parents=True, exist_ok=True)
         self.cmake_generate(
             pcre_src,

@@ -66,7 +66,13 @@ include_directories(
 # dependency mgmt solutions
 
 if(ENABLE_SPM)
-    set(SPM_DEPS ${CMAKE_BINARY_DIR}/deps)
+    if(WIN32)
+        set(HOME $ENV{HOMEPATH})
+    else()
+        set(HOME $ENV{HOME})
+    endif()
+    set(SPM_DEPS ${HOME}/.cache/shedskin)
+    # set(SPM_DEPS ${CMAKE_BINARY_DIR}/deps)
     set(SPM_LIB_DIRS ${SPM_DEPS}/lib)
     set(SPM_INCLUDE_DIRS ${SPM_DEPS}/include)
 
