@@ -2329,7 +2329,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             if (
                 struct.calcsize("P") == 8
                 and struct.calcsize("i") == 4
-                and not self.gx.longlong
+                and not (self.gx.int64 or self.gx.int128)
             ):
                 error.error(
                     "return value of 'id' does not fit in 32-bit integer (try shedskin --long)",
@@ -3671,7 +3671,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         elif value.__class__.__name__ in ("int", "long"):  # isinstance(value, int):
             self.append("__ss_int(")
             self.append(str(value))
-            if self.gx.longlong:
+            if self.gx.int64 or self.gx.int128:
                 self.append("LL")
             self.append(")")
 

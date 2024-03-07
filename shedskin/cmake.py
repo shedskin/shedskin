@@ -422,8 +422,16 @@ def generate_cmakefile(gx):
     app_mods = set()
 
     compile_options = []
-    if gx.longlong:
-        compile_options.append("-D__SS_LONG")
+    if gx.int32:
+        compile_options.append("-D__SS_INT32")
+    if gx.int64:
+        compile_options.append("-D__SS_INT64")
+    if gx.int128:
+        compile_options.append("-D__SS_INT128")
+    if gx.float32:
+        compile_options.append("-D__SS_FLOAT32")
+    if gx.float64:
+        compile_options.append("-D__SS_FLOAT64")
     if not gx.bounds_checking:
         compile_options.append("-D__SS_NOBOUNDS")
     if not gx.wrap_around_check:
