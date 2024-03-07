@@ -21,11 +21,9 @@ template<class T> PyObject *__to_py(T t) {
     return t->__to_py__();
 }
 
-#ifdef __SS_LONG
-template<> PyObject *__to_py(__ss_int i);
-#endif
-template<> PyObject *__to_py(int i);
-template<> PyObject *__to_py(long i);
+template<> PyObject *__to_py(int32_t i);
+template<> PyObject *__to_py(int64_t i);
+template<> PyObject *__to_py(__int128 i);
 template<> PyObject *__to_py(__ss_bool i);
 template<> PyObject *__to_py(__ss_float i);
 template<> PyObject *__to_py(void *);
