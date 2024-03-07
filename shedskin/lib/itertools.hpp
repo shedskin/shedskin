@@ -49,8 +49,8 @@ template<class T> inline countiter<T> *count(T start, T step) {
 inline countiter<int> *count(int start = 0) {
     return new countiter<int>(start, 1);
 }
-inline countiter<double> *count(double start, double step = 1.) {
-    return new countiter<double>(start, step);
+inline countiter<__ss_float> *count(__ss_float start, __ss_float step = 1.) {
+    return new countiter<__ss_float>(start, step);
 }
 
 // cycle

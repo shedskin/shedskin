@@ -593,9 +593,9 @@ void __utime(str *path) {
 #define HOPPA if (times) __utime(path, times->__getfirst__(), times->__getsecond__()); else __utime(path); return NULL;
 
 void *utime(str *path, tuple2<__ss_int, __ss_int> *times) { HOPPA }
-void *utime(str *path, tuple2<__ss_int, double> *times) { HOPPA }
-void *utime(str *path, tuple2<double, __ss_int> *times) { HOPPA }
-void *utime(str *path, tuple2<double, double> *times) { HOPPA }
+void *utime(str *path, tuple2<__ss_int, __ss_float> *times) { HOPPA }
+void *utime(str *path, tuple2<__ss_float, __ss_int> *times) { HOPPA }
+void *utime(str *path, tuple2<__ss_float, __ss_float> *times) { HOPPA }
 
 #undef HOPPA
 
@@ -933,14 +933,14 @@ __ss_int sysconf(__ss_int name) {
     return (__ss_int)limit;
 }
 
-tuple2<double, double> *getloadavg() {
+tuple2<__ss_float, __ss_float> *getloadavg() {
 #ifdef __CYGWIN__
     throw new NotImplementedError();
 #else
     double load[3];
     if(::getloadavg(load, 3) != 3)
         throw new OSError(new str("os.getloadavg"));
-    return new tuple2<double, double>(3, load[0], load[1], load[2]);
+    return new tuple2<__ss_float, __ss_float>(3, load[0], load[1], load[2]);
 #endif
 }
 
@@ -1036,13 +1036,13 @@ __ss_bool access(str *path, __ss_int mode) {
     return __mbool(::access(path->c_str(), mode) == 0);
 }
 
-tuple2<double, double> *times() {
+tuple2<__ss_float, __ss_float> *times() {
     struct tms buf;
     clock_t c;
     double ticks_per_second = (double)::sysconf(_SC_CLK_TCK);
     if((c = ::times(&buf)) == -1)
         throw new OSError(new str("os.utime"));
-    return new tuple2<double, double>(5, ((double)buf.tms_utime / ticks_per_second), ((double)buf.tms_stime / ticks_per_second), ((double)buf.tms_cutime / ticks_per_second), ((double)buf.tms_cstime / ticks_per_second), ((double)c / ticks_per_second));
+    return new tuple2<__ss_float, __ss_float>(5, ((__ss_float)buf.tms_utime / ticks_per_second), ((__ss_float)buf.tms_stime / ticks_per_second), ((__ss_float)buf.tms_cutime / ticks_per_second), ((__ss_float)buf.tms_cstime / ticks_per_second), ((__ss_float)c / ticks_per_second));
 }
 
 /* str *tmpnam() { XXX raises compiler warning
