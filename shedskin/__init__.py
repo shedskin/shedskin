@@ -92,8 +92,8 @@ class Shedskin:
             if args.long:
                 gx.longlong = True
 
-    #        if args.float:
-    #            ss.gx.float = True
+            if args.float32:
+                gx.float32 = True
 
             if args.nogc:
                 gx.nogc = True
@@ -225,8 +225,10 @@ class Shedskin:
         opt("-s", "--silent",       help="Silent mode, only show warnings", action="store_true")
         opt("-t", "--traceback",    help="Print traceback for uncaught exceptions", action="store_true")
         opt("-x", "--executable",   help="Generate executable", action="store_true")
-    
+
         opt("--long",               help="Use long long '64-bit' integers", action="store_true")
+        opt("--float32",            help="Use 32-bit floats", action="store_true")
+
         opt("--noassert",           help="Disable assert statements", action="store_true")
         opt("-b", "--nobounds",     help="Disable bounds checking", action="store_true")
         opt("--nogc",               help="Disable garbage collection", action="store_true")
@@ -250,7 +252,7 @@ class Shedskin:
         opt("--extproject",         help="install cmake dependencies with externalproject", action="store_true")
         opt('--ccache',             help='enable ccache with cmake', action='store_true')
         opt('--target',             help='build only specified cmake targets', nargs="+", metavar="TARGET")
-    
+
         opt("-d", "--debug",        help="Set debug level", type=int)
         opt("-e", "--extmod",       help="Generate extension module", action="store_true")
         opt("-I", "--include-dirs", help="Add an include directory", action="append")        
@@ -262,8 +264,10 @@ class Shedskin:
         opt("-s", "--silent",       help="Silent mode, only show warnings", action="store_true")
         opt("-t", "--traceback",    help="Print traceback for uncaught exceptions", action="store_true")
         opt("-x", "--executable",   help="Generate executable", action="store_true")
-    
+
         opt("--long",               help="Use long long '64-bit' integers", action="store_true")
+        opt("--float32",            help="Use 32-bit floats", action="store_true")
+
         opt("--noassert",           help="Disable assert statements", action="store_true")
         opt("--nobounds",           help="Disable bounds checking", action="store_true")
         opt("--nowarnings",         help="Disable '-Wall' compilation warnings", action="store_true")
@@ -301,6 +305,8 @@ class Shedskin:
         opt("-x", "--executable",   help="Generate executable", action="store_true")
     
         opt("--long",               help="Use long long '64-bit' integers", action="store_true")
+        opt("--float32",            help="Use 32-bit floats", action="store_true")
+
         opt("--noassert",           help="Disable assert statements", action="store_true")
         opt("--nobounds",           help="Disable bounds checking", action="store_true")
         opt("--nogc",               help="Disable garbage collection", action="store_true")

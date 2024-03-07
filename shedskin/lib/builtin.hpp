@@ -55,7 +55,7 @@ namespace __shedskin__ {
     typedef int __ss_int;
 #endif
 
-#ifdef __SS_FLOAT
+#ifdef __SS_FLOAT32
     typedef float __ss_float;
 #else
     typedef double __ss_float;
