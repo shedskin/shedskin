@@ -126,7 +126,7 @@ def generate_makefile(gx):
             if gx.int32:
                 line += " -D__SS_INT32"
             if gx.int64:
-                line += " -D__SS_INT32"
+                line += " -D__SS_INT64"
             if gx.int128:
                 line += " -D__SS_INT128"
             if gx.float32:
