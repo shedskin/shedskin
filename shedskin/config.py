@@ -82,7 +82,6 @@ class GlobalInfo:  # XXX add comments, split up
         self.tempcount = {}
         self.struct_unpack = {}
         self.maxhits = 0  # XXX amaze.py termination
-        self.gc_cleanup = False
         self.terminal = None
         self.progressbar = None
         self.generate_cmakefile = False

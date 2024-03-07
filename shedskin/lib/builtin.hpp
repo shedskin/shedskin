@@ -126,11 +126,7 @@ extern __ss_bool False;
 
 /* class declarations */
 
-#ifdef __SS_GC_CLEANUP
-class pyobj : public gc_cleanup {
-#else
 class pyobj : public gc {
-#endif
 public:
     class_ *__class__;
 

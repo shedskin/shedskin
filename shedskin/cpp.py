@@ -871,10 +871,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.deindent()
             self.output("}")
 
-        # --- destructor call
-        if "__del__" in cl.funcs and self.inhcpa(cl.funcs["__del__"]):
-            self.output("~%s() { this->__del__(); }" % self.cpp_name(cl))
-
         # --- static code
         if cl.parent.static_nodes:
             self.output("static void __static__();")

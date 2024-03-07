@@ -430,8 +430,6 @@ def generate_cmakefile(gx):
         compile_options.append("-D__SS_NOWRAP")
     if gx.backtrace:
         compile_options.append("-D__SS_BACKTRACE -rdynamic -fno-inline")
-    if gx.gc_cleanup:
-        compile_options.append("-D__SS_GC_CLEANUP")
     if not gx.assertions:
         compile_options.append("-D__SS_NOASSERT")
     if gx.backtrace:
