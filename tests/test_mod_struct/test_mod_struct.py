@@ -211,6 +211,11 @@ def test_pack_into():
     a, b = struct.unpack_from('<hh', bla, 4)
     assert a == 17 and b == 18
 
+    bert = bytearray(10*b'-')
+    struct.pack_into('c', bert, 6, b'*')
+    struct.pack_into('c', bert, -8, b'*')
+    assert bert == b'--*---*---'
+
 
 def test_calcsize():
     assert struct.calcsize('>bhl') == 7
