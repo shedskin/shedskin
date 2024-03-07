@@ -1,4 +1,4 @@
-/* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2024 Mark Dufour and contributors; License Expat (See LICENSE) */
 
 #ifndef __IO_HPP
 #define __IO_HPP
@@ -8,30 +8,54 @@
 using namespace __shedskin__;
 namespace __io__ {
 
-class BytesI : public file_binary {
+class BytesIO : public file_binary {
 public:
     __ss_int pos;
     bytes *s;
 
-    BytesI(bytes *s=NULL) : file_binary(), pos(0), s(s ? s : new bytes()) {}
+    BytesIO(bytes *initial_bytes=NULL) : file_binary(), pos(0), s(initial_bytes ? initial_bytes : new bytes()) {}
 
-    bytes * read(int n=-1);
-    bytes * readline(int n=-1);
+    bytes *read(int n=-1);
+    bytes *readline(int n=-1);
     void *seek(__ss_int i, __ss_int w=0);
     __ss_int tell() { return pos; }
-    void *truncate(int size=-1) { 
-        s->unit.resize(size == -1 ? pos : size); 
+    void *truncate(int size=-1) {
+        s->unit.resize(size == -1 ? pos : size);
         return NULL;
     }
-    void *write(bytes* data);
+    void *write(bytes *data);
 
     bool __error() { return false; }
     bool __eof() { return (pos >= len(s)); }
+
+    bytes *getvalue();
 };
 
-BytesI *BytesIO(bytes *s=0);
+class StringIO : public file {
+public:
+    __ss_int pos;
+    str *s;
+
+    StringIO(str *initial_value=NULL) : file(), pos(0), s(initial_value ? initial_value : new str()) {}
+
+    str *read(int n=-1);
+    str *readline(int n=-1);
+    void *seek(__ss_int i, __ss_int w=0);
+    __ss_int tell() { return pos; }
+    void *truncate(int size=-1) {
+        s->unit.resize(size == -1 ? pos : size);
+        return NULL;
+    }
+    void *write(str *data);
+
+    bool __error() { return false; }
+    bool __eof() { return (pos >= len(s)); }
+
+    str *getvalue();
+};
 
 extern bytes *default_0;
+extern str *default_1;
 
 void __init();
 
