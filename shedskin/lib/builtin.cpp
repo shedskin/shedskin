@@ -229,13 +229,8 @@ void __ss_exit(int code) {
 /* glue */
 
 #ifdef __SS_BIND
-#ifdef __SS_LONG
-template<> PyObject *__to_py(__ss_int i) { return PyLong_FromLongLong(i); }
-#endif
-// template<> PyObject *__to_py(int i) { return PyInt_FromLong(i); }
-template<> PyObject *__to_py(int i) { return PyLong_FromLong(i); }
-// template<> PyObject *__to_py(long i) { return PyInt_FromLong(i); }
-template<> PyObject *__to_py(long i) { return PyLong_FromLong(i); }
+template<> PyObject *__to_py(int32_t i) { return PyLong_FromLong(i); }
+template<> PyObject *__to_py(int64_t i) { return PyLong_FromLongLong(i); }
 template<> PyObject *__to_py(__ss_bool i) { return PyBool_FromLong(i.value); }
 template<> PyObject *__to_py(__ss_float d) { return PyFloat_FromDouble(d); }
 template<> PyObject *__to_py(void *v) { Py_INCREF(Py_None); return Py_None; }
