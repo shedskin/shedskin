@@ -64,7 +64,7 @@ class GlobalInfo:  # XXX add comments, split up
         self.executable_product = True
         self.pyextension_product = False
         self.longlong = False
-        self.float = False
+        self.float32 = False
         self.flags = None
         self.silent = False
         self.nogc = False
