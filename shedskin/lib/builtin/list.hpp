@@ -186,8 +186,8 @@ template<class T> void *list<T>::__setslice__(__ss_int x, __ss_int l, __ss_int u
         else if(s > 0 && u < l) slicesize=0;
         else if(s < 0 && l < u) slicesize=0;
         else {
-            int slicelen = std::abs(u-l);
-            int absstep = std::abs(s);
+            int slicelen = __abs(u-l);
+            int absstep = __abs(s);
             slicesize = slicelen/absstep;
             if(slicelen%absstep) slicesize += 1;
         }
