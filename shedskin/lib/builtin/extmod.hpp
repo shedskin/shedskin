@@ -10,7 +10,7 @@ template<class T> T __to_ss(PyObject *p) {
 
 template<> __ss_int __to_ss(PyObject *p);
 template<> __ss_bool __to_ss(PyObject *p);
-template<> double __to_ss(PyObject *p);
+template<> __ss_float __to_ss(PyObject *p);
 template<> void *__to_ss(PyObject *p);
 
 template<class T> PyObject *__to_py(T t) {
@@ -27,7 +27,7 @@ template<> PyObject *__to_py(__ss_int i);
 template<> PyObject *__to_py(int i);
 template<> PyObject *__to_py(long i);
 template<> PyObject *__to_py(__ss_bool i);
-template<> PyObject *__to_py(double i);
+template<> PyObject *__to_py(__ss_float i);
 template<> PyObject *__to_py(void *);
 
 extern dict<void *, void *> *__ss_proxy;
