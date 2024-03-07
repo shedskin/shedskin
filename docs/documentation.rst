@@ -135,7 +135,7 @@ At the moment, the following 30 modules are (fully or partially) supported. Seve
 * :code:`getopt`
 * :code:`glob`
 * :code:`heapq`
-* :code:`io` (only BytesIO)
+* :code:`io` (BytesIO, StringIO)
 * :code:`itertools` (no accumulate, pairwise, starmap)
 * :code:`math`
 * :code:`mmap`
@@ -143,7 +143,7 @@ At the moment, the following 30 modules are (fully or partially) supported. Seve
 * :code:`os.path`
 * :code:`random`
 * :code:`re`
-* :code:`select` (only select function)
+* :code:`select` (select)
 * :code:`socket`
 * :code:`string`
 * :code:`struct` (no Struct, iter_unpack)
