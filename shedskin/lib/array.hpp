@@ -292,12 +292,12 @@ template<> inline str *array<str *>::__getfast__(__ss_int i) {
     i = __wrap(this, i);
     return __char_cache[(unsigned char)units[i]];
 }
-template<> inline double array<double>::__getfast__(__ss_int i) {
+template<> inline __ss_float array<__ss_float>::__getfast__(__ss_int i) {
     i = __wrap(this, i);
     if(typechar == 'f')
         return *((float *)(&units[i*itemsize]));
     else
-        return *((double *)(&units[i*itemsize]));
+        return *((__ss_float *)(&units[i*itemsize]));
 }
 
 template<class T> void *array<T>::append(T t) {
