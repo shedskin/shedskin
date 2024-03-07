@@ -980,20 +980,6 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         if isinstance(parent, python.Class):
             if func.ident not in parent.staticmethods:  # XXX use flag
                 infer.default_var(self.gx, "self", func)
-                if (
-                    func.ident == "__init__" and "__del__" in parent.funcs
-                ):  # XXX what if no __init__
-                    self.visit(
-                        ast.Call(
-                            ast.Attribute(
-                                ast.Name("self", ast.Load()), "__del__", ast.Load()
-                            ),
-                            [],
-                            [],
-                        ),
-                        func,
-                    )
-                    self.gx.gc_cleanup = True
             parent.funcs[func.ident] = func
 
     def unpack_rec(self, formal):
