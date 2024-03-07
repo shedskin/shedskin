@@ -536,8 +536,11 @@ The shedskin translate command can be given the following options:
                           Provide alternate Makefile flags
     -L [LIB ...], --lib [LIB ...]
                           Add a library directory
-    -l, --long            Use long long '64-bit' integers
-    -f, --float32         Use 32-bit floating point numbers
+    --int32               Use 32-bit integers
+    --int64               Use 64-bit integers
+    --int128              Use 128-bit integers
+    --float32             Use 32-bit floats
+    --float64             Use 64-bit floats
     -m MAKEFILE, --makefile MAKEFILE
                           Specify alternate Makefile name
     -o OUTPUTDIR, --outputdir OUTPUTDIR
@@ -613,8 +616,11 @@ and then builds it, placing build artefacts in a `build` directory.
                           Provide alternate Makefile flags
     -L [LIB ...], --lib [LIB ...]
                           Add a library directory
-    -l, --long            Use long long '64-bit' integers
-    -f, --float32         Use 32-bit floating point numbers
+    --int32               Use 32-bit integers
+    --int64               Use 64-bit integers
+    --int128              Use 128-bit integers
+    --float32             Use 32-bit floats
+    --float64             Use 64-bit floats
     -m MAKEFILE, --makefile MAKEFILE
                           Specify alternate Makefile name
     -o OUTPUTDIR, --outputdir OUTPUTDIR
@@ -668,8 +674,11 @@ The `run` command does everything the `build` command does and then runs the res
                           Provide alternate Makefile flags
     -L [LIB ...], --lib [LIB ...]
                           Add a library directory
-    -l, --long            Use long long '64-bit' integers
-    -f, --float32         Use 32-bit floating point numbers
+    --int32               Use 32-bit integers
+    --int64               Use 64-bit integers
+    --int128              Use 128-bit integers
+    --float32             Use 32-bit floats
+    --float64             Use 64-bit floats
     -m MAKEFILE, --makefile MAKEFILE
                           Specify alternate Makefile name
     -o OUTPUTDIR, --outputdir OUTPUTDIR
