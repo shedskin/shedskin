@@ -123,10 +123,16 @@ def generate_makefile(gx):
                 line += " -D__SS_NOBOUNDS"
             if not gx.assertions:
                 line += " -D__SS_NOASSERT"
-            if gx.longlong:
-                line += " -D__SS_LONG"
+            if gx.int32:
+                line += " -D__SS_INT32"
+            if gx.int64:
+                line += " -D__SS_INT32"
+            if gx.int128:
+                line += " -D__SS_INT128"
             if gx.float32:
                 line += " -D__SS_FLOAT32"
+            if gx.float64:
+                line += " -D__SS_FLOAT64"
             if gx.backtrace:
                 line += " -D__SS_BACKTRACE -rdynamic -fno-inline"
             if gx.nogc:
