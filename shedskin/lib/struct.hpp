@@ -265,7 +265,8 @@ template<class ... Args> bytes *pack(int n, str *fmt, Args ... args) {
 }
 
 template<class ... Args> void *pack_into(int n, str *fmt, bytes *buffer, __ss_int offset, Args ... args) {
-    size_t pos = (size_t)offset;
+    size_t pos = (size_t)__wrap(buffer, offset);
+
     __ss_int ndigits = -1;
 
     __ss_int expected_args = calcitems(fmt);
