@@ -23,7 +23,9 @@ template<class T> PyObject *__to_py(T t) {
 
 template<> PyObject *__to_py(int32_t i);
 template<> PyObject *__to_py(int64_t i);
+#ifndef WIN32
 template<> PyObject *__to_py(__int128 i);
+#endif
 template<> PyObject *__to_py(__ss_bool i);
 template<> PyObject *__to_py(__ss_float i);
 template<> PyObject *__to_py(void *);
