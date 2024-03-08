@@ -19,6 +19,9 @@ template<> inline __ss_bool ___bool(int64_t x) { return __mbool(x!=0); }
 #ifdef __SS_INT128
 template<> inline __ss_bool ___bool(__int128 x) { return __mbool(x!=0); }
 #endif
+#ifdef __APPLE__
+template<> inline __ss_bool ___bool(long x) { return __mbool(x!=0); }
+#endif
 template<> inline __ss_bool ___bool(bool x) { return __mbool(x); }
 template<> inline __ss_bool ___bool(__ss_bool x) { return x; }
 template<> inline __ss_bool ___bool(__ss_float x) { return __mbool(x!=0); }
