@@ -71,7 +71,6 @@ class GlobalInfo:  # XXX add comments, split up
         self.flags = None
         self.silent = False
         self.nogc = False
-        self.gcwarns = True
         self.backtrace = False
         self.makefile_name = "Makefile"
         self.debug_level = 0

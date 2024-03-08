@@ -137,8 +137,6 @@ def generate_makefile(gx):
                 line += " -D__SS_BACKTRACE -rdynamic -fno-inline"
             if gx.nogc:
                 line += " -D__SS_NOGC"
-            if not gx.gcwarns:
-                line += " -D__SS_NOGCWARNS"
             if gx.pyextension_product:
                 if sys.platform == "win32":
                     line += " -I%s\\include -D__SS_BIND" % prefix
