@@ -233,6 +233,9 @@ template<> PyObject *__to_py(__int128 i) { return PyLong_FromLongLong(i); } /* X
 #ifdef WIN32
 template<> PyObject *__to_py(long i) { return PyLong_FromLong(i); }
 #endif
+#ifdef __APPLE__
+template<> PyObject *__to_py(long i) { return PyLong_FromLong(i); }
+#endif
 template<> PyObject *__to_py(__ss_bool i) { return PyBool_FromLong(i.value); }
 template<> PyObject *__to_py(__ss_float d) { return PyFloat_FromDouble(d); }
 template<> PyObject *__to_py(void *v) { Py_INCREF(Py_None); return Py_None; }

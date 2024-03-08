@@ -29,6 +29,9 @@ template<> PyObject *__to_py(__int128 i);
 #ifdef WIN32
 template<> PyObject *__to_py(long i);
 #endif
+#ifdef __APPLE__
+template<> PyObject *__to_py(long i);
+#endif
 template<> PyObject *__to_py(__ss_bool i);
 template<> PyObject *__to_py(__ss_float i);
 template<> PyObject *__to_py(void *);
