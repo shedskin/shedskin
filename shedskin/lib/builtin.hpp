@@ -1553,7 +1553,9 @@ template<class T> inline bool pyseq<T>::for_in_has_next(size_t i) {
 }
 
 template<class T> inline T pyseq<T>::for_in_next(size_t &i) {
-    return __getitem__(i++);
+    __ss_int pos = (__ss_int)i;
+    i++;
+    return __getitem__(pos);
 }
 
 /* __iter methods */
