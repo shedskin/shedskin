@@ -444,8 +444,6 @@ def generate_cmakefile(gx):
         compile_options.append("-D__SS_BACKTRACE -rdynamic -fno-inline")
     if gx.nogc:
         compile_options.append("-D__SS_NOGC")
-    if not gx.gcwarns:
-        compile_options.append("-D__SS_NOGCWARNS")
     compile_options = ' '.join(compile_options)
 
     for module in modules:

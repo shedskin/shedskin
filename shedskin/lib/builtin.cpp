@@ -39,10 +39,6 @@ dict<void *, void *> *__ss_proxy;
 #endif
 
 void gc_warning_handler(char *msg, GC_word arg) {
-#ifndef __SS_NOGCWARNS
-    printf(msg, arg);
-    printf("(use a 64-bit system to possibly avoid GC warnings, or use shedskin --nogcwarns to disable them)\n");
-#endif
 }
 
 void __init() {

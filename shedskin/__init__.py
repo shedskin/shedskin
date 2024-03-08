@@ -107,9 +107,6 @@ class Shedskin:
             if args.nogc:
                 gx.nogc = True
 
-            if args.nogcwarns:
-                gx.gcwarns = False
-
             if args.nowrap:
                 gx.wrap_around_check = False
 
@@ -244,7 +241,6 @@ class Shedskin:
         opt("--noassert",           help="Disable assert statements", action="store_true")
         opt("-b", "--nobounds",     help="Disable bounds checking", action="store_true")
         opt("--nogc",               help="Disable garbage collection", action="store_true")
-        opt("--nogcwarns",          help="Disable runtime GC warnings", action="store_true")
         opt("--nomakefile",         help="Disable makefile generation", action="store_true")
         opt("-w", "--nowrap",             help="Disable wrap-around checking", action="store_true")
 
@@ -287,7 +283,6 @@ class Shedskin:
         opt("--nobounds",           help="Disable bounds checking", action="store_true")
         opt("--nowarnings",         help="Disable '-Wall' compilation warnings", action="store_true")
         opt("--nogc",               help="Disable garbage collection", action="store_true")
-        opt("--nogcwarns",          help="Disable runtime GC warnings", action="store_true")
         opt("--nowrap",             help="Disable wrap-around checking", action="store_true")
 
         parser_run = subparsers.add_parser('run', help="run built and translated module")
@@ -329,7 +324,6 @@ class Shedskin:
         opt("--nobounds",           help="Disable bounds checking", action="store_true")
         opt("--nogc",               help="Disable garbage collection", action="store_true")
         opt("--nowarnings",         help="Disable '-Wall' compilation warnings", action="store_true")        
-        opt("--nogcwarns",          help="Disable runtime GC warnings", action="store_true")
         opt("--nowrap",             help="Disable wrap-around checking", action="store_true")
 
         parser_test = subparsers.add_parser('test', help="run tests")
