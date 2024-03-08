@@ -227,7 +227,7 @@ void __ss_exit(int code) {
 #ifdef __SS_BIND
 template<> PyObject *__to_py(int32_t i) { return PyLong_FromLong(i); }
 template<> PyObject *__to_py(int64_t i) { return PyLong_FromLongLong(i); }
-#ifndef WIN32
+#ifdef __SS_INT128
 template<> PyObject *__to_py(__int128 i) { return PyLong_FromLongLong(i); } /* XXX loss of precision! */
 #endif
 #ifdef WIN32
