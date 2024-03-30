@@ -832,7 +832,7 @@ str *__str() { return new str(""); } /* XXX optimize */
 
 template<> str *__str(__ss_float t) {
     std::stringstream ss;
-    ss.precision(12);
+    ss.precision(16);
     ss << std::showpoint << t;
     __GC_STRING s = ss.str().c_str();
     if(s.find('e') == std::string::npos)

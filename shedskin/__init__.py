@@ -89,17 +89,23 @@ class Shedskin:
                 if args.debug == 3:
                     self.ifa_log.setLevel(logging.DEBUG)
 
-            if args.long:
-                gx.longlong = True
+            if args.int32:
+                gx.int32 = True
 
-    #        if args.float:
-    #            ss.gx.float = True
+            if args.int64:
+                gx.int64 = True
+
+            if args.int128:
+                gx.int128 = True
+
+            if args.float32:
+                gx.float32 = True
+
+            if args.float64:
+                gx.float64 = True
 
             if args.nogc:
                 gx.nogc = True
-
-            if args.nogcwarns:
-                gx.gcwarns = False
 
             if args.nowrap:
                 gx.wrap_around_check = False
@@ -225,12 +231,16 @@ class Shedskin:
         opt("-s", "--silent",       help="Silent mode, only show warnings", action="store_true")
         opt("-t", "--traceback",    help="Print traceback for uncaught exceptions", action="store_true")
         opt("-x", "--executable",   help="Generate executable", action="store_true")
-    
-        opt("--long",               help="Use long long '64-bit' integers", action="store_true")
+
+        opt("--int32",              help="Use 32-bit integers", action="store_true")
+        opt("--int64",              help="Use 64-bit integers", action="store_true")
+        opt("--int128",             help="Use 128-bit integers", action="store_true")
+        opt("--float32",            help="Use 32-bit floats", action="store_true")
+        opt("--float64",            help="Use 64-bit floats", action="store_true")
+
         opt("--noassert",           help="Disable assert statements", action="store_true")
         opt("-b", "--nobounds",     help="Disable bounds checking", action="store_true")
         opt("--nogc",               help="Disable garbage collection", action="store_true")
-        opt("--nogcwarns",          help="Disable runtime GC warnings", action="store_true")
         opt("--nomakefile",         help="Disable makefile generation", action="store_true")
         opt("-w", "--nowrap",             help="Disable wrap-around checking", action="store_true")
 
@@ -250,7 +260,7 @@ class Shedskin:
         opt("--extproject",         help="install cmake dependencies with externalproject", action="store_true")
         opt('--ccache',             help='enable ccache with cmake', action='store_true')
         opt('--target',             help='build only specified cmake targets', nargs="+", metavar="TARGET")
-    
+
         opt("-d", "--debug",        help="Set debug level", type=int)
         opt("-e", "--extmod",       help="Generate extension module", action="store_true")
         opt("-I", "--include-dirs", help="Add an include directory", action="append")        
@@ -262,13 +272,17 @@ class Shedskin:
         opt("-s", "--silent",       help="Silent mode, only show warnings", action="store_true")
         opt("-t", "--traceback",    help="Print traceback for uncaught exceptions", action="store_true")
         opt("-x", "--executable",   help="Generate executable", action="store_true")
-    
-        opt("--long",               help="Use long long '64-bit' integers", action="store_true")
+
+        opt("--int32",              help="Use 32-bit integers", action="store_true")
+        opt("--int64",              help="Use 64-bit integers", action="store_true")
+        opt("--int128",             help="Use 128-bit integers", action="store_true")
+        opt("--float32",            help="Use 32-bit floats", action="store_true")
+        opt("--float64",            help="Use 64-bit floats", action="store_true")
+
         opt("--noassert",           help="Disable assert statements", action="store_true")
         opt("--nobounds",           help="Disable bounds checking", action="store_true")
         opt("--nowarnings",         help="Disable '-Wall' compilation warnings", action="store_true")
         opt("--nogc",               help="Disable garbage collection", action="store_true")
-        opt("--nogcwarns",          help="Disable runtime GC warnings", action="store_true")
         opt("--nowrap",             help="Disable wrap-around checking", action="store_true")
 
         parser_run = subparsers.add_parser('run', help="run built and translated module")
@@ -287,7 +301,7 @@ class Shedskin:
         opt("--extproject",         help="install cmake dependencies with externalproject", action="store_true")
         opt('--ccache',             help='enable ccache with cmake', action='store_true')
         opt('--target',             help='build only specified cmake targets', nargs="+", metavar="TARGET")
-    
+
         opt("-d", "--debug",        help="Set debug level", type=int)
         opt("-e", "--extmod",       help="Generate extension module", action="store_true")
         opt("-I", "--include-dirs", help="Add an include directory", action="append")        
@@ -299,13 +313,17 @@ class Shedskin:
         opt("-s", "--silent",       help="Silent mode, only show warnings", action="store_true")
         opt("-t", "--traceback",    help="Print traceback for uncaught exceptions", action="store_true")
         opt("-x", "--executable",   help="Generate executable", action="store_true")
-    
-        opt("--long",               help="Use long long '64-bit' integers", action="store_true")
+
+        opt("--int32",              help="Use 32-bit integers", action="store_true")
+        opt("--int64",              help="Use 64-bit integers", action="store_true")
+        opt("--int128",             help="Use 128-bit integers", action="store_true")
+        opt("--float32",            help="Use 32-bit floats", action="store_true")
+        opt("--float64",            help="Use 64-bit floats", action="store_true")
+
         opt("--noassert",           help="Disable assert statements", action="store_true")
         opt("--nobounds",           help="Disable bounds checking", action="store_true")
         opt("--nogc",               help="Disable garbage collection", action="store_true")
         opt("--nowarnings",         help="Disable '-Wall' compilation warnings", action="store_true")        
-        opt("--nogcwarns",          help="Disable runtime GC warnings", action="store_true")
         opt("--nowrap",             help="Disable wrap-around checking", action="store_true")
 
         parser_test = subparsers.add_parser('test', help="run tests")

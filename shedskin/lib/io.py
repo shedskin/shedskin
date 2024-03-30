@@ -1,9 +1,17 @@
-# Copyright 2005-2022 Mark Dufour and contributors; License Expat (See LICENSE)
+# Copyright 2005-2024 Mark Dufour and contributors; License Expat (See LICENSE)
 
 
-class BytesI(file_binary):
-    pass
+class BytesIO(file_binary):
+    def __init__(self, initial_bytes=b''):
+        pass
 
-def BytesIO(s=b''):
-    return BytesI(s)
+    def getvalue(self):
+        return b''
 
+
+class StringIO(file):
+    def __init__(self, initial_value=''):
+        pass
+
+    def getvalue(self):
+        return ''

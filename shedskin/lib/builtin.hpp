@@ -49,13 +49,21 @@ namespace __shedskin__ {
 
 /* integer type */
 
-#ifdef __SS_LONG
-    typedef long long __ss_int;
+#if defined(__SS_INT32)
+    typedef int32_t __ss_int;
+#elif defined(__SS_INT64)
+    typedef int64_t __ss_int;
+#define __SS_LONG
+#elif defined(__SS_INT128)
+    typedef __int128 __ss_int;
+#define __SS_LONG
 #else
     typedef int __ss_int;
 #endif
 
-#ifdef __SS_FLOAT
+/* float type */
+
+#if defined(__SS_FLOAT32)
     typedef float __ss_float;
 #else
     typedef double __ss_float;
@@ -126,11 +134,7 @@ extern __ss_bool False;
 
 /* class declarations */
 
-#ifdef __SS_GC_CLEANUP
-class pyobj : public gc_cleanup {
-#else
 class pyobj : public gc {
-#endif
 public:
     class_ *__class__;
 
@@ -1549,7 +1553,9 @@ template<class T> inline bool pyseq<T>::for_in_has_next(size_t i) {
 }
 
 template<class T> inline T pyseq<T>::for_in_next(size_t &i) {
-    return __getitem__(i++);
+    __ss_int pos = (__ss_int)i;
+    i++;
+    return __getitem__(pos);
 }
 
 /* __iter methods */

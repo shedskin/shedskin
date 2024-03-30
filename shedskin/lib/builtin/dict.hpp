@@ -267,7 +267,7 @@ template <class K, class V> void *dict<K,V>::__setitem__(K key, V value)
 
 template<class T> T __none() { return NULL; }
 template<> int __none();
-template<> double __none();
+template<> __ss_float __none();
 
 template <class K, class V> V dict<K,V>::__getitem__(K key) {
 	__ss_int hash = (__ss_int)hasher<K>(key);

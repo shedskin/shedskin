@@ -63,12 +63,14 @@ class GlobalInfo:  # XXX add comments, split up
         self.assertions = True
         self.executable_product = True
         self.pyextension_product = False
-        self.longlong = False
-        self.float = False
+        self.int32 = False
+        self.int64 = False
+        self.int128 = False
+        self.float32 = False
+        self.float64 = False
         self.flags = None
         self.silent = False
         self.nogc = False
-        self.gcwarns = True
         self.backtrace = False
         self.makefile_name = "Makefile"
         self.debug_level = 0
@@ -82,7 +84,6 @@ class GlobalInfo:  # XXX add comments, split up
         self.tempcount = {}
         self.struct_unpack = {}
         self.maxhits = 0  # XXX amaze.py termination
-        self.gc_cleanup = False
         self.terminal = None
         self.progressbar = None
         self.generate_cmakefile = False
