@@ -10,7 +10,7 @@ template<class T> T __to_ss(PyObject *p) {
 
 template<> __ss_int __to_ss(PyObject *p);
 template<> __ss_bool __to_ss(PyObject *p);
-template<> double __to_ss(PyObject *p);
+template<> __ss_float __to_ss(PyObject *p);
 template<> void *__to_ss(PyObject *p);
 
 template<class T> PyObject *__to_py(T t) {
@@ -21,13 +21,19 @@ template<class T> PyObject *__to_py(T t) {
     return t->__to_py__();
 }
 
-#ifdef __SS_LONG
-template<> PyObject *__to_py(__ss_int i);
+template<> PyObject *__to_py(int32_t i);
+template<> PyObject *__to_py(int64_t i);
+#ifdef __SS_INT128
+template<> PyObject *__to_py(__int128 i);
 #endif
-template<> PyObject *__to_py(int i);
+#ifdef WIN32
 template<> PyObject *__to_py(long i);
+#endif
+#ifdef __APPLE__
+template<> PyObject *__to_py(long i);
+#endif
 template<> PyObject *__to_py(__ss_bool i);
-template<> PyObject *__to_py(double i);
+template<> PyObject *__to_py(__ss_float i);
 template<> PyObject *__to_py(void *);
 
 extern dict<void *, void *> *__ss_proxy;

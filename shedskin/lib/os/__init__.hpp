@@ -99,9 +99,9 @@ popen_pipe* popen(str* cmd, str* mode, __ss_int bufsize);
 void _exit(__ss_int code);
 
 void *utime(str *path, tuple2<__ss_int, __ss_int> *times);
-void *utime(str *path, tuple2<__ss_int, double> *times);
-void *utime(str *path, tuple2<double, __ss_int> *times);
-void *utime(str *path, tuple2<double, double> *times);
+void *utime(str *path, tuple2<__ss_int, __ss_float> *times);
+void *utime(str *path, tuple2<__ss_float, __ss_int> *times);
+void *utime(str *path, tuple2<__ss_float, __ss_float> *times);
 
 #ifndef WIN32
 __ss_int __ss_WCOREDUMP(__ss_int status);
@@ -272,7 +272,7 @@ __ss_int sysconf(__ss_int name);
 
 void *ftruncate(__ss_int fd, __ss_int n);
 
-tuple2<double, double> *getloadavg();
+tuple2<__ss_float, __ss_float> *getloadavg();
 void *mkfifo(str *path, __ss_int mode=438);
 void *unlink(str *path);
 
@@ -282,7 +282,7 @@ void *lseek(__ss_int fd, __ss_int pos, __ss_int how);
 str *urandom(__ss_int n);
 
 __ss_bool access(str *path, __ss_int mode);
-tuple2<double, double> *times();
+tuple2<__ss_float, __ss_float> *times();
 
 str *tmpnam();
 file *tmpfile();

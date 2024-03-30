@@ -39,10 +39,6 @@ dict<void *, void *> *__ss_proxy;
 #endif
 
 void gc_warning_handler(char *msg, GC_word arg) {
-#ifndef __SS_NOGCWARNS
-    printf(msg, arg);
-    printf("(use a 64-bit system to possibly avoid GC warnings, or use shedskin --nogcwarns to disable them)\n");
-#endif
 }
 
 void __init() {
@@ -229,13 +225,17 @@ void __ss_exit(int code) {
 /* glue */
 
 #ifdef __SS_BIND
-#ifdef __SS_LONG
-template<> PyObject *__to_py(__ss_int i) { return PyLong_FromLongLong(i); }
+template<> PyObject *__to_py(int32_t i) { return PyLong_FromLong(i); }
+template<> PyObject *__to_py(int64_t i) { return PyLong_FromLongLong(i); }
+#ifdef __SS_INT128
+template<> PyObject *__to_py(__int128 i) { return PyLong_FromLongLong(i); } /* XXX loss of precision! */
 #endif
-// template<> PyObject *__to_py(int i) { return PyInt_FromLong(i); }
-template<> PyObject *__to_py(int i) { return PyLong_FromLong(i); }
-// template<> PyObject *__to_py(long i) { return PyInt_FromLong(i); }
+#ifdef WIN32
 template<> PyObject *__to_py(long i) { return PyLong_FromLong(i); }
+#endif
+#ifdef __APPLE__
+template<> PyObject *__to_py(long i) { return PyLong_FromLong(i); }
+#endif
 template<> PyObject *__to_py(__ss_bool i) { return PyBool_FromLong(i.value); }
 template<> PyObject *__to_py(__ss_float d) { return PyFloat_FromDouble(d); }
 template<> PyObject *__to_py(void *v) { Py_INCREF(Py_None); return Py_None; }

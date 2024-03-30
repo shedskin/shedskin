@@ -135,7 +135,7 @@ At the moment, the following 30 modules are (fully or partially) supported. Seve
 * :code:`getopt`
 * :code:`glob`
 * :code:`heapq`
-* :code:`io` (only BytesIO)
+* :code:`io` (BytesIO, StringIO)
 * :code:`itertools` (no accumulate, pairwise, starmap)
 * :code:`math`
 * :code:`mmap`
@@ -143,7 +143,7 @@ At the moment, the following 30 modules are (fully or partially) supported. Seve
 * :code:`os.path`
 * :code:`random`
 * :code:`re`
-* :code:`select` (only select function)
+* :code:`select` (select)
 * :code:`socket`
 * :code:`string`
 * :code:`struct` (no Struct, iter_unpack)
@@ -520,7 +520,7 @@ The shedskin translate command can be given the following options:
   usage: shedskin translate [-h] [-a] [-d DEBUG] [-e] [-f] [-F FLAGS]
                             [-L [LIB ...]] [-l] [-m MAKEFILE] [-o OUTPUTDIR]
                             [-r] [-s] [-x] [--noassert] [-b] [--nogc]
-                            [--nogcwarns] [--nomakefile] [--nowrap]
+                            [--nomakefile] [--nowrap]
                             name
 
   positional arguments:
@@ -532,12 +532,15 @@ The shedskin translate command can be given the following options:
     -d DEBUG, --debug DEBUG
                           Set debug level
     -e, --extmod          Generate extension module
-    -f, --float           Use 32-bit floating point numbers
     -F FLAGS, --flags FLAGS
                           Provide alternate Makefile flags
     -L [LIB ...], --lib [LIB ...]
                           Add a library directory
-    -l, --long            Use long long '64-bit' integers
+    --int32               Use 32-bit integers
+    --int64               Use 64-bit integers
+    --int128              Use 128-bit integers
+    --float32             Use 32-bit floats
+    --float64             Use 64-bit floats
     -m MAKEFILE, --makefile MAKEFILE
                           Specify alternate Makefile name
     -o OUTPUTDIR, --outputdir OUTPUTDIR
@@ -548,7 +551,6 @@ The shedskin translate command can be given the following options:
     --noassert            Disable assert statements
     -b, --nobounds        Disable bounds checking
     --nogc                Disable garbage collection
-    --nogcwarns           Disable runtime GC warnings
     --nomakefile          Disable makefile generation
     --nowrap              Disable wrap-around checking
 
@@ -585,7 +587,7 @@ and then builds it, placing build artefacts in a `build` directory.
   usage: shedskin build [-h] [--generator G] [--jobs N] [--build-type T] [--test] [--reset] [--conan]
                         [--spm] [--extproject] [--ccache] [--target TARGET [TARGET ...]] [-a]
                         [-d DEBUG] [-e] [-f] [-F FLAGS] [-L [LIB ...]] [-l] [-m MAKEFILE]
-                        [-o OUTPUTDIR] [-r] [-s] [-x] [--noassert] [--nobounds] [--nogc] [--nogcwarns]
+                        [-o OUTPUTDIR] [-r] [-s] [-x] [--noassert] [--nobounds] [--nogc]
                         [--nomakefile] [--nowrap]
                         name
 
@@ -609,12 +611,15 @@ and then builds it, placing build artefacts in a `build` directory.
     -d DEBUG, --debug DEBUG
                           Set debug level
     -e, --extmod          Generate extension module
-    -f, --float           Use 32-bit floating point numbers
     -F FLAGS, --flags FLAGS
                           Provide alternate Makefile flags
     -L [LIB ...], --lib [LIB ...]
                           Add a library directory
-    -l, --long            Use long long '64-bit' integers
+    --int32               Use 32-bit integers
+    --int64               Use 64-bit integers
+    --int128              Use 128-bit integers
+    --float32             Use 32-bit floats
+    --float64             Use 64-bit floats
     -m MAKEFILE, --makefile MAKEFILE
                           Specify alternate Makefile name
     -o OUTPUTDIR, --outputdir OUTPUTDIR
@@ -625,7 +630,6 @@ and then builds it, placing build artefacts in a `build` directory.
     --noassert            Disable assert statements
     --nobounds            Disable bounds checking
     --nogc                Disable garbage collection
-    --nogcwarns           Disable runtime GC warnings
     --nomakefile          Disable makefile generation
     --nowrap              Disable wrap-around checking
 
@@ -641,7 +645,7 @@ The `run` command does everything the `build` command does and then runs the res
   usage: shedskin run [-h] [--generator G] [--jobs N] [--build-type T] [--test] [--reset] [--conan]
                       [--spm] [--extproject] [--ccache] [--target TARGET [TARGET ...]] [-a] [-d DEBUG]
                       [-e] [-f] [-F FLAGS] [-L [LIB ...]] [-l] [-m MAKEFILE] [-o OUTPUTDIR] [-r] [-s]
-                      [-x] [--noassert] [--nobounds] [--nogc] [--nogcwarns] [--nomakefile] [--nowrap]
+                      [-x] [--noassert] [--nobounds] [--nogc] [--nomakefile] [--nowrap]
                       name
 
   positional arguments:
@@ -664,12 +668,15 @@ The `run` command does everything the `build` command does and then runs the res
     -d DEBUG, --debug DEBUG
                           Set debug level
     -e, --extmod          Generate extension module
-    -f, --float           Use 32-bit floating point numbers
     -F FLAGS, --flags FLAGS
                           Provide alternate Makefile flags
     -L [LIB ...], --lib [LIB ...]
                           Add a library directory
-    -l, --long            Use long long '64-bit' integers
+    --int32               Use 32-bit integers
+    --int64               Use 64-bit integers
+    --int128              Use 128-bit integers
+    --float32             Use 32-bit floats
+    --float64             Use 64-bit floats
     -m MAKEFILE, --makefile MAKEFILE
                           Specify alternate Makefile name
     -o OUTPUTDIR, --outputdir OUTPUTDIR
@@ -680,7 +687,6 @@ The `run` command does everything the `build` command does and then runs the res
     --noassert            Disable assert statements
     --nobounds            Disable bounds checking
     --nogc                Disable garbage collection
-    --nogcwarns           Disable runtime GC warnings
     --nomakefile          Disable makefile generation
     --nowrap              Disable wrap-around checking
 

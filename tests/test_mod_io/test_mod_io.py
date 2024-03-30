@@ -38,8 +38,47 @@ def test_io_write_to_binary_string():
         assert sio.readlines() == [b'lo\n', b'joh']
         assert sio.tell() == 9
 
+
+def test_stringio():
+    s = io.StringIO()
+    assert s.getvalue() == ''
+
+    s = io.StringIO()
+    print('bert', file=s, end='')
+    assert s.getvalue() == 'bert'
+
+    s = io.StringIO()
+    print('aa', file=s)
+    print('bb', file=s)
+    assert s.getvalue() == 'aa\nbb\n'
+
+    s = io.StringIO(initial_value='hop')
+    s.seek(0)
+    assert s.read() == 'hop'
+
+    s = io.StringIO(initial_value='empty')
+    print('hopp', file=s)
+    s.seek(0)
+    assert s.read() == 'hopp\n'
+
+
+def test_bytesio():
+    b = io.BytesIO()
+    assert b.getvalue() == b''
+
+    b = io.BytesIO(initial_bytes=b'hap')
+    assert b.getvalue() == b'hap'
+
+    b = io.BytesIO(initial_bytes=b'hap')
+    b.write(b'hup')
+    b.seek(0)
+    assert b.read() == b'hup'
+
+
 def test_all():
-    assert True
+    test_stringio()
+    test_bytesio()
+
     # test_io_from_file()
     # test_io_read_from_binary_string()
     # test_io_write_to_binary_string()
