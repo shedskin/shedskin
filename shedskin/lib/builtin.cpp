@@ -289,7 +289,9 @@ template<> __ss_float __none() { throw new TypeError(new str("mixing None with f
 str *pyobj::__str__() { return __repr__(); }
 
 str *pyobj::__repr__() {
-    return __add_strs(3, new str("<"), __class__->__name__, new str(" instance>"));
+    std::stringstream stream;
+    stream << "0x" << std::hex << reinterpret_cast<uintptr_t>(this);
+    return __add_strs(5, new str("<"), __class__->__name__, new str(" object at "), new str(stream.str().c_str()), new str(">"));
 }
 
 long pyobj::__hash__() {

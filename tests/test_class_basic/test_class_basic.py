@@ -141,12 +141,31 @@ def test_class_instance_attrs():
     assert not b.v
 
 
+class Blah:
+    pass
+
+def test_instance_str():
+    b1 = Blah()
+    assert 'object at 0x' in str(b1)
+    b2 = Blah()
+
+    d = {}
+    d[b1] = b1
+    d[b2] = b2
+    assert len(d) == 2
+
+    e = {}
+    e[str(b1)] = 'b1'
+    e[str(b2)] = 'b2'
+    assert len(e) == 2
+
 
 def test_all():
     test_class_person()
     test_class_edge()
     test_class_attrs()
     test_class_instance_attrs()
+    test_instance_str()
 
 
 
