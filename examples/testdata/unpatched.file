@@ -2947,7 +2947,7 @@ def generate_code():
         line = line[:-1]
 
         variable = line[:line.find('=')].strip()
-        if variable == 'CCFLAGS':
+        if variable == 'CXXFLAGS':
             line += ' -I. -I${SHEDSKIN_LIBDIR}'
             if sys.platform == 'darwin' and os.path.isdir('/usr/local/include'):
                 line += ' -I/usr/local/include' # XXX
@@ -3005,7 +3005,7 @@ def generate_code():
         targets += [('_prof', '-pg -ggdb'), ('_debug', '-g -ggdb')]
     for suffix, options in targets:
         print >>makefile, ident+suffix+':\t$(CPPFILES) $(HPPFILES)'
-        print >>makefile, '\t$(CC) '+options+' $(CCFLAGS) $(CPPFILES) $(LFLAGS) '+_out+ident+suffix+_ext + '\n'
+        print >>makefile, '\t$(CXX) '+options+' $(CXXFLAGS) $(CPPFILES) $(LFLAGS) '+_out+ident+suffix+_ext + '\n'
 
     # clean
     ext = ''
