@@ -109,7 +109,8 @@ def generate_makefile(gx):
     for line in open(flags):
         line = line[:-1]
 
-        variable = line[: line.find("=")].strip()
+        variable = line[: line.find("=")].strip().rstrip('?')
+
         if variable == "CXXFLAGS":
             line += " -I. -I%s" % env_var("SHEDSKIN_LIBDIR")
             line += "".join(" -I" + libdir for libdir in libdirs[:-1])
