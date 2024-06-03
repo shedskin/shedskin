@@ -397,17 +397,17 @@ template<class T> tuple2<T, T> *izipiter<T, T>::__next__() {
     return tuple;
 }
 
-inline izipiter<void*, void*> *__zip(int iterable_count, __ss_bool strict) {
+inline izipiter<void*, void*> *__zip(int, __ss_bool strict) {
     return new izipiter<void*, void*>(strict);
 }
-template<class T> inline izipiter<T, T> *__zip(int iterable_count, __ss_bool strict, pyiter<T> *iterable1) {
+template<class T> inline izipiter<T, T> *__zip(int, __ss_bool strict, pyiter<T> *iterable1) {
     izipiter<T, T> *iter = new izipiter<T, T>(strict, iterable1);
     return iter;
 }
-template<class T, class U> inline izipiter<T, U> *__zip(int iterable_count, __ss_bool strict, pyiter<T> *iterable1, pyiter<U> *iterable2) {
+template<class T, class U> inline izipiter<T, U> *__zip(int, __ss_bool strict, pyiter<T> *iterable1, pyiter<U> *iterable2) {
     return new izipiter<T, U>(strict, iterable1, iterable2);
 }
-template<class T, class ... Args> inline izipiter<T, T> *__zip(int iterable_count, __ss_bool strict, pyiter<T> *iterable, pyiter<T> *iterable2, pyiter<T> *iterable3, Args ... args) {
+template<class T, class ... Args> inline izipiter<T, T> *__zip(int, __ss_bool strict, pyiter<T> *iterable, pyiter<T> *iterable2, pyiter<T> *iterable3, Args ... args) {
     izipiter<T, T> *iter = new izipiter<T, T>(strict, iterable);
 
     iter->push_iter(iterable2);

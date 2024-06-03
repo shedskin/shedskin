@@ -150,6 +150,7 @@ The following people have contributed to Shed Skin development:
   Dave Tweed
   Jaroslaw Tworek
   Tony Veijalainen
+  Yuri Victorovich
   Pavel Vinogradov
   Jason Ye
   Liu Zhenhai

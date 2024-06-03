@@ -11,7 +11,7 @@ template<class T> tuple2<T, T>::tuple2() {
     this->__class__ = cl_tuple;
 }
 
-template <class T> template <class ... Args> tuple2<T, T>::tuple2(int count, Args ... args) {
+template <class T> template <class ... Args> tuple2<T, T>::tuple2(int, Args ... args) {
     this->__class__ = cl_tuple;
     this->units = {(T)args...};
 }
@@ -62,16 +62,16 @@ template<class T> __ss_int tuple2<T, T>::__len__() {
 
 template<class T> T tuple2<T, T>::__getitem__(__ss_int i) {
     i = __wrap(this, i);
-    return units[i];
+    return units[(unsigned)i];
 }
 
 template<class T> str *tuple2<T, T>::__repr__() {
     str *r = new str("(");
-    for(int i = 0; i<this->__len__();i++) {
+    for(size_t i = 0; i<this->units.size();i++) {
         *r += repr(this->units[i])->c_str();
-        if(this->__len__() == 1 )
+        if(this->units.size() == 1 )
             *r += ",";
-        if(i<this->__len__()-1)
+        if(i<this->units.size()-1)
             *r += ", ";
     }
     *r += ")";
@@ -111,7 +111,7 @@ template<class T> tuple2<T,T> *tuple2<T, T>::__imul__(__ss_int b) {
 }
 
 template<class T> __ss_bool tuple2<T, T>::__contains__(T a) {
-    for(int i=0; i<this->__len__(); i++)
+    for(size_t i=0; i<this->units.size(); i++)
         if(__eq(this->units[i], a))
             return True;
     return False;
@@ -161,8 +161,8 @@ template<class T> tuple2<T,T> *tuple2<T,T>::__copy__() {
 template<class T> tuple2<T,T> *tuple2<T,T>::__deepcopy__(dict<void *, pyobj *> *memo) {
     tuple2<T,T> *c = new tuple2<T,T>();
     memo->__setitem__(this, c);
-    c->units.resize(this->__len__());
-    for(int i=0; i<this->__len__(); i++)
+    c->units.resize(this->units.size());
+    for(size_t i=0; i<this->units.size(); i++)
         c->units[i] = __deepcopy(this->units[i], memo);
     return c;
 }
@@ -188,10 +188,10 @@ template<class T> tuple2<T, T>::tuple2(PyObject *p) {
 }
 
 template<class T> PyObject *tuple2<T, T>::__to_py__() {
-    int len = this->__len__();
+    size_t len = this->units.size();
     PyObject *p = PyTuple_New(len);
-    for(int i=0; i<len; i++)
-        PyTuple_SetItem(p, i, __to_py(this->__getitem__(i)));
+    for(size_t i=0; i<len; i++)
+        PyTuple_SetItem(p, i, __to_py(this->units[i]));
     return p;
 }
 #endif

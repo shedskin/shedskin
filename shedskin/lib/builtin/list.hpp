@@ -6,7 +6,7 @@ template<class T> list<T>::list() {
     this->__class__ = cl_list;
 }
 
-template<class T> template <class ... Args> list<T>::list(int count, Args ... args) {
+template<class T> template <class ... Args> list<T>::list(int, Args ... args) {
     this->__class__ = cl_list;
     this->units = {(T)args...};
 }
