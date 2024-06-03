@@ -89,10 +89,9 @@ template<> inline void __mod_char(str *result, size_t &, char c, str *arg) {
     result->unit += arg->unit[0];
 }
 
-template<class T> void __mod_one(str *fmt, unsigned int fmtlen, unsigned int &j, str *result, size_t &pos, T arg) {
-    int namepos, startpos;
+template<class T> void __mod_one(str *fmt, size_t fmtlen, size_t &j, str *result, size_t &pos, T arg) {
+    size_t namepos, startpos;
     str *name = NULL;
-    int skip = 0;
     std::string fmtchars = "0123456789# -+.*";
 
     for(; j<fmtlen;) {
@@ -128,7 +127,7 @@ template<class T> void __mod_one(str *fmt, unsigned int fmtlen, unsigned int &j,
         size_t pos = fmt->unit.find_first_not_of(fmtchars, j);
         if(pos == std::string::npos)
             throw new ValueError(new str("incomplete format"));
-        j += (unsigned int)(pos-startpos);
+        j += (size_t)(pos-startpos);
 
         c = fmt->unit[j++];
 
@@ -218,8 +217,8 @@ template<class T> void __mod_one(str *fmt, unsigned int fmtlen, unsigned int &j,
 template<class ... Args> str *__mod6(str *fmt, int, Args ... args) {
     str *result = new str();
     size_t pos = 0;
-    unsigned int fmtlen = fmt->__len__();
-    unsigned int j = 0;
+    size_t fmtlen = fmt->unit.size();
+    size_t j = 0;
 
     (__mod_one(fmt, fmtlen, j, result, pos, args), ...);
 
@@ -240,8 +239,8 @@ template<class A, class B> str *__modtuple(str *fmt, tuple2<A,B> *t) {
 template<class T> str *__modtuple(str *fmt, tuple2<T,T> *t) {
     str *result = new str();
     size_t pos = 0;
-    unsigned int fmtlen = fmt->__len__();
-    unsigned int j = 0;
+    size_t fmtlen = fmt->unit.size();
+    size_t j = 0;
 
     __ss_int l = len(t);
     for(__ss_int i=0;i<l; i++)
@@ -263,8 +262,8 @@ template<class ... Args> bytes *__mod6(bytes *fmt, int, Args ... args) {
     str *result = new str();
     bytes *r = new bytes();
     size_t pos = 0;
-    unsigned int fmtlen = fmt->__len__();
-    unsigned int j = 0;
+    size_t fmtlen = fmt->unit.size();
+    size_t j = 0;
     str *sfmt = new str();
     sfmt->unit = fmt->unit;
 
