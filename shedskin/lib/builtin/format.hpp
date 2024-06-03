@@ -12,7 +12,7 @@ extern str *nl;
 extern str *sp;
 extern str *sep;
 
-template <class T> void *__mod_dict_arg(T t, str *name) { return NULL; }
+template <class T> void *__mod_dict_arg(T, str *) { return NULL; }
 template <class V> V __mod_dict_arg(dict<str *, V> *d, str *name) {
     return d->__getitem__(name);
 }
@@ -22,8 +22,8 @@ template <class V> V __mod_dict_arg(dict<bytes *, V> *d, str *name) {
     return d->__getitem__(key);
 }
 
-template <class T> void __mod_int(str *result, size_t &pos, const char *fstr, T arg) {}
-template<> inline void __mod_int(str *result, size_t &pos, const char *fstr, __ss_int arg) {
+template <class T> void __mod_int(str *result, size_t &, const char *fstr, T arg) {}
+template<> inline void __mod_int(str *result, size_t &, const char *fstr, __ss_int arg) {
     char *d;
     int x;
     x = asprintf(&d, fstr, arg); // TODO modern C++ replacement for asprintf?
@@ -36,13 +36,13 @@ template<> inline void __mod_int(str *result, size_t &pos, const char *fstr, __s
     __mod_int(result, pos, fstr, (__ss_int)arg);
 }
 
-template <class T> void __mod_oct(str *result, size_t &pos, T arg) {}
-template<> inline void __mod_oct(str *result, size_t &pos, __ss_int arg) { // TODO asprintf for precision (has issues with 0-bytes?)
+template <class T> void __mod_oct(str *result, size_t &, T arg) {}
+template<> inline void __mod_oct(str *result, size_t &, __ss_int arg) { // TODO asprintf for precision (has issues with 0-bytes?)
     result->unit += __str(arg, (__ss_int)8)->unit;
 }
 
-template <class T> void __mod_hex(str *result, size_t &pos, char c, const char *fstr, T arg) {}
-template<> inline void __mod_hex(str *result, size_t &pos, char c, const char *fstr, __ss_int arg) {
+template <class T> void __mod_hex(str *result, size_t &, char c, const char *fstr, T arg) {}
+template<> inline void __mod_hex(str *result, size_t &, char c, const char *fstr, __ss_int arg) {
     char *d;
     int x;
     x = asprintf(&d, fstr, arg); // TODO modern C++ replacement for asprintf?
@@ -52,8 +52,8 @@ template<> inline void __mod_hex(str *result, size_t &pos, char c, const char *f
     free(d);
 }
 
-template <class T> void __mod_float(str *result, size_t &pos, const char *fstr, T arg) {}
-template<> inline void __mod_float(str *result, size_t &pos, const char *fstr, __ss_float arg) {
+template <class T> void __mod_float(str *result, size_t &, const char *fstr, T arg) {}
+template<> inline void __mod_float(str *result, size_t &, const char *fstr, __ss_float arg) {
     char *d;
     int x;
     x = asprintf(&d, fstr, arg); // TODO modern C++ replacement for asprintf?
@@ -66,24 +66,24 @@ template<> inline void __mod_float(str *result, size_t &pos, const char *fstr, _
     __mod_float(result, pos, fstr, (__ss_float)arg);
 }
 
-template <class T> void __mod_str(str *result, size_t &pos, char c, T arg) {
+template <class T> void __mod_str(str *result, size_t &, char c, T arg) {
     if(c=='s')
         result->unit += __str(arg)->unit;
     else
         result->unit += repr(arg)->unit;
 }
-template<> inline void __mod_str(str *result, size_t &pos, char c, bytes *arg) {
+template<> inline void __mod_str(str *result, size_t &, char c, bytes *arg) {
     if(c=='s')
         result->unit += arg->unit;
     else
         result->unit += repr(arg)->unit;
 }
 
-template <class T> void __mod_char(str *result, size_t &pos, char c, T arg) {} /* TODO error */
-template<> inline void __mod_char(str *result, size_t &pos, char c, __ss_int arg) {
+template <class T> void __mod_char(str *result, size_t &, char c, T arg) {} /* TODO error */
+template<> inline void __mod_char(str *result, size_t &, char c, __ss_int arg) {
     result->unit += (char)arg;
 }
-template<> inline void __mod_char(str *result, size_t &pos, char c, str *arg) {
+template<> inline void __mod_char(str *result, size_t &, char c, str *arg) {
     if(arg->unit.size() != 1)
         throw new TypeError(new str("%c requires int or char"));
     result->unit += arg->unit[0];
@@ -215,7 +215,7 @@ template<class T> void __mod_one(str *fmt, unsigned int fmtlen, unsigned int &j,
     }
 }
 
-template<class ... Args> str *__mod6(str *fmt, int count, Args ... args) {
+template<class ... Args> str *__mod6(str *fmt, int, Args ... args) {
     str *result = new str();
     size_t pos = 0;
     unsigned int fmtlen = fmt->__len__();
@@ -259,7 +259,7 @@ template<class T> str *__modtuple(str *fmt, tuple2<T,T> *t) {
 
 /* TODO optimize bytes variants */
 
-template<class ... Args> bytes *__mod6(bytes *fmt, int count, Args ... args) {
+template<class ... Args> bytes *__mod6(bytes *fmt, int, Args ... args) {
     str *result = new str();
     bytes *r = new bytes();
     size_t pos = 0;

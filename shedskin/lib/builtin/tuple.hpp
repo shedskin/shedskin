@@ -11,7 +11,7 @@ template<class T> tuple2<T, T>::tuple2() {
     this->__class__ = cl_tuple;
 }
 
-template <class T> template <class ... Args> tuple2<T, T>::tuple2(int count, Args ... args) {
+template <class T> template <class ... Args> tuple2<T, T>::tuple2(int, Args ... args) {
     this->__class__ = cl_tuple;
     this->units = {(T)args...};
 }
