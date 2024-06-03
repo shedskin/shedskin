@@ -109,8 +109,9 @@ def generate_makefile(gx):
     for line in open(flags):
         line = line[:-1]
 
-        variable = line[: line.find("=")].strip()
-        if variable == "CCFLAGS":
+        variable = line[: line.find("=")].strip().rstrip('?')
+
+        if variable == "CXXFLAGS":
             line += " -I. -I%s" % env_var("SHEDSKIN_LIBDIR")
             line += "".join(" -I" + libdir for libdir in libdirs[:-1])
             if sys.platform == "darwin" and os.path.isdir("/usr/local/include"):
@@ -192,7 +193,7 @@ def generate_makefile(gx):
         write("PCRE_INCLUDE=$(STATIC_INCLUDE)/include")
         write()
         write("STATIC_LIBS=$(GC_STATIC) $(GCCPP_STATIC) $(PCRE_STATIC)")
-        write("STATIC_CCFLAGS=$(CCFLAGS) -I$(GC_INCLUDE) -I$(PCRE_INCLUDE)")
+        write("STATIC_CXXFLAGS=$(CXXFLAGS) -I$(GC_INCLUDE) -I$(PCRE_INCLUDE)")
         write("STATIC_LFLAGS=" + MATCH.group(2))
         write()
 
@@ -208,9 +209,9 @@ def generate_makefile(gx):
     for suffix, options in targets:
         write(ident + suffix + ":\t$(CPPFILES) $(HPPFILES)")
         write(
-            "\t$(CC) "
+            "\t$(CXX) "
             + options
-            + " $(CCFLAGS) $(CPPFILES) $(LFLAGS) "
+            + " $(CXXFLAGS) $(CPPFILES) $(LFLAGS) "
             + _out
             + ident
             + suffix
@@ -222,7 +223,7 @@ def generate_makefile(gx):
         # static option
         write("static: $(CPPFILES) $(HPPFILES)")
         write(
-            f"\t$(CC) $(STATIC_CCFLAGS) $(CPPFILES) $(STATIC_LIBS) $(STATIC_LFLAGS) -o {ident}\n"
+            f"\t$(CXX) $(STATIC_CXXFLAGS) $(CPPFILES) $(STATIC_LIBS) $(STATIC_LFLAGS) -o {ident}\n"
         )
 
     # clean

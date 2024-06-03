@@ -10,7 +10,7 @@ load
 run
 ```
 
-requires adding `-fbracket-depth=512` to `CCFLAGS` in the `Makefile` in macOS
+requires adding `-fbracket-depth=512` to `CXXFLAGS` in the `Makefile` in macOS
 
 ref: https://github.com/ndless-nspire/Ndless/issues/59
 

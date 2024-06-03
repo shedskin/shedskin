@@ -613,7 +613,7 @@ void __throw_dict_changed();
 void __throw_slice_step_zero();
 void __throw_stop_iteration();
 
-template<class K, class V> class dictentry;
+template<class K, class V> struct dictentry;
 
 const int MINSIZE = 8;
 
