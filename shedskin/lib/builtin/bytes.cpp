@@ -144,15 +144,17 @@ bytes *bytes::__imul__(__ss_int n) {
 bytes *bytes::__mul__(__ss_int n) { /* optimize */
     bytes *r = new bytes(frozen);
     if(n<=0) return r;
+    size_t ns = (size_t)n;
+
     __GC_STRING &s = r->unit;
     size_t ulen = this->unit.size();
 
     if(ulen == 1)
-        r->unit = __GC_STRING(n, unit[0]);
+        r->unit = __GC_STRING(ns, unit[0]);
     else {
-        s.resize(ulen*(size_t)n);
+        s.resize(ulen*ns);
 
-        for(size_t i=0; i<ulen*(size_t)n; i+=ulen)
+        for(size_t i=0; i<ulen*ns; i+=ulen)
             s.replace(i, ulen, unit);
     }
 
@@ -716,8 +718,8 @@ void *bytes::append(__ss_int i) {
 
 bytes *bytes::swapcase() {
     bytes *r = new bytes(unit, frozen);
-    int len = __len__();
-    for(int i = 0; i < len; i++)
+    size_t len = unit.size();
+    for(size_t i=0; i<len; i++)
         r->unit[i] = __case_swap_cache->unit[(unsigned char)unit[i]];
     return r;
 }
