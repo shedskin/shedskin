@@ -204,13 +204,13 @@ template<class T> void *list<T>::__setslice__(__ss_int x, __ss_int l, __ss_int u
             this->units.insert(this->units.begin()+l, la->units.begin(), la->units.end());
     }
     else {
-        int i, j;
+        __ss_int i, j;
         if(s > 0)
             for(i = 0, j = l; j < u; i++, j += s)
-                this->units[j] = la->units[i];
+                this->units[(size_t)j] = la->units[(size_t)i];
         else
             for(i = 0, j = l; j > u; i++, j += s)
-                this->units[j] = la->units[i];
+                this->units[(size_t)j] = la->units[(size_t)i];
     }
 
     return NULL;

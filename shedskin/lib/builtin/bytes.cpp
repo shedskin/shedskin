@@ -150,9 +150,9 @@ bytes *bytes::__mul__(__ss_int n) { /* optimize */
     if(ulen == 1)
         r->unit = __GC_STRING(n, unit[0]);
     else {
-        s.resize(ulen*n);
+        s.resize(ulen*(size_t)n);
 
-        for(size_t i=0; i<ulen*n; i+=ulen)
+        for(size_t i=0; i<ulen*(size_t)n; i+=ulen)
             s.replace(i, ulen, unit);
     }
 
@@ -173,11 +173,11 @@ bytes *bytes::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
                 r[i] = unit[len-i-1];
         }
         else if(s > 0)
-            for(int i=l; i<u; i += s)
-                r += unit[i];
+            for(__ss_int i=l; i<u; i += s)
+                r += unit[(size_t)i];
         else
-            for(int i=l; i>u; i += s)
-                r += unit[i];
+            for(__ss_int i=l; i>u; i += s)
+                r += unit[(size_t)i];
         b = new bytes(r, frozen);
     }
     return b;
@@ -538,7 +538,7 @@ __ss_bool bytes::__ss_isascii() {
   size_t i, l = this->unit.size();
 
   for(i = 0; i < l; i++) {
-      unsigned char elem = unit[i];
+      unsigned char elem = (unsigned char)unit[i];
 
       if(elem > 127)
           return False;
