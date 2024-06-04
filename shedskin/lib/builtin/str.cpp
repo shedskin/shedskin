@@ -119,7 +119,7 @@ __ss_bool str::isprintable() {
   size_t i, l = this->unit.size();
 
   for(i = 0; i < l; i++) {
-      unsigned char elem = unit[i];
+      unsigned char elem = (unsigned char)unit[i];
 
       if(elem <= 31 or (127 <= elem and elem <= 160) or elem == 173)
           return False;
@@ -132,7 +132,7 @@ __ss_bool str::__ss_isascii() {
   size_t i, l = this->unit.size();
 
   for(i = 0; i < l; i++) {
-      unsigned char elem = unit[i];
+      unsigned char elem = (unsigned char)unit[i];
 
       if(elem > 127)
           return False;
@@ -148,7 +148,7 @@ __ss_bool str::isdecimal() {
       return False;
 
   for(i = 0; i < l; i++) {
-      unsigned char elem = unit[i];
+      unsigned char elem = (unsigned char)unit[i];
 
       if(elem < 48 or elem > 57)
           return False;
@@ -164,7 +164,7 @@ __ss_bool str::isnumeric() {
       return False;
 
   for(i = 0; i < l; i++) {
-      unsigned char elem = unit[i];
+      unsigned char elem = (unsigned char)unit[i];
 
       if(elem < 48 or (elem > 57 and elem < 178) or (elem > 179 and elem < 185) or (elem > 185 and elem < 188) or elem > 190)
           return False;
@@ -476,16 +476,17 @@ str *str::swapcase() {
     return r;
 }
 
-str *str::center(__ss_int width, str *fillchar) {
-    __ss_int len = __len__();
+str *str::center(__ss_int w, str *fillchar) {
+    size_t width = (size_t)w;
+    size_t len = unit.size();
     if(width<=len)
         return this;
 
     if(!fillchar) fillchar = sp;
-    str *r = fillchar->__mul__(width);
+    str *r = fillchar->__mul__(w);
 
-    __ss_int j = (width-len)/2;
-    for(__ss_int i=0; i<len; i++)
+    size_t j = (width-len)/2;
+    for(size_t i=0; i<len; i++)
         r->unit[j+i] = unit[i];
 
     return r;
@@ -517,9 +518,9 @@ str *str::__mul__(__ss_int n) { /* optimize */
     if(ulen == 1)
        r->unit = __GC_STRING(n, unit[0]);
     else {
-        s.resize(ulen*n);
+        s.resize(ulen*(size_t)n);
 
-        for(size_t i=0; i<ulen*n; i+=ulen)
+        for(size_t i=0; i<ulen*(size_t)n; i+=ulen)
             s.replace(i, ulen, unit);
     }
 
@@ -565,10 +566,10 @@ str *str::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
         }
         else if(s > 0)
             for(__ss_int i=l; i<u; i += s)
-                r += unit[i];
+                r += unit[(size_t)i];
         else
             for(__ss_int i=l; i>u; i += s)
-                r += unit[i];
+                r += unit[(size_t)i];
         return new str(r);
     }
 }
@@ -694,7 +695,7 @@ str *str::casefold() {
     size_t len = this->unit.size();
 
     for(size_t i=0; i<len; i++) {
-        unsigned char c = unit[i];
+        unsigned char c = (unsigned char)unit[i];
 
         if(65 >= c and c <= 90)
             c += 32;
