@@ -38,8 +38,7 @@ file *__ss_stdin, *__ss_stdout, *__ss_stderr;
 dict<void *, void *> *__ss_proxy;
 #endif
 
-void gc_warning_handler(char *msg, GC_word arg) {
-}
+void gc_warning_handler(char *, GC_word) {}
 
 void __init() {
     GC_INIT();
