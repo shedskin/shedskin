@@ -277,8 +277,8 @@ template<> void * __to_ss(PyObject *p) {
 }
 #endif
 
-template <> void *myallocate<__ss_int>(int n) { return GC_MALLOC_ATOMIC(n); }
-template <> void *myallocate<__ss_int, __ss_int>(int n) { return GC_MALLOC_ATOMIC(n); }
+template <> void *myallocate<__ss_int>(size_t n) { return GC_MALLOC_ATOMIC(n); }
+template <> void *myallocate<__ss_int, __ss_int>(size_t n) { return GC_MALLOC_ATOMIC(n); }
 
 template<> int __none() { throw new TypeError(new str("mixing None with int")); }
 template<> __ss_float __none() { throw new TypeError(new str("mixing None with float")); }

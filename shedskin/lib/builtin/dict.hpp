@@ -17,11 +17,11 @@ copyright Python Software Foundation (http://www.python.org/download/releases/2.
 	INIT_NONZERO_SET_SLOTS(so);				\
     } while(0)
 
-template <class T> void *myallocate(int n) { return GC_MALLOC(n); }
-template <> void *myallocate<__ss_int>(int n);
+template <class T> void *myallocate(size_t n) { return GC_MALLOC(n); }
+template <> void *myallocate<__ss_int>(size_t n);
 
-template <class K, class V> void *myallocate(int n) { return GC_MALLOC(n); }
-template <> void *myallocate<__ss_int, __ss_int>(int n);
+template <class K, class V> void *myallocate(size_t n) { return GC_MALLOC(n); }
+template <> void *myallocate<__ss_int, __ss_int>(size_t n);
 
 
 template<class K, class V, class U> static inline void __add_to_dict(dict<K, V> *d, U *iter) {
@@ -102,7 +102,7 @@ template<class K, class V> PyObject *dict<K, V>::__to_py__() {
 
 template <class K, class V> dict<K,V>& dict<K,V>::operator=(const dict<K,V>& other) {
     memcpy((void*)this, (void*)&other, sizeof(dict<K,V>));
-    int table_size = sizeof(dictentry<K,V>) * (other.mask+1);
+    size_t table_size = sizeof(dictentry<K,V>) * (other.mask+1);
     table = (dictentry<K,V>*)myallocate<K,V>(table_size);
     memcpy(table, other.table, table_size);
     return *this;
