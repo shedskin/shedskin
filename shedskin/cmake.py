@@ -33,10 +33,26 @@ def get_pkg_path():
     assert _pkg_path.name == "shedskin"
     return _pkg_path
 
-
 def pkg_path():
     """used by cmake to get package path automatically"""
     sys.stdout.write(str(get_pkg_path()))
+
+def get_user_cache_dir():
+    """get user cache directory dependending on platform"""
+    system = platform.system()
+    if system == "Darwin":
+        return pathlib.Path("~/Library/Caches/shedskin").expanduser()
+    elif system == "Linux":
+        return pathlib.Path("~/.cache/shedskin").expanduser()
+    elif system == "Windows":
+        user_dir = pathlib.Path(os.getenv("USERPROFILE"))
+        return str(user_dir / 'AppData' / 'Local' / 'shedskin' / 'Cache')
+    else:
+        raise SystemExit(f"{system} os not supported")
+
+def user_cache_dir():
+    """used by CMakeLists.txt execute process"""
+    sys.stdout.write(str(get_user_cache_dir()))
 
 
 class ConanBDWGC:
@@ -140,7 +156,9 @@ class ShedskinDependencyManager:
         self.reset_on_run = reset_on_run
         self.source_dir = source_dir
         self.build_dir = self.source_dir / "build"
-        self.deps_dir = self.build_dir / "deps"
+        # self.deps_dir = self.build_dir / "deps"
+        self.deps_dir = get_user_cache_dir()
+        # self.deps_dir = pathlib.Path.home() / ".cache" / "shedskin"
         self.include_dir = self.deps_dir / "include"
         self.lib_dir = self.deps_dir / "lib"
         self.downloads_dir = self.deps_dir / "downloads"
@@ -227,19 +245,44 @@ class ShedskinDependencyManager:
         self.cmake_build(bdwgc_build)
         self.cmake_install(bdwgc_build)
 
+    # def install_pcre(self):
+    #         """download / build / install pcre"""
+    #         pcre_url = (
+    #             "https://sourceforge.net/projects/pcre/files/pcre/8.45/pcre-8.45.tar.gz"
+    #         )
+    #         pcre_archive = self.downloads_dir / "pcre-8.45.tar.gz"
+    #         pcre_src = self.src_dir / "pcre-8.45"
+    #         pcre_build = pcre_src / "build"
+
+    #         print("download / build / install pcre")
+    #         self.wget(pcre_url, self.downloads_dir)
+    #         self.tar(pcre_archive, self.src_dir)
+    #         # pcre_archive.unlink()
+    #         pcre_build.mkdir(parents=True, exist_ok=True)
+    #         self.cmake_generate(
+    #             pcre_src,
+    #             pcre_build,
+    #             prefix=self.deps_dir,
+    #             BUILD_SHARED_LIBS=False,
+    #             PCRE_BUILD_PCREGREP=False,
+    #             PCRE_BUILD_PCRECPP=True,
+    #             PCRE_SUPPORT_LIBREADLINE=False,
+    #             PCRE_SUPPORT_LIBEDIT=False,
+    #             PCRE_SUPPORT_LIBZ=False,
+    #             PCRE_SUPPORT_LIBBZ2=False,
+    #             PCRE_BUILD_TESTS=False,
+    #             PCRE_SHOW_REPORT=False,
+    #         )
+    #         self.cmake_build(pcre_build)
+    #         self.cmake_install(pcre_build)
+
     def install_pcre(self):
         """download / build / install pcre"""
-        pcre_url = (
-            "https://sourceforge.net/projects/pcre/files/pcre/8.45/pcre-8.45.tar.gz"
-        )
-        pcre_archive = self.downloads_dir / "pcre-8.45.tar.gz"
-        pcre_src = self.src_dir / "pcre-8.45"
-        pcre_build = pcre_src / "build"
-
+        pcre_repo = "https://github.com/luvit/pcre.git"
+        pcre_src = self.src_dir / 'pcre'
+        pcre_build =  pcre_src / "build"
         print("download / build / install pcre")
-        self.wget(pcre_url, self.downloads_dir)
-        self.tar(pcre_archive, self.src_dir)
-        # pcre_archive.unlink()
+        self.git_clone(pcre_repo, pcre_src)
         pcre_build.mkdir(parents=True, exist_ok=True)
         self.cmake_generate(
             pcre_src,
@@ -257,7 +300,6 @@ class ShedskinDependencyManager:
         )
         self.cmake_build(pcre_build)
         self.cmake_install(pcre_build)
-
 
 def add_shedskin_product(
     main_module=None,
@@ -592,6 +634,7 @@ class CMakeBuilder:
         options = " ".join(options)
         bld_cmd = f"cmake --build {self.build_dir} {options}"
         self.log.info(bld_cmd)
+        print("bld_cmd:", bld_cmd)
         assert os.system(bld_cmd) == 0
 
     def cmake_test(self, options):
@@ -725,6 +768,8 @@ class CMakeBuilder:
 
         self.cmake_config(cfg_options)
 
+        print("cfg_options:", cfg_options)
+        print("bld_options:", bld_options)
         self.cmake_build(bld_options)
 
         if run_tests:
