@@ -245,12 +245,43 @@ class ShedskinDependencyManager:
         self.cmake_build(bdwgc_build)
         self.cmake_install(bdwgc_build)
 
+    # def install_pcre(self):
+    #         """download / build / install pcre"""
+    #         pcre_url = (
+    #             "https://sourceforge.net/projects/pcre/files/pcre/8.45/pcre-8.45.tar.gz"
+    #         )
+    #         pcre_archive = self.downloads_dir / "pcre-8.45.tar.gz"
+    #         pcre_src = self.src_dir / "pcre-8.45"
+    #         pcre_build = pcre_src / "build"
+
+    #         print("download / build / install pcre")
+    #         self.wget(pcre_url, self.downloads_dir)
+    #         self.tar(pcre_archive, self.src_dir)
+    #         # pcre_archive.unlink()
+    #         pcre_build.mkdir(parents=True, exist_ok=True)
+    #         self.cmake_generate(
+    #             pcre_src,
+    #             pcre_build,
+    #             prefix=self.deps_dir,
+    #             BUILD_SHARED_LIBS=False,
+    #             PCRE_BUILD_PCREGREP=False,
+    #             PCRE_BUILD_PCRECPP=True,
+    #             PCRE_SUPPORT_LIBREADLINE=False,
+    #             PCRE_SUPPORT_LIBEDIT=False,
+    #             PCRE_SUPPORT_LIBZ=False,
+    #             PCRE_SUPPORT_LIBBZ2=False,
+    #             PCRE_BUILD_TESTS=False,
+    #             PCRE_SHOW_REPORT=False,
+    #         )
+    #         self.cmake_build(pcre_build)
+    #         self.cmake_install(pcre_build)
+
     def install_pcre(self):
         """download / build / install pcre"""
         pcre_repo = "https://github.com/luvit/pcre.git"
         pcre_src = self.src_dir / 'pcre'
         pcre_build =  pcre_src / "build"
-        print("download / build / install bdwgc")
+        print("download / build / install pcre")
         self.git_clone(pcre_repo, pcre_src)
         pcre_build.mkdir(parents=True, exist_ok=True)
         self.cmake_generate(
@@ -269,7 +300,6 @@ class ShedskinDependencyManager:
         )
         self.cmake_build(pcre_build)
         self.cmake_install(pcre_build)
-
 
 def add_shedskin_product(
     main_module=None,
