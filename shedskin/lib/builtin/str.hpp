@@ -75,7 +75,7 @@ template <class U> str *str::join(U *iter) {
     return s;
 }
 
-template<class ... Args> str *__add_strs(int n, Args ... args) {
+template<class ... Args> str *__add_strs(int, Args ... args) {
     str *result = new str();
     result->unit = (args->unit + ...); /* XXX need to optimize? */
     return result;
