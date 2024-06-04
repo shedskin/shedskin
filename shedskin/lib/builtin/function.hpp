@@ -592,10 +592,10 @@ inline __ss_int ord(bytes *s) {
 static void __throw_chr_out_of_range() { /* improve inlining */
     throw new ValueError(new str("chr() arg not in range(256)"));
 }
-inline str *chr(int i) {
+inline str *chr(__ss_int i) {
     if(i < 0 || i > 255)
         __throw_chr_out_of_range();
-    return __char_cache[i];
+    return __char_cache[(size_t)i];
 }
 inline str *chr(__ss_bool b) { return chr(b.value); }
 

@@ -4,17 +4,17 @@
 
 inline __ss_int bytes::__getitem__(__ss_int i) {
     i = __wrap(this, i);
-    return (unsigned char)(unit[i]);
+    return (unsigned char)(unit[(size_t)i]);
 }
 
 inline __ss_int bytes::__getfast__(__ss_int i) {
     i = __wrap(this, i);
-    return (unsigned char)(unit[i]);
+    return (unsigned char)(unit[(size_t)i]);
 }
 
 inline void *bytes::__setitem__(__ss_int i, __ss_int e) {
     i = __wrap(this, i);
-    unit[i] = (unsigned char)e;
+    unit[(size_t)i] = (unsigned char)e;
 
     return NULL;
 }
