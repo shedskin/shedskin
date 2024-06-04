@@ -75,7 +75,7 @@ template<class T> __ss_int list<T>::__len__() {
 
 template<class T> T list<T>::__getitem__(__ss_int i) {
     i = __wrap(this, i);
-    return units[i];
+    return units[(size_t)i];
 }
 
 template<class T> __ss_bool list<T>::__eq__(pyobj *p) {
@@ -130,12 +130,12 @@ template<class T> void *list<T>::extend(str *s) {
 
 template<class T> inline T list<T>::__getfast__(__ss_int i) {
     i = __wrap(this, i);
-    return this->units[i];
+    return this->units[(size_t)i];
 }
 
 template<class T> void *list<T>::__setitem__(__ss_int i, T e) {
     i = __wrap(this, i);
-    units[i] = e;
+    units[(size_t)i] = e;
     return NULL;
 }
 
@@ -156,11 +156,11 @@ template<class T> list<T> *list<T>::__slice__(__ss_int x, __ss_int l, __ss_int u
         c->units.resize(u-l);
         memcpy(&(c->units[0]), &(this->units[l]), sizeof(T)*(u-l));
     } else if(s > 0)
-        for(int i=l; i<u; i += s)
-            c->units.push_back(units[i]);
+        for(__ss_int i=l; i<u; i += s)
+            c->units.push_back(units[(size_t)i]);
     else
-        for(int i=l; i>u; i += s)
-            c->units.push_back(units[i]);
+        for(__ss_int i=l; i>u; i += s)
+            c->units.push_back(units[(size_t)i]);
     return c;
 }
 
@@ -231,7 +231,7 @@ template<class T> void *list<T>::__delete__(__ss_int x, __ss_int l, __ss_int u, 
         __GC_VECTOR(T) v;
         for(__ss_int i=0; i<this->__len__();i++)
             if(i < l or i >= u or (i-l)%s)
-                v.push_back(this->units[i]);
+                v.push_back(this->units[(size_t)i]);
         units = v;
     }
     return NULL;
@@ -290,8 +290,8 @@ template<class T> list<T> *list<T>::__copy__() {
 template<class T> list<T> *list<T>::__deepcopy__(dict<void *, pyobj *> *memo) {
     list<T> *c = new list<T>();
     memo->__setitem__(this, c);
-    c->units.resize(this->__len__());
-    for(__ss_int i=0; i<this->__len__(); i++)
+    c->units.resize(this->units.size());
+    for(size_t i=0; i<this->units.size(); i++)
         c->units[i] = __deepcopy(this->units[i], memo);
     return c;
 }
