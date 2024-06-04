@@ -33,10 +33,26 @@ def get_pkg_path():
     assert _pkg_path.name == "shedskin"
     return _pkg_path
 
-
 def pkg_path():
     """used by cmake to get package path automatically"""
     sys.stdout.write(str(get_pkg_path()))
+
+def get_user_cache_dir():
+    """get user cache directory dependending on platform"""
+    system = platform.system()
+    if system == "Darwin":
+        return pathlib.Path("~/Library/Caches/shedskin").expanduser()
+    elif system == "Linux":
+        return pathlib.Path("~/.cache/shedskin").expanduser()
+    elif system == "Windows":
+        user_dir = pathlib.Path(os.getenv("USERPROFILE"))
+        return str(user_dir / 'AppData' / 'Local' / 'shedskin' / 'Cache')
+    else:
+        raise SystemExit(f"{system} os not supported")
+
+def user_cache_dir():
+    """used by CMakeLists.txt execute process"""
+    sys.stdout.write(str(get_user_cache_dir()))
 
 
 class ConanBDWGC:
@@ -141,7 +157,8 @@ class ShedskinDependencyManager:
         self.source_dir = source_dir
         self.build_dir = self.source_dir / "build"
         # self.deps_dir = self.build_dir / "deps"
-        self.deps_dir = pathlib.Path.home() / ".cache" / "shedskin"
+        self.deps_dir = get_user_cache_dir()
+        # self.deps_dir = pathlib.Path.home() / ".cache" / "shedskin"
         self.include_dir = self.deps_dir / "include"
         self.lib_dir = self.deps_dir / "lib"
         self.downloads_dir = self.deps_dir / "downloads"
@@ -587,6 +604,7 @@ class CMakeBuilder:
         options = " ".join(options)
         bld_cmd = f"cmake --build {self.build_dir} {options}"
         self.log.info(bld_cmd)
+        print("bld_cmd:", bld_cmd)
         assert os.system(bld_cmd) == 0
 
     def cmake_test(self, options):
@@ -720,6 +738,8 @@ class CMakeBuilder:
 
         self.cmake_config(cfg_options)
 
+        print("cfg_options:", cfg_options)
+        print("bld_options:", bld_options)
         self.cmake_build(bld_options)
 
         if run_tests:

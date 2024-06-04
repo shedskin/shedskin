@@ -66,13 +66,12 @@ include_directories(
 # dependency mgmt solutions
 
 if(ENABLE_SPM)
-    if(WIN32)
-        set(HOME $ENV{HOMEPATH})
-    else()
-        set(HOME $ENV{HOME})
-    endif()
-    set(SPM_DEPS ${HOME}/.cache/shedskin)
-    # set(SPM_DEPS ${CMAKE_BINARY_DIR}/deps)
+    execute_process(
+        COMMAND ${Python_EXECUTABLE} -c "from shedskin import cmake; cmake.user_cache_dir()"
+        OUTPUT_VARIABLE SPM_DEPS
+        COMMAND_ERROR_IS_FATAL ANY
+    )
+    message(STATUS "SPM_DEPS: ${SPM_DEPS}")
     set(SPM_LIB_DIRS ${SPM_DEPS}/lib)
     set(SPM_INCLUDE_DIRS ${SPM_DEPS}/include)
 
