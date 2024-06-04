@@ -46,7 +46,7 @@ def get_user_cache_dir():
         return pathlib.Path("~/.cache/shedskin").expanduser()
     elif system == "Windows":
         user_dir = pathlib.Path(os.getenv("USERPROFILE"))
-        return str(user_dir / 'AppData' / 'Local' / 'shedskin' / 'Cache')
+        return user_dir / 'AppData' / 'Local' / 'shedskin' / 'Cache'
     else:
         raise SystemExit(f"{system} os not supported")
 
@@ -176,9 +176,12 @@ class ShedskinDependencyManager:
         print(f"{WHITE}cmd{RESET}: {CYAN}{cmd}{RESET}")
         os.system(cmd.format(*args, **kwds))
 
-    def git_clone(self, repo, to_dir):
+    def git_clone(self, repo, to_dir, branch=None):
         """retrieve git clone of repo"""
-        self.shellcmd(f"git clone --depth=1 {repo} {to_dir}")
+        if branch:
+          self.shellcmd(f"git clone -b {branch} --depth=1 {repo} {to_dir}")
+        else:
+           self.shellcmd(f"git clone --depth=1 {repo} {to_dir}")
 
     def cmake_generate(self, src_dir, build_dir, prefix, **options):
         """activate cmake configuration / generation stage"""
@@ -187,9 +190,13 @@ class ShedskinDependencyManager:
             f"cmake -S {src_dir} -B {build_dir} --install-prefix {prefix} {opts}"
         )
 
-    def cmake_build(self, build_dir):
+    def cmake_build(self, build_dir, release=True):
         """activate cmake build stage"""
-        self.shellcmd(f"cmake --build {build_dir}")
+        if release:
+            build_type = "Release"
+        else:
+            build_type = "Debug"
+        self.shellcmd(f"cmake --build {build_dir} --config {build_type}")
 
     def cmake_install(self, build_dir):
         """activate cmake install stage"""
@@ -222,14 +229,39 @@ class ShedskinDependencyManager:
         else:
             print(f"{WHITE}SPM:{RESET} targets exist, no need to run.")
 
+    # def install_libatomics_ops(self):
+    #     """install libatomic_ops, a bdwgc dependency on windws"""
+    #     libatomic_repo = "https://github.com/ivmai/libatomic_ops.git"
+    #     libatomic_src = self.src_dir / "libatomic_ops"
+    #     libatomic_build = libatomic_src / "build"
+    #     print("download / build / install libatomic_ops")
+    #     self.git_clone(libatomic_repo, libatomic_src, branch="v7.8.2")
+    #     libatomic_build.mkdir(exist_ok=True)
+    #     self.cmake_generate(
+    #         libatomic_src,
+    #         libatomic_build,
+    #         enable_atomic_intrinsics=False,
+    #         prefix=self.deps_dir,
+    #         BUILD_SHARED_LIBS=False,
+    #     )
+    #     self.cmake_build(libatomic_build)
+    #     self.cmake_install(libatomic_build)
+
     def install_bdwgc(self):
         """download / build / install bdwgc"""
+        # if platform.system() == "Windows":
+        #     self.install_libatomics_ops()
         bdwgc_repo = "https://github.com/ivmai/bdwgc"
         bdwgc_src = self.src_dir / "bdwgc"
         bdwgc_build = bdwgc_src / "build"
 
         print("download / build / install bdwgc")
         self.git_clone(bdwgc_repo, bdwgc_src)
+        if platform.system() == "Windows":
+            # windows needs libatomic_ops
+            libatomic_repo = "https://github.com/ivmai/libatomic_ops.git"
+            libatomic_src = bdwgc_src / "libatomic_ops"
+            self.git_clone(libatomic_repo, libatomic_src)
         bdwgc_build.mkdir(exist_ok=True)
         self.cmake_generate(
             bdwgc_src,
@@ -622,10 +654,12 @@ class CMakeBuilder:
         """create build directory"""
         os.makedirs(self.build_dir, exist_ok=True)
 
-    def cmake_config(self, options):
+    def cmake_config(self, options, generator=None):
         """cmake configuration phase"""
         options = " ".join(options)
         cfg_cmd = f"cmake {options} -S {self.source_dir} -B {self.build_dir}"
+        if generator:
+            cfg_cmd += ' -G "{generator}"'
         self.log.info(cfg_cmd)
         assert os.system(cfg_cmd) == 0
 
