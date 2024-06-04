@@ -242,8 +242,8 @@ template<class T> str *__modtuple(str *fmt, tuple2<T,T> *t) {
     size_t fmtlen = fmt->unit.size();
     size_t j = 0;
 
-    __ss_int l = len(t);
-    for(__ss_int i=0;i<l; i++)
+    size_t l = t->units.size();
+    for(size_t i=0;i<l; i++)
         __mod_one(fmt, fmtlen, j, result, pos, t->units[i]);
 
     for(; j < fmtlen; j++) {
