@@ -86,7 +86,7 @@ template <class T> set<T>& set<T>::operator=(const set<T>& other) {
     update(other);*/
 
     memcpy((void*)this, (void*)&other, sizeof(set<T>));
-    int table_size = sizeof(setentry<T>) * (other.mask+1);
+    size_t table_size = sizeof(setentry<T>) * (other.mask+1);
     table = (setentry<T>*)myallocate<T>(table_size);
     memcpy(table, other.table, table_size);
     return *this;
