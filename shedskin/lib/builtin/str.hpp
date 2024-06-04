@@ -4,12 +4,12 @@
 
 inline str *str::__getitem__(__ss_int i) {
     i = __wrap(this, i);
-    return __char_cache[((unsigned char)(unit[i]))];
+    return __char_cache[((unsigned char)(unit[(size_t)i]))];
 }
 
 inline str *str::__getfast__(__ss_int i) {
     i = __wrap(this, i);
-    return __char_cache[((unsigned char)(unit[i]))];
+    return __char_cache[((unsigned char)(unit[(size_t)i]))];
 }
 
 inline __ss_int str::__len__() {
