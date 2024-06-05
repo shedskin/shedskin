@@ -62,18 +62,18 @@ class CPPNamer:
 
         return self.nokeywords(name)
 
-    def name_variable(self, var):
+    def name_variable(self, var: python.Variable):
         if var.masks_global():
             return "_" + var.name
         return self.name_str(var.name)
 
-    def name_function(self, func):
+    def name_function(self, func: python.Function):
         return self.name_str(func.ident)
 
-    def name_class(self, obj):
+    def name_class(self, obj: python.Class) -> str:
         return obj.ident
 
-    def name_str(self, name):
+    def name_str(self, name: str) -> str:
         if (
             [x for x in ("init", "add") if name == x + self.gx.main_module.ident]
             or name in self.class_names
