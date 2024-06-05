@@ -14,8 +14,9 @@ inline __ss_int bytes::__getfast__(__ss_int i) {
 
 inline void *bytes::__setitem__(__ss_int i, __ss_int e) {
     i = __wrap(this, i);
-    unit[(size_t)i] = (unsigned char)e;
-
+    if(e < 0)
+        throw new ValueError(new str("byte must be in range(0, 256)"));
+    unit[(size_t)i] = e;
     return NULL;
 }
 
