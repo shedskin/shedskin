@@ -32,8 +32,8 @@ str *bytes::__str__() {
 }
 
 __ss_int bytes::__fixstart(size_t a, __ss_int b) {
-    if(a == std::string::npos) return (__ss_int)a;
-    return (__ss_int)(a+b);
+    if(a == std::string::npos) return -1;
+    return (__ss_int)a+b;
 }
 
 __ss_int bytes::find(bytes *s, __ss_int a) { return __fixstart(unit.substr(a, this->unit.size()-a).find(s->unit), a); }
