@@ -482,14 +482,14 @@ template <class K, class V> void dict<K,V>::resize(int minused)
 		}
 	}
 	else {
-        newtable = (dictentry<K,V>*) myallocate<K,V>(sizeof(dictentry<K,V>) * newsize);
+        newtable = (dictentry<K,V>*) myallocate<K,V>(sizeof(dictentry<K,V>) * (size_t)newsize);
 	}
 
 	/* Make the dict empty, using the new table. */
 	table = newtable;
 	mask = newsize - 1;
 
-	memset(newtable, 0, sizeof(dictentry<K,V>) * newsize);
+	memset(newtable, 0, sizeof(dictentry<K,V>) * (size_t)newsize);
 
     i = used;
     used = 0;
