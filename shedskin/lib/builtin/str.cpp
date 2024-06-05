@@ -557,7 +557,7 @@ str *str::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
     size_t len = this->unit.size();
     slicenr(x, l, u, s, (__ss_int)len);
     if(s == 1)
-        return new str(unit.data()+l, u-l);
+        return new str(unit.data()+l, (size_t)(u-l));
     else {
         __GC_STRING r;
         if(!(x&1) && !(x&2) && s==-1) {
@@ -625,10 +625,11 @@ __ss_int str::count(str *s, __ss_int start, __ss_int end) {
     size_t i;
     slicenr(7, start, end, one, __len__());
 
-    i = start; count = 0;
-    while( ((i = this->unit.find(s->c_str(), i)) != std::string::npos) && (i <= (size_t)(end-len(s))) )
+    i = (size_t)start;
+    count = 0;
+    while( ((i = this->unit.find(s->c_str(), i)) != std::string::npos) && (i <= (size_t)end-s->unit.size()) )
     {
-        i += (size_t)len(s);
+        i += s->unit.size();
         count++;
     }
 
@@ -637,22 +638,24 @@ __ss_int str::count(str *s, __ss_int start, __ss_int end) {
 
 __ss_bool str::startswith(str *s, __ss_int start) { return startswith(s, start, __len__()); }
 __ss_bool str::startswith(str *s, __ss_int start, __ss_int end) {
-    __ss_int i, j, one = 1;
+    __ss_int one = 1;
     slicenr(7, start, end, one, __len__());
 
-    for(i = start, j = 0; i < end && j < len(s); )
+    size_t i, j;
+    for(i = (size_t)start, j = 0; i < (size_t)end && j < s->unit.size(); )
         if (unit[i++] != s->unit[j++])
             return False;
 
-    return __mbool(j == len(s));
+    return __mbool(j == s->unit.size());
 }
 
 __ss_bool str::endswith(str *s, __ss_int start) { return endswith(s, start, __len__()); }
 __ss_bool str::endswith(str *s, __ss_int start, __ss_int end) {
-    __ss_int i, j, one = 1;
+    __ss_int one = 1;
     slicenr(7, start, end, one, __len__());
 
-    for(i = end, j = len(s); i > start && j > 0; )
+    size_t i, j;
+    for(i = (size_t)end, j = s->unit.size(); i > (size_t)start && j > 0; )
         if (unit[--i] != s->unit[--j])
             return False;
 

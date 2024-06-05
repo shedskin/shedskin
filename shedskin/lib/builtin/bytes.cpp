@@ -448,22 +448,25 @@ list<bytes *> *bytes::splitlines(__ss_int keepends)
 
 __ss_bool bytes::startswith(bytes *s, __ss_int start) { return startswith(s, start, __len__()); }
 __ss_bool bytes::startswith(bytes *s, __ss_int start, __ss_int end) {
-    __ss_int i, j, one = 1;
+    __ss_int one = 1;
+
     slicenr(7, start, end, one, __len__());
 
-    for(i = start, j = 0; i < end && j < len(s); )
+    size_t i, j;
+    for(i = (size_t)start, j = 0; i < (size_t)end && j < s->unit.size(); )
         if (unit[i++] != s->unit[j++])
             return False;
 
-    return __mbool(j == len(s));
+    return __mbool(j == s->unit.size());
 }
 
 __ss_bool bytes::endswith(bytes *s, __ss_int start) { return endswith(s, start, __len__()); }
 __ss_bool bytes::endswith(bytes *s, __ss_int start, __ss_int end) {
-    __ss_int i, j, one = 1;
+    __ss_int one = 1;
     slicenr(7, start, end, one, __len__());
 
-    for(i = end, j = len(s); i > start && j > 0; )
+    size_t i, j;
+    for(i = (size_t)end, j = s->unit.size(); i > (size_t)start && j > 0; )
         if (unit[--i] != s->unit[--j])
             return False;
 
@@ -477,10 +480,11 @@ __ss_int bytes::count(bytes *s, __ss_int start, __ss_int end) {
     size_t i;
     slicenr(7, start, end, one, __len__());
 
-    i = start; count = 0;
-    while( ((i = this->unit.find(s->c_str(), i)) != std::string::npos) && (i <= end-(size_t)len(s)) )
+    i = (size_t)start;
+    count = 0;
+    while( ((i = this->unit.find(s->c_str(), i)) != std::string::npos) && (i <= (size_t)end-s->unit.size()) )
     {
-        i += len(s);
+        i += s->unit.size();
         count++;
     }
 
@@ -494,7 +498,7 @@ __ss_int bytes::count(__ss_int b, __ss_int start, __ss_int end) {
     slicenr(7, start, end, one, __len__());
 
     count = 0;
-    for(i = start; i < (size_t)end; i++) {
+    for(i = (size_t)start; i < (size_t)end; i++) {
         if((unsigned char)b == unit[i])
             count++;
     }
@@ -652,16 +656,17 @@ str *bytes::hex(str *sep) {
     return result;
 }
 
-bytes *bytes::center(__ss_int width, bytes *fillchar) {
-    int len = __len__();
+bytes *bytes::center(__ss_int w, bytes *fillchar) {
+    size_t width = (size_t)w;
+    size_t len = unit.size();
     if(width<=len)
         return this;
 
     if(!fillchar) fillchar = bsp;
     bytes *r = fillchar->__mul__(width);
 
-    int j = (width-len)/2;
-    for(int i=0; i<len; i++)
+    size_t j = (width-len)/2;
+    for(size_t i=0; i<len; i++)
         r->unit[j+i] = unit[i];
 
     r->frozen = frozen;
@@ -745,14 +750,14 @@ bytes *bytes::swapcase() {
 
 void *bytes::__delitem__(__ss_int i) {
     i = __wrap(this, i);
-    unit.erase(i, 1);
+    unit.erase((size_t)i, 1);
     return NULL;
 }
 
 __ss_int bytes::pop(__ss_int i) {
     i = __wrap(this, i);
-    __ss_int result = (unsigned char)unit[i];
-    unit.erase(i, 1);
+    __ss_int result = (unsigned char)unit[(size_t)i];
+    unit.erase((size_t)i, 1);
     return result;
 }
 
