@@ -576,8 +576,8 @@ str *str::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
 }
 
 __ss_int str::__fixstart(size_t a, __ss_int b) {
-    if(a == std::string::npos) return (__ss_int)a;
-    return (__ss_int)(a+b);
+    if(a == std::string::npos) return -1;
+    return (__ss_int)a+b;
 }
 
 __ss_int str::find(str *s, __ss_int a) { return __fixstart(unit.substr(a, this->unit.size()-a).find(s->unit), a); }
