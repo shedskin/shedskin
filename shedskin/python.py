@@ -14,6 +14,10 @@ import pathlib
 
 from . import ast_utils
 
+# type-checking
+from . import config
+from . import graph
+
 
 class PyObject:
     """Mixin for py objects"""
@@ -42,7 +46,13 @@ class Module(PyObject):
 
     """
 
-    def __init__(self, name, filename, relative_filename, builtin, node):
+    def __init__(
+            self, 
+            name: str, 
+            filename: str, 
+            relative_filename: str, 
+            builtin: bool, 
+            node):
         # set name and its dependent fields
         self.name = name
         self.name_list = name.split(".")
@@ -60,7 +70,7 @@ class Module(PyObject):
         self.prop_includes = set()
         self.import_order = 0
 
-    def full_path(self):
+    def full_path(self) -> str:
         return "__" + "__::__".join(self.name_list) + "__"
 
     def include_path(self):
@@ -80,13 +90,13 @@ class Module(PyObject):
         )
 
     @property
-    def doc(self):
+    def doc(self) -> str:
         """returns module docstring."""
         return ast.get_docstring(self.ast)
 
 
 class Class(PyObject):
-    def __init__(self, gx, node, mv):
+    def __init__(self, gx: config.GlobalInfo, node: ast.ClassDef, mv: graph.ModuleVisitor):
         self.gx = gx
         self.node = node
         self.mv = mv
