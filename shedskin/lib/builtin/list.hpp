@@ -204,13 +204,13 @@ template<class T> void *list<T>::__setslice__(__ss_int x, __ss_int l, __ss_int u
             this->units.insert(this->units.begin()+l, la->units.begin(), la->units.end());
     }
     else {
-        int i, j;
+        __ss_int i, j;
         if(s > 0)
             for(i = 0, j = l; j < u; i++, j += s)
-                this->units[j] = la->units[i];
+                this->units[(size_t)j] = la->units[(size_t)i];
         else
             for(i = 0, j = l; j > u; i++, j += s)
-                this->units[j] = la->units[i];
+                this->units[(size_t)j] = la->units[(size_t)i];
     }
 
     return NULL;
@@ -331,8 +331,8 @@ template<class T> __ss_int list<T>::count(T a) {
 
 template<class T> str *list<T>::__repr__() {
     str *r = new str("[");
-    int len = this->__len__();
-    for(__ss_int i = 0; i<len;i++) {
+    size_t len = this->units.size();
+    for(size_t i=0; i<len; i++) {
         *r += repr(units[i])->c_str();
         if (i<len-1)
             *r += ", ";
@@ -341,15 +341,15 @@ template<class T> str *list<T>::__repr__() {
     return r;
 }
 
-template<class T> T list<T>::pop(int i) { /* XXX optimize */
-    int len = this->__len__();
+template<class T> T list<T>::pop(__ss_int i) { /* XXX optimize */
+    __ss_int len = this->__len__();
     if(len==0)
         throw new IndexError(new str("pop from empty list"));
     if(i<0) 
         i = len+i;
     if(i<0 or i>=len)
         throw new IndexError(new str("pop index out of range"));
-    T e = units[i];
+    T e = units[(size_t)i];
     units.erase(units.begin()+i);
     return e;
 }

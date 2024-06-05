@@ -381,14 +381,14 @@ template <class T> void set<T>::resize(int minused)
 		}
 	}
 	else {
-        newtable = (setentry<T>*) myallocate<T>(sizeof(setentry<T>) * newsize);
+        newtable = (setentry<T>*) myallocate<T>(sizeof(setentry<T>) * (size_t)newsize);
 	}
 
 	/* Make the set empty, using the new table. */
 	table = newtable;
 	mask = newsize - 1;
 
-	memset(newtable, 0, sizeof(setentry<T>) * newsize);
+	memset(newtable, 0, sizeof(setentry<T>) * (size_t)newsize);
 
     i = used;
     used = 0;

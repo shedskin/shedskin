@@ -1,4 +1,4 @@
-/* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2024 Mark Dufour and contributors; License Expat (See LICENSE) */
 
 #include <string_view>
 
@@ -119,7 +119,7 @@ __ss_bool str::isprintable() {
   size_t i, l = this->unit.size();
 
   for(i = 0; i < l; i++) {
-      unsigned char elem = unit[i];
+      unsigned char elem = (unsigned char)unit[i];
 
       if(elem <= 31 or (127 <= elem and elem <= 160) or elem == 173)
           return False;
@@ -132,7 +132,7 @@ __ss_bool str::__ss_isascii() {
   size_t i, l = this->unit.size();
 
   for(i = 0; i < l; i++) {
-      unsigned char elem = unit[i];
+      unsigned char elem = (unsigned char)unit[i];
 
       if(elem > 127)
           return False;
@@ -148,7 +148,7 @@ __ss_bool str::isdecimal() {
       return False;
 
   for(i = 0; i < l; i++) {
-      unsigned char elem = unit[i];
+      unsigned char elem = (unsigned char)unit[i];
 
       if(elem < 48 or elem > 57)
           return False;
@@ -164,7 +164,7 @@ __ss_bool str::isnumeric() {
       return False;
 
   for(i = 0; i < l; i++) {
-      unsigned char elem = unit[i];
+      unsigned char elem = (unsigned char)unit[i];
 
       if(elem < 48 or (elem > 57 and elem < 178) or (elem > 179 and elem < 185) or (elem > 185 and elem < 188) or elem > 190)
           return False;
@@ -470,22 +470,23 @@ str *str::translate(str *table, str *delchars) {
 
 str *str::swapcase() {
     str *r = new str(unit);
-    __ss_int len = __len__();
-    for(__ss_int i = 0; i < len; i++)
+    size_t len = unit.size();
+    for(size_t i=0; i<len; i++)
         r->unit[i] = __case_swap_cache->unit[(unsigned char)unit[i]];
     return r;
 }
 
-str *str::center(__ss_int width, str *fillchar) {
-    __ss_int len = __len__();
+str *str::center(__ss_int w, str *fillchar) {
+    size_t width = (size_t)w;
+    size_t len = unit.size();
     if(width<=len)
         return this;
 
     if(!fillchar) fillchar = sp;
-    str *r = fillchar->__mul__(width);
+    str *r = fillchar->__mul__(w);
 
-    __ss_int j = (width-len)/2;
-    for(__ss_int i=0; i<len; i++)
+    size_t j = (width-len)/2;
+    for(size_t i=0; i<len; i++)
         r->unit[j+i] = unit[i];
 
     return r;
@@ -511,15 +512,16 @@ __ss_bool str::__eq__(pyobj *p) {
 str *str::__mul__(__ss_int n) { /* optimize */
     str *r = new str();
     if(n<=0) return r;
+    size_t ns = (size_t)n;
     __GC_STRING &s = r->unit;
     size_t ulen = this->unit.size();
 
     if(ulen == 1)
-       r->unit = __GC_STRING(n, unit[0]);
+       r->unit = __GC_STRING(ns, unit[0]);
     else {
-        s.resize(ulen*n);
+        s.resize(ulen*ns);
 
-        for(size_t i=0; i<ulen*n; i+=ulen)
+        for(size_t i=0; i<ulen*ns; i+=ulen)
             s.replace(i, ulen, unit);
     }
 
@@ -555,7 +557,7 @@ str *str::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
     size_t len = this->unit.size();
     slicenr(x, l, u, s, (__ss_int)len);
     if(s == 1)
-        return new str(unit.data()+l, u-l);
+        return new str(unit.data()+l, (size_t)(u-l));
     else {
         __GC_STRING r;
         if(!(x&1) && !(x&2) && s==-1) {
@@ -565,24 +567,45 @@ str *str::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
         }
         else if(s > 0)
             for(__ss_int i=l; i<u; i += s)
-                r += unit[i];
+                r += unit[(size_t)i];
         else
             for(__ss_int i=l; i>u; i += s)
-                r += unit[i];
+                r += unit[(size_t)i];
         return new str(r);
     }
 }
 
 __ss_int str::__fixstart(size_t a, __ss_int b) {
-    if(a == std::string::npos) return (__ss_int)a;
-    return (__ss_int)(a+b);
+    if(a == std::string::npos) return -1;
+    return (__ss_int)a+b;
 }
 
-__ss_int str::find(str *s, __ss_int a) { return __fixstart(unit.substr(a, this->unit.size()-a).find(s->unit), a); }
-__ss_int str::find(str *s, __ss_int a, __ss_int b) { return __fixstart(unit.substr(a, b-a).find(s->unit), a); }
+__ss_int str::find(str *s, __ss_int a) {
+    __ss_int step = 1;
+    __ss_int b = this->__len__();
+    slicenr(3, a, b, step, this->__len__());
+    return __fixstart(unit.substr((size_t)a, this->unit.size()-(size_t)a).find(s->unit), a);
+}
 
-__ss_int str::rfind(str *s, __ss_int a) { return __fixstart(unit.substr(a, this->unit.size()-a).rfind(s->unit), a); }
-__ss_int str::rfind(str *s, __ss_int a, __ss_int b) { return __fixstart(unit.substr(a, b-a).rfind(s->unit), a); }
+__ss_int str::find(str *s, __ss_int a, __ss_int b) {
+    __ss_int step = 1;
+    slicenr(3, a, b, step, this->__len__());
+    return __fixstart(unit.substr((size_t)a, (size_t)(b-a)).find(s->unit), a);
+
+}
+
+__ss_int str::rfind(str *s, __ss_int a) {
+    __ss_int step = 1;
+    __ss_int b = this->__len__();
+    slicenr(3, a, b, step, this->__len__());
+    return __fixstart(unit.substr((size_t)a, this->unit.size()-(size_t)a).rfind(s->unit), a);
+}
+
+__ss_int str::rfind(str *s, __ss_int a, __ss_int b) {
+    __ss_int step = 1;
+    slicenr(3, a, b, step, this->__len__());
+    return __fixstart(unit.substr((size_t)a, (size_t)(b-a)).rfind(s->unit), a);
+}
 
 __ss_int str::__checkneg(__ss_int i) {
     if(i == -1)
@@ -602,10 +625,11 @@ __ss_int str::count(str *s, __ss_int start, __ss_int end) {
     size_t i;
     slicenr(7, start, end, one, __len__());
 
-    i = start; count = 0;
-    while( ((i = this->unit.find(s->c_str(), i)) != std::string::npos) && (i <= (size_t)(end-len(s))) )
+    i = (size_t)start;
+    count = 0;
+    while( ((i = this->unit.find(s->c_str(), i)) != std::string::npos) && (i <= (size_t)end-s->unit.size()) )
     {
-        i += (size_t)len(s);
+        i += s->unit.size();
         count++;
     }
 
@@ -614,22 +638,24 @@ __ss_int str::count(str *s, __ss_int start, __ss_int end) {
 
 __ss_bool str::startswith(str *s, __ss_int start) { return startswith(s, start, __len__()); }
 __ss_bool str::startswith(str *s, __ss_int start, __ss_int end) {
-    __ss_int i, j, one = 1;
+    __ss_int one = 1;
     slicenr(7, start, end, one, __len__());
 
-    for(i = start, j = 0; i < end && j < len(s); )
+    size_t i, j;
+    for(i = (size_t)start, j = 0; i < (size_t)end && j < s->unit.size(); )
         if (unit[i++] != s->unit[j++])
             return False;
 
-    return __mbool(j == len(s));
+    return __mbool(j == s->unit.size());
 }
 
 __ss_bool str::endswith(str *s, __ss_int start) { return endswith(s, start, __len__()); }
 __ss_bool str::endswith(str *s, __ss_int start, __ss_int end) {
-    __ss_int i, j, one = 1;
+    __ss_int one = 1;
     slicenr(7, start, end, one, __len__());
 
-    for(i = end, j = len(s); i > start && j > 0; )
+    size_t i, j;
+    for(i = (size_t)end, j = s->unit.size(); i > (size_t)start && j > 0; )
         if (unit[--i] != s->unit[--j])
             return False;
 
@@ -694,7 +720,7 @@ str *str::casefold() {
     size_t len = this->unit.size();
 
     for(size_t i=0; i<len; i++) {
-        unsigned char c = unit[i];
+        unsigned char c = (unsigned char)unit[i];
 
         if(65 >= c and c <= 90)
             c += 32;

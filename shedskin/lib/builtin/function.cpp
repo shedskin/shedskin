@@ -5,10 +5,10 @@
 str *input(str *msg) {
     if(msg and len(msg)) {
         __ss_stdout->write(msg);
-        __ss_stdout->options.lastchar = msg->unit[len(msg)-1];
+        __ss_stdout->options.lastchar = msg->unit[msg->unit.size()-1];
     }
     str *s = __ss_stdin->readline();
-    if(len(s) and s->unit[len(s)-1] == '\n')
+    if(s->unit.size() and s->unit[s->unit.size()-1] == '\n')
         s->unit.erase(s->unit.end()-1, s->unit.end());
     if(__ss_stdin->__eof())
         throw new EOFError();
