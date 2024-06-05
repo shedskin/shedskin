@@ -584,13 +584,13 @@ __ss_int str::find(str *s, __ss_int a) {
     __ss_int step = 1;
     __ss_int b = this->__len__();
     slicenr(3, a, b, step, this->__len__());
-    return __fixstart(unit.substr(a, this->unit.size()-a).find(s->unit), a);
+    return __fixstart(unit.substr((size_t)a, this->unit.size()-(size_t)a).find(s->unit), a);
 }
 
 __ss_int str::find(str *s, __ss_int a, __ss_int b) {
     __ss_int step = 1;
     slicenr(3, a, b, step, this->__len__());
-    return __fixstart(unit.substr(a, b-a).find(s->unit), a);
+    return __fixstart(unit.substr((size_t)a, (size_t)(b-a)).find(s->unit), a);
 
 }
 
@@ -598,13 +598,13 @@ __ss_int str::rfind(str *s, __ss_int a) {
     __ss_int step = 1;
     __ss_int b = this->__len__();
     slicenr(3, a, b, step, this->__len__());
-    return __fixstart(unit.substr(a, this->unit.size()-a).rfind(s->unit), a);
+    return __fixstart(unit.substr((size_t)a, this->unit.size()-(size_t)a).rfind(s->unit), a);
 }
 
 __ss_int str::rfind(str *s, __ss_int a, __ss_int b) {
     __ss_int step = 1;
     slicenr(3, a, b, step, this->__len__());
-    return __fixstart(unit.substr(a, b-a).rfind(s->unit), a);
+    return __fixstart(unit.substr((size_t)a, (size_t)(b-a)).rfind(s->unit), a);
 }
 
 __ss_int str::__checkneg(__ss_int i) {
