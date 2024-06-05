@@ -1,4 +1,4 @@
-/* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2024 Mark Dufour and contributors; License Expat (See LICENSE) */
 
 #include <string_view>
 
@@ -580,11 +580,32 @@ __ss_int str::__fixstart(size_t a, __ss_int b) {
     return (__ss_int)a+b;
 }
 
-__ss_int str::find(str *s, __ss_int a) { return __fixstart(unit.substr(a, this->unit.size()-a).find(s->unit), a); }
-__ss_int str::find(str *s, __ss_int a, __ss_int b) { return __fixstart(unit.substr(a, b-a).find(s->unit), a); }
+__ss_int str::find(str *s, __ss_int a) {
+    __ss_int step = 1;
+    __ss_int b = this->__len__();
+    slicenr(3, a, b, step, this->__len__());
+    return __fixstart(unit.substr(a, this->unit.size()-a).find(s->unit), a);
+}
 
-__ss_int str::rfind(str *s, __ss_int a) { return __fixstart(unit.substr(a, this->unit.size()-a).rfind(s->unit), a); }
-__ss_int str::rfind(str *s, __ss_int a, __ss_int b) { return __fixstart(unit.substr(a, b-a).rfind(s->unit), a); }
+__ss_int str::find(str *s, __ss_int a, __ss_int b) {
+    __ss_int step = 1;
+    slicenr(3, a, b, step, this->__len__());
+    return __fixstart(unit.substr(a, b-a).find(s->unit), a);
+
+}
+
+__ss_int str::rfind(str *s, __ss_int a) {
+    __ss_int step = 1;
+    __ss_int b = this->__len__();
+    slicenr(3, a, b, step, this->__len__());
+    return __fixstart(unit.substr(a, this->unit.size()-a).rfind(s->unit), a);
+}
+
+__ss_int str::rfind(str *s, __ss_int a, __ss_int b) {
+    __ss_int step = 1;
+    slicenr(3, a, b, step, this->__len__());
+    return __fixstart(unit.substr(a, b-a).rfind(s->unit), a);
+}
 
 __ss_int str::__checkneg(__ss_int i) {
     if(i == -1)
