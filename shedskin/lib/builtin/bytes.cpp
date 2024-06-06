@@ -2,7 +2,7 @@
 
 /* bytes methods TODO share code with str */
 
-bytes::bytes(int frozen) : hash(-1), frozen(frozen) {
+bytes::bytes(int freeze) : hash(-1), frozen(freeze) {
     __class__ = cl_bytes;
 }
 
@@ -10,16 +10,16 @@ bytes::bytes(const char *s) : unit(s), hash(-1), frozen(1) {
     __class__ = cl_bytes;
 }
 
-bytes::bytes(__GC_STRING s, int frozen) : unit(s), hash(-1), frozen(frozen) {
+bytes::bytes(__GC_STRING s, int freeze) : unit(s), hash(-1), frozen(freeze) {
     __class__ = cl_bytes;
 }
 
-bytes::bytes(bytes *b, int frozen) : hash(-1), frozen(frozen) {
+bytes::bytes(bytes *b, int freeze) : hash(-1), frozen(freeze) {
     __class__ = cl_bytes;
     unit = b->unit;
 }
 
-bytes::bytes(const char *s, int size, int frozen) : unit(s, size), hash(-1), frozen(frozen) { /* '\0' delimiter in C */
+bytes::bytes(const char *s, int size, int freeze) : unit(s, size), hash(-1), frozen(freeze) { /* '\0' delimiter in C */
     __class__ = cl_bytes;
 }
 

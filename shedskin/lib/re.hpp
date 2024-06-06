@@ -71,7 +71,7 @@ public:
     str *group(__ss_int n, __ss_int m = 0);
     str *group(__ss_int n, str *m);
 
-    template <class ... Args> tuple<str *> *group(__ss_int n, __ss_int m, __ss_int o, Args ... args) {
+    template <class ... Args> tuple<str *> *group(__ss_int, __ss_int m, __ss_int o, Args ... args) {
         tuple<str *> *t = new tuple<str *>();
 
         t->units.push_back(group(1, m));
@@ -82,7 +82,7 @@ public:
         return t;
     }
 
-    template <class ... Args> tuple<str *> *group(__ss_int n, str *m, str *o, Args ... args) {
+    template <class ... Args> tuple<str *> *group(__ss_int, str *m, str *o, Args ... args) {
         tuple<str *> *t = new tuple<str *>();
         t->units.push_back(group(1, m));
         t->units.push_back(group(1, o));
