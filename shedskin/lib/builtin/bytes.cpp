@@ -75,7 +75,7 @@ __ss_int bytes::rindex(bytes *s, __ss_int a, __ss_int b) { return __checkneg(fin
 
 str *bytes::__repr__() {
     std::stringstream ss;
-    __GC_STRING sep = "\\\n\r\t";
+    __GC_STRING separator = "\\\n\r\t";
     __GC_STRING let = "\\nrt";
 
     const char *quote = "'";
@@ -83,7 +83,7 @@ str *bytes::__repr__() {
     size_t hasd = this->unit.find('\"');
 
     if (hasq != std::string::npos && hasd != std::string::npos) {
-        sep += "'"; let += "'";
+        separator += "'"; let += "'";
     }
     if (hasq != std::string::npos && hasd == std::string::npos)
         quote = "\"";
@@ -98,7 +98,7 @@ str *bytes::__repr__() {
         char c = unit[i];
         size_t k;
 
-        if((k = sep.find_first_of(c)) != std::string::npos)
+        if((k = separator.find_first_of(c)) != std::string::npos)
             ss << "\\" << let[k];
         else {
             int j = (int)((unsigned char)c);
@@ -294,10 +294,10 @@ list<bytes *> *bytes::split(bytes *sp, __ss_int max_splits) {
 
     } else { /* given separator (slightly different algorithm required)
               * (python is very inconsistent in this respect) */
-        const char *sep = sp->c_str();
+        const char *separator = sp->c_str();
         size_t sep_size = sp->unit.size();
 
-#define next_separator(iter) s.find(sep, (iter))
+#define next_separator(iter) s.find(separator, (iter))
 #define skip_separator(iter) ((iter + sep_size) > s.size()? -1 : (iter + sep_size))
 
         if (max_splits == 0) {
@@ -334,7 +334,7 @@ list<bytes *> *bytes::split(bytes *sp, __ss_int max_splits) {
     return result;
 }
 
-list<bytes *> *bytes::rsplit(bytes *sep, __ss_int maxsep)
+list<bytes *> *bytes::rsplit(bytes *separator, __ss_int maxsep)
 {
     __GC_STRING ts;
     list<bytes *> *r = new list<bytes *>();
@@ -345,7 +345,7 @@ list<bytes *> *bytes::rsplit(bytes *sep, __ss_int maxsep)
     i = j = this->unit.size() - 1;
 
     //split by whitespace
-    if(!sep)
+    if(!separator)
     {
         while(i != std::string::npos && j != std::string::npos && (curi < maxsep2 || maxsep2 == std::string::npos))
         {
@@ -367,7 +367,7 @@ list<bytes *> *bytes::rsplit(bytes *sep, __ss_int maxsep)
     //split by seperator
     else
     {
-        ts = sep->unit;
+        ts = separator->unit;
         tslen = ts.length();
 
         i++;
@@ -398,24 +398,24 @@ list<bytes *> *bytes::rsplit(bytes *sep, __ss_int maxsep)
     return r;
 }
 
-tuple2<bytes *, bytes *> *bytes::partition(bytes *sep)
+tuple2<bytes *, bytes *> *bytes::partition(bytes *separator)
 {
     size_t i;
 
-    i = this->unit.find(sep->c_str());
+    i = this->unit.find(separator->c_str());
     if(i != std::string::npos)
-        return new tuple2<bytes *, bytes *>(3, new bytes(unit.substr(0, i), frozen), new bytes(sep->unit, frozen), new bytes(unit.substr(i + sep->unit.length()), frozen));
+        return new tuple2<bytes *, bytes *>(3, new bytes(unit.substr(0, i), frozen), new bytes(separator->unit, frozen), new bytes(unit.substr(i + separator->unit.length()), frozen));
     else
         return new tuple2<bytes *, bytes *>(3, new bytes(unit, frozen), new bytes(frozen), new bytes(frozen));
 }
 
-tuple2<bytes *, bytes *> *bytes::rpartition(bytes *sep)
+tuple2<bytes *, bytes *> *bytes::rpartition(bytes *separator)
 {
     size_t i;
 
-    i = this->unit.rfind(sep->unit);
+    i = this->unit.rfind(separator->unit);
     if(i != std::string::npos)
-        return new tuple2<bytes *, bytes *>(3, new bytes(unit.substr(0, i), frozen), new bytes(sep->unit, frozen), new bytes(unit.substr(i + sep->unit.length()), frozen));
+        return new tuple2<bytes *, bytes *>(3, new bytes(unit.substr(0, i), frozen), new bytes(separator->unit, frozen), new bytes(unit.substr(i + separator->unit.length()), frozen));
     else
         return new tuple2<bytes *, bytes *>(3, new bytes(unit, frozen), new bytes(frozen), new bytes(frozen));
 }
@@ -631,7 +631,7 @@ bytes *bytes::replace(bytes *a, bytes *b, __ss_int c) {
     return new bytes(s, frozen);
 }
 
-str *bytes::hex(str *sep) {
+str *bytes::hex(str *separator) {
     str *result = new str();
     size_t l = this->unit.size();
 
@@ -649,8 +649,8 @@ str *bytes::hex(str *sep) {
         else
             result->unit += 'a' - 10 + (char)low;
 
-        if(sep and i != l-1)
-            result->unit += sep->unit;
+        if(separator and i != l-1)
+            result->unit += separator->unit;
     }
 
     return result;
