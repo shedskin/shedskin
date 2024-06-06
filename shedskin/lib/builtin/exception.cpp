@@ -1,9 +1,9 @@
-/* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2024 Mark Dufour and contributors; License Expat (See LICENSE) */
 
 /* Exceptions */
 
-OSError::OSError(str *filename) {
-    this->filename = filename;
+OSError::OSError(str *fname) {
+    this->filename = fname;
     this->__class__ = cl_oserror;
     __ss_errno = errno;
     message = new str("");
@@ -16,8 +16,8 @@ str *OSError::__repr__() {
     return __add_strs(5, new str("OSError("), __str(__ss_errno), new str(", '"), strerror, new str("')"));
 }
 
-FileNotFoundError::FileNotFoundError(str *filename) {
-    this->filename = filename;
+FileNotFoundError::FileNotFoundError(str *fname) {
+    this->filename = fname;
     this->__class__ = cl_filenotfounderror;
     __ss_errno = errno;
     message = new str("");

@@ -94,14 +94,14 @@ str *__escape_bytes(pyobj *p) {
     bytes *t = (bytes *)p;
 
     std::stringstream ss;
-    __GC_STRING sep = "\\\n\r\t";
+    __GC_STRING separator = "\\\n\r\t";
     __GC_STRING let = "\\nrt";
 
     size_t hasq = t->unit.find('\'');
     size_t hasd = t->unit.find('\"');
 
     if (hasq != std::string::npos && hasd != std::string::npos) {
-        sep += "'"; let += "'";
+        separator += "'"; let += "'";
     }
 
     for(size_t i=0; i<t->unit.size(); i++)
@@ -109,7 +109,7 @@ str *__escape_bytes(pyobj *p) {
         char c = t->unit[i];
         size_t k;
 
-        if((k = sep.find_first_of(c)) != std::string::npos)
+        if((k = separator.find_first_of(c)) != std::string::npos)
             ss << "\\" << let[k];
         else {
             int j = (int)((unsigned char)c);
