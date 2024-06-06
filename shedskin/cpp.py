@@ -29,9 +29,14 @@ from . import python
 from . import typestr
 from . import virtual
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from . import config
+    from . import graph
+
 
 class CPPNamer:
-    def __init__(self, gx, mv):
+    def __init__(self, gx: 'config.GlobalInfo', mv: 'graph.ModuleVisitor'):
         self.gx = gx
         self.class_names = [cl.ident for cl in self.gx.allclasses]
         self.cpp_keywords = self.gx.cpp_keywords

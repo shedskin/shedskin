@@ -18,7 +18,7 @@ from . import cmake, config, cpp, error, graph, infer, log
 class Shedskin:
     """Main shedskin frontend class
     """
-    def __init__(self, options):
+    def __init__(self, options: argparse.Namespace):
         self.configure_log()
         self.gx = self.configure(options)
         self.gx.options = options
@@ -37,7 +37,7 @@ class Shedskin:
         self.ifa_log.addHandler(console)
         self.ifa_log.setLevel(logging.INFO)
 
-    def get_name(self, module_path):
+    def get_name(self, module_path: str):
         """Returns name of module to be translated.
 
         Also sets current working dir for nested targets
@@ -67,7 +67,7 @@ class Shedskin:
         self.gx.module_path = path.absolute()
         return path.stem
 
-    def configure(self, args):
+    def configure(self, args: argparse.Namespace):
         # print(args)
         gx = config.GlobalInfo()
 

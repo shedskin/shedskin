@@ -53,7 +53,10 @@ def get_user_cache_dir():
     elif system == "Linux":
         return pathlib.Path("~/.cache/shedskin").expanduser()
     elif system == "Windows":
-        user_dir = pathlib.Path(os.getenv("USERPROFILE"))
+        profile = os.getenv("USERPROFILE")
+        if not profile:
+            raise SystemExit(f"USERPROFILE environment variable not set on windows")
+        user_dir = pathlib.Path(profile)
         return user_dir / 'AppData' / 'Local' / 'shedskin' / 'Cache'
     else:
         raise SystemExit(f"{system} os not supported")
