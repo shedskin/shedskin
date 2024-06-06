@@ -7,6 +7,11 @@ import os
 import sys
 import pathlib
 
+from typing import TYPE_CHECKING, Optional
+if TYPE_CHECKING:
+    import argparse
+    from . import python
+
 
 class GlobalInfo:  # XXX add comments, split up
     def __init__(self):
@@ -22,12 +27,12 @@ class GlobalInfo:  # XXX add comments, split up
         self.inheritance_temp_vars = {}
         self.parent_nodes = {}
         self.inherited = set()
-        self.main_module = None
+        self.main_module: 'python.Module' = None
         self.module = None
-        self.module_path = None
-        self.options = None
+        self.module_path: Optional[pathlib.Path] = None
+        self.options: Optional['argparse.Namespace'] = None
         self.cwd = pathlib.Path.cwd()
-        self.builtins = [
+        self.builtins: list[str] = [
             "none",
             "str_",
             "bytes_",
@@ -46,38 +51,38 @@ class GlobalInfo:  # XXX add comments, split up
         self.assign_target = {}
         # allocation site type information across iterations
         self.alloc_info = {}
-        self.iterations = 0
-        self.total_iterations = 0
+        self.iterations: int = 0
+        self.total_iterations: int = 0
         self.lambdawrapper = {}
         self.init_directories()
         illegal_file = open(self.shedskin_illegal /  "illegal.txt")
         self.cpp_keywords = set(line.strip() for line in illegal_file)
-        self.ss_prefix = "__ss_"
+        self.ss_prefix: str = "__ss_"
         self.list_types = {}
         self.loopstack = []  # track nested loops
         self.comments = {}
-        self.import_order = 0  # module import order
+        self.import_order: int = 0  # module import order
         self.from_module = {}
-        self.class_def_order = 0
+        self.class_def_order: int = 0
         # command-line options
-        self.wrap_around_check = True
-        self.bounds_checking = True
-        self.assertions = True
-        self.executable_product = True
-        self.pyextension_product = False
-        self.int32 = False
-        self.int64 = False
-        self.int128 = False
-        self.float32 = False
-        self.float64 = False
+        self.wrap_around_check: bool = True
+        self.bounds_checking: bool = True
+        self.assertions: bool = True
+        self.executable_product: bool = True
+        self.pyextension_product: bool = False
+        self.int32: bool = False
+        self.int64: bool = False
+        self.int128: bool = False
+        self.float32: bool = False
+        self.float64: bool = False
         self.flags = None
-        self.silent = False
-        self.nogc = False
-        self.backtrace = False
-        self.makefile_name = "Makefile"
-        self.debug_level = 0
-        self.outputdir = None
-        self.nomakefile = False
+        self.silent: bool = False
+        self.nogc: bool = False
+        self.backtrace: bool = False
+        self.makefile_name: str = "Makefile"
+        self.debug_level: int = 0
+        self.outputdir: Optional[str] = None
+        self.nomakefile: bool = False
 
         # Others
         self.item_rvalue = {}
@@ -88,7 +93,7 @@ class GlobalInfo:  # XXX add comments, split up
         self.maxhits = 0  # XXX amaze.py termination
         self.terminal = None
         self.progressbar = None
-        self.generate_cmakefile = False
+        self.generate_cmakefile: bool = False
 
     def init_directories(self):
         abspath = os.path.abspath(__file__) # sanitize mixed fwd/bwd slashes (mingw)
