@@ -30,7 +30,7 @@ char *str::c_str() const {
 
 str *str::__repr__() {
     std::stringstream ss;
-    __GC_STRING sep = "\\\n\r\t";
+    __GC_STRING separator = "\\\n\r\t";
     __GC_STRING let = "\\nrt";
 
     const char *quote = "'";
@@ -38,7 +38,7 @@ str *str::__repr__() {
     size_t hasd = this->unit.find('\"');
 
     if (hasq != std::string::npos && hasd != std::string::npos) {
-        sep += "'"; let += "'";
+        separator += "'"; let += "'";
     }
     if (hasq != std::string::npos && hasd == std::string::npos)
         quote = "\"";
@@ -49,7 +49,7 @@ str *str::__repr__() {
         char c = unit[i];
         size_t k;
 
-        if((k = sep.find_first_of(c)) != std::string::npos)
+        if((k = separator.find_first_of(c)) != std::string::npos)
             ss << "\\" << let[k];
         else {
             int j = (int)((unsigned char)c);
@@ -215,29 +215,29 @@ str *str::lstrip(str *chars) {
     return new str(unit.substr(first, this->unit.size()-first));
 }
 
-tuple2<str *, str *> *str::partition(str *sep)
+tuple2<str *, str *> *str::partition(str *separator)
 {
     size_t i;
 
-    i = this->unit.find(sep->unit.c_str());
+    i = this->unit.find(separator->unit.c_str());
     if(i != std::string::npos)
-        return new tuple2<str *, str *>(3, new str(unit.substr(0, i)), new str(sep->unit), new str(unit.substr(i + sep->unit.length())));
+        return new tuple2<str *, str *>(3, new str(unit.substr(0, i)), new str(separator->unit), new str(unit.substr(i + separator->unit.length())));
     else
         return new tuple2<str *, str *>(3, new str(unit), new str(""), new str(""));
 }
 
-tuple2<str *, str *> *str::rpartition(str *sep)
+tuple2<str *, str *> *str::rpartition(str *separator)
 {
     size_t i;
 
-    i = unit.rfind(sep->unit);
+    i = unit.rfind(separator->unit);
     if(i != std::string::npos)
-        return new tuple2<str *, str *>(3, new str(unit.substr(0, i)), new str(sep->unit), new str(unit.substr(i + sep->unit.length())));
+        return new tuple2<str *, str *>(3, new str(unit.substr(0, i)), new str(separator->unit), new str(unit.substr(i + separator->unit.length())));
     else
         return new tuple2<str *, str *>(3, new str(unit), new str(""), new str(""));
 }
 
-list<str *> *str::rsplit(str *sep, __ss_int maxsep)
+list<str *> *str::rsplit(str *separator, __ss_int maxsep)
 {
     __GC_STRING ts;
     list<str *> *r = new list<str *>();
@@ -248,7 +248,7 @@ list<str *> *str::rsplit(str *sep, __ss_int maxsep)
     i = j = this->unit.size() - 1;
 
     //split by whitespace
-    if(!sep)
+    if(!separator)
     {
         while(i != std::string::npos && j != std::string::npos && (curi < maxsep2 || maxsep2 == std::string::npos))
         {
@@ -269,7 +269,7 @@ list<str *> *str::rsplit(str *sep, __ss_int maxsep)
     //split by seperator
     else
     {
-        ts = sep->unit;
+        ts = separator->unit;
         tslen = ts.length();
 
         i++;
@@ -412,10 +412,10 @@ list<str *> *str::split(str *sp, __ss_int max_splits) {
 
     } else { /* given separator (slightly different algorithm required)
               * (python is very inconsistent in this respect) */
-        const char *sep = sp->c_str();
+        const char *separator = sp->c_str();
         size_t sep_size = sp->unit.size();
 
-#define next_separator(iter) s.find(sep, (iter))
+#define next_separator(iter) s.find(separator, (iter))
 #define skip_separator(iter) ((iter + sep_size) > s.size()? -1 : (iter + sep_size))
 
         if (max_splits == 0) {

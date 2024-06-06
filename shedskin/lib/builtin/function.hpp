@@ -647,20 +647,20 @@ template<> class_ *__type(__ss_float d);
 
 /* print .., */
 
-template<class T> void __print_elem(str *result, T t, size_t &count, str *sep) {
+template<class T> void __print_elem(str *result, T t, size_t &count, str *separator) {
     result->unit += __str(t)->unit;
     count--;
     if(count != 0)
-        result->unit += sep->unit;
+        result->unit += separator->unit;
 }
 
-template<class ... Args> void print(int, __ss_bool flush, file *f, str *end, str *sep, Args ... args) {
+template<class ... Args> void print(int, __ss_bool flush, file *f, str *end, str *separator, Args ... args) {
     str *s = new str();
     size_t count = sizeof...(args);
-    if(!sep)
-        sep = sp;
+    if(!separator)
+        separator = sp;
 
-    (__print_elem(s, args, count, sep), ...);
+    (__print_elem(s, args, count, separator), ...);
 
     if(!end)
         end = nl;

@@ -389,7 +389,7 @@ template<class T> template <class U> void *list<T>::sort(__ss_int (*cmp)(T, T), 
     return NULL;
 }
 
-template<class T> template <class U> void *list<T>::sort(__ss_int cmp, U (*key)(T), __ss_int reverse) {
+template<class T> template <class U> void *list<T>::sort(__ss_int, U (*key)(T), __ss_int reverse) {
     return sort((__ss_int(*)(T,T))0, key, reverse);
 }
 template<class T> void *list<T>::sort(__ss_int (*cmp)(T, T), __ss_int, __ss_int reverse) {
@@ -416,7 +416,7 @@ template<class T> void *list<T>::remove(T e) {
         }
     throw new ValueError(new str("list.remove(x): x not in list"));
 }
-template<class T> template <class U> void *list<T>::remove(U e) {
+template<class T> template <class U> void *list<T>::remove(U) {
     throw new ValueError(new str("list.remove(x): x not in list"));
 }
 

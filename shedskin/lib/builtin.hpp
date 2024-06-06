@@ -1587,9 +1587,9 @@ template<class T> str *__iter<T>::__repr__() {
 }
 
 template<class T> __seqiter<T>::__seqiter() {}
-template<class T> __seqiter<T>::__seqiter(pyseq<T> *p) {
-    this->p = p;
-    size = p->__len__();
+template<class T> __seqiter<T>::__seqiter(pyseq<T> *seq) {
+    this->p = seq;
+    size = seq->__len__();
     counter = 0;
 }
 
