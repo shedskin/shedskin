@@ -100,12 +100,12 @@ class __rangeiter : public __iter<__ss_int> {
 public:
     __ss_int i, a, b, s;
 
-    __rangeiter(__ss_int a_, __ss_int b_, __ss_int s_) {
+    __rangeiter(__ss_int a, __ss_int b, __ss_int s) {
         this->__class__ = cl_rangeiter;
 
-        a = a_;
-        b = b_;
-        s = s_;
+        this->a = a;
+        this->b = b;
+        this->s = s;
         i = a;
     }
 
@@ -126,13 +126,13 @@ public:
 
 };
 
-__xrange::__xrange(__ss_int a_, __ss_int b_, __ss_int s_) {
-    if(s_==0)
+__xrange::__xrange(__ss_int a, __ss_int b, __ss_int s) {
+    if(s==0)
         throw new ValueError(new str("range() arg 3 must not be zero"));
 
-    a = start = a_;
-    b = stop = b_;
-    s = step = s_;
+    this->a = this->start = a;
+    this->b = this->stop = b;
+    this->s = this->step = s;
 }
 
 __iter<__ss_int> *__xrange::__iter__() {

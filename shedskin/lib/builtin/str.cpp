@@ -535,7 +535,7 @@ long str::__hash__() {
     if (hash != -1)
         return hash;
 
-    hash = (long)std::hash<std::string_view>{}(std::string_view(unit.data(), unit.size()));
+    hash = std::hash<std::string_view>{}(std::string_view(unit.data(), unit.size()));
 
     return hash; 
 }
