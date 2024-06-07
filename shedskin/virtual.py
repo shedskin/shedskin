@@ -13,7 +13,7 @@ from . import python
 from . import typestr
 
 
-def virtuals(self, cl, declare):
+def virtuals(self, cl: python.Class, declare):
     if not cl.virtuals:
         return
     for ident, subclasses in cl.virtuals.items():
