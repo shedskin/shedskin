@@ -221,6 +221,16 @@ def test_format():
     assert (b'hoho %(aap)s, %(bert)s' % d2) == b'hoho acht, negen'
 
 
+def test_contains():
+    bs = b'blaa'
+    assert list(bs) == [98, 108, 97, 97]
+
+    assert b'l' in bs
+    assert not b'x' in bs
+    assert not 28 in bs
+    assert 108 in bs
+
+
 def test_all():
     test_bytes_cmp()
     test_bytes_concat()
@@ -267,6 +277,7 @@ def test_all():
     test_zfill()
     test_bytes_hash()
     test_bytes_builtin()
+    test_contains()
 
 
 if __name__ == "__main__":
