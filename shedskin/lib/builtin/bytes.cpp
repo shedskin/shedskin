@@ -663,7 +663,7 @@ bytes *bytes::center(__ss_int w, bytes *fillchar) {
         return this;
 
     if(!fillchar) fillchar = bsp;
-    bytes *r = fillchar->__mul__(width);
+    bytes *r = fillchar->__mul__(w);
 
     size_t j = (width-len)/2;
     for(size_t i=0; i<len; i++)
@@ -816,4 +816,13 @@ void *bytes::__delete__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
 
 __ss_bool bytes::__contains__(bytes *b) {
     return __mbool(unit.find(b->unit) != std::string::npos);
+}
+
+__ss_bool bytes::__contains__(__ss_int i) {
+    size_t len = unit.size();
+    for(size_t j=0; j<len; j++) {
+        if(unit[j] == i)
+            return True;
+    }
+    return False;
 }
