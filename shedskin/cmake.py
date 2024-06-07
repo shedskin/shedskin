@@ -548,6 +548,7 @@ def generate_cmakefile(gx: config.GlobalInfo):
                 continue
             app_mods.add(entry.as_posix())
 
+    assert gx.options, "gx.options must be populated"
     if in_source_build:
         master_clfile = path.parent / "CMakeLists.txt"
         master_clfile_content = get_cmakefile_template(
@@ -813,8 +814,8 @@ class CMakeBuilder:
 
         self.cmake_config(cfg_options)
 
-        print("cfg_options:", cfg_options)
-        print("bld_options:", bld_options)
+        # print("cfg_options:", cfg_options)
+        # print("bld_options:", bld_options)
         self.cmake_build(bld_options)
 
         if run_tests:

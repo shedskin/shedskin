@@ -95,6 +95,17 @@ class GlobalInfo:  # XXX add comments, split up
         self.progressbar = None
         self.generate_cmakefile: bool = False
 
+        # from infer.py
+        self.new_alloc_info = {}
+        self.added_allocs: int = 0
+        self.added_allocs_set = set()
+        self.added_funcs: int = 0
+        self.added_funcs_set = set()
+        self.cpa_clean: bool = False
+        self.cpa_limit: int = 0
+        self.cpa_limited: bool = False
+        self.orig_types = {}
+
     def init_directories(self):
         abspath = os.path.abspath(__file__) # sanitize mixed fwd/bwd slashes (mingw)
         shedskin_directory = os.sep.join(abspath.split(os.sep)[:-1])
