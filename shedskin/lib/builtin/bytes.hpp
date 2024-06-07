@@ -16,7 +16,7 @@ inline void *bytes::__setitem__(__ss_int i, __ss_int e) {
     i = __wrap(this, i);
     if(e < 0)
         throw new ValueError(new str("byte must be in range(0, 256)"));
-    unit[(size_t)i] = e;
+    unit[(size_t)i] = (char)e;
     return NULL;
 }
 
@@ -82,3 +82,4 @@ template <class U> bytes *bytes::join(U *iter) {
     }
     return s;
 }
+
