@@ -365,7 +365,7 @@ bytes *file_binary::readline(int n) {
     if(__error())
         throw new OSError();
 
-    bytes *b = new bytes(&__read_cache[0], (__ss_int)__read_cache.size());
+    bytes *b = new bytes(&__read_cache[0], __read_cache.size());
     b->frozen = 1;
     return b;
 }
@@ -390,7 +390,7 @@ bytes *file_binary::read(int n) {
     }
     if(__error())
         __throw_io_error();
-    bytes *b = new bytes(&__read_cache[0], (__ss_int)__read_cache.size());
+    bytes *b = new bytes(&__read_cache[0], __read_cache.size());
     b->frozen = 1;
     return b;
 }

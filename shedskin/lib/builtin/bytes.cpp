@@ -19,7 +19,7 @@ bytes::bytes(bytes *b, int freeze) : hash(-1), frozen(freeze) {
     unit = b->unit;
 }
 
-bytes::bytes(const char *s, int size, int freeze) : unit(s, size), hash(-1), frozen(freeze) { /* '\0' delimiter in C */
+bytes::bytes(const char *s, size_t size, int freeze) : unit(s, size), hash(-1), frozen(freeze) { /* '\0' delimiter in C */
     __class__ = cl_bytes;
 }
 
@@ -185,7 +185,7 @@ bytes *bytes::__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s) {
     slicenr(x, l, u, s, (__ss_int)len);
     bytes *b;
     if(s == 1)
-        b = new bytes(unit.data()+l, u-l, frozen);
+        b = new bytes(unit.data()+l, (size_t)(u-l), frozen);
     else {
         __GC_STRING r;
         if(!(x&1) && !(x&2) && s==-1) {
