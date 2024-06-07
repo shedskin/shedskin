@@ -222,9 +222,10 @@ template<class A> class __ss_reverse : public __iter<A> {
 public:
     pyseq<A> *p;
     __ss_int i;
-    __ss_reverse(pyseq<A> *p) {
-        this->p = p;
-        i = len(p);
+
+    __ss_reverse(pyseq<A> *seq) {
+        p = seq;
+        i = len(seq);
     }
 
     A __get_next() {
@@ -250,8 +251,8 @@ public:
     __iter<A> *p;
     __ss_int i;
 
-    __enumiter(pyiter<A> *p, __ss_int start=0) {
-        this->p = ___iter(p);
+    __enumiter(pyiter<A> *it, __ss_int start=0) {
+        p = ___iter(it);
         i = start;
     }
 
@@ -282,23 +283,23 @@ public:
     __iter<T> *first;
     __iter<U> *second;
 
-    izipiter(__ss_bool strict);
-    izipiter(__ss_bool strict, pyiter<T> *iterable1, pyiter<U> *iterable2);
+    izipiter(__ss_bool strict_);
+    izipiter(__ss_bool strict_, pyiter<T> *iterable1, pyiter<U> *iterable2);
 
     tuple2<T, U> *__next__();
 
     inline str *__str__() { return new str("<zip object>"); }
 };
 
-template<class T, class U> inline izipiter<T, U>::izipiter(__ss_bool strict) {
-    this->exhausted = true;
-    this->strict = strict;
+template<class T, class U> inline izipiter<T, U>::izipiter(__ss_bool strict_) {
+    exhausted = true;
+    strict = strict_;
 }
-template<class T, class U> inline izipiter<T, U>::izipiter(__ss_bool strict, pyiter<T> *iterable1, pyiter<U> *iterable2) {
-    this->exhausted = false;
-    this->strict = strict;
-    this->first = iterable1->__iter__();
-    this->second = iterable2->__iter__();
+template<class T, class U> inline izipiter<T, U>::izipiter(__ss_bool strict_, pyiter<T> *iterable1, pyiter<U> *iterable2) {
+    exhausted = false;
+    strict = strict_;
+    first = iterable1->__iter__();
+    second = iterable2->__iter__();
 }
 
 template<class T, class U> tuple2<T, U> *izipiter<T, U>::__next__() {
@@ -339,9 +340,9 @@ public:
 
     __GC_VECTOR(__iter<T> *) iters;
 
-    izipiter(__ss_bool strict);
-    izipiter(__ss_bool strict, pyiter<T> *iterable);
-    izipiter(__ss_bool strict, pyiter<T> *iterable1, pyiter<T> *iterable2);
+    izipiter(__ss_bool strict_);
+    izipiter(__ss_bool strict_, pyiter<T> *iterable);
+    izipiter(__ss_bool strict_, pyiter<T> *iterable1, pyiter<T> *iterable2);
 
     void push_iter(pyiter<T> *iterable);
 
@@ -351,20 +352,20 @@ public:
 
 };
 
-template<class T> inline izipiter<T, T>::izipiter(__ss_bool strict) {
-    this->exhausted = true;
-    this->strict = strict;
+template<class T> inline izipiter<T, T>::izipiter(__ss_bool strict_) {
+    exhausted = true;
+    strict = strict_;
 }
-template<class T> inline izipiter<T, T>::izipiter(__ss_bool strict, pyiter<T> *iterable) {
-    this->exhausted = false;
-    this->strict = strict;
-    this->push_iter(iterable);
+template<class T> inline izipiter<T, T>::izipiter(__ss_bool strict_, pyiter<T> *iterable) {
+    exhausted = false;
+    strict = strict_;
+    push_iter(iterable);
 }
-template<class T> inline izipiter<T, T>::izipiter(__ss_bool strict, pyiter<T> *iterable1, pyiter<T> *iterable2) {
-    this->exhausted = false;
-    this->strict = strict;
-    this->push_iter(iterable1);
-    this->push_iter(iterable2);
+template<class T> inline izipiter<T, T>::izipiter(__ss_bool strict_, pyiter<T> *iterable1, pyiter<T> *iterable2) {
+    exhausted = false;
+    strict = strict_;
+    push_iter(iterable1);
+    push_iter(iterable2);
 }
 template<class T> void izipiter<T, T>::push_iter(pyiter<T> *iterable) {
     this->iters.push_back(iterable->__iter__());
@@ -397,18 +398,18 @@ template<class T> tuple2<T, T> *izipiter<T, T>::__next__() {
     return tuple;
 }
 
-inline izipiter<void*, void*> *__zip(int, __ss_bool strict) {
-    return new izipiter<void*, void*>(strict);
+inline izipiter<void*, void*> *__zip(int, __ss_bool strict_) {
+    return new izipiter<void*, void*>(strict_);
 }
-template<class T> inline izipiter<T, T> *__zip(int, __ss_bool strict, pyiter<T> *iterable1) {
-    izipiter<T, T> *iter = new izipiter<T, T>(strict, iterable1);
+template<class T> inline izipiter<T, T> *__zip(int, __ss_bool strict_, pyiter<T> *iterable1) {
+    izipiter<T, T> *iter = new izipiter<T, T>(strict_, iterable1);
     return iter;
 }
-template<class T, class U> inline izipiter<T, U> *__zip(int, __ss_bool strict, pyiter<T> *iterable1, pyiter<U> *iterable2) {
-    return new izipiter<T, U>(strict, iterable1, iterable2);
+template<class T, class U> inline izipiter<T, U> *__zip(int, __ss_bool strict_, pyiter<T> *iterable1, pyiter<U> *iterable2) {
+    return new izipiter<T, U>(strict_, iterable1, iterable2);
 }
-template<class T, class ... Args> inline izipiter<T, T> *__zip(int, __ss_bool strict, pyiter<T> *iterable, pyiter<T> *iterable2, pyiter<T> *iterable3, Args ... args) {
-    izipiter<T, T> *iter = new izipiter<T, T>(strict, iterable);
+template<class T, class ... Args> inline izipiter<T, T> *__zip(int, __ss_bool strict_, pyiter<T> *iterable, pyiter<T> *iterable2, pyiter<T> *iterable3, Args ... args) {
+    izipiter<T, T> *iter = new izipiter<T, T>(strict_, iterable);
 
     iter->push_iter(iterable2);
     iter->push_iter(iterable3);
@@ -448,9 +449,9 @@ public:                                                                         
 template<class R, TP> inline imapiter##N<R, FP>::imapiter##N() {                                         \
     this->exhausted = true;                                                                              \
 }                                                                                                        \
-template<class R, TP> inline imapiter##N<R, FP>::imapiter##N(R (*function)(FP), DP) {                    \
+template<class R, TP> inline imapiter##N<R, FP>::imapiter##N(R (*function_)(FP), DP) {                   \
     this->exhausted = false;                                                                             \
-    this->function = function;                                                                           \
+    this->function = function_;                                                                          \
     AP                                                                                                   \
 }                                                                                                        \
                                                                                                          \
@@ -467,8 +468,8 @@ template<class R, TP> R imapiter##N<R, FP>::__next__() {                        
     }                                                                                                    \
 }                                                                                                        \
                                                                                                          \
-template<class R, TP> inline imapiter##N<R, FP> *map(int /* iterable_count */, R (*function)(FP), DP) {  \
-    return new imapiter##N<R, FP>(function, VP);                                                         \
+template<class R, TP> inline imapiter##N<R, FP> *map(int /* iterable_count */, R (*function_)(FP), DP) { \
+    return new imapiter##N<R, FP>(function_, VP);                                                        \
 }
 
 #define S ,
@@ -506,7 +507,7 @@ public:
     __iter<T> *iter;
 
     ifilteriter();
-    ifilteriter(B (*predicate)(T), pyiter<T> *iterable);
+    ifilteriter(B (*predicate_)(T), pyiter<T> *iterable);
 
     T __next__();
 
@@ -517,9 +518,9 @@ public:
 };
 
 template<class T, class B> inline ifilteriter<T, B>::ifilteriter() {}
-template<class T, class B> inline ifilteriter<T, B>::ifilteriter(B (*predicate)(T), pyiter<T> *iterable) {
-    this->predicate = predicate;
-    this->iter = iterable->__iter__();
+template<class T, class B> inline ifilteriter<T, B>::ifilteriter(B (*predicate_)(T), pyiter<T> *iterable) {
+    predicate = predicate_;
+    iter = iterable->__iter__();
 }
 
 template<class T, class B> T ifilteriter<T, B>::__next__() {
@@ -533,8 +534,8 @@ template<class T, class B> T ifilteriter<T, B>::__next__() {
  //   assert(false && "unreachable");
 }
 
-template<class T, class B> inline ifilteriter<T, B> *filter(B (*predicate)(T), pyiter<T> *iterable) {
-    return new ifilteriter<T, B>(predicate, iterable);
+template<class T, class B> inline ifilteriter<T, B> *filter(B (*predicate_)(T), pyiter<T> *iterable) {
+    return new ifilteriter<T, B>(predicate_, iterable);
 }
 template<class T> inline ifilteriter<T, bool> *filter(void * /* null */, pyiter<T> *iterable) {
     return new ifilteriter<T, bool>(_identity, iterable);
