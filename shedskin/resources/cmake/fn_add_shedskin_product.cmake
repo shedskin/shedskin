@@ -198,19 +198,31 @@ function(add_shedskin_product)
     #     set(ENABLE_CONAN ON)
     # endif()
 
+    if (UNIX)
+        set(LIBGC libgc.a)
+        set(LIBGCCPP libgccpp.a)
+        set(LIBGPCRE libpcre.a)
+    else() # i.e windows
+        set(LIBGCa gc.lib)
+        set(LIBGCCPP gccpp.lib)
+        set(LIBPCRE pcre.lib)
+    endif ()
+
     if(ENABLE_EXTERNAL_PROJECT)
         set(LIB_DEPS
-            ${install_dir}/lib/libgc.a
-            ${install_dir}/lib/libgccpp.a
-            $<$<BOOL:${IMPORTS_RE_MODULE}>:${install_dir}/lib/libpcre.a>
+            ${install_dir}/lib/${LIBGC}
+            ${install_dir}/lib/${LIBGCCPP}
+            $<$<BOOL:${IMPORTS_RE_MODULE}>:${install_dir}/lib/${LIBPCRE}>
         )
         set(LIB_DIRS ${install_dir}/lib)
         set(LIB_INCLUDES ${install_dir}/include)
     elseif(ENABLE_SPM)
         set(LIB_DEPS
-            ${SPM_LIB_DIRS}/libgc.a
-            ${SPM_LIB_DIRS}/libgccpp.a
-            $<$<BOOL:${IMPORTS_RE_MODULE}>:${SPM_LIB_DIRS}/libpcre.a>            
+            ${SPM_LIB_DIRS}/${LIBGC}
+            ${SPM_LIB_DIRS}/${LIBGCCPP}
+            # $<$<PLATFORM_ID:Windows>:${SPM_LIB_DIRS}/atomic_ops.lib>
+            # $<$<PLATFORM_ID:Windows>:${SPM_LIB_DIRS}/atomic_ops_gpl.lib>
+            $<$<BOOL:${IMPORTS_RE_MODULE}>:${SPM_LIB_DIRS}/${LIBPCRE}>            
         )
         set(LIB_DIRS ${SPM_LIB_DIRS})
         set(LIB_INCLUDES ${SPM_INCLUDE_DIRS})
@@ -345,9 +357,17 @@ function(add_shedskin_product)
             $<$<BOOL:${UNIX}>:-Wno-cast-function-type> # (PyCFunction) cast in extmods
             $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wall>
             $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wextra>
+            $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wpedantic>
             $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wconversion>
             $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wsign-compare>
-            $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-pedantic>
+            $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wformat=2>
+            $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wshadow>
+            $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wwrite-strings>
+            $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wstrict-prototypes>
+            $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wold-style-definition>
+            $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wredundant-decls>
+            $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wnested-externs>
+            $<$<AND:$<BOOL:${UNIX}>,$<BOOL:${ENABLE_WARNINGS}>>:-Wmissing-include-dirs>
             # windows
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/W4>
             $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${ENABLE_WARNINGS}>>:/wd4100> # unreferenced formal
