@@ -9,9 +9,3 @@ python c64_main.py --tape=intkarat.t64
 load
 run
 ```
-
-requires adding `-fbracket-depth=512` to `CXXFLAGS` in the `Makefile` in macOS
-
-ref: https://github.com/ndless-nspire/Ndless/issues/59
-
-requires `pyobject` see: https://pygobject.readthedocs.io
