@@ -29,9 +29,14 @@ from . import python
 from . import typestr
 from . import virtual
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from . import config
+    from . import graph
+
 
 class CPPNamer:
-    def __init__(self, gx, mv):
+    def __init__(self, gx: 'config.GlobalInfo', mv: 'graph.ModuleVisitor'):
         self.gx = gx
         self.class_names = [cl.ident for cl in self.gx.allclasses]
         self.cpp_keywords = self.gx.cpp_keywords
@@ -62,18 +67,18 @@ class CPPNamer:
 
         return self.nokeywords(name)
 
-    def name_variable(self, var):
+    def name_variable(self, var: python.Variable):
         if var.masks_global():
             return "_" + var.name
         return self.name_str(var.name)
 
-    def name_function(self, func):
+    def name_function(self, func: python.Function):
         return self.name_str(func.ident)
 
-    def name_class(self, obj):
+    def name_class(self, obj: python.Class) -> str:
         return obj.ident
 
-    def name_str(self, name):
+    def name_str(self, name: str) -> str:
         if (
             [x for x in ("init", "add") if name == x + self.gx.main_module.ident]
             or name in self.class_names

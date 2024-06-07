@@ -41,6 +41,11 @@ from . import error
 from . import infer
 from . import python
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from . import config
+
+
 # --- global variable mv
 _mv = None
 
@@ -55,7 +60,7 @@ def getmv():
     return _mv
 
 
-def check_redef(gx, node, s=None, onlybuiltins=False):  # XXX to modvisitor, rewrite
+def check_redef(gx: 'config.GlobalInfo', node, s=None, onlybuiltins: bool = False):  # XXX to modvisitor, rewrite
     if not getmv().module.builtin:
         existing = [getmv().ext_classes, getmv().ext_funcs]
         if not onlybuiltins:
@@ -72,7 +77,7 @@ def check_redef(gx, node, s=None, onlybuiltins=False):  # XXX to modvisitor, rew
 
 
 # --- maintain inheritance relations between copied AST nodes
-def inherit_rec(gx, original, copy, mv):
+def inherit_rec(gx: 'config.GlobalInfo', original, copy, mv: 'ModuleVisitor'):
     gx.inheritance_relations.setdefault(original, []).append(copy)
     gx.inherited.add(copy)
     gx.parent_nodes[copy] = original
@@ -119,7 +124,7 @@ def get_arg_nodes(node):
     return args
 
 
-def has_star_kwarg(node):
+def has_star_kwarg(node) -> bool:
     if hasattr(node, "starargs"):
         return bool(node.starargs or node.kwargs)
 
@@ -152,7 +157,7 @@ def make_arg_list(
         return ast.arguments(args, vararg, kwarg, defaults)
 
 
-def is_property_setter(dec):
+def is_property_setter(dec) -> bool:
     return (
         isinstance(dec, ast.Attribute)
         and isinstance(dec.value, ast.Name)
@@ -162,7 +167,7 @@ def is_property_setter(dec):
 
 # --- module visitor; analyze program, build constraint graph
 class ModuleVisitor(ast_utils.BaseNodeVisitor):
-    def __init__(self, module, gx):
+    def __init__(self, module, gx: 'config.GlobalInfo'):
         ast_utils.BaseNodeVisitor.__init__(self)
         self.module = module
         self.gx = gx

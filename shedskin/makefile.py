@@ -13,7 +13,7 @@ import sys
 import sysconfig
 
 
-def check_output(cmd):
+def check_output(cmd: str):
     try:
         return subprocess.check_output(cmd.split(), encoding="utf8").strip()
     except FileNotFoundError:
