@@ -125,6 +125,12 @@ template<class K, class V> __ss_bool dict<K,V>::__eq__(pyobj *p) { /* XXX check 
     return True;
 }
 
+/* suppress -Wvirtual-overloaded warnings TODO better to always use pyobj *? */
+template<class K, class V> __ss_bool dict<K,V>::__lt__(pyobj *p) { return False; }
+template<class K, class V> __ss_bool dict<K,V>::__gt__(pyobj *p) { return False; }
+template<class K, class V> __ss_bool dict<K,V>::__ge__(pyobj *p) { return False; }
+template<class K, class V> __ss_bool dict<K,V>::__le__(pyobj *p) { return False; }
+
 template <class K, class V> int characterize(dict<K,V> *a, dict<K,V> *b, V *pval)
 {
 	int i;

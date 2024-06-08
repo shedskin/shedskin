@@ -657,11 +657,17 @@ public:
     template <class U> void *update(U *other);
     void *update(dict<K, V> *e);
 
+    __ss_bool __gt__(pyobj *p);
+    __ss_bool __lt__(pyobj *p);
+    __ss_bool __ge__(pyobj *p);
+    __ss_bool __le__(pyobj *p);
+
+    __ss_bool __eq__(pyobj *p);
+
     __ss_bool __gt__(dict<K,V> *s);
     __ss_bool __lt__(dict<K,V> *s);
     __ss_bool __ge__(dict<K,V> *s);
     __ss_bool __le__(dict<K,V> *s);
-    __ss_bool __eq__(pyobj *p);
 
     __ss_int __cmp__(pyobj *p);
     V setdefault(K k, V v=0);
