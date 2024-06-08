@@ -49,13 +49,13 @@ template <class U> bytes *bytes::join(U *iter) {
         total += sz;
     END_FOR
     size_t unitsize = this->unit.size();
-    int elems = len(__join_cache_bin);
+    size_t elems = __join_cache_bin->units.size();
     if(elems==1)
         return __join_cache_bin->units[0];
     bytes *s = new bytes(frozen);
     if(unitsize == 0 and only_ones) {
         s->unit.resize(total);
-        for(int j=0; j<elems; j++)
+        for(size_t j=0; j<elems; j++)
             s->unit[j] = __join_cache_bin->units[j]->unit[0];
     }
     else if(elems) {
@@ -63,7 +63,7 @@ template <class U> bytes *bytes::join(U *iter) {
         s->unit.resize(total);
         size_t tsz;
         size_t k = 0;
-        for(int m = 0; m<elems; m++) {
+        for(size_t m = 0; m<elems; m++) {
             bytes *t = __join_cache_bin->units[m];
             tsz = t->unit.size();
             if (tsz == 1)
