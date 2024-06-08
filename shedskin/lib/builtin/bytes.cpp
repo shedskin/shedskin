@@ -19,7 +19,7 @@ bytes::bytes(bytes *b, int freeze) : hash(-1), frozen(freeze) {
     unit = b->unit;
 }
 
-bytes::bytes(const char *s, int size, int freeze) : unit(s, size), hash(-1), frozen(freeze) { /* '\0' delimiter in C */
+bytes::bytes(const char *s, int size, int freeze) : unit(s, (size_t)size), hash(-1), frozen(freeze) { /* '\0' delimiter in C */
     __class__ = cl_bytes;
 }
 
@@ -125,7 +125,7 @@ long bytes::__hash__() {
     if (hash != -1)
         return hash;
 
-    hash = std::hash<std::string>{}(unit.c_str());
+    hash = (long)std::hash<std::string>{}(unit.c_str());
 
     return hash;
 }
@@ -736,7 +736,7 @@ void *bytes::clear() {
 }
 
 void *bytes::append(__ss_int i) {
-    unit += (unsigned char)i;
+    unit += (char)i;
     return NULL;
 }
 
@@ -767,7 +767,7 @@ void *bytes::extend(pyiter<__ss_int> *t) {
     int __2;
     pyiter<__ss_int> *__1;
     FOR_IN(e,t,1,2,3)
-        unit += (unsigned char)e;
+        unit += (char)e;
     END_FOR
     return NULL;
 }
