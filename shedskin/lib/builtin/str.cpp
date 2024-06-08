@@ -416,7 +416,7 @@ list<str *> *str::split(str *sp_, __ss_int max_splits) {
         size_t sep_size = sp_->unit.size();
 
 #define next_separator(iter) s.find(separator, (iter))
-#define skip_separator(iter) ((iter + sep_size) > s.size()? -1 : (iter + sep_size))
+#define skip_separator(iter) ((iter + sep_size) > s.size()? std::string::npos : (iter + sep_size))
 
         if (max_splits == 0) {
             result->append(this);
@@ -729,7 +729,7 @@ str *str::casefold() {
         else if(216 >= c and c <= 222)
             c += 32;
 
-        r->unit += c;
+        r->unit += (char)c;
     }
 
     return r;
