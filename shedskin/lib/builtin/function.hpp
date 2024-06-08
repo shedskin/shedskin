@@ -100,7 +100,7 @@ template<class T, class B> inline void update_max(T &m, B (*key)(T), T a) {
         m=a;
 }
 
-template<class T, class B, class ... Args> T ___max(int n, B (*key)(T), T a, T b, T c, Args ... args) {
+template<class T, class B, class ... Args> T ___max(int, B (*key)(T), T a, T b, T c, Args ... args) {
     T m = a;
     update_max(m, key, b);
     update_max(m, key, c);
@@ -108,12 +108,12 @@ template<class T, class B, class ... Args> T ___max(int n, B (*key)(T), T a, T b
     return m;
 }
 
-template<class T> inline void update_max(T &m, int key, T a) {
+template<class T> inline void update_max(T &m, int, T a) {
     if(__cmp(a,m)==1)
         m=a;
 }
 
-template<class T, class ... Args> T ___max(int n, int key, T a, T b, T c, Args ... args) {
+template<class T, class ... Args> T ___max(int, int key, T a, T b, T c, Args ... args) {
     T m = a;
     update_max(m, key, b);
     update_max(m, key, c);
@@ -160,7 +160,7 @@ template<class T, class B> inline void update_min(T &m, B (*key)(T), T a) {
         m=a;
 }
 
-template<class T, class B, class ... Args> T ___min(int n, B (*key)(T), T a, T b, T c, Args ... args) {
+template<class T, class B, class ... Args> T ___min(int, B (*key)(T), T a, T b, T c, Args ... args) {
     T m = a;
     update_min(m, key, b);
     update_min(m, key, c);
@@ -168,12 +168,12 @@ template<class T, class B, class ... Args> T ___min(int n, B (*key)(T), T a, T b
     return m;
 }
 
-template<class T> inline void update_min(T &m, int key, T a) {
+template<class T> inline void update_min(T &m, int, T a) {
     if(__cmp(a,m)==-1)
         m=a;
 }
 
-template<class T, class ... Args> T ___min(int n, int key, T a, T b, T c, Args ... args) {
+template<class T, class ... Args> T ___min(int, int key, T a, T b, T c, Args ... args) {
     T m = a;
     update_min(m, key, b);
     update_min(m, key, c);

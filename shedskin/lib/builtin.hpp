@@ -1227,7 +1227,7 @@ template<class T> bytes *__bytes(T *t) {
         __ss_int __2;
         T *__1;
         FOR_IN(e,t,1,2,3)
-            b->unit += (unsigned char)e;
+            b->unit += (char)e;
         END_FOR
         return b;
     } else {
@@ -1251,7 +1251,7 @@ template<class T> bytes *__bytearray(T *t) {
         int __2;
         pyiter<__ss_int> *__1;
         FOR_IN(e,t,1,2,3)
-            b->unit += (unsigned char)e;
+            b->unit += (char)e;
         END_FOR
         return b;
     } else {
