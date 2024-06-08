@@ -2,7 +2,7 @@
 
 /* bytes methods TODO share code with str */
 
-bytes::bytes(int freeze) : hash(-1), frozen(freeze) {
+bytes::bytes(int frozen_) : hash(-1), frozen(frozen_) {
     __class__ = cl_bytes;
 }
 
@@ -10,16 +10,16 @@ bytes::bytes(const char *s) : unit(s), hash(-1), frozen(1) {
     __class__ = cl_bytes;
 }
 
-bytes::bytes(__GC_STRING s, int freeze) : unit(s), hash(-1), frozen(freeze) {
+bytes::bytes(__GC_STRING s, int frozen_) : unit(s), hash(-1), frozen(frozen_) {
     __class__ = cl_bytes;
 }
 
-bytes::bytes(bytes *b, int freeze) : hash(-1), frozen(freeze) {
+bytes::bytes(bytes *b, int frozen_) : hash(-1), frozen(frozen_) {
     __class__ = cl_bytes;
     unit = b->unit;
 }
 
-bytes::bytes(const char *s, int size, int freeze) : unit(s, (size_t)size), hash(-1), frozen(freeze) { /* '\0' delimiter in C */
+bytes::bytes(const char *s, int size, int frozen_) : unit(s, (size_t)size), hash(-1), frozen(frozen_) { /* '\0' delimiter in C */
     __class__ = cl_bytes;
 }
 
@@ -259,12 +259,12 @@ bytes *bytes::strip(bytes *chars) {
     return lstrip(chars)->rstrip(chars);
 }
 
-list<bytes *> *bytes::split(bytes *sp, __ss_int max_splits) {
+list<bytes *> *bytes::split(bytes *sp_, __ss_int max_splits) {
     __GC_STRING s = unit;
     int num_splits = 0;
     size_t sep_iter = 0, tmp, chunk_iter = 0;
     list<bytes *> *result = new list<bytes *>();
-    if (sp == NULL)
+    if (sp_ == NULL)
     {
 #define next_separator(iter) (s.find_first_of(ws, (iter)))
 #define skip_separator(iter) (s.find_first_not_of(ws, (iter)))
@@ -294,8 +294,8 @@ list<bytes *> *bytes::split(bytes *sp, __ss_int max_splits) {
 
     } else { /* given separator (slightly different algorithm required)
               * (python is very inconsistent in this respect) */
-        const char *separator = sp->c_str();
-        size_t sep_size = sp->unit.size();
+        const char *separator = sp_->c_str();
+        size_t sep_size = sp_->unit.size();
 
 #define next_separator(iter) s.find(separator, (iter))
 #define skip_separator(iter) ((iter + sep_size) > s.size()? -1 : (iter + sep_size))

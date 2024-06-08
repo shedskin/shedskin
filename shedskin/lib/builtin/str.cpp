@@ -377,12 +377,12 @@ str *str::rstrip(str *chars) {
     return new str(unit.substr(0,last+1));
 }
 
-list<str *> *str::split(str *sp, __ss_int max_splits) {
+list<str *> *str::split(str *sp_, __ss_int max_splits) {
     __GC_STRING s = unit;
     int num_splits = 0;
     size_t sep_iter = 0, tmp, chunk_iter = 0;
     list<str *> *result = new list<str *>();
-    if (sp == NULL)
+    if (sp_ == NULL)
     {
 #define next_separator(iter) (s.find_first_of(ws, (iter)))
 #define skip_separator(iter) (s.find_first_not_of(ws, (iter)))
@@ -412,8 +412,8 @@ list<str *> *str::split(str *sp, __ss_int max_splits) {
 
     } else { /* given separator (slightly different algorithm required)
               * (python is very inconsistent in this respect) */
-        const char *separator = sp->c_str();
-        size_t sep_size = sp->unit.size();
+        const char *separator = sp_->c_str();
+        size_t sep_size = sp_->unit.size();
 
 #define next_separator(iter) s.find(separator, (iter))
 #define skip_separator(iter) ((iter + sep_size) > s.size()? -1 : (iter + sep_size))
@@ -535,7 +535,7 @@ long str::__hash__() {
     if (hash != -1)
         return hash;
 
-    hash = std::hash<std::string_view>{}(std::string_view(unit.data(), unit.size()));
+    hash = (long)std::hash<std::string_view>{}(std::string_view(unit.data(), unit.size()));
 
     return hash; 
 }
@@ -846,7 +846,7 @@ str *__str(int i, int base) {
         i = i/base;
     } while(i);
     if(neg) *(--psz) = '-';
-    return new str(psz, buf+69-psz);
+    return new str(psz, (size_t)(buf+69-psz));
 }
 
 str *__str(__ss_bool b) {
