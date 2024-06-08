@@ -44,50 +44,6 @@ int asprintf(char **ret, const char *format, ...)
 }
 #endif
 
-template<class T> str *do_asprintf(const char *fmt, T t, pyobj *a1, pyobj *a2) {
-    char *d;
-    int x;
-    str *r;
-    if(a2)
-        x = asprintf(&d, fmt, ((int)(((int_ *)a1)->unit)), ((int)(((int_ *)a2)->unit)), t);
-    else if(a1)
-        x = asprintf(&d, fmt, ((int)(((int_ *)a1)->unit)), t);
-    else
-        x = asprintf(&d, fmt, t);
-    if(x == -1)
-        throw new ValueError(new str("error in string formatting"));
-    r = new str(d);
-    free(d);
-    return r;
-}
-
-/* XXX deal with null-chars.. ugh */
-str *do_asprintf_str(const char *fmt, str *s, pyobj *a1, pyobj *a2) {
-    char *d;
-    size_t x;
-    str *r;
-    int nullchars = ((const str*)s)->unit.find('\0') != std::string::npos; /* XXX %6.s */
-    size_t len = s->unit.size();
-    str *old_s = s;
-    if(nullchars) {
-        s = new str(s->unit);
-        std::replace(s->unit.begin(), s->unit.end(), '\0', ' ');
-    }
-    if(a2)
-        x = (size_t)asprintf(&d, fmt, ((int)(((int_ *)a1)->unit)), ((int)(((int_ *)a2)->unit)), s->c_str());
-    else if(a1)
-        x = (size_t)asprintf(&d, fmt, ((int)(((int_ *)a1)->unit)), s->c_str());
-    else
-        x = (size_t)asprintf(&d, fmt, s->c_str());
-    if(nullchars) {
-        for(size_t i=0; i<x && i<len; i++)
-            if(old_s->unit[i] == '\0')
-                d[i] = '\0';
-    }
-    r = new str(d, x);
-    free(d);
-    return r;
-}
 
 /* TODO use in str/bytes __repr__ */
 str *__escape_bytes(pyobj *p) {

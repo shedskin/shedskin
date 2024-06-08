@@ -110,18 +110,3 @@ template<> PyObject *__to_py(complex c) {
     return PyComplex_FromDoubles(c.real, c.imag);
 }
 #endif
-
-/* boxed methods */
-
-complex_::complex_(complex c) {
-    unit = c;
-    __class__ = cl_complex;
-}
-
-str *complex_::__repr__() {
-    return unit.__repr__();
-}
-
-__ss_bool complex_::__nonzero__() {
-    return __mbool(unit.real == 0 and unit.imag == 0);
-}

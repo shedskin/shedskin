@@ -81,11 +81,6 @@ class bytes;
 class file;
 class file_binary;
 
-class int_;
-class bool_;
-class float_;
-class complex_;
-
 template <class T> class pyiter;
 template <class T> class pyseq;
 
@@ -913,39 +908,6 @@ public:
     str *__repr__();
     __ss_bool __eq__(pyobj *c);
 
-};
-
-class int_ : public pyobj {
-public:
-    __ss_int unit;
-    int_(__ss_int i);
-    str *__repr__();
-    __ss_bool __nonzero__();
-};
-
-class float_ : public pyobj {
-public:
-    __ss_float unit;
-    float_(__ss_float f);
-    str *__repr__();
-    __ss_bool __nonzero__();
-};
-
-class bool_ : public pyobj {
-public:
-    __ss_bool unit;
-    bool_(__ss_bool i);
-    str *__repr__();
-    __ss_bool __nonzero__();
-    __ss_int __index__();
-};
-
-class complex_ : public pyobj {
-public:
-    complex unit;
-    complex_(complex i);
-    str *__repr__();
-    __ss_bool __nonzero__();
 };
 
 class object : public pyobj {
