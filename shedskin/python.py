@@ -118,6 +118,7 @@ class Class(PyObject):
         self.has_copy = self.has_deepcopy = False
         self.def_order = self.gx.class_def_order
         self.gx.class_def_order += 1
+        self.module: Optional[Module] = None # from graph.py:635
 
     def ancestors(self, inclusive: bool = False):  # XXX attribute (faster)
         a = set(self.bases)

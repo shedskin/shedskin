@@ -188,6 +188,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.listcomps = []
         self.defaults = {}
         self.importnodes = []
+        from IPython import embed; embed()
 
     def visit(self, node, *args):
         if (node, 0, 0) not in self.gx.cnode:
