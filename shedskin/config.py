@@ -27,7 +27,7 @@ class GlobalInfo:  # XXX add comments, split up
         self.inheritance_temp_vars = {}
         self.parent_nodes = {}
         self.inherited = set()
-        self.main_module: 'python.Module' = None
+        self.main_module: Optional['python.Module'] = None
         self.module = None
         self.module_path: Optional[pathlib.Path] = None
         self.options: Optional['argparse.Namespace'] = None
