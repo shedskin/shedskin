@@ -89,8 +89,8 @@ def generate_makefile(gx):
 
     cppfiles.sort(reverse=True)
     hppfiles.sort(reverse=True)
-    cppfiles = " \\\n\t".join(cppfiles)
-    hppfiles = " \\\n\t".join(hppfiles)
+    cppfiles_str = " \\\n\t".join(cppfiles)
+    hppfiles_str = " \\\n\t".join(hppfiles)
 
     # import flags
     if gx.flags:
@@ -175,8 +175,8 @@ def generate_makefile(gx):
         write(line)
     write()
 
-    write("CPPFILES=%s\n" % cppfiles)
-    write("HPPFILES=%s\n" % hppfiles)
+    write("CPPFILES=%s\n" % cppfiles_str)
+    write("HPPFILES=%s\n" % hppfiles_str)
 
     # tests for static
     MATCH = re.match(r"^LFLAGS=(.+)(\$\(LDFLAGS\).+)", line)
@@ -231,12 +231,12 @@ def generate_makefile(gx):
     if sys.platform == "win32" and not gx.pyextension_product:
         ext = ".exe"
     write("clean:")
-    targets = [ident + ext]
+    _targets = [ident + ext]
     if not gx.pyextension_product:
-        targets += [ident + "_prof" + ext, ident + "_debug" + ext]
-    write("\trm -f %s" % " ".join(targets))
+        _targets += [ident + "_prof" + ext, ident + "_debug" + ext]
+    write("\trm -f %s" % " ".join(_targets))
     if sys.platform == "darwin":
-        write("\trm -rf %s.dSYM\n" % " ".join(targets))
+        write("\trm -rf %s.dSYM\n" % " ".join(_targets))
     write()
 
     # phony
