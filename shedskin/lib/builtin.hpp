@@ -17,7 +17,8 @@
 #include <deque>
 #include <bitset>
 #include <string>
-#include <set>
+#include <unordered_set>
+#include <unordered_map>
 #include <iostream>
 #include <functional>
 #include <fstream>
@@ -123,6 +124,8 @@ using tuple = tuple2<T, T>;
 #define __GC_VECTOR(T) std::vector< T, gc_allocator< T > >
 #define __GC_DEQUE(T) std::deque< T, gc_allocator< T > >
 #define __GC_STRING std::basic_string<char,std::char_traits<char>,gc_allocator<char> >
+#define __GC_SET(T) std::unordered_set<T, std::hash<T>, std::equal_to<T>, gc_allocator<T> >
+#define __GC_DICT(K, V) std::unordered_map<K, V, std::hash<K>, std::equal_to<K>, gc_allocator< std::pair<const K, V> > >
 
 extern __ss_bool True;
 extern __ss_bool False;
@@ -627,6 +630,8 @@ public:
     dictentry<K,V> *table;
     dictentry<K,V> smalltable[MINSIZE];
 
+//    __GC_DICT(K,V) gcd;
+
     dict();
     template<class ... Args> dict(int count, Args ... args);
     template<class U> dict(U *other);
@@ -724,6 +729,8 @@ public:
     setentry<T> *table;
     setentry<T> smalltable[MINSIZE];
     long hash;
+
+//    __GC_SET(T) gcs;
 
     template<class U> set(U *other, int frozen);
     template<class U> set(U *other);
@@ -1004,7 +1011,7 @@ public:
     inline str *__str__() { return new str("dict_items"); }
 };
 
-static inline __ss_bool __mbool(bool c) { __ss_bool b; b.value=(int)c; return b; }
+static inline __ss_bool __mbool(bool c) { __ss_bool b; b.value=c?1:0; return b; }
 
 /* builtin function declarations */
 
