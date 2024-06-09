@@ -1004,7 +1004,7 @@ public:
     inline str *__str__() { return new str("dict_items"); }
 };
 
-static inline __ss_bool __mbool(bool c) { __ss_bool b; b.value=(int)c; return b; }
+static inline __ss_bool __mbool(bool c) { __ss_bool b; b.value=c?1:0; return b; }
 
 /* builtin function declarations */
 
