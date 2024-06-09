@@ -127,7 +127,7 @@ public:
 };
 
 __xrange::__xrange(__ss_int a_, __ss_int b_, __ss_int s_) {
-    if(s==0)
+    if(s_==0)
         throw new ValueError(new str("range() arg 3 must not be zero"));
 
     this->a = this->start = a_;
