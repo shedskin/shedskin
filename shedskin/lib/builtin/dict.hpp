@@ -268,6 +268,11 @@ template <class K, class V> void *dict<K,V>::__setitem__(K key, V value)
     insert_key(key, value, hash);
     if ((used > n_used && fill*3 >= (mask+1)*2))
         resize(used>50000 ? used*2 : used*4);
+
+    /*
+    gcd[key] = value;
+    */
+
     return NULL;
 }
 
@@ -520,7 +525,6 @@ template<class K, class V> str *dict<K,V>::__repr__() {
     __ss_int pos = 0;
 
     while (next(&pos, &entry)) {
-		--i;
         *r += repr(entry->key)->c_str();
         *r += ": ";
         *r += repr(entry->value)->c_str();
@@ -528,8 +532,19 @@ template<class K, class V> str *dict<K,V>::__repr__() {
             *r += ", ";
     }
 
-    r = *r + "}";
+    /*
+    for (const auto& [key, value] : gcd) {
+        *r += repr(key)->c_str();
+        *r += ":";
+        *r += repr(value)->c_str();
+        if(--i > 0)
+            *r += ", ";
+    }
+    */
+
+    *r += "}";
     return r;
+
 }
 
 template<class K, class V> __ss_int dict<K,V>::__len__() {
