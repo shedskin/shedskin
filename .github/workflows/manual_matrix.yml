@@ -3,9 +3,9 @@ name: manual-matrix
 on:
   workflow_dispatch:
 
-# concurrency:
-#   group: environment-${{ github.ref }}
-#   cancel-in-progress: true
+concurrency:
+  group: environment-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   BUILD_TYPE: Debug
