@@ -156,7 +156,7 @@ public:
 
 template<class T> class ss_eq {
     public:
-        bool operator()(T a, T b) {
+        bool operator()(const T a, const T b) const {
             return __eq<T>(a, b);
         }
 
