@@ -31,7 +31,7 @@ template<> inline long hasher(__ss_float v) {
 
 template<class T> class ss_hash {
     public:
-        long operator()(T t) {
+        long operator()(const T t) const {
             return hasher<T>(t);
         }
 

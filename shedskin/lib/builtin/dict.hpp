@@ -269,9 +269,7 @@ template <class K, class V> void *dict<K,V>::__setitem__(K key, V value)
     if ((used > n_used && fill*3 >= (mask+1)*2))
         resize(used>50000 ? used*2 : used*4);
 
-    /*
-    gcd[key] = value;
-    */
+//    gcd[key] = value;
 
     return NULL;
 }
@@ -520,8 +518,8 @@ template <class K, class V> void dict<K,V>::resize(int minused)
 template<class K, class V> str *dict<K,V>::__repr__() {
     str *r = new str("{");
     dictentry<K,V> *entry;
-
     int i = __len__();
+
     __ss_int pos = 0;
 
     while (next(&pos, &entry)) {
@@ -539,8 +537,7 @@ template<class K, class V> str *dict<K,V>::__repr__() {
         *r += repr(value)->c_str();
         if(--i > 0)
             *r += ", ";
-    }
-    */
+    } */
 
     *r += "}";
     return r;
@@ -549,6 +546,8 @@ template<class K, class V> str *dict<K,V>::__repr__() {
 
 template<class K, class V> __ss_int dict<K,V>::__len__() {
     return used;
+
+    //return gcd.size();
 }
 
 template <class K, class V> __ss_bool dict<K,V>::__contains__(K key) {
@@ -558,6 +557,8 @@ template <class K, class V> __ss_bool dict<K,V>::__contains__(K key) {
 	entry = lookup(key, hash);
 
 	return __mbool(entry->use==active);
+
+//    return __mbool(gcd.find(key) != gcd.end());
 }
 
 template <class K, class V> __ss_bool dict<K,V>::__contains__(dictentry<K,V>* entry) {
