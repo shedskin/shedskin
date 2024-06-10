@@ -670,6 +670,8 @@ template<class K, class V> __dictiterkeys<K, V>::__dictiterkeys(dict<K,V> *p) {
     this->p = p;
     this->pos = 0;
     this->si_used = p->used;
+
+//    this->it = p->gcd.begin();
 }
 
 template<class K, class V> K __dictiterkeys<K, V>::__next__() {
@@ -680,6 +682,11 @@ template<class K, class V> K __dictiterkeys<K, V>::__next__() {
     int ret = p->next(&pos, &entry);
     if (!ret) __throw_stop_iteration();
     return entry->key;
+
+/*    if(it == p->gcd.end())
+        __throw_stop_iteration();
+    else
+        return (*it++).first; */
 }
 
 template<class K, class V> __dictitervalues<K, V>::__dictitervalues(dict<K,V> *p) {

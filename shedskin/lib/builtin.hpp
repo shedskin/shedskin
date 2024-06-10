@@ -984,6 +984,8 @@ public:
     int len;
     dictentry<K,V>* entry;
 
+//    typename __GC_DICT(K, V)::iterator it;
+
     __dictiterkeys<K, V>(dict<K, V> *p);
     K __next__();
 
