@@ -108,8 +108,11 @@ template <class K, class V> dict<K,V>& dict<K,V>::operator=(const dict<K,V>& oth
     return *this;
 }
 
-template<class K, class V> __ss_bool dict<K,V>::__eq__(pyobj *p) { /* XXX check hash */
+template<class K, class V> __ss_bool dict<K,V>::__eq__(pyobj *p) {
     dict<K,V> *b = (dict<K,V> *)p;
+
+    //return __mbool(gcd == b->gcd);
+
     if(b->__len__() != this->__len__())
         return False;
     __ss_int pos = 0;
@@ -269,7 +272,7 @@ template <class K, class V> void *dict<K,V>::__setitem__(K key, V value)
     if ((used > n_used && fill*3 >= (mask+1)*2))
         resize(used>50000 ? used*2 : used*4);
 
-//    gcd[key] = value;
+    //gcd[key] = value;
 
     return NULL;
 }
