@@ -628,16 +628,18 @@ template<class K, class V> struct dictentry;
 
 const int MINSIZE = 8;
 
-template<class K, class V> struct dict_looper {
-    __ss_int pos;
-    int si_used;
-    dictentry<K,V> *entry;
-};
-
 #include "builtin/hash.hpp"
 #include "builtin/compare.hpp"
 
 #define __GC_DICT(K, V) std::unordered_map<K, V, ss_hash<K>, ss_eq<K>, gc_allocator< std::pair<const K, V> > >
+
+template<class K, class V> struct dict_looper {
+    typename __GC_DICT(K, V)::iterator it;
+
+    __ss_int pos;
+    int si_used;
+    dictentry<K,V> *entry;
+};
 
 template <class K, class V> class dict : public pyiter<K> {
 public:
@@ -703,7 +705,15 @@ public:
     typedef K for_in_unit;
     typedef dict_looper<K,V> for_in_loop;
 
-    inline dict_looper<K,V> for_in_init() { dict_looper<K,V> l; l.pos = 0; l.si_used = used; return l; }
+    inline dict_looper<K,V> for_in_init() {
+        dict_looper<K,V> l;
+        l.pos = 0; l.si_used = used;
+
+//        l.it = gcd.begin();
+
+        return l;
+    }
+
     inline bool for_in_has_next(dict_looper<K,V> &l) {
         if (l.si_used != used) {
             l.si_used = -1;
@@ -712,8 +722,15 @@ public:
         int ret = next(&l.pos, &l.entry);
         if (!ret) return false;
         return true;
+
+//        return l.it != gcd.end();
     }
-    inline K for_in_next(dict_looper<K,V> &l) { return l.entry->key; }
+
+    inline K for_in_next(dict_looper<K,V> &l) {
+        return l.entry->key;
+
+//        return (*(l.it++)).first;
+    }
 
 #ifdef __SS_BIND
     dict(PyObject *);
