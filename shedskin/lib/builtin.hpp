@@ -637,7 +637,7 @@ template<class K, class V> struct dict_looper {
 #include "builtin/hash.hpp"
 #include "builtin/compare.hpp"
 
-#define __GC_DICT(K, V) std::unordered_map<K, V, std::hash<K>, std::equal_to<K>, gc_allocator< std::pair<const K, V> > >
+#define __GC_DICT(K, V) std::unordered_map<K, V, ss_hash<K>, ss_eq<K>, gc_allocator< std::pair<const K, V> > >
 
 template <class K, class V> class dict : public pyiter<K> {
 public:
@@ -647,7 +647,7 @@ public:
     dictentry<K,V> *table;
     dictentry<K,V> smalltable[MINSIZE];
 
-    __GC_DICT(K,V) gcd;
+//    __GC_DICT(K,V) gcd;
 
     dict();
     template<class ... Args> dict(int count, Args ... args);
@@ -737,7 +737,7 @@ template<class T> struct set_looper {
     setentry<T> *entry;
 };
 
-#define __GC_SET(T) std::unordered_set<T, std::hash<T>, std::equal_to<T>, gc_allocator<T> >
+#define __GC_SET(T) std::unordered_set<T, ss_hash<T>, ss_eq<T>, gc_allocator<T> >
 
 template<class T> class set : public pyiter<T> {
 public:
@@ -749,7 +749,7 @@ public:
     setentry<T> smalltable[MINSIZE];
     long hash;
 
-    __GC_SET(T) gcs;
+//    __GC_SET(T) gcs;
 
     template<class U> set(U *other, int frozen);
     template<class U> set(U *other);
