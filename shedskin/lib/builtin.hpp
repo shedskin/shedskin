@@ -1,4 +1,4 @@
-/* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2024 Mark Dufour and contributors; License Expat (See LICENSE) */
 
 #ifndef BUILTIN_HPP
 #define BUILTIN_HPP
@@ -124,8 +124,6 @@ using tuple = tuple2<T, T>;
 #define __GC_VECTOR(T) std::vector< T, gc_allocator< T > >
 #define __GC_DEQUE(T) std::deque< T, gc_allocator< T > >
 #define __GC_STRING std::basic_string<char,std::char_traits<char>,gc_allocator<char> >
-#define __GC_SET(T) std::unordered_set<T, std::hash<T>, std::equal_to<T>, gc_allocator<T> >
-#define __GC_DICT(K, V) std::unordered_map<K, V, std::hash<K>, std::equal_to<K>, gc_allocator< std::pair<const K, V> > >
 
 extern __ss_bool True;
 extern __ss_bool False;
@@ -200,6 +198,20 @@ template <class R, class A, class B> class pycall2 : public pyobj {
 public:
     virtual R __call__(A a, B b) = 0;
 };
+
+class __ss_bool {
+public:
+    uint8_t value;
+    inline __ss_int operator+(__ss_bool b);
+    inline __ss_bool operator==(__ss_bool b);
+    inline __ss_bool operator&(__ss_bool b);
+    inline __ss_bool operator|(__ss_bool b);
+    inline __ss_bool operator^(__ss_bool b);
+    inline bool operator!();
+    inline operator bool();
+};
+
+static inline __ss_bool __mbool(bool c) { __ss_bool b; b.value=c?1:0; return b; }
 
 template <class T> class list : public pyseq<T> {
 public:
@@ -622,6 +634,11 @@ template<class K, class V> struct dict_looper {
     dictentry<K,V> *entry;
 };
 
+#include "builtin/hash.hpp"
+#include "builtin/compare.hpp"
+
+#define __GC_DICT(K, V) std::unordered_map<K, V, std::hash<K>, std::equal_to<K>, gc_allocator< std::pair<const K, V> > >
+
 template <class K, class V> class dict : public pyiter<K> {
 public:
     __ss_int fill;
@@ -630,7 +647,7 @@ public:
     dictentry<K,V> *table;
     dictentry<K,V> smalltable[MINSIZE];
 
-//    __GC_DICT(K,V) gcd;
+    __GC_DICT(K,V) gcd;
 
     dict();
     template<class ... Args> dict(int count, Args ... args);
@@ -720,6 +737,8 @@ template<class T> struct set_looper {
     setentry<T> *entry;
 };
 
+#define __GC_SET(T) std::unordered_set<T, std::hash<T>, std::equal_to<T>, gc_allocator<T> >
+
 template<class T> class set : public pyiter<T> {
 public:
     int frozen;
@@ -730,7 +749,7 @@ public:
     setentry<T> smalltable[MINSIZE];
     long hash;
 
-//    __GC_SET(T) gcs;
+    __GC_SET(T) gcs;
 
     template<class U> set(U *other, int frozen);
     template<class U> set(U *other);
@@ -851,18 +870,6 @@ public:
     void insert_clean(T key, __ss_int hash);
     int next(int *pos_ptr, setentry<T> **entry_ptr);
     void resize(int minused);
-};
-
-class __ss_bool {
-public:
-    uint8_t value;
-    inline __ss_int operator+(__ss_bool b);
-    inline __ss_bool operator==(__ss_bool b);
-    inline __ss_bool operator&(__ss_bool b);
-    inline __ss_bool operator|(__ss_bool b);
-    inline __ss_bool operator^(__ss_bool b);
-    inline bool operator!();
-    inline operator bool();
 };
 
 class complex {
@@ -1011,8 +1018,6 @@ public:
     inline str *__str__() { return new str("dict_items"); }
 };
 
-static inline __ss_bool __mbool(bool c) { __ss_bool b; b.value=c?1:0; return b; }
-
 /* builtin function declarations */
 
 template <class T> __iter<T> *___iter(pyiter<T> *p) {
@@ -1095,10 +1100,6 @@ void __ss_exit(int code=0);
 /* slicing */
 
 static void inline slicenr(__ss_int x, __ss_int &l, __ss_int &u, __ss_int &s, __ss_int len);
-
-#include "builtin/hash.hpp"
-#include "builtin/compare.hpp"
-
 
 template<class T> inline int __is_none(T *t) { return !t; }
 template<class T> inline int __is_none(T) { return 0; }
