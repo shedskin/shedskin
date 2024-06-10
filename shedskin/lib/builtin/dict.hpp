@@ -134,78 +134,20 @@ template<class K, class V> __ss_bool dict<K,V>::__gt__(pyobj *p) { return False;
 template<class K, class V> __ss_bool dict<K,V>::__ge__(pyobj *p) { return False; }
 template<class K, class V> __ss_bool dict<K,V>::__le__(pyobj *p) { return False; }
 
-template <class K, class V> int characterize(dict<K,V> *a, dict<K,V> *b, V *pval)
-{
-	int i;
-	int difference_found = 0;
-	K akey;
-	V aval;
-    akey = 0; aval = 0;
-	int cmp;
-
-	for (i = 0; i <= a->mask; i++) {
-		dictentry<K, V> *entry;
-		K thiskey;
-		V thisaval, thisbval;
-		if (a->table[i].use != active) continue;
-
-		thiskey = a->table[i].key;
-		if (difference_found) {
-			cmp = __cmp(akey, thiskey);
-			if (cmp < 0) continue;
-		}
-
-		thisaval = a->table[i].value;
-		entry = b->lookup(thiskey, a->table[i].hash);
-
-		if (entry->use != active) cmp = 1;
-		else {
-			thisbval = entry->value;
-			cmp = __cmp(thisaval, thisbval);
-		}
-
-		if (cmp != 0) {
-			difference_found = 1;
-			akey = thiskey;
-			aval = thisaval;
-		}
-	}
-
-	*pval = aval;
-	return difference_found;
-}
-
-
 template<class K, class V> __ss_bool dict<K,V>::__ge__(dict<K,V> *s) {
-    return __mbool(__cmp__(s) >= 0);
+    throw new NotImplementedError();
 }
 
 template<class K, class V> __ss_bool dict<K,V>::__le__(dict<K,V> *s) {
-    return __mbool(__cmp__(s) <= 0);
+    throw new NotImplementedError();
 }
 
 template<class K, class V> __ss_bool dict<K,V>::__lt__(dict<K,V> *s) {
-    return __mbool(__cmp__(s) < 0);
+    throw new NotImplementedError();
 }
 
 template<class K, class V> __ss_bool dict<K,V>::__gt__(dict<K,V> *s) {
-    return __mbool(__cmp__(s) > 0);
-}
-
-template<class K, class V> __ss_int dict<K,V>::__cmp__(pyobj *p) {
-    dict<K,V> *s = (dict<K,V> *)p;
-	int difference_found;
-	V aval, bval;
-
-    if (this->used < s->used) return -1;
-    else if (this->used > s->used) return 1;
-
-	difference_found = characterize(this, s, &aval);
-	if (!difference_found) return 0;
-
-	characterize(s, this, &bval);
-
-	return __cmp(aval, bval);
+    throw new NotImplementedError();
 }
 
 template <class K, class V> dictentry<K,V>* dict<K,V>::lookup(K key, __ss_int hash) const {

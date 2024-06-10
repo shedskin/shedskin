@@ -686,7 +686,6 @@ public:
     __ss_bool __ge__(dict<K,V> *s);
     __ss_bool __le__(dict<K,V> *s);
 
-    __ss_int __cmp__(pyobj *p);
     V setdefault(K k, V v=0);
 
     __dictiterkeys<K, V> *__iter__() { return new __dictiterkeys<K,V>(this);}
