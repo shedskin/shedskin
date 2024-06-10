@@ -244,6 +244,14 @@ template <class K, class V> V dict<K,V>::__getitem__(K key) {
 		throw new KeyError(repr(key));
 	
 	return entry->value;
+
+    /*
+    typename __GC_DICT(K, V)::iterator it = gcd.find(key);
+    if (it == gcd.end())
+        throw new KeyError(repr(key));
+    else
+        return (*it).second;
+    */
 }
 
 template<class K, class V> void *dict<K,V>::__addtoitem__(K key, V value) {
@@ -267,6 +275,14 @@ template <class K, class V> V dict<K,V>::get(K key) {
         return __none<V>();
 	
 	return entry->value;
+
+    /*
+    typename __GC_DICT(K, V)::iterator it = gcd.find(key);
+    if (it == gcd.end())
+        return __none<V>();
+    else
+        return (*it).second;
+    */
 }
 
 template <class K, class V> V dict<K,V>::get(K key, V d) {
@@ -278,6 +294,15 @@ template <class K, class V> V dict<K,V>::get(K key, V d) {
 		return d;
 	
 	return entry->value;
+
+    /*
+    typename __GC_DICT(K, V)::iterator it = gcd.find(key);
+    if (it == gcd.end())
+        return d;
+    else
+        return (*it).second;
+    */
+
 }
 
 template <class K, class V> V dict<K,V>::setdefault(K key, V value)
