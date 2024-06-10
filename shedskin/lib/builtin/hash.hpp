@@ -28,3 +28,12 @@ template<> inline long hasher(__ss_float v) {
         x = -2;
     return x;
 }
+
+template<class T> class ss_hash {
+    public:
+        long operator()(T t) {
+            return hasher<T>(t);
+        }
+
+};
+
