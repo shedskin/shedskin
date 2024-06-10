@@ -496,6 +496,7 @@ def check_cmake_availability():
 
 def generate_cmakefile(gx: config.GlobalInfo):
     """improved generator using built-in machinery"""
+    assert gx.main_module, "gx.main_module not provided"
     path = gx.main_module.filename
 
     in_source_build = bool(len(path.relative_to(gx.cwd).parts) == 1)
@@ -619,7 +620,7 @@ class CMakeBuilder:
 
     def get_most_recent_test(self):
         """returns name of recently modified test"""
-        max_mtime = 0
+        max_mtime = 0.0
         most_recent_test = None
         for test in self.tests:
             mtime = os.stat(os.path.abspath(test)).st_mtime

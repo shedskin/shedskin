@@ -12,6 +12,12 @@ from . import error
 from . import python
 from . import infer
 
+# type-checking
+from typing import Optional, TYPE_CHECKING
+if TYPE_CHECKING:
+    from . import config
+
+
 logger = logging.getLogger("typestr")
 
 
@@ -19,7 +25,7 @@ class ExtmodError(Exception):
     pass
 
 
-def types_var_types(gx, types, varname):
+def types_var_types(gx: 'config.GlobalInfo', types, varname):
     subtypes = set()
     for t in types:
         if varname not in t[0].vars:
@@ -34,7 +40,7 @@ def types_classes(types):
     return set(t[0] for t in types if isinstance(t[0], python.Class))
 
 
-def unboxable(gx, types):
+def unboxable(gx: 'config.GlobalInfo', types):
     if not isinstance(types, set):
         types = infer.inode(gx, types).types()
     classes = set(t[0] for t in types)
@@ -47,7 +53,7 @@ def unboxable(gx, types):
         return None
 
 
-def singletype(gx, node, type):
+def singletype(gx: 'config.GlobalInfo', node, type):
     types = [t[0] for t in infer.inode(gx, node).types()]
     if len(types) == 1 and isinstance(types[0], type):
         return types[0]
@@ -59,11 +65,11 @@ def singletype2(types, type):
         return ltypes[0][0]
 
 
-def polymorphic_t(gx, types):
+def polymorphic_t(gx: 'config.GlobalInfo', types):
     return polymorphic_cl(gx, (t[0] for t in types))
 
 
-def polymorphic_cl(gx, classes):
+def polymorphic_cl(gx: 'config.GlobalInfo', classes):
     cls = set(cl for cl in classes)
     if (
         len(cls) > 1
@@ -122,12 +128,12 @@ def lowest_common_parents(classes):
 
 
 def nodetypestr(
-    gx,
+    gx: 'config.GlobalInfo',
     node,
     parent=None,
-    cplusplus=True,
-    check_extmod=False,
-    check_ret=False,
+    cplusplus: bool = True,
+    check_extmod: bool = False,
+    check_ret: bool = False,
     var=None,
     mv=None,
 ):  # XXX minimize
@@ -150,16 +156,16 @@ def nodetypestr(
 
 
 def typestr(
-    gx,
+    gx: 'config.GlobalInfo',
     types,
     parent=None,
-    cplusplus=True,
+    cplusplus: bool = True,
     node=None,
-    check_extmod=False,
+    check_extmod: bool = False,
     depth=0,
-    check_ret=False,
+    check_ret: bool = False,
     var=None,
-    tuple_check=False,
+    tuple_check: bool = False,
     mv=None,
 ):
     try:
@@ -196,7 +202,7 @@ def typestr(
     return "[" + ts + "]"
 
 
-def dynamic_variable_error(gx, node, types, conv2):
+def dynamic_variable_error(gx: 'config.GlobalInfo', node, types, conv2):
     if not node.name.startswith("__"):  # XXX startswith
         classes = polymorphic_cl(gx, types_classes(types))
         if (
@@ -236,15 +242,15 @@ def dynamic_variable_error(gx, node, types, conv2):
 
 
 def typestrnew(
-    gx,
+    gx: 'config.GlobalInfo',
     types,
-    cplusplus=True,
+    cplusplus: bool = True,
     node=None,
-    check_extmod=False,
+    check_extmod: bool = False,
     depth=0,
-    check_ret=False,
+    check_ret: bool = False,
     var=None,
-    tuple_check=False,
+    tuple_check: bool = False,
     mv=None,
 ):
     if depth == 10:
@@ -457,7 +463,7 @@ def typestrnew(
     return namespace + ident + sep[0] + ", ".join(subtypes) + sep[1] + ptr
 
 
-def incompatible_assignment_rec(gx, argtypes, formaltypes, depth=0):
+def incompatible_assignment_rec(gx: 'config.GlobalInfo', argtypes, formaltypes, depth=0) -> bool:
     if depth == 10:
         return False
     argclasses = types_classes(argtypes)

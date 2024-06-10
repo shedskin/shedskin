@@ -36,7 +36,7 @@ if TYPE_CHECKING:
 
 
 class CPPNamer:
-    def __init__(self, gx: 'config.GlobalInfo', mv: 'graph.ModuleVisitor'):
+    def __init__(self, gx: 'config.GlobalInfo', gv: 'GenerateVisitor'):
         self.gx = gx
         self.class_names = [cl.ident for cl in self.gx.allclasses]
         self.cpp_keywords = self.gx.cpp_keywords
@@ -47,7 +47,7 @@ class CPPNamer:
             python.Function: self.name_function,
             python.Variable: self.name_variable,
         }
-        self.mv = mv
+        self.gv = gv
 
     def nokeywords(self, name):
         if name in self.cpp_keywords:
@@ -56,7 +56,7 @@ class CPPNamer:
 
     def namespace_class(self, cl, add_cl=""):
         module = cl.mv.module
-        if module.ident != "builtin" and module != self.mv.module and module.name_list:
+        if module.ident != "builtin" and module != self.gv.module and module.name_list:
             return module.full_path() + "::" + add_cl + self.name(cl)
         else:
             return add_cl + self.name(cl)
@@ -92,7 +92,7 @@ class CPPNamer:
 
 
 class GenerateVisitor(ast_utils.BaseNodeVisitor):
-    def __init__(self, gx, module):
+    def __init__(self, gx: 'config.GlobalInfo', module):
         self.gx = gx
         #        self.output_base = module.filename[:-3]
         self.output_base = module.filename.with_suffix("")
