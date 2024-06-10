@@ -89,6 +89,7 @@ template<class K, class V> PyObject *dict<K, V>::__to_py__() {
    PyObject *p = PyDict_New();
    __ss_int pos = 0;
    dictentry<K,V> *entry;
+
    while(next(&pos, &entry)) {
        PyObject *pkey = __to_py(entry->key);
        PyObject *pvalue = __to_py(entry->value);
@@ -96,6 +97,16 @@ template<class K, class V> PyObject *dict<K, V>::__to_py__() {
        Py_DECREF(pkey);
        Py_DECREF(pvalue);
    }
+
+
+   /* for (const auto& [key, value] : gcd) {
+       PyObject *pkey = __to_py(key);
+       PyObject *pvalue = __to_py(value);
+       PyDict_SetItem(p, pkey, pvalue);
+       Py_DECREF(pkey);
+       Py_DECREF(pvalue);
+   } */
+
    return p;
 }
 #endif
@@ -214,7 +225,7 @@ template <class K, class V> void *dict<K,V>::__setitem__(K key, V value)
     if ((used > n_used && fill*3 >= (mask+1)*2))
         resize(used>50000 ? used*2 : used*4);
 
-    //gcd[key] = value;
+//    gcd[key] = value;
 
     return NULL;
 }
