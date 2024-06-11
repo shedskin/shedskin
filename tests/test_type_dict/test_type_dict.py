@@ -104,6 +104,16 @@ def test_dict_fromkeys():
     assert dict.fromkeys([1, 2, 3], "abc") == {1: 'abc', 2: 'abc', 3: 'abc'}
 
 
+def test_pop():
+    d = {-1: 2, 12: 24}
+
+    assert d.pop(-1) == 2
+    assert d.pop(7, 8) == 8
+    assert d.pop(12, 9) == 24
+
+    assert len(d) == 0
+
+
 def test_all():
     test_dict()
     test_dict_get()
@@ -116,6 +126,7 @@ def test_all():
     test_instance_value()
     # test_func_as_value()
     test_dict_fromkeys()
+    test_pop()
 
 
 if __name__ == "__main__":

@@ -672,6 +672,7 @@ public:
     V get(K k);
     V get(K k, V v);
     V pop(K k);
+    V pop(K k, V v);
     tuple2<K, V> *popitem();
     template <class U> void *update(U *other);
     void *update(dict<K, V> *e);
