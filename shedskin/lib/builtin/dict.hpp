@@ -225,7 +225,7 @@ template <class K, class V> void *dict<K,V>::__setitem__(K key, V value)
     if ((used > n_used && fill*3 >= (mask+1)*2))
         resize(used>50000 ? used*2 : used*4);
 
-    //gcd[key] = value;
+//    gcd[key] = value;
 
     return NULL;
 }
@@ -376,6 +376,16 @@ template<class K, class V> V dict<K,V>::pop(K key) {
 	entry->use = dummy;
 	used--;
 	return entry->value;
+
+    /*
+    typename __GC_DICT(K, V)::iterator it = gcd.find(key);
+    if (it == gcd.end())
+        throw new KeyError(repr(key));
+    else {
+        V v = (*it).second;
+        gcd.erase(it);
+        return v;
+    } */
 }
 
 template<class K, class V> V dict<K,V>::pop(K key, V value) {
@@ -403,7 +413,7 @@ template<class K, class V> tuple2<K,V> *dict<K,V>::popitem() {
 	if (entry->use != active) {
 		i = entry->hash;
 		if (i > mask || i < 1)
-			i = 1;	/* skip slot 0 */
+			i = 1;	
 		while ((entry = &table[i])->use != active) {
 			i++;
 			if (i > mask)
@@ -412,8 +422,19 @@ template<class K, class V> tuple2<K,V> *dict<K,V>::popitem() {
 	}
 	entry->use = dummy;
 	used--;
-	table[0].hash = i + 1;  /* next place to start */
+	table[0].hash = i + 1;  
 	return new tuple2<K,V>(2, entry->key, entry->value);
+
+    /*
+    typename __GC_DICT(K, V)::iterator it = gcd.begin();
+    if(it == gcd.end())
+        throw new KeyError(new str("popitem(): dictionary is empty"));
+    else {
+        tuple2<K,V> *t = new tuple2<K,V>(2, (*it).first, (*it).second);
+        gcd.erase(it);
+        return t;
+    }
+    */
 }
 
 /*
