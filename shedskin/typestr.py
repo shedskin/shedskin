@@ -149,6 +149,7 @@ def nodetypestr(
         ts = nodetypestr(gx, node.wopper, None, cplusplus, mv=mv)
         if ts.startswith("dict<"):
             return "dictentry" + ts[4:]
+#            return "__GC_DICT(" + ts[5:-3] + ")::iterator "
     types = gx.merged_inh[node]
     return typestr(
         gx, types, None, cplusplus, node, check_extmod, 0, check_ret, var, mv=mv
