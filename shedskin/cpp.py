@@ -1415,6 +1415,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         else:
             self.visitm(right, " = %s->value" % self.mv.tempcount[node, 6], func)
         self.eol()
+#        self.output(self.mv.tempcount[node, 6] + "++;")
         if ast_utils.is_assign_list_or_tuple(left):
             self.tuple_assign(left, self.mv.tempcount[left], func)
         if ast_utils.is_assign_list_or_tuple(right):
