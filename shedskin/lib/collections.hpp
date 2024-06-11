@@ -241,6 +241,13 @@ public:
         if (entry->use != active)
             return __missing__(key);
         return entry->value;
+
+        /*
+        typename __GC_DICT(K, V)::iterator it = this->gcd.begin();
+        if(it == this->gcd.end())
+            return __missing__(key);
+        return (*it).second;
+        */
     }
 
     V __missing__(K k) {
@@ -263,6 +270,20 @@ public:
                 throw new KeyError(repr(key));
         } else
             entry->value = __add(entry->value, value);
+
+        /*
+        typename __GC_DICT(K, V)::iterator it = this->gcd.begin();
+        if(it == this->gcd.end()) {
+            if(func)
+                this->__setitem__(key, __add(func(), value));
+            else
+                throw new KeyError(repr(key));
+        }
+        else {
+            (*it).second = __add((*it).second, value);
+        }
+        */
+
         return NULL;
     }
 
