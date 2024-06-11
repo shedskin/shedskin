@@ -634,7 +634,7 @@ const int MINSIZE = 8;
 #define __GC_DICT(K, V) std::unordered_map<K, V, ss_hash<K>, ss_eq<K>, gc_allocator< std::pair<const K, V> > >
 
 template<class K, class V> struct dict_looper {
-    typename __GC_DICT(K, V)::iterator it;
+//    typename __GC_DICT(K, V)::iterator it;
 
     __ss_int pos;
     int si_used;
@@ -1017,6 +1017,8 @@ public:
     int len;
     dictentry<K,V>* entry;
 
+//    typename __GC_DICT(K, V)::iterator it;
+
     __dictitervalues<K, V>(dict<K, V> *p);
     V __next__();
 
@@ -1030,6 +1032,8 @@ public:
     int si_used;
     int len;
     dictentry<K,V>* entry;
+
+//    typename __GC_DICT(K, V)::iterator it;
 
     __dictiteritems<K, V>(dict<K, V> *p);
     tuple2<K, V> *__next__();

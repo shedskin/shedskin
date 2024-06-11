@@ -731,16 +731,20 @@ template<class K, class V> K __dictiterkeys<K, V>::__next__() {
     if (!ret) __throw_stop_iteration();
     return entry->key;
 
-/*    if(it == p->gcd.end())
+    /*
+    if(it == p->gcd.end())
         __throw_stop_iteration();
-    else
-        return (*it++).first; */
+
+    return (*it++).first;
+    */
 }
 
 template<class K, class V> __dictitervalues<K, V>::__dictitervalues(dict<K,V> *p) {
     this->p = p;
     this->pos = 0;
     this->si_used = p->used;
+
+//    this->it = p->gcd.begin();
 }
 
 template<class K, class V> V __dictitervalues<K, V>::__next__() {
@@ -751,12 +755,21 @@ template<class K, class V> V __dictitervalues<K, V>::__next__() {
     int ret = p->next(&pos, &entry);
     if (!ret) __throw_stop_iteration();
     return entry->value;
+
+    /*
+    if(it == p->gcd.end())
+        __throw_stop_iteration();
+
+    return (*it++).second;
+    */
 }
 
 template<class K, class V> __dictiteritems<K, V>::__dictiteritems(dict<K,V> *p) {
     this->p = p;
     this->pos = 0;
     this->si_used = p->used;
+
+    //this->it = p->gcd.begin();
 }
 
 template<class K, class V> tuple2<K, V> *__dictiteritems<K, V>::__next__() {
@@ -767,6 +780,15 @@ template<class K, class V> tuple2<K, V> *__dictiteritems<K, V>::__next__() {
     int ret = p->next(&pos, &entry);
     if (!ret) __throw_stop_iteration();
     return new tuple2<K, V>(2, entry->key, entry->value);
+
+    /*
+    if(it == p->gcd.end())
+        __throw_stop_iteration();
+
+    tuple2<K, V> *t = new tuple2<K, V>(2, (*it).first, (*it).second);
+    it++;
+    return t;
+    */
 }
 
 /* dict.fromkeys */
