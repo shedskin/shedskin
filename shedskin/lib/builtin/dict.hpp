@@ -378,6 +378,20 @@ template<class K, class V> V dict<K,V>::pop(K key) {
 	return entry->value;
 }
 
+template<class K, class V> V dict<K,V>::pop(K key, V value) {
+	__ss_int hash = (__ss_int)hasher<K>(key);
+    dictentry<K,V> *entry;
+
+    entry = lookup(key, hash);
+
+	if (entry->use != active)
+		return value;
+
+	entry->use = dummy;
+	used--;
+	return entry->value;
+}
+
 template<class K, class V> tuple2<K,V> *dict<K,V>::popitem() {
     int i = 0;
 	dictentry<K,V> *entry;
