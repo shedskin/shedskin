@@ -225,7 +225,7 @@ template <class K, class V> void *dict<K,V>::__setitem__(K key, V value)
     if ((used > n_used && fill*3 >= (mask+1)*2))
         resize(used>50000 ? used*2 : used*4);
 
-//    gcd[key] = value;
+    //gcd[key] = value;
 
     return NULL;
 }
@@ -514,7 +514,7 @@ template<class K, class V> str *dict<K,V>::__repr__() {
     /*
     for (const auto& [key, value] : gcd) {
         *r += repr(key)->c_str();
-        *r += ":";
+        *r += ": ";
         *r += repr(value)->c_str();
         if(--i > 0)
             *r += ", ";
@@ -528,7 +528,7 @@ template<class K, class V> str *dict<K,V>::__repr__() {
 template<class K, class V> __ss_int dict<K,V>::__len__() {
     return used;
 
-    //return gcd.size();
+//    return gcd.size();
 }
 
 template <class K, class V> __ss_bool dict<K,V>::__contains__(K key) {
@@ -594,10 +594,6 @@ template <class K, class V> void *dict<K,V>::update(dict<K,V>* other)
 	int i;
 	dictentry<K,V> *entry;
 
-	/* Do one big resize at the start, rather than
-	 * incrementally resizing as we insert new keys.  Expect
-	 * that there will be no (or few) overlapping keys.
-	 */
 	if ((fill + other->used)*3 >= (mask+1)*2)
 	   resize((used + other->used)*2);
 	for (i = 0; i <= other->mask; i++) {
@@ -606,6 +602,10 @@ template <class K, class V> void *dict<K,V>::update(dict<K,V>* other)
 			insert_key(entry->key, entry->value, entry->hash);
 		}
 	}
+
+//   for (const auto& [key, value] : other->gcd)
+//       gcd[key] = value;
+
     return NULL;
 }
 
@@ -623,12 +623,14 @@ template <class K, class V> template<class U> void *dict<K,V>::update(U *iter) {
 template<class K, class V> dict<K,V> *dict<K,V>::copy() {
     dict<K,V> *c = new dict<K,V>;
     *c = *this;
+//    c->gcd = gcd;
     return c;
 }
 
 template<class K, class V> dict<K,V> *dict<K,V>::__copy__() {
     dict<K,V> *c = new dict<K,V>;
     *c = *this;
+//    c->gcd = gcd;
     return c;
 }
 
