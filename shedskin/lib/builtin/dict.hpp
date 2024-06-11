@@ -251,7 +251,7 @@ template <class K, class V> V dict<K,V>::__getitem__(K key) {
         throw new KeyError(repr(key));
     else
         return (*it).second;
-    */
+        */
 }
 
 template<class K, class V> void *dict<K,V>::__addtoitem__(K key, V value) {
@@ -263,6 +263,14 @@ template<class K, class V> void *dict<K,V>::__addtoitem__(K key, V value) {
 		throw new KeyError(repr(key));
 
     entry->value = __add(entry->value, value);
+
+    /* typename __GC_DICT(K, V)::iterator it = gcd.find(key);
+    if (it == gcd.end())
+        throw new KeyError(repr(key));
+    else
+        (*it).second = __add((*it).second, value);
+        */
+
     return NULL;
 }
 
@@ -316,11 +324,29 @@ template <class K, class V> V dict<K,V>::setdefault(K key, V value)
 		__setitem__(key, value);
 
 	return entry->value;
+
+    /* typename __GC_DICT(K, V)::iterator it = gcd.find(key);
+    if (it == gcd.end()) {
+        gcd[key] = value;
+        return value;
+    } else {
+        return (*it).second;
+    }
+    */
 }
 
 template <class K, class V> void *dict<K,V>::__delitem__(K key) {
     if (!do_discard(key)) 
         throw new KeyError(repr(key));
+
+    /*
+    typename __GC_DICT(K, V)::iterator it = gcd.find(key);
+    if (it == gcd.end())
+        throw new KeyError(repr(key));
+    else
+        gcd.erase(it);
+    */
+
     return NULL;
 }
 
@@ -518,7 +544,8 @@ template<class K, class V> str *dict<K,V>::__repr__() {
         *r += repr(value)->c_str();
         if(--i > 0)
             *r += ", ";
-    } */
+    }
+    */
 
     *r += "}";
     return r;
@@ -554,6 +581,9 @@ template <class K, class V> __ss_bool dict<K,V>::has_key(K key) {
 
 template <class K, class V> void *dict<K,V>::clear()
 {
+//    gcd.clear();
+ //   return NULL;
+
 	dictentry<K,V> *entry, *table;
 	int table_is_malloced;
 	size_t fill;
