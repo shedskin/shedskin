@@ -121,6 +121,7 @@ using tuple = tuple2<T, T>;
 
 /* STL types */
 
+// TODO switch to template aliases
 #define __GC_VECTOR(T) std::vector< T, gc_allocator< T > >
 #define __GC_DEQUE(T) std::deque< T, gc_allocator< T > >
 #define __GC_STRING std::basic_string<char,std::char_traits<char>,gc_allocator<char> >
@@ -631,14 +632,11 @@ const int MINSIZE = 8;
 #include "builtin/hash.hpp"
 #include "builtin/compare.hpp"
 
-#define __GC_DICT(K, V) std::unordered_map<K, V, ss_hash<K>, ss_eq<K>, gc_allocator< std::pair<K const, V> > >
+template <class K, class V>
+using __GC_DICT = std::unordered_map<K, V, ss_hash<K>, ss_eq<K>, gc_allocator< std::pair<K const, V> > >;
 
 template<class K, class V> struct dict_looper {
-//    typename __GC_DICT(K, V)::iterator it;
-
-    __ss_int pos;
-    int si_used;
-    dictentry<K,V> *entry;
+    typename __GC_DICT<K, V>::iterator it;
 };
 
 template <class K, class V> class dict : public pyiter<K> {
@@ -649,14 +647,12 @@ public:
     dictentry<K,V> *table;
     dictentry<K,V> smalltable[MINSIZE];
 
-//    __GC_DICT(K,V) gcd;
+    __GC_DICT<K,V> gcd;
 
     dict();
     template<class ... Args> dict(int count, Args ... args);
     template<class U> dict(U *other);
     dict(dict<K, V> *p);
-
-    dict<K,V>& operator=(const dict<K,V>& other);
 
     void *__setitem__(K k, V v);
     V __getitem__(K k);
@@ -708,42 +704,22 @@ public:
 
     inline dict_looper<K,V> for_in_init() {
         dict_looper<K,V> l;
-        l.pos = 0; l.si_used = used;
-
-//        l.it = gcd.begin();
-
+        l.it = gcd.begin();
         return l;
     }
 
     inline bool for_in_has_next(dict_looper<K,V> &l) {
-        if (l.si_used != used) {
-            l.si_used = -1;
-            __throw_dict_changed();
-        }
-        int ret = next(&l.pos, &l.entry);
-        if (!ret) return false;
-        return true;
-
-//        return l.it != gcd.end();
+        return l.it != gcd.end();
     }
 
     inline K for_in_next(dict_looper<K,V> &l) {
-        return l.entry->key;
-
-//        return (*(l.it++)).first;
+        return (*(l.it++)).first;
     }
 
 #ifdef __SS_BIND
     dict(PyObject *);
     PyObject *__to_py__();
 #endif
-
-    // used internally
-    dictentry<K,V>* lookup(K key, __ss_int hash) const;
-    void insert_key(K key, V value, __ss_int hash);
-    void insert_clean(K key, V value, __ss_int hash);
-    int next(__ss_int *pos_ptr, dictentry<K,V> **entry_ptr);
-    void resize(int minused);
 };
 
 template<class T> struct setentry;
@@ -996,12 +972,8 @@ public:
 template <class K, class V> class __dictiterkeys : public __iter<K> {
 public:
     dict<K,V> *p;
-    __ss_int pos;
-    int si_used;
-    int len;
-    dictentry<K,V>* entry;
 
-//    typename __GC_DICT(K, V)::iterator it;
+    typename __GC_DICT<K, V>::iterator it;
 
     __dictiterkeys<K, V>(dict<K, V> *p);
     K __next__();
@@ -1012,12 +984,8 @@ public:
 template <class K, class V> class __dictitervalues : public __iter<V> {
 public:
     dict<K,V> *p;
-    __ss_int pos;
-    int si_used;
-    int len;
-    dictentry<K,V>* entry;
 
-//    typename __GC_DICT(K, V)::iterator it;
+    typename __GC_DICT<K, V>::iterator it;
 
     __dictitervalues<K, V>(dict<K, V> *p);
     V __next__();
@@ -1028,12 +996,8 @@ public:
 template <class K, class V> class __dictiteritems : public __iter<tuple2<K, V> *> {
 public:
     dict<K,V> *p;
-    __ss_int pos;
-    int si_used;
-    int len;
-    dictentry<K,V>* entry;
 
-//    typename __GC_DICT(K, V)::iterator it;
+    typename __GC_DICT<K, V>::iterator it;
 
     __dictiteritems<K, V>(dict<K, V> *p);
     tuple2<K, V> *__next__();
