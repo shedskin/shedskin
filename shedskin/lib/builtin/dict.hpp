@@ -568,7 +568,7 @@ template<class K, class V> str *dict<K,V>::__repr__() {
         *r += repr(entry->key)->c_str();
         *r += ": ";
         *r += repr(entry->value)->c_str();
-        if( i > 0 )
+        if( --i > 0 )
             *r += ", ";
     }
 
