@@ -122,10 +122,9 @@ template <class K, class V> dict<K,V>& dict<K,V>::operator=(const dict<K,V>& oth
 template<class K, class V> __ss_bool dict<K,V>::__eq__(pyobj *p) {
     dict<K,V> *b = (dict<K,V> *)p;
 
-    //return __mbool(gcd == b->gcd);
-
     if(b->__len__() != this->__len__())
         return False;
+
     __ss_int pos = 0;
     dictentry<K,V> *entry;
     while (next(&pos, &entry)) {
@@ -136,6 +135,20 @@ template<class K, class V> __ss_bool dict<K,V>::__eq__(pyobj *p) {
         if(!__eq(entry->value, entryb->value))
             return False;
     }
+
+    /*
+    // TODO why can't we just use unordered_map operator==
+    typename __GC_DICT(K, V)::iterator it;
+
+    for (const auto& [key, value] : gcd) {
+        it = b->gcd.find(key);
+        if(it == b->gcd.end())
+            return False;
+        else if(__ne((*it).second, value))
+            return False;
+    }
+    */
+
     return True;
 }
 
