@@ -5,6 +5,8 @@ from functools import reduce
 # increase the max number of recursive calls
 sys.setrecursionlimit(10000) # my default is 1000, increasing too much may cause a seg fault
 
+
+
 class Vector(object):
     """
     class Vector
@@ -144,7 +146,8 @@ class Vertex(object):
 
     def __repr__(self):
         return repr(self.pos)
-                          
+
+
 class Plane(object):
     """
     class Plane
@@ -157,6 +160,11 @@ class Plane(object):
     point is on the plane.
     """
     EPSILON = 1.e-5
+
+    COPLANAR = 0 # all the vertices are within EPSILON distance from plane
+    FRONT = 1 # all the vertices are in front of the plane
+    BACK = 2 # all the vertices are at the back of the plane
+    SPANNING = 3 # some vertices are in front, some in the back
 
     def __init__(self, normal, w):
         self.normal = normal
@@ -172,7 +180,20 @@ class Plane(object):
 
     def __repr__(self):
         return 'normal: {0} w: {1}'.format(self.normal, self.w)
-    
+
+    def vertexLocation(self, polygon, i):
+        t = self.normal.dot(polygon.vertices[i].pos) - self.w
+
+        loc = -1
+        if t < -Plane.EPSILON:
+            loc = Plane.BACK
+        elif t > Plane.EPSILON:
+            loc = Plane.FRONT
+        else:
+            loc = Plane.COPLANAR
+
+        return loc
+
     def splitPolygon(self, polygon, coplanarFront, coplanarBack, front, back):
         """
         Split `polygon` by this plane if needed, then put the polygon or polygon
@@ -181,41 +202,31 @@ class Plane(object):
         respect to this plane. Polygons in front or in back of this plane go into
         either `front` or `back`
         """
-        COPLANAR = 0 # all the vertices are within EPSILON distance from plane
-        FRONT = 1 # all the vertices are in front of the plane
-        BACK = 2 # all the vertices are at the back of the plane
-        SPANNING = 3 # some vertices are in front, some in the back
 
         # Classify each point as well as the entire polygon into one of the above
         # four classes.
-        polygonType = 0
-        vertexLocs = []
-        
         numVertices = len(polygon.vertices)
+
+        polygonType = 0
         for i in range(numVertices):
-            t = self.normal.dot(polygon.vertices[i].pos) - self.w
-            loc = -1
-            if t < -Plane.EPSILON: 
-                loc = BACK
-            elif t > Plane.EPSILON: 
-                loc = FRONT
-            else: 
-                loc = COPLANAR
+            loc = self.vertexLocation(polygon, i)
             polygonType |= loc
-            vertexLocs.append(loc)
-    
+
         # Put the polygon in the correct list, splitting it when necessary.
-        if polygonType == COPLANAR:
+        if polygonType == Plane.COPLANAR:
             normalDotPlaneNormal = self.normal.dot(polygon.plane.normal)
             if normalDotPlaneNormal > 0:
                 coplanarFront.append(polygon)
             else:
                 coplanarBack.append(polygon)
-        elif polygonType == FRONT:
+        elif polygonType == Plane.FRONT:
             front.append(polygon)
-        elif polygonType == BACK:
+        elif polygonType == Plane.BACK:
             back.append(polygon)
-        elif polygonType == SPANNING:
+        elif polygonType == Plane.SPANNING:
+            vertexLocs = []
+            for i in range(numVertices):
+                vertexLocs.append(self.vertexLocation(polygon, i))
             f = []
             b = []
             for i in range(numVertices):
@@ -224,14 +235,14 @@ class Plane(object):
                 tj = vertexLocs[j]
                 vi = polygon.vertices[i]
                 vj = polygon.vertices[j]
-                if ti != BACK: 
+                if ti != Plane.BACK:
                     f.append(vi)
-                if ti != FRONT:
-                    if ti != BACK: 
+                if ti != Plane.FRONT:
+                    if ti != Plane.BACK:
                         b.append(vi.clone())
                     else:
                         b.append(vi)
-                if (ti | tj) == SPANNING:
+                if (ti | tj) == Plane.SPANNING:
                     # interpolation weight at the intersection point
                     t = (self.w - self.normal.dot(vi.pos)) / self.normal.dot(vj.pos.minus(vi.pos))
                     # intersection point on the plane
