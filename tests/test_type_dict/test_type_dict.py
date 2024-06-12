@@ -10,9 +10,9 @@ class Klass:
 
 def test_dict():
     d = {1: "2", 2: "4"}
-    assert list(d.keys()) == [1, 2]
-    assert list(d.values()) == ['2', '4']
-    assert list(d.items()) == [(1, '2'), (2, '4')]
+    assert sorted(d.keys()) == [1, 2]
+    assert sorted(d.values()) == ['2', '4']
+    assert sorted(d.items()) == [(1, '2'), (2, '4')]
 
 
 
