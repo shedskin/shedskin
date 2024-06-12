@@ -93,10 +93,10 @@ template<class K, class V> __ss_bool dict<K,V>::__eq__(pyobj *p) {
 }
 
 /* suppress -Wvirtual-overloaded warnings TODO better to always use pyobj *? */
-template<class K, class V> __ss_bool dict<K,V>::__lt__(pyobj *p) { return False; }
-template<class K, class V> __ss_bool dict<K,V>::__gt__(pyobj *p) { return False; }
-template<class K, class V> __ss_bool dict<K,V>::__ge__(pyobj *p) { return False; }
-template<class K, class V> __ss_bool dict<K,V>::__le__(pyobj *p) { return False; }
+template<class K, class V> __ss_bool dict<K,V>::__lt__(pyobj *) { return False; }
+template<class K, class V> __ss_bool dict<K,V>::__gt__(pyobj *) { return False; }
+template<class K, class V> __ss_bool dict<K,V>::__ge__(pyobj *) { return False; }
+template<class K, class V> __ss_bool dict<K,V>::__le__(pyobj *) { return False; }
 
 template<class K, class V> __ss_bool dict<K,V>::__ge__(dict<K,V> *s) {
     throw new NotImplementedError();
@@ -214,7 +214,6 @@ template<class K, class V> tuple2<K,V> *dict<K,V>::popitem() {
 
 template<class K, class V> str *dict<K,V>::__repr__() {
     str *r = new str("{");
-    dictentry<K,V> *entry;
     int i = __len__();
 
     for (const auto& [key, value] : gcd) {
