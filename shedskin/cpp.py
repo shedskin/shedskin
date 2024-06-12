@@ -1399,27 +1399,23 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.start()
         if left in self.mv.tempcount:  # XXX not for zip, enum..?
             self.visitm(
-                "%s = %s->key" % (self.mv.tempcount[left], self.mv.tempcount[node, 6]),
-#                "%s = (*%s).first" % (self.mv.tempcount[left], self.mv.tempcount[node, 6]),
+                "%s = (*%s).first" % (self.mv.tempcount[left], self.mv.tempcount[node, 6]),
                 func,
             )
         else:
-            self.visitm(left, " = %s->key" % self.mv.tempcount[node, 6], func)
-#            self.visitm(left, " = (*%s).first" % self.mv.tempcount[node, 6], func)
+            self.visitm(left, " = (*%s).first" % self.mv.tempcount[node, 6], func)
         self.eol()
         self.start()
         if right in self.mv.tempcount:
             self.visitm(
-                "%s = %s->value"
-#                "%s = (*%s).second"
+                "%s = (*%s).second"
                 % (self.mv.tempcount[right], self.mv.tempcount[node, 6]),
                 func,
             )
         else:
-            self.visitm(right, " = %s->value" % self.mv.tempcount[node, 6], func)
-#            self.visitm(right, " = (*%s).second" % self.mv.tempcount[node, 6], func)
+            self.visitm(right, " = (*%s).second" % self.mv.tempcount[node, 6], func)
         self.eol()
-#        self.output(self.mv.tempcount[node, 6] + "++;")
+        self.output(self.mv.tempcount[node, 6] + "++;")
         if ast_utils.is_assign_list_or_tuple(left):
             self.tuple_assign(left, self.mv.tempcount[left], func)
         if ast_utils.is_assign_list_or_tuple(right):
