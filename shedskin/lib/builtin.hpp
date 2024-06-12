@@ -631,7 +631,7 @@ const int MINSIZE = 8;
 #include "builtin/hash.hpp"
 #include "builtin/compare.hpp"
 
-#define __GC_DICT(K, V) std::unordered_map<K, V, ss_hash<K>, ss_eq<K>, gc_allocator< std::pair<const K, V> > >
+#define __GC_DICT(K, V) std::unordered_map<K, V, ss_hash<K>, ss_eq<K>, gc_allocator< std::pair<K const, V> > >
 
 template<class K, class V> struct dict_looper {
 //    typename __GC_DICT(K, V)::iterator it;
