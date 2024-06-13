@@ -295,6 +295,7 @@ template<class K, class V> dict<K,V> *dict<K,V>::__deepcopy__(dict<void *, pyobj
 /* dictiterkeys/values/items */
 
 template<class K, class V> __dictiterkeys<K, V>::__dictiterkeys(dict<K,V> *d) {
+    this->p = d;
     this->it = d->gcd.begin();
 }
 
@@ -306,6 +307,7 @@ template<class K, class V> K __dictiterkeys<K, V>::__next__() {
 }
 
 template<class K, class V> __dictitervalues<K, V>::__dictitervalues(dict<K,V> *d) {
+    this->p = d;
     this->it = d->gcd.begin();
 }
 
@@ -317,6 +319,7 @@ template<class K, class V> V __dictitervalues<K, V>::__next__() {
 }
 
 template<class K, class V> __dictiteritems<K, V>::__dictiteritems(dict<K,V> *d) {
+    this->p = d;
     this->it = d->gcd.begin();
 }
 
