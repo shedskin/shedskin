@@ -127,7 +127,7 @@ add_subdirectory(astar) # ext
 add_subdirectory(bh)
 add_subdirectory(block)
 add_subdirectory(brainfuck)
-#add_subdirectory(c64) works locally, fix in CI!
+add_subdirectory(c64)
 add_subdirectory(chaos)
 add_subdirectory(chess)
 add_subdirectory(chull)
@@ -198,7 +198,7 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     add_subdirectory(webserver)
 #    add_subdirectory(msp_ss) # requires serial
 #    add_subdirectory(rsync) # requires hashlib (openssl)
-    add_subdirectory(hq2x) # check windows issue
 #    add_subdirectory(sha) # requires hashlib (openssl)
 endif()
+add_subdirectory(hq2x)
 add_subdirectory(yopyra)
