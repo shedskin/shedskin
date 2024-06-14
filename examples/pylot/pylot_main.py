@@ -32,10 +32,9 @@ WIDTH = 640
 BLOCKS_WIDE = 40
 BLOCKS_TALL = 40
 
-q_in = multiprocessing.Queue()
-q_out = multiprocessing.Queue()
 
-def worker():
+
+def worker(q_in, q_out):
     geometry = SimpleGeometry.getGeometry(size=WIDTH, which=2)
     world = SimpleGeometry.getWorld(geometry)
     camera = SimpleGeometry.getCamera(world)
@@ -60,7 +59,7 @@ def imageFromBlock(r, pixels):
     return Image.frombytes('RGB', (w, h), pixels)
 
 
-def main():
+def main(q_in, q_out):
     screen = (WIDTH, WIDTH)
     pygame.init()
     surface = pygame.display.set_mode(screen)
@@ -68,7 +67,7 @@ def main():
     drawsurf.set_colorkey((0, 0, 0))
 
 
-    processes = [multiprocessing.Process(target=worker) for i in range(8)]
+    processes = [multiprocessing.Process(target=worker, args=(q_in, q_out)) for i in range(8)]
     for p in processes:
         p.start()
 
@@ -121,4 +120,9 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    multiprocessing.set_start_method('spawn')
+
+    q_in = multiprocessing.Queue()
+    q_out = multiprocessing.Queue()
+
+    main(q_in, q_out)
