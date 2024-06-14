@@ -127,7 +127,7 @@ add_subdirectory(astar) # ext
 add_subdirectory(bh)
 add_subdirectory(block)
 add_subdirectory(brainfuck)
-add_subdirectory(c64)
+#add_subdirectory(c64) TODO
 add_subdirectory(chaos)
 add_subdirectory(chess)
 add_subdirectory(chull)
