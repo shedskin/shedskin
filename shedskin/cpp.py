@@ -1720,12 +1720,29 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def visit_Global(self, node, func=None):
         pass
 
-    def visit_If(self, node, func=None, else_if=False):
-        self.start()
-        if else_if:
-            self.append("else if (")
-        else:
+    def visit_If(self, node, func=None, else_if=0, root_if=None):
+        # break up long if-elif-elif.. chains (MSVC error C1061, c64/hq2x examples)
+        root_if = root_if or node
+        if else_if == 0:
+            if root_if in self.mv.tempcount:
+                self.output(self.mv.tempcount[root_if] + ' = (__ss_int)1;');
+            self.start()
             self.append("if (")
+        else:
+            if root_if in self.mv.tempcount and else_if % 100 == 0:
+                self.output('else')
+                self.output('    ' + self.mv.tempcount[root_if] + ' = (__ss_int)0;');
+                if else_if > 100:
+                    self.output('}')
+                self.output('if(!' + self.mv.tempcount[root_if] + ') {')
+                self.output('    ' + self.mv.tempcount[root_if] + ' = (__ss_int)1;');
+                self.start()
+                self.append("if (")
+            else:
+                self.start()
+                self.append("else if (")
+
+        # test condition, body
         self.bool_test(node.test, func)
         self.print(self.line + ") {")
         self.indent()
@@ -1736,7 +1753,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         if node.orelse:
             if len(node.orelse) == 1 and isinstance(node.orelse[0], ast.If):
-                self.visit_If(node.orelse[0], func, True)
+                self.visit_If(node.orelse[0], func, else_if+1, root_if)
             else:
                 self.output("else {")
                 self.indent()
@@ -1744,6 +1761,11 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     self.visit(child, func)
                 self.deindent()
                 self.output("}")
+
+                if root_if in self.mv.tempcount:
+                    self.output("}")
+        elif root_if in self.mv.tempcount:
+            self.output("}")
 
     def visit_IfExp(self, node, func=None):
         types = self.mergeinh[node]
