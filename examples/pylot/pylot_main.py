@@ -17,14 +17,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Foobar.  If not, see <http://www.gnu.org/licenses/>.import math
 
+import multiprocessing
+import queue
 import random
 import time
 
 import pygame
 
 import pylot
-from pylot.Pool import ThreadedQueueProcessor
-#from pylot.Utils import *
 from pylot import SimpleGeometry
 print(SimpleGeometry.__file__)
 
@@ -32,14 +32,16 @@ WIDTH = 640
 BLOCKS_WIDE = 40
 BLOCKS_TALL = 40
 
+q_in = multiprocessing.Queue()
+q_out = multiprocessing.Queue()
 
-class CameraHandler(object):
-  def __init__(self, camera):
-    self.camera = camera
+def worker():
+    geometry = SimpleGeometry.getGeometry(size=WIDTH, which=2)
+    world = SimpleGeometry.getWorld(geometry)
+    camera = SimpleGeometry.getCamera(world)
 
-  def handle(self, job):
-    realJob, debugFlag = job
-    return self.camera.runPixelRange(realJob)
+    while True:
+        q_out.put(camera.runPixelRange(q_in.get()))
 
 
 def getBlock(i, j, BLOCKS_WIDE, BLOCKS_TALL):
@@ -65,22 +67,20 @@ def main():
     drawsurf = pygame.Surface(screen).convert()
     drawsurf.set_colorkey((0, 0, 0))
 
-    geometry = SimpleGeometry.getGeometry(size=WIDTH, which=2)
-    world = SimpleGeometry.getWorld(geometry)
-    camera = SimpleGeometry.getCamera(world)
 
-    processor = ThreadedQueueProcessor(CameraHandler(camera), 8, use_processes=True)
+    processes = [multiprocessing.Process(target=worker) for i in range(8)]
+    for p in processes:
+        p.start()
 
     jobs = []
     for i in range(BLOCKS_WIDE):
         for j in range(BLOCKS_TALL):
-            jobs.append((getBlock(i, j, BLOCKS_WIDE, BLOCKS_TALL), False))
+            jobs.append(getBlock(i, j, BLOCKS_WIDE, BLOCKS_TALL))
     random.shuffle(jobs)
+    for job in jobs:
+        q_in.put(job)
 
     startTime = time.time()
-
-    for j in jobs:
-        processor.put(j)
 
     count = BLOCKS_WIDE * BLOCKS_TALL
 
@@ -96,10 +96,12 @@ def main():
             if event.type is pygame.QUIT:
                 ingame = False
 
-        gotData = False
-        block = processor.get(False)
-        while block:
-            gotData = True
+        while True:
+            try:
+                block = q_out.get(False)
+            except queue.Empty:
+                break
+
             count -= 1
             r, pixels = block
             (x, _), (y, _) = r
@@ -112,11 +114,10 @@ def main():
                 print("That took %.3f seconds." % (time.time() - startTime))
                 break
 
-            block = processor.get(False)
-
         clock.tick(60)
 
-    processor.terminate()
+    for p in processes:
+        p.terminate()
 
 
 if __name__ == '__main__':
