@@ -732,6 +732,8 @@ template<class T> struct set_looper {
     int pos;
     int si_used;
     setentry<T> *entry;
+
+    typename __GC_SET<T>::iterator it;
 };
 
 template<class T> class set : public pyiter<T> {
@@ -849,6 +851,22 @@ public:
         return true;
     }
     inline T for_in_next(set_looper<T> &l) { return l.entry->key; }
+
+    /*
+    inline set_looper<T> for_in_init() {
+        set_looper<T> l;
+        l.it = gcs.begin();
+        return l;
+    }
+
+    inline bool for_in_has_next(set_looper<T> &l) {
+        return l.it != gcs.end();
+    }
+
+    inline T for_in_next(set_looper<T> &l) {
+        return *(l.it++);
+    }
+    */
 
 #ifdef __SS_BIND
     set(PyObject *);
