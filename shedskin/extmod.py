@@ -318,9 +318,10 @@ class ExtensionModule:
 
             write("PyObject *%s::__to_py__() {" % self.gv.cpp_name(cl))
             write("    PyObject *p;")
-            write("    if(__ss_proxy->has_key(this))")
+            write("    if(__ss_proxy->has_key(this)) {")
             write("        p = (PyObject *)(__ss_proxy->__getitem__(this));")
-            write("    else {")
+            write("        Py_INCREF(p);")
+            write("    } else {")
             write(
                 "        %sObject *self = (%sObject *)(%sObjectType.tp_alloc(&%sObjectType, 0));"
                 % (4 * (clname(cl),))
@@ -329,7 +330,6 @@ class ExtensionModule:
             write("        __ss_proxy->__setitem__(self->__ss_object, self);")
             write("        p = (PyObject *)self;")
             write("    }")
-            write("    Py_INCREF(p);")
             write("    return p;")
             write("}\n")
 
