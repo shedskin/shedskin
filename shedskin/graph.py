@@ -167,7 +167,7 @@ def is_property_setter(dec) -> bool:
 
 # --- module visitor; analyze program, build constraint graph
 class ModuleVisitor(ast_utils.BaseNodeVisitor):
-    def __init__(self, module, gx: 'config.GlobalInfo'):
+    def __init__(self, module: python.Module, gx: 'config.GlobalInfo'):
         ast_utils.BaseNodeVisitor.__init__(self)
         self.module = module
         self.gx = gx
