@@ -639,6 +639,10 @@ template<class K, class V> struct dict_looper {
     typename __GC_DICT<K, V>::iterator it;
 };
 
+template <class T>
+using __GC_SET = std::unordered_set<T, ss_hash<T>, ss_eq<T>, gc_allocator< T > >;
+
+
 template <class K, class V> class dict : public pyiter<K> {
 public:
     __ss_int fill;
@@ -730,8 +734,6 @@ template<class T> struct set_looper {
     setentry<T> *entry;
 };
 
-#define __GC_SET(T) std::unordered_set<T, ss_hash<T>, ss_eq<T>, gc_allocator<T> >
-
 template<class T> class set : public pyiter<T> {
 public:
     int frozen;
@@ -742,7 +744,7 @@ public:
     setentry<T> smalltable[MINSIZE];
     long hash;
 
-//    __GC_SET(T) gcs;
+//    __GC_SET<T> gcs;
 
     template<class U> set(U *other, int frozen);
     template<class U> set(U *other);

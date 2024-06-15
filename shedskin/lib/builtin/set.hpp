@@ -232,6 +232,9 @@ template <class T> void *set<T>::add(T key)
     insert_key(key, hash);
     if ((used > n_used && fill*3 >= (mask+1)*2))
         resize(used>50000 ? used*2 : used*4);
+
+    //gcs.insert(key);
+
     return NULL;
 }
 
@@ -448,6 +451,18 @@ template<class T> str *set<T>::__repr__() {
            r->unit += ", ";
         --rest;
     }
+
+
+    /*
+    typename __GC_SET<T>::iterator it;
+    for(it = gcs.begin(); it != gcs.end(); it++) {
+        r->unit += repr(*it)->unit;
+        if(rest)
+           r->unit += ", ";
+        --rest;
+    }
+    */
+
     if(this->frozen)
         r->unit += "})";
     else
