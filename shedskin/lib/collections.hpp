@@ -235,12 +235,10 @@ public:
     }
 
     V __getitem__(K key) {
-        __ss_int hash = (__ss_int)hasher<K>(key);
-        dictentry<K, V> *entry;
-        entry = this->lookup(key, hash);
-        if (entry->use != active)
+        typename __GC_DICT<K, V>::iterator it = this->gcd.find(key);
+        if(it == this->gcd.end())
             return __missing__(key);
-        return entry->value;
+        return (*it).second;
     }
 
     V __missing__(K k) {
@@ -252,17 +250,18 @@ public:
         throw new KeyError(repr(k));
     }
 
-    void *__addtoitem__(K key, V value) { /* XXX */
-        __ss_int hash = (__ss_int)hasher<K>(key);
-        dictentry<K, V> *entry;
-        entry = this->lookup(key, hash);
-        if (entry->use != active) {
+    void *__addtoitem__(K key, V value) {
+        typename __GC_DICT<K, V>::iterator it = this->gcd.find(key);
+        if(it == this->gcd.end()) {
             if(func)
                 this->__setitem__(key, __add(func(), value));
             else
                 throw new KeyError(repr(key));
-        } else
-            entry->value = __add(entry->value, value);
+        }
+        else {
+            (*it).second = __add((*it).second, value);
+        }
+
         return NULL;
     }
 

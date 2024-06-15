@@ -153,3 +153,12 @@ public:
     cpp_cmp_key_rev(hork a) { key = a; }
     __ss_int operator()(T a, T b) const { return __cmp(key(a), key(b)) == 1; }
 };
+
+template<class T> class ss_eq {
+    public:
+        bool operator()(const T a, const T b) const {
+            return __eq<T>(a, b);
+        }
+
+};
+

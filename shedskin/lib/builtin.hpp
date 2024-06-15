@@ -1,4 +1,4 @@
-/* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2024 Mark Dufour and contributors; License Expat (See LICENSE) */
 
 #ifndef BUILTIN_HPP
 #define BUILTIN_HPP
@@ -121,11 +121,10 @@ using tuple = tuple2<T, T>;
 
 /* STL types */
 
+// TODO switch to template aliases
 #define __GC_VECTOR(T) std::vector< T, gc_allocator< T > >
 #define __GC_DEQUE(T) std::deque< T, gc_allocator< T > >
 #define __GC_STRING std::basic_string<char,std::char_traits<char>,gc_allocator<char> >
-#define __GC_SET(T) std::unordered_set<T, std::hash<T>, std::equal_to<T>, gc_allocator<T> >
-#define __GC_DICT(K, V) std::unordered_map<K, V, std::hash<K>, std::equal_to<K>, gc_allocator< std::pair<const K, V> > >
 
 extern __ss_bool True;
 extern __ss_bool False;
@@ -200,6 +199,20 @@ template <class R, class A, class B> class pycall2 : public pyobj {
 public:
     virtual R __call__(A a, B b) = 0;
 };
+
+class __ss_bool {
+public:
+    uint8_t value;
+    inline __ss_int operator+(__ss_bool b);
+    inline __ss_bool operator==(__ss_bool b);
+    inline __ss_bool operator&(__ss_bool b);
+    inline __ss_bool operator|(__ss_bool b);
+    inline __ss_bool operator^(__ss_bool b);
+    inline bool operator!();
+    inline operator bool();
+};
+
+static inline __ss_bool __mbool(bool c) { __ss_bool b; b.value=c?1:0; return b; }
 
 template <class T> class list : public pyseq<T> {
 public:
@@ -616,10 +629,14 @@ template<class K, class V> struct dictentry;
 
 const int MINSIZE = 8;
 
+#include "builtin/hash.hpp"
+#include "builtin/compare.hpp"
+
+template <class K, class V>
+using __GC_DICT = std::unordered_map<K, V, ss_hash<K>, ss_eq<K>, gc_allocator< std::pair<K const, V> > >;
+
 template<class K, class V> struct dict_looper {
-    __ss_int pos;
-    int si_used;
-    dictentry<K,V> *entry;
+    typename __GC_DICT<K, V>::iterator it;
 };
 
 template <class K, class V> class dict : public pyiter<K> {
@@ -630,14 +647,12 @@ public:
     dictentry<K,V> *table;
     dictentry<K,V> smalltable[MINSIZE];
 
-//    __GC_DICT(K,V) gcd;
+    __GC_DICT<K,V> gcd;
 
     dict();
     template<class ... Args> dict(int count, Args ... args);
     template<class U> dict(U *other);
     dict(dict<K, V> *p);
-
-    dict<K,V>& operator=(const dict<K,V>& other);
 
     void *__setitem__(K k, V v);
     V __getitem__(K k);
@@ -653,6 +668,7 @@ public:
     V get(K k);
     V get(K k, V v);
     V pop(K k);
+    V pop(K k, V v);
     tuple2<K, V> *popitem();
     template <class U> void *update(U *other);
     void *update(dict<K, V> *e);
@@ -669,7 +685,6 @@ public:
     __ss_bool __ge__(dict<K,V> *s);
     __ss_bool __le__(dict<K,V> *s);
 
-    __ss_int __cmp__(pyobj *p);
     V setdefault(K k, V v=0);
 
     __dictiterkeys<K, V> *__iter__() { return new __dictiterkeys<K,V>(this);}
@@ -687,29 +702,24 @@ public:
     typedef K for_in_unit;
     typedef dict_looper<K,V> for_in_loop;
 
-    inline dict_looper<K,V> for_in_init() { dict_looper<K,V> l; l.pos = 0; l.si_used = used; return l; }
-    inline bool for_in_has_next(dict_looper<K,V> &l) {
-        if (l.si_used != used) {
-            l.si_used = -1;
-            __throw_dict_changed();
-        }
-        int ret = next(&l.pos, &l.entry);
-        if (!ret) return false;
-        return true;
+    inline dict_looper<K,V> for_in_init() {
+        dict_looper<K,V> l;
+        l.it = gcd.begin();
+        return l;
     }
-    inline K for_in_next(dict_looper<K,V> &l) { return l.entry->key; }
+
+    inline bool for_in_has_next(dict_looper<K,V> &l) {
+        return l.it != gcd.end();
+    }
+
+    inline K for_in_next(dict_looper<K,V> &l) {
+        return (*(l.it++)).first;
+    }
 
 #ifdef __SS_BIND
     dict(PyObject *);
     PyObject *__to_py__();
 #endif
-
-    // used internally
-    dictentry<K,V>* lookup(K key, __ss_int hash) const;
-    void insert_key(K key, V value, __ss_int hash);
-    void insert_clean(K key, V value, __ss_int hash);
-    int next(__ss_int *pos_ptr, dictentry<K,V> **entry_ptr);
-    void resize(int minused);
 };
 
 template<class T> struct setentry;
@@ -719,6 +729,8 @@ template<class T> struct set_looper {
     int si_used;
     setentry<T> *entry;
 };
+
+#define __GC_SET(T) std::unordered_set<T, ss_hash<T>, ss_eq<T>, gc_allocator<T> >
 
 template<class T> class set : public pyiter<T> {
 public:
@@ -853,18 +865,6 @@ public:
     void resize(int minused);
 };
 
-class __ss_bool {
-public:
-    uint8_t value;
-    inline __ss_int operator+(__ss_bool b);
-    inline __ss_bool operator==(__ss_bool b);
-    inline __ss_bool operator&(__ss_bool b);
-    inline __ss_bool operator|(__ss_bool b);
-    inline __ss_bool operator^(__ss_bool b);
-    inline bool operator!();
-    inline operator bool();
-};
-
 class complex {
 public:
     __ss_float real, imag;
@@ -972,10 +972,8 @@ public:
 template <class K, class V> class __dictiterkeys : public __iter<K> {
 public:
     dict<K,V> *p;
-    __ss_int pos;
-    int si_used;
-    int len;
-    dictentry<K,V>* entry;
+
+    typename __GC_DICT<K, V>::iterator it;
 
     __dictiterkeys<K, V>(dict<K, V> *p);
     K __next__();
@@ -986,10 +984,8 @@ public:
 template <class K, class V> class __dictitervalues : public __iter<V> {
 public:
     dict<K,V> *p;
-    __ss_int pos;
-    int si_used;
-    int len;
-    dictentry<K,V>* entry;
+
+    typename __GC_DICT<K, V>::iterator it;
 
     __dictitervalues<K, V>(dict<K, V> *p);
     V __next__();
@@ -1000,18 +996,14 @@ public:
 template <class K, class V> class __dictiteritems : public __iter<tuple2<K, V> *> {
 public:
     dict<K,V> *p;
-    __ss_int pos;
-    int si_used;
-    int len;
-    dictentry<K,V>* entry;
+
+    typename __GC_DICT<K, V>::iterator it;
 
     __dictiteritems<K, V>(dict<K, V> *p);
     tuple2<K, V> *__next__();
 
     inline str *__str__() { return new str("dict_items"); }
 };
-
-static inline __ss_bool __mbool(bool c) { __ss_bool b; b.value=c?1:0; return b; }
 
 /* builtin function declarations */
 
@@ -1095,10 +1087,6 @@ void __ss_exit(int code=0);
 /* slicing */
 
 static void inline slicenr(__ss_int x, __ss_int &l, __ss_int &u, __ss_int &s, __ss_int len);
-
-#include "builtin/hash.hpp"
-#include "builtin/compare.hpp"
-
 
 template<class T> inline int __is_none(T *t) { return !t; }
 template<class T> inline int __is_none(T) { return 0; }

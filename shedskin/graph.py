@@ -1015,14 +1015,28 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             self.add_constraint((infer.inode(self.gx, child), newnode), func)
             self.temp_var2(child, newnode, func)
 
-    def visit_If(self, node, func=None):
+    def visit_If(self, node, func=None, root_if=None):
+        # add temp var for to split up long if-elif-elif.. chains (MSVC error C1061, c64/hq2x examples)
+        if not root_if:
+            root_if = node
+            chain_len = 0
+            x = root_if
+            while len(x.orelse) == 1 and isinstance(x.orelse[0], ast.If):
+                x = x.orelse[0]
+                chain_len += 1
+            if chain_len > 100:
+                self.temp_var_int(root_if, func)
+
         self.bool_test_add(node.test)
         faker = ast.Call(ast.Name("bool", ast.Load()), [node.test], [])
         self.visit(faker, func)
         for child in node.body:
             self.visit(child, func)
-        for child in node.orelse:
-            self.visit(child, func)
+        if len(node.orelse) == 1 and isinstance(node.orelse[0], ast.If):
+            self.visit_If(node.orelse[0], func, root_if)
+        else:
+            for child in node.orelse:
+                self.visit(child, func)
 
     def visit_IfExp(self, node, func=None):
         newnode = infer.CNode(self.gx, node, parent=func, mv=getmv())
