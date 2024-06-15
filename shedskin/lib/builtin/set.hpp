@@ -146,14 +146,6 @@ template<class T> __ss_bool set<T>::__gt__(set<T> *s) {
     return issuperset(s);
 }
 
-template<class T> __ss_int set<T>::__cmp__(pyobj *p) {
-    /* XXX sometimes TypeError, sometimes not? */
-    set<T> *s = (set<T> *)p;
-    if(issubset(s)) return -1;
-    else if(issuperset(s)) return 1;
-    return 0;
-}
-
 template<class T> long set<T>::__hash__() {
     if(!this->frozen)
         throw new TypeError(new str("unhashable type: 'set'"));
