@@ -225,7 +225,7 @@ template <class T> void *set<T>::add(T key)
     if ((used > n_used && fill*3 >= (mask+1)*2))
         resize(used>50000 ? used*2 : used*4);
 
-    //gcs.insert(key);
+//    gcs.insert(key);
 
     return NULL;
 }
@@ -446,6 +446,19 @@ template<class T> str *set<T>::__repr__() {
 
 
     /*
+    size_t rest = gcs.size()-1;
+
+    if(this->frozen) {
+        if(gcs.size() == 0)
+            return new str("frozenset()");
+        r = new str("frozenset({");
+    }
+    else {
+        if(gcs.size() == 0)
+            return new str("set()");
+        r = new str("{");
+    }
+
     typename __GC_SET<T>::iterator it;
     for(it = gcs.begin(); it != gcs.end(); it++) {
         r->unit += repr(*it)->unit;
@@ -781,6 +794,7 @@ template<class T> template<class U, class V, class W> void *set<T>::intersection
 template<class T> set<T> *set<T>::copy() {
     set<T> *c = new set<T>(this->frozen);
     *c = *this;
+//    c->gcs = gcs;
     return c;
 }
 
@@ -837,6 +851,7 @@ template<class T> __ss_bool set<T>::isdisjoint(pyiter<T> *s) {
 template<class T> set<T> *set<T>::__copy__() {
     set<T> *c = new set<T>();
     *c = *this;
+//    c->gcs = gcs;
     return c;
 }
 
@@ -857,6 +872,8 @@ template<class T> __setiter<T>::__setiter(set<T> *p) {
     this->p = p;
     this->pos = 0;
     this->si_used = p->used;
+
+//    it = p->gcs.begin();
 }
 
 template<class T> T __setiter<T>::__next__() {
@@ -867,4 +884,11 @@ template<class T> T __setiter<T>::__next__() {
     int ret = p->next(&pos, &entry);
     if (!ret) __throw_stop_iteration();
     return entry->key;
+
+    /*
+    if(it == p->gcs.end())
+        __throw_stop_iteration();
+
+    return *it++;
+    */
 }
