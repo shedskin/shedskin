@@ -39,10 +39,10 @@
     for(__ ## n = 0; (unsigned int)__ ## n < (__ ## temp)->unit.size(); __ ## n ++) { \
         i = (__ ## temp)->__getfast__(__ ## n); \
 
-#define FOR_IN_DICT(m, temp, entry, pos) \
+#define FOR_IN_DICT(m, temp, iter, pos) \
     __ ## temp = m; \
-    __ ## pos = 0; \
-	while (__ ## temp->next(& __ ## pos, & __ ## entry)) { \
+    __ ## iter = m->gcd.begin(); \
+	while (__ ## iter != m->gcd.end() ) { \
 
 #define END_FOR }
 

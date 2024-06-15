@@ -5,6 +5,24 @@ set implementation, partially derived from CPython,
 copyright Python Software Foundation (http://www.python.org/download/releases/2.6.2/license/)
 */
 
+#define INIT_NONZERO_SET_SLOTS(so) do {				\
+	(so)->table = (so)->smalltable;				\
+	(so)->mask = MINSIZE - 1;				\
+    } while(0)
+
+
+#define EMPTY_TO_MINSIZE(so) do {				\
+	memset((so)->smalltable, 0, sizeof((so)->smalltable));	\
+	(so)->used = (so)->fill = 0;				\
+	INIT_NONZERO_SET_SLOTS(so);				\
+    } while(0)
+
+template <class T> void *myallocate(size_t n) { return GC_MALLOC(n); }
+template <> void *myallocate<__ss_int>(size_t n);
+
+template <class K, class V> void *myallocate(size_t n) { return GC_MALLOC(n); }
+template <> void *myallocate<__ss_int, __ss_int>(size_t n);
+
 template <class T> set<T>::set(int frozen) : frozen(frozen) {
     this->__class__ = cl_set;
     this->hash = -1;

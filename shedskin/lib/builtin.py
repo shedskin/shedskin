@@ -627,8 +627,8 @@ class dict(pyiter):
         self.__key__(u)
         return self.value
         return v
-    def pop(self, u):
-        self.__key__(u)
+    def pop(self, k, d=None):
+        self.__key__(k)
         return self.value
     def popitem(self):
         return (self.unit, self.value)
