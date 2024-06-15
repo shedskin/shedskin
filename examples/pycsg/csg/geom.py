@@ -352,10 +352,8 @@ class BSPNode(object):
 
         if self.back: 
             back = self.back.clipPolygons(back)
-        else:
-            back = []
+            front.extend(back)
 
-        front.extend(back)
         return front
         
     def clipTo(self, bsp):
