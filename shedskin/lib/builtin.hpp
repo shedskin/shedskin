@@ -956,10 +956,13 @@ public:
 template <class T> class __setiter : public __iter<T> {
 public:
     set<T> *p;
+
     int pos;
     int si_used;
     int len;
     setentry<T>* entry;
+
+    typename __GC_SET<T>::iterator it;
 
     __setiter<T>(set<T> *p);
     T __next__();
