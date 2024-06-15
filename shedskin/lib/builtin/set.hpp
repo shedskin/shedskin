@@ -122,6 +122,16 @@ template<class T> __ss_bool set<T>::__eq__(pyobj *p) { /* XXX check hash */
         if(!b->__contains__(entry))
             return False;
     }
+
+    /*
+    // TODO why can't we just use unordered_map operator==
+    typename __GC_SET<T>::iterator it;
+
+    for (const auto& key : gcs)
+        if (b->gcs.find(key) == b->gcs.end())
+            return False;
+    */
+
     return True;
 }
 
@@ -477,6 +487,7 @@ template<class T> str *set<T>::__repr__() {
 
 template<class T> __ss_int set<T>::__len__() {
     return used;
+//    return gcs.size();
 }
 
 template <class T> __ss_bool set<T>::__contains__(T key) {
@@ -486,6 +497,8 @@ template <class T> __ss_bool set<T>::__contains__(T key) {
 	entry = lookup(key, hash);
 
 	return __mbool(entry->use==active);
+
+//    return __mbool(gcs.find(key) != gcs.end());
 }
 
 template <class T> __ss_bool set<T>::__contains__(setentry<T>* entry) {
@@ -832,6 +845,14 @@ template<class T> __ss_bool set<T>::isdisjoint(set<T> *other) {
             return False;
         }
     }
+
+    /*
+    typename __GC_SET<T>::iterator it = gcs.begin();
+    while (it != gcs.end())
+        if (other->__contains__(*it++))
+            return False;
+    */
+
     return True;
 }
 
