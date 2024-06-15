@@ -826,8 +826,6 @@ public:
     __ss_bool __le__(set<T> *s);
     __ss_bool __eq__(pyobj *p);
 
-    __ss_int __cmp__(pyobj *p);
-
     __setiter<T> *__iter__() {
         return new __setiter<T>(this);
     }
