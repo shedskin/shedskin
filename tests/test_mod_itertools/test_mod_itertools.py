@@ -33,7 +33,7 @@ def get_cycle(iterable, max_iters=10):
 def test_cycle():
     assert get_cycle([1,2,3], max_iters=10) == [1, 2, 3, 1, 2, 3, 1, 2, 3, 1]
 
-    woo = itertools.cycle(set([1, 2, 3]))
+    woo = itertools.cycle([1, 2, 3])
     assert next(woo, -1) == 1
     assert next(woo, -1) == 2
     assert next(woo, -1) == 3
