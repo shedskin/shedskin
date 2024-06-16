@@ -605,23 +605,32 @@ inline str *chr(T i) {
 
 /* hex */
 
-template<class T, typename std::enable_if<!std::is_integral<T>::value, int>::type = 0>
-inline str *hex(T i) {
-    return i->__hex__();
-}
-
-template<class T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
-inline str *hex(T i) {
+template<class T> str *__sshex(T i) {
     if(i<0)
         return (new str("-0x"))->__add__(__str(-i, (__ss_int)16));
     else
         return (new str("0x"))->__add__(__str(i, (__ss_int)16));
 }
 
+template<class T, typename std::enable_if<!std::is_integral<T>::value, int>::type = 0>
+inline str *hex(T i) {
+    return i->__hex__();
+}
+template<>
+inline str *hex(__int128 i) { // not seen as integral type according to C++ standard
+    return __sshex(i);
+}
+
+template<class T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
+inline str *hex(T i) {
+    return __sshex(i);
+}
+
 template<>
 inline str *hex(__ss_bool b) {
-    return hex((__ss_int)b.value);
+    return __sshex((__ss_int)b.value);
 }
+
 
 /* oct, bin */
 
