@@ -601,13 +601,23 @@ inline str *chr(T i) {
     return __char_cache[(size_t)i];
 }
 
-#ifdef __SS_LONG
+template<class T> str *hex(T t) {
+    return t->__hex__();
+}
+
 template<> inline str *hex(__ss_int i) {
     if(i<0)
         return (new str("-0x"))->__add__(__str(-i, (__ss_int)16));
     else
         return (new str("0x"))->__add__(__str(i, (__ss_int)16));
 }
+
+template<> inline str *hex(__ss_bool i) {
+    return hex((__ss_int)i.value);
+}
+
+
+#ifdef __SS_LONG
 template<> inline str *oct(__ss_int i) {
     if(i<0)
         return (new str("-0o"))->__add__(__str(-i, (__ss_int)8));

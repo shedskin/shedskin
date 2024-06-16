@@ -193,14 +193,6 @@ str *__str(void *) { return new str("None"); }
 
 /* hex, oct, bin */
 
-template<> str *hex(int i) {
-    if(i<0)
-        return (new str("-0x"))->__add__(__str(-i, 16));
-    else
-        return (new str("0x"))->__add__(__str(i, 16));
-}
-template<> str *hex(__ss_bool b) { return hex((int)b.value); }
-
 template<> str *oct(int i) {
     if(i<0)
         return (new str("-0o"))->__add__(__str(-i, 8));
