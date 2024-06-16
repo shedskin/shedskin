@@ -1019,6 +1019,15 @@ template<> inline int __abs(int a) { return a<0?-a:a; }
 template<> inline __ss_float __abs(__ss_float a) { return a<0?-a:a; }
 inline int __abs(__ss_bool b) { return b.value; }
 
+template<class T> str *hex(T t) {
+    return t->__hex__();
+}
+#ifdef __SS_LONG
+template<> str *hex(__ss_int a);
+#endif
+template<> str *hex(int a);
+template<> str *hex(__ss_bool b);
+
 template<class T> str *oct(T t) {
     return t->__oct__();
 }
