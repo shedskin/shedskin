@@ -593,11 +593,15 @@ inline __ss_int ord(bytes *s) {
 static void __throw_chr_out_of_range() { /* improve inlining */
     throw new ValueError(new str("chr() arg not in range(256)"));
 }
-inline str *chr(__ss_int i) {
+inline str *chr(int32_t i) {
     if(i < 0 || i > 255)
         __throw_chr_out_of_range();
     return __char_cache[(size_t)i];
 }
+inline str *chr(int64_t i) {
+    return chr((int32_t)i);
+}
+
 inline str *chr(__ss_bool b) { return chr(b.value); }
 
 template<class T> inline str *chr(T t) {
@@ -605,8 +609,8 @@ template<class T> inline str *chr(T t) {
 }
 
 #ifdef __SS_LONG
-inline str *chr(__ss_int i) {
-    return chr((int)i);
+inline str *chr(__int128 i) {
+    return chr((int32_t)i);
 }
 
 template<> inline str *hex(__ss_int i) {
