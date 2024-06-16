@@ -593,26 +593,15 @@ inline __ss_int ord(bytes *s) {
 static void __throw_chr_out_of_range() { /* improve inlining */
     throw new ValueError(new str("chr() arg not in range(256)"));
 }
-inline str *chr(int32_t i) {
+
+template<class T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
+inline str *chr(T i) {
     if(i < 0 || i > 255)
         __throw_chr_out_of_range();
     return __char_cache[(size_t)i];
 }
-inline str *chr(int64_t i) {
-    return chr((int32_t)i);
-}
-
-inline str *chr(__ss_bool b) { return chr(b.value); }
-
-template<class T> inline str *chr(T t) {
-    return chr(t->__int__());
-}
 
 #ifdef __SS_LONG
-inline str *chr(__int128 i) {
-    return chr((int32_t)i);
-}
-
 template<> inline str *hex(__ss_int i) {
     if(i<0)
         return (new str("-0x"))->__add__(__str(-i, (__ss_int)16));
