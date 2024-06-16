@@ -594,12 +594,20 @@ static void __throw_chr_out_of_range() { /* improve inlining */
     throw new ValueError(new str("chr() arg not in range(256)"));
 }
 
+/* chr */
+
 template<class T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
 inline str *chr(T i) {
     if(i < 0 || i > 255)
         __throw_chr_out_of_range();
     return __char_cache[(size_t)i];
 }
+
+inline str *chr(__ss_bool i) {
+    return chr((__ss_int)i.value);
+}
+
+/* hex */
 
 template<class T> str *hex(T t) {
     return t->__hex__();

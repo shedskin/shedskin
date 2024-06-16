@@ -75,6 +75,8 @@ def test_callable():
 def test_chr():
     assert chr(97) == 'a'
 
+    assert chr(True) == '\x01'
+
 def test_complex():
     a = complex(1, 2)
     assert a.imag == 2.0
