@@ -399,7 +399,7 @@ template<class T> void *list<T>::sort(__ss_int, __ss_int, __ss_int reverse) {
     return sort((__ss_int(*)(T,T))0, (__ss_int(*)(T))0, reverse);
 }
 
-template<class T> void *list<T>::insert(int m, T e) {
+template<class T> void *list<T>::insert(__ss_int m, T e) {
     int len = this->__len__();
     if (m<0) m = len+m;
     if (m<0) m = 0;

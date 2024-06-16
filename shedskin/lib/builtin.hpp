@@ -263,10 +263,10 @@ public:
     inline __ss_int __len__();
 
     T pop();
-    T pop(int m);
+    T pop(__ss_int m);
     void *remove(T e);
     template <class U> void *remove(U e);
-    void *insert(int m, T e);
+    void *insert(__ss_int m, T e);
 
     void *append(T a);
 
