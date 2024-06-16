@@ -594,6 +594,8 @@ static void __throw_chr_out_of_range() { /* improve inlining */
     throw new ValueError(new str("chr() arg not in range(256)"));
 }
 
+/* chr */
+
 template<class T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
 inline str *chr(T i) {
     if(i < 0 || i > 255)
@@ -601,13 +603,29 @@ inline str *chr(T i) {
     return __char_cache[(size_t)i];
 }
 
-#ifdef __SS_LONG
-template<> inline str *hex(__ss_int i) {
+/* hex */
+
+template<class T, typename std::enable_if<!std::is_integral<T>::value, int>::type = 0>
+inline str *hex(T i) {
+    return i->__hex__();
+}
+
+template<class T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
+inline str *hex(T i) {
     if(i<0)
         return (new str("-0x"))->__add__(__str(-i, (__ss_int)16));
     else
         return (new str("0x"))->__add__(__str(i, (__ss_int)16));
 }
+
+template<>
+inline str *hex(__ss_bool b) {
+    return hex((__ss_int)b.value);
+}
+
+/* oct, bin */
+
+#ifdef __SS_LONG
 template<> inline str *oct(__ss_int i) {
     if(i<0)
         return (new str("-0o"))->__add__(__str(-i, (__ss_int)8));
