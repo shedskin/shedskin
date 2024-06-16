@@ -204,6 +204,11 @@ def test_unpack_from():
     n, = struct.unpack_from('<I', data, 2)
     assert n == 1264
 
+    bla = bytearray(b'otuoutnuhatoeuoeutohueu')
+    struct.pack_into('H', bla, -6, 2828)
+    x, = struct.unpack_from('H', bla, -6)
+    assert x == 2828
+
 
 def test_pack_into():
     bla = bytearray(10)
