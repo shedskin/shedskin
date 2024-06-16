@@ -16,7 +16,7 @@ template<> inline long hasher(__ss_int a) { return (a==-1)?-2:a; }
 template<> inline long hasher(int a) { return (a==-1)?-2:a; }
 template<> inline long hasher(__ss_bool a) { return a.value; }
 template<> inline long hasher(void *a) { return (intptr_t)a; }
-template<> inline long hasher(__ss_float v) { return std::hash<__ss_float>{}(v); }
+template<> inline long hasher(__ss_float v) { return (long)std::hash<__ss_float>{}(v); }
 
 template<class T> class ss_hash {
     public:
