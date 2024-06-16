@@ -394,10 +394,12 @@ class BSPNode(object):
         front = []
         back = []
         # split all other polygons using the first polygon's plane
-        for poly in polygons[1:]:
+        i = 1
+        while i < len(polygons): ## TODO using range trips up type inference
             # coplanar front and back polygons go into self.polygons
-            self.plane.splitPolygon(poly, self.polygons, self.polygons,
+            self.plane.splitPolygon(polygons[i], self.polygons, self.polygons,
                                     front, back)
+            i += 1
         # recursively build the BSP tree
         if len(front) > 0:
             if not self.front:

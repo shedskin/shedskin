@@ -639,6 +639,10 @@ template<class K, class V> struct dict_looper {
     typename __GC_DICT<K, V>::iterator it;
 };
 
+template <class T>
+using __GC_SET = std::unordered_set<T, ss_hash<T>, ss_eq<T>, gc_allocator< T > >;
+
+
 template <class K, class V> class dict : public pyiter<K> {
 public:
     __ss_int fill;
@@ -657,7 +661,6 @@ public:
     void *__setitem__(K k, V v);
     V __getitem__(K k);
     void *__delitem__(K k);
-    int do_discard(K key);
     __ss_int __len__();
     str *__repr__();
     __ss_bool has_key(K k);
@@ -725,36 +728,24 @@ public:
 template<class T> struct setentry;
 
 template<class T> struct set_looper {
-    int pos;
-    int si_used;
-    setentry<T> *entry;
+    typename __GC_SET<T>::iterator it;
 };
-
-#define __GC_SET(T) std::unordered_set<T, ss_hash<T>, ss_eq<T>, gc_allocator<T> >
 
 template<class T> class set : public pyiter<T> {
 public:
     int frozen;
-    __ss_int fill;
-    __ss_int used;
-    __ss_int mask;
-    setentry<T> *table;
-    setentry<T> smalltable[MINSIZE];
     long hash;
 
-//    __GC_SET(T) gcs;
+    __GC_SET<T> gcs;
 
     template<class U> set(U *other, int frozen);
     template<class U> set(U *other);
     set(int frozen=0);
     template<class ... Args> set(int count, Args ... args);
 
-    set<T>& operator=(const set<T>& other);
-
     void *add(T key);
     void *add(setentry<T>* entry);
     void *discard(T key);
-    int do_discard(T key);
     void *remove(T key);
     T pop();
 
@@ -767,38 +758,38 @@ public:
     void *clear();
     set<T> *copy();
 
-    template <class U> void *update(int, U *other);
     void *update(int, set<T> *s);
+    template <class U> void *update(int, U *other);
     template <class U, class V> void *update(int, U *other, V *other2);
     template <class U, class V, class W> void *update(int, U *other, V *other2, W *other3);
 
-    template <class U> set<T> *intersection(int, U *other);
     set<T> *intersection(int, set<T> *s);
+    template <class U> set<T> *intersection(int, U *other);
     template <class U, class V> set<T> *intersection(int, U *iter, V *iter2);
     template <class U, class V, class W> set<T> *intersection(int, U *iter, V *iter2, W *iter3);
 
-    template <class U> void *intersection_update(int, U *other);
     void *intersection_update(int, set<T> *s);
+    template <class U> void *intersection_update(int, U *other);
     template <class U, class V> void *intersection_update(int, U *other, V *other2);
     template <class U, class V, class W> void *intersection_update(int, U *other, V *other2, W *other3);
 
-    template <class U> set<T> *difference(int, U *other);
     set<T> *difference(int, set<T> *s);
+    template <class U> set<T> *difference(int, U *other);
     template <class U, class V> set<T> *difference(int, U *other, V *other2);
     template <class U, class V, class W> set<T> *difference(int, U *other, V *other2, W *other3);
 
-    template <class U> void *difference_update(int, U *other);
     void *difference_update(int, set<T> *s);
+    template <class U> void *difference_update(int, U *other);
     template <class U, class V> void *difference_update(int, U *other, V *other2);
     template <class U, class V, class W> void *difference_update(int, U *other, V *other2, W *other3);
 
-    set<T> *symmetric_difference(set<T> *s);
-    void *symmetric_difference_update(set<T> *s);
-
-    template <class U> set<T> *__ss_union(int, U *other);
     set<T> *__ss_union(int, set<T> *s);
+    template <class U> set<T> *__ss_union(int, U *other);
     template <class U, class V> set<T> *__ss_union(int, U *other, V *other2);
     template <class U, class V, class W> set<T> *__ss_union(int, U *other, V *other2, W *other3);
+
+    set<T> *symmetric_difference(set<T> *s);
+    void *symmetric_difference_update(set<T> *s); // TODO why no iter versions?
 
     set<T> *__and__(set<T> *s);
     set<T> *__or__(set<T> *s);
@@ -824,8 +815,6 @@ public:
     __ss_bool __le__(set<T> *s);
     __ss_bool __eq__(pyobj *p);
 
-    __ss_int __cmp__(pyobj *p);
-
     __setiter<T> *__iter__() {
         return new __setiter<T>(this);
     }
@@ -838,17 +827,19 @@ public:
     typedef T for_in_unit;
     typedef set_looper<T> for_in_loop;
 
-    inline set_looper<T> for_in_init() { set_looper<T> l; l.pos = 0; l.si_used = used; return l; }
-    inline bool for_in_has_next(set_looper<T> &l) {
-        if (l.si_used != used) {
-            l.si_used = -1;
-            __throw_set_changed();
-        }
-        int ret = next(&l.pos, &l.entry);
-        if (!ret) return false;
-        return true;
+    inline set_looper<T> for_in_init() {
+        set_looper<T> l;
+        l.it = gcs.begin();
+        return l;
     }
-    inline T for_in_next(set_looper<T> &l) { return l.entry->key; }
+
+    inline bool for_in_has_next(set_looper<T> &l) {
+        return l.it != gcs.end();
+    }
+
+    inline T for_in_next(set_looper<T> &l) {
+        return *(l.it++);
+    }
 
 #ifdef __SS_BIND
     set(PyObject *);
@@ -856,13 +847,6 @@ public:
 #endif
 
     long __hash__();
-
-    // used internally
-    setentry<T>* lookup(T key, __ss_int hash) const;
-    void insert_key(T key, __ss_int hash);
-    void insert_clean(T key, __ss_int hash);
-    int next(int *pos_ptr, setentry<T> **entry_ptr);
-    void resize(int minused);
 };
 
 class complex {
@@ -938,10 +922,7 @@ public:
 template <class T> class __setiter : public __iter<T> {
 public:
     set<T> *p;
-    int pos;
-    int si_used;
-    int len;
-    setentry<T>* entry;
+    typename __GC_SET<T>::iterator it;
 
     __setiter<T>(set<T> *p);
     T __next__();
@@ -972,7 +953,6 @@ public:
 template <class K, class V> class __dictiterkeys : public __iter<K> {
 public:
     dict<K,V> *p;
-
     typename __GC_DICT<K, V>::iterator it;
 
     __dictiterkeys<K, V>(dict<K, V> *p);
@@ -984,7 +964,6 @@ public:
 template <class K, class V> class __dictitervalues : public __iter<V> {
 public:
     dict<K,V> *p;
-
     typename __GC_DICT<K, V>::iterator it;
 
     __dictitervalues<K, V>(dict<K, V> *p);
@@ -996,7 +975,6 @@ public:
 template <class K, class V> class __dictiteritems : public __iter<tuple2<K, V> *> {
 public:
     dict<K,V> *p;
-
     typename __GC_DICT<K, V>::iterator it;
 
     __dictiteritems<K, V>(dict<K, V> *p);
