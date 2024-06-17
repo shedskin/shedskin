@@ -124,8 +124,8 @@ __ss_int system(str *c) {
     return std::system(c->c_str());
 }
 
-str *getenv(str *name, str *alternative) {
-    const char *waba = name->c_str();
+str *getenv(str *name_, str *alternative) {
+    const char *waba = name_->c_str();
     if(std::getenv(waba))
         return new str(std::getenv(waba));
     return alternative;
@@ -154,12 +154,12 @@ void *rmdir(str *a) {
     return NULL;
 }
 
-void *removedirs(str *name) {
+void *removedirs(str *name_) {
     tuple2<str *, str *> *__0, *__1, *__5;
     str *__2, *head, *tail;
 
-    rmdir(name);
-    __0 = __path__::split(name);
+    rmdir(name_);
+    __0 = __path__::split(name_);
     head = __0->__getfirst__();
     tail = __0->__getsecond__();
     if ((!___bool(tail))) {
@@ -196,11 +196,11 @@ void _exit(__ss_int code) {
     ::exit(code);
 }
 
-void *makedirs(str *name, __ss_int mode) {
+void *makedirs(str *name_, __ss_int mode) {
     tuple2<str *, str *> *__0, *__1;
     str *head, *tail;
 
-    __0 = __path__::split(name);
+    __0 = __path__::split(name_);
     head = __0->__getfirst__();
     tail = __0->__getsecond__();
     if ((!___bool(tail))) {
@@ -220,7 +220,7 @@ void *makedirs(str *name, __ss_int mode) {
             return NULL;
         }
     }
-    mkdir(name, mode);
+    mkdir(name_, mode);
     return NULL;
 }
 
@@ -479,8 +479,8 @@ void *fdatasync(__ss_int f1) {
 }
 #endif
 
-__ss_int open(str *name, __ss_int flags) { /* XXX mode argument */
-    __ss_int fp = ::open(name->c_str(), flags);
+__ss_int open(str *name_, __ss_int flags) { /* XXX mode argument */
+    __ss_int fp = ::open(name_->c_str(), flags);
     if(fp == -1)
         throw new OSError(new str("os.open failed"));
     return fp;
@@ -779,10 +779,10 @@ void *killpg(__ss_int pgid, __ss_int sig) {
 }
 
 str *getlogin() {
-    char *name = ::getlogin();
-    if(!name)
+    char *name_ = ::getlogin();
+    if(!name_)
         throw new OSError(new str("os.getlogin"));
-    return new str(name);
+    return new str(name_);
 }
 
 void *chown(str *path, __ss_int uid, __ss_int gid) {
@@ -814,16 +814,16 @@ __ss_bool isatty(__ss_int fd) {
 }
 
 str *ttyname(__ss_int fd) {
-    char *name = ::ttyname(fd);
-    if(!name)
+    char *name_ = ::ttyname(fd);
+    if(!name_)
         throw new OSError(new str("os.ttyname"));
-    return new str(name);
+    return new str(name_);
 }
 
 tuple2<str *, str *> *uname() {
-    struct utsname name;
-    ::uname(&name);
-    return new tuple2<str *, str *>(5, new str(name.sysname), new str(name.nodename), new str(name.release), new str(name.version), new str(name.machine));
+    struct utsname name_;
+    ::uname(&name_);
+    return new tuple2<str *, str *>(5, new str(name_.sysname), new str(name_.nodename), new str(name_.release), new str(name_.version), new str(name_.machine));
 }
 
 list<__ss_int> *getgroups() {
@@ -891,46 +891,46 @@ void *symlink(str *src, str *dst) {
     return NULL;
 }
 
-__ss_int pathconf(str *path, str *name) {
-    if(!pathconf_names->__contains__(name))
+__ss_int pathconf(str *path, str *name_) {
+    if(!pathconf_names->__contains__(name_))
         throw new ValueError(new str("unrecognized configuration name"));
-    return pathconf(path, pathconf_names->__getitem__(name)); /* XXX errors */
+    return pathconf(path, pathconf_names->__getitem__(name_)); /* XXX errors */
 }
-__ss_int pathconf(str *path, __ss_int name) {
-    size_t limit = ::pathconf(path->c_str(), name); /* XXX errors */
+__ss_int pathconf(str *path, __ss_int name_) {
+    size_t limit = ::pathconf(path->c_str(), name_); /* XXX errors */
     return (__ss_int)limit;
 }
 
-__ss_int fpathconf(__ss_int fd, str *name) {
-    if(!pathconf_names->__contains__(name))
+__ss_int fpathconf(__ss_int fd, str *name_) {
+    if(!pathconf_names->__contains__(name_))
         throw new ValueError(new str("unrecognized configuration name"));
-    return fpathconf(fd, pathconf_names->__getitem__(name)); /* XXX errors */
+    return fpathconf(fd, pathconf_names->__getitem__(name_)); /* XXX errors */
 }
-__ss_int fpathconf(__ss_int fd, __ss_int name) {
-    size_t limit = ::fpathconf(fd, name); /* XXX errors */
+__ss_int fpathconf(__ss_int fd, __ss_int name_) {
+    size_t limit = ::fpathconf(fd, name_); /* XXX errors */
     return (__ss_int)limit;
 }
 
-str *confstr(str *name) {
-    if(!confstr_names->__contains__(name))
+str *confstr(str *name_) {
+    if(!confstr_names->__contains__(name_))
         throw new ValueError(new str("unrecognized configuration name"));
-    return confstr(confstr_names->__getitem__(name));
+    return confstr(confstr_names->__getitem__(name_));
 }
-str *confstr(__ss_int name) {
+str *confstr(__ss_int name_) {
     char buf[MAXENTRIES];
-    size_t size = ::confstr(name, buf, MAXENTRIES); /* XXX errors */
+    size_t size = ::confstr(name_, buf, MAXENTRIES); /* XXX errors */
     if(size == std::string::npos)
         throw new OSError(new str("os.confstr"));
     return new str(buf);
 }
 
-__ss_int sysconf(str *name) {
-    if(!sysconf_names->__contains__(name))
+__ss_int sysconf(str *name_) {
+    if(!sysconf_names->__contains__(name_))
         throw new ValueError(new str("unrecognized configuration name"));
-    return sysconf(sysconf_names->__getitem__(name)); /* XXX errors */
+    return sysconf(sysconf_names->__getitem__(name_)); /* XXX errors */
 }
-__ss_int sysconf(__ss_int name) {
-    size_t limit = ::sysconf(name); /* XXX errors */
+__ss_int sysconf(__ss_int name_) {
+    size_t limit = ::sysconf(name_); /* XXX errors */
     return (__ss_int)limit;
 }
 

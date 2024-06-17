@@ -1,4 +1,4 @@
-/* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2024 Mark Dufour and contributors; License Expat (See LICENSE) */
 
 /* sum */
 
@@ -570,7 +570,7 @@ template<class A> __ss_bool all(A *iter) {
     return True;
 }
 
-/* ord, chr, hex, oct, bin */
+/* ord */
 
 static void __throw_ord_exc(size_t s) { /* improve inlining */
     throw new TypeError(__mod6(new str("ord() expected a character, but string of length %d found"), 1, s));
@@ -590,23 +590,50 @@ inline __ss_int ord(bytes *s) {
     return (unsigned char)(s->c_str()[0]);
 }
 
+/* bin */
+
+template<class T> str *bin(T t) {
+    return bin(t->__index__());
+}
+
+template<> inline str *bin(__ss_int i) {
+    if(i<0)
+        return (new str("-0b"))->__add__(__str(-i, (__ss_int)2));
+    else
+        return (new str("0b"))->__add__(__str(i, (__ss_int)2));
+}
+
+template<>
+inline str *bin(__ss_bool i) {
+    return bin((__ss_int)i.value);
+}
+
+/* chr */
+
 static void __throw_chr_out_of_range() { /* improve inlining */
     throw new ValueError(new str("chr() arg not in range(256)"));
 }
+
+template<class T> str *chr(T t) {
+    return chr(t->__index__());
+}
+
+template<>
 inline str *chr(__ss_int i) {
     if(i < 0 || i > 255)
         __throw_chr_out_of_range();
     return __char_cache[(size_t)i];
 }
-inline str *chr(__ss_bool b) { return chr(b.value); }
 
-template<class T> inline str *chr(T t) {
-    return chr(t->__int__());
+template<>
+inline str *chr(__ss_bool i) {
+    return chr((__ss_int)i.value);
 }
 
-#ifdef __SS_LONG
-inline str *chr(__ss_int i) {
-    return chr((int)i);
+/* hex */
+
+template<class T> str *hex(T t) {
+    return hex(t->__index__());
 }
 
 template<> inline str *hex(__ss_int i) {
@@ -615,21 +642,27 @@ template<> inline str *hex(__ss_int i) {
     else
         return (new str("0x"))->__add__(__str(i, (__ss_int)16));
 }
+
+template<> inline str *hex(__ss_bool i) {
+    return hex((__ss_int)i.value);
+}
+
+/* oct */
+
+template<class T> str *oct(T t) {
+    return oct(t->__index__());
+}
+
 template<> inline str *oct(__ss_int i) {
     if(i<0)
         return (new str("-0o"))->__add__(__str(-i, (__ss_int)8));
-    else if(i>0)
+    else
         return (new str("0o"))->__add__(__str(i, (__ss_int)8));
-    else
-        return new str("0o0");
 }
-template<> inline str *bin(__ss_int i) {
-    if(i<0)
-        return (new str("-0b"))->__add__(__str(-i, (__ss_int)2));
-    else
-        return (new str("0b"))->__add__(__str(i, (__ss_int)2));
+
+template<> inline str *oct(__ss_bool i) {
+    return oct((__ss_int)i.value);
 }
-#endif
 
 /* id */
 

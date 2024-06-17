@@ -123,7 +123,7 @@ def test_numlike3():
 
     y = [1, 2, 3]
     y += set([4, 5])
-    assert y == [1, 2, 3, 4, 5]
+    assert sorted(y) == [1, 2, 3, 4, 5]
 
     v = 3
     v += 1.5

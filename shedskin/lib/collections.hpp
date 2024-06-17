@@ -177,8 +177,8 @@ public:
     deque<T> *p;
     size_t i, size;
 
-    __dequeiter(deque<T> *p) {
-        this->p = p;
+    __dequeiter(deque<T> *d) {
+        p = d;
         size = p->units.size();
         i = 0;
     }
