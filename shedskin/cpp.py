@@ -79,6 +79,7 @@ class CPPNamer:
         return obj.ident
 
     def name_str(self, name: str) -> str:
+        assert self.gx.main_module, "gx.main_module is not set"
         if (
             [x for x in ("init", "add") if name == x + self.gx.main_module.ident]
             or name in self.class_names
