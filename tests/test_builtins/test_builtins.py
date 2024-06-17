@@ -40,11 +40,17 @@ class SubKlass(Klass): pass
 def test_abs():
     assert abs(-10) == 10
 
+class Bert:
+    def __index__(self):
+        return 77
+
 # def test_ascii():
 #     assert ascii(1) == '1'
 
+
 def test_bin():
     assert bin(3) == '0b11'
+
 
 def test_bool():
     assert bool(2 > 1) == True
@@ -55,6 +61,7 @@ class MyString:
         self.s = s
     def __bytes__(self):
         return self.s.encode('utf8')
+
 
 def test_bytes():
     # s = MyString('sam')
@@ -69,13 +76,16 @@ def test_bytes():
     assert bytes(b"hop") ==  b'hop'
     assert bytes(bytes(7)) == b'\x00\x00\x00\x00\x00\x00\x00'
 
+
 def test_callable():
     assert callable(abs)
 
+
 def test_chr():
     assert chr(97) == 'a'
-
     assert chr(True) == '\x01'
+    assert chr(Bert()) == 'M'
+
 
 def test_complex():
     a = complex(1, 2)
@@ -88,6 +98,7 @@ def test_complex():
 #     delattr(obj, 'name')
 #     assert not hasattr(obj, 'name')
 
+
 def test_divmod():
     assert divmod(10, 2) == (5, 0)
     assert divmod(-496, 3) == (-166, 2)
@@ -96,16 +107,20 @@ def test_divmod():
     assert divmod(-496, -3) == (165, -1)
     assert divmod(-496.0, -3.0) == (165.0, -1.0)
 
+
 def test_enumerate():
     assert [(i, obj) for i, obj in enumerate(['a', 'b', 'c'])] == [(0, 'a'), (1, 'b'), (2, 'c')]
+
 
 def test_filter():
     is_gt_10 = lambda x: x > 10
     xs = range(12)
     assert list(filter(is_gt_10, xs)) == [11]
 
+
 def test_float():
     assert float(100) == 100.0
+
 
 def test_hash():
     assert hash('abc') == hash('abc')
@@ -114,6 +129,7 @@ def test_hash():
 # def test_hasattr():
 #     c = complex(4,2)
 #     assert hasattr(c, 'real')
+
 
 def test_int():
     assert int(100.2) == 100
@@ -126,8 +142,10 @@ def test_int():
 #     c = complex(4,2)
 #     assert getattr(c, 'real') == 4.0
 
+
 def test_hex():
     assert hex(1) == '0x1'
+
 
 def test_isinstance():
     obj = Klass('foo')
@@ -136,8 +154,10 @@ def test_isinstance():
 # def test_issubclass():
 #     assert issubclass(SubKlass, Klass)
 
+
 def test_len():
     assert len([1,2,3]) == 3
+
 
 def test_max():
     assert max([4, 5, 9, 12]) == 12
@@ -162,6 +182,7 @@ def test_max():
     assert max(xs) == 3
     assert max(xs, key=neg) == 1
 
+
 def test_min():
     assert min([1]) == 1
     assert min(1, 2) == 1
@@ -184,8 +205,10 @@ def test_min():
     assert min(xs) == 1
     assert min(xs, key=neg) == 3
 
+
 def test_oct():
     assert oct(10) == '0o12'
+
 
 def test_ord():
     assert ord('a') == 97
@@ -206,6 +229,7 @@ class Account:
     def cash(self, amount):
         self._cash = amount
 
+
 def test_property():
     a = Account()
     assert a.cash == 0
@@ -221,6 +245,7 @@ def test_print():  # TODO print to StringIO and check?
     print([])
     print(1, 2.2, end='hoep', sep='--')
     assert True
+
 
 def test_range():
     a = 1
@@ -260,24 +285,30 @@ def test_range():
     assert 8 in r
     assert 9 not in r
 
+
 def test_repr():
     assert repr(1) == '1'
     assert repr(1.1) == '1.1'
+
 
 def test_reversed():
     assert list(reversed([1,2,3])) == [3,2,1]
     assert list(reversed(['a','b','c'])) == ['c','b','a']
 
+
 def test_round():
     assert round(1.5) == 2
     assert round(1.15, 0) == 1.0
 
+
 def test_set():
     assert list(set([1,2,3,4]).difference(set([3]))) == [1, 2, 4]
+
 
 def test_str():
     assert str(1) == '1'
     assert str(1.5) == '1.5'
+
 
 def test_sum():
     assert sum([1.0, 5.0]) == 6.0
@@ -287,6 +318,7 @@ def test_sum():
     assert sum([[1], [2], [3, 4]], [0]) == [0, 1, 2, 3, 4]
     assert sum([[1], [2], [3, 4]], []) == [1, 2, 3, 4]
 
+
 def test_tuple():
     assert tuple([1,2]) == (1,2)
 
@@ -294,6 +326,7 @@ def test_tuple():
 #     assert type(1) == type(2)
 #     assert type(1.0) == type(2.0)
 #     assert type("2") == type("3")
+
 
 def test_zip():
     assert list(zip([1,2])) == [(1,), (2,)]
