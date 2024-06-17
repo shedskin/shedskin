@@ -1,4 +1,5 @@
 import array
+import os.path
 
 
 def test_typecodes():
@@ -10,12 +11,19 @@ def test_typecodes():
 
 
 def test_file():
+    if os.path.exists("testdata"):
+        testdata = "testdata"
+    elif os.path.exists("testdata"):
+        testdata = "../testdata"
+    else:
+        testdata = "../../testdata"
+
     arr = array.array('i', range(10))
-    with open("testdata/blabla", "wb") as f:
+    with open(testdata + "/blabla", "wb") as f:
         arr.tofile(f)
 
     arr2 = array.array("i")
-    with open("testdata/blabla", "rb") as f:
+    with open(testdata + "/blabla", "rb") as f:
         arr2.fromfile(f, 10)
 
     assert arr == arr2
