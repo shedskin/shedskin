@@ -10,33 +10,31 @@ def test_typecodes():
 
 
 def test_file():
-    pass
-    # tofile
-    # fromfile
+    arr = array.array('i', range(10))
+    with open("testdata/blabla", "wb") as f:
+        arr.tofile(f)
 
-    # f = open("testdata/blabla", "wb")
-    # arr4.tofile(f)
-    # f.close()
-    # arr5 = array.array("i")
-    # f = open("testdata/blabla", "rb")
-    # arr5.fromfile(f, 2)
-    # try:
-    #     arr5.fromfile(f, 2)
-    # except EOFError as e:
-    #     print(e)
-    # f.close()
+    arr2 = array.array("i")
+    with open("testdata/blabla", "rb") as f:
+        arr2.fromfile(f, 10)
+
+    assert arr == arr2
+
+
+def test_bytes():
+    arr = array.array('i', range(10))
+    bs = arr.tobytes()
+
+    arr2 = array.array("i")
+    arr2.frombytes(bs)
+
+    assert arr == arr2
 
 
 def test_list():
     arr = array.array('i', [1, 2])
     arr.fromlist([3, 4, 5])
     assert arr.tolist() == [1, 2, 3, 4, 5]
-
-
-def test_bytes():
-    pass
-    # tobytes
-    # frombytes
 
 
 def test_sequence_immutable():
@@ -63,19 +61,46 @@ def test_sequence_immutable():
 
 
 def test_sequence_mutable():
-    pass
-    # __setitem__
-    # __delitem__
-    # extend
-    # pop
-    # remove
-    # insert
-    # append
-    # reverse
-    # byteswap?
-    # __delslice__
-    # __setslice__
-    # __delete__
+    arr = array.array('i', range(5, 11))
+
+    arr[1] = 17
+    assert arr.tolist() == [5, 17, 7, 8, 9, 10]
+
+    del arr[2]
+    assert arr.tolist() == [5, 17, 8, 9, 10]
+
+    arr.append(11)
+    arr.extend([12, 13])
+    assert arr.tolist() == [5, 17, 8, 9, 10, 11, 12, 13]
+
+    assert arr.pop() == 13
+    assert arr.pop(-2) == 11
+    assert arr.pop(0) == 5
+    assert arr.tolist() == [17, 8, 9, 10, 12]
+
+    arr.append(9)
+    arr.remove(9)
+    assert arr.tolist() == [17, 8, 10, 12, 9]
+
+    arr.insert(0, 12)
+    assert arr.tolist() == [12, 17, 8, 10, 12, 9]
+    arr.insert(-2, 21)
+    assert arr.tolist() == [12, 17, 8, 10, 21, 12, 9]
+
+    arr.reverse()
+    assert arr.tolist() == [9, 12, 21, 10, 8, 17, 12]
+
+    arr.byteswap()
+    assert arr[0] == 0x9000000
+    assert arr[-1] == 0xc000000
+    arr.byteswap()
+    assert arr.tolist() == [9, 12, 21, 10, 8, 17, 12]
+
+    del arr[1::2]
+    assert arr.tolist() == [9, 21, 8, 12]
+
+    arr[::2] = array.array('i', [17, 18])
+    assert arr.tolist() == [17, 21, 18, 12]
 
 
 def test_all():
