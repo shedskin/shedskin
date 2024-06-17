@@ -596,13 +596,18 @@ static void __throw_chr_out_of_range() { /* improve inlining */
 
 /* chr */
 
-template<class T, typename std::enable_if<std::is_integral<T>::value, int>::type = 0>
-inline str *chr(T i) {
+template<class T> str *chr(T t) {
+    return chr(t->__index__());
+}
+
+template<>
+inline str *chr(__ss_int i) {
     if(i < 0 || i > 255)
         __throw_chr_out_of_range();
     return __char_cache[(size_t)i];
 }
 
+template<>
 inline str *chr(__ss_bool i) {
     return chr((__ss_int)i.value);
 }
@@ -610,7 +615,7 @@ inline str *chr(__ss_bool i) {
 /* hex */
 
 template<class T> str *hex(T t) {
-    return t->__hex__();
+    return hex(t->__index__());
 }
 
 template<> inline str *hex(__ss_int i) {

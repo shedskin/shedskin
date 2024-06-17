@@ -1020,7 +1020,7 @@ template<> inline __ss_float __abs(__ss_float a) { return a<0?-a:a; }
 inline int __abs(__ss_bool b) { return b.value; }
 
 template<class T> str *oct(T t) {
-    return t->__oct__();
+    return oct(t->__index__());
 }
 #ifdef __SS_LONG
 template<> str *oct(__ss_int a);
