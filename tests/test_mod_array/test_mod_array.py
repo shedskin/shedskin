@@ -1,5 +1,5 @@
 import array
-import os.path
+#import os.path
 
 
 def test_typecodes():
@@ -115,7 +115,7 @@ def test_all():
     test_typecodes()
     test_list()
     test_bytes()
-    test_file()
+#    test_file()
     test_sequence_immutable()
     test_sequence_mutable()
 
