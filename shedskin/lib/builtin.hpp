@@ -1019,24 +1019,6 @@ template<> inline int __abs(int a) { return a<0?-a:a; }
 template<> inline __ss_float __abs(__ss_float a) { return a<0?-a:a; }
 inline int __abs(__ss_bool b) { return b.value; }
 
-template<class T> str *oct(T t) {
-    return oct(t->__index__());
-}
-#ifdef __SS_LONG
-template<> str *oct(__ss_int a);
-#endif
-template<> str *oct(int a);
-template<> str *oct(__ss_bool b);
-
-template<class T> str *bin(T t) {
-    return bin(t->__index__());
-}
-#ifdef __SS_LONG
-template<> str *bin(__ss_int a);
-#endif
-template<> str *bin(int a);
-template<> str *bin(__ss_bool b);
-
 template<class T> str *__modtuple(str *fmt, tuple2<T,T> *t);
 template<class A, class B> str *__modtuple(str *fmt, tuple2<A,B> *t);
 

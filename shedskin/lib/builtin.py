@@ -846,20 +846,24 @@ def bytearray(x=None):
 #x.__bytes__()
     return b''
 
-def int(x=None, base=1):
+def int(x=None, base=1):  # TODO also __index__?
     x.__int__()
     return 1
 
-def float(x=None):
+def float(x=None):  # TODO also __index__?
     x.__float__()
     return 1.0
 
+def chr(x):
+    x.__index__()
+    return 'c'
+
 def hex(x):
-    x.__hex__()
+    x.__index__()
     return ''
 
 def oct(x):
-    x.__oct__()
+    x.__index__()
     return ''
 
 def bin(x):
@@ -987,9 +991,6 @@ def open_binary(name, flags=None):
 def ord(c):
     return 1
 
-def chr(i):
-    return 'c'
-
 def round(x, n=0):
     return 1.0
 
@@ -999,6 +1000,7 @@ def divmod(a, b):
 def bool(x):
     x.__nonzero__()
     x.__len__()
+    x.__index__()
     return True
 
 def repr(x):
