@@ -1036,6 +1036,10 @@ class __xrange(pyseq):
         self.stop = 1
         self.step = 1
         self.unit = 1
+    def count(self, value):
+        return 1
+    def index(self, value):
+        return 1
     def __getitem__(self, i):
         return 1
     def __contains__(self, x):

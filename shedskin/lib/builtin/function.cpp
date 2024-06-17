@@ -135,6 +135,22 @@ __xrange::__xrange(__ss_int a_, __ss_int b_, __ss_int s_) {
     this->s = this->step = s_;
 }
 
+__ss_int __xrange::count(__ss_int value) {
+    if(value < a || value >= b)
+        return 0;
+    if((value - a) % s == 0)
+        return 1;
+    return 0;
+}
+
+__ss_int __xrange::index(__ss_int value) {
+    if(value < a || value >= b)
+        throw new ValueError(new str("value not in range"));
+    if((value - a) % s != 0)
+        throw new ValueError(new str("value not in range"));
+    return (value - a) / s;
+}
+
 __iter<__ss_int> *__xrange::__iter__() {
     return new __rangeiter(a, b, s);
 }
