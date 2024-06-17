@@ -2861,7 +2861,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.eol()
             if len(node.value.args) > 2: # TODO unpack_from: nicer check
                 self.start()
-                self.visitm(tvar_pos, " = ", node.value.args[2], func)
+                self.visitm(tvar_pos, " = __wrap(", tvar, ", ", node.value.args[2], ")", func)
                 self.eol()
             else:
                 self.output("%s = 0;" % tvar_pos)

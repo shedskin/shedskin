@@ -98,19 +98,19 @@ template<class K, class V> __ss_bool dict<K,V>::__gt__(pyobj *) { return False; 
 template<class K, class V> __ss_bool dict<K,V>::__ge__(pyobj *) { return False; }
 template<class K, class V> __ss_bool dict<K,V>::__le__(pyobj *) { return False; }
 
-template<class K, class V> __ss_bool dict<K,V>::__ge__(dict<K,V> *s) {
+template<class K, class V> __ss_bool dict<K,V>::__ge__(dict<K,V> *) {
     throw new NotImplementedError();
 }
 
-template<class K, class V> __ss_bool dict<K,V>::__le__(dict<K,V> *s) {
+template<class K, class V> __ss_bool dict<K,V>::__le__(dict<K,V> *) {
     throw new NotImplementedError();
 }
 
-template<class K, class V> __ss_bool dict<K,V>::__lt__(dict<K,V> *s) {
+template<class K, class V> __ss_bool dict<K,V>::__lt__(dict<K,V> *) {
     throw new NotImplementedError();
 }
 
-template<class K, class V> __ss_bool dict<K,V>::__gt__(dict<K,V> *s) {
+template<class K, class V> __ss_bool dict<K,V>::__gt__(dict<K,V> *) {
     throw new NotImplementedError();
 }
 

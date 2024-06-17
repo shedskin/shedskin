@@ -135,6 +135,22 @@ __xrange::__xrange(__ss_int a_, __ss_int b_, __ss_int s_) {
     this->s = this->step = s_;
 }
 
+__ss_int __xrange::count(__ss_int value) {
+    if(value < a || value >= b)
+        return 0;
+    if((value - a) % s == 0)
+        return 1;
+    return 0;
+}
+
+__ss_int __xrange::index(__ss_int value) {
+    if(value < a || value >= b)
+        throw new ValueError(new str("value not in range"));
+    if((value - a) % s != 0)
+        throw new ValueError(new str("value not in range"));
+    return (value - a) / s;
+}
+
 __iter<__ss_int> *__xrange::__iter__() {
     return new __rangeiter(a, b, s);
 }
@@ -190,34 +206,6 @@ template<> str *repr(size_t i) { return repr((__ss_int)i); }
 #endif
 
 str *__str(void *) { return new str("None"); }
-
-/* hex, oct, bin */
-
-template<> str *hex(int i) {
-    if(i<0)
-        return (new str("-0x"))->__add__(__str(-i, 16));
-    else
-        return (new str("0x"))->__add__(__str(i, 16));
-}
-template<> str *hex(__ss_bool b) { return hex((int)b.value); }
-
-template<> str *oct(int i) {
-    if(i<0)
-        return (new str("-0o"))->__add__(__str(-i, 8));
-    else if(i>0)
-        return (new str("0o"))->__add__(__str(i, 8));
-    else
-      return new str("0o0");
-}
-template<> str *oct(__ss_bool b) { return oct((int)b.value); }
-
-template<> str *bin(int i) {
-    if(i<0)
-        return (new str("-0b"))->__add__(__str(-i, 2));
-    else
-        return (new str("0b"))->__add__(__str(i, 2));
-}
-template<> str *bin(__ss_bool b) { return bin((int)b.value); }
 
 /* get class pointer */
 
