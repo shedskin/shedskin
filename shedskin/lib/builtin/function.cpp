@@ -191,7 +191,7 @@ template<> str *repr(size_t i) { return repr((__ss_int)i); }
 
 str *__str(void *) { return new str("None"); }
 
-/* hex, oct, bin */
+/* oct, bin */
 
 template<> str *oct(int i) {
     if(i<0)
