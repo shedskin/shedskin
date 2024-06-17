@@ -191,26 +191,6 @@ template<> str *repr(size_t i) { return repr((__ss_int)i); }
 
 str *__str(void *) { return new str("None"); }
 
-/* oct, bin */
-
-template<> str *oct(int i) {
-    if(i<0)
-        return (new str("-0o"))->__add__(__str(-i, 8));
-    else if(i>0)
-        return (new str("0o"))->__add__(__str(i, 8));
-    else
-      return new str("0o0");
-}
-template<> str *oct(__ss_bool b) { return oct((int)b.value); }
-
-template<> str *bin(int i) {
-    if(i<0)
-        return (new str("-0b"))->__add__(__str(-i, 2));
-    else
-        return (new str("0b"))->__add__(__str(i, 2));
-}
-template<> str *bin(__ss_bool b) { return bin((int)b.value); }
-
 /* get class pointer */
 
 template<> class_ *__type(int) { return cl_int_; }
