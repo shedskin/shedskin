@@ -247,7 +247,7 @@ def test_print():  # TODO print to StringIO and check?
     assert True
 
 
-def test_range():
+def test_range():  # TODO __slice__
     a = 1
 
     assert list(range(1, 10, 1)) == [1, 2, 3, 4, 5, 6, 7, 8, 9]
@@ -284,6 +284,15 @@ def test_range():
     assert r.step == 2
     assert 8 in r
     assert 9 not in r
+
+    r = range(1, 10)
+    assert r.count(7) == 1
+    assert r.count(77) == 0
+    assert r.index(7) == 6
+
+    assert r[7] == 8
+    assert bool(r)
+    assert not bool(range(0))
 
 
 def test_repr():

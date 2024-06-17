@@ -934,6 +934,10 @@ public:
     __ss_int start, stop, step;
 
     __xrange(__ss_int a, __ss_int b, __ss_int s);
+
+    __ss_int count(__ss_int value);
+    __ss_int index(__ss_int value);
+
     __iter<__ss_int> *__iter__();
     __ss_int __len__();
     __ss_int __getitem__(__ss_int i);
