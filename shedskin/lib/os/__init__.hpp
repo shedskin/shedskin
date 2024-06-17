@@ -1,4 +1,4 @@
-/* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2024 Mark Dufour and contributors; License Expat (See LICENSE) */
 
 #ifndef __OS_HPP
 #define __OS_HPP
@@ -31,13 +31,13 @@ class __cstat;
 list<str *> *listdir(str *path);
 str *getcwd();
 void *chdir(str *dir);
-str *getenv(str *name, str *alternative=0);
+str *getenv(str *name_, str *alternative=0);
 void *rename(str *a, str *b);
 void *remove(str *a);
 void *rmdir(str *a);
-void *removedirs(str *name);
+void *removedirs(str *name_);
 void *mkdir(str *path, __ss_int mode=0777);
-void *makedirs(str *name, __ss_int mode=0777);
+void *makedirs(str *name_, __ss_int mode=0777);
 void *abort();
 __ss_int system(str *c);
 
@@ -79,14 +79,14 @@ tuple2<__ss_int,__ss_int>* pipe();
 __ss_int dup(__ss_int f1);
 void *dup2(__ss_int f1, __ss_int f2);
 void *close(__ss_int fd);
-__ss_int open(str *name, __ss_int flags);
+__ss_int open(str *name_, __ss_int flags);
 file* fdopen(__ss_int fd, str* mode=NULL, __ss_int bufsize=-1);
 str *read(__ss_int fd, __ss_int n);
 __ss_int write(__ss_int fd, str *s);
 
 class popen_pipe : public file {
 public:
-    popen_pipe(str *name, str *mode=0);
+    popen_pipe(str *cmd, str *mode=0);
     popen_pipe(FILE* pipe=0) : file(pipe) {}
 
     void *close();
@@ -261,14 +261,14 @@ __ss_int nice(__ss_int n);
 void *kill(__ss_int pid, __ss_int sig);
 void *killpg(__ss_int pgid, __ss_int sig);
 
-__ss_int pathconf(str *path, str *name);
-__ss_int pathconf(str *path, __ss_int name);
-__ss_int fpathconf(__ss_int fd, str *name);
-__ss_int fpathconf(__ss_int fd, __ss_int name);
-str *confstr(str *name);
-str *confstr(__ss_int name);
-__ss_int sysconf(str *name);
-__ss_int sysconf(__ss_int name);
+__ss_int pathconf(str *path, str *name_);
+__ss_int pathconf(str *path, __ss_int name_);
+__ss_int fpathconf(__ss_int fd, str *name_);
+__ss_int fpathconf(__ss_int fd, __ss_int name_);
+str *confstr(str *name_);
+str *confstr(__ss_int name_);
+__ss_int sysconf(str *name_);
+__ss_int sysconf(__ss_int name_);
 
 void *ftruncate(__ss_int fd, __ss_int n);
 
