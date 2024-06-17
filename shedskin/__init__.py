@@ -358,8 +358,8 @@ class Shedskin:
         opt("--nowarnings",       help="Disable '-Wall' compilation warnings", action="store_true")        
 
         # make 'translate' the default subparser
-        for arg in sys.argv[1:]:
-            if arg in ('-h', '--help'):
+        for _arg in sys.argv[1:]:
+            if _arg in ('-h', '--help'):
                 break
         else:
             if len(sys.argv) > 1 and sys.argv[1] not in ('analyze', 'translate', 'build', 'run', 'test'):
