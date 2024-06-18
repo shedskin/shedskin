@@ -74,3 +74,6 @@ def combinations(iterable, r):
 
 def combinations_with_replacement(iterable, r):
     yield iter(iterable).__next__(),
+
+def pairwise(iterable):
+    yield (iter(iterable).__next__(),)
