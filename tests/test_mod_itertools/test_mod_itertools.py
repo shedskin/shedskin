@@ -200,6 +200,12 @@ def test_compress():
     assert list(itertools.compress([42, 32, 21, 55, 303], [True, False, True, False, True])) == [42, 21, 303]
 
 
+def test_pairwise():
+    assert list(itertools.pairwise([])) == []
+    assert list(itertools.pairwise([1])) == []
+    assert list(itertools.pairwise([1,2])) == [(1,2)]
+    assert list(itertools.pairwise([1,2,3,4,5])) == [(1,2), (2,3), (3,4), (4,5)]
+
 
 def test_all():
     test_count()
@@ -218,6 +224,7 @@ def test_all():
     test_tee()
     test_filterfalse()
     test_zip_longest()
+    test_pairwise()
 
 
 if __name__ == '__main__':
