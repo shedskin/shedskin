@@ -2367,7 +2367,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 and not (self.gx.int64 or self.gx.int128)
             ):
                 error.error(
-                    "return value of 'id' does not fit in 32-bit integer (try shedskin --long)",
+                    "return value of 'id' does not fit in 32-bit integer (try shedskin --int64)",
                     self.gx,
                     node,
                     warning=True,
@@ -2448,7 +2448,15 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             elif ident == "hash":
                 self.append("hasher(")  # XXX cleanup
             elif ident == "__print":  # XXX
-                self.append("print(")
+                if not node.keywords:
+                    self.append('print(')
+                    for i, arg in enumerate(node.args):
+                        self.visit(arg)
+                        if i != len(node.args)-1:
+                            self.append(',')
+                    self.append(')')
+                    return
+                self.append("print_(")
             elif ident == "isinstance":
                 self.append("True")
                 return
