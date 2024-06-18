@@ -1156,7 +1156,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 self.fake_func(node, right, "__" + msg + "__", [left], func)
 
                 if isinstance(right, (ast.List, ast.Tuple)) and right.elts: # expr in [..]/(..) opt
-                    self.temp_var2(right.elts[0], infer.inode(self.gx, right.elts[0]), func)
+                    self.temp_var2((right, 'cmp'), infer.inode(self.gx, right.elts[0]), func)
 
             elif msg in ("lt", "gt", "le", "ge"):
                 fakefunc = ast.Call(
