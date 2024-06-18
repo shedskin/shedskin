@@ -158,7 +158,7 @@ template<class T> void __pack_one(str *fmt, unsigned int fmtlen, unsigned int &j
             case 'L':
             case 'q':
             case 'Q':
-            case 'n':
+//            case 'n':
             case 'N':
                 itemsize = get_itemsize(order, c);
                 pad = padding(order, (unsigned int)pos, itemsize);
