@@ -207,6 +207,13 @@ def test_pairwise():
     assert list(itertools.pairwise([1,2,3,4,5])) == [(1,2), (2,3), (3,4), (4,5)]
 
 
+def test_accumulate():
+#    assert list(itertools.accumulate([])) == []
+    assert list(itertools.accumulate([7.7])) == [7.7]
+    assert list(itertools.accumulate(['a', 'bb', 'ccc'])) == ['a', 'abb', 'abbccc']
+    assert list(itertools.accumulate(range(5))) == [0, 1, 3, 6, 10]
+
+
 def test_all():
     test_count()
     test_cycle()
@@ -225,6 +232,7 @@ def test_all():
     test_filterfalse()
     test_zip_longest()
     test_pairwise()
+    test_accumulate()
 
 
 if __name__ == '__main__':
