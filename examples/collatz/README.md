@@ -1,1 +1,1 @@
-shedskin --long --nobounds --nowrap collatz
+shedskin --int64 --nobounds --nowrap collatz
