@@ -2145,9 +2145,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     self.append("__eq(")
 
                 if i == 0:
-                    self.visitm(self.mv.tempcount[left.elts[0]], '=', right, func)
+                    self.visitm(self.mv.tempcount[(left, 'cmp')], '=', right, func)
                 else:
-                    self.visitm(self.mv.tempcount[left.elts[0]], func)
+                    self.visitm(self.mv.tempcount[(left, 'cmp')], func)
 
                 self.append(",")
                 self.visit(elem, func)
