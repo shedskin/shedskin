@@ -53,10 +53,43 @@ inline countiter<__ss_float> *count(__ss_float start, __ss_float step = 1.) {
     return new countiter<__ss_float>(start, step);
 }
 
+// accumulate
+
+template<class T> class accumulateiter : public __iter<T> {
+    __iter<T> *iter;
+    int position;
+    T prev;
+
+public:
+    accumulateiter(pyiter<T> *iterable);
+
+    T __next__();
+};
+
+template<class T> inline accumulateiter<T>::accumulateiter(pyiter<T> *iterable) {
+    this->position = 0;
+    this->iter = iterable->__iter__();
+}
+
+template<class T> T accumulateiter<T>::__next__() {
+    if(position++ == 0) {
+        prev = this->iter->__next__();
+        return prev;
+    }
+
+    T t = this->iter->__next__();
+
+    prev = __add(prev, t);
+    return prev;
+}
+
+template<class T> inline accumulateiter<T> *accumulate(pyiter<T> *iterable) {
+    return new accumulateiter<T>(iterable);
+}
+
 // pairwise
 
 template<class T> class pairwiseiter : public __iter<tuple<T> *> {
-    bool exhausted;
     int position;
     __iter<T> *iter;
     T prev;
@@ -68,7 +101,6 @@ public:
 };
 
 template<class T> inline pairwiseiter<T>::pairwiseiter(pyiter<T> *iterable) {
-    this->exhausted = false;
     this->position = 0;
     this->iter = iterable->__iter__();
 }
