@@ -2451,9 +2451,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 if not node.keywords:
                     self.append('print(')
                     for i, arg in enumerate(node.args):
-                        self.visit(arg)
+                        self.visit(arg, func)
                         if i != len(node.args)-1:
-                            self.append(',')
+                            self.append(', ')
                     self.append(')')
                     return
                 self.append("print_(")
