@@ -1151,8 +1151,13 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         for op, right in zip(node.ops, node.comparators):
             self.visit(right, func)
             msg = msgs.get(type(op))
+
             if msg == "contains":
                 self.fake_func(node, right, "__" + msg + "__", [left], func)
+
+                if isinstance(right, (ast.List, ast.Tuple)) and right.elts: # expr in [..]/(..) opt
+                    self.temp_var2(right.elts[0], infer.inode(self.gx, right.elts[0]), func)
+
             elif msg in ("lt", "gt", "le", "ge"):
                 fakefunc = ast.Call(
                     ast.Name("__%s" % msg, ast.Load()), [left, right], []

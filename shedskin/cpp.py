@@ -2130,11 +2130,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         argtypes = ltypes | rtypes
         ul, ur = typestr.unboxable(self.gx, ltypes), typestr.unboxable(self.gx, rtypes)
 
-        # name (not) in (expr, expr, ..)
+        # expr (not) in [const, ..]/(const, ..)
         if (
             middle == "__contains__"
-            and isinstance(left, ast.Tuple)
-            and isinstance(right, ast.Name)
+            and isinstance(left, (ast.Tuple, ast.List))
+            and left.elts
+            and all([isinstance(elt, ast.Constant) for elt in left.elts])
         ):
             self.append("(")
             for i, elem in enumerate(left.elts):
@@ -2142,7 +2143,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     self.append("!__eq(")  # XXX why does using __ne( fail test 199!?
                 else:
                     self.append("__eq(")
-                self.visit(right, func)
+
+                if i == 0:
+                    self.visitm(self.mv.tempcount[left.elts[0]], '=', right, func)
+                else:
+                    self.visitm(self.mv.tempcount[left.elts[0]], func)
+
                 self.append(",")
                 self.visit(elem, func)
                 self.append(")")
@@ -2150,7 +2156,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     if prefix == "!":
                         self.append(" && ")
                     else:
-                        self.append(" | ")
+                        self.append(" || ")
             self.append(")")
             return
 
