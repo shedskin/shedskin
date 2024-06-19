@@ -358,9 +358,9 @@ def add_shedskin_product(
     build_executable: bool = False,
     build_extension: bool = False,
     build_test: bool = False,
-    disable_executable: bool = False,
-    disable_extension: bool = False,
-    disable_test: bool = False,
+    # disable_executable: bool = False,
+    # disable_extension: bool = False,
+    # disable_test: bool = False,
     # has_lib: bool = False,
     enble_conan: bool = False,
     enable_externalproject: bool = False,
@@ -377,7 +377,7 @@ def add_shedskin_product(
 
     boolean option pairs (setting one unsets the other)
         BUILD_EXECUTABLE BUILD_EXTENSION BUILD_TEST
-        DISABLE_EXECUTABLE DISABLE_EXTENSION DISABLE_TEST
+        # not-implemented: DISABLE_EXECUTABLE DISABLE_EXTENSION DISABLE_TEST
 
     radio options (mutually exclusive):
         ENABLE_CONAN ENABLE_SPM ENABLE_EXTERNALPROJECT
@@ -408,18 +408,18 @@ def add_shedskin_product(
 
     if build_executable:
         add(1, "BUILD_EXECUTABLE")
-    if disable_executable:
-        add(1, "DISABLE_EXECUTABLE")
+    # if disable_executable:
+    #     add(1, "DISABLE_EXECUTABLE")
 
     if build_extension:
         add(1, "BUILD_EXTENSION")
-    if disable_extension:
-        add(1, "DISABLE_EXTENSION")
+    # if disable_extension:
+    #     add(1, "DISABLE_EXTENSION")
 
     if build_test:
         add(1, "BUILD_TEST")
-    if disable_test:
-        add(1, "DISABLE_TEST")
+    # if disable_test:
+    #     add(1, "DISABLE_TEST")
 
     if enable_externalproject:
         add(1, "ENABLE_EXTERNALPROJECT")
@@ -718,6 +718,12 @@ class CMakeBuilder:
         cfg_options.append("-DBUILD_EXECUTABLE=ON")
         if self.options.extmod:
             cfg_options.append("-DBUILD_EXTENSION=ON")
+
+        if self.options.disable_exes:
+            cfg_options.append("-DDISABLE_EXECUTABLES=ON")
+
+        if self.options.disable_exts:
+            cfg_options.append("-DDISABLE_EXTENSIONS=ON")
 
         if self.options.debug:
             cfg_options.append("-DDEBUG=ON")

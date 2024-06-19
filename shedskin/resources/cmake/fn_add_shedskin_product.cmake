@@ -62,6 +62,14 @@ function(add_shedskin_product)
         set(BUILD_EXTENSION OFF)
     endif()
 
+    if (DISABLE_EXECUTABLES) 
+        set(BUILD_EXECUTABLE OFF)
+    endif()
+
+    if (DISABLE_EXTENSIONS) 
+        set(BUILD_EXTENSION OFF)
+    endif()
+
     if(SHEDSKIN_BUILD_TEST)
         set(BUILD_TEST ON)
     endif()
@@ -131,7 +139,9 @@ function(add_shedskin_product)
         cmake_print_variables(
             # boolean options
             SHEDSKIN_BUILD_EXECUTABLE
+            BUILD_EXECUTABLE
             SHEDSKIN_BUILD_EXTENSION
+            BUILD_EXTENSION
             SHEDSKIN_BUILD_TEST
 
             SHEDSKIN_ENABLE_CONAN
