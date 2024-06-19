@@ -226,8 +226,14 @@ void __ss_exit(int code) {
 #ifdef __SS_BIND
 template<> PyObject *__to_py(int32_t i) { return PyLong_FromLong(i); }
 template<> PyObject *__to_py(int64_t i) { return PyLong_FromLongLong(i); }
+
 #ifdef __SS_INT128
-template<> PyObject *__to_py(__int128 i) { return PyLong_FromLongLong(i); } /* XXX loss of precision! */
+template<> PyObject *__to_py(__int128 i) {
+    int num = 1;
+    bool little_endian = (*(char *)&num == 1);
+    return _PyLong_FromByteArray((const unsigned char *)&i, 16, little_endian, 1);
+}
+
 #endif
 #ifdef WIN32
 template<> PyObject *__to_py(long i) { return PyLong_FromLong(i); }
