@@ -2606,7 +2606,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             or self.library_func(funcs, "random", "Random", "triangular")
         ):
             castnull = True
-        for itertools_func in ["islice", "zip_longest", "permutations"]:
+        for itertools_func in ["islice", "zip_longest", "permutations", "accumulate"]:
             if self.library_func(funcs, "itertools", None, itertools_func):
                 castnull = True
                 break
