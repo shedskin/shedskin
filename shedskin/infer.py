@@ -89,9 +89,9 @@ ifa_logger = logging.getLogger("infer.ifa")
 INCREMENTAL = True
 INCREMENTAL_FUNCS = 5
 INCREMENTAL_DATA = True
-INCREMENTAL_ALLOCS = 1
-MAXITERS = 10
-CPA_LIMIT = 20
+INCREMENTAL_ALLOCS = 20
+MAXITERS = 30
+CPA_LIMIT = 10
 
 
 class CNode:
@@ -1024,8 +1024,9 @@ def cpa(gx: 'config.GlobalInfo', callnode, worklist):
                 if INCREMENTAL_DATA:
                     if gx.added_allocs >= INCREMENTAL_ALLOCS:
                         continue
-                if gx.added_funcs >= INCREMENTAL_FUNCS:
-                    continue
+                else:
+                    if gx.added_funcs >= INCREMENTAL_FUNCS:
+                        continue
                 gx.added_funcs += 1
                 gx.added_funcs_set.add(func)
                 logger.debug("adding %s", func)
