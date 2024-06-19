@@ -14,6 +14,8 @@ option(SIMPLE_PROJECT "Project has a single target and no subprojects" %(is_simp
 option(BUILD_EXECUTABLE "Build executable" ON)
 option(BUILD_EXTENSION "Build python extension" OFF)
 option(BUILD_TEST "Build test" ON)
+option(DISABLE_EXECUTABLES "Disable building executables" OFF)
+option(DISABLE_EXTENSIONS "Disable building extensions" OFF)
 
 option(ENABLE_SPM "Enable shedskin dependency management" OFF)
 option(ENABLE_CONAN "Enable conan for dependency management" OFF)
