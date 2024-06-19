@@ -332,6 +332,9 @@ class Shedskin:
         opt("-e", "--extmod",     help="Generate extension module", action="store_true")
         opt("-x", "--executable", help="Generate executable", action="store_true")
 
+        opt("--disable-exts",     help="Disable building extensions", action="store_true")
+        opt("--disable-exes",     help="Disable building executables", action="store_true")
+
         opt('--dryrun',           help='dryrun without any changes ', action='store_true')
         opt('--include',          help='provide regex of tests to include with cmake', metavar="PATTERN")
         opt('--check',            help='check testfile py syntax before running', action='store_true')
