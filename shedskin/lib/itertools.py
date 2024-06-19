@@ -76,6 +76,8 @@ def combinations_with_replacement(iterable, r):
 def pairwise(iterable):
     yield (iter(iterable).__next__(),)
 
-def accumulate(iterable):
+def accumulate(iterable, func=None, initial=None):
     n = iter(iterable).__next__()
-    yield n.__add__(n)
+    n.__add__(n)
+    func(n, n)
+    yield n
