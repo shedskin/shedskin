@@ -61,29 +61,66 @@ template<class T> class accumulateiter : public __iter<T> {
     T prev;
 
 public:
+    T (*func)(T, T);
+    bool has_func;
+    T initial;
+    bool has_initial;
+
     accumulateiter(pyiter<T> *iterable);
 
     T __next__();
 };
 
 template<class T> inline accumulateiter<T>::accumulateiter(pyiter<T> *iterable) {
-    this->position = 0;
-    this->iter = iterable->__iter__();
+    position = 0;
+    has_func = false;
+    has_initial = false;
+    iter = iterable->__iter__();
 }
 
 template<class T> T accumulateiter<T>::__next__() {
     if(position++ == 0) {
-        prev = this->iter->__next__();
+        if(has_initial)
+            prev = initial;
+        else
+            prev = this->iter->__next__();
         return prev;
     }
 
     T t = this->iter->__next__();
 
-    prev = __add(prev, t);
+    if(has_func)
+        prev = func(prev, t);
+    else
+        prev = __add(prev, t);
+
     return prev;
 }
 
-template<class T> inline accumulateiter<T> *accumulate(pyiter<T> *iterable) {
+/* no beauty prize for now */
+
+template<class T> inline accumulateiter<T> *accumulate(pyiter<T> *iterable, T(*func)(T, T), T initial) {
+    auto acciter = new accumulateiter<T>(iterable);
+    acciter->func = func;
+    acciter->has_func = True;
+    acciter->initial = initial;
+    acciter->has_initial = true;
+    return acciter;
+}
+template<class T> inline accumulateiter<T> *accumulate(pyiter<T> *iterable, void *, T initial) {
+    auto acciter = new accumulateiter<T>(iterable);
+    acciter->initial = initial;
+    acciter->has_initial = true;
+    return acciter;
+}
+
+template<class T> inline accumulateiter<T> *accumulate(pyiter<T> *iterable, T(*func)(T, T), void *v) {
+    auto acciter = new accumulateiter<T>(iterable);
+    acciter->func = func;
+    acciter->has_func = true;
+    return acciter;
+}
+template<class T> inline accumulateiter<T> *accumulate(pyiter<T> *iterable, void *, void *v) {
     return new accumulateiter<T>(iterable);
 }
 
