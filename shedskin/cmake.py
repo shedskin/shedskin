@@ -719,11 +719,13 @@ class CMakeBuilder:
         if self.options.extmod:
             cfg_options.append("-DBUILD_EXTENSION=ON")
 
-        if self.options.disable_exes:
-            cfg_options.append("-DDISABLE_EXECUTABLES=ON")
+        if hasattr(self.options, 'disable_exes'):
+            if self.options.disable_exes:
+                cfg_options.append("-DDISABLE_EXECUTABLES=ON")
 
-        if self.options.disable_exts:
-            cfg_options.append("-DDISABLE_EXTENSIONS=ON")
+        if hasattr(self.options, 'disable_exts'):
+            if self.options.disable_exts:
+                cfg_options.append("-DDISABLE_EXTENSIONS=ON")
 
         if self.options.debug:
             cfg_options.append("-DDEBUG=ON")
