@@ -7,5 +7,5 @@ add_shedskin_product(
         functools
     APP_MODULES
     DATA
-        csg_main.py
+        pycsg_main.py
 )
