@@ -136,7 +136,7 @@ At the moment, the following 30 modules are (fully or partially) supported. Seve
 * :code:`glob`
 * :code:`heapq`
 * :code:`io` (BytesIO, StringIO)
-* :code:`itertools` (no accumulate, pairwise, starmap)
+* :code:`itertools` (no starmap)
 * :code:`math`
 * :code:`mmap`
 * :code:`os`

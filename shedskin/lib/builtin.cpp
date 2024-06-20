@@ -186,7 +186,7 @@ void terminate_handler() {
     } catch (SystemExit *s) {
         __add_missing_newline(); /* XXX s->message -> stderr? */
         if(s->show_message)
-            print(1, False, __ss_stderr, NULL, NULL, s->message);
+            print_(0, False, __ss_stderr, NULL, NULL, s->message);
         code = s->code;
 
     } catch (BaseException *e) {
@@ -200,9 +200,9 @@ void terminate_handler() {
 
         str *s = __str(e);
         if(___bool(s))
-            print(1, False, NULL, NULL, NULL, __add_strs(3, e->__class__->__name__, new str(": "), s));
+            print_(0, False, NULL, NULL, NULL, __add_strs(3, e->__class__->__name__, new str(": "), s));
         else
-            print(1, False, NULL, NULL, NULL, e->__class__->__name__);
+            print_(0, False, NULL, NULL, NULL, e->__class__->__name__);
         code = 1;
     }
 
@@ -226,8 +226,14 @@ void __ss_exit(int code) {
 #ifdef __SS_BIND
 template<> PyObject *__to_py(int32_t i) { return PyLong_FromLong(i); }
 template<> PyObject *__to_py(int64_t i) { return PyLong_FromLongLong(i); }
+
 #ifdef __SS_INT128
-template<> PyObject *__to_py(__int128 i) { return PyLong_FromLongLong(i); } /* XXX loss of precision! */
+template<> PyObject *__to_py(__int128 i) {
+    int num = 1;
+    bool little_endian = (*(char *)&num == 1);
+    return _PyLong_FromByteArray((const unsigned char *)&i, sizeof(i), little_endian, 1);
+}
+
 #endif
 #ifdef WIN32
 template<> PyObject *__to_py(long i) { return PyLong_FromLong(i); }
@@ -242,19 +248,26 @@ template<> PyObject *__to_py(void *v) { Py_INCREF(Py_None); return Py_None; }
 void throw_exception() {
     PyObject *ptype, *pvalue, *ptraceback;
     PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-    // char *pStrErrorMessage = PyString_AsString(pvalue);
     char *pStrErrorMessage = PyBytes_AS_STRING(pvalue);
     throw new TypeError(new str(pStrErrorMessage));
 }
 
 template<> __ss_int __to_ss(PyObject *p) {
     if(PyLong_Check(p)) {
-        __ss_int result = (__ss_int)PyLong_AsLongLong(p);
+        __ss_int result;
+#ifdef __SS_INT128
+        int num = 1;
+        bool little_endian = (*(char *)&num == 1);
+        _PyLong_AsByteArray((PyLongObject *)p, (unsigned char *)&result, sizeof(__ss_int), little_endian, 1);
+#else
+        result = (__ss_int)PyLong_AsLongLong(p);
+#endif
         if (result == -1 && PyErr_Occurred() != NULL) {
             throw_exception();
         }
         return result;
     }
+
     throw new TypeError(new str("error in conversion to Shed Skin (integer expected)"));
 }
 

@@ -25,6 +25,8 @@ int get_itemsize(char order, char c) {
             case 'Q': return sizeof(unsigned long long);
             case 'f': return sizeof(float);
             case 'd': return sizeof(double);
+//            case 'n': return sizeof(ssize_t); MSVC?
+            case 'N': return sizeof(size_t);
         }
     } else {
         switch(c) {
@@ -181,6 +183,8 @@ __ss_int calcsize(str *fmt) {
             case 'Q':
             case 'd':
             case 'f':
+//            case 'n':
+            case 'N':
                 itemsize = get_itemsize(order, c);
                 if(ndigits == -1)
                     ndigits = 1;
@@ -256,6 +260,8 @@ __ss_int calcitems(str *fmt) {
             case 'Q':
             case 'd':
             case 'f':
+//            case 'n':
+            case 'N':
             case 'c':
             case '?':
                 if(ndigits == -1)
@@ -300,6 +306,8 @@ void fillbuf_int(char c, __ss_int t, char order, unsigned int itemsize) {
             case 'L': *((unsigned long *)buffy) = t; break;
             case 'q': *((long long *)buffy) = t; break;
             case 'Q': *((unsigned long long *)buffy) = t; break;
+//            case 'n': *((ssize_t *)buffy) = t; break;
+            case 'N': *((size_t *)buffy) = t; break;
         }
     } else {
         if(swap_endian(order)) {

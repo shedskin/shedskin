@@ -154,13 +154,16 @@ def test_rpartition():
     assert "a and b and c".rpartition("and") == ('a and b ', 'and', ' c')
     assert 'aa-bb-cc'.rpartition('-')
 
+def test_rstrip():
+    assert 'bla'.rstrip('a') == 'bl'
+
 def test_rsplit():
     assert 'bla'.rsplit('l') == ['b', 'a']
     assert 'b l a'.rsplit() == ['b', 'l', 'a']
     assert 'haajaaja'.rsplit('aa') == ['h', 'j', 'ja']
 
-def test_rstrip():
-    assert 'bla'.rstrip('a') == 'bl'
+    s = 'hop  hap  hup hup  woef '
+    assert s.rsplit('  ', maxsplit=2) == ['hop  hap', 'hup hup', 'woef ']
 
 def test_split():
     assert 'bla'.split('l') == ['b', 'a']
@@ -170,6 +173,9 @@ def test_split():
     assert "hoei hoei\\n".split() == ['hoei', 'hoei\\n']
     assert "aaaa".split("a", 2) == ['', '', 'aa']
     assert "aaaa".split("a", -1) == ['', '', '', '', '']
+
+    s = 'hop  hap  hup hup  woef '
+    assert s.split('  ', maxsplit=2) == ['hop', 'hap', 'hup hup  woef ']
 
 def test_splitlines():
     assert "ab\ncd\r\nef\rghi\n".splitlines() == ['ab', 'cd', 'ef', 'ghi']

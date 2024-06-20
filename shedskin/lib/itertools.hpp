@@ -53,6 +53,109 @@ inline countiter<__ss_float> *count(__ss_float start, __ss_float step = 1.) {
     return new countiter<__ss_float>(start, step);
 }
 
+// accumulate
+
+template<class T> class accumulateiter : public __iter<T> {
+    __iter<T> *iter;
+    int position;
+    T prev;
+
+public:
+    T (*func)(T, T);
+    bool has_func;
+    T initial;
+    bool has_initial;
+
+    accumulateiter(pyiter<T> *iterable);
+
+    T __next__();
+};
+
+template<class T> inline accumulateiter<T>::accumulateiter(pyiter<T> *iterable) {
+    position = 0;
+    has_func = false;
+    has_initial = false;
+    iter = iterable->__iter__();
+}
+
+template<class T> T accumulateiter<T>::__next__() {
+    if(position++ == 0) {
+        if(has_initial)
+            prev = initial;
+        else
+            prev = this->iter->__next__();
+        return prev;
+    }
+
+    T t = this->iter->__next__();
+
+    if(has_func)
+        prev = func(prev, t);
+    else
+        prev = __add(prev, t);
+
+    return prev;
+}
+
+/* no beauty prize for now */
+
+template<class T> inline accumulateiter<T> *accumulate(pyiter<T> *iterable, T(*func)(T, T), T initial) {
+    auto acciter = new accumulateiter<T>(iterable);
+    acciter->func = func;
+    acciter->has_func = True;
+    acciter->initial = initial;
+    acciter->has_initial = true;
+    return acciter;
+}
+template<class T> inline accumulateiter<T> *accumulate(pyiter<T> *iterable, void *, T initial) {
+    auto acciter = new accumulateiter<T>(iterable);
+    acciter->initial = initial;
+    acciter->has_initial = true;
+    return acciter;
+}
+
+template<class T> inline accumulateiter<T> *accumulate(pyiter<T> *iterable, T(*func)(T, T), void *v) {
+    auto acciter = new accumulateiter<T>(iterable);
+    acciter->func = func;
+    acciter->has_func = true;
+    return acciter;
+}
+template<class T> inline accumulateiter<T> *accumulate(pyiter<T> *iterable, void *, void *v) {
+    return new accumulateiter<T>(iterable);
+}
+
+// pairwise
+
+template<class T> class pairwiseiter : public __iter<tuple<T> *> {
+    int position;
+    __iter<T> *iter;
+    T prev;
+
+public:
+    pairwiseiter(pyiter<T> *iterable);
+
+    tuple<T> *__next__();
+};
+
+template<class T> inline pairwiseiter<T>::pairwiseiter(pyiter<T> *iterable) {
+    this->position = 0;
+    this->iter = iterable->__iter__();
+}
+
+template<class T> tuple<T> *pairwiseiter<T>::__next__() {
+    if(position++ == 0)
+        prev = this->iter->__next__();
+    T t = this->iter->__next__();
+
+    tuple<T> *result = new tuple<T>(0, prev, t);
+    prev = t;
+    return result;
+}
+
+template<class T> inline pairwiseiter<T> *pairwise(pyiter<T> *iterable) {
+    return new pairwiseiter<T>(iterable);
+}
+
 // cycle
 
 template<class T> class cycleiter : public __iter<T> {

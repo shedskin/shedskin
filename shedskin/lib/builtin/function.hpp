@@ -688,7 +688,7 @@ template<class T> void __print_elem(str *result, T t, size_t &count, str *separa
         result->unit += separator->unit;
 }
 
-template<class ... Args> void print(int, __ss_bool flush, file *f, str *end, str *separator, Args ... args) {
+template<class ... Args> void print_(int, __ss_bool flush, file *f, str *end, str *separator, Args ... args) {
     str *s = new str();
     size_t count = sizeof...(args);
     if(!separator)
@@ -713,4 +713,8 @@ template<class ... Args> void print(int, __ss_bool flush, file *f, str *end, str
         if(f)
             fflush(stdout);
     }
+}
+
+template <class ... Args> void print(Args ... args) {
+    print_(0, False, NULL, NULL, NULL, args...);
 }

@@ -5,8 +5,6 @@
 #TODO not supported
 #def starmap(function, iterable):
 #    yield func(*iterable[0])
-#def accumulate
-#def pairwise
 
 # Infinite Iterators
 
@@ -74,3 +72,12 @@ def combinations(iterable, r):
 
 def combinations_with_replacement(iterable, r):
     yield iter(iterable).__next__(),
+
+def pairwise(iterable):
+    yield (iter(iterable).__next__(),)
+
+def accumulate(iterable, func=None, initial=None):
+    n = iter(iterable).__next__()
+    n.__add__(n)
+    func(n, n)
+    yield n
