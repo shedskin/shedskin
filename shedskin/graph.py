@@ -716,6 +716,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             )
 
         for name_alias in node.names:
+            if name_alias.name == 'typing':
+                continue
+
             (name, pseudonym) = (name_alias.name, name_alias.asname)
             if pseudonym:
                 # --- import a.b as c: don't import a
@@ -755,6 +758,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         return module
 
     def visit_ImportFrom(self, node, parent=None):
+        if node.module == 'typing':
+            return
+
         if node not in getmv().importnodes:  # XXX use (func, node) as parent..
             error.error(
                 "please place all imports (no 'try:' etc) at the top of the file",
@@ -1654,6 +1660,10 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.visit(assign, func)
 
     def visit_Assign(self, node, func=None):
+        # skip type annotations
+        if node.value is None:
+            return
+
         # --- rewrite for struct.unpack XXX rewrite callfunc as tuple
         if len(node.targets) == 1:
             lvalue, rvalue = node.targets[0], node.value
