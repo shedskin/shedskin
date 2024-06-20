@@ -72,9 +72,9 @@ Some screenshots of the `example programs <https://github.com/shedskin/shedskin/
 .. image:: https://raw.githubusercontent.com/shedskin/shedskin/master/docs/assets/screenshots/harm3.png
   :width: 400
 
-(mandelbrot2)
+(pycsg)
 
-.. image:: https://raw.githubusercontent.com/shedskin/shedskin/master/docs/assets/screenshots/harm4.png
+.. image:: https://raw.githubusercontent.com/shedskin/shedskin/master/docs/assets/screenshots/harm7.png
   :width: 400
 
 (c64)
