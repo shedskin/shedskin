@@ -79,8 +79,10 @@ template<> inline void __mod_str(str *result, size_t &, char c, bytes *arg) {
         result->unit += repr(arg)->unit;
 }
 
-template <class T> void __mod_char(str *, size_t &, char, T) {} /* TODO error */
+template <class T> void __mod_char(str *, size_t &, char, T) {}
 template<> inline void __mod_char(str *result, size_t &, char, __ss_int arg) {
+    if(arg < 0 || arg > 255)
+        throw new OverflowError(new str("%c arg not in range(256)"));
     result->unit += (char)arg;
 }
 template<> inline void __mod_char(str *result, size_t &, char, str *arg) {
@@ -225,7 +227,7 @@ template<class ... Args> str *__mod6(str *fmt, int, Args ... args) {
     for(; j < fmtlen; j++) {
         char c = fmt->unit[j];
         result->unit += c;
-        if(c=='%' and fmt->unit[j+1] == '%') // TODO out of bounds
+        if(c=='%' and j+1<fmtlen and fmt->unit[j+1] == '%')
             j++;
     }
 
