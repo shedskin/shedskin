@@ -393,7 +393,7 @@ public:
     bytes *lstrip(bytes *chars=0);
 
     list<bytes *> *split(bytes *sep=0, __ss_int maxsplit=-1);
-    list<bytes *> *rsplit(bytes *sep = 0, __ss_int maxsplit = -1);
+    list<bytes *> *rsplit(bytes *sep=0, __ss_int maxsplit=-1);
     tuple2<bytes *, bytes *> *rpartition(bytes *sep);
     tuple2<bytes *, bytes *> *partition(bytes *sep);
     list<bytes *> *splitlines(__ss_int keepends = 0);
@@ -541,7 +541,7 @@ public:
     str *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
 
     list<str *> *split(str *sep=0, __ss_int maxsplit=-1);
-    list<str *> *rsplit(str *sep = 0, __ss_int maxsplit = -1);
+    list<str *> *rsplit(str *sep=0, __ss_int maxsplit=-1);
     tuple2<str *, str *> *rpartition(str *sep);
     tuple2<str *, str *> *partition(str *sep);
     list<str *> *splitlines(__ss_int keepends = 0);
