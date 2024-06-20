@@ -716,6 +716,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             )
 
         for name_alias in node.names:
+            if name_alias.name == 'typing':
+                continue
+
             (name, pseudonym) = (name_alias.name, name_alias.asname)
             if pseudonym:
                 # --- import a.b as c: don't import a
@@ -755,6 +758,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         return module
 
     def visit_ImportFrom(self, node, parent=None):
+        if node.module == 'typing':
+            return
+
         if node not in getmv().importnodes:  # XXX use (func, node) as parent..
             error.error(
                 "please place all imports (no 'try:' etc) at the top of the file",
@@ -1151,8 +1157,13 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         for op, right in zip(node.ops, node.comparators):
             self.visit(right, func)
             msg = msgs.get(type(op))
+
             if msg == "contains":
                 self.fake_func(node, right, "__" + msg + "__", [left], func)
+
+                if isinstance(right, (ast.List, ast.Tuple)) and right.elts: # expr in [..]/(..) opt
+                    self.temp_var2((right, 'cmp'), infer.inode(self.gx, right.elts[0]), func)
+
             elif msg in ("lt", "gt", "le", "ge"):
                 fakefunc = ast.Call(
                     ast.Name("__%s" % msg, ast.Load()), [left, right], []
@@ -1649,6 +1660,10 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.visit(assign, func)
 
     def visit_Assign(self, node, func=None):
+        # skip type annotations
+        if node.value is None:
+            return
+
         # --- rewrite for struct.unpack XXX rewrite callfunc as tuple
         if len(node.targets) == 1:
             lvalue, rvalue = node.targets[0], node.value

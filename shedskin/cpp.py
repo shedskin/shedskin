@@ -519,7 +519,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.print()
 
         for child in node.body:
-            if isinstance(child, ast.ImportFrom) and child.module != "__future__":
+            if isinstance(child, ast.ImportFrom) and child.module not in ("__future__", "typing"):
                 module = self.gx.from_module[child]
                 using = "using " + module.full_path() + "::"
                 for name, pseudonym in [(n.name, n.asname) for n in child.names]:
@@ -588,7 +588,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     if cl.parent.static_nodes:
                         self.output("%s::__static__();" % self.cpp_name(cl))
 
-            elif isinstance(child, ast.ImportFrom) and child.module != "__future__":
+            elif isinstance(child, ast.ImportFrom) and child.module not in ("__future__", "typing"):
                 module = self.gx.from_module[child]
                 for name, pseudonym in [(n.name, n.asname) for n in child.names]:
                     pseudonym = pseudonym or name
@@ -2130,11 +2130,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         argtypes = ltypes | rtypes
         ul, ur = typestr.unboxable(self.gx, ltypes), typestr.unboxable(self.gx, rtypes)
 
-        # name (not) in (expr, expr, ..)
+        # expr (not) in [const, ..]/(const, ..)
         if (
             middle == "__contains__"
-            and isinstance(left, ast.Tuple)
-            and isinstance(right, ast.Name)
+            and isinstance(left, (ast.Tuple, ast.List))
+            and left.elts
+            and all([isinstance(elt, ast.Constant) for elt in left.elts])
         ):
             self.append("(")
             for i, elem in enumerate(left.elts):
@@ -2142,7 +2143,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     self.append("!__eq(")  # XXX why does using __ne( fail test 199!?
                 else:
                     self.append("__eq(")
-                self.visit(right, func)
+
+                if i == 0:
+                    self.visitm(self.mv.tempcount[(left, 'cmp')], '=', right, func)
+                else:
+                    self.visitm(self.mv.tempcount[(left, 'cmp')], func)
+
                 self.append(",")
                 self.visit(elem, func)
                 self.append(")")
@@ -2150,7 +2156,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     if prefix == "!":
                         self.append(" && ")
                     else:
-                        self.append(" | ")
+                        self.append(" || ")
             self.append(")")
             return
 
@@ -2361,7 +2367,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 and not (self.gx.int64 or self.gx.int128)
             ):
                 error.error(
-                    "return value of 'id' does not fit in 32-bit integer (try shedskin --long)",
+                    "return value of 'id' does not fit in 32-bit integer (try shedskin --int64)",
                     self.gx,
                     node,
                     warning=True,
@@ -2442,7 +2448,15 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             elif ident == "hash":
                 self.append("hasher(")  # XXX cleanup
             elif ident == "__print":  # XXX
-                self.append("print(")
+                if not node.keywords:
+                    self.append('print(')
+                    for i, arg in enumerate(node.args):
+                        self.visit(arg, func)
+                        if i != len(node.args)-1:
+                            self.append(', ')
+                    self.append(')')
+                    return
+                self.append("print_(")
             elif ident == "isinstance":
                 self.append("True")
                 return
@@ -2592,7 +2606,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             or self.library_func(funcs, "random", "Random", "triangular")
         ):
             castnull = True
-        for itertools_func in ["islice", "zip_longest", "permutations"]:
+        for itertools_func in ["islice", "zip_longest", "permutations", "accumulate"]:
             if self.library_func(funcs, "itertools", None, itertools_func):
                 castnull = True
                 break
@@ -2903,6 +2917,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.visit(ast.Assign([node.target], node.value), func)
 
     def visit_Assign(self, node, func=None):
+        if node.value is None: # skip type annotation
+            return
+
         if self.struct_unpack_cpp(node, func):
             return
 

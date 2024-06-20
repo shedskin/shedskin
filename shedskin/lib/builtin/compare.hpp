@@ -1,7 +1,6 @@
-/* Copyright 2005-2011 Mark Dufour and contributors; License Expat (See LICENSE) */
+/* Copyright 2005-2024 Mark Dufour and contributors; License Expat (See LICENSE) */
 
-
-/* equality */
+/* eq */
 
 template<class T> inline __ss_bool __eq(T a, T b) { return ((a&&b)?(a->__eq__(b)):__mbool(a==b)); }
 #ifdef __SS_LONG /* XXX */
@@ -21,7 +20,12 @@ template<> inline __ss_bool __eq(__ss_bool a, __ss_bool b) { return __mbool(a ==
 template<> inline __ss_bool __eq(__ss_float a, __ss_float b) { return __mbool(a == b); }
 template<> inline __ss_bool __eq(void *a, void *b) { return __mbool(a == b); }
 
+/* ne */
+
 template<class T> inline __ss_bool __ne(T a, T b) { return ((a&&b)?(a->__ne__(b)):__mbool(a!=b)); }
+#ifdef __SS_LONG /* XXX */
+template<> inline __ss_bool __ne(__ss_int a, __ss_int b) { return __mbool(a != b); }
+#endif
 template<> inline __ss_bool __ne(int a, int b) { return __mbool(a != b); }
 template<> inline __ss_bool __ne(__ss_float a, __ss_float b) { return __mbool(a != b); }
 template<> inline __ss_bool __ne(void *a, void *b) { return __mbool(a != b); }
@@ -29,15 +33,25 @@ template<> inline __ss_bool __ne(str *a, str *b) {
     return __mbool(!__eq(a, b));
 }
 
+/* gt */
+
 template<class T> inline __ss_bool __gt(T a, T b) { return a->__gt__(b); }
 template<> inline __ss_bool __gt(int a, int b) { return __mbool(a > b); }
 template<> inline __ss_bool __gt(__ss_float a, __ss_float b) { return __mbool(a > b); }
+
+/* ge */
+
 template<class T> inline __ss_bool __ge(T a, T b) { return a->__ge__(b); }
 template<> inline __ss_bool __ge(int a, int b) { return __mbool(a >= b); }
 template<> inline __ss_bool __ge(__ss_float a, __ss_float b) { return __mbool(a >= b); }
+
+/* lt */
 template<class T> inline __ss_bool __lt(T a, T b) { return a->__lt__(b); }
 template<> inline __ss_bool __lt(int a, int b) { return __mbool(a < b); }
 template<> inline __ss_bool __lt(__ss_float a, __ss_float b) { return __mbool(a < b); }
+
+/* le */
+
 template<class T> inline __ss_bool __le(T a, T b) { return a->__le__(b); }
 template<> inline __ss_bool __le(int a, int b) { return __mbool(a <= b); }
 template<> inline __ss_bool __le(__ss_float a, __ss_float b) { return __mbool(a <= b); }

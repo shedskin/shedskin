@@ -55,6 +55,7 @@ lines  name                 description
    208 path_tracing.py      path tracing raytracer
     80 pisang.py            satisfiability solver
    392 plcfrs.py            natural language parser
+   244 pycsg_main.py        constructive solid geometry     (extmod)
   1543 pygasus_main.py      NES emulator                    (extmod, GUI)
    272 pygmy.py             raytracer
    218 pylife.py            hashlife-based game of life     (extmod, curses)

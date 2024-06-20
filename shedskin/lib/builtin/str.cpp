@@ -237,7 +237,7 @@ tuple2<str *, str *> *str::rpartition(str *separator)
         return new tuple2<str *, str *>(3, new str(unit), new str(""), new str(""));
 }
 
-list<str *> *str::rsplit(str *separator, __ss_int maxsep)
+list<str *> *str::rsplit(str *separator, __ss_int maxsep) // TODO reimplement like ::split
 {
     __GC_STRING ts;
     list<str *> *r = new list<str *>();
@@ -377,78 +377,43 @@ str *str::rstrip(str *chars) {
     return new str(unit.substr(0,last+1));
 }
 
-list<str *> *str::split(str *sp_, __ss_int max_splits) {
-    __GC_STRING s = unit;
-    int num_splits = 0;
-    size_t sep_iter = 0, tmp, chunk_iter = 0;
+list<str *> *str::split(str *sep_, __ss_int maxsplit) {
+    size_t pos_start = 0, pos_end, sep_len;
     list<str *> *result = new list<str *>();
-    if (sp_ == NULL)
-    {
-#define next_separator(iter) (s.find_first_of(ws, (iter)))
-#define skip_separator(iter) (s.find_first_not_of(ws, (iter)))
+    __ss_int splits = 0;
 
-        if(skip_separator(chunk_iter) == std::string::npos) /* XXX */
+    if(sep_ == NULL) {
+        pos_start = unit.find_first_not_of(ws, pos_start);
+        if (pos_start == std::string::npos)
             return result;
-        if(next_separator(chunk_iter) == 0)
-            chunk_iter = skip_separator(chunk_iter);
-        while((max_splits < 0 or num_splits < max_splits)
-              and ((sep_iter = next_separator(chunk_iter)) != std::string::npos))
-        {
-            result->append(new str(s.substr(chunk_iter, sep_iter - chunk_iter)));
-            if((tmp = skip_separator(sep_iter)) == std::string::npos) {
-                chunk_iter = sep_iter;
-                break;
-            } else
-                chunk_iter = tmp;
-            ++num_splits;
-        }
-        if(not (max_splits < 0 or num_splits < max_splits))
-            result->append(new str(s.substr(chunk_iter, s.size()-chunk_iter)));
-        else if(sep_iter == std::string::npos)
-            result->append(new str(s.substr(chunk_iter, s.size()-chunk_iter)));
-
-#undef next_separator
-#undef skip_separator
-
-    } else { /* given separator (slightly different algorithm required)
-              * (python is very inconsistent in this respect) */
-        const char *separator = sp_->c_str();
-        size_t sep_size = sp_->unit.size();
-
-#define next_separator(iter) s.find(separator, (iter))
-#define skip_separator(iter) ((iter + sep_size) > s.size()? std::string::npos : (iter + sep_size))
-
-        if (max_splits == 0) {
-            result->append(this);
-            return result;
-        }
-        if(next_separator(chunk_iter) == 0) {
-            chunk_iter = skip_separator(chunk_iter);
-            result->append(new str());
-            ++num_splits;
-        }
-        while((max_splits < 0 or num_splits < max_splits)
-              and (sep_iter = next_separator(chunk_iter)) != std::string::npos)
-        {
-            result->append(new str(s.substr(chunk_iter, sep_iter - chunk_iter)));
-            if((tmp = skip_separator(sep_iter)) == std::string::npos) {
-                chunk_iter = sep_iter;
-                break;
-            } else
-                chunk_iter = tmp;
-            ++num_splits;
-        }
-        if(not (max_splits < 0 or num_splits < max_splits))
-            result->append(new str(s.substr(chunk_iter, s.size()-chunk_iter)));
-        else if(sep_iter == std::string::npos)
-            result->append(new str(s.substr(chunk_iter, s.size()-chunk_iter)));
-
-
-#undef next_separator
-#undef skip_separator
-
     }
 
+    while(1) {
+        if(sep_ == NULL)
+            pos_end = unit.find_first_of(ws, pos_start);
+        else
+            pos_end = unit.find(sep_->unit, pos_start);
+
+        if(pos_end == std::string::npos || ((maxsplit != -1) && splits >= maxsplit)) {
+            result->append(new str(unit.substr(pos_start, unit.size()-pos_start)));
+            break;
+        }
+
+        result->append(new str(unit.substr(pos_start, pos_end-pos_start)));
+        splits += 1;
+
+        if(sep_ == NULL) {
+            pos_start = unit.find_first_not_of(ws, pos_end);
+            if(pos_start == std::string::npos)
+                break;
+        } else {
+            pos_start = pos_end + sep_->unit.size();
+            if(pos_start == unit.size()) {
+                result->append(new str(unit.substr(pos_start, unit.size()-pos_start)));
+                break;
+            }
+        }
+    }
     return result;
 }
 

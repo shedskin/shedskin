@@ -393,7 +393,7 @@ public:
     bytes *lstrip(bytes *chars=0);
 
     list<bytes *> *split(bytes *sep=0, __ss_int maxsplit=-1);
-    list<bytes *> *rsplit(bytes *sep = 0, __ss_int maxsplit = -1);
+    list<bytes *> *rsplit(bytes *sep=0, __ss_int maxsplit=-1);
     tuple2<bytes *, bytes *> *rpartition(bytes *sep);
     tuple2<bytes *, bytes *> *partition(bytes *sep);
     list<bytes *> *splitlines(__ss_int keepends = 0);
@@ -541,7 +541,7 @@ public:
     str *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
 
     list<str *> *split(str *sep=0, __ss_int maxsplit=-1);
-    list<str *> *rsplit(str *sep = 0, __ss_int maxsplit = -1);
+    list<str *> *rsplit(str *sep=0, __ss_int maxsplit=-1);
     tuple2<str *, str *> *rpartition(str *sep);
     tuple2<str *, str *> *partition(str *sep);
     list<str *> *splitlines(__ss_int keepends = 0);
@@ -998,8 +998,6 @@ file *open(bytes *name, str *flags = 0);
 file_binary *open_binary(str *name, str *flags = 0);
 file_binary *open_binary(bytes *name, str *flags = 0); /* ugly duplication.. use str/byte template? */
 str *input(str *msg = 0);
-
-template <class ... Args> void print(int n, __ss_bool flush, file *f, str *end, str *sep, Args ... args);
 
 __xrange *range(__ss_int b);
 __xrange *range(__ss_int a, __ss_int b, __ss_int s=1);

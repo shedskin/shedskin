@@ -200,6 +200,28 @@ def test_compress():
     assert list(itertools.compress([42, 32, 21, 55, 303], [True, False, True, False, True])) == [42, 21, 303]
 
 
+def test_pairwise():
+    assert list(itertools.pairwise([])) == []
+    assert list(itertools.pairwise([1])) == []
+    assert list(itertools.pairwise([1,2])) == [(1,2)]
+    assert list(itertools.pairwise([1,2,3,4,5])) == [(1,2), (2,3), (3,4), (4,5)]
+
+
+def test_accumulate():
+#    assert list(itertools.accumulate([])) == []
+
+    assert list(itertools.accumulate([7.7])) == [7.7]
+    assert list(itertools.accumulate(['a', 'bb', 'ccc'])) == ['a', 'abb', 'abbccc']
+    assert list(itertools.accumulate(range(5))) == [0, 1, 3, 6, 10]
+
+    assert list(itertools.accumulate([2,5,-1])) == [2, 7, 6]
+    assert list(itertools.accumulate([2,5,-1], initial=-1)) == [-1, 1, 6, 5]
+    assert list(itertools.accumulate([2,5,-1], lambda a,b: a-b)) == [2, -3, -2]
+    assert list(itertools.accumulate([2,5,-1], func=lambda a,b: a*b)) == [2, 10, -10]
+    assert list(itertools.accumulate([2,5,-1], lambda a,b: a-b, initial=-1)) == [-1, -3, -8, -7]
+    assert list(itertools.accumulate([2,5,-1], initial=-1, func=lambda a,b: a-b)) == [-1, -3, -8, -7]
+    assert list(itertools.accumulate([2,5,-1], func=lambda a,b: a-b, initial=-1)) == [-1, -3, -8, -7]
+
 
 def test_all():
     test_count()
@@ -218,6 +240,8 @@ def test_all():
     test_tee()
     test_filterfalse()
     test_zip_longest()
+    test_pairwise()
+    test_accumulate()
 
 
 if __name__ == '__main__':
