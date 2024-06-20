@@ -519,7 +519,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.print()
 
         for child in node.body:
-            if isinstance(child, ast.ImportFrom) and child.module != "__future__":
+            if isinstance(child, ast.ImportFrom) and child.module not in ("__future__", "typing"):
                 module = self.gx.from_module[child]
                 using = "using " + module.full_path() + "::"
                 for name, pseudonym in [(n.name, n.asname) for n in child.names]:
@@ -588,7 +588,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     if cl.parent.static_nodes:
                         self.output("%s::__static__();" % self.cpp_name(cl))
 
-            elif isinstance(child, ast.ImportFrom) and child.module != "__future__":
+            elif isinstance(child, ast.ImportFrom) and child.module not in ("__future__", "typing"):
                 module = self.gx.from_module[child]
                 for name, pseudonym in [(n.name, n.asname) for n in child.names]:
                     pseudonym = pseudonym or name
@@ -2917,6 +2917,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.visit(ast.Assign([node.target], node.value), func)
 
     def visit_Assign(self, node, func=None):
+        if node.value is None: # skip type annotation
+            return
+
         if self.struct_unpack_cpp(node, func):
             return
 
