@@ -9,6 +9,7 @@ import logging
 import os
 import os.path
 import pathlib
+import platform
 import sys
 import time
 
@@ -96,6 +97,9 @@ class Shedskin:
                 gx.int64 = True
 
             if args.int128:
+                if platform.system() == "Windows":
+                    self.log.error("--int128 not supported on windows")
+                    sys.exit(1)
                 gx.int128 = True
 
             if args.float32:
