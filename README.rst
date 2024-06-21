@@ -42,7 +42,7 @@ Shed Skin only supports a restricted subset of Python, so one should not expect 
 Installation
 ------------
 
-Shed Skin depends on some others projects, such as the `Boehm garbage collector <https://www.hboehm.info/gc/>`_. Please see the `documentation`_ on how to install these.
+Shed Skin depends on some others projects, such as the `Boehm garbage collector <https://www.hboehm.info/gc/>`_. Please see the `0.`_ on how to install these.
 
 
 
@@ -58,7 +58,8 @@ Some timings for the Shed Skin 'sieve' example (n=100000000) and several Python 
     nuitka 0.6.16:      11.4
     pypy 3.9.12:        5.8
     numba 0.56.4:       2.5
-    shedskin (master):  1.9
+    shedskin 0.9.9:     1.9
+    shedskin 0.9.9:     1.8  (using --nowrap --nobounds)
 
 Note that Numba defaults to int64 as integer type, while Shed Skin defaults to int32. Performance is practically equal when using shedskin --long.
 
