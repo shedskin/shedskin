@@ -260,7 +260,7 @@ bytes *bytes::strip(bytes *chars) {
 }
 
 list<bytes *> *bytes::split(bytes *sep_, __ss_int maxsplit) {
-    size_t pos_start = 0, pos_end, sep_len;
+    size_t pos_start = 0, pos_end;
     list<bytes *> *result = new list<bytes *>();
     __ss_int splits = 0;
 

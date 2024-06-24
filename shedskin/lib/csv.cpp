@@ -10,7 +10,6 @@ list<void *> *const_0;
 str *const_88;
 
 str *__name__;
-list<__ss_int> *__0, *__1;
 __ss_int EAT_CRNL, ESCAPED_CHAR, ESCAPE_IN_QUOTED_FIELD, IN_FIELD, IN_QUOTED_FIELD, QUOTE_ALL, QUOTE_IN_QUOTED_FIELD, QUOTE_MINIMAL, QUOTE_NONE, QUOTE_NONNUMERIC, START_FIELD, START_RECORD, _field_limit;
 OSError *__exception;
 
@@ -41,8 +40,8 @@ void * default_1;
 void * default_5;
 void * default_4;
 
-__csviter::__csviter(reader *r) {
-    this->r = r;
+__csviter::__csviter(reader *r_) {
+    r = r_;
 }
 
 list<str *> *__csviter::__next__() {
@@ -53,8 +52,8 @@ __csviter *reader::__iter__() {
     return new __csviter(this);
 }
 
-__driter::__driter(DictReader *r) {
-    this->r = r;
+__driter::__driter(DictReader *r_) {
+    r = r_;
 }
 
 dict<str *, str *> *__driter::__next__() {
@@ -88,7 +87,7 @@ static inline list<str *> *list_comp_1(DictWriter *self, dict<str *, str *> *row
     __37 = self->fieldnames;
     __ss_result->resize(len(__37));
     FOR_IN(key,__37,37,39,123)
-        __ss_result->units[__39] = rowdict->get(key, self->restval);
+        __ss_result->units[(size_t)__39] = rowdict->get(key, self->restval);
     END_FOR
 
     return __ss_result;
@@ -126,10 +125,8 @@ class reader
 class_ *cl_reader;
 
 void *reader::parse_process_char(str *c) {
-    Excel *dialect;
     __ss_int __11, __13, __7, __9;
 
-    dialect = this->dialect;
     if (this->state == START_RECORD) {
         if (__eq(c, const_7)) {
             return NULL;
@@ -271,7 +268,7 @@ void *reader::parse_reset() {
 }
 
 list<str *> *reader::__next__() {
-    list<str *> *fields;
+    list<str *> *fields_;
     str *line;
 
     this->parse_reset();
@@ -295,30 +292,30 @@ list<str *> *reader::__next__() {
             break;
         }
     }
-    fields = this->fields;
+    fields_ = this->fields;
     this->fields = (new list<str *>());
-    return fields;
+    return fields_;
 }
 
-void *reader::__init__(file *input_iter, str *dialect, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
+void *reader::__init__(file *input_iter_, str *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
     if (quoting == QUOTE_NONNUMERIC) {
         throw ((new ValueError(const_88)));
     }
-    this->input_iter = input_iter;
+    this->input_iter = input_iter_;
     this->line_num = 0;
-    this->dialect = _get_dialect(dialect, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
+    this->dialect = _get_dialect(dialect_, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
     return NULL;
 }
 
 void *reader::parse_save_field() {
-    str *field;
+    str *field_;
 
-    field = (const_16)->join(this->field);
+    field_ = (const_16)->join(this->field);
     this->field = (new list<str *>());
     if (this->numeric_field) {
         this->numeric_field = 0;
     }
-    (this->fields)->append(field);
+    (this->fields)->append(field_);
     return NULL;
 }
 
@@ -339,10 +336,8 @@ class_ *cl_writer;
 
 __ss_int writer::join_append_data(str *field, __ss_int quote_empty, __ss_int quoted) {
     str *lineterm;
-    Excel *dialect;
     __ss_int __18, __19, __20, __22, want_escape;
 
-    dialect = this->dialect;
     lineterm = dialect->lineterminator;
     if ((this->num_fields>0)) {
         (this->rec)->append(dialect->delimiter);
@@ -404,11 +399,9 @@ __ss_int writer::join_append_data(str *field, __ss_int quote_empty, __ss_int quo
 void *writer::writerow(list<str *> *seq) {
     list<str *> *__24;
     list<str *>::for_in_loop __123;
-    Excel *dialect;
     __ss_int __26, quoted;
     str *field;
 
-    dialect = this->dialect;
     this->join_reset();
 
     FOR_IN(field,seq,24,26,123)
@@ -459,12 +452,12 @@ __ss_int writer::join_append(str *field, __ss_int quoted, __ss_int quote_empty) 
     return quoted;
 }
 
-void *writer::__init__(file *output_file, str *dialect, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
+void *writer::__init__(file *output_file_, str *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
     if (quoting == QUOTE_NONNUMERIC) {
         throw ((new ValueError(const_88)));
     }
-    this->output_file = output_file;
-    this->dialect = _get_dialect(dialect, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
+    this->output_file = output_file_;
+    this->dialect = _get_dialect(dialect_, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict);
     return NULL;
 }
 
@@ -524,13 +517,13 @@ list<str *> *DictReader::getfieldnames() {
     return this->_fieldnames;
 }
 
-void *DictReader::__init__(file *f, list<str *> *fieldnames, str *restkey, str *restval, str *dialect, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
+void *DictReader::__init__(file *f, list<str *> *fieldnames_, str *restkey_, str *restval_, str *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
     
-    this->_fieldnames = fieldnames;
-    this->restkey = restkey;
-    this->restval = restval;
-    this->_reader = (new reader(f, dialect, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict));
-    this->dialect = dialect;
+    this->_fieldnames = fieldnames_;
+    this->restkey = restkey_;
+    this->restval = restval_;
+    this->_reader = (new reader(f, dialect_, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict));
+    this->dialect = dialect_;
     this->line_num = 0;
     return NULL;
 }
@@ -574,15 +567,15 @@ void *DictWriter::writerows(list<dict<str *, str *> *> *rowdicts) {
     return (this->_writer)->writerows(rows);
 }
 
-void *DictWriter::__init__(file *f, list<str *> *fieldnames, str *restval, str *extrasaction, str *dialect, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
+void *DictWriter::__init__(file *f, list<str *> *fieldnames_, str *restval_, str *extrasaction_, str *dialect_, str *delimiter, str *quotechar, __ss_int doublequote, __ss_int skipinitialspace, str *lineterminator, __ss_int quoting, str *escapechar, __ss_int strict) {
     
-    this->fieldnames = fieldnames;
-    this->restval = restval;
-    if ((!(const_3)->__contains__(extrasaction->lower()))) {
-        throw ((new ValueError(__mod6(const_23, 1, extrasaction))));
+    this->fieldnames = fieldnames_;
+    this->restval = restval_;
+    if ((!(const_3)->__contains__(extrasaction_->lower()))) {
+        throw ((new ValueError(__mod6(const_23, 1, extrasaction_))));
     }
-    this->extrasaction = extrasaction;
-    this->_writer = (new writer(f, dialect, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict));
+    this->extrasaction = extrasaction_;
+    this->_writer = (new writer(f, dialect_, delimiter, quotechar, doublequote, skipinitialspace, lineterminator, quoting, escapechar, strict));
     return NULL;
 }
 
@@ -626,7 +619,7 @@ void __init() {
     cl_Error = new class_("Error");
     cl_DictWriter = new class_("DictWriter");
 
-    __0 = new list<__ss_int>(range(8));
+    list<__ss_int> *__0 = new list<__ss_int>(range(8));
     START_RECORD = __0->__getfast__(0);
     START_FIELD = __0->__getfast__(1);
     ESCAPED_CHAR = __0->__getfast__(2);
@@ -635,12 +628,15 @@ void __init() {
     ESCAPE_IN_QUOTED_FIELD = __0->__getfast__(5);
     QUOTE_IN_QUOTED_FIELD = __0->__getfast__(6);
     EAT_CRNL = __0->__getfast__(7);
-    __1 = new list<__ss_int>(range(4));
+
+    list<__ss_int> *__1 = new list<__ss_int>(range(4));
     QUOTE_MINIMAL = __1->__getfast__(0);
     QUOTE_ALL = __1->__getfast__(1);
     QUOTE_NONNUMERIC = __1->__getfast__(2);
     QUOTE_NONE = __1->__getfast__(3);
+
     _field_limit = (128*1024);
+
     default_0 = NULL;
     default_1 = NULL;
     default_2 = NULL;

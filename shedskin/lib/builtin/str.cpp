@@ -378,7 +378,7 @@ str *str::rstrip(str *chars) {
 }
 
 list<str *> *str::split(str *sep_, __ss_int maxsplit) {
-    size_t pos_start = 0, pos_end, sep_len;
+    size_t pos_start = 0, pos_end;
     list<str *> *result = new list<str *>();
     __ss_int splits = 0;
 
