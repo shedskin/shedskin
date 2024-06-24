@@ -23,19 +23,19 @@ public:
     char typechar;
     unsigned int itemsize;
 
-    array(str *typecode) {
+    array(str *typecode_) {
         this->__class__ = cl_array;
-        this->typecode = typecode;
-        this->typechar = typecode->unit[0];
-        this->itemsize = get_itemsize(typechar);
+        typecode = typecode_;
+        typechar = typecode_->unit[0];
+        itemsize = get_itemsize(typechar);
     }
 
-    template<class U> array(str *typecode, U *iter) { /* XXX iter with type None */
+    template<class U> array(str *typecode_, U *iter) { /* XXX iter with type None */
         this->__class__ = cl_array;
-        __init__(typecode, iter);
+        __init__(typecode_, iter);
     }
 
-    template<class U> void *__init__(str *typecode, U *iter);
+    template<class U> void *__init__(str *typecode_, U *iter);
 
     template<class U> void *extend(U *iter);
     template<class U> void *fromlist(U *iter);
@@ -89,11 +89,11 @@ public:
     void *__delslice__(__ss_int a, __ss_int b);
 };
 
-template<class T> template<class U> void *array<T>::__init__(str *typecode, U *iter) {
-    this->typecode = typecode;
-    this->typechar = typecode->unit[0];
-    this->itemsize = get_itemsize(typechar);
-    this->extend(iter);
+template<class T> template<class U> void *array<T>::__init__(str *typecode_, U *iter) {
+    typecode = typecode_;
+    typechar = typecode_->unit[0];
+    itemsize = get_itemsize(typechar);
+    extend(iter);
     return NULL;
 }
 
