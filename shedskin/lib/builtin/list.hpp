@@ -66,7 +66,7 @@ template<class T> void list<T>::clear() {
 }
 
 template<class T> void list<T>::resize(__ss_int i) {
-    units.resize(i);
+    units.resize((size_t)i);
 }
 
 template<class T> __ss_int list<T>::__len__() {
@@ -153,8 +153,8 @@ template<class T> list<T> *list<T>::__slice__(__ss_int x, __ss_int l, __ss_int u
     list<T> *c = new list<T>();
     slicenr(x, l, u, s, this->__len__());
     if(s == 1) {
-        c->units.resize(u-l);
-        memcpy(&(c->units[0]), &(this->units[l]), sizeof(T)*(u-l));
+        c->units.resize((size_t)(u-l));
+        memcpy(&(c->units[0]), &(this->units[(size_t)l]), sizeof(T)*((size_t)(u-l)));
     } else if(s > 0)
         for(__ss_int i=l; i<u; i += s)
             c->units.push_back(units[(size_t)i]);
