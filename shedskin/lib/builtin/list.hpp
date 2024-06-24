@@ -253,8 +253,8 @@ template<class T> __ss_bool list<T>::__contains__(T a) {
 }
 
 template<class T> list<T> *list<T>::__add__(list<T> *b) {
-    int l1 = this->__len__();
-    int l2 = b->__len__();
+    size_t l1 = this->units.size();
+    size_t l2 = b->units.size();
 
     list<T> *c = new list<T>();
     c->units.resize(l1+l2);
@@ -270,12 +270,12 @@ template<class T> list<T> *list<T>::__add__(list<T> *b) {
 template<class T> list<T> *list<T>::__mul__(__ss_int b) {
     list<T> *c = new list<T>();
     if(b<=0) return c;
-    __ss_int len = this->__len__();
+    size_t len = this->units.size();
     if(len==1)
-        c->units.assign(b, this->units[0]);
+        c->units.assign((size_t)b, this->units[0]);
     else {
-        c->units.resize(b*len);
-        for(__ss_int i=0; i<b; i++)
+        c->units.resize((size_t)b*len);
+        for(size_t i=0; i<(size_t)b; i++)
             memcpy(&(c->units[i*len]), &(this->units[0]), sizeof(T)*len);
     }
     return c;

@@ -61,8 +61,8 @@ public:
     int __last_yield;
     list<str *>::for_in_loop __123;
 
-    __gen_iglob(str *pathname) {
-        this->pathname = pathname;
+    __gen_iglob(str *pathname_) {
+        this->pathname = pathname_;
         __last_yield = -1;
     }
 

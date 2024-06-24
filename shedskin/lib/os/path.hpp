@@ -23,7 +23,7 @@ str *normcase(str *s);
 __ss_bool isabs(str *s);
 str *joinl(list<str *> *l);
 
-template <class ... Args> str *join(__ss_int n, Args ... args) {
+template <class ... Args> str *join(__ss_int, Args ... args) {
     list<str *> *p = new list<str *>();
     (p->append(args), ...);
     return joinl(p);

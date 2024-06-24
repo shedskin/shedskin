@@ -81,15 +81,15 @@ str *match_object::expand(str *tpl)
 
 tuple2<str *, str *> *match_object::groups(str *defval)
 {
-    tuple2<str *, str *> *r;
+    tuple<str *> *r;
     int i;
 
-    r = new tuple2<str *, str *>();
+    r = new tuple<str *>();
 
     for(i = 1; i <= re->capture_count; i++)
     {
         if(captured[i * 2] != -1)
-            r->units.push_back(new str(string->unit.substr(captured[i * 2], captured[i * 2 + 1] - captured[i * 2])));
+            r->units.push_back(new str(string->unit.substr((size_t)(captured[i * 2]), (size_t)(captured[i * 2 + 1] - captured[i * 2]))));
 
         else r->units.push_back(defval ? new str(defval->unit) : 0);
     }
@@ -110,7 +110,7 @@ dict<str *, str *> *match_object::groupdict(str *defval)
         t = re->groupindex->__getitem__(k);
 
         if(captured[t * 2] != -1) r->__setitem__(new str(k->unit),
-            new str(string->unit.substr(captured[t * 2], captured[t * 2 + 1] - captured[t * 2])));
+            new str(string->unit.substr((size_t)(captured[t * 2]), (size_t)(captured[t * 2 + 1] - captured[t * 2]))));
 
         else r->__setitem__(new str(k->unit), defval ? new str(defval->unit) : 0);
     END_FOR
@@ -248,7 +248,7 @@ str *re_object::__subn(str *repl, str *subj, __ss_int maxn, int *howmany)
 
     //temporary data
     clen = (capture_count + 1) * 2 * 3;
-    captured = (int *)GC_MALLOC(clen * sizeof(int));
+    captured = (int *)GC_MALLOC((size_t)clen * sizeof(int));
 
     out = "";
 
@@ -332,7 +332,7 @@ tuple2<str *, __ss_int> *re_object::subn(str *repl, str *subj, __ss_int maxn)
     return new tuple2<str *, __ss_int>(2, r, n);
 }
 
-list<str *> *re_object::__splitfind(str *subj, __ss_int maxn, char onlyfind, __ss_int flags)
+list<str *> *re_object::__splitfind(str *subj, __ss_int maxn, char onlyfind, __ss_int flags_)
 {
     __GC_STRING *subjs;
     list<str *> *r;
@@ -341,7 +341,7 @@ list<str *> *re_object::__splitfind(str *subj, __ss_int maxn, char onlyfind, __s
 
     //temporary data
     clen = (capture_count + 1) * 2 * 3;
-    captured = (int *)GC_MALLOC(clen * sizeof(int));
+    captured = (int *)GC_MALLOC((size_t)clen * sizeof(int));
 
     //'permanent' (in respect to the lifetime of this function)
     r = new list<str *>();
@@ -357,7 +357,7 @@ list<str *> *re_object::__splitfind(str *subj, __ss_int maxn, char onlyfind, __s
             c_subj,
             (int)subjs->size(),
             i,
-            flags,
+            flags_,
             captured,
             clen
         ) <= 0) break;
@@ -407,18 +407,18 @@ list<str *> *re_object::split(str *subj, __ss_int maxn)
     return __splitfind(subj, maxn, 0, 0);
 }
 
-list<str *> *re_object::findall(str *subj, __ss_int flags)
+list<str *> *re_object::findall(str *subj, __ss_int flags_)
 {
-    return __splitfind(subj, -1, 1, flags);
+    return __splitfind(subj, -1, 1, flags_);
 }
 
-match_iter::match_iter(re_object *ro, str *subj, __ss_int pos, __ss_int endpos, __ss_int flags)
+match_iter::match_iter(re_object *ro_, str *subj_, __ss_int pos_, __ss_int endpos_, __ss_int flags_)
 {
-    this->subj = subj;
-    this->pos = pos;
-    this->endpos = endpos;
-    this->flags = flags;
-    this->ro = ro;
+    this->subj = subj_;
+    this->pos = pos_;
+    this->endpos = endpos_;
+    this->flags = flags_;
+    this->ro = ro_;
 }
 
 match_object *match_iter::__next__(void)
@@ -437,15 +437,15 @@ match_object *match_iter::__next__(void)
     return mobj;
 }
 
-__iter<match_object *> *re_object::finditer(str *subj, __ss_int pos, __ss_int endpos, __ss_int flags)
+__iter<match_object *> *re_object::finditer(str *subj, __ss_int pos, __ss_int endpos, __ss_int flags_)
 {
     if(endpos < pos && endpos != -1) throw new error(new str("end position less than initial"));
     if((unsigned int)pos >= subj->unit.size()) throw new error(new str("starting position >= string length"));
 
-    return new match_iter(this, subj, pos, endpos, flags);
+    return new match_iter(this, subj, pos, endpos, flags_);
 }
 
-match_object *re_object::__exec(str *subj, __ss_int pos, __ss_int endpos, __ss_int flags)
+match_object *re_object::__exec(str *subj, __ss_int pos, __ss_int endpos, __ss_int flags_)
 {
     match_object *mobj;
     int *captured, clen, r, t, mx_i, nendpos;
@@ -454,7 +454,7 @@ match_object *re_object::__exec(str *subj, __ss_int pos, __ss_int endpos, __ss_i
 
     //allocate captured array
     clen = (capture_count + 1) * 2 * 3;
-    captured = (int *)GC_MALLOC(clen * sizeof(int));
+    captured = (int *)GC_MALLOC((size_t)clen * sizeof(int));
 
     //sanity checking
     if(endpos == -1) nendpos = (__ss_int)subj->unit.size() - 1;
@@ -469,7 +469,7 @@ match_object *re_object::__exec(str *subj, __ss_int pos, __ss_int endpos, __ss_i
         subj->c_str(),
         nendpos + 1,
         pos,
-        flags,
+        flags_,
         captured,
         clen
     );
