@@ -34,9 +34,9 @@ public:
 };
 
 template<class T> inline countiter<T>::countiter() {}
-template<class T> inline countiter<T>::countiter(T start, T step) {
-    this->counter = start - step;
-    this->step = step;
+template<class T> inline countiter<T>::countiter(T start, T step_) {
+    counter = start - step_;
+    step = step_;
 }
 
 template<class T> inline T countiter<T>::__next__() {
@@ -213,9 +213,9 @@ public:
 };
 
 template<class T> inline repeatiter<T>::repeatiter() {}
-template<class T> inline repeatiter<T>::repeatiter(T object, int times) {
-    this->object = object;
-    this->times = times ? times : -1;
+template<class T> inline repeatiter<T>::repeatiter(T object_, int times_) {
+    object = object_;
+    times = times_ ? times_ : -1;
 }
 
 template<class T> T repeatiter<T>::__next__() {
@@ -242,20 +242,20 @@ public:
     __GC_VECTOR(__iter<T> *) iters;
 
     chainiter();
-    chainiter(pyiter<T> *iterable);
+    chainiter(pyiter<T> *iterable_);
 
-    void push_iter(pyiter<T> *iterable);
+    void push_iter(pyiter<T> *iterable_);
 
     T __next__();
 };
 
 template<class T> inline chainiter<T>::chainiter() {}
-template<class T> inline chainiter<T>::chainiter(pyiter<T> *iterable) {
-    this->iterable = 0;
-    this->push_iter(iterable);
+template<class T> inline chainiter<T>::chainiter(pyiter<T> *iterable_) {
+    iterable = 0;
+    push_iter(iterable_);
 }
-template<class T> void chainiter<T>::push_iter(pyiter<T> *iterable) {
-    this->iters.push_back(iterable->__iter__());
+template<class T> void chainiter<T>::push_iter(pyiter<T> *iterable_) {
+    iters.push_back(iterable_->__iter__());
 }
 
 template<class T> T chainiter<T>::__next__() {
@@ -323,10 +323,10 @@ public:
 };
 
 template<class T, class B> inline dropwhileiter<T, B>::dropwhileiter() {}
-template<class T, class B> inline dropwhileiter<T, B>::dropwhileiter(B (*predicate)(T), pyiter<T> *iterable) {
-    this->drop = true;
-    this->predicate = predicate;
-    this->iter = iterable->__iter__();
+template<class T, class B> inline dropwhileiter<T, B>::dropwhileiter(B (*predicate_)(T), pyiter<T> *iterable) {
+    drop = true;
+    predicate = predicate_;
+    iter = iterable->__iter__();
 }
 
 template<class T, class B> T dropwhileiter<T, B>::__next__() {
@@ -378,9 +378,9 @@ public:
 };
 
 template<class T, class K> inline groupiter<T, K>::groupiter() {}
-template<class T, class K> inline groupiter<T, K>::groupiter(groupbyiter<T, K>* iter) {
-    this->first = true;
-    this->iter = iter;
+template<class T, class K> inline groupiter<T, K>::groupiter(groupbyiter<T, K>* iter_) {
+    first = true;
+    iter = iter_;
 }
 
 template<class T, class K> T groupiter<T, K>::__next__() {
@@ -402,11 +402,11 @@ template<class T, class K> T groupiter<T, K>::__next__() {
 }
 
 template<class T, class K> inline groupbyiter<T, K>::groupbyiter() {}
-template<class T, class K> inline groupbyiter<T, K>::groupbyiter(pyiter<T> *iterable, K (*key)(T)) {
-    this->first = true;
-    this->skip = false;
-    this->key = key;
-    this->iter = iterable->__iter__();
+template<class T, class K> inline groupbyiter<T, K>::groupbyiter(pyiter<T> *iterable, K (*key_)(T)) {
+    first = true;
+    skip = false;
+    key = key_;
+    iter = iterable->__iter__();
 }
 
 template<class T, class K> tuple2<K, __iter<T> *> *groupbyiter<T, K>::__next__() {
@@ -449,9 +449,9 @@ public:
 };
 
 template<class T, class B> inline filterfalseiter<T, B>::filterfalseiter() {}
-template<class T, class B> inline filterfalseiter<T, B>::filterfalseiter(B (*predicate)(T), pyiter<T> *iterable) {
-    this->predicate = predicate;
-    this->iter = iterable->__iter__();
+template<class T, class B> inline filterfalseiter<T, B>::filterfalseiter(B (*predicate_)(T), pyiter<T> *iterable) {
+    predicate = predicate_;
+    iter = iterable->__iter__();
 }
 
 template<class T, class B> T filterfalseiter<T, B>::__next__() {
@@ -489,12 +489,12 @@ public:
 };
 
 template<class T> inline isliceiter<T>::isliceiter() {}
-template<class T> inline isliceiter<T>::isliceiter(pyiter<T> *iterable, int start, int stop, int step) {
-    this->current_position = 0;
-    this->next_position = start;
-    this->stop = stop;
-    this->step = step;
-    this->iter = iterable->__iter__();
+template<class T> inline isliceiter<T>::isliceiter(pyiter<T> *iterable, int start_, int stop_, int step_) {
+    current_position = 0;
+    next_position = start_;
+    stop = stop_;
+    step = step_;
+    iter = iterable->__iter__();
 }
 
 template<class T> T isliceiter<T>::__next__() {
@@ -569,10 +569,10 @@ public:
     T get(int position);
 };
 
-template<class T> inline teecache<T>::teecache(int clients) {
-    this->begin = 0;
-    this->end = 0;
-    this->clients = clients;
+template<class T> inline teecache<T>::teecache(int clients_) {
+    begin = 0;
+    end = 0;
+    clients = clients_;
 }
 
 template<class T> void teecache<T>::add(const T& value) {
@@ -605,10 +605,10 @@ public:
 };
 
 template<class T> inline teeiter<T>::teeiter() {}
-template<class T> inline teeiter<T>::teeiter(pyiter<T> *iterable, teecache<T> *cache) {
-    this->position = 0;
-    this->iter = iterable->__iter__();
-    this->cache = cache;
+template<class T> inline teeiter<T>::teeiter(pyiter<T> *iterable, teecache<T> *cache_) {
+    position = 0;
+    iter = iterable->__iter__();
+    cache = cache_;
 }
 
 template<class T> T teeiter<T>::__next__() {
@@ -650,10 +650,10 @@ public:
 };
 
 template<class T, class B> inline takewhileiter<T, B>::takewhileiter() {}
-template<class T, class B> inline takewhileiter<T, B>::takewhileiter(B (*predicate)(T), pyiter<T> *iterable) {
-    this->take = true;
-    this->predicate = predicate;
-    this->iter = iterable->__iter__();
+template<class T, class B> inline takewhileiter<T, B>::takewhileiter(B (*predicate_)(T), pyiter<T> *iterable) {
+    take = true;
+    predicate = predicate_;
+    iter = iterable->__iter__();
 }
 
 template<class T, class B> T takewhileiter<T, B>::__next__() {
@@ -692,13 +692,13 @@ public:
 template<class T, class U> inline zip_longestiter<T, U>::zip_longestiter() {
     this->exhausted = true;
 }
-template<class T, class U> inline zip_longestiter<T, U>::zip_longestiter(T fillvalue, pyiter<T> *iterable1, pyiter<U> *iterable2) {
-    this->exhausted = false;
-    this->first_exhausted = false;
-    this->second_exhausted = false;
-    this->first = iterable1->__iter__();
-    this->second = iterable2->__iter__();
-    this->fillvalue = fillvalue;
+template<class T, class U> inline zip_longestiter<T, U>::zip_longestiter(T fillvalue_, pyiter<T> *iterable1, pyiter<U> *iterable2) {
+    exhausted = false;
+    first_exhausted = false;
+    second_exhausted = false;
+    first = iterable1->__iter__();
+    second = iterable2->__iter__();
+    fillvalue = fillvalue_;
 }
 
 template<class T, class U> tuple2<T, U> *zip_longestiter<T, U>::__next__() {
@@ -762,21 +762,21 @@ public:
 template<class T> inline zip_longestiter<T, T>::zip_longestiter() {
     this->exhausted = 0;
 }
-template<class T> inline zip_longestiter<T, T>::zip_longestiter(T fillvalue, pyiter<T> *iterable) {
-    this->exhausted = 0;
-    this->push_iter(iterable);
-    this->fillvalue = fillvalue;
+template<class T> inline zip_longestiter<T, T>::zip_longestiter(T fillvalue_, pyiter<T> *iterable) {
+    exhausted = 0;
+    push_iter(iterable);
+    fillvalue = fillvalue_;
 }
-template<class T> inline zip_longestiter<T, T>::zip_longestiter(T fillvalue, pyiter<T> *iterable, pyiter<T> *iterable2) {
-    this->exhausted = 0;
-    this->push_iter(iterable);
-    this->push_iter(iterable2);
-    this->fillvalue = fillvalue;
+template<class T> inline zip_longestiter<T, T>::zip_longestiter(T fillvalue_, pyiter<T> *iterable, pyiter<T> *iterable2) {
+    exhausted = 0;
+    push_iter(iterable);
+    push_iter(iterable2);
+    fillvalue = fillvalue;
 }
 
 template<class T> void zip_longestiter<T, T>::push_iter(pyiter<T> *iterable) {
-    this->iters.push_back(iterable->__iter__());
-    this->exhausted_iter.push_back(0);
+    iters.push_back(iterable->__iter__());
+    exhausted_iter.push_back(0);
 }
 
 template<class T> tuple2<T, T> *zip_longestiter<T, T>::__next__() {
@@ -959,10 +959,10 @@ template<class T> void productiter<T, T>::push_iter(pyiter<T> *iterable) {
 
     // TODO this is not optimal at all for pyseq
     // (could be improved with static polymorphism and partial specialization on templates templates)
-    __iter<T> *iter = iterable->__iter__();
+    __iter<T> *iter_ = iterable->__iter__();
     for (; ; ) {
         try {
-            this->values.back().push_back(iter->__next__());
+            this->values.back().push_back(iter_->__next__());
         } catch (StopIteration *) {
             break;
         }
@@ -981,8 +981,8 @@ template<class T> inline void productiter<T, T>::repeat(int times) {
     }
 
     for (int time = 0; time < times; ++time) {
-        for (unsigned int iter = 0; iter < this->values.size(); ++iter) {
-            this->iter.push_back(iter);
+        for (unsigned int iter_ = 0; iter_ < this->values.size(); ++iter_) {
+            this->iter.push_back(iter_);
             this->indices.push_back(0);
         }
     }
@@ -1098,8 +1098,8 @@ template<class T> inline permutationsiter<T>::permutationsiter() {
     this->indices = 0;
     this->cycles = 0;
 }
-template<class T> inline permutationsiter<T>::permutationsiter(pyiter<T> *iterable, __ss_int r) {
-    this->r = r;
+template<class T> inline permutationsiter<T>::permutationsiter(pyiter<T> *iterable, __ss_int r_) {
+    this->r = r_;
     this->len = 0;
 
     // TODO this is not optimal at all for pyseq
@@ -1114,7 +1114,7 @@ template<class T> inline permutationsiter<T>::permutationsiter(pyiter<T> *iterab
     }
     this->len = this->cache.size();
 
-    if (r > this->len) {
+    if (r_ > this->len) {
         this->current = -1;
         this->indices = 0;
         this->cycles = 0;
@@ -1206,28 +1206,28 @@ private: // We might want to implement this, but we certainly don't want the def
 template<class T> inline combinationsiter<T>::combinationsiter() {
     this->indices = 0;
 }
-template<class T> inline combinationsiter<T>::combinationsiter(pyiter<T> *iterable, int r) {
-    this->r = r;
+template<class T> inline combinationsiter<T>::combinationsiter(pyiter<T> *iterable, int r_) {
+    this->r = r_;
     this->len = 0;
 
     // TODO this is not optimal at all for pyseq
     // (could be improved with static polymorphism and partial specialization on templates templates)
-    __iter<T> *iter = iterable->__iter__();
+    __iter<T> *iter_ = iterable->__iter__();
     for (; ; ) {
         try  {
-            this->cache.push_back(iter->__next__());
+            this->cache.push_back(iter_->__next__());
         } catch (StopIteration *) {
             break;
         }
     }
     this->len = this->cache.size();
 
-    if (r > this->len) {
+    if (r_ > this->len) {
         this->current = -1;
         this->indices = 0;
     } else {
-        this->current = r;
-        this->indices = new int[r];
+        this->current = r_;
+        this->indices = new int[r_];
 
         for (int i = 0; i < this->r; ++i) {
             this->indices[i] = i;
@@ -1308,8 +1308,8 @@ private: // We might want to implement this, but we certainly don't want the def
 template<class T> inline combinations_with_replacementiter<T>::combinations_with_replacementiter() {
     this->indices = 0;
 }
-template<class T> inline combinations_with_replacementiter<T>::combinations_with_replacementiter(pyiter<T> *iterable, int r) {
-    this->r = r;
+template<class T> inline combinations_with_replacementiter<T>::combinations_with_replacementiter(pyiter<T> *iterable, int r_) {
+    this->r = r_;
     this->len = 0;
 
     // TODO this is not optimal at all for pyseq
@@ -1324,12 +1324,12 @@ template<class T> inline combinations_with_replacementiter<T>::combinations_with
     }
     this->len = this->cache.size();
 
-    if (!this->len && r) {
+    if (!this->len && r_) {
         this->current = -1;
         this->indices = 0;
     } else {
-        this->current = r;
-        this->indices = new int[r];
+        this->current = r_;
+        this->indices = new int[r_];
 
         for (int i = 0; i < this->r; ++i) {
             this->indices[i] = 0;
