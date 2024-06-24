@@ -174,7 +174,7 @@ class_ *cl_Error;
 
 void *Error::__init__(str *msg) {
 
-    this->message = msg;
+    message = msg;
     Exception::__init__(msg);
     return NULL;
 }
@@ -186,10 +186,10 @@ class NoSectionError
 
 class_ *cl_NoSectionError;
 
-void *NoSectionError::__init__(str *section) {
+void *NoSectionError::__init__(str *section_) {
 
-    Error::__init__(__mod6(const_3, 1, section));
-    this->section = section;
+    Error::__init__(__mod6(const_3, 1, section_));
+    section = section_;
     return NULL;
 }
 
@@ -199,10 +199,10 @@ class DuplicateSectionError
 
 class_ *cl_DuplicateSectionError;
 
-void *DuplicateSectionError::__init__(str *section) {
+void *DuplicateSectionError::__init__(str *section_) {
 
-    Error::__init__(__mod6(const_4, 1, section));
-    this->section = section;
+    Error::__init__(__mod6(const_4, 1, section_));
+    section = section_;
     return NULL;
 }
 
@@ -212,11 +212,11 @@ class NoOptionError
 
 class_ *cl_NoOptionError;
 
-void *NoOptionError::__init__(str *option, str *section) {
+void *NoOptionError::__init__(str *option_, str *section_) {
 
-    Error::__init__(__mod6(const_5, 2, option, section));
-    this->option = option;
-    this->section = section;
+    Error::__init__(__mod6(const_5, 2, option_, section_));
+    option = option_;
+    section = section_;
     return NULL;
 }
 
@@ -226,11 +226,11 @@ class InterpolationError
 
 class_ *cl_InterpolationError;
 
-void *InterpolationError::__init__(str *option, str *section, str *msg) {
+void *InterpolationError::__init__(str *option_, str *section_, str *msg) {
 
     Error::__init__(msg);
-    this->option = option;
-    this->section = section;
+    option = option_;
+    section = section_;
     return NULL;
 }
 
@@ -241,12 +241,12 @@ class InterpolationMissingOptionError
 
 class_ *cl_InterpolationMissingOptionError;
 
-void *InterpolationMissingOptionError::__init__(str *option, str *section, str *rawval, str *reference) {
+void *InterpolationMissingOptionError::__init__(str *option_, str *section_, str *rawval, str *reference_) {
     str *msg;
 
-    msg = __mod6(const_6, 4, section, option, reference, rawval);
-    InterpolationError::__init__(option, section, msg);
-    this->reference = reference;
+    msg = __mod6(const_6, 4, section_, option_, reference_, rawval);
+    InterpolationError::__init__(option_, section_, msg);
+    reference = reference_;
     return NULL;
 }
 
@@ -262,11 +262,11 @@ class InterpolationDepthError
 
 class_ *cl_InterpolationDepthError;
 
-void *InterpolationDepthError::__init__(str *option, str *section, str *rawval) {
+void *InterpolationDepthError::__init__(str *option_, str *section_, str *rawval) {
     str *msg;
 
-    msg = __mod6(const_7, 3, section, option, rawval);
-    InterpolationError::__init__(option, section, msg);
+    msg = __mod6(const_7, 3, section_, option_, rawval);
+    InterpolationError::__init__(option_, section_, msg);
     return NULL;
 }
 
@@ -276,11 +276,11 @@ class ParsingError
 
 class_ *cl_ParsingError;
 
-void *ParsingError::__init__(str *filename) {
+void *ParsingError::__init__(str *filename_) {
 
-    Error::__init__(__mod6(const_8, 1, filename));
-    this->filename = filename;
-    this->errors = (new list<tuple2<__ss_int, str *> *>());
+    Error::__init__(__mod6(const_8, 1, filename_));
+    filename = filename_;
+    errors = (new list<tuple2<__ss_int, str *> *>());
     return NULL;
 }
 
@@ -297,12 +297,12 @@ class MissingSectionHeaderError
 
 class_ *cl_MissingSectionHeaderError;
 
-void *MissingSectionHeaderError::__init__(str *filename, __ss_int lineno, str *line) {
+void *MissingSectionHeaderError::__init__(str *filename_, __ss_int lineno_, str *line_) {
 
-    Error::__init__(__mod6(const_10, 3, filename, lineno, line));
-    this->filename = filename;
-    this->lineno = lineno;
-    this->line = line;
+    Error::__init__(__mod6(const_10, 3, filename_, lineno_, line_));
+    filename = filename_;
+    lineno = lineno_;
+    line = line_;
     return NULL;
 }
 
