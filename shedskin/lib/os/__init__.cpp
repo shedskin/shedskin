@@ -1089,7 +1089,7 @@ void *mknod(str *filename, __ss_int mode, __ss_int device) {
 }
 
 char **__exec_argvlist(list<str *> *args) {
-    char** argvlist = (char**)GC_malloc(sizeof(char*)*(args->__len__()+1));
+    char** argvlist = (char**)GC_malloc(sizeof(char*)*(args->units.size()+1));
     for(__ss_int i = 0; i < args->__len__(); ++i) {
         argvlist[i] = (char *)(args->__getitem__(i)->c_str());
     }
@@ -1098,7 +1098,7 @@ char **__exec_argvlist(list<str *> *args) {
 }
 
 char **__exec_envplist(dict<str *, str *> *env) {
-    char** envplist = (char**)GC_malloc(sizeof(char*)*(env->__len__()+1));
+    char** envplist = (char**)GC_malloc(sizeof(char*)*(env->gcd.size()+1));
     list<tuple2<str *, str *> *> *items = new list<tuple2<str *, str *> *>(env->items());
     for(__ss_int i=0; i < items->__len__(); i++) {
         envplist[i] = (char *)(__add_strs(3, items->__getitem__(i)->__getfirst__(), new str("="), items->__getitem__(i)->__getsecond__())->c_str());
