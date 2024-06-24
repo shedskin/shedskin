@@ -55,11 +55,11 @@ public:
     str *section;
 
     NoSectionError() {}
-    NoSectionError(str *section) {
+    NoSectionError(str *section_) {
         this->__class__ = cl_NoSectionError;
-        __init__(section);
+        __init__(section_);
     }
-    void *__init__(str *section);
+    void *__init__(str *section_);
 };
 
 extern class_ *cl_DuplicateSectionError;
@@ -71,11 +71,11 @@ public:
     str *section;
 
     DuplicateSectionError() {}
-    DuplicateSectionError(str *section) {
+    DuplicateSectionError(str *section_) {
         this->__class__ = cl_DuplicateSectionError;
-        __init__(section);
+        __init__(section_);
     }
-    void *__init__(str *section);
+    void *__init__(str *section_);
 };
 
 extern class_ *cl_NoOptionError;
@@ -88,11 +88,11 @@ public:
     str *section;
 
     NoOptionError() {}
-    NoOptionError(str *option, str *section) {
+    NoOptionError(str *option_, str *section_) {
         this->__class__ = cl_NoOptionError;
-        __init__(option, section);
+        __init__(option_, section_);
     }
-    void *__init__(str *option, str *section);
+    void *__init__(str *option_, str *section_);
 };
 
 extern class_ *cl_InterpolationError;
@@ -106,11 +106,11 @@ public:
     str *option;
 
     InterpolationError() {}
-    InterpolationError(str *option, str *section, str *msg) {
+    InterpolationError(str *option_, str *section_, str *msg) {
         this->__class__ = cl_InterpolationError;
-        __init__(option, section, msg);
+        __init__(option_, section_, msg);
     }
-    void *__init__(str *option, str *section, str *msg);
+    void *__init__(str *option_, str *section_, str *msg);
 };
 
 extern class_ *cl_InterpolationMissingOptionError;
@@ -122,11 +122,11 @@ public:
     str *reference;
 
     InterpolationMissingOptionError() {}
-    InterpolationMissingOptionError(str *option, str *section, str *rawval, str *reference) {
+    InterpolationMissingOptionError(str *option_, str *section_, str *rawval, str *reference_) {
         this->__class__ = cl_InterpolationMissingOptionError;
-        __init__(option, section, rawval, reference);
+        __init__(option_, section_, rawval, reference_);
     }
-    void *__init__(str *option, str *section, str *rawval, str *reference);
+    void *__init__(str *option_, str *section_, str *rawval, str *reference_);
 };
 
 extern class_ *cl_InterpolationSyntaxError;
@@ -148,11 +148,11 @@ Raised when substitutions are nested too deeply.
 public:
 
     InterpolationDepthError() {}
-    InterpolationDepthError(str *option, str *section, str *rawval) {
+    InterpolationDepthError(str *option_, str *section_, str *rawval) {
         this->__class__ = cl_InterpolationDepthError;
-        __init__(option, section, rawval);
+        __init__(option_, section_, rawval);
     }
-    void *__init__(str *option, str *section, str *rawval);
+    void *__init__(str *option_, str *section_, str *rawval);
 };
 
 extern class_ *cl_ParsingError;
@@ -165,11 +165,11 @@ public:
     str *filename;
 
     ParsingError() {}
-    ParsingError(str *filename) {
+    ParsingError(str *filename_) {
         this->__class__ = cl_ParsingError;
-        __init__(filename);
+        __init__(filename_);
     }
-    void *__init__(str *filename);
+    void *__init__(str *filename_);
     void *append(__ss_int lineno, str *line);
 };
 
@@ -183,11 +183,11 @@ public:
     str *line;
 
     MissingSectionHeaderError() {}
-    MissingSectionHeaderError(str *filename, __ss_int lineno, str *line) {
+    MissingSectionHeaderError(str *filename_, __ss_int lineno_, str *line_) {
         this->__class__ = cl_MissingSectionHeaderError;
-        __init__(filename, lineno, line);
+        __init__(filename_, lineno_, line_);
     }
-    void *__init__(str *filename, __ss_int lineno, str *line);
+    void *__init__(str *filename_, __ss_int lineno_, str *line_);
 };
 
 extern class_ *cl_RawConfigParser;
