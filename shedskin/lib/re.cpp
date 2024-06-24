@@ -132,7 +132,7 @@ __GC_STRING re_object::__group(__GC_STRING *subj, int *captured, __ss_int matchi
     if(matchid > capture_count || matchid < 0) throw new error(new str("group does not exist"));
     if(captured[matchid * 2] == -1) throw new error(new str("group is unmatched"));
 
-    return subj->substr(captured[matchid * 2], captured[matchid * 2 + 1] - captured[matchid * 2]);
+    return subj->substr((size_t)captured[matchid * 2], (size_t)(captured[matchid * 2 + 1] - captured[matchid * 2]));
 }
 
 __GC_STRING re_object::__group(__GC_STRING *subj, int *captured, str *mname)
@@ -145,12 +145,12 @@ __GC_STRING re_object::__group(__GC_STRING *subj, int *captured, str *mname)
 __GC_STRING re_object::__expand(__GC_STRING *subj, int *captured, __GC_STRING tpl)
 {
     __GC_STRING out;
-    int i, j, len;
+    size_t i, j, len;
     __ss_int ref;
     char c;
 
     out = "";
-    len = (int)tpl.length();
+    len = tpl.length();
 
     for(i = 0; i < len; i++)
     {
@@ -269,7 +269,7 @@ str *re_object::__subn(str *repl, str *subj, __ss_int maxn, int *howmany)
         ) <= 0) break;
 
         //append stuff we skipped
-        out += s->substr(i, captured[0] - i);
+        out += s->substr((size_t)i, (size_t)(captured[0] - i));
 
         //replace section
         out += __expand(s, captured, repl->unit);
@@ -280,7 +280,7 @@ str *re_object::__subn(str *repl, str *subj, __ss_int maxn, int *howmany)
     }
 
     //extra
-    out += s->substr(i);
+    out += s->substr((size_t)i);
     if(howmany) *howmany = cur;
 
     GC_FREE(captured);
@@ -365,7 +365,7 @@ list<str *> *re_object::__splitfind(str *subj, __ss_int maxn, char onlyfind, __s
         //this whole subroutine is very similar to findall, so we might as well save some code and merge them...
         if(onlyfind)
         {
-            r->append(new str(subjs->substr(captured[0], captured[1] - captured[0])));
+            r->append(new str(subjs->substr((size_t)captured[0], (size_t)(captured[1] - captured[0]))));
 
             //for split we ignore zero-length matches, but findall dosn't
             if(captured[1] == captured[0]) captured[1]++;
@@ -381,12 +381,12 @@ list<str *> *re_object::__splitfind(str *subj, __ss_int maxn, char onlyfind, __s
             }
 
             //append block of text
-            r->append(new str(subjs->substr(i, captured[0] - i)));
+            r->append(new str(subjs->substr((size_t)i, (size_t)(captured[0] - i))));
 
             //append all the submatches to list
             for(j = 1; j <= capture_count; j++)
             {
-                if(captured[j * 2] != -1) r->append(new str(subjs->substr(captured[j * 2], captured[j * 2 + 1] - captured[j * 2])));
+                if(captured[j * 2] != -1) r->append(new str(subjs->substr((size_t)captured[j * 2], (size_t)(captured[j * 2 + 1] - captured[j * 2]))));
                 else r->append(0); //should this be new str() ?
             }
         }
@@ -395,7 +395,7 @@ list<str *> *re_object::__splitfind(str *subj, __ss_int maxn, char onlyfind, __s
         i = captured[1];
     }
 
-    if(!onlyfind) r->append(new str(subjs->substr(i)));
+    if(!onlyfind) r->append(new str(subjs->substr((size_t)i)));
 
     GC_FREE(captured);
 
@@ -597,10 +597,10 @@ re_object *compile(str *pat, __ss_int flags)
 str *escape(str *s)
 {
     __GC_STRING *ps, out;
-    int i, j, len;
+    size_t i, j, len;
 
     ps = &s->unit;
-    len = (int)ps->size();
+    len = ps->size();
     out = "";
     for(i = 0; i < len; i++)
     {
