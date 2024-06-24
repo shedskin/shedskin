@@ -67,7 +67,7 @@ __ss_int unpack_int(char o, char c, unsigned int d, bytes *data, __ss_int *pos) 
         return 0;
     result = 0;
     for(unsigned int i=0; i<itemsize; i++) {
-        unsigned long long c = (unsigned char)(data->unit[*pos+i]);
+        unsigned long long c = (unsigned char)(data->unit[(size_t)(*pos+i)]);
         if(swap_endian(o))
             result |= (c << 8*(itemsize-i-1));
         else
@@ -84,18 +84,18 @@ bytes *unpack_bytes(char, char c, unsigned int d, bytes *data, __ss_int *pos) {
     unsigned int len;
     switch(c) {
         case 'c':
-             result = new bytes(__char_cache[(unsigned char)(data->unit[*pos])]->unit);
+             result = new bytes(__char_cache[(unsigned char)(data->unit[(size_t)(*pos)])]->unit);
              break;
         case 's':
              result = new bytes();
              for(unsigned int i=0; i<d; i++)
-                 result->unit += data->unit[*pos+i];
+                 result->unit += data->unit[(size_t)(*pos+i)];
              break;
         case 'p':
              result = new bytes();
-             len = (unsigned char)data->unit[*pos];
+             len = (unsigned char)data->unit[(size_t)(*pos)];
              for(unsigned int i=0; i<len; i++)
-                 result->unit += data->unit[*pos+i+1];
+                 result->unit += data->unit[(size_t)(*pos+i+1)];
              break;
     }
     *pos += d;
@@ -105,7 +105,7 @@ bytes *unpack_bytes(char, char c, unsigned int d, bytes *data, __ss_int *pos) {
 
 __ss_bool unpack_bool(char, char, unsigned int d, bytes *data, __ss_int *pos) {
     __ss_bool result;
-    if(data->unit[*pos] == '\x00')
+    if(data->unit[(size_t)(*pos)] == '\x00')
         result = False;
     else
         result = True;
@@ -122,10 +122,10 @@ double unpack_float(char o, char c, unsigned int d, bytes *data, __ss_int *pos) 
         return 0;
     if(swap_endian(o))
         for(unsigned int i=0; i<itemsize; i++)
-            ((char *)buffy)[itemsize-i-1] = data->unit[*pos+i];
+            ((char *)buffy)[itemsize-i-1] = data->unit[(size_t)(*pos+i)];
     else
         for(unsigned int i=0; i<itemsize; i++)
-            ((char *)buffy)[i] = data->unit[*pos+i];
+            ((char *)buffy)[i] = data->unit[(size_t)(*pos+i)];
     if(c == 'f')
         result = *((float *)(buffy));
     else
@@ -307,7 +307,7 @@ void fillbuf_int(char c, __ss_int t, char order, unsigned int itemsize) {
             case 'q': *((long long *)buffy) = t; break;
             case 'Q': *((unsigned long long *)buffy) = t; break;
 //            case 'n': *((ssize_t *)buffy) = t; break;
-            case 'N': *((size_t *)buffy) = t; break;
+            case 'N': *((size_t *)buffy) = (size_t)t; break;
         }
     } else {
         if(swap_endian(order)) {

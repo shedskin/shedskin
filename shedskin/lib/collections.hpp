@@ -99,23 +99,23 @@ public:
         return r;
     }
 
-    template<class U> void *extend(U *iter) {
+    template<class U> void *extend(U *iter_) {
         typename U::for_in_unit e;
         typename U::for_in_loop __3;
         int __2;
         U *__1;
-        FOR_IN(e,iter,1,2,3)
+        FOR_IN(e,iter_,1,2,3)
            append(e);
         END_FOR
         return NULL;
     }
 
-    template<class U> void *extendleft(U *iter) {
+    template<class U> void *extendleft(U *iter_) {
         typename U::for_in_unit e;
         typename U::for_in_loop __3;
         int __2;
         U *__1;
-        FOR_IN(e,iter,1,2,3)
+        FOR_IN(e,iter_,1,2,3)
            appendleft(e);
         END_FOR
         return NULL;
@@ -195,9 +195,9 @@ public:
     deque<T> *p;
     __ss_int i;
 
-    __dequereviter(deque<T> *p) {
-        this->p = p;
-        i = p->units.size()-1;
+    __dequereviter(deque<T> *p_) {
+        p = p_;
+        i = p_->units.size()-1;
     }
 
     T __next__() {
@@ -215,16 +215,16 @@ template <class K, class V> class defaultdict : public dict<K, V> {
     V (*func)();
 
 public:
-    defaultdict(V (*func)()=NULL) {
-        this->func = func;
+    defaultdict(V (*func_)()=NULL) {
+        func = func_;
     }
 
-    defaultdict(V (*func)(), dict<K, V> *d) : dict<K,V>(d) {
-        this->func = func;
+    defaultdict(V (*func_)(), dict<K, V> *d) : dict<K,V>(d) {
+        func = func_;
     }
 
-    defaultdict(V (*func)(), pyiter<tuple2<K, V> *> *i) { /* XXX */
-        this->func = func;
+    defaultdict(V (*func_)(), pyiter<tuple2<K, V> *> *i) { /* XXX */
+        func = func_;
         tuple2<K, __ss_int> *k;
         typename pyiter<tuple2<K, V> *>::for_in_loop __3;
         int __2;

@@ -87,7 +87,7 @@ template<> inline void __pack_str(char c, bytes *b, bytes *result, size_t &pos, 
     if(len > ndigits)
         len = ndigits;
     for(__ss_int j=0; j<len; j++)
-        result->unit[pos++] = b->unit[j];
+        result->unit[pos++] = b->unit[(size_t)j];
     for(__ss_int j=0; j<ndigits-len; j++)
         result->unit[pos++] = '\x00';
 }
@@ -108,7 +108,7 @@ template<> inline void __pack_pascal(char c, bytes *t, bytes *result, size_t &po
     else
         result->unit[pos++] = (unsigned char)(len);
     for(__ss_int j=0; j<len; j++)
-        result->unit[pos++] = t->unit[j];
+        result->unit[pos++] = t->unit[(size_t)j];
     for(__ss_int j=0; j<ndigits-len-1; j++)
         result->unit[pos++] = '\x00';
 }
