@@ -157,7 +157,7 @@ void *mmap::__init__(int __ss_fileno_, __ss_int length_, __ss_int flags_, __ss_i
         }
     }
 
-    void *temp = ::mmap(0, length_, prot_, flags_, fd, offset_);
+    void *temp = ::mmap(0, (size_t)length_, prot_, flags_, fd, offset_);
 
     if (temp == MAP_FAILED)
     {
@@ -483,7 +483,7 @@ void *mmap::move(__ss_int destination, __ss_int source, __ss_int count)
     {
         throw new ValueError(const_1);
     }
-    memmove(m_begin + destination, m_begin + source, count);
+    memmove(m_begin + destination, m_begin + source, (size_t)count);
     return NULL;
 }
 
@@ -507,8 +507,7 @@ bytes *mmap::read(__ss_int size)
             m_position = m_end;
         }
     }
-    bytes *b = new bytes(at, m_position - at);
-    b->frozen = 1;
+    bytes *b = new bytes(at, (int)(m_position - at), 1);
     return b;
 }
 
@@ -544,7 +543,7 @@ bytes *mmap::readline(__ss_int size, const char eol)
     {
         m_position = at + size;
     }
-    return new bytes(at, m_position - at);
+    return new bytes(at, (int)(m_position - at), 1);
 }
 
 __ss_int mmap::rfind(bytes *needle, __ss_int start, __ss_int end)
@@ -716,7 +715,7 @@ bytes *mmap::__slice__(__ss_int kind, __ss_int lower, __ss_int upper, __ss_int)
     {
     case 1: // step[x:]
         start = m_begin + __subscript(lower);
-        size = m_end - start;
+        size = (size_t)(m_end - start);
         break;
     case 2: // step[:x]
         start = m_begin;
@@ -729,8 +728,7 @@ bytes *mmap::__slice__(__ss_int kind, __ss_int lower, __ss_int upper, __ss_int)
     default:
         assert(false);
     }
-    bytes *b = new bytes(start, (__ss_int)size);
-    b->frozen = 1;
+    bytes *b = new bytes(start, (int)size, 1);
     return b;
 }
 
@@ -757,7 +755,7 @@ void *mmap::__setslice__(__ss_int kind, __ss_int lower, __ss_int upper, __ss_int
         assert(false);
     }
 
-    memcpy(start, sequence->unit.data(), finish - start);
+    memcpy(start, sequence->unit.data(), (size_t)(finish - start));
     return NULL;
 }
 
@@ -817,7 +815,7 @@ size_t mmap::__subscript(__ss_int index, bool include_end) const
             throw new IndexError(const_13);
         }
     }
-    return index;
+    return (size_t)index;
 }
 
 __ss_int mmap::__clamp(__ss_int index) const
@@ -828,8 +826,8 @@ __ss_int mmap::__clamp(__ss_int index) const
 
 mmap::iterator mmap::__next_line(const char eol)
 {
-    return static_cast<const iterator>(
-               memchr(m_position, eol, m_end - m_position));
+    return static_cast<iterator>(
+               memchr(m_position, eol, (size_t)(m_end - m_position)));
 }
 
 __ss_int mmap::__find(const __GC_STRING& needle, __ss_int start, __ss_int end, bool reverse)
@@ -871,7 +869,7 @@ __ss_int mmap::__find(const __GC_STRING& needle, __ss_int start, __ss_int end, b
 
         if (i == length)
         {
-            return (p - m_begin);
+            return (__ss_int)(p - m_begin);
         }
     }
     return -1;
