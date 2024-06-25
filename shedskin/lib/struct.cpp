@@ -67,11 +67,11 @@ __ss_int unpack_int(char o, char c, unsigned int d, bytes *data, __ss_int *pos) 
         return 0;
     result = 0;
     for(unsigned int i=0; i<itemsize; i++) {
-        unsigned long long c = (unsigned char)(data->unit[(size_t)(*pos+i)]);
+        unsigned long long c2 = (unsigned char)(data->unit[(size_t)(*pos+i)]);
         if(swap_endian(o))
-            result |= (c << 8*(itemsize-i-1));
+            result |= (c2 << 8*(itemsize-i-1));
         else
-            result |= (c << 8*i);
+            result |= (c2 << 8*i);
     }
     *pos += itemsize;
     if(c == 'h')
