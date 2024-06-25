@@ -85,16 +85,16 @@ static __ss_int ymd_to_ord(__ss_int year, __ss_int month, __ss_int day);
 static __ss_int iso_week1_monday(__ss_int year);
 
 //class date
-date::date(__ss_int year, __ss_int month, __ss_int day){
-    __class__=cl_date;
+date::date(__ss_int year_, __ss_int month_, __ss_int day_){
+    __class__ = cl_date;
 
-    if(year<MINYEAR || year>MAXYEAR)    throw new ValueError(new str("year is out of range"));
-    if(month<=0 || month>12)            throw new ValueError(new str("month must be in 1..12"));
-    if(day<=0 || day>days_in_month(year,month)) throw new ValueError(new str("day is out of range for month"));
+    if(year_<MINYEAR || year_>MAXYEAR)    throw new ValueError(new str("year is out of range"));
+    if(month_<=0 || month_>12)            throw new ValueError(new str("month must be in 1..12"));
+    if(day_<=0 || day>days_in_month(year_,month_)) throw new ValueError(new str("day is out of range for month"));
 
-    this->year=year;
-    this->month=month;
-    this->day=day;
+    this->year=year_;
+    this->month=month_;
+    this->day=day_;
 }
 
 date *date::today() {
@@ -153,17 +153,18 @@ __ss_bool date::__lt__(date *other) { return __mbool(__cmp__(other) == -1); }
 __ss_bool date::__ge__(date *other) { return __mbool(__cmp__(other) != -1); }
 __ss_bool date::__le__(date *other) { return __mbool(__cmp__(other) != 1); }
 
-date *date::replace(__ss_int year, __ss_int month, __ss_int day) {
+date *date::replace(__ss_int year_, __ss_int month_, __ss_int day_) {
     date* t = new date(this);
-    if(year!=0) {
-        if(year<MINYEAR || year>MAXYEAR)    throw new ValueError(new str("year is out of range"));
-        t->year=year;}
-    if(month!=0) {
-        if(month<=0 || month>12)            throw new ValueError(new str("month must be in 1..12"));
-        t->month=month;}
-    if(day!=0) {
-        if(day<=0 || day>days_in_month(t->year,t->month)) throw new ValueError(new str("day is out of range for month"));
-        t->day=day;}
+
+    if(year_!=0) {
+        if(year_<MINYEAR || year_>MAXYEAR)    throw new ValueError(new str("year is out of range"));
+        t->year=year_;}
+    if(month_!=0) {
+        if(month_<=0 || month_>12)            throw new ValueError(new str("month must be in 1..12"));
+        t->month=month_;}
+    if(day_!=0) {
+        if(day_<=0 || day_>days_in_month(t->year,t->month)) throw new ValueError(new str("day is out of range for month"));
+        t->day=day_;}
     return t;
 }
 
@@ -291,18 +292,18 @@ str *tzinfo::minutes_to_str(datetime *dt) {
 
 
 //class datetime
-datetime::datetime(__ss_int year, __ss_int month, __ss_int day, __ss_int hour, __ss_int minute, __ss_int second, __ss_int microsecond, tzinfo *tzinfo) : date(year,month,day) {
-    __class__=cl_datetime;
+datetime::datetime(__ss_int year_, __ss_int month_, __ss_int day_, __ss_int hour_, __ss_int minute_, __ss_int second_, __ss_int microsecond_, tzinfo *tzinfo) : date(year_,month_,day_) {
+    __class__ = cl_datetime;
 
-    if(hour>=24 || hour<0) throw new ValueError(new str("hour must be in 0..23"));
-    if(minute>=60 || minute<0) throw new ValueError(new str("minute must be in 0..59"));
-    if(second>=60 || second<0) throw new ValueError(new str("second must be in 0..59"));
-    if(microsecond>=1000000 || microsecond<0) throw new ValueError(new str("microsecond must be in 0..999999"));
+    if(hour_>=24 || hour_<0) throw new ValueError(new str("hour must be in 0..23"));
+    if(minute_>=60 || minute_<0) throw new ValueError(new str("minute must be in 0..59"));
+    if(second_>=60 || second_<0) throw new ValueError(new str("second must be in 0..59"));
+    if(microsecond_>=1000000 || microsecond_<0) throw new ValueError(new str("microsecond must be in 0..999999"));
 
-    this->hour = hour;
-    this->minute = minute;
-    this->second = second;
-    this->microsecond = microsecond;
+    this->hour = hour_;
+    this->minute = minute_;
+    this->second = second_;
+    this->microsecond = microsecond_;
     this->_tzinfo = tzinfo;
 }
 
@@ -570,30 +571,30 @@ time *datetime::timetz() {
 	return new time(hour,minute,second,microsecond,_tzinfo);
 }
 
-datetime *datetime::replace(__ss_int __args, __ss_int year, __ss_int month, __ss_int day, __ss_int hour, __ss_int minute, __ss_int second, __ss_int microsecond, tzinfo *tzinfo) {
+datetime *datetime::replace(__ss_int __args, __ss_int year_, __ss_int month_, __ss_int day_, __ss_int hour_, __ss_int minute_, __ss_int second_, __ss_int microsecond_, tzinfo *tzinfo) {
     datetime *t = new datetime(this);
 
    if((__args & 1)==1) {
-        if(year<MINYEAR || year>MAXYEAR)    throw new ValueError(new str("year is out of range"));
-        t->year=year;}
+        if(year_<MINYEAR || year_>MAXYEAR)    throw new ValueError(new str("year is out of range"));
+        t->year=year_;}
     if((__args & 2)==2) {
-        if(month<=0 || month>12)            throw new ValueError(new str("month must be in 1..12"));
-        t->month=month;}
+        if(month_<=0 || month_>12)            throw new ValueError(new str("month must be in 1..12"));
+        t->month=month_;}
     if((__args & 4)==4) {
-        if(day<=0 || day>days_in_month(t->year,t->month)) throw new ValueError(new str("day is out of range for month"));
-        t->day=day;}
+        if(day_<=0 || day_>days_in_month(t->year,t->month)) throw new ValueError(new str("day is out of range for month"));
+        t->day=day_;}
     if((__args & 8)==8) {
-        if(hour<0 || hour>=24)              throw new ValueError(new str("hour must be in 0..23"));
-        t->hour=hour;}
+        if(hour_<0 || hour_>=24)              throw new ValueError(new str("hour must be in 0..23"));
+        t->hour=hour_;}
     if((__args & 16)==16) {
-        if(minute<0 || minute>=60)          throw new ValueError(new str("minute must be in 0..59"));
-        t->minute=minute;}
+        if(minute_<0 || minute_>=60)          throw new ValueError(new str("minute must be in 0..59"));
+        t->minute=minute_;}
     if((__args & 32)==32) {
-        if(second<0 || second>=60)          throw new ValueError(new str("second must be in 0..59"));
-        t->second=second;}
+        if(second_<0 || second_>=60)          throw new ValueError(new str("second must be in 0..59"));
+        t->second=second_;}
     if((__args & 64)==64) {
-        if(microsecond<0 || microsecond>=1000000)      throw new ValueError(new str("microsecond must be in 0..999999"));
-        t->microsecond=microsecond;}
+        if(microsecond_<0 || microsecond_>=1000000)      throw new ValueError(new str("microsecond must be in 0..999999"));
+        t->microsecond=microsecond_;}
     if((__args & 128)==128)
         t->_tzinfo = tzinfo;
     return t;
@@ -722,35 +723,35 @@ str *datetime::strftime(str *format) {
 }
 
 //class time
-time::time(__ss_int hour, __ss_int minute, __ss_int second, __ss_int microsecond, tzinfo *tzinfo) {
+time::time(__ss_int hour_, __ss_int minute_, __ss_int second_, __ss_int microsecond_, tzinfo *tzinfo) {
     __class__=cl_time;
 
-    if(hour>=24 || hour<0) throw new ValueError(new str("hour must be in 0..23"));
-    if(minute>=60 || minute<0) throw new ValueError(new str("minute must be in 0..59"));
-    if(second>=60 || second<0) throw new ValueError(new str("second must be in 0..59"));
-    if(microsecond>=1000000 || microsecond<0) throw new ValueError(new str("microsecond must be in 0..999999"));
+    if(hour_>=24 || hour_<0) throw new ValueError(new str("hour must be in 0..23"));
+    if(minute_>=60 || minute_<0) throw new ValueError(new str("minute must be in 0..59"));
+    if(second_>=60 || second_<0) throw new ValueError(new str("second must be in 0..59"));
+    if(microsecond_>=1000000 || microsecond_<0) throw new ValueError(new str("microsecond must be in 0..999999"));
 
-    this->hour = hour;
-    this->minute = minute;
-    this->second = second;
-    this->microsecond = microsecond;
+    this->hour = hour_;
+    this->minute = minute_;
+    this->second = second_;
+    this->microsecond = microsecond_;
     this->_tzinfo = tzinfo;
 }
 
-time *time::replace(__ss_int __args, __ss_int hour, __ss_int minute, __ss_int second, __ss_int microsecond, tzinfo *tzinfo) {
+time *time::replace(__ss_int __args, __ss_int hour_, __ss_int minute_, __ss_int second_, __ss_int microsecond_, tzinfo *tzinfo) {
     time *t = new time(this);
     if((__args & 1)==1) {
-        if(hour<0 || hour>=24)          throw new ValueError(new str("hour must be in 0..23"));
-        t->hour=hour;}
+        if(hour_<0 || hour_>=24)          throw new ValueError(new str("hour must be in 0..23"));
+        t->hour=hour_;}
     if((__args & 2)==2) {
-        if(minute<0 || minute>=60)      throw new ValueError(new str("minute must be in 0..59"));
-        t->minute=minute;}
+        if(minute_<0 || minute_>=60)      throw new ValueError(new str("minute must be in 0..59"));
+        t->minute=minute_;}
     if((__args & 4)==4) {
-        if(second<0 || second>=60)      throw new ValueError(new str("second must be in 0..59"));
-        t->second=second;}
+        if(second_<0 || second_>=60)      throw new ValueError(new str("second must be in 0..59"));
+        t->second=second_;}
     if((__args & 8)==8) {
-        if(microsecond<0 || microsecond>=1000000)      throw new ValueError(new str("microsecond must be in 0..999999"));
-        t->microsecond=microsecond;}
+        if(microsecond_<0 || microsecond_>=1000000)      throw new ValueError(new str("microsecond must be in 0..999999"));
+        t->microsecond=microsecond_;}
     if((__args & 16)==16)
         t->_tzinfo = tzinfo;
     return t;
@@ -857,15 +858,15 @@ __ss_bool time::__le__(time *other) { return __mbool(__cmp__(other) != 1); }
 
 
 //class timedelta
-timedelta::timedelta(double days, double seconds, double microseconds, double milliseconds, double minutes, double hours, double weeks) {
-    __class__=cl_timedelta;
+timedelta::timedelta(double days_, double seconds_, double microseconds_, double milliseconds, double minutes, double hours, double weeks) {
+    __class__ = cl_timedelta;
 //still some rounding errors
-	//all little bits of hours and seconds added up
-    double usec1 = milliseconds*1000 + microseconds +
-                        (((weeks*7 + days)*24*3600 + hours*3600 + minutes*60 + seconds)
-						-(__ss_int)(hours*3600 + minutes*60 + seconds + (weeks*7 + days)*24*3600))*1000000;
-    this->days = (__ss_int)(weeks*7 + days);
-	this->seconds = (__ss_int)(hours*3600 + minutes*60 + seconds + (weeks*7 + days - (__ss_int)(weeks*7 + days))*24*3600);
+//all little bits of hours and seconds added up
+    double usec1 = milliseconds*1000 + microseconds_ +
+                        (((weeks*7 + days_)*24*3600 + hours*3600 + minutes*60 + seconds_)
+						-(__ss_int)(hours*3600 + minutes*60 + seconds_ + (weeks*7 + days_)*24*3600))*1000000;
+    this->days = (__ss_int)(weeks*7 + days_);
+	this->seconds = (__ss_int)(hours*3600 + minutes*60 + seconds_ + (weeks*7 + days_ - (__ss_int)(weeks*7 + days_))*24*3600);
     //rounding to nearest microsec
 	if(usec1>=0.0)
 		this->microseconds = (__ss_int)(floor(usec1+0.5));
