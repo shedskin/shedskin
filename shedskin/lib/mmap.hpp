@@ -64,18 +64,18 @@ class mmap: public pyobj
 #ifndef WIN32
     mmap(int __ss_fileno,
          __ss_int length,
-         __ss_int flags = MAP_SHARED,
-         __ss_int prot  = PROT_READ | PROT_WRITE,
-         __ss_int access = 0,
+         __ss_int flags_ = MAP_SHARED,
+         __ss_int prot_  = PROT_READ | PROT_WRITE,
+         __ss_int access_ = 0,
          __ss_int offset = 0) : closed(false), fd(-1)
     {
         this->__class__ = cl_mmap;
         __init__(__ss_fileno, length,
-                 flags, prot, access, offset);
+                 flags_, prot_, access_, offset);
     }
     void *__init__(int __ss_fileno, __ss_int length,
-                   __ss_int flags,  __ss_int prot,
-                   __ss_int access, __ss_int offset);
+                   __ss_int flags_,  __ss_int prot_,
+                   __ss_int access_, __ss_int offset);
 #else /* WIN32 */
     mmap(int __ss_fileno,
          __ss_int length,
@@ -124,7 +124,7 @@ class mmap: public pyobj
     void *__setslice__(__ss_int kind, __ss_int lower, __ss_int upper, __ss_int step, bytes *sequence);
 
     // impl
-    inline size_t __size()  const { return (m_end - m_begin); }
+    inline size_t __size()  const { return (size_t)(m_end - m_begin); }
     inline bool   __eof()   const { return (m_position >= m_end); }
 
     typedef bytes * for_in_unit;
@@ -159,7 +159,7 @@ class mmap: public pyobj
 
     inline size_t __subscript(__ss_int index, bool include_end=false) const;
     inline __ss_int __clamp(__ss_int index) const;
-    inline size_t __tell() const { return (m_position - m_begin); }
+    inline size_t __tell() const { return (size_t)(m_position - m_begin); }
     iterator __next_line(const char eol);
     __ss_int __find(const __GC_STRING& needle, __ss_int start, __ss_int end, bool reverse=false);
 };
@@ -171,7 +171,7 @@ class __mmapiter : public __iter<bytes *>
 {
   public:
     mmap *map;
-    __mmapiter(mmap *map) : map(map) {}
+    __mmapiter(mmap *map_) : map(map_) {}
     bytes *__next__();
 };
 
