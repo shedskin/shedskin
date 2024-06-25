@@ -346,8 +346,8 @@ socket *socket::connect(const sockaddr *sa, socklen_t salen)
         if (err != 0) {
             std::ostringstream os;
             os << "connect: " << strerror(err) << " (errno " << err << ")";
-            const std::string& s = os.str();
-            throw new error(new str( s.c_str() ));
+            const std::string& s2 = os.str();
+            throw new error(new str( s2.c_str() ));
         }
     }
 

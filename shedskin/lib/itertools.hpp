@@ -1003,11 +1003,11 @@ template<class T> tuple2<T, T> *productiter<T, T>::__next__() {
         size_t iter_size = this->iter.size();
         tuple->units.resize(iter_size);
         for (size_t i = 0; i < iter_size; ++i) {
-            int j = this->iter[i];
+            size_t j = (size_t)(this->iter[i]);
             tuple->units[i] = this->values[j][this->indices[i]];
         }
         for (size_t i = this->iter.size() - 1; i != std::string::npos; --i) {
-            int j = this->iter[i];
+            size_t j = (size_t)(this->iter[i]);
             ++this->indices[i];
             if (i <= (size_t)this->highest_exhausted) {
                 if (this->indices[i] >= this->values[j].size() - 1) {
