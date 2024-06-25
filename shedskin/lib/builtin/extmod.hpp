@@ -44,7 +44,7 @@ extern dict<void *, void *> *__ss_proxy;
 #ifdef __SS_BIND
 template<class T> T __ss_arg(const char *name, int pos, int has_default, T default_value, PyObject *args, PyObject *kwargs) {
     PyObject *kwarg;
-    size_t nrofargs = PyTuple_Size(args);
+    Py_ssize_t nrofargs = PyTuple_Size(args);
     if (pos < (int)nrofargs)
         return __to_ss<T>(PyTuple_GetItem(args, pos));
     else if (kwargs && (kwarg = PyDict_GetItemString(kwargs, name)))

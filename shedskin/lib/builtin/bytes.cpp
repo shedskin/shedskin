@@ -676,10 +676,10 @@ bytes::bytes(PyObject *p) : hash(-1) {
     __class__ = cl_bytes;
 
     if(PyBytes_Check(p)) {
-        unit = __GC_STRING(PyBytes_AS_STRING(p), PyBytes_Size(p));
+        unit = __GC_STRING(PyBytes_AS_STRING(p), (size_t)PyBytes_Size(p));
 	frozen = 1;
     } else if (PyByteArray_Check(p)) {
-        unit = __GC_STRING(PyByteArray_AS_STRING(p), PyByteArray_Size(p));
+        unit = __GC_STRING(PyByteArray_AS_STRING(p), (size_t)PyByteArray_Size(p));
 	frozen = 0;
     } else
         throw new TypeError(new str("error in conversion to Shed Skin (bytes/bytearray expected)"));
@@ -687,9 +687,10 @@ bytes::bytes(PyObject *p) : hash(-1) {
 
 PyObject *bytes::__to_py__() {
     if(frozen)
-        return PyBytes_FromStringAndSize(unit.data(), unit.size());
-    else
-        return PyByteArray_FromStringAndSize(unit.data(), unit.size());
+        return PyBytes_FromStringAndSize(unit.data(), (Py_ssize_t)unit.size());
+    else {
+        return PyByteArray_FromStringAndSize(unit.data(), (Py_ssize_t)unit.size());
+    }
 }
 #endif
 
