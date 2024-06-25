@@ -716,7 +716,7 @@ str::str(PyObject *p) : hash(-1) {
     __class__ = cl_str_;
     Py_ssize_t sz;
     const char *data = PyUnicode_AsUTF8AndSize(p, &sz);
-    unit = __GC_STRING(data, sz);
+    unit = __GC_STRING(data, (size_t)sz);
 
     // unit = __GC_STRING(PyUnicode_AsUTF8(p), PyUnicode_GET_SIZE(p));
     // unit = __GC_STRING(PyString_AsString(p), PyString_Size(p));
@@ -727,7 +727,7 @@ PyObject *str::__to_py__() {
 //    return PyBytes_FromStringAndSize("bla", 3);
     // return PyString_FromStringAndSize(c_str(), size());
     // return PyBytes_FromStringAndSize(c_str(), size());
-    return PyUnicode_DecodeLatin1(c_str(), this->unit.size(), "");
+    return PyUnicode_DecodeLatin1(c_str(), (Py_ssize_t)this->unit.size(), "");
 }
 #endif
 

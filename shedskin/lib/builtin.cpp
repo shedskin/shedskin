@@ -243,7 +243,7 @@ template<> PyObject *__to_py(long i) { return PyLong_FromLong(i); }
 #endif
 template<> PyObject *__to_py(__ss_bool i) { return PyBool_FromLong(i.value); }
 template<> PyObject *__to_py(__ss_float d) { return PyFloat_FromDouble(d); }
-template<> PyObject *__to_py(void *v) { Py_INCREF(Py_None); return Py_None; }
+template<> PyObject *__to_py(void *) { Py_INCREF(Py_None); return Py_None; }
 
 void throw_exception() {
     PyObject *ptype, *pvalue, *ptraceback;
