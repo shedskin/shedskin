@@ -1,7 +1,6 @@
 import heapq
 
 
-
 def test_heapq_1():
     heap = [21]
 
@@ -42,8 +41,8 @@ def test_heapq_1():
     assert heapq.heappop(heap) == 52
     assert heap == [63, 112]
 
-def test_heapq_2():
 
+def test_heapq_2():
     l = [42, 45, 35, 3]
 
     heapq.heapify(l)
@@ -61,8 +60,8 @@ def test_heapq_2():
     assert heapq.heappop(l) == 45
     assert l == []
 
-def test_heapq_3():
 
+def test_heapq_3():
     assert list(heapq.merge()) == []
     assert list(heapq.merge([3, 7, 18])) == [3, 7, 18]
     assert list(heapq.merge([3, 7, 18], [5, 21, 44])) == [3, 5, 7, 18, 21, 44]
@@ -74,10 +73,18 @@ def test_heapq_3():
     assert list(heapq.nsmallest(5, [3, 15, 56, 38, 49, 12, 41])) == [3, 12, 15, 38, 41]
     assert list(heapq.nsmallest(5, [3, 15])) == [3, 15]
 
+
+def test_heapify():
+    l = []
+    heapq.heapify(l)
+    assert l == []
+
+
 def test_all():
     test_heapq_1()
     test_heapq_2()
     test_heapq_3()
+    test_heapify()
 
 if __name__ == '__main__':
     test_all() 
