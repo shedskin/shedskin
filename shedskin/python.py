@@ -50,11 +50,11 @@ class Module(PyObject):
     """
 
     def __init__(
-            self, 
-            name: str, 
-            filename: str, 
-            relative_filename: str, 
-            builtin: bool, 
+            self,
+            name: str,
+            filename: str,
+            relative_filename: str,
+            builtin: bool,
             node):
         # set name and its dependent fields
         self.name = name
@@ -121,6 +121,7 @@ class Class(PyObject):
         self.gx.class_def_order += 1
         self.module: Optional[Module] = None # from graph.py:635
         self.parent: Optional['StaticClass'] = None # issues/479
+        self.lcpcount: int = 0
 
     def ancestors(self, inclusive: bool = False):  # XXX attribute (faster)
         a = set(self.bases)

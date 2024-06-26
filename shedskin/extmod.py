@@ -198,18 +198,7 @@ class ExtensionModule:
             and infer.called(cl.funcs[name])
         )
 
-    def do_add_globals(self, classes, __ss_mod):
-        """
-        Does add globals.
-
-        :param      classes:   The classes
-        :type       classes:   { type_description }
-        :param      __ss_mod:  The ss modifier
-        :type       __ss_mod:  { type_description }
-
-        :returns:   { description_of_the_return_value }
-        :rtype:     { return_type_description }
-        """
+    def do_add_globals(self, classes, ssmod):
 
         # global variables
         for var in self.supported_vars(self.gv.mv.globals.values()):
@@ -226,7 +215,7 @@ class ExtensionModule:
                         + self.gv.module.ident
                         + "__::"
                         + self.gv.cpp_name(var),
-                        "ssmod": __ss_mod,
+                        "ssmod": ssmod,
                     }
                 )
             else:
@@ -238,7 +227,7 @@ class ExtensionModule:
                         + self.gv.module.ident
                         + "__::"
                         + self.gv.cpp_name(var),
-                        "ssmod": __ss_mod,
+                        "ssmod": ssmod,
                     }
                 )
 

@@ -70,7 +70,7 @@ class Shedskin:
 
     def configure(self, args: argparse.Namespace):
         # print(args)
-        gx = config.GlobalInfo()
+        gx = config.GlobalInfo(args)
 
         if args.subcmd in ['build', 'run', 'test']:
             # ensure cmake is available and installed.
@@ -225,7 +225,7 @@ class Shedskin:
         opt("-d", "--debug",        help="Set debug level", type=int)
         opt("-e", "--extmod",       help="Generate extension module", action="store_true")
         opt("-F", "--flags",        help="Provide alternate Makefile flags")
-        opt("-I", "--include-dirs", help="Add an include directory", action="append")        
+        opt("-I", "--include-dirs", help="Add an include directory", action="append")
         opt("-L", "--link-dirs",    help="Add a link library directory", action="append")
         opt("-l", "--link-libs",    help="Add a link library", action="append")
         opt("-X", "--extra-lib",    help="Add an extra builtins library directory")
@@ -267,7 +267,7 @@ class Shedskin:
 
         opt("-d", "--debug",        help="Set debug level", type=int)
         opt("-e", "--extmod",       help="Generate extension module", action="store_true")
-        opt("-I", "--include-dirs", help="Add an include directory", action="append")        
+        opt("-I", "--include-dirs", help="Add an include directory", action="append")
         opt("-L", "--link-dirs",    help="Add a link library directory", action="append")
         opt("-l", "--link-libs",    help="Add a link library", action="append")
         opt("-X", "--extra-lib",    help="Add an extra builtins library directory")
@@ -308,7 +308,7 @@ class Shedskin:
 
         opt("-d", "--debug",        help="Set debug level", type=int)
         opt("-e", "--extmod",       help="Generate extension module", action="store_true")
-        opt("-I", "--include-dirs", help="Add an include directory", action="append")        
+        opt("-I", "--include-dirs", help="Add an include directory", action="append")
         opt("-L", "--link-dirs",    help="Add a link library directory", action="append")
         opt("-l", "--link-libs",    help="Add a link library", action="append")
         opt("-X", "--extra-lib",    help="Add an extra builtins library directory")
@@ -327,7 +327,7 @@ class Shedskin:
         opt("--noassert",           help="Disable assert statements", action="store_true")
         opt("--nobounds",           help="Disable bounds checking", action="store_true")
         opt("--nogc",               help="Disable garbage collection", action="store_true")
-        opt("--nowarnings",         help="Disable '-Wall' compilation warnings", action="store_true")        
+        opt("--nowarnings",         help="Disable '-Wall' compilation warnings", action="store_true")
         opt("--nowrap",             help="Disable wrap-around checking", action="store_true")
 
         parser_test = subparsers.add_parser('test', help="run tests")
@@ -362,7 +362,7 @@ class Shedskin:
         opt('--target',           help='build only specified cmake targets', nargs="+", metavar="TARGET")
 
         opt("-c", "--cfg",        help="Add a cmake option '-D' prefix not needed", nargs='*', metavar="CMAKE_OPT")
-        opt("--nowarnings",       help="Disable '-Wall' compilation warnings", action="store_true")        
+        opt("--nowarnings",       help="Disable '-Wall' compilation warnings", action="store_true")
 
         # make 'translate' the default subparser
         for _arg in sys.argv[1:]:
