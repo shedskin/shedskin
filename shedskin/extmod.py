@@ -440,6 +440,7 @@ class ExtensionModule:
         else:
             id = "Global_" + "_".join(self.gv.module.name_list) + "_" + func.ident
         write("PyObject *%s(PyObject *self, PyObject *args, PyObject *kwargs) {" % id)
+        write("    (void)self; (void)args; (void)kwargs;")
         write("    try {")
 
         for i, formal in enumerate(formals):
