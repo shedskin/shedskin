@@ -45,14 +45,14 @@ class GetoptError
 
 class_ *cl_GetoptError;
 
-GetoptError::GetoptError(str *message, str *opt) {
-    this->__class__ = cl_GetoptError;
-    this->message = message;
-    this->msg = message;
-    if(opt)
-        this->opt = opt;
+GetoptError::GetoptError(str *message_, str *opt_) {
+    __class__ = cl_GetoptError;
+    message = message_;
+    msg = message_;
+    if(opt_)
+        opt = opt_;
     else
-        this->opt = const_0;
+        opt = const_0;
 }
 
 void __init() {

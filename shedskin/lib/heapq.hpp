@@ -28,16 +28,16 @@ template<class T> struct CmpSecond {
     }
 };
 
-template<class T, class U, template <class V, class W> class X, template <class Y> class Cmp> inline void _siftdown(X<T, U>& heap, __ss_int startpos, __ss_int pos) {
-    assert((size_t)startpos < heap.size());
-    assert((size_t)pos < heap.size());
+template<class T, class U, template <class V, class W> class X, template <class Y> class Cmp> inline void _siftdown(X<T, U>& heap, size_t startpos, size_t pos) {
+    assert(startpos < heap.size());
+    assert(pos < heap.size());
 
     Cmp<T> cmp;
 
     T item = heap[pos];
 
     while (pos > startpos) {
-        __ss_int parentpos = (pos - 1) / 2;
+        size_t parentpos = (pos - 1) / 2;
         T parent = heap[parentpos];
 
         if (cmp(item, parent) >= 0) {
@@ -51,27 +51,27 @@ template<class T, class U, template <class V, class W> class X, template <class 
     heap[pos] = item;
 }
 
-template<class T, class U, template <class V, class W> class X> inline void _siftdown(X<T, U>& heap, __ss_int startpos, __ss_int pos) {
+template<class T, class U, template <class V, class W> class X> inline void _siftdown(X<T, U>& heap, size_t startpos, size_t pos) {
     _siftdown<T, U, X, Cmp>(heap, startpos, pos);
 }
 
-template<class T> inline void _siftdown(list<T> *heap, __ss_int startpos, __ss_int pos) {
+template<class T> inline void _siftdown(list<T> *heap, size_t startpos, size_t pos) {
     _siftdown(heap->units, startpos, pos);
 }
 
-template<class T, class U, template <class V, class W> class X, template <class Y> class Cmp> inline void _siftup(X<T, U>& heap, __ss_int pos) {
-    assert((size_t)pos < heap.size());
+template<class T, class U, template <class V, class W> class X, template <class Y> class Cmp> inline void _siftup(X<T, U>& heap, size_t pos) {
+    assert(pos < heap.size());
 
     Cmp<T> cmp;
 
-    __ss_int startpos = pos;
-    __ss_int endpos = (__ss_int)heap.size();
+    size_t startpos = pos;
+    size_t endpos = heap.size();
 
     T item = heap[pos];
 
     for (;;) {
-        __ss_int leftsonpos = 2 * pos + 1;
-        __ss_int rightsonpos = leftsonpos + 1;
+        size_t leftsonpos = 2 * pos + 1;
+        size_t rightsonpos = leftsonpos + 1;
 
         if (leftsonpos >= endpos) {
             break;
@@ -90,11 +90,11 @@ template<class T, class U, template <class V, class W> class X, template <class 
     _siftdown<T, U, X, Cmp>(heap, startpos, pos);
 }
 
-template<class T, class U, template <class V, class W> class X> inline void _siftup(X<T, U>& heap, __ss_int pos) {
+template<class T, class U, template <class V, class W> class X> inline void _siftup(X<T, U>& heap, size_t pos) {
     _siftup<T, U, X, Cmp>(heap, pos);
 }
 
-template<class T> inline void _siftup(list<T> *heap, __ss_int pos) {
+template<class T> inline void _siftup(list<T> *heap, size_t pos) {
     _siftup(heap->units, pos);
 }
 
@@ -102,7 +102,7 @@ template<class T> inline void _siftup(list<T> *heap, __ss_int pos) {
 
 template<class T, class U, template <class V, class W> class X, template <class Y> class Cmp> inline void heappush(X<T, U>& heap, T item) {
     heap.push_back(item);
-    _siftdown<T, U, X, Cmp>(heap, 0, (__ss_int)heap.size() - 1);
+    _siftdown<T, U, X, Cmp>(heap, 0, heap.size() - 1);
 }
 
 template<class T, class U, template <class V, class W> class X> inline void heappush(X<T, U>& heap, T item) {
@@ -152,7 +152,7 @@ template<class T> inline T heappushpop(list<T> *heap, T item) {
 }
 
 template<class T, class U, template <class V, class W> class X, template <class Y> class Cmp> inline void heapify(X<T, U>& heap) {
-    for (__ss_int i = (__ss_int)heap.size() / 2 - 1; i > -1; --i) {
+    for (size_t i = heap.size() / 2 - 1; i != std::string::npos; --i) {
         _siftup<T, U, X, Cmp>(heap, i);
     }
 }
@@ -186,7 +186,7 @@ template<class T> class mergeiter;
 
 template<class T> class mergeiter : public __iter<T> {
 public:
-    typedef std::pair<__ss_int, T> iter_heap;
+    typedef std::pair<size_t, T> iter_heap;
     typedef std::allocator<iter_heap> iter_heapallocator;
 
     bool exhausted;
@@ -248,7 +248,7 @@ template<class T> T mergeiter<T>::__next__() {
 inline mergeiter<void *> *merge(__ss_int /* iterable_count */) {
     return new mergeiter<void *>();
 }
-template<class T, class ... Args> mergeiter<T> *merge(__ss_int iterable_count, pyiter<T> *iterable, Args ... args) {
+template<class T, class ... Args> mergeiter<T> *merge(__ss_int, pyiter<T> *iterable, Args ... args) {
     mergeiter<T> *iter = new mergeiter<T>(iterable);
     (iter->push_iter((pyiter<T> *)args), ...);
     return iter;
@@ -256,7 +256,7 @@ template<class T, class ... Args> mergeiter<T> *merge(__ss_int iterable_count, p
 
 template<class T, template <class Y> class Cmp> class nheapiter : public __iter<T> {
 public:
-    __ss_int index;
+    size_t index;
     std::vector<T> values;
 
     nheapiter();
@@ -283,7 +283,7 @@ template<class T, template <class Y> class Cmp> inline nheapiter<T, Cmp>::nheapi
             this->values.push_back(heappop<T, std::allocator<T>, std::vector, Cmp>(heap));
     }
 
-    this->index = (__ss_int)values.size();
+    this->index = values.size();
 }
 
 template<class T, template <class Y> class Cmp> T nheapiter<T, Cmp>::__next__() {
