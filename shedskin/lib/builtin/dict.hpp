@@ -17,7 +17,7 @@ template<class K, class V> dict<K,V>::dict() {
     this->__class__ = cl_dict;
 }
 
-template<class K, class V> template<class ... Args> dict<K, V>::dict(int count, Args ... args)  {
+template<class K, class V> template<class ... Args> dict<K, V>::dict(int, Args ... args)  {
     this->__class__ = cl_dict;
 
     (__add_to_dict(this, args), ...);
