@@ -3,18 +3,19 @@
 Copyright 2005-2023 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)
 
 """
+import argparse
 import os
 import sys
 import pathlib
 
 from typing import TYPE_CHECKING, Optional
 if TYPE_CHECKING:
-    import argparse
     from . import python
 
 
 class GlobalInfo:  # XXX add comments, split up
-    def __init__(self):
+    def __init__(self, options: argparse.Namespace):
+        self.options = options
         self.constraints = set()
         self.allvars = set()
         self.allfuncs = set()
@@ -30,7 +31,6 @@ class GlobalInfo:  # XXX add comments, split up
         self.main_module: Optional['python.Module'] = None
         self.module = None
         self.module_path: Optional[pathlib.Path] = None
-        self.options: Optional['argparse.Namespace'] = None
         self.cwd = pathlib.Path.cwd()
         self.builtins: list[str] = [
             "none",

@@ -106,6 +106,7 @@ def generate_makefile(gx):
     else:
         flags = gx.shedskin_flags / "FLAGS"
 
+    line = ''
     for line in open(flags):
         line = line[:-1]
 
