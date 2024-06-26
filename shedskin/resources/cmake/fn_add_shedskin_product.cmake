@@ -2,7 +2,7 @@ set(__doc__ [[
 
     containing folder_name:
         default: cmake_path(GET CMAKE_CURRENT_SOURCE_DIR STEM name)
-        else: can be overriden by setting SHEDSKIN_NAME 
+        else: can be overriden by setting SHEDSKIN_NAME
 
     <main>.py: can be one of two cases:
         - <containing_folder>/<main>.py
@@ -30,7 +30,7 @@ function(add_shedskin_product)
         MAIN_MODULE
         EXTRA_LIB_DIR
     )
-    set(multiValueArgs 
+    set(multiValueArgs
         SYS_MODULES
         APP_MODULES
         DATA
@@ -62,11 +62,11 @@ function(add_shedskin_product)
         set(BUILD_EXTENSION OFF)
     endif()
 
-    if (DISABLE_EXECUTABLES) 
+    if (DISABLE_EXECUTABLES)
         set(BUILD_EXECUTABLE OFF)
     endif()
 
-    if (DISABLE_EXTENSIONS) 
+    if (DISABLE_EXTENSIONS)
         set(BUILD_EXTENSION OFF)
     endif()
 
@@ -125,7 +125,7 @@ function(add_shedskin_product)
     # module-specific cases
     set(IMPORTS_OS_MODULE OFF)
     set(IMPORTS_RE_MODULE OFF)
- 
+
     # if ${name} starts_with test_ then set IS_TEST to ON
     string(FIND "${name}" "test_" index)
     if("${index}" EQUAL 0)
@@ -153,7 +153,7 @@ function(add_shedskin_product)
             SHEDSKIN_NAME
             SHEDSKIN_MAIN_MODULE
             SHEDSKIN_EXTRA_LIB_DIR
-            
+
             # multi value args
             SHEDSKIN_SYS_MODULES
             SHEDSKIN_APP_MODULES
@@ -190,7 +190,7 @@ function(add_shedskin_product)
         if(mod STREQUAL "os")
             set(IMPORTS_OS_MODULE ON)
             list(APPEND sys_module_list "${SHEDSKIN_LIB}/os/__init__.cpp")
-            list(APPEND sys_module_list "${SHEDSKIN_LIB}/os/__init__.hpp")            
+            list(APPEND sys_module_list "${SHEDSKIN_LIB}/os/__init__.hpp")
         elseif(mod STREQUAL "os.path")
             list(APPEND sys_module_list "${SHEDSKIN_LIB}/os/path.cpp")
             list(APPEND sys_module_list "${SHEDSKIN_LIB}/os/path.hpp")
@@ -232,7 +232,7 @@ function(add_shedskin_product)
             ${SPM_LIB_DIRS}/${LIBGCCPP}
             # $<$<PLATFORM_ID:Windows>:${SPM_LIB_DIRS}/atomic_ops.lib>
             # $<$<PLATFORM_ID:Windows>:${SPM_LIB_DIRS}/atomic_ops_gpl.lib>
-            $<$<BOOL:${IMPORTS_RE_MODULE}>:${SPM_LIB_DIRS}/${LIBPCRE}>            
+            $<$<BOOL:${IMPORTS_RE_MODULE}>:${SPM_LIB_DIRS}/${LIBPCRE}>
         )
         set(LIB_DIRS ${SPM_LIB_DIRS})
         set(LIB_INCLUDES ${SPM_INCLUDE_DIRS})
@@ -251,7 +251,7 @@ function(add_shedskin_product)
             ${BDWgc_INCLUDE_DIRS}
             ${PCRE_INCLUDE_DIRS}
         )
-    else() 
+    else()
         # adding -lutil for every use of os is not a good idea should only be temporary
         # better to just add it on demand if the two relevant pty functions are used
         set(local_prefix "/usr/local")
@@ -269,7 +269,7 @@ function(add_shedskin_product)
         set(local_include "${local_prefix}/include")
         set(local_libdir "${local_prefix}/lib")
 
-        set(LIB_DEPS 
+        set(LIB_DEPS
             "-lgc"
             "-lgccpp"
             "$<$<BOOL:${IMPORTS_RE_MODULE}>:-lpcre>"
@@ -280,8 +280,8 @@ function(add_shedskin_product)
             ${local_libdir}
             ${SHEDSKIN_LINK_DIRS}
         )
-        set(LIB_INCLUDES 
-            ${local_include}            
+        set(LIB_INCLUDES
+            ${local_include}
             ${SHEDSKIN_INCLUDE_DIRS}
         )
     endif()
@@ -313,7 +313,7 @@ function(add_shedskin_product)
 
         foreach(mod ${app_modules})
             list(APPEND translated_files "${PROJECT_EXE_DIR}/${mod}.cpp")
-            list(APPEND translated_files "${PROJECT_EXE_DIR}/${mod}.hpp")            
+            list(APPEND translated_files "${PROJECT_EXE_DIR}/${mod}.hpp")
         endforeach()
 
 
@@ -324,7 +324,7 @@ function(add_shedskin_product)
                 DEPENDS "${SHEDSKIN_MAIN_MODULE}"
                 COMMENT "translating ${main_py} to exe"
                 VERBATIM
-            )        
+            )
         else()
             add_custom_command(OUTPUT ${translated_files}
                 COMMAND shedskin translate --nomakefile -o ${PROJECT_EXE_DIR} ${opts} "${main_py}"
@@ -348,7 +348,7 @@ function(add_shedskin_product)
 
         # for testing only genexpr complex cases
         # add_custom_command(TARGET ${EXE} POST_BUILD
-        #     COMMAND ${CMAKE_COMMAND} -E echo 
+        #     COMMAND ${CMAKE_COMMAND} -E echo
         #     "enable-warnings = $<$<AND:${UNIX},$<BOOL:${ENABLE_WARNINGS}>>:-Wall>"
         # )
 
@@ -394,6 +394,7 @@ function(add_shedskin_product)
 
         target_link_options(${EXE} PRIVATE
             ${SHEDSKIN_LINK_OPTIONS}
+            "$<$<BOOL:${APPLE}>:-Wl,-ld_classic>"
         )
 
         target_link_directories(${EXE} PRIVATE
@@ -437,7 +438,7 @@ function(add_shedskin_product)
 
         foreach(mod ${app_modules})
             list(APPEND translated_files "${PROJECT_EXT_DIR}/${mod}.cpp")
-            list(APPEND translated_files "${PROJECT_EXT_DIR}/${mod}.hpp")            
+            list(APPEND translated_files "${PROJECT_EXT_DIR}/${mod}.hpp")
         endforeach()
 
 
@@ -448,7 +449,7 @@ function(add_shedskin_product)
                 DEPENDS "${SHEDSKIN_MAIN_MODULE}"
                 COMMENT "translating ${main_py} to ext"
                 VERBATIM
-            )        
+            )
         else()
             add_custom_command(OUTPUT ${translated_files}
                 COMMAND shedskin translate --nomakefile -o ${PROJECT_EXT_DIR} -e ${opts} "${main_py}"
@@ -523,6 +524,7 @@ function(add_shedskin_product)
             # "-fno-common" # can be excluded because it is already the default
             "-dynamic" # can be excluded because it is already the default
             ${SHEDSKIN_LINK_OPTIONS}
+            "$<$<BOOL:${APPLE}>:-Wl,-ld_classic>"
         )
 
         target_link_libraries(${EXT} PRIVATE

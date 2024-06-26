@@ -182,6 +182,7 @@ def typestr(
             mv=mv,
         )
     except RuntimeError:
+        assert mv
         if (
             not mv.module.builtin
             and isinstance(node, python.Variable)
@@ -401,6 +402,7 @@ def typestrnew(
 
     # --- namespace prefix
     namespace = ""
+    assert mv
     if cl.module not in [mv.module, gx.modules["builtin"]]:
         if cplusplus:
             namespace = cl.module.full_path() + "::"
