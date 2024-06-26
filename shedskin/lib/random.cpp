@@ -321,7 +321,6 @@ __ss_float Random::vonmisesvariate(__ss_float mu, __ss_float kappa) {
 
     */
     __ss_float d, f, q, r, s, theta, u1, u2, u3, z, TWOPI;
-    __ss_bool __0, __1;
     TWOPI = 2*__math__::pi;
 
     if (kappa <= 1e-06) {

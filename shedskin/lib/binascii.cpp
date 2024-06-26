@@ -413,7 +413,7 @@ bytes *a2b_qp(bytes *pdata, __ss_bool header) {
     memset(odata,0,datalen);
 
     __ss_int in,out;
-    char hexval,top,bot;
+    char top,bot;
     in = out = 0;
     while (in < datalen) {
         if (data[in] == '=') {
@@ -702,7 +702,6 @@ tuple2<bytes *, __ss_int> *a2b_hqx(bytes *pascii) {
         throw new Error(0); //No memory
     }
     unsigned char * ascii_data = (unsigned char *)&pascii->unit[0];
-    unsigned char * ascii_start = ascii_data;
     int done = 0, leftbits=0, leftchar=0;
     unsigned char this_ch;
 

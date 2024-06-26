@@ -42,7 +42,7 @@ void fillbuf_float(char c, __ss_float t, char order, unsigned int itemsize);
 
 /* pack int */
 
-template<class T> void __pack_int(char c, T t, char order, unsigned int itemsize) {
+template<class T> void __pack_int(char, T, char, unsigned int) {
     throw new error(new str("required argument is not an integer"));
 }
 template<> inline void __pack_int(char c, __ss_int t, char order, unsigned int itemsize) {
@@ -54,7 +54,7 @@ template<> inline void __pack_int(char c, __ss_bool t, char order, unsigned int 
 
 /* pack float */
 
-template<class T> void __pack_float(char c, T t, char order, unsigned int itemsize) {
+template<class T> void __pack_float(char, T, char, unsigned int) {
     throw new error(new str("required argument is not a float"));
 }
 template<> inline void __pack_float(char c, __ss_float t, char order, unsigned int itemsize) {
@@ -66,10 +66,10 @@ template<> inline void __pack_float(char c, __ss_int t, char order, unsigned int
 
 /* pack char */
 
-template<class T> void __pack_char(char c, T t, bytes *result, size_t &pos) {
+template<class T> void __pack_char(char, T, bytes *, size_t &) {
     throw new error(new str("char format requires a bytes object of length 1"));
 }
-template<> inline void __pack_char(char c, bytes *b, bytes *result, size_t &pos) {
+template<> inline void __pack_char(char, bytes *b, bytes *result, size_t &pos) {
     if(b->__len__() != 1)
         throw new error(new str("char format requires a bytes object of length 1"));
     result->unit[pos++] = b->unit[0];
@@ -77,10 +77,10 @@ template<> inline void __pack_char(char c, bytes *b, bytes *result, size_t &pos)
 
 /* pack str */
 
-template<class T> void __pack_str(char c, T t, bytes *result, size_t &pos, __ss_int ndigits) {
+template<class T> void __pack_str(char, T, bytes *, size_t &, __ss_int) {
     throw new error(new str("argument for 's' must be a bytes object"));
 }
-template<> inline void __pack_str(char c, bytes *b, bytes *result, size_t &pos, __ss_int ndigits) {
+template<> inline void __pack_str(char, bytes *b, bytes *result, size_t &pos, __ss_int ndigits) {
     __ss_int len = b->__len__();
     if(ndigits == -1)
         ndigits = 1;
@@ -94,10 +94,10 @@ template<> inline void __pack_str(char c, bytes *b, bytes *result, size_t &pos, 
 
 /* pack pascal */
 
-template<class T> void __pack_pascal(char c, T t, bytes *result, size_t &pos, __ss_int ndigits) {
+template<class T> void __pack_pascal(char, T, bytes *, size_t &, __ss_int) {
     throw new error(new str("argument for 'p' must be a bytes object"));
 }
-template<> inline void __pack_pascal(char c, bytes *t, bytes *result, size_t &pos, __ss_int ndigits) {
+template<> inline void __pack_pascal(char, bytes *t, bytes *result, size_t &pos, __ss_int ndigits) {
     if(ndigits == -1)
         ndigits = 1;
     __ss_int len = t->__len__();

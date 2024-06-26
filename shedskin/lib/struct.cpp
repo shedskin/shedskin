@@ -324,7 +324,7 @@ void fillbuf_int(char c, __ss_int t, char order, unsigned int itemsize) {
     }
 }
 
-void fillbuf_float(char c, double t, char order, unsigned int itemsize) {
+void fillbuf_float(char c, double t, char, unsigned int) {
     switch(c) {
         case 'f': *((float *)buffy) = (float)t; break;
         case 'd': *((double *)buffy) = t; break;
