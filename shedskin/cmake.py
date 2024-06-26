@@ -187,7 +187,7 @@ class ShedskinDependencyManager:
         print(f"{WHITE}cmd{RESET}: {CYAN}{cmd}{RESET}")
         os.system(cmd.format(*args, **kwds))
 
-    def git_clone(self, repo: str, to_dir: str, branch: Optional[str] = None):
+    def git_clone(self, repo: str, to_dir: Pathlike, branch: Optional[str] = None):
         """retrieve git clone of repo"""
         if branch:
           self.shellcmd(f"git clone -b {branch} --depth=1 {repo} {to_dir}")
@@ -794,7 +794,9 @@ class CMakeBuilder:
                 self.check(self.options.name)  # check python syntax
 
             if self.options.modified:
-                most_recent_test = pathlib.Path(self.get_most_recent_test()).stem
+                test = self.get_most_recent_test()
+                assert test, "test required"
+                most_recent_test = pathlib.Path(test).stem
                 bld_options.append(f"--target {most_recent_test}")
                 tst_options.append(f"--tests-regex {most_recent_test}")
 
