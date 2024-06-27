@@ -27,7 +27,7 @@ static inline bool swap_endian(char o) {
 
 __ss_int calcsize(str *fmt);
 __ss_int calcitems(str *fmt);
-int padding(char o, unsigned int pos, unsigned int itemsize);
+__ss_int padding(char o, __ss_int pos, unsigned int itemsize);
 
 __ss_int unpack_int(char o, char c, unsigned int d, bytes *data, __ss_int *pos);
 bytes * unpack_bytes(char o, char c, unsigned int d, bytes *data, __ss_int *pos);

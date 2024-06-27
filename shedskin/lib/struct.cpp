@@ -47,15 +47,17 @@ unsigned int get_itemsize(char order, char c) {
     return 0;
 }
 
-__ss_int padding(char o, unsigned int pos, unsigned int itemsize) {
+__ss_int padding(char o, __ss_int pos, unsigned int itemsize) {
+    unsigned int upos = (unsigned int)pos;
+
     if(sizeof(void *) == 4) {
 #ifndef WIN32
         if(itemsize == 8)
             itemsize = 4;
 #endif
     }
-    if(o == '@' and pos % itemsize)
-        return (__ss_int)(itemsize - (pos % itemsize));
+    if(o == '@' and upos % itemsize)
+        return (__ss_int)(itemsize - (upos % itemsize));
     return 0;
 }
 
@@ -73,7 +75,7 @@ __ss_int unpack_int(char o, char c, unsigned int d, bytes *data, __ss_int *pos) 
         else
             result |= (c2 << 8*i);
     }
-    *pos += itemsize;
+    *pos += (__ss_int)itemsize;
     if(c == 'h')
         return (short)result;
     return (__ss_int)result;
@@ -98,7 +100,7 @@ bytes *unpack_bytes(char, char c, unsigned int d, bytes *data, __ss_int *pos) {
                  result->unit += data->unit[(size_t)(*pos+i+1)];
              break;
     }
-    *pos += d;
+    *pos += (__ss_int)d;
     result->frozen = 1;
     return result;
 }
