@@ -73,16 +73,16 @@ template<> template<> void *array<int>::extend(list<__ss_int> *l) {
     size_t pos = this->units.size();
     this->units.resize(pos+len*itemsize);
     switch(typechar) {
-        case 'b': for(size_t i=0; i<len; i++) *((signed char *)(&this->units[pos+i*itemsize])) = l->units[i]; break;
-        case 'B': for(size_t i=0; i<len; i++) *((unsigned char *)(&this->units[pos+i*itemsize])) = l->units[i]; break;
-        case 'h': for(size_t i=0; i<len; i++) *((signed short *)(&this->units[pos+i*itemsize])) = l->units[i]; break;
-        case 'H': for(size_t i=0; i<len; i++) *((unsigned short *)(&this->units[pos+i*itemsize])) = l->units[i]; break;
-        case 'i': for(size_t i=0; i<len; i++) *((signed int *)(&this->units[pos+i*itemsize])) = l->units[i]; break;
-        case 'I': for(size_t i=0; i<len; i++) *((unsigned int *)(&this->units[pos+i*itemsize])) = l->units[i]; break;
-        case 'l': for(size_t i=0; i<len; i++) *((signed long *)(&this->units[pos+i*itemsize])) = l->units[i]; break;
-        case 'L': for(size_t i=0; i<len; i++) *((unsigned long *)(&this->units[pos+i*itemsize])) = l->units[i]; break;
-        case 'f': for(size_t i=0; i<len; i++) *((float *)(&this->units[pos+i*itemsize])) = l->units[i]; break;
-        case 'd': for(size_t i=0; i<len; i++) *((double *)(&this->units[pos+i*itemsize])) = l->units[i]; break;
+        case 'b': for(size_t i=0; i<len; i++) *((signed char *)(&this->units[pos+i*itemsize])) = (signed char)l->units[i]; break;
+        case 'B': for(size_t i=0; i<len; i++) *((unsigned char *)(&this->units[pos+i*itemsize])) = (unsigned char)l->units[i]; break;
+        case 'h': for(size_t i=0; i<len; i++) *((signed short *)(&this->units[pos+i*itemsize])) = (signed short)l->units[i]; break;
+        case 'H': for(size_t i=0; i<len; i++) *((unsigned short *)(&this->units[pos+i*itemsize])) = (unsigned short)l->units[i]; break;
+        case 'i': for(size_t i=0; i<len; i++) *((signed int *)(&this->units[pos+i*itemsize])) = (signed int)l->units[i]; break;
+        case 'I': for(size_t i=0; i<len; i++) *((unsigned int *)(&this->units[pos+i*itemsize])) = (unsigned int)l->units[i]; break;
+        case 'l': for(size_t i=0; i<len; i++) *((signed long *)(&this->units[pos+i*itemsize])) = (signed long)l->units[i]; break;
+        case 'L': for(size_t i=0; i<len; i++) *((unsigned long *)(&this->units[pos+i*itemsize])) = (unsigned long)l->units[i]; break;
+        case 'f': for(size_t i=0; i<len; i++) *((float *)(&this->units[pos+i*itemsize])) = (float)l->units[i]; break;
+        case 'd': for(size_t i=0; i<len; i++) *((double *)(&this->units[pos+i*itemsize])) = (double)l->units[i]; break;
     }
     return NULL;
 }
