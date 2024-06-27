@@ -138,7 +138,7 @@ bytes *a2b_uu(bytes *string) {
     ascii_len--;
     for( ; bin_len > 0 ; ascii_len--, ascii_data++ ) {
         /* XXX is it really best to add NULs if there's no more data */
-        this_ch = (ascii_len > 0) ? *ascii_data : 0;
+        this_ch = (unsigned char)((ascii_len > 0) ? *ascii_data : 0);
         if ( this_ch == '\n' || this_ch == '\r' || ascii_len == 0 || ascii_len == std::string::npos) {
             /*
             ** Whitespace. Assume some spaces got eaten at
@@ -164,7 +164,7 @@ bytes *a2b_uu(bytes *string) {
         leftbits += 6;
         if ( leftbits >= 8 ) {
             leftbits -= 8;
-            *bin_data++ = (leftchar >> leftbits) & 0xff;
+            *bin_data++ = (char)((leftchar >> leftbits) & 0xff);
             leftchar &= ((1 << leftbits) - 1);
             bin_len--;
         }
@@ -176,7 +176,7 @@ bytes *a2b_uu(bytes *string) {
     ** that it's whitespace only.
     */
     while( ascii_len-- > 0 ) {
-        this_ch = *ascii_data++;
+        this_ch = (unsigned char)(*ascii_data++);
         /* Extra '`' may be written as padding in some cases */
         if ( this_ch != ' ' && this_ch != ' '+64 &&
              this_ch != '\n' && this_ch != '\r' ) {
@@ -260,9 +260,9 @@ int find_valid(char *s, size_t slen, int num)
     unsigned char c, b64val;
 
     while ((slen > 0) && (ret == -1)) {
-        c = *s;
-        b64val = table_a2b_base64[c & 0x7f];
-        if ( ((c <= 0x7f) && (b64val != (unsigned char)-1)) ) {
+        c = (unsigned char)(*s);
+        b64val = (unsigned char)table_a2b_base64[c & 0x7f];
+        if (c <= 0x7f && b64val != 0xff) {
             if (num == 0)
                 ret = *s;
             num--;
@@ -293,7 +293,7 @@ bytes *a2b_base64(bytes *pascii) {
     bin_len = 0;
 
     for( ; ascii_len > 0; ascii_len--, ascii_data++) {
-        this_ch = *ascii_data;
+        this_ch = (unsigned char)(*ascii_data);
 
         if (this_ch > 0x7f ||
             this_ch == '\r' || this_ch == '\n' || this_ch == ' ')
@@ -320,7 +320,7 @@ bytes *a2b_base64(bytes *pascii) {
             }
         }
 
-        this_ch = table_a2b_base64[(unsigned char)*ascii_data];
+        this_ch = (unsigned char)table_a2b_base64[(unsigned char)*ascii_data];
         if ( this_ch == (unsigned char) -1 )
             continue;
 
@@ -334,9 +334,9 @@ bytes *a2b_base64(bytes *pascii) {
 
         if ( leftbits >= 8 ) {
             leftbits -= 8;
-            *bin_data++ = (leftchar >> leftbits) & 0xff;
+            *bin_data++ = (char)((leftchar >> leftbits) & 0xff);
             bin_len++;
-            leftchar &= ((1 << leftbits) - 1);
+            leftchar &= (unsigned int)((1 << leftbits) - 1);
         }
     }
 
@@ -381,38 +381,38 @@ bytes *b2a_base64(bytes *binary) {
         while ( leftbits >= 6 ) {
             this_ch = (leftchar >> (leftbits-6)) & 0x3f;
             leftbits -= 6;
-            *ascii_data++ = table_b2a_base64[(unsigned char)this_ch];
+            *ascii_data++ = (char)table_b2a_base64[(unsigned char)this_ch];
         }
     }
     if ( leftbits == 2 ) {
-        *ascii_data++ = table_b2a_base64[(leftchar&3) << 4];
+        *ascii_data++ = (char)table_b2a_base64[(leftchar&3) << 4];
         *ascii_data++ = BASE64_PAD;
         *ascii_data++ = BASE64_PAD;
     } else if ( leftbits == 4 ) {
-        *ascii_data++ = table_b2a_base64[(leftchar&0xf) << 2];
+        *ascii_data++ = (char)table_b2a_base64[(leftchar&0xf) << 2];
         *ascii_data++ = BASE64_PAD;
     }
     *ascii_data++ = '\n';       /* Append a courtesy newline */
 
     // resize to ascii_data - start
-    ascii->unit.resize(ascii_data-ascii_start);
+    ascii->unit.resize((size_t)(ascii_data-ascii_start));
     return ascii;
 }
 
 bytes *a2b_qp(bytes *pdata, __ss_bool header) {
     // from python 2.7.1
-    __ss_int datalen = pdata->__len__();
+    size_t datalen = pdata->unit.size();
     char * data = &pdata->unit[0];
 
     /* We allocate the output same size as input, this is overkill.
      * The previous implementation used calloc() so we'll zero out the
      * memory here too, since PyMem_Malloc() does not guarantee that.
      */
-    bytes *outdata = new bytes("",datalen,1);
+    bytes *outdata = new bytes("", (int)datalen, 1);
     char * odata = &outdata->unit[0];
-    memset(odata,0,datalen);
+    memset(odata, 0, datalen);
 
-    __ss_int in,out;
+    size_t in,out;
     char top,bot;
     in = out = 0;
     while (in < datalen) {
@@ -462,9 +462,9 @@ bytes *a2b_qp(bytes *pdata, __ss_bool header) {
 
 static unsigned char table_b2a_hex[] = "0123456789ABCDEF";
 
-void to_hex (unsigned char ch, unsigned char *s)
+void to_hex (char ch, unsigned char *s)
 {
-    unsigned int uvalue = ch;
+    unsigned int uvalue = (unsigned int)ch;
 
     s[1] = table_b2a_hex[uvalue & 0x0F];
     uvalue >>= 4;
@@ -476,13 +476,13 @@ void to_hex (unsigned char ch, unsigned char *s)
  * (mostly) with the quopri module.  It doesn't re-create the quopri
  * module bug where text ending in CRLF has the CR encoded */
 bytes *b2a_qp(bytes *pdata, __ss_bool quotetabs, __ss_bool istext, __ss_bool header) {
-    __ss_int datalen = pdata->__len__();
+    size_t datalen = pdata->unit.size();
     char * data = &pdata->unit[0];
     char * p = (char *) memchr(data, '\n', datalen);
     int crlf = 0;
 
-    __ss_int in, out, odatalen=0;
-    int linelen=0;
+    size_t in, out, odatalen=0;
+    size_t linelen=0;
     char ch;
     
 
@@ -559,7 +559,7 @@ bytes *b2a_qp(bytes *pdata, __ss_bool quotetabs, __ss_bool istext, __ss_bool hea
      * The previous implementation used calloc() so we'll zero out the
      * memory here too, since PyMem_Malloc() does not guarantee that.
      */
-    bytes *outdata = new bytes("",odatalen,1);
+    bytes *outdata = new bytes("", (int)odatalen, 1);
     unsigned char * odata = (unsigned char *)&outdata->unit[0];
     memset(odata, 0, odatalen);
 
@@ -598,7 +598,7 @@ bytes *b2a_qp(bytes *pdata, __ss_bool quotetabs, __ss_bool istext, __ss_bool hea
                 linelen = 0;
                 /* Protect against whitespace on end of line */
                 if (out && ((odata[out-1] == ' ') || (odata[out-1] == '\t'))) {
-                    ch = odata[out-1];
+                    ch = (char)odata[out-1];
                     odata[out-1] = '=';
                     to_hex(ch, &odata[out]);
                     out += 2;
@@ -626,7 +626,7 @@ bytes *b2a_qp(bytes *pdata, __ss_bool quotetabs, __ss_bool istext, __ss_bool hea
                     in++;
                 }
                 else {
-                    odata[out++] = data[in++];
+                    odata[out++] = (unsigned char)data[in++];
                 }
             }
         }
@@ -799,12 +799,13 @@ static unsigned int crc_32_tab[256] = {
 };
 
 __ss_int crc32(bytes *data, __ss_int signed_crc) {
-    __ss_int len = data->__len__();
-    unsigned int crc = signed_crc;
+    size_t len = data->unit.size();
+    unsigned int crc = (unsigned int)signed_crc;
     crc = ~crc;
     char * bin_data = &data->unit[0];
     while (len-- > 0) {
-        crc = crc_32_tab[(crc ^ *bin_data++) & 0xffU] ^ (crc >> 8);
+        crc = crc_32_tab[(crc ^ (unsigned int)(*bin_data)) & 0xffU] ^ (crc >> 8);
+        bin_data++;
     }
     return (__ss_int)(crc ^ 0xFFFFFFFFU);
 }
