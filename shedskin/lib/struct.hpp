@@ -35,7 +35,7 @@ __ss_bool unpack_bool(char o, char c, unsigned int d, bytes *data, __ss_int *pos
 double unpack_float(char o, char c, unsigned int d, bytes *data, __ss_int *pos);
 void unpack_pad(char o, char c, unsigned int d, bytes *data, __ss_int *pos);
 
-int get_itemsize(char order, char c);
+unsigned int get_itemsize(char order, char c);
 
 void fillbuf_int(char c, __ss_int t, char order, unsigned int itemsize);
 void fillbuf_float(char c, __ss_float t, char order, unsigned int itemsize);

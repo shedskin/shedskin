@@ -62,7 +62,7 @@ static inline list<__ss_float> *list_comp_0(list<int> *__108) {
 
     result->resize(len(__108));
     FOR_IN(s,__108,108,25,123)
-        result->units[__25] = __float(s);
+        result->units[(size_t)__25] = __float(s);
     END_FOR
 
     return result;
@@ -76,7 +76,7 @@ static inline list<int> *list_comp_1(list<__ss_float> *__108) {
 
     result->resize(len(__108));
     FOR_IN(s,__108,108,28,123)
-        result->units[__28] = __int(s);
+        result->units[(size_t)__28] = __int(s);
     END_FOR
 
     return result;
