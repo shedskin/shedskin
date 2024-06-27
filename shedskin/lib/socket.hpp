@@ -97,11 +97,11 @@ class socket : public object {
     socket_type _fd;
     void read_wait();
     void write_wait();
-    int send(const char *s, size_t len, int flags=0);
+    size_t send(const char *s, size_t len, int flags=0);
     socket *bind(const sockaddr *, socklen_t);
     socket *connect(const sockaddr *, socklen_t);
     socket *accept(sockaddr *, socklen_t *);
-    ssize_t recvfrom(char *, size_t, int, sockaddr *, socklen_t *);
+    size_t recvfrom(char *, size_t, int, sockaddr *, socklen_t *);
 public:
     __ss_int family;
     __ss_int proto;

@@ -105,15 +105,15 @@ template<class T> template<class U> void *list<T>::extend(U *iter) {
 }
 
 template<class T> void *list<T>::extend(list<T> *p) {
-    int l1, l2;
-    l1 = this->__len__(); l2 = p->__len__();
+    size_t l1, l2;
+    l1 = this->units.size(); l2 = p->units.size();
     this->units.resize(l1+l2);
     memcpy(&(this->units[l1]), &(p->units[0]), sizeof(T)*l2);
     return NULL;
 }
 template<class T> void *list<T>::extend(tuple2<T,T> *p) {
-    int l1, l2;
-    l1 = this->__len__(); l2 = p->__len__();
+    size_t l1, l2;
+    l1 = this->units.size(); l2 = p->units.size();
     this->units.resize(l1+l2);
     memcpy(&(this->units[l1]), &(p->units[0]), sizeof(T)*l2);
     return NULL;
@@ -409,7 +409,8 @@ template<class T> void *list<T>::insert(__ss_int m, T e) {
 }
 
 template<class T> void *list<T>::remove(T e) {
-    for(int i = 0; i < this->__len__(); i++)
+    size_t len = this->units.size();
+    for(size_t i = 0; i < len; i++)
         if(__eq(units[i], e)) {
             units.erase(units.begin()+i);
             return NULL;

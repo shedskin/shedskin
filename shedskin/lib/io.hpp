@@ -10,7 +10,7 @@ namespace __io__ {
 
 class BytesIO : public file_binary {
 public:
-    __ss_int pos;
+    __ss_int pos; // TODO size_t
     bytes *s;
 
     BytesIO(bytes *initial_bytes=NULL) : file_binary(), pos(0), s(initial_bytes ? initial_bytes : new bytes()) {}
@@ -20,7 +20,7 @@ public:
     void *seek(__ss_int i, __ss_int w=0);
     __ss_int tell() { return pos; }
     void *truncate(int size=-1) {
-        s->unit.resize(size == -1 ? pos : size);
+        s->unit.resize((size_t)(size == -1 ? pos : size));
         return NULL;
     }
     void *write(bytes *data);
@@ -33,7 +33,7 @@ public:
 
 class StringIO : public file {
 public:
-    __ss_int pos;
+    __ss_int pos; // TODO size_t
     str *s;
 
     StringIO(str *initial_value=NULL) : file(), pos(0), s(initial_value ? initial_value : new str()) {}
@@ -43,7 +43,7 @@ public:
     void *seek(__ss_int i, __ss_int w=0);
     __ss_int tell() { return pos; }
     void *truncate(int size=-1) {
-        s->unit.resize(size == -1 ? pos : size);
+        s->unit.resize((size_t)(size == -1 ? pos : size));
         return NULL;
     }
     void *write(str *data);

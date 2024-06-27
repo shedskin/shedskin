@@ -53,7 +53,7 @@ template<class T> T tuple2<T, T>::__getsecond__() {
 }
 template<class T> inline T tuple2<T, T>::__getfast__(__ss_int i) {
     i = __wrap(this, i);
-    return this->units[i];
+    return this->units[(size_t)i];
 }
 
 template<class T> __ss_int tuple2<T, T>::__len__() {
@@ -62,7 +62,7 @@ template<class T> __ss_int tuple2<T, T>::__len__() {
 
 template<class T> T tuple2<T, T>::__getitem__(__ss_int i) {
     i = __wrap(this, i);
-    return units[(unsigned)i];
+    return units[(size_t)i];
 }
 
 template<class T> str *tuple2<T, T>::__repr__() {

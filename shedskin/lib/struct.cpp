@@ -10,7 +10,7 @@ class_ *cl_error;
 bool little_endian;
 
 
-int get_itemsize(char order, char c) {
+unsigned int get_itemsize(char order, char c) {
     if(order == '@') {
         switch(c) {
             case 'b': return sizeof(signed char);
@@ -47,7 +47,7 @@ int get_itemsize(char order, char c) {
     return 0;
 }
 
-int padding(char o, unsigned int pos, unsigned int itemsize) {
+__ss_int padding(char o, unsigned int pos, unsigned int itemsize) {
     if(sizeof(void *) == 4) {
 #ifndef WIN32
         if(itemsize == 8)
@@ -55,13 +55,13 @@ int padding(char o, unsigned int pos, unsigned int itemsize) {
 #endif
     }
     if(o == '@' and pos % itemsize)
-        return itemsize - (pos % itemsize);
+        return (__ss_int)(itemsize - (pos % itemsize));
     return 0;
 }
 
 __ss_int unpack_int(char o, char c, unsigned int d, bytes *data, __ss_int *pos) {
     unsigned long long result;
-    unsigned int itemsize = (__ss_int)get_itemsize(o, c);
+    unsigned int itemsize = get_itemsize(o, c);
     *pos += padding(o, *pos, itemsize);
     if(d==0)
         return 0;
@@ -88,13 +88,13 @@ bytes *unpack_bytes(char, char c, unsigned int d, bytes *data, __ss_int *pos) {
              break;
         case 's':
              result = new bytes();
-             for(unsigned int i=0; i<d; i++)
+             for(__ss_int i=0; i<d; i++)
                  result->unit += data->unit[(size_t)(*pos+i)];
              break;
         case 'p':
              result = new bytes();
              len = (unsigned char)data->unit[(size_t)(*pos)];
-             for(unsigned int i=0; i<len; i++)
+             for(__ss_int i=0; i<(__ss_int)len; i++)
                  result->unit += data->unit[(size_t)(*pos+i+1)];
              break;
     }
@@ -130,12 +130,12 @@ double unpack_float(char o, char c, unsigned int d, bytes *data, __ss_int *pos) 
         result = *((float *)(buffy));
     else
         result = *((double *)(buffy));
-    *pos += itemsize;
+    *pos += (__ss_int)itemsize;
     return result;
 }
 
 void unpack_pad(char, char, unsigned int d, bytes *, __ss_int *pos) {
-    *pos += d;
+    *pos += (__ss_int)d;
 }
 
 __ss_int calcsize(str *fmt) {
@@ -188,7 +188,7 @@ __ss_int calcsize(str *fmt) {
                 itemsize = get_itemsize(order, c);
                 if(ndigits == -1)
                     ndigits = 1;
-                result += ndigits * itemsize;
+                result += ndigits * (__ss_int)itemsize;
                 ndigits = -1;
                 result += padding(order, result, itemsize);
                 break;
@@ -311,8 +311,8 @@ void fillbuf_int(char c, __ss_int t, char order, unsigned int itemsize) {
         }
     } else {
         if(swap_endian(order)) {
-            for(int i=itemsize-1; i>=0; i--) {
-                ((char *)buffy)[i] = (unsigned char)(t & 0xff);
+            for(int i=(int)itemsize-1; i>=0; i--) {
+                ((char *)buffy)[(size_t)i] = (unsigned char)(t & 0xff);
                 t >>= 8;
             }
         } else {
