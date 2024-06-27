@@ -10,7 +10,7 @@ class_ *cl_error;
 bool little_endian;
 
 
-int get_itemsize(char order, char c) {
+unsigned int get_itemsize(char order, char c) {
     if(order == '@') {
         switch(c) {
             case 'b': return sizeof(signed char);
@@ -61,7 +61,7 @@ __ss_int padding(char o, unsigned int pos, unsigned int itemsize) {
 
 __ss_int unpack_int(char o, char c, unsigned int d, bytes *data, __ss_int *pos) {
     unsigned long long result;
-    unsigned int itemsize = (__ss_int)get_itemsize(o, c);
+    unsigned int itemsize = get_itemsize(o, c);
     *pos += padding(o, *pos, itemsize);
     if(d==0)
         return 0;
