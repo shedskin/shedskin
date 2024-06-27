@@ -41,39 +41,43 @@ from . import error
 from . import infer
 from . import python
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 if TYPE_CHECKING:
     from . import config
 
 
 # --- global variable mv
-_mv = None
+_mv: Optional['ModuleVisitor'] = None
 
 
-def setmv(mv):
+def setmv(mv: 'ModuleVisitor'):
     global _mv
     _mv = mv
     return _mv
 
 
-def getmv():
+def getmv() -> 'ModuleVisitor':
+    assert _mv
     return _mv
 
 
 def check_redef(gx: 'config.GlobalInfo', node, s=None, onlybuiltins: bool = False):  # XXX to modvisitor, rewrite
-    if not getmv().module.builtin:
-        existing = [getmv().ext_classes, getmv().ext_funcs]
-        if not onlybuiltins:
-            existing += [getmv().classes, getmv().funcs]
-        for whatsit in existing:
-            if s is not None:
-                name = s
-            else:
-                name = node.name
-            if name in whatsit:
-                error.error(
-                    "function/class redefinition is not supported", gx, node, mv=getmv()
-                )
+    mv = getmv()
+    if mv:
+        if mv.module:
+            if not mv.module.builtin:
+                existing = [mv.ext_classes, mv.ext_funcs]
+                if not onlybuiltins:
+                    existing += [mv.classes, mv.funcs]
+                for whatsit in existing:
+                    if s is not None:
+                        name = s
+                    else:
+                        name = node.name
+                    if name in whatsit:
+                        error.error(
+                            "function/class redefinition is not supported", gx, node, mv=mv
+                        )
 
 
 # --- maintain inheritance relations between copied AST nodes
@@ -283,6 +287,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
     def constructor(self, node, classname, func):
         cl = python.def_class(self.gx, classname)
+        assert cl
 
         self.instance(node, cl, func)
         infer.default_var(self.gx, "unit", cl)
