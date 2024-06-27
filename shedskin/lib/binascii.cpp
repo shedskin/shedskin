@@ -31,7 +31,7 @@ class_ *cl_Incomplete;
 
 bytes *hexlify(bytes *data) {
     // output will be twice as long
-    __ss_int len = data->__len__();
+    size_t len = data->unit.size();
     __GC_STRING hexstr = __GC_STRING(data->unit);
     hexstr.reserve(len<<1);
     hexstr.resize(len<<1);
@@ -117,7 +117,7 @@ bytes *unhexlify(bytes *hex) {
         bot = table_a2b_hex[(int)*(curhex++)];
         if (top==-1 || bot==-1)
             throw new Error(0); //new str("Invalid hex"));
-        *(curdata++) = (top<<4) + bot;
+        *(curdata++) = (char)((top<<4) + bot);
     }
     return data;
 }
@@ -126,7 +126,7 @@ bytes *unhexlify(bytes *hex) {
 
 // from python 2.7.1
 bytes *a2b_uu(bytes *string) {
-    __ss_int ascii_len = string->__len__();
+    size_t ascii_len = string->unit.size();
     char * ascii_data = &string->unit[0];
 
     __ss_int bin_len = (*ascii_data++ - ' ') & 077;
@@ -139,7 +139,7 @@ bytes *a2b_uu(bytes *string) {
     for( ; bin_len > 0 ; ascii_len--, ascii_data++ ) {
         /* XXX is it really best to add NULs if there's no more data */
         this_ch = (ascii_len > 0) ? *ascii_data : 0;
-        if ( this_ch == '\n' || this_ch == '\r' || ascii_len <= 0) {
+        if ( this_ch == '\n' || this_ch == '\r' || ascii_len == 0 || ascii_len == std::string::npos) {
             /*
             ** Whitespace. Assume some spaces got eaten at
             ** end-of-line. (We check this later)
@@ -219,12 +219,12 @@ bytes *b2a_uu(bytes *binary) {
         while ( leftbits >= 6 ) {
             this_ch = (leftchar >> (leftbits-6)) & 0x3f;
             leftbits -= 6;
-            *ascii_data++ = this_ch + ' ';
+            *ascii_data++ = (char)(this_ch + ' ');
         }
     }
     *ascii_data++ = '\n';       /* Append a courtesy newline */
 
-    ascii->unit.resize( (ascii_data - ascii_start) );
+    ascii->unit.resize( (size_t)(ascii_data - ascii_start) );
 
     return ascii;
 }
@@ -250,7 +250,7 @@ static unsigned char table_b2a_base64[] =
 
 
 
-int find_valid(char *s, __ss_int slen, int num)
+int find_valid(char *s, size_t slen, int num)
 {
     /* Finds & returns the (num+1)th
     ** valid character for base64, or -1 if none.
@@ -277,7 +277,7 @@ int find_valid(char *s, __ss_int slen, int num)
 // from python 2.7.1
 bytes *a2b_base64(bytes *pascii) {
     char * ascii_data = &pascii->unit[0];
-    __ss_int ascii_len = pascii->__len__();
+    size_t ascii_len = pascii->unit.size();
     if (ascii_len > PY_SSIZE_T_MAX-3) {
         throw new Error(0);
     }
@@ -287,8 +287,8 @@ bytes *a2b_base64(bytes *pascii) {
     unsigned char this_ch;
     unsigned int leftchar = 0;
 
-    __ss_int bin_len = ((ascii_len+3)/4)*3; /* Upper bound, corrected later */
-    bytes *binary = new bytes("",bin_len);
+    size_t bin_len = ((ascii_len+3)/4)*3; /* Upper bound, corrected later */
+    bytes *binary = new bytes("", (int)bin_len, 1);
     char * bin_data = &binary->unit[0];
     bin_len = 0;
 
@@ -905,7 +905,7 @@ bytes *rlecode_hqx(bytes *data) {
             }
         }
     }
-    rv->unit.resize(out_data-out_start);
+    rv->unit.resize((size_t)(out_data-out_start));
     return rv;
 }
 
