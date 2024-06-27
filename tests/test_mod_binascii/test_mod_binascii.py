@@ -4,9 +4,6 @@ import binascii
 s = b"my guitar wants to strum all night long"
 
 
-# ..hqx.. functions are deprecated!
-
-
 def test_b2a_a2b():
     b2a = binascii.b2a_qp(s)
     assert b2a == b'my guitar wants to strum all night long'
@@ -39,6 +36,9 @@ def test_hexlify():
 def test_crc():
     crc = binascii.crc32(s)
     assert crc == 1546323114
+
+    crc = binascii.crc_hqx(s, 12)
+    assert crc == 53552
 
 
 def test_all():

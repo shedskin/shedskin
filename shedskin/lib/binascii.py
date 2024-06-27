@@ -18,23 +18,19 @@ def a2b_qp(string, header=False):
     return b''
 def b2a_qp(data, quotetabs=False, istext=False, header=False):
     return b''
-def a2b_hqx(string):
-    return (b'',0)
-def b2a_hqx(data):
-    return b''
-def rledecode_hqx(data):
-    return b''
-def rlecode_hqx(data):
-    return b''
-def crc_hqx(data, crc):
-    return 0
-def crc32(data, crc=0):
-    return 0
+
 def b2a_hex(data):
     return b''
 def a2b_hex(data):
     return b''
+
 def hexlify(data):
     return b''
 def unhexlify(data):
     return b''
+
+def crc_hqx(data, crc):
+    return 0
+def crc32(data, crc=0):
+    return 0
+
