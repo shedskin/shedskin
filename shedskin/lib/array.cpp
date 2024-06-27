@@ -30,7 +30,7 @@ template<> void *array<str *>::__setitem__(__ss_int i, str *t) {
     if(t->unit.size() != 1)
         __throw_no_char();
     i = __wrap(this, i);
-    units[i*itemsize] = t->unit[0];
+    units[(size_t)i*itemsize] = t->unit[0];
     return NULL;
 }
 
@@ -59,7 +59,7 @@ template<> __ss_int array<str *>::count(str *t) {
 
 template<> __ss_int array<str *>::index(str *t) {
     if(len(t) == 1) {
-        size_t len = this->__len__();
+        size_t len = units.size() / itemsize;
         char c = t->unit[0];
         for(size_t i=0; i<len; i++)
             if(units[i] == c)
@@ -69,7 +69,7 @@ template<> __ss_int array<str *>::index(str *t) {
 }
 
 template<> template<> void *array<int>::extend(list<__ss_int> *l) {
-    size_t len = l->__len__();
+    size_t len = l->units.size();
     size_t pos = this->units.size();
     this->units.resize(pos+len*itemsize);
     switch(typechar) {
