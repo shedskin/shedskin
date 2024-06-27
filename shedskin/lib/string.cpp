@@ -19,7 +19,7 @@ str *capwords(str *s, str *sep) {
     int __2;
     list<str *> *__1;
     FOR_IN(e,__3,1,2,4)
-        result->units[__2] = e->capitalize();
+        result->units[(size_t)__2] = e->capitalize();
     END_FOR
 
     if(!sep) sep = const_0;

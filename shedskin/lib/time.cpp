@@ -105,7 +105,7 @@ struct_time *tm2tuple(tm* tm_time) {
 }
 
 double time() {
-    timespec ts { 0 };
+    timespec ts { 0, 0 };
 #ifdef _MSC_VER
     if (clock_gettime(0, &ts) == -1)
 #else
@@ -192,7 +192,7 @@ str *ctime(const double seconds) {
 
 str *strftime(str *format, struct_time* tuple) {
     tm *time_tuple = tuple2tm(tuple);
-    __ss_int size = format->__len__();
+    size_t size = format->unit.size();
     size_t n;
     char *buf;
     if(size==0)

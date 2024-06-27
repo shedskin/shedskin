@@ -925,11 +925,12 @@ timedelta *timedelta::__truediv__(__ss_int n) {
     if(n==0) {
         throw new ZeroDivisionError(new str("integer division or modulo by zero"));
     }
-    double d,s,us;
+    double d,s;
+    long double us;
     d = double(days)/n;
     s = double(seconds)/n;
     us = double(microseconds)/n+(((long double)(days)/n-double(days)/n)*24*3600+(long double)(seconds)/n-s)*1000000;
-    return new timedelta(0,d*24*3600+s,us,0,0,0,0);
+    return new timedelta(0,d*24*3600+s,(double)us,0,0,0,0);
 }
 
 timedelta *timedelta::__neg__() {
