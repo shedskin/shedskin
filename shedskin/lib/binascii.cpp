@@ -104,7 +104,7 @@ bytes *unhexlify(bytes *hex) {
     // output will be half as long
     __ss_int len = hex->__len__();
     if ( len&1 ) throw new Error(0); //new str("Odd-length string"));
-    bytes *data = new bytes("",len>>1);
+    bytes *data = new bytes("",len>>1,1);
 
     char * curdata = &data->unit[0];
     char * curhex = &hex->unit[0];
@@ -130,7 +130,7 @@ bytes *a2b_uu(bytes *string) {
     char * ascii_data = &string->unit[0];
 
     __ss_int bin_len = (*ascii_data++ - ' ') & 077;
-    bytes *binary = new bytes("",bin_len);
+    bytes *binary = new bytes("",bin_len,1);
     char * bin_data = &binary->unit[0];
     unsigned char this_ch;
     __ss_int leftchar=0, leftbits=0;
@@ -198,7 +198,7 @@ bytes *b2a_uu(bytes *binary) {
 
     /* We're lazy and allocate too much (fixed up later) */
     __ss_int ascii_len = 2 + (bin_len+2)/3*4;
-    bytes * ascii = new bytes("",ascii_len);
+    bytes * ascii = new bytes("",ascii_len,1);
     char * ascii_data = &ascii->unit[0];
     char * ascii_start = ascii_data;
     unsigned char this_ch;
@@ -368,7 +368,7 @@ bytes *b2a_base64(bytes *binary) {
     __ss_int leftbits = 0,leftchar = 0;
     char this_ch;
 
-    bytes *ascii = new bytes("",bin_len*2 + 3);
+    bytes *ascii = new bytes("",bin_len*2 + 3, 1);
     char * ascii_data = &ascii->unit[0];
     char * ascii_start = ascii_data;
     
@@ -408,7 +408,7 @@ bytes *a2b_qp(bytes *pdata, __ss_bool header) {
      * The previous implementation used calloc() so we'll zero out the
      * memory here too, since PyMem_Malloc() does not guarantee that.
      */
-    bytes *outdata = new bytes("",datalen);
+    bytes *outdata = new bytes("",datalen,1);
     char * odata = &outdata->unit[0];
     memset(odata,0,datalen);
 
@@ -559,7 +559,7 @@ bytes *b2a_qp(bytes *pdata, __ss_bool quotetabs, __ss_bool istext, __ss_bool hea
      * The previous implementation used calloc() so we'll zero out the
      * memory here too, since PyMem_Malloc() does not guarantee that.
      */
-    bytes *outdata = new bytes("",odatalen);
+    bytes *outdata = new bytes("",odatalen,1);
     unsigned char * odata = (unsigned char *)&outdata->unit[0];
     memset(odata, 0, odatalen);
 
@@ -635,279 +635,6 @@ bytes *b2a_qp(bytes *pdata, __ss_bool quotetabs, __ss_bool istext, __ss_bool hea
     return outdata;
 }
 
-
-/*
-** hqx lookup table, ascii->binary.
-*/
-
-#define DONE 0x7F
-#define SKIP 0x7E
-#define FAIL 0x7D
-
-static unsigned char table_a2b_hqx[256] = {
-/*       ^@    ^A    ^B    ^C    ^D    ^E    ^F    ^G   */
-/* 0*/  FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL,
-/*       \b    \t    \n    ^K    ^L    \r    ^N    ^O   */
-/* 1*/  FAIL, FAIL, SKIP, FAIL, FAIL, SKIP, FAIL, FAIL,
-/*       ^P    ^Q    ^R    ^S    ^T    ^U    ^V    ^W   */
-/* 2*/  FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL,
-/*       ^X    ^Y    ^Z    ^[    ^\    ^]    ^^    ^_   */
-/* 3*/  FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL,
-/*              !     "     #     $     %     &     '   */
-/* 4*/  FAIL, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
-/*        (     )     *     +     ,     -     .     /   */
-/* 5*/  0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, FAIL, FAIL,
-/*        0     1     2     3     4     5     6     7   */
-/* 6*/  0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, FAIL,
-/*        8     9     :     ;     <     =     >     ?   */
-/* 7*/  0x14, 0x15, DONE, FAIL, FAIL, FAIL, FAIL, FAIL,
-/*        @     A     B     C     D     E     F     G   */
-/* 8*/  0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D,
-/*        H     I     J     K     L     M     N     O   */
-/* 9*/  0x1E, 0x1F, 0x20, 0x21, 0x22, 0x23, 0x24, FAIL,
-/*        P     Q     R     S     T     U     V     W   */
-/*10*/  0x25, 0x26, 0x27, 0x28, 0x29, 0x2A, 0x2B, FAIL,
-/*        X     Y     Z     [     \     ]     ^     _   */
-/*11*/  0x2C, 0x2D, 0x2E, 0x2F, FAIL, FAIL, FAIL, FAIL,
-/*        `     a     b     c     d     e     f     g   */
-/*12*/  0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, FAIL,
-/*        h     i     j     k     l     m     n     o   */
-/*13*/  0x37, 0x38, 0x39, 0x3A, 0x3B, 0x3C, FAIL, FAIL,
-/*        p     q     r     s     t     u     v     w   */
-/*14*/  0x3D, 0x3E, 0x3F, FAIL, FAIL, FAIL, FAIL, FAIL,
-/*        x     y     z     {     |     }     ~    ^?   */
-/*15*/  FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL,
-/*16*/  FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL,
-    FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL,
-    FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL,
-    FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL,
-    FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL,
-    FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL,
-    FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL,
-    FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL,
-    FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL,
-    FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL,
-    FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL,
-    FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL,
-    FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL,
-    FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL,
-    FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL,
-    FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL, FAIL,
-};
-
-
-tuple2<bytes *, __ss_int> *a2b_hqx(bytes *pascii) {
-    __ss_int len = pascii->__len__();
-    if (len > PY_SSIZE_T_MAX - 2){
-        throw new Error(0); //No memory
-    }
-    unsigned char * ascii_data = (unsigned char *)&pascii->unit[0];
-    int done = 0, leftbits=0, leftchar=0;
-    unsigned char this_ch;
-
-    /* Allocate a string that is too big (fixed later)
-       Add two to the initial length to prevent interning which
-       would preclude subsequent resizing.  */
-    bytes *outdata = new bytes("",len+2);
-    unsigned char * bin_data = (unsigned char *)&outdata->unit[0];
-    unsigned char * bin_start = bin_data;
-
-
-    for( ; len > 0 ; len--, ascii_data++ ) {
-        /* Get the byte and look it up */
-        this_ch = table_a2b_hqx[*ascii_data];
-        if ( this_ch == SKIP )
-            continue;
-        if ( this_ch == FAIL )
-            throw new Error(0); //Illegal char
-
-        if ( this_ch == DONE ) {
-            /* The terminating colon */
-            done = 1;
-            break;
-        }
-
-        /* Shift it into the buffer and see if any bytes are ready */
-        leftchar = (leftchar << 6) | (this_ch);
-        leftbits += 6;
-        if ( leftbits >= 8 ) {
-            leftbits -= 8;
-            *(bin_data++) = (leftchar >> leftbits) & 0xff;
-            leftchar &= ((1 << leftbits) - 1);
-        }
-    }
-
-    if ( leftbits && !done )
-        throw new Error(0); //(Incomplete) String has incomplete number of bytes 
-
-    outdata->unit.resize(bin_data-bin_start);
-    return new tuple2<bytes *, __ss_int>(2,outdata,done);
-}
-
-static unsigned char table_b2a_hqx[] =
-"!\"#$%&'()*+,-012345689@ABCDEFGHIJKLMNPQRSTUVXYZ[`abcdefhijklmpqr";
-
-bytes *b2a_hqx(bytes *binary) {
-    __ss_int bin_len = binary->__len__();
-    if (bin_len > PY_SSIZE_T_MAX / 2 - 2) {
-        throw new Error(0); // out of memory
-    }
-
-    char * bin_data = &binary->unit[0];
-
-    bytes *ascii = new bytes("",(bin_len<<1)+2);
-    char * ascii_data = &ascii->unit[0];
-    char * ascii_start = ascii_data;
-
-    int leftbits = 0, leftchar = 0;
-    char this_ch;
-
-    for( ; bin_len > 0 ; bin_len--, bin_data++ ) {
-        /* Shift into our buffer, and output any 6bits ready */
-        leftchar = (leftchar << 8) | *bin_data;
-        leftbits += 8;
-        while ( leftbits >= 6 ) {
-            this_ch = (leftchar >> (leftbits-6)) & 0x3f;
-            leftbits -= 6;
-            *ascii_data++ = table_b2a_hqx[(unsigned char)this_ch];
-        }
-    }
-    /* Output a possible runt byte */
-    if ( leftbits ) {
-        leftchar <<= (6-leftbits);
-        *ascii_data++ = table_b2a_hqx[leftchar & 0x3f];
-    }
-
-    ascii->unit.resize(ascii_data-ascii_start);
-    return ascii;
-}
-
-#define RUNCHAR 0x90
-
-bytes *rledecode_hqx(bytes *in_data_str) {
-    __ss_int in_len = in_data_str->__len__();
-    if ( in_len == 0 ) {
-        return new bytes("",0);
-    } else if (in_len > PY_SSIZE_T_MAX / 2) {
-        throw new Error(0); // no memory
-    }
-
-    char * in_data = &in_data_str->unit[0];
-    char in_byte, in_repeat;
-
-    /* Allocate a buffer of reasonable size. Resized when needed */
-    __ss_int out_len = in_len<<1;
-    bytes *out_data_str = new bytes("",out_len);
-    __ss_int out_len_left = out_len;
-    char * out_data = &out_data_str->unit[0];
-    char * out_data_start = out_data;
-
-    /*
-    ** We need two macros here to get/put bytes and handle
-    ** end-of-buffer for input and output strings.
-    */
-#define INBYTE(b) \
-    do { \
-             if ( --in_len < 0 ) { \
-                    throw new Error(0);  /* Incomplete */ \
-             } \
-             b = *in_data++; \
-    } while(0)
-
-#define OUTBYTE(b) \
-    do { \
-             if ( --out_len_left < 0 ) { \
-                      if ( out_len > PY_SSIZE_T_MAX / 2) throw new Error(0); /*No Memory*/ \
-                      out_data_str->unit.resize(out_len<<1);\
-                      out_data = out_data_start + out_len; \
-                      out_len_left = out_len-1; \
-                      out_len *= 2; \
-             } \
-             *out_data++ = (char)b; \
-    } while(0)
-
-    /*
-    ** Handle first byte separately (since we have to get angry
-    ** in case of an orphaned RLE code).
-    */
-    INBYTE(in_byte);
-
-    if (in_byte == RUNCHAR) {
-        INBYTE(in_repeat);
-        if (in_repeat != 0) {
-            /* Note Error, not Incomplete (which is at the end
-            ** of the string only). This is a programmer error.
-            */
-            throw new Error(0); // "Orphaned RLE code at start"
-        }
-        OUTBYTE(RUNCHAR);
-    } else {
-        OUTBYTE(in_byte);
-    }
-
-    while( in_len > 0 ) {
-        INBYTE(in_byte);
-
-        if (in_byte == RUNCHAR) {
-            INBYTE(in_repeat);
-            if ( in_repeat == 0 ) {
-                /* Just an escaped RUNCHAR value */
-                OUTBYTE(RUNCHAR);
-            } else {
-                /* Pick up value and output a sequence of it */
-                in_byte = out_data[-1];
-                while ( --in_repeat > 0 )
-                    OUTBYTE(in_byte);
-            }
-        } else {
-            /* Normal byte */
-            OUTBYTE(in_byte);
-        }
-    }
-    out_data_str->unit.resize(out_data-out_data_start);
-    return out_data_str;
-}
-
-bytes *rlecode_hqx(bytes *data) {
-    __ss_int len = data->__len__();
-    if (len >  PY_SSIZE_T_MAX / 2 - 2) {
-        throw new Error(0); // no memory
-    }
-
-    char * in_data = &data->unit[0];
-    bytes *rv = new bytes("", len*2+2);
-    char * out_data = &rv->unit[0];
-    char * out_start = out_data;
-    char ch;
-    __ss_int in, inend; 
-
-    for( in=0; in<len; in++) {
-        ch = in_data[in];
-        if ( ch == RUNCHAR ) {
-            /* RUNCHAR. Escape it. */
-            *out_data++ = (char)RUNCHAR;
-            *out_data++ = 0;
-        } else {
-            /* Check how many following are the same */
-            for(inend=in+1;
-                inend<len && in_data[inend] == ch &&
-                    inend < in+255;
-                inend++) ;
-            if ( inend - in > 3 ) {
-                /* More than 3 in a row. Output RLE. */
-                *out_data++ = ch;
-                *out_data++ = (char)RUNCHAR;
-                *out_data++ = (char)(inend-in);
-                in = inend-1;
-            } else {
-                /* Less than 3. Output the byte itself */
-                *out_data++ = ch;
-            }
-        }
-    }
-    rv->unit.resize((size_t)(out_data-out_start));
-    return rv;
-}
 
 static unsigned short crctab_hqx[256] = {
     0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5, 0x60c6, 0x70e7,
