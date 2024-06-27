@@ -56,8 +56,7 @@ def setmv(mv: 'ModuleVisitor'):
     return _mv
 
 
-def getmv() -> 'ModuleVisitor':
-    assert _mv
+def getmv() ->  Optional['ModuleVisitor']:
     return _mv
 
 
