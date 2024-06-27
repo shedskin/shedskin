@@ -311,8 +311,8 @@ void fillbuf_int(char c, __ss_int t, char order, unsigned int itemsize) {
         }
     } else {
         if(swap_endian(order)) {
-            for(int i=itemsize-1; i>=0; i--) {
-                ((char *)buffy)[i] = (unsigned char)(t & 0xff);
+            for(int i=(int)itemsize-1; i>=0; i--) {
+                ((char *)buffy)[(size_t)i] = (unsigned char)(t & 0xff);
                 t >>= 8;
             }
         } else {
