@@ -1,44 +1,51 @@
 import binascii
 
-def test_binascii():
-    s = b"my guitar wants to strum all night long"
 
-    assert binascii.b2a_qp(s) == b'my guitar wants to strum all night long'
-    # b2a = binascii.b2a_qp(s)
-    # print(repr(b2a))
-    # a2b = binascii.a2b_qp(b2a)
-    # print(repr(a2b))
-
-    assert binascii.b2a_uu(s) == b'G;7D@9W5I=&%R(\'=A;G1S(\'1O(\'-T<G5M(&%L;"!N:6=H="!L;VYG\n'
-
-    # b2a = binascii.b2a_uu(s)
-    # print(repr(b2a))
-    # a2b = binascii.a2b_uu(b2a)
-    # print(repr(a2b))
-
-    assert binascii.b2a_hex(s) == b'6d79206775697461722077616e747320746f20737472756d20616c6c206e69676874206c6f6e67'
-    # b2a = binascii.b2a_hex(s)
-    # print(repr(b2a))
-    # a2b = binascii.a2b_hex(b2a)
-    # print(repr(a2b))
+s = b"my guitar wants to strum all night long"
 
 
-    assert binascii.b2a_base64(s) == b'bXkgZ3VpdGFyIHdhbnRzIHRvIHN0cnVtIGFsbCBuaWdodCBsb25n\n'
-    # b2a = binascii.b2a_base64(s)
-    # print(repr(b2a))
-    # a2b = binascii.a2b_base64(b2a)
-    # print(repr(a2b))
+def test_b2a_a2b():
+    b2a = binascii.b2a_qp(s)
+    assert b2a == b'my guitar wants to strum all night long'
+    a2b = binascii.a2b_qp(b2a)
+    assert a2b == s
+
+    b2a = binascii.b2a_uu(s)
+    assert b2a == b'G;7D@9W5I=&%R(\'=A;G1S(\'1O(\'-T<G5M(&%L;"!N:6=H="!L;VYG\n'
+    a2b = binascii.a2b_uu(b2a)
+    assert a2b == s
+
+    b2a = binascii.b2a_hex(s)
+    assert b2a == b'6d79206775697461722077616e747320746f20737472756d20616c6c206e69676874206c6f6e67'
+    a2b = binascii.a2b_hex(b2a)
+    assert a2b == s
+
+    b2a = binascii.b2a_base64(s)
+    assert b2a == b'bXkgZ3VpdGFyIHdhbnRzIHRvIHN0cnVtIGFsbCBuaWdodCBsb25n\n'
+    a2b = binascii.a2b_base64(b2a)
+    assert a2b == s
 
 
-    assert binascii.hexlify(s) == b'6d79206775697461722077616e747320746f20737472756d20616c6c206e69676874206c6f6e67'
-    # b2a = binascii.hexlify(s)
-    # print(repr(b2a))
-    # a2b = binascii.unhexlify(b2a)
-    # print(repr(a2b))
+def test_hexlify():
+    b2a = binascii.hexlify(s)
+    assert b2a == b'6d79206775697461722077616e747320746f20737472756d20616c6c206e69676874206c6f6e67'
+    a2b = binascii.unhexlify(b2a)
+    assert a2b == s
+
+
+def test_crc():
+    crc = binascii.crc32(s)
+    assert crc == 1546323114
+
+    crc = binascii.crc_hqx(s, 12)
+    assert crc == 53552
 
 
 def test_all():
-    test_binascii()
+    test_b2a_a2b()
+    test_hexlify()
+    test_crc()
+
 
 if __name__ == '__main__':
     test_all()

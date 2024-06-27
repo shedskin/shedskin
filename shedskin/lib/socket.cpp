@@ -114,9 +114,9 @@ __ss_int __ss_SO_REUSEADDR = SO_REUSEADDR;
 __ss_int __ss_INADDR_ANY = INADDR_ANY;
 __ss_int __ss_INADDR_LOOPBACK = INADDR_LOOPBACK;
 #ifndef __sun
-__ss_int __ss_INADDR_NULL = INADDR_NONE;
+__ss_int __ss_INADDR_NULL = (__ss_int)INADDR_NONE;
 #endif
-__ss_int __ss_INADDR_BROADCAST = INADDR_BROADCAST;
+__ss_int __ss_INADDR_BROADCAST = (__ss_int)INADDR_BROADCAST;
 __ss_int __ss_SOMAXCONN = SOMAXCONN;
 
 double __ss_default_timeout = -1.0;
@@ -144,7 +144,7 @@ str* make_errstring(const char *prefix)
 }
 
 str *socket::getsockopt(__ss_int level, __ss_int optname, __ss_int value) {
-    socklen_t buflen = value;
+    socklen_t buflen = (socklen_t)value;
     std::vector<char> buf(buflen);
 
     if (::getsockopt(_fd, level, optname, buf.data(), &buflen) == SOCKET_ERROR)
@@ -223,8 +223,8 @@ static void tuple_to_sin_addr(sockaddr_in *dst, socket::inet_address src)
     memset(dst, 0, sizeof(sockaddr_in));
     dst->sin_family = AF_INET;
     const char *host = src->first->c_str();
-    dst->sin_addr.s_addr = string_to_addr(host);
-    dst->sin_port = htons(src->second);
+    dst->sin_addr.s_addr = (in_addr_t)string_to_addr(host);
+    dst->sin_port = htons((uint16_t)src->second);
 }
 
 socket *socket::bind(socket::inet_address address)
@@ -252,9 +252,9 @@ socket *socket::connect(socket::inet_address address) {
 
     sockaddr_in sin;
     memset(&sin, 0, sizeof(sin));
-    sin.sin_family = family;
-    sin.sin_port = htons(port);
-    sin.sin_addr.s_addr = string_to_addr(host);
+    sin.sin_family = (sa_family_t)family;
+    sin.sin_port = htons((uint16_t)port);
+    sin.sin_addr.s_addr = (in_addr_t)string_to_addr(host);
 
     return connect(reinterpret_cast<sockaddr *>(&sin), sizeof(sin));
 }
@@ -408,28 +408,28 @@ void socket::write_wait()
     }
 }
 
-int socket::send(const char *s, size_t len, int flags)
+size_t socket::send(const char *s, size_t len, int flags)
 {
     write_wait();
 
     ssize_t r = ::send(_fd, s, len, flags);
     if (r == SOCKET_ERROR)
         throw new error(make_errstring("send"));
-    return r;
+    return (size_t)r;
 }
 
 __ss_int socket::send(str *string, __ss_int flags) {
-    return send( string->unit.data(), string->unit.size(), flags );
+    return (__ss_int)send( string->unit.data(), string->unit.size(), flags );
 }
 
 __ss_int socket::sendall(str *string, __ss_int flags) {
     const char *s = string->c_str();
     size_t offset = 0;
-    size_t len = string->__len__(); //FIXME is this guaranteed to be the same as the C string length, even if we are dealing with wide/unicode?
+    size_t len = string->unit.size(); //FIXME is this guaranteed to be the same as the C string length, even if we are dealing with wide/unicode?
 
     while (offset < len)
         offset += send(s + offset, len - offset, flags);
-    return len;
+    return (__ss_int)len;
 }
 
 __ss_int socket::sendto(str* msg, __ss_int flags, socket::inet_address addr)
@@ -453,7 +453,7 @@ __ss_int socket::sendto(str* msg, __ss_int flags, socket::inet_address addr)
     if (len == SOCKET_ERROR)
         throw new error(make_errstring("sendto"));
 
-    return len;
+    return (__ss_int)len;
 }
 
 __ss_int socket::sendto(str* msg, socket::inet_address addr)
@@ -490,11 +490,11 @@ str *socket::recv(__ss_int bufsize, __ss_int flags)
 {
     read_wait();
 
-    std::vector<char> buf(bufsize);
-    ssize_t len = ::recv(_fd, buf.data(), bufsize, flags);
+    std::vector<char> buf((size_t)bufsize);
+    ssize_t len = ::recv(_fd, buf.data(), (size_t)bufsize, flags);
     if (len == SOCKET_ERROR)
         throw new error(make_errstring("recv"));
-    return new str(buf.data(), len);
+    return new str(buf.data(), (size_t)len);
 }
 
 #ifdef WIN32
@@ -513,31 +513,31 @@ static socket::inet_address sin_addr_to_tuple(const sockaddr_in *sin)
     return addr;
 }
 
-ssize_t socket::recvfrom(char *buf, size_t bufsize, int flags, sockaddr *sa, socklen_t *salen)
+size_t socket::recvfrom(char *buf, size_t bufsize, int flags, sockaddr *sa, socklen_t *salen)
 {
     read_wait();
     ssize_t len = ::recvfrom(_fd, buf, bufsize, flags, sa, salen);
     if (len == SOCKET_ERROR)
         throw new error(make_errstring("recvfrom"));
-    return len;
+    return (size_t)len;
 }
 
 tuple2<str *, socket::inet_address> *socket::recvfrom(__ss_int bufsize, __ss_int flags)
 {
-    std::vector<char> buf(bufsize);
+    std::vector<char> buf((size_t)bufsize);
     struct sockaddr_in sin;
     socklen_t salen = sizeof(sin);
-    ssize_t len = recvfrom(buf.data(), bufsize, flags, reinterpret_cast<sockaddr *>(&sin), &salen);
+    size_t len = recvfrom(buf.data(), (size_t)bufsize, flags, reinterpret_cast<sockaddr *>(&sin), &salen);
     return new tuple2<str *, inet_address>(2, new str(buf.data(), len), sin_addr_to_tuple(&sin));
 }
 
-socket::socket(__ss_int family, __ss_int type, __ss_int proto) {
+socket::socket(__ss_int family_, __ss_int type_, __ss_int proto_) {
     this->__class__ = cl_socket;
 
-    this->family = family;
-    this->type = type;
-    this->proto = proto;
-    _fd = ::socket(family, type, proto);
+    this->family = family_;
+    this->type = type_;
+    this->proto = proto_;
+    _fd = ::socket(family_, type_, proto_);
     if (_fd == SOCKET_ERROR)
         throw new error(make_errstring("socket"));
     _timeout = __ss_default_timeout;
@@ -644,19 +644,19 @@ str *gethostname()
 }
 
 __ss_int _ss_htonl(__ss_int x) {
-    return htonl(x);
+    return (__ss_int)htonl((uint32_t)x);
 }
 
 __ss_int _ss_htons(__ss_int x) {
-    return htons(x);
+    return (__ss_int)htons((uint16_t)x);
 }
 
 __ss_int _ss_ntohl(__ss_int x) {
-    return ntohl(x);
+    return (__ss_int)ntohl((uint32_t)x);
 }
 
 __ss_int _ss_ntohs(__ss_int x) {
-    return ntohs(x);
+    return (__ss_int)ntohs((uint16_t)x);
 }
 
 //FIXME this should return None when no timeout is set
@@ -721,14 +721,14 @@ str *gethostbyname(str *hostname)
     if (!he)
         throw new herror(host_not_found);
     char ip[sizeof("xxx.xxx.xxx.xxx")];
-    int addr = htonl( *((int *) he->h_addr_list[0]) );
+    uint32_t addr = htonl((uint32_t)(*((int *) he->h_addr_list[0])) );
     sprintf(ip, "%d.%d.%d.%d", ((addr >> 24) & 0xff), ((addr >> 16) & 0xff), ((addr >> 8) & 0xff), (addr & 0xff));
     return new str(ip);
 }
 
 str *inet_aton(str *x)
 {
-    int addr = string_to_addr(x->c_str());
+    unsigned long int addr = string_to_addr(x->c_str());
     return new str((char *) &addr, 4);
 }
 

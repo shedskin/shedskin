@@ -32,9 +32,9 @@ bytes *BytesIO::readline(int n) {
     __check_closed();
     if(__eof())
         return new bytes("");
-    size_t nl = s->unit.find('\n', pos);
+    size_t nl = s->unit.find('\n', (size_t)pos);
     if(nl != std::string::npos) {
-        int tbr = nl - pos + 1;
+        int tbr = (int)(nl - (size_t)pos + 1);
         return read(n < 0 ? tbr : std::min(tbr, n));
     } else {
         return read(n);
@@ -53,11 +53,11 @@ void *BytesIO::write(bytes *data) {
     __check_closed();
     if(data) {
         const size_t size = data->unit.size();
-        s->unit.insert(pos, data->unit);
-        pos += size;
-        s->unit.erase(pos, size);
+        s->unit.insert((size_t)pos, data->unit);
+        pos += (int)size;
+        s->unit.erase((size_t)pos, size);
     }
-    return 0; 
+    return 0;
 }
 
 bytes *BytesIO::getvalue() {
@@ -83,9 +83,9 @@ str *StringIO::readline(int n) {
     __check_closed();
     if(__eof())
         return new str("");
-    size_t nl = s->unit.find('\n', pos);
+    size_t nl = s->unit.find('\n', (size_t)pos);
     if(nl != std::string::npos) {
-        int tbr = nl - pos + 1;
+        int tbr = (int)(nl - (size_t)pos + 1);
         return read(n < 0 ? tbr : std::min(tbr, n));
     } else {
         return read(n);
@@ -104,9 +104,9 @@ void *StringIO::write(str *data) {
     __check_closed();
     if(data) {
         const size_t size = data->unit.size();
-        s->unit.insert(pos, data->unit);
-        pos += size;
-        s->unit.erase(pos, size);
+        s->unit.insert((size_t)pos, data->unit);
+        pos += (int)size;
+        s->unit.erase((size_t)pos, size);
     }
     return 0;
 }
