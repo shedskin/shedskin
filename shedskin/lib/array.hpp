@@ -276,15 +276,16 @@ template<class T> T array<T>::__getitem__(__ss_int i) {
 
 template<> inline __ss_int array<__ss_int>::__getfast__(__ss_int i) {
     i = __wrap(this, i);
+    unsigned int j = (unsigned int)i;
     switch(typechar) {
-        case 'b': return (__ss_int)(*((signed char *)(&units[i*itemsize])));
-        case 'B': return (__ss_int)(*((unsigned char *)(&units[i*itemsize])));
-        case 'h': return (__ss_int)(*((signed short *)(&units[i*itemsize])));
-        case 'H': return (__ss_int)(*((unsigned short *)(&units[i*itemsize])));
-        case 'i': return (__ss_int)(*((signed int *)(&units[i*itemsize])));
-        case 'I': return (__ss_int)(*((unsigned int *)(&units[i*itemsize])));
-        case 'l': return (__ss_int)(*((signed long *)(&units[i*itemsize])));
-        case 'L': return (__ss_int)(*((unsigned long *)(&units[i*itemsize])));
+        case 'b': return (__ss_int)(*((signed char *)(&units[j*itemsize])));
+        case 'B': return (__ss_int)(*((unsigned char *)(&units[j*itemsize])));
+        case 'h': return (__ss_int)(*((signed short *)(&units[j*itemsize])));
+        case 'H': return (__ss_int)(*((unsigned short *)(&units[j*itemsize])));
+        case 'i': return (__ss_int)(*((signed int *)(&units[j*itemsize])));
+        case 'I': return (__ss_int)(*((unsigned int *)(&units[j*itemsize])));
+        case 'l': return (__ss_int)(*((signed long *)(&units[j*itemsize])));
+        case 'L': return (__ss_int)(*((unsigned long *)(&units[j*itemsize])));
     }
     return 0;
 }
