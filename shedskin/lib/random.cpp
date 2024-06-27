@@ -992,8 +992,8 @@ void __init() {
     __ss_MAXINT = 2147483647;
     N = 624;
     M = 397;
-    MATRIX_A = 2567483615u;
-    UPPER = 2147483648u;
+    MATRIX_A = -1727483681;
+    UPPER = -2147483648;
     LOWER = 2147483647;
     mag01 = (new list<int>(2, 0, MATRIX_A));
     _inst = (new Random());

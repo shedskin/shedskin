@@ -409,12 +409,15 @@ template<class T> void *list<T>::insert(__ss_int m, T e) {
 }
 
 template<class T> void *list<T>::remove(T e) {
-    size_t len = this->units.size();
-    for(size_t i = 0; i < len; i++)
-        if(__eq(units[i], e)) {
-            units.erase(units.begin()+i);
+    __ss_int len = this->__len__();
+
+    for(__ss_int i = 0; i < len; i++) {
+        if(__eq(units[(size_t)i], e)) {
+            units.erase(units.begin() + i);
             return NULL;
         }
+    }
+
     throw new ValueError(new str("list.remove(x): x not in list"));
 }
 template<class T> template <class U> void *list<T>::remove(U) {
