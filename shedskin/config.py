@@ -6,10 +6,11 @@ Copyright 2005-2023 Mark Dufour and contributors; License GNU GPL version 3 (See
 import argparse
 import os
 import sys
-import pathlib
+from pathlib import Path
 
 from typing import TYPE_CHECKING, Optional
 if TYPE_CHECKING:
+    from . import infer
     from . import python
     from .utils import ProgressBar
 
@@ -17,22 +18,22 @@ if TYPE_CHECKING:
 class GlobalInfo:  # XXX add comments, split up
     def __init__(self, options: argparse.Namespace):
         self.options = options
-        self.constraints = set()
-        self.allvars = set()
-        self.allfuncs = set()
-        self.allclasses = set()
+        self.constraints: set[tuple['infer.CNode', 'infer.CNode']] = set()
+        self.allvars: set['python.Variable'] = set()
+        self.allfuncs: set['python.Function'] = set()
+        self.allclasses: set['python.Class'] = set()
         self.cnode = {}
         self.types = {}
-        self.templates = 0
-        self.modules = {}
+        self.templates: int = 0
+        self.modules: dict[str, 'python.Module'] = {}
         self.inheritance_relations = {}
         self.inheritance_temp_vars = {}
         self.parent_nodes = {}
         self.inherited = set()
         self.main_module: Optional['python.Module'] = None
-        self.module = None
-        self.module_path: Optional[pathlib.Path] = None
-        self.cwd = pathlib.Path.cwd()
+        self.module: Optional['python.Module'] = None
+        self.module_path: Optional[Path] = None
+        self.cwd: Path = Path.cwd()
         self.builtins: list[str] = [
             "none",
             "str_",
@@ -116,11 +117,11 @@ class GlobalInfo:  # XXX add comments, split up
                 shedskin_directory = os.path.join(dirname, shedskin_directory)
                 break
         shedskin_libdir = os.path.join(shedskin_directory, "lib")
-        self.shedskin_lib = pathlib.Path(shedskin_libdir)
+        self.shedskin_lib = Path(shedskin_libdir)
         system_libdir = "/usr/share/shedskin/lib"
         self.sysdir = shedskin_directory
         # set resources subdirectors
-        self.shedskin_resources = pathlib.Path(shedskin_directory) / "resources"
+        self.shedskin_resources = Path(shedskin_directory) / "resources"
         self.shedskin_cmake = self.shedskin_resources / "cmake" / "modular"
         self.shedskin_conan = self.shedskin_resources / "conan"
         self.shedskin_flags = self.shedskin_resources / "flags"
