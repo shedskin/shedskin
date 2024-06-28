@@ -51,7 +51,7 @@ str *const_0, *const_1, *const_10, *const_11, *const_12, *const_13, *const_14, *
 list<str *> *__all__;
 list<int> *mag01;
 __ss_float LOG4, NV_MAGICCONST, SG_MAGICCONST;
-int BPF, LOWER, M, MATRIX_A, MAXBITS, __ss_MAXINT, MAXWIDTH, N, UPPER;
+int BPF, LOWER, M, MATRIX_A, __ss_MAXINT, MAXWIDTH, N, UPPER;
 str *__name__;
 Random *_inst;
 
@@ -98,13 +98,13 @@ __ss_float Random::paretovariate(__ss_float alpha) {
     return (1.0/__power(u, (1.0/alpha)));
 }
 
-int Random::randrange(int stop) {
+__ss_int Random::randrange(__ss_int stop) {
     return this->randrange(0, stop, 1);
 }
-int Random::randrange(int start, int stop) {
+__ss_int Random::randrange(__ss_int start, __ss_int stop) {
     return this->randrange(start, stop, 1);
 }
-int Random::randrange(int start, int stop, int step) {
+__ss_int Random::randrange(__ss_int start, __ss_int stop, __ss_int step) {
     /**
     Choose a random item from range(start, stop[, step]).
 
@@ -112,7 +112,7 @@ int Random::randrange(int start, int stop, int step) {
             endpoint; in Python this is usually not what you want.
             Do not supply the 'int', 'default', and 'maxwidth' arguments.
     */
-    int istart, istep, istop, n, width;
+    __ss_int istart, istep, istop, n, width;
 
     istart = __int(start);
     if (istart != start) {
@@ -173,7 +173,7 @@ __ss_float Random::random() {
     Generate a random number on [0,1)-real-interval.
     */
 
-    return rand() / ((__ss_float)RAND_MAX+1);
+    return rand() / ((__ss_float)RAND_MAX+1); // TODO use more advanced C++ alternative
 }
 
 __ss_float Random::normalvariate(__ss_float mu, __ss_float sigma) {
@@ -196,20 +196,6 @@ __ss_float Random::normalvariate(__ss_float mu, __ss_float sigma) {
         }
     }
     return (mu+(z*sigma));
-}
-
-__ss_float Random::_genrand_res53() {
-    /**
-    Generate a random number on [0,1) with 53-bit resolution.
-    */
-    int a, b;
-
-    a = ((this->_genrand_int32()>>5)&~((unsigned)-1<<(32-5)));
-    b = ((this->_genrand_int32()>>6)&~((unsigned)-1<<(32-6)));
-//    return (((a*67108864.0)+b)*(1.0/9.00719925474e+15));
-
-    return (((a*67108864.0)+b)*(1.0/9007199254740992.0));
-    return 0;
 }
 
 __ss_float Random::weibullvariate(__ss_float alpha, __ss_float beta) {
@@ -298,11 +284,11 @@ int Random::_init_by_array(list<int> *init_key) {
     END_FOR
 
     __22 = this->mt;
-    __22->__setitem__(0, 2147483648u);
+    __22->__setitem__(0, -2147483648);
     return 0;
 }
 
-int Random::randint(int a, int b) {
+__ss_int Random::randint(__ss_int a, __ss_int b) {
     /**
     Return random integer in range [a, b], including both end points.
     */
@@ -485,7 +471,7 @@ __ss_float Random::expovariate(__ss_float lambd) {
     return (-__math__::log(1.0 - this->random())/lambd);
 }
 
-int Random::getrandbits(int k) {
+__ss_int Random::getrandbits(__ss_int k) {
     /**
     getrandbits(k) -> x.  Generates an int with k random bits.
     */
@@ -493,10 +479,8 @@ int Random::getrandbits(int k) {
     if ((k<=0)) {
         throw (const_8);
     }
-    if ((k>MAXBITS)) {
-        throw (new ValueError(const_9));
-    }
-    return ((this->_genrand_int32()>>(32-k))&~((unsigned)-1<<k));
+
+    return randrange((__ss_int)1<<k);
 }
 
 void *Random::setstate(list<__ss_float> *state) {
@@ -575,46 +559,6 @@ __ss_float Random::gauss(__ss_float mu, __ss_float sigma) {
         this->gauss_switch = 1;
     }
     return (mu+(z*sigma));
-}
-
-int Random::_genrand_int32() {
-    /**
-    Generate a random number on [0,0xffffffff]-interval.
-    */
-    list<int> *__2, *__5, *__6;
-    int __0, __1, __3, __4, kk, y;
-    kk = 0;
-
-    if (this->mti >= N) {
-        if (this->mti==(N+1)) {
-            this->_init_genrand(5489);
-        }
-
-        FAST_FOR(kk,0,(N-M),1,0,1)
-            y = (((this->mt)->__getfast__(kk)&UPPER)|((this->mt)->__getfast__((kk+1))&LOWER));
-            __2 = this->mt;
-            __2->__setitem__(kk, ((this->mt)->__getfast__((kk+M))^(((y>>1)&LOWER)^mag01->__getfast__((y&1)))));
-        END_FOR
-
-
-        FAST_FOR(kk,(kk+1),(N-1),1,3,4)
-            y = (((this->mt)->__getfast__(kk)&UPPER)|((this->mt)->__getfast__((kk+1))&LOWER));
-            __5 = this->mt;
-            __5->__setitem__(kk, ((this->mt)->__getfast__((kk+(M-N)))^(((y>>1)&LOWER)^mag01->__getfast__((y&1)))));
-        END_FOR
-
-        y = (((this->mt)->__getfast__((N-1))&UPPER)|((this->mt)->__getfast__(0)&LOWER));
-        __6 = this->mt;
-        __6->__setitem__(N-1, ((this->mt)->__getfast__((M-1))^(((y>>1)&LOWER)^mag01->__getfast__((y&1)))));
-        this->mti = 0;
-    }
-    y = (this->mt)->__getfast__(this->mti);
-    this->mti += 1;
-    y ^= ((y>>11)&~((unsigned)-1<<(32-11)));
-    y ^= ((y<<7)&2636928640u);
-    y ^= ((y<<15)&4022730752u);
-    y ^= ((y>>18)&~((unsigned)-1<<(32-18)));
-    return y;
 }
 
 list<__ss_float> *Random::getstate() {
@@ -988,7 +932,6 @@ void __init() {
     SG_MAGICCONST = (1.0+__math__::log(4.5));
     BPF = 53;
     MAXWIDTH = (1<<BPF);
-    MAXBITS = 31;
     __ss_MAXINT = 2147483647;
     N = 624;
     M = 397;
@@ -1014,22 +957,23 @@ void *setstate(list<__ss_float> *state) {
     return _inst->setstate(state);
 }
 
-int randrange(int stop) {
+__ss_int randrange(__ss_int stop) {
 
+    printf("randraaa\n");
     return _inst->randrange(0, stop, 1);
 }
 
-int randrange(int start, int stop) {
+__ss_int randrange(__ss_int start, __ss_int stop) {
 
     return _inst->randrange(start, stop, 1);
 }
 
-int randrange(int start, int stop, int step) {
+__ss_int randrange(__ss_int start, __ss_int stop, __ss_int step) {
 
     return _inst->randrange(start, stop, step);
 }
 
-int randint(int a, int b) {
+__ss_int randint(__ss_int a, __ss_int b) {
 
     return _inst->randint(a, b);
 }
@@ -1094,7 +1038,7 @@ __ss_float weibullvariate(__ss_float alpha, __ss_float beta) {
     return _inst->weibullvariate(alpha, beta);
 }
 
-int getrandbits(int k) {
+__ss_int getrandbits(__ss_int k) {
 
     return _inst->getrandbits(k);
 }

@@ -39,16 +39,15 @@ public:
     Random(int a);
     virtual __ss_float random();
     __ss_float paretovariate(__ss_float alpha);
-    int randrange(int stop);
-    int randrange(int start, int stop);
-    int randrange(int start, int stop, int step);
+    __ss_int randrange(__ss_int stop);
+    __ss_int randrange(__ss_int start, __ss_int stop);
+    __ss_int randrange(__ss_int start, __ss_int stop, __ss_int step);
     __ss_float betavariate(__ss_float alpha, __ss_float beta);
     __ss_float normalvariate(__ss_float mu, __ss_float sigma);
-    __ss_float _genrand_res53();
     template <class A> void *seed(A a);
     __ss_float weibullvariate(__ss_float alpha, __ss_float beta);
     int _init_by_array(list<int> *init_key);
-    int randint(int a, int b);
+    __ss_int randint(__ss_int a, __ss_int b);
     __ss_float vonmisesvariate(__ss_float mu, __ss_float kappa);
     __ss_float gammavariate(__ss_float alpha, __ss_float beta);
     __ss_float uniform(__ss_float a, __ss_float b);
@@ -57,16 +56,15 @@ public:
     __ss_float triangular(__ss_float low, __ss_float high, void *mode);
     __ss_float stdgamma(__ss_float alpha, __ss_float ainv, __ss_float bbb, __ss_float ccc);
     __ss_float expovariate(__ss_float lambd);
-    int getrandbits(int k);
+    __ss_int getrandbits(__ss_int k);
     virtual void *setstate(list<__ss_float> *state);
     __ss_float lognormvariate(__ss_float mu, __ss_float sigma);
     int _init_genrand(int s);
     __ss_float gauss(__ss_float mu, __ss_float sigma);
     template <class A> A choice(pyseq<A> *seq);
     template <class A> void *shuffle(list<A> *x);
-    template <class A> list<A> *sample(pyiter<A> *population, int k);
-    template <class A> list<A> *sample(pyseq<A> *population, int k);
-    int _genrand_int32();
+    template <class A> list<A> *sample(pyiter<A> *population, __ss_int k);
+    template <class A> list<A> *sample(pyseq<A> *population, __ss_int k);
     virtual list<__ss_float> *getstate();
     __ss_float cunifvariate(__ss_float mean, __ss_float arc);
 };
@@ -109,14 +107,14 @@ void __init();
 __ss_float random();
 list<__ss_float> *getstate();
 void *setstate(list<__ss_float> *state);
-int randrange(int stop);
-int randrange(int start, int stop);
-int randrange(int start, int stop, int step);
-int randint(int a, int b);
+__ss_int randrange(__ss_int stop);
+__ss_int randrange(__ss_int start, __ss_int stop);
+__ss_int randrange(__ss_int start, __ss_int stop, __ss_int step);
+__ss_int randint(__ss_int a, __ss_int b);
 template <class A> A choice(pyseq<A> *seq);
 template <class A> void *shuffle(list<A> *x);
-template <class A> list<A> *sample(pyiter<A> *population, int k);
-template <class A> list<A> *sample(pyseq<A> *population, int k);
+template <class A> list<A> *sample(pyiter<A> *population, __ss_int k);
+template <class A> list<A> *sample(pyseq<A> *population, __ss_int k);
 __ss_float uniform(__ss_float a, __ss_float b);
 __ss_float triangular(__ss_float low, __ss_float high, __ss_float mode);
 __ss_float triangular(__ss_float low, __ss_float high, __ss_int mode);
@@ -132,7 +130,7 @@ __ss_float gauss(__ss_float mu, __ss_float sigma);
 __ss_float betavariate(__ss_float alpha, __ss_float beta);
 __ss_float paretovariate(__ss_float alpha);
 __ss_float weibullvariate(__ss_float alpha, __ss_float beta);
-int getrandbits(int k);
+__ss_int getrandbits(__ss_int k);
 
 template <class A> A choice(pyseq<A> *seq) {
 
@@ -144,11 +142,11 @@ template <class A> void *shuffle(list<A> *x) {
     return _inst->shuffle(x);
 }
 
-template <class A> list<A> *sample(pyiter<A> *population, int k) {
+template <class A> list<A> *sample(pyiter<A> *population, __ss_int k) {
     return sample(new list<A>(population), k);
 }
 
-template <class A> list<A> *sample(pyseq<A> *population, int k) {
+template <class A> list<A> *sample(pyseq<A> *population, __ss_int k) {
 
     return _inst->sample(population, k);
 }
@@ -177,11 +175,11 @@ template <class A> void *Random::shuffle(list<A> *x) {
     return NULL;
 }
 
-template <class A> list<A> *Random::sample(pyiter<A> *population, int k) {
+template <class A> list<A> *Random::sample(pyiter<A> *population, __ss_int k) {
     return sample(new list<A>(population), k);
 }
 
-template <class A> list<A> *Random::sample(pyseq<A> *population, int k) {
+template <class A> list<A> *Random::sample(pyseq<A> *population, __ss_int k) {
     /**
     Chooses k unique random elements from a population sequence.
 
