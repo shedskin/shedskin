@@ -270,7 +270,7 @@ int Random::_init_by_array(list<int> *init_key) {
         __14 = this->mt;
         __14->__setitem__(i, (((this->mt)->__getfast__(i)^(((this->mt)->__getfast__((i-1))^(((this->mt)->__getfast__((i-1))>>30)&3))*1664525))+init_key->__getfast__(j))+j);
         __15 = this->mt;
-        __15->__setitem__(i, __15->__getfast__(i) & 4294967295u);
+        __15->__setitem__(i, __15->__getfast__(i) & -1);
         i += 1;
         j += 1;
         if (i >= N) {
@@ -288,7 +288,7 @@ int Random::_init_by_array(list<int> *init_key) {
         __19 = this->mt;
         __19->__setitem__(i, (((this->mt)->__getfast__(i)^(((this->mt)->__getfast__((i-1))^(((this->mt)->__getfast__((i-1))>>30)&3))*1566083941))-i));
         __20 = this->mt;
-        __20->__setitem__(i, __20->__getfast__(i) & 4294967295u);
+        __20->__setitem__(i, __20->__getfast__(i) & -1);
         i += 1;
         if (i >= N) {
             __21 = this->mt;
@@ -538,13 +538,13 @@ int Random::_init_genrand(int s) {
     int __8, __9;
 
     __7 = this->mt;
-    __7->__setitem__(0, (s&4294967295u));
+    __7->__setitem__(0, (s&-1));
 
     FAST_FOR(this->mti,1,N,1,8,9)
         __10 = this->mt;
         __10->__setitem__(this->mti, ((1812433253*((this->mt)->__getfast__((this->mti-1))^(((this->mt)->__getfast__((this->mti-1))>>30)&3)))+this->mti));
         __11 = this->mt;
-        __11->__setitem__(this->mti, __11->__getfast__(this->mti) & 4294967295u);
+        __11->__setitem__(this->mti, __11->__getfast__(this->mti) & -1);
     END_FOR
 
     this->mti += 1;
