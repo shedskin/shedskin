@@ -34,7 +34,7 @@ template<class T> list<T>::list(tuple2<T, T> *p) {
 
 template<class T> list<T>::list(str *s) {
     this->__class__ = cl_list;
-    this->units.resize(len(s));
+    this->units.resize(s->unit.size());
     size_t sz = s->unit.size();
     for(size_t i=0; i<sz; i++)
         this->units[i] = __char_cache[(unsigned char)s->unit[i]];
@@ -46,7 +46,7 @@ template<class T> list<T>::list(PyObject *p) {
         throw new TypeError(new str("error in conversion to Shed Skin (list expected)"));
 
     this->__class__ = cl_list;
-    size_t size = PyList_Size(p);
+    size_t size = (size_t)PyList_Size(p);
     this->units.resize(size);
     for(size_t i=0; i<size; i++)
         this->units.at(i) = __to_ss<T>(PyList_GetItem(p, i));

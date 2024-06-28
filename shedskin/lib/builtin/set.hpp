@@ -293,7 +293,6 @@ template<class T> template <class U> set<T> *set<T>::intersection(int, U *iter) 
 }
 
 template<class T> set<T> *set<T>::intersection(int, set<T> *s) {
-    set<T> *a, *b;
     set<T> *c = new set<T>(this->frozen);
 
     // TODO optimize based on size difference?
