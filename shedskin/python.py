@@ -435,8 +435,9 @@ def lookup_module(node, mv: 'graph.ModuleVisitor'):
 
 
 def def_class(gx: 'config.GlobalInfo', name: str, mv: Optional['graph.ModuleVisitor'] = None):
-    if mv is None:
+    if not mv:
         mv = gx.modules["builtin"].mv
+    assert mv
     if name in mv.classes:
         return mv.classes[name]
     elif name in mv.ext_classes:
