@@ -69,7 +69,7 @@ __ss_int unpack_int(char o, char c, unsigned int d, bytes *data, __ss_int *pos) 
         return 0;
     result = 0;
     for(unsigned int i=0; i<itemsize; i++) {
-        unsigned long long c2 = (unsigned char)(data->unit[(size_t)(*pos+i)]);
+        unsigned long long c2 = (unsigned char)(data->unit[(size_t)(*pos+(__ss_int)i)]);
         if(swap_endian(o))
             result |= (c2 << 8*(itemsize-i-1));
         else
@@ -91,13 +91,13 @@ bytes *unpack_bytes(char, char c, unsigned int d, bytes *data, __ss_int *pos) {
         case 's':
              result = new bytes();
              for(unsigned int i=0; i<d; i++)
-                 result->unit += data->unit[(size_t)(*pos+i)];
+                 result->unit += data->unit[(size_t)(*pos+(__ss_int)i)];
              break;
         case 'p':
              result = new bytes();
              len = (unsigned char)data->unit[(size_t)(*pos)];
              for(unsigned i=0; i<len; i++)
-                 result->unit += data->unit[(size_t)(*pos+i+1)];
+                 result->unit += data->unit[(size_t)(*pos+(__ss_int)i+1)];
              break;
     }
     *pos += (__ss_int)d;
@@ -124,10 +124,10 @@ double unpack_float(char o, char c, unsigned int d, bytes *data, __ss_int *pos) 
         return 0;
     if(swap_endian(o))
         for(unsigned int i=0; i<itemsize; i++)
-            ((char *)buffy)[itemsize-i-1] = data->unit[(size_t)(*pos+i)];
+            ((char *)buffy)[itemsize-i-1] = data->unit[(size_t)(*pos+(__ss_int)i)];
     else
         for(unsigned int i=0; i<itemsize; i++)
-            ((char *)buffy)[i] = data->unit[(size_t)(*pos+i)];
+            ((char *)buffy)[i] = data->unit[(size_t)(*pos+(__ss_int)i)];
     if(c == 'f')
         result = *((float *)(buffy));
     else
