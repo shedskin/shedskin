@@ -31,7 +31,12 @@ class ProgressBar:
     """
 
     def __init__(
-        self, total=100, prefix="processing", bar_length=33, done_sym="#", left_sym="-"
+        self,
+        total: int = 100,
+        prefix: str = "processing",
+        bar_length: int = 33,
+        done_sym: str = "#",
+        left_sym: str = "-",
     ):
         self.total = total
         self.prefix = prefix
@@ -39,9 +44,9 @@ class ProgressBar:
         self.done_sym = done_sym
         self.left_sym = left_sym
         self.progress = 0.0
-        self.done = False
+        self.done: bool = False
 
-    def update(self, n):
+    def update(self, n: int):
         if self.done:
             return
 

@@ -19,6 +19,7 @@ import string
 import struct
 import textwrap
 import functools
+from pathlib import Path
 
 from . import ast_utils
 from . import error
@@ -29,7 +30,7 @@ from . import python
 from . import typestr
 from . import virtual
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 if TYPE_CHECKING:
     from . import config
     from . import graph
@@ -114,16 +115,13 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         return self.namer.name(obj)
 
     def get_output_file(self, ext=".cpp", mode="w"):
-        output_file = self.output_base.with_suffix(ext)
-
-        parentdir = os.path.dirname(self.gx.module_path)
+        output_file = Path(self.output_base.with_suffix(ext))
+        assert self.gx.module_path
+        module_path = Path(self.gx.module_path)
         if self.gx.outputdir:
-            output_file = os.path.join(
-                self.gx.outputdir,
-                os.path.relpath(output_file, parentdir),
-            )
-            outputdir = os.path.dirname(output_file)
-            os.makedirs(outputdir, exist_ok=True)
+            outputdir = Path(self.gx.outputdir)
+            output_file = outputdir / output_file.relative_to(module_path.parent)
+            output_file.parent.mkdir(exist_ok=True)
         return open(output_file, mode)
 
     # XXX this is too magical
@@ -1081,9 +1079,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 types = set()
                 for child in node.elts:
                     types.update(self.mergeinh[child])
-                typestr.typestr(
-                    self.gx, types, node=child, tuple_check=True, mv=self.mv
-                )
+                # typestr.typestr(
+                #     self.gx, types, node=child, tuple_check=True, mv=self.mv
+                # )
             self.visit_tuple_list(node, func, argtypes)
         elif type(node.ctx) == ast.Store:
             assert False
@@ -1091,7 +1089,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             assert False
         else:
             error.error(
-                "unknown ctx type for Tuple, " + type(node.ctx),
+                "unknown ctx type for Tuple, " + str(type(node.ctx)),
                 self.gx,
                 node,
                 mv=self.mv,
@@ -1106,7 +1104,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             assert False
         else:
             error.error(
-                "unknown ctx type for ast.List, " + type(node.ctx),
+                "unknown ctx type for ast.List, " + str(type(node.ctx)),
                 self.gx,
                 node,
                 mv=self.mv,
@@ -1195,6 +1193,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     continue  # XXX python.lookup_class
                 elif h0:
                     cl = python.lookup_class(h0, self.mv)
+                    assert cl
                     if cl.mv.module.builtin and cl.ident in [
                         "KeyboardInterrupt",
                         "FloatingPointError",
@@ -1470,7 +1469,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.print()
 
     # --- function/method header
-    def func_header(self, func, declare, is_init=False):
+    def func_header(self, func: python.Function, declare, is_init: bool = False):
         method = isinstance(func.parent, python.Class)
         if method:
             formals = [f for f in func.formals if f != "self"]
@@ -2765,7 +2764,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                         return typestr.typestr(self.gx, builtin_types, mv=self.mv)
 
     def visit_Return(self, node, func=None):
-        if func.isGenerator:
+        if func and func.isGenerator:
             self.output("__stop_iteration = true;")
             func2 = typestr.nodetypestr(self.gx, func.retnode.thing, mv=self.mv)[
                 7:-3
@@ -3212,7 +3211,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.deindent()
             self.output("}\n")
 
-    def local_defs(self, func):
+    def local_defs(self, func: python.Function):
         pairs = []
         for name, var in func.vars.items():
             if not var.invisible and (
@@ -3359,7 +3358,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.eol()
         else:
             error.error(
-                "unknown ctx type for ast.Subscript, " + type(node.ctx),
+                "unknown ctx type for ast.Subscript, " + str(type(node.ctx)),
                 self.gx,
                 node,
                 mv=self.mv,
@@ -3441,6 +3440,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     submodule = python.lookup_module(
                         node.value.value, infer.inode(self.gx, node).mv
                     )
+                    assert submodule
                     self.append(submodule.full_path() + "::" + ident + "::")
                 else:
                     self.append(ident + "::")
@@ -3452,6 +3452,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     submodule = python.lookup_module(
                         node.value.value, infer.inode(self.gx, node).mv
                     )
+                    assert submodule
                     self.append(submodule.full_path() + "::" + cl.ident + "::")
                 else:
                     self.append(ident + "::")
@@ -3570,6 +3571,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     submodule = python.lookup_module(
                         node.value.value, infer.inode(self.gx, node).mv
                     )
+                    assert submodule
                     self.append(submodule.full_path() + "::" + cl.ident + "::")
                 else:
                     self.append(cl.ident + "::")
@@ -3587,7 +3589,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.append(self.attr_var_ref(node, node.attr))
         else:
             error.error(
-                "unknown ctx type for ast.Attribute, " + type(node.ctx),
+                "unknown ctx type for ast.Attribute, " + str(type(node.ctx)),
                 self.gx,
                 node,
                 mv=self.mv,
@@ -3683,7 +3685,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                             self.append(node.id)  # XXX
         else:
             error.error(
-                "unknown ctx type for Name, " + type(node.ctx),
+                "unknown ctx type for Name, " + str(type(node.ctx)),
                 self.gx,
                 node,
                 mv=self.mv,

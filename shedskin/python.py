@@ -46,7 +46,6 @@ class Module(PyObject):
     node: ast.node          ast Node
     prop_includes: set      ?
     import_order: int       order of imports or number of imports?
-
     """
 
     def __init__(
@@ -97,7 +96,8 @@ class Module(PyObject):
     @property
     def doc(self) -> Optional[str]:
         """returns module docstring."""
-        return ast.get_docstring(self.ast)
+        if self.ast:
+            return ast.get_docstring(self.ast)
 
 
 class Class(PyObject):
@@ -257,9 +257,8 @@ class Function:
         self.isGenerator = False
         self.yieldNodes = []
         self.tvars = set()
-        self.ftypes = (
-            []
-        )  # function is called via a virtual call: arguments may have to be cast
+        # function is called via a virtual call: arguments may have to be cast
+        self.ftypes = ([])
         self.inherited = None
 
         if node:
@@ -307,10 +306,8 @@ class Variable:
         #     return f"<Variable '{self.parent.name}.{self.name}'>"
         # return f"<Variable '{self.name}'>"
 
-
 def clear_block(m):
     return m.string.count("\n", m.start(), m.end()) * "\n"
-
 
 def parse_file(name: str):
     data = importlib.util.decode_source(open(name, 'rb').read())
