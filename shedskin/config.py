@@ -11,6 +11,7 @@ import pathlib
 from typing import TYPE_CHECKING, Optional
 if TYPE_CHECKING:
     from . import python
+    from .utils import ProgressBar
 
 
 class GlobalInfo:  # XXX add comments, split up
@@ -92,7 +93,7 @@ class GlobalInfo:  # XXX add comments, split up
         self.struct_unpack = {}
         self.maxhits = 0  # XXX amaze.py termination
         self.terminal = None
-        self.progressbar = None
+        self.progressbar:  Optional['ProgressBar'] = None
         self.generate_cmakefile: bool = False
 
         # from infer.py
