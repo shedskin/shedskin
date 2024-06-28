@@ -90,13 +90,13 @@ bytes *unpack_bytes(char, char c, unsigned int d, bytes *data, __ss_int *pos) {
              break;
         case 's':
              result = new bytes();
-             for(__ss_int i=0; i<d; i++)
+             for(unsigned int i=0; i<d; i++)
                  result->unit += data->unit[(size_t)(*pos+i)];
              break;
         case 'p':
              result = new bytes();
              len = (unsigned char)data->unit[(size_t)(*pos)];
-             for(__ss_int i=0; i<(__ss_int)len; i++)
+             for(unsigned i=0; i<len; i++)
                  result->unit += data->unit[(size_t)(*pos+i+1)];
              break;
     }
