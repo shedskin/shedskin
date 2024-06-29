@@ -76,15 +76,15 @@ class Module(PyObject):
     def full_path(self) -> str:
         return "__" + "__::__".join(self.name_list) + "__"
 
-    def include_path(self):
+    def include_path(self) -> str:
         if self.relative_filename.name.endswith("__init__.py"):
             return os.path.join(self.relative_path, "__init__.hpp")
         else:
             filename_without_ext = os.path.splitext(self.relative_filename)[0]
             return filename_without_ext + ".hpp"
 
-    def in_globals(self, ident: str):
-        assert self.mv, "must be graph.ModuleVisitor instance"
+    def in_globals(self, ident: str) -> bool:
+        assert self.mv, "must have graph.ModuleVisitor instance"
         return (
                ident in self.mv.globals
             or ident in self.mv.funcs
