@@ -104,9 +104,9 @@ template<> inline void __pack_pascal(char, bytes *t, bytes *result, size_t &pos,
     if(len+1 > ndigits)
         len = ndigits-1;
     if(len > 255)
-        result->unit[pos++] = (unsigned char)(255);
+        result->unit[pos++] = -1;
     else
-        result->unit[pos++] = (unsigned char)(len);
+        result->unit[pos++] = (char)(len);
     for(__ss_int j=0; j<len; j++)
         result->unit[pos++] = t->unit[(size_t)j];
     for(__ss_int j=0; j<ndigits-len-1; j++)

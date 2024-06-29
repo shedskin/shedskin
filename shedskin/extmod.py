@@ -250,6 +250,7 @@ class ExtensionModule:
             "PyObject *%s__reduce__(PyObject *self, PyObject *args, PyObject *kwargs) {"
             % clname(cl)
         )
+        write("    (void)args; (void)kwargs;")
         write("    PyObject *t = PyTuple_New(3);")
         write(
             '    PyTuple_SetItem(t, 0, PyObject_GetAttrString(__ss_mod_%s, "__newobj__"));'
@@ -272,6 +273,7 @@ class ExtensionModule:
             "PyObject *%s__setstate__(PyObject *self, PyObject *args, PyObject *kwargs) {"
             % clname(cl)
         )
+        write("    (void)kwargs;")
         write("    PyObject *state = PyTuple_GetItem(args, 0);")
         for i, var in enumerate(vars):
             vartype = typestr.nodetypestr(self.gx, var, var.parent, mv=self.gv.mv)
@@ -674,6 +676,9 @@ class ExtensionModule:
             % clname(cl)
         )
         write(
+            "    (void)args; (void)kwargs;"
+        )
+        write(
             "    %sObject *self = (%sObject *)type->tp_alloc(type, 0);"
             % (clname(cl), clname(cl))
         )
@@ -701,6 +706,7 @@ class ExtensionModule:
                 "PyObject *__ss_get_%s_%s(%sObject *self, void *closure) {"
                 % (clname(cl), var.name, clname(cl))
             )
+            write("    (void)closure;");
             write("    return __to_py(self->__ss_object->%s);" % self.gv.cpp_name(var))
             write("}\n")
 
@@ -708,6 +714,7 @@ class ExtensionModule:
                 "int __ss_set_%s_%s(%sObject *self, PyObject *value, void *closure) {"
                 % (clname(cl), var.name, clname(cl))
             )
+            write("    (void)closure;");
             write("    try {")
             typ = typestr.nodetypestr(self.gx, var, var.parent, mv=self.gv.mv)
             if typ == "void *":  # XXX investigate

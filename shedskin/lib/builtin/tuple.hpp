@@ -80,11 +80,12 @@ template<class T> str *tuple2<T, T>::__repr__() {
 
 template<class T> tuple2<T,T> *tuple2<T, T>::__add__(tuple2<T,T> *b) {
     tuple2<T,T> *c = new tuple2<T,T>();
-    int dst_len = this->__len__();
-    c->units.resize(dst_len + b->__len__());
-    for(int i = 0; i<dst_len;i++)
+    size_t dst_len = this->units.size();
+    size_t b_len = b->units.size();
+    c->units.resize(dst_len + b_len);
+    for(size_t i = 0; i<dst_len; i++)
         c->units.at(i) = this->units[i];
-    for(int i = 0; i<b->__len__();i++)
+    for(size_t i = 0; i<b_len; i++)
         c->units.at(i + dst_len) = b->units[i];
     return c;
 }
@@ -181,17 +182,17 @@ template<class T> tuple2<T, T>::tuple2(PyObject *p) {
         throw new TypeError(new str("error in conversion to Shed Skin (tuple expected)"));
 
     this->__class__ = cl_tuple;
-    size_t size = PyTuple_Size(p);
+    size_t size = (size_t)PyTuple_Size(p);
     this->units.resize(size);
     for(size_t i=0; i<size; i++)
-        this->units.at(i) = __to_ss<T>(PyTuple_GetItem(p, i));
+        this->units.at(i) = __to_ss<T>(PyTuple_GetItem(p, (Py_ssize_t)i));
 }
 
 template<class T> PyObject *tuple2<T, T>::__to_py__() {
     size_t len = this->units.size();
-    PyObject *p = PyTuple_New(len);
+    PyObject *p = PyTuple_New((Py_ssize_t)len);
     for(size_t i=0; i<len; i++)
-        PyTuple_SetItem(p, i, __to_py(this->units[i]));
+        PyTuple_SetItem(p, (Py_ssize_t)i, __to_py(this->units[i]));
     return p;
 }
 #endif
