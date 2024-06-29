@@ -267,12 +267,12 @@ class ShedskinDependencyManager:
         bdwgc_build = bdwgc_src / "build"
 
         print("download / build / install bdwgc")
-        self.git_clone(bdwgc_repo, bdwgc_src)
+        self.git_clone(bdwgc_repo, bdwgc_src, branch="v8.2.6")
         if platform.system() == "Windows":
             # windows needs libatomic_ops
             libatomic_repo = "https://github.com/ivmai/libatomic_ops.git"
             libatomic_src = bdwgc_src / "libatomic_ops"
-            self.git_clone(libatomic_repo, libatomic_src)
+            self.git_clone(libatomic_repo, libatomic_src, branch="v7.8.2")
         bdwgc_build.mkdir(exist_ok=True)
         self.cmake_generate(
             bdwgc_src,
