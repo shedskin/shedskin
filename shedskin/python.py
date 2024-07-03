@@ -19,6 +19,7 @@ from typing import Optional, TYPE_CHECKING
 if TYPE_CHECKING:
     from . import config
     from . import graph
+    from . import infer
 
 
 class PyObject:
@@ -223,7 +224,7 @@ def extract_argnames(arg_struct):
 
 
 class Function:
-    def __init__(self, gx: 'config.GlobalInfo', node=None, parent=None, inherited_from=None, mv: Optional['graph.ModuleVisitor'] = None):
+    def __init__(self, gx: 'config.GlobalInfo', mv: 'graph.ModuleVisitor', node=None, parent=None, inherited_from=None):
         self.gx = gx
         self.node = node
         self.inherited_from = inherited_from

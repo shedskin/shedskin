@@ -653,7 +653,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                         m,
                         mv=getmv(),
                     )
-                func = python.Function(self.gx, m, newclass, mv=getmv())
+                func = python.Function(self.gx, getmv(), m, newclass)
                 newclass.funcs[func.ident] = func
                 self.set_default_vars(m, func)
 
@@ -662,7 +662,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         for n in self.stmt_nodes(node, ast.FunctionDef):
             check_redef(self.gx, n)
             getmv().funcnodes.append(n)
-            func = getmv().funcs[n.name] = python.Function(self.gx, n, mv=getmv())
+            func = getmv().funcs[n.name] = python.Function(self.gx, getmv(), n)
             self.set_default_vars(n, func)
 
         # global variables XXX visit_Global
@@ -876,7 +876,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         ):
             func = parent.funcs[node.name]
         else:
-            func = python.Function(self.gx, node, parent, inherited_from, mv=getmv())
+            func = python.Function(self.gx, getmv(), node, parent, inherited_from)
             if inherited_from:
                 self.set_default_vars(node, func)
 
@@ -1581,7 +1581,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
 
     def visit_ListComp(self, node, func=None):
         # --- [expr for iter in list for .. if cond ..]
-        lcfunc = python.Function(self.gx, mv=getmv())
+        lcfunc = python.Function(self.gx, getmv())
         lcfunc.listcomp = True
         lcfunc.ident = "l.c."  # XXX
         lcfunc.parent = func
@@ -2036,7 +2036,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         # --- built-in functions
         for cl in [newclass, newclass.parent]:
             for ident in ["__setattr__", "__getattr__"]:
-                func = python.Function(self.gx, mv=getmv())
+                func = python.Function(self.gx, getmv())
                 func.ident = ident
                 func.parent = cl
 
