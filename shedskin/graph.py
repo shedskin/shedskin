@@ -178,7 +178,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.classes: dict[str, 'python.Class'] = {}
         self.funcs: dict[str, 'python.Function'] = {}
         self.globals: dict[str, 'python.Variable'] = {}
-        self.exc_names = {}
+        self.exc_names: dict[str, 'python.Variable'] = {}
         self.current_with_vars: List[List[str]] = []
 
         self.lambdas = {}
@@ -1648,8 +1648,6 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         if node.value is not None:  # Not naked return
             newnode = infer.CNode(self.gx, node, parent=func, mv=getmv())
             self.gx.types[newnode] = set()
-            if isinstance(node.value, ast.Name):
-                func.retvars.append(node.value.id)
         if func.retnode:
             self.add_constraint((infer.inode(self.gx, node.value), func.retnode), func)
 
