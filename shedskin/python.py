@@ -325,7 +325,7 @@ def parse_file(name: str):
     try:
         return ast.parse(filebuf)
     except SyntaxError as s:
-        print("*ERROR* %s:%d: %s" % (name, s.lineno, s.msg))
+        print("*ERROR* %s:%s: %s" % (name, str(s.lineno), s.msg))
         sys.exit(1)
 
 

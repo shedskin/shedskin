@@ -1492,6 +1492,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         elif func.ident in ["__hash__"]:
             header += "long "  # XXX __ss_int leads to problem with virtual parent
         elif func.returnexpr:
+            assert func.retnode
             header += typestr.nodetypestr(
                 self.gx, func.retnode.thing, func, mv=self.mv
             )  # XXX mult
