@@ -243,7 +243,7 @@ class Function:
             self.formals = extract_argnames(node.args)
             self.flags = None
             self.doc = ast.get_docstring(node)
-        self.returnexpr = []
+        self.returnexpr: List[ast.AST] = []
         self.retnode: Optional['infer.CNode'] = None
         self.lambdanr = None
         self.lambdawrapper = False
@@ -276,7 +276,7 @@ class Function:
         self.declared = False
 
         self.registered = []
-        self.registered_temp_vars = []
+        self.registered_temp_vars: List[Variable] = []
 
     def __repr__(self):
         if self.parent:
