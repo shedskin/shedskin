@@ -152,9 +152,9 @@ class CNode:
 
         # --- in, outgoing constraints
 
-        self.in_ = set()  # incoming nodes
-        self.out = set()  # outgoing nodes
-        self.fout = set()  # unreal outgoing edges, used in ifa
+        self.in_: set[CNode] = set()  # incoming nodes
+        self.out: set[CNode] = set()  # outgoing nodes
+        self.fout: set[CNode] = set()  # unreal outgoing edges, used in ifa
 
         # --- iterative dataflow analysis
 
@@ -1872,8 +1872,8 @@ def analyze(gx: "config.GlobalInfo", module_name):
     for func in gx.allfuncs:
         if func in gx.inheritance_relations:
             for inhfunc in gx.inheritance_relations[func]:
-                for a, b in zip(func.registered, inhfunc.registered):
-                    graph.inherit_rec(gx, a, b, func.mv)
+                for c, d in zip(func.registered, inhfunc.registered):
+                    graph.inherit_rec(gx, c, d, func.mv)
 
                 for a, b in zip(
                     func.registered_temp_vars, inhfunc.registered_temp_vars

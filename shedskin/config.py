@@ -102,7 +102,7 @@ class GlobalInfo:  # XXX add comments, split up
 
         # from infer.py
         self.added_allocs: int = 0
-        self.added_allocs_set = set()
+        self.added_allocs_set: set[Any] = set()
         self.added_funcs: int = 0
         self.added_funcs_set: set['python.Function'] = set()
         self.cpa_clean: bool = False
