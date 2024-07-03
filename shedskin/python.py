@@ -257,7 +257,7 @@ class Function:
         self.defaults: List[ast.AST] = []
         self.misses: set[str] = set()
         self.misses_by_ref: set[str] = set()
-        self.cp = {}
+        self.cp: dict[int, dict[Tuple, int]] = {}
         self.xargs: dict[Tuple[int, int], int] = {}
         self.largs = None
         self.listcomp = False
