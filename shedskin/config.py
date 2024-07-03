@@ -57,7 +57,7 @@ class GlobalInfo:  # XXX add comments, split up
         self.new_alloc_info: dict[Tuple[str, Tuple, Any], Tuple['python.Class', int]] = {}
         self.iterations: int = 0
         self.total_iterations: int = 0
-        self.lambdawrapper = {}
+        self.lambdawrapper: dict[Any, str] = {}
         self.init_directories()
         illegal_file = open(self.shedskin_illegal /  "illegal.txt")
         self.cpp_keywords = set(line.strip() for line in illegal_file)
@@ -66,7 +66,7 @@ class GlobalInfo:  # XXX add comments, split up
         self.loopstack: List[ast.AST] = []  # track nested loops
         self.comments = {}  # TODO not filled anymore?
         self.import_order: int = 0  # module import order
-        self.from_module = {}
+        self.from_module: dict[ast.AST, 'python.Module'] = {}
         self.class_def_order: int = 0
         # command-line options
         self.wrap_around_check: bool = True

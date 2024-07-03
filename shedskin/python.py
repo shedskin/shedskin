@@ -73,7 +73,7 @@ class Module(PyObject):
         self.ast = ast
         self.builtin = builtin
         self.node = node
-        self.prop_includes = set()
+        self.prop_includes: set['Module'] = set()
         self.import_order = 0
 
     def full_path(self) -> str:
@@ -121,7 +121,7 @@ class Class(PyObject):
         self.funcs: dict[str, 'Function'] = {}
         self.virtuals: dict[str, set['Class']] = {}     # 'virtually' called methods
         self.virtualvars: dict[str, set['Class']] = {}  # 'virtual' variables
-        self.properties = {}
+        self.properties: dict[str, Tuple[str, str]] = {}
         self.staticmethods: List[str] = []
         self.splits = {}  # contour: old contour (used between iterations)
         self.has_copy = self.has_deepcopy = False
@@ -264,7 +264,7 @@ class Function:
         self.isGenerator = False
         self.yieldNodes: List[ast.Yield] = []
         # function is called via a virtual call: arguments may have to be cast
-        self.ftypes = ([])
+        self.ftypes: List[str] = []
         self.inherited = None
 
         if node:
