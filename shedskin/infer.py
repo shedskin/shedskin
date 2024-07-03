@@ -78,7 +78,7 @@ from . import error
 from . import python
 from . import utils
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, List, Tuple, Any
 
 if TYPE_CHECKING:
     from . import config
@@ -766,7 +766,8 @@ def possible_functions(gx: "config.GlobalInfo", node, analysis):
         parent_constr,
         anon_func,
     ) = analysis
-    funcs = []
+
+    funcs: List[Tuple['python.Function', int, Optional[Tuple['python.Class', int]]]] = []
 
     if anon_func:
         # anonymous call
@@ -1318,9 +1319,9 @@ def ifa_split_no_confusion(
         if attr_types[varnum] == assign_set:
             others += 1
         else:
-            subtype = attr_types[:]
-            subtype[varnum] = assign_set
-            subtype = tuple(subtype)
+            subtype_list = attr_types[:]
+            subtype_list[varnum] = assign_set
+            subtype = tuple(subtype_list)
             try:
                 subtype_csites[subtype].append(node)
             except KeyError:
@@ -1341,15 +1342,15 @@ def ifa_class_types(gx: "config.GlobalInfo", cl, vars):
     """create table for previously deduced types"""
     classes_nr, nr_classes = {}, {}
     for dcpa in range(1, cl.dcpa):
-        attr_types = []  # XXX merge with ifa_merge_contours.. sep func?
+        attr_types_list = []  # XXX merge with ifa_merge_contours.. sep func?
         for var in vars:
             if (var, dcpa, 0) in gx.cnode:
-                attr_types.append(
+                attr_types_list.append(
                     merge_simple_types(gx, gx.cnode[var, dcpa, 0].types())
                 )
             else:
-                attr_types.append(frozenset())
-        attr_types = tuple(attr_types)
+                attr_types_list.append(frozenset())
+        attr_types = tuple(attr_types_list)
         if all(attr_types):
             ifa_logger.debug(
                 "IFA %s: %s",
