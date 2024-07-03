@@ -703,9 +703,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.output("*/")
 
     def do_comments(self, child):
-        if child in self.gx.comments:
-            for n in self.gx.comments[child]:
-                self.do_comment(n)
+        pass
+#        if child in self.gx.comments:
+#            for n in self.gx.comments[child]:
+#                self.do_comment(n)
 
     def visit_Continue(self, node, func=None):
         self.output("continue;")
@@ -893,10 +894,10 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
     def class_cpp(self, node):
         cl = self.mv.classes[node.name]
-        if node in self.gx.comments:
-            self.do_comments(node)
-        else:
-            self.output("/**\nclass %s\n*/\n" % cl.ident)
+#        if node in self.gx.comments:
+#            self.do_comments(node)
+#        else:
+        self.output("/**\nclass %s\n*/\n" % cl.ident)
         self.output("class_ *cl_" + cl.ident + ";\n")
 
         # --- methods
