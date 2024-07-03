@@ -24,7 +24,7 @@ class GlobalInfo:  # XXX add comments, split up
         self.allfuncs: set['python.Function'] = set()
         self.allclasses: set['python.Class'] = set()
         self.cnode: dict[Tuple[Any, int, int], 'infer.CNode']  = {}
-        self.types = {}
+        self.types: dict['infer.CNode', set[Tuple[Any, int]]] = {}
         self.templates: int = 0
         self.modules: dict[str, 'python.Module'] = {}
         self.inheritance_relations = {}
