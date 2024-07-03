@@ -100,7 +100,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.output_base = module.filename.with_suffix("")
         self.out = self.get_output_file(ext=".cpp")
         self.indentation = ""
-        self.consts = {}
+        self.consts: dict[ast.Constant, str] = {}
         self.mergeinh = self.gx.merged_inh
         self.module = module
         self.mv = module.mv
@@ -3709,7 +3709,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         return "".join(value)
 
-    def visit_const(self, node, value):
+    def visit_Constant(self, node, func=None):
+        value = node.value
+
         if isinstance(value, bool):
             self.append(str(value))
 
@@ -3753,9 +3755,6 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         else:
             assert False
-
-    def visit_Constant(self, node, func=None):
-        self.visit_const(node, node.value)
 
 
 def generate_code(gx):
