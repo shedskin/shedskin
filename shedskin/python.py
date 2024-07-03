@@ -55,8 +55,8 @@ class Module(PyObject):
             filename: str,
             relative_filename: str,
             builtin: bool,
-            node,
-            ast):
+            node: ast.AST,
+            ast: ast.Module):
         # set name and its dependent fields
         self.name = name
         self.name_list = name.split(".")
@@ -67,7 +67,7 @@ class Module(PyObject):
         self.relative_filename = pathlib.Path(relative_filename)
         self.relative_path = self.relative_filename.parent
 
-        self.mv: Optional['graph.ModuleVisitor'] = None
+        self.mv: 'graph.ModuleVisitor'
 
         # set the rest
         self.ast = ast
@@ -99,7 +99,7 @@ class Module(PyObject):
     @property
     def doc(self) -> Optional[str]:
         """returns module docstring."""
-        return self.ast.get_docstring(self.ast)
+        return ast.get_docstring(self.ast)
 
 
 class Class(PyObject):
@@ -437,6 +437,7 @@ def lookup_module(node, mv: 'graph.ModuleVisitor'):
 def def_class(gx: 'config.GlobalInfo', name: str, mv: Optional['graph.ModuleVisitor'] = None):
     if not mv:
         mv = gx.modules["builtin"].mv
+    assert mv
     if name in mv.classes:
         return mv.classes[name]
     elif name in mv.ext_classes:
