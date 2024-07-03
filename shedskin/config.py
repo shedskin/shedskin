@@ -108,7 +108,7 @@ class GlobalInfo:  # XXX add comments, split up
         self.cpa_clean: bool = False
         self.cpa_limit: int = 0
         self.cpa_limited: bool = False
-        self.merged_inh = {}
+        self.merged_inh: dict[Any, set[Tuple[Any, int]]] = {}
 
     def init_directories(self):
         abspath = os.path.abspath(__file__) # sanitize mixed fwd/bwd slashes (mingw)

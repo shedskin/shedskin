@@ -543,7 +543,8 @@ def analyze_callfunc(
 # --- merge constraint network along combination of given dimensions (dcpa, cpa, inheritance)
 # e.g. for annotation we merge everything; for code generation, we might want to create specialized code
 def merged(gx: "config.GlobalInfo", nodes, inheritance=False):
-    merge = {}
+    merge: dict[Any, set[Tuple[Any, int]]] = {}
+
     if inheritance:  # XXX do we really need this crap
         mergeinh = merged(gx, [n for n in nodes if n.thing in gx.inherited])
         mergenoinh = merged(gx, [n for n in nodes if n.thing not in gx.inherited])
@@ -1310,7 +1311,7 @@ def ifa_split_no_confusion(
     attr_types = list(nr_classes[dcpa])
     noconf = set([n for n in csites if len(n.paths) == 1] + emptycsites)
     others = len(csites) + len(emptycsites) - len(noconf)
-    subtype_csites = {}
+    subtype_csites: dict[Tuple, List[CNode]] = {}
     for node in noconf:
         if node.paths:
             assign_set = node.paths[0]
