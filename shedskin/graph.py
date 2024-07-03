@@ -42,7 +42,7 @@ from . import error
 from . import infer
 from . import python
 
-from typing import TYPE_CHECKING, Optional, List
+from typing import TYPE_CHECKING, Optional, List, Tuple
 if TYPE_CHECKING:
     from . import config
 
@@ -181,16 +181,16 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.exc_names: dict[str, 'python.Variable'] = {}
         self.current_with_vars: List[List[str]] = []
 
-        self.lambdas = {}
-        self.imports = {}
-        self.fake_imports = {}
+        self.lambdas: dict[str, 'python.Function'] = {}
+        self.imports: dict[str, 'python.Module'] = {}
+        self.fake_imports: dict[str, 'python.Module'] = {}
         self.ext_classes: dict[str, 'python.Class'] = {}
         self.ext_funcs: dict[str, 'python.Function'] = {}
-        self.lambdaname = {}
-        self.lwrapper = {}
+        self.lambdaname: dict[ast.AST, str] = {}
+        self.lwrapper: dict[ast.AST, str] = {}
         self.tempcount = self.gx.tempcount
-        self.listcomps = []
-        self.defaults = {}
+        self.listcomps: List[Tuple[ast.AST, 'python.Function', 'python.Function']] = []
+        self.defaults: dict[ast.AST, int] = {}
         self.importnodes: List[ast.AST] = []
 
     def visit(self, node, *args):
