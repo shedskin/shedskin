@@ -190,7 +190,7 @@ class Class(PyObject):
 class StaticClass(PyObject):
     def __init__(self, cl, mv: 'graph.ModuleVisitor'):
         self.vars: dict[str, Variable] = {}
-        self.static_nodes = []
+        self.static_nodes: List[ast.AST] = []
         self.funcs: dict[str, Function] = {}
         self.ident = cl.ident
         self.parent = None
@@ -248,7 +248,7 @@ class Function:
         self.lambdanr = None
         self.lambdawrapper = False
         self.parent = parent
-        self.constraints = set()
+        self.constraints: set[Tuple['infer.CNode', 'infer.CNode']] = set()
         self.vars: dict[str, Variable] = {}
         self.globals: List[str] = []
         self.mv = mv
