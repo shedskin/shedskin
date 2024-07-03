@@ -8,7 +8,7 @@ import os
 import sys
 from pathlib import Path
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Any, Tuple
 if TYPE_CHECKING:
     from . import infer
     from . import python
@@ -22,7 +22,7 @@ class GlobalInfo:  # XXX add comments, split up
         self.allvars: set['python.Variable'] = set()
         self.allfuncs: set['python.Function'] = set()
         self.allclasses: set['python.Class'] = set()
-        self.cnode = {}
+        self.cnode: dict[Tuple[Any, int, int], 'infer.CNode']  = {}
         self.types = {}
         self.templates: int = 0
         self.modules: dict[str, 'python.Module'] = {}

@@ -122,7 +122,7 @@ class Class(PyObject):
         self.virtuals = {}     # 'virtually' called methods
         self.virtualvars = {}  # 'virtual' variables
         self.properties = {}
-        self.staticmethods = []
+        self.staticmethods: List[str] = []
         self.splits = {}  # contour: old contour (used between iterations)
         self.has_copy = self.has_deepcopy = False
         self.def_order = self.gx.class_def_order
@@ -295,7 +295,7 @@ class Variable:
         self.registered = False
         self.looper = None
         self.wopper = None
-        self.const_assign = []
+        self.const_assign: List[ast.Constant] = []
 
     def masks_global(self):
         if isinstance(self.parent, Class):
