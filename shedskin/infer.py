@@ -159,9 +159,9 @@ class CNode:
         # --- iterative dataflow analysis
 
         self.in_list = 0  # node in work-list
-        self.callfuncs = []  # callfuncs to which node is object/argument
+        self.callfuncs: List[Any] = []  # callfuncs to which node is object/argument
 
-        self.nodecp = set()  # already analyzed cp's # XXX kill!?
+        self.nodecp: set[Tuple] = set()  # already analyzed cp's # XXX kill!?
 
         # --- add node to surrounding non-listcomp function
         if parent:  # do this only once! (not when copying)
