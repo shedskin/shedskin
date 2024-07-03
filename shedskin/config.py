@@ -25,12 +25,13 @@ class GlobalInfo:  # XXX add comments, split up
         self.allclasses: set['python.Class'] = set()
         self.cnode: dict[Tuple[Any, int, int], 'infer.CNode']  = {}
         self.types: dict['infer.CNode', set[Tuple[Any, int]]] = {}
+        self.orig_types: dict['infer.CNode', set[Tuple[Any, int]]] = {}
         self.templates: int = 0
         self.modules: dict[str, 'python.Module'] = {}
         self.inheritance_relations = {}
         self.inheritance_temp_vars = {}
         self.parent_nodes = {}
-        self.inherited = set()
+        self.inherited: set[ast.AST] = set()
         self.main_module: Optional['python.Module'] = None
         self.module: Optional['python.Module'] = None
         self.module_path: Optional[Path] = None
@@ -62,7 +63,7 @@ class GlobalInfo:  # XXX add comments, split up
         illegal_file = open(self.shedskin_illegal /  "illegal.txt")
         self.cpp_keywords = set(line.strip() for line in illegal_file)
         self.ss_prefix: str = "__ss_"
-        self.list_types = {}
+        self.list_types: dict[Tuple[int, ast.AST], int] = {}
         self.loopstack: List[ast.AST] = []  # track nested loops
         self.comments = {}  # TODO not filled anymore?
         self.import_order: int = 0  # module import order
@@ -89,8 +90,8 @@ class GlobalInfo:  # XXX add comments, split up
         self.nomakefile: bool = False
 
         # Others
-        self.item_rvalue = {}
-        self.genexp_to_lc = {}
+        self.item_rvalue: dict[ast.AST, ast.AST] = {}
+        self.genexp_to_lc: dict[ast.GeneratorExp, ast.ListComp] = {}
         self.bool_test_only: set[ast.AST] = set()
         self.tempcount: dict[ast.AST, str] = {}
         self.struct_unpack = {}
@@ -107,7 +108,6 @@ class GlobalInfo:  # XXX add comments, split up
         self.cpa_clean: bool = False
         self.cpa_limit: int = 0
         self.cpa_limited: bool = False
-        self.orig_types = {}
         self.merged_inh = {}
 
     def init_directories(self):
