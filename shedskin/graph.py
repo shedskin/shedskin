@@ -63,21 +63,19 @@ def getmv() ->  Optional['ModuleVisitor']:
 
 def check_redef(gx: 'config.GlobalInfo', node, s=None, onlybuiltins: bool = False):  # XXX to modvisitor, rewrite
     mv = getmv()
-    if mv:
-        if mv.module:
-            if not mv.module.builtin:
-                existing = [mv.ext_classes, mv.ext_funcs]
-                if not onlybuiltins:
-                    existing += [mv.classes, mv.funcs]
-                for whatsit in existing:
-                    if s is not None:
-                        name = s
-                    else:
-                        name = node.name
-                    if name in whatsit:
-                        error.error(
-                            "function/class redefinition is not supported", gx, node, mv=mv
-                        )
+    if mv and mv.module and not mv.module.builtin:
+        existing_names =  list(mv.ext_classes) + list(mv.ext_funcs)
+        if not onlybuiltins:
+            existing_names.extend(mv.classes)
+            existing_names.extend(mv.funcs)
+        if s is not None:
+            name = s
+        else:
+            name = node.name
+        if name in existing_names:
+            error.error(
+                "function/class redefinition is not supported", gx, node, mv=mv
+            )
 
 
 # --- maintain inheritance relations between copied AST nodes
