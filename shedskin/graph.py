@@ -179,7 +179,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         self.funcs: dict[str, 'python.Function'] = {}
         self.globals: dict[str, 'python.Variable'] = {}
         self.exc_names = {}
-        self.current_with_vars = []
+        self.current_with_vars: List[List[str]] = []
 
         self.lambdas = {}
         self.imports = {}
