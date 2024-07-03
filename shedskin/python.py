@@ -15,7 +15,7 @@ import pathlib
 from . import ast_utils
 
 # type-checking
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING, List, Tuple
 if TYPE_CHECKING:
     from . import config
     from . import graph
@@ -252,18 +252,17 @@ class Function:
         self.vars = {}
         self.globals = []
         self.mv = mv
-        self.lnodes = []
-        self.nodes = set()
-        self.nodes_ordered = []
+        self.nodes: set['infer.CNode'] = set()
+        self.nodes_ordered: List['infer.CNode'] = []
         self.defaults = []
         self.misses = set()
         self.misses_by_ref = set()
         self.cp = {}
-        self.xargs = {}
+        self.xargs: dict[Tuple[int, int], int] = {}
         self.largs = None
         self.listcomp = False
         self.isGenerator = False
-        self.yieldNodes = []
+        self.yieldNodes: List[ast.Yield] = []
         self.tvars = set()
         # function is called via a virtual call: arguments may have to be cast
         self.ftypes = ([])
@@ -419,7 +418,8 @@ def lookup_class(node, mv: 'graph.ModuleVisitor'):  # XXX lookup_var first?
 
 
 def lookup_module(node, mv: 'graph.ModuleVisitor'):
-    path = []
+    path: List[str] = []
+
     imports = mv.imports
 
     while isinstance(node, ast.Attribute) and type(node.ctx) == ast.Load:
