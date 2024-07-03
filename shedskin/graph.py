@@ -31,6 +31,7 @@ language.
 
 import ast
 import copy
+import pathlib
 import string
 import os
 import re
@@ -397,20 +398,20 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                 and isinstance(rvalue.func.value, ast.Name)
                 and rvalue.func.value.id == "struct"
                 and rvalue.func.attr in ("unpack", "unpack_from")
-                and python.lookup_var("struct", func, mv=self).imported
+                and python.lookup_var("struct", func, self).imported
             ):  # XXX imported from where?
                 return True
             elif (
                 isinstance(rvalue.func, ast.Name)
                 and rvalue.func.id in ("unpack", "unpack_from")
                 and rvalue.func.id in self.ext_funcs
-                and not python.lookup_var(rvalue.func.id, func, mv=self)
+                and not python.lookup_var(rvalue.func.id, func, self)
             ):  # XXX imported from where?
                 return True
 
     def struct_info(self, node, func):
         if isinstance(node, ast.Name):
-            var = python.lookup_var(node.id, func, mv=self)  # XXX fwd ref?
+            var = python.lookup_var(node.id, func, self)  # XXX fwd ref?
             if not var or len(var.const_assign) != 1:
                 error.error("non-constant format string", self.gx, node, mv=self)
             error.error(
@@ -1950,7 +1951,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
                     warning=True,
                 )
 
-            if python.lookup_var(ident, func, mv=getmv()):
+            if python.lookup_var(ident, func, getmv()):
                 self.visit(node.func, func)
                 infer.inode(self.gx, node.func).callfuncs.append(
                     node
@@ -1975,7 +1976,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         constructor = python.lookup_class(node.func, getmv())
         if constructor and (
             not isinstance(node.func, ast.Name)
-            or not python.lookup_var(node.func.id, func, mv=getmv())
+            or not python.lookup_var(node.func.id, func, getmv())
         ):
             self.instance(node, constructor, func)
             infer.inode(self.gx, node).callfuncs.append(
@@ -2264,7 +2265,7 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             if isinstance(func, python.Function) and node.id in func.globals:
                 var = infer.default_var(self.gx, node.id, None, mv=getmv())
             else:
-                var = python.lookup_var(node.id, func, mv=getmv())
+                var = python.lookup_var(node.id, func, getmv())
                 if not var:
                     if self.fncl_passing(node, newnode, func):
                         pass
@@ -2324,20 +2325,23 @@ def parse_module(name, gx, parent=None, node=None):
         absolute_name, filename, relative_filename, builtin = python.find_module(
             gx, name, module_paths
         )
-        module = python.Module(
-            absolute_name, filename, relative_filename, builtin, node
-        )
     except ImportError:
         error.error("cannot locate module: " + name, gx, node, mv=getmv())
 
     # --- check cache
-    if module.name in gx.modules:  # cached?
-        return gx.modules[module.name]
-    gx.modules[module.name] = module
+    if absolute_name in gx.modules:
+        return gx.modules[absolute_name]
 
     # --- not cached, so parse
-    module.ast = python.parse_file(module.filename)
+    ast = python.parse_file(pathlib.Path(filename))
 
+    module = python.Module(
+        absolute_name, filename, relative_filename, builtin, node, ast
+    )
+
+    gx.modules[absolute_name] = module
+
+    # --- visit ast
     old_mv = getmv()
     module.mv = mv = ModuleVisitor(module, gx)
     setmv(mv)

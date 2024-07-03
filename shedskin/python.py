@@ -55,7 +55,8 @@ class Module(PyObject):
             filename: str,
             relative_filename: str,
             builtin: bool,
-            node):
+            node,
+            ast):
         # set name and its dependent fields
         self.name = name
         self.name_list = name.split(".")
@@ -65,10 +66,11 @@ class Module(PyObject):
         self.path = self.filename.parent
         self.relative_filename = pathlib.Path(relative_filename)
         self.relative_path = self.relative_filename.parent
+
         self.mv: Optional['graph.ModuleVisitor'] = None
 
         # set the rest
-        self.ast = None  # to be provided later after analysis
+        self.ast = ast
         self.builtin = builtin
         self.node = node
         self.prop_includes = set()
@@ -97,8 +99,7 @@ class Module(PyObject):
     @property
     def doc(self) -> Optional[str]:
         """returns module docstring."""
-        if self.ast:
-            return ast.get_docstring(self.ast)
+        return self.ast.get_docstring(self.ast)
 
 
 class Class(PyObject):
@@ -237,7 +238,7 @@ class Function:
             self.flags = None
             self.doc = ast.get_docstring(node)
         self.returnexpr = []
-        self.retnode: 'infer.CNode' = None
+        self.retnode: Optional['infer.CNode'] = None
         self.lambdanr = None
         self.lambdawrapper = False
         self.parent = parent
@@ -277,8 +278,6 @@ class Function:
         if self.parent:
             return "Function " + repr((self.parent, self.ident))
         return "Function " + self.ident
-        #     return f"<Function '{self.parent.ident}.{self.ident}'>"
-        # return f"<Function '{self.ident}'>"
 
 
 class Variable:
@@ -377,7 +376,7 @@ def lookup_implementor(cl: Class, ident: str):
 
 def lookup_class_module(objexpr, mv: 'graph.ModuleVisitor', parent):
     if isinstance(objexpr, ast.Name):  # XXX ast.Attribute?
-        var = lookup_var(objexpr.id, parent, mv=mv)
+        var = lookup_var(objexpr.id, parent, mv)
         if var and not var.imported:  # XXX cl?
             return None, None
     return lookup_class(objexpr, mv), lookup_module(objexpr, mv)
@@ -438,15 +437,14 @@ def lookup_module(node, mv: 'graph.ModuleVisitor'):
 def def_class(gx: 'config.GlobalInfo', name: str, mv: Optional['graph.ModuleVisitor'] = None):
     if not mv:
         mv = gx.modules["builtin"].mv
-    assert mv
     if name in mv.classes:
         return mv.classes[name]
     elif name in mv.ext_classes:
         return mv.ext_classes[name]
 
 
-def lookup_var(name, parent, local: bool = False, mv: Optional['graph.ModuleVisitor'] = None):
-    var = smart_lookup_var(name, parent, local=local, mv=mv)
+def lookup_var(name, parent, mv: 'graph.ModuleVisitor', local: bool = False):
+    var = smart_lookup_var(name, parent, mv, local=local)
     if var:
         return var.var
 
@@ -454,7 +452,7 @@ def lookup_var(name, parent, local: bool = False, mv: Optional['graph.ModuleVisi
 VarLookup = collections.namedtuple("VarLookup", ["var", "is_global"])
 
 
-def smart_lookup_var(name, parent, local: bool = False, mv: Optional['graph.ModuleVisitor'] = None):
+def smart_lookup_var(name, parent, mv: 'graph.ModuleVisitor', local: bool = False):
     if not local and isinstance(parent, Class) and name in parent.parent.vars:  # XXX
         return VarLookup(parent.parent.vars[name], False)
     elif parent and name in parent.vars:
@@ -471,7 +469,6 @@ def smart_lookup_var(name, parent, local: bool = False, mv: Optional['graph.Modu
             chain.append(parent)
             parent = parent.parent
 
-        assert mv, "'graph.ModuleVisitor' instance required"
         # not found: global or exception name
         if name in mv.exc_names:
             return VarLookup(mv.exc_names[name], False)
