@@ -255,8 +255,8 @@ class Function:
         self.nodes: set['infer.CNode'] = set()
         self.nodes_ordered: List['infer.CNode'] = []
         self.defaults = []
-        self.misses = set()
-        self.misses_by_ref = set()
+        self.misses: set[str] = set()
+        self.misses_by_ref: set[str] = set()
         self.cp = {}
         self.xargs: dict[Tuple[int, int], int] = {}
         self.largs = None
@@ -271,7 +271,6 @@ class Function:
         if node:
             self.gx.allfuncs.add(self)
 
-        self.retvars = []
         self.invisible = False
         self.fakeret = None
         self.declared = False

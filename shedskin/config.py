@@ -10,6 +10,7 @@ from pathlib import Path
 
 from typing import TYPE_CHECKING, Optional, Any, Tuple
 if TYPE_CHECKING:
+    import ast
     from . import infer
     from . import python
     from .utils import ProgressBar
@@ -50,7 +51,7 @@ class GlobalInfo:  # XXX add comments, split up
             "bool_",
         ]
         # instance node for instance Variable assignment
-        self.assign_target = {}
+        self.assign_target: dict[ast.AST, ast.AST] = {}
         # allocation site type information across iterations
         self.alloc_info = {}
         self.iterations: int = 0
