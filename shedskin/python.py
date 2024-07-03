@@ -236,7 +236,7 @@ class Function:
             self.flags = None
             self.doc = ast.get_docstring(node)
         self.returnexpr = []
-        self.retnode = None
+        self.retnode: 'infer.CNode' = None
         self.lambdanr = None
         self.lambdawrapper = False
         self.parent = parent

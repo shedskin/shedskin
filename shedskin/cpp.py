@@ -100,14 +100,14 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         self.output_base = module.filename.with_suffix("")
         self.out = self.get_output_file(ext=".cpp")
         self.indentation = ""
-        self.consts: dict[ast.Constant, str] = {}
+        self.consts: dict['ast.Constant', str] = {}
         self.mergeinh = self.gx.merged_inh
         self.module = module
         self.mv = module.mv
         self.name = module.ident
         self.filling_consts = False
         self.with_count = 0
-        self.bool_wrapper = {}
+        self.bool_wrapper: dict['ast.AST', bool] = {}
         self.namer = CPPNamer(self.gx, self)
         self.extmod = extmod.ExtensionModule(self.gx, self)
 
