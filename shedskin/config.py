@@ -28,9 +28,9 @@ class GlobalInfo:  # XXX add comments, split up
         self.orig_types: dict['infer.CNode', set[Tuple[Any, int]]] = {}
         self.templates: int = 0
         self.modules: dict[str, 'python.Module'] = {}
-        self.inheritance_relations = {}
-        self.inheritance_temp_vars = {}
-        self.parent_nodes = {}
+        self.inheritance_relations: dict['python.Function', List['python.Function']] = {}
+        self.inheritance_temp_vars: dict['python.Variable', List['python.Variable']] = {}
+        self.parent_nodes: dict[ast.AST, ast.AST] = {}
         self.inherited: set[ast.AST] = set()
         self.main_module: Optional['python.Module'] = None
         self.module: Optional['python.Module'] = None
@@ -65,7 +65,7 @@ class GlobalInfo:  # XXX add comments, split up
         self.ss_prefix: str = "__ss_"
         self.list_types: dict[Tuple[int, ast.AST], int] = {}
         self.loopstack: List[ast.AST] = []  # track nested loops
-        self.comments = {}  # TODO not filled anymore?
+#        self.comments = {}  # TODO not filled anymore?
         self.import_order: int = 0  # module import order
         self.from_module: dict[ast.AST, 'python.Module'] = {}
         self.class_def_order: int = 0
@@ -104,7 +104,7 @@ class GlobalInfo:  # XXX add comments, split up
         self.added_allocs: int = 0
         self.added_allocs_set = set()
         self.added_funcs: int = 0
-        self.added_funcs_set = set()
+        self.added_funcs_set: set['python.Function'] = set()
         self.cpa_clean: bool = False
         self.cpa_limit: int = 0
         self.cpa_limited: bool = False

@@ -668,7 +668,7 @@ def propagate(gx: "config.GlobalInfo"):
     logger.debug("propagate")
 
     # --- initialize working sets
-    worklist = []
+    worklist: list[CNode] = []
     changed = set()
     for node in gx.types:
         if gx.types[node]:
