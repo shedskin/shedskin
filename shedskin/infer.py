@@ -1274,10 +1274,10 @@ def ifa_split_vars(
         # --- try to partition csites across paths
         prt = {}
         for c in csites:
-            ts = set()
+            tspaths = set()
             for p in c.paths:
-                ts.update(p)
-            ts = frozenset(ts)
+                tspaths.update(p)
+            ts = frozenset(tspaths)
             if ts not in prt:
                 prt[ts] = []
             prt[ts].append(c)

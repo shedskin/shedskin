@@ -144,7 +144,7 @@ class Class(PyObject):
             a.add(self)
         return a
 
-    def ancestors_upto(self, other: 'Class'):
+    def ancestors_upto(self, other: Optional['Class']):
         a = self
         result = []
         while a != other:
