@@ -42,7 +42,7 @@ from . import error
 from . import infer
 from . import python
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, List
 if TYPE_CHECKING:
     from . import config
 
@@ -175,23 +175,23 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         ast_utils.BaseNodeVisitor.__init__(self)
         self.module = module
         self.gx = gx
-        self.classes = {}
-        self.funcs = {}
-        self.globals = {}
+        self.classes: dict[str, 'python.Class'] = {}
+        self.funcs: dict[str, 'python.Function'] = {}
+        self.globals: dict[str, 'python.Variable'] = {}
         self.exc_names = {}
         self.current_with_vars = []
 
         self.lambdas = {}
         self.imports = {}
         self.fake_imports = {}
-        self.ext_classes = {}
-        self.ext_funcs = {}
+        self.ext_classes: dict[str, 'python.Class'] = {}
+        self.ext_funcs: dict[str, 'python.Function'] = {}
         self.lambdaname = {}
         self.lwrapper = {}
         self.tempcount = self.gx.tempcount
         self.listcomps = []
         self.defaults = {}
-        self.importnodes = []
+        self.importnodes: List[ast.AST] = []
 
     def visit(self, node, *args):
         if (node, 0, 0) not in self.gx.cnode:
