@@ -303,8 +303,8 @@ def typestrnew(
             else:
                 error.error("function mixed with non-function", gx, node, warning=True)
         f = anon_funcs.pop()
+        assert f.lambdanr is not None
         if f.mv != mv:
-            assert f.lambdanr
             return f.mv.module.full_path() + "::" + "lambda%d" % f.lambdanr
         return "lambda%d" % f.lambdanr
 
