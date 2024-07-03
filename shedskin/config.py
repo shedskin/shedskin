@@ -94,7 +94,7 @@ class GlobalInfo:  # XXX add comments, split up
         self.genexp_to_lc: dict[ast.GeneratorExp, ast.ListComp] = {}
         self.bool_test_only: set[ast.AST] = set()
         self.tempcount: dict[ast.AST, str] = {}
-        self.struct_unpack = {}
+        self.struct_unpack: dict[ast.Assign, Tuple[List, str, str]] = {}
         self.maxhits = 0  # XXX amaze.py termination
         self.terminal = None
         self.progressbar:  Optional['ProgressBar'] = None
