@@ -123,7 +123,7 @@ class Class(PyObject):
         self.virtualvars: dict[str, set['Class']] = {}  # 'virtual' variables
         self.properties: dict[str, Tuple[str, str]] = {}
         self.staticmethods: List[str] = []
-        self.splits = {}  # contour: old contour (used between iterations)
+        self.splits: dict[int, int] = {}  # contour: old contour (used between iterations)
         self.has_copy = self.has_deepcopy = False
         self.def_order = self.gx.class_def_order
         self.gx.class_def_order += 1
@@ -254,7 +254,7 @@ class Function:
         self.mv = mv
         self.nodes: set['infer.CNode'] = set()
         self.nodes_ordered: List['infer.CNode'] = []
-        self.defaults = []
+        self.defaults: List[ast.AST] = []
         self.misses: set[str] = set()
         self.misses_by_ref: set[str] = set()
         self.cp = {}
