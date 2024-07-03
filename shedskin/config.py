@@ -53,7 +53,8 @@ class GlobalInfo:  # XXX add comments, split up
         # instance node for instance Variable assignment
         self.assign_target: dict[ast.AST, ast.AST] = {}
         # allocation site type information across iterations
-        self.alloc_info = {}
+        self.alloc_info: dict[Tuple[str, Tuple, Any], Tuple['python.Class', int]] = {}
+        self.new_alloc_info: dict[Tuple[str, Tuple, Any], Tuple['python.Class', int]] = {}
         self.iterations: int = 0
         self.total_iterations: int = 0
         self.lambdawrapper = {}
@@ -99,7 +100,6 @@ class GlobalInfo:  # XXX add comments, split up
         self.generate_cmakefile: bool = False
 
         # from infer.py
-        self.new_alloc_info = {}
         self.added_allocs: int = 0
         self.added_allocs_set = set()
         self.added_funcs: int = 0
