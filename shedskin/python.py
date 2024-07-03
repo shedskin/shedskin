@@ -103,10 +103,16 @@ class Module(PyObject):
 
 
 class Class(PyObject):
-    def __init__(self, gx: 'config.GlobalInfo', node: ast.ClassDef, mv: 'graph.ModuleVisitor'):
+    def __init__(
+            self,
+            gx: 'config.GlobalInfo',
+            node: ast.ClassDef,
+            mv: 'graph.ModuleVisitor',
+            module: Module):
         self.gx = gx
         self.node = node
         self.mv = mv
+        self.module = module
         self.ident: str = node.name
         self.bases: list['Class'] = []
         self.children: list['Class'] = []
@@ -121,9 +127,9 @@ class Class(PyObject):
         self.has_copy = self.has_deepcopy = False
         self.def_order = self.gx.class_def_order
         self.gx.class_def_order += 1
-        self.module: Optional[Module] = None # from graph.py:635
-        self.parent: Optional['StaticClass'] = None # issues/479
         self.lcpcount: int = 0
+
+        self.parent: StaticClass = StaticClass(self, mv)
 
     def ancestors(self, inclusive: bool = False):  # XXX attribute (faster)
         a = set(self.bases)

@@ -633,11 +633,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
         for n in self.stmt_nodes(node, ast.ClassDef):
             check_redef(self.gx, n)
             getmv().classnodes.append(n)
-            newclass = python.Class(self.gx, n, getmv())
+            newclass = python.Class(self.gx, n, getmv(), self.module)
             self.classes[n.name] = newclass
             getmv().classes[n.name] = newclass
-            newclass.module = self.module
-            newclass.parent = python.StaticClass(newclass, getmv())
 
             # methods
             for m in self.stmt_nodes(n, ast.FunctionDef):
@@ -2027,11 +2025,9 @@ class ModuleVisitor(ast_utils.BaseNodeVisitor):
             ]  # set in visit_Module, for forward references
         else:
             check_redef(self.gx, node)  # XXX merge with visit_Module
-            newclass = python.Class(self.gx, node, getmv())
+            newclass = python.Class(self.gx, node, getmv(), self.module)
             self.classes[node.name] = newclass
             getmv().classes[node.name] = newclass
-            newclass.module = self.module
-            newclass.parent = python.StaticClass(newclass, getmv())
             return
 
         # --- built-in functions
