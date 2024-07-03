@@ -1,6 +1,6 @@
 """
 *** SHED SKIN Python-to-C++ Compiler ***
-Copyright 2005-2023 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)
+Copyright 2005-2024 Mark Dufour and contributors; License GNU GPL version 3 (See LICENSE)
 
 """
 import argparse
@@ -8,7 +8,7 @@ import os
 import sys
 from pathlib import Path
 
-from typing import TYPE_CHECKING, Optional, Any, Tuple
+from typing import TYPE_CHECKING, Optional, Any, Tuple, List
 if TYPE_CHECKING:
     import ast
     from . import infer
@@ -63,8 +63,8 @@ class GlobalInfo:  # XXX add comments, split up
         self.cpp_keywords = set(line.strip() for line in illegal_file)
         self.ss_prefix: str = "__ss_"
         self.list_types = {}
-        self.loopstack = []  # track nested loops
-        self.comments = {}
+        self.loopstack: List[ast.AST] = []  # track nested loops
+        self.comments = {}  # TODO not filled anymore?
         self.import_order: int = 0  # module import order
         self.from_module = {}
         self.class_def_order: int = 0
@@ -91,8 +91,8 @@ class GlobalInfo:  # XXX add comments, split up
         # Others
         self.item_rvalue = {}
         self.genexp_to_lc = {}
-        self.bool_test_only = set()
-        self.tempcount = {}
+        self.bool_test_only: set[ast.AST] = set()
+        self.tempcount: dict[ast.AST, str] = {}
         self.struct_unpack = {}
         self.maxhits = 0  # XXX amaze.py termination
         self.terminal = None
