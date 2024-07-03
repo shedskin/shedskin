@@ -119,8 +119,8 @@ class Class(PyObject):
         self.dcpa = 1
         self.vars: dict[str, 'Variable'] = {}
         self.funcs: dict[str, 'Function'] = {}
-        self.virtuals = {}     # 'virtually' called methods
-        self.virtualvars = {}  # 'virtual' variables
+        self.virtuals: dict[str, set['Class']] = {}     # 'virtually' called methods
+        self.virtualvars: dict[str, set['Class']] = {}  # 'virtual' variables
         self.properties = {}
         self.staticmethods: List[str] = []
         self.splits = {}  # contour: old contour (used between iterations)
@@ -189,9 +189,9 @@ class Class(PyObject):
 
 class StaticClass(PyObject):
     def __init__(self, cl, mv: 'graph.ModuleVisitor'):
-        self.vars = {}
+        self.vars: dict[str, Variable] = {}
         self.static_nodes = []
-        self.funcs = {}
+        self.funcs: dict[str, Function] = {}
         self.ident = cl.ident
         self.parent = None
         self.mv = mv
@@ -249,8 +249,8 @@ class Function:
         self.lambdawrapper = False
         self.parent = parent
         self.constraints = set()
-        self.vars = {}
-        self.globals = []
+        self.vars: dict[str, Variable] = {}
+        self.globals: List[str] = []
         self.mv = mv
         self.nodes: set['infer.CNode'] = set()
         self.nodes_ordered: List['infer.CNode'] = []
@@ -263,7 +263,6 @@ class Function:
         self.listcomp = False
         self.isGenerator = False
         self.yieldNodes: List[ast.Yield] = []
-        self.tvars = set()
         # function is called via a virtual call: arguments may have to be cast
         self.ftypes = ([])
         self.inherited = None
@@ -275,7 +274,7 @@ class Function:
         self.fakeret = None
         self.declared = False
 
-        self.registered = []
+        self.registered: List[ast.AST] = []
         self.registered_temp_vars: List[Variable] = []
 
     def __repr__(self):
@@ -465,7 +464,7 @@ def smart_lookup_var(name, parent, mv: 'graph.ModuleVisitor', local: bool = Fals
         return VarLookup(parent.vars[name], False)
     elif not (parent and local):
         # recursive lookup
-        chain = []
+        chain: List[Function] = []
         while isinstance(parent, Function):
             if name in parent.vars:
                 for ancestor in chain:

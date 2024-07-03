@@ -1273,7 +1273,7 @@ def ifa_split_vars(
             return split
 
         # --- try to partition csites across paths
-        prt = {}
+        prt: dict[frozenset[Any], List[Tuple[Any, int, int]]] = {}
         for c in csites:
             tspaths = set()
             for p in c.paths:
