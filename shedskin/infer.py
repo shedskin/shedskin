@@ -1191,9 +1191,9 @@ def actuals_formals(
 
 def ifa(gx: "config.GlobalInfo"):
     logger.debug("ifa")
-    split = []  # [(set of creation nodes, new type number), ..]
+    split: List[Tuple] = []  # [(set of creation nodes, new type number), ..]
 
-    allcsites = {}
+    allcsites: dict[Tuple['python.Class', int], set[CNode]] = {}
     for n, types in gx.types.items():
         if not n.in_:
             for cl, dcpa in types:
