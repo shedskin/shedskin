@@ -507,7 +507,7 @@ def analyze_callfunc(
     # direct [constructor] call
     if isinstance(node.func, ast.Name) or namespace != mv.module:
         if isinstance(node.func, ast.Name):
-            if python.lookup_var(ident, cnode.parent, mv=mv):
+            if python.lookup_var(ident, cnode.parent, mv):
                 return (
                     objexpr,
                     ident,
@@ -793,7 +793,7 @@ def possible_functions(gx: "config.GlobalInfo", node, analysis):
 
     elif parent_constr:
         objtypes = gx.cnode[
-            python.lookup_var("self", node.parent, mv=node.mv), node.dcpa, node.cpa
+            python.lookup_var("self", node.parent, node.mv), node.dcpa, node.cpa
         ].types()
         funcs = [
             (t[0].funcs[ident], t[1], None) for t in objtypes if ident in t[0].funcs
@@ -1903,7 +1903,7 @@ def default_var(
 ):
     if parent:
         mv = parent.mv
-    var = python.lookup_var(name, parent, local=True, mv=mv)
+    var = python.lookup_var(name, parent, mv, local=True)
     if not var:
         var = python.Variable(name, parent)
         if parent:  # XXX move to python.Variable?

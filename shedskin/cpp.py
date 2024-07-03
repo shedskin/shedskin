@@ -1133,7 +1133,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         # --- raise class [, constructor args]
         if isinstance(exc, ast.Name) and not python.lookup_var(
-            exc.id, func, mv=self.mv
+            exc.id, func, self.mv
         ):  # XXX python.lookup_class
             self.append("new %s(" % exc.id)
             if (
@@ -2982,7 +2982,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                             func,
                         )
                     elif lcp and isinstance(lcp[0], python.Class):
-                        var = python.lookup_var(lvalue.attr, lcp[0], mv=self.mv)
+                        var = python.lookup_var(lvalue.attr, lcp[0], self.mv)
                         vartypes = set()
                         if var:
                             vartypes = self.mergeinh[var]
@@ -2996,7 +2996,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 # name = expr
                 elif isinstance(lvalue, ast.Name):
                     vartypes = self.mergeinh[
-                        python.lookup_var(lvalue.id, func, mv=self.mv)
+                        python.lookup_var(lvalue.id, func, self.mv)
                     ]
                     self.visit(lvalue, func)
                     self.append(" = ")
@@ -3142,7 +3142,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
     def lc_args(self, lcfunc, func):
         args = []
         for name in lcfunc.misses:
-            if python.lookup_var(name, func, mv=self.mv).parent:
+            if python.lookup_var(name, func, self.mv).parent:
                 arg = self.cpp_name(name)
                 if name in lcfunc.misses_by_ref:
                     arg = '&' + arg
@@ -3150,7 +3150,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                     (
                         typestr.nodetypestr(
                             self.gx,
-                            python.lookup_var(name, lcfunc, mv=self.mv),
+                            python.lookup_var(name, lcfunc, self.mv),
                             lcfunc,
                             mv=self.mv,
                         ),
@@ -3261,9 +3261,9 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
 
         # iter var
         if isinstance(qual.target, ast.Name):
-            var = python.lookup_var(qual.target.id, lcfunc, mv=self.mv)
+            var = python.lookup_var(qual.target.id, lcfunc, self.mv)
         else:
-            var = python.lookup_var(self.mv.tempcount[qual.target], lcfunc, mv=self.mv)
+            var = python.lookup_var(self.mv.tempcount[qual.target], lcfunc, self.mv)
         iter = self.cpp_name(var)
 
         if ast_utils.is_fastfor(qual):
@@ -3334,7 +3334,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
         temp = self.line
 
         for name in lcfunc.misses:
-            var = python.lookup_var(name, func, mv=self.mv)
+            var = python.lookup_var(name, func, self.mv)
             if var.parent:
                 if name == "self" and not func.listcomp:  # XXX parent?
                     args.append("this")
@@ -3516,7 +3516,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 if not isinstance(node.value, ast.Name):
                     self.append("(")
                 if isinstance(node.value, ast.Name) and not python.lookup_var(
-                    node.value.id, func, mv=self.mv
+                    node.value.id, func, self.mv
                 ):  # XXX XXX
                     self.append(node.value.id)
                 else:
@@ -3579,7 +3579,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             # obj.attr
             else:
                 if isinstance(node.value, ast.Name) and not python.lookup_var(
-                    node.value.id, func, mv=self.mv
+                    node.value.id, func, self.mv
                 ):  # XXX
                     self.append(node.value.id)
                 else:
@@ -3676,7 +3676,7 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                             and node.id in func.parent.vars
                         ):  # XXX
                             self.append(func.ident + "::")
-                        var = python.smart_lookup_var(node.id, func, mv=self.mv)
+                        var = python.smart_lookup_var(node.id, func, self.mv)
                         if var:
                             if var.is_global:
                                 self.append(self.module.full_path() + "::")
