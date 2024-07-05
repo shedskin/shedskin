@@ -128,6 +128,16 @@ using tuple = tuple2<T, T>;
 
 extern __ss_bool True;
 extern __ss_bool False;
+/* externs */
+
+extern class_ *cl_str_, *cl_int_, *cl_bool, *cl_float_, *cl_complex, *cl_list, *cl_tuple, *cl_dict, *cl_set, *cl_object, *cl_xrange, *cl_rangeiter, *cl_bytes;
+
+extern __GC_VECTOR(str *) __char_cache;
+
+extern list<str *> *__join_cache;
+extern list<bytes *> *__join_cache_bin;
+
+extern file *__ss_stdin, *__ss_stdout, *__ss_stderr;
 
 /* class declarations */
 
@@ -498,125 +508,6 @@ public:
 #endif
 };
 
-class str : public pyseq<str *> {
-protected:
-public:
-    __GC_STRING unit;
-    long hash;
-    bool charcache;
-
-    str();
-    str(const char *s);
-    str(__GC_STRING s);
-    str(const char *s, size_t size); /* '\0' delimiter in C */
-
-    __ss_bool __contains__(str *s);
-    str *strip(str *chars=0);
-    str *lstrip(str *chars=0);
-    str *rstrip(str *chars=0);
-    __ss_bool __eq__(pyobj *s);
-    str *__add__(str *b);
-
-    template<class U> str *join(U *);
-
-    /* operators */
-    //inline void operator+= (const char *c);
-    str *operator+ (const char *c);
-    str *operator+ (const char &c);
-    void operator+= (const char *c);
-    void operator+= (const char &c);
-    //str *operator+ (const char c);
-    //str *operator+ (str *c);
-    //str *operator+ (basic_string c);
-
-    /* functions pointing to the underlying C++ implementation */
-    char *c_str() const;
-
-    str *__str__();
-    str *__repr__();
-    str *__mul__(__ss_int n);
-    inline str *__getitem__(__ss_int n);
-    inline str *__getfast__(__ss_int i);
-    inline __ss_int __len__();
-    str *__slice__(__ss_int x, __ss_int l, __ss_int u, __ss_int s);
-
-    list<str *> *split(str *sep=0, __ss_int maxsplit=-1);
-    list<str *> *rsplit(str *sep=0, __ss_int maxsplit=-1);
-    tuple2<str *, str *> *rpartition(str *sep);
-    tuple2<str *, str *> *partition(str *sep);
-    list<str *> *splitlines(__ss_int keepends = 0);
-
-    __ss_int __fixstart(size_t a, __ss_int b);
-    __ss_int __checkneg(__ss_int i);
-
-    __ss_int find(str *s, __ss_int a=0);
-    __ss_int find(str *s, __ss_int a, __ss_int b);
-    __ss_int rfind(str *s, __ss_int a=0);
-    __ss_int rfind(str *s, __ss_int a, __ss_int b);
-
-    __ss_int index(str *s, __ss_int a=0);
-    __ss_int index(str *s, __ss_int a, __ss_int b);
-    __ss_int rindex(str *s, __ss_int a=0);
-    __ss_int rindex(str *s, __ss_int a, __ss_int b);
-
-    __ss_int count(str *s, __ss_int start=0);
-    __ss_int count(str *s, __ss_int start, __ss_int end);
-
-    str *upper();
-    str *lower();
-    str *title();
-    str *capitalize();
-    str *casefold();
-
-    str *replace(str *a, str *b, __ss_int c=-1);
-    str *translate(str *table, str *delchars=0);
-    str *swapcase();
-    str *center(__ss_int width, str *fillchar=0);
-
-    __ss_bool __ctype_function(int (*cfunc)(int));
-
-    __ss_bool istitle();
-    __ss_bool isspace();
-    __ss_bool isalpha();
-    __ss_bool isdigit();
-    __ss_bool islower();
-    __ss_bool isupper();
-    __ss_bool isalnum();
-    __ss_bool isprintable();
-    __ss_bool isnumeric();
-    __ss_bool __ss_isascii();
-    __ss_bool isdecimal();
-    __ss_bool isidentifier();
-
-    __ss_bool startswith(str *s, __ss_int start=0);
-    __ss_bool startswith(str *s, __ss_int start, __ss_int end);
-    __ss_bool endswith(str *s, __ss_int start=0);
-    __ss_bool endswith(str *s, __ss_int start, __ss_int end);
-
-    str *zfill(__ss_int width);
-    str *expandtabs(__ss_int tabsize=8);
-
-    str *ljust(__ss_int width, str *fillchar=0);
-    str *rjust(__ss_int width, str *fillchar=0);
-
-    __ss_int __cmp__(pyobj *p);
-    long __hash__();
-
-    __ss_int __int__(); /* XXX compilation warning for int(pyseq<str *> *) */
-
-    str *__iadd__(str *b);
-    str *__imul__(__ss_int n);
-
-    /* iteration */
-
-    inline bool for_in_has_next(size_t i);
-    inline str *for_in_next(size_t &i);
-
-#ifdef __SS_BIND
-    str(PyObject *p);
-    PyObject *__to_py__();
-#endif
-};
 
 void __throw_index_out_of_range();
 void __throw_range_step_zero();
@@ -625,7 +516,29 @@ void __throw_dict_changed();
 void __throw_slice_step_zero();
 void __throw_stop_iteration();
 
+#ifdef __GNUC__
+#define unlikely(x)       __builtin_expect((x), 0)
+#else
+#define unlikely(x)    (x)
+#endif
+
+template<class T> static inline int __wrap(T a, __ss_int i) {
+    __ss_int l = len(a);
+#ifndef __SS_NOWRAP
+    if(unlikely(i<0)) i += l;
+#endif
+#ifndef __SS_NOBOUNDS
+        if(unlikely(i<0 || i>= l))
+            __throw_index_out_of_range();
+#endif
+    return i;
+}
+
+#undef unlikely
+
+#include "builtin/iter.hpp"
 #include "builtin/hash.hpp"
+#include "builtin/str.hpp"
 #include "builtin/compare.hpp"
 
 template <class K, class V>
@@ -858,16 +771,6 @@ void slicenr(__ss_int x, __ss_int &l, __ss_int &u, __ss_int &s, __ss_int len);
 template<class T> inline int __is_none(T *t) { return !t; }
 template<class T> inline int __is_none(T) { return 0; }
 
-/* externs */
-
-extern class_ *cl_str_, *cl_int_, *cl_bool, *cl_float_, *cl_complex, *cl_list, *cl_tuple, *cl_dict, *cl_set, *cl_object, *cl_xrange, *cl_rangeiter, *cl_bytes;
-
-extern __GC_VECTOR(str *) __char_cache;
-
-extern list<str *> *__join_cache;
-extern list<bytes *> *__join_cache_bin;
-
-extern file *__ss_stdin, *__ss_stdout, *__ss_stderr;
 
 /* int */
 
@@ -915,7 +818,6 @@ str *__str();
 
 template<class ... Args> str *__add_strs(int n, Args ... args);
 
-#include "builtin/iter.hpp"
 
 /* bytes */
 
@@ -1022,27 +924,6 @@ private:
 
 #define END_WITH }
 
-#ifdef __GNUC__
-#define unlikely(x)       __builtin_expect((x), 0)
-#else
-#define unlikely(x)    (x)
-#endif
-
-template<class T> static inline int __wrap(T a, __ss_int i) {
-    __ss_int l = len(a);
-#ifndef __SS_NOWRAP
-    if(unlikely(i<0)) i += l;
-#endif
-#ifndef __SS_NOBOUNDS
-        if(unlikely(i<0 || i>= l))
-            __throw_index_out_of_range();
-#endif
-    return i;
-}
-
-#undef unlikely
-
-
 /* copy */
 
 template<class T> T __copy(T t) {
@@ -1093,7 +974,6 @@ template<> inline __ss_bool __zero<__ss_bool>() { return False; }
 
 #include "builtin/list.hpp"
 #include "builtin/tuple.hpp"
-#include "builtin/str.hpp"
 #include "builtin/bytes.hpp"
 #include "builtin/math.hpp"
 #include "builtin/dict.hpp"
