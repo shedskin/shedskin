@@ -625,10 +625,6 @@ void __throw_dict_changed();
 void __throw_slice_step_zero();
 void __throw_stop_iteration();
 
-template<class K, class V> struct dictentry;
-
-const int MINSIZE = 8;
-
 #include "builtin/hash.hpp"
 #include "builtin/compare.hpp"
 
@@ -645,12 +641,6 @@ using __GC_SET = std::unordered_set<T, ss_hash<T>, ss_eq<T>, gc_allocator< T > >
 
 template <class K, class V> class dict : public pyiter<K> {
 public:
-    __ss_int fill;
-    __ss_int used;
-    __ss_int mask;
-    dictentry<K,V> *table;
-    dictentry<K,V> smalltable[MINSIZE];
-
     __GC_DICT<K,V> gcd;
 
     dict();
@@ -665,7 +655,6 @@ public:
     str *__repr__();
     __ss_bool has_key(K k);
     __ss_bool __contains__(K key);
-    __ss_bool __contains__(dictentry<K,V>* entry);
     void *clear();
     dict<K,V> *copy();
     V get(K k);
@@ -873,7 +862,7 @@ void __ss_exit(int code=0);
 
 /* slicing */
 
-static void inline slicenr(__ss_int x, __ss_int &l, __ss_int &u, __ss_int &s, __ss_int len);
+void slicenr(__ss_int x, __ss_int &l, __ss_int &u, __ss_int &s, __ss_int len);
 
 template<class T> inline int __is_none(T *t) { return !t; }
 template<class T> inline int __is_none(T) { return 0; }
@@ -888,15 +877,6 @@ extern list<str *> *__join_cache;
 extern list<bytes *> *__join_cache_bin;
 
 extern file *__ss_stdin, *__ss_stdout, *__ss_stderr;
-
-/* dict */
-
-template<class K, class V> struct dictentry {
-    __ss_int hash;
-    K key;
-    V value;
-    int use;
-};
 
 /* int */
 
@@ -1239,43 +1219,6 @@ template<class T> T __seqiter<T>::__next__() {
 }
 
 
-/* slicing */
-
-static void inline slicenr(__ss_int x, __ss_int &l, __ss_int &u, __ss_int &s, __ss_int len) {
-    if(x&4) {
-        if (s == 0)
-            __throw_slice_step_zero();
-    } else
-        s = 1;
-
-    if (l>=len)
-        l = len;
-    else if (l<0) {
-        l = len+l;
-        if(l<0)
-            l = 0;
-    }
-    if (u>=len)
-        u = len;
-    else if (u<0) {
-        u = len+u;
-        if(u<0)
-            u = 0;
-    }
-
-    if(s<0) {
-        if (!(x&1))
-            l = len-1;
-        if (!(x&2))
-            u = -1;
-    }
-    else {
-        if (!(x&1))
-            l = 0;
-        if (!(x&2))
-            u = len;
-    }
-}
 
 template<class T> void __unpack_check(T t, int expected) {
     if(len(t) > (__ss_int)expected)
