@@ -30,7 +30,7 @@ from . import python
 from . import typestr
 from . import virtual
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, List
 if TYPE_CHECKING:
     from . import config
     from . import graph
@@ -282,42 +282,42 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
                 result.append(type + (", ".join(names)) + ";\n")
         return result
 
-    def header_file(self):
+    def header_file(self) -> None:
         self.out = self.get_output_file(ext=".hpp")
         self.visit(self.module.ast, True)
         self.out.close()
 
-    def print(self, text=None):
+    def print(self, text: Optional[str]=None) -> None:
         if text is not None:
             print(text, file=self.out)
         else:
             print(file=self.out)
 
-    def output(self, text):
+    def output(self, text: str) -> None:
         if text:
             self.print(self.indentation + text)
 
-    def start(self, text=None):
+    def start(self, text: str=None) -> None:
         self.line = self.indentation
         if text:
             self.line += text
 
-    def append(self, text):
+    def append(self, text: str) -> None:
         self.line += text
 
-    def eol(self, text=None):
+    def eol(self, text: str=None) -> None:
         if text:
             self.append(text)
         if self.line.strip():
             self.print(self.line + ";")
 
-    def indent(self):
+    def indent(self) -> None:
         self.indentation += 4 * " "
 
-    def deindent(self):
+    def deindent(self) -> None:
         self.indentation = self.indentation[:-4]
 
-    def visitm(self, *args):
+    def visitm(self, *args) -> None:
         func = None
         if args and isinstance(args[-1], (python.Function, python.Class)):
             func = args[-1]
@@ -2577,7 +2577,12 @@ class GenerateVisitor(ast_utils.BaseNodeVisitor):
             self.bool_wrapper[node] = True
             self.visit(node, func)
 
-    def visit_callfunc_args(self, funcs, node, func):
+    def visit_callfunc_args(
+        self,
+        funcs: List['python.Function'],
+        node: ast.Call,
+        func: Optional['python.Function']
+    ) -> None:
         (
             objexpr,
             ident,
