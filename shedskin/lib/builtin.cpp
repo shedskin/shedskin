@@ -341,8 +341,48 @@ PyObject *__ss__newobj__(PyObject *, PyObject *args, PyObject *kwargs) {
 }
 #endif
 
+/* isinstance */
+
 __ss_bool isinstance(pyobj *p, class_ *cl) {
     return __mbool(p->__class__ == cl);
+}
+
+/* slicing helper */
+
+void slicenr(__ss_int x, __ss_int &l, __ss_int &u, __ss_int &s, __ss_int len) {
+    if(x&4) {
+        if (s == 0)
+            __throw_slice_step_zero();
+    } else
+        s = 1;
+
+    if (l>=len)
+        l = len;
+    else if (l<0) {
+        l = len+l;
+        if(l<0)
+            l = 0;
+    }
+    if (u>=len)
+        u = len;
+    else if (u<0) {
+        u = len+u;
+        if(u<0)
+            u = 0;
+    }
+
+    if(s<0) {
+        if (!(x&1))
+            l = len-1;
+        if (!(x&2))
+            u = -1;
+    }
+    else {
+        if (!(x&1))
+            l = 0;
+        if (!(x&2))
+            u = len;
+    }
 }
 
 } // namespace __shedskin__
