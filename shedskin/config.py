@@ -22,7 +22,7 @@ class GlobalInfo:  # XXX add comments, split up
         self.allvars: set['python.Variable'] = set()
         self.allfuncs: set['python.Function'] = set()
         self.allclasses: set['python.Class'] = set()
-        self.cnode = {}
+        self.cnode: dict[str, 'infer.CNode'] = {}
         self.types = {}
         self.templates: int = 0
         self.modules: dict[str, 'python.Module'] = {}
